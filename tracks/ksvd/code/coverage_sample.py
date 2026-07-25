@@ -33,6 +33,8 @@ class CoverageConfig:
     seed_policy: SeedPolicy = "degree_stratified"
     cover_target: float | None = 0.95
     hard_delete: bool = False  # must stay False (R6)
+    # ring bias: init edge weight = 1 + ring_boost * (#common neighbors)
+    ring_boost: float = 0.0
 
 
 def _pick_seeds(g: Graph, cfg: CoverageConfig, rng: random.Random) -> list[int]:
@@ -89,7 +91,14 @@ def sample_coverage(g: Graph, cfg: CoverageConfig) -> SampleBundle:
         no_backtrack=cfg.no_backtrack,
         seed=cfg.seed,
     )
-    edge_weight = {e: 1.0 for e in g.edges()}
+    if cfg.ring_boost and cfg.ring_boost > 0:
+        edge_weight = {}
+        for e in g.edges():
+            u, v = e
+            common = len(g.neighbors(u) & g.neighbors(v))
+            edge_weight[e] = 1.0 + float(cfg.ring_boost) * float(common)
+    else:
+        edge_weight = {e: 1.0 for e in g.edges()}
     all_edges = g.edges()
     m_e = max(len(all_edges), 1)
     traj_hit: set[tuple[int, int]] = set()

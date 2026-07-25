@@ -90,3 +90,6 @@
 26. ~~设计消融 n6k~~ → `results/molhiv/DESIGN_VERDICT.md`
 27. **有效**：coverage + max + 小字典 A8T2；残差相对 size +3～4pt valid
 28. **无效**：抬 cover、mean、图级 concat；下一步节点级融合 / patch 语义
+29. ~~B/C/D/A next-round~~ → `results/molhiv/NEXT_ROUND_VERDICT.md`
+30. **下调**：residual 多种子不稳；chem/ring/node_gate 均无稳定超 GINE
+31. **收窄主线**：采样+可还原字典机制；或环/cell 对象升级；molhiv 增益暂非主证据

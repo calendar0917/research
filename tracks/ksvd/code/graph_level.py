@@ -38,6 +38,7 @@ class GraphLevelConfig:
     seed_policy: str = "degree_stratified"
     cover_target: float | None = 0.95
     no_backtrack: bool = True
+    ring_boost: float = 0.0  # >0: prefer triangle-rich edges in RW
     # --- KSVD ---
     n_atoms: int = 12
     T: int = 3
@@ -48,6 +49,9 @@ class GraphLevelConfig:
     seed: int = 0
     order_mode: str = "bfs"
     max_train_patches: int = 6000
+    # --- patch vector ---
+    # topo: upper-tri adj only; chem: + atom-type hist + bond-type hist on patch
+    patch_feat: str = "topo"  # topo | chem
 
 
 def _cov_cfg(cfg: GraphLevelConfig, seed: int | None = None) -> CoverageConfig:
@@ -63,7 +67,42 @@ def _cov_cfg(cfg: GraphLevelConfig, seed: int | None = None) -> CoverageConfig:
         seed_policy=cfg.seed_policy,  # type: ignore
         cover_target=cfg.cover_target,
         hard_delete=False,
+        ring_boost=cfg.ring_boost,
     )
+
+
+def _chem_hist_for_patch(
+    S: set[int],
+    node_feat: np.ndarray | None,
+    edge_feat: dict[tuple[int, int], np.ndarray] | None,
+    g: Graph,
+    n_atom_bins: int = 16,
+    n_bond_bins: int = 8,
+) -> np.ndarray:
+    """Coarse atom/bond type histograms on induced patch (OGB first channel)."""
+    atom_h = np.zeros(n_atom_bins, dtype=np.float64)
+    bond_h = np.zeros(n_bond_bins, dtype=np.float64)
+    if node_feat is not None:
+        for u in S:
+            if 0 <= u < node_feat.shape[0]:
+                t = int(node_feat[u, 0]) % n_atom_bins
+                atom_h[t] += 1.0
+        s = atom_h.sum()
+        if s > 0:
+            atom_h /= s
+    if edge_feat is not None:
+        for u in S:
+            for v in g.neighbors(u):
+                if v in S and u < v:
+                    key = (u, v)
+                    ef = edge_feat.get(key)
+                    if ef is not None and ef.size:
+                        t = int(ef[0]) % n_bond_bins
+                        bond_h[t] += 1.0
+        s = bond_h.sum()
+        if s > 0:
+            bond_h /= s
+    return np.concatenate([atom_h, bond_h])
 
 
 def sample_patches_graph_level(g: Graph, cfg: GraphLevelConfig, seed: int | None = None):
@@ -83,6 +122,9 @@ def bundle_to_Y(
     bundle,
     max_nodes: int,
     order_mode: str = "bfs",
+    patch_feat: str = "topo",
+    node_feat: np.ndarray | None = None,
+    edge_feat: dict[tuple[int, int], np.ndarray] | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     cols = []
     for S in bundle.node_sets:
@@ -90,10 +132,16 @@ def bundle_to_Y(
             flatten_upper(adjacency_padded(g, S, max_nodes, order_mode=order_mode)),
             dtype=np.float64,
         )
+        if patch_feat == "chem":
+            y = np.concatenate(
+                [y, _chem_hist_for_patch(S, node_feat, edge_feat, g)]
+            )
         if np.linalg.norm(y) > 1e-12:
             cols.append(y)
     if not cols:
         dim = max_nodes * (max_nodes - 1) // 2
+        if patch_feat == "chem":
+            dim += 16 + 8
         return np.zeros((dim, 1), dtype=np.float64), {"n_cols": 0}
     Y = np.stack(cols, axis=1)
     return Y, {"n_cols": int(Y.shape[1]), "n_features": int(Y.shape[0])}
@@ -104,6 +152,8 @@ def collect_train_Y(
     train_idx: np.ndarray,
     cfg: GraphLevelConfig,
     mode: str = "coverage",
+    node_feats: list[np.ndarray] | None = None,
+    edge_feats: list[dict[tuple[int, int], np.ndarray]] | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     cols = []
     covers, repeats, nwalks = [], [], []
@@ -118,7 +168,17 @@ def collect_train_Y(
         covers.append(met.get("traj_edge_cover", np.nan))
         repeats.append(met.get("traj_edge_repeat", np.nan))
         nwalks.append(met.get("n_walks", len(b.node_sets)))
-        Y, _ = bundle_to_Y(g, b, cfg.max_nodes, cfg.order_mode)
+        nf = node_feats[int(ti)] if node_feats is not None else None
+        ef = edge_feats[int(ti)] if edge_feats is not None else None
+        Y, _ = bundle_to_Y(
+            g,
+            b,
+            cfg.max_nodes,
+            cfg.order_mode,
+            patch_feat=cfg.patch_feat,
+            node_feat=nf,
+            edge_feat=ef,
+        )
         for j in range(Y.shape[1]):
             if np.linalg.norm(Y[:, j]) > 1e-12:
                 cols.append(Y[:, j])
@@ -135,6 +195,7 @@ def collect_train_Y(
         "mean_traj_cover": float(np.nanmean(covers)),
         "mean_traj_repeat": float(np.nanmean(repeats)),
         "mean_n_walks": float(np.mean(nwalks)),
+        "patch_feat": cfg.patch_feat,
     }
     return Ytr, stats
 
@@ -144,8 +205,12 @@ def learn_shared_D_graph_level(
     train_idx: np.ndarray,
     cfg: GraphLevelConfig,
     mode: str = "coverage",
+    node_feats: list[np.ndarray] | None = None,
+    edge_feats: list[dict[tuple[int, int], np.ndarray]] | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    Ytr, pstats = collect_train_Y(graphs, train_idx, cfg, mode=mode)
+    Ytr, pstats = collect_train_Y(
+        graphs, train_idx, cfg, mode=mode, node_feats=node_feats, edge_feats=edge_feats
+    )
     D, X, info = ksvd(
         Ytr,
         n_atoms=cfg.n_atoms,
@@ -163,6 +228,8 @@ def encode_graph(
     cfg: GraphLevelConfig,
     mode: str = "coverage",
     seed: int | None = None,
+    node_feat: np.ndarray | None = None,
+    edge_feat: dict[tuple[int, int], np.ndarray] | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """s_G from patches of one graph under fixed D."""
     if mode == "B0":
@@ -170,7 +237,15 @@ def encode_graph(
         met = {"n_walks": g.n, "traj_edge_cover": np.nan, "traj_edge_repeat": np.nan}
     else:
         b, met = sample_patches_graph_level(g, cfg, seed=seed)
-    Y, ymeta = bundle_to_Y(g, b, cfg.max_nodes, cfg.order_mode)
+    Y, ymeta = bundle_to_Y(
+        g,
+        b,
+        cfg.max_nodes,
+        cfg.order_mode,
+        patch_feat=cfg.patch_feat,
+        node_feat=node_feat,
+        edge_feat=edge_feat,
+    )
     n_atoms = D.shape[1]
     N = Y.shape[1]
     X = np.zeros((n_atoms, N), dtype=np.float64)

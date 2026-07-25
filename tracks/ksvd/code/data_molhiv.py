@@ -23,6 +23,9 @@ class MolhivBundle:
     split: dict[str, np.ndarray]  # train/valid/test indices
     smiles: list[str] | None
     meta: dict[str, Any]
+    # optional OGB atom/bond features aligned with graphs[i] nodes 0..n-1
+    node_feats: list[np.ndarray] | None = None  # each (n_i, 9) int
+    edge_feats: list[dict[tuple[int, int], np.ndarray]] | None = None  # undirected key → (3,)
 
 
 def _edges_from_pyg(edge_index: np.ndarray, n: int) -> Graph:
@@ -65,6 +68,7 @@ def load_molhiv(
     root: str | Path | None = None,
     max_graphs: int | None = None,
     seed: int = 0,
+    with_features: bool = False,
 ) -> MolhivBundle:
     """
     Load ogbg-molhiv with official scaffold split.
@@ -72,6 +76,7 @@ def load_molhiv(
     root: data directory (default: <repo>/data/ogb)
     max_graphs: if set, stratified subsample **within each split** (smoke only),
       remapped to contiguous 0..n_used-1. Preserves train/valid/test.
+    with_features: also return OGB node_feat / edge_feat for chem patch vectors.
     """
     try:
         _patch_torch_load_weights_only()
@@ -128,6 +133,8 @@ def load_molhiv(
     graphs: list[Graph] = []
     labels: list[float] = []
     smiles: list[str] = []
+    node_feats: list[np.ndarray] | None = [] if with_features else None
+    edge_feats: list[dict[tuple[int, int], np.ndarray]] | None = [] if with_features else None
     for oi in indices:
         g_dict, y = dataset[int(oi)]
         n_nodes = int(g_dict["num_nodes"])
@@ -137,6 +144,20 @@ def load_molhiv(
         labels.append(float(yy[0]))
         if "smiles" in g_dict:
             smiles.append(str(g_dict["smiles"]))
+        if with_features:
+            nf = np.asarray(g_dict["node_feat"], dtype=np.int64)
+            node_feats.append(nf)  # type: ignore[union-attr]
+            ef_map: dict[tuple[int, int], np.ndarray] = {}
+            efeat = np.asarray(g_dict["edge_feat"], dtype=np.int64)
+            src, dst = ei[0], ei[1]
+            for k in range(src.shape[0]):
+                u, v = int(src[k]), int(dst[k])
+                if u == v:
+                    continue
+                key = (u, v) if u < v else (v, u)
+                if key not in ef_map:
+                    ef_map[key] = efeat[k].copy()
+            edge_feats.append(ef_map)  # type: ignore[union-attr]
 
     y_arr = np.asarray(labels, dtype=np.float64)
     n = len(graphs)
@@ -152,6 +173,7 @@ def load_molhiv(
         "n_test": int(len(split["test"])),
         "pos_rate": float(y_arr.mean()) if n else 0.0,
         "subsample_seed": seed if max_graphs is not None else None,
+        "with_features": with_features,
     }
     return MolhivBundle(
         graphs=graphs,
@@ -159,6 +181,8 @@ def load_molhiv(
         split=split,
         smiles=smiles if smiles else None,
         meta=meta,
+        node_feats=node_feats,
+        edge_feats=edge_feats,
     )
 
 
