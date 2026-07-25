@@ -87,4 +87,6 @@
 23. ~~结构-only / 双通道骨架~~ → `run_molhiv_probe.py` · `run_molhiv_dual.py`
 24. ~~装 ogb + 探针~~ → `results/molhiv/MOLHIV_PHASE_SUMMARY.md`
 25. **发现**：n8k 结构-only max test≈0.61 > degree；n3k dual concat **未超** gine_only
-26. **下一步**：全量 scaffold 结构-only + dual ≥3 seeds；结构通道升级
+26. ~~设计消融 n6k~~ → `results/molhiv/DESIGN_VERDICT.md`
+27. **有效**：coverage + max + 小字典 A8T2；残差相对 size +3～4pt valid
+28. **无效**：抬 cover、mean、图级 concat；下一步节点级融合 / patch 语义

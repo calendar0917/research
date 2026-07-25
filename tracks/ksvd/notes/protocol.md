@@ -8,6 +8,7 @@
 | `molhiv-struct-probe-v0` | 结构-only / 池化消融探针 | ROC-AUC（LR on \(s_G\)） | 同 scaffold；train 上 fit D+LR，val 选 pool，test 汇报；**非端到端 GNN** |
 | `graph-level-solid-v0` | 合成图级闭环 | Acc / 过程指标 | C4 等；见 `GRAPH_LEVEL_SOLID_SUMMARY` |
 | `pool-ablation-v0` | mean/max/attn 池化 | Acc | 合成 C4；无 molhiv 依赖 |
+| `molhiv-design-ablation-v0` | 分环节设计消融 | ROC-AUC | scaffold 子采样；valid 排序；须含 size 基线 |
 | `tud-paper-cite` | **仅引用** CIN/GIN 文 | Acc | Xu 10-fold max val；**禁止自跑混入主表当 strict** |
 
 新增协议：复制行改 id，旧 id 永不改定义。
