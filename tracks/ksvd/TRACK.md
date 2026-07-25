@@ -85,4 +85,6 @@
 21. ~~molhiv 阶段计划 + 协议细则~~ → `notes/molhiv_phase.md` · `protocol.md`
 22. ~~MIL attention pool + 合成消融脚本~~ → `ksvd.pool_X` · `run_pool_ablation.py`
 23. ~~结构-only / 双通道骨架~~ → `run_molhiv_probe.py` · `run_molhiv_dual.py`
-24. **下一步**：装 ogb → `run_pool_ablation` → `run_molhiv_probe --max-graphs 2000`
+24. ~~装 ogb + 探针~~ → `results/molhiv/MOLHIV_PHASE_SUMMARY.md`
+25. **发现**：n8k 结构-only max test≈0.61 > degree；n3k dual concat **未超** gine_only
+26. **下一步**：全量 scaffold 结构-only + dual ≥3 seeds；结构通道升级

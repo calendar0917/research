@@ -1,10 +1,9 @@
 """
-Dual-channel skeleton: GINE (attributes) ‖ KSVD s_G (structure) → fusion.
+Dual-channel: GINE (attributes) ‖ KSVD s_G (structure) → fusion.
 
 Protocol parent: ogb-molhiv-v0 (P2).
 
 Requires torch + torch_geometric + ogb.
-If missing, exits with install hint. Structure branch reuses graph_level.
 """
 
 from __future__ import annotations
@@ -36,23 +35,34 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--fusion", type=str, default="concat", choices=["concat", "gate", "gine_only"])
     ap.add_argument("--pool", type=str, default="attn")
-    ap.add_argument("--max-graphs", type=int, default=None, help="smoke limit")
-    ap.add_argument("--struct-cache", type=str, default=None, help="optional .npz of s_G")
+    ap.add_argument("--max-graphs", type=int, default=None, help="smoke subsample size")
+    ap.add_argument("--struct-cache", type=str, default=None)
     ap.add_argument("--device", type=str, default="cpu")
     args = ap.parse_args()
 
     try:
         import torch
+
+        if not getattr(torch.load, "_ksvd_patched", False):
+            _orig_load = torch.load
+
+            def _load(*a, **k):  # type: ignore[no-untyped-def]
+                k.setdefault("weights_only", False)
+                return _orig_load(*a, **k)
+
+            _load._ksvd_patched = True  # type: ignore[attr-defined]
+            torch.load = _load  # type: ignore[assignment]
+
         import torch.nn as nn
         import torch.nn.functional as F
         from ogb.graphproppred import Evaluator, PygGraphPropPredDataset
         from ogb.graphproppred.mol_encoder import AtomEncoder, BondEncoder
+        from torch_geometric.data import Data
         from torch_geometric.loader import DataLoader
         from torch_geometric.nn import GINEConv, global_mean_pool
     except ImportError as e:
         log(f"Missing deps for dual-channel: {e}")
         log("Install: pip install -r tracks/ksvd/configs/requirements-molhiv.txt")
-        log("Plus PyG extensions if needed: https://pytorch-geometric.readthedocs.io/")
         sys.exit(1)
 
     from code.data_molhiv import check_env, load_molhiv
@@ -66,33 +76,29 @@ def main() -> None:
     root = repo / "data" / "ogb"
     root.mkdir(parents=True, exist_ok=True)
 
-    log("Loading PyG ogbg-molhiv...")
-    dataset = PygGraphPropPredDataset(name="ogbg-molhiv", root=str(root))
-    split_idx = dataset.get_idx_split()
-    evaluator = Evaluator(name="ogbg-molhiv")
+    # 1) structure bundle defines which graphs + remapped splits
+    log(f"Loading structure graphs (max_graphs={args.max_graphs})...")
+    bundle = load_molhiv(root=root, max_graphs=args.max_graphs, seed=args.seed)
+    graphs, y_np = bundle.graphs, bundle.y
+    tr = np.asarray(bundle.split["train"], dtype=np.int64)
+    va = np.asarray(bundle.split["valid"], dtype=np.int64)
+    te = np.asarray(bundle.split["test"], dtype=np.int64)
+    log(f"  n={len(graphs)} train/val/test={len(tr)}/{len(va)}/{len(te)} pos={y_np.mean():.4f}")
+    if min(len(tr), len(va), len(te)) < 1:
+        log("ERROR: empty split")
+        sys.exit(1)
 
-    # optional smoke: subset by filtering indices
-    if args.max_graphs is not None:
-        n = min(args.max_graphs, len(dataset))
-        for k in split_idx:
-            split_idx[k] = split_idx[k][split_idx[k] < n]
-        dataset = dataset[:n]
-
-    # --- structure channel s_G (numpy, precompute) ---
+    # 2) s_G
+    tag = f"n{len(graphs)}_pool{args.pool}_seed{args.seed}"
     cache_path = Path(args.struct_cache) if args.struct_cache else (
-        _TRACK / "results" / "molhiv" / f"struct_sg_seed{args.seed}.npz"
+        _TRACK / "results" / "molhiv" / f"struct_sg_{tag}.npz"
     )
     cache_path.parent.mkdir(parents=True, exist_ok=True)
-
-    if cache_path.exists() and args.max_graphs is None:
+    if cache_path.exists():
         log(f"Loading s_G cache {cache_path}")
-        blob = np.load(cache_path)
-        S = blob["S"]
+        S = np.load(cache_path)["S"]
     else:
-        log("Computing structure s_G via CoverageRW-KSVD...")
-        bundle = load_molhiv(root=root, max_graphs=args.max_graphs)
-        graphs = bundle.graphs
-        tr = split_idx["train"].numpy() if hasattr(split_idx["train"], "numpy") else np.asarray(split_idx["train"])
+        log("Computing s_G (CoverageRW-KSVD)...")
         cfg = GraphLevelConfig(
             n_atoms=16,
             T=3,
@@ -103,21 +109,74 @@ def main() -> None:
             max_train_patches=8000,
         )
         D, dinfo = learn_shared_D_graph_level(graphs, tr, cfg, mode="coverage")
-        log(f"  D recon={dinfo.get('recon_rel'):.4f}")
+        log(f"  D recon={dinfo.get('recon_rel'):.4f} patches={dinfo.get('n_patches_used')}")
         rows = []
         for i, g in enumerate(graphs):
             s, _ = encode_graph(g, D, cfg, mode="coverage", seed=args.seed + i * 17)
             rows.append(s)
             if (i + 1) % 500 == 0:
-                log(f"  encoded {i+1}/{len(graphs)}")
+                log(f"  encoded {i + 1}/{len(graphs)}")
         d = max(r.shape[0] for r in rows)
         S = np.zeros((len(rows), d), dtype=np.float32)
         for i, r in enumerate(rows):
             S[i, : r.shape[0]] = r.astype(np.float32)
-        np.savez_compressed(cache_path, S=S, pool=args.pool)
+        np.savez_compressed(cache_path, S=S, pool=np.array(args.pool))
         log(f"  saved {cache_path} shape={S.shape}")
 
-    struct_dim = S.shape[1]
+    struct_dim = int(S.shape[1])
+    S_t = torch.tensor(S, dtype=torch.float32, device=device)
+
+    # 3) PyG attributes — full dataset, map via original indices stored in bundle meta
+    # When subsampled, we re-load full PyG and rebuild by re-querying OGB in same order as load_molhiv
+    log("Loading PyG molhiv for attributes...")
+    pyg = PygGraphPropPredDataset(name="ogbg-molhiv", root=str(root))
+    evaluator = Evaluator(name="ogbg-molhiv")
+
+    # Rebuild original index list the same way as load_molhiv
+    sp = pyg.get_idx_split()
+    tr0 = np.asarray(sp["train"], dtype=np.int64)
+    va0 = np.asarray(sp["valid"], dtype=np.int64)
+    te0 = np.asarray(sp["test"], dtype=np.int64)
+    n_full = len(pyg)
+    if args.max_graphs is not None and args.max_graphs < n_full:
+        rng = np.random.default_rng(args.seed)
+        frac = args.max_graphs / n_full
+        n_tr = max(1, int(round(len(tr0) * frac)))
+        n_va = max(1, int(round(len(va0) * frac)))
+        n_te = max(1, int(round(len(te0) * frac)))
+        total = n_tr + n_va + n_te
+        while total > args.max_graphs and n_tr > 1:
+            n_tr -= 1
+            total -= 1
+        while total < args.max_graphs and n_tr < len(tr0):
+            n_tr += 1
+            total += 1
+        tr_o = rng.choice(tr0, size=min(n_tr, len(tr0)), replace=False)
+        va_o = rng.choice(va0, size=min(n_va, len(va0)), replace=False)
+        te_o = rng.choice(te0, size=min(n_te, len(te0)), replace=False)
+        keep = np.unique(np.concatenate([tr_o, va_o, te_o]))
+        keep.sort()
+    else:
+        keep = np.arange(n_full, dtype=np.int64)
+
+    assert len(keep) == len(graphs), f"index mismatch {len(keep)} vs {len(graphs)}"
+
+    data_list: list[Data] = []
+    for new_i, old_i in enumerate(keep):
+        d = pyg[int(old_i)].clone()
+        d.idx = torch.tensor([new_i], dtype=torch.long)
+        # ensure y is float for BCE
+        d.y = d.y.view(-1).float()
+        data_list.append(d)
+
+    train_set = [data_list[i] for i in tr.tolist()]
+    valid_set = [data_list[i] for i in va.tolist()]
+    test_set = [data_list[i] for i in te.tolist()]
+    log(f"  loaders: {len(train_set)}/{len(valid_set)}/{len(test_set)}")
+
+    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
+    valid_loader = DataLoader(valid_set, batch_size=args.batch_size, shuffle=False)
+    test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
 
     class GINEStack(nn.Module):
         def __init__(self, hidden: int, layers: int):
@@ -134,7 +193,6 @@ def main() -> None:
                 )
                 self.convs.append(GINEConv(mlp, train_eps=True))
                 self.bns.append(nn.BatchNorm1d(hidden))
-            self.hidden = hidden
 
         def forward(self, data):
             x = self.atom_encoder(data.x)
@@ -150,7 +208,6 @@ def main() -> None:
             super().__init__()
             self.gine = GINEStack(hidden, layers)
             self.fusion = fusion
-            self.struct_dim = struct_dim
             if fusion == "gine_only":
                 self.head = nn.Linear(hidden, 1)
             elif fusion == "concat":
@@ -167,92 +224,60 @@ def main() -> None:
             h = self.gine(data)
             if self.fusion == "gine_only":
                 return self.head(h)
-            z = self.struct_proj(s_batch)
+            z = F.relu(self.struct_proj(s_batch))
             if self.fusion == "concat":
                 return self.head(torch.cat([h, z], dim=-1))
             g = torch.sigmoid(self.gate(torch.cat([h, z], dim=-1)))
             return self.head(g * h + (1 - g) * z)
 
-    # attach struct vector into batch via custom collate: store graph index
-    # PyG Data has .idx if we set it
-    for i in range(len(dataset)):
-        dataset[i].idx = i  # may fail if Dataset is not mutable list-like
-
-    # Safer: map via data loader and range
-    # Re-wrap as list of Data with idx
-    data_list = []
-    for i in range(len(dataset)):
-        d = dataset[i]
-        d.idx = torch.tensor([i], dtype=torch.long)
-        data_list.append(d)
-
-    train_idx = split_idx["train"]
-    valid_idx = split_idx["valid"]
-    test_idx = split_idx["test"]
-    if not torch.is_tensor(train_idx):
-        train_idx = torch.tensor(train_idx, dtype=torch.long)
-        valid_idx = torch.tensor(valid_idx, dtype=torch.long)
-        test_idx = torch.tensor(test_idx, dtype=torch.long)
-
-    train_set = [data_list[i] for i in train_idx.tolist()]
-    valid_set = [data_list[i] for i in valid_idx.tolist()]
-    test_set = [data_list[i] for i in test_idx.tolist()]
-
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
-    valid_loader = DataLoader(valid_set, batch_size=args.batch_size, shuffle=False)
-    test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
-
     model = DualModel(args.hidden, args.layers, struct_dim, args.fusion).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=args.lr)
-    S_t = torch.tensor(S, dtype=torch.float32, device=device)
 
     def run_epoch(loader, train: bool):
         model.train(train)
-        total_loss = 0.0
+        total_loss, n_ex = 0.0, 0
         ys, preds = [], []
         for batch in loader:
             batch = batch.to(device)
-            # batch.idx may be (B,) after batching
             idx = batch.idx.view(-1)
             s_batch = S_t[idx]
             out = model(batch, s_batch).view(-1)
             y = batch.y.view(-1).float()
-            # molhiv y may be -1 for missing; mask
-            mask = y == y  # all finite
-            if mask.sum() == 0:
+            # valid labels only (molhiv is single-task 0/1)
+            mask = (y == 0) | (y == 1)
+            if int(mask.sum()) == 0:
                 continue
             loss = F.binary_cross_entropy_with_logits(out[mask], y[mask])
             if train:
                 opt.zero_grad()
                 loss.backward()
                 opt.step()
-            total_loss += float(loss.item()) * int(mask.sum())
-            ys.append(y.detach().cpu())
-            preds.append(out.detach().cpu())
+            n = int(mask.sum())
+            total_loss += float(loss.item()) * n
+            n_ex += n
+            ys.append(y[mask].detach().cpu())
+            preds.append(out[mask].detach().cpu())
+        if not ys:
+            return 0.0, float("nan")
         y_all = torch.cat(ys, dim=0).numpy().reshape(-1, 1)
         p_all = torch.cat(preds, dim=0).sigmoid().numpy().reshape(-1, 1)
-        # filter nan labels
-        m = ~np.isnan(y_all.reshape(-1))
-        input_dict = {"y_true": y_all[m], "y_pred": p_all[m]}
-        auc = evaluator.eval(input_dict)["rocauc"]
-        return total_loss / max(1, len(y_all)), float(auc)
+        auc = float(evaluator.eval({"y_true": y_all, "y_pred": p_all})["rocauc"])
+        return total_loss / max(1, n_ex), auc
 
     best_val, best_test, best_ep = -1.0, -1.0, -1
     history = []
     t0 = time.time()
     for ep in range(1, args.epochs + 1):
-        tr_loss, tr_auc = run_epoch(train_loader, True)
-        va_loss, va_auc = run_epoch(valid_loader, False)
-        te_loss, te_auc = run_epoch(test_loader, False)
-        history.append(
-            {"epoch": ep, "train_auc": tr_auc, "valid_auc": va_auc, "test_auc": te_auc}
-        )
-        if va_auc > best_val:
+        _, tr_auc = run_epoch(train_loader, True)
+        _, va_auc = run_epoch(valid_loader, False)
+        _, te_auc = run_epoch(test_loader, False)
+        history.append({"epoch": ep, "train_auc": tr_auc, "valid_auc": va_auc, "test_auc": te_auc})
+        if va_auc == va_auc and va_auc > best_val:  # not nan
             best_val, best_test, best_ep = va_auc, te_auc, ep
         if ep % 5 == 0 or ep == 1:
             log(
                 f"ep {ep:03d} train={tr_auc:.4f} val={va_auc:.4f} test={te_auc:.4f} "
-                f"best@val → test={best_test:.4f}"
+                f"best@val→test={best_test:.4f}"
             )
 
     results = {
@@ -267,12 +292,22 @@ def main() -> None:
         "layers": args.layers,
         "seed": args.seed,
         "max_graphs": args.max_graphs,
+        "n_used": len(graphs),
+        "n_train": int(len(tr)),
+        "n_valid": int(len(va)),
+        "n_test": int(len(te)),
         "struct_dim": struct_dim,
         "elapsed_sec": round(time.time() - t0, 2),
         "history": history,
         "env": check_env(),
+        "note": "smoke if max_graphs set; not full ogb-molhiv-v0 claim",
     }
-    out = _TRACK / "results" / "molhiv" / f"dual_{args.fusion}_seed{args.seed}.json"
+    out = (
+        _TRACK
+        / "results"
+        / "molhiv"
+        / f"dual_{args.fusion}_{tag}.json"
+    )
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)

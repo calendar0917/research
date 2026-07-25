@@ -43,17 +43,38 @@ def _edges_from_pyg(edge_index: np.ndarray, n: int) -> Graph:
     return from_edges(n, edges)
 
 
+def _patch_torch_load_weights_only() -> None:
+    """OGB pickles need weights_only=False (PyTorch >=2.6 default True)."""
+    try:
+        import torch
+    except ImportError:
+        return
+    if getattr(torch.load, "_ksvd_patched", False):
+        return
+    _orig = torch.load
+
+    def _load(*args, **kwargs):  # type: ignore[no-untyped-def]
+        kwargs.setdefault("weights_only", False)
+        return _orig(*args, **kwargs)
+
+    _load._ksvd_patched = True  # type: ignore[attr-defined]
+    torch.load = _load  # type: ignore[assignment]
+
+
 def load_molhiv(
     root: str | Path | None = None,
     max_graphs: int | None = None,
+    seed: int = 0,
 ) -> MolhivBundle:
     """
     Load ogbg-molhiv with official scaffold split.
 
     root: data directory (default: <repo>/data/ogb)
-    max_graphs: if set, take first N graphs and intersect splits (smoke only).
+    max_graphs: if set, stratified subsample **within each split** (smoke only),
+      remapped to contiguous 0..n_used-1. Preserves train/valid/test.
     """
     try:
+        _patch_torch_load_weights_only()
         from ogb.graphproppred import GraphPropPredDataset
     except ImportError as e:
         raise ImportError(
@@ -69,34 +90,57 @@ def load_molhiv(
     dataset = GraphPropPredDataset(name="ogbg-molhiv", root=str(root))
     split_idx = dataset.get_idx_split()
     n_full = len(dataset)
-    n = n_full if max_graphs is None else min(max_graphs, n_full)
+
+    tr = np.asarray(split_idx["train"], dtype=np.int64)
+    va = np.asarray(split_idx["valid"], dtype=np.int64)
+    te = np.asarray(split_idx["test"], dtype=np.int64)
+
+    if max_graphs is not None and max_graphs < n_full:
+        # keep split proportions, min 1 per split when possible
+        rng = np.random.default_rng(seed)
+        n_tr_full, n_va_full, n_te_full = len(tr), len(va), len(te)
+        frac = max_graphs / n_full
+        n_tr = max(1, int(round(n_tr_full * frac)))
+        n_va = max(1, int(round(n_va_full * frac)))
+        n_te = max(1, int(round(n_te_full * frac)))
+        # adjust to exact max_graphs
+        total = n_tr + n_va + n_te
+        while total > max_graphs and n_tr > 1:
+            n_tr -= 1
+            total -= 1
+        while total < max_graphs and n_tr < n_tr_full:
+            n_tr += 1
+            total += 1
+        tr = rng.choice(tr, size=min(n_tr, n_tr_full), replace=False)
+        va = rng.choice(va, size=min(n_va, n_va_full), replace=False)
+        te = rng.choice(te, size=min(n_te, n_te_full), replace=False)
+        keep = np.unique(np.concatenate([tr, va, te]))
+        keep.sort()
+        old_to_new = {int(o): i for i, o in enumerate(keep)}
+        tr = np.array([old_to_new[int(i)] for i in tr], dtype=np.int64)
+        va = np.array([old_to_new[int(i)] for i in va], dtype=np.int64)
+        te = np.array([old_to_new[int(i)] for i in te], dtype=np.int64)
+        indices = keep
+    else:
+        indices = np.arange(n_full, dtype=np.int64)
+        # tr/va/te already global indices
 
     graphs: list[Graph] = []
     labels: list[float] = []
     smiles: list[str] = []
-    for i in range(n):
-        g_dict, y = dataset[i]
-        # g_dict: edge_index, num_nodes, node_feat, edge_feat, ...
+    for oi in indices:
+        g_dict, y = dataset[int(oi)]
         n_nodes = int(g_dict["num_nodes"])
         ei = np.asarray(g_dict["edge_index"])
         graphs.append(_edges_from_pyg(ei, n_nodes))
-        # y shape (1,) or scalar
         yy = np.asarray(y).reshape(-1)
         labels.append(float(yy[0]))
         if "smiles" in g_dict:
             smiles.append(str(g_dict["smiles"]))
 
     y_arr = np.asarray(labels, dtype=np.float64)
-
-    def _clip(idx: np.ndarray) -> np.ndarray:
-        idx = np.asarray(idx, dtype=np.int64)
-        return idx[idx < n]
-
-    split = {
-        "train": _clip(split_idx["train"]),
-        "valid": _clip(split_idx["valid"]),
-        "test": _clip(split_idx["test"]),
-    }
+    n = len(graphs)
+    split = {"train": tr, "valid": va, "test": te}
     meta = {
         "name": "ogbg-molhiv",
         "n_full": n_full,
@@ -107,6 +151,7 @@ def load_molhiv(
         "n_valid": int(len(split["valid"])),
         "n_test": int(len(split["test"])),
         "pos_rate": float(y_arr.mean()) if n else 0.0,
+        "subsample_seed": seed if max_graphs is not None else None,
     }
     return MolhivBundle(
         graphs=graphs,
