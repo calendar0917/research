@@ -1,0 +1,24 @@
+protocol_id: stage0-sample-v0
+seed: 0
+seeds: [0, 1, 2]
+
+# synthetic graph: ring of n + chords (has cycles)
+graph:
+  type: ring_chords
+  n: 20
+  chords: [[0, 5], [3, 10], [7, 15]]
+
+sampler:
+  # B0: one-hop stars (per-node)
+  # B1: uniform RW p=q=1
+  # M0: biased RW + edge downweight
+  methods: [B0, B1, M0]
+  p: 1.0
+  q: 1.0
+  walk_length: 8
+  max_nodes: 12          # |S| cap m
+  num_walks: 30          # R trajectories (or until cover target unused)
+  edge_decay: 0.7        # gamma; 1.0 = no downweight (B1 uses this override)
+  no_backtrack: true
+
+output_dir: results/stage0

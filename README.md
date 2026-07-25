@@ -1,0 +1,41 @@
+# research — 可增长科研工作台
+
+上层研究框架。旧仓 `../paper` **只读归档**，本目录从零按 track 增长。
+
+## 怎么用
+
+```bash
+# 新建课题（track）
+./scripts/init_track.sh ksvd "KSVD 结构字典学习"
+
+# 日常入口
+cat docs/research_guide.md          # 全局规矩 + 当前进度
+cat tracks/<name>/TRACK.md          # 该课题状态
+```
+
+## 目录
+
+| 路径 | 用途 |
+|------|------|
+| `tracks/` | **增长单元**：每个课题独立 |
+| `docs/` | 人读导航 + 全局文献深读 + 交付物 |
+| `lib/` | 跨轨可复用代码（暂空，需要再填） |
+| `scripts/init_track.sh` | 从模板初始化新课题 |
+| `templates/track/` | 课题脚手架 |
+| `data/` | 大数据集（建议 gitignore） |
+| `artifacts/` | 临时导出 |
+
+## 已有 track
+
+| track | 状态 | 说明 |
+|-------|------|------|
+| [gnn-gsn](tracks/gnn-gsn/TRACK.md) | archived | Kernel–GNN–GSN；实现在 `../paper` |
+| [ksvd](tracks/ksvd/TRACK.md) | **active** | KSVD 结构字典学习 |
+| 录音 | — | [docs/luyin/](docs/luyin/) |
+
+## 原则（短）
+
+1. **Track = 可开可关的研究单元**（问题、协议、结果、状态）
+2. **共享只放无叙事物**（数据加载、协议原语、schema）
+3. **结果不跨轨混表**；跨轨对比单独写 deliverable
+4. **一事一处**；进度只改 guide §进度 与各 `TRACK.md`
