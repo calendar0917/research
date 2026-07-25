@@ -121,30 +121,129 @@ def ksvd(
     return D, X, info
 
 
-def readout_X(X: np.ndarray, mode: str = "basic") -> np.ndarray:
+def mil_attention_weights(
+    X: np.ndarray,
+    seed: int = 0,
+    n_iter: int = 40,
+    lr: float = 0.2,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Instance-level MIL attention over patch columns of X (n_atoms, N).
+
+    Learns w,b so a_j = softmax(w^T tanh(x_j) + b); returns (weights a, attended vec).
+    Unsupervised: maximize attended energy under entropy regularizer (no labels).
+    """
+    n_atoms, N = X.shape
+    if N == 0:
+        return np.zeros(0, dtype=np.float64), np.zeros(n_atoms, dtype=np.float64)
+    if N == 1:
+        return np.ones(1, dtype=np.float64), X[:, 0].copy()
+
+    rng = np.random.default_rng(seed)
+    # features for score: tanh of coefficients
+    H = np.tanh(X)  # (k, N)
+    w = rng.standard_normal(n_atoms) * 0.1
+    b = 0.0
+    for _ in range(n_iter):
+        scores = w @ H + b  # (N,)
+        scores = scores - scores.max()
+        exp_s = np.exp(scores)
+        a = exp_s / (exp_s.sum() + 1e-12)
+        # objective: attended ||x||^2 + small entropy (prefer peaked)
+        # dL/dscores via soft attention
+        att = X @ a  # (k,)
+        energy = float(att @ att)
+        # encourage energy of attended vector
+        # grad wrt a ≈ 2 (X^T att); through softmax
+        g_a = 2.0 * (X.T @ att)  # (N,)
+        # entropy bonus on a: +eps * (-sum a log a) → prefer less flat
+        eps = 0.05
+        g_a = g_a - eps * (np.log(a + 1e-12) + 1.0)
+        # softmax Jacobian: da_i/ds_j
+        # g_s = a ⊙ (g_a - 1^T (a ⊙ g_a))
+        g_s = a * (g_a - float(a @ g_a))
+        g_w = H @ g_s
+        g_b = float(g_s.sum())
+        w = w + lr * g_w
+        b = b + lr * g_b
+        # light weight decay
+        w *= 0.999
+
+    scores = w @ H + b
+    scores = scores - scores.max()
+    exp_s = np.exp(scores)
+    a = exp_s / (exp_s.sum() + 1e-12)
+    att = X @ a
+    return a.astype(np.float64), att.astype(np.float64)
+
+
+def pool_X(
+    X: np.ndarray,
+    pool: str = "mean",
+    seed: int = 0,
+) -> np.ndarray:
+    """
+    Pool patch coefficients X (n_atoms, N) → graph vector base.
+
+    pool:
+      mean | max | sum — elementwise over patches
+      attn | mil — MIL attention (unsupervised), returns attended x + a-stats
+    """
+    absX = np.abs(X)
+    n_atoms, N = X.shape
+    if N == 0:
+        return np.zeros(n_atoms * 3, dtype=np.float64)
+
+    pool = pool.lower()
+    if pool in ("attn", "mil"):
+        a, att = mil_attention_weights(X, seed=seed)
+        # attended coef + usage of top instances + entropy of a
+        top_k = min(3, N)
+        top_idx = np.argsort(-a)[:top_k]
+        top_x = absX[:, top_idx].mean(axis=1) if top_k else np.zeros(n_atoms)
+        ent = float(-(a * np.log(a + 1e-12)).sum()) if N else 0.0
+        peak = float(a.max()) if N else 0.0
+        return np.concatenate([att, top_x, np.array([ent, peak, float(N)], dtype=np.float64)])
+    if pool == "max":
+        return absX.max(axis=1)
+    if pool == "sum":
+        return absX.sum(axis=1)
+    # mean default
+    return absX.mean(axis=1)
+
+
+def readout_X(X: np.ndarray, mode: str = "basic", pool: str = "mean", seed: int = 0) -> np.ndarray:
     """
     Graph-level vector from coefficient matrix (n_atoms, n_samples).
     mode:
       basic — mean|x|, max|x|, usage
       rich  — + std, sum, energy, quantiles per atom, top-atom soft histogram
+      pool  — use pool_X only (for ablating mean/max/attn)
+    pool: mean|max|sum|attn (used when mode=='pool' or appended in rich+attn)
     """
     absX = np.abs(X)
-    mean_abs = absX.mean(axis=1)
-    max_abs = absX.max(axis=1)
-    usage = (absX > 1e-10).mean(axis=1)
+    n_atoms, N = X.shape
+    if mode == "pool":
+        return pool_X(X, pool=pool, seed=seed)
+
+    mean_abs = absX.mean(axis=1) if N else np.zeros(n_atoms)
+    max_abs = absX.max(axis=1) if N else np.zeros(n_atoms)
+    usage = (absX > 1e-10).mean(axis=1) if N else np.zeros(n_atoms)
     if mode == "basic":
         return np.concatenate([mean_abs, max_abs, usage])
-    std_abs = absX.std(axis=1)
-    sum_abs = absX.sum(axis=1)
-    energy = (X**2).mean(axis=1)
-    q25 = np.quantile(absX, 0.25, axis=1)
-    q75 = np.quantile(absX, 0.75, axis=1)
-    # soft assignment histogram: which atom dominates each column
-    n_atoms, N = X.shape
+
+    std_abs = absX.std(axis=1) if N else np.zeros(n_atoms)
+    sum_abs = absX.sum(axis=1) if N else np.zeros(n_atoms)
+    energy = (X**2).mean(axis=1) if N else np.zeros(n_atoms)
+    q25 = np.quantile(absX, 0.25, axis=1) if N else np.zeros(n_atoms)
+    q75 = np.quantile(absX, 0.75, axis=1) if N else np.zeros(n_atoms)
     hist = np.zeros(n_atoms, dtype=np.float64)
     if N > 0:
         winners = np.argmax(absX, axis=0)
         for j in winners:
             hist[j] += 1.0
         hist /= N
-    return np.concatenate([mean_abs, max_abs, usage, std_abs, sum_abs, energy, q25, q75, hist])
+    base = np.concatenate([mean_abs, max_abs, usage, std_abs, sum_abs, energy, q25, q75, hist])
+    if pool in ("attn", "mil"):
+        return np.concatenate([base, pool_X(X, pool="attn", seed=seed)])
+    return base

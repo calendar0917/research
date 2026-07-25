@@ -1,0 +1,23 @@
+protocol_id: ogb-molhiv-v0
+data_root: ../../../data/ogb
+# sampler / KSVD (aligned with graph_level defaults)
+p: 0.5
+q: 2.0
+walk_length: 8
+max_nodes: 8
+max_walks: 12
+edge_decay: 0.7
+seed_policy: degree_stratified
+cover_target: 0.95
+n_atoms: 16
+T: 3
+T_min: 2
+ksvd_iter: 6
+readout_mode: rich
+pool: mean  # mean | max | attn
+seed: 0
+max_train_patches: 8000
+# probe controls
+max_graphs: null  # null = full; set e.g. 2000 for smoke
+mode: structure_only  # structure_only | check_only
+pools: [mean, max, attn]

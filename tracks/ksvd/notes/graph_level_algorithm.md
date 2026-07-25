@@ -18,6 +18,7 @@
 6. **学字典**（仅 train 图）：所有 patch 向量堆成 \(Y\)，KSVD 得 \(D\)（atoms=12, T=3）  
 7. **编码一图**：同样采样得 \(Y_g\)，\(x_j=\mathrm{OMP}(D,y_j)\)，  
    \(s_G = \mathrm{readout}(X)\) 拼 energy/usage（录音「能量」）  
+   - 池化可选：`mean` / `max` / **`attn`（MIL attention）** — `ksvd.pool_X`  
 8. **分类**：\(s_G\) → 标准化 + LogisticRegression  
 
 ## 过程指标（图级）

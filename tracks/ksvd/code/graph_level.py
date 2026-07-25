@@ -43,7 +43,8 @@ class GraphLevelConfig:
     T: int = 3
     T_min: int = 2
     ksvd_iter: int = 6
-    readout_mode: str = "rich"
+    readout_mode: str = "rich"  # basic | rich | pool
+    pool: str = "mean"  # mean | max | sum | attn (MIL)
     seed: int = 0
     order_mode: str = "bfs"
     max_train_patches: int = 6000
@@ -187,12 +188,14 @@ def encode_graph(
             for c, k in zip(coef, top):
                 x[k] = c
         X[:, j] = x
-    # energy-style readout (luyin10)
-    emb = readout_X(X, mode=cfg.readout_mode)
-    # also explicit energy vector
+    # energy-style readout (luyin10); pool=attn for MIL
+    emb = readout_X(X, mode=cfg.readout_mode, pool=cfg.pool, seed=cfg.seed)
     energy = (X**2).sum(axis=1)
     usage = (np.abs(X) > 1e-10).mean(axis=1)
-    s = np.concatenate([emb, energy, usage])
+    if cfg.readout_mode == "pool":
+        s = emb
+    else:
+        s = np.concatenate([emb, energy, usage])
     R = Y - D @ X
     recon = float(np.linalg.norm(R) / (np.linalg.norm(Y) + 1e-12))
     meta = {
@@ -200,6 +203,8 @@ def encode_graph(
         **ymeta,
         "recon_rel": recon,
         "emb_dim": int(s.shape[0]),
+        "readout_mode": cfg.readout_mode,
+        "pool": cfg.pool,
     }
     return s, meta
 

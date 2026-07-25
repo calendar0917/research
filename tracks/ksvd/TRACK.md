@@ -40,7 +40,8 @@
 | 精读 / RW 调研 / CIN 协议 | **done** |
 | 执行计划 | [notes/plan.md](notes/plan.md) |
 | **阶段 0–3 烟测** | **done** → `results/SUMMARY.md` · `results/full_pipeline.json` |
-| molhiv 主对标 | 未跑（缺 ogb） |
+| molhiv 主对标 | **P0/P1 骨架已就绪**（`run_molhiv_probe` / `run_molhiv_dual`）；缺依赖时需装 ogb |
+| 池化 / 融合阶段 | **进行中** → `notes/molhiv_phase.md` |
 | 交付 | 摘要已写；正式论文表未做 |
 
 ## 入口
@@ -81,3 +82,7 @@
 18. ~~图级取样做实~~ → `GRAPH_LEVEL_SOLID_SUMMARY.md` · `notes/graph_level_algorithm.md`
 19. ~~交互可视化 HTML~~ → `results/viz_pipeline/index.html`
 20. 与导师对报告；分子下游后置
+21. ~~molhiv 阶段计划 + 协议细则~~ → `notes/molhiv_phase.md` · `protocol.md`
+22. ~~MIL attention pool + 合成消融脚本~~ → `ksvd.pool_X` · `run_pool_ablation.py`
+23. ~~结构-only / 双通道骨架~~ → `run_molhiv_probe.py` · `run_molhiv_dual.py`
+24. **下一步**：装 ogb → `run_pool_ablation` → `run_molhiv_probe --max-graphs 2000`
