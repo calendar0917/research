@@ -1,0 +1,47 @@
+protocol_id: mentor-r2-atom-topo-k64-s8-all-centers-development
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  max_graphs: 8000
+  subsample_seed: 0
+
+sampler:
+  mode: radius2_atom_topo
+  radius: 2
+  p: 0.5
+  q: 2.0
+  walk_length: 8
+  max_nodes: 8
+  max_walks: 8
+  edge_decay: 0.7
+  seed_policy: degree_stratified
+  cover_target: 0.9
+  no_backtrack: true
+  patch_feat: topo
+  normalize_patches: true
+  max_patches_per_graph: null
+
+dictionary:
+  n_atoms: 64
+  sparsity: 8
+  minimum_sparsity: 2
+  iterations: 6
+  seed: 0
+  max_train_patches: 24000
+  allow_overcomplete: true
+
+classifier:
+  seeds: [0, 1, 2]
+  evaluate_test: false
+  n_estimators: 300
+  max_depth: 5
+  learning_rate: 0.05
+  min_child_weight: 5
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_lambda: 1.0
+  reg_alpha: 0.0
+  n_jobs: -1
+
+views: [s, r_raw, r_init, r_final, s_r_raw, s_r_init, s_r_final]

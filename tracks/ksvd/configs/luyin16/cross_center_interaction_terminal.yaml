@@ -1,0 +1,84 @@
+protocol_id: luyin16-molhiv-cross-center-interaction-terminal-valid-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+  frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  dev_interaction_cache: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/dev_features_true_v1.npz
+
+representation:
+  radius: 2
+  wl_rounds: 2
+  node_role_bins: 64
+  edge_role_bins: 32
+  typed_edge_bins: 256
+  max_centers_per_graph: null
+
+feature_seed: 20260941
+pca_rank: 8
+
+# Search is performed on the three official-train scaffold folds only.  The
+# official validation rows are touched once, after this search is complete.
+tuning:
+  n_trials: 16
+  seed: 20260942
+  n_jobs: 8
+  ranges:
+    n_estimators: [100, 600]
+    max_depth: [2, 7]
+    learning_rate: [0.015, 0.12]
+    min_child_weight: [2.0, 50.0]
+    subsample: [0.65, 1.0]
+    colsample_bytree: [0.35, 1.0]
+    reg_lambda: [0.3, 150.0]
+    reg_alpha: [0.00001, 15.0]
+    gamma: [0.0, 5.0]
+  view_static:
+    s:
+      max_bin: 256
+    s_marginal:
+      max_bin: 256
+    s_cross_cov:
+      max_bin: 256
+    s_binding:
+      max_bin: 256
+    s_both:
+      max_bin: 256
+  warm_start_params:
+    - n_estimators: 100
+      max_depth: 3
+      learning_rate: 0.05
+      min_child_weight: 8
+      subsample: 0.85
+      colsample_bytree: 0.80
+      reg_lambda: 10.0
+      reg_alpha: 0.01
+      gamma: 0.0
+    - n_estimators: 420
+      max_depth: 7
+      learning_rate: 0.0288815572
+      min_child_weight: 11
+      subsample: 0.7669478928
+      colsample_bytree: 0.7852959683
+      reg_lambda: 29.1674476974
+      reg_alpha: 0.09251054396
+      gamma: 0.0
+
+classifier:
+  n_estimators: 100
+  max_depth: 3
+  learning_rate: 0.05
+  min_child_weight: 8
+  subsample: 0.85
+  colsample_bytree: 0.80
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  gamma: 0.0
+  n_jobs: 8
+
+model_seeds: [0, 1, 2, 3, 4]
+
+search_checkpoint_json: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/search_checkpoint.json
+output_json: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/summary.json
+output_markdown: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/summary.md

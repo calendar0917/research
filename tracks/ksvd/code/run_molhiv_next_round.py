@@ -311,30 +311,9 @@ def run_A_node_gate(max_graphs: int, seed: int, epochs: int, out: dict) -> None:
     graph_S_arr = np.stack(graph_S, axis=0).astype(np.float32)
     struct_dim = int(graph_S_arr.shape[1])
 
-    # PyG subset aligned with load_molhiv
+    # PyG subset aligned exactly with load_molhiv's original indices.
     pyg = PygGraphPropPredDataset(name="ogbg-molhiv", root=str(root))
-    sp = pyg.get_idx_split()
-    tr0 = np.asarray(sp["train"])
-    va0 = np.asarray(sp["valid"])
-    te0 = np.asarray(sp["test"])
-    n_full = len(pyg)
-    frac = max_graphs / n_full
-    rng = np.random.default_rng(seed)
-    n_tr = max(1, int(round(len(tr0) * frac)))
-    n_va = max(1, int(round(len(va0) * frac)))
-    n_te = max(1, int(round(len(te0) * frac)))
-    total = n_tr + n_va + n_te
-    while total > max_graphs and n_tr > 1:
-        n_tr -= 1
-        total -= 1
-    while total < max_graphs and n_tr < len(tr0):
-        n_tr += 1
-        total += 1
-    tr_o = rng.choice(tr0, min(n_tr, len(tr0)), False)
-    va_o = rng.choice(va0, min(n_va, len(va0)), False)
-    te_o = rng.choice(te0, min(n_te, len(te0)), False)
-    keep = np.unique(np.concatenate([tr_o, va_o, te_o]))
-    keep.sort()
+    keep = np.asarray(bundle.meta["original_indices"], dtype=np.int64)
     assert len(keep) == len(graphs)
 
     data_list = []

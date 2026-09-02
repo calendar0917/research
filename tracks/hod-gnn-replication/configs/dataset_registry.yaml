@@ -1,0 +1,93 @@
+# dataset_registry.yaml
+# 数据集元数据
+
+datasets:
+  zinc-12k:
+    task: graph_regression
+    metric: MAE
+    direction: lower
+    num_graphs: 12000
+    split: "fixed pre-defined (train: 10000, valid: 1000, test: 1000)"
+    node_features: "atomic number (28 categories)"
+    edge_features: "bond type (4 categories)"
+    source: "https://github.com/graphdeeplearning/benchmarking-gnns"
+    data_version: "ZINC-12K"
+    official_preprocessing: true
+    test_labels_used_for_tuning: false
+    paper_epochs: 2000
+    paper_batch_size: 32
+
+  moltox21:
+    task: binary_classification (12 tasks)
+    metric: ROC-AUC
+    direction: higher
+    num_graphs: 7831
+    split: "scaffold (train: 6264, valid: 783, test: 784)"
+    node_features: "9-dim (atomic number, chirality, etc.)"
+    edge_features: "3-dim (bond type, stereo, conjugation)"
+    source: "ogb"
+    data_version: "ogbg-moltox21"
+    official_preprocessing: true
+    test_labels_used_for_tuning: false
+    paper_epochs: 100
+    paper_batch_size: 32
+
+  molbace:
+    task: binary_classification
+    metric: ROC-AUC
+    direction: higher
+    num_graphs: 1513
+    split: "scaffold (train: 1210, valid: 151, test: 152)"
+    node_features: "9-dim"
+    edge_features: "3-dim"
+    source: "ogb"
+    data_version: "ogbg-molbace"
+    official_preprocessing: true
+    test_labels_used_for_tuning: false
+    paper_epochs: 100
+    paper_batch_size: 32
+
+  molhiv:
+    task: binary_classification
+    metric: ROC-AUC
+    direction: higher
+    num_graphs: 41127
+    split: "scaffold (train: 32901, valid: 4113, test: 4113)"
+    node_features: "9-dim"
+    edge_features: "3-dim"
+    source: "ogb"
+    data_version: "ogbg-molhiv"
+    official_preprocessing: true
+    test_labels_used_for_tuning: false
+    paper_epochs: 100
+    paper_batch_size: 128
+
+  peptides-func:
+    task: multi_label_classification (10 tasks)
+    metric: Average Precision
+    direction: higher
+    num_graphs: 15535
+    split: "LRGB official (train: 12431, valid: 1553, test: 1551)"
+    node_features: "9-dim (one-hot of atom types)"
+    edge_features: "3-dim (bond type)"
+    source: "LRGB (Long Range Graph Benchmark)"
+    data_version: "peptides-functional"
+    official_preprocessing: true
+    test_labels_used_for_tuning: false
+    paper_epochs: 250
+    paper_batch_size: 32
+
+  peptides-struct:
+    task: multi_target_regression (11 targets)
+    metric: MAE
+    direction: lower
+    num_graphs: 15535
+    split: "LRGB official (train: 12431, valid: 1553, test: 1551)"
+    node_features: "9-dim"
+    edge_features: "3-dim"
+    source: "LRGB (Long Range Graph Benchmark)"
+    data_version: "peptides-structural"
+    official_preprocessing: true
+    test_labels_used_for_tuning: false
+    paper_epochs: 250
+    paper_batch_size: 32

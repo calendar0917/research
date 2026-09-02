@@ -1,0 +1,68 @@
+protocol_id: mentor-t-readout-ablation-k64-s8-smoke-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  max_graphs: 300
+  subsample_seed: 0
+
+sampler:
+  mode: coverage
+  p: 0.5
+  q: 2.0
+  walk_length: 8
+  max_nodes: 8
+  max_walks: 8
+  edge_decay: 0.7
+  seed_policy: degree_stratified
+  cover_target: 0.9
+  no_backtrack: true
+  patch_feat: topo
+  normalize_patches: true
+  max_patches_per_graph: 8
+
+dictionary:
+  n_atoms: 64
+  sparsity: 8
+  minimum_sparsity: 1
+  iterations: 2
+  seed: 0
+  max_train_patches: 1200
+
+classifier:
+  seeds: [0]
+  evaluate_test: false
+  n_estimators: 50
+  max_depth: 4
+  learning_rate: 0.08
+  min_child_weight: 2
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_lambda: 1.0
+  reg_alpha: 0.0
+  n_jobs: -1
+
+views:
+  - s
+  - t_init_raw
+  - t_final_raw
+  - t_init_reconstruction
+  - t_final_reconstruction
+  - t_init_atom_signed
+  - t_final_atom_signed
+  - t_init_code_mean
+  - t_final_code_mean
+  - t_init_abs_code_mean
+  - t_final_abs_code_mean
+  - t_init_rich_code
+  - t_final_rich_code
+  - t_init_residual_abs
+  - t_final_residual_abs
+  - s_t_init_raw
+  - s_t_final_raw
+  - s_t_init_reconstruction
+  - s_t_final_reconstruction
+  - s_t_init_rich_code
+  - s_t_final_rich_code
+  - s_t_init_residual_abs
+  - s_t_final_residual_abs

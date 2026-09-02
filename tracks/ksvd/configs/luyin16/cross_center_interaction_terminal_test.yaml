@@ -1,0 +1,27 @@
+protocol_id: luyin16-molhiv-cross-center-interaction-controlled-test-v1
+
+# This file is intentionally separate from the frozen validation-search
+# configuration.  Changing the latter would invalidate its recorded hash.
+source:
+  config: tracks/ksvd/configs/luyin16/cross_center_interaction_terminal.yaml
+  result_json: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/summary.json
+  runner: tracks/ksvd/experiments/luyin16/cross_center_interaction_terminal.py
+  interaction_encoder: tracks/ksvd/experiments/luyin16/cross_center_interaction_screen.py
+
+data:
+  root: data/ogb
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+  frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  dev_interaction_cache: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/dev_features_true_v1.npz
+  test_interaction_cache: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/test_features_true_v1.npz
+
+pca_rank: 8
+model_seeds: [0, 1, 2, 3, 4]
+
+output_json: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/test_summary.json
+output_markdown: tracks/ksvd/results/luyin16/CROSS_CENTER_INTERACTION_OFFICIAL_TEST_20260902.md
+
+# Sensitivity control: keep the train-only PCA coordinate system frozen while
+# refitting the classifier on official-train+valid labels.
+pca_control_output_json: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/test_pca_control.json
+pca_control_output_markdown: tracks/ksvd/results/luyin16/CROSS_CENTER_INTERACTION_TEST_PCA_CONTROL_20260902.md

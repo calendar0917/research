@@ -1,0 +1,36 @@
+# environment-lock.yml
+# HOD-GNN 基线复现审计环境锁定
+# 注意：各方法官方代码对 Python/PyTorch/PyG 版本有不同要求
+# 建议为每个方法创建独立 conda 环境，或使用 docker 镜像
+# 本文件记录各方法官方环境规格
+
+# 方法 1: GPS (GraphGPS)
+# conda create -n graphgps python=3.10
+# conda install pytorch=1.13 torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+# conda install pyg=2.2 -c pyg -c conda-forge
+# pip install pyg-lib -f https://data.pyg.org/whl/torch-1.13.0+cu117.html
+# pip install pytorch-lightning yacs torchmetrics performer-pytorch tensorboardX ogb wandb
+# conda install openbabel fsspec rdkit -c conda-forge (optional for PCQM4M)
+
+# 方法 2: GraphViT
+# conda create -n graph_mlpmixer python=3.8
+# conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
+# conda install -c pyg pytorch-sparse pytorch-scatter pytorch-cluster pyg
+# pip install ogb rdkit yacs tensorboard networkx einops
+# conda install -c conda-forge metis
+# pip install metis
+
+# 方法 3-5: Full/Random/Policy-Learn
+# 使用 docker 镜像 (见 policy-learn/docker/)
+# 依赖: torch, torch-geometric, ogb, hydra, wandb, einops, numpy
+
+# 本机环境 (2026-08-24)
+# Python: 3.14.7
+# 包管理器: uv 0.12.5
+# GPU: 无 (nvidia-smi not found)
+# 注意: Python 3.14 极为新，PyTorch 可能尚未发布兼容版本
+# 实施时需降级到 Python 3.10/3.8 或使用官方 docker 镜像
+
+# 锁文件格式说明:
+# 每个方法应有独立环境，避免依赖冲突
+# 建议执行顺序: 先尝试官方 docker 镜像，其次 conda 环境，最后 uv/pip

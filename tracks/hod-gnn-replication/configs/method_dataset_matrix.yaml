@@ -1,0 +1,52 @@
+# method_dataset_matrix.yaml
+# 方法 × 数据集 实验矩阵
+# 只复现 HOD-GNN 论文实际报告过的表格单元
+# ✓ = 需要运行, – = 论文未报告 (不补跑)
+
+matrix:
+  gps:
+    zinc-12k: { run: true,  metric: MAE,     direction: lower }
+    moltox21: { run: true,  metric: roc_auc, direction: higher }
+    molbace:  { run: false, note: "– in paper table" }
+    molhiv:   { run: true,  metric: roc_auc, direction: higher }
+    peptides-func:  { run: false, note: "– in paper table" }
+    peptides-struct: { run: false, note: "– in paper table" }
+
+  graphvit:
+    zinc-12k: { run: true,  metric: MAE,     direction: lower }
+    moltox21: { run: true,  metric: roc_auc, direction: higher }
+    molbace:  { run: false, note: "– in paper table" }
+    molhiv:   { run: true,  metric: roc_auc, direction: higher }
+    peptides-func:  { run: true,  metric: average_precision, direction: higher }
+    peptides-struct: { run: true,  metric: MAE, direction: lower }
+
+  full:
+    zinc-12k: { run: true,  metric: MAE,     direction: lower }
+    moltox21: { run: true,  metric: roc_auc, direction: higher }
+    molbace:  { run: true,  metric: roc_auc, direction: higher }
+    molhiv:   { run: true,  metric: roc_auc, direction: higher }
+    peptides-func:  { run: false, note: "– in paper table" }
+    peptides-struct: { run: false, note: "– in paper table" }
+
+  random:
+    zinc-12k: { run: true,  metric: MAE,     direction: lower }
+    moltox21: { run: true,  metric: roc_auc, direction: higher }
+    molbace:  { run: true,  metric: roc_auc, direction: higher }
+    molhiv:   { run: true,  metric: roc_auc, direction: higher }
+    peptides-func:  { run: false, note: "– in paper table" }
+    peptides-struct: { run: false, note: "– in paper table" }
+
+  policy_learn:
+    zinc-12k: { run: true,  metric: MAE,     direction: lower }
+    moltox21: { run: true,  metric: roc_auc, direction: higher }
+    molbace:  { run: true,  metric: roc_auc, direction: higher }
+    molhiv:   { run: true,  metric: roc_auc, direction: higher }
+    peptides-func:  { run: true,  metric: average_precision, direction: higher }
+    peptides-struct: { run: true,  metric: MAE, direction: lower }
+
+protocols:
+  - paper-seeds-provisional
+  - official-seeds
+
+# 总运行数: 28 = 5 方法 × 6 数据集 - 7 个不运行单元
+# 每协议 28 个单元 × 4 seeds = 112 运行 × 2 协议 = 224 运行

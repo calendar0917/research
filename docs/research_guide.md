@@ -37,12 +37,15 @@
 |-------|------|------|
 | gnn-gsn | **archived** | 双协议图分类 + 官方 GSN；[TRACK](../tracks/gnn-gsn/TRACK.md)；实现 `../paper` |
 | ksvd | **active** | 定义 + [RW 调研 v0.1](../tracks/ksvd/notes/rw_survey.md)；[TRACK](../tracks/ksvd/TRACK.md) |
+| hod-gnn-replication | **active** | HOD-GNN 基线复现审计；[TRACK](../tracks/hod-gnn-replication/TRACK.md)；独立官方环境 |
 
 ### 下一步
 
-1. ksvd：图级取样已做实 `results/GRAPH_LEVEL_SOLID_SUMMARY.md`（C4 闭环 coverage>B0）  
-2. 需要 GNN 数字 → `../paper` xlsx/registry（不拷进本仓主表）  
-3. 录音 → `docs/luyin/`（KSVD 深化主来源：`luyin10`；机制：`luyin3`/`luyin4`）  
+1. ksvd：图级取样已做实 `results/GRAPH_LEVEL_SOLID_SUMMARY.md`（C4 闭环 coverage>B0）
+2. ksvd：进入 `luyin16` 结构独立性、泄漏和长距离诊断阶段
+3. hod-gnn-replication：按 `TRACK.md` 维护 paper-seeds 与 official-seeds 两套协议
+4. 需要历史 GNN 数字 → `../paper` xlsx/registry（不拷进本仓主表）
+5. 录音 → `docs/luyin/`（当前 KSVD 阶段主来源：`luyin16`；历史机制：`luyin10`、`luyin3`/`luyin4`）
 
 
 ---

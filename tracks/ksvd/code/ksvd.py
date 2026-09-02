@@ -38,6 +38,9 @@ def ksvd(
     n_iter: int = 10,
     seed: int = 0,
     T_min: int = 2,
+    initial_dictionary: np.ndarray | None = None,
+    coherence_step: float = 0.0,
+    anchor_strength: float = 0.0,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """
     Sparse dictionary learning (K-SVD style).
@@ -46,20 +49,45 @@ def ksvd(
     """
     rng = np.random.default_rng(seed)
     n, N = Y.shape
-    n_atoms = min(n_atoms, max(n, 2), max(N, 2))
+    if initial_dictionary is None:
+        n_atoms = min(n_atoms, max(n, 2), max(N, 2))
+    else:
+        n_atoms = int(n_atoms)
+        if n_atoms < 1:
+            raise ValueError("n_atoms must be positive")
     T = max(T, T_min)
     T = min(T, n_atoms)
+    if not np.isfinite(coherence_step) or coherence_step < 0.0:
+        raise ValueError("coherence_step must be finite and non-negative")
+    if not np.isfinite(anchor_strength) or not 0.0 <= anchor_strength < 1.0:
+        raise ValueError("anchor_strength must be finite and in [0, 1)")
 
-    # init: random columns from Y + noise, normalize
-    idx = rng.choice(N, size=n_atoms, replace=N < n_atoms)
-    D = Y[:, idx].astype(np.float64).copy()
-    D += 1e-3 * rng.standard_normal(D.shape)
+    # Default initialization matches the historical implementation exactly.
+    # A supplied dictionary enables deterministic warm starts without changing
+    # the subsequent sparse coding or atom-wise K-SVD updates.
+    if initial_dictionary is None:
+        idx = rng.choice(N, size=n_atoms, replace=N < n_atoms)
+        D = Y[:, idx].astype(np.float64).copy()
+        D += 1e-3 * rng.standard_normal(D.shape)
+        initialization = "random_training_columns"
+    else:
+        supplied = np.asarray(initial_dictionary, dtype=np.float64)
+        if supplied.shape != (n, n_atoms):
+            raise ValueError(
+                "initial_dictionary must have shape "
+                f"{(n, n_atoms)}, got {supplied.shape}"
+            )
+        if not np.all(np.isfinite(supplied)):
+            raise ValueError("initial_dictionary contains non-finite values")
+        D = supplied.copy()
+        initialization = "provided"
     for j in range(n_atoms):
         nj = norm(D[:, j])
         if nj < 1e-12:
             D[:, j] = rng.standard_normal(n)
             nj = norm(D[:, j])
         D[:, j] /= nj
+    anchor_dictionary = D.copy() if anchor_strength > 0.0 else None
 
     X = np.zeros((n_atoms, N), dtype=np.float64)
     errs: list[float] = []
@@ -104,11 +132,70 @@ def ksvd(
                 D[:, j] /= nj
                 X[j, :] *= nj
 
+        # Optional empirical-anchor proximal regularization.  Atom indices are
+        # inherited from the initialization throughout sequential K-SVD; sign
+        # alignment removes the rank-one SVD sign ambiguity before shrinking
+        # each learned atom toward its original real training patch.
+        if anchor_strength > 0.0:
+            assert anchor_dictionary is not None
+            for j in range(n_atoms):
+                anchor = anchor_dictionary[:, j]
+                if float(D[:, j] @ anchor) < 0.0:
+                    anchor = -anchor
+                D[:, j] = (
+                    (1.0 - anchor_strength) * D[:, j]
+                    + anchor_strength * anchor
+                )
+                nj = norm(D[:, j])
+                if nj < 1e-12:
+                    raise RuntimeError(
+                        "anchor update produced a degenerate atom"
+                    )
+                D[:, j] /= nj
+
+        # Optional projected gradient step on the off-diagonal Gram penalty.
+        # The zero-step path deliberately skips this entire block so historical
+        # dictionaries and sparse codes remain byte-identical.
+        if coherence_step > 0.0 and n_atoms > 1:
+            gram_offdiag = D.T @ D
+            np.fill_diagonal(gram_offdiag, 0.0)
+            D = D - coherence_step * (D @ gram_offdiag)
+            for j in range(n_atoms):
+                nj = norm(D[:, j])
+                if nj < 1e-12:
+                    raise RuntimeError(
+                        "incoherence update produced a degenerate atom"
+                    )
+                D[:, j] /= nj
+
+        if anchor_strength > 0.0 or coherence_step > 0.0:
+            for i in range(N):
+                X[:, i] = _omp(D, Y[:, i], T)
+                if np.count_nonzero(np.abs(X[:, i]) > 1e-10) < T_min:
+                    corr = np.abs(D.T @ Y[:, i])
+                    top = np.argsort(-corr)[:T_min]
+                    Ds = D[:, top]
+                    coef, _, _, _ = np.linalg.lstsq(Ds, Y[:, i], rcond=None)
+                    X[:, i] = 0.0
+                    for c, atom in zip(coef, top):
+                        X[atom, i] = c
+
+        R = Y - D @ X
+        errs.append(float(norm(R, "fro") / max(norm(Y, "fro"), 1e-12)))
+
+    # For a zero-update control, still report the OMP reconstruction of the
+    # supplied initialization.  The dictionary itself is left unchanged.
+    if n_iter == 0:
+        for i in range(N):
+            X[:, i] = _omp(D, Y[:, i], T)
         R = Y - D @ X
         errs.append(float(norm(R, "fro") / max(norm(Y, "fro"), 1e-12)))
 
     atoms_used = int(np.sum(np.any(np.abs(X) > 1e-10, axis=1)))
     nnz_per = np.array([np.count_nonzero(np.abs(X[:, i]) > 1e-10) for i in range(N)])
+    gram_absolute = np.abs(D.T @ D)
+    offdiagonal_mask = ~np.eye(n_atoms, dtype=bool)
+    offdiagonal = gram_absolute[offdiagonal_mask]
     info = {
         "recon_rel": errs[-1] if errs else 1.0,
         "recon_curve": errs,
@@ -117,6 +204,23 @@ def ksvd(
         "n_atoms": n_atoms,
         "T": T,
         "n_iter": n_iter,
+        "initialization": initialization,
+        "coherence_step": float(coherence_step),
+        "anchor_strength": float(anchor_strength),
+        "mean_absolute_anchor_cosine": (
+            float(np.mean(np.abs(np.sum(D * anchor_dictionary, axis=0))))
+            if anchor_dictionary is not None else None
+        ),
+        "minimum_absolute_anchor_cosine": (
+            float(np.min(np.abs(np.sum(D * anchor_dictionary, axis=0))))
+            if anchor_dictionary is not None else None
+        ),
+        "mean_absolute_offdiagonal_coherence": (
+            float(offdiagonal.mean()) if offdiagonal.size else 0.0
+        ),
+        "maximum_absolute_offdiagonal_coherence": (
+            float(offdiagonal.max()) if offdiagonal.size else 0.0
+        ),
     }
     return D, X, info
 

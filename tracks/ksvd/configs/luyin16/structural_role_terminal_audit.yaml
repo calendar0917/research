@@ -1,0 +1,62 @@
+protocol_id: luyin16-molhiv-rooted-wl-terminal-audit-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+  warm_start_result: tracks/ksvd/results/luyin16/task_aligned_interaction_screen/summary.json
+  dev_feature_cache: tracks/ksvd/results/luyin16/structural_role_terminal_audit/dev_features.npz
+  test_feature_cache: tracks/ksvd/results/luyin16/structural_role_terminal_audit/test_features.npz
+
+representation:
+  radius: 2
+  degree_bins: 8
+  wl_rounds: 2
+  node_role_bins: 64
+  edge_role_bins: 32
+  typed_edge_bins: 256
+  max_centers_per_graph: null
+
+# Both views receive the same full official-train scaffold-CV budget.  The old
+# fixed probe and the three prior nested-fold optima are warm-start candidates.
+tuning:
+  n_trials: 12
+  seed: 20260907
+  n_jobs: 8
+  ranges:
+    n_estimators: [100, 500]
+    max_depth: [2, 6]
+    learning_rate: [0.015, 0.18]
+    min_child_weight: [2.0, 50.0]
+    subsample: [0.65, 1.0]
+    colsample_bytree: [0.25, 1.0]
+    reg_lambda: [0.3, 150.0]
+    reg_alpha: [0.00001, 15.0]
+    gamma: [0.0, 5.0]
+  view_static:
+    t_a:
+      max_bin: 256
+      n_jobs: 8
+    f_centered:
+      max_bin: 64
+      n_jobs: 8
+
+fixed_classifier:
+  n_estimators: 140
+  max_depth: 4
+  learning_rate: 0.05
+  min_child_weight: 8
+  subsample: 0.85
+  colsample_bytree: 0.80
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  gamma: 0.0
+  n_jobs: -1
+
+model_seeds: [0, 1, 2, 3, 4]
+
+search_checkpoint_json: tracks/ksvd/results/luyin16/structural_role_terminal_audit/search_checkpoint.json
+frozen_manifest_json: tracks/ksvd/results/luyin16/structural_role_terminal_audit/frozen_manifest.json
+frozen_manifest_markdown: tracks/ksvd/results/luyin16/structural_role_terminal_audit/frozen_manifest.md
+terminal_test_json: tracks/ksvd/results/luyin16/structural_role_terminal_audit/terminal_test.json
+terminal_test_markdown: tracks/ksvd/results/luyin16/structural_role_terminal_audit/terminal_test.md

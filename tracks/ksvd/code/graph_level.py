@@ -21,7 +21,14 @@ from .coverage_sample import CoverageConfig, sample_coverage, trajectory_cover_m
 from .graph import Graph
 from .ksvd import _omp, ksvd, readout_X
 from .sample import SampleConfig, run_method
-from .vectorize import adjacency_padded, flatten_upper
+from .vectorize import (
+    adjacency_padded,
+    flatten_upper,
+    labeled_wl_patch_features,
+    labeled_wl_ring_patch_features,
+    patch_feature_dim,
+    wl_patch_features,
+)
 
 
 @dataclass
@@ -50,8 +57,16 @@ class GraphLevelConfig:
     order_mode: str = "bfs"
     max_train_patches: int = 6000
     # --- patch vector ---
-    # topo: upper-tri adj only; chem: + atom-type hist + bond-type hist on patch
-    patch_feat: str = "topo"  # topo | chem
+    # wl_chem(_ring): permutation-invariant full OGB labels (+ true cycles).
+    patch_feat: str = "topo"  # topo | wl | chem | wl_chem | wl_chem_ring
+    normalize_patches: bool = False
+    max_patches_per_graph: int | None = None
+    # Radius used by atom-centered samplers.  Coverage/B0 samplers ignore it;
+    # keeping it in the shared config makes localized protocols explicit.
+    radius: int = 2
+    # Standard historical initialization caps K at the input width.  An
+    # explicit opt-in permits a genuinely overcomplete dictionary (K > d).
+    allow_overcomplete: bool = False
 
 
 def _cov_cfg(cfg: GraphLevelConfig, seed: int | None = None) -> CoverageConfig:
@@ -132,16 +147,36 @@ def bundle_to_Y(
             flatten_upper(adjacency_padded(g, S, max_nodes, order_mode=order_mode)),
             dtype=np.float64,
         )
-        if patch_feat == "chem":
+        if patch_feat == "wl":
+            y = np.asarray(wl_patch_features(g, S, max_nodes), dtype=np.float64)
+        elif patch_feat == "chem":
             y = np.concatenate(
                 [y, _chem_hist_for_patch(S, node_feat, edge_feat, g)]
             )
+        elif patch_feat == "wl_chem":
+            if node_feat is None or edge_feat is None:
+                raise ValueError("wl_chem requires node_feat and edge_feat")
+            y = np.asarray(
+                labeled_wl_patch_features(
+                    g, S, max_nodes, node_feat=node_feat, edge_feat=edge_feat
+                ),
+                dtype=np.float64,
+            )
+        elif patch_feat == "wl_chem_ring":
+            if node_feat is None or edge_feat is None:
+                raise ValueError("wl_chem_ring requires node_feat and edge_feat")
+            y = np.asarray(
+                labeled_wl_ring_patch_features(
+                    g, S, max_nodes, node_feat=node_feat, edge_feat=edge_feat
+                ),
+                dtype=np.float64,
+            )
+        elif patch_feat != "topo":
+            raise ValueError(f"unknown patch_feat={patch_feat!r}")
         if np.linalg.norm(y) > 1e-12:
             cols.append(y)
     if not cols:
-        dim = max_nodes * (max_nodes - 1) // 2
-        if patch_feat == "chem":
-            dim += 16 + 8
+        dim = patch_feature_dim(max_nodes, patch_feat)
         return np.zeros((dim, 1), dtype=np.float64), {"n_cols": 0}
     Y = np.stack(cols, axis=1)
     return Y, {"n_cols": int(Y.shape[1]), "n_features": int(Y.shape[0])}
@@ -179,6 +214,12 @@ def collect_train_Y(
             node_feat=nf,
             edge_feat=ef,
         )
+        if cfg.normalize_patches:
+            norms = np.linalg.norm(Y, axis=0, keepdims=True)
+            Y = Y / np.maximum(norms, 1e-12)
+        if cfg.max_patches_per_graph is not None and Y.shape[1] > cfg.max_patches_per_graph:
+            local = rng.choice(Y.shape[1], size=cfg.max_patches_per_graph, replace=False)
+            Y = Y[:, local]
         for j in range(Y.shape[1]):
             if np.linalg.norm(Y[:, j]) > 1e-12:
                 cols.append(Y[:, j])
@@ -222,6 +263,121 @@ def learn_shared_D_graph_level(
     return D, {**info, **pstats, "mode": mode}
 
 
+def sparse_code_patch_matrix(
+    Y: np.ndarray,
+    D: np.ndarray,
+    cfg: GraphLevelConfig,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return normalized patches and their OMP codes under a fixed dictionary.
+
+    Keeping sparse coding separate from graph readout lets experiments compare
+    multiple pooling/statistical readouts without resampling patches or rerunning
+    OMP.  The function uses exactly the same T/T_min behavior as the historical
+    :func:`encode_patch_matrix` path.
+    """
+    if Y.shape[0] != D.shape[0]:
+        raise ValueError(f"feature mismatch: Y has {Y.shape[0]} rows, D has {D.shape[0]}")
+    Yn = np.asarray(Y, dtype=np.float64)
+    if cfg.normalize_patches:
+        norms = np.linalg.norm(Yn, axis=0, keepdims=True)
+        Yn = Yn / np.maximum(norms, 1e-12)
+
+    n_atoms = D.shape[1]
+    N = Yn.shape[1]
+    X = np.zeros((n_atoms, N), dtype=np.float64)
+    for j in range(N):
+        y = Yn[:, j]
+        if np.linalg.norm(y) < 1e-12:
+            continue
+        x = _omp(D, y, cfg.T)
+        if np.count_nonzero(np.abs(x) > 1e-10) < cfg.T_min:
+            corr = np.abs(D.T @ y)
+            top = np.argsort(-corr)[: cfg.T_min]
+            Ds = D[:, top]
+            coef, _, _, _ = np.linalg.lstsq(Ds, y, rcond=None)
+            x = np.zeros(n_atoms, dtype=np.float64)
+            for c, k in zip(coef, top):
+                x[k] = c
+        X[:, j] = x
+    return Yn, X
+
+
+def sparse_code_readouts(
+    X: np.ndarray,
+    patch_errors: np.ndarray | None = None,
+) -> dict[str, np.ndarray]:
+    """Fixed graph statistics used by the MolHIV readout experiments.
+
+    The summaries are deliberately label-free and dictionary-agnostic.  They
+    can therefore be used unchanged for KSVD and matched dictionary controls.
+    """
+    A = np.abs(X)
+    k, n = A.shape
+    zero = np.zeros(k, dtype=np.float64)
+    if n:
+        mean = A.mean(axis=1)
+        maxv = A.max(axis=1)
+        std = A.std(axis=1)
+        usage = (A > 1e-10).mean(axis=1)
+        q75, q90 = np.quantile(A, [0.75, 0.90], axis=1)
+        top = np.sort(A, axis=1)[:, -min(3, n) :].mean(axis=1)
+        energy = (X * X).mean(axis=1)
+        signed_mean = X.mean(axis=1)
+        winner = np.bincount(np.argmax(A, axis=0), minlength=k).astype(np.float64) / n
+    else:
+        mean = maxv = std = usage = q75 = q90 = top = energy = signed_mean = winner = zero
+    errors = np.asarray([] if patch_errors is None else patch_errors, dtype=np.float64)
+    if errors.size:
+        recon = np.array(
+            [errors.mean(), errors.std(), *np.quantile(errors, [0.50, 0.75, 0.90]), errors.max()],
+            dtype=np.float64,
+        )
+    else:
+        recon = np.zeros(6, dtype=np.float64)
+    count = np.array([float(n), np.log1p(n)], dtype=np.float64)
+    basic = np.concatenate([mean, maxv, usage])
+    tail = np.concatenate([top, q75, q90])
+    moments = np.concatenate([mean, std, energy])
+    rich_no_recon = np.concatenate(
+        [mean, maxv, top, std, usage, q75, q90, energy, signed_mean, winner]
+    )
+    return {
+        "max": maxv,
+        "basic": basic,
+        "tail": tail,
+        "moments": moments,
+        "recon": np.concatenate([recon, count]),
+        "rich_no_recon": rich_no_recon,
+        "rich": np.concatenate([rich_no_recon, recon, count]),
+    }
+
+
+def encode_patch_matrix(
+    Y: np.ndarray,
+    D: np.ndarray,
+    cfg: GraphLevelConfig,
+    return_patch_errors: bool = False,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Sparse-code one graph's already-vectorized patch matrix."""
+    Y, X = sparse_code_patch_matrix(Y, D, cfg)
+
+    emb = readout_X(X, mode=cfg.readout_mode, pool=cfg.pool, seed=cfg.seed)
+    energy = (X**2).sum(axis=1)
+    usage = (np.abs(X) > 1e-10).mean(axis=1)
+    s = emb if cfg.readout_mode == "pool" else np.concatenate([emb, energy, usage])
+    R = Y - D @ X
+    meta = {
+        "recon_rel": float(np.linalg.norm(R) / (np.linalg.norm(Y) + 1e-12)),
+        "emb_dim": int(s.shape[0]),
+        "readout_mode": cfg.readout_mode,
+        "pool": cfg.pool,
+    }
+    if return_patch_errors:
+        denom = np.maximum(np.linalg.norm(Y, axis=0), 1e-12)
+        meta["patch_recon_errors"] = (np.linalg.norm(R, axis=0) / denom).tolist()
+    return s, meta
+
+
 def encode_graph(
     g: Graph,
     D: np.ndarray,
@@ -246,42 +402,8 @@ def encode_graph(
         node_feat=node_feat,
         edge_feat=edge_feat,
     )
-    n_atoms = D.shape[1]
-    N = Y.shape[1]
-    X = np.zeros((n_atoms, N), dtype=np.float64)
-    for j in range(N):
-        y = Y[:, j]
-        if np.linalg.norm(y) < 1e-12:
-            continue
-        x = _omp(D, y, cfg.T)
-        if np.count_nonzero(np.abs(x) > 1e-10) < cfg.T_min:
-            corr = np.abs(D.T @ y)
-            top = np.argsort(-corr)[: cfg.T_min]
-            Ds = D[:, top]
-            coef, _, _, _ = np.linalg.lstsq(Ds, y, rcond=None)
-            x = np.zeros(n_atoms, dtype=np.float64)
-            for c, k in zip(coef, top):
-                x[k] = c
-        X[:, j] = x
-    # energy-style readout (luyin10); pool=attn for MIL
-    emb = readout_X(X, mode=cfg.readout_mode, pool=cfg.pool, seed=cfg.seed)
-    energy = (X**2).sum(axis=1)
-    usage = (np.abs(X) > 1e-10).mean(axis=1)
-    if cfg.readout_mode == "pool":
-        s = emb
-    else:
-        s = np.concatenate([emb, energy, usage])
-    R = Y - D @ X
-    recon = float(np.linalg.norm(R) / (np.linalg.norm(Y) + 1e-12))
-    meta = {
-        **met,
-        **ymeta,
-        "recon_rel": recon,
-        "emb_dim": int(s.shape[0]),
-        "readout_mode": cfg.readout_mode,
-        "pool": cfg.pool,
-    }
-    return s, meta
+    s, code_meta = encode_patch_matrix(Y, D, cfg)
+    return s, {**met, **ymeta, **code_meta}
 
 
 def encode_dataset(
@@ -289,10 +411,26 @@ def encode_dataset(
     D: np.ndarray,
     cfg: GraphLevelConfig,
     mode: str = "coverage",
+    node_feats: list[np.ndarray] | None = None,
+    edge_feats: list[dict[tuple[int, int], np.ndarray]] | None = None,
 ) -> tuple[np.ndarray, list[dict[str, Any]]]:
+    if node_feats is not None and len(node_feats) != len(graphs):
+        raise ValueError("node_feats and graphs must have the same length")
+    if edge_feats is not None and len(edge_feats) != len(graphs):
+        raise ValueError("edge_feats and graphs must have the same length")
     rows, metas = [], []
     for i, g in enumerate(graphs):
-        s, m = encode_graph(g, D, cfg, mode=mode, seed=cfg.seed + i * 13)
+        nf = node_feats[i] if node_feats is not None else None
+        ef = edge_feats[i] if edge_feats is not None else None
+        s, m = encode_graph(
+            g,
+            D,
+            cfg,
+            mode=mode,
+            seed=cfg.seed + i * 13,
+            node_feat=nf,
+            edge_feat=ef,
+        )
         rows.append(s)
         metas.append(m)
     # pad

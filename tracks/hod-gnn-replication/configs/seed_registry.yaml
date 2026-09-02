@@ -1,0 +1,88 @@
+# seed_registry.yaml
+# 各方法/数据集的 seed 来源与取值
+# 协议: paper-seeds-provisional, official-seeds
+
+paper_seeds:
+  status: unresolved
+  source: "HOD-GNN paper says 'averaged over four runs with different random seeds' but does not disclose exact values"
+  provisional_values: [0, 1, 2, 3]
+  note: "使用 [0,1,2,3] 作为临时替代，结果标注为 paper-seeds-provisional，不能冒充严格论文复现"
+
+methods:
+  gps:
+    paper_seeds:
+      values: null
+      status: unresolved
+      source: "paper does not disclose; GraphGPS repo uses --repeat N with default seeds 0..N-1"
+    official_seeds:
+      values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      source: "rampasek/GraphGPS run/run_experiments.sh: for SEED in {0..9}"
+      convention: "GraphGPS --repeat N seed ${SEED}"
+
+  graphvit:
+    paper_seeds:
+      values: null
+      status: unresolved
+      source: "cfg.seed = None in core/config.py; cfg.train.runs = 4 means 4 random runs"
+    official_seeds:
+      values: [0, 1, 2, 3]
+      source: "GraphViT official: 4 runs with random init; no fixed seed published"
+      convention: "set cfg.seed explicitly; 4 runs for reproducibility"
+      note: "official is 4 runs without fixed seed; we use [0,1,2,3] as official-seeds-provisional"
+
+  full:
+    paper_seeds:
+      values: null
+      status: unresolved
+      source: "paper does not disclose; policy-learn official sweep uses seeds 1..5"
+    official_seeds:
+      values: [1, 2, 3, 4, 5]
+      source: "beabevi/policy-learn yaml-files/ official sweep yamls: seeds [1,2,3,4,5]"
+
+  random:
+    paper_seeds:
+      values: null
+      status: unresolved
+      source: "paper does not disclose; policy-learn official sweep uses seeds 1..5"
+    official_seeds:
+      values: [1, 2, 3, 4, 5]
+      source: "beabevi/policy-learn yaml-files/ official sweep yamls: seeds [1,2,3,4,5]"
+
+  policy_learn:
+    paper_seeds:
+      values: null
+      status: unresolved
+      source: "paper does not disclose; policy-learn official sweep uses seeds 1..5"
+    official_seeds:
+      values: [1, 2, 3, 4, 5]
+      source: "beabevi/policy-learn yaml-files/ official sweep yamls: seeds [1,2,3,4,5]"
+
+datasets:
+  zinc:
+    official_split: "fixed pre-defined split (ZINC-12K)"
+    model_seed_note: "split is fixed, seed only affects model initialization/data loading"
+  moltox21:
+    official_split:
+      source: "ogb"
+      name: "scaffold"
+      note: "via ogb.graphproppred.get_idx_split()"
+  molbace:
+    official_split:
+      source: "ogb"
+      name: "scaffold"
+      note: "via ogb.graphproppred.get_idx_split()"
+  molhiv:
+    official_split:
+      source: "ogb"
+      name: "scaffold"
+      note: "via ogb.graphproppred.get_idx_split()"
+  peptides_func:
+    official_split:
+      source: "LRGB"
+      name: "official"
+      note: "from LRGB benchmark (Dwivedi et al. 2022)"
+  peptides_struct:
+    official_split:
+      source: "LRGB"
+      name: "official"
+      note: "from LRGB benchmark (Dwivedi et al. 2022)"

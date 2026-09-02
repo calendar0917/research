@@ -1,0 +1,80 @@
+[project]
+name = "gnn-research-workbench"
+version = "0.1.0"
+description = "Reproducible research workbench for graph neural networks and KSVD structure features"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "numpy==2.1.3",
+  "scipy==1.14.1",
+  "pandas==2.2.3",
+  "scikit-learn==1.5.2",
+  "pyyaml==6.0.2",
+  "tqdm==4.67.1",
+  "optuna==4.2.1",
+]
+
+[dependency-groups]
+ksvd = [
+  "torch==2.5.1",
+  "torch-geometric==2.6.1",
+  "ogb==1.3.6",
+  "networkx==3.4.2",
+  "openpyxl==3.1.5",
+  "pynauty==2.8.8.1",
+  "xgboost==2.1.3",
+]
+
+dev = [
+  "pytest==8.3.4",
+  "ruff==0.8.6",
+]
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+default-groups = ["ksvd", "dev"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["tracks/ksvd/src/ksvd_research"]
+
+[tool.hatch.build.targets.wheel.force-include]
+# The new package currently wraps these stable historical modules.  Include
+# only their transitive closure in a wheel so the wrapper remains usable after
+# installation outside the checkout; the other legacy scripts stay repository
+# history and are not moved into the maintained package.
+"tracks/ksvd/code/__init__.py" = "ksvd_research/_legacy_code/__init__.py"
+"tracks/ksvd/code/graph.py" = "ksvd_research/_legacy_code/graph.py"
+"tracks/ksvd/code/ksvd.py" = "ksvd_research/_legacy_code/ksvd.py"
+"tracks/ksvd/code/vectorize.py" = "ksvd_research/_legacy_code/vectorize.py"
+"tracks/ksvd/code/canonical_slots.py" = "ksvd_research/_legacy_code/canonical_slots.py"
+"tracks/ksvd/code/sample.py" = "ksvd_research/_legacy_code/sample.py"
+"tracks/ksvd/code/coverage_sample.py" = "ksvd_research/_legacy_code/coverage_sample.py"
+"tracks/ksvd/code/overlap_cover.py" = "ksvd_research/_legacy_code/overlap_cover.py"
+"tracks/ksvd/code/from_scratch_unplanted_representation.py" = "ksvd_research/_legacy_code/from_scratch_unplanted_representation.py"
+"tracks/ksvd/code/data_molhiv.py" = "ksvd_research/_legacy_code/data_molhiv.py"
+"tracks/ksvd/code/data_tud.py" = "ksvd_research/_legacy_code/data_tud.py"
+"tracks/ksvd/code/pipeline.py" = "ksvd_research/_legacy_code/pipeline.py"
+"tracks/ksvd/code/metrics.py" = "ksvd_research/_legacy_code/metrics.py"
+"tracks/ksvd/code/graph_level.py" = "ksvd_research/_legacy_code/graph_level.py"
+
+[[tool.uv.index]]
+url = "https://pypi.org/simple"
+
+[[tool.uv.index]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+
+[tool.pytest.ini_options]
+testpaths = ["tracks/ksvd/tests"]
+python_files = ["test_*.py"]
+pythonpath = [".", "tracks/ksvd/src"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+exclude = ["tracks/*/results", "artifacts", "data"]

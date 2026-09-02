@@ -1,0 +1,52 @@
+protocol_id: luyin16-molhiv-clean-structural-role-fusion-v1-official-valid-smoke
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+
+representation:
+  radius: 2
+  schemas: [rooted_wl]
+  degree_bins: 8
+  wl_rounds: 2
+  node_role_bins: 64
+  edge_role_bins: 32
+  typed_edge_bins: 256
+  max_centers_per_graph: null
+
+exact_audit:
+  max_train_graphs: 4
+  max_valid_graphs: 4
+  seed: 20260903
+
+audit:
+  n_graphs: 2
+  permutations_per_graph: 1
+  seed: 20260904
+  tolerance: 1.0e-6
+
+screen:
+  split: official_valid
+  max_train_graphs_per_fold: 160
+  max_valid_graphs_per_fold: 100
+  seed: 20260902
+  shuffle_repeats: 1
+  minimum_delta: 0.003
+  minimum_fold_wins: 1
+
+classifier:
+  n_estimators: 20
+  max_depth: 3
+  learning_rate: 0.08
+  min_child_weight: 4
+  subsample: 0.85
+  colsample_bytree: 0.80
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  n_jobs: -1
+  model_seeds: [0]
+
+output_json: /tmp/structural_role_fusion_official_valid_smoke.json
+output_markdown: /tmp/structural_role_fusion_official_valid_smoke.md

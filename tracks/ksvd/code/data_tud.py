@@ -12,6 +12,10 @@ from .pipeline import graph_from_edge_index
 def load_tud(
     name: str = "MUTAG",
     root: str | Path | None = None,
+    *,
+    cleaned: bool = False,
+    structure_only: bool = False,
+    use_node_attr: bool = False,
 ) -> tuple[list[Graph], np.ndarray, list[np.ndarray | None], dict[str, Any]]:
     """
     Load TUDataset. Returns graphs, y, node_features list (or None per graph), meta.
@@ -21,7 +25,12 @@ def load_tud(
 
     root = Path(root or Path(__file__).resolve().parents[3] / "data" / "TUD")
     root.mkdir(parents=True, exist_ok=True)
-    ds = TUDataset(root=str(root), name=name)
+    ds = TUDataset(
+        root=str(root),
+        name=name,
+        cleaned=cleaned,
+        use_node_attr=use_node_attr,
+    )
     graphs: list[Graph] = []
     labels: list[int] = []
     node_feats: list[np.ndarray | None] = []
@@ -35,7 +44,11 @@ def load_tud(
             labels.append(int(y.view(-1)[0].item()))
         else:
             labels.append(int(y.item()))
-        if getattr(data, "x", None) is not None and data.x is not None:
+        if (
+            not structure_only
+            and getattr(data, "x", None) is not None
+            and data.x is not None
+        ):
             node_feats.append(data.x.cpu().numpy().astype(np.float64))
         else:
             node_feats.append(None)
@@ -47,12 +60,17 @@ def load_tud(
     feat_dim = int(node_feats[0].shape[1]) if has_x and node_feats[0] is not None else 0
     meta = {
         "name": name,
+        "cleaned": bool(cleaned),
+        "structure_only": bool(structure_only),
+        "use_node_attr": bool(use_node_attr),
         "n_graphs": len(graphs),
         "n_classes": len(uniq),
         "mean_n": float(np.mean([g.n for g in graphs])),
         "mean_e": float(np.mean([g.num_edges() for g in graphs])),
         "n_with_node_features": has_x,
         "node_feat_dim": feat_dim,
+        "num_node_attributes": int(ds.num_node_attributes) if use_node_attr else 0,
+        "num_node_labels": int(ds.num_node_labels),
     }
     return graphs, y_arr, node_feats, meta
 

@@ -1,0 +1,208 @@
+suite_id: luyin16-zinc-long-range-factorial-v2
+run_name: suite_zinc_long_range_factorial_20260830
+
+# One task per subprocess. The runner records status/logs and skips matching
+# successful tasks on resume. ZINC tasks use the official PyG split only.
+tasks:
+  - id: zinc_preflight
+    module: tracks.ksvd.experiments.luyin16.zinc_long_range_proxy
+    args:
+      - --data-root
+      - data/ZINC
+      - --preflight
+      - --result
+      - tracks/ksvd/results/luyin16/suite_zinc_long_range_factorial_20260830/zinc_preflight.json
+    allow_failure: true
+    description: Verify official PyG ZINC-12K files, split sizes, URLs and hashes.
+
+  - id: zinc_smoke_radius2
+    module: tracks.ksvd.experiments.luyin16.zinc_long_range_proxy
+    args:
+      - --data-root
+      - data/ZINC
+      - --radius
+      - "2"
+      - --max-graphs
+      - "200"
+      - --max-train-patches
+      - "2000"
+      - --ksvd-iterations
+      - "1"
+      - --seeds
+      - "0"
+      - --promotion-margin
+      - "0"
+      - --n-jobs
+      - "2"
+      - --result
+      - tracks/ksvd/results/luyin16/suite_zinc_long_range_factorial_20260830/zinc_smoke_radius2.json
+    depends_on: [zinc_preflight]
+    description: Small end-to-end smoke for frozen patch reuse, K-SVD views and MAE evaluation.
+
+  - id: zinc_radius1_full
+    module: tracks.ksvd.experiments.luyin16.zinc_long_range_proxy
+    args:
+      - --data-root
+      - data/ZINC
+      - --radius
+      - "1"
+      - --max-nodes
+      - "12"
+      - --n-atoms
+      - "24"
+      - --sparsity
+      - "3"
+      - --ksvd-iterations
+      - "6"
+      - --max-train-patches
+      - "24000"
+      - --seeds
+      - "0"
+      - "1"
+      - "2"
+      - --optuna-trials
+      - "6"
+      - --tune-top-k
+      - "3"
+      - --result
+      - tracks/ksvd/results/luyin16/suite_zinc_long_range_factorial_20260830/zinc_radius1.json
+    depends_on: [zinc_preflight, zinc_smoke_radius2]
+    description: Full official ZINC radius-1 factorial and matched K-SVD attribution.
+
+  - id: zinc_radius2_full
+    module: tracks.ksvd.experiments.luyin16.zinc_long_range_proxy
+    args:
+      - --data-root
+      - data/ZINC
+      - --radius
+      - "2"
+      - --max-nodes
+      - "12"
+      - --n-atoms
+      - "24"
+      - --sparsity
+      - "3"
+      - --ksvd-iterations
+      - "6"
+      - --max-train-patches
+      - "24000"
+      - --seeds
+      - "0"
+      - "1"
+      - "2"
+      - --optuna-trials
+      - "6"
+      - --tune-top-k
+      - "3"
+      - --result
+      - tracks/ksvd/results/luyin16/suite_zinc_long_range_factorial_20260830/zinc_radius2.json
+    depends_on: [zinc_preflight, zinc_smoke_radius2]
+    description: Full official ZINC radius-2 factorial and matched K-SVD attribution.
+
+  - id: zinc_radius3_full
+    module: tracks.ksvd.experiments.luyin16.zinc_long_range_proxy
+    args:
+      - --data-root
+      - data/ZINC
+      - --radius
+      - "3"
+      - --max-nodes
+      - "12"
+      - --n-atoms
+      - "24"
+      - --sparsity
+      - "3"
+      - --ksvd-iterations
+      - "6"
+      - --max-train-patches
+      - "24000"
+      - --seeds
+      - "0"
+      - "1"
+      - "2"
+      - --optuna-trials
+      - "6"
+      - --tune-top-k
+      - "3"
+      - --result
+      - tracks/ksvd/results/luyin16/suite_zinc_long_range_factorial_20260830/zinc_radius3.json
+    depends_on: [zinc_preflight, zinc_smoke_radius2]
+    description: Full official ZINC radius-3 factorial and matched K-SVD attribution.
+
+  - id: zinc_radius3_wide_development
+    module: tracks.ksvd.experiments.luyin16.zinc_long_range_proxy
+    args:
+      - --data-root
+      - data/ZINC
+      - --radius
+      - "3"
+      - --max-nodes
+      - "20"
+      - --max-graphs
+      - "3000"
+      - --n-atoms
+      - "24"
+      - --sparsity
+      - "3"
+      - --ksvd-iterations
+      - "4"
+      - --max-train-patches
+      - "12000"
+      - --seeds
+      - "0"
+      - "1"
+      - --optuna-trials
+      - "4"
+      - --tune-top-k
+      - "2"
+      - --result
+      - tracks/ksvd/results/luyin16/suite_zinc_long_range_factorial_20260830/zinc_radius3_wide_development.json
+    depends_on: [zinc_preflight, zinc_smoke_radius2]
+    description: "Development control: radius-3 with 20 retained nodes to separate range from truncation."
+
+  - id: zinc_radius3_wide_full
+    module: tracks.ksvd.experiments.luyin16.zinc_long_range_proxy
+    args:
+      - --data-root
+      - data/ZINC
+      - --radius
+      - "3"
+      - --max-nodes
+      - "20"
+      - --n-atoms
+      - "24"
+      - --sparsity
+      - "3"
+      - --ksvd-iterations
+      - "6"
+      - --max-train-patches
+      - "24000"
+      - --seeds
+      - "0"
+      - "1"
+      - "2"
+      - --optuna-trials
+      - "6"
+      - --tune-top-k
+      - "3"
+      - --result
+      - tracks/ksvd/results/luyin16/suite_zinc_long_range_factorial_20260830/zinc_radius3_wide_full.json
+    depends_on: [zinc_preflight, zinc_smoke_radius2, zinc_radius3_wide_development]
+    description: Full matched control for radius-3 with max_nodes increased from 12 to 20.
+
+  - id: zinc_suite_summary
+    module: tracks.ksvd.experiments.luyin16.summarize_suite
+    args:
+      - --suite-dir
+      - tracks/ksvd/results/luyin16/suite_zinc_long_range_factorial_20260830
+      - --result
+      - tracks/ksvd/results/luyin16/suite_zinc_long_range_factorial_20260830/SUITE_SUMMARY.md
+    depends_on:
+      - zinc_preflight
+      - zinc_smoke_radius2
+      - zinc_radius1_full
+      - zinc_radius2_full
+      - zinc_radius3_full
+      - zinc_radius3_wide_development
+      - zinc_radius3_wide_full
+    description: Aggregate task states, source audit and radius/view MAE tables.

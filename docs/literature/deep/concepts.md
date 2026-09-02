@@ -68,5 +68,7 @@
 | RWPE（对照） | [rwpe.md](rwpe.md) |
 | GSN | [gsn.md](gsn.md) |
 | CIN / CWN | [cin.md](cin.md) |
+| **GNN+Subgraph GNN 近期脉络（2023–26）** | [gnn_recent_survey.md](gnn_recent_survey.md) |
+| HOD-GNN（导数表达力） | [hod-gnn.md](hod-gnn.md) |
 | 组内 RW 定位 | [rw_survey v0.2](../../../tracks/ksvd/notes/rw_survey.md) |
 | 新篇 | 复制 [_template.md](_template.md) |

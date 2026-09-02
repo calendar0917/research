@@ -1,0 +1,64 @@
+protocol_id: luyin16-molhiv-task-aligned-interaction-v1-smoke
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+  feature_cache: /tmp/task_aligned_interaction_screen_smoke_features.npz
+
+representation:
+  radius: 2
+  degree_bins: 8
+  wl_rounds: 2
+  node_role_bins: 64
+  edge_role_bins: 32
+  typed_edge_bins: 256
+  max_centers_per_graph: 8
+
+screen:
+  max_train_graphs_per_fold: 240
+  max_valid_graphs_per_fold: 120
+  seed: 20260902
+  shuffle_repeats: 1
+  model_seeds: [0]
+  minimum_delta: 0.003
+  minimum_fold_wins: 2
+
+tuning:
+  n_trials: 2
+  seed: 20260905
+  n_jobs: -1
+  ranges:
+    n_estimators: [20, 60]
+    max_depth: [2, 4]
+    learning_rate: [0.04, 0.16]
+    min_child_weight: [1.0, 12.0]
+    subsample: [0.70, 1.0]
+    colsample_bytree: [0.40, 1.0]
+    reg_lambda: [0.5, 30.0]
+    reg_alpha: [0.0001, 2.0]
+    gamma: [0.0, 2.0]
+
+fixed_classifier:
+  n_estimators: 30
+  max_depth: 3
+  learning_rate: 0.08
+  min_child_weight: 4
+  subsample: 0.85
+  colsample_bytree: 0.80
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  gamma: 0.0
+  n_jobs: -1
+
+sparse:
+  seed: 20260906
+  oof_folds: 2
+  top_k: [4, 8]
+  c_values: [0.1]
+  minimum_support: 2
+  support_tolerance: 1.0e-8
+  max_iter: 500
+
+output_json: /tmp/task_aligned_interaction_screen_smoke.json
+output_markdown: /tmp/task_aligned_interaction_screen_smoke.md

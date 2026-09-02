@@ -1,0 +1,27 @@
+protocol_id: luyin16-molhiv-patch-object-audit-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  split: valid
+
+representation:
+  radius: 2
+  max_nodes: 8
+  normalize_patches: true
+  atom_bins: 16
+  bond_bins: 8
+
+audit:
+  n_graphs: 256
+  positive_fraction: 0.25
+  permutations_per_graph: 5
+  seed: 20260831
+  feature_tolerance: 1.0e-8
+  prediction_tolerance: 1.0e-6
+
+frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+frozen_search: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/xgb_optuna_promoted_12.json
+
+output_json: tracks/ksvd/results/luyin16/PATCH_OBJECT_AUDIT_20260831.json
+output_markdown: tracks/ksvd/results/luyin16/PATCH_OBJECT_AUDIT_20260831.md

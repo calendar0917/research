@@ -8,7 +8,11 @@
 # 新建课题（track）
 ./scripts/init_track.sh ksvd "KSVD 结构字典学习"
 
+# 按 uv.lock 安装活跃 KSVD 环境（清华 PyPI 镜像）
+uv sync --frozen
+
 # 日常入口
+cat AGENT.md                        # AI/Agent 使用规范
 cat docs/research_guide.md          # 全局规矩 + 当前进度
 cat tracks/<name>/TRACK.md          # 该课题状态
 ```
@@ -24,6 +28,11 @@ cat tracks/<name>/TRACK.md          # 该课题状态
 | `templates/track/` | 课题脚手架 |
 | `data/` | 大数据集（建议 gitignore） |
 | `artifacts/` | 临时导出 |
+| `AGENT.md` | AI/Agent 使用规范 |
+
+活跃 KSVD 代码统一通过 `uv run python ...` 执行。HOD-GNN 复现保留其独立的官方环境说明。
+
+环境由 `.python-version`、`pyproject.toml` 和 `uv.lock` 共同锁定。修改依赖后运行 `uv lock`，普通复现不要跳过锁文件。
 
 ## 已有 track
 
@@ -31,6 +40,7 @@ cat tracks/<name>/TRACK.md          # 该课题状态
 |-------|------|------|
 | [gnn-gsn](tracks/gnn-gsn/TRACK.md) | archived | Kernel–GNN–GSN；实现在 `../paper` |
 | [ksvd](tracks/ksvd/TRACK.md) | **active** | KSVD 结构字典学习 |
+| [hod-gnn-replication](tracks/hod-gnn-replication/TRACK.md) | **active** | HOD-GNN 论文基线复现审计；独立官方环境 |
 | 录音 | — | [docs/luyin/](docs/luyin/) |
 
 ## 原则（短）

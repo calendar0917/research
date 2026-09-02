@@ -1,0 +1,58 @@
+protocol_id: luyin16-molhiv-invariant-joint-reconstruction-screen-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+
+representation:
+  radius: 2
+  wl_rounds: 2
+  node_role_bins: 64
+  edge_role_bins: 32
+  degree_bins: 8
+  typed_edge_bins: 256
+  max_centers_per_graph: null
+
+audit:
+  n_graphs: 24
+  permutations_per_graph: 2
+  seed: 20260911
+  tolerance: 1.0e-6
+
+screen:
+  max_train_graphs_per_fold: 3000
+  max_valid_graphs_per_fold: 1500
+  seed: 20260912
+  shuffle_repeats: 2
+  minimum_delta: 0.003
+  minimum_fold_wins: 2
+
+transforms:
+  seed: 20260913
+  max_train_patches: 4000
+  pca_rank: 32
+  bilinear_structure_rank: 8
+  bilinear_attribute_rank: 8
+  ksvd_atoms: 24
+  ksvd_sparsity: 3
+  ksvd_minimum_sparsity: 2
+  ksvd_iterations: 2
+  n_jobs: 8
+
+classifier:
+  n_estimators: 140
+  max_depth: 4
+  learning_rate: 0.05
+  min_child_weight: 8
+  subsample: 0.85
+  colsample_bytree: 0.80
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  n_jobs: 8
+  model_seeds: [0]
+
+patch_cache: tracks/ksvd/results/luyin16/invariant_joint_reconstruction_screen/patch_rows.npz
+output_json: tracks/ksvd/results/luyin16/invariant_joint_reconstruction_screen/summary.json
+output_markdown: tracks/ksvd/results/luyin16/invariant_joint_reconstruction_screen/summary.md

@@ -1,0 +1,48 @@
+protocol_id: luyin16-molhiv-exact-topology-conditional-chemistry-pilot-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+
+representation:
+  radius: 2
+  wl_rounds: 2
+  node_role_bins: 64
+  edge_role_bins: 32
+  max_centers_per_graph: null
+  topology_vocab_size: 32
+  prototypes_per_topology: 4
+  shuffle_repeats: 2
+  shuffle_seed: 20260922
+  patch_pair_shuffle_seed: 20260924
+
+audit:
+  n_graphs: 16
+  permutations_per_graph: 2
+  seed: 20260923
+  shuffle_seed: 20260922
+  tolerance: 1.0e-6
+
+screen:
+  max_train_graphs_per_fold: 1200
+  max_valid_graphs_per_fold: 600
+  seed: 20260921
+  minimum_delta: 0.003
+  minimum_fold_wins: 2
+
+classifier:
+  n_estimators: 100
+  max_depth: 4
+  learning_rate: 0.05
+  min_child_weight: 8
+  subsample: 0.85
+  colsample_bytree: 0.80
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  n_jobs: 8
+  model_seeds: [0, 1, 2]
+
+output_json: tracks/ksvd/results/luyin16/exact_conditional_fusion_screen/summary.json
+output_markdown: tracks/ksvd/results/luyin16/exact_conditional_fusion_screen/summary.md

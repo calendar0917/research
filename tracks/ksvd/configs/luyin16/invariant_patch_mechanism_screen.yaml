@@ -1,0 +1,61 @@
+protocol_id: luyin16-molhiv-invariant-patch-mechanism-screen-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+
+representation:
+  radius: 2
+  degree_bins: 12
+  atom_categories: 119
+  bond_categories: 5
+  normalize_patches: true
+  readout_blocks: [mean, std, maximum, q75, q90, nonzero_fraction]
+  node_scale: 16.0
+  edge_scale: 24.0
+  degree_scale: 8.0
+  cycle_scale: 8.0
+  triangle_scale: 8.0
+
+audit:
+  n_graphs: 128
+  positive_fraction: 0.25
+  permutations_per_graph: 3
+  seed: 20260831
+  feature_tolerance: 1.0e-12
+
+screen:
+  max_train_graphs_per_fold: 6000
+  max_valid_graphs_per_fold: 3000
+  seed: 20260831
+  minimum_raw_delta: 0.003
+  minimum_fold_wins: 2
+
+classifier:
+  n_estimators: 140
+  max_depth: 4
+  learning_rate: 0.05
+  min_child_weight: 8
+  subsample: 0.85
+  colsample_bytree: 0.80
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  n_jobs: -1
+  random_state: 0
+
+dictionary:
+  run_if_raw_passes: true
+  n_atoms: 16
+  sparsity: 3
+  iterations: 2
+  max_train_patches: 1600
+  seed: 20260831
+  encode_chunk_patches: 4096
+  encode_n_jobs: -1
+  minimum_update_delta: 0.003
+  minimum_fold_wins: 2
+
+output_json: tracks/ksvd/results/luyin16/INVARIANT_PATCH_MECHANISM_SCREEN_20260831.json
+output_markdown: tracks/ksvd/results/luyin16/INVARIANT_PATCH_MECHANISM_SCREEN_20260831.md

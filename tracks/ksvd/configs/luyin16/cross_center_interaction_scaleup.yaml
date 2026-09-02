@@ -1,0 +1,54 @@
+protocol_id: luyin16-molhiv-cross-center-interaction-scaleup-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+
+representation:
+  radius: 2
+  wl_rounds: 2
+  node_role_bins: 64
+  edge_role_bins: 32
+  typed_edge_bins: 256
+  max_centers_per_graph: null
+
+screen:
+  # Reserve a third graph group by excluding both prior manifests.  The
+  # larger budget is used only after the disjoint 1200/600 confirmation
+  # passed the joint-interaction and matched-double-null gates.
+  max_train_graphs_per_fold: 3000
+  max_valid_graphs_per_fold: 1500
+  seed: 20260930
+  feature_seed: 20260931
+  shuffle_repeats: 2
+  pca_rank: 8
+  conditional_gate: true
+  minimum_delta: 0.003
+  minimum_fold_wins: 2
+  exclude_indices_npz:
+    - tracks/ksvd/results/luyin16/cross_center_interaction_screen/features_n1200_v2.npz
+    - tracks/ksvd/results/luyin16/cross_center_interaction_confirmation/features_n1200_v1.npz
+
+audit:
+  n_graphs: 8
+  seed: 20260932
+  tolerance: 1.0e-6
+
+classifier:
+  n_estimators: 100
+  max_depth: 3
+  learning_rate: 0.05
+  min_child_weight: 8
+  subsample: 0.85
+  colsample_bytree: 0.80
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  gamma: 0.0
+  n_jobs: 4
+  model_seeds: [0, 1, 2]
+
+cache_npz: tracks/ksvd/results/luyin16/cross_center_interaction_scaleup/features_n3000_v3.npz
+output_json: tracks/ksvd/results/luyin16/cross_center_interaction_scaleup/summary.json
+output_markdown: tracks/ksvd/results/luyin16/cross_center_interaction_scaleup/summary.md

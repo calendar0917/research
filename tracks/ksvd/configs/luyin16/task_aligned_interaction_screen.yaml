@@ -1,0 +1,72 @@
+protocol_id: luyin16-molhiv-task-aligned-interaction-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+  feature_cache: tracks/ksvd/results/luyin16/task_aligned_interaction_screen/features_rooted_wl.npz
+
+representation:
+  radius: 2
+  degree_bins: 8
+  wl_rounds: 2
+  node_role_bins: 64
+  edge_role_bins: 32
+  typed_edge_bins: 256
+  max_centers_per_graph: null
+
+# All selection and evaluation remain inside official train.  The same sampled
+# outer rows as the clean structural-role screen make the fixed-probe numbers
+# directly comparable while keeping the tuning audit inexpensive.
+screen:
+  max_train_graphs_per_fold: 3000
+  max_valid_graphs_per_fold: 1500
+  seed: 20260902
+  shuffle_repeats: 1
+  model_seeds: [0, 1, 2]
+  minimum_delta: 0.003
+  minimum_fold_wins: 2
+
+# Equal trial budget is applied independently to T+A, raw joint, and centered
+# binding inside each outer scaffold fold.  The old fixed probe is included as
+# an enqueued candidate whenever it lies inside these ranges.
+tuning:
+  n_trials: 6
+  seed: 20260905
+  n_jobs: -1
+  ranges:
+    n_estimators: [80, 360]
+    max_depth: [2, 6]
+    learning_rate: [0.02, 0.16]
+    min_child_weight: [2.0, 40.0]
+    subsample: [0.65, 1.0]
+    colsample_bytree: [0.30, 1.0]
+    reg_lambda: [0.5, 100.0]
+    reg_alpha: [0.0001, 10.0]
+    gamma: [0.0, 4.0]
+
+fixed_classifier:
+  n_estimators: 140
+  max_depth: 4
+  learning_rate: 0.05
+  min_child_weight: 8
+  subsample: 0.85
+  colsample_bytree: 0.80
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  gamma: 0.0
+  n_jobs: -1
+
+# The residual learner is deliberately small.  top_k and L1 strength are
+# selected by directional transfer between the two inner scaffold groups.
+sparse:
+  seed: 20260906
+  oof_folds: 3
+  top_k: [16, 32, 64]
+  c_values: [0.03, 0.1, 0.3]
+  minimum_support: 20
+  support_tolerance: 1.0e-8
+  max_iter: 1200
+
+output_json: tracks/ksvd/results/luyin16/task_aligned_interaction_screen/summary.json
+output_markdown: tracks/ksvd/results/luyin16/task_aligned_interaction_screen/summary.md

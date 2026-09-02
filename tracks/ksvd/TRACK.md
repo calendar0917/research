@@ -44,11 +44,23 @@
 | 池化 / 融合阶段 | **进行中** → `notes/molhiv_phase.md` |
 | 交付 | 摘要已写；正式论文表未做 |
 
+### luyin16 阶段入口
+
+- 阶段说明：`notes/luyin16_plan.md`
+- 配置目录：`configs/luyin16/`
+- 结果目录：`results/luyin16/`
+- 新实验入口：`experiments/luyin16/`
+- 可复用包：`src/ksvd_research/`；新代码不要依赖顶层 `code` 名称
+- 原则：先验证结构特征的独立价值，再决定是否进入结构—语义融合；不继续无目的堆叠模型。
+
 ## 入口
 
 | 路径 | 用途 |
 |------|------|
-| `code/` | 实现 |
+| `src/ksvd_research/` | 可复用核心包（当前为兼容层，逐步迁移） |
+| `experiments/luyin16/` | luyin16 新实验入口 |
+| `code/` | 历史实现与复现入口，不再平铺新增实验 |
+| `tests/` | pytest 维护测试 |
 | `configs/` | 配置 |
 | `results/` | 本轨数字唯一源 |
 | `notes/` | 决策与定义 |
@@ -93,3 +105,50 @@
 29. ~~B/C/D/A next-round~~ → `results/molhiv/NEXT_ROUND_VERDICT.md`
 30. **下调**：residual 多种子不稳；chem/ring/node_gate 均无稳定超 GINE
 31. **收窄主线**：采样+可还原字典机制；或环/cell 对象升级；molhiv 增益暂非主证据
+32. ~~luyin14 路线闭环~~ → `results/luyin14/ROUTE_CLOSURE_20260812.md`
+33. **补边 no-go**：EDGE100−FAIR95 在四数据集均值全负；结合既有 rate 审计，默认 FAIR95 + residual sidecar
+34. **关系 no-go**：TRUE−SHUFFLED 仅 IMDB-BINARY +1.1pt，未跨数据集复现
+35. **融合 no-go**：MUTAG/PTC_MR 的 KSVD 融合均未超 feature-only；简单 feature+stats 反而稳定更强
+36. **路线结论**：普通 KSVD 固定为 compressor / diagnostic baseline；不再扫描 K/T、restart、fusion depth
+37. ~~rich sparse-code readout 迁移审计~~ → `results/luyin14/RICH_READOUT_20260812.md`
+38. **rich 归因结论**：相对 coarse 在两个 IMDB 上 `+3.9/+2.4pt`、均 9/9 wins；但 FINAL−INIT 仅 `+0.4/+0.3pt`，且没有 graph-stats 外增量
+39. ~~relation-conditioned structured pursuit~~ → `results/luyin14/STRUCTURED_PURSUIT_20260812.md`
+40. **structured no-go**：support agreement 明显上升，但 reconstruction 恶化 `+33%` 到 `+271%`，三个主 gate 全失败
+41. ~~uncompressed RAW relation terminal screen~~ → `results/luyin14/RAW_RELATION_20260812.md`
+42. **RAW relation 结论**：TRUE 相对弱 bag 在 IMDB-BINARY/MUTAG 有增益，但不稳定胜 SHUFFLED、四数据集均无 stats 外增量；停止同一 TUD 上的 patch-graph/Transformer
+43. **下一研究问题**：若继续 downstream，改做低阶统计匹配、标签由 patch 空间组合决定的 benchmark；先跑 RAW/INIT/FINAL × BAG/TRUE/SHUFFLED，再决定是否需要 relation-aware encoder
+44. 完整决策：`results/luyin14/NEXT_DIRECTION_DECISION_20260812.md`
+45. ~~节点级 strict concat/FiLM~~ → `results/luyin14/NODE_LEVEL_FUSION_STAGE_A_20260812.md`：MUTAG 有位置绑定信号，但 FINAL=INIT；PTC_MR 不复现
+46. ~~OOF late fusion / patch-local bilinear~~ → `results/luyin14/OOF_MULTIVIEW_FUSION_20260812.md`、`PATCH_LOCAL_MULTIMODAL_20260812.md`：融合容量不是主瓶颈
+47. ~~structure–attribute shared-code dictionary~~ → `results/luyin14/JOINT_MULTIVIEW_DICTIONARY_STAGE_A_20260812.md`：解决无类型 patch 的零学习余量，但跨数据集 gate 失败
+48. ~~edge-aware joint dictionary + GINE，3 split seeds~~ → `results/luyin14/EDGE_AWARE_JOINT_MULTI_SPLIT_20260812.md`
+49. **edge-aware 结论**：seed-0 MUTAG 强正，但 9-fold 汇总仅 `+4.3pt`、5/9 wins，binding 3/9 wins；PTC_MR `-2.1pt`，不稳定
+50. **下一优先**：换更大、带 node/edge attributes 的真实 benchmark 做固定协议外部验证；先升级 typed radius-2 patch 语义，不增加 cross-attention
+51. ~~TU 中等规模外部验证~~ → `results/luyin14/TUD_EXTERNAL_VALIDATION_20260813.md`
+52. **Mutagenicity Stage A**：seed 0 FINAL−GINE `+7.0pt`、TRUE−SHUFFLED `+3.3pt`、FINAL−INIT `+3.9pt`，按协议扩展
+53. **Mutagenicity 9-fold 结论**：FINAL−GINE `-0.4pt`（3/9 wins）；binding `+0.8pt`（5/9），FINAL−INIT `+0.6pt`（5/9），强信号不跨 split
+54. **NCI1 结论**：FINAL−GIN `+4.4pt`，但 FINAL−INIT `-1.3pt`；shared prototype 有用，不能归因于 K-SVD updates
+55. **radius-2 substrate PASS**：两数据集 r2 ego mean≈6.3--6.5，cap8 平均保留 95.7%/98.1%，仍是局部对象；下一轮只可换 patch 语义，不调融合容量
+56. ~~TU typed radius-2 Stage A~~ → `results/luyin14/TUD_RADIUS2_VALIDATION_20260813.md`
+57. **Mutagenicity radius-2 no-go**：typed patch types 424，但 TRUE=SHUFFLED=INIT≈0.751，重构改善未转分类增益
+58. **NCI1 radius-2 9-fold**：FINAL−GIN `+5.0pt`（8/9）、TRUE−SHUFFLED `+1.8pt`（7/9），但 FINAL−INIT `-0.06pt`
+59. **路线判断**：radius-2 joint patch representation 有稳定信号；普通无监督 K-SVD updates 仍无任务归因，不进入 cross-attention
+60. ~~luyin16 导师固定特征概念复现~~ → `results/luyin16/MENTOR_CONCEPT_ROUTE_VERDICT_20260829.md`
+61. **MolHIV fixed-feature 结论**：显式 topology+chemistry + XGBoost official-valid `0.7817`；但 chem/topology K-SVD update、S 外融合和 624D reconstruction proxy 全部无稳定增量
+62. **停止项**：不继续扫 K/T、Beam、objective 或 fusion；导师约 0.80 路线必须先取得 69/624D 上游 schema、payload 与 best params，否则只能称 proxy
+63. **统计对象补充**：slot-aligned `8×64+28×4=624` proxy 的 raw `0.7014` 高于全局统计 proxy `0.6649`，但仍无 S 外增量；occurrence-sum `0.5821`，不再猜聚合方式
+64. ~~clean structural-role fusion~~ → `results/luyin16/CLEAN_STRUCTURAL_ROLE_FUSION_20260901.md`
+65. **结构编码结论**：去掉 OGB degree/ring 后，rooted-WL factorized raw 在 official-train 三折相对 coarse `+5.47pt`、3/3 wins；coarse role 确实过弱
+66. **迁移结论**：official-valid 上 centered 仍胜 shuffle `+1.56pt`，但仅比 `T+A` `+0.07pt`；factorized raw 比 `T+A` `-1.34pt`，依赖存在但无稳定标签增量
+67. **停止项**：typed-edge 内部 `-1.64pt`、0/3 wins，exact topology valid type coverage 仅 `49.5%`；不扫 WL bins/rounds、exact orbit、path、attention 或 K-SVD
+68. ~~task-aligned interaction / Optuna audit~~ → `results/luyin16/TASK_ALIGNED_INTERACTION_TUNING_20260901.md`
+69. **超参数结论**：nested Optuna 使 `T+A` `+1.52pt`、centered `+0.23pt`、raw `-1.52pt`；raw/centered 相对 `T+A` 的 gap 分别缩小 `3.03pt/1.28pt`，均 0/3 folds 改善，未调参不是 interaction 失败的解释
+70. **稀疏 residual no-go**：cross-fitted centered 胜 shuffle `+2.93pt`、2/3 wins，但比 tuned `T+A` `-0.57pt`、仅 1/3 wins；raw 比 baseline `-1.43pt`
+71. **路线冻结**：不扩大 Optuna 或继续 selector/top-k/C 搜索，不重新打开 official-valid；rooted-WL `T+A` 保持主线，centered 只保留 dependence diagnostic
+72. ~~rooted-WL frozen terminal test~~ → `results/luyin16/STRUCTURAL_ROLE_TERMINAL_TEST_20260901.md`
+73. **单分支 test**：train+valid refit `T+A=0.7610`、centered `0.7716`，centered `+1.06pt`、4/5 seeds；调参改善 valid 但未消除 valid--test mismatch
+74. **late fusion test**：预注册固定 50/50 `T+A+centered` paired-seed mean `0.7825`，十模型 probability ensemble **`0.7839`**；两个独立 expert 的互补性高于 feature-level residual
+75. **终端冻结**：official test 历史上已被查看，本轮只算 controlled terminal evaluation；不再用该 test 调 view/权重/参数，下一步转向新 outer splits 上的 constrained late fusion
+76. ~~exact rooted topology × conditional chemistry 快筛~~ → `results/luyin16/EXACT_CONDITIONAL_FUSION_20260901.md`
+77. **融合层级结论**：exact/orbit 位置绑定 no-go；rooted-WL 在本轮观测 radius-2 patch 上无 exact collision。真正可复现的是同一 patch 内 topology 与 attribute multiset 的条件配对，true−patch-pair-shuffle `+2.36pt`、8/9 seed×fold wins
+78. **预测边界与下一步**：conditional pairing 机制存在，但直接 joint XGBoost 未超过 `S+WL+attribute`；不扫 K/prototype/XGB，不看 valid/test，只允许一次 cross-fitted conditional residual gate

@@ -16,5 +16,46 @@ tracks/*/results/**/*.json
 tracks/*/code/**/__pycache__/
 *.log
 .DS_Store
+*.coverage
+.coverage.*
+.ruff_cache/
+htmlcov/
 *.npz
 tracks/*/results/molhiv/*.npz
+
+# generated experiment outputs; keep small Markdown summaries and explicit manifests
+tracks/*/results/**/*.pt
+tracks/*/results/**/*.pth
+tracks/*/results/**/*.ckpt
+tracks/*/results/**/*.png
+tracks/*/results/**/*.log
+tracks/*/results/**/*.csv
+tracks/*/results/**/cache/
+tracks/*/results/**/raw/
+tracks/*/results/**/artifacts/
+tracks/*/results/**/*_smoke/
+
+# === heavy, reproducible or third-party assets ===
+
+# raw experiment caches (pkl checkpoints)
+tracks/*/results/cache_*/
+tracks/*/results/viz_*/
+
+# large latent / ssl artifacts
+*.ssl.pt
+tracks/*/results/**/*.ssl.pt
+tracks/*/results/**/*_latents_*.npz
+tracks/*/results/**/*_frozen_test.*
+tracks/*/results/**/*reconstruction*.npz
+
+# archive/backup copies
+tracks/*/results/**/*_archive/
+tracks/*/results/**/*archive*/
+
+# hod-gnn replication — vendored code, kaggle output, datasets, results
+tracks/hod-gnn-replication/code/vendor/
+tracks/hod-gnn-replication/kaggle/
+tracks/hod-gnn-replication/dataset/
+tracks/hod-gnn-replication/data/
+tracks/hod-gnn-replication/results/
+tracks/hod-gnn-replication/hod-gnn-results/

@@ -101,14 +101,44 @@ def load_molhiv(
     te = np.asarray(split_idx["test"], dtype=np.int64)
 
     if max_graphs is not None and max_graphs < n_full:
-        # keep split proportions, min 1 per split when possible
+        # Smoke subsets preserve each official split and approximately preserve
+        # its positive rate.  This prevents seed from silently changing the
+        # class prior, especially in MolHIV's tiny validation split.
         rng = np.random.default_rng(seed)
+        labels_full = np.asarray(dataset.labels).reshape(-1)
+
+        def _stratified_pick(idx: np.ndarray, n_pick: int) -> np.ndarray:
+            n_pick = min(int(n_pick), len(idx))
+            if n_pick <= 0:
+                return np.empty(0, dtype=np.int64)
+            pos = idx[labels_full[idx] > 0.5]
+            neg = idx[labels_full[idx] <= 0.5]
+            n_pos = int(round(n_pick * (len(pos) / max(1, len(idx)))))
+            n_pos = min(n_pos, len(pos))
+            n_pos = max(0, n_pos)
+            n_neg = n_pick - n_pos
+            if n_neg > len(neg):
+                n_neg = len(neg)
+                n_pos = min(n_pick - n_neg, len(pos))
+            picked = np.concatenate(
+                [
+                    rng.choice(pos, size=n_pos, replace=False)
+                    if n_pos
+                    else np.empty(0, dtype=np.int64),
+                    rng.choice(neg, size=n_neg, replace=False)
+                    if n_neg
+                    else np.empty(0, dtype=np.int64),
+                ]
+            )
+            rng.shuffle(picked)
+            return picked.astype(np.int64)
+
         n_tr_full, n_va_full, n_te_full = len(tr), len(va), len(te)
         frac = max_graphs / n_full
         n_tr = max(1, int(round(n_tr_full * frac)))
         n_va = max(1, int(round(n_va_full * frac)))
         n_te = max(1, int(round(n_te_full * frac)))
-        # adjust to exact max_graphs
+        # adjust to exact max_graphs without changing valid/test minimums
         total = n_tr + n_va + n_te
         while total > max_graphs and n_tr > 1:
             n_tr -= 1
@@ -116,9 +146,9 @@ def load_molhiv(
         while total < max_graphs and n_tr < n_tr_full:
             n_tr += 1
             total += 1
-        tr = rng.choice(tr, size=min(n_tr, n_tr_full), replace=False)
-        va = rng.choice(va, size=min(n_va, n_va_full), replace=False)
-        te = rng.choice(te, size=min(n_te, n_te_full), replace=False)
+        tr = _stratified_pick(tr, n_tr)
+        va = _stratified_pick(va, n_va)
+        te = _stratified_pick(te, n_te)
         keep = np.unique(np.concatenate([tr, va, te]))
         keep.sort()
         old_to_new = {int(o): i for i, o in enumerate(keep)}
@@ -171,8 +201,12 @@ def load_molhiv(
         "n_train": int(len(split["train"])),
         "n_valid": int(len(split["valid"])),
         "n_test": int(len(split["test"])),
+        "n_train_pos": int(y_arr[split["train"]].sum()) if len(split["train"]) else 0,
+        "n_valid_pos": int(y_arr[split["valid"]].sum()) if len(split["valid"]) else 0,
+        "n_test_pos": int(y_arr[split["test"]].sum()) if len(split["test"]) else 0,
         "pos_rate": float(y_arr.mean()) if n else 0.0,
         "subsample_seed": seed if max_graphs is not None else None,
+        "original_indices": indices.tolist(),
         "with_features": with_features,
     }
     return MolhivBundle(

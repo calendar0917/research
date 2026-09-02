@@ -1,0 +1,36 @@
+protocol_id: molhiv-rooted-conditional-patch-network-film-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+
+representation:
+  radius: 2
+  shuffle_seed: 20261001
+
+screen:
+  folds: [0, 1, 2]
+  selection_seed: 20260921
+  max_train_graphs_per_fold: 1200
+  max_valid_graphs_per_fold: 600
+  smoke_train_graphs_per_fold: 120
+  smoke_valid_graphs_per_fold: 60
+  variants: [structure, attribute, concat, conditional_film]
+
+training:
+  hidden: 48
+  struct_layers: 2
+  experts: 4
+  dropout: 0.10
+  epochs: 15
+  smoke_epochs: 4
+  batch_size: 24
+  learning_rate: 0.002
+  weight_decay: 0.0001
+  seeds: [0]
+  device: cpu
+
+output_json: tracks/ksvd/results/luyin16/rooted_conditional_patch_network_film/summary.json
+output_markdown: tracks/ksvd/results/luyin16/rooted_conditional_patch_network_film/summary.md
+
