@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>决策边界与树规则速查</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Classical models / quick reference</div>
+  <h1>决策边界与树规则</h1>
+  <p class="dek">模型可以理解为在输入空间中画出一个预测函数。不同模型的关键差异，是它允许画出什么形状。</p>
+  <hr class="rule">
+  <div class="card"><span class="label">线性分类器</span><p><code>wᵀx + b = 0</code> 是决策边界。二维时是一条直线，高维时是超平面。它不能直接表达 XOR 这种非线性分隔。</p></div>
+  <div class="card"><span class="label">决策树</span><p>每次选择一个特征和阈值，例如 <code>x₁ ≤ t</code>，把空间切成两个区域；递归切分后得到轴对齐的分段区域。叶节点保存预测值或类别比例。</p></div>
+  <div class="card"><span class="label">树的代价</span><p>深树能表达更复杂规则，但容易过拟合；浅树偏差较高但更稳。<code>max_depth</code>、<code>min_samples_leaf</code> 和剪枝控制复杂度。</p></div>
+  <div class="card claim"><strong>表达能力不是越大越好：</strong><br>要比较一个模型，既要问它能表达什么，也要问它是否有足够数据把这种表达学对。</div>
+  <p><a href="../lessons/0006-boundaries-and-trees.html">回到第六课：从边界到规则</a></p>
+</main></body></html>

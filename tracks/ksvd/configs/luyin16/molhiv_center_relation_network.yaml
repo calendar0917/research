@@ -1,0 +1,28 @@
+protocol_id: luyin16-molhiv-center-conditional-fusion-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+
+representation:
+  radius: 3
+  wl_rounds: 3
+  node_role_bins: 64
+  edge_role_bins: 32
+  degree_scale: 4.0
+
+model:
+  hidden: 64
+  epochs: 100
+  batch_size: 64
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  evaluate_every: 1
+  device: cpu
+  num_threads: 2
+  model_seeds: [0]
+
+output:
+  feature_cache: tracks/ksvd/results/luyin16/molhiv_center_relation_network/features_r3_wl3.npz
+  json: tracks/ksvd/results/luyin16/MOLHIV_CENTER_CONDITIONAL_FUSION_20260903.json
+  markdown: tracks/ksvd/results/luyin16/MOLHIV_CENTER_CONDITIONAL_FUSION_20260903.md

@@ -1,0 +1,72 @@
+protocol_id: luyin16-molhiv-center-token-route-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+  frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  full_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/features_and_predictions.npz
+  dev_token_cache: tracks/ksvd/results/luyin16/center_token_route/dev_token_cache.npz
+  test_token_cache: tracks/ksvd/results/luyin16/center_token_route/test_token_cache.npz
+
+representation:
+  radius: 2
+  degree_bins: 8
+  wl_rounds: 2
+  node_role_bins: 64
+  edge_role_bins: 32
+  typed_edge_bins: 256
+  max_centers_per_graph: null
+
+# Every fitted feature transform and every classifier search is restricted to
+# official-train scaffold folds.  Official validation is touched once by the
+# tune stage; official test is only read by the separate test stage.
+feature_seed: 20260930
+conditional_pca_rank: 32
+
+dictionary:
+  n_atoms: 64
+  sparsity: 8
+  iterations: 4
+  max_train_tokens: 12000
+  encode_n_jobs: 8
+
+classifier:
+  n_estimators: 260
+  max_depth: 4
+  learning_rate: 0.04
+  min_child_weight: 8
+  subsample: 0.85
+  colsample_bytree: 0.70
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  gamma: 0.0
+  n_jobs: 8
+
+tuning:
+  n_trials: 8
+  seed: 20260931
+  n_jobs: 8
+  ranges:
+    n_estimators: [120, 520]
+    max_depth: [2, 7]
+    learning_rate: [0.015, 0.14]
+    min_child_weight: [2.0, 50.0]
+    subsample: [0.65, 1.0]
+    colsample_bytree: [0.30, 1.0]
+    reg_lambda: [0.3, 150.0]
+    reg_alpha: [0.00001, 15.0]
+    gamma: [0.0, 5.0]
+
+model_seeds: [0, 1, 2, 3, 4]
+
+audit:
+  n_graphs: 8
+  seed: 20260932
+  tolerance: 1.0e-6
+
+output:
+  frozen_manifest_json: tracks/ksvd/results/luyin16/center_token_route/frozen_manifest.json
+  frozen_manifest_markdown: tracks/ksvd/results/luyin16/center_token_route/frozen_manifest.md
+  terminal_test_json: tracks/ksvd/results/luyin16/center_token_route/terminal_test.json
+  terminal_test_markdown: tracks/ksvd/results/luyin16/center_token_route/terminal_test.md

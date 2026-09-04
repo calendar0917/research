@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>集成学习速查</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Classical models / quick reference</div>
+  <h1>集成学习</h1>
+  <p class="dek">集成的核心不是“树越多越强”，而是让多个基学习器以不同方式提供互补信息。</p>
+  <hr class="rule">
+  <div class="card"><span class="label">Bagging / Random Forest</span><p>对样本或特征做随机扰动，训练相对独立的树，再平均或投票。目标主要是降低方差、提高稳定性。</p></div>
+  <div class="card"><span class="label">Boosting / GBDT</span><p>从简单模型开始，每一步新增一个模型去修正当前预测的损失方向，最后加法组合。目标是逐步降低偏差。</p></div>
+  <div class="card"><span class="label">XGBoost</span><p>梯度提升树的高效、正则化实现。每一轮增加一棵树；使用损失的一阶梯度和二阶信息选择结构与叶子值，并控制树复杂度。</p></div>
+  <div class="card"><span class="label">重要超参数</span><p><code>n_estimators</code>：树的数量；<code>learning_rate</code>：每棵树的贡献缩放；<code>max_depth</code>：单棵树的复杂度；<code>subsample</code>、<code>colsample_bytree</code>：随机性与正则化；<code>reg_lambda</code>、<code>reg_alpha</code>：叶子值正则化。</p></div>
+  <div class="card claim"><strong>一句话区分：</strong><br>随机森林是“许多不同意见的平均”；Boosting 是“后一个意见专门纠正前面的错误”。</div>
+  <p><a href="../lessons/0007-ensemble-learning.html">回到第七课：为什么多棵树会更强</a></p>
+</main></body></html>

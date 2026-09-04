@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>第四课：数据、向量与函数</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Lesson 0004 · Foundations</div>
+  <h1>所有模型都在做什么？</h1>
+  <p class="dek">在理解 XGBoost、GNN 或 Transformer 之前，先建立一套对所有模型都适用的最小语言。</p>
+  <div class="card claim"><span class="label">本课唯一胜利</span><br>你能把一个实验写成：<strong>输入 x、目标 y、模型 fθ、预测 ŷ、损失 L、参数 θ 和超参数</strong>。</div>
+  <h2>1. 从一个样本开始</h2>
+  <p>假设任务是预测一个分子是否具有某种性质。一个样本包含输入 <code>x</code> 和标签 <code>y</code>。如果用固定特征，<code>x</code> 可能是 624 维向量；如果用 GNN，<code>x</code> 可能由节点特征、边特征和连接关系组成。</p>
+  <p>模型是一个函数：<code>ŷ = fθ(x)</code>。这里的 <code>θ</code> 是模型通过训练学到的参数。XGBoost 学的是树的切分和叶子分数；神经网络学的是层中的权重；它们的内部形式不同，但都在实现一个从输入到预测的映射。</p>
+  <h2>2. 训练不是“让模型变聪明”</h2>
+  <p>训练的精确定义是：选择参数 <code>θ</code>，使训练数据上的损失较小。对每个样本计算预测与标签的差异，再把这些差异合成目标。常见的抽象写法是：</p>
+  <div class="card claim"><code>训练目标 = 数据拟合损失 + 复杂度惩罚</code></div>
+  <p>复杂度惩罚就是正则化的核心直觉：不是任何能解释训练集的函数都值得保留。XGBoost 官方教程把目标函数明确写成训练损失与树复杂度之和；神经网络中也会出现权重衰减、Dropout 或早停等复杂度控制方式。</p>
+  <h2>3. 参数、超参数和指标不是一回事</h2>
+  <div class="card"><p><strong>参数：</strong>训练过程中从数据学习，例如神经网络权重、树的结构和叶子分数。</p><p><strong>超参数：</strong>训练前决定或通过验证集选择，例如 <code>max_depth</code>、树数量、学习率、GNN 层数。</p><p><strong>损失：</strong>训练时推动参数改变的目标，例如 logistic loss。</p><p><strong>指标：</strong>向别人报告模型表现的测量方式，例如 MolHIV 的 ROC-AUC；指标可以和训练损失不同。</p></div>
+  <p>这一区分能直接解决许多 AI 报告中的混乱：报告说“调高了模型”，可能实际是改了超参数；报告说“loss 下降所以效果更好”，却可能忽略了验证集指标；报告说“624 维参数”，则混淆了特征维度与可训练参数。</p>
+  <h2>4. 现在练习</h2>
+  <p>在“624 维固定特征 + XGBoost”的实验中，下面哪项最可能是<strong>超参数</strong>，而不是模型参数？</p>
+  <div class="quiz" data-answer="c"><button data-choice="a">每棵树的叶子分数。</button><button data-choice="b">树在某个特征上的具体切分阈值。</button><button data-choice="c"><code>max_depth</code>，即树允许的最大深度。</button><p class="feedback" aria-live="polite"></p></div>
+  <script>document.querySelectorAll('.quiz button').forEach(button => button.addEventListener('click', () => { const quiz = button.closest('.quiz'); const feedback = quiz.querySelector('.feedback'); feedback.textContent = button.dataset.choice === quiz.dataset.answer ? '正确：max_depth 是训练前的结构约束，通常由研究者设置或用验证集选择。' : '再区分：它是训练中从数据确定的量，还是训练前设置的约束？'; }));</script>
+  <h2>带走的工具</h2>
+  <p>打开<a href="../reference/ml-objects.html">机器学习基本对象</a>，任选仓库中的一个实验，把它的输入、标签、模型、参数、超参数、损失和指标各写出来。暂时不用解释所有实现细节，先把对象分对。</p>
+  <div class="card"><span class="label">Primary sources</span><p><a href="https://xgboost.readthedocs.io/en/stable/tutorials/model.html">XGBoost 官方 Introduction to Boosted Trees</a>：查看 supervised learning、objective function 和 model complexity 三节。</p><p><a href="https://www.deeplearningbook.org/contents/ml.html">Deep Learning, Chapter 5: Machine Learning Basics</a>：补充模型、损失、泛化和正则化的统一框架。</p></div>
+  <p class="footer">如果“参数”和“超参数”仍然容易混淆，直接举一个你报告里的字段来问我。下一课继续向下打基础：从向量和函数进入线性模型、梯度和优化。</p>
+  <p><a href="0003-representation-and-bias.html">上一课：表示与归纳偏置</a> · <a href="../CURRICULUM.md">课程路线</a></p>
+</main></body></html>

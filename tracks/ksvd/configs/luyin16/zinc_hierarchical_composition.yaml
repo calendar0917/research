@@ -1,0 +1,49 @@
+protocol_id: luyin16-zinc-hierarchical-motif-composition-v1
+
+data:
+  root: data/ZINC
+
+representation:
+  radius: 3
+  wl_rounds: 3
+  top_k: 2048
+  token_cache: tracks/ksvd/results/luyin16/zinc_motif_count/token_cache.npz
+
+xgboost:
+  objective: reg:absoluteerror
+  eval_metric: mae
+  max_bin: 256
+  n_jobs: 4
+  model_seed: 0
+  # Frozen reference parameters from the preceding tuned hierarchical
+  # backoff experiment.  The combined view is tuned below.
+  params:
+    n_estimators: 919
+    max_depth: 4
+    learning_rate: 0.10343963270953856
+    min_child_weight: 4.030666772181392
+    subsample: 0.7658043742611061
+    colsample_bytree: 0.12158581325112827
+    reg_lambda: 2.123374892698157
+    reg_alpha: 0.02156101206194706
+    gamma: 7.34527773987479
+
+tuning:
+  n_splits: 3
+  split_seed: 20260904
+  n_trials: 20
+  seed: 20260905
+  ranges:
+    n_estimators: [200, 1100]
+    max_depth: [2, 9]
+    learning_rate: [0.01, 0.20]
+    min_child_weight: [1.0, 40.0]
+    subsample: [0.60, 1.0]
+    colsample_bytree: [0.05, 1.0]
+    reg_lambda: [0.01, 200.0]
+    reg_alpha: [0.00001, 30.0]
+    gamma: [0.0, 8.0]
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_HIERARCHICAL_COMPOSITION_20260904.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_HIERARCHICAL_COMPOSITION_20260904.md

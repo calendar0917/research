@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>数据流审计速查</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Research literacy / quick reference</div>
+  <h1>数据流审计</h1>
+  <p class="dek">核心问题：每个数据子集在代码中扮演了什么角色？谁可以学习，谁只能被转换或评估？</p>
+  <hr class="rule">
+  <div class="card claim"><strong>训练集：</strong>可以用于 <code>fit</code>、选择参数和学习表示。<br><strong>验证集：</strong>可以用于选择模型或配置，但不能参与最终无偏报告。<br><strong>测试集：</strong>只在协议冻结后用于一次最终评估。</div>
+  <h2>四个动作</h2>
+  <ol><li><strong>Split：</strong>先确定索引，避免预处理先看全数据。</li><li><strong>Fit：</strong>凡是“学习参数”的动作，只能接触训练集。</li><li><strong>Transform / Predict：</strong>验证集和测试集只能使用已经学习好的变换或模型。</li><li><strong>Evaluate：</strong>验证集可用于开发期判断；测试集不能用于挑选赢家。</li></ol>
+  <h2>审计代码时标记</h2>
+  <ul><li>给每个数组标注来源：`train`、`valid`、`test`。</li><li>圈出所有 `fit`、`fit_transform`、`select`、`best`、`max` 和调参循环。</li><li>确认这些操作是否接触了 `valid` 或 `test`。</li><li>检查最终报告是否把单次分数误写成稳定结论。</li></ul>
+  <p><a href="../lessons/0002-follow-the-data.html">回到第二课：沿着数据流审计代码</a></p>
+</main></body></html>

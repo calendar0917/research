@@ -1,0 +1,39 @@
+protocol_id: luyin16-zinc-center-relation-network-v1
+
+data:
+  root: data/ZINC
+
+# Null means the complete official split.  Positive values are for smoke runs.
+limits:
+  train: null
+  valid: null
+  test: null
+
+representation:
+  radius: 3
+  wl_rounds: 3
+  node_role_bins: 64
+  edge_role_bins: 32
+  relation_radius: 3
+
+model:
+  hidden: 64
+  relation_layers: 2
+  epochs: 120
+  batch_size: 64
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  evaluate_every: 5
+  patience: 20
+  device: cpu
+  model_seeds: [0]
+  modes:
+    - attribute_only
+    - structure_only
+    - center_concat
+    - conditional_fusion
+    - conditional_relation
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_CENTER_RELATION_NETWORK_20260903.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_CENTER_RELATION_NETWORK_20260903.md

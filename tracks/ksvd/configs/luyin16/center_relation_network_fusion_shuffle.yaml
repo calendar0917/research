@@ -1,0 +1,35 @@
+protocol_id: luyin16-zinc-conditional-fusion-shuffle-confirmation-v1
+
+data:
+  root: data/ZINC
+
+limits:
+  train: null
+  valid: null
+  test: null
+
+representation:
+  radius: 3
+  wl_rounds: 3
+  node_role_bins: 64
+  edge_role_bins: 32
+  relation_radius: 3
+
+model:
+  hidden: 64
+  relation_layers: 1
+  epochs: 100
+  batch_size: 64
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  evaluate_every: 5
+  patience: 20
+  device: cpu
+  model_seeds: [0, 1, 2]
+  shuffle_seed: 20260903
+  modes: [conditional_fusion]
+  control_modes: [conditional_fusion_shuffle]
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_CONDITIONAL_FUSION_SHUFFLE_20260903.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_CONDITIONAL_FUSION_SHUFFLE_20260903.md

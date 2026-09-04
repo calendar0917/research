@@ -1,0 +1,36 @@
+protocol_id: luyin16-zinc-exact-rooted-typed-patch-direct-relation-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+output:
+  feature_cache: tracks/ksvd/results/luyin16/zinc_exact_patch_relation/feature_cache.npz
+  json: tracks/ksvd/results/luyin16/ZINC_EXACT_PATCH_RELATION_20260904.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_EXACT_PATCH_RELATION_20260904.md
+
+xgboost:
+  objective: reg:absoluteerror
+  max_bin: 256
+  n_jobs: 4
+  params:
+    n_estimators: 600
+    max_depth: 6
+    learning_rate: 0.05
+    min_child_weight: 5
+    subsample: 0.8
+    colsample_bytree: 0.45
+    reg_lambda: 5.0
+    reg_alpha: 0.01
+    gamma: 0.0
+
+mlp:
+  hidden: 128
+  dropout: 0.05
+  epochs: 50
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 12
+  device: cpu

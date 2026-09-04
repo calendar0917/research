@@ -1,0 +1,61 @@
+protocol_id: luyin16-zinc-hierarchical-topology-conditioned-match-gate-v1
+
+data:
+  root: data/ZINC
+
+representation:
+  radius: 3
+  wl_rounds: 3
+  top_k: 2048
+  token_cache: tracks/ksvd/results/luyin16/zinc_motif_count/token_cache.npz
+
+output:
+  feature_cache_dir: tracks/ksvd/results/luyin16/zinc_hierarchical_conditioned_match
+  json: tracks/ksvd/results/luyin16/ZINC_HIERARCHICAL_CONDITIONED_MATCH_GATE_20260904.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_HIERARCHICAL_CONDITIONED_MATCH_GATE_20260904.md
+
+progress_every: 500
+
+xgboost:
+  objective: reg:absoluteerror
+  eval_metric: mae
+  max_bin: 256
+  n_jobs: 4
+  model_seed: 0
+  # Best hierarchical-backoff parameters from
+  # ZINC_HIERARCHICAL_BACKOFF_20260904.json.  These are fixed during the
+  # representation gate, including for the shuffle control.
+  params:
+    n_estimators: 919
+    max_depth: 4
+    learning_rate: 0.10343963270953856
+    min_child_weight: 4.030666772181392
+    subsample: 0.7658043742611061
+    colsample_bytree: 0.12158581325112827
+    reg_lambda: 2.123374892698157
+    reg_alpha: 0.02156101206194706
+    gamma: 7.34527773987479
+
+gate:
+  n_splits: 3
+  split_seed: 20260904
+  shuffle_seed: 20260904
+  min_mean_reduction: 0.01
+  target_mean_reduction: 0.015
+  min_fold_wins: 2
+  min_true_vs_shuffle: 0.01
+
+tuning:
+  # This section is consulted only if the representation gate passes.
+  n_trials: 20
+  seed: 20260904
+  ranges:
+    n_estimators: [200, 1000]
+    max_depth: [2, 9]
+    learning_rate: [0.01, 0.20]
+    min_child_weight: [1.0, 40.0]
+    subsample: [0.60, 1.0]
+    colsample_bytree: [0.10, 1.0]
+    reg_lambda: [0.01, 200.0]
+    reg_alpha: [0.00001, 30.0]
+    gamma: [0.0, 8.0]

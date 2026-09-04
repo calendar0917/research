@@ -1,0 +1,82 @@
+protocol_id: luyin16-molhiv-center-token-route-checkpoint-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+  frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  full_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/features_and_predictions.npz
+  dev_token_cache: tracks/ksvd/results/luyin16/center_token_route/dev_token_cache.npz
+  test_token_cache: tracks/ksvd/results/luyin16/center_token_route_checkpoint/test_token_cache.npz
+
+representation:
+  radius: 2
+  degree_bins: 8
+  wl_rounds: 2
+  node_role_bins: 64
+  edge_role_bins: 32
+  typed_edge_bins: 256
+  max_centers_per_graph: null
+
+feature_seed: 20260930
+conditional_pca_rank: 16
+
+# Reduced but still capacity-matched challenger budget.  This is intentionally
+# a new protocol, not a silent modification of the broad v1 route.
+dictionary:
+  n_atoms: 64
+  sparsity: 8
+  iterations: 3
+  max_train_tokens: 6000
+  encode_n_jobs: 8
+
+classifier:
+  n_estimators: 140
+  max_depth: 4
+  learning_rate: 0.05
+  min_child_weight: 8
+  subsample: 0.85
+  colsample_bytree: 0.70
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  gamma: 0.0
+  max_bin: 64
+  n_jobs: 8
+
+screen:
+  seeds: [0, 1, 2]
+
+audit:
+  n_graphs: 8
+  seed: 20261003
+  tolerance: 1.0e-6
+
+tuning:
+  candidate_views:
+    - s_conditional
+    - s_ksvd_final
+  n_trials: 4
+  seed: 20261002
+  n_jobs: 8
+  ranges:
+    n_estimators: [100, 360]
+    max_depth: [2, 6]
+    learning_rate: [0.02, 0.12]
+    min_child_weight: [2.0, 40.0]
+    subsample: [0.70, 1.0]
+    colsample_bytree: [0.35, 1.0]
+    reg_lambda: [0.5, 100.0]
+    reg_alpha: [0.0001, 10.0]
+    gamma: [0.0, 4.0]
+
+model_seeds: [0, 1, 2, 3, 4]
+
+output:
+  checkpoint_dir: tracks/ksvd/results/luyin16/center_token_route_checkpoint/folds
+  screen_json: tracks/ksvd/results/luyin16/center_token_route_checkpoint/fixed_screen.json
+  screen_markdown: tracks/ksvd/results/luyin16/center_token_route_checkpoint/fixed_screen.md
+  tuning_json: tracks/ksvd/results/luyin16/center_token_route_checkpoint/tuning.json
+  frozen_manifest_json: tracks/ksvd/results/luyin16/center_token_route_checkpoint/frozen_manifest.json
+  frozen_manifest_markdown: tracks/ksvd/results/luyin16/center_token_route_checkpoint/frozen_manifest.md
+  terminal_test_json: tracks/ksvd/results/luyin16/center_token_route_checkpoint/terminal_test.json
+  terminal_test_markdown: tracks/ksvd/results/luyin16/center_token_route_checkpoint/terminal_test.md

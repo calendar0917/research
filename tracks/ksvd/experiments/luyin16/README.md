@@ -247,6 +247,21 @@ uv run python -m tracks.ksvd.experiments.luyin16.task_aligned_interaction_screen
 `1.28pt`；稀疏 residual 也未超过 tuned `T+A`。判定见
 `../../results/luyin16/TASK_ALIGNED_INTERACTION_TUNING_20260901.md`。
 
+## 不变谱交互与条件 binding 摘要
+
+为直接检查 PCA 坐标漂移是否是瓶颈，运行：
+
+```bash
+uv run python -m tracks.ksvd.experiments.luyin16.invariant_conditional_interaction_screen \
+  --config tracks/ksvd/configs/luyin16/invariant_conditional_interaction_screen.yaml
+```
+
+该协议从已缓存的 centre-level covariance/binding 对象构造不依赖 PCA 方向的奇异值、
+能量、熵和 role-conditioned concentration 摘要；只在 official-train scaffold folds
+内做 12-trial XGBoost 搜索，official-valid/test 不编码。当前结果见
+`../../results/luyin16/INVARIANT_CONDITIONAL_INTERACTION_20260902.md`：
+`S+marginal` 仍胜过三个新摘要，因此新摘要保留为解释性/稳定性候选，不晋级性能主线。
+
 ## Rooted-WL 冻结终端测试
 
 最终候选先在非 test 数据上冻结：
@@ -301,6 +316,72 @@ uv run python -m tracks.ksvd.experiments.luyin16.cross_center_interaction_test_p
 `../../results/luyin16/CROSS_CENTER_INTERACTION_OFFICIAL_VALID_20260902.md`、
 `../../results/luyin16/CROSS_CENTER_INTERACTION_OFFICIAL_TEST_20260902.md` 和
 `../../results/luyin16/CROSS_CENTER_INTERACTION_TEST_PCA_CONTROL_20260902.md`。
+
+PCA rank=16 的 train-only 快速敏感性检查（复用同一 5121 图、同一 raw cache，
+不编码 official-valid/test）使用：
+
+```bash
+uv run python -m tracks.ksvd.experiments.luyin16.cross_center_interaction_screen \
+  --config tracks/ksvd/configs/luyin16/cross_center_interaction_screen_pca16.yaml
+```
+
+该检查只把交互块从 PCA-8 改为 PCA-16；结果写入
+`../../results/luyin16/cross_center_interaction_screen_pca16/`。它是 development
+sensitivity，不得替代已冻结的 official-valid/test 结果。
+
+随后完成的 PCA-16 `S+cross_cov` 完整调参及冻结 valid/test 整理见
+[`CROSS_CENTER_INTERACTION_PCA16_CROSSCOV_SUMMARY_20260903.md`](../../results/luyin16/CROSS_CENTER_INTERACTION_PCA16_CROSSCOV_SUMMARY_20260903.md)。
+该结果已存在，不需要重复运行；其中 PCA-16 `cross_cov` 的完整调参使用
+official-train scaffold CV，test 只作冻结后的 controlled check。
+
+## 中心级条件融合与关系传播（ZINC）
+
+为检验“图级 readout 过早丢掉中心对应关系”这一假设，新增了一个不依赖 GPS 的
+中心级原型：每个原子保留 topology-only rooted-WL 结构表示和同中心化学表示，先做
+`[s_v, a_v, s_v*a_v]` 条件融合，再可选地沿显式中心对（最短路、patch overlap、相邻
+键类型）传播。模型只使用 sum/mean/std readout，不使用全局 attention。
+
+烟测：
+
+```bash
+./.venv/bin/python -m tracks.ksvd.experiments.luyin16.center_relation_network \
+  --config tracks/ksvd/configs/luyin16/center_relation_network_smoke.yaml
+```
+
+完整官方切分的单 seed、CPU、60 epoch fast 验证：
+
+```bash
+./.venv/bin/python -m tracks.ksvd.experiments.luyin16.center_relation_network \
+  --config tracks/ksvd/configs/luyin16/center_relation_network_official_fast.yaml
+```
+
+结果见 `../../results/luyin16/ZINC_CENTER_RELATION_NETWORK_OFFICIAL_FAST_20260903.md`。
+`center_concat` 的 test MAE 为 `0.2722`，同中心乘性交互的
+`conditional_fusion` 为 `0.2100`，均明显优于当前 `S+WL-count` 的 `0.3765`；但
+`conditional_relation` 的 valid/test 为 `0.2193/0.2382`，相对 fusion 尚未稳定，
+因此当前证据支持“中心对齐 + 条件融合”是突破点，不支持继续堆关系传播层。结果是
+单 seed fast 诊断，不替代多 seed/调参后的终端比较。
+
+## ZINC typed match 候选
+
+为直接检验“typed match + 统计”是否能改善当前 XGBoost 路线，新增
+`zinc_typed_match.py`。它从已有 token cache 取每个中心的 typed-WL
+`0/1/2/3` 四层签名，在训练部分按频次建立完整多层 prototype bank；匹配时只允许
+同一中心的前缀逐层一致，再对每个分子做 prototype response 的 mean/max 与分布统计。
+最终仍只有一个图级 XGBoost，不使用 K-SVD。该实现是可审计候选，不声称等同于导师未提供
+的内部 typed-match schema。
+
+```bash
+./.venv/bin/python -m tracks.ksvd.experiments.luyin16.zinc_typed_match \
+  --config tracks/ksvd/configs/luyin16/zinc_typed_match.yaml
+```
+
+单 seed Optuna 结果见
+[`ZINC_TYPED_MATCH_20260904.md`](../../results/luyin16/ZINC_TYPED_MATCH_20260904.md)：
+official valid/test 为 `0.4100/0.3951`，优于 `S+marginal` 的约
+`0.5444/0.5519`，但仍弱于 hierarchical typed-WL backoff 的
+`0.3546/0.3455`。这说明“同中心 typed match”确实比独立 marginal 更有用，但当前
+prototype 选择和 response readout 还没有超过显式 exact/backoff count。
 
 ## ZINC 长程 suite
 

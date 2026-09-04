@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>第一课：从分数到主张</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Lesson 0001 · Research literacy</div>
+  <h1>从“分数更高”到“什么被证明了”</h1>
+  <p class="dek">一个研究结果的价值，不由模型名字决定，而由它排除了哪些替代解释决定。</p>
+
+  <div class="card claim"><span class="label">本课唯一胜利</span><br>看到任何实验报告时，你能把一句结论拆成：<strong>主张、比较、协议、证据、边界</strong>。</div>
+
+  <h2>1. 先拆句子</h2>
+  <p>“KSVD + GNN 在 MolHIV 上优于 GNN，ROC-AUC 从 0.76 提升到 0.78。”这句话至少混合了五件事：</p>
+  <ol><li><strong>主张：</strong>加入某种 KSVD 表征后，预测性能可能提升。</li><li><strong>比较：</strong>KSVD + GNN 对 GNN，而不是对任意 Transformer。</li><li><strong>协议：</strong>MolHIV 的哪种 split、哪些特征、几个 seed、哪个评估指标？</li><li><strong>证据：</strong>0.78 是一次运行、均值，还是带方差的多 seed 结果？</li><li><strong>边界：</strong>它最多首先支持“在这个协议上预测更好”，不自动支持“学到了真正结构”或“普遍优于 GNN”。</li></ol>
+  <p>这就是科研阅读的第一道防线：<em>先把结论变成可被反驳的句子，再看数字。</em></p>
+
+  <h2>2. 找替代解释</h2>
+  <p>如果新增模块带来提升，至少要问：</p>
+  <ul><li>新增模块真的提供了目标信息，还是只增加了特征维度和参数量？</li><li>它是否在 split 之前看到了验证集或测试集，从而发生泄漏？</li><li>提升是否只来自一个幸运 seed？</li><li>基线是否使用了相同的训练预算、特征、split 和调参规则？</li></ul>
+  <p>例如，标准化、特征选择、字典学习等“模型之外”的步骤也可能泄漏测试信息。官方 scikit-learn 指南明确建议先划分数据，并只在训练数据上调用 <code>fit</code>；测试数据只能接受已经学到的 <code>transform</code>。见 <a href="https://scikit-learn.org/stable/common_pitfalls.html#data-leakage">数据泄漏指南</a>。</p>
+
+  <h2>3. 用五格模板读 AI 报告</h2>
+  <div class="card"><p><span class="label">请把报告改写成</span></p><p><strong>主张：</strong>在 ______ 协议下，______ 相比 ______ 改变了 ______。</p><p><strong>证据：</strong>使用 ______ 个 seed，指标为 ______，结果为 ______ ± ______。</p><p><strong>替代解释：</strong>还可能由 ______ 造成。</p><p><strong>下一步：</strong>只改变 ______，保持 ______ 不变，以区分这些解释。</p><p><strong>边界：</strong>当前结果不能说明 ______。</p></div>
+
+  <h2>4. 现在练习</h2>
+  <p>假设 AI 报告说：“XGBoost 在固定的 624 维分子特征上达到 0.7817，优于结构编码器，因此 XGBoost 更适合分子图。”请选择最稳妥的判断。</p>
+  <div class="quiz" data-answer="b">
+    <button data-choice="a">XGBoost 已证明优于所有 GNN。</button>
+    <button data-choice="b">它只说明该特征和协议下的预测结果更好。</button>
+    <button data-choice="c">固定特征证明了 XGBoost 学到了分子结构。</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+  <script>
+    document.querySelectorAll('.quiz button').forEach(button => button.addEventListener('click', () => {
+      const quiz = button.closest('.quiz');
+      const feedback = quiz.querySelector('.feedback');
+      feedback.textContent = button.dataset.choice === quiz.dataset.answer
+        ? '正确：先限定到协议，再讨论方法角色。'
+        : '再想一步：这个结果比较了什么，又没有比较什么？';
+    }));
+  </script>
+
+  <h2>带走的工具</h2>
+  <p>下次阅读仓库中的实验报告，先打开<a href="../reference/experiment-audit-checklist.html">实验审计清单</a>，逐项填空。你不需要马上理解每一行代码；你需要先知道每一行代码应该为哪个可检验主张服务。</p>
+  <div class="card"><span class="label">Primary source</span><p>先读 <a href="https://scikit-learn.org/stable/common_pitfalls.html#data-leakage">scikit-learn 官方 Common pitfalls</a> 的 Data leakage 部分，再回到本课检查你自己的实验流程。</p></div>
+  <p class="footer">如果某个词、数字或代码步骤不清楚，直接追问我。下一课可以把这套模板应用到你仓库中的一份真实 AI 实验报告。</p>
+</main></body></html>

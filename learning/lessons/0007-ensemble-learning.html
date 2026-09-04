@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>第七课：集成学习</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Lesson 0007 · Classical models</div>
+  <h1>为什么多棵树会更强？</h1>
+  <p class="dek">随机森林和 Boosting 都组合多棵树，但一个主要在“平均不同”，另一个主要在“顺序纠错”。</p>
+  <div class="card claim"><span class="label">本课唯一胜利</span><br>你能看懂一个集成模型的训练顺序，并准确区分 Bagging、随机森林和 Boosting。</div>
+  <h2>1. 单棵树的问题</h2>
+  <p>决策树很灵活，但训练数据稍微变化，树的切分就可能明显变化。这叫不稳定，统计学习里通常表现为较高方差。单棵深树还可能把训练样本记得过细。</p>
+  <p>集成学习的基本想法是：不要把希望押在一棵树上。关键在于，多棵树必须有足够的互补性；如果所有树犯完全相同的错误，简单平均帮助有限。</p>
+  <h2>2. Bagging 与随机森林：并行平均</h2>
+  <p>Bagging 对训练样本进行有放回抽样，让每棵树看到略有不同的数据，再平均预测。随机森林进一步在每个切分处随机抽取部分特征，使树之间更不相似。</p>
+  <div class="card"><p><strong>训练关系：</strong>各棵树大体独立，可以并行训练。</p><p><strong>组合方式：</strong>分类投票或概率平均，回归平均数值。</p><p><strong>主要收益：</strong>降低方差，提高稳定性。</p></div>
+  <h2>3. Boosting：顺序纠错</h2>
+  <p>Boosting 不是独立训练很多棵树，而是维护一个当前模型：</p>
+  <div class="card claim"><code>Fₘ(x) = Fₘ₋₁(x) + η hₘ(x)</code></div>
+  <p>新树 <code>hₘ</code> 的任务是改善旧模型 <code>Fₘ₋₁</code>。在梯度提升中，它通常拟合当前损失对预测的负梯度。你在第五课学到的梯度下降，到了这里被搬到了“函数空间”：不再直接改一个向量参数，而是添加一棵能改善损失的新树。</p>
+  <p><code>η</code> 是 learning rate。它让每棵树只做小幅修正；通常需要更多树来补偿，但小步更新往往更容易控制泛化。</p>
+  <h2>4. XGBoost 在哪里</h2>
+  <p>XGBoost 属于梯度提升树家族。它的核心不是一种全新的输入表示，而是对“用树逐步优化损失”这一思想做了高效、正则化的实现。</p>
+  <p>在二分类中，树的加法输出还要经过 logistic 变换才成为概率；因此 <code>objective="binary:logistic"</code> 指定了训练目标和输出形式，而 <code>eval_metric="auc"</code> 指定了评估指标。两者不要混为一谈。</p>
+  <p>从研究角度看，看到 <code>n_estimators</code>、<code>learning_rate</code>、<code>max_depth</code> 时，应该把它们理解为一个相互作用的复杂度/步长系统，而不是独立旋钮。增加树数量、减小学习率、限制树深度，都会改变模型如何逐步拟合。</p>
+  <h2>5. 现在练习</h2>
+  <p>下面哪句话正确描述了 Boosting？</p>
+  <div class="quiz" data-answer="c"><button data-choice="a">每棵树独立训练，最后随机投票。</button><button data-choice="b">只要树越多，测试误差一定越低。</button><button data-choice="c">后续树根据当前模型的误差方向加入，并与已有树相加。</button><p class="feedback" aria-live="polite"></p></div>
+  <script>document.querySelectorAll('.quiz button').forEach(button => button.addEventListener('click', () => { const quiz = button.closest('.quiz'); const feedback = quiz.querySelector('.feedback'); feedback.textContent = button.dataset.choice === quiz.dataset.answer ? '正确：Boosting 的“顺序纠错”是它与随机森林最重要的区别。' : '再检查训练关系：树是独立并行，还是依赖前一轮模型的错误？'; }));</script>
+  <h2>带走的工具</h2>
+  <p>打开<a href="../reference/ensemble-map.html">集成学习速查</a>。下一课会专门拆开 XGBoost 的一轮训练：当前预测、梯度、二阶信息、候选切分和正则化分别做什么。</p>
+  <div class="card"><span class="label">Primary sources</span><p><a href="https://scikit-learn.org/stable/modules/ensemble.html">scikit-learn 官方 Ensembles</a>：阅读 ensemble、forest、gradient-boosted trees 和 mathematical formulation。</p><p><a href="https://arxiv.org/abs/1603.02754">XGBoost: A Scalable Tree Boosting System</a>：作为下一课的原始论文入口。</p></div>
+  <p class="footer">如果你对“函数空间中的梯度下降”感到陌生，不必现在展开证明；先抓住顺序：旧模型给预测，新树针对损失方向修正，所有树的贡献相加。</p>
+  <p><a href="0006-boundaries-and-trees.html">上一课：决策边界与树规则</a> · <a href="../CURRICULUM.md">课程路线</a></p>
+</main></body></html>

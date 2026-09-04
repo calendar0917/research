@@ -1,0 +1,52 @@
+protocol_id: luyin16-zinc-step-a-motif-count-smoke-v1
+
+data:
+  root: data/ZINC
+
+limits:
+  train: 60
+  valid: 20
+  test: 20
+
+representation:
+  radius: 3
+  wl_rounds: 3
+  top_k: 64
+  morgan_bits: 128
+
+xgboost_objective: reg:absoluteerror
+n_jobs: 2
+max_bin: 64
+model_seeds: [0, 1]
+progress_every: 0
+
+tuning:
+  n_splits: 3
+  split_seed: 20260903
+  n_trials: 2
+  seed: 20260910
+  ranges:
+    n_estimators: [20, 40]
+    max_depth: [2, 3]
+    learning_rate: [0.03, 0.15]
+    min_child_weight: [1.0, 10.0]
+    subsample: [0.8, 1.0]
+    colsample_bytree: [0.5, 1.0]
+    reg_lambda: [0.1, 20.0]
+    reg_alpha: [0.00001, 1.0]
+    gamma: [0.0, 1.0]
+
+gine:
+  enabled: true
+  hidden: 16
+  layers: 2
+  epochs: 2
+  batch_size: 32
+  learning_rate: 0.001
+  device: cpu
+  model_seeds: [0]
+
+output:
+  token_cache: tracks/ksvd/results/luyin16/zinc_motif_count_smoke/token_cache.npz
+  json: tracks/ksvd/results/luyin16/ZINC_STEP_A_MOTIF_COUNT_SMOKE_20260903.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_STEP_A_MOTIF_COUNT_SMOKE_20260903.md

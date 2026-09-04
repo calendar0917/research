@@ -1,0 +1,21 @@
+protocol_id: luyin16-zinc-matched-gine-sufficient-training-v1
+
+data:
+  root: data/ZINC
+
+model:
+  hidden: 64
+  layers: 4
+  epochs: 2000
+  batch_size: 32
+  learning_rate: 0.001
+  device: cpu
+  # Evaluate every epoch: the official validation set is small, and this
+  # gives an exact best-epoch selection rather than a coarse checkpoint.
+  evaluate_every: 1
+  model_seeds: [0, 1, 2]
+
+output:
+  directory: tracks/ksvd/results/luyin16/zinc_gine_baseline
+  json: tracks/ksvd/results/luyin16/ZINC_MATCHED_GINE_2000_20260903.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_MATCHED_GINE_2000_20260903.md

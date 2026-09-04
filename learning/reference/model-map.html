@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>模型地图：输入与归纳偏置</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Foundations / quick reference</div>
+  <h1>模型地图</h1>
+  <p class="dek">不要按模型名字分类，先按“输入是什么、模型假设什么、输出回答什么问题”分类。</p>
+  <hr class="rule">
+  <div class="card"><span class="label">XGBoost</span><p><strong>典型输入：</strong>固定长度的表格特征向量。<br><strong>主要机制：</strong>逐棵添加、互相补充的决策树；优化损失并控制树复杂度。<br><strong>偏置：</strong>对特征阈值、非线性和特征交互敏感；不自动知道节点邻接关系。<br><strong>适合问：</strong>已有可靠的固定特征时，哪些特征组合能预测标签？</p></div>
+  <div class="card"><span class="label">Message-passing GNN</span><p><strong>典型输入：</strong>节点、边、连接关系。<br><strong>主要机制：</strong>从邻居收集消息、聚合、更新表示，堆叠层数扩大局部视野。<br><strong>偏置：</strong>尊重图的连接关系与节点置换不变性；层数限制传播距离。<br><strong>适合问：</strong>标签是否依赖局部结构、邻居属性和关系组合？</p></div>
+  <div class="card"><span class="label">Transformer</span><p><strong>典型输入：</strong>一组 token/元素及其位置或关系编码。<br><strong>主要机制：</strong>通过 attention 学习元素之间的条件交互。<br><strong>偏置：</strong>擅长全局或长距离交互，但关系结构需要通过输入编码或结构改造提供。<br><strong>适合问：</strong>哪些元素之间的交互决定预测，且交互模式需要由数据学习？</p></div>
+  <div class="card claim"><strong>研究判断公式：</strong><br>方法效果 = 表示携带的信息 × 模型利用这些信息的能力 × 训练/评估协议的可信度。</div>
+  <p><a href="../lessons/0003-representation-and-bias.html">回到第三课：先问模型看见了什么</a></p>
+</main></body></html>

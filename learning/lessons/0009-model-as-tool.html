@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第九课：模型作为工具</title>
+  <link rel="stylesheet" href="../assets/course.css">
+  <script defer src="../assets/interactive.js"></script>
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Lesson 0009 · Model literacy</div>
+  <h1>模型作为工具：先看契约，再看机制</h1>
+  <p class="dek">接口告诉你“怎么调用”；基本理解告诉你“调用了什么、结果意味着什么、什么时候不能相信”。</p>
+
+  <div class="card claim">
+    <span class="label">本课唯一胜利</span><br>
+    读一段模型代码时，你能说清输入、输出、训练目标、评估指标和数据边界，而不必先学完模型的全部数学。
+  </div>
+
+  <h2>1. 一个模型调用其实有两层</h2>
+  <p><strong>接口层</strong>是 <code>fit</code>、<code>predict</code>、<code>forward</code> 这些入口，以及参数的名字和类型。它让代码能运行。</p>
+  <p><strong>语义层</strong>是输入表示、输出含义、训练目标、方法假设和失败方式。它让你知道运行结果能否回答研究问题。</p>
+  <div class="card"><p><strong>接口：</strong><code>model.fit(X_train, y_train)</code></p><p><strong>语义：</strong>模型正在用哪些对象学习？<code>X_train</code> 是固定特征还是图？<code>y_train</code> 是什么标签？训练后输出是类别、概率还是分数？</p></div>
+  <p>科研审计通常不是从公式开始，而是先把这两层分开。公式只有在解释异常或核对实现时才需要深入。</p>
+
+  <h2>2. 用一段 XGBoost 代码练习“模型契约”</h2>
+  <pre><code>model = XGBClassifier(
+    objective="binary:logistic",
+    eval_metric="auc",
+    max_depth=4,
+    learning_rate=0.05,
+    n_estimators=300,
+    random_state=7,
+)
+
+model.fit(X_train, y_train,
+          eval_set=[(X_valid, y_valid)],
+          verbose=False)
+
+p_test = model.predict_proba(X_test)[:, 1]
+test_auc = roc_auc_score(y_test, p_test)</code></pre>
+  <p>先只读懂五件事：</p>
+  <ol>
+    <li><code>X_train</code> 通常是 <code>[样本数, 特征数]</code> 的固定长度矩阵；这里的特征是否编码了分子结构，决定了 XGBoost 能利用什么信息。</li>
+    <li><code>fit</code> 改变模型内部状态；<code>predict_proba</code> 只读取已经训练好的状态。</li>
+    <li><code>[:, 1]</code> 取正类的连续概率/分数，不是硬分类标签；ROC-AUC 需要这样的排序分数。</li>
+    <li><code>objective="binary:logistic"</code> 指定训练目标和二分类输出形式；<code>eval_metric="auc"</code> 指定监控/报告指标。</li>
+    <li><code>X_valid</code> 出现在评估位置，<code>X_test</code> 只在最后计算结果。是否真的遵守这个边界，还要继续检查调参和模型选择代码。</li>
+  </ol>
+  <p>这就是“作为工具的基本理解”：不必知道每棵树如何计算 gain，但必须知道代码把什么数据、什么目标和什么输出连接在一起。</p>
+
+  <h2>3. 把同一张工具卡迁移到 GNN</h2>
+  <div class="card">
+    <p><strong>输入：</strong><code>x</code>、<code>edge_index</code>、可能还有 <code>edge_attr</code> 和 <code>batch</code>。</p>
+    <p><strong>输出：</strong>节点级、边级或图级的 logits/概率/表示。</p>
+    <p><strong>核心机制：</strong>节点表示通过邻接关系聚合消息；图结构不是普通列特征，而是计算路径的一部分。</p>
+    <p><strong>首先审计：</strong>图是怎样构造的？标签或未来信息是否通过边、节点特征或预处理泄漏？readout 是否对应任务层级？</p>
+  </div>
+  <p>XGBoost、MLP、GNN 的接口可能都叫 <code>fit</code> 或训练循环，但它们接收的表示和利用的关系不同。因此“同一个 API”不代表“同一个研究假设”。</p>
+
+  <h2>4. 现在练习：代码审计而不是背术语</h2>
+  <p>在上面的代码中，<code>predict_proba(X_test)[:, 1]</code> 最准确地表示什么？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：它是正类的连续概率/分数，适合交给 ROC-AUC 这样的排序指标。" data-wrong="再看 [:, 1] 和 roc_auc_score：这里需要的是正类连续分数，不是硬标签。">
+    <button type="button" data-choice="a">输出正类概率值</button>
+    <button type="button" data-choice="b">输出硬分类标签</button>
+    <button type="button" data-choice="c">输出训练权重值</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>哪一项决定模型训练时主要优化的目标？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：objective 定义训练目标；指标可以用于监控或报告，但不自动取代目标。" data-wrong="区分两件事：一个对象负责训练目标，另一个对象负责评估/报告。">
+    <button type="button" data-choice="a">目标函数决定训练</button>
+    <button type="button" data-choice="b">评估指标决定训练</button>
+    <button type="button" data-choice="c">随机种子决定训练</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>在没有特殊设计时，测试集最合适的使用时机是？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：测试集用于最后一次、尽量不再影响决策的评估。" data-wrong="测试集一旦反复影响调参，就不再是干净的最终证据。">
+    <button type="button" data-choice="a">最后一次评估</button>
+    <button type="button" data-choice="b">每轮都用测试</button>
+    <button type="button" data-choice="c">用来训练权重</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <h2>带走的研究句</h2>
+  <div class="card claim"><strong>模型是工具，但不是无语义的工具。</strong><br>使用它之前至少要知道：它看见了什么表示，利用了什么关系，优化了什么目标，输出的数字是什么意思，以及这个数字受哪套协议约束。</div>
+  <p>打开<a href="../reference/model-tool-card.html">模型工具卡</a>，以后遇到 XGBoost、MLP、GNN 或 KSVD，都用同一张卡快速定位。</p>
+
+  <div class="card">
+    <span class="label">Primary sources</span>
+    <p><a href="https://xgboost.readthedocs.io/en/stable/tutorials/model.html">XGBoost 官方 Introduction to Boosted Trees</a>：核对 objective、模型输出和训练/评估概念。</p>
+    <p><a href="https://scikit-learn.org/stable/common_pitfalls.html">scikit-learn 官方 Common pitfalls</a>：继续学习数据泄漏、预处理边界和评估协议。</p>
+  </div>
+
+  <p class="footer">如果你愿意，可以把自己最近的一段模型训练代码贴出来；下一课先把训练目标、评估指标和数据划分的职责分清，再审计真实代码。</p>
+  <p><a href="0008-xgboost-one-round.html">上一课：XGBoost 的一轮更新</a> · <a href="../CURRICULUM.md">课程路线</a></p>
+</main>
+</body>
+</html>

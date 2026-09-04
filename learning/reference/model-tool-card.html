@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>模型工具卡</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Model literacy / quick reference</div>
+  <h1>模型工具卡</h1>
+  <p class="dek">接口告诉你怎样调用模型；工具卡帮助你判断调用结果在什么条件下有意义。</p>
+  <hr class="rule">
+
+  <div class="card claim">
+    <span class="label">六个必问</span>
+    <p>输入是什么？输出是什么？模型学了什么？训练优化什么？报告测量什么？什么情况下不能相信结果？</p>
+  </div>
+
+  <div class="card">
+    <span class="label">通用接口</span>
+    <table>
+      <thead><tr><th>代码对象</th><th>要理解的含义</th></tr></thead>
+      <tbody>
+        <tr><td><code>fit(X, y)</code></td><td>用数据改变模型内部状态；通常只应使用训练数据。</td></tr>
+        <tr><td><code>predict(X)</code></td><td>产生预测；调用本身不应继续学习。</td></tr>
+        <tr><td><code>predict_proba(X)</code></td><td>产生类别概率；排序指标通常应使用连续分数。</td></tr>
+        <tr><td><code>forward(...)</code></td><td>神经网络的前向计算；输入可能是张量或图结构。</td></tr>
+        <tr><td><code>objective</code></td><td>训练时希望最小化/最大化的目标或损失。</td></tr>
+        <tr><td><code>eval_metric</code></td><td>用于监控、比较或报告的指标，不自动等于训练目标。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <span class="label">四个模型的最小定位</span>
+    <table>
+      <thead><tr><th>模型</th><th>典型输入</th><th>核心机制</th><th>首先审计什么</th></tr></thead>
+      <tbody>
+        <tr><td>XGBoost</td><td>固定长度向量 <code>[N,d]</code></td><td>逐棵树修正预测</td><td>特征是否已包含结构信息</td></tr>
+        <tr><td>MLP</td><td>固定长度向量</td><td>多层非线性映射</td><td>容量、正则化和训练稳定性</td></tr>
+        <tr><td>GNN</td><td><code>x</code> + 边/邻接关系</td><td>聚合邻居消息</td><td>图构造、任务层级和信息泄漏</td></tr>
+        <tr><td>KSVD</td><td>样本/patch 特征矩阵</td><td>字典与稀疏编码</td><td>表示是否独立于标签、重建目标是否匹配</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <span class="label">60 秒代码审计</span>
+    <ol>
+      <li>找出 <code>fit</code>：哪些数据真正参与了学习？</li>
+      <li>找出预测调用：输出是标签、概率、分数还是表示？</li>
+      <li>找出目标与指标：训练目标和报告指标是否一致或有意区分？</li>
+      <li>找出关键旋钮：容量、步长、正则化和随机性在哪里？</li>
+      <li>确认验证集用于选择，测试集只用于最终评估。</li>
+      <li>写出一句边界：结果只支持哪个数据、表示和协议下的主张？</li>
+    </ol>
+  </div>
+
+  <p><a href="../lessons/0009-model-as-tool.html">回到第九课：模型作为工具</a> · <a href="model-map.html">模型家族地图</a> · <a href="ml-objects.html">机器学习基本对象</a></p>
+  <p class="footer">参考：<a href="https://xgboost.readthedocs.io/en/stable/tutorials/model.html">XGBoost 官方模型教程</a>、<a href="https://scikit-learn.org/stable/common_pitfalls.html">scikit-learn 常见陷阱</a> 和 <a href="https://distill.pub/2021/gnn-intro/">GNN 介绍</a>。</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>第二课：沿着数据流审计代码</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Lesson 0002 · Code and experiment audit</div>
+  <h1>不要先读模型，先追踪数据</h1>
+  <p class="dek">审计 AI 生成的实验代码时，最有效的第一步不是理解网络结构，而是给数据标记角色，然后追踪它是否越界。</p>
+
+  <div class="card claim"><span class="label">本课唯一胜利</span><br>你能看出一个实验是否遵守：<strong>训练集学习，验证集选择，测试集终评</strong>。</div>
+
+  <h2>1. 四个动词</h2>
+  <p>代码审计可以先压缩成四个动作：</p>
+  <ol><li><strong>Split：</strong>确定哪些样本属于 train、valid、test。</li><li><strong>Fit：</strong>从数据中学习参数，例如 scaler 的均值、PCA 方向、字典原子或分类器树结构。</li><li><strong>Transform / Predict：</strong>使用已经学到的规则处理新数据。</li><li><strong>Evaluate：</strong>计算指标；这一步本身不应反过来改变模型或选择规则。</li></ol>
+  <p>最容易犯的错误是把“没有调用模型的 <code>fit</code>”误认为没有学习。特征标准化、降维、字典学习、特征筛选、选择最佳权重，都可能在学习信息。</p>
+
+  <h2>2. 读你仓库中的真实代码</h2>
+  <p>在 <a href="../../tracks/ksvd/experiments/luyin16/mentor_concept_replication.py#L819">`fit_xgboost_views`</a> 中，关键路径是：</p>
+  <div class="card"><p><code>train = split["train"]</code></p><p><code>model.fit(matrix[train], y_train)</code></p><p><code>predict_proba(matrix[valid])</code></p><p><code>predict_proba(matrix[test])</code></p></div>
+  <p>这段结构表达了一个可审计的协议：XGBoost 只用训练集学习；验证集用来比较 view；测试集只有在 <code>evaluate_test=True</code> 时才评估。代码还记录了 <code>best_by_valid_only</code> 和 <code>test is never used as a tie-breaker</code>，这是把实验纪律写进程序，而不是只写在报告里。</p>
+  <p>但审计不能停在这一个函数：还要向上追问 <code>views</code> 是在哪里生成的。如果 KSVD 字典、标准化器或特征选择器在 split 前对全体分子调用了 <code>fit</code>，下游分类器虽然“只 fit train”，整个实验仍可能泄漏。</p>
+
+  <h2>3. 一个反例</h2>
+  <div class="card"><p><code>scaler.fit_transform(X_all)</code></p><p><code>X_train, X_test = split(X_scaled)</code></p><p><code>model.fit(X_train, y_train)</code></p></div>
+  <p>问题不在最后一行，而在第一行：scaler 的统计量已经看过测试样本。正确顺序是先 split，再对训练集 <code>fit_transform</code>，对测试集只调用 <code>transform</code>。官方 scikit-learn 指南将这类问题称为 data leakage，并建议用 Pipeline 让正确的数据边界更难被误写。</p>
+
+  <h2>4. 现在练习</h2>
+  <p>下面哪段代码最符合“训练集学习，验证集选择，测试集终评”？</p>
+  <div class="quiz" data-answer="c">
+    <button data-choice="a">先用全部数据学习字典，再拆分 train 和 test。</button>
+    <button data-choice="b">每个 split 都重新 fit scaler，再比较各自分数。</button>
+    <button data-choice="c">先拆分数据，只在 train fit，valid 选配置，最后评估 test。</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+  <script>
+    document.querySelectorAll('.quiz button').forEach(button => button.addEventListener('click', () => {
+      const quiz = button.closest('.quiz');
+      const feedback = quiz.querySelector('.feedback');
+      feedback.textContent = button.dataset.choice === quiz.dataset.answer
+        ? '正确：关键是学习动作的边界，而不是模型名称。'
+        : '再检查 fit 发生在哪些数据上，以及 test 是否参与了选择。';
+    }));
+  </script>
+
+  <h2>带走的工具</h2>
+  <p>打开<a href="../reference/data-flow-audit.html">数据流审计速查</a>，然后任选一个 AI 生成的实验入口，给每个数组写上 `train / valid / test` 标签，圈出所有 <code>fit</code>、<code>fit_transform</code>、<code>best</code> 和 <code>max</code>。</p>
+  <div class="card"><span class="label">Primary source</span><p>阅读 <a href="https://scikit-learn.org/stable/common_pitfalls.html#data-leakage">scikit-learn 官方 Data leakage</a>，重点理解“先 split，再 fit；测试集只 transform”的原则。</p></div>
+  <p class="footer">如果你愿意，下一条消息可以直接贴出一段你最看不懂的实验代码或报告。我会先让你自己标注数据流，再提供反馈，而不是直接替你读完。</p>
+  <p><a href="0001-from-score-to-claim.html">上一课：从分数到主张</a> · <a href="../reference/experiment-audit-checklist.html">实验审计清单</a></p>
+</main></body></html>

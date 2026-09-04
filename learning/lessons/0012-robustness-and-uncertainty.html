@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第十二课：结果稳定吗</title>
+  <link rel="stylesheet" href="../assets/course.css">
+  <script defer src="../assets/interactive.js"></script>
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Lesson 0012 · Robustness and uncertainty</div>
+  <h1>一次提升，稳定吗？</h1>
+  <p class="dek">一个 seed 的漂亮结果是线索，不是结论。要判断它是否可信，需要把训练随机性、数据划分和子群体分开检查。</p>
+
+  <div class="card claim">
+    <span class="label">本课唯一胜利</span><br>
+    看到一组实验结果时，你能判断它检查了哪一种稳定性，以及还缺哪一种证据。
+  </div>
+
+  <h2>1. “seed”不是一个问题</h2>
+  <p>代码里常见多个随机来源：</p>
+  <div class="card">
+    <p><strong>模型 seed：</strong>初始化、batch 顺序、dropout 等改变；主要检查训练过程是否敏感。</p>
+    <p><strong>split seed：</strong>哪些样本进入 train/valid/test 改变；主要检查结论是否依赖某次划分。</p>
+    <p><strong>数据采样 seed：</strong>patch、负样本或增强样本改变；主要检查数据构造是否稳定。</p>
+  </div>
+  <p>因此，“我们跑了 5 个 seed”还不够。要问：改变的是模型随机性，还是数据划分？两者回答不同的问题。</p>
+
+  <h2>2. 比较差值，而不只看两个均值</h2>
+  <p>比较方法 A 和 B 时，尽量让它们在同一 run 使用相同 split 和 seed，然后计算配对差值：</p>
+  <div class="card formula"><code>Δ<sub>run</sub> = score(A, run) − score(B, run)</code></div>
+  <p>示意：</p>
+  <div class="card">
+    <span class="label">同一 split/seed 下的配对结果</span>
+    <table>
+      <thead><tr><th>run</th><th>A</th><th>B</th><th>Δ=A−B</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>0.80</td><td>0.77</td><td>+0.03</td></tr>
+        <tr><td>1</td><td>0.74</td><td>0.76</td><td>−0.02</td></tr>
+        <tr><td>2</td><td>0.79</td><td>0.78</td><td>+0.01</td></tr>
+        <tr><td>3</td><td>0.75</td><td>0.76</td><td>−0.01</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>这里 A 的总体均值可能接近 B，但只有 2/4 次胜出，方向并不稳定。若只挑 run 0，报告会制造“确定提升”的错觉。均值和标准差是摘要，不是对每个运行的替代；原始值、<code>n</code> 和选择规则仍要保留。</p>
+
+  <h2>3. 多 seed、多 split、外部验证各自回答什么</h2>
+  <div class="card">
+    <p><strong>多模型 seed：</strong>固定官方 scaffold split 和配置，改变初始化/训练顺序。它回答“训练偶然性会不会改变结果”。</p>
+    <p><strong>多 split/fold：</strong>改变训练与测试样本的组成。它回答“结论会不会依赖某一批样本”。</p>
+    <p><strong>外部数据：</strong>换数据集、领域或分布。它回答“方法能否迁移”，要求更强的任务和表示对齐。</p>
+  </div>
+  <p>评估多个预先规定的 seed 本身没有问题；问题是看完 test 后挑最好 seed、挑最好 split 或修改方案，再把选后的数字称为最终证据。</p>
+
+  <h2>4. 总体分数也可能藏住失败</h2>
+  <p>MolHIV 这类分子任务中，可以进一步按分子大小、scaffold、稀有标签或结构密度分组。总体 ROC-AUC 相同，不代表每个群体都同样好；某一类新 scaffold 可能明显掉分。</p>
+  <p>子群体分析的第一个问题不是“哪个群体最好”，而是：每个群体有多少样本？分组是否在看完结果后才临时挑的？小群体的极端分数是否被过度解读？</p>
+
+  <h2>5. 现在练习</h2>
+  <p>哪种运行安排主要检查训练过程的随机性？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：固定划分，只改变模型 seed，主要检查初始化、顺序和 dropout 等训练随机性。" data-wrong="先区分两种 seed：改变模型 seed 看训练过程，改变 split seed 看数据组成。">
+    <button type="button" data-choice="a">同一划分改变模型seed</button>
+    <button type="button" data-choice="b">改变划分保持模型seed</button>
+    <button type="button" data-choice="c">改变指标保持模型seed</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>如果某方法只在 1/5 个 seed 上胜出，最稳妥的说法是什么？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：这最多是一次观察到的胜出，不能称为稳定提升。" data-wrong="稳定性需要看多次运行的方向和波动，不能只挑最高的一次。">
+    <button type="button" data-choice="a">只能报告单次观察</button>
+    <button type="button" data-choice="b">可以声称稳定提升</button>
+    <button type="button" data-choice="c">可以声称机制成立</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>比较 A 和 B 时，哪种安排更有利于公平归因？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：配对相同 seed 和 split 可以减少运行条件差异，差值更接近方法差异。" data-wrong="比较方法时，尽量让它们共享每次 run 的 split 和随机条件。">
+    <button type="button" data-choice="a">每轮配对相同种子</button>
+    <button type="button" data-choice="b">每轮挑选最好种子</button>
+    <button type="button" data-choice="c">每轮改用不同指标</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>总体均值相同但某个重要子群体明显变差时，下一步应怎样做？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：总体平均可能掩盖子群体失败，需要报告样本量并检查该群体的误差。" data-wrong="总体指标不是全部证据，先检查子群体规模、定义和性能。">
+    <button type="button" data-choice="a">继续检查子群差异</button>
+    <button type="button" data-choice="b">直接宣布结果稳定</button>
+    <button type="button" data-choice="c">删除表现较差子群</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <h2>带走的研究句</h2>
+  <div class="card claim">
+    <strong>不要只报告“最好”，要报告“在什么变化下仍然成立”。</strong><br>
+    “在固定 scaffold split 的 5 个模型 seed 上，A 相对 B 的配对差值为……；这检查了训练随机性，但还不能说明它对其他 split 或新 scaffold 同样稳定。”
+  </div>
+  <p>打开<a href="../reference/robustness-card.html">结果稳健性速查</a>，回看<a href="../reference/attribution-matrix.html">提升归因</a>和<a href="../reference/experiment-protocol-card.html">实验协议</a>。下一步会把这些工具应用到一段真实训练代码和实验报告。</p>
+
+  <div class="card">
+    <span class="label">Primary sources</span>
+    <p><a href="https://arxiv.org/abs/2003.12206">Reproducibility in Machine Learning: Experiences from NeurIPS 2019 Reproducibility Program</a>：理解重复运行、报告细节和复现边界。</p>
+    <p><a href="https://arxiv.org/abs/2005.00687">Open Graph Benchmark</a>：理解图任务 split 与泛化评估的关系。</p>
+    <p><a href="https://scikit-learn.org/stable/common_pitfalls.html">scikit-learn 官方 Common pitfalls</a>：复查评估流程和隐藏的数据边界。</p>
+  </div>
+
+  <p class="footer">如果你对某个实验的“5 个 seed”不知道该归入哪种稳定性，直接把它的 split、seed 和选择规则发给我；下一课我们会逐行标注真实代码。</p>
+  <p><a href="0011-attributing-improvement.html">上一课：提升来自哪里</a> · <a href="../CURRICULUM.md">课程路线</a></p>
+</main>
+</body>
+</html>

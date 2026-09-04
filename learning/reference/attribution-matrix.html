@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>实验提升归因速查</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Evidence / quick reference</div>
+  <h1>提升归因</h1>
+  <p class="dek">先把“比较”拆成变量，再决定一项结果能支持多大的结论。</p>
+  <hr class="rule">
+
+  <div class="card claim">
+    <span class="label">核心问题</span>
+    <p>当结果变化时，究竟是表示 <code>R</code>、模型 <code>M</code>、协议 <code>P</code>，还是它们的组合发生了变化？</p>
+  </div>
+
+  <div class="card">
+    <span class="label">2×2 最小矩阵</span>
+    <table>
+      <thead><tr><th></th><th>模型 M0</th><th>模型 M1</th></tr></thead>
+      <tbody>
+        <tr><td>表示 R0</td><td>R0 + M0<br>基线</td><td>R0 + M1<br>模型变化</td></tr>
+        <tr><td>表示 R1</td><td>R1 + M0<br>表示变化</td><td>R1 + M1<br>完整方案</td></tr>
+      </tbody>
+    </table>
+    <p>四个格子使用相同 split、标签、指标、选择规则、预算和随机性设置；每次只改变研究问题所关注的轴。</p>
+  </div>
+
+  <div class="card">
+    <span class="label">常见对照</span>
+    <table>
+      <thead><tr><th>对照</th><th>它主要排除什么解释</th></tr></thead>
+      <tbody>
+        <tr><td>简单统计量 / size-only</td><td>任务本身被容易的全局规模信号解释</td></tr>
+        <tr><td>random / PCA representation</td><td>提升只是因为增加了特征或改变了维度</td></tr>
+        <tr><td>capacity-matched model</td><td>提升只是参数量、训练预算或模型强度</td></tr>
+        <tr><td>label shuffle</td><td>高分只是流程在小样本上拟合噪声</td></tr>
+        <tr><td>relation / assignment shuffle</td><td>模型是否真的使用了声称的结构关系</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card claim">
+    <span class="label">结论边界</span>
+    <p>只改变表示并在同一模型、同一协议下提升，才开始支持“表示有增量价值”。要声称“结构关系是原因”，还需要结构关系的破坏对照。</p>
+  </div>
+
+  <p><a href="../lessons/0011-attributing-improvement.html">回到第十一课：提升来自哪里</a> · <a href="experiment-protocol-card.html">实验协议</a> · <a href="experiment-audit-checklist.html">实验审计清单</a></p>
+  <p class="footer">主要参考：<a href="https://scikit-learn.org/stable/common_pitfalls.html">scikit-learn Common pitfalls</a>、<a href="https://arxiv.org/abs/2005.00687">Open Graph Benchmark</a> 和 <a href="https://arxiv.org/abs/2003.12206">NeurIPS reproducibility program</a>。</p>
+</main>
+</body>
+</html>

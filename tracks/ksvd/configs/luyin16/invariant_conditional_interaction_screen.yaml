@@ -1,0 +1,62 @@
+protocol_id: luyin16-molhiv-invariant-conditional-interaction-screen-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  interaction_cache: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/dev_features_true_v1.npz
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+
+representation:
+  summary_top_k: 8
+
+tuning:
+  n_trials: 12
+  seed: 20260951
+  n_jobs: 8
+  ranges:
+    n_estimators: [100, 600]
+    max_depth: [2, 7]
+    learning_rate: [0.015, 0.12]
+    min_child_weight: [2.0, 50.0]
+    subsample: [0.65, 1.0]
+    colsample_bytree: [0.35, 1.0]
+    reg_lambda: [0.3, 150.0]
+    reg_alpha: [0.00001, 15.0]
+    gamma: [0.0, 5.0]
+  warm_start_params:
+    - n_estimators: 100
+      max_depth: 3
+      learning_rate: 0.05
+      min_child_weight: 8
+      subsample: 0.85
+      colsample_bytree: 0.80
+      reg_lambda: 10.0
+      reg_alpha: 0.01
+      gamma: 0.0
+    - n_estimators: 582
+      max_depth: 7
+      learning_rate: 0.02845665332405855
+      min_child_weight: 2.0552437989268113
+      subsample: 0.7195099542843616
+      colsample_bytree: 0.44325241391504167
+      reg_lambda: 32.87731853406676
+      reg_alpha: 13.160423776210738
+      gamma: 1.5959505815360724
+
+classifier:
+  n_estimators: 100
+  max_depth: 3
+  learning_rate: 0.05
+  min_child_weight: 8
+  subsample: 0.85
+  colsample_bytree: 0.80
+  reg_lambda: 10.0
+  reg_alpha: 0.01
+  gamma: 0.0
+  n_jobs: 8
+
+model_seeds: [0, 1, 2]
+
+output_json: tracks/ksvd/results/luyin16/invariant_conditional_interaction_screen/summary.json
+output_markdown: tracks/ksvd/results/luyin16/invariant_conditional_interaction_screen/summary.md

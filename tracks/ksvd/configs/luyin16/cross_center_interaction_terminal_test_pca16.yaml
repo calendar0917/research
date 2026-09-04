@@ -1,0 +1,27 @@
+protocol_id: luyin16-molhiv-cross-center-interaction-controlled-test-pca16-v1
+
+# Controlled terminal evaluation for the new PCA-16 sensitivity protocol.
+# The source validation result is verified before test features are scored.
+source:
+  config: tracks/ksvd/configs/luyin16/cross_center_interaction_terminal_pca16.yaml
+  result_json: tracks/ksvd/results/luyin16/cross_center_interaction_terminal_pca16/summary.json
+  runner: tracks/ksvd/experiments/luyin16/cross_center_interaction_terminal.py
+  interaction_encoder: tracks/ksvd/experiments/luyin16/cross_center_interaction_screen.py
+
+data:
+  root: data/ogb
+  scaffold_folds: tracks/ksvd/results/molhiv/molhiv_n41127_scaffold_folds3_seed20260726.npz
+  frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  dev_interaction_cache: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/dev_features_true_v1.npz
+  test_interaction_cache: tracks/ksvd/results/luyin16/cross_center_interaction_terminal_pca16/test_features_true_v1.npz
+
+pca_rank: 16
+model_seeds: [0, 1, 2, 3, 4]
+
+output_json: tracks/ksvd/results/luyin16/cross_center_interaction_terminal_pca16/test_summary.json
+output_markdown: tracks/ksvd/results/luyin16/CROSS_CENTER_INTERACTION_PCA16_OFFICIAL_TEST_20260903.md
+
+# Sensitivity control: keep the train-only PCA coordinate system frozen while
+# refitting the classifier on official-train+valid labels.
+pca_control_output_json: tracks/ksvd/results/luyin16/cross_center_interaction_terminal_pca16/test_pca_control.json
+output_pca_control_markdown: tracks/ksvd/results/luyin16/CROSS_CENTER_INTERACTION_PCA16_TEST_PCA_CONTROL_20260903.md

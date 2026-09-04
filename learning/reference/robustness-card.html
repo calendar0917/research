@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>结果稳健性速查</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Evidence / quick reference</div>
+  <h1>结果稳健性</h1>
+  <p class="dek">稳定不是一个数字，而是结果对训练随机性、数据划分和样本群体变化的敏感度。</p>
+  <hr class="rule">
+
+  <div class="card claim">
+    <span class="label">三个不同问题</span>
+    <p><strong>seed：</strong>换初始化/数据顺序还好吗？<br><strong>split：</strong>换一批训练与测试样本还好吗？<br><strong>subgroup：</strong>总体分数是否掩盖了某类样本的失败？</p>
+  </div>
+
+  <div class="card">
+    <span class="label">如何安排运行</span>
+    <table>
+      <thead><tr><th>目的</th><th>固定</th><th>改变</th></tr></thead>
+      <tbody>
+        <tr><td>训练稳定性</td><td>同一 split、配置和协议</td><td>模型 seed</td></tr>
+        <tr><td>划分稳健性</td><td>方法、预算和评估规则</td><td>split seed / fold</td></tr>
+        <tr><td>公平比较</td><td>同一 run 的随机条件</td><td>方法本身</td></tr>
+        <tr><td>子群体检查</td><td>冻结后的模型和预测</td><td>样本分组方式</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <span class="label">建议报告</span>
+    <ol>
+      <li>每个 seed/fold 的原始指标，不只报最高值。</li>
+      <li>均值、波动范围和运行数量 <code>n</code>。</li>
+      <li>同一 run 的配对差值 <code>Δ = A − B</code>，以及 A 胜出的次数。</li>
+      <li>预先规定 seed、split、选择规则和停止条件。</li>
+      <li>按重要子群体报告样本量和性能，避免小群体的夸张解读。</li>
+    </ol>
+    <p>多个 seed 可以在冻结协议下批量评估；不能根据 test 结果挑出最好的 seed 再报告。</p>
+  </div>
+
+  <div class="card claim">
+    <span class="label">证据等级</span>
+    <p>单次运行 = 观察到一次结果；多 seed = 对训练随机性的检查；多 split/fold = 对数据划分的检查；外部数据 = 对迁移性的进一步检查。</p>
+  </div>
+
+  <p><a href="../lessons/0012-robustness-and-uncertainty.html">回到第十二课：结果稳定吗</a> · <a href="attribution-matrix.html">提升归因</a> · <a href="experiment-protocol-card.html">实验协议</a></p>
+  <p class="footer">主要参考：<a href="https://arxiv.org/abs/2003.12206">NeurIPS reproducibility program</a>、<a href="https://arxiv.org/abs/2005.00687">Open Graph Benchmark</a> 和 <a href="https://scikit-learn.org/stable/common_pitfalls.html">scikit-learn Common pitfalls</a>。</p>
+</main>
+</body>
+</html>

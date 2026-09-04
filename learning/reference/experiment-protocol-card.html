@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>实验协议速查</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Research literacy / quick reference</div>
+  <h1>实验协议</h1>
+  <p class="dek">一个模型分数不是孤立事实；它是数据、表示、目标、选择规则和评估边界共同产生的结果。</p>
+  <hr class="rule">
+
+  <div class="card claim">
+    <span class="label">标准闭环</span>
+    <p><code>train：学习参数 → valid：做选择 → freeze：冻结决策 → test：最终评估</code></p>
+  </div>
+
+  <div class="card">
+    <span class="label">三种数据角色</span>
+    <table>
+      <thead><tr><th>数据</th><th>允许做什么</th><th>不应做什么</th></tr></thead>
+      <tbody>
+        <tr><td>train</td><td>拟合模型参数、学习训练内表示</td><td>把训练分数当泛化证据</td></tr>
+        <tr><td>validation</td><td>选超参数、epoch、阈值或候选方法</td><td>把它包装成完全未见数据</td></tr>
+        <tr><td>test</td><td>冻结方案后的最终估计</td><td>反复调参、挑 seed 或挑结果</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <span class="label">目标与指标</span>
+    <table>
+      <thead><tr><th>对象</th><th>回答的问题</th><th>典型例子</th></tr></thead>
+      <tbody>
+        <tr><td>objective / loss</td><td>模型训练时朝什么方向改变</td><td>logistic loss、平方损失</td></tr>
+        <tr><td>eval metric</td><td>我们用什么尺子比较结果</td><td>ROC-AUC、PR-AUC、accuracy</td></tr>
+        <tr><td>selection rule</td><td>用哪份证据决定保留哪个方案</td><td>best valid AUC、early stopping</td></tr>
+      </tbody>
+    </table>
+    <p>三者可以不同，但必须写清楚。比如模型优化 logistic loss，研究报告用 ROC-AUC，checkpoint 按 validation AUC 选择。</p>
+  </div>
+
+  <div class="card">
+    <span class="label">泄漏检查</span>
+    <ol>
+      <li>先 split，再对 train 调用 <code>fit</code>。</li>
+      <li>valid/test 只能调用已经学好的 <code>transform</code> 或 <code>predict</code>。</li>
+      <li>把 scaler、PCA、字典、特征筛选器和模型都视为可能学习信息的对象。</li>
+      <li>如果有 transductive 预训练或全数据无标签预处理，必须明确声明协议，不能默认为 inductive 泛化。</li>
+    </ol>
+  </div>
+
+  <div class="card claim">
+    <span class="label">结论模板</span>
+    <p>“在固定的<strong>数据集、表示、划分、训练目标、选择规则和随机性设置</strong>下，方法 A 的 test 指标为……；这支持……，但还不能说明……。”</p>
+  </div>
+
+  <p><a href="../lessons/0010-objective-metric-protocol.html">回到第十课：训练目标、指标与协议</a> · <a href="experiment-audit-checklist.html">实验审计清单</a> · <a href="data-flow-audit.html">数据流审计</a></p>
+  <p class="footer">主要参考：<a href="https://scikit-learn.org/stable/common_pitfalls.html">scikit-learn Common pitfalls</a>、<a href="https://scikit-learn.org/stable/modules/compose.html">Pipelines and composite estimators</a> 和 <a href="https://arxiv.org/abs/2005.00687">Open Graph Benchmark</a>。</p>
+</main>
+</body>
+</html>

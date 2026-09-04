@@ -1,0 +1,29 @@
+protocol_id: luyin16-molhiv-mlp-lightweight-pos-weight-search-v1
+
+data:
+  dataset: ogbg-molhiv
+  root: data/ogb
+  center_feature_config: tracks/ksvd/configs/luyin16/molhiv_center_relation_network.yaml
+  center_feature_cache: tracks/ksvd/results/luyin16/molhiv_center_relation_network/features_r3_wl3.npz
+  global_frozen_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/feature_views_train_valid.npz
+  global_dev_interaction_cache: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/dev_features_true_v1.npz
+  global_test_interaction_cache: tracks/ksvd/results/luyin16/cross_center_interaction_terminal/test_features_true_v1.npz
+  global_full_features: tracks/ksvd/results/luyin16/mentor_r2_atom_chem_k64_s8_all_official_valid/features_and_predictions.npz
+
+search:
+  pos_weights: [2, 5, 10]
+
+model:
+  hidden: 64
+  epochs: 50
+  batch_size: 64
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  evaluate_every: 1
+  device: cpu
+  num_threads: 2
+  model_seeds: [0]
+
+output:
+  json: tracks/ksvd/results/luyin16/MOLHIV_MLP_WEIGHT_SEARCH_20260903.json
+  markdown: tracks/ksvd/results/luyin16/MOLHIV_MLP_WEIGHT_SEARCH_20260903.md

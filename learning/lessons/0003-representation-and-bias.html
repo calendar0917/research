@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>第三课：表示与归纳偏置</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Lesson 0003 · Foundations</div>
+  <h1>先问：模型究竟看见了什么？</h1>
+  <p class="dek">很多“XGBoost vs GNN vs Transformer”的争论，其实没有比较同一件事：模型接收到的表示、关系和任务假设并不相同。</p>
+  <div class="card claim"><span class="label">本课唯一胜利</span><br>面对一个新模型，你能先说清楚：<strong>输入表示是什么，模型利用了什么结构，任务是否需要这种结构</strong>。</div>
+  <h2>1. 表示不是模型</h2>
+  <p>分子可以表示成一个固定长度的 Morgan fingerprint，也可以表示成“原子节点 + 化学键边”的图，还可以表示成一串 token。三种表示描述的是同一个对象，但暴露给模型的信息不同。</p>
+  <p>因此，报告说“XGBoost 在 624 维特征上达到 0.7817”，首先说明的是：<strong>这组 624 维特征包含了足以支持该预测的一些信号，而树模型能利用其中的非线性组合</strong>。它不等于 XGBoost 理解了原始分子图，也不等于这些特征比 GNN 的输入更“真实”。</p>
+  <h2>2. 三种模型的最小直觉</h2>
+  <div class="card"><p><strong>XGBoost：</strong>把每个样本看成固定长度向量，用一棵棵树切分特征空间，并让新树修正旧树的错误。它不会自动读取“节点 A 和节点 B 相连”这件事，除非连接关系已经被编码成特征。</p><p><strong>消息传递 GNN：</strong>把邻居信息聚合到节点表示中；堆叠一层通常扩大一跳视野，堆叠 k 层通常让节点接触到 k-hop 范围的信息。图的连接关系是计算的一部分，而不是普通列特征。</p><p><strong>Transformer：</strong>让元素通过 attention 计算条件交互。它可以学习远距离关系，但如果任务需要特定图结构，结构通常要通过位置、边类型、距离或图化改造提供。</p></div>
+  <p>这里的“偏置”不是贬义，而是模型对数据规律的先验倾向。好的偏置减少学习难度；错误的偏置会让模型浪费容量，甚至学到捷径。</p>
+  <h2>3. 为什么这对 KSVD 重要</h2>
+  <p>KSVD 生成的结构特征处在中间层：它不是原始图，也不是完全任务端到端学习出的 GNN 表示。研究问题必须说得更精确：</p>
+  <ul><li>KSVD 特征是否保留了某类结构信息？</li><li>这些特征是否给下游分类器提供了 GNN 没有的增量信息？</li><li>如果 XGBoost 在固定特征上更好，提升来自结构特征，还是来自树模型更适合这类向量？</li></ul>
+  <p>最后一个问题很关键：要归因于 KSVD，至少需要保持下游分类器、split、预算和特征处理一致，并比较合适的消融，而不能把“换了特征又换了分类器”的结果直接归因给特征。</p>
+  <h2>4. 现在练习</h2>
+  <p>某实验将同一批分子分别输入：A 是 624 维固定特征 + XGBoost；B 是原子/键图 + GNN。A 的 ROC-AUC 更高。最准确的第一句话是什么？</p>
+  <div class="quiz" data-answer="b"><button data-choice="a">XGBoost 比 GNN 更适合所有分子图任务。</button><button data-choice="b">在这两种输入、模型和协议的联合比较下，A 的预测结果更好。</button><button data-choice="c">624 维固定特征已经包含了全部分子结构信息。</button><p class="feedback" aria-live="polite"></p></div>
+  <script>document.querySelectorAll('.quiz button').forEach(button => button.addEventListener('click', () => { const quiz = button.closest('.quiz'); const feedback = quiz.querySelector('.feedback'); feedback.textContent = button.dataset.choice === quiz.dataset.answer ? '正确：这是联合比较，不能把差异直接归因给单一模型或单一特征。' : '再想一步：A 和 B 同时改变了输入表示与模型。'; }));</script>
+  <h2>带走的工具</h2>
+  <p>打开<a href="../reference/model-map.html">模型地图</a>。今后看到一个方法，先填写三句话：它的输入是什么？它的结构偏置是什么？如果去掉这种偏置，任务还剩下什么？</p>
+  <div class="card"><span class="label">Primary sources</span><p><a href="https://xgboost.readthedocs.io/en/stable/tutorials/model.html">XGBoost 官方 Introduction to Boosted Trees</a>：理解树模型、加法训练、损失与正则化。</p><p><a href="https://distill.pub/2021/gnn-intro/">Distill: A Gentle Introduction to Graph Neural Networks</a>：理解图表示、消息传递、聚合和归纳偏置。</p><p><a href="https://arxiv.org/abs/1810.00826">How Powerful are Graph Neural Networks?</a>：理解消息传递 GNN 的表达力与 WL 边界。</p></div>
+  <p class="footer">如果某个概念仍然像术语堆积，直接追问我。下一课会从 XGBoost 的“树如何逐步修正错误”开始，建立损失函数、梯度提升和正则化的基础直觉。</p>
+  <p><a href="0002-follow-the-data.html">上一课：沿着数据流审计代码</a> · <a href="../reference/experiment-audit-checklist.html">实验审计清单</a></p>
+</main></body></html>

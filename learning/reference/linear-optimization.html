@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>线性模型与优化速查</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Foundations / quick reference</div>
+  <h1>线性模型与优化</h1>
+  <p class="dek">所有复杂训练算法都可以先用这条链理解：参数定义函数，损失评价函数，梯度指导参数更新。</p>
+  <hr class="rule">
+  <div class="card"><span class="label">线性预测</span><p><code>ŷ = wᵀx + b</code><br><code>w</code> 是特征权重，<code>b</code> 是偏置。它对输入特征做加权求和。</p></div>
+  <div class="card"><span class="label">均方误差</span><p><code>J(w,b) = (1/n) Σ (ŷᵢ - yᵢ)²</code><br>回归中常用；预测偏差越大，惩罚以平方增长。</p></div>
+  <div class="card"><span class="label">梯度下降</span><p><code>θ ← θ - η ∇J(θ)</code><br>梯度指向局部上升最快方向，所以减去梯度；<code>η</code> 是学习率，控制步长。</p></div>
+  <div class="card"><span class="label">正则化</span><p><code>J_total = J_data + λ Ω(θ)</code><br>在拟合数据之外惩罚复杂度。<code>λ</code> 越大，通常越偏向简单模型，但可能造成欠拟合。</p></div>
+  <div class="card claim"><strong>不要混淆三种“好”： </strong><br>训练损失小 ≠ 验证指标高 ≠ 真实世界泛化好。它们需要分别测量。</div>
+  <p><a href="../lessons/0005-linear-model-gradient.html">回到第五课：让参数朝正确方向走</a></p>
+</main></body></html>

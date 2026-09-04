@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>第五课：线性模型与梯度下降</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Lesson 0005 · Foundations</div>
+  <h1>让参数朝正确方向走</h1>
+  <p class="dek">训练的核心不是模型“自己变聪明”，而是反复计算误差，并根据误差改变参数。</p>
+  <div class="card claim"><span class="label">本课唯一胜利</span><br>你能解释 <code>θ ← θ - η∇J(θ)</code> 中每一项是什么，以及为什么是“减去”梯度。</div>
+  <h2>1. 先从最简单的函数开始</h2>
+  <p>线性模型把输入向量 <code>x</code> 映射为一个预测：</p>
+  <div class="card claim"><code>ŷ = wᵀx + b</code></div>
+  <p>如果 <code>x</code> 是分子的固定特征，<code>w</code> 表示每个特征对预测的线性贡献，<code>b</code> 是整体偏移。这个模型的表达形式很有限，但它非常重要：复杂模型通常仍然可以被理解为“先构造表示，再用某种函数映射到输出”。</p>
+  <h2>2. 损失把“错多少”变成数字</h2>
+  <p>对回归可以用均方误差：</p>
+  <div class="card"><code>J(w,b) = (1/n) Σ (ŷᵢ - yᵢ)²</code></div>
+  <p>训练就是寻找让 <code>J</code> 变小的 <code>w,b</code>。对于二分类，常见的是 logistic loss；你在 XGBoost 配置里看到的 <code>objective="binary:logistic"</code> 就是在指定输出和训练目标的类别形式，而不是 ROC-AUC 本身。</p>
+  <h2>3. 梯度是什么</h2>
+  <p>把损失想象成参数空间中的地形。梯度 <code>∇J(θ)</code> 是在当前位置，损失上升最快的方向。为了让损失下降，我们沿相反方向走：</p>
+  <div class="card claim"><code>新参数 = 旧参数 - 学习率 × 梯度</code></div>
+  <p>学习率太小，训练可能很慢；太大，可能跨过低点、震荡甚至发散。梯度下降是一个更新规则，不是某个神秘的“智能模块”。SGD 只是用一个小批次估计完整训练集的梯度，因而更便宜但带有噪声。</p>
+  <h2>4. 正则化与泛化</h2>
+  <p>只让训练损失下降，模型可能记住训练集。于是目标经常写成：</p>
+  <div class="card"><code>J_total = J_data + λ Ω(θ)</code></div>
+  <p>第二项惩罚复杂度。线性模型里可以惩罚权重大小；XGBoost 会惩罚树的复杂度和叶子分数；神经网络常见权重衰减、Dropout 和早停。细节不同，但共同思想是：拟合数据与限制复杂度之间要平衡。</p>
+  <h2>5. 一个重要区分</h2>
+  <p>训练损失是“优化器正在努力降低的量”；验证指标是“研究者用来做选择的量”；测试指标是“协议冻结后的最终报告”。它们可能相关，但绝不是同一个对象。比如分类器可以优化 logistic loss，最后报告 ROC-AUC。</p>
+  <h2>6. 现在练习</h2>
+  <p>如果当前参数处的梯度是正数，且学习率为正，那么更新 <code>θ ← θ - η∇J(θ)</code> 通常会怎样？</p>
+  <div class="quiz" data-answer="b"><button data-choice="a">参数向梯度方向增加，损失一定上升。</button><button data-choice="b">参数向梯度相反方向移动，局部上有望降低损失。</button><button data-choice="c">参数保持不变，因为梯度只用于评估指标。</button><p class="feedback" aria-live="polite"></p></div>
+  <script>document.querySelectorAll('.quiz button').forEach(button => button.addEventListener('click', () => { const quiz = button.closest('.quiz'); const feedback = quiz.querySelector('.feedback'); feedback.textContent = button.dataset.choice === quiz.dataset.answer ? '正确：梯度是上升方向，减去它才是下降步骤；“有望”提醒你步长和地形仍然重要。' : '再看更新式：先判断减去一个正数会让参数向哪边移动。'; }));</script>
+  <h2>带走的工具</h2>
+  <p>打开<a href="../reference/linear-optimization.html">线性模型与优化速查</a>。下一次看训练代码时，寻找四件事：模型输出、loss、梯度/优化器、参数更新。即使代码使用高级框架，这四个角色仍然存在。</p>
+  <div class="card"><span class="label">Primary source</span><p><a href="https://www.deeplearningbook.org/contents/optimization.html">Deep Learning, Chapter 8: Optimization for Training Deep Models</a>：重点阅读学习问题与纯优化的区别、经验风险、surrogate loss 以及 minibatch。</p></div>
+  <p class="footer">如果公式看起来太快，可以只记住“损失告诉我错多少，梯度告诉我往哪改，学习率告诉我改多大”。下一课进入经典模型家族：线性模型为什么不够，以及决策树如何表达条件规则。</p>
+  <p><a href="0004-data-vector-function.html">上一课：数据、向量与函数</a> · <a href="../CURRICULUM.md">课程路线</a></p>
+</main></body></html>

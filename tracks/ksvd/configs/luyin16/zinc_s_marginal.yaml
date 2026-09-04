@@ -1,0 +1,56 @@
+protocol_id: luyin16-zinc-s-marginal-xgb-v1
+
+data:
+  root: data/ZINC
+
+representation:
+  radius: 2
+
+n_jobs: 4
+max_bin: 256
+model_seeds: [0, 1, 2, 3, 4]
+
+tuning:
+  # Only official-train rows enter these folds.  Official val/test are held
+  # out until after this search is complete.
+  n_splits: 3
+  split_seed: 20260903
+  n_trials: 20
+  seed: 20260904
+  ranges:
+    n_estimators: [200, 900]
+    max_depth: [2, 9]
+    learning_rate: [0.01, 0.15]
+    min_child_weight: [1.0, 30.0]
+    subsample: [0.65, 1.0]
+    colsample_bytree: [0.35, 1.0]
+    reg_lambda: [0.01, 150.0]
+    reg_alpha: [0.00001, 20.0]
+    gamma: [0.0, 5.0]
+
+warm_start:
+  s:
+    n_estimators: 500
+    max_depth: 6
+    learning_rate: 0.03
+    min_child_weight: 3.0
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_lambda: 1.0
+    reg_alpha: 0.0
+    gamma: 0.0
+  s_marginal:
+    n_estimators: 500
+    max_depth: 6
+    learning_rate: 0.03
+    min_child_weight: 3.0
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_lambda: 1.0
+    reg_alpha: 0.0
+    gamma: 0.0
+
+output:
+  feature_cache: tracks/ksvd/results/luyin16/zinc_s_marginal/feature_cache.npz
+  json: tracks/ksvd/results/luyin16/ZINC_S_MARGINAL_20260903.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_S_MARGINAL_20260903.md

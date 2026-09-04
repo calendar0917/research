@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>第六课：决策边界与树规则</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main class="page">
+  <div class="kicker">Lesson 0006 · Classical models</div>
+  <h1>从一条边界到一组规则</h1>
+  <p class="dek">线性模型和决策树的差异，首先是它们能表示的函数形状不同。</p>
+  <div class="card claim"><span class="label">本课唯一胜利</span><br>你能解释：为什么线性模型会欠拟合某些关系，以及决策树为什么既灵活又容易过拟合。</div>
+  <h2>1. 线性模型在空间里画一条线</h2>
+  <p>二分类线性模型先计算一个分数：</p>
+  <div class="card claim"><code>s(x) = wᵀx + b</code></div>
+  <p>再用阈值把分数转成类别。令 <code>s(x)=0</code>，就得到决策边界。二维输入时它是一条直线；三维输入时是一个平面；更高维时称为超平面。</p>
+  <p>这带来一个明确的限制：如果正负样本需要弯曲、分块或 XOR 式的边界，单个线性模型不能直接表示。增加训练轮数不能改变这个限制，因为优化只是在同一个函数族里寻找更好的参数。</p>
+  <h2>2. 决策树写 if-then 规则</h2>
+  <p>决策树不计算所有特征的加权和，而是反复选择一个特征和阈值：</p>
+  <div class="card"><code>if x₁ ≤ t：进入左子树<br>else：进入右子树</code></div>
+  <p>每次切分都把当前区域分成两个子区域。走到叶节点后，分类树通常用该叶中训练样本的类别比例给出预测概率。scikit-learn 将决策树描述为一种“分段常数近似”：树越深，区域越细，规则越复杂。</p>
+  <h2>3. 为什么树会过拟合</h2>
+  <p>如果允许树一直切分，它可以把训练样本逐个隔离，训练误差很低，但新样本未必落在正确的区域。树的深度、叶节点最小样本数和剪枝都是复杂度控制。</p>
+  <p>这也是一个重要的研究直觉：<strong>表达能力只是上限，不是泛化保证。</strong>模型越灵活，越需要足够数据、正则化和可靠评估来支持它。</p>
+  <h2>4. 与分子特征的关系</h2>
+  <p>当分子被压成固定长度向量后，树可以直接寻找“某个特征是否超过阈值”以及多个特征沿路径组合的规则。它仍然不知道这些特征原本来自哪些节点或边；它只看见向量中的坐标。</p>
+  <p>因此，树模型可能非常适合利用固定特征中的非线性组合，但这不等于它替代了图结构建模。要判断 KSVD 特征是否有结构增量，仍需区分“特征提供了什么”和“树模型利用得多好”。</p>
+  <h2>5. 现在练习</h2>
+  <p>把一个线性分类器训练更久，能否让它直接表达 XOR 形状的决策边界？</p>
+  <div class="quiz" data-answer="b"><button data-choice="a">可以，只要学习率设置足够小。</button><button data-choice="b">不能，优化不会改变线性函数族。</button><button data-choice="c">可以，只要训练集样本足够少。</button><p class="feedback" aria-live="polite"></p></div>
+  <script>document.querySelectorAll('.quiz button').forEach(button => button.addEventListener('click', () => { const quiz = button.closest('.quiz'); const feedback = quiz.querySelector('.feedback'); feedback.textContent = button.dataset.choice === quiz.dataset.answer ? '正确：学习参数不能突破模型族的表达形式；需要改变函数族或构造特征。' : '再区分：学习率改变参数搜索过程，不改变模型能够表示的函数形式。'; }));</script>
+  <h2>带走的工具</h2>
+  <p>打开<a href="../reference/decision-boundary-tree.html">决策边界与树规则速查</a>。看到 <code>max_depth</code> 时，把它理解为“允许规则树长到多复杂”，而不是一个无意义的配置数字。</p>
+  <div class="card"><span class="label">Primary source</span><p><a href="https://scikit-learn.org/stable/modules/tree.html">scikit-learn 官方 Decision Trees</a>：重点阅读决策树的分段近似、过拟合、数学形式和停止条件。</p></div>
+  <p class="footer">如果“线性边界”和“树的区域”仍然抽象，可以画两个二维特征轴，自己画一条直线，再画两次垂直切分。下一课进入集成学习：为什么很多棵不完美的树组合起来会更强。</p>
+  <p><a href="0005-linear-model-gradient.html">上一课：线性模型与梯度下降</a> · <a href="../CURRICULUM.md">课程路线</a></p>
+</main></body></html>

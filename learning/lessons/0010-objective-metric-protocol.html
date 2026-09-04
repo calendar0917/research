@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第十课：训练目标、指标与实验协议</title>
+  <link rel="stylesheet" href="../assets/course.css">
+  <script defer src="../assets/interactive.js"></script>
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Lesson 0010 · Experiment protocol</div>
+  <h1>一个分数，究竟由什么决定？</h1>
+  <p class="dek">模型只是实验链条中的一环。训练目标、评估指标和数据划分，决定了一个分数能不能成为证据。</p>
+
+  <div class="card claim">
+    <span class="label">本课唯一胜利</span><br>
+    看到训练代码或实验报告时，你能区分：模型在优化什么、研究者用什么指标做选择，以及测试集是否仍然独立。
+  </div>
+
+  <h2>1. 结果不是模型名字的属性</h2>
+  <p>“GNN 达到 0.78”这句话少了很多条件。更完整的对象是：</p>
+  <div class="card formula"><code>结果 = f(数据, 表示, 模型, 目标, 训练, 选择规则, 划分, 随机性, 指标)</code></div>
+  <p>因此两个实验即使都叫“GNN vs KSVD”，只要图构造、特征预处理、epoch 选择或 split 不同，就不一定是在比较同一件事。<a href="https://arxiv.org/abs/2005.00687">Open Graph Benchmark</a> 将数据集、任务定义和 split 作为 benchmark 的一部分，原因就在这里。</p>
+
+  <h2>2. 训练目标、评估指标、选择规则</h2>
+  <p>把三种角色分开，代码就容易读很多：</p>
+  <div class="card">
+    <p><strong>训练目标（objective/loss）：</strong>每次更新时，模型试图让什么变小或变大？</p>
+    <p><strong>评估指标（metric）：</strong>我们用什么尺子描述预测好不好？</p>
+    <p><strong>选择规则（selection rule）：</strong>多个 epoch、超参数或方法之间，依据哪份数据的哪个指标保留一个？</p>
+  </div>
+  <pre><code>model = XGBClassifier(
+    objective="binary:logistic",
+    eval_metric="auc",
+)
+model.fit(X_train, y_train,
+          eval_set=[(X_valid, y_valid)])
+p_test = model.predict_proba(X_test)[:, 1]
+test_auc = roc_auc_score(y_test, p_test)</code></pre>
+  <p>这段代码可以这样读：</p>
+  <ul>
+    <li><code>objective</code> 规定训练目标和输出形式；</li>
+    <li><code>eval_metric</code> 规定监控/比较的指标；如果它参与 early stopping，就会参与 checkpoint 选择；</li>
+    <li><code>roc_auc_score</code> 是最后报告的测试指标；它衡量排序能力，不等于概率校准，也不自动说明机制成立。</li>
+  </ul>
+  <p>目标与指标不同并不一定是错误，关键是报告中要说明这种关系。更多常见错误可查 <a href="https://scikit-learn.org/stable/common_pitfalls.html">scikit-learn 官方 Common pitfalls</a>。</p>
+
+  <h2>3. 三份数据的职责</h2>
+  <div class="card">
+    <p><strong>Train：</strong>学习模型参数，以及只允许从训练数据学习的 scaler、PCA、字典或特征选择规则。</p>
+    <p><strong>Validation：</strong>在候选方案之间做决定，例如选 epoch、超参数、特征视图、阈值或 seed。</p>
+    <p><strong>Test：</strong>方案冻结后，尽量不再影响决策地给出最终估计。</p>
+  </div>
+  <p>“测试集只评估一次”是一个很好的默认习惯，但真正的原则是：测试结果不能反过来指导方案选择。若你看了 test 后改了代码、选了更好的 seed，再报告这个 test，测试集就已经参与了研究决策。</p>
+
+  <h2>4. 两种常见的越界</h2>
+  <pre><code># 问题一：表示和变换在 split 之前学习
+dictionary = fit_ksvd_dictionary(all_graphs)
+features = scaler.fit_transform(all_features)
+train, valid, test = scaffold_split(features)
+
+# 问题二：测试集参与 checkpoint 选择
+for epoch in range(1, 101):
+    train_one_epoch(model, train_loader)
+    test_auc = evaluate(model, test_loader)
+    if test_auc &gt; best_test_auc:
+        save_checkpoint(model)
+</code></pre>
+  <p>第一段的风险不在“用了 KSVD 或 scaler”，而在它们的 <code>fit</code> 看到了哪些样本。若目标是 inductive 泛化，应该先划分，再只用 train 学习变换，valid/test 只使用已学规则。</p>
+  <p>第二段把 test 变成了选择器。即使最后只报告一个数字，它也不再是干净的最终证据；checkpoint 应依据 train 内部验证或 official validation 选择。</p>
+  <p>如果研究有意使用全图无标签预训练或 transductive 设置，也可以做，但必须明确写出这是不同的协议；不能把它和严格 inductive 结果混在一起。</p>
+
+  <h2>5. 现在练习</h2>
+  <p>哪一项负责回答“模型训练时朝什么方向改变”？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：objective/loss 参与训练更新；metric 主要是评价尺子，selection rule 决定保留哪个方案。" data-wrong="想想谁参与每次参数更新：是训练目标，不是报告数字本身。">
+    <button type="button" data-choice="a">目标函数负责优化</button>
+    <button type="button" data-choice="b">评估指标负责报告</button>
+    <button type="button" data-choice="c">随机种子负责复现</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>哪种分工最符合默认的实验协议？</p>
+  <div class="quiz" data-answer="b" data-correct="正确：train 学参数，valid 做选择，test 在冻结方案后做最终评估。" data-wrong="把三份数据分别放回它们的职责：学习、选择、最终评估。">
+    <button type="button" data-choice="a">训练集用来选择</button>
+    <button type="button" data-choice="b">验证集用来选择</button>
+    <button type="button" data-choice="c">测试集用来选择</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>下面哪种做法会污染测试集的独立性？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：一旦用 test 选择 epoch，test 就参与了决策，不能再当作未参与选择的最终证据。" data-wrong="关键不在最后是否只写了一个数字，而在 test 是否反过来影响了方案。">
+    <button type="button" data-choice="a">把测试集用于调参</button>
+    <button type="button" data-choice="b">把验证集用于调参</button>
+    <button type="button" data-choice="c">把训练集用于拟合</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <h2>带走的研究句</h2>
+  <div class="card claim">
+    <strong>报告一个数字时，补齐它的协议。</strong><br>
+    “在固定的表示、split、训练目标、选择规则和随机种子下，方法 A 的 test ROC-AUC 为……；这支持它在该协议下预测更好，但还不能单独证明它理解了结构或能迁移到新 scaffold。”
+  </div>
+  <p>打开<a href="../reference/experiment-protocol-card.html">实验协议速查</a>，并回看<a href="../reference/model-tool-card.html">模型工具卡</a>。下一课将把这套协议用于比较两个方法：如何知道提升来自表示、模型，还是实验设置。</p>
+
+  <div class="card">
+    <span class="label">Primary sources</span>
+    <p><a href="https://scikit-learn.org/stable/common_pitfalls.html">scikit-learn 官方 Common pitfalls</a>：优先阅读 data leakage 和 inconsistent preprocessing。</p>
+    <p><a href="https://scikit-learn.org/stable/modules/compose.html">scikit-learn Pipelines and composite estimators</a>：理解如何把预处理和模型绑定在正确的训练边界内。</p>
+    <p><a href="https://arxiv.org/abs/2005.00687">Open Graph Benchmark</a>：理解图学习中的任务、split 和公平比较为何属于实验定义。</p>
+  </div>
+
+  <p class="footer">如果你对“某个真实实验到底属于哪种协议”有疑问，直接把代码片段或报告段落发给我；下一步我们会一起标出每个学习动作和每个选择动作。</p>
+  <p><a href="0009-model-as-tool.html">上一课：模型作为工具</a> · <a href="../CURRICULUM.md">课程路线</a></p>
+</main>
+</body>
+</html>

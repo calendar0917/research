@@ -1,0 +1,33 @@
+protocol_id: luyin16-zinc-center-relation-network-smoke-v1
+
+data:
+  root: data/ZINC
+
+limits:
+  train: 80
+  valid: 20
+  test: 20
+
+representation:
+  radius: 3
+  wl_rounds: 3
+  node_role_bins: 64
+  edge_role_bins: 32
+  relation_radius: 3
+
+model:
+  hidden: 16
+  relation_layers: 1
+  epochs: 3
+  batch_size: 16
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  evaluate_every: 1
+  patience: null
+  device: cpu
+  model_seeds: [0]
+  modes: [center_concat, conditional_fusion, conditional_relation]
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_CENTER_RELATION_NETWORK_SMOKE_20260903.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_CENTER_RELATION_NETWORK_SMOKE_20260903.md

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第八课：XGBoost 的一轮更新</title>
+  <link rel="stylesheet" href="../assets/course.css">
+  <script defer src="../assets/interactive.js"></script>
+  <script defer src="../assets/xgboost-round.js"></script>
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Lesson 0008 · Classical models</div>
+  <h1>XGBoost 如何走完一轮？</h1>
+  <p class="dek">把上一课的“顺序纠错”拆成可以审计的计算：当前预测、梯度、二阶信息、叶子权重和切分收益。</p>
+
+  <div class="card claim">
+    <span class="label">本课唯一胜利</span><br>
+    给定一组当前预测和一个候选切分，你能判断新树应该往哪边修正，以及这个切分是否值得保留。
+  </div>
+
+  <h2>1. 先记住时间顺序</h2>
+  <p>Boosting 的当前模型记作 <code>F<sub>m−1</sub></code>。第 <code>m</code> 轮不会从头训练一棵“最终模型”，而是先用已有模型得到每个训练样本的当前预测，再添加一个修正函数：</p>
+  <p class="card formula"><code>F<sub>m</sub>(x) = F<sub>m−1</sub>(x) + η f<sub>m</sub>(x)</code></p>
+  <ol>
+    <li>旧的树集合给出当前预测 <code>ŷᵢ</code>。</li>
+    <li>在每个 <code>ŷᵢ</code> 处计算损失的一阶导数 <code>gᵢ</code> 和二阶导数 <code>hᵢ</code>。</li>
+    <li>把样本按候选树的叶子分组，汇总成 <code>G</code>、<code>H</code>，比较叶子与切分的正则化收益。</li>
+    <li>建好新树后，用 <code>η</code> 缩放它，再加入旧模型。</li>
+  </ol>
+  <p>这就是第五课“梯度告诉我往哪改”的函数版本：参数向量不再直接移动，而是添加一棵能降低损失的树。这个加法训练视角见 <a href="https://xgboost.readthedocs.io/en/stable/tutorials/model.html">XGBoost 官方模型教程</a>。</p>
+
+  <h2>2. 梯度告诉方向，二阶信息告诉曲率</h2>
+  <p>对样本 <code>i</code>，令损失为 <code>ℓ(yᵢ, ŷᵢ)</code>：</p>
+  <div class="card formula">
+    <code>gᵢ = ∂ℓ / ∂ŷᵢ</code><br>
+    <code>hᵢ = ∂²ℓ / ∂ŷᵢ²</code>
+  </div>
+  <p><code>gᵢ</code> 是“如果预测再增大一点，损失会怎样变化”的局部答案；<code>hᵢ</code> 描述这个答案变化得有多快。XGBoost 用损失的二阶 Taylor 近似来决定新树的叶子值，而不是只看一个粗糙的正确/错误计数；原始论文给出了这个正则化目标的推导。</p>
+  <div class="card">
+    <span class="label">为了算得清</span>
+    <p>下面的小例子暂用平方损失 <code>½(y−ŷ)²</code>，因此：</p>
+    <p class="formula"><code>gᵢ = ŷᵢ − yᵢ，hᵢ = 1</code></p>
+    <p>预测偏高时 <code>gᵢ&gt;0</code>，修正应为负；预测偏低时 <code>gᵢ&lt;0</code>，修正应为正。二分类 logistic 会换成对应的 <code>gᵢ,hᵢ</code>，但“先按当前预测计算，再聚合并选树”的结构不变。</p>
+  </div>
+
+  <h2>3. 一个叶子能给出多大的修正？</h2>
+  <p>假设若干样本落入同一个叶子，记：</p>
+  <div class="card formula"><code>G = Σ gᵢ，H = Σ hᵢ</code></div>
+  <p>对这个叶子的常数输出 <code>w</code>，二阶近似加上 L2 正则化后，最优值为：</p>
+  <div class="card claim formula"><code>w* = −G / (H + λ)</code></div>
+  <p>这条式子很适合审计代码和日志：</p>
+  <ul>
+    <li><code>G</code> 决定方向：<code>G&gt;0</code> 往下调，<code>G&lt;0</code> 往上调；</li>
+    <li><code>H</code> 和 <code>λ</code> 出现在分母，控制更新幅度；</li>
+    <li>得到的 <code>w*</code> 还是新树的原始叶子权重，最终贡献还会乘上 <code>η</code>。</li>
+  </ul>
+
+  <h2>4. 一个候选切分值不值得？</h2>
+  <p>把父节点切成左、右两个叶子时，XGBoost 比较正则化目标的下降量：</p>
+  <div class="card formula"><code>gain = ½[ G<sub>L</sub>²/(H<sub>L</sub>+λ) + G<sub>R</sub>²/(H<sub>R</sub>+λ) − G²/(H+λ) ] − γ</code></div>
+  <p><code>γ</code> 是新增叶子/切分的复杂度代价。gain 为正，才说明“分开以后获得的拟合收益”超过了复杂度成本。注意：这只是<strong>训练目标在该轮的局部收益</strong>，不是验证集 AUC 的保证。</p>
+
+  <div class="card">
+    <span class="label">小型计算器 · λ=1，γ=0.1</span>
+    <p class="note">平方损失下，当前预测与标签已经换算成上面的 <code>gᵢ</code>、<code>hᵢ</code>。先心算方向，再点击候选切分。</p>
+    <table>
+      <thead><tr><th>样本</th><th>x</th><th>y</th><th>ŷ</th><th>g</th><th>h</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>0.1</td><td>1</td><td>0.2</td><td>−0.8</td><td>1</td></tr>
+        <tr><td>2</td><td>0.2</td><td>1</td><td>0.4</td><td>−0.6</td><td>1</td></tr>
+        <tr><td>3</td><td>0.8</td><td>0</td><td>0.7</td><td>+0.7</td><td>1</td></tr>
+        <tr><td>4</td><td>0.9</td><td>0</td><td>0.9</td><td>+0.9</td><td>1</td></tr>
+      </tbody>
+    </table>
+    <div class="calc-actions" aria-label="选择候选切分">
+      <button type="button" data-cut="0.5" aria-pressed="false">x ≤ 0.5</button>
+      <button type="button" data-cut="0.8" aria-pressed="false">x ≤ 0.8</button>
+    </div>
+    <p class="calc-output" aria-live="polite">点击一个候选切分，查看左右叶子的方向和正则化 gain。</p>
+    <script type="application/json">
+      [
+        {"x":0.1,"g":-0.8,"h":1},
+        {"x":0.2,"g":-0.6,"h":1},
+        {"x":0.8,"g":0.7,"h":1},
+        {"x":0.9,"g":0.9,"h":1}
+      ]
+    </script>
+  </div>
+
+  <h2>5. 现在练习</h2>
+  <p>先不要看公式，回答：一个叶子里的样本大多被当前模型预测得过高，平方损失下它的修正方向是？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：预测偏高时，g=ŷ−y 多为正，所以 w* 为负。" data-wrong="再看 g=ŷ−y 的符号：预测偏高时，损失希望预测变小。">
+    <button type="button" data-choice="a">把预测往下调</button>
+    <button type="button" data-choice="b">把预测往上调</button>
+    <button type="button" data-choice="c">暂时保持不变</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>再回忆一个审计区别：增大 <code>λ</code> 通常会怎样？</p>
+  <div class="quiz" data-answer="b" data-correct="正确：λ 在分母中，会收缩叶子权重。" data-wrong="提示：看 w*=−G/(H+λ)，λ 增大时分母发生什么？">
+    <button type="button" data-choice="a">让叶子更新更激进</button>
+    <button type="button" data-choice="b">让叶子更新更保守</button>
+    <button type="button" data-choice="c">让切分数量必增加</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <h2>带走的审计模板</h2>
+  <div class="card claim">
+    <p><strong>看到 XGBoost 日志或代码时，按这个顺序问：</strong></p>
+    <p>当前预测从哪里来？训练目标是什么？<code>g,h</code> 针对哪个损失？叶子/切分是否包含正则化？报告里的 <code>eval_metric</code> 是否被误说成了训练目标？</p>
+  </div>
+  <p>打开<a href="../reference/xgboost-one-round.html">XGBoost 一轮更新速查</a>，把公式压缩成一页；也可以回看<a href="0007-ensemble-learning.html">第七课：集成学习</a>和<a href="../reference/ensemble-map.html">集成学习速查</a>。</p>
+
+  <div class="card">
+    <span class="label">Primary sources</span>
+    <p><a href="https://xgboost.readthedocs.io/en/stable/tutorials/model.html">XGBoost 官方 Introduction to Boosted Trees</a>：优先阅读 objective function、model complexity 和 gradient boosted trees 部分。</p>
+    <p><a href="https://arxiv.org/abs/1603.02754">XGBoost: A Scalable Tree Boosting System</a>：阅读第 2 节，核对二阶近似、正则化目标和 split finding。</p>
+  </div>
+
+  <p class="footer">如果某一步的符号、公式或计算器结果不清楚，直接把你的推理写出来问我；下一步我们会把“目标函数、评估指标、验证协议”接回真实实验审计。</p>
+  <p><a href="0007-ensemble-learning.html">上一课：集成学习</a> · <a href="../CURRICULUM.md">课程路线</a></p>
+</main>
+</body>
+</html>

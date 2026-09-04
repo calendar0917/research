@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第十一课：提升来自哪里</title>
+  <link rel="stylesheet" href="../assets/course.css">
+  <script defer src="../assets/interactive.js"></script>
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Lesson 0011 · Evidence and attribution</div>
+  <h1>提升来自哪里？</h1>
+  <p class="dek">A 比 B 高，只是观察到差异；科研要继续追问：差异究竟归因于表示、模型、协议，还是它们的组合。</p>
+
+  <div class="card claim">
+    <span class="label">本课唯一胜利</span><br>
+    面对两个实验结果，你能指出它们同时改变了哪些因素，并提出一个最小对照来缩小归因范围。
+  </div>
+
+  <h2>1. 一个比较可能捆绑了很多变化</h2>
+  <p>例如下面的比较：</p>
+  <div class="card formula"><code>KSVD 固定向量 + XGBoost</code>　vs　<code>原子/键图 + GNN</code></div>
+  <p>两边不仅模型不同，输入表示、可用关系、参数化方式、训练循环和可能的选择规则也不同。即使左边分数更高，最稳妥的表述仍然只是：</p>
+  <div class="card claim">在这两种输入、模型和协议的联合比较下，左边的预测结果更好。</div>
+  <p>它还不能单独证明“KSVD 表示更好”“XGBoost 更适合分子图”，更不能证明 GNN 没有能力。</p>
+
+  <h2>2. 最小工具：2×2 对照矩阵</h2>
+  <p>把研究关心的两个轴分别记为表示 <code>R</code> 和模型 <code>M</code>：</p>
+  <div class="card">
+    <table>
+      <thead><tr><th></th><th>模型 M0</th><th>模型 M1</th></tr></thead>
+      <tbody>
+        <tr><td>表示 R0</td><td>R0 + M0<br>基线</td><td>R0 + M1<br>只换模型</td></tr>
+        <tr><td>表示 R1</td><td>R1 + M0<br>只换表示</td><td>R1 + M1<br>完整方案</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>比如：</p>
+  <ul>
+    <li><code>R0</code>：原始/固定特征；<code>R1</code>：KSVD 特征；</li>
+    <li><code>M0</code>：Logistic Regression；<code>M1</code>：XGBoost。</li>
+  </ul>
+  <p>比较同一列，主要观察表示变化；比较同一行，主要观察模型变化。四格都应尽量共享 split、标签、指标、选择规则、训练预算和随机种子集合。</p>
+
+  <h2>3. 如何读一个示意结果</h2>
+  <div class="card">
+    <span class="label">示意 ROC-AUC，不是实际实验结果</span>
+    <table>
+      <thead><tr><th></th><th>Logistic M0</th><th>XGBoost M1</th></tr></thead>
+      <tbody>
+        <tr><td>固定特征 R0</td><td>0.71</td><td>0.76</td></tr>
+        <tr><td>KSVD 特征 R1</td><td>0.73</td><td>0.77</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>从同一模型看，KSVD 表示带来 <code>+0.02</code> 或 <code>+0.01</code>；从同一表示看，XGBoost 带来约 <code>+0.04</code> 或 <code>+0.05</code>。这提示模型变化可能比表示变化更大，但要结合多 seed、误差范围和任务定义，不能只看一个小数。</p>
+  <p>如果 R1 只在 M1 上有效，可能存在<strong>表示 × 模型的交互</strong>：不是“表示普遍更好”，而是它更适合某种下游读取方式。这个区别会改变论文主张。</p>
+
+  <h2>4. 对照不是越多越好，而是要对应解释</h2>
+  <div class="card">
+    <p><strong>担心规模信号：</strong>加入 size-only 或 degree-only 基线。若复杂方法只比 size 高一点，结构主张要收紧。</p>
+    <p><strong>担心维度/容量：</strong>使用 random、PCA 或参数量匹配的表示/模型。</p>
+    <p><strong>担心模型记噪声：</strong>做 label shuffle，并保持流程、预算和选择规则不变。</p>
+    <p><strong>声称使用了关系：</strong>只打乱关系或 assignment，保留内容、数量和容量，观察性能是否下降。</p>
+  </div>
+  <p>一个好的对照不是“再跑一个模型”，而是针对一个具体的替代解释设计的。先写“我担心提升其实来自什么”，再决定要改哪一处。</p>
+
+  <h2>5. 现在练习</h2>
+  <p>如果想隔离“表示本身”的增量价值，哪种比较最直接？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：固定下游模型和协议，只改变表示，差异才主要落在表示轴上。" data-wrong="归因的原则是固定其他条件，只改变你想检验的那个因素。">
+    <button type="button" data-choice="a">固定模型改变表示</button>
+    <button type="button" data-choice="b">固定表示改变模型</button>
+    <button type="button" data-choice="c">固定指标改变数据</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>“KSVD 向量 + XGBoost”优于“原始图 + GNN”时，最稳妥的第一句话是什么？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：这只是联合系统的比较；表示、模型和输入关系同时不同。" data-wrong="先列出两边改变的轴：表示、模型和可用关系并不相同。">
+    <button type="button" data-choice="a">只能比较组合结果</button>
+    <button type="button" data-choice="b">可以归因表示提升</button>
+    <button type="button" data-choice="c">可以归因模型优越</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>如果只完成了 R0+M0 与 R1+M1 两个实验，最强能支持哪句话？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：两轴同时变化，只能先描述完整方案差异，不能拆分原因。" data-wrong="想想这两个格子之间同时换了几件事：表示和模型都换了。">
+    <button type="button" data-choice="a">只能说完整方案有效</button>
+    <button type="button" data-choice="b">可以说表示单独有效</button>
+    <button type="button" data-choice="c">可以说模型单独有效</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <h2>带走的研究句</h2>
+  <div class="card claim">
+    <strong>先写替代解释，再设计对照。</strong><br>
+    “我想声称 KSVD 表示带来增量信息；可能的替代解释是维度、模型容量、size 信号或协议差异。因此我固定下游模型和 split，并加入 size、PCA/random 与关系打乱对照。”
+  </div>
+  <p>打开<a href="../reference/attribution-matrix.html">提升归因速查</a>，并回看<a href="../reference/experiment-protocol-card.html">实验协议</a>。下一课将继续问：一次提升在不同 seed 和不同子集上是否稳定。</p>
+
+  <div class="card">
+    <span class="label">Primary sources</span>
+    <p><a href="https://scikit-learn.org/stable/common_pitfalls.html">scikit-learn 官方 Common pitfalls</a>：理解预处理、模型选择和公平比较中的隐藏变化。</p>
+    <p><a href="https://arxiv.org/abs/2005.00687">Open Graph Benchmark</a>：核对图学习中统一任务、数据和 split 的重要性。</p>
+    <p><a href="https://arxiv.org/abs/2003.12206">NeurIPS reproducibility program</a>：理解多次运行、报告细节和复现证据为何影响结论可信度。</p>
+  </div>
+
+  <p class="footer">如果你有一个正在比较的真实实验，可以只发我两行“方法 A / 方法 B”；下一步我们先列出它们改变的轴，再决定最小对照。</p>
+  <p><a href="0010-objective-metric-protocol.html">上一课：训练目标、指标与协议</a> · <a href="../CURRICULUM.md">课程路线</a></p>
+</main>
+</body>
+</html>

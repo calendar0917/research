@@ -1,0 +1,56 @@
+protocol_id: luyin16-zinc-step-a-motif-count-v1
+
+data:
+  root: data/ZINC
+
+# Set positive values only for smoke runs.  The official run uses all rows.
+limits:
+  train: null
+  valid: null
+  test: null
+
+representation:
+  # This is intentionally fixed: Step A tests information preservation, not
+  # another radius/objective sweep.
+  radius: 3
+  wl_rounds: 3
+  top_k: 2048
+  morgan_bits: 2048
+
+xgboost_objective: reg:absoluteerror
+n_jobs: 4
+max_bin: 256
+model_seeds: [0, 1, 2, 3, 4]
+progress_every: 500
+
+tuning:
+  # Hyperparameters are selected only from official-train rows.
+  n_splits: 3
+  split_seed: 20260903
+  n_trials: 20
+  seed: 20260910
+  ranges:
+    n_estimators: [200, 900]
+    max_depth: [2, 9]
+    learning_rate: [0.01, 0.15]
+    min_child_weight: [1.0, 30.0]
+    subsample: [0.65, 1.0]
+    colsample_bytree: [0.20, 1.0]
+    reg_lambda: [0.01, 150.0]
+    reg_alpha: [0.00001, 20.0]
+    gamma: [0.0, 5.0]
+
+gine:
+  enabled: true
+  hidden: 64
+  layers: 4
+  epochs: 60
+  batch_size: 128
+  learning_rate: 0.001
+  device: cpu
+  model_seeds: [0, 1, 2]
+
+output:
+  token_cache: tracks/ksvd/results/luyin16/zinc_motif_count/token_cache.npz
+  json: tracks/ksvd/results/luyin16/ZINC_STEP_A_MOTIF_COUNT_20260903.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_STEP_A_MOTIF_COUNT_20260903.md

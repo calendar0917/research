@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>XGBoost 一轮更新速查</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Classical models / quick reference</div>
+  <h1>XGBoost 一轮更新</h1>
+  <p class="dek">每一轮都在已有模型上添加一棵树：用当前预测计算损失的局部方向与曲率，再选择能让正则化目标下降的树结构。</p>
+  <hr class="rule">
+
+  <div class="card claim">
+    <span class="label">核心流程</span>
+    <p><code>当前模型 → ŷᵢ → gᵢ,hᵢ → 汇总 G,H → 叶子权重/切分 gain → 新树 → η 缩放后相加</code></p>
+  </div>
+
+  <div class="card">
+    <span class="label">一阶 / 二阶信息</span>
+    <p><code>gᵢ = ∂ℓ(yᵢ, ŷᵢ) / ∂ŷᵢ</code>：在当前预测处，损失希望预测向哪边改。</p>
+    <p><code>hᵢ = ∂²ℓ(yᵢ, ŷᵢ) / ∂ŷᵢ²</code>：损失曲率，帮助决定这次改动应该多谨慎。</p>
+    <p>平方损失 <code>½(y−ŷ)²</code> 下：<code>gᵢ=ŷᵢ−yᵢ</code>，<code>hᵢ=1</code>。二分类 logistic 的 raw margin 下通常是 <code>gᵢ=pᵢ−yᵢ</code>，<code>hᵢ=pᵢ(1−pᵢ)</code>。</p>
+  </div>
+
+  <div class="card">
+    <span class="label">一个叶子</span>
+    <p>对落入同一叶子的样本求和：<code>G=Σgᵢ</code>，<code>H=Σhᵢ</code>。L2 正则化为 <code>λ</code> 时，局部最优叶子权重是：</p>
+    <p class="formula"><code>w* = −G / (H + λ)</code></p>
+    <p>所以 <code>G&gt;0</code> 时往下修正，<code>G&lt;0</code> 时往上修正。<code>λ</code> 越大，叶子更新越保守。</p>
+  </div>
+
+  <div class="card">
+    <span class="label">一个切分</span>
+    <p>候选切分把父节点分为左右子节点。带有“每增加一个叶子”的复杂度代价 <code>γ</code> 时：</p>
+    <p class="formula"><code>gain = ½[ G<sub>L</sub>²/(H<sub>L</sub>+λ) + G<sub>R</sub>²/(H<sub>R</sub>+λ) − G²/(H+λ) ] − γ</code></p>
+    <p>gain 为正，说明这个切分带来的损失下降超过了复杂度代价；否则应拒绝或继续寻找别的切分。</p>
+  </div>
+
+  <div class="card">
+    <span class="label">参数别混淆</span>
+    <table>
+      <thead><tr><th>对象</th><th>它控制什么</th><th>什么时候审计</th></tr></thead>
+      <tbody>
+        <tr><td><code>objective</code></td><td>训练损失与输出形式</td><td>模型究竟优化什么</td></tr>
+        <tr><td><code>eval_metric</code></td><td>报告/比较用的指标</td><td>指标是否被误当训练目标</td></tr>
+        <tr><td><code>learning_rate</code> / η</td><td>新树贡献的缩放</td><td>小步更新与树数量的配合</td></tr>
+        <tr><td><code>reg_lambda</code> / λ</td><td>叶子权重的 L2 惩罚</td><td>更新是否被收缩</td></tr>
+        <tr><td><code>gamma</code> / γ</td><td>新增叶子/切分的门槛</td><td>复杂度是否值得</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>研究审计句</h2>
+  <div class="card claim"><strong>我能声称：</strong>该轮在给定训练样本、当前预测、损失和正则化设置下选择了一个局部上有利的树更新。<br><strong>我还不能声称：</strong>该切分在验证集或测试集上一定带来收益。</div>
+
+  <p><a href="../lessons/0008-xgboost-one-round.html">回到第八课：拆开一轮 XGBoost</a> · <a href="ensemble-map.html">集成学习速查</a> · <a href="linear-optimization.html">线性模型与优化速查</a></p>
+  <p class="footer">主要依据：<a href="https://xgboost.readthedocs.io/en/stable/tutorials/model.html">XGBoost 官方 Introduction to Boosted Trees</a> 与 <a href="https://arxiv.org/abs/1603.02754">XGBoost 原始论文</a>。</p>
+</main>
+</body>
+</html>
