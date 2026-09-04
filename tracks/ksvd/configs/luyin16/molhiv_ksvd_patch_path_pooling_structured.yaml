@@ -1,0 +1,32 @@
+protocol_id: luyin16-molhiv-ksvd-structured-patch-path-pooling-v1
+
+data:
+  root: data/ogb
+
+seed: 0
+
+representation:
+  descriptor: structured_v1
+  n_atoms: 64
+  sparsity: 4
+  ksvd_iter: 3
+  max_dictionary_patches: 12000
+
+model:
+  patch_hidden: 64
+  pair_hidden: 32
+  dropout: 0.05
+  epochs: 20
+  batch_size: 64
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 5
+  evaluate_every: 1
+  device: cpu
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/luyin16/MOLHIV_KSVD_PATCH_PATH_POOLING_STRUCTURED_20260905.json
+  markdown: tracks/ksvd/results/luyin16/MOLHIV_KSVD_PATCH_PATH_POOLING_STRUCTURED_20260905.md

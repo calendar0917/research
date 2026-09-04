@@ -48,6 +48,23 @@ from tracks.ksvd.experiments.luyin16 import molhiv_patch_path_pooling as base
 REPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_CONFIG = REPO_ROOT / "tracks/ksvd/configs/luyin16/molhiv_ksvd_patch_path_pooling.yaml"
 
+# ``structured_v1`` adds two explicit, local relations to the shell
+# marginal descriptor:
+#
+#   * endpoint-distance-conditioned ordered two-walk bond relations from the
+#     centre (2 * 13 * 13 = 338 coordinates);
+#   * shell-pair-conditioned endpoint atomic-number mass (6 * 119 = 714).
+#
+# The descriptor is still permutation invariant, but unlike a shell histogram
+# it records which bond sequence reaches a second-shell node and which atom
+# types are joined by an induced local edge.  With K=64 this fits below the
+# CIN-sized total-parameter budget together with the current head.
+STRUCTURED_PATH_WIDTH = 2 * base.BOND_WIDTH * base.BOND_WIDTH
+STRUCTURED_EDGE_ATOM_WIDTH = len(base.SHELL_PAIRS) * base.ATOM_FEATURE_DIMS[0]
+STRUCTURED_SHELL_WIDTH = (
+    base.SHELL_WIDTH + STRUCTURED_PATH_WIDTH + STRUCTURED_EDGE_ATOM_WIDTH
+)
+
 
 def _jsonable(value: Any) -> Any:
     if isinstance(value, Path):
@@ -95,20 +112,217 @@ def _seed_everything(seed: int) -> None:
         torch.cuda.manual_seed_all(int(seed))
 
 
+def _structured_shell_descriptor(
+    graph: Any,
+    center: int,
+    node_types: np.ndarray,
+    edge_types: Mapping[tuple[int, int], tuple[int, ...]],
+    distances: Mapping[int, int],
+) -> tuple[np.ndarray, frozenset[int], frozenset[int]]:
+    """Return the base shell descriptor plus explicit local relations.
+
+    The two-walk block enumerates ``center -> middle -> endpoint`` paths in
+    the induced radius-2 ego.  Endpoints at distance 1 mark local closures
+    (e.g. triangles), while endpoints at distance 2 mark genuine second-shell
+    paths.  The ordered bond-feature outer product retains the direction from
+    the root and therefore does not collapse a two-bond sequence into a
+    single bond marginal.
+
+    The edge block records endpoint atomic-number mass for each shell pair.
+    Both additions are sums over unordered/locally rooted objects and are
+    independent of the input node numbering.
+    """
+    base_descriptor, nodes, boundary = base._shell_descriptor(
+        graph, int(center), node_types, edge_types, distances
+    )
+
+    path_block = np.zeros((2, base.BOND_WIDTH * base.BOND_WIDTH), dtype=np.float32)
+    path_counts = np.zeros(2, dtype=np.float32)
+    for middle in sorted(graph.neighbors(int(center))):
+        middle = int(middle)
+        first_bond = base._feature_one_hot(
+            edge_types[graph.edge_key(int(center), middle)], base.BOND_FEATURE_DIMS
+        )
+        for endpoint in sorted(graph.neighbors(middle)):
+            endpoint = int(endpoint)
+            endpoint_distance = int(distances.get(endpoint, -1))
+            if endpoint_distance not in (1, 2):
+                continue
+            second_bond = base._feature_one_hot(
+                edge_types[graph.edge_key(middle, endpoint)], base.BOND_FEATURE_DIMS
+            )
+            path_block[endpoint_distance - 1] += np.outer(
+                first_bond, second_bond
+            ).reshape(-1)
+            path_counts[endpoint_distance - 1] += 1.0
+    for index in range(2):
+        if path_counts[index] > 0.0:
+            path_block[index] /= path_counts[index]
+
+    edge_atom_block = np.zeros(
+        (len(base.SHELL_PAIRS), base.ATOM_FEATURE_DIMS[0]), dtype=np.float32
+    )
+    shell_pair_index = {pair: index for index, pair in enumerate(base.SHELL_PAIRS)}
+    edge_count_by_shell = np.zeros(len(base.SHELL_PAIRS), dtype=np.float32)
+    induced = graph.induced(set(nodes))
+    for left, right in induced.edges():
+        shell_pair = tuple(sorted((int(distances[left]), int(distances[right]))))
+        shell_index = shell_pair_index[shell_pair]
+        left_atomic_number = int(node_types[int(left), 0])
+        right_atomic_number = int(node_types[int(right), 0])
+        edge_atom_block[shell_index, left_atomic_number] += 1.0
+        edge_atom_block[shell_index, right_atomic_number] += 1.0
+        edge_count_by_shell[shell_index] += 2.0
+    for index in range(len(base.SHELL_PAIRS)):
+        if edge_count_by_shell[index] > 0.0:
+            edge_atom_block[index] /= edge_count_by_shell[index]
+
+    descriptor = np.concatenate(
+        [base_descriptor, path_block.reshape(-1), edge_atom_block.reshape(-1)]
+    ).astype(np.float32, copy=False)
+    if descriptor.shape != (STRUCTURED_SHELL_WIDTH,):
+        raise RuntimeError(
+            f"structured descriptor width changed: {descriptor.shape}; "
+            f"expected {(STRUCTURED_SHELL_WIDTH,)}"
+        )
+    return descriptor, nodes, boundary
+
+
+def _relabel_graph_features(
+    graph: Any,
+    node_features: np.ndarray,
+    edge_features: Mapping[tuple[int, int], np.ndarray],
+    permutation: np.ndarray,
+) -> tuple[Any, np.ndarray, dict[tuple[int, int], np.ndarray]]:
+    """Relabel a graph for the local descriptor invariance audit."""
+    permutation = np.asarray(permutation, dtype=np.int64)
+    if sorted(permutation.tolist()) != list(range(graph.n)):
+        raise ValueError("permutation must contain every node id exactly once")
+    from ksvd_research.core import from_edges
+
+    changed_graph = from_edges(
+        graph.n,
+        [
+            (int(permutation[left]), int(permutation[right]))
+            for left, right in graph.edges()
+        ],
+    )
+    changed_nodes = np.empty_like(node_features)
+    changed_nodes[permutation] = node_features
+    changed_edges: dict[tuple[int, int], np.ndarray] = {}
+    for (left, right), values in edge_features.items():
+        mapped = (int(permutation[left]), int(permutation[right]))
+        key = mapped if mapped[0] < mapped[1] else (mapped[1], mapped[0])
+        changed_edges[key] = np.asarray(values).copy()
+    return changed_graph, changed_nodes, changed_edges
+
+
+def audit_descriptor_invariance(
+    bundle: Any,
+    indices: Sequence[int],
+    descriptor_name: str,
+    *,
+    n_graphs: int = 32,
+    permutations_per_graph: int = 2,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Check that the structured descriptor is independent of node IDs."""
+    rng = np.random.default_rng(int(seed))
+    candidates = np.asarray(indices, dtype=np.int64)
+    if candidates.size > int(n_graphs):
+        candidates = rng.choice(candidates, size=int(n_graphs), replace=False)
+
+    # Compare the row multisets lexicographically.  Sorting each coordinate
+    # independently would be a weaker check because it could hide a
+    # coordinate permutation between rows.
+    def _sorted_rows(value: np.ndarray) -> np.ndarray:
+        order = np.lexsort(
+            tuple(value[:, column] for column in range(value.shape[1] - 1, -1, -1))
+        )
+        return value[order]
+
+    drifts: list[float] = []
+    for raw_index in candidates:
+        index = int(raw_index)
+        graph = bundle.graphs[index]
+        node_features = np.asarray(bundle.node_feats[index], dtype=np.int64)
+        edge_features = bundle.edge_feats[index]
+        distances_by_centre = {
+            int(centre): base._ego_distances(graph, int(centre), base.PATCH_RADIUS)
+            for centre in graph.nodes
+        }
+        reference = np.stack(
+            [
+                (
+                    base._shell_descriptor(
+                        graph, int(centre), node_features, edge_features,
+                        distances_by_centre[int(centre)]
+                    )[0]
+                    if descriptor_name == "shell"
+                    else _structured_shell_descriptor(
+                        graph, int(centre), node_features, edge_features,
+                        distances_by_centre[int(centre)]
+                    )[0]
+                )
+                for centre in graph.nodes
+            ],
+            axis=0,
+        )
+        for _ in range(int(permutations_per_graph)):
+            permutation = rng.permutation(graph.n)
+            changed_graph, changed_nodes, changed_edges = _relabel_graph_features(
+                graph, node_features, edge_features, permutation
+            )
+            changed = np.stack(
+                [
+                    (
+                        base._shell_descriptor(
+                            changed_graph, int(centre), changed_nodes, changed_edges,
+                            base._ego_distances(changed_graph, int(centre), base.PATCH_RADIUS)
+                        )[0]
+                        if descriptor_name == "shell"
+                        else _structured_shell_descriptor(
+                            changed_graph, int(centre), changed_nodes, changed_edges,
+                            base._ego_distances(changed_graph, int(centre), base.PATCH_RADIUS)
+                        )[0]
+                    )
+                    for centre in changed_graph.nodes
+                ],
+                axis=0,
+            )
+            reference_sorted = _sorted_rows(reference)
+            changed_sorted = _sorted_rows(changed)
+            drifts.append(float(np.max(np.abs(reference_sorted - changed_sorted))))
+    return {
+        "graphs": int(candidates.size),
+        "permutations_per_graph": int(permutations_per_graph),
+        "maximum_coordinate_drift_after_sorting": float(max(drifts, default=0.0)),
+        "mean_coordinate_drift_after_sorting": float(np.mean(drifts) if drifts else 0.0),
+    }
+
+
 def _compositional_graph_record(
     graph: Any,
     node_types: np.ndarray,
     edge_types: Mapping[tuple[int, int], tuple[int, ...]],
     y: float,
+    descriptor_name: str,
 ) -> base.GraphRecord:
     """Build the same relation object without computing exact certificates."""
     centres = list(graph.nodes)
     patches: list[base.PatchRecord] = []
     for centre in centres:
         distances = base._ego_distances(graph, int(centre), base.PATCH_RADIUS)
-        descriptor, nodes, boundary = base._shell_descriptor(
-            graph, int(centre), node_types, edge_types, distances
-        )
+        if descriptor_name == "shell":
+            descriptor, nodes, boundary = base._shell_descriptor(
+                graph, int(centre), node_types, edge_types, distances
+            )
+        elif descriptor_name == "structured_v1":
+            descriptor, nodes, boundary = _structured_shell_descriptor(
+                graph, int(centre), node_types, edge_types, distances
+            )
+        else:
+            raise ValueError(f"unknown descriptor_name={descriptor_name!r}")
         # The base record is reused so pair construction and downstream code
         # remain byte-for-byte compatible with the existing relation protocol.
         patches.append(
@@ -168,6 +382,7 @@ def _extract_split(
     bundle: Any,
     indices: Sequence[int],
     split: str,
+    descriptor_name: str,
 ) -> tuple[list[base.GraphRecord], dict[str, Any]]:
     started = time.perf_counter()
     records: list[base.GraphRecord] = []
@@ -185,6 +400,7 @@ def _extract_split(
                 node_types,
                 edge_types,
                 float(bundle.y[index_int]),
+                descriptor_name,
             )
         )
         if (position + 1) % 1000 == 0 or position + 1 == len(indices):
@@ -693,6 +909,8 @@ def _fit_phase_data(
         "sparsity": int(representation.get("sparsity", 4)),
         "patch_aux_width": 2,
         "standardizer_fit_graphs": int(len(fit_records)),
+        "descriptor": str(representation.get("descriptor", "shell")),
+        "descriptor_width": int(dictionary_matrix.shape[0]),
     }
     return encoded_fit, encoded_other, audit
 
@@ -731,9 +949,16 @@ def run(config_path: Path) -> dict[str, Any]:
     representation = config["representation"]
     started = time.perf_counter()
     seed = int(config.get("seed", 0))
+    descriptor_name = str(representation.get("descriptor", "shell"))
     torch.set_num_threads(max(int(config.get("runtime", {}).get("torch_threads", 4)), 1))
 
-    bundle = load_molhiv(root=_resolve(data_config["root"]), with_features=True)
+    max_graphs = data_config.get("max_graphs")
+    bundle = load_molhiv(
+        root=_resolve(data_config["root"]),
+        max_graphs=None if max_graphs is None else int(max_graphs),
+        seed=seed,
+        with_features=True,
+    )
     if bundle.node_feats is None or bundle.edge_feats is None:
         raise RuntimeError("MolHIV OGB node/edge features were not loaded")
     split_indices = {
@@ -750,10 +975,10 @@ def run(config_path: Path) -> dict[str, Any]:
 
     feature_metadata: dict[str, Any] = {}
     train_records, feature_metadata["train"] = _extract_split(
-        bundle, split_indices["train"], "train"
+        bundle, split_indices["train"], "train", descriptor_name
     )
     valid_records, feature_metadata["valid"] = _extract_split(
-        bundle, split_indices["valid"], "valid"
+        bundle, split_indices["valid"], "valid", descriptor_name
     )
     valid_train_data, valid_eval_data, valid_audit = _fit_phase_data(
         train_records, valid_records, representation=representation, seed=seed
@@ -781,10 +1006,10 @@ def run(config_path: Path) -> dict[str, Any]:
         np.int64, copy=False
     )
     refit_records, feature_metadata["train_valid_refit"] = _extract_split(
-        bundle, refit_indices, "train+valid"
+        bundle, refit_indices, "train+valid", descriptor_name
     )
     test_records, feature_metadata["test"] = _extract_split(
-        bundle, split_indices["test"], "test"
+        bundle, split_indices["test"], "test", descriptor_name
     )
     refit_train_data, refit_test_data, test_audit = _fit_phase_data(
         refit_records, test_records, representation=representation, seed=seed
@@ -820,8 +1045,14 @@ def run(config_path: Path) -> dict[str, Any]:
         "representation": {
             "radius": base.PATCH_RADIUS,
             "centres": "every atom",
-            "patch_width": int(base.SHELL_WIDTH),
-            "patch_descriptor": "invariant radius-2 shell atom/bond composition, root/incident chemistry, size/cycle/degree scalars",
+        "patch_width": int(valid_audit["descriptor_width"]),
+            "descriptor": descriptor_name,
+            "patch_descriptor": (
+                "invariant radius-2 shell atom/bond composition, root/incident "
+                "chemistry, size/cycle/degree scalars"
+                if descriptor_name == "shell"
+                else "shell descriptor + endpoint-distance typed two-walk bond relations + shell-pair endpoint atomic-number mass"
+            ),
             "dictionary_atoms": dictionary_atoms,
             "sparsity": int(representation.get("sparsity", 4)),
             "relation_width": int(base.RELATION_WIDTH),
@@ -860,7 +1091,7 @@ def run(config_path: Path) -> dict[str, Any]:
             },
             "parameters": valid_parameters,
             "parameters_including_dictionary": int(
-                valid_parameters + base.SHELL_WIDTH * dictionary_atoms
+                valid_parameters + int(valid_audit["descriptor_width"]) * dictionary_atoms
             ),
         },
         "runtime": {
