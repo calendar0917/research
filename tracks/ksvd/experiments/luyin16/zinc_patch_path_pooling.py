@@ -594,18 +594,82 @@ class _FactorizedEmbedding(nn.Module):
         return self.projection(self.embedding(token))
 
 
+class _HybridEmbedding(nn.Module):
+    """Use a full embedding for frequent exact tokens and a low-rank one for
+    rare exact tokens.
+
+    ``_fit_vocabulary`` assigns IDs in decreasing occurrence frequency and
+    reserves ID zero for OOV.  Thus ``full_count`` is a parameterisation
+    boundary, not a vocabulary truncation: every token keeps its own row and
+    rare tokens are not merged or hashed.
+    """
+
+    def __init__(
+        self,
+        vocabulary_size: int,
+        output_width: int,
+        rank: int,
+        full_count: int,
+    ) -> None:
+        super().__init__()
+        vocabulary_size = int(vocabulary_size)
+        output_width = int(output_width)
+        rank = int(rank)
+        full_count = int(full_count)
+        if vocabulary_size < 1:
+            raise ValueError("vocabulary_size must be positive")
+        if not 1 <= full_count <= vocabulary_size:
+            raise ValueError("full_count must be in [1, vocabulary_size]")
+        if rank < 1 or rank > output_width:
+            raise ValueError("embedding rank must be in [1, output_width]")
+        self.vocabulary_size = vocabulary_size
+        self.output_width = output_width
+        self.rank = rank
+        self.full_count = full_count
+        self.full = nn.Embedding(full_count, output_width)
+        self.rare = (
+            None
+            if full_count == vocabulary_size
+            else _FactorizedEmbedding(vocabulary_size - full_count, output_width, rank)
+        )
+
+    def forward(self, token: torch.Tensor) -> torch.Tensor:
+        token = token.long()
+        full_mask = token < int(self.full_count)
+        full_index = token.clamp(min=0, max=int(self.full_count) - 1)
+        full_value = self.full(full_index)
+        if self.rare is None:
+            # This branch is used for the small parent vocabulary, where all
+            # typed radius-1 tokens fit in the full table.
+            return full_value
+        rare_index = (token - int(self.full_count)).clamp(
+            min=0, max=int(self.vocabulary_size - self.full_count) - 1
+        )
+        rare_value = self.rare(rare_index)
+        return torch.where(full_mask.unsqueeze(-1), full_value, rare_value)
+
+
 def _make_embedding(
     vocabulary_size: int,
     output_width: int,
     *,
     mode: str,
     rank: int,
+    full_count: int | None = None,
 ) -> nn.Module:
     if mode == "full":
         return nn.Embedding(int(vocabulary_size), int(output_width))
     if mode == "factorized":
         return _FactorizedEmbedding(int(vocabulary_size), int(output_width), int(rank))
-    raise ValueError(f"unknown embedding_mode={mode!r}; expected full or factorized")
+    if mode == "hybrid":
+        if full_count is None:
+            raise ValueError("hybrid embedding requires full_count")
+        return _HybridEmbedding(
+            int(vocabulary_size), int(output_width), int(rank), int(full_count)
+        )
+    raise ValueError(
+        f"unknown embedding_mode={mode!r}; expected full, factorized, or hybrid"
+    )
 
 
 class PatchPathModel(nn.Module):
@@ -620,25 +684,39 @@ class PatchPathModel(nn.Module):
         dropout: float,
         embedding_mode: str = "full",
         embedding_rank: int = 16,
+        hybrid_full_typed_tokens: int | None = None,
+        hybrid_full_parent_tokens: int | None = None,
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
         self.pair_hidden = int(pair_hidden)
         self.embedding_mode = str(embedding_mode)
         self.embedding_rank = int(embedding_rank)
+        typed_full_count = (
+            None
+            if hybrid_full_typed_tokens is None
+            else int(hybrid_full_typed_tokens)
+        )
         self.typed_embedding = _make_embedding(
             int(typed_vocabulary_size),
             int(token_width),
             mode=self.embedding_mode,
             rank=self.embedding_rank,
+            full_count=typed_full_count,
         )
         parent_width = max(int(token_width // 2), 1)
         parent_rank = min(self.embedding_rank, parent_width)
+        parent_full_count = (
+            None
+            if hybrid_full_parent_tokens is None
+            else int(hybrid_full_parent_tokens)
+        )
         self.parent_embedding = _make_embedding(
             int(parent_vocabulary_size),
             parent_width,
             mode=self.embedding_mode,
             rank=parent_rank,
+            full_count=parent_full_count,
         )
         self.patch_encoder = _MLPBlock(
             SHELL_WIDTH + int(token_width) + parent_width,
@@ -802,6 +880,16 @@ def _train_phase(
         dropout=float(model_config.get("dropout", 0.05)),
         embedding_mode=str(model_config.get("embedding_mode", "full")),
         embedding_rank=int(model_config.get("embedding_rank", 16)),
+        hybrid_full_typed_tokens=(
+            None
+            if model_config.get("hybrid_full_typed_tokens") is None
+            else int(model_config["hybrid_full_typed_tokens"])
+        ),
+        hybrid_full_parent_tokens=(
+            None
+            if model_config.get("hybrid_full_parent_tokens") is None
+            else int(model_config["hybrid_full_parent_tokens"])
+        ),
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),

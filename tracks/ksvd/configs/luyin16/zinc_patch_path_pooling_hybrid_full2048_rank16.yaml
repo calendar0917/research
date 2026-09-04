@@ -1,0 +1,38 @@
+protocol_id: luyin16-zinc-exact-patch-path-conditioned-pooling-hybrid-full2048-rank16-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+
+model:
+  patch_hidden: 64
+  pair_hidden: 24
+  token_width: 32
+  embedding_mode: hybrid
+  embedding_rank: 16
+  # ID zero is OOV; IDs 1..2048 are the most frequent exact patch tokens.
+  # The tail retains one independent row per token, but with rank 16.
+  hybrid_full_typed_tokens: 2049
+  hybrid_full_parent_tokens: 32
+  dropout: 0.05
+  epochs: 50
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 10
+  evaluate_every: 1
+  device: cpu
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_PATCH_PATH_POOLING_HYBRID_FULL2048_RANK16_20260905.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_PATCH_PATH_POOLING_HYBRID_FULL2048_RANK16_20260905.md
