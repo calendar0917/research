@@ -1,0 +1,36 @@
+protocol_id: luyin16-molhiv-ksvd-shell-summeanstd-screen-v1
+
+data:
+  root: data/ogb
+  max_graphs: 12000
+
+seed: 0
+
+representation:
+  descriptor: shell
+  dictionary_mode: final
+  n_atoms: 64
+  sparsity: 4
+  ksvd_iter: 3
+  max_dictionary_patches: 12000
+
+model:
+  patch_hidden: 48
+  pair_hidden: 24
+  readout: sum_mean_std
+  dropout: 0.05
+  epochs: 12
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 4
+  evaluate_every: 1
+  device: cpu
+
+runtime:
+  torch_threads: 4
+  record_cache: tracks/ksvd/results/cache_molhiv_ksvd_shell_12000
+
+output:
+  json: tracks/ksvd/results/luyin16/MOLHIV_KSVD_SHELL_SUMMEANSTD_SCREEN_20260905.json
+  markdown: tracks/ksvd/results/luyin16/MOLHIV_KSVD_SHELL_SUMMEANSTD_SCREEN_20260905.md

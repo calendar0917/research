@@ -744,14 +744,19 @@ class CompressedPatchPathModel(nn.Module):
         pair_hidden: int,
         dropout: float,
         readout: str = "moments",
+        node_readout: str | None = None,
+        pair_readout: str | None = None,
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
         self.pair_hidden = int(pair_hidden)
         self.readout = str(readout)
-        if self.readout not in {"moments", "mean_std", "distribution"}:
+        self.node_readout = str(node_readout or self.readout)
+        self.pair_readout = str(pair_readout or self.readout)
+        valid_readouts = {"moments", "mean_std", "distribution", "sum_mean_std"}
+        if self.node_readout not in valid_readouts or self.pair_readout not in valid_readouts:
             raise ValueError(
-                f"unknown readout={self.readout!r}; expected moments, mean_std, or distribution"
+                "unknown readout; expected moments, mean_std, sum_mean_std, or distribution"
             )
         patch_input = 2 * int(code_width) + 2
         self.patch_encoder = base._MLPBlock(
@@ -780,8 +785,8 @@ class CompressedPatchPathModel(nn.Module):
             int(pair_hidden),
             float(dropout),
         )
-        pooled_unary_width = self._pooled_width(int(patch_hidden), self.readout)
-        pooled_pair_width = self._pooled_width(int(pair_hidden), self.readout)
+        pooled_unary_width = self._pooled_width(int(patch_hidden), self.node_readout)
+        pooled_pair_width = self._pooled_width(int(pair_hidden), self.pair_readout)
         readout_width = pooled_unary_width + base.DISTANCE_BUCKETS * pooled_pair_width
         self.head = nn.Sequential(
             nn.Linear(readout_width + 32, max(int(patch_hidden) * 2, 96)),
@@ -799,6 +804,8 @@ class CompressedPatchPathModel(nn.Module):
             return 2 * int(width) + 1
         if mode == "mean_std":
             return 2 * int(width) + 1
+        if mode == "sum_mean_std":
+            return 3 * int(width) + 1
         if mode == "distribution":
             # Keep graph mass while adding the centre-population mean/std and
             # a rare-instance-sensitive max.  This is the small differentiable
@@ -829,6 +836,13 @@ class CompressedPatchPathModel(nn.Module):
             variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
             std = torch.sqrt(variance + 1.0e-8)
             output = torch.cat([mean, std, torch.log1p(counts)], dim=1)
+        elif mode == "sum_mean_std":
+            mean = total / counts.clamp_min(1.0)
+            squared = torch.zeros_like(total)
+            squared.index_add_(0, batch, value * value)
+            variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+            std = torch.sqrt(variance + 1.0e-8)
+            output = torch.cat([total, mean, std, torch.log1p(counts)], dim=1)
         elif mode == "distribution":
             mean = total / counts.clamp_min(1.0)
             squared = torch.zeros_like(total)
@@ -847,7 +861,7 @@ class CompressedPatchPathModel(nn.Module):
         return output
 
     def _pool_nodes(self, value: torch.Tensor, batch: torch.Tensor, n_graphs: int) -> torch.Tensor:
-        return self._pool_values(value, batch, n_graphs, self.readout)
+        return self._pool_values(value, batch, n_graphs, self.node_readout)
 
     @staticmethod
     def _grouped_max(
@@ -897,12 +911,12 @@ class CompressedPatchPathModel(nn.Module):
                         (current_batch.shape[0], 1), device=value.device, dtype=value.dtype
                     ),
                 )
-            if self.readout == "moments":
+            if self.pair_readout == "moments":
                 squared = torch.zeros_like(total)
                 if current.numel():
                     squared.index_add_(0, current_batch, current * current)
                 pooled = torch.cat([total, squared, torch.log1p(counts)], dim=1)
-            elif self.readout == "mean_std":
+            elif self.pair_readout == "mean_std":
                 mean = total / counts.clamp_min(1.0)
                 squared = torch.zeros_like(total)
                 if current.numel():
@@ -910,7 +924,15 @@ class CompressedPatchPathModel(nn.Module):
                 variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
                 std = torch.sqrt(variance + 1.0e-8)
                 pooled = torch.cat([mean, std, torch.log1p(counts)], dim=1)
-            elif self.readout == "distribution":
+            elif self.pair_readout == "sum_mean_std":
+                mean = total / counts.clamp_min(1.0)
+                squared = torch.zeros_like(total)
+                if current.numel():
+                    squared.index_add_(0, current_batch, current * current)
+                variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+                std = torch.sqrt(variance + 1.0e-8)
+                pooled = torch.cat([total, mean, std, torch.log1p(counts)], dim=1)
+            elif self.pair_readout == "distribution":
                 mean = total / counts.clamp_min(1.0)
                 squared = torch.zeros_like(total)
                 if current.numel():
@@ -921,10 +943,10 @@ class CompressedPatchPathModel(nn.Module):
                 pooled = torch.cat([total, mean, std, maximum, torch.log1p(counts)], dim=1)
             else:
                 raise ValueError(f"unknown pooling mode {self.readout!r}")
-            expected = self._pooled_width(value.shape[1], self.readout)
+            expected = self._pooled_width(value.shape[1], self.pair_readout)
             if pooled.shape[1] != expected:
                 raise RuntimeError(
-                    f"pair pooled width changed for mode={self.readout}: "
+                    f"pair pooled width changed for mode={self.pair_readout}: "
                     f"{pooled.shape[1]} != {expected}"
                 )
             blocks.append(pooled)
@@ -1024,6 +1046,8 @@ def _train_phase(
         pair_hidden=int(model_config.get("pair_hidden", 32)),
         dropout=float(model_config.get("dropout", 0.05)),
         readout=str(model_config.get("readout", "moments")),
+        node_readout=model_config.get("node_readout"),
+        pair_readout=model_config.get("pair_readout"),
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),
@@ -1317,6 +1341,12 @@ def run(config_path: Path) -> dict[str, Any]:
             # Retain the old key for consumers of the first structured report.
             "dictionary_final_recon_rel": float(valid_dictionary_info["recon_rel"]),
             "readout": str(model_config.get("readout", "moments")),
+            "node_readout": str(
+                model_config.get("node_readout", model_config.get("readout", "moments"))
+            ),
+            "pair_readout": str(
+                model_config.get("pair_readout", model_config.get("readout", "moments"))
+            ),
             "message_passing": False,
             "attention": False,
             "label_free": True,
