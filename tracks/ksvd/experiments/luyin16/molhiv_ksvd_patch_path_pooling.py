@@ -5,7 +5,9 @@ same all-centre radius-2 shell descriptor, explicit shortest-path pair
 relation, invariant pooling and one MLP head, but removes the large table of
 independent exact-patch embeddings.  A train-only K-SVD dictionary converts a
 standardized patch descriptor into a fixed-width sparse code.  The dictionary
-is refit on train+valid only for the terminal test evaluation.
+is refit on train+valid only for the terminal test evaluation.  The runner
+also supports a mean/std or mean/std/max distribution readout and a label-free
+record cache so those alternatives can be compared without rebuilding graphs.
 
 The first implementation deliberately does not use the exact certificate:
 K-SVD is applied to a continuous, permutation-invariant descriptor rather
@@ -23,6 +25,7 @@ import gc
 import hashlib
 import importlib.metadata
 import json
+import pickle
 import platform
 from pathlib import Path
 import random
@@ -431,6 +434,105 @@ def _extract_split(
     return records, metadata
 
 
+def _record_cache_signature(
+    bundle: Any,
+    indices: Sequence[int],
+    split: str,
+    descriptor_name: str,
+) -> str:
+    """Return a dataset/split signature for the label-free record cache."""
+    digest = hashlib.sha256()
+    digest.update(b"molhiv-ksvd-record-cache-v1")
+    digest.update(str(split).encode("utf-8"))
+    digest.update(str(descriptor_name).encode("utf-8"))
+    digest.update(str(bundle.meta.get("name", "ogbg-molhiv")).encode("utf-8"))
+    digest.update(str(bundle.meta.get("n_full", "")).encode("ascii"))
+    digest.update(str(bundle.meta.get("n_used", "")).encode("ascii"))
+    # ``load_molhiv(max_graphs=...)`` remaps sampled graphs to contiguous
+    # indices.  Include the original global indices so caches from two smoke
+    # seeds cannot be mistaken for the same graph population.
+    digest.update(
+        np.asarray(bundle.meta.get("original_indices", []), dtype=np.int64).tobytes()
+    )
+    digest.update(np.asarray(indices, dtype=np.int64).tobytes())
+    return digest.hexdigest()
+
+
+def _load_record_cache(
+    path: Path,
+    *,
+    signature: str,
+    descriptor_name: str,
+) -> tuple[list[base.GraphRecord], dict[str, Any]]:
+    with path.open("rb") as handle:
+        payload = pickle.load(handle)
+    if not isinstance(payload, Mapping):
+        raise ValueError(f"record cache is not a mapping: {path}")
+    if payload.get("schema") != "molhiv-ksvd-record-cache-v1":
+        raise ValueError(f"record cache schema mismatch: {path}")
+    if payload.get("signature") != signature or payload.get("descriptor") != descriptor_name:
+        raise ValueError(f"record cache signature mismatch: {path}")
+    records = payload.get("records")
+    metadata = payload.get("metadata")
+    if not isinstance(records, list) or not isinstance(metadata, Mapping):
+        raise ValueError(f"record cache payload is malformed: {path}")
+    return records, dict(metadata)
+
+
+def _save_record_cache(
+    path: Path,
+    *,
+    signature: str,
+    descriptor_name: str,
+    records: Sequence[base.GraphRecord],
+    metadata: Mapping[str, Any],
+) -> None:
+    """Persist feature records atomically; cache contains no learned weights."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema": "molhiv-ksvd-record-cache-v1",
+        "signature": signature,
+        "descriptor": descriptor_name,
+        "records": list(records),
+        "metadata": dict(metadata),
+    }
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    with temporary.open("wb") as handle:
+        pickle.dump(payload, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    temporary.replace(path)
+
+
+def _extract_or_load_split(
+    bundle: Any,
+    indices: Sequence[int],
+    split: str,
+    descriptor_name: str,
+    cache_dir: Path | None,
+) -> tuple[list[base.GraphRecord], dict[str, Any], bool]:
+    """Build records once and reuse them for candidate readout experiments."""
+    if cache_dir is None:
+        records, metadata = _extract_split(bundle, indices, split, descriptor_name)
+        return records, metadata, False
+    path = cache_dir / f"{descriptor_name}_{split}.pkl"
+    signature = _record_cache_signature(bundle, indices, split, descriptor_name)
+    if path.exists():
+        records, metadata = _load_record_cache(
+            path, signature=signature, descriptor_name=descriptor_name
+        )
+        print(f"MolHIV K-SVD record cache hit: {path}", flush=True)
+        return records, metadata, True
+    records, metadata = _extract_split(bundle, indices, split, descriptor_name)
+    _save_record_cache(
+        path,
+        signature=signature,
+        descriptor_name=descriptor_name,
+        records=records,
+        metadata=metadata,
+    )
+    print(f"MolHIV K-SVD record cache saved: {path}", flush=True)
+    return records, metadata, False
+
+
 class StreamingStandardizer:
     """Feature standardizer fitted without materializing all patch rows."""
 
@@ -506,6 +608,7 @@ def _batch_omp(
     sparsity: int,
     *,
     chunk_size: int = 4096,
+    gram: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Batch OMP using the small per-sample normal equations.
 
@@ -520,7 +623,9 @@ def _batch_omp(
     n_samples = int(matrix.shape[0])
     n_atoms = int(dictionary64.shape[1])
     steps = min(max(int(sparsity), 1), n_atoms)
-    gram = dictionary64.T @ dictionary64
+    gram_matrix = dictionary64.T @ dictionary64 if gram is None else np.asarray(gram, dtype=np.float64)
+    if gram_matrix.shape != (n_atoms, n_atoms):
+        raise ValueError(f"invalid dictionary Gram shape {gram_matrix.shape}")
     codes = np.zeros((n_samples, n_atoms), dtype=np.float32)
     relative_errors = np.zeros(n_samples, dtype=np.float32)
     for start in range(0, n_samples, int(chunk_size)):
@@ -537,7 +642,7 @@ def _batch_omp(
             support[:, step] = atom
             selected[np.arange(stop - start), atom] = True
             active = support[:, : step + 1]
-            active_gram = gram[active[:, :, None], active[:, None, :]]
+            active_gram = gram_matrix[active[:, :, None], active[:, None, :]]
             active_cross = cross[np.arange(stop - start)[:, None], active]
             # A tiny diagonal keeps duplicate/near-duplicate dictionary
             # atoms from making one whole batch fail.  This is numerically
@@ -552,7 +657,7 @@ def _batch_omp(
             correlation = cross - np.einsum(
                 "ni,nij->nj",
                 active_coeff,
-                gram[active, :],
+                gram_matrix[active, :],
             )
         reconstructed = np.zeros_like(current)
         for step in range(steps):
@@ -575,29 +680,58 @@ def _encode_records(
     context_standardizer: base.Standardizer,
     dictionary: np.ndarray,
     sparsity: int,
+    block_records: int = 256,
 ) -> list[Data]:
+    """Encode records in blocks so OMP shares one dictionary Gram matrix.
+
+    The old implementation invoked ``_batch_omp`` once per graph.  That is
+    mathematically fine, but it recomputed ``D.T @ D`` for every molecule.
+    Packing a bounded number of graphs preserves graph boundaries while
+    making the expensive matrix multiplication and OMP setup amortized.
+    """
     output: list[Data] = []
-    for record in records:
-        patch_values = patch_standardizer.transform(
-            np.stack([patch.shell_descriptor for patch in record.patches], axis=0)
-        )
-        code, relative_error = _batch_omp(patch_values, dictionary, sparsity)
-        patch_norm = np.log1p(np.linalg.norm(patch_values, axis=1)).astype(np.float32)
-        patch_aux = np.stack([relative_error, patch_norm], axis=1).astype(np.float32, copy=False)
-        output.append(
-            Data(
-                patch_code=torch.from_numpy(code),
-                patch_aux=torch.from_numpy(patch_aux),
-                pair_index=torch.from_numpy(record.pair_index),
-                pair_relation=torch.from_numpy(record.pair_relation),
-                pair_bucket=torch.from_numpy(record.pair_bucket),
-                global_context=torch.from_numpy(
-                    context_standardizer.transform(record.global_context[None, :])
-                ),
-                y=torch.tensor([record.y], dtype=torch.float32),
-                num_nodes=len(record.patches),
+    if int(block_records) < 1:
+        raise ValueError("block_records must be positive")
+    dictionary64 = np.asarray(dictionary, dtype=np.float64)
+    gram = dictionary64.T @ dictionary64
+    for block_start in range(0, len(records), int(block_records)):
+        block = records[block_start : block_start + int(block_records)]
+        patch_values_by_record: list[np.ndarray] = []
+        offsets = [0]
+        for record in block:
+            values = patch_standardizer.transform(
+                np.stack([patch.shell_descriptor for patch in record.patches], axis=0)
             )
+            patch_values_by_record.append(values)
+            offsets.append(offsets[-1] + int(values.shape[0]))
+        packed = np.concatenate(patch_values_by_record, axis=0)
+        packed_code, packed_error = _batch_omp(
+            packed, dictionary64, sparsity, gram=gram
         )
+        for local, record in enumerate(block):
+            start = int(offsets[local])
+            stop = int(offsets[local + 1])
+            patch_values = patch_values_by_record[local]
+            code = packed_code[start:stop]
+            relative_error = packed_error[start:stop]
+            patch_norm = np.log1p(np.linalg.norm(patch_values, axis=1)).astype(np.float32)
+            patch_aux = np.stack([relative_error, patch_norm], axis=1).astype(
+                np.float32, copy=False
+            )
+            output.append(
+                Data(
+                    patch_code=torch.from_numpy(code),
+                    patch_aux=torch.from_numpy(patch_aux),
+                    pair_index=torch.from_numpy(record.pair_index),
+                    pair_relation=torch.from_numpy(record.pair_relation),
+                    pair_bucket=torch.from_numpy(record.pair_bucket),
+                    global_context=torch.from_numpy(
+                        context_standardizer.transform(record.global_context[None, :])
+                    ),
+                    y=torch.tensor([record.y], dtype=torch.float32),
+                    num_nodes=len(record.patches),
+                )
+            )
     return output
 
 
@@ -609,10 +743,16 @@ class CompressedPatchPathModel(nn.Module):
         patch_hidden: int,
         pair_hidden: int,
         dropout: float,
+        readout: str = "moments",
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
         self.pair_hidden = int(pair_hidden)
+        self.readout = str(readout)
+        if self.readout not in {"moments", "mean_std", "distribution"}:
+            raise ValueError(
+                f"unknown readout={self.readout!r}; expected moments, mean_std, or distribution"
+            )
         patch_input = 2 * int(code_width) + 2
         self.patch_encoder = base._MLPBlock(
             patch_input,
@@ -640,11 +780,9 @@ class CompressedPatchPathModel(nn.Module):
             int(pair_hidden),
             float(dropout),
         )
-        readout_width = (
-            2 * int(patch_hidden)
-            + 1
-            + base.DISTANCE_BUCKETS * (2 * int(pair_hidden) + 1)
-        )
+        pooled_unary_width = self._pooled_width(int(patch_hidden), self.readout)
+        pooled_pair_width = self._pooled_width(int(pair_hidden), self.readout)
+        readout_width = pooled_unary_width + base.DISTANCE_BUCKETS * pooled_pair_width
         self.head = nn.Sequential(
             nn.Linear(readout_width + 32, max(int(patch_hidden) * 2, 96)),
             nn.LayerNorm(max(int(patch_hidden) * 2, 96)),
@@ -656,18 +794,86 @@ class CompressedPatchPathModel(nn.Module):
         )
 
     @staticmethod
-    def _pool_nodes(value: torch.Tensor, batch: torch.Tensor, n_graphs: int) -> torch.Tensor:
+    def _pooled_width(width: int, mode: str) -> int:
+        if mode == "moments":
+            return 2 * int(width) + 1
+        if mode == "mean_std":
+            return 2 * int(width) + 1
+        if mode == "distribution":
+            # Keep graph mass while adding the centre-population mean/std and
+            # a rare-instance-sensitive max.  This is the small differentiable
+            # analogue of the successful clean distribution readout probe.
+            return 4 * int(width) + 1
+        raise ValueError(f"unknown pooling mode {mode!r}")
+
+    def _pool_values(
+        self,
+        value: torch.Tensor,
+        batch: torch.Tensor,
+        n_graphs: int,
+        mode: str,
+    ) -> torch.Tensor:
         total = torch.zeros(
             (n_graphs, value.shape[1]), device=value.device, dtype=value.dtype
         )
         total.index_add_(0, batch, value)
-        squared = torch.zeros_like(total)
-        squared.index_add_(0, batch, value * value)
         counts = torch.bincount(batch, minlength=n_graphs).to(value.dtype).unsqueeze(1)
-        return torch.cat([total, squared, torch.log1p(counts)], dim=1)
+        if mode == "moments":
+            squared = torch.zeros_like(total)
+            squared.index_add_(0, batch, value * value)
+            output = torch.cat([total, squared, torch.log1p(counts)], dim=1)
+        elif mode == "mean_std":
+            mean = total / counts.clamp_min(1.0)
+            squared = torch.zeros_like(total)
+            squared.index_add_(0, batch, value * value)
+            variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+            std = torch.sqrt(variance + 1.0e-8)
+            output = torch.cat([mean, std, torch.log1p(counts)], dim=1)
+        elif mode == "distribution":
+            mean = total / counts.clamp_min(1.0)
+            squared = torch.zeros_like(total)
+            squared.index_add_(0, batch, value * value)
+            variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+            std = torch.sqrt(variance + 1.0e-8)
+            maximum = self._grouped_max(value, batch, n_graphs)
+            output = torch.cat([total, mean, std, maximum, torch.log1p(counts)], dim=1)
+        else:
+            raise ValueError(f"unknown pooling mode {mode!r}")
+        expected = self._pooled_width(value.shape[1], mode)
+        if output.shape[1] != expected:
+            raise RuntimeError(
+                f"pooled width changed for mode={mode}: {output.shape[1]} != {expected}"
+            )
+        return output
+
+    def _pool_nodes(self, value: torch.Tensor, batch: torch.Tensor, n_graphs: int) -> torch.Tensor:
+        return self._pool_values(value, batch, n_graphs, self.readout)
 
     @staticmethod
+    def _grouped_max(
+        value: torch.Tensor,
+        group: torch.Tensor,
+        n_groups: int,
+    ) -> torch.Tensor:
+        """Differentiable grouped max without a Python loop over graphs."""
+        maximum = torch.full(
+            (int(n_groups), value.shape[1]),
+            -float("inf"),
+            device=value.device,
+            dtype=value.dtype,
+        )
+        if value.numel():
+            maximum.scatter_reduce_(
+                0,
+                group.view(-1, 1).expand(-1, value.shape[1]),
+                value,
+                reduce="amax",
+                include_self=True,
+            )
+        return torch.where(torch.isfinite(maximum), maximum, torch.zeros_like(maximum))
+
     def _pool_pairs(
+        self,
         value: torch.Tensor,
         pair_batch: torch.Tensor,
         pair_bucket: torch.Tensor,
@@ -681,11 +887,9 @@ class CompressedPatchPathModel(nn.Module):
             total = torch.zeros(
                 (n_graphs, value.shape[1]), device=value.device, dtype=value.dtype
             )
-            squared = torch.zeros_like(total)
             counts = torch.zeros((n_graphs, 1), device=value.device, dtype=value.dtype)
             if current.numel():
                 total.index_add_(0, current_batch, current)
-                squared.index_add_(0, current_batch, current * current)
                 counts.index_add_(
                     0,
                     current_batch,
@@ -693,7 +897,37 @@ class CompressedPatchPathModel(nn.Module):
                         (current_batch.shape[0], 1), device=value.device, dtype=value.dtype
                     ),
                 )
-            blocks.append(torch.cat([total, squared, torch.log1p(counts)], dim=1))
+            if self.readout == "moments":
+                squared = torch.zeros_like(total)
+                if current.numel():
+                    squared.index_add_(0, current_batch, current * current)
+                pooled = torch.cat([total, squared, torch.log1p(counts)], dim=1)
+            elif self.readout == "mean_std":
+                mean = total / counts.clamp_min(1.0)
+                squared = torch.zeros_like(total)
+                if current.numel():
+                    squared.index_add_(0, current_batch, current * current)
+                variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+                std = torch.sqrt(variance + 1.0e-8)
+                pooled = torch.cat([mean, std, torch.log1p(counts)], dim=1)
+            elif self.readout == "distribution":
+                mean = total / counts.clamp_min(1.0)
+                squared = torch.zeros_like(total)
+                if current.numel():
+                    squared.index_add_(0, current_batch, current * current)
+                variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+                std = torch.sqrt(variance + 1.0e-8)
+                maximum = self._grouped_max(current, current_batch, n_graphs)
+                pooled = torch.cat([total, mean, std, maximum, torch.log1p(counts)], dim=1)
+            else:
+                raise ValueError(f"unknown pooling mode {self.readout!r}")
+            expected = self._pooled_width(value.shape[1], self.readout)
+            if pooled.shape[1] != expected:
+                raise RuntimeError(
+                    f"pair pooled width changed for mode={self.readout}: "
+                    f"{pooled.shape[1]} != {expected}"
+                )
+            blocks.append(pooled)
         return torch.cat(blocks, dim=1)
 
     def forward(self, data: Data) -> torch.Tensor:
@@ -789,6 +1023,7 @@ def _train_phase(
         patch_hidden=int(model_config.get("patch_hidden", 64)),
         pair_hidden=int(model_config.get("pair_hidden", 32)),
         dropout=float(model_config.get("dropout", 0.05)),
+        readout=str(model_config.get("readout", "moments")),
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),
@@ -885,12 +1120,21 @@ def _fit_phase_data(
         seed + 1729,
     )
     started = time.perf_counter()
+    dictionary_mode = str(representation.get("dictionary_mode", "final"))
+    if dictionary_mode not in {"init", "final"}:
+        raise ValueError(
+            f"unknown dictionary_mode={dictionary_mode!r}; expected init or final"
+        )
     dictionary, _, dictionary_info = ksvd(
         dictionary_matrix,
         n_atoms=int(representation.get("n_atoms", 64)),
         T=int(representation.get("sparsity", 4)),
         T_min=1,
-        n_iter=int(representation.get("ksvd_iter", 3)),
+        n_iter=(
+            0
+            if dictionary_mode == "init"
+            else int(representation.get("ksvd_iter", 3))
+        ),
         seed=seed + 2718,
     )
     dictionary_seconds = time.perf_counter() - started
@@ -911,6 +1155,7 @@ def _fit_phase_data(
         "standardizer_fit_graphs": int(len(fit_records)),
         "descriptor": str(representation.get("descriptor", "shell")),
         "descriptor_width": int(dictionary_matrix.shape[0]),
+        "dictionary_mode": dictionary_mode,
     }
     return encoded_fit, encoded_other, audit
 
@@ -935,7 +1180,7 @@ def _render_markdown(result: Mapping[str, Any]) -> str:
             "",
             f"- trainable parameters: `{evaluation['parameters']}`",
             f"- total parameters including frozen dictionary: `{evaluation['parameters_including_dictionary']}`",
-            f"- dictionary final relative reconstruction: `{representation['dictionary_final_recon_rel']:.6f}`",
+            f"- dictionary `{representation['dictionary_mode']}` relative reconstruction: `{representation['dictionary_recon_rel']:.6f}`",
             f"- runtime: `{result['runtime']['seconds']:.1f}s`",
             "",
         ]
@@ -951,6 +1196,8 @@ def run(config_path: Path) -> dict[str, Any]:
     seed = int(config.get("seed", 0))
     descriptor_name = str(representation.get("descriptor", "shell"))
     torch.set_num_threads(max(int(config.get("runtime", {}).get("torch_threads", 4)), 1))
+    cache_value = config.get("runtime", {}).get("record_cache")
+    record_cache_dir = None if cache_value in (None, "", False) else _resolve(str(cache_value))
 
     max_graphs = data_config.get("max_graphs")
     bundle = load_molhiv(
@@ -974,11 +1221,11 @@ def run(config_path: Path) -> dict[str, Any]:
     }
 
     feature_metadata: dict[str, Any] = {}
-    train_records, feature_metadata["train"] = _extract_split(
-        bundle, split_indices["train"], "train", descriptor_name
+    train_records, feature_metadata["train"], train_cache_hit = _extract_or_load_split(
+        bundle, split_indices["train"], "train", descriptor_name, record_cache_dir
     )
-    valid_records, feature_metadata["valid"] = _extract_split(
-        bundle, split_indices["valid"], "valid", descriptor_name
+    valid_records, feature_metadata["valid"], valid_cache_hit = _extract_or_load_split(
+        bundle, split_indices["valid"], "valid", descriptor_name, record_cache_dir
     )
     valid_train_data, valid_eval_data, valid_audit = _fit_phase_data(
         train_records, valid_records, representation=representation, seed=seed
@@ -1005,11 +1252,11 @@ def run(config_path: Path) -> dict[str, Any]:
     refit_indices = np.concatenate([split_indices["train"], split_indices["valid"]]).astype(
         np.int64, copy=False
     )
-    refit_records, feature_metadata["train_valid_refit"] = _extract_split(
-        bundle, refit_indices, "train+valid", descriptor_name
+    refit_records, feature_metadata["train_valid_refit"], refit_cache_hit = _extract_or_load_split(
+        bundle, refit_indices, "train+valid", descriptor_name, record_cache_dir
     )
-    test_records, feature_metadata["test"] = _extract_split(
-        bundle, split_indices["test"], "test", descriptor_name
+    test_records, feature_metadata["test"], test_cache_hit = _extract_or_load_split(
+        bundle, split_indices["test"], "test", descriptor_name, record_cache_dir
     )
     refit_train_data, refit_test_data, test_audit = _fit_phase_data(
         refit_records, test_records, representation=representation, seed=seed
@@ -1041,6 +1288,13 @@ def run(config_path: Path) -> dict[str, Any]:
                 name: int(split_meta[name]["positive_graphs"]) for name in split_indices
             },
             "test_labels_used_for_selection": False,
+            "record_cache": None if record_cache_dir is None else str(record_cache_dir),
+            "record_cache_hits": {
+                "train": train_cache_hit,
+                "valid": valid_cache_hit,
+                "train_valid_refit": refit_cache_hit,
+                "test": test_cache_hit,
+            },
         },
         "representation": {
             "radius": base.PATCH_RADIUS,
@@ -1058,8 +1312,11 @@ def run(config_path: Path) -> dict[str, Any]:
             "relation_width": int(base.RELATION_WIDTH),
             "global_width": int(base.GLOBAL_WIDTH),
             "dictionary_fit": "train-only for valid; train+valid for test refit",
+            "dictionary_mode": str(valid_audit.get("dictionary_mode", "final")),
+            "dictionary_recon_rel": float(valid_dictionary_info["recon_rel"]),
+            # Retain the old key for consumers of the first structured report.
             "dictionary_final_recon_rel": float(valid_dictionary_info["recon_rel"]),
-            "readout": "unary sum and sum-of-squares plus distance-conditioned pair sum and sum-of-squares with log pair mass",
+            "readout": str(model_config.get("readout", "moments")),
             "message_passing": False,
             "attention": False,
             "label_free": True,
