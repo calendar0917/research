@@ -66,6 +66,13 @@ BOND_CATEGORIES = 4
 PATCH_RADIUS = 2
 DISTANCE_BUCKETS = 5  # 1, 2, 3, 4, 5+
 SHELL_PAIRS = ((0, 0), (0, 1), (0, 2), (1, 1), (1, 2), (2, 2))
+CONTEXT_RADIUS = 3
+
+# Continuous outer-shell context used by the optional multiscale candidate.
+# It records the atom composition of shell 3, bond composition for shell-2/3
+# and shell-3/3 edges, and six invariant mass/degree quantities.  Radius-2
+# exact token identity remains the categorical structural object.
+CONTEXT_WIDTH = ATOM_CATEGORIES + 2 * BOND_CATEGORIES + 6
 
 # Shell-wise atom proportions (3 x 28), shell-pair bond proportions (6 x 4),
 # root/incident chemistry (28 + 4), and a few size/cycle/degree scalars.
@@ -91,6 +98,7 @@ class PatchRecord:
     nodes: frozenset[int]
     boundary: frozenset[int]
     shell_descriptor: np.ndarray
+    context_descriptor: np.ndarray | None = None
 
 
 @dataclass(frozen=True)
@@ -268,6 +276,71 @@ def _shell_descriptor(
     return descriptor, nodes, boundary
 
 
+def _outer_context_descriptor(
+    graph: Any,
+    center: int,
+    node_types: np.ndarray,
+    edge_types: Mapping[tuple[int, int], int],
+    distances: Mapping[int, int],
+) -> np.ndarray:
+    """Return a compact invariant descriptor for the radius-3 outer shell.
+
+    The radius-2 patch already supplies the exact rooted identity and full
+    shell-0..2 histogram.  This side channel deliberately adds only new
+    radius-3 information, instead of duplicating the entire radius-3 shell
+    descriptor or introducing a 45k-token vocabulary.
+    """
+    outer = [int(node) for node, distance in distances.items() if int(distance) == 3]
+    outer_set = set(outer)
+    atom = np.zeros(ATOM_CATEGORIES, dtype=np.float32)
+    for node in outer:
+        atom[int(node_types[node])] += 1.0
+    atom /= max(float(len(outer)), 1.0)
+
+    bond_blocks = np.zeros((2, BOND_CATEGORIES), dtype=np.float32)
+    edge_count = 0
+    outer_edge_count = 0
+    for left, right in graph.induced(set(distances)).edges():
+        left_distance = int(distances[int(left)])
+        right_distance = int(distances[int(right)])
+        if 3 not in (left_distance, right_distance):
+            continue
+        bond = int(edge_types[graph.edge_key(int(left), int(right))])
+        # Sort the shell labels before assigning the block.  The graph edge
+        # iterator is not a semantic ordering and must not affect the
+        # descriptor.
+        shell_pair = tuple(sorted((left_distance, right_distance)))
+        if shell_pair == (3, 3):
+            block = 0
+        elif shell_pair == (2, 3):
+            block = 1
+        else:
+            raise RuntimeError(f"unexpected radius-3 edge shell pair {shell_pair}")
+        bond_blocks[block, bond] += 1.0
+        edge_count += 1
+        outer_edge_count += int(left_distance == 3 and right_distance == 3)
+    bond_blocks /= max(float(edge_count), 1.0)
+
+    outer_degrees = np.asarray([len(graph.neighbors(node)) for node in outer], dtype=np.float32)
+    scalars = np.asarray(
+        [
+            np.log1p(float(len(outer))),
+            np.log1p(float(edge_count)),
+            float(outer_edge_count) / max(float(edge_count), 1.0),
+            float(len(outer)) / max(float(len(distances)), 1.0),
+            float(outer_degrees.mean()) / 4.0 if outer_degrees.size else 0.0,
+            float(outer_degrees.std()) / 4.0 if outer_degrees.size else 0.0,
+        ],
+        dtype=np.float32,
+    )
+    descriptor = np.concatenate([atom, bond_blocks.reshape(-1), scalars]).astype(
+        np.float32, copy=False
+    )
+    if descriptor.shape != (CONTEXT_WIDTH,):
+        raise RuntimeError(f"outer context width changed: {descriptor.shape}")
+    return descriptor
+
+
 def _typed_certificate(
     graph: Any,
     center: int,
@@ -345,6 +418,7 @@ def _graph_record(
     data: Any,
     global_context: np.ndarray,
     certificate_cache: dict[bytes, bytes],
+    context_radius: int = 0,
 ) -> GraphRecord:
     graph, node_types, edge_types = _data_to_graph(data)
     centers = list(graph.nodes)
@@ -354,6 +428,12 @@ def _graph_record(
         descriptor, nodes, boundary = _shell_descriptor(
             graph, int(center), node_types, edge_types, distances
         )
+        context_descriptor = None
+        if int(context_radius) > PATCH_RADIUS:
+            context_distances = _ego_distances(graph, int(center), int(context_radius))
+            context_descriptor = _outer_context_descriptor(
+                graph, int(center), node_types, edge_types, context_distances
+            )
         typed = _typed_certificate(
             graph, int(center), node_types, edge_types, PATCH_RADIUS, certificate_cache
         )
@@ -367,6 +447,7 @@ def _graph_record(
                 nodes=nodes,
                 boundary=boundary,
                 shell_descriptor=descriptor,
+                context_descriptor=context_descriptor,
             )
         )
 
@@ -413,12 +494,20 @@ def _extract_split(
     dataset: Any,
     split: str,
     certificate_cache: dict[bytes, bytes],
+    context_radius: int = 0,
 ) -> tuple[list[GraphRecord], dict[str, Any]]:
     started = time.perf_counter()
     contexts = global_feature_views(dataset)["global_all"]
     records: list[GraphRecord] = []
     for index, data in enumerate(dataset):
-        records.append(_graph_record(data, contexts[index], certificate_cache))
+        records.append(
+            _graph_record(
+                data,
+                contexts[index],
+                certificate_cache,
+                context_radius=int(context_radius),
+            )
+        )
         if index and index % 500 == 0:
             print(
                 f"patch-path features {split}: {index}/{len(dataset)} "
@@ -435,6 +524,8 @@ def _extract_split(
         "max_patch_nodes": int(
             max((len(patch.nodes) for row in records for patch in row.patches), default=0)
         ),
+        "context_radius": int(context_radius),
+        "context_width": int(CONTEXT_WIDTH if int(context_radius) > PATCH_RADIUS else 0),
         "seconds": float(time.perf_counter() - started),
     }
     return records, metadata
@@ -511,6 +602,17 @@ def _patch_matrix(records: Sequence[GraphRecord]) -> np.ndarray:
     ).astype(np.float32, copy=False)
 
 
+def _context_patch_matrix(records: Sequence[GraphRecord]) -> np.ndarray:
+    values = [
+        patch.context_descriptor
+        for record in records
+        for patch in record.patches
+    ]
+    if not values or any(value is None for value in values):
+        raise ValueError("radius-3 context descriptors are not present")
+    return np.stack(values, axis=0).astype(np.float32, copy=False)
+
+
 def _context_matrix(records: Sequence[GraphRecord]) -> np.ndarray:
     return np.stack([record.global_context for record in records], axis=0).astype(
         np.float32, copy=False
@@ -523,12 +625,21 @@ def _encode_records(
     parent_vocabulary: Mapping[bytes, int],
     patch_standardizer: Standardizer,
     context_standardizer: Standardizer,
+    context_patch_standardizer: Standardizer | None = None,
 ) -> list[Data]:
     output: list[Data] = []
     for record in records:
         patch_cont = patch_standardizer.transform(
             np.stack([patch.shell_descriptor for patch in record.patches], axis=0)
         )
+        if context_patch_standardizer is None:
+            patch_context = np.zeros(
+                (len(record.patches), 0), dtype=np.float32
+            )
+        else:
+            patch_context = context_patch_standardizer.transform(
+                _context_patch_matrix([record])
+            )
         typed = np.asarray(
             [typed_vocabulary.get(patch.typed_certificate, 0) for patch in record.patches],
             dtype=np.int64,
@@ -540,6 +651,7 @@ def _encode_records(
         output.append(
             Data(
                 patch_cont=torch.from_numpy(patch_cont),
+                patch_context=torch.from_numpy(patch_context),
                 typed_token=torch.from_numpy(typed),
                 parent_token=torch.from_numpy(parent),
                 pair_index=torch.from_numpy(record.pair_index),
@@ -689,6 +801,7 @@ class PatchPathModel(nn.Module):
         readout: str = "moments",
         node_readout: str | None = None,
         pair_readout: str | None = None,
+        context_width: int = 0,
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
@@ -698,6 +811,7 @@ class PatchPathModel(nn.Module):
         self.readout = str(readout)
         self.node_readout = str(node_readout or self.readout)
         self.pair_readout = str(pair_readout or self.readout)
+        self.context_width = int(context_width)
         valid_readouts = {"moments", "mean_std", "sum_mean_std", "distribution"}
         if self.node_readout not in valid_readouts or self.pair_readout not in valid_readouts:
             raise ValueError(
@@ -730,7 +844,7 @@ class PatchPathModel(nn.Module):
             full_count=parent_full_count,
         )
         self.patch_encoder = _MLPBlock(
-            SHELL_WIDTH + int(token_width) + parent_width,
+            SHELL_WIDTH + self.context_width + int(token_width) + parent_width,
             max(int(patch_hidden), 64),
             int(patch_hidden),
             float(dropout),
@@ -911,6 +1025,7 @@ class PatchPathModel(nn.Module):
             torch.cat(
                 [
                     data.patch_cont,
+                    data.patch_context,
                     self.typed_embedding(data.typed_token),
                     self.parent_embedding(data.parent_token),
                 ],
@@ -982,6 +1097,7 @@ def _train_phase(
     seed: int,
     select_best: bool,
     epochs: int,
+    context_width: int = 0,
 ) -> dict[str, Any]:
     model_config = config["model"]
     device = torch.device(str(model_config.get("device", "cpu")))
@@ -1010,6 +1126,7 @@ def _train_phase(
         readout=str(model_config.get("readout", "moments")),
         node_readout=model_config.get("node_readout"),
         pair_readout=model_config.get("pair_readout"),
+        context_width=int(context_width),
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),
@@ -1112,12 +1229,21 @@ def _phase_data(
     )
     patch_standardizer = Standardizer.fit(_patch_matrix(fit_records))
     context_standardizer = Standardizer.fit(_context_matrix(fit_records))
+    has_context = any(
+        patch.context_descriptor is not None
+        for record in fit_records
+        for patch in record.patches
+    )
+    context_patch_standardizer = (
+        Standardizer.fit(_context_patch_matrix(fit_records)) if has_context else None
+    )
     encoded_fit = _encode_records(
         fit_records,
         typed_vocabulary,
         parent_vocabulary,
         patch_standardizer,
         context_standardizer,
+        context_patch_standardizer,
     )
     encoded_other = _encode_records(
         other_records,
@@ -1125,6 +1251,7 @@ def _phase_data(
         parent_vocabulary,
         patch_standardizer,
         context_standardizer,
+        context_patch_standardizer,
     )
     audit = {
         "typed_vocabulary": {
@@ -1139,6 +1266,8 @@ def _phase_data(
         "parent_vocabulary_size_with_oov": int(len(parent_vocabulary) + 1),
         "patch_standardizer_fit_graphs": int(len(fit_records)),
         "context_standardizer_fit_graphs": int(len(fit_records)),
+        "context_patch_width": int(CONTEXT_WIDTH if has_context else 0),
+        "context_patch_standardizer_fit_graphs": int(len(fit_records)) if has_context else 0,
     }
     return encoded_fit, encoded_other, audit
 
@@ -1177,6 +1306,11 @@ def run(config_path: Path) -> dict[str, Any]:
     started = time.perf_counter()
     thread_count = int(config.get("runtime", {}).get("torch_threads", 4))
     torch.set_num_threads(max(thread_count, 1))
+    context_radius = int(config.get("representation", {}).get("context_radius", 0))
+    if context_radius not in (0, CONTEXT_RADIUS):
+        raise ValueError(
+            f"context_radius must be 0 or {CONTEXT_RADIUS}, got {context_radius}"
+        )
 
     datasets = tuple(_load_zinc(data_root, split) for split in ("train", "val", "test"))
     labels = tuple(
@@ -1187,7 +1321,12 @@ def run(config_path: Path) -> dict[str, Any]:
     records: list[list[GraphRecord]] = []
     feature_metadata: dict[str, Any] = {}
     for split, dataset in zip(("train", "valid", "test"), datasets, strict=True):
-        split_records, metadata = _extract_split(dataset, split, certificate_cache)
+        split_records, metadata = _extract_split(
+            dataset,
+            split,
+            certificate_cache,
+            context_radius=context_radius,
+        )
         records.append(split_records)
         feature_metadata[split] = metadata
     feature_metadata["certificate_cache_entries"] = int(len(certificate_cache))
@@ -1210,6 +1349,7 @@ def run(config_path: Path) -> dict[str, Any]:
         seed=seed,
         select_best=True,
         epochs=int(model_config.get("epochs", 50)),
+        context_width=int(CONTEXT_WIDTH if context_radius > PATCH_RADIUS else 0),
     )
     selected_epoch = int(valid_phase["selected_epoch"])
 
@@ -1226,6 +1366,7 @@ def run(config_path: Path) -> dict[str, Any]:
         seed=seed,
         select_best=False,
         epochs=selected_epoch,
+        context_width=int(CONTEXT_WIDTH if context_radius > PATCH_RADIUS else 0),
     )
 
     result = {
@@ -1246,9 +1387,11 @@ def run(config_path: Path) -> dict[str, Any]:
         },
         "representation": {
             "radius": PATCH_RADIUS,
+            "context_radius": context_radius,
             "centres": "every atom",
             "exact_patch": "rooted colored-incidence typed certificate; radius-2 token with radius-1 parent token",
             "shell_width": SHELL_WIDTH,
+            "context_width": int(CONTEXT_WIDTH if context_radius > PATCH_RADIUS else 0),
             "relation_width": RELATION_WIDTH,
             "distance_buckets": ["1", "2", "3", "4", "5+"],
             "relation_definition": "distance bucket, shortest-path bond composition averaged over all shortest paths, path count, patch overlap/boundary overlap, and adjacent bond type",
