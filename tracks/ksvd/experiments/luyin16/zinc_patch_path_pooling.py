@@ -571,6 +571,43 @@ class _MLPBlock(nn.Module):
         return self.layers(value)
 
 
+class _FactorizedEmbedding(nn.Module):
+    """Exact-token lookup with a low-rank parameterization.
+
+    The lookup still has one row per exact rooted patch, so no patch identity
+    is hashed or merged.  Only the embedding table is factorized as
+    ``V x rank`` followed by a shared linear map to the requested output
+    width.  This lets us keep a 32D token representation under the CIN-sized
+    parameter budget.
+    """
+
+    def __init__(self, vocabulary_size: int, output_width: int, rank: int) -> None:
+        super().__init__()
+        if int(rank) < 1 or int(rank) > int(output_width):
+            raise ValueError("embedding rank must be in [1, output_width]")
+        self.rank = int(rank)
+        self.output_width = int(output_width)
+        self.embedding = nn.Embedding(int(vocabulary_size), int(rank))
+        self.projection = nn.Linear(int(rank), int(output_width), bias=False)
+
+    def forward(self, token: torch.Tensor) -> torch.Tensor:
+        return self.projection(self.embedding(token))
+
+
+def _make_embedding(
+    vocabulary_size: int,
+    output_width: int,
+    *,
+    mode: str,
+    rank: int,
+) -> nn.Module:
+    if mode == "full":
+        return nn.Embedding(int(vocabulary_size), int(output_width))
+    if mode == "factorized":
+        return _FactorizedEmbedding(int(vocabulary_size), int(output_width), int(rank))
+    raise ValueError(f"unknown embedding_mode={mode!r}; expected full or factorized")
+
+
 class PatchPathModel(nn.Module):
     def __init__(
         self,
@@ -581,13 +618,28 @@ class PatchPathModel(nn.Module):
         pair_hidden: int,
         token_width: int,
         dropout: float,
+        embedding_mode: str = "full",
+        embedding_rank: int = 16,
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
         self.pair_hidden = int(pair_hidden)
-        self.typed_embedding = nn.Embedding(int(typed_vocabulary_size), int(token_width))
-        self.parent_embedding = nn.Embedding(int(parent_vocabulary_size), max(int(token_width // 2), 1))
+        self.embedding_mode = str(embedding_mode)
+        self.embedding_rank = int(embedding_rank)
+        self.typed_embedding = _make_embedding(
+            int(typed_vocabulary_size),
+            int(token_width),
+            mode=self.embedding_mode,
+            rank=self.embedding_rank,
+        )
         parent_width = max(int(token_width // 2), 1)
+        parent_rank = min(self.embedding_rank, parent_width)
+        self.parent_embedding = _make_embedding(
+            int(parent_vocabulary_size),
+            parent_width,
+            mode=self.embedding_mode,
+            rank=parent_rank,
+        )
         self.patch_encoder = _MLPBlock(
             SHELL_WIDTH + int(token_width) + parent_width,
             max(int(patch_hidden), 64),
@@ -748,6 +800,8 @@ def _train_phase(
         pair_hidden=int(model_config.get("pair_hidden", PAIR_HIDDEN)),
         token_width=int(model_config.get("token_width", 32)),
         dropout=float(model_config.get("dropout", 0.05)),
+        embedding_mode=str(model_config.get("embedding_mode", "full")),
+        embedding_rank=int(model_config.get("embedding_rank", 16)),
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),

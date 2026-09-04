@@ -277,6 +277,14 @@ def _load_record_cache(
     *,
     signature: str,
 ) -> tuple[list[ExactGraphRecord], dict[str, Any]]:
+    # When this runner is invoked with ``python -m``, pickle may record the
+    # dataclass under ``__main__``.  Register the canonical class as a
+    # compatibility alias before loading caches produced by that invocation.
+    # The cache contains no executable objects beyond these data records.
+    import __main__
+
+    if not hasattr(__main__, "ExactGraphRecord"):
+        setattr(__main__, "ExactGraphRecord", ExactGraphRecord)
     with path.open("rb") as handle:
         payload = pickle.load(handle)
     if not isinstance(payload, Mapping):
