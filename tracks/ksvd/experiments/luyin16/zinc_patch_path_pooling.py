@@ -686,12 +686,23 @@ class PatchPathModel(nn.Module):
         embedding_rank: int = 16,
         hybrid_full_typed_tokens: int | None = None,
         hybrid_full_parent_tokens: int | None = None,
+        readout: str = "moments",
+        node_readout: str | None = None,
+        pair_readout: str | None = None,
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
         self.pair_hidden = int(pair_hidden)
         self.embedding_mode = str(embedding_mode)
         self.embedding_rank = int(embedding_rank)
+        self.readout = str(readout)
+        self.node_readout = str(node_readout or self.readout)
+        self.pair_readout = str(pair_readout or self.readout)
+        valid_readouts = {"moments", "mean_std", "sum_mean_std", "distribution"}
+        if self.node_readout not in valid_readouts or self.pair_readout not in valid_readouts:
+            raise ValueError(
+                "unknown readout; expected moments, mean_std, sum_mean_std, or distribution"
+            )
         typed_full_count = (
             None
             if hybrid_full_typed_tokens is None
@@ -736,10 +747,11 @@ class PatchPathModel(nn.Module):
             int(pair_hidden),
             float(dropout),
         )
-        # Unary: sum, sum-of-squares, log mass.  Each distance bucket has the
-        # same first/second moment plus log pair mass.  The final module is the
-        # sole graph-level prediction head.
-        readout_width = 2 * int(patch_hidden) + 1 + DISTANCE_BUCKETS * (2 * int(pair_hidden) + 1)
+        # Unary and pair readouts are invariant moment summaries.  The final
+        # module is the sole graph-level prediction head.
+        pooled_unary_width = self._pooled_width(int(patch_hidden), self.node_readout)
+        pooled_pair_width = self._pooled_width(int(pair_hidden), self.pair_readout)
+        readout_width = pooled_unary_width + DISTANCE_BUCKETS * pooled_pair_width
         self.head = nn.Sequential(
             nn.Linear(readout_width + 32, max(int(patch_hidden) * 2, 96)),
             nn.LayerNorm(max(int(patch_hidden) * 2, 96)),
@@ -751,16 +763,85 @@ class PatchPathModel(nn.Module):
         )
 
     @staticmethod
-    def _pool_nodes(value: torch.Tensor, batch: torch.Tensor, n_graphs: int) -> torch.Tensor:
-        total = torch.zeros((n_graphs, value.shape[1]), device=value.device, dtype=value.dtype)
-        total.index_add_(0, batch, value)
-        squared = torch.zeros_like(total)
-        squared.index_add_(0, batch, value * value)
-        counts = torch.bincount(batch, minlength=n_graphs).to(value.dtype).unsqueeze(1)
-        return torch.cat([total, squared, torch.log1p(counts)], dim=1)
+    def _pooled_width(width: int, mode: str) -> int:
+        if mode in {"moments", "mean_std"}:
+            return 2 * int(width) + 1
+        if mode == "sum_mean_std":
+            return 3 * int(width) + 1
+        if mode == "distribution":
+            return 4 * int(width) + 1
+        raise ValueError(f"unknown pooling mode {mode!r}")
 
     @staticmethod
+    def _grouped_max(
+        value: torch.Tensor,
+        group: torch.Tensor,
+        n_groups: int,
+    ) -> torch.Tensor:
+        maximum = torch.full(
+            (int(n_groups), value.shape[1]),
+            -float("inf"),
+            device=value.device,
+            dtype=value.dtype,
+        )
+        if value.numel():
+            maximum.scatter_reduce_(
+                0,
+                group.view(-1, 1).expand(-1, value.shape[1]),
+                value,
+                reduce="amax",
+                include_self=True,
+            )
+        return torch.where(torch.isfinite(maximum), maximum, torch.zeros_like(maximum))
+
+    def _pool_values(
+        self,
+        value: torch.Tensor,
+        batch: torch.Tensor,
+        n_graphs: int,
+        mode: str,
+    ) -> torch.Tensor:
+        total = torch.zeros((n_graphs, value.shape[1]), device=value.device, dtype=value.dtype)
+        total.index_add_(0, batch, value)
+        counts = torch.bincount(batch, minlength=n_graphs).to(value.dtype).unsqueeze(1)
+        if mode == "moments":
+            squared = torch.zeros_like(total)
+            squared.index_add_(0, batch, value * value)
+            output = torch.cat([total, squared, torch.log1p(counts)], dim=1)
+        elif mode == "mean_std":
+            mean = total / counts.clamp_min(1.0)
+            squared = torch.zeros_like(total)
+            squared.index_add_(0, batch, value * value)
+            variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+            std = torch.sqrt(variance + 1.0e-8)
+            output = torch.cat([mean, std, torch.log1p(counts)], dim=1)
+        elif mode == "sum_mean_std":
+            mean = total / counts.clamp_min(1.0)
+            squared = torch.zeros_like(total)
+            squared.index_add_(0, batch, value * value)
+            variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+            std = torch.sqrt(variance + 1.0e-8)
+            output = torch.cat([total, mean, std, torch.log1p(counts)], dim=1)
+        elif mode == "distribution":
+            mean = total / counts.clamp_min(1.0)
+            squared = torch.zeros_like(total)
+            squared.index_add_(0, batch, value * value)
+            variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+            std = torch.sqrt(variance + 1.0e-8)
+            maximum = self._grouped_max(value, batch, n_graphs)
+            output = torch.cat([total, mean, std, maximum, torch.log1p(counts)], dim=1)
+        else:
+            raise ValueError(f"unknown pooling mode {mode!r}")
+        expected = self._pooled_width(value.shape[1], mode)
+        if output.shape[1] != expected:
+            raise RuntimeError(f"pooled width changed for mode={mode}: {output.shape[1]} != {expected}")
+        return output
+
+    def _pool_nodes(self, value: torch.Tensor, batch: torch.Tensor, n_graphs: int) -> torch.Tensor:
+        return self._pool_values(value, batch, n_graphs, self.node_readout)
+
     def _pool_pairs(
+        self,
         value: torch.Tensor,
         pair_batch: torch.Tensor,
         pair_bucket: torch.Tensor,
@@ -772,17 +853,53 @@ class PatchPathModel(nn.Module):
             current = value[mask]
             current_batch = pair_batch[mask]
             total = torch.zeros((n_graphs, value.shape[1]), device=value.device, dtype=value.dtype)
-            squared = torch.zeros_like(total)
             counts = torch.zeros((n_graphs, 1), device=value.device, dtype=value.dtype)
             if current.numel():
                 total.index_add_(0, current_batch, current)
-                squared.index_add_(0, current_batch, current * current)
                 counts.index_add_(
                     0,
                     current_batch,
                     torch.ones((current_batch.shape[0], 1), device=value.device, dtype=value.dtype),
                 )
-            blocks.append(torch.cat([total, squared, torch.log1p(counts)], dim=1))
+            if self.pair_readout == "moments":
+                squared = torch.zeros_like(total)
+                if current.numel():
+                    squared.index_add_(0, current_batch, current * current)
+                pooled = torch.cat([total, squared, torch.log1p(counts)], dim=1)
+            elif self.pair_readout == "mean_std":
+                mean = total / counts.clamp_min(1.0)
+                squared = torch.zeros_like(total)
+                if current.numel():
+                    squared.index_add_(0, current_batch, current * current)
+                variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+                std = torch.sqrt(variance + 1.0e-8)
+                pooled = torch.cat([mean, std, torch.log1p(counts)], dim=1)
+            elif self.pair_readout == "sum_mean_std":
+                mean = total / counts.clamp_min(1.0)
+                squared = torch.zeros_like(total)
+                if current.numel():
+                    squared.index_add_(0, current_batch, current * current)
+                variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+                std = torch.sqrt(variance + 1.0e-8)
+                pooled = torch.cat([total, mean, std, torch.log1p(counts)], dim=1)
+            elif self.pair_readout == "distribution":
+                mean = total / counts.clamp_min(1.0)
+                squared = torch.zeros_like(total)
+                if current.numel():
+                    squared.index_add_(0, current_batch, current * current)
+                variance = (squared / counts.clamp_min(1.0) - mean * mean).clamp_min(0.0)
+                std = torch.sqrt(variance + 1.0e-8)
+                maximum = self._grouped_max(current, current_batch, n_graphs)
+                pooled = torch.cat([total, mean, std, maximum, torch.log1p(counts)], dim=1)
+            else:
+                raise ValueError(f"unknown pooling mode {self.pair_readout!r}")
+            expected = self._pooled_width(value.shape[1], self.pair_readout)
+            if pooled.shape[1] != expected:
+                raise RuntimeError(
+                    f"pair pooled width changed for mode={self.pair_readout}: "
+                    f"{pooled.shape[1]} != {expected}"
+                )
+            blocks.append(pooled)
         return torch.cat(blocks, dim=1)
 
     def forward(self, data: Data) -> torch.Tensor:
@@ -890,6 +1007,9 @@ def _train_phase(
             if model_config.get("hybrid_full_parent_tokens") is None
             else int(model_config["hybrid_full_parent_tokens"])
         ),
+        readout=str(model_config.get("readout", "moments")),
+        node_readout=model_config.get("node_readout"),
+        pair_readout=model_config.get("pair_readout"),
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),
@@ -1132,7 +1252,13 @@ def run(config_path: Path) -> dict[str, Any]:
             "relation_width": RELATION_WIDTH,
             "distance_buckets": ["1", "2", "3", "4", "5+"],
             "relation_definition": "distance bucket, shortest-path bond composition averaged over all shortest paths, path count, patch overlap/boundary overlap, and adjacent bond type",
-            "readout": "unary sum and sum-of-squares plus distance-conditioned pair sum and sum-of-squares with log pair mass",
+            "readout": "configurable invariant unary/pair pooling with log mass",
+            "node_readout": str(
+                model_config.get("node_readout", model_config.get("readout", "moments"))
+            ),
+            "pair_readout": str(
+                model_config.get("pair_readout", model_config.get("readout", "moments"))
+            ),
             "message_passing": False,
             "attention": False,
             "label_free": True,
