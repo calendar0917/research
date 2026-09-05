@@ -893,6 +893,7 @@ class PatchPathModel(nn.Module):
         dropout: float,
         embedding_mode: str = "full",
         embedding_rank: int = 16,
+        parent_embedding_rank: int | None = None,
         hybrid_full_typed_tokens: int | None = None,
         hybrid_full_parent_tokens: int | None = None,
         readout: str = "moments",
@@ -906,6 +907,9 @@ class PatchPathModel(nn.Module):
         self.pair_hidden = int(pair_hidden)
         self.embedding_mode = str(embedding_mode)
         self.embedding_rank = int(embedding_rank)
+        self.parent_embedding_rank = int(
+            embedding_rank if parent_embedding_rank is None else parent_embedding_rank
+        )
         self.readout = str(readout)
         self.node_readout = str(node_readout or self.readout)
         self.pair_readout = str(pair_readout or self.readout)
@@ -929,7 +933,7 @@ class PatchPathModel(nn.Module):
             full_count=typed_full_count,
         )
         parent_width = max(int(token_width // 2), 1)
-        parent_rank = min(self.embedding_rank, parent_width)
+        parent_rank = min(self.parent_embedding_rank, parent_width)
         parent_full_count = (
             None
             if hybrid_full_parent_tokens is None
@@ -1213,6 +1217,11 @@ def _train_phase(
         dropout=float(model_config.get("dropout", 0.05)),
         embedding_mode=str(model_config.get("embedding_mode", "full")),
         embedding_rank=int(model_config.get("embedding_rank", 16)),
+        parent_embedding_rank=(
+            None
+            if model_config.get("parent_embedding_rank") is None
+            else int(model_config["parent_embedding_rank"])
+        ),
         hybrid_full_typed_tokens=(
             None
             if model_config.get("hybrid_full_typed_tokens") is None

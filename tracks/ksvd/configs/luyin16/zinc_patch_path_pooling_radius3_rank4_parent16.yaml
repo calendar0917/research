@@ -1,0 +1,37 @@
+protocol_id: luyin16-zinc-exact-r3-patch-path-pooling-factorized-rank4-parent16-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  patch_radius: 3
+  max_typed_tokens: 24576
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+
+model:
+  patch_hidden: 64
+  pair_hidden: 24
+  token_width: 32
+  embedding_mode: factorized
+  embedding_rank: 4
+  parent_embedding_rank: 16
+  readout: moments
+  dropout: 0.05
+  epochs: 50
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 10
+  evaluate_every: 1
+  device: cpu
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_PATCH_PATH_POOLING_RADIUS3_RANK4_PARENT16_20260905.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_PATCH_PATH_POOLING_RADIUS3_RANK4_PARENT16_20260905.md
