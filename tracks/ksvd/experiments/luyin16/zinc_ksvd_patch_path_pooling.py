@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import argparse
 import copy
-from collections import deque
 from dataclasses import dataclass
 import gc
 import hashlib
@@ -51,7 +50,6 @@ from tracks.ksvd.experiments.luyin16.molhiv_ksvd_patch_path_pooling import (
     _sample_dictionary_matrix,
 )
 from tracks.ksvd.experiments.luyin16.zinc_exact_patch_relation import (
-    MAX_PATCH_NODES,
     PATCH_WIDTH,
     _canonical_typed_patch,
     _patch_cache_key,
@@ -196,6 +194,7 @@ def _exact_graph_record(
                 patches[right_index],
                 path_summary,
                 adjacent_bond,
+                PATCH_RADIUS,
             )
             pair_sources.append(int(left_index))
             pair_targets.append(int(right_index))

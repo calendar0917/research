@@ -1,0 +1,40 @@
+protocol_id: luyin16-molhiv-unified-relational-patch-readout-v1
+
+dataset: molhiv
+data:
+  root: data/ogb
+
+seed: 0
+
+representation:
+  descriptor: shell
+  max_patch_samples: 20000
+  max_relation_samples: 20000
+  distance_buckets: 6
+  unary_sketch_width: 512
+  parent_sketch_width: 128
+  pair_sketch_width: 2048
+
+model:
+  prototype_width: 16
+  prototype_atoms: 16
+  prototype_sparsity: 2
+  relation_code_width: 8
+  context_width: 16
+  head_hidden: 32
+  head_bottleneck: 16
+  dropout: 0.05
+  epochs: 20
+  batch_size: 64
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 5
+  device: cpu
+
+runtime:
+  torch_threads: 4
+  record_cache: tracks/ksvd/results/cache_molhiv_ksvd_shell_full
+
+output:
+  json: tracks/ksvd/results/luyin16/UNIFIED_RELATIONAL_PATCH_MOLHIV_20260905.json
+  markdown: tracks/ksvd/results/luyin16/UNIFIED_RELATIONAL_PATCH_MOLHIV_20260905.md
