@@ -91,6 +91,28 @@ PAIR_HIDDEN = 32
 GLOBAL_WIDTH = 62  # global_feature_views(...)["global_all"]
 
 
+def _shell_pairs_for_radius(radius: int) -> tuple[tuple[int, int], ...]:
+    radius = int(radius)
+    if radius < 1:
+        raise ValueError(f"radius must be positive, got {radius}")
+    return tuple(
+        (left, right)
+        for left in range(radius + 1)
+        for right in range(left, radius + 1)
+    )
+
+
+def _shell_width_for_radius(radius: int) -> int:
+    shell_pairs = _shell_pairs_for_radius(int(radius))
+    return (
+        (int(radius) + 1) * ATOM_CATEGORIES
+        + len(shell_pairs) * BOND_CATEGORIES
+        + 28
+        + 4
+        + 6
+    )
+
+
 @dataclass(frozen=True)
 class PatchRecord:
     typed_certificate: bytes
@@ -216,12 +238,15 @@ def _shell_descriptor(
     node_types: np.ndarray,
     edge_types: Mapping[tuple[int, int], int],
     distances: Mapping[int, int],
+    radius: int,
 ) -> tuple[np.ndarray, frozenset[int], frozenset[int]]:
+    radius = int(radius)
+    shell_pairs = _shell_pairs_for_radius(radius)
     nodes = frozenset(int(node) for node in distances)
     induced = graph.induced(set(nodes))
     n_nodes = len(nodes)
     n_edges = induced.num_edges()
-    atom_shell = np.zeros((PATCH_RADIUS + 1, ATOM_CATEGORIES), dtype=np.float32)
+    atom_shell = np.zeros((radius + 1, ATOM_CATEGORIES), dtype=np.float32)
     for node in nodes:
         atom = int(node_types[node])
         shell = int(distances[node])
@@ -230,8 +255,8 @@ def _shell_descriptor(
         atom_shell[shell, atom] += 1.0
     atom_shell /= max(float(n_nodes), 1.0)
 
-    bond_shell = np.zeros((len(SHELL_PAIRS), BOND_CATEGORIES), dtype=np.float32)
-    shell_pair_index = {pair: index for index, pair in enumerate(SHELL_PAIRS)}
+    bond_shell = np.zeros((len(shell_pairs), BOND_CATEGORIES), dtype=np.float32)
+    shell_pair_index = {pair: index for index, pair in enumerate(shell_pairs)}
     for left, right in induced.edges():
         pair = tuple(sorted((int(distances[left]), int(distances[right]))))
         index = shell_pair_index.get(pair)
@@ -257,7 +282,7 @@ def _shell_descriptor(
         [
             np.log1p(float(n_nodes)),
             np.log1p(float(n_edges)),
-            float(len(nodes) and sum(int(distance) == PATCH_RADIUS for distance in distances.values()))
+            float(len(nodes) and sum(int(distance) == radius for distance in distances.values()))
             / max(float(n_nodes), 1.0),
             float(cycle_rank) / max(float(n_nodes), 1.0),
             float(len(graph.neighbors(int(center)))) / 4.0,
@@ -268,10 +293,13 @@ def _shell_descriptor(
     descriptor = np.concatenate(
         [atom_shell.reshape(-1), bond_shell.reshape(-1), root_atom, incident_bonds, scalars]
     ).astype(np.float32, copy=False)
-    if descriptor.shape != (SHELL_WIDTH,):
-        raise RuntimeError(f"shell descriptor width changed: {descriptor.shape}")
+    expected_width = _shell_width_for_radius(radius)
+    if descriptor.shape != (expected_width,):
+        raise RuntimeError(
+            f"shell descriptor width changed: {descriptor.shape}; expected {(expected_width,)}"
+        )
     boundary = frozenset(
-        int(node) for node, distance in distances.items() if int(distance) == PATCH_RADIUS
+        int(node) for node, distance in distances.items() if int(distance) == radius
     )
     return descriptor, nodes, boundary
 
@@ -349,12 +377,65 @@ def _typed_certificate(
     radius: int,
     cache: dict[bytes, bytes],
 ) -> bytes:
+    """Return an exact rooted typed incidence certificate at any radius.
+
+    ``zinc_exact_patch_relation._canonical_typed_patch`` also emits a
+    certificate, but its fixed-width descriptor intentionally rejects patches
+    larger than 14 nodes.  Radius-3 ZINC patches occasionally exceed that
+    width, so the scalable token path must construct only the canonical
+    incidence graph and omit the fixed descriptor.
+    """
     key = _patch_cache_key(graph, int(center), node_types, edge_types, int(radius))
     certificate = cache.get(key)
     if certificate is None:
-        certificate = _canonical_typed_patch(
-            graph, int(center), node_types, edge_types, radius=int(radius)
-        )[2]
+        try:
+            import pynauty
+        except ImportError as exc:  # pragma: no cover - dependency diagnostic
+            raise RuntimeError("this experiment requires pynauty==2.8.8.1") from exc
+        distances = _ego_distances(graph, int(center), int(radius))
+        original_nodes = tuple(sorted(distances))
+        node_to_local = {node: index for index, node in enumerate(original_nodes)}
+        induced = graph.induced(set(original_nodes))
+        local_edges = tuple(
+            (node_to_local[int(left)], node_to_local[int(right)])
+            for left, right in sorted(induced.edges())
+        )
+        n_nodes = len(original_nodes)
+        n_edges = len(local_edges)
+        adjacency: dict[int, list[int]] = {
+            vertex: [] for vertex in range(n_nodes + n_edges)
+        }
+        color_groups: dict[tuple[Any, ...], set[int]] = {}
+        root_local = node_to_local[int(center)]
+        for local, node in enumerate(original_nodes):
+            key_color = (
+                "node",
+                int(local == root_local),
+                int(distances[node]),
+                int(node_types[int(node)]),
+            )
+            color_groups.setdefault(key_color, set()).add(local)
+        for edge_local, (left, right) in enumerate(local_edges):
+            edge_vertex = n_nodes + edge_local
+            adjacency[left].append(edge_vertex)
+            adjacency[right].append(edge_vertex)
+            adjacency[edge_vertex] = [left, right]
+            bond_type = int(
+                edge_types[
+                    graph.edge_key(
+                        int(original_nodes[left]), int(original_nodes[right])
+                    )
+                ]
+            )
+            color_groups.setdefault(("edge", bond_type), set()).add(edge_vertex)
+        coloring = [color_groups[key_color] for key_color in sorted(color_groups, key=repr)]
+        incidence = pynauty.Graph(
+            number_of_vertices=n_nodes + n_edges,
+            directed=False,
+            adjacency_dict=adjacency,
+            vertex_coloring=coloring,
+        )
+        certificate = bytes(pynauty.certificate(incidence))
         cache[key] = certificate
     return certificate
 
@@ -364,6 +445,7 @@ def _pair_relation(
     right: PatchRecord,
     path_summary: tuple[int, float, np.ndarray],
     adjacent_bond: int | None,
+    patch_radius: int,
 ) -> tuple[np.ndarray, int]:
     distance, path_count, path_bond_mean = path_summary
     bucket = min(max(int(distance), 1), DISTANCE_BUCKETS) - 1
@@ -376,11 +458,12 @@ def _pair_relation(
     right_size = len(right.nodes)
     overlap = np.asarray(
         [
-            float(intersection) / max(float(PATCH_RADIUS * PATCH_RADIUS + 10), 1.0),
+            float(intersection) / max(float(int(patch_radius) * int(patch_radius) + 10), 1.0),
             float(intersection) / max(float(union), 1.0),
             float(intersection) / max(float(min(left_size, right_size)), 1.0),
             float(intersection) / max(float(max(left_size, right_size)), 1.0),
-            float(abs(left_size - right_size)) / max(float(PATCH_RADIUS * PATCH_RADIUS + 10), 1.0),
+            float(abs(left_size - right_size))
+            / max(float(int(patch_radius) * int(patch_radius) + 10), 1.0),
         ],
         dtype=np.float32,
     )
@@ -418,27 +501,34 @@ def _graph_record(
     data: Any,
     global_context: np.ndarray,
     certificate_cache: dict[bytes, bytes],
+    patch_radius: int = PATCH_RADIUS,
     context_radius: int = 0,
 ) -> GraphRecord:
+    patch_radius = int(patch_radius)
     graph, node_types, edge_types = _data_to_graph(data)
     centers = list(graph.nodes)
     patches: list[PatchRecord] = []
     for center in centers:
-        distances = _ego_distances(graph, int(center), PATCH_RADIUS)
+        distances = _ego_distances(graph, int(center), patch_radius)
         descriptor, nodes, boundary = _shell_descriptor(
-            graph, int(center), node_types, edge_types, distances
+            graph, int(center), node_types, edge_types, distances, patch_radius
         )
         context_descriptor = None
-        if int(context_radius) > PATCH_RADIUS:
+        if int(context_radius) > patch_radius:
             context_distances = _ego_distances(graph, int(center), int(context_radius))
             context_descriptor = _outer_context_descriptor(
                 graph, int(center), node_types, edge_types, context_distances
             )
         typed = _typed_certificate(
-            graph, int(center), node_types, edge_types, PATCH_RADIUS, certificate_cache
+            graph, int(center), node_types, edge_types, patch_radius, certificate_cache
         )
         parent = _typed_certificate(
-            graph, int(center), node_types, edge_types, 1, certificate_cache
+            graph,
+            int(center),
+            node_types,
+            edge_types,
+            max(1, patch_radius - 1),
+            certificate_cache,
         )
         patches.append(
             PatchRecord(
@@ -468,7 +558,11 @@ def _graph_record(
             if distance == 1:
                 adjacent_bond = int(edge_types[graph.edge_key(int(left_center), right_center)])
             relation, bucket = _pair_relation(
-                patches[left_index], patches[right_index], path_summary, adjacent_bond
+                patches[left_index],
+                patches[right_index],
+                path_summary,
+                adjacent_bond,
+                patch_radius,
             )
             pair_sources.append(int(left_index))
             pair_targets.append(int(right_index))
@@ -494,6 +588,7 @@ def _extract_split(
     dataset: Any,
     split: str,
     certificate_cache: dict[bytes, bytes],
+    patch_radius: int = PATCH_RADIUS,
     context_radius: int = 0,
 ) -> tuple[list[GraphRecord], dict[str, Any]]:
     started = time.perf_counter()
@@ -505,6 +600,7 @@ def _extract_split(
                 data,
                 contexts[index],
                 certificate_cache,
+                patch_radius=int(patch_radius),
                 context_radius=int(context_radius),
             )
         )
@@ -525,6 +621,7 @@ def _extract_split(
             max((len(patch.nodes) for row in records for patch in row.patches), default=0)
         ),
         "context_radius": int(context_radius),
+        "patch_radius": int(patch_radius),
         "context_width": int(CONTEXT_WIDTH if int(context_radius) > PATCH_RADIUS else 0),
         "seconds": float(time.perf_counter() - started),
     }
@@ -801,6 +898,7 @@ class PatchPathModel(nn.Module):
         readout: str = "moments",
         node_readout: str | None = None,
         pair_readout: str | None = None,
+        shell_width: int = SHELL_WIDTH,
         context_width: int = 0,
     ) -> None:
         super().__init__()
@@ -811,6 +909,7 @@ class PatchPathModel(nn.Module):
         self.readout = str(readout)
         self.node_readout = str(node_readout or self.readout)
         self.pair_readout = str(pair_readout or self.readout)
+        self.shell_width = int(shell_width)
         self.context_width = int(context_width)
         valid_readouts = {"moments", "mean_std", "sum_mean_std", "distribution"}
         if self.node_readout not in valid_readouts or self.pair_readout not in valid_readouts:
@@ -844,7 +943,7 @@ class PatchPathModel(nn.Module):
             full_count=parent_full_count,
         )
         self.patch_encoder = _MLPBlock(
-            SHELL_WIDTH + self.context_width + int(token_width) + parent_width,
+            self.shell_width + self.context_width + int(token_width) + parent_width,
             max(int(patch_hidden), 64),
             int(patch_hidden),
             float(dropout),
@@ -1097,6 +1196,7 @@ def _train_phase(
     seed: int,
     select_best: bool,
     epochs: int,
+    shell_width: int = SHELL_WIDTH,
     context_width: int = 0,
 ) -> dict[str, Any]:
     model_config = config["model"]
@@ -1126,6 +1226,7 @@ def _train_phase(
         readout=str(model_config.get("readout", "moments")),
         node_readout=model_config.get("node_readout"),
         pair_readout=model_config.get("pair_readout"),
+        shell_width=int(shell_width),
         context_width=int(context_width),
     ).to(device)
     optimizer = torch.optim.Adam(
@@ -1215,6 +1316,7 @@ def _phase_data(
     config: Mapping[str, Any],
 ) -> tuple[list[Data], list[Data], dict[str, Any]]:
     representation = config["representation"]
+    patch_radius = int(representation.get("patch_radius", PATCH_RADIUS))
     typed_vocabulary = _fit_vocabulary(
         fit_records,
         "typed_certificate",
@@ -1268,6 +1370,8 @@ def _phase_data(
         "context_standardizer_fit_graphs": int(len(fit_records)),
         "context_patch_width": int(CONTEXT_WIDTH if has_context else 0),
         "context_patch_standardizer_fit_graphs": int(len(fit_records)) if has_context else 0,
+        "patch_radius": patch_radius,
+        "shell_width": int(_shell_width_for_radius(patch_radius)),
     }
     return encoded_fit, encoded_other, audit
 
@@ -1306,11 +1410,16 @@ def run(config_path: Path) -> dict[str, Any]:
     started = time.perf_counter()
     thread_count = int(config.get("runtime", {}).get("torch_threads", 4))
     torch.set_num_threads(max(thread_count, 1))
-    context_radius = int(config.get("representation", {}).get("context_radius", 0))
-    if context_radius not in (0, CONTEXT_RADIUS):
+    representation_config = config.get("representation", {})
+    patch_radius = int(representation_config.get("patch_radius", PATCH_RADIUS))
+    context_radius = int(representation_config.get("context_radius", 0))
+    if patch_radius < 1:
+        raise ValueError(f"patch_radius must be positive, got {patch_radius}")
+    if context_radius not in (0, patch_radius + 1):
         raise ValueError(
-            f"context_radius must be 0 or {CONTEXT_RADIUS}, got {context_radius}"
+            f"context_radius must be 0 or patch_radius+1={patch_radius + 1}, got {context_radius}"
         )
+    shell_width = _shell_width_for_radius(patch_radius)
 
     datasets = tuple(_load_zinc(data_root, split) for split in ("train", "val", "test"))
     labels = tuple(
@@ -1325,6 +1434,7 @@ def run(config_path: Path) -> dict[str, Any]:
             dataset,
             split,
             certificate_cache,
+            patch_radius=patch_radius,
             context_radius=context_radius,
         )
         records.append(split_records)
@@ -1349,7 +1459,8 @@ def run(config_path: Path) -> dict[str, Any]:
         seed=seed,
         select_best=True,
         epochs=int(model_config.get("epochs", 50)),
-        context_width=int(CONTEXT_WIDTH if context_radius > PATCH_RADIUS else 0),
+        shell_width=shell_width,
+        context_width=int(CONTEXT_WIDTH if context_radius > patch_radius else 0),
     )
     selected_epoch = int(valid_phase["selected_epoch"])
 
@@ -1366,7 +1477,8 @@ def run(config_path: Path) -> dict[str, Any]:
         seed=seed,
         select_best=False,
         epochs=selected_epoch,
-        context_width=int(CONTEXT_WIDTH if context_radius > PATCH_RADIUS else 0),
+        shell_width=shell_width,
+        context_width=int(CONTEXT_WIDTH if context_radius > patch_radius else 0),
     )
 
     result = {
@@ -1386,12 +1498,12 @@ def run(config_path: Path) -> dict[str, Any]:
             "test_labels_used_for_selection": False,
         },
         "representation": {
-            "radius": PATCH_RADIUS,
+            "radius": patch_radius,
             "context_radius": context_radius,
             "centres": "every atom",
-            "exact_patch": "rooted colored-incidence typed certificate; radius-2 token with radius-1 parent token",
-            "shell_width": SHELL_WIDTH,
-            "context_width": int(CONTEXT_WIDTH if context_radius > PATCH_RADIUS else 0),
+            "exact_patch": "rooted colored-incidence typed certificate; configurable-radius token with one-radius-lower parent token",
+            "shell_width": shell_width,
+            "context_width": int(CONTEXT_WIDTH if context_radius > patch_radius else 0),
             "relation_width": RELATION_WIDTH,
             "distance_buckets": ["1", "2", "3", "4", "5+"],
             "relation_definition": "distance bucket, shortest-path bond composition averaged over all shortest paths, path count, patch overlap/boundary overlap, and adjacent bond type",
