@@ -901,6 +901,7 @@ class PatchPathModel(nn.Module):
         pair_readout: str | None = None,
         shell_width: int = SHELL_WIDTH,
         context_width: int = 0,
+        direct_token_readout: bool = False,
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
@@ -915,6 +916,7 @@ class PatchPathModel(nn.Module):
         self.pair_readout = str(pair_readout or self.readout)
         self.shell_width = int(shell_width)
         self.context_width = int(context_width)
+        self.direct_token_readout = bool(direct_token_readout)
         valid_readouts = {"moments", "mean_std", "sum_mean_std", "distribution"}
         if self.node_readout not in valid_readouts or self.pair_readout not in valid_readouts:
             raise ValueError(
@@ -946,6 +948,14 @@ class PatchPathModel(nn.Module):
             rank=parent_rank,
             full_count=parent_full_count,
         )
+        if self.direct_token_readout and self.embedding_mode != "factorized":
+            raise ValueError(
+                "direct_token_readout currently requires embedding_mode=factorized "
+                "so the raw low-rank code remains a compact identity channel"
+            )
+        self.direct_token_code_width = (
+            int(self.embedding_rank) if self.direct_token_readout else 0
+        )
         self.patch_encoder = _MLPBlock(
             self.shell_width + self.context_width + int(token_width) + parent_width,
             max(int(patch_hidden), 64),
@@ -968,7 +978,16 @@ class PatchPathModel(nn.Module):
         # module is the sole graph-level prediction head.
         pooled_unary_width = self._pooled_width(int(patch_hidden), self.node_readout)
         pooled_pair_width = self._pooled_width(int(pair_hidden), self.pair_readout)
-        readout_width = pooled_unary_width + DISTANCE_BUCKETS * pooled_pair_width
+        direct_width = (
+            2 * int(self.direct_token_code_width) + 1
+            if self.direct_token_readout
+            else 0
+        )
+        readout_width = (
+            pooled_unary_width
+            + DISTANCE_BUCKETS * pooled_pair_width
+            + direct_width
+        )
         self.head = nn.Sequential(
             nn.Linear(readout_width + 32, max(int(patch_hidden) * 2, 96)),
             nn.LayerNorm(max(int(patch_hidden) * 2, 96)),
@@ -1136,6 +1155,16 @@ class PatchPathModel(nn.Module):
             )
         )
         unary = self._pool_nodes(patch, data.batch, n_graphs)
+        direct_blocks: list[torch.Tensor] = []
+        if self.direct_token_readout:
+            # The factorized table has one independent rank-dimensional code
+            # per exact token.  Pooling this code directly preserves a
+            # compact identity/count channel in addition to the nonlinear
+            # patch-state moments below.
+            token_code = self.typed_embedding.embedding(data.typed_token)
+            direct_blocks.append(self._pool_values(
+                token_code, data.batch, n_graphs, "moments"
+            ))
 
         source = data.pair_index[0]
         target = data.pair_index[1]
@@ -1159,7 +1188,10 @@ class PatchPathModel(nn.Module):
             pair_value, pair_batch, data.pair_bucket, n_graphs
         )
         graph_hidden = self.global_encoder(global_context)
-        return self.head(torch.cat([unary, relation_readout, graph_hidden], dim=1)).view(-1)
+        readout_blocks = [unary, relation_readout]
+        readout_blocks.extend(direct_blocks)
+        readout_blocks.append(graph_hidden)
+        return self.head(torch.cat(readout_blocks, dim=1)).view(-1)
 
 
 def _make_loader(graphs: Sequence[Data], batch_size: int, shuffle: bool, seed: int) -> DataLoader:
@@ -1200,8 +1232,9 @@ def _train_phase(
     seed: int,
     select_best: bool,
     epochs: int,
-    shell_width: int = SHELL_WIDTH,
-    context_width: int = 0,
+        shell_width: int = SHELL_WIDTH,
+        context_width: int = 0,
+        direct_token_readout: bool = False,
 ) -> dict[str, Any]:
     model_config = config["model"]
     device = torch.device(str(model_config.get("device", "cpu")))
@@ -1237,6 +1270,7 @@ def _train_phase(
         pair_readout=model_config.get("pair_readout"),
         shell_width=int(shell_width),
         context_width=int(context_width),
+        direct_token_readout=bool(direct_token_readout),
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),
@@ -1381,6 +1415,7 @@ def _phase_data(
         "context_patch_standardizer_fit_graphs": int(len(fit_records)) if has_context else 0,
         "patch_radius": patch_radius,
         "shell_width": int(_shell_width_for_radius(patch_radius)),
+        "direct_token_readout": bool(config.get("model", {}).get("direct_token_readout", False)),
     }
     return encoded_fit, encoded_other, audit
 
@@ -1470,6 +1505,7 @@ def run(config_path: Path) -> dict[str, Any]:
         epochs=int(model_config.get("epochs", 50)),
         shell_width=shell_width,
         context_width=int(CONTEXT_WIDTH if context_radius > patch_radius else 0),
+        direct_token_readout=bool(model_config.get("direct_token_readout", False)),
     )
     selected_epoch = int(valid_phase["selected_epoch"])
 
@@ -1488,6 +1524,7 @@ def run(config_path: Path) -> dict[str, Any]:
         epochs=selected_epoch,
         shell_width=shell_width,
         context_width=int(CONTEXT_WIDTH if context_radius > patch_radius else 0),
+        direct_token_readout=bool(model_config.get("direct_token_readout", False)),
     )
 
     result = {
@@ -1523,6 +1560,7 @@ def run(config_path: Path) -> dict[str, Any]:
             "pair_readout": str(
                 model_config.get("pair_readout", model_config.get("readout", "moments"))
             ),
+            "direct_token_readout": bool(model_config.get("direct_token_readout", False)),
             "message_passing": False,
             "attention": False,
             "label_free": True,
