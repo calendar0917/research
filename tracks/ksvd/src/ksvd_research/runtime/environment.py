@@ -28,6 +28,20 @@ TRACKED_PACKAGES = (
     "pytest",
 )
 
+# Hard dependencies of the active zinc runner chain (+ the control plane's
+# own yaml).  Missing here is FAIL.
+REQUIRED_PACKAGES = (
+    "pyyaml",
+    "numpy",
+    "scikit-learn",
+    "torch",
+    "torch-geometric",
+    "pynauty",
+)
+
+# Standalone / other-track / optional tooling.  Missing here is WARN only.
+OPTIONAL_PACKAGES = ("scipy", "pandas", "networkx", "ogb", "optuna", "pytest")
+
 
 def dependency_versions(names=TRACKED_PACKAGES) -> dict[str, str | None]:
     versions: dict[str, str | None] = {}
@@ -40,6 +54,8 @@ def dependency_versions(names=TRACKED_PACKAGES) -> dict[str, str | None]:
 
 
 def capture_environment() -> dict[str, Any]:
+    # Keep every TRACKED_PACKAGES key, including nulls: the manifest must
+    # express "package absent" explicitly, not "key missing".
     return {
         "python": sys.version.split()[0],
         "python_full": sys.version,
@@ -47,9 +63,5 @@ def capture_environment() -> dict[str, Any]:
         "platform": platform.platform(),
         "machine": platform.machine(),
         "cwd": str(Path.cwd()),
-        "packages": {
-            name: version
-            for name, version in dependency_versions().items()
-            if version is not None
-        },
+        "packages": dependency_versions(),
     }

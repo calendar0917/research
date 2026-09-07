@@ -23,6 +23,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime
 import io
 import json
+import os
 import sys
 import traceback
 from pathlib import Path
@@ -30,6 +31,7 @@ from typing import Any
 
 from .runner_api import RunnerError
 from .runners import get_runner, list_runners
+from .runtime.environment import OPTIONAL_PACKAGES, REQUIRED_PACKAGES
 from .runtime import (
     capture_environment,
     capture_git_state,
@@ -240,47 +242,107 @@ def build_parser() -> argparse.ArgumentParser:
 # ---------------------------------------------------------------------------
 
 
-def _doctor_check(name: str, ok: bool, detail: str, severity: str = "ok") -> tuple[str, bool, str]:
-    if not ok:
+def _doctor_check(
+    name: str, ok: bool, detail: str, severity: str = "ok"
+) -> tuple[str, bool, str, str]:
+    if not ok and severity != "warn":
         severity = "error"
     return name, ok, detail, severity
 
 
-def _cmd_doctor(args: argparse.Namespace) -> int:
-    checks: list[tuple[str, bool, str]] = []
+def doctor_checks() -> list[tuple[str, bool, str, str]]:
+    """All doctor checks; each is (name, ok, detail, severity).
+
+    Severity: ``ok`` / ``warn`` / ``error``.  Only ``error`` makes the
+    doctor exit non-zero; ``warn`` is informational for optional gaps.
+    A missing ``runs/`` is *never* an error: the local scratch store is
+    created lazily and a fresh clone simply does not have one yet.
+    """
+    checks: list[tuple[str, bool, str, str]] = []
 
     git = capture_git_state()
-    checks.append(("git.repo", git.commit is not None, git.commit or "no git available"))
     checks.append(
-        ("git.dirty", True, f"{len(git.untracked)} untracked, diff_hash={git.diff_hash[:12] or 'clean'}")
+        _doctor_check("git.repo", git.commit is not None, git.commit or "no git available")
+    )
+    checks.append(
+        _doctor_check(
+            "git.dirty",
+            True,
+            f"{len(git.untracked)} untracked, diff_hash={git.diff_hash[:12] or 'clean'}",
+        )
     )
 
     state = load_state()
-    checks.append(("control.state", True, f"STATE.yaml at {TRACK_ROOT / 'STATE.yaml'} ({len(state)} keys)"))
-    checks.append(("control.protocols", protocols_root().is_dir(), str(protocols_root())))
-    checks.append(("control.studies", studies_root().is_dir(), str(studies_root())))
-    checks.append(("control.records", records_root().is_dir(), str(records_root())))
-    checks.append(("control.runs", runs_root().is_dir(), str(runs_root())))
-
-    environment = capture_environment()
-    missing = [name for name, version in environment["packages"].items() if version is None]
     checks.append(
-        ("env.python", environment["python"].startswith("3.12"), environment["python"]),
+        _doctor_check(
+            "control.state",
+            True,
+            f"STATE.yaml at {TRACK_ROOT / 'STATE.yaml'} ({len(state)} keys)",
+        )
     )
     checks.append(
-        (
-            "env.packages",
-            not missing,
-            f"{len(environment['packages'])}/{len(list(environment['packages']))} reportable versions"
-            + (f"; missing: {', '.join(missing)}" if missing else ""),
-        ),
+        _doctor_check("control.protocols", protocols_root().is_dir(), str(protocols_root()))
+    )
+    checks.append(_doctor_check("control.studies", studies_root().is_dir(), str(studies_root())))
+    checks.append(_doctor_check("control.records", records_root().is_dir(), str(records_root())))
+
+    runs_store = runs_root()
+    if runs_store.is_dir():
+        checks.append(_doctor_check("control.runs", True, str(runs_store)))
+    else:
+        checks.append(
+            _doctor_check(
+                "control.runs",
+                True,
+                "local scratch run store not created yet; it will be created lazily "
+                f"(parent {runs_store.parent} writable: {os.access(runs_store.parent, os.W_OK)})",
+            )
+        )
+
+    environment = capture_environment()
+    packages = environment["packages"]
+    checks.append(
+        _doctor_check(
+            "env.python",
+            environment["python"].startswith("3.12"),
+            environment["python"],
+        )
+    )
+    missing_required = [
+        name for name in REQUIRED_PACKAGES if packages.get(name) is None
+    ]
+    checks.append(
+        _doctor_check(
+            "env.packages.required",
+            not missing_required,
+            "present: "
+            + ", ".join(name for name in REQUIRED_PACKAGES if packages.get(name) is not None)
+            + (f"; MISSING: {', '.join(missing_required)}" if missing_required else ""),
+        )
+    )
+    missing_optional = [name for name in OPTIONAL_PACKAGES if packages.get(name) is None]
+    checks.append(
+        _doctor_check(
+            "env.packages.optional",
+            not missing_optional,
+            "present: "
+            + ", ".join(name for name in OPTIONAL_PACKAGES if packages.get(name) is not None)
+            + (f"; missing (warn only): {', '.join(missing_optional)}" if missing_optional else ""),
+            severity="warn" if missing_optional else "ok",
+        )
     )
 
     try:
         runners = list_runners()
-        checks.append(("runners.registry", bool(runners), ", ".join(runner["name"] for runner in runners)))
+        checks.append(
+            _doctor_check(
+                "runners.registry",
+                bool(runners),
+                ", ".join(runner["name"] for runner in runners),
+            )
+        )
     except Exception as exc:  # noqa: BLE001 - doctor reports failures, not raises
-        checks.append(("runners.registry", False, repr(exc)))
+        checks.append(_doctor_check("runners.registry", False, repr(exc)))
 
     from .runtime.fingerprints import zinc_fingerprints as _zfp
 
@@ -288,19 +350,45 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     try:
         payload = _zfp(zinc_root, expected_sizes={"train": 10_000, "val": 1_000, "test": 1_000})
         sizes = payload["split"]["sizes"]
-        available = all(size == expected for size, expected in zip((sizes[k] for k in ("train", "val", "test")), (10_000, 1_000, 1_000)))
-        checks.append(("data.zinc", available, f"sizes={sizes} raw_files={len(payload['raw_files'])}"))
+        available = all(
+            size == expected
+            for size, expected in zip(
+                (sizes[k] for k in ("train", "val", "test")), (10_000, 1_000, 1_000)
+            )
+        )
+        checks.append(
+            _doctor_check(
+                "data.zinc",
+                available,
+                f"sizes={sizes} raw_files={len(payload['raw_files'])}",
+            )
+        )
     except Exception as exc:  # noqa: BLE001
-        checks.append(("data.zinc", False, repr(exc)))
+        checks.append(_doctor_check("data.zinc", False, repr(exc)))
 
-    ok_count = sum(1 for _, ok, _ in checks if ok)
-    for name, ok, detail in checks:
-        marker = "ok" if ok else "FAIL"
+    return checks
+
+
+def doctor_exit_code(checks: list[tuple[str, bool, str, str]]) -> int:
+    if any(severity == "error" for _, _, _, severity in checks):
+        return STATUS_EXIT_ERROR
+    return STATUS_EXIT_OK
+
+
+def _cmd_doctor(args: argparse.Namespace) -> int:
+    checks = doctor_checks()
+    ok_count = sum(1 for _, ok, _, severity in checks if ok and severity != "warn")
+    warn_count = sum(1 for _, _, _, severity in checks if severity == "warn")
+    for name, ok, detail, severity in checks:
+        if severity == "warn":
+            marker = "WARN"
+        elif ok:
+            marker = "ok"
+        else:
+            marker = "FAIL"
         print(f"[{marker}] {name}: {detail}")
-    print(f"doctor: {ok_count}/{len(checks)} checks ok")
-    if ok_count == len(checks):
-        return STATUS_EXIT_OK
-    return STATUS_EXIT_ERROR
+    print(f"doctor: {ok_count} ok / {warn_count} warn / {len(checks) - ok_count - warn_count} fail")
+    return doctor_exit_code(checks)
 
 
 # ---------------------------------------------------------------------------
