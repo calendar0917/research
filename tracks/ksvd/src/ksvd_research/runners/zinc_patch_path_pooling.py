@@ -37,7 +37,7 @@ def _legacy_module():
 
 
 def build_runner():
-    from ksvd_research.runners import Runner
+    from ksvd_research.runner_api import Runner
 
     return Runner(
         name="zinc_patch_path_pooling",

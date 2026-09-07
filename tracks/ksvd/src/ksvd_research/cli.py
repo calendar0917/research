@@ -28,7 +28,8 @@ import traceback
 from pathlib import Path
 from typing import Any
 
-from .runners import RunnerError, get_runner, list_runners
+from .runner_api import RunnerError
+from .runners import get_runner, list_runners
 from .runtime import (
     capture_environment,
     capture_git_state,
