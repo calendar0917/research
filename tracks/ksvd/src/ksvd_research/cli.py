@@ -117,13 +117,7 @@ def main(argv: list[str] | None = None) -> int:
     handler = args.handler
     try:
         code = handler(args)
-    except RunnerError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return STATUS_EXIT_ERROR
-    except FileNotFoundError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return STATUS_EXIT_ERROR
-    except (ValueError, KeyError) as exc:
+    except (RunnerError, FileNotFoundError, RuntimeError, ValueError, KeyError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return STATUS_EXIT_ERROR
     return int(code or 0)
