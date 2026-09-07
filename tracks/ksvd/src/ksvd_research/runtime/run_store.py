@@ -344,6 +344,15 @@ def write_config_resolved(run_dir: Path, config: dict[str, Any]) -> None:
     write_yaml_atomic(Path(run_dir) / "config.resolved.yaml", config)
 
 
+def write_protocol_snapshot(run_dir: Path, protocol: dict[str, Any]) -> None:
+    """Snapshot the protocol rules actually used by this run.
+
+    Even if the protocol file later changes, the run knows what rules it ran
+    under (``protocol.snapshot.yaml`` + ``manifest.protocol_hash``).
+    """
+    write_yaml_atomic(Path(run_dir) / "protocol.snapshot.yaml", protocol)
+
+
 def write_patch(run_dir: Path, patch: str) -> None:
     if not patch:
         return

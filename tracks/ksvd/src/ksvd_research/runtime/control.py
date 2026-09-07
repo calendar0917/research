@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .paths import protocols_root, state_file, studies_root
-from .serialization import load_yaml
+from .serialization import dumps_json, jsonable, load_yaml, sha256_text
 
 
 def load_protocol(protocol_id: str) -> dict[str, Any]:
@@ -22,6 +22,17 @@ def load_protocol(protocol_id: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError(f"protocol {path} is not a mapping")
     return payload
+
+
+def protocol_hash(protocol: dict[str, Any]) -> str:
+    """Semantic hash of a parsed protocol.
+
+    Hashes the parsed content only: YAML formatting, comments and key
+    ordering must not change the hash; a change to any scientific rule does.
+    """
+    if not isinstance(protocol, dict):
+        raise ValueError("protocol hash expects a mapping")
+    return sha256_text(dumps_json(jsonable(protocol)))
 
 
 def load_study(study_id: str) -> dict[str, Any]:

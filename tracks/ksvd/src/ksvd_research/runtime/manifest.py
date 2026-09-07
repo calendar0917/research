@@ -53,6 +53,7 @@ class RunSpec:
     run_dir: Path
     git: dict[str, Any]
     environment: dict[str, Any]
+    protocol_hash: str = "legacy-unknown"
 
 
 @dataclass
@@ -101,6 +102,7 @@ def build_manifest(
         "study_id": spec.study_id,
         "candidate_id": spec.candidate_id,
         "protocol_id": spec.protocol_id,
+        "protocol_hash": spec.protocol_hash,
         "mode": spec.mode,
         "purpose": spec.purpose,
         "runner": spec.runner,

@@ -17,16 +17,22 @@ def _run(index: str, protocol: str, dataset: str, split: str) -> dict:
     }
 
 
-def test_comparability_key_requires_triple_match():
-    assert comparability_key(_run("a", "p1", "d1", "s1")) == ("p1", "d1", "s1")
-    assert comparability_key(_run("a", "p1", "d2", "s1")) != comparability_key(_run("a", "p1", "d1", "s1"))
+def test_comparability_key_requires_full_match():
+    assert comparability_key(_run("a", "p1", "d1", "s1")) == ("p1", "d1", "s1", "legacy-unknown")
+    left = comparability_key(_run("a", "p1", "d1", "s1"))
+    right = comparability_key(_run("b", "p1", "d2", "s1"))
+    assert left != right
+    # protocol_hash must be part of the identity; unknown != known
+    hashed = {** _run("c", "p1", "d1", "s1"), "protocol_hash": "h" * 64}
+    assert comparability_key(hashed) == ("p1", "d1", "s1", "h" * 64)
+    assert comparability_key(hashed) != left
 
 
 def test_partition_same_group_is_comparable():
     groups, compatible = partition_comparable(
         [_run("a", "zinc-context-gap", "d", "s"), _run("b", "zinc-context-gap", "d", "s")]
     )
-    assert compatible and list(groups.keys()) == [("zinc-context-gap", "d", "s")]
+    assert compatible and list(groups.keys()) == [("zinc-context-gap", "d", "s", "legacy-unknown")]
 
 
 def test_partition_mismatch_is_incomparable():

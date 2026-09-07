@@ -50,6 +50,7 @@ from .runtime.control import (
     load_state,
     load_study,
     protocol_for_study,
+    protocol_hash as protocol_semantic_hash,
 )
 from .runtime.policy import resolve_test_access
 from .runtime.git_state import porcelain_status, write_untracked_snapshots
@@ -79,6 +80,7 @@ from .runtime.run_store import (
     write_config_resolved,
     write_metrics_file,
     write_patch,
+    write_protocol_snapshot,
 )
 from .runtime.serialization import load_yaml
 
@@ -521,6 +523,9 @@ def _resolve_run_plan(args: argparse.Namespace) -> dict[str, Any]:
     dataset_payload, split_fingerprint = runner.fingerprints(config)
     git = capture_git_state()
     config_hash_value = config_hash(config)
+    protocol_hash_value = (
+        protocol_semantic_hash(protocol) if protocol is not None else "unassigned"
+    )
     spec_fingerprint = run_fingerprint(
         runner=runner.name,
         study_id=study_id,
@@ -531,6 +536,7 @@ def _resolve_run_plan(args: argparse.Namespace) -> dict[str, Any]:
         git=git.to_dict(),
         dataset_fingerprint=dataset_payload,
         split_fingerprint=split_fingerprint,
+        protocol_hash=protocol_hash_value,
     )
     return {
         "runner": runner,
@@ -540,6 +546,7 @@ def _resolve_run_plan(args: argparse.Namespace) -> dict[str, Any]:
         "config": config,
         "candidate_id": candidate_id,
         "protocol_id": protocol_id,
+        "protocol_hash": protocol_hash_value,
         "seeds": seeds,
         "dataset_fingerprint": dataset_payload,
         "split_fingerprint": split_fingerprint,
@@ -587,6 +594,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         study_id=plan["study_id"],
         candidate_id=plan["candidate_id"],
         protocol_id=plan["protocol_id"],
+        protocol_hash=plan["protocol_hash"],
         mode=args.mode,
         purpose=args.purpose,
         runner=plan["runner"].name,
@@ -603,6 +611,8 @@ def _cmd_run(args: argparse.Namespace) -> int:
     manifest = build_manifest(spec=spec, started_at=started, status="running", config=plan["config"])
     write_manifest(run_dir, manifest)
     write_config_resolved(run_dir, plan["config"])
+    if plan["protocol"] is not None:
+        write_protocol_snapshot(run_dir, plan["protocol"])
     write_patch(run_dir, git.patch)
     write_untracked_snapshots(run_dir, git.untracked)
 
@@ -754,11 +764,15 @@ def _cmd_compare(args: argparse.Namespace) -> int:
 
     groups, compatible = partition_comparable(manifests)
     if not compatible and not args.override:
-        print("INCOMPARABLE: runs differ on protocol_id / dataset_fingerprint / split_fingerprint:")
+        print(
+            "INCOMPARABLE: runs differ on protocol_id / protocol_hash / "
+            "dataset_fingerprint / split_fingerprint:"
+        )
         for key, group in sorted(groups.items()):
             value = manifest_metric(group[0], metric)
             print(
-                f"  protocol={key[0]} dataset={key[1][:12]} split={key[2][:12]} "
+                f"  protocol={key[0]} protocol_hash={key[3][:12]} "
+                f"dataset={key[1][:12]} split={key[2][:12]} "
                 f"runs={[row['run_id'] for row in group]} value={value}"
             )
         print("pass --override to rank anyway (the comparison then ignores comparability)")
@@ -826,19 +840,27 @@ def manifest_metric(manifest: dict[str, Any], key: str, default: Any = None) -> 
     return (manifest.get("metrics") or {}).get(key, default)
 
 
-def comparability_key(manifest: dict[str, Any]) -> tuple[str, str, str]:
+def comparability_key(manifest: dict[str, Any]) -> tuple[str, str, str, str]:
+    """Comparability identity: protocol id + protocol content + data + split.
+
+    ``protocol_hash`` is the semantic hash of the parsed protocol file.  Runs
+    recorded before the hash existed use ``legacy-unknown``, which never
+    equals a known hash — old unknown protocols are conservatively treated as
+    incomparable with new ones.
+    """
     return (
         str(manifest.get("protocol_id")),
         str(manifest.get("dataset_fingerprint", {}).get("dataset_fingerprint", "?")),
         str(manifest.get("split_fingerprint")),
+        str(manifest.get("protocol_hash") or "legacy-unknown"),
     )
 
 
 def partition_comparable(
     manifests: list[dict[str, Any]],
-) -> tuple[dict[tuple[str, str, str], list[dict[str, Any]]], bool]:
+) -> tuple[dict[tuple[str, str, str, str], list[dict[str, Any]]], bool]:
     """Group runs by comparability key; ``compatible`` is True iff one group."""
-    groups: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    groups: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
     for manifest in manifests:
         groups.setdefault(comparability_key(manifest), []).append(manifest)
     return groups, len(groups) == 1
