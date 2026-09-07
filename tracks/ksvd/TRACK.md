@@ -1,5 +1,12 @@
 # Track: KSVD 结构字典学习
 
+> **2026-09-07 起**：本 TRACK 不再承担实验流水数据库职责。新实验统一走
+> `uv run research run` → `runs/`（本地执行真相，Git-ignored）；有意义 →
+> `uv run research promote` → `records/runs/`（durable facts，Git-tracked，
+> fresh clone 可读）；判断/决策进 `records/{claims,decisions}`；
+> 导航见 `STATE.yaml`。`results/luyin16/` 保留为 legacy evidence archive
+> （只读，不再作为新实验数字的默认入口）。下方历史进度保留，不代表当前记录方式。
+
 | 项 | 内容 |
 |----|------|
 | slug | `ksvd` |
@@ -63,7 +70,10 @@
 | `code/` | 历史实现与复现入口，不再平铺新增实验 |
 | `tests/` | pytest 维护测试 |
 | `configs/` | 配置 |
-| `results/` | 本轨数字唯一源 |
+| `runs/` | 本地执行真相（Git-ignored，控制面自动写） |
+| `records/runs/` | durable promoted facts（Git-tracked） |
+| `records/claims/` `records/decisions/` | 科研判断 / 路线决策 |
+| `results/luyin16/` | legacy evidence archive（2026-09-07 前后历史体系，只读） |
 | `notes/` | 决策与定义 |
 | `docs/` | 短说明 |
 

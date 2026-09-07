@@ -402,7 +402,7 @@ def _cmd_context(args: argparse.Namespace) -> int:
 
     git = capture_git_state()
     status_now = porcelain_status() or ""
-    dirty_lines = [line for line in status_now.splitlines() if line.strip()]
+    dirty_lines = [entry[3:] for entry in status_now.split("\0") if len(entry) > 3]
     lines.append("# KSVD research context")
     lines.append(f"phase: {state.get('phase', 'unknown')}")
     lines.append(
@@ -431,19 +431,19 @@ def _cmd_context(args: argparse.Namespace) -> int:
         lines.append(f"- {study_id}: metric={metric} ({direction}) test_policy={test_policy}")
         lines.append(f"  question: {question}")
     lines.append("## files worth reading")
-    for relative in (
-        "STATE.yaml",
-        "protocols/zinc-context-gap.yaml",
-        "protocols/molhiv-cross-scaffold-interaction.yaml",
-        "studies/zinc-context-gap.yaml",
-        "studies/molhiv-cross-scaffold-interaction.yaml",
-    ):
+    readable = ["STATE.yaml"]
+    for study_id in state.get("active_studies") or []:
+        readable.append(f"protocols/{study_id}.yaml")
+        readable.append(f"studies/{study_id}.yaml")
+    for relative in readable:
         path = TRACK_ROOT / relative
         lines.append(f"- {path} ({'exists' if path.is_file() else 'MISSING'})")
     lines.append("")
     lines.append("## baseline / candidate")
     baseline = state.get("baseline_record") or state.get("baseline_legacy")
     lines.append(f"baseline: {baseline or 'not promoted yet'}")
+    if state.get("best_record"):
+        lines.append(f"best: {state.get('best_record')}")
     lines.append(f"current candidate: {state.get('current_candidate')}")
     lines.append("")
     lines.append("## recent runs")
