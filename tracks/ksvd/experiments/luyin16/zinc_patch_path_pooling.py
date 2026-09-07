@@ -857,6 +857,139 @@ class _HybridEmbedding(nn.Module):
         return torch.where(full_mask.unsqueeze(-1), full_value, rare_value)
 
 
+PARAMETER_AUDIT_BLOCKS = (
+    ("typed_token_embedding", "typed_embedding"),
+    ("parent_token_embedding", "parent_embedding"),
+    ("patch_encoder", "patch_encoder"),
+    ("pair_projection", "pair_projection"),
+    ("relation_encoder", "relation_encoder"),
+    ("distance_gate", "distance_gate"),
+    ("pair_encoder", "pair_encoder"),
+    ("center_context", "center_update"),
+    ("global_encoder", "global_encoder"),
+    ("graph_head", "head"),
+)
+
+
+def _block_parameters(module: nn.Module | None) -> int:
+    if module is None:
+        return 0
+    return int(
+        sum(
+            parameter.numel()
+            for parameter in module.parameters()
+            if parameter.requires_grad
+        )
+    )
+
+
+def _embedding_spec(module: nn.Module) -> dict[str, Any]:
+    """Describe an embedding module regardless of mode (full/factorized/hybrid)."""
+    vocabulary_size = int(
+        getattr(module, "vocabulary_size", None)
+        or getattr(module, "num_embeddings", 0)
+    )
+    output_width = int(
+        getattr(module, "output_width", None)
+        or getattr(module, "embedding_dim", 0)
+    )
+    return {
+        "vocabulary_size": vocabulary_size,
+        "output_width": output_width,
+        "rank": int(getattr(module, "rank", 0)),
+        "full_count": int(getattr(module, "full_count", 0)),
+    }
+
+
+def audit_parameters(model: PatchPathModel) -> dict[str, Any]:
+    """Count trainable (``requires_grad=True``) parameters per major module.
+
+    The per-block total is cross-checked against the global parameter
+    iterator, so an audit result can never silently disagree with
+    ``sum(p.numel() for p in model.parameters() if p.requires_grad)``.
+    """
+    blocks: dict[str, int] = {}
+    for label, attribute in PARAMETER_AUDIT_BLOCKS:
+        blocks[label] = _block_parameters(getattr(model, attribute))
+    accounted = sum(blocks.values())
+    total_global = int(
+        sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
+    )
+    if accounted != total_global:
+        raise RuntimeError(
+            f"parameter audit inconsistency: blocks={accounted} != global={total_global}"
+        )
+    dimensions = {
+        "patch_descriptor_dim": int(model.shell_width),
+        "context_descriptor_dim": int(model.context_width),
+        "typed_token_width": int(model.token_width),
+        "parent_token_width": int(model.parent_width),
+        "patch_hidden_dim": int(model.patch_hidden),
+        "relation_descriptor_dim": int(RELATION_WIDTH),
+        "pair_hidden_dim": int(model.pair_hidden),
+        "distance_buckets": int(DISTANCE_BUCKETS),
+        "unary_pooled_dim": int(model.pooled_unary_width),
+        "pair_pooled_dim": int(model.pooled_pair_width),
+        "graph_readout_dim": int(model.readout_width),
+        "graph_head_hidden_dims": [
+            int(model.head_hidden_0),
+            int(model.head_hidden_1),
+        ],
+        "center_context_hidden_dim": (
+            None if model.center_update is None else int(model.center_context_hidden)
+        ),
+        "global_encoder_width": int(model.global_output_width),
+    }
+    return {
+        "blocks": blocks,
+        "total_trainable": total_global,
+        "fraction": {
+            label: (float(count / total_global) if total_global else 0.0)
+            for label, count in blocks.items()
+        },
+        "dimensions": dimensions,
+        "embedding": {
+            "mode": str(model.embedding_mode),
+            "rank": int(model.embedding_rank),
+            "typed": _embedding_spec(model.typed_embedding),
+            "parent": _embedding_spec(model.parent_embedding),
+        },
+    }
+
+
+def _print_parameter_audit(model: PatchPathModel, phase_label: str) -> dict[str, Any]:
+    audit = audit_parameters(model)
+    blocks = audit["blocks"]
+    fractions = audit["fraction"]
+    print(f"Model parameter audit (phase={phase_label})", flush=True)
+    for label, _attribute in PARAMETER_AUDIT_BLOCKS:
+        if label == "center_context" and blocks[label] == 0:
+            continue
+        print(
+            f"{label}: {blocks[label]} ({fractions[label] * 100.0:.2f}%)",
+            flush=True,
+        )
+    print("total_trainable_params: " + str(audit["total_trainable"]), flush=True)
+    dims = audit["dimensions"]
+    print("Representation dimensions", flush=True)
+    for key in (
+        "patch_descriptor_dim",
+        "typed_token_width",
+        "parent_token_width",
+        "patch_hidden_dim",
+        "relation_descriptor_dim",
+        "pair_hidden_dim",
+        "distance_buckets",
+        "unary_pooled_dim",
+        "pair_pooled_dim",
+        "graph_readout_dim",
+        "center_context_hidden_dim",
+    ):
+        print(f"{key}: {dims[key]}", flush=True)
+    print(f"embedding: {audit['embedding']}", flush=True)
+    return audit
+
+
 def _make_embedding(
     vocabulary_size: int,
     output_width: int,
@@ -903,6 +1036,8 @@ class PatchPathModel(nn.Module):
         direct_token_readout: bool = False,
         center_context: bool = False,
         center_context_hidden: int | None = None,
+        graph_head_hidden_0: int | None = None,
+        graph_head_hidden_1: int | None = None,
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
@@ -919,6 +1054,8 @@ class PatchPathModel(nn.Module):
         self.context_width = int(context_width)
         self.direct_token_readout = bool(direct_token_readout)
         self.center_context = bool(center_context)
+        self.token_width = int(token_width)
+        self.global_output_width = 32
         valid_readouts = {"moments", "mean_std", "sum_mean_std", "distribution"}
         if self.node_readout not in valid_readouts or self.pair_readout not in valid_readouts:
             raise ValueError(
@@ -937,6 +1074,7 @@ class PatchPathModel(nn.Module):
             full_count=typed_full_count,
         )
         parent_width = max(int(token_width // 2), 1)
+        self.parent_width = int(parent_width)
         parent_rank = min(self.parent_embedding_rank, parent_width)
         parent_full_count = (
             None
@@ -991,6 +1129,7 @@ class PatchPathModel(nn.Module):
                 if center_context_hidden is not None
                 else max(2 * int(patch_hidden), 96)
             )
+            self.center_context_hidden = int(update_hidden)
             self.center_update = nn.Sequential(
                 nn.Linear(
                     int(patch_hidden) + self.center_context_width,
@@ -1006,6 +1145,7 @@ class PatchPathModel(nn.Module):
         else:
             self.center_context_width = 0
             self.center_update = None
+            self.center_context_hidden = None
         # Unary and pair readouts are invariant moment summaries.  The final
         # module is the sole graph-level prediction head.
         pooled_unary_width = self._pooled_width(int(patch_hidden), self.node_readout)
@@ -1020,14 +1160,33 @@ class PatchPathModel(nn.Module):
             + DISTANCE_BUCKETS * pooled_pair_width
             + direct_width
         )
+        self.pooled_unary_width = int(pooled_unary_width)
+        self.pooled_pair_width = int(pooled_pair_width)
+        self.readout_width = int(readout_width)
+        # Graph head hidden widths are configurable; when the candidate does
+        # not set them, the historical default (``max(2*patch_hidden, 96)``
+        # and ``patch_hidden``) is preserved exactly so old configs keep the
+        # same architecture and parameter counts.
+        self.head_hidden_0 = (
+            int(graph_head_hidden_0)
+            if graph_head_hidden_0 is not None
+            else max(int(patch_hidden) * 2, 96)
+        )
+        self.head_hidden_1 = (
+            int(graph_head_hidden_1)
+            if graph_head_hidden_1 is not None
+            else int(patch_hidden)
+        )
+        if self.head_hidden_0 < 1 or self.head_hidden_1 < 1:
+            raise ValueError("graph head hidden dimensions must be positive")
         self.head = nn.Sequential(
-            nn.Linear(readout_width + 32, max(int(patch_hidden) * 2, 96)),
-            nn.LayerNorm(max(int(patch_hidden) * 2, 96)),
+            nn.Linear(readout_width + 32, self.head_hidden_0),
+            nn.LayerNorm(self.head_hidden_0),
             nn.ReLU(),
             nn.Dropout(float(dropout)),
-            nn.Linear(max(int(patch_hidden) * 2, 96), int(patch_hidden)),
+            nn.Linear(self.head_hidden_0, self.head_hidden_1),
             nn.ReLU(),
-            nn.Linear(int(patch_hidden), 1),
+            nn.Linear(self.head_hidden_1, 1),
         )
 
     @staticmethod
@@ -1337,6 +1496,7 @@ def _train_phase(
         shell_width: int = SHELL_WIDTH,
         context_width: int = 0,
         direct_token_readout: bool = False,
+        phase_label: str | None = None,
 ) -> dict[str, Any]:
     model_config = config["model"]
     device = torch.device(str(model_config.get("device", "cpu")))
@@ -1379,7 +1539,36 @@ def _train_phase(
             if model_config.get("center_context_hidden") is None
             else int(model_config["center_context_hidden"])
         ),
+        graph_head_hidden_0=(
+            None
+            if model_config.get("graph_head_hidden_0") is None
+            else int(model_config["graph_head_hidden_0"])
+        ),
+        graph_head_hidden_1=(
+            None
+            if model_config.get("graph_head_hidden_1") is None
+            else int(model_config["graph_head_hidden_1"])
+        ),
     ).to(device)
+    parameter_audit: dict[str, Any] | None = None
+    if bool(model_config.get("parameter_audit", False)):
+        phase_label = phase_label or ("validation-selection" if select_best else "train-valid-refit")
+        parameter_audit = _print_parameter_audit(model, phase_label)
+        budget = model_config.get("expected_max_trainable_params")
+        if budget is not None:
+            total = int(parameter_audit["total_trainable"])
+            budget = int(budget)
+            print(f"Trainable params: {total}", flush=True)
+            print(f"Parameter budget: {budget}", flush=True)
+            if total <= budget:
+                print("PASS", flush=True)
+            else:
+                print("FAIL", flush=True)
+                raise RuntimeError(
+                    f"parameter budget exceeded: {total} > {budget} "
+                    f"(phase={phase_label}); model is fatter than the compact "
+                    f"budget, refuse to train silently"
+                )
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=float(model_config.get("learning_rate", 1.0e-3)),
@@ -1457,6 +1646,7 @@ def _train_phase(
         "losses": losses,
         "device": str(device),
         "parameters": int(sum(parameter.numel() for parameter in model.parameters())),
+        "parameter_audit": parameter_audit,
     }
 
 
@@ -1717,6 +1907,16 @@ def run(config_path: Path) -> dict[str, Any]:
             ),
             "attention": False,
             "label_free": True,
+            "dimensions": (
+                valid_phase["parameter_audit"]["dimensions"]
+                if valid_phase.get("parameter_audit") is not None
+                else None
+            ),
+            "parameter_audit": (
+                valid_phase["parameter_audit"]
+                if valid_phase.get("parameter_audit") is not None
+                else None
+            ),
         },
         "feature_build": feature_metadata,
         "vocabulary_audit": {
@@ -1742,6 +1942,8 @@ def run(config_path: Path) -> dict[str, Any]:
                 {
                     "mae": float(refit_phase["mae"]),
                     "epochs_run": int(refit_phase["epochs_run"]),
+                    "parameter_audit": refit_phase["parameter_audit"],
+                    "parameters": int(refit_phase["parameters"]),
                 }
                 if refit_phase is not None
                 else {"mae": None, "epochs_run": 0, "blocked": True}

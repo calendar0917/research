@@ -1,0 +1,59 @@
+protocol_id: luyin16-zinc-hierarchical-patch-relation-context-compact-hybrid-v2-horizon120
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+
+model:
+  patch_hidden: 48
+  pair_hidden: 16
+  token_width: 16
+  embedding_mode: hybrid
+  # Training-horizon audit: this config is Compact-v2 with ONE semantic
+  # difference, the max training horizon (model.epochs 60 -> 120).  The
+  # rare-token rank-4 representation, the 768-token full table boundary, the
+  # 64/32 graph head, the optimizer, the schedule-less training rule and the
+  # patience-12 early-stopping rule are all identical to Compact-v2.  This
+  # lets the run measure where the validation optimum naturally stops when
+  # the 60-epoch ceiling is removed.
+  embedding_rank: 4
+  # IDs are frequency ordered; ID zero is a learned OOV token.  The full
+  # table therefore covers OOV + the top-(768-1)=767 train-frequent typed
+  # tokens; every remaining exact token keeps its own rank-4 factorized row.
+  # The parent vocabulary (31 known + OOV = 32) is entirely covered by the
+  # full table.
+  hybrid_full_typed_tokens: 768
+  hybrid_full_parent_tokens: 32
+  center_context: true
+  # 60 keeps both the selection phase and the train+valid refit phase
+  # strictly <= 100000 trainable params (identical to Compact-v1).
+  center_context_hidden: 60
+  # v2 only reallocation: the prediction head narrows from 294 -> 96 -> 48 -> 1
+  # to 294 -> 64 -> 32 -> 1.  Activation (ReLU), dropout, and LayerNorm
+  # order/type are unchanged; only the hidden widths move.
+  graph_head_hidden_0: 64
+  graph_head_hidden_1: 32
+  dropout: 0.05
+  epochs: 120
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 12
+  evaluate_every: 1
+  device: cpu
+  parameter_audit: true
+  expected_max_trainable_params: 100000
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_HIERARCHICAL_PATCH_RELATION_CONTEXT_COMPACT_HYBRID_V2_HORIZON120_20260907.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_HIERARCHICAL_PATCH_RELATION_CONTEXT_COMPACT_HYBRID_V2_HORIZON120_20260907.md
