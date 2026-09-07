@@ -7,10 +7,14 @@ active_studies:
 
 focus_study: zinc-context-gap
 
-baseline_record: null
-  # Set to a promoted record id (records/runs/<run_id>.json) after the first
-  # promotion; until then the legacy baseline is authoritative.
+# Durable baseline pointer: a git-tracked record under records/runs/.
+# The legacy JSON below is kept only as a provenance hint; it is not the
+# authoritative pointer and is git-ignored.
+baseline_record: record-legacy-zinc-patch-path-pooling-20260904
 baseline_legacy: results/luyin16/ZINC_PATCH_PATH_POOLING_20260904.json
+
+# Durable pointer to the best known zinc result (managed candidate family).
+best_record: record-legacy-zinc-patch-path-pooling-factorized-rank20-20260905
 
 current_candidate: luyin16-zinc-exact-patch-path-conditioned-pooling-v1
 
@@ -29,7 +33,7 @@ guardrails:
   - "no MLflow/W&B/Hydra/DVC/database without documented failure of current primitives"
 
 next_queue:
-  - "promote the current zinc baseline run to records/runs"
+  - "promote a fresh control-plane zinc run (the legacy baseline is backfilled, not a new run)"
   - "migrate molhiv runner after zinc equivalence is accepted"
   - "hotspot migration: runtime duplication (zinc_long_range_proxy -> runtime)"
   - "hotspot migration: patch_object_audit -> runtime"
