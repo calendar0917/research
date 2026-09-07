@@ -2,11 +2,28 @@
 
 本文件是本仓库中 AI/Agent 的工作规则。仓库目标是维护可复现、可审计的 GNN/KSVD 科研过程。
 
-## 开始工作
+## 开始工作（AI 快捷流程）
 
-1. 先读本文件、`docs/research_guide.md`，再读当前 active track 的 `TRACK.md`。
-2. 先运行 `git status --short`；保留用户已有修改，不执行覆盖性整理。
-3. 明确任务属于哪个 track、哪个阶段和哪个 `protocol_id`，再改代码或运行实验。
+1. 先运行 `git status --short`；保留用户已有修改，不执行覆盖性整理。
+2. 运行 `uv run research context`（约 100–200 行）。
+   只读取 context 指向的 `STATE.yaml`、当前 `Study`、`Protocol` 与相关
+   `Claim`/`Decision`；不要默认读取全部 luyin16 result Markdown。
+3. 需要环境诊断或数据核对时运行 `uv run research doctor`。
+4. 明确任务属于哪个 track、哪个 stage 和哪个 `protocol_id`，再改代码或运行实验。
+
+### 运行控制平面（tracks/ksvd）
+
+- 运行 scratch/screen/confirm/terminal 实验统一走
+  `uv run research run <runner> [--study ...] [--purpose "..."] [--set k=v] [--mode ...]`；
+  每个 run 自动落盘 `runs/YYYY/MM/DD/<run_id>/`（git-ignored，含
+  manifest/config.resolved/metrics/stdout/stderr/artifacts）。
+- 只有 `uv run research promote <run_id>` 才进入 `records/runs/`（Git 追踪、
+  不可变）。scratch 实验不会产生 Git 文件。
+- 协议声明 `test_policy: terminal` 时，非 terminal run 禁止访问 official test
+  （控制面强制，manifest 记录 `test_access`）。
+- 比较只看相同 `protocol_id` + dataset/split fingerprint：不一致默认
+  `INCOMPARABLE`，显式 `--override` 才会有 rank 并带 warning。
+- 重复 run（同 runner/config/protocol/seed/code state）默认拒绝，需 `--force`。
 
 ## 目录边界
 
@@ -19,6 +36,8 @@
 
 ## 实验纪律
 
+- 每次运行通过 `research run` 走控制平面；新实验入口以 runner 形式注册，
+  遵守 CLI → runner → feature/model/data/evaluation 的依赖方向。
 - 每个实验先写清问题、数据集、split、seed、指标、输入特征和停止条件。
 - 字典、标准化参数、特征选择和模型选择只能使用训练部分；验证/测试只做编码或评估。
 - 不把不同协议、不同数据集或不同阶段的结果混入同一主表。
@@ -40,6 +59,8 @@
 - 优先做小而可回滚的提交；移动文件前先建立索引并确认引用关系。
 - 不运行 `git reset --hard`、`git clean`、递归删除或覆盖用户文件。
 - 不为了“整洁”删除历史实验；先标记 `legacy`/`archived` 并保留摘要和校验信息。
+- `TRACK.md` 保持为 Track Charter；长实验流水不再追加到 TRACK，写入
+  `records/`（claim/decision）与 `runs/`/`reports/`。
 - 新增依赖、数据集或实验入口时，同时更新相应 README、配置和协议说明。
 
 ## 交付格式
