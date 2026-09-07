@@ -311,6 +311,20 @@ def _cmd_context(args: argparse.Namespace) -> int:
     lines.append(f"active studies: {', '.join(state.get('active_studies', []))}")
     lines.append(f"focus study: {state.get('focus_study')}")
     lines.append("")
+    lines.append("## study / protocol rules")
+    for study_id in state.get("active_studies", []):
+        try:
+            study = load_study(study_id)
+            protocol = protocol_for_study(study_id)
+        except FileNotFoundError:
+            lines.append(f"- {study_id}: MISSING")
+            continue
+        question = str(study.get("question", "")).replace("\n", " ")[:100]
+        metric = protocol.get("metric", {}).get("ranking_metric", "?")
+        direction = protocol.get("metric", {}).get("metric_direction", "?")
+        test_policy = protocol.get("test_policy", "unguarded")
+        lines.append(f"- {study_id}: metric={metric} ({direction}) test_policy={test_policy}")
+        lines.append(f"  question: {question}")
     lines.append("## files worth reading")
     for relative in (
         "STATE.yaml",
