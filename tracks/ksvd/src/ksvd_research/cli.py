@@ -634,33 +634,65 @@ def _cmd_promote(args: argparse.Namespace) -> int:
     return STATUS_EXIT_OK
 
 
-def _metric_for_protocol(protocol_id: str) -> tuple[str, str]:
-    """Return (metric key, direction) for ranking; default valid_mae / lower."""
+def metric_for_protocol(protocol_id: str) -> tuple[str, str]:
+    """Return (ranking metric key, direction) declared by a protocol.
+
+    Schema priority: ``metric.ranking_metric`` / ``metric.metric_direction``
+    (current schema) -> legacy top-level ``ranking_metric`` /
+    ``metric_direction`` -> defaults (``valid_mae`` / ``lower_is_better``).
+    An unrecognized direction is a hard error: silently ranking with the
+    wrong polarity would produce a confidently wrong scientific answer.
+    """
     try:
         protocol = load_protocol(protocol_id)
-        metric = str(protocol.get("ranking_metric") or "valid_mae")
-        direction = str(protocol.get("metric_direction") or "lower_is_better")
-        return metric, direction
     except FileNotFoundError:
-        return "valid_mae", "lower_is_better"
+        protocol = {}
+    metric_config = protocol.get("metric") or {}
+    if not isinstance(metric_config, dict):
+        raise ValueError(
+            f"protocol {protocol_id!r} has non-mapping 'metric'; cannot read ranking metric"
+        )
+    metric = str(
+        metric_config.get("ranking_metric")
+        or protocol.get("ranking_metric")
+        or "valid_mae"
+    )
+    direction = str(
+        metric_config.get("metric_direction")
+        or protocol.get("metric_direction")
+        or "lower_is_better"
+    )
+    if direction not in {"lower_is_better", "higher_is_better"}:
+        raise ValueError(
+            f"protocol {protocol_id!r} declares invalid metric_direction {direction!r}; "
+            "refusing to rank with unknown polarity"
+        )
+    return metric, direction
 
 
 def _cmd_compare(args: argparse.Namespace) -> int:
     if args.study:
         manifests = [run for run in list_runs(study_id=args.study) if run.get("status") == "completed"]
     else:
-        manifests = []
-        for run_id in args.run_ids:
-            manifests.append(load_run(run_id))
+        manifests = [load_run(run_id) for run_id in args.run_ids]
     if not manifests:
         print("no completed runs to compare")
         return STATUS_EXIT_ERROR
 
-    metric_names: set[str] = set()
-    for manifest in manifests:
-        metric, _ = _metric_for_protocol(manifest.get("protocol_id") or "none")
-        metric_names.add(metric)
-    metric = args.metric or (sorted(metric_names)[0] if len(metric_names) == 1 else "valid_mae")
+    if args.metric:
+        metric = args.metric
+    else:
+        metric_names = {
+            metric_for_protocol(str(manifest.get("protocol_id") or "none"))[0]
+            for manifest in manifests
+        }
+        if len(metric_names) != 1:
+            print(
+                "runs disagree on the ranking metric "
+                f"({', '.join(sorted(metric_names))}); pass --metric <key>"
+            )
+            return STATUS_EXIT_ERROR
+        metric = sorted(metric_names)[0]
 
     groups, compatible = partition_comparable(manifests)
     if not compatible and not args.override:
@@ -677,26 +709,48 @@ def _cmd_compare(args: argparse.Namespace) -> int:
     if not compatible and args.override:
         print("WARNING: comparing across different protocol/dataset/split fingerprints")
 
-    rows = []
-    for group in groups.values():
-        for manifest in group:
-            direction = _metric_for_protocol(manifest.get("protocol_id") or "none")[1]
-            rows.append((manifest, direction))
+    direction_groups: dict[str, list[str]] = {}
+    for manifest in manifests:
+        if manifest_metric(manifest, metric) is None:
+            continue
+        direction = metric_for_protocol(str(manifest.get("protocol_id") or "none"))[1]
+        direction_groups.setdefault(direction, []).append(str(manifest.get("run_id")))
+    if len(direction_groups) > 1:
+        print("METRIC DIRECTION CONFLICT: runs assign different polarity to the same metric")
+        print(f"  metric: {metric}")
+        for direction, run_ids in sorted(direction_groups.items()):
+            print(f"  {direction}: {', '.join(run_ids)}")
+        print("refusing to rank; use --override only for protocol/dataset/split comparability")
+        return STATUS_EXIT_ERROR
+    direction = next(iter(direction_groups), "lower_is_better")
+
+    missing = [
+        str(manifest.get("run_id"))
+        for manifest in manifests
+        if manifest_metric(manifest, metric) is None
+    ]
+    if missing:
+        print("MISSING METRIC:")
+        for run_id in missing:
+            print(f"  {run_id}")
+        print(f"metric={metric!r}: runs without this metric receive no rank")
+
+    rows = [
+        (manifest, direction)
+        for manifest in manifests
+        if manifest_metric(manifest, metric) is not None
+    ]
     if not rows:
-        print("no metrics to rank")
+        print(f"no run has metric {metric!r}; no ranking possible")
         return STATUS_EXIT_ERROR
 
-    def sort_key(item: tuple[dict[str, Any], str]) -> float:
-        manifest, direction = item
+    rows.sort(
+        key=lambda item: float(manifest_metric(item[0], metric)),
+        reverse=direction == "higher_is_better",
+    )
+    for rank, (manifest, _direction) in enumerate(rows, start=1):
         value = manifest_metric(manifest, metric)
-        if value is None:
-            return float("inf") if direction == "lower_is_better" else float("-inf")
-        return float(value)
-
-    rows.sort(key=sort_key, reverse=all(d == "higher_is_better" for _, d in rows))
-    for rank, (manifest, direction) in enumerate(rows, start=1):
-        value = manifest_metric(manifest, metric)
-        value_text = "n/a" if value is None else f"{value:.6f}"
+        value_text = f"{value:.6f}"
         print(
             f"#{rank:<2} {manifest['run_id']}  {metric}={value_text} "
             f"(protocol={manifest.get('protocol_id')} mode={manifest.get('mode')} "
@@ -706,12 +760,12 @@ def _cmd_compare(args: argparse.Namespace) -> int:
 
 
 def manifest_metric(manifest: dict[str, Any], key: str, default: Any = None) -> Any:
-    metrics = manifest.get("metrics") or {}
-    if key in metrics:
-        return metrics[key]
-    if "valid_mae" in metrics:
-        return metrics.get("valid_mae")
-    return default
+    """Read exactly the requested metric.  No cross-metric fallback.
+
+    Scientific rule: what you ask for is what you read; a missing metric is
+    missing, never silently replaced with a different metric.
+    """
+    return (manifest.get("metrics") or {}).get(key, default)
 
 
 def comparability_key(manifest: dict[str, Any]) -> tuple[str, str, str]:
