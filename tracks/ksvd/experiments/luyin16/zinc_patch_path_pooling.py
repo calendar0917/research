@@ -902,6 +902,8 @@ class PatchPathModel(nn.Module):
         shell_width: int = SHELL_WIDTH,
         context_width: int = 0,
         direct_token_readout: bool = False,
+        center_context: bool = False,
+        center_context_hidden: int | None = None,
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
@@ -917,6 +919,7 @@ class PatchPathModel(nn.Module):
         self.shell_width = int(shell_width)
         self.context_width = int(context_width)
         self.direct_token_readout = bool(direct_token_readout)
+        self.center_context = bool(center_context)
         valid_readouts = {"moments", "mean_std", "sum_mean_std", "distribution"}
         if self.node_readout not in valid_readouts or self.pair_readout not in valid_readouts:
             raise ValueError(
@@ -974,6 +977,36 @@ class PatchPathModel(nn.Module):
             int(pair_hidden),
             float(dropout),
         )
+        if self.center_context:
+            # Keep the original global pair readout, but additionally retain
+            # which pair relations share a centre.  For every centre and
+            # distance bucket we aggregate the mean, standard deviation and
+            # mass of incident pair embeddings.  The final projection is
+            # zero-initialised, so the complete model is exactly the original
+            # patch-path model at initialisation.
+            self.center_context_width = DISTANCE_BUCKETS * (
+                2 * int(pair_hidden) + 1
+            )
+            update_hidden = int(
+                center_context_hidden
+                if center_context_hidden is not None
+                else max(2 * int(patch_hidden), 96)
+            )
+            self.center_update = nn.Sequential(
+                nn.Linear(
+                    int(patch_hidden) + self.center_context_width,
+                    update_hidden,
+                ),
+                nn.LayerNorm(update_hidden),
+                nn.ReLU(),
+                nn.Dropout(float(dropout)),
+                nn.Linear(update_hidden, int(patch_hidden)),
+            )
+            nn.init.zeros_(self.center_update[-1].weight)
+            nn.init.zeros_(self.center_update[-1].bias)
+        else:
+            self.center_context_width = 0
+            self.center_update = None
         # Unary and pair readouts are invariant moment summaries.  The final
         # module is the sole graph-level prediction head.
         pooled_unary_width = self._pooled_width(int(patch_hidden), self.node_readout)
@@ -1138,6 +1171,61 @@ class PatchPathModel(nn.Module):
             blocks.append(pooled)
         return torch.cat(blocks, dim=1)
 
+    def _pool_pairs_to_centres(
+        self,
+        value: torch.Tensor,
+        source: torch.Tensor,
+        target: torch.Tensor,
+        pair_bucket: torch.Tensor,
+        n_centres: int,
+    ) -> torch.Tensor:
+        """Pool incident pair states per centre and distance bucket.
+
+        Pair rows are unordered, so every row contributes identically to both
+        endpoints.  Mean/std rather than raw sums keep the centre update
+        numerically stable across molecule sizes; log-count retains relation
+        mass explicitly.
+        """
+        blocks: list[torch.Tensor] = []
+        width = int(value.shape[1])
+        for bucket in range(DISTANCE_BUCKETS):
+            mask = pair_bucket == int(bucket)
+            current = value[mask]
+            current_source = source[mask]
+            current_target = target[mask]
+            total = torch.zeros(
+                (int(n_centres), width), device=value.device, dtype=value.dtype
+            )
+            squared = torch.zeros_like(total)
+            counts = torch.zeros(
+                (int(n_centres), 1), device=value.device, dtype=value.dtype
+            )
+            if current.numel():
+                endpoints = torch.cat([current_source, current_target], dim=0)
+                duplicated = torch.cat([current, current], dim=0)
+                total.index_add_(0, endpoints, duplicated)
+                squared.index_add_(0, endpoints, duplicated * duplicated)
+                counts.index_add_(
+                    0,
+                    endpoints,
+                    torch.ones(
+                        (endpoints.shape[0], 1),
+                        device=value.device,
+                        dtype=value.dtype,
+                    ),
+                )
+            denominator = counts.clamp_min(1.0)
+            mean = total / denominator
+            variance = (squared / denominator - mean * mean).clamp_min(0.0)
+            std = torch.sqrt(variance + 1.0e-8)
+            occupied = (counts > 0).to(value.dtype)
+            blocks.append(
+                torch.cat(
+                    [mean, std * occupied, torch.log1p(counts)], dim=1
+                )
+            )
+        return torch.cat(blocks, dim=1)
+
     def forward(self, data: Data) -> torch.Tensor:
         global_context = data.global_context
         if global_context.ndim == 1:
@@ -1184,6 +1272,21 @@ class PatchPathModel(nn.Module):
         )
         pair_value = self.pair_encoder(pair_input)
         pair_batch = data.batch[source]
+        if self.center_update is not None:
+            center_context = self._pool_pairs_to_centres(
+                pair_value,
+                source,
+                target,
+                data.pair_bucket,
+                int(patch.shape[0]),
+            )
+            patch = patch + self.center_update(
+                torch.cat([patch, center_context], dim=1)
+            )
+            # The unary readout is deliberately recomputed after the update.
+            # The direct pair readout below remains the original scheme-seven
+            # path, while unary moments now retain pair-incidence structure.
+            unary = self._pool_nodes(patch, data.batch, n_graphs)
         relation_readout = self._pool_pairs(
             pair_value, pair_batch, data.pair_bucket, n_graphs
         )
@@ -1271,6 +1374,12 @@ def _train_phase(
         shell_width=int(shell_width),
         context_width=int(context_width),
         direct_token_readout=bool(direct_token_readout),
+        center_context=bool(model_config.get("center_context", False)),
+        center_context_hidden=(
+            None
+            if model_config.get("center_context_hidden") is None
+            else int(model_config["center_context_hidden"])
+        ),
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),
@@ -1422,10 +1531,16 @@ def _phase_data(
 
 def _render_markdown(result: Mapping[str, Any]) -> str:
     evaluation = result["evaluation"]
+    center_context = bool(result["representation"].get("center_context", False))
     lines = [
         f"# {result['protocol_id']}",
         "",
-        "Exact rooted typed patch tokens with shortest-path-conditioned pair pooling; one MLP, no message passing.",
+        (
+            "Exact rooted typed patch tokens with shortest-path-conditioned pair pooling, "
+            "one zero-initialised centre-context relation update, and one MLP."
+            if center_context
+            else "Exact rooted typed patch tokens with shortest-path-conditioned pair pooling; one MLP, no message passing."
+        ),
         "",
         f"- split: `{result['data']['split']}`; sizes `{result['data']['sizes']}`",
         f"- patch shell descriptor: `{result['representation']['shell_width']}D`; relation descriptor: `{result['representation']['relation_width']}D`",
@@ -1561,7 +1676,16 @@ def run(config_path: Path) -> dict[str, Any]:
                 model_config.get("pair_readout", model_config.get("readout", "moments"))
             ),
             "direct_token_readout": bool(model_config.get("direct_token_readout", False)),
-            "message_passing": False,
+            "center_context": bool(model_config.get("center_context", False)),
+            "center_context_definition": (
+                "per-centre, per-distance mean/std/log-count of incident pair embeddings; zero-initialised residual update"
+                if bool(model_config.get("center_context", False))
+                else None
+            ),
+            "message_passing": bool(model_config.get("center_context", False)),
+            "message_passing_layers": (
+                1 if bool(model_config.get("center_context", False)) else 0
+            ),
             "attention": False,
             "label_free": True,
         },

@@ -26,6 +26,7 @@ import importlib.metadata
 import json
 import platform
 from pathlib import Path
+import pickle
 import random
 import sys
 import time
@@ -144,6 +145,32 @@ def _write_json_atomic(path: Path, payload: Mapping[str, Any]) -> None:
 def _resolve(value: str | Path) -> Path:
     path = Path(value)
     return path.resolve() if path.is_absolute() else (REPO_ROOT / path).resolve()
+
+
+def _load_exact_rooted_record_cache(
+    cache_dir: Path,
+    split: str,
+    expected_size: int,
+) -> tuple[list[GraphRecord], dict[str, Any]]:
+    """Load the audited exact-rooted records produced by the shared adapter."""
+    path = cache_dir / f"exact_rooted_{split}.pkl"
+    with path.open("rb") as handle:
+        payload = pickle.load(handle)
+    if not isinstance(payload, Mapping):
+        raise ValueError(f"exact-rooted record cache is not a mapping: {path}")
+    if payload.get("schema") != "molhiv-unified-exact-rooted-record-cache-v1":
+        raise ValueError(f"unexpected exact-rooted cache schema: {path}")
+    records = payload.get("records")
+    metadata = payload.get("metadata")
+    if not isinstance(records, list) or not isinstance(metadata, Mapping):
+        raise ValueError(f"malformed exact-rooted record cache: {path}")
+    if len(records) != int(expected_size):
+        raise ValueError(
+            f"exact-rooted record count mismatch for {split}: "
+            f"{len(records)} != {expected_size}"
+        )
+    print(f"MolHIV exact-rooted record cache hit: {path}", flush=True)
+    return records, {**dict(metadata), "record_cache": str(path)}
 
 
 def _seed_everything(seed: int) -> None:
@@ -881,10 +908,13 @@ class PatchPathModel(nn.Module):
         pair_hidden: int,
         token_width: int,
         dropout: float,
+        center_context: bool = False,
+        center_context_hidden: int | None = None,
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
         self.pair_hidden = int(pair_hidden)
+        self.center_context = bool(center_context)
         self.typed_embedding = nn.Embedding(int(typed_vocabulary_size), int(token_width))
         parent_width = max(int(token_width // 2), 1)
         self.parent_embedding = nn.Embedding(int(parent_vocabulary_size), parent_width)
@@ -914,6 +944,31 @@ class PatchPathModel(nn.Module):
             int(pair_hidden),
             float(dropout),
         )
+        if self.center_context:
+            self.center_context_width = DISTANCE_BUCKETS * (
+                2 * int(pair_hidden) + 1
+            )
+            update_hidden = int(
+                center_context_hidden
+                if center_context_hidden is not None
+                else max(2 * int(patch_hidden), 96)
+            )
+            self.center_update = nn.Sequential(
+                nn.Linear(
+                    int(patch_hidden) + self.center_context_width,
+                    update_hidden,
+                ),
+                nn.LayerNorm(update_hidden),
+                nn.ReLU(),
+                nn.Dropout(float(dropout)),
+                nn.Linear(update_hidden, int(patch_hidden)),
+            )
+            # Function-preserving expansion of the raw scheme-seven model.
+            nn.init.zeros_(self.center_update[-1].weight)
+            nn.init.zeros_(self.center_update[-1].bias)
+        else:
+            self.center_context_width = 0
+            self.center_update = None
         readout_width = (
             2 * int(patch_hidden)
             + 1
@@ -972,6 +1027,53 @@ class PatchPathModel(nn.Module):
             blocks.append(torch.cat([total, squared, torch.log1p(counts)], dim=1))
         return torch.cat(blocks, dim=1)
 
+    @staticmethod
+    def _pool_pairs_to_centres(
+        value: torch.Tensor,
+        source: torch.Tensor,
+        target: torch.Tensor,
+        pair_bucket: torch.Tensor,
+        n_centres: int,
+    ) -> torch.Tensor:
+        """Distance-conditioned incident-pair moments for every centre."""
+        blocks: list[torch.Tensor] = []
+        width = int(value.shape[1])
+        for bucket in range(DISTANCE_BUCKETS):
+            mask = pair_bucket == int(bucket)
+            current = value[mask]
+            current_source = source[mask]
+            current_target = target[mask]
+            total = torch.zeros(
+                (int(n_centres), width), device=value.device, dtype=value.dtype
+            )
+            squared = torch.zeros_like(total)
+            counts = torch.zeros(
+                (int(n_centres), 1), device=value.device, dtype=value.dtype
+            )
+            if current.numel():
+                endpoints = torch.cat([current_source, current_target], dim=0)
+                duplicated = torch.cat([current, current], dim=0)
+                total.index_add_(0, endpoints, duplicated)
+                squared.index_add_(0, endpoints, duplicated * duplicated)
+                counts.index_add_(
+                    0,
+                    endpoints,
+                    torch.ones(
+                        (endpoints.shape[0], 1),
+                        device=value.device,
+                        dtype=value.dtype,
+                    ),
+                )
+            denominator = counts.clamp_min(1.0)
+            mean = total / denominator
+            variance = (squared / denominator - mean * mean).clamp_min(0.0)
+            std = torch.sqrt(variance + 1.0e-8)
+            occupied = (counts > 0).to(value.dtype)
+            blocks.append(
+                torch.cat([mean, std * occupied, torch.log1p(counts)], dim=1)
+            )
+        return torch.cat(blocks, dim=1)
+
     def forward(self, data: Data) -> torch.Tensor:
         global_context = data.global_context
         if global_context.ndim == 1:
@@ -1007,11 +1109,49 @@ class PatchPathModel(nn.Module):
         )
         pair_value = self.pair_encoder(pair_input)
         pair_batch = data.batch[source]
+        if self.center_update is not None:
+            center_context = self._pool_pairs_to_centres(
+                pair_value,
+                source,
+                target,
+                data.pair_bucket,
+                int(patch.shape[0]),
+            )
+            patch = patch + self.center_update(
+                torch.cat([patch, center_context], dim=1)
+            )
+            unary = self._pool_nodes(patch, data.batch, n_graphs)
         relation_readout = self._pool_pairs(
             pair_value, pair_batch, data.pair_bucket, n_graphs
         )
         graph_hidden = self.global_encoder(global_context)
         return self.head(torch.cat([unary, relation_readout, graph_hidden], dim=1)).view(-1)
+
+    def parameter_breakdown(self) -> dict[str, int]:
+        def count(module: nn.Module | None) -> int:
+            if module is None:
+                return 0
+            return int(sum(parameter.numel() for parameter in module.parameters()))
+
+        groups = {
+            "exact_typed_embedding": count(self.typed_embedding),
+            "radius1_parent_embedding": count(self.parent_embedding),
+            "patch_encoder": count(self.patch_encoder),
+            "pair_core": sum(
+                count(module)
+                for module in (
+                    self.pair_projection,
+                    self.relation_encoder,
+                    self.distance_gate,
+                    self.pair_encoder,
+                )
+            ),
+            "center_context_update": count(self.center_update),
+            "global_encoder": count(self.global_encoder),
+            "graph_head": count(self.head),
+        }
+        groups["total"] = int(sum(groups.values()))
+        return groups
 
 
 def _make_loader(
@@ -1086,6 +1226,12 @@ def _train_phase(
         pair_hidden=int(model_config.get("pair_hidden", PAIR_HIDDEN)),
         token_width=int(model_config.get("token_width", 32)),
         dropout=float(model_config.get("dropout", 0.05)),
+        center_context=bool(model_config.get("center_context", False)),
+        center_context_hidden=(
+            None
+            if model_config.get("center_context_hidden") is None
+            else int(model_config["center_context_hidden"])
+        ),
     ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),
@@ -1180,6 +1326,7 @@ def _train_phase(
         "trace": trace,
         "losses": losses,
         "parameters": int(sum(parameter.numel() for parameter in model.parameters())),
+        "parameter_breakdown": model.parameter_breakdown(),
     }
 
 
@@ -1237,10 +1384,16 @@ def _phase_data(
 
 def _render_markdown(result: Mapping[str, Any]) -> str:
     evaluation = result["evaluation"]
+    center_context = bool(result["representation"].get("center_context", False))
     lines = [
         f"# {result['protocol_id']}",
         "",
-        "Exact rooted OGB-typed patch tokens with shortest-path-conditioned pair pooling; one MLP, no message passing.",
+        (
+            "Exact rooted OGB-typed patch tokens with shortest-path-conditioned pair pooling, "
+            "one zero-initialised centre-context update, and one MLP."
+            if center_context
+            else "Exact rooted OGB-typed patch tokens with shortest-path-conditioned pair pooling; one MLP, no message passing."
+        ),
         "",
         f"- split: `{result['data']['split']}`; sizes `{result['data']['sizes']}`",
         f"- patch shell descriptor: `{result['representation']['shell_width']}D`; relation descriptor: `{result['representation']['relation_width']}D`",
@@ -1254,6 +1407,7 @@ def _render_markdown(result: Mapping[str, Any]) -> str:
         f"- train-only valid typed token coverage: `{result['vocabulary_audit']['valid']['typed_vocabulary']['other']['known_occurrence_fraction']:.4f}`",
         f"- train+valid test typed token coverage: `{result['vocabulary_audit']['test_after_train_valid_refit']['typed_vocabulary']['other']['known_occurrence_fraction']:.4f}`",
         f"- trainable parameters: `{evaluation['parameters']}`",
+        f"- centre-context parameters: `{evaluation['parameter_breakdown']['center_context_update']}`",
         f"- runtime: `{result['runtime']['seconds']:.1f}s`",
         "",
     ]
@@ -1288,15 +1442,29 @@ def run(config_path: Path) -> dict[str, Any]:
 
     certificate_cache: dict[bytes, bytes] = {}
     feature_metadata: dict[str, Any] = {}
+    configured_record_cache = config.get("runtime", {}).get("record_cache")
+    record_cache = (
+        None
+        if configured_record_cache is None
+        else _resolve(configured_record_cache)
+    )
 
     # Phase 1: build only train and valid records, then release the raw record
     # objects before fitting.  This keeps the full MolHIV run below local RAM.
-    train_records, feature_metadata["train"] = _extract_split(
-        bundle, split_indices["train"], "train", certificate_cache
-    )
-    valid_records, feature_metadata["valid"] = _extract_split(
-        bundle, split_indices["valid"], "valid", certificate_cache
-    )
+    if record_cache is None:
+        train_records, feature_metadata["train"] = _extract_split(
+            bundle, split_indices["train"], "train", certificate_cache
+        )
+        valid_records, feature_metadata["valid"] = _extract_split(
+            bundle, split_indices["valid"], "valid", certificate_cache
+        )
+    else:
+        train_records, feature_metadata["train"] = _load_exact_rooted_record_cache(
+            record_cache, "train", int(split_indices["train"].size)
+        )
+        valid_records, feature_metadata["valid"] = _load_exact_rooted_record_cache(
+            record_cache, "valid", int(split_indices["valid"].size)
+        )
     valid_train_data, valid_eval_data, valid_audit = _phase_data(
         train_records, valid_records, config=config
     )
@@ -1327,12 +1495,31 @@ def run(config_path: Path) -> dict[str, Any]:
     refit_indices = np.concatenate(
         [split_indices["train"], split_indices["valid"]]
     ).astype(np.int64, copy=False)
-    refit_records, feature_metadata["train_valid_refit"] = _extract_split(
-        bundle, refit_indices, "train+valid", certificate_cache
-    )
-    test_records, feature_metadata["test"] = _extract_split(
-        bundle, split_indices["test"], "test", certificate_cache
-    )
+    if record_cache is None:
+        refit_records, feature_metadata["train_valid_refit"] = _extract_split(
+            bundle, refit_indices, "train+valid", certificate_cache
+        )
+        test_records, feature_metadata["test"] = _extract_split(
+            bundle, split_indices["test"], "test", certificate_cache
+        )
+    else:
+        refit_records, refit_train_meta = _load_exact_rooted_record_cache(
+            record_cache, "train", int(split_indices["train"].size)
+        )
+        refit_valid_records, refit_valid_meta = _load_exact_rooted_record_cache(
+            record_cache, "valid", int(split_indices["valid"].size)
+        )
+        refit_records.extend(refit_valid_records)
+        del refit_valid_records
+        feature_metadata["train_valid_refit"] = {
+            "source": "concatenated audited train and valid record caches",
+            "train": refit_train_meta,
+            "valid": refit_valid_meta,
+            "n_graphs": int(len(refit_records)),
+        }
+        test_records, feature_metadata["test"] = _load_exact_rooted_record_cache(
+            record_cache, "test", int(split_indices["test"].size)
+        )
     refit_train_data, refit_test_data, test_audit = _phase_data(
         refit_records, test_records, config=config
     )
@@ -1383,7 +1570,16 @@ def run(config_path: Path) -> dict[str, Any]:
             "distance_buckets": ["1", "2", "3", "4", "5+", "disconnected"],
             "relation_definition": "distance bucket, shortest-path bond-feature composition averaged over all shortest paths, path count, patch overlap/boundary overlap, and adjacent bond feature",
             "readout": "unary sum and sum-of-squares plus distance-conditioned pair sum and sum-of-squares with log pair mass",
-            "message_passing": False,
+            "center_context": bool(model_config.get("center_context", False)),
+            "center_context_definition": (
+                "per-centre, per-distance mean/std/log-count of incident pair embeddings; zero-initialised residual update"
+                if bool(model_config.get("center_context", False))
+                else None
+            ),
+            "message_passing": bool(model_config.get("center_context", False)),
+            "message_passing_layers": (
+                1 if bool(model_config.get("center_context", False)) else 0
+            ),
             "attention": False,
             "label_free": True,
         },
@@ -1416,6 +1612,7 @@ def run(config_path: Path) -> dict[str, Any]:
                 "epochs_run": int(refit_phase["epochs_run"]),
             },
             "parameters": int(valid_phase["parameters"]),
+            "parameter_breakdown": valid_phase["parameter_breakdown"],
         },
         "runtime": {
             "seconds": float(time.perf_counter() - started),
