@@ -28,7 +28,7 @@
 ## 协议 / 评估
 
 - 登记：[notes/protocol.md](notes/protocol.md)
-- 主下游：`ogb-molhiv-v0`（未跑）；过程：`stage0-sample-v0`
+- 主下游：`ogb-molhiv-v0` + PyG `ZINC subset=True`（official split，luyin16 已跑通）；过程：`stage0-sample-v0`
 - TUD/CIN 乐观 10-fold：**只引用**，不进 strict 主表
 - 目的分维：A / B **分表**
 
@@ -40,13 +40,14 @@
 | 精读 / RW 调研 / CIN 协议 | **done** |
 | 执行计划 | [notes/plan.md](notes/plan.md) |
 | **阶段 0–3 烟测** | **done** → `results/SUMMARY.md` · `results/full_pipeline.json` |
-| molhiv 主对标 | **P0/P1 骨架已就绪**（`run_molhiv_probe` / `run_molhiv_dual`）；缺依赖时需装 ogb |
-| 池化 / 融合阶段 | **进行中** → `notes/molhiv_phase.md` |
-| 交付 | 摘要已写；正式论文表未做 |
+| molhiv 主对标 | **done**（luyin16 官方 scaffold：显式统计 S=0.7817，分布读出 0.8341 valid，严格 test 0.8087 / 集成 0.8135） |
+| 池化 / 融合阶段 | **已成判断**：机制冻结在统计交互 + XGBoost；可学习融合（attention/FiLM/gate）无稳定增量 |
+| 交付 | 总览已写：`results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md`；正式论文表未做 |
 
 ### luyin16 阶段入口
 
 - 阶段说明：`notes/luyin16_plan.md`
+- 阶段总览：`results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md`
 - 配置目录：`configs/luyin16/`
 - 结果目录：`results/luyin16/`
 - 新实验入口：`experiments/luyin16/`
@@ -152,3 +153,6 @@
 76. ~~exact rooted topology × conditional chemistry 快筛~~ → `results/luyin16/EXACT_CONDITIONAL_FUSION_20260901.md`
 77. **融合层级结论**：exact/orbit 位置绑定 no-go；rooted-WL 在本轮观测 radius-2 patch 上无 exact collision。真正可复现的是同一 patch 内 topology 与 attribute multiset 的条件配对，true−patch-pair-shuffle `+2.36pt`、8/9 seed×fold wins
 78. **预测边界与下一步**：conditional pairing 机制存在，但直接 joint XGBoost 未超过 `S+WL+attribute`；不扫 K/prototype/XGB，不看 valid/test，只允许一次 cross-fitted conditional residual gate
+79. ~~luyin16 概念复现 → 机制 → 显式模型全路线~~ → `results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md`；主判：**K-SVD=压缩器而非任务表征学习器**；机制阶段冻结在统计交互 + XGBoost
+80. ~~显式模型路线（0903–0905）~~ → ZINC 精确 patch 路径 `0.1872/0.1381` → **层级关系上下文 `0.1816/0.1346`（当前最佳）**；MolHIV patch 路径 `0.8028/0.7852`，统一 OOV-only `0.8383/0.7727`（精确 token 反降到 0.805 valid）
+81. **待答两个问题**：①跨中心交互在新骨架划分上是否仍稳定；②ZINC 0.13–0.18 差距来自 patch 身份 / 关系距离 / 读出统计，还是缺少全图上下文

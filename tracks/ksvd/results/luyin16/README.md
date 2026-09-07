@@ -84,3 +84,18 @@ binding 作为条件修正”，而不是两个独立分支的粗拼接。随后
 更应把 `cross_cov` 作为稳定核心、把 binding 作为条件辅助块，并优先做冻结坐标下的
 bootstrap/校准/错误分层，而不是继续引入 GINE、attention、
 结构独立预训练或 K-SVD task update。
+
+## 0903–0905 显式模型路线（当前阶段）
+
+0903 起主线从"统计交互 + XGBoost"转向 ZINC 优先的显式模型路线：MolHIV valid 已饱和
+（瓶颈是骨架 test 泛化），ZINC 提供连续 MAE 反馈。**本阶段总览（按 8 个方案组织）**
+见 [`EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md`](EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md)，
+其上补充了 09-05 晚间的方案九（结构化可解释诊断）与层级关系上下文。
+
+- ZINC 高维 typed motif 计数 / 层级回退 / typed match（0903–0904）：`ZINC_STEP_A_MOTIF_COUNT_*`、`ZINC_HIERARCHICAL_BACKOFF_*`、`ZINC_TYPED_MATCH_*`
+- 中心条件融合 + shuffle 确认（0903）：`ZINC_CONDITIONAL_FUSION_SHUFFLE_*`；关系传播无稳定增益
+- 精确 patch 路径 + 距离分桶 pair 池化（0904–0905）：`ZINC_EXACT_PATCH_RELATION_*`、`ZINC_PATCH_PATH_POOLING_*`（及 radius3/factorized/hybrid/full-token 变体）、`MOLHIV_PATCH_PATH_POOLING_*`、`MOLHIV_KSVD_PATCH_PATH_POOLING_*`
+- 统一 / 结构化 / 层级关系模型（0905）：`UNIFIED_*`、`STRUCTURED_PATCH_RELATIONAL_MODEL_*`、`ZINC_HIERARCHICAL_PATCH_RELATION_CONTEXT_*`（当前 ZINC 最佳 test `0.1346`，单次运行待重复）
+
+主判：K-SVD = 压缩器而非任务表征学习器（两数据集一致）；当前收益来源是
+精确局部身份 + 显式关系 + MLP 读出，"统一编码器"与"可解释线性诊断"均未超过方案七。

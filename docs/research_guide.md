@@ -36,16 +36,17 @@
 | Track | 状态 | 要点 |
 |-------|------|------|
 | gnn-gsn | **archived** | 双协议图分类 + 官方 GSN；[TRACK](../tracks/gnn-gsn/TRACK.md)；实现 `../paper` |
-| ksvd | **active** | 定义 + [RW 调研 v0.1](../tracks/ksvd/notes/rw_survey.md)；[TRACK](../tracks/ksvd/TRACK.md) |
+| ksvd | **active** | luyin16：概念复现 → 机制研究 → 显式模型路线（MolHIV + ZINC）；主判 K-SVD=压缩器；总览 [`tracks/ksvd/results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md`](../tracks/ksvd/results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md)；[TRACK](../tracks/ksvd/TRACK.md) |
 | hod-gnn-replication | **active** | HOD-GNN 基线复现审计；[TRACK](../tracks/hod-gnn-replication/TRACK.md)；独立官方环境 |
 
 ### 下一步
 
-1. ksvd：图级取样已做实 `results/GRAPH_LEVEL_SOLID_SUMMARY.md`（C4 闭环 coverage>B0）
-2. ksvd：进入 `luyin16` 结构独立性、泄漏和长距离诊断阶段
-3. hod-gnn-replication：按 `TRACK.md` 维护 paper-seeds 与 official-seeds 两套协议
-4. 需要历史 GNN 数字 → `../paper` xlsx/registry（不拷进本仓主表）
-5. 录音 → `docs/luyin/`（当前 KSVD 阶段主来源：`luyin16`；历史机制：`luyin10`、`luyin3`/`luyin4`）
+1. ksvd：luyin16 机制阶段已冻结（统计交互 + XGBoost）；显式模型路线最佳 ZINC `test 0.1346`（层级关系上下文）
+2. ksvd：两个待答问题 —— 跨中心交互在新骨架划分的稳定性；ZINC 0.13–0.18 差距来自 patch 身份 / 关系 / 读出还是全图上下文
+3. ksvd：待导师定稿 —— 正式论文表；K-SVD 在文中的定位（诊断/压缩器 vs 表征学习器）
+4. hod-gnn-replication：按 `TRACK.md` 维护 paper-seeds 与 official-seeds 两套协议
+5. 需要历史 GNN 数字 → `../paper` xlsx/registry（不拷进本仓主表）
+6. 录音 → `docs/luyin/`（当前 KSVD 阶段主来源：`luyin16`；历史机制：`luyin10`、`luyin3`/`luyin4`）
 
 
 ---
