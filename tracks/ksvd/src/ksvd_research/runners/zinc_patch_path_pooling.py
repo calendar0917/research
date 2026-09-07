@@ -52,12 +52,15 @@ def build_runner():
 
 
 def check_test_access_blocked(protocol: Mapping[str, Any] | None, mode: str) -> bool:
-    """Whether a non-terminal run must stay away from the official test split."""
+    """Deprecated: kept only for legacy callers of the old semantics.
+
+    The policy now belongs to the control plane
+    (``ksvd_research.runtime.policy.resolve_test_access``).  The runner only
+    obeys ``context.test_access``; it no longer inspects test_policy.
+    """
     if not protocol:
         return False
-    if protocol.get("test_policy") != "terminal":
-        return False
-    return mode != "terminal"
+    return protocol.get("test_policy") == "terminal" and mode != "terminal"
 
 
 def fingerprints(config: Mapping[str, Any]) -> tuple[dict[str, Any], str]:
@@ -96,7 +99,9 @@ def _metrics_from_legacy(result: Mapping[str, Any], blocked: bool) -> dict[str, 
 
 
 def run(config: dict[str, Any], context: RunContext) -> RunResult:
-    blocked = check_test_access_blocked(context.protocol, context.mode)
+    # The control plane has already resolved access (terminal rule, mode,
+    # protocol); the runner only obeys the instruction recorded in context.
+    blocked = context.test_access == "blocked"
     legacy_config = _inject_policy(copy.deepcopy(config), blocked)
     legacy_config = apply_override(legacy_config, "output.json", str(context.artifact_dir / "legacy_full_result.json"))
     legacy_config = apply_override(legacy_config, "output.markdown", str(context.artifact_dir / "legacy_result.md"))

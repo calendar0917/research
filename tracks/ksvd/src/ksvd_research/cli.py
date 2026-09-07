@@ -50,6 +50,7 @@ from .runtime.control import (
     load_study,
     protocol_for_study,
 )
+from .runtime.policy import resolve_test_access
 from .runtime.git_state import porcelain_status, write_untracked_snapshots
 from .runtime.manifest import (
     RunContext,
@@ -511,9 +512,7 @@ def _resolve_run_plan(args: argparse.Namespace) -> dict[str, Any]:
     if args.seed is not None:
         config = apply_override(config, "seed", args.seed)
 
-    from .runners.zinc_patch_path_pooling import check_test_access_blocked as _blocked
-
-    blocked = _blocked(protocol, args.mode)
+    test_access = resolve_test_access(protocol, args.mode)
     candidate_id = args.candidate or str(config.get("protocol_id") or "unassigned")
     protocol_id = str(protocol.get("id")) if protocol else "unassigned"
     seeds = [int(config.get("seed", 0))]
@@ -546,8 +545,8 @@ def _resolve_run_plan(args: argparse.Namespace) -> dict[str, Any]:
         "git": git,
         "config_hash": config_hash_value,
         "fingerprint": spec_fingerprint,
-        "test_access": "blocked" if blocked else ("granted" if protocol else "unguarded"),
-        "blocked": blocked,
+        "test_access": test_access,
+        "blocked": test_access == "blocked",
     }
 
 
@@ -615,6 +614,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         mode=args.mode,
         protocol=plan["protocol"],
         study=plan["study"],
+        test_access=plan["test_access"],
     )
     metrics: dict[str, Any] = {}
     status = "failed"

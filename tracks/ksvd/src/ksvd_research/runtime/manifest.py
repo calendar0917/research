@@ -67,7 +67,13 @@ class RunResult:
 
 @dataclass
 class RunContext:
-    """What a runner function receives at execution time."""
+    """What a runner function receives at execution time.
+
+    ``test_access`` is resolved once by the control plane
+    (``runtime.policy.resolve_test_access``); runners treat it as an
+    authoritative instruction and must never re-derive ``terminal`` /
+    ``test_policy`` semantics themselves.
+    """
 
     run_id: str
     run_dir: Path
@@ -75,6 +81,7 @@ class RunContext:
     mode: str
     protocol: dict[str, Any] | None
     study: dict[str, Any] | None
+    test_access: str = "unguarded"
 
 
 def build_manifest(

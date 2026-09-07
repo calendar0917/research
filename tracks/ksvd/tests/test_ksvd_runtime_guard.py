@@ -1,4 +1,8 @@
-"""Protocol comparison guard, test-access guard and control-plane loading."""
+"""Control-plane loading: studies, protocols, claims, decisions.
+
+Test-access policy semantics live in ``test_ksvd_policy.py``; this file
+covers control-plane file loading and record primitives.
+"""
 
 from __future__ import annotations
 
@@ -6,25 +10,6 @@ import pytest
 
 from ksvd_research.runtime.control import load_protocol, load_study, protocol_for_study
 from ksvd_research.runtime.records import new_claim, new_decision, set_claim_status
-from ksvd_research.runners.zinc_patch_path_pooling import check_test_access_blocked
-
-
-# ---------------------------------------------------------------------------
-# protocol guard
-# ---------------------------------------------------------------------------
-
-
-def test_protocol_terminal_blocks_non_terminal_modes():
-    protocol = {"test_policy": "terminal"}
-    assert check_test_access_blocked(protocol, "scratch") is True
-    assert check_test_access_blocked(protocol, "screen") is True
-    assert check_test_access_blocked(protocol, "confirm") is True
-    assert check_test_access_blocked(protocol, "terminal") is False
-
-
-def test_protocol_without_terminal_policy_is_unguarded():
-    assert check_test_access_blocked({"test_policy": "always"}, "scratch") is False
-    assert check_test_access_blocked(None, "scratch") is False
 
 
 # ---------------------------------------------------------------------------
