@@ -36,6 +36,7 @@ from .runtime import (
     create_run_directory,
     find_duplicate_run,
     list_runs,
+    load_local_run,
     load_run,
     new_run_id,
     parse_override_spec,
@@ -145,10 +146,16 @@ def build_parser() -> argparse.ArgumentParser:
     context = sub.add_parser("context", help="print a compact orientation context")
     context.set_defaults(handler=_cmd_context)
 
-    runs = sub.add_parser("runs", help="list recorded runs")
+    runs = sub.add_parser("runs", help="list recorded runs (local + promoted)")
     runs.add_argument("--study", default=None)
     runs.add_argument("--status", default=None)
     runs.add_argument("--limit", type=int, default=20)
+    runs.add_argument(
+        "--source",
+        choices=("all", "local", "promoted"),
+        default="all",
+        help="local runs (git-ignored executions), promoted records (git-tracked), or both",
+    )
     runs.add_argument("--json", action="store_true")
     runs.set_defaults(handler=_cmd_runs)
 
@@ -179,6 +186,12 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("run_ids", nargs="*")
     compare.add_argument("--study", default=None)
     compare.add_argument("--metric", default=None, help="override ranking metric key")
+    compare.add_argument(
+        "--source",
+        choices=("all", "local", "promoted"),
+        default="all",
+        help="which run sources to compare against",
+    )
     compare.add_argument("--override", action="store_true", help="rank despite mismatches (warned)")
     compare.add_argument("--json", action="store_true")
     compare.set_defaults(handler=_cmd_compare)
@@ -342,16 +355,19 @@ def _cmd_context(args: argparse.Namespace) -> int:
     lines.append(f"current candidate: {state.get('current_candidate')}")
     lines.append("")
     lines.append("## recent runs")
-    runs = list_runs(limit=8)
+    runs = list_runs(limit=8, source="all")
     if runs:
         for run in runs:
             details = ",".join(
                 f"{key}={value:.4f}" if isinstance(value, float) else f"{key}={value}"
                 for key, value in (run.get("metrics") or {}).items()
             )[:110]
+            source = run.get("source") or "local"
+            if run.get("promoted") and source == "local":
+                source = "local+promoted"
             lines.append(
-                f"- {run['run_id']} [{run['mode']}/{run['status']}] "
-                f"{run.get('study_id')} mae={details or '-'}"
+                f"- {run['run_id']} [source={source} {run.get('mode')}/{run.get('status')}] "
+                f"{run.get('study_id')} {details or '-'}"
             )
     else:
         lines.append("- none yet; run `uv run research run ...`")
@@ -385,54 +401,85 @@ def _cmd_context(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 
 
+def _runs_metric_summary(run: dict[str, Any]) -> str:
+    metrics = run.get("metrics") or {}
+    parts = [
+        f"{key}={value:.4f}" if isinstance(value, (int, float)) else f"{key}={value}"
+        for key, value in metrics.items()
+    ]
+    return ", ".join(parts)[:60]
+
+
 def _cmd_runs(args: argparse.Namespace) -> int:
-    runs = list_runs(study_id=args.study, status=args.status, limit=args.limit)
+    runs = list_runs(
+        study_id=args.study,
+        status=args.status,
+        limit=args.limit,
+        source=args.source,
+    )
     if args.json:
         print(json.dumps(runs, indent=2, ensure_ascii=False))
         return STATUS_EXIT_OK
     if not runs:
         print("no runs recorded")
         return STATUS_EXIT_OK
-    print(f"{'run_id':<28} {'mode':<8} {'status':<10} {'study':<26} {'valid_mae':<10} purpose")
+    print(f"{'run_id':<28} {'source':<10} {'mode':<8} {'status':<10} {'study':<26} {'metrics':<64} purpose")
     for run in runs:
-        metrics = run.get("metrics") or {}
-        mae = metrics.get("valid_mae")
-        mae_text = "n/a" if mae is None else f"{mae:.4f}"
-        purpose = (run.get("purpose") or "")[:40]
+        source = str(run.get("source") or "?")
+        if run.get("promoted"):
+            source = "local+promoted" if source == "local" else "promoted"
+        purpose = (run.get("purpose") or "")[:30]
         print(
-            f"{run['run_id']:<28} {run.get('mode', '-'):<8} {run.get('status', '-'):<10} "
-            f"{str(run.get('study_id') or '-'):<26} {mae_text:<10} {purpose}"
+            f"{run['run_id']:<28} {source:<10} {run.get('mode', '-'):<8} "
+            f"{run.get('status', '-'):<10} {str(run.get('study_id') or '-'):<26} "
+            f"{_runs_metric_summary(run):<64} {purpose}"
         )
     return STATUS_EXIT_OK
 
 
 def _cmd_show(args: argparse.Namespace) -> int:
     manifest = load_run(args.run_id)
-    manifest_path = locate_manifest(args.run_id)
-    run_dir = manifest_path.parent
     if args.json:
         print(json.dumps(manifest, indent=2, ensure_ascii=False))
         return STATUS_EXIT_OK
+    git = manifest.get("git") or {}
+    source = manifest.get("source") or "local"
+    local_available = source == "local"
     print(f"run_id:        {manifest['run_id']}")
-    print(f"runner:        {manifest['runner']}")
-    print(f"study:         {manifest['study_id']}  protocol: {manifest['protocol_id']}")
-    print(f"candidate:     {manifest['candidate_id']}")
-    print(f"mode:          {manifest['mode']}  status: {manifest['status']}")
-    print(f"purpose:       {manifest['purpose'] or '-'}")
-    print(f"started:       {manifest['started_at']}  ended: {manifest['ended_at']}")
+    print(
+        "source:        "
+        + source
+        + (" (promoted record: durable, git-tracked)" if manifest.get("promoted") else "")
+        + ("; local artifacts: unavailable" if not local_available else "")
+    )
+    print(f"runner:        {manifest.get('runner') or '-'}")
+    print(f"study:         {manifest.get('study_id')}  protocol: {manifest.get('protocol_id')}")
+    print(f"candidate:     {manifest.get('candidate_id')}")
+    print(f"mode:          {manifest.get('mode')}  status: {manifest.get('status')}")
+    print(f"purpose:       {manifest.get('purpose') or '-'}")
+    print(f"started:       {manifest.get('started_at')}  ended: {manifest.get('ended_at')}")
     print(f"runtime:       {manifest.get('runtime_seconds')} s")
-    print(f"config_hash:   {manifest['config_hash']}")
-    print(f"git:           commit={manifest['git']['commit']} dirty={manifest['git']['dirty']}")
-    print(f"diff_hash:     {manifest['git']['diff_hash'] or 'clean'}")
-    print(f"test_access:   {manifest['test_access']}")
-    print(f"seeds:         {manifest['seeds']}")
+    print(f"config_hash:   {manifest.get('config_hash') or '-'}")
+    print(f"protocol_hash: {manifest.get('protocol_hash') or 'legacy-unknown'}")
+    print(f"git:           commit={git.get('commit')} dirty={git.get('dirty')}")
+    print(f"diff_hash:     {git.get('diff_hash') or 'clean'}")
+    print(f"test_access:   {manifest.get('test_access') or '-'}")
+    print(f"seeds:         {manifest.get('seeds') or []}")
     print("metrics:")
     for key, value in (manifest.get("metrics") or {}).items():
         print(f"  {key}: {value}")
-    print(f"run directory: {run_dir}")
-    for child in sorted(run_dir.iterdir()):
-        suffix = "/" if child.is_dir() else ""
-        print(f"  {child.name}{suffix}")
+    if local_available:
+        run_dir = locate_manifest(args.run_id).parent
+        print(f"run directory: {run_dir}")
+        if run_dir.is_dir():
+            for child in sorted(run_dir.iterdir()):
+                suffix = "/" if child.is_dir() else ""
+                print(f"  {child.name}{suffix}")
+        else:
+            print("  (not present)")
+    if not local_available and manifest.get("record_path"):
+        print(f"record:        {manifest['record_path']}")
+        print("local artifacts: unavailable (execution output not present on this machine)")
     if manifest.get("error"):
         print(f"error: {manifest['error']}")
     return STATUS_EXIT_OK
@@ -520,7 +567,9 @@ def _cmd_run(args: argparse.Namespace) -> int:
         print(f"overrides:    {args.set}")
         return STATUS_EXIT_OK
 
-    existing = find_duplicate_run(list_runs(status="completed"), plan["fingerprint"])
+    existing = find_duplicate_run(
+        list_runs(status="completed", source="all"), plan["fingerprint"]
+    )
     if existing and not args.force:
         print(
             f"identical run already exists: {existing['run_id']} "
@@ -616,7 +665,9 @@ def _cmd_run(args: argparse.Namespace) -> int:
 
 
 def _cmd_promote(args: argparse.Namespace) -> int:
-    manifest = load_run(args.run_id)
+    # Promotion needs the local execution truth (resolved config, run
+    # directory, provenance); a promoted record is never promoted again.
+    manifest = load_local_run(args.run_id)
     if manifest.get("status") != "completed":
         print(f"run {args.run_id} is not completed ({manifest.get('status')}); refusing to promote")
         return STATUS_EXIT_ERROR
@@ -671,10 +722,15 @@ def metric_for_protocol(protocol_id: str) -> tuple[str, str]:
 
 
 def _cmd_compare(args: argparse.Namespace) -> int:
+    source = getattr(args, "source", "all")
     if args.study:
-        manifests = [run for run in list_runs(study_id=args.study) if run.get("status") == "completed"]
+        manifests = [
+            run
+            for run in list_runs(study_id=args.study, source=source)
+            if run.get("status") == "completed"
+        ]
     else:
-        manifests = [load_run(run_id) for run_id in args.run_ids]
+        manifests = [load_run(run_id, source=source) for run_id in args.run_ids]
     if not manifests:
         print("no completed runs to compare")
         return STATUS_EXIT_ERROR
