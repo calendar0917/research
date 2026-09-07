@@ -46,7 +46,6 @@ from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
 
 from tracks.ksvd.experiments.luyin16.zinc_exact_patch_relation import (
-    _canonical_typed_patch,
     _patch_cache_key,
 )
 from tracks.ksvd.experiments.luyin16.zinc_long_range_proxy import (
@@ -1678,10 +1677,9 @@ def run(config_path: Path) -> dict[str, Any]:
             "root": str(data_root),
             "split": "PyG ZINC subset=True official train/val/test",
             "sizes": {
-                name: (len(dataset) if loaded else None)
-                for name, dataset, loaded in zip(
-                    ("train", "valid", "test"), datasets, (True, True, load_test), strict=True
-                )
+                "train": len(datasets[0]) if datasets else None,
+                "valid": len(datasets[1]) if len(datasets) > 1 else None,
+                "test": len(datasets[2]) if load_test else None,
             },
             "source": source_audit(data_root),
             "valid_vocab_scope": "official train only",
