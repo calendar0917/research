@@ -249,14 +249,15 @@ def test_git_state_captures_commit():
 
 
 def test_git_dirty_detection():
-    probe = Path(REPO_ROOT) / f"tmp-ksvd-state-probe-{new_run_id()}.txt"
+    probe = Path(REPO_ROOT) / f"tmp-ksvd-probe-{new_run_id()}.py"
     try:
         state = capture_git_state()
         dirty_before = state.dirty
-        probe.write_text("probe", encoding="utf-8")
+        probe.write_text("probe = 1\n", encoding="utf-8")
         state_after = capture_git_state()
         assert state_after.dirty
-        assert any(probe.name in untracked for untracked in state_after.untracked)
+        assert any(entry.path == probe.name for entry in state_after.untracked)
+        assert state_after.code_state_hash
     finally:
         probe.unlink(missing_ok=True)
         assert not dirty_before or True

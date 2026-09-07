@@ -50,7 +50,7 @@ from .runtime.control import (
     load_study,
     protocol_for_study,
 )
-from .runtime.git_state import porcelain_status
+from .runtime.git_state import porcelain_status, write_untracked_snapshots
 from .runtime.manifest import (
     RunContext,
     RunSpec,
@@ -604,6 +604,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
     write_manifest(run_dir, manifest)
     write_config_resolved(run_dir, plan["config"])
     write_patch(run_dir, git.patch)
+    write_untracked_snapshots(run_dir, git.untracked)
 
     stdout_path = run_dir / "stdout.log"
     stderr_path = run_dir / "stderr.log"

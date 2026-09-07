@@ -60,8 +60,14 @@ def run_fingerprint(
     split_fingerprint: str,
     protocol_hash: str | None = None,
 ) -> str:
-    """Duplicate fingerprint: runner + scientific config + protocol + seed + code state."""
+    """Duplicate fingerprint: runner + scientific config + protocol + seed + code state.
+
+    Code identity prefers ``code_state_hash`` (commit + tracked diff hash +
+    ordered untracked file SHA-256s).  ``git_commit`` / ``git_diff_hash`` are
+    kept for readability only.
+    """
     from .config import scientific_config
+    from .git_state import code_state_hash_from_git_dict
 
     payload = {
         "runner": runner,
@@ -70,11 +76,13 @@ def run_fingerprint(
         "candidate_id": candidate_id,
         "scientific_config": scientific_config(config),
         "seeds": seeds,
+        "code_state_hash": git.get("code_state_hash")
+        or code_state_hash_from_git_dict(git),
+        "protocol_hash": protocol_hash or "legacy-unknown",
         "git_commit": git.get("commit") or "unknown",
         "git_diff_hash": git.get("diff_hash") or "",
         "dataset_fingerprint": dataset_fingerprint,
         "split_fingerprint": split_fingerprint,
-        "protocol_hash": protocol_hash or "legacy-unknown",
     }
     return sha256_text(dumps_json(jsonable(payload)))
 

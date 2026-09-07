@@ -23,10 +23,12 @@ MANIFEST_NAME = "manifest.json"
 RUN_FILE_LAYOUT = {
     "manifest": "manifest.json",
     "config": "config.resolved.yaml",
+    "protocol": "protocol.snapshot.yaml",
     "metrics": "metrics.json",
     "stdout": "stdout.log",
     "stderr": "stderr.log",
     "patch": "git.diff.patch",
+    "untracked": "git.untracked/",
     "artifacts": "artifacts/",
 }
 
