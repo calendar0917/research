@@ -1,0 +1,46 @@
+protocol_id: luyin16-zinc-mentor-artifact-typed-ksvd-sta-cross-v1
+# The feature builder retains cross_cov for a future ablation; the current
+# requested result is sta_final only, with no cross_cov Optuna search.
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+dictionary:
+  n_atoms: 64
+  sparsity: 8
+  iterations: 5
+  power_iterations: 6
+  max_train_patches: 24000
+
+xgboost:
+  objective: reg:absoluteerror
+  max_bin: 256
+
+tuning:
+  n_folds: 3
+  split_seed: 0
+  n_trials: 12
+  seed: 0
+  ranges:
+    n_estimators: [200, 900]
+    max_depth: [2, 9]
+    learning_rate: [0.01, 0.15]
+    min_child_weight: [1.0, 30.0]
+    subsample: [0.65, 1.0]
+    colsample_bytree: [0.20, 1.0]
+    reg_lambda: [0.01, 150.0]
+    reg_alpha: [0.00001, 20.0]
+    gamma: [0.0, 5.0]
+
+runtime:
+  n_jobs: 4
+  record_cache: tracks/ksvd/results/luyin16/zinc_ksvd_patch_path_pooling/record_cache
+
+output:
+  features: tracks/ksvd/results/luyin16/zinc_mentor_artifact_typed_ksvd_k64_s8/features.npz
+  manifest: tracks/ksvd/results/luyin16/zinc_mentor_artifact_typed_ksvd_k64_s8/manifest.json
+  storage: tracks/ksvd/results/luyin16/zinc_mentor_artifact_typed_ksvd_k64_s8/optuna.sqlite3
+  json: tracks/ksvd/results/luyin16/ZINC_MENTOR_ARTIFACT_TYPED_KSVD_20260906.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_MENTOR_ARTIFACT_TYPED_KSVD_20260906.md
