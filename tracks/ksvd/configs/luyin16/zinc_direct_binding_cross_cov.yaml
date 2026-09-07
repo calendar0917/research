@@ -1,0 +1,58 @@
+protocol_id: luyin16-zinc-direct-structure-binding-cross-cov-xgb-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  # The same induced patch is used for T rows, A rows, binding, cross_cov,
+  # and the direct marginal baseline.  No WL colours are computed.
+  radius: 3
+  degree_bins: 5
+  atom_categories: 28
+  bond_categories: 4
+  pca_rank: 16
+
+xgboost:
+  objective: reg:absoluteerror
+  eval_metric: mae
+  max_bin: 256
+  n_jobs: 4
+  params:
+    n_estimators: 800
+    max_depth: 4
+    learning_rate: 0.05
+    min_child_weight: 4.0
+    subsample: 0.8
+    colsample_bytree: 0.35
+    reg_lambda: 2.0
+    reg_alpha: 0.02
+    gamma: 4.0
+
+tuning:
+  # Parameter search sees only official-train folds.  PCA is also refit per
+  # fold before each view is scored.
+  n_folds: 3
+  split_seed: 0
+  n_trials: 12
+  seed: 0
+  ranges:
+    n_estimators: [200, 900]
+    max_depth: [2, 9]
+    learning_rate: [0.01, 0.15]
+    min_child_weight: [1.0, 30.0]
+    subsample: [0.65, 1.0]
+    colsample_bytree: [0.20, 1.0]
+    reg_lambda: [0.01, 150.0]
+    reg_alpha: [0.00001, 20.0]
+    gamma: [0.0, 5.0]
+
+audit:
+  n_graphs: 16
+  tolerance: 0.000001
+
+output:
+  feature_cache: tracks/ksvd/results/luyin16/zinc_direct_binding_cross_cov/feature_cache.npz
+  json: tracks/ksvd/results/luyin16/ZINC_DIRECT_BINDING_CROSS_COV_20260905.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_DIRECT_BINDING_CROSS_COV_20260905.md

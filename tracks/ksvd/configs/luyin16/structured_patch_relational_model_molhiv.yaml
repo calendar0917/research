@@ -1,0 +1,36 @@
+protocol_id: luyin16-molhiv-structured-patch-relational-model-v1
+
+dataset: molhiv
+data:
+  root: data/ogb
+
+seed: 0
+
+model:
+  adapter_hidden: 64
+  structure_code_width: 24
+  attribute_code_width: 24
+  binding_width: 12
+  geometry_code_width: 8
+  pair_structure_width: 16
+  pair_attribute_width: 16
+  pair_binding_width: 8
+  pair_relation_width: 16
+  context_code_width: 16
+  dropout: 0.05
+  epochs: 20
+  batch_size: 64
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 5
+  device: cpu
+
+runtime:
+  torch_threads: 4
+  molhiv_record_mode: exact_rooted
+  zinc_record_cache: tracks/ksvd/results/luyin16/unified_relational_patch_zinc/record_cache
+  molhiv_record_cache: tracks/ksvd/results/luyin16/unified_relational_patch_molhiv_exact_rooted/record_cache
+
+output:
+  json: tracks/ksvd/results/luyin16/STRUCTURED_PATCH_RELATIONAL_MODEL_MOLHIV_20260905.json
+  markdown: tracks/ksvd/results/luyin16/STRUCTURED_PATCH_RELATIONAL_MODEL_MOLHIV_20260905.md

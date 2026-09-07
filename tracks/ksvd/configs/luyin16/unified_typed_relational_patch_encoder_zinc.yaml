@@ -1,0 +1,43 @@
+protocol_id: luyin16-zinc-unified-typed-relational-patch-encoder-v2
+
+dataset: zinc
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_backoff_tokens: 2048
+  minimum_backoff_frequency: 1
+
+model:
+  structure_code_width: 24
+  attribute_code_width: 24
+  binding_width: 12
+  token_width: 16
+  token_rank: 8
+  backoff_width: 8
+  backoff_rank: 4
+  patch_hidden: 48
+  pair_hidden: 20
+  context_code_width: 16
+  head_hidden: 64
+  head_bottleneck: 32
+  dropout: 0.05
+  epochs: 50
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 10
+  device: cpu
+
+runtime:
+  torch_threads: 4
+  zinc_record_cache: tracks/ksvd/results/luyin16/unified_relational_patch_zinc/record_cache
+  molhiv_record_cache: tracks/ksvd/results/cache_molhiv_ksvd_shell_full
+
+output:
+  json: tracks/ksvd/results/luyin16/UNIFIED_TYPED_RELATIONAL_PATCH_ENCODER_ZINC_20260905.json
+  markdown: tracks/ksvd/results/luyin16/UNIFIED_TYPED_RELATIONAL_PATCH_ENCODER_ZINC_20260905.md
