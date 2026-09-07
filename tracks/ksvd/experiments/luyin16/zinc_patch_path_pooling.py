@@ -1529,9 +1529,16 @@ def _phase_data(
     return encoded_fit, encoded_other, audit
 
 
+def _format_mae(value: float | None) -> str:
+    if value is None:
+        return "blocked"
+    return f"{value:.6f}"
+
+
 def _render_markdown(result: Mapping[str, Any]) -> str:
     evaluation = result["evaluation"]
     center_context = bool(result["representation"].get("center_context", False))
+    test_markdown = _format_mae(evaluation["test_after_train_valid_refit"]["mae"])
     lines = [
         f"# {result['protocol_id']}",
         "",
@@ -1549,10 +1556,15 @@ def _render_markdown(result: Mapping[str, Any]) -> str:
         "",
         "| head | valid MAE | test MAE after train+valid refit | selected epoch |",
         "|---|---:|---:|---:|",
-        f"| `single_mlp` | {evaluation['valid']['mae']:.6f} | {evaluation['test_after_train_valid_refit']['mae']:.6f} | {evaluation['valid']['selected_epoch']} |",
+        f"| `single_mlp` | {evaluation['valid']['mae']:.6f} | {test_markdown} | {evaluation['valid']['selected_epoch']} |",
         "",
         f"- train-only valid typed token coverage: `{result['vocabulary_audit']['valid']['typed_vocabulary']['other']['known_occurrence_fraction']:.4f}`",
-        f"- train+valid test typed token coverage: `{result['vocabulary_audit']['test_after_train_valid_refit']['typed_vocabulary']['other']['known_occurrence_fraction']:.4f}`",
+        (
+            "- train+valid test typed token coverage: `blocked`"
+            if not result["vocabulary_audit"]["test_after_train_valid_refit"]
+            else "- train+valid test typed token coverage: "
+            f"`{result['vocabulary_audit']['test_after_train_valid_refit']['typed_vocabulary']['other']['known_occurrence_fraction']:.4f}`"
+        ),
         f"- trainable parameters: `{evaluation['parameters']}`",
         f"- runtime: `{result['runtime']['seconds']:.1f}s`",
         "",
@@ -1565,6 +1577,11 @@ def run(config_path: Path) -> dict[str, Any]:
     data_root = _resolve(config["data"]["root"])
     result_json = _resolve(config["output"]["json"])
     result_markdown = _resolve(config["output"]["markdown"])
+    test_policy = str(config.get("test_policy", "terminal"))
+    if test_policy not in ("terminal", "no_test"):
+        raise ValueError(
+            f"unknown test_policy={test_policy!r}; expected 'terminal' or 'no_test'"
+        )
     seed = int(config.get("seed", 0))
     started = time.perf_counter()
     thread_count = int(config.get("runtime", {}).get("torch_threads", 4))
@@ -1580,7 +1597,10 @@ def run(config_path: Path) -> dict[str, Any]:
         )
     shell_width = _shell_width_for_radius(patch_radius)
 
-    datasets = tuple(_load_zinc(data_root, split) for split in ("train", "val", "test"))
+    load_test = test_policy == "terminal"
+    datasets = tuple(
+        _load_zinc(data_root, split) for split in ("train", "val", *(["test"] if load_test else []))
+    )
     labels = tuple(
         np.asarray([float(data.y.view(-1)[0]) for data in dataset], dtype=np.float32)
         for dataset in datasets
@@ -1588,7 +1608,8 @@ def run(config_path: Path) -> dict[str, Any]:
     certificate_cache: dict[bytes, bytes] = {}
     records: list[list[GraphRecord]] = []
     feature_metadata: dict[str, Any] = {}
-    for split, dataset in zip(("train", "valid", "test"), datasets, strict=True):
+    loaded_splits = ("train", "valid", "test") if load_test else ("train", "valid")
+    for split, dataset in zip(loaded_splits, datasets, strict=True):
         split_records, metadata = _extract_split(
             dataset,
             split,
@@ -1598,9 +1619,12 @@ def run(config_path: Path) -> dict[str, Any]:
         )
         records.append(split_records)
         feature_metadata[split] = metadata
+    if not load_test:
+        feature_metadata["test"] = {"n_graphs": None, "blocked": True}
     feature_metadata["certificate_cache_entries"] = int(len(certificate_cache))
 
-    train_records, valid_records, test_records = records
+    train_records, valid_records = records[:2]
+    test_records = records[2] if load_test else []
     model_config = config["model"]
     device = torch.device(str(model_config.get("device", "cpu")))
     if device.type == "cuda" and not torch.cuda.is_available():
@@ -1624,39 +1648,46 @@ def run(config_path: Path) -> dict[str, Any]:
     )
     selected_epoch = int(valid_phase["selected_epoch"])
 
-    refit_train_records = list(train_records) + list(valid_records)
-    refit_train_data, refit_test_data, test_audit = _phase_data(
-        refit_train_records, test_records, config=config
-    )
-    refit_phase = _train_phase(
-        refit_train_data,
-        refit_test_data,
-        typed_vocabulary_size=int(test_audit["typed_vocabulary_size_with_oov"]),
-        parent_vocabulary_size=int(test_audit["parent_vocabulary_size_with_oov"]),
-        config=config,
-        seed=seed,
-        select_best=False,
-        epochs=selected_epoch,
-        shell_width=shell_width,
-        context_width=int(CONTEXT_WIDTH if context_radius > patch_radius else 0),
-        direct_token_readout=bool(model_config.get("direct_token_readout", False)),
-    )
+    refit_phase = None
+    test_audit = {}
+    if load_test:
+        refit_train_records = list(train_records) + list(valid_records)
+        refit_train_data, refit_test_data, test_audit = _phase_data(
+            refit_train_records, test_records, config=config
+        )
+        refit_phase = _train_phase(
+            refit_train_data,
+            refit_test_data,
+            typed_vocabulary_size=int(test_audit["typed_vocabulary_size_with_oov"]),
+            parent_vocabulary_size=int(test_audit["parent_vocabulary_size_with_oov"]),
+            config=config,
+            seed=seed,
+            select_best=False,
+            epochs=selected_epoch,
+            shell_width=shell_width,
+            context_width=int(CONTEXT_WIDTH if context_radius > patch_radius else 0),
+            direct_token_readout=bool(model_config.get("direct_token_readout", False)),
+        )
 
     result = {
         "protocol_id": str(config["protocol_id"]),
         "status": "completed",
         "seed": seed,
+        "test_policy": test_policy,
         "data": {
             "root": str(data_root),
             "split": "PyG ZINC subset=True official train/val/test",
             "sizes": {
-                name: len(dataset)
-                for name, dataset in zip(("train", "valid", "test"), datasets, strict=True)
+                name: (len(dataset) if loaded else None)
+                for name, dataset, loaded in zip(
+                    ("train", "valid", "test"), datasets, (True, True, load_test), strict=True
+                )
             },
             "source": source_audit(data_root),
             "valid_vocab_scope": "official train only",
             "test_vocab_scope": "official train+valid only",
             "test_labels_used_for_selection": False,
+            "test_accessed": bool(load_test),
         },
         "representation": {
             "radius": patch_radius,
@@ -1709,10 +1740,14 @@ def run(config_path: Path) -> dict[str, Any]:
                 "epochs_run": int(valid_phase["epochs_run"]),
                 "trace": valid_phase["trace"],
             },
-            "test_after_train_valid_refit": {
-                "mae": float(refit_phase["mae"]),
-                "epochs_run": int(refit_phase["epochs_run"]),
-            },
+            "test_after_train_valid_refit": (
+                {
+                    "mae": float(refit_phase["mae"]),
+                    "epochs_run": int(refit_phase["epochs_run"]),
+                }
+                if refit_phase is not None
+                else {"mae": None, "epochs_run": 0, "blocked": True}
+            ),
             "parameters": int(valid_phase["parameters"]),
         },
         "runtime": {
