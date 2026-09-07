@@ -68,10 +68,11 @@ def locate_manifest(run_id: str) -> Path:
     """Locate a run manifest independent of its date directory."""
     for year in runs_root().glob("*"):
         for month in year.glob("*"):
-            for candidate in month.glob("*"):
-                manifest = candidate / MANIFEST_NAME
-                if manifest.is_file() and candidate.name == run_id:
-                    return manifest
+            for day in month.glob("*"):
+                for candidate in day.glob("*"):
+                    manifest = candidate / MANIFEST_NAME
+                    if manifest.is_file() and candidate.name == run_id:
+                        return manifest
     return Path(runs_root()) / "unknown-date" / run_id / MANIFEST_NAME
 
 

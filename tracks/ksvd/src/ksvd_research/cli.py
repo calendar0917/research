@@ -349,11 +349,13 @@ def _cmd_context(args: argparse.Namespace) -> int:
         lines.append("- none yet; run `uv run research run ...`")
     lines.append("")
     lines.append("## claims")
-    claims = list_claims()
-    lines.extend(f"- {claim_id} (stub {path})" for claim_id, path in claims[:6] or [])
+    for claim_id, path in list_claims()[:6]:
+        payload = load_yaml(path)
+        lines.append(f"- {claim_id} [{payload.get('status')}] {str(payload.get('statement'))[:70]}")
     lines.append("## decisions")
-    decisions = list_decisions()
-    lines.extend(f"- {decision_id}" for decision_id, _ in decisions[:6] or [])
+    for decision_id, path in list_decisions()[:6]:
+        payload = load_yaml(path)
+        lines.append(f"- {decision_id}: {str(payload.get('decision'))[:60]}")
     lines.append("")
     lines.append("## open questions")
     open_questions = state.get("open_questions") or []
