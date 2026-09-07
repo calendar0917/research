@@ -89,7 +89,7 @@ def list_runs(
     limit: int | None = None,
 ) -> list[dict[str, Any]]:
     runs: list[dict[str, Any]] = []
-    for manifest in sorted(runs_root().glob("*/*/*/manifest.json")):
+    for manifest in sorted(runs_root().glob("*/*/*/*/manifest.json")):
         if manifest.parent.name.startswith("."):
             continue
         try:
