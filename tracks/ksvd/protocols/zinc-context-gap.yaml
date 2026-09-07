@@ -1,0 +1,70 @@
+# Comparability protocol for the ZINC context-gap study.
+
+# A protocol states rules, not a model: dataset, split, metric, fitting
+# scope, selection policy, test policy, seed semantics.  Architecture and
+# hyperparameters live with the candidate / study baseline, never here.
+
+id: zinc-context-gap
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  fingerprint_policy: raw-file SHA-256 audit (files + byte-sizes under data/ZINC/raw), recorded per run
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+  notes: "Do not use mirrored/third-party downloads; see AGENT.md data rules."
+
+split:
+  description: PyG ZINC subset=True official train/val/test indices
+  fingerprint_policy: index-file SHA-256 + split sizes, recorded per run
+  folds: 1
+  oof: false
+
+metric:
+  ranking_metric: valid_mae
+  metric_direction: lower_is_better
+  secondary_metrics:
+    - valid_best_mae
+    - test_after_train_valid_refit_mae
+  unit: MAE on ZINC target (mean absolute error, lower is better)
+
+train_only_fitting_scope:
+  description: >-
+    During the validation-selection phase every fitted quantity
+    (token vocabularies, continuous standardizers, model parameters) is fit on
+    official train only.  The official validation split is evaluation-only.
+  refit_for_test: >-
+    In terminal runs the label-free transforms and vocabularies are refit on
+    official train+validation and the model retrains with the frozen
+    selected-epoch budget on train+validation before the single official test
+    evaluation.  Official test labels never affect representation fitting,
+    model fitting, or epoch selection.
+
+validation_selection_policy:
+  selection: "min valid_mae among evaluated epochs (early stop: patience from candidate config)"
+  selection_rule: "evaluations are observed; the selected epoch freezes before any test refit"
+
+test_policy: terminal
+description_short: >-
+  Non-terminal modes (scratch/screen/confirm) must not evaluate the official
+  ZINC test split.  Access is enforced by the run control plane: such runs
+  record test_access=blocked and the runner switches to train+valid-only mode.
+
+seed_semantics:
+  seed_role: "single seed governs torch/numpy/random init and loader shuffle (offset seeds +91011/+91012)"
+  seeds: [0]
+  notes: >-
+    A run's scientific identity includes its seed; different seeds are
+    distinct runs, not duplicates.
+
+comparability:
+  requires:
+    - protocol_id
+    - dataset_fingerprint
+    - split_fingerprint
+  ranking_metric: valid_mae
+  note: >-
+    Terminal-run test numbers may only be compared with other terminal runs
+    under the same protocol/dataset/split fingerprints.

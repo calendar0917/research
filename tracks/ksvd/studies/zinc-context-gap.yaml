@@ -1,0 +1,41 @@
+id: zinc-context-gap
+protocol: zinc-context-gap
+active: true
+focus: true
+created: 2026-09-07
+
+question: >-
+  When the rooted patch radius cannot observe the whole molecule context, can a
+  gradient-conditioned (patch/relation) pooling route reduce the gap to
+  explicit long-range structure, and at what cost in context vs. parameter
+  budget?
+
+baseline: >-
+  luyin16-zinc-exact-patch-path-conditioned-pooling-v1 candidate:
+  valid MAE 0.187220 / test 0.138081 (seed 0; 2026-09-04).  Legacy result:
+  results/luyin16/ZINC_PATCH_PATH_POOLING_20260904.json
+  (record not yet promoted).
+best_so_far: >-
+  Valid MAE 0.175867 (factorized rank20, seed 0) — legacy result only,
+  not yet promoted to records/runs.
+
+candidates:
+  - id: luyin16-zinc-exact-patch-path-conditioned-pooling-v1
+    status: active
+    note: baseline full-token variant with center-context additive variants
+  - id: luyin16-zinc-exact-patch-path-conditioned-pooling-factorized-v1
+    status: active
+    note: parameter-budget variants (CIN-comparable), rank/width sweeps
+  - id: luyin16-zinc-exact-patch-path-conditioned-pooling-hybrid-v1
+    status: active
+    note: frequency-split full/rare embedding
+
+open_questions:
+  - Does the gap close with context radius growth at matched parameter budget?
+  - Do valid-vs-test deltas stay small across the candidate family (overfitting of selection)?
+  - Is the 2-hop token family still the right object, or does a radius-3 exact token matter?
+
+guardrails:
+  - test access terminal-only (protocol test_policy)
+  - no message passing beyond zero-initialised center-context residual
+  - official PyG ZINC data only

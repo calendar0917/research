@@ -1,0 +1,30 @@
+id: molhiv-cross-scaffold-interaction
+protocol: molhiv-cross-scaffold-interaction
+active: true
+focus: false
+created: 2026-09-07
+
+question: >-
+  Do structure-role/attribute binding statistics survive the official scaffold
+  split, or do strong internal-fold effects collapse at the outside-scaffold
+  boundary?
+
+baseline: >-
+  Explicit statistics (S) valid ROC-AUC 0.7817; distribution readout 0.8341;
+  strict test 0.8087 / ensemble 0.8135 (luyin16 official scaffold; see
+  TRACK.md summary and results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md).
+best_so_far: unknown
+  # legacy molhiv numbers are aggregated in summary Markdown; per-run JSON
+  # manifests exist under results/luyin16 and will be backfilled to records/runs
+  # only for the baseline/best marks (unknown metadata stays unknown).
+
+candidates: []
+
+open_questions:
+  - Do the internal 3-fold scaffold effects (strong) persist on official valid outside-scaffold?
+  - Is distribution readout's advantage robust for interaction variants?
+
+guardrails:
+  - official OGB scaffold split; no random split main table
+  - test access terminal-only (protocol test_policy)
+  - no OOF leaks into selection

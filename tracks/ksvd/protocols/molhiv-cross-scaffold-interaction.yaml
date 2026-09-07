@@ -1,0 +1,72 @@
+# Comparability protocol for the molhiv cross-scaffold interaction study.
+
+# Rules only; architecture and hyperparameters live with the candidate /
+# study baseline, never here.
+
+id: molhiv-cross-scaffold-interaction
+
+dataset:
+  name: ogbg-molhiv (OGB, official scaffold split)
+  source_policy: official OGB download
+  fingerprint_policy: >-
+    OGB dataset metadata + raw file sizes/SHA-256 where available (data/molhiv
+    or the OGB cache root), recorded per run; unknown fields recorded as
+    null/unknown, never inferred.
+  expected_sizes:
+    train: 41127
+    valid: 4113
+    test: 4113
+  notes: "Official scaffold split only; no random splits on the main table."
+
+split:
+  description: ogbg-molhiv official scaffold split
+  fingerprint_policy: scaffold-seed + split sizes + sklearn scaffold generator signature
+  folds: 1
+  oof: false
+  internal_scaffold_folds: >-
+    Model/feature selection may use scaffold-aware CV folds drawn inside
+    official train only (documented per candidate); they never touch official
+    validation or test, and are not the comparison metric.
+
+metric:
+  ranking_metric: valid_roc_auc
+  metric_direction: higher_is_better
+  secondary_metrics:
+    - test_roc_auc
+  unit: ROC-AUC (higher is better)
+
+train_only_fitting_scope:
+  description: >-
+    Feature statistics, dictionaries and model fitting use official train
+    only (plus documented internal train-only scaffold folds for selection).
+    Official validation is selection/evaluation-only.
+  refit_for_test: >-
+    Terminal runs select on official validation, then refit on train+validation
+    for the single official test evaluation.  Official test labels never affect
+    representation or model fitting.
+
+validation_selection_policy:
+  selection: max valid_roc_auc; internal train-only scaffold folds only to decide what to push to official validation
+  selection_rule: "official valid is observed once per pushed candidate; no iterative refitting on official valid"
+
+test_policy: terminal
+description_short: >-
+  Non-terminal modes (scratch/screen/confirm) must not evaluate the official
+  test split.  Ensured by the run control plane (test_access=blocked).
+
+seed_semantics:
+  seed_role: "single seed governs torch/numpy/random; multi-seed runs record every seed in the manifest"
+  seeds: [0]
+  notes: >-
+    A run's scientific identity includes its seeds; different seeds are
+    distinct runs, not duplicates.
+
+comparability:
+  requires:
+    - protocol_id
+    - dataset_fingerprint
+    - split_fingerprint
+  ranking_metric: valid_roc_auc
+  note: >-
+    Test numbers compare only among terminal runs with identical
+    fingerprints.

@@ -1,0 +1,45 @@
+# KSVD track state — small live pointer, not an experiment history dump.
+phase: track-control-plane-round-1
+
+active_studies:
+  - zinc-context-gap
+  - molhiv-cross-scaffold-interaction
+
+focus_study: zinc-context-gap
+
+baseline_record: null
+  # Set to a promoted record id (records/runs/<run_id>.json) after the first
+  # promotion; until then the legacy baseline is authoritative.
+baseline_legacy: results/luyin16/ZINC_PATCH_PATH_POOLING_20260904.json
+
+current_candidate: luyin16-zinc-exact-patch-path-conditioned-pooling-v1
+
+open_questions:
+  - "zinc: does the gap close at matched parameter budget (CIN-comparable)?"
+  - "zinc: are valid-vs-test deltas stable across the candidate family?"
+  - "molhiv: do internal 3-fold effects persist on official valid outside-scaffold?"
+  - "molhiv: is the distribution readout advantage robust for interaction variants?"
+
+guardrails:
+  - "no new fixed output paths in new-style configs"
+  - "protocol test_policy=terminal => non-terminal runs never evaluate official test"
+  - "only promoted runs enter records/ (Git-tracked); runs/ is git-ignored"
+  - "do not delete/rewrite historical experiments or results"
+  - "infrastructure commits separate from scientific commits"
+  - "no MLflow/W&B/Hydra/DVC/database without documented failure of current primitives"
+
+next_queue:
+  - "promote the current zinc baseline run to records/runs"
+  - "migrate molhiv runner after zinc equivalence is accepted"
+  - "hotspot migration: runtime duplication (zinc_long_range_proxy -> runtime)"
+  - "hotspot migration: patch_object_audit -> runtime"
+  - "hotspot migration: role_attribute_binding -> runtime"
+  - "hotspot migration: structural_role_fusion -> runtime"
+  - "hotspot migration: stable model/readout parts -> ksvd_research"
+  - "backfill: current baseline / best candidate / key negative result / key evidence"
+
+recent_claims:
+  - null
+
+recent_decisions:
+  - null
