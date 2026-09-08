@@ -1,0 +1,73 @@
+# Compact-v3 main version: typed ring context, low-rank multiplicative
+# conditioning (the studied mechanism).
+#
+# Single-variable experiment against Compact-Hybrid-v2; everything except the
+# patch-representation formation is identical (split/seed/optimizer/LR/loss/
+# epochs/batch/patience/head/pooling/path encoder/center-context update).
+#
+# Structural context = center-anchored canonical typed cycle signature:
+#   node_type, edge_type, node_type, ... around cycles up to
+#   structural_context_max_cycle_len (10), direction-canonical, one token per
+#   distinct ring context; NO_RING=0 (delta forced to zero), UNK_CONTEXT=1,
+#   known tokens 2..; vocabulary fitted on official train only (refit phase
+#   refits on train+validation per the zinc-context-gap protocol).
+#
+# Conditioning (NOT concat, NOT a ring network):
+#   e_patch' = e_patch + W_out(tanh(W_p e_patch) * tanh(W_c e_ctx))
+# with W_out zero-initialised so the model equals compact-v2 at init.
+protocol_id: luyin16-zinc-hierarchical-patch-relation-context-compact-v3-typed-ring-condition
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+  patch_radius: 2
+  context_radius: 0
+  structural_context_max_cycle_len: 10
+
+model:
+  patch_hidden: 48
+  pair_hidden: 16
+  token_width: 16
+  embedding_mode: hybrid
+  embedding_rank: 4
+  hybrid_full_typed_tokens: 768
+  hybrid_full_parent_tokens: 32
+  center_context: true
+  center_context_hidden: 60
+  graph_head_hidden_0: 64
+  graph_head_hidden_1: 32
+  dropout: 0.05
+  epochs: 60
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 12
+  evaluate_every: 1
+  device: cpu
+  parameter_audit: true
+  # Budget: v2 99,613 + typed context vocabulary + 308 conditioning params.
+  # Measured cost: selection vocab 9,702 -> 108,558; refit vocab (train+val,
+  # per protocol) 10,244 -> 110,165.  Rank is already 1 / dim 4 / condition
+  # rank 8 (the vocabulary size is the only remaining cost driver, and the
+  # vocabulary is protocol-mandated), so the documented budget is 111,000:
+  # +0.15% above the 110k ideal, still ~110k vs the 277,053 baseline.
+  expected_max_trainable_params: 111000
+  structural_context_mode: typed_ring
+  structural_context_fusion: condition
+  structural_context_dim: 4
+  structural_context_embedding_rank: 1
+  structural_context_condition_rank: 8
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_COMPACT_V3_TYPED_RING_CONDITION_20260907.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_COMPACT_V3_TYPED_RING_CONDITION_20260907.md

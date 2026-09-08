@@ -1,0 +1,58 @@
+# Compact-v3 sanity/reproduction: structural context disabled.
+#
+# This config is bit-parameter-identical to Compact-Hybrid-v2
+# (zinc_hierarchical_patch_relation_context_compact_hybrid_v2_budget_reallocation.yaml)
+# plus an explicit `structural_context_mode: none`.  It exists so the v3 code
+# path can be audited against the v2 baseline without touching the historical
+# v2 config, and to serve as the in-v3-family "no context" control.
+protocol_id: luyin16-zinc-hierarchical-patch-relation-context-compact-v3-context-none
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+  patch_radius: 2
+  context_radius: 0
+  structural_context_max_cycle_len: 10
+
+model:
+  patch_hidden: 48
+  pair_hidden: 16
+  token_width: 16
+  embedding_mode: hybrid
+  embedding_rank: 4
+  hybrid_full_typed_tokens: 768
+  hybrid_full_parent_tokens: 32
+  center_context: true
+  center_context_hidden: 60
+  graph_head_hidden_0: 64
+  graph_head_hidden_1: 32
+  dropout: 0.05
+  epochs: 60
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 12
+  evaluate_every: 1
+  device: cpu
+  parameter_audit: true
+  expected_max_trainable_params: 100000
+  # Compact-v3 knobs; `none` keeps the whole v2 pipeline untouched.
+  structural_context_mode: none
+  structural_context_fusion: condition
+  structural_context_dim: 4
+  structural_context_embedding_rank: 1
+  structural_context_condition_rank: 8
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_COMPACT_V3_CONTEXT_NONE_20260907.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_COMPACT_V3_CONTEXT_NONE_20260907.md

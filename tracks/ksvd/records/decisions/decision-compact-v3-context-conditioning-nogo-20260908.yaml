@@ -1,0 +1,29 @@
+decision_id: decision-compact-v3-context-conditioning-nogo-20260908
+created: '2026-09-08T00:40:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  NO-GO on the first version of context-conditioned patch representation
+  (Compact-v3): ring/cycle context as an embedding + low-rank multiplicative
+  gate on the exact patch embedding does not improve ZINC validation; it
+  regresses it (coarse +0.0021, typed +0.0125, typed-concat +0.0171 valid
+  MAE; test +0.0069 / +0.0247 / +0.0024 respectively vs compact-v2's
+  0.184158 / 0.1353615).
+alternatives_rejected:
+- item: typed concat fusion
+  because: worse on validation than conditioning and unstable valid-test gap
+- item: raising context capacity (dim/rank)
+  because: >-
+    the degradation already shows an overfitting signature at minimal
+    capacity (train L1 0.1340 vs v2 0.1407 while valid worsens); more
+    capacity is expected to enlarge it
+- item: moving to conditional dictionary D(context) = D0 + dD(context)
+  because: >-
+    deferred by design; the current evidence does not justify rewriting the
+    K-SVD machinery on top of this result
+revisit_if: >-
+  a mechanism that modifies the patch representation without flat capacity
+  growth (shared/bounded context modifier, conditioning the 48D patch state
+  instead of the 16D embedding, or a constrained family of context-dependent
+  basis transforms) shows a validation improvement consistent with the
+  pre-registered 0.003+ band on seed 0, ideally replicated across seeds.

@@ -81,3 +81,14 @@ is the dominant module nor that the graph head is unimportant; it is limited
 to: "fixed-budget capacity reallocation toward token representation improved
 the current single-seed result."  Next step (if requested): promote the
 terminal run to a durable record and consider whether to run more seeds.
+
+---
+
+## Addendum (2026-09-08): 残差机制再解释
+
+v2 的 0.1842 valid MAE 残差（16% 全局收缩，ŷ≈0.07+0.838y）经机制审计
+（`notes/zinc_long_cycle_audit.md`）确认为 **benchmark target 定义中的 long-cycle penalty
+未学满**所致，而非 generic heavy-tail：3.5% 长环分子贡献 27.1% MAE 质量；
+λ（学到的罚项比例）阶梯 0.99/0.89/0.46/0.001（excess 0/1/2/≥4）；
+无环组斜率 0.989（无收缩）。v3 局部环条件化 NO-GO 与此不矛盾（局部环尺度 ≠ 全局环
+统计量）。下一步唯一推荐：全局不变环尺度通道（上限 ΔMAE +0.0117）。

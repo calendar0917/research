@@ -1,0 +1,19 @@
+claim_id: claim-compact-v3-context-none-is-v2
+created: '2026-09-08T00:30:00'
+kind: claim
+statement: >-
+  Compact-v3 with structural_context_mode=none is bit-identical to
+  Compact-Hybrid-v2 through the v3 code path: same valid MAE 0.184158
+  (best epoch 56), same terminal test MAE 0.1353615, same parameter
+  counts (98,549 selection / 99,613 refit).
+scope: seed 0, official PyG ZINC subset split, 60-epoch selection + train+valid refit
+status: supported
+study_id: zinc-context-gap
+supporting_evidence:
+  - 20260908-001318-34985928
+contradicting_evidence: []
+implication: >-
+  Any v3 result can be attributed to the added structural-context module
+  alone; the code path adds no drift to the compact-v2 baseline.
+limitations:
+  - single seed; the claim is about code-path equivalence, not about model quality

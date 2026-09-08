@@ -1,0 +1,67 @@
+# Compact-v3 ablation: typed ring context by simple concatenation.
+#
+# Same context extractor / same context embedding as the main condition
+# variant; the fusion differs only: e_ctx joins the patch-encoder input
+# instead of multiplicatively gating the exact patch embedding, and the
+# decoder is not given a separate projection (the patch encoder input is
+# widened by structural_context_dim).  The ablation holds:
+#
+#   V2                     (no context)
+#   V2 + ring feature concat  (this config)
+#   V3 + ring-conditioned patch (zinc_compact_v3_typed_ring_condition.yaml)
+#
+# Everything else is identical to compact-v2 (single-variable rule).
+protocol_id: luyin16-zinc-hierarchical-patch-relation-context-compact-v3-typed-ring-concat
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+  patch_radius: 2
+  context_radius: 0
+  structural_context_max_cycle_len: 10
+
+model:
+  patch_hidden: 48
+  pair_hidden: 16
+  token_width: 16
+  embedding_mode: hybrid
+  embedding_rank: 4
+  hybrid_full_typed_tokens: 768
+  hybrid_full_parent_tokens: 32
+  center_context: true
+  center_context_hidden: 60
+  graph_head_hidden_0: 64
+  graph_head_hidden_1: 32
+  dropout: 0.05
+  epochs: 60
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 12
+  evaluate_every: 1
+  device: cpu
+  parameter_audit: true
+  # Same budget as the conditioning variant: 99,613 + context table + widened
+  # patch encoder (+256).  Measured cost: selection 108,510; refit (train+val
+  # vocab 10,244) 110,117.  Rank 1 / dim 4 are already minimal; documented
+  # budget 111,000 (+0.1% over the 110k ideal).
+  expected_max_trainable_params: 111000
+  structural_context_mode: typed_ring
+  structural_context_fusion: concat
+  structural_context_dim: 4
+  structural_context_embedding_rank: 1
+  structural_context_condition_rank: 8
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_COMPACT_V3_TYPED_RING_CONCAT_20260907.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_COMPACT_V3_TYPED_RING_CONCAT_20260907.md

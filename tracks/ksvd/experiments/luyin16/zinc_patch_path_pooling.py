@@ -45,6 +45,17 @@ from sklearn.metrics import mean_absolute_error
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
 
+from tracks.ksvd.experiments.luyin16.structural_context import (
+    COARSE_WIDTH,
+    NO_RING_TOKEN,
+    UNK_CONTEXT_TOKEN,
+    coarsen,
+    context_statistics,
+    cycle_length_distribution,
+    encode_structural_token,
+    extract_structural_context,
+    fit_structural_vocabulary,
+)
 from tracks.ksvd.experiments.luyin16.zinc_exact_patch_relation import (
     _patch_cache_key,
 )
@@ -120,6 +131,9 @@ class PatchRecord:
     boundary: frozenset[int]
     shell_descriptor: np.ndarray
     context_descriptor: np.ndarray | None = None
+    # Compact-v3: higher-order structural context of the centre node
+    # (ring/cycle conditioning signal; None in compact-v2 mode).
+    structural_context: Any | None = None
 
 
 @dataclass(frozen=True)
@@ -130,6 +144,8 @@ class GraphRecord:
     pair_bucket: np.ndarray
     global_context: np.ndarray
     y: float
+    # Bounded simple-cycle lengths of this graph (structural context mode only).
+    cycle_lengths: tuple[int, ...] = ()
 
 
 def _jsonable(value: Any) -> Any:
@@ -502,9 +518,18 @@ def _graph_record(
     certificate_cache: dict[bytes, bytes],
     patch_radius: int = PATCH_RADIUS,
     context_radius: int = 0,
+    structural_mode: str = "none",
+    max_cycle_len: int = 10,
 ) -> GraphRecord:
     patch_radius = int(patch_radius)
     graph, node_types, edge_types = _data_to_graph(data)
+    node_contexts: dict[int, Any] | None = None
+    cycle_lengths: tuple[int, ...] = ()
+    if str(structural_mode) != "none":
+        # One bounded cycle enumeration per graph; every patch reuses it.
+        node_contexts, cycle_lengths = extract_structural_context(
+            graph, node_types, edge_types, max_cycle_len=int(max_cycle_len)
+        )
     centers = list(graph.nodes)
     patches: list[PatchRecord] = []
     for center in centers:
@@ -537,6 +562,9 @@ def _graph_record(
                 boundary=boundary,
                 shell_descriptor=descriptor,
                 context_descriptor=context_descriptor,
+                structural_context=(
+                    node_contexts[int(center)] if node_contexts is not None else None
+                ),
             )
         )
 
@@ -580,6 +608,7 @@ def _graph_record(
         pair_bucket=pair_bucket,
         global_context=np.asarray(global_context, dtype=np.float32),
         y=float(data.y.view(-1)[0]),
+        cycle_lengths=cycle_lengths,
     )
 
 
@@ -589,6 +618,8 @@ def _extract_split(
     certificate_cache: dict[bytes, bytes],
     patch_radius: int = PATCH_RADIUS,
     context_radius: int = 0,
+    structural_mode: str = "none",
+    max_cycle_len: int = 10,
 ) -> tuple[list[GraphRecord], dict[str, Any]]:
     started = time.perf_counter()
     contexts = global_feature_views(dataset)["global_all"]
@@ -601,6 +632,8 @@ def _extract_split(
                 certificate_cache,
                 patch_radius=int(patch_radius),
                 context_radius=int(context_radius),
+                structural_mode=str(structural_mode),
+                max_cycle_len=int(max_cycle_len),
             )
         )
         if index and index % 500 == 0:
@@ -622,6 +655,12 @@ def _extract_split(
         "context_radius": int(context_radius),
         "patch_radius": int(patch_radius),
         "context_width": int(CONTEXT_WIDTH if int(context_radius) > PATCH_RADIUS else 0),
+        "structural_context_mode": str(structural_mode),
+        "structural_context_max_cycle_len": int(max_cycle_len),
+        "structural_context_cycles": int(
+            sum(len(row.cycle_lengths) for row in records)
+        ),
+        "cycle_length_distribution": cycle_length_distribution(records),
         "seconds": float(time.perf_counter() - started),
     }
     return records, metadata
@@ -722,6 +761,8 @@ def _encode_records(
     patch_standardizer: Standardizer,
     context_standardizer: Standardizer,
     context_patch_standardizer: Standardizer | None = None,
+    structural_mode: str = "none",
+    structural_vocabulary: Mapping[bytes, int] | None = None,
 ) -> list[Data]:
     output: list[Data] = []
     for record in records:
@@ -744,12 +785,35 @@ def _encode_records(
             [parent_vocabulary.get(patch.parent_certificate, 0) for patch in record.patches],
             dtype=np.int64,
         )
+        if str(structural_mode) == "typed_ring":
+            structural_token = np.asarray(
+                [
+                    encode_structural_token(patch.structural_context, structural_vocabulary or {})
+                    for patch in record.patches
+                ],
+                dtype=np.int64,
+            )
+            structural_coarse = np.stack(
+                [coarsen(patch.structural_context) for patch in record.patches], axis=0
+            ).astype(np.float32, copy=False)
+        elif str(structural_mode) == "coarse_ring":
+            structural_token = np.zeros(len(record.patches), dtype=np.int64)
+            structural_coarse = np.stack(
+                [coarsen(patch.structural_context) for patch in record.patches], axis=0
+            ).astype(np.float32, copy=False)
+        else:
+            structural_token = np.zeros(len(record.patches), dtype=np.int64)
+            structural_coarse = np.zeros(
+                (len(record.patches), COARSE_WIDTH), dtype=np.float32
+            )
         output.append(
             Data(
                 patch_cont=torch.from_numpy(patch_cont),
                 patch_context=torch.from_numpy(patch_context),
                 typed_token=torch.from_numpy(typed),
                 parent_token=torch.from_numpy(parent),
+                structural_token=torch.from_numpy(structural_token),
+                structural_coarse=torch.from_numpy(structural_coarse),
                 pair_index=torch.from_numpy(record.pair_index),
                 pair_relation=torch.from_numpy(record.pair_relation),
                 pair_bucket=torch.from_numpy(record.pair_bucket),
@@ -868,6 +932,10 @@ PARAMETER_AUDIT_BLOCKS = (
     ("center_context", "center_update"),
     ("global_encoder", "global_encoder"),
     ("graph_head", "head"),
+    ("structural_context_embedding", "structural_context_embedding"),
+    ("context_patch_projection", "context_patch_projection"),
+    ("context_condition_projection", "context_condition_projection"),
+    ("context_delta_output", "context_delta_output"),
 )
 
 
@@ -939,6 +1007,11 @@ def audit_parameters(model: PatchPathModel) -> dict[str, Any]:
             None if model.center_update is None else int(model.center_context_hidden)
         ),
         "global_encoder_width": int(model.global_output_width),
+        "structural_context_mode": str(model.structural_context_mode),
+        "structural_context_fusion": str(model.structural_context_fusion),
+        "structural_context_dim": int(model.structural_context_dim),
+        "structural_context_condition_rank": int(model.structural_context_condition_rank),
+        "structural_context_vocabulary_size": int(model.structural_context_vocabulary_size),
     }
     return {
         "blocks": blocks,
@@ -963,7 +1036,11 @@ def _print_parameter_audit(model: PatchPathModel, phase_label: str) -> dict[str,
     fractions = audit["fraction"]
     print(f"Model parameter audit (phase={phase_label})", flush=True)
     for label, _attribute in PARAMETER_AUDIT_BLOCKS:
-        if label == "center_context" and blocks[label] == 0:
+        if blocks[label] == 0 and (
+            label == "center_context"
+            or label == "structural_context_embedding"
+            or label.startswith("context_")
+        ):
             continue
         print(
             f"{label}: {blocks[label]} ({fractions[label] * 100.0:.2f}%)",
@@ -984,8 +1061,13 @@ def _print_parameter_audit(model: PatchPathModel, phase_label: str) -> dict[str,
         "pair_pooled_dim",
         "graph_readout_dim",
         "center_context_hidden_dim",
+        "structural_context_dim",
+        "structural_context_condition_rank",
     ):
         print(f"{key}: {dims[key]}", flush=True)
+    print(f"structural_context: mode={dims['structural_context_mode']} "
+          f"fusion={dims['structural_context_fusion']} "
+          f"vocab(incl NO_RING/UNK)={dims['structural_context_vocabulary_size']}", flush=True)
     print(f"embedding: {audit['embedding']}", flush=True)
     return audit
 
@@ -1038,6 +1120,12 @@ class PatchPathModel(nn.Module):
         center_context_hidden: int | None = None,
         graph_head_hidden_0: int | None = None,
         graph_head_hidden_1: int | None = None,
+        structural_context_mode: str = "none",
+        structural_context_fusion: str = "condition",
+        structural_context_dim: int = 8,
+        structural_context_embedding_rank: int = 1,
+        structural_context_condition_rank: int = 8,
+        structural_context_vocabulary_size: int = 2,
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
@@ -1056,11 +1144,78 @@ class PatchPathModel(nn.Module):
         self.center_context = bool(center_context)
         self.token_width = int(token_width)
         self.global_output_width = 32
+        self.structural_context_mode = str(structural_context_mode)
+        self.structural_context_fusion = str(structural_context_fusion)
+        self.structural_context_dim = int(structural_context_dim)
+        self.structural_context_embedding_rank = int(structural_context_embedding_rank)
+        self.structural_context_condition_rank = int(structural_context_condition_rank)
+        self.structural_context_vocabulary_size = int(structural_context_vocabulary_size)
+        valid_context_modes = {"none", "coarse_ring", "typed_ring"}
+        if self.structural_context_mode not in valid_context_modes:
+            raise ValueError(
+                f"unknown structural_context_mode={self.structural_context_mode!r}; "
+                f"expected one of {sorted(valid_context_modes)}"
+            )
+        if self.structural_context_fusion not in {"condition", "concat"}:
+            raise ValueError(
+                f"unknown structural_context_fusion={self.structural_context_fusion!r}; "
+                f"expected 'condition' or 'concat'"
+            )
+        if self.structural_context_dim < 1 or self.structural_context_condition_rank < 1:
+            raise ValueError("structural context dims must be positive")
         valid_readouts = {"moments", "mean_std", "sum_mean_std", "distribution"}
         if self.node_readout not in valid_readouts or self.pair_readout not in valid_readouts:
             raise ValueError(
                 "unknown readout; expected moments, mean_std, sum_mean_std, or distribution"
             )
+        # Compact-v3 structural-context conditioning signal.  This is not a
+        # ring network: the module only builds ``e_ctx`` (an embedding of the
+        # ring context) and optionally a low-rank multiplicative gate on the
+        # exact patch embedding.  Nothing here creates ring nodes or passes
+        # messages on rings.
+        self.context_patch_projection: nn.Module | None = None
+        self.context_condition_projection: nn.Module | None = None
+        self.context_delta_output: nn.Module | None = None
+        self.structural_context_embedding: nn.Module | None = None
+        structural_input_width = 0
+        if self.structural_context_mode != "none":
+            if self.structural_context_mode == "typed_ring":
+                if self.structural_context_vocabulary_size < 2:
+                    raise ValueError(
+                        "typed_ring requires structural_context_vocabulary_size >= 2 "
+                        "(NO_RING + UNK_CONTEXT at least)"
+                    )
+                # Rows: [UNK_CONTEXT, known_0, known_1, ...]; NO_RING is
+                # masked to zeros in the forward pass.  One row per known
+                # typed context (no merging/hashing), low-rank factorized.
+                self.structural_context_embedding = _FactorizedEmbedding(
+                    self.structural_context_vocabulary_size - 1,
+                    self.structural_context_dim,
+                    min(self.structural_context_embedding_rank, self.structural_context_dim),
+                )
+            else:  # coarse_ring: continuous 4D coarse vector
+                self.structural_context_embedding = nn.Linear(
+                    COARSE_WIDTH, self.structural_context_dim, bias=False
+                )
+            if self.structural_context_fusion == "condition":
+                # ``e_patch + W_out(tanh(W_p e_patch) * tanh(W_c e_ctx))``
+                # NO_RING is masked so that the delta is exactly zero there:
+                # the model is bit-identical to compact-v2 on ringless
+                # patches (and exactly compact-v2 at initialisation, since
+                # W_out is zero-initialised).
+                self.context_patch_projection = nn.Linear(
+                    int(token_width), self.structural_context_condition_rank, bias=False
+                )
+                self.context_condition_projection = nn.Linear(
+                    self.structural_context_dim, self.structural_context_condition_rank, bias=False
+                )
+                self.context_delta_output = nn.Linear(
+                    self.structural_context_condition_rank, int(token_width)
+                )
+                nn.init.zeros_(self.context_delta_output.weight)
+                nn.init.zeros_(self.context_delta_output.bias)
+            else:  # concat ablation: context goes into the patch encoder input
+                structural_input_width = self.structural_context_dim
         typed_full_count = (
             None
             if hybrid_full_typed_tokens is None
@@ -1097,7 +1252,11 @@ class PatchPathModel(nn.Module):
             int(self.embedding_rank) if self.direct_token_readout else 0
         )
         self.patch_encoder = _MLPBlock(
-            self.shell_width + self.context_width + int(token_width) + parent_width,
+            self.shell_width
+            + self.context_width
+            + int(token_width)
+            + parent_width
+            + int(structural_input_width),
             max(int(patch_hidden), 64),
             int(patch_hidden),
             float(dropout),
@@ -1384,18 +1543,71 @@ class PatchPathModel(nn.Module):
             )
         return torch.cat(blocks, dim=1)
 
+    def _structural_context_embedding_value(self, data: Data) -> torch.Tensor:
+        """Build ``e_ctx`` from the node's structural context.
+
+        * ``typed_ring``: row lookup of the canonical typed cycle signature
+          (token 0 = NO_RING is masked to zeros; token 1 = UNK_CONTEXT keeps
+          its own learned row).
+        * ``coarse_ring``: linear map of the 4D coarse vector.
+        """
+        if self.structural_context_mode == "typed_ring":
+            token = data.structural_token
+            if token.numel() == 0:
+                return torch.zeros(
+                    (0, self.structural_context_dim), device=token.device, dtype=token.dtype
+                )
+            # Rows: [UNK_CONTEXT, known_0, known_1, ...]; NO_RING (token 0)
+            # lands on the UNK row but is masked to zeros below.
+            index = (token - UNK_CONTEXT_TOKEN).clamp(min=0)
+            value = self.structural_context_embedding(index)
+            return value * (token > NO_RING_TOKEN).float().unsqueeze(-1)
+        return self.structural_context_embedding(data.structural_coarse)
+
+    def _structural_no_ring_mask(self, data: Data) -> torch.Tensor:
+        """1.0 for patches that carry a ring context, 0.0 for NO_RING."""
+        if self.structural_context_mode == "typed_ring":
+            return (data.structural_token > NO_RING_TOKEN).float().unsqueeze(-1)
+        return (data.structural_coarse[:, 0] > 0.5).float().unsqueeze(-1)
+
+    def _condition_patch(
+        self, e_patch: torch.Tensor, e_ctx: torch.Tensor, mask: torch.Tensor
+    ) -> torch.Tensor:
+        """Low-rank multiplicative conditioning.
+
+        ``e_patch_conditioned = e_patch + delta`` with
+        ``delta = W_out(tanh(W_p e_patch) * tanh(W_c e_ctx))``; when
+        ``mask`` is zero (NO_RING) the delta is exactly zero and the output
+        is bit-identical to the input.
+        """
+        p = self.context_patch_projection(e_patch)
+        c = self.context_condition_projection(e_ctx)
+        delta = self.context_delta_output(torch.tanh(p) * torch.tanh(c))
+        return e_patch + delta * mask
+
     def forward(self, data: Data) -> torch.Tensor:
         global_context = data.global_context
         if global_context.ndim == 1:
             global_context = global_context.unsqueeze(0)
         n_graphs = int(global_context.shape[0])
+        e_patch = self.typed_embedding(data.typed_token)
+        structural_blocks: list[torch.Tensor] = []
+        if self.structural_context_mode != "none":
+            e_ctx = self._structural_context_embedding_value(data)
+            if self.structural_context_fusion == "condition":
+                e_patch = self._condition_patch(
+                    e_patch, e_ctx, self._structural_no_ring_mask(data)
+                )
+            else:
+                structural_blocks.append(e_ctx)
         patch = self.patch_encoder(
             torch.cat(
                 [
                     data.patch_cont,
                     data.patch_context,
-                    self.typed_embedding(data.typed_token),
+                    e_patch,
                     self.parent_embedding(data.parent_token),
+                    *structural_blocks,
                 ],
                 dim=1,
             )
@@ -1497,8 +1709,20 @@ def _train_phase(
         context_width: int = 0,
         direct_token_readout: bool = False,
         phase_label: str | None = None,
+        structural_context_vocabulary_size: int = 0,
 ) -> dict[str, Any]:
     model_config = config["model"]
+    structural_context_mode = str(model_config.get("structural_context_mode", "none"))
+    if structural_context_mode == "typed_ring":
+        model_config = dict(model_config)
+        if int(structural_context_vocabulary_size) < 2:
+            raise RuntimeError(
+                "typed_ring requires a fitted structural context vocabulary "
+                "(structural_context_vocabulary_size >= 2)"
+            )
+        model_config["structural_context_vocabulary_size"] = int(
+            structural_context_vocabulary_size
+        )
     device = torch.device(str(model_config.get("device", "cpu")))
     if device.type == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("model requested CUDA but CUDA is unavailable")
@@ -1548,6 +1772,18 @@ def _train_phase(
             None
             if model_config.get("graph_head_hidden_1") is None
             else int(model_config["graph_head_hidden_1"])
+        ),
+        structural_context_mode=str(model_config.get("structural_context_mode", "none")),
+        structural_context_fusion=str(model_config.get("structural_context_fusion", "condition")),
+        structural_context_dim=int(model_config.get("structural_context_dim", 8)),
+        structural_context_embedding_rank=int(
+            model_config.get("structural_context_embedding_rank", 1)
+        ),
+        structural_context_condition_rank=int(
+            model_config.get("structural_context_condition_rank", 8)
+        ),
+        structural_context_vocabulary_size=int(
+            model_config.get("structural_context_vocabulary_size", 2)
         ),
     ).to(device)
     parameter_audit: dict[str, Any] | None = None
@@ -1657,6 +1893,7 @@ def _phase_data(
     config: Mapping[str, Any],
 ) -> tuple[list[Data], list[Data], dict[str, Any]]:
     representation = config["representation"]
+    structural_mode = str(config.get("model", {}).get("structural_context_mode", "none"))
     patch_radius = int(representation.get("patch_radius", PATCH_RADIUS))
     typed_vocabulary = _fit_vocabulary(
         fit_records,
@@ -1680,6 +1917,9 @@ def _phase_data(
     context_patch_standardizer = (
         Standardizer.fit(_context_patch_matrix(fit_records)) if has_context else None
     )
+    structural_vocabulary = None
+    if str(structural_mode) == "typed_ring":
+        structural_vocabulary = fit_structural_vocabulary(fit_records)
     encoded_fit = _encode_records(
         fit_records,
         typed_vocabulary,
@@ -1687,6 +1927,8 @@ def _phase_data(
         patch_standardizer,
         context_standardizer,
         context_patch_standardizer,
+        structural_mode=structural_mode,
+        structural_vocabulary=structural_vocabulary,
     )
     encoded_other = _encode_records(
         other_records,
@@ -1695,6 +1937,8 @@ def _phase_data(
         patch_standardizer,
         context_standardizer,
         context_patch_standardizer,
+        structural_mode=structural_mode,
+        structural_vocabulary=structural_vocabulary,
     )
     audit = {
         "typed_vocabulary": {
@@ -1714,6 +1958,19 @@ def _phase_data(
         "patch_radius": patch_radius,
         "shell_width": int(_shell_width_for_radius(patch_radius)),
         "direct_token_readout": bool(config.get("model", {}).get("direct_token_readout", False)),
+        "structural_context": {
+            "mode": structural_mode,
+            "fit": context_statistics(fit_records, structural_vocabulary),
+            "other": context_statistics(other_records, structural_vocabulary),
+            "vocabulary_size_with_reserved": (
+                int(len(structural_vocabulary)) + 2 if structural_vocabulary is not None else None
+            ),
+            "cycle_lengths_fit": cycle_length_distribution(fit_records),
+            "cycle_lengths_other": cycle_length_distribution(other_records),
+        },
+        "structural_context_vocabulary_size": (
+            int(len(structural_vocabulary)) + 2 if structural_vocabulary is not None else 0
+        ),
     }
     return encoded_fit, encoded_other, audit
 
@@ -1742,6 +1999,15 @@ def _render_markdown(result: Mapping[str, Any]) -> str:
         f"- patch shell descriptor: `{result['representation']['shell_width']}D`; relation descriptor: `{result['representation']['relation_width']}D`",
         f"- readout: `{result['representation']['readout']}`",
         f"- message passing: `{result['representation']['message_passing']}`; attention: `{result['representation']['attention']}`",
+        (
+            ""
+            if result["representation"].get("structural_context", {}).get("mode") == "none"
+            else f"- structural context: `{result['representation']['structural_context']['mode']}` "
+            f"fusion `{result['representation']['structural_context']['fusion']}` "
+            f"max_cycle_len `{result['representation']['structural_context']['max_cycle_len']}`; "
+            "ring/cycle context only modifies the patch representation "
+            "(no ring message passing / ring nodes)"
+        ),
         "",
         "| head | valid MAE | test MAE after train+valid refit | selected epoch |",
         "|---|---:|---:|---:|",
@@ -1778,6 +2044,21 @@ def run(config_path: Path) -> dict[str, Any]:
     representation_config = config.get("representation", {})
     patch_radius = int(representation_config.get("patch_radius", PATCH_RADIUS))
     context_radius = int(representation_config.get("context_radius", 0))
+    structural_context_mode = str(
+        config.get("model", {}).get("structural_context_mode", "none")
+    )
+    structural_context_max_cycle_len = int(
+        representation_config.get("structural_context_max_cycle_len", 10)
+    )
+    if structural_context_mode not in ("none", "coarse_ring", "typed_ring"):
+        raise ValueError(
+            f"unknown structural_context_mode={structural_context_mode!r}; "
+            f"expected none, coarse_ring, or typed_ring"
+        )
+    if structural_context_mode != "none" and structural_context_max_cycle_len < 3:
+        raise ValueError(
+            f"structural_context_max_cycle_len must be >= 3, got {structural_context_max_cycle_len}"
+        )
     if patch_radius < 1:
         raise ValueError(f"patch_radius must be positive, got {patch_radius}")
     if context_radius not in (0, patch_radius + 1):
@@ -1805,6 +2086,8 @@ def run(config_path: Path) -> dict[str, Any]:
             certificate_cache,
             patch_radius=patch_radius,
             context_radius=context_radius,
+            structural_mode=structural_context_mode,
+            max_cycle_len=structural_context_max_cycle_len,
         )
         records.append(split_records)
         feature_metadata[split] = metadata
@@ -1834,6 +2117,9 @@ def run(config_path: Path) -> dict[str, Any]:
         shell_width=shell_width,
         context_width=int(CONTEXT_WIDTH if context_radius > patch_radius else 0),
         direct_token_readout=bool(model_config.get("direct_token_readout", False)),
+        structural_context_vocabulary_size=int(
+            valid_audit["structural_context_vocabulary_size"]
+        ),
     )
     selected_epoch = int(valid_phase["selected_epoch"])
 
@@ -1856,6 +2142,9 @@ def run(config_path: Path) -> dict[str, Any]:
             shell_width=shell_width,
             context_width=int(CONTEXT_WIDTH if context_radius > patch_radius else 0),
             direct_token_readout=bool(model_config.get("direct_token_readout", False)),
+            structural_context_vocabulary_size=int(
+                test_audit["structural_context_vocabulary_size"]
+            ),
         )
 
     result = {
@@ -1907,6 +2196,37 @@ def run(config_path: Path) -> dict[str, Any]:
             ),
             "attention": False,
             "label_free": True,
+            "structural_context": {
+                "mode": structural_context_mode,
+                "max_cycle_len": structural_context_max_cycle_len,
+                "fusion": str(model_config.get("structural_context_fusion", "condition")),
+                "dim": int(model_config.get("structural_context_dim", 8)),
+                "embedding_rank": int(
+                    model_config.get("structural_context_embedding_rank", 1)
+                ),
+                "condition_rank": int(
+                    model_config.get("structural_context_condition_rank", 8)
+                ),
+                "definition": (
+                    "center-anchored canonical typed cycle signature (node types + "
+                    "edge types + cycle topology); NO_RING=0, UNK_CONTEXT=1; "
+                    "conditioning delta forced to zero for NO_RING"
+                    if structural_context_mode == "typed_ring"
+                    else "4D coarse ring vector: in_cycle / cycle_count / min_cycle_len / "
+                    "max_cycle_len; delta forced to zero for NO_RING"
+                    if structural_context_mode == "coarse_ring"
+                    else None
+                ),
+                "conditioning": (
+                    "e_patch + W_out(tanh(W_p e_patch) * tanh(W_c e_ctx)); "
+                    "no ring message passing, no ring nodes"
+                    if structural_context_mode != "none"
+                    and str(model_config.get("structural_context_fusion", "condition"))
+                    == "condition"
+                    else None
+                ),
+                "message_passing_on_rings": False,
+            },
             "dimensions": (
                 valid_phase["parameter_audit"]["dimensions"]
                 if valid_phase.get("parameter_audit") is not None

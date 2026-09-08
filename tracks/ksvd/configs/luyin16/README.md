@@ -20,6 +20,13 @@
 - `mentor_typed_slot_proxy_v2.yaml`：自然的 `8×64 + 28×4 = 624` typed-slot proxy；不声称等同导师上游特征。
 - `mentor_typed_slot_proxy_v2_k64_dev.yaml`：同一 typed-slot object，但使用导师目录线索对应的 K64/T8/6-iteration 容量；仅作 development。
 - `mentor_typed_slot_proxy_v2_k64_official_valid.yaml`：K64/T8 在完整 official train/valid 上的最终容量复核；仍不看 test。
+- `zinc_compact_v3_context_none.yaml`：Compact-v3 的 `structural_context_mode=none` 复核（与 Compact-Hybrid-v2 逐参数、逐结果一致）。
+- `zinc_compact_v3_coarse_ring_condition.yaml`：粗粒度环上下文（4D 连续）乘法 condition 融合。
+- `zinc_compact_v3_typed_ring_condition.yaml`：typed ring 上下文（canonical typed cycle signature）+ 低秩乘法 condition（主实验配置）。
+- `zinc_compact_v3_typed_ring_concat.yaml`：同 typed ring 上下文，但只做 concat（对照消融）。
+
+这组 v3 配置只改变 patch representation 形成阶段（context conditioning），其余与 compact-v2 完全一致；设计说明与结果见
+[`notes/compact_v3_context_conditioned_patch_representation.md`](../../notes/compact_v3_context_conditioned_patch_representation.md)。
 
 本概念复现的 `S_v1/T_v1` 有独立 schema，不冒充导师未知的 69/624 维特征。
 
