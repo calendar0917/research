@@ -1,0 +1,82 @@
+{
+  "_comment": "GSN 官方实现 social 数据集配置。来源：arXiv:2006.09252v3 supplementary Table 5 + 官方 README IMDBBINARY 命令 + 附录 C.2 公共超参(4层/JK/mean readout/one-hot ids)。K 系列键: {DATASET}--{gsn-e|gsn-v}。REDDITBINARY 为论文外扩展(无论文数字)。",
+  "IMDBBINARY--gsn-e": {
+    "dataset_name": "IMDBBINARY", "variant": "gsn-e", "in_paper": true,
+    "expected_paper": {"mean": 0.778, "std": 0.033},
+    "overrides": {"k": 5, "id_scope": "local", "degree_as_tag": false}
+  },
+  "IMDBBINARY--gsn-v": {
+    "dataset_name": "IMDBBINARY", "variant": "gsn-v", "in_paper": true,
+    "expected_paper": {"mean": 0.768, "std": 0.020},
+    "overrides": {"k": 4, "id_scope": "global", "degree_as_tag": true}
+  },
+  "IMDBMULTI--gsn-e": {
+    "dataset_name": "IMDBMULTI", "variant": "gsn-e", "in_paper": true,
+    "expected_paper": {"mean": 0.543, "std": 0.033},
+    "overrides": {"k": 5, "id_scope": "local", "degree_as_tag": true}
+  },
+  "IMDBMULTI--gsn-v": {
+    "dataset_name": "IMDBMULTI", "variant": "gsn-v", "in_paper": true,
+    "expected_paper": {"mean": 0.526, "std": 0.036},
+    "overrides": {"k": 3, "id_scope": "global", "degree_as_tag": true}
+  },
+  "COLLAB--gsn-e": {
+    "dataset_name": "COLLAB", "variant": "gsn-e", "in_paper": true,
+    "expected_paper": {"mean": 0.855, "std": 0.012},
+    "overrides": {"k": 3, "id_scope": "local", "degree_as_tag": false}
+  },
+  "COLLAB--gsn-v": {
+    "dataset_name": "COLLAB", "variant": "gsn-v", "in_paper": true,
+    "expected_paper": {"mean": 0.827, "std": 0.015},
+    "overrides": {"k": 3, "id_scope": "global", "degree_as_tag": false}
+  },
+  "REDDITBINARY--gsn-e": {
+    "dataset_name": "REDDITBINARY", "variant": "gsn-e", "in_paper": false,
+    "expected_paper": null,
+    "note": "论文外扩展。无 10fold_idx → 用 --split random (StratifiedKFold(10, shuffle, random_state=split_seed))，即 GIN 论文对 REDDIT 的协议。超参沿用 IMDB-B GSN-e。",
+    "extra_cli": ["--split", "random", "--split_seed", "0"],
+    "overrides": {"k": 5, "id_scope": "local", "degree_as_tag": false}
+  },
+  "REDDITBINARY--gsn-v": {
+    "dataset_name": "REDDITBINARY", "variant": "gsn-v", "in_paper": false,
+    "expected_paper": null,
+    "note": "论文外扩展。无 10fold_idx → --split random。超参沿用 IMDB-B GSN-v。",
+    "extra_cli": ["--split", "random", "--split_seed", "0"],
+    "overrides": {"k": 4, "id_scope": "global", "degree_as_tag": true}
+  },
+
+  "_base_cli": [
+    "--onesplit", "False",
+    "--dataset", "social",
+    "--root_folder", "DATASETS_ROOT",
+    "--split", "given",
+    "--id_type", "complete_graph",
+    "--induced", "False",
+    "--id_encoding", "one_hot_unique",
+    "--id_embedding", "one_hot_encoder",
+    "--model_name", "GSN_sparse",
+    "--msg_kind", "gin",
+    "--num_layers", "4",
+    "--d_out", "64",
+    "--dropout_features", "0",
+    "--final_projection", "True",
+    "--jk_mlp", "False",
+    "--readout", "mean",
+    "--batch_size", "32",
+    "--num_epochs", "300",
+    "--num_iters", "50",
+    "--lr", "1e-3",
+    "--decay_rate", "0.5",
+    "--mode", "train",
+    "--wandb", "False",
+    "--GPU", "True",
+    "--device_idx", "0",
+    "--num_workers", "0",
+    "--num_threads", "1"
+  ],
+
+  "_decay_steps": {
+    "IMDBBINARY": 10, "IMDBMULTI": 10, "COLLAB": 50, "REDDITBINARY": 10
+  },
+  "_lr": {"IMDBBINARY": "1e-3", "IMDBMULTI": "1e-3", "COLLAB": "1e-2", "REDDITBINARY": "1e-3"}
+}
