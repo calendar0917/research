@@ -1,5 +1,39 @@
 # GSN 官方复现：来源、协议、假设、偏差
 
+## 两个协议（本轨）
+
+| | `gsn-strict-social-v1`（**主**） | `gsn-official-social-v1`（旁路参考） |
+|---|---|---|
+| 评估 | 10 seeds × 10×10 CV（每 seed 100 折） | 论文同款：单次 10 折 CV（seed 0） |
+| 划分 | `RepeatedStratifiedKFold(10,10,random_state=seed)`（同 wl-kernel 轨 API/同序） | 官方 powerful-gnns 10fold_idx |
+| epoch 选择 | **折内验证集**（train 分层切 10% val） | 官方：无 val 时直接用 test 选（**乐观/测试泄漏**） |
+| 报告 | 每折 val-best epoch 的 test acc；fold-level + seed-level 聚合 | 官方 main.py "Best test mean/std" |
+| 超参 | 固定论文 Table 5（不乐观化的部分） | 同左 |
+
+> 之所以官方是“乐观协议”：官方 main.py:333 `best_idx = perf_opt(test_accs)`（无
+> val 时）——即在测试集上选 epoch。本轨严格协议写 `val_idx-{k}.txt` 后官方代码自动
+> 改用 `perf_opt(val_accs)`（main.py:333/398），**零改动**消除该泄漏。
+
+## 严格协议要点（run_strict.py）
+
+- 每 (seed, rep, fold)：`RepeatedStratifiedKFold(10,10,random_state=seed)` 取 train/test →
+  `train_test_split(stratify, test_size=0.1, random_state=seed*1e5+rep*1e3+fold)` 切 val；
+  写入 `data/social/<NAME>/10fold_idx/{train,test,val}_idx-{fold+1}.txt` 后调官方 main.py
+  （`--split given --fold_idx [fold]`）。
+- 种子列表（用户给定）：`0, 41, 123, 1024, 2026, 777, 3407, 999, 111, 888`。
+  ⚠ wl-subtree-kernel 轨种子为 `0, 42, …`（42≠41）——与其横比前需统一种子列表。
+- 每折训练用 `--seed {seed}`（官方随机种子全链路），仅划分随 (seed,rep,fold) 变。
+- 磁盘：官方每 epoch 存 checkpoint（300 文件/折 × 1000 折 ≈ 数百 GB/配置）→ 默认每折
+  结束即清理（`--keep-checkpoints` 保留）。
+- 汇总：fold-level（全部 1000 折 mean±std）与 seed-level（10 个种子均值再聚合）。
+
+## 成本参考（服务器）
+
+单折训练时长取决于数据集（V100 参考：IMDB-B/M 数分钟~十几分钟/折；COLLAB、REDDIT-B
+更慢）。建议：先 `--seeds 0 --n-repeats 1`（10 折）测单折时长 → 外推 → 多 GPU
+`--workers N --devices N` 并行。8 配置 × 1000 折总计可能是**数十~数百 GPU 小时**，
+请按预算分阶段跑（先 IMDB-BINARY 一个配置出主表，再补其余）。
+
 ## 来源登记
 
 | 项 | 值 |

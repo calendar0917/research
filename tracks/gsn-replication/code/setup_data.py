@@ -77,17 +77,17 @@ def ensure_layout(purge_processed: bool = False) -> None:
     print("data layout ready.")
 
 
-def migrate_legacy_processed() -> None:
+def migrate_legacy_processed(proc_dir: Path | None = None) -> None:
     """PyG 1.4 pickle -> PyG 2.x Data：作者预计算缓存（若未迁移且未 purge）。
 
-    官方仓自带的 datasets/social/IMDBBINARY/processed/local/complete_graph_5.pt
-    用 PyG1.4 保存；PyG 2.6 直接 torch.load 会抛 'older version of PyG'。
-    这里把每个旧 Data 转换为新 Data（仅复制 tensor 属性），并原址回写。
+    官方仓/数据副本里的 processed/*.pt 用 PyG1.4 保存；PyG 2.6 直接 torch.load
+    会抛 'older version of PyG'。这里把每个旧 Data 转换为新 Data（仅复制 tensor
+    属性），并原址回写。已迁移（新 Data 含 _store）的文件自动跳过。
     """
     import torch
     from torch_geometric.data import Data
 
-    proc = OFFICIAL / "datasets" / "social" / "IMDBBINARY" / "processed"
+    proc = proc_dir or (OFFICIAL / "datasets" / "social" / "IMDBBINARY" / "processed")
     if not proc.exists():
         print("[migrate] no processed dir to migrate")
         return
@@ -95,20 +95,21 @@ def migrate_legacy_processed() -> None:
         print(f"[migrate] {pt}")
         obj = torch.load(pt, map_location="cpu", weights_only=False)
         graphs, rest = obj[0], obj[1:]
+        if len(graphs) and "_store" in graphs[0].__dict__:
+            print("[migrate]   already PyG2 format, skip")
+            continue
         new = []
         for g in graphs:
             d = Data()
             for k, v in g.__dict__.items():
                 if isinstance(v, torch.Tensor):
                     setattr(d, k, v)
-                # y/label 丢失则回退：旧 Data 的 label 是 int 属性
             if not hasattr(d, "y") and hasattr(g, "label"):
                 import torch as _t
                 setattr(d, "y", _t.tensor([int(g.label)]))
             new.append(d)
         torch.save((new, *rest), pt)
     print("[migrate] done")
-
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)

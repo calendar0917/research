@@ -1,5 +1,8 @@
 # GSN 复现操作手册（服务器版）
 
+**两个入口**：`run_strict.py` = 严格协议主表（10 seeds × 10×10 CV，val 选 epoch）；
+`run_official.py` = 官方乐观协议旁路参考。以下按主表写，旁路在第 5 节。
+
 ## 1. 拷贝到服务器
 
 本地（已含 vendor 官方仓 + powerful-gnns 数据源，**vendor 被 git-ignore**，必须整体拷贝）：
@@ -34,39 +37,49 @@ python code/setup_data.py --purge-processed      # A. 删作者缓存，用 grap
 # python code/setup_data.py --migrate-processed  # B. 迁移作者缓存（PyG 旧 pickle → 新 Data）
 ```
 
-## 4. 运行（8 个配置 = 4 数据集 × {GSN-e, GSN-v}）
+## 4. 严格协议主实验（10 seeds × 10×10 CV）
 
 ```bash
-python code/run_official.py --config IMDBBINARY--gsn-e     # seed 0, folds 0-9, GPU
-```
+cd ~/research/gsn-replication
 
-每个配置全量 ≈（V100 实测参考：IMDB-B 单次 10 折约 0.5-1h；COLLAB 约 1.5-2h；
-REDDIT-BINARY 计数需几分钟、训练约 1-2h；IMDB-M 与 IMDB-B 相当）。建议：
+# 0) 先测单折时长（每个数据集跑一个 seed 的 10 折；服务器不需要 --pythonpath）
+python code/run_strict.py --config IMDBBINARY--gsn-e --seeds 0 --n-repeats 1
+# 单折时长 t → 1000 折 ≈ t×1000；多 GPU 并行：
+python code/run_strict.py --config IMDBBINARY--gsn-e --workers 4 --devices 4
 
-```bash
-mkdir -p logs
+# 1) 全量（8 配置 × 10 seeds × 100 折 = 8000 折；逐配置跑）
 for cfg in IMDBBINARY--gsn-e IMDBBINARY--gsn-v IMDBMULTI--gsn-e IMDBMULTI--gsn-v \
            COLLAB--gsn-e COLLAB--gsn-v REDDITBINARY--gsn-e REDDITBINARY--gsn-v; do
-  python code/run_official.py --config $cfg 2>&1 | tee logs/$cfg.log
+  python code/run_strict.py --config $cfg --workers 4 --devices 4 2>&1 | tee logs/strict-$cfg.log
 done
+python code/audit_results.py
 ```
 
-说明：
-- `run_official.py` 输出结果 JSON 至 `results/<config>__seed<seed>.json`（git-ignored 本体；重要结果
-  建议 git commit `results/*SUMMARY.md` 或 promote 记录）。
-- 中断续跑：同一 (config, seed) 的 JSON 已存在则跳过（`--force` 重跑）。
-- 计数预计算在首次出现某 (id_type,k,scope) 时执行并缓存到
-  `vendor/.../datasets/social/<NAME>/processed/<scope>/<id_type>_<k>.pt`；
-  请确认该文件由 graph-tool 生成（首次跑前 `--purge-processed`）。
-- GPU 选择：`--device_idx 0` 默认；改 `--GPU True` 已在配置内。
+- 断点续跑：`--resume`（跳过已成功 fold）；`--force` 全重跑；`--purge-processed` 重算计数。
+- 每折 checkpoint 默认清理（防数百 GB）；`--keep-checkpoints` 保留。
+- REDDIT-BINARY 无官方 10fold_idx：strict 协议对所有数据集统一用随机划分
+  （`RepeatedStratifiedKFold(10,10,random_state=seed)`，与 wl-subtree-kernel 轨同源）。
+- 期望：严格协议数字会比论文低（val 选 epoch 损失的“选择收益”），差值本身即乐观偏差度量。
+- 汇总：`results/strict/<config>/summary.json`（fold-level + seed-level），
+  每折明细 `seed*_r*f*.json`。
 
-## 5. 汇总与核对
+## 5. 官方乐观协议（旁路参考，可跳过）
+
+```bash
+python code/setup_data.py            # 校验/补齐 4 个数据集到 vendor 官方仓布局
+# 首次跑 IMDBBINARY--gsn-e 之前，二选一：
+python code/setup_data.py --purge-processed      # A. 删作者缓存，用 graph-tool 重算（推荐）
+# python code/setup_data.py --migrate-processed  # B. 迁移作者缓存（PyG 旧 pickle → 新 Data）
+python code/run_official.py --config IMDBBINARY--gsn-e   # seed 0, folds 0-9，单次 10 折
+```
+
+## 6. 汇总与核对
 
 ```bash
 python code/audit_results.py         # 读 results/*.json，与论文数字并排打印
 ```
 
-## 6. 本地冒烟（可选，无 GPU/conda 的机器）
+## 7. 本地冒烟（可选，无 GPU/conda 的机器）
 
 ```bash
 cd ~/code/research/tracks/gsn-replication
