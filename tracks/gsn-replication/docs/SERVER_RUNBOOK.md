@@ -121,6 +121,7 @@ python code/audit_results.py
 
 | 现象 | 处理 |
 |---|---|
+| `ImportError: ... libgomp ... GOMP_5.0 not found` | torch 自带旧 libgomp 遮蔽了 graph-tool 需要的：重跑 setup_server.sh（自动写激活钩子）；旧环境则手动执行：`mkdir -p $CONDA_PREFIX/etc/conda/activate.d` 并把 `export LD_PRELOAD=$CONDA_PREFIX/lib/libgomp.so.1` 写入其中，再 `conda deactivate && conda activate gsn` |
 | `ModuleNotFoundError: graph_tool` | graph-tool 没有 pip 版；`conda install -y -c conda-forge graph-tool`（或重跑 setup_server.sh） |
 | `torch.cuda.is_available()==False` | 驱动太旧：换 `bash env/setup_server.sh cu118` 重装 torch；或 `nvidia-smi` 看驱动 |
 | 首次跑报 `older version of PyG` | 作者预计算缓存是 PyG1.4 pickle：`python code/setup_data.py --purge-processed`（graph-tool 重算，推荐）或 `--migrate-processed` |

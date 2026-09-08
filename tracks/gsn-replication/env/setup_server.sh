@@ -34,6 +34,21 @@ pip install "torch-geometric==2.6.1"
 echo "==> 其余依赖（networkx/ogb/tqdm/wandb 等）"
 pip install networkx ogb tqdm wandb tensorboardX
 
+echo "==> libgomp 冲突修复（torch 自带旧 libgomp 会遮蔽 graph-tool 需要的 GOMP_5.0）"
+mkdir -p "$CONDA_PREFIX/etc/conda/activate.d"
+cat > "$CONDA_PREFIX/etc/conda/activate.d/gsn-libgomp.sh" <<'EOF'
+# torch 自带 libgomp（仅 GOMP<=4.5 符号）会先被加载，导致 conda-forge graph-tool
+# 报 'version GOMP_5.0 not found'。预加载 conda 的 libgomp 使全部库共用同一 runtime。
+if [ -f "$CONDA_PREFIX/lib/libgomp.so.1" ]; then
+  export LD_PRELOAD="$CONDA_PREFIX/lib/libgomp.so.1${LD_PRELOAD:+ $LD_PRELOAD}"
+fi
+EOF
+echo "   已写入 \$CONDA_PREFIX/etc/conda/activate.d/gsn-libgomp.sh（重新 activate 生效）"
+
+if [ -f "$CONDA_PREFIX/lib/libgomp.so.1" ]; then
+  export LD_PRELOAD="$CONDA_PREFIX/lib/libgomp.so.1${LD_PRELOAD:+ $LD_PRELOAD}"
+fi
+
 echo "==> 验证"
 python - <<'PY'
 import torch, torch_geometric, graph_tool, networkx, ogb
