@@ -5,6 +5,8 @@
 
 ## 1. 拷贝到服务器
 
+> ⚠ 完整分步手册（从放代码到出结果）见 [SERVER_RUNBOOK.md](SERVER_RUNBOOK.md)。
+
 本地（已含 vendor 官方仓 + powerful-gnns 数据源，**vendor 被 git-ignore**，必须整体拷贝）：
 
 ```bash
