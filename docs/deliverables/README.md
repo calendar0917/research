@@ -8,4 +8,4 @@
 - 需要留档时用子目录：`YYYYMMDD/`
 - 禁止在 `docs/experiments/` 按日堆一堆 `mentor_brief_日期.md`（旧仓习惯不再延续）
 
-GNN 阶段已有导师表：见 `../../paper/docs/experiments/`（只读指针，不复制大表进本仓）。
+GNN 阶段已有导师表：原在 `../../paper/docs/experiments/`（旧仓 2026-09 核验已不可访问，该表未迁入本仓、现已遗失）。如需交付表，需基于现行轨重建。

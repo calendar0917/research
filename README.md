@@ -55,7 +55,7 @@ cat tracks/<name>/TRACK.md          # 该课题 charter
 
 | track | 状态 | 说明 |
 |-------|------|------|
-| [gnn-gsn](tracks/gnn-gsn/TRACK.md) | archived | Kernel–GNN–GSN；实现在 `../paper` |
+| [gnn-gsn](tracks/gnn-gsn/TRACK.md) | archived | Kernel–GNN–GSN；旧实现随 `../paper` 遗失，权威实现→ gsn-replication |
 | [gsn-replication](tracks/gsn-replication/TRACK.md) | **active** | 官方 GSN 在 IMDB-B/M、REDDIT-B、COLLAB 的严格复现（vendor 官方仓 + 论文 Table 5 超参） |
 | [ksvd](tracks/ksvd/TRACK.md) | **active** | KSVD 结构字典学习 |
 | [hod-gnn-replication](tracks/hod-gnn-replication/TRACK.md) | **active** | HOD-GNN 论文基线复现审计；独立官方环境 |

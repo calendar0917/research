@@ -1,6 +1,6 @@
 # WL Graph Kernel（压缩精读）
 
-> 概念：[concepts.md](concepts.md) · 完整旧笔记：`../../../paper/docs/literature/notes/wl_graph_kernel.md`
+> 概念：[concepts.md](concepts.md) · （旧仓完整笔记 `paper/docs/literature/notes/wl_graph_kernel.md` 随旧仓遗失，本文为现存权威版）
 
 | 项 | 内容 |
 |----|------|

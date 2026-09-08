@@ -103,4 +103,4 @@
 1. 读本文件 §2  
 2. 打开当前 active 轨的 `TRACK.md`  
 3. 实验只进该轨 `code/` + `results/`  
-4. 需要旧 GNN 细节 → `../paper/docs/research_guide.md`（只读）
+4. 需要旧 GNN 细节 → 现行轨（`tracks/gsn-replication` 等；旧仓 `paper/docs/research_guide.md` 已不可访问）

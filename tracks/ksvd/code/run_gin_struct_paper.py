@@ -2,7 +2,7 @@
 GIN ± structure under GIN-paper *optimistic* protocol (SELF-CHECK).
 
 Protocol (paper-optimistic / Xu-style habit):
-  - stratified 10-fold, fold_seed=42 (same spirit as paper/experiments)
+  - stratified 10-fold, fold_seed=42 (same spirit as the legacy unified protocol)
   - NO independent val set
   - for each fold: train fixed HPs; **select epoch by max held-out Acc on that fold's test**
   - report mean±std of those selected Acc over folds

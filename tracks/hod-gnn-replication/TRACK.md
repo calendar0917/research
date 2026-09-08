@@ -54,7 +54,7 @@ HOD-GNN 论文中作为对比基线的 GPS、GraphViT、Full、Random、Policy-L
 ## 禁止
 
 - 与其它轨结果混表横比（除非单独 deliverable 写清协议）
-- 在旧仓 `../../paper` 继续扩张本课题
+- 在 tracks/ 之外另立仓库扩张本课题（旧仓 `../../paper` 已不可访问）
 - 用非官方代码冒充基线复现
 
 ## 下一步
