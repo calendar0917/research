@@ -2394,7 +2394,17 @@ def run(config_path: Path) -> dict[str, Any]:
 
     refit_phase = None
     test_audit = {}
-    if load_test:
+    skip_refit = bool(
+        config.get("evaluation", {}).get("skip_train_valid_refit", False)
+    )
+    if load_test and skip_refit:
+        print(
+            "train+valid refit SKIPPED (evaluation.skip_train_valid_refit); "
+            "only the frozen selection checkpoint is evaluated on test",
+            flush=True,
+        )
+
+    if load_test and not skip_refit:
         refit_train_records = list(train_records) + list(valid_records)
         refit_train_data, refit_test_data, test_audit = _phase_data(
             refit_train_records, test_records, config=config
@@ -2590,7 +2600,12 @@ def run(config_path: Path) -> dict[str, Any]:
                     "parameters": int(refit_phase["parameters"]),
                 }
                 if refit_phase is not None
-                else {"mae": None, "epochs_run": 0, "blocked": True}
+                else {
+                    "mae": None,
+                    "epochs_run": 0,
+                    "blocked": not load_test,
+                    "skipped": bool(load_test and skip_refit),
+                }
             ),
             "test_with_selection_checkpoint": (
                 {
