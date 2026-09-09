@@ -1,0 +1,61 @@
+# Compact-v4 stage E: capacity-matched non-topology control.
+#
+# Same architecture as v4-spectrum (15D input -> 16 -> 8 encoder, head input
+# widened by 8) but the topology input is CONSTANT ZERO — the model carries
+# the same extra capacity with zero topology information.  If v4-spectrum
+# improves while this control does not, the gain is attributable to the
+# topology information, not to the extra parameters.
+#
+# Single-variable principle: exactly compact-v2 + the zero-input topology
+# branch.  No random-noise tuning: the input is deterministic zeros.
+protocol_id: luyin16-zinc-hierarchical-patch-relation-context-compact-v4-topology-capacity-control
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+
+model:
+  patch_hidden: 48
+  pair_hidden: 16
+  token_width: 16
+  embedding_mode: hybrid
+  embedding_rank: 4
+  hybrid_full_typed_tokens: 768
+  hybrid_full_parent_tokens: 32
+  center_context: true
+  center_context_hidden: 60
+  graph_head_hidden_0: 64
+  graph_head_hidden_1: 32
+  dropout: 0.05
+  epochs: 60
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 12
+  evaluate_every: 1
+  device: cpu
+  parameter_audit: true
+  # v4: capacity-matched control (inputs are constant zeros, same width as
+  # v4-spectrum, identical encoder/hhead parameter count).
+  topology_mode: capacity_control
+  topology_input_width: 15
+  topology_hidden_dim: 16
+  topology_out_dim: 8
+  topology_shuffle_test: true
+  save_state_dict: true
+  # Budget: identical to v4-spectrum: 99,453 selection / 100,517 refit.
+  expected_max_trainable_params: 105000
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_COMPACT_V4_TOPOLOGY_CAPACITY_CONTROL_20260908.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_COMPACT_V4_TOPOLOGY_CAPACITY_CONTROL_20260908.md

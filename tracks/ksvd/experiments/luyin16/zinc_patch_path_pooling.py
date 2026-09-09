@@ -67,6 +67,7 @@ from tracks.ksvd.experiments.luyin16.zinc_long_range_proxy import (
     global_feature_views,
     source_audit,
 )
+from tracks.ksvd.experiments.luyin16 import zinc_topology_features as ztopo
 
 
 DEFAULT_CONFIG = REPO_ROOT / "tracks/ksvd/configs/luyin16/zinc_patch_path_pooling.yaml"
@@ -146,6 +147,9 @@ class GraphRecord:
     y: float
     # Bounded simple-cycle lengths of this graph (structural context mode only).
     cycle_lengths: tuple[int, ...] = ()
+    # Compact-v4: raw global topology features (unstandardized), one vector
+    # per graph; see notes/compact_v4_global_topology_channel.md.
+    topology_features: np.ndarray | None = None
 
 
 def _jsonable(value: Any) -> Any:
@@ -520,6 +524,7 @@ def _graph_record(
     context_radius: int = 0,
     structural_mode: str = "none",
     max_cycle_len: int = 10,
+    topology_features: np.ndarray | None = None,
 ) -> GraphRecord:
     patch_radius = int(patch_radius)
     graph, node_types, edge_types = _data_to_graph(data)
@@ -609,6 +614,7 @@ def _graph_record(
         global_context=np.asarray(global_context, dtype=np.float32),
         y=float(data.y.view(-1)[0]),
         cycle_lengths=cycle_lengths,
+        topology_features=topology_features,
     )
 
 
@@ -620,11 +626,18 @@ def _extract_split(
     context_radius: int = 0,
     structural_mode: str = "none",
     max_cycle_len: int = 10,
+    topology_mode: str = "none",
+    topology_matrix: np.ndarray | None = None,
 ) -> tuple[list[GraphRecord], dict[str, Any]]:
     started = time.perf_counter()
     contexts = global_feature_views(dataset)["global_all"]
     records: list[GraphRecord] = []
     for index, data in enumerate(dataset):
+        topology_row = None
+        if str(topology_mode) != "none":
+            if topology_matrix is None:
+                raise RuntimeError("topology_mode != none requires a topology matrix")
+            topology_row = topology_matrix[index]
         records.append(
             _graph_record(
                 data,
@@ -634,6 +647,7 @@ def _extract_split(
                 context_radius=int(context_radius),
                 structural_mode=str(structural_mode),
                 max_cycle_len=int(max_cycle_len),
+                topology_features=topology_row,
             )
         )
         if index and index % 500 == 0:
@@ -661,6 +675,7 @@ def _extract_split(
             sum(len(row.cycle_lengths) for row in records)
         ),
         "cycle_length_distribution": cycle_length_distribution(records),
+        "topology_mode": str(topology_mode),
         "seconds": float(time.perf_counter() - started),
     }
     return records, metadata
@@ -763,6 +778,8 @@ def _encode_records(
     context_patch_standardizer: Standardizer | None = None,
     structural_mode: str = "none",
     structural_vocabulary: Mapping[bytes, int] | None = None,
+    topology_mode: str = "none",
+    topology_standardizer: Standardizer | None = None,
 ) -> list[Data]:
     output: list[Data] = []
     for record in records:
@@ -806,6 +823,17 @@ def _encode_records(
             structural_coarse = np.zeros(
                 (len(record.patches), COARSE_WIDTH), dtype=np.float32
             )
+        has_topology = str(topology_mode) != "none"
+        if has_topology:
+            if topology_standardizer is None or record.topology_features is None:
+                raise RuntimeError(
+                    "topology_mode != none requires a train-fit topology standardizer"
+                )
+            topology = topology_standardizer.transform(
+                record.topology_features[None, :]
+            )
+        else:
+            topology = np.zeros((1, 0), dtype=np.float32)
         output.append(
             Data(
                 patch_cont=torch.from_numpy(patch_cont),
@@ -822,6 +850,7 @@ def _encode_records(
                 ),
                 y=torch.tensor([record.y], dtype=torch.float32),
                 num_nodes=len(record.patches),
+                topology_features=torch.from_numpy(topology),
             )
         )
     return output
@@ -936,6 +965,7 @@ PARAMETER_AUDIT_BLOCKS = (
     ("context_patch_projection", "context_patch_projection"),
     ("context_condition_projection", "context_condition_projection"),
     ("context_delta_output", "context_delta_output"),
+    ("topology_encoder", "topology_encoder"),
 )
 
 
@@ -1012,6 +1042,11 @@ def audit_parameters(model: PatchPathModel) -> dict[str, Any]:
         "structural_context_dim": int(model.structural_context_dim),
         "structural_context_condition_rank": int(model.structural_context_condition_rank),
         "structural_context_vocabulary_size": int(model.structural_context_vocabulary_size),
+        "topology_mode": str(model.topology_mode),
+        "topology_input_width": int(model.topology_input_width),
+        "topology_hidden_dim": int(model.topology_hidden_dim),
+        "topology_out_dim": int(model.topology_out_dim),
+        "unified_graph_width": int(model.unified_graph_width),
     }
     return {
         "blocks": blocks,
@@ -1126,6 +1161,10 @@ class PatchPathModel(nn.Module):
         structural_context_embedding_rank: int = 1,
         structural_context_condition_rank: int = 8,
         structural_context_vocabulary_size: int = 2,
+        topology_mode: str = "none",
+        topology_input_width: int = 0,
+        topology_hidden_dim: int = 16,
+        topology_out_dim: int = 8,
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
@@ -1150,6 +1189,27 @@ class PatchPathModel(nn.Module):
         self.structural_context_embedding_rank = int(structural_context_embedding_rank)
         self.structural_context_condition_rank = int(structural_context_condition_rank)
         self.structural_context_vocabulary_size = int(structural_context_vocabulary_size)
+        # Compact-v4: global topology channel.  This is NOT a ring network and
+        # NOT a second predictor: it is a tiny MLP that maps the graph-level
+        # invariant topology vector to ``z_topology``, which is concatenated
+        # into the single unified graph representation consumed by the sole
+        # regression head (see notes/compact_v4_global_topology_channel.md).
+        self.topology_mode = str(topology_mode)
+        self.topology_input_width = int(topology_input_width)
+        self.topology_hidden_dim = int(topology_hidden_dim)
+        self.topology_out_dim = int(topology_out_dim)
+        if self.topology_mode != "none":
+            if self.topology_input_width < 1 or self.topology_hidden_dim < 1 or self.topology_out_dim < 1:
+                raise ValueError(
+                    "topology_mode != none requires positive topology input/hidden/out dims"
+                )
+            self.topology_encoder = nn.Sequential(
+                nn.Linear(self.topology_input_width, self.topology_hidden_dim),
+                nn.ReLU(),
+                nn.Linear(self.topology_hidden_dim, self.topology_out_dim),
+            )
+        else:
+            self.topology_encoder = None
         valid_context_modes = {"none", "coarse_ring", "typed_ring"}
         if self.structural_context_mode not in valid_context_modes:
             raise ValueError(
@@ -1338,8 +1398,10 @@ class PatchPathModel(nn.Module):
         )
         if self.head_hidden_0 < 1 or self.head_hidden_1 < 1:
             raise ValueError("graph head hidden dimensions must be positive")
+        topology_width = self.topology_out_dim if self.topology_encoder is not None else 0
+        self.unified_graph_width = int(readout_width + 32 + topology_width)
         self.head = nn.Sequential(
-            nn.Linear(readout_width + 32, self.head_hidden_0),
+            nn.Linear(self.unified_graph_width, self.head_hidden_0),
             nn.LayerNorm(self.head_hidden_0),
             nn.ReLU(),
             nn.Dropout(float(dropout)),
@@ -1664,6 +1726,16 @@ class PatchPathModel(nn.Module):
         readout_blocks = [unary, relation_readout]
         readout_blocks.extend(direct_blocks)
         readout_blocks.append(graph_hidden)
+        if self.topology_encoder is not None:
+            topology = data.topology_features
+            if topology.ndim == 1:
+                topology = topology.unsqueeze(0)
+            if int(topology.shape[1]) != self.topology_input_width:
+                raise RuntimeError(
+                    f"topology width mismatch: data={int(topology.shape[1])} "
+                    f"model={self.topology_input_width}"
+                )
+            readout_blocks.append(self.topology_encoder(topology))
         return self.head(torch.cat(readout_blocks, dim=1)).view(-1)
 
 
@@ -1678,7 +1750,10 @@ def _make_loader(graphs: Sequence[Data], batch_size: int, shuffle: bool, seed: i
     )
 
 
-def _evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> float:
+def _predict_values(
+    model: nn.Module, loader: DataLoader, device: torch.device
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return (targets, predictions) per molecule, in loader order."""
     model.eval()
     predictions: list[np.ndarray] = []
     targets: list[np.ndarray] = []
@@ -1687,12 +1762,44 @@ def _evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> flo
             batch = batch.to(device)
             predictions.append(model(batch).cpu().numpy())
             targets.append(batch.y.view(-1).cpu().numpy())
-    return float(
-        mean_absolute_error(
-            np.concatenate(targets).astype(np.float64),
-            np.concatenate(predictions).astype(np.float64),
-        )
+    return (
+        np.concatenate(targets).astype(np.float64),
+        np.concatenate(predictions).astype(np.float64),
     )
+
+
+def _evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> float:
+    targets, predictions = _predict_values(model, loader, device)
+    return float(mean_absolute_error(targets, predictions))
+
+
+def _shuffled_topology_mae(
+    model: nn.Module,
+    graphs: Sequence[Data],
+    device: torch.device,
+    seed: int,
+    batch_size: int = 128,
+) -> float:
+    """Validation-only diagnostic: MAE with molecule<->topology pairing broken.
+
+    The molecule order is fixed; each molecule receives the topology feature
+    vector of a *different* molecule (a fixed random derangement).  Targets
+    stay attached to the molecules, so a drop of the gain here means the
+    model was genuinely using the topology channel.
+    """
+    rng = np.random.default_rng(int(seed))
+    n = len(graphs)
+    permutation = rng.permutation(n)
+    # force a derangement (no molecule keeps its own topology vector)
+    while np.any(permutation == np.arange(n)):
+        permutation = rng.permutation(n)
+    shuffled: list[Data] = []
+    for index, graph in enumerate(graphs):
+        copy = graph.clone()
+        copy.topology_features = graphs[int(permutation[index])].topology_features.clone()
+        shuffled.append(copy)
+    loader = DataLoader(shuffled, batch_size=int(batch_size), shuffle=False)
+    return _evaluate(model, loader, device)
 
 
 def _train_phase(
@@ -1710,9 +1817,19 @@ def _train_phase(
         direct_token_readout: bool = False,
         phase_label: str | None = None,
         structural_context_vocabulary_size: int = 0,
+        topology_input_width: int = 0,
+        topology_hidden_dim: int = 16,
+        topology_out_dim: int = 8,
+        topology_shuffle_test: bool = True,
 ) -> dict[str, Any]:
     model_config = config["model"]
     structural_context_mode = str(model_config.get("structural_context_mode", "none"))
+    topology_mode = str(model_config.get("topology_mode", "none"))
+    if topology_mode != "none" and topology_input_width < 1:
+        raise RuntimeError(
+            "topology_mode != none requires a fitted topology standardizer "
+            "(topology_input_width >= 1)"
+        )
     if structural_context_mode == "typed_ring":
         model_config = dict(model_config)
         if int(structural_context_vocabulary_size) < 2:
@@ -1784,6 +1901,14 @@ def _train_phase(
         ),
         structural_context_vocabulary_size=int(
             model_config.get("structural_context_vocabulary_size", 2)
+        ),
+        topology_mode=topology_mode,
+        topology_input_width=int(topology_input_width),
+        topology_hidden_dim=int(
+            model_config.get("topology_hidden_dim", 16)
+        ),
+        topology_out_dim=int(
+            model_config.get("topology_out_dim", 8)
         ),
     ).to(device)
     parameter_audit: dict[str, Any] | None = None
@@ -1871,7 +1996,23 @@ def _train_phase(
             break
     if select_best and best_state is not None:
         model.load_state_dict(best_state)
-    final_mae = _evaluate(model, eval_loader, device)
+    eval_targets, eval_predictions = _predict_values(model, eval_loader, device)
+    final_mae = float(mean_absolute_error(eval_targets, eval_predictions))
+    diagnostics: dict[str, Any] = {}
+    if (
+        select_best
+        and topology_mode != "none"
+        and bool(topology_shuffle_test)
+        and best_state is not None
+    ):
+        diagnostics["valid_shuffled_topology_mae"] = _shuffled_topology_mae(
+            model,
+            eval_graphs,
+            device,
+            seed=int(seed),
+            batch_size=int(model_config.get("batch_size", 128)),
+        )
+        diagnostics["shuffle_seed"] = int(seed)
     return {
         "model": model,
         "mae": float(final_mae),
@@ -1883,6 +2024,9 @@ def _train_phase(
         "device": str(device),
         "parameters": int(sum(parameter.numel() for parameter in model.parameters())),
         "parameter_audit": parameter_audit,
+        "diagnostics": diagnostics,
+        "eval_targets": eval_targets if select_best else None,
+        "eval_predictions": eval_predictions if select_best else None,
     }
 
 
@@ -1894,6 +2038,10 @@ def _phase_data(
 ) -> tuple[list[Data], list[Data], dict[str, Any]]:
     representation = config["representation"]
     structural_mode = str(config.get("model", {}).get("structural_context_mode", "none"))
+    topology_mode = str(config.get("model", {}).get("topology_mode", "none"))
+    topology_input_width = ztopo.raw_width(
+        topology_mode, input_width_hint=config.get("model", {}).get("topology_input_width")
+    )
     patch_radius = int(representation.get("patch_radius", PATCH_RADIUS))
     typed_vocabulary = _fit_vocabulary(
         fit_records,
@@ -1920,6 +2068,17 @@ def _phase_data(
     structural_vocabulary = None
     if str(structural_mode) == "typed_ring":
         structural_vocabulary = fit_structural_vocabulary(fit_records)
+    topology_standardizer = None
+    if topology_mode != "none":
+        fit_topology = np.stack(
+            [record.topology_features for record in fit_records], axis=0
+        ).astype(np.float32, copy=False)
+        if fit_topology.shape[1] != topology_input_width:
+            raise RuntimeError(
+                f"topology width mismatch: records={fit_topology.shape[1]} "
+                f"config={topology_input_width} mode={topology_mode}"
+            )
+        topology_standardizer = Standardizer.fit(fit_topology)
     encoded_fit = _encode_records(
         fit_records,
         typed_vocabulary,
@@ -1929,6 +2088,8 @@ def _phase_data(
         context_patch_standardizer,
         structural_mode=structural_mode,
         structural_vocabulary=structural_vocabulary,
+        topology_mode=topology_mode,
+        topology_standardizer=topology_standardizer,
     )
     encoded_other = _encode_records(
         other_records,
@@ -1939,6 +2100,8 @@ def _phase_data(
         context_patch_standardizer,
         structural_mode=structural_mode,
         structural_vocabulary=structural_vocabulary,
+        topology_mode=topology_mode,
+        topology_standardizer=topology_standardizer,
     )
     audit = {
         "typed_vocabulary": {
@@ -1971,6 +2134,21 @@ def _phase_data(
         "structural_context_vocabulary_size": (
             int(len(structural_vocabulary)) + 2 if structural_vocabulary is not None else 0
         ),
+        "topology": {
+            "mode": topology_mode,
+            "input_width": int(topology_input_width),
+            "standardizer_fit_graphs": int(len(fit_records)),
+            "mean": (
+                topology_standardizer.mean.tolist()
+                if topology_standardizer is not None
+                else None
+            ),
+            "scale": (
+                topology_standardizer.scale.tolist()
+                if topology_standardizer is not None
+                else None
+            ),
+        },
     }
     return encoded_fit, encoded_other, audit
 
@@ -2047,9 +2225,22 @@ def run(config_path: Path) -> dict[str, Any]:
     structural_context_mode = str(
         config.get("model", {}).get("structural_context_mode", "none")
     )
+    topology_mode = str(config.get("model", {}).get("topology_mode", "none"))
+    topology_hidden_dim = int(config.get("model", {}).get("topology_hidden_dim", 16))
+    topology_out_dim = int(config.get("model", {}).get("topology_out_dim", 8))
+    topology_shuffle_test = bool(config.get("model", {}).get("topology_shuffle_test", False))
+    topology_input_width = ztopo.raw_width(
+        topology_mode,
+        input_width_hint=config.get("model", {}).get("topology_input_width"),
+    )
     structural_context_max_cycle_len = int(
         representation_config.get("structural_context_max_cycle_len", 10)
     )
+    if topology_mode not in ("none", "longest", "spectrum", "hinge", "capacity_control"):
+        raise ValueError(
+            f"unknown topology_mode={topology_mode!r}; expected none, longest, "
+            f"spectrum, hinge, or capacity_control"
+        )
     if structural_context_mode not in ("none", "coarse_ring", "typed_ring"):
         raise ValueError(
             f"unknown structural_context_mode={structural_context_mode!r}; "
@@ -2066,6 +2257,7 @@ def run(config_path: Path) -> dict[str, Any]:
             f"context_radius must be 0 or patch_radius+1={patch_radius + 1}, got {context_radius}"
         )
     shell_width = _shell_width_for_radius(patch_radius)
+    model_config = config["model"]
 
     load_test = test_policy == "terminal"
     datasets = tuple(
@@ -2078,8 +2270,24 @@ def run(config_path: Path) -> dict[str, Any]:
     certificate_cache: dict[bytes, bytes] = {}
     records: list[list[GraphRecord]] = []
     feature_metadata: dict[str, Any] = {}
+    topology_matrices: dict[str, np.ndarray] = {}
     loaded_splits = ("train", "valid", "test") if load_test else ("train", "valid")
     for split, dataset in zip(loaded_splits, datasets, strict=True):
+        cache_key = "valid" if split == "val" else split
+        if topology_mode != "none":
+            matrix, frame, topo_meta = ztopo.matrices_for_split(
+                cache_key,
+                dataset,
+                topology_mode,
+                force=False,
+                input_width=(
+                    int(model_config.get("topology_input_width"))
+                    if topology_mode == "capacity_control"
+                    else None
+                ),
+            )
+            topology_matrices[cache_key] = matrix
+            feature_metadata.setdefault("topology_cache", {})[cache_key] = topo_meta
         split_records, metadata = _extract_split(
             dataset,
             split,
@@ -2088,6 +2296,8 @@ def run(config_path: Path) -> dict[str, Any]:
             context_radius=context_radius,
             structural_mode=structural_context_mode,
             max_cycle_len=structural_context_max_cycle_len,
+            topology_mode=topology_mode,
+            topology_matrix=topology_matrices.get(cache_key),
         )
         records.append(split_records)
         feature_metadata[split] = metadata
@@ -2097,7 +2307,6 @@ def run(config_path: Path) -> dict[str, Any]:
 
     train_records, valid_records = records[:2]
     test_records = records[2] if load_test else []
-    model_config = config["model"]
     device = torch.device(str(model_config.get("device", "cpu")))
     if device.type == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("model requested CUDA but CUDA is unavailable")
@@ -2120,6 +2329,10 @@ def run(config_path: Path) -> dict[str, Any]:
         structural_context_vocabulary_size=int(
             valid_audit["structural_context_vocabulary_size"]
         ),
+        topology_input_width=int(valid_audit["topology"]["input_width"]),
+        topology_hidden_dim=topology_hidden_dim,
+        topology_out_dim=topology_out_dim,
+        topology_shuffle_test=topology_shuffle_test,
     )
     selected_epoch = int(valid_phase["selected_epoch"])
 
@@ -2145,7 +2358,26 @@ def run(config_path: Path) -> dict[str, Any]:
             structural_context_vocabulary_size=int(
                 test_audit["structural_context_vocabulary_size"]
             ),
+            topology_input_width=int(test_audit["topology"]["input_width"]),
+            topology_hidden_dim=topology_hidden_dim,
+            topology_out_dim=topology_out_dim,
+            topology_shuffle_test=False,
         )
+
+    artifacts: list[str] = []
+    if bool(model_config.get("save_state_dict", False)):
+        state_path = Path(result_json).with_name(
+            Path(result_json).stem + "_selection_state.pt"
+        )
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(valid_phase["model"].state_dict(), state_path)
+        artifacts.append(str(state_path))
+        if refit_phase is not None:
+            refit_state_path = Path(result_json).with_name(
+                Path(result_json).stem + "_refit_state.pt"
+            )
+            torch.save(refit_phase["model"].state_dict(), refit_state_path)
+            artifacts.append(str(refit_state_path))
 
     result = {
         "protocol_id": str(config["protocol_id"]),
@@ -2227,6 +2459,32 @@ def run(config_path: Path) -> dict[str, Any]:
                 ),
                 "message_passing_on_rings": False,
             },
+            "topology": {
+                "mode": topology_mode,
+                "input_width": int(topology_input_width),
+                "hidden_dim": int(topology_hidden_dim),
+                "out_dim": int(topology_out_dim),
+                "feature_names": ztopo.feature_names(
+                    topology_mode,
+                    input_width=(
+                        int(model_config.get("topology_input_width"))
+                        if topology_mode == "capacity_control"
+                        else None
+                    ),
+                ),
+                "definition": (
+                    "graph-level permutation-invariant global topology vector: "
+                    "exact longest simple cycle + cycle-length spectrum + "
+                    "minimum-cycle-basis summary + cycle rank; joint-trained "
+                    "single graph head (NOT a second predictor, NOT a ring "
+                    "network)"
+                    if topology_mode != "none"
+                    else None
+                ),
+                "target_formula_input": False,
+                "cache": feature_metadata.get("topology_cache"),
+                "standardizer": valid_audit.get("topology"),
+            },
             "dimensions": (
                 valid_phase["parameter_audit"]["dimensions"]
                 if valid_phase.get("parameter_audit") is not None
@@ -2250,6 +2508,7 @@ def run(config_path: Path) -> dict[str, Any]:
             "selected_epoch": selected_epoch,
             "one_predictive_head": True,
         },
+        "diagnostics": valid_phase.get("diagnostics", {}),
         "evaluation": {
             "valid": {
                 "mae": float(valid_phase["mae"]),
@@ -2257,6 +2516,12 @@ def run(config_path: Path) -> dict[str, Any]:
                 "selected_epoch": selected_epoch,
                 "epochs_run": int(valid_phase["epochs_run"]),
                 "trace": valid_phase["trace"],
+                "targets": valid_phase["eval_targets"].tolist()
+                if valid_phase.get("eval_targets") is not None
+                else None,
+                "predictions": valid_phase["eval_predictions"].tolist()
+                if valid_phase.get("eval_predictions") is not None
+                else None,
             },
             "test_after_train_valid_refit": (
                 {
@@ -2270,6 +2535,7 @@ def run(config_path: Path) -> dict[str, Any]:
             ),
             "parameters": int(valid_phase["parameters"]),
         },
+        "artifacts": artifacts,
         "runtime": {
             "seconds": float(time.perf_counter() - started),
             "python": sys.version,
