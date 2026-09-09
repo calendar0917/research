@@ -1,0 +1,50 @@
+claim_id: claim-post-v4-residual-structure-20260909
+contradicting_evidence: []
+created: '2026-09-09T21:45:00'
+implication: >-
+  No v5 representation channel is indicated by the residual structure of the
+  frozen v4-hinge baseline on ordinary Group A; the next permissible step,
+  if any, is an objective/calibration (heteroscedastic or density-aware)
+  study, and it must be evaluated on an OOF-train residual under the frozen
+  protocol before any model change.
+kind: claim
+limitations:
+- validation split only (test frozen and never loaded; no OOF-train residual
+  exists under the no-retrain freeze, so all fitted probes are
+  valid-internal-CV descriptive diagnostics, gated conservatively)
+- n=4 seeds; sign-consistency flags are computed on validation residuals that
+  are themselves correlated across seeds (systematic difficulty), so
+  consistency is corroborating, not independent
+- composition conclusions carry a multiple-comparison caveat (18 features);
+  N-H1+ is present in 135/965 Group A molecules
+- target components (z_SA/z_logP/z_cycle) are oracles for attribution only
+scope: >-
+  seeds [0,1,2,3] of frozen compact-v4-hinge (code state 0a61b23 + audit
+  module), official PyG ZINC-12k validation split, Group A = label-excess 0
+  (n=965)
+statement: >-
+  Group-A residuals of compact-v4-hinge (validation) show no correctable
+  second-layer structural signal: every fitted non-oracle probe family
+  (rarity/OOV, graph complexity, atom/bond composition incl. N-H1+,
+  exact unary/pair/relation hashes, relation-conditioned pairs, frozen-state
+  continuous pairs h_i*h_j, representation statistics) yields valid-internal
+  CV delta MAE within -0.0019..+0.0001 (gate 0.003) with residual R2 <= +0.017.
+  The residual structure that does exist is heteroscedastic difficulty, 4/4
+  seed-consistent and systematic across seeds (ensemble MAE 0.1186 = 86% of
+  the mean per-seed MAE 0.1374): it tracks the z_SA axis (abs Spearman
+  -0.359, partial -0.314 given z_logP) and patch rarity (0.28-0.32 per seed,
+  partial +0.32), with signed bias only as a small z_logP top-quintile drift
+  (+0.043 ensemble, 4/4) and a sparse N-H1+ composition hint (signed +0.109,
+  partial +0.175). Verdict: NO CLEAR SECONDARY SIGNAL.
+status: supported
+study_id: zinc-context-gap
+supporting_evidence:
+- notes/post_v4_residual_audit.md
+- results/post_v4_residual_audit/README.md
+- records/decisions/decision-post-v4-residual-audit-no-secondary-signal-20260909.yaml
+- >-
+  results/post_v4_residual_audit/{component_attribution_correlations.csv,
+  probe_correlations_groupA.csv, probe_1d_cv_groupA.csv, pair_probe_cv_groupA.csv,
+  continuous_pair_cv_groupA.csv, state_stats_crossseed_groupA.csv,
+  cross_partial_correlations_groupA.csv, cross_zSA_zlogP_difficulty_grid.csv,
+  groupA_error_distributions.csv, top30_groupA_molecules.csv, decision_record.json}

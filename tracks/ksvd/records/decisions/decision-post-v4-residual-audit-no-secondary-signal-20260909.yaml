@@ -1,0 +1,46 @@
+decision_id: decision-post-v4-residual-audit-no-secondary-signal-20260909
+created: '2026-09-09T21:45:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  NO CLEAR SECONDARY SIGNAL from the post-v4 residual audit of frozen
+  compact-v4-hinge (seeds 0-3, validation only). Group A (excess 0, n=965)
+  residual variance is systematic, structured, and variance-side only:
+  difficulty concentrates on the low-z_SA axis (abs Spearman -0.359, 4/4
+  seeds; partial given z_logP -0.314) and on rare-patch molecules (abs
+  0.28-0.32/seed, 4/4; partial +0.32 given z_SA+z_logP); signed bias is
+  limited to a small z_logP top-quintile drift (+0.04, 4/4) and a sparse
+  N-H1+ composition hint (partial +0.18, 135/965 molecules). No non-oracle
+  fitted probe clears the Weak band: best positive delta MAE across all 29
+  valid-internal-CV rows is +0.00007 (gate 0.003), exact-pair and
+  continuous-pair probes give R2<=0, and frozen-state statistics show no
+  stable signal. No v5 representation channel is recommended; any future
+  step must be an objective/calibration study of the documented
+  heteroscedastic difficulty axes, not another structural feature family.
+alternatives_rejected:
+- item: GO structural-representation v5
+  because: >-
+    every decision-tree GO branch requires a consistent >=0.005 (candidate)
+    or >=0.008 (strong) structural delta MAE; the audited structural probe
+    families (rarity/OOV, complexity, composition, exact patch/relation
+    pairs, relation-conditioned pairs, continuous h_i*h_j interactions,
+    frozen-state statistics) all measure <= +0.0001 on valid-internal CV
+- item: GO objective/calibration v5
+  because: >-
+    the branch also requires >=0.003 non-oracle structural delta or a
+    reproducible >=0.003 signed bias; SA/rarity difficulty is real and 4/4
+    seed-consistent but is conditional variance with no signed component
+    (oracle isotonic delta MAE -0.0008/-0.002), so it would only relabel
+    irreducible noise under the current objective
+- item: reopen the long-cycle tail (groups B/C) with a residual-repair
+  because: >-
+    already addressed by v4-hinge (+0.0092 mean paired test MAE, 4/4 seeds);
+    residual v4 audit adds nothing beyond the documented order-dependence
+    artifact of the benchmark cycle term
+revisit_if: >-
+  (1) the freeze lifts and an OOF-train residual becomes available, showing a
+  fitted correction >=0.003 for the N-H1+ composition hint or the z_logP
+  top-quintile drift that also holds on validation; or (2) a
+  heteroscedastic/objective study is opened, in which case the z_SA-axis and
+  rarity-axis difficulty documented here is its target list; or (3) the v4
+  baseline itself changes.
