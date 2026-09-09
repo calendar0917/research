@@ -7,22 +7,22 @@ active_studies:
 
 focus_study: zinc-context-gap
 
-# Durable baseline pointer: a git-tracked record under records/runs/.
-# The legacy JSON below is kept only as a provenance hint; it is not the
-# authoritative pointer and is git-ignored.
-baseline_record: record-legacy-zinc-patch-path-pooling-20260904
-baseline_legacy: results/luyin16/ZINC_PATCH_PATH_POOLING_20260904.json
+# Legacy provenance pointers (superseded 2026-09-09 by the compact-v2/v4-hinge
+# canonical runs; kept as history, see records/runs/20260909-* guard runs).
+legacy_baseline_record: record-legacy-zinc-patch-path-pooling-20260904
+legacy_baseline_json: results/luyin16/ZINC_PATCH_PATH_POOLING_20260904.json
 
 # Durable pointer to the best known zinc result (managed candidate family).
 best_record: record-legacy-zinc-patch-path-pooling-factorized-rank20-20260905
 
-current_candidate: luyin16-zinc-exact-patch-path-conditioned-pooling-v1
+current_candidate: luyin16-zinc-hierarchical-patch-relation-context-compact-v4-topology-hinge
 
 open_questions:
-  - "zinc: does the gap close at matched parameter budget (CIN-comparable)?"
-  - "zinc: are valid-vs-test deltas stable across the candidate family?"
+  - "zinc: does the gap close at matched parameter budget (CIN-comparable)? (benchmark-comparable: v4-hinge 0.1369 mean test vs CIN-small-E 0.094 — still open at the level of apples-to-apples claims)"
+  - "zinc: are valid-vs-test deltas stable across the candidate family? -> answered 2026-09-09 for v2/v4-hinge: valid and selection-checkpoint test agree in direction on 4/4 seeds; refit-test flips (secondary protocol)"
   - "molhiv: do internal 3-fold effects persist on official valid outside-scaffold?"
   - "molhiv: is the distribution readout advantage robust for interaction variants?"
+  - "post-v4: after freezing v4-hinge as baseline, what new signal appears in its residual (rarity / OOV / pair composition / chemistry / objective)?"
 
 guardrails:
   - "no new fixed output paths in new-style configs"
@@ -33,6 +33,7 @@ guardrails:
   - "no MLflow/W&B/Hydra/DVC/database without documented failure of current primitives"
 
 next_queue:
+  - "post-v4 residual audit on frozen v4-hinge (benchmark protocol; no topology feature stacking, no loss/refit repair)"
   - "promote a fresh control-plane zinc run (the legacy baseline is backfilled, not a new run)"
   - "migrate molhiv runner after zinc equivalence is accepted"
   - "hotspot migration: runtime duplication (zinc_long_range_proxy -> runtime)"
@@ -43,10 +44,12 @@ next_queue:
   - "backfill: current baseline / best candidate / key negative result / key evidence"
 
 recent_claims:
+  - "claim-929b3e29 [supported] v4-hinge beats v2 under primary benchmark protocol across seeds 0-3 (mean paired +0.0092 test MAE, 4/4 seeds); GO not Strong GO; bulk-A flips sign"
   - "claim-16d7e75e [supported] legacy vs runtime zinc runner bit-identical (smoke evidence)"
   - "claim-compact-v3-context-none-is-v2 [supported] v3 code path with context_mode=none is bit-identical to compact-v2 (terminal run)"
 
 recent_decisions:
+  - "decision-d5bf08b3: GO compact-v4-hinge under primary benchmark protocol (selection-checkpoint test, +0.0092 mean paired, 4/4 seeds); next = post-v4 residual audit; seed-0 refit regression is secondary-robustness evidence only"
   - "decision-0a35c7a0: wrap, don't rewrite (strangler runner; revisit if architecture tests demand more)"
   - "decision-compact-v3-context-conditioning-nogo-20260908: first version of ring-context conditioning NO-GO on valid (coarse +0.0021 / typed +0.0125 / concat +0.0171); revisit with capacity-neutral mechanisms"
 

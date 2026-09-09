@@ -1,0 +1,20 @@
+alternatives_rejected:
+- treat refit-robustness (train+valid refit) as the primary protocol
+because: Benchmark audit (Dwivedi et al./CIN sources) shows the literature protocol
+  is train-only + validation-selected checkpoint + single test, with no train+valid
+  refit; under that protocol v4-hinge's seed-0 gain (+0.0204) reproduces across seeds
+  0-3 (mean +0.0092, 4/4) with mechanism intact (shuffle destroys the gain; capacity
+  control flat; B/C 4/4).
+created: '2026-09-09T20:50:11'
+decision: 'GO for compact-v4-hinge under the primary benchmark protocol (selection-checkpoint
+  test): mean paired test improvement +0.0092 >= 0.008 with 4/4 seeds improving; adopt
+  v4-hinge as the benchmark-comparable baseline and proceed to the post-v4 residual
+  audit. The seed-0 train+valid refit regression (+0.0041) is classified as secondary-refit-robustness
+  evidence and does not block this GO; it must not be repaired by benchmark-protocol
+  tuning.'
+decision_id: decision-d5bf08b3
+kind: decision
+revisit_if: a later multi-seed refit stability study shows the refit regression is
+  seed-robust AND the benchmark-protocol gain disappears when refit is required for
+  deployment
+study_id: zinc-context-gap

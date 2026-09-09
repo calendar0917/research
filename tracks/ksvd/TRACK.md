@@ -166,3 +166,10 @@
 79. ~~luyin16 概念复现 → 机制 → 显式模型全路线~~ → `results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md`；主判：**K-SVD=压缩器而非任务表征学习器**；机制阶段冻结在统计交互 + XGBoost
 80. ~~显式模型路线（0903–0905）~~ → ZINC 精确 patch 路径 `0.1872/0.1381` → **层级关系上下文 `0.1816/0.1346`（当前最佳）**；MolHIV patch 路径 `0.8028/0.7852`，统一 OOV-only `0.8383/0.7727`（精确 token 反降到 0.805 valid）
 81. **待答两个问题**：①跨中心交互在新骨架划分上是否仍稳定；②ZINC 0.13–0.18 差距来自 patch 身份 / 关系距离 / 读出统计，还是缺少全图上下文
+
+82. ~~compact-v2 budget reallocation (09-07)~~ → `notes/compact_hybrid_v2_budget_reallocation.md`：valid 0.184158 @56（98,549 params）；refit-test 0.135362
+83. ~~compact-v2 info-gap audit (09-07)~~ → `notes/compact_v2_information_gap_audit.md`：13 探针全 NO-GO；残差 = target 定义 long-cycle 项（valid 3.5% 分子 = 27.1% MAE mass）
+84. ~~v3 ring-context conditioning NO-GO (09-08)~~ → `notes/compact_v3_context_conditioned_patch_representation.md` + `records/decisions/decision-compact-v3-context-conditioning-nogo-20260908.yaml`
+85. ~~long-cycle audit GO (09-08)~~ → `notes/zinc_long_cycle_audit.md`：机制验证 + 不变量 oracle 上限 +0.0117
+86. ~~compact-v4 global topology channel (09-09)~~ → `notes/compact_v4_global_topology_channel.md`：hinge valid +0.0141；seed-0 refit 口径 −0.0041（**协议口径分裂**，见 addendum）
+87. **protocol correction + multi-seed confirmation (09-09)** → `notes/compact_v4_multiseed_protocol_confirmation.md` + `notes/reproducibility_cpu_determinism.md` + `records/claims/claim-929b3e29.yaml` + `records/decisions/decision-d5bf08b3.yaml`：primary benchmark protocol = train→valid selection→frozen checkpoint→test（**无 refit**；refit 降级为 secondary robustness）；seeds 0–3 串行 bit-verified：v4-hinge vs v2 mean paired Δtest **+0.0092（4/4 seeds）→ GO**（非 Strong GO；A 组 sign flip caveat）；下一步唯一推荐 **post-v4 residual audit**

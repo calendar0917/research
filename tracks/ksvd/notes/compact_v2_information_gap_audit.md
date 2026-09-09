@@ -228,3 +228,14 @@ uv run python -m tracks.ksvd.experiments.luyin16.zinc_information_gap_audit figu
    longest-simple-cycle/环尺寸谱 + 单调 readout），预期上限 +0.0117；若 NO-GO，则
    benchmark target 重定义（不变 cycle penalty）可再解锁 +0.013。**不推荐** weighted L1 /
    quantile / 尾部重加权（尾部不是采样不均衡）。
+
+---
+
+## Addendum (2026-09-09): protocol wording
+
+本文档首行的 "test MAE 0.1353615" 是 internal **train+valid refit** 口径（现命名：
+secondary refit-robustness protocol）。Benchmark audit（Dwivedi et al./CIN）确认
+literature ZINC 主协议 = train-only + validation-selected checkpoint + 单次 test
+（selection-checkpoint test；v2 seed-0 = 0.154284，seeds 0–3 mean 0.146069 ±
+0.006177）。详见 `compact_v4_multiseed_protocol_confirmation.md`。本审计的所有
+机制结论（残差 = long-cycle target 项、探针全 NO-GO、重尾分解）不受命名影响。

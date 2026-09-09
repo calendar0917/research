@@ -1,0 +1,25 @@
+claim_id: claim-929b3e29
+contradicting_evidence: []
+created: '2026-09-09T20:49:57'
+implication: v4-hinge is the new benchmark-comparable baseline; next stage = post-v4
+  residual audit; refit-robustness instability (seed-0 only, +0.0041) is a separate
+  phenomenon not used for this verdict
+kind: claim
+limitations:
+- n=4 seeds; test paired 95% CI includes 0 (p=0.142); seed 2/3 improvements are small
+  (+0.0009/+0.0023); bulk group A flips sign across seeds
+scope: seeds [0,1,2,3], official PyG ZINC subset split, selection-checkpoint test
+  protocol, serial runs, code state 0a61b23
+statement: 'Under the benchmark-comparable primary protocol (train only -> validation
+  selection -> frozen checkpoint -> single test), compact-v4-hinge improves over compact-v2
+  on ZINC-12k test across seeds: mean paired improvement +0.0092 MAE (median +0.0077),
+  4/4 seeds positive; test mean 0.136885 (v2 0.146069). Valid agrees in direction
+  on 4/4 seeds (+0.0134 mean). Gain is concentrated and reliable in long-cycle subgroups
+  B/C (4/4 seeds) while bulk group A is mean +0.0031 with 2/4 sign flips (worst -0.0068).
+  Verdict: GO (not Strong GO: mean < 0.010).'
+status: supported
+study_id: zinc-context-gap
+supporting_evidence:
+- records/runs/20260909-193141-6962889e, 20260909-194445-182c7021, 20260909-195530-666da952,
+  20260909-200320-34b347bf, 20260909-201121-e3e57f05, 20260909-201918-45fbe48d, 20260909-202722-a1dd7a00,
+  20260909-203516-04e62a28; notes/compact_v4_multiseed_protocol_confirmation.md

@@ -482,3 +482,40 @@ none guard terminal `20260909-172752-4881725e` 与 statedict 复现 `20260909-17
 `20260909-164306-c0a568c9`；capacity_control `20260909-165917-b544452b`（与 2-way run
 `20260909-161302-97c62f91` 完全一致）；v2 canonical screen `20260907-193612-46c1a12f`、
 terminal `20260907-194818-604fa0f5`。
+
+---
+
+## Addendum (2026-09-09): protocol naming fix + multi-seed confirmation (GO)
+
+**Wording correction (do not delete the history above).** 本文档 §14.2/§19/§20 中
+的 "Official terminal test" / "official refit/test" 指 **train+valid refit → test**。
+Benchmark audit（Dwivedi et al. arXiv:2003.00982v4 + benchmarking-gnns 代码 + CIN
+arXiv:2106.12575v2，见 `compact_v4_multiseed_protocol_confirmation.md` §2）确认文献
+ZINC-12k 主协议是 **train only → validation selection → frozen checkpoint → single
+test**，**没有** train+valid refit。因此：
+
+- 本文档的 "Official terminal test 0.139446" 应改读为
+  **secondary refit-robustness test**（内部 robustness 协议）；
+- 本文档 §14.2 的 selection-checkpoint test 数字（v2 0.154284 / hinge 0.133901）才是
+  **benchmark-comparable** 数字；§15.1 的 "selection 模型" 分组表即 benchmark 口径。
+
+**Multi-seed confirmation (seeds 0–3, serial, bit-verified; 详见
+`compact_v4_multiseed_protocol_confirmation.md`).** 在 benchmark 口径下
+（frozen best-valid checkpoint 单次 test，train-only fits）：
+
+- v2 test mean **0.146069 ± 0.006177**；hinge test mean **0.136885 ± 0.005552**；
+- paired mean improvement **+0.009184**（median +0.007747），**4/4 seeds** 为正；
+  valid 方向 4/4 一致（+0.013393，p=0.049）；
+- test subgroups（4-seed 汇总）：A +0.0031±0.0103（2/4 wins，sign flips），
+  B +0.0722±0.0558（4/4），C +0.3882±0.3017（4/4）；
+- seed-0 guard：valid traces 与 refit test 逐位复现本文档 §14 数字；in-run
+  selection-checkpoint test 逐位复现 §14.2 的 post-hoc 值
+  （0.15428431200794876 / 0.13390139845572413）。
+
+**修正后的 round 判定：GO（benchmark 口径，非 Strong GO）**，取代 §19 的
+"valid-GO / official-test-negative（分裂）"表述 —— 分裂来自把 secondary refit
+协议当 primary；benchmark 口径下 valid 与 test 同向。seed-0 refit 退化 (+0.0041)
+保留为 secondary 现象记录（train+valid refit 稳定性问题，另行研究）。下一步：
+**post-v4 residual audit**（以 v4-hinge 为冻结 baseline）。工具：terminal run 现可
+in-run 测 `test_with_selection_checkpoint_mae`（flag
+`evaluation.selection_checkpoint_test`，commit 0a61b23，additive，默认 off）。

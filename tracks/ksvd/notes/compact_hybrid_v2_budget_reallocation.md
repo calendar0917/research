@@ -92,3 +92,15 @@ v2 的 0.1842 valid MAE 残差（16% 全局收缩，ŷ≈0.07+0.838y）经机制
 λ（学到的罚项比例）阶梯 0.99/0.89/0.46/0.001（excess 0/1/2/≥4）；
 无环组斜率 0.989（无收缩）。v3 局部环条件化 NO-GO 与此不矛盾（局部环尺度 ≠ 全局环
 统计量）。下一步唯一推荐：全局不变环尺度通道（上限 ΔMAE +0.0117）。
+
+---
+
+## Addendum (2026-09-09): protocol wording + multi-seed benchmark numbers
+
+**Wording correction.** 上文 "Terminal result (train+valid refit)" = internal
+**secondary refit-robustness protocol**（benchmark audit 见
+`compact_v4_multiseed_protocol_confirmation.md` §2；文献 ZINC 主协议不含
+train+valid refit）。compact-v2 的 **benchmark-comparable**（selection-checkpoint
+test）数字见 v4 multi-seed note：seed 0 = 0.154284；seeds 0–3 mean **0.146069 ±
+0.006177**（run ids 见该 note §6）。valid 0.184158 @56（seed 0）在 multi-seed guard
+run `20260909-193141-6962889e` 中逐位复现。
