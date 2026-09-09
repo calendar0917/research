@@ -11,9 +11,11 @@
 
 Same code + same seed + same machine + same environment, but with
 **>= 3 concurrent CPU training processes** on a 16-logical-thread machine, produce
-run-to-run numerical divergence **from epoch 4 onward** (valid-MAE traces stop being
-bit-identical; e.g. the 4-way concurrent hinge run `20260909-154106-7f962608`
-reached valid 0.1692115 @54 while the canonical solo hinge run is 0.1700656 @53).
+run-to-run numerical divergence **from epoch 3 onward** (epochs 1–2 stay
+bit-identical, then valid-MAE traces diverge; e.g. the 4-way concurrent hinge run
+`20260909-154106-7f962608` reached valid 0.1692115 @54 while the canonical solo
+hinge run is 0.1700656 @53; traces compared epoch-by-epoch: first divergent epoch 3,
+58/60 epochs differ).
 
 Concrete A/B evidence (2026-09-09, all `zinc-context-gap`, same day):
 
