@@ -1,0 +1,62 @@
+claim_id: claim-oof-difficulty-confirmed-20260910
+contradicting_evidence: []
+created: '2026-09-10T00:20:00'
+implication: >-
+  The official-train OOF residual of frozen compact-v4-hinge is confirmed as
+  predictive difficulty / heteroscedastic conditional variance. Remaining
+  error after the frozen protocol is systematically larger on rare-token
+  molecules and on molecules the two model seeds disagree about; no signed
+  second-layer structural signal appears on train (signed correlations
+  remain small vs their absolute counterparts everywhere). The train-side
+  diagnostic loop opened by the validation-only Post-v4 Residual Audit is
+  closed: residual structure is conditional variance, not a hidden
+  correctable bias, and no new representation channel is indicated.
+kind: claim
+limitations:
+- n=2 model seeds (seed 0 + one disagreement seed, as pre-registered);
+  molecule-level cross-seed consistency (0.384) is a 2-sample estimate and
+  per-fold MAEs are the seed-stable quantities (all folds within 0.0064)
+- internal-state statistics come from seed-0 fold checkpoints only
+- y is the stored normalized-logP label of the frozen benchmark generator;
+  difficulty = |residual| on that scale
+- rarity counters are per-molecule outer-fold inner-train (7200; own fold
+  excluded); cross-pool population comparisons used a full-train counter
+  (train rare<=5 mean 0.039 vs valid 0.045 - similar mixes)
+- disagreement is a 2-seed diagnostic; the epistemic GO branch is
+  pre-registered at >=0.30 Spearman with >=4/5 same sign and clears it
+  (0.393, 5/5), but the ensemble gain it implies (-8.3% with 2 seeds) is an
+  upper-ish bound on what more seeds could recover, not a promise
+scope: >-
+  official ZINC-12k train split (10 000 molecules), K=5 OOF (fold_seed=0),
+  per fold nested inner 7200/800, frozen compact-v4-hinge protocol
+  (configs/luyin16/zinc_compact_v4_topology_hinge.yaml), model seeds 0 and 1;
+  official test and validation splits never loaded; no architecture/loss/
+  feature modification (only hybrid-embedding full-count clamp 32->29/31
+  parent rows on fold vocabularies, same practice as the v2 OOF audit)
+statement: >-
+  Cross-fitted (nested-OOF) difficulty prediction on official-train
+  per-molecule absolute error reaches Spearman 0.374 (model-visible features:
+  rarity+structure+topology+states) and 0.490 (including seed disagreement),
+  both 5/5 folds same sign; predicted-hardest quintile MAE is 3.67x the
+  easiest. Rarity is the leading visible axis (rare<=5 Spearman 0.309,
+  OOV 0.277, mean-inverse-1+freq 0.339; monotone MAE ladder 0.133 -> 0.417
+  across rarity bins). Seed disagreement is the single best difficulty
+  feature (Spearman 0.393 overall, 0.359-0.420 per fold, 5/5 same sign);
+  2-seed ensembling lowers MAE 0.1750 -> 0.1604 (-8.3%), with gain
+  concentrated in the hardest error quintile. Difficulty persists within
+  target-y halves and within-y-quintiles (pooled 0.284), so it is not a
+  y-level artifact. Verdicts: difficulty GO (gate 0.25, 4/5), epistemic GO
+  (gate 0.30, 4/5).
+status: supported
+study_id: zinc-context-gap
+supporting_evidence:
+- notes/oof_difficulty_heteroscedasticity_audit.md
+- results/oof_difficulty_audit/README.md
+- records/decisions/decision-oof-difficulty-heteroscedasticity-go-20260910.yaml
+- >-
+  results/oof_difficulty_audit/{fold_assignments.csv, inner_splits.csv,
+  oof_per_molecule.csv, table_A_fold_results.csv,
+  table_B_difficulty_correlations.csv, table_C_difficulty_predictor.json,
+  table_D_difficulty_quintiles.csv, table_E_epistemic_signal.json,
+  rarity_bin_table.csv, difficulty_predictions.npz, decision_record.json,
+  cache/folds/fold*_seed*_meta.json}

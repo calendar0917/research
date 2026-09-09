@@ -1,0 +1,52 @@
+decision_id: decision-oof-difficulty-heteroscedasticity-go-20260910
+created: '2026-09-10T00:20:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  GO (difficulty) and GO (epistemic) for the OOF Difficulty/Heteroscedasticity
+  Confirmation on official TRAIN with frozen compact-v4-hinge (K=5 OOF,
+  fold_seed=0, nested inner 7200/800, model seeds 0+1; official test and
+  validation never loaded). Difficulty GO: cross-fitted model-visible
+  (rarity+structure+topology+states) Spearman 0.374 >= 0.25 with 5/5 folds
+  same sign (already GO on seed 0 alone: 0.300, 5/5); all-features variant
+  0.490 (R2-log 0.264), predicted-quintile MAE ratio 3.67. Epistemic GO:
+  disagreement-error Spearman 0.393 >= 0.30 with 5/5 folds same sign
+  (per-fold 0.359-0.420), 2-seed ensemble gain -0.0146 (-8.3%) concentrated
+  in the hardest error quintile. Interpretation: the train OOF residual of
+  the frozen protocol is predictive difficulty / heteroscedastic conditional
+  variance on the rarity axis, the low-y extreme axis, and the
+  seed-disagreement axis - not a signed second-layer structural signal.
+  This confirms (now with true OOF, on train) the validation-only Post-v4
+  Residual Audit conclusion NO CLEAR SECONDARY SIGNAL and closes that
+  diagnostic loop. No v5 representation channel is recommended by this
+  audit; remaining error is documented conditional variance, which is the
+  pre-registered target list for any future (separately gated)
+  objective/calibration study - not for structural feature work.
+alternatives_rejected:
+- item: GO structural-representation v5 on the strength of train OOF signal
+  because: >-
+    the audit was mandated as a diagnostic gate only: confirm that the
+    residual is difficulty/heteroscedasticity, never train or modify. The
+    confirmed axes (rarity, disagreement, low-y tail) are variance axes;
+    their signed counterparts stay weak (rare<=5 signed -0.08 vs abs +0.31),
+    and no non-oracle probe was fitted or gated in this phase
+- item: treat OOF MAE (0.175) vs frozen valid MAE (0.170) as a train-vs-valid
+  quality gap
+  because: >-
+    fit sizes differ (7200/fold vs full-protocol fit) and train/valid
+    rare-token mixes are similar (0.039 vs 0.045); per-molecule difficulty is
+    the measured quantity and it is heterogeneous and predictable, which is
+    the claim
+- item: open a calibration/objective study now
+  because: >-
+    out of scope for this freeze-bound phase; revisit_if below records the
+    conditions under which the documented difficulty axes become a target
+    list for such a study
+revisit_if: >-
+  (1) an objective/calibration study is opened under the frozen protocol's
+  rules - the documented difficulty axes (token rarity, per-seed
+  disagreement, low-y tail) and this OOF-train residual set are its
+  measurement substrate; or (2) the freeze lifts and a structural feature
+  family is proposed that must clear the original gates on this OOF set
+  (>=0.003 corrected MAE style, 5/5-fold consistent) before any model change;
+  or (3) the v4-hinge baseline itself changes.
