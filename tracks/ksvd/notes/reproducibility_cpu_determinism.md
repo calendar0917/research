@@ -21,7 +21,7 @@ Concrete A/B evidence (2026-09-09, all `zinc-context-gap`, same day):
 
 | concurrency | run(s) | valid best MAE | bit-identical with canonical? |
 |---|---|---|---|
-| 4-way (15:41:06 batch) | `...154106-7f962608` (hinge) | 0.1692115 @54 | **no** (diverges from epoch 4) |
+| 4-way (15:41:06 batch) | `...154106-7f962608` (hinge) | 0.1692115 @54 | **no** (first divergent epoch 3; 58/60 epochs differ) |
 | 2-way (16:13:02 batch) | `...161302-4c318efd` (v4-none) | 0.18415821571176638 @56 | **yes** (== v2 canonical) |
 | 2-way | `...161302-97c62f91` (capacity) | 0.18425278290727876 @60 | yes (== its own solo rerun) |
 | solo reruns | `...164306/164801/165340/165917/171303/172752/174717` | see notes | yes (bit-identical among repeats) |
