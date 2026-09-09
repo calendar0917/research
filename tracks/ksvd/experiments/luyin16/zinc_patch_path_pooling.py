@@ -2336,6 +2336,62 @@ def run(config_path: Path) -> dict[str, Any]:
     )
     selected_epoch = int(valid_phase["selected_epoch"])
 
+    # --- Primary benchmark protocol measurement (read-only, additive) ---
+    # The frozen validation-selected checkpoint (fit on official train only)
+    # is evaluated exactly once on official test.  This is the
+    # literature-comparable protocol (train -> validation selection -> frozen
+    # checkpoint -> single test evaluation); it retrains nothing and never
+    # refits vocabularies/standardizers on train+validation.  Gated by the
+    # config flag evaluation.selection_checkpoint_test (default False), so
+    # existing runs remain bit-identical when the flag is off.
+    selection_test_phase = None
+    selection_test_audit = {}
+    if bool(config.get("evaluation", {}).get("selection_checkpoint_test", False)):
+        if not load_test:
+            raise RuntimeError(
+                "evaluation.selection_checkpoint_test requires terminal test "
+                "access (test_policy=terminal); official test is not loaded "
+                "in non-terminal runs"
+            )
+        _sel_train_data, selection_test_graphs, selection_test_audit = _phase_data(
+            train_records, test_records, config=config
+        )
+        # Guard: the refit of train-only vocabularies must equal the one the
+        # selection phase actually used (catches any nondeterminism before
+        # it silently corrupts a frozen-checkpoint evaluation).
+        if int(selection_test_audit["typed_vocabulary_size_with_oov"]) != int(
+            valid_audit["typed_vocabulary_size_with_oov"]
+        ) or int(selection_test_audit["parent_vocabulary_size_with_oov"]) != int(
+            valid_audit["parent_vocabulary_size_with_oov"]
+        ):
+            raise RuntimeError(
+                "selection-checkpoint test vocab size mismatch vs selection "
+                f"phase: {selection_test_audit['typed_vocabulary_size_with_oov']} "
+                f"vs {valid_audit['typed_vocabulary_size_with_oov']}"
+            )
+        selection_test_loader = _make_loader(
+            selection_test_graphs,
+            int(model_config.get("batch_size", 128)),
+            False,
+            seed + 91013,
+        )
+        sel_targets, sel_predictions = _predict_values(
+            valid_phase["model"], selection_test_loader, device
+        )
+        selection_test_phase = {
+            "mae": float(mean_absolute_error(sel_targets, sel_predictions)),
+            "parameters": int(valid_phase["parameters"]),
+            "checkpoint": "validation-selected best state; train-only fits",
+            "targets": sel_targets.tolist(),
+            "predictions": sel_predictions.tolist(),
+        }
+        print(
+            "selection-checkpoint test MAE = "
+            f"{selection_test_phase['mae']!r} (frozen best-valid state, "
+            "train-only fits)",
+            flush=True,
+        )
+
     refit_phase = None
     test_audit = {}
     if load_test:
@@ -2499,6 +2555,9 @@ def run(config_path: Path) -> dict[str, Any]:
         "feature_build": feature_metadata,
         "vocabulary_audit": {
             "valid": valid_audit,
+            "test_with_selection_checkpoint": (
+                selection_test_audit if selection_test_phase is not None else None
+            ),
             "test_after_train_valid_refit": test_audit,
         },
         "training": {
@@ -2532,6 +2591,17 @@ def run(config_path: Path) -> dict[str, Any]:
                 }
                 if refit_phase is not None
                 else {"mae": None, "epochs_run": 0, "blocked": True}
+            ),
+            "test_with_selection_checkpoint": (
+                {
+                    "mae": float(selection_test_phase["mae"]),
+                    "parameters": int(selection_test_phase["parameters"]),
+                    "checkpoint": selection_test_phase["checkpoint"],
+                    "targets": selection_test_phase["targets"],
+                    "predictions": selection_test_phase["predictions"],
+                }
+                if selection_test_phase is not None
+                else {"mae": None, "blocked": True}
             ),
             "parameters": int(valid_phase["parameters"]),
         },

@@ -95,6 +95,9 @@ def _metrics_from_legacy(result: Mapping[str, Any], blocked: bool) -> dict[str, 
     if test.get("mae") is not None:
         metrics["test_after_train_valid_refit_mae"] = float(test["mae"])
         metrics["test_epochs_run"] = int(test["epochs_run"])
+    sel_test = evaluation.get("test_with_selection_checkpoint")
+    if sel_test and sel_test.get("mae") is not None:
+        metrics["test_with_selection_checkpoint_mae"] = float(sel_test["mae"])
     return metrics
 
 

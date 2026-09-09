@@ -53,11 +53,37 @@ description_short: >-
   record test_access=blocked and the runner switches to train+valid-only mode.
 
 seed_semantics:
-  seed_role: "single seed governs torch/numpy/random init and loader shuffle (offset seeds +91011/+91012)"
-  seeds: [0]
+  seed_role: "seed governs torch/numpy/random init and loader shuffle (offset seeds +91011/+91012)"
+  seeds: [0, 1, 2, 3]
   notes: >-
     A run's scientific identity includes its seed; different seeds are
     distinct runs, not duplicates.
+
+# --- 2026-09-09 addendum: primary/secondary protocol naming (protocol-correction
+# stage; see tracks/ksvd/notes/compact_v4_multiseed_protocol_confirmation.md).
+# The validation-selection phase IS the benchmark-comparable protocol; the
+# train+valid refit/test path is an internal robustness protocol only.
+benchmark_protocol:
+  name: primary-benchmark-protocol
+  description: >-
+    Train only on official train; validation is used for checkpoint
+    selection / scheduler / early stopping; the frozen best-validation
+    checkpoint is evaluated on official test exactly once (no train+valid
+    refit).  Literature-comparable (Dwivedi et al. Benchmarking GNNs;
+    CIN/Bodnar et al. 2021): mean +/- std over repeated seeds.
+  measured_as: test_with_selection_checkpoint_mae
+  seeds: [0, 1, 2, 3]
+
+secondary_refit_robustness_protocol:
+  name: secondary-refit-robustness
+  description: >-
+    Internal only: retrain the selected-epoch budget on official
+    train+validation (vocab/standardizers refit on train+valid) then
+    evaluate test once.  NOT literature-standard; used only for
+    robustness/distribution-expansion analysis.  Formerly called "official
+    refit/test" in earlier notes — that wording is deprecated.
+  measured_as: test_after_train_valid_refit_mae
+  seeds: [0]
 
 comparability:
   requires:
