@@ -1,0 +1,101 @@
+claim_id: claim-function-basis-accessibility-nogo-20260913
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-09-13T00:10:00'
+statement: >-
+  On the frozen compact-v4-hinge representation R (302D) of the official ZINC
+  train universe, an explicit target-independent additive piecewise-linear
+  (quantile-hinge) basis does NOT make L1/MAE residual regression more
+  sample-efficient than a parameter-matched generic ReLU MLP. Setup verified
+  from real exports: R_dim = 302 with layout unary 97 + pair-bucket moments
+  165 + global 32 + topology 8; frozen baseline yhat_0 == the OOF fold
+  prediction (max diff 0.0) and the stored R re-fed through the frozen
+  reconstructed head reproduces yhat_0 (max 0.0); offline reconstructed R
+  matches the exported R (max 1.1e-5..9.2e-5). All readers share the same
+  fit-only coordinate standardisation (mean/std from the 1200 adapter-fit
+  molecules only, z_j = (R_j-mean_j)/max(std_j,1e-6), z_j = 0 when
+  std_j < 1e-6; 18-94 of 302 coordinates are fit-degenerate per fold), the
+  same L1 objective, the same Adam(lr=1e-3) full-batch trainer, the same
+  selection checkpoint rule and the same fixed horizon (400, chosen by a
+  fold0/seed0 100/200/400/800 convergence trace), and all predict
+  yhat = yhat_0 + delta(z). Readers: B0 frozen baseline; B1 generic ReLU MLP
+  302 -> 4 -> 2 -> 1 (1225 params); B2 generic ReLU MLP 302 -> 13 -> 13 -> 1
+  (4135 params, deliberately not matched); E additive linear reader on
+  [z_j, ReLU(z_j-t25), ReLU(z_j-t50), ReLU(z_j-t75)] (1208D, 1209 params, knot
+  quantiles from adapter-fit inputs only); B-linear descriptive 302 -> 1
+  (303 params). B1/E parameter mismatch +1.32% <= 3%. Stage 1 (frozen OOF
+  backbone seed 0 x 5 folds x 1 init, same 1200/400/400 molecule-ID hash split
+  as the frozen-readout audit, assignment sha256 cross-checked identical)
+  evaluation MAE means: B0 0.193160, B1 0.187815, B2 0.190508, B-linear
+  0.203257, E 0.203204, E with hinge coefficients zeroed 0.250995. mean
+  Delta_small = MAE(B1) - MAE(E) = -0.015389 (median -0.015305, 0/5 folds
+  positive, stratified paired bootstrap 95% CI [-0.01979,-0.01093], P(>0)=0);
+  mean Delta_strong = MAE(B2) - MAE(E) = -0.012696 (0/5); mean MAE_E - MAE_B0
+  = +0.010044. The common-input rare-patch bulk also degrades under E
+  (mean MAE_E - MAE_B1 = +0.018408, max +0.021165, gate <= +0.002 FAIL).
+  Within E the hinge terms are essential (zeroing them raises MAE by
+  +0.047791, 95% CI [+0.03975,+0.05587], 5/5), so the explicit basis is
+  expressive but not competitive. The second reader init, second backbone
+  seed, mechanism coefficient analysis and fixed-knot control were not spent.
+scope: >-
+  ZINC-12k official TRAIN only, through the existing frozen compact-v4-hinge
+  OOF checkpoints (official valid/test never loaded); backbone seed 0 (second
+  seed NOT spent under the pre-registered CLEAR NO-GO rule); one reader init
+  (Stage 1b not triggered); typed_tokenizer_v1_historical; fixed horizon 400
+  with best-selection checkpointing; B1/B2/E share identical L1 objective,
+  Adam(lr=1e-3), full-batch policy and deterministic seed; no backbone
+  training, no compact-v4 change, no patch/tokenizer/pair-encoder/centre-update
+  /pooling/topology/loss change, no new structural feature, no target-informed
+  knot, no MSE/Huber/weighted objective, no LR/weight-decay/optimizer sweep.
+supporting_evidence:
+- notes/function_basis_accessibility_audit.md
+- results/function_basis_accessibility/representation_integrity.json
+- results/function_basis_accessibility/checkpoint_inventory.json
+- results/function_basis_accessibility/fold_split_manifest.json
+- results/function_basis_accessibility/preprocessing_stats.json
+- results/function_basis_accessibility/basis_spec.json
+- results/function_basis_accessibility/convergence_trace.json
+- results/function_basis_accessibility/stage1_fold_results.csv
+- results/function_basis_accessibility/stage1_bootstrap.json
+- results/function_basis_accessibility/final_decision.json
+- tests/test_function_basis_accessibility.py
+contradicting_evidence:
+  - >-
+    E is not a dead reader: its hinge terms carry most of its expressive
+    power (removing them costs +0.047791 MAE, 5/5 folds), and E is globally
+    non-collapsed (prediction sensitivity min 1.117). This does not reverse
+    the result: the fact that the explicit basis expresses useful shape is
+    exactly what makes its failure to beat the same-budget MLP informative.
+  - >-
+    The target-independent hinge basis is only one member of the explicit
+    basis family. A basis with explicit coordinate interactions, a shared or
+    learned sparse response dictionary, or an MAE-compatible boosted-tree
+    family could in principle behave differently; none of these was tested.
+  - >-
+    The compact-v4-hinge success itself is consistent with a
+    parameterisation/function-basis effect (spectrum already contains L and
+    the hinge only adds L^2 and ReLU(L-t) ladders, with an all-zero
+    equal-capacity control at Delta ~ 0), but v4 also differs in feature set,
+    parameterisation, target-audit inspiration and preprocessing, so this
+    audit does not prove v4's gain was a pure function-basis effect.
+limitations:
+- One frozen backbone seed only (pre-registered CLEAR NO-GO stopped the
+  second seed); one reader init (Stage 1b not triggered).
+- The experimental reader E is deliberately additive (no hidden MLP), so the
+  result closes the additive coordinatewise hinge basis specifically, not
+  every explicit basis expansion.
+- Five outer folds of 400 adapter-evaluation molecules each; the effect is
+  large and same-signed on all folds, but it is a screening budget.
+- The frozen R is fixed; no statement is made about representations that
+  already contain explicit interactions or about jointly trained bases.
+implication: >-
+  Stop the frozen-R basis-engineering route. Do NOT next try more or learned
+  knots, B-splines, polynomial, RBF, Fourier or wavelet bases, and do NOT open
+  the KSVD / learned shared response dictionary as the main line on the back
+  of this negative. The next decision should move to the representation-family
+  level (does the model need a different representation family / structured
+  computation, rather than another function transform of frozen R?). A
+  separate, later, pre-registered experiment may compare MAE-compatible
+  function families (generic ReLU MLP, additive spline/hinge dictionary,
+  boosted trees) once the function-family question is independently motivated.

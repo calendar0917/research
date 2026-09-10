@@ -1,0 +1,90 @@
+decision_id: decision-function-basis-accessibility-nogo-20260913
+created: '2026-09-13T00:10:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  CLEAR NO-GO (Case C) for the simple target-independent coordinatewise
+  quantile-hinge function basis on the frozen compact-v4-hinge representation.
+  On the same frozen OOF representation R (302D), the same L1/MAE objective,
+  the same fit-only standardisation, the same 1200/400/400 split and the same
+  optimizer / checkpoint-selection protocol, a parameter-matched generic ReLU
+  MLP (B1, 302 -> 4 -> 2 -> 1, 1225 params) beats the explicit additive
+  quantile-hinge reader (E, [z, relu(z-t25), relu(z-t50), relu(z-t75)] -> 1,
+  1209 params) on every fold: mean Delta_small = MAE(B1) - MAE(E) = -0.015389
+  (median -0.015305, 0/5 folds positive; stratified paired bootstrap 95% CI
+  [-0.01979, -0.01093], P(>0)=0). E is also worse than the stronger generic
+  MLP B2 (302 -> 13 -> 13 -> 1, 4135 params; mean Delta_strong = -0.012696,
+  0/5) and worse than the frozen baseline B0 it was meant to correct
+  (mean MAE_E - MAE_B0 = +0.010044). The hinge basis is not inert: zeroing the
+  hinge coefficients inside E at inference raises evaluation MAE by
+  +0.047791 (95% CI [+0.03975, +0.05587], 5/5), so the explicit basis does
+  express L1-relevant shape, it is simply not competitive at this budget.
+  Bulk safety also fails (common-input rare-patch subgroup
+  mean MAE_E - MAE_B1 = +0.018408, max +0.021165, gate <= +0.002), so the
+  shortfall is not confined to a few unusual molecules. Representation
+  integrity / reconstruction gates passed 5/5 folds (stored yhat_0 == frozen
+  OOF prediction max 0.0; reconstructed R max <= 9.2e-5; stored R re-fed
+  through the frozen head max 0.0). The second reader init, the second frozen
+  backbone seed, the mechanism coefficient analysis and the fixed-knot control
+  were NOT spent. The conclusion is scoped to the simple additive
+  coordinatewise hinge basis; it does NOT mean function parameterisation is
+  unimportant in general, and it does NOT prove the compact-v4 backbone is
+  optimal.
+alternatives_rejected:
+- item: spend the second frozen backbone seed for replication
+  because: >-
+    the pre-registered Stage-1 CLEAR NO-GO rule fires on both clauses
+    (mean Delta_small <= +0.0005 AND E better than B1 in <= 2/5 folds);
+    replication is earned only by a positive or borderline Stage 1
+- item: run Stage-1b (second reader init)
+  because: >-
+    Stage 1b is defined only for a borderline Stage 1; this is a clear NO-GO
+    with a large negative effect on all five folds, not an init-noise issue
+- item: add more / learned knots, B-splines, polynomial, RBF or Fourier bases
+  because: >-
+    explicitly forbidden as post-hoc basis hunting after a failed fixed
+    target-independent basis; the mandate says do not immediately search ten
+    more basis families
+- item: run the XGBoost / MAE-compatible boosted-tree comparison now
+  because: >-
+    out of scope for this stage. XGBoost simultaneously changes function
+    family, optimization, regularization, feature selection, partition
+    structure and absolute-error implementation; comparing it before
+    establishing that the function family itself matters would produce a
+    number without a mechanism
+- item: run the KSVD / learned shared response dictionary route
+  because: >-
+    the mandate gates the learned-dictionary direction on a GO for the fixed
+    hinge basis; there was no GO
+- item: treat the negative as evidence that the whole backbone is optimal
+  because: >-
+    this is a frozen-representation screen only; it shows a generic MLP still
+    extracts signal that an additive per-coordinate basis cannot, which is
+    consistent with coordinate interactions mattering, not with the backbone
+    being optimal
+revisit_if: >-
+  A fundamentally different function-family hypothesis is registered with its
+  own witness, for example (1) an MAE-oriented structured function basis with
+  explicit coordinate interactions rather than a purely additive one, or
+  (2) a sparse / shared learned response dictionary, or (3) the
+  MAE-compatible function-family comparison (generic ReLU MLP vs additive
+  spline/hinge dictionary vs boosted trees). Do not reopen the frozen-R
+  basis-engineering route by only changing knots, thresholds, basis family or
+  capacity without a pre-registered hypothesis and a clean control.
+notes: >-
+  This audit was explicitly motivated by the compact-v4 topology hinge. A
+  re-check of the repo confirms that the v4 spectrum channel already contains
+  the scalar longest-cycle length L plus exact small-cycle counts, while the
+  hinge channel only adds L^2 and a ReLU(L-3..10) ladder. Those hinge features
+  supply almost no new graph-identity information; they mainly make a
+  saturating, asymmetric response shape easy to express and easy to estimate,
+  and the equal-capacity all-zero control rules out a pure-capacity
+  explanation. That is a hypothesis about why v4-hinge worked, not a proof.
+  The present experiment is a cleaner, independent test of the same
+  parameterisation idea on a frozen representation, and it comes out
+  negative for the additive coordinatewise basis. Independent descriptive
+  finding worth carrying forward: B1 (1225 params) and B2 (4135 params) both
+  beat B0 on 5/5 folds (mean +0.005345 and +0.002651), so the frozen compact-v4
+  representation still contains signed residual structure that a small generic
+  ReLU reader can exploit; an additive per-coordinate hinge expansion cannot
+  access it as efficiently.
