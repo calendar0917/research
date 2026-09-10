@@ -1,0 +1,77 @@
+claim_id: claim-compact-v6-attribute-branch-collapse-and-viability-20260910
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-10T18:45:00'
+statement: >-
+  (A) The original compact-v6 factorized-role attribute branch collapsed and was
+  unused. The final fusion projection was zero-initialised, so at step 0 e_attribute
+  was exactly zero: every upstream attribute parameter (atom/bond embedding, atom/bond
+  MLP) and the eight new patch_encoder input columns received EXACTLY zero gradient,
+  while only attribute_encoder.fusion.2.weight/bias and grad_e_attribute (std 7.5e-6)
+  were nonzero. The optimizer registration is correct (14/14 attribute parameters,
+  requires_grad=True, one param group), and the raw representation is informative
+  (role-feature std ~0.30; an adversarial same-multiset different-placement pair
+  changes the factorized view but not the count view). Collapse occurred in the
+  attribute encoder's nonlinear layers, not the final projection: at the frozen
+  seed-0 checkpoint h_atom occurrence std is 5.2e-6 (input std 0.212) and per-patch
+  e_attribute std is 7.6e-12, so the branch output was a constant absorbed by the
+  following LayerNorm and the model was exactly invariant to attribute-type and
+  role-association shuffle (max per-molecule |delta| = 0.0). (B) The minimal
+  pre-registered repair -- only the final fusion projection init changed from zeros
+  to normal(std=0.01), everything else bit-identical -- makes the branch demonstrably
+  active over 100 optimizer steps (V1 e_attribute patch std 3.87e-4 > 1e-4; V2 final /
+  upstream / patch-column gradients alive; V3 role-shuffle max |delta| 3.70e-5;
+  V4 attr-zero ablation max |delta| 1.38e-2). (C) Under the canonical 60-epoch
+  protocol the repaired branch nevertheless degenerates again to a near-constant
+  output (per-patch std 3.62e-7; role/type shuffle mean |delta| ~1.2e-7) and does not
+  improve seed-0 validation: v4 0.170066 -> viable 0.170209 (delta -0.000143, gate
+  >= +0.003 FAIL), with the historical Q1/Q2 easy-bulk combined degradation +0.023831
+  (gate <= +0.002 FAIL) and a Q5 hard-tail gain of +0.051138 -- the same redistribution
+  fingerprint as the original collapsed v6 and the corrected exact tokenizer. The
+  zero-init is therefore the trigger/aggravator, not the sole cause: the attractor is
+  that the v4 path alone can fit the target, so placement receives no persistent
+  gradient.
+scope: >-
+  ZINC-12k official train/valid, historical compact-v4-hinge patch path
+  (typed_tokenizer_v1_historical), seed 0 (seed 1 not run per stop rule), validation
+  MAE only; no test split loaded; serial CPU, deterministic, identical
+  optimizer/protocol to v4 except attribute_fusion_init.
+supporting_evidence:
+- notes/compact_v6_attribute_branch_viability_repair.md
+- results/compact_v6_viability/original_single_batch_trace.json
+- results/compact_v6_viability/original_10step_trace.csv
+- results/compact_v6_viability/original_100step_trace.csv
+- results/compact_v6_viability/optimizer_parameter_audit.csv
+- results/compact_v6_viability/attribute_input_variance.json
+- results/compact_v6_viability/adversarial_representation_check.json
+- results/compact_v6_viability/repaired_100step_trace.csv
+- results/compact_v6_viability/repaired_viability_gate.json
+- results/compact_v6_viability/seed0_mechanism_diagnostics.json
+- results/compact_v6_viability/original_collapsed_mechanism_diagnostics.json
+- results/compact_v6_viability/seed0_difficulty_quintiles.csv
+- results/compact_v6_viability/seed01_results.csv
+- results/compact_v6_viability/decision_record.json
+- results/compact_v6_viability/figures/fig1_original_10step_gradients.png
+- results/compact_v6_viability/figures/fig2_repaired_100step.png
+- results/compact_v6_viability/figures/fig3_seed0_prediction_delta.png
+- experiments/luyin16/compact_v6_viability_repair.py
+- experiments/luyin16/compact_v6_viability_summary.py
+- configs/luyin16/zinc_compact_v6_viable.yaml
+- tests/test_compact_v6_viability_repair.py
+- runs/2026/09/10/20260910-162801-fa8a41cf
+- runs/2026/09/10/20260910-183159-63fd1616
+contradicting_evidence:
+- 'The repaired branch passes the full 100-step viability gate V1-V4, so the earlier "the configuration could not test attribute placement at all" caveat is now resolved: even a demonstrably active branch yields no seed-0 gain.'
+- 'The repaired init makes the branch several orders of magnitude more active than the original at the frozen checkpoint (patch std 3.6e-7 vs 7.6e-12; fusion weight norm 0.035 vs 0.008), so the repair is real, not cosmetic.'
+limitations:
+- 'Only seed 0 was run; the pre-registered rule stops at seed 0 when the performance gate fails, so no two-seed or four-seed statement is made here.'
+- 'The collapse in the repaired full run is a training-dynamics attractor (v4 path fits the target alone); the exact epoch at which it re-collapses was not traced (only the 100-step window and the frozen endpoint were measured).'
+- 'Difficulty quintiles are the frozen historical (v4-audit) quintiles reused for comparability, not re-derived from the v6 split.'
+- 'The 8D e_attribute and 8-feature role descriptor remain one specific realisation; a fundamentally different (non-appended) attribute interaction is not excluded by this claim.'
+implication: >-
+  The topology-attribute-factorization branch is closed permanently on this evidence.
+  The original seed-0 gain (+0.013645) is invalid as mechanism evidence (its branch was
+  collapsed). Do not tune init scale, attribute dimension, role features, or optimizer;
+  any reopening requires a fundamentally different architecture stage and its own
+  pre-registered graph-side-observable gate.

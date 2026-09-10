@@ -1,0 +1,68 @@
+# Compact-v6: factorized topology-attribute patch representation.
+#
+# The historical compact-v4-hinge model is held fixed (coarse topology token
+# embedding, 146D shell descriptor, parent embedding, pair/path pooling,
+# center-context, single graph head).  The ONLY change is a tiny shared
+# compositional attribute encoder over (atom/bond type, coarse rooted
+# automorphism-role descriptor) primitives whose 8D output ``e_attribute`` is
+# appended to the patch encoder input.
+#
+# No exact typed-token lookup is used anywhere in this branch (atom types and
+# bond types are 28/4 categorical values, not patch identities).  See
+# notes/compact_v6_topology_attribute_factorization.md.
+protocol_id: luyin16-zinc-hierarchical-patch-relation-context-compact-v6-factorized-role
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+
+model:
+  patch_hidden: 48
+  pair_hidden: 16
+  token_width: 16
+  embedding_mode: hybrid
+  embedding_rank: 4
+  hybrid_full_typed_tokens: 768
+  hybrid_full_parent_tokens: 32
+  center_context: true
+  center_context_hidden: 60
+  graph_head_hidden_0: 64
+  graph_head_hidden_1: 32
+  dropout: 0.05
+  epochs: 60
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 12
+  evaluate_every: 1
+  device: cpu
+  parameter_audit: true
+  # v4 global topology channel (unchanged).
+  topology_mode: hinge
+  topology_hidden_dim: 16
+  topology_out_dim: 8
+  topology_shuffle_test: true
+  save_state_dict: true
+  # v6 factorized attribute channel.
+  attribute_mode: factorized_role
+  attribute_atom_dim: 4
+  attribute_bond_dim: 2
+  attribute_hidden: 10
+  attribute_out_dim: 8
+  # v4-hinge 99,613 + attribute branch 1,470 = 101,083 selection
+  # (+1,064 refit vocab rows => 102,147 train+valid refit), both <= 105k.
+  expected_max_trainable_params: 105000
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_COMPACT_V6_FACTORIZED_ROLE.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_COMPACT_V6_FACTORIZED_ROLE.md

@@ -69,6 +69,14 @@ from tracks.ksvd.experiments.luyin16.typed_patch_tokenizer import (
     resolve_typed_tokenizer_version,
     typed_tokenizer_fingerprint,
 )
+from tracks.ksvd.experiments.luyin16.compact_v6_attribute_roles import (
+    ATOM_CATEGORIES as V6_ATOM_CATEGORIES,
+    BOND_CATEGORIES as V6_BOND_CATEGORIES,
+    ROLE_DIM as V6_ROLE_DIM,
+    PatchRolePrimitives,
+    attribute_role_fingerprint,
+    patch_role_primitives,
+)
 from tracks.ksvd.experiments.luyin16.zinc_long_range_proxy import (
     REPO_ROOT,
     _data_to_graph,
@@ -88,6 +96,31 @@ PATCH_RADIUS = 2
 DISTANCE_BUCKETS = 5  # 1, 2, 3, 4, 5+
 SHELL_PAIRS = ((0, 0), (0, 1), (0, 2), (1, 1), (1, 2), (2, 2))
 CONTEXT_RADIUS = 3
+
+# --- Compact-v6: factorized topology-attribute patch representation --------
+# The historical coarse token embedding is unchanged.  An additional,
+# very small shared compositional encoder maps (atom/bond type, topological
+# role) primitives to ``e_attribute in R^8``, which is appended to the patch
+# encoder input.  It never looks up an exact typed patch token.  See
+# notes/compact_v6_topology_attribute_factorization.md.
+ATTRIBUTE_MODES = (
+    "none",
+    "factorized_role",
+    "count_control",
+    "capacity_control",
+)
+DEFAULT_ATTRIBUTE_ATOM_DIM = 4
+DEFAULT_ATTRIBUTE_BOND_DIM = 2
+DEFAULT_ATTRIBUTE_HIDDEN = 10
+DEFAULT_ATTRIBUTE_OUT_DIM = 8
+#: How the final ``e_attribute`` projection of ``_AttributeEncoder`` is
+#: initialised.  ``zero`` is the original compact-v6 behaviour (the complete
+#: model is bit-identical to v4 at initialisation).  ``small_normal`` is the
+#: minimal viability repair: the final projection is a normal init scaled by
+#: ``ATTRIBUTE_FUSION_INIT_SCALE`` so the branch carries a nonzero signal from
+#: step 1 onwards.  Pre-registered, not swept.
+ATTRIBUTE_FUSION_INITS = ("zero", "small_normal")
+ATTRIBUTE_FUSION_INIT_SCALE = 0.01
 
 # Continuous outer-shell context used by the optional multiscale candidate.
 # It records the atom composition of shell 3, bond composition for shell-2/3
@@ -258,6 +291,8 @@ class PatchRecord:
     boundary: frozenset[int]
     shell_descriptor: np.ndarray
     context_descriptor: np.ndarray | None = None
+    # Compact-v6: per-patch attribute primitives (type, topological role).
+    attribute_primitives: PatchRolePrimitives | None = None
     # Compact-v3: higher-order structural context of the centre node
     # (ring/cycle conditioning signal; None in compact-v2 mode).
     structural_context: Any | None = None
@@ -625,8 +660,16 @@ def _graph_record(
     max_cycle_len: int = 10,
     topology_features: np.ndarray | None = None,
     tokenizer_version: str = DEFAULT_TYPED_TOKENIZER_VERSION,
+    attribute_mode: str = "none",
 ) -> GraphRecord:
     patch_radius = int(patch_radius)
+    attribute_mode = str(attribute_mode)
+    if attribute_mode not in ATTRIBUTE_MODES:
+        raise ValueError(
+            f"unknown attribute_mode={attribute_mode!r}; expected one of "
+            f"{sorted(ATTRIBUTE_MODES)}"
+        )
+    compute_attributes = attribute_mode != "none"
     graph, node_types, edge_types = _data_to_graph(data)
     node_contexts: dict[int, Any] | None = None
     cycle_lengths: tuple[int, ...] = ()
@@ -674,6 +717,13 @@ def _graph_record(
                 boundary=boundary,
                 shell_descriptor=descriptor,
                 context_descriptor=context_descriptor,
+                attribute_primitives=(
+                    patch_role_primitives(
+                        graph, int(center), node_types, edge_types, patch_radius
+                    )
+                    if compute_attributes
+                    else None
+                ),
                 structural_context=(
                     node_contexts[int(center)] if node_contexts is not None else None
                 ),
@@ -736,8 +786,10 @@ def _extract_split(
     topology_mode: str = "none",
     topology_matrix: np.ndarray | None = None,
     tokenizer_version: str = DEFAULT_TYPED_TOKENIZER_VERSION,
+    attribute_mode: str = "none",
 ) -> tuple[list[GraphRecord], dict[str, Any]]:
     started = time.perf_counter()
+    attribute_started = time.perf_counter()
     contexts = global_feature_views(dataset)["global_all"]
     records: list[GraphRecord] = []
     for index, data in enumerate(dataset):
@@ -757,6 +809,7 @@ def _extract_split(
                 max_cycle_len=int(max_cycle_len),
                 topology_features=topology_row,
                 tokenizer_version=str(tokenizer_version),
+                attribute_mode=str(attribute_mode),
             )
         )
         if index and index % 500 == 0:
@@ -785,6 +838,15 @@ def _extract_split(
         ),
         "cycle_length_distribution": cycle_length_distribution(records),
         "topology_mode": str(topology_mode),
+        "attribute_mode": str(attribute_mode),
+        "attribute_role_fingerprint": (
+            attribute_role_fingerprint(int(patch_radius))
+            if str(attribute_mode) != "none"
+            else None
+        ),
+        "attribute_preprocessing_seconds": float(
+            time.perf_counter() - attribute_started
+        ),
         "typed_tokenizer_version": resolve_typed_tokenizer_version(tokenizer_version),
         "typed_tokenizer_fingerprint": typed_tokenizer_fingerprint(
             tokenizer_version, int(patch_radius)
@@ -882,6 +944,70 @@ def _context_matrix(records: Sequence[GraphRecord]) -> np.ndarray:
     )
 
 
+def _attribute_tensors(
+    record: GraphRecord, attribute_mode: str
+) -> dict[str, np.ndarray]:
+    """Concatenate a graph's per-patch attribute primitives into flat tensors.
+
+    ``*_patch_index`` keys end in "index" so PyG's collate automatically
+    offsets them by ``num_nodes`` (= number of patches) when batching graphs;
+    this keeps every occurrence aligned with its owning patch state.
+    """
+    if str(attribute_mode) == "none":
+        return {
+            "attribute_atom_type": np.zeros(0, dtype=np.int64),
+            "attribute_atom_role": np.zeros((0, V6_ROLE_DIM), dtype=np.float32),
+            "attribute_atom_patch_index": np.zeros(0, dtype=np.int64),
+            "attribute_bond_type": np.zeros(0, dtype=np.int64),
+            "attribute_bond_role_left": np.zeros((0, V6_ROLE_DIM), dtype=np.float32),
+            "attribute_bond_role_right": np.zeros((0, V6_ROLE_DIM), dtype=np.float32),
+            "attribute_bond_patch_index": np.zeros(0, dtype=np.int64),
+        }
+    atom_types: list[np.ndarray] = []
+    atom_roles: list[np.ndarray] = []
+    atom_patch: list[np.ndarray] = []
+    bond_types: list[np.ndarray] = []
+    bond_left: list[np.ndarray] = []
+    bond_right: list[np.ndarray] = []
+    bond_patch: list[np.ndarray] = []
+    for patch_index, patch in enumerate(record.patches):
+        primitives = patch.attribute_primitives
+        if primitives is None:
+            raise RuntimeError(
+                "attribute_mode != none requires extracted attribute primitives"
+            )
+        n_atoms = int(primitives.atom_types.shape[0])
+        n_bonds = int(primitives.bond_types.shape[0])
+        atom_types.append(primitives.atom_types)
+        atom_roles.append(primitives.atom_roles)
+        atom_patch.append(np.full(n_atoms, patch_index, dtype=np.int64))
+        bond_types.append(primitives.bond_types)
+        bond_left.append(primitives.bond_role_left)
+        bond_right.append(primitives.bond_role_right)
+        bond_patch.append(np.full(n_bonds, patch_index, dtype=np.int64))
+    return {
+        "attribute_atom_type": np.concatenate(atom_types, axis=0),
+        "attribute_atom_role": (
+            np.concatenate(atom_roles, axis=0)
+            if atom_roles
+            else np.zeros((0, V6_ROLE_DIM), dtype=np.float32)
+        ),
+        "attribute_atom_patch_index": np.concatenate(atom_patch, axis=0),
+        "attribute_bond_type": np.concatenate(bond_types, axis=0),
+        "attribute_bond_role_left": (
+            np.concatenate(bond_left, axis=0)
+            if bond_left
+            else np.zeros((0, V6_ROLE_DIM), dtype=np.float32)
+        ),
+        "attribute_bond_role_right": (
+            np.concatenate(bond_right, axis=0)
+            if bond_right
+            else np.zeros((0, V6_ROLE_DIM), dtype=np.float32)
+        ),
+        "attribute_bond_patch_index": np.concatenate(bond_patch, axis=0),
+    }
+
+
 def _encode_records(
     records: Sequence[GraphRecord],
     typed_vocabulary: Mapping[bytes, int],
@@ -893,6 +1019,7 @@ def _encode_records(
     structural_vocabulary: Mapping[bytes, int] | None = None,
     topology_mode: str = "none",
     topology_standardizer: Standardizer | None = None,
+    attribute_mode: str = "none",
 ) -> list[Data]:
     output: list[Data] = []
     for record in records:
@@ -964,6 +1091,12 @@ def _encode_records(
                 y=torch.tensor([record.y], dtype=torch.float32),
                 num_nodes=len(record.patches),
                 topology_features=torch.from_numpy(topology),
+                **{
+                    key: torch.from_numpy(value)
+                    for key, value in _attribute_tensors(
+                        record, attribute_mode
+                    ).items()
+                },
             )
         )
     return output
@@ -1079,7 +1212,160 @@ PARAMETER_AUDIT_BLOCKS = (
     ("context_condition_projection", "context_condition_projection"),
     ("context_delta_output", "context_delta_output"),
     ("topology_encoder", "topology_encoder"),
+    ("attribute_encoder", "attribute_encoder"),
 )
+
+
+def _scatter_mean(
+    value: torch.Tensor, index: torch.Tensor, n_groups: int
+) -> torch.Tensor:
+    """Permutation-invariant mean of rows into ``n_groups`` buckets."""
+    output = torch.zeros(
+        (int(n_groups), value.shape[1]), device=value.device, dtype=value.dtype
+    )
+    counts = torch.zeros(
+        (int(n_groups), 1), device=value.device, dtype=value.dtype
+    )
+    if value.numel():
+        index = index.long()
+        output.index_add_(0, index, value)
+        counts.index_add_(
+            0, index, torch.ones((index.shape[0], 1), device=value.device, dtype=value.dtype)
+        )
+    return output / counts.clamp_min(1.0)
+
+
+def _tile_to_width(value: torch.Tensor, width: int) -> torch.Tensor:
+    """Deterministically tile/truncate columns to ``width`` (capacity control)."""
+    width = int(width)
+    current = int(value.shape[1])
+    if current == width:
+        return value
+    if current == 0:
+        return torch.zeros(
+            (value.shape[0], width), device=value.device, dtype=value.dtype
+        )
+    repeats = (width + current - 1) // current
+    return value.repeat(1, repeats)[:, :width]
+
+
+class _AttributeEncoder(nn.Module):
+    """Tiny shared compositional encoder for ``(type, topological role)`` primitives.
+
+    The branch is shared across every patch and every molecule, is
+    permutation-invariant, and has no exact typed-token vocabulary: it can
+    encode an unseen atom/bond combination because it only ever looks up the
+    atom/bond *type* (28 / 4 categories) plus a bounded structural role
+    descriptor.
+
+    ``mode``:
+
+    * ``factorized_role`` -- type embeddings + role descriptors (the v6
+      treatment).
+    * ``count_control``  -- identical parameters, role descriptors zeroed:
+      the chemistry composition without placement information.
+    * ``capacity_control`` -- identical parameters, fed a fixed deterministic
+      slice of the existing coarse patch embedding: extra capacity only, no
+      new attribute information.
+
+    The final fusion projection is zero-initialised so the complete model is
+    exactly the historical v4 model at initialisation (the branch contributes
+    a zero vector and receives its first gradient signal on step 1).
+    """
+
+    def __init__(
+        self,
+        *,
+        atom_dim: int,
+        bond_dim: int,
+        hidden: int,
+        out_dim: int,
+        role_dim: int,
+        mode: str,
+        fusion_init: str = "zero",
+    ) -> None:
+        super().__init__()
+        if mode not in ("factorized_role", "count_control", "capacity_control"):
+            raise ValueError(f"unknown attribute encoder mode {mode!r}")
+        if fusion_init not in ATTRIBUTE_FUSION_INITS:
+            raise ValueError(f"unknown attribute fusion init {fusion_init!r}")
+        self.mode = str(mode)
+        self.fusion_init = str(fusion_init)
+        self.atom_dim = int(atom_dim)
+        self.bond_dim = int(bond_dim)
+        self.hidden = int(hidden)
+        self.out_dim = int(out_dim)
+        self.role_dim = int(role_dim)
+        self.atom_input_dim = int(atom_dim) + int(role_dim)
+        self.bond_input_dim = int(bond_dim) + 2 * int(role_dim)
+        self.atom_embedding = nn.Embedding(V6_ATOM_CATEGORIES, int(atom_dim))
+        self.bond_embedding = nn.Embedding(V6_BOND_CATEGORIES, int(bond_dim))
+        self.atom_mlp = nn.Sequential(
+            nn.Linear(self.atom_input_dim, int(hidden)),
+            nn.ReLU(),
+            nn.Linear(int(hidden), int(hidden)),
+            nn.ReLU(),
+        )
+        self.bond_mlp = nn.Sequential(
+            nn.Linear(self.bond_input_dim, int(hidden)),
+            nn.ReLU(),
+            nn.Linear(int(hidden), int(hidden)),
+            nn.ReLU(),
+        )
+        self.fusion = nn.Sequential(
+            nn.Linear(2 * int(hidden), int(hidden)),
+            nn.ReLU(),
+            nn.Linear(int(hidden), int(out_dim)),
+        )
+        if self.fusion_init == "zero":
+            nn.init.zeros_(self.fusion[-1].weight)
+        else:  # small_normal
+            nn.init.normal_(
+                self.fusion[-1].weight,
+                mean=0.0,
+                std=float(ATTRIBUTE_FUSION_INIT_SCALE),
+            )
+        nn.init.zeros_(self.fusion[-1].bias)
+
+    def _inputs(
+        self, data: Data, e_patch: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
+        if self.mode == "capacity_control":
+            atom_input = _tile_to_width(e_patch, self.atom_input_dim)
+            bond_input = _tile_to_width(e_patch, self.bond_input_dim)
+            return atom_input, bond_input, None, None
+        atom_type = data.attribute_atom_type
+        atom_role = data.attribute_atom_role
+        bond_type = data.attribute_bond_type
+        bond_left = data.attribute_bond_role_left
+        bond_right = data.attribute_bond_role_right
+        if self.mode == "count_control":
+            atom_role = torch.zeros_like(atom_role)
+            bond_left = torch.zeros_like(bond_left)
+            bond_right = torch.zeros_like(bond_right)
+        atom_input = torch.cat([self.atom_embedding(atom_type), atom_role], dim=1)
+        bond_input = torch.cat(
+            [self.bond_embedding(bond_type), bond_left, bond_right], dim=1
+        )
+        return (
+            atom_input,
+            bond_input,
+            data.attribute_atom_patch_index,
+            data.attribute_bond_patch_index,
+        )
+
+    def forward(self, data: Data, e_patch: torch.Tensor) -> torch.Tensor:
+        n_patches = int(e_patch.shape[0])
+        atom_input, bond_input, atom_patch, bond_patch = self._inputs(data, e_patch)
+        h_atom = self.atom_mlp(atom_input)
+        h_bond = self.bond_mlp(bond_input)
+        if atom_patch is None:
+            atom_pool = h_atom
+            bond_pool = h_bond
+        else:
+            atom_pool = _scatter_mean(h_atom, atom_patch, n_patches)
+            bond_pool = _scatter_mean(h_bond, bond_patch, n_patches)
+        return self.fusion(torch.cat([atom_pool, bond_pool], dim=1))
 
 
 def _block_parameters(module: nn.Module | None) -> int:
@@ -1159,6 +1445,10 @@ def audit_parameters(model: PatchPathModel) -> dict[str, Any]:
         "topology_input_width": int(model.topology_input_width),
         "topology_hidden_dim": int(model.topology_hidden_dim),
         "topology_out_dim": int(model.topology_out_dim),
+        "attribute_mode": str(model.attribute_mode),
+        "attribute_out_dim": int(model.attribute_out_dim),
+        "attribute_role_dim": int(V6_ROLE_DIM),
+        "attribute_input_width": int(model.attribute_input_width),
         "unified_graph_width": int(model.unified_graph_width),
     }
     return {
@@ -1187,6 +1477,7 @@ def _print_parameter_audit(model: PatchPathModel, phase_label: str) -> dict[str,
         if blocks[label] == 0 and (
             label == "center_context"
             or label == "structural_context_embedding"
+            or label == "attribute_encoder"
             or label.startswith("context_")
         ):
             continue
@@ -1211,6 +1502,8 @@ def _print_parameter_audit(model: PatchPathModel, phase_label: str) -> dict[str,
         "center_context_hidden_dim",
         "structural_context_dim",
         "structural_context_condition_rank",
+        "attribute_out_dim",
+        "attribute_role_dim",
     ):
         print(f"{key}: {dims[key]}", flush=True)
     print(f"structural_context: mode={dims['structural_context_mode']} "
@@ -1278,6 +1571,12 @@ class PatchPathModel(nn.Module):
         topology_input_width: int = 0,
         topology_hidden_dim: int = 16,
         topology_out_dim: int = 8,
+        attribute_mode: str = "none",
+        attribute_atom_dim: int = DEFAULT_ATTRIBUTE_ATOM_DIM,
+        attribute_bond_dim: int = DEFAULT_ATTRIBUTE_BOND_DIM,
+        attribute_hidden: int = DEFAULT_ATTRIBUTE_HIDDEN,
+        attribute_out_dim: int = DEFAULT_ATTRIBUTE_OUT_DIM,
+        attribute_fusion_init: str = "zero",
         quantile_mode: str = "none",
     ) -> None:
         super().__init__()
@@ -1330,6 +1629,42 @@ class PatchPathModel(nn.Module):
             )
         else:
             self.topology_encoder = None
+        # Compact-v6: factorized topology-attribute branch.  This is NOT an
+        # exact typed-token lookup; it is a small shared compositional encoder
+        # over (type, topological role) primitives whose output is appended to
+        # the patch encoder input (see notes/compact_v6_...).
+        self.attribute_mode = str(attribute_mode)
+        if self.attribute_mode not in ATTRIBUTE_MODES:
+            raise ValueError(
+                f"unknown attribute_mode={self.attribute_mode!r}; expected one "
+                f"of {sorted(ATTRIBUTE_MODES)}"
+            )
+        self.attribute_atom_dim = int(attribute_atom_dim)
+        self.attribute_bond_dim = int(attribute_bond_dim)
+        self.attribute_hidden = int(attribute_hidden)
+        self.attribute_out_dim = int(attribute_out_dim)
+        if attribute_fusion_init not in ATTRIBUTE_FUSION_INITS:
+            raise ValueError(
+                f"unknown attribute_fusion_init={attribute_fusion_init!r}; "
+                f"expected one of {sorted(ATTRIBUTE_FUSION_INITS)}"
+            )
+        self.attribute_fusion_init = str(attribute_fusion_init)
+        self.attribute_encoder: _AttributeEncoder | None = None
+        if self.attribute_mode != "none":
+            if min(self.attribute_out_dim, self.attribute_hidden) < 1:
+                raise ValueError("attribute dims must be positive")
+            self.attribute_encoder = _AttributeEncoder(
+                atom_dim=self.attribute_atom_dim,
+                bond_dim=self.attribute_bond_dim,
+                hidden=self.attribute_hidden,
+                out_dim=self.attribute_out_dim,
+                role_dim=V6_ROLE_DIM,
+                mode=self.attribute_mode,
+                fusion_init=self.attribute_fusion_init,
+            )
+            self.attribute_input_width = int(self.attribute_out_dim)
+        else:
+            self.attribute_input_width = 0
         valid_context_modes = {"none", "coarse_ring", "typed_ring"}
         if self.structural_context_mode not in valid_context_modes:
             raise ValueError(
@@ -1436,7 +1771,8 @@ class PatchPathModel(nn.Module):
             + self.context_width
             + int(token_width)
             + parent_width
-            + int(structural_input_width),
+            + int(structural_input_width)
+            + int(self.attribute_input_width),
             max(int(patch_hidden), 64),
             int(patch_hidden),
             float(dropout),
@@ -1789,6 +2125,9 @@ class PatchPathModel(nn.Module):
                 )
             else:
                 structural_blocks.append(e_ctx)
+        attribute_blocks: list[torch.Tensor] = []
+        if self.attribute_encoder is not None:
+            attribute_blocks.append(self.attribute_encoder(data, e_patch))
         patch = self.patch_encoder(
             torch.cat(
                 [
@@ -1797,6 +2136,7 @@ class PatchPathModel(nn.Module):
                     e_patch,
                     self.parent_embedding(data.parent_token),
                     *structural_blocks,
+                    *attribute_blocks,
                 ],
                 dim=1,
             )
@@ -2064,6 +2404,22 @@ def _train_phase(
         topology_out_dim=int(
             model_config.get("topology_out_dim", 8)
         ),
+        attribute_mode=str(model_config.get("attribute_mode", "none")),
+        attribute_atom_dim=int(
+            model_config.get("attribute_atom_dim", DEFAULT_ATTRIBUTE_ATOM_DIM)
+        ),
+        attribute_bond_dim=int(
+            model_config.get("attribute_bond_dim", DEFAULT_ATTRIBUTE_BOND_DIM)
+        ),
+        attribute_hidden=int(
+            model_config.get("attribute_hidden", DEFAULT_ATTRIBUTE_HIDDEN)
+        ),
+        attribute_out_dim=int(
+            model_config.get("attribute_out_dim", DEFAULT_ATTRIBUTE_OUT_DIM)
+        ),
+        attribute_fusion_init=str(
+            model_config.get("attribute_fusion_init", "zero")
+        ),
         quantile_mode=quantile_mode,
     ).to(device)
     parameter_audit: dict[str, Any] | None = None
@@ -2204,6 +2560,7 @@ def _phase_data(
     representation = config["representation"]
     structural_mode = str(config.get("model", {}).get("structural_context_mode", "none"))
     topology_mode = str(config.get("model", {}).get("topology_mode", "none"))
+    attribute_mode = str(config.get("model", {}).get("attribute_mode", "none"))
     topology_input_width = ztopo.raw_width(
         topology_mode, input_width_hint=config.get("model", {}).get("topology_input_width")
     )
@@ -2255,6 +2612,7 @@ def _phase_data(
         structural_vocabulary=structural_vocabulary,
         topology_mode=topology_mode,
         topology_standardizer=topology_standardizer,
+        attribute_mode=attribute_mode,
     )
     encoded_other = _encode_records(
         other_records,
@@ -2267,6 +2625,7 @@ def _phase_data(
         structural_vocabulary=structural_vocabulary,
         topology_mode=topology_mode,
         topology_standardizer=topology_standardizer,
+        attribute_mode=attribute_mode,
     )
     audit = {
         "typed_vocabulary": {
@@ -2313,6 +2672,11 @@ def _phase_data(
                 if topology_standardizer is not None
                 else None
             ),
+        },
+        "attribute": {
+            "mode": attribute_mode,
+            "role_definition_version": attribute_role_fingerprint(patch_radius),
+            "role_dim": int(V6_ROLE_DIM),
         },
     }
     return encoded_fit, encoded_other, audit
@@ -2394,6 +2758,7 @@ def run(config_path: Path) -> dict[str, Any]:
         config.get("model", {}).get("structural_context_mode", "none")
     )
     topology_mode = str(config.get("model", {}).get("topology_mode", "none"))
+    attribute_mode = str(config.get("model", {}).get("attribute_mode", "none"))
     topology_hidden_dim = int(config.get("model", {}).get("topology_hidden_dim", 16))
     topology_out_dim = int(config.get("model", {}).get("topology_out_dim", 8))
     topology_shuffle_test = bool(config.get("model", {}).get("topology_shuffle_test", False))
@@ -2417,6 +2782,11 @@ def run(config_path: Path) -> dict[str, Any]:
         raise ValueError(
             f"unknown structural_context_mode={structural_context_mode!r}; "
             f"expected none, coarse_ring, or typed_ring"
+        )
+    if attribute_mode not in ATTRIBUTE_MODES:
+        raise ValueError(
+            f"unknown attribute_mode={attribute_mode!r}; expected one of "
+            f"{sorted(ATTRIBUTE_MODES)}"
         )
     if structural_context_mode != "none" and structural_context_max_cycle_len < 3:
         raise ValueError(
@@ -2471,6 +2841,7 @@ def run(config_path: Path) -> dict[str, Any]:
             topology_mode=topology_mode,
             topology_matrix=topology_matrices.get(cache_key),
             tokenizer_version=typed_tokenizer_version,
+            attribute_mode=attribute_mode,
         )
         records.append(split_records)
         feature_metadata[split] = metadata
@@ -2737,6 +3108,22 @@ def run(config_path: Path) -> dict[str, Any]:
                 "target_formula_input": False,
                 "cache": feature_metadata.get("topology_cache"),
                 "standardizer": valid_audit.get("topology"),
+            },
+            "attribute_factorization": {
+                "mode": attribute_mode,
+                "role_definition_version": attribute_role_fingerprint(
+                    patch_radius
+                ),
+                "role_dim": int(V6_ROLE_DIM),
+                "definition": (
+                    "small shared compositional encoder over (atom/bond type, "
+                    "coarse rooted automorphism-role descriptor) primitives, "
+                    "appended to the patch encoder input as e_attribute in R^8; "
+                    "no exact typed-token lookup"
+                    if attribute_mode != "none"
+                    else None
+                ),
+                "exact_typed_token_used": False,
             },
             "dimensions": (
                 valid_phase["parameter_audit"]["dimensions"]

@@ -1,0 +1,56 @@
+decision_id: decision-compact-v6-topology-attribute-factorization-nogo-20260910
+kind: decision
+study_id: zinc-context-gap
+created: '2026-09-10T18:12:00'
+decision: >-
+  NO-GO for the topology-attribute factorization representation (compact-v6 / Case D at the
+  benchmark gate). The frozen historical compact-v4-hinge patch path stays the ZINC-12k
+  representation; the compact-v6 attribute branch is closed. No attribute-dimension
+  increase, deeper attribute MLP, extra role features, dictionary atoms, KSVD sparse
+  coding, topology/attribute gate, message passing, ring nodes, or pooling/graph-head/loss
+  redesign is opened on this evidence.
+because: >-
+  (1) Benchmark gate: paired multi-seed (0-2) mean delta (v4 - factorized) is -0.000295
+  (< +0.003), 2/3 positive; the seed-0 +0.013645 does not replicate (seed 1 -0.017017).
+  (2) Bulk gate: the seed-0 gain is entirely a hard-tail-vs-easy-bulk trade — historical
+  quintiles Q1/Q2 combined degrade -0.017265 (gate <= +0.002 FAIL) for a Q5 gain of
+  +0.091709, the same redistribution fingerprint as the corrected exact tokenizer.
+  (3) Mechanism gate: the frozen seed-0 factorized model is EXACTLY invariant to
+  within-patch attribute-type and role-association shuffles (clean == shuffled,
+  max per-molecule |delta| = 0.0) with a near-constant e_attribute (norm std 2.3e-10);
+  the branch collapsed, so no attribute-placement usage is demonstrated.
+  (4) The count-only control gives no gain (seed 0 -0.000865; multi-seed mean -0.002243,
+  1/3), so chemistry composition alone is not sufficient; factorized-vs-count mean
+  +0.001948 (1/3) is below the 0.003 mechanism threshold. (5) At seed 0 the
+  param-matched capacity control alone improves +0.007491, so a large part of the seed-0
+  factorized gain is capacity/optimization, not attribute information.
+alternatives_rejected:
+- because: the factorized attribute branch is shuffle-invariant and its e_attribute is
+    near-constant at the frozen checkpoint, so the branch does not consume placement and
+    any apparent improvement is a training-trajectory/capacity effect.
+  item: GO topology-attribute factorization (compact-v6 factorized-role)
+- because: the count-only control (same parameters, role descriptors zeroed) gives no
+    seed-0 gain and multi-seed mean -0.002243 (1/3); feeding chemistry composition alone
+    through an extra encoder is not supported.
+  item: GO attribute-composition encoding without placement (count-only control)
+- because: although a parameter-matched capacity control improves at seed 0 (+0.007491),
+    it regresses multi-seed (mean -0.006475, 1/3), so extra encoder capacity is not a
+    reliable mechanism either.
+  item: GO extra attribute-encoder capacity / deeper attribute MLP
+- because: enlarging the role dimension or adding role features would only add capacity
+    to a branch already shown to be unused; the seed-0 tail-for-bulk trade is a failed
+    bulk gate, not a partial success to be pushed further.
+  item: GO wider role descriptor / more topological-role features
+revisit_if: >-
+  (1) The branch-collapse cause is diagnosed and fixed: the zero-initialized final fusion
+  drives the upstream attribute MLP gradient to ~0 at step 0, and at convergence the
+  branch weights are driven to ~0 by weight decay, so the configuration may under-test
+  attribute placement. A future stage may re-register a small nonzero fusion init (or a
+  gradient-path correction) with its own pre-registered graph-side-observable gate and a
+  fresh seed sweep — the seed-0 checkpoint may not be re-read as evidence. (2) A
+  fundamentally different attribute channel (not a zero-init appended embedding, e.g. a
+  multiplicative structure x attribute interaction trained from scratch) is registered as
+  a new architecture stage. (3) The historical coarse-token basis itself changes (e.g.
+  the certificate-injectivity fix is adopted), in which case the factorization question
+  must be re-measured against the corrected basis. (4) A benchmark / target where the
+  easy-bulk-vs-hard-tail redistribution trade is not the dominant failure mode.
