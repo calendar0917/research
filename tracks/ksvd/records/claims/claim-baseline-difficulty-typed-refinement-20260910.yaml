@@ -1,0 +1,62 @@
+claim_id: claim-baseline-difficulty-typed-refinement-20260910
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-10T15:30:00'
+statement: >-
+  On the frozen paired compact-v4-hinge historical-vs-corrected validation runs
+  (ZINC official train/validation only, seeds 0-3, official test never loaded, no
+  training), the corrected exact typed tokenizer's error redistribution is a
+  stable, difficulty-locked CENTRE (bias) shift, NOT an effect of typed-refinement
+  informativeness. Quintile degradation (corrected - historical |error|) is
+  +0.0312 (Q1 easiest), +0.0180, +0.0116, +0.0020, -0.0397 (Q5 hardest);
+  per-seed Spearman(baseline |error|, degradation) = -0.218/-0.167/-0.268/-0.172
+  (4/4 negative). Centring dominates on easy molecules (easy delta_centre_MAE
+  +0.0213 vs delta_spread_MAE +0.0125) and the 4-seed ENSEMBLE itself degrades on
+  Q1 (0.0245 -> 0.0489), so this is a prediction-centre move, not a variance-only
+  regularisation loss (easy ensemble degradation is ~87% of the individual
+  degradation, not ~0). Hard-quintile improvement is also centre-driven
+  (hard delta_centre_MAE -0.0227 vs delta_spread_MAE -0.0030). Easy moves are
+  systematic: Q1 harmful 65.5% = wrong-direction 36.9% + overshoot 28.6%, with
+  magnitude-only disturbance only 4.8%. Typed-refinement informativeness - the
+  support-weighted train target / historical-OOF-residual dispersion of the
+  corrected children of each historical token (707 eligible parents of 2,363
+  split parents) - has NO independent relation to the corrected gain:
+  ensemble Spearman(info, gain) = -0.019 (seeds +0.002/+0.018/-0.019/-0.004),
+  partial given baseline difficulty -0.036, partial given frequency -0.018, and
+  across all seven metric variants (residual/target mean/max/split, fraction
+  high-info) the partial is in [-0.069, -0.025] with 0-2/4 seeds positive. The
+  2x2 (easy/hard x low/high info) is ordered by difficulty, not informativeness:
+  hard+low-info gain +0.0252, hard+high +0.0129, easy+high -0.0268,
+  easy+low -0.0226 (interaction -0.0080). High informativeness is weakly
+  ANTI-predictive of corrected benefit.
+scope: >-
+  ZINC-12k official train/validation; frozen compact-v4-hinge historical and
+  corrected validation-selected runs seeds 0-3; child statistics and OOF residuals
+  from official TRAIN only (validation targets used only for final evaluation);
+  single-variable tokenizer change; no training; official test never loaded.
+supporting_evidence:
+- notes/baseline_difficulty_typed_refinement_redistribution_audit.md
+- results/baseline_difficulty_typed_refinement_audit/decision_record.json
+- results/baseline_difficulty_typed_refinement_audit/difficulty_quintiles.csv
+- results/baseline_difficulty_typed_refinement_audit/movement_classes.csv
+- results/baseline_difficulty_typed_refinement_audit/typed_info_groups.csv
+- results/baseline_difficulty_typed_refinement_audit/mechanism_2x2.csv
+- results/baseline_difficulty_typed_refinement_audit/informativeness_metric_robustness.csv
+- results/baseline_difficulty_typed_refinement_audit/per_molecule_analysis.csv
+supporting_results:
+- 'The corrected typed children of historical tokens DO carry real train-derived target/residual heterogeneity (707/2,363 split parents eligible), so the null is not a construction failure - the heterogeneity simply does not predict the corrected gain.'
+contradicting_evidence:
+- A modest variance increase exists on the easiest bin (Q1 delta_spread_MAE +0.0182 on a historical spread of 0.0385, +56%), so a small variance/regularisation component is present alongside the dominant centre shift.
+- The redistribution is stable (4/4 seeds) rather than unstable, so "unexplained" here means "not attributable to the pre-registered coarse-regularisation or typed-informativeness mechanisms", not "noisy".
+limitations:
+- The child-context metric uses historical compact-v4-hinge train OOF residuals (2 seeds) as a proxy for the historical token's mixed prediction bias; a different instrument could sharpen the residual dispersion.
+- Validation tertiles / median splits of the train-derived informativeness are audit-time and unsupervised (no validation target used); no threshold was chosen from MAE.
+- n = 1,000 validation molecules and 4 seeds; the hard+high-info cell is n=207.
+- The L2 mean-squared decomposition is outlier-dominated on ZINC's heavy target tail; the decision uses the robust L1 centre/spread split (L2 reported in the CSV for completeness).
+implication: >-
+  Fine exact typed refinement is not selectively useful at the molecule level, and
+  the corrected-vs-historical difference is a systematic centre shift by difficulty.
+  Do not build a coarse-to-fine representation or a coarse shared prior on this
+  evidence. The tokenizer-derived architecture branch is closed pending a different,
+  explicitly pre-registered mechanism.

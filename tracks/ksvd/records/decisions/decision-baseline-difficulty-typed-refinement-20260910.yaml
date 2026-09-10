@@ -1,0 +1,52 @@
+decision_id: decision-baseline-difficulty-typed-refinement-20260910
+kind: decision
+study_id: zinc-context-gap
+created: '2026-09-10T15:30:00'
+decision: >-
+  Case D - UNEXPLAINED REDISTRIBUTION. NO architecture GO. The corrected exact typed
+  tokenizer's harm/benefit pattern is a stable, difficulty-locked CENTRE (bias) shift -
+  it degrades the prediction centre on historical easy molecules (Q1/Q2 degradation
+  +0.0312/+0.0180; ensemble MAE 0.0245 -> 0.0489 on Q1) and improves it on hard
+  molecules (Q4/Q5 +0.0020/-0.0397). It is not a variance-reducing-regularisation
+  effect (Case A fails: easy ensemble degradation is ~87% of the individual
+  degradation, and the centre component dominates the spread component), and it is not
+  explained by typed-refinement informativeness (Cases B/C fail: partial rho given
+  baseline difficulty -0.036; all seven informativeness metrics null-to-anti-predictive,
+  0-2/4 seeds; hard+low-info benefits more than hard+high-info). Do not design a
+  coarse-to-fine representation, an adaptive fine gate, or a coarse shared prior on
+  this evidence. Close the tokenizer-derived architecture branch.
+because: >-
+  (1) The degradation ladder is monotone in historical difficulty and stable 4/4 seeds
+  (Spearman(baseline, degradation) -0.218/-0.167/-0.268/-0.172). (2) The easy
+  degradation is centre-dominated (easy delta_centre_MAE +0.0213 vs delta_spread_MAE
+  +0.0125) and the ensemble itself degrades, so it is a representation bias/centre
+  move, not optimisation variance. (3) Easy moves are systematic (Q1 harmful 65.5% =
+  wrong-direction 36.9% + overshoot 28.6%; magnitude-only 4.8%), not noise. (4) Child
+  target/residual heterogeneity exists (707 eligible parents) but has no independent
+  relation to the corrected gain (partial -0.036, robust across 7 metrics), so fine
+  typed refinement is not selectively useful. (5) The 2x2 is ordered by difficulty, not
+  informativeness; high informativeness is weakly anti-predictive (hard+low +0.0252 >
+  hard+high +0.0129; easy+high -0.0268).
+alternatives_rejected:
+- item: GO - principled coarse regularization (Case A)
+  because: 'Case A condition 3 fails: the easy ensemble prediction itself degrades (0.0245 -> 0.0489), and the centre component (>50%) exceeds the spread component, so this is a bias/centre shift rather than a variance-reducing regularisation loss.'
+- item: GO - adaptive coarse-to-fine representation (Case B)
+  because: 'typed-refinement informativeness has no independent signal (partial given difficulty -0.036, robust across 7 metrics, <=2/4 seeds; gate needs >=+0.20), and hard+high-info is not the largest-benefit group.'
+- item: GO - coarse base + regularized typed residual (Case C)
+  because: 'requires both the easy variance/regularisation loss AND an independent informativeness rho >= 0.15; neither holds (centre-dominated easy loss; informativeness rho ~ -0.04).'
+revisit_if: >-
+  (1) A pre-registered, structurally-observable gate (recognisable from graph/patch
+  structure, not from train target statistics) is shown to predict corrected benefit
+  after controlling baseline difficulty; (2) the difficulty-centre shift is understood
+  as a representation-geometry effect and a coarse prior that reproduces it without the
+  exact-identity cost is registered with its own gates; (3) a different tokenizer change
+  (not exact-identity) is paired against the historical coarse tokenizer.
+supporting_evidence:
+- notes/baseline_difficulty_typed_refinement_redistribution_audit.md
+- results/baseline_difficulty_typed_refinement_audit/decision_record.json
+- results/baseline_difficulty_typed_refinement_audit/difficulty_quintiles.csv
+- results/baseline_difficulty_typed_refinement_audit/movement_classes.csv
+- results/baseline_difficulty_typed_refinement_audit/mechanism_2x2.csv
+- results/baseline_difficulty_typed_refinement_audit/informativeness_metric_robustness.csv
+- records/claims/claim-baseline-difficulty-typed-refinement-20260910.yaml
+- records/claims/claim-corrected-token-fragmentation-20260910.yaml
