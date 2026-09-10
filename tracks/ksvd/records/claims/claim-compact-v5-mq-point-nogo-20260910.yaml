@@ -1,0 +1,43 @@
+claim_id: claim-compact-v5-mq-point-nogo-20260910
+contradicting_evidence:
+- seed-0 validation improvement +0.011423 (Strong-GO band) and seed-0 width-|error|
+  0.2543 (GO band) - the single seed-0 result is the only evidence in favour of the
+  hypothesis; it does not reproduce
+created: '2026-09-10T09:43:14'
+implication: 'Do not adopt the multi-quantile objective as a benchmark-improvement
+  mechanism. Do not open uncertainty-guided weighting/resampling/distillation: its
+  pre-registered precondition (mean width-|error| GO >= 0.25) was not met. compact-v4-hinge
+  remains the current candidate.'
+kind: claim
+limitations:
+- n=4 seeds; paired test/std ~0.005, so the point estimate is noisy
+- the lambda grid was pre-registered to three values and was not widened
+- q90-q10 is a model-implied predictive interval width, not aleatoric uncertainty
+  (deterministic ZINC target)
+- subgroup B (n=30) regresses slightly; subgroup C (n=5) is dominated by the benchmark
+  order artifact
+scope: ZINC-12k official split, compact-v4-hinge frozen representation, validation
+  selection then one-time terminal benchmark test, seeds 0-3, lambda_q in pre-registered
+  {0.10,0.25,0.50}; no representation change; test never used for tuning.
+statement: 'HYPOTHESIS REFUTED at the pre-registered gates: auxiliary conditional-quantile
+  supervision (non-crossing q10/q50/q90 head + loss 2*pinball_0.5 + lambda_q*(pinball_0.1+pinball_0.9),
+  frozen compact-v4-hinge representation, +66 params) does NOT reliably improve the
+  q50 point prediction. Seed 0 (lambda=0.25) looked like Case A (valid q50 0.170066
+  -> 0.158643, Delta +0.011423; width-|error| Spearman 0.2543), but the frozen 4-seed
+  validation confirmation is only Mild (paired mean Delta +0.003686, 3/4 seeds, one
+  negative seed -0.002390; multi-seed GO gate 0.005 NOT met), and the one-time benchmark
+  test does not transfer (v5 lambda=0.25 test mean 0.139403 +/- 0.002510 vs v4 0.136885
+  +/- 0.005552; paired Delta -0.002518, 1/4 seeds). Controls are exact: quantile_mode=none
+  is bit-identical to canonical compact-v4-hinge seed 0 (60/60 epochs, 0.17006561887910357
+  @53) and median_only (2*pinball_0.5 on a scalar head) is bit-identical to the L1
+  run, so the pinball formulation introduces zero fake gain. lambda=0.10 is a clear
+  regression (0.186205, Delta -0.016139).'
+status: refuted
+study_id: zinc-context-gap
+supporting_evidence:
+- notes/compact_v5_multi_quantile_regression.md
+- results/compact_v5_multi_quantile/decision_record.json
+- results/compact_v5_multi_quantile/stage1_seed0_summary.json
+- results/compact_v5_multi_quantile/run_map.json
+- configs/luyin16/zinc_compact_v5_quantile_lambda025.yaml
+- tests/test_zinc_patch_path_quantile_v5.py

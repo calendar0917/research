@@ -1,0 +1,39 @@
+claim_id: claim-compact-v5-width-internalizes-difficulty-20260910
+contradicting_evidence:
+- width-|error| mean 0.211 is below the 0.25 GO gate; the seed-0 0.2543 is at the
+  gate boundary
+- width correlates with the target/SA level (-0.77), so it reflects target magnitude
+  as well as difficulty
+created: '2026-09-10T09:43:14'
+implication: Interval width is a usable single-model proxy for the OOF difficulty/epistemic
+  axis, but at this consistency it is not strong enough to justify an uncertainty-guided
+  objective. Any such study needs a new pre-registration whose success metric is not
+  the q50 MAE.
+kind: claim
+limitations:
+- interval width is model-implied, not aleatoric (deterministic target)
+- no post-hoc calibration (temperature/conformal/isotonic) was applied; raw learned
+  quantiles
+- validation subgroup estimates for B/C are small-n and single-seed
+scope: ZINC-12k validation split (1000 molecules), compact-v4-hinge frozen representation
+  + multi-quantile head, lambda_q in {0.10,0.25,0.50}, seeds 0-3; width = q90-q10;
+  difficulty predictor is a 31-feature static model-visible Ridge re-fit of the OOF
+  audit predictor.
+statement: 'A single compact-v4-hinge model trained with the multi-quantile objective
+  learns a predictive interval width that internalizes the previously OOF-confirmed
+  difficulty / epistemic axes at a Mild but consistent level: width-|error| Spearman
+  seed 0 = 0.2543 (lambda 0.25) / 0.2630 (lambda 0.50), 4-seed mean 0.2111 (std 0.037,
+  4/4 seeds positive, min 0.1646); robust to the outlier tail (0.2489 excluding |error|>=1).
+  Width predicts magnitude, not direction (signed-residual Spearman -0.095). Width
+  correlates 0.408 with v4 4-seed disagreement and 0.376 with a frozen OOF-train difficulty
+  predictor (OOF-train 0.3735); seed-0 coverage is near-calibrated (central-80 0.798,
+  q10 0.121, q90 0.919). Seed-0 point gain concentrates in rare/medium molecules (rare
+  +0.0385, medium +0.0150) while the common bulk is flat (+0.0007); width quintiles
+  are monotone through Q4 (MAE 0.096/0.111/0.118/0.249, Q5 median still rising).'
+status: supported
+study_id: zinc-context-gap
+supporting_evidence:
+- notes/compact_v5_multi_quantile_regression.md
+- notes/oof_difficulty_heteroscedasticity_audit.md
+- results/compact_v5_multi_quantile/seed0/
+- results/compact_v5_multi_quantile/figures/

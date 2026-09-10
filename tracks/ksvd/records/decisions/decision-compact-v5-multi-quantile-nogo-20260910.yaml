@@ -1,0 +1,42 @@
+alternatives_rejected:
+- because: multi-seed mean +0.003686 is below the +0.005 GO gate and the benchmark
+    test regresses (-0.002518, 1/4 seeds); the effect is not reproducible.
+  item: GO multi-quantile as a point-prediction / benchmark channel
+- because: the pre-registered precondition for that branch is a mean width-|error|
+    GO >= 0.25; the observed 4-seed mean is 0.2111 (Mild), so the branch is not opened.
+  item: GO uncertainty-guided objective (hard-sample weighting / resampling / distillation)
+    with the v5 width
+- because: 0.50 is within the pre-registered tie band and 0.10 is a clear regression;
+    the frozen selection is 0.25 and no post-hoc lambda change is permitted.
+  item: switch the selected lambda to 0.50 or drop to 0.10
+- because: out of the pre-registered objective space for this stage.
+  item: Gaussian/NLL heteroscedastic output as a follow-up
+because: 'Selected/frozen lambda=0.25 (lowest-MAE lambda 0.50 wins by only 0.000219
+  < 0.001 tie band -> prefer smaller lambda, per the pre-registered rule; uncertainty
+  correlation never used as a tie-breaker). Controls prove the plumbing is honest:
+  none-mode and median-only are bit-identical to their v4/L1 counterparts, and the
+  terminal test runs'' selection traces are bit-identical to the scratch runs. The
+  point gain is fragile (dominated by seed 0; seed 1 negative) and does not survive
+  the test; the width signal is real but Mild and correlates only 0.21-0.25 with its
+  own |error| while correlating 0.376-0.408 with the OOF difficulty/epistemic axes.'
+created: '2026-09-10T09:43:14'
+decision: 'NO-GO for compact-v5 multi-quantile regression as a confirmed benchmark
+  improvement (frozen compact-v4-hinge representation + non-crossing q10/q50/q90 head
+  + pinball loss; +66 params). Stage-1 seed 0 reached Case A (Strong-GO point +0.011423,
+  GO uncertainty 0.2543), so the frozen 4-seed confirmation was entered; it landed
+  in the Mild/Mild band (valid q50 paired mean +0.003686, 3/4 seeds; width-|error|
+  mean 0.2111, 4/4 seeds) and the pre-registered multi-seed gates (point >=0.005,
+  width >=0.25) were NOT met. Because the point signal is Mild (not NO-GO) and the
+  width signal is Mild (not NO-GO), the pre-registered Case map has no clean match:
+  the outcome is ''Mild/Mild, no confirmed GO'', explicitly neither Case A nor Case
+  D. The one-time frozen benchmark test does not transfer (v5 test 0.139403 +/- 0.002510
+  vs v4 0.136885 +/- 0.005552, paired -0.002518, 1/4 seeds). compact-v4-hinge remains
+  the current candidate.'
+decision_id: decision-compact-v5-multi-quantile-nogo-20260910
+kind: decision
+revisit_if: (1) the frozen compact-v4-hinge representation changes, or (2) a re-registered
+  (multi-seed, OOF-train-tested) study shows the width-|error| signal clears the GO
+  gate and the q50 gain clears +0.005 with majority seeds, or (3) a genuinely non-deterministic
+  / label-noise-bearing target is used, where an uncertainty-aware objective has a
+  real irreducible target.
+study_id: zinc-context-gap

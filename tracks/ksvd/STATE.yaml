@@ -22,6 +22,7 @@ open_questions:
   - "zinc: are valid-vs-test deltas stable across the candidate family? -> answered 2026-09-09 for v2/v4-hinge: valid and selection-checkpoint test agree in direction on 4/4 seeds; refit-test flips (secondary protocol)"
   - "post-v4 residual audit -> answered 2026-09-09: NO CLEAR SECONDARY SIGNAL — Group-A residuals are heteroscedastic difficulty on the z_SA axis and on rare-patch molecules (variance-side only); signed bias is a small z_logP top-quintile drift and a sparse N-H1+ hint; no structural probe clears 0.003; no v5 representation channel recommended"
   - "zinc: is the documented z_SA-axis / rarity-axis heteroscedastic difficulty reducible by any objective/calibration change at all? -> shape confirmed 2026-09-10 on a true OOF-train residual (K=5, frozen v4-hinge): difficulty GO (cross-fitted 0.374, 5/5) + epistemic GO (disagreement 0.393, 5/5); reducibility by an objective change is still untested and unqueued"
+  - "zinc compact-v5 multi-quantile regression (objective-only, v4 representation frozen) -> answered 2026-09-10: NO-GO as a benchmark improvement. Stage-1 seed0 Case A (valid q50 +0.0114, width-|err| 0.254) but frozen 4-seed confirmation is Mild (point +0.0037, 3/4; width 0.211, 4/4) and the one-time test does not transfer (0.139403 vs 0.136885, 1/4). Learned width absorbs the OOF difficulty/epistemic axis (0.376/0.408) but only Mildly; not enough for uncertainty-guided weighting"
   - "molhiv: do internal 3-fold effects persist on official valid outside-scaffold?"
   - "molhiv: is the distribution readout advantage robust for interaction variants?"
 
@@ -34,6 +35,7 @@ guardrails:
   - "no MLflow/W&B/Hydra/DVC/database without documented failure of current primitives"
 
 next_queue:
+  - "zinc compact-v5 multi-quantile -> NO-GO (decision-compact-v5-multi-quantile-nogo-20260910): do NOT open uncertainty-guided weighting/resampling/distillation (width-GO precondition 0.25 not met); re-register or close the quantile route on the OOF-train set before any further objective change; compact-v4-hinge remains the current candidate"
   - "zinc (revisit-gated, freeze-bound): objective/calibration direction is NOT queued; decision-oof-difficulty-heteroscedasticity-go-20260910 supersedes the OOF-train revisit condition (an OOF residual now exists) and records the current revisit_if (any future model change must clear original gates on the OOF set)"
   - "promote a fresh control-plane zinc run (the legacy baseline is backfilled, not a new run)"
   - "migrate molhiv runner after zinc equivalence is accepted"
@@ -45,6 +47,8 @@ next_queue:
   - "backfill: current baseline / best candidate / key negative result / key evidence"
 
 recent_claims:
+  - "claim-compact-v5-mq-point-nogo-20260910 [refuted] auxiliary quantile supervision (non-crossing q10/q50/q90 + pinball loss, frozen v4-hinge, +66 params) does NOT reliably improve q50: seed-0 Case A (+0.0114) but 4-seed mean +0.0037 (3/4, Mild) and test -0.0025 (1/4); none/median controls bit-identical to v4/L1"
+  - "claim-compact-v5-width-internalizes-difficulty-20260910 [supported] single-model interval width learns the OOF difficulty/epistemic axes at Mild level: width-|err| 0.254 (seed0)/0.211 (4-seed mean, 4/4 positive), robust to tail; width-disagreement 0.408, width-OOF-difficulty 0.376; signed-residual -0.095; gain concentrated in rare/medium molecules (common bulk flat)"
   - "claim-oof-difficulty-confirmed-20260910 [supported] OOF difficulty/heteroscedasticity confirmation on official train (K=5 OOF, frozen v4-hinge, seeds 0+1, test/valid never loaded): cross-fitted difficulty Spearman 0.374 visible / 0.490 all, 5/5; rarity monotone 0.133 -> 0.417 MAE; disagreement-error Spearman 0.393 5/5; ensemble gain -8.3%; difficulty persists within y-level controls"
   - "claim-post-v4-residual-structure-20260909 [supported] post-v4 residual audit: no correctable second-layer structural signal in frozen v4-hinge Group-A validation residuals (all fitted probes < 0.003 gate; best +0.0001); structure is variance-side only (z_SA-axis abs -0.359 4/4; rarity 0.28-0.32/seed 4/4) plus small z_logP top-quintile drift and sparse N-H1+ hint"
   - "claim-929b3e29 [supported] v4-hinge beats v2 under primary benchmark protocol across seeds 0-3 (mean paired +0.0092 test MAE, 4/4 seeds); GO not Strong GO; bulk-A flips sign"
@@ -52,6 +56,7 @@ recent_claims:
   - "claim-compact-v3-context-none-is-v2 [supported] v3 code path with context_mode=none is bit-identical to compact-v2 (terminal run)"
 
 recent_decisions:
+  - "decision-compact-v5-multi-quantile-nogo-20260910: NO-GO multi-quantile as a benchmark improvement (Stage-1 seed0 Case A did not reproduce; 4-seed Mild/Mild: point +0.0037 3/4, width 0.211 4/4; one-time test -0.0025 1/4); do NOT open uncertainty-guided weighting (width-GO precondition unmet); re-register/close the quantile route on OOF-train"
   - "decision-oof-difficulty-heteroscedasticity-go-20260910: GO difficulty (cross-fitted OOF Spearman 0.374 >= 0.25, 5/5) + GO epistemic (disagreement 0.393 >= 0.30, 5/5) on official-train OOF residual — remaining error is predictive difficulty/heteroscedastic variance on rarity + disagreement + low-y axes; confirms (train-side, true OOF) the valid-only NO CLEAR SECONDARY SIGNAL; no structural v5 channel; any future change must clear gates on this OOF set"
   - "decision-post-v4-residual-audit-no-secondary-signal-20260909: NO CLEAR SECONDARY SIGNAL — no v5 representation channel; revisit only via OOF-train-tested >=0.003 corrections or an opened objective/calibration study"
   - "decision-d5bf08b3: GO compact-v4-hinge under primary benchmark protocol (selection-checkpoint test, +0.0092 mean paired, 4/4 seeds); next = post-v4 residual audit; seed-0 refit regression is secondary-robustness evidence only"
@@ -59,6 +64,42 @@ recent_decisions:
   - "decision-compact-v3-context-conditioning-nogo-20260908: first version of ring-context conditioning NO-GO on valid (coarse +0.0021 / typed +0.0125 / concat +0.0171); revisit with capacity-neutral mechanisms"
 
 promoted_records:
+  - run_id: 20260910-081449-790d891a
+    note: "compact-v5 control none-mode guard (bit-identical to canonical v4-hinge seed0)"
+    record: records/runs/20260910-081449-790d891a.json
+  - run_id: 20260910-082335-4160bc7f
+    note: "compact-v5 control median_only (2*pinball_0.5 == L1, bit-identical)"
+    record: records/runs/20260910-082335-4160bc7f.json
+  - run_id: 20260910-082959-706bb17a
+    note: "compact-v5 MQ lambda=0.10 (regression)"
+    record: records/runs/20260910-082959-706bb17a.json
+  - run_id: 20260910-083648-62c77ebd
+    note: "compact-v5 MQ lambda=0.25 (selected; Stage-1 seed0 +0.0114)"
+    record: records/runs/20260910-083648-62c77ebd.json
+  - run_id: 20260910-084328-b0817b52
+    note: "compact-v5 MQ lambda=0.50 (within tie band)"
+    record: records/runs/20260910-084328-b0817b52.json
+  - run_id: 20260910-085142-c49d0536
+    note: "compact-v5 MQ lambda=0.25 multi-seed s1"
+    record: records/runs/20260910-085142-c49d0536.json
+  - run_id: 20260910-085811-e7e99190
+    note: "compact-v5 MQ lambda=0.25 multi-seed s2"
+    record: records/runs/20260910-085811-e7e99190.json
+  - run_id: 20260910-090440-ba4ca9ae
+    note: "compact-v5 MQ lambda=0.25 multi-seed s3"
+    record: records/runs/20260910-090440-ba4ca9ae.json
+  - run_id: 20260910-091252-5e114a07
+    note: "compact-v5 MQ lambda=0.25 frozen benchmark test s0 (test 0.136037)"
+    record: records/runs/20260910-091252-5e114a07.json
+  - run_id: 20260910-091947-500a2536
+    note: "compact-v5 MQ lambda=0.25 frozen benchmark test s1 (test 0.141317)"
+    record: records/runs/20260910-091947-500a2536.json
+  - run_id: 20260910-092640-8ef02123
+    note: "compact-v5 MQ lambda=0.25 frozen benchmark test s2 (test 0.141324)"
+    record: records/runs/20260910-092640-8ef02123.json
+  - run_id: 20260910-093339-417cbcbd
+    note: "compact-v5 MQ lambda=0.25 frozen benchmark test s3 (test 0.138932)"
+    record: records/runs/20260910-093339-417cbcbd.json
   - run_id: 20260907-123049-e96f14e4
     note: equivalence verification (smoke 2 epochs) — not the scientific baseline
     record: records/runs/20260907-123049-e96f14e4.json
