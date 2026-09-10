@@ -1,0 +1,58 @@
+decision_id: decision-corrected-token-fragmentation-mixed-20260910
+kind: decision
+study_id: zinc-context-gap
+created: '2026-09-10T14:30:00'
+decision: >-
+  Case D - MIXED MECHANISM (do not open the hierarchical architecture). The corrected-vs-historical
+  compact-v4-hinge degradation is NOT directed by token fragmentation: every unconditional
+  molecule-level fragmentation-degradation correlation is |Spearman| <= 0.06 (frequency loss
+  -0.025, newly-rare -0.023, newly-OOV -0.056), failing the pre-registered strong (>=0.25) and
+  moderate (0.15) sharing-loss gates. It is dominated by a baseline-difficulty-dependent error
+  redistribution (Spearman(baseline error, degradation) = -0.352; corrected worse on the easy
+  bulk, better on the hard tail; 4/4 seeds), which is not a fragmentation mechanism. A weak,
+  non-specific, largely bulk-localised frequency-loss/newly-rare signal remains conditional on
+  baseline difficulty (partial Spearman ~0.10, 4/4 seeds; G3 matched +0.014). Newly-OOV
+  molecules do not degrade (G4 matched -0.009), split-but-still-common molecules do not degrade
+  more than difficulty-matched less-fragmented common molecules (matched -0.003), fragmentation
+  does not raise cross-seed disagreement (|rho| <= 0.07), and HybridEmbedding tier reallocation
+  is collinear with frequency loss and non-explanatory (rho 0.025). Ranked by effect size:
+  (1) baseline-difficulty redistribution, (2) weak frequency-loss/newly-rare signal,
+  (3) newly-OOV absent, (4) tier reallocation absent. No architecture GO. The single next stage
+  is to quantify and separate the baseline-difficulty redistribution from the weak fragmentation
+  residual (diagnostic only, no training, no new architecture).
+because: >-
+  (1) Tokenizer correction fragments massively (r2 6,784 -> 15,218 types, mean split multiplicity
+  2.24, max 104; parent 31 -> 512, mean 16.5) and creates 1,065 newly-rare and 396 newly-OOV
+  validation occurrences, but none of these predict paired degradation. (2) The pre-registered
+  strong/moderate gates require a positive fragmentation-degradation correlation with >=3/4 seed
+  consistency; the unconditional relation is ~0 with inconsistent signs, and the
+  difficulty-conditioned partial is only ~0.10. (3) The dominant pattern is a monotone
+  degradation-vs-baseline-difficulty ladder (+0.031, +0.018, +0.012, +0.002, -0.040), robust
+  across seeds and not reproduced by within-model seed-pair deltas. (4) G2 (split-but-common)
+  does not degrade more than the matched less-fragmented common control, so neither "sharing
+  loss" nor "coarse structural inductive bias" is cleanly established. (5) Newly-OOV molecules
+  improve, contradicting the strongest form of the sharing-loss prediction.
+alternatives_rejected:
+- item: GO - hierarchical coarse-shared + exact-residual embedding (Case A, strong/moderate sharing loss)
+  because: 'no fragmentation metric clears even the 0.15 moderate gate (pooled |rho| <= 0.06, conditional <= 0.10); newly-OOV molecules do not degrade; the difficulty-conditioned subgroup signal is non-specific (already-rare / historical-OOV share it).'
+- item: GO - coarse-to-fine patch representation (Case B, coarse structural inductive bias)
+  because: 'split-but-still-common G2 does not clearly degrade (matched diff vs less-fragmented common = -0.003). The bulk-vs-tail redistribution is suggestive of a coarse regularisation benefit but is not tied to fragmentation.'
+- item: GO - shared low-rank exact representation (Case C, capacity allocation bottleneck)
+  because: 'tier downgrade is collinear with frequency loss (rho 0.52) and carries no independent degradation signal (rho 0.025).'
+- item: NO SUPPORT / Case E (all explanations weak)
+  because: 'not clean either - the newly-rare group G3 degrades +0.0141 (4/4 seeds, difficulty-matched) and disagreement correlates with degradation, so a weak non-specific fragmentation component cannot be dismissed; the data are genuinely mixed.'
+revisit_if: >-
+  (1) A higher-powered / longer-training study makes the weak conditional newly-rare signal clear
+  the moderate gate; (2) the baseline-difficulty redistribution is understood (e.g. a frozen
+  analysis of which molecules/patch types move) and turns out to be explainable by the coarse
+  historical identity acting as a bulk-favouring regulariser; (3) a corrected tokenizer with an
+  explicit shared base is registered with its own pre-registered gates.
+supporting_evidence:
+- notes/corrected_token_fragmentation_rarity_audit.md
+- results/corrected_token_fragmentation_audit/audit_summary.json
+- results/corrected_token_fragmentation_audit/decision_record.json
+- results/corrected_token_fragmentation_audit/group_transition_results.csv
+- results/corrected_token_fragmentation_audit/disagreement_comparison.csv
+- results/corrected_token_fragmentation_audit/partial_analysis.json
+- records/claims/claim-corrected-token-fragmentation-20260910.yaml
+- records/claims/claim-typed-tokenizer-rebaseline-caseC-20260910.yaml

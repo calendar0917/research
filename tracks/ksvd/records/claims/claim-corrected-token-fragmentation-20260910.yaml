@@ -1,0 +1,67 @@
+claim_id: claim-corrected-token-fragmentation-20260910
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-10T14:30:00'
+statement: >-
+  On the frozen paired compact-v4-hinge historical-vs-corrected tokenizer runs (ZINC official
+  train/validation only, seeds 0-3, official test never loaded), the corrected tokenizer
+  fragments the exact patch vocabulary massively and dilutes exact-token train frequency, but
+  the paired molecule-level degradation (delta_error = err_corrected - err_historical; positive
+  = corrected worse) is NOT directed by that fragmentation. r2: 6,784 historical -> 15,218
+  corrected types, 2,363 (34.8%) split, mean multiplicity 2.24 (max 104); parent: 31 -> 512,
+  23 (74%) split, mean multiplicity 16.5. Validation transitions: 1,065 newly-rare and 396
+  newly-OOV occurrences, affecting 565 and 240 molecules (union 631/1000). But every
+  molecule-level fragmentation metric is unconditionally uncorrelated with degradation
+  (pooled |Spearman| <= 0.06; frequency loss -0.025, newly-rare -0.023, newly-OOV -0.056, all
+  1-2/4 seeds positive). The degradation is instead dominated by a baseline-difficulty
+  redistribution: Spearman(baseline historical error, degradation) = -0.352 (monotone over
+  baseline-error quintiles +0.031 -> -0.040; robust 4/4 seeds), i.e. the corrected tokenizer is
+  worse on the easy common bulk and better on the hard rare tail. Group degradation is
+  G1 +0.0016 / G2 +0.0042 / G3 +0.0141 / G4 -0.0083, so the expected G1<G2<G3<G4 gradient
+  breaks at newly-OOV (difficulty-matched: G3 +0.0143, G4 -0.0089). After conditioning on
+  baseline error a weak, non-specific, largely bulk-localised signal remains (best conditional
+  partial Spearman 0.096, newly-rare; 4/4 seeds) that is not larger than the generic already-rare
+  / historical-OOV effect. The rarity-difficulty relation is only marginally stronger under the
+  corrected tokenizer (rare<=5 0.305 -> 0.322; OOV 0.349 -> 0.372). Cross-seed disagreement rises
+  only slightly (0.0809 -> 0.0845) and is largest for the LEAST fragmented group; it is
+  uncorrelated with every fragmentation metric (|rho| <= 0.07) though it does correlate with
+  degradation (+0.31). HybridEmbedding tier reallocation touches 16.6% of occurrences but is
+  collinear with frequency loss (rho 0.52) and carries no independent signal (vs degradation
+  rho 0.025).
+scope: >-
+  ZINC-12k official train/validation; frozen compact-v4-hinge historical and corrected
+  validation-selected runs seeds 0-3; single-variable tokenizer change; all frequency
+  statistics from official train only; paired per-molecule delta; no training; official test
+  never loaded.
+supporting_evidence:
+- notes/corrected_token_fragmentation_rarity_audit.md
+- results/corrected_token_fragmentation_audit/audit_summary.json
+- results/corrected_token_fragmentation_audit/decision_record.json
+- results/corrected_token_fragmentation_audit/per_seed_degradation.csv
+- results/corrected_token_fragmentation_audit/validation_molecule_fragmentation.csv
+- results/corrected_token_fragmentation_audit/group_transition_results.csv
+- results/corrected_token_fragmentation_audit/partial_analysis.json
+contradicting_evidence:
+- A weak but difficulty-consistent fragmentation signal exists — G3 (newly rare) molecules
+  degrade +0.0141 (4/4 seeds; +0.0143 difficulty-matched), and the difficulty-conditioned
+  partial Spearman is positive and sign-consistent (4/4) for frequency loss / newly-rare /
+  newly-OOV. So the sharing-loss direction is not entirely absent.
+- The corrected tokenizer does raise cross-seed disagreement slightly, and disagreement
+  correlates with degradation (+0.31), so estimation variance is a real axis even though it is
+  not produced by fragmentation.
+limitations:
+- Baseline-difficulty is a strong confound; the paired difference is a change score containing
+  -baseline_error, so the unconditional correlation is mechanically pushed negative. Both the
+  unconditional and the difficulty-conditioned views are reported.
+- The weak conditional signal uses a molecule-level median group threshold (audit-time, not
+  outcome-selected); G1 is empty under a strict no-split definition because >=53% of every
+  molecule's patches come from an aliased historical token.
+- The parent-token partial correlations are <= 0.08 with inconsistent signs; no parent-only
+  effect.
+- n = 1,000 validation molecules and 4 seeds; the G3 subgroup is n=391.
+implication: >-
+  The simple frequency-fragmentation / statistical-sharing-loss explanation is NOT supported at
+  the required level. Do not build the hierarchical coarse-shared + exact-residual embedding on
+  this evidence. The dominant, robust pattern to explain next is the baseline-difficulty
+  redistribution (correctness helps the hard tail and hurts the easy bulk).
