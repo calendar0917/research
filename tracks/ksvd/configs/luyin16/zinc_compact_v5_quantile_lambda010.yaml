@@ -1,0 +1,60 @@
+# Compact-v5 multi-quantile regression — variant C: q10/q50/q90, lambda_q=0.10.
+#
+# Objective-only v5 stage.  The compact-v4-hinge representation is FROZEN.
+# `model.quantile_mode: q10_q50_q90` widens only the final head Linear from
+# 1 to 3 raw outputs [m, d_low_raw, d_high_raw]; forward decodes
+#   d_low = softplus(d_low_raw); d_high = softplus(d_high_raw)
+#   q50 = m; q10 = m - d_low; q90 = m + d_high   (non-crossing by construction)
+# No representation or graph-head-hidden structure changes; parameter delta
+# = +66 (99,679 selection params).
+#
+# Loss: 2*pinball_0.5(q50) + lambda_q * (pinball_0.1(q10) + pinball_0.9(q90)).
+# q50 is the only benchmark point prediction (selection metric = valid q50 MAE).
+protocol_id: luyin16-zinc-hierarchical-patch-relation-context-compact-v5-mq-lambda010
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+
+model:
+  patch_hidden: 48
+  pair_hidden: 16
+  token_width: 16
+  embedding_mode: hybrid
+  embedding_rank: 4
+  hybrid_full_typed_tokens: 768
+  hybrid_full_parent_tokens: 32
+  center_context: true
+  center_context_hidden: 60
+  graph_head_hidden_0: 64
+  graph_head_hidden_1: 32
+  dropout: 0.05
+  epochs: 60
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 12
+  evaluate_every: 1
+  device: cpu
+  parameter_audit: true
+  # v4: global topology channel with generic hinge basis (nonlinear input).
+  topology_mode: hinge
+  topology_hidden_dim: 16
+  topology_out_dim: 8
+  topology_shuffle_test: true
+  save_state_dict: true
+  # v5 (objective-only): three-quantile non-crossing readout.
+  quantile_mode: q10_q50_q90
+  quantile_lambda: 0.10
+  # Budget: v4 99,613 + head-final 2*32+2 = 99,679 selection (<= 105k).
+  expected_max_trainable_params: 105000
+
+runtime:
+  torch_threads: 4

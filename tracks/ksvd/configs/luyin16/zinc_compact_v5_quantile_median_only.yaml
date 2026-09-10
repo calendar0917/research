@@ -1,0 +1,59 @@
+# Compact-v5 multi-quantile regression — variant B: v5-median-only control.
+#
+# Objective-only v5 stage.  The compact-v4-hinge representation is FROZEN.
+# `model.quantile_mode: median_only` keeps the EXACT compact-v4 scalar head
+# (same architecture, same 99,613 params) and only swaps the training loss
+# from L1 to `2 * pinball_0.5`, which is elementwise identical to L1
+# (2*max(0.5e, -0.5e) == |e| with power-of-two scalings).  This control
+# isolates the loss-implementation change from the multi-quantile auxiliary
+# supervision; a gain here would signal an implementation artifact, not a
+# v5 mechanism.
+#
+# Loss: 2*pinball_0.5 (== L1 scale).  Params: 99,613 (unchanged).
+protocol_id: luyin16-zinc-hierarchical-patch-relation-context-compact-v5-mq-median-only
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+
+model:
+  patch_hidden: 48
+  pair_hidden: 16
+  token_width: 16
+  embedding_mode: hybrid
+  embedding_rank: 4
+  hybrid_full_typed_tokens: 768
+  hybrid_full_parent_tokens: 32
+  center_context: true
+  center_context_hidden: 60
+  graph_head_hidden_0: 64
+  graph_head_hidden_1: 32
+  dropout: 0.05
+  epochs: 60
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 12
+  evaluate_every: 1
+  device: cpu
+  parameter_audit: true
+  # v4: global topology channel with generic hinge basis (nonlinear input).
+  topology_mode: hinge
+  topology_hidden_dim: 16
+  topology_out_dim: 8
+  topology_shuffle_test: true
+  save_state_dict: true
+  # v5 (objective-only): median-only control — scalar q50, 2*pinball_0.5 loss.
+  quantile_mode: median_only
+  # Budget: v4 99,613 selection (<= 105k).  median_only adds 0 params.
+  expected_max_trainable_params: 105000
+
+runtime:
+  torch_threads: 4

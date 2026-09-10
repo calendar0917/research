@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import csv
 from collections import Counter, deque
 from dataclasses import dataclass
 import hashlib
@@ -100,6 +101,122 @@ RELATION_WIDTH = (
 PATCH_HIDDEN = 64
 PAIR_HIDDEN = 32
 GLOBAL_WIDTH = 62  # global_feature_views(...)["global_all"]
+
+# --- Compact-v5 multi-quantile regression (objective-only change) ---------
+# The compact-v4 representation/graph head hidden structure is frozen; v5
+# only changes the regression output parameterization and the training loss.
+#
+#   quantile_mode="none"        exact compact-v4 scalar output + L1 (guard)
+#   quantile_mode="median_only" scalar q50 (= m) + loss 2*pinball_0.5 == L1
+#   quantile_mode="q10_q50_q90" non-crossing q10/q50/q90 readout + combined
+#                               quantile loss (q50 stays the point prediction)
+#
+# Loss scale rule: 2 * pinball(y-q, 0.5) == abs(y-q) exactly (both halves of
+# the pinball are ±0.5*e, so doubling recovers |e| bit-for-bit).  This keeps
+# the q50 main-task gradient magnitude identical to the original compact-v4 L1.
+QUANTILE_MODES = ("none", "median_only", "q10_q50_q90")
+QUANTILE_TAUS = (0.10, 0.50, 0.90)
+# Pre-registered lambda grid for stage 1 (objective-lottery protection):
+# only these three values may be run for quantile_mode="q10_q50_q90".
+PREREGISTERED_QUANTILE_LAMBDAS = (0.10, 0.25, 0.50)
+DEFAULT_QUANTILE_LAMBDA = 0.25
+
+
+def pinball_loss(error: torch.Tensor, tau: float) -> torch.Tensor:
+    """Elementwise pinball (quantile) loss for one quantile level tau.
+
+    With ``error = y - q_tau``:
+
+        L_tau(e) = max(tau * e, (tau - 1) * e)
+
+    For tau = 0.5 this equals 0.5 * |e|, so ``2 * pinball_loss(e, 0.5)`` is
+    exactly ``abs(e)`` (both branches are exact powers-of-two scalings of e).
+    """
+    tau = float(tau)
+    return torch.maximum(tau * error, (tau - 1.0) * error)
+
+
+def _validate_quantile_config(
+    quantile_mode: str,
+    quantile_lambda: float | None,
+) -> float | None:
+    """Validate a (mode, lambda) pair; returns the effective lambda."""
+    if quantile_mode not in QUANTILE_MODES:
+        raise ValueError(
+            f"unknown quantile_mode={quantile_mode!r}; expected one of "
+            f"{sorted(QUANTILE_MODES)}"
+        )
+    if quantile_mode == "q10_q50_q90":
+        lambda_value = float(
+            DEFAULT_QUANTILE_LAMBDA
+            if quantile_lambda is None
+            else quantile_lambda
+        )
+        # Stage-1 pre-registration: do not open the lambda grid.  Only the
+        # three declared values may run for the full three-quantile model.
+        if lambda_value not in PREREGISTERED_QUANTILE_LAMBDAS:
+            raise ValueError(
+                f"quantile_lambda={lambda_value} not in pre-registered grid "
+                f"{PREREGISTERED_QUANTILE_LAMBDAS}; re-register a new stage "
+                "before widening the grid"
+            )
+        return lambda_value
+    return None
+
+
+def _quantile_point_prediction_torch(
+    prediction: torch.Tensor,
+) -> torch.Tensor:
+    """The benchmark point estimate: q50 (column 1) or the scalar output."""
+    if prediction.ndim == 2:
+        return prediction[:, 1]
+    return prediction
+
+
+def _quantile_point_prediction_numpy(
+    predictions: np.ndarray,
+) -> np.ndarray:
+    """Numpy variant of the q50 point-prediction extraction."""
+    if predictions.ndim == 2:
+        return predictions[:, 1]
+    return predictions
+
+
+def quantile_regression_loss(
+    prediction: torch.Tensor,
+    target: torch.Tensor,
+    *,
+    quantile_mode: str = "none",
+    quantile_lambda: float | None = None,
+) -> torch.Tensor:
+    """Training loss for the requested output/objective mode.
+
+    ``target`` is always 1-D per-molecule; ``prediction`` is 1-D for
+    ``none``/``median_only`` and (n, 3) for ``q10_q50_q90`` with columns
+    [q10, q50, q90].  ``quantile_mode="none"`` returns exactly
+    ``F.l1_loss(prediction, target)`` so the compact-v4 path is untouched.
+    """
+    lambda_value = _validate_quantile_config(quantile_mode, quantile_lambda)
+    if quantile_mode == "none":
+        return F.l1_loss(prediction, target)
+    if quantile_mode == "median_only":
+        # 2 * pinball_0.5 == |y - q50|; forward-equal (and, with power-of-two
+        # scalings only, gradient-equal) to the original L1.
+        error = target - prediction
+        return (2.0 * pinball_loss(error, 0.5)).mean()
+    # q10_q50_q90: q50 (median) is the main task at L1 scale; q10/q90 are
+    # auxiliary distributional tasks weighted by lambda.
+    q10 = prediction[:, 0]
+    q50 = prediction[:, 1]
+    q90 = prediction[:, 2]
+    error_mid = target - q50
+    main = (2.0 * pinball_loss(error_mid, 0.5)).mean()
+    assert lambda_value is not None
+    auxiliary = pinball_loss(target - q10, 0.10).mean() + pinball_loss(
+        target - q90, 0.90
+    ).mean()
+    return main + lambda_value * auxiliary
+
 
 
 def _shell_pairs_for_radius(radius: int) -> tuple[tuple[int, int], ...]:
@@ -1165,8 +1282,15 @@ class PatchPathModel(nn.Module):
         topology_input_width: int = 0,
         topology_hidden_dim: int = 16,
         topology_out_dim: int = 8,
+        quantile_mode: str = "none",
     ) -> None:
         super().__init__()
+        if quantile_mode not in QUANTILE_MODES:
+            raise ValueError(
+                f"unknown quantile_mode={quantile_mode!r}; expected one of "
+                f"{sorted(QUANTILE_MODES)}"
+            )
+        self.quantile_mode = str(quantile_mode)
         self.patch_hidden = int(patch_hidden)
         self.pair_hidden = int(pair_hidden)
         self.embedding_mode = str(embedding_mode)
@@ -1400,6 +1524,13 @@ class PatchPathModel(nn.Module):
             raise ValueError("graph head hidden dimensions must be positive")
         topology_width = self.topology_out_dim if self.topology_encoder is not None else 0
         self.unified_graph_width = int(readout_width + 32 + topology_width)
+        # v5: only the final output width may change.  ``none``/``median_only``
+        # keep the exact compact-v4 scalar head (bit-identical construction);
+        # ``q10_q50_q90`` widens only the last Linear to 3 raw outputs
+        # [m, d_low_raw, d_high_raw] (parameter delta = +66 for the frozen
+        # 32-wide hidden_1).  The decoding into non-crossing quantiles happens
+        # in forward(); no extra MLP is added.
+        head_output_dim = 3 if self.quantile_mode == "q10_q50_q90" else 1
         self.head = nn.Sequential(
             nn.Linear(self.unified_graph_width, self.head_hidden_0),
             nn.LayerNorm(self.head_hidden_0),
@@ -1407,7 +1538,7 @@ class PatchPathModel(nn.Module):
             nn.Dropout(float(dropout)),
             nn.Linear(self.head_hidden_0, self.head_hidden_1),
             nn.ReLU(),
-            nn.Linear(self.head_hidden_1, 1),
+            nn.Linear(self.head_hidden_1, head_output_dim),
         )
 
     @staticmethod
@@ -1736,7 +1867,20 @@ class PatchPathModel(nn.Module):
                     f"model={self.topology_input_width}"
                 )
             readout_blocks.append(self.topology_encoder(topology))
-        return self.head(torch.cat(readout_blocks, dim=1)).view(-1)
+        unified = torch.cat(readout_blocks, dim=1)
+        if self.quantile_mode == "q10_q50_q90":
+            # Non-crossing parameterization: raw head outputs are
+            # [m, d_low_raw, d_high_raw]; d_low/d_high are softplus-positive
+            # widths, so q10 = m - d_low <= m = q50 <= q90 = m + d_high by
+            # construction (no explicit crossing penalty needed).
+            raw = self.head(unified)
+            m = raw[:, 0]
+            d_low = F.softplus(raw[:, 1])
+            d_high = F.softplus(raw[:, 2])
+            q10 = m - d_low
+            q90 = m + d_high
+            return torch.stack([q10, m, q90], dim=1)
+        return self.head(unified).view(-1)
 
 
 def _make_loader(graphs: Sequence[Data], batch_size: int, shuffle: bool, seed: int) -> DataLoader:
@@ -1769,8 +1913,9 @@ def _predict_values(
 
 
 def _evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> float:
+    """Validation MAE of the point prediction (q50 for multi-quantile)."""
     targets, predictions = _predict_values(model, loader, device)
-    return float(mean_absolute_error(targets, predictions))
+    return float(mean_absolute_error(targets, _quantile_point_prediction_numpy(predictions)))
 
 
 def _shuffled_topology_mae(
@@ -1821,8 +1966,21 @@ def _train_phase(
         topology_hidden_dim: int = 16,
         topology_out_dim: int = 8,
         topology_shuffle_test: bool = True,
+        quantile_mode: str | None = None,
+        quantile_lambda: float | None = None,
 ) -> dict[str, Any]:
     model_config = config["model"]
+    quantile_mode = str(
+        quantile_mode
+        if quantile_mode is not None
+        else model_config.get("quantile_mode", "none")
+    )
+    quantile_lambda = (
+        model_config.get("quantile_lambda")
+        if quantile_lambda is None
+        else quantile_lambda
+    )
+    effective_lambda = _validate_quantile_config(quantile_mode, quantile_lambda)
     structural_context_mode = str(model_config.get("structural_context_mode", "none"))
     topology_mode = str(model_config.get("topology_mode", "none"))
     if topology_mode != "none" and topology_input_width < 1:
@@ -1910,6 +2068,7 @@ def _train_phase(
         topology_out_dim=int(
             model_config.get("topology_out_dim", 8)
         ),
+        quantile_mode=quantile_mode,
     ).to(device)
     parameter_audit: dict[str, Any] | None = None
     if bool(model_config.get("parameter_audit", False)):
@@ -1962,7 +2121,12 @@ def _train_phase(
             batch = batch.to(device)
             prediction = model(batch)
             target = batch.y.view(-1)
-            loss = F.l1_loss(prediction, target)
+            loss = quantile_regression_loss(
+                prediction,
+                target,
+                quantile_mode=quantile_mode,
+                quantile_lambda=effective_lambda,
+            )
             optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
@@ -1984,9 +2148,10 @@ def _train_phase(
                 stale += 1
         if epoch == 1 or epoch == int(epochs) or epoch % max(1, int(epochs) // 10) == 0:
             suffix = "" if current_mae is None else f" valid_mae={current_mae:.6f}"
+            loss_name = "l1" if quantile_mode == "none" else "q_loss"
             print(
                 f"patch-path phase={'select' if select_best else 'refit'} "
-                f"epoch={epoch:03d}/{epochs} l1={epoch_loss:.6f}{suffix}",
+                f"epoch={epoch:03d}/{epochs} {loss_name}={epoch_loss:.6f}{suffix}",
                 flush=True,
             )
         if select_best and stale >= patience:
@@ -1997,7 +2162,11 @@ def _train_phase(
     if select_best and best_state is not None:
         model.load_state_dict(best_state)
     eval_targets, eval_predictions = _predict_values(model, eval_loader, device)
-    final_mae = float(mean_absolute_error(eval_targets, eval_predictions))
+    final_mae = float(
+        mean_absolute_error(
+            eval_targets, _quantile_point_prediction_numpy(eval_predictions)
+        )
+    )
     diagnostics: dict[str, Any] = {}
     if (
         select_best
@@ -2229,6 +2398,10 @@ def run(config_path: Path) -> dict[str, Any]:
     topology_hidden_dim = int(config.get("model", {}).get("topology_hidden_dim", 16))
     topology_out_dim = int(config.get("model", {}).get("topology_out_dim", 8))
     topology_shuffle_test = bool(config.get("model", {}).get("topology_shuffle_test", False))
+    quantile_mode = str(config.get("model", {}).get("quantile_mode", "none"))
+    quantile_lambda = _validate_quantile_config(
+        quantile_mode, config.get("model", {}).get("quantile_lambda")
+    )
     topology_input_width = ztopo.raw_width(
         topology_mode,
         input_width_hint=config.get("model", {}).get("topology_input_width"),
@@ -2336,8 +2509,7 @@ def run(config_path: Path) -> dict[str, Any]:
     )
     selected_epoch = int(valid_phase["selected_epoch"])
 
-    # --- Primary benchmark protocol measurement (read-only, additive) ---
-    # The frozen validation-selected checkpoint (fit on official train only)
+    # --- Primary benchmark protocol measurement (read-only, additive) ---    # The frozen validation-selected checkpoint (fit on official train only)
     # is evaluated exactly once on official test.  This is the
     # literature-comparable protocol (train -> validation selection -> frozen
     # checkpoint -> single test evaluation); it retrains nothing and never
@@ -2378,13 +2550,20 @@ def run(config_path: Path) -> dict[str, Any]:
         sel_targets, sel_predictions = _predict_values(
             valid_phase["model"], selection_test_loader, device
         )
+        sel_point = _quantile_point_prediction_numpy(sel_predictions)
         selection_test_phase = {
-            "mae": float(mean_absolute_error(sel_targets, sel_predictions)),
+            "mae": float(mean_absolute_error(sel_targets, sel_point)),
             "parameters": int(valid_phase["parameters"]),
             "checkpoint": "validation-selected best state; train-only fits",
             "targets": sel_targets.tolist(),
-            "predictions": sel_predictions.tolist(),
+            "predictions": sel_point.tolist(),
         }
+        if quantile_mode == "q10_q50_q90":
+            selection_test_phase["quantile_predictions"] = {
+                "q10": sel_predictions[:, 0].tolist(),
+                "q50": sel_predictions[:, 1].tolist(),
+                "q90": sel_predictions[:, 2].tolist(),
+            }
         print(
             "selection-checkpoint test MAE = "
             f"{selection_test_phase['mae']!r} (frozen best-valid state, "
@@ -2572,7 +2751,20 @@ def run(config_path: Path) -> dict[str, Any]:
         },
         "training": {
             **dict(model_config),
-            "loss": "L1 / mean absolute error",
+            "loss": (
+                "L1 / mean absolute error"
+                if quantile_mode == "none"
+                else "quantile / 2*pinball_0.5 + lambda_q*(pinball_0.1+pinball_0.9)"
+                if quantile_mode == "q10_q50_q90"
+                else "2*pinball_0.5 (== L1 scale)"
+            ),
+            "quantile_mode": quantile_mode,
+            "quantile_lambda": quantile_lambda,
+            "quantile_parameterization": (
+                "none"
+                if quantile_mode != "q10_q50_q90"
+                else "m, softplus(d_low), softplus(d_high) -> q10=m-d_low, q90=m+d_high (non-crossing)"
+            ),
             "device": str(device),
             "selected_epoch": selected_epoch,
             "one_predictive_head": True,
@@ -2588,7 +2780,9 @@ def run(config_path: Path) -> dict[str, Any]:
                 "targets": valid_phase["eval_targets"].tolist()
                 if valid_phase.get("eval_targets") is not None
                 else None,
-                "predictions": valid_phase["eval_predictions"].tolist()
+                "predictions": _quantile_point_prediction_numpy(
+                    valid_phase["eval_predictions"]
+                ).tolist()
                 if valid_phase.get("eval_predictions") is not None
                 else None,
             },
@@ -2632,6 +2826,55 @@ def run(config_path: Path) -> dict[str, Any]:
             "script_sha256": _sha256(Path(__file__).resolve()),
         },
     }
+    valid_eval_raw = (
+        np.asarray(valid_phase["eval_predictions"], dtype=np.float64)
+        if valid_phase.get("eval_predictions") is not None
+        else None
+    )
+    if quantile_mode == "q10_q50_q90" and valid_eval_raw is not None:
+        if valid_eval_raw.ndim != 2 or valid_eval_raw.shape[1] != 3:
+            raise RuntimeError(
+                "q10_q50_q90 mode must produce (n, 3) predictions, got "
+                f"shape={valid_eval_raw.shape}"
+            )
+        q10 = valid_eval_raw[:, 0]
+        q50 = valid_eval_raw[:, 1]
+        q90 = valid_eval_raw[:, 2]
+        result["evaluation"]["valid"]["quantile_predictions"] = {
+            "q10": q10.tolist(),
+            "q50": q50.tolist(),
+            "q90": q90.tolist(),
+        }
+        # Per-molecule validation outputs (molecule_id by val-split position,
+        # which is the official val dataset order; the audit feature tables
+        # use the identical ordering, verified bit-exact in the post-v4 audit).
+        per_molecule: list[dict[str, Any]] = []
+        valid_targets = np.asarray(result["evaluation"]["valid"]["targets"], dtype=np.float64)
+        for index in range(int(valid_targets.shape[0])):
+            per_molecule.append(
+                {
+                    "molecule_id": f"valid:{index:04d}",
+                    "target": float(valid_targets[index]),
+                    "q10": float(q10[index]),
+                    "q50": float(q50[index]),
+                    "q90": float(q90[index]),
+                    "width80": float(q90[index] - q10[index]),
+                    "lower_width": float(q50[index] - q10[index]),
+                    "upper_width": float(q90[index] - q50[index]),
+                    "abs_error": float(abs(valid_targets[index] - q50[index])),
+                    "signed_residual": float(valid_targets[index] - q50[index]),
+                }
+            )
+        per_molecule_path = Path(result_json).with_name(
+            "validation_predictions.csv"
+        )
+        with per_molecule_path.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(per_molecule[0].keys()))
+            writer.writeheader()
+            writer.writerows(per_molecule)
+        result["artifacts"] = list(result["artifacts"]) + [
+            str(per_molecule_path)
+        ]
     _write_json_atomic(result_json, result)
     result_markdown.parent.mkdir(parents=True, exist_ok=True)
     result_markdown.write_text(_render_markdown(result), encoding="utf-8")
