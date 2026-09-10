@@ -1,0 +1,80 @@
+claim_id: claim-pair-endpoint-association-witness-nogo-20260911
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-09-11T00:40:00'
+statement: >-
+  For the frozen compact-v4-hinge pair representation, the symmetric
+  off-diagonal endpoint association a_ij = offdiag_{k<l}(u_i u_j^T + u_j u_i^T)
+  in R^120 that the current pair map c_ij = [u_i+u_j, |u_i-u_j|, u_i⊙u_j]
+  discards does NOT carry stable incremental signed predictive value on real
+  ZINC, beyond the existing 302D graph vector R and beyond the diagonal /
+  current-pair-information control. New v3 export
+  (frozen_state_export_v3_pair_endpoint) adds projected_patch_state u_i = P(h_i)
+  (16D, pre-centre-update patch, the exact tensor entering pair feature
+  construction) and the raw 23D pair relation; Gate 0 all-pass on 5/5 folds
+  (u_i == forward pair projection max 0.0; reconstructed pair encoder input ==
+  forward pair input max 0.0; reconstructed q_ij == true q_ij max 0.0; R
+  reconstruction max 1.14e-5; prediction reconstruction max 9.5e-7; batch
+  invariance u-mean 0.0, yhat 4.8e-7; node-permutation witness max 1.24e-7).
+  Stage 1 (frozen OOF backbone seed 0, 5 folds, target-independent
+  molecule-ID-hash split 1200/400/400, one deterministic adapter init, no
+  sweeps) on the 400 adapter-evaluation molecules per fold: mean MAE B0 0.19316,
+  B1 R-only 0.19050, B2 diagonal control 0.19475, E endpoint witness 0.19749.
+  mean delta_R = MAE(B1)-MAE(E) = -0.006994 (95% CI [-0.01039,-0.00359],
+  P(>0)=0.0001, 0/5 folds positive); mean delta_diag = MAE(B2)-MAE(E) =
+  -0.002741 (0/5 folds non-negative). E is worse than B1 on the selection split
+  in 5/5 folds, so the deficit is optimization/generalization, not eval noise.
+  Representation-level ambiguity is mild-to-moderate and target-free: c-nearest
+  a-distance is 0.317x the random same-bucket a-distance (relation-restricted
+  0.495x), Pearson(||dc||,||da||)=0.927, fraction close-c/far-a = 0.0,
+  normalized conditional Var(a | 16-NN c-neighborhood) = 0.252.
+scope: >-
+  ZINC-12k official TRAIN only, through the existing frozen compact-v4-hinge
+  OOF checkpoints (official valid/test never loaded); backbone seed 0 (second
+  seed NOT spent by the pre-registered CLEAR NO-GO rule); typed_tokenizer_v1_historical;
+  deterministic orthogonal 16D random projection (seed 20260911, never learned);
+  single pre-registered adapter protocol (Adam 1e-3, full batch, 400 epochs,
+  patience 50, L1); B1 4,135 params, B2/E 4,177 params (+1.02%); no backbone
+  training, no pair-encoder change, no q_ij change, no new features.
+supporting_evidence:
+- notes/pair_endpoint_association_witness_audit.md
+- results/pair_endpoint_association_witness/export_integrity_report.json
+- results/pair_endpoint_association_witness/checkpoint_inventory.json
+- results/pair_endpoint_association_witness/pair_feature_spec.json
+- results/pair_endpoint_association_witness/representation_ambiguity.json
+- results/pair_endpoint_association_witness/stage1_fold_results.csv
+- results/pair_endpoint_association_witness/stage1_bootstrap.json
+- results/pair_endpoint_association_witness/final_decision.json
+- results/pair_endpoint_association_witness/fold_split_manifest.json
+contradicting_evidence:
+  - >-
+    The algebraic collision is real (Test 5: identical c_ij, different a_ij)
+    and exact c-duplicate pairs exist in the frozen ZINC states, so the current
+    map is genuinely non-injective. This does NOT reverse the negative result,
+    but it means the NO-GO is empirical, not algebraic.
+  - >-
+    The R-only residual head still improves on the frozen model (mean B0-B1 =
+    +0.00266), so a cheap post-state residual readout is not useless in
+    general; it is specifically the off-diagonal (and diagonal) pair summaries
+    that hurt.
+  - >-
+    The diagonal control B2 is also worse than B1, so the negative is partly
+    about the 160D bucket mean/std summary parameterization, not only about the
+    off-diagonal content.
+limitations:
+- One frozen backbone seed only (Stage 1 clear NO-GO stopped the second seed by
+  the pre-registered budget rule); one adapter init (Stage 1b not triggered).
+- One fixed frozen 16D random projection; a learned or differently-sized
+  projection was deliberately NOT searched. A GO would not have proven a full
+  outer product optimal; a NO-GO here must not be rescued by "learn the
+  projection".
+- The summary is a low-capacity per-bucket mean/std graph vector; a richer
+  higher-order / centre-incidence readout is not excluded.
+implication: >-
+  Close off-diagonal endpoint cross-coordinate association as the current
+  bottleneck for the compact-v4 pair path. Do NOT sweep rank, learn the
+  projection, feed the full 120D outer product, or reach for attention /
+  triplet networks. The next question moves upstream in the computation graph
+  (centre-incidence compression / one-shot centre update / higher-order
+  interaction), again only after its own task-relevant witness.

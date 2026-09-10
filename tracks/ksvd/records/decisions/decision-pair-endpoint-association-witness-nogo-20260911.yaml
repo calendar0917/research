@@ -1,0 +1,55 @@
+decision_id: decision-pair-endpoint-association-witness-nogo-20260911
+created: '2026-09-11T00:40:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  NO-GO for the pair endpoint association route (Case C: R-only equally good /
+  better). After building the corrected v3 export (Gate 0 all-pass 5/5 folds)
+  and running the pre-registered Stage 1 screening (frozen OOF backbone seed 0
+  x 5 folds x 1 adapter init), the endpoint witness E is worse than both the
+  R-only control B1 (mean delta_R = -0.006994, 95% CI [-0.01039,-0.00359],
+  0/5 folds positive) and the matched diagonal/current-information control B2
+  (mean delta_diag = -0.002741, 0/5 folds non-negative), and E degrades the
+  common-input bulk (mean +0.0050, max +0.0112 > 0.002 gate). Representation
+  ambiguity is only mild-to-moderate (c-nearest a-distance 0.32x random,
+  Pearson(dc,da) 0.93, normalized conditional Var(a|c) 0.25), so no
+  task-relevant witness was found. The second frozen backbone seed and the
+  Stage-1b second adapter init were NOT spent. compact-v4-hinge remains the
+  current candidate; no backbone, pair encoder, q_ij or feature was modified.
+alternatives_rejected:
+- item: spend the second frozen backbone seed for replication
+  because: >-
+    the pre-registered CLEAR NO-GO rule (mean delta_R <= +0.0005 and 0/5 folds
+    better than R-only) is unambiguous; replication is earned only by a
+    positive or borderline Stage 1
+- item: run Stage-1b (second adapter init)
+  because: >-
+    Stage 1b is defined only for a borderline Stage 1; here every fold and the
+    pooled bootstrap are negative
+- item: use a learned projection, sweep the projection rank, or feed the full
+   120D outer product
+  because: >-
+    explicitly out of scope for a witness audit; a failed witness must not be
+    rescued by making the probe more expressive
+- item: try attention / triplet networks / Set Transformer
+  because: >-
+    forbidden by the stage scope; the whole point was to decide whether the
+    missing off-diagonal association earns the right to be modeled
+- item: open a low-rank symmetric bilinear pair encoder now
+  because: >-
+    the mandate gates that architecture on a GO witness, which was not found
+revisit_if: >-
+  (1) a fundamentally different, pre-registered task-relevant witness shows
+  that a discarded quantity on the compact-v4 pair path carries signed signal
+  beyond R and beyond the matched current-information control; or (2) an
+  upstream computation-graph object (centre-incidence compression, one-shot
+  centre update, higher-order interaction) is proposed with its own
+  pre-registered witness diagnostic first. Do not reopen by changing the
+  projection, rank, readout pooling or architecture without a new witness.
+notes: >-
+  This is the diagnostic that the frozen-readout-sufficiency NO-GO
+  (decision-frozen-readout-sufficiency-nogo-20260910) explicitly queued as the
+  next question. It is a screening diagnostic only: NO-GO closes off-diagonal
+  endpoint cross-coordinate association as a bottleneck for this
+  representation, and does NOT prove the pair encoder is globally wrong nor
+  that a full outer product is optimal.
