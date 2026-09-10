@@ -1,0 +1,85 @@
+decision_id: decision-centre-incidence-cooccurrence-witness-nogo-20260912
+created: '2026-09-12T00:30:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  NO-GO for the centre-incidence co-occurrence route (Case B — centre marginal
+  re-access only — plus Case-C evidence). After building the v4 centre-incidence
+  export (Gate 0 all-pass, 37/37 gate instances on 5/5 folds) and running the
+  pre-registered Stage 1 screening (frozen OOF backbone seed 0 x 5 folds x 1
+  adapter init), the covariance witness E is not better than the matched
+  marginal control B2 (mean delta_M = MAE(B2)-MAE(E) = -0.001361, 95% CI
+  [-0.00569,+0.00279], P(>0)=0.27, only 2/5 folds positive; E worse than B2 on
+  the selection split 5/5 and on the common-input bulk, max +0.0077 > 0.002
+  gate), and is worse than the historical R-only residual head on 0/5 folds
+  (mean delta_R_hist = -0.011056, CI [-0.01610,-0.00612]). delta_R against the
+  pre-registered matched-budget R-only head is +0.000922 (CI straddling zero,
+  3/5 folds), far below both the advance gate and the clear-NO-GO line. There
+  IS real, target-free representational ambiguity (m-space nearest neighbours
+  are 0.282x as far in covariance space as random cells; normalized
+  conditional Var(c | 16-NN m) = 0.285), so the discarded quantity is genuinely
+  not determined by the retained summary — it is simply not task-relevant. The
+  second frozen backbone seed, the Stage-1b second adapter init, and the
+  channel-shuffle surrogate control were NOT spent. compact-v4-hinge remains
+  the current candidate; no backbone, pair encoder, centre update, q_ij or
+  feature was modified.
+alternatives_rejected:
+- item: >-
+    build a covariance / joint-relation / centre-incidence encoder
+  because: >-
+    the mandate gates that architecture on E > B1 AND E > B2; E > B2 failed
+    outright, so a gain cannot be attributed to cross-channel co-occurrence
+- item: spend the second frozen backbone seed for replication
+  because: >-
+    the pre-registered CLEAR NO-GO rule (mean delta_M <= 0 and E better than
+    B2 in only 2/5 folds) is unambiguous; replication is earned only by a
+    positive or borderline Stage 1
+- item: run Stage-1b (second adapter init)
+  because: >-
+    Stage 1b is defined only for a borderline Stage 1; this is a clear NO-GO,
+    and the shortfall is on the decisive delta_M, not on init noise
+- item: >-
+    run the channel-shuffle surrogate mechanism control
+  because: >-
+    it is pre-registered as conditional on E clearly beating B2, which did not
+    happen; running it would be an unregistered use of budget and, worse, a
+    distribution-shift-impossible interpretation
+- item: >-
+    enlarge or learn the covariance projection, or use the full 120D covariance
+  because: >-
+    explicitly out of scope for a witness audit; a failed witness must not be
+    rescued by making the probe more expressive
+- item: >-
+    treat the depth confound as a reason to rerun with a stronger witness adapter
+  because: >-
+    the decisive comparison (E vs B2) is already depth-matched and
+    parameter-matched (identical 382->11->1 modules), so the confound cannot
+    explain the negative; strengthening the adapter after seeing the result is
+    exactly the capacity search the mandate forbids
+- item: >-
+    open attention / relation-set Transformer / DeepSets centre encoder / second
+    centre update / triplet-motif networks now
+  because: >-
+    forbidden by the stage scope and unjustified by any positive witness
+revisit_if: >-
+  (1) a fundamentally different, pre-registered task-relevant witness for a
+  different discarded quantity, WITH its own hard Gate 0 and its own matched
+  control; or (2) the question is re-posed at the paradigm level (information
+  accessibility / learnable parameterization / is the one-shot centre update
+  the right function class), registered as an independent hypothesis with its
+  own witness — NOT as another pooled statistic on the same compute graph.
+  Do not reopen by changing the projection, rank, capacity or architecture
+  without a new witness.
+notes: >-
+  This is the diagnostic that the pair-endpoint audit
+  (decision-pair-endpoint-association-witness-nogo-20260911) explicitly
+  queued as the next question, and the last of the three "missing statistic"
+  probes downstream of the frozen representation. It is a screening
+  diagnostic only: NO-GO closes within-centre cross-channel co-occurrence as
+  a bottleneck for this representation under a low-capacity witness, and does
+  NOT prove that moment pooling is sufficient in general nor that a full
+  covariance would fail. Independent artefact of the audit worth carrying
+  forward: the frozen compact-v4 pair states are extremely sparse
+  (86-97% exactly-zero q entries; only 3-29% of cells with n >= 2 have a
+  nonzero covariance row), which structurally bounds how much cross-channel
+  co-occurrence the current pair encoder can even express.

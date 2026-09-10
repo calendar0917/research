@@ -1,0 +1,123 @@
+claim_id: claim-centre-incidence-cooccurrence-witness-nogo-20260912
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-09-12T00:30:00'
+statement: >-
+  For the frozen compact-v4-hinge representation, the cross-channel relation
+  co-occurrence discarded by the per-centre mean/std/log-count compression of
+  incident pair states does NOT carry stable incremental signed predictive
+  value on real ZINC beyond the existing 302D graph vector R and beyond a
+  parameter-matched, depth-matched marginal-control pathway built from the
+  centre statistics the model already consumes. Real centre update
+  (verified from code and at runtime): each unordered pair row contributes
+  q_ij identically to BOTH endpoint centres; per (centre, distance bucket)
+  the model keeps [mean(q) 16 ; population std(q) 16 ; log1p(count) 1] = 33D
+  over 5 buckets = 165D; the centre update is
+  patch <- patch + MLP([patch ; 165D]) with
+  MLP = Linear(213->60) -> LayerNorm -> ReLU -> Dropout -> Linear(60->48)
+  (final projection zero-init), i.e. a residual update, and the unary readout
+  is recomputed afterwards. The discarded quantity is the strictly
+  upper-triangular population covariance C_{i,b} = E[q q^T] - E[q]E[q]^T
+  (denominator n; C = 0 when n < 2), c_{i,b} in R^120. New cache
+  frozen_state_export_v4_centre_incidence (same frozen OOF checkpoints,
+  nothing retrained) adds the pre/post centre-update patch states and the
+  true forward 165D centre contexts. Gate 0 all-pass on 5/5 folds (37/37 gate
+  instances): pair grouping; each unordered pair consumed exactly once to
+  each endpoint (self-loops 0, duplicates 0, sum of per-centre incidence =
+  2*n_pairs); bucket identity consistent with both the relation one-hot and
+  log1p(distance); reconstructed 165D context max 3.98e-4 (mean 9.09e-9,
+  entirely float32 variance cancellation in near-degenerate cells);
+  reconstructed h'_i max 5.74e-6; reconstructed R max 1.14e-5; reconstructed
+  prediction max 9.5e-7; incident-pair row-order invariance 5.4e-19; batch
+  invariance R 0.0 / yhat_0 4.8e-7 / centre context 0.0. Stage 1 (frozen OOF
+  backbone seed 0, 5 folds, the same pre-registered target-independent
+  molecule-ID-hash split 1200/400/400 as the frozen-readout audit, one
+  deterministic adapter init, no sweeps) on the 400 adapter-evaluation
+  molecules per fold: mean MAE B0 0.193160 / B1 matched-budget R-only
+  0.202477 (302->14->1, 4,257 params) / B1_hist historical R-only 0.190499
+  (302->13->13->1, 4,135 params, depth-confounded) / B2 marginal control
+  0.200194 / E covariance witness 0.201555 (B2 and E identical architecture
+  382->11->1, 4,225 params; B1 differs by +0.75%). mean delta_R =
+  MAE(B1)-MAE(E) = +0.000922 (95% CI [-0.00447,+0.00619], P(>0)=0.64, 3/5
+  folds positive); mean delta_R_hist = -0.011056 (CI [-0.01610,-0.00612],
+  P(>0)=0.00, 0/5); mean delta_M = MAE(B2)-MAE(E) = -0.001361 (95% CI
+  [-0.00569,+0.00279], P(>0)=0.27, 2/5 folds positive). E is worse than B2 on
+  the selection split in 5/5 folds and on the common-input bulk (max +0.0077,
+  gate <= 0.002 FAIL); both adapters are non-collapsed (witness sensitivity
+  min 0.601, prediction std 1.84). Representation ambiguity is real and
+  target-free (m-space nearest neighbours are 0.282x as far in covariance
+  space as random cells; Pearson 0.596, Spearman 0.684; normalized
+  conditional Var(c | 16-NN m) = 0.285) — the loss is genuine but NOT
+  task-relevant. The frozen pair encoder ends in ReLU, so q_ij has 86-97%
+  exactly-zero entries and only 3-29% of cells with n >= 2 have a nonzero
+  covariance row (independently reproduced from the predecessor v3 export).
+scope: >-
+  ZINC-12k official TRAIN only, through the existing frozen compact-v4-hinge
+  OOF checkpoints (official valid/test never loaded); backbone seed 0 (second
+  seed NOT spent by the pre-registered CLEAR NO-GO rule); one adapter init
+  (Stage 1b NOT triggered); typed_tokenizer_v1_historical; deterministic
+  orthonormal 120x8 covariance projection (seed 20260912) and 33x8 marginal
+  projection (seed 20260913), both never learned and shared across centres,
+  buckets and folds; single pre-registered adapter protocol (Adam 1e-3, full
+  batch, 400 epochs, patience 50, L1); no backbone training, no compact-v4
+  change, no pair-encoder change, no second centre update, no attention, no
+  higher-order GNN.
+supporting_evidence:
+- notes/centre_incidence_cooccurrence_witness_audit.md
+- results/centre_incidence_cooccurrence_witness/centre_export_integrity_report.json
+- results/centre_incidence_cooccurrence_witness/checkpoint_inventory.json
+- results/centre_incidence_cooccurrence_witness/centre_feature_spec.json
+- results/centre_incidence_cooccurrence_witness/representation_ambiguity.json
+- results/centre_incidence_cooccurrence_witness/adapter_depth_sensitivity.json
+- results/centre_incidence_cooccurrence_witness/stage1_fold_results.csv
+- results/centre_incidence_cooccurrence_witness/stage1_bootstrap.json
+- results/centre_incidence_cooccurrence_witness/final_decision.json
+- results/centre_incidence_cooccurrence_witness/fold_split_manifest.json
+contradicting_evidence:
+  - >-
+    The algebraic non-uniqueness is real and occurs in practice: two relation
+    sets with (1,0),(0,1) and (1,1),(0,0) share mean, std AND count but have
+    covariance off-diagonals of opposite sign. The target-free ambiguity
+    audit confirms this is measurable in the frozen states (normalized
+    conditional Var(c | 16-NN m) = 0.285). So the retained summary genuinely
+    does not determine the discarded quantity. This does NOT reverse the
+    result: it is precisely the "mathematical non-uniqueness is not a
+    task-relevant bottleneck" distinction the audit was designed to test.
+  - >-
+    delta_R is positive in 3/5 folds (+0.00092 pooled), so the covariance
+    witness is not uniformly worse than the matched-budget R-only head; the
+    confidence interval straddles zero. This is why the verdict rests on the
+    depth-matched, parameter-matched delta_M rather than on delta_R alone.
+  - >-
+    The matched-budget 1-layer R-only head underperforms B0 here, while the
+    historical 2-layer head at the same budget is much stronger
+    (B1_hist 0.190499). A fixed, non-swept depth sensitivity measures the
+    extra hidden layer at +0.01198 mean MAE (5/5 folds), i.e. the same order
+    as the whole delta_M scale. The historical-head comparison is therefore
+    depth-confounded and is robustness evidence only. The confound cuts
+    against the negative conclusion.
+limitations:
+- One frozen backbone seed only (the pre-registered CLEAR NO-GO rule stopped
+  the second seed); one adapter init (Stage 1b not triggered); the channel
+  shuffle surrogate control was not run (gated on E clearly beating B2).
+- One fixed frozen 8D random projection. A larger, learned or full 120D
+  covariance pathway was deliberately NOT searched; a NO-GO here must not be
+  rescued by "learn the projection" or "use the full covariance".
+- The witness is a low-capacity projection-based graph summary; it does not
+  prove that moment pooling is sufficient in general, nor that the centre
+  update is globally well-parameterized.
+- The frozen pair states are very sparse (86-97% zero entries), which
+  structurally limits how much cross-channel co-occurrence exists to detect;
+  a differently trained pair encoder could in principle expose more.
+implication: >-
+  Close within-centre cross-channel relation co-occurrence as the current
+  bottleneck for compact-v4. Do NOT build a covariance / joint-relation /
+  centre-incidence architecture, do NOT test full covariance, a larger or
+  learned covariance projection, attention over relations, a DeepSets centre
+  encoder, a second centre update, or relation-set Transformer. Do NOT
+  re-register a third "missing statistic along the compute graph" probe.
+  The next question must move to a different level: information
+  accessibility / learnable parameterization / whether the one-shot centre
+  update is the right function class — each as its own pre-registered
+  hypothesis.
