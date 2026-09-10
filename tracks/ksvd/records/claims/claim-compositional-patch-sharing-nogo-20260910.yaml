@@ -1,0 +1,51 @@
+claim_id: claim-compositional-patch-sharing-nogo-20260910
+contradicting_evidence:
+- A frozen 50/50 blend of the exact embedding with a structurally matched shared embedding
+  (Blend50) is the least harmful variant, confirming that the exact identity component
+  carries value even for rare tokens; sharing never turns positive.
+- A small number of individual molecules do improve (e.g. valid:917, error 1.591 -> 0.995),
+  so replacement is not uniformly destructive at the molecule level.
+created: '2026-09-10T10:30:00'
+implication: 'Do not build the compositional patch dictionary. Do not open a Shared Structural
+  Base + Exact Identity Residual architecture, an OOV compositional fallback, frequency-aware
+  sharing, or KSVD / subword / nearest-neighbour-embedding routes on this evidence. Treat
+  the frozen exact-token embedding, including rare/OOV tokens, as already carrying
+  information that any donor/average replacement destroys.'
+kind: claim
+limitations:
+- Frozen-inference oracle only; no model was trained, so the harm could partly be an
+  out-of-distribution calibration effect (the frozen patch_encoder/head expect the exact
+  embedding distribution). The negative controls (frequent-mean, random-donor) are equally
+  out-of-distribution and are not beaten by structural KNN, so this does not rescue the
+  hypothesis, but the effect size is an upper bound on "sharing value".
+- T=1 softmax and k=8 were pre-registered and not tuned; the peakedness of exp(-d) may
+  reduce KNN8 toward NN1 in practice.
+- The frozen typed certificate is not injective (730/6784 tokens carry multiple root atoms);
+  donor constraints were therefore approximate at the token level (targets were matched
+  per occurrence).
+- Validation-only diagnostics (1000 molecules, seeds 0-3); official test was never loaded.
+scope: ZINC-12k official train (vocabulary/frequency/donor bank/embedding bank/standardization)
+  and official validation (frozen inference + diagnostics); compact-v4-hinge validation-selected
+  checkpoints seeds 0-3, 99613 params; radius-2 exact patch embedding only (parent embedding
+  and 146D descriptor untouched); test never loaded.
+statement: 'HYPOTHESIS REFUTED under a frozen-representation oracle: rare/OOV exact patch
+  embeddings do NOT improve when they borrow information from structurally similar frequent
+  patch embeddings. On the frozen compact-v4-hinge checkpoints (seeds 0-3; baseline
+  bit-exact, max abs diff 0.0), every pre-registered intervention degrades validation MAE:
+  NN1 -0.011985, KNN8 -0.010882, Blend50 -0.004339, FrequentMean -0.009917, RandomDonor
+  -0.010891 (0/4 seeds positive for all). Harm is concentrated on the intervened rare-seen
+  (-0.00995..-0.02482) and OOV (-0.01243..-0.02454) molecules; unaffected molecules are
+  bit-identical (max abs diff 0.0). Structural KNN8 is not better than the controls
+  (KNN8 - FrequentMean = -0.00096; KNN8 - RandomDonor = +9.5e-6), so neighbour structure has
+  no value. Donor-distance quintiles show no benefit gradient (all negative, non-monotone).
+  Interpretation E: no useful sharing signal.'
+status: refuted
+study_id: zinc-context-gap
+supporting_evidence:
+- notes/compositional_patch_sharing_oracle.md
+- results/compositional_patch_sharing_oracle/decision_record.json
+- results/compositional_patch_sharing_oracle/metrics.json
+- results/compositional_patch_sharing_oracle/coverage.json
+- results/compositional_patch_sharing_oracle/intervene_meta.json
+- experiments/luyin16/zinc_compositional_patch_sharing_oracle.py
+- records/runs/20260910-* (frozen v4-hinge baseline provenance)

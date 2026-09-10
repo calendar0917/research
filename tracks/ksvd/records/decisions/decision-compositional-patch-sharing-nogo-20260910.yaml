@@ -1,0 +1,39 @@
+alternatives_rejected:
+- because: the best structural variant overall dMAE is -0.004339 (0/4 seeds positive)
+    and the rare/OOV subgroup deltas are negative; the pre-registered Strong/GO/Targeted-GO
+    gates are all unmet.
+  item: GO compositional patch representation (design Shared Structural Base + Exact Identity
+    Residual)
+- because: KNN8 is not better than the frequent-mean control (it is 0.00096 worse) and not
+    better than the random-donor control (+9.5e-6); no structural-neighbour value is
+    demonstrated, so an OOV-specific or structural-dictionary fallback is not supported.
+  item: GO OOV compositional fallback / structural dictionary atoms / KSVD sparse coding
+- because: even the generic frequent-mean replacement regresses (-0.009917, 0/4), so there
+    is no supportive shrinkage signal to regularize toward.
+  item: GO rare-embedding shrinkage / hierarchical prior
+because: Every pre-registered sharing intervention degrades frozen validation inference
+    (NN1 -0.011985, KNN8 -0.010882, Blend50 -0.004339, FrequentMean -0.009917, RandomDonor
+    -0.010891; 0/4 seeds positive for all five), the degradation is concentrated exactly
+    on the intervened rare-seen/OOV/high-rarity molecules, and structural KNN matching does
+    not beat the random-donor or frequent-mean controls. The frozen exact patch embedding,
+    even for rare/OOV tokens, is better than any donor/average substitute; the audit also
+    found that the frozen typed certificate is not injective (730/6784 tokens mix root
+    atoms), a tokenizer correctness defect that must be separated from the sharing question.
+created: '2026-09-10T10:30:00'
+decision: 'NO-GO for compositional patch sharing (Case E). No compositional patch dictionary,
+    shared structural base + exact residual, OOV fallback, frequency gate, KSVD sparse coding
+    or subword / nearest-neighbour embedding route is opened on this evidence. The single
+    recommended next step is a correctness fix, not a sharing architecture: repair the lossy
+    typed certificate so the exact token is a genuine complete invariant of the rooted typed
+    patch (include color-cell sizes), then re-quantify coverage in a separately registered
+    stage.'
+decision_id: decision-compositional-patch-sharing-nogo-20260910
+kind: decision
+revisit_if: (1) the frozen compact-v4-hinge representation or the typed-certificate construction
+    changes (e.g. the certificate-injectivity fix is implemented), in which case donor
+    matching must be re-measured on the corrected tokens; (2) a sharing mechanism that does
+    NOT operate on the frozen in-distribution embedding (e.g. training a shared structural
+    base from scratch together with an exact residual) is registered as a new architecture
+    stage with its own pre-registered gates; (3) a different benchmark / target decomposition
+    where rare-token coverage is a first-order rather than a 4% effect.
+study_id: zinc-context-gap
