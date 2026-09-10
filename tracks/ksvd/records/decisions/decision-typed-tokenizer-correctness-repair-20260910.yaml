@@ -1,0 +1,49 @@
+decision_id: decision-typed-tokenizer-correctness-repair-20260910
+kind: decision
+study_id: zinc-context-gap
+created: '2026-09-10T13:00:00'
+decision: >-
+  Case C - CORRECTNESS FIX REVEALS ACCIDENTAL SHARING BENEFIT. The corrected typed patch
+  tokenizer (`typed_tokenizer_v2_corrected`) becomes the semantically correct default exact-token
+  method, but it is NOT promoted as a performance improvement: the primary v4-hinge 4-seed
+  validation mean degrades by -0.0046 (>= 0.003) and the frozen benchmark test by -0.0040
+  (0.136885 -> 0.140895), with v2 degrading by -0.0067. The historical certificate-derived
+  tokenizer is retained as the historical benchmark baseline; correctness is NOT rolled back
+  because the metric is slightly worse. The single next stage is a Corrected-tokenizer residual
+  / rarity re-audit on the frozen corrected-v4 representation. A principled shared structural
+  base + exact identity residual is a hypothesis only and is NOT implemented in this stage.
+because: >-
+  (1) The historical token was not a complete invariant of the intended typed patch: it aliased
+  2,363/6,784 r2 tokens (34.8%) and 23/31 parent tokens, covering 94.4% of patch occurrences; the
+  corrected key passes all correctness gates (0 failures). (2) Under a strict single-variable
+  change the corrected tokenizer does not improve: v4 seed-0 0.170066->0.178158, 4-seed mean
+  0.169451->0.174062 (paired -0.0046, 1/4 positive), benchmark test 0.136885->0.140895; v2
+  seed-0 0.184158->0.208384, 4-seed -0.0067. (3) The regression is not truncation: an uncapped
+  corrected diagnostic is worse (0.1993). (4) The harm is largest where alias was heaviest
+  (high-burden -0.0061, q3 -0.0082 vs q1 -0.0020), consistent with the coarse topology token
+  acting as accidental shared regularisation while the 146D descriptor carried chemistry.
+alternatives_rejected:
+- item: REVERT to the historical certificate-derived tokenizer as the claimed exact representation
+  because: 'the corrected tokenizer is provably correct (0 gate failures on 16,000 permutation cases, 489k+ oracle soundness checks, completeness and determinism); reverting to a semantically wrong tokenizer because it scores slightly better would be a research-integrity failure. Instead the corrected tokenizer becomes the default and the historical tokenizer is labelled as the historical baseline.'
+- item: GO corrected tokenizer as a new performance baseline (Case A/B)
+  because: 'the mean degradation is -0.0046 (>= 0.003) and the sign consistency is 1/4; this is not a performance-neutral fix.'
+- item: IMPLEMENT shared structural base + exact identity residual now
+  because: 'the pre-registered rule does not open a new architecture in this stage; the accidental-sharing reading only motivates a future, separately registered shared-base design.'
+revisit_if: >-
+  (1) A corrected-tokenizer residual/rarity re-audit changes the bottleneck ranking; (2) a
+  training-regime change (e.g. more capacity for the fragmented exact vocabulary, or a larger
+  typed-token budget) makes the corrected identity competitive; (3) a principled shared-base +
+  exact-residual architecture is registered with its own pre-registered gates; (4) the
+  non-canonical corrected-v4 seed-3 trajectory (late-epoch divergence) is understood and the
+  serial-execution determinism policy is reinforced.
+supporting_evidence:
+- notes/typed_patch_tokenizer_correctness_repair.md
+- results/typed_patch_tokenizer_correctness/audit.json
+- results/typed_patch_tokenizer_correctness/model_analysis/analysis.json
+- records/claims/claim-typed-tokenizer-correctness-20260910.yaml
+- records/claims/claim-typed-tokenizer-rebaseline-caseC-20260910.yaml
+- records/runs/20260910-110507-092dc480.json (historical v2 guard, bit-identical)
+- records/runs/20260910-111427-9e799ade.json (historical v4 guard, bit-identical)
+- records/runs/20260910-111954-64845bd9.json (corrected v4 seed0)
+- records/runs/20260910-120914-14d2ddc7.json (corrected v4 seed0 benchmark test)
+- records/runs/20260910-120423-88ed9311.json (uncapped diagnostic)

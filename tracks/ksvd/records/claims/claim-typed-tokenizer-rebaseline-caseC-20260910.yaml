@@ -1,0 +1,50 @@
+claim_id: claim-typed-tokenizer-rebaseline-caseC-20260910
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-10T13:00:00'
+statement: >-
+  Switching ONLY the typed patch tokenizer to the corrected complete key (radius, descriptor,
+  embeddings, encoder, head, loss, optimizer, epochs all unchanged) does NOT improve the
+  compact family; it slightly degrades it. Seed-0 validation: v2 0.184158 -> 0.208384
+  (dMAE -0.0242), v4-hinge 0.170066 -> 0.178158 (-0.0081); historical guards reproduce the
+  canonical records bit-identically. 4-seed v4 validation mean 0.169451 -> 0.174062
+  (paired dMAE -0.0046, 1/4 seeds positive, std 0.0071) and the one-time frozen benchmark test
+  0.136885 -> 0.140895 (dMAE -0.0040, 1/4). 4-seed v2 mean dMAE -0.0067. The regression is not
+  a vocabulary-truncation artefact: an uncapped corrected diagnostic (vocab 15,219, 135,305
+  params) is worse still (valid 0.1993). Corrected parameters rise naturally by +7,588
+  (+7.6-7.7%). Every validation molecule is alias-affected (no unaffected control); the
+  regression is LARGEST on the highest alias-burden molecules (high-burden dMAE -0.0061,
+  quartile q3 -0.0082 vs q1 -0.0020), and cross-seed disagreement is slightly HIGHER after
+  correction (overall -0.0036, high-burden -0.0057).
+scope: >-
+  ZINC-12k official train/validation; compact-v2 and compact-v4-hinge validation-selected
+  checkpoints; seeds 0-3; single-variable tokenizer change; official test evaluated only in
+  terminal runs launched after the multi-seed validation conclusion (selection-checkpoint
+  protocol), not used for model selection.
+supporting_evidence:
+- notes/typed_patch_tokenizer_correctness_repair.md
+- results/typed_patch_tokenizer_correctness/model_analysis/analysis.json
+- results/typed_patch_tokenizer_correctness/audit.json
+- records/runs/20260910-120914-14d2ddc7.json (corrected v4 seed0 terminal test 0.143933)
+- records/runs/20260910-111954-64845bd9.json (corrected v4 seed0 validation)
+contradicting_evidence:
+- Corrected v4 seed-2 validation improves (0.174149 -> 0.168984) and the direction is not
+  unanimous, so the effect is within a small multiple of the seed std.
+- The historical tokenizer's coarse identity may be desirable, but that does not make the
+  corrected key incorrect.
+limitations:
+- The primary magnitude (-0.0046) is close to the 0.003 Case-C threshold.
+- A single nondeterministic late-training trajectory at corrected-v4 seed 3
+  (20260910-113625-e5d57ba6, valid 0.168201 at epoch 60 vs the reproducible 0.174880) was
+  discarded as non-canonical; the reproducible value is used.
+- The mechanism claim (accidental sharing) is supported by the burden gradient and the
+  uncapped diagnostic but is confounded by the burden/difficulty correlation; it is not a
+  clean causal partition.
+- The sub-% occurrence share of any single effect and the 8,192-token cap limit how much the
+  comparison can attribute to identity vs sharing.
+implication: >-
+  Keep `typed_tokenizer_v2_corrected` as the semantically correct default; retain the
+  historical tokenizer as the historical benchmark baseline (do NOT roll back correctness for
+  a slightly better metric). The result motivates a future principled *shared structural base +
+  exact identity residual* design, which is NOT implemented in this stage.

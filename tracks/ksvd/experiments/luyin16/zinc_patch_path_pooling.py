@@ -60,6 +60,15 @@ from tracks.ksvd.experiments.luyin16.structural_context import (
 from tracks.ksvd.experiments.luyin16.zinc_exact_patch_relation import (
     _patch_cache_key,
 )
+from tracks.ksvd.experiments.luyin16.typed_patch_tokenizer import (
+    DEFAULT_TYPED_TOKENIZER_VERSION,
+    TYPED_TOKENIZER_V1_HISTORICAL,
+    build_colored_incidence,
+    corrected_canonical_key,
+    historical_certificate,
+    resolve_typed_tokenizer_version,
+    typed_tokenizer_fingerprint,
+)
 from tracks.ksvd.experiments.luyin16.zinc_long_range_proxy import (
     REPO_ROOT,
     _data_to_graph,
@@ -512,66 +521,39 @@ def _typed_certificate(
     edge_types: Mapping[tuple[int, int], int],
     radius: int,
     cache: dict[bytes, bytes],
+    tokenizer_version: str = DEFAULT_TYPED_TOKENIZER_VERSION,
 ) -> bytes:
-    """Return an exact rooted typed incidence certificate at any radius.
+    """Return a rooted typed incidence token at any radius.
 
     ``zinc_exact_patch_relation._canonical_typed_patch`` also emits a
     certificate, but its fixed-width descriptor intentionally rejects patches
     larger than 14 nodes.  Radius-3 ZINC patches occasionally exceed that
     width, so the scalable token path must construct only the canonical
     incidence graph and omit the fixed descriptor.
+
+    Two tokenizer versions exist (``typed_patch_tokenizer``):
+
+    * ``typed_tokenizer_v1_historical`` -- the historical bytes
+      ``pynauty.certificate(incidence)``; retained verbatim so every historical
+      run is bit-identical and reproducible.
+    * ``typed_tokenizer_v2_corrected`` -- certificate **plus** the canonical
+      semantic color sequence, a complete invariant of the colored incidence
+      graph (atom type + bond type + root designation + root-distance class).
+
+    The only thing that changes between versions is the byte string used as
+    the token; radius, descriptor, model and loss are untouched.
     """
+    version = resolve_typed_tokenizer_version(tokenizer_version)
     key = _patch_cache_key(graph, int(center), node_types, edge_types, int(radius))
     certificate = cache.get(key)
     if certificate is None:
-        try:
-            import pynauty
-        except ImportError as exc:  # pragma: no cover - dependency diagnostic
-            raise RuntimeError("this experiment requires pynauty==2.8.8.1") from exc
-        distances = _ego_distances(graph, int(center), int(radius))
-        original_nodes = tuple(sorted(distances))
-        node_to_local = {node: index for index, node in enumerate(original_nodes)}
-        induced = graph.induced(set(original_nodes))
-        local_edges = tuple(
-            (node_to_local[int(left)], node_to_local[int(right)])
-            for left, right in sorted(induced.edges())
+        incidence = build_colored_incidence(
+            graph, int(center), node_types, edge_types, int(radius)
         )
-        n_nodes = len(original_nodes)
-        n_edges = len(local_edges)
-        adjacency: dict[int, list[int]] = {
-            vertex: [] for vertex in range(n_nodes + n_edges)
-        }
-        color_groups: dict[tuple[Any, ...], set[int]] = {}
-        root_local = node_to_local[int(center)]
-        for local, node in enumerate(original_nodes):
-            key_color = (
-                "node",
-                int(local == root_local),
-                int(distances[node]),
-                int(node_types[int(node)]),
-            )
-            color_groups.setdefault(key_color, set()).add(local)
-        for edge_local, (left, right) in enumerate(local_edges):
-            edge_vertex = n_nodes + edge_local
-            adjacency[left].append(edge_vertex)
-            adjacency[right].append(edge_vertex)
-            adjacency[edge_vertex] = [left, right]
-            bond_type = int(
-                edge_types[
-                    graph.edge_key(
-                        int(original_nodes[left]), int(original_nodes[right])
-                    )
-                ]
-            )
-            color_groups.setdefault(("edge", bond_type), set()).add(edge_vertex)
-        coloring = [color_groups[key_color] for key_color in sorted(color_groups, key=repr)]
-        incidence = pynauty.Graph(
-            number_of_vertices=n_nodes + n_edges,
-            directed=False,
-            adjacency_dict=adjacency,
-            vertex_coloring=coloring,
-        )
-        certificate = bytes(pynauty.certificate(incidence))
+        if version == TYPED_TOKENIZER_V1_HISTORICAL:
+            certificate = historical_certificate(incidence)
+        else:
+            certificate = corrected_canonical_key(incidence)
         cache[key] = certificate
     return certificate
 
@@ -642,6 +624,7 @@ def _graph_record(
     structural_mode: str = "none",
     max_cycle_len: int = 10,
     topology_features: np.ndarray | None = None,
+    tokenizer_version: str = DEFAULT_TYPED_TOKENIZER_VERSION,
 ) -> GraphRecord:
     patch_radius = int(patch_radius)
     graph, node_types, edge_types = _data_to_graph(data)
@@ -666,7 +649,13 @@ def _graph_record(
                 graph, int(center), node_types, edge_types, context_distances
             )
         typed = _typed_certificate(
-            graph, int(center), node_types, edge_types, patch_radius, certificate_cache
+            graph,
+            int(center),
+            node_types,
+            edge_types,
+            patch_radius,
+            certificate_cache,
+            tokenizer_version,
         )
         parent = _typed_certificate(
             graph,
@@ -675,6 +664,7 @@ def _graph_record(
             edge_types,
             max(1, patch_radius - 1),
             certificate_cache,
+            tokenizer_version,
         )
         patches.append(
             PatchRecord(
@@ -745,6 +735,7 @@ def _extract_split(
     max_cycle_len: int = 10,
     topology_mode: str = "none",
     topology_matrix: np.ndarray | None = None,
+    tokenizer_version: str = DEFAULT_TYPED_TOKENIZER_VERSION,
 ) -> tuple[list[GraphRecord], dict[str, Any]]:
     started = time.perf_counter()
     contexts = global_feature_views(dataset)["global_all"]
@@ -765,6 +756,7 @@ def _extract_split(
                 structural_mode=str(structural_mode),
                 max_cycle_len=int(max_cycle_len),
                 topology_features=topology_row,
+                tokenizer_version=str(tokenizer_version),
             )
         )
         if index and index % 500 == 0:
@@ -793,6 +785,10 @@ def _extract_split(
         ),
         "cycle_length_distribution": cycle_length_distribution(records),
         "topology_mode": str(topology_mode),
+        "typed_tokenizer_version": resolve_typed_tokenizer_version(tokenizer_version),
+        "typed_tokenizer_fingerprint": typed_tokenizer_fingerprint(
+            tokenizer_version, int(patch_radius)
+        ),
         "seconds": float(time.perf_counter() - started),
     }
     return records, metadata
@@ -2391,6 +2387,9 @@ def run(config_path: Path) -> dict[str, Any]:
     representation_config = config.get("representation", {})
     patch_radius = int(representation_config.get("patch_radius", PATCH_RADIUS))
     context_radius = int(representation_config.get("context_radius", 0))
+    typed_tokenizer_version = resolve_typed_tokenizer_version(
+        representation_config.get("typed_tokenizer_version")
+    )
     structural_context_mode = str(
         config.get("model", {}).get("structural_context_mode", "none")
     )
@@ -2471,6 +2470,7 @@ def run(config_path: Path) -> dict[str, Any]:
             max_cycle_len=structural_context_max_cycle_len,
             topology_mode=topology_mode,
             topology_matrix=topology_matrices.get(cache_key),
+            tokenizer_version=typed_tokenizer_version,
         )
         records.append(split_records)
         feature_metadata[split] = metadata
@@ -2646,8 +2646,16 @@ def run(config_path: Path) -> dict[str, Any]:
         "representation": {
             "radius": patch_radius,
             "context_radius": context_radius,
+            "typed_tokenizer_version": typed_tokenizer_version,
+            "typed_tokenizer_fingerprint": typed_tokenizer_fingerprint(
+                typed_tokenizer_version, patch_radius
+            ),
             "centres": "every atom",
-            "exact_patch": "rooted colored-incidence typed certificate; configurable-radius token with one-radius-lower parent token",
+            "exact_patch": (
+                "rooted colored-incidence typed canonical token "
+                f"({typed_tokenizer_version}); configurable-radius token with "
+                "one-radius-lower parent token"
+            ),
             "shell_width": shell_width,
             "context_width": int(CONTEXT_WIDTH if context_radius > patch_radius else 0),
             "relation_width": RELATION_WIDTH,

@@ -36,7 +36,9 @@ guardrails:
 
 next_queue:
   - "zinc compositional patch sharing oracle -> NO-GO (decision-compositional-patch-sharing-nogo-20260910): do NOT open Shared Structural Base + Exact Identity Residual, OOV compositional fallback, frequency gate, KSVD sparse coding or subword/NN-embedding routes; compact-v4-hinge remains the current candidate"
-  - "zinc (NEW, correctness) typed certificate injectivity fix: _typed_certificate stores pynauty.certificate which is not a complete invariant of the colored incidence graph (pynauty isomorphic() also compares color-cell sizes) => 730/6784 train tokens carry >1 root atom; fix = include color-cell sizes / use a complete invariant, then re-quantify coverage and re-measure any exact-token claim — must be a separately registered stage (changes the vocabulary; would break the frozen baseline)"
+  - "zinc typed tokenizer correctness repair -> DONE 2026-09-10 (Case C; decision-typed-tokenizer-correctness-repair-20260910): corrected v2/v4 tokenizer is provably correct (0 gate failures) but regresses slightly (v4 valid -0.0046, test -0.0040; v2 valid -0.0067); corrected tokenizer is now the default exact-token method, historical tokenizer stays the benchmark baseline; do NOT roll back correctness"
+  - "zinc (NEXT) corrected-tokenizer residual / rarity re-audit on the frozen corrected-v4 representation (previous bottleneck ranking may change)"
+  - "zinc (hypothesis only, do NOT implement yet) principled shared structural base + exact identity residual: the corrected fix reveals the historical coarse-topology token acted as accidental shared regularisation"
   - "zinc compact-v5 multi-quantile -> NO-GO (decision-compact-v5-multi-quantile-nogo-20260910): do NOT open uncertainty-guided weighting/resampling/distillation (width-GO precondition 0.25 not met); re-register or close the quantile route on the OOF-train set before any further objective change; compact-v4-hinge remains the current candidate"
   - "zinc (revisit-gated, freeze-bound): objective/calibration direction is NOT queued; decision-oof-difficulty-heteroscedasticity-go-20260910 supersedes the OOF-train revisit condition (an OOF residual now exists) and records the current revisit_if (any future model change must clear original gates on the OOF set)"
   - "promote a fresh control-plane zinc run (the legacy baseline is backfilled, not a new run)"
@@ -49,6 +51,8 @@ next_queue:
   - "backfill: current baseline / best candidate / key negative result / key evidence"
 
 recent_claims:
+  - "claim-typed-tokenizer-rebaseline-caseC-20260910 [supported] single-variable corrected typed patch tokenizer does NOT improve compact v2/v4: v4 seed0 0.170066->0.178158, 4-seed mean 0.169451->0.174062 (paired -0.0046, 1/4 positive), frozen test 0.136885->0.140895; v2 seed0 0.184158->0.208384, 4-seed -0.0067; params +7588 (+7.6-7.7%); uncapped corrected diagnostic worse (0.1993); regression largest on highest alias-burden molecules; cross-seed disagreement slightly higher (Case C accidental-sharing benefit)"
+  - "claim-typed-tokenizer-correctness-20260910 [supported] historical exact typed token = pynauty.certificate = UNCOLORED rooted-topology token; aliases 2363/6784 r2 tokens (34.8%, 730 root-only + 1633 non-root) and 23/31 parent tokens, covering 94.4% of patch occurrences; corrected canonical key (certificate + canonical semantic color sequence) is a complete invariant and passes all gates with 0 failures"
   - "claim-compositional-patch-sharing-nogo-20260910 [refuted] frozen-oracle intervention on v4-hinge seeds 0-3: rare/OOV exact patch embeddings do NOT improve when borrowing from structurally similar frequent embeddings — NN1 -0.011985 / KNN8 -0.010882 / Blend50 -0.004339 / FrequentMean -0.009917 / RandomDonor -0.010891 MAE, 0/4 seeds positive; harm concentrated on intervened rare/OOV molecules; unaffected bit-identical; structural KNN not better than random/mean controls; interpretation E (no useful sharing signal)"
   - "claim-compact-v5-mq-point-nogo-20260910 [refuted] auxiliary quantile supervision (non-crossing q10/q50/q90 + pinball loss, frozen v4-hinge, +66 params) does NOT reliably improve q50: seed-0 Case A (+0.0114) but 4-seed mean +0.0037 (3/4, Mild) and test -0.0025 (1/4); none/median controls bit-identical to v4/L1"
   - "claim-compact-v5-width-internalizes-difficulty-20260910 [supported] single-model interval width learns the OOF difficulty/epistemic axes at Mild level: width-|err| 0.254 (seed0)/0.211 (4-seed mean, 4/4 positive), robust to tail; width-disagreement 0.408, width-OOF-difficulty 0.376; signed-residual -0.095; gain concentrated in rare/medium molecules (common bulk flat)"
@@ -59,6 +63,7 @@ recent_claims:
   - "claim-compact-v3-context-none-is-v2 [supported] v3 code path with context_mode=none is bit-identical to compact-v2 (terminal run)"
 
 recent_decisions:
+  - "decision-typed-tokenizer-correctness-repair-20260910: Case C — correctness fix reveals accidental sharing benefit. Corrected tokenizer (`typed_tokenizer_v2_corrected`) becomes the default semantically-correct exact-token method; historical certificate tokenizer retained as historical benchmark baseline; do NOT roll back correctness. Next stage = corrected-tokenizer residual/rarity re-audit; shared-base + exact-residual is a hypothesis only (do not implement)."
   - "decision-compositional-patch-sharing-nogo-20260910: NO-GO compositional patch sharing (Case E) — all five frozen-inference sharing variants regress on validation (0/4 seeds), KNN8 not better than frequent-mean/random-donor controls, unaffected bit-identical; do NOT open shared-base+exact-residual / OOV fallback / frequency gate / KSVD / subword routes; single next step is a tokenizer correctness fix (the frozen typed certificate is not injective: 730/6784 tokens mix root atoms), re-registered separately"
   - "decision-compact-v5-multi-quantile-nogo-20260910: NO-GO multi-quantile as a benchmark improvement (Stage-1 seed0 Case A did not reproduce; 4-seed Mild/Mild: point +0.0037 3/4, width 0.211 4/4; one-time test -0.0025 1/4); do NOT open uncertainty-guided weighting (width-GO precondition unmet); re-register/close the quantile route on OOF-train"
   - "decision-oof-difficulty-heteroscedasticity-go-20260910: GO difficulty (cross-fitted OOF Spearman 0.374 >= 0.25, 5/5) + GO epistemic (disagreement 0.393 >= 0.30, 5/5) on official-train OOF residual — remaining error is predictive difficulty/heteroscedastic variance on rarity + disagreement + low-y axes; confirms (train-side, true OOF) the valid-only NO CLEAR SECONDARY SIGNAL; no structural v5 channel; any future change must clear gates on this OOF set"
@@ -68,6 +73,51 @@ recent_decisions:
   - "decision-compact-v3-context-conditioning-nogo-20260908: first version of ring-context conditioning NO-GO on valid (coarse +0.0021 / typed +0.0125 / concat +0.0171); revisit with capacity-neutral mechanisms"
 
 promoted_records:
+  - run_id: 20260910-110507-092dc480
+    note: "typed-tokenizer Stage A guard: historical v2 seed0 bit-identical (valid 0.184158)"
+    record: records/runs/20260910-110507-092dc480.json
+  - run_id: 20260910-111031-2b8cce42
+    note: "typed-tokenizer Stage A: corrected v2 seed0 validation (valid 0.208384, 106137 params)"
+    record: records/runs/20260910-111031-2b8cce42.json
+  - run_id: 20260910-114152-3295454c
+    note: "typed-tokenizer corrected v2 seed1 validation"
+    record: records/runs/20260910-114152-3295454c.json
+  - run_id: 20260910-114713-132cd654
+    note: "typed-tokenizer corrected v2 seed2 validation"
+    record: records/runs/20260910-114713-132cd654.json
+  - run_id: 20260910-115243-a96622ae
+    note: "typed-tokenizer corrected v2 seed3 validation"
+    record: records/runs/20260910-115243-a96622ae.json
+  - run_id: 20260910-111427-9e799ade
+    note: "typed-tokenizer Stage B guard: historical v4-hinge seed0 bit-identical (valid 0.170066)"
+    record: records/runs/20260910-111427-9e799ade.json
+  - run_id: 20260910-111954-64845bd9
+    note: "typed-tokenizer Stage B: corrected v4-hinge seed0 validation (valid 0.178158, 107201 params)"
+    record: records/runs/20260910-111954-64845bd9.json
+  - run_id: 20260910-112530-c02ac7f0
+    note: "typed-tokenizer corrected v4-hinge seed1 validation"
+    record: records/runs/20260910-112530-c02ac7f0.json
+  - run_id: 20260910-113058-a40ee3e1
+    note: "typed-tokenizer corrected v4-hinge seed2 validation"
+    record: records/runs/20260910-113058-a40ee3e1.json
+  - run_id: 20260910-123241-6067c9ac
+    note: "typed-tokenizer corrected v4-hinge seed3 validation (reproducible; supersedes non-canonical 20260910-113625-e5d57ba6)"
+    record: records/runs/20260910-123241-6067c9ac.json
+  - run_id: 20260910-120423-88ed9311
+    note: "typed-tokenizer DIAGNOSTIC uncapped corrected v4 seed0 (valid 0.1993, non-primary)"
+    record: records/runs/20260910-120423-88ed9311.json
+  - run_id: 20260910-120914-14d2ddc7
+    note: "typed-tokenizer frozen benchmark test corrected v4 seed0 (test 0.143933)"
+    record: records/runs/20260910-120914-14d2ddc7.json
+  - run_id: 20260910-121440-c17fa9ee
+    note: "typed-tokenizer frozen benchmark test corrected v4 seed1 (test 0.144546)"
+    record: records/runs/20260910-121440-c17fa9ee.json
+  - run_id: 20260910-122003-18b1318b
+    note: "typed-tokenizer frozen benchmark test corrected v4 seed2 (test 0.133807)"
+    record: records/runs/20260910-122003-18b1318b.json
+  - run_id: 20260910-122548-86896214
+    note: "typed-tokenizer frozen benchmark test corrected v4 seed3 (test 0.141293)"
+    record: records/runs/20260910-122548-86896214.json
   - run_id: 20260910-081449-790d891a
     note: "compact-v5 control none-mode guard (bit-identical to canonical v4-hinge seed0)"
     record: records/runs/20260910-081449-790d891a.json

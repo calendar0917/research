@@ -1,0 +1,71 @@
+# Corrected-tokenizer compact-v4 topology hinge (single-variable).
+#
+# Byte-for-byte identical to compact-v4-topology-hinge EXCEPT the tokenizer
+# version (typed_tokenizer_v2_corrected) and the parameter-budget guard
+# (raised to 120000 because the corrected vocabulary adds embedding rows).
+# The global topology channel and every other model variable are unchanged.
+# Compact-v4 stage D: hinge-basis version — spectrum + generic hinge basis
+# (25D raw).  The most important nonlinear variant.
+#
+# Single-variable experiment against Compact-Hybrid-v2: only the graph-level
+# topology channel is added (GlobalTopologyEncoder: Linear(25,16) -> ReLU ->
+# Linear(16,8)); the unified graph representation becomes
+# [z_local ; z_topology] and the single regression head consumes it.
+# Every other variable is identical to compact-v2.
+#
+# Feature definition (25D, permutation-invariant, all precomputed + cached):
+#   spectrum (15D) + [L, L^2] + [ReLU(L-3) .. ReLU(L-10)] (10D)
+# The hinge thresholds are a *generic* integer ladder; they are NOT the
+# ZINC target's max(0, L-6) formula (that would be target reverse
+# engineering; the model never sees the target's cycle term).
+protocol_id: luyin16-zinc-hierarchical-patch-relation-context-compact-v4-topology-hinge
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+  typed_tokenizer_version: typed_tokenizer_v2_corrected
+
+model:
+  patch_hidden: 48
+  pair_hidden: 16
+  token_width: 16
+  embedding_mode: hybrid
+  embedding_rank: 4
+  hybrid_full_typed_tokens: 768
+  hybrid_full_parent_tokens: 32
+  center_context: true
+  center_context_hidden: 60
+  graph_head_hidden_0: 64
+  graph_head_hidden_1: 32
+  dropout: 0.05
+  epochs: 60
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 12
+  evaluate_every: 1
+  device: cpu
+  parameter_audit: true
+  # v4: global topology channel with generic hinge basis (nonlinear input).
+  topology_mode: hinge
+  topology_hidden_dim: 16
+  topology_out_dim: 8
+  topology_shuffle_test: true
+  save_state_dict: true
+  # Budget: v2 98,549 + head input +8 (512) + encoder Linear(25,16)+Linear(16,8)
+  # (552) = 99,613 selection / 100,677 train+valid refit (<= 105k).
+  expected_max_trainable_params: 120000
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/luyin16/ZINC_COMPACT_V4_TOPOLOGY_HINGE_TYPED_V2_CORRECTED_20260910.json
+  markdown: tracks/ksvd/results/luyin16/ZINC_COMPACT_V4_TOPOLOGY_HINGE_TYPED_V2_CORRECTED_20260910.md

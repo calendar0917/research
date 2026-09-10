@@ -1,0 +1,40 @@
+claim_id: claim-typed-tokenizer-correctness-20260910
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-10T13:00:00'
+statement: >-
+  The historical compact-v2/v4 "exact typed patch token" was NOT a complete invariant of the
+  intended rooted typed patch: `_typed_certificate` stored `pynauty.certificate` of the colored
+  incidence graph, and the certificate returns only the canonical adjacency (the coloring is
+  not part of the bytes), so it is an invariant of the UNCOLORED rooted-topology only. Across
+  the official train split this aliases 2,363 / 6,784 radius-2 tokens (34.8%), 730 by root atom
+  and 1,633 with an identical root atom, covering 94.4% of patch occurrences; the radius-1
+  parent token is worse (23 / 31 tokens aliased, 99.99% of occurrences). A corrected key
+  (`typedpatchkey/v2;` + certificate + canonical semantic color sequence) is a complete
+  invariant of the colored incidence graph and passes every correctness gate (16,000
+  permutation cases, 489k+ ground-truth-oracle soundness checks, completeness/over-split
+  checks, determinism and adversarial separation) with 0 failures.
+scope: >-
+  ZINC-12k official train (audit) and official validation (labels/subgroups); compact-v2 and
+  compact-v4-hinge token path (radius-2 typed + radius-1 parent); no test split used in the
+  audit. pynauty 2.8.8.1.
+supporting_evidence:
+- notes/typed_patch_tokenizer_correctness_repair.md
+- results/typed_patch_tokenizer_correctness/audit.json
+- results/typed_patch_tokenizer_correctness/occurrences.npz
+- results/typed_patch_tokenizer_correctness/alias_molecules.json
+- experiments/luyin16/typed_patch_tokenizer.py
+- experiments/luyin16/zinc_typed_tokenizer_audit.py
+- tests/test_typed_patch_tokenizer.py
+contradicting_evidence:
+- 'The certificate is not a degenerate invariant: 4,421 / 6,784 historical r2 tokens are a single true typed class, and the certificate is permutation-invariant and deterministic for what it computes.'
+limitations:
+- 'The oracle here is networkx VF2 (validated against brute force on small graphs); no proof is included, only exhaustive empirical soundness on the official train/valid occurrences.'
+- 'The aliased-occurrence definition counts every occurrence of an aliased token, including the majority class, so the 94.4% occurrence figure is an upper bound on mis-assigned patches.'
+- 'Radius-3 / non-active certificate paths (legacy zinc_exact_patch_relation, molhiv) were recorded in the dependency map but not changed here.'
+implication: >-
+  Any future "exact patch token" claim must use a verified colored-graph canonical key
+  (`typed_tokenizer_v2_corrected`), not the bare certificate. Historical notes using "exact
+  typed token" wording get an addendum; the historical numbers remain valid as historical
+  baseline results.
