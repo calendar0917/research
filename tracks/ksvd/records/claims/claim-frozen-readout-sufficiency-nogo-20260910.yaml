@@ -1,0 +1,66 @@
+claim_id: claim-frozen-readout-sufficiency-nogo-20260910
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-09-10T22:30:00'
+statement: >-
+  A parameter-matched tiny permutation-invariant set readout of the frozen
+  compact-v4-hinge pre-pooling states ({h'_i} and {q_ij}) does NOT provide
+  incremental signed predictive value beyond an equally sized readout of the
+  existing 302D graph vector R. Stage 0 corrected two historical export bugs
+  (pair rows must be grouped by batch.batch[batch.pair_index[0]], not by
+  np.diff(pair_index[0]); the pre-head representation R is the INPUT to
+  model.head[0], 302D = unary 97 + pair-bucket moments 165 + global 32 +
+  topology 8, not the 64D head[0] output) and all seven Gate-0 families
+  (pair grouping, endpoint identity, coverage, R reconstruction max 9.2e-5,
+  prediction reconstruction max 1.9e-6, batch invariance 4.8e-7, node
+  permutation 2.9e-6) pass on 5/5 OOF folds. Stage 1 (frozen OOF backbone
+  seed 0, 5 folds, target-independent molecule-ID-hash split 1200/400/400,
+  one deterministic adapter init, no sweeps) gives on the 400
+  adapter-evaluation molecules per fold: mean MAE B0 0.19316, B1 R-only
+  0.19050, S set 0.19229; mean delta0 = MAE(B0)-MAE(S) = +0.00087 and mean
+  delta_R = MAE(B1)-MAE(S) = -0.00179 (positive in only 2/5 folds). Stratified
+  molecule-level paired bootstrap over 2000 molecules: delta_R 95% CI
+  [-0.00507, +0.00153], P(>0)=0.14. The set adapter is worse than the
+  parameter-matched R-only head on the selection split in 4/5 folds, and 400
+  vs 2000 training epochs give bit-identical MAE (not under-training).
+scope: >-
+  ZINC-12k official TRAIN only (official valid/test never loaded); frozen
+  compact-v4-hinge OOF checkpoints, 5 outer folds, backbone seed 0 (second
+  seed NOT spent); historical tokenizer typed_tokenizer_v1_historical; tiny
+  adapters (~4.1k params, 0.24% parameter match); single pre-registered
+  training protocol; no backbone training and no model modification.
+supporting_evidence:
+- notes/frozen_conditional_readout_sufficiency_audit.md
+- results/frozen_readout_sufficiency/export_integrity_report.json
+- results/frozen_readout_sufficiency/checkpoint_inventory.json
+- results/frozen_readout_sufficiency/fold_split_manifest.json
+- results/frozen_readout_sufficiency/stage1_fold_results.csv
+- results/frozen_readout_sufficiency/stage1_bootstrap.json
+- results/frozen_readout_sufficiency/final_decision.json
+- results/frozen_readout_sufficiency/legacy_evidence_impact_record.json
+contradicting_evidence:
+- A small nonlinear R-only residual head does improve on the frozen model
+  (mean MAE B0 - B1 = +0.00266), so a cheap post-state residual readout is
+  not useless in general; the negative result is specifically that the SET
+  summary adds nothing over R at matched capacity.
+- delta0 is positive in 2/5 folds and its bootstrap CI reaches +0.0045, so a
+  weak signal is not formally excluded at this budget; it is simply below the
+  pre-registered advance threshold.
+limitations:
+- One backbone seed only (Stage 1 clear NO-GO stopped the second seed by the
+  pre-registered budget rule).
+- One adapter initialization (Stage 1b is only triggered for a borderline
+  Stage 1; this was a clear negative).
+- Low-capacity shared-MLP mean-pooled summary; the negative does not
+  exclude richer higher-order (triplet / centre-incidence) structure or a
+  fully end-to-end readout replacement.
+- The 302D R and the set summary both come from the same frozen backbone, so
+  this is an accessibility/parameterization screen, not a proof about
+  information content.
+implication: >-
+  Do NOT open gated pooling / DeepSets variants / max pooling / Set
+  Transformer / attention readout. This does NOT prove moment pooling is
+  sufficient and does NOT prove the patch paradigm has reached its ceiling.
+  Next research question: pair endpoint association / centre-incidence
+  compression, but only after a real task-relevant witness diagnostic.

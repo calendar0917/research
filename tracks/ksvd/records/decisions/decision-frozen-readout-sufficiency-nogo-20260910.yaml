@@ -1,0 +1,50 @@
+decision_id: decision-frozen-readout-sufficiency-nogo-20260910
+created: '2026-09-10T22:30:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  NO-GO for a cheap post-state readout extension. After repairing the OOF
+  state export (Gate 0 all-pass) and running the pre-registered Stage 1
+  screening (frozen OOF backbone seed 0 x 5 folds x 1 adapter init), the
+  mechanism metric delta_R = MAE(R-only) - MAE(set) = -0.00179 (95% CI
+  [-0.00507, +0.00153]) and mean delta0 = +0.00087 both fall in the
+  pre-registered CLEAR NO-GO band (mean delta0 < +0.001, mean delta_R <=
+  +0.001, set improves on R-only in < 4/5 folds). The second frozen backbone
+  seed was therefore NOT spent (budget discipline: a clearly negative
+  mechanism experiment stops early). compact-v4-hinge remains the current
+  candidate; no model, tokenizer, standardizer or pooling was modified.
+alternatives_rejected:
+- item: spend the second frozen backbone seed for replication
+  because: >-
+    the pre-registered Stage 1 rule makes this a clear (not borderline)
+    negative; replication is earned only by a positive or borderline Stage 1
+- item: run an additional adapter initialization (Stage 1b)
+  because: >-
+    Stage 1b is defined only for a borderline Stage 1; here both the point
+    estimate and 4/5 selection-split comparisons are negative
+- item: run B2 (marginal-preserving joint-structure destruction)
+  because: >-
+    B2 is gated on the set adapter already beating the R-only control; it
+    did not, so there is no positive effect to attribute
+- item: >-
+    open gated pooling / DeepSets / max-pooling / Set Transformer / attention
+    readout to "rescue" the signal
+  because: >-
+    explicitly out of scope for this diagnostic; the question asked was
+    whether a tiny set summary adds value over the current graph vector at
+    matched capacity, and it does not at this budget
+revisit_if: >-
+  (1) a different, equally cheap readout is proposed that reads the frozen
+  states with an explicitly different parameterization (e.g. higher-order /
+  pair-incidence summaries) and is registered with its own pre-declared
+  gates; or (2) a real task-relevant witness diagnostic establishes that
+  endpoint association / centre-incidence structure carries signed signal
+  before any triplet/higher-order architecture is implemented; or (3) an
+  end-to-end budget-matched readout replacement stage is opened (only after
+  a frozen-readout GO, which this is not).
+notes: >-
+  Measurement repair recorded separately: legacy evidence impact record at
+  results/frozen_readout_sufficiency/legacy_evidence_impact_record.json.
+  The 2026-09-09 OOF difficulty audit predictions/MAE/rarity/disagreement/
+  ensemble are unaffected; its per-molecule pair-state features and any
+  head-as-R interpretation need re-check/caveat.
