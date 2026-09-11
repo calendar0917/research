@@ -1,0 +1,92 @@
+claim_id: claim-graph-head-refit-late-adaptation-20260916
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-16T01:10:00'
+statement: >-
+  On the frozen compact-v4 graph representation R (302D) of the official ZINC
+  train universe, the previously observed advantage of a small post-hoc MLP head
+  (302->13->13->1, H2) over the original jointly-trained head
+  (302->64->32->1, H0) is NOT a head-capacity effect. Under an identical
+  frozen-R refit protocol the small 13->13 MLP and the original-size 64->32 MLP
+  are statistically indistinguishable: Delta_cap = MAE(L-scratch) - MAE(S) =
+  +0.000255 (paired molecule-level stratified bootstrap over 2 backbone seeds x
+  5 folds, 95% CI [-0.00097,+0.00150], P(>0)=0.658, fold-averaged positive only
+  2/5), and on raw inputs the sign reverses (Delta_cap_raw = -0.003264, large
+  head better, only 1/5 folds positive). The dominant mechanism is frozen readout
+  refit / late adaptation: Delta_S = MAE(H0)-MAE(S) = +0.004751 (CI
+  [+0.00150,+0.00952], P=0.9997, 5/5), Delta_L = MAE(H0)-MAE(L-scratch) =
+  +0.004496 (CI [+0.00108,+0.00946], P=0.9983, 5/5) and Delta_W =
+  MAE(H0)-MAE(L-warm) = +0.005369 (CI [+0.00414,+0.00660], P=1.0000, 5/5). The
+  original head module, warm-started from the checkpoint through an exact
+  first-layer standardisation reparameterisation (float64 identity max 6.2e-15;
+  float32 deployment max 4.4e-5 < 1e-4), matches or beats both scratch heads,
+  so the original architecture is sufficient and was under-adapted to the final
+  frozen R. Fit-only standardisation is not the source of the gain: the same
+  small head on raw R beats its standardised counterpart by 0.002234 (CI
+  [-0.00356,-0.00090], P(>0)=0.0004). Learning curves support overfitting of the
+  large scratch head (fit MAE 0.0371 vs 0.0740 at epoch 800 while selection
+  worsens) and under-adaptation of the warm-started original head. Exact
+  parameter counts: H0 original head 21633 (21505 linear + 128 LayerNorm),
+  small head 4135, large scratch head 21505; replacing the head in the real
+  model changes 96141 -> 78643 on fold0/seed0 (mean 78732.6), a saving of 17498
+  per model.
+scope: >-
+  ZINC-12k official TRAIN only, through the existing frozen compact-v4 OOF R
+  caches (graph_head_R_cache_v1; official valid/test never loaded); two frozen
+  backbone seeds (0 and 1); head_seed 0 only (the pre-registered second-init
+  window was not entered); one fixed training protocol (L1/MAE, Adam lr=1e-3,
+  wd=0, deterministic mini-batch 512, horizon 800, best-selection checkpoint on
+  800) shared by every refit head; no backbone training, no representation
+  change, no new head family, no width sweep.
+supporting_evidence:
+- notes/graph_head_refit_capacity_decomposition.md
+- results/graph_head_refit_capacity_decomposition/checkpoint_inventory.json
+- results/graph_head_refit_capacity_decomposition/representation_integrity.json
+- results/graph_head_refit_capacity_decomposition/standardization_equivalence.json
+- results/graph_head_refit_capacity_decomposition/standardization_stats.json
+- results/graph_head_refit_capacity_decomposition/split_manifest.json
+- results/graph_head_refit_capacity_decomposition/head_specs.json
+- results/graph_head_refit_capacity_decomposition/parameter_counts.json
+- results/graph_head_refit_capacity_decomposition/fold_results.csv
+- results/graph_head_refit_capacity_decomposition/backbone_summary.csv
+- results/graph_head_refit_capacity_decomposition/pooled_summary.json
+- results/graph_head_refit_capacity_decomposition/paired_bootstrap.json
+- results/graph_head_refit_capacity_decomposition/learning_curves.csv
+- results/graph_head_refit_capacity_decomposition/raw_vs_standardized.csv
+- results/graph_head_refit_capacity_decomposition/large_raw_control.csv
+- results/graph_head_refit_capacity_decomposition/final_decision.json
+- tests/test_graph_head_refit_capacity_decomposition.py
+contradicting_evidence:
+  - >-
+    The large scratch head does show a clear overfitting fingerprint on
+    selection (fit MAE 0.0371 vs 0.0740 at epoch 800, selection worsens to
+    0.1871 vs 0.1817). This is consistent with a small-capacity regularisation
+    story even though it does not survive on the untouched outer-heldout set.
+  - >-
+    Warm continuation has the weakest selection MAE of all heads (~0.20) yet the
+    best outer-heldout MAE; the selection metric is therefore not a perfect
+    proxy for outer generalisation and the L-warm advantage is partly about
+    which checkpoint the selection rule lands on.
+  - >-
+    On raw inputs the LARGE head beats the small head by 0.003264, so the
+    capacity ordering is scale-dependent. A capacity claim in either direction
+    would be fragile.
+limitations:
+- Only one refit protocol was tested (mini-batch 512, 800 epochs, lr 1e-3); the
+  decomposition holds for this protocol, not for all possible refit schedules.
+- The original head carries LayerNorm + Dropout while the two scratch heads are
+  pure ReLU MLPs, so the S/L vs L-warm contrast also differs in architecture,
+  not only in initialisation. The capacity contrast (S vs L-scratch) is
+  architecture-family matched, which is where the decisive Delta_cap is measured.
+- Frozen OOF checkpoints only; no official valid/test evidence, so the
+  late-adaptation signal is not yet shown to transfer to a benchmark-comparable
+  protocol.
+implication: >-
+  Do NOT replace the compact-v4 head with a 302->13->13->1 head and do NOT run
+  width / depth / activation sweeps. Treat the small-head signal as a
+  frozen-readout adaptation signal. The next experiment is a leakage-safe
+  canonical-training -> freeze-backbone -> head-only MAE adaptation protocol on
+  the official train/valid split, with selection and final evaluation roles
+  strictly separated. If an end-to-end small head is ever run, all upstream
+  shared tensors must be copied item by item (not merely seeded identically).

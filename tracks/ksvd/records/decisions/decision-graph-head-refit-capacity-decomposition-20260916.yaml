@@ -1,0 +1,97 @@
+decision_id: decision-graph-head-refit-capacity-decomposition-20260916
+created: '2026-09-16T01:10:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  LATE-READOUT-ADAPTATION GO (Case C, with the Case B post-hoc-refit component
+  also satisfied) for the frozen compact-v4 graph-head refit decomposition.
+  Question: why does a small post-hoc MLP head (H2 302->13->13->1) beat the
+  original jointly-trained head (H0 302->64->32->1) by ~+0.00475 on the same
+  frozen R? Protocol: reuse the existing frozen OOF R caches (official TRAIN
+  universe only; official valid/test never loaded), 2 backbone seeds x 5 folds,
+  true nested split 7200 head-fit / 800 head-selection / 2000 untouched
+  outer-heldout, fit-only standardisation, identical L1/MAE Adam(lr=1e-3, wd=0)
+  deterministic mini-batch 512, fixed horizon 800, head_seed 0. Heads: H0
+  frozen original head; S-scratch 302->13->13->1 pure MLP; L-scratch
+  302->64->32->1 pure MLP; L-warm original head module (LayerNorm + Dropout)
+  initialised from the checkpoint through an EXACT first-layer standardisation
+  reparameterisation (W'=W diag(scale), b'=b+W mean) so that step 0 is
+  function-identical to H0; S-raw small head on raw R; L-scratch-raw large head
+  on raw R (conditional control, run because |S-raw - S-std| > 0.002). Stage 0
+  integrity: all gates pass 10/10 fold-seed instances (target==label; role
+  7200/800/2000; head(R)==yhat_0 max 0.0; forward gate max 0.0). Standardisation
+  equivalence: float64 identity on the reconstructed input max 6.2e-15; float32
+  deployment max 4.4e-5 < 1e-4, residual entirely due to the frozen
+  standardiser's own degenerate convention. Results (pooled 2x5, outer-heldout
+  2000): H0 0.175031, S-scratch 0.170280 (reproduces the prior H2 to 4.9e-7),
+  L-scratch 0.170534, L-warm 0.169661, S-raw 0.168045, L-scratch-raw 0.164781.
+  Paired molecule-level stratified bootstrap: Delta_S = MAE(H0)-MAE(S) =
+  +0.004751 (95% CI [+0.00150,+0.00952], P(>0)=0.9997, 5/5 fold-averaged
+  positive, both backbones positive); Delta_L = +0.004496 (CI
+  [+0.00108,+0.00946], P=0.9983, 5/5); Delta_W = MAE(H0)-MAE(L-warm) =
+  +0.005369 (CI [+0.00414,+0.00660], P=1.0000, 5/5, strongest and tightest
+  signal); the decisive capacity contrast Delta_cap = MAE(L-scratch)-MAE(S)
+  = +0.000255 (95% CI [-0.00097,+0.00150], P=0.658, fold-averaged positive
+  only 2/5); Delta_init = MAE(L-scratch)-MAE(L-warm) = +0.000873 (CI
+  [-0.00390,+0.00406], P=0.695). Standardisation is NOT the mechanism: S-raw
+  beats S-std by 0.002234 (CI [-0.00356,-0.00090], P(>0)=0.0004) and
+  L-scratch-raw beats L-scratch-std by 0.00575. Capacity is not robust to input
+  scale: on raw inputs Delta_cap_raw = MAE(L-scratch-raw)-MAE(S-raw) = -0.003264
+  (only 1/5 folds positive), i.e. the LARGE head wins on raw. Learning curves:
+  L-scratch overfits (fit MAE 0.0371 at epoch 800 vs S 0.0740 while selection
+  worsens 0.1789->0.1871) but the overfit does not translate to a stable
+  outer-heldout deficit; L-warm shows the under-adaptation pattern (starts at
+  H0 and improves). Parameter accounting from the real checkpoints: H0 head
+  21633 (21505 linear + 128 LayerNorm), S 4135, L-scratch 21505; replacing the
+  head with the small one changes a real total of 96141 to 78643 on fold0/seed0
+  (mean 78732.6 over 10 fold-seeds), saving 17498 per model. Verdict: the
+  original architecture is sufficient; at the end of joint training the head is
+  under-adapted to the final frozen R, and any reasonable head refit (or even a
+  warm continuation of the original head) recovers the gap. End-to-end
+  compact-v4 small-head replacement is NOT authorized.
+alternatives_rejected:
+- item: declare CAPACITY GO and authorize a compact-v4 302->13->13->1 end-to-end run
+  because: >-
+    the decisive matched-protocol contrast is Delta_cap = +0.000255 with a 95%
+    CI including 0 (P(>0)=0.658) and only 2/5 fold-averaged positive folds; on
+    raw inputs the sign reverses (Delta_cap_raw = -0.003264, large head wins).
+    A capacity claim is not supported.
+- item: label the result MIXED (capacity + refit both independently present)
+  because: >-
+    the pre-registered mixed case requires Delta_cap >= +0.002 AND
+    Delta_W >= +0.002; Delta_cap is ~0 while Delta_W is large, so the capacity
+    component is absent.
+- item: report standardisation as the source of the prior H2 gain
+  because: >-
+    raw inputs are significantly BETTER for the same small head
+    (S-raw - S-std = -0.002234, CI excludes 0), so the prior gain was obtained
+    despite standardisation, not because of it.
+- item: treat the previous H2 signal as not robust (Case F) and stop the route
+  because: >-
+    Delta_S reproduces the prior pooled H2 value to 4.9e-7 and is positive in
+    5/5 fold-averaged and both backbones with a CI lower bound > 0. The signal
+    is robust; only its attribution to architecture is refuted.
+- item: run a second head init (head_seed 1) now
+  because: >-
+    the pre-registered borderline window is |pooled Delta_cap| in [0.001,0.003];
+    here |Delta_cap| = 0.000255, so the window is not entered.
+- item: run width / depth / activation sweeps or FM / CatBoost / XGBoost
+  because: >-
+    out of scope; this audit only decomposes the already-observed 13->13 vs
+    64->32 signal.
+revisit_if: >-
+  (1) a leakage-safe official train/valid head-only adaptation protocol
+  (canonical training -> freeze backbone -> short head-only MAE refit with
+  selection and final evaluation roles strictly separated) is designed and
+  fails to reproduce the frozen-R late-adaptation signal; or (2) a new
+  pre-registered witness shows that frozen-R refit gains are an artifact of the
+  OOF checkpoint-selection protocol rather than a property of the final R.
+  Do not reopen the head-capacity route via width sweeps; a small-head E2E
+  requires a capacity signal that this audit did not find.
+notes: >-
+  This audit directly follows decision-graph-head-function-family-inconclusive-20260915
+  (FM INCONCLUSIVE, Case E). It does not touch tokenizer / patch representation /
+  pair encoder / centre update / pooling / topology / R / loss / backbone; it
+  reuses only the frozen OOF R caches. It reproduces the prior H0 and H2 pooled
+  numbers bit-for-bit, which is the strongest possible evidence that the
+  decomposition is executed on the same protocol.
