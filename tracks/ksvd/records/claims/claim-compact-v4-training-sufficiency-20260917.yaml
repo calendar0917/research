@@ -1,0 +1,73 @@
+claim_id: claim-compact-v4-training-sufficiency-20260917
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-17T00:40:00'
+statement: >-
+  The historical canonical 60-epoch compact-v4-hinge training protocol
+  materially UNDER-TRAINED the architecture. Holding the optimisation regime
+  completely fixed (Adam, lr 1e-3, batch 128, weight_decay 1e-5, L1, best-valid
+  checkpoint, no scheduler), simply extending the horizon 60 -> 240 epochs
+  improves official-valid MAE from 0.170066 to 0.146420 on seed 0 (best epoch
+  169 > 60) and from 0.163167 to 0.149332 on seed 1; over the four canonical
+  seeds the paired valid gain is +0.022250 (4/4 positive; historical valid
+  0.169451 +/- 0.003965 -> optimized 0.147201 +/- 0.003697). The frozen one-shot
+  official test confirms the improvement is not validation-only: test mean
+  0.125179 +/- 0.003374 vs historical 0.136885, paired test gain +0.011706
+  (4/4 positive). The canonical late-readout *continuation* signal
+  (B0 0.170066 -> C 0.160976, +0.00909) is therefore a training-horizon /
+  early-stopping-rule effect, NOT an optimisation-regime switch: the
+  continuation-like changes (batch 512 and/or weight_decay 0) do NOT give any
+  independent gain and each is worse than the canonical batch-128 / wd-1e-5
+  regime at the same 240-epoch horizon (B0 0.146420 vs B1 batch512 0.153920 vs
+  B2 wd0 0.159668 vs B3 batch512+wd0 0.151145). Learning rate 1e-3 remains
+  best (3e-4 tied on MAE but horizon-pinned at epoch 232/240); no scheduler is
+  needed. Because the valid-selected gain (+0.0223) is about twice the test
+  gain (+0.0117), part of the apparent valid improvement is validation-selection
+  bias (the noisy batch-128 valid curve has late-phase std ~0.011 and the best
+  epoch is an isolated dip), but a substantial, reproducible official-test
+  improvement remains.
+scope: >-
+  ZINC-12k official train/valid for all search stages; official test loaded
+  exactly once per confirmed seed, only after the frozen protocol lock and only
+  through the valid-selected checkpoint. Model, representation, tokenizer,
+  topology, pair encoder, centre update, pooling, head, loss and target are
+  unchanged (99,613 selection-phase parameters in every run). Search is a small
+  structured design: horizon ladder 60/120/240 (seed 0), batch {128,512} x wd
+  {1e-5,0} at 240 epochs (seed 0), lr {3e-4,1e-3} on the winning regime, then
+  seed-1 replication and seed-2/3 confirmation. No Optuna / random / Bayesian
+  search, no architecture change, no two-stage protocol.
+supporting_evidence:
+- notes/compact_v4_training_sufficiency.md
+- results/compact_v4_training_sufficiency/README.md
+- results/compact_v4_training_sufficiency/historical_protocol.json
+- results/compact_v4_training_sufficiency/historical_learning_curve.csv
+- results/compact_v4_training_sufficiency/search_preregistration.json
+- results/compact_v4_training_sufficiency/stage1a_horizon_results.csv
+- results/compact_v4_training_sufficiency/stage1b_regime_results.csv
+- results/compact_v4_training_sufficiency/stage2_lr_results.csv
+- results/compact_v4_training_sufficiency/candidate_protocol.json
+- results/compact_v4_training_sufficiency/candidate_seed0_curve.csv
+- results/compact_v4_training_sufficiency/seed1_replication.json
+- results/compact_v4_training_sufficiency/seed2_results.json
+- results/compact_v4_training_sufficiency/seed3_results.json
+- results/compact_v4_training_sufficiency/valid_summary.csv
+- results/compact_v4_training_sufficiency/final_training_protocol_lock.json
+- results/compact_v4_training_sufficiency/final_decision.json
+- results/compact_v4_training_sufficiency/test_results.csv
+- results/compact_v4_training_sufficiency/test_summary.json
+- results/compact_v4_training_sufficiency/representation_drift.json
+- results/compact_v4_training_sufficiency/compute_accounting.csv
+- tests/test_compact_v4_training_sufficiency.py
+contradicting_evidence:
+  - >-
+    The seed-0 selected minimum (0.146420 at epoch 169) is an isolated dip: only
+    2/209 epochs fall below 0.15 and the late-phase (last half) valid median is
+    0.167. The smoother batch-512 regimes have a floor ~0.151-0.154. The exact
+    selected-checkpoint value is therefore partly validation-selection noise;
+    this is why the frozen test gain (+0.0117) is smaller than the valid gain
+    (+0.0223).
+  - >-
+    Seed-2/3 historical selection-checkpoint test MAE (0.144614 / 0.137019) is
+    read from the committed multiseed confirmation file, not re-derived here;
+    the paired test gain uses the four historical values as recorded there.

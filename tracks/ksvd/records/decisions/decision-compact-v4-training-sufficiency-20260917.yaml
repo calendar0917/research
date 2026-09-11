@@ -1,0 +1,68 @@
+decision_id: decision-compact-v4-training-sufficiency-20260917
+created: '2026-09-17T00:40:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Case A — HISTORICAL UNDERTRAINING CONFIRMED. The historical canonical
+  60-epoch compact-v4-hinge protocol materially under-trained the existing
+  architecture; the canonical late-readout continuation gain was a
+  training-horizon / early-stopping-rule effect, not a batch/weight-decay/
+  fresh-optimizer regime switch. New baseline = LONGER SINGLE-STAGE
+  compact-v4-hinge: Adam, lr 1e-3, batch 128, weight_decay 1e-5, max_epochs 240,
+  patience 40, no scheduler, L1, best-valid checkpoint. Replication gates:
+  seed0 gain +0.023645 (>= +0.003), seed1 gain +0.013834 (> 0), paired mean
+  +0.018740 (>= +0.003) -> TRAINING PROTOCOL GO; not retuned on seed 1. Seed-2/3
+  confirmation gains +0.022694 / +0.028826 (4/4 positive). Frozen one-shot
+  official test: optimized 0.125179 +/- 0.003374 vs historical 0.136885, paired
+  test gain +0.011706 (4/4). The continuation anchor 0.160976 is absorbed and
+  exceeded by simple longer training (seed0 0.146420), so no two-stage
+  full-model optimisation protocol is retained.
+alternatives_rejected:
+- item: OPTIMIZATION_REGIME SWITCH GO (Case B), i.e. attribute the gain to the continuation regime (batch 512 / wd 0 / fresh Adam)
+  because: >-
+    at the same 240-epoch horizon the canonical batch-128 / wd-1e-5 regime (B0
+    0.146420) is better than batch 512 (B1 0.153920), wd 0 (B2 0.159668), and
+    both (B3 0.151145). B0->B1 -0.007500, B0->B2 -0.013248, B0->B3 -0.004725:
+    every continuation-regime change hurts. No step-matched batch control was
+    needed (batch 128 dominates on both epochs and optimizer updates).
+- item: keep a two-stage full-model optimisation protocol
+  because: >-
+    longer single-stage canonical training already absorbs and exceeds the
+    continuation anchor (seed0 0.146420 < 0.160976); a phase switch adds
+    complexity with no demonstrated value beyond a longer horizon.
+- item: SMALL TRAINING IMPROVEMENT ONLY / NO-GO (Cases C/E)
+  because: >-
+    the paired valid gain is +0.02225 (far above the +0.003 gate, 4/4 positive)
+    and the frozen test gain is +0.011706 (4/4 positive). The effect is large
+    and replicates.
+- item: INCONCLUSIVE / seed-specific (Case D)
+  because: >-
+    seed0 +0.023645 and seed1 +0.013834 are both large, same-direction, with the
+    same mechanism (better valid minimum reached well beyond epoch 60); seeds 2
+    and 3 also improve (+0.022694 / +0.028826).
+- item: add a scheduler / sweep scheduler parameters
+  because: >-
+    the winning candidate's best epoch (169/240) is not pinned to the horizon,
+    so a fixed lr 1e-3 is not obviously limiting convergence; lr 3e-4 is tied on
+    MAE but horizon-pinned (best epoch 232/240) and has a worse late-phase
+    trajectory. The pre-registered single-scheduler test is not entered.
+- item: treat the previous architecture/statistic NO-GO audits as invalidated
+  because: >-
+    they were pre-registered diagnostics on the historical latent manifold; the
+    optimized representation drifts (normalized L2 0.314, cosine 0.950), so they
+    describe the not-yet-optimised manifold but are not automatically void. No
+    re-audit was run in this stage.
+consequences:
+- All future zinc architecture / representation claims must compare against the
+  optimized compact-v4-hinge baseline (valid 0.147201 +/- 0.003697, test
+  0.125179 +/- 0.003374), not the historical 0.170 / 0.1369.
+- Parameter efficiency is unchanged (99,613 params); optimisation compute rises
+  ~2.4-3.5x (144-209 epochs / 11,376-16,511 updates vs 60 / 4,740). Report the
+  two separately.
+- Re-open the decisive representation diagnostics (with fresh pre-registered
+  witnesses) on the optimized manifold only before opening a new architecture
+  family.
+revisit_if: >-
+  A later stage shows the selected-checkpoint valid gain does not transfer to a
+  new dataset/split, or a scheduler/curvature method demonstrates a
+  reproducible further gain beyond the longer single-stage protocol.
