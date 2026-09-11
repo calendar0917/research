@@ -1,0 +1,72 @@
+claim_id: claim-triadic-relation-binding-witness-nogo-20260914
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-09-14T00:30:00'
+statement: >-
+  On the frozen compact-v4-hinge representation of the official ZINC train
+  universe, an explicit permutation-invariant binding of the three pair
+  relations of a patch triple (q_ij, q_ik, q_jk) does NOT carry stable
+  incremental signed predictive value beyond the existing 302D graph vector R
+  and beyond a parameter-matched, depth-matched unbound control that preserves
+  the pair-state multiset while destroying true triple closure. Verified
+  compact-v4 relation path (from code and from the frozen v4 export): q_ij is
+  the 16D pair-encoder output computed once before the single one-shot centre
+  update; pair rows are unordered (i<j) and each row contributes identically to
+  both endpoint centres; per (centre, distance bucket) the model keeps
+  [mean(q) 16 ; population std(q) 16 ; log1p(count) 1] = 33D x 5 = 165D; the
+  centre update is patch <- patch + MLP([patch ; 165D]) with final projection
+  zero-init (residual), and the unary readout is recomputed afterwards. There
+  is no tensor/product/pool in which the three relations of a triple appear
+  together: the outer relation q_jk is never part of the reference centre's
+  context. The witness is parameter-free: for each unordered triple i<j<k with
+  a=q_ij, b=q_ik, c=q_jk, form s1 = a+b+c (16D), s_abs = |a-mu|+|b-mu|+|c-mu|
+  with mu=(a+b+c)/3 (16D), s2 = a*b + a*c + b*c (16D), triad_raw in R^48;
+  value-lexicographic canonical ordering makes the representation exactly
+  invariant to pair-slot permutation, and a fixed deterministic orthonormal
+  48x16 projection (seed 20260914) gives z, summarised as
+  T_graph = [mean(z) ; std(z)] in R^32 (no triad count). The unbound control
+  keeps q_ij, q_ik and deterministically permutes the outer q_jk across the
+  triples of the same molecule (molecule-ID-seeded single cycles within
+  same-outer-bucket groups; leftover singletons pooled; isolated singleton =
+  recorded fixed point). Gate 0 all-pass on 5/5 folds, seed 0 (22 gate
+  instances): exported triples == sum C(n,3) (4,037,863 / 4,087,118 / 4,034,692
+  / 4,114,144 / 4,079,685); sum n_pairs == sum C(n,2) with no self-loops,
+  duplicates or missing pairs; each triple's three q equal the direct pair
+  gathers and endpoint order is irrelevant (max diff 0.0); triad_raw exactly
+  invariant under all 6 pair-slot permutations (max diff 0.0); projection
+  deterministic and orthonormal (Gram off-diag 7.8e-16); parameter mismatch
+  4135 vs 4189 = +1.31% <= 3%. Full O(n^3) enumeration was used (median n=23,
+  max n=36; 100-molecule profile 0.0042 s/molecule for true+unbound, ~8.3 s per
+  2000-molecule fold; sampling not applied). Unbound control quality over all
+  triads: bucket mismatch 0.0 on 5/5 folds, fixed-point rate <= 4.95e-7,
+  breakage 0.974. Stage 1 (frozen OOF backbone seed 0 x 5 folds x 1 init, same
+  1200/400/400 molecule-ID-hash split as the predecessor audits, assignment
+  sha256 cross-checked identical on 5/5 folds, same L1/Adam(lr=1e-3)
+  full-batch selection-checkpoint protocol, fixed horizon 400) evaluation MAE
+  means: B0 0.193160 / B1 R-only 302->13->13->1 (4135) 0.190499 / B2 unbound
+  (302+32)->12->12->1 (4189) 0.190303 / E true (identical architecture to B2)
+  0.192152. mean delta_R = MAE(B1)-MAE(E) = -0.001653 (1/5 folds positive);
+  mean delta_U = MAE(B2)-MAE(E) = -0.001849 (95% CI [-0.002941,-0.000791],
+  P(>0)=0.0003, 0/5 folds positive). Common-input rare-patch bulk: E degrades
+  relative to B2 by max +0.003416 (gate <= +0.002 FAIL) and relative to B1 by
+  max +0.005125; relative to B0 the bulk is safe (mean -0.0015). Both adapters
+  are non-collapsed (true sensitivity min 0.157, prediction std 1.8) and the
+  true/unbound summaries differ (median ||T_graph-U_graph|| 0.254, per-channel
+  correlation 0.980). The second backbone seed and the Stage-1b second init
+  were not spent. Case C: no incremental value over R, and E is worse than the
+  unbound control, so triadic binding itself is not supported.
+scope: >-
+  ZINC-12k official TRAIN only, through the existing frozen compact-v4-hinge
+  OOF checkpoints (official valid/test never loaded); backbone seed 0 (second
+  seed NOT spent under the pre-registered CLEAR NO-GO rule); one adapter init
+  (Stage 1b not triggered); typed_tokenizer_v1_historical; frozen v4
+  centre-incidence export reused with no new backbone inference; explicit
+  parameter-free symmetry-reduced triad representation and fixed orthonormal
+  projection (seed 20260914); L1/Adam(lr=1e-3), full batch, fixed horizon 400,
+  best-selection checkpointing; B1/B2/E share the same split and optimizer; no
+  backbone training, no compact-v4 change, no pair recomputation, no patch-state
+  update, no second state-propagation round, no learned triad projection, no
+  larger triad vector, no attention / GNN / Transformer / message passing, no
+  target / residual / target-component / cycle-oracle / new descriptor input to
+  the witness.

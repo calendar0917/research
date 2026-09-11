@@ -1,0 +1,90 @@
+decision_id: decision-triadic-relation-binding-witness-nogo-20260914
+created: '2026-09-14T00:30:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  NO-GO for explicit triadic relation binding (Case C). After building an exact,
+  permutation-invariant explicit three-patch binding witness over (q_ij, q_ik,
+  q_jk) from the frozen v4 centre-incidence export (no backbone inference, no
+  pair recomputation, no patch-state update) and running the pre-registered
+  Stage 1 screening (frozen OOF backbone seed 0 x 5 folds x 1 adapter init,
+  the same official-train-only 1200/400/400 molecule-ID-hash split), the true
+  triad witness E does NOT beat the parameter-matched, depth-matched unbound
+  matched control B2 (mean delta_U = MAE(B2)-MAE(E) = -0.001849, 95% CI
+  [-0.002941,-0.000791], P(>0)=0.0003, 0/5 folds positive) and does NOT beat
+  the historical R-only residual head B1 (mean delta_R = MAE(B1)-MAE(E) =
+  -0.001653, 1/5 folds). Re-expressed as fold means: B0 0.193160 / B1 0.190499
+  (302 -> 13 -> 13 -> 1, 4135 params) / B2 unbound 0.190303 ((302+32) -> 12 ->
+  12 -> 1, 4189 params) / E true 0.192152 (identical architecture to B2). Both
+  pre-registered CLEAR NO-GO clauses fire: mean delta_R <= +0.0005 and
+  mean delta_U <= 0, and E beats unbound in 0/5 <= 2/5 folds. The loss is
+  therefore not "extra capacity": B2 and E are architecture-identical and the
+  unbound control preserves the pair-state multiset exactly while breaking
+  97.4% of true triple closures (bucket mismatch 0.0, fixed-point rate
+  <= 4.95e-7). The adapted readers are non-collapsed (true-witness sensitivity
+  min 0.157, prediction std 1.8) and the true/unbound summaries differ (median
+  ||T_graph-U_graph|| 0.254), so the negative is a genuine measurement. The
+  earlier concern that the model might know pairs individually but not their
+  triple membership is answered: explicitly binding them is not task-relevant.
+  The second frozen backbone seed, the Stage-1b second adapter init and the
+  mechanism replacement control were NOT spent. compact-v4-hinge is unchanged
+  and remains the current candidate.
+alternatives_rejected:
+- item: spend the second frozen backbone seed for replication
+  because: >-
+    the pre-registered Stage-1 CLEAR NO-GO rule fires on both clauses and on
+    the fold-direction clause (E better than unbound in 0/5); replication is
+    earned only by a positive or borderline Stage 1
+- item: run Stage-1b (second adapter init)
+  because: >-
+    Stage 1b is defined only for a borderline Stage 1; this is a clear NO-GO
+    with a consistent negative direction on 5/5 folds, not an init-noise issue
+- item: >-
+    run the mechanism replacement control (swap T_graph between similar-size
+    molecules)
+  because: >-
+    explicitly gated on a GO; running it after a decisive negative would be an
+    unregistered use of budget and could not change the decision
+- item: design a low-rank one-shot triadic composition module
+  because: >-
+    the mandate gates the next architecture on a task-relevant witness; the
+    witness failed, so a triadic module is not justified
+- item: >-
+    enlarge the triad vector, learn the projection, or use a higher-order
+    s1/s_abs/s2 expansion
+  because: >-
+    explicitly out of scope for a witness audit; a failed witness must not be
+    rescued by making the probe more expressive
+- item: open triangle attention / triplet Transformer / higher-order motif sweep
+  because: >-
+    forbidden by the stage scope and unjustified by any positive witness
+- item: >-
+    treat the negative as a failure of the s1/s_abs/s2 representation
+    specifically
+  because: >-
+    the witness was pre-registered as a deterministic, permutation-invariant,
+    low-order, parameter-free diagnostic; the claim is scoped to explicit
+    binding under this representation, not to every possible triad encoder
+revisit_if: >-
+  (1) a genuinely different representation family changes what a pair state
+  contains (so that triple closure could carry information the current q_ij
+  cannot express), with its own pre-registered witness and matched unbound
+  control; or (2) the question is re-posed at the paradigm level
+  (representation family / dictionary construction / objective-aligned
+  structured model) as an independent hypothesis. Do NOT reopen by adding
+  more higher-order relation statistics, learned triad projections, attention
+  or message passing to the current compute graph.
+notes: >-
+  This is the last of the explicit relation-composition rungs on the current
+  compact-v4 compute graph and the audit the centre-incidence NO-GO left open
+  as a distinct (cross-centre closure) object. It is a screening diagnostic
+  only: NO-GO closes explicit triadic binding as a bottleneck for this frozen
+  representation under a low-capacity witness; it does NOT prove higher-order
+  structure is unnecessary in general nor that a learned triadic module would
+  fail. Independent artefact: the frozen pair states remain the same sparse
+  ReLU-bounded codes (16D), so the three-pair closure signal available to any
+  triad witness is structurally limited. With this result the chain on the
+  current representation reads: local enrichment NO-GO; richer frozen readout
+  NO-GO; pair endpoint association NO-GO; centre covariance NO-GO; simple
+  function basis NO-GO; triadic binding NO-GO. The next step must be
+  representation-family level, not another feature.
