@@ -1,0 +1,115 @@
+claim_id: claim-graph-head-low-rank-interaction-inconclusive-20260915
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+created: '2026-09-15T00:30:00'
+statement: >-
+  On the frozen compact-v4 graph representation R (302D) of the official ZINC
+  train universe, an explicit rank-4 low-rank cross-coordinate interaction head
+  (Factorization Machine: bias + linear + sum_{i<j} <v_i,v_j> z_i z_j, 1511
+  params) does NOT show a *replicable* parameter-efficiency advantage over a
+  same-budget generic ReLU MLP (302 -> 5 -> 2 -> 1, 1530 params). Setup verified
+  from real exports: R_dim = 302 with layout unary 97 + pair-bucket moments 165
+  + global 32 + topology 8; per fold the frozen backbone exposes the true
+  nested structure 7200 head-fit / 800 head-selection / 2000 outer-heldout, and
+  all direct heads do yhat = f(R) with no residual yhat_0. Representation
+  integrity gates are exact on 5/5 folds for both backbone seeds: stored target
+  == official-train label, role membership == 7200/800/2000, re-fed R through
+  the frozen reconstructed head == stored yhat_0 (max 0.0), holdout yhat_0 ==
+  frozen OOF fold prediction (max 0.0), and holdout R == corrected
+  centre-incidence export R (max 0.0, seed 0). All heads share fit-only
+  coordinate standardisation (mean/std from the 7200 head-fit molecules only,
+  z_j = (R_j-mean_j)/max(std_j,1e-6), z_j = 0 when std_j < 1e-6; 11-84 of 302
+  coordinates are fit-degenerate per fold), the same L1/MAE objective, the same
+  Adam(lr=1e-3, weight_decay=0) trainer, the same deterministic mini-batch 512
+  order, the same best-selection checkpoint rule and the same fixed horizon
+  (800, chosen by a fold0/seed0 100/200/400/800 convergence trace). Head
+  parameters: H0 frozen original jointly-trained head; Hlinear 302 -> 1 (303);
+  H1 302 -> 5 -> 2 -> 1 (1530); H2 302 -> 13 -> 13 -> 1 (4135); FM rank-4
+  (1511). H1/FM mismatch +1.257% <= 3%. Stage 1 (backbone seed 0 x 5 folds x
+  init 0) evaluation MAE means: H0 0.175809, Hlinear 0.187802, H1 0.175539,
+  H2 0.170051, FM 0.172165; mean Delta_small = MAE(H1)-MAE(FM) = +0.003374
+  (median +0.005323, 4/5 folds positive; stratified paired bootstrap 95% CI
+  [-0.004398,+0.008361], P(>0)=0.835); mean Delta_strong = MAE(H2)-MAE(FM) =
+  -0.002114; mean Delta_orig = MAE(H0)-MAE(FM) = +0.003643. This met the
+  pre-registered EFFICIENCY ADVANCE gate. Stage 2 (backbone seed 1 x 5 folds x
+  init 0) evaluation MAE means: H0 0.174253, Hlinear 0.186197, H1 0.176349,
+  H2 0.170508, FM 0.175931; mean Delta_small = +0.000417 (median -0.002274,
+  only 2/5 folds positive; CI [-0.004378,+0.004220]); mean Delta_strong =
+  -0.005424. Pooled over both backbones: H0 0.175031, Hlinear 0.186999,
+  H1 0.175944, H2 0.170280, FM 0.174048; pooled Delta_small = +0.001896
+  (< +0.0025), pooled Delta_strong = -0.003769, fold-averaged Delta_small
+  positive in 3/5 folds, and the paired bootstrap 95% CI lower bound is
+  negative in both stages. The FM interaction is mechanically alive: on
+  backbone 0 std(interaction) = 0.905 vs std(linear) = 1.852
+  (interaction/prediction scale 0.427, mean |interaction| = 0.223) and forcing
+  V=0 at inference (no retraining) raises evaluation MAE by +0.1144 on 5/5
+  folds. CatBoost is not installed, so the secondary tree-style MAE reference
+  is recorded unavailable. The end-to-end FM replacement was NOT authorized.
+scope: >-
+  ZINC-12k official TRAIN only, through the existing frozen compact-v4 OOF
+  checkpoints (official valid/test never loaded); backbone seeds 0 and 1 (both
+  spent); one head init per backbone (head_seed 0; Stage 1b not triggered);
+  typed_tokenizer_v1_historical; direct heads yhat = f(R) with no residual
+  yhat_0; fit-only standardisation; identical L1 objective, Adam(lr=1e-3,
+  weight_decay=0) and deterministic mini-batch 512 for every head; fixed
+  horizon 800 with best-selection checkpointing; no backbone training, no
+  compact-v4 change, no new structural feature, no target-informed knot, no
+  MSE/Huber/weighted objective, no LR/weight-decay/optimizer/batch/rank sweep,
+  no official valid/test access.
+supporting_evidence:
+- notes/graph_head_function_family_audit.md
+- results/graph_head_function_family/checkpoint_inventory.json
+- results/graph_head_function_family/representation_integrity.json
+- results/graph_head_function_family/split_manifest.json
+- results/graph_head_function_family/preprocessing_stats.json
+- results/graph_head_function_family/head_spec.json
+- results/graph_head_function_family/parameter_counts.json
+- results/graph_head_function_family/convergence_trace.json
+- results/graph_head_function_family/stage1_fold_results.csv
+- results/graph_head_function_family/stage1_bootstrap.json
+- results/graph_head_function_family/stage2_fold_results.csv
+- results/graph_head_function_family/stage2_bootstrap.json
+- results/graph_head_function_family/pooled_backbone_results.csv
+- results/graph_head_function_family/final_bootstrap.json
+- results/graph_head_function_family/fm_mechanism_summary.json
+- results/graph_head_function_family/fm_interaction_ablation.csv
+- results/graph_head_function_family/final_frozen_decision.json
+- results/graph_head_function_family/catboost_secondary_status.json
+- tests/test_graph_head_function_family.py
+contradicting_evidence:
+  - >-
+    On backbone seed 0 the FM does beat H1 (mean Delta_small +0.003374 on 4/5
+    folds) and even beats the jointly-trained original head H0 on the untouched
+    held-out molecules (mean Delta_orig +0.003643), with a live interaction
+    term (V=0 costs +0.1144 MAE, 5/5). A single-backbone reading would call this
+    a parameter-efficiency win.
+  - >-
+    The pooled FM MAE (0.174048) is close to H1 (0.175944) and better than H0
+    (0.175031), so the FM head is not a broken reader; the negative is about
+    replicability and the strong H2 reference, not about inability to fit.
+  - >-
+    Frozen R was produced by a backbone jointly trained with the original MLP
+    head, so its latent geometry may be MLP-friendly; this could penalise the
+    low-rank interaction family in a way that would not persist end-to-end.
+limitations:
+- Only two frozen backbone seeds and one head init each (Stage 1b not triggered
+  because Stage 1 was an efficiency advance, not borderline).
+- The final held-out set is 2000 molecules per fold on the official train
+  universe; no official valid/test was loaded, so this is a screening result.
+- The protocol uses a deterministic mini-batch 512 rather than the frozen
+  adapters' full-batch, because full-batch under-trained the 7200-sample heads;
+  this is a pre-registered protocol choice, not a head-family difference.
+- CatBoost was unavailable, so no tree-style secondary reference exists for
+  this representation and split.
+- Rank was fixed at 4; no larger or learned rank was tested (by design).
+implication: >-
+  Do not expand the frozen-R explicit low-rank interaction head budget: no rank
+  8/16/learned, no DeepFM / field-aware FM / CrossNet / polynomial network /
+  bilinear head, no MLP+FM hybrid, and no end-to-end FM replacement. The
+  low-rank interaction hypothesis gets one fair frozen chance (rank 4) and it
+  did not replicate. The next move must be a paradigm-level, pre-registered
+  representation-family / objective-aligned structured-computation question with
+  its own witness, not another function transform of frozen R. If a tree-style
+  reader is desired, install CatBoost under its own pre-registered MAE preset
+  and split in a separate MAE-compatible head-family audit.

@@ -1,0 +1,105 @@
+decision_id: decision-graph-head-function-family-inconclusive-20260915
+created: '2026-09-15T00:30:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  INCONCLUSIVE (Case E) for the explicit low-rank cross-coordinate interaction
+  head on the frozen compact-v4 representation. Protocol: frozen OOF
+  compact-v4 graph head (official TRAIN only), per fold the true nested
+  structure (7200 head-fit / 800 head-selection / 2000 untouched outer-heldout),
+  direct heads yhat = f(R) (no residual yhat_0), fit-only standardisation,
+  identical L1/MAE objective, Adam(lr=1e-3), weight decay 0, deterministic
+  mini-batch 512, fixed horizon 800 chosen by a fold0/seed0 convergence trace,
+  5 folds, head_seed 0. Heads: H0 frozen original jointly-trained head;
+  Hlinear 302->1 (303); H1 generic ReLU MLP 302->5->2->1 (1530);
+  H2 stronger generic ReLU MLP 302->13->13->1 (4135); E rank-4 Factorization
+  Machine (bias + linear 302 + 302x4 factors = 1511, mismatch vs H1 +1.257%
+  <= 3%). Stage 0 representation integrity: all gates exact on 5/5 folds for
+  both backbone seeds (stored target == label; role membership == 7200/800/2000;
+  re-fed R through the frozen head == yhat_0 max 0.0; holdout yhat_0 == frozen
+  OOF prediction max 0.0; holdout R == centre-incidence export max 0.0 on
+  seed 0). Stage 1 (backbone seed 0) evaluation MAE means: H0 0.175809 /
+  Hlinear 0.187802 / H1 0.175539 / H2 0.170051 / FM 0.172165; mean
+  Delta_small = MAE(H1)-MAE(FM) = +0.003374 (median +0.005323, 4/5 folds
+  positive, paired bootstrap 95% CI [-0.004398,+0.008361]); mean Delta_strong =
+  MAE(H2)-MAE(FM) = -0.002114; mean Delta_orig = MAE(H0)-MAE(FM) = +0.003643.
+  This fires the pre-registered EFFICIENCY ADVANCE gate (mean Delta_small
+  >= +0.003, >= 4/5 positive, FM worse than H2 by <= +0.004), so the second
+  frozen backbone seed WAS spent. Stage 2 (backbone seed 1) evaluation MAE
+  means: H0 0.174253 / H1 0.176349 / H2 0.170508 / FM 0.175931; mean
+  Delta_small = +0.000417 (median -0.002274, only 2/5 folds positive,
+  CI [-0.004378,+0.004220]); mean Delta_strong = -0.005424. The Stage-1
+  efficiency signal did NOT replicate. Pooled over both backbones:
+  Delta_small = +0.001896 (< +0.0025 GO threshold), Delta_strong = -0.003769,
+  fold-averaged Delta_small positive in only 3/5 folds, and the paired bootstrap
+  95% CI lower bound is negative in both stages. Final frozen GO therefore
+  fails on three of five criteria (pooled mean, fold-averaged direction, CI
+  lower bound); only backbone-consistency-of-sign and interaction-aliveness
+  pass. The interaction term is nonetheless mechanically alive: on backbone 0
+  the FM interaction contribution has std 0.905 vs linear std 1.852
+  (interaction/prediction scale 0.427, mean |interaction| 0.223), and forcing
+  V=0 at inference raises evaluation MAE by +0.1144 (5/5 folds), so the Stage-1
+  signal was genuinely an interaction effect and not a linear fallback.
+  CatBoost is not installed, so the pre-registered secondary tree-style
+  reference is recorded unavailable (no tree evidence, no environment change).
+  End-to-end FM replacement is NOT authorized (frozen GO not met); no rank
+  sweep (8/16/learned), no DeepFM / field-aware FM / CrossNet / polynomial /
+  bilinear head, no MLP+FM hybrid. compact-v4 is unchanged.
+alternatives_rejected:
+- item: declare a PARAMETER-EFFICIENCY GO from the backbone seed 0 fold alone
+  because: >-
+    the pre-registered final gate requires replication across two frozen
+    backbone seeds with a pooled mean >= +0.0025, >= 4/5 fold-averaged positive
+    folds and a paired bootstrap 95% CI lower bound > 0; backbone seed 1 gives
+    mean Delta_small = +0.000417 (2/5) and both CIs include zero
+- item: call it a clean NO-GO (Case C, generic MLP wins)
+  because: >-
+    on backbone seed 0 FM does beat H1 (Delta_small +0.003374, 4/5) and even
+    beats the jointly-trained H0 on the untouched held-out molecules
+    (Delta_orig +0.003643); the correct description is a small, unstable
+    efficiency signal, not a clean defeat
+- item: spend a second head initialization (Stage 1b)
+  because: >-
+    Stage 1b is defined only for a BORDERLINE Stage 1 (mean Delta_small in
+    (0.0005, 0.003)); Stage 1 was an EFFICIENCY ADVANCE, so the pre-registered
+    next step is the second backbone seed, which was run
+- item: sweep FM rank (8 / 16 / learned) or add field-aware / DeepFM / CrossNet
+  because: >-
+    explicitly forbidden: the hypothesis gets rank 4 for one fair chance; a
+    non-replicated result is not rescued by increasing capacity
+- item: run the end-to-end FM head replacement anyway
+  because: >-
+    end-to-end is authorized only after a frozen FM GO; the frozen witness did
+    not clear the gate, and a frozen non-GO does not authorize more head-family
+    search or an architecture change
+- item: run a tree-style secondary reference
+  because: >-
+    catboost is unavailable and the mandate says record unavailable and
+    continue; no environment change is made for a secondary control, and
+    XGBoost is not re-swept
+revisit_if: >-
+  A fundamentally different, pre-registered downstream-function-family
+  hypothesis with its own frozen witness and matched controls (not a rank or
+  capacity variant of the FM), or a representation-family / objective-aligned
+  structured-computation stage. If a tree-style reference is wanted later,
+  install CatBoost under its own pre-registered MAE preset and split, and
+  register the MAE-compatible head-family audit as a separate study. Do not
+  reopen the frozen-R explicit low-rank interaction route by changing rank,
+  adding interactions, or retuning the optimiser.
+notes: >-
+  This audit is the direct successor of the frozen function-basis accessibility
+  NO-GO (decision-function-basis-accessibility-nogo-20260913), whose revisit_if
+  explicitly named "an MAE-oriented structured function basis with explicit
+  coordinate interactions rather than a purely additive one". It also follows
+  the stopped structural-statistic search (pair endpoint association,
+  centre-incidence covariance, explicit triadic binding all NO-GO). The one
+  protocol deviation from the frozen adapters is deliberate and pre-registered:
+  a deterministic mini-batch 512 replaces full-batch, because a full-batch
+  convergence sanity on 7200 head-fit molecules showed severe under-training
+  (H1 selection MAE still falling 0.025 from epoch 400 to 800), which would
+  confound function-family capacity with optimisation speed. Independent
+  descriptive finding: the strong direct MLP H2 (4135 params, refit on 7200)
+  pooled MAE 0.170280 beats the jointly-trained original head H0 0.175031 on
+  the untouched 2000-molecule held-out folds, i.e. the frozen R still contains
+  signal a stronger direct reader can exploit, but this is not stable enough to
+  be a method.
