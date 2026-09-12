@@ -30,6 +30,16 @@
   XGBoost 原始论文，用于理解正则化目标、加法训练、二阶近似、稀疏感知和系统实现。
 - [Reproducibility in Machine Learning: Experiences from NeurIPS 2019 Reproducibility Program](https://arxiv.org/abs/2003.12206)
   经验性讨论机器学习复现中的报告与实验问题，用于建立“结果不是单个数字”的意识。
+- [uv: Projects](https://docs.astral.sh/uv/concepts/projects/)
+  uv 官方项目机制：pyproject、lock 与 sync 的设计，用于环境锁定与按项目隔离。
+- [uv: Using uv with PyTorch](https://docs.astral.sh/uv/guides/integration/pytorch/)
+  uv 官方 PyTorch 集成：torch 的 CUDA 变体、专用 index 与 GPU 扩展配置。
+- [uv: Installing and managing Python](https://docs.astral.sh/uv/guides/install-python/)
+  官方解释器管理：自动下载、复用系统解释器与版本锁定规则。
+- [conda: Managing environments](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)
+  conda 官方环境文档：创建、-p 位置、激活、导出与 lockfile，以及和 pip 混用的注意事项。
+- [conda-forge](https://conda-forge.org/)
+  社区 conda 频道，确认某项依赖是否存在官方二进制构建（用于判断是否必须读 conda 路线）。
 
 ## Wisdom (Communities)
 

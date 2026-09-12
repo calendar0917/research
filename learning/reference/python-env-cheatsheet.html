@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python 环境速查卡</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Experiment tooling / quick reference</div>
+  <h1>Python 环境：uv 与 conda</h1>
+  <p class="dek">判断规则：依赖能走 pip 轮子 → uv；需要 conda-forge 原生二进制 → conda。两条路线的命令都列在这里。</p>
+  <hr class="rule">
+
+  <div class="card claim">
+    <span class="label">三层心智模型</span>
+    <p><code>解释器（谁提供 Python）→ 包（谁解析依赖）→ 位置（环境装在哪）</code></p>
+    <p>uv：解释器自下载 · pip 轮子 · 项目 <code>.venv</code> ｜ conda：环境自带 · conda-forge 二进制 · <code>&lt;prefix&gt;/envs</code>（可用 <code>-p</code> 改）</p>
+  </div>
+
+  <div class="card">
+    <span class="label">uv 常用</span>
+    <table>
+      <thead><tr><th>动作</th><th>命令</th></tr></thead>
+      <tbody>
+        <tr><td>安装（无 sudo）</td><td><code>curl -LsSf https://astral.sh/uv/install.sh | sh</code></td></tr>
+        <tr><td>新建项目</td><td><code>uv init && uv add torch numpy</code></td></tr>
+        <tr><td>按 lock 重建</td><td><code>uv sync</code></td></tr>
+        <tr><td>运行</td><td><code>uv run python main.py</code>（自动用项目 .venv）</td></tr>
+        <tr><td>新增/更新依赖</td><td><code>uv add pkg==1.2.3</code> / <code>uv remove pkg</code></td></tr>
+        <tr><td>下载解释器</td><td><code>uv python install 3.12</code>；列表 <code>uv python list</code></td></tr>
+        <tr><td>临时跑工具</td><td><code>uvx mypy .</code></td></tr>
+        <tr><td>导出 requirements</td><td><code>uv pip compile pyproject.toml -o req.txt</code>（可选 <code>--universal</code>）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <span class="label">torch CUDA 变体（pyproject.toml）</span>
+    <p>PyPI 的 torch 2.x Linux 轮子默认捆绑 CUDA；需要指定版本时用 PyTorch index（uv ≥ 0.5.3）：</p>
+    <pre><code>[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu124" }]
+torch-geometric = [{ index = "pytorch-cu124" }]</code></pre>
+    <p>常用 URL：<code>.../whl/cpu</code>、<code>/whl/cu118</code>、<code>/whl/cu121</code>、<code>/whl/cu124</code>、<code>/whl/cu128</code>。GPU 扩展（flash-attn、torch-scatter）见 <a href="https://wheels.astral.sh/">wheels.astral.sh</a>。</p>
+  </div>
+
+  <div class="card">
+    <span class="label">conda 常用</span>
+    <table>
+      <thead><tr><th>动作</th><th>命令</th></tr></thead>
+      <tbody>
+        <tr><td>在脚本中复活函数<br>（不写 .bashrc）</td><td><code>eval "$(/home/hxy/enter/bin/conda shell.bash hook)"</code></td></tr>
+        <tr><td>建到自己的目录</td><td><code>conda create -p ~/papers/xxx/env -c conda-forge python=3.9 mpi4py</code></td></tr>
+        <tr><td>按名激活（默认 envs）</td><td><code>conda activate myenv</code>；按路径 <code>conda activate ~/papers/xxx/env</code></td></tr>
+        <tr><td>一次性跑一条命令</td><td><code>conda run -p ~/papers/xxx/env python train.py</code></td></tr>
+        <tr><td>列出环境</td><td><code>conda env list</code>（active 行带 <code>*</code>）</td></tr>
+        <tr><td>记录环境</td><td><code>conda export &gt; environment.yml</code>（跨机 → <code>--from-history</code>）</td></tr>
+        <tr><td>精确重建（锁文件）</td><td><code>conda export --format=explicit &gt; spec.txt</code>；需 conda ≥ 26.5 支持 conda-lock.yaml</td></tr>
+        <tr><td>按文件重建</td><td><code>conda create -n myenv --file spec.txt</code> / <code>-f environment.yml</code></td></tr>
+        <tr><td>删除</td><td><code>conda env remove -n myenv</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <span class="label">这台服务器备忘</span>
+    <ul>
+      <li>conda 前缀：<code>/home/hxy/enter</code>；默认 envs 在 <code>~/enter/envs</code>（导师共享目录，勿写入）</li>
+      <li>无 sudo；系统 Python 3.10.12，无 pip；驱动 550 支持 CUDA 12.4</li>
+      <li>已有环境：<code>Graph_recover</code>（py3.9/torch2.8+cu128）、<code>graph_lab</code>（py3.9/torch2.1+cu121）等</li>
+      <li><code>/home</code> 剩约 732G（99% 满）；uv 缓存可指 <code>UV_CACHE_DIR=/tmp/uv-cache</code> 省空间（重启清空）</li>
+      <li>长任务用 <code>tmux</code> 挂住；跑前 <code>nvidia-smi</code> 看谁在占卡</li>
+    </ul>
+  </div>
+
+  <p class="footer">按提示查看 <code>uv --help</code>、<code>conda create --help</code>；本卡仅覆盖日常工作流，其余见 Primary sources（第十三课）。</p>
+</main>
+</body>
+</html>

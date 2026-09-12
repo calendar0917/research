@@ -111,5 +111,6 @@
 - 最小数学与数据对象：已完成前两课；
 - 经典模型与集成学习入口：完成；
 - 当前学习课：`0012-robustness-and-uncertainty.html`，区分训练随机性、数据划分和子群体稳健性；
+- 2026-09-07 新增支撑课：`0013-conda-or-uv.html`（实验环境管理：uv 为主、conda 兜底，配套 `reference/python-env-cheatsheet.html`），服务服务器实验落地；
 - 接下来：用协议、归因和稳健性工具审计真实训练代码与实验报告；
 - 再之后：用同一研究卡学习 MLP、GNN、Transformer 和 KSVD/表示学习，最后回到 MolHIV/KSVD 的真实实验。

@@ -16,3 +16,4 @@
 - 第十课进入训练与实验协议：先区分 objective/loss、eval metric、selection rule，再检查 train/valid/test 和表示学习动作是否越界。
 - 第十一课进入证据归因：用 matched controls 和 2×2 矩阵区分表示效果、模型效果及交互，避免把联合比较误写成单一机制结论。
 - 第十二课进入稳健性：区分 model seed、split seed 和 subgroup 检查，强调配对差值、原始运行值、样本量与“不要根据 test 挑最好 seed”。
+- 2026-09-07：第十三课为工程支撑课（conda vs uv），服务服务器实验落地：导师账号 hxy、无 sudo、conda 在 ~/enter、/home 仅剩 732G。用户决定：conda 为主，环境放默认 ~/enter/envs 与导师环境共存（接受共享）；不再强调 uv 为主。

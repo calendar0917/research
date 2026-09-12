@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第十三课：conda 还是 uv 配实验环境</title>
+  <link rel="stylesheet" href="../assets/course.css">
+  <script defer src="../assets/interactive.js"></script>
+</head>
+<body>
+<main class="page">
+  <div class="kicker">Lesson 0013 · Reproducible environments</div>
+  <h1>环境管理：conda 还是 uv？</h1>
+  <p class="dek">复现实验的地基，是把“曾经能跑”变成“任何人都能确定地跑”。conda 与 uv 是两条路线，各有各的位置。</p>
+
+  <div class="card claim">
+    <span class="label">本课唯一胜利</span><br>
+    拿到一篇新论文，30 秒判断该用 uv 还是 conda；并且说得清解释器、包、环境分别放在哪里。
+  </div>
+
+  <h2>1. 先把“环境”拆成三层</h2>
+  <p>“配环境”其实是三件事：</p>
+  <div class="card formula">环境 = 解释器（Python 3.12？） + 包（torch？）+ 位置（装在哪、如何隔离）</div>
+  <p>conda 和 uv 都提供这三件事，但<b>由谁提供、装在哪</b>不一样。理解这张表，比背命令更重要：</p>
+  <table>
+    <thead>
+      <tr><th>维度</th><th>conda</th><th>uv</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>解释器</td><td>建环境时选定，环境自带</td><td>可自动下载（<code>uv python install 3.12</code>），也能复用系统/conda 的</td></tr>
+      <tr><td>包来源</td><td>conda 求解器 + conda-forge 编译好的二进制</td><td>pip 轮子生态 + 专用 index（PyTorch cu121/cu124、Astral GPU）</td></tr>
+      <tr><td>环境位置</td><td><code>envs_dirs</code>，默认 <code>&lt;conda前缀&gt;/envs</code></td><td>项目目录下的 <code>.venv</code></td></tr>
+      <tr><td>系统级库<br>(MPI、R、mkl、旧 CUDA)</td><td>强项：这些都做成包发布</td><td>几乎做不到，只能 pip 轮子</td></tr>
+      <tr><td>精确锁定</td><td><code>conda export --file conda-lock.yaml</code> 或 <code>conda list --explicit</code></td><td><code>uv.lock</code>（含哈希）</td></tr>
+      <tr><td>速度</td><td>慢（求解器、无共享缓存）</td><td>很快（Rust 实现，全局缓存复用）</td></tr>
+      <tr><td>无 sudo 时</td><td>需要已有 conda，用 <code>-p</code> 隔离</td><td>单二进制 curl 安装即可</td></tr>
+    </tbody>
+  </table>
+  <p>这张表不是“谁更好”，而是“谁负责哪一层”。<a href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">conda 官方环境文档</a>说明 <code>--prefix</code> 可把环境放到任意位置；<a href="https://docs.astral.sh/uv/guides/install-python/">uv 官方安装 Python</a>说明解释器自动下载行为。</p>
+
+  <h2>2. 决策规则（30 秒）</h2>
+  <div class="card">
+    <p><strong>uv</strong>：依赖都能从 PyPI 拿到轮子（torch、torch-geometric、ogb、numpy……全是的）。项目自带 <code>pyproject.toml + uv.lock</code> 最好。</p>
+    <p><strong>conda</strong>：需要 conda-forge 才有的原生二进制——MPI、R 接口、特定旧 CUDA 运行时、mkl、fortran 编译库。</p>
+    <p><strong>复现别人项目</strong>：有 <code>uv.lock</code> 就 <code>uv sync</code>；有 <code>environment.yml</code> 或 explicit spec 就 <code>conda create -f</code>。</p>
+    <p><strong>隔离原则</strong>：永远把环境建在“自己的目录”，不要写进共享前缀。uv 天然如此（项目 .venv）；conda 用 <code>conda create -p &lt;path&gt;</code>。</p>
+  </div>
+  <p>两条路线在这个场景下都能干净落地，选哪条取决于团队习惯：</p>
+  <ul>
+    <li><strong>conda 路线（组内惯用）</strong>：借导师的 conda 二进制 <code>conda create -n xxx python=3.12</code>，环境进默认 <code>~/enter/envs</code>——只要命名清晰、不动 base，共享目录完全可以接受。</li>
+    <li><strong>uv 路线（习惯 pip 时更顺）</strong>：自动下载解释器、环境落在项目 <code>.venv</code>，与组内环境完全隔离。</li>
+  </ul>
+  <p>共同原则：环境是实验的一部分——对复现负责任的不是“哪个工具酷”，而是你留下了 <code>environment.yml</code> / <code>uv.lock</code> 这类精确清单。</p>
+
+  <h2>3. uv 怎么用：一个目录一个项目</h2>
+  <pre><code># 1) 装 uv（单用户，无 sudo；装到 ~/.local/bin）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2) 每篇论文一个目录，复制已有 lock 的项目最快
+mkdir -p ~/papers/attn-gnn &amp;&amp; cd ~/papers/attn-gnn &amp;&amp; git clone &lt;repo&gt; .
+uv python install 3.12      # 可选：预先下载解释器（uv sync 也会自动装）
+uv sync                     # 按 uv.lock 精确重建 .venv
+
+# 3) 新项目：声明依赖，lock 自动生成
+uv init &amp;&amp; uv add torch==2.5.1 "torch-geometric==2.6.1" numpy
+
+# 4) 什么都不 source、不 activate，直接运行
+uv run python main.py</code></pre>
+  <p>要点：不需要 <code>source</code> 任何脚本，<code>uv run</code> 自动使用项目 <code>.venv</code>；<code>uv.lock</code> 与 <code>pyproject.toml</code> 一起提交 git，复现 = <code>git clone &amp;&amp; uv sync</code>。torch 的 CUDA 变体（cu118/cu124）通过 <code>[tool.uv.index]</code> + <code>[tool.uv.sources]</code> 指定，模板见<a href="../reference/python-env-cheatsheet.html">环境速查卡</a>。</p>
+
+  <h2>4. conda 兜底：借二进制，不借目录</h2>
+  <pre><code>eval "$(/home/hxy/enter/bin/conda shell.bash hook)"   # 只复活函数，不改 .bashrc
+conda create -p ~/papers/xxx/env -c conda-forge python=3.9 mpi4py
+conda activate ~/papers/xxx/env                         # 环境在自己目录，不进 ~/enter/envs
+conda export &gt; environment.yml                         # 记录：重建时 conda create -f</code></pre>
+  <p>conda 求解器慢，所以<b>一次性把包列全再 create</b>；环境里混用 pip 后，尽量“重建环境”而不是在原环境上继续 conda 操作（官方建议，见上表来源）。</p>
+
+  <h2>5. 现在练习</h2>
+  <p>服务器无 sudo，系统只有 Python 3.10，论文要求 Python 3.12，只允许你装一个工具——选哪个？</p>
+  <div class="quiz" data-answer="a" data-correct="正确：uv 自己下载解释器，还能锁精确版本，环境落在项目目录。" data-wrong="另一个工具连解释器都不帮你装，不适合这条约束。">
+    <button type="button" data-choice="a">装 uv 同步</button>
+    <button type="button" data-choice="b">装 conda 克隆</button>
+    <button type="button" data-choice="c">装 pip 全局</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>论文依赖 MPI 编译的缓存库和 R 语言接口，pip 没有现成轮子——哪条路线更稳？</p>
+  <div class="quiz" data-answer="b" data-correct="正确：conda-forge 把这些原生依赖做成二进制包，这正是它不可替代的强项。" data-wrong="纯 pip 生态优先提供 Python 轮子；原生系统库应交给 conda-forge。">
+    <button type="button" data-choice="a">只用 uv 解析</button>
+    <button type="button" data-choice="b">用 conda 创建</button>
+    <button type="button" data-choice="c">编译源码一次</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <p>三个月后同事想重建你的实验环境，哪个文件最可靠？</p>
+  <div class="quiz" data-answer="c" data-correct="正确：lock 文件锁定精确版本（uv.lock）或精确清单（conda-lock.yaml），依赖声明只是范围。" data-wrong="说明依赖范围的文件不等于能重建同一环境的证据，需要精确版本信息。">
+    <button type="button" data-choice="a">README 编号</button>
+    <button type="button" data-choice="b">训练代码文件</button>
+    <button type="button" data-choice="c">lock 锁定文件</button>
+    <p class="feedback" aria-live="polite"></p>
+  </div>
+
+  <h2>带走的研究句</h2>
+  <div class="card claim">
+    <strong>环境是实验的一部分，不是背景。</strong><br>
+    “我用 uv.lock / conda-lock.yaml 记录了完整环境；报告的结果对应这个锁定环境，而不是‘当时能跑的机器’。”
+  </div>
+  <p>打开<a href="../reference/python-env-cheatsheet.html">环境速查卡</a>（常用命令 + CUDA index 模板），回看<a href="../reference/experiment-protocol-card.html">实验协议速查</a>：环境锁定和协议一样，都是为了“能被别人重建”。</p>
+
+  <div class="card">
+    <span class="label">Primary sources</span>
+    <p><a href="https://docs.astral.sh/uv/concepts/projects/">uv: Projects</a>：pyproject + lock + sync 的机制，优先读“Locking and syncing”。</p>
+    <p><a href="https://docs.astral.sh/uv/guides/integration/pytorch/">uv: Using uv with PyTorch</a>：torch 的 CUDA 变体与专用 index 配置。</p>
+    <p><a href="https://docs.astral.sh/uv/guides/install-python/">uv: Installing and managing Python</a>：解释器自动下载与复用规则。</p>
+    <p><a href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">conda: Managing environments</a>：-p 位置、导出、lockfile 与 pip 混用的注意事项。</p>
+    <p><a href="https://conda-forge.org/">conda-forge</a>：确认某依赖是否有官方构建。</p>
+  </div>
+
+  <p class="footer">如果你后续在服务器上实操时遇到报错（下载失败、CUDA 版本不匹配、lock 冲突），把完整命令和输出贴给我；下一步会把本机项目在服务器上完整落一遍作为练习。</p>
+  <p><a href="0012-robustness-and-uncertainty.html">上一课：稳健性与不确定性</a> · <a href="../CURRICULUM.md">课程路线</a></p>
+</main>
+</body>
+</html>
