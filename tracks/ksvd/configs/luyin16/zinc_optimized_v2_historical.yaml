@@ -1,0 +1,66 @@
+# Optimized-baseline critical revalidation -- Part A (Question A).
+#
+# compact-v2 (historical no-topology architecture) retrained under the frozen
+# optimized compact-v4-hinge training protocol.
+#
+# This config is `zinc_hierarchical_patch_relation_context_compact_hybrid_v2_budget_reallocation.yaml`
+# with EXACTLY two changes:
+#   1. `representation.typed_tokenizer_version` is now pinned EXPLICITLY to
+#      `typed_tokenizer_v1_historical` (the historical certificate tokenizer).
+#      The historical v2 config omitted the key and therefore relied on the
+#      module default; the revalidation pins it so a future default change can
+#      never silently switch the tokenizer (which would break the
+#      single-variable comparison and the cache fingerprint).
+#   2. the training protocol moves to the frozen optimized values
+#      (max_epochs 240, patience 40); Adam / lr 1e-3 / batch 128 / wd 1e-5 /
+#      no scheduler / L1 / best-valid are unchanged from the canonical regime.
+#
+# There is NO global topology channel here (topology_mode absent -> "none"),
+# which is precisely the architecture variable under test (compact-v2 vs
+# compact-v4-hinge).
+protocol_id: luyin16-zinc-hierarchical-patch-relation-context-compact-hybrid-v2-budget-reallocation
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  # EXPLICIT pin: historical aliased rooted-topology (certificate) tokenizer.
+  typed_tokenizer_version: typed_tokenizer_v1_historical
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+
+model:
+  patch_hidden: 48
+  pair_hidden: 16
+  token_width: 16
+  embedding_mode: hybrid
+  embedding_rank: 4
+  hybrid_full_typed_tokens: 768
+  hybrid_full_parent_tokens: 32
+  center_context: true
+  center_context_hidden: 60
+  graph_head_hidden_0: 64
+  graph_head_hidden_1: 32
+  dropout: 0.05
+  # optimized single-stage protocol (frozen by compact_v4_training_sufficiency)
+  epochs: 240
+  patience: 40
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  evaluate_every: 1
+  device: cpu
+  parameter_audit: true
+  # compact-v2 selection-phase parameter count is 98,549 (<= 100k).
+  expected_max_trainable_params: 100000
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/optimized_baseline_critical_revalidation/scratch/optimized_v2_historical.json
+  markdown: tracks/ksvd/results/optimized_baseline_critical_revalidation/scratch/optimized_v2_historical.md

@@ -1,0 +1,135 @@
+decision_id: decision-top5-checkpoint-aggregation-stabilization-20260912
+created: '2026-09-12T04:35:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Execute the pre-registered Top-5 checkpoint aggregation stabilization audit and
+  register the verdict Decision Case D: CHECKPOINT AGGREGATION STABILIZATION
+  SUPPORTED, with the primary deployable-form result TOP-5 WEIGHT-SOUP
+  STABILIZATION SIGNAL. Authorize checkpoint_weight_averaging_protocol_design as
+  a future protocol family; do NOT authorize EMA/SWA and do NOT authorize
+  official-test evaluation.
+why_this_experiment: >-
+  The Internal Generalization & Training-Stochasticity Audit established
+  CHECKPOINT-SELECTION NOISE DOMINANT: the 82K compact-v4-smallhead seed spread on
+  official valid did not reproduce on an independent internal probe, while both
+  canonical runs showed material selection regret (mean 0.003381) and sharp
+  raw-800 minima. The prior 5-epoch moving-average selector was rejected. The one
+  remaining pre-registered question was whether a fixed multi-checkpoint
+  estimator built solely from the original 800-selection trajectory is more
+  robust than the single raw argmin. This is a zero-new-backbone-training
+  checkpoint-estimator experiment, not an architecture, representation,
+  regularization, EMA/SWA, optimizer, K-sweep, diversity, or benchmark stage.
+protocol: >-
+  K=5 frozen in aggregation_protocol_lock.json before any new evaluation;
+  checkpoint ranking strictly by 800-selection MAE with earliest-epoch ties; no
+  epoch spacing; no greedy/weighted soup; prediction aggregation = arithmetic
+  mean; weight aggregation = equal-weight arithmetic mean. Three locked
+  estimators: RAW = e_1; ENSEMBLE = mean of five checkpoint predictions; SOUP =
+  mean of five state_dicts. Stage A on the development-reuse 2000 probe is
+  descriptive with no continue/stop gate. confirmation_lock.json was written
+  after Stage A and before the first official-valid read. Stage B evaluates
+  official valid once on the locked estimators only.
+results:
+  K: 5
+  top5_epochs_I0T0: [232, 215, 223, 219, 228]
+  top5_epochs_I1T1: [173, 197, 183, 170, 195]
+  probe_raw_I0T0: 0.13167857976048253
+  probe_ensemble_I0T0: 0.1270497178510297
+  probe_soup_I0T0: 0.12751749921706504
+  probe_raw_I1T1: 0.1278573995383922
+  probe_ensemble_I1T1: 0.12282538730972446
+  probe_soup_I1T1: 0.1242676870196592
+  valid_raw_I0T0: 0.1672344087473466
+  valid_ensemble_I0T0: 0.16305601935380837
+  valid_soup_I0T0: 0.16306307677918813
+  valid_raw_I1T1: 0.15783199245104335
+  valid_ensemble_I1T1: 0.1526847812152817
+  valid_soup_I1T1: 0.15289840444450964
+  delta_soup_I0T0: 0.00417133196815847
+  delta_soup_I1T1: 0.004933588006533707
+  mean_delta_soup: 0.004552459987346089
+  delta_ensemble_I0T0: 0.004178389393538234
+  delta_ensemble_I1T1: 0.005147211235761645
+  mean_delta_ensemble: 0.00466280031464994
+  soup_bootstrap_ci95_low: 0.0026672963733668357
+  soup_bootstrap_ci95_high: 0.006456316867016712
+  soup_bootstrap_lower_gt_zero: true
+  G1_per_run_soup_non_degrade: true
+  G2_mean_soup_ge_0.0015: true
+  G3_soup_ci_lower_gt_zero: true
+  soup_pass: true
+  ensemble_mechanism_pass: true
+  decision_case: D
+  S_raw: 0.009402416296303256
+  S_soup: 0.010164672334678493
+  S_ens: 0.010371238138526667
+  S_soup_minus_S_raw: 0.0007622560383752364
+  selection_retention_rho: 0.9763360384623001
+  soup_params: 82115
+  soup_buffers: 0
+  soup_forward_ms: 18.739964987616986
+  raw_forward_ms: 18.51692597847432
+  ensemble_forward_ms: 95.44707961613312
+  ensemble_inference_multiplier: 5.154585579004263
+  integrity_gates_passed: true
+  official_test_loaded: false
+alternatives_rejected:
+  - item: tune K (2/3/4/8/10) on the 2000 probe or official valid
+    because: >-
+      K=5 was frozen before any new evaluation; tuning would be double dipping
+      and would invalidate the locked confirmation.
+  - item: select checkpoints for diversity / minimum epoch gap / remove adjacent
+      epochs
+    because: >-
+      the hypothesis is a fixed equal-weight average of the five lowest-800-MAE
+      states; trajectory clustering is part of the result.
+  - item: use prediction median instead of the arithmetic mean
+    because: >-
+      exactly one fixed aggregation rule is allowed.
+  - item: use greedy soup / weighted soup / inverse-loss weights
+    because: >-
+      the primary estimator is a strict equal-weight arithmetic parameter mean.
+  - item: use Stage A's favourable 2000-probe numbers to change anything
+    because: >-
+      the probe already participated in hypothesis formation; Stage A is a
+      development-reuse diagnostic with no gate.
+  - item: treat official valid as an unbiased project holdout
+    because: >-
+      it has been used throughout earlier development; this stage calls it a
+      locked development confirmation.
+  - item: run EMA/SWA after the soup success
+    because: >-
+      EMA/SWA are separate weight-space mechanisms requiring their own
+      pre-registered design; soup success authorizes protocol design only.
+  - item: open official test because both gates passed
+    because: >-
+      official test is hard-locked and no test evaluation is authorized.
+consequences:
+  - >-
+    checkpoint_weight_averaging_protocol_design is authorized: how a canonical
+    10K training protocol should lock an equal-weight checkpoint-averaging rule
+    without ever touching official test.
+  - >-
+    A fixed Top-5 equal-weight weight soup retains essentially all of the
+    prediction-ensemble benefit while remaining a single 82,115-parameter model
+    with ~1x forward cost (rho = 0.976; ensemble-vs-soup CIs include zero).
+  - >-
+    The two-run point spread was not reduced by the soup; the supported claim is
+    estimator stabilization within each trajectory, not cross-run variance
+    reduction.
+  - >-
+    Outputs committed under
+    results/top5_checkpoint_aggregation_stabilization/ (protocol lock,
+    checkpoint inventory, Top-5 manifests, soup construction + hashes, integrity
+    gates, development-reuse probe/summary, prediction disagreement, weight-space
+    diagnostics, confirmation lock, official-valid per-run + summary, paired
+    bootstrap, compute audit, final decision, Q1-Q20, soup states, 3 figures)
+    and notes/top5_checkpoint_aggregation_stabilization.md; tests 20 pass.
+revisit_if: >-
+  (1) A separate pre-registered checkpoint_weight_averaging_protocol_design stage
+  locks an averaging rule inside a canonical 10K training protocol, still without
+  official test. (2) EMA/SWA may only be considered under their own independent
+  pre-registration. Do NOT tune K, do NOT re-select membership, do NOT use
+  official valid to choose among estimators, do NOT train a new backbone here,
+  and never load official test without a separate locked benchmark stage.

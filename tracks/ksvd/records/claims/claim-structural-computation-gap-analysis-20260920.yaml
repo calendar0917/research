@@ -1,0 +1,79 @@
+claim_id: claim-structural-computation-gap-analysis-20260920
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+created: '2026-09-20T00:00:00'
+statement: >-
+  Static reconstruction of the real computation graphs shows that, at the same
+  parameter SCALE (~100K), the dominant structural-computation difference
+  between optimized compact-v4-hinge (99,613 params; single pass; complete
+  patch-pair set pooled into moments once; no per-cycle object; cycle info only
+  as a graph-level 25D vector) and the stronger higher-order reference
+  CIN-small (official config instantiated: 130,945 params; ring lifting to
+  explicit 2-cells; every 0/1/2-cell keeps a persistent learned state updated
+  over 2 rank-aware cellular message-passing layers along explicit
+  boundary/coboundary/upper-adjacency incidence; sum readout) is
+  incidence-preserving structural persistence of explicit higher-order objects.
+  "Structural Persistence" and "Incidence Persistence" are analysis terms
+  INTRODUCED IN THIS AUDIT, not literature terms. Evidence: the official
+  No-Rings ablation (CIN No-Rings small 0.174 +/- 0.006 vs CIN-small
+  0.094 +/- 0.004) shows the explicit 2-cells dominate the reference gain;
+  but CIN No-Rings (2 layers of persistent edge-state message passing, no
+  rings) is WEAKER than our single-pass model, so persistence/refinement alone
+  is insufficient and the ring OBJECT is the key. This hypothesis is NOT
+  equivalent to the closed frozen-statistic witnesses: those added readers /
+  statistics over FROZEN already-computed states with an unchanged computation
+  graph, whereas this changes the computation graph (new object class,
+  persistent learned state, explicit incidence).
+scope: >-
+  Analysis only. ZINC-12K dataset/split/target/metric verified identical to the
+  reference (PyG ZINC subset=True, 10000/1000/1000, MAE) from primary sources;
+  protocol / seeds / horizon / scheduler / parameter count / hardware are NOT
+  matched (benchmark_comparability verdict PARTIALLY VERIFIED), so the
+  performance gap (0.094 vs 0.125 test) is used ONLY as architecture headroom
+  evidence and never as mechanism proof (hard rule: no leaderboard inference).
+  Official test NEVER loaded. No training, no compact-v4 retraining, no
+  endpoint/covariance/triad re-run, no CIN implementation, no message passing
+  implemented, no new features, no compact-v7. Reference facts verified from
+  the paper (arXiv:2106.12575v3, NeurIPS 2021) and official code
+  (github.com/twitter-research/cwn, config cwn-zinc-small.sh). exact reference
+  parameter count is PARTIALLY VERIFIED (paper says only "in the order of
+  100k"; our instantiation gives 130,945).
+supporting_evidence:
+- notes/structural_computation_gap_analysis.md
+- results/structural_computation_gap_analysis/source_inventory.json
+- results/structural_computation_gap_analysis/benchmark_comparability.json
+- results/structural_computation_gap_analysis/compact_v4_computation_graph.json
+- results/structural_computation_gap_analysis/reference_computation_graph.json
+- results/structural_computation_gap_analysis/structural_object_lifecycle_v4.json
+- results/structural_computation_gap_analysis/structural_object_lifecycle_reference.json
+- results/structural_computation_gap_analysis/parameter_allocation_v4.csv
+- results/structural_computation_gap_analysis/parameter_allocation_reference.csv
+- results/structural_computation_gap_analysis/compute_profile_v4.json
+- results/structural_computation_gap_analysis/compute_profile_reference.json
+- results/structural_computation_gap_analysis/gap_evidence_matrix.csv
+- results/structural_computation_gap_analysis/top1_hypothesis.json
+- results/structural_computation_gap_analysis/minimal_falsification_plan.json
+- results/structural_computation_gap_analysis/final_decision.json
+- results/structural_computation_gap_analysis/answers_q1_q20.json
+- results/structural_computation_gap_analysis/information_path_examples.md
+- tests/test_structural_computation_gap_analysis.py
+contradicting_evidence:
+  - >-
+    The reference's mechanism is confounded: object vocabulary (rings),
+    incidence persistence, multi-rank interaction and depth (2 layers) cannot
+    be isolated from the published ablations; no 1-layer ring model is reported.
+  - >-
+    Parameter budget and training protocol differ (130,945 vs 99,613; 10 seeds
+    / <=1000 epochs / LR schedule / GPU vs 1-4 seeds / 240 epochs / CPU), so
+    part of any raw gap may be budget, not mechanism (G8 confound).
+  - >-
+    The incremental value of per-cycle objects over compact-v4's existing
+    graph-level topology channel (a surviving architecture GO, optimized
+    delta_topo +0.019846) is unproven and must be isolated by a
+    multiset-preserving incidence-breaking control.
+  - >-
+    The minimal architecture needs a small fixed number of rank-aware
+    incidence rounds, which touches structured propagation; if the effect
+    requires extensive iteration this is a method-philosophy tradeoff
+    (Decision Case B) and not authorized.

@@ -1,0 +1,87 @@
+decision_id: decision-compact-v4-sbci-nogo-20261007
+created: '2026-10-07T12:00:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Run exactly one pre-registered architecture falsification ticket
+  (SBCI_N3600_I0T0) and register Decision Case A:
+  SBCI MINIMAL SHARED-BASIS FACTORIZATION NO-GO. Do NOT buy seed1, do NOT run
+  N=7200, do NOT run N=1800, do NOT run seed2/seed3, do NOT rescue with K, width,
+  aggregation, relation-form or head changes, and never load official valid or
+  official test.
+why_this_experiment: >-
+  The information-bottleneck line is closed (raw-graph patch-system sufficiency
+  Case D; stagewise representation collision Case E) and the fixed
+  compact-v4-smallhead family is strongly data-limited (each 3600->7200 doubling
+  buys ~0.05 probe MAE). The localization audit (Case H) found no robust
+  target-independent support predictor of the gain. The only remaining
+  scientifically justified move was a function-class restriction: force
+  structural effects through a shared low-rank functional basis and factorised
+  relation-only composition.
+protocol: >-
+  Exact reused environment: D3600 nested target-independent subset (salt
+  compact-v4-sample-efficiency-nested-subset-v1-20260912; dataset hash
+  3be9f7e1...), 800 selection, 2000 probe; official valid/test never loaded;
+  Adam lr 1e-3 wd 1e-5 batch 128 L1 no scheduler, gradient clip 5.0, max 13,680
+  optimizer steps, selection every 57 steps, patience 40, earliest-step tie;
+  RAW = lowest-800-MAE checkpoint, SOUP = K=5 equal-weight parameter average.
+  SBCI = retained compact-v4 patch/embedding/global/topology branches plus
+  phi(48->32->16), psi(23->32->16) with g = 1 + tanh(psi), p_ij = z_i*z_j*g_ij,
+  5-bucket mean/std/log-count -> 165D, Linear(165,16) centre composer with
+  c_i = z_i + delta_i, graph mean/std/sqrt-sum -> 48D, R = 88D, head
+  88->16->1. Removed: pair projection, relation encoder, distance gate, pair
+  encoder, 213D centre update, 302D R and 302->13->13->1 head. Candidate
+  62,045 params (cap 82,115).
+results:
+  candidate_total_params: 62045
+  baseline_total_params: 82115
+  delta_params: -20070
+  phi_params: 2096
+  psi_params: 1296
+  centre_composer_params: 2656
+  head_params: 1441
+  shared_tensors_exact: 20
+  shared_max_abs_diff: 0.0
+  integrity_gates_passed: 25
+  integrity_gates_total: 25
+  R_dim: 88
+  run_id: N3600_I0T0
+  best_select_800_mae: 0.21551095060385705
+  best_step: 3534
+  optimizer_steps: 5814
+  eval_count: 102
+  effective_epochs: 200.49777777777777
+  early_stopped: true
+  boundary_pinned: false
+  sbci_soup_probe_mae: 0.18292410240857862
+  sbci_raw_probe_mae: 0.18754500717832706
+  baseline_soup_probe_mae_N3600_seed0: 0.176633
+  baseline_raw_probe_mae_N3600_seed0: 0.181330
+  delta_SE_soup: -0.006291102408578608
+  delta_SE_raw: -0.00621500717832707
+  DDR_seed0: -0.12808661960620996
+  bootstrap_soup_ci95: [-0.01276037395929452, -0.0001762832050444579]
+  bootstrap_raw_ci95: [-0.013077733074396384, 0.000696359263674814]
+  forward_ms_baseline: 19.425783399492502
+  forward_ms_sbci: 7.6550137950107455
+  seed1_run: false
+  N7200_run: false
+  N1800_run: false
+rejected:
+  - buying N3600 seed1 after a negative delta_SE
+  - running N7200 without a replicated low-data GO
+  - running N1800, seed2 or seed3
+  - K sweep, phi width sweep, attention, softmax, LayerNorm/dropout in SBCI modules
+  - residual q/centre bypass, pair MLP after product, additive pair branch
+  - task-specific global features
+  - official valid/test access
+  - any HPO or architecture sweep
+outputs:
+  - tracks/ksvd/results/compact_v4_sbci/
+  - tracks/ksvd/notes/compact_v4_sbci_sample_efficiency.md
+  - tracks/ksvd/tests/test_compact_v4_sbci.py
+revisit_if: >-
+  A genuinely different pre-registered function-class hypothesis with its own
+  frozen witness and matched controls, or new independent evidence that a
+  shared-basis parameterisation helps at the tested scale. The exact K=16
+  minimal factorisation is closed.

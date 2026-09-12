@@ -1,0 +1,52 @@
+claim_id: claim-compact-v4-learned-centre-composer-nogo-20260911
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-09-11T22:30:00'
+statement: >-
+  Under the frozen optimized compact-v4-hinge protocol, a minimal end-to-end
+  learned permutation-invariant relation-to-centre composer that operates
+  before centre contextualization does NOT improve compact-v4. The P1 candidate
+  replaces the fixed pre-pool compression [mean(q) 16 ; population_std(q) 16 ;
+  log1p(count) 1] = 33D per (centre,bucket) with a residual learned path:
+  shared phi = Linear(16,24)->ReLU->Linear(24,24); per-(centre,bucket)
+  permutation-invariant mean z_ib = mean_{q in Q_ib} phi(q) in R^24;
+  u_ib = [z_ib ; log1p(n_ib)] in R^25; shared rho = Linear(25,33)->ReLU->
+  Linear(33,33) with zero-initialised final Linear; a^P1_ib = a^fixed_ib + r_ib
+  (fixed moments retained); empty bucket residual exactly 0; R unchanged at
+  302D; centre-update input unchanged at 213D; 102,601 params = 99,613 baseline
+  + 2,988 (phi 1,008 + rho 1,980). P1 seed0 reaches official-valid MAE 0.147229
+  (best epoch 151, 191 epochs, 15,089 optimizer steps) vs the reused optimized
+  compact-v4 seed0 reference 0.146420, i.e. delta_P1,0 = -0.000809, far below
+  the pre-registered +0.004 architecture gate. The branch is genuinely alive and
+  trained (inference residual-zero ablation shifts predictions by max|delta| =
+  0.531, mean 0.037; phi gradient max 6.0e-3 and rho gradient max 0.177 every
+  epoch; learned residual norm grows 0.078 -> 0.81), all 17 Stage-0 integrity
+  gates pass, the original fixed pooling is reused verbatim, the seed0 baseline
+  initial tensors are matched exactly (48 shared tensors, max diff 0.0), and the
+  common-input bulk is safe (v4 0.09472 vs P1 0.09358, diff -0.00114). No
+  optimization pathology (no NaN, best epoch not boundary-pinned). Verdict:
+  Decision Case A - P1 MINIMAL LEARNED COMPOSER NO-GO.
+scope: >-
+  ZINC-12k official train/valid only; official test never loaded; one new
+  full-training run (P1 seed0); frozen optimized protocol (Adam lr 1e-3, wd
+  1e-5, batch 128, 240 ep, patience 40, no scheduler, L1, best-valid).
+evidence:
+  - >-
+    results/compact_v4_learned_centre_composer/architecture_lock.json,
+    baseline_inventory.json, parameter_audit.json, initialization_match.json,
+    integrity_gates.json, compute_audit.json, stage1_p1_seed0.json,
+    stage1_decision.json, common_input_bulk.json, composition_diagnostics.json,
+    final_decision.json, answers_q1_q20.json, curves/p1_seed0_curve.csv,
+    figures/ (2).
+  - >-
+    notes/compact_v4_learned_centre_composer.md (24 sections + Q1-Q20).
+  - tests/test_compact_v4_learned_centre_composer.py (22 pass).
+limitations: >-
+  Not a mathematical impossibility result: it is a statement about this minimal
+  residual-composer form under this protocol; the fixed mean/std/log-count is a
+  strong inductive bias. The pre-pooling mechanism itself was not tested (the
+  matched post-pooling capacity control was NOT purchased) because the
+  architecture gain did not clear +0.004. seed1 was not run. Do not rescue this
+  result with attention / larger widths / alternate pooling / bucket embeddings
+  / centre conditioning / relation refresh.

@@ -1,0 +1,130 @@
+decision_id: decision-compact-v4-smallhead-e2e-replicated-non-inferior-20260912
+created: '2026-09-12T09:40:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Execute the pre-registered end-to-end small-head compression confirmation and
+  register the verdict Decision Case D: END-TO-END SMALL-HEAD COMPRESSION --
+  REPLICATED NON-INFERIOR WITH FAVOURABLE POINT ESTIMATES. Replacing the
+  21,633-parameter graph head with the fixed 4,135-parameter raw small head
+  (82,115 total, -17,498) is validation-non-inferior on both development seeds:
+  D0 = -0.001086 (seed0 0.145334 vs 0.146420), D1 = -0.011273 (seed1 0.138059 vs
+  0.149332), mean D = -0.006180 <= +0.0015, both D_s <= +0.002 and both < 0.
+  Budget rule honoured exactly: baseline reused (never retrained), seed1
+  purchased only after seed0 passed, seed2/seed3 never run, released parameters
+  never reallocated, official test never loaded. The ~82.1K compact-v4-smallhead
+  becomes a new compact baseline candidate. The primary claim is compression
+  non-inferiority, NOT a small-head performance GO.
+why_this_experiment: >-
+  The Parameter Allocation & Representation Leverage audit identified the graph
+  head as an H-STRONG donor on frozen optimized backbones (frozen R -> refit
+  small head: seed0 0.143208, seed1 0.147754) but explicitly noted this is a
+  readout-fitting screening device, not a proof that the head can be deleted
+  during representation co-training. The only remaining budget-level question
+  was therefore whether the large head is redundant end to end. This experiment
+  closed that question with a from-scratch compressed architecture; it is not a
+  new representation, parameter reallocation, new recipient, architecture
+  expansion, P1/P2/cell rescue, HPO, head-family search or test benchmark.
+protocol: >-
+  Inherited frozen optimized protocol (Adam lr 1e-3, wd 1e-5, batch 128, max 240,
+  patience 40, no scheduler, gradient clip 5.0, L1, best official-valid, single
+  stage). Candidate: PatchPathSmallHeadModel -- all compact-v4 representation
+  modules unchanged, graph head replaced by the historical Sraw / Hsmall
+  GenericReader (302 -> 13 -> 13 -> 1, raw R, direct yhat=f(R), ReLU, no
+  LayerNorm, no dropout). Shared initial tensors copied exactly from the
+  canonical baseline init (40 tensors, max abs diff 0.0); small head initialised
+  independently under head_seed 0. R = 302D; 82,115 params. All Stage-0 gates
+  pass (G0.1-G0.10). No head-width / activation / normalisation / dropout /
+  residual / warm-start / distillation / scheduler / horizon change. Official
+  test blocked.
+results:
+  baseline_params: 99613
+  baseline_head_params: 21633
+  smallhead_params: 82115
+  smallhead_head_params: 4135
+  absolute_param_reduction: 17498
+  relative_total_reduction: 0.17565980343931012
+  relative_head_reduction: 0.8088568390884298
+  seed0_smallhead_valid: 0.14533376283763208
+  seed0_baseline_valid: 0.14642022556537995
+  D0: -0.0010864627277478722
+  seed0_best_epoch: 176
+  seed0_optimizer_steps: 17064
+  seed1_smallhead_valid: 0.13805893784115325
+  seed1_baseline_valid: 0.1493322635096847
+  D1: -0.011273325668531453
+  seed1_best_epoch: 143
+  seed1_optimizer_steps: 14457
+  mean_D: -0.006179894198139663
+  per_seed_gate: 0.002
+  mean_gate: 0.0015
+  per_seed_pass: true
+  mean_pass: true
+  seed0_shared_init_exact: true
+  seed1_shared_init_exact: true
+  pre_head_R_bit_identical: true
+  integrity_gates_passed: true
+  common_input_bulk_seed0_diff: -0.007967003339054007
+  common_input_bulk_seed1_diff: -0.006829002650211954
+  bulk_caution: false
+  forward_ms_baseline: 20.17696280963719
+  forward_ms_smallhead: 21.053912793286145
+  representation_drift_normalized_L2_mean: 1.2935799509646773
+  representation_drift_mean_cosine: 0.17248381165971263
+  seed2_run: false
+  seed3_run: false
+  params_reallocated: false
+  official_test_loaded: false
+alternatives_rejected:
+  - item: buy seed1 before seed0 cleared the non-inferiority gate
+    because: >-
+      the pre-registered budget rule purchases seed1 only if seed0 loses no more
+      than +0.002 MAE.
+  - item: run seed2 / seed3 because both seeds looked favourable
+    because: >-
+      this stage only decides whether the small head is worth becoming a compact
+      baseline candidate; a third/fourth seed is a different (performance) claim.
+  - item: reallocate the freed 17,498 parameters to a new pair / centre /
+      patch-encoder module
+    because: >-
+      compression-only stage; reallocation would re-open closed hypotheses
+      (P1/P2/cell/covariance/triad) and conflate two questions.
+  - item: use the frozen-head refit numbers as the result
+    because: >-
+      frozen readout fitting on a valid-selected backbone is screening
+      evidence, not an end-to-end compression proof.
+  - item: open official test after the two-seed success
+    because: >-
+      official test is hard-locked; a benchmark needs a separate locked stage.
+  - item: rescue / tune the head (width, LayerNorm, dropout, activation, warm
+      start)
+    because: >-
+      the small-head definition is frozen from prior evidence; there is no
+      head search in this stage.
+consequences:
+  - >-
+    compact-v4-smallhead (82,115 params, backbone unchanged, head 4,135) is a
+    new compact baseline candidate. Future architecture claims may still compare
+    against optimized compact-v4, but the smaller core is now available.
+  - >-
+    The "frozen readout capacity redundancy" hypothesis is shown to translate
+    into genuine end-to-end parameter redundancy for this representation and
+    protocol: the large head is not needed for joint representation learning.
+  - >-
+    The released 17,498 parameters remain unused. They may only be spent after a
+    separate, independently pre-registered, R-SUPPORTED representation
+    hypothesis, staying under the original ~100K ceiling.
+  - >-
+    Outputs committed under results/compact_v4_smallhead_e2e/ (lock, baseline
+    inventory + anchor, parameter audit, seed0/seed1 init matching, integrity
+    gates, compute audit, stage1, stage1 decision, stage2, replication decision,
+    two-seed summary, bulk seed0/seed1, representation drift, curves, final
+    decision, Q1-Q18, 3 figures) and
+    notes/compact_v4_smallhead_e2e_compression.md; tests 15 pass.
+revisit_if: >-
+  (1) A separate locked official-test benchmark stage is explicitly authorised.
+  (2) A genuinely new, independently pre-registered representation hypothesis
+  with its own witness may spend part of the released budget. Do NOT reopen
+  P1/P2/cell/covariance/triad/endpoint/FM/head-family, do NOT add a scheduler or
+  extend the horizon to rescue anything, do NOT run seed2/seed3 here, and never
+  load official test without a separate authorisation.

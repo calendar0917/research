@@ -1,0 +1,121 @@
+decision_id: decision-compact-v4-relation-refresh-nogo-20260911
+created: '2026-09-11T23:40:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Run the single authorise-and-stop falsification of the P2 hypothesis: the final
+  graph representation currently mixes the contextualized unary state h^(1) with
+  the stale pre-context relation state q^(0); replacing q^(0) in the final pair
+  summary with one parameter-shared refresh q^(1) = Q(P(h^(1)), r) should make
+  the final relation representable at the same contextual stage as the final
+  endpoints. Staged as: (Stage A) a zero-training, label-free staleness-magnitude
+  audit that either STOPS on near-identity or authorizes exactly one seed0 run;
+  (Stage B) P2 seed0 with a +0.004 architecture gate. Verdict: Stage A ADVANCED
+  (relation drift is non-trivial) but Stage B is Decision Case B - ONE-SHOT
+  RELATION REFRESH NO-GO. P2 seed0 valid 0.144457 vs reused optimized compact-v4
+  seed0 reference 0.146420 -> delta_P2,0 = +0.001963, a sub-threshold positive
+  strictly below +0.004. Budget rule honoured exactly: only ONE new
+  full-training run was spent; seed1 was NOT purchased.
+why_this_experiment: >-
+  P1 (learned centre composition) closed NO-GO and it was explicitly stated that
+  P2 is a SEPARATE pre-registered hypothesis, not a rescue. P2 tests computation
+  ORDERING / shared-operator reuse at the exact site P1 did not touch: compact-v4
+  computes q_ij once, before the centre update, but then pools that pre-context
+  relation into the same final readout as the post-context unary state. P2 asks
+  only whether the explicit relation object should be re-evaluated (with the same
+  learned operator) once the endpoint states have changed. It adds exactly zero
+  parameters, so any gain cannot be attributed to extra capacity.
+protocol: >-
+  Inherited frozen optimized protocol (Adam lr 1e-3, wd 1e-5, batch 128, max 240,
+  patience 40, no scheduler, L1, best official-valid, single stage). Candidate:
+  compact-v4 unchanged through centre contextualization; one parameter-shared
+  refresh u^(1) = P(h^(1)), q^(1) = Q(u^(1), r) reusing the SAME pair_projection,
+  pair_encoder, relation_encoder, distance_gate tensors and the same r_ij; final
+  pair moments pool q^(1); q^(1) does not feed a centre update; refresh count = 1;
+  no alpha mixing; no concat; R = 302D; total params = 99,613 (delta 0). Stage A
+  probe = 2000 official-train molecules from the reused target-independent
+  deterministic hash split (train_probe role of
+  optimized-manifold-broad-state-screen-v1-20260919). No change to tokenizer /
+  radius / patch encoder / pair definition / relation descriptor / q dim / bucket
+  count / centre pooling / final pair moments / global descriptors / topology
+  branch / graph head / optimizer / lr / batch / wd / horizon / patience.
+results:
+  stageA_near_identity: false
+  stageA_advance: true
+  stageA_median_cosine: 0.9826642274856567
+  stageA_median_pair_summary_drift: 0.19879475235939026
+  stageA_mean_prediction_shift: 0.06695546209812164
+  stageA_n_relations: 528582
+  p2_seed0_valid: 0.14445687556866324
+  p2_seed0_best_epoch: 156
+  p2_seed0_epochs_run: 196
+  p2_seed0_optimizer_steps: 15484
+  v4_seed0_reference_valid: 0.14642022556537995
+  delta_arch0: 0.0019633499967167123
+  architecture_gate: 0.004
+  passes_arch_gate: false
+  parameter_neutral: true
+  p2_total_params: 99613
+  delta_params: 0
+  initialization_match_exact: true
+  branch_alive: true
+  refresh_off_valid_mae: 0.1751241186687839
+  refresh_off_mean_abs_prediction_shift: 0.09319622914842329
+  q1_grad_norm_max: 0.041839851986003825
+  pair_encoder_grad_norm_max: 5.701518396262522
+  common_input_bulk_safe: true
+  common_input_bulk_diff: -0.0009901862837578684
+  forward_overhead_ratio: 0.6131164591686522
+  seed1_run: false
+  official_test_loaded: false
+alternatives_rejected:
+  - item: run seed1 to "see" even though seed0 gain is +0.001963
+    because: >-
+      pre-registered rule: a sub-threshold positive (even +0.002/+0.003) still
+      STOPs; expensive full training is continued only for clear architecture
+      effects (>= +0.004 on seed0). No seed2/seed3 exist in this stage.
+  - item: rescue with a second refresh / depth sweep (T=2,3,4) / separate q1
+      weights / alpha mixing / concat [q0;q1] / attention / larger q dim /
+      learned pooling / P1 composer / new or changed topology
+    because: >-
+      each is explicitly forbidden by the P2 mandate; a gain that requires them
+      is a different (generic message-passing) architecture family, not the
+      one-shot explicit relation refresh under test.
+  - item: report the seed0 gain as a GO and buy seed1
+    because: >-
+      +0.001963 < +0.004; the mandate forbids continuing seed1 below the gate.
+  - item: treat Stage A's non-negligible drift as evidence that refresh helps
+    because: >-
+      Stage A is a label-free magnitude audit, not a performance test; it only
+      establishes that the refresh is non-trivial enough to spend one seed0 run.
+  - item: load official test
+    because: hard-locked throughout architecture development.
+consequences:
+  - >-
+    The one-shot parameter-shared relation-refresh architecture (q^(1) replacing
+    q^(0) in the final pair summary) is closed under this protocol; compact-v4
+    remains the current candidate.
+  - >-
+    Positive but sub-threshold signal: the trained model does depend on q^(1)
+    (refresh-off valid 0.175 vs on 0.144), so the branch is real and used, but
+    the effect does not clear the bar. No mechanism-isolation claim is made
+    (refresh-off is a dependency check only).
+  - >-
+    Together with P1 (learned centre composer NO-GO) and compact-v4-cell (cycle
+    object NO-GO), a clean P2 failure weakens the "compact-v4 just has a small
+    local computation-ordering defect" explanation and points future work toward
+    broader representation-family / parameter-allocation redesign rather than
+    further local patches of the existing computation graph.
+  - >-
+    Outputs committed under results/compact_v4_relation_refresh/ (Stage A lock,
+    probe manifest, integrity gates, drift/prediction-shift metrics and decision;
+    Stage B architecture/parameter/init/compute audits, seed0 result/decision,
+    common-input bulk, mechanism diagnostics, final decision, Q1-Q20, curve, 3
+    figures) and notes/compact_v4_relation_refresh.md; tests 24 pass.
+revisit_if: >-
+  Reopen only with a genuinely different, independently pre-registered
+  hypothesis at the same site (e.g. a single refresh that is NOT parameter
+  neutral, or a refresh whose cost is reduced by parameter reallocation). Do NOT
+  tune the refresh count / placement / q width / pooling / mixing to rescue this
+  specific NO-GO, do NOT stack P1 + refresh + cells + attention at once, and
+  never load official test without a separate authorisation.

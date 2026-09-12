@@ -1,0 +1,91 @@
+decision_id: decision-parameter-allocation-representation-leverage-caseC-20260912
+created: '2026-09-12T00:00:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  COMPRESSION-ONLY OPPORTUNITY (mandate Case C). A strongly-supported parameter
+  donor exists (graph head, H-STRONG: a fixed 4,135-param raw small head improves
+  valid on both optimized backbones while removing 17,498 params, 80.9%), but NO
+  representation-forming recipient is R-SUPPORTED. The identity lookup is L-NO
+  (already frequency-adaptive; no positive SVD saving). Therefore this stage does
+  NOT authorize any budget-reallocation performance architecture and does NOT open
+  a next full-training run. The scientifically valid next action, if any, is a
+  compactness/compression experiment, not a larger middle network.
+why_this_experiment: >-
+  Three consecutive local repairs (P1 composer, P2 refresh, compact-v4-cell) and
+  the frozen-statistic witness family all returned clean or sub-threshold NO-GOs.
+  This stage re-posed the question at the budget level: which parameters are
+  identity storage, shared structural computation, and late readout, and is any
+  region an evidence-supported donor/recipient pair.
+protocol: >-
+  Analysis-only / zero-full-backbone-training. Reused the two existing optimized
+  compact-v4-hinge checkpoints (no training), the deterministic official-train
+  hash split (7200/800/2000), SVD ranks chosen mechanically from 99%/99.9%
+  Frobenius energy, one fixed small raw head (no search), official test never
+  loaded. 15 integrity tests pass.
+results:
+  verdict: COMPRESSION-ONLY OPPORTUNITY
+  case: Case C
+  donor_head: H-STRONG
+  donor_lookup: L-NO
+  recipient_supported: false
+  head_seed0_delta_valid: -0.0032126547731459176
+  head_seed1_delta_valid: -0.0015783869549632068
+  head_params_saved: 17498
+  lookup_factorized_savings_r99: -65595
+  lookup_factorized_savings_r999: -72396
+  top1_hypothesis_authorized: false
+  next_experiment_authorized: false
+  official_test_loaded: false
+  new_full_training_runs: 0
+alternatives_rejected:
+  - item: authorize a budget-neutral performance architecture that shrinks the
+      head and reallocates ~17.5K into the pair/centre encoder
+    because: >-
+      P1 learned composer, P2 one-shot refresh, endpoint association, centre
+      covariance and triadic binding are all NO-GOs; the mechanism space is
+      equivalently closed, so this would be an unauthorized re-run.
+  - item: authorize a higher-order structural-persistence recipient
+    because: >-
+      compact-v4-cell (explicit persistent cycle cells, T=2) is a NO-GO; the
+      audit rule forbids rescuing it without a genuinely different object class
+      and a fresh pre-registered witness.
+  - item: treat the identity lookup as a donor and prune or re-factorize it
+    because: >-
+      rare rows are already rank-4 factorized and the frequent 768 rows are
+      genuinely rank-16; a global rank-15/16 factorization has negative saving.
+      Frequency pruning is explicitly not authorized (would reopen OOV/aliasing).
+  - item: declare patch_encoder R-SUPPORTED because h0 has low participation ratio
+    because: >-
+      low activation rank is bandwidth evidence only; it neither proves a
+      bottleneck nor isolates an untested representation principle.
+  - item: load official test or re-tune on valid
+    because: official test is hard-locked; canonical valid-selected checkpoints
+      make this screening evidence, not a clean compression proof.
+consequences:
+  - >-
+    compact-v4-hinge remains the current candidate at 99,613 params; no new
+    architecture is authorized by this audit.
+  - >-
+    The graph head is recorded as a strongly-supported donor for any future
+    budget-neutral compactness experiment (a ~4-8K head budget is plausible), but
+    the freed parameters must NOT be spent without a justified recipient.
+  - >-
+    The identity lookup is recorded as already frequency-adaptive and not a
+    compression donor; rare-token pruning stays closed.
+  - >-
+    Outputs committed under results/parameter_allocation_representation_leverage/
+    (inventory, protocol lock, ledger, class summary, reuse, frequency rows /
+    summary, embedding spectrum, low-rank accounting / drift / valid screen,
+    head protocol lock, per-seed head reducibility, head donor summary, activation
+    rank, gradient sensitivity, evidence matrix, donor/recipient/top1/final
+    decisions, Q1-Q20, 4 figures) plus
+    notes/parameter_allocation_representation_leverage.md and
+    tests/test_parameter_allocation_representation_leverage.py (15 pass).
+revisit_if: >-
+  (1) A pre-registered representation-forming recipient with its own mechanism
+  witness that is not equivalent to P1/P2/cell/covariance/triad, together with a
+  budget-neutral (95K-105K, hard ceiling 105K) seed0-only optimized-protocol run
+  against 0.146420; or (2) a genuinely different (non-post-hoc) structured
+  storage scheme for the identity lookup with its own witness. Official test
+  remains locked until a separate authorisation.

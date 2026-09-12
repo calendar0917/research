@@ -1,0 +1,79 @@
+claim_id: claim-parameter-allocation-representation-leverage-20260912
+created: '2026-09-12T00:00:00'
+kind: claim
+study_id: zinc-context-gap
+status: supported
+claim: >-
+  A zero-training parameter-allocation audit of the two optimized compact-v4-hinge
+  checkpoints (seed0 valid 0.146420, seed1 valid 0.149332; 99,613 params; R 302D)
+  separates the budget into identity storage (36,676; 36.82%), shared structural
+  operators (37,616; 37.76%), late readout (21,633; 21.72%) and global structural
+  prior (3,688; 3.70%). The graph head is a STRONGLY SUPPORTED reallocation donor:
+  a single fixed small raw head (302->13->13->1, 4,135 params, direct yhat=f(R),
+  raw R, L1/Adam(lr 1e-3,wd 0), 7200 fit/800 selection, horizon 800, head_seed 0)
+  gives valid 0.143208 vs 0.146420 (seed0, delta -0.003213) and 0.147754 vs
+  0.149332 (seed1, delta -0.001578), i.e. it improves valid while removing 17,498
+  params (80.9%). The identity lookup is NOT a simple donor: its effective 16-D
+  table has 99% energy rank 15/16 (seed0/seed1), the 768 frequent rows are
+  full-rank-16 and the 6,017 rare rows are already rank-4 factorized, so a global
+  rank-15/16 factorization has negative hypothetical saving (-65,595 / -72,396)
+  and r99/r999 frozen perturbation drift/valid change is negligible. No
+  representation-forming region is R-SUPPORTED: pair path and centre update are
+  R-DISFAVORED (P1 composer, P2 refresh, endpoint/covariance/triad NO-GOs),
+  higher-order structural persistence is R-DISFAVORED (compact-v4-cell NO-GO), and
+  patch_encoder is only R-UNCLEAR.
+evidence:
+  parameter_ledger_sum: 99613
+  parameter_ledger_unique_tensors: true
+  identity_storage_params: 36676
+  identity_storage_pct: 36.81848754680614
+  shared_operator_params: 37616
+  late_readout_params: 21633
+  global_structural_prior_params: 3688
+  head_small_params: 4135
+  head_params_saved: 17498
+  head_reduction_frac: 0.8088568390884298
+  head_seed0_delta_valid: -0.0032126547731459176
+  head_seed1_delta_valid: -0.0015783869549632068
+  head_mean_delta_valid: -0.002395520864054562
+  head_label: H-STRONG
+  lookup_label: L-NO
+  lookup_r99_rank_seed0: 15
+  lookup_r99_rank_seed1: 16
+  lookup_factorized_savings_r99: -65595
+  lookup_factorized_savings_r999: -72396
+  embedding_stable_rank_seed0: 1.9923088675235867
+  embedding_stable_rank_seed1: 2.9442837028048445
+  embedding_entropy_rank_seed0: 4.66216043016398
+  embedding_entropy_rank_seed1: 6.83889835664602
+  coverage_top10_fraction: 0.8895167138614545
+  coverage_top25_fraction: 0.9527203190828096
+  coverage_top50_fraction: 0.9821897230471718
+  patch_per_molecule: 23.051
+  pair_per_molecule: 264.291
+  activation_rank_h0_over_dim: 0.15742876928362187
+  activation_rank_q_over_dim: 0.2784086171149575
+  activation_rank_R_over_dim: 0.01060526261818599
+  recipient_supported: false
+  official_test_loaded: false
+  full_backbones_trained: 0
+  small_heads_fit: 2
+caveats:
+  - >-
+    The optimized backbones are valid-selected canonical checkpoints, so the
+    small-head screen is parameter-donor screening evidence, NOT a clean
+    independent end-to-end compression proof.
+  - >-
+    Frozen post-hoc low-rank compression failing (or not saving) does not prove
+    that end-to-end structured sharing is impossible; it only rejects simple
+    post-hoc linear low-rank compression at the pre-registered ranks.
+  - >-
+    Low activation participation ratio is bandwidth evidence only; it is not an
+    instruction to reduce or increase any dimension.
+  - >-
+    Gradient magnitude at a trained checkpoint is a descriptive local
+    sensitivity, not a capacity-importance ranking.
+artifacts:
+  results_dir: tracks/ksvd/results/parameter_allocation_representation_leverage/
+  note: tracks/ksvd/notes/parameter_allocation_representation_leverage.md
+  tests: tracks/ksvd/tests/test_parameter_allocation_representation_leverage.py

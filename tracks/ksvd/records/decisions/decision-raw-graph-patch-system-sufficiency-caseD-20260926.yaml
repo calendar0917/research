@@ -1,0 +1,80 @@
+decision_id: decision-raw-graph-patch-system-sufficiency-caseD-20260926
+created: '2026-09-26T00:00:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Execute the pre-registered zero-full-training Raw-Graph -> Patch-System
+  Sufficiency Audit and register Decision Case D: CURRENT PRE-NEURAL PATCH
+  SYSTEM SUFFICIENCY NOT REFUTED. On the official-train 10K molecules the
+  complete model-accessible pre-neural signature P3 has ZERO raw-non-isomorphic
+  collisions and empirical alias lower bound LB(P3) = 0.0 (< 0.002 material
+  gate). The historical tokenizer alias is real at P0 (2 raw-non-isomorphic
+  token-level classes, LB 7.95e-5) but is fully resolved by the continuous
+  146D shell descriptor at P1. On the frozen target-independent 7200/2000/800
+  split the current patch-system geometry is MORE target-local than both
+  generic raw-graph references: eta(PATCH_FULL) = 0.5459 vs eta(RAW) = 0.6337,
+  eta(WL) = 0.7455, eta(SP) = 0.6024; Delta_pre = -0.0878 (95% CI
+  [-0.0999,-0.0748]), 800 replication -0.0909, both raw views and the
+  collision metric agree. No representation-family redesign is authorized
+  (top1_pre_neural_hypothesis.json authorized_for_design = false,
+  full_training_authorized = false). Zero neural training; official valid and
+  official test never loaded.
+why_this_experiment: >-
+  The previous stagewise audit began at X_patch, which is already a human
+  structural abstraction, so it could not test the G_raw -> F_pre(G) boundary.
+  Every local architectural patch on the compact-v4 line had already returned a
+  clean or sub-threshold NO-GO, leaving the pre-neural abstraction as the only
+  unaudited boundary that could explain a target-relevant information or
+  geometry loss. The audit was therefore designed to either authorise one
+  pre-neural representation-family redesign hypothesis or formally close the
+  "where did information get lost?" line.
+protocol: >-
+  Phase H (hard aliasing, all 10K official train): progressive deterministic
+  signatures P0 token multiset, P1 full patch-object system (token + parent +
+  146D shell descriptor bytes), P2 canonical patch-relational object system
+  (relation descriptor bytes + bucket + incidence), P3 P2 + 62D global + 25D
+  topology. Canonicalisation = coloured-incidence pynauty certificate +
+  canonical semantic colour sequence (exact coloured-graph invariant);
+  permutation invariance and VF2 collision checks verified. Target-free
+  signatures SHA-256 locked before LB. Phase S (soft locality): 7200 reference
+  / 2000 primary / 800 replication official-train split; raw references =
+  edge-aware typed 1-WL rounds 0..4 and typed shortest-path histogram; patch
+  blocks B1 identity, B2 217D patch-descriptor sketch, B3 217D pair-relation
+  sketch, B4 z-scored 87D global+topology; per-block random-pair median
+  scaling; k=8; all neighbour manifests SHA-256 locked before targets.
+  eta = V8/V_rand; Delta_pre = eta(PATCH_FULL)-eta(RAW); paired bootstrap
+  B=2000 over query molecules.
+results:
+  split: 7200 reference / 2000 primary (train_probe) / 800 replication (adapter_selection)
+  P0: {unique: 9995, nonsingleton: 5, collision_mass: 0.00100, raw_nonisomorphic: 2, lb: 0.0000795}
+  P1: {unique: 9997, nonsingleton: 3, collision_mass: 0.00060, raw_nonisomorphic: 0, lb: 0.0}
+  P2: {unique: 9997, nonsingleton: 3, collision_mass: 0.00060, raw_nonisomorphic: 0, lb: 0.0}
+  P3: {unique: 9997, nonsingleton: 3, collision_mass: 0.00060, raw_nonisomorphic: 0, lb: 0.0}
+  eta_probe: {RAW: 0.6337, WL: 0.7455, SP: 0.6024, PATCH_LOCAL: 0.5865, PATCH_PAIR: 0.5888, PATCH_FULL: 0.5459}
+  delta_pre: -0.0878
+  delta_pre_ci: [-0.0999, -0.0748]
+  delta_pre_selection: -0.0909
+  raw_reference_robustness: {patch_minus_wl: -0.1996, patch_minus_sp: -0.0565, unstable: false}
+  collision_consistency: {raw: 0.0846, patch_full: 0.0464, metric_inconsistent: false}
+  decision_case: Case D
+  decision_title: CURRENT_PRE_NEURAL_PATCH_SYSTEM_SUFFICIENCY_NOT_REFUTED
+next_steps:
+  - >-
+    Do NOT reopen the missing-information / collision-hunting line. The
+    scientifically justified next stage is an Inductive-Bias & Sample-Efficiency
+    Audit (function smoothness, representation density, reusable compositional
+    bias, data scaling), not another structural feature/module.
+forbidden:
+  - any full-model training / neural probe fitting
+  - EMA / SWA / soup / checkpoint averaging work
+  - official valid access
+  - official test access
+  - reopening P1/P2/cell/covariance/triad/endpoint/corrected-tokenizer/larger-radius/FM-head
+integrity:
+  official_valid_loaded: false
+  official_test_loaded: false
+  zero_full_training: true
+  manifests_locked_before_target: true
+outcome: >-
+  Case D. Pre-neural patch-system sufficiency not refuted; no redesign
+  authorized; next direction is inductive bias / sample efficiency.

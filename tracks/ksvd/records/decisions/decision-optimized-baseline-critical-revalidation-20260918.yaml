@@ -1,0 +1,72 @@
+decision_id: decision-optimized-baseline-critical-revalidation-20260918
+created: '2026-09-18T00:35:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Optimized-baseline critical revalidation completed with EXACTLY 2 new
+  full-training runs (one per branch, seed0). Part A — TOPOLOGY STRONGLY
+  SURVIVES: optimized compact-v2 seed0 valid 0.166266 vs optimized
+  compact-v4-hinge seed0 0.146420, delta_topo = +0.019846 >= +0.006
+  (A-STRONG), and larger than the historical +0.014093 -> KEEP TOPOLOGY AS CORE
+  ARCHITECTURE COMPONENT; seed1 NOT purchased (reserved for future paper-core
+  confirmation). Part B — CORRECTED TOKENIZER CLEAR NO-GO: optimized
+  corrected-token v4 0.150849 vs optimized historical-token v4 0.146420,
+  corrected worse by +0.004429 >= +0.004; longer training relieved
+  (+0.008093 -> +0.004429) but did not rescue the corrected exact-token
+  representation; seed1 NOT purchased. PERFORMANCE/CORRECTNESS TRADEOFF
+  REMAINS: keep the historical aliased representation for the performance model
+  (with accurate terminology: historical aliased rooted-topology token, NEVER
+  "exact typed patch token") and retain the corrected tokenizer as the
+  semantically-correct method. Official test was never loaded.
+alternatives_rejected:
+- item: buy optimized-v2 seed1 for Part A
+  because: >-
+    the A-STRONG seed0 gate fired (delta_topo +0.019846, far above +0.006).
+    The discovery of an under-trained baseline should reduce unnecessary
+    experimentation; one-seed is the default exploration budget and a second
+    seed is purchased only on genuine decision uncertainty or a threat to a core
+    claim. Neither applies.
+- item: buy corrected-token seed1 for Part B
+  because: >-
+    corrected degradation +0.004429 meets the pre-registered CLEAR NO-GO clause
+    (>= +0.004); the result is not in the reopen band (delta_correct >= +0.003
+    or |delta_correct| <= 0.002) nor the weak-negative tradeoff band.
+- item: run seed2 / seed3 anywhere
+  because: >-
+    this is exploratory architecture revalidation, not a final paper benchmark;
+    seed2/3 belong to future candidate confirmation and are forbidden here.
+- item: re-run the full historical experiment set against the stronger baseline
+  because: >-
+    only claims both central to the method and plausibly sensitive to the
+    training horizon were reopened. A stronger baseline must reduce
+    experimentation, not trigger a mechanical rerun of every historical negative
+    result (radius-3, local ring conditioning, v5 quantile, v6 factorization,
+    endpoint association, centre covariance, triadic binding, FM, head-family,
+    and the 277k model are explicitly NOT re-run).
+- item: auto-extend the horizon to 400 for a variant whose best epoch pins 240
+  because: >-
+    this stage is not HPO; the pre-registered response would be to record
+    horizon_boundary_warning = true and defer saturation study until the variant
+    becomes a real candidate. (In fact both new runs early-stopped well inside
+    the horizon: best epochs 166 and 146.)
+- item: touch official test / build optimized OOF models / rebaseline the 277k model
+  because: >-
+    official test is forbidden in this screening stage; the expensive optimized
+    OOF reconstructions are only justified after a cheap broad frozen-state
+    diagnostic turns positive; the 277k fair rebaseline is only warranted if the
+    paper needs a strict compact-vs-277k parameter-efficiency claim.
+consequences:
+- The optimized compact-v4-hinge baseline (valid 0.147201 +/- 0.003697, test
+  0.125179 +/- 0.003374) remains the comparison baseline; the topology GO is
+  strengthened, and the corrected-tokenizer performance NO-GO stands under fair
+  optimization.
+- The correctness fact about the historical tokenizer is preserved and must be
+  reflected in any paper terminology.
+- Prior NO-GO representation diagnostics still describe the historical
+  (under-trained) manifold; they are not revalidated here.
+revisit_if: >-
+  A future stage wants a paper-core topology claim (then run optimized-v2 seed1)
+  or wants to switch the performance model to the corrected tokenizer; also, if
+  a cheap broad optimized-manifold frozen-state diagnostic turns clearly
+  positive, then build optimized OOF models and re-open the relevant
+  representation diagnostics.

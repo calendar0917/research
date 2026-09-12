@@ -1,0 +1,76 @@
+decision_id: decision-compact-v4-cell-minimal-falsification-nogo-20260921
+created: '2026-09-21T00:00:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Run the single authorised representation-family falsification of the Top-1
+  hypothesis (explicit persistent cycle-cell objects + incidence-aware learned
+  computation). Verdict: Decision Case A - CELL REPRESENTATION NO-GO under the
+  locked protocol. True-cell seed0 valid 0.147462 vs optimized compact-v4 seed0
+  reference 0.146420 -> delta_arch0 = -0.001042, far below the +0.004
+  architecture gate. Budget rule honoured exactly: only ONE new full-training
+  run was spent; the broken-incidence control was NOT purchased and seed1 was
+  NOT run.
+why_this_experiment: >-
+  The Same-Budget Structural Computation Gap Analysis authorised exactly one
+  representation-family hypothesis: cycles as graph-level descriptors -> cycles
+  as persistent identity-bearing objects with explicit lower<->cycle incidence.
+  Architecture value and mechanism evidence are different questions, so the
+  pre-registered budget staged True-seed0 (architecture gate) before any
+  broken-incidence control.
+protocol: >-
+  Inherited frozen optimized protocol (Adam lr 1e-3, wd 1e-5, batch 128, max
+  240, patience 40, no scheduler, L1, best official-valid, single stage).
+  compact-v4-cell: induced (chordless) cycles length 3..8, d_cell=48, exactly
+  T=2 pre-registered incidence rounds (lower->cell then cell->lower, shared
+  params), cell summary [mean; std; log1p(count)] = 97D, R = [R_original 302;
+  S_cell 97] = 399D; global topology hinge branch preserved; 113,069 params.
+results:
+  true_cell_seed0_valid: 0.1474619060754776
+  true_cell_seed0_best_epoch: 145
+  v4_seed0_reference_valid: 0.14642022556537995
+  delta_arch0: -0.0010416805100976478
+  architecture_gate: 0.004
+  cell_branch_alive: true
+  zero_cell_summary_max_abs_diff: 1.954267978668213
+  common_input_bulk_safe: true
+  broken_control_run: false
+  seed1_run: false
+  official_test_loaded: false
+alternatives_rejected:
+  - item: purchase the broken-incidence control after a sub-threshold seed0
+    because: >-
+      pre-registered rule: do not pay for the control unless the architecture
+      itself clears +0.004 valid MAE; a whole-architecture gain below the gate
+      makes a mechanism run uninformative.
+  - item: run seed1 to "see"
+    because: >-
+      seed1 is conditional on seed0 passing both the architecture gate and the
+      mechanism gate; only True-seed0 runs first.
+  - item: rescue by more rounds / wider cell dim / attention / bigger head /
+      removing topology
+    because: >-
+      each is explicitly forbidden in this stage; a gain requiring extensive
+      iteration would reclassify the hypothesis to the method-philosophy
+      tradeoff, not extend it.
+  - item: load official test
+    because: hard-locked throughout architecture development.
+consequences:
+  - >-
+    The explicit persistent cycle-cell branch is not supported at the minimal
+    budget under the frozen protocol; compact-v4-hinge remains the current
+    candidate.
+  - >-
+    The incidence mechanism is untested (not refuted): the architecture gate
+    failed first, so no incidence claim is made in either direction.
+  - >-
+    Outputs committed under results/compact_v4_cell/ (locks, audits, integrity
+    gates, stage1 result/decision, common-input bulk, final decision, Q1-Q20,
+    curves, 3 figures) and notes/compact_v4_cell_minimal_falsification.md;
+    tests/test_compact_v4_cell.py (21 pass).
+revisit_if: >-
+  Reopen only with a genuinely different structural object class or a
+  pre-registered mechanism witness that does not depend on this T=2
+  architecture clearing +0.004 first; do NOT tune width/depth/rounds or add
+  statistics/readouts to rescue this result, and never use official test
+  without a separate authorisation.

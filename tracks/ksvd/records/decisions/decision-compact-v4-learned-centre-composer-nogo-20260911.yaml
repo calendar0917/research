@@ -1,0 +1,95 @@
+decision_id: decision-compact-v4-learned-centre-composer-nogo-20260911
+created: '2026-09-11T22:30:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Run the single authorise-and-stop falsification of the P1 hypothesis: a small
+  end-to-end learned permutation-invariant relation composer placed BEFORE
+  centre contextualization can extract task-useful composition structure that
+  the fixed coordinatewise mean/std/log-count cannot. Verdict: Decision Case A -
+  P1 MINIMAL LEARNED COMPOSER NO-GO under the locked protocol. P1 seed0 valid
+  0.147229 vs reused optimized compact-v4 seed0 reference 0.146420 ->
+  delta_P1,0 = -0.000809, far below the +0.004 architecture gate. Budget rule
+  honoured exactly: only ONE new full-training run was spent; the matched
+  post-pooling capacity control was NOT purchased and seed1 was NOT run.
+why_this_experiment: >-
+  compact-v4 spends learned computation on the pair relation q_ij then
+  compresses it with a hand-fixed operator before the centre update. This is the
+  one architecture assumption under test: unlike the historical frozen-state
+  probes (which added a statistic/readout on top of a frozen q/h) and unlike the
+  CIN-driven compact-v4-cell object-class experiment, P1 changes the computation
+  graph inside the backbone so the pair encoder can co-adapt. Architecture value
+  and mechanism evidence are different questions, so the pre-registered budget
+  staged P1-seed0 (architecture gate) before the matched capacity control.
+protocol: >-
+  Inherited frozen optimized protocol (Adam lr 1e-3, wd 1e-5, batch 128, max
+  240, patience 40, no scheduler, L1, best official-valid, single stage).
+  Candidate: shared phi = 16->24->24 (ReLU), permutation-invariant mean of
+  phi(q) per (centre,bucket) = z_ib in R^24, u_ib = [z_ib ; log1p(n_ib)] in
+  R^25, shared rho = 25->33->33 (ReLU, final Linear zero-init), a^P1 = a^fixed
+  + rho(u) as a residual; empty bucket residual exactly 0; R = 302D; centre
+  update input 213D; 102,601 params. Fixed moments retained as residual path.
+  No relation refresh (q computed once), no attention, no change to tokenizer /
+  radius / patch encoder / pair definition / relation descriptor / q dim / pair
+  encoder / bucket count / centre-update architecture / final pair moments /
+  global descriptors / topology branch / graph head / optimizer / lr / batch /
+  wd / horizon / patience.
+results:
+  p1_seed0_valid: 0.14722899334976683
+  p1_seed0_best_epoch: 151
+  p1_seed0_epochs_run: 191
+  p1_seed0_optimizer_steps: 15089
+  v4_seed0_reference_valid: 0.14642022556537995
+  delta_arch0: -0.0008087677843868768
+  architecture_gate: 0.004
+  branch_alive: true
+  residual_zero_max_abs_prediction_shift: 0.531348466873169
+  phi_grad_norm_max: 0.00604647813086953
+  rho_grad_norm_max: 0.17749285699744233
+  learned_residual_norm_final: 0.7910103519339311
+  residual_fixed_ratio_ckpt: 0.37273831687899617
+  common_input_bulk_safe: true
+  common_input_bulk_diff: -0.0011402664893361003
+  p1_params: 102601
+  p1_added_params: 2988
+  integrity_gates_passed: true
+  capacity_control_run: false
+  seed1_run: false
+  official_test_loaded: false
+alternatives_rejected:
+  - item: purchase the matched post-pooling capacity control after a sub-threshold seed0
+    because: >-
+      pre-registered rule: do not pay for the control unless the architecture
+      itself clears +0.004 valid MAE; a whole-architecture gain below the gate
+      makes a mechanism run uninformative.
+  - item: run seed1 to "see"
+    because: >-
+      seed1 is conditional on seed0 passing BOTH the architecture gate and the
+      mechanism gate; only P1 seed0 runs first.
+  - item: rescue with attention / wider phi or rho / sum or max pooling / bucket
+      embedding / centre conditioning / q refresh / deeper composer
+    because: >-
+      each is explicitly forbidden in this stage; a gain requiring them would be
+      a different architecture family / a different pre-registered hypothesis.
+  - item: load official test
+    because: hard-locked throughout architecture development.
+consequences:
+  - >-
+    The minimal learned pre-pool relation-composition hypothesis is closed in
+    the form q -> mean(phi(q)) -> rho -> 33D residual; compact-v4-hinge remains
+    the current candidate.
+  - >-
+    The pre-pooling mechanism is untested (not refuted): the architecture gate
+    failed first, so no mechanism claim is made in either direction.
+  - >-
+    Outputs committed under results/compact_v4_learned_centre_composer/ (lock,
+    audits, integrity gates, stage1 result/decision, common-input bulk,
+    composition diagnostics, final decision, Q1-Q20, curve, 2 figures) and
+    notes/compact_v4_learned_centre_composer.md; tests 22 pass.
+revisit_if: >-
+  Reopen only with a genuinely different, independently pre-registered
+  hypothesis (e.g. P2 one-shot relation refresh h -> q -> h' -> q') that does
+  not depend on this minimal residual-composer form clearing +0.004 first. Do
+  NOT tune phi/rho width, pooling, activation, bucket embeddings or residual
+  scaling to rescue this result, do NOT add attention or centre conditioning,
+  and never load official test without a separate authorisation.

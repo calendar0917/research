@@ -1,0 +1,67 @@
+# Optimized-baseline critical revalidation -- Part B (Question B).
+#
+# corrected-tokenizer compact-v4-hinge retrained under the frozen optimized
+# training protocol.
+#
+# This config is `zinc_compact_v4_topology_hinge_typed_v2.yaml` with EXACTLY
+# one change: the training protocol moves to the frozen optimized values
+# (max_epochs 240, patience 40).  Adam / lr 1e-3 / batch 128 / wd 1e-5 /
+# no scheduler / L1 / best-valid are unchanged from the canonical regime, and
+# the corrected tokenizer + every model variable are byte-for-byte the
+# historical corrected-token experiment.
+#
+# Corrected-tokenizer fingerprint is explicit (single-variable tokenizer
+# change vs the optimized historical-token compact-v4-hinge reference).
+protocol_id: luyin16-zinc-hierarchical-patch-relation-context-compact-v4-topology-hinge
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+representation:
+  # EXPLICIT pin: corrected complete typed-isomorphism canonical key.
+  typed_tokenizer_version: typed_tokenizer_v2_corrected
+  max_typed_tokens: 8192
+  minimum_typed_frequency: 1
+  max_parent_tokens: 2048
+  minimum_parent_frequency: 1
+
+model:
+  patch_hidden: 48
+  pair_hidden: 16
+  token_width: 16
+  embedding_mode: hybrid
+  embedding_rank: 4
+  hybrid_full_typed_tokens: 768
+  hybrid_full_parent_tokens: 32
+  center_context: true
+  center_context_hidden: 60
+  graph_head_hidden_0: 64
+  graph_head_hidden_1: 32
+  dropout: 0.05
+  # optimized single-stage protocol (frozen by compact_v4_training_sufficiency)
+  epochs: 240
+  patience: 40
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  evaluate_every: 1
+  device: cpu
+  parameter_audit: true
+  # v4: global topology channel with generic hinge basis (nonlinear input).
+  topology_mode: hinge
+  topology_hidden_dim: 16
+  topology_out_dim: 8
+  topology_shuffle_test: true
+  save_state_dict: true
+  # corrected vocabulary adds embedding rows -> selection-phase parameter count
+  # is 107,201 (historical corrected-token v4 run); budget raised accordingly.
+  expected_max_trainable_params: 120000
+
+runtime:
+  torch_threads: 4
+
+output:
+  json: tracks/ksvd/results/optimized_baseline_critical_revalidation/scratch/optimized_corrected_v4.json
+  markdown: tracks/ksvd/results/optimized_baseline_critical_revalidation/scratch/optimized_corrected_v4.md

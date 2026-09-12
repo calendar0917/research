@@ -1,0 +1,64 @@
+claim_id: claim-compact-v4-relation-refresh-nogo-20260911
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-09-11T23:40:00'
+statement: >-
+  Under the frozen optimized compact-v4-hinge protocol, replacing the stale
+  pre-context relation state q^(0) in the FINAL graph pair summary with a single
+  parameter-shared relation refresh q^(1) = Q(P(h^(1)), r) over the
+  contextualized endpoints h^(1) does NOT clear the +0.004 architecture gate.
+  The P2 candidate keeps the compact-v4 pathway unchanged through centre
+  contextualization (h^(0) -> q^(0) -> A -> h^(1)), then re-evaluates the exact
+  same pair_projection and pair_encoder tensors on h^(1) and pools q^(1) instead
+  of q^(0) in the final pair moments; q^(0) still drives the centre update, q^(1)
+  never feeds a further centre update (no h^(2)), there is exactly one refresh,
+  no alpha mixing, no concat [q0;q1], and no independent refresh encoder. R
+  stays 302D and the total parameter count stays exactly 99,613 (delta = 0).
+  Stage A (zero-training, label-free, 2000-molecule official-train probe, reused
+  optimized seed0 checkpoint) shows the refresh is NOT numerically negligible:
+  median relation cosine(q0,q1) = 0.9827, median normalized L2 = 0.1820, median
+  graph pair-summary drift = 0.1988, mean |prediction shift| = 0.06696 (gate:
+  cos >= 0.995, pair drift <= 0.02, shift <= 0.005) -> ADVANCE. P2 seed0 then
+  reaches official-valid MAE 0.144457 (best epoch 156, 196 epochs, 15,484
+  optimizer steps, 1382 s) vs the reused optimized compact-v4 seed0 reference
+  0.146420, i.e. delta_P2,0 = +0.001963, a sub-threshold positive strictly below
+  the pre-registered +0.004 gate. The refresh branch is genuinely alive and
+  trained (refresh-off inference on the same checkpoint degrades valid MAE to
+  0.175124, mean |prediction shift| 0.0932, max 1.683; q1 path gradient
+  non-zero, max 0.0418; pair_encoder gradient non-zero, max 5.70), the
+  from-scratch seed0 initialization matches the baseline exactly (48 tensors,
+  max diff 0.0, identical state hash), the common-input bulk is safe (v4
+  0.09472 vs P2 0.09373, diff -0.00099). No optimization pathology (no NaN, best
+  epoch 156 not boundary-pinned, early stop fired). Verdict: Decision Case B -
+  ONE-SHOT RELATION REFRESH NO-GO (sub-threshold positive; STOP, seed1 not
+  purchased).
+scope: >-
+  ZINC-12k official train/valid only; official test never loaded; one new
+  full-training run (P2 seed0) spent after the zero-training Stage A audit;
+  frozen optimized protocol (Adam lr 1e-3, wd 1e-5, batch 128, 240 ep, patience
+  40, no scheduler, L1, best-valid).
+evidence:
+  - >-
+    results/compact_v4_relation_refresh/baseline_inventory.json,
+    staleness_probe_manifest.json, staleness_audit_lock.json,
+    staleness_integrity.json, relation_drift.json, pair_summary_drift.json,
+    prediction_shift.json, stageA_decision.json (= ADVANCE);
+    architecture_lock.json, parameter_audit.json, initialization_match.json,
+    compute_audit.json, stageB_p2_seed0.json, stageB_decision.json,
+    common_input_bulk.json, mechanism_diagnostics.json, final_decision.json,
+    answers_q1_q20.json, curves/p2_seed0_curve.csv, figures/ (3).
+  - >-
+    notes/compact_v4_relation_refresh.md (23 sections + Q1-Q20).
+  - tests/test_compact_v4_relation_refresh.py (24 pass).
+limitations: >-
+  Not a proof that staleness is harmless and not a proof that it is the unique
+  causal bottleneck. Stage A only establishes that the refresh is numerically
+  non-trivial (it authorized one seed0 run); it is NOT a performance test. The
+  sub-threshold +0.001963 seed0 gain is positive but does not clear +0.004, so
+  seed1 was not purchased and no replication claim is made. The refresh-off
+  degradation is a branch-dependency check only (the head/backbone were trained
+  for q1), so it does not causally isolate staleness. Do not rescue this result
+  with a second refresh / depth sweep / separate q1 weights / attention / larger
+  q dim / learned pooling / P1 composer / new topology, and never load official
+  test without separate authorisation.

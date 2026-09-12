@@ -1,0 +1,50 @@
+claim_id: claim-optimized-corrected-tokenizer-nogo-20260918
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-18T00:30:00'
+statement: >-
+  Training the corrected-tokenizer compact-v4-hinge under the frozen optimized
+  protocol (240 epochs, patience 40, Adam lr 1e-3, batch 128, wd 1e-5, no
+  scheduler, L1) does NOT rescue the corrected exact-token representation:
+  official-valid MAE 0.150849 (best epoch 146, 107,201 params) vs the reused
+  optimized historical-token compact-v4-hinge reference 0.146420 (99,613
+  params). Corrected remains worse by corrected_minus_historical = +0.004429
+  (delta_correct = MAE_valid(historical) - MAE_valid(corrected) = -0.004429),
+  satisfying the pre-registered CLEAR NO-GO clause (degradation >= +0.004).
+  Longer training relieves roughly half of the historical degradation
+  (+0.008093 at 60 epochs -> +0.004429 optimized) but does not remove it. The
+  corrected tokenizer is a demonstrably larger / more accurate representation
+  (typed vocab 8,193 vs 6,785 with OOV; parent 513 vs 32; +7,588 params), yet it
+  still loses. The historical tokenizer's persisting performance edge is an
+  aliased-representation effect, not merely an under-training effect.
+scope: >-
+  ZINC-12k official train/valid only; official test never loaded. Single new
+  full-training run (corrected-token compact-v4-hinge seed0). Only the typed
+  tokenizer version differs vs the optimized historical-token reference
+  (typed_tokenizer_v2_corrected vs typed_tokenizer_v1_historical); every model
+  variable is byte-for-byte the historical corrected-token experiment with only
+  the training protocol moved to the optimized values. seed1 NOT purchased
+  (clear no-go). Correctness fact preserved: the historical tokenizer is not a
+  complete typed canonical invariant key and must not be described as an exact
+  typed patch token.
+supporting_evidence:
+- notes/optimized_baseline_critical_revalidation.md
+- results/optimized_baseline_critical_revalidation/part_b_corrected_seed0.json
+- results/optimized_baseline_critical_revalidation/part_b_decision.json
+- results/optimized_baseline_critical_revalidation/runs/v4_corr_seed0.json
+- results/optimized_baseline_critical_revalidation/curves/v4_corr_seed0_curve.csv
+- results/optimized_baseline_critical_revalidation/states/v4_corr_seed0_selection_state.pt
+- results/compact_v4_training_sufficiency/runs/Pstar_A2_long_seed0.json
+- records/claims/claim-typed-tokenizer-correctness-20260910.yaml
+- configs/luyin16/zinc_optimized_corrected_v4.yaml
+- tests/test_optimized_baseline_critical_revalidation.py
+contradicting_evidence:
+  - >-
+    The degradation shrank from +0.008093 (60 epochs) to +0.004429 (optimized),
+    so under-training did account for about half of the original regression; the
+    margin above the +0.004 clear-no-go line is modest (0.00043).
+  - >-
+    Single seed (seed0) by design; the result is one branch of a
+    performance/correctness tradeoff, and the corrected representation is the
+    semantically correct one regardless of the MAE outcome.

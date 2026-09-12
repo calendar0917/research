@@ -1,0 +1,64 @@
+decision_id: decision-optimized-manifold-broad-state-inconclusive-20260919
+created: '2026-09-19T00:05:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Optimized-manifold broad frozen-state sufficiency screen -> INCONCLUSIVE - DO
+  NOT BUILD OPTIMIZED OOF (mandate Case C). On the two existing optimized
+  compact-v4-hinge checkpoints (seed0 valid 0.146420, seed1 0.149332; both
+  training costs already paid, ZERO new backbone training), the primary adapter
+  init gave delta_state = MAE(B1 R-only) - MAE(E broad state) = +0.000370
+  (seed0) and +0.001150 (seed1), mean +0.00076: both positive but far below the
+  pre-registered +0.003 advance bar -> BORDERLINE, which mandates a second
+  adapter init. The second init gave +0.000179 (seed0) and -0.000513 (seed1)
+  (sign flip); combined mean +0.00030 <= +0.0005. The state branch is provably
+  alive (state-zero / within-molecule permutation sensitivity 0.026-0.121), the
+  common-input bulk is safe, and Gate 0 export integrity passes on both seeds,
+  so the result is a valid diagnostic, not an invalid one. No optimized OOF
+  pilot, no endpoint / covariance / triad revalidation, no second backbone seed
+  and no extra adapter init are authorised.
+alternatives_rejected:
+- item: build optimized OOF backbones (5 folds x 240 epochs)
+  because: >-
+    the broad screen did not clear the +0.003 advance bar (combined +0.00030,
+    second-init sign flip). The only purpose of this cheap screen was to decide
+    whether the expensive OOF reconstruction was worth the compute; it is not.
+- item: launch a two-fold optimized OOF pilot
+  because: >-
+    the pilot is only authorised by Decision Case A (per-seed >= +0.002, mean
+    >= +0.003, bulk safe, state branch alive). Case A did not fire.
+- item: re-run optimized endpoint / centre-covariance / triadic witnesses
+  because: >-
+    a negative/inconclusive broad screen terminates the local witness tree: if
+    no broad low-complexity reader exploits the states, there is no reason to
+    re-run the more expensive local missing-statistic probes.
+- item: reject the historical NO-GO audits wholesale
+  because: >-
+    the historical audits remain valid statements about the under-trained
+    manifold; this screen only removes the hypothesis that the under-training
+    alone was hiding a broad exploitable signal.
+- item: model / tokenizer / topology / loss / head changes
+  because: >-
+    this stage is a frozen-state screening diagnostic only. No representation
+    change is licensed by an inconclusive screen.
+- item: touch official test
+  because: >-
+    official test is hard-locked for screening diagnostics regardless of the
+    result.
+consequences:
+  - >-
+    Bottleneck map stands: historical state audit NO-GO, optimized broad screen
+    INCONCLUSIVE (no OOF). Mass revalidation of local frozen witnesses stays
+    closed.
+  - >-
+    The next discussion is paradigm-level (representation family /
+    structural-computation redesign), NOT another missing-local-statistic probe.
+  - >-
+    Reusable asset: optimized_frozen_state_export_v1 for the two optimized
+    checkpoints (train + valid, Gate-0 clean), still available if a future,
+    pre-registered hypothesis needs the optimized manifold.
+revisit_if: >-
+  A pre-registered, non-historical broad state parameterisation (e.g. a
+  genuinely different learnable state reader class) or a paradigm-level change
+  of the representation / compute graph; otherwise do not reopen the local
+  witness tree on the optimized manifold.

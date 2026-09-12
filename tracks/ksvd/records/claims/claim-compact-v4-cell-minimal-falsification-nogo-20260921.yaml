@@ -1,0 +1,45 @@
+claim_id: claim-compact-v4-cell-minimal-falsification-nogo-20260921
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-21T00:00:00'
+statement: >-
+  Under the frozen optimized compact-v4-hinge protocol, promoting cycles from a
+  graph-level descriptor to explicit persistent cycle-cell objects with exactly
+  two pre-registered incidence-aware rounds does NOT improve compact-v4. The
+  compact-v4-cell model (induced/chordless cycles length 3..8; d_cell=48; T=2;
+  113,069 params = 99,613 baseline + 6,208 head expansion + 7,248 cell branch;
+  R 302->399; global topology hinge branch preserved) reaches official-valid MAE
+  0.147462 seed0 vs the reused optimized compact-v4 seed0 reference 0.146420,
+  i.e. delta_arch0 = -0.001042 (no improvement; a noise-scale negative
+  point estimate, v4 seed-to-seed spread ~0.010), far below the pre-registered
+  +0.004 architecture gate. The cell branch is genuinely alive
+  (zeroing the cell summary at inference changes predictions by max|delta| =
+  1.954 >> 1e-3; cell_grad_norm non-zero every epoch; cell-state norms grow
+  6.97->7.61), the original compact-v4 pathway is bit-identical inside the
+  hybrid model (G0.1 max diff 0.0), all 11 Stage-0 integrity gates pass, and
+  the common-input bulk is safe (v4 0.09472 vs true-cell 0.09648, diff +0.00176
+  <= +0.002). Per the pre-registered budget rule the broken-incidence control
+  and seed1 were NOT purchased. Verdict: Decision Case A - CELL REPRESENTATION
+  NO-GO.
+scope: >-
+  ZINC-12k official train/valid only; official test never loaded; one new
+  full-training run (true-cell seed0); frozen optimized protocol (Adam lr 1e-3,
+  wd 1e-5, batch 128, 240 ep, patience 40, no scheduler, L1, best-valid).
+evidence:
+  - >-
+    results/compact_v4_cell/architecture_lock.json,
+    cycle_construction_lock.json, parameter_audit.json, compute_audit.json,
+    integrity_gates.json, baseline_inventory.json, stage1_true_seed0.json,
+    stage1_decision.json, common_input_bulk.json, final_decision.json,
+    answers_q1_q20.json, curves/true_cell_seed0_curve.csv, figures/ (3).
+  - >-
+    notes/compact_v4_cell_minimal_falsification.md (22 sections + Q1-Q20).
+  - tests/test_compact_v4_cell.py (21 pass).
+limitations: >-
+  Not a mathematical impossibility result: it is a statement about this minimal
+  architecture at T=2 under this protocol. The incidence mechanism itself was
+  not tested (broken control not run) because the architecture gain did not
+  clear +0.004. An implementation-integrity incident (PyG DataLoader overriding
+  the custom collate, which silently zeroed the cell branch) was detected and
+  fixed before the decision; the corrected run is the reported one.

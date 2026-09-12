@@ -2110,7 +2110,16 @@ class PatchPathModel(nn.Module):
         delta = self.context_delta_output(torch.tanh(p) * torch.tanh(c))
         return e_patch + delta * mask
 
-    def forward(self, data: Data) -> torch.Tensor:
+    def encode(self, data: Data) -> torch.Tensor:
+        """Return the unified graph representation ``R`` (the input to the
+        sole regression head).
+
+        This is a pure refactor of the historical ``forward`` body: the code
+        path is byte-for-byte the same, so ``forward`` (which calls
+        ``encode``) is bit-identical to the pre-refactor implementation.  The
+        canonical late-readout adaptation experiment needs access to ``R`` in
+        order to freeze it and adapt the head separately.
+        """
         global_context = data.global_context
         if global_context.ndim == 1:
             global_context = global_context.unsqueeze(0)
@@ -2204,6 +2213,10 @@ class PatchPathModel(nn.Module):
                 )
             readout_blocks.append(self.topology_encoder(topology))
         unified = torch.cat(readout_blocks, dim=1)
+        return unified
+
+    def forward(self, data: Data) -> torch.Tensor:
+        unified = self.encode(data)
         if self.quantile_mode == "q10_q50_q90":
             # Non-crossing parameterization: raw head outputs are
             # [m, d_low_raw, d_high_raw]; d_low/d_high are softplus-positive

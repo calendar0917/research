@@ -1,0 +1,52 @@
+claim_id: claim-compact-v4-sbci-nogo-20261007
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-10-07T12:00:00'
+statement: >-
+  The minimal Shared-Basis Compositional Interaction (SBCI) function-class
+  restriction does NOT improve finite-data sample efficiency on ZINC. Replacing
+  the free compact-v4 relation/centre function family with a shared 16D
+  functional basis phi(h_i) and a deterministic relation-only gate
+  g_ij = 1 + tanh(psi(r_ij)) such that p_ij = z_i * z_j * g_ij, pooled into
+  per-(centre,bucket) mean/std/log-count (165D), composed by a single
+  Linear(165,16) with c_i = z_i + delta_i, and read out from
+  R_SBCI = [mean/std/sqrt-sum(c); G(32); T(8)] = 88D, is trainable and
+  internally exact (62,045 params <= 82,115 cap; 20 shared tensors exactly
+  equal to the canonical baseline init; exact pair factorisation; endpoint
+  symmetry; empty-bucket zeros; permutation invariance; R=88D; all 25/25
+  Stage-0 integrity gates pass). But the single authorised seed0 run at N=3600
+  gives SOUP probe MAE 0.182924 vs the reused compact-v4-smallhead baseline
+  0.176633 (delta_SE = -0.006291; RAW -0.006215; DDR = -0.128; paired bootstrap
+  95% CI [-0.012760, -0.000176]), i.e. the candidate is slightly WORSE, not
+  more sample-efficient. Decision: SBCI_MINIMAL_FACTORIZATION_NO_GO (Case A).
+  Seed1, N=7200, N=1800 and seed2/3 were not purchased; no rescue (no K sweep,
+  no residual q/centre branch, no attention, no wider basis).
+scope: >-
+  ZINC official train only (frozen internal 7200/800/2000 split); official valid
+  and official test never loaded; single seed0 N=3600 run; exact compute-matched
+  protocol (Adam lr 1e-3 wd 1e-5 batch 128 L1 no scheduler; max 13,680 optimizer
+  steps; selection every 57 steps; patience 40 selection evaluations; K=5
+  equal-weight soup). This closes only the specific minimal shared-basis
+  factorisation, not "compositional inductive bias" in general.
+evidence:
+  - >-
+    results/compact_v4_sbci/architecture_lock.json, baseline_inventory.json,
+    sbci_parameter_ledger.json, relation_input_inventory.json,
+    initialization_lock.json, integrity_gates.json, branch_alive_tests.json,
+    compute_audit.json, stage_run_N3600_I0T0.json,
+    checkpoint_manifest_N3600_I0T0.json, soup_construction_N3600_I0T0.json,
+    stage1_N3600_I0T0.json, stage1_bootstrap.json, stage1_decision.json,
+    representation_diagnostics.json, final_decision.json, answers_q1_q20.json,
+    curves/N3600_I0T0.csv, figures/ (3).
+  - >-
+    notes/compact_v4_sbci_sample_efficiency.md (29 sections + Q1-Q20).
+  - tests/test_compact_v4_sbci.py (12 pass).
+limitations: >-
+  Single seed0 and single training size; the direction is negative rather than
+  sub-threshold, but the conclusion is limited to this exact K=16 minimal
+  factorisation at N=3600. It does not prove that no shared-basis architecture
+  could help, that N=7200 behaves the same, or that the 2000 probe generalises
+  to official valid/test. It does not reopen the old compositional
+  patch-sharing (token-embedding transplant) NO-GO and does not authorise any
+  K/width/aggregation/relation-form rescue.

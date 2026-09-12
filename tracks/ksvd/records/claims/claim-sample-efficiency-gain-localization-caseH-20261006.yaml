@@ -1,0 +1,72 @@
+claim_id: claim-sample-efficiency-gain-localization-caseH-20261006
+kind: claim
+status: inconclusive
+study_id: zinc-context-gap
+created: '2026-10-06T00:00:00'
+statement: >-
+  In a zero-new-training audit of the frozen 82,115-parameter compact-v4-smallhead
+  over the nested official-train subsets D1800 subset D3600 subset D7200 (six
+  frozen SOUP states, RAW anchors as robustness; official valid and official test
+  never loaded), no target-independent training-set support family passes the
+  full pre-registered strong gate in both doublings. Token support has the
+  strongest partial signal (quartile contrast Q4-Q1 = +0.027594 [0.008935,
+  0.047188] at 18->36 and +0.033577 [0.017212, 0.050005] at 36->72; size-adjusted
+  beta1 = +0.012594 [0.004136, 0.022076] and +0.015861 [0.008052, 0.024032]) but
+  fails the continuous Spearman gate (rho = 0.060642 / 0.060983 < +0.15), so it is
+  labelled NON-ROBUST ASSOCIATION rather than strong support-limited signal.
+  Whole-molecule PATCH_FULL neighbour density has a comparable quartile contrast
+  (+0.028177 / +0.037888) but its size-adjusted beta1 CI crosses zero
+  (SUPPORT SIGNAL EXPLAINED BY SIZE / WEAK). Relation-context support passes only
+  at 36->72 (REGIME-SPECIFIC / PARTIAL). The primary WELL_COVERED stress test on
+  the exact typed-endpoint relation key is underpowered (n = 1), so the strict
+  pre-registered verdict is Case H (localization inconclusive); a pre-registered
+  secondary coarser parent-endpoint relation key yields a powered well-covered
+  subset (n = 361) retaining R_covered = 0.722 / 0.603, which is only a Case E
+  candidate and is explicitly non-authoritative. Fixed 5-fold hash-split OLS OOF
+  R2 is at most +0.004 (full model negative), i.e. deficiency does not predict
+  per-molecule gain out of sample. Gain values reproduce the prior
+  learning-curve audit exactly: G_soup 18->36 +0.056533, 36->72 +0.050175.
+  authorized_for_design = false; full_training_authorized = false.
+scope: >-
+  ZINC official train only; exactly six frozen SOUP states (1800/3600/7200 x
+  seed0/seed1) plus their RAW anchors; no new training, no architecture/feature/
+  tokenizer/probe/OOF search/HPO/EMA-SWA/checkpoint averaging, no external data,
+  no official valid and no official test. Support metrics are document
+  frequencies over unique training molecules; Phase U is hash-locked before any
+  target or prediction is read.
+evidence:
+  - >-
+    results/sample_efficiency_gain_localization/audit_protocol_lock.json,
+    model_inventory.json, subset_inventory.json, prediction_provenance.json,
+    probe_predictions_locked.parquet, recomputed_learning_curve.json,
+    bootstrap_provenance_check.json.
+  - >-
+    results/sample_efficiency_gain_localization/support_table_locked.parquet,
+    support_table_lock.json, support_quartile_manifest.json,
+    well_covered_subset_manifest.json, token_document_frequency_summary.json,
+    relation_document_frequency_summary.json,
+    relation_document_frequency_summary_parent.json, relation_key_inventory.json,
+    size_control_lock.json, patchfull_metric_inventory.json,
+    phaseU_integrity.json.
+  - >-
+    results/sample_efficiency_gain_localization/gain_table.parquet,
+    gain_summary.json, token_family_results.json, relation_family_results.json,
+    relation_parent_family_results.json, neighbor_density_results.json,
+    size_adjusted_results.json, fixed_ols_oof_results.json,
+    support_family_correlation.csv, support_increment_diagnostics.json,
+    well_covered_stress_test.json, raw_estimator_robustness.json,
+    initial_error_control.json.
+  - >-
+    results/sample_efficiency_gain_localization/mechanism_decision.json,
+    top1_sample_efficiency_mechanism.json, answers_q1_q24.json,
+    final_decision.json, integrity_tests.json (20/20 pass), figures/.
+  - notes/sample_efficiency_gain_localization_audit.md (30 sections).
+  - tracks/ksvd/tests/test_sample_efficiency_gain_localization_audit.py (17 pass).
+confidence: >-
+  High in the negative/inconclusive result: all six anchor MAEs and both gains
+  are reproduced bit-exactly, the bootstrap provenance is reconciled exactly, and
+  20/20 integrity tests pass. The underpowering of the primary stress test is a
+  direct and documented consequence of the pre-registered exact typed-endpoint
+  relation key.
+official_test_loaded: false
+official_valid_loaded: false

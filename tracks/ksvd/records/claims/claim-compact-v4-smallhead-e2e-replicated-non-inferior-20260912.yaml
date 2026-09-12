@@ -1,0 +1,63 @@
+claim_id: claim-compact-v4-smallhead-e2e-replicated-non-inferior-20260912
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-12T09:40:00'
+statement: >-
+  Under the frozen optimized compact-v4-hinge protocol, the 21,633-parameter
+  graph head (302 -> 64 -> 32 -> 1 with LayerNorm + Dropout) is NOT required for
+  successful end-to-end learning. A from-scratch model whose only change is the
+  pre-audited fixed raw small head (302 -> 13 -> 13 -> 1, Raw R, ReLU, no
+  LayerNorm, no dropout, no residual; 4,135 params) reaches 82,115 total
+  parameters (-17,498; -17.57% whole model; -80.89% head) and is
+  validation-non-inferior on both development seeds. Seed0: small-head valid
+  0.145334 (best epoch 176, 216 epochs, 17,064 optimizer steps) vs reused
+  optimized baseline 0.146420, D0 = -0.001086 <= +0.002. Seed1: small-head valid
+  0.138059 (best epoch 143, 183 epochs, 14,457 optimizer steps) vs baseline
+  0.149332, D1 = -0.011273 <= +0.002; mean D = -0.006180 <= +0.0015. The two
+  seeds therefore show replicated non-inferiority with favourable point
+  estimates. All Stage-0 gates pass: baseline 99,613 / head 21,633 / small head
+  4,135 / candidate 82,115 are exact; R is still 302D; every non-head trainable
+  tensor is structurally identical (40 tensors); seed0 AND seed1 shared initial
+  tensors exact-match the canonical baseline initialization (max abs diff 0.0,
+  hash match true); pre-head R is bit-identical at init on a real 128-molecule
+  valid batch (both seeds, max abs diff 0.0); the optimizer/loss/horizon/
+  patience/selection protocol is byte-for-byte the canonical one. No optimization
+  pathology (no NaN, head and backbone gradients alive, best epochs 176 and 143
+  of 240 are not boundary-pinned). Common-input bulk is safe and improved
+  (seed0 -0.007967, seed1 -0.006829 vs the +0.003 caution gate). This is a
+  from-scratch compressed architecture, not post-hoc pruning and not
+  distillation. Official test was never loaded.
+scope: >-
+  ZINC-12k official train/valid only; official test never loaded; exactly two
+  new full-training runs (seed0 and conditional seed1); frozen optimized
+  protocol (Adam lr 1e-3, wd 1e-5, batch 128, 240 epochs, patience 40, no
+  scheduler, L1, best official-valid, single stage). Baseline reused, never
+  retrained. No representation / tokenizer / patch / pair / centre / topology /
+  global / loss / optimizer change. The released parameters were not
+  reallocated.
+evidence:
+  - >-
+    results/compact_v4_smallhead_e2e/architecture_lock.json,
+    baseline_inventory.json, baseline_anchor.json, parameter_audit.json,
+    initialization_match_seed0.json, initialization_match_seed1.json,
+    integrity_gates.json, compute_audit.json, stage1_smallhead_seed0.json,
+    stage1_decision.json, stage2_smallhead_seed1.json,
+    stage2_replication_decision.json, common_input_bulk_seed0.json,
+    common_input_bulk_seed1.json, two_seed_summary.csv, representation_drift.json,
+    final_decision.json, answers_q1_q18.json, curves/smallhead_seed0_curve.csv,
+    curves/smallhead_seed1_curve.csv, figures/ (3).
+  - >-
+    notes/compact_v4_smallhead_e2e_compression.md (23 sections + Q1-Q18).
+  - tests/test_compact_v4_smallhead_e2e.py (15 pass).
+limitations: >-
+  Two development seeds are not sufficient to claim the small head is a
+  *performance* improvement; the primary claim is compression non-inferiority
+  with favourable point estimates. Official test was never loaded, so test
+  non-inferiority is not established. Representation drift is material
+  (seed0 normalized L2 1.294, cosine 0.172): the backbone representation changes
+  under joint training, as expected; this is descriptive, not a gate. The result
+  is specific to this tokenizer / patch representation / protocol. Do NOT
+  reallocate the released 17,498 parameters to a new module without a separate,
+  independently pre-registered, R-SUPPORTED representation hypothesis, and do
+  NOT open official test without a separate locked benchmark stage.

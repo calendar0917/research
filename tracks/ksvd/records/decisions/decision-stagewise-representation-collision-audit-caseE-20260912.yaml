@@ -1,0 +1,147 @@
+decision_id: decision-stagewise-representation-collision-audit-caseE-20260912
+created: '2026-09-12T10:30:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Execute the pre-registered analysis-only stagewise representation collision
+  audit and register the verdict Decision Case E: NO CLEAR STAGEWISE
+  REPRESENTATION COLLISION. Along the real compact-v4-smallhead computation
+  graph (both small-head seeds), no pre-registered contrast reached the
+  two-seed material degradation gate (delta_eta >= +0.02 with paired-bootstrap
+  95% CI lower > 0 on the 2000 probe, delta_eta > 0 on the 800 selection, and
+  non-negative collision delta). Patch encoder, pair encoder and unary graph
+  compression show material geometry GAIN; centre contextualization is
+  seed-unstable at sub-threshold magnitude; pair graph compression is a stable
+  sub-threshold positive signal that is also collision-inconsistent. No
+  architecture or representation hypothesis is authorized
+  (top1_representation_hypothesis.json authorized_for_design = false,
+  next_full_training_budget = "not yet authorized"). Zero full-backbone
+  training was performed; only the two existing 82.1K checkpoints were reused;
+  official valid was not used for stage selection; official test was never
+  loaded.
+why_this_experiment: >-
+  Three consecutive clean local-repair NO-GOs (P1 learned centre composer, P2
+  one-shot relation refresh, compact-v4-cell persistent cycle cells) plus
+  covariance / triad / endpoint witness NO-GOs and an inconclusive optimized
+  broad frozen-state screen made a fourth additive module scientifically
+  indefensible. The unresolved question was not "which new module helps?" but
+  "where does the EXISTING representation geometry first degrade in a stable,
+  target-relevant way?". This audit answers that question with the real module
+  inputs/outputs and a target-independent set-aware sketch, without training
+  and without reading the target until the nearest-neighbour manifests are
+  frozen.
+protocol: >-
+  Phase U (unlabeled): instrumented replica of PatchPathModel.encode capturing
+  S0 patch_encoder_input (170), S1 h0 (48), S2 pair_encoder_input (64), S3 q0
+  (16), S4 centre_update_input (213), S5 h1 (48), S6 unary_fixed (97), S7
+  pair_fixed (165), S8 global (32), S9 topology (8), S10 R (302); verified
+  bit-identical to the original forward (R and yhat max abs diff 0.0). Pooled
+  object normalisation and per-coordinate z-score fit ONLY on the 7200
+  adapter_fit references. Deterministic projected-quantile set sketch (P=24,
+  quantiles 0.1..0.9, +log1p(n) = 217D; base_seed 1729; stage seed
+  sha256(base_seed|stage)); empty set = 0. Fixed-size stages use
+  ||z_a - z_b||_2/sqrt(d). k=8 nearest references; random-neighbour manifest
+  seed fixed. All four aggregated JSONL neighbour files plus 44 per-stage
+  shards written and SHA-256 hashed before target read. Phase Y: read
+  official-train targets only; compute V_8, eta = V_8/V_rand, collision rate
+  C_8 (tau_far = 3.3656 = 80th percentile over fixed random reference pairs),
+  NN8 MAE diagnostic; paired bootstrap B=2000 over query molecules only.
+results:
+  backbones: compact-v4-smallhead seed0 (0.145334) + seed1 (0.138059)
+  params: 82115
+  R_dim: 302
+  split: 7200 reference / 800 selection / 2000 probe
+  primary_k: 8
+  set_sketch_dim: 217
+  V_rand: {seed0_probe: 2.0771, seed0_selection: 2.1222, seed1_probe: 2.1099, seed1_selection: 2.1117}
+  tau_far: 3.3656
+  decision_case: Case E
+  decision_title: NO CLEAR STAGEWISE REPRESENTATION COLLISION
+  first_material_degradation: null
+  implicated_stage: null
+  contrast_A_patch_encoder:
+    probe_delta_eta: {seed0: -0.192732, seed1: -0.182000}
+    selection_delta_eta: {seed0: -0.187224, seed1: -0.187901}
+    status: MATERIAL_GEOMETRY_GAIN
+  contrast_B_pair_encoder:
+    probe_delta_eta: {seed0: -0.039731, seed1: -0.033617}
+    selection_delta_eta: {seed0: -0.039428, seed1: -0.043767}
+    status: MATERIAL_GEOMETRY_GAIN
+  contrast_C_centre_contextualization:
+    probe_delta_eta: {seed0: 0.007051, seed1: -0.011478}
+    selection_delta_eta: {seed0: 0.008604, seed1: -0.014713}
+    status: SEED_UNSTABLE (sub-threshold)
+  contrast_D1_unary_graph_compression:
+    probe_delta_eta: {seed0: -0.088284, seed1: -0.052570}
+    selection_delta_eta: {seed0: -0.085955, seed1: -0.050219}
+    status: MATERIAL_GEOMETRY_GAIN
+  contrast_D2_pair_graph_compression:
+    probe_delta_eta: {seed0: 0.011336, seed1: 0.043220}
+    selection_delta_eta: {seed0: 0.011492, seed1: 0.056524}
+    probe_delta_collision: {seed0: -0.010875, seed1: -0.009625}
+    selection_delta_collision: {seed0: -0.005156, seed1: -0.008750}
+    status: GEOMETRY_STABLE_OR_SMALL_EFFECT (sub-threshold positive, collision-inconsistent)
+  R_geometry:
+    probe_eta: {seed0: 0.211993, seed1: 0.212394}
+    probe_collision: {seed0: 0.003938, seed1: 0.004188}
+    nn8_mae_probe: {seed0: 0.2814, seed1: 0.2839}
+  robustness_triggered: false
+  official_valid_used_for_selection: false
+  official_test_loaded: false
+  tests_passed: 23
+alternatives_rejected:
+  - item: declare a pair-graph-compression bottleneck from the sub-threshold D2 signal
+    because: >-
+      the pre-registered materiality gate requires BOTH seeds >= +0.02 and the
+      collision-consistency clause requires non-negative collision deltas; D2
+      seed0 is +0.0113 < +0.02 and D2 collision deltas are negative on every
+      seed/split.
+  - item: declare an early local / relation / centre bottleneck
+    because: >-
+      A, B and D1 are material GAINS and C is sub-threshold seed-unstable; the
+      earliest stable material degradation does not exist.
+  - item: classify Case F (inconclusive)
+    because: >-
+      Case F requires a credible localization disagreement (different stages
+      implicated across seeds, or probe material but replication reversed).
+      Contrast C's sign flip is an order of magnitude below materiality and no
+      stage is implicated at all.
+  - item: run the second-projection and k=4/16 robustness reruns anyway
+    because: >-
+      the pre-registered rule triggers them only when a contrast reaches the
+      material gate; fabricating partial robustness results is forbidden.
+  - item: use official valid to pick a stage
+    because: >-
+      the audit is official-train only; official valid and test are locked.
+  - item: treat a low effective rank or a large representation drift as a bottleneck
+    because: >-
+      the audit localises target-alignment geometry transitions, not capacity or
+      drift.
+consequences:
+  - >-
+    The hypothesis "model error is caused by a specific compact-v4 stage
+    destroying target-relevant geometry" is NOT supported by the real
+    computation graph on official train. Future work should not default to
+    another structural module.
+  - >-
+    The patch encoder and relation encoder CREATE useful target-aligned
+    geometry (large material gains), and the unary moment summary does not lose
+    it; this is descriptive and does NOT authorize widening any encoder.
+  - >-
+    The pair moment summary is the only boundary with a stable positive
+    degradation direction, but it is sub-threshold and collision-inconsistent;
+    it is recorded as a descriptive watch item only. Do NOT build a
+    pair-compression rescue on the basis of this audit.
+  - >-
+    Recommended next direction (not a training authorization): generalisation /
+    regularisation, training stochasticity, scalar-target-mapping geometry,
+    finite-data sample efficiency.
+revisit_if: >-
+  (1) A future audit may re-examine the pair graph-compression sub-threshold
+  signal with more seeds and an independently pre-registered gate, but this
+  audit does not authorize it. (2) Case E explicitly does NOT authorize a new
+  architecture; only a genuinely new, independently pre-registered,
+  non-geometric hypothesis (generalization / regularization / sample
+  efficiency) should be pursued. (3) Existing P1/P2/cell/covariance/triad/
+  endpoint/readout/lookup NO-GOs remain binding. (4) Never load official test
+  without a separate locked benchmark stage.

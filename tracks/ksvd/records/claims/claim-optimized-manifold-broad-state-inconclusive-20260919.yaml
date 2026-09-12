@@ -1,0 +1,67 @@
+claim_id: claim-optimized-manifold-broad-state-inconclusive-20260919
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+created: '2026-09-19T00:00:00'
+statement: >-
+  On the fully-trained optimized compact-v4-hinge latent manifold, the broad
+  frozen internal states (updated patch/centre states h'_i and frozen pair
+  states q_ij) give NO robust low-complexity predictive increment beyond the
+  final 302D graph representation R. Using the two existing optimized
+  checkpoints (seed0 valid 0.146420, seed1 valid 0.149332; training cost already
+  paid, no backbone training) and the historical parameter-matched reader family
+  (B1 R-only 302->13->13->1, 4135 params; E broad state R+[mean phi_h(h'_i);
+  per-bucket mean phi_q(q_ij)]->8->1, 4145 params, mismatch 0.24%), official
+  valid once after adapter lock: seed0 B0 0.146420 / B1 0.143495 / E 0.143125,
+  delta_state = MAE(B1)-MAE(E) = +0.000370; seed1 B0 0.149332 / B1 0.146420 /
+  E 0.145270, delta_state = +0.001150. Primary init mean +0.00076, both seeds
+  positive but far below the +0.003 advance bar -> BORDERLINE, so the mandated
+  second adapter init was run: seed0 +0.000179, seed1 -0.000513 (sign flip);
+  combined mean +0.00030 <= +0.0005. The state branch is provably alive (E
+  output changes by 0.026-0.121 under state-zero / within-molecule state
+  permutation), the common-input bulk is safe (delta_state seed0 +0.00041,
+  seed1 -0.00028; gate <= +0.002), and Gate 0 export integrity passes all 28 gate instances (13 per seed + 2 invariances) covering
+  gate families on both seeds (true pre-head R 302D; valid prediction anchor
+  reproduced exactly 0.0; reconstructed R 6.1e-5/8.4e-5; prediction 1.9e-6).
+  Verdict: INCONCLUSIVE - DO NOT BUILD OPTIMIZED OOF (mandate Case C).
+scope: >-
+  ZINC-12k official train/valid only; official test never loaded; no backbone
+  training. Optimization-free screening on canonical valid-selected optimized
+  checkpoints -> this is a screening diagnostic, NOT clean OOF mechanism
+  evidence. Readers, preprocessing, parameter matching, L1/Adam/full-batch
+  400-epoch protocol and deterministic init are imported unchanged from the
+  historical corrected frozen-readout audit
+  (zinc_frozen_readout_sufficiency). Adapter split is an official-train-only
+  deterministic hash split 7200 adapter-fit / 800 adapter-selection / 2000
+  train-probe; official valid is used once, for evaluation only. Secondary
+  train-probe MAE is descriptive only (the backbone saw all official-train
+  labels). Paired molecule bootstrap over the 1000 valid molecules: init-0
+  seed0 mean +0.00037 (95% CI [-0.00142,+0.00215], P(>0)=0.657), seed1
+  +0.00115 (95% CI [-0.00087,+0.00318], P(>0)=0.864).
+supporting_evidence:
+- notes/optimized_manifold_broad_state_screen.md
+- results/optimized_manifold_broad_state_screen/export_integrity.json
+- results/optimized_manifold_broad_state_screen/export_fingerprints.json
+- results/optimized_manifold_broad_state_screen/adapter_protocol_lock.json
+- results/optimized_manifold_broad_state_screen/split_manifest.json
+- results/optimized_manifold_broad_state_screen/seed0_results.json
+- results/optimized_manifold_broad_state_screen/seed1_results.json
+- results/optimized_manifold_broad_state_screen/valid_summary.csv
+- results/optimized_manifold_broad_state_screen/train_probe_summary.csv
+- results/optimized_manifold_broad_state_screen/common_input_bulk.json
+- results/optimized_manifold_broad_state_screen/adapter_dependency.json
+- results/optimized_manifold_broad_state_screen/final_decision.json
+- results/optimized_manifold_broad_state_screen/second_init_results.csv
+- tests/test_optimized_manifold_broad_state_screen.py
+contradicting_evidence:
+  - >-
+    The primary adapter init is weakly positive on both backbones
+    (+0.00037/+0.00115); the screen cannot exclude a very small (< ~0.001)
+    increment. The second init is sign-unstable, which is why the verdict is
+    INCONCLUSIVE rather than an information-theoretic NO-GO.
+  - >-
+    The checkpoints were valid-selected, so backbone-selection dependence
+    remains; the valid-based estimate is not a clean OOF mechanism estimate.
+  - >-
+    Only the historical low-complexity reader is tested; a different
+    (higher-capacity / learned) state parameterisation is NOT ruled out.

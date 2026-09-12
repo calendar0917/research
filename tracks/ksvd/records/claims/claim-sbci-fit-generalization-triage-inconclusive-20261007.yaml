@@ -1,0 +1,51 @@
+claim_id: claim-sbci-fit-generalization-triage-inconclusive-20261007
+kind: claim
+status: inconclusive
+study_id: zinc-context-gap
+created: '2026-10-07T18:30:00'
+statement: >-
+  Zero-training fit-vs-generalization triage of the already-final N3600 seed0
+  compact-v4-SBCI NO-GO. Using only the frozen N3600/I0/T0 compact-v4-smallhead
+  and compact-v4-SBCI trajectories and checkpoints (208 snapshots re-evaluated
+  on D3600 in model.eval(); no gradient updates; official valid and official
+  test never loaded), the protocol is index-identical and init-exact
+  (16/16 comparability checks; 20 shared tensors max_abs_diff 0.0; baseline
+  init 63f2cecb..., SBCI init f3479439...). D3600 training fit:
+  RAW 0.073954 (baseline) vs 0.072016 (SBCI), delta_F_raw = -0.001938
+  (95% CI [-0.004562,+0.000603]); SOUP 0.048170 vs 0.052724,
+  delta_F_soup = +0.004554 (95% CI [+0.002693,+0.006696]); best-achieved
+  F_min 0.055960 (step 5985) vs 0.059002 (step 5301), delta_F_min = +0.003042;
+  late-10 median 0.069631 vs 0.068679, delta_F_late = -0.000952. The four fit
+  deficits are small but sign-conflicting (RAW better for SBCI, SOUP worse), so
+  neither Case A (approx_fit >= +0.008) nor Case B (|dF| <= 0.003 and selected
+  deficits <= +0.003) is met; delta_F_min misses B1 by 4.2e-5 and delta_F_soup
+  misses B3 by 0.00155. The literal -5e-5 per-eval convergence slope threshold
+  is crossed by SBCI (-0.002014) but is statistically insignificant
+  (SE 0.003259, t -0.618, bootstrap 95% CI [-0.008627,+0.003827]) and SBCI's
+  best-so-far train fit had plateaued (+0.000993 in the last 10 vs +0.008651 for
+  baseline). Decision: FIT_GENERALIZATION_TRIAGE_INCONCLUSIVE; no next
+  architecture family authorized (no SSOD, no DSP, no SBCI rescue). This does
+  NOT re-judge the SBCI NO-GO.
+scope: >-
+  ZINC official train only, frozen internal D3600/800/2000 environment; official
+  valid and official test never loaded; single N3600 seed0 pair; zero gradient
+  updates; no representation geometry; F_min is a diagnostic statistic only and
+  never a deployed checkpoint.
+evidence:
+  - >-
+    results/sbci_fit_generalization_triage/audit_protocol_lock.json,
+    baseline_run_inventory.json, sbci_run_inventory.json,
+    triage_protocol_compatibility.json, train_eval_raw.json, train_eval_soup.json,
+    snapshot_train_fit.csv, snapshot_train_fit.summary.json, best_train_fit.json,
+    late_trajectory_fit.json, convergence_diagnostic.json,
+    generalization_gap.json, parameter_utilization.json, triage_decision.json,
+    next_architecture_family.json, answers_q1_q16.json, final_decision.json.
+  - notes/sbci_fit_generalization_triage.md (16 sections + Q1-Q16).
+  - tests/test_sbci_fit_generalization_triage.py (18 pass).
+limitations: >-
+  Single seed0 and single N=3600 pair; the fit differences are all <= 0.005 and
+  partly inside measurement noise, so the triage cannot commit to either
+  mechanism. The late-window convergence slope is ambiguous; under a strict
+  literal reading the case would be OPTIMIZATION_AMBIGUOUS, which also
+  authorizes no architecture. No claim is made about seed1, N7200, N1800 or
+  official valid/test.

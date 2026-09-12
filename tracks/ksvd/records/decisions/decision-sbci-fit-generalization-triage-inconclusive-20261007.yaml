@@ -1,0 +1,64 @@
+decision_id: decision-sbci-fit-generalization-triage-inconclusive-20261007
+created: '2026-10-07T18:30:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Register Decision Case C: FIT_GENERALIZATION_TRIAGE_INCONCLUSIVE for the
+  already-final compact-v4-SBCI NO-GO. Do NOT authorize Shared Structural
+  Operator Dictionary (SSOD); do NOT authorize Direct Shared Structural
+  Potentials (DSP); do NOT rescue SBCI; do NOT run seed1, N7200 or N1800; do
+  NOT train anything; do NOT load official valid or official test.
+why_this_experiment: >-
+  The SBCI NO-GO is final and magnitude-negative, but a worse probe MAE alone
+  cannot distinguish an over-constrained function class (redesign: restore
+  cross-channel expressivity, i.e. SSOD) from an adequate-fit wrong inductive
+  bias (redesign: abandon latent-basis sharing, i.e. DSP). The only way to
+  choose was to measure deterministic D3600 training-set fit of the frozen
+  baseline and candidate estimators.
+protocol: >-
+  Zero-training triage. Exact index-for-index reuse of the N3600/I0/T0
+  environment: D3600 sha256 3be9f7e1..., 800-selection and 2000-probe hashes
+  from the frozen split manifest, subset salt
+  compact-v4-sample-efficiency-nested-subset-v1-20260912; Adam lr 1e-3 wd 1e-5
+  batch 128 L1 no scheduler clip 5.0, max 13680 steps, eval interval 57,
+  patience 40; K=5 equal-weight parameter soup. RAW = select-800 argmin; SOUP =
+  K=5 mean. All 208 saved snapshots re-evaluated on D3600 under model.eval();
+  recomputed train MAE matches the stored curves exactly (max|diff| 0.0).
+results:
+  delta_F_raw: -0.0019376612074362837
+  delta_F_soup: 0.004553863516905246
+  delta_F_min: 0.0030418804722527684
+  delta_F_late: -0.000951941726185998
+  baseline_raw_train_mae: 0.07395395469796819
+  sbci_raw_train_mae: 0.0720162934905319
+  baseline_soup_train_mae: 0.048169815672477446
+  sbci_soup_train_mae: 0.05272367918938269
+  baseline_f_min: 0.055959773517129684
+  sbci_f_min: 0.05900165398938245
+  probe_degradation_soup: 0.00629063782421872
+  delta_gap: 0.001736774307313449
+  convergence_warning: false
+  literal_slope_threshold_fired: true
+  literal_slope_significant_negative: false
+  literal_slope_per_eval: -0.0020138255
+  literal_slope_bootstrap_ci95: [-0.008627, 0.003827]
+  best_so_far_improve_last10_sbci: 0.000993
+  best_so_far_improve_last10_baseline: 0.008651
+  case_if_literal_convergence_rule: OPTIMIZATION_AMBIGUOUS
+  authorized_for_design: false
+  next_architecture_family: null
+  full_training_authorized: false
+rejected:
+  - authorizing SSOD from a sub-threshold (+0.0046) fit deficit
+  - authorizing DSP from a fit deficit that misses the +0.003 gate
+  - rounding the 0.003042 / 0.004554 deficits to zero to force Case B
+  - treating the negative OLS convergence slope as a real optimization warning
+  - resuming SBCI training / buying seeds / touching official valid or test
+outputs:
+  - tracks/ksvd/results/sbci_fit_generalization_triage/
+  - tracks/ksvd/notes/sbci_fit_generalization_triage.md
+  - tracks/ksvd/tests/test_sbci_fit_generalization_triage.py
+revisit_if: >-
+  A materially larger fit measurement (more than one seed/N pair) or a
+  pre-registered, noise-robust convergence statistic that resolves the
+  RAW-vs-SOUP sign conflict. The exact K=16 minimal factorisation stays closed.

@@ -1,0 +1,61 @@
+claim_id: claim-top5-checkpoint-aggregation-stabilization-20260912
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-12T04:35:00'
+statement: >-
+  Under the locked Top-5 checkpoint-aggregation protocol (zero new backbone
+  training; reuse of the I0T0 and I1T1 82,115-parameter compact-v4-smallhead
+  trajectories), a fixed equal-weight arithmetic mean of the five
+  lowest-800-selection-MAE checkpoints ("weight soup") is a more stable
+  estimator than the canonical single raw-800 argmin on the locked
+  official-valid development confirmation. Top-5 epochs: I0T0 232/215/223/219/228
+  (800 MAE 0.152610/0.152810/0.154181/0.154310/0.154399); I1T1
+  173/197/183/170/195 (0.154226/0.154724/0.154912/0.155499/0.156336). Official
+  valid MAE (opened once, after confirmation_lock.json): I0T0 RAW 0.167234,
+  ENSEMBLE 0.163056, SOUP 0.163063; I1T1 RAW 0.157832, ENSEMBLE 0.152685, SOUP
+  0.152898. Primary soup improvement: raw - soup = +0.004171 (I0T0) and +0.004934
+  (I1T1), mean +0.004552; both per-run effects non-negative (G1), mean >= +0.0015
+  (G2), and the two-run paired molecule-level bootstrap (B=2000, fixed seed
+  20260923, n=1000) 95% CI is [+0.002667, +0.006456] with lower > 0 (G3). The
+  prediction-ensemble mechanism also passes (raw - ensemble = +0.004178 / +
+  0.005147, mean +0.004663 >= +0.002, both runs positive). The soup remains a
+  single 82,115-parameter model with 46 trainable float32 tensors and 0 buffers,
+  finite tensors, strict load with no missing/unexpected keys, and ~1x forward
+  cost (18.74 ms vs 18.52 ms on a 128-molecule batch); the ensemble costs ~5.15x
+  and stores 5 models. Ensemble-vs-soup is indistinguishable from zero in both
+  runs, so the soup retains essentially all of the function-space benefit. The
+  two-run point spread was not reduced (S_raw 0.009402, S_soup 0.010165,
+  S_soup - S_raw = +0.000762; secondary descriptive only). All 12 Stage-0
+  integrity gates and the 20-test suite pass. Official test was never loaded.
+scope: >-
+  ZINC official train only; reuses the frozen internal 7200/800/2000 split and
+  the two saved I0T0/I1T1 trajectories; zero new backbone training; K=5 fixed
+  before any new evaluation; official valid accessed once after the confirmation
+  lock; official test never loaded. The 2000 probe is a development-reuse
+  diagnostic only and was not used to change any rule.
+evidence:
+  - >-
+    results/top5_checkpoint_aggregation_stabilization/aggregation_protocol_lock.json,
+    checkpoint_inventory.json, top5_manifest_I0T0.json, top5_manifest_I1T1.json,
+    soup_construction_I0T0.json, soup_construction_I1T1.json,
+    soup_state_hashes.json, integrity_gates.json,
+    development_reuse_probe_I0T0.json, development_reuse_probe_I1T1.json,
+    development_reuse_summary.json, prediction_disagreement.json,
+    weight_space_diagnostics.json, confirmation_lock.json, official_valid_I0T0.json,
+    official_valid_I1T1.json, official_valid_summary.json, paired_bootstrap.json,
+    compute_audit.json, final_decision.json, answers_q1_q20.json, states/ (soup
+    states), figures/ (3).
+  - notes/top5_checkpoint_aggregation_stabilization.md (27 sections + Q1-Q20).
+  - tests/test_top5_checkpoint_aggregation_stabilization.py (20 pass).
+limitations: >-
+  Only two trajectories; a two-run point spread is descriptive, not a variance
+  estimate. Official valid has been used extensively in earlier project
+  development and is therefore a locked development confirmation, not a pristine
+  project-level holdout. The audit does not establish that checkpoint-selection
+  noise is solved, does not prove the mechanism is prediction ensembling (a
+  flatter local solution or weight interpolation is equally consistent), and
+  makes no official-test claim. A fixed Top-5 weight average can only be said to
+  reduce the observed sensitivity of the selected estimator under this locked
+  development protocol. Do not tune K, weights, epoch spacing, or membership;
+  do not run EMA/SWA; do not open official test.

@@ -1,0 +1,132 @@
+decision_id: decision-sample-efficiency-gain-localization-caseH-20261006
+created: '2026-10-06T00:00:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Execute the pre-registered Sample-Efficiency Gain Localization Audit and register
+  the verdict Decision Case H: SAMPLE-EFFICIENCY GAIN LOCALIZATION INCONCLUSIVE.
+  Do NOT authorize any new architecture or full-training run. The pre-registered
+  strong gate is not passed by any target-independent support family, and the
+  primary WELL_COVERED stress test is underpowered. Old NO-GOs remain binding.
+why_this_experiment: >-
+  The prior inductive-bias & sample-efficiency audit (Case A,
+  STRONG_WITHIN_FAMILY_DATA_LIMITED_REGIME) established a roughly constant
+  ~+0.05 MAE gain per data doubling on the frozen compact-v4-smallhead. The open
+  question was which target-independent dimension of training-set support growth
+  (token support, relation-context support, whole-molecule neighbour density, or
+  a size confound) is associated with that gain. This audit answers it with a
+  zero-new-training protocol: a target-free Phase U support inventory, hash-locked
+  before any gain read, followed by a Phase Y gain-association analysis.
+protocol: >-
+  Phase firewall: target/prediction access is blocked until the Phase U support
+  table and quartiles are hash-locked (target_used = false, prediction_used =
+  false); official non-train splits are blocked at the loader level. Support uses
+  document frequency over unique training molecules. Primary token key = historical
+  typed_certificate. Primary relation key = canonical unordered typed-endpoint pair
+  + exact integer shortest-path distance + adjacent bond (naturally discrete source
+  fields only, no continuous binning). Secondary non-authoritative relation key =
+  parent-endpoint pair + distance + adjacent bond. Neighbour density = frozen
+  PATCH_FULL distance to k = 8 nearest D_N molecules, with the 7200-frozen
+  normalization never refit per N. Size controls C1 = log(1+atom_count),
+  C2 = log(1+relation_count). Deficiency D = (z(unseen) + z(rare) -
+  z(meanlogdf))/3 equal-weight, z-scored within each N on the 2000 probe. Gains
+  g(i) = |y_i - yhat_N(i)| - |y_i - yhat_2N(i)| on the two-seed SOUP estimator,
+  RAW as robustness. All bootstraps B = 2000, seed 20261006; the old bootstrap
+  provenance is reconciled with its own seed 20260912.
+results:
+  gains_soup: {18_36: 0.05653316885931417, 36_72: 0.050174794545629994}
+  anchor_mae_reproduced_exactly: true
+  bootstrap_provenance_matches_prior: true
+  strong_families: []
+  family_verdicts:
+    token: NON_ROBUST_ASSOCIATION__strong_quartile_and_size_adjusted_but_weak_continuous
+    neighbor_density: SUPPORT_SIGNAL_EXPLAINED_BY_SIZE_OR_WEAK_AFTER_ADJUSTMENT
+    relation: REGIME_SPECIFIC_OR_PARTIAL_SUPPORT_SIGNAL
+    relation_parent: NO_MATERIAL_SUPPORT_ASSOCIATION
+  token:
+    quartile_contrast: {18_36: 0.027594, 36_72: 0.033577}
+    spearman: {18_36: 0.060642, 36_72: 0.060983}
+    size_adjusted_beta1: {18_36: 0.012594, 36_72: 0.015861}
+    G1: {18_36: true, 36_72: true}
+    G2: {18_36: false, 36_72: false}
+    G3: {18_36: true, 36_72: true}
+    G4: {18_36: true, 36_72: true}
+  neighbor_density:
+    quartile_contrast: {18_36: 0.028177, 36_72: 0.037888}
+    spearman: {18_36: 0.052992, 36_72: 0.078461}
+    size_adjusted_beta1: {18_36: 0.004973, 36_72: 0.010730}
+    G3: {18_36: false, 36_72: false}
+  relation:
+    quartile_contrast: {18_36: 0.012348, 36_72: 0.039300}
+    spearman: {18_36: 0.034270, 36_72: 0.067107}
+    size_adjusted_beta1: {18_36: 0.006417, 36_72: 0.014971}
+    G1: {18_36: false, 36_72: true}
+  well_covered_primary: {n: 1, powered: false, R_covered: {18_36: 1.779746, 36_72: 0.383659}}
+  well_covered_secondary_parent_key:
+    n: 361
+    powered: true
+    R_covered: {18_36: 0.722322, 36_72: 0.603226}
+    authoritative: false
+  fixed_ols_oof_r2: {18_36: {size_only: -0.000120, size_plus_token: 0.003999, full: -0.072287},
+                     36_72: {size_only: -0.005411, size_plus_token: 0.001628, full: -0.048462}}
+  raw_direction_conflict: false
+  size_controls_effective_dimensions: 1
+  decision_case: H
+  authorized_for_design: false
+  full_training_authorized: false
+  integrity_tests_passed: '20/20'
+  official_test_loaded: false
+  official_valid_loaded: false
+alternatives_rejected:
+  - item: authorize a token-support architecture now
+    because: >-
+      token passes G1, G3 and G4 but fails G2 (rho < +0.15); the protocol labels
+      this NON-ROBUST ASSOCIATION and does not authorize architecture on it.
+  - item: claim Case E from the powered secondary coarse-key well-covered subset
+    because: >-
+      the well-covered subset must be defined on the pre-registered primary
+      typed-endpoint relation key; using the coarser key would loosen the unseen
+      definition, which the protocol prohibits.
+  - item: loosen the unseen definition to make the primary stress test powered
+    because: >-
+      the protocol explicitly forbids rescuing an underpowered stress test by
+      loosening the unseen definition; it requires honest reporting.
+  - item: treat whole-molecule neighbour density as the mechanism
+    because: >-
+      its size-adjusted beta1 CI crosses zero in both doublings; the molecule-size
+      proxy (atom count) is the confound.
+  - item: reduce the size controls to C1 only despite the exact collinearity
+    because: >-
+      C2 is retained as the protocol-mandated second control even though
+      relation_count == C(atom_count, 2) makes it a deterministic function of C1.
+  - item: reopen old structural/representation NO-GOs
+    because: >-
+      this audit adds no evidence that changes their premises; it does not cleanly
+      reject the coverage explanation on the primary key.
+  - item: open official valid or official test
+    because: >-
+      both are hard-locked for this audit and no evaluation is authorized.
+consequences:
+  - >-
+    No new architecture or full-training run is authorized for the
+    sample-efficiency gap. The old NO-GOs remain binding.
+  - >-
+    The strongest partial signal is token support, but it is non-robust on the
+    continuous association measure; whole-molecule density is size-confounded;
+    relation-context support is regime-specific.
+  - >-
+    A Case E candidate (basic structural coverage insufficient) is documented via
+    the non-authoritative coarser-key diagnostic and the Q1 retention, to be
+    confirmed only after a properly powered primary-key stress test.
+  - >-
+    Outputs committed under results/sample_efficiency_gain_localization/,
+    notes/sample_efficiency_gain_localization_audit.md (30 sections),
+    tests/test_sample_efficiency_gain_localization_audit.py (17 pass).
+revisit_if: >-
+  (1) A larger probe or a pre-registered coarser primary relation key makes the
+  primary WELL_COVERED stress test powered (n >= 200). (2) A pre-registered
+  continuous support statistic with a more monotone relationship to gain
+  re-examines whether the token association is genuinely non-robust. (3) An
+  independent larger training-size sweep confirms the observed threshold shape is
+  not a finite-sample artifact. Do NOT authorize architecture training before
+  (1)-(3); do NOT loosen the primary unseen definition; never load official test.

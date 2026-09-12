@@ -1,0 +1,70 @@
+claim_id: claim-stagewise-representation-collision-audit-caseE-20260912
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-12T10:30:00'
+statement: >-
+  Along the real computation graph of the already-trained 82,115-parameter
+  compact-v4-smallhead model (seed0 valid 0.145334, seed1 valid 0.138059;
+  R = 302D; zero full-backbone training), target-relevant neighbourhood
+  geometry does NOT reproducibly degrade at any pre-registered computation
+  boundary. Decision Case E: NO CLEAR STAGEWISE REPRESENTATION COLLISION.
+  Using the official-train deterministic 7200/800/2000 split (reference =
+  7200 adapter_fit, primary query = 2000 train_probe, replication = 800
+  adapter_selection), a target-independent set-aware projected-quantile sketch
+  (24 fixed Gaussian unit projections x 9 quantiles + log1p(count) = 217D,
+  base_seed 1729, empty-set policy defined) for the variable-size stages and
+  per-coordinate z-score Euclidean for the fixed-size stages, and the primary
+  metric eta(Z) = V_8(Z)/V_rand: the patch-encoder boundary (X_patch -> h0) and
+  the pair-encoder boundary (X_pair -> q0) and the unary graph-compression
+  boundary (h1 -> U_97) all show MATERIAL_GEOMETRY_GAIN (probe delta_eta:
+  A -0.1927/-0.1820, B -0.0397/-0.0336, D1 -0.0883/-0.0526 for seeds 0/1;
+  bootstrap 95% CIs exclude 0). The centre-contextualization boundary
+  (X_centre -> h1) is SEED_UNSTABLE at sub-threshold magnitude (probe +0.0071
+  seed0, -0.0115 seed1; both far below +/-0.02). The pair graph-compression
+  boundary (q0 -> P_165) is the only stable positive degradation direction
+  (probe +0.0113 seed0, +0.0432 seed1; selection +0.0115/+0.0565) but it FAILS
+  the pre-registered two-seed +0.02 materiality gate (seed0 is +0.0113) AND
+  fails the collision-consistency clause (Delta collision is negative on every
+  seed/split: -0.0109,-0.0052,-0.0096,-0.0088). R is the best target-aligned
+  representation (eta ~= 0.212, collision ~= 0.004). No contrast reached the
+  material gate, so the second-projection and k=4/16 robustness reruns were not
+  triggered. Official valid was not used for stage selection; official test was
+  never loaded; all neighbour manifests were hashed before any target read.
+scope: >-
+  ZINC-12k official train only; official valid not used for stage selection;
+  official test never loaded; exactly the two already-trained 82,115-parameter
+  small-head checkpoints reused; zero full-backbone training; official-train
+  deterministic 7200/800/2000 split; primary k = 8; set sketch dim 217. No new
+  architecture, no P1/P2/cell rescue, no new pooling / attention / width /
+  depth sweep, no new learned reader, no error-based subgroup mining.
+evidence:
+  - >-
+    results/stagewise_representation_collision_audit/audit_protocol_lock.json,
+    checkpoint_inventory.json, split_inventory.json, stage_inventory.json,
+    instrumentation_integrity.json, set_sketch_lock.json,
+    normalization_stats.json, projection_manifest.json, phaseU_integrity.json,
+    neighbors_seed0_probe.jsonl.gz, neighbors_seed0_selection.jsonl.gz,
+    neighbors_seed1_probe.jsonl.gz, neighbors_seed1_selection.jsonl.gz,
+    neighbor_manifest_hashes.json, target_metric_lock.json,
+    random_neighbor_baseline.json, target_far_threshold.json,
+    stage_metrics_seed0.csv, stage_metrics_seed1.csv, contrast_metrics_seed0.csv,
+    contrast_metrics_seed1.csv, bootstrap_intervals.json,
+    projection_robustness.json, k_robustness.json, bottleneck_decision.json,
+    top1_representation_hypothesis.json, answers_q1_q20.json,
+    final_decision.json, neighbors/ (44 per-stage shards), figures/ (3).
+  - notes/stagewise_representation_collision_audit.md (27 sections + Q1-Q20).
+  - tests/test_stagewise_representation_collision_audit.py (23 pass).
+limitations: >-
+  This is GEOMETRY evidence, not information-theoretic proof: kNN geometry
+  degradation is not identical-representation collision. Two development seeds
+  are not a population. The pair-compression sub-threshold signal (D2) is
+  direction-stable but non-material and collision-inconsistent; it is recorded
+  as a descriptive watch item, NOT a bottleneck and NOT an authorization.
+  Official test was never loaded, so nothing is claimed about test MAE. The
+  set-aware sketch is a deterministic projected-quantile sketch, not an exact
+  Wasserstein distance. Existing NO-GOs (P1 / P2 / cell / covariance / triad /
+  endpoint / richer frozen readout / low-rank lookup donor) remain binding.
+  Case E does NOT authorize an architecture: the next direction is
+  generalisation / regularisation / training stochasticity / scalar-target
+  mapping geometry / finite-data sample efficiency.

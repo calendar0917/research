@@ -1,0 +1,49 @@
+claim_id: claim-optimized-topology-survives-20260918
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-18T00:30:00'
+statement: >-
+  Under the frozen optimized compact-v4-hinge training protocol (Adam, lr 1e-3,
+  wd 1e-5, batch 128, max_epochs 240, patience 40, no scheduler, L1, best
+  official-valid checkpoint, single stage), the global topology hinge still
+  provides independent architecture value: optimized compact-v2 seed0 reaches
+  official-valid MAE 0.166266 (best epoch 166, 98,549 params) while the reused
+  optimized compact-v4-hinge seed0 reference is 0.146420 (best epoch 169,
+  99,613 params). The topology gap is delta_topo = MAE_valid(v2) - MAE_valid(v4)
+  = +0.019846, i.e. far above the +0.006 strong-survival threshold and LARGER
+  than the historical 60-epoch gap (+0.014093). Fair optimization improves BOTH
+  architectures (v2 0.184158 -> 0.166266, +0.017892; v4 0.170066 -> 0.146420,
+  +0.023645) but does not close the gap. The historical topology GO is therefore
+  not an under-training artifact.
+scope: >-
+  ZINC-12k official train/valid only; official test never loaded. Single new
+  full-training run (optimized compact-v2 seed0) against the reused optimized
+  compact-v4-hinge seed0 checkpoint. Only the global topology channel differs
+  between the two models (topology_mode none vs hinge); patch definition,
+  historical tokenizer (explicitly pinned), descriptor widths, embedding
+  dims/rank, pair path, centre update, pooling, global branch, graph head and
+  parameter-budget rules are unchanged. Seed1 was NOT purchased because the
+  A-STRONG seed0 gate fired; it is reserved for future paper-core confirmation.
+supporting_evidence:
+- notes/optimized_baseline_critical_revalidation.md
+- results/optimized_baseline_critical_revalidation/protocol_lock.json
+- results/optimized_baseline_critical_revalidation/checkpoint_inventory.json
+- results/optimized_baseline_critical_revalidation/part_a_v2_seed0.json
+- results/optimized_baseline_critical_revalidation/part_a_decision.json
+- results/optimized_baseline_critical_revalidation/runs/v2_hist_seed0.json
+- results/optimized_baseline_critical_revalidation/curves/v2_hist_seed0_curve.csv
+- results/optimized_baseline_critical_revalidation/states/v2_hist_seed0_selection_state.pt
+- results/compact_v4_training_sufficiency/runs/Pstar_A2_long_seed0.json
+- configs/luyin16/zinc_optimized_v2_historical.yaml
+- tests/test_optimized_baseline_critical_revalidation.py
+contradicting_evidence:
+  - >-
+    This is a SINGLE seed (seed0) result by design; the strong-survival branch
+    was pre-registered to stop at seed0 because the topology claim already had
+    4/4 historical directional gains. A future paper-core claim should still add
+    optimized-v2 seed1.
+  - >-
+    The optimized compact-v2 best-valid epoch 166 is an isolated dip on a noisy
+    batch-128 curve (late-phase std ~0.011); the gap is nonetheless ~0.02, far
+    larger than that noise scale and larger than the historical gap.

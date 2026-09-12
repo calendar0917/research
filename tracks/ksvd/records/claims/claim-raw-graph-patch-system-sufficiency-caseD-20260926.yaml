@@ -1,0 +1,71 @@
+claim_id: claim-raw-graph-patch-system-sufficiency-caseD-20260926
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-26T00:00:00'
+statement: >-
+  On the official PyG ZINC train split (10,000 molecules; official valid and
+  official test never loaded; zero neural training), the complete
+  model-accessible pre-neural object system of compact-v4 (P3 = patch tokens +
+  parent tokens + 146D patch shell descriptors + the full 23D pair-relation
+  system with distance buckets and incidence + 62D global context + 25D
+  topology) has NO raw-non-isomorphic exact collision, giving empirical alias
+  lower bound LB(P3) = 0.0, far below the 0.002 material gate. The historical
+  tokenizer alias is genuine but shallow: P0 token-only signatures form 2
+  raw-non-isomorphic classes ({941,2264} and {7805,9382}; LB 7.95e-5), both
+  dissolved by the continuous patch descriptor at P1. On the frozen
+  target-independent 7200 reference / 2000 primary / 800 replication
+  official-train split, the current patch-system geometry is MORE target-local
+  than two generic raw-graph references: eta(PATCH_FULL) = 0.5459 vs
+  eta(RAW combined) = 0.6337, eta(WL) = 0.7455, eta(SP) = 0.6024, with
+  Delta_pre = -0.0878 (paired bootstrap B=2000 95% CI [-0.0999,-0.0748]),
+  replication -0.0909, lower collision rate (0.0464 vs 0.0846), and both raw
+  views agreeing. Verdict: Decision Case D — CURRENT PRE-NEURAL PATCH SYSTEM
+  SUFFICIENCY NOT REFUTED. No hard or soft pre-neural bottleneck is supported;
+  no representation-family redesign is authorized; the next justified stage is
+  inductive bias / sample efficiency.
+scope: >-
+  ZINC-12k official train only. Official valid never loaded; official test
+  never loaded. Zero full-model training, zero neural probe fitting, no EMA /
+  SWA / soup, no checkpoint tuning. Phase H over all 10K official-train
+  molecules; Phase S over the frozen 7200/800/2000 official-train split with
+  primary k=8 and pre-registered WL depth 0..4. Raw references use only the
+  dataset raw atom (atomic number) and bond (bond type) features. Patch blocks
+  come exclusively from the current compact-v4 preprocessing.
+evidence:
+  - >-
+    results/raw_graph_patch_system_sufficiency/audit_protocol_lock.json,
+    raw_graph_inventory.json, pre_neural_input_inventory.json,
+    split_inventory.json, hard_signature_lock.json, p0/p1/p2/p3_signature_summary.json,
+    raw_graph_isomorphism_checks.json, functional_collision_checks.json,
+    hard_aliasing_target_summary.json, hard_aliasing_lower_bounds.json,
+    raw_wl_lock.json, raw_sp_lock.json, patch_soft_signature_lock.json,
+    normalization_stats.json, distance_scale_stats.json,
+    neighbors_{raw,wl,sp,patch_local,patch_pair,patch_full}_{probe,selection}.jsonl.gz,
+    neighbor_manifest_hashes.json, phaseU_integrity.json, target_metric_lock.json,
+    random_neighbor_baseline.json, soft_geometry_metrics.csv,
+    soft_geometry_bootstrap.json, collision_consistency.json,
+    knn_predictor_diagnostics.json, integrity_tests.json, final_decision.json,
+    top1_pre_neural_hypothesis.json, answers_q1_q20.json, figure_data.json,
+    figures/ (3).
+  - notes/raw_graph_patch_sufficiency_audit.md (28 sections + Q1-Q20).
+  - tests/test_raw_graph_patch_sufficiency_audit.py (20 pass).
+limitations: >-
+  P3 injectivity is not an information-theoretic optimality proof. The soft
+  comparison depends on the two pre-registered generic raw references; a
+  different raw metric could in principle rank differently, though WL and SP
+  agree here. The topology block has a disclosed provenance caveat (historically
+  motivated by a long-cycle target audit) but remains a genuine
+  model-accessible input. Nothing is claimed about official valid or official
+  test.
+  LB(P3)=0.0 does not prove the representation is optimal for finite-data
+  learning; that is the separate sample-efficiency question.
+evidence_summary:
+  lb_p3: 0.0
+  lb_p3_material_gate: 0.002
+  p3_raw_nonisomorphic_classes: 0
+  delta_pre: -0.0878
+  delta_pre_ci: [-0.0999, -0.0748]
+  eta_patch_full: 0.5459
+  eta_raw: 0.6337
+  verdict: CURRENT_PRE_NEURAL_PATCH_SYSTEM_SUFFICIENCY_NOT_REFUTED
