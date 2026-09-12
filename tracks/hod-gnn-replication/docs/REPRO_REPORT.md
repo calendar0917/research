@@ -26,7 +26,7 @@
 - **选优**：按**验证集** AUC 选 best epoch，再取该 epoch 的 test AUC（全程不看 test 选模）
 - **数据**：OGB `ogbg-molhiv` 官方 scaffold split；`split_hash = feda8af4…321179`；train/valid/test = 32901/4113/4113
 - **代码/commit**：GraphGPS 官方仓 `https://github.com/rampasek/GraphGPS.git` @ `28015707cbab7f8ad72bed0ee872d068ea59c94b`
-- **配置**：`configs/GPS/ogbg-molhiv-GPS+RWSE.yaml`（max_epoch=100, warmup=5, layers=6, hidden=64, lr=1e-4, RWSE PE）
+- **配置**：`configs/GPS/ogbg-molhiv-GPS+RWSE.yaml`（max_epoch=100, warmup=5, gt.layers=10, n_heads=4, dim_hidden=64, lr=1e-4, RWSE PE）
 - **批量/偏差**：`batch_size=32`（官方 config）；论文附录 molhiv 写 128 → 记录在 DEVIATIONS.md
 - **环境**：Kaggle Tesla P100-16GB；torch 1.13.0+cu117；python 3.12.13；约 3h/seed
 
