@@ -1,0 +1,135 @@
+decision_id: decision-inductive-bias-sample-efficiency-audit-caseA-20260912
+created: '2026-09-12T14:40:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Execute the pre-registered Compact-v4 Inductive-Bias & Sample-Efficiency Audit
+  and register Decision Case A: STRONG WITHIN-FAMILY DATA-LIMITED REGIME.
+  Authorize sample_efficiency_inductive_bias design only
+  (authorized_for_design=true, full_training_authorized=false). Do NOT authorize
+  any architecture training, do NOT run N=900, do NOT run seed2/seed3, and never
+  load official valid or official test.
+why_this_experiment: >-
+  The information-bottleneck line is closed (raw-graph patch-system sufficiency
+  Case D: LB(P3)=0, PATCH_FULL target geometry beats RAW references; stagewise
+  representation collision Case E: no material degradation; parameter-allocation
+  audit: compression-only opportunity). Checkpoint tuning is also closed as a
+  main line (Top-5 soup is a fixed measurement stabilizer). The remaining
+  question was not where information is lost but how hard the same information is
+  to learn from a finite number of examples at fixed architecture, optimizer,
+  selection set, probe set and optimizer-step budget.
+protocol: >-
+  Exact compact-v4-smallhead (82,115 params); Adam lr 1e-3, wd 1e-5, batch 128,
+  L1, no scheduler; frozen official-train 7200/800/2000 split reused
+  index-for-index; nested target-independent subsets D1800 subset D3600 subset
+  D7200 via sha256(salt || original_official_train_index); max optimizer steps
+  240 x 57 = 13,680 mechanically derived from run_I0T0.json; selection eval every
+  57 steps; patience 40 selection evaluations; ties resolve to the earlier step.
+  RAW = lowest-800-MAE checkpoint; SOUP = K=5 equal-weight parameter average.
+  Staged purchase: N3600 seed0 first; N3600 seed1 only on a material +0.006
+  SOUP gain with positive paired-bootstrap support and positive RAW; N1800 seed0
+  only after two-seed replication; N1800 seed1 only on a material +0.006
+  18->36 gain. The 7200 I0T0/I1T1 anchors were reused and never retrained.
+results:
+  anchor_steps_per_epoch: 57
+  max_optimizer_steps: 13680
+  selection_eval_interval: 57
+  patience_evaluations: 40
+  subset_hash_3600: 3be9f7e1a4fb8cf4ed5eedfbd725b1ac9d618e6bc6d4873fe254ddc1017dfea9
+  subset_hash_1800: 17eb66c1fdd81cf9991501688681c825e18d9b1accdc434ded18ae0eb05a4747
+  soup_probe_mae_N1800_seed0: 0.22518424505670556
+  soup_probe_mae_N1800_seed1: 0.24001686798990704
+  soup_probe_mae_N3600_seed0: 0.1766334645843599
+  soup_probe_mae_N3600_seed1: 0.17550131074362435
+  soup_probe_mae_N7200_seed0: 0.12751749921706504
+  soup_probe_mae_N7200_seed1: 0.1242676870196592
+  raw_probe_mae_N1800_seed0: 0.22653947317157871
+  raw_probe_mae_N1800_seed1: 0.2443582241225522
+  raw_probe_mae_N3600_seed0: 0.1813302334912587
+  raw_probe_mae_N3600_seed1: 0.17647210092493332
+  raw_probe_mae_N7200_seed0: 0.13167857976048253
+  raw_probe_mae_N7200_seed1: 0.1278573995383922
+  G_soup_36_to_72_seed0: 0.04911596536729487
+  G_soup_36_to_72_seed1: 0.051233623723965144
+  mean_G_soup_36_to_72: 0.05017479454563001
+  two_seed_bootstrap_36_to_72_ci95: [0.04325570836785483, 0.05799889225887018]
+  G_soup_18_to_36_seed0: 0.04855078047234565
+  G_soup_18_to_36_seed1: 0.06451555724628269
+  mean_G_soup_18_to_36: 0.05653316885931417
+  G_raw_36_to_72_seed0: 0.04965165373077618
+  G_raw_36_to_72_seed1: 0.048614701386541115
+  G_raw_18_to_36_seed0: 0.04520923968032001
+  average_per_doubling_gain: 0.05335398170247212
+  descriptive_slope_b: -0.05335398170247212
+  stage1_case: MATERIAL_LOCAL_DATA_SCALING_SIGNAL
+  stage2_case: REPLICATED_MATERIAL_NEAR_7200_DATA_SCALING
+  stage3_case: THREE_POINT_STRONG_SCALING_SIGNAL
+  final_case: STRONG_WITHIN_FAMILY_DATA_LIMITED_REGIME
+  integrity_gates_passed: true
+  official_valid_loaded: false
+  official_test_loaded: false
+alternatives_rejected:
+  - item: retrain or alter the 7200 I0T0/I1T1 anchors
+    because: >-
+      the anchors are reused byte-for-byte; retraining would break the fixed
+      reference and waste budget.
+  - item: run N=900
+    because: >-
+      two consecutive data doublings over 1800-3600-7200 already resolve the
+      local curve; N=900 is explicitly out of scope even if the plot is pretty.
+  - item: run seed2 / seed3
+    because: >-
+      the maximum is two seeds at this stage; the two-seed replication is
+      already unambiguous.
+  - item: retune LR / weight decay / batch / scheduler / patience / max steps
+      for small N
+    because: >-
+      the audit measures the effect of sample count under one canonical recipe;
+      retuning would confound sample size with optimization.
+  - item: compare against CIN / GIN / GCN or any external reference
+    because: >-
+      this is a within-family sample-efficiency audit; cross-family comparison
+      needs its own pre-registered design and would add confounds.
+  - item: fit a 3-parameter power law and report a scaling exponent
+    because: >-
+      three sample sizes make any asymptotic-floor fit unstable; the primary
+      quantity is the measured MAE gained per data doubling.
+  - item: report soup as a new method contribution
+    because: >-
+      soup is a fixed checkpoint-selection-noise-reduced measurement channel,
+      not a research object.
+  - item: add structural features / capacity / attention / message passing to
+      rescue the gap
+    because: >-
+      a steep learning curve says the family is data-limited; it does not
+      authorize reopening the closed missing-information NO-GOs.
+  - item: treat the strong doubling gain as proof that more data closes the
+      0.02 benchmark gap
+    because: >-
+      doubling gains generally diminish and cross-model protocols are not
+      unified; this is a within-family local measurement.
+consequences:
+  - >-
+    authorized_for_design=true with hypothesis_family=sample_efficiency_inductive_bias
+    and full_training_authorized=false: future architecture candidates must
+    explain why existing structural information is easier to use from fewer
+    samples (parameter sharing, reusable composition, constrained interaction
+    structure, factorized functional form) rather than adding information or
+    capacity.
+  - >-
+    The next research budget should target sample efficiency, e.g. compare a new
+    candidate E_new(3600) against the current E_current(7200) under the same
+    frozen split and probe.
+  - >-
+    Outputs under results/inductive_bias_sample_efficiency_audit/ (protocol and
+    architecture locks, split inventory, nested subset lock, anchor compatibility,
+    seed lock, decision thresholds, integrity gates, per-stage JSON/decisions,
+    learning-curve CSVs, doubling-gain and paired-bootstrap summaries, compute
+    audit, final decision, Q1-Q20, curves, snapshots, soup states, 4 figures) and
+    notes/inductive_bias_sample_efficiency_audit.md.
+revisit_if: >-
+  A new pre-registered architecture hypothesis has a sample-efficiency mechanism
+  and a frozen same-subset / same-probe / same-step protocol; only then may a
+  targeted E_new(3600) vs E_current(7200) test be run. Do NOT run N=900, do NOT
+  add seed2/seed3, do NOT reopen the closed representation NO-GOs, and never
+  load official valid or official test without separate authorization.

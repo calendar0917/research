@@ -1,0 +1,69 @@
+claim_id: claim-inductive-bias-sample-efficiency-audit-20260912
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-12T14:40:00'
+statement: >-
+  Under the locked compute-matched protocol (exact compact-v4-smallhead 82,115
+  params; Adam lr 1e-3 wd 1e-5 batch 128 L1 no scheduler; frozen official-train
+  7200/800/2000 split; max 13,680 optimizer steps derived from the real 7200
+  anchor steps_per_epoch=57 x 240; selection every 57 steps; patience 40
+  selection evaluations; K=5 equal-weight soup of the lowest-800-MAE
+  checkpoints; nested target-independent subsets), held-out 2000-probe MAE for
+  the fixed model family falls sharply as unique training examples double. SOUP
+  probe MAE: N=1800 seed0 0.225184 / seed1 0.240017; N=3600 seed0 0.176633 /
+  seed1 0.175501; N=7200 seed0 0.127517 / seed1 0.124268 (7200 anchors reused,
+  never retrained). RAW agrees in direction throughout. Doubling gains
+  (G_soup = E(N) - E(2N)): N3600->7200 seed0 +0.049116 (paired 95% CI
+  [+0.042053, +0.056636]) / seed1 +0.051234 (CI [+0.042389, +0.061006]),
+  two-seed mean +0.050175 (CI [+0.043256, +0.057999]); N1800->3600 seed0
+  +0.048551 (CI [+0.041398, +0.055593]) / seed1 +0.064516 (CI [+0.056034,
+  +0.072706]), two-seed mean +0.056533. Average per-doubling gain +0.053354,
+  roughly constant over 1800-7200 (descriptive slope b = -0.053354 MAE per
+  log2(N)); the curve is close to linear in log2(N) over the observed range.
+  All four new runs early-stopped under canonical patience (N3600 seed0 6,042
+  steps/106 evals, seed1 9,063/159; N1800 seed0 6,555/115, seed1 7,581/133);
+  no run is boundary-pinned. Initial state hashes exactly match the historical
+  smallhead I0/I1 fingerprints. Train/probe gaps grow as N shrinks (SOUP gap
+  0.128/0.126 at 3600; 0.187/0.199 at 1800). All 18 integrity gates pass.
+  Official valid was never loaded; official test was never loaded. Verdict:
+  Decision Case A STRONG_WITHIN_FAMILY_DATA_LIMITED_REGIME.
+scope: >-
+  ZINC official train only (frozen internal 7200/800/2000 split); official valid
+  and official test never loaded; two parameter-initialization seeds (0,1) and
+  two trajectory seeds (0,1); N in {1800, 3600, 7200}; exact compact-v4-smallhead
+  architecture, optimizer, loss, batch size, selection set and probe set held
+  fixed; 7200 anchors reused from the internal-generalization trajectories.
+evidence:
+  - >-
+    results/inductive_bias_sample_efficiency_audit/audit_protocol_lock.json,
+    architecture_lock.json, split_inventory.json,
+    sample_efficiency_subset_lock.json, anchor_protocol_compatibility.json,
+    seed_lock.json, decision_thresholds.json, integrity_gates.json,
+    stage1_N3600_I0T0.json, stage1_decision.json, stage2_N3600_I1T1.json,
+    stage2_decision.json, stage3_N1800_I0T0.json, stage3_decision.json,
+    stage4_N1800_I1T1.json, stage4_decision.json, learning_curve_summary.csv,
+    three_point_learning_curve.csv, two_seed_learning_curve.csv,
+    doubling_gain_summary.json, paired_bootstrap.json, compute_audit.json,
+    final_decision.json, answers_q1_q20.json, curves/ (4), snapshots/ (new runs),
+    states/ (soup), figures/ (4).
+  - top1_sample_efficiency_hypothesis.json (authorized_for_design=true,
+    hypothesis_family=sample_efficiency_inductive_bias,
+    full_training_authorized=false).
+  - notes/inductive_bias_sample_efficiency_audit.md (29 sections).
+  - tests/test_inductive_bias_sample_efficiency_audit.py.
+limitations: >-
+  Within-family only. This does NOT prove that compact-v4 has inferior inductive
+  bias relative to CIN/GNN or any external model; a cross-family sample-efficiency
+  comparison needs the same subsets and probe with another representation family.
+  The 2000 probe already participated in prior hypothesis formation and is not a
+  pristine holdout; it was locked for preregistered measurement only. The
+  per-doubling gain is a local 1800-7200 measurement; with three sample sizes no
+  power-law or asymptotic-floor claim is made and no extrapolation to 14.4K /
+  28.8K / infinite data is authorized. The larger N=7200 anchors were run at full
+  budget while smaller-N runs early-stopped under patience; at matched optimizer
+  step 6,783 the 3600 seed1 800-selection MAE 0.205394 is still much worse than
+  the 7200 anchor at epoch 119 (0.1698), so the effect is not an artifact of
+  early stopping. A steep curve means the family remains data-limited; it does not
+  by itself prove that more data would close the benchmark gap. It also does not
+  authorize adding structural features or capacity.
