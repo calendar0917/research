@@ -1,0 +1,71 @@
+claim_id: claim-sbci-fit-matched-generalization-frontier-crossing-20260912
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-09-12T18:58:00'
+runtime_date: '2026-09-12'
+repository_record_date: '2026-09-12'
+date_policy: runtime_date
+chronology_note: >-
+  runtime clock is 2026-09-12; earlier SBCI-branch records carry repository
+  dates 20261007 (they were created under a different apparent clock and are
+  NOT re-dated here). This audit logically postdates those records even though
+  its filename date sorts earlier.
+statement: >-
+  Zero-training final diagnostic on the SBCI branch. Using only the frozen
+  N3600/I0/T0 compact-v4-smallhead (106 snapshots) and compact-v4-SBCI (102
+  snapshots) RAW trajectories, the D3600 empirical training fit was recomputed
+  for all 208 snapshots under model.eval() (max |recomputed - stored| = 0.0).
+  After a pre-registered 25% burn-in (common final step 5814, threshold 1453.5;
+  81 baseline / 77 SBCI eligible) the common D3600 train-fit overlap is
+  [0.0590017, 0.1680832]; 10% edge trimming gives [0.0699098, 0.1571750]
+  (width 0.0872652) and K=7 equally spaced fit anchors. A deterministic
+  minimum-cost bipartite assignment (cost = |train MAE - anchor|, later-step
+  tie-break via epsilon 1e-12) matched 6 valid anchors for both families
+  (K_valid = 6 >= 5; median cross-model fit gap 0.0008688 <= 0.001; anchor 6
+  invalid because the baseline trajectory has no snapshot within 0.002 of
+  0.15718). The pairs were SHA-256 locked before any 800 access. On the 800
+  selection-generalization diagnostic set (not pristine; used for original
+  checkpoint selection) the equal-weight per-anchor differences are
+  D_k = [+0.006618, -0.003695, +0.008842, +0.021548, -0.003175, -0.010575]:
+  D_mean = +0.003261, paired-molecule bootstrap (B=2000, seed 20260912)
+  95% CI [-0.004861, +0.012669], median D_k = +0.001722, f_+ = 0.50,
+  f_{<=0.002} = 0.50. Because 3 anchors are >= +0.003 and 3 anchors are
+  <= -0.003, the pre-registered material-frontier-crossing condition fires.
+  Decision: FIT_DEPENDENT_FRONTIER_CROSSING. The 2000 internal probe was
+  correctly NOT opened (no stage2_2000 artifacts exist). No next architecture
+  family is authorized: authorized_for_design = false, family = null,
+  full_training_authorized = false,
+  sbci_branch_closed_for_architecture_inference = true. The SBCI endpoint
+  NO-GO is unchanged and is not re-judged.
+scope: >-
+  ZINC official train only; frozen internal D3600/800/2000 environment; official
+  valid and official test never loaded; single N3600 seed0 pair; zero gradient
+  updates (runtime guard forbids Tensor.backward / Optimizer.step); the 800 set
+  is a selection-generalization diagnostic set, not a pristine holdout; the
+  2000 probe is an internal development probe and was not opened; soup states
+  are contextual endpoint markers only and never enter the frontier.
+evidence:
+  - >-
+    results/sbci_fit_matched_generalization_frontier/audit_protocol_lock.json,
+    protocol_compatibility.json (16/16), snapshot_inventory.json,
+    train_fit_inventory.parquet, fit_inventory.summary.json,
+    train_fit_overlap.json, fit_anchor_lock.json (lock_sha256 85fbd6cc...),
+    matched_snapshot_pairs.csv (sha256 44d6a246...),
+    phaseF_fit_only_lock.json, match_quality.json,
+    stage1_800_per_anchor.csv, stage1_800_per_molecule.npy,
+    stage1_800_bootstrap.json, stage1_800_decision.json,
+    endpoint_context.json, final_decision.json, next_architecture_family.json,
+    answers_q1_q20.json, integrity_tests.json (20/20),
+    figures/figure1_fit_matched_frontier.png,
+    figures/figure2_anchor_differences.png,
+    figures/figure3_aggregate_matched_fit.png.
+  - notes/sbci_fit_matched_generalization_frontier.md (23 sections + Q1-Q20).
+  - tests/test_sbci_fit_matched_generalization_frontier.py (29 pass).
+limitations: >-
+  Single N3600 seed0 pair; fit-matched frontier built from individual trajectory
+  snapshots, not soup states; the 800 set was used for original checkpoint
+  selection and the 2000 probe has been used in prior mechanism audits, so
+  neither is a pristine final holdout; no official valid/test claim is made;
+  the material crossing means the relative frontier depends on the empirical
+  fit level and no single capacity/wrong-bias label is justified.

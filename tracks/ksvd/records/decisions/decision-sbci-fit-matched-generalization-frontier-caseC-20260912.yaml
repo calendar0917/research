@@ -1,0 +1,87 @@
+decision_id: decision-sbci-fit-matched-generalization-frontier-caseC-20260912
+kind: decision
+created: '2026-09-12T18:58:00'
+runtime_date: '2026-09-12'
+repository_record_date: '2026-09-12'
+date_policy: runtime_date
+chronology_note: >-
+  runtime clock is 2026-09-12; earlier SBCI-branch records carry repository
+  dates 20261007 and are not re-dated here. This audit logically postdates them.
+study_id: zinc-context-gap
+decision: >-
+  Register the final SBCI diagnostic: FIT_DEPENDENT_FRONTIER_CROSSING. At matched
+  D3600 empirical training fit, SBCI's 800 generalization difference materially
+  crosses zero (3 anchors >= +0.003, 3 anchors <= -0.003), so no next
+  architecture family can be inferred from the SBCI failure. Do NOT authorize
+  Shared Structural Operator Dictionary (SSOD); do NOT authorize Direct Shared
+  Structural Potentials (DSP); do NOT rescue SBCI; do NOT run seed1; do NOT run
+  a fourth SBCI diagnostic (no fit-bin subdivision, no 5/9/11 anchors, no
+  tolerance/threshold sweep, no subgroup analysis); do NOT train anything; do
+  NOT load official valid or official test. Close the SBCI branch for
+  architecture inference.
+why_this_experiment: >-
+  The prior fit triage was mixed (RAW better for SBCI, SOUP worse, dF_min just
+  over the gate, dF_late the other way), so it could not separate an
+  endpoint-fit confound from a genuine matched-fit generalization ordering. The
+  clean way to decide between "capacity/over-constraint failure" (DSP) and
+  "wrong inductive bias despite adequate fit" (SSOD) was to match individual
+  frozen RAW trajectory snapshots by D3600 training fit, fully blind to
+  held-out performance, and then compare the locked pairs on 800, with 2000
+  reserved for conditional confirmation.
+protocol: >-
+  Zero-training, three-firewall diagnostic. Exact index-for-index reuse of the
+  N3600/I0/T0 environment: D3600 sha256 3be9f7e1..., same 800/2000 index hashes,
+  subset salt compact-v4-sample-efficiency-nested-subset-v1-20260912; Adam
+  lr 1e-3 wd 1e-5 batch 128 L1 no scheduler clip 5.0, max 13680 steps, eval
+  interval 57, patience 40; 20 shared tensors bit-identical (max_abs_diff 0.0).
+  Phase F: recompute every saved snapshot's D3600 train MAE in model.eval()
+  (208/208, max|diff| vs stored 0.0), exclude steps < 0.25*5814 = 1453.5,
+  build the common fit overlap and K=7 anchors, deterministic minimum-cost
+  matching with later-step tie-break, SHA-256 lock before any 800 access.
+  Phase G800: evaluate only the six valid locked pairs on the 800
+  selection-generalization set. Phase G2000: only if Stage 1 authorizes it;
+  here it did not, so 2000 was never opened.
+results:
+  baseline_snapshots: 106
+  sbci_snapshots: 102
+  s_common: 5814
+  common_step_threshold: 1453.5
+  eligible_baseline: 81
+  eligible_sbci: 77
+  common_train_fit_overlap: [0.05900165398938245, 0.16808316832430945]
+  trimmed_interval: [0.06990980542287516, 0.15717501689081675]
+  fit_anchors: [0.06990980542287516, 0.08445400733419875, 0.09899820924552236, 0.11354241115684596, 0.12808661306816954, 0.14263081497949315, 0.15717501689081675]
+  k_valid: 6
+  max_cross_model_fit_gap: 0.007996989568928276
+  median_cross_model_fit_gap: 0.0008687678881688088
+  stage1_800_D_k: [0.0066180491773411565, -0.0036946114779857486, 0.008841753767192151, 0.02154818258932209, -0.0031746022775769045, -0.01057496660389004]
+  stage1_800_D_mean: 0.003260634195733784
+  stage1_800_bootstrap_ci95: [-0.004860773937072735, 0.01266885479403693]
+  stage1_800_median_D_k: 0.001721723449882126
+  stage1_800_f_plus: 0.5
+  stage1_800_f_le_002: 0.5
+  stage1_800_material_crossing: true
+  stage1_800_decision: MATERIAL_FRONTIER_CROSSING
+  authorize_2000: false
+  stage2_2000: null
+  final_case: FIT_DEPENDENT_FRONTIER_CROSSING
+  authorized_for_design: false
+  next_architecture_family: null
+  full_training_authorized: false
+  sbci_branch_closed_for_architecture_inference: true
+rejected:
+  - authorizing SSOD or DSP from a frontier that materially crosses
+  - opening the 2000 internal probe after a crossing at 800
+  - selecting or re-matching fit anchors using any held-out performance
+  - using SOUP states to construct the frontier
+  - running a fourth SBCI diagnostic / anchor-count or tolerance sweep
+  - resuming SBCI training / buying seeds / touching official valid or test
+outputs:
+  - tracks/ksvd/results/sbci_fit_matched_generalization_frontier/
+  - tracks/ksvd/notes/sbci_fit_matched_generalization_frontier.md
+  - tracks/ksvd/tests/test_sbci_fit_matched_generalization_frontier.py
+revisit_if: >-
+  A genuinely independent, pre-registered frontier hypothesis with its own
+  frozen witness (not a re-reading of SBCI). Architecture ideas should now come
+  from independent principles rather than post-hoc interpretation of the SBCI
+  endpoint failure.
