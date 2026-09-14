@@ -1,0 +1,82 @@
+decision_id: decision-compact-v4-ordered-path-bond-nogo-20260913
+created: '2026-09-13T14:30:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Ordered shortest-path bond-sequence encoding on the frozen T=2 recurrent
+  pair--centre skeleton: NO-GO / DEGRADED at the seed0 gate. Phase A audited the
+  current relation primitive and confirmed genuine path-order aliasing
+  (official-valid bond-order collision 55.0% overall; 46% at d=3 rising above
+  90% for d>=11; 23.6% of pairs have multiple shortest paths; official-train
+  57.3%). A minimal ordered encoder (shared bond embedding + learned position
+  embedding -> 2-layer MLP -> 8D s_ij, concatenated to the widened pair-encoder
+  input; canonical min(seq, reverse(seq)) per shortest path; mean over paths)
+  was added with all recurrent modules/params/protocol frozen. It adds +2,328
+  params (84,443 total) and costs 1.06x epoch time, but degrades seed0
+  official-valid MAE to 0.142814 @ epoch 120 versus the recurrent reference
+  0.138376 @ epoch 199 (Delta = -0.004438, i.e. worse). At a matched horizon of
+  140/160 epochs the ordered model is still slightly worse (Delta = -0.00138).
+  Per the pre-registered gate (Delta >= +0.002 to continue; <= +0.001 stop),
+  the matched orderless control was NOT run, seed1 was NOT purchased, atom
+  sequence was NOT added, and official test was NEVER loaded.
+why_this_experiment: >-
+  Previous diagnostics on this frozen model closed depth (T=3 saturated) and
+  relation activation (signed-q degraded), and explicitly recommended changing
+  the relation *primitive*, e.g. ordered shortest-path encoding. The current
+  descriptor retains distance, path count and the bond composition averaged
+  over shortest paths, but not the bond order. Phase A first established whether
+  that order is actually aliased before spending any training compute.
+protocol: >-
+  Inherited frozen compact-v4-smallhead protocol (Adam lr 1e-3, wd 1e-5, batch
+  128, max 240, patience 40, no scheduler, gradient clip 5.0, L1, best
+  official-valid, single stage) applied to the frozen T=2 recurrent pair--centre
+  model. Path encoder geometry pre-registered: PATH_MAX_LEN=12, PATH_TOKEN_DIM=8,
+  PATH_HIDDEN=16, PATH_DIM=8. s_ij = MLP(flatten(counts @ bond_embedding +
+  position_embedding)); counts[pos,bond] = mean over canonicalised shortest
+  paths. Baseline pair-encoder input columns copied bit-exactly; new columns
+  small-normal (std=0.01). force_zero_path reduces exactly to the recurrent
+  function. Seed0 only; validation only.
+results:
+  phase_a_valid_n_pairs: 264776
+  phase_a_valid_fraction_multiple_shortest_paths: 0.23564446928724658
+  phase_a_valid_bond_collision_fraction: 0.5502651297700698
+  phase_a_valid_atom_collision_fraction: 0.9992106535335529
+  phase_a_train_n_pairs: 2668346
+  phase_a_train_fraction_multiple_shortest_paths: 0.2308396287437986
+  phase_a_train_bond_collision_fraction: 0.572708711688814
+  phase_b_parameters_recurrent: 82115
+  phase_b_parameters_ordered: 84443
+  phase_b_added_parameters: 2328
+  phase_b_sanity_all_checks_passed: true
+  phase_b_epoch_seconds_recurrent: 7.4361620434895
+  phase_b_epoch_seconds_ordered: 7.875959168700137
+  phase_b_epoch_ratio: 1.0591430260177948
+  phase_c_ordered_valid_seed0: 0.1428136210675002
+  phase_c_ordered_best_epoch: 120
+  phase_c_ordered_epochs_run: 160
+  phase_c_reference_recurrent_valid_seed0: 0.13837560486892472
+  phase_c_delta_recurrent_minus_ordered: -0.0044380161985754785
+  phase_c_matched_horizon_160_delta: -0.00138
+  phase_c_verdict: DEGRADED
+  phase_d_triggered: false
+  official_test_loaded: false
+alternatives_rejected:
+  - Do not run the orderless matched control (Phase-C gate not met).
+  - Do not add atom-type sequence, CNN/GRU/Transformer/attention path encoders,
+    bigram/learned-order sweeps, or per-position parameter sweeps.
+  - Do not buy seed1, do not reopen T=3, pair-to-pair, P1/P2, cycle cells,
+    covariance/triad/endpoint, or the tokenizer branch.
+  - Do not load official test.
+consequences:
+  - 'Path-order aliasing is real but does not convert to a validation gain with
+    a minimal position-aware bond encoder on this frozen recurrent skeleton.'
+  - 'The relation-primitive line suggested by the T=3/signed-q diagnostics is
+    closed for this family of small ordered encoders.'
+  - 'Next structural move, if any, must be a different pre-registered mechanism
+    witness, not another path-encoder variant.'
+revisit_if: >-
+  Reopen only with (a) a pre-registered mechanism that explains why the missing
+  order is task-relevant, e.g. a target-side witness on the ZINC synthetic
+  substructure, or (b) a genuinely different relation object (not an ordered
+  bond sequence on the same shortest paths) with its own matched control. Never
+  by sweeping encoder variants or opening official test.

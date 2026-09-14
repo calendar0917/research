@@ -234,6 +234,9 @@ def _environment_fingerprint() -> dict[str, Any]:
         "torch": torch.__version__,
         "numpy": np.__version__,
         "torch_threads": int(torch.get_num_threads()),
+        "deterministic_algorithms": bool(
+            torch.are_deterministic_algorithms_enabled()
+        ),
         "device": "cpu",
     }
 
@@ -452,9 +455,29 @@ def train_model(
     tag: str,
     save_state: bool = True,
     real_batch_identity: bool = True,
+    expected_total: int | None = None,
+    snapshot_dir: Path | None = None,
+    data_seed: int | None = None,
 ) -> dict[str, Any]:
     device = torch.device("cpu")
     model = build_fn(seed).to(device)
+    # Seed factorization: ``seed`` always controls initialization (and, because
+    # the builders finish with a fixed head seed, the shared forward/dropout RNG
+    # stream).  ``data_seed`` optionally controls only the mini-batch / training
+    # order.  Default ``None`` reproduces the historical single-seed behaviour
+    # exactly.
+    data_seed = int(seed) if data_seed is None else int(data_seed)
+    expected_total = (
+        int(EXPECTED_SMALL_TOTAL) if expected_total is None else int(expected_total)
+    )
+    # Optional diagnostic: dump one weights-only state_dict per epoch.  Saving a
+    # state_dict uses no RNG and does not touch the optimizer, so a run with
+    # ``snapshot_dir`` set is bit-identical in trajectory to the same run with
+    # snapshots disabled.
+    snapshot_manifest: list[dict[str, Any]] = []
+    if snapshot_dir is not None:
+        snapshot_dir = Path(snapshot_dir)
+        snapshot_dir.mkdir(parents=True, exist_ok=True)
 
     identity: dict[str, Any] = {}
     if real_batch_identity:
@@ -485,27 +508,43 @@ def train_model(
 
     total_params = _n_params(model)
     head_params = _n_params(model.head)
-    if int(total_params) != EXPECTED_SMALL_TOTAL:
+    if int(total_params) != int(expected_total):
         raise RuntimeError(
             f"small-head total params {total_params} != expected "
-            f"{EXPECTED_SMALL_TOTAL}"
+            f"{expected_total}"
         )
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=float(OPTIMIZED_PROTOCOL["learning_rate"]),
         weight_decay=float(OPTIMIZED_PROTOCOL["weight_decay"]),
     )
+    # Optional validation-driven plateau schedule.  The default protocol uses
+    # ``scheduler="none"`` and therefore never constructs a scheduler, so every
+    # existing run keeps a bit-identical optimization trajectory.
+    scheduler_name = str(OPTIMIZED_PROTOCOL.get("scheduler", "none"))
+    scheduler = None
+    scheduler_events: list[dict[str, Any]] = []
+    if scheduler_name == "reduce_on_plateau":
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="min",
+            factor=float(OPTIMIZED_PROTOCOL.get("scheduler_factor", 0.5)),
+            patience=int(OPTIMIZED_PROTOCOL.get("scheduler_patience", 20)),
+            min_lr=float(OPTIMIZED_PROTOCOL.get("scheduler_min_lr", 1.0e-5)),
+        )
+    elif scheduler_name != "none":
+        raise ValueError(f"unknown scheduler: {scheduler_name!r}")
     loader = zpp._make_loader(
         train_data,
         int(OPTIMIZED_PROTOCOL["batch_size"]),
         True,
-        seed + int(OPTIMIZED_PROTOCOL["train_shuffle_seed_offset"]),
+        data_seed + int(OPTIMIZED_PROTOCOL["train_shuffle_seed_offset"]),
     )
     eval_loader = zpp._make_loader(
         valid_data,
         int(OPTIMIZED_PROTOCOL["batch_size"]),
         False,
-        seed + int(OPTIMIZED_PROTOCOL["eval_shuffle_seed_offset"]),
+        data_seed + int(OPTIMIZED_PROTOCOL["eval_shuffle_seed_offset"]),
     )
     steps_per_epoch = int(
         math.ceil(len(train_data) / int(OPTIMIZED_PROTOCOL["batch_size"]))
@@ -548,11 +587,37 @@ def train_model(
         train_mae = epoch_loss / max(seen, 1)
         losses.append(float(train_mae))
         valid_mae, _, _ = _evaluate_mae(model, eval_loader, device)
+        if snapshot_dir is not None:
+            snap_path = snapshot_dir / f"epoch_{epoch:03d}.pt"
+            torch.save(copy.deepcopy(model.state_dict()), snap_path)
+            snapshot_manifest.append(
+                {
+                    "epoch": int(epoch),
+                    "path": str(snap_path),
+                    "sha256": _sha256_file(snap_path),
+                    "train_mae": float(train_mae),
+                    "valid_mae": float(valid_mae),
+                }
+            )
+        if scheduler is not None:
+            previous_lr = float(optimizer.param_groups[0]["lr"])
+            scheduler.step(float(valid_mae))
+            stepped_lr = float(optimizer.param_groups[0]["lr"])
+            if stepped_lr < previous_lr - 1.0e-12:
+                scheduler_events.append(
+                    {
+                        "epoch": int(epoch),
+                        "previous_lr": previous_lr,
+                        "new_lr": stepped_lr,
+                        "valid_mae": float(valid_mae),
+                    }
+                )
+        current_lr = float(optimizer.param_groups[0]["lr"])
         row: dict[str, Any] = {
             "epoch": int(epoch),
             "train_mae": float(train_mae),
             "valid_mae": float(valid_mae),
-            "lr": float(OPTIMIZED_PROTOCOL["learning_rate"]),
+            "lr": float(current_lr),
             "optimizer_steps": int(epoch * steps_per_epoch),
             "checkpoint_selected": 0,
             "head_grad_norm": float(head_grad_sum / max(grad_steps, 1)),
@@ -617,7 +682,15 @@ def train_model(
         "protocol_version": PROTOCOL_VERSION,
         "tag": str(tag),
         "seed": int(seed),
+        "init_seed": int(seed),
+        "data_seed": int(data_seed),
         "protocol": dict(OPTIMIZED_PROTOCOL),
+        "scheduler": str(scheduler_name),
+        "scheduler_events": scheduler_events,
+        "final_lr": float(optimizer.param_groups[0]["lr"]),
+        "min_lr_reached": (
+            None if not curve else float(min(row["lr"] for row in curve))
+        ),
         "best_valid_mae": float(best_mae),
         "best_epoch": int(best_epoch),
         "final_valid_mae": float(final_valid),
@@ -631,6 +704,8 @@ def train_model(
         "parameters": int(total_params),
         "head_parameters": int(head_params),
         "state_path": None if state_path is None else str(state_path),
+        "snapshot_dir": None if snapshot_dir is None else str(snapshot_dir),
+        "snapshot_manifest": snapshot_manifest,
         "curve_path": str(curve_path),
         "pre_head_R_identity": identity,
         "git_commit": _git_commit(),

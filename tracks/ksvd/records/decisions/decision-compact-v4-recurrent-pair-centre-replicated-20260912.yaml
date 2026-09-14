@@ -1,0 +1,88 @@
+decision_id: decision-compact-v4-recurrent-pair-centre-replicated-20260912
+created: '2026-09-12T21:22:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Run one parameter-neutral falsification of the relation-persistence
+  hypothesis on the current best compact-v4-smallhead model: a 2-round,
+  weight-tied recurrent pair--centre variant (q^(1) recomputed from h^(1) with
+  the shared pair encoder; h^(2) = h^(1) + U([h^(1), A(q^(1))]) with the shared
+  centre update; final readout unchanged). Verdict: the 2-round recurrence
+  improves validation and frozen test on 2/2 seeds, BUT the depth-only stale
+  control shows the gain is mostly extra centre depth, not relation
+  persistence. The specific hypothesis that the one-shot relation computation
+  is the bottleneck is therefore WEAK/NO-GO.
+why_this_experiment: >-
+  P2 (one-shot relation refresh, q^(1) pooled into the readout but never fed
+  back into a centre update) was a sub-threshold positive (+0.001963 vs
+  +0.004). The natural stronger test is whether making the relation persist
+  across rounds -- with the updated centres acting back on the relation and the
+  refreshed relation acting back on the centres -- moves the bottleneck. The
+  experiment is deliberately parameter-neutral so any gain cannot be capacity.
+protocol: >-
+  Inherited frozen compact-v4-smallhead protocol (Adam lr 1e-3, wd 1e-5, batch
+  128, max 240, patience 40, no scheduler, gradient clip 5.0, L1, best
+  official-valid, single stage). Matched baseline = compact-v4-smallhead
+  (82,115 params) under the same code path and shared initial tensors; it
+  reproduced the existing smallhead seed0 (0.145334@176) and seed1
+  (0.138059@143) exactly. Candidate = same modules, two weight-tied rounds,
+  82,115 params (delta 0). Control = stale recurrence_mode: two centre updates
+  but q^(0) reused in round 2, same 82,115 params, init-identical to baseline.
+  Official test only in the explicit frozen `terminal_test` stage, gated on the
+  positive validation verdict.
+results:
+  sanity_checks_passed: 24
+  parameters_baseline: 82115
+  parameters_recurrent: 82115
+  parameters_stale_control: 82115
+  delta_parameters: 0
+  valid_seed0_baseline: 0.14533376283763208
+  valid_seed0_stale_control: 0.14050405619485537
+  valid_seed0_recurrent: 0.13837560486892472
+  valid_seed0_delta_vs_baseline: 0.006958157968707357
+  valid_seed0_depth_effect: 0.00482970664277671
+  valid_seed0_refresh_over_depth: 0.002128451325930647
+  refresh_beats_depth_final: true
+  valid_seed1_baseline: 0.13805893784115325
+  valid_seed1_recurrent: 0.13343997858563672
+  valid_seed1_delta: 0.00461895925551653
+  valid_mean_delta: 0.005788558612111944
+  valid_gate: 0.003
+  valid_verdict: RECURRENCE_REPLICATED
+  test_seed0_baseline: 0.12182060355786234
+  test_seed0_recurrent: 0.1193528561219573
+  test_seed1_baseline: 0.11709203501325101
+  test_seed1_recurrent: 0.11054929509293288
+  test_mean_delta: 0.004505243678111587
+  test_recurrent_mean: 0.11495107560744508
+  matched_epoch_seed1_at_baseline_best: -0.005222
+  seed1_horizon_boundary_warning: true
+  matched_epoch_refresh_over_depth_at_stale_best: -0.000927
+alternatives_rejected:
+  - Do not reopen P1 (learned centre composer), P2 (single refresh), compact-v4-cell
+    (cycle cells), covariance/triad/endpoint/topology-statistic routes.
+  - Do not add attention, path features, extra statistics, alpha mixing, concat
+    [q0;q1], per-round weights, a larger q dim, or a learned pooling to this
+    variant.
+  - Do not add a third centre round or more depth without a matched-horizon /
+    matched-depth control; the depth-only stale control already captures ~69%
+    of the seed0 gain.
+  - Do not treat the seed1 horizon-boundary run or the late refresh increment as
+    a clean representation win.
+consequences:
+  - "The one-shot-relation bottleneck hypothesis is WEAK/NO-GO: the dominant
+    effect of the recurrent variant is the extra centre update (depth), not the
+    refreshed pair relation."
+  - "The relation-persistence line is not fully closed: refresh adds a small
+    (+0.0021) and late increment on seed0; the next most informative test is a
+    pre-registered shared-intermediate-k pair-to-pair interaction experiment
+    (parameter-neutral, matched baseline, matched depth, matched horizon)."
+  - Official test is recorded for this variant (mean 0.114951); the <0.10 target
+    is not reached.
+revisit_if: >-
+  Reopen only with a genuinely different, independently pre-registered
+  persistence mechanism (e.g. shared-intermediate-k pair-to-pair interaction),
+  or with a longer-horizon matched-optimization protocol that resolves the
+  late-convergence confound and a matched-depth control for seed1. Do not layer
+  a second refresh / composer / cycle object / extra centre round onto the
+  current recurrent variant.

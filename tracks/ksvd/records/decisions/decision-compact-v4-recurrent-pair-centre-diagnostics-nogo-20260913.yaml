@@ -1,0 +1,80 @@
+decision_id: decision-compact-v4-recurrent-pair-centre-diagnostics-nogo-20260913
+created: '2026-09-13T13:20:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Run two single-change, seed0-only validation diagnostics on the frozen best
+  compact-v4-smallhead 2-round recurrent pair--centre model (82,115 params;
+  seed0 valid 0.138376): (A) signed-q -- remove only the final pair_encoder
+  ReLU; (B) T=3 recurrent depth -- three weight-tied P/Q/U rounds. Verdict:
+  NEITHER CARRIES ENOUGH SIGNAL. Signed-q degrades to 0.140051 (delta -0.001675
+  vs T=2; strong/weak/noise gates +0.002/+0.001/-0.001) -> stop, seed1 not
+  purchased. T=3 reaches 0.139022 (delta -0.000647, |delta| <= 0.001) with no
+  horizon warning (best epoch 173, max 320, patience 40) -> saturated -> stop,
+  no T4/T5. Pivot to changing the relation PRIMITIVE (e.g. ordered
+  shortest-path encoding), not the activation or the recurrence depth.
+why_this_experiment: >-
+  The validated T=2 recurrent model was the best variant, but its control had
+  shown the benefit is mostly extra centre depth while the one-shot relation
+  computation is not the dominant bottleneck. A pre-training audit of the
+  original ReLU model showed 85.1%/86.0% (q0/q1) of pair pre-activations are
+  negative and zeroed by the final ReLU, making signed-q the cheapest test of
+  a truncated relation latent; T=3 was the cheapest test of whether T=2 is
+  depth-limited. These are the two pre-registered diagnostics requested before
+  committing to a relation-primitive redesign.
+protocol: >-
+  Inherited frozen compact-v4-smallhead protocol verbatim (Adam lr 1e-3, wd
+  1e-5, batch 128, patience 40, no scheduler, gradient clip 5.0, L1, best
+  official-valid; seed0). Task A uses max 240 epochs. Task B uses the same
+  protocol with max 320 epochs (patience unchanged) so a late-converging
+  depth-3 model cannot be a horizon false negative. Validation only; official
+  test never loaded. No activation sweep, no T-depth sweep, no pair-to-pair.
+results:
+  taskA_audit_q0_negative_fraction: 0.8505
+  taskA_audit_q1_negative_fraction: 0.8605
+  taskA_audit_q0_to_q1_sign_flip_fraction: 0.0318
+  taskA_audit_q0_to_q1_cosine_mean: 0.98698
+  taskA_audit_q0_to_q1_relative_delta_norm_mean: 0.16285
+  taskA_signed_params: 82115
+  taskA_signed_sanity_checks_passed: 10
+  taskA_t2_recurrent_valid: 0.13837560486892472
+  taskA_signed_valid: 0.14005053023347863
+  taskA_signed_best_epoch: 171
+  taskA_delta_t2_minus_signed: -0.0016749253645539086
+  taskA_verdict: DEGRADED
+  taskB_t3_params: 82115
+  taskB_t3_sanity_checks_passed: 23
+  taskB_t3_valid: 0.13902229469740995
+  taskB_t3_best_epoch: 173
+  taskB_t3_epochs_run: 213
+  taskB_t3_max_epochs: 320
+  taskB_t3_horizon_warning: false
+  taskB_delta_t2_minus_t3: -0.0006466898284852307
+  taskB_verdict: SATURATED
+  official_test_loaded: false
+alternatives_rejected:
+  - Do not run seed1 for signed-q (degraded on seed0).
+  - Do not run T4/T5 (T=3 already saturated).
+  - Do not try SiLU/GELU/LeakyReLU or other activation sweeps at the pair site.
+  - Do not resume pair-to-pair composition.
+  - Never load official test.
+consequences:
+  - The signed-relation-latent and deeper-recurrence hypotheses are both closed
+    as no-signal single changes.
+  - The T=2 recurrent pair--centre model (82,115 params; seed0 0.138376, seed1
+    0.133440; frozen test mean 0.114951) remains the frozen best model.
+  - The viable next direction is a relation-primitive redesign such as ordered
+    shortest-path encoding, not activation or depth changes.
+revisit_if: >-
+  Reopen depth or signed-relation only with a genuinely independent
+  pre-registered mechanism (not another activation/depth variant of this site),
+  or after a relation-primitive change that moves the baseline.
+evidence:
+  - results/compact_v4_recurrent_pair_centre_diagnostics/taskA_pre_activation_audit.json
+  - results/compact_v4_recurrent_pair_centre_diagnostics/sanity_signed.json
+  - results/compact_v4_recurrent_pair_centre_diagnostics/signed_seed0.json
+  - results/compact_v4_recurrent_pair_centre_diagnostics/decision_signed_seed0.json
+  - results/compact_v4_recurrent_pair_centre_diagnostics/sanity_t3.json
+  - results/compact_v4_recurrent_pair_centre_diagnostics/t3_seed0.json
+  - results/compact_v4_recurrent_pair_centre_diagnostics/decision_t3_seed0.json
+  - notes/compact_v4_recurrent_pair_centre_diagnostics.md

@@ -1,0 +1,101 @@
+decision_id: decision-compact-v4-pair-to-pair-nogo-20260913
+created: '2026-09-13T12:10:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Run one minimal, parameter-scoped direct pair-to-pair composition experiment
+  on the validated compact-v4 recurrent pair--centre model: after the first
+  recurrent round (h0 -> q0 -> A0 -> h1 -> q1 = Q(h1)), compose relations
+  through a shared intermediate k, q1*_ij = q1_ij + phi(q1_ij,
+  mean_k psi(q1_ik, q1_kj)), and feed q1* into the existing second centre
+  aggregation and pair readout. Verdict: NO INDEPENDENT SIGNAL. Seed0 was a
+  weak positive (+0.001388) but seed1 was a near-exact tie (+0.000066); the
+  mean (+0.000727) lies inside the pre-registered +/-0.001 no-signal band.
+  Two seeds show opposite matched-epoch profiles (seed0 wins only late;
+  seed1 wins early/mid but converges to the same final MAE). Stop the
+  pair-to-pair line; no hyper-parameter sweep and no more complex variants.
+why_this_experiment: >-
+  The feedback-control study (decision-compact-v4-recurrent-feedback-controls)
+  showed that the refreshed relation's value requires re-entering the centre,
+  not merely a better final pair representation. The cheapest next test of
+  whether relations can exchange information directly (rather than only
+  through the centre aggregate) is a shared-k pair-to-pair composition before
+  the second centre aggregation, with the first recurrent round kept exactly
+  unchanged.
+protocol: >-
+  Inherited frozen compact-v4-smallhead protocol verbatim (Adam lr 1e-3,
+  wd 1e-5, batch 128, max 240, patience 40, no scheduler, gradient clip 5.0,
+  L1, best official-valid). Matched reference = the validated recurrent T=2
+  model (82,115 params; seed0 0.138376, seed1 0.133440). Candidate adds only
+  two small MLPs: psi Linear(48->24)->ReLU->Linear(24->16) on
+  [q_ik+q_kj; |q_ik-q_kj|; q_ik*q_kj] and phi Linear(32->24)->ReLU->
+  Linear(24->16) on [q_ij; mean_k psi], phi last layer zero-initialised.
+  q1* replaces q1 in both the second centre aggregation and the pair readout;
+  P/Q/U stay weight-tied; no attention, no new relation descriptor, no
+  tokenizer/patch/global/topology/readout/head/optimizer change. Only real
+  (i,k)/(k,j) triples are enumerated via cached per-graph-size local patterns;
+  no dense (i,j,k) tensor. Seed0 run first; seed1 run only after the
+  pre-registered weak-positive seed0 result.
+results:
+  parameters_recurrent: 82115
+  parameters_pair_to_pair: 84883
+  added_parameters: 2768
+  psi_parameters: 1576
+  phi_parameters: 1192
+  sanity_pair_to_pair_checks_passed: 17
+  tests_passed: 31
+  valid_seed0_recurrent: 0.13837560486892472
+  valid_seed0_pair_to_pair: 0.13698744112817804
+  valid_seed0_delta: 0.001388163740746684
+  valid_seed0_best_epoch_pair_to_pair: 213
+  valid_seed1_recurrent: 0.13343997858563672
+  valid_seed1_pair_to_pair: 0.13337435588712104
+  valid_seed1_delta: 6.562269851567715e-05
+  valid_seed1_best_epoch_pair_to_pair: 167
+  mean_delta: 0.0007268932196311806
+  strong_gate: 0.003
+  weak_gate: 0.001
+  verdict: NO_INDEPENDENT_SIGNAL
+  next_step: stop_no_sweep
+  triples_per_pair_valid_batch: 23.06
+  n_triples_valid_batch: 804384
+  avg_pairs_per_graph_valid: 264.78
+  avg_triples_per_graph_valid: 6030
+  max_triples_per_graph: 23310
+  wall_seed0_recurrent_s: 1777.2
+  wall_seed0_pair_to_pair_s: 7499.3
+  wall_seed1_recurrent_s: 1849.3
+  wall_seed1_pair_to_pair_s: 6355.0
+  peak_rss_recurrent_gb_approx: 2.23
+  peak_rss_pair_to_pair_gb_approx: 3.01
+  official_test_loaded: false
+alternatives_rejected:
+  - Do not run hidden-size, aggregation-type, number-of-layers, attention,
+    T=3/T=4, or path/cycle-feature sweeps to rescue this operator.
+  - Do not interpret the seed0 weak positive as a representation gain; it does
+    not replicate and the matched-epoch profile is late/unstable.
+  - Do not attribute the seed1 early/mid advantage to a final representation
+    gain; the recurrent model converges to the same final MAE.
+  - Never load official test for this operator.
+consequences:
+  - The direct shared-k relational-composition operator is closed as a
+    no-independent-signal result.
+  - The recurrent pair--centre T=2 model (validated 2/2 seeds, test mean
+    0.114951) remains the best compact-v4-smallhead variant on this line.
+  - Remaining relation-persistence options are all now weak/no-go; if the line
+    is revisited it must be with a genuinely different mechanism and a fresh
+    pre-registration.
+revisit_if: >-
+  Reopen only with an independently pre-registered mechanism that is not a
+  variant of the shared-k composition tested here, or with a matched-capacity
+  control showing the extra parameters are not the source of any future gain.
+  Do not layer composition onto the current recurrent model again.
+evidence:
+  - results/compact_v4_recurrent_pair_centre/pair_to_pair_seed0.json
+  - results/compact_v4_recurrent_pair_centre/pair_to_pair_seed1.json
+  - results/compact_v4_recurrent_pair_centre/decision_pair_to_pair_seed0.json
+  - results/compact_v4_recurrent_pair_centre/decision_pair_to_pair_seed1.json
+  - results/compact_v4_recurrent_pair_centre/decision_pair_to_pair_replication.json
+  - results/compact_v4_recurrent_pair_centre/sanity_pair_to_pair.json
+  - notes/compact_v4_recurrent_pair_centre.md
+  - tests/test_compact_v4_recurrent_pair_centre.py

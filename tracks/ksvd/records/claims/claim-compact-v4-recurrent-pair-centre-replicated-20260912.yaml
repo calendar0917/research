@@ -1,0 +1,61 @@
+claim_id: claim-compact-v4-recurrent-pair-centre-replicated-20260912
+created: '2026-09-12T21:20:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  Under the frozen compact-v4-smallhead protocol (Adam lr 1e-3, wd 1e-5, batch
+  128, max 240 epochs, patience 40, no scheduler, L1, best official-valid,
+  single stage), a 2-round weight-tied recurrent pair--centre variant is
+  parameter-neutral (82,115 = 82,115; 0 added tensors) and improves
+  official-valid MAE on 2/2 development seeds (seed0 0.145334 -> 0.138376,
+  delta +0.006958; seed1 0.138059 -> 0.133440, delta +0.004619; mean
+  +0.005789 >= +0.003 gate), with the frozen one-shot official test also
+  improving on both seeds (mean +0.004505; recurrent test mean 0.114951).
+  The variant recomputes q^(1) from the updated h^(1) with the SAME
+  pair_projection / pair_encoder / relation_encoder / distance_gate, feeds
+  aggregate(q^(1)) through the SAME center_update to form h^(2), and pools pair
+  moments of q^(1) into the unchanged 302D readout. 24/24 mechanism sanity
+  checks pass (one-round pathway and init-time function bit-identical to
+  baseline; zero-update collapse exact; q^(1) != q^(0) with cosine 0.9893 and
+  non-zero autograd dependence on h^(1); round-2 mask/bucket count block
+  bit-identical). HOWEVER, a depth-only stale-q^(0) control run on seed0 (same
+  two centre updates, same 82,115 params, q0 reused in round 2) reaches
+  0.140504 vs baseline 0.145334 and refresh 0.138376: +0.004830 of the
+  +0.006958 gain is attributable to the extra centre depth alone, and only
+  +0.002128 to recomputing the relation. At matched epochs the refresh-over-depth
+  delta is not consistently positive (negative at epochs <=154 and <=176). The
+  supported claim is therefore: the 2-round recurrence helps, but the
+  one-shot relation computation is NOT the dominant bottleneck.
+scope: >-
+  ZINC-12k official train/valid and the frozen one-shot official test (1000
+  molecules) of the selection checkpoints; matched baseline and recurrent for
+  seeds 0 and 1, plus the depth-only stale control for seed0; matched baseline
+  reproduced the existing compact-v4-smallhead runs exactly. No tokenizer /
+  radius / patch construction / relation descriptor / bucket count / centre
+  pooling / readout / global / topology / small head / optimizer / scheduler
+  change; no attention, path features, extra statistics, or per-round weights.
+limitations: >-
+  The gain is NOT uniformly a matched-optimization-step representation gain.
+  Seed0 is clean vs baseline at matched cutoffs, but the stale control shows most
+  of it is extra centre depth. Seed1 is WORSE than its baseline at every matched
+  cutoff up to the baseline's own early stop (ep143 delta -0.0052) and only
+  overtakes later (best epoch 234/240, horizon warning true), so its benefit is
+  partly late effective optimization. The stale control was run for seed0 only
+  (budget); seed1's depth decomposition is not measured. Two seeds are
+  development evidence, not a benchmark claim; the recurrent test mean 0.114951
+  is still above the <0.10 target. Official test was loaded only in the explicit
+  frozen `terminal_test` stage after the positive validation verdict.
+evidence:
+  - results/compact_v4_recurrent_pair_centre/sanity.json (24/24 checks pass).
+  - results/compact_v4_recurrent_pair_centre/baseline_seed0.json,
+    baseline_seed1.json, recurrent_seed0.json, recurrent_seed1.json,
+    stale_seed0.json.
+  - results/compact_v4_recurrent_pair_centre/decision_seed0.json,
+    decision_seed1.json (mean delta +0.005789, RECURRENCE_REPLICATED),
+    decision_control_seed0.json (depth +0.004830, refresh +0.002128).
+  - results/compact_v4_recurrent_pair_centre/terminal_test.json
+    (mean test delta +0.004505), terminal_test_lock.json.
+  - results/compact_v4_recurrent_pair_centre/curves/*.csv.
+  - notes/compact_v4_recurrent_pair_centre.md.
+  - tests/test_compact_v4_recurrent_pair_centre.py (19 pass).

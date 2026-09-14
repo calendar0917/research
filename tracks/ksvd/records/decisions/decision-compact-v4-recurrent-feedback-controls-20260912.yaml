@@ -1,0 +1,86 @@
+decision_id: decision-compact-v4-recurrent-feedback-controls-20260912
+created: '2026-09-12T15:36:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Run two low-cost mechanism controls on the compact-v4-smallhead recurrent
+  pair--centre line, without any architecture sweep and without official test:
+  (A) stale seed1 replication of the depth-only control, and (B) a
+  parameter-neutral one-shot late-refresh variant on seed0 in which A^(0) is
+  replayed into both centre updates and q^(1) is recomputed from h^(2) but fed
+  only to the pair readout. Verdict: the seed0 "gain is mostly depth" reading
+  does NOT replicate (stale is worse than baseline on seed1), and late-refresh
+  does not beat stale while recurrent clearly beats late-refresh. The relation
+  refresh therefore earns its gain through feedback into the centre, not as a
+  standalone final pair representation. Next: persistent relation /
+  direct pair-to-pair composition, not K=3 centre depth.
+why_this_experiment: >-
+  The seed0 depth-only stale control sat between baseline and recurrent, which
+  suggested most of the T=2 gain was extra centre depth and only ~+0.0021 came
+  from the refreshed relation. Two cheap falsifications were needed: (A) does
+  the baseline > stale > recurrent ordering replicate on seed1, and (B) is the
+  refresh-over-depth increment explained by a better final pair representation
+  alone (late-refresh) or does the refreshed relation have to re-enter the
+  centre (recurrent)?
+protocol: >-
+  Inherited frozen compact-v4-smallhead protocol verbatim (Adam lr 1e-3,
+  wd 1e-5, batch 128, max 240, patience 40, no scheduler, gradient clip 5.0,
+  L1, best official-valid, single stage). stale seed1 uses the existing
+  recurrence_mode="stale" builder. late-refresh adds the mode
+  recurrence_mode="late_refresh": A^(0) pooled once from q^(0), replayed into
+  both centre updates (centre path bit-identical to stale), then
+  q^(1)=Q(h^(2)) recomputed and consumed only by pair_moments. P/Q/U remain
+  weight-tied; no hidden-dim, tokenizer, relation descriptor, readout, head,
+  optimizer, or protocol change. All variants built with the exact shared
+  baseline initialisation and the same training loop.
+results:
+  params_all_variants: 82115
+  head_params: 4135
+  valid_seed0_baseline: 0.14533376283763208
+  valid_seed0_stale: 0.14050405619485537
+  valid_seed0_late_refresh: 0.1429516043002368
+  valid_seed0_recurrent: 0.13837560486892472
+  seed0_delta_late_vs_stale: -0.0024475481053814196
+  seed0_delta_recurrent_vs_late: 0.004575999431312067
+  valid_seed1_baseline: 0.13805893784115325
+  valid_seed1_stale: 0.14511053527420154
+  valid_seed1_recurrent: 0.13343997858563672
+  seed1_delta_stale_vs_baseline: -0.0070515974330482845
+  best_epoch_stale_seed1: 131
+  best_epoch_late_refresh_seed0: 150
+  sanity_late_refresh_checks_passed: 21
+  sanctity_existing_checks_passed: 24
+  tests_passed: 25
+  verdict: RECURRENT_LEADS_LATE_REFRESH
+  next_step: persistent_relation_or_pair_to_pair
+  official_test_loaded: false
+alternatives_rejected:
+  - Do not claim the seed0 depth-only ordering replicates; stale is worse than
+    baseline on seed1.
+  - Do not attribute the refresh increment to a better final pair
+    representation alone; late-refresh is worse than stale on seed0.
+  - Do not run a K=3 centre-refinement-depth sweep on the strength of this
+    evidence; the feedback path, not extra depth, carries the refresh gain.
+  - Do not add attention, path features, extra statistics, per-round weights,
+    or a larger q dimension.
+  - Never load official test for these controls.
+consequences:
+  - The depth-only explanation of the recurrent gain is weakened; the stale
+    effect is seed-specific and can be negative.
+  - The late-refresh result localises the refresh benefit to the feedback of
+    q^(1) into the centre.
+  - The next pre-registered experiment should be a parameter-neutral,
+    matched-depth persistent relation / direct pair-to-pair composition.
+revisit_if: >-
+  Reopen the depth-only interpretation only with a matched-horizon multi-seed
+  stale run (including seed1) and a matched-epoch analysis. Reopen the
+  late-refresh interpretation only with a late-refresh seed1 replication.
+evidence:
+  - results/compact_v4_recurrent_pair_centre/stale_seed1.json
+  - results/compact_v4_recurrent_pair_centre/late_refresh_seed0.json
+  - results/compact_v4_recurrent_pair_centre/decision_late_refresh_seed0.json
+  - results/compact_v4_recurrent_pair_centre/decision_control_seed1.json
+  - results/compact_v4_recurrent_pair_centre/sanity_late_refresh.json
+  - results/compact_v4_recurrent_pair_centre/sanity.json
+  - notes/compact_v4_recurrent_pair_centre.md
+  - tests/test_compact_v4_recurrent_pair_centre.py
