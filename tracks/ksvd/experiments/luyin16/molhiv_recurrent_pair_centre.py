@@ -466,7 +466,15 @@ def _auc(targets: np.ndarray, logits: np.ndarray) -> float:
     return float(roc_auc_score(targets, logits))
 
 
-def train_seed(seed: int, device: str = "cuda") -> dict[str, Any]:
+def train_seed(
+    seed: int,
+    device: str = "cuda",
+    max_epochs: int | None = None,
+    patience: int | None = None,
+    train_limit: int | None = None,
+) -> dict[str, Any]:
+    max_epochs = int(MAX_EPOCHS if max_epochs is None else max_epochs)
+    patience = int(PATIENCE if patience is None else patience)
     started = time.perf_counter()
     dev = torch.device(device)
     if dev.type == "cuda" and not torch.cuda.is_available():
@@ -476,6 +484,8 @@ def train_seed(seed: int, device: str = "cuda") -> dict[str, Any]:
 
     train_records, _ = _load_records("train")
     valid_records, _ = _load_records("valid")
+    if train_limit is not None:
+        train_records = train_records[: int(train_limit)]
     transforms = fit_train_transforms(train_records)
     typed_size = len(transforms["typed_vocabulary"]) + 1
     parent_size = len(transforms["parent_vocabulary"]) + 1
@@ -499,7 +509,7 @@ def train_seed(seed: int, device: str = "cuda") -> dict[str, Any]:
     best_epoch = 1
     stale = 0
     epoch_times: list[float] = []
-    for epoch in range(1, MAX_EPOCHS + 1):
+    for epoch in range(1, max_epochs + 1):
         epoch_started = time.perf_counter()
         model.train()
         total_loss = 0.0
@@ -544,7 +554,7 @@ def train_seed(seed: int, device: str = "cuda") -> dict[str, Any]:
                 f"valid_auc={valid_auc:.6f} best={best_auc:.6f}@{best_epoch}",
                 flush=True,
             )
-        if stale >= PATIENCE:
+        if stale >= patience:
             print(f"[molhiv-rpc seed{seed}] early_stop epoch={epoch}", flush=True)
             break
 
@@ -574,7 +584,7 @@ def train_seed(seed: int, device: str = "cuda") -> dict[str, Any]:
         "typed_vocabulary_size_with_oov": int(typed_size),
         "parent_vocabulary_size_with_oov": int(parent_size),
         "epochs_run": int(len(curve)),
-        "early_stopped": bool(len(curve) < MAX_EPOCHS),
+        "early_stopped": bool(len(curve) < max_epochs),
         "best_epoch": int(best_epoch),
         "best_valid_auc": float(best_auc),
         "raw_valid_auc_recomputed": float(raw_valid_auc),
@@ -606,6 +616,60 @@ def train_queue(seeds: Sequence[int], device: str) -> None:
             continue
         print(f"=== train molhiv-rpc seed{seed} device={device} ===", flush=True)
         train_seed(int(seed), device=device)
+
+
+def _state_sha256(state: Mapping[str, torch.Tensor]) -> str:
+    import hashlib
+
+    digest = hashlib.sha256()
+    for key in sorted(state):
+        value = state[key].detach().to(torch.float32).cpu()
+        digest.update(key.encode("utf-8"))
+        digest.update(str(tuple(value.shape)).encode("ascii"))
+        digest.update(value.numpy().tobytes())
+    return digest.hexdigest()
+
+
+def repro(seed: int, epochs: int, device: str, train_limit: int = 4096) -> dict[str, Any]:
+    """Short same-seed GPU reproducibility sanity on a fixed train subset."""
+    global RESULTS_DIR, SNAPSHOT_DIR, CURVE_DIR
+    base = RESULTS_DIR
+    saved = (RESULTS_DIR, SNAPSHOT_DIR, CURVE_DIR)
+    root = base / "repro"
+    RESULTS_DIR, SNAPSHOT_DIR, CURVE_DIR = root, root / "snapshots", root / "curves"
+    try:
+        summary = train_seed(
+            int(seed),
+            device=device,
+            max_epochs=int(epochs),
+            patience=int(epochs),
+            train_limit=int(train_limit),
+        )
+        state = torch.load(
+            RESULTS_DIR / f"raw_state_seed{seed}.pt", map_location="cpu", weights_only=True
+        )
+        state_hash = _state_sha256(state)
+    finally:
+        RESULTS_DIR, SNAPSHOT_DIR, CURVE_DIR = saved
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "stage": "gpu_reproducibility_sanity",
+        "seed": int(seed),
+        "epochs": int(epochs),
+        "train_limit": int(train_limit),
+        "device": str(device),
+        "best_valid_auc": float(summary["best_valid_auc"]),
+        "best_epoch": int(summary["best_epoch"]),
+        "epochs_run": int(summary["epochs_run"]),
+        "mean_epoch_time_s": float(summary["mean_epoch_time_s"]),
+        "wall_clock_s": float(summary["wall_clock_s"]),
+        "train_loss_curve": [float(row["train_bce"]) for row in summary["curve"]],
+        "valid_auc_curve": [float(row["valid_auc"]) for row in summary["curve"]],
+        "raw_state_sha256": state_hash,
+        "official_test_loaded": False,
+    }
+    _write_json(base / f"repro_{device}_seed{seed}.json", payload)
+    return payload
 
 
 # ---------------------------------------------------------------------------
@@ -777,6 +841,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "smoke",
             "train",
             "train_queue",
+            "repro",
             "freeze",
             "test",
             "report",
@@ -785,6 +850,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--seeds", type=str, default="0,1")
     parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--epochs", type=int, default=2)
+    parser.add_argument("--train-limit", type=int, default=4096)
     args = parser.parse_args(argv)
 
     torch.set_num_threads(4)
@@ -798,6 +865,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(train_seed(args.seed, args.device), indent=2, default=str))
     if args.stage == "train_queue":
         train_queue([int(s) for s in args.seeds.split(",")], args.device)
+    if args.stage == "repro":
+        print(
+            json.dumps(
+                repro(args.seed, args.epochs, args.device, args.train_limit),
+                indent=2,
+                default=str,
+            ),
+            flush=True,
+        )
     if args.stage == "freeze":
         print(json.dumps(freeze(), indent=2, default=str), flush=True)
     if args.stage == "test":

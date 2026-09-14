@@ -46,7 +46,7 @@ import argparse
 import json
 import platform
 import time
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 import numpy as np
 import torch
@@ -413,6 +413,78 @@ def train_queue(cells: Sequence[str], seeds: Sequence[int], device: str) -> None
             train(str(cell), int(seed), device=device)
 
 
+def _state_sha256(state: Mapping[str, torch.Tensor]) -> str:
+    import hashlib
+
+    digest = hashlib.sha256()
+    for key in sorted(state):
+        value = state[key].detach().to(torch.float32).cpu()
+        digest.update(key.encode("utf-8"))
+        digest.update(str(tuple(value.shape)).encode("ascii"))
+        digest.update(value.numpy().tobytes())
+    return digest.hexdigest()
+
+
+def repro(cell: str, seed: int, epochs: int, device: str) -> dict[str, Any]:
+    """Short GPU reproducibility sanity: same seed, same short protocol.
+
+    Runs a fixed small number of epochs in an isolated ``repro`` result
+    subtree (never the formal run paths) and records the validation curve and
+    a hash of the selection state so two GPUs / two repeats can be compared.
+    """
+    global CURVE_DIR, STATE_DIR, RUNS_DIR, SNAPSHOT_DIR, SOUP_DIR
+    saved = (CURVE_DIR, STATE_DIR, RUNS_DIR, SNAPSHOT_DIR, SOUP_DIR)
+    root = RESULTS_DIR / "repro"
+    CURVE_DIR, STATE_DIR, RUNS_DIR, SNAPSHOT_DIR, SOUP_DIR = (
+        root / "curves",
+        root / "states",
+        root / "runs",
+        root / "snapshots",
+        root / "soup_states",
+    )
+    original = dict(shead.OPTIMIZED_PROTOCOL)
+    shead.OPTIMIZED_PROTOCOL = {
+        **original,
+        "max_epochs": int(epochs),
+        "patience": int(epochs),
+    }
+    try:
+        summary = train(cell, seed, device=device)
+        state = torch.load(
+            STATE_DIR / f"{tag_for(cell)}_seed{seed}_selection_state.pt",
+            map_location="cpu",
+            weights_only=True,
+        )
+        state_hash = _state_sha256(state)
+        curve_path = CURVE_DIR / f"{tag_for(cell)}_seed{seed}_curve.csv"
+        valid_curve: list[float] = []
+        if curve_path.exists():
+            for line in curve_path.read_text(encoding="utf-8").splitlines()[1:]:
+                parts = line.split(",")
+                if len(parts) > 2:
+                    valid_curve.append(float(parts[2]))
+    finally:
+        shead.OPTIMIZED_PROTOCOL = original
+        CURVE_DIR, STATE_DIR, RUNS_DIR, SNAPSHOT_DIR, SOUP_DIR = saved
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "stage": "gpu_reproducibility_sanity",
+        "cell": cell,
+        "seed": int(seed),
+        "epochs": int(epochs),
+        "device": str(device),
+        "best_valid_mae": float(summary["best_valid_mae"]),
+        "best_epoch": int(summary["best_epoch"]),
+        "epochs_run": int(summary["epochs_run"]),
+        "wall_clock_s": float(summary["wall_clock_s"]),
+        "valid_mae_curve": valid_curve,
+        "selection_state_sha256": state_hash,
+        "official_test_loaded": False,
+    }
+    hw._write_json(RESULTS_DIR / f"repro_{device}_{cell}_seed{seed}.json", payload)
+    return payload
+
+
 # ---------------------------------------------------------------------------
 # diagnostics
 # ---------------------------------------------------------------------------
@@ -583,6 +655,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "sanity",
             "train",
             "train_queue",
+            "repro",
             "soup",
             "diagnostics",
             "decide",
@@ -594,6 +667,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--cells", type=str, default="A,B")
     parser.add_argument("--seeds", type=str, default="0,1")
     parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--epochs", type=int, default=6)
     args = parser.parse_args(argv)
 
     torch.set_num_threads(4)
@@ -605,6 +679,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(train(args.cell, args.seed, args.device), indent=2, default=str))
     if args.stage == "train_queue":
         train_queue(args.cells.split(","), [int(s) for s in args.seeds.split(",")], args.device)
+    if args.stage == "repro":
+        print(
+            json.dumps(
+                repro(args.cell, args.seed, args.epochs, args.device),
+                indent=2,
+                default=str,
+            ),
+            flush=True,
+        )
     if args.stage == "soup":
         print(json.dumps(soup(args.cell, args.seed), indent=2, default=str), flush=True)
     if args.stage == "diagnostics":
