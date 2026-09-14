@@ -630,12 +630,15 @@ def _state_sha256(state: Mapping[str, torch.Tensor]) -> str:
     return digest.hexdigest()
 
 
-def repro(seed: int, epochs: int, device: str, train_limit: int = 4096) -> dict[str, Any]:
+def repro(
+    seed: int, epochs: int, device: str, train_limit: int = 4096, run_tag: str = ""
+) -> dict[str, Any]:
     """Short same-seed GPU reproducibility sanity on a fixed train subset."""
     global RESULTS_DIR, SNAPSHOT_DIR, CURVE_DIR
     base = RESULTS_DIR
+    tag = str(run_tag or "default").replace("/", "_")
     saved = (RESULTS_DIR, SNAPSHOT_DIR, CURVE_DIR)
-    root = base / "repro"
+    root = base / "repro" / tag
     RESULTS_DIR, SNAPSHOT_DIR, CURVE_DIR = root, root / "snapshots", root / "curves"
     try:
         summary = train_seed(
@@ -657,6 +660,7 @@ def repro(seed: int, epochs: int, device: str, train_limit: int = 4096) -> dict[
         "seed": int(seed),
         "epochs": int(epochs),
         "train_limit": int(train_limit),
+        "run_tag": tag,
         "device": str(device),
         "best_valid_auc": float(summary["best_valid_auc"]),
         "best_epoch": int(summary["best_epoch"]),
@@ -668,7 +672,7 @@ def repro(seed: int, epochs: int, device: str, train_limit: int = 4096) -> dict[
         "raw_state_sha256": state_hash,
         "official_test_loaded": False,
     }
-    _write_json(base / f"repro_{device}_seed{seed}.json", payload)
+    _write_json(base / f"repro_{tag}_seed{seed}.json", payload)
     return payload
 
 
@@ -852,6 +856,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--epochs", type=int, default=2)
     parser.add_argument("--train-limit", type=int, default=4096)
+    parser.add_argument("--run-tag", type=str, default="")
     args = parser.parse_args(argv)
 
     torch.set_num_threads(4)
@@ -868,7 +873,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.stage == "repro":
         print(
             json.dumps(
-                repro(args.seed, args.epochs, args.device, args.train_limit),
+                repro(args.seed, args.epochs, args.device, args.train_limit, args.run_tag),
                 indent=2,
                 default=str,
             ),

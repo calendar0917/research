@@ -425,16 +425,18 @@ def _state_sha256(state: Mapping[str, torch.Tensor]) -> str:
     return digest.hexdigest()
 
 
-def repro(cell: str, seed: int, epochs: int, device: str) -> dict[str, Any]:
+def repro(cell: str, seed: int, epochs: int, device: str, run_tag: str = "") -> dict[str, Any]:
     """Short GPU reproducibility sanity: same seed, same short protocol.
 
     Runs a fixed small number of epochs in an isolated ``repro`` result
     subtree (never the formal run paths) and records the validation curve and
     a hash of the selection state so two GPUs / two repeats can be compared.
+    ``run_tag`` keeps two concurrent workers from sharing files.
     """
     global CURVE_DIR, STATE_DIR, RUNS_DIR, SNAPSHOT_DIR, SOUP_DIR
+    tag = str(run_tag or "default").replace("/", "_")
     saved = (CURVE_DIR, STATE_DIR, RUNS_DIR, SNAPSHOT_DIR, SOUP_DIR)
-    root = RESULTS_DIR / "repro"
+    root = RESULTS_DIR / "repro" / tag
     CURVE_DIR, STATE_DIR, RUNS_DIR, SNAPSHOT_DIR, SOUP_DIR = (
         root / "curves",
         root / "states",
@@ -472,6 +474,7 @@ def repro(cell: str, seed: int, epochs: int, device: str) -> dict[str, Any]:
         "cell": cell,
         "seed": int(seed),
         "epochs": int(epochs),
+        "run_tag": tag,
         "device": str(device),
         "best_valid_mae": float(summary["best_valid_mae"]),
         "best_epoch": int(summary["best_epoch"]),
@@ -481,7 +484,7 @@ def repro(cell: str, seed: int, epochs: int, device: str) -> dict[str, Any]:
         "selection_state_sha256": state_hash,
         "official_test_loaded": False,
     }
-    hw._write_json(RESULTS_DIR / f"repro_{device}_{cell}_seed{seed}.json", payload)
+    hw._write_json(RESULTS_DIR / f"repro_{tag}_{cell}_seed{seed}.json", payload)
     return payload
 
 
@@ -668,6 +671,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--seeds", type=str, default="0,1")
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--epochs", type=int, default=6)
+    parser.add_argument("--run-tag", type=str, default="")
     args = parser.parse_args(argv)
 
     torch.set_num_threads(4)
@@ -682,7 +686,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.stage == "repro":
         print(
             json.dumps(
-                repro(args.cell, args.seed, args.epochs, args.device),
+                repro(args.cell, args.seed, args.epochs, args.device, args.run_tag),
                 indent=2,
                 default=str,
             ),
