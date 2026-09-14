@@ -47,6 +47,7 @@ import argparse
 import copy
 import gc
 import json
+import os
 import platform
 import time
 from pathlib import Path
@@ -100,6 +101,18 @@ GRAD_CLIP = 5.0
 
 SOUP_K = 5
 SEEDS = (0, 1)
+
+# Freeze the CUDA execution regime to deterministic algorithms (the model pools
+# with ``index_add_``, atomic/non-deterministic on CUDA).
+DETERMINISTIC = False
+
+
+def _set_deterministic(enabled: bool) -> None:
+    if enabled:
+        os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+        torch.use_deterministic_algorithms(True)
+    else:
+        torch.use_deterministic_algorithms(False)
 
 
 # ---------------------------------------------------------------------------
@@ -600,6 +613,9 @@ def train_seed(
         "raw_valid_logits": raw_logits.tolist(),
         "soup_valid_logits": soup_logits.tolist(),
         "loss": "BCEWithLogitsLoss (unweighted)",
+        "deterministic_algorithms": bool(
+            torch.are_deterministic_algorithms_enabled()
+        ),
         "official_test_loaded": False,
     }
     _write_json(RESULTS_DIR / f"run_seed{seed}.json", summary)
@@ -670,6 +686,9 @@ def repro(
         "train_loss_curve": [float(row["train_bce"]) for row in summary["curve"]],
         "valid_auc_curve": [float(row["valid_auc"]) for row in summary["curve"]],
         "raw_state_sha256": state_hash,
+        "deterministic_algorithms": bool(
+            torch.are_deterministic_algorithms_enabled()
+        ),
         "official_test_loaded": False,
     }
     _write_json(base / f"repro_{tag}_seed{seed}.json", payload)
@@ -857,9 +876,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--epochs", type=int, default=2)
     parser.add_argument("--train-limit", type=int, default=4096)
     parser.add_argument("--run-tag", type=str, default="")
+    parser.add_argument("--deterministic", action="store_true")
     args = parser.parse_args(argv)
 
+    global DETERMINISTIC
+    DETERMINISTIC = bool(args.deterministic)
     torch.set_num_threads(4)
+    _set_deterministic(DETERMINISTIC)
     if args.stage == "data_sanity":
         print(json.dumps(data_sanity(), indent=2, default=str), flush=True)
     if args.stage == "params":

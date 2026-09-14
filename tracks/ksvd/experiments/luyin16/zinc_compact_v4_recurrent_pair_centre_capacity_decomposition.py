@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import time
 from typing import Any, Mapping, Sequence
@@ -107,6 +108,19 @@ H96_TOTAL = 103219
 
 STRONG_GATE = 0.002
 WEAK_GATE = 0.001
+
+# When enabled, the CUDA execution regime is frozen to deterministic algorithms.
+# The model pools with ``index_add_``, which is atomic/non-deterministic on
+# CUDA; without this, two identical seeds diverge run-to-run.
+DETERMINISTIC = False
+
+
+def _set_deterministic(enabled: bool) -> None:
+    if enabled:
+        os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+        torch.use_deterministic_algorithms(True)
+    else:
+        torch.use_deterministic_algorithms(False)
 
 
 # ---------------------------------------------------------------------------
@@ -355,6 +369,9 @@ def train(cell: str, seed: int, device: str = "cpu") -> dict[str, Any]:
     summary["peak_rss_delta_kb"] = hw._rss_peak_kb() - int(rss_before)
     summary["outer_wall_clock_s"] = elapsed
     summary["platform"] = platform.platform()
+    summary["deterministic_algorithms"] = bool(
+        torch.are_deterministic_algorithms_enabled()
+    )
     hw._write_json(RUNS_DIR / f"{tag}_seed{seed}.json", summary)
 
     soup(cell, seed)
@@ -476,6 +493,9 @@ def repro(cell: str, seed: int, epochs: int, device: str, run_tag: str = "") -> 
         "epochs": int(epochs),
         "run_tag": tag,
         "device": str(device),
+        "deterministic_algorithms": bool(
+            torch.are_deterministic_algorithms_enabled()
+        ),
         "best_valid_mae": float(summary["best_valid_mae"]),
         "best_epoch": int(summary["best_epoch"]),
         "epochs_run": int(summary["epochs_run"]),
@@ -672,9 +692,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--epochs", type=int, default=6)
     parser.add_argument("--run-tag", type=str, default="")
+    parser.add_argument("--deterministic", action="store_true")
     args = parser.parse_args(argv)
 
+    global DETERMINISTIC
+    DETERMINISTIC = bool(args.deterministic)
     torch.set_num_threads(4)
+    _set_deterministic(DETERMINISTIC)
     if args.stage == "params":
         print(json.dumps(params(), indent=2, default=str), flush=True)
     if args.stage == "sanity":
