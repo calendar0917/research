@@ -1571,6 +1571,14 @@ class PatchPathModel(nn.Module):
         topology_input_width: int = 0,
         topology_hidden_dim: int = 16,
         topology_out_dim: int = 8,
+        # Capacity-decomposition hooks: by default the patch/global encoder
+        # hidden widths keep their historical derivation from ``patch_hidden``
+        # (``max(patch_hidden, 64)`` and ``max(patch_hidden // 2, 32)``).
+        # Passing an explicit value only changes the hidden width of that MLP;
+        # the output widths, module construction order and RNG consumption are
+        # untouched, so the frozen width-derived defaults stay bit-identical.
+        patch_encoder_hidden: int | None = None,
+        global_encoder_hidden: int | None = None,
         attribute_mode: str = "none",
         attribute_atom_dim: int = DEFAULT_ATTRIBUTE_ATOM_DIM,
         attribute_bond_dim: int = DEFAULT_ATTRIBUTE_BOND_DIM,
@@ -1598,6 +1606,18 @@ class PatchPathModel(nn.Module):
         self.pair_readout = str(pair_readout or self.readout)
         self.shell_width = int(shell_width)
         self.context_width = int(context_width)
+        self.patch_encoder_hidden = (
+            max(int(patch_hidden), 64)
+            if patch_encoder_hidden is None
+            else int(patch_encoder_hidden)
+        )
+        self.global_encoder_hidden = (
+            max(int(patch_hidden // 2), 32)
+            if global_encoder_hidden is None
+            else int(global_encoder_hidden)
+        )
+        if self.patch_encoder_hidden < 1 or self.global_encoder_hidden < 1:
+            raise ValueError("encoder hidden widths must be positive")
         self.direct_token_readout = bool(direct_token_readout)
         self.center_context = bool(center_context)
         self.token_width = int(token_width)
@@ -1773,11 +1793,11 @@ class PatchPathModel(nn.Module):
             + parent_width
             + int(structural_input_width)
             + int(self.attribute_input_width),
-            max(int(patch_hidden), 64),
+            self.patch_encoder_hidden,
             int(patch_hidden),
             float(dropout),
         )
-        self.global_encoder = _MLPBlock(GLOBAL_WIDTH, max(int(patch_hidden // 2), 32), 32, float(dropout))
+        self.global_encoder = _MLPBlock(GLOBAL_WIDTH, self.global_encoder_hidden, 32, float(dropout))
         self.pair_projection = nn.Linear(int(patch_hidden), int(pair_hidden), bias=False)
         self.relation_encoder = _MLPBlock(
             RELATION_WIDTH, max(int(pair_hidden), 32), int(pair_hidden), float(dropout)

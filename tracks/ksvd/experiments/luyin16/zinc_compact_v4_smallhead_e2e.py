@@ -227,8 +227,8 @@ def _git_commit() -> str:
     return "unknown"
 
 
-def _environment_fingerprint() -> dict[str, Any]:
-    return {
+def _environment_fingerprint(device: str = "cpu") -> dict[str, Any]:
+    payload = {
         "python": platform.python_version(),
         "platform": platform.platform(),
         "torch": torch.__version__,
@@ -237,8 +237,17 @@ def _environment_fingerprint() -> dict[str, Any]:
         "deterministic_algorithms": bool(
             torch.are_deterministic_algorithms_enabled()
         ),
-        "device": "cpu",
+        "device": str(device),
     }
+    if str(device).startswith("cuda") and torch.cuda.is_available():
+        index = torch.cuda.current_device()
+        payload["cuda_available"] = True
+        payload["cuda_device_index"] = int(index)
+        payload["cuda_device_name"] = torch.cuda.get_device_name(index)
+        payload["torch_cuda"] = torch.version.cuda
+    else:
+        payload["cuda_available"] = bool(torch.cuda.is_available())
+    return payload
 
 
 def _configure_determinism() -> None:
@@ -458,8 +467,15 @@ def train_model(
     expected_total: int | None = None,
     snapshot_dir: Path | None = None,
     data_seed: int | None = None,
+    device: str | torch.device = "cpu",
 ) -> dict[str, Any]:
-    device = torch.device("cpu")
+    device = torch.device(device)
+    if device.type == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("train_model requested CUDA but CUDA is unavailable")
+    if device.type == "cuda":
+        # CUDA is a new execution regime; seed it explicitly.  Model init below
+        # still runs on the CPU RNG, so initialisation is device-independent.
+        torch.cuda.manual_seed_all(int(seed))
     model = build_fn(seed).to(device)
     # Seed factorization: ``seed`` always controls initialization (and, because
     # the builders finish with a fixed head seed, the shared forward/dropout RNG
@@ -709,7 +725,7 @@ def train_model(
         "curve_path": str(curve_path),
         "pre_head_R_identity": identity,
         "git_commit": _git_commit(),
-        "environment": _environment_fingerprint(),
+        "environment": _environment_fingerprint(str(device)),
         "official_test_loaded": False,
         "valid_predictions": valid_predictions.tolist(),
         "valid_targets": valid_targets.tolist(),
