@@ -50,6 +50,7 @@ import argparse
 import copy
 import csv
 import gzip
+import hashlib
 import json
 import math
 import os
@@ -1113,6 +1114,77 @@ def train_queue(seeds: Sequence[int], device: str, tag: str = "sspe") -> None:
         soup_seed(int(seed), tag=tag)
 
 
+def _state_sha256(state: Mapping[str, torch.Tensor]) -> str:
+    digest = hashlib.sha256()
+    for key in sorted(state):
+        value = state[key].detach().to(torch.float32).cpu()
+        digest.update(key.encode("utf-8"))
+        digest.update(str(tuple(value.shape)).encode("ascii"))
+        digest.update(value.numpy().tobytes())
+    return digest.hexdigest()
+
+
+def repro(
+    seed: int, epochs: int, device: str, run_tag: str = "default"
+) -> dict[str, Any]:
+    """Short deterministic GPU sanity for one seed (isolated result subtree)."""
+    global CURVE_DIR, STATE_DIR, RUNS_DIR, SOUP_DIR
+    tag = str(run_tag or "default").replace("/", "_")
+    saved = (CURVE_DIR, STATE_DIR, RUNS_DIR, SOUP_DIR)
+    root = RESULTS_DIR / "repro" / tag
+    CURVE_DIR, STATE_DIR, RUNS_DIR, SOUP_DIR = (
+        root / "curves",
+        root / "states",
+        root / "runs",
+        root / "soup_states",
+    )
+    try:
+        summary = train_seed(
+            int(seed),
+            device=device,
+            tag=f"repro_{tag}",
+            protocol_override={
+                "max_epochs": int(epochs),
+                "patience": int(epochs),
+            },
+        )
+        state = torch.load(
+            STATE_DIR / f"repro_{tag}_seed{seed}_selection_state.pt",
+            map_location="cpu",
+            weights_only=True,
+        )
+        state_hash = _state_sha256(state)
+        curve_path = CURVE_DIR / f"repro_{tag}_seed{seed}_curve.csv"
+        valid_curve: list[float] = []
+        if curve_path.exists():
+            for line in curve_path.read_text(encoding="utf-8").splitlines()[1:]:
+                parts = line.split(",")
+                if len(parts) > 2:
+                    valid_curve.append(float(parts[2]))
+        payload = {
+            "protocol_version": PROTOCOL_VERSION,
+            "stage": "gpu_reproducibility_sanity",
+            "seed": int(seed),
+            "epochs": int(epochs),
+            "run_tag": tag,
+            "device": str(device),
+            "deterministic_algorithms": bool(
+                torch.are_deterministic_algorithms_enabled()
+            ),
+            "best_valid_mae": float(summary["best_valid_mae"]),
+            "best_epoch": int(summary["best_epoch"]),
+            "epochs_run": int(summary["epochs_run"]),
+            "wall_clock_s": float(summary["wall_clock_s"]),
+            "valid_mae_curve": valid_curve,
+            "selection_state_sha256": state_hash,
+            "official_test_loaded": False,
+        }
+    finally:
+        CURVE_DIR, STATE_DIR, RUNS_DIR, SOUP_DIR = saved
+    _write_json(RESULTS_DIR / f"repro_{tag}_seed{seed}.json", payload)
+    return payload
+
+
 # ---------------------------------------------------------------------------
 # diagnostics
 # ---------------------------------------------------------------------------
@@ -1355,6 +1427,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "sanity",
             "train",
             "train_queue",
+            "repro",
             "soup",
             "diagnostics",
             "decide",
@@ -1366,6 +1439,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--seeds", type=str, default="0,1")
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--tag", type=str, default="sspe")
+    parser.add_argument("--epochs", type=int, default=6)
+    parser.add_argument("--run-tag", type=str, default="")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--deterministic", action="store_true")
     args = parser.parse_args(argv)
@@ -1399,6 +1474,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.stage == "soup":
         print(
             json.dumps(soup_seed(args.seed, tag=args.tag), indent=2, default=str),
+            flush=True,
+        )
+    if args.stage == "repro":
+        print(
+            json.dumps(
+                repro(args.seed, args.epochs, args.device, args.run_tag),
+                indent=2,
+                default=str,
+            ),
             flush=True,
         )
     if args.stage == "diagnostics":
