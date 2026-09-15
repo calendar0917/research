@@ -1,0 +1,66 @@
+decision_id: decision-shared-structural-patch-encoder-vocab-free-20260915
+created: '2026-09-15T10:05:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Shared connectivity-aware structural patch encoder (vocab-free) -> Decision
+  Case A: STRONG_SUCCESS. Keep the result as evidence that the vocab-sized
+  typed certificate lookup is removable on ZINC Cell A; the candidate (84,495
+  params) reaches a 2-seed fixed Top-5 soup valid mean 0.118972 vs the frozen
+  Cell A reference 0.126368 (delta -0.007396; per-seed -0.004886 / -0.009906,
+  same direction), clearing the pre-registered strong gate (delta <= -0.002,
+  same direction). Exactly one architecture was run as registered (node/edge
+  primitives, 2 untied edge-aware rounds, [root;mean;std] pooling, e_struct in
+  R^16, 35,152 params); no typed embedding, no certificate bytes, no
+  attention, no exact-identity residual. Deterministic GPU repro bit-identical
+  across both A100s. Binding caveat: the trained encoder output is nearly
+  rank-1 across patches (effective rank 1.107/1.202), so this is a
+  vocab-removal result, NOT a rich-structure-usage result. MolHIV is
+  parameter-accounting only (projected total 273,069; no training, no
+  performance claim). Official ZINC test remains locked.
+alternatives_rejected:
+- item: Regression / inconclusive characterisation of the result
+  because: >-
+    delta -0.007396 >= 0.002 in the improving direction and both seeds agree
+    in sign; the strong-success branch fires under the pre-registered logic.
+- item: Attribute the gain to rich structural message passing
+  because: >-
+    diagnostics show the shared encoder is nearly rank-1 across patches
+    (top singular fraction 0.955-0.979); the honest mechanism is a small
+    shared connectivity-derived (near-bias) function replacing the lookup.
+- item: Open the ZINC official test to confirm the gain
+  because: >-
+    the study is valid-selection only by design and the test is hard-locked;
+    a test read was not pre-registered and is not authorized here.
+- item: Sweep encoder width / rounds / pooling / distance bins
+  because: >-
+    explicitly forbidden by the stop rule; exactly one architecture was
+    pre-registered.
+- item: Fall back to hash table / KNN sharing / exact-identity residual /
+    corrected exact lookup
+  because: >-
+    each is a closed line that reintroduces a vocabulary or identity
+    mechanism; none is needed to obtain the result.
+- item: Train MolHIV with the projected encoder
+  because: >-
+    only parameter accounting was in scope; no MolHIV training is authorized.
+consequences:
+  - >-
+    The typed-patch-lookup-removal question is CLOSED with a positive result
+    on ZINC Cell A; record the caveat that the encoder is near-collapsed.
+  - >-
+    Cell A stays the frozen ZINC configuration; the vocab-free variant is a
+    validated alternative, not a new benchmark champion (no test read).
+  - >-
+    MolHIV compact-design work may cite the 273,069-parameter projection as
+    accounting evidence only.
+  - >-
+    A future (not-authorized-here) question is whether the near-collapse can
+    be removed and whether that converts the gain into structure-attributable
+    benefit; that would be a new pre-registered stage.
+revisit_if: >-
+  A new pre-registered stage asks (a) whether the near-rank-1 collapse of the
+  shared encoder can be removed by a different readout/objective, or (b)
+  whether the same vocab-free substitution survives an authorized official
+  test read for a frozen, pre-registered variant. Neither is authorized by
+  this decision; no width/round/pooling sweep follows from it.

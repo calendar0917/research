@@ -1,0 +1,75 @@
+claim_id: claim-shared-structural-patch-encoder-vocab-free-20260915
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-15T10:00:00'
+statement: >-
+  On the frozen deterministic-A100 ZINC Cell A protocol, completely removing
+  the vocab-sized typed certificate->ID->learned-embedding lookup and instead
+  deriving each rooted typed radius-2 patch's representation from its internal
+  connectivity + semantic attributes via a single shared encoder (shared by
+  all patches) PRESERVES AND IMPROVES the baseline. Pre-registered
+  architecture: node primitive = atom_embedding(28,48) + root_embedding(2,48)
+  + distance_embedding(3,48); edge primitive = bond_embedding(4,24); exactly 2
+  untied edge-aware message-passing rounds (m=G_r([state[src],bond]);
+  agg=scatter_mean(m,dst); state=state+F_r([state,agg])); permutation-
+  invariant pooling [root_state;mean;std] -> fusion MLP -> e_struct in R^16;
+  node_dim=48, edge_dim=24, hidden_dim=48, rounds=2 (35,152 params), replacing
+  the released 36,420-param typed lookup. Candidate total 84,495 params
+  (baseline Cell A 85,763). 2-seed fixed Top-5 soup valid mean 0.118972 vs
+  Cell A 0.126368 -> delta -0.007396, per-seed -0.004886 / -0.009906 (same
+  direction), verdict STRONG_SUCCESS (gate: delta <= -0.002, same direction).
+  seed0 raw 0.125324 (ep231) / soup 0.119818; seed1 raw 0.124394 (ep197) /
+  soup 0.118126. Determinism verified: 6-epoch repro on GPU0 and GPU1
+  bit-identical (selection-state SHA-256 91f1a615...). 14/14 remote sanity
+  checks and 72 repo tests pass; no vocab-sized typed_embedding.weight; OOV is
+  naturally encodable; parent/global/topology/q16/h64/T2/recurrent tying
+  preserved. IMPORTANT CAVEAT: the trained shared encoder is nearly rank-1
+  across patches (effective rank 1.107/1.202, top singular fraction
+  0.979/0.955 over 5864 valid patches), so the gain must NOT be attributed to
+  rich structural connectivity being exploited; the defensible claim is that
+  the categorical vocabulary memory can be removed with a small shared
+  connectivity encoder without loss. Param-only MolHIV projection: replacing
+  [26233,32]=839,456 with an output-32 encoder (35,936) gives 273,069 total
+  (no MolHIV training, no performance claim). Official ZINC test never loaded.
+scope: >-
+  ZINC-12K official train/valid only; deterministic-A100 regime; seeds 0 and 1;
+  fixed Top-5 soup; valid-selection metric. One pre-registered architecture, no
+  width/depth sweep. Official test NEVER loaded. Not a MolHIV claim. Not a
+  structural-inductive-bias claim (see rank caveat). Excludes attention /
+  Transformer, learned token dictionary, certificate-ID lookup, certificate
+  bytes as input, exact identity residual, hash table, KNN sharing, corrected
+  exact lookup.
+supporting_evidence:
+  - >-
+    2-seed soup mean 0.118972 vs 0.126368 (delta -0.007396); both seeds
+    improve (-0.004886, -0.009906).
+  - >-
+    Candidate 84,495 params (baseline 85,763); typed lookup 36,420 -> 0;
+    structural encoder 35,152; no typed_embedding state keys.
+  - >-
+    Deterministic GPU repro identical across both A100s (state SHA-256
+    91f1a615b5f8dc01985b14a0d7ca834feb4e6f1bd9165b8c531248831528f276).
+  - >-
+    14/14 remote sanity checks (relabel invariance, atom/bond/root
+    sensitivity, no certificate dependence, parent preserved, q16/h64/T2,
+    recurrent tying, finite fwd/bwd, budget) and 72 repo tests pass.
+  - >-
+    Cache rebuilt on official train only (10,000 mols / 231,664 patches /
+    1,418,500 patch-nodes / 2,465,688 directed edges); official_test_loaded
+    false.
+  - >-
+    MolHIV parameter accounting reproduced: 1,076,589 - 839,456 + 35,936 =
+    273,069.
+contradicting_evidence:
+  - >-
+    The shared encoder output is nearly rank-1 across patches (effective rank
+    1.107/1.202; top singular fraction 0.979/0.955), so the mechanism is
+    closer to a learned per-patch bias than to rich structural propagation.
+  - >-
+    Only 2 seeds; no test-set confirmation (official test intentionally
+    locked); the improvement (-0.0074) while consistent is modest relative to
+    the historical ~0.003-0.005 seed spread scale.
+  - >-
+    seed0 ran on a contended GPU0 (another user held 34.8 GiB), so its wall
+    time is not a clean compute measurement.
