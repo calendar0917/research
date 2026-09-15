@@ -95,6 +95,9 @@ from tracks.ksvd.experiments.luyin16.explicit_support_composer import (
 from tracks.ksvd.experiments.luyin16.explicit_structural_basis import (
     ExplicitStructuralBasisEncoder,
 )
+from tracks.ksvd.experiments.luyin16.explicit_object_relational import (
+    ExplicitObjectRelationalEncoder,
+)
 from tracks.ksvd.experiments.luyin16 import zinc_topology_features as ztopo
 
 
@@ -1648,6 +1651,22 @@ class PatchPathModel(nn.Module):
         esb_n_degree_bins: int = 8,
         esb_valuation_hidden: int = 184,
         esb_fusion_hidden: int = 184,
+        # Explicit objects + explicit relations + T_obj=2 recurrent reasoning
+        # (``explicit_object_relational``).  Object states are initialised from
+        # deterministic primitive kernels; relations are support-derived and
+        # sparse; one weight-tied update refines object states over the fixed
+        # relation graph; pooling is late (after T_obj=2) and the structural
+        # channel stays rank-1 (b + s(P) * v).  Widths chosen once by
+        # parameter accounting to match B-full's 35,152-param encoder exactly.
+        eor_obj_dim: int = 8,
+        eor_rel_hidden: int = 64,
+        eor_rel_latent_dim: int = 16,
+        eor_q_hidden: int = 64,
+        eor_q_obj_dim: int = 8,
+        eor_object_hidden: int = 120,
+        eor_update_hidden: int = 79,
+        eor_fusion_hidden: int = 96,
+        eor_rounds: int = 2,
         # Connectivity-free ablation of the shared structural encoder.  Same
         # input primitives (atom / root / distance / bond type) and same
         # output width, but a permutation-invariant DeepSets bag encoder with
@@ -1673,11 +1692,13 @@ class PatchPathModel(nn.Module):
             "shared_bag",
             "explicit_composer",
             "explicit_basis_rank1",
+            "explicit_object_relational",
         }:
             raise ValueError(
                 f"unknown patch_representation={self.patch_representation!r}; "
                 "expected 'typed_lookup', 'shared_structural', 'shared_bag', "
-                "'explicit_composer' or 'explicit_basis_rank1'"
+                "'explicit_composer', 'explicit_basis_rank1' or "
+                "'explicit_object_relational'"
             )
         self.structural_node_dim = int(structural_node_dim)
         self.structural_edge_dim = int(structural_edge_dim)
@@ -1698,6 +1719,15 @@ class PatchPathModel(nn.Module):
         self.esb_n_degree_bins = int(esb_n_degree_bins)
         self.esb_valuation_hidden = int(esb_valuation_hidden)
         self.esb_fusion_hidden = int(esb_fusion_hidden)
+        self.eor_obj_dim = int(eor_obj_dim)
+        self.eor_rel_hidden = int(eor_rel_hidden)
+        self.eor_rel_latent_dim = int(eor_rel_latent_dim)
+        self.eor_q_hidden = int(eor_q_hidden)
+        self.eor_q_obj_dim = int(eor_q_obj_dim)
+        self.eor_object_hidden = int(eor_object_hidden)
+        self.eor_update_hidden = int(eor_update_hidden)
+        self.eor_fusion_hidden = int(eor_fusion_hidden)
+        self.eor_rounds = int(eor_rounds)
         self.embedding_mode = str(embedding_mode)
         self.embedding_rank = int(embedding_rank)
         self.parent_embedding_rank = int(
@@ -1943,6 +1973,30 @@ class PatchPathModel(nn.Module):
                 valuation_hidden=self.esb_valuation_hidden,
                 fusion_hidden=self.esb_fusion_hidden,
                 output_dim=int(token_width),
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "explicit_object_relational":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='explicit_object_relational'"
+                )
+            self.structural_encoder = ExplicitObjectRelationalEncoder(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                n_degree_bins=self.esb_n_degree_bins,
+                obj_dim=self.eor_obj_dim,
+                rel_hidden=self.eor_rel_hidden,
+                rel_latent_dim=self.eor_rel_latent_dim,
+                q_hidden=self.eor_q_hidden,
+                q_obj_dim=self.eor_q_obj_dim,
+                object_hidden=self.eor_object_hidden,
+                update_hidden=self.eor_update_hidden,
+                fusion_hidden=self.eor_fusion_hidden,
+                output_dim=int(token_width),
+                t_obj=self.eor_rounds,
             )
             del self.typed_embedding  # no vocabulary-sized table remains
             self.typed_embedding = None
