@@ -56,8 +56,10 @@ alternatives_rejected:
     a scalar model from it.
 - item: Open the ZINC official test or train MolHIV to confirm the mechanism
   because: >-
-    the study is valid-selection only by design; official test is hard-locked
-    and no test read was pre-registered.
+    the mechanism decision itself is valid-selection only; at decision time the
+    official test was hard-locked. It was later read exactly once in a
+    separately-authorized terminal closure (commit 4802ba8, tag sbpe-test), which
+    changed no model/selection decision and is recorded below.
 - item: "Change h/q/T, the optimizer, the relation/centre family, or add attention/Transformer/identity mechanisms"
   because: >-
     all are out of scope and none is needed to answer the mechanism question.
@@ -78,6 +80,24 @@ consequences:
   - >-
     ZINC Cell A remains the frozen configuration; B-bag is a mechanism control,
     not a candidate architecture and not a new benchmark result.
+terminal_test_closure:
+  status: performed_once (explicitly authorized)
+  run_tag: sbpe-test
+  commit: 4802ba89dc1a0ec076c6ed56c8f60e8718819b81
+  n_test: 1000
+  soup_test_mean: 0.09874153676908463
+  soup_test_per_seed:
+    '0': 0.10266160276997835
+    '1': 0.09482147076819092
+  raw_test_mean: 0.10821205288078636
+  same_regime_cell_a_test_soup_mean: 0.10671669006999582
+  interpretation: >-
+    B-bag beats frozen cell A on both valid soup (0.123806 vs 0.126368) and
+    test soup (0.098742 vs 0.106717), so the validation advantage transfers to
+    official test. A2 and B-full were not evaluated on test (one-shot reads,
+    only B-bag authorized), so the test split does not re-derive the valid
+    ordering or the connectivity decomposition. The mechanism conclusion is
+    unchanged. test_used_for_selection_or_tuning = false.
 revisit_if: >-
   A new pre-registered stage asks (a) whether the connectivity increment
   survives a same-input-information composition control, (b) whether the

@@ -33,8 +33,11 @@ statement: >-
   0.279/0.553, Spearman max |rho| ~0.48/0.54 with root-atom-type/atom-composition
   directions strongest) -> between R3 and R4, seed-dependent.
 scope: >-
-  ZINC-12K official train/valid only; deterministic-A100 regime; seeds 0 and 1;
-  fixed Top-5 soup; valid-selection metric; official test NEVER loaded. Exactly
+  ZINC-12K official train/valid for the mechanism decomposition; deterministic-A100
+  regime; seeds 0 and 1; fixed Top-5 soup; valid-selection metric. The official
+  test split was read EXACTLY ONCE, in the separately-authorized terminal
+  closure (commit 4802ba8, tag sbpe-test, n=1000); no test number was used for
+  selection, tuning, or any model decision. Exactly
   one pre-registered B-bag architecture (no width/depth/pooling sweep); no extra
   seeds. The A2-vs-B-bag comparison is CONFOUNDED by input information (A2 reads
   the 146-D handcrafted shell descriptor; B-bag reads only raw primitives), so
@@ -44,6 +47,30 @@ scope: >-
   reconstruction is a mechanism diagnostic only, never a model-selection device.
   Excludes attention/Transformer, identity lookup/hash/KNN/SBCI, h/q/T changes,
   optimizer/seed sweeps, MolHIV training, and any scalar-model design.
+terminal_test_closure:
+  status: performed_once
+  run_tag: sbpe-test
+  commit: 4802ba89dc1a0ec076c6ed56c8f60e8718819b81
+  n_test: 1000
+  soup_test_per_seed:
+    '0': 0.10266160276997835
+    '1': 0.09482147076819092
+  soup_test_mean: 0.09874153676908463
+  soup_test_std: 0.005543810503861554
+  raw_test_per_seed:
+    '0': 0.10953527839202434
+    '1': 0.10688882736954838
+  raw_test_mean: 0.10821205288078636
+  raw_test_std: 0.0018713234640708233
+  diagnostic_soup_prediction_ensemble_test_mae: 0.08926600432861596
+  same_regime_reference_cell_a_test_soup_mean: 0.10671669006999582
+  note: >-
+    The 2-seed soup is the equal-weight mean of the per-seed Top-5 soup test
+    MAEs. B-bag beats frozen cell A on both valid (0.123806 vs 0.126368) and
+    test (0.098742 vs 0.106717) soup, so the validation advantage transfers.
+    A2 and B-full were NOT evaluated on test, so the test split does not
+    re-derive the valid ordering or the connectivity decomposition.
+    official_test_evaluated=true, test_used_for_selection_or_tuning=false.
 supporting_evidence:
   - >-
     B-bag 2-seed Top-5 soup valid mean 0.123806 (seed0 0.127382, seed1 0.120229);
