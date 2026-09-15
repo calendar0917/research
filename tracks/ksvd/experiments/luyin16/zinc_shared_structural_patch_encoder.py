@@ -1269,7 +1269,7 @@ def decide(tag: str = "sspe") -> dict[str, Any]:
         rows[str(seed)] = {
             "raw_best_valid": float(soup["best_checkpoint_valid_mae"]),
             "soup_valid": float(soup["top5_soup_valid_mae"]),
-            "best_epoch": int(soup["best_epoch"]),
+            "best_epoch": int(run["best_epoch"]),
             "epochs_run": int(run["epochs_run"]),
             "train_at_best": float(run["train_loss_at_best"]),
             "top5_epochs": soup["top5_epochs"],
