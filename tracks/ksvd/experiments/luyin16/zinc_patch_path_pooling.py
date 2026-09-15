@@ -86,6 +86,7 @@ from tracks.ksvd.experiments.luyin16.zinc_long_range_proxy import (
     source_audit,
 )
 from tracks.ksvd.experiments.luyin16.structural_patch_encoder import (
+    AdaptiveStructureBindingEncoder,
     SharedBagPatchEncoder,
     SharedStructuralPatchEncoder,
 )
@@ -1675,6 +1676,19 @@ class PatchPathModel(nn.Module):
         bag_node_hidden: int = 96,
         bag_bond_hidden: int = 48,
         bag_fusion_hidden: int = 104,
+        # Adaptive Structure-Binding cell (``adaptive_structure_binding``).
+        # One shared cell that derives an explicit connected support inside the
+        # radius-2 patch from the activation of structure--attribute bindings
+        # and runs the patch computation on that learned structure.  Widths are
+        # pre-registered once (no width/round sweep); the cell degenerates to
+        # B-bag with open gates and (tiny) perturbation paths.
+        asb_bond_hidden: int = 48,
+        asb_bind_hidden: int = 32,
+        asb_gate_hidden: int = 24,
+        asb_message_hidden: int = 32,
+        asb_update_hidden: int = 32,
+        asb_bind_update_hidden: int = 32,
+        asb_perturb_init: float = 1.0e-3,
     ) -> None:
         super().__init__()
         if quantile_mode not in QUANTILE_MODES:
@@ -1693,12 +1707,13 @@ class PatchPathModel(nn.Module):
             "explicit_composer",
             "explicit_basis_rank1",
             "explicit_object_relational",
+            "adaptive_structure_binding",
         }:
             raise ValueError(
                 f"unknown patch_representation={self.patch_representation!r}; "
                 "expected 'typed_lookup', 'shared_structural', 'shared_bag', "
-                "'explicit_composer', 'explicit_basis_rank1' or "
-                "'explicit_object_relational'"
+                "'explicit_composer', 'explicit_basis_rank1', "
+                "'explicit_object_relational' or 'adaptive_structure_binding'"
             )
         self.structural_node_dim = int(structural_node_dim)
         self.structural_edge_dim = int(structural_edge_dim)
@@ -1708,6 +1723,13 @@ class PatchPathModel(nn.Module):
         self.bag_node_hidden = int(bag_node_hidden)
         self.bag_bond_hidden = int(bag_bond_hidden)
         self.bag_fusion_hidden = int(bag_fusion_hidden)
+        self.asb_bond_hidden = int(asb_bond_hidden)
+        self.asb_bind_hidden = int(asb_bind_hidden)
+        self.asb_gate_hidden = int(asb_gate_hidden)
+        self.asb_message_hidden = int(asb_message_hidden)
+        self.asb_update_hidden = int(asb_update_hidden)
+        self.asb_bind_update_hidden = int(asb_bind_update_hidden)
+        self.asb_perturb_init = float(asb_perturb_init)
         self.composer_latent_dim = int(composer_latent_dim)
         self.composer_edge_dim = int(composer_edge_dim)
         self.composer_n_degree_bins = int(composer_n_degree_bins)
@@ -1934,6 +1956,31 @@ class PatchPathModel(nn.Module):
                 bond_hidden=self.bag_bond_hidden,
                 fusion_hidden=self.bag_fusion_hidden,
                 output_dim=int(token_width),
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "adaptive_structure_binding":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='adaptive_structure_binding'"
+                )
+            self.structural_encoder = AdaptiveStructureBindingEncoder(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                node_dim=self.structural_node_dim,
+                edge_dim=self.structural_edge_dim,
+                node_hidden=self.bag_node_hidden,
+                bond_hidden=self.asb_bond_hidden,
+                bind_hidden=self.asb_bind_hidden,
+                gate_hidden=self.asb_gate_hidden,
+                message_hidden=self.asb_message_hidden,
+                update_hidden=self.asb_update_hidden,
+                bind_update_hidden=self.asb_bind_update_hidden,
+                fusion_hidden=self.bag_fusion_hidden,
+                output_dim=int(token_width),
+                perturb_init=self.asb_perturb_init,
             )
             del self.typed_embedding  # no vocabulary-sized table remains
             self.typed_embedding = None

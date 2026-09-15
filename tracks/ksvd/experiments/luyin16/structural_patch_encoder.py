@@ -58,6 +58,8 @@ Every undirected bond is stored twice (``u -> v`` and ``v -> u``).
 
 from __future__ import annotations
 
+from typing import Any
+
 import torch
 import torch.nn as nn
 
@@ -391,3 +393,462 @@ class SharedBagPatchEncoder(nn.Module):
                 [root_state, node_mean, node_std, bond_mean, bond_std], dim=1
             )
         )
+
+
+def _straight_through_binary(soft: torch.Tensor) -> torch.Tensor:
+    """Hard 0/1 forward membership with a straight-through gradient.
+
+    Forward: ``round(soft > 0.5)``.  Backward: identity (the gradient of the
+    hard mask with respect to ``soft`` is treated as 1), which is the standard
+    straight-through estimator for a discrete membership variable.
+    """
+    hard = (soft > 0.5).to(soft.dtype)
+    return soft + (hard - soft).detach()
+
+
+class AdaptiveStructureBindingEncoder(nn.Module):
+    """Adaptive Structure-Binding (ASB) cell for rooted typed radius-2 patches.
+
+    This encoder realises Z1 / *Local ASB*: inside each existing radius-2 patch
+    the model derives an explicit, connected support from the activation of
+    structure--attribute *bindings*, and then performs the patch computation on
+    that learned structure.  The radius-2 patch is the *search region*; the
+    learned support is the *actual structure*.
+
+    Unified computation (one cell, no parallel branch)::
+
+        z_v   = node_mlp(atom_embed + root_embed + dist_embed)
+        b_uv  = bond_mlp(bond_embed) + bind_delta([z_u+z_v, |z_u-z_v|, bond_embed])
+        gate  = sigmoid(gate_mlp(b_uv))
+        a_root = 1
+        a_v    = gate(root--v)                       for dist(v)=1
+        a_w    = 1 - prod_v (1 - a_v * gate(v--w))   for dist(w)=2, v in N(w)
+        a_hard = StraightThroughBinary(a_soft)
+        m_v    = mean_{u in N(v) and selected} message_mlp(b_uv)
+        z'_v   = z_v + update_mlp([z_v, m_v])
+        b'_uv  = b_uv + bind_update([z'_u+z'_v, |z'_u-z'_v|, bond_embed])
+        e      = fusion([z'_root; mean_S z'; std_S z'; mean_E b'; std_E b'])
+
+    The same ``b_uv`` objects decide the support (through ``gate_mlp``) and are
+    the messages inside the support (through ``message_mlp``), so the binding
+    states both *form* and *compute within* the learned structure.
+
+    Degeneration to the connectivity-free bag (B-bag)
+    -------------------------------------------------
+    ``bond_mlp(bond_embed)`` is exactly the B-bag bond primitive map and the
+    node / fusion maps are the B-bag maps.  The three perturbation paths
+    (``bind_delta``, ``update_mlp``, ``bind_update``) are initialised with tiny
+    final-layer weights and the gate is initialised open
+    (``sigmoid(gate_bias) ~ 0.95``); with all gates on and the perturbations
+    near zero the cell reduces to the B-bag computation.  The perturbations are
+    deliberately *not* exactly zero so that gradients reach the gate, binding,
+    message and update modules from the first step.
+
+    Permutation invariance
+    ----------------------
+    Every aggregation is a mean / second moment over a multiset (nodes in the
+    support, real undirected bonds in the induced support) and the root term is
+    the shared node map at the unique root.  The support is built only from
+    root-relative roles (root distance) and exchangeable binding states, so a
+    relabelling of the patch nodes yields the same ``e_asb`` and the same
+    support.  The induced support keeps **all** real bonds among selected
+    nodes, including bonds that were not used to grow the support (e.g. rings).
+
+    ``struct_src`` / ``struct_dst`` are the only adjacency used; there is no
+    vocabulary, no certificate, no motif enumeration and no per-patch table.
+    """
+
+    def __init__(
+        self,
+        *,
+        atom_categories: int = 28,
+        bond_categories: int = 4,
+        n_distance_bins: int = 3,
+        node_dim: int = 48,
+        edge_dim: int = 24,
+        bind_dim: int | None = None,
+        node_hidden: int = 96,
+        bond_hidden: int = 48,
+        bind_hidden: int = 32,
+        gate_hidden: int = 24,
+        message_hidden: int = 32,
+        update_hidden: int = 32,
+        bind_update_hidden: int = 32,
+        fusion_hidden: int = 104,
+        output_dim: int = 16,
+        perturb_init: float = 1.0e-3,
+        gate_bias_init: float = 3.0,
+        gate_weight_init_std: float = 1.0e-2,
+    ) -> None:
+        super().__init__()
+        self.atom_categories = int(atom_categories)
+        self.bond_categories = int(bond_categories)
+        self.n_distance_bins = int(n_distance_bins)
+        self.node_dim = int(node_dim)
+        self.edge_dim = int(edge_dim)
+        self.bind_dim = int(edge_dim if bind_dim is None else bind_dim)
+        self.node_hidden = int(node_hidden)
+        self.bond_hidden = int(bond_hidden)
+        self.bind_hidden = int(bind_hidden)
+        self.gate_hidden = int(gate_hidden)
+        self.message_hidden = int(message_hidden)
+        self.update_hidden = int(update_hidden)
+        self.bind_update_hidden = int(bind_update_hidden)
+        self.fusion_hidden = int(fusion_hidden)
+        self.output_dim = int(output_dim)
+        self.perturb_init = float(perturb_init)
+        self.gate_bias_init = float(gate_bias_init)
+        self.gate_weight_init_std = float(gate_weight_init_std)
+        # Interface-compatible audit metadata (see SharedBagPatchEncoder).
+        self.hidden_dim = int(fusion_hidden)
+        self.rounds = 1
+        self.include_std_pool = True
+        self.kind = "adaptive_structure_binding"
+        if min(
+            self.atom_categories,
+            self.bond_categories,
+            self.n_distance_bins,
+            self.node_dim,
+            self.edge_dim,
+            self.bind_dim,
+            self.node_hidden,
+            self.fusion_hidden,
+            self.output_dim,
+        ) < 1:
+            raise ValueError("ASB encoder dimensions must be positive")
+
+        # --- B-bag-compatible attribute primitive maps ----------------------
+        self.atom_embedding = nn.Embedding(self.atom_categories, self.node_dim)
+        self.root_embedding = nn.Embedding(2, self.node_dim)
+        self.distance_embedding = nn.Embedding(
+            self.n_distance_bins, self.node_dim
+        )
+        self.bond_embedding = nn.Embedding(self.bond_categories, self.edge_dim)
+        self.node_mlp = nn.Sequential(
+            nn.Linear(self.node_dim, self.node_hidden),
+            nn.ReLU(),
+            nn.Linear(self.node_hidden, self.node_dim),
+        )
+        # The bond primitive map is shape-compatible with the B-bag bond map so
+        # the attribute-pretrained initialisation is an exact tensor copy.
+        self.bond_mlp = nn.Sequential(
+            nn.Linear(self.edge_dim, self.bond_hidden),
+            nn.ReLU(),
+            nn.Linear(self.bond_hidden, self.bind_dim),
+        )
+
+        # --- binding state (structure + computation) ------------------------
+        # b = bond_mlp(bond_embed) + bind_delta([z_u+z_v, |z_u-z_v|, bond_embed])
+        self.bind_delta_mlp = nn.Sequential(
+            nn.Linear(2 * self.node_dim + self.edge_dim, self.bind_hidden),
+            nn.ReLU(),
+            nn.Linear(self.bind_hidden, self.bind_dim),
+        )
+        # one shared gate scores every real bond; the same b_uv is the message.
+        self.gate_mlp = nn.Sequential(
+            nn.Linear(self.bind_dim, self.gate_hidden),
+            nn.ReLU(),
+            nn.Linear(self.gate_hidden, 1),
+        )
+        self.message_mlp = nn.Sequential(
+            nn.Linear(self.bind_dim, self.message_hidden),
+            nn.ReLU(),
+            nn.Linear(self.message_hidden, self.node_dim),
+        )
+        self.update_mlp = nn.Sequential(
+            nn.Linear(2 * self.node_dim, self.update_hidden),
+            nn.ReLU(),
+            nn.Linear(self.update_hidden, self.node_dim),
+        )
+        self.bind_update = nn.Sequential(
+            nn.Linear(2 * self.node_dim + self.edge_dim, self.bind_update_hidden),
+            nn.ReLU(),
+            nn.Linear(self.bind_update_hidden, self.bind_dim),
+        )
+        fusion_input = 3 * self.node_dim + 2 * self.bind_dim
+        self.fusion = nn.Sequential(
+            nn.Linear(fusion_input, self.fusion_hidden),
+            nn.ReLU(),
+            nn.Linear(self.fusion_hidden, self.output_dim),
+        )
+
+        # --- near-function-preserving initialisation ------------------------
+        for module in (self.bind_delta_mlp, self.update_mlp, self.bind_update):
+            nn.init.normal_(module[-1].weight, mean=0.0, std=self.perturb_init)
+            nn.init.zeros_(module[-1].bias)
+        nn.init.normal_(
+            self.gate_mlp[-1].weight, mean=0.0, std=self.gate_weight_init_std
+        )
+        nn.init.constant_(self.gate_mlp[-1].bias, self.gate_bias_init)
+
+        # Diagnostics (never parameters / buffers).  Sufficient statistics are
+        # refreshed by every forward so support / gate / binding health can be
+        # audited without a second pass.  ``record_support`` additionally keeps
+        # the explicit per-patch selected support for correctness tests; it is
+        # off by default so training runs never accumulate it.
+        self.last_stats: dict[str, Any] = {}
+        self.record_support = False
+        self.last_support: dict[str, Any] = {}
+
+    # -- near-function-preserving initialisation from B-bag ------------------
+    def load_attribute_pretrained(self, bbag: "SharedBagPatchEncoder") -> None:
+        """Copy the B-bag attribute primitive maps into this cell.
+
+        Copies ``atom / root / distance / bond`` embeddings, the node map, the
+        bond primitive map and the fusion.  After this call the ASB cell reads
+        the same attribute primitives as B-bag and, with open gates and tiny
+        perturbation paths, reproduces the B-bag patch token to first order.
+        """
+        for name in (
+            "atom_embedding",
+            "root_embedding",
+            "distance_embedding",
+            "bond_embedding",
+            "node_mlp",
+            "bond_mlp",
+            "fusion",
+        ):
+            target = getattr(self, name)
+            source = getattr(bbag, name)
+            target.load_state_dict(source.state_dict())
+
+    # -- helpers -------------------------------------------------------------
+    @staticmethod
+    def _group_mean(
+        values: torch.Tensor,
+        index: torch.Tensor,
+        weight: torch.Tensor,
+        n_groups: int,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Weighted group mean and population std (weights in ``{0, 1}``)."""
+        dim = int(values.shape[1])
+        total = values.new_zeros((n_groups, dim))
+        if values.numel():
+            total.index_add_(0, index, values * weight.unsqueeze(1))
+        count = values.new_zeros(n_groups)
+        if weight.numel():
+            count.index_add_(0, index, weight)
+        denom = count.clamp_min(1.0).unsqueeze(1)
+        mean = total / denom
+        second = values.new_zeros((n_groups, dim))
+        if values.numel():
+            second.index_add_(0, index, values * values * weight.unsqueeze(1))
+        variance = (second / denom - mean * mean).clamp_min(0.0)
+        return mean, torch.sqrt(variance + 1.0e-8)
+
+    def forward(self, data: object) -> torch.Tensor:
+        atom = data.struct_atom.long()
+        root = data.struct_root.long()
+        distance = data.struct_dist.long()
+        unique_patch, node_patch = torch.unique(
+            data.struct_patch.long(), return_inverse=True
+        )
+        n_patches = int(unique_patch.numel())
+        n_nodes = int(atom.shape[0])
+
+        # --- node states ----------------------------------------------------
+        z = self.node_mlp(
+            self.atom_embedding(atom)
+            + self.root_embedding(root)
+            + self.distance_embedding(distance)
+        )
+
+        # --- real undirected bonds (each bond is stored twice) --------------
+        src = data.struct_src.long()
+        dst = data.struct_dst.long()
+        bond = data.struct_bond.long()
+        keep = src < dst
+        eu = src[keep]
+        ev = dst[keep]
+        ebond = bond[keep]
+        edge_group = node_patch[eu]
+        n_edges = int(eu.numel())
+        if n_edges:
+            bond_emb = self.bond_embedding(ebond)
+            base_b = self.bond_mlp(bond_emb)
+            delta_in = torch.cat(
+                [z[eu] + z[ev], (z[eu] - z[ev]).abs(), bond_emb], dim=1
+            )
+            b = base_b + self.bind_delta_mlp(delta_in)
+            gate = torch.sigmoid(self.gate_mlp(b)).view(-1)
+        else:
+            b = z.new_zeros((0, self.bind_dim))
+            gate = z.new_zeros(0)
+
+        # --- adaptive support (root-relative, connectivity-guaranteed) ------
+        level1_soft = z.new_zeros(n_nodes)
+        level2_soft = z.new_zeros(n_nodes)
+        if n_edges:
+            dist_u = distance[eu]
+            dist_v = distance[ev]
+            # root -> distance-1 bonds: the non-root endpoint is the child.
+            root_edge = (dist_u == 0) | (dist_v == 0)
+            re_idx = torch.nonzero(root_edge, as_tuple=False).view(-1)
+            if re_idx.numel():
+                children = torch.where(
+                    dist_u[re_idx] == 0, ev[re_idx], eu[re_idx]
+                )
+                level1_soft = level1_soft.index_put(
+                    (children,), gate[re_idx], accumulate=False
+                )
+            # distance-1 -> distance-2 bonds: activation requires an active
+            # parent, so the support can never touch a disconnected node.
+            level1_hard = _straight_through_binary(level1_soft)
+            cross = ((dist_u == 1) & (dist_v == 2)) | (
+                (dist_u == 2) & (dist_v == 1)
+            )
+            cr_idx = torch.nonzero(cross, as_tuple=False).view(-1)
+            if cr_idx.numel():
+                parent_is_u = dist_u[cr_idx] == 1
+                parents = torch.where(parent_is_u, eu[cr_idx], ev[cr_idx])
+                child2 = torch.where(parent_is_u, ev[cr_idx], eu[cr_idx])
+                path = level1_hard[parents] * gate[cr_idx]
+                logs = torch.log1p(-path.clamp(max=1.0 - 1.0e-6))
+                acc = z.new_zeros(n_nodes).index_add(0, child2, logs)
+                level2_soft = 1.0 - torch.exp(acc)
+
+        ones = torch.ones_like(level1_soft)
+        a_soft = torch.where(
+            distance == 0,
+            ones,
+            torch.where(distance == 1, level1_soft, level2_soft),
+        )
+        selected = _straight_through_binary(a_soft)
+
+        # --- binding-aware computation on the learned support ---------------
+        if n_edges:
+            selected_edge = selected[eu] * selected[ev]
+            message = self.message_mlp(b)
+            message = message * selected_edge.unsqueeze(1)
+            incident_sum = z.new_zeros((n_nodes, self.node_dim))
+            incident_sum = incident_sum.index_add(0, eu, message)
+            incident_sum = incident_sum.index_add(0, ev, message)
+            incident_count = z.new_zeros(n_nodes)
+            incident_count = incident_count.index_add(0, eu, selected_edge)
+            incident_count = incident_count.index_add(0, ev, selected_edge)
+            m = incident_sum / incident_count.clamp_min(1.0).unsqueeze(1)
+            z2 = z + self.update_mlp(torch.cat([z, m], dim=1))
+            update_in = torch.cat(
+                [z2[eu] + z2[ev], (z2[eu] - z2[ev]).abs(), bond_emb], dim=1
+            )
+            b2 = b + self.bind_update(update_in)
+        else:
+            selected_edge = z.new_zeros(0)
+            m = z.new_zeros((n_nodes, self.node_dim))
+            z2 = z + self.update_mlp(torch.cat([z, m], dim=1))
+            b2 = b
+
+        # --- permutation-invariant pooling over the learned structure -------
+        is_root = root > 0
+        root_state = z2.new_zeros((n_patches, self.node_dim))
+        if bool(is_root.any()):
+            root_state = root_state.index_put(
+                (node_patch[is_root],), z2[is_root], accumulate=False
+            )
+        node_mean, node_std = self._group_mean(
+            z2, node_patch, selected, n_patches
+        )
+        if n_edges:
+            bind_mean, bind_std = self._group_mean(
+                b2, edge_group, selected_edge, n_patches
+            )
+        else:
+            bind_mean = z.new_zeros((n_patches, self.bind_dim))
+            bind_std = z.new_zeros((n_patches, self.bind_dim))
+
+        output = self.fusion(
+            torch.cat(
+                [root_state, node_mean, node_std, bind_mean, bind_std], dim=1
+            )
+        )
+
+        self._record_stats(
+            n_patches=n_patches,
+            distance=distance,
+            selected=selected,
+            node_patch=node_patch,
+            selected_edge=selected_edge if n_edges else None,
+            n_edges=n_edges,
+            gate=gate if n_edges else None,
+            node_state=z2,
+            binding_state=b2,
+            message=m,
+            update=z2 - z,
+        )
+        if self.record_support:
+            self.last_support = {
+                "selected": selected.detach().cpu(),
+                "distance": distance.detach().cpu(),
+                "root": root.detach().cpu(),
+                "node_patch": node_patch.detach().cpu(),
+                "src": eu.detach().cpu(),
+                "dst": ev.detach().cpu(),
+                "selected_edge": (
+                    selected_edge.detach().cpu()
+                    if n_edges
+                    else torch.zeros(0)
+                ),
+                "n_patches": int(n_patches),
+                "output": output.detach().cpu(),
+            }
+        return output
+
+    # -- diagnostics ---------------------------------------------------------
+    def _record_stats(self, **kw: Any) -> None:
+        n_patches = int(kw["n_patches"])
+        distance = kw["distance"]
+        selected = kw["selected"]
+        node_patch = kw["node_patch"]
+        selected_edge = kw["selected_edge"]
+        n_edges = int(kw["n_edges"])
+        gate = kw["gate"]
+
+        dist1 = distance == 1
+        dist2 = distance == 2
+        patch_nodes = torch.bincount(
+            node_patch, minlength=n_patches
+        ).to(torch.float64)
+        support_sizes = torch.zeros(n_patches, dtype=torch.float64)
+        if selected.numel():
+            support_sizes.index_add_(0, node_patch, selected.to(torch.float64))
+        gate_f = gate.double() if gate is not None and gate.numel() else None
+        stats: dict[str, Any] = {
+            "n_patches": int(n_patches),
+            "n_nodes": int(selected.numel()),
+            "n_selected_nodes": float(selected.sum()) if selected.numel() else 0.0,
+            "n_dist1": int(dist1.sum()),
+            "n_dist1_selected": float(selected[dist1].sum()) if dist1.any() else 0.0,
+            "n_dist2": int(dist2.sum()),
+            "n_dist2_selected": float(selected[dist2].sum()) if dist2.any() else 0.0,
+            "n_edges": int(n_edges),
+            "n_selected_edges": (
+                float(selected_edge.sum()) if selected_edge is not None else 0.0
+            ),
+            "gate_sum": float(gate_f.sum()) if gate_f is not None else 0.0,
+            "gate_sq_sum": (
+                float((gate_f * gate_f).sum()) if gate_f is not None else 0.0
+            ),
+            "gate_count": int(gate.numel()) if gate is not None else 0,
+            "gate_entropy_sum": (
+                float(
+                    (
+                        -gate_f * torch.log(gate_f.clamp_min(1.0e-12))
+                        - (1.0 - gate_f)
+                        * torch.log((1.0 - gate_f).clamp_min(1.0e-12))
+                    ).sum()
+                )
+                if gate_f is not None
+                else 0.0
+            ),
+            "node_state_norm_sum": float(kw["node_state"].norm(dim=1).sum()),
+            "binding_state_norm_sum": (
+                float(kw["binding_state"].norm(dim=1).sum())
+                if kw["binding_state"].numel()
+                else 0.0
+            ),
+            "message_norm_sum": float(kw["message"].norm(dim=1).sum()),
+            "update_norm_sum": float(kw["update"].norm(dim=1).sum()),
+            "support_sizes": support_sizes.detach().cpu(),
+            "patch_node_counts": patch_nodes.detach().cpu(),
+        }
+        self.last_stats = stats
