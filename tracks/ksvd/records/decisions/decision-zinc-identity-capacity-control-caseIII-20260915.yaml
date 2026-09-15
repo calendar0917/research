@@ -1,0 +1,71 @@
+decision_id: decision-zinc-identity-capacity-control-caseIII-20260915
+created: '2026-09-15T10:22:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Decision Case III - TYPED LOOKUP DISPENSABLE / SHARED CAPACITY SUFFICES. On the
+  frozen deterministic-A100 ZINC cell A (85,763 params, 2-seed fixed Top-5 soup
+  valid 0.126368), replace the 36,420-param learned hybrid typed lookup with a
+  token-shared 36,397-param adapter that reads either a fixed seed-independent
+  16-D identity code (A1) or exact zeros (A2), at 85,740 total (-0.027%), with
+  all 43 shared tensors bit-identical to A0. Soup 2-seed means A0 0.126368 /
+  A1 0.123629 / A2 0.121914; raw 0.130562 / 0.129283 / 0.124667; deltas vs A0
+  -0.002739 (A1) and -0.004454 (A2), A2-A1 -0.001715. A0 is beaten on both seeds
+  and the two shared-capacity variants do not differ from each other. Therefore
+  per-identity learned embedding memory is NOT required, identity
+  distinguishability adds nothing, and the released identity budget can be moved
+  to a token-shared adapter without loss. Accepted only as Case III: 2 seeds,
+  per-seed spreads comparable to the deltas, and paired per-molecule bootstrap
+  95% CIs that include 0 mean the shared adapter is "not worse", NOT proven
+  better.
+why_this_experiment: >-
+  The naive test "delete identity and see performance drop" is confounded
+  because deletion also removes a large number of parameters. The question was
+  whether cell A's 0.126368 depends on per-identity learned categorical memory,
+  or only on identity distinguishability / generic shared capacity. Three
+  parameter-matched, one-variable conditions isolate the typed-token channel.
+protocol: >-
+  Frozen deterministic-A100 cell A protocol (Adam lr 1e-3, wd 1e-5, batch 128,
+  max 240, patience 40, scheduler none, L1, gradient clip 5.0, fixed equal-weight
+  Top-5 soup, torch.use_deterministic_algorithms(True)). A0 = frozen learned
+  hybrid lookup reference (not retrained). A1 = splitmix64 fixed code + shared
+  adapter. A2 = shared adapter with the 16-D identity slot forced to zeros.
+  Formal runs: 4 detached runs, one condition/seed each. Official test never
+  loaded. Smoke repro on GPU1 is bit-identical; peak GPU 316-318 MB.
+alternatives_rejected:
+  - item: Treating the learned per-identity typed lookup as necessary
+    because: >-
+      A1 and A2 both match or beat A0 on both seeds, and A1 ~= A2; the lookup
+      is not needed for the measured performance.
+  - item: Claiming the shared-capacity adapter is superior
+    because: >-
+      only 2 seeds, per-seed spreads 0.0004-0.0048 comparable to the deltas, and
+      paired per-molecule bootstrap 95% CIs include 0.
+  - item: Reopening closed identity lines (KNN embedding sharing / rare-token
+      donor / corrected tokenizer / v6 attribute branch / SBCI / attention)
+    because: >-
+      none is needed to obtain the result and each is an explicitly closed line.
+  - item: h/q/T/token-width changes or a new optimizer sweep
+    because: >-
+      the control changes exactly one thing (the typed-token channel); capacity
+      and architecture are held fixed.
+  - item: Opening the ZINC official test
+    because: >-
+      never loaded by design; no test read is authorized by this decision.
+consequences:
+  - >-
+    Per-identity learned embedding memory is not a requirement of the ZINC cell
+    A result; the released identity budget can be reinvested token-shared.
+  - >-
+    Identity distinguishability (fixed code vs zeros) adds no measurable
+    benefit in this regime, which weakens any "identity is needed for
+    distinguishability" argument at the ZINC cell A scale.
+  - >-
+    Combined with the shared-structural-encoder result and the
+    incremental-information audit, the typed lookup is best treated as
+    replaceable categorical memory, not as essential structure.
+revisit_if: >-
+  A new pre-registered experiment with more seeds and a pre-declared effect
+  threshold shows the learned lookup is required, or an authorized official-test
+  read for a frozen variant is pre-registered. Not by widening h/q/T, not by an
+  optimizer sweep, not by reopening the closed identity lines.

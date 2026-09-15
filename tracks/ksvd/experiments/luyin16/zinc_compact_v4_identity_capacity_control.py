@@ -594,12 +594,10 @@ def _shared_tensor_names(reference_state: Mapping[str, torch.Tensor]) -> list[st
 
 
 def sanity() -> dict[str, Any]:
-    device = torch.device("cpu")
     batch = _synthetic_batch()
 
     a1, copied1, ref_state = build_condition("A1", 0)
     a2, copied2, _ = build_condition("A2", 0)
-    a0 = cd.build_cell("A", 0)
 
     expected_adapter = None
     expected_total_value = None

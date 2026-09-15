@@ -1,0 +1,76 @@
+claim_id: claim-zinc-identity-capacity-control-20260915
+created: '2026-09-15T10:20:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the frozen deterministic-A100 ZINC cell A (h=64, q=16, patch_hidden=64,
+  global_hidden=32, T=2 weight-tied recurrent pair--centre; 85,763 params;
+  2-seed fixed Top-5 soup valid 0.126368), the performance does NOT depend on
+  per-identity learned embedding memory. Three parameter-matched conditions
+  differ only in the typed-token channel: A0 = frozen learned hybrid typed
+  lookup (36,420 lookup params; reference, NOT retrained); A1 = deterministic
+  seed-independent fixed unit-norm 16-D code per typed token (splitmix64, 6,785
+  rows, 0 duplicate rows, |cos| mean 0.202 / max 0.884) + token-shared trainable
+  adapter (36,397 params; input [16-D identity slot ; 146-D shell patch_cont])
+  = 85,740 total; A2 = identical adapter with the identity slot forced to exact
+  zeros = 85,740 total. A1/A2 are 23 params (0.027%) below A0; A1/A2 adapters
+  bit-identical; 43 shared tensors bit-identical to A0 (max abs diff 0.0);
+  parent embedding unchanged. 2-seed fixed Top-5 soup valid means A0 0.126368 >
+  A1 0.123629 > A2 0.121914 (raw 0.130562 / 0.129283 / 0.124667); soup deltas
+  (negative = better than A0) A1-A0 -0.002739, A2-A0 -0.004454, A2-A1 -0.001715,
+  with all four per-seed deltas negative. Verdict Case III: typed identity is
+  dispensable and identity distinguishability adds nothing (A1 ~= A2); the
+  36,420 released lookup params can be reinvested token-shared with no loss.
+  Point estimates favour the shared adapter, but a paired per-molecule bootstrap
+  (2-seed-averaged soup predictions, B=2000, seed 20260917) has 95% CIs that all
+  include 0 (A1-A0 [-0.011143,+0.005813], A2-A0 [-0.014777,+0.000714], A2-A1
+  [-0.008977,+0.000751]), so this is a "not worse / not needed" result, NOT a
+  superiority claim. 25/25 sanity checks; A2 is invariant to typed-token
+  permutation (max abs diff 0.0) while A1 is sensitive (7.8e-04); baseline guard
+  reproduces the frozen A0 checkpoint forward (best abs diff 2.94e-08, soup
+  2.68e-09); deterministic selection-state SHA-256 eea84e7a...d74d bit-identical
+  across repeat smokes; peak GPU 318 MB. Official ZINC test NEVER loaded.
+scope: >-
+  ZINC-12K official train/valid only; deterministic-A100 regime
+  (torch.use_deterministic_algorithms(True)); seeds 0 and 1; fixed equal-weight
+  Top-5 soup; valid-selection metric. One variable at a time in the typed-token
+  channel only; h/q/T/token-width/relation/pair/centre/global/topology/head/
+  optimizer/protocol all frozen. Official test never loaded. A0 is the frozen
+  2026-09-14 reference, not a re-trained baseline.
+supporting_evidence:
+  - >-
+    2-seed soup means A0 0.126368 / A1 0.123629 / A2 0.121914; deltas vs A0
+    -0.002739 / -0.004454 (both beyond the 0.002 threshold in the improving
+    direction); A2-A1 -0.001715 within threshold.
+  - >-
+    Exact parameter parity: A0 85,763 vs A1/A2 85,740 (-0.027%); released
+    36,420 lookup params reinvested as a 36,397-param token-shared adapter; the
+    graph head is untouched (4,551).
+  - >-
+    43 shared tensors bit-identical to A0 (A1/A2 shared max abs diff 0.0);
+    single-variable control verified behaviourally (A1 permutation-sensitive
+    7.8e-04, A2 invariant 0.0); 25/25 sanity; baseline guard reproduced.
+  - >-
+    Diagnostics: adapter output norm 3.42-3.76 (non-collapsed); centre-state
+    participation ranks h1 ~26-35 / h2 ~19-29 (no rank collapse); common-vs-rare
+    valid MAE gap stays negative (-0.033..-0.053), so rarity structure is not
+    carried by the lookup alone.
+contradicting_evidence:
+  - >-
+    Only 2 seeds; per-seed soup spreads 0.0004-0.0048 are comparable to the
+    deltas; paired per-molecule bootstrap 95% CIs include 0. The shared adapter
+    is therefore "not worse", not proven better.
+  - >-
+    A0 is the stored frozen reference rather than a freshly trained arm; the
+    comparison relies on the baseline guard reproducing its forward to 3e-08.
+evidence:
+  - results/compact_v4_identity_capacity_control/parameter_accounting.json
+  - results/compact_v4_identity_capacity_control/sanity.json (25/25)
+  - results/compact_v4_identity_capacity_control/baseline_guard.json
+  - results/compact_v4_identity_capacity_control/diagnostics.json
+  - results/compact_v4_identity_capacity_control/decision.json (case III)
+  - results/compact_v4_identity_capacity_control/report.json
+  - results/compact_v4_identity_capacity_control/runs/, soup_identity_*, states/
+  - notes/compact_v4_identity_capacity_control.md
+  - tests/test_compact_v4_identity_capacity_control.py (5 pass)
