@@ -1,0 +1,77 @@
+claim_id: claim-identity-incremental-information-audit-20260915
+created: '2026-09-15T09:40:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  A zero/full-training-free audit of ZINC and OGBG-MolHIV, run on frozen
+  checkpoints and the official-train split only, shows that the discrete typed
+  identity token contributes (i) genuine per-patch categorical separation the
+  deterministic non-ID descriptor does not supply, but (ii) no molecule-level
+  distinguishing power, and (iii) learned embedding geometry that is not
+  organised by structural similarity. Concretely, exact-byte descriptor
+  signatures collide with multiple identities on 45.9% of ZINC and 23.5-26.1% of
+  MolHIV patch occurrences (H(identity|descriptor) = 0.271 / 0.114 nats, max
+  multiplicity 9 / 11); kNN identity purity is strongly frequency-stratified
+  (ZINC k=8 0.81 frequent -> 0.00 singleton; MolHIV top-1 0.893); yet on official
+  ZINC train the descriptor-only, descriptor+identity, full-with-identity and
+  full-without-identity molecule signatures are identical (3 collision classes,
+  6 molecules, 0 non-raw-isomorphic classes), so identity adds zero
+  molecule-level expressivity. The learned matrices are not structural (ZINC
+  participation ratio 3.08, NN overlap@10 with token-mean descriptor 0.46% vs
+  ~0.15% random, sampled-pair Spearman 0.004; MolHIV 18.99, 0.087% vs ~0.038%,
+  0.021) while norm grows with frequency (Spearman +0.365 / +0.391), i.e.
+  task-specific arbitrary categorical memory. A second finding corrects the
+  record: the MolHIV "exact rooted typed certificate" is the same coarse
+  uncoloured rooted-topology invariant as the ZINC *historical* token
+  (`_canonical_typed_patch` returns bytes(pynauty.certificate(...)) and drops the
+  colour sequence); the complete coloured key has 87,039 classes versus the
+  26,232-row vocabulary (3.3x). Identity is therefore best read as
+  distinguishability + task-specific memory, not as missing raw structural
+  information.
+scope: >-
+  ZINC official train (10,000 molecules / 231,664 patches) and official valid
+  (1,000 / 23,083); OGBG-MolHIV official train (32,901 / 830,936) and valid
+  (4,113 / 114,300). Frozen checkpoints:
+  compact_v4_training_sufficiency/states/Pstar_A2_long_seed0_selection_state.pt
+  (6,785 x 16) and molhiv_recurrent_pair_centre/raw_state_seed0.pt
+  (26,233 x 32). X_nonID is the exact-byte patch_cont shell descriptor (146D
+  ZINC / 793D MolHIV). Reused artifacts were re-verified from code, not copied
+  from notes: post_v4_residual_audit caches + typed_patch_tokenizer_correctness
+  occurrences (231,664 patches, 100% historical-certificate match),
+  corrected_token_fragmentation_audit, raw_graph_patch_system_sufficiency,
+  molhiv_parameter_attribution. Reused read-only.
+limitations: >-
+  (1) Target-dependent statements are limited to the locked-signature empirical
+  lower bound on official ZINC train; no valid/test target was read for ZINC.
+  (2) The MolHIV official test was already opened once for the frozen
+  checkpoint; here it is only re-read read-only from existing artifacts, and the
+  Section-8 comparisons are descriptive, not causal. (3) Scaffold frequency is
+  approximated by document frequency of the sorted typed-token multiset because
+  RDKit is unavailable; molecule size is measured, scaffold is not. (4) The
+  Section-8 mean-error comparison is prevalence-confounded (zero-OOV prevalence
+  2.32% vs any-OOV 1.73%; mean error 0.0288 vs 0.0245 in the opposite direction
+  from the AUC gap). (5) ZINC corrected identity maps to >1 descriptor
+  (mean 1.64, max 9) because descriptor coordinate 145 uses full-molecule degree
+  and leaks context outside the induced patch; this is a descriptor-design fact.
+  (6) No new backbone was trained, so this audit constrains but does not settle
+  the causal role of the lookup (delegated to the capacity-controlled A0/A1/A2
+  and shared-encoder experiments).
+evidence:
+  - results/identity_incremental_information/dataflow.json
+  - results/identity_incremental_information/zinc_descriptor_identity.json
+  - results/identity_incremental_information/zinc_knn_purity.json
+  - results/identity_incremental_information/zinc_frequency.json
+  - results/identity_incremental_information/zinc_expressivity.json
+  - results/identity_incremental_information/zinc_expressivity_signature_lock.json
+  - results/identity_incremental_information/zinc_embedding_geometry.json
+  - results/identity_incremental_information/molhiv_descriptor_identity.json
+  - results/identity_incremental_information/molhiv_embedding_geometry.json
+  - results/identity_incremental_information/molhiv_generalization.json
+  - results/identity_incremental_information/final_decision.json
+  - results/identity_incremental_information/answers_q1_q20.json
+  - results/identity_incremental_information/figures/fig1_identity_multiplicity.png
+  - results/identity_incremental_information/figures/fig2_knn_purity.png
+  - results/identity_incremental_information/figures/fig3_embedding_geometry.png
+  - notes/identity_incremental_information_audit.md
+  - tests/test_identity_incremental_information_audit.py (10 pass)

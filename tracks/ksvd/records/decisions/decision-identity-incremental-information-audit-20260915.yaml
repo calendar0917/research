@@ -1,0 +1,119 @@
+decision_id: decision-identity-incremental-information-audit-20260915
+created: '2026-09-15T09:42:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Adopt a multi-label reading of the typed identity token from the
+  zero/full-training-free audit: Case A (mostly redundant at the molecule level)
+  + Case B (distinguishability matters, learned semantics not structural) + Case
+  C (genuine per-patch descriptor ambiguity), and REJECT Case D (unique
+  task-relevant learned semantics) for lack of any isolating evidence. The core
+  answer is that identity is a mixture dominated by distinguishability plus
+  task-specific arbitrary categorical memory, not missing raw structural
+  information. No new architecture is proposed and no identity mechanism is
+  changed by this decision. Pre-registered interpretation guidance is fixed for
+  the two sibling experiments: Agent A (exp/identity-capacity-control, A0/A1/A2)
+  and Agent B (exp/shared-structural-patch-encoder).
+why_this_experiment: >-
+  The repository had many partial identity results (tokenizer correctness,
+  fragmentation, sharing oracle, v6 factorisation, SBCI, recurrent Cell A,
+  MolHIV parameter attribution) but no single zero-training audit that separates
+  "identity carries structural information", "identity provides categorical
+  distinguishability", and "identity is task-specific memory". The three
+  sibling tasks (this audit + two training experiments) were designed together,
+  so the audit must fix its interpretation before the training results arrive.
+protocol: >-
+  Twelve target-free computations plus one bounded diagnostic: dataflow
+  accounting; exact-byte descriptor->identity collision and conditional entropy;
+  identity->descriptor variability; label-free kNN identity purity at fixed
+  k=1,8 (no sweep); learned-embedding geometry vs structural geometry on frozen
+  checkpoints; frequency/OOV/parameter share; with-ID vs without-ID molecule
+  expressivity on official ZINC train with a signature lock written before any
+  official-train target is read; MolHIV OOV/rarity vs error with
+  prevalence/size/patch-count/frequency controls; historical reconciliation;
+  final Case A/B/C/D map. No backbone trained, no architecture selection, ZINC
+  official test never opened, MolHIV test only re-read read-only.
+results:
+  official_zinc_test_loaded: false
+  official_molhiv_test_loaded_readonly: true
+  backbone_trained: false
+  zinc_descriptor_dim: 146
+  molhiv_descriptor_dim: 793
+  zinc_historical_vocab: 6784
+  zinc_corrected_vocab_uncapped: 15218
+  molhiv_historical_vocab: 26232
+  molhiv_corrected_vocab: 87039
+  zinc_collision_mass_fraction: 0.45929017887975687
+  zinc_H_identity_given_descriptor_nats: 0.27112410958415184
+  molhiv_historical_collision_mass_fraction: 0.23458124332078523
+  molhiv_corrected_collision_mass_fraction: 0.26086244909355233
+  molhiv_historical_H_identity_given_descriptor_nats: 0.11357578762311474
+  zinc_knn_top1_historical: 0.7996
+  zinc_knn_k8_historical: 0.7663625
+  zinc_knn_k8_singleton: 0.0
+  molhiv_knn_top1_historical: 0.893
+  zinc_embedding_participation_ratio_all: 3.0780797462414964
+  zinc_nn_overlap_at_10: 0.004613797169811321
+  zinc_sampled_pair_spearman: 0.004389704753438015
+  molhiv_embedding_participation_ratio_all: 18.986955475083697
+  molhiv_nn_overlap_at_10: 0.0008729795669411406
+  molhiv_sampled_pair_spearman: 0.020563230638623115
+  zinc_expressivity_identity_increment: 0
+  zinc_target_lower_bound_mae: 0.0
+  molhiv_identity_parameter_fraction: 0.7812675031975991
+  case_A_molecule_redundant: true
+  case_B_distinguishability: true
+  case_C_per_patch_ambiguity: true
+  case_D_task_semantics: false
+  overall_labels:
+    - A_mostly_redundant_at_molecule_level
+    - B_distinguishability_matters
+    - C_per_patch_descriptor_ambiguity
+  core_answer: >-
+    identity = genuine per-patch categorical separation + task-specific
+    arbitrary categorical memory; redundant for molecule-level structural
+    distinguishability; not evidence of missing raw structural information.
+alternatives_rejected:
+  - Do not claim the historical coarse certificate is the "exact typed identity"
+    for either dataset; the corrected coloured key is the exact object.
+  - Do not interpret high OOV-subgroup prediction error as a causal effect of
+    OOV; it is descriptive and partly prevalence-confounded.
+  - Do not propose Case D without a new isolating evidence source; lookup
+    performance alone is not evidence.
+  - Do not train a backbone, delete identity, design a new embedding, choose a
+    top-K cutoff, hash-compress, build a compositional encoder, or sweep the
+    optimizer in this audit.
+  - Do not open the ZINC official test.
+consequences:
+  - 'Identity is retained unchanged; this decision only fixes interpretation.'
+  - >-
+    Agent A (exp/identity-capacity-control): threshold 0.002 on the 2-seed Top-5
+    soup valid mean (A0 = 0.126368). Expected Case I (A0 ~= A1 << A2) =
+    distinguishability matters but per-ID memory is not necessary; Case II
+    (A0 << A1 ~= A2) = memory-dominance; Case III (all equal) = lookup largely
+    dispensable (strengthens A/B); Case IV = require quantitative
+    decomposition. Require exact parameter parity (85,763 +/- 1%) and report A2
+    error by token-frequency stratum. Never open ZINC test.
+  - >-
+    Agent B (exp/shared-structural-patch-encoder): strong success if
+    improvement >= 0.002 on both seeds and same sign; neutral success if
+    |delta| < 0.002 with no vocab-sized lookup and vocabulary-independent
+    parameters; failure if regression > 0.003 on both seeds. Because the learned
+    rows are not structural, a shared connectivity encoder is replacing
+    arbitrary memory with a principled function, so a neutral outcome is already
+    meaningful. A large regression implies optimisation / inductive bias, not
+    missing structural information. Report per-OOV-stratum valid error. Do not
+    train MolHIV.
+  - >-
+    Joint reading: A Case I + B neutral -> distinguishability + generic shared
+    capacity, per-ID memory dispensable (headline unchanged); A Case II + B
+    failure -> memory-dominance (Case B strengthens, Case D still unestablished);
+    A Case III + B success -> identity largely dispensable, retire the lookup
+    line.
+revisit_if: >-
+  Reopen only with (a) a new isolating experiment that separates task-relevant
+  semantics of learned identity rows from the structural information already
+  present (the only route to Case D), or (b) a demonstrated structural encoding
+  of the identity signal (it would contradict the geometry finding), or (c) a
+  measured scaffold-frequency control for the MolHIV OOV difficulty signal.
+  Never by sweeping embeddings/cutoffs or opening official test.
