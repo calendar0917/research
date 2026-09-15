@@ -1372,34 +1372,75 @@ def decide(tag: str = "asb") -> dict[str, Any]:
     )
 
     # mechanism liveness from the selection checkpoints
-    fractions = [
-        float(support_by_seed[str(s)]["selected_node_fraction"])
+    fractions = {
+        str(s): float(support_by_seed[str(s)]["selected_node_fraction"])
         for s in SEEDS
         if str(s) in support_by_seed
-    ]
-    non_trivial = bool(fractions) and all(
-        f < 1.0 - NONTRIVIAL_FRACTION_MARGIN for f in fractions
+    }
+    gate_stds = {
+        str(s): float(support_by_seed[str(s)]["gate_probability_std"])
+        for s in SEEDS
+        if str(s) in support_by_seed
+    }
+    message_norms = {
+        str(s): float(support_by_seed[str(s)]["message_norm_mean"])
+        for s in SEEDS
+        if str(s) in support_by_seed
+    }
+    binding_norms = {
+        str(s): float(support_by_seed[str(s)]["binding_state_norm_mean"])
+        for s in SEEDS
+        if str(s) in support_by_seed
+    }
+    ranks = {
+        str(s): float(diag.get("per_seed", {}).get(str(s), {}).get(
+            "asb_encoder_rank", {}
+        ).get("effective_rank", 1.0))
+        for s in SEEDS
+    } if diag_path.exists() else {}
+    per_seed_nontrivial = {
+        s: fractions[s] < 1.0 - NONTRIVIAL_FRACTION_MARGIN for s in fractions
+    }
+    any_nontrivial = any(per_seed_nontrivial.values())
+    all_full = bool(fractions) and all(
+        f >= 1.0 - NONTRIVIAL_FRACTION_MARGIN for f in fractions.values()
     )
-    gate_means = [
-        float(support_by_seed[str(s)]["gate_probability_mean"])
-        for s in SEEDS
-        if str(s) in support_by_seed
-    ]
-    gates_collapsed_open = bool(gate_means) and all(g > 0.999 for g in gate_means)
+    # ``branch_dead``: the binding / message branch carries no signal at the
+    # selected checkpoint (exactly-zero message or a constant encoder output).
+    message_dead = {
+        s: message_norms.get(s, 0.0) < 1.0e-6 for s in message_norms
+    }
+    encoder_collapsed = {
+        s: ranks.get(s, 1.0) < 0.5 for s in ranks
+    }
+    gate_input_independent = {
+        s: gate_stds.get(s, 1.0) < 1.0e-4 for s in gate_stds
+    }
+    branch_dead = bool(message_dead) and all(message_dead.values())
+    collapse = branch_dead or (
+        bool(encoder_collapsed) and all(encoder_collapsed.values())
+    )
 
-    if gates_collapsed_open and not non_trivial:
+    if collapse:
+        case = "E_branch_or_structure_collapse"
+    elif all_full and all(
+        support_by_seed[s]["gate_probability_mean"] > 0.999
+        for s in support_by_seed
+    ):
         case = "D_gates_always_on"
-    elif delta_bag <= -STRONG_GATE and same_direction_bag and non_trivial:
+    elif delta_bag <= -STRONG_GATE and same_direction_bag and any_nontrivial:
         case = "A_go_to_z2"
-    elif abs(delta_bag) < STRONG_GATE and non_trivial:
-        case = "B_neutral_with_nontrivial_structure"
+    elif abs(delta_bag) < STRONG_GATE:
+        case = "B_neutral_signal"
     elif delta_bag >= REGRESSION_GATE and same_direction_bag:
         case = "C_regression_but_active"
-    elif not non_trivial:
-        case = "D_gates_always_on"
     else:
         case = "E_inconclusive"
 
+    non_trivial = any_nontrivial
+    gates_collapsed_open = all_full and all(
+        support_by_seed[s]["gate_probability_mean"] > 0.999 for s in support_by_seed
+    )
     payload = {
         "protocol_version": PROTOCOL_VERSION,
         "reference": {
@@ -1418,16 +1459,21 @@ def decide(tag: str = "asb") -> dict[str, Any]:
         "delta_per_seed_vs_bbag": delta_bag_per_seed,
         "delta_per_seed_vs_bfull": delta_bfull_per_seed,
         "same_direction_vs_bbag": bool(same_direction_bag),
-        "support_selected_fraction_per_seed": {
-            str(s): support_by_seed.get(str(s), {}).get("selected_node_fraction")
-            for s in SEEDS
-        },
+        "support_selected_fraction_per_seed": fractions,
         "gate_probability_mean_per_seed": {
             str(s): support_by_seed.get(str(s), {}).get("gate_probability_mean")
             for s in SEEDS
         },
+        "gate_probability_std_per_seed": gate_stds,
+        "message_norm_mean_per_seed": message_norms,
+        "binding_state_norm_mean_per_seed": binding_norms,
+        "asb_encoder_effective_rank_per_seed": ranks,
+        "support_nontrivial_per_seed": per_seed_nontrivial,
         "support_nontrivial": bool(non_trivial),
         "gates_collapsed_open": bool(gates_collapsed_open),
+        "binding_message_branch_dead": bool(branch_dead),
+        "asb_encoder_collapsed": bool(collapse),
+        "gate_input_independent": gate_input_independent,
         "case": case,
         "candidate_params": int(
             _read_json(RESULTS_DIR / "parameter_accounting.json")["candidate_params"]
