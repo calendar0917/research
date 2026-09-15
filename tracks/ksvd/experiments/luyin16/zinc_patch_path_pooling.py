@@ -89,6 +89,9 @@ from tracks.ksvd.experiments.luyin16.structural_patch_encoder import (
     SharedBagPatchEncoder,
     SharedStructuralPatchEncoder,
 )
+from tracks.ksvd.experiments.luyin16.explicit_support_composer import (
+    ExplicitSupportComposer,
+)
 from tracks.ksvd.experiments.luyin16 import zinc_topology_features as ztopo
 
 
@@ -1622,6 +1625,16 @@ class PatchPathModel(nn.Module):
         structural_hidden_dim: int = 48,
         structural_rounds: int = 2,
         structural_include_std_pool: bool = True,
+        # Explicit-support structural composer (``explicit_composer``).  It
+        # replaces the typed lookup with learned composition over precomputed
+        # legal atom/bond-support objects (see explicit_support_composer.py).
+        # Widths are pre-registered once; there is no width/round sweep.
+        composer_latent_dim: int = 8,
+        composer_edge_dim: int = 8,
+        composer_n_degree_bins: int = 6,
+        composer_candidate_hidden: int = 200,
+        composer_fusion_hidden: int = 199,
+        composer_max_conn: int = 4,
         # Connectivity-free ablation of the shared structural encoder.  Same
         # input primitives (atom / root / distance / bond type) and same
         # output width, but a permutation-invariant DeepSets bag encoder with
@@ -1645,10 +1658,12 @@ class PatchPathModel(nn.Module):
             "typed_lookup",
             "shared_structural",
             "shared_bag",
+            "explicit_composer",
         }:
             raise ValueError(
                 f"unknown patch_representation={self.patch_representation!r}; "
-                "expected 'typed_lookup', 'shared_structural' or 'shared_bag'"
+                "expected 'typed_lookup', 'shared_structural', 'shared_bag' "
+                "or 'explicit_composer'"
             )
         self.structural_node_dim = int(structural_node_dim)
         self.structural_edge_dim = int(structural_edge_dim)
@@ -1658,6 +1673,12 @@ class PatchPathModel(nn.Module):
         self.bag_node_hidden = int(bag_node_hidden)
         self.bag_bond_hidden = int(bag_bond_hidden)
         self.bag_fusion_hidden = int(bag_fusion_hidden)
+        self.composer_latent_dim = int(composer_latent_dim)
+        self.composer_edge_dim = int(composer_edge_dim)
+        self.composer_n_degree_bins = int(composer_n_degree_bins)
+        self.composer_candidate_hidden = int(composer_candidate_hidden)
+        self.composer_fusion_hidden = int(composer_fusion_hidden)
+        self.composer_max_conn = int(composer_max_conn)
         self.embedding_mode = str(embedding_mode)
         self.embedding_rank = int(embedding_rank)
         self.parent_embedding_rank = int(
@@ -1864,6 +1885,26 @@ class PatchPathModel(nn.Module):
                 bond_hidden=self.bag_bond_hidden,
                 fusion_hidden=self.bag_fusion_hidden,
                 output_dim=int(token_width),
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "explicit_composer":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='explicit_composer'"
+                )
+            self.structural_encoder = ExplicitSupportComposer(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                n_degree_bins=self.composer_n_degree_bins,
+                latent_dim=self.composer_latent_dim,
+                edge_dim=self.composer_edge_dim,
+                candidate_hidden=self.composer_candidate_hidden,
+                fusion_hidden=self.composer_fusion_hidden,
+                output_dim=int(token_width),
+                max_conn=self.composer_max_conn,
             )
             del self.typed_embedding  # no vocabulary-sized table remains
             self.typed_embedding = None
