@@ -217,3 +217,177 @@ class SharedStructuralPatchEncoder(nn.Module):
             )
         blocks.insert(0, root_state)
         return self.fusion(torch.cat(blocks, dim=1))
+
+
+class SharedBagPatchEncoder(nn.Module):
+    """Permutation-invariant DeepSets encoder over rooted-patch primitives.
+
+    This is the *connectivity-free* ablation of
+    :class:`SharedStructuralPatchEncoder`.  It reads exactly the same input
+    primitives -- atom type, root flag, distance from the root and bond type --
+    but it **never** consumes ``struct_src`` / ``struct_dst`` and never
+    propagates a message along a real patch edge.  A patch is treated as a bag
+    of node primitives plus a bag of bond-type primitives, grouped only by the
+    patch they belong to (``struct_patch`` / ``struct_edge_patch`` are grouping
+    indices, not adjacency).
+
+    Form (one pre-registered architecture; no attention, no message passing)::
+
+        h_v = node_MLP(atom_embed(atom_v) + root_embed(root_v) + dist_embed(d_v))
+        g_e = bond_MLP(bond_embed(bond_e))
+        e_bag = fusion([h_root ; mean_v h_v ; std_v h_v ;
+                        mean_e g_e ; std_e g_e])
+
+    Because every aggregation is a mean / second-moment over a multiset and the
+    root term is the shared node map evaluated at the unique root, ``e_bag`` is
+    invariant to a permutation of the patch's node labels and to the arbitrary
+    direction / order in which the undirected bonds are listed.  Two patches
+    with identical atom / root / distance / bond-type multisets but **different
+    actual connectivity** therefore receive exactly the same ``e_bag`` -- which
+    is precisely the variable this encoder is meant to isolate.
+
+    Attributes ``hidden_dim``, ``rounds`` and ``include_std_pool`` mirror the
+    interface of :class:`SharedStructuralPatchEncoder` so the shared parameter
+    audit keeps working; ``rounds == 0`` records that no message passing is
+    performed.
+
+    Preprocessing contract (attached by ``zinc_shared_bag_patch_encoder``):
+
+    ``struct_atom``        int64 ``[T]``  atom category per patch-node
+    ``struct_root``        int64 ``[T]``  1 for the patch root, else 0
+    ``struct_dist``        int64 ``[T]``  BFS distance from the patch root
+    ``struct_patch``       int64 ``[T]``  patch index owning each node
+    ``struct_bond``        int64 ``[E]``  bond category per directed edge
+    ``struct_edge_patch``  int64 ``[E]``  patch index owning each directed edge
+
+    ``struct_src`` / ``struct_dst`` are deliberately **not** read.
+    """
+
+    def __init__(
+        self,
+        *,
+        atom_categories: int = 28,
+        bond_categories: int = 4,
+        n_distance_bins: int = 3,
+        node_dim: int = 48,
+        edge_dim: int = 24,
+        node_hidden: int = 96,
+        bond_hidden: int = 48,
+        fusion_hidden: int = 104,
+        output_dim: int = 16,
+    ) -> None:
+        super().__init__()
+        self.atom_categories = int(atom_categories)
+        self.bond_categories = int(bond_categories)
+        self.n_distance_bins = int(n_distance_bins)
+        self.node_dim = int(node_dim)
+        self.edge_dim = int(edge_dim)
+        self.node_hidden = int(node_hidden)
+        self.bond_hidden = int(bond_hidden)
+        self.fusion_hidden = int(fusion_hidden)
+        self.output_dim = int(output_dim)
+        # Interface-compatible audit metadata (see class docstring).
+        self.hidden_dim = int(fusion_hidden)
+        self.rounds = 0
+        self.include_std_pool = True
+        self.kind = "shared_bag"
+        if min(
+            self.atom_categories,
+            self.bond_categories,
+            self.n_distance_bins,
+            self.node_dim,
+            self.edge_dim,
+            self.node_hidden,
+            self.bond_hidden,
+            self.fusion_hidden,
+            self.output_dim,
+        ) < 1:
+            raise ValueError("bag encoder dimensions must be positive")
+
+        self.atom_embedding = nn.Embedding(self.atom_categories, self.node_dim)
+        self.root_embedding = nn.Embedding(2, self.node_dim)
+        self.distance_embedding = nn.Embedding(
+            self.n_distance_bins, self.node_dim
+        )
+        self.bond_embedding = nn.Embedding(self.bond_categories, self.edge_dim)
+        self.node_mlp = nn.Sequential(
+            nn.Linear(self.node_dim, self.node_hidden),
+            nn.ReLU(),
+            nn.Linear(self.node_hidden, self.node_dim),
+        )
+        self.bond_mlp = nn.Sequential(
+            nn.Linear(self.edge_dim, self.bond_hidden),
+            nn.ReLU(),
+            nn.Linear(self.bond_hidden, self.edge_dim),
+        )
+        fusion_input = 3 * self.node_dim + 2 * self.edge_dim
+        self.fusion = nn.Sequential(
+            nn.Linear(fusion_input, self.fusion_hidden),
+            nn.ReLU(),
+            nn.Linear(self.fusion_hidden, self.output_dim),
+        )
+
+    def _std_pool(
+        self, values: torch.Tensor, group: torch.Tensor, n_groups: int, mean: torch.Tensor
+    ) -> torch.Tensor:
+        total = values.new_zeros((n_groups, int(values.shape[1])))
+        if values.numel():
+            total.index_add_(0, group, values * values)
+        counts = (
+            torch.bincount(group, minlength=n_groups)
+            .clamp_min(1)
+            .to(values.dtype)
+            .unsqueeze(1)
+        )
+        second_moment = total / counts
+        return torch.sqrt((second_moment - mean * mean).clamp_min(0.0) + 1.0e-8)
+
+    def forward(self, data: object) -> torch.Tensor:
+        atom = data.struct_atom.long()
+        root = data.struct_root.long()
+        distance = data.struct_dist.long()
+        # Patch ids are grouping indices, not adjacency.  ``struct_edge_patch``
+        # is required so that the bond bag is built without ever touching an
+        # edge endpoint (``struct_src`` / ``struct_dst``).
+        if not hasattr(data, "struct_edge_patch"):
+            raise AttributeError(
+                "SharedBagPatchEncoder requires struct_edge_patch "
+                "(bond -- patch grouping); it never reads struct_src/struct_dst"
+            )
+        unique_patch, node_patch = torch.unique(
+            data.struct_patch.long(), return_inverse=True
+        )
+        n_patches = int(unique_patch.numel())
+
+        node_state = self.node_mlp(
+            self.atom_embedding(atom)
+            + self.root_embedding(root)
+            + self.distance_embedding(distance)
+        )
+        node_mean = scatter_mean(node_state, node_patch, n_patches)
+        node_std = self._std_pool(node_state, node_patch, n_patches, node_mean)
+
+        root_mask = root > 0
+        root_state = node_state.new_zeros((n_patches, self.node_dim))
+        if bool(root_mask.any()):
+            root_state.index_add_(
+                0, node_patch[root_mask], node_state[root_mask]
+            )
+
+        edge_patch_ids = data.struct_edge_patch.long()
+        if edge_patch_ids.numel():
+            # ``unique_patch`` is sorted, so this maps an edge's patch id to
+            # its batch-local group index without using any edge endpoint.
+            edge_group = torch.searchsorted(unique_patch, edge_patch_ids)
+            bond_state = self.bond_mlp(self.bond_embedding(data.struct_bond.long()))
+            bond_mean = scatter_mean(bond_state, edge_group, n_patches)
+            bond_std = self._std_pool(bond_state, edge_group, n_patches, bond_mean)
+        else:
+            bond_mean = node_state.new_zeros((n_patches, self.edge_dim))
+            bond_std = node_state.new_zeros((n_patches, self.edge_dim))
+
+        return self.fusion(
+            torch.cat(
+                [root_state, node_mean, node_std, bond_mean, bond_std], dim=1
+            )
+        )
