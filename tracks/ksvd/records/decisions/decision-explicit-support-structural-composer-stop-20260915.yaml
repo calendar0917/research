@@ -1,0 +1,67 @@
+decision_id: decision-explicit-support-structural-composer-stop-20260915
+created: '2026-09-15T14:10:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Explicit-support structural composer -> Decision STOP (pre-registered stop
+  branch). The exact-support composition hypothesis does not survive the
+  promotion gate on the frozen deterministic-A100 ZINC Cell A: seed1 Top-5 soup
+  valid 0.133289 vs B-full seed1 0.118126 (delta +0.015162 > +0.003), also
+  worse than B-bag seed1 0.120229 and A2 seed1 0.122134. The composer is
+  budget-matched (84,487 total; composer 35,144 vs B-full encoder 35,152) and
+  its explicit machinery is exact (24/24 sanity, support/provenance exact,
+  connectivity changes the legal candidate set, no message passing, no vocab
+  lookup, deterministic GPU repro). The regression is explained by the learned
+  composition collapsing: activities saturated near sigmoid(0)=0.5 (mean
+  0.5142, std 0.0102) and the pooled patch token became near-constant
+  (effective rank 1.045, per-dim std mean 0.0052, mean norm 0.0263 vs B-full
+  0.0556 / 0.1452), so the patch token carried almost no per-patch structure.
+  Per the stop rule: do NOT change rounds, latent width, activity temperature,
+  candidate rule or pooling; do NOT buy a second seed; do NOT lift these
+  internal objects into outer h/q relational objects. Keep B-full as the frozen
+  ZINC Cell A reference. Official ZINC test never loaded.
+alternatives_rejected:
+- item: Buy a second seed (method-go / seed2)
+  because: >-
+    the regression is +0.015162, an order of magnitude beyond the +0.003 stop
+    line, on a single pre-registered seed whose protocol matches B-full.
+- item: Sweep latent width / rounds / activity temperature / candidate rule /
+    pooling to rescue the composer
+  because: >-
+    explicitly forbidden by the pre-registered stop rule; no such sweep was
+    run and none is authorized.
+- item: Attribute the regression to the explicit support representation itself
+  because: >-
+    support/provenance/coverage diagnostics are healthy (coverage 1.0,
+    duplicate 0.0, singleton 0.0, whole-patch 0.0042); the failure is the
+    learned activity/content collapse, not the discrete support machinery.
+- item: Attribute the regression to compute / combinatorial blow-up
+  because: >-
+    the candidate set is bounded (mean 10.46 level-2 objects per patch) and the
+    composer forward is 0.51x the B-full encoder latency on A100.
+- item: Lift the learned internal objects to outer h/q relational objects now
+  because: >-
+    the relation preview is feasible (deterministic overlap/containment/
+    adjacency/boundary-sharing/graph-distance over 453,670 object pairs) but
+    the underlying composer did not produce a useful representation; wiring a
+    collapsed object set into the backbone is not justified.
+- item: Open the official ZINC test / train MolHIV
+  because: >-
+    neither was pre-registered; the study is valid-selection only and the test
+    remains locked.
+- item: Re-open the old routes (KSVD motif-slot / DiffPool soft clustering /
+    certificate lookup)
+  because: >-
+    this study was explicitly distinct from all three and its negative result
+    does not authorize them.
+next_step: >-
+  Close the explicit-support-composition route in this exact form and keep
+  B-full as the frozen ZINC Cell A reference. Any revisit must be a fresh
+  pre-registered design that directly targets the observed activity-gate /
+  patch-token saturation (e.g. a composition objective or supervision that
+  prevents the gate from collapsing to its initialization) with its own frozen
+  witness; not a parameter sweep of this composer.
+evidence:
+- tracks/ksvd/notes/explicit_support_structural_composer.md
+- tracks/ksvd/results/explicit_support_composer/decision.json
+- tracks/ksvd/records/claims/claim-explicit-support-structural-composer-stop-20260915.yaml

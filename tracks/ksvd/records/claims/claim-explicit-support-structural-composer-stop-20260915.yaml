@@ -1,0 +1,56 @@
+claim_id: claim-explicit-support-structural-composer-stop-20260915
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-09-15T14:05:00'
+statement: >-
+  Hypothesis REFUTED on the frozen deterministic-A100 ZINC Cell A protocol: an
+  explicit-support structural composer that replaces the vocab-sized typed
+  lookup with discrete, exact atom/bond-support objects and learned local
+  composition does NOT preserve or improve the B-full reference. Exactly one
+  pre-registered architecture was run (seed1 only): round 0 atom primitives;
+  round 1 one object per real patch bond (support 2 atoms, 1 bond); round 2
+  legal level-1+level-1 objects (overlap OR a real new connecting bond, union
+  <= 4 atoms, deterministic support de-duplication); symmetric order-invariant
+  scorer/content MLPs with a_k=sigmoid(score), z_new=a_k*f(...), support
+  retained regardless of a_k; activity-weighted mean/std + log1p(count) ->
+  fusion -> e_struct in R^16. latent_dim=8, edge_dim=8, candidate_hidden=200,
+  fusion_hidden=199. Composer 35,144 params; total 84,487 (cell-A 85,763,
+  B-full 84,495, delta -8 / -0.0095%). Seed1 raw 0.139464 @ep153, 193 epochs,
+  fixed Top-5 soup 0.133289 vs B-full seed1 0.118126 -> delta +0.015162
+  (regression), vs A2 seed1 0.122134 -> +0.011154, vs B-bag seed1 0.120229 ->
+  +0.013059. Support/provenance/search-space integrity is exact: 24/24 sanity
+  checks, 18 unit tests, 46 affected-suite tests; atom/bond supports exactly
+  recoverable; composition support == parent union; provenance recurses to
+  atom primitives; only topology-legal pairs compose; a same-primitive
+  different-connectivity adversarial pair changes the legal candidate
+  signature; the composer never reads struct_src/struct_dst (no message
+  passing); no vocab lookup; e_struct width 16; h/q/T = 64/16/2; deterministic
+  6-epoch GPU repro bit-identical (sha256 3bafae7e8e11c94a...). Mechanism: the
+  activities saturated near their sigmoid(0)=0.5 initialization (mean 0.5142,
+  std 0.0102, range [0.49999, 0.52151]) and the pooled patch token collapsed to
+  a near-constant, low-magnitude vector (per-dim std mean 0.0052, mean norm
+  0.0263, effective rank 1.045) versus B-full (per-dim std 0.0556, norm 0.1452,
+  rank 1.107); support diagnostics show no collapse of the objects themselves
+  (coverage 1.0, duplicate rate 0.0, singleton 0.0, whole-patch 0.0042). The
+  failure is the learned composition / patch-token discriminability, not the
+  explicit-support machinery, and not compute (composer forward is 0.51x
+  B-full latency). Official ZINC test never loaded. MolHIV never trained.
+scope: >-
+  ZINC-12K official train/valid only; deterministic-A100; exactly one promotion
+  seed (seed1); fixed Top-5 soup; valid-selection metric. One pre-registered
+  architecture; no width/round/temperature/candidate/pooling sweep, no h/q/T
+  change, no optimizer sweep. Official test NEVER loaded. The negative result
+  applies to this exact composer under this protocol; it is not a proof that
+  exact-support composition is impossible. Excludes GNN/attention inside the
+  composer, soft clustering/DiffPool, certificate lookup/hash identity, KSVD
+  dictionary, learned top-k, and extra hand-crafted chemistry.
+evidence:
+- tracks/ksvd/results/explicit_support_composer/decision.json
+- tracks/ksvd/results/explicit_support_composer/diagnostics.json
+- tracks/ksvd/results/explicit_support_composer/compute_profile.json
+- tracks/ksvd/results/explicit_support_composer/relations_preview.json
+- tracks/ksvd/results/explicit_support_composer/sanity.json
+- tracks/ksvd/results/explicit_support_composer/parameter_accounting.json
+- tracks/ksvd/notes/explicit_support_structural_composer.md
+- tracks/ksvd/tests/test_explicit_support_composer.py
