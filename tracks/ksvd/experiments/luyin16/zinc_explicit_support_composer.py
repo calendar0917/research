@@ -1489,10 +1489,10 @@ def _support_stats_for_details(
 
 def _collapse_flags(stats: Mapping[str, Any]) -> dict[str, Any]:
     """Section-13 collapse checks (diagnostic only; never affects forward)."""
-    total = max(int(stats["selected_objects"]), 1)
-    singleton_fraction = float(stats["singleton_supports"]) / total
-    whole_fraction = float(stats["whole_patch_supports"]) / total
-    duplicate_fraction = float(stats["duplicate_supports"]) / total
+    total = max(int(stats["selected_objects_total"]), 1)
+    singleton_fraction = float(stats["singleton_supports_total"]) / total
+    whole_fraction = float(stats["whole_patch_supports_total"]) / total
+    duplicate_fraction = float(stats["duplicate_supports_total"]) / total
     collapse_a = singleton_fraction > 0.9
     collapse_b = whole_fraction > 0.9
     collapse_c = bool(stats["activity_std"] < 0.01)
