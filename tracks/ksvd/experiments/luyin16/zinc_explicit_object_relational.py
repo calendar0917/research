@@ -2314,7 +2314,7 @@ def mechanism(tag: str = "eor", device: str = "auto") -> dict[str, Any]:
 
         basis_state_path = esbdrv.STATE_DIR / f"esb_seed{seed}_selection_state.pt"
         if basis_state_path.exists():
-            basis_model = esbdrv.build_candidate(seed)
+            basis_model = esbdrv.build_candidate(seed).to(device_obj)
             basis_model.load_state_dict(
                 torch.load(basis_state_path, map_location="cpu", weights_only=True)
             )
