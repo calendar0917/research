@@ -1,0 +1,78 @@
+decision_id: decision-explicit-object-relational-reasoning-stop-20260915
+created: '2026-09-15T19:58:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Explicit objects + explicit support-derived relations + T_obj=2 tied recurrent
+  reasoning + late pooling + rank-1 channel -> STOP (pre-registered stop branch);
+  NOT PROMOTED; do NOT buy a second seed. On the frozen deterministic-A100 ZINC
+  cell A, seed1 Top-5 soup valid 0.125834 vs B-full seed1 0.118126 (delta
+  +0.007707), vs the exp-1 explicit-basis seed1 0.120194 (+0.005639), vs the
+  connectivity-free B-bag seed1 0.120229 (+0.005604) and vs A2 seed1 0.122134
+  (+0.003699). The pre-registered stop condition (candidate >= 0.120194 or >
+  0.121126) fires, so no promotion and no second seed are authorized. The
+  architecture is EXACTLY budget-matched (encoder 35,152 = B-full; total 84,495 =
+  B-full; delta 0) and its explicit machinery is exact (53/53 sanity; supports
+  identical to exp-1; relation graph support-derived and sparse at edge/object
+  ~6.94; no message passing/attention/vocab/certificate/learned gate; deterministic
+  GPU repro). The decision is decided by the mechanism: the explicit-object
+  relational encoder COLLAPSED to a constant during training (healthy at init:
+  h^2 norm 2.18, effective rank 5.29, per-dim std 0.36; dead after training:
+  h^0 norm 4.7e-29, h^2 norm 7.5e-24, per-dim std 8e-30, s(P) std 1.8e-9,
+  e_struct row-norm std 4.7e-10). Encoder weights moved/grew and the module is
+  the forward-pass instance inside Adam, so this is a genuine dying-ReLU collapse,
+  not a wiring bug. Consequently the frozen ablations are numerically no-ops
+  (relation-zero soup +1.0e-8; round-1-only -4.8e-9; all family masks <= 2e-8)
+  and s_new does not align with B-full's frozen PC1 axis (Spearman 0.191, R^2
+  0.039) nor with the exp-1 explicit-basis scalar (Spearman -0.143, R^2 0.007);
+  existing descriptors already explain the residual variation (ridge valid R^2
+  0.469). The correct reading is that THIS frozen tied-recurrent ReLU
+  object-update architecture is collapse-prone; the experiment does NOT cleanly
+  test whether explicit relational reasoning can recover B-full. Keep B-full as
+  the frozen ZINC cell A reference. Official ZINC test never loaded.
+alternatives_rejected:
+- item: Buy a second confirmation seed
+  because: >-
+    the pre-registered stop condition fires (0.125834 >= 0.120194) and the gates
+    reserve a second seed for the GO bands only; a second seed cannot change the
+    collapse mechanism and would only re-measure a dead channel.
+- item: Rescue the run with a width / round / relation-family / fusion sweep, a
+    different aggregation statistic, or a new optimizer/learning-rate
+  because: >-
+    explicitly forbidden by the stop rule; widths were fixed once by parameter
+    accounting; the failure is an optimization collapse, and tuning around it
+    inside the same frozen protocol is exactly the rescue move the brief rules out.
+- item: Blame the explicit support/relation machinery or compute
+  because: >-
+    supports and relations are exact (53/53 sanity), the graph is sparse
+    (edge/object 6.94), the budget matches B-full exactly (delta 0), and compute
+    is 1.96x B-full (under the 2x guard); none of these is the cause.
+- item: Add attention, softmax, gating, GRU/LSTM, B3/B4 objects, rings/motifs,
+    learned objects/supports or a certificate/token lookup
+  because: >-
+    explicitly forbidden by the brief; these are the exact rescue moves ruled out.
+- item: Promote the explicit objects to molecule-level outer h/q relational nodes
+    now
+  because: >-
+    the inner encoder collapsed, so the relational representation was never shown
+    to carry usable information; wiring it into the backbone is unjustified by
+    this result.
+- item: Open the official ZINC test / train MolHIV
+  because: >-
+    neither was pre-registered; the study is valid-selection only and the test
+    remains locked.
+next_step: >-
+  Close this exact architecture and keep B-full as the frozen ZINC cell A
+  reference. No second seed. The only justified revisit is a fresh, pre-registered
+  collapse-risk study of explicit-object relational encoders (zero or minimal
+  training): establish whether dead-unit collapse is intrinsic to the tied
+  recurrent ReLU object update over explicit objects, and if so pre-register ONE
+  collapse-avoiding inner update (e.g. a non-saturating or residual-gated object
+  update) with its OWN frozen collapse witness. This must be a new design, not a
+  parameter/round/family sweep of this run and not a second seed of it.
+evidence:
+- tracks/ksvd/notes/explicit_object_relational.md
+- tracks/ksvd/results/explicit_object_relational/decision.json
+- tracks/ksvd/results/explicit_object_relational/mechanism.json
+- tracks/ksvd/results/explicit_object_relational/diagnostics.json
+- tracks/ksvd/records/claims/claim-explicit-object-relational-reasoning-20260915.yaml
