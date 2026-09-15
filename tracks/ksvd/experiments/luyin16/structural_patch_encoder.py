@@ -808,7 +808,7 @@ class AdaptiveStructureBindingEncoder(nn.Module):
         patch_nodes = torch.bincount(
             node_patch, minlength=n_patches
         ).to(torch.float64)
-        support_sizes = torch.zeros(n_patches, dtype=torch.float64)
+        support_sizes = node_patch.new_zeros(n_patches, dtype=torch.float64)
         if selected.numel():
             support_sizes.index_add_(0, node_patch, selected.to(torch.float64))
         gate_f = gate.double() if gate is not None and gate.numel() else None
