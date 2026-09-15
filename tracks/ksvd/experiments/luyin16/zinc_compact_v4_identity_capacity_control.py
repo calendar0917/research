@@ -940,6 +940,11 @@ def repro(
         "best_epoch": int(summary["best_epoch"]),
         "epochs_run": int(summary["epochs_run"]),
         "wall_clock_s": float(summary["wall_clock_s"]),
+        "peak_gpu_memory_mb": (
+            float(torch.cuda.max_memory_allocated() / (1024.0 * 1024.0))
+            if torch.cuda.is_available()
+            else 0.0
+        ),
         "valid_mae_curve": valid_curve,
         "selection_state_sha256": state_hash,
         "official_test_loaded": False,
