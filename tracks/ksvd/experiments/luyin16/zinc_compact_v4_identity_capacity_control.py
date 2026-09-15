@@ -144,6 +144,10 @@ A0_REFERENCE_RAW_2SEED_MEAN = 0.1305623254594393
 
 MEANINGFUL_THRESHOLD = 0.002
 
+# Paired per-molecule bootstrap for the soup-delta confidence intervals.
+BOOTSTRAP_SEED = 20260917
+BOOTSTRAP_RESAMPLES = 2000
+
 DETERMINISTIC = False
 
 
@@ -864,6 +868,23 @@ def soup(condition: str, seed: int) -> dict[str, Any]:
     return payload
 
 
+def _load_soup(condition: str, seed: int) -> dict[str, Any]:
+    """Return the recorded soup payload, recomputing only if it is absent."""
+    path = RESULTS_DIR / f"soup_{tag_for(condition)}_seed{seed}.json"
+    if path.exists():
+        return _read_json(path)
+    return soup(condition, seed)
+
+
+def _load_selection_state(
+    condition: str, seed: int
+) -> dict[str, torch.Tensor] | None:
+    path = STATE_DIR / f"{tag_for(condition)}_seed{seed}_selection_state.pt"
+    if not path.exists():
+        return None
+    return torch.load(path, map_location="cpu", weights_only=True)
+
+
 def train_queue(conditions: Sequence[str], seeds: Sequence[int], device: str) -> None:
     for condition in conditions:
         for seed in seeds:
@@ -1108,18 +1129,19 @@ def diagnostics() -> dict[str, Any]:
         payload["conditions"][condition] = {}
         soup_preds[condition] = {}
         for seed in SEEDS:
-            sp = soup(condition, seed)
+            sp = _load_soup(condition, seed)
             model = build_model(condition, seed)
-            model.load_state_dict(
-                torch.load(
-                    STATE_DIR / f"{tag_for(condition)}_seed{seed}_selection_state.pt",
-                    map_location="cpu",
-                    weights_only=True,
+            state = _load_selection_state(condition, seed)
+            if state is not None:
+                model.load_state_dict(state)
+                payload["conditions"][condition][str(seed)] = hw._centre_diagnostics(
+                    model, batch
                 )
-            )
-            payload["conditions"][condition][str(seed)] = hw._centre_diagnostics(
-                model, batch
-            )
+            else:
+                payload["conditions"][condition][str(seed)] = {
+                    "available": False,
+                    "reason": "selection state not present",
+                }
             payload["conditions"][condition][str(seed)]["adapter_output_norm"] = (
                 _adapter_output_norm(model, batch)
             )
@@ -1162,11 +1184,48 @@ def _adapter_output_norm(model: IdentityCapacityModel, batch: Data) -> float:
 # ---------------------------------------------------------------------------
 
 
+def _soup_predictions(condition: str, seed: int) -> np.ndarray:
+    soup = _load_soup(condition, seed)
+    return np.asarray(soup["soup_predictions"], dtype=np.float64)
+
+
+def _a0_soup_predictions(seed: int) -> np.ndarray:
+    payload = _read_json(A0_RESULTS_DIR / f"soup_cell_A_seed{seed}.json")
+    return np.asarray(payload["soup_predictions"], dtype=np.float64)
+
+
+def _mean_soup_predictions(preds: Sequence[np.ndarray]) -> np.ndarray:
+    return np.mean(np.stack(list(preds), axis=0), axis=0)
+
+
+def _paired_delta_bootstrap(
+    pred_a: np.ndarray, pred_b: np.ndarray, targets: np.ndarray
+) -> dict[str, float]:
+    """Paired per-molecule bootstrap of MAE(a) - MAE(b).
+
+    Negative delta means ``a`` is better. Resampling is over the fixed valid
+    split (same molecule order for every condition), so the pairing is exact.
+    """
+    diff = np.abs(pred_a - targets) - np.abs(pred_b - targets)
+    rng = np.random.default_rng(BOOTSTRAP_SEED)
+    n = int(diff.shape[0])
+    boots = diff[rng.integers(0, n, size=(BOOTSTRAP_RESAMPLES, n))].mean(axis=1)
+    lo, hi = np.percentile(boots, [2.5, 97.5])
+    return {
+        "delta_mae": float(diff.mean()),
+        "ci95_low": float(lo),
+        "ci95_high": float(hi),
+        "prob_first_better": float((boots < 0.0).mean()),
+        "n_molecules": n,
+        "resamples": int(BOOTSTRAP_RESAMPLES),
+    }
+
+
 def decide() -> dict[str, Any]:
     a0 = _a0_reference()
     per_condition: dict[str, Any] = {}
     for condition in CONDITIONS:
-        soups = [soup(condition, seed) for seed in SEEDS]
+        soups = [_load_soup(condition, seed) for seed in SEEDS]
         soup_values = [float(x["top5_soup_valid_mae"]) for x in soups]
         raw_values = [float(x["best_checkpoint_valid_mae"]) for x in soups]
         run0 = _read_json(RUNS_DIR / f"{tag_for(condition)}_seed0.json")
@@ -1196,29 +1255,64 @@ def decide() -> dict[str, Any]:
     d20 = a2_mean - a0_mean  # positive => A2 worse than A0
     d21 = a2_mean - a1_mean  # positive => A2 worse than A1
 
-    def _close(x: float, y: float) -> bool:
-        return abs(x - y) < MEANINGFUL_THRESHOLD
+    t = MEANINGFUL_THRESHOLD
+    a1_worse = d10 > t
+    a2_worse_than_a0 = d20 > t
+    a2_worse_than_a1 = d21 > t
 
-    if _close(a0_mean, a1_mean) and (a2_mean - min(a0_mean, a1_mean)) > MEANINGFUL_THRESHOLD:
+    if a2_worse_than_a0 and not a1_worse and a2_worse_than_a1:
         case = "I"
         reading = (
             "identity distinguishability matters, per-id learned memory does not"
         )
-    elif (a1_mean - a0_mean) > MEANINGFUL_THRESHOLD and _close(a1_mean, a2_mean):
+    elif a1_worse and a2_worse_than_a0 and abs(d21) <= t:
         case = "II"
         reading = (
             "gain comes from task-specific learned categorical memory, not from "
             "knowing that tokens differ"
         )
-    elif _close(a0_mean, a1_mean) and _close(a1_mean, a2_mean):
+    elif (not a1_worse) and (not a2_worse_than_a0) and abs(d21) <= t:
         case = "III"
-        reading = "typed lookup largely dispensable; shared capacity suffices"
-    elif a0_mean < a1_mean < a2_mean:
+        reading = (
+            "typed lookup largely dispensable; the capacity-matched shared "
+            "adapter is not worse than the learned lookup (A1 and A2 match or "
+            "beat A0, and A1 ~= A2)"
+        )
+    elif (a0_mean < a1_mean < a2_mean) and a1_worse and a2_worse_than_a1:
         case = "IV"
         reading = "both identity and learned per-token semantics contribute"
     else:
         case = "UNRESOLVED"
         reading = "ordering does not match a pre-registered case cleanly"
+
+    targets = np.asarray(
+        _load_soup("A1", SEEDS[0])["valid_targets"], dtype=np.float64
+    )
+    pred_means = {
+        condition: _mean_soup_predictions(
+            [_soup_predictions(condition, seed) for seed in SEEDS]
+        )
+        for condition in CONDITIONS
+    }
+    pred_means["A0"] = _mean_soup_predictions(
+        [_a0_soup_predictions(seed) for seed in SEEDS]
+    )
+    bootstrap = {
+        "A1_minus_A0": _paired_delta_bootstrap(
+            pred_means["A1"], pred_means["A0"], targets
+        ),
+        "A2_minus_A0": _paired_delta_bootstrap(
+            pred_means["A2"], pred_means["A0"], targets
+        ),
+        "A2_minus_A1": _paired_delta_bootstrap(
+            pred_means["A2"], pred_means["A1"], targets
+        ),
+        "note": (
+            "paired per-molecule bootstrap over 2-seed-averaged top-5 soup "
+            "predictions; negative delta => first condition better"
+        ),
+        "seed": int(BOOTSTRAP_SEED),
+    }
 
     payload = {
         "protocol_version": PROTOCOL_VERSION,
@@ -1229,6 +1323,7 @@ def decide() -> dict[str, Any]:
             "A2_minus_A0_soup": float(d20),
             "A2_minus_A1_soup": float(d21),
         },
+        "bootstrap": bootstrap,
         "meaningful_threshold": float(MEANINGFUL_THRESHOLD),
         "case": case,
         "reading": reading,
