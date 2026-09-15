@@ -463,7 +463,7 @@ class PatchPathRecurrentPairCentreModel(shead.PatchPathSmallHeadModel):
         if global_context.ndim == 1:
             global_context = global_context.unsqueeze(0)
         n_graphs = int(global_context.shape[0])
-        e_patch = self.typed_embedding(data.typed_token)
+        e_patch = self._patch_token_value(data)
         structural_blocks: list[torch.Tensor] = []
         if self.structural_context_mode != "none":
             e_ctx = self._structural_context_embedding_value(data)

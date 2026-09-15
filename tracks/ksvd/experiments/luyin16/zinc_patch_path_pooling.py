@@ -85,6 +85,9 @@ from tracks.ksvd.experiments.luyin16.zinc_long_range_proxy import (
     global_feature_views,
     source_audit,
 )
+from tracks.ksvd.experiments.luyin16.structural_patch_encoder import (
+    SharedStructuralPatchEncoder,
+)
 from tracks.ksvd.experiments.luyin16 import zinc_topology_features as ztopo
 
 
@@ -1197,6 +1200,7 @@ class _HybridEmbedding(nn.Module):
 
 
 PARAMETER_AUDIT_BLOCKS = (
+    ("structural_patch_encoder", "structural_encoder"),
     ("typed_token_embedding", "typed_embedding"),
     ("parent_token_embedding", "parent_embedding"),
     ("patch_encoder", "patch_encoder"),
@@ -1380,8 +1384,10 @@ def _block_parameters(module: nn.Module | None) -> int:
     )
 
 
-def _embedding_spec(module: nn.Module) -> dict[str, Any]:
+def _embedding_spec(module: nn.Module | None) -> dict[str, Any]:
     """Describe an embedding module regardless of mode (full/factorized/hybrid)."""
+    if module is None:
+        return {"vocabulary_size": 0, "output_width": 0, "rank": 0, "full_count": 0}
     vocabulary_size = int(
         getattr(module, "vocabulary_size", None)
         or getattr(module, "num_embeddings", 0)
@@ -1449,6 +1455,22 @@ def audit_parameters(model: PatchPathModel) -> dict[str, Any]:
         "attribute_out_dim": int(model.attribute_out_dim),
         "attribute_role_dim": int(V6_ROLE_DIM),
         "attribute_input_width": int(model.attribute_input_width),
+        "patch_representation": str(model.patch_representation),
+        "structural_encoder_spec": (
+            None
+            if model.structural_encoder is None
+            else {
+                "atom_categories": int(model.structural_encoder.atom_categories),
+                "bond_categories": int(model.structural_encoder.bond_categories),
+                "n_distance_bins": int(model.structural_encoder.n_distance_bins),
+                "node_dim": int(model.structural_encoder.node_dim),
+                "edge_dim": int(model.structural_encoder.edge_dim),
+                "hidden_dim": int(model.structural_encoder.hidden_dim),
+                "output_dim": int(model.structural_encoder.output_dim),
+                "rounds": int(model.structural_encoder.rounds),
+                "include_std_pool": bool(model.structural_encoder.include_std_pool),
+            }
+        ),
         "unified_graph_width": int(model.unified_graph_width),
     }
     return {
@@ -1586,6 +1608,19 @@ class PatchPathModel(nn.Module):
         attribute_out_dim: int = DEFAULT_ATTRIBUTE_OUT_DIM,
         attribute_fusion_init: str = "zero",
         quantile_mode: str = "none",
+        # Shared connectivity-aware patch representation.  ``typed_lookup`` is
+        # the historical behaviour (a vocabulary-sized ``typed_embedding``
+        # row per exact certificate).  ``shared_structural`` removes that lookup
+        # entirely and derives the patch token from a shared two-round
+        # edge-aware encoder over the real rooted typed patch graph.  The
+        # structural encoder output width must equal ``token_width`` so the
+        # downstream patch encoder input width is unchanged.
+        patch_representation: str = "typed_lookup",
+        structural_node_dim: int = 48,
+        structural_edge_dim: int = 24,
+        structural_hidden_dim: int = 48,
+        structural_rounds: int = 2,
+        structural_include_std_pool: bool = True,
     ) -> None:
         super().__init__()
         if quantile_mode not in QUANTILE_MODES:
@@ -1596,6 +1631,17 @@ class PatchPathModel(nn.Module):
         self.quantile_mode = str(quantile_mode)
         self.patch_hidden = int(patch_hidden)
         self.pair_hidden = int(pair_hidden)
+        self.patch_representation = str(patch_representation)
+        if self.patch_representation not in {"typed_lookup", "shared_structural"}:
+            raise ValueError(
+                f"unknown patch_representation={self.patch_representation!r}; "
+                "expected 'typed_lookup' or 'shared_structural'"
+            )
+        self.structural_node_dim = int(structural_node_dim)
+        self.structural_edge_dim = int(structural_edge_dim)
+        self.structural_hidden_dim = int(structural_hidden_dim)
+        self.structural_rounds = int(structural_rounds)
+        self.structural_include_std_pool = bool(structural_include_std_pool)
         self.embedding_mode = str(embedding_mode)
         self.embedding_rank = int(embedding_rank)
         self.parent_embedding_rank = int(
@@ -1763,6 +1809,29 @@ class PatchPathModel(nn.Module):
             rank=self.embedding_rank,
             full_count=typed_full_count,
         )
+        # Shared structural patch encoder.  When enabled it *replaces* the
+        # typed lookup: ``typed_embedding`` keeps no trainable rows (it is set to
+        # ``None``) and the model contains no vocabulary-sized table.
+        self.structural_encoder: nn.Module | None = None
+        if self.patch_representation == "shared_structural":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='shared_structural'"
+                )
+            self.structural_encoder = SharedStructuralPatchEncoder(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                node_dim=self.structural_node_dim,
+                edge_dim=self.structural_edge_dim,
+                hidden_dim=self.structural_hidden_dim,
+                output_dim=int(token_width),
+                rounds=self.structural_rounds,
+                include_std_pool=self.structural_include_std_pool,
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
         parent_width = max(int(token_width // 2), 1)
         self.parent_width = int(parent_width)
         parent_rank = min(self.parent_embedding_rank, parent_width)
@@ -2130,6 +2199,17 @@ class PatchPathModel(nn.Module):
         delta = self.context_delta_output(torch.tanh(p) * torch.tanh(c))
         return e_patch + delta * mask
 
+    def _patch_token_value(self, data: Data) -> torch.Tensor:
+        """Per-patch token representation fed to the patch encoder.
+
+        ``typed_lookup``: a learned row per exact certificate vocabulary id.
+        ``shared_structural``: ``e_struct`` from the shared connectivity-aware
+        patch encoder (no exact-identity lookup).
+        """
+        if self.structural_encoder is not None:
+            return self.structural_encoder(data)
+        return self.typed_embedding(data.typed_token)
+
     def encode(self, data: Data) -> torch.Tensor:
         """Return the unified graph representation ``R`` (the input to the
         sole regression head).
@@ -2144,7 +2224,7 @@ class PatchPathModel(nn.Module):
         if global_context.ndim == 1:
             global_context = global_context.unsqueeze(0)
         n_graphs = int(global_context.shape[0])
-        e_patch = self.typed_embedding(data.typed_token)
+        e_patch = self._patch_token_value(data)
         structural_blocks: list[torch.Tensor] = []
         if self.structural_context_mode != "none":
             e_ctx = self._structural_context_embedding_value(data)
