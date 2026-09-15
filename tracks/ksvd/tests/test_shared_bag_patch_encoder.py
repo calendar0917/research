@@ -21,6 +21,8 @@ Requirements covered (numbered as in the experiment brief):
 
 from __future__ import annotations
 
+import json
+
 import torch
 from torch_geometric.data import Data
 
@@ -399,3 +401,59 @@ def test_bfull_reference_candidate_is_unchanged():
     """The B-full candidate must still build to its frozen 84,495 params."""
     model = sspe.build_candidate(0)
     assert sspe._n_params(model) == sbpe.REFERENCE_BFULL_PARAMS
+
+
+# ---------------------------------------------------------------------------
+# terminal official-test closure: one-shot discipline
+# ---------------------------------------------------------------------------
+
+
+def _fake_freeze_inputs(tmp_path):
+    runs = tmp_path / "runs"
+    runs.mkdir()
+    for seed in (0, 1):
+        (tmp_path / f"soup_sbpe_seed{seed}.json").write_text(
+            json.dumps(
+                {
+                    "top5_soup_valid_mae": 0.12,
+                    "best_checkpoint_valid_mae": 0.13,
+                    "top5_epochs": [1, 2, 3, 4, 5],
+                }
+            ),
+            encoding="utf-8",
+        )
+        (runs / f"sbpe_seed{seed}.json").write_text(
+            json.dumps({"parameters": 84511, "best_epoch": 1}),
+            encoding="utf-8",
+        )
+    return runs
+
+
+def test_terminal_test_refuses_second_read(tmp_path, monkeypatch):
+    monkeypatch.setattr(sbpe, "RESULTS_DIR", tmp_path)
+    (tmp_path / "official_test_unlock.json").write_text("{}", encoding="utf-8")
+    try:
+        sbpe.terminal_test()
+    except RuntimeError as exc:
+        assert "already unlocked" in str(exc)
+    else:  # pragma: no cover - failure path
+        raise AssertionError("expected RuntimeError on a second official-test read")
+
+
+def test_terminal_test_unlocks_before_touching_test(tmp_path, monkeypatch):
+    monkeypatch.setattr(sbpe, "RESULTS_DIR", tmp_path)
+    monkeypatch.setattr(sbpe, "RUNS_DIR", _fake_freeze_inputs(tmp_path))
+
+    def _stop():
+        raise RuntimeError("stop-before-test-load")
+
+    monkeypatch.setattr(sbpe.ztraining, "load_train_valid_records", _stop)
+    try:
+        sbpe.terminal_test()
+    except RuntimeError as exc:
+        assert "stop-before-test-load" in str(exc)
+    else:  # pragma: no cover - failure path
+        raise AssertionError("expected the injected loader failure")
+    # the freeze + one-shot unlock must be written BEFORE any test load
+    assert (tmp_path / "official_test_freeze.json").exists()
+    assert (tmp_path / "official_test_unlock.json").exists()
