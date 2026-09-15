@@ -1,0 +1,84 @@
+claim_id: claim-adaptive-structure-binding-cell-z1-collapse-20260916
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-16T08:00:00'
+statement: >-
+  On the frozen deterministic-A100 ZINC Cell A protocol, the pre-registered
+  Z1 Local Adaptive Structure-Binding (ASB) cell does NOT learn a
+  binding-conditioned adaptive support. The cell runs inside each rooted
+  radius-2 patch, forms its support from structure-attribute bindings
+  (b_uv = bond_primitive + bind_delta(binding inputs), gate a_uv =
+  sigmoid(gate_mlp(b_uv)), straight-through binary membership, real induced
+  bond set, binding-aware message/update on the support), and reproduces
+  B-Bag exactly when all gates are forced open with perturbation paths zeroed
+  (init delta 6.27e-4; full-gate degeneration 8.49e-6; batch invariance 0.0).
+  Candidate total 101,536 params (ASB encoder 52,193; B-Bag 84,511 / 35,168;
+  B-Full 84,495 / 35,152); dataset_dependent_params = 0; no typed_embedding;
+  official test NEVER loaded. Two-seed (0,1) fixed Top-5 soup valid mean
+  0.1255354 vs B-Bag 0.1238055 (delta +0.0017299; per-seed -0.0013002 /
+  +0.0047600 -> SIGN FLIP) and vs B-Full 0.1189722 (delta +0.0065632) and vs
+  A2 0.1219141 (+0.0036214). PRIMARY MECHANISM (decisive): the cell collapsed.
+  Seed 0 selection checkpoint: selected_node/edge fraction 1.0 (full support),
+  gate_probability_mean 0.5333 with gate_probability_std 0.0, message_norm_mean
+  0.0, binding_state_norm 0.6399, e_struct effective rank 1.0145; weight audit
+  shows message_mlp ALL-ZERO and gate_mlp first/last weights ZERO with only a
+  last bias 0.1334 -> gate is a global constant independent of the binding
+  state; the cell degenerates to B-Bag + a node-wise residual update. Seed 1
+  selection checkpoint: selected_node_fraction 0.1636 (= 1 / mean patch size
+  6.114, i.e. ROOT-ONLY support), selected_edge_fraction 0.0, gate 0.5,
+  message_norm 0.0, binding_state_norm 0.0, node/update norms ~1e-13, e_struct
+  effective rank 0.0; weight audit shows message_mlp/gate_mlp/update_mlp/
+  bind_delta_mlp/bind_update/node_mlp/bond_mlp ALL exactly 0.0 -> the encoder
+  output is a constant. Trajectory: at epoch 1 both seeds have a live message
+  branch (message_norm ~0.6) and gate_std ~1e-5 (input-independent at init);
+  by epoch 60 the message branch is dead (9e-9 / 0.0); the gate declines
+  monotonically in both seeds (task gradient prefers pruning); seed 1 crosses
+  logit 0 at ~epoch 106-109 and collapses full -> root-only, an ABSORBING dead
+  state with exactly-zero gate/binding/update gradients; seed 0 asymptotes at
+  gate ~0.533 and stays full. The two coupled causes are (i) the hard-threshold
+  step gives the soft gate no continuous edge-specific forward gradient, so it
+  never becomes a function of the binding state, and (ii) the near-function-
+  preserving tiny-init perturbation paths have gradients proportional to tiny
+  final-layer weights, so Adam with coupled weight decay (wd=1e-5) annihilates
+  exactly those parameters (a zero/near-zero-gradient parameter loses ~lr per
+  step). 14/14 unit tests and 21/21 sanity checks pass; deterministic 2-epoch
+  GPU0/GPU1 repro is bit-identical (sha256 fcc397f6...). Verdict STOP (Case E,
+  branch / structure collapse) - NOT a clean refutation of adaptive structure;
+  the frozen ASB-Z1 cell as implemented does not realize it. No promotion, no
+  Z2, no second seed, no sweep.
+scope: >-
+  ZINC-12K official train/valid only; deterministic-A100 regime; seeds 0 and 1;
+  fixed Top-5 soup; valid-selection metric; protocol
+  adaptive_structure_binding_cell_z1_v1. One pre-registered architecture, no
+  width/depth/sparsity/gate-threshold sweep. Official test NEVER loaded. Not a
+  MolHIV claim. Not evidence that adaptive structure is worthless (the
+  mechanism collapsed; the hypothesis was not cleanly tested). Excludes Z2 /
+  outer-context support revision, motif vocabulary, learned dictionary, hard
+  top-k, attention/Transformer, auxiliary losses/branches.
+supporting_evidence:
+  - >-
+    2-seed Top-5 soup mean 0.1255354 vs B-Bag 0.1238055 (delta +0.0017299,
+    per-seed -0.0013002 / +0.0047600, sign flip) and vs B-Full 0.1189722
+    (delta +0.0065632, both seeds worse).
+  - >-
+    Seed 0 selection checkpoint: support 1.0, gate mean 0.5333 / std 0.0,
+    message_norm 0.0, binding_state_norm 0.6399, e_struct effective rank
+    1.0145; weight audit message_mlp all-zero, gate_mlp weights zero / bias
+    0.1334.
+  - >-
+    Seed 1 selection checkpoint: support 0.1636 root-only, edges 0.0, gate
+    0.5, all encoder modules exactly 0.0 except tiny fusion, e_struct
+    effective rank 0.0.
+  - >-
+    Epoch-1 gate_probability_std ~1e-5 in both seeds (input-independent from
+    init); message branch dead by epoch 60; seed1 collapse at ~epoch 106-109;
+    absorbing dead state.
+  - >-
+    14/14 unit tests; 21/21 sanity (init delta 6.27e-4, full-gate degeneration
+    8.49e-6, batch invariance 0.0, all init gradients nonzero); deterministic
+    GPU0/GPU1 repro bit-identical sha256 fcc397f6...; official test never
+    loaded.
+related:
+  - notes/adaptive_structure_binding_cell_z1.md
+  - records/decisions/decision-adaptive-structure-binding-cell-z1-stop-20260916.yaml

@@ -1,0 +1,71 @@
+decision_id: decision-adaptive-structure-binding-cell-z1-stop-20260916
+created: '2026-09-16T08:05:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Z1 Local Adaptive Structure-Binding (ASB) cell -> Decision Case E: STOP
+  (branch / structure collapse). The pre-registered ASB cell (adaptive
+  structure-binding + binding-aware computation on the learned support,
+  101,536 params, ASB encoder 52,193) did NOT form a binding-conditioned
+  adaptive support. Two-seed (0,1) Top-5 soup valid mean 0.1255354 vs B-Bag
+  0.1238055 (delta +0.0017299, per-seed -0.0013002 / +0.0047600, sign flip)
+  and vs B-Full 0.1189722 (delta +0.0065632, both seeds worse). Mechanism: the
+  gate is input-independent from init (gate_probability_std ~1e-5) and the
+  hard-threshold step gives it no continuous edge-specific gradient, so it
+  collapses to a global constant; the near-function-preserving tiny-init
+  perturbation paths are annihilated by Adam weight decay. Seed 0 keeps full
+  support with a dead message branch and degenerates to B-Bag + a node-wise
+  residual; seed 1 collapses to a root-only support and its whole encoder
+  becomes an exact constant (all modules 0.0). No seed learned a
+  differentiated, meaningful substructure. Do NOT promote, do NOT proceed to
+  Z2, do NOT purchase more seeds, do NOT sweep width/depth/sparsity/gate
+  thresholds. Official ZINC test never loaded.
+alternatives_rejected:
+- item: Promote ASB as a neutral/positive result (Case A/B) versus B-Bag
+  because: >-
+    the +0.0017299 soup delta is within the +-0.002 neutral band but is
+    sign-unstable across seeds (seed0 better, seed1 worse) and the mechanism
+    is collapsed; there is no defensible signal.
+- item: Classify as Case D (gates always on / binding contribution near zero)
+  because: >-
+    seed 1 is NOT always-on: its support collapsed to root-only and its whole
+    encoder is a constant; seed 0 has a fully dead message branch. The
+    corrected rule fires E_branch_or_structure_collapse (message_norm < 1e-6,
+    encoder effective rank < 0.5, gate std < 1e-4).
+- item: Attribute the result to an adaptive-structure representational limit
+  because: >-
+    the comparison is confounded by a utilization/optimization collapse (the
+    hypothesis was not cleanly tested); the honest claim is only that this
+    implementation does not realize it.
+- item: Proceed to Z2 (outer context -> support revision)
+  because: >-
+    the inner cell never produced a meaningful support to revise; Z2 would
+    compound a dead inner mechanism.
+- item: Execute the single minimal repair now
+  because: >-
+    the repair changes forward semantics (continuous soft-gate influence) and
+    parameter regularization, so it needs its own fresh pre-registration and a
+    frozen witness; it is recorded as a candidate, not authorized here.
+- item: Open the ZINC official test
+  because: >-
+    the study is valid-only by design and the test is hard-locked; a test read
+    was never pre-registered.
+consequences:
+  - >-
+    Z1 is STOPPED for this cell; the frozen Cell A baselines (B-Bag 0.1238055,
+    B-Full 0.1189722, A2 0.1219141) stand.
+  - >-
+    The result is corroborating evidence for the existing line that
+    patch-local connectivity beyond aggregate primitives is not the
+    task-relevant signal on ZINC Cell A (B-Full near rank-1; EOR inner-encoder
+    collapse; ESB connectivity-free tie).
+  - >-
+    A single minimal, pre-registerable repair candidate is recorded (continuous
+    soft-gate influence on messages/pooled bindings + protecting the adaptive
+    params from Adam weight decay); it is NOT authorized and must not be
+    started as an unbounded tuning loop.
+  - >-
+    No new run, seed, or architecture is queued from this decision.
+related:
+  - notes/adaptive_structure_binding_cell_z1.md
+  - records/claims/claim-adaptive-structure-binding-cell-z1-collapse-20260916.yaml
