@@ -1,5 +1,14 @@
 # FSAR Stage 0/1 status + GPU blocker
 
+> **Seed0 outcome (2026-09-16, updated)**: the GPU blocker below is resolved
+> (GPU-1 co-tenancy authorized). A/SA/SAB/SAM seed0 all ran. The pre-registered
+> A guard failed (soup 0.157917 > 0.135); the relational core and topology
+> channel were audited and are functional, so the failure is representational
+> starvation of the 32-D marginal A channel. SAB soup 0.130913; the
+> marginal-only capacity control SAM (95,153 params) reaches 0.134182, so only
+> 0.00327 of the 0.020705 SA->SAB gain is aligned binding (84.2% is capacity).
+> Seed1 NOT authorized. Full verdict: `notes/fsar_seed0_case_verdict.md`.
+
 Branch `exp/factorized-structure-attribute-relational-zinc`.
 Formal commit `902cd2a` (Stage-0 audit + FSAR implementation + correctness tests
 + runner).  This note records what is done and the one blocking condition.

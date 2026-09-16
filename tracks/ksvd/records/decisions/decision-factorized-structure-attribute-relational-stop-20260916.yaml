@@ -1,0 +1,95 @@
+decision_id: decision-factorized-structure-attribute-relational-stop-20260916
+created: '2026-09-16T18:10:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Decision - FSAR STRICT FACTORIZATION: STOP (_A_guard_failed__SAB_binding_
+  increment_). The pre-registered engineering guard "A seed0 soup <= 0.135" is
+  FAILED by +0.02292, so the strict factorized backbone is information-starved
+  relative to the mixed backbone; seed1 is NOT authorized and the architecture
+  is NOT promoted. FSAR removes every MIXED bypass from the recurrent
+  patch-centre backbone and keeps each atom strictly factorized into A_v
+  (attribute marginal; no topology access), S_v (topology only; no chemistry
+  access) and B_v (the only channel that pairs a role with the attribute of the
+  same node/edge, patch-internally centred), with a chemistry-free 15-D pair
+  relation, a T=2 recurrent pair-centre core and g = Pool(h^T) + topology hinge.
+  Zero dataset-dependent vocabulary params. Params A 56,617 / SA 77,609 / SAB
+  95,209 (nested), capacity control SAM 95,153. Seed0 Top-5 soup valid A
+  0.157917 / SA 0.151617 / SAB 0.130913 / SAM 0.134182; raw bests 0.160617@177
+  / 0.156987@208 / 0.132160@222 / 0.147073@232. SAB is +0.011095 / +0.009219 /
+  +0.003531 above frozen B-Full / A2 / B-Bag seed0 soups. Guard diagnosis:
+  zeroing the trained relational core collapses valid MAE 0.1606 -> 0.9067 and
+  zeroing the topology hinge 0.1606 -> 0.3529, so the relational core and graph
+  pooling are functional; the loss is representational starvation of the 32-D
+  marginal A channel, not an architecture defect. Mechanism (corrected
+  centre-fixed context shuffle): A stable 1.53e-8, S stable 0.0, B responds
+  0.3637; interventions no-A +2.2552, no-S +0.2536, no-B +0.4467, shuffle
+  +0.8323 -> B is functionally necessary at the checkpoint. Capacity control:
+  SA->SAB total 0.020705 decomposes into SA->SAM capacity 0.017435 (84.2 %) and
+  SAM->SAB aligned-binding residual 0.003270 (15.8 %); SAB still beats SAM by
+  0.00327 > 0.001, so capacity_confound_excluded = true, but the naive
+  "SA->SAB = binding" reading is ~5x overstated. 10/10 correctness gates pass
+  local and remote; deterministic A100; official ZINC test NEVER loaded.
+why_this_experiment: >-
+  The Stage-0 information-flow audit showed FSAB (the prior attempt) was not a
+  factorized backbone: it replaced only the 16-D local token while patch_cont,
+  patch_context, the typed token, parent_token, the chemistry columns of
+  pair_relation and global_context stayed MIXED, which is why the token could be
+  annihilated with no loss. FSAR rebuilds the whole information flow so that the
+  A/S/B assignment is enforced by input access, and asks whether strict
+  factorization can still match the mixed backbone.
+protocol: >-
+  Inherited frozen optimized compact-v4 protocol verbatim (Adam lr 1e-3, wd
+  1e-5, batch 128, grad clip 5.0, max 240 epochs, patience 40, no scheduler,
+  single stage, best official-valid MAE checkpoint, fixed equal-weight Top-5
+  soup, deterministic A100, torch.use_deterministic_algorithms(True)). Only the
+  ZINC L1/MAE task loss is optimized; attribute shuffle and channel zeroing are
+  evaluation-only. A/SA/SAB trained at commit cf192e4; commit 1f84090 changed
+  only the eval-only witness shuffle (centre fixed) and added the conditional
+  capacity-control mode SAM and the richer decide(); A/SA/SAB checkpoints re-soup
+  identically. Official test never loaded.
+alternatives_rejected:
+  - item: Promoting SAB because it beats SA by a large raw margin
+    because: >-
+      the pre-registered A guard fails, and the marginal-only SAM capacity
+      control recovers 84.2 % of the SA->SAB gain at matched parameter count;
+      only 0.00327 is aligned-binding residual.
+  - item: Calling the relational core / graph pooling broken
+    because: >-
+      zeroing the trained core raises valid MAE 0.1606 -> 0.9067 and zeroing the
+      topology hinge 0.1606 -> 0.3529; both are heavily used and functional.
+  - item: Buying seed1 (the literal section-34 performance condition holds)
+    because: >-
+      the earlier pre-registered section-31 A guard is a STOP condition and it
+      failed; the absolute regime is non-competitive with B-Full/A2/B-Bag.
+  - item: Widening channels, adding back mixed descriptors, sweeping capacity,
+      or reopening the closed binding families (ASB/Z1/BCE/EOR/FSAB)
+    because: >-
+      forbidden by the brief; the guard failure is diagnosed as representational
+      starvation at the inherited budget, not a width problem.
+  - item: Opening the official ZINC test
+    because: >-
+      never loaded by design; no test read is authorized by this decision.
+consequences:
+  - >-
+    Strict A/S/B factorization with a topology-only relational substrate is
+    implementable and functional, but at the inherited ~32-D-per-channel budget
+    with node-state-only pooling it is information-starved on ZINC (A soup
+    0.158 vs the 0.135 guard; SAB 0.131 vs B-Bag 0.127 / A2 0.122 / B-Full
+    0.120).
+  - >-
+    Future binding claims must be compared against a marginal-only capacity
+    control, not SA alone: 84 % of the naive SA->SAB gain here is generic
+    capacity.
+  - >-
+    The corrected centre-fixed attribute shuffle is the valid binding witness
+    for rooted-factorization models; the inherited FSAB shuffle (which also
+    permutes the centre) is invalid because A_self deliberately encodes the
+    centre.
+revisit_if: >-
+  A new pre-registered FSAR variant that raises the A-channel information
+  content (e.g. shell-resolved attribute marginals, or a wider A budget) beats a
+  matched marginal-only capacity control by >= 0.001 soup MAE AND clears an
+  A-level guard, with its own frozen witness. Not by widening channels blindly,
+  not by adding back the removed mixed descriptors, not by reopening the closed
+  binding families, never by loading the official test.
