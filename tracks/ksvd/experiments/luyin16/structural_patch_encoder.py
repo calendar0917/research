@@ -852,3 +852,518 @@ class AdaptiveStructureBindingEncoder(nn.Module):
             "patch_node_counts": patch_nodes.detach().cpu(),
         }
         self.last_stats = stats
+
+
+# ---------------------------------------------------------------------------
+# Binding Composition Encoder (BCE)
+# ---------------------------------------------------------------------------
+
+
+def _csr_row_gather(
+    ptr: torch.Tensor, row_ids: torch.Tensor
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Select CSR rows ``row_ids`` from a ``[n_rows + 1]`` pointer array.
+
+    Returns ``(gather, rows_expanded, counts)`` where ``gather`` indexes the flat
+    value array and ``rows_expanded`` gives the output-row id of every gathered
+    element (``0..len(row_ids)-1``).
+    """
+    if row_ids.numel() == 0:
+        empty = torch.zeros(0, dtype=torch.long, device=ptr.device)
+        return empty, empty, empty
+    starts = ptr[row_ids]
+    ends = ptr[row_ids + 1]
+    counts = (ends - starts).clamp_min(0)
+    total = int(counts.sum())
+    if total == 0:
+        empty = torch.zeros(0, dtype=torch.long, device=ptr.device)
+        return empty, empty, counts
+    within = torch.arange(total, device=ptr.device, dtype=torch.long)
+    row_offsets = torch.repeat_interleave(counts.cumsum(0) - counts, counts)
+    gather = torch.repeat_interleave(starts, counts) + (within - row_offsets)
+    rows_expanded = torch.repeat_interleave(
+        torch.arange(row_ids.numel(), device=ptr.device, dtype=torch.long), counts
+    )
+    return gather, rows_expanded, counts
+
+
+def _row_moments(
+    values: torch.Tensor, rows_expanded: torch.Tensor, n_rows: int
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Permutation-invariant per-row mean / population std over ragged rows.
+
+    Empty rows produce explicit zero vectors (never NaN) plus a zero count.
+    """
+    dim = int(values.shape[1])
+    mean = values.new_zeros((n_rows, dim))
+    std = values.new_zeros((n_rows, dim))
+    count = values.new_zeros((n_rows,))
+    if values.numel() == 0 or rows_expanded.numel() == 0:
+        return mean, std, count
+    sums = values.new_zeros((n_rows, dim))
+    sums.index_add_(0, rows_expanded, values)
+    squares = values.new_zeros((n_rows, dim))
+    squares.index_add_(0, rows_expanded, values * values)
+    count.index_add_(
+        0, rows_expanded, torch.ones_like(rows_expanded, dtype=values.dtype)
+    )
+    denom = count.clamp_min(1.0).unsqueeze(1)
+    mean = sums / denom
+    variance = (squares / denom - mean * mean).clamp_min(0.0)
+    std = torch.sqrt(variance + 1.0e-8)
+    occupied = (count > 0).to(values.dtype).unsqueeze(1)
+    return mean * occupied, std * occupied, count
+
+
+class BindingCompositionEncoder(nn.Module):
+    """Shared explicit binding-composition encoder for rooted radius-2 patches.
+
+    One structural path only::
+
+        atom attributes + root role + root distance
+                -> atom primitives            h_v            (size-1 support)
+        real bond + endpoint atom states
+                -> bond-binding primitives    h_uv           (size-2 support)
+        every legal unordered parent pair (A, B) of every connected induced
+        support S (|S| = 3, 4)
+                -> interface I(A, B)
+                -> shared symmetric composition candidate c_(A,B)
+                -> invariant (mean, std, count) aggregation over all
+                   decompositions of S
+                -> shared SupportUpdate              h_S
+        permutation-invariant object pooling (root state / object mean /
+        object std / object-count summary)
+                -> e_struct in R^output_dim
+
+    The composition operator is shared across every patch, every support and
+    every decomposition, is symmetric in the two parents, uses SiLU (never a
+    dying-ReLU tiny residual) and is initialised at the standard scale.  There
+    is no softmax over decompositions, no edge scalar attention, no gate, no
+    hard/soft mask, no top-k, no motif vocabulary and no learned structure id.
+
+    Input contract (attached by ``zinc_binding_composition_encoder``; all node
+    ids are graph-local and all bond ids index the *undirected* bond list):
+
+    ``struct_atom`` / ``struct_root`` / ``struct_dist`` / ``struct_patch``
+    ``struct_src`` / ``struct_dst`` / ``struct_bond``   (each bond stored twice)
+    ``sup_size`` / ``sup_root`` / ``sup_patch``
+    ``sup_single_node``  node id for size-1 supports (else -1)
+    ``sup_single_bond``  bond id for size-2 supports (else -1)
+    ``sup_node_ptr`` / ``sup_node_idx``   CSR of support -> atom membership
+    ``sup_edge_ptr`` / ``sup_edge_idx``   CSR of support -> induced real bonds
+    ``dec_child`` / ``dec_parent_a`` / ``dec_parent_b``
+    ``dec_overlap_ptr`` / ``dec_overlap_idx``   CSR of decomposition -> overlap
+    ``dec_cross_ptr`` / ``dec_cross_idx``       CSR -> real crossing bonds
+    """
+
+    def __init__(
+        self,
+        *,
+        atom_categories: int = 28,
+        bond_categories: int = 4,
+        n_distance_bins: int = 3,
+        object_dim: int = 32,
+        compose_hidden: int = 48,
+        update_hidden: int = 48,
+        fusion_hidden: int = 48,
+        output_dim: int = 16,
+        max_support_size: int = 4,
+        activation: str = "silu",
+    ) -> None:
+        super().__init__()
+        self.atom_categories = int(atom_categories)
+        self.bond_categories = int(bond_categories)
+        self.n_distance_bins = int(n_distance_bins)
+        self.object_dim = int(object_dim)
+        self.compose_hidden = int(compose_hidden)
+        self.update_hidden = int(update_hidden)
+        self.fusion_hidden = int(fusion_hidden)
+        self.output_dim = int(output_dim)
+        self.max_support_size = int(max_support_size)
+        self.activation_name = str(activation)
+        if min(
+            self.atom_categories,
+            self.bond_categories,
+            self.n_distance_bins,
+            self.object_dim,
+            self.compose_hidden,
+            self.update_hidden,
+            self.fusion_hidden,
+            self.output_dim,
+            self.max_support_size,
+        ) < 1:
+            raise ValueError("BCE dimensions must be positive")
+        if self.max_support_size < 2:
+            raise ValueError("BCE needs max_support_size >= 2")
+        if self.activation_name not in {"silu", "gelu"}:
+            raise ValueError("BCE activation must be 'silu' or 'gelu'")
+
+        def _act() -> nn.Module:
+            return nn.SiLU() if self.activation_name == "silu" else nn.GELU()
+
+        # Interface-compatible audit metadata (mirrors the other encoders).
+        self.node_dim = self.object_dim
+        self.edge_dim = self.object_dim
+        self.hidden_dim = self.fusion_hidden
+        self.rounds = self.max_support_size - 2
+        self.include_std_pool = True
+        self.kind = "binding_composition"
+
+        # --- primitives -----------------------------------------------------
+        self.atom_embedding = nn.Embedding(self.atom_categories, self.object_dim)
+        self.root_embedding = nn.Embedding(2, self.object_dim)
+        self.distance_embedding = nn.Embedding(
+            self.n_distance_bins, self.object_dim
+        )
+        self.bond_embedding = nn.Embedding(self.bond_categories, self.object_dim)
+        self.atom_mlp = nn.Sequential(
+            nn.Linear(self.object_dim, self.object_dim),
+            _act(),
+            nn.Linear(self.object_dim, self.object_dim),
+        )
+        self.bind_mlp = nn.Sequential(
+            nn.Linear(3 * self.object_dim, self.compose_hidden),
+            _act(),
+            nn.Linear(self.compose_hidden, self.object_dim),
+        )
+
+        # --- shared composition operator ------------------------------------
+        # interface = [|A|+|B|, ||A|-|B||, |S|, overlay count,
+        #              overlap mean/std (2 x D), crossing mean/std (2 x D),
+        #              crossing count, rootA+rootB, |rootA-rootB|, child root]
+        self.interface_width = 4 * self.object_dim + 8
+        self.compose_input_width = 2 * self.object_dim + self.interface_width
+        self.compose = nn.Sequential(
+            nn.Linear(self.compose_input_width, self.compose_hidden),
+            _act(),
+            nn.Linear(self.compose_hidden, self.object_dim),
+        )
+
+        # --- shared support update ------------------------------------------
+        self.size_embedding = nn.Embedding(
+            self.max_support_size + 1, self.object_dim
+        )
+        self.update_input_width = 2 * self.object_dim + 1 + self.object_dim + 1
+        self.support_update = nn.Sequential(
+            nn.Linear(self.update_input_width, self.update_hidden),
+            _act(),
+            nn.Linear(self.update_hidden, self.object_dim),
+        )
+
+        # --- patch fusion ---------------------------------------------------
+        self.fusion_input_width = 3 * self.object_dim + 3
+        self.fusion = nn.Sequential(
+            nn.Linear(self.fusion_input_width, self.fusion_hidden),
+            _act(),
+            nn.Linear(self.fusion_hidden, self.output_dim),
+        )
+
+        # Diagnostics (never parameters / buffers).
+        self.capture_diagnostics = False
+        self.last_stats: dict[str, Any] = {}
+        self.last_support_states: torch.Tensor | None = None
+        self.last_support_counts: torch.Tensor | None = None
+        self.last_support_disagreement: torch.Tensor | None = None
+
+    # -- primitive helpers ---------------------------------------------------
+    def _atom_primitives(self, data: object) -> torch.Tensor:
+        atom = data.struct_atom.long()
+        root = data.struct_root.long()
+        distance = data.struct_dist.long()
+        return self.atom_mlp(
+            self.atom_embedding(atom)
+            + self.root_embedding(root)
+            + self.distance_embedding(distance)
+        )
+
+    def _bond_primitives(
+        self, data: object, atom_state: torch.Tensor
+    ) -> torch.Tensor:
+        src = data.struct_src.long()
+        dst = data.struct_dst.long()
+        bond = data.struct_bond.long()
+        keep = src < dst
+        bu, bv, bt = src[keep], dst[keep], bond[keep]
+        if bu.numel() == 0:
+            return atom_state.new_zeros((0, self.object_dim))
+        bond_emb = self.bond_embedding(bt)
+        return self.bind_mlp(
+            torch.cat(
+                [
+                    atom_state[bu] + atom_state[bv],
+                    (atom_state[bu] - atom_state[bv]).abs(),
+                    bond_emb,
+                ],
+                dim=1,
+            )
+        )
+
+    # -- forward -------------------------------------------------------------
+    def forward(self, data: object) -> torch.Tensor:
+        atom_state = self._atom_primitives(data)
+        bond_state = self._bond_primitives(data, atom_state)
+
+        sup_size = data.sup_size.long()
+        sup_root = data.sup_root.long()
+        sup_patch = data.sup_patch.long()
+        single_node = data.sup_single_node.long()
+        single_bond = data.sup_single_bond.long()
+        n_supports = int(sup_size.numel())
+
+        _unique_patch, patch_group = torch.unique(
+            sup_patch, return_inverse=True
+        )
+        n_patches = int(_unique_patch.numel())
+
+        h_support = atom_state.new_zeros((n_supports, self.object_dim))
+        size_one = sup_size == 1
+        size_two = sup_size == 2
+        if bool(size_one.any()):
+            h_support[size_one] = atom_state[single_node[size_one]]
+        if bool(size_two.any()):
+            h_support[size_two] = bond_state[single_bond[size_two]]
+
+        dec_child = data.dec_child.long()
+        dec_parent_a = data.dec_parent_a.long()
+        dec_parent_b = data.dec_parent_b.long()
+        overlap_ptr = data.dec_overlap_ptr.long()
+        overlap_idx = data.dec_overlap_idx.long()
+        cross_ptr = data.dec_cross_ptr.long()
+        cross_idx = data.dec_cross_idx.long()
+
+        candidate_chunks: dict[int, tuple[torch.Tensor, torch.Tensor]] = {}
+        support_counts = torch.zeros(
+            n_supports, dtype=atom_state.dtype, device=atom_state.device
+        )
+        disagreement_sums = torch.zeros(
+            n_supports, dtype=atom_state.dtype, device=atom_state.device
+        )
+        for size in range(3, self.max_support_size + 1):
+            child_size = sup_size[dec_child]
+            selected = child_size == size
+            child = dec_child[selected]
+            if child.numel() == 0:
+                continue
+            parent_a = dec_parent_a[selected]
+            parent_b = dec_parent_b[selected]
+            state_a = h_support[parent_a]
+            state_b = h_support[parent_b]
+
+            sizes_a = sup_size[parent_a].to(atom_state.dtype)
+            sizes_b = sup_size[parent_b].to(atom_state.dtype)
+            roots_a = sup_root[parent_a].to(atom_state.dtype)
+            roots_b = sup_root[parent_b].to(atom_state.dtype)
+
+            overlap_gather, overlap_rows, _ = _csr_row_gather(
+                overlap_ptr, torch.nonzero(selected, as_tuple=False).view(-1)
+            )
+            overlap_mean, overlap_std, overlap_count = _row_moments(
+                atom_state[overlap_idx[overlap_gather]]
+                if overlap_gather.numel()
+                else atom_state.new_zeros((0, self.object_dim)),
+                overlap_rows,
+                int(child.numel()),
+            )
+            cross_gather, cross_rows, _ = _csr_row_gather(
+                cross_ptr, torch.nonzero(selected, as_tuple=False).view(-1)
+            )
+            cross_mean, cross_std, cross_count = _row_moments(
+                bond_state[cross_idx[cross_gather]]
+                if cross_gather.numel()
+                else bond_state.new_zeros((0, self.object_dim)),
+                cross_rows,
+                int(child.numel()),
+            )
+
+            interface = torch.cat(
+                [
+                    (sizes_a + sizes_b).unsqueeze(1),
+                    (sizes_a - sizes_b).abs().unsqueeze(1),
+                    sup_size[child].to(atom_state.dtype).unsqueeze(1),
+                    overlap_count.unsqueeze(1),
+                    overlap_mean,
+                    overlap_std,
+                    cross_mean,
+                    cross_std,
+                    cross_count.unsqueeze(1),
+                    (roots_a + roots_b).unsqueeze(1),
+                    (roots_a - roots_b).abs().unsqueeze(1),
+                    sup_root[child].to(atom_state.dtype).unsqueeze(1),
+                ],
+                dim=1,
+            )
+            candidate = self.compose(
+                torch.cat(
+                    [state_a + state_b, (state_a - state_b).abs(), interface],
+                    dim=1,
+                )
+            )
+            candidate_chunks[size] = (candidate, child)
+            support_counts.index_add_(
+                0, child, torch.ones_like(child, dtype=atom_state.dtype)
+            )
+
+            # aggregate candidate multiset (mean + population std + count)
+            candidate_mean, candidate_std, _ = _row_moments(
+                candidate,
+                child,
+                n_supports,
+            )
+            # per-support spread of the decomposition candidates
+            disagreement_sums.index_add_(
+                0,
+                child,
+                (candidate - candidate_mean[child]).norm(dim=1),
+            )
+            rows = sup_size == size
+            update_input = torch.cat(
+                [
+                    candidate_mean[rows],
+                    candidate_std[rows],
+                    torch.log1p(support_counts[rows]).unsqueeze(1),
+                    self.size_embedding(sup_size[rows]),
+                    sup_root[rows].to(atom_state.dtype).unsqueeze(1),
+                ],
+                dim=1,
+            )
+            updated = self.support_update(update_input)
+            h_support = h_support.clone()
+            h_support[rows] = updated
+
+        # --- invariant object pooling --------------------------------------
+        root_singleton = size_one & (sup_root == 1)
+        root_state = h_support.new_zeros((n_patches, self.object_dim))
+        if bool(root_singleton.any()):
+            root_state = root_state.index_put(
+                (patch_group[root_singleton],), h_support[root_singleton]
+            )
+
+        higher = sup_size >= 2
+        if bool(higher.any()):
+            higher_group = patch_group[higher]
+            object_mean = scatter_mean(
+                h_support[higher], higher_group, n_patches
+            )
+            object_square = h_support.new_zeros((n_patches, self.object_dim))
+            object_square.index_add_(
+                0, higher_group, h_support[higher] * h_support[higher]
+            )
+            counts = (
+                torch.bincount(higher_group, minlength=n_patches)
+                .clamp_min(1)
+                .to(h_support.dtype)
+                .unsqueeze(1)
+            )
+            object_std = torch.sqrt(
+                (object_square / counts - object_mean * object_mean).clamp_min(0.0)
+                + 1.0e-8
+            )
+        else:
+            object_mean = h_support.new_zeros((n_patches, self.object_dim))
+            object_std = h_support.new_zeros((n_patches, self.object_dim))
+
+        count_summary = h_support.new_zeros((n_patches, 3))
+        for offset, size in enumerate(range(2, self.max_support_size + 1)):
+            mask = sup_size == size
+            if bool(mask.any()):
+                count_summary[:, offset].index_add_(
+                    0,
+                    patch_group[mask],
+                    torch.ones_like(sup_size[mask], dtype=h_support.dtype),
+                )
+        count_summary = torch.log1p(count_summary)
+
+        output = self.fusion(
+            torch.cat([root_state, object_mean, object_std, count_summary], dim=1)
+        )
+
+        self.last_support_states = h_support
+        self.last_support_counts = support_counts.detach()
+        self.last_support_disagreement = (
+            disagreement_sums / support_counts.clamp_min(1.0)
+        ).detach()
+        if self.capture_diagnostics:
+            self._record_stats(
+                atom_state=atom_state,
+                bond_state=bond_state,
+                h_support=h_support,
+                sup_size=sup_size,
+                support_counts=support_counts,
+                candidate_chunks=candidate_chunks,
+                output=output,
+                n_patches=n_patches,
+                higher=higher,
+            )
+        return output
+
+    # -- mechanism diagnostics ----------------------------------------------
+    def _record_stats(self, **kw: Any) -> None:
+        h_support = kw["h_support"].detach()
+        sup_size = kw["sup_size"]
+        stats: dict[str, Any] = {
+            "n_supports": int(h_support.shape[0]),
+            "n_decompositions": int(kw["support_counts"].sum()),
+            "n_patches": int(kw["n_patches"]),
+        }
+        for size in range(1, self.max_support_size + 1):
+            mask = sup_size == size
+            count = int(mask.sum())
+            stats[f"support_count_size{size}"] = count
+            if count:
+                norms = h_support[mask].norm(dim=1)
+                stats[f"object_norm_mean_size{size}"] = float(norms.mean())
+                stats[f"object_norm_std_size{size}"] = float(
+                    norms.std(unbiased=False)
+                )
+            else:
+                stats[f"object_norm_mean_size{size}"] = 0.0
+                stats[f"object_norm_std_size{size}"] = 0.0
+        higher = kw["higher"]
+        stats["higher_object_count"] = int(higher.sum())
+        stats["higher_object_norm_mean"] = (
+            float(h_support[higher].norm(dim=1).mean()) if bool(higher.any()) else 0.0
+        )
+        stats["output_norm_mean"] = float(
+            kw["output"].detach().norm(dim=1).mean()
+        )
+        stats["output_norm_std"] = float(
+            kw["output"].detach().norm(dim=1).std(unbiased=False)
+        )
+
+        # composition candidate statistics + disagreement
+        support_counts = kw["support_counts"]
+        candidate_norms: list[torch.Tensor] = []
+        candidate_stds: list[torch.Tensor] = []
+        for size, (candidate, child) in kw["candidate_chunks"].items():
+            candidate_norms.append(candidate.detach().norm(dim=1))
+            candidate_stds.append(
+                candidate.detach().std(dim=0, unbiased=False).mean().expand(
+                    candidate.shape[0]
+                )
+            )
+        if candidate_norms:
+            all_norms = torch.cat(candidate_norms)
+            all_stds = torch.cat(candidate_stds)
+            stats["candidate_norm_mean"] = float(all_norms.mean())
+            stats["candidate_norm_std"] = float(all_norms.std(unbiased=False))
+            stats["candidate_across_decomposition_std_mean"] = float(
+                all_stds.mean()
+            )
+        else:
+            stats["candidate_norm_mean"] = 0.0
+            stats["candidate_norm_std"] = 0.0
+            stats["candidate_across_decomposition_std_mean"] = 0.0
+        per_support_counts = self.last_support_counts
+        per_support_spread = self.last_support_disagreement
+        if per_support_counts is not None and per_support_spread is not None:
+            multi = per_support_counts > 1
+            stats["multi_decomposition_candidate_count"] = int(multi.sum())
+            stats["composition_disagreement_mean"] = (
+                float(per_support_spread[multi].mean())
+                if bool(multi.any())
+                else 0.0
+            )
+        else:
+            stats["multi_decomposition_candidate_count"] = 0
+            stats["composition_disagreement_mean"] = 0.0
+        self.last_stats = stats

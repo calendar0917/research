@@ -87,6 +87,7 @@ from tracks.ksvd.experiments.luyin16.zinc_long_range_proxy import (
 )
 from tracks.ksvd.experiments.luyin16.structural_patch_encoder import (
     AdaptiveStructureBindingEncoder,
+    BindingCompositionEncoder,
     SharedBagPatchEncoder,
     SharedStructuralPatchEncoder,
 )
@@ -1689,6 +1690,16 @@ class PatchPathModel(nn.Module):
         asb_update_hidden: int = 32,
         asb_bind_update_hidden: int = 32,
         asb_perturb_init: float = 1.0e-3,
+        # Binding Composition Encoder (``binding_composition``).  One structural
+        # path only: atom/bond primitives -> shared symmetric composition of
+        # every legal explicit parent decomposition -> shared support update ->
+        # invariant object pooling.  Widths pre-registered once (no sweep).
+        bce_object_dim: int = 32,
+        bce_compose_hidden: int = 48,
+        bce_update_hidden: int = 48,
+        bce_fusion_hidden: int = 48,
+        bce_max_support_size: int = 4,
+        bce_activation: str = "silu",
     ) -> None:
         super().__init__()
         if quantile_mode not in QUANTILE_MODES:
@@ -1708,12 +1719,14 @@ class PatchPathModel(nn.Module):
             "explicit_basis_rank1",
             "explicit_object_relational",
             "adaptive_structure_binding",
+            "binding_composition",
         }:
             raise ValueError(
                 f"unknown patch_representation={self.patch_representation!r}; "
                 "expected 'typed_lookup', 'shared_structural', 'shared_bag', "
                 "'explicit_composer', 'explicit_basis_rank1', "
-                "'explicit_object_relational' or 'adaptive_structure_binding'"
+                "'explicit_object_relational', 'adaptive_structure_binding' or "
+                "'binding_composition'"
             )
         self.structural_node_dim = int(structural_node_dim)
         self.structural_edge_dim = int(structural_edge_dim)
@@ -1730,6 +1743,12 @@ class PatchPathModel(nn.Module):
         self.asb_update_hidden = int(asb_update_hidden)
         self.asb_bind_update_hidden = int(asb_bind_update_hidden)
         self.asb_perturb_init = float(asb_perturb_init)
+        self.bce_object_dim = int(bce_object_dim)
+        self.bce_compose_hidden = int(bce_compose_hidden)
+        self.bce_update_hidden = int(bce_update_hidden)
+        self.bce_fusion_hidden = int(bce_fusion_hidden)
+        self.bce_max_support_size = int(bce_max_support_size)
+        self.bce_activation = str(bce_activation)
         self.composer_latent_dim = int(composer_latent_dim)
         self.composer_edge_dim = int(composer_edge_dim)
         self.composer_n_degree_bins = int(composer_n_degree_bins)
@@ -1981,6 +2000,26 @@ class PatchPathModel(nn.Module):
                 fusion_hidden=self.bag_fusion_hidden,
                 output_dim=int(token_width),
                 perturb_init=self.asb_perturb_init,
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "binding_composition":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='binding_composition'"
+                )
+            self.structural_encoder = BindingCompositionEncoder(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                object_dim=self.bce_object_dim,
+                compose_hidden=self.bce_compose_hidden,
+                update_hidden=self.bce_update_hidden,
+                fusion_hidden=self.bce_fusion_hidden,
+                output_dim=int(token_width),
+                max_support_size=self.bce_max_support_size,
+                activation=self.bce_activation,
             )
             del self.typed_embedding  # no vocabulary-sized table remains
             self.typed_embedding = None
