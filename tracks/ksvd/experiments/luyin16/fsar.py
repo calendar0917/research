@@ -117,6 +117,14 @@ DROPOUT = 0.05
 
 MODE_INPUT_DIM = {"A": A_DIM, "SA": A_DIM + S_DIM, "SAB": A_DIM + S_DIM + B_DIM}
 MODES = ("A", "SA", "SAB")
+#: Conditional capacity control (brief section 25): SA plus a marginal-only MLP
+#: ``M_v = F_M([A_v, S_v])`` with approximately the B encoder's parameter count.
+#: ``M`` never reads an aligned per-node / per-edge pair, so it cannot encode
+#: binding; it can only add capacity on the same marginals.
+SAM_MARGINAL_DIM = 64
+SAM_MARGINAL_HIDDEN = 72
+MODE_INPUT_DIM["SAM"] = A_DIM + S_DIM + SAM_MARGINAL_DIM
+ALL_MODES = MODES + ("SAM",)
 
 
 def scatter_mean(
@@ -852,14 +860,14 @@ class PatchPathFSARModel(nn.Module):
     ) -> None:
         super().__init__()
         mode = str(mode)
-        if mode not in MODES:
-            raise ValueError(f"unknown FSAR mode={mode!r}; expected one of {MODES}")
+        if mode not in ALL_MODES:
+            raise ValueError(f"unknown FSAR mode={mode!r}; expected one of {ALL_MODES}")
         self.mode = mode
         self.hidden = int(hidden)
         self.q_dim = int(q_dim)
         self.recurrence_rounds = int(recurrence_rounds)
         self.use_topology_channel = bool(use_topology_channel)
-        include_structure = mode in {"SA", "SAB"}
+        include_structure = mode in {"SA", "SAB", "SAM"}
         include_binding = mode == "SAB"
         self.encoder = FSARChannelEncoder(
             role_dim=int(role_dim),
@@ -877,6 +885,14 @@ class PatchPathFSARModel(nn.Module):
             include_binding=include_binding,
         )
         input_dim = MODE_INPUT_DIM[mode]
+        self.capacity_mlp = None
+        if mode == "SAM":
+            # Marginal-only capacity control: reads [A, S] and nothing else.
+            self.capacity_mlp = nn.Sequential(
+                nn.Linear(A_DIM + S_DIM, SAM_MARGINAL_HIDDEN),
+                _act("relu"),
+                nn.Linear(SAM_MARGINAL_HIDDEN, SAM_MARGINAL_DIM),
+            )
         self.node_init = nn.Sequential(
             nn.Linear(input_dim, 128),
             _act("relu"),
@@ -1015,6 +1031,8 @@ class PatchPathFSARModel(nn.Module):
 
     def encode(self, data: Data) -> torch.Tensor:
         z = self.encoder(data)
+        if self.capacity_mlp is not None:
+            z = torch.cat([z, self.capacity_mlp(z)], dim=1)
         h = self.node_init(z)
         h0 = h
         source = data.pair_index[0].long()
@@ -1161,6 +1179,7 @@ def parameter_breakdown(model: PatchPathFSARModel) -> dict[str, Any]:
             + _n_params(encoder.binding_fuse)
         ),
         "node_init": _n_params(model.node_init),
+        "capacity_mlp": _n_params(model.capacity_mlp),
         "relation_core": int(
             _n_params(model.pair_projection)
             + _n_params(model.relation_encoder)

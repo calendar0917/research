@@ -227,10 +227,15 @@ def params() -> dict[str, Any]:
     for mode in fsar.MODES:
         model = build_model(mode, seed=0)
         payload["modes"][mode] = fsar.parameter_breakdown(model)
+    sam_model = build_model("SAM", seed=0)
+    payload["capacity_control"] = fsar.parameter_breakdown(sam_model)
     totals = {mode: row["total"] for mode, row in payload["modes"].items()}
     payload["nested_totals"] = totals
     payload["nested_ordering"] = bool(totals["A"] < totals["SA"] < totals["SAB"])
     payload["budget_ok"] = bool(max(totals.values()) <= 200_000)
+    payload["sam_vs_sab_param_gap"] = int(
+        payload["capacity_control"]["total"] - totals["SAB"]
+    )
     payload["dataset_dependent_vocabulary_params"] = 0
     payload["references"] = {
         "B-Bag_per_seed": REFERENCE_BBAG_SOUP_PER_SEED,
@@ -777,11 +782,38 @@ def diagnostics(mode: str = "SAB", seed: int = 0, tag: str | None = None) -> dic
 
 
 def _shuffle_attributes(batch, seed: int):
+    """Evaluation-only attribute-assignment shuffle for FSAR (brief section 27).
+
+    Keeps the **centre** atom attribute fixed (``A_self`` is explicitly
+    rooted), and keeps the per-patch context atom multiset and bond multiset
+    fixed.  Only the context-attribute -> structural-role assignment and the
+    bond-attribute -> edge-role assignment change inside each rooted frame.
+    """
     from tracks.ksvd.experiments.luyin16.zinc_factorized_binding_encoder import (
-        shuffle_attribute_assignment,
+        _within_group_rotation,
     )
 
-    return shuffle_attribute_assignment(batch, seed)
+    patch = batch.struct_patch.detach().cpu().numpy().astype(np.int64)
+    root = batch.struct_root.detach().cpu().numpy().astype(np.int64)
+    atom = batch.struct_atom.detach().cpu()
+    n_atoms = int(patch.shape[0])
+    if n_atoms:
+        # Each centre is its own singleton group, so it is never rotated.
+        groups = np.where(
+            root == 0, patch, 10**7 + np.arange(n_atoms, dtype=np.int64)
+        )
+        atom_source = _within_group_rotation(groups, int(seed))
+        shuffled_atom = atom[torch.from_numpy(atom_source)]
+    else:
+        shuffled_atom = atom.clone()
+    bond = batch.struct_bond.detach().cpu()
+    if bond.numel():
+        edge_patch = batch.struct_edge_patch.detach().cpu().numpy().astype(np.int64)
+        bond_source = _within_group_rotation(edge_patch, int(seed) + 977)
+        shuffled_bond = bond[torch.from_numpy(bond_source)]
+    else:
+        shuffled_bond = bond.clone()
+    return shuffled_atom, shuffled_bond
 
 
 def witness(mode: str = "SAB", seed: int = 0, tag: str | None = None) -> dict[str, Any]:
@@ -923,7 +955,9 @@ def decide() -> dict[str, Any]:
     for mode in fsar.MODES:
         value = _soup_valid(mode, 0)
         payload["soups"][mode] = value
+    payload["soups"]["SAM"] = _soup_valid("SAM", 0)
     a, sa, sab = (payload["soups"][m] for m in fsar.MODES)
+    sam = payload["soups"]["SAM"]
     if a is None:
         payload["status"] = "A_NOT_RUN"
         payload["a_guard_pass"] = None
@@ -935,6 +969,11 @@ def decide() -> dict[str, Any]:
         payload["deltas"]["A_to_SA"] = a - sa
     if sa is not None and sab is not None:
         payload["deltas"]["SA_to_SAB"] = sa - sab
+    if sab is not None and sam is not None:
+        # Positive => the true aligned-binding channel beats the marginal-only
+        # capacity control, i.e. the B gain is not merely extra parameters.
+        payload["deltas"]["SAB_to_SAM"] = sam - sab
+        payload["capacity_confound_excluded"] = bool(sam - sab >= B_GAIN_GATE)
     if a is not None and sa is not None and sab is not None:
         payload["status"] = "COMPLETE_SEED0"
         b_gain = payload["deltas"]["SA_to_SAB"]
@@ -960,6 +999,7 @@ def report() -> dict[str, Any]:
         "decision": _maybe("decision"),
         "soups_seed0": {mode: _soup_valid(mode, 0) for mode in fsar.MODES},
         "soups_seed1": {mode: _soup_valid(mode, 1) for mode in fsar.MODES},
+        "capacity_control_seed0": _soup_valid("SAM", 0),
         "official_test_loaded": False,
     }
     _write_json(RESULTS_DIR / "report.json", payload)
@@ -990,7 +1030,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "report",
         ],
     )
-    parser.add_argument("--mode", default="SAB", choices=list(fsar.MODES))
+    parser.add_argument("--mode", default="SAB", choices=list(fsar.ALL_MODES))
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--tag", default=None)
