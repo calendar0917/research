@@ -974,13 +974,70 @@ def decide() -> dict[str, Any]:
         # capacity control, i.e. the B gain is not merely extra parameters.
         payload["deltas"]["SAB_to_SAM"] = sam - sab
         payload["capacity_confound_excluded"] = bool(sam - sab >= B_GAIN_GATE)
-    if a is not None and sa is not None and sab is not None:
-        payload["status"] = "COMPLETE_SEED0"
-        b_gain = payload["deltas"]["SA_to_SAB"]
-        payload["case"] = (
-            "SAB_adds_increment" if b_gain >= B_GAIN_GATE else "SAB_no_increment"
+
+    # Mechanism evidence (brief sections 27/28/34).
+    def _maybe_read(path: Path) -> Any:
+        return _read_json(path) if path.exists() else None
+
+    witness = _maybe_read(RESULTS_DIR / "witness_fsar_sab_seed0.json")
+    interventions = _maybe_read(RESULTS_DIR / "interventions_fsar_sab_seed0.json")
+    mechanism = {
+        "witness_available": witness is not None,
+        "interventions_available": interventions is not None,
+    }
+    if witness is not None:
+        mechanism["A_stable"] = bool(witness.get("A_stable"))
+        mechanism["S_stable"] = bool(witness.get("S_stable"))
+        mechanism["B_responds"] = bool(witness.get("B_responds"))
+    if interventions is not None:
+        mechanism["delta_no_B"] = interventions.get("delta_no_B")
+        mechanism["delta_shuffle_attributes"] = interventions.get(
+            "delta_shuffle_attributes"
         )
-        payload["seed1_authorized"] = bool(b_gain >= B_GAIN_GATE)
+    mechanism_supported = bool(
+        witness is not None
+        and interventions is not None
+        and mechanism.get("A_stable")
+        and mechanism.get("S_stable")
+        and mechanism.get("B_responds")
+        and float(mechanism.get("delta_no_B") or 0.0) > 0.0
+        and float(mechanism.get("delta_shuffle_attributes") or 0.0) > 0.0
+    )
+    payload["mechanism"] = mechanism
+    payload["mechanism_supported"] = mechanism_supported
+
+    performance_supported = None
+    if sa is not None and sab is not None:
+        bfull_seed0 = float(REFERENCE_BFULL_SOUP_PER_SEED[0])
+        performance_supported = bool(
+            sab <= sa - B_GAIN_GATE or sab <= bfull_seed0 + SEED0_REFERENCE_TOLERANCE
+        )
+    payload["performance_supported"] = performance_supported
+
+    if a is not None and sa is not None and sab is not None:
+        b_gain = payload["deltas"]["SA_to_SAB"]
+        increment = bool(b_gain >= B_GAIN_GATE)
+        capacity_ok = payload.get("capacity_confound_excluded")
+        payload["status"] = (
+            "COMPLETE_SEED0" if payload["a_guard_pass"] else "STOP_A_GUARD"
+        )
+        if payload["a_guard_pass"]:
+            payload["case"] = (
+                "SAB_adds_increment" if increment else "SAB_no_increment"
+            )
+        else:
+            payload["case"] = (
+                "A_guard_failed__SAB_binding_increment"
+                if increment and mechanism_supported
+                else "A_guard_failed"
+            )
+        payload["seed1_authorized"] = bool(
+            payload["a_guard_pass"]
+            and increment
+            and mechanism_supported
+            and performance_supported
+            and capacity_ok is not False
+        )
     _write_json(RESULTS_DIR / "decision.json", payload)
     print(json.dumps(payload, indent=2, sort_keys=True, default=str), flush=True)
     return payload
