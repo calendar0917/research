@@ -1,0 +1,75 @@
+decision_id: decision-molhiv-shared-bag-transfer-20260916
+created: '2026-09-16T10:05:00'
+kind: decision
+study_id: molhiv-cross-scaffold-interaction
+decision: >-
+  MolHIV shared vocabulary-free B-Bag patch encoder transfer -> Q1 (parameter
+  explosion) YES, SOLVED; Q2 (predictive transfer) PRESERVED / PARTIAL, no
+  regression on the frozen official test. Exactly one architecture was
+  pre-registered and run: the exact typed certificate lookup is deleted
+  (839,456 -> 0 params) and replaced by a shared connectivity-free DeepSets
+  encoder over fixed schema-sized OGB atom/root/distance and bond field
+  embeddings (fusion [root;node_mean;node_std;bond_mean;bond_std] -> 104 -> 32),
+  with the relational downstream (pair/relation/recurrent centre/global/head),
+  loss, optimizer, schedule, scaffold split and the no-refit
+  best-valid + fixed Top-5 soup rule unchanged. Total 281,205 params
+  (-73.880%); the only dataset-dependent identity left is the 1,648-param
+  radius-1 parent table. Frozen official test: raw mean 0.758373 (-0.004231 vs
+  the matched RPC 0.762605; 2-seed ensemble 0.777680, -0.002368), Top-5 soup
+  mean 0.777772 (+0.015677; 2-seed ensemble 0.787817, +0.011848 vs 0.775969).
+  Valid 2-seed means are mildly lower (raw -0.005827, soup -0.012496) with a
+  per-seed sign flip. The ~0.80 external test target is NOT reached
+  (single-model soup 0.7778; diagnostic 2-seed soup ensemble 0.7878). Official
+  test was opened exactly once after freeze; no architecture change followed.
+alternatives_rejected:
+- item: Claim a transfer advantage / strong transfer
+  because: >-
+    the valid 2-seed mean is mildly lower and the raw test is tied; only the
+    soup aggregator is better, so the honest reading is 'no meaningful loss',
+    not an advance.
+- item: Change the architecture, epoch, width, pooling or preprocessing after
+    seeing the test
+  because: >-
+    forbidden by the freeze protocol; the test is a final frozen evaluation.
+- item: Rescue the valid mean by a width / rounds / fusion-hidden / embedding
+    sweep or by adding connectivity (B-Full / ASB / Binding Composition)
+  because: >-
+    explicitly out of scope; only the typed-identity substitution is under
+    test, and on ZINC the connectivity-aware variant did not beat its
+    connectivity-free ablation.
+- item: Remove the radius-1 parent embedding in this round
+  because: >-
+    it is 1,648 params (0.59%) and not a parameter-explosion source; removing it
+    would break the single-variable comparison.
+- item: Drop patch_cont / global context / pair descriptors
+  because: >-
+    the question is only whether exact typed identity is replaceable; the rest
+    of the MolHIV representation stays.
+- item: Run a 3rd seed, class weighting, or an ensemble/selection search to
+    chase 0.80
+  because: >-
+    not pre-registered; the study is a transfer measurement, not an
+    architecture search, and 0.80 must not drive selection.
+consequences:
+  - >-
+    The exact typed-patch identity embedding is replaceable on MolHIV at a
+    73.9% parameter reduction with no meaningful frozen-test loss; cite
+    281,205 params as the new compact MolHIV shared-encoder figure.
+  - >-
+    The MolHIV H96 RPC (1,076,589 params, test raw 0.7626 / ensemble 0.7800)
+    remains the frozen matched baseline; the B-Bag variant is a validated
+    compact alternative, not a new champion (no valid gain, test gain only
+    under the soup aggregator).
+  - >-
+    Migrating the connectivity-aware Binding Composition method to MolHIV is
+    NOT justified by this result: the connectivity-free B-Bag already transfers
+    at no meaningful loss.
+  - >-
+    Results live only on branch exp/molhiv-shared-bag-patch-encoder in
+    results/molhiv_shared_bag_patch_encoder/; the ZINC/BCE line and its
+    caches/results were not touched or merged.
+revisit_if: >-
+  A pre-registered MolHIV study with a less noisy selection rule (e.g. more
+  seeds or a repeated-CV valid selection) shows a real valid gap, or the ~0.80
+  target is pursued with its own frozen protocol; the B-Bag substitution
+  question itself is closed.
