@@ -845,10 +845,15 @@ def run(mode: str, seed: int, device: str = "cpu", tag: str | None = None) -> di
 # ---------------------------------------------------------------------------
 
 
-def _load_frozen(mode: str, seed: int, tag: str | None = None):
+def _load_frozen(mode: str, seed: int, tag: str | None = None, state: str = "best"):
     tag = str(tag or f"fsar_v2_{mode.lower()}")
     model = build_model(mode, seed)
-    state_path = STATE_DIR / f"{tag}_seed{seed}_selection_state.pt"
+    if str(state) == "soup":
+        state_path = SOUP_DIR / f"{tag}_seed{seed}_top5_soup.pt"
+    elif str(state) == "best":
+        state_path = STATE_DIR / f"{tag}_seed{seed}_selection_state.pt"
+    else:
+        raise ValueError(f"unknown frozen state {state!r}; expected 'best' or 'soup'")
     model.load_state_dict(torch.load(state_path, map_location="cpu", weights_only=True))
     model.eval()
     return model
@@ -911,8 +916,10 @@ def _basis_block_diagnostics(model: v2.PatchPathFSARV2Model) -> dict[str, Any]:
     }
 
 
-def diagnostics(mode: str = "SAB", seed: int = 0, tag: str | None = None) -> dict[str, Any]:
-    model = _load_frozen(mode, seed, tag)
+def diagnostics(
+    mode: str = "SAB", seed: int = 0, tag: str | None = None, state: str = "best"
+) -> dict[str, Any]:
+    model = _load_frozen(mode, seed, tag, state=state)
     _train, valid_data, _ = build_datasets()
     batches = list(_loader(list(valid_data)[:DIAG_BATCHES], 128, False, 0))
     payload: dict[str, Any] = {
@@ -974,15 +981,22 @@ def diagnostics(mode: str = "SAB", seed: int = 0, tag: str | None = None) -> dic
     payload["grad_norms"] = _encoder_grad_norms(model)
     model.zero_grad()
     _write_json(
-        RESULTS_DIR / f"diagnostics_{tag or f'fsar_v2_{mode.lower()}'}_seed{seed}.json",
+        RESULTS_DIR
+        / (
+            f"diagnostics_{tag or f'fsar_v2_{mode.lower()}'}_seed{seed}"
+            + ("_soup" if str(state) == "soup" else "")
+            + ".json"
+        ),
         payload,
     )
     print(json.dumps(payload, indent=2, sort_keys=True, default=str), flush=True)
     return payload
 
 
-def witness(mode: str = "SAB", seed: int = 0, tag: str | None = None) -> dict[str, Any]:
-    model = _load_frozen(mode, seed, tag)
+def witness(
+    mode: str = "SAB", seed: int = 0, tag: str | None = None, state: str = "best"
+) -> dict[str, Any]:
+    model = _load_frozen(mode, seed, tag, state=state)
     _train, valid_data, _ = build_datasets()
     batches = list(_loader(list(valid_data)[:WITNESS_BATCHES], 128, False, 0))
     channel_deltas: dict[str, list[float]] = {"A": [], "S": [], "B": []}
@@ -1029,15 +1043,22 @@ def witness(mode: str = "SAB", seed: int = 0, tag: str | None = None) -> dict[st
         "official_test_loaded": False,
     }
     _write_json(
-        RESULTS_DIR / f"witness_{tag or f'fsar_v2_{mode.lower()}'}_seed{seed}.json",
+        RESULTS_DIR
+        / (
+            f"witness_{tag or f'fsar_v2_{mode.lower()}'}_seed{seed}"
+            + ("_soup" if str(state) == "soup" else "")
+            + ".json"
+        ),
         payload,
     )
     print(json.dumps(payload, indent=2, sort_keys=True, default=str), flush=True)
     return payload
 
 
-def interventions(mode: str = "SAB", seed: int = 0, tag: str | None = None) -> dict[str, Any]:
-    model = _load_frozen(mode, seed, tag)
+def interventions(
+    mode: str = "SAB", seed: int = 0, tag: str | None = None, state: str = "best"
+) -> dict[str, Any]:
+    model = _load_frozen(mode, seed, tag, state=state)
     _train, valid_data, _ = build_datasets()
     loader = _selection_loader(valid_data)
     rows: dict[str, float] = {}
@@ -1086,7 +1107,12 @@ def interventions(mode: str = "SAB", seed: int = 0, tag: str | None = None) -> d
         "official_test_loaded": False,
     }
     _write_json(
-        RESULTS_DIR / f"interventions_{tag or f'fsar_v2_{mode.lower()}'}_seed{seed}.json",
+        RESULTS_DIR
+        / (
+            f"interventions_{tag or f'fsar_v2_{mode.lower()}'}_seed{seed}"
+            + ("_soup" if str(state) == "soup" else "")
+            + ".json"
+        ),
         payload,
     )
     print(json.dumps(payload, indent=2, sort_keys=True, default=str), flush=True)
@@ -1299,6 +1325,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--tag", default=None)
     parser.add_argument("--steps", type=int, default=5)
+    parser.add_argument("--state", default="best", choices=["best", "soup"])
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--patience", type=int, default=None)
     parser.add_argument("--force", action="store_true")
@@ -1336,11 +1363,26 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif arguments.stage == "soup":
         soup(arguments.mode, int(arguments.seed), tag=arguments.tag)
     elif arguments.stage == "diagnostics":
-        diagnostics(mode=arguments.mode, seed=int(arguments.seed), tag=arguments.tag)
+        diagnostics(
+            mode=arguments.mode,
+            seed=int(arguments.seed),
+            tag=arguments.tag,
+            state=arguments.state,
+        )
     elif arguments.stage == "witness":
-        witness(mode=arguments.mode, seed=int(arguments.seed), tag=arguments.tag)
+        witness(
+            mode=arguments.mode,
+            seed=int(arguments.seed),
+            tag=arguments.tag,
+            state=arguments.state,
+        )
     elif arguments.stage == "interventions":
-        interventions(mode=arguments.mode, seed=int(arguments.seed), tag=arguments.tag)
+        interventions(
+            mode=arguments.mode,
+            seed=int(arguments.seed),
+            tag=arguments.tag,
+            state=arguments.state,
+        )
     elif arguments.stage == "gate":
         gate()
     elif arguments.stage == "decide":
