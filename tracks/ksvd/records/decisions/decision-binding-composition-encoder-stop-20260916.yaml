@@ -1,0 +1,73 @@
+decision_id: decision-binding-composition-encoder-stop-20260916
+created: '2026-09-16T10:40:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Binding Composition Encoder (BCE) -> Decision Case D: STOP (composition branch
+  dead / constant), with the pre-registered seed0 guard exceeded. The single
+  authorised seed 0 Top-5 soup valid = 0.1332753 is above the guard
+  B-Bag + 0.003 = 0.1268055 by +0.0064698 and is worse than B-Bag (+0.0094698 vs
+  2-seed soup; +0.0058935 vs B-Bag seed0), B-Full seed0 (+0.0134573) and A2
+  seed0 (+0.0115817). The shared Compose operator collapsed to a constant
+  function of the decomposition interface (composition_disagreement 6.69e-9 vs
+  0.1859 at init; candidate cross-decomposition std exactly 0.0), 53.7% of
+  encoder parameters were annihilated to ~0 (all atom/bond/distance/root
+  embeddings; 99.7% of Compose with compose.2.weight exactly 0), and e_struct is
+  near rank-1 (effective rank 1.053). Only SupportUpdate and Fusion remain
+  alive, so BCE degenerates to a size-conditioned support-state encoder with a
+  dead composition branch. Do NOT promote, do NOT buy seed 1, do NOT sweep
+  widths / hidden sizes / activation / MAX_SUPPORT_SIZE / aggregation /
+  optimizer / weight decay, and do NOT open the official test. A single repair
+  direction (give the composition branch a non-vanishing task gradient, e.g.
+  exclude primitive/compose params from weight decay) is recorded but NOT
+  authorized; it needs its own fresh pre-registration and frozen witness.
+alternatives_rejected:
+- item: Promote BCE as a neutral/positive composition result
+  because: >-
+    the seed0 soup is outside the pre-registered guard by +0.0064698 and is
+    worse than every frozen reference, and the mechanism is collapsed; there is
+    no defensible composition signal.
+- item: Classify as a clean representational NO-GO for explicit composition
+  because: >-
+    the shared Compose operator never became a function of the decomposition
+    interface (disagreement 6.7e-9, candidate std 0.0), so the hypothesis was
+    not cleanly tested; the honest claim is only that this implementation does
+    not realize explicit composition.
+- item: Buy seed 1 to reduce seed noise
+  because: >-
+    the study is guard-gated on seed0 and the guard failed; a second seed is not
+    pre-registered and cannot rescue a dead mechanism.
+- item: Execute the minimal repair now
+  because: >-
+    excluding primitive/compose params from weight decay or changing the
+    gradient path changes forward/optimization semantics, so it requires a fresh
+    pre-registration and a frozen witness; it is recorded as a candidate only.
+- item: Attribute the gap to the combinatorial cost of MAX_SUPPORT_SIZE=4
+  because: >-
+    the scale audit shows the enumeration is affordable (5.41M supports /
+    13.51M train decompositions; max 3,015 per patch; ~170-185k per 128-molecule
+    batch) and the run completed with 665 MiB peak GPU memory; cost is not the
+    failure mode.
+- item: Open the ZINC official test
+  because: >-
+    the study is valid-only by design and the test is hard-locked; a test read
+    was never pre-registered.
+consequences:
+  - >-
+    BCE is STOPPED; the frozen Cell A references (B-Bag 0.1238055, B-Full
+    0.1189722, A2 0.1219141) stand unchanged.
+  - >-
+    Corroborating evidence for the existing line that patch-local connectivity
+    beyond aggregate primitives is not the task-relevant ZINC Cell A signal
+    (B-Full near rank-1; EOR inner-encoder collapse; ESB connectivity-free tie).
+  - >-
+    Reusable infrastructure is retained: a target-free explicit
+    support/decomposition chart with an independent brute-force reference, an
+    exact induced-decomposition contract, and 13 correctness tests, available
+    for any future pre-registered composition study.
+  - >-
+    No new run, seed, or architecture is queued from this decision; the next
+    move must be paradigm-level, not another local structural patch.
+related:
+  - notes/binding_composition_encoder.md
+  - records/claims/claim-binding-composition-encoder-collapse-20260916.yaml
