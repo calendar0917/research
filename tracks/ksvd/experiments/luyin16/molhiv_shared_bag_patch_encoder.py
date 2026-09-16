@@ -1658,7 +1658,7 @@ def sanity(device: str = "cpu") -> dict[str, Any]:
     )
 
     # connectivity-free witness: the encoder must not consume edge endpoints
-    batch_a, batch_b = _adversarial_structural_pair()
+    batch_a, batch_b = _adversarial_structural_pair(dev)
     encoder = model.bag_encoder.eval()
     with torch.no_grad():
         token_a = encoder(batch_a)
@@ -1707,7 +1707,9 @@ class _StructBatch:
         self.struct_edge_patch = edge_patch
 
 
-def _adversarial_structural_pair() -> tuple[_StructBatch, _StructBatch]:
+def _adversarial_structural_pair(
+    device: torch.device | str = "cpu",
+) -> tuple[_StructBatch, _StructBatch]:
     """Identical primitive multisets, different (unused) connectivity.
 
     The encoder receives no endpoints at all, so both containers produce the
@@ -1720,12 +1722,17 @@ def _adversarial_structural_pair() -> tuple[_StructBatch, _StructBatch]:
     patch = torch.zeros(5, dtype=torch.long)
     bond_fields = torch.zeros((4, len(BOND_FEATURE_DIMS)), dtype=torch.long)
     edge_patch = torch.zeros(4, dtype=torch.long)
+    moved = (
+        atom_fields.to(device),
+        root.to(device),
+        dist.to(device),
+        patch.to(device),
+        bond_fields.to(device),
+        edge_patch.to(device),
+    )
     return (
-        _StructBatch(atom_fields, root, dist, patch, bond_fields, edge_patch),
-        _StructBatch(
-            atom_fields.clone(), root.clone(), dist.clone(), patch.clone(),
-            bond_fields.clone(), edge_patch.clone(),
-        ),
+        _StructBatch(*moved),
+        _StructBatch(*(tensor.clone() for tensor in moved)),
     )
 
 
