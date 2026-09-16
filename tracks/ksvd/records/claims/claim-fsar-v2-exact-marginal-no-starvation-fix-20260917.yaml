@@ -1,0 +1,108 @@
+claim_id: claim-fsar-v2-exact-marginal-no-starvation-fix-20260917
+created: '2026-09-17T02:30:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On deterministic-A100 ZINC (seed0, Top-5 soup, official test never loaded),
+  replacing the FSAR-v1 mean/std learned-embedding attribute marginal with an
+  exactly lossless discrete categorical marginal (root one-hot + context atom
+  counts + bond counts, 60-D raw -> 64-D A_v, collision-free on 1,148/1,148
+  sampled train+valid frames) does NOT remove the A information starvation and
+  in fact degrades every nested mode: FSAR-v2 soup A 0.165132 / SA 0.167141 /
+  SAB 0.154115 / SAM 0.170986 vs FSAR-v1 A 0.157917 / SA 0.151617 / SAB
+  0.130913 / SAM 0.134182 (deltas +0.007215 / +0.015524 / +0.023202 /
+  +0.036804). The pre-registered A guard fails (A_exact 0.165132 > 0.145,
+  improvement -0.007215 < 0.010) -> Case D. The information-resolution confound
+  is verified removed: A_exact determines the complete categorical multiset that
+  B's shared entity embeddings see, so the only principled extra B information
+  is attribute<->structural-role assignment; therefore the FSAR-v1 A weakness is
+  not primarily mean/std marginal information loss but a relational
+  interface / representation-optimization issue. The aligned channel is still
+  functionally used: fixed-centre shuffle gives A exactly stable (0.0) and S
+  exactly stable (0.0) with B responding 0.156; full-valid interventions no-B
+  +0.7598 (best) / +0.8022 (soup), shuffle-assignment +0.3702 / +0.3414; and
+  SAM - SAB = 0.016871 >= 0.001, i.e. a seed0 aligned increment beyond the
+  marginal-only capacity control that is larger than FSAR-v1's 0.00327, but
+  inside a clearly degraded absolute regime. The pre-registered explicit-S gate
+  is CLOSED (A_exact > 0.145), so the explicit structural operator basis is
+  implemented and unit-tested but NOT formally run; seed1 is NOT authorized.
+scope: >-
+  ZINC-12K official train/valid only; deterministic A100-SXM4-40GB; seed 0; fixed
+  equal-weight Top-5 soup; valid-selection MAE. Training commit 81f70da,
+  eval-only commit 56ae3c3. No official test, no MolHIV, no width / A-transform
+  / DeepSets / quantile / basis sweep, no auxiliary or distillation loss, no
+  explicit-S formal run, no seed1.
+supporting_evidence:
+  - >-
+    Schema audit: x single categorical field (28-category schema, observed
+    0..20 train / 0..15 valid); edge_attr single categorical (4-category schema,
+    observed 1..3).
+  - >-
+    Collision audit: 200 molecules / 4,645 frames, 1,148 unique marginal keys,
+    1,148 unique raw vectors, 0 collisions, 0 same-key/different-raw mismatches
+    -> lossless_for_defined_marginal = true.
+  - >-
+    Seed0 soups: A 0.165132 / SA 0.167141 / SAB 0.154115 / SAM 0.170986; raw
+    bests 0.168621@237 / 0.167918@201 / 0.160203@236 / 0.175238@165; params
+    68,281 / 89,273 / 106,873 / 106,867 (SAM - SAB = -6, < 0.1 %).
+  - >-
+    Aligned residual SAM - SAB = 0.016871 >= 0.001; SA -> SAB 0.013027;
+    SA -> SAM -0.003845.
+  - >-
+    Fixed-centre shuffle (SAB best / soup): mean abs delta A 0.0 / 0.0,
+    S 0.0 / 0.0, B 0.1562 / 0.1560.
+  - >-
+    Full-valid interventions (SAB best): true 0.160203, no_A +0.8361,
+    no_S +0.0274, no_B +0.7598, shuffle +0.3702; (soup) true 0.154115,
+    no_A +0.8112, no_S +0.0316, no_B +0.8022, shuffle +0.3414.
+  - >-
+    SAB diagnostics: A/B/S norms 3.07/1.70/0.99, cross-mol std 0.338/0.322/0.166,
+    effective rank 12.79/7.31/5.49, node-init contributions 10.27/4.28/2.48;
+    all gradient blocks non-zero.
+  - >-
+    12/12 architecture correctness gates pass local and remote
+    (losslessness, collision-freedom, A topology-blindness, explicit-basis
+    chemistry purity / relabel equivariance, no message passing in explicit S,
+    assignment moves B only, plus inherited contract); CUDA smoke SAB/SABE.
+  - >-
+    No raw chemical field reaches B outside A_exact
+    (a_exact_reconstructs_full_attribute_multiset).
+contradicting_evidence:
+  - >-
+    Only seed0 was run (seed1 blocked by the pre-registered A failure), so all
+    deltas are single-seed.
+  - >-
+    The v2 degradation is consistent across all four modes, so it is not
+    isolated to the A channel alone; the wider 64-D A and the larger node-init
+    input are part of the pre-registered change, and the exact-count raw
+    representation may carry an optimization cost. The claim is limited to
+    "complete marginals do not fix the starvation", not to a causal isolation of
+    the count representation.
+  - >-
+    The aligned residual grew while absolute performance degraded, so the 0.0169
+    increment is measured in a non-competitive regime and cannot be read as a
+    competitive binding gain.
+evidence:
+  - results/fsar_v2/schema_audit.json
+  - results/fsar_v2/collision_audit.json
+  - results/fsar_v2/parameter_accounting.json
+  - results/fsar_v2/sanity.json (12/12)
+  - results/fsar_v2/soup_fsar_v2_a_seed0.json
+  - results/fsar_v2/soup_fsar_v2_sa_seed0.json
+  - results/fsar_v2/soup_fsar_v2_sab_seed0.json
+  - results/fsar_v2/soup_fsar_v2_sam_seed0.json
+  - results/fsar_v2/diagnostics_fsar_v2_a_seed0.json
+  - results/fsar_v2/diagnostics_fsar_v2_sa_seed0.json
+  - results/fsar_v2/diagnostics_fsar_v2_sab_seed0.json
+  - results/fsar_v2/diagnostics_fsar_v2_sab_seed0_soup.json
+  - results/fsar_v2/witness_fsar_v2_sab_seed0.json
+  - results/fsar_v2/witness_fsar_v2_sab_seed0_soup.json
+  - results/fsar_v2/interventions_fsar_v2_sab_seed0.json
+  - results/fsar_v2/interventions_fsar_v2_sab_seed0_soup.json
+  - results/fsar_v2/explicit_gate.json
+  - results/fsar_v2/decision.json
+  - results/fsar_v2/report.json
+  - notes/fsar_v2_preregistration.md
+  - notes/fsar_v2_seed0_case_verdict.md
+  - tests/test_fsar_v2.py (12 pass)
