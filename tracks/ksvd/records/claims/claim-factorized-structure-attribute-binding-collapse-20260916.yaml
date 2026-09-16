@@ -1,0 +1,107 @@
+claim_id: claim-factorized-structure-attribute-binding-collapse-20260916
+created: '2026-09-16T14:30:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the frozen deterministic-A100 ZINC cell A protocol, the pre-registered
+  Factorized Structure--Attribute Binding encoder (FSAB) does NOT realize its
+  factorization: the local token encoder collapses to an exactly constant
+  function of the patch. Inside each rooted radius-2 reference frame the three
+  channels are separated by input access -- S reads only topology (root flag,
+  root distance, untyped adjacency), A reads only atom/bond categories grouped
+  by patch membership (never the root flag, distance, degree, role, src, dst or
+  adjacency), and B is the only channel that pairs a structural role state with
+  the attribute of the same node/edge after patch-internal centering -- and
+  fusion is z = W_S S + W_A A + W_B B + b, e = z + MLP(z) into the inherited
+  16-D token width. The candidate is 81,423 params (FSAB encoder 32,080: S
+  16,368 / A 5,264 / B 8,592 / fusion 1,856; downstream inherited 49,343;
+  dataset-dependent vocabulary params 0; no typed_embedding). The encoder was
+  externally valid and alive at initialization (30/30 sanity checks; S ignores
+  attributes exactly, A ignores topology exactly, binding witness positive,
+  node-relabel and edge-order invariant, batch invariant), but after training
+  the selected checkpoint (epoch 234) emits a BIT-IDENTICAL token for every
+  molecule: S/A/B/e norm std 9.31e-10 / 1.86e-09 / 2.33e-09 / 0.0 with
+  effective rank 0.0 for all four, weighted contributions W_S.S / W_A.A /
+  W_B.B falling from 0.646 / 0.221 / 0.233 at init to 1.21e-4 / 5.66e-4 /
+  2.63e-4, and 93.9% of the encoder's 32,080 parameters exactly zero (0.15% at
+  init; the runner's per-tensor unweighted mean reports 81.8%). An independent
+  probe outside the runner's diagnostic path, on 200 valid molecules at batch
+  size one with a fresh model as control, reproduces this exactly: fresh
+  cross-molecule std 1.397e-02 / 7.639e-03 / 1.950e-03 for S / A / B versus
+  exactly 0.0 for all channels trained, while identical per-molecule vectors are
+  emitted for molecules whose atom counts are 231/111/115/163/144 and whose
+  atom-category sums are 141/27/160/180/116. The model still predicts
+  differently per molecule (0.574 / 2.492 / 1.603 / 1.487 / 1.028), so the
+  forward pass is intact and the inherited channels carry the signal. Eval-only
+  damage agrees exactly: witness mean abs delta 0.0 for S, A, B, e and pred with
+  B_delta_above_noise=false, and interventions on the full 1,000-molecule valid
+  split give delta_no_S -2.068e-08, delta_no_A -1.615e-07, delta_no_B -6.992e-08
+  and delta_shuffle_B exactly 0.0 across 3 repeats. Performance nevertheless
+  passes the pre-registered seed0 guard: Top-5 soup valid 0.12295305345853558
+  <= 0.12938177864899625 (B-Bag seed0 + 0.002), i.e. -0.0044287 versus the
+  matched B-Bag seed0 soup 0.12738177864899625, +0.0031350 versus B-Full seed0
+  0.11981802638241788 and +0.0012594 versus A2 seed0 0.12169302585240742. That
+  number is therefore NOT evidence for the factorization: it lies inside the
+  B-Bag per-seed spread (seed0 0.1273818 vs seed1 0.1202293, spread 0.0072) and
+  is worse than both A2 and B-Full seed0 soups. Mechanism: the same
+  near-zero-gradient primitive-parameter annihilation by Adam weight decay
+  already documented for Z1/ASB, BCE and EOR -- once the inherited residual path
+  fits the target the local token is redundant, the S/A/B fusion weights decay,
+  encoder gradients vanish (gS/gA/gB ~1e-5 by epoch 140-240) and weight decay
+  finishes the erasure. This is a replication of that mechanism in a third
+  independent architecture, NOT a clean refutation of the factorization
+  hypothesis, which was not cleanly tested.
+scope: >-
+  ZINC-12K official train/valid only (10,000/1,000); deterministic-A100 regime
+  (torch.use_deterministic_algorithms(True)); single seed 0, guard- and
+  mechanism-gated; fixed equal-weight Top-5 soup; valid-selection metric. One
+  variable at a time: only the local patch token encoder differs from the frozen
+  B-Full reference; radius-2 patches, relation construction, T=2 tied recurrent
+  pair--centre, global/topology channels, head, optimizer (Adam lr 1e-3, wd 1e-5),
+  batch 128, gradient clip 5.0, 240-epoch/patience-40 schedule and the Top-5 soup
+  are inherited unchanged. Training loss is ZINC regression L1/MAE only. The
+  official ZINC test was never loaded (official_test_loaded=false in every
+  produced JSON). Seed 1 was not purchased. No architecture or optimizer sweep.
+supporting_evidence:
+  - >-
+    Selected checkpoint diagnostics: S/A/B/e norm std 9.31e-10 / 1.86e-09 /
+    2.33e-09 / 0.0 and effective rank 0.0 for every channel; e cross-molecule std
+    exactly 0.0.
+  - >-
+    Independent out-of-runner probe (batch size 1, 200 valid molecules, fresh
+    model control): fresh cross-molecule std 1.397e-02 / 7.639e-03 / 1.950e-03
+    for S / A / B versus exactly 0.0 trained; identical per-molecule vectors
+    across molecules with atom counts 231/111/115/163/144.
+  - >-
+    93.9% of encoder parameters exactly zero at the selected checkpoint versus
+    0.15% at init (|w| < 1e-30).
+  - >-
+    Eval-only witnesses: witness mean abs delta exactly 0.0 for S, A, B, e and
+    pred; B_delta_above_noise=false; interventions delta_no_S -2.068e-08,
+    delta_no_A -1.615e-07, delta_no_B -6.992e-08, delta_shuffle_B 0.0 (3
+    identical repeats) at valid MAE true 0.1259851778735756.
+  - >-
+    Monotone channel decay in the epoch curve: |S| 0.635 / 0.246 / 0.038 / 0.006
+    and |B| 0.328 / 0.295 / 0.086 / 0.0042 at epochs 1 / 20 / 140 / 240, with
+    gS, gA, gB ~1e-5 at the end.
+  - >-
+    The guard nevertheless passes: Top-5 soup 0.12295305345853558 <=
+    0.12938177864899625, -0.0044287 vs B-Bag seed0, +0.0031350 vs B-Full seed0,
+    +0.0012594 vs A2 seed0.
+  - >-
+    Purity and invariance audit at the same commit: S_ignores_attributes exact,
+    A_ignores_topology exact, shuffle_S unchanged (0.0), shuffle_A unchanged
+    within float noise, shuffle_B changes at init (9.15e-03), edge-shuffle
+    leaves A unchanged and changes B, node-relabel and batch invariance, AST
+    audit finds no attention, no auxiliary loss, no distillation and L1-only
+    training; 17 unit tests plus 469 related repository tests pass; 30/30 sanity
+    checks on both the local and the remote checkout.
+  - >-
+    Reproduces the mechanism already recorded in
+    claim-binding-composition-encoder-collapse-20260916, the Z1/ASB Case E
+    collapse and claim-explicit-object-relational-reasoning-20260915.
+refuted_claims: []
+related:
+  - notes/factorized_structure_attribute_binding.md
+  - records/decisions/decision-factorized-structure-attribute-binding-stop-20260916.yaml
