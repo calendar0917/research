@@ -1367,3 +1367,485 @@ class BindingCompositionEncoder(nn.Module):
             stats["multi_decomposition_candidate_count"] = 0
             stats["composition_disagreement_mean"] = 0.0
         self.last_stats = stats
+
+
+class FactorizedStructureAttributeBindingEncoder(nn.Module):
+    """Factorized Structure--Attribute Binding (FSAB) encoder for rooted patches.
+
+    The radius-2 patch is used only as a **rooted local reference frame**: for
+    every centre atom ``v`` it provides a local coordinate system in which the
+    model can observe (1) the topology / structural role, (2) the chemical
+    attribute multiset and (3) the correspondence between the two.  The patch is
+    never called a motif, a learned object or a discovered structure.
+
+    Three channels are separated by **input access**, not by hoping that three
+    MLPs learn the right semantics:
+
+    ``S`` (structure / topology only)
+        Reads ``struct_root`` (root flag), ``struct_dist`` (root-relative BFS
+        distance) and the *untyped* adjacency ``struct_src`` / ``struct_dst``.
+        It never reads ``struct_atom``, ``struct_bond`` or any typed
+        certificate.  It is a small 2-round edge-aware message-passing encoder
+        with a shared topology base vector::
+
+            r_u^0   = root_embed(is_root_u) + dist_embed(d_u) + topology_base
+            r_u^1..R = U_S([r_u ; mean_{w in N(u)} M_S([r_u ; r_w])])
+            S_v     = SPool([r_root ; mean_u r_u ; std_u r_u])
+
+        The per-node role state ``r_u`` is retained as the topology side of the
+        binding channel.
+
+    ``A`` (attribute marginals only)
+        Reads ``struct_atom`` and ``struct_bond`` grouped by patch membership
+        (``struct_patch`` / ``struct_edge_patch``) and nothing else.  It never
+        reads the root flag, the root distance, the node degree, any structural
+        role, ``struct_src`` / ``struct_dst`` or any adjacency propagation.
+        In particular it does **not** single out the root atom, because
+        "this attribute belongs to the root" is already a structure--attribute
+        binding::
+
+            a_u = AtomMLP(atom_embed(x_u)),  e_uw = BondMLP(bond_embed(t_uw))
+            A_v = A_fuse([mean a, std a, mean e, std e])
+
+    ``B`` (centered structure--attribute interaction)
+        The only channel that sees a structural role and the attribute of the
+        *same* node / edge.  Both sides are centered inside the patch before a
+        low-rank product, so ``B`` is the patch-level analogue of
+        ``P(S, A) - P(S) P(A)`` rather than a re-encoding of the two marginals::
+
+            r~_u  = r_u  - mean_j r_j        a~_u = a_u - mean_j a_j
+            b_u   = U_r r~_u  (*)  U_a a~_u
+            B_v^node = [mean_u b_u ; std_u b_u]
+
+            redge_uw = E_S([r_u + r_w ; |r_u - r_w| ; d_u ; d_w])   (topology)
+            aedge_uw = E_A(bond type_uw)                            (attribute)
+            b_uw  = U_E (redge - mean) (*) V_E (aedge - mean)
+            B_v^edge = [mean_uw b_uw ; std_uw b_uw]
+
+            B_v = B_fuse([B_v^node ; B_v^edge])
+
+        There is no attention, no learned scalar weighting, no orthogonality /
+        HSIC / MI loss and no auxiliary objective: the input contract defines
+        the three semantics.
+
+    Fusion (no Transformer, no cross-attention)::
+
+        z_v = W_S S_v + W_A A_v + W_B B_v + bias
+        e_v = z_v + FusionMLP(z_v)    in R^output_dim (16, matching B-Full)
+
+    There is no B-Bag / B-Full / raw typed token bypass and no exact patch
+    identity: the local token *is* ``S + A + B``.
+
+    Evaluation-only channel interventions (never used for training, never
+    differentiated through) are supported through :meth:`set_intervention`:
+    ``{"S"}`` / ``{"A"}`` / ``{"B"}`` zero the corresponding fusion input.
+
+    Input contract (attached by ``zinc_factorized_binding_encoder``):
+
+    ``struct_atom``       int64 ``[T]``  atom category per patch-node
+    ``struct_root``       int64 ``[T]``  1 for the patch root, else 0
+    ``struct_dist``       int64 ``[T]``  BFS distance from the patch root
+    ``struct_patch``      int64 ``[T]``  patch index owning each node
+    ``struct_src``        int64 ``[E]``  directed edge source (batch-local node)
+    ``struct_dst``        int64 ``[E]``  directed edge target (batch-local node)
+    ``struct_bond``       int64 ``[E]``  bond category (attribute channel only)
+    ``struct_edge_patch`` int64 ``[E]``  bond -> patch grouping index
+    """
+
+    def __init__(
+        self,
+        *,
+        atom_categories: int = 28,
+        bond_categories: int = 4,
+        n_distance_bins: int = 3,
+        role_dim: int = 32,
+        s_dim: int = 16,
+        a_dim: int = 16,
+        b_dim: int = 16,
+        attr_dim: int = 16,
+        s_hidden: int = 32,
+        a_hidden: int = 32,
+        b_hidden: int = 32,
+        fusion_hidden: int = 32,
+        rounds: int = 2,
+        output_dim: int = 16,
+        activation: str = "silu",
+        include_std_pool: bool = True,
+    ) -> None:
+        super().__init__()
+        self.atom_categories = int(atom_categories)
+        self.bond_categories = int(bond_categories)
+        self.n_distance_bins = int(n_distance_bins)
+        self.role_dim = int(role_dim)
+        self.s_dim = int(s_dim)
+        self.a_dim = int(a_dim)
+        self.b_dim = int(b_dim)
+        self.attr_dim = int(attr_dim)
+        self.s_hidden = int(s_hidden)
+        self.a_hidden = int(a_hidden)
+        self.b_hidden = int(b_hidden)
+        self.fusion_hidden = int(fusion_hidden)
+        self.rounds = int(rounds)
+        self.output_dim = int(output_dim)
+        self.activation_name = str(activation)
+        self.include_std_pool = bool(include_std_pool)
+        if min(
+            self.atom_categories,
+            self.bond_categories,
+            self.n_distance_bins,
+            self.role_dim,
+            self.s_dim,
+            self.a_dim,
+            self.b_dim,
+            self.attr_dim,
+            self.s_hidden,
+            self.a_hidden,
+            self.b_hidden,
+            self.fusion_hidden,
+            self.rounds,
+            self.output_dim,
+        ) < 1:
+            raise ValueError("FSAB dimensions must be positive")
+        if self.activation_name not in {"silu", "gelu"}:
+            raise ValueError("FSAB activation must be 'silu' or 'gelu'")
+
+        def _act() -> nn.Module:
+            return nn.SiLU() if self.activation_name == "silu" else nn.GELU()
+
+        # Interface-compatible audit metadata (mirrors the sibling encoders).
+        self.node_dim = self.role_dim
+        self.edge_dim = self.b_dim
+        self.hidden_dim = self.fusion_hidden
+        self.kind = "factorized_binding"
+
+        # --- structure stream S (topology only) ------------------------------
+        self.root_embedding = nn.Embedding(2, self.role_dim)
+        self.distance_embedding = nn.Embedding(
+            self.n_distance_bins, self.role_dim
+        )
+        self.topology_base = nn.Parameter(torch.zeros(self.role_dim))
+        self.message = nn.ModuleList(
+            nn.Sequential(
+                nn.Linear(2 * self.role_dim, self.s_hidden),
+                _act(),
+                nn.Linear(self.s_hidden, self.role_dim),
+            )
+            for _ in range(self.rounds)
+        )
+        self.update = nn.ModuleList(
+            nn.Sequential(
+                nn.Linear(2 * self.role_dim, self.s_hidden),
+                _act(),
+                nn.Linear(self.s_hidden, self.role_dim),
+            )
+            for _ in range(self.rounds)
+        )
+        s_pool_width = 3 * self.role_dim if self.include_std_pool else 2 * self.role_dim
+        self.structure_pool = nn.Sequential(
+            nn.Linear(s_pool_width, self.s_hidden),
+            _act(),
+            nn.Linear(self.s_hidden, self.s_dim),
+        )
+
+        # --- attribute stream A (strict marginal only) ------------------------
+        self.atom_embedding = nn.Embedding(self.atom_categories, self.attr_dim)
+        self.bond_embedding = nn.Embedding(self.bond_categories, self.attr_dim)
+        self.atom_mlp = nn.Sequential(
+            nn.Linear(self.attr_dim, self.a_hidden),
+            _act(),
+            nn.Linear(self.a_hidden, self.attr_dim),
+        )
+        self.bond_mlp = nn.Sequential(
+            nn.Linear(self.attr_dim, self.a_hidden),
+            _act(),
+            nn.Linear(self.a_hidden, self.attr_dim),
+        )
+        a_fuse_width = 4 * self.attr_dim
+        self.attribute_fuse = nn.Sequential(
+            nn.Linear(a_fuse_width, self.a_hidden),
+            _act(),
+            nn.Linear(self.a_hidden, self.a_dim),
+        )
+
+        # --- binding stream B (centered low-rank interaction) -----------------
+        self.node_role_projection = nn.Linear(self.role_dim, self.b_dim, bias=False)
+        self.node_attribute_projection = nn.Linear(
+            self.attr_dim, self.b_dim, bias=False
+        )
+        # Pure-topology edge role: endpoint roles + symmetric endpoint root
+        # distances (symmetric under the arbitrary directed-edge listing, so the
+        # pooled edge binding is invariant to edge order and direction).
+        edge_role_width = 3 * self.role_dim
+        self.edge_role_mlp = nn.Sequential(
+            nn.Linear(edge_role_width, self.b_hidden),
+            _act(),
+            nn.Linear(self.b_hidden, self.b_dim),
+        )
+        self.edge_attribute_mlp = nn.Sequential(
+            nn.Linear(self.attr_dim, self.b_hidden),
+            _act(),
+            nn.Linear(self.b_hidden, self.b_dim),
+        )
+        self.edge_role_projection = nn.Linear(self.b_dim, self.b_dim, bias=False)
+        self.edge_attribute_projection = nn.Linear(
+            self.b_dim, self.b_dim, bias=False
+        )
+        b_fuse_width = 4 * self.b_dim if self.include_std_pool else 2 * self.b_dim
+        self.binding_fuse = nn.Sequential(
+            nn.Linear(b_fuse_width, self.b_hidden),
+            _act(),
+            nn.Linear(self.b_hidden, self.b_dim),
+        )
+
+        # --- fusion ----------------------------------------------------------
+        self.structure_weight = nn.Linear(self.s_dim, self.output_dim, bias=False)
+        self.attribute_weight = nn.Linear(self.a_dim, self.output_dim, bias=False)
+        self.binding_weight = nn.Linear(self.b_dim, self.output_dim, bias=False)
+        self.fusion_bias = nn.Parameter(torch.zeros(self.output_dim))
+        self.fusion_mlp = nn.Sequential(
+            nn.Linear(self.output_dim, self.fusion_hidden),
+            _act(),
+            nn.Linear(self.fusion_hidden, self.output_dim),
+        )
+
+        self.capture_diagnostics = False
+        self.last_stats: dict[str, Any] = {}
+        # Evaluation-only fusion-channel interventions (never trained through).
+        self.intervention_disable: frozenset[str] = frozenset()
+
+    # -- helpers -------------------------------------------------------------
+
+    @staticmethod
+    def _masked_std(
+        values: torch.Tensor,
+        group: torch.Tensor,
+        n_groups: int,
+        mean: torch.Tensor,
+    ) -> torch.Tensor:
+        dim = int(values.shape[1]) if values.dim() == 2 else 0
+        if values.numel() == 0:
+            return values.new_zeros((n_groups, dim))
+        total = values.new_zeros((n_groups, dim))
+        total.index_add_(0, group, values * values)
+        counts = torch.bincount(group, minlength=n_groups).to(values.dtype)
+        safe = counts.clamp_min(1.0).unsqueeze(1)
+        second_moment = total / safe
+        variance = (second_moment - mean * mean).clamp_min(0.0)
+        std = torch.sqrt(variance + 1.0e-8)
+        return std * (counts > 0).to(values.dtype).unsqueeze(1)
+
+    def set_intervention(self, disable: Sequence[str] | None) -> None:
+        """Set evaluation-only fusion-channel interventions ({"S","A","B"})."""
+        if disable is None:
+            self.intervention_disable = frozenset()
+            return
+        unknown = set(disable) - {"S", "A", "B"}
+        if unknown:
+            raise ValueError(f"unknown FSAB channel intervention {sorted(unknown)}")
+        self.intervention_disable = frozenset(str(item) for item in disable)
+
+    # -- forward -------------------------------------------------------------
+
+    def forward_channels(self, data: object) -> dict[str, torch.Tensor]:
+        """Return every FSAB channel value (for audit / diagnostic use)."""
+        atom = data.struct_atom.long()
+        root = data.struct_root.long()
+        distance = data.struct_dist.long()
+        unique_patch, node_patch = torch.unique(
+            data.struct_patch.long(), return_inverse=True
+        )
+        n_patches = int(unique_patch.numel())
+        n_nodes = int(atom.shape[0])
+        device = atom.device
+
+        # ---------------- structure stream S (topology only) ----------------
+        role = (
+            self.root_embedding(root)
+            + self.distance_embedding(distance)
+            + self.topology_base
+        )
+        src = data.struct_src.long()
+        dst = data.struct_dst.long()
+        for round_index in range(self.rounds):
+            if src.numel():
+                messages = self.message[round_index](
+                    torch.cat([role[src], role[dst]], dim=1)
+                )
+                aggregate = scatter_mean(messages, dst, n_nodes)
+            else:
+                aggregate = torch.zeros_like(role)
+            role = role + self.update[round_index](
+                torch.cat([role, aggregate], dim=1)
+            )
+
+        role_mean = scatter_mean(role, node_patch, n_patches)
+        blocks = [role_mean]
+        if self.include_std_pool:
+            blocks.append(self._masked_std(role, node_patch, n_patches, role_mean))
+        root_mask = root > 0
+        root_state = role.new_zeros((n_patches, self.role_dim))
+        if bool(root_mask.any()):
+            root_state.index_add_(0, node_patch[root_mask], role[root_mask])
+        blocks.insert(0, root_state)
+        structure = self.structure_pool(torch.cat(blocks, dim=1))
+
+        # -------------- attribute stream A (strict marginal only) -----------
+        node_attribute = self.atom_mlp(self.atom_embedding(atom))
+        atom_mean = scatter_mean(node_attribute, node_patch, n_patches)
+        attribute_blocks = [atom_mean]
+        if self.include_std_pool:
+            attribute_blocks.append(
+                self._masked_std(node_attribute, node_patch, n_patches, atom_mean)
+            )
+
+        bond = data.struct_bond.long()
+        if not hasattr(data, "struct_edge_patch"):
+            raise AttributeError(
+                "FSAB needs an explicit bond -> patch grouping index; the "
+                "attribute stream never reads edge endpoints"
+            )
+        edge_patch_ids = data.struct_edge_patch.long()
+        edge_group = (
+            torch.searchsorted(unique_patch, edge_patch_ids)
+            if edge_patch_ids.numel()
+            else edge_patch_ids
+        )
+        if bond.numel():
+            edge_attribute = self.bond_mlp(self.bond_embedding(bond))
+            bond_mean = scatter_mean(edge_attribute, edge_group, n_patches)
+            attribute_blocks.append(bond_mean)
+            if self.include_std_pool:
+                attribute_blocks.append(
+                    self._masked_std(
+                        edge_attribute, edge_group, n_patches, bond_mean
+                    )
+                )
+        else:
+            edge_attribute = node_attribute.new_zeros((0, self.attr_dim))
+            bond_mean = node_attribute.new_zeros((n_patches, self.attr_dim))
+            if self.include_std_pool:
+                attribute_blocks.append(torch.zeros_like(bond_mean))
+        if not self.include_std_pool:
+            # keep the pre-registered 4-block width explicit
+            pass
+        attributes = self.attribute_fuse(torch.cat(attribute_blocks, dim=1))
+
+        # --------- binding stream B (centered structure--attribute) ---------
+        role_center = role_mean
+        attribute_center = atom_mean
+        centered_role = role - role_center[node_patch]
+        centered_attribute = node_attribute - attribute_center[node_patch]
+        node_binding = self.node_role_projection(
+            centered_role
+        ) * self.node_attribute_projection(centered_attribute)
+        node_binding_mean = scatter_mean(node_binding, node_patch, n_patches)
+        binding_blocks = [node_binding_mean]
+        if self.include_std_pool:
+            binding_blocks.append(
+                self._masked_std(
+                    node_binding, node_patch, n_patches, node_binding_mean
+                )
+            )
+
+        if bond.numel():
+            edge_role = self.edge_role_mlp(
+                torch.cat(
+                    [
+                        role[src] + role[dst],
+                        torch.abs(role[src] - role[dst]),
+                        self.distance_embedding(distance[src])
+                        + self.distance_embedding(distance[dst]),
+                    ],
+                    dim=1,
+                )
+            )
+            edge_attribute_role = self.edge_attribute_mlp(edge_attribute)
+            edge_role_center = scatter_mean(edge_role, edge_group, n_patches)
+            edge_attribute_center = scatter_mean(
+                edge_attribute_role, edge_group, n_patches
+            )
+            edge_binding = self.edge_role_projection(
+                edge_role - edge_role_center[edge_group]
+            ) * self.edge_attribute_projection(
+                edge_attribute_role - edge_attribute_center[edge_group]
+            )
+            edge_binding_mean = scatter_mean(edge_binding, edge_group, n_patches)
+            binding_blocks.append(edge_binding_mean)
+            if self.include_std_pool:
+                binding_blocks.append(
+                    self._masked_std(
+                        edge_binding, edge_group, n_patches, edge_binding_mean
+                    )
+                )
+        else:
+            edge_binding = node_binding.new_zeros((0, self.b_dim))
+            edge_binding_mean = node_binding.new_zeros((n_patches, self.b_dim))
+            if self.include_std_pool:
+                binding_blocks.append(torch.zeros_like(edge_binding_mean))
+        binding = self.binding_fuse(torch.cat(binding_blocks, dim=1))
+
+        # ---------------------------- fusion --------------------------------
+        disabled = self.intervention_disable
+        if "S" in disabled:
+            structure = torch.zeros_like(structure)
+        if "A" in disabled:
+            attributes = torch.zeros_like(attributes)
+        if "B" in disabled:
+            binding = torch.zeros_like(binding)
+        z = (
+            self.structure_weight(structure)
+            + self.attribute_weight(attributes)
+            + self.binding_weight(binding)
+            + self.fusion_bias
+        )
+        output = z + self.fusion_mlp(z)
+
+        channels = {
+            "structure": structure,
+            "attributes": attributes,
+            "binding": binding,
+            "z": z,
+            "output": output,
+            "role": role,
+            "node_attribute": node_attribute,
+            "centered_role": centered_role,
+            "centered_attribute": centered_attribute,
+            "node_binding": node_binding,
+            "edge_binding": edge_binding,
+        }
+        if self.capture_diagnostics:
+            self.last_stats = self._stats_from_channels(channels, n_patches)
+        return channels
+
+    def _stats_from_channels(
+        self, channels: Mapping[str, torch.Tensor], n_patches: int
+    ) -> dict[str, Any]:
+        def _norm_stats(value: torch.Tensor, name: str) -> dict[str, float]:
+            if value.numel() == 0:
+                return {f"{name}_norm_mean": 0.0, f"{name}_norm_std": 0.0}
+            norms = value.detach().norm(dim=1)
+            return {
+                f"{name}_norm_mean": float(norms.mean()),
+                f"{name}_norm_std": float(norms.std(unbiased=False)),
+            }
+
+        stats: dict[str, Any] = {"n_patches": int(n_patches)}
+        stats.update(_norm_stats(channels["structure"], "S"))
+        stats.update(_norm_stats(channels["attributes"], "A"))
+        stats.update(_norm_stats(channels["binding"], "B"))
+        stats.update(_norm_stats(channels["output"], "e_struct"))
+        with torch.no_grad():
+            contribution = {
+                "W_S_S": self.structure_weight(channels["structure"]),
+                "W_A_A": self.attribute_weight(channels["attributes"]),
+                "W_B_B": self.binding_weight(channels["binding"]),
+            }
+        for key, value in contribution.items():
+            if value.numel() == 0:
+                stats[f"contribution_{key}"] = 0.0
+                continue
+            stats[f"contribution_{key}"] = float(value.detach().norm(dim=1).mean())
+        return stats
+
+    def forward(self, data: object) -> torch.Tensor:
+        return self.forward_channels(data)["output"]

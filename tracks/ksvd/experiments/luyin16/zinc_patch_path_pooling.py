@@ -88,6 +88,7 @@ from tracks.ksvd.experiments.luyin16.zinc_long_range_proxy import (
 from tracks.ksvd.experiments.luyin16.structural_patch_encoder import (
     AdaptiveStructureBindingEncoder,
     BindingCompositionEncoder,
+    FactorizedStructureAttributeBindingEncoder,
     SharedBagPatchEncoder,
     SharedStructuralPatchEncoder,
 )
@@ -1677,6 +1678,21 @@ class PatchPathModel(nn.Module):
         bag_node_hidden: int = 96,
         bag_bond_hidden: int = 48,
         bag_fusion_hidden: int = 104,
+        # Factorized Structure--Attribute Binding (``factorized_binding``): one
+        # topology-only stream S, one strict attribute-marginal stream A and one
+        # centered low-rank structure--attribute binding stream B.  Widths
+        # pre-registered once (no sweep).
+        fsab_role_dim: int = 32,
+        fsab_s_dim: int = 16,
+        fsab_a_dim: int = 16,
+        fsab_b_dim: int = 16,
+        fsab_attr_dim: int = 16,
+        fsab_s_hidden: int = 32,
+        fsab_a_hidden: int = 32,
+        fsab_b_hidden: int = 32,
+        fsab_fusion_hidden: int = 32,
+        fsab_rounds: int = 2,
+        fsab_activation: str = "silu",
         # Adaptive Structure-Binding cell (``adaptive_structure_binding``).
         # One shared cell that derives an explicit connected support inside the
         # radius-2 patch from the activation of structure--attribute bindings
@@ -1720,13 +1736,14 @@ class PatchPathModel(nn.Module):
             "explicit_object_relational",
             "adaptive_structure_binding",
             "binding_composition",
+            "factorized_binding",
         }:
             raise ValueError(
                 f"unknown patch_representation={self.patch_representation!r}; "
                 "expected 'typed_lookup', 'shared_structural', 'shared_bag', "
                 "'explicit_composer', 'explicit_basis_rank1', "
-                "'explicit_object_relational', 'adaptive_structure_binding' or "
-                "'binding_composition'"
+                "'explicit_object_relational', 'adaptive_structure_binding', "
+                "'binding_composition' or 'factorized_binding'"
             )
         self.structural_node_dim = int(structural_node_dim)
         self.structural_edge_dim = int(structural_edge_dim)
@@ -1736,6 +1753,17 @@ class PatchPathModel(nn.Module):
         self.bag_node_hidden = int(bag_node_hidden)
         self.bag_bond_hidden = int(bag_bond_hidden)
         self.bag_fusion_hidden = int(bag_fusion_hidden)
+        self.fsab_role_dim = int(fsab_role_dim)
+        self.fsab_s_dim = int(fsab_s_dim)
+        self.fsab_a_dim = int(fsab_a_dim)
+        self.fsab_b_dim = int(fsab_b_dim)
+        self.fsab_attr_dim = int(fsab_attr_dim)
+        self.fsab_s_hidden = int(fsab_s_hidden)
+        self.fsab_a_hidden = int(fsab_a_hidden)
+        self.fsab_b_hidden = int(fsab_b_hidden)
+        self.fsab_fusion_hidden = int(fsab_fusion_hidden)
+        self.fsab_rounds = int(fsab_rounds)
+        self.fsab_activation = str(fsab_activation)
         self.asb_bond_hidden = int(asb_bond_hidden)
         self.asb_bind_hidden = int(asb_bind_hidden)
         self.asb_gate_hidden = int(asb_gate_hidden)
@@ -2020,6 +2048,31 @@ class PatchPathModel(nn.Module):
                 output_dim=int(token_width),
                 max_support_size=self.bce_max_support_size,
                 activation=self.bce_activation,
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "factorized_binding":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='factorized_binding'"
+                )
+            self.structural_encoder = FactorizedStructureAttributeBindingEncoder(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                role_dim=self.fsab_role_dim,
+                s_dim=self.fsab_s_dim,
+                a_dim=self.fsab_a_dim,
+                b_dim=self.fsab_b_dim,
+                attr_dim=self.fsab_attr_dim,
+                s_hidden=self.fsab_s_hidden,
+                a_hidden=self.fsab_a_hidden,
+                b_hidden=self.fsab_b_hidden,
+                fusion_hidden=self.fsab_fusion_hidden,
+                rounds=self.fsab_rounds,
+                output_dim=int(token_width),
+                activation=self.fsab_activation,
             )
             del self.typed_embedding  # no vocabulary-sized table remains
             self.typed_embedding = None
