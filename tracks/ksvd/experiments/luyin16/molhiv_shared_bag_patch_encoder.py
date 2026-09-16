@@ -994,10 +994,11 @@ def data_sanity() -> dict[str, Any]:
         raise RuntimeError("MolHIV split sizes do not match the official scaffold split")
 
     # Cross-check that the structural patch ordering lines up with the audited
-    # exact-rooted cache on a bounded prefix of each split (never the full
-    # expensive cache when not needed).
+    # exact-rooted cache on a bounded prefix of each *selection* split (train,
+    # valid).  Official test records are deliberately not touched before the
+    # one-shot unlock; their ordering is validated inside ``test_eval``.
     checks: dict[str, Any] = {}
-    for name, limit in (("valid", 256), ("test", 256)):
+    for name, limit in (("train", 256), ("valid", 256)):
         if not (STRUCT_CACHE_DIR / f"structural_{name}.pkl").exists():
             checks[name] = {"checked": False, "reason": "structural cache absent"}
             continue
