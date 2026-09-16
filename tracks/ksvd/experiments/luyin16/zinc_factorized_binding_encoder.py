@@ -1782,15 +1782,57 @@ def decide(tag: str = "fsab") -> dict[str, Any]:
         guard_pass = bool(
             seed0 is not None and float(seed0["soup_valid"]) <= SEED0_GUARD
         )
+        # Seed0-only classification uses the matched per-seed references so the
+        # single-seed verdict is apples-to-apples (seed0 vs seed0).
+        delta_bag0 = (
+            float(seed0["soup_valid"]) - REFERENCE_BBAG_SOUP_PER_SEED[0]
+            if seed0 is not None
+            else float("nan")
+        )
+        delta_bfull0 = (
+            float(seed0["soup_valid"]) - REFERENCE_BFULL_SOUP_PER_SEED[0]
+            if seed0 is not None
+            else float("nan")
+        )
+        delta_a20 = (
+            float(seed0["soup_valid"]) - REFERENCE_A2_SOUP_PER_SEED[0]
+            if seed0 is not None
+            else float("nan")
+        )
+        if seed0 is None:
+            case0 = "no_seed0_run"
+        elif not channels_alive:
+            case0 = "E_binding_channel_collapsed"
+        elif delta_bfull0 <= 0.002:
+            case0 = "A_fsab_alive_near_or_above_bfull"
+        elif delta_bag0 < 0 < delta_bfull0:
+            case0 = "B_fsab_alive_above_bbag_below_bfull"
+        elif abs(delta_bag0) < STRONG_GATE:
+            case0 = "C_fsab_alive_tied_with_bbag"
+        elif delta_bag0 >= REGRESSION_GATE:
+            case0 = "bad_regression"
+        else:
+            case0 = "D_fsab_weak_capacity"
         payload = {
             "protocol_version": PROTOCOL_VERSION,
             "status": "SEED0_ONLY",
+            "reference": {
+                "bbag_soup_seed0": REFERENCE_BBAG_SOUP_PER_SEED[0],
+                "bfull_soup_seed0": REFERENCE_BFULL_SOUP_PER_SEED[0],
+                "a2_soup_seed0": REFERENCE_A2_SOUP_PER_SEED[0],
+                "bbag_params": int(REFERENCE_BBAG_PARAMS),
+                "bfull_params": int(REFERENCE_BFULL_PARAMS),
+            },
             "per_seed": rows,
             "seed0_guard_threshold": SEED0_GUARD,
             "seed0_guard_pass": guard_pass,
             "seed1_authorized": bool(guard_pass and channels_alive and mechanism_ok),
             "channels_alive": channels_alive,
             "mechanism_ok": mechanism_ok,
+            "case": case0,
+            "delta_soup_seed0_vs_bbag_seed0": float(delta_bag0),
+            "delta_soup_seed0_vs_bfull_seed0": float(delta_bfull0),
+            "delta_soup_seed0_vs_a2_seed0": float(delta_a20),
             "official_test_loaded": False,
         }
         _write_json(RESULTS_DIR / "decision.json", payload)
