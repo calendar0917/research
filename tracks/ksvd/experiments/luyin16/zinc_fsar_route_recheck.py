@@ -929,6 +929,113 @@ def diagnostics(
     return payload
 
 
+def _branch_weight_norms(encoder: nn.Module) -> dict[str, float | None]:
+    """Per-sub-branch |weight| sums for the B channel (None if absent)."""
+
+    def total(module: nn.Module | None) -> float | None:
+        if module is None:
+            return None
+        return float(sum(p.detach().abs().sum() for p in module.parameters()))
+
+    return {
+        name: total(getattr(encoder, name, None))
+        for name in (
+            "structure_pool",
+            "message",
+            "node_role_projection",
+            "node_attribute_projection",
+            "edge_role_mlp",
+            "edge_attribute_mlp",
+            "edge_role_projection",
+            "edge_attribute_projection",
+            "binding_fuse",
+        )
+    }
+
+
+def checkpoint_audit(
+    mode: str = "SABI",
+    seed: int = 0,
+    tag: str | None = None,
+    state: str = "soup",
+) -> dict[str, Any]:
+    """Post-hoc liveness audit of the trained sub-branches (eval-only).
+
+    Reports the |weight| sum of every B-channel sub-branch so that
+    ``Adam + L2`` primitive annihilation is visible without loading tensors
+    back on the analysis machine.  Route states are preferred; the frozen
+    FSAR-v1 state is used as a fallback so the v1 references can be audited
+    with the same code path.
+    """
+    tag = _tag(mode, tag)
+    if str(state) == "soup":
+        candidates = [
+            SOUP_DIR / f"{tag}_seed{seed}_top5_soup.pt",
+            FSAR_V1_RESULTS / "soup_states" / f"fsar_{str(mode).lower()}_seed{seed}_top5_soup.pt",
+        ]
+    elif str(state) == "best":
+        candidates = [
+            STATE_DIR / f"{tag}_seed{seed}_selection_state.pt",
+            FSAR_V1_RESULTS / "states" / f"fsar_{str(mode).lower()}_seed{seed}_selection_state.pt",
+        ]
+    else:
+        raise ValueError(f"unknown state {state!r}; expected 'best' or 'soup'")
+    state_path = next((path for path in candidates if path.exists()), None)
+    if state_path is None:
+        raise FileNotFoundError(
+            f"no checkpoint for mode={mode} seed={seed} state={state}; tried "
+            + ", ".join(str(path) for path in candidates)
+        )
+    model = build_model(mode, seed)
+    model.load_state_dict(torch.load(state_path, map_location="cpu", weights_only=True))
+    model.eval()
+    fresh = build_model(mode, seed)
+    payload: dict[str, Any] = {
+        "protocol_version": PROTOCOL_VERSION,
+        "mode": str(mode),
+        "local_s_kind": rr.MODE_LOCAL_S[mode],
+        "binding_kind": rr.MODE_BINDING[mode],
+        "seed": int(seed),
+        "state": str(state),
+        "state_path": str(state_path.relative_to(TRACK_ROOT.parent)),
+        "source": (
+            "route_harness" if str(state_path).startswith(str(RESULTS_DIR)) else "fsar_v1"
+        ),
+        "trained_branch_weight_abs_sum": _branch_weight_norms(model.encoder),
+        "fresh_branch_weight_abs_sum": _branch_weight_norms(fresh.encoder),
+        "capacity_mlp_weight_abs_sum": (
+            None
+            if model.capacity_mlp is None
+            else float(
+                sum(p.detach().abs().sum() for p in model.capacity_mlp.parameters())
+            )
+        ),
+        "annihilated_branches": [],
+        "official_test_loaded": False,
+    }
+    trained = payload["trained_branch_weight_abs_sum"]
+    fresh_norms = payload["fresh_branch_weight_abs_sum"]
+    for name, value in trained.items():
+        if value is None:
+            continue
+        reference = fresh_norms.get(name)
+        if reference is None or reference <= 0.0:
+            continue
+        if value <= 1.0e-6 * reference:
+            payload["annihilated_branches"].append(name)
+    _write_json(
+        RESULTS_DIR
+        / (
+            f"checkpoint_audit_{_tag(mode, tag)}_seed{seed}"
+            + ("_soup" if str(state) == "soup" else "_best")
+            + ".json"
+        ),
+        payload,
+    )
+    print(json.dumps(payload, indent=2, sort_keys=True, default=str), flush=True)
+    return payload
+
+
 def witness(
     mode: str = "SABI", seed: int = 0, tag: str | None = None, state: str = "best"
 ) -> dict[str, Any]:
@@ -1490,6 +1597,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "soup",
             "run",
             "diagnostics",
+            "checkpoint_audit",
             "witness",
             "interventions",
             "explicit_basis_diagnostics",
@@ -1553,6 +1661,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             seed=int(arguments.seed),
             tag=arguments.tag,
             state=arguments.state,
+        )
+    elif arguments.stage == "checkpoint_audit":
+        checkpoint_audit(
+            mode=arguments.mode,
+            seed=int(arguments.seed),
+            tag=arguments.tag,
+            state=arguments.state if arguments.state in {"best", "soup"} else "soup",
         )
     elif arguments.stage == "witness":
         witness(

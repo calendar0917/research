@@ -476,3 +476,80 @@ def test_parameter_accounting() -> None:
     for align, null in (("SAB", "SABI"), ("SABE", "SABEI")):
         assert breakdowns[align]["B_params"] > 0
         assert breakdowns[null]["capacity_mlp_params"] == 0
+
+
+def test_branch_weight_norms_map_sub_branches() -> None:
+    """`_branch_weight_norms` reports present sub-branches and None for absent.
+
+    This is the mapping used by the post-hoc `checkpoint_audit` stage, so it
+    must distinguish an absent B sub-branch (None) from an annihilated one
+    (a finite, far-smaller-than-fresh value).
+    """
+    from tracks.ksvd.experiments.luyin16 import zinc_fsar_route_recheck as zr
+
+    expected_present = {
+        "SAB": {
+            "structure_pool",
+            "message",
+            "node_role_projection",
+            "node_attribute_projection",
+            "edge_role_mlp",
+            "edge_attribute_mlp",
+            "edge_role_projection",
+            "edge_attribute_projection",
+            "binding_fuse",
+        },
+        "SABI": {
+            "structure_pool",
+            "message",
+            "node_role_projection",
+            "node_attribute_projection",
+            "edge_role_mlp",
+            "edge_attribute_mlp",
+            "edge_role_projection",
+            "edge_attribute_projection",
+            "binding_fuse",
+        },
+        "SAE": {"structure_pool"},
+        "SABE": {
+            "structure_pool",
+            "node_role_projection",
+            "node_attribute_projection",
+            "edge_role_mlp",
+            "edge_attribute_mlp",
+            "edge_role_projection",
+            "edge_attribute_projection",
+            "binding_fuse",
+        },
+        "SABEI": {
+            "structure_pool",
+            "node_role_projection",
+            "node_attribute_projection",
+            "edge_role_mlp",
+            "edge_attribute_mlp",
+            "edge_role_projection",
+            "edge_attribute_projection",
+            "binding_fuse",
+        },
+    }
+    for mode, present in expected_present.items():
+        model = rr.PatchPathFSARRouteModel(mode=mode)
+        norms = zr._branch_weight_norms(model.encoder)
+        for name, value in norms.items():
+            if name in present:
+                assert value is not None and value > 0.0, (mode, name)
+            else:
+                assert value is None, (mode, name)
+    # latent message-passing branch exists only for the latent S modes
+    assert (
+        zr._branch_weight_norms(rr.PatchPathFSARRouteModel(mode="SABI").encoder)[
+            "message"
+        ]
+        is not None
+    )
+    assert (
+        zr._branch_weight_norms(rr.PatchPathFSARRouteModel(mode="SABE").encoder)[
+            "message"
+        ]
+        is None
+    )
