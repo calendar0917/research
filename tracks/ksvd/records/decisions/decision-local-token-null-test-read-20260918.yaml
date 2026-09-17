@@ -1,0 +1,85 @@
+decision_id: decision-local-token-null-test-read-20260918
+created: '2026-09-18T20:10:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Decision - AUTHORISED ONE-SHOT OFFICIAL-TEST READ OF THE LOCAL-TOKEN-NULL
+  SCREENS.  Under explicit user authorisation (overriding, for reporting only,
+  the "do NOT open the official test" clause of
+  decision-local-token-null-20260919 and
+  decision-molhiv-local-token-null-20260918), both closures wrote a
+  valid-only architecture_freeze.json (raw + fixed Top-5 soup, with SHA-256,
+  test_loaded_at_freeze_time false) and then loaded the official test exactly
+  once (official_test_unlock.json).  Revision 4818df6.  ZINC (n=1000, MAE
+  lower better): B-Null 49,343 params raw test 0.102759 / soup test 0.097731;
+  Constant-16 49,359 params raw 0.109475 / soup 0.100665; cell-A typed
+  reference 85,763 params 2-seed raw 0.109361 / soup 0.106717.  MolHIV
+  (n=4113, ROC-AUC higher better): B-Null 237,133 params raw 0.743411 / soup
+  0.760501; Constant-32 237,165 params raw 0.716694 / soup 0.744255; typed
+  1,076,589 params 2-seed raw 0.762605 / soup 0.762095.  VERDICT: the
+  channel-necessity conclusion holds on test (ZINC deletion is better by
+  -0.008986 soup and reaches 0.097731, the first single model below 0.10;
+  MolHIV deletion is a tie at -0.001594 inside the typed 2-seed std 0.008464
+  at 22 % of the parameters).  The Pattern-2 shared-offset mechanism reading is
+  NOT confirmed and is retracted for test (Constant was best on valid but worse
+  than B-Null on test on both datasets).  The results are terminal/post-hoc:
+  they do NOT promote any model, do NOT reopen architecture selection, and do
+  NOT authorise further test reads (both unlock files are spent).
+why_this_experiment: >-
+  The two channel-necessity rounds were deliberately valid-only screens with a
+  pre-registered gate.  The user asked to see the official test numbers for
+  B-Null on both datasets.  The only disciplined way to produce them is a
+  frozen, one-shot terminal read with both raw and soup reported and no
+  selection use, which is what was done.
+protocol: >-
+  New modules zinc_local_token_null_test_closure.py and
+  molhiv_local_token_null_test_closure.py.  freeze (valid-only, no test access)
+  -> official_test_unlock.json -> one test load -> report.  Pre-existing raw
+  selection state and fixed equal-weight Top-5 soup only; no retraining, no K
+  search, no weight search, no architecture change.  ZINC test built by the
+  canonical ztraining.load_train_valid_records / extract_test_records /
+  build_encoded path (identical to the cell-A closure) and evaluated on CPU
+  deterministic; MolHIV test built by the canonical rpc._load_records /
+  fit_train_transforms / encode_records path and evaluated on GPU1.  Both
+  closures refuse a second test (unlock present) and refuse to test without a
+  freeze.
+alternatives_rejected:
+  - item: Not reporting the test at all because the rounds pre-registered "no test"
+    because: >-
+      the user explicitly asked for and authorised the read; the discipline is
+      preserved by freezing first and reporting raw+soup.
+  - item: Promoting B-Null on the strength of the ZINC test result
+    because: >-
+      this is a post-hoc terminal read of a non-promoted single-seed screen and
+      the pre-registered decision was NOT PROMOTED; using the test number for
+      promotion is exactly what the freeze discipline forbids.
+  - item: Reporting only the better of raw/soup
+    because: >-
+      cherry-picking the aggregation would inflate the result; both are frozen
+      and both reported.
+  - item: Claiming Pattern 2 (constant recovers the channel) on test
+    because: >-
+      the valid ordering flips on test on both datasets.
+consequences:
+  - >-
+    The ZINC necessity verdict is upgraded from a valid-only screen to a
+    test-level result: B-Null (49,343 params, no local-token generator) reaches
+    soup test MAE 0.097731, below the 0.10 target and better than the frozen
+    cell-A typed reference (0.106717).
+  - >-
+    The MolHIV verdict stays "not required": B-Null at 237,133 params ties the
+    1,076,589-param typed model on test (0.760501 vs 0.762095, inside the
+    typed 2-seed std 0.008464).
+  - >-
+    The Pattern-2 mechanism claim (a 16/32-param constant recovers the channel's
+    value) is retracted for test on both datasets.
+  - >-
+    Both test closures are spent; no further official-test read is possible
+    without a new module and a new pre-registration.
+next_action: >-
+  ONE action only (not auto-authorized): stop opening tests and convert the
+  surviving screen into a proper paired statement, i.e. run the already-scoped
+  MolHIV seed-1 confirmation of B-Null and Constant-32 (fixed soup rule, no
+  other change) so the "not required" verdict rests on a paired comparison
+  rather than a single seed.  Do not promote, do not re-read the test, do not
+  add architecture variables.

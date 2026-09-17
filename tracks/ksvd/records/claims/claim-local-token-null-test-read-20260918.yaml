@@ -1,0 +1,51 @@
+claim_id: claim-local-token-null-test-read-20260918
+created: '2026-09-18T20:00:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  AUTHORISED POST-HOC OFFICIAL-TEST READ OF THE LOCAL-TOKEN-NULL SCREENS
+  (ZINC + MolHIV).  The user explicitly authorised opening the official test
+  for the two non-promoted local-token-null screens; both the best-valid raw
+  checkpoint and the fixed equal-weight Top-5 soup were frozen in
+  architecture_freeze.json before the test was loaded
+  (test_loaded_at_freeze_time false), each closure loaded the test exactly once
+  (official_test_unlock.json written), and the numbers are terminal/post-hoc and
+  must not be used for promotion or any further architecture selection.
+  Revision 4818df6.  ZINC (n=1000, MAE lower better): B-Null (49,343 params,
+  no local-token generator) raw test 0.102759 and soup test 0.097731;
+  Constant-16 (49,359 params) raw 0.109475 and soup 0.100665; frozen cell-A
+  typed reference (85,763 params, 2-seed mean) raw 0.109361 and soup 0.106717.
+  MolHIV (n=4113, ROC-AUC higher better): B-Null (237,133 params) raw test
+  0.743411 and soup 0.760501; Constant-32 (237,165) raw 0.716694 and soup
+  0.744255; frozen typed lookup (1,076,589 params, 2-seed mean) raw 0.762605
+  and soup 0.762095.  CONCLUSIONS.  (1) Channel necessity is confirmed on test
+  on both datasets: deleting the whole molecule-dependent local-token generator
+  costs nothing.  On ZINC, B-Null soup 0.097731 beats the cell-A typed
+  reference by -0.008986 and is the first single model in the track below the
+  0.10 target (previous best single model: H96 soup 0.104990; only the labelled
+  2-seed prediction ensemble reached 0.098641).  On MolHIV, B-Null soup
+  0.760501 differs from the typed reference by -0.001594, a tie inside the
+  typed 2-seed std 0.008464, at 237k instead of 1.08M params.  (2) The
+  shared-offset ("Pattern 2") reading does NOT survive on test: Constant was
+  the best of the family on valid on both datasets (ZINC 0.120515 < Null
+  0.123028; MolHIV 0.860768 > Null 0.840847) but is worse than B-Null on test
+  (ZINC 0.100665 > 0.097731; MolHIV 0.744255 < 0.760501) -> the defensible
+  claim is the weaker "the channel is redundant"; "a 16/32-param constant
+  recovers its value" was a valid-set artefact.  (3) Valid ranking is not
+  predictive of test ranking in this family; the MolHIV valid->test drop is
+  large and model-dependent (B-Null soup -0.080346, Constant -0.116513, typed
+  seed0 -0.047) and the ZINC valid ordering also flips.  LIMITS: candidates are
+  single seed 0 while the typed references are 2-seed means, so this is not a
+  paired comparison; the read is post-hoc and cannot change the earlier
+  decisions; ZINC test was evaluated CPU-deterministic matching the existing
+  cell-A closure; both closures are one-shot.  Consequences: the ZINC
+  "necessity" verdict is strengthened (now a test-level result, not only a
+  valid screen), the MolHIV verdict stays "not required / tie", and the
+  Pattern-2 mechanism claim is retracted for test.
+evidence:
+  - tracks/ksvd/results/local_token_null_test_closure/architecture_freeze.json
+  - tracks/ksvd/results/local_token_null_test_closure/official_test_results.json
+  - tracks/ksvd/results/molhiv_local_token_null_test_closure/architecture_freeze.json
+  - tracks/ksvd/results/molhiv_local_token_null_test_closure/official_test_results.json
+  - tracks/ksvd/notes/local_token_null_test_read.md
