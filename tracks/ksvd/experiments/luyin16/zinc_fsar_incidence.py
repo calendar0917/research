@@ -1108,13 +1108,28 @@ def gate() -> dict[str, Any]:
 
 def decide() -> dict[str, Any]:
     gate_payload = gate()
+    c1 = gate_payload["C1_seed0_soup_valid"]
+    c0 = _run_soup_valid(_tag("C0"), 0)
+    deltas: dict[str, Any] = {}
+    if c1 is not None and c0 is not None:
+        deltas["C0_minus_C1"] = c0 - c1
+        deltas["C1_minus_B_Full_seed0"] = c1 - REFERENCES["B_Full_soup_seed0"]
+        deltas["C1_minus_B_Bag_seed0"] = c1 - REFERENCES["B_Bag_soup_seed0"]
+        deltas["C1_minus_AR0_edge_BVE_seed0"] = c1 - REFERENCES["ar0e_BVE_assign_soup_seed0"]
+        gap_c0_to_bfull = c0 - REFERENCES["B_Full_soup_seed0"]
+        if gap_c0_to_bfull > 0.0:
+            deltas["fraction_of_C0_to_BFull_gap_closed_by_C1"] = (
+                (c0 - c1) / gap_c0_to_bfull
+            )
     payload = {
         "protocol_version": PROTOCOL_VERSION,
         "verdict": gate_payload["call"],
-        "C1_seed0_soup_valid": gate_payload["C1_seed0_soup_valid"],
-        "C0_seed0_soup_valid": _run_soup_valid(_tag("C0"), 0),
+        "C1_seed0_soup_valid": c1,
+        "C0_seed0_soup_valid": c0,
+        "deltas": deltas,
         "references": REFERENCES,
         "gate": gate_payload,
+        "seed1_authorized": False,
         "official_test_loaded": False,
     }
     _write_json(RESULTS_DIR / "decision.json", payload)
