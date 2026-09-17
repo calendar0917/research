@@ -402,3 +402,46 @@ D. Explicit binding       : if run, is SABE < SABEI?
 ```
 
 No single combined verdict.
+
+## 19. Addendum (pre-registered before Wave 6 launch): within-harness latent reference
+
+The Wave 1-5 schedule intentionally used the **frozen FSAR-v1** soups as the
+latent `SAB` reference (`latent_sab_reference` in `decide()`), because
+`PatchPathFSARRouteModel` is bit-for-bit identical to the FSAR-v1 core for
+latent modes and `fsar_route_collate` delegates to `v1.fsar_collate`.
+
+After Waves 1-4 a *post-hoc* audit of the trained route checkpoints found that
+the **edge sub-branch of the B channel is annihilated** in every route mode
+(`edge_role_mlp` / `edge_attribute_mlp` / `edge_role_projection` /
+`edge_attribute_projection` all decay to ~1e-40), while the same branch stays
+alive in the frozen FSAR-v1 `SAB` soup.  The exact mechanism is the repo's
+documented near-zero-gradient Adam+L2 primitive annihilation, and it makes the
+cross-harness FSAR-v1 latent reference potentially unpaired (different edge
+sub-branch state ⇒ different function class in B, not only a different seed).
+
+Wave 6 is therefore a **provenance / harness control**, not a new scientific
+arm: rerun the two latent `SAB` references *inside the route harness*.
+
+* `route_sab` seed 0  — must reproduce the frozen FSAR-v1 `SAB` seed 0 soup
+  (0.130913) if the harness is truly identical; any deviation is reported as a
+  harness effect.
+* `route_sab` seed 1  — the within-harness seed-1 latent reference, so that
+  `delta_B_latent = MAE(SABI) - MAE(SAB)` is paired within one harness for both
+  seeds.
+
+Reporting rules fixed here:
+
+* if `route_sab` seed 0 reproduces 0.130913 (within float noise) then the
+  Wave 1-5 `latent_sab_reference` is validated as paired and Wave 6 seed 1 must
+  also agree with the Frozen FSAR-v1 seed-1 soup (0.143701); disagreement on
+  seed 1 only is reported as an unrelated-seed trajectory effect;
+* if `route_sab` seed 0 does **not** reproduce, the headline `delta_B_latent`
+  is recomputed from the two within-harness `route_sab` soups and both numbers
+  (cross-harness and within-harness) are reported, with the within-harness pair
+  treated as primary;
+* the dead edge sub-branch is reported as a shared caveat for *all* route B
+  modes (`SABI` / `SABE` / `SABEI`), so `delta_B` in Wave 6 is effectively a
+  node-side aligned-vs-independent comparison;
+* no new mode, seed, or architecture is introduced; the frozen FSAR-v1 `A`,
+  `R_S`, `G_S` and the frozen `A_exact` are untouched; `official_test_loaded`
+  stays `false`.
