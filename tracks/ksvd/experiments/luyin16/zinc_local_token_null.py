@@ -796,6 +796,63 @@ def _gradient_audit(model: nn.Module, batch: Data, device: torch.device) -> dict
     return result
 
 
+def witness(representation: str, seed: int, device: str = "cpu") -> dict[str, Any]:
+    """Post-training mechanism witness for a Null / Constant checkpoint."""
+    rep = str(representation)
+    tag = tag_for(rep)
+    device_obj = torch.device(device)
+    builder = build_null if rep == "null" else build_constant
+    model = builder(int(seed)).to(device_obj)
+    state_path = STATE_DIR / f"{tag}_seed{int(seed)}_selection_state.pt"
+    soup_path = SOUP_DIR / f"{tag}_seed{int(seed)}_top5_soup.pt"
+    selection = torch.load(state_path, map_location="cpu", weights_only=True)
+    model.load_state_dict(selection, strict=True)
+    model.eval()
+
+    valid_loader = _valid_loader()
+    first_batch = next(iter(valid_loader)).to(device_obj)
+    with torch.no_grad():
+        token = model._patch_token_value(first_batch)
+        prediction = model(first_batch)
+    if rep == "null":
+        token_is_zero = bool(torch.equal(token, torch.zeros_like(token)))
+        constant_stats = None
+    else:
+        token_is_zero = bool(torch.equal(token, torch.zeros_like(token)))
+        constant = model.local_token_constant.detach().cpu()
+        constant_stats = {
+            "values": [float(v) for v in constant.tolist()],
+            "norm": float(constant.norm()),
+            "std": float(constant.std(unbiased=False)),
+            "per_patch_token_std": float(token.detach().std(unbiased=False)),
+        }
+
+    gradient_audit = _gradient_audit(builder(int(seed)).to(device_obj), first_batch, device_obj)
+
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "representation": rep,
+        "seed": int(seed),
+        "total_params": int(_n_params(model)),
+        "local_token_generator_params": int(_n_params_typed_like_local(model)),
+        "typed_embedding_present": bool(model.typed_embedding is not None),
+        "structural_encoder_present": bool(model.structural_encoder is not None),
+        "patch_encoder_input_width": int(model.patch_encoder.layers[0].in_features),
+        "token_shape": [int(v) for v in token.shape],
+        "token_is_exactly_zero": token_is_zero,
+        "constant_stats": constant_stats,
+        "forward_finite": bool(torch.isfinite(prediction).all()),
+        "selection_state_path": str(state_path),
+        "soup_state_path": (str(soup_path) if soup_path.exists() else None),
+        "gradient_audit": gradient_audit,
+        "official_test_loaded": False,
+    }
+    _write_json(
+        RESULTS_DIR / f"witness_{tag}_seed{int(seed)}.json", payload
+    )
+    return payload
+
+
 def sanity() -> dict[str, Any]:
     checks: dict[str, Any] = {}
     accounting = parameter_accounting()
@@ -980,6 +1037,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "train",
             "train_queue",
             "soup",
+            "witness",
             "decide",
             "report",
         ],
@@ -1038,6 +1096,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(
             json.dumps(
                 soup(args.representation, int(args.seed)), indent=2, default=str
+            ),
+            flush=True,
+        )
+    if args.stage == "witness":
+        print(
+            json.dumps(
+                witness(args.representation, int(args.seed), device=args.device),
+                indent=2,
+                default=str,
             ),
             flush=True,
         )
