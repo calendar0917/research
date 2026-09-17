@@ -1,0 +1,150 @@
+claim_id: claim-fsar-r2-ar0-node-assignment-residual-20260917
+created: '2026-09-17T18:00:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  FSAR-R2-AR0 (deterministic A100, ZINC-12K official train/valid only, official
+  test never loaded, fixed equal-weight Top-5 soup, valid MAE).  QUESTION: under
+  a fixed radius-2 explicit PURE-TOPOLOGY coordinate, a strong
+  structure/attribute marginal baseline and one identical training protocol,
+  does the real node structural-role <-> node attribute assignment provide a
+  stable predictive increment over the marginals AND over a matched
+  marginal-capacity control?  ANSWER: YES, assignment is supported.  Design:
+  phi_v in R^65 = [root explicit basis 11, mean node 11, std node 11, mean edge
+  15, std edge 15, log1p|V_B2|, log1p|E_B2|] (frozen fsar_v2 explicit operator
+  basis, chemistry-free, no message passing, undirected edge counted once, no
+  new primitive, radius fixed at 2); S encoder 65->64->64 SiLU, z_S = [sum u,
+  mean u, log1p n, log1p m] in R^130; A = [log1p atom_counts 28, atom_freq 28,
+  log1p bond_counts 4, bond_freq 4] in R^64 whole-graph multiset only.  Models:
+  M0 = F0([z_S,a]) (194->64->32->1 SiLU); MB = M0 + <W_B, C~>; MM = M0 +
+  <W_M, P~>, where q_v = onehot(x_v), J = sum phi_v q_v^T,
+  P = (1/n)(sum phi)(sum q)^T, C = J - P = sum (phi_v-phibar)(q_v-qbar)^T (SUM
+  centred, no /(n-1)), train-only per-coordinate RMS scaling C~=C/D_C with
+  raw-RMS<=1e-9 coordinates masked to zero and the dataset mean never
+  subtracted.  W_B and W_M are plain bias-free [65,28] parameters, zero-init,
+  with no MLP/activation/nonlinearity after them and no other aligned bypass;
+  M0/MB/MM share bit-identical S and F0 tensors at the same seed.  Params M0
+  22,977; MB 24,797; MM 24,797 (binding linear 1,820 each;
+  dataset_dependent_vocabulary_params 0).  RESULT (3 paired seeds): Top-5 soup
+  valid, M0 0.553790/0.535570/0.546893, MB 0.469285/0.458746/0.462365, MM
+  0.528340/0.543241/0.524873 for seeds 0/1/2.  Paired deltas (positive = MB
+  better): seed0 M0-MB +0.084505, MM-MB +0.059055; seed1 +0.076824 / +0.084495;
+  seed2 +0.084528 / +0.062507 -- MB beats BOTH controls on EVERY seed.  Paired
+  per-molecule bootstrap (5,000 resamples, 1,000 valid molecules, seed
+  20260917) 95% CIs: seed0 M0-MB [0.067510,0.101410] and MM-MB
+  [0.041431,0.076366]; seed1 [0.060364,0.092985] and [0.066661,0.102764];
+  seed2 [0.067804,0.101036] and [0.045553,0.079732]; P(delta>0)=1.0 in all six.
+  MECHANISM: the trained MB is assignment-sensitive -- evaluation-only
+  within-graph permutation of the original-node attributes leaves A and S
+  EXACTLY invariant (delta 0.0) while C changes (sum |delta| ~4.4e4) and the
+  prediction changes by mean |delta| 0.76-0.80; actual MAE 0.469/0.459/0.462 vs
+  MAE(E[yhat_pi]) 0.872/0.855/0.842 and E[MAE(yhat_pi)] 1.019/1.003/0.977.  No
+  branch collapse: MB W norm 0.75-1.03 (39% exact zeros), branch output std
+  0.65-0.68, base output std 1.39-1.41; MM W norm 0.73-1.08 (37% zeros),
+  branch output std 1.17-1.18 but worse MAE, so the gain is not extra live
+  capacity.  SYNTHETIC CONTROLS (before any ZINC run): positive assignment-only
+  control (fixed 4-path, multiset 1 N + 3 C, label = N endpoint vs internal) MB
+  valid MAE 0.0216 vs M0 0.5653 / MM 0.5247 with ||W_B|| ~0.056; negative
+  marginal-only control M0 0.0069, MB 0.0169, MM 0.0247 (no repeatable MB
+  advantage).  17/17 correctness tests (relabel invariance, S chemistry purity,
+  A and P assignment invariance, C assignment sensitivity, exact permutation
+  expectation mean_pi C=0, scalar mean_pi <W_B,C>=0, batched-vs-numpy equality,
+  no patch-copy inconsistency, undirected bond counting, train-only scaler, W_B
+  and W_M gradient viability, no mixed bypass, architecture identity,
+  zero-init equals M0, parameter counts) + synthetic positive control;
+  gradient_audit active path == total for all three (22,977/24,797/24,797);
+  determinism verified by a full MB seed0 re-run reproducing soup
+  0.4692853513918235, Top-5 epochs [58,46,81,65,90] and selection-state SHA-256
+  76b373a69ff32cb3432f7a170e044921 exactly.  Feature audit (500 molecules): phi
+  effective rank 9.11 (11 constant coordinates), A 16.69 (24 zero-std unused
+  categories), C effective coordinates 1109/1820 and cross-molecule effective
+  rank 1.40 (top singular fraction 0.89 -> the linear residual has roughly one
+  effective direction), P 1151/1820, Pearson(||C||,n) 0.363.
+scope: >-
+  ZINC-12K official train/valid only (10,000 / 1,000); deterministic NVIDIA
+  A100-SXM4-40GB; seeds 0, 1 and the gate-authorised seed 2; fixed radius-2
+  pure-topology explicit basis, no radius/width/depth/primitive/optimizer
+  sweep; identical protocol for all three models (Adam lr 1e-3, wd 1e-5, batch
+  128, L1, clip 5.0, 240 epochs, patience 40, no scheduler, best official-valid
+  checkpoint, fixed equal-weight Top-5 soup); official ZINC test never loaded;
+  no use of historical B-full hidden states; B-full/B-bag retained only as an
+  external mixed-model reference.  Training revision fc1312f; eval-only
+  revision 8ad2358.
+supporting_evidence:
+  - >-
+    Pre-registered seed-2 gate fired on both paired seeds (gate.json
+    seed2_authorized true), so seed 2 was purchased exactly as pre-registered
+    and also passed.
+  - >-
+    Matched-control design: MB and MM are exactly parameter-matched (24,797
+    each) and architecture-matched; they differ only in the statistic (C vs P).
+  - >-
+    Assignment statistics are algebraically exact: E_pi[C(T, pi X)] = 0 and
+    E_pi[<W_B, C(T, pi X)>] = 0 for any fixed W_B, confirmed by exhaustive
+    permutation on a 4-node toy (<1e-10 and <1e-9).
+  - >-
+    Witness: A delta exactly 0.0 and S delta exactly 0.0 under the
+    original-node attribute permutation, with a large C delta and a large
+    prediction delta; both MAE(E[yhat_pi]) and E[MAE(yhat_pi)] are >> actual
+    MAE.
+  - >-
+    Both synthetic controls pass before any ZINC run; no branch collapse (MB
+    and MM branch output std 0.65-1.18, W norms 0.73-1.08).
+  - >-
+    Remote sanity 17/17, local test suite 17/17, gradient_audit all three
+    models with non-zero W_B / W_M task gradient and active path == total.
+  - >-
+    Transport determinism: scaler rebuilt from the pulled cache matches
+    sqrt(E_train[C^2]) / sqrt(E_train[P^2]) exactly; re-extracted phi/A/y are
+    bit-equal to the cache; the MB seed0 re-run is bit-identical (hash
+    76b373a6...).
+contradicting_evidence:
+  - >-
+    C is close to rank-1 across molecules (effective rank 1.40), so the result
+    certifies a single effective assignment direction, not a rich 65x28 tensor
+    readout.
+  - >-
+    MM's P is one specific marginal functional, not all marginals; the marginal
+    side is also covered by the strong M0 baseline and by A.  The clean
+    same-shape control is MB-vs-MM, which is positive on every seed.
+  - >-
+    Absolute MAE (~0.46-0.56) is far from full-backbone ZINC numbers; this is
+    not a benchmark or SOTA claim.
+  - >-
+    The synthetic positive control is a clean assignment-only construction; it
+    proves the implementation can learn an assignment, not that ZINC assignment
+    is equally clean.
+evidence:
+  - results/fsar_r2_ar0/parameter_accounting.json
+  - results/fsar_r2_ar0/sanity.json
+  - results/fsar_r2_ar0/feature_audit.json
+  - results/fsar_r2_ar0/gradient_audit_M0.json
+  - results/fsar_r2_ar0/gradient_audit_MB.json
+  - results/fsar_r2_ar0/gradient_audit_MM.json
+  - results/fsar_r2_ar0/synthetic_controls.json
+  - results/fsar_r2_ar0/gate.json
+  - results/fsar_r2_ar0/analysis_paired_bootstrap.json
+  - results/fsar_r2_ar0/decision.json
+  - results/fsar_r2_ar0/FORMAL_RESULTS.md
+  - results/fsar_r2_ar0/soup_r2ar0_m0_seed0.json
+  - results/fsar_r2_ar0/soup_r2ar0_mb_seed0.json
+  - results/fsar_r2_ar0/soup_r2ar0_mm_seed0.json
+  - results/fsar_r2_ar0/soup_r2ar0_m0_seed1.json
+  - results/fsar_r2_ar0/soup_r2ar0_mb_seed1.json
+  - results/fsar_r2_ar0/soup_r2ar0_mm_seed1.json
+  - results/fsar_r2_ar0/soup_r2ar0_m0_seed2.json
+  - results/fsar_r2_ar0/soup_r2ar0_mb_seed2.json
+  - results/fsar_r2_ar0/soup_r2ar0_mm_seed2.json
+  - results/fsar_r2_ar0/diagnostics_r2ar0_mb_seed0_soup.json
+  - results/fsar_r2_ar0/diagnostics_r2ar0_mb_seed1_soup.json
+  - results/fsar_r2_ar0/diagnostics_r2ar0_mb_seed2_soup.json
+  - results/fsar_r2_ar0/diagnostics_r2ar0_mm_seed0_soup.json
+  - results/fsar_r2_ar0/diagnostics_r2ar0_mm_seed1_soup.json
+  - results/fsar_r2_ar0/diagnostics_r2ar0_mm_seed2_soup.json
+  - results/fsar_r2_ar0/witness_r2ar0_mb_seed0_soup.json
+  - results/fsar_r2_ar0/witness_r2ar0_mb_seed1_soup.json
+  - results/fsar_r2_ar0/witness_r2ar0_mb_seed2_soup.json
+  - notes/fsar_r2_ar0_preregistration.md
+  - notes/fsar_r2_ar0.md
+  - tests/test_fsar_r2_ar0.py (17 pass)
