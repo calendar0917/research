@@ -486,7 +486,15 @@ def audit(sample_molecules: int = 500) -> dict[str, Any]:
             "effective_coordinates": int(scalers["C_mask"].sum()),
             "total_coordinates": int(scalers["C_mask"].size),
             "nan_or_inf": bool(not np.isfinite(c_matrix_all).all()),
-            **{f"rank_{k}": v for k, v in _effective_rank(c_matrix_all[:, :64]).items()},
+            # The full flattened statistic is 65 * 28 = 1820 wide.  An earlier
+            # revision accidentally sliced only the first 64 columns here and
+            # reported a spurious near-rank-1.  The primary keys below are the
+            # corrected full-matrix values; the legacy slice is kept only for
+            # provenance.
+            **{f"rank_{k}": v for k, v in _effective_rank(c_matrix_all).items()},
+            "legacy_first64_effective_rank": float(
+                _effective_rank(c_matrix_all[:, :64])["effective_rank"]
+            ),
         },
         "P": {
             "shape": [int(r2.PHI_DIM), int(r2.ATOM_CATEGORIES)],

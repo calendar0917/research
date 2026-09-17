@@ -1,5 +1,16 @@
 # FSAR-R2-AR0 — fixed radius-2 explicit pure-topology coordinates + assignment residual (durable verdict)
 
+> **Correction (added by the later node-mechanism round, branch
+> `exp/fsar-r2-ar0-edge-binding-zinc`).**  The claim in this note and in
+> `FSAR-R2-AR0`'s caveats that `C` is "close to rank-1" (effective rank
+> `1.40`, top singular fraction `0.89`) was an audit-slicing bug: the audit
+> computed the rank on `flattened_C[:, :64]` (the first 64 of 1820
+> coordinates).  On the full flattened `C` the cross-molecule effective rank
+> is `~57`, and on the model input `C~` it is `~116`.  The `MB` verdict itself
+> is unaffected (it rests on the paired `M0`/`MM` MAE deltas and the
+> assignment-shuffle diagnostic, not on this descriptive number).  Full
+> analysis: `notes/fsar_r2_ar0_node_binding_mechanism.md`.
+
 Branch `exp/fsar-r2-ar0-zinc`.
 Pre-registration: `notes/fsar_r2_ar0_preregistration.md` (20 sections).
 Training revision `fc1312f`; eval-only revisions `8ad2358` (3-seed `decide()`
