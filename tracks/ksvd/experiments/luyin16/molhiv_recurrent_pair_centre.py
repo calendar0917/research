@@ -196,7 +196,7 @@ class MolhivRecurrentPairCentreModel(mpp.PatchPathModel):
             torch.cat(
                 [
                     data.patch_cont,
-                    self.typed_embedding(data.typed_token),
+                    self._patch_token_value(data),
                     self.parent_embedding(data.parent_token),
                 ],
                 dim=1,
@@ -255,7 +255,12 @@ class MolhivRecurrentPairCentreModel(mpp.PatchPathModel):
         return counts
 
 
-def build_model(typed_vocabulary_size: int, parent_vocabulary_size: int, seed: int) -> MolhivRecurrentPairCentreModel:
+def build_model(
+    typed_vocabulary_size: int,
+    parent_vocabulary_size: int,
+    seed: int,
+    patch_representation: str = "typed_lookup",
+) -> MolhivRecurrentPairCentreModel:
     mpp._seed_everything(int(seed))
     return MolhivRecurrentPairCentreModel(
         int(typed_vocabulary_size),
@@ -267,6 +272,7 @@ def build_model(typed_vocabulary_size: int, parent_vocabulary_size: int, seed: i
         center_context=True,
         center_context_hidden=CENTER_CONTEXT_HIDDEN,
         recurrence_rounds=RECURRENCE_ROUNDS,
+        patch_representation=str(patch_representation),
     )
 
 
