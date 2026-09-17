@@ -181,9 +181,14 @@ def data_sanity() -> dict[str, Any]:
         "expected_sizes_match": all(
             int(split[name].size) == rpc.SPLIT_SIZES[name] for name in rpc.SPLIT_SIZES
         ),
-        "positive": {name: int(bundle.y[split[name]].sum()) for name in split},
+        # Only train/valid label aggregates are recorded; the test split is
+        # sized but its labels are neither scored nor recorded in this round.
+        "positive": {
+            name: int(bundle.y[split[name]].sum()) for name in ("train", "valid")
+        },
         "record_cache": str(rpc.RECORD_CACHE),
-        "official_test_labels_loaded": False,
+        "official_test_labels_recorded": False,
+        "official_test_scored": False,
         "official_test_loaded": False,
     }
     _write_json(RESULTS_DIR / "data_sanity.json", payload)
