@@ -1,0 +1,63 @@
+claim_id: claim-molhiv-local-token-null-20260918
+created: '2026-09-18T14:30:00'
+kind: claim
+status: supported
+study_id: molhiv-cross-scaffold-interaction
+statement: >-
+  THE DENSE EXACT-CERTIFICATE LOCAL PATCH TOKEN IS NOT NECESSARY FOR THE
+  MOLHIV RECURRENT PAIR--CENTRE BACKBONE (pre-registered
+  molhiv_local_token_null_v1; official train/valid only; the official test
+  split was never scored; training revision e163ac6; A100-SXM4-40GB GPU 1;
+  fixed equal-weight Top-5 parameter soup on official valid ROC-AUC; seed 0
+  per candidate, one architecture at a time).  QUESTION: the frozen MolHIV
+  model is 1,076,589 params, of which the dense lookup typed_embedding
+  [26233,32] is 839,456 (78.0 %) and parent_embedding [103,16] is 1,648,
+  while the fixed backbone is 235,485; is that molecule-dependent local 32-D
+  patch token necessary?  ANSWER: NO, on the seed-0 point estimate the
+  deletion is free or better.  B-Null (exact zero 32-D token per patch, no
+  local-token generator at all, 237,133 params, a 839,456-param / 77.97 %
+  drop) reaches best valid 0.843168 @ep24 (64 epochs, wall 1357.3 s,
+  20.6 s/epoch, peak 749,046,272 B) and fixed Top-5 soup 0.840847 with top5
+  epochs/values [24,23,35,22,40] = [0.8432,0.8425,0.8410,0.8378,0.8363].
+  The authorised Constant-32 (one trainable graph-wide 32-vector, 237,165
+  params) reaches best valid 0.856445 @ep40 (80 epochs, wall 1670.4 s, peak
+  749,047,808 B) and soup 0.860768 with top5 [40,76,77,75,22] =
+  [0.8564,0.8564,0.8515,0.8504,0.8497].  Matched frozen typed seed0
+  reference raw 0.814239 / soup 0.809505 (best ep16, 56 epochs); frozen typed
+  seed1 raw 0.849865 / soup 0.851092.  Deltas (typed_s0 - candidate, positive
+  = candidate worse): D_null_soup = -0.031342 and D_null_raw = -0.028929;
+  D_const_soup = -0.051263 and D_const_raw = -0.042206 -> both candidates are
+  ABOVE the matched typed seed0, and Constant-32 is even above typed seed1 by
+  +0.0097 soup.  Pre-registered gate D_null <= 0.005 fires
+  (STRONG_LOCAL_TOKEN_CHANNEL_NOT_REQUIRED) and authorises Constant-32.
+  PATTERN 1+2, replicated and larger than on ZINC
+  (decision-local-token-null-20260919): the channel is redundant and its
+  residual value is a shared trainable offset (32 params), not
+  molecule-dependent identity.  Mechanism witness at the soup checkpoint:
+  Null total 237,133, typed_embedding not instantiated, token exactly zero on
+  a real valid batch (3,227 patches, mean norm 0, max abs 0), patch-encoder
+  input width 841 unchanged, all 9 remaining backbone groups receive non-zero
+  task gradient (parent 1.9e-3 ... pair_encoder 3.8e-2), forward finite
+  (logits std 1.81); Constant total 237,165, no typed embedding, learned
+  vector norm 0.01287 / max abs 0.00569, the constant itself receives
+  non-zero gradient 2.5e-4, all 10 groups non-zero, forward finite (logits
+  std 3.20); every artefact records official_test_loaded false.  This is the
+  training-side counterpart of the identity audit: the exact certificate
+  identity adds no molecule-level distinguishing power on ZINC, and here the
+  839k-param table that stores it is empirically unnecessary.  SCOPE/LIMITS:
+  single seed per candidate; MolHIV is noisy at this scale and the two frozen
+  typed seeds already span 0.0416 soup, so the round is a pre-registered
+  screen, not a statistical claim; the Constant-32 - typed seed1 margin
+  (+0.0097) is inside that seed spread; the typed seed0 reference
+  early-stopped at epoch 16 while the candidates ran 64/80 epochs under the
+  identical patience rule.  No official test, no parameter re-investment.
+evidence:
+  - tracks/ksvd/results/molhiv_local_token_null/parameter_accounting.json
+  - tracks/ksvd/results/molhiv_local_token_null/run_null_seed0.json
+  - tracks/ksvd/results/molhiv_local_token_null/run_constant_seed0.json
+  - tracks/ksvd/results/molhiv_local_token_null/witness_null_seed0.json
+  - tracks/ksvd/results/molhiv_local_token_null/witness_constant_seed0.json
+  - tracks/ksvd/results/molhiv_local_token_null/decision.json
+  - tracks/ksvd/results/molhiv_local_token_null/report.json
+  - tracks/ksvd/notes/molhiv_local_token_null.md
+  - tracks/ksvd/notes/molhiv_local_token_null_preregistration.md
