@@ -4,7 +4,7 @@ Round name: ``FSAR-R2-AR0``.
 
 Stages
 ------
-``params preprocess audit sanity gradient_audit synthetic smoke train soup run
+``params preprocess audit sanity gradient_audit synthetic train soup run
 diagnostics witness shuffle_eval gate decide report``
 
 The frozen training protocol is inherited verbatim from the optimized
@@ -1315,6 +1315,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--variant", default="MB", choices=list(r2.MODELS))
     p.add_argument("--all", action="store_true")
     p.add_argument("--device", default="cpu")
+    p.add_argument("--deterministic", action="store_true")
     for stage in ("train", "soup", "run", "diagnostics", "witness", "shuffle_eval"):
         p = sub.add_parser(stage)
         p.add_argument("--variant", required=True, choices=list(r2.MODELS))
