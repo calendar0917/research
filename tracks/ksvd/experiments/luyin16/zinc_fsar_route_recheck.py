@@ -1179,9 +1179,11 @@ def explicit_basis_diagnostics(
     }
     _write_json(
         RESULTS_DIR
-        / f"explicit_basis_diagnostics_{_tag(mode, tag)}_seed{seed}"
-        + ("_soup" if str(state) == "soup" else "")
-        + ".json",
+        / (
+            f"explicit_basis_diagnostics_{_tag(mode, tag)}_seed{seed}"
+            + ("_soup" if str(state) == "soup" else "")
+            + ".json"
+        ),
         payload,
     )
     print(json.dumps(payload, indent=2, sort_keys=True, default=str), flush=True)
@@ -1281,6 +1283,9 @@ def decide() -> dict[str, Any]:
         else payload["v1_legacy_soups"]["SAB"]["1"],
     }
     payload["latent_sab_reference"] = latent_sab
+    # latent SA reference: FSAR-v1 seed0 is the frozen number; seed1 was not run.
+    latent_sa = {0: FSAR_V1_SA, 1: _v1_soup_valid("SA", 1)}
+    payload["latent_sa_reference"] = latent_sa
 
     # --- A. historical replication ------------------------------------------
     hist = {}
@@ -1336,14 +1341,23 @@ def decide() -> dict[str, Any]:
             "sabe": sabe,
             "sae_minus_sa": (
                 None
-                if (sae is None or payload["soups"]["SA"][str(seed)] is None)
-                else sae - payload["soups"]["SA"][str(seed)]
+                if (sae is None or latent_sa[seed] is None)
+                else sae - latent_sa[seed]
             ),
             "sabe_minus_sab": gap,
             "band": band,
         }
     payload["explicit_vs_latent"] = explicit
     payload["explicit_seed0_class"] = explicit["0"]["band"]
+    known_gap = [
+        row["sabe_minus_sab"]
+        for row in explicit.values()
+        if row["sabe_minus_sab"] is not None
+    ]
+    payload["sabe_minus_sab_mean"] = (
+        float(np.mean(known_gap)) if known_gap else None
+    )
+    payload["sae_minus_sa_seed0"] = explicit["0"]["sae_minus_sa"]
 
     # --- D. explicit binding ------------------------------------------------
     explicit_delta = {}
@@ -1386,6 +1400,46 @@ def decide() -> dict[str, Any]:
         "FSAR_v1_SA": FSAR_V1_SA,
         "FSAR_v1_SAB": FSAR_V1_SAB,
         "FSAR_v1_SAM": FSAR_V1_SAM,
+    }
+    # --- four independent answers (never merged into one verdict) -----------
+    payload["answer_A_historical_replication"] = {
+        "question": "does FSAR-v1 SAB < SAM replicate at seed1?",
+        "sam_minus_sab_per_seed": {
+            seed: hist[str(seed)]["sam_minus_sab"] for seed in (0, 1)
+        },
+        "replicated": bool(payload["historical_replication_supported"]),
+    }
+    payload["answer_B_clean_binding"] = {
+        "question": (
+            "SAB < SABI (aligned vs operator-matched assignment-independent "
+            "null) on paired seeds?"
+        ),
+        "delta_B_latent_per_seed": latent_delta,
+        "delta_B_latent_mean": payload["delta_B_latent_mean"],
+        "both_seeds_positive": bool(
+            len(known) == 2 and all(v > 0.0 for v in known)
+        ),
+        "mean_ge_0.001": bool(
+            payload["delta_B_latent_mean"] is not None
+            and payload["delta_B_latent_mean"] >= BINDING_MEAN_GATE
+        ),
+        "supported": bool(payload["clean_binding_supported"]),
+    }
+    payload["answer_C_structural_explicitness"] = {
+        "question": "what does explicit local S cost vs latent local S?",
+        "sabe_minus_sab_per_seed": {
+            seed: explicit[str(seed)]["sabe_minus_sab"] for seed in (0, 1)
+        },
+        "sabe_minus_sab_mean": payload["sabe_minus_sab_mean"],
+        "sae_minus_sa_seed0": payload["sae_minus_sa_seed0"],
+        "seed0_band": explicit["0"]["band"],
+        "seed1_band": explicit["1"]["band"],
+    }
+    payload["answer_D_explicit_binding"] = {
+        "question": "SABE < SABEI (explicit aligned vs explicit null)?",
+        "delta_B_explicit_per_seed": explicit_delta,
+        "seed0_ran": bool(explicit_delta["0"] is not None or sabe_seed0 is not None),
+        "supported": bool(payload["explicit_binding_supported"]),
     }
     _write_json(RESULTS_DIR / "decision.json", payload)
     print(json.dumps(payload, indent=2, sort_keys=True, default=str), flush=True)
