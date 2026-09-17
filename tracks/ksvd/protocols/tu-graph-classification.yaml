@@ -1,0 +1,91 @@
+# Comparability protocol for the TU (TUDataset) graph-classification track.
+
+# Rules only; architecture and hyperparameters live with the study candidate,
+# never here.  TU datasets ship no canonical split, so the split itself is
+# generated under this protocol with a fixed seed and a recorded fingerprint.
+
+id: tu-graph-classification
+
+dataset:
+  family: TUDataset (PyG `torch_geometric.datasets.TUDataset`)
+  source_policy: canonical TU download (`data/TUD`), `cleaned=False`, no re-labelling
+  fingerprint_policy: >-
+    `TUDataset` name + graph/class counts + mean nodes/edges + node/edge type
+    widths + a SHA-256 over the frozen split index lists.
+  datasets_in_scope:
+    - MUTAG
+    - PROTEINS
+    - IMDB-BINARY
+  notes: >-
+    Disjoint train/valid/test are generated here (no official split exists).
+    Structure-only datasets derive the discrete node type from clipped degree;
+    labelled datasets use the given one-hot node/edge labels.
+
+split:
+  description: strict nested stratified k-fold, generated with a fixed seed
+  generator: sklearn StratifiedKFold(n_splits=k, shuffle=True, random_state=split_seed)
+  split_seed: 20260918
+  k_values_in_scope: [3, 10]
+  valid_fraction: 0.2
+  construction: >-
+    For each outer fold, the test set is one held-out stratified fold; the
+    remaining k-1 folds are split once, stratified, into train (80%) and
+    valid (20%) with `random_state = split_seed + 1000 * (fold + 1)`.
+  invariants:
+    - train, valid and test are pairwise disjoint within a fold
+    - every graph is in exactly one test set across the k folds
+    - the same frozen splits are used by every condition and every baseline
+  fingerprint_policy: >-
+    SHA-256 over the JSON of all fold index lists; written to
+    `splits_<dataset>_k<k>.json` before any training and required to match in
+    every run record.
+
+metric:
+  ranking_metric: valid_accuracy
+  metric_direction: higher_is_better
+  secondary_metrics:
+    - test_accuracy
+  unit: accuracy (higher is better)
+
+train_only_fitting_scope:
+  description: >-
+    The typed/parent vocabularies and every feature standardizer are fit on the
+    train fold only.  The valid fold is selection-only; the test fold is
+    evaluation-only.
+  oov_policy: unseen certificate -> index 0 (a learned OOV row)
+
+validation_selection_policy:
+  selection: max valid_accuracy
+  model_freeze: >-
+    Fixed equal-weight Top-5 soup over the best valid epochs plus the single
+    best-valid raw checkpoint are both frozen before the test fold is touched;
+    both are reported, never cherry-picked.
+
+test_policy: terminal
+test_access:
+  mode: held_out_fold
+  description_short: >-
+    The test fold of a run is read once, after best-valid checkpoint and Top-5
+    soup are frozen.  It never feeds training, early stopping, soup selection
+    or hyperparameter choice.  Test accuracy is a reported outcome only.
+
+seed_semantics:
+  seed_role: >-
+    The split seed is part of the protocol; the model seed governs torch/numpy
+    initialization and batch order and is recorded per run.
+  split_seed: 20260918
+  model_seeds: [0]
+  notes: >-
+    A run's scientific identity includes (dataset, k, fold, condition, seed);
+    different values are distinct runs.
+
+comparability:
+  requires:
+    - protocol_id
+    - dataset_fingerprint
+    - split_fingerprint
+  ranking_metric: valid_accuracy
+  note: >-
+    Test numbers compare only among runs with identical dataset and split
+    fingerprints.  A 10-fold run is reported alongside, not instead of, its
+    3-fold predecessor.
