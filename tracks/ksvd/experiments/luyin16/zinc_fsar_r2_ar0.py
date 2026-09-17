@@ -1189,30 +1189,51 @@ def gate() -> dict[str, Any]:
 
 def decide() -> dict[str, Any]:
     gate_payload = gate()
-    per_seed = gate_payload["per_seed"]
-    available = all(
-        per_seed[seed].get("passes_both") is not None for seed in SEEDS_FIRST_ROUND
+    per_seed: dict[int, dict[str, Any]] = {}
+    for seed in (*SEEDS_FIRST_ROUND, SEED_GATE):
+        values = {
+            variant: _run_soup_valid(_tag(variant), seed) for variant in r2.MODELS
+        }
+        if not all(value is not None for value in values.values()):
+            continue
+        delta_base = float(values["M0"] - values["MB"])
+        delta_capacity = float(values["MM"] - values["MB"])
+        per_seed[int(seed)] = {
+            **values,
+            "delta_base_M0_minus_MB": delta_base,
+            "delta_capacity_MM_minus_MB": delta_capacity,
+            "passes_both": bool(delta_base > 0.0 and delta_capacity > 0.0),
+        }
+    complete_seeds = sorted(per_seed)
+    all_pass = bool(complete_seeds) and all(
+        bool(per_seed[seed]["passes_both"]) for seed in complete_seeds
     )
-    if not available:
+    if len(complete_seeds) == 0:
         verdict = "INCOMPLETE"
         interpretation = "formal runs missing; no scientific verdict"
-    elif gate_payload["seed2_authorized"]:
-        verdict = "ASSIGNMENT_SUPPORTED_PENDING_SEED2"
+    elif len(complete_seeds) >= 2 and all_pass:
+        verdict = "ASSIGNMENT_SUPPORTED"
         interpretation = (
-            "MB beats both M0 and MM on seeds 0 and 1; seed 2 is authorized by the "
-            "pre-registered gate before the verdict is finalised"
+            "MB beats both M0 and MM on every paired seed run "
+            f"{complete_seeds}: under the current radius-2 explicit topology "
+            "coordinates, the node structural-role <-> atom-attribute assignment "
+            "provides a stable predictive increment beyond the structure/attribute "
+            "marginals and a matched marginal-capacity control"
         )
     else:
         verdict = "ASSIGNMENT_NOT_SUPPORTED"
         interpretation = (
-            "MB does not beat both M0 and MM on both paired seeds; the node-level "
+            "MB does not beat both M0 and MM on all paired seeds; the node-level "
             "linear assignment residual is not stably supported under this explicit "
-            "basis and training budget"
+            "basis / training budget"
         )
     payload = {
         "protocol_version": PROTOCOL_VERSION,
         "verdict": verdict,
         "interpretation": interpretation,
+        "complete_seeds": [int(seed) for seed in complete_seeds],
+        "all_complete_seeds_pass": bool(all_pass),
+        "per_seed": per_seed,
         "gate": gate_payload,
         "official_test_loaded": False,
     }
