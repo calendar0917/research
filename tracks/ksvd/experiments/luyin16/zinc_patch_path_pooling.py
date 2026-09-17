@@ -1737,14 +1737,28 @@ class PatchPathModel(nn.Module):
             "adaptive_structure_binding",
             "binding_composition",
             "factorized_binding",
+            # ``null``: keep the 16-D slot but feed an exact zero vector for
+            # every patch, with *no* local-token generator instantiated at all.
+            # ``constant``: same, but the slot is one trainable graph-wide
+            # vector (16 params) shared by every patch of every molecule.
+            "null",
+            "constant",
         }:
             raise ValueError(
                 f"unknown patch_representation={self.patch_representation!r}; "
                 "expected 'typed_lookup', 'shared_structural', 'shared_bag', "
                 "'explicit_composer', 'explicit_basis_rank1', "
                 "'explicit_object_relational', 'adaptive_structure_binding', "
-                "'binding_composition' or 'factorized_binding'"
+                "'binding_composition', 'factorized_binding', 'null' or "
+                "'constant'"
             )
+        # Evaluation-only local-token intervention.  ``None`` reproduces the
+        # frozen forward path bit-for-bit (no arithmetic is inserted).  See
+        # ``set_local_token_intervention``.
+        self.local_token_intervention: str | None = None
+        self.local_token_intervention_value: torch.Tensor | None = None
+        self.local_token_permute_seed: int | None = None
+        self.local_token_constant: nn.Parameter | None = None
         self.structural_node_dim = int(structural_node_dim)
         self.structural_edge_dim = int(structural_edge_dim)
         self.structural_hidden_dim = int(structural_hidden_dim)
@@ -2139,6 +2153,30 @@ class PatchPathModel(nn.Module):
             )
             del self.typed_embedding  # no vocabulary-sized table remains
             self.typed_embedding = None
+        elif self.patch_representation == "null":
+            # No local-token generator is instantiated at all: no vocabulary
+            # table, no structural encoder.  ``_patch_token_value`` returns an
+            # exact zero 16-D vector per patch, so the downstream patch encoder
+            # input width (and every other tensor) is unchanged while the
+            # generator's trainable parameters are genuinely absent.
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='null'"
+                )
+            del self.typed_embedding  # no local-token parameters remain
+            self.typed_embedding = None
+        elif self.patch_representation == "constant":
+            # One graph-wide trainable 16-D vector shared by every patch and
+            # every molecule; no patch-/molecule-dependent generator.
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='constant'"
+                )
+            del self.typed_embedding  # no local-token generator remains
+            self.typed_embedding = None
+            self.local_token_constant = nn.Parameter(torch.zeros(int(token_width)))
         parent_width = max(int(token_width // 2), 1)
         self.parent_width = int(parent_width)
         parent_rank = min(self.parent_embedding_rank, parent_width)
@@ -2507,15 +2545,100 @@ class PatchPathModel(nn.Module):
         return e_patch + delta * mask
 
     def _patch_token_value(self, data: Data) -> torch.Tensor:
-        """Per-patch token representation fed to the patch encoder.
+        """Per-patch 16-D local token fed to the patch encoder.
 
         ``typed_lookup``: a learned row per exact certificate vocabulary id.
-        ``shared_structural``: ``e_struct`` from the shared connectivity-aware
-        patch encoder (no exact-identity lookup).
+        ``shared_structural`` / ``shared_bag`` / ...: ``e_struct`` from a shared
+        molecule-dependent patch encoder (no exact-identity lookup).
+        ``null``: an exact zero vector per patch with no generator at all.
+        ``constant``: one graph-wide trainable vector shared by every patch.
+
+        Any evaluation-only intervention set via
+        :meth:`set_local_token_intervention` is applied to this single funnel.
         """
         if self.structural_encoder is not None:
-            return self.structural_encoder(data)
-        return self.typed_embedding(data.typed_token)
+            value = self.structural_encoder(data)
+        elif self.typed_embedding is not None:
+            value = self.typed_embedding(data.typed_token)
+        elif self.local_token_constant is not None:
+            count = int(data.patch_cont.shape[0])
+            value = self.local_token_constant.view(1, -1).expand(count, -1)
+        else:
+            count = int(data.patch_cont.shape[0])
+            value = data.patch_cont.new_zeros((count, int(self.token_width)))
+        return self._apply_local_token_intervention(value, data)
+
+    def set_local_token_intervention(
+        self,
+        mode: str | None = None,
+        *,
+        constant: torch.Tensor | None = None,
+        permute_seed: int | None = None,
+    ) -> "PatchPathModel":
+        """Install an evaluation-only intervention on the local 16-D token.
+
+        ``mode=None``/``'none'``/``'original'`` disables the intervention and
+        restores the frozen forward path (bit-identical).  ``'zero'`` replaces
+        every patch token with an exact zero vector.  ``'constant'`` replaces
+        every patch token with the supplied ``constant`` vector (same for all
+        patches / molecules).  ``'permute'`` randomly permutes patch tokens
+        *within* each molecule, preserving the token marginal distribution but
+        destroying token-to-patch alignment.  Only no-grad evaluation paths use
+        this; training code never sets it.
+        """
+        if mode in (None, "none", "original"):
+            mode = None
+        elif mode not in ("zero", "constant", "permute"):
+            raise ValueError(f"unknown local-token intervention {mode!r}")
+        self.local_token_intervention = mode
+        self.local_token_intervention_value = (
+            None if constant is None else constant.detach().clone()
+        )
+        self.local_token_permute_seed = (
+            None if permute_seed is None else int(permute_seed)
+        )
+        return self
+
+    def clear_local_token_intervention(self) -> "PatchPathModel":
+        return self.set_local_token_intervention(None)
+
+    def _apply_local_token_intervention(
+        self, value: torch.Tensor, data: Data
+    ) -> torch.Tensor:
+        mode = self.local_token_intervention
+        if mode is None:
+            return value
+        if mode == "zero":
+            return torch.zeros_like(value)
+        if mode == "constant":
+            constant = self.local_token_intervention_value
+            if constant is None:
+                raise RuntimeError(
+                    "constant intervention requires `constant=<tensor>`"
+                )
+            constant = constant.to(device=value.device, dtype=value.dtype).view(1, -1)
+            if int(constant.shape[1]) != int(value.shape[1]):
+                raise RuntimeError("intervention constant width mismatch")
+            return constant.expand_as(value)
+        if mode == "permute":
+            batch = data.batch
+            output = value.clone()
+            generator = torch.Generator().manual_seed(
+                int(self.local_token_permute_seed or 0)
+            )
+            batch_cpu = batch.detach().to("cpu")
+            for graph_id in torch.unique(batch_cpu).tolist():
+                index = torch.nonzero(
+                    batch_cpu == int(graph_id), as_tuple=False
+                ).view(-1)
+                if index.numel() <= 1:
+                    continue
+                order = torch.randperm(int(index.numel()), generator=generator)
+                index_device = index.to(value.device)
+                order_device = order.to(value.device)
+                output[index_device] = value[index_device[order_device]]
+            return output
+        raise RuntimeError(f"unknown local-token intervention {mode!r}")
 
     def encode(self, data: Data) -> torch.Tensor:
         """Return the unified graph representation ``R`` (the input to the
