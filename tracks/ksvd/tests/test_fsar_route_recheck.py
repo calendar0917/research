@@ -553,3 +553,16 @@ def test_branch_weight_norms_map_sub_branches() -> None:
         ]
         is None
     )
+
+
+def test_gradient_audit_row_normalisation() -> None:
+    """`gate` must read both the flat and the nested audit-row layouts."""
+    from tracks.ksvd.experiments.luyin16 import zinc_fsar_route_recheck as zr
+
+    flat = {
+        "active_prediction_path_params": 95209,
+        "zero_grad_parameter_elements": 17049,
+    }
+    nested = {"active_path": dict(flat), "mode": "SABI"}
+    assert zr._gradient_audit_row(flat)["active_prediction_path_params"] == 95209
+    assert zr._gradient_audit_row(nested)["zero_grad_parameter_elements"] == 17049

@@ -1333,6 +1333,17 @@ def _edge_branch_alive(mode: str, seed: int) -> bool | None:
     return "edge_role_mlp" not in payload.get("annihilated_branches", [])
 
 
+def _gradient_audit_row(row: dict[str, Any]) -> dict[str, Any]:
+    """Normalise a ``gradient_audit`` per-mode row to the flat layout.
+
+    ``active_path_from_grads`` is merged flat into the per-mode row by
+    ``gradient_audit``; a nested ``active_path`` key is tolerated for
+    forward/backward compatibility.
+    """
+    nested = row.get("active_path")
+    return nested if isinstance(nested, dict) else row
+
+
 def gate() -> dict[str, Any]:
     payload: dict[str, Any] = {
         "protocol_version": PROTOCOL_VERSION,
@@ -1361,16 +1372,16 @@ def gate() -> dict[str, Any]:
     payload["gradient_audit_available"] = audit is not None
     if audit is not None:
         payload["gradient_audit_all_pass"] = bool(audit.get("all_pass"))
+
+        def _audit_row(mode: str) -> dict[str, Any]:
+            return _gradient_audit_row(audit["modes"][mode])
+
         payload["zero_grad_on_nulls"] = {
-            mode: audit["modes"][mode]["active_path"][
-                "zero_grad_parameter_elements"
-            ]
+            mode: _audit_row(mode)["zero_grad_parameter_elements"]
             for mode in audit["modes"]
         }
         payload["active_prediction_path_params"] = {
-            mode: audit["modes"][mode]["active_path"][
-                "active_prediction_path_params"
-            ]
+            mode: _audit_row(mode)["active_prediction_path_params"]
             for mode in audit["modes"]
         }
     payload["matched_control_valid"] = bool(
