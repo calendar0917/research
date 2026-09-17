@@ -5,7 +5,7 @@ Round name: ``FSAR-R2-AR0``.
 Stages
 ------
 ``params preprocess audit sanity gradient_audit synthetic train soup run
-diagnostics witness shuffle_eval gate decide report``
+diagnostics witness shuffle_eval gate decide analyze report``
 
 The frozen training protocol is inherited verbatim from the optimized
 compact-v4 cell: Adam, lr 1e-3, weight decay 1e-5, batch 128, grad clip 5.0,
@@ -1242,6 +1242,79 @@ def decide() -> dict[str, Any]:
     return payload
 
 
+# ---------------------------------------------------------------------------
+# local paired analysis on pulled results
+# ---------------------------------------------------------------------------
+
+
+def _soup_predictions(variant: str, seed: int, loader, scalers):
+    state_path = SOUP_DIR / f"{_tag(variant)}_seed{seed}_top5_soup.pt"
+    if not state_path.exists():
+        return None
+    model = r2.build_model(variant, scalers)
+    state = torch.load(state_path, map_location="cpu", weights_only=True)
+    return _predict_state(model, state, loader, torch.device("cpu"))
+
+
+def analyze(repeats: int = 5000, bootstrap_seed: int = 20260917) -> dict[str, Any]:
+    """Paired per-molecule bootstrap of the soup predictions (eval-only)."""
+    _train, valid_molecules, scalers, _meta = build_datasets()
+    loader = _loader(valid_molecules, 128, False, 0)
+    rng = np.random.default_rng(int(bootstrap_seed))
+    targets: np.ndarray | None = None
+    per_seed: dict[str, Any] = {}
+    for seed in (*SEEDS_FIRST_ROUND, SEED_GATE):
+        predictions = {
+            variant: _soup_predictions(variant, seed, loader, scalers)
+            for variant in r2.MODELS
+        }
+        if any(value is None for value in predictions.values()):
+            continue
+        targets = predictions["M0"][0]
+        matrix = {variant: predictions[variant][1] for variant in r2.MODELS}
+        n = int(targets.shape[0])
+        index = rng.integers(0, n, size=(int(repeats), n))
+        base_mae = np.abs(matrix["M0"][index] - targets[index]).mean(axis=1)
+        mb_mae = np.abs(matrix["MB"][index] - targets[index]).mean(axis=1)
+        mm_mae = np.abs(matrix["MM"][index] - targets[index]).mean(axis=1)
+        delta_base = base_mae - mb_mae
+        delta_capacity = mm_mae - mb_mae
+
+        def _ci(values: np.ndarray) -> dict[str, float]:
+            return {
+                "mean": float(values.mean()),
+                "median": float(np.median(values)),
+                "ci95_low": float(np.percentile(values, 2.5)),
+                "ci95_high": float(np.percentile(values, 97.5)),
+                "prob_gt_zero": float((values > 0.0).mean()),
+            }
+
+        per_seed[str(int(seed))] = {
+            "point_mae": {
+                variant: float(np.mean(np.abs(matrix[variant] - targets)))
+                for variant in r2.MODELS
+            },
+            "delta_base_M0_minus_MB": _ci(delta_base),
+            "delta_capacity_MM_minus_MB": _ci(delta_capacity),
+            "passes_both": bool(delta_base.mean() > 0.0 and delta_capacity.mean() > 0.0),
+        }
+    complete = sorted(per_seed, key=int)
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "bootstrap_repeats": int(repeats),
+        "bootstrap_seed": int(bootstrap_seed),
+        "n_valid_molecules": int(targets.shape[0]) if targets is not None else 0,
+        "per_seed": per_seed,
+        "complete_seeds": complete,
+        "all_complete_seeds_pass": bool(complete)
+        and all(per_seed[seed]["passes_both"] for seed in complete),
+        "official_test_loaded": False,
+    }
+    _write_json(RESULTS_DIR / "analysis_paired_bootstrap.json", payload)
+    print(json.dumps(payload, indent=2, sort_keys=True, default=str), flush=True)
+    return payload
+
+
 def report() -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     seeds: list[int] = []
@@ -1332,6 +1405,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     p = sub.add_parser("gate")
     p = sub.add_parser("decide")
     p = sub.add_parser("report")
+    p = sub.add_parser("analyze")
+    p.add_argument("--repeats", type=int, default=5000)
     p = sub.add_parser("gradient_audit")
     p.add_argument("--variant", default="MB", choices=list(r2.MODELS))
     p.add_argument("--all", action="store_true")
@@ -1398,6 +1473,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         decide()
     elif arguments.stage == "report":
         report()
+    elif arguments.stage == "analyze":
+        analyze(repeats=int(arguments.repeats))
     else:  # pragma: no cover
         raise SystemExit(f"unknown stage {arguments.stage!r}")
     return 0
