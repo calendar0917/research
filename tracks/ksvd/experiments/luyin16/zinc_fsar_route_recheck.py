@@ -1316,6 +1316,23 @@ def _v1_soup_valid(mode: str, seed: int) -> float | None:
     return float(_read_json(path)["top5_soup_valid_mae"])
 
 
+def _edge_branch_alive(mode: str, seed: int) -> bool | None:
+    """Post-hoc B edge sub-branch liveness from the ``checkpoint_audit`` stage.
+
+    ``True`` = the edge sub-branch survived training, ``False`` = it was
+    annihilated (``Adam + L2`` near-zero-gradient primitive annihilation),
+    ``None`` = no audit artifact / the sub-branch does not exist by design.
+    """
+    path = RESULTS_DIR / f"checkpoint_audit_{_tag(mode, None)}_seed{seed}_soup.json"
+    if not path.exists():
+        return None
+    payload = _read_json(path)
+    norms = payload.get("trained_branch_weight_abs_sum", {})
+    if norms.get("edge_role_mlp") is None:
+        return None
+    return "edge_role_mlp" not in payload.get("annihilated_branches", [])
+
+
 def gate() -> dict[str, Any]:
     payload: dict[str, Any] = {
         "protocol_version": PROTOCOL_VERSION,
@@ -1548,6 +1565,64 @@ def decide() -> dict[str, Any]:
         "seed0_ran": bool(explicit_delta["0"] is not None or sabe_seed0 is not None),
         "supported": bool(payload["explicit_binding_supported"]),
     }
+    # --- POST-HOC edge-sub-branch stratification (NOT the primary gate) -----
+    # Discovered by the ``checkpoint_audit`` stage after Waves 1-5: the aligned
+    # B edge sub-branch is seed-unstable and is annihilated in some runs.  A
+    # delta_B pair is only a clean aligned-vs-independent comparison when both
+    # members have the same edge-branch fate; otherwise the difference also
+    # contains the edge sub-branch's own contribution.  This block is recorded
+    # as exploratory only and does not modify the pre-registered verdicts.
+    edge_state = {
+        mode: {seed: _edge_branch_alive(mode, seed) for seed in (0, 1)}
+        for mode in ("SAB", "SABI", "SABE", "SABEI")
+    }
+    payload["edge_branch_alive"] = edge_state
+
+    def _matched(align_mode: str, null_mode: str) -> dict[str, Any]:
+        rows: dict[str, Any] = {}
+        for seed in (0, 1):
+            align = edge_state[align_mode][seed]
+            null = edge_state[null_mode][seed]
+            rows[str(seed)] = {
+                "align_edge_alive": align,
+                "null_edge_alive": null,
+                "edge_matched": (
+                    None if (align is None or null is None) else bool(align == null)
+                ),
+            }
+        return rows
+
+    latent_match = _matched("SAB", "SABI")
+    explicit_match = _matched("SABE", "SABEI")
+    matched_latent_seeds = [
+        seed for seed in (0, 1) if latent_match[str(seed)]["edge_matched"] is True
+    ]
+    payload["post_hoc_edge_match_stratification"] = {
+        "note": (
+            "Exploratory only. The pre-registered delta_B gate above is "
+            "unchanged; this block just records which seed pairs compare two "
+            "B channels with the same edge-sub-branch fate."
+        ),
+        "latent_aligned_vs_null": latent_match,
+        "explicit_aligned_vs_null": explicit_match,
+        "latent_edge_matched_seeds": matched_latent_seeds,
+        "latent_delta_on_edge_matched_seeds": {
+            str(seed): latent_delta[str(seed)] for seed in matched_latent_seeds
+        },
+        "latent_edge_matched_all_negative": bool(
+            matched_latent_seeds
+            and all(
+                latent_delta[str(seed)] is not None
+                and latent_delta[str(seed)] < 0.0
+                for seed in matched_latent_seeds
+            )
+        ),
+    }
+    payload["answer_B_clean_binding"]["edge_matched_seeds"] = matched_latent_seeds
+    payload["answer_B_clean_binding"]["note"] = (
+        "Seed 0 is edge-confounded (aligned SAB kept its edge sub-branch, the "
+        "null did not); seed 1 is edge-matched (both dead) and negative."
+    )
     _write_json(RESULTS_DIR / "decision.json", payload)
     print(json.dumps(payload, indent=2, sort_keys=True, default=str), flush=True)
     return payload
