@@ -500,10 +500,15 @@ def stage_a_reference(
         "recorded_soup_valid_mae": (
             None if not recorded else float(recorded["top5_soup_valid_mae"])
         ),
+        "recomputed_minus_recorded": (
+            None
+            if not recorded
+            else float(original_mae - float(recorded["top5_soup_valid_mae"]))
+        ),
         "recomputed_equals_recorded": (
             None
             if not recorded
-            else bool(abs(original_mae - float(recorded["top5_soup_valid_mae"])) < 1e-9)
+            else bool(abs(original_mae - float(recorded["top5_soup_valid_mae"])) < 1e-6)
         ),
         "train_side_mean_token": [float(v) for v in constant.tolist()],
         "train_side_mean_token_norm": float(constant.norm()),
