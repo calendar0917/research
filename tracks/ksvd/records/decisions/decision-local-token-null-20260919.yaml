@@ -1,0 +1,95 @@
+decision_id: decision-local-token-null-20260919
+created: '2026-09-19T12:10:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Decision - LOCAL 16-D PATCH-TOKEN CHANNEL: STRONG / NOT REQUIRED, do NOT
+  promote a checkpoint, do NOT buy seed1, do NOT open the official ZINC test.
+  On the frozen deterministic-A100 ZINC-12K official train/valid regime
+  (training revision b31d1bc; official test never loaded) the single
+  pre-registered seed0 B-Null (``e_patch = 0``, no local-token generator,
+  49,343 params) reaches Top-5 soup valid 0.123028 (raw 0.126873 @ep237,
+  240 epochs, wall 5228.9 s, peak GPU 305.5 MB) and the authorised seed0
+  Constant-16 (one trainable graph-wide 16-vector, 49,359 params) reaches
+  Top-5 soup 0.120515 (raw 0.126260 @ep225, wall 5112.5 s, peak GPU 305.3 MB).
+  Pre-registered bands: B-Null 0.123028 <= 0.13 -> STRONG
+  (STRONG_LOCAL_TOKEN_CHANNEL_NOT_REQUIRED) and authorised Stage C.  Matched
+  seed0 references: A0 0.124704, B-Bag 0.127382, B-Full 0.119818.  B-Null beats
+  A0 and B-Bag seed0 and is +0.003210 above B-Full; Constant-16 is +0.000697
+  above B-Full and -0.002512 vs B-Null.  The full molecule-dependent local
+  16-D family is worth 36,420 / 35,168 / 35,152 params (41.6-42.5 % of the
+  reference totals); deleting it costs at most ~0.003 at seed0.  Stage A
+  frozen knockouts agree: B-Bag +0.000294 and B-Full +0.002534 (2-seed means),
+  versus A0 +0.195931.  The A0 catastrophe is not evidence that the strong
+  backbone needs the channel: A0's learned table has mean-token norm 0.44/0.36
+  and freezing it is a distribution-shift artefact, while A0's own retrained
+  zero-slot A2 control already reached 0.1217.  PATTERN 1+2: Null ~ Constant ~
+  B-Full; the channel is broadly redundant and the slot's residual value is a
+  shared trainable offset (16 params), matching the near rank-1 shared
+  structural ``e_struct``.  Mechanism witness: no typed embedding /
+  structural encoder instantiated, patch-encoder input width unchanged (170),
+  Null token exactly zero, Constant norm 0.00919, all ten remaining backbone
+  groups receive non-zero gradient, forward finite, official test never loaded.
+  Do NOT promote, do NOT buy seed1, do NOT re-invest the released 35-36k
+  parameters, do NOT widen the backbone, do NOT add structural features /
+  radius / RRWP / cycles / pair networks / attention, do NOT sweep
+  hyperparameters or optimisers, do NOT open the official ZINC test, do NOT
+  treat the frozen knockout as a retrained causal claim.
+why_this_experiment: >-
+  Prior rounds established that the learned typed identity is dispensable (A2
+  zero-slot ~ A1 ~ A0), that a vocab-free shared structural encoder matches or
+  beats the typed lookup, and that its learned 16-D ``e_struct`` is near
+  rank-1.  What was never tested is the channel itself: can the molecule-
+  dependent local 16-D token be deleted outright rather than replaced?  This is
+  a channel-necessity / backbone ablation, and the released parameter budget is
+  deliberately not re-invested so the parameter drop is the experimental
+  variable, not a confound.
+protocol: >-
+  Pre-registered in notes/local_token_null_preregistration.md before any run.
+  Stage A eval-only: frozen reference soups (A0 / B-Bag / B-Full), ``e_patch``
+  set to exact zero / train-side mean / within-molecule permutation, backbone
+  frozen, tensor shape unchanged, no retrain, no new training.  Stage B/C:
+  canonical OPTIMIZED_PROTOCOL (Adam lr 1e-3, wd 1e-5, batch 128, 240 epochs,
+  patience 40, L1, clip 5.0, fixed equal-weight Top-5 soup,
+  torch.use_deterministic_algorithms(True)); only seed0, only one architecture
+  at a time; training revision b31d1bc; official test never loaded.  Two new
+  ``patch_representation`` values (``null``, ``constant``) and a default-off
+  eval-only intervention hook were added to the central model with
+  bit-identical default behaviour; 11 targeted tests plus 65 related tests pass.
+alternatives_rejected:
+  - item: Buying a second seed for B-Null or Constant-16
+    because: >-
+      the pre-registration authorises seed0 only and the deltas (<= 0.003) are
+      within the ~0.004-0.007 seed-spread scale; a seed1 would not change the
+      redundancy conclusion.
+  - item: Promoting a Null / Constant checkpoint as a new best model
+    because: >-
+      both are worse than B-Full seed0 on the point estimate; the scientific
+      result is parameter redundancy, not a performance win.  The round
+      reports and stops.
+  - item: Re-investing the released 35-36k parameters into other modules
+    because: >-
+      that would confound deletion with reallocation and is explicitly outside
+      this round's question.
+  - item: Opening the official ZINC test
+    because: >-
+      architecture selection must not use it and this round is a redundancy
+      screen, not a terminal claim.
+consequences:
+  - >-
+    The FSAR-C1 residual gap (0.182050) can no longer be attributed to a
+    missing sophisticated local 16-D patch embedding.
+  - >-
+    Hypothesis ranking for the remaining strong-backbone gap moves to
+    ``patch_cont`` shell chemistry, radius-1 parent typed context, the mixed
+    pair relation, the pair-centre/co-occurrence computation, the
+    global/topology channels and the readout (not identified in this round).
+next_action: >-
+  ONE action only (not auto-authorized here): extend the same channel-necessity
+  question to MolHIV, where the strong recurrent pair--centre backbone spends
+  839,456 of its 1,076,589 params on a dense typed certificate lookup
+  ([26233,32], 78 %) and 235,485 on the fixed backbone.  That requires a
+  separate pre-registration under the molhiv-cross-scaffold-interaction
+  protocol (terminal test policy, freeze before a single official-test open),
+  a matched MolHIV Null/Constant candidate, and a valid-only selection phase
+  first.  Do not start it without that pre-registration.
