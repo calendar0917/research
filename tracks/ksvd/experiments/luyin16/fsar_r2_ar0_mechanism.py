@@ -839,6 +839,12 @@ def assemble_summary() -> dict[str, Any]:
     summary: dict[str, Any] = {
         "protocol_version": PROTOCOL_VERSION,
         "git_commit": runner._git_commit(),
+        "environment": runner._environment_fingerprint("cpu"),
+        "h5_provenance": {
+            "ran_on": "remote A100 host, CUDA_VISIBLE_DEVICES=1 (CPU tensors), deterministic",
+            "remote_repo": "/home/hxy/cy/research",
+            "official_test_loaded": False,
+        },
         "official_test_loaded": False,
     }
     for name in (
