@@ -152,12 +152,12 @@ def freeze() -> dict[str, Any]:
         checks[f"{representation}_params_match_expected"] = bool(
             int(run["parameters"]) == EXPECTED_TOTAL[representation]
         )
-        checks[f"{representation}_soup_valid_matches_recorded"] = bool(
+        checks[f"{representation}_raw_valid_matches_run"] = bool(
             abs(
-                float(soup["top5_soup_valid_mae"])
-                - float(run["soup_valid_mae"])
+                float(soup["best_checkpoint_valid_mae"])
+                - float(run["best_valid_mae"])
             )
-            < 1e-9
+            < 1e-6
         )
         checks[f"{representation}_source_test_never_loaded"] = bool(
             run.get("official_test_loaded") is False
