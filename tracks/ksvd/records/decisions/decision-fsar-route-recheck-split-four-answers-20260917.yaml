@@ -1,0 +1,103 @@
+decision_id: decision-fsar-route-recheck-split-four-answers-20260917
+created: '2026-09-17T11:15:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Decision - FSAR ROUTE RECHECK, FOUR SPLIT ANSWERS (no merged verdict).  (A)
+  Historical replication STANDS as a replication, not as binding evidence:
+  SAM - SAB = +0.003270 (seed0) / +0.001886 (seed1), both positive, but SAM has
+  no aligned channel at all, so this comparison cannot carry a binding claim.
+  (B) CLEAN BINDING NOT SUPPORTED: with a genuinely operator-matched, total- and
+  B-parameter-matched, assignment-independent null, delta_B_latent = +0.014466 /
+  -0.002719 (mean +0.005874); the pre-registered both-seeds-positive gate fails
+  and the only edge-sub-branch-matched seed is negative.  (C) EXPLICIT LOCAL
+  STRUCTURAL S IS A VIABLE REPLACEMENT for the latent topology-GNN local S:
+  SAE - SA_v1 = -0.007199 (explicit better, seed0, no B present), SABE mean cost
+  +0.003896 (moderate band) with the cost concentrated in the one seed where the
+  latent B retained an extra sub-branch, and SABE is ~3x more seed-stable.
+  (D) EXPLICIT BINDING NOT SUPPORTED: delta_B_explicit(seed0) = -0.004190 on a
+  function-class-matched pair.  MECHANISM OF RECORD: the B edge sub-branch is
+  annihilated by Adam+L2 and is seed-unstable in FSAR-v1 itself (alive at SAB
+  seed0, 1.6e-36 at SAB seed1, proved by bit-for-bit reproduction of both v1
+  soups), so future binding claims on this code must report the edge-sub-branch
+  state per checkpoint or exclude the edge sub-branch from B by construction.
+  Do NOT read this round as "aligned binding is harmful in general" and do NOT
+  claim any competitive advantage: SAB is worse than the frozen B-Bag baseline
+  by +0.003531 / +0.023472.
+why_this_experiment: >-
+  Three independent open questions could not be answered by the FSAR-v1/v2
+  rounds: (1) is the FSAR-v1 SAB advantage stable across seeds, (2) does aligned
+  binding carry an increment under a genuinely operator-matched and
+  active-capacity-matched assignment-independent null rather than a marginal-only
+  capacity MLP, and (3) can the latent topology-GNN local S be replaced by an
+  explicit local structural basis without losing most of the performance.  The
+  old SAM control was not operator-matched and the old SAB seed0 result was
+  single-seed, so both earlier conclusions were underdetermined.
+protocol: >-
+  Frozen deterministic A100 protocol (Adam lr 1e-3, weight decay 1e-5, batch
+  128, max 240 epochs, patience 40, no scheduler, L1 loss, gradient clip 5.0,
+  79 steps/epoch, best-official-valid checkpoint selection, fixed equal-weight
+  Top-5 soup, torch.use_deterministic_algorithms(True)).  FSAR-v1 A / R_S / G_S
+  frozen and not retrained; A_exact not retrained and not used.  Six waves, two
+  jobs in parallel on GPU 1 only; GPU 0 held an unknown 35.8 GB task that was
+  never touched; the GPU-1 co-tenant grew from 0.54 GB to 5.6 GB mid-round and
+  was recorded, not touched.  Peak our-GPU memory 288-451 MB.  Official ZINC test
+  never loaded.
+alternatives_rejected:
+  - item: Keeping the FSAR-v1 marginal-only SAM as the binding control
+    because: >-
+      SAM has no aligned channel at all (its binding modules do not exist; only
+      a 663-|w| capacity_mlp is alive) and its parameter count differs from SAB
+      by 56, so SAM - SAB is not an aligned-vs-null comparison.
+  - item: Reporting the seed0 delta_B_latent = +0.014466 as a clean binding gain
+    because: >-
+      on that seed the aligned SAB kept its edge sub-branch (|w| 92.4) while the
+      null did not (0.0 by design of the annihilation trajectory), so the delta
+      also contains the edge sub-branch's contribution.
+  - item: Declaring the explicit local structural basis a failure because seed0
+      SABE - SAB = +0.012388 lands in the "large cost" band
+    because: >-
+      the S-only comparison with no B present (SAE - SA_v1 = -0.007199) shows the
+      explicit basis BEATS the latent topology-GNN S, and the seed0 S+B gap is
+      driven by the latent SAB's unusually rich B, not by the explicit basis.
+  - item: Buying Wave 5 (seed1 explicit null + SAE seed1) automatically
+    because: >-
+      the pre-registered Wave-5 trigger was false (SABE 0.143301 < SABEI - 0.001
+      = 0.138111 is false) and §24 forbids buying it when explicit seed0 is
+      already > implicit SAB + 0.005 with no special mechanism advantage.
+  - item: Reopening A_exact, A width sweeps, DeepSets / Transformer / attention
+      variants, or an auxiliary binding loss
+    because: >-
+      none is needed for any of the four answers and each is an explicitly
+      closed line.
+  - item: Reading the official ZINC test
+    because: >-
+      never loaded by design; no test read is authorized by this decision.
+consequences:
+  - >-
+    The FSAR-v1 "SAB advantage" survives only as a replication of a
+    dead-channel-vs-alive-channel comparison; it is not evidence that aligned
+    structure-attribute binding earns its keep.
+  - >-
+    The latent topology-GNN local S is dispensable at ZINC-12K scale: an 11-D
+    node / 15-D edge explicit local structural basis is better at seed0 on the
+    S-only comparison and more seed-stable on S+B.
+  - >-
+    The B channel of this architecture is fragile: its edge sub-branch is
+    annihilated in most runs and is seed-unstable even in FSAR-v1.  Any future
+    binding experiment on this code must either report per-checkpoint
+    edge-sub-branch liveness or remove the edge sub-branch from B so aligned and
+    null have identical function class by construction.
+  - >-
+    No mode from this round beats the frozen external baselines (B-Bag / B-Full
+    / A2) on either seed, so no benchmark-improvement claim is opened.
+revisit_if: >-
+  A seed-1 explicit-null (SABEI) run is funded and its edge-matched pair with
+  SABE is again negative; OR B is redefined to exclude the edge sub-branch (or
+  that sub-branch is protected from annihilation) so aligned and independent
+  differ only in the moment construction and answer B can be re-asked on truly
+  function-class-matched pairs at both seeds; OR an explicit-basis revision
+  addresses the near-constant common_neighbours coordinate and the
+  0.163-frequency root / sh0 coordinates.  Not by A width sweeps, not by
+  DeepSets / Transformer / attention variants, not by an auxiliary binding loss,
+  not by reopening A_exact, not by reading the official test.

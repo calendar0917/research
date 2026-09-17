@@ -1,0 +1,130 @@
+claim_id: claim-fsar-route-recheck-binding-null-explicit-s-20260917
+created: '2026-09-17T11:10:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  FSAR route recheck (deterministic A100, ZINC-12K official train/valid only,
+  official test never loaded, fixed equal-weight Top-5 soup, valid MAE).  FOUR
+  SEPARATE ANSWERS, no merged verdict.  (A) Historical replication: FSAR-v1
+  SAB < SAM replicates in direction on both seeds (SAM - SAB = +0.003270 seed0 /
+  +0.001886 seed1) but SAM has NO aligned channel (its edge_role_mlp /
+  binding_fuse / node_role_projection do not exist; only a 663-|w| capacity_mlp),
+  so this replicates a logged comparison rather than testing binding.  (B) Clean
+  binding NOT supported: against a genuinely operator-matched, total- and
+  B-parameter-matched, assignment-independent null (B_indep), delta_B_latent =
+  MAE(SABI) - MAE(SAB) = +0.014466 (seed0) / -0.002719 (seed1), mean +0.005874;
+  the pre-registered gate (both seeds > 0 and mean >= 0.001) fails, and the only
+  seed on which the two B channels have the same edge-sub-branch fate (seed1) is
+  NEGATIVE.  (C) Structural explicitness SUPPORTED with a caveat: the explicit
+  local structural basis beats the latent topology-GNN local S on the S-only
+  comparison (SAE - SA_v1 = -0.007199) and is ~3x more seed-stable (SABE range
+  0.004195 vs SAB 0.012788); on S+B the mean cost is +0.003896 (moderate band)
+  concentrated in the seed where the latent B kept an extra sub-branch.  (D)
+  Explicit binding NOT supported: delta_B_explicit(seed0) = -0.004190 on a
+  function-class-matched pair (the null is better).  MECHANISM: the B channel's
+  edge sub-branch is annihilated by Adam+L2, and it is seed-UNSTABLE in FSAR-v1
+  itself (alive |w| 92.4 at SAB seed0, 1.6e-36 at SAB seed1), which is why
+  answer B's seed0 and answer C's "large cost" are edge-confounded.  No mode in
+  this round beats the frozen external baselines B-Bag / B-Full / A2 on either
+  seed (SAB - B-Bag = +0.003531 / +0.023472).
+scope: >-
+  ZINC-12K official train/valid only; deterministic NVIDIA A100-SXM4-40GB;
+  seeds 0 and 1; frozen FSAR-v1 A / R_S / G_S unchanged and not retrained;
+  A_exact not retrained and not used; official test never loaded; no A width
+  sweep, no DeepSets / Transformer / attention variant, no auxiliary binding
+  loss.  Training revision 50b5972; Wave-6 harness control at 2146a24.
+supporting_evidence:
+  - >-
+    Harness equivalence proved bit-for-bit (Wave 6): route_sab soup
+    0.13091256372159113 / 0.1437008262788295 equals the frozen FSAR-v1 SAB soups
+    to the last float, with identical top-5 epoch lists, so the cross-harness
+    latent reference is paired.
+  - >-
+    gate: matched_control_valid true; SAB and SABI both 95,209 total / 13,504 B
+    params; SABE and SABEI both 79,177 total / 11,264 B params; gradient audit
+    all_pass; module-granularity active_prediction_path_params == total for
+    every mode; zero-grad on SABI exceeds SAB by exactly 2048 first-moment
+    binding_fuse columns (+71 unused rows).
+  - >-
+    Soup MAE seed0/seed1: SAB 0.130913/0.143701, SAM 0.134182/0.145587,
+    SABI 0.145379/0.140982, SAE 0.144418/-, SABE 0.143301/0.139105,
+    SABEI 0.139111/-; FSAR-v1 A 0.157917, SA 0.151617.
+  - >-
+    Wave 4 fired (SABE 0.143301 < SAE - 0.001 = 0.143418); Wave 5 did not fire
+    (SABE 0.143301 < SABEI - 0.001 = 0.138111 is false), so seed-1 explicit-null
+    and SAE seed-1 were not bought.
+  - >-
+    checkpoint_audit (new stage): FSAR-v1 SAB seed0 edge sub-branch alive
+    (edge_role_mlp 92.43, edge_attribute_mlp 55.99, edge_role_projection 11.78),
+    FSAR-v1 SAB seed1 annihilated (1.6e-36 / 8.0e-37 / 5.2e-37); all route B
+    modes edge-dead; SAM binding modules absent by design with capacity_mlp
+    661.8 alive.
+  - >-
+    witness (soup, fixed-centre attribute shuffle): A and S exactly stable
+    (0.0) in every mode; SABI and SABEI B delta and prediction delta EXACTLY
+    0.0 (the assignment-free null is exactly assignment-invariant); SAB 0.3567 /
+    SABE 0.1006 with prediction deltas 1.0178 / 0.3864.
+  - >-
+    Frozen interventions (1,000 valid molecules, reliance diagnostics, not
+    additive causal estimates): A dominates everywhere (no-A +1.32 to +3.95);
+    S weakest (+0.11 to +0.27); SAB seed0 is the most B-reliant mode (no-B
+    +0.4346, shuffle +0.8421); null shuffle deltas exactly 0.0.
+  - >-
+    Channel diagnostics: B effective rank 15.94 (SAB seed0, edge alive) vs
+    4.25-8.71 (all edge-dead modes); A ranks 10.4-11.8.
+  - >-
+    Sanity 15/15 remote and 17/17 local suite; explicit-path checks include
+    no-message-passing (AST), chemistry purity, relabel equivariance, no mixed
+    bypass.
+  - >-
+    external matched references (frozen): B-Bag 0.127382/0.120229,
+    B-Full 0.119818/0.118126, A2 0.121694/0.122134; SAB is worse than B-Bag at
+    both seeds.
+contradicting_evidence:
+  - >-
+    Answer B's seed0 delta is large and positive (+0.014466) and the mean
+    (+0.005874) clears the 0.001 threshold; only the both-seeds-positive gate
+    fails.  An advocate of aligned binding can point at seed0.
+  - >-
+    The seed0 confound means the round does NOT establish that aligned binding is
+    useless in general; it establishes that this particular
+    operator-matched/parameter-matched null is not beaten on any
+    edge-sub-branch-matched seed.
+  - >-
+    Answer D rests on a single seed (seed1 explicit null not funded), and Wave 4
+    fired on a 0.000117 margin, so the explicit-binding negative is one-seed.
+  - >-
+    The explicit-basis win (SAE - SA = -0.007199) is also seed0-only; SAE seed1
+    was not run.
+evidence:
+  - results/fsar_route_recheck/gate.json
+  - results/fsar_route_recheck/sanity.json
+  - results/fsar_route_recheck/gradient_audit.json
+  - results/fsar_route_recheck/decision.json
+  - results/fsar_route_recheck/report.json
+  - results/fsar_route_recheck/soup_route_sab_seed0.json
+  - results/fsar_route_recheck/soup_route_sab_seed1.json
+  - results/fsar_route_recheck/soup_route_sabi_seed0.json
+  - results/fsar_route_recheck/soup_route_sabi_seed1.json
+  - results/fsar_route_recheck/soup_route_sae_seed0.json
+  - results/fsar_route_recheck/soup_route_sabe_seed0.json
+  - results/fsar_route_recheck/soup_route_sabe_seed1.json
+  - results/fsar_route_recheck/soup_route_sabei_seed0.json
+  - results/fsar_route_recheck/checkpoint_audit_route_sab_seed0_soup.json
+  - results/fsar_route_recheck/checkpoint_audit_route_sab_seed1_soup.json
+  - results/fsar_route_recheck/checkpoint_audit_route_sabi_seed0_soup.json
+  - results/fsar_route_recheck/checkpoint_audit_route_sabe_seed0_soup.json
+  - results/fsar_route_recheck/checkpoint_audit_route_sabei_seed0_soup.json
+  - results/fsar_route_recheck/witness_route_sabi_seed0_soup.json
+  - results/fsar_route_recheck/witness_route_sabei_seed0_soup.json
+  - results/fsar_route_recheck/witness_route_sabe_seed1_soup.json
+  - results/fsar_route_recheck/interventions_route_sab_seed0_soup.json
+  - results/fsar_route_recheck/interventions_route_sabi_seed1_soup.json
+  - results/fsar_route_recheck/diagnostics_route_sab_seed0_soup.json
+  - results/fsar_route_recheck/explicit_basis_diagnostics_route_sabe_seed0_soup.json
+  - results/fsar/soup_fsar_sab_seed1.json
+  - results/fsar/soup_fsar_sam_seed1.json
+  - notes/fsar_route_recheck_preregistration.md
+  - notes/fsar_route_recheck_verdict.md
+  - tests/test_fsar_route_recheck.py (17 pass)
