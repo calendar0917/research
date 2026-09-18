@@ -9,8 +9,20 @@
    只读取 context 指向的 `STATE.yaml`、当前 `Study`、`Protocol` 与相关
    `Claim`/`Decision`；不要默认读取全部 luyin16 result Markdown，也不要
    默认读取全部 TRACK 或全部 research guide。
-3. 需要环境诊断或数据核对时运行 `uv run research doctor`。
+3. 需要环境诊断或数据核对时运行 `uv run research doctor`；
+   需要科研记录 / STATE 一致性检查时运行 `uv run research verify`。
 4. 明确任务属于哪个 track、哪个 stage 和哪个 `protocol_id`，再改代码或运行实验。
+
+### 测试
+
+- 快速子集（CI 使用，约 10s，不加载数据/checkpoint）：
+  `uv run pytest -q -m "not slow" tracks/ksvd/tests`
+- 全量套件（较慢，约 100s）：`uv run pytest -q tracks/ksvd/tests`
+- 加载 ZINC 数据 / checkpoint 或跑训练审计的测试会被自动打上 `slow` 标记
+  （见 `tracks/ksvd/tests/conftest.py`）；新增长耗时测试时把模块加入该列表。
+- CI gate：`.github/workflows/research-integrity.yml`（CPU-only：`uv sync
+  --frozen` → `research verify` → ruff → 快速子集），不下载数据、不用 GPU、
+  不打开 official test。
 
 ### 运行控制平面（tracks/ksvd）
 
