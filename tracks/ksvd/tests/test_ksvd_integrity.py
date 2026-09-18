@@ -25,6 +25,19 @@ def test_repo_integrity_passes():
     assert integrity.check_exit_code(checks) == 0
 
 
+def test_repo_documented_future_dates_still_ok():
+    """The 16 documented future-dated records stay allowlisted (no regression)."""
+    checks = _run_repo_checks()
+    future = [c for c in checks if c.name == "records.no_undocumented_future_dates"][0]
+    assert future.ok, future.detail
+
+
+def test_repo_run_record_pointers_resolve():
+    checks = _run_repo_checks()
+    runs = [c for c in checks if c.name == "records.run_pointers_resolve"][0]
+    assert runs.ok, runs.detail
+
+
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
@@ -47,7 +60,7 @@ def _fake_tree(tmp_path: Path, *, records):
                 "phase: test",
                 "active_studies: [zinc-context-gap]",
                 "focus_study: zinc-context-gap",
-                "open_questions: ['still open?']",
+                "authorized_next_action: {status: none}",
                 "guardrails: ['keep']",
             ]
         ),
@@ -102,8 +115,8 @@ def test_dangling_reference_is_error(patched, monkeypatch):
                 "phase: test",
                 "active_studies: [zinc-context-gap]",
                 "focus_study: zinc-context-gap",
-                "open_questions: ['see decision-does-not-exist-20260101']",
-                "guardrails: ['keep']",
+                "authorized_next_action: {status: none}",
+                "guardrails: ['see decision-does-not-exist-20260101']",
             ]
         ),
     )
@@ -111,6 +124,80 @@ def test_dangling_reference_is_error(patched, monkeypatch):
     refs = [c for c in checks if c.name == "records.references_resolve"][0]
     assert not refs.ok
     assert "decision-does-not-exist-20260101" in refs.detail
+
+
+def test_dangling_run_record_pointer_is_error(patched):
+    _write(
+        patched / "STATE.yaml",
+        "\n".join(
+            [
+                "phase: test",
+                "active_studies: [zinc-context-gap]",
+                "focus_study: zinc-context-gap",
+                "authorized_next_action: {status: none}",
+                "guardrails: ['keep']",
+                "baseline_record: record-missing-20260101",
+            ]
+        ),
+    )
+    checks = integrity.integrity_checks()
+    runs = [c for c in checks if c.name == "records.run_pointers_resolve"][0]
+    assert not runs.ok
+    assert "record-missing-20260101" in runs.detail
+    assert integrity.check_exit_code(checks) == 1
+
+
+def test_valid_run_record_pointer_passes(patched):
+    _write(
+        patched / "records" / "runs" / "record-real-20260101.json",
+        '{"record_id": "record-real-20260101"}\n',
+    )
+    _write(
+        patched / "STATE.yaml",
+        "\n".join(
+            [
+                "phase: test",
+                "active_studies: [zinc-context-gap]",
+                "focus_study: zinc-context-gap",
+                "authorized_next_action: {status: none}",
+                "guardrails: ['keep']",
+                "baseline_record: record-real-20260101",
+            ]
+        ),
+    )
+    checks = integrity.integrity_checks()
+    runs = [c for c in checks if c.name == "records.run_pointers_resolve"][0]
+    assert runs.ok, runs.detail
+
+
+def test_repository_timezone_crosses_utc_midnight():
+    from datetime import date, datetime, timezone
+
+    # 16:30 UTC == 00:30 the next calendar day in Asia/Shanghai (UTC+8).
+    assert integrity.repository_today(
+        datetime(2026, 9, 18, 16, 30, tzinfo=timezone.utc)
+    ) == date(2026, 9, 19)
+    # 15:30 UTC == 23:30 the same day in Asia/Shanghai.
+    assert integrity.repository_today(
+        datetime(2026, 9, 18, 15, 30, tzinfo=timezone.utc)
+    ) == date(2026, 9, 18)
+    # A naive timestamp is interpreted as already repository-local.
+    assert integrity.repository_today(datetime(2026, 9, 19, 0, 30)) == date(2026, 9, 19)
+
+
+def test_local_evening_record_is_not_future_dated(patched):
+    from datetime import datetime, timezone
+
+    _write(
+        patched / "records" / "claims" / "claim-local-20260919.yaml",
+        "claim_id: claim-local-20260919\ncreated: '2026-09-19T00:30:00'\nstatus: supported\n",
+    )
+    # At 2026-09-18 16:30 UTC the repository-local date is already 2026-09-19,
+    # so a record written at 00:30 local must not be flagged as future-dated.
+    today = integrity.repository_today(datetime(2026, 9, 18, 16, 30, tzinfo=timezone.utc))
+    checks = integrity.integrity_checks(today=today)
+    future = [c for c in checks if c.name == "records.no_undocumented_future_dates"][0]
+    assert future.ok, future.detail
 
 
 def test_id_filename_mismatch_is_error(patched, monkeypatch):
