@@ -1,0 +1,74 @@
+decision_id: decision-explicit-structural-basis-valuation-partial-nopromotion-20260915
+created: '2026-09-15T16:45:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Explicit structural basis + learned scalar valuation -> PARTIAL_GO on the
+  numeric band only; NOT PROMOTED; do NOT buy a second seed. On the frozen
+  deterministic-A100 ZINC Cell A, seed1 Top-5 soup valid 0.120194 vs B-full
+  seed1 0.118126 (delta +0.002068, inside the pre-registered Partial-GO band
+  (B-full+0.001, B-full+0.003]) but vs the connectivity-free B-bag seed1
+  0.120229 (delta -0.000035, a tie) and vs A2 seed1 0.122134 (-0.001940). The
+  pre-registered Partial-GO condition "clearly better than B-bag" is therefore
+  NOT met, so no promotion is authorized. The architecture is budget-matched
+  (84,527 total; encoder 35,184 vs B-full 35,152; +0.038%) and its explicit
+  machinery is exact (34/34 sanity, exact supports, connectivity changes the
+  explicit B2 object basis, no message passing/attention/vocab/learned support,
+  deterministic GPU repro). Mechanism diagnostics decide the call: s(P) does
+  not collapse (std 1.034) but the channel reproduces the connectivity-free bag
+  rather than B-full; its scalar does not align with B-full's frozen PC1 axis
+  (Spearman 0.096, R^2 0.008) and is only partly predictable from existing
+  descriptors (ridge valid R^2 0.2755); the order ablation shows B1 bond
+  objects dominate (+0.018866 soup) while their information is local (bond
+  endpoint primitives), exactly what the bag already has. This is a
+  representational limit (no propagation beyond fixed low-order supports), not
+  a collapse or optimization failure. Keep B-full as the frozen ZINC Cell A
+  reference. Official ZINC test never loaded.
+alternatives_rejected:
+- item: Buy a second confirmation seed
+  because: >-
+    the candidate is statistically tied with the connectivity-free B-bag
+    (delta -0.000035), so even a confirmed +0.0021-vs-B-full result would not
+    be a useful B-full replacement; the gate's "clearly better than B-bag"
+    condition fails on seed1 and a second seed cannot change the mechanism
+    finding.
+- item: Re-tune node_dim / edge_dim / degree bins / valuation or fusion hidden
+    widths to chase the +0.002
+  because: >-
+    widths were fixed once by parameter accounting (pre-registered) and were
+    not selected on validation; a sweep is explicitly forbidden and the
+    mechanism diagnosis (no super-local information channel) predicts it would
+    only reshuffle the B-bag plateau.
+- item: Add higher-order objects (4-atom motifs), more rounds/orders,
+    attention, gates, temperature, max pooling, or a wider latent to rescue
+    the basis
+  because: >-
+    explicitly forbidden by the stop rule; the failure is representational, and
+    these are the exact rescue moves the brief rules out.
+- item: Lift the explicit objects into outer h/q relational objects now
+  because: >-
+    the object supports are exact and relations would be constructible, but the
+    underlying scalar valuation reproduces the connectivity-free bag, so
+    wiring it into the backbone is not justified by this result.
+- item: Attribute the shortfall to the explicit-support/valuation machinery or
+    to compute
+  because: >-
+    supports are exact (34/34 sanity), s(P) is not collapsed, the basis is
+    budget-matched, and object counts are bounded (17.39/patch); the shortfall
+    is that fixed low-order local supports cannot propagate.
+- item: Open the official ZINC test / train MolHIV
+  because: >-
+    neither was pre-registered; the study is valid-selection only and the test
+    remains locked.
+next_step: >-
+  Close this exact explicit B0/B1/B2 + rank-1 valuation basis as a B-full
+  replacement and keep B-full as the frozen ZINC Cell A reference. A revisit is
+  only justified as a fresh pre-registered design that adds a mechanism able to
+  carry information beyond fixed low-order local supports (so it can leave the
+  B-bag plateau), with its own frozen witness; not a parameter/order sweep of
+  this basis and not a second seed of it.
+evidence:
+- tracks/ksvd/notes/explicit_structural_basis.md
+- tracks/ksvd/results/explicit_structural_basis/decision.json
+- tracks/ksvd/results/explicit_structural_basis/mechanism.json
+- tracks/ksvd/records/claims/claim-explicit-structural-basis-valuation-20260915.yaml

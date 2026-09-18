@@ -1,0 +1,81 @@
+claim_id: claim-explicit-object-relational-reasoning-20260915
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-09-15T19:55:00'
+statement: >-
+  Hypothesis REFUTED on the frozen deterministic-A100 ZINC cell A protocol:
+  replacing B-full's hidden GNN structural channel with the exact exp-1 explicit
+  B0/B1/B2 object basis PLUS an explicit support-derived object-object relation
+  graph, exact T_obj=2 tied recurrent reasoning (q_ij^t = Q(h_i^t,h_j^t,r_ij);
+  A_i^t = fixed invariant stats of q; h_i^{t+1} = h_i^t + U([h_i^t,A_i^t])),
+  late per-order pooling -> scalar s(P) -> rank-1 e_struct = b + s(P)*v does
+  NOT recover B-full connectivity performance. Exactly one pre-registered
+  architecture, seed1 only, determinism on. Relations are unique undirected
+  support-derived edges with three families (bond_overlap / overlap / adjacent)
+  and a symmetric width-23 descriptor; no attention/softmax, no learned
+  relation-ID, no GRU/LSTM, no learned support/existence gate, no B3+/rings/
+  motifs, no outer-architecture change. Parameter budget is EXACT: encoder
+  35,152 == B-full encoder 35,152 (object_hidden 100, update_hidden 79,
+  fusion_hidden 136), candidate 84,495 == B-full 84,495 (delta 0; within 1%).
+  Zero-training relation audit: train 4,025,826 objects / 28,195,862 relations
+  (mean edge/object 6.944, max 11.160), valid 401,412 / 2,811,834 (6.953 /
+  10.572) -> sparse and support-local, far from complete. Seed1 raw 0.131644
+  @ep125, early stop @165 (wall 4806.3 s, peak GPU 1.288 GB), fixed Top-5 soup
+  0.125834 (epochs 125/161/146/162/160) vs B-full seed1 0.118126 -> delta
+  +0.007707, vs exp-1 explicit-basis seed1 0.120194 -> +0.005639, vs B-bag
+  seed1 0.120229 -> +0.005604, vs A2 seed1 0.122134 -> +0.003699. Pre-registered
+  gate is STOP (candidate >= 0.120194 and > 0.121126); second_seed_authorized =
+  false. PRIMARY MECHANISM FINDING: the explicit-object relational encoder
+  COLLAPSED to a constant during training. At init the object states are healthy
+  (h^0 norm 1.324, h^2 norm 2.177, per-dim std ~0.35, effective rank 4.7-5.3)
+  and the channel is exactly rank-1 (effective rank 1.0); after training the
+  states are dead (h^0 norm 4.7e-29, h^2 norm 7.5e-24, per-dim std 8e-30) and
+  s(P) has std 1.8e-9 (s_collapse true; e_struct row-norm std 4.7e-10). Encoder
+  weights grew (L2 10.35 -> 13.29 soup; L1 fresh->selection 775) and the module
+  is the same instance used in forward and is in the Adam parameter list, so this
+  is a genuine dying-ReLU / dead-unit collapse, not a wiring bug. Consequence:
+  frozen ablations are all ~1e-8 (relation-zero delta soup +1.0e-8; round-1-only
+  -4.8e-9; family masks <= 2e-8) -> relations, the second round and every family
+  contribute nothing to the trained candidate. Scalar alignments on 23,083 valid
+  patches: s_new vs B-full frozen PC1 Spearman 0.191 / Pearson 0.197 / R^2 0.039;
+  s_new vs exp-1 explicit-basis scalar Spearman -0.143 / R^2 0.007; ridge from
+  224 deterministic descriptors valid R^2 0.469. Witnesses: a 64-switch
+  relation-topology intervention on a real batch has early explicit-basis pooling
+  delta EXACTLY 0.0 and late EOR output delta 9.20e-4; the 7-atom connectivity
+  witness shares B0/B1 primitive multisets with a different B2 basis (early delta
+  6.47e-4, late delta 7.74e-5, 37 triples each). Integrity exact: 53/53 sanity
+  checks, 17 unit tests, 419 affected-suite tests; supports identical to exp-1;
+  no edge for disjoint+unbonded pairs; endpoint-swap invariance; no message
+  passing/attention/vocab/certificate/learned gate; late pooling only after h^2;
+  rank <= 1; outer h/q/T = 64/16/2; deterministic 6-epoch GPU repro bit-identical
+  (selection-state sha256 dbb365655f8d5dbbe1bc71b97d17f7a775fa5c35810e286c893dc661cedd9a2d).
+  Compute: EOR forward 0.06284 s vs B-full 0.03200 s (1.96x, under the 2x guard),
+  10.82x the exp-1 basis; peak GPU 744 MB profile / 1.288 GB training; mean 17.39
+  objects and 121.81 relations per patch. Interpretation: the hypothesis was NOT
+  cleanly tested because the inner encoder was switched off by the optimizer; the
+  result refutes THIS exact frozen architecture/optimization, not explicit
+  relational reasoning in general. Keep B-full as the frozen ZINC cell A
+  reference. Official ZINC test NEVER loaded; no MolHIV training; no second seed.
+scope: >-
+  ZINC-12K official train/valid only; deterministic-A100; exactly one promotion
+  seed (seed1); fixed Top-5 soup; valid-selection metric. One pre-registered
+  architecture; no width/round/family/optimizer/pooling sweep, no h/q/T change,
+  no outer-architecture change. Official test NEVER loaded. Excludes
+  B3/B4/higher-order objects, rings/motifs, learned objects/supports/existence
+  gates, dense inner pairs, attention/softmax/Transformer, GRU/LSTM, certificate
+  or token lookup, learned clustering, and promoting the inner objects to
+  molecule-level outer nodes. The negative result applies to this exact
+  architecture and frozen protocol; because the inner encoder collapsed, it is
+  NOT evidence that explicit relational reasoning over explicit objects cannot
+  work.
+evidence:
+- tracks/ksvd/results/explicit_object_relational/decision.json
+- tracks/ksvd/results/explicit_object_relational/mechanism.json
+- tracks/ksvd/results/explicit_object_relational/diagnostics.json
+- tracks/ksvd/results/explicit_object_relational/compute_profile.json
+- tracks/ksvd/results/explicit_object_relational/sanity.json
+- tracks/ksvd/results/explicit_object_relational/parameter_accounting.json
+- tracks/ksvd/results/explicit_object_relational/soup_eor_seed1.json
+- tracks/ksvd/notes/explicit_object_relational.md
+- tracks/ksvd/tests/test_explicit_object_relational.py

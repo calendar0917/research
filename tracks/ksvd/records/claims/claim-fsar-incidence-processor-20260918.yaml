@@ -1,0 +1,135 @@
+claim_id: claim-fsar-incidence-processor-20260918
+created: '2026-09-18T09:00:00'
+kind: claim
+status: partially_supported
+study_id: zinc-context-gap
+statement: >-
+  FSAR-C1 (deterministic A100, ZINC-12K official train/valid only, official
+  test never loaded, fixed equal-weight Top-5 soup, valid MAE, single seed 0).
+  QUESTION: keeping the same S/A/B primitives of FSAR-R2-AR0 / AR0-EDGE (no
+  new structural information) and matching the ~80-100k strong-model
+  parameter budget, does keeping persistent node objects and persistent edge
+  objects and running a real node -> incident-edge -> node compositional
+  processor recover the performance gap between the 25k factorized diagnostic
+  and the strong mixed backbone?  ANSWER: PARTIALLY.  Incidence composition is
+  necessary and highly effective (a +0.187309 parameter-matched mechanism gain
+  over the incidence-free bag control) but NOT sufficient to reach the strong
+  backbone (+0.062232 above B-Full seed0, +0.054668 above B-Bag seed0); the
+  pre-registered seed0 gate call is INSPECT, not seed1-worthy.
+  DESIGN: persistent objects h_v^0 = f_s(phi_v) + f_a(q_v) +
+  W_b(U_s f_s(phi_v) * U_a f_a(q_v)) and g_e^0 = f_se(psi_e) + f_ae(r_e) +
+  W_be(U_se f_se(psi_e) * U_ae f_ae(r_e)), with the frozen radius-2
+  pure-topology phi_v (R^65), psi_e = [phi_u + phi_v, |phi_u - phi_v|] in
+  R^130 (endpoint-swap invariant, chemistry-free), q_v = onehot(atom) in R^28,
+  r_e = onehot(bond) in R^4 and the pure attribute marginal A(G) in R^64.
+  Hidden width d=48; four SHARED recurrent rounds; edge update
+  g_e <- g_e + alpha_e W_e2(SiLU(W_e1(LN([h_u+h_v, |h_u-h_v|, g_e]))))
+  (endpoint-symmetric); node update h_v <- h_v + alpha_v
+  W_n2(SiLU(W_n1(LN([h_v, mean_{e incident to v} W_m2(SiLU(W_m1([g_e,
+  h_w])))])))); dense-matmul incidence (no atomic index_add_); pre-LN, SiLU;
+  scalar residual scales init 0.05; readout [mean(h), std(h), mean(g), std(g),
+  A, log1p(n), log1p(m)] -> 258 -> 64 -> 1.  C1 total 88,643 params (node
+  initializer 4,560 / edge initializer 6,528 / binding 13,920 / incidence
+  processor 46,994 / readout 16,641), dataset_dependent_vocabulary_params 0,
+  no attention / pair state / triangles / new feature family / radius > 2.
+  C0 = the PARAMETER-EXACT incidence-free bag control: identical modules and
+  identical 88,643 parameters, but every edge sees only its graph's global
+  node mean and every node receives the global edge-message mean.
+  RESULT (seed 0): C1 best valid 0.190477 @ep219 (240 epochs, no early stop),
+  Top-5 soup 0.182050 (top5 epochs 219/226/223/206/204), wall 2079.9 s, peak
+  275.9 MB; C0 best valid 0.376120 @ep166 (early stop @206), Top-5 soup
+  0.369359, wall 2442.2 s, peak 255.9 MB.  Deltas (positive = incidence
+  better): C0 - C1 = +0.187309; C1 - AR0-EDGE BVE (0.445958) = -0.263908;
+  C1 - B-Full seed0 (0.119818) = +0.062232; C1 - B-Bag seed0 (0.127382) =
+  +0.054668; fraction of the C0 -> B-Full gap closed by C1 = 0.7506.
+  MECHANISM (frozen soup): both models fully alive, no collapse.  C1
+  node/edge binding output std 0.2924/0.2488, binding weight norms 13.70/13.63,
+  edge/node residual std 0.2602/0.2069, residual scales 0.2614/0.1292 (from
+  0.05), node/edge representation effective rank 26.80/33.24 of 48, all seven
+  module groups with non-zero task gradient (node_init 0.320, edge_init 0.198,
+  node_binding 0.168, edge_binding 0.096, edge_update 0.317, node_update
+  0.440, readout 0.666).  C0 similarly alive (binding std 0.5090/0.4897,
+  rank 28.50/32.91, all groups non-zero) -> its worse score is a
+  representational limit, NOT a collapse.  Evaluation-only attribute
+  permutation (5 repeats, topology fixed): C1 actual MAE 0.18205 vs
+  atom-permuted 1.2607 and bond-permuted 1.5433 (mean |delta pred| 1.2326 /
+  1.5179); C0 actual 0.36936 vs 0.6769 / 0.5168 (0.5147 / 0.3322).  C1 uses
+  the real atom and bond assignments heavily; C0 only weakly.
+  CONTROLS: 14/14 local tests, remote sanity 14/14, remote gradient_audit
+  active path == total (88,643/88,643) with all seven groups non-zero, remote
+  GPU smoke finite / not constant / 254.8 MB.  Synthetic positive control
+  (incidence-only 4-leaf star: is the DOUBLE bond on the N leaf? identical node
+  and edge multisets for both labels) C1 0.00741 vs C0 0.51087 (C0 at chance,
+  3 seeds); negative marginal-only control C1 0.00637 vs C0 0.00241.  LEARNING
+  CURVE: C1 train MAE 0.1394 @240 while valid oscillates 0.19-0.23 (last-20
+  mean 0.2096) -> late OVERFITTING, not underfitting; C0 early-stopped earlier
+  and worse.
+scope: >-
+  ZINC-12K official train/valid only (10,000 / 1,000); deterministic NVIDIA
+  A100-SXM4-40GB; SINGLE seed 0; fixed radius-2 pure-topology basis; one
+  pre-registered architecture at a fixed 88,643-parameter budget; canonical
+  OPTIMIZED_PROTOCOL (Adam lr 1e-3, batch 128, L1, clip 5.0, 240 epochs,
+  patience 40, no scheduler, best official-valid checkpoint, fixed equal-weight
+  Top-5 soup) with the single documented deviation that binding / LayerNorm /
+  residual-scale parameters use weight_decay 0; no
+  width/depth/rounds/optimizer/regularization sweep; C0 is the only control;
+  official ZINC test never loaded; B-Full / B-Bag / cell A / AR0 diagnostic
+  used only as frozen external references.  Formal revision 412b3bd; eval-only
+  revision 1f1871f.
+supporting_evidence:
+  - >-
+    At an identical parameter count (88,643 each), the real incidence processor
+    C1 beats the incidence-free bag C0 by +0.187309 valid Top-5 soup MAE,
+    which is ~27x the known per-seed soup spread, with both models fully alive
+    and high-rank.
+  - >-
+    The incidence-only synthetic star control separates C1 (0.00741) from C0
+    (0.51087, chance) exactly as designed, proving the implementation really
+    routes edge attributes to their endpoint nodes.
+  - >-
+    C1 uses the real assignments heavily at the trained state: atom- and
+    bond-permutation MAEs are ~7-8x the actual MAE.
+  - >-
+    No branch collapsed: residual scales grew from the 0.05 init, object
+    effective ranks are 27-33 of 48, and every module group has a non-zero task
+    gradient in both variants.
+  - >-
+    C1 is -0.263908 better than the 25,317-param factorized AR0-EDGE
+    diagnostic, and closes 75.1 % of the C0 -> B-Full gap.
+contradicting_evidence:
+  - >-
+    C1 does NOT reach the strong backbone: +0.062232 vs B-Full seed0 and
+    +0.054668 vs B-Bag seed0.  "Incidence composition recovers the strong
+    backbone" is false at this budget.
+  - >-
+    Single seed only; the valid curve is noisy and the best/soup numbers sit on
+    late dips, while train MAE falls to 0.1394 (overfitting signature), so the
+    absolute level is less stable than the C1-C0 mechanism delta.
+  - >-
+    The residual gap is confounded between (a) information the strong backbone
+    consumes and this round deliberately excludes (typed local tokens,
+    radius-3 typed context) and (b) overfitting / optimization at this budget;
+    this round cannot separate them.
+  - >-
+    C0 is not a pure bag: its per-object B_v / B_e survive as pooled features,
+    so it is a conservative (stronger) control rather than a fully
+    information-matched non-incidence model.
+evidence:
+  - results/fsar_incidence/parameter_accounting.json
+  - results/fsar_incidence/sanity.json
+  - results/fsar_incidence/synthetic_controls.json
+  - results/fsar_incidence/smoke.json
+  - results/fsar_incidence/gradient_audit_C1.json
+  - results/fsar_incidence/gradient_audit_C0.json
+  - results/fsar_incidence/soup_inc_c1_seed0.json
+  - results/fsar_incidence/soup_inc_c0_seed0.json
+  - results/fsar_incidence/diagnostics_inc_c1_seed0_soup.json
+  - results/fsar_incidence/diagnostics_inc_c0_seed0_soup.json
+  - results/fsar_incidence/witness_inc_c1_seed0_soup.json
+  - results/fsar_incidence/witness_inc_c0_seed0_soup.json
+  - results/fsar_incidence/gate.json
+  - results/fsar_incidence/decision.json
+  - results/fsar_incidence/FORMAL_RESULTS.md
+  - notes/fsar_incidence_processor_preregistration.md
+  - notes/fsar_incidence_processor.md
+  - tests/test_fsar_incidence.py (14 pass)

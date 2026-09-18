@@ -1,0 +1,65 @@
+claim_id: claim-explicit-structural-basis-valuation-20260915
+kind: claim
+status: refuted
+study_id: zinc-context-gap
+created: '2026-09-15T16:40:00'
+statement: >-
+  Hypothesis REFUTED on the frozen deterministic-A100 ZINC Cell A protocol:
+  replacing the vocab-sized typed lookup with an explicit, deterministic
+  B0 atom / B1 bond / B2 centred-3-atom object basis plus a learned signed
+  scalar valuation and a rank-1 structural channel does NOT reproduce B-full's
+  connectivity-aware performance. Exactly one pre-registered architecture was
+  run (seed1 only): B0 atom objects (support {v}); B1 bond objects (support
+  {u,v}, bonds {(u,v)}); B2 centred 3-atom objects (support {centre,u,w},
+  bonds {(v,u),(v,w)} plus closure (u,w) when real); one shared signed scalar
+  valuation MLP per order (no sigmoid/gate/top-k/attention/learned weighting);
+  fixed [mean,std,log1p(count)] per order -> fusion -> s(P); channel
+  e_struct = b + s(P)*v in R^16, rank-1 by construction. node_dim 20, edge_dim
+  16, degree bins 8, valuation/fusion hidden 184. Encoder 35,184 params;
+  total 84,527 (cell-A 85,763 / typed lookup 36,420; B-full 84,495 / 35,152;
+  delta +32 / +0.038%). Seed1 raw 0.127628 @ep177, 217 epochs, fixed Top-5
+  soup 0.120194 vs B-full seed1 0.118126 -> delta +0.002068 (numeric
+  Partial-GO band) but vs B-bag seed1 0.120229 -> delta -0.000035 (a tie) and
+  vs A2 seed1 0.122134 -> -0.001940. The pre-registered "clearly better than
+  B-bag" condition fails, so this is not a promotion. Integrity is exact:
+  34/34 sanity checks, 21 unit tests, 67 affected-suite tests; atom/bond
+  supports exactly recoverable; B1 count == real bond count; B2 count ==
+  sum_v C(deg(v),2); endpoint-swap invariance for B1 and B2; a 7-atom
+  same-primitive / same-B1-multiset different-connectivity witness changes the
+  explicit B2 basis and moves the pooled output (9.3e-6); the encoder forward
+  never reads struct_src/struct_dst (no message passing); no attention; no
+  vocab lookup; no certificate dependence; e_struct width 16; h/q/T = 64/16/2;
+  deterministic 6-epoch GPU repro bit-identical (sha256 fe142098fa16a263...).
+  Mechanism: s(P) is NOT collapsed (std 1.0338, range [-3.259,3.657]); the B0
+  atom valuation collapsed to a constant while B1 (std 3.59) and B2 (std 1.09)
+  stayed active; frozen order ablation on official valid shows B1 dominates
+  (remove B1 +0.018866 soup) with B0 +0.002257 and B2 +0.001084; the candidate
+  scalar does NOT align with B-full's frozen PC1 axis (Spearman 0.096, Pearson
+  0.088, R^2 0.008) and is only partially predictable from 224 pre-existing
+  deterministic patch descriptors (ridge alpha=1, valid R^2 0.2755). Compute:
+  complexity O(V_patch+E_patch+sum deg^2), mean 17.39 objects/patch (6.12
+  atoms, 5.33 bonds, 5.94 triples), no combinatorial blow-up, but the encoder
+  forward is 2.53x the B-full encoder latency on A100 and peak training GPU
+  memory 389 MB. Interpretation: the explicit low-order basis is
+  representational-equivalent to the connectivity-free bag for this task and
+  does not capture B-full's hidden-propagation value. Official ZINC test never
+  loaded; no second seed purchased; no MolHIV training.
+scope: >-
+  ZINC-12K official train/valid only; deterministic-A100; exactly one promotion
+  seed (seed1); fixed Top-5 soup; valid-selection metric. One pre-registered
+  architecture; no width/round/order-count/pooling sweep, no h/q/T change, no
+  optimizer sweep. Official test NEVER loaded. Excludes GNN/attention/message
+  passing inside the structural module, soft clustering/DiffPool, certificate
+  lookup/hash identity, KSVD dictionary, learned top-k/support gates, motif
+  vocabulary, RDKit or target-derived chemistry, and higher-order objects
+  (>= 4 atoms). The negative result applies to this exact basis under this
+  protocol; it is not a proof that explicit structural valuation is impossible.
+evidence:
+- tracks/ksvd/results/explicit_structural_basis/decision.json
+- tracks/ksvd/results/explicit_structural_basis/mechanism.json
+- tracks/ksvd/results/explicit_structural_basis/diagnostics.json
+- tracks/ksvd/results/explicit_structural_basis/compute_profile.json
+- tracks/ksvd/results/explicit_structural_basis/sanity.json
+- tracks/ksvd/results/explicit_structural_basis/parameter_accounting.json
+- tracks/ksvd/notes/explicit_structural_basis.md
+- tracks/ksvd/tests/test_explicit_structural_basis.py

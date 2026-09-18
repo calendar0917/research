@@ -1,0 +1,97 @@
+decision_id: decision-tu-channel-necessity-20260918
+created: '2026-09-18T18:20:00'
+kind: decision
+study_id: tu-graph-classification
+decision: >-
+  Decision - TU EXACT-CERTIFICATE LOCAL PATCH TOKEN: STRONG / NOT REQUIRED on
+  all three datasets; the port is feasible and the backbone is competitive;
+  do NOT promote, do NOT buy seeds, do NOT re-invest the released parameters,
+  do NOT continue the channel-necessity question on TU.  On the pre-registered
+  tu_channel_necessity_v1 regime (strict generated 3-fold splits frozen before
+  training; training revision 15849603dd627bb60899bdc7e6a85cd94eef7ba0; A100
+  GPU 0; fixed equal-weight Top-5 soup; seed 0), D = mean_fold(typed_soup) -
+  mean_fold(null_soup) is +0.0054 (MUTAG), -0.0135 (PROTEINS) and -0.0100
+  (IMDB-BINARY), all inside the pre-registered STRONG band D <= 0.02.  Deleting
+  the typed certificate lookup improves soup test accuracy on PROTEINS
+  (67,824 params, 45.8 % of the model, +0.0135) and IMDB-BINARY (33,168 params,
+  26.7 %, +0.0100) and costs +0.0054 soup on MUTAG while gaining 0.0265 raw
+  (sign flip = noise; one MUTAG test graph = 0.016).  Constant-16 is at or
+  below null on every dataset, so Pattern 2 (shared trainable offset recovers
+  the channel) is NOT confirmed on TU either.  This is the third independent
+  replication of the ZINC/MolHIV redundancy result
+  (decision-local-token-null-20260919,
+  decision-molhiv-local-token-null-20260918), now on non-molecular discrete
+  graph classification, and it closes the channel-necessity line on TU.
+  Feasibility (the other half of the user request) is confirmed: the
+  self-contained TU port trains, the strict split invariants hold, and the
+  backbone reaches 0.878 MUTAG / 0.747-0.761 PROTEINS / 0.704-0.717
+  IMDB-BINARY against majority baselines 0.665 / 0.596 / 0.499.
+why_this_experiment: >-
+  The user asked whether "this method" runs on TUData (TUDataset).  TU is a
+  genuinely different regime from ZINC/MolHIV: non-molecular, discrete labels
+  or none, 10x-100x fewer graphs, no official split.  It is therefore both a
+  feasibility test of the compact pair--centre backbone and a third independent
+  setting for the channel-necessity question that was answered on ZINC and
+  MolHIV.
+protocol: >-
+  Pre-registered in notes/tu_channel_necessity_preregistration.md and frozen in
+  protocols/tu-graph-classification.yaml before any real run.  Strict split
+  protocol: outer StratifiedKFold(k=3, shuffle=True, random_state=20260918);
+  test = held-out fold; the remaining k-1 folds split once 80/20 into
+  train/valid with random_state 20260918+1000*(fold+1); identical splits for
+  every condition; pairwise-disjoint and each-graph-tested-once invariants
+  verified and recorded; SHA-256 split fingerprint written to splits_*.json
+  before training and repeated in every run record; vocabularies and
+  standardizers fit on the train fold only; unseen certificate -> learned OOV
+  row.  The test fold is read once per run after the best-valid checkpoint and
+  the fixed Top-5 soup are frozen, and never feeds training/early-stopping/
+  soup selection.  Only the local-token channel differs across conditions
+  (typed_lookup / null / constant); the patch-encoder input width is unchanged.
+  A majority-class baseline (train-fold majority on the test fold) is recorded
+  for context.  Three new patch_representation values with default typed_lookup
+  are added; 11 new tests pass (strict splits, permutation-invariant
+  certificates, null == zeroed typed, parameter-drop identity, forward shapes).
+alternatives_rejected:
+  - item: Promoting a null/constant TU checkpoint as a new model
+    because: >-
+      the scientific result is that the local channel is unnecessary, not a
+      documented performance win; the deltas are inside 3-fold split noise.
+  - item: Buying a second model seed or moving straight to 10 folds for the
+      channel question
+    because: >-
+      the question is already answered (STRONG on all three datasets); extra
+      seeds would add no decision-relevant information.
+  - item: Re-investing the released typed-lookup parameters
+    because: >-
+      that would confound deletion with reallocation; the parameter drop is
+      the experimental variable.
+  - item: Running a GIN baseline at 3 folds
+    because: >-
+      the pre-registration defers the competitiveness baseline to the 10-fold
+      stage; adding it now would be a post-hoc comparison.
+  - item: Tuning per-dataset widths/epochs or sweeping hyperparameters
+    because: >-
+      no parameter re-investment, no sweep, one fixed model across datasets.
+  - item: Treating the 3-fold screen as a statistical claim
+    because: >-
+      test folds are 62-371 graphs and the pre-registration declares the bands
+      coarse; this is a screen.
+consequences:
+  - >-
+    The local patch-token channel is redundant on a third, non-molecular
+    benchmark; the ZINC/MolHIV conclusion generalises beyond chemistry.
+  - >-
+    A self-contained TU track now exists (loader, strict split generator,
+    model, runner, protocol, tests) and the backbone is competitive at 3 folds,
+    so the natural follow-up is a benchmark-quality 10-fold + GIN comparison
+    rather than more channel ablations.
+  - >-
+    On TU the informative quantity is backbone competitiveness, not channel
+    necessity: the typed channel is only 4.0 % of the MUTAG model.
+next_action: >-
+  ONE action only (not auto-authorised here): Stage 2 - the pre-registered
+  10-fold run of the same fixed model on MUTAG/PROTEINS/IMDB-BINARY plus a GIN
+  baseline, to answer the backbone-competitiveness question with mean +/- std
+  over folds.  Do not start it without a separate pre-registration, do not
+  re-open the channel-necessity question (answered STRONG on all three
+  datasets), and do not add architecture variables.

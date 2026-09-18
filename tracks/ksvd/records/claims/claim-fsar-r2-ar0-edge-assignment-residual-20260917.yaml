@@ -1,0 +1,137 @@
+claim_id: claim-fsar-r2-ar0-edge-assignment-residual-20260917
+created: '2026-09-17T21:00:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  FSAR-R2-AR0-EDGE (deterministic A100, ZINC-12K official train/valid only,
+  official test never loaded, fixed equal-weight Top-5 soup, valid MAE).
+  QUESTION: with the already-supported node assignment residual held fixed,
+  does the real edge structural-role <-> bond-type assignment provide a stable
+  predictive increment over (a) the node baseline and (b) an exactly
+  parameter-/architecture-matched, assignment-independent edge marginal
+  control?  ANSWER: YES, edge assignment is supported on two paired seeds.
+  DESIGN: edge role psi_e = [phi_u + phi_v, |phi_u - phi_v|] in R^130
+  (endpoint-swap invariant, chemistry-free, no bond type/atom type/typed
+  path/message passing/new motif); phi is the frozen AR0 radius-2 pure-topology
+  explicit basis (R^65).  Bond attribute r_e = onehot(bond_type) in R^4
+  (NONE/SINGLE/DOUBLE/TRIPLE verified from data/ZINC/raw/bond_dict.pickle);
+  PyG's two directed entries per bond canonicalised to one undirected bond.
+  Edge assignment J_E = sum_e psi_e r_e^T, marginal P_E = (1/m)(sum psi)(sum
+  r)^T, residual C_E = J_E - P_E = sum_e (psi_e - psibar)(r_e - rbar)^T
+  (SUM-centred).  Train-only per-coordinate RMS scalers, no dataset-mean
+  subtraction.  Models share F0 and the node branch <W_B, C~_V> (AR0 MB) and
+  differ only in the edge branch: BV = node only; BVE = BV + <W_E, C~_E>;
+  BVEM = BV + <W_ME, P~_E>.  W_B/W_E/W_ME bias-free [.] params, zero-init, no
+  MLP/activation/bypass; dataset_dependent_vocabulary_params 0.  Params BV
+  24,797; BVE and BVEM 25,317 (edge linear 520 each); base + W_B bit-identical
+  across variants at the same seed; step-0 predictions identical.
+  RESULT (2 paired seeds): Top-5 soup valid, seed0 BV 0.4692853513918235 /
+  BVE 0.44595771902793785 / BVEM 0.46358981231594226; seed1 BV
+  0.4587459604590549 / BVE 0.4443749022744014 / BVEM 0.46093909119063753.
+  Paired deltas (positive = BVE better): seed0 BV-BVE +0.023328, BVEM-BVE
+  +0.017632; seed1 BV-BVE +0.014371, BVEM-BVE +0.016564 -- BVE beats BOTH the
+  node baseline and the matched marginal control on BOTH seeds.  Paired
+  per-molecule bootstrap (5,000 resamples, 1,000 valid molecules, seed
+  20260918) 95% percentile CIs: seed0 BV-BVE [0.013024, 0.033619] and
+  BVEM-BVE [0.007824, 0.027251]; seed1 BV-BVE [0.003825, 0.025392] and
+  BVEM-BVE [0.007065, 0.026228]; P(delta>0) 1.0/1.0 (seed0) and 0.996/1.0
+  (seed1).  MECHANISM: no branch collapse -- BVE edge branch ||W_E||
+  0.523/0.530, output std 0.233/0.225, per-coordinate task gradient norm
+  1.84/1.92, effective non-masked coordinates 324/520; BVEM edge branch is
+  MORE live (||W|| 0.626/0.729, std 0.338/0.394) yet worse, so the BVE gain is
+  not extra capacity.  The exact-zero counts (196/520 BVE, 190/520 BVEM) are
+  exactly the zero-RMS mask counts, not learned sparsity.
+  EVALUATION-ONLY bond-type permutation (fixed topology, atom attributes, atom
+  assignment and bond-type multiset; permute bond types among undirected
+  edges): S, A, the node statistic C_V and the marginal P_E are EXACTLY
+  invariant (delta 0.0) while C_E changes (sum |delta| 49,419 / 47,805) and
+  the prediction changes (mean |delta| 0.282 / 0.275).  Actual MAE 0.4460 /
+  0.4444 vs MAE(E[yhat_pi]) 0.5149 / 0.5090 and E[MAE(yhat_pi)] 0.5616 /
+  0.5608 -- both permutation-MAE quantities are materially worse.  SYNTHETIC
+  CONTROLS (before any ZINC run): positive assignment-only control (fixed
+  5-node tree with non-equivalent edge roles, one DOUBLE edge, all-C
+  attributes) BVE valid MAE 0.0173 vs BV 0.2531 / BVEM 0.3228 with
+  ||W_E||~0.05 (pass); negative marginal-only control BV 0.0206 / BVE 0.0666 /
+  BVEM 0.0420 (pass, no repeatable BVE advantage).  CORRECTNESS: 17/17 local
+  tests, remote sanity 16/16, remote gradient_audit active path == total
+  (25,317/25,317) with non-zero W_E and W_ME task gradient; feature audit psi
+  130-D effective rank 20.1, C_E effective coordinates 324/520, P_E 330/520;
+  BV seed0 and seed1 reproduce the AR0 MB node soups EXACTLY
+  (0.4692853513918235 / 0.4587459604590549).  PRE-REGISTERED GATE: both seeds
+  0 and 1 pass (both deltas > 0), gate.json seed2_authorized true; seed 2 was
+  authorised but deliberately not completed for time budget, so the verdict
+  rests on the two completed paired seeds.
+scope: >-
+  ZINC-12K official train/valid only (10,000 / 1,000); deterministic NVIDIA
+  A100-SXM4-40GB; paired seeds 0 and 1; fixed radius-2 pure-topology explicit
+  basis; FIRST-ORDER linear edge assignment residual on this fixed psi_e basis
+  at this budget; no radius/width/depth/primitive/optimizer sweep; no
+  pair-level / second-order attribute-pair interaction; identical protocol for
+  all three models (Adam lr 1e-3, wd 1e-5, batch 128, L1, clip 5.0, 240
+  epochs, patience 40, no scheduler, best official-valid checkpoint, fixed
+  equal-weight Top-5 soup); official ZINC test never loaded; no use of
+  historical B-full hidden states; B-full/B-bag retained only as an external
+  mixed-model reference.  Formal revision 44660bb.
+supporting_evidence:
+  - >-
+    BVE beats both controls on both paired seeds with consistent direction;
+    the matched marginal control BVEM is equally parameterised, equally
+    well-defined, and more live, yet worse.
+  - >-
+    Evaluation-only bond-type permutation leaves S, A, C_V and P_E exactly
+    invariant while C_E and the prediction move; both permutation-MAE
+    quantities are materially worse than the actual MAE.
+  - >-
+    Both synthetic controls pass before any ZINC run; the positive control is
+    assignment-only and the negative control is marginal-only.
+  - >-
+    BV bit-exactly reproduces the AR0 MB node soups, so the node component and
+    shared protocol are inherited correctly and the deltas are attributable to
+    the edge branch.
+  - >-
+    Remote sanity 16/16, local tests 17/17, gradient_audit active path ==
+    total with non-zero edge-branch task gradient; 2 deterministic A100
+    formal runs per variant, peak ~103 MB.
+  - >-
+    Pre-registered gate fired on seeds 0 and 1 exactly as pre-registered; no
+    protocol or architecture change was made at any point.
+contradicting_evidence:
+  - >-
+    The effect is larger and tighter on seed 0 (CI lower bound +0.0130) than
+    on seed 1 (+0.0038); it is a consistent-direction moderate effect, not a
+    large one, and only two seeds are complete.
+  - >-
+    Absolute MAE (~0.44-0.47) is far from full-backbone ZINC numbers; this is
+    not a benchmark or SOTA claim.
+  - >-
+    The negative control shows no repeatable BVE advantage; it bounds the
+    failure mode but does not prove the ZINC edge assignment is uniquely
+    informative.
+  - >-
+    The exact-A-key / first-order collision question was not searched, so
+    nothing here quantifies the compositional limit or justifies a
+    pair-level B^(2).
+evidence:
+  - results/fsar_r2_ar0_edge/parameter_accounting.json
+  - results/fsar_r2_ar0_edge/sanity.json
+  - results/fsar_r2_ar0_edge/feature_audit.json
+  - results/fsar_r2_ar0_edge/gradient_audit_BV.json
+  - results/fsar_r2_ar0_edge/gradient_audit_BVE.json
+  - results/fsar_r2_ar0_edge/gradient_audit_BVEM.json
+  - results/fsar_r2_ar0_edge/synthetic_controls.json
+  - results/fsar_r2_ar0_edge/gate.json
+  - results/fsar_r2_ar0_edge/analysis_paired_bootstrap.json
+  - results/fsar_r2_ar0_edge/decision.json
+  - results/fsar_r2_ar0_edge/FORMAL_RESULTS.md
+  - results/fsar_r2_ar0_edge/diagnostics_r2ar0e_bv_seed0_soup.json
+  - results/fsar_r2_ar0_edge/diagnostics_r2ar0e_bv_seed1_soup.json
+  - results/fsar_r2_ar0_edge/diagnostics_r2ar0e_bve_seed0_soup.json
+  - results/fsar_r2_ar0_edge/diagnostics_r2ar0e_bve_seed1_soup.json
+  - results/fsar_r2_ar0_edge/diagnostics_r2ar0e_bvem_seed0_soup.json
+  - results/fsar_r2_ar0_edge/diagnostics_r2ar0e_bvem_seed1_soup.json
+  - results/fsar_r2_ar0_edge/witness_r2ar0e_bve_seed0_soup.json
+  - results/fsar_r2_ar0_edge/witness_r2ar0e_bve_seed1_soup.json
+  - notes/fsar_r2_ar0_edge_binding_preregistration.md
+  - notes/fsar_r2_ar0_edge_binding.md
+  - tests/test_fsar_r2_ar0_edge.py (17 pass)

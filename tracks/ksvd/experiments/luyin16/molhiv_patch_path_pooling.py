@@ -910,12 +910,34 @@ class PatchPathModel(nn.Module):
         dropout: float,
         center_context: bool = False,
         center_context_hidden: int | None = None,
+        patch_representation: str = "typed_lookup",
     ) -> None:
         super().__init__()
         self.patch_hidden = int(patch_hidden)
         self.pair_hidden = int(pair_hidden)
         self.center_context = bool(center_context)
+        # Local 16/32-D patch-token channel selector.  ``typed_lookup`` is the
+        # frozen default (a learned row per exact certificate vocabulary id).
+        # ``null`` feeds an exact zero vector for every patch with no
+        # local-token generator at all; ``constant`` feeds one trainable
+        # graph-wide vector (token_width params) shared by every patch of every
+        # molecule.  Default behaviour is bit-identical to before.
+        self.patch_representation = str(patch_representation)
+        if self.patch_representation not in {"typed_lookup", "null", "constant"}:
+            raise ValueError(
+                f"unknown patch_representation={self.patch_representation!r}; "
+                "expected 'typed_lookup', 'null' or 'constant'"
+            )
+        self.local_token_constant: nn.Parameter | None = None
+        self.token_width = int(token_width)
         self.typed_embedding = nn.Embedding(int(typed_vocabulary_size), int(token_width))
+        if self.patch_representation == "null":
+            del self.typed_embedding  # no local-token parameters remain
+            self.typed_embedding = None
+        elif self.patch_representation == "constant":
+            del self.typed_embedding  # no local-token generator remains
+            self.typed_embedding = None
+            self.local_token_constant = nn.Parameter(torch.zeros(int(token_width)))
         parent_width = max(int(token_width // 2), 1)
         self.parent_embedding = nn.Embedding(int(parent_vocabulary_size), parent_width)
         self.patch_encoder = _MLPBlock(
@@ -1074,6 +1096,21 @@ class PatchPathModel(nn.Module):
             )
         return torch.cat(blocks, dim=1)
 
+    def _patch_token_value(self, data: Data) -> torch.Tensor:
+        """Per-patch local token fed to the patch encoder.
+
+        ``typed_lookup``: a learned row per exact certificate vocabulary id.
+        ``null``: an exact zero vector per patch with no generator at all.
+        ``constant``: one graph-wide trainable vector shared by every patch.
+        """
+        if self.typed_embedding is not None:
+            return self.typed_embedding(data.typed_token)
+        if self.local_token_constant is not None:
+            count = int(data.patch_cont.shape[0])
+            return self.local_token_constant.view(1, -1).expand(count, -1)
+        count = int(data.patch_cont.shape[0])
+        return data.patch_cont.new_zeros((count, int(self.token_width)))
+
     def forward(self, data: Data) -> torch.Tensor:
         global_context = data.global_context
         if global_context.ndim == 1:
@@ -1083,7 +1120,7 @@ class PatchPathModel(nn.Module):
             torch.cat(
                 [
                     data.patch_cont,
-                    self.typed_embedding(data.typed_token),
+                    self._patch_token_value(data),
                     self.parent_embedding(data.parent_token),
                 ],
                 dim=1,
@@ -1135,6 +1172,11 @@ class PatchPathModel(nn.Module):
 
         groups = {
             "exact_typed_embedding": count(self.typed_embedding),
+            "local_token_constant": (
+                int(self.local_token_constant.numel())
+                if self.local_token_constant is not None
+                else 0
+            ),
             "radius1_parent_embedding": count(self.parent_embedding),
             "patch_encoder": count(self.patch_encoder),
             "pair_core": sum(

@@ -1,0 +1,120 @@
+decision_id: decision-fsar-r2-ar0-assignment-supported-20260917
+created: '2026-09-17T18:05:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Decision - FSAR-R2-AR0: ASSIGNMENT SUPPORTED (three paired seeds).  On the
+  frozen deterministic-A100 ZINC-12K official train/valid regime (official test
+  never loaded), a fixed radius-2 explicit pure-topology coordinate plus a
+  strong structure/attribute marginal baseline is beaten by adding a
+  bias-free linear residual on the sum-centred node role<->attribute
+  assignment statistic C, beyond both the strong marginal baseline M0 and the
+  exactly parameter-matched marginal-capacity control MM.  Top-5 soup valid
+  MAE, seeds 0/1/2: M0 0.553790/0.535570/0.546893, MB 0.469285/0.458746/
+  0.462365, MM 0.528340/0.543241/0.524873.  MB beats BOTH controls on EVERY
+  seed: M0-MB +0.084505/+0.076824/+0.084528 and MM-MB
+  +0.059055/+0.084495/+0.062507.  Paired per-molecule bootstrap (5,000
+  resamples, n=1000) 95% CIs exclude zero with P(delta>0)=1.0 on all six
+  comparisons.  The pre-registered seed-2 gate fired on seeds 0 and 1 and seed
+  2 also passed, exactly as pre-registered; no width/radius/primitive/optimizer
+  change was made at any point.  Mechanism: A and S are exactly invariant
+  under an evaluation-only within-graph attribute permutation (delta 0.0) while
+  C and the prediction change materially; actual MAE ~0.46-0.47 vs
+  MAE(E[yhat_pi]) ~0.84-0.87 and E[MAE(yhat_pi)] ~0.98-1.02; both branches are
+  live and non-collapsed (MB/MM branch output std 0.65-1.18, W norms 0.73-1.08
+  with ~37-39% exact zeros), and MM is more live yet worse, so the gain is not
+  extra capacity.  Claim scope is exactly the node-level LINEAR residual on
+  this fixed 65-D radius-2 explicit basis at this budget: no SOTA/general
+  binding claim, no use of historical B-full hidden states, no causal
+  decomposition from the permutation diagnostic.
+why_this_experiment: >-
+  FSAR-v1/v2 and the route recheck left the assignment question entangled with
+  other failures: the v1 SAM control had no aligned channel at all, the v2
+  A_exact interface degraded the family, and the route recheck's
+  operator-matched null was confounded by seed-dependent edge-sub-branch
+  annihilation in the B channel.  This round re-poses exactly one clean
+  question with (a) a fixed, readable, PURE-topology local coordinate (the
+  route recheck showed the explicit local basis is a viable replacement for
+  the latent topology-GNN S), (b) a deliberately strong marginal baseline
+  (nonlinear fusion of z_S and the whole-graph attribute marginal A), (c) a
+  strictly linear assignment residual with no bypass and no nonlinearity, and
+  (d) an exactly parameter-/architecture-matched marginal-capacity control MM
+  that differs only in the statistic.  Two synthetic controls were required
+  before any ZINC run precisely to separate an implementation failure from a
+  scientific negative.
+protocol: >-
+  Frozen deterministic A100 protocol inherited verbatim: Adam lr 1e-3, weight
+  decay 1e-5, batch 128, L1 loss, gradient clip 5.0, no scheduler, max 240
+  epochs, patience 40, best-official-valid checkpoint, fixed equal-weight Top-5
+  soup, torch.use_deterministic_algorithms(True).  Models M0 22,977 / MB and MM
+  24,797 params, dataset_dependent_vocabulary_params 0.  Short 60-epoch
+  trainability smoke for all three, then six formal runs, then the
+  gate-authorised seed-2 trio.  Two independent jobs in parallel on GPU 1 only;
+  GPU 0 held an unknown 35.8 GB / 94-97% third-party task that was never
+  touched or co-tenanted; a ~0.54 GB GSN co-tenant on GPU 1 was recorded, never
+  touched.  Peak our-GPU memory 77.3 MB (M0) / 100.8 MB (MB, MM).  Full re-run
+  of MB seed0 bit-identical (soup 0.4692853513918235, Top-5 epochs
+  [58,46,81,65,90], selection-state SHA-256 76b373a69ff32cb3432f7a170e044921).
+  Official ZINC test never loaded.
+alternatives_rejected:
+  - item: Weakening the baseline to the additive f_S(S) + f_A(A) form
+    because: >-
+      the pre-registration requires a strong nonlinear marginal fusion
+      F0([z_S,a]); an additive baseline would inflate the apparent assignment
+      gain.  MB still beats the strong nonlinear M0 by 0.077-0.085.
+  - item: Reading the MB-vs-MM gap as 'more parameters' or 'more live capacity'
+    because: >-
+      MB and MM are exactly parameter-matched (24,797 each) and
+      architecture-matched and differ only in the statistic; MM's branch is
+      actually more live (output std 1.17-1.18 vs 0.65-0.68) yet worse.
+  - item: Using the historical B-full / B-bag hidden states to choose
+      primitives or as a pure-topology teacher
+    because: >-
+      B-full reads atom/root/distance/bond primitives and runs two rounds of
+      edge-aware message passing, so it is not a pure-topology S teacher; it
+      was retained only as an external mixed-model reference.
+  - item: Adding C4/C5, homomorphism or RRWP primitives, or sweeping the radius
+    because: >-
+      the round's question is about assignment at a fixed radius-2 explicit
+      basis; new primitives are reserved for a future round if the structure
+      coordinates are shown insufficient, which this round does not show.
+  - item: Continuing to seeds 3+ or tuning width / optimizer / weight decay /
+      dropout after the positive result
+    because: >-
+      the pre-registered budget was 2 paired seeds plus the automatic seed-2
+      gate, all three of which passed; no unregistered extension is authorised.
+  - item: Reinterpreting the evaluation-only assignment shuffle as a causal
+      additive decomposition
+    because: >-
+      the shuffle is a reliance/mechanism diagnostic only; the causal-style
+      evidence is the independently trained MB-vs-M0 and MB-vs-MM comparisons.
+  - item: Reading the official ZINC test
+    because: >-
+      never loaded by design; no test read is authorised by this decision.
+consequences:
+  - >-
+    The node-level linear assignment residual is supported at this fixed
+    radius-2 explicit pure-topology basis and training budget; the surviving
+    claim is exactly that and nothing broader.
+  - >-
+    The route-recheck conclusion that the explicit local structural basis is a
+    viable replacement for the latent topology-GNN S is now complemented: on
+    that explicit basis, a strictly linear assignment residual carries a large,
+    seed-stable, bootstrap-significant increment over both a strong marginal
+    baseline and an exactly matched marginal-capacity control.
+  - >-
+    Because C is close to rank-1 across molecules (effective rank 1.40), the
+    result certifies roughly one effective assignment direction; a richer
+    assignment readout is NOT claimed.
+  - >-
+    The next minimal experiment (recorded, NOT implemented) is a pair-level
+    assignment residual over structural relations, with the same strong
+    marginal baseline and an exactly matched marginal-capacity control.
+revisit_if: >-
+  A fresh pre-registered pair-level (or higher-order) assignment-residual design
+  is proposed with its own strong marginal baseline, its own exactly
+  matched marginal-capacity control and its own frozen witness; OR a genuinely
+  different pure-topology coordinate family is pre-registered to test whether
+  the single effective C direction is a limit of the basis.  Not by radius
+  sweeps, not by width/optimizer sweeps, not by adding primitives to this
+  round's model, not by reopening A_exact, not by reading the official test.

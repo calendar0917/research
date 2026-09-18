@@ -1,0 +1,56 @@
+claim_id: claim-local-token-null-20260919
+created: '2026-09-19T12:00:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  LOCAL 16-D PATCH-TOKEN CHANNEL IS NOT NECESSARY ON THE STRONG ZINC BACKBONE
+  (deterministic A100, ZINC-12K official train/valid only, official test never
+  loaded, fixed equal-weight Top-5 soup, valid MAE).  QUESTION: in the strong
+  mixed backbone, can the molecule-dependent local 16-D patch token
+  ``e_patch`` (learned typed lookup / shared bag / shared structural encoder) be
+  removed entirely while performance survives?  ANSWER: YES, essentially.
+  Stage A frozen knockout (2-seed means, eval-only): forcing ``e_patch = 0``
+  changes valid MAE by +0.195931 for the learned-lookup A0, by only +0.000294
+  for the shared-bag B-Bag and +0.002534 for the shared-structural B-Full;
+  a train-side constant gives +0.148442 / +0.000331 / +0.002610.  The strongest
+  references are therefore insensitive, while A0's large learned table
+  (mean-token norm 0.44/0.36) is a genuine high-rank memory whose frozen removal
+  is a distribution-shift artefact (the retrained zero-slot A2 control already
+  reached 0.1217).  Stage B/C retraining (seed0 only): B-Null
+  (``e_patch = 0``, no generator, 49,343 params) reaches Top-5 soup 0.123028
+  (raw 0.126873 @ep237) and Constant-16 (one trainable graph-wide 16-vector,
+  49,359 params) reaches Top-5 soup 0.120515 (raw 0.126260 @ep225).  Matched
+  seed0 references: A0 0.124704, B-Bag 0.127382, B-Full 0.119818.  B-Null is
+  -0.001677 vs A0 and -0.004354 vs B-Bag (both better) and +0.003210 vs B-Full;
+  Constant-16 is +0.000697 vs B-Full, -0.002512 vs B-Null.  The whole
+  molecule-dependent local-token family removes 36,420 / 35,168 / 35,152
+  parameters (41.6-42.5 % of each reference total) with no meaningful loss.
+  PATTERN: Null ~ Constant ~ B-Full (0.1230 / 0.1205 / 0.1198) -> Pattern 1
+  (channel broadly redundant) with Pattern 2 mechanism (the slot mainly supplies
+  a shared trainable offset; 16 params recover it), which explains the observed
+  near rank-1 shared structural ``e_struct`` (effective rank 1.107/1.202, top
+  singular fraction 0.979/0.955).  Mechanism witness: no typed embedding and no
+  structural encoder instantiated; patch-encoder input width unchanged (170);
+  Null token exactly zero; Constant vector norm 0.00919 (all |values| <= 0.005);
+  all ten remaining backbone groups receive non-zero gradient; forward finite;
+  official test never loaded.  CONSEQUENCE FOR FSAR-C1: with the strong backbone
+  at 0.1198-0.1230 while the entire local 16-D family is deleted, the FSAR-C1
+  residual gap (0.182050, +0.062232 vs B-Full seed0) can no longer be attributed
+  to a missing sophisticated local 16-D patch embedding; the remaining gap
+  hypotheses move to ``patch_cont`` shell chemistry, radius-1 parent typed
+  context, the mixed pair relation, the pair-centre/co-occurrence computation,
+  the global/topology channels and the readout.  This round does not identify
+  which one.  Scope: single seed for both candidates (per pre-registration);
+  the deltas are within the ~0.004-0.007 seed-spread scale, so this is a
+  parameter-efficiency / redundancy conclusion, not a claim that the channel is
+  provably useless.
+evidence:
+  - tracks/ksvd/results/local_token_null/stage_a_frozen_knockout.json
+  - tracks/ksvd/results/local_token_null/stage_a_gate.json
+  - tracks/ksvd/results/local_token_null/soup_lt_null_seed0.json
+  - tracks/ksvd/results/local_token_null/soup_lt_constant_seed0.json
+  - tracks/ksvd/results/local_token_null/witness_lt_null_seed0.json
+  - tracks/ksvd/results/local_token_null/witness_lt_constant_seed0.json
+  - tracks/ksvd/notes/local_token_null.md
+  - tracks/ksvd/notes/local_token_null_preregistration.md

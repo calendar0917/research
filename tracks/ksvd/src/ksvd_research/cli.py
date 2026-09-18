@@ -54,6 +54,7 @@ from .runtime.control import (
     protocol_for_study,
     protocol_hash as protocol_semantic_hash,
 )
+from .runtime.integrity import check_exit_code, integrity_checks
 from .runtime.policy import resolve_test_access
 from .runtime.git_state import porcelain_status, write_untracked_snapshots
 from .runtime.manifest import (
@@ -151,6 +152,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     context = sub.add_parser("context", help="print a compact orientation context")
     context.set_defaults(handler=_cmd_context)
+
+    verify = sub.add_parser(
+        "verify", help="run lightweight research-integrity checks (STATE + records)"
+    )
+    verify.add_argument("--json", action="store_true")
+    verify.set_defaults(handler=_cmd_verify)
 
     runs = sub.add_parser("runs", help="list recorded runs (local + promoted)")
     runs.add_argument("--study", default=None)
@@ -389,6 +396,32 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         print(f"[{marker}] {name}: {detail}")
     print(f"doctor: {ok_count} ok / {warn_count} warn / {len(checks) - ok_count - warn_count} fail")
     return doctor_exit_code(checks)
+
+
+def _cmd_verify(args: argparse.Namespace) -> int:
+    checks = integrity_checks()
+    if getattr(args, "json", False):
+        print(
+            json.dumps(
+                [
+                    {"name": c.name, "ok": c.ok, "detail": c.detail, "severity": c.severity}
+                    for c in checks
+                ],
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return check_exit_code(checks)
+    for check in checks:
+        marker = "ok" if check.ok else "FAIL"
+        if check.severity == "documented":
+            marker = "note"
+        elif check.severity == "warn" and not check.ok:
+            marker = "WARN"
+        print(f"[{marker}] {check.name}: {check.detail}")
+    failures = sum(1 for c in checks if not c.ok and c.severity == "error")
+    print(f"verify: {len(checks) - failures} ok / {failures} fail")
+    return check_exit_code(checks)
 
 
 # ---------------------------------------------------------------------------

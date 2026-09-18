@@ -1,0 +1,83 @@
+claim_id: claim-binding-composition-encoder-collapse-20260916
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-16T10:40:00'
+statement: >-
+  On the frozen deterministic-A100 ZINC Cell A protocol, the pre-registered
+  Binding Composition Encoder (BCE) does NOT realize explicit decomposition
+  composition. BCE builds, inside every rooted radius-2 patch, every connected
+  induced support of size <= 4 (exact unordered node set; induced edges = real
+  patch bonds) and, for size 3 and 4, every legal unordered parent decomposition
+  (both parents strictly smaller and connected; non-empty overlap or at least
+  one real crossing bond), then combines each decomposition with ONE shared,
+  parent-swap-symmetric Compose MLP and aggregates the candidate multiset by
+  mean + std + count (no attention / gate / top-k / learned weighting), followed
+  by a shared SupportUpdate and a shared patch Fusion to a 16-D e_struct. The
+  candidate totals 82,143 params (BCE encoder 32,800; inherited frozen
+  downstream 49,343; baseline A0 85,763), dataset_dependent_params = 0, no
+  typed_embedding; official test NEVER loaded. Seed 0 (only seed run) Top-5 soup
+  valid = 0.1332753, above the pre-registered guard B-Bag + 0.003 = 0.1268055 by
+  +0.0064698; best checkpoint 0.1343159 at epoch 209 (240 epochs, wall 6750.9 s,
+  peak GPU 697,091,072 B). Comparisons are all worse: vs B-Bag 2-seed soup
+  0.1238055 (+0.0094698), vs B-Bag seed0 0.1273818 (+0.0058935), vs B-Full
+  seed0 0.1198180 (+0.0134573), vs A2 seed0 0.1216936 (+0.0115817). PRIMARY
+  MECHANISM (decisive): the composition branch collapsed. At the seed0
+  selection checkpoint composition_disagreement_mean = 6.69e-9 (vs 0.1859 at
+  init), candidate_across_decomposition_std_mean = 0.0 (all legal
+  decompositions of a support produce the identical candidate), candidate norm
+  0.03275, and e_struct effective rank 1.053 (participation ratio 1.018, top
+  singular fraction 0.991). Weight audit: 17,616 / 32,800 encoder params
+  (53.7%) have |w| < 1e-30, including 100% of atom_embedding, bond_embedding,
+  distance_embedding and root_embedding, 99.7% of Compose (compose.2.weight
+  exactly 0, only the last bias 0.03275 survives), 98% of atom_mlp and 49% of
+  bind_mlp; SupportUpdate and Fusion are 0% dead and carry all live
+  computation. This reproduces the Z1 mechanism (near-zero-gradient
+  primitive/compose parameters erased by Adam with coupled weight decay once
+  the SupportUpdate/Fusion residual path fits the data). 13/13 correctness
+  tests, 13/13 sanity checks and the GPU smoke (loss 1.2465 -> 0.7425, all
+  module gradients non-zero at init, disagreement 0.1859, rank 2.80, peak
+  314 MiB) pass; the combinatorial audit is affordable (5,411,595 supports /
+  13,511,399 decompositions on official train; max 3,015 decompositions per
+  patch; a 128-molecule batch is ~170-185k decompositions). Verdict STOP (Case
+  D, composition branch dead/constant) plus pre-registered guard failure - NOT a
+  clean refutation of explicit composition; the frozen BCE as implemented does
+  not realize it. No promotion, no seed 1, no sweep.
+scope: >-
+  ZINC-12K official train/valid only; deterministic-A100 regime; seed 0 only
+  (guard-gated); fixed Top-5 soup; valid-selection metric; protocol
+  binding_composition_encoder_v1. One pre-registered architecture, no width /
+  hidden / activation / MAX_SUPPORT_SIZE / aggregation / optimizer sweep.
+  Official test NEVER loaded. Not a MolHIV claim. Not evidence that explicit
+  decomposition composition is worthless (the operator collapsed; the
+  hypothesis was not cleanly tested). Excludes attention / edge gates /
+  learned structure or motif IDs / triangle-ring-clique labels / vocabulary
+  patch embeddings / node-ID-dependent behaviour / "first decomposition wins" /
+  lexicographic parent semantics.
+supporting_evidence:
+  - >-
+    Seed0 Top-5 soup 0.1332753 vs pre-registered guard 0.1268055 (+0.0064698);
+    vs B-Bag 2-seed soup 0.1238055 (+0.0094698); vs B-Bag seed0 0.1273818
+    (+0.0058935); vs B-Full seed0 0.1198180 (+0.0134573); vs A2 seed0
+    0.1216936 (+0.0115817).
+  - >-
+    composition_disagreement_mean 6.69e-9 (init 0.1859) and
+    candidate_across_decomposition_std_mean 0.0 at the selection checkpoint;
+    per-size size3 mean 6.83e-9 (max 1.91e-8), size4 mean 6.58e-9 (max
+    3.41e-8).
+  - >-
+    e_struct effective rank 1.053 (participation ratio 1.018, top singular
+    fraction 0.991); candidate_norm_mean 0.03275; size3/4 object norm std
+    1.115 / 0.880.
+  - >-
+    Weight audit: 53.7% of encoder params |w| < 1e-30; all atom/bond/distance/
+    root embeddings exactly 0; Compose 99.7% zero with compose.2.weight = 0;
+    SupportUpdate and Fusion 0% dead.
+  - >-
+    13/13 tests, 13/13 sanity checks (invariance max diff 1.12e-8, else 0.0;
+    no-GAT audit; dataset_dependent_params = 0), GPU smoke loss 1.2465 ->
+    0.7425 with non-zero module gradients and peak 329,655,296 B; formal peak
+    697,091,072 B.
+related:
+  - notes/binding_composition_encoder.md
+  - records/decisions/decision-binding-composition-encoder-stop-20260916.yaml

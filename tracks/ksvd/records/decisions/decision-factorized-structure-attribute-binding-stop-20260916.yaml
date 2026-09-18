@@ -1,0 +1,96 @@
+decision_id: decision-factorized-structure-attribute-binding-stop-20260916
+created: '2026-09-16T14:35:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Factorized Structure--Attribute Binding (FSAB) -> Decision Case E: STOP (the
+  binding channel collapsed). The single authorised seed 0 PASSES the
+  pre-registered performance guard (Top-5 soup valid 0.12295305345853558 <=
+  0.12938177864899625 = B-Bag seed0 + 0.002; -0.0044287 versus the matched B-Bag
+  seed0 soup, +0.0031350 versus B-Full seed0, +0.0012594 versus A2 seed0) but
+  FAILS the mechanism gate exactly: at the selected checkpoint the local token
+  encoder emits a bit-identical vector for every molecule (S/A/B/e norm std
+  9.31e-10 / 1.86e-09 / 2.33e-09 / 0.0, effective rank 0.0 for all four), 93.9%
+  of its 32,080 parameters are exactly zero, witness mean abs deltas are exactly
+  0.0 for S, A, B, e and pred, and removing S, removing A, removing B or
+  shuffling the attribute assignment changes the valid prediction by nothing
+  (delta_no_S -2.068e-08, delta_no_A -1.615e-07, delta_no_B -6.992e-08,
+  delta_shuffle_B 0.0). The guard-passing number is therefore NOT evidence for
+  the factorization: it sits inside the B-Bag per-seed spread (0.0072) and is
+  worse than both A2 (0.1216930) and B-Full (0.1198180) seed0 soups, and the
+  trained artifact is effectively the inherited Cell-A-family downstream plus a
+  learned constant token offset. Do NOT promote, do NOT buy seed 1, do NOT sweep
+  widths / hidden sizes / activation / rounds / channel dims / fusion width /
+  pooling / optimizer / weight decay, and do NOT open the official test. A
+  single repair direction (give the S/A/B parameters a non-vanishing task
+  gradient, e.g. exclude the FSAB encoder's primitive/fusion parameters from
+  weight decay) is recorded but NOT authorized; it needs its own fresh
+  pre-registration and its own frozen witness.
+alternatives_rejected:
+- item: Promote FSAB because the seed0 soup passes the guard and beats B-Bag seed0
+  because: >-
+    the local encoder is exactly constant, so the number cannot be attributed to
+    the factorization; the delta (-0.0044287) is inside the B-Bag per-seed spread
+    (seed0 0.1273818 vs seed1 0.1202293) and is worse than both A2 and B-Full
+    seed0 soups, i.e. there is no defensible factorized-binding signal.
+- item: Buy seed 1 to reduce seed noise
+  because: >-
+    the study is guard- and mechanism-gated on seed 0; the guard passed but the
+    mechanism gate failed exactly, and a second seed cannot rescue a dead
+    mechanism. seed1_authorized=false.
+- item: Classify as a clean representational NO-GO for structure--attribute factorization
+  because: >-
+    S/A/B purity, relabel invariance, edge-order invariance, batch invariance and
+    the binding witness all hold at initialization and the channels are alive at
+    init; the failure is optimization-side (near-zero-gradient parameter
+    annihilation by Adam weight decay), so the hypothesis was not cleanly tested.
+    The honest claim is only that this implementation does not realize it.
+- item: Treat the collapse as FSAB-specific
+  because: >-
+    the identical mechanism is already recorded for Z1/ASB (Case E), BCE
+    (composition branch dead/constant) and EOR (inner-encoder collapse); B-Full
+    itself is documented as near rank-1 (effective rank 1.107/1.202). This is a
+    third independent replication, not a new failure mode.
+- item: Execute the minimal repair now
+  because: >-
+    excluding primitive/fusion parameters from weight decay, or bounding fusion
+    weights away from zero, changes optimization semantics; it requires a fresh
+    pre-registration and a frozen witness. Recorded as a candidate only.
+- item: Buy a GPU0/GPU1 bit-identical repro before deciding
+  because: >-
+    the verdict does not ride on any numeric margin: the mechanism signal is
+    exact (channel std 0.0, witness deltas 0.0, 93.9% of parameters exactly
+    zero), --deterministic was used throughout, and the environment is pinned.
+    Follows the BCE STOP precedent.
+- item: Open the ZINC official test
+  because: >-
+    the study is valid-only by design and the test is hard-locked; a test read
+    was never pre-registered.
+consequences:
+  - >-
+    FSAB is STOPPED and not promoted; the frozen Cell A references (B-Bag
+    0.1238055, B-Full 0.1189722, A2 0.1219141; per-seed seed0 0.1273818 /
+    0.1198180 / 0.1216930) stand unchanged.
+  - >-
+    The pre-registered performance guard is NOT sufficient on its own: it passed
+    here while the mechanism was exactly dead, so future studies in this track
+    must keep the mechanism gate mandatory and report it beside the guard.
+  - >-
+    Corroborating evidence accumulates that any additional patch-local structural
+    channel is discarded by the optimizer on this dataset/downstream because the
+    inherited global/topology/centre/relation channels already suffice (B-Full
+    near rank-1; EOR inner collapse; ESB connectivity-free tie; BCE composition
+    collapse; now FSAB factorization collapse).
+  - >-
+    Reusable infrastructure is retained: an input-access-separated S/A/B
+    factorization with 17 correctness tests (including an AST audit that no
+    attention, auxiliary loss or distillation is reachable and that training is
+    L1-only), a within-group rotation shuffle that preserves every multiset, and
+    a mechanism-gated runner with witness and intervention stages, available for
+    any future pre-registered binding study.
+  - >-
+    No new run, seed, or architecture is queued from this decision; the next move
+    must be paradigm-level, not another local patch representation.
+related:
+  - notes/factorized_structure_attribute_binding.md
+  - records/claims/claim-factorized-structure-attribute-binding-collapse-20260916.yaml

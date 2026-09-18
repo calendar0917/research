@@ -1,0 +1,104 @@
+decision_id: decision-fsar-v2-exact-marginal-stop-20260917
+created: '2026-09-17T02:30:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Decision - FSAR-v2 EXACT MARGINAL + EXPLICIT BASIS: STOP_A_FAILED (Case D).
+  The pre-registered Q1 guard fails: A_exact Top-5 soup 0.165132 is +0.007215
+  ABOVE the FSAR-v1 weak-marginal A 0.157917 (improvement -0.007215, i.e. no
+  improvement at all) and above the 0.145 partial-success ceiling, so the
+  attribute-marginal information-starvation hypothesis is REFUTED as the primary
+  cause of the FSAR-v1 A weakness. The information-resolution confound is
+  verified removed (A_exact's exact 60-D raw vector determines the complete
+  categorical multiset that B's shared entity embeddings see; the only extra B
+  information is attribute<->structural-role assignment; collision audit
+  1,148/1,148 keys collision-free). Yet every nested mode degrades vs FSAR-v1:
+  SA 0.167141 (+0.015524), SAB 0.154115 (+0.023202), SAM 0.170986 (+0.036804),
+  and SAB is +0.026733 above the matched B-Bag seed0 reference. The aligned
+  channel is nevertheless functionally used: fixed-centre shuffle gives A
+  exactly stable (0.0), S exactly stable (0.0), B responds 0.156; full-valid
+  interventions no-B +0.7598 (best) / +0.8022 (soup) and shuffle-assignment
+  +0.3702 / +0.3414; SAM - SAB = 0.01687099 >= 0.001 -> a seed0 aligned
+  increment beyond the marginal-only capacity control (larger than FSAR-v1's
+  0.00327, but in a degraded absolute regime). Consequences: do NOT add
+  attribute-encoder capacity, do NOT run a DeepSets / attention / quantile /
+  transform sweep, do NOT resume the FSAR-v1 stop branch; re-audit the
+  relational interface / root-centric formulation first. The pre-registered
+  explicit-S gate is CLOSED (A_exact 0.165132 > 0.145): the fixed readable
+  explicit structural operator basis is implemented and unit-tested (11-D rooted
+  node basis + 15-D rooted edge basis; chemistry purity, relabel equivariance,
+  no adjacency message passing) but NO explicit formal run (Wave 3/4) is
+  launched. Seed1 NOT authorized. Official ZINC test never loaded.
+why_this_experiment: >-
+  FSAR-v1 diagnosed the factorized backbone as trainable and functional but
+  attribute-marginal starved (A 0.157917 vs the 0.135 guard, while ~84 % of the
+  SA->SAB gain was matched capacity and only 0.00327 aligned binding). FSAR-v2
+  was the pre-registered one-variable test of that diagnosis: keep the whole
+  FSAR backbone and the implicit topology-only S unchanged, replace only the
+  mean/std learned-embedding A marginal with an exactly lossless categorical
+  count marginal, and (conditionally) replace the implicit S with a fixed
+  readable explicit rooted structural basis.
+protocol: >-
+  Inherited frozen optimized compact-v4 protocol verbatim (Adam lr 1e-3, wd
+  1e-5, batch 128, grad clip 5.0, max 240 epochs, patience 40, no scheduler,
+  single stage, best official-valid MAE checkpoint, fixed equal-weight Top-5
+  soup, deterministic A100, torch.use_deterministic_algorithms(True)). Only the
+  ZINC L1/MAE task loss is optimized; attribute shuffle and channel zeroing are
+  evaluation-only. All architecture / modes / gates frozen and committed at
+  81f70da before any formal run; eval-only --state addition at 56ae3c3. GPU 0 was
+  occupied by an unknown task the whole session and was never touched; all jobs
+  ran on GPU 1. Two of our own independent jobs were run in parallel on GPU 1
+  under explicit user authorization (no DDP, one process per job). Official test
+  never loaded.
+alternatives_rejected:
+  - item: Promoting A_exact because the aligned residual (SAM - SAB = 0.0169) is large
+    because: >-
+      the pre-registered A guard is a STOP condition and it failed; the aligned
+      increment lives in a regime whose absolute MAE is 0.154, far worse than
+      every reference.
+  - item: Continuing to enlarge / re-parameterize the attribute encoder
+    because: >-
+      the exact, collision-free, resolution-matched marginal did not help; more
+      A capacity is not the binding constraint.
+  - item: Running the explicit-S phase anyway because the explicit basis is implemented
+    because: >-
+      the gate is pre-registered as A_exact <= 0.145 AND (SAB <= 0.132 OR
+      aligned >= 0.001); A_exact 0.165132 fails the first conjunct. Running it
+      would be a post-hoc rescue.
+  - item: Buying seed1 for SAB/SAM
+    because: >-
+      seed1_authorized_implicit = false under the pre-registered rule.
+  - item: Citing the 0.0169 aligned residual as a competitive binding gain
+    because: >-
+      the model is not competitive (SAB 0.154115 vs B-Bag 0.127382 / A2
+      0.121694 / B-Full 0.119818); the increment is a seed0 signal inside a
+      degraded representation regime.
+  - item: Opening the official ZINC test
+    because: >-
+      never loaded; architecture and gate decisions use train/valid only.
+consequences:
+  - >-
+    FSAR-v1's A weakness is NOT primarily mean/std marginal information loss.
+    With a provably lossless, resolution-matched categorical marginal (and the
+    information-resolution confound removed) the factorized backbone is worse,
+    not better: the bottleneck is the relational interface / root-centric
+    formulation or the representation-optimization regime, not the marginal's
+    completeness.
+  - >-
+    Aligned structure-attribute access remains the live mechanism: B is
+    functionally used (shuffle witness + no-B + shuffle-assignment) and beats a
+    parameter-matched marginal-only control by 0.0169 seed0. Any next step must
+    target the relational interface while preserving that aligned access.
+  - >-
+    The fixed explicit rooted structural basis (node + edge, k=3 walks,
+    chemistry-free, no message passing) is implemented, unit-tested and ready,
+    but remains un-run formally; its performance-vs-implicit-S cost is still
+    unknown.
+revisit_if: >-
+  A new pre-registered, single-variable relational-interface / root-centric
+  hypothesis (e.g. how pooled per-frame A/B marginals are lifted into the
+  T=2 pair-centre core) beats a matched marginal-only capacity control in a
+  regime that is at least competitive with the mixed backbone, with its own
+  frozen witness. Not by widening A or sweeping A transforms; not by running the
+  explicit-S phase out of gate order; not by reopening the closed binding
+  families; never by loading the official test.

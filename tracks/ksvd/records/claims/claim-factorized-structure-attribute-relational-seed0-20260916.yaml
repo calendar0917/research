@@ -1,0 +1,81 @@
+claim_id: claim-factorized-structure-attribute-relational-seed0-20260916
+created: '2026-09-16T18:10:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On deterministic-A100 ZINC, a whole-backbone strict factorization (FSAR:
+  every MIXED bypass removed; A_v attribute marginal with no topology access,
+  S_v topology only with no chemistry access, B_v the only aligned
+  role-attribute channel, chemistry-free 15-D pair relation, T=2 recurrent
+  pair-centre core, g = Pool(h^T) + topology hinge, 0 dataset-dependent
+  vocabulary params) is implementable and its relational core and topology
+  channel are functional, but at the inherited ~32-D-per-channel budget it is
+  information-starved: seed0 Top-5 soup valid A 0.157917 / SA 0.151617 / SAB
+  0.130913 (params 56,617 / 77,609 / 95,209) vs the pre-registered A guard
+  0.135 (FAIL +0.02292) and vs B-Full 0.119818 / A2 0.121694 / B-Bag 0.127382.
+  The relational core is required (zeroing it sends the trained A model
+  0.1606 -> 0.9067) and the topology hinge is required (0.1606 -> 0.3529), so
+  the failure is representational starvation, not an architecture defect. The
+  aligned-binding channel is functionally used (centre-fixed context shuffle:
+  A stable 1.53e-8, S stable 0.0, B responds 0.3637; no-B +0.4467, shuffle
+  +0.8323) and beats a parameter-matched marginal-only capacity control (SAM
+  95,153 soup 0.134182) by 0.003270 > 0.001, but 84.2 % of the naive SA->SAB
+  gain (0.020705) is generic capacity (SA->SAM 0.017435) and only 15.8 %
+  (0.003270) is aligned structure-attribute binding. Seed1 NOT authorized
+  (pre-registered A guard STOP). Official ZINC test never loaded.
+scope: >-
+  ZINC-12K official train/valid only; deterministic A100; seed 0; fixed
+  equal-weight Top-5 soup; valid-selection MAE. Architecture/training commit
+  cf192e4, eval-only commit 1f84090. No official test, no MolHIV, no
+  width/optimizer sweep, no auxiliary loss, no attention/GAT/Transformer, no
+  distillation.
+supporting_evidence:
+  - >-
+    Params A 56,617 / SA 77,609 / SAB 95,209 nested (<= 200k), capacity control
+    SAM 95,153 (SAB - SAM = -56); 0 dataset-dependent vocabulary parameters.
+  - >-
+    Seed0 soup A 0.157917 / SA 0.151617 / SAB 0.130913 / SAM 0.134182; raw
+    bests 0.160617@177 / 0.156987@208 / 0.132160@222 / 0.147073@232; deltas
+    A->SA 0.006299, SA->SAB 0.020705, SA->SAM 0.017435, SAM->SAB 0.003270.
+  - >-
+    Guard diagnosis on the trained A checkpoint: no relational core 0.9067
+    (+0.746), no topology hinge 0.3529 (+0.192) -> core and pooling functional.
+  - >-
+    Mechanism at the selected SAB checkpoint: A_stable 1.53e-8, S_stable 0.0,
+    B_responds 0.3637; interventions true 0.13216, no_A 2.3873, no_S 0.3858,
+    no_B 0.5789, no_A_self 2.5447, no_A_ctx 0.3267, shuffle 0.9645.
+  - >-
+    Channel diagnostics SAB: A/S/B norms 3.31/1.89/2.68, cross-mol std
+    0.50/0.27/0.50, effective rank 11.8/6.8/16.3, node-init contributions
+    7.63/4.17/5.32; all gradient blocks non-zero.
+  - >-
+    10/10 architecture correctness gates pass local and remote; deterministic
+    GPU smoke; official_test_loaded = false in every produced JSON.
+contradicting_evidence:
+  - >-
+    Only seed0 was run (seed1 blocked by the pre-registered A guard), so all
+    deltas are single-seed.
+  - >-
+    SAB soup 0.130913 is +0.003531 worse than matched B-Bag seed0 and worse
+    than A2/B-Full, so the factorized system is not competitive even where the
+    binding channel helps.
+  - >-
+    The capacity control SAM is a different function class from B, so the
+    0.003270 residual is an upper bound on the aligned-binding effect, not an
+    isolated causal estimate.
+evidence:
+  - results/fsar/parameter_accounting.json
+  - results/fsar/sanity.json (10/10)
+  - results/fsar/soup_fsar_a_seed0.json
+  - results/fsar/soup_fsar_sa_seed0.json
+  - results/fsar/soup_fsar_sab_seed0.json
+  - results/fsar/soup_fsar_sam_seed0.json
+  - results/fsar/diagnostics_fsar_sab_seed0.json
+  - results/fsar/witness_fsar_sab_seed0.json
+  - results/fsar/interventions_fsar_sab_seed0.json
+  - results/fsar/decision.json
+  - results/fsar/report.json
+  - notes/zinc_current_backbone_information_flow.md
+  - notes/fsar_seed0_case_verdict.md
+  - tests/test_fsar.py (10 pass)

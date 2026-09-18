@@ -86,7 +86,20 @@ from tracks.ksvd.experiments.luyin16.zinc_long_range_proxy import (
     source_audit,
 )
 from tracks.ksvd.experiments.luyin16.structural_patch_encoder import (
+    AdaptiveStructureBindingEncoder,
+    BindingCompositionEncoder,
+    FactorizedStructureAttributeBindingEncoder,
+    SharedBagPatchEncoder,
     SharedStructuralPatchEncoder,
+)
+from tracks.ksvd.experiments.luyin16.explicit_support_composer import (
+    ExplicitSupportComposer,
+)
+from tracks.ksvd.experiments.luyin16.explicit_structural_basis import (
+    ExplicitStructuralBasisEncoder,
+)
+from tracks.ksvd.experiments.luyin16.explicit_object_relational import (
+    ExplicitObjectRelationalEncoder,
 )
 from tracks.ksvd.experiments.luyin16 import zinc_topology_features as ztopo
 
@@ -1621,6 +1634,88 @@ class PatchPathModel(nn.Module):
         structural_hidden_dim: int = 48,
         structural_rounds: int = 2,
         structural_include_std_pool: bool = True,
+        # Explicit-support structural composer (``explicit_composer``).  It
+        # replaces the typed lookup with learned composition over precomputed
+        # legal atom/bond-support objects (see explicit_support_composer.py).
+        # Widths are pre-registered once; there is no width/round sweep.
+        composer_latent_dim: int = 8,
+        composer_edge_dim: int = 8,
+        composer_n_degree_bins: int = 6,
+        composer_candidate_hidden: int = 200,
+        composer_fusion_hidden: int = 199,
+        composer_max_conn: int = 4,
+        # Explicit structural basis with learned scalar valuation
+        # (``explicit_basis_rank1``).  The graph defines which B0/B1/B2 objects
+        # exist; the network only learns one signed scalar valuation per object
+        # and the structural channel is rank-1 by construction (b + s(P) * v).
+        # Widths are chosen once by parameter accounting; no validation sweep.
+        esb_node_dim: int = 20,
+        esb_edge_dim: int = 16,
+        esb_n_degree_bins: int = 8,
+        esb_valuation_hidden: int = 184,
+        esb_fusion_hidden: int = 184,
+        # Explicit objects + explicit relations + T_obj=2 recurrent reasoning
+        # (``explicit_object_relational``).  Object states are initialised from
+        # deterministic primitive kernels; relations are support-derived and
+        # sparse; one weight-tied update refines object states over the fixed
+        # relation graph; pooling is late (after T_obj=2) and the structural
+        # channel stays rank-1 (b + s(P) * v).  Widths chosen once by
+        # parameter accounting to match B-full's 35,152-param encoder exactly.
+        eor_obj_dim: int = 8,
+        eor_rel_hidden: int = 64,
+        eor_rel_latent_dim: int = 16,
+        eor_q_hidden: int = 64,
+        eor_q_obj_dim: int = 8,
+        eor_object_hidden: int = 120,
+        eor_update_hidden: int = 79,
+        eor_fusion_hidden: int = 96,
+        eor_rounds: int = 2,
+        # Connectivity-free ablation of the shared structural encoder.  Same
+        # input primitives (atom / root / distance / bond type) and same
+        # output width, but a permutation-invariant DeepSets bag encoder with
+        # no message passing over real patch edges.  Widths are reported and
+        # chosen once to match the shared encoder parameter budget.
+        bag_node_hidden: int = 96,
+        bag_bond_hidden: int = 48,
+        bag_fusion_hidden: int = 104,
+        # Factorized Structure--Attribute Binding (``factorized_binding``): one
+        # topology-only stream S, one strict attribute-marginal stream A and one
+        # centered low-rank structure--attribute binding stream B.  Widths
+        # pre-registered once (no sweep).
+        fsab_role_dim: int = 32,
+        fsab_s_dim: int = 16,
+        fsab_a_dim: int = 16,
+        fsab_b_dim: int = 16,
+        fsab_attr_dim: int = 16,
+        fsab_s_hidden: int = 32,
+        fsab_a_hidden: int = 32,
+        fsab_b_hidden: int = 32,
+        fsab_fusion_hidden: int = 32,
+        fsab_rounds: int = 2,
+        fsab_activation: str = "silu",
+        # Adaptive Structure-Binding cell (``adaptive_structure_binding``).
+        # One shared cell that derives an explicit connected support inside the
+        # radius-2 patch from the activation of structure--attribute bindings
+        # and runs the patch computation on that learned structure.  Widths are
+        # pre-registered once (no width/round sweep); the cell degenerates to
+        # B-bag with open gates and (tiny) perturbation paths.
+        asb_bond_hidden: int = 48,
+        asb_bind_hidden: int = 32,
+        asb_gate_hidden: int = 24,
+        asb_message_hidden: int = 32,
+        asb_update_hidden: int = 32,
+        asb_bind_update_hidden: int = 32,
+        asb_perturb_init: float = 1.0e-3,
+        # Binding Composition Encoder (``binding_composition``).  One structural
+        # path only: atom/bond primitives -> shared symmetric composition of
+        # every legal explicit parent decomposition -> shared support update ->
+        # invariant object pooling.  Widths pre-registered once (no sweep).
+        bce_object_dim: int = 32,
+        bce_compose_hidden: int = 48,
+        bce_update_hidden: int = 48,
+        bce_fusion_hidden: int = 48,
+        bce_max_support_size: int = 4,
+        bce_activation: str = "silu",
     ) -> None:
         super().__init__()
         if quantile_mode not in QUANTILE_MODES:
@@ -1632,16 +1727,90 @@ class PatchPathModel(nn.Module):
         self.patch_hidden = int(patch_hidden)
         self.pair_hidden = int(pair_hidden)
         self.patch_representation = str(patch_representation)
-        if self.patch_representation not in {"typed_lookup", "shared_structural"}:
+        if self.patch_representation not in {
+            "typed_lookup",
+            "shared_structural",
+            "shared_bag",
+            "explicit_composer",
+            "explicit_basis_rank1",
+            "explicit_object_relational",
+            "adaptive_structure_binding",
+            "binding_composition",
+            "factorized_binding",
+            # ``null``: keep the 16-D slot but feed an exact zero vector for
+            # every patch, with *no* local-token generator instantiated at all.
+            # ``constant``: same, but the slot is one trainable graph-wide
+            # vector (16 params) shared by every patch of every molecule.
+            "null",
+            "constant",
+        }:
             raise ValueError(
                 f"unknown patch_representation={self.patch_representation!r}; "
-                "expected 'typed_lookup' or 'shared_structural'"
+                "expected 'typed_lookup', 'shared_structural', 'shared_bag', "
+                "'explicit_composer', 'explicit_basis_rank1', "
+                "'explicit_object_relational', 'adaptive_structure_binding', "
+                "'binding_composition', 'factorized_binding', 'null' or "
+                "'constant'"
             )
+        # Evaluation-only local-token intervention.  ``None`` reproduces the
+        # frozen forward path bit-for-bit (no arithmetic is inserted).  See
+        # ``set_local_token_intervention``.
+        self.local_token_intervention: str | None = None
+        self.local_token_intervention_value: torch.Tensor | None = None
+        self.local_token_permute_seed: int | None = None
+        self.local_token_constant: nn.Parameter | None = None
         self.structural_node_dim = int(structural_node_dim)
         self.structural_edge_dim = int(structural_edge_dim)
         self.structural_hidden_dim = int(structural_hidden_dim)
         self.structural_rounds = int(structural_rounds)
         self.structural_include_std_pool = bool(structural_include_std_pool)
+        self.bag_node_hidden = int(bag_node_hidden)
+        self.bag_bond_hidden = int(bag_bond_hidden)
+        self.bag_fusion_hidden = int(bag_fusion_hidden)
+        self.fsab_role_dim = int(fsab_role_dim)
+        self.fsab_s_dim = int(fsab_s_dim)
+        self.fsab_a_dim = int(fsab_a_dim)
+        self.fsab_b_dim = int(fsab_b_dim)
+        self.fsab_attr_dim = int(fsab_attr_dim)
+        self.fsab_s_hidden = int(fsab_s_hidden)
+        self.fsab_a_hidden = int(fsab_a_hidden)
+        self.fsab_b_hidden = int(fsab_b_hidden)
+        self.fsab_fusion_hidden = int(fsab_fusion_hidden)
+        self.fsab_rounds = int(fsab_rounds)
+        self.fsab_activation = str(fsab_activation)
+        self.asb_bond_hidden = int(asb_bond_hidden)
+        self.asb_bind_hidden = int(asb_bind_hidden)
+        self.asb_gate_hidden = int(asb_gate_hidden)
+        self.asb_message_hidden = int(asb_message_hidden)
+        self.asb_update_hidden = int(asb_update_hidden)
+        self.asb_bind_update_hidden = int(asb_bind_update_hidden)
+        self.asb_perturb_init = float(asb_perturb_init)
+        self.bce_object_dim = int(bce_object_dim)
+        self.bce_compose_hidden = int(bce_compose_hidden)
+        self.bce_update_hidden = int(bce_update_hidden)
+        self.bce_fusion_hidden = int(bce_fusion_hidden)
+        self.bce_max_support_size = int(bce_max_support_size)
+        self.bce_activation = str(bce_activation)
+        self.composer_latent_dim = int(composer_latent_dim)
+        self.composer_edge_dim = int(composer_edge_dim)
+        self.composer_n_degree_bins = int(composer_n_degree_bins)
+        self.composer_candidate_hidden = int(composer_candidate_hidden)
+        self.composer_fusion_hidden = int(composer_fusion_hidden)
+        self.composer_max_conn = int(composer_max_conn)
+        self.esb_node_dim = int(esb_node_dim)
+        self.esb_edge_dim = int(esb_edge_dim)
+        self.esb_n_degree_bins = int(esb_n_degree_bins)
+        self.esb_valuation_hidden = int(esb_valuation_hidden)
+        self.esb_fusion_hidden = int(esb_fusion_hidden)
+        self.eor_obj_dim = int(eor_obj_dim)
+        self.eor_rel_hidden = int(eor_rel_hidden)
+        self.eor_rel_latent_dim = int(eor_rel_latent_dim)
+        self.eor_q_hidden = int(eor_q_hidden)
+        self.eor_q_obj_dim = int(eor_q_obj_dim)
+        self.eor_object_hidden = int(eor_object_hidden)
+        self.eor_update_hidden = int(eor_update_hidden)
+        self.eor_fusion_hidden = int(eor_fusion_hidden)
+        self.eor_rounds = int(eor_rounds)
         self.embedding_mode = str(embedding_mode)
         self.embedding_rank = int(embedding_rank)
         self.parent_embedding_rank = int(
@@ -1832,6 +2001,182 @@ class PatchPathModel(nn.Module):
             )
             del self.typed_embedding  # no vocabulary-sized table remains
             self.typed_embedding = None
+        elif self.patch_representation == "shared_bag":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='shared_bag'"
+                )
+            self.structural_encoder = SharedBagPatchEncoder(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                node_dim=self.structural_node_dim,
+                edge_dim=self.structural_edge_dim,
+                node_hidden=self.bag_node_hidden,
+                bond_hidden=self.bag_bond_hidden,
+                fusion_hidden=self.bag_fusion_hidden,
+                output_dim=int(token_width),
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "adaptive_structure_binding":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='adaptive_structure_binding'"
+                )
+            self.structural_encoder = AdaptiveStructureBindingEncoder(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                node_dim=self.structural_node_dim,
+                edge_dim=self.structural_edge_dim,
+                node_hidden=self.bag_node_hidden,
+                bond_hidden=self.asb_bond_hidden,
+                bind_hidden=self.asb_bind_hidden,
+                gate_hidden=self.asb_gate_hidden,
+                message_hidden=self.asb_message_hidden,
+                update_hidden=self.asb_update_hidden,
+                bind_update_hidden=self.asb_bind_update_hidden,
+                fusion_hidden=self.bag_fusion_hidden,
+                output_dim=int(token_width),
+                perturb_init=self.asb_perturb_init,
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "binding_composition":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='binding_composition'"
+                )
+            self.structural_encoder = BindingCompositionEncoder(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                object_dim=self.bce_object_dim,
+                compose_hidden=self.bce_compose_hidden,
+                update_hidden=self.bce_update_hidden,
+                fusion_hidden=self.bce_fusion_hidden,
+                output_dim=int(token_width),
+                max_support_size=self.bce_max_support_size,
+                activation=self.bce_activation,
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "factorized_binding":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='factorized_binding'"
+                )
+            self.structural_encoder = FactorizedStructureAttributeBindingEncoder(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                role_dim=self.fsab_role_dim,
+                s_dim=self.fsab_s_dim,
+                a_dim=self.fsab_a_dim,
+                b_dim=self.fsab_b_dim,
+                attr_dim=self.fsab_attr_dim,
+                s_hidden=self.fsab_s_hidden,
+                a_hidden=self.fsab_a_hidden,
+                b_hidden=self.fsab_b_hidden,
+                fusion_hidden=self.fsab_fusion_hidden,
+                rounds=self.fsab_rounds,
+                output_dim=int(token_width),
+                activation=self.fsab_activation,
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "explicit_composer":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='explicit_composer'"
+                )
+            self.structural_encoder = ExplicitSupportComposer(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                n_degree_bins=self.composer_n_degree_bins,
+                latent_dim=self.composer_latent_dim,
+                edge_dim=self.composer_edge_dim,
+                candidate_hidden=self.composer_candidate_hidden,
+                fusion_hidden=self.composer_fusion_hidden,
+                output_dim=int(token_width),
+                max_conn=self.composer_max_conn,
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "explicit_basis_rank1":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='explicit_basis_rank1'"
+                )
+            self.structural_encoder = ExplicitStructuralBasisEncoder(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                n_degree_bins=self.esb_n_degree_bins,
+                node_dim=self.esb_node_dim,
+                edge_dim=self.esb_edge_dim,
+                valuation_hidden=self.esb_valuation_hidden,
+                fusion_hidden=self.esb_fusion_hidden,
+                output_dim=int(token_width),
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "explicit_object_relational":
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='explicit_object_relational'"
+                )
+            self.structural_encoder = ExplicitObjectRelationalEncoder(
+                atom_categories=ATOM_CATEGORIES,
+                bond_categories=BOND_CATEGORIES,
+                n_distance_bins=int(PATCH_RADIUS) + 1,
+                n_degree_bins=self.esb_n_degree_bins,
+                obj_dim=self.eor_obj_dim,
+                rel_hidden=self.eor_rel_hidden,
+                rel_latent_dim=self.eor_rel_latent_dim,
+                q_hidden=self.eor_q_hidden,
+                q_obj_dim=self.eor_q_obj_dim,
+                object_hidden=self.eor_object_hidden,
+                update_hidden=self.eor_update_hidden,
+                fusion_hidden=self.eor_fusion_hidden,
+                output_dim=int(token_width),
+                t_obj=self.eor_rounds,
+            )
+            del self.typed_embedding  # no vocabulary-sized table remains
+            self.typed_embedding = None
+        elif self.patch_representation == "null":
+            # No local-token generator is instantiated at all: no vocabulary
+            # table, no structural encoder.  ``_patch_token_value`` returns an
+            # exact zero 16-D vector per patch, so the downstream patch encoder
+            # input width (and every other tensor) is unchanged while the
+            # generator's trainable parameters are genuinely absent.
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='null'"
+                )
+            del self.typed_embedding  # no local-token parameters remain
+            self.typed_embedding = None
+        elif self.patch_representation == "constant":
+            # One graph-wide trainable 16-D vector shared by every patch and
+            # every molecule; no patch-/molecule-dependent generator.
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='constant'"
+                )
+            del self.typed_embedding  # no local-token generator remains
+            self.typed_embedding = None
+            self.local_token_constant = nn.Parameter(torch.zeros(int(token_width)))
         parent_width = max(int(token_width // 2), 1)
         self.parent_width = int(parent_width)
         parent_rank = min(self.parent_embedding_rank, parent_width)
@@ -2200,15 +2545,100 @@ class PatchPathModel(nn.Module):
         return e_patch + delta * mask
 
     def _patch_token_value(self, data: Data) -> torch.Tensor:
-        """Per-patch token representation fed to the patch encoder.
+        """Per-patch 16-D local token fed to the patch encoder.
 
         ``typed_lookup``: a learned row per exact certificate vocabulary id.
-        ``shared_structural``: ``e_struct`` from the shared connectivity-aware
-        patch encoder (no exact-identity lookup).
+        ``shared_structural`` / ``shared_bag`` / ...: ``e_struct`` from a shared
+        molecule-dependent patch encoder (no exact-identity lookup).
+        ``null``: an exact zero vector per patch with no generator at all.
+        ``constant``: one graph-wide trainable vector shared by every patch.
+
+        Any evaluation-only intervention set via
+        :meth:`set_local_token_intervention` is applied to this single funnel.
         """
         if self.structural_encoder is not None:
-            return self.structural_encoder(data)
-        return self.typed_embedding(data.typed_token)
+            value = self.structural_encoder(data)
+        elif self.typed_embedding is not None:
+            value = self.typed_embedding(data.typed_token)
+        elif self.local_token_constant is not None:
+            count = int(data.patch_cont.shape[0])
+            value = self.local_token_constant.view(1, -1).expand(count, -1)
+        else:
+            count = int(data.patch_cont.shape[0])
+            value = data.patch_cont.new_zeros((count, int(self.token_width)))
+        return self._apply_local_token_intervention(value, data)
+
+    def set_local_token_intervention(
+        self,
+        mode: str | None = None,
+        *,
+        constant: torch.Tensor | None = None,
+        permute_seed: int | None = None,
+    ) -> "PatchPathModel":
+        """Install an evaluation-only intervention on the local 16-D token.
+
+        ``mode=None``/``'none'``/``'original'`` disables the intervention and
+        restores the frozen forward path (bit-identical).  ``'zero'`` replaces
+        every patch token with an exact zero vector.  ``'constant'`` replaces
+        every patch token with the supplied ``constant`` vector (same for all
+        patches / molecules).  ``'permute'`` randomly permutes patch tokens
+        *within* each molecule, preserving the token marginal distribution but
+        destroying token-to-patch alignment.  Only no-grad evaluation paths use
+        this; training code never sets it.
+        """
+        if mode in (None, "none", "original"):
+            mode = None
+        elif mode not in ("zero", "constant", "permute"):
+            raise ValueError(f"unknown local-token intervention {mode!r}")
+        self.local_token_intervention = mode
+        self.local_token_intervention_value = (
+            None if constant is None else constant.detach().clone()
+        )
+        self.local_token_permute_seed = (
+            None if permute_seed is None else int(permute_seed)
+        )
+        return self
+
+    def clear_local_token_intervention(self) -> "PatchPathModel":
+        return self.set_local_token_intervention(None)
+
+    def _apply_local_token_intervention(
+        self, value: torch.Tensor, data: Data
+    ) -> torch.Tensor:
+        mode = self.local_token_intervention
+        if mode is None:
+            return value
+        if mode == "zero":
+            return torch.zeros_like(value)
+        if mode == "constant":
+            constant = self.local_token_intervention_value
+            if constant is None:
+                raise RuntimeError(
+                    "constant intervention requires `constant=<tensor>`"
+                )
+            constant = constant.to(device=value.device, dtype=value.dtype).view(1, -1)
+            if int(constant.shape[1]) != int(value.shape[1]):
+                raise RuntimeError("intervention constant width mismatch")
+            return constant.expand_as(value)
+        if mode == "permute":
+            batch = data.batch
+            output = value.clone()
+            generator = torch.Generator().manual_seed(
+                int(self.local_token_permute_seed or 0)
+            )
+            batch_cpu = batch.detach().to("cpu")
+            for graph_id in torch.unique(batch_cpu).tolist():
+                index = torch.nonzero(
+                    batch_cpu == int(graph_id), as_tuple=False
+                ).view(-1)
+                if index.numel() <= 1:
+                    continue
+                order = torch.randperm(int(index.numel()), generator=generator)
+                index_device = index.to(value.device)
+                order_device = order.to(value.device)
+                output[index_device] = value[index_device[order_device]]
+            return output
+        raise RuntimeError(f"unknown local-token intervention {mode!r}")
 
     def encode(self, data: Data) -> torch.Tensor:
         """Return the unified graph representation ``R`` (the input to the

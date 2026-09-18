@@ -1,0 +1,93 @@
+decision_id: decision-molhiv-local-token-null-20260918
+created: '2026-09-18T14:40:00'
+kind: decision
+study_id: molhiv-cross-scaffold-interaction
+decision: >-
+  Decision - MOLHIV DENSE EXACT-CERTIFICATE LOCAL PATCH TOKEN: STRONG /
+  NOT REQUIRED on the seed-0 screen; do NOT promote, do NOT buy additional
+  seeds, do NOT re-invest the released 839,456 parameters, do NOT open the
+  official test.  On the pre-registered molhiv_local_token_null_v1 regime
+  (OGBG-MolHIV official scaffold train/valid only, official test never
+  scored, training revision e163ac6, A100-SXM4-40GB GPU 1, fixed equal-weight
+  Top-5 soup on official valid ROC-AUC), B-Null (e_patch = exact zero 32-D
+  per patch, no local-token generator at all, 237,133 params, a 839,456-param
+  / 77.97 % drop) reaches soup 0.840847 (raw 0.843168 @ep24, 64 epochs,
+  1357.3 s, peak 749,046,272 B) and Constant-32 (one trainable graph-wide
+  32-vector, 237,165 params) reaches soup 0.860768 (raw 0.856445 @ep40,
+  80 epochs, 1670.4 s) against the matched frozen typed seed0 reference soup
+  0.809505 / raw 0.814239.  D_null_soup = -0.031342 and D_const_soup =
+  -0.051263 (negative = candidate better): both candidates beat the matched
+  typed seed0, and Constant-32 is +0.0097 above the frozen typed seed1 soup
+  0.851092.  Pre-registered gate D_null <= 0.005 -> STRONG and authorises
+  Constant-32 (which was then run).  Deleting the channel removes 78 % of the
+  model with no loss; its residual value is a shared trainable offset (32
+  params), matching the ZINC result and the near rank-1 shared structural
+  encoder there.  Mechanism witness: Null token exactly zero on a real valid
+  batch (3,227 patches), typed_embedding not instantiated, patch-encoder
+  input width 841 unchanged, all 9 remaining backbone groups receive non-zero
+  task gradient, forward finite; Constant vector norm 0.01287 with non-zero
+  gradient 2.5e-4, all 10 groups non-zero; every artefact records
+  official_test_loaded false.
+why_this_experiment: >-
+  MolHIV is where the local-token channel dominates the parameter budget
+  (839,456 of 1,076,589 params, 78 %), so it is the strongest transfer test of
+  the ZINC redundancy conclusion (decision-local-token-null-20260919) and the
+  training-side counterpart of the identity audit
+  (claim-identity-incremental-information-audit-20260915), which showed the
+  exact certificate identity adds no molecule-level distinguishing power.
+protocol: >-
+  Pre-registered in notes/molhiv_local_token_null_preregistration.md before any
+  candidate training.  protocol_id molhiv-cross-scaffold-interaction,
+  test_policy terminal.  Official train / official valid only; the official
+  test split was never scored.  Seed 0 per candidate, exactly one architecture
+  at a time.  Frozen regime identical to the reference model: Adam lr 1e-3,
+  wd 1e-5, batch 128, unweighted BCEWithLogitsLoss, grad clip 5.0, 240 epochs,
+  patience 40 on official valid ROC-AUC, no scheduler, fixed equal-weight
+  Top-5 parameter soup, no k/weight search.  Only the local-token channel
+  differs (null / constant); the patch-encoder input width (841) and every
+  other module remain identical.  Two new patch_representation values were
+  added to molhiv_patch_path_pooling.py with default typed_lookup bit-identical
+  to the frozen path; 13 new tests pass (20 with the two existing MolHIV
+  suites).
+alternatives_rejected:
+  - item: Promoting a Null / Constant checkpoint as a new best model
+    because: >-
+      the scientific result is that 78 % of the parameters are unnecessary,
+      not a documented performance win; the point estimate is inside the
+      ~0.0416 two-seed typed spread.
+  - item: Buying seed 1 for B-Null / Constant-32
+    because: >-
+      the pre-registration is seed-0 only and the deltas are within the
+      observed typed seed spread; a seed-1 confirmation is the single
+      recommended next action, not part of this round.
+  - item: Re-investing the released 839,456 parameters
+    because: >-
+      that would confound deletion with reallocation; the parameter drop is
+      the experimental variable.
+  - item: Adding structural features / radius / RRWP / cycles / pair networks / attention
+    because: >-
+      the pre-registered question is channel necessity, not architecture
+      search; the round reports and stops.
+  - item: Scoring the official MolHIV test
+    because: >-
+      the protocol test policy is terminal and this is a non-terminal screen.
+  - item: Treating the single-seed screen as a statistical claim
+    because: >-
+      the two frozen typed seeds already span 0.0416 soup and the bands were
+      declared coarse in the pre-registration.
+consequences:
+  - >-
+    The MolHIV parameter budget is not justified by the local certificate
+    token: a 237k-param version of the same backbone is at least as good at
+    seed 0 as the 1.08M-param typed model.
+  - >-
+    The ZINC redundancy conclusion (redundant molecule-dependent local token;
+    residual value = shared trainable offset) reproduces on a binary
+    scaffold-split benchmark and is larger there (78 % of params).
+next_action: >-
+  ONE action only (not auto-authorized here): a pre-registered paired seed-1
+  confirmation of B-Null and Constant-32 against the frozen typed seed0/seed1
+  references, with the same fixed soup rule and no other change, to decide
+  whether the point-estimate advantage (and in particular Constant-32 > typed
+  seed1) survives the MolHIV seed spread.  Do not start it without a separate
+  pre-registration and do not add any other variable.

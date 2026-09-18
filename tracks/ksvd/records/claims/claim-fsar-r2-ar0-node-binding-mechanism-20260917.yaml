@@ -1,0 +1,84 @@
+claim_id: claim-fsar-r2-ar0-node-binding-mechanism-20260917
+created: '2026-09-17T20:00:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  FSAR-R2-AR0 node-B mechanism (deterministic A100 node round, revision
+  6acfc45; ZINC-12K official train/valid only; official test never loaded;
+  fixed equal-weight Top-5 soup valid MAE).  QUESTION: what is the node
+  role<->attribute assignment residual B_V actually doing, and is the AR0
+  support a real learned functional or a low-dimensional artifact?
+  ANSWER: a stable, genuinely high-dimensional learned functional; NOT
+  low-dimensional, NOT an artifact.  SIX STAGES: H1 seed agreement -- branch
+  output Pearson across seeds 0/1/2 0.9922 / 0.9878 / 0.9894; final prediction
+  Pearson 0.9965 / 0.9978 / 0.9974; scaled-space W_B cosine 0.954 / 0.959 /
+  0.986 while raw-unit cosine is -0.2535 / -0.6292 / +0.9056 (raw weights are
+  not aligned, because of coordinate scaling -- the FUNCTION is).  H2 rank --
+  full flattened C train-fit effective rank 56.6 with PC1 variance 0.352; the
+  model input C~ effective rank 116.3 with PC1 0.060; raw-C PC1 correlates
+  -0.267 with n_nodes and -0.364 with the target; C~ PC1 -0.029 / -0.050; PC1
+  vs MB branch max 0.129.  H3 dimension -- PC1->B in-sample R^2 is only
+  0.0167 / 0.0130 / 0.0054; a k=10 subspace reaches only ~0.373-0.378
+  in-sample and ~0.082 / 0.093 / 0.103 out-of-sample.  H4 interpretability --
+  contribution shares (RMS) are seed-stable: node_mean ~0.19, node_std ~0.24,
+  edge_mean ~0.24, edge_std ~0.25, root_basis ~0.04, patch_size ~0.04; top
+  atom categories N,C,O (H1 +), C (H1), N (+), S, F; cross-seed contribution
+  cosine 0.96-0.99; large RAW weights sit on near-zero-RMS coordinates whose
+  contribution is ~0.  H5 frozen M0 -- a linear C readout on the completely
+  frozen M0 soup recovers 70.1 % / 70.7 % / 66.7 % of the full MB gain (seeds
+  0/1/2): M0 0.553790/0.535570/0.546893 -> frozen 0.494536/0.481278/0.490488,
+  MB 0.469285/0.458746/0.462365.  H6 witness -- only 9 exact-A-key collision
+  pairs among the 1,000 valid molecules; top |delta b| witnesses (118|502
+  delta_b 0.585 sign-match; 334|613; 47|887; 63|570; 480|730) are illustrative
+  only.  CORRECTION: the AR0 feature-audit statement "C effective rank 1.40 /
+  top singular fraction 0.89" was an off-by-slice bug (flattened_C[:, :64],
+  the first 64 of 1,820 coordinates); the corrected full-matrix values are
+  effective rank 56.6 (raw C) and 116.3 (C~).  The AR0 verdict rests on paired
+  MAE deltas and the assignment-permutation diagnostic, not on the rank number,
+  so it is unaffected; the corrected audit() is now on this branch.
+scope: >-
+  Analysis-only, evaluation-only diagnostics over the existing AR0 seed 0/1/2
+  checkpoints plus one pre-existing frozen-M0 diagnostic run; ZINC-12K official
+  train/valid only; official test never loaded; no architecture or protocol
+  change; no re-training beyond the frozen-M0 linear probe that was already
+  part of the AR0 protocol family; revision 6acfc45 (module + audit fix) and
+  2d66ca7 (note).
+supporting_evidence:
+  - >-
+    Seed agreement is high in function space (0.988-0.997) and in
+    RMS-normalised weight space (0.954-0.986) with raw-unit weights unaligned
+    only where the coordinates have near-zero RMS and contribute ~0.
+  - >-
+    The corrected full-C effective rank (56.6 raw, 116.3 C~) removes the
+    low-dimensional artifact reading; a 10-D subspace explains only 8-10 % of
+    held-out B.
+  - >-
+    Contribution decomposition is interpretable, group-structured and
+    seed-stable (cross-seed cosine 0.96-0.99).
+  - >-
+    Frozen-M0 linear probe recovers 2/3 of the MB gain with the base and B
+    completely fixed, so the node assignment residual is largely a linear
+    functional of C, not a co-adapted nonlinear code.
+contradicting_evidence:
+  - >-
+    PC1 of the raw C is still not negligible (0.352 variance) and correlates
+    with n_nodes (-0.267) and the target (-0.364); the network input C~ is the
+    one that is genuinely high-dimensional (PC1 0.060).
+  - >-
+    The exact-A-key collision witnesses are sparse (9 pairs) and are
+    illustrative, not a controlled second-order test; nothing here quantifies
+    the compositional limit.
+  - >-
+    H6 did not search for a first-order collision witness, so no pair-level
+    B^(2) need is established.
+evidence:
+  - results/fsar_r2_ar0/mechanism/
+  - results/fsar_r2_ar0/mechanism/h1_seed_agreement.json
+  - results/fsar_r2_ar0/mechanism/h2_rank.json
+  - results/fsar_r2_ar0/mechanism/h3_pc_explanation.json
+  - results/fsar_r2_ar0/mechanism/h4_contributions.json
+  - results/fsar_r2_ar0/mechanism/h5_frozen_m0.json
+  - results/fsar_r2_ar0/mechanism/h6_witnesses.json
+  - notes/fsar_r2_ar0_node_binding_mechanism.md
+  - tests/test_fsar_r2_ar0_mechanism.py (7 pass)

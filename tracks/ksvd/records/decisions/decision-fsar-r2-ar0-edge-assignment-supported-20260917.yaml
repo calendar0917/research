@@ -1,0 +1,139 @@
+decision_id: decision-fsar-r2-ar0-edge-assignment-supported-20260917
+created: '2026-09-17T21:10:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Decision - FSAR-R2-AR0-EDGE: EDGE_ASSIGNMENT_SUPPORTED (two paired seeds),
+  and the AR0 node-B mechanism is a stable high-dimensional functional.
+  On the frozen deterministic-A100 ZINC-12K official train/valid regime
+  (official test never loaded; revision 44660bb), with the already-supported
+  node assignment residual (B_V) held fixed, the real edge structural-role <->
+  bond-type assignment residual C_E provides a stable predictive increment
+  over both the node baseline BV and the exactly parameter-/architecture-
+  matched, assignment-independent edge marginal control BVEM.  Top-5 soup
+  valid MAE: seed0 BV 0.4692853513918235 / BVE 0.44595771902793785 / BVEM
+  0.46358981231594226; seed1 BV 0.4587459604590549 / BVE 0.4443749022744014 /
+  BVEM 0.46093909119063753.  Paired deltas (positive = BVE better): seed0
+  BV-BVE +0.023328, BVEM-BVE +0.017632; seed1 BV-BVE +0.014371, BVEM-BVE
+  +0.016564 -- both controls beaten on both seeds.  Paired per-molecule
+  bootstrap (5,000 resamples, n=1000) 95% CIs exclude zero on all four
+  comparisons with P(delta>0) 1.0/1.0 (seed0) and 0.996/1.0 (seed1).  The
+  pre-registered seed-2 gate fired on seeds 0 and 1 (gate.json
+  seed2_authorized true); seed 2 was authorised but deliberately not
+  completed for time budget, so the verdict uses exactly the two completed
+  paired seeds and no protocol or architecture change was made at any point.
+  Mechanism: evaluation-only bond-type permutation leaves S, A, the node
+  statistic C_V and the marginal P_E EXACTLY invariant (delta 0.0) while C_E
+  changes (sum |delta| 49,419/47,805) and the prediction changes (mean
+  |delta| 0.282/0.275); actual MAE 0.4460/0.4444 vs MAE(E[yhat_pi])
+  0.5149/0.5090 and E[MAE(yhat_pi)] 0.5616/0.5608.  No branch collapse: BVE
+  ||W_E|| 0.523/0.530, output std 0.233/0.225, task grad norm 1.84/1.92,
+  324/520 effective coordinates, with the 196 exact zeros equal to the
+  zero-RMS mask (not learned sparsity); BVEM is more live (||W|| 0.626/0.729,
+  std 0.338/0.394) yet worse, so this is not extra capacity.  Both synthetic
+  controls pass before any ZINC run; BV bit-exactly reproduces the AR0 MB node
+  soups on both seeds.  SCOPE: a first-order linear edge assignment residual
+  on this fixed psi_e basis at this budget; no SOTA/general-binding claim; no
+  pair-level B^(2) is implemented or justified.  SECOND OUTCOME (node round,
+  revision 6acfc45): the AR0 feature-audit statement 'C effective rank 1.40 /
+  top singular fraction 0.89' is RETRACTED as an off-by-slice bug
+  (flattened_C[:, :64]); the corrected full-matrix values are effective rank
+  56.6 (raw C) and 116.3 (C~), PC1 0.352/0.060.  The AR0 verdict rests on
+  paired MAE deltas and the assignment-permutation diagnostic, not on the rank
+  number, so AR0 is unaffected; the mechanism analysis (seed agreement
+  0.988-0.997, a 10-D subspace explaining only 8-10 % of held-out B, stable
+  interpretable contributions, frozen-M0 linear probe recovering 2/3 of the
+  MB gain) shows B_V is a stable high-dimensional functional, NOT a
+  low-dimensional artifact.
+why_this_experiment: >-
+  FSAR-R2-AR0 established the node role<->attribute assignment residual on a
+  fixed radius-2 explicit pure-topology basis but left two questions: is the
+  node residual a real high-dimensional functional or a low-dimensional
+  artifact (Phase 1), and does the OTHER natural one-body assignment --
+  structural edge role <-> bond type -- carry a comparable stable increment
+  over its own strong marginal baseline and matched marginal-capacity control
+  (Phase 2)?  Both were pre-registered before the formal edge runs.  The edge
+  round reuses the exact AR0 protocol, feature basis and node branch so the
+  only difference across BV/BVE/BVEM is the edge branch, and requires a
+  synthetic positive (assignment-only) and negative (marginal-only) control
+  before any ZINC run to separate implementation failure from a scientific
+  negative.
+protocol: >-
+  Frozen deterministic A100 protocol inherited verbatim from AR0: Adam lr
+  1e-3, weight decay 1e-5, batch 128, L1 loss, gradient clip 5.0, no
+  scheduler, max 240 epochs, patience 40, best-official-valid checkpoint,
+  fixed equal-weight Top-5 soup, torch.use_deterministic_algorithms(True),
+  CUBLAS_WORKSPACE_CONFIG=:4096:8.  Models BV 24,797 / BVE and BVEM 25,317
+  params, dataset_dependent_vocabulary_params 0; base and W_B bit-identical
+  across variants at the same seed.  Short 60-epoch trainability smoke for all
+  three, then formal runs: wave1 BV-s0 || BVE-s0, wave2 BVEM-s0 || BV-s1,
+  wave3 BVE-s1 || BVEM-s1; the gate-authorised seed-2 trio was launched but
+  stopped before its first checkpoint on time budget and contributes nothing.
+  GPU 1 only; GPU 0 held an unknown 35.8 GB / 98 % third-party task that was
+  never touched or co-tenanted; a ~0.54 GB GSN co-tenant on GPU 1 was recorded,
+  never touched.  Peak our-GPU memory ~103 MB per formal run.  Official ZINC
+  test never loaded.
+alternatives_rejected:
+  - item: Reading the BVE gain as extra capacity
+    because: >-
+      BVEM is exactly parameter-matched (25,317 each), uses the same edge-role
+      coordinates and a MORE live edge branch, and is still worse on both
+      seeds; the only difference is C_E vs the assignment-independent P_E.
+  - item: Reading the 196 exact zeros in W_E as learned sparsity
+    because: >-
+      the zero count equals exactly the zero-RMS coordinate mask count
+      (520 - 324 = 196 for BVE, 520 - 330 = 190 for BVEM); the mask, not the
+      optimiser, produced them.
+  - item: Keeping the AR0 rank-1 caveat
+    because: >-
+      it came from flattening C and slicing only the first 64 of 1,820
+      coordinates; the full-matrix effective rank is 56.6 (raw C) / 116.3
+      (C~), so the caveat mis-describes the mechanism.  It is retracted, and
+      the AR0 verdict is unchanged because it never depended on the rank.
+  - item: Buying seed 2 after the gate fired
+    because: >-
+      the user directed a time-budget stop; the gate already passed on two
+      paired seeds, which is sufficient for the pre-registered verdict.  Seed 2
+      remains authorised and reproducible.
+  - item: Searching for a first-order collision witness or implementing
+      pair-level B^(2)
+    because: >-
+      explicitly out of scope and not justified by any witness in this round;
+      B^(2) stays a discussion-only candidate.
+  - item: Reading the official ZINC test
+    because: >-
+      never loaded by design; no test read is authorised by this decision.
+consequences:
+  - >-
+    A complete FIRST-ORDER assignment picture now exists on the fixed
+    radius-2 explicit basis: the node role<->atom assignment (B_V, AR0,
+    3 seeds) and the edge role<->bond-type assignment (B_E, this round,
+    2 paired seeds) both carry real, seed-stable, control-beating information
+    that the marginals S and A cannot express.
+  - >-
+    The AR0 rank-1 caveat is retracted in favour of the corrected full-matrix
+    rank and the mechanism evidence (seed agreement, dimension, interpretable
+    contributions, frozen-M0 recovery): B_V is a stable high-dimensional but
+    shallow (largely linearly recoverable) functional.
+  - >-
+    Pair-level B^(2) is NOT warranted by this round.  The pre-registered
+    condition for even proposing it is a first-order collision witness
+    (equal S, A, B_V and B_E but different systematic residual), which was not
+    searched for and is not claimed.
+  - >-
+    The ~0.12 gap to strong models is most plausibly a downstream
+    compositional-processor deficit, not an assignment-order deficit, because
+    both first-order increments are real but small in absolute terms and the
+    node residual is largely a linear functional of C.  This is a hypothesis,
+    not a result of this round, and requires its own pre-registered
+    architecture round; no next step is auto-implemented.
+revisit_if: >-
+  A fresh pre-registered round exhibits an explicit first-order collision
+  witness (equal S, A, B_V and B_E with different systematic residual), which
+  would justify a pair-level B^(2) design with its own strong marginal
+  baseline and its own exactly matched marginal-capacity control; OR the
+  compositional-processor hypothesis is pre-registered as a separate
+  architecture round with its own guard and controls.  Not by radius sweeps,
+  not by width/optimizer sweeps, not by adding primitives, not by reopening
+  A_exact or the official test.  Seed 2 remains authorised and available if a
+  future round needs a third paired seed.
