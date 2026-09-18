@@ -506,13 +506,33 @@ def _cmd_context(args: argparse.Namespace) -> int:
         payload = load_yaml(path)
         lines.append(f"- {decision_id}: {str(payload.get('decision'))[:60]}")
     lines.append("")
-    lines.append("## open questions")
-    open_questions = state.get("open_questions") or []
-    lines.extend(f"- {question}" for question in open_questions[:12])
+    lines.append("## open design questions (next round)")
+    for question in (state.get("open_design_questions") or [])[:12]:
+        lines.append(f"- {question}")
+    deferred_science = state.get("deferred_scientific_questions") or []
+    if deferred_science:
+        lines.append("## deferred scientific questions (not on the critical path)")
+        for question in deferred_science[:12]:
+            lines.append(f"- {question}")
+    reporting = state.get("reporting_open_items") or []
+    if reporting:
+        lines.append("## reporting / comparability open items")
+        for item in reporting[:12]:
+            lines.append(f"- {item}")
     lines.append("")
-    lines.append("## next queue")
-    next_queue = state.get("next_queue") or []
-    lines.extend(f"- {item}" for item in next_queue[:12])
+    lines.append("## next action")
+    action = state.get("authorized_next_action") or {}
+    if isinstance(action, dict):
+        lines.append(f"- status: {action.get('status', 'unknown')}")
+        if action.get("note"):
+            lines.append(f"  {action['note']}")
+    else:
+        lines.append(f"- {action}")
+    deferred_optional = state.get("deferred_optional") or []
+    if deferred_optional:
+        lines.append("## deferred optional (NOT authorized, not a queue)")
+        for item in deferred_optional[:12]:
+            lines.append(f"- {item}")
     lines.append("")
     lines.append("## guardrails")
     guardrails = state.get("guardrails") or []

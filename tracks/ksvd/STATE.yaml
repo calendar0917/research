@@ -30,65 +30,127 @@ legacy_baseline_json: results/luyin16/ZINC_PATCH_PATH_POOLING_20260904.json
 legacy_best_record: record-legacy-zinc-patch-path-pooling-factorized-rank20-20260905
 
 # No live candidate. The local-token / B-Null ablation line is CLOSED for
-# architecture inference. Best compact single model on record: ZINC B-Null
-# (49,343 params, official-test soup MAE 0.097731). The next round may only
-# start from a NEW pre-registration (see research_direction below).
-current_candidate: none (local-token / B-Null ablation line CLOSED; see frozen_references)
+# architecture inference. No model is ranked "best": official-test point
+# estimates are reporting-only (see terminal_reporting_references). The next
+# round may only start from a NEW pre-registration (see research_direction).
+current_candidate: none
 
 # ---------------------------------------------------------------------------
-# frozen references — the only numbers to quote; each points at its record
+# development references — valid/development side ONLY (no official-test numbers)
 # ---------------------------------------------------------------------------
-frozen_references:
+# Safe to use for protocol matching and historical (valid-side) comparison.
+# A reference whose official test has been read is still listed here for its
+# valid-side value, but it is NOT selection-eligible; its test numbers live in
+# terminal_reporting_references. Ids may therefore appear in both lists by
+# design (dev-side valid snapshot vs terminal test snapshot).
+development_references:
+  - id: zinc-b-full
+    dataset: zinc
+    role: connectivity-aware shared patch encoder (mechanism reference; official test never read)
+    params: 84495
+    valid_soup_mae: 0.118972
+    test_read: false
+    pointer: records/claims/claim-shared-structural-patch-encoder-vocab-free-20260915.yaml
   - id: zinc-cell-a-typed
     dataset: zinc
     role: frozen typed ZINC reference (typed certificate lookup + H64/T2)
     params: 85763
     valid_soup_mae: 0.126368
-    official_test_raw_mae: 0.109361
-    official_test_soup_mae: 0.106717
+    test_read: true
     pointer: notes/compact_v4_recurrent_pair_centre_capacity_test_closure.md
-  - id: zinc-b-full
-    dataset: zinc
-    role: connectivity-aware shared patch encoder (mechanism reference; test not read)
-    params: 84495
-    valid_soup_mae: 0.118972
-    pointer: records/claims/claim-shared-structural-patch-encoder-vocab-free-20260915.yaml
   - id: zinc-b-null
     dataset: zinc
-    role: best compact single model; local 16-D patch token removed (no generator)
+    role: compact single-pass model (local 16-D patch token removed; no generator)
     params: 49343
     valid_soup_mae: 0.123028
-    official_test_raw_mae: 0.102759
-    official_test_soup_mae: 0.097731
+    test_read: true
     pointer: records/decisions/decision-local-token-null-test-read-20260918.yaml
   - id: molhiv-typed-rpc
     dataset: molhiv
     role: frozen typed MolHIV reference (H96 T=2 recurrent pair--centre port)
     params: 1076589
     valid_soup_roc_auc: 0.830299
-    official_test_raw_roc_auc: 0.762605
-    official_test_soup_roc_auc: 0.762095
+    test_read: true
     pointer: notes/molhiv_recurrent_pair_centre_transfer.md
   - id: molhiv-b-null
     dataset: molhiv
     role: compact MolHIV variant; dense typed certificate lookup removed (78% params)
     params: 237133
     valid_soup_roc_auc: 0.840847
-    official_test_soup_roc_auc: 0.760501
+    test_read: true
     pointer: records/decisions/decision-local-token-null-test-read-20260918.yaml
   - id: molhiv-bbag-transfer
     dataset: molhiv
     role: vocabulary-free shared B-Bag transfer (281k); parameter explosion solved
     params: 281205
     valid_soup_roc_auc: 0.817803
-    official_test_soup_roc_auc: 0.777772
+    test_read: true
     pointer: records/decisions/decision-molhiv-shared-bag-transfer-20260916.yaml
 
 # ---------------------------------------------------------------------------
-# official test reads already spent — one-shot discipline; never re-open
+# terminal reporting references — official test ALREADY observed
 # ---------------------------------------------------------------------------
-# Every entry was frozen before the read (test_loaded_at_freeze_time=false) and
-# is one-shot (unlock marker written). Post-hoc reads may not drive selection.
+# Historical reporting evidence ONLY. selection_eligible=false: these numbers
+# must never be used to rank models ("best"/"winner"), choose architectures,
+# hyperparameters or a representation family, decide when to stop training, or
+# authorize an experiment. The tests are no longer pristine (see
+# official_test_reads). Numbers are kept only so past reports stay checkable.
+terminal_reporting_references:
+  - id: zinc-cell-a-typed
+    dataset: zinc
+    params: 85763
+    official_test_raw_mae: 0.109361
+    official_test_soup_mae: 0.106717
+    test_status: observed
+    terminal_only: true
+    selection_eligible: false
+    read_date: 2026-09-14
+    pointer: notes/compact_v4_recurrent_pair_centre_capacity_test_closure.md
+  - id: zinc-b-null
+    dataset: zinc
+    params: 49343
+    official_test_raw_mae: 0.102759
+    official_test_soup_mae: 0.097731
+    test_status: observed
+    terminal_only: true
+    selection_eligible: false
+    read_date: 2026-09-18
+    pointer: records/decisions/decision-local-token-null-test-read-20260918.yaml
+  - id: molhiv-typed-rpc
+    dataset: molhiv
+    params: 1076589
+    official_test_raw_roc_auc: 0.762605
+    official_test_soup_roc_auc: 0.762095
+    test_status: observed
+    terminal_only: true
+    selection_eligible: false
+    read_date: 2026-09-14
+    pointer: notes/molhiv_recurrent_pair_centre_transfer.md
+  - id: molhiv-b-null
+    dataset: molhiv
+    params: 237133
+    official_test_soup_roc_auc: 0.760501
+    test_status: observed
+    terminal_only: true
+    selection_eligible: false
+    read_date: 2026-09-18
+    pointer: records/decisions/decision-local-token-null-test-read-20260918.yaml
+  - id: molhiv-bbag-transfer
+    dataset: molhiv
+    params: 281205
+    official_test_soup_roc_auc: 0.777772
+    test_status: observed
+    terminal_only: true
+    selection_eligible: false
+    read_date: 2026-09-16
+    pointer: records/decisions/decision-molhiv-shared-bag-transfer-20260916.yaml
+
+# ---------------------------------------------------------------------------
+# official test reads already spent — no longer pristine; reporting-only
+# ---------------------------------------------------------------------------
+# Every entry was frozen before the read and is one-shot (unlock marker
+# written). ZINC has been read 3 times and MolHIV 4 times, so neither test is a
+# pristine confirmatory split any more.
 official_test_reads:
   zinc:
     - date: 2026-09-14
@@ -121,19 +183,30 @@ official_test_reads:
       soup_roc_auc: 0.760501
       pointer: notes/molhiv_bnull_small_head_test_read.md
   note: >-
-    ZINC and MolHIV official tests are SPENT. Do not re-read them; any future
-    test use requires a fresh pre-registration and explicit authorization.
+    Official ZINC and MolHIV tests are SPENT and no longer pristine: they have
+    been read multiple times (see above). Official-test results are historical
+    terminal-reporting evidence only. They must never be used for architecture
+    selection, hyperparameter selection, representation-family choice, training
+    stopping decisions, or experiment authorization. Any future reuse must be
+    labelled a repeated / non-pristine evaluation and cannot be presented as an
+    untouched confirmatory test.
 
 # ---------------------------------------------------------------------------
-# genuinely open questions (everything ANSWERED/DONE/CLOSED lives in records/)
+# open questions, split by what they actually gate
 # ---------------------------------------------------------------------------
-open_questions:
-  - >-
-    zinc: at matched parameter budget (CIN-comparable), is there an
-    apples-to-apples claim that the compact single-pass model closes the gap?
-    Legacy framing: compact-v4-hinge ~0.137 mean test vs CIN-small 0.094. Still
-    open as a *comparability claim*; the SBCI/statistical family is closed for
-    architecture inference. See decision-sbci-fit-matched-generalization-frontier-caseC-20260912.
+# (a) live design questions for the next representation round.
+open_design_questions:
+  - Can a single end-to-end module learn the structural representation jointly
+    with the task objective (replacing the statistics-then-readout pipeline)
+    while keeping the KSVD/dictionary-learning interpretation?
+  - For ZINC-sized graphs, is a whole-graph compressed representation preferable
+    to a rooted-patch system (and can attributes be folded in without a separate
+    descriptor branch)?
+
+# (b) genuinely open scientific questions that are NOT on the next-round
+# critical path. Do not let these pull an agent back into the closed ablation
+# lines; they stay deferred until a future round re-opens them explicitly.
+deferred_scientific_questions:
   - >-
     zinc: is the documented z_SA-axis / rarity-axis heteroscedastic difficulty
     reducible by any objective/calibration change at all? Shape is confirmed
@@ -145,6 +218,16 @@ open_questions:
     readout advantage robust for interaction variants? Not re-asked by the
     current MolHIV line (which trains directly on the official split). See
     studies/molhiv-cross-scaffold-interaction.yaml.
+
+# (c) reporting / paper-level open items (comparability and write-up), not
+# experiments to run.
+reporting_open_items:
+  - >-
+    zinc: at matched parameter budget (CIN-comparable), is there an
+    apples-to-apples comparability claim? Legacy framing: compact-v4-hinge
+    ~0.137 mean test vs CIN-small 0.094. Open only as a *comparability claim*;
+    the SBCI/statistical family is closed for architecture inference. See
+    decision-sbci-fit-matched-generalization-frontier-caseC-20260912.
 
 # ---------------------------------------------------------------------------
 # next round: direction under discussion, NOT an authorized experiment
@@ -167,33 +250,26 @@ research_direction:
     - do not open either official test again
     - do not re-litigate the closed statistical/ablation families
 
-open_design_questions:
-  - Can a single end-to-end module learn the structural representation jointly
-    with the task objective (replacing the statistics-then-readout pipeline)
-    while keeping the KSVD/dictionary-learning interpretation?
-  - For ZINC-sized graphs, is a whole-graph compressed representation preferable
-    to a rooted-patch system (and can attributes be folded in without a separate
-    descriptor branch)?
-
 authorized_next_action:
   status: none
   note: >-
     No experiment is authorized. The only admissible next step is writing a new
-    pre-registration under the relevant protocol (freeze before any terminal
+    preregistration under the relevant protocol (freeze before any terminal
     read; test_policy=terminal), then explicit human authorization.
 
 # ---------------------------------------------------------------------------
-# live queue — only not-yet-executed, still-reasonable work
+# deferred optional work — explicitly NOT authorized, NOT a live queue
 # ---------------------------------------------------------------------------
-next_queue:
+# Do not treat these as queued work. They are recorded only so they are not
+# lost; each needs its own preregistration or an explicit maintenance decision.
+deferred_optional:
   - >-
-    none for architecture. Optional, explicitly NOT authorized: seed-1 paired
-    confirmation of the ZINC/MolHIV B-Null vs typed/Constant comparisons
-    (requires its own preresgistration; see decision-local-token-null-test-read-20260918).
+    seed-1 paired confirmation of the ZINC/MolHIV B-Null vs typed/Constant
+    comparisons (architecture line CLOSED; requires its own preregistration).
+    See decision-local-token-null-test-read-20260918.
   - >-
-    optional non-scientific follow-ups (control-plane maintenance), only if
-    touched: hotspot migration of duplicated runtime modules into ksvd_research,
-    a fresh promoted zinc control-plane run.
+    control-plane-only maintenance, only if touched: migrate duplicated runtime
+    modules into ksvd_research; add a fresh promoted zinc control-plane run.
 
 # ---------------------------------------------------------------------------
 # recent closures — navigational pointers only (no text copied)
@@ -226,7 +302,7 @@ guardrails:
   - "do not delete/rewrite historical experiments or results"
   - "infrastructure commits separate from scientific commits"
   - "no MLflow/W&B/Hydra/DVC/database without documented failure of current primitives"
-  - "official ZINC and MolHIV tests are SPENT; re-opening requires a new preregistration + explicit authorization"
+  - "official ZINC and MolHIV tests are SPENT and no longer pristine; they are reporting-only, must never drive selection, and re-opening requires a new preregistration + explicit authorization"
   - "no experiment may start from this STATE without a preregistration (freeze before terminal read)"
 
 # ---------------------------------------------------------------------------
