@@ -1,0 +1,43 @@
+name: research-integrity
+
+# Lightweight, CPU-only gate. It must never download datasets, train models,
+# require a GPU, or read the official test splits. It checks that the durable
+# research surface (STATE.yaml + records/) is internally consistent and that
+# the fast unit/integrity subset still passes.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Sync locked environment (CPU only)
+        run: uv sync --frozen
+
+      - name: Research-integrity validator (STATE + durable records)
+        run: uv run research verify
+
+      - name: Ruff (maintained / changed code)
+        run: |
+          uv run ruff check \
+            tracks/ksvd/src \
+            tracks/ksvd/tests/test_ksvd_integrity.py \
+            tracks/ksvd/tests/test_molhiv_shared_bag_patch_encoder.py \
+            tracks/ksvd/tests/test_shared_bag_patch_encoder.py \
+            tracks/ksvd/experiments/luyin16/molhiv_shared_bag_patch_encoder.py \
+            tracks/ksvd/experiments/luyin16/zinc_shared_bag_patch_encoder.py
+
+      - name: Fast control-plane / core test subset (no data, no GPU, no test split)
+        run: uv run pytest -q -m "not slow" tracks/ksvd/tests
