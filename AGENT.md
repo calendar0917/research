@@ -90,6 +90,22 @@
   dataset/split URL，不借助清华 PyPI 镜像，并记录 split 大小与 raw SHA-256。
 - KSVD 自测脚本使用 `uv run python -m tracks.ksvd.code.test_<name>`；它们不是 pytest 风格测试函数。
 
+## 远端计算（res / A100）
+
+- 远端主机：SSH alias `res`（`hxy@a100-2`），仓库 checkout 在
+  `/home/hxy/cy/research`；本地是唯一 source of truth，远端只作 compute checkout。
+- 仓库现为 **私有**（2026-09-18 起）。远端用一把 **read-only deploy key**
+  （`~/.ssh/id_ed25519_github`，已注册为仓库 deploy key），
+  `origin = git@github.com:calendar0917/research.git`；`~/.ssh/config` 已配
+  `Host github.com` + `IdentitiesOnly yes`。不再使用 `gh-proxy` 等只读代理
+  （服务器可直连 `github.com:22` / `ssh.github.com:443`）。
+- 远端只 fetch、不 push（read-only key）；本地用你自己的账号 SSH 密钥 push。
+- `deploy.sh` 现在走正常路径（本地 push → 远端 `git fetch` + `merge --ff-only`
+  → `uv sync --frozen`），不再需要手工 `git bundle` 绕过代理。
+- 查看 / 回滚 deploy key：`gh api repos/calendar0917/research/keys` /
+  `gh api -X DELETE repos/calendar0917/research/keys/<id>`；撤销私有：
+  `gh api -X PATCH repos/calendar0917/research -F private=false`。
+
 ## 修改与安全
 
 - 优先做小而可回滚的提交；移动文件前先建立索引并确认引用关系。
