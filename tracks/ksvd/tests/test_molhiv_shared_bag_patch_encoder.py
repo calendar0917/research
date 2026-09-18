@@ -107,7 +107,6 @@ def _bag_from_patch_nodelists(patches, seed: int = 0):
 
 def _molhiv_data(n_patches: int, seed: int = 0) -> Data:
     """A minimal single-molecule PyG ``Data`` with every field the model reads."""
-    generator = torch.Generator().manual_seed(seed)
     node_counts = [3] * n_patches
     bag = _bag_from_patch_nodelists(node_counts, seed=seed)
     pairs = [(i, j) for i in range(n_patches) for j in range(i + 1, n_patches)]

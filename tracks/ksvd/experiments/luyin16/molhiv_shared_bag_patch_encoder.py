@@ -1083,7 +1083,7 @@ def smoke(device: str = "cuda") -> dict[str, Any]:
         )
         if not finite:
             raise RuntimeError("non-finite gradient in smoke")
-        clip = torch.nn.utils.clip_grad_norm_(model.parameters(), GRAD_CLIP)
+        torch.nn.utils.clip_grad_norm_(model.parameters(), GRAD_CLIP)
         optimizer.step()
         losses.append(float(loss.detach()))
         n_graphs += int(target.numel())
