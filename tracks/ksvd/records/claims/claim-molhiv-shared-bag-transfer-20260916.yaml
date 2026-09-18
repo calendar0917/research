@@ -1,0 +1,83 @@
+claim_id: claim-molhiv-shared-bag-transfer-20260916
+kind: claim
+status: supported
+study_id: molhiv-cross-scaffold-interaction
+created: '2026-09-16T10:00:00'
+statement: >-
+  On OGBG-MolHIV (official OGB scaffold split, official validation selection),
+  replacing the vocabulary-sized exact rooted-patch identity embedding
+  (typed_embedding.weight [26233,32] = 839,456 params, 77.97% of the frozen H96
+  recurrent pair--centre port) with a single shared, vocabulary-free,
+  connectivity-free DeepSets B-Bag encoder over OGB atom/root/distance and bond
+  primitives removes the dataset-dependent parameter explosion with no
+  meaningful predictive loss. The B-Bag token is built from fixed schema-sized
+  per-field embeddings (ATOM_FEATURE_DIMS=(119,5,12,12,10,6,6,2,2),
+  BOND_FEATURE_DIMS=(5,6,2); 1/sqrt(K) field mean), a node MLP 48->96->48, a
+  bond MLP 24->48->24, and a fusion [root;node_mean;node_std;bond_mean;bond_std]
+  -> 104 -> 32, with node_dim=48/edge_dim=24/n_distance_bins=3/fusion_hidden=104.
+  The forward never reads struct_src/struct_dst, so identical primitive
+  multisets with different connectivity give exactly the same token. The
+  relational downstream (pair projection/relation encoder/distance gate/pair
+  encoder, T=2 weight-tied recurrent pair--centre, unary+pair-moment+global
+  readout, head, unweighted BCE, Adam lr1e-3/wd1e-5/batch128/240ep/patience40,
+  no train+valid refit) is inherited unchanged. Total params fall from
+  1,076,589 to 281,205 (-73.880%); exact typed identity 839,456 -> 0; the only
+  remaining dataset-dependent identity storage is the 1,648-param radius-1
+  parent lookup (0.59%). There is no tensor whose size grows with the exact
+  patch vocabulary (largest tensor head.0.weight [192,423] = 81,216). Frozen
+  2-seed results: raw valid 0.823648/0.828802 (mean 0.826225, delta -0.005827
+  vs the matched RPC baseline 0.832052) and Top-5 soup valid 0.808091/0.827516
+  (mean 0.817803, delta -0.012496 vs 0.830299), with a per-seed sign flip on
+  raw. One-shot frozen official test: raw 0.769918/0.746828 (mean 0.758373,
+  delta -0.004231; 2-seed ensemble 0.777680, delta -0.002368) and Top-5 soup
+  0.779067/0.776477 (mean 0.777772, delta +0.015677; 2-seed ensemble 0.787817,
+  delta +0.011848 vs the RPC soup ensemble 0.775969). Because the valid->test
+  direction reverses between the raw and soup rules, the defensible reading is
+  no meaningful loss / mildly better on official test, not a transfer
+  advantage; there is no evidence that the removed exact identity carried
+  irreplaceable predictive signal. The user's external ~0.80 test target is
+  not reached (single-model soup 0.7778; diagnostic 2-seed soup ensemble
+  0.7878).
+scope: >-
+  OGBG-MolHIV official scaffold train/valid/test; 2 seeds (0,1); GPU1 A100-40GB;
+  frozen protocol molhiv_shared_bag_patch_encoder_v1 with valid-selection and
+  fixed Top-5 soup, NO train+valid refit; official test opened exactly once
+  after architecture_freeze.json. One pre-registered architecture, no
+  width/depth/round/pooling/radius/head/loss sweep, no class weighting, no
+  refit, no connectivity/message passing, no attention, no binding composition,
+  no exact certificate id in the forward. Excludes claims that connectivity or
+  exact identity is required, and claims of a transfer advantage.
+supporting_evidence:
+  - >-
+    Parameter accounting (exact, cross-checked): new total 281,205 (-73.880% vs
+    1,076,589); B-Bag encoder 44,072; exact typed embedding 0; exact identity
+    storage 1,648 (parent only); every tensor < 100k.
+  - >-
+    15 unit tests (node permutation invariance, edge-order invariance,
+    connectivity-free witness, per-field sensitivity over all 9 atom and 3 bond
+    fields, schema-sized embeddings, no typed vocabulary, batch invariance,
+    gradient viability, downstream RPC equivalence) pass locally and on the
+    remote GPU node (22 with the frozen RPC tests).
+  - >-
+    11/11 remote sanity checks pass on cuda; smoke 20 steps with no NaN/Inf/OOM,
+    peak GPU 0.356 GB, 760.7 graphs/s.
+  - >-
+    Patch-order audit: the new structural cache matches the audited exact-rooted
+    record cache on train/valid prefixes before freeze; test ordering validated
+    inside the one-shot test (encode raises on any mismatch).
+  - >-
+    Frozen official test soup 2-seed ensemble 0.787817 exceeds the matched RPC
+    baseline soup ensemble 0.775969 and the prior patch-path port 0.7852.
+contradicting_evidence:
+  - >-
+    2-seed validation means are lower than the matched RPC baseline (raw
+    -0.005827, soup -0.012496) and raw per-seed signs flip (seed0 +0.009409,
+    seed1 -0.021063); the 4,113-graph / 81-positive valid split makes the
+    difference hard to separate from selection noise.
+  - >-
+    raw official test mean is slightly below the baseline (-0.004231;
+    ensemble -0.002368); only the Top-5 soup aggregator is clearly better.
+  - >-
+    Only 2 seeds; no third-seed confirmation; seed1 ran on a GPU1 shared with a
+    concurrent BCE job (mean epoch 51.1 s vs seed0 30.1 s), so its wall time is
+    not a clean compute measurement.
