@@ -1,13 +1,26 @@
 name: research-integrity
 
 # Lightweight, CPU-only gate. It must never download datasets, train models,
-# require a GPU, or read the official test splits. It checks that the durable
-# research surface (STATE.yaml + records/) is internally consistent and that
-# the fast unit/integrity subset still passes.
+# require a GPU/CUDA wheel, or read the official test splits. It checks that the
+# durable research surface (STATE.yaml + records/) is internally consistent and
+# that an explicit, verified fresh-clone-safe subset of unit tests still passes.
+#
+# The test list below is an explicit ALLOWLIST, NOT `-m "not slow"`. The `slow`
+# marker only classifies expensive local tests; it is not a fresh-clone-safety
+# guarantee (many unmarked tests still need data/, results/ or checkpoints).
+# Every file listed here was verified to pass on a fresh `git clone` with the
+# minimal, torch-free environment produced by
+# `uv sync --frozen --no-default-groups --group dev`.
+# Re-verify a file the same way before adding it here.
 on:
   push:
-    branches: ["**"]
+    branches:
+      - main
   pull_request:
+
+concurrency:
+  group: research-integrity-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   integrity:
@@ -23,15 +36,15 @@ jobs:
       - name: Set up Python
         run: uv python install 3.12
 
-      - name: Sync locked environment (CPU only)
-        run: uv sync --frozen
+      - name: Sync minimal CPU-only environment (no torch / CUDA wheels)
+        run: uv sync --frozen --no-default-groups --group dev
 
       - name: Research-integrity validator (STATE + durable records)
-        run: uv run research verify
+        run: uv run --no-sync research verify
 
-      - name: Ruff (maintained / changed code)
+      - name: Ruff (maintained control-plane code)
         run: |
-          uv run ruff check \
+          uv run --no-sync ruff check \
             tracks/ksvd/src \
             tracks/ksvd/tests/test_ksvd_integrity.py \
             tracks/ksvd/tests/test_molhiv_shared_bag_patch_encoder.py \
@@ -39,5 +52,23 @@ jobs:
             tracks/ksvd/experiments/luyin16/molhiv_shared_bag_patch_encoder.py \
             tracks/ksvd/experiments/luyin16/zinc_shared_bag_patch_encoder.py
 
-      - name: Fast control-plane / core test subset (no data, no GPU, no test split)
-        run: uv run pytest -q -m "not slow" tracks/ksvd/tests
+      - name: Fresh-clone-safe test allowlist (no data, no checkpoints, no torch)
+        run: |
+          uv run --no-sync pytest -q -p no:cacheprovider \
+            tracks/ksvd/tests/test_ksvd_integrity.py \
+            tracks/ksvd/tests/test_ksvd_cli.py \
+            tracks/ksvd/tests/test_ksvd_compare.py \
+            tracks/ksvd/tests/test_ksvd_policy.py \
+            tracks/ksvd/tests/test_ksvd_protocol_hash.py \
+            tracks/ksvd/tests/test_ksvd_runtime.py \
+            tracks/ksvd/tests/test_ksvd_runtime_guard.py \
+            tracks/ksvd/tests/test_ksvd_run_sources.py \
+            tracks/ksvd/tests/test_ksvd_runner_dependencies.py \
+            tracks/ksvd/tests/test_ksvd_git_provenance.py \
+            tracks/ksvd/tests/test_core_api.py \
+            tracks/ksvd/tests/test_metrics.py \
+            tracks/ksvd/tests/test_canonical_slots.py \
+            tracks/ksvd/tests/test_canonical_vectorize.py \
+            tracks/ksvd/tests/test_identity_incremental_information_audit.py \
+            tracks/ksvd/tests/test_corrected_token_fragmentation_audit.py \
+            tracks/ksvd/tests/test_baseline_difficulty_typed_refinement_audit.py
