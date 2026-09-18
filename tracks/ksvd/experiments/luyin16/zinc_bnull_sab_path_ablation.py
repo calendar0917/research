@@ -1341,6 +1341,105 @@ def train_queue(tickets: Sequence[str], seed: int = SEED, device: str = "cpu") -
 
 
 # ---------------------------------------------------------------------------
+# smoke / non-formal concurrency benchmark
+# ---------------------------------------------------------------------------
+
+
+def smoke(device: str = "cuda", limit: int = 512) -> dict[str, Any]:
+    """Single-process GPU forward/backward smoke for every default ticket."""
+    dev = torch.device(device)
+    if dev.type == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("smoke requested CUDA but CUDA is unavailable")
+    rows: dict[str, Any] = {}
+    for ticket in TICKETS:
+        train_data, _valid, _audit = control_encoded(TRAIN_KINDS[ticket])
+        subset = list(train_data)[: int(limit)]
+        loader = zpp._make_loader(subset, 128, False, 0)
+        batch = next(iter(loader)).to(dev)
+        if dev.type == "cuda":
+            torch.cuda.reset_peak_memory_stats()
+        model = BUILDERS[ticket](SEED).to(dev)
+        model.train()
+        loss = F.l1_loss(model(batch).view(-1), batch.y.view(-1))
+        loss.backward()
+        grads = [
+            float(parameter.grad.abs().max())
+            for parameter in model.parameters()
+            if parameter.grad is not None
+        ]
+        with torch.no_grad():
+            token = model._patch_token_value(batch)
+        rows[ticket] = {
+            "parameters": int(_n_params(model)),
+            "loss": float(loss.detach()),
+            "finite": bool(torch.isfinite(loss).all()),
+            "max_grad": max(grads) if grads else None,
+            "n_params_with_grad": int(len(grads)),
+            "local_token_exactly_zero": bool(torch.equal(token, torch.zeros_like(token))),
+            "peak_cuda_bytes": (
+                int(torch.cuda.max_memory_allocated()) if dev.type == "cuda" else None
+            ),
+        }
+        del model, batch, loader, subset, train_data
+        gc.collect()
+        if dev.type == "cuda":
+            torch.cuda.empty_cache()
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "device": str(dev),
+        "tickets": rows,
+        "official_test_loaded": False,
+    }
+    _write_json(RESULTS_DIR / "smoke.json", payload)
+    return payload
+
+
+def bench(ticket: str, steps: int = 30, device: str = "cuda", limit: int = 3000) -> dict[str, Any]:
+    """Short non-formal optimizer-step throughput probe (never a result)."""
+    dev = torch.device(device)
+    train_data, _valid, _audit = control_encoded(TRAIN_KINDS[str(ticket)])
+    subset = list(train_data)[: int(limit)]
+    loader = zpp._make_loader(subset, 128, True, 0)
+    model = BUILDERS[str(ticket)](SEED).to(dev)
+    optimizer = torch.optim.Adam(
+        model.parameters(),
+        lr=float(shead.OPTIMIZED_PROTOCOL["learning_rate"]),
+        weight_decay=float(shead.OPTIMIZED_PROTOCOL["weight_decay"]),
+    )
+    iterator = iter(loader)
+    model.train()
+    if dev.type == "cuda":
+        torch.cuda.synchronize()
+    started = time.perf_counter()
+    for _ in range(int(steps)):
+        try:
+            batch = next(iterator)
+        except StopIteration:
+            iterator = iter(loader)
+            batch = next(iterator)
+        batch = batch.to(dev)
+        loss = F.l1_loss(model(batch).view(-1), batch.y.view(-1))
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    if dev.type == "cuda":
+        torch.cuda.synchronize()
+    wall = float(time.perf_counter() - started)
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "ticket": str(ticket),
+        "steps": int(steps),
+        "wall_clock_s": wall,
+        "steps_per_second": float(int(steps) / max(wall, 1e-9)),
+        "device": str(dev),
+        "non_formal": True,
+        "official_test_loaded": False,
+    }
+    print(json.dumps(payload, sort_keys=True), flush=True)
+    return payload
+
+
+# ---------------------------------------------------------------------------
 # witness
 # ---------------------------------------------------------------------------
 
@@ -1528,6 +1627,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             "select_tickets",
             "train",
             "train_queue",
+            "smoke",
+            "bench",
             "soup",
             "witness",
             "camera",
@@ -1537,6 +1638,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=SEED)
     parser.add_argument("--ticket", type=str, default="NoParent")
     parser.add_argument("--tickets", type=str, default="")
+    parser.add_argument("--steps", type=int, default=30)
+    parser.add_argument("--limit", type=int, default=3000)
     parser.add_argument("--device", type=str, default="cpu")
     args = parser.parse_args(argv)
 
@@ -1581,6 +1684,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             else list(TICKETS)
         )
         train_queue(tickets, int(args.seed), args.device)
+    if args.stage == "smoke":
+        print(
+            json.dumps(
+                smoke(args.device, limit=int(args.limit)), indent=2, default=str
+            ),
+            flush=True,
+        )
+    if args.stage == "bench":
+        bench(
+            args.ticket,
+            steps=int(args.steps),
+            device=args.device,
+            limit=int(args.limit),
+        )
     if args.stage == "soup":
         print(
             json.dumps(soup_ticket(args.ticket, int(args.seed)), indent=2, default=str),
