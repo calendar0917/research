@@ -1511,7 +1511,12 @@ def witness(ticket: str, seed: int = SEED, device: str = "cpu") -> dict[str, Any
     )
     parent_parameters = list(model.parent_embedding.parameters())
     parent_norm = float(
-        torch.sqrt(sum(float(p.detach().pow(2).sum()) for p in parent_parameters))
+        torch.sqrt(
+            sum(
+                (parameter.detach().pow(2).sum() for parameter in parent_parameters),
+                torch.zeros(()),
+            )
+        )
     )
     payload = {
         "protocol_version": PROTOCOL_VERSION,
