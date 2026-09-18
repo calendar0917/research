@@ -36,10 +36,12 @@ results (no retraining):
     B-full (shared connectivity-aware encoder)
         2-seed Top-5 soup valid = 0.118972
 
-Official ZINC test is **never** loaded.
+Official ZINC test is **never** loaded by the selection/mechanism stages; it is
+read exactly once by the terminal ``test`` stage (user-authorised one-shot
+closure), which never re-selects an epoch or changes the frozen soup rule.
 
 Stages: ``params preprocess sanity train soup train_queue repro diagnostics
-decide report``.
+decide report test``.
 
 Run::
 
@@ -70,6 +72,9 @@ from tracks.ksvd.experiments.luyin16 import (
 )
 from tracks.ksvd.experiments.luyin16 import (
     zinc_compact_v4_recurrent_pair_centre_capacity_decomposition as cd,
+)
+from tracks.ksvd.experiments.luyin16 import (
+    zinc_compact_v4_training_sufficiency as ztraining,
 )
 from tracks.ksvd.experiments.luyin16 import zinc_compact_v4_smallhead_e2e as shead
 from tracks.ksvd.experiments.luyin16 import (
@@ -1014,6 +1019,189 @@ def diagnostics(tag: str = "sbpe") -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# one-shot official-test closure
+# ---------------------------------------------------------------------------
+
+
+def _mean_std(values: np.ndarray) -> tuple[float, float]:
+    mean = float(values.mean())
+    std = float(values.std(ddof=1)) if values.shape[0] > 1 else 0.0
+    return mean, std
+
+
+def terminal_test(tag: str = "sbpe") -> dict[str, Any]:
+    """Load the official ZINC test split exactly once and evaluate frozen bags.
+
+    This is the single authorised official-test read for the B-bag control.  It
+    reuses the pre-existing per-seed Top-5 soup states (frozen by validation),
+    never re-selects an epoch, never changes the soup rule, and writes a
+    one-shot unlock marker before the test split is touched.  The 2-seed soup is
+    the equal-weight mean of the per-seed soup test MAEs (matching the
+    validation definition); the prediction ensemble is reported only as a
+    diagnostic.
+    """
+    unlock_path = RESULTS_DIR / "official_test_unlock.json"
+    if unlock_path.exists():
+        raise RuntimeError(
+            "official test already unlocked once; refusing to re-read it"
+        )
+
+    soup_rows = {
+        seed: _read_json(RESULTS_DIR / f"soup_{tag}_seed{seed}.json")
+        for seed in SEEDS
+    }
+    run_rows = {
+        seed: _read_json(RUNS_DIR / f"{tag}_seed{seed}.json") for seed in SEEDS
+    }
+    _write_json(
+        RESULTS_DIR / "official_test_freeze.json",
+        {
+            "protocol_version": PROTOCOL_VERSION,
+            "role": "terminal official-test closure for the B-bag mechanism control",
+            "architecture": "shared_bag",
+            "h_dim": H_DIM,
+            "q_dim": Q_DIM,
+            "recurrence_rounds": T_ROUNDS,
+            "params": int(run_rows[0]["parameters"]),
+            "seeds": [int(s) for s in SEEDS],
+            "soup_rule": {
+                "K": 5,
+                "ranking": "lowest official-valid MAE",
+                "tie_rule": "earliest epoch",
+                "weight_aggregation": "equal-weight arithmetic parameter mean",
+                "frozen_before_test": True,
+            },
+            "validation": {
+                "soup_valid_mae": {
+                    str(s): float(soup_rows[s]["top5_soup_valid_mae"])
+                    for s in SEEDS
+                },
+                "raw_valid_mae": {
+                    str(s): float(soup_rows[s]["best_checkpoint_valid_mae"])
+                    for s in SEEDS
+                },
+                "top5_epochs": {str(s): soup_rows[s]["top5_epochs"] for s in SEEDS},
+                "best_epochs": {str(s): int(run_rows[s]["best_epoch"]) for s in SEEDS},
+            },
+            "test_loaded_at_freeze_time": False,
+            "official_test_loaded": False,
+        },
+    )
+    _write_json(
+        unlock_path,
+        {
+            "protocol_version": PROTOCOL_VERSION,
+            "frozen_before_test": True,
+            "encoding": "transforms fit on official train only (identical to selection)",
+            "checkpoints": "pre-existing seed0/seed1 selection states and fixed Top-5 soups",
+            "test_used_for_selection_or_tuning": False,
+            "official_test_loaded": True,
+            "git_commit": _git_commit(),
+        },
+    )
+
+    # --- first and only official-test load ---------------------------------
+    train_records, _valid_records = ztraining.load_train_valid_records()
+    test_records = ztraining.extract_test_records()
+    config = ztraining.base_config()
+    config["model"]["device"] = "cpu"
+    _enc_train, enc_test, audit = zpp._phase_data(
+        train_records, test_records, config=config
+    )
+    del _enc_train
+    test_ds = _load_zinc(ZINC_ROOT, "test")
+    test_graphs = sspe._patch_graphs_from_dataset(test_ds)
+    if len(test_graphs) != len(enc_test):
+        raise RuntimeError("test patch graph / record molecule count mismatch")
+    for graph, data in zip(test_graphs, enc_test):
+        if graph.n_patches != int(data.num_nodes):
+            raise RuntimeError("test patch count mismatch")
+    _attach_struct_tensors_bag(enc_test, test_graphs)
+
+    loader = _make_bag_loader(enc_test, 128, False, 0)
+    targets = np.asarray(
+        [float(graph.y.view(-1)[0]) for graph in enc_test], dtype=np.float64
+    )
+
+    rows: list[dict[str, Any]] = []
+    raw_preds: dict[int, np.ndarray] = {}
+    soup_preds: dict[int, np.ndarray] = {}
+    for seed in SEEDS:
+        model = build_candidate(int(seed))
+        _t_raw, raw_pred = _predict_state(
+            model,
+            torch.load(
+                STATE_DIR / f"{tag}_seed{seed}_selection_state.pt",
+                map_location="cpu",
+                weights_only=True,
+            ),
+            loader,
+        )
+        _t_soup, soup_pred = _predict_state(
+            model,
+            torch.load(
+                SOUP_DIR / f"{tag}_seed{seed}_top5_soup.pt",
+                map_location="cpu",
+                weights_only=True,
+            ),
+            loader,
+        )
+        if not np.array_equal(_t_raw, targets) or not np.array_equal(
+            _t_soup, targets
+        ):
+            raise RuntimeError("official-test target order mismatch")
+        raw_preds[int(seed)] = raw_pred
+        soup_preds[int(seed)] = soup_pred
+        rows.append(
+            {
+                "seed": int(seed),
+                "raw_selection_test_mae": _mae(targets, raw_pred),
+                "soup_test_mae": _mae(targets, soup_pred),
+            }
+        )
+
+    raw_values = np.array([row["raw_selection_test_mae"] for row in rows])
+    soup_values = np.array([row["soup_test_mae"] for row in rows])
+    raw_mean, raw_std = _mean_std(raw_values)
+    soup_mean, soup_std = _mean_std(soup_values)
+    raw_ensemble = np.mean(np.stack([raw_preds[s] for s in SEEDS], axis=0), axis=0)
+    soup_ensemble = np.mean(np.stack([soup_preds[s] for s in SEEDS], axis=0), axis=0)
+
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "role": "official-test terminal evaluation of the B-bag mechanism control",
+        "n_test": int(targets.shape[0]),
+        "rows": rows,
+        "soup_test_per_seed": {str(r["seed"]): r["soup_test_mae"] for r in rows},
+        "raw_test_per_seed": {
+            str(r["seed"]): r["raw_selection_test_mae"] for r in rows
+        },
+        "soup_test_mean": soup_mean,
+        "soup_test_std": soup_std,
+        "raw_test_mean": raw_mean,
+        "raw_test_std": raw_std,
+        "diagnostic_soup_2seed_prediction_ensemble_test_mae": _mae(
+            targets, soup_ensemble
+        ),
+        "diagnostic_raw_2seed_prediction_ensemble_test_mae": _mae(
+            targets, raw_ensemble
+        ),
+        "diagnostic_note": (
+            "the 2-seed prediction ensemble is a diagnostic, NOT a single-model "
+            "result; the reported 2-seed soup is the equal-weight mean of the "
+            "per-seed Top-5 soup test MAEs, matching the validation definition"
+        ),
+        "official_test_evaluated": True,
+        "test_used_for_selection_or_tuning": False,
+        "audit": {key: audit[key] for key in sorted(audit) if key != "topology"},
+        "official_test_loaded": True,
+        "git_commit": _git_commit(),
+    }
+    _write_json(RESULTS_DIR / "official_test_results.json", payload)
+    return payload
+
+
+# ---------------------------------------------------------------------------
 # decision / mechanism decomposition
 # ---------------------------------------------------------------------------
 
@@ -1136,6 +1324,8 @@ def report() -> dict[str, Any]:
         "diagnostics": _maybe("diagnostics"),
         "decision": _maybe("decision"),
         "decomposition": _maybe("decomposition"),
+        "official_test_freeze": _maybe("official_test_freeze"),
+        "official_test_results": _maybe("official_test_results"),
         "soup": {
             str(seed): _maybe(f"soup_sbpe_seed{seed}") for seed in SEEDS
         },
@@ -1166,6 +1356,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "decompose",
             "decide",
             "report",
+            "test",
         ),
     )
     parser.add_argument("--seed", type=int, default=0)
@@ -1209,6 +1400,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(decide(tag=args.tag), flush=True)
     elif args.stage == "report":
         print(report(), flush=True)
+    elif args.stage == "test":
+        print(terminal_test(tag=args.tag), flush=True)
     return 0
 
 

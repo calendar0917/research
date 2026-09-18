@@ -1,0 +1,120 @@
+claim_id: claim-structural-encoder-mechanism-decomposition-20260915
+kind: claim
+status: supported
+study_id: zinc-context-gap
+created: '2026-09-15T14:30:00'
+statement: >-
+  On the frozen deterministic-A100 ZINC Cell A protocol, the +0.002942 (2-seed
+  fixed Top-5 soup valid) gain of the shared connectivity-aware patch encoder
+  (B-full, 0.118972) over the capacity-matched generic shared adapter (A2,
+  0.121914) decomposes into (a) a reproducible connectivity increment and (b)
+  an inconclusive composition increment, and the 16-D structural channel is
+  functionally a rank-1 scalar modulation. The missing control B-bag is a
+  permutation-invariant DeepSets encoder built from exactly the same input
+  primitives as B-full (atom type, root flag, root-distance, bond type), with
+  the same output width (16) and a matched budget (84,511 vs 84,495 params,
+  +0.019%); it never reads struct_src/struct_dst and performs no message
+  passing. Delta_composition = A2 - Bbag = -0.001891 (seed0 -0.005688, seed1
+  +0.001905 -> SIGN FLIP, mean negative); Delta_connectivity = Bbag - Bfull =
+  +0.004833 (seed0 +0.007564, seed1 +0.002103 -> both positive >= 0.002);
+  Delta_total = +0.002942. 2-seed soup means order B-full 0.118972 < A2 0.121914
+  < B-bag 0.123806. Decision: connectivity axis Case C1 (connectivity
+  supported); composition axis inconclusive (not proven neutral; B-bag is on
+  average worse than A2). Separately, a zero-training audit of the frozen
+  B-full checkpoints shows the 16-D e_struct is near rank-1 on official train
+  (occurrence-weighted PC1 explained variance 0.9793/0.9567, effective rank
+  1.106/1.196; unique-structure weighted is at least as collapsed), and
+  replacing e_struct by its train-fit rank-1 reconstruction changes official
+  valid MAE by only +0.000020/+0.000011 (soup; 2-seed mean 0.11897219 ->
+  0.11898768, delta +0.0000155) at a 2.0%/4.3% relative reconstruction error ->
+  Case R1: the channel is functionally a scalar modulation, not a rich explicit
+  structural code. The train-fit PC1 score is only partially predictable from
+  the 224 deterministic patch descriptors (fixed ridge train->valid R2
+  0.279/0.553, Spearman max |rho| ~0.48/0.54 with root-atom-type/atom-composition
+  directions strongest) -> between R3 and R4, seed-dependent.
+scope: >-
+  ZINC-12K official train/valid for the mechanism decomposition; deterministic-A100
+  regime; seeds 0 and 1; fixed Top-5 soup; valid-selection metric. The official
+  test split was read EXACTLY ONCE, in the separately-authorized terminal
+  closure (commit 4802ba8, tag sbpe-test, n=1000); no test number was used for
+  selection, tuning, or any model decision. Exactly
+  one pre-registered B-bag architecture (no width/depth/pooling sweep); no extra
+  seeds. The A2-vs-B-bag comparison is CONFOUNDED by input information (A2 reads
+  the 146-D handcrafted shell descriptor; B-bag reads only raw primitives), so
+  the composition statement is limited to "a shared bag over raw primitives is
+  not better than the generic shared adapter", never "compositional structure is
+  worthless". The B-bag e_bag effective rank was NOT measured. Frozen rank-1
+  reconstruction is a mechanism diagnostic only, never a model-selection device.
+  Excludes attention/Transformer, identity lookup/hash/KNN/SBCI, h/q/T changes,
+  optimizer/seed sweeps, MolHIV training, and any scalar-model design.
+terminal_test_closure:
+  status: performed_once
+  run_tag: sbpe-test
+  commit: 4802ba89dc1a0ec076c6ed56c8f60e8718819b81
+  n_test: 1000
+  soup_test_per_seed:
+    '0': 0.10266160276997835
+    '1': 0.09482147076819092
+  soup_test_mean: 0.09874153676908463
+  soup_test_std: 0.005543810503861554
+  raw_test_per_seed:
+    '0': 0.10953527839202434
+    '1': 0.10688882736954838
+  raw_test_mean: 0.10821205288078636
+  raw_test_std: 0.0018713234640708233
+  diagnostic_soup_prediction_ensemble_test_mae: 0.08926600432861596
+  same_regime_reference_cell_a_test_soup_mean: 0.10671669006999582
+  note: >-
+    The 2-seed soup is the equal-weight mean of the per-seed Top-5 soup test
+    MAEs. B-bag beats frozen cell A on both valid (0.123806 vs 0.126368) and
+    test (0.098742 vs 0.106717) soup, so the validation advantage transfers.
+    A2 and B-full were NOT evaluated on test, so the test split does not
+    re-derive the valid ordering or the connectivity decomposition.
+    official_test_evaluated=true, test_used_for_selection_or_tuning=false.
+supporting_evidence:
+  - >-
+    B-bag 2-seed Top-5 soup valid mean 0.123806 (seed0 0.127382, seed1 0.120229);
+    Delta_connectivity = +0.004833 with both seeds positive (>= 0.002 gate).
+  - >-
+    Integrity gate: identical primitive multisets + different actual
+    connectivity -> B-bag e_bag max abs delta exactly 0.0, B-full e_struct max
+    abs delta 1.787e-3; B-bag forward runs on a batch with no edge endpoints.
+  - >-
+    Matched budget/backbone: 84,511 vs 84,495 total (+16, +0.019%); every one of
+    the 15 shared blocks identical; h=64, q=16, T=2, R=334; no typed embedding.
+  - >-
+    Deterministic-A100 repro bit-identical across GPU0/GPU1 (selection-state
+    SHA-256 2198026f796883bea1915068f37b0cc3129d47b98cb96606bbab6b555513b491);
+    20/20 sanity checks; 888 repo tests pass.
+  - >-
+    Frozen B-full rank-1 reconstruction: selection +0.000013/-0.000011, soup
+    +0.000020/+0.000011; 2-seed soup mean 0.11897219 -> 0.11898768; full
+    evaluation reproduces the deterministic-A100 soup values exactly.
+  - >-
+    Train spectrum: occurrence-weighted PC1 EV 0.9793/0.9567, effective rank
+    1.106/1.196; unique-structure-weighted PC1 EV 0.9937/0.9504; PC1-PC4
+    cumulative 1.0000.
+contradicting_evidence:
+  - >-
+    Delta_composition sign-flips across seeds (-0.005688/+0.001905) and its mean
+    is negative, so the component intended to be "primitive composition" is not
+    a robust positive increment; B-bag is on average worse than A2.
+  - >-
+    A2 and B-bag have different input information (146-D shell descriptor vs raw
+    primitives), so the composition axis is confounded and cannot be read as a
+    clean capacity-matched composition test.
+  - >-
+    Only 2 seeds; the B-bag soup per-seed spread (0.0072) is larger than the
+    decomposition deltas, so the composition axis cannot be resolved with this
+    budget (and no extra seeds were purchased).
+  - >-
+    "Connectivity" here is entangled with "has two rounds of learned message
+    passing" vs "has none"; it is the pre-registered variable but is not a
+    same-encoder edge-flag intervention.
+  - >-
+    The train-fit PC1 score is only partially explained by existing descriptors
+    (R2 0.279/0.553) and the fit is seed-dependent, so the scalar's meaning is
+    not fully pinned down.
+  - >-
+    B-bag e_bag effective rank was not measured, so the matrix has one
+    unmeasured representation cell.
