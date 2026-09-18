@@ -22,7 +22,10 @@ the filename suffix, the `created:` field, and the date embedded in the
 * The anomaly is recorded here and enforced by `uv run research verify`:
   a future-dated record is an **error** unless its id is listed below.
 * Git commit dates are evidence of *when a record existed*, not of when the
-  underlying experiment ran; they are recorded here only as a lower bound.
+  underlying experiment ran. Because a record is committed after (or at) the
+  experiment it documents, the first-commit date is an **upper bound / latest
+  known date** on the real experiment date (`real experiment date <= first
+  commit date`), never a lower bound.
 
 ## Recoverable vs unrecoverable
 

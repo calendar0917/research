@@ -16,8 +16,13 @@ Checks performed
   (``records/PROVENANCE_DATES.md``) is reported as ``documented``; an
   undocumented future date is an ``error``.
 * Every claim/decision id mentioned in STATE.yaml resolves to a record file.
+* Every ``record-*`` id mentioned in STATE.yaml resolves to a promoted run
+  record under ``records/runs/`` (``.json`` or ``.yaml``).
 * Cross-references of the form ``records/<kind>/<id>.yaml`` and
   ``notes/<name>.md`` written inside records exist on disk.
+* "Today" is the repository-local calendar date in ``Asia/Shanghai``, not the
+  CI runner's UTC date, so a record written locally in the evening is not
+  falsely flagged as future-dated.
 
 Nothing here selects models, reads the official test, or changes scientific
 content; it only reports.
@@ -30,14 +35,19 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import yaml
 
 from .paths import records_root, state_file, track_root
 from .serialization import load_yaml
 
+# Scientific records are dated by the working-timezone calendar day.
+REPOSITORY_TIMEZONE = "Asia/Shanghai"
+
 CLAIM_ID_RE = re.compile(r"\bclaim-[A-Za-z0-9][A-Za-z0-9-]*\b")
 DECISION_ID_RE = re.compile(r"\bdecision-[A-Za-z0-9][A-Za-z0-9-]*\b")
+RUN_RECORD_ID_RE = re.compile(r"\brecord-[A-Za-z0-9][A-Za-z0-9-]*\b")
 _FILENAME_DATE_RE = re.compile(r"-(\d{8})$")
 _DATE_IN_ID_RE = re.compile(r"(\d{8})")
 _ISO_DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
@@ -46,8 +56,8 @@ STATE_REQUIRED_KEYS = (
     "phase",
     "active_studies",
     "focus_study",
-    "open_questions",
     "guardrails",
+    "authorized_next_action",
 )
 
 PROVENANCE_FILE = "PROVENANCE_DATES.md"
@@ -75,6 +85,21 @@ def _parse_date_token(value: str) -> date | None:
         except ValueError:
             continue
     return None
+
+
+def repository_today(now: datetime | None = None) -> date:
+    """Repository-local calendar date, independent of the runner's timezone.
+
+    GitHub Actions runs in UTC; the research records are written on the local
+    working day (``Asia/Shanghai``). Using the UTC date would falsely flag a
+    record written at, e.g., 2026-09-19 00:30 CST as future-dated.
+    """
+    tz = ZoneInfo(REPOSITORY_TIMEZONE)
+    if now is None:
+        return datetime.now(tz).date()
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=tz)
+    return now.astimezone(tz).date()
 
 
 def _record_date_from_stem(stem: str) -> date | None:
@@ -182,7 +207,7 @@ _PATH_RE = re.compile(r"(?:records/(?:claims|decisions|runs)/[A-Za-z0-9._-]+|not
 
 def integrity_checks(today: date | None = None) -> list[Check]:
     """Run all integrity checks and return an ordered list of results."""
-    today = today or date.today()
+    today = today or repository_today()
     checks: list[Check] = []
 
     # --- STATE ---------------------------------------------------------
@@ -207,7 +232,7 @@ def integrity_checks(today: date | None = None) -> list[Check]:
         )
         empty = [
             key
-            for key in ("open_questions", "guardrails", "active_studies")
+            for key in ("active_studies", "guardrails")
             if not state.get(key)
         ]
         checks.append(
@@ -316,6 +341,26 @@ def integrity_checks(today: date | None = None) -> list[Check]:
             "all claim/decision references resolve"
             if not dangling
             else f"dangling: {', '.join(dangling[:12])}",
+        )
+    )
+
+    # --- promoted run-record pointers (record-* -> records/runs/) ------
+    run_ids = _collect_ids(RUN_RECORD_ID_RE, state_text)
+    runs_dir = records_root() / "runs"
+    missing_runs = sorted(
+        rid
+        for rid in run_ids
+        if not (runs_dir / f"{rid}.json").is_file()
+        and not (runs_dir / f"{rid}.yaml").is_file()
+    )
+    checks.append(
+        Check(
+            "records.run_pointers_resolve",
+            not missing_runs,
+            "all promoted run-record pointers resolve"
+            if not missing_runs
+            else f"dangling run records: {', '.join(missing_runs[:12])}",
+            "error",
         )
     )
 
