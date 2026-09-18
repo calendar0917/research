@@ -78,6 +78,7 @@ from typing import Any, Callable, Mapping, Sequence
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch_geometric.data import Data
 
 from tracks.ksvd.experiments.luyin16 import zinc_compact_v4_recurrent_pair_centre as rec
