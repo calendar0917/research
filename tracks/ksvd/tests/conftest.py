@@ -1,12 +1,19 @@
 """Shared pytest configuration for the ksvd track.
 
-Most of the 1100+ tests are fast static/unit checks. A handful of modules load
-the frozen ZINC records / checkpoints or run toy training loops, and dominate
-the wall time. They are marked ``slow`` automatically so a fast subset can be
-selected without editing every module:
+Most tests are fast static/unit checks. A handful of modules load the frozen
+ZINC records / checkpoints or run toy training loops and dominate wall time.
+They are marked ``slow`` automatically so a fast *local* subset can be selected
+without editing every module:
 
-    uv run pytest -q -m "not slow" tracks/ksvd/tests   # fast integrity subset
-    uv run pytest -q tracks/ksvd/tests                 # full suite
+    uv run pytest -q -m "not slow" tracks/ksvd/tests   # fast local subset
+    uv run pytest -q tracks/ksvd/tests                 # full local suite
+
+IMPORTANT: ``slow`` only classifies *known expensive* local tests. It is NOT a
+fresh-clone-safety guarantee: many tests that are not marked ``slow`` still need
+``data/``, ``tracks/*/results/`` or local checkpoints and will fail on a fresh
+clone. GitHub CI therefore does **not** use ``-m "not slow"``; it runs an
+explicit, verified fresh-clone-safe allowlist (see
+``.github/workflows/research-integrity.yml``).
 
 The ``slow`` marker is registered in ``pyproject.toml``.
 """

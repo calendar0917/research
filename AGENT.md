@@ -15,14 +15,19 @@
 
 ### 测试
 
-- 快速子集（CI 使用，约 10s，不加载数据/checkpoint）：
-  `uv run pytest -q -m "not slow" tracks/ksvd/tests`
-- 全量套件（较慢，约 100s）：`uv run pytest -q tracks/ksvd/tests`
-- 加载 ZINC 数据 / checkpoint 或跑训练审计的测试会被自动打上 `slow` 标记
-  （见 `tracks/ksvd/tests/conftest.py`）；新增长耗时测试时把模块加入该列表。
-- CI gate：`.github/workflows/research-integrity.yml`（CPU-only：`uv sync
-  --frozen` → `research verify` → ruff → 快速子集），不下载数据、不用 GPU、
-  不打开 official test。
+- 快速本地子集（约 15s）：`uv run pytest -q -m "not slow" tracks/ksvd/tests`。
+  注意：`slow` 只分类**已知耗时**的本地测试，**不代表**其余测试 fresh-clone
+  安全——许多未标记 `slow` 的测试仍需要 `data/`、`tracks/*/results/` 或本地
+  checkpoint。
+- 全量本地套件（较慢，约 110s）：`uv run pytest -q tracks/ksvd/tests`。
+- 加载 ZINC 数据 / checkpoint 或跑训练审计的模块会被自动打上 `slow` 标记
+  （见 `tracks/ksvd/tests/conftest.py`）；新增长耗时本地测试时把模块加入该列表。
+- **GitHub CI 不用 `-m "not slow"`**，而是跑一个显式的、逐个验证过的
+  fresh-clone-safe allowlist（`.github/workflows/research-integrity.yml`）：
+  CPU-only、无数据、无 checkpoint、无 results artifact、无 official test，
+  且用最小环境 `uv sync --frozen --no-default-groups --group dev`（不装
+  torch/CUDA）。想往 allowlist 加文件，必须先用同样的 fresh clone + 最小环境
+  验证它通过。
 
 ### 运行控制平面（tracks/ksvd）
 
