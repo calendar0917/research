@@ -103,3 +103,44 @@ def test_head_forward_and_valid_auc_are_finite_on_synthetic_R():
     assert torch.isfinite(logits).all()
     auc = probe._valid_auc(head, R, y, torch.device("cpu"))
     assert 0.0 <= auc <= 1.0
+
+
+# ---------------------------------------------------------------------------
+# single-pass R / label alignment
+# ---------------------------------------------------------------------------
+
+
+class _FeatureModel(torch.nn.Module):
+    """Toy model whose pre-head representation is the graph feature itself."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.head = torch.nn.Linear(3, 1, bias=False)
+
+    def forward(self, data: Data) -> torch.Tensor:
+        return self.head(data.x_feature).view(-1)
+
+
+def test_extract_R_and_y_are_aligned_under_shuffle():
+    import torch_geometric.data as pyg_data
+
+    torch.manual_seed(0)
+    graphs = []
+    for index in range(40):
+        feature = torch.zeros(1, 3)
+        feature[0, index % 3] = float(index + 1)
+        graphs.append(
+            pyg_data.Data(
+                x_feature=feature,
+                y=torch.tensor([float(index % 2)]),
+                num_nodes=1,
+            )
+        )
+    loader = mpp._make_loader(graphs, 8, True, 0)
+    model = _FeatureModel()
+    R, y = probe._extract_R_and_y(model, loader, torch.device("cpu"))
+    assert R.shape == (40, 3)
+    assert y.shape == (40,)
+    lookup = {tuple(graph.x_feature.view(-1).tolist()): float(graph.y) for graph in graphs}
+    for row, label in zip(R.tolist(), y.tolist()):
+        assert abs(lookup[tuple(row)] - label) < 1e-9

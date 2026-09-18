@@ -698,8 +698,8 @@ def _evaluate(
     *,
     parent_null: bool = False,
     t1: bool = False,
-    patch_cont_override: Mapping[int, torch.Tensor] | None = None,
-    pair_relation_override: Mapping[int, torch.Tensor] | None = None,
+    patch_cont_override: torch.Tensor | None = None,
+    pair_relation_override: torch.Tensor | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     model.eval()
     targets: list[np.ndarray] = []
@@ -713,18 +713,13 @@ def _evaluate(
             if patch_cont_override is not None or pair_relation_override is not None:
                 batch = batch.clone()
                 if patch_cont_override is not None:
-                    rows = [
-                        patch_cont_override[patch_seen + index]
-                        for index in range(n_patches)
+                    batch.patch_cont = patch_cont_override[
+                        patch_seen:patch_seen + n_patches
                     ]
-                    batch.patch_cont = torch.stack(rows, dim=0)
                 if pair_relation_override is not None:
-                    rows = [
-                        pair_relation_override[pair_seen + index]
-                        for index in range(n_pairs)
+                    batch.pair_relation = pair_relation_override[
+                        pair_seen:pair_seen + n_pairs
                     ]
-                    if rows:
-                        batch.pair_relation = torch.stack(rows, dim=0)
             patch_seen += n_patches
             pair_seen += n_pairs
             batch = batch.to(device)
@@ -794,10 +789,9 @@ def stage_a(device: str = "cpu") -> dict[str, Any]:
 
     # A2 pair-B marginalized (raw pair_relation, original encoded split)
     pair_valid = control_encoded("pair_b_marginal")[1]
-    pair_override = {
-        index: data.pair_relation.detach().cpu()
-        for index, data in enumerate(pair_valid)
-    }
+    pair_override = torch.cat(
+        [data.pair_relation.detach().cpu() for data in pair_valid], dim=0
+    )
     _t, pair_preds = _evaluate(
         model, loader, device_obj, pair_relation_override=pair_override
     )
@@ -805,10 +799,9 @@ def stage_a(device: str = "cpu") -> dict[str, Any]:
 
     # A3 patch-B marginalized (original train-fit standardizer)
     patch_valid = patch_b_valid_original_scale()
-    patch_override = {
-        index: data.patch_cont.detach().cpu()
-        for index, data in enumerate(patch_valid)
-    }
+    patch_override = torch.cat(
+        [data.patch_cont.detach().cpu() for data in patch_valid], dim=0
+    )
     _t, patch_preds = _evaluate(
         model, loader, device_obj, patch_cont_override=patch_override
     )

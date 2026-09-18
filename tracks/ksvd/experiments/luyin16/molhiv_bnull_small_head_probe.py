@@ -217,8 +217,16 @@ def _build_bnull_soup_model(device: torch.device):
 
 
 @torch.no_grad()
-def _extract_R(model: nn.Module, loader, device: torch.device):
+def _extract_R_and_y(model: nn.Module, loader, device: torch.device):
+    """Extract frozen ``R`` and labels in a single ordered pass.
+
+    ``R`` and ``y`` must come from the same iteration: the train loader
+    shuffles with a stateful generator, so a second pass would reorder the
+    molecules and silently misalign representation and label.
+    """
     captured: list[torch.Tensor] = []
+    representations: list[torch.Tensor] = []
+    targets: list[torch.Tensor] = []
 
     def hook(_module, args):
         captured.append(args[0].detach().to("cpu"))
@@ -229,9 +237,11 @@ def _extract_R(model: nn.Module, loader, device: torch.device):
         for batch in loader:
             captured.clear()
             model(batch.to(device))
+            representations.append(captured[0])
+            targets.append(batch.y.view(-1).detach().to("cpu"))
     finally:
         handle.remove()
-    return torch.cat(captured, dim=0)
+    return torch.cat(representations, dim=0), torch.cat(targets, dim=0)
 
 
 def extract(device: str = "cuda") -> dict[str, Any]:
@@ -257,14 +267,8 @@ def extract(device: str = "cuda") -> dict[str, Any]:
     head_logits = model.head(captured[0]).view(-1)
     identity_max_abs = float((logits.view(-1) - head_logits).abs().max())
 
-    R_train = _extract_R(model, train_loader, dev)
-    R_valid = _extract_R(model, valid_loader, dev)
-    y_train = torch.cat(
-        [batch.y.view(-1) for batch in train_loader], dim=0
-    ).float()
-    y_valid = torch.cat(
-        [batch.y.view(-1) for batch in valid_loader], dim=0
-    ).float()
+    R_train, y_train = _extract_R_and_y(model, train_loader, dev)
+    R_valid, y_valid = _extract_R_and_y(model, valid_loader, dev)
     del train_data, valid_data
     gc.collect()
 

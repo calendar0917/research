@@ -247,3 +247,61 @@ def test_zero_parent_embedding_context_manager_zeroes_only_parent():
         index for index in range(base.shape[1]) if not (parent_start <= index < parent_start + parent_width)
     ]
     assert torch.equal(base[:, others], after[:, others])
+
+
+# ---------------------------------------------------------------------------
+# frozen-override plumbing (alignment of the per-batch overrides)
+# ---------------------------------------------------------------------------
+
+
+class _Recorder(torch.nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.patch_parts: list[torch.Tensor] = []
+        self.pair_parts: list[torch.Tensor] = []
+
+    def forward(self, data: Data) -> torch.Tensor:
+        self.patch_parts.append(data.patch_cont.detach().clone())
+        self.pair_parts.append(data.pair_relation.detach().clone())
+        return data.y.view(-1)
+
+    def eval(self):  # type: ignore[override]
+        return self
+
+
+def _synthetic_graphs(count: int = 5):
+    graphs = []
+    for index in range(count):
+        n = 3
+        pair_index = torch.tensor([[0, 0, 1], [1, 2, 2]], dtype=torch.long)
+        graphs.append(
+            Data(
+                patch_cont=torch.full((n, sab.PATCH_CONT_WIDTH), float(index)),
+                pair_relation=torch.full((3, sab.RELATION_WIDTH), float(index)),
+                pair_bucket=torch.tensor([0, 1, 0], dtype=torch.long),
+                y=torch.tensor([float(index)]),
+                num_nodes=n,
+            )
+        )
+    return graphs
+
+
+def test_evaluate_overrides_are_applied_in_split_order():
+    graphs = _synthetic_graphs(5)
+    loader = zpp._make_loader(graphs, 2, False, 0)
+    patch_override = torch.arange(
+        5 * 3 * sab.PATCH_CONT_WIDTH, dtype=torch.float32
+    ).reshape(5 * 3, sab.PATCH_CONT_WIDTH)
+    pair_override = torch.arange(
+        5 * 3 * sab.RELATION_WIDTH, dtype=torch.float32
+    ).reshape(5 * 3, sab.RELATION_WIDTH)
+    model = _Recorder()
+    sab._evaluate(
+        model,
+        loader,
+        torch.device("cpu"),
+        patch_cont_override=patch_override,
+        pair_relation_override=pair_override,
+    )
+    assert torch.equal(torch.cat(model.patch_parts, dim=0), patch_override)
+    assert torch.equal(torch.cat(model.pair_parts, dim=0), pair_override)
