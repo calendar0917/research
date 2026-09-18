@@ -1,0 +1,66 @@
+claim_id: claim-tu-channel-necessity-20260918
+created: '2026-09-18T18:10:00'
+kind: claim
+status: supported
+study_id: tu-graph-classification
+statement: >-
+  THE EXACT-CERTIFICATE LOCAL PATCH-TOKEN CHANNEL IS NOT NECESSARY FOR THE
+  COMPACT RECURRENT PAIR--CENTRE BACKBONE ON TU GRAPH CLASSIFICATION
+  (pre-registered tu_channel_necessity_v1; new benchmark track, strict
+  generated splits, 3-fold screen; training revision
+  15849603dd627bb60899bdc7e6a85cd94eef7ba0; A100-SXM4-40GB GPU 0 shared with
+  an unrelated 35.8 GB co-tenant never touched; fixed equal-weight Top-5 soup;
+  seed 0; every artefact records official_test_loaded false because TU has no
+  official split - the held-out fold is the terminal read).  QUESTION: on a
+  self-contained port of the ZINC/MolHIV compact pair--centre backbone, is the
+  graph-dependent local patch token (learned row per exact rooted-patch
+  certificate, width 16) necessary, or does the fixed downstream backbone
+  carry almost all predictive power?  ANSWER: NO on all three datasets; the
+  pre-registered STRONG band D <= 0.02 fires everywhere.  Strict split
+  protocol frozen before training: outer StratifiedKFold(k=3, shuffle=True,
+  random_state=20260918); test = held-out fold; remaining folds split once
+  80/20 into train/valid; identical splits for every condition; vocabularies
+  and standardizers fit on the train fold only; invariants verified (pairwise
+  disjoint within a fold, every graph tested exactly once).  MUTAG (188 graphs,
+  majority 0.665, test folds 63/63/62, fingerprint eada5c9b3eb70644): typed
+  82,902 params valid soup 0.9472 raw test 0.8565+/-0.0309 soup test
+  0.8777+/-0.0178; null 79,558 params 0.9338 / 0.8830+/-0.0241 /
+  0.8723+/-0.0012; constant 79,574 params 0.9338 / 0.8776+/-0.0245 /
+  0.8670+/-0.0086; D_soup +0.0054, D_raw -0.0265 (sign flips, one test graph =
+  0.016).  PROTEINS (1113 graphs, majority 0.596, test 371x3, fingerprint
+  d991fb7c4013d659): typed 147,966 params 0.7897 / 0.7430+/-0.0127 /
+  0.7475+/-0.0102; null 80,142 params 0.8009 / 0.7529+/-0.0136 /
+  0.7610+/-0.0243; constant 80,158 params 0.8009 / 0.7493+/-0.0093 /
+  0.7502+/-0.0189; D_soup -0.0135, D_raw -0.0099.  IMDB-BINARY (1000 graphs,
+  majority 0.499, test 334/333/333, fingerprint f1f7a5cde2cd0848): typed
+  124,190 params 0.7662 / 0.7090+/-0.0177 / 0.7040+/-0.0191; null 91,022 params
+  0.7662 / 0.7100+/-0.0110 / 0.7140+/-0.0020; constant 91,038 params 0.7637 /
+  0.7230+/-0.0076 / 0.7170+/-0.0101; D_soup -0.0100, D_raw -0.0010.  The
+  ablated channel is 3,344 params (4.0 %, vocab 209) on MUTAG, 67,824 (45.8 %,
+  vocab 4,239) on PROTEINS and 33,168 (26.7 %, vocab 2,073) on IMDB-BINARY;
+  on the two informative datasets its deletion is non-positive, so this is the
+  third independent replication of the ZINC/MolHIV redundancy pattern.  Pattern
+  2 (a 16-param constant recovers the channel) does NOT replicate: constant is
+  at or below null everywhere (0.8670 vs 0.8723 MUTAG, 0.7502 vs 0.7610
+  PROTEINS, 0.7170 vs 0.7140 IMDB-BINARY), consistent with the valid-vs-test
+  retraction in decision-local-token-null-test-read-20260918.  Feasibility is
+  confirmed as a secondary result: the backbone reaches 0.878 MUTAG, 0.747-0.761
+  PROTEINS, 0.704-0.717 IMDB-BINARY, all far above the majority baselines and in
+  the GIN-class range at 3 folds; the whole 27-run screen is cheap on one GPU.
+  SCOPE/LIMITS: single model seed, 3 folds, test folds of 62-371 graphs ->
+  pre-registered screen, not a statistical claim; MUTAG's typed channel is only
+  4.0 % of the model so it is weak evidence about necessity; IMDB-BINARY is
+  structure-only by construction, so its certificate is degree-derived and the
+  channel is degenerate by the pre-registered note; no GIN baseline at 3 folds
+  (deferred to the 10-fold stage).  No official/extra test split, no multi-seed,
+  no parameter re-investment, no backbone widening, no new structural features,
+  no hyperparameter sweep, no per-dataset tuning.
+evidence:
+  - tracks/ksvd/results/tu_channel_necessity/splits_MUTAG_k3.json
+  - tracks/ksvd/results/tu_channel_necessity/splits_PROTEINS_k3.json
+  - tracks/ksvd/results/tu_channel_necessity/splits_IMDB-BINARY_k3.json
+  - tracks/ksvd/results/tu_channel_necessity/report_k3.json
+  - tracks/ksvd/results/tu_channel_necessity/runs/
+  - tracks/ksvd/notes/tu_channel_necessity.md
+  - tracks/ksvd/notes/tu_channel_necessity_preregistration.md
+  - tracks/ksvd/protocols/tu-graph-classification.yaml
