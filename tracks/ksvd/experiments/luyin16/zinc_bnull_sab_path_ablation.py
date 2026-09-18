@@ -896,7 +896,7 @@ def stage_a_integrity() -> dict[str, Any]:
     handle.remove()
     parent_input = captured["input"].clone()
 
-    parent_width = int(model.parent_embedding.embedding_dim)
+    parent_width = int(model.parent_width)
     parent_start = int(model.shell_width) + int(model.context_width) + int(
         model.token_width
     )
@@ -1034,6 +1034,22 @@ def stage_a_integrity() -> dict[str, Any]:
         "patches_checked": int(total_patches),
         "patches_with_shell_assignment_changed": int(assignment_changed),
     }
+    standardized_diffs = []
+    for original, controlled in zip(valid_original, patch_valid):
+        before = original.patch_cont.detach().cpu().numpy()
+        after = controlled.patch_cont.detach().cpu().numpy()
+        standardized_diffs.append(np.abs(after - before))
+    standardized_diff = np.concatenate(standardized_diffs, axis=0)
+    checks["patch_b_marginal"]["standardized_diff_max_abs"] = float(
+        standardized_diff.max()
+    )
+    checks["patch_b_marginal"]["standardized_diff_mean_abs"] = float(
+        standardized_diff.mean()
+    )
+    chemistry = list(range(140))  # everything except the six pure-S scalars
+    checks["patch_b_marginal"]["standardized_chemistry_diff_max_abs"] = float(
+        standardized_diff[:, chemistry].max()
+    )
     torch.save(
         {
             "before_patch_cont": valid_original[0].patch_cont.detach().cpu(),
@@ -1065,6 +1081,25 @@ def stage_a_integrity() -> dict[str, Any]:
         "finite": bool(np.isfinite(preds_a).all()),
         "valid_targets_identical": bool(np.array_equal(targets_a, targets_b)),
     }
+
+    # ---- identity-override plumbing: unchanged tensors give identical preds ---
+    identity_patch = torch.cat(
+        [data.patch_cont.detach().cpu() for data in valid_original], dim=0
+    )
+    identity_pair = torch.cat(
+        [data.pair_relation.detach().cpu() for data in valid_original], dim=0
+    )
+    _t, identity_preds = _evaluate(
+        model_t1,
+        loader,
+        torch.device("cpu"),
+        patch_cont_override=identity_patch,
+        pair_relation_override=identity_pair,
+    )
+    checks["identity_override"] = {
+        "predictions_bit_identical": bool(np.array_equal(identity_preds, preds_a)),
+        "max_abs_diff": float(np.abs(identity_preds - preds_a).max()),
+    }
     checks["all_pass"] = bool(
         checks["parent_null"]["parent_block_exactly_zero"]
         and checks["parent_null"]["non_parent_columns_bit_identical"]
@@ -1080,6 +1115,7 @@ def stage_a_integrity() -> dict[str, Any]:
         and checks["t1_frozen"]["t2_had_two_rounds"]
         and checks["determinism"]["repeat_predictions_bit_identical"]
         and checks["determinism"]["finite"]
+        and checks["identity_override"]["predictions_bit_identical"]
     )
     _write_json(RESULTS_DIR / "stage_a_integrity.json", checks)
     return checks
