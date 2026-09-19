@@ -168,7 +168,8 @@ def calibrate(
     n_graphs = int(cal_cfg.get("n_graphs", 256))
     max_expansions = int(cal_cfg.get("max_expansions", 1))
     subset = list(train_samples[:n_graphs])
-    batch = icsc.collate(subset)
+    device = next(model.parameters()).device
+    batch = icsc.collate(subset).to(device)
     d_v, d_e = model.normalized_dictionaries()
 
     table: list[dict[str, Any]] = []
