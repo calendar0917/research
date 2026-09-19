@@ -468,39 +468,42 @@ def train(
 
 
 def full_audit(
-    model: icrate.ICrateV0,
+    model,
     valid_batches: Sequence[icrate.TokenBatch],
     device: torch.device,
     seed: int,
     train_batch: icrate.TokenBatch,
 ) -> dict[str, Any]:
-    coeffs_all: list[list[torch.Tensor]] = [[] for _ in range(icrate.L_LAYERS)]
-    deltas_all: list[list[torch.Tensor]] = [[] for _ in range(icrate.L_LAYERS)]
-    zinputs_all: list[list[torch.Tensor]] = [[] for _ in range(icrate.L_LAYERS)]
+    n_layers = icrate.L_LAYERS
+    has_odl = hasattr(model, "frozen_dictionaries")
+    coeffs_all: list[list[torch.Tensor]] = [[] for _ in range(n_layers)]
+    deltas_all: list[list[torch.Tensor]] = [[] for _ in range(n_layers)]
+    zinputs_all: list[list[torch.Tensor]] = [[] for _ in range(n_layers)]
     valid_all: list[torch.Tensor] = []
     alpha_all: list[torch.Tensor] = []
     with torch.no_grad():
         for batch in valid_batches:
             moved = batch.to(device)
             _, info = model(moved)
-            for li in range(icrate.L_LAYERS):
-                coeffs_all[li].append(info.coeffs[li].cpu())
+            for li in range(n_layers):
                 deltas_all[li].append(info.delta_mssa[li].cpu())
                 zinputs_all[li].append(info.z_layers[li].cpu())
+                if has_odl:
+                    coeffs_all[li].append(info.coeffs[li].cpu())
             valid_all.append(moved.valid.cpu())
             alpha_all.append(info.alpha.cpu())
     valid = torch.cat(valid_all)
-    coeffs = [torch.cat(c) for c in coeffs_all]
     deltas = [torch.cat(d) for d in deltas_all]
     zinputs = [torch.cat(z) for z in zinputs_all]
     alpha = torch.cat(alpha_all)
 
-    token_stats = _token_odl_stats(coeffs, valid)
+    token_stats = _token_odl_stats([torch.cat(c) for c in coeffs_all], valid) if has_odl else {}
     global_stats = _global_alpha_stats(alpha)
     vitality = _structural_vitality(deltas, zinputs, valid)
-    dict_audit = _dictionary_audit(model.frozen_dictionaries())
+    dict_audit = _dictionary_audit(model.frozen_dictionaries()) if has_odl else {}
     attn_stats = _attention_stats(model, train_batch, device)
     return {
+        "variant": "icrate" if has_odl else "ffn_control",
         "token_odl": token_stats,
         "global_alpha": global_stats,
         "structural_vitality": vitality,
@@ -522,10 +525,17 @@ def _gradient_vitality(model, batch, device) -> dict[str, float]:
     out["E_E"] = _norm(model.e_e.weight)
     for li, layer in enumerate(model.layers):
         out[f"U^{li}"] = _norm(layer.u)
-        out[f"D_a^{li}"] = _norm(layer.d_a)
-        out[f"D_s^{li}"] = _norm(layer.d_s)
+        if hasattr(layer, "d_a"):
+            out[f"D_a^{li}"] = _norm(layer.d_a)
+            out[f"D_s^{li}"] = _norm(layer.d_s)
+        else:
+            out[f"w1^{li}"] = _norm(layer.w1.weight)
+            out[f"w2^{li}"] = _norm(layer.w2.weight)
     out["U^G"] = _norm(model.u_g)
-    out["D_G"] = _norm(model.d_g)
+    if hasattr(model, "d_g"):
+        out["D_G"] = _norm(model.d_g)
+    else:
+        out["g_proj"] = _norm(model.g_proj.weight)
     out["head"] = _norm(model.head[0].weight)
     model.zero_grad(set_to_none=True)
     return out
@@ -619,7 +629,12 @@ def run(config: dict[str, Any], context: RunContext) -> RunResult:
         seed=seed,
         init_std=float(model_cfg.get("init_std", 1.0)),
         no_incidence=bool(model_cfg.get("no_incidence", False)),
+    ).to(device) if str(model_cfg.get("variant", "icrate")) != "ffn" else icrate.ICrateFFNControl(
+        seed=seed,
+        init_std=float(model_cfg.get("init_std", 1.0)),
+        no_incidence=bool(model_cfg.get("no_incidence", False)),
     ).to(device)
+    variant = str(model_cfg.get("variant", "icrate"))
     parameters = model.parameter_breakdown()
     print(f"[icrate] params={parameters}", flush=True)
 
@@ -657,6 +672,7 @@ def run(config: dict[str, Any], context: RunContext) -> RunResult:
 
     results: dict[str, Any] = {
         "candidate": "icrate-v0",
+        "variant": variant,
         "seed": int(seed),
         "device": str(device),
         "gpu": torch.cuda.get_device_name(0) if device.type == "cuda" else None,
@@ -697,10 +713,10 @@ def run(config: dict[str, Any], context: RunContext) -> RunResult:
         "split_sizes": {"train": len(train_samples), "valid": len(valid_samples), "test": None},
         "test_access": context.test_access,
         "pre_registered_gate": gate,
-        "alpha_nonzero_frac": float(audit["global_alpha"]["nonzero_frac"]),
-        "alpha_dead_atoms": int(audit["global_alpha"]["dead_atoms"]),
-        "L0_nonzero_frac": float(audit["token_odl"]["L0_nonzero_frac"]),
-        "L0_mssa_ratio": float(audit["structural_vitality"]["L0_mssa_ratio"]),
+        "alpha_nonzero_frac": audit["global_alpha"].get("nonzero_frac"),
+        "alpha_dead_atoms": audit["global_alpha"].get("dead_atoms"),
+        "L0_nonzero_frac": audit["token_odl"].get("L0_nonzero_frac") if audit["token_odl"] else None,
+        "L0_mssa_ratio": audit["structural_vitality"].get("L0_mssa_ratio"),
         "incidence_alpha_relative_change": float(intervention["alpha_relative_change_mean"]),
         "incidence_pred_abs_change": float(intervention["prediction_abs_change_mean"]),
     }

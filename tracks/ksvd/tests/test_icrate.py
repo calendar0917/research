@@ -341,3 +341,44 @@ def test_parameter_budget() -> None:
     model = _model()
     total = sum(p.numel() for p in model.parameters())
     assert 45000 < total < 80000, total
+
+
+# ---------------------------------------------------------------------------
+# Control B — FFN replacement (preregistration §11)
+# ---------------------------------------------------------------------------
+
+
+def test_ffn_control_runs_and_gradients_flow() -> None:
+    torch.manual_seed(0)
+    model = icrate.ICrateFFNControl(seed=0)
+    batch = icrate.collate([_toy()])
+    pred, info = model(batch)
+    assert pred.shape == (1,)
+    assert info.alpha.shape == (1, icrate.M_DICT)
+    loss = torch.nn.functional.l1_loss(pred, batch.y)
+    loss.backward()
+    blocks = {"E_V": model.e_v.weight, "E_E": model.e_e.weight, "U_G": model.u_g, "g_proj": model.g_proj.weight}
+    for li, layer in enumerate(model.layers):
+        blocks[f"U^{li}"] = layer.u
+        blocks[f"w1^{li}"] = layer.w1.weight
+        blocks[f"w2^{li}"] = layer.w2.weight
+    for name, parameter in blocks.items():
+        assert parameter.grad is not None, name
+        assert float(parameter.grad.norm()) > 0.0, name
+    total = model.parameter_breakdown()["total"]
+    assert 50000 < total < 80000, total
+
+
+def test_ffn_control_matches_reference_in_batch() -> None:
+    torch.manual_seed(0)
+    model = icrate.ICrateFFNControl(seed=0).eval()
+    mols = [_toy(), icrate.molecule_from_arrays([5, 5, 6, 7], [(0, 1, 1), (1, 2, 3), (2, 3, 2)], y=2.0)]
+    batch = icrate.collate(mols)
+    nmax = batch.atom_idx.shape[1]
+    with torch.no_grad():
+        pred_b, info_b = model(batch)
+        for g, mol in enumerate(mols):
+            pred_r, info_r = model.forward_reference(mol)
+            idx = list(range(mol.n)) + [nmax + e for e in range(mol.m)]
+            assert float((pred_b[g] - pred_r).abs().max()) < 1e-5
+            assert float((info_b.z_layers[-1][g, idx] - info_r.z_layers[-1]).abs().max()) < 1e-5

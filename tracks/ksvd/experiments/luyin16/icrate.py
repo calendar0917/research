@@ -538,3 +538,125 @@ class ICrateV0(nn.Module):
             out[f"layer{li}_D_s"] = normalize_columns(layer.d_s).detach()
         out["global_D_G"] = normalize_columns(self.d_g).detach()
         return out
+
+
+# ---------------------------------------------------------------------------
+# Control B — FFN replacement (preregistration §11)
+# ---------------------------------------------------------------------------
+
+
+class StructuralFFNLayer(nn.Module):
+    """Structural stage identical to :class:`StructuralLayer` except that the
+    ODL pair ``D_a + D_s`` is replaced by a matched-width FFN
+    ``LN -> Linear(48,96) -> SiLU -> Linear(96,48)`` + residual."""
+
+    def __init__(self, generator: torch.Generator) -> None:
+        super().__init__()
+        self.ln_mssa = nn.LayerNorm(D_MODEL)
+        self.u = nn.Parameter(torch.randn(H_HEADS, D_MODEL, HEAD_DIM, generator=generator) * 0.1)
+        self.ln_ffn = nn.LayerNorm(D_MODEL)
+        self.w1 = nn.Linear(D_MODEL, M_DICT)
+        self.w2 = nn.Linear(M_DICT, D_MODEL)
+
+
+class ICrateFFNControl(nn.Module):
+    """Control B: same tokenizer / incidence-MSSA / depth / aggregation / head,
+    but every sparse-dictionary stage is a matched-width ordinary FFN and the
+    global dictionary + ISTA becomes ``Linear(48,96) -> ReLU``."""
+
+    def __init__(self, *, seed: int = 0, init_std: float = 1.0, no_incidence: bool = False) -> None:
+        super().__init__()
+        generator = torch.Generator().manual_seed(int(seed))
+        self.e_v = nn.Embedding(D_V, D_MODEL)
+        self.e_e = nn.Embedding(D_E, D_MODEL)
+        with torch.no_grad():
+            self.e_v.weight.normal_(0.0, init_std, generator=generator)
+            self.e_e.weight.normal_(0.0, init_std, generator=generator)
+        self.layers = nn.ModuleList([StructuralFFNLayer(generator) for _ in range(L_LAYERS)])
+        self.ln_g = nn.LayerNorm(D_MODEL)
+        self.ln_tokens = nn.LayerNorm(D_MODEL)
+        self.u_g = nn.Parameter(torch.randn(H_HEADS, D_MODEL, HEAD_DIM, generator=generator) * 0.1)
+        self.g_proj = nn.Linear(D_MODEL, M_DICT)
+        self.head = nn.Sequential(nn.Linear(M_DICT, 64), nn.SiLU(), nn.Linear(64, 1))
+        self.no_incidence = bool(no_incidence)
+
+    def embed_batch(self, batch: TokenBatch) -> torch.Tensor:
+        z = torch.cat([self.e_v(batch.atom_idx), self.e_e(batch.bond_idx)], dim=1)
+        return z * batch.valid.unsqueeze(-1).to(z.dtype)
+
+    def embed_molecule(self, mol: Molecule) -> torch.Tensor:
+        return torch.cat([self.e_v(mol.atom), self.e_e(mol.bond)], dim=0)
+
+    def core(
+        self,
+        z: torch.Tensor,
+        keep: torch.Tensor,
+        valid: torch.Tensor,
+        n_tokens: torch.Tensor,
+        *,
+        record_attn: bool = False,
+    ) -> tuple[torch.Tensor, ForwardInfo]:
+        info = ForwardInfo()
+        info.z_layers.append(z)
+        for layer in self.layers:
+            u_hat = normalize_columns_heads(layer.u)
+            z_norm = layer.ln_mssa(z)
+            if record_attn:
+                y = torch.einsum("...td,hdk->...htk", z_norm, u_hat)
+                scores = torch.einsum("...htk,...hsk->...hts", y, y) / math.sqrt(HEAD_DIM)
+                info.attn.append(masked_softmax(scores, keep.unsqueeze(-3)).mean(dim=-3))
+            delta = _incidence_mssa(z_norm, keep, u_hat)
+            if self.no_incidence:
+                delta = torch.zeros_like(delta)
+            z_half = z + delta
+            h = layer.w1(layer.ln_ffn(z_half))
+            z = z_half + layer.w2(F.silu(h))
+            info.delta_mssa.append(delta)
+            info.z_half.append(z_half)
+            info.z_layers.append(z)
+
+        z_l = z
+        g0 = _graph_seed(z_l, valid, n_tokens)
+        u_g_hat = normalize_columns_heads(self.u_g)
+        delta_g = _cross_mssa(self.ln_g(g0), self.ln_tokens(z_l), valid, u_g_hat)
+        g_half = g0 + delta_g
+        alpha = F.relu(self.g_proj(g_half))
+        pred = self.head(alpha).squeeze(-1)
+        info.g0 = g0
+        info.delta_g = delta_g
+        info.g_half = g_half
+        info.alpha = alpha
+        return pred, info
+
+    def forward(self, batch: TokenBatch, *, record_attn: bool = False) -> tuple[torch.Tensor, ForwardInfo]:
+        return self.core(self.embed_batch(batch), batch.keep, batch.valid, batch.n_tokens, record_attn=record_attn)
+
+    def forward_reference(self, mol: Molecule, *, record_attn: bool = False) -> tuple[torch.Tensor, ForwardInfo]:
+        z = self.embed_molecule(mol)
+        keep = incidence_keep(mol).to(z.device)
+        valid = torch.ones(mol.n_tokens, dtype=torch.bool, device=z.device)
+        n_tokens = torch.tensor(float(mol.n_tokens), dtype=torch.float32, device=z.device)
+        return self.core(z, keep, valid, n_tokens, record_attn=record_attn)
+
+    def parameter_breakdown(self) -> dict[str, int]:
+        tokenizer = int(self.e_v.weight.numel() + self.e_e.weight.numel())
+        per_layer = int(sum(p.numel() for p in self.layers[0].parameters()))
+        structural = int(sum(p.numel() for p in self.layers.parameters()))
+        global_mssa = int(
+            self.u_g.numel()
+            + self.ln_g.weight.numel()
+            + self.ln_g.bias.numel()
+            + self.ln_tokens.weight.numel()
+            + self.ln_tokens.bias.numel()
+        )
+        graph_proj = int(sum(p.numel() for p in self.g_proj.parameters()))
+        head = int(sum(p.numel() for p in self.head.parameters()))
+        return {
+            "tokenizer": tokenizer,
+            "structural_per_layer": per_layer,
+            "structural_total": structural,
+            "global_mssa": global_mssa,
+            "global_dictionary": graph_proj,
+            "head": head,
+            "total": int(sum(p.numel() for p in self.parameters())),
+        }
