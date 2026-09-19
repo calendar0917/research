@@ -1,0 +1,40 @@
+alternatives_rejected:
+  - 'Fixed interleaved nonlinearity is the missing ingredient (Hypothesis A): rejected — the fixed scattering lift improves valid MAE only 0.3865 -> 0.3657 (+0.021) and only after the label-free dimension rule forced D_RFF 1024 -> 2048 (feature dim 3074 -> 6146), and Gate A (valid <= 0.25) is not met.'
+  - 'Task-coupled local coordinate formation is necessary (Hypothesis B): rejected — the tiny learned incidence lift is the best of the three (valid 0.3310, train 0.3138, 2496 structural params) and clearly improves topology geometry (R_topo 9.71 -> 3.85) but still floors at valid > 0.25, so Gate B (<= 0.20) and Gate C (<= 0.25) both fail.'
+  - 'Run the gated no-message control: not triggered — its pre-registered trigger (learned valid must beat DOI by > 0.10) was not met (improvement 0.0555).'
+  - 'Raise scattering D_RFF beyond 2048 / re-estimate bandwidths to rescue the fixed lift: rejected by this round''s pre-registration (max 2048, no bandwidth re-estimation).'
+  - 'Continue toward a dictionary on the fixed object: rejected — no lift reaches a dictionary-ready band.'
+because: >-
+  All three lifts panel together on the same task: Linear DOI train 0.3273 /
+  valid 0.3865, fixed scattering 0.3041 / 0.3657, learned incidence 0.3138 /
+  0.3310. Interleaving fixed nonlinearity between propagation steps buys almost
+  nothing, and even a task-coupled ~2.5K-parameter atom-bond lift only reaches
+  0.331 valid (still > 0.25), with its train error also ~0.31 (a pipeline floor,
+  not overfitting). The learned lift does make degree-preserving rewiring much
+  more visible (R_topo 9.71 -> 3.85; per-layer Delta grows through the rounds
+  and survives the KME), confirming it genuinely uses incidence, but this is not
+  enough to make the whole-graph invariant distributional object dictionary-ready.
+decision: >-
+  Nonlinearity Placement Audit (seed 20260921, commit 6585bf6): on ZINC train
+  10000 / valid 1000 (official test never loaded), neither a fixed nonlinear
+  scattering lift (P=(I+S)/2, dyadic wavelets Psi_j with interleaved modulus,
+  192-D per-object response, DOI distributional readout, 0 structural params)
+  nor a tiny task-coupled incidence lift (h=16, L=2 atom-bond alternating tanh,
+  2496 structural params, fixed-seed RFF, MAE-only end-to-end training) materially
+  fixes the DOI readout. Fixed scattering: valid 0.3865 -> 0.3657 (+0.021) and
+  needs D_RFF 2048 (dim 6146 vs 3074); learned incidence: valid 0.3865 -> 0.3310
+  (-0.0555), train 0.3138, best geometry (R_topo 9.71 -> 3.85, best WL top-1
+  0.9356) but still > 0.25. RFF audited (learned post-training p95 0.022,
+  not confounded). Verdict: Hypothesis C — even a minimal task-coupled lift lacks
+  enough capacity. DECISION: a minimally parameterised pre-dictionary structural
+  lift is insufficient for ZINC; reconsider whether the whole-graph dictionary
+  can remain the primary representation. Evidence:
+  notes/nonlinearity_placement_analysis.md, results/nonlinearity_placement/SUMMARY.json.
+decision_id: decision-3f9c1a7e
+kind: decision
+revisit_if: >-
+  A pre-dictionary structural lift with materially more capacity is
+  pre-registered (e.g. a real equivariant encoder), or the dictionary is
+  repositioned as a bottleneck/compression layer behind a genuine learned
+  encoder: re-run a matched valid-only probe before any terminal read.
+study_id: zinc-context-gap
