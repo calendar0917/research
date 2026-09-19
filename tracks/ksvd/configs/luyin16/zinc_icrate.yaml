@@ -1,0 +1,29 @@
+protocol_id: icrate-v0
+
+data:
+  root: data/ZINC
+  # limit_train / limit_valid are null for the formal run; the 64-graph overfit
+  # smoke overrides them on the command line.
+  limit_train: null
+  limit_valid: null
+
+seed: 0
+
+model:
+  # frozen architecture (see notes/icrate_v0_preregistration.md)
+  init_std: 1.0
+  no_incidence: false  # Control A (only run if the main seed-0 passes Case B)
+  # canonical ZINC training protocol
+  epochs: 240
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 40
+  gradient_clip_norm: 5.0
+  device: cpu
+
+intervention:
+  n_graphs: 500
+
+runtime:
+  torch_threads: 4
