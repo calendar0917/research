@@ -154,10 +154,14 @@ def soup_state(states: Sequence[Mapping[str, torch.Tensor]]) -> dict[str, torch.
 # ---------------------------------------------------------------------------
 
 
-def _token_odl_stats(coeffs: list[torch.Tensor], valid: torch.Tensor) -> dict[str, float]:
-    """Per-layer token ODL sparsity / utilisation / concentration (valid tokens)."""
+def _token_odl_stats(coeff_rows: list[torch.Tensor]) -> dict[str, float]:
+    """Per-layer token ODL sparsity / utilisation / concentration.
+
+    ``coeff_rows[li]`` is ``[nv, M]``: the coefficients of every valid token
+    (pooled across batches, so token counts never need to match).
+    """
     out: dict[str, float] = {}
-    n_layers = len(coeffs)
+    n_layers = len(coeff_rows)
     per_layer_active = []
     per_layer_top1 = []
     per_layer_top5 = []
@@ -165,8 +169,7 @@ def _token_odl_stats(coeffs: list[torch.Tensor], valid: torch.Tensor) -> dict[st
     per_layer_util = []
     per_layer_dead = []
     for li in range(n_layers):
-        a = coeffs[li]  # [B, T, M]
-        av = a[valid]  # [nv, M]
+        av = coeff_rows[li]  # [nv, M]
         nv = av.shape[0]
         nz = av > SPARSITY_EPS
         out[f"L{li}_nonzero_frac"] = float(nz.to(torch.float32).mean()) if nv else float("nan")
@@ -245,11 +248,12 @@ def _dictionary_audit(dictionaries: Mapping[str, torch.Tensor]) -> dict[str, Any
     return out
 
 
-def _structural_vitality(deltas: list[torch.Tensor], z_inputs: list[torch.Tensor], valid: torch.Tensor) -> dict[str, float]:
+def _structural_vitality(delta_rows: list[torch.Tensor], z_rows: list[torch.Tensor]) -> dict[str, float]:
+    """``r_mssa = ||Delta_MSSA||_F / ||Z||_F`` per layer over pooled valid tokens."""
     out: dict[str, float] = {}
-    for li in range(len(deltas)):
-        d = deltas[li][valid].pow(2).sum()
-        z = z_inputs[li][valid].pow(2).sum()
+    for li in range(len(delta_rows)):
+        d = delta_rows[li].pow(2).sum()
+        z = z_rows[li].pow(2).sum()
         out[f"L{li}_mssa_ratio"] = float(torch.sqrt(d) / (torch.sqrt(z) + 1e-8))
         out[f"L{li}_mssa_fro"] = float(torch.sqrt(d))
     return out
@@ -353,7 +357,9 @@ def _epoch_support(model, batch, device) -> dict[str, float]:
         av = a[valid]
         out[f"L{li}_nonzero"] = float((av > SPARSITY_EPS).to(torch.float32).mean())
     out["alpha_nonzero"] = float((info.alpha > SPARSITY_EPS).to(torch.float32).mean())
-    out.update(_structural_vitality(info.delta_mssa, info.z_layers[:-1], valid))
+    delta_rows = [info.delta_mssa[li][valid].cpu() for li in range(icrate.L_LAYERS)]
+    z_rows = [info.z_layers[li][valid].cpu() for li in range(icrate.L_LAYERS)]
+    out.update(_structural_vitality(delta_rows, z_rows))
     return out
 
 
@@ -479,27 +485,25 @@ def full_audit(
     coeffs_all: list[list[torch.Tensor]] = [[] for _ in range(n_layers)]
     deltas_all: list[list[torch.Tensor]] = [[] for _ in range(n_layers)]
     zinputs_all: list[list[torch.Tensor]] = [[] for _ in range(n_layers)]
-    valid_all: list[torch.Tensor] = []
     alpha_all: list[torch.Tensor] = []
     with torch.no_grad():
         for batch in valid_batches:
             moved = batch.to(device)
             _, info = model(moved)
+            vb = moved.valid
             for li in range(n_layers):
-                deltas_all[li].append(info.delta_mssa[li].cpu())
-                zinputs_all[li].append(info.z_layers[li].cpu())
+                deltas_all[li].append(info.delta_mssa[li][vb].cpu())  # [nv, d]
+                zinputs_all[li].append(info.z_layers[li][vb].cpu())  # [nv, d]
                 if has_odl:
-                    coeffs_all[li].append(info.coeffs[li].cpu())
-            valid_all.append(moved.valid.cpu())
+                    coeffs_all[li].append(info.coeffs[li][vb].cpu())  # [nv, M]
             alpha_all.append(info.alpha.cpu())
-    valid = torch.cat(valid_all)
     deltas = [torch.cat(d) for d in deltas_all]
     zinputs = [torch.cat(z) for z in zinputs_all]
     alpha = torch.cat(alpha_all)
 
-    token_stats = _token_odl_stats([torch.cat(c) for c in coeffs_all], valid) if has_odl else {}
+    token_stats = _token_odl_stats([torch.cat(c) for c in coeffs_all]) if has_odl else {}
     global_stats = _global_alpha_stats(alpha)
-    vitality = _structural_vitality(deltas, zinputs, valid)
+    vitality = _structural_vitality(deltas, zinputs)
     dict_audit = _dictionary_audit(model.frozen_dictionaries()) if has_odl else {}
     attn_stats = _attention_stats(model, train_batch, device)
     return {
