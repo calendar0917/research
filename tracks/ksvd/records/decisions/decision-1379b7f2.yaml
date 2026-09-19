@@ -1,0 +1,35 @@
+alternatives_rejected:
+- 'Continue the exact WG-ICSC-v0 form with more compute/epochs: rejected - train already
+  plateaus at ~0.50 with train~valid, so it is a capacity/objective limit, not an
+  optimisation-budget limit.'
+- 'Run the No-incidence (gamma=0) and Dense (lambda=0) controls anyway: rejected -
+  the pre-registration authorises them only after the main passes the gate; the failure
+  is already attributable to the readout/objective from the mechanism audit.'
+- 'Stop the line entirely: rejected for now - the incidence mechanism is active and
+  the sparse solver is real; the identified defect (assignment-invariant row-norm
+  readout + hard bilevel shaping) is a concrete, falsifiable objective revision.'
+because: The mechanism is implementable, stable and non-degenerate (real sparsity,
+  monotone solver, non-dead composition gradient), so the line is not refuted. But
+  the 192-D row-L2 graph code is nearly invariant to the true bond<->endpoint assignment,
+  and the dictionaries are shaped only through a hard, un-converged bilevel solver,
+  so the representation underfits (train~valid~0.51) and is ~4x the matched A100 references
+  (0.118-0.125). The controls are gated on a passing main run and were therefore not
+  run.
+created: '2026-09-19T18:28:51'
+decision: 'WG-ICSC-v0 seed-0: FAIL the pre-registered feasibility gate (valid Top-5
+  soup 0.5058 vs >0.15 = Case A), but the sparse-incidence MECHANISM IS ACTIVE and
+  the failure is representational, not a dead module. Decision: REVISE THE MATHEMATICAL
+  OBJECTIVE; do not continue this exact form and do not run the gated No-incidence
+  / Dense controls. Evidence (A100, seed 0, commit 6fcb3c4, valid-only, test never
+  loaded): 23489 params, 240 epochs, best 0.50593 / soup 0.50575, train task 0.501
+  ~ valid 0.511 (severe underfit); calibration froze lambda1=0.03 lambda_g=0.15 (x3
+  grid); solver energy monotone 1.000->0.641 but T=8 not converged (T16 alpha +16.6%);
+  composition/attribute gradient ratio median 0.12; assignment shuffle changes the
+  graph code by only 1.5% while changing the prediction by 0.448; active-row fraction
+  0.37->0.52; dead atoms 30/128 node + 24/64 edge; D_V coherence max 1.0.'
+decision_id: decision-1379b7f2
+kind: decision
+revisit_if: A revised graph code / readout that preserves bond<->endpoint (incidence)
+  information, or an outer objective that shapes the dictionaries through a converged
+  solver, is pre-registered and passes the seed-0 valid gate.
+study_id: zinc-context-gap
