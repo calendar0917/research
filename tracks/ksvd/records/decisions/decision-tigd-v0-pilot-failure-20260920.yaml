@@ -1,0 +1,73 @@
+alternatives_rejected:
+  - 'Proceed to the full 10 000-graph stage: rejected — the pre-registered pilot gate fails 5/10 checks (dictionary usage collapse, rewiring insensitivity, structure-off insensitivity, no original/random reconstruction separation, non-converged Sinkhorn), and the pre-registration says write a failure note instead.'
+  - 'Declare the graph-space dictionary object viable because permutation invariance and atom parameter diversity hold: rejected — those are necessary but not sufficient; the code is provably topology-blind (Delta_rewire 5.8e-08 ~= Delta_perm 1.9e-08) and 13/16 atoms are never selected.'
+  - 'Blame the fixed lift / attribute channel: rejected — attribute terms train cleanly (L_V -25%, L_E -42%); the failure is the transport/structural coupling (L_B falls only 1.4%).'
+  - 'Tune lambda_B / epsilon / Sinkhorn iterations or add a sparse penalty to rescue it: forbidden by this round''s pre-registration (no weight/epsilon sweep, no sparsity); the only admissible next step is a revised object with its own preregistration.'
+  - 'Run the frozen-code probe as the primary success criterion: rejected — the probe (valid MAE 1.32) is far above every frozen lift (0.37-0.40), but the mechanism audit already shows the failure is structural, not merely task-misaligned.'
+because: >-
+  On the pre-registered object (K=16 whole attributed incidence-graph atoms,
+  q_V=q_E=24, mixture code alpha in Delta_16, free graph-specific soft transport
+  P_V in Pi(1/n,1/24), P_E in Pi(1/m,1/24), eps=0.05, 50 log-domain Sinkhorn
+  iterations, T_alt=8, lambda=1; ZINC train 2048 graphs / 40 epochs, seed 0,
+  commit 28bab97, official test never loaded), the dictionary learns attribute
+  prototypes but not incidence structure. L_V falls from 0.4546 to 0.3412 and
+  L_E from 0.2816 to 0.1632, while L_B is essentially flat (0.0835 -> 0.0823,
+  -1.4%), stuck at the fully-unexplained-incidence value ~1.68/n. The graph code
+  collapses to a near one-hot assignment over ~3 atoms (entropy 0.0091,
+  effective support 1.01, 97.8% of codes one-hot, argmax atom 7 = 83.3%,
+  13/16 atoms never selected). Degree-preserving 2-switch rewiring changes
+  alpha by 5.8e-08, indistinguishable from a pure relabelling (1.9e-08), while
+  a random size-matched graph changes it by 0.545; inferred energies are
+  original 0.58584, rewired 0.58585, random 0.58910, and L_B is slightly
+  *lower* for the unrelated random graph (0.08210 vs 0.08287). Setting lambda_B=0
+  at inference changes the codes by only 1.0e-04. The KME-free frozen-code probe
+  (only use of y) reaches valid MAE 1.32 (ridge 1.343 / linear 1.317 / MLP32
+  1.318), far above DOI 0.3865, scattering 0.3657 and I-CRATE 0.399, and only
+  modestly below a predict-the-mean baseline (~1.6). Separately, the
+  pre-registered Sinkhorn budget is not converged for a learned dictionary: the
+  transport marginal error grows monotonically 1.0e-04 -> 1.24e-02 over the 40
+  epochs, so the returned coupling violates its row marginals by ~29% relative
+  at the end. Mechanism: free graph-specific transport can reshuffle any
+  incidence onto the atom slot templates at no attribute cost (identity
+  absorption); the convex attribute quadratic plus free transport drives the
+  unregularised mixture to a vertex within a few epochs, starving 13/16 atoms of
+  gradient; and with alpha one-hot and transport near-uniform the L_B gradient
+  w.r.t. R is structureless, so the latent templates stay ~2/24 (near-uniform).
+decision: >-
+  TIGD-v0 (typed incidence graph dictionary unmixing; seed 0, commit 28bab97,
+  A100, ZINC train 2048 / valid 1000, official test never loaded): the pilot
+  FAILS its pre-registered feasibility gate (5/10 checks). A shared dictionary
+  whose atoms are whole attributed incidence graphs, fit by a mixture code and
+  free graph-specific soft transport, does NOT learn topology: L_B is flat
+  (-1.4% in 40 epochs), the code collapses to a near one-hot assignment over
+  ~3/16 atoms, degree-preserving rewiring is invisible to alpha_G
+  (Delta_rewire 5.8e-08 ~= Delta_perm 1.9e-08; random 0.545), structure-off
+  (lambda_B=0) changes codes by 1.0e-04, and unrelated size-matched graphs are
+  reconstructed as well as originals (0.5891 vs 0.5858). The entropic transport
+  also silently mal-converges (marginal error to 1.24e-02). Frozen-code probe
+  valid MAE 1.32 is far above the fixed-lift references (DOI 0.3865, scattering
+  0.3657, I-CRATE 0.399). VERDICT: soft transport absorbs too much graph
+  identity; this graph-space dictionary formulation is not viable. DECISION:
+  do not run the full stage; revise the graph-space reconstruction / transport
+  objective (anchor/regularise the transport, break the transport-structure
+  symmetry, prevent the degenerate one-hot mixture without a forbidden ad-hoc
+  sparsity penalty, and make the entropic solver converge) under a new
+  preregistration. This is a research bet, not a probe-supported result.
+  Evidence: notes/tigd_representation_analysis.md,
+  results/tigd_graph_dictionary/SUMMARY.json.
+decision_id: decision-tigd-v0-pilot-failure-20260920
+kind: decision
+created: '2026-09-20T00:35:00'
+revisit_if: >-
+  A revised graph-space dictionary object is pre-registered that (a) constrains
+  or anchors the graph-specific transport so it cannot reshuffle endpoints for
+  free, (b) breaks the transport-structure symmetry (stronger/coupled
+  structural term or a transport prior tied to the real incidence), (c) keeps
+  the code non-degenerate without the forbidden ad-hoc sparse penalty (e.g. an
+  entropic code regulariser), and (d) uses a converged entropic solver. Re-run
+  the same permutation / rewiring / random / structure-off mechanism audit and
+  require Delta_perm << Delta_rewire <= Delta_random, descending L_B, and
+  original/random reconstruction separation *before* any task-driven or sparse
+  graph-dictionary round. If a revised object still shows Delta_rewire ~=
+  Delta_perm and code collapse, stop dictionary-as-primary-representation.
+study_id: zinc-context-gap
