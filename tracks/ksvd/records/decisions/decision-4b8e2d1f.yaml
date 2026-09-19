@@ -1,0 +1,35 @@
+alternatives_rejected:
+  - 'Proceed to sparse dictionary learning: rejected — the pre-registered Strong gate (valid <= 0.20) is not met; Full DOI T=4 valid is 0.3865 (Weak band, > 0.30).'
+  - 'Add more RFF dimensions / a larger bandwidth sweep to fix the readout: rejected — RFF approximation already passes (median < 0.02, p95 < 0.05, Spearman >= 0.995) and a dense MLP (strictly more expressive than any linear sparse readout) still floors at train 0.327 > 0.25, so the limit is the fixed invariant object, not the embedding.'
+  - 'Test higher T or higher-order incidence tuples: rejected by this round''s pre-registration (T>4 and motif/higher-order tuples are explicitly out of scope).'
+  - 'Run the 256-wide Full-DOI probe ceiling: rejected — its pre-registered trigger (> 0.05 valid MAE improvement over AIOM) was not met (improvement 0.0456).'
+because: >-
+  Train and valid MAE still plateau together above the Weak-gate thresholds
+  (Full DOI T=4: train 0.3273 / valid 0.3865) even though the object is exact
+  permutation-invariant, RFF-accurate and collision-free; a dense MLP is
+  strictly more expressive than any linear sparse readout, so this is a property
+  of the fixed label-free lift, not of the solver. The aggregation change (AIOM
+  moments -> per-object distributions + incidence pairs) is a real but modest
+  improvement (valid 0.4321 -> 0.3865), so more aggregation/RFF tuning inside the
+  same fixed-lift premise is unlikely to reach a dictionary-ready domain.
+created: '2026-09-19T23:10:00'
+decision: >-
+  DOI audit (seed 20260920, commit fe38e7f): the Distributional Operator-Incidence
+  lift (per-object multiscale responses + atom/bond/incidence-pair empirical
+  distributions + log masses) is exactly permutation-invariant (max err 3.5e-17
+  over 10000 checks), RFF-adequate, and repairs AIOM geometry (min non-isomorphic
+  distance 0.020 -> 0.223). It improves the frozen AIOM T=4 dense-probe valid MAE
+  from 0.4321 to 0.3865 (train 0.3956 -> 0.3273) and shows a genuine multiscale
+  gain (T=0 0.5200 -> T=2 0.4029 -> T=4 0.3865), but stays in the pre-registered
+  Weak band (valid > 0.30, train > 0.25) and rewiring sensitivity remains ~1
+  percent relative (random pairs 11x larger standardised). DECISION: the fixed-lift
+  premise is the bottleneck; move to a task-coupled minimal structural lift. Do
+  not train a dictionary on this object. Evidence: notes/doi_representation_analysis.md,
+  results/doi_representation/SUMMARY.json.
+decision_id: decision-4b8e2d1f
+kind: decision
+revisit_if: >-
+  A task-coupled (or learned) minimal structural transformation is pre-registered,
+  or a fundamentally different fixed graph object is proposed: re-run the same DOI
+  audit (Test A-F) before any dictionary learning.
+study_id: zinc-context-gap
