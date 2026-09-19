@@ -1,0 +1,32 @@
+protocol_id: wg-icsc-v0
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  # frozen architecture (see notes/wg_icsc_v0_preregistration.md)
+  gamma: 1.0
+  rho: 0.001
+  # null => calibration selects and freezes lambda1 / lambda_g once
+  lambda1: null
+  lambda_g: null
+  t_steps: 8
+  init_std: 0.5
+  mu: 0.1
+  # canonical ZINC training protocol
+  epochs: 240
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 40
+  gradient_clip_norm: 5.0
+  device: cpu
+
+calibration:
+  n_graphs: 256
+  max_expansions: 1
+
+runtime:
+  torch_threads: 4
