@@ -362,7 +362,11 @@ def _assignment_permutation_intervention(
     device: torch.device,
     seed: int,
 ) -> dict[str, float]:
-    """Evaluation-only: reassign bond objects to different endpoint pairs."""
+    """Evaluation-only: reassign bond objects to different endpoint pairs.
+
+    The permutation is applied **within each graph** so the bond objects stay
+    attached to their own molecule; only the bond<->endpoint assignment changes.
+    """
     generator = torch.Generator().manual_seed(int(seed))
     ratios: list[float] = []
     pred_changes: list[float] = []
@@ -371,7 +375,12 @@ def _assignment_permutation_intervention(
             moved = batch.to(device)
             base = model.solve(moved)
             base_pred = model.head(base.alpha).view(-1)
-            perm = torch.randperm(moved.M, generator=generator)
+            perm = torch.arange(moved.M, device=device)
+            for g in range(moved.n_graphs):
+                idx = (moved.edge_graph == g).nonzero(as_tuple=True)[0]
+                if idx.numel() > 1:
+                    local = torch.randperm(idx.numel(), generator=generator).to(device)
+                    perm[idx] = idx[local]
             shuffled = icsc.Batch(
                 xv=moved.xv,
                 xe=moved.xe,
@@ -690,6 +699,7 @@ def run(config: dict[str, Any], context: RunContext) -> RunResult:
     )
 
     plots = _write_plots(context.artifact_dir, trained["history"], dynamics, calibration)
+    torch.save(trained["soup_state"], context.artifact_dir / "soup_state.pt")
 
     results: dict[str, Any] = {
         "candidate": "wg-icsc-v0",
@@ -752,5 +762,9 @@ def run(config: dict[str, Any], context: RunContext) -> RunResult:
     return RunResult(
         metrics=metrics,
         status="completed",
-        artifacts=["artifacts/results.json", *[f"artifacts/{name}" for name in plots]],
+        artifacts=[
+            "artifacts/results.json",
+            "artifacts/soup_state.pt",
+            *[f"artifacts/{name}" for name in plots],
+        ],
     )
