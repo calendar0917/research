@@ -505,7 +505,7 @@ class ICrateV0(nn.Module):
         self, mol: Molecule, *, record_attn: bool = False
     ) -> tuple[torch.Tensor, ForwardInfo]:
         z = self.embed_molecule(mol)
-        keep = incidence_keep(mol)
+        keep = incidence_keep(mol).to(z.device)
         valid = torch.ones(mol.n_tokens, dtype=torch.bool, device=z.device)
         n_tokens = torch.tensor(float(mol.n_tokens), dtype=torch.float32, device=z.device)
         return self.core(z, keep, valid, n_tokens, record_attn=record_attn)
