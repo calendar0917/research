@@ -844,7 +844,7 @@ def dictionary_stats(*, num_graphs: int, d_v: torch.Tensor, d_e: torch.Tensor, w
             cols = m / (m.norm(dim=0, keepdim=True) + EPS)
             gram = cols.t() @ cols
             k = gram.shape[0]
-            off = gram - torch.eye(k, dtype=gram.dtype)
+            off = gram - torch.eye(k, dtype=gram.dtype, device=gram.device)
             out[f"{name}_coherence_mean"] = float(off.abs().sum() / max(k * (k - 1), 1))
             out[f"{name}_coherence_max"] = float(off.abs().max()) if k > 1 else 0.0
     return out
