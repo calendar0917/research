@@ -653,18 +653,35 @@ def run(config: dict[str, Any], context: RunContext) -> RunResult:
         mech_batch=mech_batch,
     )
 
-    valid_batches = make_batches(valid_samples, int(model_cfg.get("batch_size", 128)))
-    print("[icrate] running full mechanism audit ...", flush=True)
-    audit = full_audit(model, valid_batches, device, seed, mech_batch)
-    grad_vitality = _gradient_vitality(model, icrate.collate(train_samples[:128]).to(device), device)
+    # Persist the trained model + history immediately so a failure in the
+    # (evaluation-only) audit cannot lose a long training run.
+    context.artifact_dir.mkdir(parents=True, exist_ok=True)
+    torch.save(trained["soup_state"], context.artifact_dir / "soup_state.pt")
+    (context.artifact_dir / "training_history.json").write_text(
+        json.dumps(trained["history"]), encoding="utf-8"
+    )
 
-    n_interv = int(config.get("intervention", {}).get("n_graphs", 500))
-    interv_samples = valid_samples[:n_interv]
-    print(f"[icrate] incidence intervention on {len(interv_samples)} valid graphs ...", flush=True)
-    intervention = incidence_intervention(model, interv_samples, device, seed=seed + 777)
+    valid_batches = make_batches(valid_samples, int(model_cfg.get("batch_size", 128)))
+    audit_error: str | None = None
+    try:
+        print("[icrate] running full mechanism audit ...", flush=True)
+        audit = full_audit(model, valid_batches, device, seed, mech_batch)
+        grad_vitality = _gradient_vitality(model, icrate.collate(train_samples[:128]).to(device), device)
+
+        n_interv = int(config.get("intervention", {}).get("n_graphs", 500))
+        interv_samples = valid_samples[:n_interv]
+        print(f"[icrate] incidence intervention on {len(interv_samples)} valid graphs ...", flush=True)
+        intervention = incidence_intervention(model, interv_samples, device, seed=seed + 777)
+    except Exception as exc:  # noqa: BLE001 - keep the trained model, record the failure
+        import traceback
+
+        traceback.print_exc()
+        audit_error = f"{type(exc).__name__}: {exc}"
+        audit = {"variant": variant, "token_odl": {}, "global_alpha": {}, "structural_vitality": {}, "dictionary_audit": {}, "attention": {}}
+        grad_vitality = {}
+        intervention = {}
 
     plots = _write_plots(context.artifact_dir, trained["history"], audit)
-    torch.save(trained["soup_state"], context.artifact_dir / "soup_state.pt")
 
     soup_valid = float(trained["soup_valid_mae"])
     if soup_valid > GATE_CASE_A:
@@ -700,6 +717,7 @@ def run(config: dict[str, Any], context: RunContext) -> RunResult:
         "audit": audit,
         "gradient_vitality": grad_vitality,
         "incidence_intervention": intervention,
+        "audit_error": audit_error,
         "reference_soup_valid": REFERENCE_SOUP_VALID,
         "pre_registered_gate": gate,
         "artifacts": plots,
@@ -721,8 +739,9 @@ def run(config: dict[str, Any], context: RunContext) -> RunResult:
         "alpha_dead_atoms": audit["global_alpha"].get("dead_atoms"),
         "L0_nonzero_frac": audit["token_odl"].get("L0_nonzero_frac") if audit["token_odl"] else None,
         "L0_mssa_ratio": audit["structural_vitality"].get("L0_mssa_ratio"),
-        "incidence_alpha_relative_change": float(intervention["alpha_relative_change_mean"]),
-        "incidence_pred_abs_change": float(intervention["prediction_abs_change_mean"]),
+        "incidence_alpha_relative_change": intervention.get("alpha_relative_change_mean"),
+        "incidence_pred_abs_change": intervention.get("prediction_abs_change_mean"),
+        "audit_error": audit_error,
     }
     return RunResult(
         metrics=metrics,
