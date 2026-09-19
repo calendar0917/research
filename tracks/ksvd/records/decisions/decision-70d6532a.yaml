@@ -1,0 +1,30 @@
+alternatives_rejected:
+- 'Continue/sweep I-CRATE depth/width/lambda: rejected — pre-registered Case A forbids
+  sweeps and the plateaus show a capacity limit, not a budget limit.'
+- 'Run the gated No-incidence / FFN controls anyway: rejected — pre-registration authorises
+  controls only after a Case-B-or-better main; the 64-graph audit already shows both
+  mechanisms are active.'
+- 'Re-run the full formal training just for the missing full-data audit/soup: rejected
+  after the crash was fixed — best 0.399 >> 0.20 is already Case A, so the soup cannot
+  change the verdict; checkpointing is now in place for any future run.'
+because: train 0.355 / valid 0.418 plateau together and are ~3.4x the matched A100
+  reference (0.118/0.125); the fixed 96-atom global sparse code + single pooled graph
+  seed cannot fit 10000 ZINC graphs even though it can memorise 64. The WG-ICSC defects
+  are fixed (readout now incidence-sensitive; dictionaries non-collapsed), so this
+  is a new, specific failure mode (capacity), not a repetition.
+created: '2026-09-19T20:59:09'
+decision: 'I-CRATE-v0 seed-0: Case A (clear failure) on the pre-registered gate —
+  best-checkpoint valid 0.3989 vs the >0.20 threshold — but BOTH intended mechanisms
+  are active (incidence reaches the graph code: within-graph endpoint rewiring moves
+  alpha_G by ~42% vs WG-ICSC 1.5%; token ODL is sparse with 0 dead atoms; dictionaries
+  full-rank ~42/96 with no collapse). Decision: STOP the I-CRATE-v0 performance line
+  in its current form; the limit is capacity of the fixed sparse forward pipeline
+  (train~valid~0.40), not a dead mechanism or a broken optimiser (the 64-graph overfit
+  reaches train 0.18). No sweeps; gated controls A/B not run. Evidence: notes/icrate_v0_failure_analysis.md,
+  results/icrate/overfit64/artifacts/results.json, results/icrate/formal_seed0/stdout.log.'
+decision_id: decision-70d6532a
+kind: decision
+revisit_if: A new mathematical object changes the capacity of the graph code (more
+  than a single pooled seed / 96 global atoms) and is pre-registered, or a full-data
+  mechanism audit is required to confirm the 64-graph incidence finding.
+study_id: zinc-context-gap
