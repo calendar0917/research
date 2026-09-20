@@ -1,0 +1,73 @@
+decision_id: decision-psd-v0-stop-pair-encoder-20260920
+created: '2026-09-20T20:12:00'
+kind: decision
+study_id: zinc-context-gap
+because: >-
+  PSD-v0 (2026-09-20, seed 0, commit e1bef7c, A100; ZINC canonical train 10000 /
+  valid 1000, official test never loaded; train-only screen) tested whether a
+  raw-input relation-preserving PAIR-STATE structural encoder (M_ij = sum_k
+  phi(H_ik).psi(H_kj), L=3, d=64, readout u_G in R^64) can match a raw node-MPNN
+  at comparable parameter budget, as the prerequisite (Q1) for inserting a
+  function-preserving sparse dictionary (Q2). Stage 0 (data-free) all passed and
+  the synthetic C6-vs-2C3 mechanism test confirms the pair update is active
+  (pair-state projection gap 0.051 vs raw node multiset gap 0.0). Stage 1
+  (128 graphs) passes after one targeted optimization-budget revision (batch
+  128->16, 300 epochs; pair train 0.0626). Stage 2 (2048 train-dev / 512
+  train-monitor, seed 20260922, valid never used) is decisive: best monitor MAE
+  pair 0.5038 (200 ep, early stop; no improvement after ep 103) vs raw_wide
+  0.4115 and raw 0.4152; soup 0.4955/0.5043 vs 0.4094/0.4105. Delta pair -
+  raw_wide = +0.106 / +0.088 and pair - raw = +0.103 / +0.089, far above the
+  pre-registered 0.005 practical-effect scale; pair overfits (train 0.195 vs
+  monitor 0.513; raw 0.255/0.415) and is ~1.8-2.1x slower. Mechanism diagnosis
+  found NO pair-specific numerical pathology: the pair field is rank 8.5-11.7
+  (L1-2), and although the graph readout is low rank (u_G 1.46) the raw node
+  baselines' sum-pooled graph vectors are also low rank (raw 2.46, raw_wide
+  2.18), so low rank is shared, not the differentiator; the difference is
+  inductive bias / effective capacity. Q2 was gated on Q1 and therefore not
+  started (no insertion, no matched controls).
+decision: >-
+  STOP the pair-state structural encoder and DO NOT start the dictionary (Q2)
+  round. The raw relation-preserving pair lift does not beat a raw node-MPNN at
+  matched parameters, so there is no representation for the dictionary to act
+  on; inserting the dictionary would repeat the GSCN-v0 mistake of asking a
+  compression mechanism to rescue a representation that has not formed. Do NOT
+  rescue by width/depth sweep, capacity matching, adding residual/gate/attention,
+  re-tuning the readout, or tuning lambda/K. No official valid/test was opened,
+  so no test is spent. Any next step needs a NEW pre-registration.
+alternatives_rejected:
+  - item: "Run the full 10000-train pair encoder to test whether the 2048 gap is a data-size effect"
+    because: >-
+      the round brief explicitly forbids the full-10k run once the pair encoder
+      is clearly worse than the raw baseline at 2048; the gap (+0.09) is far
+      beyond noise, and the 200-epoch run had already early-stopped with no
+      monitor improvement after epoch 103 while train kept falling, i.e. the
+      failure is overfitting, not under-training. Recorded as a revisit_if, not
+      queued.
+  - item: "One architecture revision (better readout / smaller pair capacity / regularisation)"
+    because: >-
+      the mechanism diagnosis found no pair-specific bug: Stage 0 is clean, the
+      mechanism is active, there is no norm explosion, and the low-rank readout
+      is shared with the raw baselines that work. With no clear mechanism
+      hypothesis, a revision would be architecture fishing, which the brief
+      forbids; the one allowed revision was already used on the genuine
+      optimization-budget defect at Stage 1.
+  - item: "Proceed to the function-preserving dictionary (Q2) anyway"
+    because: >-
+      the pre-registration gates Q2 on Q1; Q1 fails, and the brief states a
+      dictionary must not be used to rescue a structural representation that has
+      not formed.
+consequences:
+  - >-
+    The "keep pair states alive until the graph readout instead of collapsing
+    neighbours before coding" remedy to the GSCN-v0 problem is NOT supported on
+    raw ZINC at this capacity/budget: a plain raw node-MPNN still dominates it.
+  - >-
+    The dictionary/PSCD line remains paused; the only raw representation that
+    works is the node-MPNN (`raw` / `raw_wide`).
+next_action: >-
+  NONE auto-authorized. A future round must start from a NEW pre-registration and
+  may only pursue one of the revisit_if conditions (a structurally different lift
+  or parameterisation; full-10000 / effective-capacity-matched evidence that the
+  2048 overfitting is a pure data effect; or re-scoping the dictionary question
+  onto the raw node representation). Do not reopen official valid/test and do not
+  resume GSCN/PSCD/motif/port repair.

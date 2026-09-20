@@ -1,0 +1,75 @@
+claim_id: claim-psd-v0-pair-structural-encoder-not-viable-20260920
+created: '2026-09-20T20:10:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On ZINC (official PyG subset=True; seed 0; A100; commit e1bef7c; canonical
+  OPTIMIZED_PROTOCOL; official valid and test NEVER loaded; train-only screen),
+  a raw-input RELATION-PRESERVING PAIR-STATE structural encoder (pair state
+  H_ij in R^64 initialised from raw atom/bond/relation embeddings, updated by
+  M_ij = sum_k phi(H_ik) . psi(H_kj) with a residual eta -> LayerNorm, L=3
+  relation layers; permutation-invariant graph readout u_G in R^64 = W_read of
+  [mean over valid pairs H_ij ; mean diagonal H_ii]; linear head) does NOT match
+  a raw node-MPNN of comparable parameter budget. Parameters (real ZINC counts
+  21 atom / 3 bond categories): raw B-Null-Raw d=64 L=4 = 55,681; pair d=64 L=3
+  = 76,609; raw_wide d=76 L=4 = 77,977 (1.75% param mismatch to pair). Stage 0
+  (data-free) all passed: layer-state permutation equivariance 9.5e-7,
+  prediction invariance 3.7e-9, batching invariance 3.7e-9, padding invariance
+  0.0, graph-order invariance 3.7e-9, nonzero gradients on every structural
+  tensor at every layer, no absolute-position parameter, official test blocked.
+  Synthetic mechanism sanity: on C6 (diameter 3) vs 2*C3 (diameter 2), two
+  2-regular 1-WL-equivalent graphs, the raw node-state multiset gap is 0.0 while
+  the pair-state projection gap is 0.051 and the graph-representation gap 0.043
+  -> the pair update does build relation structure a node-MPNN cannot. Stage 1
+  (128 official-train graphs, batch 16, 300 epochs = 2400 steps): best train MAE
+  pair 0.0626 / raw 0.0694 -> capacity GO (the canonical batch-128/60-epoch probe
+  = only 60 steps failed 0.15 purely from step budget; one targeted revision to
+  batch 16 fixed it, architecture frozen). Stage 2 (deterministic official-train
+  split 2048 train-dev / 512 train-monitor, seed 20260922, batch 64, valid not
+  used): best monitor MAE pair 0.5038 (200 ep, early stop 143, no improvement
+  after ep 103) / 0.5177 (80 ep) versus raw_wide 0.4115 and raw 0.4152 (80 ep);
+  Top-5 soup pair 0.4955/0.5043 vs raw_wide 0.4094 / raw 0.4105. Delta pair -
+  raw_wide = +0.106 (80 ep) / +0.088 (best 200 ep); Delta pair - raw = +0.103 /
+  +0.089, an order of magnitude above the pre-registered 0.005 practical-effect
+  scale. Pair train@last 0.195 vs monitor 0.513 (overfits the 2048 train graphs)
+  while raw is 0.255 / 0.415; pair is ~1.8-2.1x slower per epoch. Mechanism
+  diagnosis: pair-field effective rank 8.5-11.7 (L1-2) / 4.6 (L3) is not
+  degenerate, but the graph readout is low rank (u_G 1.46) AND so are the raw
+  baselines' sum-pooled vectors (raw 2.46, raw_wide 2.18) -> low rank is shared,
+  not a pair-specific numerical pathology; the distinction is inductive bias /
+  effective capacity. Because Q1 fails, the function-preserving dictionary (Q2)
+  was NOT started (no insertion, no matched controls, no compression/budget
+  claim). FROZEN FIRST LINE: 'Pair-state structural representation is not viable
+  (dominated by the raw node baseline).'
+scope: >-
+  ZINC subset, official train only (2048 dev / 512 monitor), seed 0, <=200 epochs,
+  batch 64; official valid and test never used; full 10000-train pair run NOT
+  performed (round brief forbids it once the 2048 gap is clear). One pair
+  formulation at one capacity; no width/depth/K/lambda/solver sweep; no
+  residual/side-channel/attention; no PSCD/motifs/ports/handcrafted statistics.
+  The claim is about THIS raw pair-state lift, not about pair/2-FWL models in
+  general, and says nothing about the dictionary (untested here).
+evidence:
+  - notes/zinc_pair_dict_v0_preregistration.md
+  - notes/zinc_pair_dict_v0_analysis.md
+  - results/zinc_pair_dict_v0/RESULTS_SUMMARY.md
+  - code/run_zinc_pair_dict_v0.py
+  - tests/test_zinc_pair_dict_v0.py
+  - results/zinc_pair_dict_v0/stage0_tests.json
+  - results/zinc_pair_dict_v0/synth_mechanism.json
+  - results/zinc_pair_dict_v0/params.json
+  - results/zinc_pair_dict_v0/overfit_pair.json
+  - results/zinc_pair_dict_v0/overfit_raw.json
+  - results/zinc_pair_dict_v0/screen_pair.json
+  - results/zinc_pair_dict_v0/screen_raw.json
+  - results/zinc_pair_dict_v0/screen_raw_wide.json
+revisit_if: >-
+  A NEW pre-registration (i) proposes a structurally different object class /
+  parameterisation rather than a local patch; or (ii) supplies full-10000 or
+  effective-capacity-matched evidence that the pair lift's 2048 overfitting is a
+  pure data-size effect (e.g. the gap closes when the pair encoder is trained on
+  all 10000 official-train graphs or when its effective capacity is matched to
+  the node-MPNN); or (iii) re-scopes the dictionary question onto the working raw
+  node representation (raw_wide), which is the one raw encoder that does match
+  the raw baseline family here.

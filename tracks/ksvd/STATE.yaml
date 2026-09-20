@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-gscn-v0-dictionary-core-reject
+phase: post-psd-v0-pair-encoder-stop
 updated: 2026-09-20
 
 active_studies:
@@ -198,7 +198,12 @@ official_test_reads:
 open_design_questions:
   - Can a single end-to-end module learn the structural representation jointly
     with the task objective (replacing the statistics-then-readout pipeline)
-    while keeping the KSVD/dictionary-learning interpretation?
+    while keeping the KSVD/dictionary-learning interpretation?  PARTIALLY -
+    PSD-v0
+    tested a raw-input pair-state end-to-end module and it was dominated by a
+    raw node-MPNN (see decision-psd-v0-stop-pair-encoder-20260920); the
+    dictionary half of this question is unanswered/blocked on a working raw
+    structural encoder.
   - For ZINC-sized graphs, is a whole-graph compressed representation preferable
     to a rooted-patch system (and can attributes be folded in without a separate
     descriptor branch)?
@@ -253,7 +258,35 @@ research_direction:
 authorized_next_action:
   status: none
   note: >-
-    No experiment is authorized. GSCN-v0 (2026-09-20, seed 0, commit e7f5e02,
+    No experiment is authorized. PSD-v0 (2026-09-20, seed 0, commit e1bef7c,
+    A100; ZINC canonical train 10000 / valid 1000, official test never loaded;
+    train-only screen) tested whether a raw-input RELATION-PRESERVING PAIR-STATE
+    structural encoder (M_ij = sum_k phi(H_ik).psi(H_kj), L=3, d=64; readout
+    u_G in R^64) can match a raw node-MPNN at comparable parameter budget as the
+    prerequisite (Q1) for a function-preserving sparse dictionary (Q2). Stage 0
+    (data-free) all passed and the synthetic C6-vs-2C3 mechanism test is active;
+    Stage 1 (128 graphs) passes after one targeted optimization-budget revision
+    (batch 128->16, 300 epochs; pair train 0.0626). Stage 2 (2048 train-dev / 512
+    train-monitor, seed 20260922, official valid/test never used) is decisive:
+    best monitor MAE pair 0.5038 (200 ep, early stop) / 0.5177 (80 ep) vs
+    raw_wide 0.4115 and raw 0.4152; soup pair 0.4955 vs raw_wide 0.4094 / raw
+    0.4105. Delta pair - raw_wide = +0.106 / +0.088, far above the pre-registered
+    0.005 scale; pair overfits (train 0.195 vs monitor 0.513; raw 0.255/0.415)
+    and is ~1.8-2.1x slower. Mechanism: no pair-specific numerical pathology (the
+    pair field is rank 8.5-11.7 at L1-2 and the raw baselines' sum-pooled graph
+    vectors are ALSO low rank: raw 2.46, raw_wide 2.18, pair u_G 1.46) -> the
+    difference is inductive bias / effective capacity. FROZEN VERDICT:
+    'Pair-state structural representation is not viable (dominated by the raw
+    node baseline).' DECISION: STOP the pair encoder and DO NOT start the
+    dictionary (Q2); no width/depth/capacity/readout/regularisation rescue; no
+    full-10k pair run (round brief forbids it once the 2048 gap is clear). Any
+    next step needs a NEW preregistration; neither official test was opened. See
+    notes/zinc_pair_dict_v0_preregistration.md,
+    notes/zinc_pair_dict_v0_analysis.md,
+    results/zinc_pair_dict_v0/RESULTS_SUMMARY.md,
+    claim-psd-v0-pair-structural-encoder-not-viable-20260920,
+    decision-psd-v0-stop-pair-encoder-20260920. The GSCN-v0 authorized-next-action
+    note is retained below for provenance: No experiment is authorized. GSCN-v0 (2026-09-20, seed 0, commit e7f5e02,
     A100; ZINC canonical train 10000 / valid 1000, official test never loaded)
     tested whether task-driven sparse dictionary coding can be the graph
     hidden-state transition from raw topology. Reading the repo first showed the
@@ -324,6 +357,7 @@ deferred_optional:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-psd-v0-stop-pair-encoder-20260920: "PSD-v0 (2026-09-20, seed 0, commit e1bef7c, A100; ZINC canonical train 10000 / valid 1000, official test never loaded; train-only screen; protocol zinc-pair-struct-dict-v0): a raw-input RELATION-PRESERVING PAIR-STATE structural encoder (pair state H_ij in R^64 from raw atom/bond/relation embeddings; M_ij = sum_k phi(H_ik).psi(H_kj); residual eta -> LayerNorm; L=3; readout u_G in R^64 = W_read[mean pairs H ; mean diag H]; linear head) does NOT match a raw node-MPNN at matched parameters. Raw categories 21 atom / 3 bond; params raw 55,681 / pair 76,609 / raw_wide 77,977 (1.75% mismatch). Stage 0 all passed (perm-equivariance 9.5e-7, batch/padding/order invariance <=3.7e-9, gradients on every structural tensor, no position parameter, test blocked); synthetic C6-vs-2C3: raw node multiset gap 0.0 vs pair projection gap 0.051 / u_G gap 0.043 (mechanism active). Stage 1 (128 graphs) passes after one targeted optimization-budget revision (batch 128->16, 300 epochs; pair train 0.0626 / raw 0.0694). Stage 2 (2048 train-dev / 512 train-monitor, seed 20260922, batch 64, official valid/test unused): best monitor MAE pair 0.5038 (200 ep, early stop 143, no gain after 103) / 0.5177 (80 ep) vs raw_wide 0.4115 and raw 0.4152; soup pair 0.4955/0.5043 vs raw_wide 0.4094 / raw 0.4105. Delta pair - raw_wide = +0.106 / +0.088, Delta pair - raw = +0.103 / +0.089 (>> 0.005 scale); pair overfits (train 0.195 vs monitor 0.513; raw 0.255/0.415) and is ~1.8-2.1x slower. Diagnosis: no pair-specific numerical pathology (pair field rank 8.5-11.7 at L1-2; graph readout low rank for BOTH: pair u_G 1.46, raw 2.46, raw_wide 2.18) -> inductive bias / effective capacity, not collapse. VERDICT (frozen first line): 'Pair-state structural representation is not viable (dominated by the raw node baseline).' DECISION: STOP the pair encoder and DO NOT start the dictionary (Q2); no width/depth/capacity/readout/regularisation rescue; no full-10k pair run (round brief forbids it once the 2048 gap is clear). See notes/zinc_pair_dict_v0_analysis.md, notes/zinc_pair_dict_v0_preregistration.md, results/zinc_pair_dict_v0/RESULTS_SUMMARY.md, claim-psd-v0-pair-structural-encoder-not-viable-20260920, decision-psd-v0-stop-pair-encoder-20260920."
   - decision-gscn-v0-reject-dictionary-core-20260920: "GSCN-v0 (2026-09-20, seed 0, commit e7f5e02, A100; ZINC canonical train 10000 / valid 1000, official test never loaded; d=64 L=4 K=128 T=3; lambda label-free 80th-percentile calibrated once and frozen; B-Null/B-Full restated as rooted-patch models, input frozen to raw atom/bond/adjacency, baseline = raw graph model B-Null-Raw): soup valid MAE B-Null-Raw 0.1950 (55681), generic param-matched control 0.1982 (89985), No-Threshold-GSCN 0.2605 (89473), Sparse-GSCN 0.2123 (89473), B-Full reference 0.119818. Delta_Null -0.0173 (sparse worse), Delta_Capacity -0.0141 (sparse worse than generic), Delta_Sparsity +0.0482 (explicit lambda helps inside the family). Strong-positive FALSE; CAPACITY-ONLY failure gate FIRES (M_Generic <= M_Sparse); sparsity-not-needed FALSE; handcrafted gap 0.0752 with rho -0.230 (no recovery). Mechanism genuinely active and sparse (active 0.060-0.078/layer, atoms used 75-84%, eff rank 19.5-25.2, task grads reach D; ablations random-dict +40.7 / shuffle +2.6 / mean-code +4.5) and Stage0+smoke gates passed; failure is neither collapse nor optimization. VERDICT (frozen first line): 'The gain is explained by generic model capacity rather than sparse dictionary learning.' DECISION: reject the dictionary-core architecture and reassess the research premise; no seed-1, no optimization revision, no dictionary-factorization-only, no PSCD/motif repair; next step needs a NEW preregistration and the official test stays unopened. See notes/gscn_v0_analysis.md, notes/gscn_v0_preregistration.md, results/gscn_v0/, claim-gscn-v0-sparse-dictionary-core-not-viable-20260920, decision-gscn-v0-reject-dictionary-core-20260920."
   - decision-pscd-rm-v0-analyze-merge-only-20260920: "PSCD-RM-v0 (2026-09-20, seed 0, A100; commits faf8c49/a4d1eb2; ZINC canonical train 10000 / valid 1000, official test never loaded; reused PSCD-TMDL-v0 FREQ/TM dictionaries md5 bbb26189/8c151be6 and split md5 c4a21aa1; only discovery drives merges): two pre-registered rate-matched controls. FREQ-LOOSE (frozen frequency trajectory stopped at k*=5) is a STRONG rate match to the task+MDL dictionary (R_state 1.4046 vs 1.3923, |d| 0.0124 <= 0.03; R_occ 0.5556 vs 0.5551, |d| 0.0004 <= 0.05) and, under the IDENTICAL PSCD-SC-v0 StrongPortOperator (192257 params, seed 0), gives best valid 0.21293@220 (Top-5 soup 0.20325, 240 epochs) vs TM 0.20374 (soup 0.19517): Delta_task^high-rate = 0.00919 (best) / 0.00808 (soup) < 0.02, so 86.3%/86.1% of the raw Delta_dictionary 0.06704/0.05814 is decompression and 13.7%/13.9% is task. TM-RATE (task+MDL under the hard representation-rate constraint to the FREQ-64 discovery budget R_state 0.8887 / R_occ 0.3156) is INFEASIBLE under the frozen 64-rule budget: step 1 forced (1 admissible of 36 support_ok), step 2 support_ok 41 / mdl_ok 7 / rate_ok 9 / admissible 0 (rate floor need_occ 0.01009 ~ 2103 merges vs best compressive g_occ 0.00252 ~ 526 merges). Binding constraint = the frozen first-order two-part MDL eligibility rejecting the high-merge rules frequency uses (e.g. 51753 merges -> deltaL +129998), verified bit-for-bit against PSCD-TMDL-v0 mdl_delta_candidate. Both new dictionaries exact (Decode==G 100% discovery+monitor); FREQ-LOOSE invariance 0/1000 relabel mismatches; FREQ-LOOSE reuse maximally healthy (5 motifs, median support 7277, 0 low-support, 0 unused) while TM uses 64 mostly-fine motifs (median support 140, 6 low-support, 2 unused) at the SAME dynamic-state budget. VERDICT (frozen first line): rate-matched task dictionary construction is infeasible under the current 64-rule merge-only parameterisation; co-primary finding: at a strong rate match the pure-frequency dictionary is only 0.009 worse than TM, i.e. ~86% of the PSCD-TMDL-v0 gain is weaker abstraction / higher representation rate, not task-selected boundaries. DECISION: analyze the merge-only parameterisation (and its MDL eligibility) before further dictionary learning; do NOT increase K; do NOT formalise alternating task-driven dictionary learning yet; do NOT open either official test. Delta_task^low-rate is UNDEFINED (no TM-RATE dictionary). See notes/pscd_rm_analysis.md, notes/pscd_rm_preregistration.md, results/pscd_rm/, claim-pscd-rm-v0-rate-matched-dictionary-20260920, decision-pscd-rm-v0-analyze-merge-only-20260920."
   - decision-pscd-tmdl-v0-strengthen-regularization-20260920: "PSCD-TMDL-v0 (2026-09-20, seed 0, commits 3b77b4b/aed5796/0839151, A100; ZINC canonical train 10000 / valid 1000, official test never loaded; deterministic 9000 discovery + 1000 internal-monitor split, only discovery drives every merge; both dictionaries exact Decode==G 100%; 64 merges / max size 8): changing ONLY the motif-selection rule (frequency vs task+MDL), with the IDENTICAL PSCD-SC-v0 StrongPortOperator (192257 params) frozen on each dictionary, gives B-FREQ best valid 0.27078@113 (Top-5 soup 0.25331, early stop epoch 153) vs B-TM best valid 0.20374@230 (soup 0.19517, 240 epochs). Delta_dictionary = 0.0670 (best) / 0.0581 (soup) / +0.0523 at the matched 153-epoch budget (epoch 100 +0.0559; epoch 150 +0.0411); B-TM fits TRAIN better (0.0852 vs 0.1318) AND generalises better with a SMALLER train-valid gap (0.1186 vs 0.1389). Dictionaries almost disjoint (Jaccard 0.058; 7/64 shared types; 0 identical positional rules). The pre-registered PREDICTIVE gate fires decisively (Delta>=0.04; MAE_TM<=0.22), but the required reuse/compression half is only partially met: D_TM is materially less compressive (dynamic-state ratio 1.392x vs 0.888x raw; occurrence/atom 0.555 vs 0.315) and less reused (median support 140 vs 506; 6 low-support + 2 unused motifs vs 1 + 0), so the gain is entangled with reduced compression. Cheap Ridge probe did NOT predict this (task-only 0.5400 < D_TM 0.5911 ~ D_freq 0.5909). VERDICT (frozen first line): task supervision materially improves the reusable compositional dictionary, with the compression/reuse caveat. DECISION: strengthen dictionary regularization before further task coupling -- next step is a COMPRESSION-MATCHED CONTROL, then re-run the identical strong reader; formalise alternating task-driven dictionary learning only if the gain survives. See notes/pscd_tmdl_analysis.md, notes/pscd_tmdl_preregistration.md, results/pscd_tmdl/, claim-pscd-tmdl-v0-task-mdm-dictionary-selection-20260920, decision-pscd-tmdl-v0-strengthen-regularization-20260920."
