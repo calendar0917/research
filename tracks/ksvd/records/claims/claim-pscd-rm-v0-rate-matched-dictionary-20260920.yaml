@@ -1,0 +1,66 @@
+claim_id: claim-pscd-rm-v0-rate-matched-dictionary-20260920
+created: '2026-09-20T16:35:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On ZINC (official PyG subset=True; canonical train 10000 / valid 1000; official
+  test never loaded; seed 0; A100), the PSCD-TMDL-v0 task+MDL dictionary gain is
+  primarily a decompression effect, and a literal rate-matched task dictionary
+  cannot be constructed under the frozen method. (1) FREQ-LOOSE -- the frozen
+  frequency-BPE trajectory stopped after k*=5 merges -- is a STRONG rate match to
+  the task+MDL dictionary on the same 9000 discovery split (R_state 1.4046 vs
+  1.3923, |dR_state| 0.0124 <= 0.03; R_occ 0.5556 vs 0.5551, |dR_occ| 0.0004 <=
+  0.05). Under the IDENTICAL PSCD-SC-v0 StrongPortOperator (192257 params, seed
+  0), FREQ-LOOSE reaches best valid 0.21293@220 (Top-5 soup 0.20325, 240
+  epochs) vs TM 0.20374 (soup 0.19517), i.e. Delta_task^high-rate = 0.00919
+  (best) / 0.00808 (soup), below the 0.02 negligible band. Decomposing the raw
+  gain G_total = 0.06704 (best) / 0.05814 (soup): G_decompress = 0.05785 /
+  0.05006 (86.3% / 86.1%) and G_task,high = 0.00919 / 0.00808 (13.7% / 13.9%).
+  (2) TM-RATE -- task+MDL discovery under the pre-registered hard
+  representation-rate constraint (candidates must satisfy f_graph>=45, deltaL<0,
+  and corpus-level g_occ >= D_occ/m and g_state >= D_state/m) is INFEASIBLE under
+  the frozen 64-rule budget: step 1 is forced (1 admissible candidate of 36
+  support_ok), and at step 2 no candidate is BOTH MDL-compressive and
+  rate-sufficient (support_ok 41 / mdl_ok 7 / rate_ok 9 / admissible 0; rate
+  floor need_occ 0.01009 ~ 2103 merges vs best compressive g_occ 0.00252 ~ 526
+  merges). The binding constraint is the frozen first-order two-part MDL
+  eligibility, which rejects the high-merge rules the frequency dictionary uses
+  (e.g. 51753 merges -> deltaL = +129998), an identity verified bit-for-bit
+  against PSCD-TMDL-v0's mdl_delta_candidate. Both dictionaries exact
+  (Decode==G 100% discovery+monitor); FREQ-LOOSE invariance 0/1000 relabel
+  mismatches; FREQ-LOOSE reuse is maximally healthy (5 motifs, median support
+  7277, 0 low-support, 0 unused) whereas TM uses 64 mostly fine motifs (median
+  support 140, 6 low-support, 2 unused) at the SAME dynamic-state budget.
+scope: >-
+  ZINC subset, canonical train 10000 / valid 1000, official test never loaded;
+  single seed 0. Reader architecture / ports / composition / vocabulary budget /
+  max motif size / optimizer protocol / 64-step and max-size-8 budget frozen;
+  only the dictionary differs across arms. Delta_task^low-rate = MAE_FREQ -
+  MAE_TM-RATE is UNDEFINED (no TM-RATE dictionary exists). The decomposition is
+  an empirical decomposition, not a strict additive causal identity, and assumes
+  FREQ-LOOSE and TM are interchangeable rate controls (they are strongly matched
+  but not identical, |dR_state| 0.012). The mechanistic claim about the MDL proxy
+  is a diagnostic of the frozen proxy, not a redesign. No computational
+  compression claim is made: FREQ dynamic state is 0.889x raw (~11% state
+  reduction); the correct phrase is 'matched structural representation budget'.
+evidence:
+  - notes/pscd_rm_preregistration.md
+  - notes/pscd_rm_analysis.md
+  - code/run_pscd_rm_dictionary.py
+  - code/analyze_pscd_rm.py
+  - tests/test_pscd_rm.py
+  - results/pscd_rm/rate_match.json
+  - results/pscd_rm/audit_freqloose.json
+  - results/pscd_rm/audit_tmrate.json
+  - results/pscd_rm/rounds_tmrate.json
+  - results/pscd_rm/summary_BFREQLOOSE.json
+  - results/pscd_rm/ANALYSIS.json
+  - results/pscd_rm/rate_performance_plane.png
+revisit_if: >-
+  A merge-only parameterisation whose MDL eligibility admits the high-merge rules
+  (or a split / replacement / retirement dictionary) lets a task-driven
+  dictionary reach the frequency-level R_state/R_occ budget AND then beats
+  FREQ-LOOSE by Delta_task^low-rate >= 0.04 with healthy reuse -> task
+  boundaries, not compression, drive the gain; or a reader-gradient /
+  differentiable dictionary update escapes the same rate-construction failure.

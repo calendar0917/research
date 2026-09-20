@@ -1,0 +1,70 @@
+decision_id: decision-pscd-rm-v0-analyze-merge-only-20260920
+created: '2026-09-20T16:36:00'
+kind: decision
+study_id: zinc-context-gap
+because: >-
+  PSCD-RM-v0 (seed 0, A100; ZINC canonical train 10000 / valid 1000, official
+  test never loaded; deterministic 9000 discovery + 1000 internal-monitor split
+  unchanged, md5 c4a21aa1...; only discovery drives merges) ran the two
+  pre-registered rate-matched controls and reused FREQ/TM from PSCD-TMDL-v0.
+  FREQ-LOOSE (frozen frequency trajectory stopped at k*=5) is a STRONG rate match
+  to the task+MDL dictionary (R_state 1.4046 vs 1.3923, |d| 0.0124; R_occ 0.5556
+  vs 0.5551, |d| 0.0004) and, under the identical 192257-param StrongPortOperator
+  (seed 0), scores best valid 0.21293 / soup 0.20325 vs TM 0.20374 / 0.19517.
+  Delta_task^high-rate = 0.00919 / 0.00808 (< 0.02 negligible band), so 86.3% /
+  86.1% of the raw Delta_dictionary = 0.06704 / 0.05814 is decompression, and
+  only 13.7% / 13.9% is attributable to task boundaries at matched rate.
+  TM-RATE could not be built: under the frozen 64-rule budget the hard
+  representation-rate constraint is infeasible from step 2 because the frozen
+  first-order MDL eligibility (deltaL<0) admits only low-merge candidates (max
+  526 merges) while the frequency-level budget needs >= 2103 merges this step.
+  The result is reported as the pre-registered negative: rate-matched task
+  dictionary construction infeasible under the current 64-rule merge-only
+  parameterisation. Both new dictionaries are exact (Decode==G 100%
+  discovery+monitor); FREQ-LOOSE invariant under relabelling (0/1000) and
+  maximally reused (median support 7277, 0 unused) at the same dynamic-state
+  budget where TM keeps 64 mostly-fine motifs (median support 140).
+decision: >-
+  PSCD-RM-v0 VERDICT (frozen first line): 'Rate-matched task dictionary
+  construction is infeasible under the current 64-rule merge-only
+  parameterisation.' CO-PRIMARY finding: at a strong rate match, the pure
+  frequency dictionary is only 0.009 worse than the task+MDL dictionary, i.e.
+  approximately 86% of the PSCD-TMDL-v0 gain is weaker abstraction / higher
+  representation rate, not task-selected boundaries. DECISION: analyse the
+  merge-only parameterisation before further dictionary learning. Concretely, the
+  next round must determine whether the irreversible graph-BPE merge-only
+  parameterisation AND its first-order two-part MDL eligibility (which rejects
+  the high-merge rules the frequency dictionary relies on) are what prevent a
+  genuinely task-adapted dictionary at a fixed representation budget -- e.g. by
+  letting the dictionary admit merge + split + replacement + retirement, or by
+  replacing the per-merge two-part proxy with an objective that does not penalise
+  high-merge boundary rules. Do NOT increase K; do NOT formalise alternating
+  task-driven dictionary learning yet; do NOT sweep beta/K/reader/ports; do NOT
+  open either official test.
+alternatives_rejected:
+  - >-
+    formalize alternating task-driven graph dictionary learning now: rejected --
+    the low-rate arm is infeasible and the high-rate matched control shows the
+    residual task effect (0.009) is below the negligible band, so there is no
+    demonstrated matched-rate task advantage to formalise.
+  - >-
+    run one reader-gradient dictionary-selection diagnostic: rejected for this
+    step -- the immediate blocker is the merge-only parameterisation / MDL
+    eligibility (a rate-construction failure), which a gradient selector would
+    inherit; the cheaper and more decisive step is to characterise that
+    parameterisation first.
+  - >-
+    reformulate as task-aware rate-distortion without strong sparsity: deferred
+    -- the FREQ-LOOSE result motivates it, but the first-order evidence (a
+    frequency dictionary matching TM's budget and nearly matching its MAE) is
+    most directly explained by the merge-only construction path, which should be
+    analysed before changing the objective.
+  - >-
+    reconsider dictionary-as-primary representation: rejected -- FREQ-LOOSE (a
+    legitimate compressive dictionary) reaches 0.213, far better than the raw
+    PSCD reading and close to TM, so the representation family remains live; the
+    open issue is the task-guided construction path, not the family.
+  - >-
+    claim computational compression: rejected -- FREQ dynamic state is 0.889x raw
+    (~11% state reduction); only a matched structural representation budget is
+    claimed.
