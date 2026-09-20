@@ -708,7 +708,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         summary[f"stage_a_{arm}"] = audit
         log(f"[A:{arm}] n_learned={audit['n_learned']} ridge={audit['ridge']}")
 
-        with (out / f"dictionary_{arm.upper()}.pkl").open("wb") as fh:
+        arm_tag = {"freq": "FREQ", "task": "TASK", "tmdl": "TM"}[arm]
+        with (out / f"dictionary_{arm_tag}.pkl").open("wb") as fh:
             pickle.dump({"vocab": vocab, "sequence": sequence, "rounds": data["rounds"]}, fh)
         write_json(out / f"rounds_{arm}.json", data["rounds"])
         write_json(out / f"audit_{arm}.json", audit)
