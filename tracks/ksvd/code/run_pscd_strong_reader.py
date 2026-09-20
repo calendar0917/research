@@ -378,12 +378,11 @@ def compression_metrics(codes, pre, mols, vocab: Vocabulary) -> dict[str, Any]:
     n_ext = int(sum(it["n_ext"] for it in pre))
     n_intra = int(sum(it["n_intra"] for it in pre))
     n_raw_edges = int(sum(2 * m.m for m in mols))
-    n_motif_atoms = int(sum(vocab.by_id[k].size for sc in codes for k in sc.occ_motif_ids))
     return {
         "n_graphs": len(mols), "N_raw": n_raw, "N_pscd": n_occ + n_port,
         "n_occ": n_occ, "n_active_ports": n_port,
         "r_state": (n_occ + n_port) / max(n_raw, 1),
-        "motif_atom_ratio": n_motif_atoms / max(n_raw, 1),
+        "occurrence_atom_ratio": n_occ / max(n_raw, 1),
         "inter_motif_messages": n_ext,
         "intra_motif_port_pair_messages": n_intra,
         "raw_edge_messages": n_raw_edges,
