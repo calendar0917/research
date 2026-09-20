@@ -871,6 +871,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--max-steps", type=int, default=MAX_STEPS)
     parser.add_argument("--eval-every", type=int, default=EVAL_EVERY)
     parser.add_argument("--skip-exactness", action="store_true")
+    parser.add_argument("--readers", type=str, default="R0ship,R0,R1,R2,R3",
+                        help="comma-separated subset of R0ship,R0,R1,R2,R3")
+    parser.add_argument("--no-early-stop", action="store_true",
+                        help="disable early termination (phase-2 extension only)")
     args = parser.parse_args(argv)
 
     EVAL_EVERY = args.eval_every
@@ -1003,16 +1007,26 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     trainers: dict[str, StepTrainer] = {}
     order = ["R0ship", "R0", "R1", "R2", "R3"]
+    selected = [s for s in args.readers.split(",") if s]
     for name in order:
+        if name not in selected:
+            continue
         model, kind, bb, tr_items, va_items, structured = models[name]
         log(f"[train] {name} kind={kind} params={sum(p.numel() for p in model.parameters())}")
         tr = StepTrainer(name, model, kind, bb, tr_items, va_items, ytr, yva,
                          device, log, structured)
+        if args.no_early_stop:
+            tr.early_enabled = False
         tr.run_to(MAX_STEPS)
         trainers[name] = tr
         log(f"[train] {name} done: {json.dumps(tr.final_metrics())}")
 
     # --- recovery ratios -------------------------------------------------
+    have_core = all(n in trainers for n in ("R0", "R1", "R2", "R3"))
+    recovery: dict[str, Any] = {}
+    gate_info: dict[str, Any] = {}
+    extensions: dict[str, Any] = {}
+
     def build_recovery():
         common = sorted({r["step"] for r in trainers["R0"].history} &
                         {r["step"] for r in trainers["R3"].history})
@@ -1036,55 +1050,58 @@ def main(argv: Sequence[str] | None = None) -> int:
             out[str(step)] = row
         return out, common
 
-    recovery, common_ckpts = build_recovery()
+    best_structured = None
+    if have_core:
+        recovery, common_ckpts = build_recovery()
 
-    # --- extension gate --------------------------------------------------
-    structured_names = ["R1", "R2"]
-    best_structured = min(structured_names,
-                          key=lambda s: trainers[s].final_metrics()["valid_mae"])
-    bs = trainers[best_structured]
-    raw = trainers["R3"]
-    matched_step = max([s for s in common_ckpts if s <= bs.step], default=bs.step)
-    gate_info = {"best_structured": best_structured, "matched_step": matched_step,
-                 "criteria": {}}
-    rec_last = bs.at_step(matched_step) or bs.history[-1]
-    prev = [r for r in bs.history if r["step"] <= matched_step - 1000]
-    trend_valid = (prev[-1]["valid_mae"] - rec_last["valid_mae"]) if prev else None
-    trend_train = (prev[-1]["train_mae"] - rec_last["train_mae"]) if prev else None
-    raw_last = raw.at_step(matched_step) or raw.history[-1]
-    raw_prev = [r for r in raw.history if r["step"] <= raw_last["step"] - 1000]
-    raw_trend_valid = (raw_prev[-1]["valid_mae"] - raw_last["valid_mae"]) if raw_prev else None
-    recov_valid = (recovery.get(str(matched_step), {}).get(best_structured, {})
-                   .get("valid_recover"))
-    e1 = recov_valid is not None and recov_valid >= RECOVERY_GATE
-    e2 = rec_last["valid_mae"] <= raw_last["valid_mae"] + RECOVERY_GATE_RAW_MARGIN
-    e3 = (trend_valid is not None and trend_valid >= RECOVERY_GATE_TREND
-          and trend_train is not None and trend_train > 0)
-    gate_info["criteria"] = {
-        "recover_valid_at_matched_step": recov_valid,
-        "e1_recover_ge_0.50": bool(e1),
-        "e2_within_raw_plus_0.10": bool(e2),
-        "e3_trend_ge_0.02": bool(e3),
-        "trend_valid_last1000": trend_valid,
-        "trend_train_last1000": trend_train,
-        "raw_trend_valid_last1000": raw_trend_valid,
-    }
-    gate_info["pass"] = bool(e1 or e2 or e3)
-    log(f"[gate] {json.dumps(gate_info['criteria'], default=float)} pass={gate_info['pass']}")
+        # --- extension gate ----------------------------------------------
+        structured_names = ["R1", "R2"]
+        best_structured = min(structured_names,
+                              key=lambda s: trainers[s].final_metrics()["valid_mae"])
+        bs = trainers[best_structured]
+        raw = trainers["R3"]
+        matched_step = max([s for s in common_ckpts if s <= bs.step], default=bs.step)
+        gate_info = {"best_structured": best_structured, "matched_step": matched_step,
+                     "criteria": {}}
+        rec_last = bs.at_step(matched_step) or bs.history[-1]
+        prev = [r for r in bs.history if r["step"] <= matched_step - 1000]
+        trend_valid = (prev[-1]["valid_mae"] - rec_last["valid_mae"]) if prev else None
+        trend_train = (prev[-1]["train_mae"] - rec_last["train_mae"]) if prev else None
+        raw_last = raw.at_step(matched_step) or raw.history[-1]
+        raw_prev = [r for r in raw.history if r["step"] <= raw_last["step"] - 1000]
+        raw_trend_valid = (raw_prev[-1]["valid_mae"] - raw_last["valid_mae"]) \
+            if raw_prev else None
+        recov_valid = (recovery.get(str(matched_step), {}).get(best_structured, {})
+                       .get("valid_recover"))
+        e1 = recov_valid is not None and recov_valid >= RECOVERY_GATE
+        e2 = rec_last["valid_mae"] <= raw_last["valid_mae"] + RECOVERY_GATE_RAW_MARGIN
+        e3 = (trend_valid is not None and trend_valid >= RECOVERY_GATE_TREND
+              and trend_train is not None and trend_train > 0)
+        gate_info["criteria"] = {
+            "recover_valid_at_matched_step": recov_valid,
+            "e1_recover_ge_0.50": bool(e1),
+            "e2_within_raw_plus_0.10": bool(e2),
+            "e3_trend_ge_0.02": bool(e3),
+            "trend_valid_last1000": trend_valid,
+            "trend_train_last1000": trend_train,
+            "raw_trend_valid_last1000": raw_trend_valid,
+        }
+        gate_info["pass"] = bool(e1 or e2 or e3)
+        log(f"[gate] {json.dumps(gate_info['criteria'], default=float)} "
+            f"pass={gate_info['pass']}")
 
-    # --- extended budget -------------------------------------------------
-    extensions = {}
-    if gate_info["pass"] and bs.step < EXTENDED_STEPS:
-        log(f"[extend] continuing {best_structured} to {EXTENDED_STEPS} steps")
-        bs.cont_to(EXTENDED_STEPS)
-        extensions[best_structured] = bs.final_metrics()
-    if raw_trend_valid is not None and raw_trend_valid >= RECOVERY_GATE_TREND \
-            and raw.step < EXTENDED_STEPS:
-        log(f"[extend] raw control still improving ({raw_trend_valid:.4f}); "
-            f"continuing to {EXTENDED_STEPS}")
-        raw.cont_to(EXTENDED_STEPS)
-        extensions["R3"] = raw.final_metrics()
-    recovery, _ = build_recovery()
+        # --- extended budget ---------------------------------------------
+        if gate_info["pass"] and bs.step < EXTENDED_STEPS and not args.no_early_stop:
+            log(f"[extend] continuing {best_structured} to {EXTENDED_STEPS} steps")
+            bs.cont_to(EXTENDED_STEPS)
+            extensions[best_structured] = bs.final_metrics()
+        if (not args.no_early_stop) and raw_trend_valid is not None \
+                and raw_trend_valid >= RECOVERY_GATE_TREND and raw.step < EXTENDED_STEPS:
+            log(f"[extend] raw control still improving ({raw_trend_valid:.4f}); "
+                f"continuing to {EXTENDED_STEPS}")
+            raw.cont_to(EXTENDED_STEPS)
+            extensions["R3"] = raw.final_metrics()
+        recovery, _ = build_recovery()
 
     # --- results tables --------------------------------------------------
     table = {name: trainers[name].final_metrics() for name in trainers}
@@ -1092,10 +1109,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         table[name]["params"] = param_breakdown(models[name][0])
 
     # --- mechanism audit + ablation -------------------------------------
-    audit_reader = best_structured
-    enc = models[audit_reader][0].enc
-    mechanism = mechanism_audit(enc, vocab, learned_mids, log=log)
-    ablation = eval_only_ablation(trainers[audit_reader], log=log)
+    mechanism: dict[str, Any] = {}
+    ablation: dict[str, Any] = {}
+    audit_reader: str | None = None
+    structured_present = [n for n in ("R1", "R2") if n in trainers]
+    if structured_present:
+        audit_reader = min(structured_present,
+                           key=lambda s: trainers[s].final_metrics()["valid_mae"])
+        enc = models[audit_reader][0].enc
+        mechanism = mechanism_audit(enc, vocab, learned_mids, log=log)
+        ablation = eval_only_ablation(trainers[audit_reader], log=log)
 
     make_plots(out, trainers, log=log)
     for name, tr in trainers.items():
