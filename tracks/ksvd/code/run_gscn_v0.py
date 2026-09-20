@@ -599,11 +599,12 @@ def stage0_tests(atom_index, bond_index, device, log=print) -> dict[str, Any]:
 # ===========================================================================
 class EpochTrainer:
     def __init__(self, model, train_mols, valid_mols, ytr, yva, atom_index,
-                 bond_index, device, arm, log=print):
+                 bond_index, device, arm, log=print, eval_valid: bool = True):
         torch = _torch()
         self.model = model
         self.train_mols = list(train_mols)
         self.valid_mols = list(valid_mols)
+        self.eval_valid = bool(eval_valid)
         self.ytr = torch.as_tensor(ytr, dtype=torch.float32, device=device)
         self.yva = torch.as_tensor(yva, dtype=torch.float32, device=device)
         self.atom_index = atom_index
@@ -614,6 +615,7 @@ class EpochTrainer:
         self.opt = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=WD)
         self.gen = torch.Generator().manual_seed(SEED + TRAIN_SHUFFLE_SEED_OFFSET)
         self.history: list[dict[str, Any]] = []
+        self.best_score = float("inf")
         self.best_valid = float("inf")
         self.best_epoch = 0
         self.best_state = None
@@ -638,7 +640,10 @@ class EpochTrainer:
 
     def evaluate(self) -> tuple[float, float]:
         tr = float((self._forward_all(self.train_mols) - self.ytr).abs().mean())
-        va = float((self._forward_all(self.valid_mols) - self.yva).abs().mean())
+        if self.eval_valid:
+            va = float((self._forward_all(self.valid_mols) - self.yva).abs().mean())
+        else:
+            va = float("nan")
         if self.device.startswith("cuda"):
             torch = _torch()
             self.peak_gpu_mb = max(self.peak_gpu_mb,
@@ -676,31 +681,36 @@ class EpochTrainer:
             wall = time.time() - self.t0
             self.history.append({"epoch": epoch, "train_mae": tr, "valid_mae": va,
                                  "train_batch_l1": ep_loss / max(nb, 1), "wall_s": wall})
-            if va < self.best_valid - 1e-12:
-                self.best_valid = va
+            score = va if not math.isnan(va) else tr
+            if score < self.best_score - 1e-12:
+                self.best_score = score
+                if not math.isnan(va):
+                    self.best_valid = va
                 self.best_epoch = epoch
                 self.best_state = copy.deepcopy(
                     {k: v.detach().cpu() for k, v in self.model.state_dict().items()})
             state = copy.deepcopy(
                 {k: v.detach().cpu() for k, v in self.model.state_dict().items()})
-            self.top5.append((va, epoch, state))
+            self.top5.append((score, epoch, state))
             self.top5.sort(key=lambda x: x[0])
             self.top5 = self.top5[:TOP_K]
             if epoch % 10 == 0 or epoch <= 3:
                 self.log(f"[{self.arm}] ep {epoch} train={tr:.4f} valid={va:.4f} "
-                         f"best={self.best_valid:.4f}@{self.best_epoch} wall={wall:.0f}s")
+                         f"best={self.best_score:.4f}@{self.best_epoch} wall={wall:.0f}s")
             if epoch - self.best_epoch >= patience:
                 self.log(f"[{self.arm}] early stop at epoch {epoch} "
-                         f"(best {self.best_valid:.4f}@{self.best_epoch})")
+                         f"(best {self.best_score:.4f}@{self.best_epoch})")
                 break
         soup = self._soup_state()
         soup_mae = self._eval_state(soup)
         return {
             "history": self.history,
-            "best_valid": self.best_valid,
+            "best_score": self.best_score,
+            "best_valid": self.best_valid if self.eval_valid else float("nan"),
             "best_epoch": self.best_epoch,
             "soup_valid": soup_mae,
             "soup_members": [e for _, e, _ in self.top5],
+            "eval_valid": self.eval_valid,
             "wall_s": self.history[-1]["wall_s"],
             "epochs_run": self.history[-1]["epoch"],
             "peak_gpu_mb": self.peak_gpu_mb,
@@ -721,7 +731,7 @@ class EpochTrainer:
         return out
 
     def _eval_state(self, state):
-        if state is None:
+        if state is None or not self.eval_valid:
             return float("nan")
         backup = copy.deepcopy({k: v.detach().cpu() for k, v in self.model.state_dict().items()})
         self.model.load_state_dict(state)
@@ -993,7 +1003,8 @@ def run_smoke(args, log) -> int:
     calib = train_mols[:CALIB_GRAPHS]
     lam = calibrate_lambdas(model, calib, atom_index, bond_index, args.device, log=log)
     trainer = EpochTrainer(model, train_mols, valid_mols, y_train, y_valid,
-                           atom_index, bond_index, args.device, "sparse_smoke", log=log)
+                           atom_index, bond_index, args.device, "sparse_smoke", log=log,
+                           eval_valid=False)
     out = trainer.train(max_epochs=args.smoke_epochs, patience=999)
     model.load_state_dict(out["state_best"])
     cs = code_stats(model, train_mols[:2000], atom_index, bond_index, args.device)
@@ -1006,7 +1017,7 @@ def run_smoke(args, log) -> int:
                    / max(sum(v["atoms_total"] for v in cs.values()), 1))
     grads = out["d_grad_history"]
     nonzero_grad = bool(grads) and all(any(v > 0 for v in h.values()) for h in grads[:50])
-    fin = bool(np.isfinite(out["best_valid"]) and np.isfinite(out["soup_valid"]))
+    fin = bool(np.isfinite(out["best_score"]))
     losedec = bool(out["history"][-1]["train_batch_l1"]
                    < out["history"][0]["train_batch_l1"])
     gate = {
@@ -1020,11 +1031,10 @@ def run_smoke(args, log) -> int:
     }
     gate["passed"] = all(bool(v) for k, v in gate.items() if k != "passed")
     payload = {
-        "provenance": provenance(args.device),
+        "provenance": provenance(args.device, {"valid_not_used_for_tuning": True}),
         "lambdas": lam,
         "smoke_epochs": args.smoke_epochs,
-        "best_valid": out["best_valid"],
-        "soup_valid": out["soup_valid"],
+        "best_train_mae": out["best_score"],
         "history": out["history"],
         "code_stats": cs,
         "dict_geometry": geo,
@@ -1032,7 +1042,7 @@ def run_smoke(args, log) -> int:
         "gate": gate,
     }
     write_json(RESULTS_DIR / "smoke_gate.json", payload)
-    log(f"[smoke] best_valid={out['best_valid']:.4f} active={active} used={used} "
+    log(f"[smoke] best_train={out['best_score']:.4f} active={active} used={used} "
         f"pooled_used={pooled_used:.3f} dom={dom} effrank={eff} "
         f"gate_passed={gate['passed']}")
     return 0 if gate["passed"] else 1
