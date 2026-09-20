@@ -857,10 +857,8 @@ def run_ablations(model, valid_mols, yva, atom_index, bond_index, device,
             model.D[li].data.copy_(D_backup[li])
 
     # C. within-batch code shuffle
-    gen = torch.Generator().manual_seed(SEED + 1)
-
     def shuffle_fn(A, layer, meta):
-        idx = torch.randperm(A.shape[0], generator=gen, device=A.device)
+        idx = torch.randperm(A.shape[0], device=A.device)
         return A[idx]
 
     res["code_shuffle_valid_mae"] = _valid_mae(model, valid_mols, yva, atom_index,
