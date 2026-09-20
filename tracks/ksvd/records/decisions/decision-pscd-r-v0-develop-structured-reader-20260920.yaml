@@ -1,0 +1,76 @@
+decision_id: decision-pscd-r-v0-develop-structured-reader-20260920
+created: '2026-09-20T11:00:00'
+kind: decision
+study_id: zinc-context-gap
+because: >-
+  PSCD-R-v0 (seed 0, A100; ZINC official train 10000 / valid 1000; official test
+  never loaded) froze the entire PSCD-v0 dictionary (artifact md5
+  b180e9695fb4f0a2cb366338bd58f459; re-asserted Decode(D,C_G)==G 100% train +
+  valid) and changed only how a tiny reader represents a dictionary atom.
+  (1) Inspection found the PSCD-v0 as-shipped composition reader is NOT
+  batch-invariant (collate node layout conflicts with the forward's h[:M]/h[M:]
+  assumption; batch-of-4 vs per-graph predictions differ by up to 1.36 MAE),
+  so the historical Stage-B composition number (valid 0.5429) is not a valid
+  measurement of the frozen object. (2) With the collate corrected (R0, same
+  module) the opaque reader reaches best-valid 0.4346 by step 3000; the
+  as-shipped reader plateaus at 0.5683. (3) A single shared intra-motif graph
+  encoder (R1, 9216 shared params, zero per-motif lookup) reaches 0.4167 at
+  matched step 2000, on par with the raw reader (0.4139). (4) A port-resolved
+  reader (R2) reaches 0.3794 at step 2000 and best-valid 0.3246 at the 6000-step
+  ceiling, at/ below the raw control (0.3363 at 6000). Recovery
+  R_recover^valid = 0.93 (R1) / 1.82 (R2) at step 2000. Gap decomposition at
+  matched 2000: batching defect 0.122, H1 opaque->shared structure 0.039, H2
+  static->port-resolved 0.038 of the 0.164 R0ship->raw gap. An evaluation-only
+  port-mean ablation degrades R2 valid MAE 0.340->0.560, so port-resolved
+  dictionary state is used. Therefore the dominant failure of PSCD-v0 was the
+  motif READER (batching defect + opaque parameterisation + early port collapse),
+  not the frequency-derived dictionary; the frozen frequency motifs are readable
+  by a shared structured reader. The converged (historical ~0.31) raw gap is not
+  resolved, since raw is noisy and still descending at the 6000 ceiling.
+decision: >-
+  PSCD-R-v0 (frozen-dictionary motif readability audit; seed 0, A100; ZINC train
+  10000 / valid 1000, official test never loaded): the dominant PSCD-v0 failure
+  was the opaque (and batching-defective) motif reader, and frequency-derived
+  motifs remain viable. VERDICT (frozen first line): "The dominant PSCD-v0
+  failure was the opaque motif reader; frequency-derived motifs remain viable."
+  DECISION: develop the structured dictionary reader -- a shared intra-motif
+  encoder plus port-resolved occurrence states -- as the next phase, under its own
+  preregistration. Do NOT proceed to task-aware MDL-constrained motif discovery
+  (there is no evidence of a motif-discovery bottleneck), do NOT repair the object
+  (exact/compressive/reusable/port-clean), and do NOT stop the compositional
+  dictionary line. Also record the correction: the PSCD-v0 Stage-B composition
+  reader was batch-defective, so the historical composition MAE is a reader
+  artifact. Evidence: notes/pscd_reader_diagnostic_preregistration.md,
+  notes/pscd_reader_diagnostic_analysis.md,
+  results/pscd_reader_diagnostic/SUMMARY.json,
+  results/pscd_reader_diagnostic/extend_raw/SUMMARY.json,
+  claim-pscd-r-v0-frozen-dictionary-readable-20260920,
+  claim-pscd-v0-composition-reader-batching-defect-20260920.
+alternatives_rejected:
+  - >-
+    Proceed to task-aware / MDL-constrained motif discovery: rejected -- at every
+    matched step the structured readers (R1, R2) recover >= 0.5 (and >= 0.9 at
+    step 2000) of the corrected-opaque->raw gap, and structured train MAE is below
+    raw train MAE at step 2000; there is no evidence that the frequency-selected
+    primitives are the bottleneck.
+  - >-
+    Keep the opaque-ID reader and only fix the batching: rejected -- fixing the
+    batching (R0 0.4558) still leaves a real gap to the shared structured reader
+    (R1 0.4167) and to port-resolved R2 (0.3794) at matched step 2000, so opaque
+    parameterisation and early port collapse are genuine additional reader
+    defects.
+  - >-
+    Stop the compositional dictionary line: rejected -- the frozen frequency
+    dictionary is readable at least as well as the raw atom graph at the tested
+    budget once the reader is fixed, so the representation object is not the
+    problem.
+  - >-
+    Declare the object still task-hostile because the historical 0.5429 is far
+    from raw 0.3113: rejected -- the 0.5429 was produced by a non-batch-invariant
+    reader; it is not a valid measurement of the frozen object.
+revisit_if: >-
+  A pre-registered >=20k-step matched comparison shows the structured reader
+  stays >= 0.08 behind a fully converged raw reader with the shared encoder and
+  100% exact decode intact (then the bottleneck is motif discovery, not the
+  reader); or a seed-1 run fails to reproduce the 0.12 batching-defect
+  contribution.

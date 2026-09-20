@@ -1,0 +1,39 @@
+claim_id: claim-pscd-v0-composition-reader-batching-defect-20260920
+created: '2026-09-20T10:58:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  The PSCD-v0 Stage-B "composition reader" (commit cdae8b0,
+  code/run_pscd_compositional_dictionary_audit.py, collate(kind="comp") +
+  make_module("comp")) is NOT batch-invariant: its collate lays nodes out
+  interleaved per graph ([occ_g0, conn_g0, occ_g1, conn_g1, ...], off += M+Ec)
+  while the forward assumes all occurrence nodes first (h[:M_total] =
+  E_M(occ_ids); h[M_total:] = E_B(conn_ids)). For any multi-graph batch the
+  motif/bond features land on the wrong nodes. Evidence: with a fixed random
+  init, batch-of-4 predictions differ from per-graph single predictions by up
+  to 1.36 MAE for the composition reader, while the bag and raw readers
+  reproduce single predictions to < 1.4e-6. Consequently the historical Stage-B
+  composition number (valid MAE 0.5429) is NOT a valid measurement of the frozen
+  dictionary / opaque representation and must not be interpreted as a property
+  of the PSCD object. The same module with only the collate node order fixed to
+  [all occurrence nodes | all connection nodes] (edges remapped) is
+  batch-invariant and reaches valid MAE 0.4346 (best) at 3000 optimizer steps
+  (vs 0.5683 for the as-shipped reader at 2600 steps) under the PSCD-R-v0
+  protocol. The Stage-A object claims (exact decode, invariance, compression,
+  reuse, ports, collisions) are unaffected; only the Stage-B composition reader
+  instantiation is defective.
+scope: >-
+  ZINC subset, train 10000 / valid 1000, official test never loaded; single seed
+  0, A100; a reader plumbing defect, not a representation claim. Locked by the
+  data-free tests in tests/test_pscd_reader.py.
+evidence:
+  - notes/pscd_reader_diagnostic_preregistration.md
+  - notes/pscd_reader_diagnostic_analysis.md
+  - code/run_pscd_reader_diagnostic.py
+  - tests/test_pscd_reader.py
+  - results/pscd_reader_diagnostic/SUMMARY.json
+revisit_if: >-
+  A future round re-implements the PSCD-v0 Stage-B reader and reproduces a
+  batch-invariant (or batch-dependent) composition number; then re-classify the
+  historical 0.5429 accordingly.

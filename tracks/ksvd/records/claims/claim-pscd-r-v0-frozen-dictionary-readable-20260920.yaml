@@ -1,0 +1,54 @@
+claim_id: claim-pscd-r-v0-frozen-dictionary-readable-20260920
+created: '2026-09-20T10:59:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the FROZEN PSCD-v0 dictionary (ZINC official train 10000 / valid 1000;
+  official test never loaded; commit cdae8b0 artifact md5
+  b180e9695fb4f0a2cb366338bd58f459; re-asserted Decode(D,C_G)==G 100% train +
+  valid; seed 0; A100), changing only how a tiny reader (d=32, L_outer=2,
+  identical optimizer/MAE-loss/head) represents a dictionary atom dramatically
+  improves readability of the lossless composition code. Readers: R0ship =
+  PSCD-v0 as-shipped opaque composition reader; R0 = same module, corrected
+  collate; R1 = structured-static (one shared 9216-param intra-motif graph
+  encoder, motif state h_k=sum_v z_v, port state r_{k,p}=z_p, no per-motif
+  lookup); R2 = port-resolved (per-active-port dynamic state); R3 = matched raw
+  atom graph. At the matched step 2000 best-valid (train/valid): R0ship
+  0.559/0.578, R0 0.418/0.456, R1 0.393/0.417, R2 0.360/0.379, R3 0.407/0.414.
+  Recovery R_recover^valid = (M_R0 - M_struct)/(M_R0 - M_R3): R1 0.93, R2 1.82.
+  At the 6000-step ceiling R2 best-valid 0.3246 (train 0.274) vs R3 0.3363
+  (train 0.317). Gap decomposition at matched 2000: the as-shipped reader defect
+  contributes 0.122 of the 0.164 R0ship->raw gap (74%), opaque->shared-structure
+  (H1) 0.039 (24%), static->port-resolved (H2) 0.038 (23%). An evaluation-only
+  ablation replacing every port vector by the motif mean degrades R2 valid MAE
+  0.340 -> 0.560 (+0.220), so port-resolved dictionary state is genuinely used.
+  Mechanism audit (trained R2 encoder): motif embeddings not collapsed (mean
+  pairwise cosine 0.360, effective rank 2.58); motifs sharing an induced
+  substructure (<=4 atoms) are closer than unrelated (16.89 vs 17.79); ports
+  differentiated (mean within-motif port cosine 0.342; 95% of motifs < 0.9).
+  Conclusion: the dominant PSCD-v0 failure was the opaque (and batching-defective)
+  motif READER, not the frequency-derived dictionary; frequency motifs remain
+  viable, and port resolution is specifically necessary. Caveat: the raw control
+  is noisy and still descending at the 6000 ceiling, so the converged
+  (historical ~0.31) gap is not resolved.
+scope: >-
+  ZINC subset, frozen PSCD-v0 dictionary, train 10000 / valid 1000, official test
+  never loaded; single seed 0; screening budget <= 3000 steps per model with a
+  pre-registered extension to 6000 only for the best structured variant and the
+  raw control; not a benchmark-performance claim (matched tiny-reader diagnostic
+  on raw unstandardised y). R2 has 2.8x the parameters of R0/R3; no
+  parameter-matched superiority over raw is claimed.
+evidence:
+  - notes/pscd_reader_diagnostic_preregistration.md
+  - notes/pscd_reader_diagnostic_analysis.md
+  - code/run_pscd_reader_diagnostic.py
+  - tests/test_pscd_reader.py
+  - results/pscd_reader_diagnostic/SUMMARY.json
+  - results/pscd_reader_diagnostic/extend_raw/SUMMARY.json
+  - results/pscd_reader_diagnostic/learning_curve_valid_combined.png
+revisit_if: >-
+  A >=20k-step matched comparison (structured vs a fully converged raw reader)
+  keeps the structured reader >= 0.08 behind raw with the shared encoder and exact
+  decode intact (would indicate a motif-discovery, not a reader, bottleneck); or
+  a seed-1 run fails to reproduce the 0.12 batching-defect contribution.

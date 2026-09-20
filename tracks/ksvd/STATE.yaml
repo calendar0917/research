@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-pscd-refine-motif-discovery
+phase: post-pscd-r-develop-structured-reader
 updated: 2026-09-20
 
 active_studies:
@@ -255,14 +255,22 @@ authorized_next_action:
   note: >-
     No experiment is authorized. The only admissible next step is writing a new
     preregistration under the relevant protocol (freeze before any terminal
-    read; test_policy=terminal), then explicit human authorization. PSCD-v0
-    (2026-09-20, commit cdae8b0) showed a port-structured compositional code is
-    lossless/invariant/compressive/reusable but not task-friendly under a
-    matched tiny reader; its decision is to refine the motif discovery
-    objective (task-aware primitive selection) under its own preregistration,
-    NOT to proceed to task-driven dictionary selection yet and NOT to repair the
-    composition/port representation. See
-    decision-pscd-v0-abstraction-weak-20260920.
+    read; test_policy=terminal), then explicit human authorization. PSCD-R-v0
+    (2026-09-20, frozen PSCD-v0 dictionary, commits 782f49e4/16e6d6f5, A100;
+    ZINC train 10000 / valid 1000, official test never loaded) showed the
+    dominant PSCD-v0 failure was the opaque motif READER -- a large part of it a
+    correctable batching defect in the Stage-B composition collate (the
+    historical composition MAE 0.5429 is therefore not a valid measurement of
+    the frozen object) -- and that frequency-derived motifs remain viable: a
+    shared structured reader (R1) matches raw at matched step 2000 and a
+    port-resolved reader (R2) at/below raw at the 6000-step ceiling. Its decision
+    is to DEVELOP THE STRUCTURED DICTIONARY READER next, under its own
+    preregistration; NOT to start task-aware motif discovery, NOT to repair the
+    object, NOT to stop the line. This supersedes the PSCD-v0 decision to refine
+    the motif-discovery objective. See
+    decision-pscd-r-v0-develop-structured-reader-20260920,
+    claim-pscd-r-v0-frozen-dictionary-readable-20260920,
+    claim-pscd-v0-composition-reader-batching-defect-20260920.
 
 # ---------------------------------------------------------------------------
 # deferred optional work — explicitly NOT authorized, NOT a live queue
@@ -285,7 +293,8 @@ deferred_optional:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
-  - decision-pscd-v0-abstraction-weak-20260920: "PSCD-v0 (2026-09-20, seed 0, commit cdae8b0, A100; ZINC train 10000 / valid 1000, official test never loaded): a port-structured compositional graph code G <-> (D, C_G) with a 64-rule / max-size-8 data-driven graph-BPE dictionary is VIABLE on all Stage-A hard gates — 100% exact decode (train+valid), 0/10000 relabel mismatches, mean(M_G/n_G)=0.320, 64/64 learned types used (support 8..3135, top-16/32 coverage 0.597/0.823), size>=4 port fraction 0.471, full-PSCD collisions 0, MDL L_PSCD/L_atom=0.215; collision ladder A:1 pair, B=C=D:0. BUT under a matched tiny reader (d=32, L=2, seed 0) the frozen frequency code is not task-friendly: composition valid MAE 0.5429 vs raw atom-graph 0.3113 (+0.232; strong band fails), motif bag 0.5609 so composition adds only +0.018. VERDICT (frozen sentence): the compositional dictionary is lossless and compressive but its abstraction is not task-friendly enough. DECISION: refine the motif discovery objective (task-aware primitives), NOT proceed to task-driven selection yet and NOT repair ports/composition. See notes/pscd_representation_analysis.md, claim-pscd-v0-lossless-compositional-code-20260920."
+  - decision-pscd-r-v0-develop-structured-reader-20260920: "PSCD-R-v0 (2026-09-20, frozen PSCD-v0 dictionary md5 b180e969..., commits 782f49e4/16e6d6f5, A100; ZINC train 10000 / valid 1000, official test never loaded; Decode(D,C_G)==G re-asserted 100% train+valid): the dominant PSCD-v0 failure was the opaque motif READER. Found pre-run that the as-shipped Stage-B composition collate is NOT batch-invariant (node layout vs h[:M]/h[M:] assumption; batch-vs-single diff up to 1.36 MAE), so the historical composition valid MAE 0.5429 is a reader artifact. Matched step-2000 best-valid: R0ship 0.578 | R0 corrected-opaque 0.456 | R1 structured-static 0.417 | R2 port-resolved 0.379 | R3 raw 0.414; recovery R_recover^valid R1 0.93 / R2 1.82; at the 6000-step ceiling R2 best-valid 0.3246 vs raw 0.3363. Gap decomposition at 2000: batching defect 0.122 (74%), H1 0.039, H2 0.038. Evaluation-only port-mean ablation degrades R2 valid 0.340->0.560, so port-resolved state is used. VERDICT (frozen first line): the dominant PSCD-v0 failure was the opaque motif reader; frequency-derived motifs remain viable. DECISION: develop the structured dictionary reader next; not task-aware motif discovery, not object repair, not stopping the line. See notes/pscd_reader_diagnostic_analysis.md, results/pscd_reader_diagnostic/SUMMARY.json, claim-pscd-r-v0-frozen-dictionary-readable-20260920, claim-pscd-v0-composition-reader-batching-defect-20260920."
+  - decision-pscd-v0-abstraction-weak-20260920: "PSCD-v0 (2026-09-20, seed 0, commit cdae8b0, A100; ZINC train 10000 / valid 1000, official test never loaded): a port-structured compositional graph code G <-> (D, C_G) with a 64-rule / max-size-8 data-driven graph-BPE dictionary is VIABLE on all Stage-A hard gates — 100% exact decode (train+valid), 0/10000 relabel mismatches, mean(M_G/n_G)=0.320, 64/64 learned types used (support 8..3135, top-16/32 coverage 0.597/0.823), size>=4 port fraction 0.471, full-PSCD collisions 0, MDL L_PSCD/L_atom=0.215; collision ladder A:1 pair, B=C=D:0. BUT under a matched tiny reader (d=32, L=2, seed 0) the frozen frequency code is not task-friendly: composition valid MAE 0.5429 vs raw atom-graph 0.3113 (+0.232; strong band fails), motif bag 0.5609 so composition adds only +0.018. VERDICT (frozen sentence): the compositional dictionary is lossless and compressive but its abstraction is not task-friendly enough. DECISION: refine the motif discovery objective (task-aware primitives), NOT proceed to task-driven selection yet and NOT repair ports/composition. See notes/pscd_representation_analysis.md, claim-pscd-v0-lossless-compositional-code-20260920. NOTE (2026-09-20, PSCD-R-v0): the Stage-B composition number here was produced by a non-batch-invariant reader and is superseded; the object claims are unaffected."
   - decision-tigd-v0-pilot-failure-20260920: "TIGD-v0 (2026-09-20, seed 0, commit 28bab97, A100; ZINC train 2048 / valid 1000, official test never loaded): a shared dictionary of WHOLE attributed incidence-graph atoms (K=16, q_V=q_E=24, softmax categorical prototypes, R_k[:,b]=2*softmax_a(Xi) endpoint mass) fit by a mixture code alpha_G in Delta_16 and FREE graph-specific soft transport P_V/P_E FAILS its pre-registered feasibility gate (5/10). L_V -25% / L_E -42% but L_B only -1.4% (0.0835 -> 0.0823); code collapses (effective support 1.01, 97.8% one-hot, argmax atom 7 = 83%, 13/16 atoms dead); degree-preserving rewiring is invisible (Delta_rewire 5.8e-08 ~= Delta_perm 1.9e-08; random 0.545); structure-off (lambda_B=0) changes codes by 1.0e-04; unrelated random graphs reconstruct as well as originals (0.5891 vs 0.5858, L_B even lower for random); entropic transport silently mal-converges (marginal error 1.0e-04 -> 1.24e-02). Frozen-code probe valid MAE 1.32 >> DOI 0.3865 / scattering 0.3657 / I-CRATE 0.399. Verdict: soft transport absorbs too much graph identity; this graph-space dictionary formulation is not viable. Decision: skip the full stage; revise the graph-space reconstruction / transport objective under a new preregistration. See notes/tigd_representation_analysis.md."
   - decision-3f9c1a7e: "NPA audit (2026-09-21, seed 20260921, commit 6585bf6): neither a FIXED nonlinear scattering lift (P=(I+S)/2, dyadic wavelets Psi_j with interleaved pointwise modulus, 192-D per-object response, DOI distributional readout, 0 structural params) nor a TINY task-coupled incidence lift (h=16, L=2 atom-bond alternating tanh, 2496 structural params, fixed-seed RFF, MAE-only end-to-end) materially fixes the DOI readout on ZINC train 10000 / valid 1000 (official test never loaded). Fixed scattering valid 0.3865 -> 0.3657 (+0.021) and needs D_RFF 2048 (dim 6146 vs 3074); learned incidence valid 0.3865 -> 0.3310 (-0.0555, train 0.3138) with the best geometry (R_topo 9.71 -> 3.85, best WL top-1 0.9356) but still >0.25. Learned post-training RFF audit p95 0.022 (not confounded); no-message control not triggered (<0.10 improvement). Verdict: Hypothesis C — even a minimal task-coupled lift lacks enough capacity. Decision: a minimally parameterised pre-dictionary structural lift is insufficient for ZINC; reconsider whether the whole-graph dictionary can remain the primary representation. See notes/nonlinearity_placement_analysis.md."
   - decision-4b8e2d1f: "DOI audit (2026-09-19, seed 20260920): the distributional operator-incidence lift (per-object multiscale responses + atom/bond/incidence-pair empirical distributions + log masses, same S_G/X_G as AIOM) is exactly permutation-invariant (max err 3.5e-17 / 10000 checks), RFF-accurate (median<0.02, p95<0.05, Spearman>=0.995) and collision-free (min non-iso std distance 0.020 -> 0.223), and improves the frozen AIOM T=4 dense probe 0.4321 -> 0.3865 valid (train 0.3956 -> 0.3273) with a real multiscale gain (T=0 0.520 -> T=2 0.403 -> T=4 0.387). But it stays in the pre-registered WEAK band (valid>0.30, train>0.25) and degree-preserving rewiring is still ~1% relative (random pairs ~11x larger standardised). Decision: the fixed-lift premise is the bottleneck -> move to a task-coupled minimal structural lift; no dictionary/ISTA/K-SVD, no T>4, no higher-order tuples. See notes/doi_representation_analysis.md."
