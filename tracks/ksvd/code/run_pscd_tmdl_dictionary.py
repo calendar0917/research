@@ -612,6 +612,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--n-monitor", type=int, default=N_MONITOR)
     parser.add_argument("--arms", type=str, default="freq,task,tmdl")
     parser.add_argument("--arm", type=str, default=None, choices=["FREQ", "TM", "TASK"])
+    parser.add_argument("--artifact", type=Path, default=None,
+                        help="stageB frozen dictionary pkl (default: <out>/dictionary_<ARM>.pkl)")
     parser.add_argument("--max-epochs", type=int, default=None, help="stageB smoke override only")
     parser.add_argument("--patience", type=int, default=None, help="stageB smoke override only")
     parser.add_argument("--limit", type=int, default=None, help="stageB smoke override only")
@@ -635,7 +637,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.stage == "stageB":
         arm = args.arm or "TM"
-        artifact = out / f"dictionary_{arm}.pkl"
+        artifact = args.artifact or (out / f"dictionary_{arm}.pkl")
         if not artifact.exists():
             raise SystemExit(f"missing frozen dictionary artifact: {artifact}")
         with artifact.open("rb") as fh:
