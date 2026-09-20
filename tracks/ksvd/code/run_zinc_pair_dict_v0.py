@@ -438,9 +438,10 @@ class GraphCodeModel:
 class EpochTrainer:
     def __init__(self, model, train_mols, monitor_mols, ytr, ymon, atom_index,
                  bond_index, device, arm, batch_fn, log=print, eval_monitor=True,
-                 lam: float = 0.0):
+                 lam: float = 0.0, batch_size: int = BATCH):
         torch = _torch()
         self.model = model
+        self.bs = int(batch_size)
         self.train_mols = list(train_mols)
         self.monitor_mols = list(monitor_mols) if monitor_mols else []
         self.eval_monitor = bool(eval_monitor and self.monitor_mols)
@@ -483,8 +484,8 @@ class EpochTrainer:
             self.lam = lam
         preds = []
         with torch.no_grad():
-            for s in range(0, len(mols), BATCH):
-                preds.append(self._fwd(self._batch(mols[s:s + BATCH])))
+            for s in range(0, len(mols), self.bs):
+                preds.append(self._fwd(self._batch(mols[s:s + self.bs])))
         self.lam = prev
         return torch.cat(preds)
 
@@ -514,8 +515,8 @@ class EpochTrainer:
             order = torch.randperm(n, generator=self.gen).tolist()
             ep_loss = 0.0
             nb = 0
-            for s in range(0, n, BATCH):
-                idx = order[s:s + BATCH]
+            for s in range(0, n, self.bs):
+                idx = order[s:s + self.bs]
                 batch = self._batch([self.train_mols[i] for i in idx])
                 pred = self._fwd(batch)
                 tgt = self.ytr[torch.as_tensor(idx, dtype=torch.long, device=self.device)]
@@ -829,7 +830,7 @@ def run_overfit(args, log) -> int:
     model = build_model(arm, n_atom, n_bond).to(args.device)
     trainer = EpochTrainer(model, train_mols, None, y_train, None, ai, bi,
                            args.device, f"{arm}_overfit", batch_fn_for(arm), log=log,
-                           eval_monitor=False)
+                           eval_monitor=False, batch_size=args.batch)
     out = trainer.train(max_epochs=args.max_epochs, patience=999)
     hist = out["history"]
     mae1 = hist[0]["train_mae"]
@@ -864,7 +865,7 @@ def run_screen(args, log) -> int:
     model = build_model(arm, n_atom, n_bond).to(args.device)
     trainer = EpochTrainer(model, dev, mon, ydev, ymon, ai, bi, args.device,
                            f"{arm}_screen", batch_fn_for(arm), log=log,
-                           eval_monitor=True)
+                           eval_monitor=True, batch_size=args.batch)
     out = trainer.train(max_epochs=args.max_epochs, patience=args.patience)
     payload = {"provenance": provenance(args.device, {"arm": arm,
                                                       "n_dev": SCREEN_DEV_N,
@@ -1044,6 +1045,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--max-epochs", type=int, default=None)
+    parser.add_argument("--batch", type=int, default=BATCH)
     parser.add_argument("--patience", type=int, default=PATIENCE)
     args = parser.parse_args(argv)
     _configure_determinism()
