@@ -451,7 +451,8 @@ def invariance_check(vocab: Vocabulary, sequence, mols, ranks, n_graphs: int = 2
             perm = rng.permutation(mol.n)
             inv = np.empty_like(perm)
             inv[perm] = np.arange(mol.n)
-            new_node = np.asarray(mol.node_types, dtype=np.int64)[perm]
+            # relabelling: old atom ``a`` -> new atom ``perm[a]``
+            new_node = np.asarray(mol.node_types, dtype=np.int64)[inv]
             edges = []
             bts = []
             for i, (a, b) in enumerate(mol.bonds):

@@ -129,6 +129,17 @@ def test_truncate_vocabulary_prefix_layout():
     assert len(sub) == 4
 
 
+def test_invariance_check_zero_mismatch():
+    mols = _corpus(12)
+    bonds = [graph_bonds(m) for m in mols]
+    ranks = [mol_rank(m) for m in mols]
+    vocab = Vocabulary()
+    sequence = _learn_short_frequency(vocab, mols, bonds, ranks, steps=3)
+    res = rm.invariance_check(vocab, sequence, mols, ranks, n_graphs=6, n_relabels=3)
+    assert res["checked"] == 18
+    assert res["mismatch"] == 0
+
+
 def test_discover_rate_completes_under_loose_target(monkeypatch):
     mols = _corpus(12)
     y = np.linspace(0.0, 1.0, len(mols))
