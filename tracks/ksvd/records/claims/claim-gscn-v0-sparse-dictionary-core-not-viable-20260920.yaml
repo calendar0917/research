@@ -1,0 +1,74 @@
+claim_id: claim-gscn-v0-sparse-dictionary-core-not-viable-20260920
+created: '2026-09-20T19:05:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On ZINC (official PyG subset=True; canonical train 10000 / valid 1000; official
+  test never loaded; seed 0; A100; commit e7f5e02; canonical OPTIMIZED_PROTOCOL;
+  fixed equal-weight Top-5 soup), a task-driven SPARSE DICTIONARY-CORE graph
+  network does NOT provide value as the hidden-state transition. The round's
+  premise was restated first: the canonical B-Null (49,343 params, soup 0.123028)
+  and B-Full (84,495, soup 0.119818) are ROOTED-PATCH models that already consume
+  handcrafted structural statistics and differ only by a learned 16-D local token
+  (gap 0.0032 < 0.02); so GSCN input was frozen to RAW atom/bond/adjacency only
+  and the primary baseline became a raw-input graph model B-Null-Raw (repo raw
+  reader primitive) at d=64, L=4. Arms (soup valid MAE): B-Null-Raw 0.1950
+  (55,681 params), param-matched generic MLP control 0.1982 (89,985),
+  No-Threshold-GSCN (lambda=0) 0.2605 (89,473), Sparse-GSCN 0.2123 (89,473), vs
+  B-Full reference 0.119818. Deltas: Delta_Null = -0.0173 (sparse WORSE than the
+  raw baseline), Delta_Capacity = -0.0141 (sparse worse than the generic control),
+  Delta_Sparsity = +0.0482 (the explicit lambda threshold DOES help within the
+  dictionary-core family). Pre-registered gates: strong-positive FALSE; the
+  CAPACITY-ONLY failure gate FIRES (M_Generic 0.1982 <= M_Sparse 0.2123);
+  sparsity-not-needed FALSE (explicit sparsity is supported); no ambiguous band.
+  The handcrafted gap M_Null - M_Full = 0.0752 >= 0.02, but rho = -0.230 < 0
+  (GSCN widens the gap; no recovery). Mechanism: genuinely active and sparse
+  (active fraction 0.060-0.078 per layer, atoms used 75-84%, no atom >9.1% of
+  non-zeros, effective rank 19.5-25.2, coherence 0.76-0.93, ||D_final-D_init||_F
+  ~11, task gradients reach D at every layer), NOT collapsed and NOT an
+  optimization failure (train loss descends to ~0.17). Inference ablations (no
+  retraining, intact 0.2271) confirm heavy dependence on the learned structure:
+  atom permutation 0.0, random dictionary +40.71, code shuffle +2.58, mean code
+  +4.47. Stage-0 data-free tests all passed; Stage-1 train-only smoke gate passed
+  (pooled atom usage 0.590). Post-hoc, top-activating nodes show above-random
+  rooted radius-2 WL concentration (0.24-0.28 vs 0.044) but no predictive gain.
+  FROZEN FIRST LINE: 'The gain is explained by generic model capacity rather than
+  sparse dictionary learning.' (strictly there is no gain: NO GSCN variant beats
+  the raw baseline; the generic control is at least as good as Sparse-GSCN.)
+scope: >-
+  ZINC subset, canonical train 10000 / valid 1000, official test never loaded;
+  single seed 0. d=64, L=4, K=128, T=3, lambda calibrated once (label-free 80th
+  percentile) and frozen; no K/lambda/T/depth/width sweep; no residual/bypass;
+  no reconstruction auxiliary loss; no PSCD/GraphBPE/motifs/ports/MDL/handcrafted
+  structural statistics as input. The raw baseline is a lifted repo raw reader
+  (the repo has no canonical raw-graph backbone); GSCN adds 2 LayerNorms and uses
+  the same head/pooling as the raw baseline. Deltas are at the seed-0 scale; valid
+  only. Result is NOT a demonstration that dictionary coding is unusable in
+  general, only that THIS optimization-derived sparse graph update is dominated
+  under the canonical ZINC regime at this capacity.
+evidence:
+  - notes/gscn_v0_preregistration.md
+  - notes/gscn_v0_analysis.md
+  - code/run_gscn_v0.py
+  - code/analyze_gscn_v0.py
+  - tests/test_gscn_v0.py
+  - results/gscn_v0/stage0_tests.json
+  - results/gscn_v0/smoke_gate.json
+  - results/gscn_v0/params.json
+  - results/gscn_v0/summary_bnull_raw.json
+  - results/gscn_v0/summary_generic.json
+  - results/gscn_v0/summary_nothresh.json
+  - results/gscn_v0/summary_sparse.json
+  - results/gscn_v0/audit_sparse.json
+  - results/gscn_v0/ablation_sparse.json
+  - results/gscn_v0/semantics_sparse.json
+  - results/gscn_v0/analysis.json
+revisit_if: >-
+  A dictionary-core parameterisation with a different objective/optimization
+  (e.g. a learned encoder that stays coupled to reconstruction, a continuum /
+  annealing of lambda, T unbounded, or a dictionary-core WITHOUT the extra
+  LayerNorms) both reproduces B-Null-Raw AND beats it by >=0.02 through the sparse
+  code (with sparse, non-collapsed codes) -> the negative result is specific to
+  the frozen ISTA/ReLU parameterisation; or a raw baseline that is NOT better than
+  the generic control appears, which would change the capacity-only reading.

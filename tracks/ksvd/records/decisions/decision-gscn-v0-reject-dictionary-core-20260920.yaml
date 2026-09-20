@@ -1,0 +1,71 @@
+decision_id: decision-gscn-v0-reject-dictionary-core-20260920
+created: '2026-09-20T19:06:00'
+kind: decision
+study_id: zinc-context-gap
+because: >-
+  GSCN-v0 (2026-09-20, seed 0, commit e7f5e02, A100, ZINC canonical train 10000 /
+  valid 1000, official test never loaded) tested whether task-driven sparse
+  dictionary coding can IS the graph hidden-state transition and recover structure
+  from raw topology. Reading the repo first showed the canonical B-Null/B-Full are
+  rooted-patch models that already use handcrafted statistics and differ only by a
+  learned 16-D local token (gap 0.0032), so the input discipline was frozen to raw
+  atom/bond/adjacency and the primary baseline became a raw graph model B-Null-Raw.
+  Under the canonical protocol: B-Null-Raw soup 0.1950 (55,681 params), generic
+  param-matched control 0.1982 (89,985), No-Threshold-GSCN 0.2605 (89,473),
+  Sparse-GSCN 0.2123 (89,473) vs B-Full reference 0.119818. No GSCN variant beats
+  the raw baseline; the param-matched generic control is at least as good as
+  Sparse-GSCN, so the pre-registered capacity-only failure gate fires. The sparse
+  mechanism is genuinely active (sparse codes, non-collapsed dictionary, task
+  gradients reach D, ablations matter) and the explicit lambda threshold helps
+  inside the family (+0.048 over lambda=0), but this does not make the
+  dictionary-core competitive. Stage-0 tests and the Stage-1 smoke gate passed;
+  the failure is neither mechanism collapse nor an optimization failure (train loss
+  descends).
+decision: >-
+  REJECT the dictionary-core architecture and REASSESS the research premise.
+  Do not continue developing a dictionary-core / sparse-coding hidden-state update
+  on this raw ZINC backbone, and do not "fix" it by adding a residual/side channel,
+  a bigger dictionary, or a learned encoder. A task-driven sparse dictionary does
+  not currently serve as the graph hidden-state update: the plainest raw SiLU
+  message-passing learner is better, and a parameter-matched generic nonlinear
+  control is not worse than Sparse-GSCN. No official test was opened, so no test
+  is spent by this round. Any next step requires a NEW pre-registration.
+alternatives_rejected:
+  - item: Buy a seed-1 paired confirmation of the primary comparison
+    because: >-
+      the primary gate is not in the ambiguous band (Delta_Null = -0.0173 < 0 and
+      Delta_Capacity = -0.0141, |Delta_Sparsity| = 0.048); a second seed would not
+      change the "no variant beats the raw baseline" conclusion.
+  - item: Investigate one optimization-level revision of the sparse coding block
+    because: >-
+      the pre-registered capacity-only failure gate fires (M_Generic <= M_Sparse);
+      even the no-threshold dictionary-core is +0.065 worse than the raw baseline,
+      and the generic control does not beat the raw baseline either, so there is no
+      evidence a dictionary-core optimization revision would reach the raw learner.
+      Recorded as a revisit_if condition instead, not a queued experiment.
+  - item: Drop sparsity and keep dictionary factorization alone
+    because: >-
+      the lambda=0 arm is substantially WORSE than the calibrated-lambda arm
+      (0.2605 vs 0.2123), so explicit sparsity is the one dictionary-core component
+      that helps; removing it is not a path to viability.
+  - item: Reuse PSCD/GraphBPE/motif/port/MDL machinery to rescue the premise
+    because: >-
+      this round was an explicit reset away from those artifacts and the premise
+      under test was dictionary coding from raw topology, not those vocabularies.
+consequences:
+  - >-
+    The "sparse dictionary coding IS the hidden-state transition" premise is not
+    supported on raw ZINC under the canonical regime; the negative result is
+    recorded with the full mechanism/ablation evidence so it is not re-run.
+  - >-
+    The canonical handcrafted-statistics models (B-Full 0.119818 / B-Null 0.123028)
+    remain ~0.075 MAE better than the best raw graph model built here (0.1950),
+    and the raw model is not improved by either a generic MLP control or a
+    dictionary core.
+next_action: >-
+  NONE auto-authorized. If this line is revisited it must start from a NEW
+  pre-registration and may only test the revisit_if condition (a dictionary-core
+  parameterisation, without the extra LayerNorms and with an objective/optimization
+  change, that reproduces AND beats B-Null-Raw by >=0.02 via sparse non-collapsed
+  codes). Do not reopen the official test (it is spent and reporting-only), and do
+  not resume motif/port/PSCD repair.
