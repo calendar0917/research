@@ -1,0 +1,48 @@
+claim_id: claim-pscd-v0-lossless-compositional-code-20260920
+created: '2026-09-20T10:12:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  ON ZINC (official train 10000 / valid 1000; official test never loaded; seed 0;
+  commit cdae8b0; A100 host res), a graph sparse code can be a STRUCTURED OBJECT
+  rather than a coefficient vector: G <-> (D, C_G), with D a shared dictionary of
+  64 learned, cross-graph-reused attributed typed-bond subgraph primitives
+  (max 8 atoms; learned by data-driven graph BPE from train only) and C_G a
+  graph-specific port-aware composition graph whose edges are the full tuple
+  (source occurrence, source canonical port, bond type, target occurrence,
+  target port). The PROPERTY claim is: this code is (i) exactly lossless --
+  Decode(D,C_G) reconstructs 1000/1000 valid and 10000/10000 train by exact
+  colored-incidence canonical key; (ii) exactly permutation invariant --
+  500 graphs x 20 atom+bond relabelings (10000 full re-tokenizations +
+  lex-min port mappings + decodes) give 0 representation mismatches and 0
+  decode failures; (iii) compressive -- mean(M_G/n_G) = 0.3198 train / 0.3215
+  valid (~3.2x), MDL proxy L_PSCD/L_atom = 0.215; (iv) genuinely reused --
+  64/64 learned types used, 1/64 with train occurrence < 10, graph support
+  8..3135, top-16/32 occurrence coverage 0.597/0.823; (v) port-clean -- over
+  size>=4 occurrences the mean port fraction p_j/|V| = 0.471 and only 19.4%
+  are near-fully-ported; (vi) injective for the full code -- 0 non-isomorphic
+  collisions in 11000 molecules (A 1 pair, B=C=D 0). The LIMITATION is that
+  under a matched tiny reader (d=32, L=2, identical optimizer/protocol, seed 0)
+  the frozen frequency-driven code is NOT task-friendly: composition-graph
+  valid MAE 0.5429 vs raw atom-graph 0.3113 (+0.232), with the motif bag at
+  0.5609 (composition over bag buys only +0.018). So the abstraction is
+  lossless/compressive/reusable but hides task-relevant local organisation;
+  the deficit is in the (frequency-only) CHOICE of primitives, not in the
+  composition/port representation.
+scope: >-
+  ZINC subset (PyG ZINC, subset=True); frozen 64-rule / max-size-8 vocabulary;
+  train-only learning. Not a benchmark-performance claim: Stage B uses a tiny
+  fixed reader and raw unstandardised y, so its MAE is a matched-comparison
+  diagnostic only. Reuses the repository's exact colored-incidence
+  canonicalization (pynauty) for motif identity and ground-truth equivalence.
+evidence:
+  - notes/pscd_preregistration.md
+  - notes/pscd_representation_analysis.md
+  - code/run_pscd_compositional_dictionary_audit.py
+  - results/pscd_compositional/SUMMARY.json
+  - results/pscd_compositional/dictionary_top20.json
+revisit_if: >-
+  A task-coupled dictionary-selection objective is pre-registered; re-test
+  whether the matched composition reader closes to within +0.03 of raw while
+  keeping mean(M_G/n_G) <= 0.55 and 100% exact decode.

@@ -1,0 +1,63 @@
+alternatives_rejected:
+  - 'Proceed to task-driven dictionary selection: rejected — the frozen preregistration gates it on the Stage-B composition reader being close to the raw reader (MAE_comp <= MAE_raw + 0.03); here MAE_comp 0.5429 vs MAE_raw 0.3113 (+0.232), so the gate is not met.'
+  - 'Refine the composition / port representation: rejected — exact reconstruction is 100% (A1), the full PSCD code has zero non-isomorphic collisions (A6), and port complexity is low (mean p_j/|V| over size>=4 occurrences 0.47; only 19% near-fully-ported, A5). There is no composition/port defect to repair.'
+  - 'Stop the compositional dictionary line: rejected as premature — the representation object is healthy on exactness, invariance, compression (mean M_G/n_G 0.320), reuse (64/64 types used) and port cleanliness; only its task capacity under a matched tiny reader is weak, and that weakness is localised to the frequency-only choice of primitives.'
+  - 'Treat the ladder as evidence of a port defect because B/C/D do not separate: rejected — B already has zero non-isomorphic collisions, so the weak ladder separation is a positive property of the composition code (a motif bag is already almost injective on ZINC), not a failure of the port mechanism; C=D is explicitly allowed by the preregistration.'
+because: >-
+  On the pre-registered object (PSCD-v0, seed 0, commit cdae8b0, A100; ZINC
+  train 10000 / valid 1000, official test never loaded), Stage A is a clean pass
+  on every hard gate. Data-driven graph BPE (64 merge rules, max motif size 8,
+  train only) yields 85 motif types (21 singletons + 64 learned). Decode(D,C_G)
+  reconstructs 100% of train and valid by exact colored canonical key (A1).
+  500 train graphs x 20 random relabelings (10000 checks, full frozen
+  re-tokenization + lex-min port mapping + decode) show 0 representation
+  mismatches and 0 decode failures (A2). mean(M_G/n_G) = 0.3198 train / 0.3215
+  valid, ~3.2x compression (A3). All 64 learned types are used, 1/64 has train
+  occurrence < 10, graph support 8..3135, top-16/32 coverage 0.597/0.823 (A4).
+  Over size>=4 occurrences the mean port fraction is 0.471 and only 19.4% are
+  near-fully-ported (A5). The collision ladder is A: 1 non-isomorphic pair
+  confused, B=C=D: 0 (A6). The MDL proxy L_PSCD/L_atom = 0.215. Stage B (frozen
+  dictionary; matched tiny readers d=32, L=2, identical optimizer/protocol,
+  seed 0) gives valid MAE: composition graph 0.5429 (train 0.4884), motif bag
+  0.5609 (train 0.4822), raw atom graph 0.3113 (train 0.2835). The
+  pre-registered bands read: strong = False (comp - raw = +0.232);
+  composition-matters = False (bag - comp = 0.018 < 0.02); weak abstraction =
+  True (comp > raw + 0.08 and train MAE also much higher). So the lossless,
+  invariant, compressive, reusable port-structured code is not task-friendly
+  under a matched tiny reader, and the gap already exists on train — the
+  frequency-driven abstraction hides task-relevant local organisation rather
+  than merely fitting worse.
+decision: >-
+  PSCD-v0 (port-structured compositional graph dictionary; seed 0, commit
+  cdae8b0, A100; ZINC train 10000 / valid 1000, official test never loaded):
+  the representation object is VIABLE as a lossless, permutation-invariant,
+  compressive, cross-graph-reused and port-clean structured code (all Stage-A
+  gates A1-A6 pass: 100% exact decode; 0/10000 relabel mismatches;
+  mean(M_G/n_G)=0.320; 64/64 types used; port fraction 0.47 for size>=4; full
+  PSCD collisions 0; MDL ratio 0.215). But it is NOT task-friendly under a
+  matched tiny reader: composition-graph valid MAE 0.543 vs raw atom-graph 0.311
+  (+0.232, failing the <=+0.03 strong band), with the motif bag at 0.561 so
+  relational composition adds only 0.018 over counts. VERDICT (frozen sentence):
+  "The compositional dictionary is lossless and compressive, but its abstraction
+  is not task-friendly enough." DECISION: refine the motif discovery objective —
+  the primitives are chosen purely by frequency and hide task-relevant local
+  organisation; the next round should decide which primitives are worth putting
+  into the dictionary in a task-aware way, under its own preregistration. Do NOT
+  proceed to task-driven dictionary selection yet, and do not repair the
+  composition/port representation (it is exact and clean). Evidence:
+  notes/pscd_representation_analysis.md,
+  results/pscd_compositional/SUMMARY.json,
+  results/pscd_compositional/dictionary_top20.{json,png}.
+decision_id: decision-pscd-v0-abstraction-weak-20260920
+kind: decision
+created: '2026-09-20T10:10:00'
+revisit_if: >-
+  A task-coupled but still port-structured and still exactly-reconstructable
+  dictionary-selection objective is pre-registered and the matched composition
+  reader moves to within +0.03 of the raw reader while keeping
+  mean(M_G/n_G) <= 0.55 and 100% exact decode. If under a task-aware dictionary
+  the composition reader still stays >= 0.08 behind raw, then the ladder result
+  (motif bag nearly injective; composition adds ~0.018) plus the Stage-B gap
+  indicates the whole-graph compressed-code route is not task-friendly and the
+  compositional dictionary line should be stopped rather than refined again.
+study_id: zinc-context-gap
