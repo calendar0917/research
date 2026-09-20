@@ -1,0 +1,69 @@
+decision_id: decision-pscd-tmdl-v0-strengthen-regularization-20260920
+created: '2026-09-20T14:12:00'
+kind: decision
+study_id: zinc-context-gap
+because: >-
+  PSCD-TMDL-v0 (seed 0, A100; ZINC canonical train 10000 / valid 1000, official
+  test never loaded; deterministic 9000 discovery + 1000 internal-monitor split,
+  only discovery drives merges; both dictionaries exact Decode==G 100%) changed
+  ONLY the motif-selection rule while freezing reader / ports / vocabulary budget
+  / max motif size. Stage B trained the identical PSCD-SC-v0 StrongPortOperator
+  (192257 params) on both frozen dictionaries: B-FREQ (frequency BPE) best valid
+  0.27078@113 (Top-5 soup 0.25331, early stop epoch 153) vs B-TM (task+MDL
+  lexical selection) best valid 0.20374@230 (soup 0.19517, 240 epochs). The
+  pre-registered predictive gate fires decisively: Delta_dictionary = 0.0670
+  (best) / 0.0581 (soup) / +0.0523 at the matched 153-epoch budget, MAE_TM <=
+  0.22, and the B-TM train-valid gap is SMALLER (0.1186 vs 0.1389) while fitting
+  train better. The two dictionaries are almost disjoint (Jaccard 0.058). This is
+  the first direct evidence that the task signal can select a better reusable
+  graph dictionary than frequency alone. HOWEVER the pre-registered gate also
+  required healthy reuse / non-collapsed compression, and that half is only
+  partially met: B-TM's dictionary is materially LESS compressive and less reused
+  (dynamic-state ratio 1.392 vs 0.888; occurrence/atom 0.555 vs 0.315; median
+  support 140 vs 506; 6 low-support + 2 unused motifs vs 1 + 0). The predictive
+  gain is therefore entangled with reduced compression: a dictionary that keeps
+  more of the raw graph is intrinsically easier for the reader, so the observed
+  +0.067 cannot yet be attributed to task-relevant abstraction rather than to
+  'less abstraction'. The cheap Ridge probe is consistent with this ambiguity
+  (D_TM ~ D_freq on monitor despite far more tokens) but cannot resolve it.
+decision: >-
+  PSCD-TMDL-v0 VERDICT (frozen first line): 'Task supervision materially improves
+  the reusable compositional dictionary' -- recorded WITH the mandatory qualifier
+  that the task+MDL dictionary is also materially less compressive and less
+  reused, so 'reusable/compressive' is only partially supported. DECISION:
+  strengthen dictionary regularization before further task coupling. The required
+  next step is a COMPRESSION-MATCHED CONTROL: constrain task+MDL discovery so its
+  occurrence / dynamic-state budget matches D_freq (or add an explicit
+  reuse / graph-support (and dynamic-state) penalty to the MDL objective) and
+  re-run the identical strong reader. Formalise task-driven dictionary learning
+  (alternating / reader-gradient) ONLY IF the task-selection gain survives at
+  matched compression; if it vanishes, the effect was reduced compression and the
+  abstraction gap is not addressed by task-coupled boundary selection. Do NOT
+  formalise an end-to-end objective on the current, compression-confounded
+  result; do NOT sweep beta/K/reader/ports; do NOT open either official test.
+alternatives_rejected:
+  - >-
+    formalize alternating task-driven dictionary learning immediately: rejected --
+    the predictive gate fired but the compression/reuse half of the gate only
+    partially held, and a lower-compression dictionary is intrinsically easier, so
+    the gain is not yet attributable to task relevance; formalising now would bake
+    in a confounded effect.
+  - >-
+    run one reader-gradient dictionary-selection diagnostic: rejected for this
+    step -- a differentiable/gradient selector is a larger change and cannot
+    distinguish task relevance from compression any better than a matched-budget
+    discrete control, which is cheaper and directly targets the confound.
+  - >-
+    reject task coupling as no-signal / overfit: rejected -- Delta 0.067 > 0.04,
+    the gain is stable from epoch 50 to 240 and at matched budget, B-TM fits train
+    AND valid better with a smaller gap, so this is not overfitting (the cheap
+    discovery-monitor gap +0.0098 did NOT carry over to official valid).
+  - >-
+    reconsider dictionary-as-primary representation: rejected -- the strong
+    reader improved substantially under a task-selected dictionary, so the
+    representation family remains live; the open issue is controlling the
+    compression budget, not abandoning the line.
+  - >-
+    report the 3.2x-style compression claim: rejected -- dynamic state is 0.888x
+    raw for D_freq and 1.392x raw for D_TM; no computational-compression claim is
+    made.

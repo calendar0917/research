@@ -1,0 +1,63 @@
+claim_id: claim-pscd-tmdl-v0-task-mdm-dictionary-selection-20260920
+created: '2026-09-20T14:10:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On ZINC (official PyG subset=True; canonical train 10000 / valid 1000; official
+  test never loaded; seed 0; A100), changing ONLY the motif-selection rule of the
+  PSCD graph dictionary -- frequency vs task+MDL, with reader, ports, vocabulary
+  budget and max motif size frozen -- changes the strong-reader held-out MAE by
+  Delta_dictionary = MAE_FREQ - MAE_TM = 0.0670 (best valid) / 0.0581 (Top-5
+  soup), and +0.0523 at a matched epoch budget. Dictionaries were learned on a
+  deterministic 9000 discovery / 1000 internal-monitor split of the canonical
+  train (only discovery drives every merge); both dictionaries are exact
+  (Decode(D,C_G)==G 100% train+valid) and use 64 merges / max size 8. Stage B
+  trained the IDENTICAL PSCD-SC-v0 StrongPortOperator (192257 params) on both
+  frozen dictionaries with identical protocol/seed/data/checkpoints. B-FREQ best
+  valid 0.27078@113 (soup 0.25331, early stop 153) vs B-TM best valid 0.20374@230
+  (soup 0.19517, 240 epochs). B-TM fits TRAIN better (0.0852 vs 0.1318) AND
+  generalises better, with a SMALLER train-valid gap (0.1186 vs 0.1389), so the
+  gain is a genuine representation improvement, not variance or overfitting. The
+  task+MDL and frequency dictionaries are almost disjoint (Jaccard 0.058; 7/64
+  shared motif types; 0 identical positional merge rules). MANDATORY CAVEAT: the
+  task+MDL dictionary is materially LESS compressive and less reused than the
+  frequency control -- dynamic-state ratio (occurrences + active ports)/atoms =
+  1.392 vs 0.888 (occurrence/atom 0.555 vs 0.315), median graph support 140 vs
+  506, 6 low-support (<45) and 2 unused motifs vs 1 and 0 -- so the predictive
+  gain is entangled with reduced compression and the 'reusable' half of the claim
+  is only partially supported. On the cheap Ridge(alpha=1) probe the ordering
+  (task-only 0.5400 monitor < D_TM 0.5911 ~ D_freq 0.5909) does NOT predict the
+  Stage-B outcome; the decisive difference appears only under the strong reader.
+scope: >-
+  ZINC subset, canonical train 10000 / valid 1000, official test never loaded;
+  single seed 0 (Delta 0.067 > 0.04; a paired seed-1 confirmation is deferred).
+  Both dictionaries 64 merges / max size 8; Stage-B readers 192257 params each,
+  canonical B-Full protocol (Adam lr 1e-3 / wd 1e-5 / batch 128 / clip 5 / L1 /
+  max 240 epochs / patience 40 / Top-5 soup). B-FREQ early-stopped at epoch 153;
+  matched-budget and matched-epoch comparisons confirm the gap is not a
+  longer-training artefact. Not a benchmark claim (raw unstandardised y, same-host
+  regime reference). The eligibility MDL proxy is a first-order two-part code
+  (uniform token-symbol + empirical edge/port), not the PSCD-v0 empirical-entropy
+  mdl_proxy (which cannot express a positive merge gain); the corpus-level proxy
+  is reported as the compression measure.
+evidence:
+  - notes/pscd_tmdl_preregistration.md
+  - notes/pscd_tmdl_analysis.md
+  - code/run_pscd_tmdl_dictionary.py
+  - tests/test_pscd_tmdl.py
+  - results/pscd_tmdl/audit_freq.json
+  - results/pscd_tmdl/audit_task.json
+  - results/pscd_tmdl/audit_tmdl.json
+  - results/pscd_tmdl/dictionary_similarity.json
+  - results/pscd_tmdl/summary_BFREQ.json
+  - results/pscd_tmdl/summary_BTM.json
+  - results/pscd_tmdl/history_BFREQ.json
+  - results/pscd_tmdl/history_BTM.json
+  - results/pscd_tmdl/stageB_valid_curves.png
+revisit_if: >-
+  A compression-matched control (task+MDL discovery constrained to the frequency
+  arm's occurrence / dynamic-state budget) removes the Delta>=0.04 gain -> the
+  effect was reduced compression, not task relevance; or a paired seed-1 run
+  fails to reproduce the direction; or a stronger dictionary regularisation both
+  keeps the frequency-level compression and preserves the task gain.

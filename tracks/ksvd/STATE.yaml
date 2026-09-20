@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-pscd-sc-abstraction-ceiling
+phase: post-pscd-tmdl-compression-control-pending
 updated: 2026-09-20
 
 active_studies:
@@ -255,25 +255,33 @@ authorized_next_action:
   note: >-
     No experiment is authorized. The only admissible next step is writing a new
     preregistration under the relevant protocol (freeze before any terminal
-    read; test_policy=terminal), then explicit human authorization. PSCD-SC-v0
-    (2026-09-20, frozen PSCD-v0 dictionary md5 b180e969..., commits
-    34bd87a/f167269, A100; ZINC train 10000 / valid 1000, official test never
-    loaded) supersedes the PSCD-R-v0 direction: under the canonical B-Full
-    protocol a STRONG port-operator reader (d=64, L_outer=4, 192257 params =
-    2.28x raw) could NOT follow the raw graph (best valid 0.263 vs raw 0.136
-    fresh / 0.119 historical soup; gap +0.127, growing from -0.012 at the tiny
-    regime) while fitting TRAIN better than raw (0.096 vs 0.110) -- a
-    representation-induced generalisation bottleneck. The decode oracle held
-    (max|Delta y_hat| 3.6e-6 on 512+512), so the frozen object remains exact; but
-    its dynamic compression is NOT demonstrated (state 0.888x raw, messages
-    0.899x raw). DECISION: REPLACE frequency motif discovery with task+MDL
-    discovery -- NOT strengthen the reader further, NOT task-coupled learning on
-    the frequency dictionary, NOT repair the object. Stop claiming 3.2x
-    computational compression. Both training runs were intentionally truncated
-    at the user's request (no Top-5 soup). See
-    decision-pscd-sc-v0-task-mdm-motif-discovery-20260920,
-    claim-pscd-sc-v0-strong-port-operator-abstraction-ceiling-20260920,
-    notes/pscd_sc_analysis.md, results/pscd_strong_reader/.
+    read; test_policy=terminal), then explicit human authorization. PSCD-TMDL-v0
+    (2026-09-20, commits 3b77b4b/aed5796/0839151, seed 0, A100; ZINC canonical
+    train 10000 / valid 1000, official test never loaded; deterministic 9000
+    discovery + 1000 internal-monitor split, only discovery drives merges)
+    changed ONLY the motif-selection rule while freezing reader / ports /
+    vocabulary budget / max motif size. Stage B (identical PSCD-SC-v0
+    StrongPortOperator, 192257 params, seed 0) gave B-FREQ best valid 0.27078
+    (Top-5 soup 0.25331, early stop 153) vs B-TM best valid 0.20374 (soup
+    0.19517, 240 epochs): Delta_dictionary = 0.0670 (best) / 0.0581 (soup) /
+    +0.0523 at the matched 153-epoch budget; both dictionaries exact
+    (Decode==G 100%). VERDICT: task supervision materially improves the
+    dictionary, WITH the mandatory caveat that D_TM is materially less
+    compressive (dynamic-state ratio 1.392x vs 0.888x raw) and less reused
+    (median support 140 vs 506; 6 low-support + 2 unused motifs vs 1 + 0), so
+    'reusable/compressive' is only partially supported and the gain is
+    entangled with reduced compression. DECISION: strengthen dictionary
+    regularization before further task coupling -- the next step is a
+    COMPRESSION-MATCHED CONTROL (constrain task+MDL discovery to the frequency
+    arm's occurrence / dynamic-state budget, or add an explicit reuse / state
+    penalty to the MDL objective), then re-run the identical strong reader;
+    formalise alternating / reader-gradient task-driven dictionary learning ONLY
+    if the task-selection gain survives at matched compression. Do NOT open
+    either official test; do NOT sweep beta / K / reader / ports. See
+    decision-pscd-tmdl-v0-strengthen-regularization-20260920,
+    claim-pscd-tmdl-v0-task-mdm-dictionary-selection-20260920,
+    notes/pscd_tmdl_analysis.md, notes/pscd_tmdl_preregistration.md,
+    results/pscd_tmdl/.
 
 # ---------------------------------------------------------------------------
 # deferred optional work — explicitly NOT authorized, NOT a live queue
@@ -296,6 +304,7 @@ deferred_optional:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-pscd-tmdl-v0-strengthen-regularization-20260920: "PSCD-TMDL-v0 (2026-09-20, seed 0, commits 3b77b4b/aed5796/0839151, A100; ZINC canonical train 10000 / valid 1000, official test never loaded; deterministic 9000 discovery + 1000 internal-monitor split, only discovery drives every merge; both dictionaries exact Decode==G 100%; 64 merges / max size 8): changing ONLY the motif-selection rule (frequency vs task+MDL), with the IDENTICAL PSCD-SC-v0 StrongPortOperator (192257 params) frozen on each dictionary, gives B-FREQ best valid 0.27078@113 (Top-5 soup 0.25331, early stop epoch 153) vs B-TM best valid 0.20374@230 (soup 0.19517, 240 epochs). Delta_dictionary = 0.0670 (best) / 0.0581 (soup) / +0.0523 at the matched 153-epoch budget (epoch 100 +0.0559; epoch 150 +0.0411); B-TM fits TRAIN better (0.0852 vs 0.1318) AND generalises better with a SMALLER train-valid gap (0.1186 vs 0.1389). Dictionaries almost disjoint (Jaccard 0.058; 7/64 shared types; 0 identical positional rules). The pre-registered PREDICTIVE gate fires decisively (Delta>=0.04; MAE_TM<=0.22), but the required reuse/compression half is only partially met: D_TM is materially less compressive (dynamic-state ratio 1.392x vs 0.888x raw; occurrence/atom 0.555 vs 0.315) and less reused (median support 140 vs 506; 6 low-support + 2 unused motifs vs 1 + 0), so the gain is entangled with reduced compression. Cheap Ridge probe did NOT predict this (task-only 0.5400 < D_TM 0.5911 ~ D_freq 0.5909). VERDICT (frozen first line): task supervision materially improves the reusable compositional dictionary, with the compression/reuse caveat. DECISION: strengthen dictionary regularization before further task coupling -- next step is a COMPRESSION-MATCHED CONTROL, then re-run the identical strong reader; formalise alternating task-driven dictionary learning only if the gain survives. See notes/pscd_tmdl_analysis.md, notes/pscd_tmdl_preregistration.md, results/pscd_tmdl/, claim-pscd-tmdl-v0-task-mdm-dictionary-selection-20260920, decision-pscd-tmdl-v0-strengthen-regularization-20260920."
   - decision-pscd-sc-v0-task-mdm-motif-discovery-20260920: "PSCD-SC-v0 (2026-09-20, seed 0, commits 34bd87a/f167269, A100; frozen PSCD-v0 dictionary md5 b180e969..., ZINC train 10000 / valid 1000, official test never loaded; Decode(D,C_G)==G 100% train+valid; all data-free gates pass): under the CANONICAL B-Full protocol a STRONG port-operator reader (d=64, L_outer=4, alternating inter/intra-motif transfer; 192257 params = 2.28x P_raw) does NOT follow the raw graph. Best valid: canonical strong raw (zinc-b-full, fresh Arm A seed 0, truncated epoch 119/240) 0.1364 vs frozen PSCD port operator (Arm C seed 0, truncated epoch 170/240) 0.262959 -> gap +0.127. Tiny->strong: raw improves 0.336->0.136 (0.20) while frozen PSCD improves only 0.325->0.263 (0.06); the gap GROWS from -0.012 (tiny) to +0.127 (strong). The failure is a representation-induced GENERALISATION / abstraction bottleneck, not capacity: Arm C train MAE 0.096 is BELOW raw train 0.110 while valid is 0.127 worse, and the valid curve had plateaued while train kept falling. Decode oracle (same canonical B-Full weights on G vs Decode(C_G), 512+512, CPU deterministic) max|Delta y_hat| 3.58e-6 (< 1e-5): the object is computationally lossless. Compression NOT demonstrated: dynamic state N_PSCD = |O_G| + active ports = 0.888x N_raw and message count 0.899x raw (occurrence/atom 0.315 excludes ports). Gate C (abstraction ceiling) AND Gate E (compression failure) fire; raw baseline reproduced (<0.16). VERDICT (frozen first line): the fixed frequency dictionary imposes a real predictive abstraction ceiling; motif discovery must become task-coupled. DECISION: replace frequency motif discovery with task+MDL discovery (and STOP claiming 3.2x computational compression). Both training runs intentionally truncated at the user's request; no Top-5 soup. See notes/pscd_sc_analysis.md, results/pscd_strong_reader/, claim-pscd-sc-v0-strong-port-operator-abstraction-ceiling-20260920, decision-pscd-sc-v0-task-mdm-motif-discovery-20260920."
   - decision-pscd-r-v0-develop-structured-reader-20260920: "PSCD-R-v0 (2026-09-20, frozen PSCD-v0 dictionary md5 b180e969..., commits 782f49e4/16e6d6f5, A100; ZINC train 10000 / valid 1000, official test never loaded; Decode(D,C_G)==G re-asserted 100% train+valid): the dominant PSCD-v0 failure was the opaque motif READER. Found pre-run that the as-shipped Stage-B composition collate is NOT batch-invariant (node layout vs h[:M]/h[M:] assumption; batch-vs-single diff up to 1.36 MAE), so the historical composition valid MAE 0.5429 is a reader artifact. Matched step-2000 best-valid: R0ship 0.578 | R0 corrected-opaque 0.456 | R1 structured-static 0.417 | R2 port-resolved 0.379 | R3 raw 0.414; recovery R_recover^valid R1 0.93 / R2 1.82; at the 6000-step ceiling R2 best-valid 0.3246 vs raw 0.3363. Gap decomposition at 2000: batching defect 0.122 (74%), H1 0.039, H2 0.038. Evaluation-only port-mean ablation degrades R2 valid 0.340->0.560, so port-resolved state is used. VERDICT (frozen first line): the dominant PSCD-v0 failure was the opaque motif reader; frequency-derived motifs remain viable. DECISION: develop the structured dictionary reader next; not task-aware motif discovery, not object repair, not stopping the line. See notes/pscd_reader_diagnostic_analysis.md, results/pscd_reader_diagnostic/SUMMARY.json, claim-pscd-r-v0-frozen-dictionary-readable-20260920, claim-pscd-v0-composition-reader-batching-defect-20260920."
   - decision-pscd-v0-abstraction-weak-20260920: "PSCD-v0 (2026-09-20, seed 0, commit cdae8b0, A100; ZINC train 10000 / valid 1000, official test never loaded): a port-structured compositional graph code G <-> (D, C_G) with a 64-rule / max-size-8 data-driven graph-BPE dictionary is VIABLE on all Stage-A hard gates — 100% exact decode (train+valid), 0/10000 relabel mismatches, mean(M_G/n_G)=0.320, 64/64 learned types used (support 8..3135, top-16/32 coverage 0.597/0.823), size>=4 port fraction 0.471, full-PSCD collisions 0, MDL L_PSCD/L_atom=0.215; collision ladder A:1 pair, B=C=D:0. BUT under a matched tiny reader (d=32, L=2, seed 0) the frozen frequency code is not task-friendly: composition valid MAE 0.5429 vs raw atom-graph 0.3113 (+0.232; strong band fails), motif bag 0.5609 so composition adds only +0.018. VERDICT (frozen sentence): the compositional dictionary is lossless and compressive but its abstraction is not task-friendly enough. DECISION: refine the motif discovery objective (task-aware primitives), NOT proceed to task-driven selection yet and NOT repair ports/composition. See notes/pscd_representation_analysis.md, claim-pscd-v0-lossless-compositional-code-20260920. NOTE (2026-09-20, PSCD-R-v0): the Stage-B composition number here was produced by a non-batch-invariant reader and is superseded; the object claims are unaffected."
