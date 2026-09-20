@@ -1,0 +1,57 @@
+claim_id: claim-pscd-sc-v0-strong-port-operator-abstraction-ceiling-20260920
+created: '2026-09-20T12:05:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the FROZEN PSCD-v0 dictionary (ZINC official train 10000 / valid 1000;
+  official test never loaded; artifact md5 b180e9695fb4f0a2cb366338bd58f459;
+  re-asserted Decode(D,C_G)==G 100% train + valid; seed 0; A100), a STRONG
+  compressed port-operator reader (shared 2-layer edge-aware motif encoder;
+  d=64, L_outer=4 alternating inter-motif / intra-motif transfer; shared state
+  maps W_C,W_S,W_G,W_P,W_D; layer-specific Linear-SiLU-Linear message MLPs;
+  192257 params, 2.28x the raw baseline; canonical B-Full protocol: Adam lr 1e-3
+  / wd 1e-5 / batch 128 / clip 5 / L1 / max_epochs 240 / patience 40) does NOT
+  follow the raw graph with capacity. Best valid MAE: canonical strong raw
+  (zinc-b-full, fresh Arm A seed 0, truncated at epoch 119/240) 0.1364; frozen
+  PSCD port operator (Arm C seed 0, truncated at epoch 170/240) 0.262959. From
+  the tiny regime to the strong regime the raw improves 0.336 -> 0.136 (delta
+  0.20) while frozen PSCD improves only 0.325 -> 0.263 (delta 0.06); the PSCD/raw
+  gap GROWS from -0.012 (tiny; PSCD marginally better) to +0.127 (strong,
+  > 0.08). The failure is a representation-induced GENERALISATION bottleneck, not
+  capacity or optimisation: Arm C train MAE at its best epoch (0.096) is BELOW
+  the raw train MAE (0.110) while its valid MAE is 0.127 worse, and the valid
+  curve had plateaued (~2-5e-4 / epoch) while train kept falling. Decode oracle:
+  the SAME canonical B-Full model + weights, fed G and Decode(C_G) on a
+  deterministic CPU reference for 512 train + 512 valid graphs, gives
+  max|Delta y_hat| = 3.58e-6 (100% < 1e-5), so the lossless PSCD object hides no
+  data loss even computationally. Dynamic compression is NOT demonstrated:
+  N_PSCD = |O_G| + sum_o |P_o^active| = 0.888x N_raw (occurrence/atom ratio 0.315
+  is misleading) and the port-operator message count (inter 0.329x + intra 0.569x
+  = 0.899x) is ~ the raw edge message count. Data-free gate all pass (batch
+  invariance 1.3e-7; molecule permutation 1.2e-7; motif automorphism 1.1e-8;
+  empty/single/multi-port finite; port-routing sensitivity 0.0168). Therefore the
+  fixed frequency decomposition creates a real task abstraction ceiling.
+scope: >-
+  ZINC subset, frozen PSCD-v0 dictionary, train 10000 / valid 1000, official test
+  never loaded; single seed 0; both training runs intentionally stopped early at
+  the user's request (Arm A epoch 140/240, Arm C epoch 170/240), so best-valid
+  numbers are upper bounds on the converged ceilings and no Top-5 soup was
+  materialised. Not a benchmark-performance claim (raw unstandardised y, same-host
+  regime reference). Arm B used the historical canonical B-Full seed-0 state.
+evidence:
+  - notes/pscd_sc_preregistration.md
+  - notes/pscd_sc_analysis.md
+  - code/run_pscd_strong_reader.py
+  - tests/test_pscd_strong_reader.py
+  - results/pscd_strong_reader/arm_b_decode_oracle.json
+  - results/pscd_strong_reader/compression.json
+  - results/pscd_strong_reader/arm_a_run.log
+  - results/pscd_strong_reader/arm_c_run.log
+  - results/pscd_strong_reader/scaling_curve.png
+revisit_if: >-
+  A fully converged (exact canonical stop, >=240 epochs, Top-5 soup) strong
+  port-operator run lands <= 0.22 and closes the raw gap to <= 0.08 with the
+  dynamic-state ratio still < ~0.85; or a reader that exposes atom-resolved
+  intra-motif states (not only canonical ports) collapses the gap without
+  exceeding N_raw dynamic states.

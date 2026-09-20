@@ -1,0 +1,65 @@
+decision_id: decision-pscd-sc-v0-task-mdm-motif-discovery-20260920
+created: '2026-09-20T12:06:00'
+kind: decision
+study_id: zinc-context-gap
+because: >-
+  PSCD-SC-v0 (seed 0, A100; ZINC official train 10000 / valid 1000; official test
+  never loaded) froze the entire PSCD-v0 dictionary (artifact md5
+  b180e9695fb4f0a2cb366338bd58f459; Decode==G 100% train + valid) and asked
+  whether a STRONG port-operator reader (d=64, L_outer=4 alternating
+  inter-motif / intra-motif transfer; canonical B-Full protocol) follows the raw
+  graph into a 0.1-0.2 MAE band. It does not. Best valid: strong raw
+  (zinc-b-full, fresh Arm A seed 0, truncated epoch 119) 0.1364 vs frozen PSCD
+  port operator (Arm C seed 0, truncated epoch 170) 0.262959 -- gap +0.127; from
+  tiny to strong raw improves 0.20 while PSCD improves only 0.06, so the gap
+  GROWS from -0.012 to +0.127. Critically, Arm C fits TRAIN better than raw
+  (0.096 vs 0.110) while generalising far worse, and its valid curve had
+  plateaued while train kept falling: the failure is a representation-induced
+  generalisation / abstraction bottleneck, not capacity or under-training. The
+  decode oracle (same canonical B-Full weights on G vs Decode(C_G), 512+512,
+  CPU) gives max|Delta| 3.58e-6 (< 1e-5), so the object is computationally
+  lossless and the bottleneck is the frequency abstraction, not the artifact.
+  Independently, the frozen operator is NOT a demonstrated compression: dynamic
+  state N_PSCD/N_raw = 0.888 and message count 0.899x raw (the 0.315
+  occurrence/atom ratio excludes the port states). Gate C (abstraction ceiling)
+  and Gate E (compression failure) both fire. Arm A did not stay > 0.16, so the
+  raw baseline reproduced and the interpretation is admissible.
+decision: >-
+  PSCD-SC-v0 VERDICT (frozen first line): "The fixed frequency dictionary imposes
+  a real predictive abstraction ceiling; motif discovery must become
+  task-coupled." DECISION: replace frequency motif discovery with task+MDL
+  discovery -- couple the motif merge / boundary / vocabulary objective to the
+  downstream task under an MDL constraint -- under its own preregistration. Do
+  NOT keep strengthening the port-operator reader (Gate C says stop reader
+  tuning), do NOT proceed to task-coupled dictionary learning ON TOP OF the frozen
+  frequency dictionary, and do NOT repair the object (it remains exact /
+  permutation-invariant / reusable / port-clean; it is simply the wrong
+  abstraction). Also record the reporting correction: STOP CLAIMING 3.2x
+  computational compression of the frozen operator (dynamic-state 0.888x,
+  message 0.899x). Evidence: notes/pscd_sc_preregistration.md,
+  notes/pscd_sc_analysis.md, results/pscd_strong_reader/arm_b_decode_oracle.json,
+  results/pscd_strong_reader/compression.json, results/pscd_strong_reader/*.log,
+  claim-pscd-sc-v0-strong-port-operator-abstraction-ceiling-20260920.
+alternatives_rejected:
+  - >-
+    Perform one final port-operator mechanism revision: rejected -- the reader is
+    already strong (d=64, L=4, ports preserved, intra-motif transfer, 4 alternating
+    layers, 2.28x the raw parameters) and it fits train better than raw while
+    failing to generalise; the bottleneck is the fixed frequency abstraction, not a
+    missing reader mechanism.
+  - >-
+    Proceed to task-coupled compositional dictionary learning on the frequency
+    dictionary: rejected -- the frequency dictionary is the demonstrated
+    bottleneck; coupling the task to a task-hostile set of primitives cannot
+    recover the lost generalisation.
+  - >-
+    Stop the compositional-dictionary line entirely: rejected -- the object is
+    exact, permutation-invariant, reuse-healthy and port-clean; the evidence calls
+    for changing the motif-discovery OBJECTIVE, not abandoning the representation
+    family.
+  - >-
+    Fix baseline/optimisation before interpretation: rejected -- Arm A reproduced
+    the canonical strong raw ceiling (0.136 truncated / 0.119 historical soup,
+    well under the 0.16 stop rule) and the Arm C valid curve had plateaued, so this
+    is not primarily an optimisation artefact (a small truncated-run caveat is
+    recorded).
