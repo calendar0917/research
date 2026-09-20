@@ -589,10 +589,13 @@ def arm_b_decode_oracle(n_train: int, n_valid: int, device: str, state_path: Pat
 
     _, enc_dec_train, _ = zpp._phase_data(train_records, dec_train_records, config=dict(config))
     _, enc_dec_valid, _ = zpp._phase_data(train_records, dec_valid_records, config=dict(config))
-    _, enc_ref_valid, _ = zpp._phase_data(train_records, valid_records[:n_valid], config=dict(config))
-    _, enc_ref_train, _ = zpp._phase_data(train_records, train_records[:n_train], config=dict(config))
     sbse._attach_struct_tensors(enc_dec_train, sbse._patch_graphs_from_dataset(dec_train_data))
     sbse._attach_struct_tensors(enc_dec_valid, sbse._patch_graphs_from_dataset(dec_valid_data))
+    # reference graph encodings come straight from the canonical pipeline (with
+    # struct tensors attached), so the comparison is apples-to-apples.
+    enc_train_ref, enc_valid_ref, _audit = sbse.build_encoded_records()
+    enc_ref_train = enc_train_ref[:n_train]
+    enc_ref_valid = enc_valid_ref[:n_valid]
 
     def predict(encoded):
         loader = sbse._make_struct_loader(encoded, 64, False, 0)
