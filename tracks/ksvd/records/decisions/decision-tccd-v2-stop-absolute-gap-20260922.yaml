@@ -1,0 +1,59 @@
+decision_id: decision-tccd-v2-stop-absolute-gap-20260922
+created: '2026-09-22T01:30:00'
+kind: decision
+study_id: zinc-context-gap
+because: >-
+  TCCD-v2 passed Gate 0 on GPU1, Gate A composition, Prototype-vs-Dense
+  comparison, and vocabulary quality. Prototype-REL best internal-dev MAE was
+  0.286244 versus Dense-REL 0.410789; assignment shuffle was 0.838816, giving
+  composition gain 0.552572. Vocabulary usage was healthy at 64/64 active,
+  effective count 62.5755, and top-8 mass 0.152634. The preregistered
+  full-data run was therefore authorized. The first attempt at 8ad255c was
+  invalidated because the runner passed official-valid indices against the
+  training-record list. After fixing that wiring, the corrected GPU1 run at
+  030b3c5 used cached official-valid records and produced best valid MAE
+  0.287337 and Top-5 soup 0.261988 versus canonical GPU1 baseline 0.119818.
+  The corrected best-checkpoint absolute gap was 0.167519, above the 0.05
+  NOT-VIABLE threshold.
+decision: >-
+  STOP TCCD-v2 at the absolute gate. The result supports task-learned reusable
+  prototypes and assignment-sensitive explicit composition, but does not
+  support absolute competitiveness of the simple 714-to-64 local encoder plus
+  K=64 prototype-composition representation. Do not run seed 1, temperature/K
+  sweeps, reader or relation rescues, stronger encoder changes inside this
+  round, or official-test evaluation.
+alternatives_rejected:
+  - item: Treat the Top-5 soup as a rescue
+    because: >-
+      Corrected soup MAE 0.261988 is still 0.142170 above the canonical GPU1
+      baseline and does not alter the preregistered best-checkpoint decision.
+  - item: Use the invalidated first full-data result
+    because: >-
+      Commit 8ad255c wired official-valid indices to the training-record list;
+      its reported 0.197586 / 0.158107 values are excluded from all claims and
+      decisions.
+  - item: Continue tuning the prototype bottleneck
+    because: >-
+      Gate A and vocabulary gates passed; the remaining failure is the absolute
+      capacity/generalization gap. The round forbids temperature, K, reader,
+      regularizer and relation sweeps after the frozen decision.
+  - item: Reopen the official test
+    because: >-
+      Official test access is permanently frozen for this round and is not
+      needed to resolve the absolute failure.
+consequences:
+  - >-
+    Supported: shared task-learned prototypes can retain predictive information
+    and explicit composition can be strongly assignment-sensitive.
+  - >-
+    Supported: the vocabulary can remain broad and semantically organized
+    without reconstruction loss or sparse coding.
+  - >-
+    Ruled out: the current simple local encoder plus prototype-composition
+    architecture is competitive with the strong canonical ZINC baseline.
+next_action: >-
+  NONE auto-authorized. A future experiment may only begin with a new
+  preregistration for a stronger permutation-invariant local encoder class.
+revisit_if: >-
+  A new round freezes a matched Dense control, GPU1 execution regime, usage
+  diagnostics, absolute thresholds, and official-test freeze before training.

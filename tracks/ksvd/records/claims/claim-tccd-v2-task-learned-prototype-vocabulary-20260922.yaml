@@ -1,0 +1,42 @@
+claim_id: claim-tccd-v2-task-learned-prototype-vocabulary-20260922
+created: '2026-09-22T01:30:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  TCCD-v2 supports a shared task-learned local prototype vocabulary as a
+  mechanism-level representation under the matched 714-to-64 local encoder.
+  On the fixed internal ZINC split and remote A100 GPU1, Prototype-REL achieves
+  best internal-dev MAE 0.286244 versus Dense-REL 0.410789, Prototype-BAG
+  0.354108, and assignment-shuffle 0.838816. The composition gain is
+  0.552572 and the prototype gap versus Dense-REL is -0.124546. Vocabulary
+  usage is healthy: 64/64 active prototypes, effective count 62.5755, top-8
+  mass 0.152634, normalized global usage entropy 0.997175, and learned
+  temperature 0.094572. Mean top-50 canonical-key concentration is 0.504375
+  versus 0.061563 random baseline. The corrected preregistered full-data
+  train-to-official-valid run at commit 030b3c5 reaches best valid MAE 0.287337
+  and Top-5 soup 0.261988 versus canonical GPU1 baseline 0.119818, giving
+  best-checkpoint delta_abs 0.167519 and NOT-VIABLE absolute performance.
+  Thus the vocabulary and assignment-sensitive composition claim is supported,
+  but absolute competitiveness of the simple local encoder plus
+  prototype-composition architecture is not supported.
+scope: >-
+  All formal experiments use GPU1 only, seed 0, the TCCD-v1 internal split
+  seed 20260922, and the frozen radius-2 canonical patch records and relations.
+  Dense and Prototype share the same 714-to-64 local encoder initialization,
+  optimizer family, reader and relation set. K-SVD was not refit; OMP/IHT and
+  raw reconstruction loss were not used. Official ZINC test was never loaded.
+  The earlier full-data attempt at commit 8ad255c was invalidated because its
+  validation-index wiring did not evaluate the official-valid record set; it is
+  excluded from the claim.
+evidence:
+  - tracks/ksvd/notes/tccd_v2_preregistration.md
+  - tracks/ksvd/notes/tccd_v2_gateA_analysis.md
+  - tracks/ksvd/notes/tccd_v2_vocabulary_analysis.md
+  - tracks/ksvd/notes/tccd_v2_absolute_analysis.md
+  - tracks/ksvd/notes/tccd_v2_analysis.md
+  - tracks/ksvd/results/tccd_v2/gateA_seed0.json
+  - tracks/ksvd/results/tccd_v2/vocabulary_seed0.json
+  - tracks/ksvd/results/tccd_v2/absolute_seed0.json
+  - tracks/ksvd/results/tccd_v2/prototype_semantics_seed0.json
+  - tracks/ksvd/tests/test_tccd_v2.py
