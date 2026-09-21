@@ -174,16 +174,21 @@ def _graphs_for_split(split: str) -> tuple[list[dict[str, Any]], dict[str, Any]]
     raise ValueError("official test is forbidden")
 
 
-def struct_example_from_plain(graph: Mapping[str, Any], graph_id: int, *, exterior_signature: str = "") -> StructExample:
-    atom = np.asarray(graph["atom"], dtype=np.int64)
-    root = np.asarray(graph["root"], dtype=np.int64)
-    dist = np.asarray(graph["dist"], dtype=np.int64)
-    patch = np.asarray(graph["patch"], dtype=np.int64)
-    bond = np.asarray(graph["bond"], dtype=np.int64)
-    edge_patch = np.asarray(graph["edge_patch"], dtype=np.int64)
-    src_local = np.asarray(graph["src"], dtype=np.int64)
-    dst_local = np.asarray(graph["dst"], dtype=np.int64)
-    n_patches = int(graph["n_patches"])
+def struct_example_from_plain(graph: Mapping[str, Any] | Any, graph_id: int, *, exterior_signature: str = "") -> StructExample:
+    def field(name: str) -> Any:
+        if isinstance(graph, Mapping):
+            return graph[name]
+        return getattr(graph, name)
+
+    atom = np.asarray(field("atom"), dtype=np.int64)
+    root = np.asarray(field("root"), dtype=np.int64)
+    dist = np.asarray(field("dist"), dtype=np.int64)
+    patch = np.asarray(field("patch"), dtype=np.int64)
+    bond = np.asarray(field("bond"), dtype=np.int64)
+    edge_patch = np.asarray(field("edge_patch"), dtype=np.int64)
+    src_local = np.asarray(field("src"), dtype=np.int64)
+    dst_local = np.asarray(field("dst"), dtype=np.int64)
+    n_patches = int(field("n_patches"))
     counts = np.bincount(patch, minlength=n_patches).astype(np.int64)
     node_start = np.concatenate([[0], np.cumsum(counts)[:-1]]).astype(np.int64)
     src = src_local + node_start[edge_patch]
