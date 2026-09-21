@@ -28,7 +28,12 @@ import numpy as np
 
 from tracks.ksvd.code import tccd_v0 as T
 from tracks.ksvd.code import tccd_v1 as V
-from tracks.ksvd.code.run_tccd_v0 import internal_split, load_or_build_records
+from tracks.ksvd.code.run_tccd_v0 import (
+    atom_semantics,
+    continuity_audit,
+    internal_split,
+    load_or_build_records,
+)
 
 OUT_DIR = V.RESULTS_DIR
 
@@ -309,6 +314,114 @@ def gate_b(args, log=print) -> int:
 
 
 # ===========================================================================
+# Gate B diagnostics — report-only continuity / reuse / semantics
+# ===========================================================================
+def _stack_codes_fast(model, records, indices, device, batch=64):
+    torch = T._torch()
+    model.eval()
+    chunks = []
+    with torch.no_grad():
+        for start in range(0, len(indices), batch):
+            chunk = list(indices[start : start + batch])
+            b = V.make_padded_batch(records, chunk, device)
+            _, C_flat, _ = V._fast_forward(model, b)
+            C_pad = C_flat.reshape(b["X_pad"].shape[0], b["X_pad"].shape[1], -1)
+            chunks.append(C_pad[b["valid"]].detach().cpu().numpy())
+    return np.concatenate(chunks, axis=0)
+
+
+def _reuse_stats(records, dev_idx, C_dev):
+    support = np.abs(C_dev) > 1e-8
+    atom_support = support.sum(axis=0)
+    atom_mass = np.abs(C_dev).sum(axis=0)
+    mol_of_patch = np.concatenate([
+        np.full(int(records[i]["n"]), k, dtype=np.int64)
+        for k, i in enumerate(dev_idx)
+    ])
+    mol_presence = np.zeros((support.shape[1],), dtype=np.int64)
+    for k in range(support.shape[1]):
+        mol_presence[k] = len(np.unique(mol_of_patch[support[:, k]]))
+    order = np.argsort(atom_mass)[::-1]
+    total_mass = float(atom_mass.sum())
+    return {
+        "dead_atoms": int(np.sum(atom_support < 5)),
+        "reused_atoms": int(np.sum((atom_support >= 20) & (mol_presence >= 5))),
+        "top1_mass_share": float(atom_mass[order[0]] / max(total_mass, 1e-12)),
+        "top8_mass_share": float(atom_mass[order[:8]].sum() / max(total_mass, 1e-12)),
+        "mean_coeff_entropy": float(T.coefficient_entropy(C_dev).mean()),
+        "atom_support": atom_support.astype(int).tolist(),
+        "atom_mol_presence": mol_presence.astype(int).tolist(),
+        "top_atoms": order[:8].astype(int).tolist(),
+    }
+
+
+def gate_b_diagnostics(args, log=print) -> int:
+    decision = _load_json(OUT_DIR / "gateB_decision.json")
+    if decision is None or decision.get("final_verdict") != "PASS":
+        raise SystemExit("Gate B diagnostics require a Gate B PASS decision.")
+    D0, _ = V.load_frozen_dictionary()
+    layout = V.frozen_layout()
+    records, _ = _records_for(args, log)
+    tr_idx, dev_idx = internal_split(len(records))
+    device = args.device
+    log("[diagB] loading official-train molecules for the frozen continuity audit")
+    mols, _ = T.load_mols(args.data_root, "train")
+
+    # Re-run exactly the single Gate-B TASK-D arm to retain its soup state.
+    model = T.TCCDModel.build(
+        layout.feature_dim, T.K_DICT, V.N_REL, D0,
+        dense=False, frozen_D=False, readout_dim=None, seed=args.seed,
+    ).to(device)
+    res = V.train_model_fast(
+        model, records, records, list(tr_idx), list(dev_idx), device,
+        seed=args.seed, max_epochs=args.max_epochs, patience=args.patience,
+        batch=args.batch, calibrate_rec=True, log=log,
+    )
+    if res.state_soup is None:
+        raise SystemExit("TASK-D soup state missing; cannot run post-Gate-B diagnostics")
+    model.load_state_dict(res.state_soup)
+    D_task = model.D.detach().cpu().numpy().astype(np.float64)
+
+    X_dev = np.concatenate([np.asarray(records[i]["X"], dtype=np.float32) for i in dev_idx], axis=0)
+    C_frozen = T.omp_codes(D0, X_dev, s=T.SPARSITY)
+    C_task = _stack_codes_fast(model, records, list(dev_idx), device, batch=64)
+    log("[diagB] continuity audit: frozen D0")
+    cont_frozen = continuity_audit(mols, records, dev_idx, D0, C_frozen, log=log)
+    log("[diagB] continuity audit: TASK-D soup")
+    cont_task = continuity_audit(mols, records, dev_idx, D_task, C_task, log=log)
+    reuse_frozen = _reuse_stats(records, list(dev_idx), C_frozen)
+    reuse_task = _reuse_stats(records, list(dev_idx), C_task)
+    sem_frozen = atom_semantics(records, dev_idx, C_frozen, reuse_frozen["top_atoms"])
+    sem_task = atom_semantics(records, dev_idx, C_task, reuse_task["top_atoms"])
+
+    cache_path = V.CACHE_DIR / "taskD_seed0_soup.pkl"
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    with cache_path.open("wb") as fh:
+        import pickle
+        pickle.dump({"state_soup": res.state_soup, "D_task": D_task}, fh, protocol=4)
+    out = {
+        "protocol": V.PROTOCOL_VERSION,
+        "gate": "B_diagnostics",
+        "commit": T.git("rev-parse", "HEAD"),
+        "device": device,
+        "seed": args.seed,
+        "execution_regime": "local_cpu",
+        "reused_tccd_v0_dictionary": True,
+        "ksvd_refit_performed": False,
+        "task_checkpoint": "TASK-D top-5 soup state (diagnostic only)",
+        "task_soup_valid": res.soup_valid,
+        "continuity": {"frozen": cont_frozen, "task": cont_task},
+        "reuse": {"frozen": reuse_frozen, "task": reuse_task},
+        "atom_semantics": {"frozen": sem_frozen, "task": sem_task},
+        "official_test_loaded": False,
+    }
+    T.write_json(OUT_DIR / "gateB_diagnostics_seed0.json", out)
+    log(f"[diagB] frozen_code_auc={cont_frozen['code_auc']:.6f} "
+        f"task_code_auc={cont_task['code_auc']:.6f}; report-only complete")
+    return 0
+
+
+# ===========================================================================
 # Gate C — dictionary uniqueness (DENSE control)
 # ===========================================================================
 def gate_c(args, log=print) -> int:
@@ -409,7 +522,7 @@ def gate_d(args, log=print) -> int:
 # ===========================================================================
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("stage", choices=["smoke", "gateA", "gateB", "gateC", "gateD"])
+    p.add_argument("stage", choices=["smoke", "gateA", "gateB", "diagB", "gateC", "gateD"])
     p.add_argument("--data-root", type=Path, default=T.REPO_ROOT / "data/ZINC")
     p.add_argument("--device", default="cuda")
     p.add_argument("--seed", type=int, default=V.PRIMARY_SEED)
@@ -429,6 +542,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return gate_a(args)
     if args.stage == "gateB":
         return gate_b(args)
+    if args.stage == "diagB":
+        return gate_b_diagnostics(args)
     if args.stage == "gateC":
         return gate_c(args)
     if args.stage == "gateD":
