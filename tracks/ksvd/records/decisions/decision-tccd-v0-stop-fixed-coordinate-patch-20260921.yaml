@@ -1,0 +1,100 @@
+decision_id: decision-tccd-v0-stop-fixed-coordinate-patch-20260921
+created: '2026-09-21T20:35:00'
+kind: decision
+study_id: zinc-context-gap
+because: >-
+  TCCD-v0 (2026-09-21, seed 0, commit 008b5e3, remote A100 host GPU1; canonical
+  PyG ZINC subset=True official train 10,000; official valid and official test
+  never loaded; Gate 1 never uses y) tested whether a molecule can be
+  represented as data-learned reusable local environments plus explicit
+  observed composition relations WITHOUT learned message passing.  The frozen
+  candidate builds a fixed coordinate vector x_v in R^714 for every radius-2
+  attributed rooted patch via the repository's exact rooted colored-incidence
+  canonicalization, learns a shared K=64 / s=8 dictionary by detached OMP +
+  mini-batch K-SVD, and would add one-shot relation contractions C^T R C over a
+  frozen 5-relation set and a linear reader.  Gate -1 PASS (canonical strong GPU
+  reference B-Full / shared-structural Top-5 soup valid MAE 0.119818 exists,
+  A100, official test unread).  Gate 0 PASS on GPU1: all 8 correctness checks
+  (x_v/code/C^T R C/prediction permutation invariance, batching invariance,
+  relation correctness, decoupling sensitivity, exact sparsity = 8,
+  task+reconstruction gradients reach D, no column collapse).  Gate 1 on the
+  full official train 10,000 FAILS on exactly one pre-registered check: the
+  LOCAL-COORDINATE CONTINUITY audit (code-space AUC 0.4675, x-space AUC 0.5019;
+  PASS threshold >= 0.70).  The other Gate 1 checks pass comfortably:
+  permutation stability max Delta x_v = 0.0 and OMP support Jaccard = 1.0 over
+  48,200 relabeling checks; held-out reconstruction ratio E_learned/E_random =
+  0.0491 (learned 0.0470 vs matched random normalized D 0.9568); reuse 0 dead,
+  64/64 atoms reused, top-1 mass 0.0515, top-8 0.2879.  The failure is
+  mechanism-specific, not collapse/optimization: the coordinate space and the
+  dictionary built on it do not preserve raw structural proximity - 800
+  near-pair patches (typed-WL cosine ~1.0, non-isomorphic) are coded at
+  essentially random distance (near 5.799 vs random 5.710).  Atom semantics
+  (report only) confirm atoms latch onto repeated EXACT rooted motifs (key
+  concentration 0.610 vs 0.075 random), which is orthogonal to metric
+  smoothness.  The matching 400-graph development smoke shows the same failure
+  (AUC 0.54), so it is not a capacity/data-scale artefact.  Two implementation
+  findings were fixed before any formal run (pynauty.canon_label is not an
+  invariant vertex ORDER unless root/shell colours are included -> use the
+  typed-patch root+distance colouring; tied-IHT step size must use a
+  deterministic power-iteration start); both are bugfixes, not architecture
+  changes.
+decision: >-
+  STOP TCCD-v0 at Gate 1.  Do NOT start Gate 2 (composition BAG/REL/
+  REL-SHUFFLE), do NOT start Gate 3 (FROZEN-D/TASK-D/DENSE), and do NOT run the
+  full-data TCCD-v0 model / Gate 4 absolute comparison.  Do not rescue the gate
+  by changing K, radius, slot ordering, sparsity, the relation set, the reader,
+  or by adding a learned local encoder or a stronger reader.  Record the
+  negative result with the full evidence.  If the local-dictionary hypothesis is
+  pursued again, it must start from a NEW explicit pre-registration for a
+  DIFFERENT object class - a permutation-invariant learned local encoder ->
+  dictionary, or a permutation-invariant (bag/multiset of canonical
+  sub-structures) reconstruction objective rather than slot-indexed canonical
+  coordinates.  The official ZINC test stays unopened.
+alternatives_rejected:
+  - item: Change the slot ordering / capacity / K / radius to recover continuity
+    because: >-
+      the pre-registration and the round brief forbid rescuing a failed gate by
+      changing the frozen construction; the failure is a property of
+      slot-indexed canonical coordinates (also present at M=11, F=396, 400
+      graphs), not of a particular capacity.
+  - item: Add a learned local encoder before the dictionary to smooth the domain
+    because: >-
+      that is a different object class than the one under test (it reintroduces
+      learned local representation); it must be a new pre-registration, not a
+      Gate 1 rescue.
+  - item: Interpret the strong reconstruction/reuse as evidence for the
+      hypothesis
+    because: >-
+      reconstruction/reuse are necessary but not sufficient; the pre-registered
+      core audit (metric smoothness of the domain) is what the hypothesis
+      requires, and it fails uniformly in the primary and graded strata.
+  - item: Reuse the sparse codes for a whole-graph claim anyway
+    because: >-
+      Gates 2/3 were not run, so no composition or task-coupling claim is
+      licensed, and no absolute-performance claim was measured.
+consequences:
+  - >-
+    The "fixed-coordinate canonical raw local patch is a valid K-SVD domain"
+    premise is refuted and recorded with full diagnostics, so it is not re-run.
+  - >-
+    The reusable finding is narrow and positive: exact rooted
+    colored-incidence canonicalization gives an exactly permutation-invariant
+    coordinate vector, and K-SVD on it reconstructs held-out patches well with
+    healthy atom reuse - but the coordinate space is NOT metrically faithful to
+    raw structural nearness.
+  - >-
+    This is consistent with and reinforces
+    notes/wholegraph_canonical_registration_audit.md (canonical slots are not a
+    stable cross-graph correspondence) and with the PSD-v0 / GSCN-v0 closures
+    (whole-graph and local dictionary routes without a permutation-invariant
+    learnable lift).
+next_action: >-
+  NONE auto-authorized.  A future round needs its own pre-registration and must
+  change the object class (permutation-invariant learned local encoder ->
+  dictionary, or permutation-invariant reconstruction objective), not the frozen
+  TCCD-v0 construction.  Do not reopen the official ZINC or MolHIV tests (both
+  spent, reporting-only).
+revisit_if: >-
+  a new pre-registration defines a permutation-invariant local representation
+  (or a bag/multiset reconstruction objective) and pre-registers the same Gate 1
+  continuity threshold (code-space AUC >= 0.70) BEFORE any run.

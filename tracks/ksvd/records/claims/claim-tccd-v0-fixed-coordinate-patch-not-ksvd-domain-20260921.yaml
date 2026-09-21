@@ -1,0 +1,62 @@
+claim_id: claim-tccd-v0-fixed-coordinate-patch-not-ksvd-domain-20260921
+created: '2026-09-21T20:30:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  A FIXED-COORDINATE CANONICAL RAW LOCAL PATCH IS NOT A SUITABLE K-SVD /
+  DICTIONARY-LEARNING DOMAIN FOR ZINC (remote A100 host, GPU1, commit 008b5e3,
+  seed 0, canonical PyG ZINC subset=True official train 10,000; official valid
+  and official test NEVER loaded; Gate 1 uses no y).  QUESTION: can the exact
+  rooted colored-incidence canonicalization turn a radius-2 attributed rooted
+  patch into a fixed Euclidean coordinate vector x_v in R^F that is a valid
+  dictionary domain (permutation-stable, reconstructable, reused, and
+  METRICALLY SMOOTH in the raw structural sense)?  ANSWER: invariance,
+  reconstruction and reuse YES; metrical smoothness NO.  Construction (frozen
+  before any run; notes/tccd_v0_preregistration.md): slot order from
+  typed_patch_tokenizer.build_colored_incidence (atom colour = (is_root,
+  distance_from_root, atom_type), bond colour = bond_type) + pynauty.canon_label;
+  blocks topology/bond/atom/shell/mask; M = max train radius-2 patch size = 14,
+  A=21 atom categories, B=3 bond categories, F=714; K=64, s=8; detached OMP +
+  mini-batch K-SVD (12 chunk epochs), fit on internal-train 8,000 (185,538
+  patches), holdout internal-dev 2,000 (46,126 patches), deterministic split
+  seed 20260922.  RESULTS: (1) permutation stability PERFECT - 100 dev molecules
+  x 20 random relabelings, max |Delta x_v| = 0.0 and OMP support Jaccard
+  mean = frac = 1.0 over 48,200 checks; (2) held-out reconstruction ratio
+  E_learned / E_random = 0.0491 (learned 0.0470 vs matched random normalized D
+  0.9568; PASS threshold <= 0.70), i.e. the K-SVD machinery genuinely learns the
+  coordinate space; (3) reuse maximally healthy - 0 dead atoms, 64/64 atoms
+  reused (support >= 20 and >= 5 molecules), top-1 atom mass share 0.0515,
+  top-8 0.2879, mean coefficient entropy 1.542 bits; (4) THE CORE AUDIT FAILS -
+  local-coordinate continuity code-space AUC = 0.4675 (x-space AUC = 0.5019;
+  graded tail stratum code AUC = 0.5494) against the pre-registered PASS
+  threshold >= 0.70.  Near pairs (800 highest typed-WL-subtree-kernel cosine
+  non-isomorphic patch pairs, mean cosine 0.99999999999) are coded at essentially
+  random distance (near mean 5.799 vs random 5.710), i.e. canonical slot
+  rearrangement scatters structurally near patches as far as size/root-matched
+  random patches.  Atom semantics (report only) show mean top-50 corrected
+  canonical-key concentration 0.610 vs random baseline 0.075 (8.1x), max 1.0 -
+  atoms do latch onto REPEATED EXACT rooted motifs, which is orthogonal to
+  metric smoothness because the continuity audit excludes isomorphic pairs.
+  Gate 0 passed all 8 correctness checks on GPU1 (permutation invariance of
+  x_v/code/C^T R C/prediction, batching invariance, relation correctness,
+  decoupling sensitivity, exact sparsity = 8, task+reconstruction gradients reach
+  D, no column collapse).  Two implementation findings fixed before any formal
+  run: pynauty.canon_label is NOT an invariant vertex ORDER when the colouring
+  omits root/shell (fix: root+distance colours, the repo's typed-patch
+  construction); and the tied-IHT step size must use a deterministic
+  power-iteration start vector.  VERDICT (frozen): fixed-coordinate canonical raw
+  local patches are not a suitable K-SVD domain because the coordinate space does
+  not preserve raw structural proximity.  SCOPE: single seed, one frozen
+  coordinate construction and one WL nearness operationalization; NOT a statement
+  that dictionary learning on molecular patches is impossible; Gates 2/3/4 not
+  run (composition, task coupling, absolute performance untested); official test
+  never read.
+evidence:
+  - tracks/ksvd/notes/tccd_v0_preregistration.md
+  - tracks/ksvd/notes/tccd_v0_analysis.md
+  - tracks/ksvd/results/tccd_v0/gate0.json
+  - tracks/ksvd/results/tccd_v0/gate1.json
+  - tracks/ksvd/code/tccd_v0.py
+  - tracks/ksvd/code/run_tccd_v0.py
+  - tracks/ksvd/tests/test_tccd_v0.py
