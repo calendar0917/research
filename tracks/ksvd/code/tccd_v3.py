@@ -25,6 +25,7 @@ import torch
 import torch.nn as nn
 
 from tracks.ksvd.code import tccd_v0 as T
+from tracks.ksvd.code import tccd_v1 as V1
 from tracks.ksvd.code import tccd_v2 as V2
 from tracks.ksvd.code.run_tccd_v0 import load_or_build_records, records_cache_path
 from tracks.ksvd.experiments.luyin16 import zinc_shared_structural_patch_encoder as SSPE
@@ -351,7 +352,7 @@ def _official_records(data_root: Path) -> tuple[list[dict[str, Any]], list[dict[
         len(valid_mols),
     )
     meta = {
-        "train_records_source": str(V2.V0_TRAIN_CACHE.relative_to(REPO_ROOT)),
+        "train_records_source": str(V1.V0_TRAIN_CACHE.relative_to(REPO_ROOT)),
         "train_meta": train_meta,
         "valid_records_cached": bool(valid_cached),
         "valid_records_source": str(
