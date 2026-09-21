@@ -1,0 +1,40 @@
+claim_id: claim-tccd-v1-composition-task-coupling-dense-control-20260921
+created: '2026-09-21T23:55:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  TCCD-v1 on ZINC supports assignment-sensitive frozen composition and task
+  coupling, but does not support a sparse-dictionary predictive advantage over
+  a matched dense local latent control. Gate A passed on remote A100 GPU1 at
+  commit 3739c3a: REL MAE 0.750809 versus REL-SHUFFLE 0.941584, giving
+  delta_comp 0.190775 against the PASS threshold 0.015; BAG MAE was 1.078464.
+  Gate B then passed on local CPU using a math-equivalent padded/vectorized
+  implementation at commit 0b6ebc4: FROZEN-D MAE 1.087302 versus TASK-D MAE
+  0.938099, delta_task 0.149203 against the PASS threshold 0.010. The
+  TCCD-v0 dictionary D0 was reused throughout and K-SVD was never refit. Gate C
+  failed on local CPU at commit 5e3a4cf: TASK-D MAE 0.938099 versus matched
+  DENSE MAE 0.403933, so TASK-D is worse by 0.534167 versus the allowed 0.005
+  margin. Gate D was not run. Official test was never loaded or referenced.
+  Post-Gate-B diagnostics remained report-only: code continuity AUC 0.477500
+  frozen versus 0.506250 TASK-D, dead atoms 0 versus 32, reused atoms 64/64
+  versus 31/64, and top-8 mass share 0.287924 versus 0.470679. These support
+  task-oriented reorganization rather than recovery of a smooth local manifold.
+scope: >-
+  Gate B and Gate C are local-CPU matched internal comparisons after the remote
+  GPU1 path was stopped for excessive runtime. The vectorized path was checked
+  against the original path with exact synthetic contraction/reconstruction
+  tests. This claim does not include a GPU1 absolute-performance result and
+  does not authorize any official-test access.
+evidence:
+  - tracks/ksvd/notes/tccd_v1_preregistration.md
+  - tracks/ksvd/notes/tccd_v1_analysis.md
+  - tracks/ksvd/notes/tccd_v1_gateA_analysis.md
+  - tracks/ksvd/notes/tccd_v1_gateB_analysis.md
+  - tracks/ksvd/notes/tccd_v1_gateC_analysis.md
+  - tracks/ksvd/notes/tccd_v1_gateD_not_run.md
+  - tracks/ksvd/results/tccd_v1/gateA_decision.json
+  - tracks/ksvd/results/tccd_v1/gateB_decision.json
+  - tracks/ksvd/results/tccd_v1/gateB_diagnostics_seed0.json
+  - tracks/ksvd/results/tccd_v1/gateC.json
+  - tracks/ksvd/tests/test_tccd_v1.py

@@ -1,0 +1,60 @@
+decision_id: decision-tccd-v1-stop-dense-control-20260921
+created: '2026-09-21T23:55:00'
+kind: decision
+study_id: zinc-context-gap
+because: >-
+  TCCD-v1 was preregistered as a new round on top of TCCD-v0 evidence. The
+  frozen TCCD-v0 D0 dictionary was reused with no K-SVD refit. Gate A passed
+  on remote A100 GPU1 (REL 0.750809, REL-SHUFFLE 0.941584, delta_comp
+  0.190775). Gate B passed on local CPU after the original remote graphwise
+  path was stopped for excessive runtime; the validated vectorized path gave
+  FROZEN-D 1.087302, TASK-D 0.938099, delta_task 0.149203. Gate B diagnostics
+  were report-only and showed no restoration of continuity. Gate C then failed
+  decisively: TASK-D 0.938099 versus matched DENSE 0.403933, a 0.534167 gap
+  against the 0.005 PASS margin. Official test was never loaded.
+decision: >-
+  STOP TCCD-v1 at Gate C. Do not run Gate D, do not run seed 1, do not add a
+  GNN, MLP, handcrafted feature, extra relation, reader-capacity, or
+  loss-weight rescue. The frozen sparse dictionary is not supported as a
+  uniquely useful predictive inductive bias against the matched dense control.
+  The result is mechanism-positive for composition and task coupling but
+  architecture-negative for sparse dictionary uniqueness.
+alternatives_rejected:
+  - item: Finish the interrupted remote Gate B run
+    because: >-
+      The remote run had not produced a scientific result; the user explicitly
+      requested stopping server use. A numerically validated local vectorized
+      path completed the same internal comparison.
+  - item: Re-run Gate B or C with seed 1
+    because: >-
+      Gate B passed directly at delta_task >= 0.010, while Gate C failed by a
+      very large margin. The preregistered ambiguity rule does not authorize a
+      rescue seed after a decisive Gate C failure.
+  - item: Run Gate D anyway
+    because: >-
+      Gate C is a hard prerequisite for Gate D. The absolute-performance result
+      would not rescue the failed dictionary-uniqueness claim.
+  - item: Interpret continuity movement as a mechanism rescue
+    because: >-
+      Continuity, reuse, semantics and support entropy were explicitly
+      report-only diagnostics in TCCD-v1 and cannot override Gate C.
+consequences:
+  - >-
+    Supported: frozen C^T R C composition contains assignment-sensitive
+    predictive information.
+  - >-
+    Supported: task supervision improves the sparse dictionary relative to the
+    frozen K-SVD control.
+  - >-
+    Ruled out: the sparse task-coupled dictionary is not competitive with the
+    matched dense latent representation in this object class.
+  - >-
+    Gate D absolute MAE is not measured; no TCCD-v1 test-side or full-data
+    competitiveness claim is allowed.
+next_action: >-
+  NONE auto-authorized. Any continuation requires a new preregistration for a
+  genuinely different object class, such as a permutation-invariant learned
+  local encoder before a dictionary. Do not reopen official test data.
+revisit_if: >-
+  a new round changes the object class and preregisters a matched dense control,
+  execution regime, and stop thresholds before any experiment.
