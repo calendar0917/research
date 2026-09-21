@@ -1,0 +1,83 @@
+decision_id: decision-tccd-v3-stop-strong-local-bridge-20260921
+created: '2026-09-21T23:42:59Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  TCCD-v2 showed a large official-valid gap versus the canonical strong local
+  reference. TCCD-v3 isolated the local-representation question by reusing a
+  frozen pure-local 16-D structural encoder and adding only a matched 16-to-64
+  linear adapter, while freezing the TCCD-v2 prototype/composition/reader
+  protocol.
+protocol: >-
+  Preregistered GPU1-only diagnostic, seed 0, official train 10000 / valid
+  1000, official test never loaded, one frozen strong-local checkpoint, exact
+  TCCD-v2 K=64 vocabulary and five relations, DenseREL and PrototypeREL,
+  evaluation-only assignment shuffle, Top-5 soup, and no rescue sweeps.
+results:
+  commit: 18753a1622dba61fba770372da8e192df3095ea1
+  source_checkpoint: tracks/ksvd/results/shared_structural_patch_encoder/soup_states/sspe_seed0_top5_soup.pt
+  source_checkpoint_sha256: 785dff866fa8d952d6e9764549761a7019a4e46ffd70d625110b618f51e6a2c4
+  strong_source_commit: 0aa71c81e845fd334c8ecd2bf7904c149277c289
+  gate0_all_pass: true
+  strong_dense_best_valid_mae: 1.1070233583450317
+  strong_dense_soup_valid_mae: 1.1028200387954712
+  strong_proto_best_valid_mae: 0.9825019240379333
+  strong_proto_soup_valid_mae: 0.9718574285507202
+  shuffle_best_valid_mae: 1.2425556182861328
+  delta_local: -0.6951649240379334
+  delta_proto_strong: -0.12452143430709839
+  delta_comp_strong: 0.26005369424819946
+  decision_level: L3
+  active_prototypes: 64
+  dead_prototypes: 0
+  effective_prototype_count: 62.68351608504851
+  official_test_loaded: false
+decision: >-
+  STOP TCCD-v3 at the preregistered L3 Strong-Local Bridge failure. The strong
+  standalone local encoder does not rescue the frozen TCCD-v2 composition and
+  reader interface. Do not unfreeze or retrain the strong encoder, add reader
+  capacity, change relations, sweep K or temperature, add pair/topology or
+  higher-order machinery, or spend rescue seeds.
+alternatives_rejected:
+  - item: Treat the prototype vocabulary as the remaining simple failure
+    because: >-
+      PrototypeREL beats DenseREL by 0.124521 MAE on the primary best-checkpoint
+      metric and the vocabulary remains broad at 64/64 active prototypes.
+  - item: Treat assignment composition as unnecessary
+    because: >-
+      Evaluation-only row shuffling worsens valid MAE by 0.260054 while keeping
+      relation matrices fixed; the composition remains materially
+      assignment-sensitive.
+  - item: Add capacity or rescue sweeps inside TCCD-v3
+    because: >-
+      The preregistration stops after DenseREL, PrototypeREL, shuffle and
+      vocabulary diagnostics; rescue changes would confound the bridge audit.
+  - item: Open official test
+    because: >-
+      The official test is hard-frozen and was never loaded; the valid-side L3
+      decision is already decisive.
+consequences:
+  - >-
+    The absolute TCCD-v2 gap is not explained mainly by the simple 714-to-64
+    local encoder alone.
+  - >-
+    Strong local features remain useful inside the fixed composition interface,
+    but their standalone B-full performance does not transfer through the
+    TCCD-v2 prototype/readout path.
+  - >-
+    The next research question, if reopened, is an interface or representation
+    family redesign under a new preregistration, not another local encoder,
+    reader, K, temperature or relation sweep in this round.
+revisit_if: >-
+  Only a separately preregistered architecture-level study may revisit the
+  interface between learned local features and graph-level composition. It must
+  preserve the official-test freeze and declare matched controls before any
+  training.
+evidence:
+  - tracks/ksvd/notes/tccd_v3_strong_local_bridge_preregistration.md
+  - tracks/ksvd/notes/tccd_v3_strong_local_bridge_analysis.md
+  - tracks/ksvd/results/tccd_v3/gate0.json
+  - tracks/ksvd/results/tccd_v3/cache.json
+  - tracks/ksvd/results/tccd_v3/dense_seed0.json
+  - tracks/ksvd/results/tccd_v3/prototype_seed0.json
+  - tracks/ksvd/results/tccd_v3/diagnostics.json

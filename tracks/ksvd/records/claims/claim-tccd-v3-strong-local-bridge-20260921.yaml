@@ -1,0 +1,37 @@
+claim_id: claim-tccd-v3-strong-local-bridge-20260921
+created: '2026-09-21T23:42:59Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  TCCD-v3 rejects the narrow hypothesis that TCCD-v2's absolute performance gap
+  is mainly caused by its simple 714-to-64 local encoder. Replacing that local
+  encoder with a frozen pure-local SharedStructuralPatchEncoder output in R^16
+  plus the preregistered matched Linear(16,64) adapter, while keeping the
+  TCCD-v2 prototype vocabulary, C^T R C relations, lightweight reader,
+  temperature and regularizers unchanged, gives StrongLocal-PrototypeREL best
+  valid MAE 0.982502 and Top-5 soup MAE 0.971857 versus TCCD-v2 PrototypeREL
+  best valid 0.287337 and canonical standalone strong-local reference 0.119818.
+  The bridge therefore fails the preregistered L1/L2 thresholds and is L3.
+  The failure is not a Gate-0 locality/freeze failure, vocabulary collapse, or
+  composition-insensitivity artifact: all Gate-0 checks pass, 64/64 prototypes
+  remain active, effective prototype count is 62.6835, and evaluation-only
+  assignment shuffle worsens MAE by 0.260054.
+scope: >-
+  One frozen seed-0 strong-local checkpoint, official ZINC train 10000 and valid
+  1000, remote A100 GPU1, commit 18753a1, radius-2 pure-local patch embeddings,
+  frozen encoder, matched 16-to-64 linear adapter, exact TCCD-v2 prototype and
+  relation machinery, and official-test freeze. This is a bridge audit, not an
+  unbiased final-model comparison, because the reused strong checkpoint was
+  selected on official valid in its source study.
+evidence:
+  - tracks/ksvd/notes/tccd_v3_strong_local_bridge_preregistration.md
+  - tracks/ksvd/notes/tccd_v3_strong_local_bridge_preregistration.md
+  - tracks/ksvd/notes/tccd_v3_strong_local_bridge_analysis.md
+  - tracks/ksvd/results/tccd_v3/gate0.json
+  - tracks/ksvd/results/tccd_v3/cache.json
+  - tracks/ksvd/results/tccd_v3/dense_seed0.json
+  - tracks/ksvd/results/tccd_v3/prototype_seed0.json
+  - tracks/ksvd/results/tccd_v3/diagnostics.json
+  - tracks/ksvd/tests/test_tccd_v3.py
+official_test_loaded: false
