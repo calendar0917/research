@@ -174,12 +174,12 @@ def gate0(args, log=print) -> int:
     return 0 if passed else 1
 
 
-def _train_arm(mode: str, args, records, tr_idx, dev_idx, device, log):
+def _train_arm(mode: str, args, records_train, records_dev, tr_idx, dev_idx, device, log):
     layout = V.frozen_layout()
     model = _make_model(mode, args, layout, device)
     _peak_reset(device)
     res = V.train_model(
-        model, records, records, list(tr_idx), list(dev_idx), device,
+        model, records_train, records_dev, list(tr_idx), list(dev_idx), device,
         seed=args.seed, max_epochs=args.max_epochs, patience=args.patience,
         batch=args.batch, log=log,
     )
@@ -208,12 +208,12 @@ def gate_a(args, log=print) -> int:
         "historical_tccd_v1_soup_valid": V.DENSE_REFERENCE_SOUP,
     }
 
-    model_rel, rel = _train_arm("rel", args, records, tr_idx, dev_idx, device, log)
+    model_rel, rel = _train_arm("rel", args, records, records, tr_idx, dev_idx, device, log)
     rel_best_path = _save_model_state(f"prototype_rel_seed{args.seed}_best", rel.state_best)
     rel_soup_path = _save_model_state(f"prototype_rel_seed{args.seed}_soup", rel.state_soup) if rel.state_soup is not None else None
     rel_shuffle = V.evaluate_mae(model_rel, records, dev_idx, device, batch=64, shuffle=True, seed=args.seed)
 
-    model_bag, bag = _train_arm("bag", args, records, tr_idx, dev_idx, device, log)
+    model_bag, bag = _train_arm("bag", args, records, records, tr_idx, dev_idx, device, log)
     bag_best_path = _save_model_state(f"prototype_bag_seed{args.seed}_best", bag.state_best)
     delta_comp = float(rel_shuffle - rel.best_valid)
     delta_proto = float(rel.best_valid - dense["best_valid"])
@@ -334,8 +334,8 @@ def absolute(args, log=print) -> int:
     )
     log(f"[absolute] full train={len(train_records)} official valid={len(valid_records)} cached_valid={valid_cached}")
 
-    model, res = _train_arm("rel", args, train_records, list(range(len(train_records))),
-                             list(range(len(valid_records))), device, log)
+    model, res = _train_arm("rel", args, train_records, valid_records,
+                             list(range(len(train_records))), list(range(len(valid_records))), device, log)
     delta_abs = float(res.best_valid - V.CANONICAL_GPU1_BASELINE)
     if delta_abs <= 0.015:
         band = "COMPETITIVE"
