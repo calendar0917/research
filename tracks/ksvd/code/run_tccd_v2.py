@@ -18,7 +18,7 @@ import numpy as np
 from tracks.ksvd.code import tccd_v0 as T
 from tracks.ksvd.code import tccd_v1 as V1
 from tracks.ksvd.code import tccd_v2 as V
-from tracks.ksvd.code.run_tccd_v0 import continuity_audit, internal_split
+from tracks.ksvd.code.run_tccd_v0 import continuity_audit, internal_split, load_or_build_records
 
 OUT_DIR = V.RESULTS_DIR
 
@@ -306,9 +306,86 @@ def vocabulary(args, log=print) -> int:
     return 0 if passed else 1
 
 
+def absolute(args, log=print) -> int:
+    device = args.device
+    gate_path = OUT_DIR / f"gateA_seed{args.seed}.json"
+    vocab_path = OUT_DIR / f"vocabulary_seed{args.seed}.json"
+    if not gate_path.exists() or not vocab_path.exists():
+        raise SystemExit("absolute stage requires Gate A and vocabulary results")
+    gate = json.loads(gate_path.read_text())
+    vocab = json.loads(vocab_path.read_text())
+    if gate.get("verdict") != "PASS":
+        raise SystemExit("absolute stage requires Gate A PASS")
+    if not vocab.get("vocabulary_pass", False):
+        raise SystemExit("absolute stage requires vocabulary PASS")
+    internal_mae = float(gate["prototype_rel"]["best_valid"])
+    if internal_mae > V.ABSOLUTE_GATE:
+        raise SystemExit(f"absolute stage blocked: internal Prototype-REL MAE {internal_mae:.6f} > {V.ABSOLUTE_GATE:.2f}")
+
+    train_records, meta = V.load_train_records()
+    layout = V.frozen_layout()
+    train_mols, _ = T.load_mols(args.data_root, "train")
+    atom_index, bond_index = T.category_catalog(train_mols)
+    if len(atom_index) != layout.n_atom or len(bond_index) != layout.n_bond:
+        raise SystemExit("frozen layout catalog mismatch on full train")
+    valid_mols, valid_y = T.load_mols(args.data_root, "valid")
+    valid_records, valid_cached = load_or_build_records(
+        "valid", valid_mols, layout, atom_index, bond_index, valid_y, len(valid_mols), log=log
+    )
+    log(f"[absolute] full train={len(train_records)} official valid={len(valid_records)} cached_valid={valid_cached}")
+
+    model, res = _train_arm("rel", args, train_records, list(range(len(train_records))),
+                             list(range(len(valid_records))), device, log)
+    delta_abs = float(res.best_valid - V.CANONICAL_GPU1_BASELINE)
+    if delta_abs <= 0.015:
+        band = "COMPETITIVE"
+    elif delta_abs <= 0.05:
+        band = "PROMISING_BUT_INSUFFICIENT"
+    else:
+        band = "NOT_VIABLE"
+    C_valid, mol_ids = V.collect_assignments(model, valid_records, list(range(len(valid_records))), device, batch=64)
+    usage = V.usage_metrics(C_valid, mol_ids)
+    out = {
+        "protocol": V.PROTOCOL_VERSION,
+        "gate": "absolute",
+        "commit": T.git("rev-parse", "HEAD"),
+        "device": device,
+        "gpu": T.provenance(device).get("gpu"),
+        "seed": args.seed,
+        "n_official_train": len(train_records),
+        "n_official_valid": len(valid_records),
+        "valid_records_cached": bool(valid_cached),
+        "split": "official train -> official valid; official test never loaded",
+        "architecture": "shared 714->64 task-learned local encoder -> K64 soft prototypes -> C^T R C",
+        "K": V.K_PROTO,
+        "d": V.D_LOCAL,
+        "temperature_parameterization": "0.05+0.95*sigmoid(a)",
+        "ksvd_refit_performed": False,
+        "omp_or_iht_used": False,
+        "reconstruction_loss_used": False,
+        "official_test_loaded": False,
+        "internal_gate_mae": internal_mae,
+        "best_valid_mae": res.best_valid,
+        "best_epoch": res.best_epoch,
+        "soup_valid_mae": res.soup_valid,
+        "soup_members": res.soup_members,
+        "regularization": res.regularization,
+        "learned_temperature": float(model.temperature().detach()),
+        "canonical_gpu1_baseline": V.CANONICAL_GPU1_BASELINE,
+        "delta_abs": delta_abs,
+        "band": band,
+        "usage_on_official_valid": usage,
+        "wall_s": res.wall_s,
+        "peak_mem_mb": res.peak_mem_mb,
+    }
+    T.write_json(OUT_DIR / f"absolute_seed{args.seed}.json", out)
+    log(f"[absolute] valid={res.best_valid:.6f} soup={res.soup_valid:.6f} baseline={V.CANONICAL_GPU1_BASELINE:.6f} delta_abs={delta_abs:.6f} -> {band}")
+    return 0 if band != "NOT_VIABLE" else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("stage", choices=["gate0", "gateA", "vocabulary"])
+    p.add_argument("stage", choices=["gate0", "gateA", "vocabulary", "absolute"])
     p.add_argument("--data-root", type=Path, default=T.REPO_ROOT / "data/ZINC")
     p.add_argument("--device", default="cuda")
     p.add_argument("--seed", type=int, default=0)
@@ -329,6 +406,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return gate_a(args)
     if args.stage == "vocabulary":
         return vocabulary(args)
+    if args.stage == "absolute":
+        return absolute(args)
     raise SystemExit(2)
 
 
