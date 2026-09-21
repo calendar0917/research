@@ -355,6 +355,192 @@ def ridge_reader(
 
 
 # ===========================================================================
+# vectorized end-to-end training path
+# ===========================================================================
+def make_padded_batch(records: Sequence[Mapping[str, Any]], indices: Sequence[int], device: str):
+    """Build a padded batch without changing the graph-local math.
+
+    The slow v0 path builds one tensor per graph and contracts each graph in a
+    Python loop. This path pads only within the batch, stacks the five frozen
+    relations, and contracts all graphs with one batched einsum. Padded rows
+    are zero, so they contribute exactly zero to both the task representation
+    and the reconstruction loss (the loss is masked to real patch rows).
+    """
+    torch = T._torch()
+    if not indices:
+        raise ValueError("empty batch")
+    bsz = len(indices)
+    max_n = max(int(records[i]["n"]) for i in indices)
+    F = int(np.asarray(records[indices[0]]["X"]).shape[1])
+    X_np = np.zeros((bsz, max_n, F), dtype=np.float32)
+    R_np = np.zeros((bsz, N_REL, max_n, max_n), dtype=np.float32)
+    valid_np = np.zeros((bsz, max_n), dtype=np.bool_)
+    y_np = np.zeros((bsz,), dtype=np.float32)
+    for bi, gi in enumerate(indices):
+        rec = records[gi]
+        n = int(rec["n"])
+        X_np[bi, :n] = np.asarray(rec["X"], dtype=np.float32)
+        ops = T.relation_matrices(rec)
+        for ri, R in enumerate([ops[0], *ops[1], ops[2]]):
+            R_np[bi, ri, :n, :n] = np.asarray(R, dtype=np.float32)
+        valid_np[bi, :n] = True
+        y_np[bi] = float(rec.get("y", 0.0))
+    iu0_np, iu1_np = T.sym_indices(T.K_DICT)
+    return {
+        "X_pad": torch.as_tensor(X_np, dtype=torch.float32, device=device),
+        "R_pad": torch.as_tensor(R_np, dtype=torch.float32, device=device),
+        "valid": torch.as_tensor(valid_np, dtype=torch.bool, device=device),
+        "y": torch.as_tensor(y_np, dtype=torch.float32, device=device),
+        "iu0": torch.as_tensor(iu0_np, dtype=torch.long, device=device),
+        "iu1": torch.as_tensor(iu1_np, dtype=torch.long, device=device),
+    }
+
+
+def compose_padded(C, R_pad, valid, iu0, iu1):
+    """Batched equivalent of ``T.compose_torch`` for non-shuffled graphs."""
+    torch = T._torch()
+    B, N, K = C.shape
+    C = C * valid.unsqueeze(-1).to(C.dtype)
+    M = torch.einsum("bnk,brnm,bml->brkl", C, R_pad, C)
+    pair = M[:, :, iu0, iu1].reshape(B, -1)
+    return torch.cat([C.sum(dim=1), pair], dim=1)
+
+
+def _fast_forward(model, batch, s: int = T.SPARSITY):
+    B, N, F = batch["X_pad"].shape
+    X_flat = batch["X_pad"].reshape(-1, F)
+    C_flat = model.encode(X_flat, s=s)
+    C = C_flat.reshape(B, N, -1)
+    h = compose_padded(C, batch["R_pad"], batch["valid"], batch["iu0"], batch["iu1"])
+    pred = model.head(h).reshape(-1)
+    return pred, C_flat, X_flat
+
+
+def _masked_reconstruction_loss(X_flat, C_flat, D, valid_flat):
+    rec = ((X_flat - C_flat @ D.t()) ** 2).sum(dim=1) / (
+        (X_flat ** 2).sum(dim=1) + T.EPS
+    )
+    return rec[valid_flat].mean()
+
+
+def evaluate_mae_fast(model, records, indices, device, *, batch=64) -> float:
+    torch = T._torch()
+    model.eval()
+    errs = []
+    with torch.no_grad():
+        for start in range(0, len(indices), batch):
+            chunk = list(indices[start : start + batch])
+            b = make_padded_batch(records, chunk, device)
+            pred, _, _ = _fast_forward(model, b)
+            errs.append((pred - b["y"]).abs().cpu().numpy())
+    return float(np.concatenate(errs).mean())
+
+
+def train_model_fast(
+    model,
+    records_train,
+    records_dev,
+    train_indices,
+    dev_indices,
+    device: str,
+    *,
+    seed: int = 0,
+    s: int = T.SPARSITY,
+    max_epochs: int = T.MAX_EPOCHS,
+    patience: int = T.PATIENCE,
+    batch: int = T.BATCH,
+    lr: float = T.LR,
+    wd: float = T.WD,
+    clip: float = T.CLIP,
+    calibrate_rec: bool = False,
+    log=print,
+):
+    """Math-equivalent fast path for Gate B/C/D (no row-shuffle arm)."""
+    torch = T._torch()
+    torch.manual_seed(int(seed))
+    rng = np.random.default_rng(int(seed) + 91011)
+    opt = torch.optim.Adam([p for p in model.parameters() if p.requires_grad], lr=lr, weight_decay=wd)
+
+    lam = None
+    if calibrate_rec:
+        cal_idx = list(train_indices[: min(512, len(train_indices))])
+        b = make_padded_batch(records_train, cal_idx, device)
+        with torch.no_grad():
+            pred, C_flat, X_flat = _fast_forward(model, b, s=s)
+            l_rec = float(_masked_reconstruction_loss(
+                X_flat, C_flat, model.D, b["valid"].reshape(-1)
+            ))
+            l_task = float((pred - b["y"]).abs().mean())
+        lam = l_task / (l_rec + 1e-12)
+        log(f"  calibrated lambda_rec={lam:.6f} (task={l_task:.6f} rec={l_rec:.6f})")
+
+    best = math.inf
+    best_epoch = -1
+    best_state = None
+    top: list[tuple[float, int, Any]] = []
+    history: list[dict[str, Any]] = []
+    stale = 0
+    for epoch in range(1, int(max_epochs) + 1):
+        model.train()
+        order = rng.permutation(len(train_indices))
+        ep_loss = 0.0
+        ep_n = 0
+        for start in range(0, len(order), batch):
+            sel = [train_indices[i] for i in order[start : start + batch]]
+            b = make_padded_batch(records_train, sel, device)
+            opt.zero_grad(set_to_none=True)
+            pred, C_flat, X_flat = _fast_forward(model, b, s=s)
+            task = (pred - b["y"]).abs().mean()
+            loss = task
+            if lam is not None:
+                rec = _masked_reconstruction_loss(
+                    X_flat, C_flat, model.D, b["valid"].reshape(-1)
+                )
+                loss = task + lam * rec
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], clip)
+            opt.step()
+            model.renormalize_()
+            ep_loss += float(loss.detach()) * len(sel)
+            ep_n += len(sel)
+        dev_mae = evaluate_mae_fast(model, records_dev, dev_indices, device, batch=64)
+        history.append({"epoch": epoch, "train_loss": ep_loss / max(ep_n, 1), "valid": dev_mae})
+        log(f"  epoch={epoch:03d} train={ep_loss / max(ep_n, 1):.6f} valid={dev_mae:.6f} best@{best_epoch}")
+        if dev_mae < best - 1e-9:
+            best = dev_mae
+            best_epoch = epoch
+            best_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
+            stale = 0
+        else:
+            stale += 1
+        if len(top) < T.TOP_K_SOUP or dev_mae < max(t[0] for t in top):
+            top.append((dev_mae, epoch, {k: v.detach().clone() for k, v in model.state_dict().items()}))
+            top.sort(key=lambda t: t[0])
+            top = top[: T.TOP_K_SOUP]
+        if stale >= int(patience):
+            log(f"  early stop at epoch {epoch}")
+            break
+
+    soup = None
+    soup_mae = None
+    members: list[int] = []
+    if top:
+        members = [e for _, e, _ in top]
+        keys = top[0][2].keys()
+        soup = {k: sum(st[k].float() for _, _, st in top) / len(top) for k in keys}
+        backup = {k: v.detach().clone() for k, v in model.state_dict().items()}
+        model.load_state_dict(soup)
+        soup_mae = evaluate_mae_fast(model, records_dev, dev_indices, device, batch=64)
+        model.load_state_dict(backup)
+    model.load_state_dict(best_state if best_state is not None else model.state_dict())
+    return T.TrainResult(
+        best_valid=float(best), best_epoch=int(best_epoch),
+        soup_valid=None if soup_mae is None else float(soup_mae),
+        soup_members=members, train_history=history, state_soup=soup, lam_rec=lam,
+    )
+
+
+# ===========================================================================
 # gate decision helpers (frozen thresholds)
 # ===========================================================================
 def gate_a_verdict(delta: float, seed: int, seed0_delta: float | None = None) -> str:

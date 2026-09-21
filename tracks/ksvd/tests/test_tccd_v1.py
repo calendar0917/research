@@ -134,3 +134,35 @@ def test_ridge_reader_standardizes_with_train_stats_only():
     a = V.ridge_reader(X[:320], y[:320], X[320:], y[320:], **kw).best_valid
     b = V.ridge_reader((X + 5.0)[:320], y[:320], (X + 5.0)[320:], y[320:], **kw).best_valid
     assert abs(a - b) <= 1e-6
+
+
+def test_padded_fast_path_matches_slow_graphwise_path():
+    torch = T._torch()
+    layout = _layout()
+    ai, bi = _indices()
+    records = []
+    for seed in range(5):
+        rec = T.build_mol_record(synthetic_zinc_like(seed, 12), layout, ai, bi)
+        rec["y"] = float(seed)
+        records.append(rec)
+    idx = [0, 1, 2, 3]
+    slow = T.make_batch(records, idx, "cpu")
+    fast = V.make_padded_batch(records, idx, "cpu")
+    D = T.random_normalized_dictionary(layout.feature_dim, T.K_DICT, 9).astype(np.float32)
+    model = T.TCCDModel.build(layout.feature_dim, T.K_DICT, V.N_REL, D, dense=False).to("cpu")
+    with torch.no_grad():
+        C = model.encode(slow["X_all"])
+        hs = []
+        for gi, graph in enumerate(slow["graphs"]):
+            hs.append(T.compose_torch(C[graph["slice"]], graph["Rint"], graph["Rb"],
+                                      graph["Rgeo"], slow["iu0"], slow["iu1"]))
+        pred_slow = model.head(torch.stack(hs)).reshape(-1)
+        pred_fast, C_fast, X_fast = V._fast_forward(model, fast)
+        rec_slow = ((slow["X_all"] - C @ model.D.t()) ** 2).sum(1) / (
+            (slow["X_all"] ** 2).sum(1) + T.EPS
+        )
+        rec_fast = V._masked_reconstruction_loss(
+            X_fast, C_fast, model.D, fast["valid"].reshape(-1)
+        )
+    assert float((pred_slow - pred_fast).abs().max()) <= 1e-6
+    assert abs(float(rec_slow.mean() - rec_fast)) <= 1e-6

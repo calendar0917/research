@@ -28,7 +28,7 @@ import numpy as np
 
 from tracks.ksvd.code import tccd_v0 as T
 from tracks.ksvd.code import tccd_v1 as V
-from tracks.ksvd.code.run_tccd_v0 import internal_split, load_or_build_records, _train_arm
+from tracks.ksvd.code.run_tccd_v0 import internal_split, load_or_build_records
 
 OUT_DIR = V.RESULTS_DIR
 
@@ -121,9 +121,9 @@ def smoke(args, log=print) -> int:
     # 5. D does not collapse and train loss decreases over a few steps
     before = model.D.detach().clone()
     me = min(int(args.max_epochs), 30)  # smoke is not a formal training run
-    res = T.train_model(model, records, records, sub, sub, device, seed=args.seed,
-                        max_epochs=me, patience=max(me, 1),
-                        batch=int(args.batch), calibrate_rec=True, log=log)
+    res = V.train_model_fast(model, records, records, sub, sub, device, seed=args.seed,
+                             max_epochs=me, patience=max(me, 1),
+                             batch=int(args.batch), calibrate_rec=True, log=log)
     after = model.D.detach()
     checks["D_updated"] = bool(float((after - before).abs().max()) > 0)
     col = after.norm(dim=0)
@@ -239,9 +239,24 @@ def gate_a(args, log=print) -> int:
 # Gate B — task coupling
 # ===========================================================================
 def _train_arm_timed(arm, args, layout, records, tr_idx, dev_idx, device, D, log):
+    """Train Gate B/C arms with the vectorized math-equivalent path."""
+    torch = T._torch()
+    dense = arm == "DENSE"
+    frozen = arm == "FROZEN-D"
+    model = T.TCCDModel.build(
+        layout.feature_dim, T.K_DICT, V.N_REL, D,
+        dense=dense, frozen_D=frozen, readout_dim=None, seed=args.seed,
+    )
+    if frozen:
+        model.D.requires_grad_(False)
+    model = model.to(device)
     _peak_reset(device)
     t0 = time.time()
-    res = _train_arm(arm, args, layout, records, tr_idx, dev_idx, device, D, log)
+    res = V.train_model_fast(
+        model, records, records, list(tr_idx), list(dev_idx), device,
+        seed=args.seed, max_epochs=args.max_epochs, patience=args.patience,
+        batch=args.batch, calibrate_rec=(arm == "TASK-D"), log=log,
+    )
     return res, {"wall_s": time.time() - t0, "peak_mem_mb": _peak_mb(device)}
 
 
@@ -363,7 +378,7 @@ def gate_d(args, log=print) -> int:
     model = model.to(device)
     _peak_reset(device)
     t0 = time.time()
-    res = T.train_model(
+    res = V.train_model_fast(
         model, records, valid_records, list(range(len(records))), list(range(len(valid_records))),
         device, seed=args.seed, max_epochs=args.max_epochs, patience=args.patience,
         batch=args.batch, calibrate_rec=True, log=log,
