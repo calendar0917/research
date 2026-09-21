@@ -78,6 +78,15 @@ deliberate fallback implemented here because the original structural payload,
 capacity/cache, and classifier inputs are absent. This difference is material
 and is the main reason the current result must be reported as a proxy.
 
+> **Provenance note (2026-09-21).** `artifacts/` is git-ignored, so the two
+> scripts cited above were not part of the repository and could not be
+> inspected from a fresh clone. They are now vendored byte-for-byte (with
+> sha256 and a dependency audit) at
+> [`mentor_upstream/v1_20260921/`](../../experiments/luyin16/mentor_upstream/v1_20260921/README.md),
+> alongside five further mentor scripts. Nothing in this report's conclusion
+> changes: the vendored snapshot confirms the same missing-dependency picture
+> described below and is **not** a runnable full reproduction package.
+
 The artifact source itself expects files that are absent from the supplied workspace:
 
 - the original `composition[69]` and `recon_typed[624]` feature payloads;

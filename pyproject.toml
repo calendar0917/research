@@ -88,4 +88,11 @@ markers = [
 [tool.ruff]
 line-length = 110
 target-version = "py312"
-exclude = ["tracks/*/results", "artifacts", "data"]
+exclude = [
+  "tracks/*/results",
+  "artifacts",
+  "data",
+  # vendored upstream snapshots are kept byte-for-byte; never reformat them
+  "tracks/*/code/vendor",
+  "tracks/*/experiments/*/mentor_upstream",
+]

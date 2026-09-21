@@ -44,7 +44,7 @@ cat tracks/<name>/TRACK.md          # 该课题 charter
 | `scripts/init_track.sh` | 从模板初始化新课题 |
 | `templates/track/` | 课题脚手架 |
 | `data/` | 大数据集（建议 gitignore） |
-| `artifacts/` | 临时导出 |
+| `artifacts/` | 临时导出（git-ignored；**不可再生的上游源码需 vendor 进 track**，见 `tracks/ksvd/experiments/luyin16/mentor_upstream/`） |
 | `AGENT.md` | AI/Agent 使用规范 |
 
 活跃 KSVD 代码统一通过 `uv run python ...` 执行。HOD-GNN 复现保留其独立的官方环境说明。

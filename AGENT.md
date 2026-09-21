@@ -63,6 +63,12 @@
 - `tracks/<track>/notes/`：定义、决策和实验意图，不堆大段结果表。
 - `docs/luyin/`：录音原文档案，不改写、不删除；整理结论写入 track notes 或 results。
 - `data/`、`artifacts/`：本地数据和生成物，默认不提交。
+  例外：**不可再生的上游/导师原始源码**不做生成物处理。若要长期审计，保持
+  `artifacts/` 不变，把源码逐字节 vendor 进对应 track（先例：
+  `tracks/ksvd/experiments/luyin16/mentor_upstream/v1_20260921/`、
+  `tracks/gsn-replication/code/vendor/`、
+  `tracks/ksvd/results/zinc_long_cycle_audit/upstream/`），并在同目录写
+  sha256 溯源与已知限制；不要就地修改被引用的原件。
 
 新实验流程：`research run` → `runs/`；有意义 → `research promote` →
 `records/runs/`。Legacy 历史结果（`results/luyin16/`）保留，不删除。
