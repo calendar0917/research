@@ -203,8 +203,8 @@ def struct_example_from_plain(graph: Mapping[str, Any] | Any, graph_id: int, *, 
         dst=dst,
         bond=bond,
         n_patches=n_patches,
-        n_nodes=int(graph["n_nodes"]),
-        n_edges=int(graph["n_edges"]),
+        n_nodes=int(field("n_nodes")),
+        n_edges=int(field("n_edges")),
         exterior_signature=str(exterior_signature),
     )
 
