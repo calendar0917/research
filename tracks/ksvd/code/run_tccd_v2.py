@@ -16,6 +16,7 @@ from typing import Any, Sequence
 import numpy as np
 
 from tracks.ksvd.code import tccd_v0 as T
+from tracks.ksvd.code import tccd_v1 as V1
 from tracks.ksvd.code import tccd_v2 as V
 from tracks.ksvd.code.run_tccd_v0 import continuity_audit, internal_split
 
@@ -68,7 +69,7 @@ def _train_dense(args, records, tr_idx, dev_idx, device, log):
     ).to(device)
     _peak_reset(device)
     t0 = time.time()
-    res = V.train_model_fast(
+    res = V1.train_model_fast(
         model, records, records, list(tr_idx), list(dev_idx), device,
         seed=args.seed, max_epochs=args.max_epochs, patience=args.patience,
         batch=args.batch, calibrate_rec=False, log=log,

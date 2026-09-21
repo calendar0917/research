@@ -314,7 +314,7 @@ def collect_assignments(model, records, indices, device, *, batch: int = 64):
 
 def _initial_regularization(model, records, train_indices, device, *, batch: int, log=print):
     torch = _torch()
-    cal_idx = list(train_indices[: min(512, len(train_indices))])
+    cal_idx = list(train_indices[: min(int(batch), len(train_indices))])
     b = make_batch(records, cal_idx, device)
     with torch.no_grad():
         pred, C_flat, _ = model.forward_padded(b)
