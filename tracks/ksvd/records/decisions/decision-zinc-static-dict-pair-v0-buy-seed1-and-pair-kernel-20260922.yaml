@@ -1,0 +1,114 @@
+decision_id: decision-zinc-static-dict-pair-v0-buy-seed1-and-pair-kernel-20260922
+created: '2026-09-22T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The research direction is to stop detached statistics-then-MLP pipelines and
+  learn an end-to-end structural representation without any learned message
+  passing. The prior PSD-v0 and GSCN-v0 rounds rejected raw pair-state encoders
+  and dictionary-core transitions, but they were tested without a modern,
+  strongly-trained strict-static patch-pair baseline and without a
+  parameter-matched generic dense control. This round isolated one minimal
+  falsifiable question: on such a baseline, does a residual learnable dictionary
+  beat a parameter-matched generic residual adapter?
+protocol: >-
+  Local-first implementation with targeted CPU tests, then remote A100 execution
+  under the remote-research-runner workflow. Preregistration and implementation
+  commit 033c1b6. Official ZINC train 10000 / official valid 1000, seed 0,
+  inherited optimized protocol (Adam 1e-3, wd 1e-5, batch 128, 240 epochs,
+  patience 40, no scheduler, L1, clip 5.0, best official-valid checkpoint), and
+  a corroborating fixed Top-5 weight soup. S0 is the strict-static
+  compact-v4-smallhead backbone (center_context=False, center_update=None,
+  302D runtime representation, small raw head 302->13->13->1). S-Dict adds a
+  residual dictionary (K=64, d=32, forward-normalized atoms, tau init 0.20,
+  gamma init 0.1) on the local encoder output with no zero-init final
+  projection. S-Dense adds a parameter-matched Linear(48,53)->SiLU->Linear(53,48)
+  residual (5,189 vs 5,201 params, 0.23 % mismatch) with bit-identical shared
+  tensors. Exactly three seed-0 full runs were purchased: S0 GPU0 first, then
+  S-Dense GPU0 and S-Dict GPU1 in parallel. Official test never loaded.
+results:
+  implementation_commit: 033c1b6be2a8797d30433bd1b4582a86437d47be
+  devices: [A100-SXM4-40GB GPU0, A100-SXM4-40GB GPU1]
+  seed: 0
+  n_train: 10000
+  n_valid: 1000
+  s0_best_valid_mae: 0.14567435123870381
+  s0_soup_valid_mae: 0.14079417109390488
+  s0_best_epoch: 164
+  s0_epochs_run: 204
+  s0_parameters: 66228
+  dense_best_valid_mae: 0.1459580120528699
+  dense_soup_valid_mae: 0.14266016137128462
+  dense_best_epoch: 170
+  dense_epochs_run: 210
+  dense_parameters: 71417
+  dense_branch_parameters: 5189
+  dict_best_valid_mae: 0.13604981670057167
+  dict_soup_valid_mae: 0.1338291083899676
+  dict_best_epoch: 225
+  dict_epochs_run: 240
+  dict_parameters: 71429
+  dict_branch_parameters: 5201
+  gain_vs_base_dict_primary: 0.00962453453813214
+  gain_vs_base_dense_primary: -0.0002836608141660868
+  dict_specific_gain_primary: 0.009908195352298227
+  gain_vs_base_dict_soup: 0.006965062703937291
+  gain_vs_base_dense_soup: -0.001865990277379742
+  dict_specific_gain_soup: 0.008831052981317034
+  case: A_DICT_SPECIFIC_SIGNAL
+  strict_static_contract_passed: true
+  initialization_match_bit_identical: true
+  dense_dict_parameter_mismatch_relative: 0.0023072486060373007
+  dict_effective_prototype_count: 8.125783920288086
+  dict_active_prototypes: 64
+  dict_residual_ablation_mean_shift: 0.30436395554244516
+  dict_residual_ablation_max_shift: 0.9831738471984863
+  full_training_runs: 3
+  total_wall_clock_s: 2850.564995547058
+  official_test_loaded: false
+decision: >-
+  Buy one paired seed-1 confirmation AND implement the occurrence-level
+  dictionary-conditioned pair kernel in the next stage, under a new
+  preregistration. Keep the current round closed at exactly three seed-0 runs.
+because: >-
+  Both the primary best-checkpoint metric and the corroborating Top-5 soup
+  satisfy the pre-registered Case-A gate (M0 - MK >= 0.004 and MD - MK >= 0.002),
+  while the matched generic dense adapter gives no gain over S0 on either
+  metric. The dictionary is verifiably active (64/64 atoms, effective count 8.13,
+  gamma 0.1 -> 0.184, inference ablation mean shift 0.304) and the strict-static
+  contract, bit-identical initialization matching and step-0 gradient viability
+  all pass. However the evidence is single-seed and the effect is near the
+  training-noise scale, with the gain concentrated in a late noisy plateau and
+  unequal optimizer steps across arms, so a paired seed-1 confirmation is
+  required before any stronger claim. This is a qualified Case A, not a
+  definitive success.
+alternatives_rejected:
+  - >-
+    Claiming a definitive dictionary advantage from seed 0 alone. Rejected: the
+    per-epoch valid-MAE noise is comparable to the effect and S-Dict used more
+    optimizer steps than the early-stopped arms.
+  - >-
+    Concluding GENERAL_CAPACITY_SIGNAL from the failed dense control. Rejected:
+    the dense control did not beat S0, and both primary and soup show a
+    dictionary-specific gap above the 0.002 gate.
+  - >-
+    Running a sparsity / temperature / K / width sweep to stabilize the effect
+    in this round. Rejected: the round forbids HPO and the preregistered gate
+    already fired.
+  - >-
+    Using the historical compact-v4 baseline (center_context=True) as the
+    strict-static S0. Rejected: it contains pair -> centre/patch feedback and is
+    therefore not strict-static.
+revisit_if: >-
+  A paired seed-1 run shows MD - MK < 0.002 (effect not stable across seeds), or
+  a seed-1 S0/S-Dense run changes the baseline enough that the Case-A gate no
+  longer fires. Also revisit if the next round's occurrence-level
+  dictionary-conditioned pair kernel cannot recover the residual-adapter gain
+  with the same strict-static contract.
+evidence:
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_preregistration.md
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_analysis.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair/RESULTS_SUMMARY.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair/analysis.json
+  - tracks/ksvd/experiments/luyin16/zinc_static_dictionary_pair.py
+  - tracks/ksvd/tests/test_zinc_static_dictionary_pair.py

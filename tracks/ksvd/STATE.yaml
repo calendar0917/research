@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-tccd-v7-standalone-route-closed
+phase: post-zinc-static-dict-pair-v0-case-a-seed0
 updated: 2026-09-22
 
 # ---------------------------------------------------------------------------
@@ -366,9 +366,51 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: none
+  status: new_preregistration_required_for_seed1_and_pair_kernel
+  # -------------------------------------------------------------------------
+  # ZINC strict-static dictionary-pair v0 (2026-09-22) — the current round.
+  # User authorized exactly three seed-0 full runs (S0 / S-Dense / S-Dict);
+  # that authorization is now fully spent.  The next stage is NOT started.
+  # -------------------------------------------------------------------------
+  zinc_static_dict_pair_v0:
+    status: case_A_dict_specific_signal_seed0
+    round: zinc-static-dictionary-pair-v0
+    implementation_commit: 033c1b6be2a8797d30433bd1b4582a86437d47be
+    devices: [A100-SXM4-40GB GPU0, A100-SXM4-40GB GPU1]
+    seed: 0
+    split: official ZINC train 10000 / official valid 1000
+    strict_static_contract: PASS (center_context False, center_update None, h_i bit-identical under pair mutation, pair evaluated once)
+    best_valid_mae: {s0: 0.14567435123870381, dense: 0.1459580120528699, dict: 0.13604981670057167}
+    soup_valid_mae: {s0: 0.14079417109390488, dense: 0.14266016137128462, dict: 0.1338291083899676}
+    gains_primary: {gain_vs_base_dict: 0.00962453453813214, gain_vs_base_dense: -0.0002836608141660868, dict_specific_gain: 0.009908195352298227}
+    gains_soup: {gain_vs_base_dict: 0.006965062703937291, gain_vs_base_dense: -0.001865990277379742, dict_specific_gain: 0.008831052981317034}
+    case: A_DICT_SPECIFIC_SIGNAL
+    parameters: {s0: 66228, dense: 71417, dense_branch: 5189, dict: 71429, dict_branch: 5201}
+    initialization_match_bit_identical: true
+    official_test_loaded: false
+    full_training_runs: 3
+    total_wall_clock_s: 2850.564995547058
+    caveat: >-
+      Single-seed exploratory evidence; the effect is near the training-time
+      valid-MAE noise scale and S-Dict never early-stopped (240/240 epochs, best
+      at 225), so it used more optimizer steps than S0 (204) / S-Dense (210).
+      The matched-epoch picture is mixed (dictionary better at epochs 200/210,
+      worse at 164).  No statistical significance is claimed.
+    next: >-
+      Buy one paired seed-1 confirmation AND implement the occurrence-level
+      dictionary-conditioned pair kernel, under a NEW preregistration with
+      matched controls.  NOT started; the current round is closed at three
+      seed-0 runs.
+    claim: claim-zinc-static-dict-pair-v0-dictionary-specific-signal-20260922
+    decision: decision-zinc-static-dict-pair-v0-buy-seed1-and-pair-kernel-20260922
+    evidence:
+      - notes/zinc_static_dictionary_pair_preregistration.md
+      - notes/zinc_static_dictionary_pair_analysis.md
+      - results/zinc_static_dictionary_pair/RESULTS_SUMMARY.md
   note: >-
-    No experiment is authorized. TCCD standalone performance route CLOSED
+    (Retained for provenance; the current authorization is the
+    zinc_static_dict_pair_v0 block above.) TCCD standalone performance route
+    CLOSED
     (2026-09-22): TCCD-v7 (preregistration commit a3f531d, implementation commit
     34d931f9b0ec2a27d970f522c32cc8bcb307f3fb; remote A100 GPU1 only; official
     test never loaded) passed Gate 0 and then FAILED the frozen Stage-A screen.
@@ -551,6 +593,7 @@ deferred_optional:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-zinc-static-dict-pair-v0-buy-seed1-and-pair-kernel-20260922: "ZINC strict-static dictionary-pair v0 (2026-09-22, preregistration+implementation commit 033c1b6; remote A100 GPU0/GPU1; official test never loaded): a strict-static patch-pair compact-v4-smallhead S0 (center_context False, center_update None, 302D runtime representation, small raw head 302->13->13->1, 66,228 params) with three seed-0 full runs. Best-checkpoint official-valid MAE S0 0.145674 @164 (soup 0.140794), S-Dense 0.145958 @170 (soup 0.142660), S-Dict 0.136050 @225 (soup 0.133829). Gains primary: M0-MK +0.009624 (>=0.004), M0-MD -0.000284, MD-MK +0.009908 (>=0.002); soup: M0-MK +0.006965, MD-MK +0.008831. Both metrics fire Case A DICT_SPECIFIC_SIGNAL while the parameter-matched generic dense adapter (H=53, 5,189 vs 5,201 params, 0.23% mismatch, shared tensors bit-identical) gives no gain over S0. Strict-static gates PASS (forward with _pool_pairs_to_centres raising, pair/relation encoder called once, h_i bit-identical under pair mutation, pair-order invariant <=1.9e-6); dictionary active (64/64 atoms, effective count 8.13, gamma 0.1->0.184, inference ablation mean shift 0.304 vs dense 0.034). Caveat: single seed, noisy valid curve, S-Dict used more optimizer steps (240 epochs, no early stop) than S0/S-Dense. Decision: buy one paired seed-1 confirmation and implement the occurrence-level dictionary-conditioned pair kernel under a NEW preregistration; no HPO/rescue. See notes/zinc_static_dictionary_pair_preregistration.md, notes/zinc_static_dictionary_pair_analysis.md, results/zinc_static_dictionary_pair/RESULTS_SUMMARY.md, claim-zinc-static-dict-pair-v0-dictionary-specific-signal-20260922, decision-zinc-static-dict-pair-v0-buy-seed1-and-pair-kernel-20260922."
   - decision-tccd-v7-stop-standalone-normalized-moment-20260922: "TCCD-v7 (2026-09-22, preregistration commit a3f531d, implementation commit 34d931f; remote A100 GPU1 only; official test never loaded): Gate 0 passed all checks (permutation, batching/padding, algebra, full-symmetric normalized composition mass, zero-mass relation, no target leakage, official-test blocking, independent float64 reference, Stage-A-cache vs Stage-B-tensor equivalence, and relation-mass source agreement). Stage A on the fixed internal 8000/2000 split with the exact frozen TCCD-v2 PrototypeREL checkpoint and the identical linear-reader protocol: same-session RAW re-screen reproduced the frozen TCCD-v5 BASE bit-for-bit (best 0.28791576623916626 @ epoch 54, soup 0.2783639132976532, members [54,94,50,43,79], drift 0.0), NORM (10,470 dims) best/soup 0.4144890606403351/0.4146538972854614, NORM+MOM (10,534 dims) best/soup 0.4119139015674591/0.4121180474758148; delta_norm -0.13375413417816162 (required >= +0.015), absolute gate 0.255 failed, delta_mom 0.0025358498096466064 NEGLIGIBLE. Verdict Stage A FAIL -> STOP the TCCD standalone performance route immediately: no Stage B end-to-end run, no official-valid run, no official-test access, no seed 1, no tuning. TCCD standalone performance route CLOSED; No TCCD-v8 rescue is authorized. See notes/tccd_v7_final_normalized_moment_preregistration.md, notes/tccd_v7_final_normalized_moment_analysis.md, claim-tccd-v7-normalized-moment-standalone-insufficient-20260922, decision-tccd-v7-stop-standalone-normalized-moment-20260922."
   - decision-tccd-v5-stop-stage-a-pair-placement-20260922: "TCCD-v5 (2026-09-22, preregistration commit 539ee07, implementation commit 1ec96ff; remote A100 GPU1 only; official test never loaded): Gate 0 passed pair-swap, graph-relabel, pair-order, batching, linear-PRE/POST equivalence, nonlinear separation, gradient, no-leakage, and official-test-blocking checks. Stage A on the fixed internal 8000/2000 split used exact TCCD-v2 PrototypeREL assignments and matched 197-to-64-to-16 pair MLPs. BASE best/soup 0.287916/0.278364, POST 0.260827/0.252233, PRE 0.261728/0.251418, PRE-SHUFFLE 0.262062/0.251756; delta_place 0.000815183, delta_add 0.026945770, delta_shuffle 0.000337422. Decision: STOP at Stage A; no paired seed, Stage-B E2E, official-valid full run, or official-test access. Pair branch value versus BASE is supported, but PRE versus POST causal placement is not; next justified hypothesis is center-preserving occurrence composition under a new preregistration. See notes/tccd_v5_occurrence_pair_nonlinearity_analysis.md, claim-tccd-v5-pair-nonlinearity-placement-no-material-gain-20260922, decision-tccd-v5-stop-stage-a-pair-placement-20260922."
   - decision-tccd-v4-stop-stage-a-twohop-20260922: "TCCD-v4 (2026-09-22, preregistration commit bd7ad91, implementation commit 2e0218a; remote A100 GPU1 only; official test never loaded): Gate 0 passed exact S^2 algebra, permutation and batching invariance, two-hop sensitivity, effective fixed-permutation mismatch, target independence, and official-test blocking. Stage A frozen screen on the internal 8000/2000 split used the exact TCCD-v2 PrototypeREL checkpoint and matched readers. BASE best/soup 0.287916/0.279731, REAL-2 0.287929/0.278038, MIS-2 0.287936/0.279558; delta_topo 0.0000068843 and delta_add -0.0000134408, both below the 0.005 failure threshold. Decision: STOP at Stage A; no paired seed, end-to-end +2hop, S^3, official-valid full run, or official-test access. Leading hypothesis: early occurrence aggregation / lossy C^T R C contraction. See notes/tccd_v4_higher_order_assembly_analysis.md, claim-tccd-v4-twohop-assembly-no-material-increment-20260922, decision-tccd-v4-stop-stage-a-twohop-20260922."

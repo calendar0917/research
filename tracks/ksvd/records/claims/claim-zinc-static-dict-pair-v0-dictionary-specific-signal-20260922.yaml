@@ -1,0 +1,84 @@
+claim_id: claim-zinc-static-dict-pair-v0-dictionary-specific-signal-20260922
+created: '2026-09-22T00:00:00Z'
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+statement: >-
+  On a modern strict-static patch-pair ZINC baseline, a residual learnable
+  dictionary (K=64, d=32, tau~0.20, gamma=0.1) added on the shared local patch
+  encoder output is more valuable than a parameter-matched generic dense SiLU
+  residual adapter. In the single authorized seed-0 A100 round (commit
+  033c1b6, official train 10000 / official valid 1000, official test never
+  loaded), best-checkpoint official-valid MAE is S0 0.145674, S-Dense 0.145958,
+  S-Dict 0.136050, giving M0 - MK = +0.009624 (gate >= 0.004),
+  M0 - MD = -0.000284, and MD - MK = +0.009908 (gate >= 0.002). The fixed Top-5
+  soup corroborates: S0 0.140794, S-Dense 0.142660, S-Dict 0.133829
+  (M0 - MK = +0.006965, MD - MK = +0.008831). The generic dense adapter gives
+  no gain over S0, so the S-Dict gain is not explained by added generic
+  capacity. This is exploratory single-seed evidence: the per-epoch
+  valid-MAE curve is noisy (S-Dict 0.1360 at epoch 225 but 0.1608 at epoch 240;
+  S0 0.1457 at 164 but 0.1665 at 170), S-Dict never early-stopped (240 epochs)
+  so it used ~18,960 optimizer steps versus S0 204 and S-Dense 210 epochs, and
+  the matched-epoch picture is mixed (S-Dict is better at epochs 200/210 but
+  worse at epoch 164). No statistical significance is claimed.
+scope: >-
+  Preregistration commit 033c1b6; implementation commit 033c1b6; remote A100
+  GPUs 0 and 1; seed 0; official ZINC train 10000 / official valid 1000;
+  compact-v4-smallhead inheritance with patch_hidden 48, pair_hidden 16,
+  token_width 16, hybrid embedding rank 4, hinge topology (25->16->8), small
+  raw head 302->13->13->1, dropout 0.05; strict-static contract with
+  center_context=False and center_update=None; dictionary K=64 / d=32 / tau init
+  0.20 / gamma init 0.1; matched dense H=53 (5,189 vs 5,201 params, 0.23 %
+  mismatch); identical optimizer/data order/seed/protocol; official test never
+  loaded. Not purchased in this round: seed 1/2/3, HPO, dictionary-conditioned
+  pair kernel, any rescue.
+supporting_evidence:
+  - >-
+    Strict-static integrity passes for all arms on real valid batches: forward
+    succeeds with _pool_pairs_to_centres monkeypatched to raise, pair and
+    relation encoders are each called exactly once, h_i is bit-identical under
+    pair-relation mutation (max abs diff 0.0) while the graph prediction
+    changes, and pair-order invariance holds to 1.9e-6.
+  - >-
+    All 40 shared tensors (including the 6 reader tensors) are bit-identical
+    across S0 / S-Dense / S-Dict (max_abs_diff 0.0), so the only difference
+    between candidate arms is the residual branch.
+  - >-
+    Step-0 gradient viability: dictionary / Wq / Wv and both dense MLP layers
+    receive strictly positive task gradient and gamma is finite, so the branch
+    is not a dead branch at initialization.
+  - >-
+    Dictionary is genuinely active at the best checkpoint over 23,083 valid
+    patches: 64/64 atoms active, 12 argmax-used, effective prototype count
+    8.126, top-8 assignment mass 0.845, max average assignment mass 0.348,
+    mean ||gamma*delta_i|| 0.0692 versus mean ||h0_i|| 1.886, gamma 0.100 ->
+    0.184, tau 0.200 -> 0.210, no collapse.
+  - >-
+    Inference ablation with the residual forced to zero: S-Dict mean/max
+    |prediction shift| 0.3044 / 0.9832 versus S-Dense 0.0339 / 0.1563.
+contradicting_evidence:
+  - >-
+    At epoch 164 (S0's best checkpoint) S-Dict valid MAE is 0.1623 versus S0
+    0.1457, and S-Dict's final epoch (240) is 0.1608; the gain is concentrated
+    in a late, noisy plateau and S-Dict received more optimizer steps than the
+    early-stopped S0/S-Dense runs.
+limitations:
+  - >-
+    Single seed (seed 0) only; the effect size is near the training-time
+    valid-MAE noise scale.
+  - >-
+    Best-checkpoint selection is a max statistic over a noisy per-epoch curve;
+    the Top-5 soup mitigates but its members are all late epochs and therefore
+    correlated with the best epoch.
+  - >-
+    No seed-1 paired confirmation, no HPO, and no occurrence-level
+    dictionary-conditioned pair kernel was run.
+evidence:
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_preregistration.md
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_analysis.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair/RESULTS_SUMMARY.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair/analysis.json
+  - tracks/ksvd/results/zinc_static_dictionary_pair/initialization_match.json
+  - tracks/ksvd/results/zinc_static_dictionary_pair/integrity_gates.json
+  - tracks/ksvd/experiments/luyin16/zinc_static_dictionary_pair.py
+  - tracks/ksvd/tests/test_zinc_static_dictionary_pair.py
