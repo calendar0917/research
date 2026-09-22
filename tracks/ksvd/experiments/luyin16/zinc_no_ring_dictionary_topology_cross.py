@@ -1400,15 +1400,18 @@ def static_contract_checks(model: DTXModel, batch: Any) -> dict[str, Any]:
     permuted_batch = batch.clone()
     permuted_batch.generic_topology = permuted_s
 
-    # Arm M shares the passed model's parameters exactly (only the forward
-    # cross-matrix selection differs), so the comparison is weight-matched.
-    marginal_model = build_dtx(0, "marginal")
-    marginal_model.load_state_dict(
-        {key: value.detach().cpu() for key, value in model.state_dict().items()}
-    )
-    marginal_model.to(batch.patch_cont.device)
+    # Arm M and Arm A probes share the passed model's parameters exactly
+    # (only the forward cross-matrix selection differs), so the comparison is
+    # weight-matched no matter which arm is being trained.
+    state_cpu = {key: value.detach().cpu() for key, value in model.state_dict().items()}
+    marginal_probe = build_dtx(0, "marginal")
+    marginal_probe.load_state_dict(state_cpu)
+    marginal_probe.to(batch.patch_cont.device)
+    aligned_probe = build_dtx(0, "aligned")
+    aligned_probe.load_state_dict(state_cpu)
+    aligned_probe.to(batch.patch_cont.device)
     n_graphs = int(batch.global_context.shape[0])
-    for arm_model, label in ((marginal_model, "marginal"), (model, "aligned")):
+    for arm_model, label in ((marginal_probe, "marginal"), (aligned_probe, "aligned")):
         arm_model.eval()
         with torch.no_grad():
             base_prediction = arm_model(batch)
