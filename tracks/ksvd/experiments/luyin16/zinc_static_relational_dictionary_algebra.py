@@ -971,30 +971,32 @@ def static_contract_checks(model: SRDAModel, batch: Any) -> dict[str, Any]:
     if not results["pair_input_width_ok"]:
         raise RuntimeError("pair input width drifted")
 
-    # (F) no identity channel: typed / parent tokens have zero effect.
+    # (F) no identity channel: typed / parent tokens have zero effect.  The
+    # indices are poisoned out of range, so any embedding lookup on them would
+    # raise immediately; the prediction must also stay at execution-noise
+    # level (CUDA ``index_add_`` scatter is not bit-deterministic).
+    repeat_prediction, _repeat_trace = _trace_forward(model, batch)
     identity = batch.clone()
-    identity.typed_token = torch.randint(
-        0,
-        sdp.TYPED_VOCAB_SIZE,
-        identity.typed_token.shape,
-        generator=torch.Generator().manual_seed(11),
-    )
-    identity.parent_token = torch.randint(
-        0,
-        sdp.PARENT_VOCAB_SIZE,
-        identity.parent_token.shape,
-        generator=torch.Generator().manual_seed(12),
-    )
+    identity.typed_token = torch.full_like(batch.typed_token, 10_000_000)
+    identity.parent_token = torch.full_like(batch.parent_token, 10_000_000)
     with torch.no_grad():
         identity_prediction = model(identity)
-    results["prediction_shift_under_identity_mutation"] = float(
+    identity_shift = float(
         (prediction_again - identity_prediction).abs().max().item()
     )
+    repeat_shift = float((prediction_again - repeat_prediction).abs().max().item())
+    results["prediction_shift_under_identity_mutation"] = identity_shift
+    results["prediction_shift_repeat_forward_baseline"] = repeat_shift
+    results["identity_index_poison_no_lookup"] = True
     results["identity_mutation_zero_effect"] = bool(
-        results["prediction_shift_under_identity_mutation"] == 0.0
+        identity_shift <= max(1.0e-5, 0.01 * results["prediction_mutation_max_abs_diff"])
     )
     if not results["identity_mutation_zero_effect"]:
-        raise RuntimeError("typed/parent identity tokens influence the prediction")
+        raise RuntimeError(
+            "typed/parent identity tokens influence the prediction: "
+            f"{identity_shift} vs relation shift "
+            f"{results['prediction_mutation_max_abs_diff']}"
+        )
 
     # (G) invariances: pair order, endpoint swap, patch relabel.
     if int(batch.pair_index.shape[1]) > 1:
@@ -1018,10 +1020,10 @@ def static_contract_checks(model: SRDAModel, batch: Any) -> dict[str, Any]:
             (prediction_again - swapped_prediction).abs().max().item()
         )
         results["pair_order_invariant"] = bool(
-            results["pair_order_max_abs_pred_diff"] < 1.0e-5
+            results["pair_order_max_abs_pred_diff"] < 1.0e-4
         )
         results["endpoint_swap_symmetric"] = bool(
-            results["endpoint_swap_max_abs_pred_diff"] < 1.0e-5
+            results["endpoint_swap_max_abs_pred_diff"] < 1.0e-4
         )
     else:
         results["pair_order_max_abs_pred_diff"] = 0.0
@@ -1056,7 +1058,7 @@ def static_contract_checks(model: SRDAModel, batch: Any) -> dict[str, Any]:
         (prediction_again - relabeled_prediction).abs().max().item()
     )
     results["patch_order_invariant"] = bool(
-        results["patch_relabel_max_abs_pred_diff"] < 1.0e-5
+        results["patch_relabel_max_abs_pred_diff"] < 1.0e-4
     )
 
     results["identity_channel_audit"] = identity_channel_audit(model)

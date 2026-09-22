@@ -272,13 +272,11 @@ def test_identity_token_mutation_has_zero_effect():
     with torch.no_grad():
         baseline = model(batch)
         mutated = batch.clone()
-        mutated.typed_token = torch.randint(
-            0, 4096, mutated.typed_token.shape, generator=torch.Generator().manual_seed(3)
-        )
-        mutated.parent_token = torch.randint(
-            0, 32, mutated.parent_token.shape, generator=torch.Generator().manual_seed(4)
-        )
+        # Out-of-range poisoned indices: any embedding lookup would raise.
+        mutated.typed_token = torch.full_like(batch.typed_token, 10_000_000)
+        mutated.parent_token = torch.full_like(batch.parent_token, 10_000_000)
         changed = model(mutated)
+    # CPU execution is bit-deterministic, so the strongest form holds here.
     assert torch.equal(baseline, changed)
     assert float((baseline - changed).abs().max()) == 0.0
 
