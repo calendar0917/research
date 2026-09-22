@@ -1,0 +1,94 @@
+decision_id: decision-tccd-v3b-stop-correct-pre-pair-bridge-20260922
+created: '2026-09-22T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  Historical TCCD-v3 tested only the isolated 16-D B-full `e_struct` channel.
+  TCCD-v3b corrected the bridge by extracting the complete fused pure-local
+  B-full `patch_encoder` output before pair projection and keeping every
+  downstream TCCD-v2 mechanism fixed.
+protocol: >-
+  Preregistered GPU1-only diagnostic, seed 0, official train 10000 / valid
+  1000, official test never loaded, frozen source checkpoint, 64-D pre-pair
+  `patch_encoder` output, matched Linear(64,64) adapter in DenseREL and
+  PrototypeREL, exact TCCD-v2 K=64 vocabulary and C^T R C relations,
+  evaluation-only assignment shuffle, vocabulary diagnostics, and no rescue
+  sweeps.
+results:
+  commit: f942a00febbd54b9a3b0f1dfdb301eb48d0293a2
+  source_checkpoint: tracks/ksvd/results/shared_structural_patch_encoder/soup_states/sspe_seed0_top5_soup.pt
+  source_checkpoint_sha256: 785dff866fa8d952d6e9764549761a7019a4e46ffd70d625110b618f51e6a2c4
+  strong_source_commit: 0aa71c81e845fd334c8ecd2bf7904c149277c289
+  selected_tensor: 'PatchPathRecurrentPairCentreModel._encode_core -> patch_encoder output'
+  selected_layer: patch_encoder
+  raw_width: 64
+  patch_encoder_input_width: 170
+  pair_projection_input_width: 64
+  gate0_all_pass: true
+  cache_fresh_max_delta: 2.384185791015625e-07
+  strong_dense_best_valid_mae: 0.3275279402732849
+  strong_dense_soup_valid_mae: 0.31280484795570374
+  strong_proto_best_valid_mae: 0.31526264548301697
+  strong_proto_soup_valid_mae: 0.3126433193683624
+  shuffle_best_valid_mae: 0.5923776626586914
+  delta_local: -0.02792564548301696
+  delta_proto_strong: -0.012265294790267944
+  delta_comp_strong: 0.27711501717567444
+  decision_level: L3
+  active_prototypes: 64
+  dead_prototypes: 0
+  effective_prototype_count: 63.83281445770348
+  normalized_global_usage_entropy: 0.9996897567480748
+  top8_usage_mass: 0.13537019622549598
+  learned_temperature: 0.13386012613773346
+  official_test_loaded: false
+decision: >-
+  STOP TCCD-v3b at the preregistered L3 Correct-Strong-Local Bridge failure.
+  The complete fused B-full pre-pair local state materially improves over the
+  historical isolated `e_struct` bridge, but it still does not rescue the
+  frozen TCCD-v2 composition and lightweight reader to the registered absolute
+  threshold. The failure is not due to locality, freezing, cache mismatch,
+  prototype collapse, or composition insensitivity.
+alternatives_rejected:
+  - item: Reinterpret the result as prototype failure
+    because: >-
+      PrototypeREL beats DenseREL by 0.012265 MAE and the vocabulary remains
+      broad at 64/64 active prototypes with effective count 63.8328.
+  - item: Treat composition as unnecessary
+    because: >-
+      Evaluation-only assignment shuffling worsens valid MAE by 0.277115 while
+      relation matrices remain fixed.
+  - item: Continue with rescue sweeps
+    because: >-
+      K, temperature, reader, relation, pair/topology and unfreezing changes
+      were explicitly outside the registered diagnostic and would confound the
+      interface conclusion.
+  - item: Open official test
+    because: >-
+      Official test access is frozen and the valid-side L3 result is decisive.
+consequences:
+  - >-
+    Historical TCCD-v3 is narrowed to the isolated `e_struct` channel claim;
+    its numeric artifacts remain unchanged.
+  - >-
+    Complete strong local B-full features are useful but insufficient when
+    passed through the frozen TCCD-v2 composition/readout interface.
+  - >-
+    The next legitimate question is an interface or representation-family
+    redesign under a new preregistration, not another local-channel or reader
+    sweep in this round.
+next_action: >-
+  NONE auto-authorized. Any follow-up requires a new preregistration; official
+  test evaluation remains prohibited.
+revisit_if: >-
+  A separately preregistered architecture-level study freezes matched controls,
+  GPU1 execution, provenance, and the official-test freeze before training.
+evidence:
+  - tracks/ksvd/notes/tccd_v3b_correct_strong_local_bridge_preregistration.md
+  - tracks/ksvd/notes/tccd_v3b_correct_strong_local_bridge_analysis.md
+  - tracks/ksvd/records/claims/claim-tccd-v3-clarification-20260922.yaml
+  - tracks/ksvd/results/tccd_v3b/gate0.json
+  - tracks/ksvd/results/tccd_v3b/cache.json
+  - tracks/ksvd/results/tccd_v3b/dense_seed0.json
+  - tracks/ksvd/results/tccd_v3b/prototype_seed0.json
+  - tracks/ksvd/results/tccd_v3b/diagnostics.json

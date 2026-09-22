@@ -1,0 +1,71 @@
+claim_id: claim-tccd-v3b-correct-pre-pair-bridge-20260922
+created: '2026-09-22T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  The corrected TCCD-v3b bridge uses the complete frozen B-full fused pure-local
+  `patch_encoder` output before pair projection, with raw width 64, rather than
+  the isolated 16-D `e_struct` input block used by historical TCCD-v3. With the
+  exact TCCD-v2 K=64 prototype vocabulary, C^T R C relations, lightweight reader,
+  temperature and regularizers unchanged, CorrectStrongLocal-PrototypeREL
+  reaches best official-valid MAE 0.315263 and Top-5 soup MAE 0.312643 on the
+  registered GPU1 seed-0 run. This is a large correction versus the historical
+  isolated-channel result, but it still fails the preregistered absolute rescue
+  gate relative to TCCD-v2 PrototypeREL best valid 0.287337: Delta_local is
+  -0.027926, so the result is L3. The complete fused pre-pair local state alone
+  is therefore insufficient to rescue the frozen TCCD-v2 composition/readout
+  interface.
+scope: >-
+  One frozen seed-0 B-full source checkpoint, official ZINC train 10000 and
+  valid 1000, remote A100 GPU1, formal implementation commit f942a00, source
+  checkpoint SHA-256 785dff866fa8d952d6e9764549761a7019a4e46ffd70d625110b618f51e6a2c4,
+  selected `patch_encoder` output before pair/global operations, raw width 64,
+  matched Linear(64,64) adapter, exact TCCD-v2 downstream mechanics, and
+  official-test freeze. The source checkpoint was selected on official-valid in
+  its source study, so this is a diagnostic bridge audit rather than an
+  unbiased final-model comparison.
+evidence:
+  - tracks/ksvd/notes/tccd_v3b_correct_strong_local_bridge_preregistration.md
+  - tracks/ksvd/notes/tccd_v3b_correct_strong_local_bridge_analysis.md
+  - tracks/ksvd/results/tccd_v3b/gate0.json
+  - tracks/ksvd/results/tccd_v3b/cache.json
+  - tracks/ksvd/results/tccd_v3b/dense_seed0.json
+  - tracks/ksvd/results/tccd_v3b/prototype_seed0.json
+  - tracks/ksvd/results/tccd_v3b/diagnostics.json
+  - tracks/ksvd/tests/test_tccd_v3b.py
+gate0:
+  all_pass: true
+  official_test_loaded: false
+  selected_tensor: 'PatchPathRecurrentPairCentreModel._encode_core -> patch_encoder output'
+  selected_layer: patch_encoder
+  raw_width: 64
+  patch_encoder_input_width: 170
+  pair_projection_input_width: 64
+  cache_fresh_max_delta: 2.384185791015625e-07
+results:
+  device: 'cuda'
+  physical_gpu: 1
+  seed: 0
+  n_train: 10000
+  n_valid: 1000
+  strong_dense_best_valid_mae: 0.3275279402732849
+  strong_dense_soup_valid_mae: 0.31280484795570374
+  strong_proto_best_valid_mae: 0.31526264548301697
+  strong_proto_soup_valid_mae: 0.3126433193683624
+  shuffle_best_valid_mae: 0.5923776626586914
+  delta_local: -0.02792564548301696
+  delta_proto_strong: -0.012265294790267944
+  delta_comp_strong: 0.27711501717567444
+  active_prototypes: 64
+  dead_prototypes: 0
+  effective_prototype_count: 63.83281445770348
+  learned_temperature: 0.13386012613773346
+  normalized_global_usage_entropy: 0.9996897567480748
+  top8_usage_mass: 0.13537019622549598
+decision_level: L3
+official_test_loaded: false
+clarification: >-
+  This corrected claim supersedes the broader interpretation of historical
+  TCCD-v3. The historical v3 evidence remains valid only for the narrow
+  isolated-16-D-e_struct channel claim.

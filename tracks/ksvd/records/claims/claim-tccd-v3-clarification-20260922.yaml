@@ -1,0 +1,24 @@
+claim_id: claim-tccd-v3-clarification-20260922
+created: '2026-09-22T00:00:00Z'
+kind: clarification
+status: supported
+study_id: zinc-context-gap
+supersedes_scope_of: claim-tccd-v3-strong-local-bridge-20260921
+statement: >-
+  Historical TCCD-v3 used the isolated 16-D `e_struct` channel rather than the
+  complete B-full fused pre-pair local state. Its supported interpretation is
+  therefore narrowed to: the isolated structural-token channel alone is not a
+  sufficient standalone local representation for the TCCD bridge. Historical
+  TCCD-v3 numbers, files, and decision remain unchanged, but they must not be
+  used to claim that a complete strong B-full local representation cannot help.
+  The corrected TCCD-v3b audit selects the 64-D output of the full B-full
+  `patch_encoder` before pair projection and shows partial recovery to
+  0.315263 best valid MAE, while still failing the preregistered L1/L2 rescue
+  thresholds with an L3 result.
+reason: >-
+  A model-path audit found that `e_struct` was only one of the pure-local inputs
+  to the B-full `patch_encoder`; the historical bridge tested an incomplete
+  local channel.
+original_record: records/claims/claim-tccd-v3-strong-local-bridge-20260921.yaml
+corrective_record: records/claims/claim-tccd-v3b-correct-pre-pair-bridge-20260922.yaml
+official_test_loaded: false
