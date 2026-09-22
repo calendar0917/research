@@ -3,6 +3,8 @@
 Round: **ZINC-static-relational-dictionary-algebra-v0** (SRDA-v0).
 Preregistration: `tracks/ksvd/notes/zinc_static_relational_dictionary_algebra_v0_preregistration.md`
 frozen at commit `d4ef523`.
+Record commit: `2e27fe6` (this note, the claim, the decision and the `STATE.yaml`
+entry).
 Formal run commit: `82adff72829fe2f1e0b9a8927ada8812bded2ad8`
 (`d4ef523` + two audit-only bugfixes, see §1.1).
 Device: remote `A100-SXM4-40GB` GPU 0 (`a100-2`).
