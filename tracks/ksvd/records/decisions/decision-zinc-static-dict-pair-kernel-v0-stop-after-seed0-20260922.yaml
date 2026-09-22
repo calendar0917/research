@@ -1,0 +1,130 @@
+decision_id: decision-zinc-static-dict-pair-kernel-v0-stop-after-seed0-20260922
+created: '2026-09-22T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The previous round showed that a learnable dictionary attached as a local
+  residual adapter (h_i = h0_i + gamma * delta_dict) either works or is
+  bypassed: in seed 1 gamma collapsed to ~0 and the dictionary became inert.
+  This round deleted that concept entirely and asked the single
+  performance-oriented question of whether promoting the dictionary to the core
+  coordinate system of the occurrence-level static pair / relation kernel opens
+  a new absolute strict-static ZINC band. The old "gamma collapse" question was
+  explicitly out of scope and no ablation grid was authorized.
+protocol: >-
+  Local-first implementation with targeted CPU tests, then remote A100 execution
+  under the remote-research-runner workflow. Preregistration and implementation
+  commit f0a778dd07f5eeee4b2c8473115cdf980b45ac22. Frozen architecture: S0 local
+  encoder unchanged (h_i = h0_i, no residual, no gamma), end-to-end dictionary
+  K=64 / rank=32 / coord_dim=16 / tau_init=0.20, dictionary coordinates in an
+  occurrence-level pair kernel with an occurrence-specific multiplicative gate
+  and a 112D input to one static pair encoder (112 -> 64 -> 16), inherited
+  302D invariant readout, topology hinge and small raw head 302 -> 13 -> 13 -> 1.
+  Frozen training protocol: Adam, lr 1e-3, wd 1e-5, batch 128, L1/MAE, clip 5.0,
+  no scheduler, full 240 epochs with no early termination, best-checkpoint and
+  fixed Top-5 weight soup. One seed-0 full run on remote A100-SXM4-40GB GPU 0.
+  Official ZINC train 10000 / official valid 1000; official test never loaded.
+results:
+  implementation_commit: f0a778dd07f5eeee4b2c8473115cdf980b45ac22
+  devices: [A100-SXM4-40GB GPU0]
+  seed: 0
+  parameters: 74996
+  parameter_budget_preferred_max: 82000
+  pair_input_width: 112
+  pair_encoder: '112 -> 64 -> 16'
+  epochs_run: 240
+  early_terminated: false
+  best_valid_mae: 0.14219318306347123
+  best_epoch: 209
+  final_epoch_valid_mae: 0.165984
+  top5_soup_valid_mae: 0.13973486851429334
+  top5_soup_members: [165, 180, 186, 196, 209]
+  reference_s0_seed0_best: 0.145674
+  reference_s0_seed0_soup: 0.140794
+  best_improvement: 0.003480816936528769
+  soup_improvement: 0.0010591314857066603
+  gate_soup_abs: 0.1328
+  gate_soup_delta: 0.008
+  gate_best_delta: 0.006
+  seed0_verdict: SDPK_V0_NO_STRONG_PERFORMANCE_SIGNAL
+  dictionary_diagnostics:
+    active_atoms: 58
+    argmax_used_atoms: 43
+    effective_atom_count: 9.492768287658691
+    mean_assignment_entropy: 2.250530242919922
+    top8_assignment_mass: 0.823899507522583
+    dictionary_coherence_mean_abs: 0.22925986349582672
+    dictionary_coherence_max_abs: 0.9977928996086121
+    tau_final: 0.14978419244289398
+  dictionary_intervention:
+    mean_coord_mean_abs_prediction_shift: 0.05166193342208862
+    mean_coord_max_abs_prediction_shift: 1.277517318725586
+    neutral_mean_abs_prediction_shift: 0.059055072754621504
+    neutral_max_abs_prediction_shift: 1.778909683227539
+  strict_static_contract_passed: true
+  hard_tests_all_pass: true
+  initialization_match_bit_identical: true
+  baseline_guard_replayed_s0_valid_mae: 0.14567432867834576
+  baseline_guard_abs_diff: 3.2867834576233435e-07
+  peak_gpu_memory_mb: 174.27880859375
+  gpu_wall_clock_s: 888.1277270829309
+  elapsed_wall_clock_s: 902
+  full_training_runs: 1
+  max_full_runs: 2
+  seed1_purchased: false
+  official_test_loaded: false
+decision: >-
+  STOP SDPK-v0 after the single seed-0 run. Do NOT purchase seed 1, do NOT sweep
+  K / rank / coord_dim / tau / pair width, do NOT add sparsity / entropy /
+  orthogonality / reconstruction terms, do NOT add a second dictionary layer or
+  a residual, do NOT add message passing or a dense pair-kernel control in this
+  round. The round is closed with SDPK_V0_NO_STRONG_PERFORMANCE_SIGNAL.
+because: >-
+  The seed-0 top-5 soup improvement over the historical strict-static S0
+  reference is +0.001059 and the best-checkpoint improvement is +0.003481, both
+  below the pre-registered thresholds (soup delta >= 0.008, best delta >= 0.006,
+  absolute soup <= 0.1328). SDPK soup 0.139735 is essentially on top of S0 seed-0
+  soup 0.140794 and worse than S0 seed-1 soup 0.136423, i.e. no new band. The
+  known S0 seed-to-seed movement (0.006285) is larger than the observed gain, so
+  the effect is inside baseline variability. Importantly, this is not an inert
+  mechanism: the dictionary is live and load-bearing at the best checkpoint
+  (tau 0.20 -> 0.15, 43 argmax-used atoms, neutral-dictionary intervention shifts
+  predictions by mean 0.059 / max 1.78 MAE), so promoting the dictionary into
+  the pair kernel does not by itself add enough predictive information over the
+  raw pair interaction. A greater-than-gate absolute effect is a prerequisite
+  for spending further compute on mechanism controls, and it did not appear.
+alternatives_rejected:
+  - >-
+    Buying seed 1 despite the failed seed-0 gate. Rejected: the gate is explicit
+    and the primary metric is absolute soup, which is an order of magnitude
+    below the required delta.
+  - >-
+    Sweeping K / rank / coord_dim / tau / pair width or adding a sparsity,
+    entropy or orthogonality term to rescue the number. Rejected: forbidden by
+    the preregistration; the clean negative is the result.
+  - >-
+    Adding a matched dense pair-kernel control. Rejected for this round: the
+    round asks whether the architecture opens a new absolute band, not whether
+    the dictionary beats generic capacity; a mechanism control is only worth
+    buying after a materially positive absolute effect exists.
+  - >-
+    Reinterpreting the live dictionary diagnostics (entropy 2.25, 43 used atoms)
+    as success. Rejected: assignment entropy is a reporting diagnostic, never a
+    GO gate; absolute MAE is the first success criterion.
+revisit_if: >-
+  A future preregistered round first observes a greater-than-noise absolute
+  strict-static improvement from some dictionary-conditioned mechanism, or a
+  paired multi-seed baseline establishes a tighter S0 seed-0 reference and the
+  SDPK soup lands materially below it. Only then does a matched dense
+  pair-kernel control (dictionary vs generic capacity inside the pair kernel)
+  become the justified next question. Gamma/residual-dictionary work remains
+  closed.
+evidence:
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_kernel_v0_preregistration.md
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_kernel_v0_analysis.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair_kernel_v0/RESULTS_SUMMARY.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair_kernel_v0/analysis.json
+  - tracks/ksvd/results/zinc_static_dictionary_pair_kernel_v0/parameter_audit.json
+  - tracks/ksvd/results/zinc_static_dictionary_pair_kernel_v0/baseline_guard.json
+  - tracks/ksvd/experiments/luyin16/zinc_static_dictionary_pair_kernel.py
+  - tracks/ksvd/tests/test_zinc_static_dictionary_pair_kernel.py

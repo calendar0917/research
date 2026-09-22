@@ -1,0 +1,102 @@
+claim_id: claim-zinc-static-dict-pair-kernel-v0-dictionary-used-no-absolute-gain-20260922
+created: '2026-09-22T00:00:00Z'
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+statement: >-
+  In a strict-static ZINC round (commit f0a778d, remote A100-SXM4-40GB GPU 0,
+  official ZINC train 10000 / official valid 1000, official test never loaded),
+  promoting the learnable dictionary from a bypassable local residual adapter to
+  the core coordinate system of the occurrence-level static pair / relation
+  kernel does NOT open a new absolute performance band. SDPK-v0 (74,996 params;
+  h_i = h0_i with no residual and no gamma; K=64, rank=32, coord_dim=16,
+  tau_init=0.20; c_i = U(softmax(Wq(h_i) D^T / tau)); dictionary pair
+  coordinates feed a multiplicative gate m_ij = 1 + tanh(Wm([c_i+c_j,
+  |c_i-c_j|, c_i*c_j, rel_ij])) that modulates raw_prod * distance_gate, plus a
+  112D single static pair encoder) reaches seed-0 best official-valid MAE
+  0.14219318306347123 @ epoch 209 and fixed Top-5 soup 0.13973486851429334 over
+  the full 240 epochs. Against the historical strict-static S0 seed-0 reference
+  (best 0.145674, soup 0.140794) this is best +0.003480816936528769 and soup
+  +0.0010591314857066603, both far below the pre-registered gates (best >=
+  0.006, soup >= 0.008 with absolute soup <= 0.1328), giving
+  SDPK_V0_NO_STRONG_PERFORMANCE_SIGNAL and no seed-1 purchase. Crucially the
+  negative result is NOT an inert-dictionary artifact: at the best checkpoint
+  the dictionary is live and load-bearing (tau 0.200 -> 0.1498, 43 argmax-used
+  atoms, effective atom count 9.49, top-8 assignment mass 0.824, coherence mean
+  0.229, and a neutral-dictionary / graph-mean-coordinate inference intervention
+  shifts predictions by mean 0.059 / 0.052 MAE and max 1.78 / 1.28, versus the
+  previous residual dictionary's 1e-05-scale ablation). A used
+  dictionary-conditioned pair kernel therefore does not add enough predictive
+  information over the raw pair interaction to move absolute MAE.
+scope: >-
+  Preregistration/implementation commit f0a778dd07f5eeee4b2c8473115cdf980b45ac22;
+  remote A100-SXM4-40GB GPU 0; seed 0 only; inherited strict-static S0
+  architecture, tokenizer, topology, head, objective, loss, split, optimizer,
+  LR, weight decay, batch size and shuffle-seed convention; forced full 240
+  epochs with no early termination. One new full-training run; S0 NOT retrained
+  (its checkpoint was replayed to 3.3e-7); no seed 1/2/3; no HPO; no K/rank/
+  coord_dim/tau/pair-width sweep; no matched dense pair-kernel control; no
+  sparsity/entropy/orthogonality/reconstruction term; official test never
+  loaded.
+supporting_evidence:
+  - >-
+    Strict-static hard gates all pass: center_context False, center_update None,
+    forward succeeds with _pool_pairs_to_centres raising, pair_encoder /
+    relation_encoder / dictionary each called once per forward, h_i / alpha_i /
+    c_i bit-identical (max diff 0.0) under pair-relation mutation with the
+    prediction still changing, pair-order invariance 1.0e-6, and step-0
+    gradients > 0 and finite for dictionary atoms, Wq, U, Wm and the pair
+    encoder. 15 targeted CPU tests pass.
+  - >-
+    Runtime parameter audit: SDPK-v0 74,996 total (dictionary 4,657, gate
+    1,040, pair encoder 8,400, head 4,135) versus S0 66,228; within the <=82,000
+    preferred budget. Shared tensors bit-identical to S0 (max abs diff 0.0);
+    only the pair encoder input projection is widened 64 -> 112.
+  - >-
+    Baseline guard: the existing S0 seed-0 best checkpoint was loaded and
+    re-evaluated on the full official-valid split, giving valid MAE
+    0.14567432867834576 versus recorded 0.145674 (abs diff 3.3e-07), so the
+    reference is not a moving target; S0 source hashes are recorded unchanged.
+  - >-
+    Dictionary diagnostics at the seed-0 best checkpoint: active atoms 58/64,
+    argmax-used 43, effective atoms 9.49, mean assignment entropy 2.251 (of
+    ln 64 = 4.159), top-8 mass 0.824, coherence mean/max 0.229/0.998, tau
+    0.1498. Neutral-dictionary intervention mean |delta pred| 0.0591 (max
+    1.7789) and graph-mean-coordinate intervention mean 0.0517 (max 1.2775).
+  - >-
+    The 240-epoch horizon is sufficient: best epoch 209 and the final-epoch
+    valid MAE is 0.165984, so the best checkpoint is not truncated.
+contradicting_evidence:
+  - >-
+    The seed-0 SDPK soup (0.139735) is only +0.0011 better than S0 and worse
+    than the S0 seed-1 soup (0.136423), and the previous round's seed-0 residual
+    dictionary reached soup 0.133829 (though that signal did not replicate
+    mechanistically in seed 1). The pair kernel therefore does not dominate all
+    prior dictionary variants; with a single seed nothing stronger than "no
+    strong signal" is claimed.
+  - >-
+    The comparison is to a historical S0 seed-0 reference and not to a
+    same-session paired baseline; the known S0 seed-to-seed movement (0.006285)
+    is larger than the observed +0.0011 soup gain, so the effect is inside
+    baseline variability.
+limitations:
+  - >-
+    One seed only (seed 1 not purchased because the seed-0 gate failed); no
+    distributional claim.
+  - >-
+    No matched dense pair-kernel control, so this round cannot separate
+    "dictionary adds nothing" from "the pair kernel has no headroom"; that was
+    explicitly out of scope for a performance-first round.
+  - >-
+    Diagnostics are inference-only and were used for reporting, never for
+    checkpoint selection or the GO gate.
+evidence:
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_kernel_v0_preregistration.md
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_kernel_v0_analysis.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair_kernel_v0/RESULTS_SUMMARY.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair_kernel_v0/analysis.json
+  - tracks/ksvd/results/zinc_static_dictionary_pair_kernel_v0/runs/sdpl_seed0.json
+  - tracks/ksvd/results/zinc_static_dictionary_pair_kernel_v0/baseline_guard.json
+  - tracks/ksvd/results/zinc_static_dictionary_pair_kernel_v0/integrity_gates.json
+  - tracks/ksvd/experiments/luyin16/zinc_static_dictionary_pair_kernel.py
+  - tracks/ksvd/tests/test_zinc_static_dictionary_pair_kernel.py

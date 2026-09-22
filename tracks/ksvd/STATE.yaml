@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-zinc-static-dict-pair-v1-seed1-b2-mechanism-inert
+phase: post-zinc-static-dict-pair-kernel-v0-seed0-no-strong-signal
 updated: 2026-09-22
 
 # ---------------------------------------------------------------------------
@@ -366,9 +366,70 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: new_preregistration_required_for_dictionary_stability
+  status: new_preregistration_required
   # -------------------------------------------------------------------------
-  # ZINC strict-static dictionary-pair v0 (2026-09-22) — the current round.
+  # ZINC static dictionary-conditioned pair kernel v0 (SDPK-v0, 2026-09-22).
+  # User authorized up to two full runs; the seed-0 performance gate FAILED, so
+  # only ONE run was spent and seed 1 was NOT purchased.  The next stage is NOT
+  # started.
+  # -------------------------------------------------------------------------
+  zinc_static_dict_pair_kernel_v0:
+    status: seed0_no_strong_performance_signal
+    round: zinc-static-dictionary-pair-kernel-v0
+    implementation_commit: f0a778dd07f5eeee4b2c8473115cdf980b45ac22
+    devices: [A100-SXM4-40GB GPU0]
+    seed: 0
+    split: official ZINC train 10000 / official valid 1000
+    architecture: >-
+      strict-static S0 local encoder unchanged (h_i = h0_i, no residual, no
+      gamma); end-to-end dictionary K=64 / rank=32 / coord_dim=16 /
+      tau_init=0.20; dictionary coordinates feed an occurrence-specific
+      multiplicative gate and a single 112D static pair encoder
+      (112 -> 64 -> 16); inherited 302D readout, topology hinge and small raw
+      head.
+    parameters: 74996
+    parameter_budget_preferred_max: 82000
+    strict_static_contract: PASS (center_context False, center_update None, forward with _pool_pairs_to_centres raising, h_i/alpha_i/c_i bit-identical under pair mutation, pair evaluated once)
+    hard_tests_all_pass: true
+    epochs_run: 240
+    early_terminated: false
+    best_valid_mae: 0.14219318306347123
+    best_epoch: 209
+    top5_soup_valid_mae: 0.13973486851429334
+    top5_soup_members: [165, 180, 186, 196, 209]
+    reference_s0_seed0: {best: 0.145674, soup: 0.140794}
+    best_improvement: 0.003480816936528769
+    soup_improvement: 0.0010591314857066603
+    gate: {soup_abs: 0.1328, soup_delta: 0.008, best_delta: 0.006}
+    seed0_verdict: SDPK_V0_NO_STRONG_PERFORMANCE_SIGNAL
+    dictionary_live_and_used: true
+    dictionary_diagnostics: {active_atoms: 58, argmax_used_atoms: 43, effective_atom_count: 9.492768287658691, assignment_entropy: 2.250530242919922, top8_assignment_mass: 0.823899507522583, coherence_mean_abs: 0.22925986349582672, coherence_max_abs: 0.9977928996086121, tau_final: 0.14978419244289398}
+    dictionary_intervention: {mean_coord_mean_shift: 0.05166193342208862, neutral_mean_shift: 0.059055072754621504, neutral_max_shift: 1.778909683227539}
+    baseline_guard: {replayed_s0_valid_mae: 0.14567432867834576, abs_diff: 3.2867834576233435e-07}
+    initialization_match_bit_identical: true
+    peak_gpu_memory_mb: 174.27880859375
+    gpu_wall_clock_s: 888.1277270829309
+    elapsed_wall_clock_s: 902
+    full_training_runs: 1
+    max_full_runs: 2
+    seed1_purchased: false
+    matched_dense_control: false
+    official_test_loaded: false
+    next: >-
+      STOP.  Do not buy seed 1, do not sweep K/rank/coord_dim/tau/pair width,
+      do not add sparsity/entropy/orthogonality/reconstruction terms, do not add
+      a residual or a dense pair-kernel control in this round.  A matched dense
+      pair-kernel control only becomes justified after a greater-than-noise
+      absolute strict-static improvement from some dictionary-conditioned
+      mechanism.  Gamma/residual-dictionary work stays closed.
+    claim: claim-zinc-static-dict-pair-kernel-v0-dictionary-used-no-absolute-gain-20260922
+    decision: decision-zinc-static-dict-pair-kernel-v0-stop-after-seed0-20260922
+    evidence:
+      - notes/zinc_static_dictionary_pair_kernel_v0_preregistration.md
+      - notes/zinc_static_dictionary_pair_kernel_v0_analysis.md
+      - results/zinc_static_dictionary_pair_kernel_v0/RESULTS_SUMMARY.md
+  # -------------------------------------------------------------------------
+  # ZINC strict-static dictionary-pair v0 (2026-09-22) — spent/historical.
   # User authorized exactly three seed-0 full runs (S0 / S-Dense / S-Dict);
   # that authorization is now fully spent.  The next stage is NOT started.
   # -------------------------------------------------------------------------
@@ -666,6 +727,7 @@ deferred_optional:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-zinc-static-dict-pair-kernel-v0-stop-after-seed0-20260922: "SDPK-v0 (2026-09-22, prereg+impl commit f0a778d; remote A100-SXM4-40GB GPU0; official test never loaded): promoted the learnable dictionary from a bypassable local residual adapter to the core coordinate of the occurrence-level static pair kernel under the strict-static contract (h_i = h0_i, no residual, no gamma; K=64/rank=32/coord_dim=16/tau_init=0.20; c_i = U(softmax(Wq(h_i) D^T / tau)); dictionary pair coordinates feed m_ij = 1 + tanh(Wm([c_i+c_j, |c_i-c_j|, c_i*c_j, rel_ij])) modulating raw_prod * distance_gate; single 112D pair encoder 112->64->16; 74,996 params; shared tensors bit-identical to S0, only the pair encoder input widened 64->112). One seed-0 full run of 240 epochs (no early stop): best official-valid MAE 0.14219318306347123 @209, Top-5 soup 0.13973486851429334 (members [165,180,186,196,209]); reference strict-static S0 seed0 best 0.145674 / soup 0.140794 -> best improvement +0.003480816936528769, soup improvement +0.0010591314857066603, both below the gates (soup <=0.1328 and delta >=0.008; best delta >=0.006) -> SDPK_V0_NO_STRONG_PERFORMANCE_SIGNAL; seed 1 NOT purchased. The dictionary is live and used (tau 0.20 -> 0.1498, 43 argmax-used atoms, effective atoms 9.49, top-8 mass 0.824, neutral-dictionary intervention mean/max |delta pred| 0.0591/1.7789 and graph-mean-coordinate 0.0517/1.2775), unlike the previous residual dictionary's 1e-5-scale ablation, so the failure is 'used dictionary-conditioned pair kernel still does not add absolute signal', not inertness. Strict-static hard gates all pass; baseline guard replayed the S0 checkpoint to 3.3e-7; 1 full run; GPU wall 888.1 s; elapsed 902 s; peak GPU 174.3 MB; official test never loaded. Decision: STOP with no sweep, no residual, no dense control, no seed 1. See notes/zinc_static_dictionary_pair_kernel_v0_preregistration.md, notes/zinc_static_dictionary_pair_kernel_v0_analysis.md, results/zinc_static_dictionary_pair_kernel_v0/RESULTS_SUMMARY.md, claim-zinc-static-dict-pair-kernel-v0-dictionary-used-no-absolute-gain-20260922, decision-zinc-static-dict-pair-kernel-v0-stop-after-seed0-20260922."
   - decision-zinc-static-dict-pair-v1-stop-confirmatory-pair-kernel-20260922: "ZINC strict-static dictionary-pair v1 confirmation (2026-09-22, prereg+impl commit 1cb4fc7; remote A100 GPU0/GPU1; official test never loaded): Phase A zero-training common-horizon audit of the seed-0 curves gave H_common 204 from durable artifacts, M0c 0.145674 / MDc 0.145958 / MKc 0.139009, base_gain_common +0.006666 (>=0.004) and dict_gain_common +0.006949 (>=0.002) -> A1 COMMON_HORIZON_SIGNAL_SURVIVES; the restricted Top-5 weight soup is unavailable from saved states (v0 persisted only the best checkpoint) and was not faked; ~30.7% of the seed-0 S0-Dict margin came from epochs 205-240. Phase B bought exactly three seed-1 full runs, each forced to 240 epochs with a shadow patience-40 early-stopping tracker: equal-horizon best S0 0.139389 @233 (soup 0.136423), S-Dense 0.145830 @164 (soup 0.141608), S-Dict 0.138020 @240 (soup 0.134697); Gbase_1 = S0-Dict +0.001369 (<0.004 gate), Gdict_1 = Dense-Dict +0.007811 (>=0.002), soup +0.001726 / +0.006912 -> B2 SEED1_DIRECTIONAL_REPLICATION. The shadow tracker never stopped S0 or S-Dict, so equal-horizon and original-protocol views coincide. DECISIVE CAVEAT: the seed-1 dictionary residual is inert at the best checkpoint (gamma 0.100 -> 3.75e-04 with 0.0021 by epoch 100 and ~0 from ~epoch 140; residual-disable ablation mean/max shift 1.02e-05 / 1.02e-04 versus 0.3044 / 0.9832 in seed 0; entropy 4.068 of 4.159, 58.45 effective atoms, tau 0.20 -> 0.547) and the matched S-Dense branch collapsed too (gamma 9.5e-05), so the seed-1 S-Dict endpoint is effectively the strict-static base network. Seed-1 S0 also improved 0.006285 over seed-0 S0 (~4.6x the S0-Dict margin). Two-seed original-protocol paired means: S0-Dict +0.005497 best / +0.004346 soup, Dense-Dict +0.008859 best / +0.007871 soup, sign-consistent. Strict-static gates PASS for all seed-1 arms; shared tensors bit-identical; 3 full runs; GPU wall 3109.4 s; official test never loaded. Decision: do NOT authorize the confirmatory occurrence-level dictionary-conditioned pair kernel; first run a new preregistered residual-dictionary stability/liveness round. See notes/zinc_static_dictionary_pair_v1_preregistration.md, notes/zinc_static_dictionary_pair_v1_analysis.md, results/zinc_static_dictionary_pair_v1_confirmation/RESULTS_SUMMARY.md, claim-zinc-static-dict-pair-v1-seed1-directional-not-mechanism-20260922, decision-zinc-static-dict-pair-v1-stop-confirmatory-pair-kernel-20260922."
   - decision-zinc-static-dict-pair-v0-buy-seed1-and-pair-kernel-20260922: "ZINC strict-static dictionary-pair v0 (2026-09-22, preregistration+implementation commit 033c1b6; remote A100 GPU0/GPU1; official test never loaded): a strict-static patch-pair compact-v4-smallhead S0 (center_context False, center_update None, 302D runtime representation, small raw head 302->13->13->1, 66,228 params) with three seed-0 full runs. Best-checkpoint official-valid MAE S0 0.145674 @164 (soup 0.140794), S-Dense 0.145958 @170 (soup 0.142660), S-Dict 0.136050 @225 (soup 0.133829). Gains primary: M0-MK +0.009624 (>=0.004), M0-MD -0.000284, MD-MK +0.009908 (>=0.002); soup: M0-MK +0.006965, MD-MK +0.008831. Both metrics fire Case A DICT_SPECIFIC_SIGNAL while the parameter-matched generic dense adapter (H=53, 5,189 vs 5,201 params, 0.23% mismatch, shared tensors bit-identical) gives no gain over S0. Strict-static gates PASS (forward with _pool_pairs_to_centres raising, pair/relation encoder called once, h_i bit-identical under pair mutation, pair-order invariant <=1.9e-6); dictionary active (64/64 atoms, effective count 8.13, gamma 0.1->0.184, inference ablation mean shift 0.304 vs dense 0.034). Caveat: single seed, noisy valid curve, S-Dict used more optimizer steps (240 epochs, no early stop) than S0/S-Dense. Decision: buy one paired seed-1 confirmation and implement the occurrence-level dictionary-conditioned pair kernel under a NEW preregistration; no HPO/rescue. See notes/zinc_static_dictionary_pair_preregistration.md, notes/zinc_static_dictionary_pair_analysis.md, results/zinc_static_dictionary_pair/RESULTS_SUMMARY.md, claim-zinc-static-dict-pair-v0-dictionary-specific-signal-20260922, decision-zinc-static-dict-pair-v0-buy-seed1-and-pair-kernel-20260922."
   - decision-tccd-v7-stop-standalone-normalized-moment-20260922: "TCCD-v7 (2026-09-22, preregistration commit a3f531d, implementation commit 34d931f; remote A100 GPU1 only; official test never loaded): Gate 0 passed all checks (permutation, batching/padding, algebra, full-symmetric normalized composition mass, zero-mass relation, no target leakage, official-test blocking, independent float64 reference, Stage-A-cache vs Stage-B-tensor equivalence, and relation-mass source agreement). Stage A on the fixed internal 8000/2000 split with the exact frozen TCCD-v2 PrototypeREL checkpoint and the identical linear-reader protocol: same-session RAW re-screen reproduced the frozen TCCD-v5 BASE bit-for-bit (best 0.28791576623916626 @ epoch 54, soup 0.2783639132976532, members [54,94,50,43,79], drift 0.0), NORM (10,470 dims) best/soup 0.4144890606403351/0.4146538972854614, NORM+MOM (10,534 dims) best/soup 0.4119139015674591/0.4121180474758148; delta_norm -0.13375413417816162 (required >= +0.015), absolute gate 0.255 failed, delta_mom 0.0025358498096466064 NEGLIGIBLE. Verdict Stage A FAIL -> STOP the TCCD standalone performance route immediately: no Stage B end-to-end run, no official-valid run, no official-test access, no seed 1, no tuning. TCCD standalone performance route CLOSED; No TCCD-v8 rescue is authorized. See notes/tccd_v7_final_normalized_moment_preregistration.md, notes/tccd_v7_final_normalized_moment_analysis.md, claim-tccd-v7-normalized-moment-standalone-insufficient-20260922, decision-tccd-v7-stop-standalone-normalized-moment-20260922."
