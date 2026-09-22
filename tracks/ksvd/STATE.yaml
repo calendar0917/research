@@ -61,6 +61,27 @@ chemcont_diagnostic:
     Re-specify local chemical similarity as a graded continuous target under a
     new preregistration; keep the frozen architecture.
 
+# ---------------------------------------------------------------------------
+# TCCD-v2 GRAD-CONT diagnostic (2026-09-22)
+# ---------------------------------------------------------------------------
+# Ordinal-only (Pareto d1/d2) label-free term on z, no scalar target. Ordinal
+# accuracy jumps (0.716 -> 0.848) but the geometry is still a step function
+# with the cliff relocated to the dominant training comparison (0,1)<(0,2).
+# Preregistered Outcome B. No lambda sweep, no seed-1, no official test.
+gradcont_diagnostic:
+  status: COMPLETE
+  outcome: B
+  report: tracks/ksvd/audit/tccd_v2_gradcont_continuity/REPORT.md
+  audit: tracks/ksvd/audit/tccd_v2_gradcont_continuity/tccd_v2_gradcont_continuity_audit.json
+  coverage: tracks/ksvd/results/tccd_v2_gradcont/coverage_seed0.json
+  claim: claim-tccd-v2-gradcont-ordinal-rule-boundary-20260922
+  decision: decision-tccd-v2-gradcont-stop-ordinal-latent-continuity-20260922
+  next_step: >-
+    Stop auxiliary latent continuity/ranking terms on the frozen architecture
+    and do not start Z->C dictionary coding. Redefine the local environment /
+    local boundary itself under a new preregistration before adding any
+    continuity objective.
+
 focus_study: zinc-context-gap
 
 # ---------------------------------------------------------------------------

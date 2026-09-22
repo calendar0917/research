@@ -1,0 +1,79 @@
+decision_id: decision-tccd-v2-gradcont-stop-ordinal-latent-continuity-20260922
+created: '2026-09-22T15:45:00'
+kind: decision
+study_id: zinc-context-gap
+because: >-
+  The single preregistered GRAD-CONT arm answered the round's question with a
+  preregistered Outcome B. Replacing the CHEM-CONT binary
+  radius-1-identical/c1>=2 contrast with an ordinal-only Pareto order on
+  (d1,d2) raised held-out Z ordinal accuracy from 0.716386 to 0.848344
+  (paired delta +0.131958, CI [+0.123248, +0.141717]), yet the geometry
+  remained step-like and actually became more cliffy: the Exact-to-VeryNear
+  cliff shrank (0.4444 to 0.2586) while a new cliff appeared at
+  (d1=0,d2=1) -> (d1=0,d2=2) (Z cosine 0.7414 to -0.0384), max adjacent-bin
+  jump rose to 0.7861 and max largest-boundary share to 1.0747 (both worse than
+  BASE and CHEM-CONT), and only 2 of 6 fixed-axis slices are monotone. The
+  dominant training comparison (0,1)<(0,2) is 79.6% of the ordinal triplets, and
+  the new cliff sits exactly at its farther bin, so the model satisfied the
+  ranking with one sharp boundary rather than interpolating chemistry. Together
+  with CHEM-CONT (which ruled out the 714->64 encoder as the binding limit),
+  this shows the effect is neither the choice of binary vs ordinal supervision
+  nor encoder capacity.
+decision: >-
+  Stop adding auxiliary latent continuity/ranking terms to the frozen TCCD-v2
+  architecture. Do not start Z -> C dictionary coding, do not redesign
+  prototypes or composition, do not retune or sweep lambda_grad, do not run
+  seed 1, do not sweep K/temperature/reader/relations/radius, and do not open
+  official test or official valid. The next round must first re-specify the
+  local environment itself (what "the same / a slightly different local
+  environment" means) under a new preregistration before any continuity
+  objective is added.
+alternatives_rejected:
+  - item: Proceed to Z -> C dictionary coding because ordinal accuracy improved
+    because: >-
+      The preregistered Outcome A requires a genuinely graded Z geometry, and
+      Z failed the smoothness criteria (max jump and boundary share worse than
+      both baselines, 2/6 monotone slices); a high ranking accuracy can come
+      from a step function.
+  - item: Retune lambda_grad or rebalance the triplet mixture and rerun
+    because: >-
+      lambda_grad was frozen by a detached one-shot calibration and the round
+      forbids sweeps; the failure mechanism (over-separation of the dominant
+      farther bin) is qualitative, and the preregistration authorizes no
+      rescue run.
+  - item: Conclude the representation is the limit and replace the encoder
+    because: >-
+      CHEM-CONT already showed the frozen encoder is highly plastic, and
+      GRAD-CONT again reorganized Z strongly; there is no evidence of a
+      representation limit.
+  - item: Keep only the favourable radius-1 sub-curve and declare partial success
+    because: >-
+      The radius-1 axis did improve, but the round's question is whether local
+      latent geometry is graded; the dominant d2 axis shows a relocated cliff,
+      so a partial claim would be post-hoc selection.
+consequences:
+  - >-
+    Supported: ordinal ranking supervision on this frozen architecture is
+    learned but converges to a piecewise-constant separation, not a graded
+    manifold.
+  - >-
+    Supported: the CHEM-CONT conclusion generalizes beyond the binary target
+    definition; the relocated-cliff pattern is objective-shaped, not
+    target-format-shaped.
+  - >-
+    Supported: the Z/C decoupling persists (C ordinal accuracy 0.771, (0,1)
+    top-1 agreement 0.329), so prototype coding remains a separate downstream
+    concern.
+  - >-
+    Observed: unlike CHEM-CONT, GRAD-CONT does not push far environments into a
+    globally negative region (minimum bin mean -0.0384, 1 negative bin), so the
+    damage is a localized rule boundary.
+next_action: >-
+  New preregistration that redefines the local environment / local boundary
+  itself (matched composition or task-relevant local boundary) and first
+  measures whether a graded local geometry is even definable, before adding any
+  continuity or ranking loss; frozen architecture and official test blocked.
+revisit_if: >-
+  A redesigned local environment still produces a single-boundary partition, or
+  a future round authorizes an architecture whose local code is not a linear
+  projection onto shared prototypes.

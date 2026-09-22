@@ -390,7 +390,7 @@ def main(argv=None):
         shares = [m["z"]["largest_boundary_share"] for m in jm.values() if m["z"].get("largest_boundary_share") is not None]
         flat = [x for xs in allz for x in xs]
         jm["_aggregate"] = {
-            "n_slices": len(jm) - 1,
+            "n_slices": len(jm),
             "median_abs_jump": float(np.median(flat)) if flat else None,
             "max_abs_jump": float(np.max(flat)) if flat else None,
             "mean_largest_boundary_share": float(np.mean(shares)) if shares else None,
@@ -515,10 +515,11 @@ def main(argv=None):
     # ---------------- MAE guardrail (read from existing result JSONs) -------
     mae = {}
     base_train = json.loads((REPO / "tracks/ksvd/results/tccd_v2/gateA_seed0.json").read_text())
+    base_rel = base_train.get("prototype_rel", base_train)
     mae["BASE"] = {
-        "best_valid": base_train.get("best_valid"),
-        "soup_valid": base_train.get("soup_valid"),
-        "source": "tracks/ksvd/results/tccd_v2/gateA_seed0.json",
+        "best_valid": base_rel.get("best_valid"),
+        "soup_valid": base_rel.get("soup_valid"),
+        "source": "tracks/ksvd/results/tccd_v2/gateA_seed0.json::prototype_rel",
     }
     chem_train = json.loads((REPO / "tracks/ksvd/results/tccd_v2_chemcont/train_seed0.json").read_text())
     mae["CHEM-CONT"] = {
@@ -533,6 +534,64 @@ def main(argv=None):
             "best_valid": gc_train.get("best_valid"),
             "soup_valid": gc_train.get("soup_valid"),
             "source": "tracks/ksvd/results/tccd_v2_gradcont/train_seed0.json",
+        }
+
+    # ---------------- pre-registered A/B/C/D classification ----------------
+    def _classify():
+        if results.get("GRAD-CONT", {}).get("missing"):
+            return {"outcome": "NOT_RUN", "reason": "GRAD-CONT checkpoint missing"}
+        acc = {n: ordinal[n]["all"]["z_accuracy"] for n in ("BASE", "CHEM-CONT", "GRAD-CONT")}
+        best_base = max(acc["BASE"], acc["CHEM-CONT"])
+        delta_acc = acc["GRAD-CONT"] - best_base
+        # paired CI against whichever baseline is higher
+        ref = "CHEM-CONT" if acc["CHEM-CONT"] >= acc["BASE"] else "BASE"
+        ci = paired[f"GRAD-CONT_vs_{ref}"]["z_accuracy_delta_ci"]
+        a_ok = bool(delta_acc >= 0.03 and ci is not None and ci[0] > 0)
+        gj = jumps["GRAD-CONT"]["_aggregate"]
+        b_jump = gj["max_abs_jump"] <= 0.445
+        b_share = gj["max_largest_boundary_share"] <= 0.774
+        b_ok = bool(b_jump and b_share)
+        mono_keys = ["d1=0", "d1=1", "d1=2", "d2=1", "d2=2", "sub::l1_identical_by_d2"]
+        mono = [bool(jumps["GRAD-CONT"][k]["z"].get("monotone_nonincreasing")) for k in mono_keys]
+        c_ok = bool(sum(mono) >= 3)
+        gr = guardrail["GRAD-CONT"]
+        d_ok = bool(gr["min_bin_z_mean"] is None or gr["min_bin_z_mean"] >= -0.10)
+        graded = bool(a_ok and b_ok and c_ok and d_ok)
+        base_best = mae["BASE"]["best_valid"]
+        base_soup = mae["BASE"]["soup_valid"]
+        mae_ok = None
+        if base_best is not None and "GRAD-CONT" in mae:
+            db = mae["GRAD-CONT"]["best_valid"] - base_best
+            ds = mae["GRAD-CONT"]["soup_valid"] - base_soup
+            mae_ok = bool(db <= 0.010 or ds <= 0.010)
+        if graded and mae_ok:
+            outcome = "A"
+        elif graded and not mae_ok:
+            outcome = "C"
+        elif a_ok and not graded:
+            outcome = "B"
+        elif (not a_ok) and (not b_ok):
+            outcome = "D"
+        else:
+            outcome = "INCONCLUSIVE"
+        return {
+            "outcome": outcome,
+            "ordinal_accuracy": acc,
+            "delta_vs_best_baseline": delta_acc,
+            "delta_ci_vs": ref,
+            "delta_ci": ci,
+            "criteria": {
+                "a_ordinal_accuracy": a_ok,
+                "b_jump": b_jump,
+                "b_share": b_share,
+                "b_ok": b_ok,
+                "c_monotone_slices": int(sum(mono)),
+                "c_ok": c_ok,
+                "d_no_anomalous_negative": d_ok,
+                "graded_Z": graded,
+                "mae_ok": mae_ok,
+            },
+            "monotone_by_slice": dict(zip(mono_keys, mono)),
         }
 
     # ---------------- provenance ----------------
@@ -572,6 +631,7 @@ def main(argv=None):
         "guardrail": guardrail,
         "summary": summary,
         "mae": mae,
+        "verdict": _classify(),
     }
     pathlib.Path(cli.out_json).write_text(json.dumps(out, indent=1, default=float))
     print(f"[done] wrote {cli.out_json} in {time.time()-t_start:.0f}s")

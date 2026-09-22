@@ -1,0 +1,56 @@
+claim_id: claim-tccd-v2-gradcont-ordinal-rule-boundary-20260922
+created: '2026-09-22T15:45:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  An ordinal-only, label-free local-geometry objective on the latent z does not
+  produce a graded local chemical geometry in TCCD-v2; it learns the ranking
+  while relocating the cliff. With a Pareto partial order on
+  (d1, d2) edit counts (j closer than k iff d1(i,j)<=d1(i,k) and
+  d2(i,j)<=d2(i,k) with one strict; exact pairs excluded; no scalar distance, no
+  shell weighting, no margin) and L_grad = mean softplus(cos(z_i,z_far) -
+  cos(z_i,z_close)) at one frozen calibration lambda_grad = 0.1154061, held-out
+  internal-dev Z ordinal accuracy rose from 0.716386 (CHEM-CONT) / 0.699103
+  (BASE) to 0.848344 (paired cluster-bootstrap delta vs CHEM-CONT +0.131958,
+  CI [+0.123248, +0.141717]). Every smoothness diagnostic got worse: the
+  Exact-to-(d1=0,d2=1) cliff shrank (0.4444 to 0.2586) but a new cliff appeared
+  at the radius-2 boundary (d1=0,d2=1) -> (d1=0,d2=2) with Z cosine falling
+  +0.7414 to -0.0384 (bin median -0.2318); max adjacent-bin jump rose to 0.7861
+  (BASE 0.4054, CHEM-CONT 0.5936); max largest-boundary share rose to 1.0747
+  (BASE 0.8922, CHEM-CONT 1.0321); only 2 of 6 fixed-axis slices are monotone
+  non-increasing; the d1=0 slice is non-monotone (0.977, 0.741, -0.038, 0.138,
+  0.177, 0.259, 0.246). The effect is localized, not a global negative push:
+  minimum bin mean Z cosine -0.0384 with 1 negative bin (N>=200) versus
+  CHEM-CONT -0.4447 with 16. Stratified accuracy shows the trade: same_d1
+  (sweep d2) +0.166 but same_d2 (sweep d1) -0.117 versus CHEM-CONT. Prototype
+  code follows only partially (C ordinal accuracy 0.686 to 0.771; (0,1) top-1
+  agreement 0.257 to 0.329). Task guardrail: best MAE 0.299083 (BASE +0.012839)
+  and Top-5 soup 0.275521 (BASE +0.009169). Preregistered outcome B: the
+  ordering is learned, the geometry is still a step function whose boundary
+  moved to the dominant training comparison (0,1) < (0,2), which is 79.6% of all
+  training triplets.
+scope: >-
+  One new arm only, GRAD-CONT seed 0, GPU1, commit 423b703, using the frozen
+  TCCD-v2 Prototype-REL architecture, records, internal split seed 20260922,
+  K=64, temperature parameterization, BAG + C^T R C reader, optimizer and
+  stopping protocol. The only change is one label-free ordinal term on z, with
+  lambda_grad fixed once by a detached 5%-task-share calibration and never
+  retuned. BASE and CHEM-CONT were not retrained or re-audited; their geometry
+  was read with the same new audit on frozen checkpoints. Official test and
+  official valid were never loaded. Phase 0 coverage before training: train
+  eligible_fraction 0.999731 with 741774 triplets, held-out dev 0.999588 with
+  184332 triplets, graph coverage 1.0, cross-molecule 1.0.
+evidence:
+  - tracks/ksvd/notes/tccd_v2_gradcont_preregistration.md
+  - tracks/ksvd/audit/tccd_v2_gradcont_continuity/REPORT.md
+  - tracks/ksvd/audit/tccd_v2_gradcont_continuity/tccd_v2_gradcont_continuity_audit.json
+  - tracks/ksvd/results/tccd_v2_gradcont/train_seed0.json
+  - tracks/ksvd/results/tccd_v2_gradcont/gate0_seed0.json
+  - tracks/ksvd/results/tccd_v2_gradcont/coverage_seed0.json
+  - tracks/ksvd/code/tccd_v2_local_chem.py
+  - tracks/ksvd/code/tccd_v2_gradcont.py
+  - tracks/ksvd/code/run_tccd_v2_gradcont.py
+  - tracks/ksvd/tests/test_tccd_v2_gradcont.py
+  - tracks/ksvd/audit/tccd_v2_chemcont_continuity/REPORT.md
+  - tracks/ksvd/audit/tccd_v2_continuity/tccd_v2_continuity_audit.json
