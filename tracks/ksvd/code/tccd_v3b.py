@@ -450,14 +450,18 @@ def gate0_checks(device: str = "cpu", *, require_cache: bool = False) -> dict[st
     data_a = _synthetic_full_data(raw_a)
     data_b = _synthetic_full_data(raw_b)
     with torch.no_grad():
-        out_a = _capture_patch_encoder(model, _batch_one(data_a))
-        out_b = _capture_patch_encoder(model, _batch_one(data_b))
+        out_a = _capture_patch_encoder(model, _batch_one(data_a).to(device))
+        out_b = _capture_patch_encoder(model, _batch_one(data_b).to(device))
         out_batch = _capture_patch_encoder(
-            model, SSPE.struct_collate([data_a, data_b])
+            model, SSPE.struct_collate([data_a, data_b]).to(device)
         )[:1]
         reload_model = _source_model(device)
-        out_reload = _capture_patch_encoder(model=reload_model, batch=_batch_one(data_a))
-        out_perm = _capture_patch_encoder(model, _batch_one(_synthetic_relabel(data_a)))
+        out_reload = _capture_patch_encoder(
+            model=reload_model, batch=_batch_one(data_a).to(device)
+        )
+        out_perm = _capture_patch_encoder(
+            model, _batch_one(_synthetic_relabel(data_a)).to(device)
+        )
 
     # Pair/global/topology intervention on one actual local patch.  The hook is
     # captured before all pair/global operations, so this is also a code-path
@@ -467,7 +471,9 @@ def gate0_checks(device: str = "cpu", *, require_cache: bool = False) -> dict[st
     intervention.global_context = torch.ones_like(intervention.global_context)
     intervention.topology_features = torch.ones_like(intervention.topology_features)
     with torch.no_grad():
-        out_intervention = _capture_patch_encoder(model, _batch_one(intervention))
+        out_intervention = _capture_patch_encoder(
+            model, _batch_one(intervention).to(device)
+        )
 
     checks: dict[str, Any] = {
         "official_test_loaded": False,
