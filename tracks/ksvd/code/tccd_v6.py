@@ -968,6 +968,7 @@ def gate0_data_free_checks(device: str = "cpu") -> dict[str, Any]:
     checks["relabel_invariant"] = bool(checks["relabel_invariance_max_abs_diff"] <= 1e-5)
 
     # arm prediction invariance under relabel with frozen weights
+    m = m.to(device)
     m.eval()
     with torch.no_grad():
         pred_o = m(make_arm_batch(orig_cache, y, [0], device))
