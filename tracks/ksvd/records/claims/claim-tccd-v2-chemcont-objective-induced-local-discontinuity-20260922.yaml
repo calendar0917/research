@@ -1,0 +1,44 @@
+claim_id: claim-tccd-v2-chemcont-objective-induced-local-discontinuity-20260922
+created: '2026-09-22T14:40:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  The frozen TCCD-v2 Exact-to-VeryNear local discontinuity is primarily
+  objective-induced, not representation-limited. A single label-free
+  chemical-continuity term on the latent z alone (softplus margin over
+  training-split VeryNear positives and matched HardNegative negatives,
+  lambda_chem 0.115614 fixed by one detached 5%-task-share calibration) moved
+  the internal-dev VeryNear Z cosine from 0.427804 to 0.734396 (delta +0.306592;
+  non-overlapping molecule-cluster bootstrap CIs) and halved the Exact-to-VeryNear
+  cliff (1 - cos) from 0.572196 to 0.265604, using the identical frozen 714->64
+  linear encoder. Outcome C is therefore ruled out for this cliff. The change is
+  not a smooth chemical manifold: it is a contrastive re-partition at the
+  radius-1 boundary (VeryNear>Moderate AUC 0.588 to 0.909; HardNegative Z cosine
+  0.205862 to -0.338076, so hard negatives become less similar than random), the
+  prototype code follows only weakly (VeryNear C cosine 0.301212 to 0.383090,
+  same top-1 0.089742 to 0.136833), and internal-dev best MAE degrades from
+  0.286244 to 0.302059 (delta +0.015815; Top-5 soup 0.266352 to 0.275267). The
+  primary round outcome is D with a strong B-like Z/C decoupling component: the
+  radius-1-based chemical similarity definition is too coarse and conflicts with
+  task distinctions.
+scope: >-
+  One new arm only, CHEM-CONT seed 0, on GPU1 at commit
+  1f18c7466187d7915d6ad463a9bc59959cb4e9ea, using the frozen TCCD-v2
+  Prototype-REL architecture, records, split seed 20260922, K=64, temperature
+  parameterization, BAG + C^T R C reader, optimizer and stopping protocol. The
+  only change is lambda_chem * mean softplus(cos(z_i,z_neg) - cos(z_i,z_pos)).
+  Pair cache is deterministic and label-free from the training split only
+  (161718 anchors, 604683 triplets, 12.84% unmatched). BASE was not retrained or
+  re-audited. Official test and official valid were never loaded.
+evidence:
+  - tracks/ksvd/notes/tccd_v2_chemcont_preregistration.md
+  - tracks/ksvd/audit/tccd_v2_chemcont_continuity/REPORT.md
+  - tracks/ksvd/audit/tccd_v2_chemcont_continuity/BASE_vs_CHEMCONT.json
+  - tracks/ksvd/audit/tccd_v2_chemcont_continuity/tccd_v2_chemcont_continuity_audit.json
+  - tracks/ksvd/audit/tccd_v2_continuity/tccd_v2_continuity_audit.json
+  - tracks/ksvd/results/tccd_v2_chemcont/train_seed0.json
+  - tracks/ksvd/results/tccd_v2_chemcont/gate0_seed0.json
+  - tracks/ksvd/code/tccd_v2_chemcont.py
+  - tracks/ksvd/code/run_tccd_v2_chemcont.py
+  - tracks/ksvd/tests/test_tccd_v2_chemcont.py

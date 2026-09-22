@@ -1,0 +1,67 @@
+decision_id: decision-tccd-v2-chemcont-redefine-similarity-20260922
+created: '2026-09-22T14:40:00'
+kind: decision
+study_id: zinc-context-gap
+because: >-
+  The single preregistered CHEM-CONT arm resolved the causal fork toward the
+  objective: with the frozen 714->64 linear encoder, a label-free latent
+  continuity term moved internal-dev VeryNear Z cosine from 0.427804 to 0.734396
+  and cut the Exact-to-VeryNear cliff in half (0.572196 to 0.265604), so the
+  frozen representation is not the binding limit for that cliff (Outcome C
+  ruled out). However the same arm produced a sharper contrastive boundary
+  rather than a chemical manifold: VeryNear>Moderate AUC rose 0.588 to 0.909 and
+  HardNegative Z cosine fell to -0.338076 (below random), while the prototype
+  code followed only weakly (VeryNear C cosine +0.081878, same top-1 0.136833)
+  and internal-dev best MAE degraded 0.286244 to 0.302059 (delta +0.015815,
+  above the 0.010 materiality floor; Top-5 soup +0.008915). This matches the
+  preregistered Outcome D mechanism: the binary radius-1-identical positive /
+  c1>=2 negative contrast is too coarse and conflicts with task distinctions.
+decision: >-
+  Stop the CHEM-CONT objective as specified. Do not retune lambda_chem, do not
+  run seed 1, do not sweep K/temperature/reader/relations, do not add a
+  projector or a message-passing encoder, and do not open official test. The
+  next round must first re-specify the local chemical similarity as a graded,
+  continuous target (monotone kernel over radius-1 and radius-2 edit counts,
+  exact pairs excluded) under a new preregistration, keeping the frozen
+  architecture, then test one arm.
+alternatives_rejected:
+  - item: Retune or sweep lambda_chem to trade continuity against MAE
+    because: >-
+      The preregistration froze a single detached 5%-task calibration and
+      forbids using dev MAE or continuity to tune lambda; the failure is
+      qualitative (boundary relocation), not a wrong weight.
+  - item: Conclude Outcome C (representation-limited) and replace the 714-D input
+    because: >-
+      Z VeryNear cosine nearly doubled and the Exact-to-VeryNear cliff halved
+      under the same encoder, which directly falsifies the representation-limit
+      explanation for that cliff.
+  - item: Conclude Outcome B only and move straight to dictionary coding
+    because: >-
+      C-space does lag, but the dominant new evidence is that the Z objective
+      itself was reshaped into a definition-shaped contrastive partition, so
+      fixing the similarity definition comes first.
+  - item: Run a seed-1 rescue or an official-test evaluation
+    because: >-
+      The round is a single diagnostic arm; no seed-1 and no official-test
+      access are authorized, consistent with the frozen TCCD-v7 stop.
+consequences:
+  - >-
+    Supported: the frozen 714->64 canonical-patch encoder can be reorganized
+    substantially by a label-free local objective, so the Exact-to-VeryNear
+    discontinuity is objective-induced.
+  - >-
+    Supported: prototype coding does not automatically inherit Z continuity
+    (Z/C decoupling), so dictionary coding remains a downstream concern.
+  - >-
+    Ruled out: the strong representation-limit explanation for the
+    Exact-to-VeryNear cliff.
+  - >-
+    Observed: a binary radius-1 similarity target relocates the cliff rather
+    than smoothing it and costs task MAE.
+next_action: >-
+  New preregistration for one arm replacing the binary contrast with a graded
+  continuous chemical-similarity target over radius-1/radius-2 edit counts,
+  frozen architecture, no lambda sweep, official test blocked.
+revisit_if: >-
+  A graded similarity target still relocates the boundary instead of smoothing
+  it, or a future round authorizes a genuinely continuous local input encoding.

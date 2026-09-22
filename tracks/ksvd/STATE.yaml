@@ -44,6 +44,23 @@ active_studies:
   - zinc-context-gap
   - molhiv-cross-scaffold-interaction
 
+# ---------------------------------------------------------------------------
+# TCCD-v2 CHEM-CONT diagnostic (2026-09-22)
+# ---------------------------------------------------------------------------
+# Single label-free continuity arm on the frozen TCCD-v2 encoder. Resolves the
+# causal fork toward the objective (not the 714->64 representation), but the
+# radius-1 similarity definition relocates the cliff and costs MAE -> Outcome D.
+# No lambda sweep, no seed-1, no official test.
+chemcont_diagnostic:
+  status: COMPLETE
+  outcome: D-with-B-component
+  report: tracks/ksvd/audit/tccd_v2_chemcont_continuity/REPORT.md
+  claim: claim-tccd-v2-chemcont-objective-induced-local-discontinuity-20260922
+  decision: decision-tccd-v2-chemcont-redefine-similarity-20260922
+  next_step: >-
+    Re-specify local chemical similarity as a graded continuous target under a
+    new preregistration; keep the frozen architecture.
+
 focus_study: zinc-context-gap
 
 # ---------------------------------------------------------------------------
