@@ -619,8 +619,9 @@ def gate0_data_free_checks(device: str = "cpu") -> dict[str, Any]:
     C_rel = C[:, perm_rows]
     i0r = torch.as_tensor(new_i0).unsqueeze(0)
     i1r = torch.as_tensor(new_i1).unsqueeze(0)
+    # keep this algebraic check on CPU so it runs identically for any requested device
     torch.manual_seed(7)
-    model3 = CenterCompFactory.build(seed=0).to(device).eval()
+    model3 = CenterCompFactory.build(seed=0).eval()
     with torch.no_grad():
         _, q_rel = center_pair_context(C_rel, i0r, i1r, rel, valid, model3.phi)
         h_center_orig = compose_center(
