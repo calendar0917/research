@@ -1,0 +1,101 @@
+claim_id: claim-tccd-v7-normalized-moment-standalone-insufficient-20260922
+created: '2026-09-22T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the fixed internal ZINC split with the exact frozen TCCD-v2 PrototypeREL
+  checkpoint, an explicit normalized prototype/relation-moment representation
+  consumed by a LINEAR reader only is NOT sufficient as a standalone TCCD
+  representation. Under an identical protocol, the raw TCCD-v2 representation
+  (h_RAW, 10,464 dims) reaches Top-5 soup 0.2783639132976532 while the
+  registered NORM+MOM representation h_NM = [mu, v, {vec_sym(C^T R_r C /
+  max(s_r, eps))}, log(1+n), {log(1+s_r)}] (10,534 dims) reaches only
+  0.4121180474758148, i.e. delta_norm = -0.13375413417816162 (the registered
+  PASS direction required >= +0.015, and the registered absolute gate required
+  <= 0.255). NORM without the prototype variance gives 0.4146538972854614, so
+  delta_mom = 0.0025358498096466064 < 0.005 is NEGLIGIBLE: the unary second
+  moment adds no independent increment. The failure is representational
+  underfitting, not an optimization artifact: both normalized arms never
+  early-stopped within 240 epochs and their TRAIN MAE plateaus at ~0.39 versus
+  ~0.18 for RAW, with the identical reader/protocol/seed/device. Mechanism:
+  raw -> normalized is a deterministic map, but recovering the raw coordinates
+  requires multiplying by the per-graph scale (BAG = n*mu, M_r = s_r*Mhat_r),
+  which a linear reader cannot do from n and s_r entering as separate additive
+  coordinates. Combined with TCCD-v6 (RECON-LINFACT soup 0.252556831 on
+  h_base PLUS normalized coordinates), the v5/v6 gain is re-attributed as an
+  ADDITIVE coordinate-exposure effect inside the union representation; the raw
+  un-normalized coordinates remain necessary and cannot be replaced by the
+  normalized moment representation. The preregistered Stage-A verdict is FAIL,
+  so Stage B (end-to-end), the official-valid run and the official test were
+  not run.
+scope: >-
+  TCCD-v7 preregistration commit a3f531d; implementation commit
+  34d931f9b0ec2a27d970f522c32cc8bcb307f3fb; remote A100 GPU1 only; seed 0;
+  fixed internal split seed 20260922 with 8000 train and 2000 dev; exact frozen
+  TCCD-v2 PrototypeREL checkpoint (SHA-256
+  093e0e46d4d5dab7e5558b807d993d1136df58d8f531d6b9b3621e8ab05c0f42) and exact
+  frozen TCCD-v5 pair cache; K=64 prototypes, temperature
+  0.05+0.95*sigmoid(a), five frozen relations [R_int, R_b0, R_b1, R_b2, R_geo];
+  linear reader only (Linear(h_G,1), no MLP, no standardization layer);
+  TCCD-v2 optimizer/regularizer/soup protocol unchanged; no end-to-end run, no
+  official-valid run, official test never loaded.
+supporting_evidence:
+  - >-
+    Gate 0 PASS on remote GPU1 (A permutation invariance; B batching/padding
+    invariance 2.3e-10 / 0.0; C sum_k mu_k = 1 and v = m2 - mu^2 with clamp;
+    D full-symmetric-rebuild normalized composition mass == 1 within 1.8e-07 on
+    the real cache; E zero-mass relation exactly zero, exercised by 9,493 real
+    zero-mass relation entries (relation 2: 127 graphs, relation 3: 9,366
+    graphs); F no target leakage; G official test blocked; H independent
+    float64 numpy reference agrees to 1.7e-08 relative; I Stage-A cache path ==
+    Stage-B tensor path to 4.8e-07; J relation mass from h_base == relation
+    mass from the frozen pair cache to 2.2e-07 relative; K RAW features are
+    exactly the frozen h_base).
+  - >-
+    Same-session REMOTE re-screen of the exact RAW linear reader reproduces the
+    frozen TCCD-v5 BASE bit-for-bit: best 0.28791576623916626 @ epoch 54 and
+    Top-5 soup 0.2783639132976532 with soup members [54,94,50,43,79], identical
+    to the frozen v5 record; protocol_drift = 0.0, so the comparison is free of
+    execution-regime confounds.
+  - >-
+    NORM (10,470 dims) best 0.4144890606403351 @240 / soup 0.4146538972854614;
+    NORM+MOM (10,534 dims) best 0.4119139015674591 @240 / soup
+    0.4121180474758148; neither arm early-stopped and both were still improving
+    at epoch 240.
+  - >-
+    Underfitting evidence: NORM train 0.401679 / valid 0.418548 at epoch 200 and
+    train 0.397303 / valid 0.414489 at epoch 240; NORM+MOM train 0.397673 /
+    valid 0.416005 at epoch 200 and train 0.393731 / valid 0.411914 at epoch
+    240; RAW train ~0.180 (epoch 80) with early stop at epoch 94.
+  - >-
+    Registered decision arithmetic: delta_norm = -0.13375413417816162,
+    delta_norm_rerun = -0.13375413417816162, delta_mom =
+    0.0025358498096466064, protocol_drift = 0.0, nm_soup_abs_ok FALSE,
+    delta_norm_ok FALSE, verdict FAIL.
+  - >-
+    Combined with the frozen TCCD-v6 result (h_base + 69 normalized
+    base-reconstructible coordinates, no ReLU, soup 0.252556831), the
+    normalization gain is additive-only and the raw coordinates remain
+    load-bearing.
+falsified_by: >-
+  A matched frozen screen in which the raw coordinates are removed but the
+  normalized-moment representation (with the same reader, split, seed and
+  protocol) reaches at most 0.255 and beats RAW by at least 0.015. This claim
+  is also falsified if any future round shows a linear reader recovering the
+  raw-scale information from [mu, v, Mhat_r, log(1+n), log(1+s_r)] alone.
+notes: >-
+  Interpretation boundary is frozen: the negative result is about the
+  prototype-moment standalone predictor, NOT about prototype learning. The
+  prototype vocabulary itself (task-learned K=64, assignment-sensitive
+  composition) remains supported by TCCD-v2. The variance diagnostic is
+  report-only and does not change any architecture.
+evidence:
+  - tracks/ksvd/notes/tccd_v7_final_normalized_moment_preregistration.md
+  - tracks/ksvd/notes/tccd_v7_final_normalized_moment_analysis.md
+  - tracks/ksvd/results/tccd_v7/gate0.json
+  - tracks/ksvd/results/tccd_v7/stageA_seed0.json
+  - tracks/ksvd/results/tccd_v7/stageA_decision_seed0.json
+  - tracks/ksvd/code/tccd_v7.py
+  - tracks/ksvd/code/run_tccd_v7.py
+  - tracks/ksvd/tests/test_tccd_v7.py

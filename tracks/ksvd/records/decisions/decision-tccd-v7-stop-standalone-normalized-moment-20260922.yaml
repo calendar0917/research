@@ -1,0 +1,143 @@
+decision_id: decision-tccd-v7-stop-standalone-normalized-moment-20260922
+created: '2026-09-22T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  TCCD-v5 and TCCD-v6 localized the frozen TCCD-v2 local gain to coordinate
+  conditioning / readout geometry (G_FULL 0.0261305868625641; RECON rho
+  0.995135; ReLU gap 0.000196368) rather than to new structural information,
+  and left exactly one open question: is the normalization that produced the
+  gain sufficient when written EXPLICITLY into the representation itself? As
+  the closing round of the TCCD standalone-predictor route, TCCD-v7 wrote the
+  size-normalized prototype mean/variance, the normalized relation
+  contractions and the explicit log size/mass coordinates into h_NM and read
+  them with a LINEAR reader only, then tested frozen closure (Stage A) before
+  allowing one end-to-end co-adaptation run (Stage B).
+protocol: >-
+  GPU1-only remote A100 execution; seed 0; fixed internal 8000/2000 split (split
+  seed 20260922); exact frozen TCCD-v2 PrototypeREL checkpoint and exact frozen
+  TCCD-v5 pair cache; K=64 prototypes, temperature 0.05+0.95*sigmoid(a), five
+  frozen relations; representation h_N = [mu, {vec_sym(Mhat_r)}, log(1+n),
+  {log(1+s_r)}] (10,470) and h_NM = [mu, v, {vec_sym(Mhat_r)}, log(1+n),
+  {log(1+s_r)}] (10,534) with Mhat_r = C^T R_r C / max(s_r, eps); linear reader
+  only; exact TCCD-v5 frozen-reader protocol (Adam 1e-3, wd 1e-5, clip 5,
+  batch 32, 240 epochs, patience 40, Top-5 soup); same-session RAW re-screen as
+  a preregistered protocol-identity check; Stage B (end-to-end from scratch,
+  exact TCCD-v2 regularizers) and the official-train -> official-valid run were
+  registered as authorized only after a Stage A PASS; official test frozen.
+results:
+  preregistration_commit: a3f531d
+  implementation_commit: 34d931f9b0ec2a27d970f522c32cc8bcb307f3fb
+  gpu: GPU1
+  seed: 0
+  split_seed: 20260922
+  n_train: 8000
+  n_dev: 2000
+  dims: {raw: 10464, norm: 10470, norm_mom: 10534}
+  stage_b_parameter_accounting: {encoder: 45696, prototypes: 4096, temperature: 1, reader: 10535, total: 60328}
+  gate0_pass: true
+  raw_best_valid_mae: 0.28791576623916626
+  raw_soup_valid_mae: 0.2783639132976532
+  raw_rescreen_best_valid_mae: 0.28791576623916626
+  raw_rescreen_soup_valid_mae: 0.2783639132976532
+  raw_rescreen_best_epoch: 54
+  raw_rescreen_soup_members: [54, 94, 50, 43, 79]
+  norm_best_valid_mae: 0.4144890606403351
+  norm_soup_valid_mae: 0.4146538972854614
+  norm_best_epoch: 240
+  norm_mom_best_valid_mae: 0.4119139015674591
+  norm_mom_soup_valid_mae: 0.4121180474758148
+  norm_mom_best_epoch: 240
+  norm_mom_train_mae_epoch200: 0.397673
+  norm_mom_train_mae_epoch240: 0.393731
+  delta_norm: -0.13375413417816162
+  delta_norm_rerun: -0.13375413417816162
+  delta_mom: 0.0025358498096466064
+  protocol_drift: 0.0
+  variance_diagnostic: NEGLIGIBLE
+  stage_a_verdict: FAIL
+  stage_a_pass: false
+  stage_b_run: false
+  official_valid_run: false
+  official_test_loaded: false
+  wall_s: 342.9503266811371
+  peak_mem_mb: 420.1083984375
+decision: >-
+  STAGE A FAIL -> STOP the TCCD standalone-predictor route immediately. The
+  explicit normalized prototype/relation-moment representation is strictly
+  worse than the raw representation it was meant to improve (0.412118 vs
+  0.278364, delta_norm -0.133754 when the registered PASS required +0.015 and
+  an absolute gate of 0.255), with protocol identity proven bit-for-bit
+  (drift 0.0). Under the frozen preregistration this forbids Stage B
+  (end-to-end co-adaptation), the official-train -> official-valid run and the
+  official test; none was run. TCCD standalone performance route CLOSED. No
+  TCCD-v8 rescue is authorized.
+alternatives_rejected:
+  - item: Run the preregistered Stage B end-to-end NORM+MOM co-adaptation anyway
+    because: >-
+      the registered Stage-A PASS condition (MAE_NM <= 0.255 and delta_norm >=
+      0.015) failed on every clause, and the round brief forbids rescue after a
+      Stage-A FAIL.
+  - item: Attribute the failure to reader optimization and re-tune the reader
+    because: >-
+      the same-session RAW re-screen reproduced the frozen v5 numbers
+      bit-for-bit under the identical reader protocol, and both normalized arms
+      underfit (train MAE ~0.39 vs ~0.18 for RAW) while still improving at the
+      240-epoch budget, so the deficit is representational.
+  - item: >-
+      Re-add the raw coordinates and call the union representation a new candidate
+    because: >-
+      that is exactly TCCD-v6's RECON-LINFACT construction, which was already
+      measured (soup 0.252556831) and already attributed; it is not a new
+      authorization and does not make the normalized representation standalone.
+  - item: >-
+      Sweep K, temperature, regularizers, reader width/nonlinearity, seeds or moments
+    because: >-
+      explicitly forbidden by the round preregistration and not supported by
+      any measured gradient.
+  - item: Open the official ZINC test
+    because: >-
+      never loaded; Stage A FAIL left no candidate to report and the test is
+      spent / reporting-only.
+consequences:
+  - >-
+    TCCD standalone (prototype vocabulary + normalized moment representation +
+    linear decode) is not viable as a high-performance predictor on ZINC:
+    MAE_NM 0.412118 versus the frozen raw TCCD-v2 0.278364 / official-valid
+    0.261988 and the canonical strong GPU1 reference 0.119818.
+  - >-
+    TCCD-v6's Case R1 conclusion is sharpened: the v5/v6 conditioning gain is an
+    ADDITIVE coordinate-exposure effect inside the union representation
+    (h_base PLUS normalized coordinates); the raw un-normalized coordinates
+    remain load-bearing and cannot be replaced.
+  - >-
+    delta_mom 0.0025358498096466064 < 0.005 confirms, with a matched reader and
+    no end-to-end confound, that prototype second moments add no independent
+    increment.
+  - >-
+    The prototype-vocabulary mechanisms themselves (task-learned K=64
+    prototypes, assignment-sensitive composition) remain supported by TCCD-v2
+    and are NOT retracted.
+  - >-
+    TCCD standalone performance route CLOSED. No TCCD-v8 rescue is authorized.
+    No seed 1, no hyperparameter tuning, no K/tau/regularizer sweep, no deeper
+    or nonlinear reader, no new moments, no structural rescue.
+revisit_if: >-
+  Only by re-positioning the prototype vocabulary as an interpretable /
+  reusable local coordinate system INSIDE a stronger structural backbone under
+  a NEW preregistration, with matched controls (same backbone without
+  prototypes; same backbone with prototypes; prototype shuffle / zero
+  intervention; vocabulary health). Not by extending the standalone predictor,
+  not by a normalization-only variant, and never by opening the official test.
+next_action: >-
+  NONE auto-authorized. Do not start TCCD-v8. Any future hybrid prototype-role
+  experiment requires a new preregistration with the matched controls above.
+evidence:
+  - tracks/ksvd/notes/tccd_v7_final_normalized_moment_preregistration.md
+  - tracks/ksvd/notes/tccd_v7_final_normalized_moment_analysis.md
+  - tracks/ksvd/results/tccd_v7/gate0.json
+  - tracks/ksvd/results/tccd_v7/stageA_seed0.json
+  - tracks/ksvd/results/tccd_v7/stageA_decision_seed0.json
+  - tracks/ksvd/code/tccd_v7.py
+  - tracks/ksvd/code/run_tccd_v7.py
+  - tracks/ksvd/tests/test_tccd_v7.py

@@ -12,8 +12,33 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-tccd-v6-post-gain-decomposition-case-r1
+phase: post-tccd-v7-standalone-route-closed
 updated: 2026-09-22
+
+# ---------------------------------------------------------------------------
+# FINAL STANDALONE STATUS (TCCD-v7, 2026-09-22)
+# ---------------------------------------------------------------------------
+# TCCD standalone performance route CLOSED.
+# No TCCD-v8 rescue is authorized.
+# See decision-tccd-v7-stop-standalone-normalized-moment-20260922 and
+# claim-tccd-v7-normalized-moment-standalone-insufficient-20260922.
+standalone_route_status:
+  status: CLOSED
+  round: TCCD-v7
+  reason: >-
+    Stage A FAIL: the explicit normalized prototype/relation-moment
+    representation read by a linear reader reached Top-5 soup 0.4121180474758148
+    versus the frozen raw TCCD-v2 representation 0.2783639132976532
+    (delta_norm -0.13375413417816162 against a required +0.015; absolute gate
+    0.255), with protocol identity proven bit-for-bit (drift 0.0). Stage B
+    (end-to-end), the official-valid run and the official test were therefore
+    never run.
+  no_v8_rescue: true
+  future_prototype_role: >-
+    prototype vocabulary as an interpretable / reusable local coordinate system
+    inside a stronger structural backbone, only under a new preregistration
+    with matched controls (backbone without prototypes; backbone with
+    prototypes; prototype shuffle / zero intervention; vocabulary health).
 
 active_studies:
   - zinc-context-gap
@@ -258,7 +283,35 @@ research_direction:
 authorized_next_action:
   status: none
   note: >-
-    No experiment is authorized. TCCD-v6 (2026-09-22, preregistration commit
+    No experiment is authorized. TCCD standalone performance route CLOSED
+    (2026-09-22): TCCD-v7 (preregistration commit a3f531d, implementation commit
+    34d931f9b0ec2a27d970f522c32cc8bcb307f3fb; remote A100 GPU1 only; official
+    test never loaded) passed Gate 0 and then FAILED the frozen Stage-A screen.
+    In one GPU1 session, with the exact frozen TCCD-v2 PrototypeREL checkpoint,
+    the fixed internal 8000/2000 split (seed 20260922), and the identical
+    linear-reader protocol, the same-session RAW re-screen reproduced the frozen
+    TCCD-v5 BASE bit-for-bit (best 0.28791576623916626 @ epoch 54, soup
+    0.2783639132976532, soup members [54,94,50,43,79], protocol drift 0.0),
+    while NORM (10,470 dims) reached soup 0.4146538972854614 and the primary
+    NORM+MOM representation (10,534 dims) reached soup 0.4121180474758148:
+    delta_norm -0.13375413417816162 (required >= +0.015) and the absolute gate
+    0.255 failed. delta_mom 0.0025358498096466064 < 0.005 is NEGLIGIBLE, so the
+    prototype variance adds no independent increment. The failure is
+    representational underfitting, not optimization: both normalized arms never
+    early-stopped within 240 epochs and their train MAE plateaued near 0.39
+    versus ~0.18 for RAW, because a linear reader cannot recover raw-scale
+    coordinates (BAG = n*mu, M_r = s_r*Mhat_r) from n and s_r entering as
+    separate additive coordinates. This sharpens TCCD-v6 Case R1: the v5/v6
+    conditioning gain is an ADDITIVE coordinate-exposure effect inside the union
+    representation (h_base PLUS normalized coordinates); the raw un-normalized
+    coordinates remain load-bearing. Stage B (end-to-end co-adaptation), the
+    official-train -> official-valid run, seed 1, hyperparameter tuning,
+    K/tau/regularizer sweeps, reader upgrades, new moments and any structural
+    rescue are FORBIDDEN. No TCCD-v8 rescue is authorized. The prototype
+    vocabulary itself remains supported (TCCD-v2), and the only authorized
+    future direction (NOT started) is its re-positioning as an interpretable /
+    reusable local coordinate system inside a stronger structural backbone under
+    a NEW preregistration with matched controls. TCCD-v6 (2026-09-22, preregistration commit
     822a235, implementation commit e016b4d, device fix ac94dae; remote A100 GPU1
     only; official test never loaded) passed Gate 0 and completed the frozen
     POST-gain decomposition as Case R1 (NONLINEARITY NOT MATERIAL / RECON
@@ -413,6 +466,7 @@ deferred_optional:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-tccd-v7-stop-standalone-normalized-moment-20260922: "TCCD-v7 (2026-09-22, preregistration commit a3f531d, implementation commit 34d931f; remote A100 GPU1 only; official test never loaded): Gate 0 passed all checks (permutation, batching/padding, algebra, full-symmetric normalized composition mass, zero-mass relation, no target leakage, official-test blocking, independent float64 reference, Stage-A-cache vs Stage-B-tensor equivalence, and relation-mass source agreement). Stage A on the fixed internal 8000/2000 split with the exact frozen TCCD-v2 PrototypeREL checkpoint and the identical linear-reader protocol: same-session RAW re-screen reproduced the frozen TCCD-v5 BASE bit-for-bit (best 0.28791576623916626 @ epoch 54, soup 0.2783639132976532, members [54,94,50,43,79], drift 0.0), NORM (10,470 dims) best/soup 0.4144890606403351/0.4146538972854614, NORM+MOM (10,534 dims) best/soup 0.4119139015674591/0.4121180474758148; delta_norm -0.13375413417816162 (required >= +0.015), absolute gate 0.255 failed, delta_mom 0.0025358498096466064 NEGLIGIBLE. Verdict Stage A FAIL -> STOP the TCCD standalone performance route immediately: no Stage B end-to-end run, no official-valid run, no official-test access, no seed 1, no tuning. TCCD standalone performance route CLOSED; No TCCD-v8 rescue is authorized. See notes/tccd_v7_final_normalized_moment_preregistration.md, notes/tccd_v7_final_normalized_moment_analysis.md, claim-tccd-v7-normalized-moment-standalone-insufficient-20260922, decision-tccd-v7-stop-standalone-normalized-moment-20260922."
   - decision-tccd-v5-stop-stage-a-pair-placement-20260922: "TCCD-v5 (2026-09-22, preregistration commit 539ee07, implementation commit 1ec96ff; remote A100 GPU1 only; official test never loaded): Gate 0 passed pair-swap, graph-relabel, pair-order, batching, linear-PRE/POST equivalence, nonlinear separation, gradient, no-leakage, and official-test-blocking checks. Stage A on the fixed internal 8000/2000 split used exact TCCD-v2 PrototypeREL assignments and matched 197-to-64-to-16 pair MLPs. BASE best/soup 0.287916/0.278364, POST 0.260827/0.252233, PRE 0.261728/0.251418, PRE-SHUFFLE 0.262062/0.251756; delta_place 0.000815183, delta_add 0.026945770, delta_shuffle 0.000337422. Decision: STOP at Stage A; no paired seed, Stage-B E2E, official-valid full run, or official-test access. Pair branch value versus BASE is supported, but PRE versus POST causal placement is not; next justified hypothesis is center-preserving occurrence composition under a new preregistration. See notes/tccd_v5_occurrence_pair_nonlinearity_analysis.md, claim-tccd-v5-pair-nonlinearity-placement-no-material-gain-20260922, decision-tccd-v5-stop-stage-a-pair-placement-20260922."
   - decision-tccd-v4-stop-stage-a-twohop-20260922: "TCCD-v4 (2026-09-22, preregistration commit bd7ad91, implementation commit 2e0218a; remote A100 GPU1 only; official test never loaded): Gate 0 passed exact S^2 algebra, permutation and batching invariance, two-hop sensitivity, effective fixed-permutation mismatch, target independence, and official-test blocking. Stage A frozen screen on the internal 8000/2000 split used the exact TCCD-v2 PrototypeREL checkpoint and matched readers. BASE best/soup 0.287916/0.279731, REAL-2 0.287929/0.278038, MIS-2 0.287936/0.279558; delta_topo 0.0000068843 and delta_add -0.0000134408, both below the 0.005 failure threshold. Decision: STOP at Stage A; no paired seed, end-to-end +2hop, S^3, official-valid full run, or official-test access. Leading hypothesis: early occurrence aggregation / lossy C^T R C contraction. See notes/tccd_v4_higher_order_assembly_analysis.md, claim-tccd-v4-twohop-assembly-no-material-increment-20260922, decision-tccd-v4-stop-stage-a-twohop-20260922."
   - decision-tccd-v3b-stop-correct-pre-pair-bridge-20260922: "TCCD-v3b (2026-09-22, preregistration commit f46cd63, formal implementation commit f942a00; remote A100 GPU1 only; official test never loaded): corrected the historical TCCD-v3 bridge by extracting the complete fused pure-local B-full patch_encoder output before pair projection, with raw width 64 and matched Linear(64,64) adapters in DenseREL and PrototypeREL. Gate 0 passed, including train/valid cache freshness max delta 2.3842e-7, exterior/relabel/batch invariance, deterministic reload, pair/global independence, frozen-source and gradient checks, and no raw bypass. CorrectStrongLocal-DenseREL best/soup valid MAE 0.327528/0.312805; CorrectStrongLocal-PrototypeREL 0.315263/0.312643; shuffle 0.592378. Delta_local = -0.027926 versus TCCD-v2 best 0.287337, Delta_proto,strong = -0.012265, Delta_comp,strong = 0.277115; all 64 prototypes active, effective count 63.8328. Decision: L3 CORRECT STRONG LOCAL BRIDGE FAIL. Historical TCCD-v3 is narrowed to the isolated e_struct claim; no rescue sweeps or official-test read. See notes/tccd_v3b_correct_strong_local_bridge_analysis.md, claim-tccd-v3b-correct-pre-pair-bridge-20260922, claim-tccd-v3-clarification-20260922, decision-tccd-v3b-stop-correct-pre-pair-bridge-20260922."
