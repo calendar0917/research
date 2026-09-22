@@ -1,0 +1,137 @@
+claim_id: claim-zinc-srda-v0-prototype-algebra-dominant-but-no-absolute-gain-20260922
+created: '2026-09-22T00:00:00Z'
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+statement: >-
+  In a strict-static ZINC round (formal-run commit
+  82adff72829fe2f1e0b9a8927ada8812bded2ad8, remote A100-SXM4-40GB GPU 0,
+  official ZINC train 10000 / official valid 1000, official test never loaded),
+  deleting the typed-token (16D) and parent (8D) identity channels outright and
+  making the end-to-end dictionary assignment define the occurrence-level
+  relation algebra directly (SRDA-v0: z_i = SiLU MLP(146 -> 96 -> 64) from the
+  static patch descriptor only; K=64 / rank=32 / tau_init=0.20; a_i = alpha_i @
+  A, b_i = alpha_i @ B with A, B in R^{64x32}; proto_pair_ij = 0.5*(a_i*b_j +
+  a_j*b_i); relation-gated p_dict_ij; narrow 8D within-prototype residual
+  eps_i = q_i - alpha_i @ D_norm -> W_eps; pair input 72 = 32 + 24 + 16 -> pair
+  encoder 72 -> 64 -> 32 evaluated once; 129D unary + 325D pair + 32D global +
+  8D topology = 494D graph vector; 16/16 reader; 49,970 params) does NOT open a
+  new absolute performance band: seed-0 best official-valid MAE
+  0.15544865403691074 @ epoch 196 and fixed Top-5 soup 0.14987310345092555 over
+  the full 240 epochs, i.e. 0.009775 worse in best and 0.009079 worse in soup
+  than the strict-static S0 seed-0 reference (0.145674 / 0.140794) and 0.013255
+  / 0.010138 worse than SDPK-v0 seed 0 (0.142193 / 0.139735). The model never
+  reached valid MAE <= 0.15 at any of the 240 epochs. The seed-0 GO gate (soup
+  <= 0.1340 and best <= 0.1385) fails in the negative direction, so no seed 1
+  was purchased. Crucially the failure is NOT bypass/inertness of the new
+  object: at the best checkpoint the prototype algebra is the dominant pair
+  block (mean ||p_dict|| 0.611 -> 2.256, 3.69x growth, 81.8% of the pair-input
+  energy; pair-encoder first-layer block weight norm 3.08 -> 7.04), while the 8D
+  residual stayed flat (0.621 -> 0.659, 7.0% of the energy). Neutralising
+  p_dict moves predictions by mean 1.2018 / max 2.8373 and raises valid MAE from
+  0.1554 to 1.2319; zeroing p_eps costs only 0.1307 MAE (mean shift 0.2462);
+  replacing alpha_i by the graph-mean alpha costs 0.4882 MAE (mean shift
+  0.6125). Dictionary health is good (64/64 active atoms, 51 argmax-used,
+  effective atom count 14.47, top-8 mass 0.750, coherence mean 0.172, tau 0.200
+  -> 0.1718). The supported statement is therefore: an end-to-end dictionary
+  whose assignments directly define a relation-conditioned prototype-pair
+  tensor contraction is genuinely used, dominant and load-bearing, yet does not
+  beat the strict-static baseline in absolute MAE when it replaces (rather than
+  augments) the raw pair interaction and the identity channels are removed.
+scope: >-
+  Preregistration commit d4ef523 (architecture/gates frozen) plus two audit-only
+  bugfix commits (ba38b0c, 82adff7: device-robust identity/permutation gates;
+  no architecture, width, hyperparameter, loss or protocol change); formal run
+  commit 82adff72829fe2f1e0b9a8927ada8812bded2ad8; remote A100-SXM4-40GB GPU 0;
+  seed 0 only; inherited static descriptor pipeline, relation preprocessing,
+  global-context channel, topology hinge and training/checkpoint/soup utilities;
+  Adam, lr 1e-3, wd 1e-5, batch 128, L1/MAE, clip 5.0, no scheduler, forced full
+  240 epochs with no early termination, best checkpoint plus fixed Top-5 weight
+  soup. One new full-training run; S0/SDPK-v0 were NOT retrained (the S0 seed-0
+  checkpoint was replayed to 3.3e-07); no seed 1/2/3; no HPO; no K / R /
+  residual-dim / width / tau sweep; no relation redesign; no matched control;
+  no auxiliary objective; official test never loaded.
+supporting_evidence:
+  - >-
+    Strict-static hard gates all pass on CPU and on the A100: standalone module
+    with center_context False and center_update None, forward succeeds with
+    _pool_pairs_to_centres monkeypatched to raise, dictionary assignment /
+    relation trunk / pair encoder each called exactly once per forward,
+    z / q / alpha / eps bit-identical (0.0) under pair-relation mutation while
+    the prediction still moves (1.48e-3), pair-order permutation 5.2e-08,
+    endpoint swap 0.0, within-graph patch relabel 1.5e-08, and step-0 gradients
+    > 0 and finite for the local encoder, Wq, D, A, B, relation trunk, W_eps,
+    pair encoder. 16 targeted CPU tests pass.
+  - >-
+    No raw endpoint bypass (code-level audit): perturbing z inside ker(Wq) moves
+    z by 0.64 relative and the unary readout by 0.28 relative while the
+    pair-kernel input moves 4.4e-07 relative (gate < 1e-4), and the captured 72D
+    pair input is reconstructed exactly from alpha / eps / rel only.
+  - >-
+    Identity channels provably absent: identity_channel_params 0, no typed /
+    parent key in state_dict(), the only nn.Embedding is the 5-row bucket table,
+    poisoned out-of-range typed/parent indices raise nothing and shift the
+    prediction by 4.5e-08 (execution noise; relation mutation shifts 1.48e-3).
+  - >-
+    Runtime width audit consistent: input 146 (patch_cont 146 + patch_context 0),
+    z 64, alpha 64, A/B 32, eps 32, e 8, pair input 72, q_ij 32, relation input
+    23, unary 129, pair pool 325 (5 x 65), global 32, topology 8, graph 494,
+    head 16/16; 49,970 params.
+  - >-
+    Baseline guard: the inherited S0 seed-0 checkpoint replayed to
+    0.1456743331188918 vs recorded 0.145674 (abs diff 3.3e-07); inherited source
+    hashes unchanged (zinc_patch_path_pooling.py ee67a5f1..., 
+    zinc_static_dictionary_pair.py 9bfcbbe5...).
+  - >-
+    Mechanism (report only, never a GO gate): mean ||p_dict|| 0.611 -> 2.256
+    (3.69x) with 81.8% of pair-input energy and first-layer weight norm
+    3.08 -> 7.04 (2.29x); mean ||p_eps|| 0.621 -> 0.659 (1.06x, 7.0% energy);
+    mean ||rel_feat|| 0.852 -> 0.835 (0.98x). Interventions at the best
+    checkpoint: neutralise p_dict -> mean |d pred| 1.2018 / valid MAE 1.2319;
+    zero p_eps -> 0.2462 / 0.2861; graph-mean alpha -> 0.6125 / 0.6436.
+  - >-
+    Dictionary health: active atoms 64/64, argmax-used 51, effective atom count
+    14.47, mean entropy 2.672 of ln 64, top-8 mass 0.750, coherence mean/max
+    0.172/0.781, tau 0.200 -> 0.1718 (best) / 0.1635 (epoch 240).
+contradicting_evidence:
+  - >-
+    The comparison is against historical S0 seed-0 / SDPK-v0 seed-0 references,
+    not a same-session paired baseline, and no matched control was purchased;
+    the known S0 seed-to-seed movement is 0.006285. The 0.009-0.013 regression is
+    larger than that movement and the model never entered the 0.14x band, but
+    single-seed causality between "identity channels deleted" and "raw pair
+    bypass replaced" cannot be attributed here.
+  - >-
+    SDPK-v0 (raw pair interaction retained, dictionary added on top) reached
+    soup 0.139735 while SRDA (raw pair interaction replaced by prototype
+    algebra) reached 0.149873, so within this round's evidence the prototype
+    algebra did not compensate for what it replaced. This is a difference
+    between rounds, not a controlled contrast.
+  - >-
+    p_dict's dominance over p_eps is partly a consequence of the preregistered
+    factor-init scale std(A) = std(B) = 2.0 (chosen to make the three blocks
+    comparable at initialisation), so the observed 82% energy share is the
+    outcome of that frozen choice rather than an init-independent property.
+limitations:
+  - >-
+    One seed only (seed 1 not purchased because the seed-0 gate failed); no
+    distributional claim, no seed-variance estimate for SRDA.
+  - >-
+    No matched control (no-dictionary / no-residual / raw-pair / dense pair
+    kernel), so the round cannot attribute the regression between the identity
+    deletion and the pair-algebra replacement; the round's goal was the absolute
+    band, and a control is deferred to a future preregistration.
+  - >-
+    Diagnostics are inference-only and were never used for checkpoint selection
+    or for the GO gate.
+evidence:
+  - tracks/ksvd/notes/zinc_static_relational_dictionary_algebra_v0_preregistration.md
+  - tracks/ksvd/notes/zinc_static_relational_dictionary_algebra_v0_analysis.md
+  - tracks/ksvd/results/zinc_static_relational_dictionary_algebra_v0/RESULTS_SUMMARY.md
+  - tracks/ksvd/results/zinc_static_relational_dictionary_algebra_v0/analysis.json
+  - tracks/ksvd/results/zinc_static_relational_dictionary_algebra_v0/runs/srda_seed0.json
+  - tracks/ksvd/results/zinc_static_relational_dictionary_algebra_v0/integrity_gates.json
+  - tracks/ksvd/results/zinc_static_relational_dictionary_algebra_v0/parameter_audit.json
+  - tracks/ksvd/results/zinc_static_relational_dictionary_algebra_v0/baseline_guard.json
+  - tracks/ksvd/experiments/luyin16/zinc_static_relational_dictionary_algebra.py
+  - tracks/ksvd/tests/test_zinc_static_relational_dictionary_algebra.py

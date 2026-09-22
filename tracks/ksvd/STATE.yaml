@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-zinc-static-dict-pair-kernel-v0-seed0-no-strong-signal
+phase: post-zinc-static-relational-dictionary-algebra-v0-seed0-negative
 updated: 2026-09-22
 
 # ---------------------------------------------------------------------------
@@ -367,6 +367,89 @@ research_direction:
 
 authorized_next_action:
   status: new_preregistration_required
+  # -------------------------------------------------------------------------
+  # ZINC static relational dictionary algebra v0 (SRDA-v0, 2026-09-22).
+  # User authorized up to two full runs; the seed-0 performance gate FAILED in
+  # the NEGATIVE direction, so only ONE run was spent and seed 1 was NOT
+  # purchased.  The next stage is NOT started.
+  # -------------------------------------------------------------------------
+  zinc_static_relational_dictionary_algebra_v0:
+    status: seed0_no_strong_performance_signal_negative_direction
+    round: zinc-static-relational-dictionary-algebra-v0
+    preregistration_commit: d4ef523
+    formal_run_commit: 82adff72829fe2f1e0b9a8927ada8812bded2ad8
+    audit_only_followups: [ba38b0c, 82adff7]
+    devices: [A100-SXM4-40GB GPU0]
+    seed: 0
+    split: official ZINC train 10000 / official valid 1000
+    architecture: >-
+      standalone strict-static module (no PatchPathModel inheritance): typed
+      (16D) and parent (8D) identity channels deleted outright; local state
+      z_i = SiLU MLP(146 -> 96 -> 64) from patch_cont+patch_context only;
+      end-to-end dictionary K=64 / rank=32 / tau_init=0.20; a_i = alpha_i @ A,
+      b_i = alpha_i @ B (A,B in R^{64x32}, init std 2.0);
+      proto_pair_ij = 0.5*(a_i*b_j + a_j*b_i); relation trunk
+      Linear(23,32)+SiLU -> rel_gate = 1+tanh(G(rel_hidden)+bucket_embedding)
+      and rel_feat (16); p_dict = proto_pair * rel_gate; narrow within-prototype
+      residual eps_i = q_i - alpha_i @ D_norm -> W_eps (32 -> 8) giving
+      p_eps = [e_i+e_j | |e_i-e_j| | e_i*e_j] (24); pair input 72 -> pair
+      encoder 72 -> 64 -> 32 evaluated once; 5-bucket mean/std/log-count pair
+      moments (325), 129D unary, 32D global, 8D topology hinge, 494D graph
+      vector, 16/16 reader.
+    parameters: 49970
+    identity_channel_params: 0
+    runtime_widths: {local_input: 146, local_state: 64, dictionary_assignment: 64, prototype_factor: 32, residual: 8, pair_input: 72, relation_input: 23, unary: 129, pair_pool: 325, global: 32, topology: 8, graph: 494}
+    strict_static_contract: PASS (standalone nn.Module, center_context False, center_update None, forward with _pool_pairs_to_centres raising, dictionary/relation trunk/pair encoder 1 call each per forward, z/q/alpha/eps bit-identical under pair mutation, no raw endpoint bypass under a ker(Wq) perturbation (pair-input relative shift 4.4e-07 vs z shift 0.64))
+    hard_tests_all_pass: true
+    identity_proof: 'no typed/parent key in state_dict(), only nn.Embedding is the 5-row bucket table, poisoned out-of-range typed/parent indices raise nothing and shift the prediction by 4.5e-08 (relation mutation shifts 1.48e-03)'
+    epochs_run: 240
+    early_terminated: false
+    best_valid_mae: 0.15544865403691074
+    best_epoch: 196
+    final_epoch_valid_mae: 0.17467789612332127
+    valid_mae_below_0_15_epochs: 0
+    top5_soup_valid_mae: 0.14987310345092555
+    top5_soup_members: [196, 213, 223, 227, 231]
+    reference_s0_seed0: {best: 0.145674, soup: 0.140794}
+    reference_sdpl_seed0: {best: 0.14219318306347123, soup: 0.13973486851429334}
+    best_improvement_vs_s0: -0.009774654036910746
+    soup_improvement_vs_s0: -0.009079103450925552
+    best_improvement_vs_sdpl: -0.013255470973439515
+    soup_improvement_vs_sdpl: -0.010138234936632212
+    gate: {soup_abs: 0.134, best_abs: 0.1385}
+    seed0_verdict: SRDA_V0_NO_STRONG_PERFORMANCE_SIGNAL
+    prototype_algebra_dominant: true
+    dictionary_diagnostics: {active_atoms: 64, argmax_used_atoms: 51, effective_atom_count: 14.472058296203613, assignment_entropy: 2.672219753265381, top8_assignment_mass: 0.7497097849845886, coherence_mean_abs: 0.171961709856987, coherence_max_abs: 0.7810962200164795, tau_best: 0.17179708182811737, tau_epoch240: 0.1634783297777176, mean_norm_p_dict: 2.2554714679718018, mean_norm_p_eps: 0.6593062281608582, mean_norm_rel_feat: 0.8348535299301147, pair_input_energy_share: {p_dict: 0.818, p_eps: 0.0699, rel_feat: 0.1121}, pair_encoder_first_layer_block_weight_norms: {p_dict: 7.040309429168701, p_eps: 4.532189846038818, rel_feat: 3.1178300380706787}}
+    interventions: {neutral_dict: {mean_shift: 1.2017923780977726, max_shift: 2.8373329639434814, valid_mae_after: 1.2319464431191445}, zero_eps: {mean_shift: 0.2462456296160817, max_shift: 0.5006635189056396, valid_mae_after: 0.28605216084694257}, mean_alpha: {mean_shift: 0.6124557076841592, max_shift: 2.5659177005290985, valid_mae_after: 0.6436459120092332}}
+    mechanism_answer: >-
+      The prototype algebra IS the computation (82% of pair-input energy, first
+      layer weight norm 3.08 -> 7.04, neutralisation collapses the prediction to
+      1.23 MAE) and the 8D residual did NOT take over (flat at 0.66 norm, 7% of
+      energy).  The round therefore fails on absolute MAE, not on inertness or
+      bypass.
+    baseline_guard: {replayed_s0_valid_mae: 0.1456743331188918, abs_diff: 3.331188918043182e-07}
+    peak_gpu_memory_mb: 228.7451171875
+    gpu_wall_clock_s: 909.2755130049773
+    elapsed_wall_clock_s: 923
+    full_training_runs: 1
+    max_full_runs: 2
+    seed1_purchased: false
+    matched_control: false
+    official_test_loaded: false
+    next: >-
+      STOP.  Do not buy seed 1, do not sweep K / tensor rank / residual dim /
+      width / tau, do not redesign the relation trunk, do not restore the raw
+      z-projection pair blocks as a rescue, do not add auxiliary objectives.
+      Gamma/residual-dictionary work stays closed.  A future round that wants to
+      attribute the regression needs a same-session paired strict-static
+      baseline and exactly one matched control isolating the raw pair
+      interaction, under a NEW preregistration.
+    claim: claim-zinc-srda-v0-prototype-algebra-dominant-but-no-absolute-gain-20260922
+    decision: decision-zinc-srda-v0-stop-after-seed0-negative-20260922
+    evidence:
+      - notes/zinc_static_relational_dictionary_algebra_v0_preregistration.md
+      - notes/zinc_static_relational_dictionary_algebra_v0_analysis.md
+      - results/zinc_static_relational_dictionary_algebra_v0/RESULTS_SUMMARY.md
   # -------------------------------------------------------------------------
   # ZINC static dictionary-conditioned pair kernel v0 (SDPK-v0, 2026-09-22).
   # User authorized up to two full runs; the seed-0 performance gate FAILED, so
@@ -727,6 +810,48 @@ deferred_optional:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-zinc-srda-v0-stop-after-seed0-negative-20260922: >-
+      SRDA-v0 (2026-09-22, preregistration commit d4ef523, formal-run commit
+      82adff7; remote A100-SXM4-40GB GPU0; official test never loaded) deleted
+      the typed (16D) and parent (8D) identity channels outright and made the
+      end-to-end dictionary assignment define the occurrence-level relation
+      algebra directly under the strict-static contract: standalone module,
+      z_i = SiLU MLP(146 -> 96 -> 64) from the static descriptor only,
+      K=64/rank=32/tau_init=0.20, a_i = alpha_i @ A, b_i = alpha_i @ B
+      (A,B in R^{64x32}), proto_pair_ij = 0.5*(a_i*b_j + a_j*b_i),
+      p_dict = proto_pair * rel_gate, narrow 8D within-prototype residual
+      eps_i = q_i - alpha_i @ D_norm -> W_eps, pair input 72 -> pair encoder
+      72 -> 64 -> 32 evaluated once, 129D unary + 325D pair + 32D global + 8D
+      topology = 494D graph vector, 16/16 reader, 49,970 params, identity
+      params 0. One seed-0 full run of 240 epochs (no early stop): best
+      official-valid MAE 0.15544865403691074 @196, Top-5 soup
+      0.14987310345092555 (members [196,213,223,227,231]); reference
+      strict-static S0 seed0 best 0.145674 / soup 0.140794 and SDPK-v0 seed0
+      0.142193 / 0.139735 -> best -0.009775 / -0.013255 and soup -0.009079 /
+      -0.010138 (worse on both), and valid MAE never reached 0.15 in any of the
+      240 epochs -> SRDA_V0_NO_STRONG_PERFORMANCE_SIGNAL; seed 1 NOT purchased.
+      The failure is NOT bypass/inertness: the prototype algebra is the
+      dominant pair block (mean ||p_dict|| 0.611 -> 2.256 = 3.69x, 81.8% of
+      pair-input energy, pair-encoder first-layer block weight norm 3.08 ->
+      7.04) while the 8D residual stayed flat (0.621 -> 0.659, 7.0% energy);
+      neutralising p_dict shifts predictions by mean 1.2018 / max 2.8373 and
+      raises valid MAE 0.1554 -> 1.2319, zeroing p_eps costs 0.1307 MAE, and
+      graph-mean alpha costs 0.4882.  Dictionary is healthy (64/64 active,
+      51 argmax-used, effective atoms 14.47, top-8 mass 0.750, coherence mean
+      0.172, tau 0.200 -> 0.1718).  Strict-static hard gates all pass
+      (standalone module, forward with _pool_pairs_to_centres raising,
+      dictionary/relation/pair encoder 1 call each, z/q/alpha/eps bit-identical
+      under pair mutation, no raw endpoint bypass: pair-input relative shift
+      4.4e-07 under a ker(Wq) perturbation vs z shift 0.64, identity poisoning
+      shift 4.5e-08); baseline guard replayed S0 to 3.3e-07; 16 targeted CPU
+      tests; 1 full run; GPU wall 909.3 s; elapsed 923 s; peak 228.7 MB;
+      official test never loaded.  Decision: STOP with no sweep, no rescue, no
+      seed 1, no control.  See
+      notes/zinc_static_relational_dictionary_algebra_v0_preregistration.md,
+      notes/zinc_static_relational_dictionary_algebra_v0_analysis.md,
+      results/zinc_static_relational_dictionary_algebra_v0/RESULTS_SUMMARY.md,
+      claim-zinc-srda-v0-prototype-algebra-dominant-but-no-absolute-gain-20260922,
+      decision-zinc-srda-v0-stop-after-seed0-negative-20260922.
   - decision-zinc-static-dict-pair-kernel-v0-stop-after-seed0-20260922: "SDPK-v0 (2026-09-22, prereg+impl commit f0a778d; remote A100-SXM4-40GB GPU0; official test never loaded): promoted the learnable dictionary from a bypassable local residual adapter to the core coordinate of the occurrence-level static pair kernel under the strict-static contract (h_i = h0_i, no residual, no gamma; K=64/rank=32/coord_dim=16/tau_init=0.20; c_i = U(softmax(Wq(h_i) D^T / tau)); dictionary pair coordinates feed m_ij = 1 + tanh(Wm([c_i+c_j, |c_i-c_j|, c_i*c_j, rel_ij])) modulating raw_prod * distance_gate; single 112D pair encoder 112->64->16; 74,996 params; shared tensors bit-identical to S0, only the pair encoder input widened 64->112). One seed-0 full run of 240 epochs (no early stop): best official-valid MAE 0.14219318306347123 @209, Top-5 soup 0.13973486851429334 (members [165,180,186,196,209]); reference strict-static S0 seed0 best 0.145674 / soup 0.140794 -> best improvement +0.003480816936528769, soup improvement +0.0010591314857066603, both below the gates (soup <=0.1328 and delta >=0.008; best delta >=0.006) -> SDPK_V0_NO_STRONG_PERFORMANCE_SIGNAL; seed 1 NOT purchased. The dictionary is live and used (tau 0.20 -> 0.1498, 43 argmax-used atoms, effective atoms 9.49, top-8 mass 0.824, neutral-dictionary intervention mean/max |delta pred| 0.0591/1.7789 and graph-mean-coordinate 0.0517/1.2775), unlike the previous residual dictionary's 1e-5-scale ablation, so the failure is 'used dictionary-conditioned pair kernel still does not add absolute signal', not inertness. Strict-static hard gates all pass; baseline guard replayed the S0 checkpoint to 3.3e-7; 1 full run; GPU wall 888.1 s; elapsed 902 s; peak GPU 174.3 MB; official test never loaded. Decision: STOP with no sweep, no residual, no dense control, no seed 1. See notes/zinc_static_dictionary_pair_kernel_v0_preregistration.md, notes/zinc_static_dictionary_pair_kernel_v0_analysis.md, results/zinc_static_dictionary_pair_kernel_v0/RESULTS_SUMMARY.md, claim-zinc-static-dict-pair-kernel-v0-dictionary-used-no-absolute-gain-20260922, decision-zinc-static-dict-pair-kernel-v0-stop-after-seed0-20260922."
   - decision-zinc-static-dict-pair-v1-stop-confirmatory-pair-kernel-20260922: "ZINC strict-static dictionary-pair v1 confirmation (2026-09-22, prereg+impl commit 1cb4fc7; remote A100 GPU0/GPU1; official test never loaded): Phase A zero-training common-horizon audit of the seed-0 curves gave H_common 204 from durable artifacts, M0c 0.145674 / MDc 0.145958 / MKc 0.139009, base_gain_common +0.006666 (>=0.004) and dict_gain_common +0.006949 (>=0.002) -> A1 COMMON_HORIZON_SIGNAL_SURVIVES; the restricted Top-5 weight soup is unavailable from saved states (v0 persisted only the best checkpoint) and was not faked; ~30.7% of the seed-0 S0-Dict margin came from epochs 205-240. Phase B bought exactly three seed-1 full runs, each forced to 240 epochs with a shadow patience-40 early-stopping tracker: equal-horizon best S0 0.139389 @233 (soup 0.136423), S-Dense 0.145830 @164 (soup 0.141608), S-Dict 0.138020 @240 (soup 0.134697); Gbase_1 = S0-Dict +0.001369 (<0.004 gate), Gdict_1 = Dense-Dict +0.007811 (>=0.002), soup +0.001726 / +0.006912 -> B2 SEED1_DIRECTIONAL_REPLICATION. The shadow tracker never stopped S0 or S-Dict, so equal-horizon and original-protocol views coincide. DECISIVE CAVEAT: the seed-1 dictionary residual is inert at the best checkpoint (gamma 0.100 -> 3.75e-04 with 0.0021 by epoch 100 and ~0 from ~epoch 140; residual-disable ablation mean/max shift 1.02e-05 / 1.02e-04 versus 0.3044 / 0.9832 in seed 0; entropy 4.068 of 4.159, 58.45 effective atoms, tau 0.20 -> 0.547) and the matched S-Dense branch collapsed too (gamma 9.5e-05), so the seed-1 S-Dict endpoint is effectively the strict-static base network. Seed-1 S0 also improved 0.006285 over seed-0 S0 (~4.6x the S0-Dict margin). Two-seed original-protocol paired means: S0-Dict +0.005497 best / +0.004346 soup, Dense-Dict +0.008859 best / +0.007871 soup, sign-consistent. Strict-static gates PASS for all seed-1 arms; shared tensors bit-identical; 3 full runs; GPU wall 3109.4 s; official test never loaded. Decision: do NOT authorize the confirmatory occurrence-level dictionary-conditioned pair kernel; first run a new preregistered residual-dictionary stability/liveness round. See notes/zinc_static_dictionary_pair_v1_preregistration.md, notes/zinc_static_dictionary_pair_v1_analysis.md, results/zinc_static_dictionary_pair_v1_confirmation/RESULTS_SUMMARY.md, claim-zinc-static-dict-pair-v1-seed1-directional-not-mechanism-20260922, decision-zinc-static-dict-pair-v1-stop-confirmatory-pair-kernel-20260922."
   - decision-zinc-static-dict-pair-v0-buy-seed1-and-pair-kernel-20260922: "ZINC strict-static dictionary-pair v0 (2026-09-22, preregistration+implementation commit 033c1b6; remote A100 GPU0/GPU1; official test never loaded): a strict-static patch-pair compact-v4-smallhead S0 (center_context False, center_update None, 302D runtime representation, small raw head 302->13->13->1, 66,228 params) with three seed-0 full runs. Best-checkpoint official-valid MAE S0 0.145674 @164 (soup 0.140794), S-Dense 0.145958 @170 (soup 0.142660), S-Dict 0.136050 @225 (soup 0.133829). Gains primary: M0-MK +0.009624 (>=0.004), M0-MD -0.000284, MD-MK +0.009908 (>=0.002); soup: M0-MK +0.006965, MD-MK +0.008831. Both metrics fire Case A DICT_SPECIFIC_SIGNAL while the parameter-matched generic dense adapter (H=53, 5,189 vs 5,201 params, 0.23% mismatch, shared tensors bit-identical) gives no gain over S0. Strict-static gates PASS (forward with _pool_pairs_to_centres raising, pair/relation encoder called once, h_i bit-identical under pair mutation, pair-order invariant <=1.9e-6); dictionary active (64/64 atoms, effective count 8.13, gamma 0.1->0.184, inference ablation mean shift 0.304 vs dense 0.034). Caveat: single seed, noisy valid curve, S-Dict used more optimizer steps (240 epochs, no early stop) than S0/S-Dense. Decision: buy one paired seed-1 confirmation and implement the occurrence-level dictionary-conditioned pair kernel under a NEW preregistration; no HPO/rescue. See notes/zinc_static_dictionary_pair_preregistration.md, notes/zinc_static_dictionary_pair_analysis.md, results/zinc_static_dictionary_pair/RESULTS_SUMMARY.md, claim-zinc-static-dict-pair-v0-dictionary-specific-signal-20260922, decision-zinc-static-dict-pair-v0-buy-seed1-and-pair-kernel-20260922."

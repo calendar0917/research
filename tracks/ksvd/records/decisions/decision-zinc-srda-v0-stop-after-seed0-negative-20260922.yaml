@@ -1,0 +1,177 @@
+decision_id: decision-zinc-srda-v0-stop-after-seed0-negative-20260922
+created: '2026-09-22T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  Two earlier results framed the question: (a) the typed-token / parent identity
+  channels are provably not necessary for strict-static ZINC performance
+  (identity incremental-information study), and (b) SDPK-v0 showed that a
+  dictionary-conditioned pair kernel can be live and load-bearing yet still fail
+  to improve absolute MAE, because it was added on top of the raw pair
+  interaction without changing what the pair kernel fundamentally computes.
+  SRDA-v0 asked the remaining performance-first question: delete the identity
+  channels outright and let the end-to-end dictionary assignment DEFINE the
+  occurrence-level relation algebra (relation-conditioned prototype-pair tensor
+  contraction), rather than compressing it into a generic coordinate and handing
+  it to a generic raw-pair MLP. No gamma/residual-dictionary question, no
+  ablation grid, no sweep, no rescue.
+protocol: >-
+  Local-first implementation with targeted CPU tests, then remote A100 execution
+  under the remote-research-runner workflow (local Git as source of truth,
+  deploy.sh, uv sync --frozen, research doctor, durable detached launch,
+  pull_results.sh). Frozen architecture: standalone strict-static module;
+  x_i = [patch_cont | patch_context] (146D); z_i = SiLU MLP(146 -> 96 -> 64);
+  K=64 / rank=32 / tau_init=0.20; a_i = alpha_i @ A, b_i = alpha_i @ B,
+  A,B in R^{64x32} (init std 2.0), proto_pair_ij = 0.5*(a_i*b_j + a_j*b_i);
+  rel_hidden = SiLU(Linear(23,32)); rel_gate = 1 + tanh(G(rel_hidden) +
+  bucket_embedding[bucket]); p_dict = proto_pair * rel_gate; eps_i = q_i -
+  alpha_i @ D_norm; e_i = W_eps(eps_i) (32 -> 8); p_eps = [e_i+e_j |
+  |e_i-e_j| | e_i*e_j]; pair input = [p_dict | p_eps | rel_feat] (72);
+  pair encoder 72 -> 64 -> 32 evaluated once; 5-bucket mean/std/log-count pair
+  moments (325), 129D unary, 32D global, 8D topology hinge, 494D graph vector,
+  16/16 reader. Frozen protocol: Adam, lr 1e-3, wd 1e-5, batch 128, L1/MAE,
+  clip 5.0, no scheduler, full 240 epochs with no early termination, best
+  checkpoint + fixed Top-5 weight soup. One seed-0 full run on remote
+  A100-SXM4-40GB GPU 0; official ZINC train 10000 / official valid 1000;
+  official test never loaded.
+results:
+  implementation_commit: d4ef523
+  formal_run_commit: 82adff72829fe2f1e0b9a8927ada8812bded2ad8
+  audit_only_followups: [ba38b0c, 82adff7]
+  devices: [A100-SXM4-40GB GPU0]
+  seed: 0
+  parameters: 49970
+  runtime_widths:
+    local_input: 146
+    local_state: 64
+    dictionary_assignment: 64
+    prototype_factor: 32
+    residual: 8
+    pair_input: 72
+    relation_input: 23
+    unary: 129
+    pair_pool: 325
+    global: 32
+    topology: 8
+    graph: 494
+    head_hidden: [16, 16]
+  identity_channel_params: 0
+  epochs_run: 240
+  early_terminated: false
+  best_valid_mae: 0.15544865403691074
+  best_epoch: 196
+  final_epoch_valid_mae: 0.17467789612332127
+  top5_soup_valid_mae: 0.14987310345092555
+  top5_soup_members: [196, 213, 223, 227, 231]
+  top5_soup_member_valid_mae: [0.15544865403691074, 0.15711725098261378, 0.1565490449629142, 0.15700477280461927, 0.15634202936658403]
+  valid_mae_below_0_15_epochs: 0
+  reference_s0_seed0_best: 0.145674
+  reference_s0_seed0_soup: 0.140794
+  reference_sdpl_seed0_best: 0.14219318306347123
+  reference_sdpl_seed0_soup: 0.13973486851429334
+  best_improvement_vs_s0: -0.009774654036910746
+  soup_improvement_vs_s0: -0.009079103450925552
+  best_improvement_vs_sdpl: -0.013255470973439515
+  soup_improvement_vs_sdpl: -0.010138234936632212
+  gate_soup_abs: 0.134
+  gate_best_abs: 0.1385
+  seed0_verdict: SRDA_V0_NO_STRONG_PERFORMANCE_SIGNAL
+  dictionary_diagnostics:
+    active_atoms: 64
+    argmax_used_atoms: 51
+    effective_atom_count: 14.472058296203613
+    mean_assignment_entropy: 2.672219753265381
+    top8_assignment_mass: 0.7497097849845886
+    dictionary_coherence_mean_abs: 0.171961709856987
+    dictionary_coherence_max_abs: 0.7810962200164795
+    tau_best_checkpoint: 0.17179708182811737
+    tau_epoch_240: 0.1634783297777176
+    mean_norm_p_dict: 2.2554714679718018
+    mean_norm_p_eps: 0.6593062281608582
+    mean_norm_rel_feat: 0.8348535299301147
+    pair_input_energy_share_p_dict: 0.8180
+    pair_input_energy_share_p_eps: 0.0699
+    pair_input_energy_share_rel_feat: 0.1121
+    pair_encoder_first_layer_block_weight_norms: {p_dict: 7.040309429168701, p_eps: 4.532189846038818, rel_feat: 3.1178300380706787}
+  interventions:
+    neutral_dict: {mean_abs_prediction_shift: 1.2017923780977726, max_abs_prediction_shift: 2.8373329639434814, valid_mae_after: 1.2319464431191445}
+    zero_eps: {mean_abs_prediction_shift: 0.2462456296160817, max_abs_prediction_shift: 0.5006635189056396, valid_mae_after: 0.28605216084694257}
+    mean_alpha: {mean_abs_prediction_shift: 0.6124557076841592, max_abs_prediction_shift: 2.5659177005290985, valid_mae_after: 0.6436459120092332}
+  strict_static_contract_passed: true
+  hard_tests_all_pass: true
+  initialization_pair_block_scale: {p_dict: 0.6114369630813599, p_eps: 0.6208072304725647, rel_feat: 0.852450132369996}
+  baseline_guard_replayed_s0_valid_mae: 0.1456743331188918
+  baseline_guard_abs_diff: 3.331188918043182e-07
+  peak_gpu_memory_mb: 228.7451171875
+  gpu_wall_clock_s: 909.2755130049773
+  elapsed_wall_clock_s: 923
+  full_training_runs: 1
+  max_full_runs: 2
+  seed1_purchased: false
+  matched_control: false
+  official_test_loaded: false
+decision: >-
+  STOP SRDA-v0 after the single seed-0 run. Do NOT purchase seed 1, do NOT sweep
+  K / R / residual dim / width / tau, do NOT redesign the relation trunk, do NOT
+  add residual bypasses or auxiliary objectives, do NOT rescue. The round is
+  closed with SRDA_V0_NO_STRONG_PERFORMANCE_SIGNAL. Do not re-open the
+  residual-dictionary / gamma line, and do not treat "the dictionary looks
+  healthy" as a success criterion.
+because: >-
+  The preregistered seed-0 GO gate (Top-5 soup <= 0.1340 and best <= 0.1385)
+  failed in the NEGATIVE direction: soup 0.149873 and best 0.155449, i.e.
+  0.009079 / 0.009775 WORSE than the strict-static S0 seed-0 reference and
+  0.010138 / 0.013255 worse than SDPK-v0 seed 0, and the model never reached
+  valid MAE <= 0.15 in any of the 240 epochs. The regression exceeds the known
+  S0 seed-to-seed movement (0.006285). The mechanism is nevertheless fully alive
+  and now dominant: p_dict holds 81.8% of the pair-input energy (0.611 -> 2.256,
+  3.69x), the pair encoder's first-layer weight norm on that block grew to 7.04
+  (2.29x), and neutralising it collapses the prediction (mean |d pred| 1.2018,
+  valid MAE 0.155 -> 1.232), while the 8D residual stayed flat
+  (0.621 -> 0.659, 7.0% of energy; zeroing it costs 0.131 MAE). So the round
+  answers its mechanism question ("the prototype algebra really is the
+  computation; the 8D residual did not take over") and still fails its
+  performance question. With absolute MAE as the first success criterion, there
+  is no basis to spend the second authorized full run.
+alternatives_rejected:
+  - >-
+    Buying seed 1. Rejected: the gate is explicit and failed in the wrong
+    direction by an order of magnitude relative to the required improvement.
+  - >-
+    Sweeping K / tensor rank / residual dim / tau / pair width / local width or
+    redesigning the relation trunk to rescue the number. Rejected: forbidden by
+    the preregistration, and a parameter sweep on top of a 0.009 regression is
+    not a scientific step.
+  - >-
+    Restoring the raw z-projection pair blocks (u_i+u_j, |u_i-u_j|, u_i*u_j) as
+    a rescue. Rejected: that reintroduces exactly the SDPK-v0 generic raw bypass
+    this round was designed to remove; it is a different architecture and would
+    need a new preregistration with its own control.
+  - >-
+    Reinterpreting the healthy dictionary (64/64 active atoms, effective count
+    14.5, dominant p_dict energy share) as success. Rejected: assignment health
+    is a reporting diagnostic, never a GO gate.
+  - >-
+    Attributing the regression between "identity channels deleted" and "raw pair
+    interaction replaced" without a matched control. Rejected: the round
+    deliberately did not buy controls; the honest statement is that this round
+    cannot separate the two changes, and it records that as a limitation.
+revisit_if: >-
+  A future preregistered round (i) establishes a same-session paired strict-static
+  baseline and (ii) buys exactly one matched control that isolates the raw pair
+  interaction (dictionary algebra WITH vs WITHOUT the raw z-projection blocks,
+  identity channels deleted in both arms). Only a materially positive absolute
+  effect from some dictionary-conditioned mechanism justifies further compute;
+  a regression of this size with the mechanism demonstrably dominant does not
+  justify a sweep. The identity-information finding (typed/parent channels
+  unnecessary) is unchanged and remains usable by other architectures.
+evidence:
+  - tracks/ksvd/notes/zinc_static_relational_dictionary_algebra_v0_preregistration.md
+  - tracks/ksvd/notes/zinc_static_relational_dictionary_algebra_v0_analysis.md
+  - tracks/ksvd/results/zinc_static_relational_dictionary_algebra_v0/RESULTS_SUMMARY.md
+  - tracks/ksvd/results/zinc_static_relational_dictionary_algebra_v0/analysis.json
+  - tracks/ksvd/results/zinc_static_relational_dictionary_algebra_v0/parameter_audit.json
+  - tracks/ksvd/results/zinc_static_relational_dictionary_algebra_v0/integrity_gates.json
+  - tracks/ksvd/results/zinc_static_relational_dictionary_algebra_v0/baseline_guard.json
+  - tracks/ksvd/experiments/luyin16/zinc_static_relational_dictionary_algebra.py
+  - tracks/ksvd/tests/test_zinc_static_relational_dictionary_algebra.py
