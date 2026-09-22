@@ -1,0 +1,90 @@
+decision_id: decision-tccd-v5-stop-stage-a-pair-placement-20260922
+created: '2026-09-22T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  TCCD-v4 showed that adding a parameter-free normalized S^2 moment did not
+  rescue the TCCD-v2 ceiling. TCCD-v5 therefore tested one and only one
+  aggregation-order variable: PRE E[phi(p_ij)] versus matched POST
+  phi(E[p_ij]) over the same unordered prototype-labelled occurrence pairs.
+protocol: >-
+  GPU1-only remote A100 execution; seed 0; fixed internal 8000/2000 split;
+  exact TCCD-v2 PrototypeREL checkpoint and mechanics; five exact frozen
+  relations; all unordered i<j pairs; symmetric descriptor [c_i+c_j,
+  |c_i-c_j|, c_i*c_j, r_ij] of width 197; matched
+  Linear(197,64)-ReLU-Linear(64,16) pair MLP; identical reader and optimizer;
+  PRE-SHUFFLE changed only the new pair branch; official test frozen.
+results:
+  preregistration_commit: 539ee07
+  implementation_commit: 1ec96ffd2abf0e9e2690d4fa7faf0ddb734bb1bb
+  v2_checkpoint_sha256: 093e0e46d4d5dab7e5558b807d993d1136df58d8f531d6b9b3621e8ab05c0f42
+  gpu: GPU1
+  seed: 0
+  split_seed: 20260922
+  n_train: 8000
+  n_dev: 2000
+  relation_count: 5
+  pair_descriptor_width: 197
+  pair_mlp_parameters: 13712
+  total_pairs: 2668346
+  base_best_valid_mae: 0.28791576623916626
+  base_soup_valid_mae: 0.2783639132976532
+  post_best_valid_mae: 0.2608269155025482
+  post_soup_valid_mae: 0.2522333264350891
+  pre_best_valid_mae: 0.2617282271385193
+  pre_soup_valid_mae: 0.2514181435108185
+  pre_shuffle_best_valid_mae: 0.26206174492836
+  pre_shuffle_soup_valid_mae: 0.25175556540489197
+  delta_place_soup: 0.0008151829242706299
+  delta_add_soup: 0.026945769786834717
+  delta_shuffle_soup: 0.00033742189407348633
+  gate0_pass: true
+  stage_a_verdict: FAIL
+  official_test_loaded: false
+  runtime_s: 366.6531991958618
+  peak_mem_mb: 417.7294921875
+decision: >-
+  STOP after Stage A failure. PRE does not materially outperform matched POST,
+  and the PRE-SHUFFLE intervention is negligible. The pair branch has additive
+  predictive value versus BASE, but the causal early-versus-late nonlinearity
+  hypothesis is not supported.
+alternatives_rejected:
+  - item: Run paired seed 1
+    because: >-
+      The preregistered failure rule fires directly: delta_place 0.000815183
+      and delta_shuffle 0.000337422 are both below 0.005.
+  - item: Proceed to Stage B PRE-E2E or POST-E2E
+    because: >-
+      Stage B requires a Stage-A pass; continuing would violate the frozen gate.
+  - item: Open official-valid or official-test data
+    because: >-
+      Stage A failed and no official route is authorized. Official test remained
+      blocked throughout.
+  - item: Claim that global C^T R C early aggregation is proven as the primary bottleneck
+    because: >-
+      PRE did not beat POST, so this specific one-level placement intervention
+      does not identify early global pooling as the causal explanation.
+consequences:
+  - >-
+    TCCD-v5 ends at the frozen Stage-A screen; no Stage-B E2E artifacts,
+    vocabulary diagnostics, official-valid run, or official-test evaluation.
+  - >-
+    The result supports pair-branch usefulness versus BASE but not the claim
+    that nonlinear interpretation must occur before global pair aggregation.
+  - >-
+    Center-preserving composition is the next justified hypothesis, but it
+    requires a new preregistration and matched controls before execution.
+next_action: >-
+  NONE auto-authorized. Draft a new preregistration only if continuing to
+  center-preserving occurrence composition; keep official test closed.
+revisit_if: >-
+  A new preregistration retains centre identity through pair interactions and
+  defines matched capacity, batching, shuffle, and no-leakage controls.
+evidence:
+  - tracks/ksvd/notes/tccd_v5_occurrence_pair_nonlinearity_preregistration.md
+  - tracks/ksvd/notes/tccd_v5_occurrence_pair_nonlinearity_analysis.md
+  - tracks/ksvd/results/tccd_v5/gate0.json
+  - tracks/ksvd/results/tccd_v5/stageA_seed0.json
+  - tracks/ksvd/code/tccd_v5.py
+  - tracks/ksvd/code/run_tccd_v5.py
+  - tracks/ksvd/tests/test_tccd_v5.py

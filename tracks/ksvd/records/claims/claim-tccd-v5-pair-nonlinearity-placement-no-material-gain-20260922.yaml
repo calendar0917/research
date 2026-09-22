@@ -1,0 +1,68 @@
+claim_id: claim-tccd-v5-pair-nonlinearity-placement-no-material-gain-20260922
+created: '2026-09-22T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the fixed internal ZINC split, with the exact TCCD-v2 PrototypeREL frozen
+  representation, exact five-relation set, all unordered occurrence pairs,
+  matched 197-to-64-to-16 pair MLPs, and matched lightweight readers, PRE
+  placement E[phi(p_ij)] does not materially outperform POST placement
+  phi(E[p_ij]). The Top-5 soup placement delta is 0.000815183, below the
+  preregistered 0.005 failure threshold. PRE-SHUFFLE changes the PRE soup MAE
+  by only 0.000337422, also below threshold. The new nonlinear pair branch does
+  improve over BASE by 0.026945770 MAE, so pair-branch capacity has predictive
+  value, but this result cannot be attributed to preserving occurrence pairs
+  through the nonlinear transform.
+scope: >-
+  TCCD-v5 preregistration commit 539ee07; formal implementation commit
+  1ec96ffd2abf0e9e2690d4fa7faf0ddb734bb1bb; remote A100 GPU1; seed 0; fixed
+  internal split seed 20260922 with 8000 train and 2000 dev; exact TCCD-v2
+  714-to-64 local encoder, K=64 prototypes, temperature, existing five
+  relations, all unordered i<j pairs, pair descriptor width 197, and
+  Linear(197,64)-ReLU-Linear(64,16) pair MLP; official test never loaded.
+evidence:
+  - tracks/ksvd/notes/tccd_v5_occurrence_pair_nonlinearity_preregistration.md
+  - tracks/ksvd/notes/tccd_v5_occurrence_pair_nonlinearity_analysis.md
+  - tracks/ksvd/results/tccd_v5/gate0.json
+  - tracks/ksvd/results/tccd_v5/stageA_seed0.json
+  - tracks/ksvd/tests/test_tccd_v5.py
+gate0:
+  all_pass: true
+  official_test_loaded: false
+  pair_swap_invariant: true
+  pair_order_invariant: true
+  relabel_invariant_pre: true
+  relabel_invariant_post: true
+  batching_invariant: true
+  linear_phi_pre_equals_post: true
+  nonlinear_separation: true
+stage_a:
+  base_best_valid_mae: 0.28791576623916626
+  base_soup_valid_mae: 0.2783639132976532
+  post_best_valid_mae: 0.2608269155025482
+  post_soup_valid_mae: 0.2522333264350891
+  pre_best_valid_mae: 0.2617282271385193
+  pre_soup_valid_mae: 0.2514181435108185
+  pre_shuffle_best_valid_mae: 0.26206174492836
+  pre_shuffle_soup_valid_mae: 0.25175556540489197
+  delta_place_soup: 0.0008151829242706299
+  delta_add_soup: 0.026945769786834717
+  delta_shuffle_soup: 0.00033742189407348633
+  verdict: FAIL
+  n_train: 8000
+  n_dev: 2000
+  total_pairs: 2668346
+  relation_count: 5
+  pair_descriptor_width: 197
+  pair_mlp_parameters: 13712
+  runtime_s: 366.6531991958618
+decision: STOP_STAGE_A_FAIL
+interpretation: >-
+  The shared pair branch improves the frozen BASE, but PRE and POST are
+  indistinguishable at the preregistered causal threshold and PRE-SHUFFLE is
+  negligible. A one-level global nonlinear placement change is insufficient to
+  support early occurrence aggregation as the primary TCCD bottleneck.
+next_hypothesis: >-
+  Center-preserving occurrence composition is the next justified hypothesis,
+  but it requires a new preregistration and is not auto-authorized.
