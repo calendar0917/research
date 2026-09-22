@@ -1,0 +1,123 @@
+decision_id: decision-center-comp-v0-stop-single-layer-incidence-20260922
+created: '2026-09-22T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  TCCD-v4 showed that the parameter-free two-hop moment C^T S^2 C adds no
+  material frozen-screen signal, but that moment contracts occurrence identity
+  before composition. TCCD-v5 showed that a global pair nonlinearity (PRE/POST)
+  and an assignment-location shuffle do not materially change the frozen TCCD-v2
+  ceiling. TCCD-v6 attributed the v5 POST gain to base-reconstructible
+  coordinate exposure. None of these rounds tested whether the binding between
+  a concrete center occurrence and the pair interactions it participates in
+  carries predictive information. CENTER-COMP-v0 therefore froze one explicit
+  pair-to-center incidence operator and asked whether retaining that binding
+  before global pooling breaks the ~0.25 frozen ceiling.
+protocol: >-
+  GPU1-only remote A100 execution; seed 0; fixed internal 8000/2000 split
+  (split seed 20260922); exact frozen TCCD-v2 PrototypeREL checkpoint
+  (SHA-256 093e0e46...c0f42) and exact reused TCCD-v5 pair cache
+  (official_test_loaded false); all unordered i<j pairs; p_ij =
+  [c_i+c_j, |c_i-c_j|, c_i*c_j, r_ij]; e_ij = phi(p_ij) with phi
+  197->64->16; q_i = sum_{j!=i} e_ij; u_i = rho([c_i, q_i]) with rho
+  80->64->16; h_center = sum_i u_i; h = [h_base, h_center]; linear head
+  10480->1; 30417 trainable parameters; exact TCCD-v5 Adam / Top-5-soup
+  protocol; evaluation-only CENTER-BIND-SHUFFLE permutes q within each molecule
+  with c_i, h_base and the q multiset fixed. No baseline rerun, no seed 1, no
+  second layer, no GNN, no official-valid, official test never loaded.
+results:
+  preregistration_commit: 552e3d6
+  implementation_commit: cf87d1e95bdb7cd97d8b875ce8be437185dcb7b8
+  v2_checkpoint_sha256: 093e0e46d4d5dab7e5558b807d993d1136df58d8f531d6b9b3621e8ab05c0f42
+  gpu: GPU1
+  seed: 0
+  split_seed: 20260922
+  n_train: 8000
+  n_dev: 2000
+  total_pairs: 2668346
+  trainable_parameters: 30417
+  init_checksum: 699e9854b9684761eb71613a0b647d82b0eb9e2d5b3461cac9e8616a49b64119
+  center_comp_best_valid_mae: 0.2634674421566306
+  center_comp_soup_valid_mae: 0.2543369984066812
+  center_bind_shuffle_best_valid_mae: 0.27069287430110855
+  center_bind_shuffle_soup_valid_mae: 0.2636783788445173
+  mae_prev: 0.2514181435108185
+  g_center: -0.0029188548958627436
+  g_bind_soup: 0.009341380437836055
+  g_bind_best: 0.007225432144477975
+  gap_to_strong: 0.1345190
+  center_minus_base: 0.0240269149
+  gate0_pass: true
+  outcome: D
+  official_test_loaded: false
+  runtime_s: 269.7736692428589
+  peak_mem_mb: 107.7265625
+decision: >-
+  OUTCOME D — NO MATERIAL SIGNAL (borderline binding). G_center
+  -0.0029188548958627436 (CENTER-COMP soup 0.254337 does not exceed the best
+  existing frozen composition, TCCD-v5 PRE 0.251418) and G_bind(soup)
+  0.009341380437836055 (below the 0.010 material threshold). One layer of
+  pair-to-center incidence is used but is insufficient: it does not supply
+  material missing predictive signal beyond the existing global
+  pair/statistical representation, and it explains none of the 0.25 -> 0.12
+  gap. Do not add a second incidence layer, do not deepen the reader, do not
+  attempt a GNN rescue.
+alternatives_rejected:
+  - item: Add a second pair-to-center incidence layer or iterate the composition
+    because: >-
+      the registered outcome is D: one layer is already used only at a
+      sub-material level (G_bind 0.009341) and does not exceed the existing
+      frozen composition, so a second layer would be an unauthorized depth
+      sweep rather than a preregistered test.
+  - item: Deepen rho / the final reader or widen phi
+    because: >-
+      the preregistration froze one fixed architecture with no width or depth
+      sweep; TCCD-v6 already showed that reader-coordinate effects, not new
+      structure, explain the recent v5 POST gain.
+  - item: Run a paired seed 1 to confirm the borderline G_bind
+    because: >-
+      CENTER-COMP-v0 is a single-seed round; no seed was authorized, and the
+      registered D rule fires on both gates.
+  - item: Re-run any existing baseline (TCCD-v2 BASE, TCCD-v5 PRE/POST,
+      TCCD-v6 arms) for a matched comparison
+    because: >-
+      all required references are frozen formal artifacts that were read
+      directly (TCCD-v5 stageA_seed0 0.2514181435108185); re-running would
+      violate the no-baseline-rerun constraint and add noise, not information.
+  - item: Open official ZINC valid or test
+    because: >-
+      the round is internal-dev only; official_test_loaded is false everywhere
+      and the official test is closed.
+consequences:
+  - >-
+    Single-layer shared-center identity is weakened as the primary explanation
+    of the frozen ~0.25 TCCD ceiling: it is used, but it neither exceeds the
+    existing global composition nor closes the gap to the strong reference.
+  - >-
+    The size stratification shows the binding effect is largest for small
+    molecules and nearly absent for large ones, so the large-graph shortfall is
+    not explained by lost center incidence.
+  - >-
+    The result is consistent with the v6 reading that recent gains are mostly
+    coordinate/reader exposure; the next representation step (fuller assembly
+    object or local-code sufficiency) needs a new preregistration.
+revisit_if: >-
+  A new preregistration specifies a richer assembly object that preserves
+  incidence across more than one composition step with matched controls, or
+  isolates local-code sufficiency independently of incidence; or a new
+  diagnostic explains the large-graph error where incidence binding is inert.
+  Not by adding depth to this operator, not by a reader sweep, and not by an
+  official-test read.
+next_action: >-
+  NONE auto-authorized. Keep the single-layer incidence route stopped; draft a
+  new preregistration only for a fuller assembly representation or a
+  local-code sufficiency test; official ZINC test stays closed.
+evidence:
+  - tracks/ksvd/notes/center_comp_v0_preregistration.md
+  - tracks/ksvd/notes/center_comp_v0_analysis.md
+  - tracks/ksvd/results/center_comp_v0/gate0.json
+  - tracks/ksvd/results/center_comp_v0/stageA_seed0.json
+  - tracks/ksvd/results/center_comp_v0/stageA_decision.json
+  - tracks/ksvd/code/center_comp_v0.py
+  - tracks/ksvd/code/run_center_comp_v0.py
+  - tracks/ksvd/tests/test_center_comp_v0.py

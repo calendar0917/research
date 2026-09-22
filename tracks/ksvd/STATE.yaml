@@ -82,6 +82,27 @@ gradcont_diagnostic:
     local boundary itself under a new preregistration before adding any
     continuity objective.
 
+# ---------------------------------------------------------------------------
+# CENTER-COMP-v0 composition diagnostic (2026-09-22)
+# ---------------------------------------------------------------------------
+# Single-seed frozen-representation diagnostic: does retaining pair-to-center
+# incidence identity before global pooling break the ~0.25 frozen ceiling?
+# Outcome D: center binding is used (G_bind 0.009341) but the operator does not
+# exceed the best existing frozen composition (G_center -0.002919) and closes
+# none of the 0.25 -> 0.12 gap. No baseline rerun, no seed 1, no official test.
+center_comp_diagnostic:
+  status: COMPLETE
+  outcome: D
+  report: tracks/ksvd/notes/center_comp_v0_analysis.md
+  preregistration: tracks/ksvd/notes/center_comp_v0_preregistration.md
+  result: tracks/ksvd/results/center_comp_v0/stageA_seed0.json
+  gate0: tracks/ksvd/results/center_comp_v0/gate0.json
+  claim: claim-center-comp-v0-incidence-binding-used-but-no-ceiling-break-20260922
+  decision: decision-center-comp-v0-stop-single-layer-incidence-20260922
+  next_step: >-
+    Do not add a second incidence layer or a GNN rescue. A fuller assembly
+    object or a local-code sufficiency question requires a new preregistration.
+
 focus_study: zinc-context-gap
 
 # ---------------------------------------------------------------------------

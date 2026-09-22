@@ -1,0 +1,121 @@
+claim_id: claim-center-comp-v0-incidence-binding-used-but-no-ceiling-break-20260922
+created: '2026-09-22T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the fixed internal ZINC split, with the exact frozen TCCD-v2 PrototypeREL
+  representation and the exact TCCD-v5 pair cache, a single explicit
+  incidence-preserving composition operator pair -> center -> graph
+  (e_ij = phi(p_ij); q_i = sum_{j!=i} e_ij; u_i = rho([c_i, q_i]);
+  h_center = sum_i u_i; h = [h_base, h_center]) does NOT break the existing
+  frozen-representation ceiling. Its Top-5 soup MAE is 0.2543369984066812
+  versus the best existing frozen composition TCCD-v5 PRE 0.2514181435108185,
+  i.e. G_center = -0.0029188548958627436. The branch does add capacity over
+  BASE (+0.0240269149) but less than the v5 POST/PRE gain. The evaluation-only
+  CENTER-BIND-SHUFFLE (q_i -> q_{pi(i)} with c_i fixed) raises soup MAE to
+  0.2636783788445173, giving G_bind(soup) = 0.009341380437836055 and
+  G_bind(best) = 0.007225432144477975: the trained model clearly uses center
+  binding, with 51.25% of dev molecules moving by >= 0.01, but the aggregate
+  effect is just below the preregistered 0.010 material threshold. The
+  preregistered case is therefore D (NO MATERIAL SIGNAL, borderline binding):
+  one layer of pair-to-center incidence is used but is insufficient, and it
+  does not explain the 0.25 -> 0.12 gap (gap_to_strong 0.1345190). Read-only
+  size stratification shows the binding effect is strongest for small
+  molecules (G_bind 0.018894) and nearly absent for large molecules
+  (0.000781), opposite to a graph-size/complexity-scaling story.
+scope: >-
+  CENTER-COMP-v0 preregistration commit 552e3d6; formal implementation commit
+  cf87d1e95bdb7cd97d8b875ce8be437185dcb7b8; remote A100 GPU1 only; seed 0;
+  fixed internal split seed 20260922 with 8000 train and 2000 dev; exact
+  TCCD-v2 checkpoint SHA-256
+  093e0e46d4d5dab7e5558b807d993d1136df58d8f531d6b9b3621e8ab05c0f42; exact
+  reused TCCD-v5 pair cache (all unordered i<j pairs, 2668346 pairs, 231664
+  occurrences, 5 relations, descriptor width 197); phi 197->64->16 (13712
+  params), rho 80->64->16 (6224 params), linear head 10480->1 (10481 params);
+  the exact TCCD-v5 lightweight Adam / Top-5 soup protocol; one seed; no
+  baseline rerun; no official-valid; official test never loaded.
+supporting_evidence:
+  - >-
+    Gate 0 PASS on GPU1: parameter accounting total 30417; every unordered pair
+    contributes exactly once to each of its two endpoint centers (max diff
+    0.0); pair-swap / pair-order / batching / relabel invariance; freeze
+    re-derivation of the TCCD-v2 C from the checkpoint matches the reused cache
+    (max abs diff 3.28e-07); pair descriptor identical to the v5 tensor path
+    (0.0); task gradient reaches phi, rho and the reader but not W/P/temperature;
+    official_test_loaded false.
+  - >-
+    Stage A: CENTER-COMP best 0.2634674421566306 / soup 0.2543369984066812;
+    CENTER-BIND-SHUFFLE best 0.27069287430110855 / soup 0.2636783788445173;
+    G_center -0.0029188548958627436; G_bind(soup) 0.009341380437836055;
+    G_bind(best) 0.007225432144477975; gap_to_strong 0.1345190.
+  - >-
+    Mechanism: shuffle mean / median / p90 absolute prediction change 0.03652 /
+    0.01075 / 0.12055; fractions with change >= 0.01 / 0.05 / 0.10 are 0.5125 /
+    0.2465 / 0.1415, so the binding intervention is not a no-op.
+  - >-
+    Size stratification: small (n 9-21) G_bind 0.018894, medium (21-25)
+    0.008336, large (25-37) 0.000781.
+contradicting_evidence:
+  - >-
+    G_bind(soup) 0.009341 is 93.4% of the 0.010 material threshold and the
+    shuffle changes over half the predictions by >= 0.01, so center binding is
+    clearly non-negligible even though the registered D rule fires.
+  - >-
+    Only one seed; internal-dev only; the sum pooling registered here scales
+    with graph size, and no normalization or layer-depth alternative was
+    tested by design.
+evidence:
+  - tracks/ksvd/notes/center_comp_v0_preregistration.md
+  - tracks/ksvd/notes/center_comp_v0_analysis.md
+  - tracks/ksvd/results/center_comp_v0/gate0.json
+  - tracks/ksvd/results/center_comp_v0/stageA_seed0.json
+  - tracks/ksvd/code/center_comp_v0.py
+  - tracks/ksvd/code/run_center_comp_v0.py
+  - tracks/ksvd/tests/test_center_comp_v0.py
+gate0:
+  all_pass: true
+  official_test_loaded: false
+  frozen_C_recompute_max_abs_diff: 3.2782554626464844e-07
+  frozen_h_base_recompute_rel_diff: 1.0482285775622061e-07
+  v5_pair_descriptor_max_abs_diff: 0.0
+  pair_to_centers_exact: true
+  shuffle_q_multiset_preserved: true
+  shuffle_c_multiset_preserved: true
+  shuffle_h_base_preserved: true
+  gradient_scope_ok: true
+stage_a:
+  center_comp_best_valid_mae: 0.2634674421566306
+  center_comp_soup_valid_mae: 0.2543369984066812
+  center_bind_shuffle_best_valid_mae: 0.27069287430110855
+  center_bind_shuffle_soup_valid_mae: 0.2636783788445173
+  mae_prev: 0.2514181435108185
+  g_center: -0.0029188548958627436
+  g_bind_soup: 0.009341380437836055
+  g_bind_best: 0.007225432144477975
+  gap_to_strong: 0.1345190
+  center_minus_base: 0.0240269149
+  outcome: D
+  n_train: 8000
+  n_dev: 2000
+  total_pairs: 2668346
+  trainable_parameters: 30417
+  init_checksum: 699e9854b9684761eb71613a0b647d82b0eb9e2d5b3461cac9e8616a49b64119
+  best_epoch: 78
+  runtime_s: 269.7736692428589
+  peak_mem_mb: 107.7265625
+decision: OUTCOME_D_SINGLE_LAYER_INCIDENCE_INSUFFICIENT
+interpretation: >-
+  Retaining pair-to-center incidence before global pooling is not the missing
+  ingredient that unlocks the frozen TCCD-v2 ceiling. The trained operator does
+  use center binding (G_bind 0.009341), but below the preregistered material
+  threshold, and it does not exceed the existing global pair/statistical
+  representation (G_center -0.002919). The binding effect shrinks with graph
+  size, contrary to a complexity-scaling account. This is direct evidence
+  against single-layer shared-center identity as the primary 0.25 bottleneck,
+  and consistent with the v6 reading that recent gains are mostly
+  coordinate/reader exposure rather than new occurrence-level information.
+next_hypothesis: >-
+  Do not add a second incidence layer or a GNN rescue. The next representation
+  question (a fuller assembly object, or local-code / representation
+  sufficiency) requires a new preregistration.
