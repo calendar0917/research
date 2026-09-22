@@ -1,0 +1,181 @@
+claim_id: claim-zinc-dtx-v0-aligned-cross-load-bearing-but-no-signal-20260923
+created: '2026-09-23T00:00:00Z'
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+statement: >-
+  In a strict-static ZINC round (preregistration commit 7c28be1, formal-run
+  commit 3810d73688805039f4ffccab1a90cf769d0e4639, remote A100-SXM4-40GB GPU0 =
+  Arm M / GPU1 = Arm A, official ZINC train 10000 / official valid 1000,
+  official test never loaded), the typed-token (16D) and parent (8D) identity
+  channels being deleted, a ring-blind shared dictionary (query = static patch
+  descriptor with the explicit cycle-rank/cyclomatic coordinate 143 deleted,
+  d_dict = 145 -> 64 -> 32; K = 64, rank 32, tau init 0.20) crossed with a
+  ring-blind generic topology role s_i in R^8 (root degree fraction, shell-1/2
+  occupancy, shell-1 / shell-1-shell-2 / shell-2 edge densities, shell-2
+  multi-parent fraction, same-shell incidence fraction; computed from untyped
+  radius-2 induced distances + edges only) does NOT beat the matched
+  marginal-only control. The only difference between the arms is
+  J_align = (1/N) sum_i alpha_i outer s_i versus J_indep = mu_alpha outer mu_s
+  (both arms also carry mu_alpha 64D and mu_s 8D; 512 -> 32 cross projection;
+  406D graph vector; 60,442 params; shared init bit-identical). Seed-0 240-epoch
+  full runs (no early stop): ARM M best official-valid MAE 0.14867128915613284
+  @238 / Top-5 soup 0.1443295570872142 (members [232,233,235,236,238]); ARM A
+  best 0.1540012241489603 @232 / soup 0.15035672007867834 (members
+  [216,224,227,231,232]). Delta_align = M - A = -0.005330 (best) / -0.006027
+  (soup), i.e. the aligned cross is strictly worse than the matched marginal
+  control; preregistered Case D -> NO_ALIGNED_CROSS_SIGNAL, no base-regression
+  confound (M_soup 0.144330 <= 0.1450), seed 1 not purchased. Crucially the
+  aligned interaction is NOT inert: on the Arm A soup checkpoint, replacing
+  J_align by J_indep moves predictions by mean 0.06494 / max 0.32649 and raises
+  valid MAE 0.15036 -> 0.16877, and within-graph shuffling s_i moves predictions
+  by mean 0.08716 / max 0.48008 and raises valid MAE to 0.18416 (repeat-forward
+  noise floor 0.0; both clear the 0.010 / 20x gates), so the aligned-trained
+  weights genuinely depend on the alpha_i <-> s_i pairing. Post-hoc (explicit
+  ring labels, inference-only) the ring-blind role vector is strongly
+  ring-relevant (ring_any delta for shell-1-shell-2 edge density -0.271,
+  shell-2 edge density +0.096, same-shell incidence +0.054) and the dictionary
+  learns ring-correlated environments (Arm A atom 13 ring_any +0.168; Arm M
+  atom 38 ring_any +0.169 / ring6 +0.252), yet that alignment does not translate
+  into MAE. Dictionary health is mixed/concentrated in both arms (effective atom
+  count 2.47 M / 2.88 A of 64, top-8 mass 0.979 / 0.969, tau 0.082 / 0.103,
+  coherence 0.240 / 0.306). Supported statement: a ring-blind
+  dictionary x generic-topology aligned joint statistic is load-bearing but
+  causally harmful relative to its matched marginal-only control at equal
+  budget; within-graph alignment of the two marginals is not the missing
+  ingredient for strict-static ZINC.
+scope: >-
+  Preregistration commit 7c28be1 freezes architecture, widths, gates, budget and
+  interventions; one audit-only follow-up commit 3810d73 makes the strict-static
+  gate's Arm-M / Arm-A probes weight-matched regardless of which arm is being
+  trained (the marginal run had aborted on the audit's own assertion; no frozen
+  mathematical object, width, hyperparameter, loss or threshold changed). Both
+  formal runs use 3810d73. Remote A100-SXM4-40GB, GPU0 = MARGINAL seed 0, GPU1 =
+  ALIGNED seed 0, run in parallel; deterministic algorithms on
+  (torch.use_deterministic_algorithms(True) + CUBLAS_WORKSPACE_CONFIG=:4096:8)
+  with a bit-identical cross-GPU smoke. Adam, lr 1e-3, wd 1e-5, batch 128,
+  L1/MAE, clip 5.0, no scheduler, forced full 240 epochs with no early
+  termination, best checkpoint plus fixed Top-5 weight soup. Raw pair backbone
+  inherited from S0 (u_i = 48 -> 16; pair input 64; 5 distance buckets).
+  Exactly 2 full training runs, the round's entire budget; no HPO, no K / tau /
+  width / topology-feature sweep, no seed 1, no rescue, no control beyond
+  MARGINAL. Diagnostics (dictionary health, interventions, post-hoc ring) are
+  report-only and were never used for selection. Official test never loaded in
+  any stage.
+supporting_evidence:
+  - >-
+    Deterministic cross-device smoke: parameter_init_sha256 identical on GPU0 and
+    GPU1 (d4568d5badf9f507...), 2-epoch trace identical
+    [[1, 1.467997, 1.395119], [2, 1.447125, 1.377680]], best 1.377679516808712
+    on both, contract / gradient / width gates pass on both, peak 181.3 MB.
+  - >-
+    Parameter / init parity: 60,442 params each arm, state-dict keys and shapes
+    equal, shared_init_bit_identical = true, only difference is the forward
+    selection of J_align vs J_indep (parity_gates.json).
+  - >-
+    Ring-blindness proven: exactly one dictionary coordinate deleted,
+    patch_cont[143] = max(E-V+1,0)/V over the induced radius-2 patch
+    (dictionary_input_width 145; cycle_rank_coordinate_audit passed with
+    synthetic tree/triangle/square/fused-triangles/hexagon evidence;
+    other_cycle_derived_coordinates []); AST audit of the role extractor and
+    DTXModel.encode finds no ring/cycle/basis/aromatic/fused/spiro symbol and no
+    typed/parent/structural token read; the only nn.Embedding is the 5-row
+    distance gate (identity_input_audit.only_distance_gate_embedding true,
+    forbidden_key_hits []).
+  - >-
+    Strict-static contract passes on CPU and A100 for both arms: center_context
+    False and center_update None, forward succeeds with
+    _pool_pairs_to_centres raising, pair/relation/dict encoders and the
+    dictionary each called exactly once per forward, h / alpha / dictionary
+    embedding bit-identical under topology mutation (max |d alpha| 0.0),
+    pair-order 1.30e-07, endpoint swap 0.0, within-graph patch relabel
+    1.49e-08, repeat-forward noise floor 0.0.
+  - >-
+    Alignment sensitivity / control separation: within-graph s permutation
+    shifts J_indep and the prediction by 7.45e-09 (Arm M) but shifts J_align by
+    1.140e-02 and the prediction by 2.30e-05 (Arm A, >= max(1e-6, 10x M));
+    marginal_joint_is_outer_product true, aligned_joint_is_outer_product false.
+  - >-
+    Non-vacuous gradients: required_positive_ok true with finite norms (head
+    0.838, pair_encoder 0.094, local 0.041, global 0.038, relation 0.028,
+    pair_projection 0.015, topology hinge 0.0085, cross projection 0.0062,
+    dict_encoder 0.0031, dictionary atoms 0.0012, tau 1.11e-05).
+  - >-
+    Load-bearing aligned mechanism (inference-only, official valid, Arm A soup):
+    J_align -> J_indep mean 0.06494 / max 0.32649, valid MAE 0.15036 -> 0.16877;
+    within-graph s shuffle mean 0.08716 / max 0.48008, valid MAE 0.18416; both
+    clear the frozen 0.010 mean-shift and 20x noise gates (mechanism_clear true).
+    The Arm A best checkpoint behaves identically (0.06582 / 0.33209 -> 0.17416;
+    0.08820 / 0.48878 -> 0.18908).
+  - >-
+    The ring-blind role vector is ring-relevant post-hoc: ring_any mean delta
+    shell1_shell2_edge_density -0.271, shell2_edge_density +0.096,
+    same_shell_incidence_fraction +0.054 (ring5 shell2_edge_density +0.336);
+    the dictionary learns ring-correlated atoms without ring input (Arm A atom
+    13 ring_any +0.168 / ring6 +0.197; Arm M atom 38 ring_any +0.169 /
+    ring6 +0.252), and the largest aligned joint mass sits on atom 13 x
+    shell occupancy / S1-S2 edge density (top J_align 0.152 with ring delta
+    +0.087).
+  - >-
+    Absolute context: Arm M soup 0.144330 versus S0 seed0 soup 0.140794
+    (+0.003536), S0 seed1 0.136423 (+0.007907), SDPK-v0 0.139735 (+0.004595),
+    SRDA-v0 0.149873 (-0.005543); Arm A soup 0.150357 worse than every
+    reference except SRDA. No base-regression confound (M_soup <= 0.1450).
+  - >-
+    13 targeted CPU tests pass (contract A-H, formula / relabel invariance, AST
+    ring audit, interventions, pooling); encode audit confirms
+    local_input_width 146, dictionary_input_width 145, 10,000 train / 1,000
+    valid, patch/node alignment and bit-identical patch_cont recompute.
+contradicting_evidence:
+  - >-
+    The causal claim is rejected in the negative direction, so the round does not
+    support using an aligned dictionary x topology cross; the load-bearing
+    intervention shows the mechanism is active but its effect on MAE is
+    adverse, so "used" must not be read as "useful".
+  - >-
+    Dictionary health is mixed in both arms (effective atom count 2.47 M / 2.88
+    A of 64, top-8 assignment mass 0.979 / 0.969, max average atom mass 0.191 /
+    0.260), so neither arm is a strong test of a rich, distributed dictionary;
+    the negative could in principle reflect a concentrated dictionary rather
+    than a fundamental absence of aligned signal, and this round cannot separate
+    those.
+  - >-
+    The comparison is a two-arm matched control within one seed; Arm A is worse
+    by 0.0060 soup, below the 0.004 improvement gate in magnitude but in the
+    opposite direction, and no seed-to-seed variance estimate exists for either
+    arm (seed 1 not purchased by preregistered rule).
+  - >-
+    The marginal arm uses a graph-level sufficient statistic (mu_alpha outer
+    mu_s) that already mixes every atom with every role coordinate without any
+    within-graph pairing, so the negative is most precisely "within-graph
+    alignment adds no value beyond the marginals", not "dictionary x topology
+    information is worthless".
+limitations:
+  - >-
+    One seed per arm; no distributional claim and no seed-variance estimate.
+  - >-
+    The aligned cross is a graph-level sufficient statistic and cannot write
+    back to local states by construction, so no statement is made about
+    local/message-passing uses of dictionary-topology alignment.
+  - >-
+    Post-hoc ring enrichment uses explicit ring labels and is inference-only; it
+    explains but does not select, and the atom indices of Arm M and Arm A are not
+    comparable.
+  - >-
+    The absence of a base-regression confound only rules out a broken shared
+    backbone; it does not attribute the Arm A deficit to optimisation versus
+    overfitting, which this round did not separate.
+evidence:
+  - tracks/ksvd/notes/zinc_no_ring_dictionary_topology_cross_v0_preregistration.md
+  - tracks/ksvd/notes/zinc_no_ring_dictionary_topology_cross_v0_analysis.md
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/RESULTS_SUMMARY.md
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/analysis.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/integrity_gates.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/parity_gates.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/parameter_audit.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/runs/dtx_marginal_seed0.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/runs/dtx_aligned_seed0.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/interventions_aligned_soup.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/posthoc_ring_aligned_soup.json
+  - tracks/ksvd/experiments/luyin16/zinc_no_ring_dictionary_topology_cross.py
+  - tracks/ksvd/tests/test_zinc_no_ring_dictionary_topology_cross.py

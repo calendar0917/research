@@ -1,0 +1,274 @@
+decision_id: decision-zinc-dtx-v0-stop-no-aligned-cross-signal-20260923
+created: '2026-09-23T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  Three earlier results framed the question. (a) SRDA-v0 showed the typed-token
+  (16D) and parent (8D) identity channels are permanently deletable, and that a
+  dictionary whose assignments define the pair algebra can be dominant yet
+  regress absolute MAE. (b) SDPK-v0 showed a live dictionary-conditioned pair
+  kernel still adds no absolute signal when it is layered on the raw pair
+  interaction. (c) The mentor no-ring line showed explicit ring-context blocks
+  carry signal but weaken the "self-discovery" hypothesis. DTX-v0 asked the
+  remaining controlled question: if a ring-blind dictionary and a ring-blind,
+  generic, untyped topology role are crossed with an ALIGNED joint statistic
+  (J_align = mean_i alpha_i outer s_i) and compared against a matched
+  marginal-only control (J_indep = mu_alpha outer mu_s) with everything else
+  identical, does the within-graph alignment add value — without ever feeding
+  ring/cycle context into the new branch?
+protocol: >-
+  Local-first implementation with 13 targeted CPU tests and a synthetic
+  cycle-rank coordinate audit, then remote A100 execution under the
+  remote-research-runner workflow (local Git as source of truth, deploy.sh,
+  uv sync --frozen, research doctor, durable detached launch, pull_results.sh).
+  Frozen architecture: standalone strict-static module; x_i = [patch_cont |
+  patch_context] (146D); h_i = SiLU MLP(146 -> 64 -> 48); x_dict_i = patch_cont
+  with the explicit cycle-rank coordinate 143 deleted (145D); z_dict_i =
+  SiLU MLP(145 -> 64 -> 32); q_i = l2_normalize(z_dict_i); D_k =
+  l2_normalize(dictionary_atom_k); tau = 0.05 + 0.95 sigmoid(tau_logit) init
+  0.20; alpha_i = softmax(q_i D_norm^T / tau) (K = 64); ring-blind generic
+  topology role s_i in R^8 from the untyped radius-2 induced patch; mu_alpha =
+  mean_i alpha_i (64); mu_s = mean_i s_i (8); J_align = mean_i alpha_i outer
+  s_i (512) vs J_indep = mu_alpha outer mu_s (512); e_cross = SiLU Linear(512 ->
+  32); inherited raw S0 pair backbone u_i = pair_projection(h_i) 48 -> 16,
+  pair_input = [u_i+u_j | |u_i-u_j| | (u_i*u_j)*gate | rel] (64), pair encoder
+  64 -> 64 -> 16 evaluated once, 5-bucket pair pooling (165); R_final =
+  [unary 97 | pair 165 | global 32 | topology hinge 8 | mu_alpha 64 | mu_s 8 |
+  e_cross 32] = 406; head 406 -> 16 -> 16 -> 1; 60,442 params. Frozen protocol:
+  Adam, lr 1e-3, wd 1e-5, batch 128, L1/MAE, clip 5.0, no scheduler, full 240
+  epochs with no early termination, best checkpoint plus fixed Top-5 weight
+  soup. Exactly two full runs: GPU0 MARGINAL seed 0, GPU1 ALIGNED seed 0, in
+  parallel; deterministic algorithms on; official ZINC train 10000 / official
+  valid 1000; official test never loaded.
+results:
+  preregistration_commit: 7c28be1
+  formal_run_commit: 3810d73688805039f4ffccab1a90cf769d0e4639
+  audit_only_followups: [3810d73]
+  devices: [A100-SXM4-40GB GPU0, A100-SXM4-40GB GPU1]
+  seed: 0
+  parameters: 60442
+  runtime_widths:
+    local_input: 146
+    local_state: 48
+    dictionary_input: 145
+    dictionary_query: 32
+    dictionary_assignment: 64
+    topology_role: 8
+    cross_matrix: 512
+    cross_embedding: 32
+    pair_input: 64
+    relation_input: 23
+    unary: 97
+    pair_pool: 165
+    global: 32
+    topology_hinge: 8
+    graph: 406
+    head_hidden: [16, 16]
+  deleted_dictionary_coordinate: patch_cont[143] = max(E - V + 1, 0) / V (cycle rank / cyclomatic number)
+  identity_channel_params: 0
+  epochs_run: 240
+  early_terminated: false
+  arm_marginal:
+    best_valid_mae: 0.14867128915613284
+    best_epoch: 238
+    top5_soup_valid_mae: 0.1443295570872142
+    top5_soup_members: [232, 233, 235, 236, 238]
+    top5_soup_member_valid_mae: [0.150578, 0.150629, 0.150816, 0.151014, 0.148671]
+    gpu_wall_clock_s: 1353.4187465640716
+    peak_gpu_memory_mb: 190.986328125
+  arm_aligned:
+    best_valid_mae: 0.1540012241489603
+    best_epoch: 232
+    top5_soup_valid_mae: 0.15035672007867834
+    top5_soup_members: [216, 224, 227, 231, 232]
+    top5_soup_member_valid_mae: [0.154442, 0.154727, 0.155707, 0.156148, 0.154001]
+    gpu_wall_clock_s: 1672.9863445928786
+    peak_gpu_memory_mb: 192.51025390625
+  delta_align_best: -0.0053299349928274675
+  delta_align_soup: -0.006027162991464136
+  gate_align_soup_delta: 0.004
+  gate_align_best_delta: 0.003
+  gate_align_abs_soup: 0.134
+  base_regression_confound: false
+  reference_s0_seed0_best: 0.145674
+  reference_s0_seed0_soup: 0.140794
+  reference_s0_seed1_best: 0.139389
+  reference_s0_seed1_soup: 0.136423
+  reference_sdpk_v0_seed0_best: 0.14219318306347123
+  reference_sdpk_v0_seed0_soup: 0.13973486851429334
+  reference_srda_v0_seed0_best: 0.15544865403691074
+  reference_srda_v0_seed0_soup: 0.14987310345092555
+  arm_m_soup_improvement_vs_s0_seed0: -0.0035355570872142058
+  arm_m_soup_improvement_vs_sdpk_v0: -0.00459468857307888
+  arm_m_soup_improvement_vs_srda_v0: 0.005543546364711345
+  case: D
+  seed0_verdict: NO_ALIGNED_CROSS_SIGNAL
+  seed1_authorized: false
+  deterministic_smoke:
+    parameter_init_sha256_equal_across_gpus: true
+    trace_equal_across_gpus: true
+    trace: [[1, 1.467996895313263, 1.3951189893559786], [2, 1.447124719619751, 1.377679516808712]]
+    peak_gpu_memory_mb: 181.345703125
+  strict_static_contract_passed: true
+  parity:
+    arm_m_params: 60442
+    arm_a_params: 60442
+    state_dict_keys_equal: true
+    state_dict_shapes_equal: true
+    shared_init_bit_identical: true
+  alignment_sensitivity:
+    marginal_joint_shift_under_s_permutation: 7.450580596923828e-09
+    marginal_prediction_shift_under_s_permutation: 7.450580596923828e-09
+    aligned_joint_shift_under_s_permutation: 0.011402769014239311
+    aligned_prediction_shift_under_s_permutation: 2.300366759300232e-05
+    marginal_joint_is_outer_product: true
+    aligned_joint_is_outer_product: false
+  invariance:
+    pair_order_max_abs_pred_diff: 1.30385160446167e-07
+    endpoint_swap_max_abs_pred_diff: 0.0
+    patch_relabel_max_abs_pred_diff: 1.4901161193847656e-08
+    repeat_forward_noise_floor: 0.0
+    identity_mutation_shift: 0.0
+    alpha_shift_under_topology_mutation: 0.0
+  gradient_viability:
+    required_positive_ok: true
+    all_finite: true
+    head_grad_norm: 0.8377005396484423
+    pair_encoder_grad_norm: 0.09438473502981987
+    local_encoder_grad_norm: 0.04146606274996466
+    global_encoder_grad_norm: 0.037995750273923753
+    relation_encoder_grad_norm: 0.028491538019143326
+    pair_projection_grad_norm: 0.014948331620257925
+    topology_encoder_grad_norm: 0.00850949789
+    cross_projection_grad_norm: 0.00618095364363437
+    dict_encoder_grad_norm: 0.003114447544011963
+    dict_atoms_grad_norm: 0.0011733172976610272
+    tau_grad_norm: 1.1074430317685293e-05
+  dictionary_diagnostics:
+    arm_marginal:
+      active_atom_count: 48
+      argmax_used_atoms: 51
+      effective_atom_count: 2.4668331146240234
+      top8_assignment_mass: 0.9793763160705566
+      max_average_assignment_mass: 0.19140203297138214
+      mean_assignment_entropy: 0.9029352068901062
+      tau_final: 0.0823039710521698
+      dictionary_coherence_mean_abs: 0.2404867559671402
+    arm_aligned:
+      active_atom_count: 45
+      argmax_used_atoms: 41
+      effective_atom_count: 2.8815157413482666
+      top8_assignment_mass: 0.9694079160690308
+      max_average_assignment_mass: 0.25977644324302673
+      mean_assignment_entropy: 1.0583164691925049
+      tau_final: 0.10292655229568481
+      dictionary_coherence_mean_abs: 0.3059333562850952
+  interventions_arm_aligned_soup:
+    alignment_removal: {mean_abs_prediction_shift: 0.06494407629966736, max_abs_prediction_shift: 0.326488733291626, valid_mae_after: 0.16876635007181903}
+    topology_shuffle: {mean_abs_prediction_shift: 0.08715837734937668, max_abs_prediction_shift: 0.48008430004119873, valid_mae_after: 0.1841560063175275}
+    mechanism_clear: true
+    repeat_noise_max_abs: 0.0
+  posthoc_ring_role_delta_ring_any:
+    shell1_shell2_edge_density: -0.2706
+    shell2_edge_density: 0.0962
+    same_shell_incidence_fraction: 0.054
+    root_degree_fraction: 0.026
+    shell1_edge_density: 0.012
+  posthoc_ring_top_atoms:
+    arm_aligned: {atom_13_ring_any_delta: 0.1676, atom_24_ring_any_delta: -0.1543, atom_43_ring_any_delta: 0.0743}
+    arm_marginal: {atom_24_ring_any_delta: -0.2361, atom_38_ring_any_delta: 0.1687, atom_28_ring_any_delta: -0.054}
+  full_training_runs: 2
+  max_full_runs: 2
+  seed1_purchased: false
+  hpo: false
+  sweep: false
+  official_test_loaded: false
+decision: >-
+  STOP DTX-v0 after the two seed-0 runs, which are the round's entire budget. Do
+  NOT purchase seed 1, do NOT sweep K / tau / cross width / topology features,
+  do NOT add explicit ring inputs or ring dictionaries, do NOT add a second
+  topology dictionary or a K^2 dictionary-pair matrix, do NOT reintroduce
+  dictionary residuals into h_i, and do NOT rescue. The round is closed with
+  NO_ALIGNED_CROSS_SIGNAL. Do not treat "the aligned statistic is load-bearing"
+  as success. The ring-blind dictionary x generic-topology cross line is closed
+  in its graph-level aligned form.
+because: >-
+  The preregistered Case D fired: Delta_align = M - A = -0.005330 (best) /
+  -0.006027 (soup), so the aligned cross is not merely null but worse than the
+  matched marginal-only control at equal budget, while the marginal control is
+  itself non-degenerate (soup 0.144330 <= the 0.1450 safety line, so no
+  base-regression confound; 0.0055 better than SRDA-v0 but 0.0035-0.0046 worse
+  than S0 seed 0 and SDPK-v0). The mechanism is nevertheless fully alive: on the
+  Arm A soup checkpoint, replacing J_align with J_indep costs +0.0184 MAE and
+  shuffling s_i within graphs costs +0.0338 MAE, both far above the 0.010 / 20x
+  noise gates; the role vector is strongly ring-relevant post-hoc
+  (shell1_shell2_edge_density ring_any delta -0.271) and the dictionary learns
+  ring-correlated atoms without any ring input. So the round answers its
+  mechanism question ("the ring-blind aligned cross is real and used, and both
+  marginals are individually informative") and still fails its causal question
+  ("alignment beats the matched marginal control"): the marginal control already
+  mixes every dictionary atom with every topology coordinate, and the
+  within-graph pairing adds optimization burden / variance without a
+  compensating signal. With absolute MAE as the first success criterion and the
+  direction negative, there is no basis to spend further compute. The mixed
+  dictionary health (effective atoms 2.5-2.9 of 64) is recorded as a caveat, not
+  as a licence for a sweep.
+alternatives_rejected:
+  - >-
+    Buying seed 1. Rejected: the preregistered case fired in the negative
+    direction; the preregistration does not authorize seed 1 for Case D.
+  - >-
+    Sweeping K / tau / cross width / topology-feature set or adding
+    entropy / sparsity / orthogonality regularizers to fix the concentrated
+    dictionary and retest alignment. Rejected: forbidden by the preregistration;
+    a sweep on top of a negative causal gate is not a scientific step, and the
+    concentration caveat is recorded for a future independent round.
+  - >-
+    Adding explicit ring/cycle context (ring5/ring6/fused labels, ring
+    dictionaries, cycle enumerations) into the cross branch to see whether
+    "aligned but ring-aware" helps. Rejected: that abandons the round's
+    ring-blind premise and needs a new preregistration with its own controls.
+  - >-
+    Rescuing with message passing / centre update / dictionary-to-local writeback
+    so alignment can act locally rather than once at the graph level. Rejected:
+    violates the strict-static contract; the graph-level sufficient-statistic
+    question was the only one this round asked.
+  - >-
+    Reinterpreting "the aligned statistic is load-bearing" (interventions clear
+    the gates) as a positive result. Rejected: mechanism liveness is a reporting
+    diagnostic; the causal gate requires beating the matched marginal control,
+    which Arm A does not.
+  - >-
+    Blaming the negative on the concentrated dictionary alone. Rejected as
+    unsupported by this round's evidence: the marginal arm reaches its best MAE
+    under the same concentration, so the aligned-vs-marginal contrast is not
+    obviously explained by concentration; the honest statement is that richness
+    of the dictionary was not separated from alignment value here.
+revisit_if: >-
+  A future preregistered round may revisit dictionary x topology alignment only
+  if it (i) first establishes a richer, non-degenerate dictionary (effective
+  atom count well above the 2.5-2.9 observed here) under a frozen, claim-bearing
+  objective, and (ii) buys matched controls that separate "alignment value" from
+  "dictionary richness" (e.g. marginal vs aligned at two different
+  dictionary-entropy regimes, same backbone and budget). A graph-level aligned
+  cross with a concentrated dictionary and a negative matched-control result is
+  not worth another seed. The permanent, reusable findings from this round are:
+  (a) the explicit cycle-rank coordinate in patch_cont is index 143 and can be
+  deleted cleanly (dictionary_input_width 145) to make a dictionary query
+  ring-blind; (b) a generic untyped radius-2 topology role of 8 bounded
+  coordinates is strongly ring-relevant without any ring input; (c) a
+  dictionary trained on ring-blind static descriptors learns ring-correlated
+  atoms post-hoc. These are usable by other architectures under their own
+  preregistrations.
+evidence:
+  - tracks/ksvd/notes/zinc_no_ring_dictionary_topology_cross_v0_preregistration.md
+  - tracks/ksvd/notes/zinc_no_ring_dictionary_topology_cross_v0_analysis.md
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/RESULTS_SUMMARY.md
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/analysis.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/integrity_gates.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/parity_gates.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/parameter_audit.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/interventions_aligned_soup.json
+  - tracks/ksvd/results/zinc_no_ring_dictionary_topology_cross_v0/posthoc_ring_aligned_soup.json
+  - tracks/ksvd/experiments/luyin16/zinc_no_ring_dictionary_topology_cross.py
+  - tracks/ksvd/tests/test_zinc_no_ring_dictionary_topology_cross.py

@@ -12,8 +12,8 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-zinc-static-relational-dictionary-algebra-v0-seed0-negative
-updated: 2026-09-22
+phase: post-zinc-no-ring-dictionary-topology-cross-v0-seed0-negative
+updated: 2026-09-23
 
 # ---------------------------------------------------------------------------
 # FINAL STANDALONE STATUS (TCCD-v7, 2026-09-22)
@@ -811,6 +811,74 @@ deferred_optional:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-zinc-dtx-v0-stop-no-aligned-cross-signal-20260923: >-
+      DTX-v0 (2026-09-23, preregistration commit 7c28be1, formal-run commit
+      3810d73; remote A100-SXM4-40GB GPU0 = MARGINAL / GPU1 = ALIGNED, in
+      parallel; official test never loaded) tested whether a RING-BLIND
+      dictionary crossed with a RING-BLIND, generic, untyped topology role via
+      an ALIGNED graph-level joint statistic beats a matched marginal-only
+      control, with all identity channels deleted and the raw S0 pair backbone
+      preserved. Architecture: x_i = [patch_cont | patch_context] 146D;
+      h_i = SiLU MLP(146 -> 64 -> 48); dictionary query = patch_cont with the
+      explicit cycle-rank coordinate 143 deleted (145D) -> 64 -> 32, K=64,
+      rank 32, tau init 0.20, alpha_i = softmax(q_i D^T / tau); ring-blind
+      generic topology role s_i in R^8 (root degree fraction, shell-1/2
+      occupancy, shell-1 / shell-1-shell-2 / shell-2 edge densities, shell-2
+      multi-parent fraction, same-shell incidence fraction) from the untyped
+      radius-2 induced distances + edges only; mu_alpha 64, mu_s 8;
+      J_align = mean_i alpha_i outer s_i vs J_indep = mu_alpha outer mu_s
+      (512 -> 32); inherited raw pair backbone (u 48 -> 16, pair input 64,
+      5 buckets) evaluated once; R_final = [unary 97 | pair 165 | global 32 |
+      topology hinge 8 | mu_alpha 64 | mu_s 8 | e_cross 32] = 406D; head
+      406 -> 16 -> 16 -> 1; 60,442 params; shared init bit-identical; the only
+      difference between arms is J_align vs J_indep. Two seed-0 full runs of
+      240 epochs (no early stop, no HPO, no sweep), deterministic algorithms
+      on with a bit-identical GPU0/GPU1 smoke (same init sha256, same
+      2-epoch trace, peak 181.3 MB): ARM M best official-valid MAE
+      0.14867128915613284 @238 / Top-5 soup 0.1443295570872142 (members
+      [232,233,235,236,238]); ARM A best 0.1540012241489603 @232 / soup
+      0.15035672007867834 (members [216,224,227,231,232]); Delta_align =
+      M - A = -0.005330 (best) / -0.006027 (soup) -> preregistered Case D
+      NO_ALIGNED_CROSS_SIGNAL, no base-regression confound (M_soup 0.144330 <=
+      0.1450), seed 1 NOT purchased. The aligned cross is NOT inert: on the
+      Arm A soup, replacing J_align by J_indep moves predictions by mean
+      0.06494 / max 0.32649 and raises valid MAE 0.15036 -> 0.16877, and
+      within-graph shuffling s_i moves them by mean 0.08716 / max 0.48008 and
+      raises valid MAE to 0.18416 (noise floor 0.0; both clear the 0.010 / 20x
+      gates) -> the aligned-trained weights genuinely depend on the
+      alpha_i <-> s_i pairing, yet Arm A is worse than the matched marginal
+      control, so within-graph alignment of the two marginals is not the
+      missing ingredient. Ring-blindness proven: exactly one dictionary
+      coordinate deleted (cycle_rank_coordinate_audit passed on synthetic
+      tree/triangle/square/fused-triangles/hexagon; other cycle-derived
+      coordinates none), AST audit finds no ring/cycle/basis/aromatic/fused/
+      spiro symbol and no typed/parent/structural token read, the only
+      nn.Embedding is the 5-row distance gate. Strict-static + alignment gates
+      all pass on CPU and A100 (forward with _pool_pairs_to_centres raising;
+      pair/relation/dict encoders 1 call each; h/alpha/dict embedding
+      bit-identical under topology mutation; Arm M s-permutation shift
+      7.45e-09 vs Arm A joint 1.14e-02 / prediction 2.30e-05; pair order
+      1.3e-07, endpoint swap 0.0, relabel 1.5e-08; all required grads > 0 and
+      finite). Post-hoc ring (explicit labels, inference-only): the ring-blind
+      role is strongly ring-relevant (ring_any delta shell1_shell2_edge_density
+      -0.271, shell2_edge_density +0.096, same-shell incidence +0.054) and the
+      dictionary learns ring-correlated atoms without ring input (Arm A atom
+      13 +0.168; Arm M atom 38 +0.169 / ring6 +0.252). Dictionary health is
+      mixed/concentrated in both arms (effective atoms 2.47 M / 2.88 A of 64,
+      top-8 mass 0.979 / 0.969, tau 0.082 / 0.103). Absolute context: Arm M
+      soup 0.144330 vs S0 seed0 0.140794 (+0.003536), S0 seed1 0.136423
+      (+0.007907), SDPK-v0 0.139735 (+0.004595), SRDA-v0 0.149873 (-0.005543).
+      13 targeted CPU tests pass; encode audit confirms dictionary_input_width
+      145 and bit-identical patch_cont recompute; 2 full runs (the whole
+      budget); GPU wall 1353.4 s (M) / 1673.0 s (A); peak 191.0 / 192.5 MB;
+      official test never loaded. Decision: STOP with no seed 1, no sweep, no
+      rescue, no explicit ring input; the graph-level aligned cross line is
+      CLOSED. See
+      notes/zinc_no_ring_dictionary_topology_cross_v0_preregistration.md,
+      notes/zinc_no_ring_dictionary_topology_cross_v0_analysis.md,
+      results/zinc_no_ring_dictionary_topology_cross_v0/RESULTS_SUMMARY.md,
+      claim-zinc-dtx-v0-aligned-cross-load-bearing-but-no-signal-20260923,
+      decision-zinc-dtx-v0-stop-no-aligned-cross-signal-20260923.
   - decision-zinc-srda-v0-stop-after-seed0-negative-20260922: >-
       SRDA-v0 (2026-09-22, preregistration commit d4ef523, formal-run commit
       82adff7; remote A100-SXM4-40GB GPU0; official test never loaded) deleted
