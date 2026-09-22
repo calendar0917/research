@@ -1035,16 +1035,22 @@ def static_contract_checks(model: SRDAModel, batch: Any) -> dict[str, Any]:
     # (``data.batch``) stays valid; the graph-level readout is permutation
     # invariant by construction and this checks it on real pair data.
     generator = torch.Generator().manual_seed(13)
-    patch_order = torch.arange(int(batch.patch_cont.shape[0]))
+    patch_order = torch.arange(
+        int(batch.patch_cont.shape[0]), device=batch.patch_cont.device
+    )
     for graph_id in range(int(batch.global_context.shape[0])):
         members = (batch.batch == graph_id).nonzero(as_tuple=True)[0]
         if int(members.numel()) > 1:
             shuffled = members[
-                torch.randperm(int(members.numel()), generator=generator)
+                torch.randperm(int(members.numel()), generator=generator).to(
+                    members.device
+                )
             ]
             patch_order[members] = shuffled
     inverse = torch.empty_like(patch_order)
-    inverse[patch_order] = torch.arange(patch_order.shape[0])
+    inverse[patch_order] = torch.arange(
+        patch_order.shape[0], device=patch_order.device
+    )
     relabeled = batch.clone()
     relabeled.patch_cont = batch.patch_cont[patch_order]
     relabeled.patch_context = batch.patch_context[patch_order]
