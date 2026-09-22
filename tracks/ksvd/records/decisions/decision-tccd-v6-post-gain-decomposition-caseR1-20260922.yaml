@@ -1,0 +1,124 @@
+decision_id: decision-tccd-v6-post-gain-decomposition-caseR1-20260922
+created: '2026-09-22T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  TCCD-v5 produced a real POST Top-5 soup gain over the frozen TCCD-v2 BASE
+  (0.2783639132976532 -> 0.2522333264350891, G_FULL 0.0261305868625641) while
+  the PRE-vs-POST placement hypothesis failed. TCCD-v6 therefore ran a strict
+  frozen-representation diagnostic instead of a new architecture: it
+  decomposed the 197-D POST mean pair descriptor into coordinates exactly
+  reconstructible from h_base (RECON) and coordinates that are not (NOVEL),
+  and asked which block, and whether a ReLU, explains the gain.
+protocol: >-
+  GPU1-only remote A100 execution; seed 0; fixed internal 8000/2000 split
+  (split seed 20260922); exact frozen TCCD-v2 PrototypeREL checkpoint and
+  exact TCCD-v5 pair cache; all unordered i<j pairs; descriptor blocks
+  A = E[c_i+c_j] (64), B = E|c_i-c_j| (64), C_prod = E[c_i*c_j] (64),
+  D = E[r_ij] (5); label-free A/D reconstructibility audit before any training;
+  frozen partition RECON 69 / NOVEL 128; four parameter-matched arms
+  (24,193 trainable parameters each) with identical bit-level initialization
+  (checksum 9fbedb92...e8487f) and the exact TCCD-v5 Adam / Top-5-soup protocol;
+  FULL-NL reused from v5 and verified by re-evaluation (delta 0.0); RECON-NL
+  and RECON-LINFACT differ only by the ReLU; NOVEL-NL uses the novel mask;
+  no PRE, no center-preserving model, no official-valid, official test frozen.
+results:
+  preregistration_commit: 822a235
+  implementation_commit: e016b4d8031994ca0d33f15242b444488fbe8713
+  device_fix_commit: ac94daea613d8d19bf5ef978756c82568918a157
+  v2_checkpoint_sha256: 093e0e46d4d5dab7e5558b807d993d1136df58d8f531d6b9b3621e8ab05c0f42
+  v5_stage_a_sha256: 2ab232c74219529ef3ddbdf1c6175d664756eb0dc7c0a0a30325d62a94b8aefe
+  gpu: GPU1
+  seed: 0
+  split_seed: 20260922
+  n_train: 8000
+  n_dev: 2000
+  descriptor_widths: {A: 64, B: 64, C_prod: 64, D: 5}
+  recon_mask_nonzero: 69
+  novel_mask_nonzero: 128
+  trainable_parameters_per_arm: 24193
+  init_checksum: 9fbedb92ced44449ade422b152684e3706f34fb943c32b5bfd64979290e8487f
+  base_best_valid_mae: 0.28791576623916626
+  base_soup_valid_mae: 0.2783639132976532
+  full_nl_best_valid_mae: 0.2608269155025482
+  full_nl_soup_valid_mae: 0.2522333264350891
+  recon_nl_best_valid_mae: 0.257836252450943
+  recon_nl_soup_valid_mae: 0.252360463142395
+  recon_linfact_best_valid_mae: 0.26240912079811096
+  recon_linfact_soup_valid_mae: 0.25255683064460754
+  novel_nl_best_valid_mae: 0.2638615369796753
+  novel_nl_soup_valid_mae: 0.25401341915130615
+  g_full: 0.026130586862564087
+  g_recon: 0.02600345015525818
+  g_novel: 0.024350494146347046
+  rho_recon: 0.9951345636447205
+  rho_novel: 0.9318770479369797
+  nonlinearity_gap: 0.00019636750221252441
+  gate0_pass: true
+  case: R1
+  case_status: FINAL
+  official_test_loaded: false
+  runtime_s: 466.01937651634216
+  peak_mem_mb: 109.2333984375
+decision: >-
+  CASE R1 — NONLINEARITY NOT MATERIAL / RECON SUFFICIENT. The 69
+  base-reconstructible POST coordinates recover 99.51% of G_FULL (99.25%
+  without ReLU); the nonlinearity gap 0.000196368 is far below the 0.005 R1
+  threshold; no paired seed 1 was authorized or run. Case M also holds
+  (NOVEL-NL rho 0.931877) but is redundant under the registered R > M
+  precedence. Within the frozen TCCD-v2 representation the primary bottleneck
+  is readout / coordinate geometry, not missing structural information.
+alternatives_rejected:
+  - item: Run a paired seed 1 for the RECON nonlinearity question
+    because: >-
+      the registered ambiguity interval is 0.005 <= gap < 0.010 and the
+      observed gap is 0.000196368, so the R1 branch fires directly.
+  - item: Continue to Stage B or any end-to-end / official-valid training
+    because: >-
+      TCCD-v6 is a frozen decomposition round; no E2E or official route is
+      authorized by its preregistration.
+  - item: Open the official ZINC test
+    because: >-
+      never loaded by design; no test read is authorized by this decision.
+  - item: Prioritize center-preserving occurrence composition next
+    because: >-
+      the POST gain is fully recoverable from base-reconstructible coordinates
+      without any new occurrence information, so occurrence placement is not
+      supported as the missing ingredient.
+  - item: Deepen the pair MLP or add a nonlinear 10,464-D reader
+    because: >-
+      ReLU removal changes the result by 0.000196; more nonlinear capacity is
+      not the explanation and would destroy the parameter-matched diagnostic.
+consequences:
+  - >-
+    TCCD-v5's POST gain is re-attributed: it is a coordinate-exposure /
+    readout-geometry effect of the normalization 2*BAG/n and the normalized
+    relation density, not new structural or occurrence information.
+  - >-
+    Genuinely new prototype-distribution moments (B dispersion, C_prod
+    product) suffice alone but are not necessary; the blocks are substantially
+    redundant because they are functions of the same frozen assignments.
+  - >-
+    The next representation hypothesis is an explicit
+    normalization/moment-complete frozen representation with a simple reader,
+    under a new preregistration.
+revisit_if: >-
+  A new preregistration specifies a normalization/moment-complete
+  representation with a matched simple reader and pre-declared controls; or a
+  new frozen-representation diagnostic isolates the A block from the D block.
+  Not by widening the MLP, not by reopening occurrence placement, not by an
+  official-valid/test read.
+next_action: >-
+  NONE auto-authorized. Draft a new preregistration only for the explicit
+  normalization/moment-complete frozen representation with a simple reader or
+  for a new frozen diagnostic; keep the official test closed.
+evidence:
+  - tracks/ksvd/notes/tccd_v6_post_gain_decomposition_preregistration.md
+  - tracks/ksvd/notes/tccd_v6_post_gain_decomposition_analysis.md
+  - tracks/ksvd/results/tccd_v6/label_free_audit.json
+  - tracks/ksvd/results/tccd_v6/gate0.json
+  - tracks/ksvd/results/tccd_v6/stageA_seed0.json
+  - tracks/ksvd/results/tccd_v6/stageA_decision.json
+  - tracks/ksvd/code/tccd_v6.py
+  - tracks/ksvd/code/run_tccd_v6.py
+  - tracks/ksvd/tests/test_tccd_v6.py

@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-tccd-v5-stage-a-pair-placement-stop
+phase: post-tccd-v6-post-gain-decomposition-case-r1
 updated: 2026-09-22
 
 active_studies:
@@ -258,7 +258,22 @@ research_direction:
 authorized_next_action:
   status: none
   note: >-
-    No experiment is authorized. TCCD-v5 (2026-09-22, preregistration commit 539ee07, implementation commit 1ec96ff; remote A100 GPU1 only; official test never loaded) passed Gate 0 but failed the frozen Stage-A pair-placement screen: delta_place 0.000815183, delta_add 0.026945770, and delta_shuffle 0.000337422. Therefore paired seed 1, Stage-B PRE/POST E2E, official-valid full training, and official-test access are blocked; the specific hypothesis that nonlinear pair interpretation must occur before global pair aggregation is not supported. The next justified hypothesis is center-preserving occurrence composition, requiring a new preregistration. TCCD-v3b (2026-09-22) corrected the historical bridge to the full 64-D B-full pre-pair patch_encoder output and stopped at the preregistered L3 interface failure; no architecture rescue or additional sweeps are authorized. Historical TCCD-v3 is narrowed to the isolated 16-D e_struct channel claim. TCCD-v2 (2026-09-22) previously stopped at the absolute gate; any future architecture requires a new preregistration. TCCD-v0 (2026-09-21, seed 0, commit 008b5e3,
+    No experiment is authorized. TCCD-v6 (2026-09-22, preregistration commit
+    822a235, implementation commit e016b4d, device fix ac94dae; remote A100 GPU1
+    only; official test never loaded) passed Gate 0 and completed the frozen
+    POST-gain decomposition as Case R1 (NONLINEARITY NOT MATERIAL / RECON
+    SUFFICIENT). Label-free audit: A = 2*BAG/n reconstructible to 4.62e-07 and
+    all five D relation marginals reconstructible to <=1.53e-07; RECON 69 /
+    NOVEL 128. Stage A (all arms 24,193 params, identical init 9fbedb92...,
+    FULL reuse verified at delta 0.0): RECON-NL soup 0.252360463 (G_RECON
+    0.026003450, rho 0.995135), RECON-LINFACT soup 0.252556831 (nonlinearity gap
+    0.000196368 < 0.005, so no paired seed ran), NOVEL-NL soup 0.254013419 (rho
+    0.931877), against FULL 0.252233326 and BASE 0.278363913. The v5 POST gain is
+    base-reconstructible coordinate exposure / readout geometry, so
+    center-preserving composition is NOT the next priority; the registered next
+    hypothesis is an explicit normalization/moment-complete frozen
+    representation with a simple reader, requiring a new preregistration. TCCD-v5
+    (2026-09-22, preregistration commit 539ee07, implementation commit 1ec96ff; remote A100 GPU1 only; official test never loaded) passed Gate 0 but failed the frozen Stage-A pair-placement screen: delta_place 0.000815183, delta_add 0.026945770, and delta_shuffle 0.000337422. Therefore paired seed 1, Stage-B PRE/POST E2E, official-valid full training, and official-test access are blocked; the specific hypothesis that nonlinear pair interpretation must occur before global pair aggregation is not supported. The next justified hypothesis is center-preserving occurrence composition, requiring a new preregistration. TCCD-v3b (2026-09-22) corrected the historical bridge to the full 64-D B-full pre-pair patch_encoder output and stopped at the preregistered L3 interface failure; no architecture rescue or additional sweeps are authorized. Historical TCCD-v3 is narrowed to the isolated 16-D e_struct channel claim. TCCD-v2 (2026-09-22) previously stopped at the absolute gate; any future architecture requires a new preregistration. TCCD-v0 (2026-09-21, seed 0, commit 008b5e3,
     remote A100 GPU1; canonical PyG ZINC subset=True official train 10000;
     official valid AND official test never loaded; Gate 1 uses no y) tested
     whether a molecule can be represented as data-learned reusable local

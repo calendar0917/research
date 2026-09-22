@@ -1,0 +1,130 @@
+claim_id: claim-tccd-v6-post-gain-base-reconstructible-coordinate-exposure-20260922
+created: '2026-09-22T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the fixed internal ZINC split with the exact frozen TCCD-v2 PrototypeREL
+  representation and the exact TCCD-v5 pair cache, the TCCD-v5 POST Top-5 soup
+  gain (BASE 0.2783639132976532 to FULL 0.2522333264350891, G_FULL
+  0.0261305868625641) is essentially fully explained by POST coordinates that
+  are exactly reconstructible from h_base. A label-free algebra audit over all
+  10,000 cached graphs proves A_G = 2*BAG_G/n_G (max abs diff 4.62e-07) and
+  all five relation marginals D_G[r] = sum_{i<j} R_r[i,j] / C(n,2) (max
+  per-relation diff 1.53e-07) are deterministic functions of h_base; B and
+  C_prod are not. The frozen RECON mask has 69 nonzero coordinates and the
+  NOVEL mask 128, FULL = RECON + NOVEL, and all four arms share identical
+  24,193 trainable parameters, identical bit-level initialization
+  (9fbedb92...e8487f, equal to the v5 POST init checksum). RECON-NL reaches
+  Top-5 soup 0.252360463 (G_RECON 0.026003450, rho 0.995135); removing the ReLU
+  (RECON-LINFACT, identical parameters) gives 0.252556831, a nonlinearity gap
+  of only 0.000196368, far below the registered 0.005 R1 threshold. NOVEL-NL
+  reaches 0.254013419 (G_NOVEL 0.024350494, rho 0.931877), so genuinely new
+  prototype-distribution moments also suffice alone, but they are not
+  necessary. The preregistered final Case is R1: NONLINEARITY NOT MATERIAL /
+  RECON SUFFICIENT. The v5 POST gain is a readout / coordinate-geometry effect
+  (exposing the size-normalized prototype mean and normalized relation density
+  to a linear reader), not evidence of missing structural information or of a
+  need for occurrence-preserving / center-preserving composition. One seed per
+  new arm; no paired seed was authorized because the nonlinearity gap lies
+  below the ambiguity interval; internal-dev only.
+scope: >-
+  TCCD-v6 preregistration commit 822a235; formal implementation commit
+  e016b4d8031994ca0d33f15242b444488fbe8713; device-fix commit
+  ac94daea613d8d19bf5ef978756c82568918a157; remote A100 GPU1 only; seed 0;
+  fixed internal split seed 20260922 with 8000 train and 2000 dev; exact
+  TCCD-v2 PrototypeREL checkpoint (SHA-256
+  093e0e46d4d5dab7e5558b807d993d1136df58d8f531d6b9b3621e8ab05c0f42); exact
+  TCCD-v5 pair cache; 197-D mean pair descriptor decomposed into A (64),
+  B (64), C_prod (64), D (5); no prototype, encoder, temperature, relation, or
+  reader-protocol changes; PRE / PRE-SHUFFLE / center-preserving composition /
+  official-valid / official test never run or loaded.
+supporting_evidence:
+  - >-
+    Label-free audit on all 10,000 graphs: A reconstructible to 4.62e-07,
+    all five D marginals to <=1.53e-07, independent S_all identity at 1.08e-07
+    relative; RECON 69 / NOVEL 128; FULL = RECON + NOVEL exact.
+  - >-
+    Gate 0 PASS on GPU1: parameter equality 24,193 across all four arms,
+    bit-identical init (max diff 0.0, checksum equal to v5 POST), v5 descriptor
+    equivalence 2.98e-08, relabel / batching / pair-order invariance, empty-pair
+    zero, official_test_loaded false.
+  - >-
+    FULL-NL reuse re-evaluated exactly: soup 0.2522333264350891 (delta 0.0),
+    best 0.2608269155025482 (delta 0.0) against the frozen v5 result.
+  - >-
+    Stage A: RECON-NL soup 0.252360463 (rho_RECON 0.995135), RECON-LINFACT
+    0.252556831 (nonlinearity gap 0.000196368), NOVEL-NL 0.254013419
+    (rho_NOVEL 0.931877); best-checkpoint agreement (RECON-NL best 0.257836252
+    is better than FULL best 0.260826916).
+  - >-
+    Registered decision precedence R > M > J > N yields Case R1; M also holds
+    as a redundant-block observation.
+contradicting_evidence:
+  - >-
+    One seed per new arm; the registered seed-1 route never triggered because
+    the nonlinearity gap is far below the 0.005 ambiguity interval.
+  - >-
+    The three new arms are close in soup MAE (0.252360 / 0.252557 / 0.254013),
+    so no ordering between RECON and NOVEL is claimed; the conclusion rests on
+    the registered sufficiency and nonlinearity-gap gates only.
+  - >-
+    Internal-dev only: no official-valid training and no official-test read;
+    absolute-level claims are out of scope.
+evidence:
+  - tracks/ksvd/notes/tccd_v6_post_gain_decomposition_preregistration.md
+  - tracks/ksvd/notes/tccd_v6_post_gain_decomposition_analysis.md
+  - tracks/ksvd/results/tccd_v6/label_free_audit.json
+  - tracks/ksvd/results/tccd_v6/gate0.json
+  - tracks/ksvd/results/tccd_v6/stageA_seed0.json
+  - tracks/ksvd/code/tccd_v6.py
+  - tracks/ksvd/code/run_tccd_v6.py
+  - tracks/ksvd/tests/test_tccd_v6.py
+gate0:
+  all_pass: true
+  official_test_loaded: false
+  parameter_equality: true
+  init_bit_identical: true
+  init_matches_v5_post: true
+  v5_descriptor_equivalence_max_abs_diff: 2.9802322387695312e-08
+  A_reconstructible: true
+  A_max_abs_diff: 4.6193599700927734e-07
+  D_status: BASE_RECONSTRUCTIBLE
+  recon_mask_nonzero: 69
+  novel_mask_nonzero: 128
+stage_a:
+  base_best_valid_mae: 0.28791576623916626
+  base_soup_valid_mae: 0.2783639132976532
+  full_nl_best_valid_mae: 0.2608269155025482
+  full_nl_soup_valid_mae: 0.2522333264350891
+  recon_nl_best_valid_mae: 0.257836252450943
+  recon_nl_soup_valid_mae: 0.252360463142395
+  recon_linfact_best_valid_mae: 0.26240912079811096
+  recon_linfact_soup_valid_mae: 0.25255683064460754
+  novel_nl_best_valid_mae: 0.2638615369796753
+  novel_nl_soup_valid_mae: 0.25401341915130615
+  g_full: 0.026130586862564087
+  g_recon: 0.02600345015525818
+  g_novel: 0.024350494146347046
+  rho_recon: 0.9951345636447205
+  rho_novel: 0.9318770479369797
+  nonlinearity_gap: 0.00019636750221252441
+  trainable_parameters_per_arm: 24193
+  init_checksum: 9fbedb92ced44449ade422b152684e3706f34fb943c32b5bfd64979290e8487f
+  case: R1
+  runtime_s: 466.01937651634216
+  peak_mem_mb: 109.2333984375
+decision: CASE_R1_NONLINEARITY_NOT_MATERIAL
+interpretation: >-
+  The v5 POST gain is recovered to 99.51% by 69 base-reconstructible
+  coordinates with a small nonlinear decoder and to 99.25% with the
+  nonlinearity removed. The primary TCCD bottleneck within the frozen
+  representation is readout / coordinate geometry (normalization and
+  conditioning of the global summary), not missing structural information.
+  Genuinely new prototype-distribution moments are not required, and
+  occurrence-preserving / center-preserving composition is not supported as
+  the next priority.
+next_hypothesis: >-
+  An explicit normalization/moment-complete frozen representation with a
+  simple reader, under a new preregistration; no deeper MLP, no new pair
+  enumeration, no structural channel, official test remains closed.
