@@ -1,0 +1,97 @@
+claim_id: claim-zinc-static-dict-pair-v1-seed1-directional-not-mechanism-20260922
+created: '2026-09-22T00:00:00Z'
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+supersedes: claim-zinc-static-dict-pair-v0-dictionary-specific-signal-20260922
+statement: >-
+  In a paired seed-1 confirmation (commit 1cb4fc7, remote A100, official ZINC
+  train 10000 / official valid 1000, official test never loaded) of the
+  strict-static dictionary-pair seed-0 signal, each arm was forced to 240 epochs
+  with a shadow early-stopping tracker. The ARM-LEVEL direction replicates but
+  the MECHANISM does not. Equal-horizon best official-valid MAE: S0 0.139389
+  @233, S-Dense 0.145830 @164, S-Dict 0.138020 @240; Top-5 soups 0.136423 /
+  0.141608 / 0.134697. This gives Gbase_1 = S0 - Dict = +0.001369 (below the
+  0.004 gate) and Gdict_1 = Dense - Dict = +0.007811 (above the 0.002 gate);
+  soup values are +0.001726 and +0.006912. Pre-registered case B2
+  (SEED1_DIRECTIONAL_REPLICATION). Critically, the dictionary residual is inert
+  at the seed-1 best checkpoint: residual scale gamma fell 0.100 -> 3.75e-04
+  (0.0021 by epoch 100, ~0 thereafter), the residual-disable inference ablation
+  moves predictions by only 1.0e-05 on average (max 1.0e-04) versus 0.304
+  (max 0.983) in seed 0, and the code became near-uniform (entropy 4.068 of
+  ln64=4.159, effective atoms 58.45, top-8 mass 0.239, tau 0.20 -> 0.547).
+  The matched S-Dense branch collapsed likewise (gamma 9.5e-05). Because the
+  shadow tracker never stopped S0 or S-Dict, the equal-horizon and
+  original-protocol views coincide for them; the zero-training seed-0
+  common-horizon audit (H_common 204) still shows the signal survives inside the
+  shared horizon (base_gain_common +0.006666, dict_gain_common +0.006949, A1),
+  and ~30.7 % of the seed-0 primary S0 - Dict margin came from epochs 205-240.
+scope: >-
+  Preregistration/implementation commit 1cb4fc7 (1cb4fc7eec47cbc474cd14d3fff6a880bb1c7477);
+  remote A100-SXM4-40GB GPUs 0 and 1; seed 1; inherited architecture contract
+  unchanged (center_context=False, center_update=None, strict-static, 302D
+  representation, small raw head 302->13->13->1; dictionary K=64 / d=32 / tau
+  init 0.20 / gamma init 0.1; matched dense H=53, 5,189 vs 5,201 branch params,
+  shared tensors bit-identical); inherited optimizer/LR/wd/batch/split/shuffle
+  conventions; forced 240 epochs + shadow patience-40 tracker. Three new full
+  runs; seed 0 NOT retrained; no HPO; no dictionary-conditioned pair kernel;
+  official test never loaded.
+supporting_evidence:
+  - >-
+    Phase A (zero training, seed-0 curves): H_common = 204 from durable
+    artifacts; M0c 0.145674 / MDc 0.145958 / MKc 0.139009; base_gain_common
+    +0.006666 >= 0.004 and dict_gain_common +0.006949 >= 0.002 -> A1
+    COMMON_HORIZON_SIGNAL_SURVIVES. The seed-0 direction is not created by the
+    extra 36 epochs S-Dict received.
+  - >-
+    seed1 shadow vs equal-horizon views are identical for S0 and S-Dict (shadow
+    never stopped; both kept improving within every 40-epoch window) and agree
+    for S-Dense (stopped 204, best 164), so the seed-1 result is not an
+    unequal-optimizer-step artifact.
+  - >-
+    Sign-consistent two-seed arm-level direction: mean S0 - Dict +0.005497
+    (best) / +0.004346 (soup); mean Dense - Dict +0.008859 (best) / +0.007871
+    (soup).
+  - >-
+    Strict-static contract passes for all seed-1 arms (center_context False,
+    center_update None, forward with _pool_pairs_to_centres raising, pair and
+    relation encoders called once, h_i bit-identical under pair mutation, pair
+    order invariant <=1.9e-6); dictionary/Wq/Wv gradients alive at step 0.
+  - >-
+    Residual-disable ablation directly measures the branch contribution: seed-1
+    S-Dict mean/max shift 1.02e-05 / 1.02e-04 and S-Dense 9.28e-07 / 9.54e-06,
+    against seed-0 S-Dict 0.3044 / 0.9832 and S-Dense 0.0339 / 0.1563.
+contradicting_evidence:
+  - >-
+    Seed-1 S0 is 0.006285 better than seed-0 S0 (0.139389 vs 0.145674), about
+    4.6x the seed-1 S0 - Dict margin (0.001369), so the weak S0 - Dict direction
+    is inside the baseline's own seed-to-seed variability and does not meet the
+    +0.004 gate.
+  - >-
+    The dictionary mechanism did not replicate: seed-1 gamma collapsed to
+    3.75e-04 with a 1e-05-scale ablation, so the seed-1 S-Dict best checkpoint is
+    effectively the strict-static base network. The Dense - Dict ordering is
+    therefore an early-trajectory/base-optimisation effect rather than an
+    endpoint dictionary mechanism.
+limitations:
+  - >-
+    Two seeds only; best-checkpoint over a very noisy per-epoch curve is a max
+    statistic (seed-1 S0 best at epoch 233 with valid 0.1633 at 240; seed-1
+    S-Dict best at the final epoch 240).
+  - >-
+    Phase-A restricted Top-5 weight soup is unavailable because v0 persisted
+    only the best checkpoint; the best-5 validation-MAE mean is explicitly not
+    presented as a weight soup.
+  - >-
+    gamma decay is a training-dynamics outcome; no entropy/sparsity/scale
+    regularizer, K/tau sweep or rescue was authorized, so the cause of the
+    collapse is not identified by this round.
+evidence:
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_v1_preregistration.md
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_v1_analysis.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair_v1_confirmation/RESULTS_SUMMARY.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair_v1_confirmation/analysis.json
+  - tracks/ksvd/results/zinc_static_dictionary_pair_v1_confirmation/common_horizon_audit.json
+  - tracks/ksvd/results/zinc_static_dictionary_pair_v1_confirmation/provisional.json
+  - tracks/ksvd/experiments/luyin16/zinc_static_dictionary_pair_v1_confirmation.py
+  - tracks/ksvd/tests/test_zinc_static_dictionary_pair_v1.py

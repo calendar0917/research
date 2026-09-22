@@ -961,6 +961,26 @@ def _write_summary_markdown(payload: Mapping[str, Any]) -> None:
     lines.append(f"* equal-horizon soup: `S0 - Dict` {cls['Gbase_1_soup']:+.6f}, `Dense - Dict` {cls['Gdict_1_soup']:+.6f}")
     lines.append(f"* equal-horizon case: **{cls['case']}**")
     lines.append("")
+    lines.append("## Mechanism check at the seed-1 best checkpoint")
+    lines.append("")
+    lines.append("| arm | gamma_final | mean residual norm (diag) | ablation mean shift | ablation max shift |")
+    lines.append("|---|---|---|---|---|")
+    runs_dir = RESULTS_DIR / "runs"
+    for arm in ARMS:
+        run = _read_json(runs_dir / f"{arm}_seed{SEED1}.json")
+        diag = run.get("dictionary_diagnostics") or {}
+        abl = run.get("residual_ablation") or {}
+        lines.append(
+            f"| {ARM_LABEL[arm]} | {run['gamma_final']:+.6f} | "
+            f"{diag.get('mean_residual_norm', float('nan'))} | "
+            f"{abl.get('mean_abs_prediction_shift')} | {abl.get('max_abs_prediction_shift')} |"
+        )
+    lines.append("")
+    lines.append(
+        "A near-zero `gamma_final` means the residual adapter is inert at the best "
+        "checkpoint (the run is effectively the strict-static base network)."
+    )
+    lines.append("")
     lines.append("## Seed-1 shadow-protocol view (simulated v0 early stopping)")
     lines.append("")
     lines.append("| arm | best MAE | best epoch | stop epoch | Top-5 soup |")

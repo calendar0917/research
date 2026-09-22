@@ -1,0 +1,129 @@
+decision_id: decision-zinc-static-dict-pair-v1-stop-confirmatory-pair-kernel-20260922
+created: '2026-09-22T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The v0 strict-static dictionary-pair round produced a Case-A seed-0 signal but
+  carried a documented confound: S-Dict ran 240 epochs (best 225) while S0
+  stopped at 204 (best 164) and S-Dense at 210 (best 170), so the dictionary
+  checkpoint was selected from more optimizer steps.  This round isolated one
+  falsifiable question: after removing the unequal-checkpoint-opportunity
+  confound, does the dictionary-specific signal replicate on seed 1?
+protocol: >-
+  Local-first implementation with targeted CPU tests, then remote A100 execution
+  under the remote-research-runner workflow.  Preregistration and implementation
+  commit 1cb4fc7eec47cbc474cd14d3fff6a880bb1c7477.  Phase A is a zero-training
+  common-horizon audit of the existing seed-0 curves.  Phase B is exactly three
+  seed-1 full-training runs (S0 GPU0, S-Dict GPU1 in parallel; S-Dense GPU0
+  after a provisional check) with the v0 architecture, tokenizer, topology, head,
+  optimizer, LR, wd, batch, split, shuffle-seed convention and parameter
+  matching unchanged.  Every arm is forced to the full 240 epochs and a shadow
+  early-stopping tracker (patience 40) simulates the v0 protocol without
+  stopping the optimizer, so each run yields both the equal-horizon and the
+  original-protocol views.  Official ZINC train 10000 / official valid 1000,
+  seed 1, official test never loaded.
+results:
+  implementation_commit: 1cb4fc7eec47cbc474cd14d3fff6a880bb1c7477
+  devices: [A100-SXM4-40GB GPU0, A100-SXM4-40GB GPU1]
+  seed: 1
+  phase_a_H_common: 204
+  phase_a_M0c: 0.14567435123870381
+  phase_a_MDc: 0.1459580120528699
+  phase_a_MKc: 0.13900858746742598
+  phase_a_base_gain_common: 0.006665763771277838
+  phase_a_dict_gain_common: 0.006949424585443925
+  phase_a_verdict: COMMON_HORIZON_SIGNAL_SURVIVES
+  phase_a_restricted_top5_soup: unavailable_from_saved_states
+  phase_a_late_window_share_of_seed0_margin: 0.3074
+  seed1_s0_equal_best: 0.1393890990539803
+  seed1_s0_equal_best_epoch: 233
+  seed1_s0_equal_soup: 0.13642283965486587
+  seed1_dense_equal_best: 0.14583049337664852
+  seed1_dense_equal_best_epoch: 164
+  seed1_dense_equal_soup: 0.1416083769113164
+  seed1_dict_equal_best: 0.13801988949353108
+  seed1_dict_equal_best_epoch: 240
+  seed1_dict_equal_soup: 0.13469725379078525
+  seed1_Gbase_1: 0.001369209560449225
+  seed1_Gdict_1: 0.00781060388311744
+  seed1_Gbase_1_soup: 0.0017264450032962453
+  seed1_Gdict_1_soup: 0.006911537233740078
+  seed1_case: B2_SEED1_DIRECTIONAL_REPLICATION
+  shadow_stop_epoch: {s0: null, dense: 204, dict: null}
+  seed1_dict_gamma_final: 0.0003750676996782422
+  seed1_dense_gamma_final: 9.5e-05
+  seed1_dict_residual_ablation_mean_shift: 1.0206058621406556e-05
+  seed1_dict_residual_ablation_max_shift: 0.00010204315185546875
+  seed0_dict_gamma_final: 0.18063220381736755
+  seed0_dict_residual_ablation_mean_shift: 0.30436395554244516
+  seed1_dict_effective_atoms: 58.45116
+  seed1_dict_assignment_entropy: 4.068192
+  seed1_dict_tau_final: 0.5473164319992065
+  two_seed_mean_s0_minus_dict_best: 0.005497
+  two_seed_mean_dense_minus_dict_best: 0.008859
+  two_seed_mean_s0_minus_dict_soup: 0.004346
+  two_seed_mean_dense_minus_dict_soup: 0.007871
+  sign_consistent_across_seeds: true
+  strict_static_contract_passed: true
+  initialization_match_bit_identical: true
+  full_training_runs: 3
+  total_gpu_wall_clock_s: 3109.3526502088644
+  formal_elapsed_wall_clock_s: 2181
+  official_test_loaded: false
+decision: >-
+  Do NOT authorize the occurrence-level dictionary-conditioned pair kernel as a
+  confirmatory next round.  First run a separate preregistered stability round
+  on the residual dictionary itself (gamma / liveness dynamics under the same
+  strict-static contract, with matched controls and mandatory gamma + ablation
+  liveness diagnostics).  Only if the dictionary is demonstrably live and
+  seed-stable may the pair kernel be registered as a confirmatory experiment.
+because: >-
+  The seed-1 confirmation is B2 directional replication only.  Arm-level, S-Dict
+  beats S0 on both views by a sub-gate margin (+0.001369 best / +0.001726 soup,
+  gate 0.004) and beats the matched S-Dense control (+0.007811 / +0.006912,
+  sign-consistent with seed 0), and the zero-training common-horizon audit shows
+  the seed-0 signal survives inside the shared 204-epoch window.  But the
+  mechanism did not replicate: at the seed-1 best checkpoint the residual scale
+  gamma collapsed to 3.75e-04 (0.0021 by epoch 100, ~0 from ~epoch 140), the
+  residual-disable ablation moves predictions by only 1.0e-05 (max 1.0e-04)
+  versus 0.304 in seed 0, the code became near-uniform (entropy 4.068 of 4.159,
+  58.45 effective atoms, tau 0.20 -> 0.547), and the matched dense branch
+  collapsed likewise.  So the seed-1 S-Dict endpoint is effectively the
+  strict-static base network and the Dense - Dict ordering reflects early
+  residual-induced base-trajectory differences, not a live dictionary at the
+  endpoint.  Additionally seed-1 S0 improved 0.006285 over seed-0 S0, ~4.6x the
+  S0 - Dict margin, so that margin is inside baseline seed variability.
+  Building the pair kernel on this unstable mechanism would be premature.
+alternatives_rejected:
+  - >-
+    Declaring SEED1_DICT_SPECIFIC_REPLICATION from the arm-level Dense - Dict gap.
+    Rejected: B2 requires the S0 gate (0.004) which fails, and the dictionary
+    residual is provably inert at the seed-1 best checkpoint.
+  - >-
+    Declaring SEED1_NO_REPLICATION from the sub-gate S0 - Dict margin.  Rejected:
+    the direction is positive on both views and both metrics, and the
+    dictionary still beats the parameter-matched dense control on both seeds.
+  - >-
+    Stopping before buying S-Dense seed 1.  Rejected: the provisional check gave
+    a positive-but-subthreshold direction, so the matched dense control was
+    required to evaluate the B-gates.
+  - >-
+    Retraining seed 0 to a symmetric 240-epoch table, or adding seed 2/3, or
+    sweeping K/tau/gamma/regularizers in this round.  Rejected: forbidden by the
+    round; the gamma collapse is recorded as a finding, not rescued.
+revisit_if: >-
+  A preregistered stability study shows the residual dictionary stays live
+  (gamma bounded away from 0 with a non-trivial residual ablation) across at
+  least two seeds under the same strict-static contract; then the
+  occurrence-level dictionary-conditioned pair kernel becomes a candidate
+  confirmatory round.  Also revisit if a seed-2 S0 run lands near 0.1457 (making
+  the seed-1 S0 0.1394 look like an outlier) or near 0.1394 (confirming the
+  stronger baseline and further shrinking the S0 - Dict margin).
+evidence:
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_v1_preregistration.md
+  - tracks/ksvd/notes/zinc_static_dictionary_pair_v1_analysis.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair_v1_confirmation/RESULTS_SUMMARY.md
+  - tracks/ksvd/results/zinc_static_dictionary_pair_v1_confirmation/analysis.json
+  - tracks/ksvd/results/zinc_static_dictionary_pair_v1_confirmation/provisional.json
+  - tracks/ksvd/experiments/luyin16/zinc_static_dictionary_pair_v1_confirmation.py
+  - tracks/ksvd/tests/test_zinc_static_dictionary_pair_v1.py
