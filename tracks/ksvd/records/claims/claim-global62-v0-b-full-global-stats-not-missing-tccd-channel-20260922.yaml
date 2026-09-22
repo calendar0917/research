@@ -1,0 +1,158 @@
+claim_id: claim-global62-v0-b-full-global-stats-not-missing-tccd-channel-20260922
+created: '2026-09-22T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the fixed internal ZINC split, with the exact frozen TCCD-v5 PRE Top-5
+  soup prediction as the base and the exact 62-D B-Full global context
+  (global_feature_views(...)["global_all"] = short 15 + long 15 + atom
+  histogram 28 + bond histogram 4), a single fixed residual head
+  (62 -> Linear(62,32) -> LayerNorm(32) -> ReLU -> Linear(32,32) -> ReLU ->
+  Linear(32,1), 3169 parameters) does NOT recover a material amount of
+  task-relevant graph-level information. Frozen base reproduces exactly:
+  MAE_BASE 0.251418160446 vs the formal v5 PRE reference 0.2514181435108185
+  (abs delta 1.69e-8). BASE+REAL GLOBAL62 Top-5 soup is 0.251032248318, so
+  G_total 0.000385912128; the bias-only control gives b* -0.008749365807 and
+  MAE_BIAS 0.251554300576 (worse than base), so G_global 0.000522052258; the
+  evaluation-only deterministic dev derangement gives MAE_SHUFFLE
+  0.252333112178 and G_bind 0.001300863860. G_global < 0.005 fires the
+  preregistered Case D and G_bind < 0.005 fires the shuffle-precedence rule,
+  so even the 0.00039 total movement must be read as head capacity /
+  optimization effect, not as correct molecule<->global binding. The head
+  fits the train residual (train L1 0.151530 -> 0.113521 over 53 epochs, best
+  epoch 13) while dev stays flat. The gap_closed_fraction is 0.002932 (0.29%)
+  of the 0.2514 -> 0.1198 gap, leaving 0.131214. Read-only size
+  stratification shows no stratum is repaired: large (n 25-37) improvement
+  0.001239 against 0.328138 absolute error, medium 0.000403, small -0.000484.
+  Per-column raw global residual correlations are unstable (train
+  max|Pearson| 0.0588, dev max|Pearson| 0.2246 at degree.min with train
+  0.0161). The correct conclusion is that B-Full's plain graph-level summary
+  statistics are not a hidden reservoir that the frozen TCCD route fails to
+  use; this closes the "missing global statistics" explanation for the TCCD
+  ceiling.
+scope: >-
+  Preregistration commit 4d71f4398b82dde23d61786762076ace8ddf823b;
+  formal implementation/result commit 60f4b25f9c0c7417bc92028882cbb1e9e239d50d;
+  local CPU execution; seed 0; fixed internal split seed 20260922 with 8000
+  train and 2000 dev; exact frozen TCCD-v5 PRE soup state
+  tracks/ksvd/results/tccd_v5/stageA_pre_seed0_soup.pt (SHA-256
+  93325ac48f2b001899a307e3368db3efaa52a60247727ac02ce2368809a61441) forwarded
+  over the reused TCCD-v5 pair cache; frozen TCCD-v2 checkpoint SHA-256
+  093e0e46d4d5dab7e5558b807d993d1136df58d8f531d6b9b3621e8ab05c0f42;
+  exact B-Full global_all 62-D context; train-only standardizer (constant
+  columns 17,51,52,53,54,55,56,57,58); residual head 3169 parameters; fixed
+  seed-0 protocol (Adam lr 1e-3, wd 1e-5, L1, batch 128, max 240, patience 40,
+  Top-5 soup, no clipping); evaluation-only derangement seed 20260923; no
+  baseline rerun; no seed 1; no width/depth sweep; no feature selection; no
+  official valid; official test never loaded.
+supporting_evidence:
+  - >-
+    Gate 0 PASS: base reproduction abs delta 1.69e-8; 62-D width/finiteness/
+    determinism/histogram normalization; label alignment to cached targets
+    <= 1e-6; label-free check with perturbed Data.y leaves global_all
+    bit-identical; train-only standardizer mean/std reproduced; gradient
+    reaches all 3169 head parameters and no frozen TCCD parameter; shuffle
+    derangement has no fixed points and preserves the dev multiset exactly;
+    bias-only computed on train residuals only.
+  - >-
+    Stage A: BASE 0.251418160446, BIAS_ONLY 0.251554300576, REAL soup
+    0.251032248318 / best 0.251135724669, SHUFFLED soup 0.252333112178 / best
+    0.252032670749; G_total 0.000385912128, G_global 0.000522052258, G_bind
+    0.001300863860; best-checkpoint G_total 0.000282435777, G_global
+    0.000418575907, G_bind 0.000896946080; gap_closed_fraction 0.002932.
+  - >-
+    Mechanism: deterministic initialization checksum
+    e155425a905dd4d186aaf91657622a3739c64173908b10849a0a7c2e211c4a4e; 53
+    epochs, best epoch 13, soup members [13,17,24,32,7]; train L1 0.151530 ->
+    0.113521 while dev is flat; reruns at commit 60f4b25 reproduce the exact
+    numbers.
+  - >-
+    Size stratification: small (n 9-21) improvement -0.000484, medium (21-25)
+    0.000403, large (25-37) 0.001239 with base MAE 0.328138, so the 62-D
+    global block does not fix the large-molecule failure.
+contradicting_evidence:
+  - >-
+    The shuffle direction is consistent with real binding (MAE_SHUFFLE
+    0.252333 > MAE_REAL 0.251032), i.e. G_bind is positive, just far below the
+    0.005 precedence threshold; the claim is therefore "no material
+    generalizable signal", not "the features are provably unused".
+  - >-
+    Only one seed and internal-dev only; the 62 columns are the existing
+    B-Full views, so the result does not exclude a different, richer global
+    summary.
+  - >-
+    One dev column (degree.min) has |Pearson| 0.225 with the residual but only
+    0.0161 on train; it is reported as unstable and is not used.
+evidence:
+  - tracks/ksvd/notes/global62_residual_preregistration.md
+  - tracks/ksvd/notes/global62_residual_analysis.md
+  - tracks/ksvd/results/global62_residual/gate0.json
+  - tracks/ksvd/results/global62_residual/stageA_seed0.json
+  - tracks/ksvd/results/global62_residual/stageA_decision.json
+  - tracks/ksvd/code/global62_residual.py
+  - tracks/ksvd/code/run_global62_residual.py
+  - tracks/ksvd/tests/test_global62_residual.py
+gate0:
+  all_pass: true
+  official_valid_loaded: false
+  official_test_loaded: false
+  base_reproduction_abs_delta: 1.6935053304134584e-08
+  global_width: 62
+  global_finite_rate: 1.0
+  global_deterministic: true
+  label_alignment_ok: true
+  label_free: true
+  standardizer_std_from_train: true
+  constant_columns: [17, 51, 52, 53, 54, 55, 56, 57, 58]
+  gradient_reaches_head: true
+  frozen_tccd_grad_none_after_head_backward: true
+  shuffle_no_fixed_points: true
+  shuffle_multiset_preserved: true
+  parameter_accounting_total: 3169
+stage_a:
+  mae_base: 0.2514181604458718
+  mae_base_formal_reference: 0.2514181435108185
+  mae_bias_only: 0.25155430057633205
+  bias_star: -0.00874936580657959
+  mae_real_global62_soup: 0.2510322483180789
+  mae_real_global62_best: 0.251135724669206
+  mae_shuffled_global62_soup: 0.25233311217825394
+  mae_shuffled_global62_best: 0.25203267074923497
+  g_total: 0.00038591212779287565
+  g_global: 0.0005220522582531362
+  g_bind: 0.0013008638601750278
+  g_total_best: 0.00028243577666581254
+  g_global_best: 0.00041857590712607307
+  g_bind_best: 0.000896946080028993
+  gap_closed_fraction: 0.0029324599897960564
+  remaining_gap_to_b_full: 0.131214
+  b_full_scale_reference: 0.11981802638241788
+  trainable_parameters: 3169
+  init_checksum: e155425a905dd4d186aaf91657622a3739c64173908b10849a0a7c2e211c4a4e
+  best_epoch: 13
+  soup_members: [13, 17, 24, 32, 7]
+  epochs_run: 53
+  train_l1_first: 0.15152985990047455
+  train_l1_last: 0.11352151060104371
+  shuffle_seed: 20260923
+  n_train: 8000
+  n_dev: 2000
+  case: DOWNGRADED_SHALLOW_BINDING
+  runtime_s: 13.17920207977295
+decision: CASE_D_NO_MATERIAL_GLOBAL_SIGNAL
+interpretation: >-
+  The 62-D B-Full global context does not carry material task-relevant
+  information beyond the frozen TCCD-v5 PRE prediction. G_global 0.000522 is
+  an order of magnitude below the 0.005 small-signal floor, G_bind 0.001301 is
+  below the 0.005 shuffle-precedence threshold, and only 0.29% of the
+  0.2514 -> 0.1198 gap is closed. The head demonstrably fits train residuals
+  while dev is flat, so the residual movement is capacity/optimization, not
+  transferable graph-level signal. The "missing plain graph-level statistics"
+  explanation for the TCCD ceiling is closed.
+next_hypothesis: >-
+  No global-context architecture rescue and no added feature blocks. A new
+  preregistration should test whether the frozen ceiling is a local-object
+  adequacy question (radius-2 canonical patch coordinates plus the prototype
+  vocabulary learned on them), with matched controls; official test stays
+  closed.

@@ -1,0 +1,132 @@
+decision_id: decision-global62-v0-stop-missing-global-stats-20260922
+created: '2026-09-22T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  TCCD-v6 showed the recent frozen gains are base-reconstructible coordinate
+  exposure, and CENTER-COMP-v0 showed a single pair-to-center incidence layer
+  is used but does not break the ~0.25 ceiling. Both are local/incidence
+  stories. The one remaining naive explanation was that the frozen TCCD route
+  is simply not using the plain graph-level statistics that a strong model
+  like B-Full feeds to its global encoder. TCCD-GLOBAL62-v0 tested exactly
+  that single block: with the frozen TCCD prediction fixed and correct, does
+  the exact 62-D B-Full global context add material signal beyond a bias-only
+  control, and only if the molecule<->global binding is correct?
+protocol: >-
+  Local CPU execution; seed 0; fixed internal 8000/2000 split (split seed
+  20260922); exact frozen TCCD-v5 PRE Top-5 soup state forwarded over the
+  reused TCCD-v5 pair cache (no TCCD training); exact B-Full
+  global_feature_views(...)["global_all"] 62-D context (= short 15 + long 15
+  + atom histogram 28 + bond histogram 4); train-only standardizer; residual
+  target r = y - yhat_base on internal train only; final prediction
+  yhat_base + f(g); one fixed residual head 62 -> Linear(62,32) ->
+  LayerNorm(32) -> ReLU -> Linear(32,32) -> ReLU -> Linear(32,1), 3169
+  parameters; L1 on the final prediction; Adam lr 1e-3, wd 1e-5, batch 128,
+  max 240 epochs, patience 40, Top-5 soup, no clipping; bias-only control
+  b* = median train residual; evaluation-only deterministic dev derangement
+  (seed 20260923, no fixed points, multiset preserved) on the trained head.
+  No baseline rerun, no seed 1, no width/depth sweep, no feature selection, no
+  topology/patch/pair features, no official valid, official test never
+  loaded.
+results:
+  preregistration_commit: 4d71f4398b82dde23d61786762076ace8ddf823b
+  implementation_commit: 60f4b25f9c0c7417bc92028882cbb1e9e239d50d
+  v2_checkpoint_sha256: 093e0e46d4d5dab7e5558b807d993d1136df58d8f531d6b9b3621e8ab05c0f42
+  v5_pre_soup_sha256: 93325ac48f2b001899a307e3368db3efaa52a60247727ac02ce2368809a61441
+  device: cpu
+  seed: 0
+  split_seed: 20260922
+  n_train: 8000
+  n_dev: 2000
+  trainable_parameters: 3169
+  init_checksum: e155425a905dd4d186aaf91657622a3739c64173908b10849a0a7c2e211c4a4e
+  mae_base: 0.2514181604458718
+  mae_base_formal_reference: 0.2514181435108185
+  base_reproduction_abs_delta: 1.6935053304134584e-08
+  mae_bias_only: 0.25155430057633205
+  bias_star: -0.00874936580657959
+  mae_real_global62_soup: 0.2510322483180789
+  mae_real_global62_best: 0.251135724669206
+  mae_shuffled_global62_soup: 0.25233311217825394
+  mae_shuffled_global62_best: 0.25203267074923497
+  g_total: 0.00038591212779287565
+  g_global: 0.0005220522582531362
+  g_bind: 0.0013008638601750278
+  g_total_best: 0.00028243577666581254
+  g_global_best: 0.00041857590712607307
+  g_bind_best: 0.000896946080028993
+  gap_closed_fraction: 0.0029324599897960564
+  b_full_scale_reference: 0.11981802638241788
+  gate0_pass: true
+  case: DOWNGRADED_SHALLOW_BINDING
+  official_valid_loaded: false
+  official_test_loaded: false
+  runtime_s: 13.17920207977295
+decision: >-
+  CASE D — NO MATERIAL GLOBAL SIGNAL, with the shuffle precedence also firing.
+  G_global 0.000522052258 is an order of magnitude below the 0.005
+  small-signal floor, G_bind 0.001300863860 is below the 0.005 precedence
+  threshold, and only 0.29% of the 0.2514 -> 0.1198 gap is closed. The
+  bias-only control is already worse than base, so there is no intercept
+  miscalibration to remove. Because the head fits train residuals while dev
+  stays flat, the tiny movement must be read as head capacity / optimization
+  effect. Close the "frozen TCCD is missing plain graph-level statistics"
+  explanation; no global-context architecture rescue.
+alternatives_rejected:
+  - item: Add topology 25-D / patch_cont 146 / pair_relation / local-state
+      bridge / RDKit descriptors to the same probe
+    because: >-
+      the preregistration froze the 62-D block as the single variable; prior
+      compact-v4 topology work already bounded the topology increment near
+      ~0.01 MAE, and the registered Case D explicitly forbids widening the
+      block within this round.
+  - item: Sweep head width/depth or swap the MLP for a linear probe
+    because: >-
+      the head is fixed once by preregistration with no sweep; the train L1
+      fell from 0.1515 to 0.1135 while dev stayed flat, so additional capacity
+      addresses the wrong failure mode.
+  - item: Run a paired seed 1
+    because: >-
+      GLOBAL62-v0 is a single-seed screen; the registered Case D rule fires on
+      G_global, and the seed-1 route was never authorized.
+  - item: Re-run TCCD-v2/v5/v6 or B-Full for a matched comparison
+    because: >-
+      the base prediction is the exact frozen v5 PRE soup and reproduces the
+      formal number to 1.69e-8; re-running would add noise, not information.
+  - item: Open official ZINC valid or test
+    because: >-
+      the round is internal-dev only and the official test stays closed.
+consequences:
+  - >-
+    B-Full's 62-D graph-level summary block is not a hidden reservoir of
+    task-relevant information that frozen TCCD fails to use; the ~0.13 MAE
+    gap is not a missing-plain-statistics problem.
+  - >-
+    Together with TCCD-v6 (gains are coordinate exposure) and CENTER-COMP-v0
+    (single incidence layer used but insufficient), the frozen-ceiling
+    bottleneck is now not attributable to global summary statistics, nor to
+    single-layer occurrence placement.
+  - >-
+    The large-molecule error (base MAE 0.328138 for n 25-37) is not repaired
+    by the 62-D global block (improvement 0.001239), so the large-graph
+    shortfall also needs a different explanation.
+revisit_if: >-
+  A new preregistration specifies a different, richer global representation
+  with matched controls and a binding-shuffle control; or a new diagnostic
+  isolates local-object adequacy (radius-2 canonical patch coordinates plus
+  the frozen prototype vocabulary) independently of any pooling or context
+  channel. Not by adding feature blocks to this probe, not by a head sweep,
+  and not by an official-test read.
+next_action: >-
+  NONE auto-authorized. Do not build a global-context rescue. Draft a new
+  preregistration only for a local-object adequacy question with matched
+  controls; official ZINC test stays closed.
+evidence:
+  - tracks/ksvd/notes/global62_residual_preregistration.md
+  - tracks/ksvd/notes/global62_residual_analysis.md
+  - tracks/ksvd/results/global62_residual/gate0.json
+  - tracks/ksvd/results/global62_residual/stageA_seed0.json
+  - tracks/ksvd/results/global62_residual/stageA_decision.json
+  - tracks/ksvd/code/global62_residual.py
+  - tracks/ksvd/code/run_global62_residual.py
+  - tracks/ksvd/tests/test_global62_residual.py
