@@ -1,0 +1,62 @@
+claim_id: claim-tccd-v4-twohop-assembly-no-material-increment-20260922
+created: '2026-09-22T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the fixed internal ZINC split, a parameter-free normalized two-hop walk
+  moment M2 = C^T S^2 C does not materially add predictive information beyond
+  the exact TCCD-v2 relation set under a frozen TCCD-v2 PrototypeREL
+  representation and matched lightweight readers. The primary topology-mismatch
+  delta is 0.0000068843 MAE and the BASE-vs-REAL2 additive delta is
+  -0.0000134408 MAE, both far below the preregistered 0.005 Stage-A failure
+  threshold. This does not show that topology is irrelevant; it supports the
+  narrower conclusion that one additional normalized two-hop aggregated moment
+  does not overcome the TCCD-v2 ceiling and that early occurrence aggregation
+  may be the leading bottleneck.
+scope: >-
+  TCCD-v4 preregistration; formal implementation commit
+  2e0218a121d26737a5fff9e45bfaf4cbad4a4b25; remote A100 GPU1; seed 0; fixed
+  internal split seed 20260922 with 8000 train and 2000 dev; exact TCCD-v2
+  714-to-64 local encoder, K=64 prototypes, temperature, regularizers, and
+  existing relations; S=D^-1/2 A D^-1/2 from native untyped adjacency, R2=S^2
+  including diagonal; deterministic permutation seed 20260922; official test
+  never loaded.
+evidence:
+  - tracks/ksvd/notes/tccd_v4_higher_order_assembly_preregistration.md
+  - tracks/ksvd/notes/tccd_v4_higher_order_assembly_analysis.md
+  - tracks/ksvd/results/tccd_v4/gate0.json
+  - tracks/ksvd/results/tccd_v4/stageA_seed0.json
+  - tracks/ksvd/tests/test_tccd_v4.py
+gate0:
+  all_pass: true
+  official_test_loaded: false
+  exact_s2: true
+  permutation_invariant: true
+  batching_invariant: true
+  twohop_sensitivity: true
+  mismatch_effective: true
+stage_a:
+  base_best_valid_mae: 0.2879157066345215
+  base_soup_valid_mae: 0.27973058819770813
+  real2_best_valid_mae: 0.28792914748191833
+  real2_soup_valid_mae: 0.2780376076698303
+  mis2_best_valid_mae: 0.2879360318183899
+  mis2_soup_valid_mae: 0.2795582711696625
+  delta_topo_best: 0.000006884336471557617
+  delta_add_best: -0.000013440847396850586
+  delta_topo_soup: 0.0015206634998321533
+  delta_add_soup: 0.0016929805278778076
+  verdict: FAIL
+  n_train: 8000
+  n_dev: 2000
+  feature_width_base: 10464
+  feature_width_real2: 12544
+  feature_width_mis2: 12544
+  runtime_s: 163.07243084907532
+  peak_mem_mb: 498.06201171875
+decision: STOP_STAGE_A_FAIL
+next_action: >-
+  NONE auto-authorized. Do not run end-to-end +2hop, paired seed 1, S^3,
+  official-valid full training, or official-test evaluation. Any occurrence-
+  preserving representation requires a new preregistration.
