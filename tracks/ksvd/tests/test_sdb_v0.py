@@ -214,6 +214,17 @@ def check_binding_identity_exact() -> None:
     assert np.linalg.norm(residual) / (np.linalg.norm(c_phi) + 1e-12) < 1e-5  # float32-stored phi
 
 
+def check_iht_exact_sparsity() -> None:
+    from tracks.ksvd.code import tccd_v0 as T
+
+    D = torch.as_tensor(_dict(), dtype=torch.float32)
+    X = torch.as_tensor(np.random.default_rng(0).standard_normal((24, sdb.PHI_DIM)), dtype=torch.float32)
+    alpha = T.iht_codes(D, X, s=sdb.SPARSITY, steps=10).numpy()
+    max_l0, within = sdb.exact_sparsity(alpha)
+    assert within and max_l0 <= sdb.SPARSITY
+    assert alpha.shape == (24, sdb.K_ATOMS)
+
+
 # ---------------------------------------------------------------------------
 # pytest wrappers
 # ---------------------------------------------------------------------------
@@ -232,6 +243,7 @@ def check_binding_identity_exact() -> None:
         check_no_raw_or_mixed_bypass,
         check_no_official_test_access,
         check_binding_identity_exact,
+        check_iht_exact_sparsity,
     ],
 )
 def test_sdb_v0_checks(check) -> None:

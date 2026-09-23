@@ -32,6 +32,7 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 import torch
 
+from tracks.ksvd.code import tccd_v0 as T
 from tracks.ksvd.experiments.luyin16 import fsar_r2_ar0 as r2
 from tracks.ksvd.experiments.luyin16 import fsar_r2_ar0_mechanism as mech
 from tracks.ksvd.experiments.luyin16 import sdb_v0 as sdb
@@ -447,97 +448,110 @@ def _toy_molecule(n: int, edges: list[tuple[int, int]], atom_idx: Sequence[int],
     )
 
 
+def _toy_tree(rng: np.random.Generator, n: int) -> list[tuple[int, int]]:
+    edges: list[tuple[int, int]] = []
+    for node in range(1, int(n)):
+        parent = int(rng.integers(0, node))
+        edges.append((parent, node))
+    return edges
+
+
+def _synthetic_family(seed: int, count: int = 600) -> list[tuple[r2.MoleculeFeatures, float, int]]:
+    """Random trees (n in 5..8) with one hetero atom; balanced placements."""
+    rng = np.random.default_rng(int(seed))
+    rows: list[tuple[r2.MoleculeFeatures, float, int]] = []
+    for _ in range(int(count)):
+        n = int(rng.integers(5, 9))
+        edges = _toy_tree(rng, n)
+        degree = np.zeros(n, dtype=int)
+        for left, right in edges:
+            degree[left] += 1
+            degree[right] += 1
+        pos = int(rng.integers(0, n))
+        atoms = [0] * n
+        atoms[pos] = 1
+        endpoint = 1.0 if degree[pos] == 1 else 0.0
+        rows.append((_toy_molecule(n, edges, atoms, 0.0), endpoint, n))
+    return rows
+
+
+def _ridge_stats(
+    train_molecules: Sequence[r2.MoleculeFeatures],
+    valid_molecules: Sequence[r2.MoleculeFeatures],
+    D: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Flattened ``C_D`` and whole-graph marginal features for a ridge readout."""
+    codes_train = _codes(train_molecules, D)
+    codes_valid = _codes(valid_molecules, D)
+    c_train = sdb.binding_matrices_for_molecules(codes_train, train_molecules).reshape(len(train_molecules), -1)
+    c_valid = sdb.binding_matrices_for_molecules(codes_valid, valid_molecules).reshape(len(valid_molecules), -1)
+    a_train = np.stack([np.asarray(m.A, dtype=np.float64) for m in train_molecules])
+    a_valid = np.stack([np.asarray(m.A, dtype=np.float64) for m in valid_molecules])
+    return c_train, c_valid, a_train, a_valid
+
+
+def _ridge_mae(x_train, y_train, x_valid, y_valid) -> float:
+    from sklearn.linear_model import Ridge
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    model = make_pipeline(StandardScaler(), Ridge(alpha=1.0))
+    model.fit(np.asarray(x_train), np.asarray(y_train))
+    prediction = model.predict(np.asarray(x_valid))
+    return float(np.mean(np.abs(prediction - np.asarray(y_valid))))
+
+
 def _synthetic_positive() -> dict[str, Any]:
-    """Fixed marginals, chemistry placement changes only; label = endpoint N."""
+    """Fixed marginals, chemistry placement changes only; label = endpoint hetero."""
     D, _Drand, _pca = load_dictionary()
-    hetero = 1  # N-like category, distinct from carbon 0
-    examples: list[r2.MoleculeFeatures] = []
-    for n in range(4, 9):
-        path = [(i, i + 1) for i in range(n - 1)]
-        for pos in range(n):
-            atoms = [0] * n
-            atoms[pos] = hetero
-            y = 1.0 if pos in (0, n - 1) else 0.0
-            examples.append(_toy_molecule(n, path, atoms, y))
-    train = [m for i, m in enumerate(examples) if i % 2 == 0]
-    valid = [m for i, m in enumerate(examples) if i % 2 == 1]
-    codes_train = _codes(train, D)
-    codes_valid = _codes(valid, D)
-    c_train = sdb.binding_matrices_for_molecules(codes_train, train)
-    c_valid = sdb.binding_matrices_for_molecules(codes_valid, valid)
-    scale, mask = sdb.fit_rms_scaler(c_train)
-    protocol = dict(shead.OPTIMIZED_PROTOCOL)
-    protocol.update({"max_epochs": 240, "patience": 40})
-    base_train = np.zeros(len(train), dtype=np.float64)
-    base_valid = np.zeros(len(valid), dtype=np.float64)
-    y_train = np.asarray([m.y for m in train], dtype=np.float64)
-    y_valid = np.asarray([m.y for m in valid], dtype=np.float64)
-    result = sdb.train_linear_residual(
-        sdb.apply_rms_scaler(c_train, scale, mask), base_train, y_train,
-        sdb.apply_rms_scaler(c_valid, scale, mask), base_valid, y_valid,
-        seed=0, protocol=protocol, width=int(sdb.K_ATOMS),
-    )
-    # marginal-only reference: C_D replaced by a constant (zero) statistic.
-    marginal_mae = float(np.mean(np.abs(y_valid - y_train.mean())))
+    family = _synthetic_family(seed=11, count=600)
+    train = [row[0] for row in family[0::2]]
+    valid = [row[0] for row in family[1::2]]
+    y_train = np.asarray([row[1] for row in family[0::2]], dtype=np.float64)
+    y_valid = np.asarray([row[1] for row in family[1::2]], dtype=np.float64)
+    c_train, c_valid, a_train, a_valid = _ridge_stats(train, valid, D)
+    mae_binding = _ridge_mae(c_train, y_train, c_valid, y_valid)
+    mae_marginal = _ridge_mae(a_train, y_train, a_valid, y_valid)
     return {
         "n_train": int(len(train)),
         "n_valid": int(len(valid)),
-        "dict_branch_soup_mae": float(result["top5_soup_valid_mae"]),
-        "dict_branch_best_mae": float(result["best_valid_mae"]),
-        "marginal_only_mae": marginal_mae,
-        "W_norm": float(result["W_soup_norm"]),
-        "pass": bool(result["top5_soup_valid_mae"] < 0.25 * max(marginal_mae, 1e-9)),
+        "binding_ridge_mae": mae_binding,
+        "marginal_ridge_mae": mae_marginal,
+        "pass": bool(mae_binding < 0.5 * mae_marginal),
     }
 
 
 def _synthetic_negative() -> dict[str, Any]:
     """Label depends only on the topology marginal; placement randomised."""
     D, _Drand, _pca = load_dictionary()
-    rng = np.random.default_rng(7)
-    hetero = 1
-    examples: list[r2.MoleculeFeatures] = []
-    for n in range(4, 9):
-        path = [(i, i + 1) for i in range(n - 1)]
-        for _ in range(2):
-            atoms = [0] * n
-            atoms[int(rng.integers(0, n))] = hetero
-            y = float(n)  # marginal-only target (does not depend on placement)
-            examples.append(_toy_molecule(n, path, atoms, y))
-    train = [m for i, m in enumerate(examples) if i % 2 == 0]
-    valid = [m for i, m in enumerate(examples) if i % 2 == 1]
-    codes_train = _codes(train, D)
-    codes_valid = _codes(valid, D)
-    c_train = sdb.binding_matrices_for_molecules(codes_train, train)
-    c_valid = sdb.binding_matrices_for_molecules(codes_valid, valid)
-    scale, mask = sdb.fit_rms_scaler(c_train)
-    protocol = dict(shead.OPTIMIZED_PROTOCOL)
-    y_train = np.asarray([m.y for m in train], dtype=np.float64)
-    y_valid = np.asarray([m.y for m in valid], dtype=np.float64)
-    base_train = np.zeros(len(train), dtype=np.float64)
-    base_valid = np.zeros(len(valid), dtype=np.float64)
-    result = sdb.train_linear_residual(
-        sdb.apply_rms_scaler(c_train, scale, mask), base_train, y_train,
-        sdb.apply_rms_scaler(c_valid, scale, mask), base_valid, y_valid,
-        seed=0, protocol=protocol, width=int(sdb.K_ATOMS),
-    )
+    family = _synthetic_family(seed=23, count=600)
+    train = [row[0] for row in family[0::2]]
+    valid = [row[0] for row in family[1::2]]
+    y_train = np.asarray([row[2] for row in family[0::2]], dtype=np.float64)
+    y_valid = np.asarray([row[2] for row in family[1::2]], dtype=np.float64)
+    c_train, c_valid, a_train, a_valid = _ridge_stats(train, valid, D)
+    mae_binding = _ridge_mae(c_train, y_train, c_valid, y_valid)
+    mae_marginal = _ridge_mae(a_train, y_train, a_valid, y_valid)
     return {
         "n_train": int(len(train)),
         "n_valid": int(len(valid)),
-        "dict_branch_soup_mae": float(result["top5_soup_valid_mae"]),
-        "mean_baseline_mae": float(np.mean(np.abs(y_valid - y_train.mean()))),
-        "W_norm": float(result["W_soup_norm"]),
+        "binding_ridge_mae": mae_binding,
+        "marginal_ridge_mae": mae_marginal,
+        "binding_advantage": float(mae_marginal - mae_binding),
     }
 
 
 def synthetic_controls() -> dict[str, Any]:
     positive = _synthetic_positive()
     negative = _synthetic_negative()
+    negative_ok = bool(negative["binding_advantage"] <= 0.02)
     payload = {
         "protocol_version": PROTOCOL_VERSION,
         "git_commit": _git_commit(),
         "positive_assignment_only": positive,
         "negative_marginal_only": negative,
-        "all_pass": bool(positive["pass"]),
+        "negative_no_advantage": negative_ok,
+        "all_pass": bool(positive["pass"] and negative_ok),
         "official_test_loaded": False,
     }
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -697,6 +711,25 @@ def stage2(seeds: Sequence[int] = (0, 1, 2), force: bool = False) -> dict[str, A
     stat_r_train = sdb.apply_rms_scaler(c_r_train, scale_r, mask_r)
     stat_r_valid = sdb.apply_rms_scaler(c_r_valid, scale_r, mask_r)
 
+    # dense rank-32 PCA code over the same phi (best dense linear 32-D coordinate)
+    _D_ksvd2, _D_rand2, pca = load_dictionary()
+    pca_codes_train = [pca.dense_codes(np.asarray(m.phi, dtype=np.float64)) for m in train]
+    pca_codes_valid = [pca.dense_codes(np.asarray(m.phi, dtype=np.float64)) for m in valid]
+    c_pca_train = sdb.binding_matrices_for_molecules(pca_codes_train, train)
+    c_pca_valid = sdb.binding_matrices_for_molecules(pca_codes_valid, valid)
+    scale_p, mask_p = sdb.fit_rms_scaler(c_pca_train)
+    stat_p_train = sdb.apply_rms_scaler(c_pca_train, scale_p, mask_p)
+    stat_p_valid = sdb.apply_rms_scaler(c_pca_valid, scale_p, mask_p)
+
+    # dense (s=K) code over the same learned D: isolates sparsity from subspace
+    codes_dd_train = _codes(train, D_ksvd, s=sdb.K_ATOMS)
+    codes_dd_valid = _codes(valid, D_ksvd, s=sdb.K_ATOMS)
+    c_dd_train = sdb.binding_matrices_for_molecules(codes_dd_train, train)
+    c_dd_valid = sdb.binding_matrices_for_molecules(codes_dd_valid, valid)
+    scale_dd, mask_dd = sdb.fit_rms_scaler(c_dd_train)
+    stat_dd_train = sdb.apply_rms_scaler(c_dd_train, scale_dd, mask_dd)
+    stat_dd_valid = sdb.apply_rms_scaler(c_dd_valid, scale_dd, mask_dd)
+
     # frozen random dense projection control: C_z = W^T C_phi, W fixed normalised.
     W_frozen = sdb.random_normalized_dictionary(int(r2.PHI_DIM), int(sdb.K_ATOMS), int(sdb.DICT_SEED) + 3)
     c_zf_train = np.einsum("blj,lk->bkj", c_phi_train, W_frozen)
@@ -723,6 +756,8 @@ def stage2(seeds: Sequence[int] = (0, 1, 2), force: bool = False) -> dict[str, A
         arm_phi = _arm(train_arrays.C_tilde, valid_arrays.C_tilde, r2.PHI_DIM)
         arm_dict = _arm(stat_d_train, stat_d_valid, sdb.K_ATOMS)
         arm_rand = _arm(stat_r_train, stat_r_valid, sdb.K_ATOMS)
+        arm_pca = _arm(stat_p_train, stat_p_valid, sdb.K_ATOMS)
+        arm_dict_dense = _arm(stat_dd_train, stat_dd_valid, sdb.K_ATOMS)
         arm_dense = _train_dense_joint(
             c_phi_train, m0_train, y_train, c_phi_valid, m0_valid, y_valid, seed, protocol,
         )
@@ -755,6 +790,8 @@ def stage2(seeds: Sequence[int] = (0, 1, 2), force: bool = False) -> dict[str, A
             "phi65_protocol_drift": float(abs(m_phi - float(h5["per_seed"][str(seed)]["frozen_M0_plus_B_soup_valid_mae"]))),
             "dict32_soup_valid_mae": m_dict,
             "rand32_soup_valid_mae": m_rand,
+            "pca32_soup_valid_mae": float(arm_pca["top5_soup_valid_mae"]),
+            "dict_dense32_soup_valid_mae": float(arm_dict_dense["top5_soup_valid_mae"]),
             "dense32_soup_valid_mae": m_dense,
             "dense32_frozen_soup_valid_mae": m_dense_frozen,
             "recovery_oracle": recovery,
@@ -768,6 +805,7 @@ def stage2(seeds: Sequence[int] = (0, 1, 2), force: bool = False) -> dict[str, A
             "top5_epochs_dict": arm_dict["top5_epochs"],
         }
         print(f"[stage2 seed{seed}] recovery={recovery:.3f} dict={m_dict:.6f} phi65={m_phi:.6f} "
+              f"dict_dense32={float(arm_dict_dense['top5_soup_valid_mae']):.6f} pca32={float(arm_pca['top5_soup_valid_mae']):.6f} "
               f"dense={m_dense:.6f} dense_frozen={m_dense_frozen:.6f} rand={m_rand:.6f} "
               f"shuffle_deg={mae_shuf - mae_clean:.4f}", flush=True)
 
@@ -825,18 +863,117 @@ def _write_stage2_markdown(payload: Mapping[str, Any]) -> None:
     lines.append(f"\nmean assignment-shuffle MAE degradation: {_fmt(payload['mean_shuffle_degradation'])}")
     lines.append(f"\ndict within dense slack: {payload['dict_within_dense_slack']}; alive: {payload['dict_branch_alive']}")
     lines.append(f"\nphi65 protocol drift (max): {_fmt(payload['phi65_protocol_drift_max'])}\n")
-    lines.append("| seed | M0 | phi65 | dict32 | dense32 | dense32_frozen | rand32 | recovery | shuffle_deg |")
-    lines.append("|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+    lines.append("| seed | M0 | phi65 | dict32 | dict_dense32 | pca32 | dense32 | dense32_frozen | rand32 | recovery | shuffle_deg |")
+    lines.append("|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for seed, row in payload["per_seed"].items():
         lines.append(
             f"| {seed} | {_fmt(row['M0_valid_mae'])} | {_fmt(row['phi65_soup_valid_mae'])} "
-            f"| {_fmt(row['dict32_soup_valid_mae'])} | {_fmt(row['dense32_soup_valid_mae'])} "
+            f"| {_fmt(row['dict32_soup_valid_mae'])} | {_fmt(row['dict_dense32_soup_valid_mae'])} "
+            f"| {_fmt(row['pca32_soup_valid_mae'])} | {_fmt(row['dense32_soup_valid_mae'])} "
             f"| {_fmt(row['dense32_frozen_soup_valid_mae'])} | {_fmt(row['rand32_soup_valid_mae'])} "
             f"| {_fmt(row['recovery_oracle'])} | {_fmt(row['shuffle_degradation'])} |"
         )
     lines.append("\n*All arms are a frozen `M0` soup plus a single linear assignment residual. "
                  "`dict32` total params = 65x32 (frozen D) + 32x28 (readout); `dense32` = 65x32 (trained W) + 32x28.*\n")
     STAGE2_MD.write_text("\n".join(lines), encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Stage 3 — task-coupled end-to-end dictionary
+# ---------------------------------------------------------------------------
+
+STAGE3_IMPROVE = 0.003
+
+
+def stage3(seeds: Sequence[int] = (0, 1, 2), force: bool = False) -> dict[str, Any]:
+    stage2_payload = stage2()
+    if stage2_payload.get("verdict") not in {"PASS", "INSPECT"}:
+        payload = {
+            "protocol_version": PROTOCOL_VERSION,
+            "git_commit": _git_commit(),
+            "verdict": "SKIPPED_STAGE2_STOP",
+            "official_test_loaded": False,
+        }
+        _write_json(RESULTS_DIR / "stage3_task_coupled.json", payload)
+        return payload
+    if (RESULTS_DIR / "stage3_task_coupled.json").exists() and not force:
+        return _read_json(RESULTS_DIR / "stage3_task_coupled.json")
+
+    torch.use_deterministic_algorithms(True)
+    train, valid, scalers, _meta = build_datasets()
+    D_ksvd, _D_rand, _pca = load_dictionary()
+    protocol = dict(shead.OPTIMIZED_PROTOCOL)
+
+    phi_train, q_train, off_train = sdb.make_flat_split(train)
+    y_train = np.asarray([m.y for m in train], dtype=np.float64)
+    y_valid = np.asarray([m.y for m in valid], dtype=np.float64)
+
+    def _iht(molecules):
+        D_t = torch.as_tensor(D_ksvd, dtype=torch.float32)
+        return [
+            T.iht_codes(
+                D_t,
+                torch.as_tensor(np.asarray(m.phi, dtype=np.float32)),
+                s=sdb.SPARSITY,
+                steps=10,
+            ).numpy()
+            for m in molecules
+        ]
+
+    codes_ft = _iht(train)
+    codes_fv = _iht(valid)
+    c_ft = sdb.binding_matrices_for_molecules(codes_ft, train)
+    scale, mask = sdb.fit_rms_scaler(c_ft)
+
+    def _stat(molecules, codes):
+        c = sdb.binding_matrices_for_molecules(codes, molecules)
+        return sdb.apply_rms_scaler(c, scale, mask)
+
+    h5 = _read_json(mech.MECH_DIR / "h5_frozen_m0.json")
+    per_seed: dict[str, Any] = {}
+    for seed in seeds:
+        seed = int(seed)
+        m0_train = mech._batched_prediction("M0", seed, train, scalers, base_only=True)["base"]
+        m0_valid = mech._batched_prediction("M0", seed, valid, scalers, base_only=True)["base"]
+        m0_valid_mae = float(np.mean(np.abs(y_valid - m0_valid)))
+        frozen = sdb.train_linear_residual(
+            _stat(train, codes_ft), m0_train, y_train,
+            _stat(valid, codes_fv), m0_valid, y_valid,
+            seed=seed, protocol=protocol, width=sdb.K_ATOMS,
+        )
+        task = sdb.train_task_coupled_dictionary(
+            phi_train, q_train, off_train, m0_train, y_train, seed, protocol,
+            D_init=D_ksvd, scale=scale, mask=mask, learn_dictionary=True,
+        )
+        m_frozen = float(frozen["top5_soup_valid_mae"])
+        m_task = float(task["top5_soup_valid_mae"])
+        per_seed[str(seed)] = {
+            "M0_valid_mae": m0_valid_mae,
+            "h5_phi65_soup_valid_mae": float(h5["per_seed"][str(seed)]["frozen_M0_plus_B_soup_valid_mae"]),
+            "frozen_iht_soup_valid_mae": m_frozen,
+            "task_iht_soup_valid_mae": m_task,
+            "task_minus_frozen": float(m_task - m_frozen),
+            "lambda_rec": float(task["lambda_rec"]),
+            "atom_movement": float(task["atom_movement"]),
+            "readout_norm": float(task["readout_norm"]),
+            "top5_epochs_task": task["top5_epochs"],
+        }
+        print(f"[stage3 seed{seed}] frozen_iht={m_frozen:.6f} task_iht={m_task:.6f} "
+              f"delta={m_task - m_frozen:+.6f} lambda={task['lambda_rec']:.2f} move={task['atom_movement']:.4f}", flush=True)
+
+    deltas = [row["task_minus_frozen"] for row in per_seed.values()]
+    mean_delta = float(np.mean(deltas))
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "git_commit": _git_commit(),
+        "verdict": "TASK_COUPLING_HELPS" if mean_delta <= -STAGE3_IMPROVE else "TASK_COUPLING_NULL",
+        "mean_task_minus_frozen": mean_delta,
+        "improve_threshold": STAGE3_IMPROVE,
+        "per_seed": per_seed,
+        "official_test_loaded": False,
+    }
+    _write_json(RESULTS_DIR / "stage3_task_coupled.json", payload)
+    return payload
 
 
 # ---------------------------------------------------------------------------
@@ -850,6 +987,8 @@ def report() -> dict[str, Any]:
         payload["stage1"] = _read_json(STAGE1_JSON)
     if STAGE2_JSON.exists():
         payload["stage2"] = _read_json(STAGE2_JSON)
+    if (RESULTS_DIR / "stage3_task_coupled.json").exists():
+        payload["stage3"] = _read_json(RESULTS_DIR / "stage3_task_coupled.json")
     if SANITY_JSON.exists():
         payload["sanity"] = _read_json(SANITY_JSON)
     if SYNTHETIC_JSON.exists():
@@ -861,7 +1000,7 @@ def report() -> dict[str, Any]:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="SDB-v0 runner")
-    parser.add_argument("stage", choices=["dict", "gate1", "sanity", "synthetic", "gate2", "report", "all"])
+    parser.add_argument("stage", choices=["dict", "gate1", "sanity", "synthetic", "gate2", "gate3", "report", "all"])
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--max-fit-atoms", type=int, default=None)
     parser.add_argument("--seeds", type=int, nargs="*", default=[0, 1, 2])
@@ -877,6 +1016,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         synthetic_controls()
     elif args.stage == "gate2":
         stage2(seeds=tuple(args.seeds), force=args.force)
+    elif args.stage == "gate3":
+        stage3(seeds=tuple(args.seeds), force=args.force)
     elif args.stage == "report":
         report()
     elif args.stage == "all":

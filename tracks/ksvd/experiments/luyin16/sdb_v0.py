@@ -420,6 +420,195 @@ def shuffle_codes_against_chemistry(
     return out
 
 
+# ---------------------------------------------------------------------------
+# Stage 3 — task-coupled tied-IHT dictionary (frozen base)
+# ---------------------------------------------------------------------------
+
+
+def make_flat_split(molecules: Sequence[Any]) -> tuple[np.ndarray, np.ndarray, list[tuple[int, int]]]:
+    """Flatten a split into ``(phi_all, q_all, offsets)`` tensors (numpy)."""
+    phi = np.concatenate([np.asarray(m.phi, dtype=np.float32) for m in molecules], axis=0)
+    q = np.concatenate(
+        [r2.one_hot_q(np.asarray(m.atom_idx, dtype=np.int64)).astype(np.float32) for m in molecules],
+        axis=0,
+    )
+    offsets: list[tuple[int, int]] = []
+    position = 0
+    for molecule in molecules:
+        end = position + int(molecule.n_nodes)
+        offsets.append((position, end))
+        position = end
+    return phi, q, offsets
+
+
+def gather_molecule_batch(
+    phi_all: "torch.Tensor", q_all: "torch.Tensor", offsets: Sequence[tuple[int, int]], indices: Sequence[int]
+) -> tuple["torch.Tensor", "torch.Tensor", "torch.Tensor"]:
+    """Gather a batch of molecules into concatenated node tensors + `node_graph`."""
+    import torch
+
+    node_index: list["torch.Tensor"] = []
+    graph_index: list["torch.Tensor"] = []
+    for local, molecule_index in enumerate(indices):
+        start, end = offsets[int(molecule_index)]
+        node_index.append(torch.arange(start, end, device=phi_all.device))
+        graph_index.append(torch.full((end - start,), int(local), device=phi_all.device, dtype=torch.long))
+    return phi_all[torch.cat(node_index)], q_all[torch.cat(node_index)], torch.cat(graph_index)
+
+
+def train_task_coupled_dictionary(
+    phi_all: np.ndarray,
+    q_all: np.ndarray,
+    offsets: Sequence[tuple[int, int]],
+    base: np.ndarray,
+    y: np.ndarray,
+    seed: int,
+    protocol: Mapping[str, Any],
+    *,
+    D_init: np.ndarray,
+    scale: np.ndarray,
+    mask: np.ndarray,
+    learn_dictionary: bool = True,
+    s: int = SPARSITY,
+    iht_steps: int = 10,
+    calibrate_rec: bool = True,
+    device: str = "cpu",
+) -> dict[str, Any]:
+    """Frozen-base + tied-IHT dictionary + linear assignment readout.
+
+    ``loss = L1(pred, y) + lambda * mean_v ||phi_v - D alpha_v||^2 / ||phi_v||^2``
+    with ``lambda`` calibrated once (detached) to match the initial task and
+    reconstruction magnitudes (TCCD-style).  ``D`` is the *same* tensor used
+    for encoding (IHT) and reconstruction (no free encoder).
+    """
+    import torch
+
+    dev = torch.device(device)
+    torch.manual_seed(int(seed))
+    np.random.seed(int(seed))
+    phi_t = torch.as_tensor(np.asarray(phi_all), dtype=torch.float32, device=dev)
+    q_t = torch.as_tensor(np.asarray(q_all), dtype=torch.float32, device=dev)
+    base_t = torch.as_tensor(np.asarray(base), dtype=torch.float32, device=dev)
+    y_t = torch.as_tensor(np.asarray(y), dtype=torch.float32, device=dev)
+    scale_t = torch.as_tensor(np.asarray(scale), dtype=torch.float32, device=dev)
+    mask_t = torch.as_tensor(np.asarray(mask), dtype=torch.float32, device=dev)
+
+    D_param = torch.nn.Parameter(torch.as_tensor(np.asarray(D_init), dtype=torch.float32, device=dev).clone())
+    readout = torch.nn.Parameter(torch.zeros(int(scale.shape[0]), int(scale.shape[1]), dtype=torch.float32, device=dev))
+    learnable = [readout]
+    if learn_dictionary:
+        learnable.append(D_param)
+    D_init_t = D_param.detach().clone()
+    optimizer = torch.optim.Adam(learnable, lr=float(protocol["learning_rate"]), weight_decay=float(protocol["weight_decay"]))
+
+    def _normalized(D: "torch.Tensor") -> "torch.Tensor":
+        return D / D.norm(dim=0, keepdim=True).clamp_min(1e-12)
+
+    def _codes(phi_batch: "torch.Tensor", D: "torch.Tensor") -> "torch.Tensor":
+        return T.iht_codes(_normalized(D), phi_batch, s=int(s), steps=int(iht_steps))
+
+    def _pred_and_rec(batch_index, D):
+        phi_b, q_b, node_graph = gather_molecule_batch(phi_t, q_t, offsets, batch_index)
+        alpha = _codes(phi_b, D)
+        c_code, _p = r2.segment_center_stats(alpha, q_b, node_graph, len(batch_index))
+        statistic = (c_code / scale_t[None, :, :]) * mask_t[None, :, :]
+        prediction = base_t[batch_index] + (statistic * readout).sum(dim=(1, 2))
+        rec = ((phi_b - alpha @ _normalized(D).t()) ** 2).sum(dim=1) / (
+            (phi_b ** 2).sum(dim=1) + 1e-12
+        )
+        return prediction, rec.mean()
+
+    n = len(offsets)
+    batch_size = int(protocol["batch_size"])
+    max_epochs = int(protocol["max_epochs"])
+    patience = int(protocol["patience"])
+    clip = float(protocol["gradient_clip_norm"])
+    generator = torch.Generator(device="cpu").manual_seed(int(seed) + int(protocol.get("train_shuffle_seed_offset", 0)))
+
+    lam = 1.0
+    if calibrate_rec:
+        cal = torch.arange(min(512, n), device=dev)
+        with torch.no_grad():
+            prediction, rec = _pred_and_rec(cal, D_param)
+            l_task = float((prediction - y_t[cal]).abs().mean())
+            l_rec = float(rec)
+        lam = l_task / (l_rec + 1e-12)
+
+    def _valid_mae(D) -> float:
+        with torch.no_grad():
+            total = 0.0
+            seen = 0
+            for start in range(0, n, 512):
+                idx = torch.arange(start, min(start + 512, n), device=dev)
+                prediction, _rec = _pred_and_rec(idx, D)
+                total += float((prediction - y_t[idx]).abs().sum())
+                seen += int(idx.numel())
+            return total / max(seen, 1)
+
+    best_mae = float("inf")
+    best_epoch = 1
+    best_state = None
+    stale = 0
+    top5: list[tuple[float, int, dict[str, "torch.Tensor"]]] = []
+    for epoch in range(1, max_epochs + 1):
+        order = torch.randperm(n, generator=generator).to(dev)
+        for start in range(0, n, batch_size):
+            batch_index = order[start : start + batch_size]
+            prediction, rec = _pred_and_rec(batch_index, D_param)
+            loss = torch.nn.functional.l1_loss(prediction, y_t[batch_index]) + float(lam) * rec
+            optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(learnable, clip)
+            optimizer.step()
+        valid_mae = _valid_mae(D_param)
+        state = {"D": D_param.detach().clone(), "readout": readout.detach().clone()}
+        top5.append((float(valid_mae), int(epoch), state))
+        top5.sort(key=lambda item: (item[0], item[1]))
+        top5 = top5[:5]
+        if valid_mae < best_mae:
+            best_mae = float(valid_mae)
+            best_epoch = int(epoch)
+            best_state = state
+            stale = 0
+        else:
+            stale += 1
+        if stale >= patience:
+            break
+    assert best_state is not None
+    soup = {
+        "D": torch.stack([item[2]["D"] for item in top5], dim=0).mean(dim=0),
+        "readout": torch.stack([item[2]["readout"] for item in top5], dim=0).mean(dim=0),
+    }
+
+    def _mae_with(state) -> float:
+        with torch.no_grad():
+            total = 0.0
+            seen = 0
+            for start in range(0, n, 512):
+                idx = torch.arange(start, min(start + 512, n), device=dev)
+                phi_b, q_b, node_graph = gather_molecule_batch(phi_t, q_t, offsets, idx)
+                alpha = _codes(phi_b, state["D"])
+                c_code, _p = r2.segment_center_stats(alpha, q_b, node_graph, len(idx))
+                statistic = (c_code / scale_t[None, :, :]) * mask_t[None, :, :]
+                prediction = base_t[idx] + (statistic * state["readout"]).sum(dim=(1, 2))
+                total += float((prediction - y_t[idx]).abs().sum())
+                seen += int(idx.numel())
+            return total / max(seen, 1)
+
+    atom_movement = float((_normalized(soup["D"]) - _normalized(D_init_t)).norm())
+    return {
+        "best_valid_mae": float(best_mae),
+        "best_epoch": int(best_epoch),
+        "top5_epochs": [int(item[1]) for item in top5],
+        "top5_soup_valid_mae": float(_mae_with(soup)),
+        "lambda_rec": float(lam),
+        "atom_movement": atom_movement,
+        "readout_norm": float(soup["readout"].norm()),
+        "dictionary_norm": float(soup["D"].norm()),
+        "state": soup,
+    }
+
+
 __all__ = [
     "K_ATOMS",
     "SPARSITY",
@@ -446,4 +635,7 @@ __all__ = [
     "apply_rms_scaler",
     "shuffle_chemistry_within_molecules",
     "shuffle_codes_against_chemistry",
+    "make_flat_split",
+    "gather_molecule_batch",
+    "train_task_coupled_dictionary",
 ]
