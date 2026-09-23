@@ -1,0 +1,104 @@
+decision_id: decision-fec-d0-stop-no-subrole-signal-20260923
+created: '2026-09-23T23:35:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Record FEC-D0 with the frozen verdict
+  FEC_D0_BASIS_HAS_NO_HELDOUT_SUBROLE_SIGNAL and STOP the dictionary placement
+  at "coarse rooted role -> sparse residual subrole" on the audited rooted node
+  basis b^V in R^11. Do NOT implement FEC-D1. Do NOT change K, s, iterations,
+  initialization, solver or lambda; do NOT move to K=32 / s=8 / more iterations
+  / a nonlinear dictionary; do NOT invent a new basis on the spot, and do NOT
+  add an edge / bond-role / node+edge joint dictionary. Do NOT run any property
+  task: no ZINC y, no MAE training, no official valid, no official test, no
+  FEC-S1 retrain, no task-coupled D, no seed0 task run. Do NOT retrain FEC-S1.
+  Do NOT execute FEC-S1 seed 1 in this round. The next dictionary step, if any,
+  requires a NEW pre-registration and, critically, a rooted structural basis
+  that demonstrably carries degree-beyond held-out subrole information.
+because: >-
+  FEC-D0 (protocol fec_d0, commit ca2e947, local CPU, label-free, official
+  valid/test never loaded, targets never read) is the first round to
+  RESIDUALIZE the coarse rooted role before asking whether the remainder is a
+  reusable sparse vocabulary. Gate 0 passed 7/7. The learned K=16/s=4
+  dictionary reconstructs the per-shell-standardized residual almost exactly
+  (R_rec 0.0038) and is maximally reused (16/16 active on both splits, Jaccard
+  1.000, Spearman 1.000, 16 atoms on >=20 held-out molecules), BUT both are
+  structural artefacts: deleting the exact shell coordinates and standardizing
+  leaves a residual of FIT rank 2 (shell 0) to 4 (shells 1-2), two kept
+  coordinates (neigh_by_shell[0], walk1) being exactly shell-deterministic, so
+  K=16 is massively overcomplete for a rank-<=4 target and the s=4 code is a
+  linear reparametrisation of the dense residual (F1_D == F1_O exactly). The
+  decisive Gate 2b failure is that the DENSE root-relative basis has no
+  held-out marked-subrole signal beyond a within-shell degree baseline:
+  aggregate G_O = 0.0244 < 0.03 (shell0 0.0177, shell1 0.0537, shell2 0.0055),
+  and the learned dictionary is not better than a matched random dictionary
+  (F1_D - F1_R = -0.0008 < 0.03). Gate 3 shows MI(atom->degree) 0.357 with
+  every atom spanning only 3-4 degree buckets against hundreds of
+  marked-topology classes, so the object is best described as a discretized
+  degree representation rather than a rich subrole vocabulary. The failure is
+  localized to the BASIS (a root-relative operator fingerprint dominated by
+  degree), not to the dictionary, which is faithful, reusable and
+  information-neutral. No rescue is scientifically licensed.
+alternatives_rejected:
+  - >-
+    Increase K (e.g. K=32) or s (e.g. s=8) to lower the reconstruction error:
+    rejected - reconstruction is already 0.0038 and structurally trivial
+    because the residual rank is <= 4; more atoms cannot create subrole
+    information that is not in the basis.
+  - >-
+    Add a stronger/nonlinear dictionary or more K-SVD iterations: rejected -
+    the pre-registration forbids it and the bottleneck is the basis, not the
+    coder.
+  - >-
+    Swap in a different rooted basis on the spot (e.g. a marked-node-centred
+    fingerprint): rejected - the round explicitly forbids inventing a new basis
+    mid-round; doing so would be an unpreregistered rescue and would also make
+    the result uninterpretable.
+  - >-
+    Report only the PASSing gates (reconstruction 0.0038, reuse 16/16) and call
+    the dictionary qualified: rejected - the pre-registered success gate
+    requires the dense basis to carry degree-beyond held-out subrole signal
+    first, and it does not.
+  - >-
+    Run the bounded max_iter convergence check and, if the probe improves,
+    treat the FAIL as inconclusive: rejected as the primary path - the decisive
+    evidence is structural (rank <= 4, D == O, degree-dominated residual) and
+    the frozen protocol fixes max_iter; the convergence caveat is recorded as a
+    limitation, not used to overrule the gate.
+  - >-
+    Proceed directly to FEC-D1 because the dictionary is healthy and reusable:
+    rejected - FEC-D1 is authorized only by
+    FEC_D0_RESIDUAL_STRUCTURAL_DICTIONARY_QUALIFIED, which did not fire; a
+    healthy but information-neutral coder of a low-rank, degree-dominated
+    residual does not justify a chemistry-binding property experiment.
+revisit_if: >-
+  (a) A NEW pre-registered round with a rooted structural basis that
+  demonstrably carries held-out marked-subrole information beyond degree
+  (e.g. a marked-node-centred rooted fingerprint), for which FEC-D0's negative
+  result localizes exactly what was missing; or (b) a pre-registered
+  re-analysis of shell 1 only, where G_O = 0.0537 already clears 0.03, if a
+  scientifically motivated shell-restricted question can be posed without
+  changing K/s; or (c) a pre-registered investigative round on the probe's
+  convergence and rare-class behaviour if the 0.03 threshold is to be trusted
+  at face value. FEC-D1 (baseline-preserving sparse structural subrole
+  binding, r_new = r_coarse + g * r_dict with g = 0 => FEC-S1) remains a
+  PROPOSAL only. The FEC-S1 strong seed-0 anchor (soup 0.130422, best 0.136783
+  @238) still stands and still motivates a baseline-preserving future
+  dictionary experiment, but NOT this basis and NOT this round.
+evidence:
+  - tracks/ksvd/notes/fec_d0_prior_artifact_audit.md
+  - tracks/ksvd/notes/fec_d0_preregistration.md
+  - tracks/ksvd/notes/fec_d0_analysis.md
+  - tracks/ksvd/results/fec_d0/DECISION.md
+  - tracks/ksvd/results/fec_d0/REPORT.md
+  - tracks/ksvd/results/fec_d0/decision.json
+  - tracks/ksvd/results/fec_d0/basis_audit.json
+  - tracks/ksvd/results/fec_d0/correctness.json
+  - tracks/ksvd/results/fec_d0/residualization.json
+  - tracks/ksvd/results/fec_d0/reconstruction.json
+  - tracks/ksvd/results/fec_d0/dictionary_usage.json
+  - tracks/ksvd/results/fec_d0/marked_topology_probe.json
+  - tracks/ksvd/results/fec_d0/atom_semantics.json
+  - tracks/ksvd/experiments/luyin16/fec_d0.py
+  - tracks/ksvd/experiments/luyin16/zinc_fec_d0.py
+  - tracks/ksvd/tests/test_fec_d0.py

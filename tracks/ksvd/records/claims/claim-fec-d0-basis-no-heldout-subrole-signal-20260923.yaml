@@ -1,0 +1,128 @@
+claim_id: claim-fec-d0-basis-no-heldout-subrole-signal-20260923
+created: '2026-09-23T23:30:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On official ZINC train (10000 molecules, FIT 8000 / HOLDOUT 2000 by the
+  canonical SPLIT_SEED=20260922 permutation split; official valid and official
+  test never loaded; no target read anywhere), the audited FSAR explicit rooted
+  node basis b^V_iv in R^11 (fsar_v2._explicit_basis_for_patch, pure topology)
+  does NOT carry a held-out marked-subrole signal beyond the within-patch
+  degree baseline once the coarse rooted role shell(i,v) in {0,1,2} is known.
+  Deleting the exact shell coordinates {0,1,2,3} and per-shell standardizing
+  with FIT-only mu_s/sigma_s leaves a residual phi^perp in R^7 that is
+  low-rank (FIT rank shell0 = 2, shell1 = 4, shell2 = 4; two kept coordinates,
+  neigh_by_shell[0] and walk1, are exactly shell-deterministic). A single
+  shared K=16 / s=4 dictionary fit by the correctness-tested SDB/TCCD K-SVD+OMP
+  primitives reconstructs this residual almost exactly (R_rec = E_D/E_R =
+  0.0038) and is maximally reused (16/16 atoms active on both splits, active
+  Jaccard 1.000, usage Spearman 1.000, all 16 atoms on >=20 held-out molecules),
+  but both facts are structural rather than informative because K=16 greatly
+  exceeds the residual rank. Because the residual has rank <= 4, rank(D)=7 and
+  the s=4 code is (piecewise) a linear reparametrisation of phi^perp, a
+  multinomial-logistic probe on the learned code is EXACTLY equal to the probe
+  on the dense residual in every shell (F1_D == F1_O), so the dictionary is
+  information-neutral. The dense root-relative basis moves macro-F1 only
+  G_O = 0.0244 beyond a within-shell degree-only baseline (occurrence-weighted
+  aggregate; shell0 0.0177, shell1 0.0537, shell2 0.0055), below the
+  pre-registered 0.03 threshold, and the learned dictionary is not better than
+  a matched random dictionary (F1_D - F1_R = -0.0008). Frozen verdict:
+  FEC_D0_BASIS_HAS_NO_HELDOUT_SUBROLE_SIGNAL. The deficiency is localized to
+  the BASIS (root-relative fingerprint dominated by degree), not to the
+  dictionary, which faithfully and seamlessly codes the residual.
+scope: >-
+  Round FEC-D0, protocol fec_d0, pre-registered in
+  notes/fec_d0_preregistration.md before any fit; prior-artifact audit in
+  notes/fec_d0_prior_artifact_audit.md. Local CPU only; label-free; no property
+  training; no official valid/test; no FEC-S1 retrain; no task coupling; no
+  edge dictionary; no K/s/iteration/seed sweep. RUNNER
+  tracks/ksvd/experiments/luyin16/zinc_fec_d0.py; module
+  tracks/ksvd/experiments/luyin16/fec_d0.py; split fingerprint recorded in
+  results/fec_d0/split_fingerprint.json. Reuses
+  fsar_v2._explicit_basis_for_patch (basis), tccd_v0.ksvd_fit / omp_codes /
+  random_normalized_dictionary (dictionary), sdb_v0.fit_pca_rank (PCA-4
+  reference), typed_patch_tokenizer.corrected_canonical_key (marked-topology
+  canonicalization). No primitive re-implemented.
+supporting_evidence:
+  - >-
+    Gate 0 all pass (7/7): chemistry invariance, relabel invariance (residual
+    max abs diff 0.0, codes exactly equal), exact sparsity (max L0 = 4,
+    exact-top-4 fraction 1.0), FIT-only transforms, no target, coarse anchor
+    removed (E[phi^perp|shell] max abs ~1.6e-16), independent float64
+    reconstruction reference (abs diff 0.0).
+  - >-
+    Per-shell FIT rank of phi^perp: shell0 = 2 (explained variance
+    [0.751, 0.249]), shell1 = 4 ([0.487, 0.398, 0.113, 0.0007]), shell2 = 4
+    ([0.596, 0.401, 0.003]). Shell-deterministic kept coordinates: 5
+    (neigh_by_shell[0] = 1[shell=1]) and 8 (walk1 = A e_root = 1[shell=1]),
+    both floored out by the per-shell standardization.
+  - >-
+    Reconstruction (HOLDOUT): E_D 0.000216, E_R 0.057305, E_P (PCA-4)
+    5.1e-31, R_rec 0.0038 (gate <= 0.80, PASS but structurally trivial);
+    rank(D_learned)=7, rank(D_random)=7, rank(holdout residual)=4, holdout
+    relative reconstruction error 2.2e-4.
+  - >-
+    Reuse: active FIT 16/16, active HOLDOUT 16/16, active Jaccard 1.000,
+    atoms on >=20 heldout molecules 16/16, usage Spearman 1.000, FIT entropy
+    2.376 nats / effective atoms 10.76 / top1 0.196 / top4 0.623 / Gini 0.484,
+    HOLDOUT the same to three decimals. Noise stability (eps~N(0,1e-4)):
+    support Jaccard 0.9999, coefficient cosine 0.99999, top1 stability 1.0.
+  - >-
+    Marked-topology probe (512 eligible untyped marked-node rooted topology
+    classes, FIT>=20 and HOLDOUT>=5; probe fit on FIT only, evaluated on
+    HOLDOUT only, within each shell): aggregate G_O = F1_O - F1_B = 0.0244
+    (gate >= 0.03, FAIL), F1_D - F1_R = -0.0008 (gate >= 0.03, FAIL),
+    G_D/G_O = 1.000. Per shell: shell0 G_O 0.0177, shell1 G_O 0.0537,
+    shell2 G_O 0.0055.
+  - >-
+    Gate 3 report-only: MI(atom -> degree) = 0.357 while MI(atom -> marked
+    topology) = 0.989; every atom spans only 3-4 degree buckets yet sees
+    hundreds of marked-topology classes.
+contradicting_evidence:
+  - >-
+    Shell 1 alone shows a material degree-beyond signal (G_O = 0.0537), so the
+    basis is not uniformly uninformative; the aggregate failure is driven by
+    the large shell-2 stratum (weight 0.485, G_O 0.0055) and by shell 0
+    (rank-2, degree-determined).
+  - >-
+    The dictionary mechanics are all healthy (exact reconstruction, perfect
+    reuse, exact sparsity, noise-stable). A reader who asked only "can a
+    K=16/s=4 vocabulary be fit and reused stably?" would answer yes; FEC-D0
+    shows that question is not scientifically load-bearing for this basis.
+limitations:
+  - >-
+    The frozen probe fixes max_iter=200 (no HPO); some lbfgs fits emitted
+    ConvergenceWarning. This caveat is recorded but does not drive the verdict:
+    the decisive evidence (per-shell rank <= 4, D == O identity, degree-
+    dominated residual) is structural. A bounded convergence re-run was
+    deliberately not executed to keep the round lean.
+  - >-
+    The marked-topology class is a finer invariant than the root-relative
+    basis can express; a positive G_O is not guaranteed, and the failure may
+    partly reflect that the basis was designed as a root-relative operator
+    basis rather than a marked-node descriptor. This is a statement about this
+    audited basis, not about every conceivable rooted topology coordinate.
+  - >-
+    Single deterministic split (SPLIT_SEED 20260922) and a single dictionary
+    seed (DICT_SEED 20260922) within the frozen no-sweep policy.
+evidence:
+  - tracks/ksvd/notes/fec_d0_prior_artifact_audit.md
+  - tracks/ksvd/notes/fec_d0_preregistration.md
+  - tracks/ksvd/notes/fec_d0_analysis.md
+  - tracks/ksvd/results/fec_d0/basis_audit.json
+  - tracks/ksvd/results/fec_d0/split_fingerprint.json
+  - tracks/ksvd/results/fec_d0/correctness.json
+  - tracks/ksvd/results/fec_d0/residualization.json
+  - tracks/ksvd/results/fec_d0/reconstruction.json
+  - tracks/ksvd/results/fec_d0/dictionary_usage.json
+  - tracks/ksvd/results/fec_d0/reuse_stability.json
+  - tracks/ksvd/results/fec_d0/marked_topology_classes.json
+  - tracks/ksvd/results/fec_d0/marked_topology_probe.json
+  - tracks/ksvd/results/fec_d0/atom_semantics.json
+  - tracks/ksvd/results/fec_d0/decision.json
+  - tracks/ksvd/results/fec_d0/DECISION.md
+  - tracks/ksvd/results/fec_d0/REPORT.md
+  - tracks/ksvd/experiments/luyin16/fec_d0.py
+  - tracks/ksvd/experiments/luyin16/zinc_fec_d0.py
+  - tracks/ksvd/tests/test_fec_d0.py

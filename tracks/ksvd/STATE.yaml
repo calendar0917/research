@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: fec-s1-stopped-shared-replacement-strong
+phase: fec-d0-stopped-no-subrole-signal
 updated: 2026-09-23
 
 # ---------------------------------------------------------------------------
@@ -209,6 +209,106 @@ fec_s1:
     admissible PROPOSAL only and requires its own pre-registration.  No H
     sweep, activation/depth change, token/hash/fixed-code arm, local GNN, MP,
     recurrence, extra epochs, reader enlargement, dictionary or official test.
+
+# ---------------------------------------------------------------------------
+# FEC-D0 (within-coarse-role residual structural dictionary audit) — 2026-09-23
+# ---------------------------------------------------------------------------
+# Label-free dictionary qualification round.  Local CPU only; official valid
+# and official test never loaded; no target read; no FEC-S1 retrain; no task
+# coupling; no edge dictionary.  Dictionary placement at
+# "coarse rooted role -> sparse residual subrole" on the audited rooted node
+# basis b^V in R^11 is NOT qualified.
+fec_d0:
+  status: STOPPED_NO_HELDOUT_SUBROLE_SIGNAL
+  round: FEC-D0
+  protocol: fec_d0
+  verdict: FEC_D0_BASIS_HAS_NO_HELDOUT_SUBROLE_SIGNAL
+  commit: ca2e947013263a2590c7ad4edffff03a46e6b830
+  dirty_at_run: true
+  device: local CPU
+  regime: LABEL_FREE (no property training, no task coupling)
+  data: official ZINC train only, 10000 molecules; FIT 8000 / HOLDOUT 2000
+  split: SPLIT_SEED 20260922 (np.random.RandomState permutation convention)
+  official_valid_loaded: false
+  official_test_loaded: false
+  targets_loaded: false
+  fec_s1_retrained: false
+  basis:
+    source: tracks/ksvd/experiments/luyin16/fsar_v2.py::_explicit_basis_for_patch
+    object: FSAR explicit rooted node basis b^V_iv
+    dim: 11
+    chemistry_free: true
+    root_conditioned_occurrence: true
+    deleted_exact_shell_coordinates: [0, 1, 2, 3]
+    d_res: 7
+  dictionary:
+    K: 16
+    s: 4
+    solver: tccd_v0.ksvd_fit (OMP exact top-s) / tccd_v0.omp_codes
+    shared_not_per_shell: true
+    seed: 20260922
+  gates:
+    gate0_correctness: PASS (7/7)
+    gate1_reconstruction: PASS (R_rec 0.0038 <= 0.80) but structurally trivial
+    gate2_reuse: PASS (16/16 FIT, 16/16 HOLDOUT, Jaccard 1.000, Spearman 1.000)
+    gate2b_oracle: FAIL (G_O 0.0244 < 0.03)
+    semantic_dict_vs_random: FAIL (F1_D - F1_R -0.0008 < 0.03)
+    semantic_retained: PASS (G_D/G_O 1.000)
+  reconstruction_ratio: 0.0037743063026877944
+  active_atoms_fit: 16
+  active_atoms_holdout: 16
+  probe_aggregate:
+    F1_B: 0.008071877718830323
+    F1_R: 0.03329405162618903
+    F1_D: 0.03249865819058059
+    F1_O: 0.03249865819058059
+    G_O: 0.02442678047175027
+    G_R: 0.025222173907358706
+    G_D: 0.02442678047175027
+    dict_minus_random: -0.0007953934356084366
+    retained: 1.0
+    per_shell_G_O: {shell0: 0.0177, shell1: 0.0537, shell2: 0.0055}
+  structural_facts:
+    residual_rank_per_shell: [2, 4, 4]
+    shell_deterministic_kept_coordinates: [5, 8]
+    rank_D_learned: 7
+    rank_D_random: 7
+    rank_holdout_residual: 4
+    learned_code_is_linear_reparametrisation: true
+    note: >-
+      K=16 is massively overcomplete for a rank<=4 residual, so the
+      reconstruction gate is trivial and F1_D == F1_O exactly; Gate 3 shows
+      MI(atom->degree) 0.357, i.e. the object is primarily a discretized
+      degree representation, not a rich subrole vocabulary.
+  n_eligible_marked_topology_classes: 512
+  claims:
+    - claim-fec-d0-basis-no-heldout-subrole-signal-20260923
+  decision: decision-fec-d0-stop-no-subrole-signal-20260923
+  prior_artifact_audit: tracks/ksvd/notes/fec_d0_prior_artifact_audit.md
+  preregistration: tracks/ksvd/notes/fec_d0_preregistration.md
+  analysis: tracks/ksvd/notes/fec_d0_analysis.md
+  results: tracks/ksvd/results/fec_d0/
+  runner: tracks/ksvd/experiments/luyin16/zinc_fec_d0.py
+  module: tracks/ksvd/experiments/luyin16/fec_d0.py
+  tests: tracks/ksvd/tests/test_fec_d0.py
+  fec_s1_context:
+    seed0_soup: 0.13042183499777457
+    seed0_best: 0.136783
+    seed1_executed: false
+    note: >-
+      FEC-S1 provided a strong shared strict-static environment->composition
+      seed-0 anchor (not a stable 2-seed baseline; seed 1 intentionally not
+      run) sufficient to motivate a baseline-preserving future dictionary
+      experiment, but FEC-D0 does not qualify that experiment on this basis.
+  next_step: >-
+    STOP.  Do NOT implement FEC-D1.  FEC-D1 is authorized only by
+    FEC_D0_RESIDUAL_STRUCTURAL_DICTIONARY_QUALIFIED, which did not fire.  No
+    K/s/iteration/seed sweep, no nonlinear dictionary, no new basis invented
+    on the spot, no edge dictionary, no second seed, no property run, no
+    FEC-S1 retrain, no FEC-S1 seed 1.  A future dictionary step needs a NEW
+    preregistration and a rooted basis that demonstrably carries degree-beyond
+    held-out subrole information (FEC-D0 localizes the deficiency to the
+    basis, not the dictionary).
 
 # ---------------------------------------------------------------------------
 # PEC-C1 (pure environment composition confirmatory) — 2026-09-23
@@ -1289,6 +1389,39 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-fec-d0-stop-no-subrole-signal-20260923: >-
+      FEC-D0 (2026-09-23, local CPU, protocol fec_d0, commit ca2e947,
+      LABEL-FREE, official valid/test never loaded, targets never read, no
+      FEC-S1 retrain, no task coupling) is the first round to RESIDUALIZE the
+      coarse rooted role before asking whether the remainder is a reusable
+      sparse vocabulary.  Basis = audited FSAR explicit rooted node basis b^V
+      in R^11 (fsar_v2._explicit_basis_for_patch, pure topology); exact shell
+      coordinates {0,1,2,3} deleted; FIT-only per-shell standardization ->
+      phi^perp in R^7; one shared K=16 / s=4 dictionary (SDB/TCCD K-SVD + OMP),
+      matched random dictionary and FIT-only PCA-4 reference; 8000/2000
+      train-internal split (SPLIT_SEED 20260922).  Gate 0 passed 7/7; the
+      learned dictionary reconstructs almost exactly (R_rec 0.0038 <= 0.80)
+      and is maximally reused (16/16 active both splits, Jaccard 1.000,
+      Spearman 1.000, 16 atoms on >=20 held-out molecules), but BOTH are
+      structural artefacts: after residualization the FIT residual rank is 2
+      (shell 0) to 4 (shells 1-2), two kept coordinates (neigh_by_shell[0],
+      walk1) being exactly shell-deterministic, so K=16 is massively
+      overcomplete and the s=4 code is a linear reparametrisation of the dense
+      residual (F1_D == F1_O exactly).  The decisive Gate-2b failure is that
+      the DENSE root-relative basis carries no held-out untyped marked-node
+      rooted topology signal beyond a within-shell degree baseline: aggregate
+      G_O 0.0244 < 0.03 (shell0 0.0177, shell1 0.0537, shell2 0.0055) and the
+      learned dictionary is not better than a matched random dictionary
+      (F1_D - F1_R -0.0008).  Gate 3 (report-only) shows MI(atom->degree)
+      0.357 with every atom spanning only 3-4 degree buckets, so the object is
+      primarily a discretized degree representation.  Frozen verdict
+      FEC_D0_BASIS_HAS_NO_HELDOUT_SUBROLE_SIGNAL; deficiency localized to the
+      BASIS (root-relative, degree-dominated), not the dictionary.  Decision:
+      STOP, no FEC-D1, no sweep/rescue, no property run, no official test.  See
+      notes/fec_d0_prior_artifact_audit.md, notes/fec_d0_preregistration.md,
+      notes/fec_d0_analysis.md, results/fec_d0/,
+      claim-fec-d0-basis-no-heldout-subrole-signal-20260923,
+      decision-fec-d0-stop-no-subrole-signal-20260923.
   - decision-fec-s0-local-factorization-blocked-20260923: >-
       FEC-S0 (2026-09-23, local CPU, protocol fec_s0, lineage commit d4de88e,
       official test never loaded, ZERO training / HPO / dictionary):
