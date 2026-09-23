@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: pec-v0-positive-cpu-screen-gate3-withheld-pending-authorization
+phase: pec-c1-preregistered-full-data-seed0-authorized
 updated: 2026-09-23
 
 # ---------------------------------------------------------------------------
@@ -422,7 +422,36 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: new_preregistration_required
+  status: pec_c1_authorized_two_seed0_arms
+  # -------------------------------------------------------------------------
+  # PEC-C1 (2026-09-23).  New confirmatory round; does NOT amend PEC-v0.
+  # PEC-v0 Gate 1 remains a historical frozen FAIL.  Authorized: exactly two
+  # full-data seed-0 arms (CK = frozen SparseDict on GPU0, CD = DenseRole on
+  # GPU1) against official valid.  Official test never loaded.  seed 1
+  # forbidden unless a frozen Case C/D trigger fires.  No K/s/epochs reader
+  # rescue, no task-coupled dictionary (reserved for a future PEC-C2).
+  # -------------------------------------------------------------------------
+  pec_c1:
+    status: preregistered_implementation_committed_run_pending
+    round: pec-c1
+    preregistration: tracks/ksvd/notes/pec_c1_preregistration.md
+    implementation_note: tracks/ksvd/notes/pec_c1_implementation.md
+    runner: tracks/ksvd/experiments/luyin16/zinc_pec_c1.py
+    tests: tracks/ksvd/tests/test_pec_c1.py
+    arms: [CK_seed0_sparse_frozen_dict, CD_seed0_trainable_dense_role]
+    devices: {CK: cuda:0, CD: cuda:1}
+    epochs: 240
+    selection: official-valid best checkpoint + fixed Top-5 prediction soup
+    record_pending: true
+    note: >-
+      Durable claim/decision records are written only after the two arms
+      complete; no PEC-C1 claim or decision id is referenced here yet.
+    forbidden_without_new_preregistration:
+      - K or s sweep
+      - epochs / threshold / architecture rescue
+      - seed 1
+      - task-coupled or trainable dictionary
+      - official test access
   # -------------------------------------------------------------------------
   # PEC-v0 (pure environment composition, 2026-09-23).
   # Local CPU only, zero GPU spend.  Gate 0 PASS (8/8), Gate 1 FROZEN FAIL
