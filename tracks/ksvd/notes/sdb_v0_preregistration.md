@@ -454,3 +454,32 @@ One additional **reported** (not gated) dictionary reference is added:
 `E_bind^{s=K}` — the same learned `D_KSVD` coded **densely** (`s = K = 32`),
 which isolates the *sparsity* cost from the *subspace* cost. All other
 definitions, thresholds, arms and gates are unchanged.
+
+---
+
+# Amendment A2 (made before the formal Stage-4 run)
+
+Timestamp: 2026-09-24. Status: **pre-formal-run**.
+
+**Finding.** The historical strict-static S0 runs persisted only the single
+best `s0_seed{0,1}_selection_state.pt` plus the fixed Top-5 **soup
+predictions on the valid split** (`runs/s0_seed*.json`). They did **not**
+persist the five per-member soup states, so the S0 soup cannot be reproduced
+bit-exactly on the **train** split, which a frozen-base residual branch needs
+for training.
+
+**Amendment.** Stage 4 uses the durable S0 **selection state** (best
+checkpoint) as the frozen base for *both* train and valid, self-consistently.
+The historical S0 Top-5 soup (`0.140794` seed 0) is still reported as context
+but the material-gain gate is measured against the *same frozen base* used to
+train the branch, because a residual branch must be trained on the base it is
+compared against. Concretely the Stage-4 seed-0 gate becomes:
+
+* `DictBinding_soup ≤ base_valid_mae − 0.003` (material gain on the frozen
+  selection-state base), and
+* `DictBinding_soup ≤ DenseBinding_soup + 0.002`, and
+* within-molecule assignment shuffle degrades MAE by `≥ 0.02`.
+
+The SDB branch and all forbidden-rescue rules are unchanged. `D` is the frozen
+Stage-1 `D_KSVD(K=32, s=8)`; the readout is the only trained statistical part
+(the matched dense control additionally trains a `65×32` projection).

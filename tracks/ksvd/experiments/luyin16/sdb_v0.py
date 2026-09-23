@@ -457,11 +457,8 @@ def gather_molecule_batch(
 
 
 def train_task_coupled_dictionary(
-    phi_all: np.ndarray,
-    q_all: np.ndarray,
-    offsets: Sequence[tuple[int, int]],
-    base: np.ndarray,
-    y: np.ndarray,
+    train_split: tuple,
+    valid_split: tuple,
     seed: int,
     protocol: Mapping[str, Any],
     *,
@@ -476,6 +473,10 @@ def train_task_coupled_dictionary(
 ) -> dict[str, Any]:
     """Frozen-base + tied-IHT dictionary + linear assignment readout.
 
+    Each split is ``(phi_all, q_all, offsets, base, y)`` flattened over atoms;
+    ``train_split`` drives the optimizer and ``valid_split`` is held out for
+    checkpoint selection and the reported MAE.
+
     ``loss = L1(pred, y) + lambda * mean_v ||phi_v - D alpha_v||^2 / ||phi_v||^2``
     with ``lambda`` calibrated once (detached) to match the initial task and
     reconstruction magnitudes (TCCD-style).  ``D`` is the *same* tensor used
@@ -486,10 +487,20 @@ def train_task_coupled_dictionary(
     dev = torch.device(device)
     torch.manual_seed(int(seed))
     np.random.seed(int(seed))
-    phi_t = torch.as_tensor(np.asarray(phi_all), dtype=torch.float32, device=dev)
-    q_t = torch.as_tensor(np.asarray(q_all), dtype=torch.float32, device=dev)
-    base_t = torch.as_tensor(np.asarray(base), dtype=torch.float32, device=dev)
-    y_t = torch.as_tensor(np.asarray(y), dtype=torch.float32, device=dev)
+
+    def _to_tensors(split):
+        phi_all, q_all, _offsets, base, y = split
+        return (
+            torch.as_tensor(np.asarray(phi_all), dtype=torch.float32, device=dev),
+            torch.as_tensor(np.asarray(q_all), dtype=torch.float32, device=dev),
+            torch.as_tensor(np.asarray(base), dtype=torch.float32, device=dev),
+            torch.as_tensor(np.asarray(y), dtype=torch.float32, device=dev),
+        )
+
+    phi_tr, q_tr, base_tr, y_tr = _to_tensors(train_split)
+    phi_va, q_va, base_va, y_va = _to_tensors(valid_split)
+    off_tr = train_split[2]
+    off_va = valid_split[2]
     scale_t = torch.as_tensor(np.asarray(scale), dtype=torch.float32, device=dev)
     mask_t = torch.as_tensor(np.asarray(mask), dtype=torch.float32, device=dev)
 
@@ -507,7 +518,7 @@ def train_task_coupled_dictionary(
     def _codes(phi_batch: "torch.Tensor", D: "torch.Tensor") -> "torch.Tensor":
         return T.iht_codes(_normalized(D), phi_batch, s=int(s), steps=int(iht_steps))
 
-    def _pred_and_rec(batch_index, D):
+    def _forward(phi_t, q_t, base_t, offsets, batch_index, D):
         phi_b, q_b, node_graph = gather_molecule_batch(phi_t, q_t, offsets, batch_index)
         alpha = _codes(phi_b, D)
         c_code, _p = r2.segment_center_stats(alpha, q_b, node_graph, len(batch_index))
@@ -518,7 +529,7 @@ def train_task_coupled_dictionary(
         )
         return prediction, rec.mean()
 
-    n = len(offsets)
+    n = len(off_tr)
     batch_size = int(protocol["batch_size"])
     max_epochs = int(protocol["max_epochs"])
     patience = int(protocol["patience"])
@@ -529,20 +540,24 @@ def train_task_coupled_dictionary(
     if calibrate_rec:
         cal = torch.arange(min(512, n), device=dev)
         with torch.no_grad():
-            prediction, rec = _pred_and_rec(cal, D_param)
-            l_task = float((prediction - y_t[cal]).abs().mean())
+            prediction, rec = _forward(phi_tr, q_tr, base_tr, off_tr, cal, D_param)
+            l_task = float((prediction - y_tr[cal]).abs().mean())
             l_rec = float(rec)
         lam = l_task / (l_rec + 1e-12)
 
-    def _valid_mae(D) -> float:
+    def _mae(D, readout_state) -> float:
         with torch.no_grad():
             total = 0.0
             seen = 0
-            for start in range(0, n, 512):
-                idx = torch.arange(start, min(start + 512, n), device=dev)
-                prediction, _rec = _pred_and_rec(idx, D)
-                total += float((prediction - y_t[idx]).abs().sum())
+            n_va = len(off_va)
+            saved = readout.data
+            readout.data = readout_state
+            for start in range(0, n_va, 512):
+                idx = torch.arange(start, min(start + 512, n_va), device=dev)
+                prediction, _rec = _forward(phi_va, q_va, base_va, off_va, idx, D)
+                total += float((prediction - y_va[idx]).abs().sum())
                 seen += int(idx.numel())
+            readout.data = saved
             return total / max(seen, 1)
 
     best_mae = float("inf")
@@ -554,13 +569,13 @@ def train_task_coupled_dictionary(
         order = torch.randperm(n, generator=generator).to(dev)
         for start in range(0, n, batch_size):
             batch_index = order[start : start + batch_size]
-            prediction, rec = _pred_and_rec(batch_index, D_param)
-            loss = torch.nn.functional.l1_loss(prediction, y_t[batch_index]) + float(lam) * rec
+            prediction, rec = _forward(phi_tr, q_tr, base_tr, off_tr, batch_index, D_param)
+            loss = torch.nn.functional.l1_loss(prediction, y_tr[batch_index]) + float(lam) * rec
             optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(learnable, clip)
             optimizer.step()
-        valid_mae = _valid_mae(D_param)
+        valid_mae = _mae(D_param, readout.detach())
         state = {"D": D_param.detach().clone(), "readout": readout.detach().clone()}
         top5.append((float(valid_mae), int(epoch), state))
         top5.sort(key=lambda item: (item[0], item[1]))
@@ -580,27 +595,14 @@ def train_task_coupled_dictionary(
         "readout": torch.stack([item[2]["readout"] for item in top5], dim=0).mean(dim=0),
     }
 
-    def _mae_with(state) -> float:
-        with torch.no_grad():
-            total = 0.0
-            seen = 0
-            for start in range(0, n, 512):
-                idx = torch.arange(start, min(start + 512, n), device=dev)
-                phi_b, q_b, node_graph = gather_molecule_batch(phi_t, q_t, offsets, idx)
-                alpha = _codes(phi_b, state["D"])
-                c_code, _p = r2.segment_center_stats(alpha, q_b, node_graph, len(idx))
-                statistic = (c_code / scale_t[None, :, :]) * mask_t[None, :, :]
-                prediction = base_t[idx] + (statistic * state["readout"]).sum(dim=(1, 2))
-                total += float((prediction - y_t[idx]).abs().sum())
-                seen += int(idx.numel())
-            return total / max(seen, 1)
-
+    mae_soup = _mae(soup["D"], soup["readout"])
+    mae_best = _mae(best_state["D"], best_state["readout"])
     atom_movement = float((_normalized(soup["D"]) - _normalized(D_init_t)).norm())
     return {
-        "best_valid_mae": float(best_mae),
+        "best_valid_mae": float(mae_best),
         "best_epoch": int(best_epoch),
         "top5_epochs": [int(item[1]) for item in top5],
-        "top5_soup_valid_mae": float(_mae_with(soup)),
+        "top5_soup_valid_mae": float(mae_soup),
         "lambda_rec": float(lam),
         "atom_movement": atom_movement,
         "readout_norm": float(soup["readout"].norm()),

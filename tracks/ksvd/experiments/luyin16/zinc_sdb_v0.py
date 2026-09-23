@@ -905,6 +905,7 @@ def stage3(seeds: Sequence[int] = (0, 1, 2), force: bool = False) -> dict[str, A
     protocol = dict(shead.OPTIMIZED_PROTOCOL)
 
     phi_train, q_train, off_train = sdb.make_flat_split(train)
+    phi_valid, q_valid, off_valid = sdb.make_flat_split(valid)
     y_train = np.asarray([m.y for m in train], dtype=np.float64)
     y_valid = np.asarray([m.y for m in valid], dtype=np.float64)
 
@@ -942,8 +943,9 @@ def stage3(seeds: Sequence[int] = (0, 1, 2), force: bool = False) -> dict[str, A
             seed=seed, protocol=protocol, width=sdb.K_ATOMS,
         )
         task = sdb.train_task_coupled_dictionary(
-            phi_train, q_train, off_train, m0_train, y_train, seed, protocol,
-            D_init=D_ksvd, scale=scale, mask=mask, learn_dictionary=True,
+            (phi_train, q_train, off_train, m0_train, y_train),
+            (phi_valid, q_valid, off_valid, m0_valid, y_valid),
+            seed, protocol, D_init=D_ksvd, scale=scale, mask=mask, learn_dictionary=True,
         )
         m_frozen = float(frozen["top5_soup_valid_mae"])
         m_task = float(task["top5_soup_valid_mae"])
@@ -977,6 +979,128 @@ def stage3(seeds: Sequence[int] = (0, 1, 2), force: bool = False) -> dict[str, A
 
 
 # ---------------------------------------------------------------------------
+# Stage 4 — strict-static S0 + dictionary binding (frozen base)
+# ---------------------------------------------------------------------------
+
+STATIC_RESULTS = TRACK_ROOT / "results/zinc_static_dictionary_pair"
+S0_STATE = STATIC_RESULTS / "states/s0_seed0_selection_state.pt"
+STAGE4_GAIN = 0.003
+STAGE4_DENSE_SLACK = 0.002
+STAGE4_SHUFFLE = 0.02
+
+
+def stage4(seed: int = 0, force: bool = False) -> dict[str, Any]:
+    out_path = RESULTS_DIR / f"stage4_static_seed{seed}.json"
+    if out_path.exists() and not force:
+        return _read_json(out_path)
+    from tracks.ksvd.experiments.luyin16 import zinc_patch_path_pooling as zpp
+    from tracks.ksvd.experiments.luyin16 import zinc_static_dictionary_pair as sdp
+
+    train, valid, scalers, _meta = build_datasets()
+    D_ksvd, _D_rand, _pca = load_dictionary()
+    protocol = dict(shead.OPTIMIZED_PROTOCOL)
+    y_train = np.asarray([m.y for m in train], dtype=np.float64)
+    y_valid = np.asarray([m.y for m in valid], dtype=np.float64)
+
+    # frozen S0 base (selection state) predictions, in FSAR-cache order (verified aligned by y).
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = sdp.build_s0(seed=int(seed))
+    model.load_state_dict(torch.load(S0_STATE, map_location="cpu", weights_only=True))
+    model.to(device).eval()
+    encoded_train, encoded_valid, _audit = sdp.load_encoded()
+    _, s0_train = zpp._predict_values(model, zpp._make_loader(encoded_train, 128, False, 0), device)
+    _, s0_valid = zpp._predict_values(model, zpp._make_loader(encoded_valid, 128, False, 0), device)
+    if not (np.allclose(y_train, [float(d.y.view(-1)[0]) for d in encoded_train])
+            and np.allclose(y_valid, [float(d.y.view(-1)[0]) for d in encoded_valid])):
+        raise RuntimeError("FSAR cache / strict-static encoded order mismatch")
+    base_valid_mae = float(np.mean(np.abs(y_valid - s0_valid)))
+
+    # SDB statistic C_D (frozen K-SVD dictionary, OMP s=8) + train-only RMS scaler.
+    codes_train = _codes(train, D_ksvd)
+    codes_valid = _codes(valid, D_ksvd)
+    c_d_train = sdb.binding_matrices_for_molecules(codes_train, train)
+    c_d_valid = sdb.binding_matrices_for_molecules(codes_valid, valid)
+    scale_d, mask_d = sdb.fit_rms_scaler(c_d_train)
+    stat_d_train = sdb.apply_rms_scaler(c_d_train, scale_d, mask_d)
+    stat_d_valid = sdb.apply_rms_scaler(c_d_valid, scale_d, mask_d)
+
+    c_phi_train = mech._node_arrays(train, scalers).C_raw
+    c_phi_valid = mech._node_arrays(valid, scalers).C_raw
+
+    dict_arm = sdb.train_linear_residual(
+        stat_d_train, s0_train, y_train, stat_d_valid, s0_valid, y_valid,
+        seed=int(seed), protocol=protocol, width=sdb.K_ATOMS,
+    )
+    dense_arm = _train_dense_joint(
+        c_phi_train, s0_train, y_train, c_phi_valid, s0_valid, y_valid, int(seed), protocol,
+    )
+
+    shuffled = sdb.shuffle_codes_against_chemistry(codes_valid, valid, seed=int(seed) + 991)
+    c_shuf = sdb.binding_matrices_for_molecules(shuffled, valid)
+    stat_shuf = sdb.apply_rms_scaler(c_shuf, scale_d, mask_d)
+    w = dict_arm["W_soup"].numpy()
+    pred_clean = s0_valid + np.einsum("bkj,kj->b", stat_d_valid, w)
+    pred_shuf = s0_valid + np.einsum("bkj,kj->b", stat_shuf, w)
+    mae_clean = float(np.mean(np.abs(y_valid - pred_clean)))
+    mae_shuf = float(np.mean(np.abs(y_valid - pred_shuf)))
+
+    m_dict = float(dict_arm["top5_soup_valid_mae"])
+    m_dense = float(dense_arm["top5_soup_valid_mae"])
+    gain = float(base_valid_mae - m_dict)
+    shuffle_deg = float(mae_shuf - mae_clean)
+    gate_perf = bool(m_dict <= base_valid_mae - STAGE4_GAIN)
+    gate_dense = bool(m_dict <= m_dense + STAGE4_DENSE_SLACK)
+    gate_shuffle = bool(shuffle_deg >= STAGE4_SHUFFLE)
+
+    # Supplementary arm: task-coupled dictionary on the *same* frozen S0 base.
+    phi_tr, q_tr, off_tr = sdb.make_flat_split(train)
+    phi_va, q_va, off_va = sdb.make_flat_split(valid)
+    task_arm = sdb.train_task_coupled_dictionary(
+        (phi_tr, q_tr, off_tr, s0_train, y_train),
+        (phi_va, q_va, off_va, s0_valid, y_valid),
+        int(seed), protocol, D_init=D_ksvd, scale=scale_d, mask=mask_d, learn_dictionary=True,
+    )
+    m_task = float(task_arm["top5_soup_valid_mae"])
+    task_gain = float(base_valid_mae - m_task)
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "git_commit": _git_commit(),
+        "seed": int(seed),
+        "device": str(device),
+        "verdict": "PASS" if (gate_perf and gate_dense and gate_shuffle) else "FAIL",
+        "base_valid_mae": base_valid_mae,
+        "historical_s0_soup_seed0": 0.14079417109390488,
+        "dict_soup_valid_mae": m_dict,
+        "dense_soup_valid_mae": m_dense,
+        "gain_vs_base": gain,
+        "dense_slack": float(m_dict - m_dense),
+        "shuffle_clean_mae": mae_clean,
+        "shuffle_permuted_mae": mae_shuf,
+        "shuffle_degradation": shuffle_deg,
+        "gates": {"perf": gate_perf, "dense_control": gate_dense, "shuffle": gate_shuffle},
+        "supplementary_task_coupled": {
+            "task_dict_soup_valid_mae": m_task,
+            "task_gain_vs_base": task_gain,
+            "task_minus_frozen_dict": float(m_task - m_dict),
+            "task_gate_perf": bool(m_task <= base_valid_mae - STAGE4_GAIN),
+            "atom_movement": float(task_arm["atom_movement"]),
+            "lambda_rec": float(task_arm["lambda_rec"]),
+        },
+        "thresholds": {"gain": STAGE4_GAIN, "dense_slack": STAGE4_DENSE_SLACK, "shuffle": STAGE4_SHUFFLE},
+        "dict_trainable_params": int(dict_arm["trainable_params"]),
+        "dense_trainable_params": int(dense_arm["trainable_params"]),
+        "top5_epochs_dict": dict_arm["top5_epochs"],
+        "base_artifact": "s0_seed0_selection_state.pt (Amendment A2)",
+        "frozen_dictionary": "D_KSVD K=32 s=8",
+        "baselines_not_rerun": ["strict-static S0 training", "FSAR MB/MM", "TCCD", "DTX"],
+        "official_test_loaded": False,
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True, default=str), flush=True)
+    _write_json(out_path, payload)
+    return payload
+
+
+# ---------------------------------------------------------------------------
 # report / CLI
 # ---------------------------------------------------------------------------
 
@@ -1000,7 +1124,7 @@ def report() -> dict[str, Any]:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="SDB-v0 runner")
-    parser.add_argument("stage", choices=["dict", "gate1", "sanity", "synthetic", "gate2", "gate3", "report", "all"])
+    parser.add_argument("stage", choices=["dict", "gate1", "sanity", "synthetic", "gate2", "gate3", "gate4", "report", "all"])
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--max-fit-atoms", type=int, default=None)
     parser.add_argument("--seeds", type=int, nargs="*", default=[0, 1, 2])
@@ -1018,6 +1142,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         stage2(seeds=tuple(args.seeds), force=args.force)
     elif args.stage == "gate3":
         stage3(seeds=tuple(args.seeds), force=args.force)
+    elif args.stage == "gate4":
+        stage4(seed=int(args.seeds[0]) if args.seeds else 0, force=args.force)
     elif args.stage == "report":
         report()
     elif args.stage == "all":
