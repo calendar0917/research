@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-zinc-no-ring-dictionary-topology-cross-v0-seed0-negative
+phase: post-zinc-contextualization-gap-audit-v0-case-c
 updated: 2026-09-23
 
 # ---------------------------------------------------------------------------
@@ -811,6 +811,53 @@ deferred_optional:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-zinc-cga-v0-deprioritise-local-dictionaries-20260923: >-
+      CGA-v0 (2026-09-23, preregistration + Amendment A1 commit c174ab3,
+      formal-run commit c174ab36; remote A100 host res, deterministic CPU
+      inference; official ZINC train 10000 / official valid 1000; official test
+      never loaded; 0 new full training runs) reused the DURABLE recurrent
+      pair-centre checkpoints (recurrent_seed{0,1}, 82,115 params, training
+      commit a3515e76), the matched one-shot baseline (baseline_seed{0,1}, same
+      commit/budget/seed/local machinery) and the auxiliary B-Null seed0
+      (49,343 params) to ask whether the recurrent model's advantage comes from
+      a contextual computation a strict-static representation cannot replicate.
+      Exports reproduce the recorded behaviour exactly (valid MAE |Δ| = 5.2e-9
+      / 2.4e-8; q0/A0 reconstruction, single-vs-batched h0, repeat-export all
+      bit-identical), gates A/B/C/D pass. Discovered structure: the h0 space is
+      massively duplicated (72.3% of valid patches have an exact h0 match in
+      train, median 77 duplicates), so Jaccard(NN_h0,NN_h2) is tie-confounded
+      and Amp = d2/(d0+eps) is degenerate; Amendment A1 (frozen before the
+      formal run) therefore bases the decision on a matched-random retention
+      ratio and an absolute context criterion. Result: delta_h = h2 - h0 is
+      largely a LOCALLY determined transformation. P_local = 0.926 / 0.961;
+      adding centre context [h0;A0] gives P_context = 0.963 / 0.976, i.e.
+      context_abs_gain = 0.037 / 0.014 of the delta variance (0.85% / 0.57% of
+      the h2 variance); context_gain on the residual is 0.501 / 0.375 but the
+      residual is tiny. h0-neighbour deltas disagree only 0.304 / 0.262 as much
+      as matched random patches; identical-h0 patches disagree by 0.176 / 0.082
+      of sqrt(2) sigma_delta; K=64 target-free local prototypes carry only
+      13-18% of the delta variance within-atom (weighted mean S_k 0.184 /
+      0.128). The task link is marginal and SEED-UNSTABLE: Spearman(C_h,gain) =
+      0.026 (95% CI [-0.036,0.092]) / 0.065 (95% CI [0.0005,0.130]), Q4-Q1 gain
+      +0.0088 (CI crosses 0) / +0.0044, size-residualised Spearman 0.018 / 0.042
+      (CIs include 0). Auxiliary B-Null seed0 shows the same structure
+      (P_local 0.864, context_abs_gain 0.069, reproduction |Δ| = 5.6e-8).
+      Preregistered decision -> CASE C: CONTEXTUAL_STATE_LOCALLY_COMPILABLE
+      (DIVERGENCE false for both seeds; LOCAL_COMPILABLE_ABSOLUTE true for both;
+      TASK_LINK true for seed1 only, marginally). Interpretation: contextual
+      states EXIST and are context-input-dependent, but contextual computation
+      is NOT the bottleneck (93-96% of the recurrent shift is locally
+      predictable; the context-only increment is 1-4% of the shift and has no
+      consistent task link). This deprioritises further local / pair /
+      topology-cross dictionary designs as a way to recover the recurrent
+      advantage; at most it authorizes ONE bounded preregistered test of a
+      strictly-local two-update compiler, with a low ceiling. No seed 2, no
+      sweep, no new architecture, no official test. See
+      notes/zinc_contextualization_gap_audit_v0_preregistration.md,
+      notes/zinc_contextualization_gap_audit_v0_analysis.md,
+      results/zinc_contextualization_gap_audit_v0/RESULTS_SUMMARY.md,
+      claim-zinc-cga-v0-contextual-state-locally-compilable-20260923,
+      decision-zinc-cga-v0-deprioritise-local-dictionaries-20260923.
   - decision-zinc-dtx-v0-stop-no-aligned-cross-signal-20260923: >-
       DTX-v0 (2026-09-23, preregistration commit 7c28be1, formal-run commit
       3810d73; remote A100-SXM4-40GB GPU0 = MARGINAL / GPU1 = ALIGNED, in

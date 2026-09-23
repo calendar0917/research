@@ -1,0 +1,103 @@
+claim_id: claim-zinc-cga-v0-contextual-state-locally-compilable-20260923
+created: '2026-09-23T00:00:00Z'
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+statement: >-
+  CGA-v0 (preregistration + Amendment A1 in
+  notes/zinc_contextualization_gap_audit_v0_preregistration.md; formal run
+  commit c174ab36, remote A100 host res, deterministic CPU inference, official
+  ZINC train 10000 / official valid 1000, official test never loaded, 0 new
+  full training runs) reuses the durable recurrent pair-centre checkpoints
+  (recurrent_seed{0,1}, 82,115 params, training commit a3515e76) and the matched
+  one-shot baseline (baseline_seed{0,1}, same commit/budget) plus the auxiliary
+  B-Null seed0 (49,343 params). Valid MAE and all exports reproduce the recorded
+  behaviour (|MAE diff| <= 2.4e-8; q0/A0 reconstruction and repeat-export
+  bit-identical; gates A/B/C/D pass). KEY OBSERVED STRUCTURE: the h0 space is
+  massively duplicated - 72.3% of valid patches have an exact h0 match in train
+  (median 77 duplicates), so Jaccard(NN_h0, NN_h2) is tie-confounded and the raw
+  amplification d2/(d0+eps) is degenerate; Amendment A1 therefore bases the
+  decision on a matched-random retention ratio computed BEFORE the formal run.
+  RESULT: the recurrent contextual refinement delta_h = h2 - h0 is largely a
+  locally determined transformation. The local state alone predicts delta_h with
+  P_local = 0.926 (seed0) / 0.961 (seed1); centre context [h0;A0] raises this
+  only to P_context = 0.963 / 0.976, i.e. context explains an absolute
+  context_abs_gain = 0.037 / 0.014 of the delta variance (0.85% / 0.57% of the
+  h2 variance). h0-neighbour deltas disagree only ~0.26-0.30 as much as matched
+  random patches (retention_dDelta), and identical-h0 patches disagree by
+  0.18 / 0.08 of sqrt(2) sigma_delta. K=64 target-free local prototypes carry
+  only 13-18% of the delta variance within-atom (weighted mean S_k 0.184 /
+  0.128); 82-87% is between prototypes. The task link is marginal and
+  seed-unstable: Spearman(C_h, gain) = 0.026 (95% CI [-0.036, 0.092]) / 0.065
+  (95% CI [0.0005, 0.130]), Q4-Q1 gain +0.0088 (CI crosses 0) / +0.0044,
+  size-residualised Spearman 0.018 / 0.042 (CIs include 0). Auxiliary B-Null
+  seed0 shows the same structure (P_local 0.864, context_abs_gain 0.069).
+  Preregistered decision -> CASE C: CONTEXTUAL_STATE_LOCALLY_COMPILABLE.
+  Supported statement: the strong recurrent pair-centre model's contextual
+  refinement is not a hidden, locally inaccessible computation; it is 93-96%
+  predictable from the local state, its context-only increment is 1-4% of the
+  shift, and that increment has no consistent task link. This deprioritises
+  further local / pair / topology-cross dictionary designs as a way to recover
+  the recurrent advantage.
+evidence:
+  preregistration_commit: c174ab3
+  formal_run_commit: c174ab36c14e69059be43b7bbe9ff977433bdcf1
+  analysis_note: notes/zinc_contextualization_gap_audit_v0_analysis.md
+  results_dir: results/zinc_contextualization_gap_audit_v0
+  integrity:
+    seed0_mae_abs_diff: 5.24e-09
+    seed1_mae_abs_diff: 2.42e-08
+    reconstruction_max_abs_diff: 0.0
+    determinism_max_abs_diff: 0.0
+    official_test_loaded: false
+  seed0:
+    P_local: 0.926041862670683
+    P_context: 0.9630585167665158
+    context_gain: 0.5005081987260838
+    context_abs_gain: 0.03701665409583281
+    context_share_of_h2_variance: 0.008502469812974128
+    R_delta_median_H0: 0.18209032714366913
+    retention_dDelta_over_random: 0.3043084144592285
+    exact_h0_fraction: 0.723
+    exact_subset_dDelta_over_sqrt2_sigma: 0.1763
+    weighted_mean_S_k: 0.1845
+    spearman_C_h_gain: 0.026404634404634406
+    spearman_C_h_gain_ci: [-0.03547169642787733, 0.0919]
+    q4_minus_q1_gain: 0.008767602920532226
+    task_link: false
+  seed1:
+    P_local: 0.9614777703995503
+    P_context: 0.9759329598135861
+    context_gain: 0.37524280302475266
+    context_abs_gain: 0.014455189414035863
+    context_share_of_h2_variance: 0.005667635587557309
+    R_delta_median_H0: 0.10394967347383499
+    retention_dDelta_over_random: 0.26203039288520813
+    exact_h0_fraction: 0.723
+    exact_subset_dDelta_over_sqrt2_sigma: 0.0821
+    weighted_mean_S_k: 0.1276
+    spearman_C_h_gain: 0.0648989928989929
+    spearman_C_h_gain_ci: [0.0004783101994509297, 0.1297]
+    q4_minus_q1_gain: 0.00435173273086548
+    task_link: true
+  bnull_seed0_auxiliary:
+    reproduction_abs_diff: 5.5869168125166624e-08
+    P_local: 0.8639
+    P_context: 0.933
+    context_abs_gain: 0.0691
+    R_delta_median_H0: 0.2567
+    retention_dDelta_over_random: 0.3971
+decision: case-C
+caveats:
+  - h0 is a learned local representation; the audit asks whether the model's own
+    local state already determines its contextual refinement, not whether a raw
+    graph invariant does.
+  - P_local is a non-parametric upper bound for a local-only predictor; it does
+    not prove an end-to-end strictly-local model recovers the recurrent task
+    performance.
+  - context_abs_gain is small but non-zero; the honest reading is "context is
+    real but not the bottleneck", not "context is absent".
+  - B-Null is a single seed and auxiliary only; it is not used for the verdict.
+  - The h0-space duplication forced a measurement amendment (A1); both the
+    original and the amended quantities are reported, and the amendment was
+    frozen before the formal run.

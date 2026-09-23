@@ -1,0 +1,91 @@
+decision_id: decision-zinc-cga-v0-deprioritise-local-dictionaries-20260923
+created: '2026-09-23T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The recurring question after SRDA-v0 / SDPK-v0 / DTX-v0 was whether the strong
+  recurrent pair-centre model has an advantage that strict-static local
+  dictionaries cannot replicate - i.e. whether the same local environment, in
+  different molecule contexts, produces substantially different contextual
+  states after recurrence, and whether that contextualization drives the
+  recurrent gain. Resolving it decides whether to keep investing in
+  local/pair/topology-cross dictionary designs or to stop them.
+protocol: >-
+  Local-first implementation (13 targeted CPU tests pass) under the
+  remote-research-runner workflow (local Git as source of truth, deploy.sh,
+  uv sync --frozen, research doctor, detached launch, pull results). HARD
+  BUDGET: 0 new full training runs; only existing-checkpoint deterministic CPU
+  inference / state export and train-only, target-free probes. Preregistration
+  frozen at commit c174ab3 including Amendment A1 (measurement robustness).
+  Data policy: train-only neighbour index / prototypes; official valid as
+  queries (no y in representation audits A/B/C); official test never loaded.
+  Primary comparator: recurrent_seed{0,1} vs matched baseline_seed{0,1}
+  (82,115 params, equal protocol/seed/local machinery/budget). Auxiliary:
+  B-Null seed0. Primary metrics: k=16 train-h0 NN; P_local / P_context /
+  context_abs_gain; matched-random retention ratio; K=64 target-free spherical
+  k-means (fixed seed, no tuning, no sweep); Spearman(C_h, gain) with 10,000
+  bootstrap 95% CI and quartile gain.
+results:
+  preregistration_commit: c174ab3
+  formal_run_commit: c174ab36c14e69059be43b7bbe9ff977433bdcf1
+  decision: C_CONTEXTUAL_STATE_LOCALLY_COMPILABLE
+  integrity_passed: true
+  official_test_loaded: false
+  new_full_training_runs: 0
+  seed0:
+    P_local: 0.926041862670683
+    context_abs_gain: 0.03701665409583281
+    retention_dDelta_over_random: 0.3043084144592285
+    spearman_C_h_gain: 0.026404634404634406
+  seed1:
+    P_local: 0.9614777703995503
+    context_abs_gain: 0.014455189414035863
+    retention_dDelta_over_random: 0.26203039288520813
+    spearman_C_h_gain: 0.0648989928989929
+decision_summary: >-
+  CASE C. The recurrence's contextual refinement is 93-96% predictable from the
+  local state; context adds only 1-4% of the shift variance (0.6-0.9% of the h2
+  variance); the task link is marginal and seed-unstable; the recurrent gain
+  (+0.00696/+0.00462 MAE) is therefore not attributable to contextual
+  computation.
+closure:
+  - STOP the local / pair / topology-cross dictionary line as a route to
+    recover the recurrent advantage. The three-way evidence chain fails at
+    local-unpredictability and task-linked-gain.
+  - No seed 2, no sweep, no new architecture, no dictionary rescue, no entropy
+    rescue, no new ring feature, no static compiler training this round.
+  - Do not re-run these audits with a different K or k as a rescue; K=64 and
+    k=16 were frozen a priori and the conclusion is insensitive across two
+    seeds and the auxiliary B-Null.
+authorized_next_steps:
+  - At most ONE bounded preregistered test of a strictly-local two-update
+    compiler (per-patch, no pair->centre context, matched depth and parameter
+    budget), with a LOW prior because the context residual is small and its task
+    link is null. This is a new question and needs its own preregistration.
+  - Prefer no new round at all if effort is the constraint; the representation
+    result is already sufficient to deprioritise dictionary work.
+not_authorized:
+  - another local / pair / topology-cross dictionary design
+  - retraining the backbone, seed sweep, architecture modification, HPO
+  - official ZINC test
+alternatives_considered:
+  - 'Keep designing local dictionaries: rejected - they target the local
+    transformation, which is not the missing ingredient, and previous absolute
+    gains were unstable.'
+  - 'Accept controlled contextual refinement as necessary: rejected as the
+    headline - context is real but explains only 1-4% of the shift and has no
+    consistent task link; it is not the bottleneck.'
+  - 'Declare inconclusive: rejected - both seeds and the auxiliary B-Null agree
+    on high local predictability and small absolute context gain.'
+revisit_if:
+  - a new backbone/objective changes the local state so that
+    context_abs_gain > 0.05 with a task link whose bootstrap CI excludes zero
+    in two seeds.
+  - the recurrent pair-centre model becomes the production model and the
+    compiler question becomes a deployment-latency question rather than a
+    scientific one.
+pointers:
+  - notes/zinc_contextualization_gap_audit_v0_preregistration.md
+  - notes/zinc_contextualization_gap_audit_v0_analysis.md
+  - results/zinc_contextualization_gap_audit_v0/RESULTS_SUMMARY.md
+  - claim-zinc-cga-v0-contextual-state-locally-compilable-20260923
