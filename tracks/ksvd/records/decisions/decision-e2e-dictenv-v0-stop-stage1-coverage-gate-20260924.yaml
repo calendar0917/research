@@ -1,0 +1,144 @@
+decision_id: decision-e2e-dictenv-v0-stop-stage1-coverage-gate-20260924
+created: '2026-09-24T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  Prior work localized the sparse SDB-v0 pure-topology dictionary coordinate
+  inside a frozen FEC-S1 shared local environment (FEC-D1: local binding helps,
+  but the gain was not dictionary-specific versus a matched PCA32 control).
+  E2E-DictEnv-v0 asked the end-to-end question: can a task-coupled, sparse,
+  shared pure-topology dictionary (phi65 -> D -> alpha32, tied-IHT) be the ONLY
+  fine-grained learned structural coordinate from which local chemical
+  environments are built, and is its value SPECIFIC versus a parameter-identical
+  dense tied coordinate (z = phi @ Pbar on the same matrix)?  The round was
+  pre-registered with fixed K=32, s=8, 10 IHT steps, frozen SDB K-SVD
+  initialisation, 66,158 parameters, one-shot frozen lambda_rec, Sparse vs
+  DenseTied arms only (no PCA), hard Gate 0 and a Stage-1 train-only mechanism
+  smoke before any formal run.
+protocol: >-
+  Local-first implementation with targeted CPU tests, pre-registration frozen
+  before any run.  Architecture: only coordinate phi65, no message passing,
+  recurrence, pair->centre, relation refresh, attention, context writeback,
+  typed/parent lookup, FEC-S1 146->214->24 adapter, patch_cont in the model,
+  graph-level dictionary residual or pair-kernel dictionary side channel.
+  Frozen: K=32, s=8, IHT=10, r_atom=64, r_bond=16, env MLP 86->329->48 SiLU,
+  exact FEC-S1 strict-static composition backend (15,359 params), total 66,158.
+  Training protocol OPTIMIZED_PROTOCOL: Adam lr 1e-3, wd 1e-5, batch 128,
+  L1 + lambda_rec * normalised reconstruction, clip 5, no scheduler, 240
+  epochs, no early termination, fixed Top-5 soup, seed 0, official train 10,000
+  / official valid 1,000, official test never loaded.  Gate 0: G0..G12.
+  Stage 1: first 512 official-train molecules, 3 epochs, Sparse arm, official
+  valid never read; hard gate >= 24/32 atoms active, no single atom > 50%,
+  effective atom count >= 8, environment rank > 1.
+results:
+  implementation_commit: see results/e2e_dictenv_v0/decision.json git_commit
+  parameters_whole_model: 66158
+  parameters_fec_s1_reference: 66170
+  parameter_difference: -12
+  correctness_gates_all_passed: true
+  correctness_gate_pass: G0..G12 all true
+  cpu_tests: 15/15 pass
+  lambda_rec: 135.8349280176023
+  lambda_task_init: 1.3659378290176392
+  lambda_rec_init: 0.010055865960372121
+  stage1_gates:
+    loss_finite: true
+    train_mae_decreased: true
+    d_grad_nonzero: true
+    alpha_still_sparse: true
+    atoms_active: false
+    no_single_atom_dominance: true
+    effective_atom_count: true
+    environment_rank: true
+  atoms_active_init_official_train: 25
+  atoms_active_init_512_subset: 24
+  atoms_active_after_smoke_official_train: 23
+  atoms_active_after_smoke_512_subset: 23
+  atoms_active_required: 24
+  effective_atom_count_after_smoke: 12.827
+  top1_support_share_after_smoke: 0.125
+  max_l0_after_smoke: 8
+  environment_effective_rank_smoke: 2.297468123322293
+  train_mae_curve: [1.3470047414302826, 1.3305959403514862, 1.2491758465766907]
+  train_rec_curve: [0.008435140027497944, 0.0065351408305921056, 0.005321892989309211]
+  determinism: two runs identical support and gate outcome
+  formal_arms_run: []
+  zero_code_intervention_run: false
+  shuffle_intervention_run: false
+  dictionary_health_run: false
+  M_S: null
+  M_D: null
+  G_sparse: null
+  official_test_loaded: false
+decision: >-
+  STOP E2E-DictEnv-v0 at the Stage-1 mechanism gate (frozen verdict
+  E2E_DICTENV_MECHANISM_COLLAPSED, case S1).  Do NOT run the formal Sparse or
+  DenseTied arms, do NOT run the zero-code or assignment-shuffle interventions,
+  do NOT evaluate the absolute band or the dictionary-specific gate, and do NOT
+  apply any forbidden rescue (K / s / IHT steps / LISTA / soft dictionary /
+  multiple or per-shell dictionaries / deeper decoder / attention / LayerNorm /
+  lambda sweep / extra epochs / reader enlargement / seed 1).  The round is
+  closed; the dictionary hypothesis remains untested by this round.
+because: >-
+  The pre-registered Stage-1 coverage gate requires >= 24/32 active dictionary
+  atoms in the 512-molecule / 3-epoch train-only smoke and the trained smoke
+  model leaves only 23/32, deterministically and under both the 512-subset and
+  the full official-train measurement scopes.  The frozen verdict table makes
+  any Stage-1 FAIL a STOP with no workaround, so the formal arms and all
+  mechanism interventions were withheld.  The failure is a coverage-threshold
+  miss, not a collapse: support stays exactly sparse (max l0 = 8), train MAE and
+  reconstruction both fall, task gradients reach D, no atom dominates (top-1
+  0.125), the effective atom count is 12.83 and the environment coordinate keeps
+  effective rank 2.30; at initialisation the frozen K-SVD dictionary already
+  covers 25/32 atoms on official train (24/32 on the 512 subset), so the short
+  smoke merely prunes two rare atoms under the calibrated lambda_rec = 135.8.
+  The preregistration did not specify whether the atoms-active gate is measured
+  on the initialisation or on the trained smoke model, nor on the 512 subset or
+  the full train distribution; the strictest reading fails and the gate is
+  binding, so the negative stop is recorded rather than reinterpreted.
+alternatives_rejected:
+  - >-
+    Reinterpreting atoms-active on the frozen initialisation (24/32 or 25/32)
+    to pass the gate and proceed to formal training.  Rejected: the gate is
+    frozen and the preregistration lists it among the post-training smoke
+    checks; changing the measurement scope after seeing the number is exactly
+    the rescue the protocol forbids.
+  - >-
+    Extending the smoke beyond 3 epochs, lowering lambda_rec, or adding an
+    entropy/orthogonality/coverage term to keep rare atoms active.  Rejected:
+    explicitly forbidden by the preregistration; the clean stop is the result.
+  - >-
+    Reporting a positive dictionary-specificity claim from the Gate-0
+    mechanism checks alone.  Rejected: mechanism presence (gradients to D,
+    exact sparsity, environment rank) is necessary but not sufficient; the
+    round's claim requires the formal M_S / M_D / zero / shuffle comparison,
+    which was never run.
+  - >-
+    Running the formal arms as an "exploratory" pass.  Rejected: the frozen
+    verdict table makes a Stage-1 FAIL terminal, and any post-hoc continuation
+    would contaminate the confirmatory status of the results.
+revisit_if: >-
+  A new pre-registration corrects the Stage-1 gate definition to match the
+  gate's provenance (a full-official-train dictionary-coverage property of the
+  frozen initialisation, with the trained-model coverage reported as a
+  diagnostic), or supplies a stated power rationale for a trained-model
+  coverage floor so that a single rare atom cannot trigger a false
+  MECHANISM_COLLAPSED.  Under such a corrected gate the substantive question is
+  unchanged: SparseDictEnv vs the parameter-identical DenseTiedEnv, with the
+  zero-code (alpha -> 0) and assignment-shuffle interventions, the absolute band
+  of M_S and G_sparse = M_D - M_S >= 0.003.  No seed 1, no sweep and no
+  architecture change may be attached to this round.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_v0_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_v0/artifact_identity.json
+  - tracks/ksvd/results/e2e_dictenv_v0/parameter_accounting.json
+  - tracks/ksvd/results/e2e_dictenv_v0/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_v0/lambda_calibration.json
+  - tracks/ksvd/results/e2e_dictenv_v0/smoke_gate.json
+  - tracks/ksvd/results/e2e_dictenv_v0/decision.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_v0.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_v0.py
+  - tracks/ksvd/tests/test_e2e_dictenv_v0.py

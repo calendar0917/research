@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: fec-d1-stopped-local-binding-supported-dictionary-not-specific
+phase: e2e-dictenv-v0-stopped-stage1-coverage-gate
 updated: 2026-09-24
 
 # ---------------------------------------------------------------------------
@@ -311,7 +311,108 @@ fec_d0:
     basis, not the dictionary).
 
 # ---------------------------------------------------------------------------
-# FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24, LATEST
+# E2E-DictEnv-v0 (end-to-end sparse dictionary-core environment) — 2026-09-24, LATEST
+# ---------------------------------------------------------------------------
+# Asked whether a task-coupled, sparse, shared pure-topology dictionary
+# (phi65 -> D -> alpha32, tied-IHT) can be the ONLY fine-grained learned
+# structural coordinate of a no-message-passing chemical-environment model, and
+# whether its value is SPECIFIC vs a parameter-identical dense tied coordinate.
+# STOPPED at the pre-registered Stage-1 mechanism smoke (coverage gate); no
+# formal arm, intervention or performance verdict was run.  Official test never
+# loaded.
+e2e_dictenv_v0:
+  status: STOPPED_AT_STAGE1_MECHANISM_GATE
+  round: E2E-DictEnv-v0
+  protocol: e2e_dictenv_v0
+  verdict: E2E_DICTENV_MECHANISM_COLLAPSED
+  case: S1 (Stage-1 mechanism gate FAIL; frozen verdict table)
+  execution: local CPU only (no GPU needed for a Stage-1 stop; remote A100 not used)
+  seed: 0
+  data: official train 10000 / official valid 1000
+  official_valid_loaded: false (Stage-1 smoke never read valid)
+  official_test_loaded: false
+  parameters:
+    whole_model: 66158
+    local: 50799
+    backend: 15359
+    fec_s1_reference: 66170
+    difference: -12
+    sparse_equals_dense_tied: true
+  reuse:
+    dictionary: tracks/ksvd/results/sdb_v0/dictionary.pt
+    dictionary_sha256: 925d573a58083c3c20f36980dec9bba77dff592b30ea1abf11098ca3a7b7487a
+    K: 32
+    s: 8
+    iht_steps: 10
+    solver: tied-IHT(Dbar, phi) exact top-8 (tccd_v0.power_iter_sigma step, row-equivariant)
+    dense_arm: z = phi @ Dbar (same 65x32 matrix, initialized bit-identically)
+    phi: exact phi65 construction (bit-identical to FSAR cache, G0 max_abs 0.0)
+  lambda_rec:
+    formula: lambda_rec = L_task_init / (L_rec_init + eps)
+    l_task_init: 1.3659378290176392
+    l_rec_init: 0.010055865960372121
+    lambda_rec: 135.8349280176023
+    frozen_for_both_arms: true
+  correctness:
+    all_passed: true
+    gates: [G0, G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11, G12]
+    cpu_tests: 15/15 pass
+    g0_phi_identity_max_abs: 0.0
+    g9_relabel_max_abs_pred_diff: 1.1920928955078125e-07
+    g10_parameter_identity: 66158
+    g11_init_matching_all_tensors_bit_identical: true
+    g12_official_test_blocker: true
+  stage1_smoke:
+    molecules: 512
+    epochs: 3
+    gates:
+      loss_finite: true
+      train_mae_decreased: true
+      d_grad_nonzero: true
+      alpha_still_sparse: true
+      atoms_active: false
+      no_single_atom_dominance: true
+      effective_atom_count: true
+      environment_rank: true
+    atoms_active_init_official_train: 25
+    atoms_active_init_512_subset: 24
+    atoms_active_after_smoke_official_train: 23
+    atoms_active_after_smoke_512_subset: 23
+    atoms_active_required: 24
+    effective_atom_count_after_smoke: 12.827
+    top1_support_share_after_smoke: 0.125
+    max_l0_after_smoke: 8
+    environment_effective_rank: 2.297468123322293
+    train_mae_curve: [1.3470047414302826, 1.3305959403514862, 1.2491758465766907]
+    determinism: two runs, identical support and gate outcome
+  formal_arms_run: []
+  mechanism_interventions_run: false
+  dictionary_health_run: false
+  performance_metrics: null
+  claims:
+    - claim-e2e-dictenv-v0-stage1-coverage-gate-failed-20260924
+  decision: decision-e2e-dictenv-v0-stop-stage1-coverage-gate-20260924
+  prior_artifact_audit: tracks/ksvd/notes/e2e_dictenv_v0_prior_artifact_audit.md
+  preregistration: tracks/ksvd/notes/e2e_dictenv_v0_preregistration.md
+  implementation_note: tracks/ksvd/notes/e2e_dictenv_v0_implementation.md
+  analysis: tracks/ksvd/notes/e2e_dictenv_v0_analysis.md
+  results_dir: tracks/ksvd/results/e2e_dictenv_v0/
+  runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_v0.py
+  module: tracks/ksvd/experiments/luyin16/e2e_dictenv_v0.py
+  tests: tracks/ksvd/tests/test_e2e_dictenv_v0.py
+  next_step: >-
+    STOP (frozen case S1).  The dictionary mechanism is intact (25/32 atoms
+    active on official train at init, exact top-8, no dominance, effective count
+    12.83, environment rank 2.30, non-zero task gradient to D) but the 3-epoch
+    512-molecule smoke prunes rare-atom support to 23/32, one below the frozen
+    >= 24/32 threshold, under both the 512-subset and full-train scopes.  Do NOT
+    run the formal arms, the zero/shuffle interventions or any forbidden rescue.
+    A new round may re-preregister the coverage gate (full-train initialisation
+    coverage, or a trained-model floor with a stated power rationale); the
+    substantive Sparse-vs-DenseTied question remains open.
+
+# ---------------------------------------------------------------------------
+# FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
 # ---------------------------------------------------------------------------
 # First round to LOCALIZE a validated reusable dictionary coordinate into each
 # rooted chemical environment and BIND it to atom chemistry during environment
@@ -1508,6 +1609,29 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-e2e-dictenv-v0-stop-stage1-coverage-gate-20260924: >-
+      E2E-DictEnv-v0 (2026-09-24, local CPU, protocol e2e_dictenv_v0; official
+      valid and official test never loaded) tested whether a task-coupled sparse
+      shared pure-topology dictionary (phi65 -> tied-IHT(D) -> alpha32) can be
+      the only fine-grained learned structural coordinate of a no-message-passing
+      chemical-environment model, against a parameter-identical dense tied
+      coordinate (z = phi @ Dbar).  Gate 0 passed all G0..G12 (66,158 params,
+      FEC-S1 66,170 delta -12; D and P bit-identical at step 0; no local dense
+      bypass; environment frozen under pair mutation; relabel invariant; test
+      raise-guarded), 15/15 CPU tests passed, and the frozen lambda_rec
+      calibrated to 135.834928.  The pre-registered Stage-1 train-only mechanism
+      smoke (first 512 official-train molecules, 3 epochs, Sparse arm) FAILED its
+      hard coverage gate: 23/32 active atoms vs a required >= 24/32, under both
+      the 512-subset and the full official-train measurement scopes.  The
+      mechanism is intact at init (25/32 on official train, 24/32 on the subset;
+      exact top-8; top-1 share 0.125; effective count 12.83; environment rank
+      2.30; nonzero task gradient to D; train MAE 1.347 -> 1.249), so the miss is
+      a deterministic coverage artefact of the short smoke, not a collapse.  Per
+      the frozen verdict table (case S1) the round STOPPED before any formal arm,
+      zero/shuffle intervention, dictionary-health run or performance verdict; no
+      rescue was applied.  See notes/e2e_dictenv_v0_analysis.md,
+      claim-e2e-dictenv-v0-stage1-coverage-gate-failed-20260924,
+      decision-e2e-dictenv-v0-stop-stage1-coverage-gate-20260924.
   - decision-fec-d0-stop-no-subrole-signal-20260923: >-
       FEC-D0 (2026-09-23, local CPU, protocol fec_d0, commit ca2e947,
       LABEL-FREE, official valid/test never loaded, targets never read, no

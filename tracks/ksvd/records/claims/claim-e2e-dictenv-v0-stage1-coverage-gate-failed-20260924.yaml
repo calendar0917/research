@@ -1,0 +1,56 @@
+claim_id: claim-e2e-dictenv-v0-stage1-coverage-gate-failed-20260924
+created: '2026-09-24T00:00:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  Round E2E-DictEnv-v0 (protocol e2e_dictenv_v0).  Gate 0 (G0..G12) passed on
+  the frozen architecture (66,158 parameters; SparseDictEnv alpha = tied-IHT(D,
+  phi65) exact top-8 vs DenseTiedEnv z = phi65 @ Dbar on the same 65x32
+  frozen SDB K-SVD matrix, sha256
+  925d573a58083c3c20f36980dec9bba77dff592b30ea1abf11098ca3a7b7487a), and the
+  frozen lambda_rec calibrated to 135.834928.  The pre-registered Stage-1
+  train-only mechanism smoke (first 512 official-train molecules, 3 epochs,
+  Sparse arm, seed 0, official valid never read) FAILED its hard coverage gate:
+  the smoke-trained model leaves 23/32 dictionary atoms active versus a
+  required >= 24/32, and the same 23/32 holds whether coverage is measured on
+  the 512-molecule smoke subset or over the full official-train distribution
+  (231,664 atoms).  The failure is deterministic (two runs, identical support)
+  and is a coverage miss, NOT a collapse: exact top-8 support is preserved
+  (max l0 = 8), train MAE falls 1.34700 -> 1.24918, reconstruction falls
+  0.00844 -> 0.00532, task gradients reach D (norm > 0), the largest atom
+  carries only 12.5% of assignments, the effective atom count is 12.83 (>= 8)
+  and the environment coordinate keeps effective rank 2.30 (> 1).  At
+  initialisation the frozen K-SVD dictionary covers 25/32 atoms on official
+  train (24/32 on the 512 subset), so the mechanism is intact before the short
+  smoke prunes rare-atom support by two atoms.  Per the frozen verdict table
+  (case S1) the round STOPPED at the gate: the formal Sparse and DenseTied arms,
+  the zero-code and assignment-shuffle interventions, dictionary health, the
+  absolute performance band of M_S and the dictionary-specific gate
+  G_sparse = M_D - M_S >= 0.003 were never run or evaluated, and no rescue
+  (K / s / IHT-step / LISTA / dictionary-count / decoder / attention / LayerNorm
+  / lambda sweep / extra epochs / seed change) was applied.  Frozen verdict:
+  E2E_DICTENV_MECHANISM_COLLAPSED.
+scope: >-
+  Round E2E-DictEnv-v0, protocol e2e_dictenv_v0, pre-registered in
+  notes/e2e_dictenv_v0_preregistration.md before any run; prior-artifact audit
+  in notes/e2e_dictenv_v0_prior_artifact_audit.md; implementation in
+  notes/e2e_dictenv_v0_implementation.md; analysis in
+  notes/e2e_dictenv_v0_analysis.md.  Local CPU execution (no GPU needed for a
+  Stage-1 stop).  Official ZINC train 10,000 / official valid 1,000; official
+  test never loaded (raise-guarded, G12).  Advisory-only interpretation: the
+  Stage-1 gate is a coverage statistic whose provenance (SDB-v0 used >= 24) is a
+  full-train property; a new round may re-preregister the gate without
+  rescuing this one.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_v0_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_v0/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_v0/lambda_calibration.json
+  - tracks/ksvd/results/e2e_dictenv_v0/smoke_gate.json
+  - tracks/ksvd/results/e2e_dictenv_v0/decision.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_v0.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_v0.py
+  - tracks/ksvd/tests/test_e2e_dictenv_v0.py
