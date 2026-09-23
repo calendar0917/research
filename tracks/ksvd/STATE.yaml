@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-sdb-v0-stop-no-material-gain-strong-backbone
+phase: pec-v0-positive-cpu-screen-gate3-withheld-pending-authorization
 updated: 2026-09-23
 
 # ---------------------------------------------------------------------------
@@ -43,6 +43,62 @@ standalone_route_status:
 active_studies:
   - zinc-context-gap
   - molhiv-cross-scaffold-interaction
+
+# ---------------------------------------------------------------------------
+# PEC-v0 (pure environment composition) — 2026-09-23, LATEST ROUND
+# ---------------------------------------------------------------------------
+# Purer core hypothesis than any prior route: chemical primitives bound to
+# reusable rooted structural roles -> FROZEN local chemical environments -> one
+# read-only static composition, with NO message passing, NO recurrence and NO
+# mixed chemistry bypass.  Local CPU only; official valid and official test
+# never read; no historical baseline retrained.
+pec_v0:
+  status: STOPPED_AFTER_GATE2_POSITIVE_SCREEN_GATE3_WITHHELD
+  round: PEC-v0
+  protocol: pec_v0
+  commit: 883e529b159cae49fd1a9d279db2b40b8ff5e77c
+  gate0: PASS (8/8 correctness checks; params sparse 94049 = dense 94049, coarse 94036)
+  gate1: >-
+    FROZEN FAIL (7/10 criteria: node_random_ratio 0.1115>0.10,
+    edge_random_ratio 0.1024>0.10, edge_used 11<12) while the user-specified
+    STOP condition passes decisively (alpha->shell macro-F1 1.000, alpha->
+    shellpair 1.000; K-SVD monitor E_rec node 0.036866 / edge 0.054270 vs
+    matched random 0.330513 / 0.529933).  Amendment A2 proceeded to Gate 2 with
+    the frozen FAIL unchanged and no K/s/epoch/threshold/architecture rescue.
+  gate2: >-
+    PASS, verdict GATE2_PASS_BUY_SEED0, all 5 criteria (chem-shuffle +0.8353 MAE
+    required >=0.02; TRUE beats BAG +0.035171 and SHUFFLE +0.011597 required
+    >=0.003 each; CK 0.461811 not worse than parameter-matched CD 0.467108;
+    neutral-dictionary MAE 2.175492).  2000 train / 500 dev official-train
+    molecules, dictionaries refit on train only, one seed, Top-5 soup.
+  gate3: NOT RUN (seed-0 official-valid A100 purchase withheld)
+  terminal_verdict: WITHHELD_PENDING_GATE3
+  provisional_if_gate3_confirms: PURE_SPARSE_DICT_ENV_COMPOSITION_SUPPORTED
+  contradicted_by_screen:
+    - ENVIRONMENT_SUPPORTED_COMPOSITION_NULL
+    - PURE_ENV_COMPOSITION_NOT_VIABLE
+    - ENV_COMPOSITION_SUPPORTED_DENSE_NOT_DICT
+  not_claimed:
+    - TASK_COUPLED_DICT_SUPPORTED
+  claim: claim-pec-v0-environment-and-composition-supported-internal-screen-20260923
+  claim_support: claim-pec-v0-sparse-role-dictionary-preserves-coarse-rooted-role-20260923
+  decision: decision-pec-v0-stop-before-gate3-withheld-gpu-purchase-20260923
+  preregistration: tracks/ksvd/notes/pec_v0_preregistration.md
+  prior_artifact_audit: tracks/ksvd/notes/pec_v0_prior_artifact_audit.md
+  gate1_decision: tracks/ksvd/notes/pec_v0_gate1_decision.md
+  analysis: tracks/ksvd/notes/pec_v0_analysis.md
+  results: tracks/ksvd/results/pec_v0/
+  implementation:
+    - tracks/ksvd/experiments/luyin16/pec_v0.py
+    - tracks/ksvd/experiments/luyin16/pec_v0_gate0.py
+    - tracks/ksvd/experiments/luyin16/zinc_pec_v0.py
+    - tracks/ksvd/tests/test_pec_v0.py
+  official_test_loaded: false
+  official_valid_read: false
+  next_step: >-
+    Await explicit user authorization for the Gate-3 seed-0 official-valid
+    purchase (two arms: best non-dictionary control and CK sparse).  No
+    autonomous re-run, no K/s/epoch/threshold rescue, no seed 1.
 
 # ---------------------------------------------------------------------------
 # TCCD-v2 CHEM-CONT diagnostic (2026-09-22)
@@ -367,6 +423,33 @@ research_direction:
 
 authorized_next_action:
   status: new_preregistration_required
+  # -------------------------------------------------------------------------
+  # PEC-v0 (pure environment composition, 2026-09-23).
+  # Local CPU only, zero GPU spend.  Gate 0 PASS (8/8), Gate 1 FROZEN FAIL
+  # (7/10; Amendment A2 proceeded to the CPU screen only), Gate 2 PASS
+  # (GATE2_PASS_BUY_SEED0, 5/5).  Gate 3 (official-valid seed-0 A100) is NOT
+  # purchased autonomously because the frozen Gate-1 verdict is FAIL; the
+  # terminal verdict is WITHHELD pending explicit authorization.
+  # -------------------------------------------------------------------------
+  pec_v0:
+    status: stopped_after_gate2_positive_screen_gate3_withheld
+    round: pec-v0
+    gate0: PASS
+    gate1: FROZEN_FAIL
+    gate2: PASS_GATE2_PASS_BUY_SEED0
+    gate3: not_run
+    terminal_verdict: WITHHELD_PENDING_GATE3
+    provisional_if_gate3_confirms: PURE_SPARSE_DICT_ENV_COMPOSITION_SUPPORTED
+    claim: claim-pec-v0-environment-and-composition-supported-internal-screen-20260923
+    claim_support: claim-pec-v0-sparse-role-dictionary-preserves-coarse-rooted-role-20260923
+    decision: decision-pec-v0-stop-before-gate3-withheld-gpu-purchase-20260923
+    authorization_needed: "buy Gate-3 seed-0 official-valid run (two arms: best non-dictionary control + CK sparse)"
+    forbidden_without_new_preregistration:
+      - K or s sweep
+      - epochs / threshold / architecture rescue
+      - seed 1
+      - task-coupled or trainable dictionary
+      - official test access
   # -------------------------------------------------------------------------
   # ZINC static relational dictionary algebra v0 (SRDA-v0, 2026-09-22).
   # User authorized up to two full runs; the seed-0 performance gate FAILED in

@@ -1,0 +1,61 @@
+decision_id: decision-pec-v0-stop-before-gate3-withheld-gpu-purchase-20260923
+created: '2026-09-23T16:52:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  STOP the PEC-v0 round after Gate 2 and DO NOT purchase the Gate-3 seed-0
+  official-valid A100 run without explicit authorization.  Record the round as a
+  POSITIVE CPU screen with the terminal verdict WITHHELD.
+because: >-
+  PEC-v0 (2026-09-23, local CPU only, commit
+  883e529b159cae49fd1a9d279db2b40b8ff5e77c plus this round's implementation;
+  official valid and official test NEVER loaded, official_test_loaded = false,
+  no historical baseline retrained) produced three frozen gate verdicts:
+  Gate 0 PASS (8/8 correctness checks: chemistry/topology isolation,
+  chemistry-placement sensitivity 0.0991, environment freeze bit-identical under
+  pair mutation, environment module called once, BAG forward finite, relabel
+  |Delta| 0.0, exact l0 = 4, finite non-zero gradients on all five modules;
+  parameters sparse 94,049 = dense 94,049, coarse 94,036);
+  Gate 1 FROZEN FAIL (7/10 criteria; node_random_ratio 0.1115 > 0.10,
+  edge_random_ratio 0.1024 > 0.10, edge_used 11 < 12) with the user-specified
+  STOP condition passing decisively (alpha -> shell macro-F1 1.000, alpha ->
+  shellpair 1.000, K-SVD E_rec 0.0369 / 0.0543 vs random 0.3305 / 0.5299);
+  Gate 2 PASS, verdict GATE2_PASS_BUY_SEED0, all 5 criteria
+  (chemistry-placement shuffle +0.8353 MAE required >= 0.02; TRUE beats BAG
+  +0.035171 and SHUFFLE +0.011597 required >= 0.003 each; CK 0.461811 not worse
+  than parameter-matched CD 0.467108; neutral-dictionary MAE 2.175492).
+  The pre-registration makes Gate 3 conditional on ALL previous gates passing;
+  the frozen Gate-1 verdict is FAIL and Amendment A2 was scoped to the CPU
+  Gate-2 screen only.  Buying the GPU run now would be an unpreregistered rescue
+  of a failed frozen gate, so it is withheld.  The two plausibly-fatal outcomes
+  for the core hypothesis are nevertheless excluded by the screen: chemistry
+  placement is load-bearing and the read-only static composition beats both BAG
+  and SHUFFLE, and the sparse dictionary is not worse than a parameter-matched
+  dense encoder.  The absolute band and therefore the terminal verdict
+  vocabulary remain unevaluated.
+alternatives_rejected:
+  - 'Buy the Gate-3 seed-0 official-valid GPU run now: rejected - the frozen Gate-1 numeric verdict is FAIL, and Amendment A2 authorized only the Gate-2 CPU screen; buying now would be an unpreregistered rescue.'
+  - 'Relax or re-run Gate 1 with calibrated thresholds in place: rejected - forbidden; the frozen criteria and the frozen FAIL are reported verbatim and unchanged, and any recalibration requires a new preregistration, not an in-round amendment.'
+  - 'Rescue with K=32/64, more tied-IHT steps, a different occurrence basis, more epochs, or a wider architecture: rejected - explicitly forbidden by the round brief and by the pre-registration.'
+  - 'Rescue with more Gate-2 seeds or a sweep over the frozen protocol: rejected - one seed only, protocol frozen before the run.'
+  - 'Claim ENV_COMPOSITION_SUPPORTED_DENSE_NOT_DICT: rejected as contradicted - the sparse arm (0.461811) is better than the exactly parameter-matched dense arm (0.467108), with the caveat that the 0.005297 gap is small relative to the ~0.004-0.007 seed spread.'
+  - 'Claim PURE_SPARSE_DICT_ENV_COMPOSITION_SUPPORTED now: rejected - the pre-registered meaning of that verdict is a formal official-valid result; the round has only a 2,000-molecule internal screen, and the internal 0.461811 is not comparable to the strict-static S0 band (0.140794 seed 0 / 0.136423 seed 1).'
+revisit_if: >-
+  (a) The user explicitly authorizes the Gate-3 seed-0 official-valid purchase
+  (two arms: best non-dictionary control and CK sparse; one seed; official valid
+  only; official test closed; remote-research-runner workflow), which would
+  resolve the terminal verdict as PURE_SPARSE_DICT_ENV_COMPOSITION_SUPPORTED or
+  otherwise; or (b) the user elects to re-freeze the Gate-1 numerical thresholds
+  through a NEW preregistration with a declared calibration split (not an
+  amendment); or (c) a task-coupled (trainable) dictionary would be proposed
+  under a new preregistration, since the frozen detached K-SVD dictionary used
+  here cannot support TASK_COUPLED_DICT_SUPPORTED.
+evidence:
+  - tracks/ksvd/notes/pec_v0_preregistration.md
+  - tracks/ksvd/notes/pec_v0_gate1_decision.md
+  - tracks/ksvd/notes/pec_v0_analysis.md
+  - tracks/ksvd/results/pec_v0/decision.json
+  - tracks/ksvd/results/pec_v0/DECISION.md
+  - tracks/ksvd/results/pec_v0/gate0.json
+  - tracks/ksvd/results/pec_v0/gate1_label_free.json
+  - tracks/ksvd/results/pec_v0/gate2_small_train.json
