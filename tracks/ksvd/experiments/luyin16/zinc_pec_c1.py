@@ -127,16 +127,34 @@ def _git_dirty() -> bool:
         return True
 
 
+def cuda_index(device: torch.device) -> int | None:
+    """CUDA ordinal for ``device``, forcing context init first.
+
+    ``torch.cuda.reset_peak_memory_stats`` and ``torch.cuda.max_memory_allocated``
+    raise ``RuntimeError: Invalid device argument`` when the CUDA context has not
+    been initialised yet; ``torch.cuda.is_available()`` and ``device_count()``
+    return ``True`` without initialising it.  ``torch.cuda.init()`` is idempotent,
+    so it is forced here before any device-scoped call.
+    """
+    if device.type != "cuda":
+        return None
+    torch.cuda.init()
+    if device.index is not None:
+        return int(device.index)
+    return int(torch.cuda.current_device())
+
+
 def device_report(device: torch.device) -> dict[str, Any]:
+    index = cuda_index(device)
     payload: dict[str, Any] = {
         "device": str(device),
         "torch": torch.__version__,
         "python": platform.python_version(),
         "platform": platform.platform(),
         "cuda_available": bool(torch.cuda.is_available()),
+        "gpu_index": index,
     }
-    if device.type == "cuda":
-        index = device.index or 0
+    if index is not None:
         payload["cuda"] = torch.version.cuda
         payload["gpu_name"] = torch.cuda.get_device_name(index)
         payload["gpu_total_memory_bytes"] = int(
@@ -540,9 +558,10 @@ def train_arm(
 
     torch.manual_seed(int(seed))
     np.random.seed(int(seed))
-    if device.type == "cuda":
+    gpu_index = cuda_index(device)
+    if gpu_index is not None:
         torch.cuda.manual_seed_all(int(seed))
-        torch.cuda.reset_peak_memory_stats(device)
+        torch.cuda.reset_peak_memory_stats(gpu_index)
 
     model = pec.build_model(
         role_mode, d_node=d_node, d_edge=d_edge, ablation="true", seed=seed
@@ -755,8 +774,8 @@ def train_arm(
         "wall_seconds": wall,
         "wall_seconds_per_epoch": wall / max(int(epochs), 1),
         "peak_gpu_memory_bytes": (
-            int(torch.cuda.max_memory_allocated(device))
-            if device.type == "cuda"
+            int(torch.cuda.max_memory_allocated(gpu_index))
+            if gpu_index is not None
             else None
         ),
         "historical_context_only": HISTORICAL_CONTEXT,

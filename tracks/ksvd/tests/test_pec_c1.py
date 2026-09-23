@@ -253,8 +253,6 @@ def test_forward_is_deterministic() -> None:
 # --------------------------------------------------------------------------
 # 10: real-batch backward is finite (CPU here, CUDA when available)
 # --------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize("role_mode", ["sparse", "dense", "coarse"])
 def test_real_batch_backward_is_finite(role_mode: str) -> None:
     device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
@@ -272,6 +270,32 @@ def test_real_batch_backward_is_finite(role_mode: str) -> None:
     for parameter in params:
         assert parameter.grad is not None
         assert torch.isfinite(parameter.grad).all()
+
+
+def test_cuda_index_is_none_on_cpu() -> None:
+    assert c1.cuda_index(torch.device("cpu")) is None
+
+
+def test_cuda_context_is_initialised_before_device_scoped_calls(monkeypatch) -> None:
+    """Regression guard: reset_peak_memory_stats/max_memory_allocated raise
+    ``Invalid device argument`` unless the CUDA context is initialised first.
+    ``is_available()`` is NOT sufficient (verified on the remote A100).
+    """
+    order: list[str] = []
+    monkeypatch.setattr(torch.cuda, "init", lambda: order.append("init"))
+    monkeypatch.setattr(torch.cuda, "current_device", lambda: 0)
+    index = c1.cuda_index(torch.device("cuda:1"))
+    assert index == 1
+    assert order == ["init"], order
+
+
+def test_train_arm_initialises_cuda_before_peak_stats() -> None:
+    import inspect
+
+    source = inspect.getsource(c1.train_arm)
+    assert "cuda_index(device)" in source
+    assert source.index("cuda_index(device)") < source.index("reset_peak_memory_stats")
+    assert "max_memory_allocated(gpu_index)" in source
 
 
 # --------------------------------------------------------------------------
