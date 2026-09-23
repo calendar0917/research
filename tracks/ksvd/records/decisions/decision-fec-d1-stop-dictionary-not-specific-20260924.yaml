@@ -1,0 +1,107 @@
+decision_id: decision-fec-d1-stop-dictionary-not-specific-20260924
+created: '2026-09-24T01:25:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Record FEC-D1 with the frozen verdict
+  FEC_D1_LOCAL_BINDING_SUPPORTED_DICTIONARY_NOT_SPECIFIC and STOP the sparse
+  SDB dictionary performance route.  The localized, chemistry-bound,
+  assignment-mediated structural-coordinate refinement (Gate A PASS +0.005245,
+  Gate C PASS +0.013132) is a real mechanism and may be cited as such, but it
+  must NOT be attributed to the K=32 / s=8 dictionary, because the matched
+  dense PCA32 control is BETTER (Gate B FAIL, M_P - M_D = -0.001306).  Do NOT
+  rescue by any of: refitting or re-seeding the dictionary; changing K, s,
+  sparsity solver or normalization; a task-coupled D; an edge or node+edge
+  joint dictionary; a nonlinear branch; a different rank; a graph-level
+  residual; pair-kernel injection; reader widening; FEC-S1 finetuning; seed 1
+  or any new seed; official-test access.  Any further dictionary-specific claim
+  requires a NEW pre-registration with a dictionary whose matched dense control
+  it demonstrably beats.
+because: >-
+  FEC-D1 (protocol fec_d1, commit 0ee273c, remote A100 seed 0, 240 epochs/arm,
+  official test never loaded) tested the strongest remaining dictionary
+  placement: localize an already-validated reusable sparse pure-topology
+  dictionary coordinate into each rooted chemical environment and bind it to
+  atom chemistry during environment formation, then inject a fixed rank-8
+  bias-free refinement into the frozen FEC-S1 local environment token, with W2
+  initialised to exact zero so g = 0 recovers FEC-S1 bit-approximately
+  (neutralization max abs prediction shift 9.5e-07).  G0-G9 all passed and the
+  baseline guard reproduced 0.136782497 (recorded 0.136782507, diff 1.0e-08).
+  Gate A PASSED (M_D 0.131537382, G_D +0.005245115 >= 0.003 over the frozen
+  base 0.136782497) and Gate C PASSED (assignment shuffle 0.144669035,
+  G_assign +0.013132 >= 0.010, so the gain is carried by which chemistry is
+  bound to which structural coordinate).  But Gate B FAILED with the sign
+  opposite to the hypothesis: the parameter-matched dense PCA32(phi_v) control
+  reached 0.130231331, i.e. 0.001306 BETTER than the sparse dictionary.  Both
+  coordinates are 32-D and come from the same frozen SDB artifact, so the
+  experiment isolates sparsity/topology-dictionary structure from dense
+  compression and finds no dictionary-specific value.  The localization +
+  binding mechanism is therefore supported while the dictionary attribution is
+  refuted.  A second, independent caveat reinforces the stop: against the
+  historical FEC-S1 seed-0 Top-5 soup (0.130422, external context only), the
+  Dict32 branch soup is 0.001116 WORSE and the PCA32 branch soup is only
+  0.000191 better, so the Gate-A gain over the single best checkpoint is
+  comparable to what weight souping the unmodified FEC-S1 run already produced;
+  it is not a new absolute record.  No rescue is scientifically licensed.
+alternatives_rejected:
+  - >-
+    Report Gate A and Gate C and declare a dictionary win: rejected - the
+    pre-registered dictionary-specificity gate B requires the Dict arm to beat
+    the matched dense PCA32 control by >= 0.002, and it does not; it is worse.
+  - >-
+    Refit or re-seed the dictionary, or change K/s/solver/normalization, to try
+    to recover Gate B: rejected - explicitly forbidden by the pre-registration
+    and by the prior FEC-D0/K-SVD discipline; a post-hoc K/s change would make
+    the result uninterpretable.
+  - >-
+    Add a task-coupled dictionary, a nonlinear branch, a larger rank, or an
+    edge dictionary to widen the search: rejected - forbidden rescues; none is
+    justified by a Gate-B failure whose cause is that the dense control is
+    simply as good or better.
+  - >-
+    Move the placement to a graph-level residual (the rejected FEC-D0/FEC-D1
+    residual design): rejected - the localization + binding placement is the
+    one that produced Gates A and C; reverting to the graph residual would
+    discard the mechanism that actually worked and re-enter a design FEC-D0
+    already found wanting on the R11 basis.
+  - >-
+    Widen the reader or finetune FEC-S1 to convert the +0.005245 into a larger
+    number: rejected - changes the frozen baseline and is an unauthorized
+    rescue; the question was whether the dictionary adds dictionary-specific
+    information to a frozen strong base, and it does not.
+  - >-
+    Run seed 1 to sharpen the M_P - M_D margin: rejected as an autonomous step -
+    seed 1 was not authorized; the frozen verdict is decided by the
+    pre-registered single-seed gates, and the margin already has the opposite
+    sign.
+revisit_if: >-
+  (a) A NEW pre-registered round proposes a dictionary (or dictionary-derived
+  coordinate) for which a matched dense control of the same width and the same
+  frozen input map is specified in advance, and the dictionary is required to
+  beat that control; or (b) a pre-registered study wants to keep the localized
+  chemistry-bound structural coordinate (Gates A and C) as a mechanism result
+  and ask a different scientific question about it (e.g. which shell or which
+  chemistry channel carries the assignment signal), without re-attributing the
+  gain to sparsity; or (c) a genuinely new structural coordinate family (not a
+  re-parameterisation of phi65) is proposed with its own matched control.  The
+  FEC-S1 strong anchor (seed-0 soup 0.130422, best 0.136783 @238) still stands;
+  FEC-D1's PCA32 localized-binding soup (0.130231) is the best official-valid
+  static number so far but only by 0.000191, so it is not a new anchor.
+evidence:
+  - tracks/ksvd/notes/fec_d1_prior_artifact_audit.md
+  - tracks/ksvd/notes/fec_d1_preregistration.md
+  - tracks/ksvd/notes/fec_d1_implementation.md
+  - tracks/ksvd/notes/fec_d1_analysis.md
+  - tracks/ksvd/results/fec_d1/DECISION.md
+  - tracks/ksvd/results/fec_d1/REPORT.md
+  - tracks/ksvd/results/fec_d1/decision.json
+  - tracks/ksvd/results/fec_d1/correctness.json
+  - tracks/ksvd/results/fec_d1/baseline_guard.json
+  - tracks/ksvd/results/fec_d1/parameter_accounting.json
+  - tracks/ksvd/results/fec_d1/mechanism.json
+  - tracks/ksvd/results/fec_d1/dict_seed0.json
+  - tracks/ksvd/results/fec_d1/pca_seed0.json
+  - tracks/ksvd/results/fec_d1/binding_scalers.json
+  - tracks/ksvd/experiments/luyin16/fec_d1.py
+  - tracks/ksvd/experiments/luyin16/zinc_fec_d1.py
+  - tracks/ksvd/tests/test_fec_d1.py

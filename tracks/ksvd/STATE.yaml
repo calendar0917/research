@@ -12,8 +12,8 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: fec-d0-stopped-no-subrole-signal
-updated: 2026-09-23
+phase: fec-d1-stopped-local-binding-supported-dictionary-not-specific
+updated: 2026-09-24
 
 # ---------------------------------------------------------------------------
 # FINAL STANDALONE STATUS (TCCD-v7, 2026-09-22)
@@ -309,6 +309,125 @@ fec_d0:
     preregistration and a rooted basis that demonstrably carries degree-beyond
     held-out subrole information (FEC-D0 localizes the deficiency to the
     basis, not the dictionary).
+
+# ---------------------------------------------------------------------------
+# FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24, LATEST
+# ---------------------------------------------------------------------------
+# First round to LOCALIZE a validated reusable dictionary coordinate into each
+# rooted chemical environment and BIND it to atom chemistry during environment
+# formation, then inject a rank-8 refinement into the frozen FEC-S1 local
+# environment token (W2 = 0 => exact FEC-S1).  User-authorized NEW placement
+# (the FEC-D0 STOP applied to the rejected R11 graph-residual design, not to
+# this one; see notes/fec_d1_prior_artifact_audit.md).  Official test never
+# loaded; formal run on a clean committed tree.
+fec_d1:
+  status: STOPPED_LOCAL_BINDING_SUPPORTED_DICTIONARY_NOT_SPECIFIC
+  round: FEC-D1
+  protocol: fec_d1
+  verdict: FEC_D1_LOCAL_BINDING_SUPPORTED_DICTIONARY_NOT_SPECIFIC
+  case: 'A ∧ ¬B (A and C pass, B fails; frozen classifier -> not_specific)'
+  implementation_commit: 0ee273caa97eaf1a2d226d7b1bc0d480f7915298
+  formal_run_commit: 0ee273caa97eaf1a2d226d7b1bc0d480f7915298
+  remote_commit: 0ee273caa97eaf1a2d226d7b1bc0d480f7915298
+  remote_host: hxy@a100-2
+  remote_repo: /home/hxy/cy/research
+  remote_dirty_entries: clean (tracked source); fec_s1 result markdown parked outside the repo before deploy
+  device: NVIDIA A100-SXM4-40GB (GPU1 after GPU0 migration), CUDA 12.4, torch 2.5.1+cu124
+  gpu_migration: >-
+    launched on GPU0/GPU1 in parallel; a foreign 37 GB job (user zc, demo_train.py)
+    appeared on GPU0, so the Dict arm was killed and re-run on GPU1 after the PCA
+    arm finished.  Both arms completed 240 epochs, exit 0, no orphan jobs.
+  seed: 0
+  epochs: 240 (fixed, no early termination)
+  data: official train 10000 / official valid 1000 (selection only)
+  official_valid_loaded: true (selection only)
+  official_test_loaded: false
+  reuse:
+    dictionary: tracks/ksvd/results/sdb_v0/dictionary.pt
+    dictionary_sha256: 925d573a58083c3c20f36980dec9bba77dff592b30ea1abf11098ca3a7b7487a
+    K: 32
+    s: 8
+    dict_seed: 20260924
+    solver: sdb_v0.omp_codes -> tccd_v0.omp_codes (exact top-s)
+    phi: exact phi65 construction (bit-identical to FSAR cache)
+    atom_normalization: sdb_v0.fit_rms_scaler (train-only per-coordinate RMS, no mean subtraction)
+    pca_control: SDB-v0 train-fit affine PCA32(phi_v), read-only, never refit
+    base: tracks/ksvd/results/fec_s1/states/fec_s1_seed0_selection_state.pt
+    base_sha256: 2cb36a919b53bc915fcea9186978223c7dc37c2d733888419e9e5abbd5bd751b
+  statistic:
+    object: within-shell centred cross-covariance of alpha_v with atom chemistry q_v
+    formula: 'C_ik = sum_{v in S_ik}(alpha_v - abar)(q_v - qbar)^T in R^{32x28}; |S_ik|<2 => 0'
+    shells: [0, 1, 2]
+    dim_per_root: 2688
+    role: chemistry enters only here, during environment formation; never re-fed to the dictionary
+  branch:
+    shape: '2688 -> 8 -> 24, bias=false, linear, no nonlinearity'
+    init: W1 deterministic standard, W2 exact zero (step0 Delta e = 0)
+    params: 21696 (= W1 21504 + W2 192)
+    base_params_frozen: 66170
+    arms_parameter_matched: true
+    effective_coordinates: {dict: 1254, pca: 1344}
+  correctness:
+    all_passed: true
+    gates: [G0, G1, G2, G3, G4, G5, G6, G7, G8, G9]
+    g0_phi_identity_max_abs: 0.0
+    g0_max_l0: 8
+    g3_float64_reference_max_abs: 9.934107481068821e-09
+    g5_w2_zero_bit_identical: true
+    g6_no_readout_bypass: true
+    g7_w2_grad_step0: 0.008968418464064598
+    g9_official_test_blocker: true
+  baseline_guard:
+    replay_valid_mae: 0.13678249692165992
+    recorded_best_valid_mae: 0.1367825070246472
+    abs_diff: 1.0102987280102838e-08
+    tolerance: 1.0e-05
+    passed: true
+  results:
+    M_B_frozen_base_replay: 0.13678249692165992
+    M_D_dict32_soup: 0.13153738241636892
+    M_P_pca32_soup: 0.13023133112484356
+    M_shuffle_mean: 0.14466903518323088
+    G_D: 0.005245114505290999
+    G_dict_specific: -0.001306051291525362
+    G_assign: 0.013131652766861956
+    gates: {A_material_local_gain: true, B_dictionary_specific: false, C_assignment: true}
+    dict_soup_members: [59, 63, 101, 210, 238]
+    dict_best_valid: 0.131555400
+    dict_best_epoch: 238
+    pca_soup_members: [59, 98, 140, 166, 172]
+    pca_best_valid: 0.130413783
+    pca_best_epoch: 140
+    historical_fec_s1_soup_anchor: 0.13042183499777457
+    dict_minus_historical_soup_anchor: 0.0011155474185943481
+    pca_minus_historical_soup_anchor: -0.0001905038729307875
+  mechanism:
+    branch_neutralization_restores_base: true
+    neutralization_max_abs_pred_shift: 9.5367431640625e-07
+    assignment_shuffle_mean_abs_pred_shift: 0.06294902909100056
+    assignment_shuffle_max_abs_pred_shift: 1.0472736358642578
+    assignment_shuffle_seeds: [101, 202, 303, 404, 505]
+  claims:
+    - claim-fec-d1-local-binding-supported-dictionary-not-specific-20260924
+  decision: decision-fec-d1-stop-dictionary-not-specific-20260924
+  prior_artifact_audit: tracks/ksvd/notes/fec_d1_prior_artifact_audit.md
+  preregistration: tracks/ksvd/notes/fec_d1_preregistration.md
+  implementation_note: tracks/ksvd/notes/fec_d1_implementation.md
+  analysis: tracks/ksvd/notes/fec_d1_analysis.md
+  results_dir: tracks/ksvd/results/fec_d1/
+  runner: tracks/ksvd/experiments/luyin16/zinc_fec_d1.py
+  module: tracks/ksvd/experiments/luyin16/fec_d1.py
+  tests: tracks/ksvd/tests/test_fec_d1.py
+  next_step: >-
+    STOP the sparse SDB dictionary performance route.  The localized,
+    chemistry-bound, assignment-mediated structural-coordinate refinement is
+    supported (Gates A and C) but is NOT dictionary-specific (Gate B fails;
+    dense PCA32 is 0.001306 better).  Forbidden without a NEW preregistration:
+    refit/re-seed D, any K/s/solver/normalization change, task-coupled D, edge
+    or node+edge dictionary, nonlinearity, rank change, graph-level residual,
+    pair-kernel injection, reader widening, FEC-S1 finetuning, seed 1, official
+    test access.  Any further dictionary-specific claim needs a matched dense
+    control that it beats.
 
 # ---------------------------------------------------------------------------
 # PEC-C1 (pure environment composition confirmatory) — 2026-09-23

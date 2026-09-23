@@ -1,0 +1,139 @@
+claim_id: claim-fec-d1-local-binding-supported-dictionary-not-specific-20260924
+created: '2026-09-24T01:20:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On official ZINC train (10000 molecules) into the frozen FEC-S1 strict-static
+  shared local environment (seed-0 best checkpoint, official-valid MAE
+  0.136782497, replayed bit-approximately), with official valid (1000) used for
+  selection only and the official test never loaded, localizing the already
+  validated SDB-v0 sparse pure-topology dictionary coordinate alpha_v in R^32
+  (frozen K=32 / s=8 dictionary, sha256
+  925d573a58083c3c20f36980dec9bba77dff592b30ea1abf11098ca3a7b7487a, exact
+  top-s solver, never refit) into each rooted chemical environment and binding
+  it to the atom chemistry q_v during environment formation (within-shell
+  centred cross-covariance C_ik = sum_{v in S_ik}(alpha_v - abar)(q_v - qbar)^T
+  concatenated over shells 0,1,2 into C_i in R^2688) and injecting a fixed
+  rank-8 bias-free linear refinement Delta e_i = W2 W1 C_i into the 24-D local
+  environment token (W2 initialised to exact zero, so the branch is an exact
+  no-op at step 0) does produce a MATERIAL local gain over the matched frozen
+  base: Top-5 soup M_D = 0.131537382, G_D = M_B - M_D = +0.005245115 (Gate A
+  >= 0.003 PASS), and the gain is genuinely assignment-mediated: breaking the
+  alpha_v <-> q_v correspondence within each root/shell (five permutations, all
+  node/shell/multiset/base-input content preserved) degrades MAE by
+  G_assign = M_shuffle - M_D = +0.013132 (Gate C >= 0.010 PASS, mean absolute
+  prediction shift 0.0629, max 1.047).  HOWEVER the gain is NOT dictionary
+  specific: a matched dense control, PCA32(phi_v) from the same frozen SDB
+  artifact (same 32-D width, same statistic, same branch, same base, same init
+  seed, same optimizer and batch order), reaches a BETTER soup M_P = 0.130231331,
+  i.e. G_dict-specific = M_P - M_D = -0.001306 < 0 (Gate B >= 0.002 FAIL, sign
+  opposite).  Frozen verdict: FEC_D1_LOCAL_BINDING_SUPPORTED_DICTIONARY_NOT_SPECIFIC.
+  Reading: localized, chemistry-bound, assignment-sensitive rooted structural
+  coordinates help the frozen shared environment, but the sparse SDB vocabulary
+  is not the source of that help; its matched dense PCA compression of the same
+  phi65 is at least as good.
+scope: >-
+  Round FEC-D1, protocol fec_d1, pre-registered in
+  notes/fec_d1_preregistration.md before any run; prior-artifact audit in
+  notes/fec_d1_prior_artifact_audit.md; implementation note
+  notes/fec_d1_implementation.md.  Formal run commit 0ee273c, remote A100
+  (migrated from GPU0 to GPU1 after a foreign 37 GB job was detected), seed 0,
+  240 epochs per arm, no early termination, single seed.  Reuses
+  results/sdb_v0/dictionary.pt (K=32/s=8, DICT_SEED 20260924),
+  sdb_v0.omp_codes -> tccd_v0.omp_codes (exact top-s), sdb_v0.fit_rms_scaler
+  (train-only per-coordinate RMS, no mean subtraction), the exact phi65
+  construction, and the frozen
+  results/fec_s1/states/fec_s1_seed0_selection_state.pt (all FEC-S1 parameters
+  requires_grad=False).  No R11 residual basis, no graph-level residual, no
+  pair-kernel or centre update, no message passing, no recurrence, no context
+  writeback, no K/s/iteration/seed sweep, no refit K-SVD, no task-coupled D,
+  no edge dictionary, no nonlinearity, no rank sweep, no reader widening, no
+  FEC-S1 finetuning, no official test, no seed 1.
+supporting_evidence:
+  - >-
+    Correctness gates G0-G9 all PASS (local CPU and remote agree): G0 phi65
+    bit-identical to the FSAR cache (3/3 molecules, 71 nodes) with deterministic
+    alpha and exact max l0 = 8; G1 chemistry relabelling leaves phi/alpha
+    unchanged (max abs diff 0.0); G2 alpha is node-centric (diff 0.0) and 118
+    shared nodes change shell across roots; G3 binding statistic matches an
+    independent float64 hand loop (max abs diff 9.9e-09); G4 within-root/shell
+    assignment shuffle changes the statistic while preserving both multisets;
+    G5 W2 = 0 gives bit-identical adapter output and prediction; G6 no readout
+    bypass (W2=0 stat has no effect, active branch changes prediction only via
+    the adapter); G7 W2 grad 0.00897 at step 0, W1 grad 0.0 at step 0 and
+    0.00111 after one optimizer step; G8 static contract holds and the pre-pair
+    local 24-D output is bit-identical under pair mutation; G9 official-test
+    access raises and encoded cache official_test_loaded = false.
+  - >-
+    Baseline guard PASS: frozen FEC-S1 seed-0 best-checkpoint replay gives
+    0.136782497 (recorded 0.136782507, abs diff 1.0e-08, tolerance 1e-05),
+    read-only.
+  - >-
+    Gate A PASS: Dict32 localized-binding Top-5 soup M_D = 0.131537382,
+    members [59, 63, 101, 210, 238] with individual valid MAE [0.131619,
+    0.132026, 0.131909, 0.131971, 0.131555]; G_D = +0.005245115 >= 0.003.
+    Learning is stable (train 0.0884 -> 0.0759 over 240 epochs, no early stop).
+  - >-
+    Gate C PASS: five fixed assignment-shuffle permutations give valid MAE
+    0.146836 / 0.142833 / 0.140604 / 0.147456 / 0.145617 (mean 0.144669035),
+    G_assign = +0.013132 >= 0.010, mean abs prediction shift 0.0629, max 1.047.
+  - >-
+    Branch neutralization is exact: zeroing W2 returns to the base
+    (0.136782511 vs 0.136782506) with max abs prediction shift 9.54e-07, so
+    Delta e = 0 is a true neutral element and Gate A is not an artefact of the
+    base having been modified.
+  - >-
+    Parameter accounting: base 66170 frozen, branch 21696 trainable
+    (W1 21504 + W2 192) = +32.8 %, identical for Dict32 and PCA32.
+contradicting_evidence:
+  - >-
+    Gate B FAIL: the matched dense PCA32 control reaches M_P = 0.130231331,
+    which is 0.001306 BETTER than the sparse dictionary M_D = 0.131537382.
+    The sparse pure-topology dictionary therefore has no demonstrated
+    dictionary-specific value at this placement; the pre-registered
+    dictionary-specificity hypothesis is refuted.
+  - >-
+    Historical-anchor caveat: against the historical FEC-S1 seed-0 Top-5 soup
+    (0.130422, external context only), M_D = 0.131537 is 0.001116 WORSE and
+    M_P = 0.130231 is only 0.000191 better.  The Gate-A gain over the frozen
+    single best checkpoint is therefore of the same magnitude that weight
+    souping the unmodified FEC-S1 run already delivered; it is not a new
+    absolute record in the static line.
+limitations:
+  - >-
+    Single seed (0); seed 1 was not authorized and not run.  The M_P - M_D
+    margin (0.001306) exceeds the seed-0 replay noise (1.0e-08) but is a
+    single-run directional result.
+  - >-
+    Official test never loaded; the claim is confined to the official-valid
+    regime.
+  - >-
+    The statistic is a within-shell centred cross-covariance of a 32-D
+    structural coordinate with a 28-way one-hot chemistry; it is a
+    hand-specified binding order, not an exhaustive search over binding forms.
+    The negative dictionary-specificity result is about this statistic and
+    this frozen dictionary/control pairing, not about every conceivable binding.
+    Gate B says "not better than matched dense PCA32", not "the localized
+    binding is useless" (Gates A and C both pass).
+evidence:
+  - tracks/ksvd/notes/fec_d1_prior_artifact_audit.md
+  - tracks/ksvd/notes/fec_d1_preregistration.md
+  - tracks/ksvd/notes/fec_d1_implementation.md
+  - tracks/ksvd/notes/fec_d1_analysis.md
+  - tracks/ksvd/results/fec_d1/artifact_identity.json
+  - tracks/ksvd/results/fec_d1/correctness.json
+  - tracks/ksvd/results/fec_d1/parameter_accounting.json
+  - tracks/ksvd/results/fec_d1/baseline_guard.json
+  - tracks/ksvd/results/fec_d1/binding_scalers.json
+  - tracks/ksvd/results/fec_d1/dict_seed0.json
+  - tracks/ksvd/results/fec_d1/pca_seed0.json
+  - tracks/ksvd/results/fec_d1/dict_curve.csv
+  - tracks/ksvd/results/fec_d1/pca_curve.csv
+  - tracks/ksvd/results/fec_d1/mechanism.json
+  - tracks/ksvd/results/fec_d1/decision.json
+  - tracks/ksvd/results/fec_d1/DECISION.md
+  - tracks/ksvd/results/fec_d1/REPORT.md
+  - tracks/ksvd/experiments/luyin16/fec_d1.py
+  - tracks/ksvd/experiments/luyin16/zinc_fec_d1.py
+  - tracks/ksvd/tests/test_fec_d1.py
