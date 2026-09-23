@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: pec-c1-stopped-absolute-weak-no-seed1
+phase: pec-i1-stopped-static-pooling-not-primary-gap
 updated: 2026-09-23
 
 # ---------------------------------------------------------------------------
@@ -160,6 +160,76 @@ pec_c1:
     STOP.  No seed 1, no K/s/epoch/horizon/reader/recurrence rescue, no
     task-coupled dictionary (PEC-C2 is not authorized by this result).  A new
     pre-registration is required for any further step.
+
+# ---------------------------------------------------------------------------
+# PEC-I1 static composition interface audit (2026-09-23)
+# ---------------------------------------------------------------------------
+# Circle-input round: PEC-C1's 0.151767 deficit may be caused by compressing a
+# real environment-composition mechanism into a graph-level `mean`/`max`
+# interface.  Exactly one object changed vs PEC-C1: the pooling statistics
+# interface (S0 audited `[mean, std, log1p(count)]` over 5 shortest-path
+# buckets), DenseRole only, parameters matched to +0.102 %.  No MP / recurrence
+# / pair->centre / mixed chemistry.  Official test never loaded.
+pec_i1:
+  status: STOPPED_STATIC_POOLING_NOT_PRIMARY_GAP
+  round: PEC-I1
+  protocol: pec_i1
+  remote_commit: a84a6c86477d4a8ebab08f22370d6cf3c8d7e7dd
+  remote_host: hxy@a100-2
+  remote_repo: /home/hxy/cy/research
+  remote_dirty_entries: '?? tracks/ksvd/results/pec_i1/ (this round''s generated results dir only; tracked source clean)'
+  device: NVIDIA A100-SXM4-40GB, CUDA 12.4, torch 2.5.1+cu124
+  seed: 0
+  epochs: 240 (fixed, no early stopping)
+  data: official train 10000 / official valid 1000 (selection only)
+  change: 'unary [mean,std,log1p(n)] + pair per S0 5-bucket [mean,std,log1p(n_d)] + unchanged global_topo; reader 590->22->1'
+  params: 94145 (delta +96 vs PEC-CD 94049, +0.102 %)
+  stage_a:
+    verdict: LOCAL_INFORMATION_SUBSTANTIALLY_PRESENT
+    atom_shell_exact: true
+    bond_shell_exact: true
+    root_atom_exact: true
+    incident_exact: true
+    scalar5_scope_difference: 'patch-scoped mean molecule degree; ridge probe valid R2 0.316'
+    missing_shell_pair_class_0_0_occurrences: 0
+  internal_screen:
+    CD_matched_soup: 0.466020
+    CD_I1_soup: 0.424733
+    delta_frozen_467108: 0.042375
+    delta_matched: 0.041287
+    reproduction_drift: -0.001088
+    verdict: INTERFACE_SIGNAL_STRONG
+  full_seed0:
+    CD_I1_soup: 0.1516571342945099
+    CD_I1_best: 0.15973035991191864
+    best_epoch: 173
+    pec_c1_CD_soup: 0.1517672836780548
+    improvement: 0.00011014938354492188
+    mechanism: { relation_shuffle_degradation: 0.822537, bag_degradation: 0.816163 }
+  verdict: STATIC_POOLING_NOT_PRIMARY_GAP
+  case: C
+  seed1_authorized: false
+  methodological_finding: >-
+    The cheap 2000-molecule underfitting screen showed +0.041287 but the
+    full-data gain is +0.000110: the screen is not predictive of the full-data
+    interface effect for this family.
+  claims:
+    - claim-pec-i1-local-information-substantially-present-20260923
+    - claim-pec-i1-static-pooling-not-primary-gap-20260923
+  decision: decision-pec-i1-stop-static-pooling-not-primary-gap-20260923
+  prior_artifact_audit: tracks/ksvd/notes/pec_i1_prior_artifact_audit.md
+  preregistration: tracks/ksvd/notes/pec_i1_preregistration.md
+  information_recoverability: tracks/ksvd/notes/pec_i1_information_recoverability.md
+  analysis: tracks/ksvd/notes/pec_i1_analysis.md
+  results: tracks/ksvd/results/pec_i1/
+  runner: tracks/ksvd/experiments/luyin16/zinc_pec_i1.py
+  tests: tracks/ksvd/tests/test_pec_i1.py
+  official_test_loaded: false
+  next_step: >-
+    STOP.  The pooling interface is closed.  A future PEC-I2 (composition-level
+    direct bond chemistry primitive beta_ij, including NONE) is a proposal only
+    and may not be implemented without a new pre-registration.  No second
+    pooling, no reader/environment widening, no recurrence, no dictionary.
 
 # ---------------------------------------------------------------------------
 # TCCD-v2 CHEM-CONT diagnostic (2026-09-22)
@@ -483,7 +553,34 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_pec_c1_absolute_weak_new_preregistration_required
+  status: stop_pec_i1_static_pooling_not_primary_gap_new_preregistration_required
+  # -------------------------------------------------------------------------
+  # PEC-I1 (2026-09-23) is CLOSED.  Frozen verdict
+  # STATIC_POOLING_NOT_PRIMARY_GAP: replacing PEC's coarse mean/max pooling
+  # with S0's audited distance-bucketed mean/std/log-count geometry leaves the
+  # full-data result unchanged (0.151657 vs PEC-C1 CD 0.151767, +0.000110).
+  # Stage A proved the coarse local chemistry is substantially present.  The
+  # pooling hypothesis is closed; no second pooling, no reader/environment
+  # widening, no recurrence, no dictionary, no seed 1.  Any PEC-I2 must be a
+  # NEW pre-registration.
+  # -------------------------------------------------------------------------
+  pec_i1:
+    status: stopped_static_pooling_not_primary_gap
+    round: pec-i1
+    verdict: STATIC_POOLING_NOT_PRIMARY_GAP
+    seed1_authorized: false
+    claims:
+      - claim-pec-i1-local-information-substantially-present-20260923
+      - claim-pec-i1-static-pooling-not-primary-gap-20260923
+    decision: decision-pec-i1-stop-static-pooling-not-primary-gap-20260923
+    forbidden_without_new_preregistration:
+      - second pooling variant or bucket-scheme change
+      - reader or environment width change
+      - message passing / recurrence / attention / relation refresh
+      - direct bond chemistry / path_bond_mean / beta_ij (PEC-I2 is proposal-only)
+      - dictionary / K-SVD / K-s / task-coupled dictionary
+      - seed 1
+      - official test access
   # -------------------------------------------------------------------------
   # PEC-C1 (2026-09-23) is CLOSED.  Frozen verdict
   # PURE_ENV_COMPOSITION_ABSOLUTE_WEAK: min(soup) 0.151767 > 0.145, and the

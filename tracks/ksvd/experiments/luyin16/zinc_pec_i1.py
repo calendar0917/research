@@ -997,6 +997,9 @@ def report(device: torch.device, *, force: bool = False) -> dict[str, Any]:
         payload["full"] = {
             "soup_valid_mae": full_payload["soup_valid_mae"],
             "best_valid_mae": full_payload["best_valid_mae"],
+            "best_epoch": full_payload["best_epoch"],
+            "soup_members": full_payload["soup_members"],
+            "mechanism": full_payload["mechanism"],
             **decision,
         }
         payload["verdict"] = decision["verdict"]
@@ -1012,6 +1015,10 @@ def _write_report_markdown(payload: Mapping[str, Any]) -> None:
     lines = [
         "# PEC-I1 — Static Composition Interface Audit: report",
         "",
+        "Round `pec_i1` · study `zinc-context-gap`.  Pre-registration:",
+        "`notes/pec_i1_preregistration.md` (frozen before the run).  Official test",
+        "never loaded.",
+        "",
         f"Stage A: **{payload['stage_a_verdict']}**",
         "",
         f"Internal screen: **{payload['screen_verdict']}**",
@@ -1019,16 +1026,18 @@ def _write_report_markdown(payload: Mapping[str, Any]) -> None:
     ]
     deltas = payload["screen_deltas"]
     lines += [
+        "## Internal screen (PEC-v0 Gate-2 split, 2000 train / 500 dev)",
+        "",
         "| delta | value |",
         "|---|---:|",
-        f"| `0.467108 - M_CD-I1` (frozen) | {deltas['delta_frozen_467108_minus_I1']:.6f} |",
+        f"| `0.467108 - M_CD-I1` (frozen historical) | {deltas['delta_frozen_467108_minus_I1']:.6f} |",
         f"| `M_CD_matched - M_CD-I1` (device-matched) | {deltas['delta_matched_CDminusI1']:.6f} |",
         f"| gate (`min`) | {deltas['delta_gate_min']:.6f} |",
         "",
     ]
     mechanism = payload["mechanism"]
     lines += [
-        "Mechanism (eval-only on CD-I1 soup):",
+        "Mechanism (eval-only on the CD-I1 screen soup):",
         "",
         f"* relation-shuffle degradation: {mechanism['relation_shuffle']['degradation']:.6f}",
         f"* BAG degradation: {mechanism['bag']['degradation']:.6f}",
@@ -1040,20 +1049,64 @@ def _write_report_markdown(payload: Mapping[str, Any]) -> None:
     if payload.get("full"):
         full = payload["full"]
         lines += [
-            "## Full-data seed 0",
+            "## Full-data seed 0 (official train 10 000 / official valid 1 000)",
             "",
-            f"* soup valid MAE: {full['soup_valid_mae']:.6f}",
-            f"* best valid MAE: {full['best_valid_mae']:.6f}",
+            f"* `CD-I1` Top-5 soup valid MAE: {full['soup_valid_mae']:.6f}",
+            f"* `CD-I1` best valid MAE: {full['best_valid_mae']:.6f}",
+            f"* PEC-C1 `CD` comparator soup: {HIST_PEC_C1_CD_SOUP:.6f}",
             f"* improvement vs PEC-C1 CD: {full['improvement_vs_pec_c1_cd']:.6f}",
             f"* case {full['case']} -> **{full['verdict']}**",
             f"* matches/beats S0 orientation: {full['matches_or_beats_s0']}",
             "",
+            "Full-scale mechanism (eval-only on the `CD-I1` soup):",
+            "",
+            f"* relation-shuffle degradation: "
+            f"{full['mechanism']['relation_shuffle']['degradation']:.6f}",
+            f"* BAG degradation: {full['mechanism']['bag']['degradation']:.6f}",
+            "",
         ]
     lines += [f"FINAL: **{payload['verdict']}**", ""]
     (RESULTS_DIR / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    (RESULTS_DIR / "DECISION.md").write_text(
-        "# PEC-I1 decision\n\n" + "\n".join(lines) + "\n", encoding="utf-8"
-    )
+    _write_decision_markdown(payload)
+
+
+def _write_decision_markdown(payload: Mapping[str, Any]) -> None:
+    full = payload.get("full") or {}
+    lines = [
+        "# PEC-I1 — frozen decision",
+        "",
+        f"**{payload['verdict']}**",
+        "",
+        f"* Stage A: `{payload['stage_a_verdict']}`",
+        f"* internal screen: `{payload['screen_verdict']}` "
+        f"(delta `{payload['screen_deltas']['delta_gate_min']:.6f}`)",
+        f"* full-data `CD-I1` soup / best: "
+        f"{full.get('soup_valid_mae', float('nan')):.6f} / "
+        f"{full.get('best_valid_mae', float('nan')):.6f}",
+        f"* PEC-C1 `CD` comparator soup: {HIST_PEC_C1_CD_SOUP:.6f}",
+        f"* improvement: {full.get('improvement_vs_pec_c1_cd', float('nan')):.6f}",
+        f"* case: {full.get('case', 'n/a')}",
+        f"* seed 1 authorized: false",
+        "",
+        "The one scientific change versus PEC-C1 was the graph-level pooling",
+        "interface (`[mean, max]` -> S0 audited distance-bucketed",
+        "`[mean, std, log1p(count)]`); the pure environment factorization, the",
+        "topology-only 18-D pair relation, the single read-only static pair pass",
+        "and the no-MP / no-recurrence contract were unchanged, and the reader was",
+        "parameter-matched to +0.102 %.",
+        "",
+        "The full-data improvement is below the pre-registered 0.005 materiality",
+        "threshold, so Case C fires: the pooling interface is not the primary gap.",
+        "No second pooling variant, no reader/environment widening, no recurrence,",
+        "no dictionary, no seed 1, and no PEC-I2 implementation is authorized.",
+        "Any PEC-I2 (direct chemical bond relation primitive) is a NEW",
+        "pre-registration.",
+        "",
+        "PEC-C1's `PURE_ENV_COMPOSITION_ABSOLUTE_WEAK` and PEC-v0's historical",
+        "frozen Gate-1 FAIL are untouched.",
+        "",
+    ]
+    (RESULTS_DIR / "DECISION.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------

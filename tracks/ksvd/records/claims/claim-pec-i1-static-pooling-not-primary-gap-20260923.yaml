@@ -1,0 +1,49 @@
+claim_id: claim-pec-i1-static-pooling-not-primary-gap-20260923
+created: '2026-09-23T20:07:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  PEC-I1 (2026-09-23, remote A100-SXM4-40GB, commit
+  a84a6c86477d4a8ebab08f22370d6cf3c8d7e7dd, seed 0, official train 10,000 /
+  official valid 1,000, official test NEVER loaded; the only dirty entry is this
+  round's untracked results directory): replacing PEC's coarse graph-level
+  `[mean, max]` pooling with S0's audited distance-bucketed
+  `[mean, std, log1p(count)]` geometry, keeping the full pure environment
+  factorization (no MP, no recurrence, no pair->centre, frozen E_i, topology-only
+  18-D rho_ij) and matching parameters to within 0.102 % (94,145 vs 94,049;
+  590->22->1 reader), gives essentially NO full-data gain.  M_CD-I1 Top-5 soup =
+  0.151657 (best 0.159730 @173) versus matched PEC-C1 CD soup = 0.151767 (best
+  0.159782 @235): improvement +0.000110, far below the pre-registered 0.005
+  materiality and inside the known single-seed spread.  The pair composition
+  remains load-bearing at full scale (relation-correspondence shuffle +0.822537,
+  BAG +0.816163 valid MAE), so the model did not collapse to a unary bag.  In
+  the PEC-v0 Gate-2 internal screen (2,000 train / dev official-train
+  8,000..8,499, seed 0, 60 epochs) the SAME interface change looked strong:
+  CD_matched soup 0.466020 (historical CPU 0.467108, drift -0.001088) versus
+  CD-I1 0.424733, i.e. delta_frozen +0.042375 and delta_matched +0.041287,
+  which is why the full run was authorized exactly as pre-registered.  The
+  screen's strong signal therefore did NOT transfer, a methodological finding
+  for this track: in the underfitting small-data regime the wider moment
+  interface helps fit, while at full data the two models converge to the same
+  solution quality.  FROZEN VERDICT (Case C): STATIC_POOLING_NOT_PRIMARY_GAP.
+  STOP; the pooling hypothesis is closed.  This does NOT reopen the dictionary
+  route, does not authorize PEC-I2 implementation, and is not a statement that
+  composition or the environment is unnecessary.  PEC-C1's frozen
+  PURE_ENV_COMPOSITION_ABSOLUTE_WEAK verdict and PEC-v0's historical frozen
+  Gate-1 FAIL are untouched.
+evidence:
+  - tracks/ksvd/notes/pec_i1_analysis.md
+  - tracks/ksvd/notes/pec_i1_preregistration.md
+  - tracks/ksvd/notes/pec_i1_prior_artifact_audit.md
+  - tracks/ksvd/results/pec_i1/internal_screen.json
+  - tracks/ksvd/results/pec_i1/internal_curve.csv
+  - tracks/ksvd/results/pec_i1/mechanism.json
+  - tracks/ksvd/results/pec_i1/full_seed0.json
+  - tracks/ksvd/results/pec_i1/full_seed0_curve.csv
+  - tracks/ksvd/results/pec_i1/decision.json
+  - tracks/ksvd/results/pec_i1/REPORT.md
+  - tracks/ksvd/results/pec_i1/DECISION.md
+  - tracks/ksvd/experiments/luyin16/pec_i1.py
+  - tracks/ksvd/experiments/luyin16/zinc_pec_i1.py
+  - tracks/ksvd/tests/test_pec_i1.py

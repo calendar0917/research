@@ -1,0 +1,69 @@
+decision_id: decision-pec-i1-stop-static-pooling-not-primary-gap-20260923
+created: '2026-09-23T20:10:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  STOP PEC-I1 with the frozen verdict STATIC_POOLING_NOT_PRIMARY_GAP (Case C).
+  The graph-level composition/readout interface is closed as an explanation of
+  the PEC-C1 absolute deficit.  Do not run a second pooling variant, do not
+  change the bucket scheme, do not widen the reader or the environment, do not
+  add message passing / recurrence / attention, do not reopen the dictionary
+  route, and do not implement PEC-I2 in this round.  A future PEC-I2
+  (composition-level direct bond chemistry) is a proposal only.
+because: >-
+  PEC-I1 (2026-09-23, remote A100-SXM4-40GB, commit
+  a84a6c86477d4a8ebab08f22370d6cf3c8d7e7dd, official test never loaded) was
+  pre-registered to change exactly one scientific object versus PEC-C1: the
+  graph-level pooling interface, from PEC's `[mean, max]` to S0's audited
+  distance-bucketed `[mean, std, log1p(count)]`, with a deterministic
+  nearest-integer reader parameter match (94,145 vs 94,049, +0.102 %).  Stage A
+  passed decisively (all four coarse local chemistry blocks recovered exactly;
+  the only PEC-inexpressible S0 shell-pair class (0,0) is structurally empty;
+  the only non-recoverable coordinate is one topology scalar with a documented
+  scope difference), so the deficit is not missing local chemistry.  The
+  PEC-v0 Gate-2 internal screen then showed a large interface signal
+  (CD_matched soup 0.466020 vs CD-I1 0.424733; delta_matched +0.041287,
+  delta_frozen +0.042375; mechanism alive), which pre-registeredly authorized
+  the full-data seed-0 run.  At full data the signal vanished: M_CD-I1 soup
+  0.151657, best 0.159730 @173, versus matched PEC-C1 CD soup 0.151767, best
+  0.159782 @235, i.e. improvement +0.000110 << 0.005.  The fixed 240-epoch
+  horizon is not the explanation (both models' 48-epoch block minima are flat
+  over the last two blocks and the two best checkpoints differ by 0.00005), and
+  the composition branch is not decorative (relation shuffle +0.822537, BAG
+  +0.816163).  Case C therefore fires and the pooling hypothesis is closed.
+  This is also a methodological result: a cheap 2,000-molecule underfitting
+  screen can over-authorize an interface full run for this model family.
+alternatives_rejected:
+  - 'Try a second pooling variant (8 PEC buckets, sum/mean/std, distribution moments, or attention pooling): rejected - the round forbids designing a second pooling, and the full-data effect is +0.000110, i.e. there is no signal to chase.'
+  - 'Widen the reader (hidden 22 -> 64 or larger): rejected - the parameter-matched reader is the frozen design; widening it reintroduces the parameter confound and is explicitly out of scope.'
+  - 'Extend training beyond 240 epochs or add early stopping/a scheduler: rejected - the frozen protocol and tail analysis show the horizon cannot move a +0.000110 effect to >= 0.005.'
+  - 'Re-run PEC-C1 CD or run seed 1 to resolve a 0.000110 difference: rejected - the difference is far inside the single-seed spread; no seed is authorized, and the round requires one test, one conclusion.'
+  - 'Reopen the sparse dictionary / K-SVD / K-s / task-coupled dictionary: rejected - PEC-C1 already showed the frozen sparse dictionary is 0.009204 worse than DenseRole, and dictionary questions wait until a pure Dense architecture re-enters the viability band; this round is DenseRole only.'
+  - 'Implement PEC-I2 (direct chemical bond relation primitive) immediately: rejected - PEC-I2 can only be proposed after I1 failure is recorded, and adding chemistry now would confound the frozen interface test.'
+  - 'Claim INTERFACE_MATTERS_BUT_NOT_SUFFICIENT from the screen signal: rejected - the frozen full-data decision rule is Case C because the full improvement is < 0.005; screen deltas are not full-data deltas.'
+revisit_if: >-
+  (a) A NEW pre-registration proposes a structurally different explanation of
+  the PEC-C1 absolute deficit - in particular PEC-I2, which would test whether
+  the composition operator needs an explicit direct chemical bond relation
+  primitive beta_ij (including NONE), c_ij = F(E_i, E_j, rho_ij_topo, beta_ij),
+  still with no MP / no recurrence / no pair->centre / frozen E_i; or (b) a
+  separately pre-registered methodological study replaces the cheap internal
+  screen with a screen that predicts full-data interface effects for this
+  family; or (c) the research direction is re-scoped to the mechanistic claims
+  (local information sufficiency, environment binding, read-only static
+  composition), which PEC-I1 supports and which do not require the strict-static
+  band.  The frozen PEC-C1 and PEC-v0 verdicts remain untouched.
+evidence:
+  - tracks/ksvd/notes/pec_i1_preregistration.md
+  - tracks/ksvd/notes/pec_i1_prior_artifact_audit.md
+  - tracks/ksvd/notes/pec_i1_information_recoverability.md
+  - tracks/ksvd/notes/pec_i1_analysis.md
+  - tracks/ksvd/results/pec_i1/decision.json
+  - tracks/ksvd/results/pec_i1/DECISION.md
+  - tracks/ksvd/results/pec_i1/REPORT.md
+  - tracks/ksvd/results/pec_i1/information_recoverability.json
+  - tracks/ksvd/results/pec_i1/correctness.json
+  - tracks/ksvd/results/pec_i1/parameter_accounting.json
+  - tracks/ksvd/results/pec_i1/internal_screen.json
+  - tracks/ksvd/results/pec_i1/mechanism.json
+  - tracks/ksvd/results/pec_i1/full_seed0.json

@@ -1,0 +1,37 @@
+claim_id: claim-pec-i1-local-information-substantially-present-20260923
+created: '2026-09-23T20:05:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  PEC-I1 Stage A (2026-09-23, remote A100-SXM4-40GB, commit
+  a84a6c86477d4a8ebab08f22370d6cf3c8d7e7dd, official test never loaded,
+  label-free / no target y read): the PEC environment's raw input primitives
+  already contain the main coarse local chemistry of S0's 146-D `patch_cont`.
+  For the same rooted radius-2 patches (2,000 official-train + 1,000
+  official-valid molecules, all 69,544 roots), the S0 blocks are recovered from
+  PEC primitives by explicit known-denominator transforms with exact fraction
+  1.000000: atom_shell (3x28, coarse shell x atom binding / n_nodes, max abs err
+  2.65e-08), bond_shell (6x4 = the 5 PEC shell-pair classes / n_edges plus the
+  structurally empty (0,0) block, max abs err 2.75e-08), root_atom (28, exact),
+  incident bond composition (4, coarse (0,1) binding / root degree, max abs err
+  1.99e-08).  The shell-pair taxonomy difference is audited explicitly: S0
+  declares 6 classes including (0,0); PEC's role one-hot covers 5 and cannot
+  express (0,0), whose occurrence count is exactly 0 on both official splits
+  (structurally impossible: shell 0 is the singleton root, so a (0,0) induced
+  bond would be a self-loop).  (0,2) is expressible in PEC and is also exactly
+  empty.  The only non-recoverable coordinate is S0 structural scalar 5, the
+  patch-scoped mean molecule degree, a documented scope difference from PEC's
+  molecule-scoped root_scalars[3] (train-fit ridge probe valid R2 = 0.316,
+  MAE 0.032891); it is topology, not chemistry.  Verdict
+  LOCAL_INFORMATION_SUBSTANTIALLY_PRESENT.  This does NOT claim PEC and S0 are
+  equivalent: PEC-I1 still removes the mixed patch_cont bypass, typed tokens,
+  typed global marginals and mixed pair chemistry.  It claims only that the
+  PEC-C1 deficit is not plausibly caused by missing coarse local chemistry in
+  the environment formation.
+evidence:
+  - tracks/ksvd/notes/pec_i1_information_recoverability.md
+  - tracks/ksvd/notes/pec_i1_preregistration.md
+  - tracks/ksvd/results/pec_i1/information_recoverability.json
+  - tracks/ksvd/experiments/luyin16/pec_i1.py
+  - tracks/ksvd/tests/test_pec_i1.py
