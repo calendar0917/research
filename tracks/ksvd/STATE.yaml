@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: pec-c1-preregistered-full-data-seed0-authorized
+phase: pec-c1-stopped-absolute-weak-no-seed1
 updated: 2026-09-23
 
 # ---------------------------------------------------------------------------
@@ -45,7 +45,7 @@ active_studies:
   - molhiv-cross-scaffold-interaction
 
 # ---------------------------------------------------------------------------
-# PEC-v0 (pure environment composition) — 2026-09-23, LATEST ROUND
+# PEC-v0 (pure environment composition) — 2026-09-23
 # ---------------------------------------------------------------------------
 # Purer core hypothesis than any prior route: chemical primitives bound to
 # reusable rooted structural roles -> FROZEN local chemical environments -> one
@@ -99,6 +99,67 @@ pec_v0:
     Await explicit user authorization for the Gate-3 seed-0 official-valid
     purchase (two arms: best non-dictionary control and CK sparse).  No
     autonomous re-run, no K/s/epoch/threshold rescue, no seed 1.
+
+# ---------------------------------------------------------------------------
+# PEC-C1 (pure environment composition confirmatory) — 2026-09-23, LATEST ROUND
+# ---------------------------------------------------------------------------
+# New confirmatory round; does NOT amend PEC-v0.  It answers the absolute
+# capacity question PEC-v0 left WITHHELD, in the full official-train -> official
+# valid regime, under a completely frozen PEC-v0 architecture / feature
+# definition / dictionary K,s / static composition / training semantics.
+# Official test never loaded; only train/val ever read; no baseline re-run.
+pec_c1:
+  status: STOPPED_ABSOLUTE_WEAK_NO_SEED1
+  round: PEC-C1
+  protocol: pec_c1
+  remote_commit: bf8b5a628d99eedaf52f0b6e95e79cf583c4ba7b
+  remote_host: hxy@a100-2
+  remote_repo: /home/hxy/cy/research
+  device: 2x NVIDIA A100-SXM4-40GB, CUDA 12.4, torch 2.5.1+cu124
+  seed: 0
+  epochs: 240 (fixed, no early stopping)
+  data: official train 10000 / official valid 1000 (selection only)
+  arms:
+    CK_SparseDict_frozen: soup 0.160971 (best 0.169599 @210, total 94049, trainable 93633, dictionary frozen, drift 0.0)
+    CD_DenseRole_trainable: soup 0.151767 (best 0.159782 @235, total 94049, trainable 94049, drift 0.375/0.613)
+  verdict: PURE_ENV_COMPOSITION_ABSOLUTE_WEAK
+  band: '>0.145'
+  M_CK: 0.16097134351730347
+  M_CD: 0.1517672836780548
+  delta_dict: -0.009204059839248657
+  cases_fired: [A_absolute_weak, B_dense_dominates_sparse]
+  precedence: A > B > D > C > E
+  seed1_authorized: false
+  mechanism_integrity:
+    chemistry_placement_sensitive: true
+    dictionary_dependent: true
+    composition_relation_sensitive: true
+    no_mp_no_recurrence_no_bypass: true
+  historical_context_only:
+    strict_static_S0_seed0_soup: 0.140794
+    strict_static_S0_seed1_soup: 0.136423
+    B_Null: 0.123
+    B_Full: 0.119
+    note: orientation only; different computation class; never a gate; never re-run
+  claims:
+    - claim-pec-c1-pure-env-composition-absolute-weak-20260923
+    - claim-pec-c1-mechanisms-load-bearing-capacity-limited-20260923
+    - claim-pec-c1-frozen-sparse-dictionary-worse-than-dense-role-20260923
+  decision: decision-pec-c1-stop-absolute-weak-no-seed1-20260923
+  preregistration: tracks/ksvd/notes/pec_c1_preregistration.md
+  implementation_note: tracks/ksvd/notes/pec_c1_implementation.md
+  analysis: tracks/ksvd/notes/pec_c1_analysis.md
+  results: tracks/ksvd/results/pec_c1/
+  runner: tracks/ksvd/experiments/luyin16/zinc_pec_c1.py
+  tests: tracks/ksvd/tests/test_pec_c1.py
+  official_test_loaded: false
+  declared_deviations:
+    - 'D1: PEC-v0 made d_node/d_edge trainable nn.Parameters fed to Adam, contradicting PEC-v0 prereg 2.2; PEC-C1 freezes D (requires_grad False, excluded from the optimizer) and asserts drift exactly 0.0. PEC-v0 gate verdicts unchanged.'
+    - 'D2: CD keeps PEC-v0 trainable Linear(11->16)/Linear(15->16); CK is therefore handicapped, making the CK/CD comparison conservative against CK.'
+  next_step: >-
+    STOP.  No seed 1, no K/s/epoch/horizon/reader/recurrence rescue, no
+    task-coupled dictionary (PEC-C2 is not authorized by this result).  A new
+    pre-registration is required for any further step.
 
 # ---------------------------------------------------------------------------
 # TCCD-v2 CHEM-CONT diagnostic (2026-09-22)
@@ -422,35 +483,32 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: pec_c1_authorized_two_seed0_arms
+  status: stop_pec_c1_absolute_weak_new_preregistration_required
   # -------------------------------------------------------------------------
-  # PEC-C1 (2026-09-23).  New confirmatory round; does NOT amend PEC-v0.
-  # PEC-v0 Gate 1 remains a historical frozen FAIL.  Authorized: exactly two
-  # full-data seed-0 arms (CK = frozen SparseDict on GPU0, CD = DenseRole on
-  # GPU1) against official valid.  Official test never loaded.  seed 1
-  # forbidden unless a frozen Case C/D trigger fires.  No K/s/epochs reader
-  # rescue, no task-coupled dictionary (reserved for a future PEC-C2).
+  # PEC-C1 (2026-09-23) is CLOSED.  Frozen verdict
+  # PURE_ENV_COMPOSITION_ABSOLUTE_WEAK: min(soup) 0.151767 > 0.145, and the
+  # frozen sparse dictionary is 0.009204 MAE worse than the parameter-matched
+  # trainable dense role map.  seed1_authorized = false.  Both seed-0 arms were
+  # run (A100 GPU0/GPU1) and the official test was never loaded.  Any further
+  # step needs a NEW pre-registration.
   # -------------------------------------------------------------------------
   pec_c1:
-    status: preregistered_implementation_committed_run_pending
+    status: stopped_absolute_weak_no_seed1
     round: pec-c1
-    preregistration: tracks/ksvd/notes/pec_c1_preregistration.md
-    implementation_note: tracks/ksvd/notes/pec_c1_implementation.md
-    runner: tracks/ksvd/experiments/luyin16/zinc_pec_c1.py
-    tests: tracks/ksvd/tests/test_pec_c1.py
-    arms: [CK_seed0_sparse_frozen_dict, CD_seed0_trainable_dense_role]
-    devices: {CK: cuda:0, CD: cuda:1}
-    epochs: 240
-    selection: official-valid best checkpoint + fixed Top-5 prediction soup
-    record_pending: true
-    note: >-
-      Durable claim/decision records are written only after the two arms
-      complete; no PEC-C1 claim or decision id is referenced here yet.
+    verdict: PURE_ENV_COMPOSITION_ABSOLUTE_WEAK
+    seed1_authorized: false
+    claims:
+      - claim-pec-c1-pure-env-composition-absolute-weak-20260923
+      - claim-pec-c1-mechanisms-load-bearing-capacity-limited-20260923
+      - claim-pec-c1-frozen-sparse-dictionary-worse-than-dense-role-20260923
+    decision: decision-pec-c1-stop-absolute-weak-no-seed1-20260923
     forbidden_without_new_preregistration:
-      - K or s sweep
-      - epochs / threshold / architecture rescue
       - seed 1
-      - task-coupled or trainable dictionary
+      - K or s sweep
+      - epochs / horizon / scheduler change
+      - reader or environment width rescue
+      - message passing / recurrence / attention / relation refresh
+      - task-coupled dictionary
       - official test access
   # -------------------------------------------------------------------------
   # PEC-v0 (pure environment composition, 2026-09-23).

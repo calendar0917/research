@@ -1,0 +1,47 @@
+claim_id: claim-pec-c1-mechanisms-load-bearing-capacity-limited-20260923
+created: '2026-09-23T19:11:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  PEC-C1 (2026-09-23, remote A100-SXM4-40GB, commit
+  bf8b5a628d99eedaf52f0b6e95e79cf583c4ba7b, seed 0, full official train 10,000 /
+  official valid 1,000, official test NEVER loaded).  QUESTION: in the full-data
+  regime, are the pure architecture's mechanisms still genuinely load-bearing,
+  i.e. is the PEC-C1 absolute failure (PURE_ENV_COMPOSITION_ABSOLUTE_WEAK,
+  min soup 0.151767 > 0.145) a CAPACITY failure rather than inertness, collapse
+  or a dead branch?  ANSWER: the mechanisms are intact and decisive; the failure
+  is capacity.  Three evaluation-only interventions on the frozen CK (SparseDict)
+  Top-5 official-valid soup, never used for selection: (1) CHEMISTRY-PLACEMENT
+  SHUFFLE - topology, the atom multiset and the bond multiset held fixed, only
+  the structure<->chemistry assignment destroyed - degrades valid MAE by
+  +1.576104 with mean abs prediction shift 1.710692 (valid MAE 1.737075 vs soup
+  0.160971); the same intervention on CD degrades by +1.433714.  This is
+  stronger at full scale than in the PEC-v0 Gate-2 cheap screen (+0.8353).
+  (2) NEUTRAL DICTIONARY - D replaced by a matched random unit-normalized
+  dictionary - shifts predictions by 2.093377 and costs +1.967415 MAE (valid MAE
+  2.128386), so the frozen sparse code is genuinely consumed rather than
+  decorative; the dictionary branch is alive even though the frozen dictionary
+  is not better than the dense control.  (3) COMPOSITION RELATION SHUFFLE - only
+  rho_ij permuted within each graph with environments and pair endpoints fixed -
+  degrades by +1.392907 with shift 1.507191 (CD: +0.874643), confirming the TRUE
+  static composition is not relation-invariant.  In addition the purity contract
+  is unchanged: pec_v0.py / pec_v0_gate0.py / zinc_pec_v0.py are byte-identical
+  to PEC-v0, all Gate-0 correctness checks still pass under the PEC-C1 import
+  (34 targeted tests, 41 with test_pec_v0.py), there is no message passing, no
+  recurrence, no attention, no pair->centre write-back and no chemistry-bearing
+  pair relation (rho is 18-D pure topology).  SCOPE / LIMITS: the interventions
+  are single-seed, evaluation-only validity checks and their magnitudes must not
+  be read as effect sizes; the CK dictionary is frozen (requires_grad False,
+  excluded from the optimizer, drift exactly 0.0) while CD's role map is trained,
+  so the CK/CD asymmetry is declared and conservative against CK; a strong
+  chemistry-placement sensitivity does not by itself imply the environment
+  composition is a good representation, only that it is a used one.
+evidence:
+  - tracks/ksvd/notes/pec_c1_preregistration.md
+  - tracks/ksvd/notes/pec_c1_analysis.md
+  - tracks/ksvd/results/pec_c1/CK_seed0.json
+  - tracks/ksvd/results/pec_c1/CD_seed0.json
+  - tracks/ksvd/results/pec_c1/pec_c1_decision.json
+  - tracks/ksvd/results/pec_c1/DECISION.md
+  - tracks/ksvd/tests/test_pec_c1.py

@@ -1,0 +1,72 @@
+decision_id: decision-pec-c1-stop-absolute-weak-no-seed1-20260923
+created: '2026-09-23T19:13:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  STOP PEC-C1 after the two pre-registered seed-0 arms.  Record the frozen
+  verdict PURE_ENV_COMPOSITION_ABSOLUTE_WEAK with seed1_authorized = false.  No
+  seed 1, no K/s/epoch/horizon/reader/recurrence rescue, no task-coupled
+  dictionary, no further PEC-C1 work.
+because: >-
+  PEC-C1 (2026-09-23, remote A100-SXM4-40GB, commit
+  bf8b5a628d99eedaf52f0b6e95e79cf583c4ba7b clean, seed 0, full official ZINC
+  train 10,000 / official valid 1,000, official test never loaded) was frozen
+  before the run and asked whether the pure no-MP environment -> static
+  composition architecture has absolute capacity in the full-data regime and
+  whether a frozen sparse structural-role dictionary remains not worse than a
+  parameter-matched dense control.  Both frozen cases A and B fire.  Case A:
+  min(M_CK, M_CD) = min(0.160971, 0.151767) = 0.151767 > 0.145, so the
+  architecture does not reach the viability band; it is +0.010973 (CD) /
+  +0.020177 (CK) worse than the strict-static S0 seed-0 Top-5 soup 0.140794 in
+  the same train/valid protocol family (orientation only; different computation
+  class, never a gate).  Case B: M_CK - M_CD = +0.009204 > 0.003, so the frozen
+  sparse dictionary is materially worse than the parameter-matched trainable
+  dense role map.  Precedence A > B > D > C > E therefore selects Case A.
+  Neither seed-1 trigger fired (Trigger 1 needs M_CK <= 0.145 and
+  M_CD - M_CK >= 0.003; Trigger 2 needs min <= 0.140), and none of the
+  forbidden justifications applies: the gap is not a noisy near-miss that more
+  seeds should chase.  The fixed 240-epoch horizon is not the explanation - CK's
+  minimum is at epoch 210 with a flat-to-worse tail and CD's is at epoch 235 with
+  its entire last 48 epochs inside a 0.003 range, while leaving the weak band
+  would require -0.0148.  The mechanisms are not at fault: chemistry-placement
+  shuffle costs +1.576104, the neutral-dictionary intervention +1.967415 with a
+  2.093377 prediction shift, and the composition relation shuffle +1.392907, so
+  the failure is a representation/optimization ceiling rather than inertness,
+  collapse or a dead branch.  A descriptive fit/gap split against strict-static
+  S0 seed 0 (train-at-best 0.075434, gap 0.070241) shows the pure class cannot
+  even fit the training set as well (train minima 0.080633 / 0.073690 versus
+  0.067595), with the remainder in a wider generalization gap.  PEC-v0's
+  historical frozen verdicts are untouched: PEC-v0 Gate 1 remains a historical
+  frozen FAIL, PEC-C1 does not retroactively pass or recalibrate it, and the
+  PEC-v0 Gate-2 "frozen dictionary" wording is corrected by PEC-C1's D1 finding
+  that PEC-v0's d_node/d_edge were in fact trainable.
+alternatives_rejected:
+  - 'Buy seed 1: rejected - no frozen trigger fired; the 0.009204 dictionary gap and the 0.006767 band miss are not to be chased with more seeds, and Case A is a 0.006767 miss whose size exceeds any plausible seed effect.'
+  - 'Rescue with K or s (e.g. K=12 for the edge dictionary, which uses only 8 of 16 atoms on the full corpus): rejected - explicitly forbidden by the pre-registration, and the overcomplete edge dictionary is an inherited PEC-v0 property, not a new degree of freedom.'
+  - 'Extend beyond 240 epochs or add early stopping / a scheduler: rejected - the fixed schedule is frozen, and the tail analysis shows the horizon cannot flip Case A.'
+  - 'Widen the reader, the environment MLP or the pair composer: rejected - forbidden; and the deficit is present in the train fit as well as the gap, so raw capacity tuning is not authorized here.'
+  - 'Add message passing, recurrence, relation refresh or attention to recover the S0 band: rejected - that abandons the purity contract that defines the round; such a change needs a new pre-registration and is no longer this hypothesis.'
+  - 'Re-run, relax or recalibrate PEC-v0 Gate 1: rejected - Gate 1 has no bearing on PEC-C1, stays a historical frozen FAIL, and is not re-optimised.'
+  - 'Run a task-coupled (trainable) dictionary now: rejected - the pre-registration makes task coupling conditional on a stable absolute pure architecture, which PEC-C1 shows we do not have, and Case B is explicitly scoped to the frozen dictionary only.'
+  - 'Report ENV_COMPOSITION_SUPPORTED_DENSE_NOT_DICT as the verdict: rejected as the primary verdict - Case A outranks Case B; Case B is recorded inside the report with the frozen-dictionary confound stated.'
+  - 'Treat the strong mechanism magnitudes as a positive architecture result: rejected - chemistry-placement sensitivity proves the environment is used, not that it is a good representation, and the absolute band failed.'
+revisit_if: >-
+  (a) A NEW pre-registration proposes a structurally different environment
+  formation function class that keeps the no-MP / no-recurrence / no-mixed-bypass
+  purity contract and first demonstrates absolute viability in the full regime;
+  or (b) a PEC-C2 task-coupling round is proposed on a DIFFERENT architecture
+  that has already demonstrated absolute viability, since PEC-C1 does not
+  estimate task-coupled dictionaries and does not authorize PEC-C2; or (c) the
+  research direction is re-scoped away from ZINC absolute MAE toward the
+  mechanistic claims (environment binding and read-only static composition),
+  which PEC-C1 supports decisively and which do not require the strict-static
+  band.
+evidence:
+  - tracks/ksvd/notes/pec_c1_preregistration.md
+  - tracks/ksvd/notes/pec_c1_implementation.md
+  - tracks/ksvd/notes/pec_c1_analysis.md
+  - tracks/ksvd/results/pec_c1/DECISION.md
+  - tracks/ksvd/results/pec_c1/REPORT.md
+  - tracks/ksvd/results/pec_c1/pec_c1_decision.json
+  - tracks/ksvd/results/pec_c1/CK_seed0.json
+  - tracks/ksvd/results/pec_c1/CD_seed0.json
