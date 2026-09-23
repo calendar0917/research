@@ -1,0 +1,43 @@
+claim_id: claim-fec-s0-local-token-opaque-aliased-20260923
+created: '2026-09-23T20:22:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  FEC-S0 (2026-09-24, local CPU, protocol fec_s0, lineage commit d4de88e,
+  official test never loaded, ZERO training): the dominant learned local channel
+  of historical strict-static S0 is an aliased exact-token memory, not a shared
+  role x primitive environment, and it blocks a full pure-FEC factorization of
+  the local environment.  S0 reads typed_token (16-D, `_HybridEmbedding` over
+  6,785 ids, 36,420 params) and parent_token (8-D, 256 params); both keys are
+  `pynauty.certificate` bytes produced by the historical tokenizer
+  (`typed_tokenizer_v1_historical`, the default) of the rooted typed incidence
+  graph.  The certificate is a canonical adjacency matrix and does NOT encode
+  the vertex coloring, so it is a non-injective alias of the role x primitive
+  binding; on the official-valid audit split 299 of 2,379 unique tokens
+  (12.57 %) mix multiple root atom categories, and 15,309 of 23,083 patch
+  occurrences (66.32 %) fall in such alias buckets.  The certificate is
+  deterministically reconstructible from raw primitives (rebuilt bytes equal the
+  historical certificates for 23,083/23,083 patches; vocabulary lookup
+  reproduces every cached id), so provenance is traceable, but the environment
+  operator is a per-key learned table with independent parameters per joint
+  configuration rather than a shared function of local roles and local
+  chemistry.  Under the frozen FEC-S0 pre-registration the distinction
+  `FACTORIZED_SHARED` vs `EXPLICIT_BINDING_LOOKUP` is applied, so the local
+  environment is NOT fully factorized and the round verdict is
+  FEC_S0_LOCAL_FACTORIZATION_BLOCKED (Case C).  Corollary: 36,420 of S0's
+  66,228 parameters (55 %) sit in this aliased local memory, giving a precise
+  quantitative reason the PEC line removed the typed token.  A future round may
+  adopt the permissive reading (reconstructible via explicit binding), in which
+  case the verdict would be FEC_S0_FUNCTIONALLY_EQUIVALENT; both facts are
+  recorded so no re-run is required.
+evidence:
+  - tracks/ksvd/notes/fec_s0_prior_artifact_audit.md
+  - tracks/ksvd/notes/fec_s0_path_factorization.md
+  - tracks/ksvd/notes/fec_s0_equivalence_analysis.md
+  - tracks/ksvd/results/fec_s0/access_audit.json
+  - tracks/ksvd/results/fec_s0/token_equivalence.json
+  - tracks/ksvd/results/fec_s0/token_alias_audit.json
+  - tracks/ksvd/results/fec_s0/decision.json
+  - tracks/ksvd/experiments/luyin16/typed_patch_tokenizer.py
+  - tracks/ksvd/experiments/luyin16/fec_s0_factorization.py

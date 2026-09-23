@@ -1,0 +1,79 @@
+decision_id: decision-fec-s0-local-factorization-blocked-20260923
+created: '2026-09-23T20:25:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  STOP FEC-S0 with the frozen verdict FEC_S0_LOCAL_FACTORIZATION_BLOCKED (Case
+  C).  Historical strict-static S0 is NOT already a pure
+  chemical-primitives + structural-roles -> frozen-local-environments ->
+  read-only-static-composition model: its handcrafted channels factor exactly,
+  but its dominant learned local channel (typed_token / parent_token) is an
+  aliased per-configuration exact-token memory.  Do not delete, zero, replace,
+  re-train or re-factor the blocking path; do not run a new performance run,
+  seed, HPO or dictionary; do not open the official test.  The claim "S0 is
+  already pure FEC" must not be asserted without the token qualification.  The
+  FEC-D1 proposal (baseline-preserving sparse structural-role refinement,
+  r_new = r_coarse + g * r_dict with g=0 => FEC-D1 == FEC-S0) is recorded as a
+  proposal only and is NOT implemented or trained this round.
+because: >-
+  FEC-S0 (2026-09-24, local CPU, protocol fec_s0, lineage commit d4de88e,
+  official test never loaded, zero training) rebuilt every S0 input tensor from
+  raw molecular primitives through explicit role x primitive bindings and ran
+  the unchanged historical checkpoint on historical and factorized inputs for
+  the same molecules.  Result: patch_cont (146), pair_relation (23),
+  global_context (62), topology_features (25) and standardizers reproduce
+  bit-identically (max_abs = 0.0, bit_equal_fraction = 1.0 on the full
+  official-valid split and a 512-molecule train sample), and h, q, R and the
+  prediction are bit-identical with the recorded best-checkpoint valid MAE
+  reproduced to 1.34e-8.  Static purity holds (no MP, no recurrence, no
+  pair->centre, no context writeback; environment formed before pair
+  composition; relabel-invariant; 7/7 targeted tests pass).  However, the
+  local token path is an aliased non-injective pynauty certificate
+  (typed_tokenizer_v1_historical) answered by a 6,785-row / 36,420-parameter
+  table: 66.32 % of official-valid patch occurrences sit in alias buckets that
+  mix distinct root atoms.  It is reconstructible from primitives (provenance
+  traceable) but is not a shared role x primitive factorization.  Under the
+  pre-registered FACTORIZED_SHARED vs EXPLICIT_BINDING_LOOKUP rule this is a
+  reachable local chemistry path that blocks Case A, so Case C fires.  The
+  Top-5 soup (0.140794) has no persisted member states and was therefore not
+  reproduced; the round forbids retraining to reconstruct them.
+alternatives_rejected:
+  - 'Delete or zero the typed/parent token so the remaining channels form a clean FEC model: rejected - this changes the S0 function and is exactly what the round forbids; it would make the equivalence claim meaningless.'
+  - 'Rename the aliased certificate lookup as an "explicit binding" and declare Case A: rejected - the frozen pre-registration deliberately separates a shared role x primitive factorization from a per-joint-configuration learned memory, and the round explicitly forbids theoretical renaming.'
+  - 'Retrain a substitute model with a shared structural role encoder to demonstrate factorizability: rejected - zero-training round; any retraining is out of scope and would confound function preservation.'
+  - 'Refit the standardizer / vocabulary on valid or use the PEC scaler: rejected - the historical train-only transforms already reproduce the cache bit-identically; no refit was needed or allowed.'
+  - 'Reconstruct the Top-5 soup by retraining the member epochs: rejected - the member states were never persisted and the round forbids retraining.'
+  - 'Implement or train FEC-D1 now: rejected - proposal only; it requires its own pre-registration on the verified role x primitive channels.'
+revisit_if: >-
+  (a) A NEW pre-registration adopts the permissive reading of the round clause
+  ("reconstructible from structural primitive + chemical primitive + explicit
+  binding") and re-labels the aliased token as an explicit binding, in which
+  case the already-recorded bit-identical equivalence supports
+  FEC_S0_FUNCTIONALLY_EQUIVALENT without any re-run; or (b) a new preregistered
+  round defines a shared role x primitive environment coordinate that provably
+  reproduces or dominates the aliased token's function (this is the natural
+  home of FEC-D1); or (c) the research direction moves to exploiting the now
+  verified exact role x primitive factorization of patch_cont / pair_relation /
+  global_context for a baseline-preserving refinement, still with no MP /
+  recurrence / pair->centre.  The frozen PEC-v0 / PEC-C1 / PEC-I1 verdicts and
+  the SDB-v0 / TCCD closures remain untouched.
+evidence:
+  - tracks/ksvd/notes/fec_s0_preregistration.md
+  - tracks/ksvd/notes/fec_s0_prior_artifact_audit.md
+  - tracks/ksvd/notes/fec_s0_path_factorization.md
+  - tracks/ksvd/notes/fec_s0_equivalence_analysis.md
+  - tracks/ksvd/results/fec_s0/REPORT.md
+  - tracks/ksvd/results/fec_s0/DECISION.md
+  - tracks/ksvd/results/fec_s0/decision.json
+  - tracks/ksvd/results/fec_s0/access_audit.json
+  - tracks/ksvd/results/fec_s0/local_descriptor_equivalence.json
+  - tracks/ksvd/results/fec_s0/pair_relation_equivalence.json
+  - tracks/ksvd/results/fec_s0/global_equivalence.json
+  - tracks/ksvd/results/fec_s0/intermediate_equivalence.json
+  - tracks/ksvd/results/fec_s0/prediction_equivalence.json
+  - tracks/ksvd/results/fec_s0/purity_contract.json
+  - tracks/ksvd/results/fec_s0/token_equivalence.json
+  - tracks/ksvd/results/fec_s0/token_alias_audit.json
+  - tracks/ksvd/results/fec_s0/full_audit.json
+  - tracks/ksvd/experiments/luyin16/fec_s0_factorization.py
+  - tracks/ksvd/tests/test_fec_s0_factorization.py

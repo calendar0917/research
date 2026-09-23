@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: pec-i1-stopped-static-pooling-not-primary-gap
+phase: fec-s0-stopped-local-factorization-blocked
 updated: 2026-09-23
 
 # ---------------------------------------------------------------------------
@@ -553,7 +553,32 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_pec_i1_static_pooling_not_primary_gap_new_preregistration_required
+  status: stop_fec_s0_local_factorization_blocked_new_preregistration_required
+  # -------------------------------------------------------------------------
+  # FEC-S0 (2026-09-23, local CPU, zero training) is CLOSED.  Frozen verdict
+  # FEC_S0_LOCAL_FACTORIZATION_BLOCKED: the handcrafted S0 channels
+  # (patch_cont / pair_relation / global_context / topology) factor exactly and
+  # the forward is bit-identical, but the dominant learned local channel
+  # (typed_token/parent_token) is an aliased non-injective exact-token memory
+  # (36,420 params; 66.32% of valid-patch occurrences in alias buckets mixing
+  # distinct root atoms), so the local environment is not fully factorized.
+  # No path deletion, no retraining, no dictionary, no official test.
+  # -------------------------------------------------------------------------
+  fec_s0:
+    status: stopped_local_factorization_blocked
+    round: fec-s0
+    verdict: FEC_S0_LOCAL_FACTORIZATION_BLOCKED
+    claims:
+      - claim-fec-s0-handcrafted-channels-factor-exactly-20260923
+      - claim-fec-s0-local-token-opaque-aliased-20260923
+    decision: decision-fec-s0-local-factorization-blocked-20260923
+    forbidden_without_new_preregistration:
+      - deleting / zeroing / replacing the typed or parent token
+      - retraining S0 or any substitute with a shared role encoder
+      - new performance run / seed / HPO / dictionary (K-SVD, K/s sweep)
+      - refitting the standardizer or vocabulary
+      - reproducing the Top-5 soup by retraining member epochs
+      - official test access
   # -------------------------------------------------------------------------
   # PEC-I1 (2026-09-23) is CLOSED.  Frozen verdict
   # STATIC_POOLING_NOT_PRIMARY_GAP: replacing PEC's coarse mean/max pooling
@@ -1104,12 +1129,88 @@ sdb_v0:
   forbidden_rescues_used: false
 
 # ---------------------------------------------------------------------------
+# FEC-S0 — Factorized Environment-Composition S0 (2026-09-23)
+# ---------------------------------------------------------------------------
+# Zero-training, function-preserving equivalence audit of historical
+# strict-static S0 (build_s0(0), 66,228 params, checkpoint
+# results/zinc_static_dictionary_pair/states/s0_seed0_selection_state.pt).
+# Local CPU only; official test never loaded; no training / HPO / dictionary.
+# Handcrafted channels (patch_cont 146, pair_relation 23, global_context 62,
+# topology 25) reconstruct from raw primitives BIT-IDENTICALLY and h/q/R/pred
+# are bit-identical, reproducing the recorded best-checkpoint valid MAE to
+# 1.34e-8.  The dominant learned local channel (typed_token/parent_token) is an
+# aliased non-injective pynauty certificate answered by a 36,420-param per-key
+# table; 66.32% of official-valid patch occurrences sit in alias buckets that
+# mix distinct root atoms.  Frozen verdict FEC_S0_LOCAL_FACTORIZATION_BLOCKED.
+# The Top-5 soup (0.140794) has no persisted member states and was not
+# reconstructed.
+fec_s0:
+  status: STOPPED_LOCAL_FACTORIZATION_BLOCKED
+  round: FEC-S0
+  verdict: FEC_S0_LOCAL_FACTORIZATION_BLOCKED
+  preregistration: tracks/ksvd/notes/fec_s0_preregistration.md
+  prior_artifact_audit: tracks/ksvd/notes/fec_s0_prior_artifact_audit.md
+  path_factorization: tracks/ksvd/notes/fec_s0_path_factorization.md
+  analysis: tracks/ksvd/notes/fec_s0_equivalence_analysis.md
+  decision: decision-fec-s0-local-factorization-blocked-20260923
+  claims:
+    - claim-fec-s0-handcrafted-channels-factor-exactly-20260923
+    - claim-fec-s0-local-token-opaque-aliased-20260923
+  blocking_tensors:
+    - typed_token
+    - parent_token
+  result: >-
+    patch_cont / pair_relation / global_context / topology reproduce
+    bit-identically (max_abs 0.0) on the full official-valid split; standardizer
+    and vocabulary reproduction exact; static purity holds; but the aliased
+    exact-token memory blocks the pure role x primitive factorization of the
+    local environment.  Function is bit-identically reproducible; the
+    factorization claim is blocked.
+  official_test_loaded: false
+  training_runs: 0
+  full_training_runs: 0
+  seeds_purchased: 0
+  forbidden_rescues_used: false
+
+# ---------------------------------------------------------------------------
 # recent closures — navigational pointers only (no text copied)
 # ---------------------------------------------------------------------------
 # Test access note: WG-ICSC-v0 (2026-09-19) was a valid-only feasibility round;
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-fec-s0-local-factorization-blocked-20260923: >-
+      FEC-S0 (2026-09-23, local CPU, protocol fec_s0, lineage commit d4de88e,
+      official test never loaded, ZERO training / HPO / dictionary):
+      function-preserving equivalence audit of historical strict-static S0
+      (build_s0(0), 66,228 params; checkpoint s0_seed0_selection_state.pt).
+      Every S0 input tensor was rebuilt from raw molecular primitives via
+      explicit role x primitive bindings.  patch_cont (146), pair_relation
+      (23), global_context (62), topology_features (25) and the train-fit
+      standardizers/vocabularies reproduce the historical inputs
+      bit-identically on the full official-valid split (1,000 molecules) and a
+      512-molecule train sample (max_abs 0.0, bit_equal_fraction 1.0); h, q,
+      relation/global encoder outputs, R and the prediction are all
+      bit-identical, and the fixed checkpoint's valid MAE recomputes to
+      0.1456743378872634 versus recorded 0.14567435123870381 (|delta| 1.34e-8).
+      Static purity holds (no MP / recurrence / pair->centre / context
+      writeback; environment formed before pair; relabel-invariant; 7/7
+      targeted tests).  The blocking path is typed_token/parent_token: an
+      aliased non-injective pynauty certificate (typed_tokenizer_v1_historical
+      omits color labels) answered by a 6,785-row / 36,420-param per-key table;
+      299/2,379 unique tokens (12.57%) and 15,309/23,083 patch occurrences
+      (66.32%) mix distinct root atoms.  It is reconstructible from primitives
+      (certificate bytes exact for 23,083/23,083 patches; token ids exact) but
+      is not a shared role x primitive factorization, so the local environment
+      is not fully factorized.  FROZEN VERDICT: FEC_S0_LOCAL_FACTORIZATION_BLOCKED
+      (Case C).  The Top-5 soup (0.140794) was not reproduced (member states
+      never persisted; no retraining).  Conservative alternative reading
+      recorded: under the permissive 'reconstructible via explicit binding'
+      clause the verdict would be FEC_S0_FUNCTIONALLY_EQUIVALENT.  FEC-D1
+      (baseline-preserving sparse role refinement, r_new = r_coarse + g*r_dict,
+      g=0 => FEC-S0) is a proposal only, not implemented or trained.  See
+      notes/fec_s0_*.md, results/fec_s0/, claim-fec-s0-*-20260923,
+      decision-fec-s0-local-factorization-blocked-20260923.
   - decision-sdb-v0-stop-no-material-gain-strong-backbone-20260923: >-
       SDB-v0 (2026-09-23, local CPU, protocol sdb_v0; official ZINC train
       10000 / official valid 1000; official test never loaded; 0 full training

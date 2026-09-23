@@ -1,0 +1,46 @@
+claim_id: claim-fec-s0-handcrafted-channels-factor-exactly-20260923
+created: '2026-09-23T20:20:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  FEC-S0 (2026-09-24, local CPU, protocol fec_s0, lineage commit d4de88e,
+  official test never loaded, ZERO training / HPO / dictionary): the
+  handcrafted mixed input tensors of historical strict-static S0 (round
+  ZINC-strict-static-dictionary-pair-v0, build_s0(0), checkpoint
+  results/zinc_static_dictionary_pair/states/s0_seed0_selection_state.pt, 66,228
+  params) factor EXACTLY into explicit structural-role x chemical-primitive
+  bindings plus pure topology, and the factorized tensors are bit-identical to
+  the historical ones.  patch_cont (146 = atom_shell 3x28 + bond_shell 6x4 +
+  root_atom 28 + incident 4 + scalars 6): every raw and standardized block has
+  max_abs = 0.0 and bit_equal_fraction = 1.0 on the full official-valid split
+  (1,000 molecules / 23,083 patches) and a 512-molecule train sample;
+  pair_relation (23 = 14+1 topology coords + 8 explicit chemical relation
+  primitives path_bond_mean(4) + adjacent-bond one-hot(4)): every block
+  max_abs = 0.0 over 264,776 official-valid pairs; global_context
+  (62 = 30 pure-topology coords + 28-D atom marginal + 4-D bond marginal): raw
+  and standardized max_abs = 0.0.  The train-fit standardizers are reproduced
+  (refit reproduces the cached encoding with max_abs 0.0, bit_equal_fraction
+  1.0) and the refit token vocabularies reproduce every cached token id
+  (match_fraction 1.0); no scaler was refit on valid and no PEC scaler was
+  used.  The reconstructed local state h, pair state q, relation/global
+  encoder outputs, reader representation R and the prediction are all
+  bit-identical on the full official-valid split (max_abs = 0.0), and the
+  fixed checkpoint's official-valid MAE recomputes to 0.1456743378872634 versus
+  the recorded 0.14567435123870381 (|delta| = 1.34e-8).  This is a
+  model-factorization / computational-equivalence result, NOT a claim about
+  real chemistry and NOT a performance re-selection.  The Top-5 soup (recorded
+  0.140794) is not reproduced because its member states were never persisted.
+evidence:
+  - tracks/ksvd/notes/fec_s0_preregistration.md
+  - tracks/ksvd/notes/fec_s0_prior_artifact_audit.md
+  - tracks/ksvd/notes/fec_s0_path_factorization.md
+  - tracks/ksvd/notes/fec_s0_equivalence_analysis.md
+  - tracks/ksvd/results/fec_s0/local_descriptor_equivalence.json
+  - tracks/ksvd/results/fec_s0/pair_relation_equivalence.json
+  - tracks/ksvd/results/fec_s0/global_equivalence.json
+  - tracks/ksvd/results/fec_s0/intermediate_equivalence.json
+  - tracks/ksvd/results/fec_s0/prediction_equivalence.json
+  - tracks/ksvd/results/fec_s0/purity_contract.json
+  - tracks/ksvd/experiments/luyin16/fec_s0_factorization.py
+  - tracks/ksvd/tests/test_fec_s0_factorization.py
