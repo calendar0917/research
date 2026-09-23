@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: fec-s0-stopped-local-factorization-blocked
+phase: fec-s1-stopped-shared-replacement-strong
 updated: 2026-09-23
 
 # ---------------------------------------------------------------------------
@@ -101,7 +101,117 @@ pec_v0:
     autonomous re-run, no K/s/epoch/threshold rescue, no seed 1.
 
 # ---------------------------------------------------------------------------
-# PEC-C1 (pure environment composition confirmatory) — 2026-09-23, LATEST ROUND
+# FEC-S1 shared local environment replacement — 2026-09-23, LATEST ROUND
+# ---------------------------------------------------------------------------
+# In historical strict-static S0, delete both per-key learned lookup memories
+# (typed_embedding 36,420 + parent_embedding 256 = 36,676 = 55.4 % of 66,228
+# params) completely and replace them with ONE parameter-matched,
+# vocabulary-independent shared function A(x_i): R^146 -> R^24 of the FEC-S0
+# factorized standardized patch_cont.  Everything else in S0 frozen.  Single
+# full seed-0 GPU run; no small-data screen (PEC-I1), no H sweep, no dictionary,
+# no seed 1.  Official test never loaded.
+fec_s1:
+  status: STRONG_SHARED_REPLACEMENT
+  round: FEC-S1
+  protocol: fec_s1_v1
+  implementation_commit: 341be8ffa6e1a7393340aa44ec7bbb911d7af99d
+  formal_run_commit: 341be8ffa6e1a7393340aa44ec7bbb911d7af99d
+  diagnostic_commit: e442c22b8ccd9cecc64a6a401f2b26a505750b66
+  remote_commit: e442c22b8ccd9cecc64a6a401f2b26a505750b66
+  remote_host: hxy@a100-2
+  remote_repo: /home/hxy/cy/research
+  remote_dirty_entries: '?? tracks/ksvd/results/fec_s1/ (this round''s generated results dir only; tracked source clean)'
+  device: NVIDIA A100-SXM4-40GB, CUDA 12.4, torch 2.5.1+cu124
+  seed: 0
+  epochs: 240 (fixed, no early stopping)
+  data: official train 10000 / official valid 1000 (selection only)
+  architecture:
+    removed: typed_embedding, parent_embedding
+    adapter: 'Linear(146,214) -> SiLU -> Linear(214,24) = [e (16) ; parent (8)]'
+    input: factorized standardized patch_cont (FEC-S0 verified, bit-identical)
+    hidden_selection: 'H* = argmin_H |171 H + 24 - 36676| = 214'
+  params:
+    s0_total: 66228
+    lookup_removed: 36676
+    adapter_params: 36618
+    fec_s1_total: 66170
+    adapter_vs_lookup_relative_error: 0.0015814156396553604
+    total_relative_error: 0.0008757625173642568
+  baseline_guard:
+    replay_valid_mae: 0.14567434728989612
+    recorded_historical_best_valid: 0.14567435123870381
+    abs_diff_vs_recorded: 3.9488076974958375e-09
+    tolerance: 1.0e-05
+    passed: true
+  correctness:
+    all_passed: true
+    gates_passed: 12
+    descriptor_identity_max_abs: 0.0
+    adapter_input_equals_patch_cont: true
+    no_lookup_keys: true
+    token_poisoning_bit_identical: true
+    vocabulary_independence_bit_identical: true
+    adapter_gradient_nonzero: true
+    pair_to_centre_disabled_forward_ok: true
+    adapter_output_frozen_under_relation_mutation: true
+    relabel_invariance_max_abs: 2.86102294921875e-06
+    shared_tensors_bit_identical_vs_s0: true
+    official_test_blocker: true
+  full_seed0:
+    primary_soup_valid_mae: 0.13042183499777457
+    soup_members: [218, 219, 223, 238, 239]
+    soup_member_valid_mae: [0.136942670997174, 0.13735506682930282, 0.13938668785238406, 0.1367825070246472, 0.14001875323796412]
+    best_valid_mae: 0.1367825070246472
+    best_epoch: 238
+    train_mae_at_best: 0.09869579591751099
+    train_minimum: 0.0945073988199234
+    epochs_run: 240
+    wall_clock_s: 774.9219694258645
+    peak_gpu_memory_mb: 139.69775390625
+  mechanism:
+    token_invariance_max_abs_pred_diff: 0.0
+    rerun_noise_floor: 0.0
+    adapter_zeroing_mean_abs_pred_shift: 0.46315548503398896
+    adapter_zeroing_valid_mae: 0.49851077648909997
+    shared_channel_inert: false
+    effective_rank_participation_ratio: 6.203909756927913
+    top_singular_fraction: 0.3117610732985279
+    stable_rank: 3.20758454357272
+  comparison:
+    historical_S0_seed0_soup_provenance_only: 0.140794
+    historical_S0_seed0_best: 0.14567435123870381
+    historical_S0_seed1_soup: 0.136423
+    SDPK_v0_soup: 0.139735
+    delta_soup_vs_S0_seed0_soup: -0.01037216500222543
+    delta_soup_vs_S0_seed1_soup: -0.006001165002225417
+    delta_best_vs_S0_seed0_best: -0.008891844214056616
+  verdict: FEC_S1_SHARED_REPLACEMENT_STRONG
+  case: A
+  band: '<=0.1408'
+  seed1_authorized: true
+  seed1_executed: false
+  claims:
+    - claim-fec-s1-shared-replacement-strong-20260923
+  decision: decision-fec-s1-shared-replacement-strong-20260923
+  prior_artifact_audit: tracks/ksvd/notes/fec_s1_prior_artifact_audit.md
+  preregistration: tracks/ksvd/notes/fec_s1_preregistration.md
+  implementation_note: tracks/ksvd/notes/fec_s1_implementation.md
+  analysis: tracks/ksvd/notes/fec_s1_analysis.md
+  results: tracks/ksvd/results/fec_s1/
+  runner: tracks/ksvd/experiments/luyin16/fec_s1_shared_local_env.py
+  tests: tracks/ksvd/tests/test_fec_s1_shared_local_env.py
+  official_test_loaded: false
+  next_step: >-
+    STOP after seed 0.  Only authorised follow-up: paired seed 1 with the
+    identical FEC-S1 architecture and hyperparameters (seed1_authorized = true,
+    not auto-executed).  FEC-D1 (baseline-preserving sparse structural-role
+    refinement, r_new = r_coarse + g * r_dict, g = 0 => FEC-S1) is now an
+    admissible PROPOSAL only and requires its own pre-registration.  No H
+    sweep, activation/depth change, token/hash/fixed-code arm, local GNN, MP,
+    recurrence, extra epochs, reader enlargement, dictionary or official test.
+
+# ---------------------------------------------------------------------------
+# PEC-C1 (pure environment composition confirmatory) — 2026-09-23
 # ---------------------------------------------------------------------------
 # New confirmatory round; does NOT amend PEC-v0.  It answers the absolute
 # capacity question PEC-v0 left WITHHELD, in the full official-train -> official

@@ -1,0 +1,76 @@
+claim_id: claim-fec-s1-shared-replacement-strong-20260923
+created: '2026-09-23T21:20:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  FEC-S1 (2026-09-23, remote A100-SXM4-40GB GPU 0, protocol fec_s1_v1,
+  implementation/formal-run commit 341be8f, official ZINC test never loaded,
+  ONE seed-0 full run, no HPO, no dictionary): in historical strict-static S0
+  the two per-key learned lookup memories (typed_embedding 36,420 params +
+  parent_embedding 256 params = 36,676 = 55.4 % of S0's 66,228 params) can be
+  deleted COMPLETELY and replaced by a single parameter-matched,
+  vocabulary-independent shared function of the already-factorized local
+  environment, while the strict-static performance band is not merely retained
+  but improved.  The replacement is A(x_i) = Linear(146,214) -> SiLU ->
+  Linear(214,24) = [e_i (16) ; p_i (8)] reading only the FEC-S0-verified
+  explicit 146-D standardized patch_cont; H = 214 is fixed by parameter
+  matching (P_A(H) = 171H + 24; adapter 36,618 params, 0.158 % below the
+  released lookup budget; total 66,170 vs 66,228, 0.088 %), never tuned.
+  Everything else in S0 is frozen: pair composition, 23-D pair_relation, graph
+  composition and the small raw reader are inherited bit-identically (all 41
+  shared tensors max_abs diff 0.0 vs S0; unified_graph_width 302; the four
+  removed lookup keys are the only replaced parameters).  Correctness gates all
+  pass: adapter input bit-identical to the factorized standardized patch_cont
+  (max_abs 0.0, rebuilt from raw primitives via the train-fit scaler); no
+  typed/parent/token-table/certificate keys in state_dict; token ids poisoned
+  to 1e9 leave the prediction bit-identical both before and after training;
+  a vocab-9000/64 model with poisoned ids is bit-identical (vocabulary
+  independence); a real backward gives finite strictly-nonzero adapter
+  gradients; forward succeeds with _pool_pairs_to_centres forced to raise;
+  pair/relation encoders called exactly once; the 24-D adapter output is
+  bit-identical under pair_relation mutation (frozen environment, no
+  writeback); relabel invariance within 1e-5.  In-regime read-only replay of
+  the historical S0 seed-0 selection checkpoint gives 0.14567434728989612 vs
+  the recorded 0.14567435123870381 (|delta| 3.95e-9), so the delta is not a
+  baseline-drift artefact.  Primary (fixed Top-5 soup official-valid MAE, over
+  epochs [218,219,223,238,239]) = 0.13042183499777457, versus the historical
+  S0 seed-0 soup 0.140794 (delta -0.010372; provenance-only reference, member
+  states were never persisted), the historical S0 seed-1 soup 0.136423 (delta
+  -0.006001) and SDPK-v0 soup 0.139735 (delta -0.009313); best checkpoint =
+  0.1367825070246472 @ epoch 238 vs S0 seed-0 best 0.14567435 (delta -0.008892).
+  Frozen band: 0.130422 <= 0.1408 => Case A
+  FEC_S1_SHARED_REPLACEMENT_STRONG; seed1_authorized = true (seed 1 NOT
+  executed).  Mechanism (report-only): post-training token poisoning leaves the
+  prediction bit-identical on CPU (max abs diff 0.0, rerun noise floor 0.0);
+  zeroing the 24-D shared output shifts every valid prediction (mean |dPred|
+  0.463, max 1.722, fraction > 1e-6 = 1.0) and degrades official-valid MAE from
+  0.136783 to 0.498511, so the shared channel is load-bearing and not inert;
+  the 24-D output over 23,083 valid patches has participation ratio 6.204, top
+  singular fraction 0.312 and stable rank 3.208 (multi-dimensional, NOT the
+  near-rank-1 regime of the earlier shared structural encoder).
+  Interpretation boundary: this is a lookup-removal / shared-capacity result;
+  it is NOT a claim that the learned 24-D representation is physically correct
+  chemistry, and it is a single-seed band result, not a 2-seed superiority
+  claim.  What it does establish is that the per-key categorical memory was a
+  capacity allocation, not a necessary local computation of the task: the
+  line's target object now exists as explicit shared local chemical environment
+  -> read-only static composition -> y, with no vocabulary memory, no message
+  passing, no recurrence and no context writeback.
+evidence:
+  - tracks/ksvd/notes/fec_s1_prior_artifact_audit.md
+  - tracks/ksvd/notes/fec_s1_preregistration.md
+  - tracks/ksvd/notes/fec_s1_implementation.md
+  - tracks/ksvd/notes/fec_s1_analysis.md
+  - tracks/ksvd/results/fec_s1/parameter_accounting.json
+  - tracks/ksvd/results/fec_s1/correctness.json
+  - tracks/ksvd/results/fec_s1/baseline_guard.json
+  - tracks/ksvd/results/fec_s1/seed0.json
+  - tracks/ksvd/results/fec_s1/seed0_curve.csv
+  - tracks/ksvd/results/fec_s1/mechanism.json
+  - tracks/ksvd/results/fec_s1/REPORT.md
+  - tracks/ksvd/results/fec_s1/DECISION.md
+  - tracks/ksvd/results/fec_s1/decision.json
+  - tracks/ksvd/experiments/luyin16/fec_s1_shared_local_env.py
+  - tracks/ksvd/experiments/luyin16/zinc_patch_path_pooling.py
+  - tracks/ksvd/tests/test_fec_s1_shared_local_env.py

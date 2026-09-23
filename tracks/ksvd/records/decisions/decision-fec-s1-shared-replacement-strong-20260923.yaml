@@ -1,0 +1,91 @@
+decision_id: decision-fec-s1-shared-replacement-strong-20260923
+created: '2026-09-23T21:20:00'
+kind: decision
+study_id: zinc-context-gap
+decision: >-
+  Record FEC-S1 with the frozen verdict FEC_S1_SHARED_REPLACEMENT_STRONG (Case
+  A) and STOP after the single pre-registered seed-0 run.  The two per-key
+  learned lookup memories of historical strict-static S0 are retired for good
+  and replaced by one parameter-matched, vocabulary-independent shared function
+  of the explicit factorized 146-D local environment; the strict-static S0
+  performance band is not merely preserved but improved (Top-5 soup
+  official-valid MAE 0.130422 vs 0.1408 strong-band limit and vs S0 seed-0 soup
+  0.140794 / S0 seed-1 soup 0.136423).  Set seed1_authorized = true but do NOT
+  execute seed 1 in this round: the round stops and waits for explicit
+  authorisation.  Do not run a small-data screen, an H sweep, an activation or
+  depth change, a token/hash/fixed-code arm, a parent-only or typed-only
+  memory, a local GNN, MP, recurrence, extra epochs, reader enlargement, or any
+  dictionary.  Do not load the official test.  Do not retrain S0.  FEC-D1
+  (baseline-preserving sparse structural-role refinement, r_new = r_coarse +
+  g * r_dict with g = 0 degenerating to FEC-S1) is now scientifically
+  admissible as a PROPOSAL but remains unimplemented and requires its own
+  pre-registration.
+because: >-
+  FEC-S1 (remote A100 GPU 0, protocol fec_s1_v1, formal-run commit 341be8f,
+  official test never loaded, one seed-0 full 240-epoch run, no early stop) is
+  a single-variable isolation on the proven-strong historical strict-static S0
+  object: only the identity-memory path changed, and it changed completely
+  (typed_embedding 36,420 + parent_embedding 256 = 36,676 of 66,228 params,
+  55.4 %, deleted; both attributes None; no vocabulary-sized table, hash or
+  code anywhere).  The replacement is one shared A(x_i): R^146 -> R^24
+  (Linear 146->214 -> SiLU -> Linear 214->24) whose hidden width 214 is fixed
+  by parameter matching (P_A(H) = 171H + 24; 36,618 params, 0.158 % below the
+  released budget; total 66,170, 0.088 % below S0), never tuned.  Every hard
+  gate passed before any training: adapter input bit-identical to the FEC-S0
+  factorized standardized patch_cont; no forbidden lookup keys; poisoned token
+  ids give a bit-identical prediction pre- and post-training; a vocab-9000/64
+  model with poisoned ids is bit-identical (vocabulary independence); real
+  backward gives finite strictly-nonzero adapter gradients; forward succeeds
+  with pair->centre disabled; pair/relation encoders exactly once; adapter
+  output bit-identical under pair_relation mutation; relabel invariance within
+  1e-5; all 41 shared tensors bit-identical to S0 with unified_graph_width 302.
+  The in-regime read-only replay of the historical S0 selection checkpoint
+  reproduces 0.14567434728989612 vs recorded 0.14567435123870381 (|delta|
+  3.95e-9), so the candidate delta is not baseline drift.  Primary frozen
+  metric: fixed Top-5 soup official-valid MAE 0.13042183499777457 <= 0.1408 =>
+  Case A.  Best checkpoint 0.136783 @ epoch 238, train MAE at best 0.098696,
+  soup members [218,219,223,238,239] with spread 0.003236, wall 774.9 s, peak
+  139.7 MB.  Mechanism is not inert: zeroing the 24-D shared output shifts
+  every valid prediction (mean |dPred| 0.463, fraction > 1e-6 = 1.0) and
+  degrades MAE 0.136783 -> 0.498511, and the channel is multi-dimensional
+  (participation ratio 6.204, stable rank 3.208), unlike the near-rank-1
+  historical shared structural encoder.  Scientifically this answers the round's
+  question: the per-key categorical memory that blocked shared
+  environment-factorization of strict-static S0 was a capacity allocation, not
+  a necessary local computation of the task.
+alternatives_rejected:
+  - 'Run a 2k small-data screen first to choose the adapter design: rejected - PEC-I1 proved the screen is not predictive for this family (+0.041287 screen vs +0.000110 full data); the pre-registration forbids it.'
+  - 'Sweep H (or activation/depth) for a better number: rejected - H is fixed by parameter matching, not a hyperparameter, and any sweep is a forbidden rescue.'
+  - 'Add a dictionary (K-SVD / sparse code / prototype vocabulary) to push absolute MAE further: rejected - forbidden this round; the only question was whether a shared function can substitute for per-key memory, and a dictionary would reintroduce the SRDA/SDPK/DTX confound.'
+  - 'Attribute the gain to better chemistry representation: rejected - the result is a lookup-removal / shared-capacity result; no physical-chemistry claim is supported by this evidence.'
+  - 'Reconstruct or replay the historical S0 seed-0 Top-5 soup 0.140794 as the matched comparator: rejected - member states were never persisted; it is provenance-only, and the matched reference is the 0.14567435 selection checkpoint replayed read-only in the same regime.'
+  - 'Execute seed 1 immediately because the band is STRONG: rejected - the pre-registration requires an explicit authorisation stop after seed 0.'
+  - 'Re-run S0 on GPU for a matched retrain baseline: rejected - the candidate is a replacement test against a persisted historical checkpoint; a retrain would be a different object and the read-only replay already excludes drift.'
+revisit_if: >-
+  (a) Paired seed 1 with the identical FEC-S1 architecture and hyperparameters
+  (the only authorised follow-up; seed1_authorized = true); or (b) a new
+  pre-registered FEC-D1 round that refines the verified shared local
+  environment with a baseline-preserving sparse structural-role dictionary
+  r_new = r_coarse + g * r_dict, where g = 0 must reproduce FEC-S1 exactly; or
+  (c) a pre-registered mechanism study of the multi-dimensional shared channel
+  (participation ratio 6.2) versus the near-rank-1 shared structural encoder,
+  which may clarify whether richer environment geometry is being used.  The
+  frozen PEC-v0 / PEC-C1 / PEC-I1 / FEC-S0 verdicts and the SDB-v0 / TCCD
+  closures remain untouched.
+evidence:
+  - tracks/ksvd/notes/fec_s1_prior_artifact_audit.md
+  - tracks/ksvd/notes/fec_s1_preregistration.md
+  - tracks/ksvd/notes/fec_s1_implementation.md
+  - tracks/ksvd/notes/fec_s1_analysis.md
+  - tracks/ksvd/results/fec_s1/REPORT.md
+  - tracks/ksvd/results/fec_s1/DECISION.md
+  - tracks/ksvd/results/fec_s1/decision.json
+  - tracks/ksvd/results/fec_s1/parameter_accounting.json
+  - tracks/ksvd/results/fec_s1/correctness.json
+  - tracks/ksvd/results/fec_s1/baseline_guard.json
+  - tracks/ksvd/results/fec_s1/seed0.json
+  - tracks/ksvd/results/fec_s1/seed0_curve.csv
+  - tracks/ksvd/results/fec_s1/mechanism.json
+  - tracks/ksvd/experiments/luyin16/fec_s1_shared_local_env.py
+  - tracks/ksvd/experiments/luyin16/zinc_patch_path_pooling.py
+  - tracks/ksvd/tests/test_fec_s1_shared_local_env.py
