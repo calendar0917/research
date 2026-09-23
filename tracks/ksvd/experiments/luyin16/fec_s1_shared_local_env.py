@@ -868,16 +868,33 @@ def mechanism_stage(device: str = "cuda", seed: int = 0) -> dict[str, Any]:
     loader = zpp._make_loader(valid_data, 128, False, 0)
     mae_on, _t, preds_on = _evaluate_mae(model, loader, device_obj)
 
-    # A. token poisoning after training.
-    poisoned = []
-    with torch.no_grad():
-        for batch in loader:
-            batch = batch.to(device_obj)
-            batch.typed_token = torch.full_like(batch.typed_token, 10**9)
-            batch.parent_token = torch.full_like(batch.parent_token, 10**9)
-            poisoned.append(model(batch).view(-1).cpu().numpy())
-    preds_poison = np.concatenate(poisoned)
-    poison_max = float(np.abs(preds_on.astype(np.float64) - preds_poison.astype(np.float64)).max())
+    # A. token poisoning after training (CPU, deterministic).  A repeated
+    # unpoisoned forward establishes the exact noise floor.
+    cpu = torch.device("cpu")
+    model_cpu = build_fec_s1(seed=seed, hidden=hidden)
+    model_cpu.load_state_dict(state)
+    model_cpu.to(cpu).eval()
+    loader_cpu = zpp._make_loader(valid_data, 128, False, 0)
+
+    def _cpu_predictions(poison: bool) -> np.ndarray:
+        outputs: list[np.ndarray] = []
+        with torch.no_grad():
+            for batch in loader_cpu:
+                if poison:
+                    batch.typed_token = torch.full_like(batch.typed_token, 10**9)
+                    batch.parent_token = torch.full_like(batch.parent_token, 10**9)
+                outputs.append(model_cpu(batch).view(-1).numpy())
+        return np.concatenate(outputs)
+
+    base_cpu = _cpu_predictions(False)
+    base_cpu_rerun = _cpu_predictions(False)
+    preds_poison = _cpu_predictions(True)
+    poison_max = float(
+        np.abs(base_cpu.astype(np.float64) - preds_poison.astype(np.float64)).max()
+    )
+    noise_floor = float(
+        np.abs(base_cpu.astype(np.float64) - base_cpu_rerun.astype(np.float64)).max()
+    )
 
     # B. adapter ablation: zero the 24-D shared output.
     def _zero_hook(_module, _inputs, output):
@@ -911,8 +928,11 @@ def mechanism_stage(device: str = "cuda", seed: int = 0) -> dict[str, Any]:
         "device": str(device_obj),
         "seed": int(seed),
         "token_invariance": {
+            "device": "cpu",
             "max_abs_pred_diff": poison_max,
+            "noise_floor_rerun_max_abs_diff": noise_floor,
             "invariant": bool(poison_max == 0.0),
+            "invariant_within_rerun_noise": bool(poison_max <= noise_floor),
         },
         "adapter_ablation": {
             "valid_mae_on": float(mae_on),
