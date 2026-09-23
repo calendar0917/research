@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: post-zinc-contextualization-gap-audit-v0-case-c
+phase: post-sdb-v0-stop-no-material-gain-strong-backbone
 updated: 2026-09-23
 
 # ---------------------------------------------------------------------------
@@ -805,12 +805,72 @@ deferred_optional:
     modules into ksvd_research; add a fresh promoted zinc control-plane run.
 
 # ---------------------------------------------------------------------------
+# SDB-v0 — sparse structural dictionary binding (2026-09-23)
+# ---------------------------------------------------------------------------
+# Reusable sparse dictionary coordinate replaces the FSAR-R2-AR0 pure-topology
+# R^65 structural-role axis; on the strong strict-static S0 backbone it adds no
+# material gain. Local CPU-only; official test never loaded; no baseline
+# retrained; stopped after Stage-4 seed 0 by explicit user decision.
+sdb_v0:
+  status: STOPPED_AFTER_STAGE4_SEED0
+  round: SDB-v0
+  report: tracks/ksvd/notes/sdb_v0.md
+  preregistration: tracks/ksvd/notes/sdb_v0_preregistration.md  # + Amendments A1, A2
+  decision: decision-sdb-v0-stop-no-material-gain-strong-backbone-20260923
+  claims:
+    - claim-sdb-v0-sparse-dictionary-replaces-role-axis-20260923
+    - claim-sdb-v0-no-material-gain-on-strong-backbone-20260923
+  headline: >-
+    Chemistry-free K=32/s=8 dictionary coordinate with C_D in R^{32x28}
+    (uncompressed) is a loss-free, causally-used replacement for the R^65
+    structural-role axis (Stage 1 PASS; Stage 2 3-seed mean recovery vs the
+    frozen phi65 oracle 1.159, mean shuffle degradation 0.245). Task coupling
+    is only marginal after a train-split validation leak was fixed (Stage 3
+    seed0 -0.009097, threshold 0.003). On the strong strict-static S0 selection
+    state the branch FAILS 2/3 gates: gain vs base 0.002381 < 0.003 and
+    assignment-shuffle degradation 0.016131 < 0.02, though it is 0.000890
+    BETTER than the parameter-matched dense control and lands behind the
+    existing S0 soup (0.143294 > 0.140794).
+  official_test_loaded: false
+  seeds_purchased: 1
+  full_training_runs: 0
+  forbidden_rescues_used: false
+
+# ---------------------------------------------------------------------------
 # recent closures — navigational pointers only (no text copied)
 # ---------------------------------------------------------------------------
 # Test access note: WG-ICSC-v0 (2026-09-19) was a valid-only feasibility round;
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-sdb-v0-stop-no-material-gain-strong-backbone-20260923: >-
+      SDB-v0 (2026-09-23, local CPU, protocol sdb_v0; official ZINC train
+      10000 / official valid 1000; official test never loaded; 0 full training
+      runs, 1 seed). Asked whether the FSAR-R2-AR0 R^65 pure-topology
+      structural-role axis can be replaced by a reusable sparse task-coupled
+      dictionary coordinate (K=32, s=8, chemistry-free D, C_D in R^{32x28}
+      uncompressed). Stage 1 (label-free, 231,664 atoms) PASS: E_phi dev
+      1.637e-05, E_bind sparse dev 3.454e-04 vs dense-coded same D 1.602e-05,
+      random 1.713, 32/32 atoms, exact l0 8. Stage 2 (3 seeds, frozen M0 +
+      linear residual) PASS: dict32 0.486293/0.471510/0.481535 beats the frozen
+      phi65 oracle 0.494538/0.481283/0.490486 and every matched control, mean
+      recovery 1.159, mean shuffle degradation 0.245, phi65 drift 8.2e-09.
+      Stage 3 (seed0, tied-IHT task-coupled D, held-out validation) marginal:
+      frozen-D 0.498979 vs task-D 0.489882 (delta -0.009097, threshold 0.003);
+      this CORRECTS an earlier inflated -0.030 caused by a train-split
+      validation leak fixed before any durable record. Stage 4 (seed0, strong
+      strict-static S0 selection state, Amendment A2) FAIL: base 0.145674,
+      S0+DenseBinding 0.144183, S0+DictBinding 0.143294 -> gain 0.002381 < 0.003
+      (FAIL) and assignment-shuffle degradation 0.016131 < 0.02 (FAIL), though
+      Dict beats the parameter-matched dense control (pass); branch does not
+      beat the existing S0 soup (0.143294 > 0.140794). Decision: STOP after
+      Stage-4 seed 0 with no seed 1, no K/s sweep, no LISTA/attention/new
+      reader/dense bypass, no baseline retrain, no official test; the
+      implemented supplementary Stage-4 task-coupled arm is documented but NOT
+      run. See notes/sdb_v0.md, notes/sdb_v0_preregistration.md,
+      results/sdb_v0/, claim-sdb-v0-sparse-dictionary-replaces-role-axis-20260923,
+      claim-sdb-v0-no-material-gain-on-strong-backbone-20260923,
+      decision-sdb-v0-stop-no-material-gain-strong-backbone-20260923.
   - decision-zinc-cga-v0-deprioritise-local-dictionaries-20260923: >-
       CGA-v0 (2026-09-23, preregistration + Amendment A1 commit c174ab3,
       formal-run commit c174ab36; remote A100 host res, deterministic CPU

@@ -1,0 +1,38 @@
+claim_id: claim-sdb-v0-no-material-gain-on-strong-backbone-20260923
+created: '2026-09-23T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  SDB-v0 (local CPU, ZINC official valid 1000, official test never loaded,
+  protocol sdb_v0, seed 0 only). QUESTION: does adding the SDB branch
+  (y_hat = y_hat_S0 + <W_D, C~_D>, a single trained 32x28 readout over the
+  train-RMS-scaled centered binding tensor from the frozen Stage-1 K-SVD
+  dictionary D_KSVD, 896 params; matched dense control additionally trains the
+  65x32 projection, 2976 params) to the strong strict-static S0 backbone add a
+  material task gain? ANSWER: NO. Frozen-base = durable
+  zinc_static_dictionary_pair/states/s0_seed0_selection_state.pt (valid MAE
+  0.145674; Amendment A2, because the historical Top-5 soup member states were
+  never persisted and the soup cannot be reproduced on the train split).
+  RESULT (seed 0): S0+DenseBinding 0.144183, S0+DictBinding 0.143294 vs base
+  0.145674. Gates: gain vs base 0.002381 < 0.003 (FAIL); DictBinding <=
+  DenseBinding + 0.002 passes (Dict is 0.000890 BETTER than the parameter-matched
+  dense control, so the branch is neither inert nor a capacity artefact);
+  within-molecule assignment-shuffle MAE degradation 0.016131 < 0.02 (FAIL)
+  -> SDB_V0_STRONG_BACKBONE_NO_MATERIAL_GAIN. The branch also lands worse than
+  the already-existing S0 Top-5 soup (0.143294 > 0.140794), so it does not
+  improve on the durable strong baseline. Mechanistic reading: on the weak
+  frozen M0 base the assignment statistic is the dominant channel (Stage 2
+  recovery 1.159), whereas the strong S0 backbone already internalises the
+  topology<->chemistry assignment, leaving too little residual for a
+  per-molecule linear C_D readout. This mirrors the track's recurring pattern
+  (dictionary branch used but no absolute gain on a strong backbone, cf.
+  claim-zinc-static-dict-pair-kernel-v0-dictionary-used-no-absolute-gain-20260922).
+  No seed 1 was purchased; no K/s sweep, LISTA, attention, new reader or dense
+  bypass was used.
+evidence:
+  - tracks/ksvd/notes/sdb_v0.md
+  - tracks/ksvd/notes/sdb_v0_preregistration.md
+  - tracks/ksvd/results/sdb_v0/stage4_static_seed0.json
+  - tracks/ksvd/experiments/luyin16/zinc_sdb_v0.py
+  - tracks/ksvd/records/decisions/decision-sdb-v0-stop-no-material-gain-strong-backbone-20260923.yaml

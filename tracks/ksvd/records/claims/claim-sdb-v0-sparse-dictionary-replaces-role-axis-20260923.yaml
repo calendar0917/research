@@ -1,0 +1,45 @@
+claim_id: claim-sdb-v0-sparse-dictionary-replaces-role-axis-20260923
+created: '2026-09-23T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  SDB-v0 (local CPU, ZINC official train 10000 / official valid 1000, official
+  test never loaded, protocol sdb_v0). QUESTION: can the structural-role axis
+  phi_v of the multi-seed-validated FSAR-R2-AR0 node assignment be replaced by
+  a reusable, sparse, task-coupled dictionary coordinate without losing the
+  object's main task information? ANSWER: YES. A chemistry-free learned
+  dictionary D in R^{65x32} with exact sparsity s=8 codes the pure-topology
+  radius-2 role vector phi_v (R^65) into alpha_v, and the centered binding
+  tensor C_D = sum_v (alpha_v - alpha_bar)(q_v - q_bar)^T (R^{32x28}, never
+  compressed) is a faithful, causally-used replacement:
+  (Stage 1, no y, 231,664 train atoms) E_phi dev 1.637e-05, E_bind sparse dev
+  3.454e-04 vs dense-coded same D 1.602e-05, random 1.713; 32/32 atoms used,
+  exact l0 8, top-1/top-8 coefficient mass 0.803/1.0; PASS.
+  (Stage 2, 3 seeds, frozen M0 Top-5 soup + one linear assignment residual)
+  the sparse dict32 branch beats the full 65-D pure-topology phi65 oracle and
+  every matched/control arm: mean recovery vs phi65 = 1.159 (dict32
+  0.486293/0.471510/0.481535 vs phi65 0.494538/0.481283/0.490486), mean
+  within-molecule assignment-shuffle MAE degradation 0.245, and phi65
+  reproduces the durable h5_frozen_m0.json bit-exactly (drift 8.2e-09); PASS.
+  (Stage 3, seed 0, task-coupled tied-IHT dictionary initialised at the K-SVD
+  D) task coupling still helps but only marginally on the held-out split
+  (frozen-D readout 0.498979 vs task D 0.489882, delta -0.009097), and this is
+  a correction of an earlier inflated estimate (see decision for the
+  train-split validation leak that was fixed before any durable record).
+  Conclusion: compressing the structural-role axis to a reusable sparse
+  dictionary coordinate is loss-free for the validated assignment and is a
+  legitimate drop-in replacement / reusable resource for other architectures.
+  The companion claim-sdb-v0-no-material-gain-on-strong-backbone-20260923
+  records that the same replacement adds no material task gain on a strong
+  backbone.
+evidence:
+  - tracks/ksvd/notes/sdb_v0.md
+  - tracks/ksvd/notes/sdb_v0_preregistration.md
+  - tracks/ksvd/results/sdb_v0/STAGE1_REPORT.md
+  - tracks/ksvd/results/sdb_v0/STAGE2_REPORT.md
+  - tracks/ksvd/results/sdb_v0/stage1_label_free.json
+  - tracks/ksvd/results/sdb_v0/stage2_mechanism.json
+  - tracks/ksvd/results/sdb_v0/stage3_task_coupled.json
+  - tracks/ksvd/experiments/luyin16/sdb_v0.py
+  - tracks/ksvd/tests/test_sdb_v0.py

@@ -1,0 +1,180 @@
+decision_id: decision-sdb-v0-stop-no-material-gain-strong-backbone-20260923
+created: '2026-09-23T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  FSAR-R2-AR0 established (2-3 seeds) that the pure-topology structural role
+  phi_v (R^65) and the one-hot atom chemistry q_v (R^28) carry a real node
+  assignment residual C_phi = sum_v (phi_v - phi_bar)(q_v - q_bar)^T read by a
+  bias-free linear W. SDB-v0 asked whether the structural-role axis can be
+  replaced by a REUSABLE, SPARSE, task-coupled dictionary coordinate (K=32,
+  s=8, one shared chemistry-free dictionary D) without losing the object's main
+  task information, and whether the replacement adds a material task gain when
+  attached to a strong backbone. This is the natural next step after the
+  track's recurring pattern (dictionary branches are often used but fail to add
+  absolute signal on strong backbones).
+protocol: >-
+  Local-first CPU-only, protocol sdb_v0, frozen before runs in
+  notes/sdb_v0_preregistration.md (+ Amendment A1 before Stage 1 reporting, A2
+  before the formal Stage-4 run). Frozen config: K=32, s=8, phi_v in R^65,
+  C_D in R^{32x28} never compressed, dictionary input chemistry-free. Stages:
+  (0) data-free sanity + synthetic ridge controls; (1) label-free K-SVD
+  dictionary identity with E_phi / E_bind vs random, dense-coded-same-D and PCA
+  references; (2) FSAR mechanism preservation on the frozen M0 Top-5 soup with
+  dict32 vs the frozen phi65 oracle and matched controls (pca32, dict_dense32,
+  dense32, dense32_frozen, rand32) + within-molecule assignment shuffle, 3
+  seeds; (3) task-coupled tied-IHT dictionary (learnable D, lambda_rec
+  calibrated once, held-out validation) vs frozen-D readout, seed 0; (4)
+  strict-static S0 frozen base + linear DictBinding vs parameter-matched
+  DenseBinding + assignment shuffle, seed 0. Official ZINC test never loaded;
+  no historical baseline retrained; no K/s sweep, LISTA, attention, new reader
+  or dense bypass.
+results:
+  preregistration_sha256: 920f74b85090defdd7a6b30145b083142ef05576bc2164c71fad76d3a70f8264
+  stage03_commit: 00bf711
+  stage4_commit: 00bf711
+  stage03_source_sha256: {sdb_v0.py: 0bc1faca4858cf18e5259a5bee088cb0e8eb4dcee8bdcbd55a54862b111fe039, zinc_sdb_v0.py: 96613cef0814876514239a702cbf10eabf6175a648bd30dc07302c32dd25adce}
+  device: local CPU
+  official_test_loaded: false
+  stage0_sanity:
+    checks_passed: 10
+    checks_total: 10
+    synthetic_positive_binding_mae: 0.09271476236757546
+    synthetic_positive_marginal_mae: 0.501870056775426
+    synthetic_negative_binding_advantage: -0.9578282063927559
+    verdict: PASS
+  stage1_label_free:
+    n_fit_atoms: 231664
+    ksvd_final_fit_mse: 0.000496655844111223
+    E_phi_ksvd_dev: 1.63678e-05
+    E_bind_ksvd_dev: 0.000345415
+    E_bind_ksvd_dense_dev: 1.60177e-05
+    E_bind_rand_dev: 1.71345
+    E_bind_pca_dev: 5.30406e-07
+    atoms_used: 32
+    exact_sparsity: 8
+    verdict: PASS
+  stage2_mechanism:
+    seeds: [0, 1, 2]
+    dict32_soup_valid_mae: [0.486293, 0.471510, 0.481535]
+    phi65_soup_valid_mae: [0.494538, 0.481283, 0.490486]
+    mean_recovery_vs_phi65: 1.15928
+    mean_shuffle_degradation: 0.245369
+    phi65_protocol_drift_max: 8.16584e-09
+    verdict: PASS
+  stage3_task_coupled:
+    seed: 0
+    frozen_iht_soup_valid_mae: 0.4989794473252773
+    task_iht_soup_valid_mae: 0.48988221740722654
+    delta: -0.009097229918050787
+    threshold: 0.003
+    lambda_rec: 49.381958843716184
+    atom_movement: 5.067498683929443
+    verdict: TASK_COUPLING_HELPS_MARGINAL
+  stage4_static_s0:
+    base_valid_mae: 0.1456743331188918
+    dict_soup_valid_mae: 0.14329366607445787
+    dense_soup_valid_mae: 0.14418329351281417
+    gain_vs_base: 0.0023806670444339317
+    gain_threshold: 0.003
+    dict_minus_dense: -0.0008896274383562996
+    shuffle_degradation: 0.016130881629025734
+    shuffle_threshold: 0.02
+    historical_s0_soup_context: 0.14079417109390488
+    gates: {perf: false, dense_control: true, shuffle: false}
+    verdict: FAIL
+  corrections:
+    - >-
+      train_task_coupled_dictionary originally computed its "valid MAE" over
+      the TRAIN split (no held-out split), inflating the Stage-3 task-coupling
+      gain from an honest -0.009097 to a leaked -0.030. Fixed before any
+      durable record was written; the committed Stage-3 number is the
+      corrected one. Stages 0-2 and the Stage-4 frozen/dense/shuffle arms are
+      unaffected.
+  seeds_purchased: 1
+  full_runs: 0
+  official_test_loaded: false
+decision: >-
+  STOP SDB-v0 after Stage-4 seed 0. Do NOT buy a second seed for Stage 3 or
+  Stage 4, do NOT sweep K or s, do NOT add LISTA / attention / a new reader /
+  a dense bypass, do NOT retrain any historical baseline, do NOT run the
+  implemented supplementary Stage-4 task-coupled arm, and do NOT open the
+  official test. Record the two durable outcomes: (a) the structural-role axis
+  CAN be replaced by a reusable sparse (K=32, s=8) chemistry-free dictionary
+  coordinate with no loss of the validated assignment (supported); (b) the same
+  replacement adds no material task gain on the strong strict-static S0
+  backbone (supported negative). A clean STOP is preferred over an
+  unattributable extra run.
+because: >-
+  Stage 1 showed the sparse dictionary is a faithful, label-free coding of the
+  phi axis (E_bind dev 3.45e-04, 32/32 atoms, exact l0 8) and Stage 2 showed on
+  3 seeds that the compressed dict32 statistic beats the full 65-D phi65 oracle
+  and every matched control (mean recovery 1.159, mean shuffle degradation
+  0.245, phi65 drift 8.2e-09). So the replacement/reuse half of the question is
+  decisively positive and cheap. The incremental-value half is negative: after
+  fixing a train-split validation leak, task coupling helps only marginally
+  (delta -0.009097 on one seed, threshold 0.003), and on the strong S0 backbone
+  the frozen-dictionary branch fails two of three pre-registered gates -- gain
+  vs base 0.002381 < 0.003, assignment-shuffle degradation 0.016131 < 0.02 --
+  even though it is slightly BETTER than the parameter-matched dense control
+  (0.143294 vs 0.144183), so it is neither inert nor a capacity artefact. The
+  branch also does not beat the already-existing S0 Top-5 soup (0.143294 >
+  0.140794). The mechanism is consistent: on the weak M0 base the assignment
+  statistic dominates and compresses freely, whereas S0 already internalises
+  the topology<->chemistry assignment, leaving too little residual for a
+  per-molecule linear C_D readout. With the direction negative and the effect
+  sub-threshold, there is no basis to spend further compute.
+alternatives_rejected:
+  - >-
+    Buying Stage-4 seed 1. Rejected: the pre-registered gate failed in the
+    negative direction on seed 0; the preregistration does not authorize seed 1
+    for a FAIL, and the effect is sub-threshold rather than near-miss.
+  - >-
+    Running the implemented supplementary Stage-4 arm with a task-coupled D on
+    the frozen S0 base. Rejected as a rescue: the corrected Stage-3 effect is
+    only -0.009 on the weak base and the frozen-D strong-backbone gain is
+    0.0024, so a material (>0.003) strong-backbone gain is not expected; the
+    arm stays implemented but documented as a follow-up, not executed.
+  - >-
+    Sweeping K / s / lambda_rec, or adding LISTA / attention / a new reader /
+    a dense bypass to move the Stage-4 number. Rejected: forbidden by the
+    preregistration; a sweep on top of a failed causal gate is not a scientific
+    step.
+  - >-
+    Retraining the strict-static S0 to reproduce the Top-5 soup so the branch
+    could be trained against the exact strong baseline. Rejected: no historical
+    baseline is retrained; Amendment A2 records the selection-state base and
+    the reason (soup member states were never persisted).
+  - >-
+    Treating "recovery > 1 vs phi65" in Stage 2 as proof of a strong-backbone
+    task gain. Rejected: Stage 2 is measured on the weak frozen M0 base; the
+    strong-backbone question is Stage 4, which fails.
+revisit_if: >-
+  A future preregistered round may revisit strong-backbone dictionary binding
+  only if it (i) persists the strict-static S0 Top-5 soup member states so the
+  branch can be trained and selected against the exact strong baseline, and
+  (ii) buys matched controls that separate dictionary richness / task coupling
+  from assignment value at the strong-backbone operating point (e.g. frozen vs
+  task-coupled D at two dictionary-health regimes, same backbone and budget).
+  The permanent reusable findings from this round are: (a) a chemistry-free
+  K=32/s=8 dictionary coordinate is a loss-free, causally-used replacement for
+  the R^65 pure-topology structural-role axis under the FSAR-R2-AR0 node
+  assignment; (b) the centered binding tensor C_D in R^{32x28} may be used
+  uncompressed under a single linear readout; (c) on a strong backbone this
+  branch is used but sub-threshold, reinforcing the track's recurring
+  "dictionary used, no absolute gain" pattern.
+evidence:
+  - tracks/ksvd/notes/sdb_v0_preregistration.md
+  - tracks/ksvd/notes/sdb_v0.md
+  - tracks/ksvd/results/sdb_v0/sanity.json
+  - tracks/ksvd/results/sdb_v0/synthetic_controls.json
+  - tracks/ksvd/results/sdb_v0/dictionary_meta.json
+  - tracks/ksvd/results/sdb_v0/stage1_label_free.json
+  - tracks/ksvd/results/sdb_v0/stage2_mechanism.json
+  - tracks/ksvd/results/sdb_v0/stage3_task_coupled.json
+  - tracks/ksvd/results/sdb_v0/stage4_static_seed0.json
+  - tracks/ksvd/experiments/luyin16/sdb_v0.py
+  - tracks/ksvd/experiments/luyin16/zinc_sdb_v0.py
+  - tracks/ksvd/tests/test_sdb_v0.py
+  - tracks/ksvd/records/claims/claim-sdb-v0-sparse-dictionary-replaces-role-axis-20260923.yaml
+  - tracks/ksvd/records/claims/claim-sdb-v0-no-material-gain-on-strong-backbone-20260923.yaml
