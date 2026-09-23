@@ -35,7 +35,6 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torch_geometric.data import Batch
 
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_v0 as e2e
 from tracks.ksvd.experiments.luyin16 import fsar_r2_ar0 as r2
@@ -440,7 +439,6 @@ def _g1_chemistry_purity(n_molecules: int = 2) -> dict[str, Any]:
         graph, node_types, edge_types = zlr._data_to_graph(raw_molecule)
         incidence_a = e2e.env_incidence(graph, edge_types)
         # a genuinely different chemistry assignment on the SAME topology
-        relabelled_types = (np.asarray(node_types) + 1) % e2e.ATOM_CATEGORIES
         relabelled_edges = {key: (value + 1) % e2e.BOND_CATEGORIES for key, value in edge_types.items()}
         incidence_b = e2e.env_incidence(graph, relabelled_edges)
         if all(torch.equal(incidence_a[key], incidence_b[key]) for key in ("occ_node", "occ_root", "occ_shell")):
@@ -562,7 +560,6 @@ def _g5_no_local_dense_bypass(n_molecules: int = 16, device: str = "cpu") -> dic
     with torch.no_grad():
         _pred_c, aux_c = model(mutated, coord_zero=False, return_aux=True)
     source = Path(e2e.__file__).read_text(encoding="utf-8")
-    runner_source = Path(__file__).read_text(encoding="utf-8")
     # `patch_cont` may only appear in the six-scalar extraction of the cache
     model_source_patch_cont = source.count("patch_cont")
     return {
@@ -633,7 +630,7 @@ def _g7_no_pair_to_centre(n_molecules: int = 8, device: str = "cpu") -> dict[str
     except Exception as error:  # pragma: no cover - failure path
         forward_ok = False
         prediction = None
-        error_message = repr(error)
+        print(f"[G7] pair->centre guard raised: {error!r}", flush=True)
     finally:
         zpp.PatchPathModel._pool_pairs_to_centres = original
     return {
@@ -1618,7 +1615,6 @@ def classify(
 
 def stop_stage() -> dict[str, Any]:
     """Preregistered STOP path: Stage-1 mechanism gate failed."""
-    identity = _read_json(RESULTS_DIR / "artifact_identity.json")
     accounting = _read_json(RESULTS_DIR / "parameter_accounting.json")
     correctness = _read_json(RESULTS_DIR / "correctness.json")
     lambda_payload = _read_json(RESULTS_DIR / "lambda_calibration.json")
