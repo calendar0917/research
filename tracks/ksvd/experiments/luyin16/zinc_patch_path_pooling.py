@@ -1134,6 +1134,33 @@ class _MLPBlock(nn.Module):
         return self.layers(value)
 
 
+class LocalEnvironmentAdapter(nn.Module):
+    """FEC-S1 shared local-environment replacement for two per-key lookups.
+
+    One shared function reads the explicit factorized 146-D local environment
+    descriptor (the standardized ``patch_cont``) and emits the 24-D local
+    channel ``[e_patch (16) ; parent (8)]`` that historically came from two
+    per-key learned lookups (``typed_embedding`` / ``parent_embedding``).  It is
+    an independent per-root function: it reads only ``patch_cont`` (no other
+    roots, no pair/graph state, no token id, no vocabulary).  The hidden width
+    is fixed by parameter matching, never tuned.
+    """
+
+    def __init__(self, input_width: int, hidden: int, output_width: int) -> None:
+        super().__init__()
+        self.input_width = int(input_width)
+        self.hidden = int(hidden)
+        self.output_width = int(output_width)
+        self.net = nn.Sequential(
+            nn.Linear(int(input_width), int(hidden)),
+            nn.SiLU(),
+            nn.Linear(int(hidden), int(output_width)),
+        )
+
+    def forward(self, descriptor: torch.Tensor) -> torch.Tensor:
+        return self.net(descriptor)
+
+
 class _FactorizedEmbedding(nn.Module):
     """Exact-token lookup with a low-rank parameterization.
 
@@ -1634,6 +1661,13 @@ class PatchPathModel(nn.Module):
         structural_hidden_dim: int = 48,
         structural_rounds: int = 2,
         structural_include_std_pool: bool = True,
+        # FEC-S1 shared local-environment replacement (``shared_local_env``).
+        # ``typed_embedding`` and ``parent_embedding`` are removed and one
+        # shared ``Linear(146 -> H) -> SiLU -> Linear(H -> 24)`` reads only the
+        # factorized 146-D ``patch_cont``.  ``local_env_hidden`` is fixed by
+        # parameter matching the released lookup budget; it is required for the
+        # mode and is deliberately never tuned for performance.
+        local_env_hidden: int | None = None,
         # Explicit-support structural composer (``explicit_composer``).  It
         # replaces the typed lookup with learned composition over precomputed
         # legal atom/bond-support objects (see explicit_support_composer.py).
@@ -1743,14 +1777,15 @@ class PatchPathModel(nn.Module):
             # vector (16 params) shared by every patch of every molecule.
             "null",
             "constant",
+            "shared_local_env",
         }:
             raise ValueError(
                 f"unknown patch_representation={self.patch_representation!r}; "
                 "expected 'typed_lookup', 'shared_structural', 'shared_bag', "
                 "'explicit_composer', 'explicit_basis_rank1', "
                 "'explicit_object_relational', 'adaptive_structure_binding', "
-                "'binding_composition', 'factorized_binding', 'null' or "
-                "'constant'"
+                "'binding_composition', 'factorized_binding', 'null', "
+                "'constant' or 'shared_local_env'"
             )
         # Evaluation-only local-token intervention.  ``None`` reproduces the
         # frozen forward path bit-for-bit (no arithmetic is inserted).  See
@@ -1759,6 +1794,8 @@ class PatchPathModel(nn.Module):
         self.local_token_intervention_value: torch.Tensor | None = None
         self.local_token_permute_seed: int | None = None
         self.local_token_constant: nn.Parameter | None = None
+        # FEC-S1: ``None`` for every other representation (so S0 is untouched).
+        self.local_env_adapter: nn.Module | None = None
         self.structural_node_dim = int(structural_node_dim)
         self.structural_edge_dim = int(structural_edge_dim)
         self.structural_hidden_dim = int(structural_hidden_dim)
@@ -2153,6 +2190,31 @@ class PatchPathModel(nn.Module):
             )
             del self.typed_embedding  # no vocabulary-sized table remains
             self.typed_embedding = None
+        elif self.patch_representation == "shared_local_env":
+            # FEC-S1: delete both per-key learned lookups and replace them with
+            # one shared function of the factorized 146-D local environment.
+            # The 24-D output is ``[e_patch (token_width) ; parent (parent_width)]``
+            # so downstream dimensions and the concatenation order are exactly
+            # historical S0's.  ``local_env_hidden`` is parameter-matched, not
+            # tuned; a missing value is a hard error.
+            if self.direct_token_readout:
+                raise ValueError(
+                    "direct_token_readout is incompatible with "
+                    "patch_representation='shared_local_env'"
+                )
+            if local_env_hidden is None:
+                raise ValueError(
+                    "patch_representation='shared_local_env' requires an "
+                    "explicit parameter-matched local_env_hidden"
+                )
+            adapter_parent_width = max(int(token_width // 2), 1)
+            del self.typed_embedding  # no typed lookup remains
+            self.typed_embedding = None
+            self.local_env_adapter = LocalEnvironmentAdapter(
+                input_width=int(shell_width),
+                hidden=int(local_env_hidden),
+                output_width=int(token_width) + int(adapter_parent_width),
+            )
         elif self.patch_representation == "null":
             # No local-token generator is instantiated at all: no vocabulary
             # table, no structural encoder.  ``_patch_token_value`` returns an
@@ -2192,6 +2254,11 @@ class PatchPathModel(nn.Module):
             rank=parent_rank,
             full_count=parent_full_count,
         )
+        if self.local_env_adapter is not None:
+            # FEC-S1: the shared environment function supplies the parent
+            # channel too; no parent lookup may remain.
+            del self.parent_embedding
+            self.parent_embedding = None
         if self.direct_token_readout and self.embedding_mode != "factorized":
             raise ValueError(
                 "direct_token_readout currently requires embedding_mode=factorized "
@@ -2556,7 +2623,9 @@ class PatchPathModel(nn.Module):
         Any evaluation-only intervention set via
         :meth:`set_local_token_intervention` is applied to this single funnel.
         """
-        if self.structural_encoder is not None:
+        if self.local_env_adapter is not None:
+            value = self.local_env_adapter(data.patch_cont)[:, : int(self.token_width)]
+        elif self.structural_encoder is not None:
             value = self.structural_encoder(data)
         elif self.typed_embedding is not None:
             value = self.typed_embedding(data.typed_token)
@@ -2654,7 +2723,15 @@ class PatchPathModel(nn.Module):
         if global_context.ndim == 1:
             global_context = global_context.unsqueeze(0)
         n_graphs = int(global_context.shape[0])
-        e_patch = self._patch_token_value(data)
+        if self.local_env_adapter is not None:
+            # FEC-S1: one shared function over the factorized 146-D environment
+            # supplies both the 16-D local token and the 8-D parent channel.
+            local_env = self.local_env_adapter(data.patch_cont)
+            e_patch = local_env[:, : int(self.token_width)]
+            parent_value = local_env[:, int(self.token_width) :]
+        else:
+            e_patch = self._patch_token_value(data)
+            parent_value = self.parent_embedding(data.parent_token)
         structural_blocks: list[torch.Tensor] = []
         if self.structural_context_mode != "none":
             e_ctx = self._structural_context_embedding_value(data)
@@ -2673,7 +2750,7 @@ class PatchPathModel(nn.Module):
                     data.patch_cont,
                     data.patch_context,
                     e_patch,
-                    self.parent_embedding(data.parent_token),
+                    parent_value,
                     *structural_blocks,
                     *attribute_blocks,
                 ],
