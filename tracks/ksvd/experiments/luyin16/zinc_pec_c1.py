@@ -454,6 +454,27 @@ def role_parameters(model: pec.PECModel) -> dict[str, torch.nn.Parameter]:
     return {}
 
 
+def capture_role(model: pec.PECModel) -> dict[str, torch.Tensor]:
+    """Device-independent CPU snapshot of the role coordinate.
+
+    The snapshot is always on CPU so that drift comparisons cannot fail with a
+    cross-device subtraction when the model lives on CUDA.
+    """
+    return {
+        name: parameter.detach().cpu().clone()
+        for name, parameter in role_parameters(model).items()
+    }
+
+
+def role_drift(
+    model: pec.PECModel, initial: Mapping[str, torch.Tensor]
+) -> dict[str, float]:
+    return {
+        name: float((parameter.detach().cpu() - initial[name]).abs().max())
+        for name, parameter in role_parameters(model).items()
+    }
+
+
 # ---------------------------------------------------------------------------
 # mechanism interventions (evaluation-only; pre-registration §7)
 # ---------------------------------------------------------------------------
@@ -581,10 +602,7 @@ def train_arm(
     if arm == "CK" and frozen_in_opt:
         raise RuntimeError("frozen dictionary leaked into the optimizer")
 
-    initial_role = {
-        name: parameter.detach().clone()
-        for name, parameter in role_parameters(model).items()
-    }
+    initial_role = capture_role(model)
 
     valid_batches = list(_batches(valid, BATCH, shuffle=False, seed=seed))
     valid_targets = _batch_targets(valid_batches)
@@ -628,10 +646,7 @@ def train_arm(
     wall = time.time() - start
 
     # PEC-C1 D1 empirical proof: the role coordinate must not have moved.
-    drift_after_training = {
-        name: float((parameter.detach().cpu() - initial_role[name]).abs().max())
-        for name, parameter in role_parameters(model).items()
-    }
+    drift_after_training = role_drift(model, initial_role)
     if arm == "CK":
         for name, value in drift_after_training.items():
             if value != 0.0:
@@ -658,10 +673,7 @@ def train_arm(
         model.load_state_dict({k: v.to(device) for k, v in best_state.items()})
         best_predictions = _predict(model, valid_batches, device)
     best_valid = float(np.abs(best_predictions - valid_targets).mean())
-    drift_after_soup = {
-        name: float((parameter.detach().cpu() - initial_role[name]).abs().max())
-        for name, parameter in role_parameters(model).items()
-    }
+    drift_after_soup = role_drift(model, initial_role)
     if arm == "CK":
         for name, value in drift_after_soup.items():
             if value != 0.0:
@@ -709,10 +721,7 @@ def train_arm(
             ),
         }
 
-    role_drift = {
-        name: float((parameter.detach().cpu() - initial_role[name]).abs().max())
-        for name, parameter in role_parameters(model).items()
-    }
+    drift_after_interventions = role_drift(model, initial_role)
 
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     torch.save(
@@ -748,7 +757,7 @@ def train_arm(
         "dictionary_frozen": bool(arm == "CK"),
         "role_drift_after_training": drift_after_training,
         "role_drift_after_soup": drift_after_soup,
-        "role_drift_after_interventions": role_drift,
+        "role_drift_after_interventions": drift_after_interventions,
         "dictionary_fit_corpus": "official train, full 10000"
         if smoke_train is None
         else f"official train subset {smoke_train}",

@@ -298,6 +298,37 @@ def test_train_arm_initialises_cuda_before_peak_stats() -> None:
     assert "max_memory_allocated(gpu_index)" in source
 
 
+def test_capture_role_snapshot_is_cpu_and_frozen_drift_is_exact_zero() -> None:
+    """Regression guard: the drift snapshot must live on CPU.
+
+    On the A100 the first smoke failed with a cross-device subtraction because
+    the role snapshot was taken on the GPU while the comparison happened on
+    CPU.  ``capture_role`` must therefore always return CPU tensors.
+    """
+    ck = _model("sparse")
+    c1.freeze_dictionary(ck)
+    snapshot = c1.capture_role(ck)
+    assert set(snapshot) == {"d_node", "d_edge"}
+    assert all(t.device.type == "cpu" for t in snapshot.values())
+    assert c1.role_drift(ck, snapshot) == {"d_node": 0.0, "d_edge": 0.0}
+
+    cd = _model("dense")
+    dense_snapshot = c1.capture_role(cd)
+    assert set(dense_snapshot) == {"m_node", "m_edge"}
+    assert all(t.device.type == "cpu" for t in dense_snapshot.values())
+    assert c1.role_drift(cd, dense_snapshot) == {"m_node": 0.0, "m_edge": 0.0}
+
+
+def test_train_arm_uses_device_independent_drift() -> None:
+    import inspect
+
+    source = inspect.getsource(c1.train_arm)
+    assert "capture_role(model)" in source
+    assert "role_drift(model, initial_role)" in source
+    # no raw cross-device subtraction left in the training path
+    assert "initial_role[name]" not in source
+
+
 # --------------------------------------------------------------------------
 # frozen decision-gate semantics
 # --------------------------------------------------------------------------
