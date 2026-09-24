@@ -1,0 +1,81 @@
+decision_id: decision-e2e-dictenv-m1-primitive-dictionary-core-transfers-to-molhiv-20260924
+created: '2026-09-24T12:20:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  E2E-DictEnv-P1 established that a primitive-only, chemistry-free dictionary
+  core is absolute-strong and dictionary-load-bearing on ZINC, but that its
+  advantage is not specific to sparsity (a parameter-equal DenseTied control
+  matched it on valid and beat it on test).  P1's capability was therefore
+  demonstrated only inside the ZINC molecular scale.  The open question for the
+  mainline was whether the dictionary-core architecture itself is a ZINC
+  artefact or a transferable primitive, i.e. whether the same frozen-shape
+  primitive-only design can be made valid and terminal on a chemically and
+  topologically different benchmark (OGBG-MolHIV) when the only adaptation is a
+  label-free re-fit of the topology dictionary on the new train split.
+protocol: >-
+  Local-first implementation with targeted CPU tests, pre-registration frozen
+  before any run, then remote A100 execution under the remote-research-runner
+  workflow (preflight -> deploy -> dictionary -> env cache -> anchor scaler ->
+  lambda calibration -> correctness G0-G14 -> GPU smoke -> formal seeds ->
+  freeze -> analyze -> terminal one-shot test).  Frozen objects: phi65 unchanged
+  (fsar_r2_ar0.build_phi); K-SVD dictionary K=32, s=8, IHT=10, epochs=10, seed
+  20260924 on a deterministic 500,000-node sample of the 830,936 official-train
+  nodes; OGB categorical chemistry embeddings only (atom 24-D, bond 12-D);
+  62-D primitive anchor with a train-only per-coordinate scaler; node/edge
+  dictionary binding; z_i in R^638 -> 638->102->48 SiLU MLP; 15-D pure-topology
+  pair relation with P1's 5 distance buckets; 102,325 parameters; lambda_M =
+  0.25 * lambda_base calibrated train-only; horizon 240, patience 40, Adam 1e-3,
+  wd 1e-5, batch 128, grad clip 5; Top-5 valid-AUC soup; seeds 0 and 1.  No
+  MolHIV architecture search and no architecture tuning of any kind.  Pre-
+  registered order: correctness, smoke, seed 0, seed 1, freeze, analyze, then the
+  single terminal test read authorised only after the freeze.  Remote GPU0 was
+  occupied by a foreign ~37 GB job for the whole round, so GPU1 carried both
+  workstreams; a Case-B concurrency gate was executed first and passed
+  (T_parallel 6.504 s vs T_M + T_Z 12.484 s, ratio 0.521 <= 0.85; combined peak
+  534.8 MiB << 30 GiB; no OOM/NaN).
+results:
+  implementation_commit: 39cda1ba1680c6cdeb3479d4b2a49d50dd03af49
+  terminal_test_commit: 39cda1ba1680c6cdeb3479d4b2a49d50dd03af49
+  device: NVIDIA A100-SXM4-40GB (GPU1; GPU0 foreign-contended)
+  seeds_run: [0, 1]
+  parameters: {local_total: 87094, backend_total: 15231, whole_model: 102325, budget_min: 80000, budget_max: 130000}
+  dictionary: {K: 32, s: 8, iht_steps: 10, epochs: 10, seed: 20260924, node_used: 500000, node_total: 830936, sampled: true, fit_mse: 0.0008324875, sha256: 0aefb1702d6836339f7c4d33e7123d07e15434bee372b57780d894c50b72c0eb}
+  lambda_M: 61.9921982356686
+  correctness_gates_all_passed: true
+  cpu_tests: 13/13
+  valid: {seed0_raw: 0.814328, seed0_soup: 0.808532, seed1_raw: 0.836603, seed1_soup: 0.828391, soup_mean: 0.818462, soup_std: 0.009930}
+  test: {seed0_raw: 0.738098, seed1_raw: 0.763371, seed0_soup: 0.770266, seed1_soup: 0.753551, ensemble_raw: 0.768458, ensemble_soup: 0.789059}
+  frozen_valid_verdict: M1_TRANSFER_STRONG
+  terminal_band: competitive (>= 0.78); strong band (>= 0.80) missed by 0.010941 on the ensemble
+decision: >-
+  CONTINUE the dictionary-core mainline and treat cross-dataset transferability
+  as DEMONSTRATED.  The P1 primitive-only dictionary core transfers to
+  OGBG-MolHIV as a valid and terminal architecture with only a label-free
+  dictionary re-fit plus a train-only anchor scaler: frozen 2-seed Top-5-soup
+  ensemble test ROC-AUC 0.789059, the strongest MolHIV result in this project
+  (patch-path-pooling 0.785195, recurrent pair-centre 0.762605) at 102,325
+  parameters with no message passing, no recurrence, no attention and no
+  pair->centre.  The valid-side verdict M1_TRANSFER_STRONG is NOT revised by the
+  test read; the honest terminal band is "competitive".  Two scope limits are
+  carried forward rather than reopened: (a) the 5-bucket distance relation
+  saturates on MolHIV (52.2% of train node pairs clip into 5+), so relation
+  granularity is a live design question for larger molecules; (b) the dictionary
+  is re-learned almost entirely during the task phase, so this result does not
+  establish that the K-SVD initialisation is necessary.  No further MolHIV
+  architecture search is authorised in this round; the MolHIV test is not read
+  again.
+next: >-
+  Carry the dictionary-core mainline forward on the home benchmark: the ZINC
+  clean dictionary-core absolute-performance search (E2E-DictEnv-P2-ABS) is the
+  active workstream, and its winner defines the next frozen dictionary-core
+  configuration.  MolHIV-specific follow-ups (relation granularity, K-SVD-init
+  necessity) are recorded as open questions, not scheduled.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_m1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_m1_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_m1_analysis.md
+  - tracks/ksvd/notes/e2e_dictenv_m1_test_read.md
+  - tracks/ksvd/results/e2e_dictenv_m1/architecture_freeze.json
+  - tracks/ksvd/results/e2e_dictenv_m1/decision.json
+  - tracks/ksvd/results/e2e_dictenv_m1/official_test_results.json

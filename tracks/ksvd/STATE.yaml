@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-p1-stopped-dictionary-not-specific
+phase: e2e-dictenv-p2-abs-running-zinc-absolute-search
 updated: 2026-09-24
 
 # ---------------------------------------------------------------------------
@@ -696,6 +696,166 @@ e2e_dictenv_p1:
     test.  Forbidden without a NEW preregistration: any K/s/IHT/LISTA/
     dictionary-count/attention/MP/recurrence/reader/optimizer/lambda/horizon
     change, new relation block, seed-1 purchase, or test re-read.
+
+# ---------------------------------------------------------------------------
+# E2E-DictEnv-M1 (primitive dictionary core -> OGBG-MolHIV) — 2026-09-24
+# ---------------------------------------------------------------------------
+# Architecture-transfer round for the dictionary-core mainline: does the P1
+# primitive-only no-message-passing dictionary core transfer to a different
+# benchmark when the ONLY MolHIV-specific object is a label-free re-fit of the
+# topology dictionary on MolHIV official-train topology?  Two seeds, valid-only
+# decisions frozen before a single terminal test read.
+e2e_dictenv_m1:
+  status: DONE_TRANSFER_SUPPORTED
+  round: E2E-DictEnv-M1
+  protocol: e2e_dictenv_m1
+  verdict: M1_TRANSFER_STRONG (valid)
+  terminal_band: competitive
+  implementation_commit: 39cda1ba1680c6cdeb3479d4b2a49d50dd03af49
+  formal_run_commit: 39cda1ba1680c6cdeb3479d4b2a49d50dd03af49
+  terminal_test_commit: 39cda1ba1680c6cdeb3479d4b2a49d50dd03af49
+  remote_host: hxy@a100-2
+  remote_repo: /home/hxy/cy/research
+  device: NVIDIA A100-SXM4-40GB (GPU1; GPU0 foreign-contended at ~37 GB)
+  seeds_run: [0, 1]
+  epochs: 240
+  patience: 40
+  data: OGBG-MolHIV official train 32901 / official valid 4113; official test 4113 (single terminal read after freeze)
+  official_valid_loaded: true
+  official_test_loaded: true (single terminal read after freeze)
+  parameters:
+    local_total: 87094
+    backend_total: 15231
+    whole_model: 102325
+    budget: [80000, 130000]
+    p1_reference: 97865
+  frozen_config:
+    config_id: e2e_dictenv_m1_primitive_only_dict_core
+    phi: fsar_r2_ar0.build_phi (65-D, unchanged from P1)
+    dictionary: K-SVD K=32 s=8 IHT=10 epochs=10 seed=20260924 on 500000-node sample of 830936 official-train nodes
+    dictionary_init_sha256: 0aefb1702d6836339f7c4d33e7123d07e15434bee372b57780d894c50b72c0eb
+    dictionary_fit_mse: 0.0008324875048206415
+    chemistry: OGB categorical embeddings only (atom fields -> 24-D sum, bond fields -> 12-D sum)
+    anchor_dim: 62
+    lambda_M: 61.9921982356686
+    lambda_base: 247.9687929426744
+    lambda_factor: 0.25
+    module_sha256: 81207e88ebb11eebdb1b903eb4b227fd2fb94be8e7a0385ba5854e7d0498cd73
+    official_test_loaded_at_freeze_time: false
+  correctness:
+    all_passed: true
+    gates: [G0, G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11, G12, G13, G14]
+    cpu_tests: 13/13
+    relabel_invariance_max_abs_logit_diff: 6.556510925292969e-07
+    smoke_gates_all_passed: true
+    smoke_peak_gpu_memory_mb: 170.69189453125
+  primary_results:
+    valid:
+      seed0_raw: 0.8143279688418578
+      seed0_raw_epoch: 35
+      seed0_soup: 0.808531746031746
+      seed0_soup_members: [28, 35, 45, 59, 66]
+      seed1_raw: 0.8366034685479129
+      seed1_raw_epoch: 20
+      seed1_soup: 0.8283913874191652
+      seed1_soup_members: [16, 20, 21, 41, 43]
+      soup_mean: 0.8184615677254561
+      soup_std_population: 0.0099298206937096
+      epochs_run: {seed0: 75, seed1: 60}
+      wall_clock_s: {seed0: 1633.7, seed1: 1287.4}
+    test:
+      seed0_raw: 0.738098
+      seed1_raw: 0.7633712508932192
+      seed0_soup: 0.7702659379285038
+      seed1_soup: 0.7535506672589274
+      ensemble_raw: 0.768458255277236
+      ensemble_soup: 0.7890592711330848
+      valid_to_test_gap_ensemble_soup: -0.029403
+    bands:
+      strong: 0.80
+      competitive: 0.78
+      plausible: 0.72
+    anchors_context_only:
+      prior_patch_path_pooling_test: 0.785195
+      prior_recurrent_pair_centre_test_mean: 0.762605
+      gin_published_test: 0.756
+      gps_published_test: 0.788
+      cin_small_published_test: 0.801
+  mechanism:
+    dictionary_movement_relative: {seed0: 0.9998544454574585, seed1: 0.8935}
+    exact_top8_fraction: 1.0
+    clipping:
+      train_node_pairs: 12428143
+      clipped_distance_gt_5: 6313171
+      clipped_disconnected: 176596
+      clipped_fraction: 0.5221831612333395
+      valid_clipped_fraction: 0.5295598873133145
+    note: >-
+      The MolHIV 5-bucket distance relation saturates (52.2% of train node pairs
+      clip into 5+), and the dictionary is re-learned almost entirely during the
+      task phase, so the capability belongs to the learned environment rather
+      than to the K-SVD initialisation.
+  concurrency_gate_case_b:
+    t_m1_isolated_s: 6.015063707949594
+    t_z2_isolated_s: 6.469003266189247
+    t_parallel_s: 6.504143938887864
+    ratio_vs_serial_sum: 0.521
+    gate: 0.85
+    combined_peak_gpu_memory_mb: 534.8
+    result: PASS
+  caveats:
+    two_seeds_only: true
+    valid_test_scaffold_gap: true
+    cross_architecture_anchors_context_only: true
+    dictionary_init_necessity_not_established: true
+    official_test_not_project_pristine: true
+  claims:
+    - claim-e2e-dictenv-m1-primitive-dictionary-core-transfers-to-molhiv-20260924
+  decision: decision-e2e-dictenv-m1-primitive-dictionary-core-transfers-to-molhiv-20260924
+  preregistration: tracks/ksvd/notes/e2e_dictenv_m1_preregistration.md
+  implementation_note: tracks/ksvd/notes/e2e_dictenv_m1_implementation.md
+  analysis: tracks/ksvd/notes/e2e_dictenv_m1_analysis.md
+  test_read: tracks/ksvd/notes/e2e_dictenv_m1_test_read.md
+  results_dir: tracks/ksvd/results/e2e_dictenv_m1/
+  runner: tracks/ksvd/experiments/luyin16/molhiv_e2e_dictenv_m1.py
+  module: tracks/ksvd/experiments/luyin16/e2e_dictenv_m1.py
+  tests: tracks/ksvd/tests/test_e2e_dictenv_m1.py
+  next_step: >-
+    DONE.  No further MolHIV architecture search authorised in this round and the
+    MolHIV test is not read again.  Open questions recorded, not scheduled:
+    relation granularity for large molecules, and whether the K-SVD
+    initialisation is necessary.
+
+# ---------------------------------------------------------------------------
+# E2E-DictEnv-P2-ABS (ZINC clean dictionary-core absolute search) — 2026-09-24
+# ---------------------------------------------------------------------------
+# Workstream Z of the same round: absolute-performance tuning of the ZINC clean
+# dictionary core on official-valid MAE only, with a pre-registered MAX 8 runs.
+# Official ZINC test is never loaded.  Stage A is Z1/Z2/Z3; Stage B H1/H2
+# decoder variants; Stage C E64; Stage D K64s8 (plus conditional K64s12).
+e2e_dictenv_p2_abs:
+  status: RUNNING_STAGE_A
+  round: E2E-DictEnv-P2-ABS
+  protocol: e2e_dictenv_p2_abs
+  implementation_commit: 39cda1ba1680c6cdeb3479d4b2a49d50dd03af49
+  max_runs: 8
+  official_test_loaded: false
+  p1_reference_soup: 0.13197501279687276
+  lambda_base_p1: 135.83492071463948
+  stage_a:
+    Z1: {lambda_rec: 33.95873017865987, horizon: 320, raw_valid_mae: 0.13357518604764482, raw_epoch: 312, soup_valid_mae: 0.12790690318023554, soup_members: [266, 278, 298, 308, 312], wall_clock_s: 2146.2}
+    Z2: {lambda_rec: 16.979365089329935, horizon: 240, raw_valid_mae: 0.140523, raw_epoch: 237, soup_valid_mae: 0.134484, soup_members: [215, 224, 226, 231, 237], wall_clock_s: 1646}
+    Z3: running
+    interim_note: >-
+      Higher reconstruction weight wins within Stage A: Z1 (lambda x0.25) beats
+      the P1 reference 0.131975 by 0.004068, while Z2 (lambda x0.125) is worse
+      than the reference by 0.002509.
+  preregistration: tracks/ksvd/notes/e2e_dictenv_p2_abs_preregistration.md
+  implementation_note: tracks/ksvd/notes/e2e_dictenv_p2_abs_implementation.md
+  results_dir: tracks/ksvd/results/e2e_dictenv_p2_abs/
+  runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_p2_abs.py
+  module: tracks/ksvd/experiments/luyin16/e2e_dictenv_p2_abs.py
+  tests: tracks/ksvd/tests/test_e2e_dictenv_p2_abs.py
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24

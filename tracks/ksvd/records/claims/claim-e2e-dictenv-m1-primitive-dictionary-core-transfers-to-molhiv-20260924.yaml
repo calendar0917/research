@@ -1,0 +1,95 @@
+claim_id: claim-e2e-dictenv-m1-primitive-dictionary-core-transfers-to-molhiv-20260924
+created: '2026-09-24T12:20:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  Round E2E-DictEnv-M1 (protocol e2e_dictenv_m1, formal-run commit
+  39cda1ba1680c6cdeb3479d4b2a49d50dd03af49, remote NVIDIA A100-SXM4-40GB GPU1,
+  seeds 0 and 1, official MolHIV test loaded exactly once at the very end for
+  terminal reporting only) shows that the P1 PRIMITIVE-ONLY dictionary core —
+  tied-IHT sparse coding of the frozen 65-D pure-topology coordinate, no message
+  passing, no recurrence, no attention, no pair->centre, no coarse-chemistry
+  bypass — TRANSFERS to OGBG-MolHIV as a valid and terminal architecture once its
+  dictionary is re-fit label-free on MolHIV official-train topology.  Transfer
+  protocol: phi65 from fsar_r2_ar0.build_phi unchanged; K-SVD dictionary
+  K=32, s=8, IHT=10, epochs=10, seed 20260924 on a deterministic 500,000-node
+  sample of the 830,936 official-train nodes (D sha256
+  0aefb1702d6836339f7c4d33e7123d07e15434bee372b57780d894c50b72c0eb, fit mse
+  0.0008324875); chemistry enters ONLY through OGB categorical embeddings (per-
+  field atom embeddings summed to 24-D, per-field bond embeddings summed to 12-D);
+  anchor p_i in R^62 = [root chem 24 | patch atom mass 24 | patch bond mass 12 |
+  log sizes 2]; node binding A_i in R^288 and edge binding E_i in R^288 exactly as
+  P1; z_i in R^638 -> SiLU MLP 638->102->48; pair relation is 15-D PURE TOPOLOGY
+  with P1's 5 distance buckets; total parameters 102,325 (local 87,094 + backend
+  15,231), inside the pre-registered 80,000-130,000 budget; lambda_M =
+  61.9921982356686 = 0.25 * lambda_base 247.9687929426744 calibrated train-only
+  on the first 512 official-train graphs; horizon 240, patience 40, Adam 1e-3,
+  wd 1e-5, batch 128, grad clip 5, unweighted BCEWithLogits + lambda_M *
+  reconstruction, Top-5 valid-AUC soup.  All 15 correctness gates G0-G14 PASS
+  (relabel invariance max |dlogit| 6.6e-7, parameter budget 102,325, chemistry
+  purity, forbidden-local-descriptor blocker, pair-relation chemistry blocker,
+  once-only composition, official-test blocker), CPU tests 13/13, GPU smoke
+  all_passed with exact top-8 sparsity and nonzero task gradient to D.  Official-
+  valid results: seed 0 raw 0.814328 @ epoch 35, soup 0.808532 (members
+  28/35/45/59/66, 75 epochs, 1634 s); seed 1 raw 0.836603 @ epoch 20, soup
+  0.828391 (members 16/20/21/41/43, 60 epochs, 1287 s); mean soup 0.818462 +-
+  0.009930; frozen valid verdict M1_TRANSFER_STRONG (>= 0.80 band).  Terminal
+  official-test read of the six frozen objects: seed0 raw 0.738098, seed1 raw
+  0.763371, seed0 soup 0.770266, seed1 soup 0.753551, 2-seed raw ensemble
+  0.768458, 2-seed SOUP ENSEMBLE 0.789059 (valid->test gap -0.029403).  Both
+  seeds early-stopped well inside the horizon, so the schedule was not binding.
+  Reading: (1) the primitive-only dictionary core is not a ZINC-specific
+  artefact — it produces the strongest MolHIV result in this project
+  (0.789059 test, above patch-path-pooling 0.785195 and recurrent pair-centre
+  0.762605) at 102,325 parameters and with no message passing or recurrence;
+  (2) the transfer is architectural, not tuned: no MolHIV architecture search was
+  performed, the only MolHIV-specific object is the label-free re-fit dictionary
+  and the 62-D anchor scaler; (3) the dictionary is re-learned almost entirely
+  during the task phase (relative movement ||dD||/||D|| = 0.9999 / 0.8935), so the
+  capability belongs to the learned dictionary environment, not to the K-SVD
+  initialisation; (4) the MolHIV 5-bucket distance relation saturates much harder
+  than on ZINC (52.2% of official-train node pairs clip into the 5+ bucket),
+  which is a scope limit of the P1 relation, not of the dictionary core.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_m1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_m1_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_m1_analysis.md
+  - tracks/ksvd/notes/e2e_dictenv_m1_test_read.md
+  - tracks/ksvd/results/e2e_dictenv_m1/dictionary_fit.json
+  - tracks/ksvd/results/e2e_dictenv_m1/env_cache.json
+  - tracks/ksvd/results/e2e_dictenv_m1/anchor_stats.json
+  - tracks/ksvd/results/e2e_dictenv_m1/lambda_calibration.json
+  - tracks/ksvd/results/e2e_dictenv_m1/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_m1/smoke.json
+  - tracks/ksvd/results/e2e_dictenv_m1/run_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_m1/run_seed1.json
+  - tracks/ksvd/results/e2e_dictenv_m1/architecture_freeze.json
+  - tracks/ksvd/results/e2e_dictenv_m1/decision.json
+  - tracks/ksvd/results/e2e_dictenv_m1/official_test_unlock.json
+  - tracks/ksvd/results/e2e_dictenv_m1/official_test_results.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_m1.py
+  - tracks/ksvd/experiments/luyin16/molhiv_e2e_dictenv_m1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_m1.py
+caveats:
+  two_seeds_only: >-
+    Only seeds 0 and 1 were run, as pre-registered.  The soup mean 0.818462 has a
+    two-seed population std of 0.009930, which is larger than the valid->test gap
+    of the ensemble; single-seed test spread (0.753551-0.770266) is the dominant
+    source of uncertainty and the ensemble is the reported headline object.
+  valid_test_gap: >-
+    MolHIV uses a scaffold split, so valid -> test costs ~0.03-0.05 AUC.  The
+    frozen valid verdict M1_TRANSFER_STRONG (>= 0.80) is deliberately NOT revised
+    by the test read (0.789059, below the strong band, above the competitive
+    band).
+  cross_architecture_anchors: >-
+    The comparison against molhiv_patch_path_pooling and
+    molhiv_recurrent_pair_centre crosses architectures and protocols and is anchor
+    context only, never a decision input.
+  dictionary_not_initialisation: >-
+    Because the dictionary moves almost completely during training, this claim is
+    about the learned environment; it does not establish that the K-SVD
+    initialisation is necessary.
+  official_test_not_project_pristine: >-
+    Historical unrelated MolHIV test reads exist in this project; this round's
+    single read is reporting-only and post-freeze.
