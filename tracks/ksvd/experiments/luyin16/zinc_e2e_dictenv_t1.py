@@ -679,10 +679,13 @@ def train_run(
 # ---------------------------------------------------------------------------
 
 
-def stage_a_stage(device: str = "cuda") -> dict[str, Any]:
+def _stage_a_rows() -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for key in t1.CANDIDATE_ORDER:
-        payload = train_run(t1.SPARSE_ARM, key, 0, t1.LAMBDA_V0, MAX_EPOCHS, f"stage_a_{key}", device)
+        path = RESULTS_DIR / f"stage_a_{key}.json"
+        if not path.exists():
+            continue
+        payload = _read_json(path)
         rows.append(
             {
                 "candidate_key": key,
@@ -696,23 +699,39 @@ def stage_a_stage(device: str = "cuda") -> dict[str, Any]:
                 "params": int(payload["parameter_accounting"]["whole_model"]),
             }
         )
-    _write_json(RESULTS_DIR / "stage_a_summary.json", {"rows": rows, "official_test_loaded": False})
+    return rows
+
+
+def stage_a_stage(device: str = "cuda", only: str | None = None) -> dict[str, Any]:
+    keys = [only] if only else list(t1.CANDIDATE_ORDER)
+    for key in keys:
+        train_run(t1.SPARSE_ARM, key, 0, t1.LAMBDA_V0, MAX_EPOCHS, f"stage_a_{key}", device)
+    rows = _stage_a_rows()
+    if only is None:
+        _write_json(RESULTS_DIR / "stage_a_summary.json", {"rows": rows, "official_test_loaded": False})
     return {"rows": rows}
 
 
 def resolve_stage_a() -> dict[str, Any]:
-    rows = _read_json(RESULTS_DIR / "stage_a_summary.json")["rows"]
+    rows = _stage_a_rows()
+    if not rows:
+        raise RuntimeError("Stage A has not run yet")
     eligible = [row for row in rows if _health_gate_ok(row["candidate_key"], f"stage_a_{row['candidate_key']}")]
     pool = eligible if eligible else rows
     winner = min(pool, key=lambda r: (float(r["soup_valid_mae"]), float(r["best_valid_mae"]), int(r["best_epoch"])))
     return {"rows": rows, "eligible": [r["candidate_key"] for r in eligible], "winner": winner["candidate_key"], "winner_row": winner}
 
 
-def stage_b_stage(device: str = "cuda") -> dict[str, Any]:
+def stage_b_stage(device: str = "cuda", only: str | None = None) -> dict[str, Any]:
     selection = resolve_stage_a()
     winner = selection["winner"]
+    targets: list[tuple[float, str]] = []
+    if only in (None, "b1"):
+        targets.append((0.5, "stage_b_lambda050"))
+    if only in (None, "b2"):
+        targets.append((0.25, "stage_b_lambda025"))
     rows: list[dict[str, Any]] = []
-    for scale, tag in ((0.5, "stage_b_lambda050"), (0.25, "stage_b_lambda025")):
+    for scale, tag in targets:
         payload = train_run(t1.SPARSE_ARM, winner, 0, t1.LAMBDA_V0 * scale, MAX_EPOCHS, tag, device)
         rows.append(
             {
@@ -728,15 +747,12 @@ def stage_b_stage(device: str = "cuda") -> dict[str, Any]:
                 "wall_clock_s": float(payload["wall_clock_s"]),
             }
         )
-    _write_json(RESULTS_DIR / "stage_b_summary.json", {"winner": winner, "rows": rows, "official_test_loaded": False})
     return {"winner": winner, "rows": rows}
 
 
-def resolve_stage_b() -> dict[str, Any]:
-    selection = resolve_stage_a()
-    winner = selection["winner"]
+def _stage_b_rows(winner: str) -> list[dict[str, Any]]:
     stage_a_payload = _read_json(RESULTS_DIR / f"stage_a_{winner}.json")
-    rows = [
+    rows: list[dict[str, Any]] = [
         {
             "tag": f"stage_a_{winner}",
             "lambda_scale": 1.0,
@@ -748,9 +764,30 @@ def resolve_stage_b() -> dict[str, Any]:
             "soup_valid_rec": float(stage_a_payload["soup"]["soup_valid_rec"]),
         }
     ]
-    summary_path = RESULTS_DIR / "stage_b_summary.json"
-    if summary_path.exists():
-        rows.extend(_read_json(summary_path)["rows"])
+    for tag, scale in (("stage_b_lambda050", 0.5), ("stage_b_lambda025", 0.25)):
+        path = RESULTS_DIR / f"{tag}.json"
+        if not path.exists():
+            continue
+        payload = _read_json(path)
+        rows.append(
+            {
+                "tag": tag,
+                "lambda_scale": scale,
+                "lambda_rec": float(payload["lambda_rec"]),
+                "soup_valid_mae": float(payload["soup"]["soup_valid_mae"]),
+                "best_valid_mae": float(payload["best_valid_mae"]),
+                "best_epoch": int(payload["best_epoch"]),
+                "soup_members": payload["soup"]["members"],
+                "soup_valid_rec": float(payload["soup"]["soup_valid_rec"]),
+            }
+        )
+    return rows
+
+
+def resolve_stage_b() -> dict[str, Any]:
+    selection = resolve_stage_a()
+    winner = selection["winner"]
+    rows = _stage_b_rows(winner)
     eligible = [row for row in rows if _health_gate_ok(winner, row["tag"])]
     pool = eligible if eligible else rows
     chosen = min(pool, key=lambda r: (float(r["soup_valid_mae"]), float(r["best_valid_mae"]), int(r["best_epoch"])))
@@ -1495,6 +1532,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ],
     )
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--only", default=None, choices=["a1", "a2", "a3", "b1", "b2"])
     args = parser.parse_args(argv)
     v0run.sdp._configure_determinism()
     if args.stage == "identity":
@@ -1502,11 +1540,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.stage == "correct":
         print(json.dumps(correctness_stage(device="cpu"), indent=2))
     elif args.stage == "stage_a":
-        print(json.dumps(stage_a_stage(device=args.device), indent=2))
+        print(json.dumps(stage_a_stage(device=args.device, only=args.only), indent=2))
     elif args.stage == "select":
         print(json.dumps(resolve_stage_a(), indent=2))
     elif args.stage == "stage_b":
-        print(json.dumps(stage_b_stage(device=args.device), indent=2))
+        print(json.dumps(stage_b_stage(device=args.device, only=args.only), indent=2))
     elif args.stage == "stage_c":
         print(json.dumps(stage_c_stage(device=args.device), indent=2))
     elif args.stage == "finalize":
