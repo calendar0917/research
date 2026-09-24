@@ -1,0 +1,181 @@
+decision_id: decision-e2e-dictenv-p1-stop-not-specific-20260924
+created: '2026-09-24T09:35:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  E2E-DictEnv-v0 established a dictionary-specific but absolute-weak no-message-
+  passing environment (M_S = 0.145508); T1 showed the 0.145 ceiling was an
+  INTERFACE property and could be relieved (0.125765) only by exposing the exact
+  146-D FEC-S0 coarse chemistry beside the dictionary code, which made the
+  dictionary non-load-bearing (G_zero 0.0179, G_node 0.0076).  The open question
+  was whether a dictionary-core environment can be BOTH absolute-strong AND
+  genuinely load-bearing once every coarse-chemistry bypass is deleted.  P1
+  answered it with a primitive-only architecture whose only learned chemistry
+  path is the dictionary code, and with the mechanism gates as the
+  pre-registered primary criterion.
+protocol: >-
+  Local-first implementation with targeted CPU tests, preregistration frozen
+  before any run, then remote A100 execution under the remote-research-runner
+  workflow (preflight -> deploy -> env cache -> correctness -> GPU smoke ->
+  formal run -> freeze -> terminal test) at formal-run commit 684675f and
+  terminal-test commit e16ac15.  Frozen backend identical to v0/T1 (phi65
+  FSAR-R2-AR0, K=32, s=8, 10 unrolled tied-IHT steps, SDB-v0 K-SVD D init,
+  tied encode/reconstruct, task-coupled D, no message passing / recurrence /
+  attention / pair->centre / relation refresh / typed lookup).  New primitive-only
+  local core: 62-D anchor p_i, node binding A_i in R^288, edge binding E_i in
+  R^288, z_i in R^638 -> SiLU MLP 638->102->48, 15-D pure-topology pair relation;
+  97,865 parameters; lambda_rec 33.95873017865987; horizon 240; Adam 1e-3,
+  wd 1e-5, batch 128, clip 5, seed 0.  Pre-registered order: correctness, smoke,
+  formal Sparse seed 0, mechanism + health, GO gate, matched DenseTied control,
+  seed-1 pair only if the specificity gate passed, freeze, terminal reporting-
+  only test.  Remote A100 GPU0 was occupied by a foreign ~37 GB / ~91% job, so
+  every formal run used GPU1.
+results:
+  implementation_commit: 684675fbff10df54f66c2d71e1e6bbfed7f467c9
+  terminal_test_commit: e16ac159fa4b70a796e1aab4054aeeed6842df5e
+  device: NVIDIA A100-SXM4-40GB (GPU1; GPU0 foreign-contended)
+  seed_run: 0
+  parameters: {local_total: 82762, backend_total: 15103, whole_model: 97865, budget_min: 90000, budget_max: 105000}
+  correctness_gates_all_passed: true
+  cpu_tests: 11/11 (P1); 41 passed combined with v0/T1 suites
+  smoke_gates_all_passed: true
+  sparse_seed0:
+    best_valid_mae: 0.13647751207923284
+    best_epoch: 237
+    soup_valid_mae: 0.13197501279687276
+    band: strong
+    soup_members: [206, 217, 219, 236, 237]
+    soup_valid_rec: 0.00013109570756371914
+    wall_clock_s: 1555.6846024009865
+    peak_gpu_memory_mb: 187.45556640625
+  dense_seed0:
+    best_valid_mae: 0.1375358338802471
+    best_epoch: 224
+    soup_valid_mae: 0.1345339369624271
+    wall_clock_s: 1345.04786135396
+    peak_gpu_memory_mb: 174.80029296875
+  mechanism:
+    M_S: 0.13197501279687276
+    M_zero: 0.47909058167791224
+    G_zero: 0.3471155649620341
+    G_zero_gate: 0.03
+    G_zero_pass: true
+    G_zero_vs_t1: 0.017903
+    M_node_shuffle: 0.14509857581307878
+    G_node: 0.013123559097200616
+    G_node_gate: 0.01
+    G_node_pass: true
+    G_node_vs_t1: 0.007628
+    M_edge_shuffle: 0.19150349343385314
+    G_edge: 0.05952847671797498
+    M_all_shuffle: 0.2049739609242766
+    G_all: 0.07299894420839845
+    G_all_gate: 0.015
+    G_all_pass: true
+  dictionary_health_all_passed: true
+  go_gate: true
+  specificity:
+    M_S: 0.13197501279687276
+    M_D: 0.1345339369624271
+    G_specific: 0.002558924165554338
+    gate: 0.003
+    gate_pass: false
+    seed1_authorized: false
+  terminal_test:
+    sparse_seed0_soup: 0.10759263431467116
+    dense_seed0_soup: 0.10166120657231659
+    G_zero_test: 0.3487532532159239
+    G_node_test: 0.011292910425364983
+    G_edge_test: 0.05637531140651554
+    G_all_test: 0.07131385574564338
+    note: reporting only; test reverses the valid-side sparse/dense direction and does not reopen any decision
+  verdict: P1_CLEAN_ENVIRONMENT_VIABLE_BUT_DICTIONARY_NOT_SPECIFIC
+  official_test_loaded: true
+decision: >-
+  STOP E2E-DictEnv-P1 with frozen verdict
+  P1_CLEAN_ENVIRONMENT_VIABLE_BUT_DICTIONARY_NOT_SPECIFIC (pre-registered
+  case D).  Record both halves honestly: the primitive-only clean environment is
+  absolute-strong and genuinely dictionary-load-bearing - which answers the T1
+  question and shows the T1 mechanism loss was a coarse-interface property, not
+  a dictionary-core weakness - but the sparse dictionary is NOT demonstrated
+  specific, because the parameter-identical dense tied coordinate matches it on
+  valid and beats it on test.  Do NOT claim a dictionary-specificity success, do
+  NOT reinterpret the v0 improvement (+0.0135) as a dictionary win, and buy no
+  rescue.  seed 1 is NOT purchased (specificity gate failed), and no K/s/IHT/
+  LISTA/dictionary-count/attention/MP/recurrence/reader/optimizer/lambda/horizon
+  change, no new relation block, and no re-read of the test are authorised by
+  this round.  Any next step requires a new preregistration.
+because: >-
+  The mechanism layer, which the pre-registered decision order places first,
+  passes decisively and reverses T1: zeroing the dictionary coordinate costs
+  G_zero = +0.347116 (T1 +0.017903, v0 +0.854839), the node-assignment shuffle
+  costs G_node = +0.013124 (clears the 0.010 gate that T1 missed at +0.007628),
+  and the combined shuffle costs G_all = +0.072999; health passes every gate.
+  With every coarse-chemistry pathway deleted, the only learned chemistry input
+  is the bound dictionary code, so its removal is now destructive.  The absolute
+  band is also strong (soup 0.131975, <= 0.135), materially better than v0
+  (0.145508) and level with the FEC-S1 anchor (0.130422), confirming that the
+  0.145 ceiling was an interface property.  However the pre-registered
+  specificity step fails: the matched DenseTied control (same 97,865 parameters,
+  only the coding operator changed) reaches soup valid 0.134534, so
+  G_specific = 0.002559 < 0.003, and the terminal test reverses the sign
+  (DenseTied 0.101661 vs Sparse 0.107593).  The correct reading is therefore
+  narrow and precise: the bound code is load-bearing, but its sparse discrete
+  structure is not demonstrated to be what produces the accuracy.  Reporting the
+  mechanism success alone would overstate the result; reporting only the
+  not-specific failure would hide that a clean no-message-passing dictionary
+  environment can be both strong and load-bearing.
+alternatives_rejected:
+  - >-
+    Claiming a dictionary-core success because M_S = 0.131975 is in the strong
+    band and all mechanism gates pass.  Rejected: the pre-registered order
+    requires the matched-control specificity step, and it fails on valid and
+    reverses on test.
+  - >-
+    Treating G_specific = 0.002559 as effectively passing because it is close to
+    0.003 and directionally favourable.  Rejected: the gate is frozen at 0.003
+    before the run, the margin is within GPU run-to-run scale, and the test
+    reversal removes any claim to a robust specific advantage.
+  - >-
+    Buying seed 1 anyway to see whether the valid-side sign replicates.
+    Rejected: forbidden by the frozen stop rule; the test reversal already
+    indicates the sign is not stable.
+  - >-
+    Rescuing specificity post hoc (e.g. re-weighting sparsity, changing K/s/IHT,
+    or adding a denser coordinate as a new arm).  Rejected: that is a new
+    architecture question, not an authorised change, and would be selected on
+    the same valid set.
+revisit_if: >-
+  A new preregistration asks whether the dense tied coordinate is doing the same
+  work for a structural reason - e.g. an ablation that isolates the anchor +
+  binding capacity from the code dictionary (bindings with the dictionary code
+  replaced by a fixed random projection at matched parameters), or a
+  pre-registered two-seed paired comparison whose success criterion is the
+  matched-control margin rather than the absolute band.  Neither is authorised by
+  E2E-DictEnv-P1.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_p1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_p1_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_p1_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_p1_analysis.md
+  - tracks/ksvd/notes/e2e_dictenv_p1_test_read.md
+  - tracks/ksvd/results/e2e_dictenv_p1/parameter_accounting.json
+  - tracks/ksvd/results/e2e_dictenv_p1/env_cache.json
+  - tracks/ksvd/results/e2e_dictenv_p1/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_p1/smoke_gate.json
+  - tracks/ksvd/results/e2e_dictenv_p1/sparse_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_p1/dense_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_p1/architecture_freeze.json
+  - tracks/ksvd/results/e2e_dictenv_p1/gate_sparse_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_p1/mechanism_zero.json
+  - tracks/ksvd/results/e2e_dictenv_p1/mechanism_node_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_p1/mechanism_edge_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_p1/mechanism_all_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_p1/dictionary_health.json
+  - tracks/ksvd/results/e2e_dictenv_p1/specificity_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_p1/decision.json
+  - tracks/ksvd/results/e2e_dictenv_p1/official_test_unlock.json
+  - tracks/ksvd/results/e2e_dictenv_p1/official_test_results.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_p1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_p1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_p1.py

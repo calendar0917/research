@@ -1,0 +1,111 @@
+claim_id: claim-e2e-dictenv-p1-clean-load-bearing-but-not-specific-20260924
+created: '2026-09-24T09:35:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  Round E2E-DictEnv-P1 (protocol e2e_dictenv_p1, formal-run commit 684675f,
+  terminal-test commit e16ac15, remote NVIDIA A100-SXM4-40GB, seed 0 only,
+  official test loaded once at the very end for terminal reporting only) shows
+  that a PRIMITIVE-ONLY, chemistry-free end-to-end dictionary environment can be
+  BOTH absolute-strong AND genuinely dictionary-load-bearing, but that its
+  advantage is NOT demonstrated to be specific to the sparse discrete
+  dictionary.  Architecture: 62-D zeroth-order primitive anchor p_i (root
+  one-hot 28 | patch atom mass 28 | patch bond mass 4 | size 2) with no chemistry
+  lookup; node binding u_v^A = (alpha_v W_A^S) * (q_v W_A^C) / sqrt(96) summed
+  per shell into A_i in R^288; edge binding g_uv = [a_u+a_v ; |a_u-a_v| ;
+  a_u*a_v] with u_uv^E = (g_uv W_E^S) * (b_uv W_E^C) / sqrt(48) summed per
+  6-class shell-pair into E_i^edge in R^288; z_i = [p_i 62 | A_i 288 | E_i^edge
+  288] = 638-D -> SiLU MLP 638->102->48 -> E_i; pair relation restricted to 15-D
+  pure topology (indices 0:14 and 18) with 15->32->16 encoder; backend identical
+  to v0/T1; total parameters 97,865 (local 82,762 + backend 15,103), inside the
+  pre-registered 90,000-105,000 budget.  The exact SDB-v0 K-SVD D (65x32,
+  sha256 925d573a58083c3c20f36980dec9bba77dff592b30ea1abf11098ca3a7b7487a),
+  K=32, s=8, 10 unrolled tied-IHT steps, tied reconstruction and
+  lambda_rec = 33.95873017865987 are reused unchanged; no patch_cont, atom_shell,
+  bond_shell, root-conditioned chemistry histogram, typed/parent token, FEC-S1
+  adapter, PCA32/DenseRole/FEC-D1/B-Null branch, message passing, recurrence,
+  pair->centre or attention.  All 15 correctness gates G0-G14 PASS (relabel
+  invariance 2.4e-7, parameter budget 97,865, official-test blocker, chemistry
+  purity, forbidden-local-descriptor, pair-relation chemistry blocker), P1 CPU
+  tests 11/11, GPU smoke 12/12, and the environment cache reproduces the v0
+  occurrence counts exactly.  Formal Sparse seed-0 run (240 epochs, Adam 1e-3,
+  wd 1e-5, batch 128, clip 5, no early stop, seed 0, no sweep): best valid MAE
+  0.136478 @ epoch 237, fixed Top-5 soup valid MAE M_S = 0.131975 (band strong,
+  <= 0.135), soup members [206,217,219,236,237], soup valid reconstruction
+  1.31e-4, wall 1555.7 s, peak 187.5 MB.  Absolute anchors (context only):
+  v0 0.145508 (M_S - v0 = -0.013533), FEC-S1 0.130422 (+0.001553), T1 tuned
+  0.125765 (+0.006210).  The mechanism layer, the pre-registered primary
+  criterion, PASSES decisively and marks the decisive difference from T1:
+  zeroing the dictionary coordinate costs G_zero = +0.347116 (T1 +0.017903;
+  v0 +0.854839), the 5-permutation node-assignment shuffle costs G_node =
+  +0.013124 (>= 0.010 gate; T1 missed at +0.007628), the edge-binding shuffle
+  costs +0.059528 (report only) and the combined shuffle costs G_all = +0.072999
+  (>= 0.015).  Dictionary health PASSES every gate (27/32 active atoms, effective
+  atom count 16.09, top-1 share 0.125, exact top-8 fraction 1.0, valid
+  reconstruction 1.31e-4, ||dL/dD|| = 0.094, effective rank 10.30, K-SVD-init
+  movement 5.07, train/valid usage Spearman 0.999).  The seed-0 GO gate
+  (absolute-viable + G_zero + G_node + G_all + health) is GO.  BUT the matched
+  parameter-identical DenseTied control (dense tied operator phi @ Dbar instead
+  of tied-IHT top-8; same 97,865 parameters) reaches soup valid 0.134534 (best
+  0.137536 @224), so the dictionary-specific margin is
+  G_specific = M_D - M_S = 0.002559 < the frozen 0.003 materiality gate -> FAIL.
+  The sparse dictionary is directionally better on valid (unlike FEC-D1, where
+  dense won) but below materiality; seed 1 was NOT authorised and NOT run.
+  Frozen verdict, pre-registered case D:
+  P1_CLEAN_ENVIRONMENT_VIABLE_BUT_DICTIONARY_NOT_SPECIFIC.  Terminal test read
+  (reporting only, after freeze): Sparse seed0 soup 0.107593, DenseTied seed0
+  soup 0.101661, i.e. the test REVERSES the valid-side direction by 0.0059 MAE
+  in favour of dense, and the mechanism generalises almost exactly (G_zero_test
+  0.348753, G_node_test 0.011293, G_edge_test 0.056375, G_all_test 0.071314).
+  Reading: (1) deleting the coarse-chemistry bypass makes the dictionary
+  strongly load-bearing again while keeping a strong absolute band, so the T1
+  mechanism loss was an interface property and a dictionary-core environment can
+  be accurate and load-bearing without message passing; (2) the accuracy is not
+  attributable to sparsity / dictionary specificity, since the parameter-equal
+  dense tied coordinate matches it on valid and beats it on test.  The same
+  not-specific family as FEC-D1 is reproduced at the end-to-end environment
+  level, now with a strong load-bearing signal.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_p1_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_p1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_p1_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_p1_analysis.md
+  - tracks/ksvd/notes/e2e_dictenv_p1_test_read.md
+  - tracks/ksvd/results/e2e_dictenv_p1/artifact_identity.json
+  - tracks/ksvd/results/e2e_dictenv_p1/parameter_accounting.json
+  - tracks/ksvd/results/e2e_dictenv_p1/env_cache.json
+  - tracks/ksvd/results/e2e_dictenv_p1/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_p1/smoke_gate.json
+  - tracks/ksvd/results/e2e_dictenv_p1/sparse_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_p1/dense_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_p1/architecture_freeze.json
+  - tracks/ksvd/results/e2e_dictenv_p1/gate_sparse_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_p1/mechanism_zero.json
+  - tracks/ksvd/results/e2e_dictenv_p1/mechanism_node_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_p1/mechanism_edge_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_p1/mechanism_all_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_p1/dictionary_health.json
+  - tracks/ksvd/results/e2e_dictenv_p1/specificity_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_p1/decision.json
+  - tracks/ksvd/results/e2e_dictenv_p1/official_test_unlock.json
+  - tracks/ksvd/results/e2e_dictenv_p1/official_test_results.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_p1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_p1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_p1.py
+caveats:
+  single_seed: >-
+    Only seed 0 was run; seed 1 was not authorised because the seed-0
+    specificity gate failed.  The G_specific margin (0.002559 vs 0.003) is close
+    in absolute terms, but the test-side reversal (DenseTied 0.0059 better)
+    makes the not-specific conclusion robust rather than marginal.
+  gpu_not_bit_deterministic: >-
+    Remote A100 floating point is not bit-deterministic; run-to-run valid
+    differences are at the ~1e-3 scale, which is the order of the specific
+    margin.
+  cross_architecture_anchors: >-
+    The comparison against v0/T1/FEC-S1 crosses architectures and horizons and is
+    anchor context only, never a decision input.
+  official_test_not_project_pristine: >-
+    Historical unrelated ZINC official-test reads exist; this round's single read
+    is reporting-only and post-freeze.

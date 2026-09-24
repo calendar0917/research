@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-v0-stopped-absolute-weak
+phase: e2e-dictenv-p1-stopped-dictionary-not-specific
 updated: 2026-09-24
 
 # ---------------------------------------------------------------------------
@@ -559,6 +559,143 @@ e2e_dictenv_t1:
     (mechanism gates as the primary criterion), or an explicit engineering trade
     on whether to keep the dictionary given the strong coarse-chemistry
     backbone.
+
+# ---------------------------------------------------------------------------
+# E2E-DictEnv-P1 (primitive-only end-to-end dictionary environment) — 2026-09-24
+# ---------------------------------------------------------------------------
+# Third round of the E2E-DictEnv line.  Delete every coarse-chemistry / FEC-S0
+# bypass and build the environment core from zeroth-order primitives only:
+# 62-D anchor p_i, role<->chemistry node binding A_i in R^288, edge binding
+# E_i in R^288, z_i in R^638 -> SiLU MLP 638->102->48, 15-D pure-topology pair
+# relation.  Exact SDB-v0 K-SVD D reused; K=32/s=8/IHT=10 tied coding.
+# 97865 params.  Single seed-0 GPU run; no sweep.  Official test loaded once,
+# last, reporting only.  Result: clean, absolute-strong, strongly load-bearing,
+# but the matched dense tied control is not materially worse -> not specific.
+e2e_dictenv_p1:
+  status: STOPPED_DICTIONARY_NOT_SPECIFIC
+  round: E2E-DictEnv-P1
+  protocol: e2e_dictenv_p1
+  verdict: P1_CLEAN_ENVIRONMENT_VIABLE_BUT_DICTIONARY_NOT_SPECIFIC
+  case: 'D (absolute-strong + mechanism PASS, but matched DenseTied control within the 0.003 specificity margin)'
+  implementation_commit: 684675fbff10df54f66c2d71e1e6bbfed7f467c9
+  formal_run_commit: 684675fbff10df54f66c2d71e1e6bbfed7f467c9
+  terminal_test_commit: e16ac159fa4b70a796e1aab4054aeeed6842df5e
+  remote_host: hxy@a100-2
+  remote_repo: /home/hxy/cy/research
+  device: NVIDIA A100-SXM4-40GB (GPU1; GPU0 foreign-contended at ~37 GB / ~91%)
+  seed_run: 0
+  epochs: 240
+  data: official train 10000 / official valid 1000; official test 1000 (terminal report only)
+  official_valid_loaded: true
+  official_test_loaded: true (single terminal read after freeze)
+  parameters:
+    local_total: 82762
+    backend_total: 15103
+    whole_model: 97865
+    budget: [90000, 105000]
+    fec_s1_reference: 66170
+  frozen_config:
+    config_id: e2e_dictenv_p1_primitive_only_dict_core
+    relation_indices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 18]
+    K: 32
+    s: 8
+    iht_steps: 10
+    lambda_rec: 33.95873017865987
+    horizon: 240
+    params: 97865
+    dictionary_init_sha256: 925d573a58083c3c20f36980dec9bba77dff592b30ea1abf11098ca3a7b7487a
+    module_sha256: 7744b541c0f65badafa2b9f3bf655234f6cd56dbae4c97f2a26e941ba5a1faa4
+    official_test_loaded_at_freeze_time: false
+  correctness:
+    all_passed: true
+    gates: [G0, G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11, G12, G13, G14]
+    cpu_tests: 11/11 P1 (41 passed combined with v0/T1 suites)
+    smoke_gates_all_passed: true
+  primary_results:
+    M_S_sparse_seed0_soup: 0.13197501279687276
+    band: strong (<= 0.135)
+    sparse_best_valid: 0.13647751207923284
+    sparse_best_epoch: 237
+    sparse_soup_members: [206, 217, 219, 236, 237]
+    M_D_dense_tied_seed0_soup: 0.1345339369624271
+    dense_best_valid: 0.1375358338802471
+    dense_best_epoch: 224
+    G_specific: 0.002558924165554338
+    G_specific_gate: 0.003
+    G_specific_pass: false
+    seed1_authorized: false
+    anchors_context_only:
+      v0_soup: 0.145508
+      fec_s1_soup: 0.13042183499777457
+      t1_tuned_soup: 0.125765
+      M_S_minus_v0: -0.013533
+      M_S_minus_fec_s1: 0.001553
+      M_S_minus_t1: 0.006210
+  mechanism:
+    M_zero: 0.47909058167791224
+    G_zero: 0.3471155649620341
+    G_zero_gate: 0.03
+    G_zero_pass: true
+    G_zero_t1: 0.017903
+    M_node_shuffle: 0.14509857581307878
+    G_node: 0.013123559097200616
+    G_node_gate: 0.01
+    G_node_pass: true
+    G_node_t1: 0.007628
+    M_edge_shuffle: 0.19150349343385314
+    G_edge: 0.05952847671797498
+    M_all_shuffle: 0.2049739609242766
+    G_all: 0.07299894420839845
+    G_all_gate: 0.015
+    G_all_pass: true
+  dictionary_health:
+    all_passed: true
+    active_atoms: 27
+    effective_atom_count: 16.09
+    top1_share: 0.125
+    exact_top8_fraction: 1.0
+    valid_reconstruction: 0.00013109567243607136
+    task_grad_to_D: 0.09399858862161636
+    effective_rank: 10.302263259887695
+    movement_fro_from_ksvd_init: 5.0702385902404785
+    usage_spearman_train_valid: 0.998900293255132
+  go_gate: true
+  terminal_test:
+    n_test: 1000
+    sparse_seed0_soup: 0.10759263431467116
+    dense_seed0_soup: 0.10166120657231659
+    G_zero_test: 0.3487532532159239
+    G_node_test: 0.011292910425364983
+    G_edge_test: 0.05637531140651554
+    G_all_test: 0.07131385574564338
+    note: reporting only; the test reverses the valid-side sparse/dense direction and reopens no decision
+  caveats:
+    single_seed: true
+    gpu_not_bit_deterministic: true
+    specificity_margin_within_run_to_run_scale: true
+    cross_architecture_anchors_context_only: true
+  claims:
+    - claim-e2e-dictenv-p1-clean-load-bearing-but-not-specific-20260924
+  decision: decision-e2e-dictenv-p1-stop-not-specific-20260924
+  prior_artifact_audit: tracks/ksvd/notes/e2e_dictenv_p1_prior_artifact_audit.md
+  preregistration: tracks/ksvd/notes/e2e_dictenv_p1_preregistration.md
+  implementation_note: tracks/ksvd/notes/e2e_dictenv_p1_implementation.md
+  analysis: tracks/ksvd/notes/e2e_dictenv_p1_analysis.md
+  test_read: tracks/ksvd/notes/e2e_dictenv_p1_test_read.md
+  results_dir: tracks/ksvd/results/e2e_dictenv_p1/
+  runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_p1.py
+  module: tracks/ksvd/experiments/luyin16/e2e_dictenv_p1.py
+  tests: tracks/ksvd/tests/test_e2e_dictenv_p1.py
+  next_step: >-
+    STOP per frozen case D.  The T1 question is answered: a primitive-only
+    no-message-passing dictionary environment is absolute-strong (0.131975) and
+    genuinely load-bearing (G_zero 0.347, G_node 0.0131) once the coarse-chemistry
+    bypass is deleted, so the T1 mechanism loss was an interface property.  But
+    the accuracy is not shown to be sparse-dictionary-specific: the
+    parameter-identical dense tied coordinate matches it on valid and beats it on
+    test.  Forbidden without a NEW preregistration: any K/s/IHT/LISTA/
+    dictionary-count/attention/MP/recurrence/reader/optimizer/lambda/horizon
+    change, new relation block, seed-1 purchase, or test re-read.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
@@ -1758,6 +1895,40 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-e2e-dictenv-p1-stop-not-specific-20260924: >-
+      E2E-DictEnv-P1 (2026-09-24, remote A100-SXM4-40GB GPU1, protocol
+      e2e_dictenv_p1, formal-run commit 684675f, terminal-test commit e16ac15,
+      official train 10000 / official valid 1000, official test read once at the
+      end for terminal reporting only) asked whether a primitive-only,
+      coarse-chemistry-free end-to-end dictionary environment can be BOTH
+      absolute-strong AND genuinely load-bearing.  Architecture: 62-D anchor
+      p_i; node binding A_i in R^288; edge binding E_i in R^288; z_i in R^638 ->
+      SiLU MLP 638->102->48; 15-D pure-topology pair relation; exact SDB-v0
+      K-SVD D (65x32, sha256 925d573a5808...), K=32, s=8, 10 tied-IHT steps,
+      lambda_rec 33.95873017865987; 97865 params (local 82762 + backend 15103,
+      in the 90000-105000 budget).  All G0-G14 correctness gates PASS, P1 CPU
+      tests 11/11, GPU smoke 12/12, env cache reproduces v0 occurrence counts.
+      Formal Sparse seed-0 run: best valid 0.136478 @237, Top-5 soup
+      M_S = 0.131975 (band strong, <= 0.135), members [206,217,219,236,237].  The
+      mechanism layer (pre-registered first) PASSES and reverses T1: G_zero =
+      +0.347116 (T1 +0.017903; v0 +0.854839), G_node = +0.013124 (clears the
+      0.010 gate T1 missed at +0.007628), G_edge +0.059528 (report only),
+      G_all = +0.072999; health PASSES all gates (27/32 active, effective 16.09,
+      valid reconstruction 1.3e-4).  Absolute anchors context only: v0 0.145508
+      (-0.013533), FEC-S1 0.130422 (+0.001553), T1 tuned 0.125765 (+0.006210).
+      BUT the parameter-identical DenseTied control reaches soup valid 0.134534,
+      so G_specific = 0.002559 < 0.003 -> NOT specific; seed 1 NOT purchased.
+      Terminal test (report only) reverses the sign (Sparse 0.107593 vs DenseTied
+      0.101661) while mechanism generalises almost exactly (G_zero_test 0.348753,
+      G_node_test 0.011293, G_edge_test 0.056375, G_all_test 0.071314).  Frozen
+      verdict P1_CLEAN_ENVIRONMENT_VIABLE_BUT_DICTIONARY_NOT_SPECIFIC (case D).
+      Reading: the bound code is load-bearing, but its sparse discrete structure
+      is not demonstrated to be what produces the accuracy; the FEC-D1
+      not-specific family is reproduced end-to-end with a strong load-bearing
+      signal.  See notes/e2e_dictenv_p1_analysis.md,
+      notes/e2e_dictenv_p1_test_read.md,
+      claim-e2e-dictenv-p1-clean-load-bearing-but-not-specific-20260924,
+      decision-e2e-dictenv-p1-stop-not-specific-20260924.
   - decision-e2e-dictenv-v0-stop-absolute-weak-20260924: >-
       E2E-DictEnv-v0 (2026-09-24, remote A100-SXM4-40GB GPU1, protocol
       e2e_dictenv_v0, commit eeeb6b34, official train 10000 / official valid
