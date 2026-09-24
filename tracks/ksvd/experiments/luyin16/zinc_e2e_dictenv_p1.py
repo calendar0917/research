@@ -1321,6 +1321,147 @@ def _write_decision(payload: Mapping[str, Any]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# terminal official test (single load, reporting only)
+# ---------------------------------------------------------------------------
+
+
+def _attach_test_env(test_data: Sequence[Any], raw_test: Sequence[Any]) -> dict[str, Any]:
+    from tracks.ksvd.experiments.luyin16 import fsar_r2_ar0 as r2
+
+    stats = _read_json(_anchor_stats_path())
+    mean = torch.as_tensor(stats["mean"], dtype=torch.float32)
+    scale = torch.as_tensor(stats["scale"], dtype=torch.float32)
+    n_occ = n_bond = 0
+    for index, (data, raw_molecule) in enumerate(zip(test_data, raw_test)):
+        graph, node_types, edge_types = zlr._data_to_graph(raw_molecule)
+        if int(data.num_nodes) != int(raw_molecule.num_nodes):
+            raise RuntimeError(f"test[{index}]: node mismatch")
+        incidence = e2e_v0.env_incidence(graph, edge_types)
+        data.dict_phi = torch.as_tensor(r2.build_phi(graph).astype(np.float32))
+        data.dict_atom = torch.as_tensor(np.asarray(node_types, dtype=np.int64))
+        raw_anchor = p1.build_anchor_raw(data.dict_atom, incidence["occ_node"], incidence["occ_root"], incidence["bond_root"], incidence["bond_type"], int(data.num_nodes))
+        data.anchor = p1.standardize_anchor(raw_anchor, mean, scale)
+        data.env_occ_node = incidence["occ_node"]
+        data.env_occ_root = incidence["occ_root"]
+        data.env_occ_shell = incidence["occ_shell"]
+        data.env_bond_root = incidence["bond_root"]
+        data.env_bond_shellpair = incidence["bond_shellpair"]
+        data.env_bond_type = incidence["bond_type"]
+        data.env_bond_u = incidence["bond_u"]
+        data.env_bond_v = incidence["bond_v"]
+        data.env_occ_coord_node = None
+        data.env_bond_u_shuffled = None
+        data.env_bond_v_shuffled = None
+        n_occ += int(incidence["occ_node"].shape[0])
+        n_bond += int(incidence["bond_root"].shape[0])
+    return {"n_molecules": int(len(test_data)), "n_occurrences": int(n_occ), "n_bond_occurrences": int(n_bond)}
+
+
+def unlock_test_stage(device: str = "cuda") -> dict[str, Any]:
+    unlock_path = RESULTS_DIR / "official_test_unlock.json"
+    if unlock_path.exists():
+        raise RuntimeError("refusing test: official test already unlocked once this round")
+    freeze = _read_json(RESULTS_DIR / "architecture_freeze.json")
+    if freeze.get("official_test_loaded_at_freeze_time") is not False:
+        raise RuntimeError("refusing test: freeze does not assert a pre-test freeze")
+    if not (RESULTS_DIR / "decision.json").exists():
+        raise RuntimeError("refusing test: all valid conclusions must be recorded first")
+    spec = _read_json(RESULTS_DIR / "specificity_seed0.json")
+    seed1_authorized = bool(spec.get("seed1_authorized", False))
+    if seed1_authorized and not (RESULTS_DIR / "sparse_seed1.json").exists():
+        raise RuntimeError("refusing test: seed-1 pair was authorized but is not complete")
+    _write_json(unlock_path, {
+        "protocol_version": PROTOCOL_VERSION,
+        "git_commit": _git_commit(),
+        "user_authorised_test_read": True,
+        "purpose": "terminal reporting only",
+        "project_wide_pristine": False,
+        "reason": "historical unrelated ZINC official-test reads already exist",
+        "architecture_frozen_before_this_rounds_test_read": True,
+        "test_will_not_affect_any_model_config_checkpoint_decision": True,
+        "seed1_authorized": seed1_authorized,
+        "seed1_run": bool((RESULTS_DIR / "sparse_seed1.json").exists()),
+        "official_test_loaded": True,
+    })
+
+    from tracks.ksvd.experiments.luyin16 import zinc_compact_v4_training_sufficiency as ztraining
+
+    train_records, _valid_records = ztraining.load_train_valid_records()
+    test_records = ztraining.extract_test_records()
+    config = ztraining.base_config()
+    _train_enc, test_data, _audit = ztraining.build_encoded(train_records, test_records, config)
+    del _train_enc
+    raw_test = list(zlr._load_zinc(ZINC_ROOT, "test"))
+    if len(test_data) != len(raw_test):
+        raise RuntimeError("official-test length mismatch")
+    env_meta = _attach_test_env(test_data, raw_test)
+
+    device_obj = torch.device(device)
+    loader = p1.make_env_loader(list(test_data), BATCH_SIZE, False, 0)
+    objects = [
+        ("sparse_seed0_soup", p1.SPARSE_ARM, "sparse_seed0"),
+        ("dense_seed0_soup", p1.DENSE_ARM, "dense_seed0"),
+        ("sparse_seed1_soup", p1.SPARSE_ARM, "sparse_seed1"),
+        ("dense_seed1_soup", p1.DENSE_ARM, "dense_seed1"),
+    ]
+    rows: list[dict[str, Any]] = []
+    for name, arm, tag in objects:
+        state_path = STATE_DIR / f"{tag}_soup_state.pt"
+        if not state_path.exists():
+            rows.append({"name": name, "available": False, "tag": tag})
+            continue
+        model = _load_soup(arm, int(tag.split("seed")[-1]), tag, device_obj)
+        result = evaluate(model, loader, device_obj)
+        pred = np.asarray(result["predictions"], dtype=np.float64)
+        rows.append({"name": name, "available": True, "arm": arm, "tag": tag, "params": int(p1.total_parameter_count()["whole_model"]), "test_mae": float(result["mae"]), "test_mean_prediction": float(pred.mean()), "test_std_prediction": float(pred.std())})
+
+    model = _load_soup(p1.SPARSE_ARM, 0, "sparse_seed0", device_obj)
+    clean = evaluate(model, loader, device_obj)
+    mechanism: dict[str, Any] = {"clean_test_mae": float(clean["mae"])}
+    zero = evaluate(model, loader, device_obj, coord_zero=True)
+    mechanism["zero_code_test_mae"] = float(zero["mae"])
+    mechanism["G_zero_test"] = float(zero["mae"] - clean["mae"])
+    node_maes = []
+    for shuffle_seed in SHUFFLE_SEEDS:
+        _permute_node_shuffle(test_data, shuffle_seed)
+        sh_loader = p1.make_env_loader(list(test_data), BATCH_SIZE, False, 0)
+        node_maes.append(float(evaluate(model, sh_loader, device_obj, use_node_shuffle=True)["mae"]))
+        _clear_shuffles(test_data)
+    mechanism["node_shuffle_test_mae"] = float(np.mean(node_maes))
+    mechanism["G_node_test"] = float(np.mean(node_maes) - clean["mae"])
+    edge_maes = []
+    for shuffle_seed in SHUFFLE_SEEDS:
+        _permute_edge_shuffle(test_data, shuffle_seed)
+        sh_loader = p1.make_env_loader(list(test_data), BATCH_SIZE, False, 0)
+        edge_maes.append(float(evaluate(model, sh_loader, device_obj, use_edge_shuffle=True)["mae"]))
+        _clear_shuffles(test_data)
+    mechanism["edge_shuffle_test_mae"] = float(np.mean(edge_maes))
+    mechanism["G_edge_test"] = float(np.mean(edge_maes) - clean["mae"])
+    all_maes = []
+    for shuffle_seed in SHUFFLE_SEEDS:
+        _permute_node_shuffle(test_data, shuffle_seed)
+        _permute_edge_shuffle(test_data, 1000 + shuffle_seed)
+        sh_loader = p1.make_env_loader(list(test_data), BATCH_SIZE, False, 0)
+        all_maes.append(float(evaluate(model, sh_loader, device_obj, use_node_shuffle=True, use_edge_shuffle=True)["mae"]))
+        _clear_shuffles(test_data)
+    mechanism["all_shuffle_test_mae"] = float(np.mean(all_maes))
+    mechanism["G_all_test"] = float(np.mean(all_maes) - clean["mae"])
+
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "git_commit": _git_commit(),
+        "note": "terminal reporting-only evaluation of a configuration frozen on train/valid within E2E-DictEnv-P1; the official test is not project-wide pristine",
+        "n_test": int(len(test_data)),
+        **env_meta,
+        "rows": rows,
+        "mechanism_generalization": mechanism,
+        "official_test_loaded": True,
+    }
+    _write_json(RESULTS_DIR / "official_test_results.json", payload)
+    return payload
+
+
+# ---------------------------------------------------------------------------
 # training orchestration
 # ---------------------------------------------------------------------------
 
@@ -1356,7 +1497,7 @@ def run_all(device: str = "cuda") -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("stage", nargs="?", default="all", choices=["identity", "env", "correct", "smoke", "train", "gate", "mechanism", "health", "dense-seed0", "specificity-seed0", "seed1", "freeze", "analyze", "all"])
+    parser.add_argument("stage", nargs="?", default="all", choices=["identity", "env", "correct", "smoke", "train", "gate", "mechanism", "health", "dense-seed0", "specificity-seed0", "seed1", "freeze", "analyze", "unlock", "all"])
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--arm", default=p1.SPARSE_ARM, choices=list(p1.ARMS))
@@ -1391,6 +1532,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(freeze_stage(), indent=2))
     elif args.stage == "analyze":
         print(json.dumps(analyze_stage(), indent=2))
+    elif args.stage == "unlock":
+        print(json.dumps(unlock_test_stage(device=args.device), indent=2))
     else:
         run_all(device=args.device)
     return 0
