@@ -1,0 +1,163 @@
+decision_id: decision-e2e-dictenv-v0-stop-absolute-weak-20260924
+created: '2026-09-24T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  Prior work had established that a reusable sparse pure-topology dictionary
+  coordinate helps when localized into a frozen shared environment (FEC-D1:
+  local binding supported, dictionary not specific versus PCA32), but had never
+  asked whether the dictionary can be the ONLY fine-grained learned structural
+  coordinate of the whole model.  E2E-DictEnv-v0 asked that end-to-end question
+  and, crucially, whether the value is SPECIFIC by adding a parameter-identical
+  dense tied control (z = phi @ Dbar on the same matrix) instead of a PCA arm.
+protocol: >-
+  Local-first implementation with targeted CPU tests, preregistration frozen
+  before any run, then remote A100 execution.  Architecture: only coordinate
+  phi65; no message passing, recurrence, pair->centre, relation refresh,
+  attention, context writeback, typed/parent lookup, FEC-S1 146->214->24
+  adapter, patch_cont in the model, graph-level dictionary residual or
+  pair-kernel dictionary side channel.  Frozen: K=32, s=8, IHT=10, r_atom=64,
+  r_bond=16, env MLP 86->329->48 SiLU, exact FEC-S1 strict-static backend
+  (15359 params), total 66158.  Training: Adam 1e-3, wd 1e-5, batch 128,
+  L1 + lambda_rec * normalised reconstruction, clip 5, no scheduler, 240
+  epochs, no early termination, fixed Top-5 soup, seed 0; lambda_rec =
+  135.834921 calibrated once at Sparse init on the first 512 train molecules
+  and frozen for both arms.  Gate 0 G0..G12 all PASS.  The pre-registered
+  Stage-1 train-only smoke failed its atoms_active sub-gate (23/32 < 24/32) and
+  was treated as passed under explicit user authorisation (Amendment A1); all
+  other Stage-1 sub-gates passed.  Both arms ran sequentially on GPU1 (GPU0
+  occupied by a foreign job), commit eeeb6b34f641260a0373a3daeda1286a855717d7.
+  Official train 10000 / official valid 1000; official test never loaded.
+results:
+  implementation_commit: eeeb6b34f641260a0373a3daeda1286a855717d7
+  formal_run_commit: eeeb6b34f641260a0373a3daeda1286a855717d7
+  device: NVIDIA A100-SXM4-40GB GPU1 (both arms sequential)
+  seed: 0
+  parameters: 66158
+  parameters_fec_s1_reference: 66170
+  parameter_difference: -12
+  correctness_gates_all_passed: true
+  stage1_override: true
+  stage1_atoms_active_smoke: 23
+  stage1_atoms_active_required: 24
+  lambda_rec: 135.83492071463948
+  primary_metric: fixed Top-5 soup official-valid MAE
+  M_S_sparse_soup: 0.14550823224702616
+  M_S_sparse_best: 0.15098220306256555
+  M_S_sparse_best_epoch: 228
+  M_S_soup_members: [223, 228, 234, 235, 236]
+  M_D_dense_tied_soup: 0.31304719778796425
+  M_D_dense_tied_best: 0.31768575709214203
+  M_D_dense_tied_best_epoch: 146
+  M_D_soup_members: [146, 156, 170, 185, 212]
+  G_sparse: 0.16753896554093808
+  G_sparse_gate: 0.003
+  G_sparse_pass: true
+  M_zero: 1.0003474428820773
+  G_dict_use: 0.8548392106350512
+  G_dict_use_gate: 0.01
+  G_dict_use_pass: true
+  M_shuffle_mean: 0.16279680894234916
+  G_assign: 0.017288576695322994
+  G_assign_gate: 0.01
+  G_assign_pass: true
+  shuffle_seed_mae: {101: 0.16411, 202: 0.16314, 303: 0.15954, 404: 0.16458, 505: 0.16262}
+  dictionary_health_all_passed: true
+  active_atoms_train: 27
+  active_atoms_valid: 27
+  effective_atom_count_valid: 13.888
+  top1_support_share_valid: 0.125
+  top8_support_share_valid: 0.7733
+  support_entropy_valid: 2.6311
+  exact_top8_fraction: 1.0
+  usage_spearman_train_valid: 0.9981671554252199
+  dictionary_effective_rank: 10.8291
+  dictionary_coherence_max: 0.862283
+  dictionary_movement_soup_fro: 5.9409894943237305
+  reconstruction_valid: 9.740255581311908e-05
+  task_gradient_to_D: 0.087363
+  band: weak
+  band_boundary: 0.145
+  band_margin: 0.00050823224702616
+  historical_fec_s1_soup_anchor: 0.13042183499777457
+  M_S_minus_anchor: 0.015086397249251586
+  wall_clock_s: {sparse: 1586.7, dense_tied: 1272.1}
+  peak_gpu_memory_mb: {sparse: 168.33740234375, dense_tied: 155.68212890625}
+  epochs_run: 240
+  early_terminated: false
+  verdict: E2E_DICTENV_ABSOLUTE_WEAK
+  official_test_loaded: false
+decision: >-
+  STOP E2E-DictEnv-v0 with frozen verdict E2E_DICTENV_ABSOLUTE_WEAK (case D:
+  M_S > 0.145).  Do NOT run seed 1, do NOT sweep K / s / IHT steps / LISTA /
+  dictionary count / decoder / attention / LayerNorm / lambda / epochs / reader
+  width, and do NOT reinterpret the mechanism PASSes as an absolute success.
+  The mechanism/specificity half of the hypothesis is durably established and
+  should be carried forward; the absolute-strength half is not.
+because: >-
+  Every mechanism gate passed and the specific contrast is large: the matched
+  dense tied coordinate is 2.15x worse (G_sparse = +0.167539, ~56x the gate),
+  neutralising the dictionary coordinate destroys the model (G_dict-use =
+  +0.854839), assignment shuffle degrades it robustly across five permutations
+  (G_assign = +0.017289), and the trained dictionary is healthy (27/32 active,
+  effective 13.89, exact top-8, usage Spearman 0.998, rank 10.83, D moved far
+  from the K-SVD init).  But the pre-registered PRIMARY criterion is the
+  absolute band, and M_S = 0.145508 is above the frozen 0.145 viable boundary
+  (and 0.015086 above the FEC-S1 anchor), so the architecture does not reach
+  the viable band.  Two honest caveats are recorded rather than resolved: the
+  Stage-1 atoms_active sub-gate failed (23/32) and was waived by explicit user
+  authorisation, retrospectively justified because the fully trained soup
+  reaches 27/32; and the single-seed GPU protocol is seeded but not
+  bit-deterministic, so the 0.0005 band margin is inside execution noise even
+  though the mechanism contrasts are far outside it.  Stopping, rather than
+  buying seed 1 or widening the architecture, preserves the confirmatory status
+  of the mechanism finding and leaves the absolute-strength question to a new
+  preregistration.
+alternatives_rejected:
+  - >-
+    Buying seed 1 or a paired seed set to move M_S across the 0.145 boundary.
+    Rejected: the preregistration fixes a single seed and forbids seed 1; the
+    band label must not be selected by extra draws.
+  - >-
+    Reporting dictionary-specificity as overall success because G_sparse,
+    G_dict-use and G_assign all passed.  Rejected: the frozen table separates
+    mechanism from absolute performance; case D is a stop regardless of the
+    mechanism gates.
+  - >-
+    Rescuing the absolute number with a deeper environment decoder, wider
+    reader, attention, LayerNorm, a larger K, or a lambda/epoch change.
+    Rejected: all are explicitly forbidden rescues.
+  - >-
+    Reinterpreting the waived Stage-1 sub-gate as a genuine collapse and
+    discarding the formal runs.  Rejected: the trained soup has 27/32 active
+    atoms, so the smoke value was a 512-molecule/3-epoch transient; the waiver
+    is recorded and the original failing value is preserved in smoke_gate.json.
+revisit_if: >-
+  A new preregistration either (a) stabilises the execution regime
+  (deterministic scatter) or budgets a small paired seed set to resolve the
+  weak-vs-viable band label at the 0.145 boundary - the label, not a rescue;
+  (b) asks why the parameter-identical dense tied coordinate collapses
+  (M_D = 0.313 with near-perfect reconstruction) so the value of sparse
+  selection over a dense linear code is characterised directly; or (c) lifts
+  the confirmed sparse dictionary core onto a different, stronger composition
+  backbone as a new architecture question.  None of these is authorized by this
+  round.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_v0_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_amendment_a1.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_v0/artifact_identity.json
+  - tracks/ksvd/results/e2e_dictenv_v0/parameter_accounting.json
+  - tracks/ksvd/results/e2e_dictenv_v0/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_v0/lambda_calibration.json
+  - tracks/ksvd/results/e2e_dictenv_v0/smoke_gate.json
+  - tracks/ksvd/results/e2e_dictenv_v0/sparse_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_v0/dense_tied_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_v0/dictionary_health.json
+  - tracks/ksvd/results/e2e_dictenv_v0/mechanism_zero.json
+  - tracks/ksvd/results/e2e_dictenv_v0/mechanism_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_v0/decision.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_v0.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_v0.py
+  - tracks/ksvd/tests/test_e2e_dictenv_v0.py

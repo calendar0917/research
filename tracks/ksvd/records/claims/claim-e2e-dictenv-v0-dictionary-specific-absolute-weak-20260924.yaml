@@ -1,0 +1,78 @@
+claim_id: claim-e2e-dictenv-v0-dictionary-specific-absolute-weak-20260924
+created: '2026-09-24T00:00:00'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  Round E2E-DictEnv-v0 (protocol e2e_dictenv_v0, formal commit
+  eeeb6b34f641260a0373a3daeda1286a855717d7, remote A100-SXM4-40GB, seed 0,
+  official train 10000 / official valid 1000, official test never loaded)
+  shows that a task-coupled, sparse, shared PURE-TOPOLOGY dictionary
+  (phi65 -> tied-IHT(D), exact top-8, 10 unrolled steps) can be the ONLY
+  fine-grained learned structural coordinate of a no-message-passing chemical
+  environment model, and that its value is both dictionary-specific and
+  assignment-mediated.  Both arms share the same 65x32 SDB K-SVD matrix
+  (sha256 925d573a58083c3c20f36980dec9bba77dff592b30ea1abf11098ca3a7b7487a),
+  are bit-identical at step 0 (all 40 tensors) and have exactly 66158
+  parameters (FEC-S1 66170, delta -12); the only difference is the tied coding
+  operator: alpha = IHT(Dbar, phi) exact top-8 (SparseDictEnv) versus
+  z = phi @ Dbar dense (DenseTiedEnv).  Fixed Top-5 soup official-valid MAE:
+  M_S = 0.145508 (best 0.150982 @ 228) and M_D = 0.313047 (best 0.317686 @
+  146), so G_sparse = M_D - M_S = +0.167539 is ~56x the pre-registered >= 0.003
+  dictionary-specific gate (PASS).  The Sparse coordinate is strongly
+  load-bearing and correctly bound: neutralising it (alpha -> 0, DC/chemistry/
+  bond/six-scalars/backend kept) raises MAE to M_zero = 1.000347
+  (G_dict-use = +0.854839, gate >= 0.010 PASS; mean prediction shift 0.981, max
+  4.538), and permuting alpha against q within each (root, shell) - all node
+  sets, shells, alpha/q multisets, DC marginal, bond branch and global context
+  preserved, five fixed permutations - raises MAE to M_shuffle = 0.162797
+  (G_assign = +0.017289, gate >= 0.010 PASS; per-permutation 0.15954-0.16458).
+  Dictionary health on the trained soup PASSES: 27/32 atoms active on train and
+  valid, effective atom count 13.89, top-1 support share 0.1250, exact top-8
+  fraction 1.000000, train-valid usage Spearman 0.9982, effective rank 10.83,
+  normalised reconstruction 9.7e-5, task gradient to D 0.0874, and D moves far
+  from the K-SVD initialisation (frobenius 5.941).  HOWEVER the absolute band
+  is weak: M_S = 0.145508 exceeds the frozen viable boundary 0.145 by 0.000508,
+  and sits 0.015086 above the FEC-S1 static-composition anchor 0.130422 (context
+  only).  Frozen verdict, case D of the pre-registered table:
+  E2E_DICTENV_ABSOLUTE_WEAK.  Reading: the sparse dictionary core is the right
+  MECHANISM (central, specific, assignment-mediated, healthy, and sharply
+  better than a parameter-identical dense tied coordinate) but not yet the
+  strongest ARCHITECTURE.  Two caveats travel with the claim: (1) the
+  pre-registered Stage-1 atoms_active sub-gate failed (23/32 < 24/32) and was
+  treated as passed by explicit user authorisation (Amendment A1); the fully
+  trained soup reaches 27/32, so the smoke value was a 512-molecule/3-epoch
+  transient, and the original failing value is preserved in smoke_gate.json;
+  (2) the run is single-seed and the inherited GPU protocol is seeded but not
+  bit-deterministic (index_add_ scatter, use_deterministic_algorithms(False)),
+  with visibly different trajectories across identical re-runs, so the
+  weak-vs-viable BAND LABEL is inside execution noise even though the mechanism
+  contrasts (0.855 / 0.0173 / 0.168) are far outside it.
+scope: >-
+  Round E2E-DictEnv-v0, protocol e2e_dictenv_v0, pre-registered in
+  notes/e2e_dictenv_v0_preregistration.md before any run; Stage-1 waiver in
+  notes/e2e_dictenv_v0_amendment_a1.md; prior-artifact audit in
+  notes/e2e_dictenv_v0_prior_artifact_audit.md; implementation note
+  notes/e2e_dictenv_v0_implementation.md; analysis in
+  notes/e2e_dictenv_v0_analysis.md.  Both arms ran sequentially on remote
+  A100-SXM4-40GB GPU1 (GPU0 was occupied by a foreign 37GB job), 240 epochs,
+  no early termination, frozen lambda_rec = 135.834921 calibrated once on the
+  first 512 official-train molecules at Sparse init, fixed Top-5 soup, seed 0.
+  No seed 1, no sweep, no rescue.  Official test never loaded.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_v0_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_amendment_a1.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_v0_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_v0/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_v0/lambda_calibration.json
+  - tracks/ksvd/results/e2e_dictenv_v0/smoke_gate.json
+  - tracks/ksvd/results/e2e_dictenv_v0/sparse_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_v0/dense_tied_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_v0/dictionary_health.json
+  - tracks/ksvd/results/e2e_dictenv_v0/mechanism_zero.json
+  - tracks/ksvd/results/e2e_dictenv_v0/mechanism_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_v0/decision.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_v0.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_v0.py
+  - tracks/ksvd/tests/test_e2e_dictenv_v0.py

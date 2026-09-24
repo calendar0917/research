@@ -5,9 +5,11 @@ Frozen intent: `notes/e2e_dictenv_v0_preregistration.md`
 Prior-artifact audit: `notes/e2e_dictenv_v0_prior_artifact_audit.md`
 
 > **Outcome at a glance:** Gate 0 (G0..G12) **PASS**; Stage-1 mechanism smoke
-> **FAIL** (23/32 active atoms against a frozen `>= 24/32` threshold).
-> Per the frozen verdict table (case S1) the round **STOPPED** before any formal
-> arm, intervention or performance claim. See `notes/e2e_dictenv_v0_analysis.md`.
+> failed its `atoms_active` sub-gate (23/32 < 24/32) and was treated as passed
+> under explicit user authorisation (Amendment A1); both formal arms, the
+> dictionary-health and the zero/shuffle interventions ran. Frozen verdict
+> **`E2E_DICTENV_ABSOLUTE_WEAK`** (`M_S` = 0.145508 > 0.145). See
+> `notes/e2e_dictenv_v0_analysis.md`.
 
 ## 1. Files
 
@@ -163,13 +165,42 @@ The failure is a genuine, deterministic miss of the frozen threshold. It is a
 coverage artefact of the 512-molecule/3-epoch smoke under the calibrated
 λ_rec = 135.8, **not** a loss/reconstruction collapse.
 
-## 7. Formal arms — not run
+**Amendment A1** (user-authorised) treats this sub-gate as passed; the formal
+run then proceeded, and the fully trained Sparse soup reaches **27/32** active
+atoms (train and valid), confirming that the smoke value was a transient.
 
-Per preregistration §16/§17/§21 (case S1: Stage-1 mechanism gate FAIL ⇒
-`E2E_DICTENV_MECHANISM_COLLAPSED`, STOP) no formal training, no zero/shuffle
-intervention, no dictionary-health run and no performance verdict table were
-executed. No rescue (no K/s/IHT/LISTA/dictionary-count/decoder/attention/
-LayerNorm/λ-sweep/extra-epoch/seed change) was applied.
+## 7. Formal arms (`sparse_seed0.json`, `dense_tied_seed0.json`)
+
+Remote A100-SXM4-40GB GPU1, seed 0, 240 epochs, no early termination, fixed
+Top-5 soup, commit `eeeb6b34f641260a0373a3daeda1286a855717d7`.
+
+| | SparseDictEnv | DenseTiedEnv |
+|---|---:|---:|
+| best valid MAE | 0.150982 @ 228 | 0.317686 @ 146 |
+| **Top-5 soup valid MAE** | **0.145508** | **0.313047** |
+| soup members | 223, 228, 234, 235, 236 | 146, 156, 170, 185, 212 |
+| train MAE at best | 0.115179 | 0.258287 |
+| train minimum MAE | 0.111971 | 0.237859 |
+| valid normalised reconstruction | 9.7e-5 | 8.0e-6 |
+| `‖D̄_soup − D̄_init‖_F` | 5.941 | 4.342 |
+| wall clock | 1586.7 s | 1272.1 s |
+| peak GPU memory | 168.3 MB | 155.7 MB |
+
+`G_sparse = M_D − M_S = +0.167539` (gate ≥ 0.003, PASS).
+
+### Interventions and health
+
+* zero-code (α → 0, DC/clχ/bond/scalars/backend kept): `M_zero` = 1.000347,
+  `G_dict-use` = +0.854839 (gate ≥ 0.010, PASS); mean prediction shift 0.981.
+* assignment shuffle (5 perms within (root, shell)): `M_shuffle` = 0.162797,
+  `G_assign` = +0.017289 (gate ≥ 0.010, PASS); seeds 101/202/303/404/505 give
+  0.16411/0.16314/0.15954/0.16458/0.16262.
+* dictionary health: **PASS** — 27/32 active (train & valid), effective atom
+  count 13.89, top-1 share 0.1250, exact top-8 fraction 1.0, usage Spearman
+  0.998, effective rank 10.83, reconstruction 9.7e-5, task gradient to `D`
+  0.0874.
+
+Frozen verdict: **`E2E_DICTENV_ABSOLUTE_WEAK`** (case D, `M_S` > 0.145).
 
 ## 8. Provenance
 
