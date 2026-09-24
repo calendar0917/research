@@ -95,6 +95,17 @@ it.  No rescue is allowed by the pre-registration; the post-hoc diagnostics
 (`continuity_posthoc.json`) are recorded for the *next* pre-registration, which
 must fix the stratum (see the analysis note).
 
+## Post-run fix (commit `17017125`)
+
+The formal `all` run reached `decision` and then crashed in `report_stage` with
+`FileNotFoundError: iht_diagnostic.json`, because the report unconditionally read
+Stage-2 artifacts that a Gate-0 stop never produces (the `decision.json` verdict
+and all Gate-0 evidence were already written before the crash).  `report_stage`
+now reads every later-stage artifact through an existence guard and always emits
+`REPORT.md` with whatever exists plus an explicit "Stage 2 — not reached
+(Gate 0 stop)" section.  Re-run remotely as `a1 report` at `17017125` (seconds,
+CPU-only) and pulled; no result, threshold or artifact was changed by the fix.
+
 ## Local validation
 
 * `pytest tracks/ksvd/tests/test_e2e_dictenv_a1.py` — 38 passed.

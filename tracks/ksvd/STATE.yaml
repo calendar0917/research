@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-round-complete-m1-transfer-supported-zinc-target-band
+phase: e2e-dictenv-a1-stopped-gate0-continuity-fail-new-preregistration-required
 updated: 2026-09-24
 
 # ---------------------------------------------------------------------------
@@ -919,6 +919,77 @@ e2e_dictenv_p2_abs:
   tests: tracks/ksvd/tests/test_e2e_dictenv_p2_abs.py
 
 # ---------------------------------------------------------------------------
+# E2E-DictEnv-A1 (invariant attributed dictionary core) — 2026-09-24 (latest)
+# ---------------------------------------------------------------------------
+# Does the REAL structure<->attribute pairing participating in sparse dictionary
+# code formation give a stable increment over (a) topology-only TOPO and (b) the
+# parameter-matched assignment-independent ATTR-INDEP?  Frozen 433-D objects
+# chi_REAL = [phi65; vec(JV 11x28); vec(JE 15x4)] and chi_INDEP with
+# P^V = (1/n)(sum b^V)(sum q)^T, P^E = (1/m)(sum b^E)(sum r)^T (zero when m = 0).
+# Frozen budget K=32, s=8, H1, d_e=48, horizon 320,
+# lambda = 33.95873017865987, seeds 0 (seed 1 only if G_attr >= 0.003).
+# Official ZINC test never loaded; all CUDA work on GPU1 (GPU0 foreign).
+# Stopped at Gate 0: continuity FAIL 0.534375 < 0.70 -> no Stage 1/2/3/4.
+e2e_dictenv_a1:
+  status: STOPPED_GATE0_CONTINUITY_FAIL
+  round: E2E-DictEnv-A1
+  protocol: e2e_dictenv_a1
+  verdict: REPRESENTATION_NOT_QUALIFIED
+  preregistration_commit: bd3700a
+  implementation_commits: [1ac429f, 37324eb, 17017125]
+  formal_run_commit: 37324eb
+  formal_run_tag: a1-full
+  device: NVIDIA A100-SXM4-40GB (GPU1; GPU0 foreign-contended)
+  official_test_loaded: false
+  parameters: {TOPO: 97487, INDEP: 109263, REAL: 109263, indep_equals_real: true, budget_min: 80000, budget_max: 130000}
+  objects:
+    REAL: {dim: 433, sha256: c1cafb086662fb0753d52987fc321b1369d4f586164dde7960a3bed775d4b809, ksvd_final_fit_mse: 0.5173866149758972, ksvd_seconds: 1726.5}
+    INDEP: {dim: 433, sha256: 400821ee5105050eb34600a0fb4cb8040f983daa1e773738dc9e2774036ff32d, ksvd_final_fit_mse: 0.17008911208708885, ksvd_seconds: 1687.3}
+    TOPO: {dim: 65, sha256: b0c5da98aee5795450927fcd76606281aca947448f77ab186e11de09b33dfecd, kind: reuse_sdb_v0}
+  gate0:
+    correctness: 19/19 pass
+    assignment_semantics: pass (REAL sensitive 3.6243, INDEP invariant 0.0, marginal drift 0.0, phi drift 0.0)
+    dictionary_health: pass (used 32/32, 32/32, 31/32; effective atoms 4.03, 18.59, 19.99; holdout rec 1.41e-05, 2.11e-02, 1.97e-01)
+    continuity: {metric: real.code_auc, threshold: 0.70, real_code_auc: 0.534375, real_x_auc: 0.560625, indep_code_auc: 0.705625, indep_x_auc: 0.6375, topo_code_auc: 0.4325, topo_x_auc: 0.466875, passed: false}
+  stages_not_run: [stage1_omp_screen, stage2_iht_qualification, stage3_e2e, stage4_dense_tied, mechanism, liveness, specificity, seed1]
+  gate0_stratum_finding: >-
+    The frozen G0.3 stratum is degenerate for this population: pool mean patch
+    size 6.07 (median 6; 1.07 % >= 10 atoms) and the near stratum is 100 %
+    size-equal, root-category-equal and molecule-disjoint (mean size 5.35; WL
+    cosine >= 0.9999999999979995), so attributed-WL identity is nearly implied
+    by (size, root type).  REAL WL-identical pairs are FARTHER apart than the
+    matched control (code 3.917 vs 3.087; x 1.295 vs 1.141), also under angular
+    (0.531) and norm-matched (0.527) distances, while chemistry-blind TOPO is
+    worst (0.443) and assignment-independent INDEP is best (0.715).  On graded
+    equal-size molecule-disjoint pairs the attribute arms do track WL similarity
+    (REAL 0.287, INDEP 0.281) where TOPO does not (0.128).  The same criterion
+    already failed on the unrelated TCCD-v0 object (0.4675), so both failures
+    are evidence about the criterion, not about either object; the primary
+    G_attr question stays unanswered.  See notes/e2e_dictenv_a1_analysis.md
+    section 3 and results/e2e_dictenv_a1/gate0_stratum_diagnostics.json.
+  claims:
+    - claim-e2e-dictenv-a1-gate0-continuity-criterion-fails-and-is-degenerate-20260924
+  decision: decision-e2e-dictenv-a1-stop-gate0-representation-not-qualified-20260924
+  artifacts:
+    report: tracks/ksvd/results/e2e_dictenv_a1/REPORT.md
+    decision: tracks/ksvd/results/e2e_dictenv_a1/DECISION.md
+    correctness: tracks/ksvd/results/e2e_dictenv_a1/correctness.json
+    assignment_semantics: tracks/ksvd/results/e2e_dictenv_a1/assignment_semantics.json
+    continuity_audit: tracks/ksvd/results/e2e_dictenv_a1/continuity_audit.json
+    continuity_posthoc: tracks/ksvd/results/e2e_dictenv_a1/continuity_posthoc.json
+    gate0_stratum_diagnostics: tracks/ksvd/results/e2e_dictenv_a1/gate0_stratum_diagnostics.json
+    parameter_accounting: tracks/ksvd/results/e2e_dictenv_a1/parameter_accounting.json
+  preregistration: tracks/ksvd/notes/e2e_dictenv_a1_preregistration.md
+  prior_artifact_audit: tracks/ksvd/notes/e2e_dictenv_a1_prior_artifact_audit.md
+  implementation_note: tracks/ksvd/notes/e2e_dictenv_a1_implementation.md
+  analysis: tracks/ksvd/notes/e2e_dictenv_a1_analysis.md
+  results_dir: tracks/ksvd/results/e2e_dictenv_a1/
+  runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_a1.py
+  module: tracks/ksvd/experiments/luyin16/e2e_dictenv_a1.py
+  tests: tracks/ksvd/tests/test_e2e_dictenv_a1.py
+  diagnostic_script: tracks/ksvd/code/analyze_e2e_dictenv_a1_gate0_stratum.py
+
+# ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
 # ---------------------------------------------------------------------------
 # First round to LOCALIZE a validated reusable dictionary coordinate into each
@@ -1490,7 +1561,37 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_fec_s0_local_factorization_blocked_new_preregistration_required
+  status: stop_e2e_dictenv_a1_gate0_continuity_fail_new_preregistration_required
+  # -------------------------------------------------------------------------
+  # E2E-DictEnv-A1 (2026-09-24, remote A100 GPU1, protocol e2e_dictenv_a1,
+  # preregistration bd3700a, formal run 37324eb) is CLOSED.  Frozen verdict
+  # REPRESENTATION_NOT_QUALIFIED: Gate-0 correctness (19/19), assignment
+  # semantics and dictionary health all PASS but the frozen continuity gate
+  # FAILED (REAL code-space AUC 0.534375 < 0.70), so Stage 1 OMP screen,
+  # Stage 2 IHT qualification, Stage 3 E2E (G_attr), Stage 4 dense-tied,
+  # mechanism/liveness/specificity and seed 1 were never run and the round's
+  # primary question is UNANSWERED.  Post-hoc stratum diagnostics attribute the
+  # failure to the criterion (tiny-patch pool, degenerate near stratum,
+  # chemistry-marginal INDEP scoring best, chemistry-blind TOPO worst) and the
+  # same criterion had already failed on TCCD-v0 (0.4675).  No rescue, no
+  # re-thresholding, no alternative stratum, no stage skipped into.
+  e2e_dictenv_a1:
+    status: stopped_gate0_continuity_fail
+    round: e2e-dictenv-a1
+    verdict: REPRESENTATION_NOT_QUALIFIED
+    seed1_authorized: false
+    claims:
+      - claim-e2e-dictenv-a1-gate0-continuity-criterion-fails-and-is-degenerate-20260924
+    decision: decision-e2e-dictenv-a1-stop-gate0-representation-not-qualified-20260924
+    forbidden_without_new_preregistration:
+      - re-running Gate 0.3 with a patch-size floor / graded statistic / relaxed threshold / different control
+      - running Stage 1/2/3/4, mechanism, liveness or specificity after the frozen FAIL
+      - changing K / s / IHT rollout / reader / lambda / horizon to satisfy the continuity gate
+      - seed 1
+      - official ZINC test access
+    next_round_must_fix:
+      - 'continuity criterion per notes/e2e_dictenv_a1_analysis.md section 5: >= 10-atom equal-size molecule-disjoint population, graded Spearman with a paired REAL-vs-INDEP contrast, scale-invariant distance, and a TOPO-vs-attribute sanity check inside the gate'
+      - 'declare how the upcoming round handles the REAL object being ~3x harder to represent sparsely (K-SVD 0.5174 vs 0.1701 at identical parameters)'
   # -------------------------------------------------------------------------
   # FEC-S0 (2026-09-23, local CPU, zero training) is CLOSED.  Frozen verdict
   # FEC_S0_LOCAL_FACTORIZATION_BLOCKED: the handcrafted S0 channels
@@ -2116,6 +2217,37 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-e2e-dictenv-a1-stop-gate0-representation-not-qualified-20260924: >-
+      E2E-DictEnv-A1 (2026-09-24, remote A100-SXM4-40GB GPU1, protocol
+      e2e_dictenv_a1, preregistration bd3700a, formal-run commit 37324eb,
+      official test never loaded) asked whether the REAL structure<->attribute
+      pairing participating in sparse dictionary code formation gives a stable
+      increment over topology-only TOPO and the parameter-matched
+      assignment-independent ATTR-INDEP, using the frozen 433-D objects
+      chi_REAL = [phi65; vec(JV 11x28); vec(JE 15x4)] and chi_INDEP with
+      P^V = (1/n)(sum b^V)(sum q)^T, P^E = (1/m)(sum b^E)(sum r)^T, K=32, s=8,
+      H1, d_e=48, horizon 320, lambda 33.95873017865987.  Gate-0 correctness
+      (19/19), assignment semantics (REAL sensitive 3.6243, INDEP invariant
+      0.0) and dictionary health (30-32/32 atoms, effective 4.03/18.59/19.99)
+      PASS, and TOPO reproduces the audited SDB-v0 dictionary sha exactly, but
+      the frozen G0.3 continuity criterion FAILED: REAL code-space AUC 0.534375
+      versus the 0.70 threshold (x 0.560625; INDEP code 0.705625; TOPO code
+      0.4325).  Frozen verdict REPRESENTATION_NOT_QUALIFIED; Stage 1/2/3/4,
+      mechanism, liveness, specificity and seed 1 were never run and G_attr is
+      unanswered.  Post-hoc stratum diagnostics (gate0_stratum_diagnostics.json)
+      show the criterion is degenerate on this population: pool mean patch size
+      6.07 with only 1.07 % >= 10 atoms, near stratum 100 % size-equal /
+      root-category-equal / molecule-disjoint (mean size 5.35, WL cosine
+      >= 0.9999999999979995), yet REAL WL-identical pairs are FARTHER apart than
+      the matched control (code 3.917 vs 3.087), also under angular (0.531) and
+      norm-matched (0.527) distance, while chemistry-blind TOPO is worst (0.443)
+      and assignment-independent INDEP best (0.715); graded equal-size
+      molecule-disjoint pairs do carry signal (Spearman(WL cosine, -x dist) REAL
+      0.287, INDEP 0.281, TOPO 0.128).  The same criterion already failed on
+      TCCD-v0 (0.4675), so both failures are evidence about the criterion; the
+      REAL object is additionally ~3x harder to represent sparsely
+      (K-SVD 0.5174 vs 0.1701 at identical parameters).  Any continuation needs
+      a NEW preregistration with a corrected continuity criterion.
   - decision-e2e-dictenv-p1-stop-not-specific-20260924: >-
       E2E-DictEnv-P1 (2026-09-24, remote A100-SXM4-40GB GPU1, protocol
       e2e_dictenv_p1, formal-run commit 684675f, terminal-test commit e16ac15,

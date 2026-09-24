@@ -1,0 +1,189 @@
+decision_id: decision-e2e-dictenv-a1-stop-gate0-representation-not-qualified-20260924
+created: '2026-09-24T19:25:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The previous rounds established a clean, absolute-strong, dictionary-load-bearing
+  end-to-end environment (P1: soup valid 0.131975, G_zero 0.347116, G_node
+  0.013124) whose advantage was NOT demonstrated to be specific to the sparse
+  discrete dictionary (P1 specificity 0.002559 < 0.003; P2-ABS reached the
+  target band, soup valid 0.123549).  Those environments had no real
+  structure<->attribute pairing: they used a chemistry-free anchor plus bindings
+  whose dictionary input was the pure-topology phi65.  A1 asked the narrower,
+  earlier question the FSAR-R2-AR0 and SRDA antecedents left open: does REAL
+  structure<->attribute pairing participating in the sparse dictionary code alpha
+  give a stable increment over (a) topology-only and (b) the parameter-matched
+  assignment-independent ATTR-INDEP object?  The pre-registered order was
+  Gate 0 (correctness, assignment semantics, continuity, dictionary health) ->
+  Stage 1 OMP screen (G_attr_OMP >= 0.003) -> Stage 2 IHT qualification -> Stage
+  3 E2E (G_attr >= 0.003) -> Stage 4 dense-tied conditional -> mechanism + liveness,
+  with an unconditional stop at the first failed gate and no rescue.
+protocol: >-
+  Local-first implementation with targeted CPU tests, preregistration frozen and
+  committed (bd3700a) before implementation, then the remote-research-runner
+  workflow on the shared A100 box: preflight, deploy, uv sync, resumable stages
+  (cache -> scaler -> dictionaries -> omp-codes -> correctness -> assignment ->
+  health -> continuity -> posthoc-continuity -> omp-screen -> iht-diag -> formal
+  -> mechanism -> liveness -> specificity -> accounting -> decision -> report).
+  Objects frozen: chi_REAL = [phi65; vec(JV 11x28=308); vec(JE 15x4=60)] = 433-D
+  from the audited fsar_v2._explicit_basis_for_patch, chi_INDEP with
+  P^V = (1/n)(sum b^V)(sum q)^T and P^E = (1/m)(sum b^E)(sum r)^T (zero when
+  m = 0); train-only scaling (per-coordinate RMS, no mean subtraction, zero-RMS
+  masked, then block-energy normalisation); identical treatment for REAL/INDEP.
+  Budget K=32, s=8, H1 decoder, d_e=48, horizon 320,
+  lambda = 33.95873017865987, seeds 0 (seed 1 only if G_attr >= 0.003); TOPO
+  reuses the frozen SDB-v0 dictionary.  All CUDA work on physical GPU1
+  (CUDA_VISIBLE_DEVICES=1 asserted in code); GPU0 was foreign-owned all round;
+  the official ZINC test split was never loaded.
+results:
+  preregistration_commit: bd3700a
+  implementation_commit: 1ac429f5e0c0e5dd58a58450a98635e0e1e52a3b
+  formal_run_commit: 37324ebe327f5ea4d981650daa1248adce736f0f
+  report_fix_commit: 17017125d7868e42c20b3ed45964ab905fda1563
+  formal_run_tag: a1-full
+  device: NVIDIA A100-SXM4-40GB (GPU1; GPU0 foreign-contended)
+  seed_run: 0
+  parameters: {TOPO: 97487, INDEP: 109263, REAL: 109263, indep_equals_real: true, budget_min: 80000, budget_max: 130000}
+  official_test_loaded: false
+  cache_sha256_matches_local_smoke: true
+  topo_dictionary_sha256: b0c5da98aee5795450927fcd76606281aca947448f77ab186e11de09b33dfecd
+  indep_dictionary_sha256: 400821ee5105050eb34600a0fb4cb8040f983daa1e773738dc9e2774036ff32d
+  real_dictionary_sha256: c1cafb086662fb0753d52987fc321b1369d4f586164dde7960a3bed775d4b809
+  ksvd_final_fit_mse: {INDEP: 0.17008911208708885, REAL: 0.5173866149758972}
+  ksvd_seconds: {INDEP: 1687.3, REAL: 1726.5}
+  gate0:
+    correctness_all_passed: true
+    correctness_gates: 19
+    assignment_passed: true
+    real_joint_max_abs_change: 3.6243410110473633
+    indep_marginal_max_abs_change: 0.0
+    continuity_passed: false
+    continuity_real_code_auc: 0.534375
+    continuity_real_x_auc: 0.560625
+    continuity_indep_code_auc: 0.705625
+    continuity_topo_code_auc: 0.432500
+    continuity_tail_code_auc: {REAL: 0.658750, INDEP: 0.837500, TOPO: 0.570625}
+    dictionary_health_passed: true
+    health_holdout_rec: {TOPO: 1.41e-05, INDEP: 2.11e-02, REAL: 1.97e-01}
+    health_effective_atoms: {TOPO: 4.03, INDEP: 18.59, REAL: 19.99}
+  stages_not_run: [stage1_omp_screen, stage2_iht_qualification, stage3_e2e, stage4_dense_tied, mechanism, liveness, specificity, seed1]
+  gate0_stratum_diagnostics:
+    pool_mean_patch_size: 6.067333333333333
+    pool_fraction_patches_ge10_atoms: 0.010666666666666666
+    near_stratum_mean_patch_size: 5.35
+    near_stratum_all_equal_size: true
+    near_stratum_wl_cosine_min: 0.9999999999979995
+    control_wl_cosine_mean: 0.8954902672600253
+    near_minus_control_code_distance: {TOPO: 0.714, INDEP: -0.658, REAL: 0.830}
+    angular_paired_code_auc: {TOPO: 0.48125, INDEP: 0.73625, REAL: 0.53125}
+    norm_ratio_matched_paired_code_auc: {TOPO: 0.4501, INDEP: 0.7254, REAL: 0.5267}
+    graded_spearman_wl_cosine_vs_neg_xdist_equal_size_mol_disjoint: {TOPO: 0.1282, INDEP: 0.2809, REAL: 0.2870}
+    isomorphic_control_distance_x: 4.66e-09
+  verdict: REPRESENTATION_NOT_QUALIFIED
+decision: >-
+  STOP E2E-DictEnv-A1 at Gate 0 with the frozen verdict
+  REPRESENTATION_NOT_QUALIFIED.  Spend no Stage-1/2/3/4 budget, run no mechanism
+  or liveness/specificity stage, buy no seed 1, and do not reinterpret the
+  failure as evidence about ATTR-REAL versus ATTR-INDEP: the round's primary
+  question G_attr is UNANSWERED and must not be reported as if it had been
+  measured.  Record honestly what the round did establish - a qualified,
+  parameter-identical pair of 433-D attributed objects (assignment semantics,
+  invariance, health and accounting all pass; cross-machine bit-identical
+  caches; exact frozen-dictionary reuse) plus a refuted measurement criterion -
+  and require a NEW pre-registration for any continuation, with the corrected
+  continuity criterion proposed in the analysis note (>= 10-atom equal-size
+  molecule-disjoint population, graded Spearman criterion with a paired
+  REAL-vs-INDEP contrast, scale-invariant representation distance, and an
+  in-gate sanity check that the statistic separates the chemistry-blind TOPO arm
+  from an attribute arm).
+because: >-
+  The pre-registered stop rule is unconditional: G0.3 requires REAL code-space
+  AUC >= 0.70 and the formal run measured 0.534375.  The gate was frozen before
+  implementation and is reported verbatim; no rescue, re-thresholding or
+  alternative stratum is authorised after the fact.  Every other Gate-0
+  component passes, and the objects are exact (INDEP == REAL == 109,263
+  parameters; 19/19 correctness gates; REAL sensitive to pairing at 3.6243 while
+  INDEP is exactly invariant at 0.0; health 30-32/32 atoms, unit-norm columns,
+  train/valid usage Spearman 0.999).  The failure is attributed to the criterion
+  and its population rather than to a demonstrated defect of the object, on two
+  independent grounds.  First, the stratum diagnostics: the audit pool is
+  dominated by tiny rooted patches (mean size 6.07, only 1.07 % >= 10 atoms) and
+  the near stratum is 100 % size-equal, root-category-equal and molecule-disjoint
+  with mean size 5.35, so attributed-WL identity is nearly implied by (size, root
+  type); the REAL object places such pairs FARTHER apart than its (size, root
+  category)-matched controls (code 3.917 vs 3.087, x 1.295 vs 1.141) under
+  Euclidean, angular (0.531) and norm-matched (0.527) distances, while the
+  chemistry-blind TOPO arm scores worst (0.443) and the assignment-independent
+  INDEP object scores best (0.715) - exactly the ordering a criterion that
+  rewards forgetting residual detail must produce, and the opposite of what
+  G0.3 is meant to certify.  On graded equal-size molecule-disjoint pairs the
+  attribute arms do track attributed-WL similarity (REAL 0.287, INDEP 0.281)
+  where chemistry-blind TOPO does not (0.128), so a corrected criterion has
+  measurable signal to work with.  Second, the same frozen criterion had already
+  failed on the unrelated TCCD-v0 object (code AUC 0.4675), i.e. it has now
+  failed twice on objects built from unrelated principles.  The REAL object's
+  3x harder K-SVD fit (0.5174 vs 0.1701 at identical parameters) and 9x larger
+  OMP holdout error (1.97e-01 vs 2.11e-02) independently corroborate that the
+  real pairing retains heterogeneous interaction detail rather than being
+  degenerate.
+alternatives_rejected:
+  - >-
+    Read 0.5344 < 0.7056 as evidence that ATTR-REAL is a worse representation
+    than ATTR-INDEP.  Rejected: the criterion's validity is contradicted by the
+    stratum diagnostics, and a chemistry-marginal statistic beating a
+    pairing-sensitive one on a WL-histogram criterion is the expected artefact,
+    not a performance measurement.
+  - >-
+    Re-run G0.3 with a patch-size floor, a graded statistic, a relaxed
+    threshold, or a different control to unlock Stages 1-4 in this round.
+    Rejected: that is an unpreregistered rescue of a failed frozen gate; it must
+    be a new pre-registration with its own frozen thresholds.
+  - >-
+    Run Stages 1-4 anyway 'for information' and report them as diagnostics.
+    Rejected: the frozen decision order makes G0.3 a round-stopping gate, the
+    stage budget is a finite scientific resource, and reporting stage results
+    obtained after a frozen FAIL would silently violate the protocol.
+  - >-
+    Buy seed 1 because the failure may be a seed artefact.  Rejected: seed 1 was
+    authorised only after G_attr >= 0.003, which was never measured.
+  - >-
+    Change K, s, the IHT rollout, the reader, lambda or the horizon so that the
+    caches/codes satisfy the continuity gate.  Rejected: explicitly forbidden by
+    the frozen brief, and it would be a rescue selected on the same audit set.
+  - >-
+    Load the official ZINC test split to check whether REAL/INDEP differ on test.
+    Rejected: forbidden; the round stopped before any predictor existed and the
+    test must never drive a decision.
+revisit_if: >-
+  A new pre-registration replaces the continuity criterion as proposed in
+  notes/e2e_dictenv_a1_analysis.md section 5 (>= 10-atom equal-size
+  molecule-disjoint population; graded Spearman criterion with a paired
+  REAL-vs-INDEP contrast instead of an absolute 0.70 bar; scale-invariant
+  angular or norm-matched representation distance; in-gate sanity check that the
+  statistic separates chemistry-blind TOPO from an attribute arm, which it does
+  on graded pairs at 0.128 versus 0.287), or a new pre-registration keeps a
+  binary continuity gate but calibrates its threshold and population on frozen
+  artifacts so that a FAIL is interpretable, or the primary question is re-asked
+  with the continuity audit reported as a diagnostic rather than a
+  round-stopping prerequisite.  Any such round must also declare how it handles
+  the now-repeated evidence that the REAL object is much harder to represent
+  sparsely than the marginal one (K-SVD 0.5174 vs 0.1701).
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_a1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_a1_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_a1_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_a1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_a1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_a1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_a1/decision.json
+  - tracks/ksvd/results/e2e_dictenv_a1/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_a1/assignment_semantics.json
+  - tracks/ksvd/results/e2e_dictenv_a1/dictionary_health.json
+  - tracks/ksvd/results/e2e_dictenv_a1/parameter_accounting.json
+  - tracks/ksvd/results/e2e_dictenv_a1/continuity_audit.json
+  - tracks/ksvd/results/e2e_dictenv_a1/continuity_posthoc.json
+  - tracks/ksvd/results/e2e_dictenv_a1/gate0_stratum_diagnostics.json
+  - tracks/ksvd/code/analyze_e2e_dictenv_a1_gate0_stratum.py
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_a1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_a1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_a1.py
