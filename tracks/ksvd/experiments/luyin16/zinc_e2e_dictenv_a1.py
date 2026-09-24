@@ -2340,6 +2340,8 @@ def report_stage() -> dict[str, Any]:
 
 
 def run_all(device: str = "cuda") -> None:
+    for split in ("train", "valid"):
+        build_cache(split)
     fit_scalers()
     fit_dictionaries()
     for arm in a1.ARMS:
