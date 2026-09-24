@@ -1,0 +1,105 @@
+claim_id: claim-e2e-dictenv-t1-interface-relieves-ceiling-mechanism-lost-20260924
+created: '2026-09-24T06:58:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  Round E2E-DictEnv-T1 (protocol e2e_dictenv_t1, formal-run commit
+  3c13c816cede53e5e03d5933fdada5e908561201, remote NVIDIA A100-SXM4-40GB,
+  seed-0 tuning with a frozen seed-1 confirmation, official test loaded once at
+  the very end for terminal reporting only) answers the v0-ceiling question
+  asymmetrically: the E2E-DictEnv-v0 weak absolute band (M_S = 0.145508) was an
+  INTERFACE/ARCHITECTURE property, not a weak-dictionary-core property, but the
+  interface that relieves it does so by making the dictionary auxiliary.  Only
+  the three pre-registered axes were changed - dictionary->environment interface
+  (A1 pooled64 / A2 slot48 / A3 slot64), reconstruction balance
+  (lambda_0, 0.5 lambda_0, 0.25 lambda_0) and horizon (240, conditional 320) -
+  with K=32, s=8, IHT=10, the SDB-v0 K-SVD D init
+  (sha256 925d573a58083c3c20f36980dec9bba77dff592b30ea1abf11098ca3a7b7487a) and
+  the tied coding operator untouched; exactly 6 new full Sparse tuning runs plus
+  the paired seed-1 Sparse/DenseTied confirmation were spent (pre-registered
+  budget).  Stage-A fixed Top-5 soup official-valid MAE: A1 0.128383 (pooled64,
+  params 66067, raw-interface diagonal), A2 0.126436 (slot48, 66132), A3 0.129966
+  (slot64, 66219), all far better than v0 0.145508, so the pre-registered
+  INTERFACE_UPGRADE_NO_MATERIAL_GAIN case did not trigger and root-relative shell
+  localisation (slot) beat the pooled sum.  A1 was
+  health-INELIGIBLE with an exact pathology: after one real backward pass
+  ||d L_task / d D|| = 0 for the pooled interface, versus 0.0795 (A2) and 0.0339
+  (A3), i.e. the task loss is detached from the dictionary at the interface.
+  Stage-B on the A2 winner: lambda 0.5x -> 0.125997, lambda 0.25x -> 0.125765,
+  both better than B0 0.126436 (the reconstruction term was over-weighted, but
+  the effect is sub-0.001 and minor next to the interface axis); all arms health
+  PASS.  Stage-C was triggered (best epoch 234) and ran horizon 320 -
+  0.125522 versus 0.125765, delta_240_minus_320 = 0.000243 < 0.001, so horizon
+  240 was adopted.  Frozen config e2e_dictenv_t1_a2_lam0.25_h240: A2
+  A2_COARSE146_SLOT48, lambda_rec 33.95873017865987 (0.25 lambda_0), 240 epochs,
+  66132 parameters; tuned seed-0 soup 0.125765, a material +0.019743 over v0
+  (0.145508), inside the pre-registered Breakthrough band (<= 0.130) and 0.004657
+  below the FEC-S1 static-composition anchor 0.130422.  The frozen seed-1
+  confirmation replicates specificity: Sparse soup 0.125496 versus DenseTied
+  0.131315, G_sparse^seed1 = +0.005819 >= 0.003 (PASS).  BUT the pre-registered
+  mechanism layer fails.  Dictionary health passes on every tag (exact top-8,
+  27-29/32 active atoms, effective rank 8.7-12.1, valid reconstruction
+  1.1-1.9e-4, nonzero task gradient to D), yet the behavioural interventions
+  collapse relative to v0: neutralising the dictionary coordinate (alpha -> 0,
+  coarse146 / chemistry / backend kept) gives M_zero = 0.143668 and
+  G_dict-use = +0.017903 (v0: 1.000347 / +0.854839, a 48x collapse), and the
+  5-permutation assignment shuffle gives M_shuffle = 0.133393 and
+  G_assign = +0.007628, BELOW the frozen 0.010 gate (per-permutation
+  0.131568-0.134558; v0: +0.017289).  The cause is the authorised interface
+  itself: the environment decoder input is z_i = [x_i^146 ; m_i^D] with
+  E = env_mlp(z), so zeroing the dictionary code leaves the exact 146-D FEC-S0
+  coarse chemistry descriptor intact and the reader can still predict well
+  (mean prediction shift on alpha -> 0 is only 0.0621 versus v0's 0.981).
+  Frozen verdict, case 4 of the pre-registered table (precedence over the
+  absolute-gain and specificity cases):
+  E2E_DICTENV_TUNED_MECHANISM_LOST.  Reading: the 0.145 ceiling was an
+  interface property, not a core weakness - a weak core cannot explain a
+  +0.0197 move with the dictionary, K, s, IHT and init untouched - but the
+  cheapest interface relief found inside the authorised budget buys accuracy by
+  routing information around the dictionary, so no dictionary-core success may
+  be claimed.  Two transferable sub-findings: task-coupling of D is controlled
+  at the interface (pooled -> dL/dD = 0 exactly), and structural health is not
+  behavioural load-bearing (the tuned model passes every health gate while
+  barely using the dictionary).
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_t1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_t1_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_t1_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_t1_analysis.md
+  - tracks/ksvd/notes/e2e_dictenv_t1_test_read.md
+  - tracks/ksvd/results/e2e_dictenv_t1/parameter_audit.json
+  - tracks/ksvd/results/e2e_dictenv_t1/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_a_a1.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_a_a2.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_a_a3.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_b_lambda050.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_b_lambda025.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_c_horizon320.json
+  - tracks/ksvd/results/e2e_dictenv_t1/tuning_decision.json
+  - tracks/ksvd/results/e2e_dictenv_t1/architecture_freeze.json
+  - tracks/ksvd/results/e2e_dictenv_t1/final_sparse_seed1.json
+  - tracks/ksvd/results/e2e_dictenv_t1/final_dense_seed1.json
+  - tracks/ksvd/results/e2e_dictenv_t1/mechanism_zero.json
+  - tracks/ksvd/results/e2e_dictenv_t1/mechanism_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_t1/dictionary_health.json
+  - tracks/ksvd/results/e2e_dictenv_t1/decision.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_t1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_t1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_t1.py
+
+caveats:
+  single_tuning_seed: true
+  gpu_not_bit_deterministic: true
+  gpu_heterogeneous_stage_a: >-
+    A1 ran on a GPU0 contended by a foreign ~37 GB / ~100% job; A2/A3/B/C and
+    the seed-1 confirmation ran on GPU1 (foreign ~35 GB / ~0%).  Wall-clock is
+    not a cross-candidate comparator; valid MAE is.
+  coarse_146_channel_shared_by_all_stage_a_candidates: >-
+    the gain cannot be attributed separately to "exposing coarse chemistry" vs
+    "slot width/mode" from within Stage A; the v0->T1 mechanism collapse is the
+    evidence for the coarse-pathway interpretation.
+  shuffle_gate_miss_is_marginal_in_absolute_terms: >-
+    0.007628 vs 0.010 (-0.0024), but the collapse relative to v0 (0.017289 ->
+    0.007628) is far larger than execution noise and is corroborated by the
+    independent 48x G_dict-use collapse.

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import torch
 from torch_geometric.data import Data
@@ -9,6 +11,7 @@ from torch_geometric.data import Data
 from tracks.ksvd.code.graph import from_edges
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_v0 as e2e_v0
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_t1 as t1
+from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_t1 as runner
 
 
 def _synthetic_data(n: int, edges: list[tuple[int, int]], *, seed: int = 0):
@@ -219,3 +222,74 @@ def test_env_collate_offsets_occurrences():
     assert int(batch.env_occ_node[occ_first:].min()) >= first
     assert int(batch.env_occ_root.max()) == int(batch.num_nodes) - 1
     assert batch.patch_cont.shape[1] == t1.COARSE_DIM
+
+
+# ---------------------------------------------------------------------------
+# tuning orchestration (per-candidate parallel runs)
+# ---------------------------------------------------------------------------
+
+
+def _fake_stage_a_payload(candidate_id: str, soup: float, best: float, epoch: int) -> dict:
+    return {
+        "candidate_id": candidate_id,
+        "lambda_rec": 135.83,
+        "soup": {"soup_valid_mae": soup, "soup_valid_rec": 1e-4, "members": [epoch - 4, epoch - 2, epoch, epoch + 2, epoch + 4]},
+        "best_valid_mae": best,
+        "best_epoch": epoch,
+        "train_mae_at_best": 0.09,
+        "wall_clock_s": 1000.0,
+        "parameter_accounting": {"whole_model": 66132},
+    }
+
+
+def test_stage_a_rows_follow_candidate_order_and_select_min(monkeypatch, tmp_path):
+    monkeypatch.setattr(runner, "RESULTS_DIR", tmp_path)
+    for key, soup, best, epoch in [("a3", 0.130, 0.140, 100), ("a1", 0.124, 0.130, 90), ("a2", 0.126, 0.135, 95)]:
+        (tmp_path / f"stage_a_{key}.json").write_text(json.dumps(_fake_stage_a_payload(key.upper(), soup, best, epoch)))
+    rows = runner._stage_a_rows()
+    assert [row["candidate_key"] for row in rows] == ["a1", "a2", "a3"]
+    monkeypatch.setattr(runner, "_health_gate_ok", lambda *_a, **_k: True)
+    selection = runner.resolve_stage_a()
+    assert selection["winner"] == "a1"
+    monkeypatch.setattr(runner, "_health_gate_ok", lambda key, *_a, **_k: key == "a3")
+    assert runner.resolve_stage_a()["winner"] == "a3"
+
+
+def test_stage_a_only_trains_one_candidate(monkeypatch, tmp_path):
+    monkeypatch.setattr(runner, "RESULTS_DIR", tmp_path)
+    calls: list[str] = []
+
+    def _fake_train_run(arm, candidate_key, seed, lambda_rec, epochs, tag, device, *args, **kwargs):
+        calls.append(tag)
+        (tmp_path / f"{tag}.json").write_text(json.dumps(_fake_stage_a_payload(candidate_key.upper(), 0.12, 0.13, 100)))
+        return json.loads((tmp_path / f"{tag}.json").read_text())
+
+    monkeypatch.setattr(runner, "train_run", _fake_train_run)
+    runner.stage_a_stage(device="cpu", only="a2")
+    assert calls == ["stage_a_a2"]
+    assert not (tmp_path / "stage_a_summary.json").exists()
+    runner.stage_a_stage(device="cpu")
+    assert calls == ["stage_a_a2", "stage_a_a1", "stage_a_a2", "stage_a_a3"]
+    assert (tmp_path / "stage_a_summary.json").exists()
+
+
+def test_stage_b_only_trains_one_arm_and_reads_per_tag_files(monkeypatch, tmp_path):
+    monkeypatch.setattr(runner, "RESULTS_DIR", tmp_path)
+    (tmp_path / "stage_a_a2.json").write_text(json.dumps(_fake_stage_a_payload("A2_COARSE146_SLOT48", 0.126, 0.131, 237)))
+    monkeypatch.setattr(runner, "_health_gate_ok", lambda *_a, **_k: True)
+    calls: list[str] = []
+
+    def _fake_train_run(arm, candidate_key, seed, lambda_rec, epochs, tag, device, *args, **kwargs):
+        calls.append(tag)
+        payload = _fake_stage_a_payload(candidate_key.upper(), 0.125, 0.132, 234)
+        payload["soup"]["soup_valid_rec"] = 1.4e-4
+        (tmp_path / f"{tag}.json").write_text(json.dumps(payload))
+        return payload
+
+    monkeypatch.setattr(runner, "train_run", _fake_train_run)
+    runner.stage_b_stage(device="cpu", only="b2")
+    assert calls == ["stage_b_lambda025"]
+    resolved = runner.resolve_stage_b()
+    assert resolved["winner"] == "a2"
+    assert [row["tag"] for row in resolved["rows"]] == ["stage_a_a2", "stage_b_lambda025"]
+    assert resolved["chosen"]["tag"] == "stage_b_lambda025"

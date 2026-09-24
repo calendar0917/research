@@ -1,0 +1,194 @@
+decision_id: decision-e2e-dictenv-t1-stop-mechanism-lost-20260924
+created: '2026-09-24T06:58:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  E2E-DictEnv-v0 established that a task-coupled sparse pure-topology dictionary
+  can be the only fine-grained learned structural coordinate of a
+  no-message-passing environment model, that it is dictionary-specific
+  (G_sparse = +0.1675 over a parameter-identical dense tied coordinate) and
+  assignment-mediated (G_assign = +0.0173, G_dict-use = +0.8548), but that its
+  absolute band is weak (M_S = 0.145508, just above the 0.145 viable boundary).
+  T1 asked the single diagnostic question: is that ceiling caused by a weak
+  dictionary core, or by an unnecessarily compressed dictionary->environment
+  interface and an over-constrained reconstruction/task balance?  Only three
+  axes were authorised (interface, lambda, horizon) with a hard budget of 6 new
+  full Sparse runs.
+protocol: >-
+  Local-first implementation with targeted CPU tests, preregistration frozen
+  before any run, then remote A100 execution under the remote-research-runner
+  workflow at commit 3c13c816cede53e5e03d5933fdada5e908561201.  Frozen backend
+  identical to v0 (phi65 FSAR-R2-AR0, K=32, s=8, 10 unrolled tied-IHT steps,
+  SDB-v0 K-SVD D init, tied encode/reconstruct, task-coupled D, no message
+  passing / recurrence / attention / pair->centre / relation refresh / typed
+  lookup).  The environment decoder input becomes z_i = [x_i^146 ; m_i^D], where
+  x_i^146 is the exact FEC-S0 factorized train-fit-standardized 146-D coarse
+  chemistry descriptor (checked by gate G0b, max_abs 0.0) and m_i^D is the
+  dictionary->environment code; v0's separate 16-D bond marginal is removed
+  because bond chemistry is already in x_i^146.  Stage A: A1 pooled64 (z 210),
+  A2 slot48 (z 290), A3 slot64 (z 338).  Stage B: lambda_0 = 135.834928 and
+  0.5x / 0.25x.  Stage C: conditional 320 epochs.  Training: Adam 1e-3, wd 1e-5,
+  batch 128, L1 + lambda_rec * normalized reconstruction, clip 5, no scheduler,
+  240 epochs, fixed Top-5 soup, seed 0.  Official valid = tuning set; official
+  test = terminal reporting only, loaded exactly once after the freeze.  All 32
+  correctness sub-gates PASS; CPU suites 15/15.  Operational note: the first
+  monolithic launch was split so independent tuning runs could use both A100s
+  (runner extended with --only); a leaked orphan process from the aborted first
+  launch was detected via nvidia-smi and killed, and A3 was restarted from
+  scratch on the idle GPU1 after GPU0 proved contended.
+results:
+  implementation_commit: 6cc5ab19ebd6a9ebde347ae3c2ef36895e595857
+  formal_run_commit: 3c13c816cede53e5e03d5933fdada5e908561201
+  device: NVIDIA A100-SXM4-40GB (a1 GPU0-contended; a2/a3/b/c/confirm GPU1)
+  seed_tuning: 0
+  seed_confirmation: 1
+  parameter_audit: {a1: 66067, a2: 66132, a3: 66219, backend: 15359, fec_s1_reference: 66170}
+  correctness_gates_all_passed: true
+  stage_a:
+    a1_pooled64: {soup_valid: 0.128383, best_valid: 0.134283, best_epoch: 201, health: false, failed_gate: task_gradient_to_d, task_grad_to_D: 0.0}
+    a2_slot48:   {soup_valid: 0.126436, best_valid: 0.131860, best_epoch: 237, health: true, task_grad_to_D: 0.0795363}
+    a3_slot64:   {soup_valid: 0.129966, best_valid: 0.135920, best_epoch: 228, health: true, task_grad_to_D: 0.033896}
+    winner: a2
+    eligible: [a2, a3]
+  stage_b:
+    b0_a2:          {lambda_rec: 135.834928, soup_valid: 0.126436}
+    b1_lambda050:   {lambda_rec: 67.917464, soup_valid: 0.125997}
+    b2_lambda025:   {lambda_rec: 33.958732, soup_valid: 0.125765}
+    chosen: stage_b_lambda025
+  stage_c:
+    triggered: true
+    horizon320_soup_valid: 0.1255223331739544
+    horizon320_best_epoch: 310
+    delta_240_minus_320: 0.0002426711916923563
+    adopted: false
+    adopted_horizon: 240
+  frozen_config:
+    config_id: e2e_dictenv_t1_a2_lam0.25_h240
+    candidate: a2 / A2_COARSE146_SLOT48
+    lambda_rec: 33.95873017865987
+    horizon: 240
+    parameter_count: 66132
+    D_init_sha256: f31350865f3f27064f3490263dd7a59e5b8cb26aef6610ef32bd08e14fe42f09
+    architecture_source_sha256: 2915d9657ac6d371cc37c024e93e0e0a171999a41df14b064cd0e7f3ae6e92f6
+    seed0_soup_state_sha256: 952337b71d5d747e4a5693dadd529ecd6d254bdca72a0c0f9ca489421dba7637
+    soup_members: [170, 212, 217, 234, 240]
+    official_test_loaded_at_freeze_time: false
+  tuned_seed0_soup_valid: 0.125765
+  band: Breakthrough (<= 0.130); code band field "strong" (<= 0.135 prefix)
+  improvement_vs_v0: 0.019743
+  fec_s1_anchor: 0.13042183499777457
+  tuned_minus_anchor: -0.004657
+  material_improvement: true
+  seed1_confirmation:
+    sparse_soup_valid: 0.125496
+    dense_tied_soup_valid: 0.131315
+    G_sparse_seed1: 0.005819392208009949
+    G_sparse_seed1_gate: 0.003
+    G_sparse_seed1_pass: true
+  mechanism:
+    M_S: 0.125765
+    M_zero: 0.143668
+    G_dict_use: 0.017903
+    G_dict_use_gate: 0.01
+    G_dict_use_pass: true
+    G_dict_use_vs_v0: -0.836936
+    M_shuffle_mean: 0.133393
+    G_assign: 0.007628
+    G_assign_gate: 0.01
+    G_assign_pass: false
+    G_assign_vs_v0: -0.009661
+    shuffle_seed_mae: {101: 0.133423, 202: 0.134558, 303: 0.131568, 404: 0.134083, 505: 0.133335}
+  dictionary_health_all_passed: true
+  verdict: E2E_DICTENV_TUNED_MECHANISM_LOST
+  official_test_loaded: true
+decision: >-
+  STOP E2E-DictEnv-T1 with frozen verdict E2E_DICTENV_TUNED_MECHANISM_LOST
+  (pre-registered case 4, precedence over the Breakthrough absolute band and the
+  seed-1 specificity pass).  Record the answer to the diagnostic question - the
+  0.145 ceiling was an interface/architecture property, not a weak dictionary
+  core - together with the mechanism loss: the authorised interface (exact
+  146-D coarse chemistry exposed alongside the dictionary code) gives the reader
+  a dictionary-independent pathway, so the dictionary is no longer load-bearing.
+  Do NOT claim a dictionary-core success for the tuned configuration, do NOT
+  reinterpret the accuracy gain as a dictionary win, and do NOT buy a rescue
+  (K/s/IHT/LISTA/dictionary-count/attention/MP/recurrence/reader/optimizer
+  change, no 400/500-epoch run, no new lambda).  The round is closed; any next
+  step requires a new preregistration.
+because: >-
+  The absolute result is unambiguous and large: moving only interface, lambda and
+  horizon lifted the fixed Top-5 soup official-valid MAE from v0's 0.145508 to
+  0.125765 (+0.019743), into the pre-registered Breakthrough band and 0.004657
+  below the FEC-S1 static-composition anchor, with K, s, IHT, the K-SVD D init
+  and the tied coding operator untouched - a weak dictionary core cannot explain
+  that, so the ceiling was architectural.  The frozen seed-1 pair also confirms
+  specificity (Sparse 0.125496 vs DenseTied 0.131315, G = +0.005819 >= 0.003).
+  However the pre-registered mechanism layer, which the decision table places
+  first, fails: neutralising the dictionary coordinate costs only +0.017903 MAE
+  (v0: +0.854839) and the 5-permutation assignment shuffle costs only +0.007628
+  (below the 0.010 gate; v0: +0.017289), while dictionary health passes on every
+  tag.  The mechanism is visible in the architecture: the decoder input is
+  z_i = [x_i^146 ; m_i^D] with E = env_mlp(z), so alpha -> 0 removes only m_i^D
+  and leaves the coarse descriptor, and the model predicts almost as well.  Two
+  sub-findings reinforce this and are worth carrying forward: the pooled
+  interface makes the task loss exactly detached from the dictionary
+  (||dL/dD|| = 0 after a real backward pass, versus 0.0795/0.0339 for the slot
+  candidates), and structural health is not behavioural load-bearing (a fully
+  health-PASS dictionary whose removal barely changes the output).  Recording
+  the mechanism loss rather than the headline number keeps the round's claim
+  honest and preserves the v0 dictionary-core finding as the reference.
+alternatives_rejected:
+  - >-
+    Reporting the tuned configuration as a dictionary-core success because it
+    reached the Breakthrough band and passed the seed-1 specificity gate.
+    Rejected: the pre-registered precedence runs mechanism loss first; a
+    dictionary whose removal costs 0.018 MAE is not the predictive core.
+  - >-
+    Reinterpreting G_dict-use = 0.017903 as still "load-bearing" because it is
+    above the 0.010 gate while treating G_assign = 0.007628 as a marginal miss.
+    Rejected: the two interventions are independent and agree, and the 48x
+    collapse against v0 is far outside execution noise; the honest label is
+    mechanism loss with a marginal absolute shuffle margin.
+  - >-
+    Running more seeds or a 400/500-epoch run to try to restore the mechanism or
+    push the absolute number further.  Rejected: forbidden by the frozen budget
+    and stop rule; the budget (6 Sparse runs) is spent.
+  - >-
+    Rescuing load-bearing by re-weighting lambda or shrinking the coarse channel
+    after seeing these results.  Rejected: that is a new architecture question,
+    not an authorised change, and would be tuned on the same valid set.
+revisit_if: >-
+  A new preregistration asks either (a) for an interface that keeps the coarse
+  signal's accuracy but forces the reader's prediction through the dictionary
+  coordinate (so that alpha -> 0 and assignment shuffle are destructive by
+  construction), with the mechanism gates rather than MAE as the primary success
+  criterion; or (b) whether the coarse-chemistry interface alone (dictionary
+  removed) is simply a stronger backbone, in which case whether to keep the
+  dictionary becomes an explicit engineering trade rather than a mechanism
+  claim.  Neither is authorised by E2E-DictEnv-T1.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_t1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_t1_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_t1_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_t1_analysis.md
+  - tracks/ksvd/notes/e2e_dictenv_t1_test_read.md
+  - tracks/ksvd/results/e2e_dictenv_t1/parameter_audit.json
+  - tracks/ksvd/results/e2e_dictenv_t1/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_a_a1.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_a_a2.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_a_a3.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_b_lambda050.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_b_lambda025.json
+  - tracks/ksvd/results/e2e_dictenv_t1/stage_c_horizon320.json
+  - tracks/ksvd/results/e2e_dictenv_t1/tuning_decision.json
+  - tracks/ksvd/results/e2e_dictenv_t1/architecture_freeze.json
+  - tracks/ksvd/results/e2e_dictenv_t1/final_sparse_seed1.json
+  - tracks/ksvd/results/e2e_dictenv_t1/final_dense_seed1.json
+  - tracks/ksvd/results/e2e_dictenv_t1/mechanism_zero.json
+  - tracks/ksvd/results/e2e_dictenv_t1/mechanism_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_t1/dictionary_health.json
+  - tracks/ksvd/results/e2e_dictenv_t1/decision.json
+  - tracks/ksvd/results/e2e_dictenv_t1/official_test_unlock.json
+  - tracks/ksvd/results/e2e_dictenv_t1/official_test_results.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_t1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_t1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_t1.py
