@@ -2239,11 +2239,18 @@ def decision_stage() -> dict[str, Any]:
     return payload
 
 
+def _maybe_read(name: str) -> dict[str, Any] | None:
+    path = RESULTS_DIR / name
+    return _read_json(path) if path.exists() else None
+
+
 def report_stage() -> dict[str, Any]:
+    """Markdown report; every section is optional so a Gate-0 stop still reports."""
     decision = _read_json(RESULTS_DIR / "decision.json")
-    continuity = _read_json(RESULTS_DIR / "continuity_audit.json")
-    diagnostic = _read_json(RESULTS_DIR / "iht_diagnostic.json")
-    health = _read_json(RESULTS_DIR / "dictionary_health.json")
+    continuity = _maybe_read("continuity_audit.json")
+    posthoc = _maybe_read("continuity_posthoc.json")
+    diagnostic = _maybe_read("iht_diagnostic.json")
+    health = _maybe_read("dictionary_health.json")
     lines = [
         "# E2E-DictEnv-A1 — report",
         "",
@@ -2254,35 +2261,94 @@ def report_stage() -> dict[str, Any]:
         f"* assignment semantics passed: {decision['gate0']['assignment_passed']}",
         f"* continuity: REAL code-space AUC {decision['gate0']['continuity_code_auc']:.4f}, "
         f"x-space AUC {decision['gate0']['continuity_x_auc']:.4f}, "
-        f"INDEP code-space AUC {decision['gate0']['continuity_indep_code_auc']:.4f} "
-        f"(pool {continuity['pool']}, near {continuity['near_pairs']})",
+        f"INDEP code-space AUC {decision['gate0']['continuity_indep_code_auc']:.4f}"
+        + (
+            f" (pool {continuity['pool']}, near {continuity['near_pairs']}, "
+            f"threshold {a1.CONTINUITY_AUC_PASS})"
+            if continuity
+            else " (audit artifact missing)"
+        ),
         "",
-        "## Dictionary health (official train, exact OMP)",
+        "## Parameter accounting",
         "",
-        "| arm | dim | rec(fit) | rec(holdout) | random/holdout | used | effective | top1 mass | train-valid rho |",
-        "|---|---|---|---|---|---|---|---|---|",
+        f"* TOPO {a1.total_parameter_count('TOPO')['whole_model']}, "
+        f"INDEP {a1.total_parameter_count('INDEP')['whole_model']}, "
+        f"REAL {a1.total_parameter_count('REAL')['whole_model']} (INDEP == REAL exactly)",
+        "",
     ]
-    for arm in a1.ARMS:
-        entry = health["arms"][arm]
-        lines.append(
-            f"| {arm} | {entry['input_dim']} | {entry['omp_normalized_err_fit']:.3e} | "
-            f"{entry['omp_normalized_err_holdout']:.3e} | {entry['random_over_learned_holdout']:.1f} | "
-            f"{entry['usage_fit']['used_atoms']}/{a1.DICT_K} | {entry['usage_fit']['effective_atom_count']:.2f} | "
-            f"{entry['usage_fit']['top1_mass_share']:.3f} | {entry['train_valid_usage_spearman']:.4f} |"
-        )
-    lines += ["", "## Stage 2 — label-free coder qualification", "", "| arm | OMP | IHT-10 | IHT-30 | IHT-100 | IHT-200 |", "|---|---|---|---|---|---|"]
-    for arm in a1.ARMS:
-        entry = diagnostic["arms"][arm]
-        cells = [f"{entry['omp_normalized_err']:.3e}"] + [
-            f"{entry['steps'][str(steps)]['normalized_err']:.3e}" for steps in a1.IHT_CANDIDATE_STEPS
+    if continuity:
+        lines += [
+            "### G0.3 continuity strata (frozen gate is `REAL` code-space)",
+            "",
+            "| arm | x-space AUC | code-space AUC | graded-tail x AUC | graded-tail code AUC |",
+            "|---|---|---|---|---|",
         ]
-        lines.append(f"| {arm} | " + " | ".join(cells) + " |")
-    lines += [
-        "",
-        f"selected shared IHT step count: **{diagnostic.get('selected_steps')}** "
-        f"(qualified {diagnostic.get('qualified_steps')}, threshold {diagnostic['qualify_max_normalized_err']})",
-        "",
-    ]
+        real, indep = continuity["real"], continuity["indep"]
+        tail = continuity.get("graded_tail") or {}
+        rows = [
+            ("TOPO", None, None, None, None),
+            ("INDEP", indep["x_auc"], indep["code_auc"], tail.get("indep_x_auc"), tail.get("indep_code_auc")),
+            ("REAL", real["x_auc"], real["code_auc"], tail.get("x_auc"), tail.get("code_auc")),
+        ]
+        posthoc_by_arm = (posthoc or {}).get("arms", {})
+        for arm, x_auc, code_auc, tail_x, tail_code in rows:
+            if x_auc is None and arm in posthoc_by_arm:
+                x_auc = posthoc_by_arm[arm]["near_vs_random_auc_x"]
+                code_auc = posthoc_by_arm[arm]["near_vs_random_auc_code"]
+                tail_x = posthoc_by_arm[arm]["tail_auc_x"]
+                tail_code = posthoc_by_arm[arm]["tail_auc_code"]
+            fmt = lambda value: "n/a" if value is None else f"{value:.4f}"  # noqa: E731
+            lines.append(f"| {arm} | {fmt(x_auc)} | {fmt(code_auc)} | {fmt(tail_x)} | {fmt(tail_code)} |")
+        if posthoc:
+            near = posthoc["near_stratum"]
+            lines += [
+                "",
+                f"Post-hoc stratum diagnostic (not the gate): the frozen near stratum is "
+                f"{'entirely ' if near['all_equal_size'] else ''}equal-size "
+                f"(mean patch size {near['mean_patch_size']:.2f}, range "
+                f"{near['min_patch_size']}-{near['max_patch_size']}), "
+                f"WL cosine >= {near['wl_cosine_min']:.6f}. "
+                f"Sampled-pair Spearman(WL cosine, -distance): REAL x "
+                f"{posthoc['arms']['REAL']['spearman_wl_cosine_vs_neg_xdist']:.3f} / code "
+                f"{posthoc['arms']['REAL']['spearman_wl_cosine_vs_neg_codedist']:.3f}; "
+                f"chemistry-blind TOPO x "
+                f"{posthoc['arms']['TOPO']['spearman_wl_cosine_vs_neg_xdist']:.3f}. "
+                f"Isomorphic control distance: REAL x "
+                f"{posthoc['arms']['REAL']['isomorphic_mean_distance_x']:.2e}.",
+                "",
+            ]
+    if health:
+        lines += [
+            "## Dictionary health (official train, exact OMP)",
+            "",
+            "| arm | dim | rec(fit) | rec(holdout) | random/holdout | used | effective | top1 mass | train-valid rho |",
+            "|---|---|---|---|---|---|---|---|---|",
+        ]
+        for arm in a1.ARMS:
+            entry = health["arms"][arm]
+            lines.append(
+                f"| {arm} | {entry['input_dim']} | {entry['omp_normalized_err_fit']:.3e} | "
+                f"{entry['omp_normalized_err_holdout']:.3e} | {entry['random_over_learned_holdout']:.1f} | "
+                f"{entry['usage_fit']['used_atoms']}/{a1.DICT_K} | {entry['usage_fit']['effective_atom_count']:.2f} | "
+                f"{entry['usage_fit']['top1_mass_share']:.3f} | {entry['train_valid_usage_spearman']:.4f} |"
+            )
+        lines += [""]
+    if diagnostic:
+        lines += ["## Stage 2 — label-free coder qualification", "", "| arm | OMP | IHT-10 | IHT-30 | IHT-100 | IHT-200 |", "|---|---|---|---|---|---|"]
+        for arm in a1.ARMS:
+            entry = diagnostic["arms"][arm]
+            cells = [f"{entry['omp_normalized_err']:.3e}"] + [
+                f"{entry['steps'][str(steps)]['normalized_err']:.3e}" for steps in a1.IHT_CANDIDATE_STEPS
+            ]
+            lines.append(f"| {arm} | " + " | ".join(cells) + " |")
+        lines += [
+            "",
+            f"selected shared IHT step count: **{diagnostic.get('selected_steps')}** "
+            f"(qualified {diagnostic.get('qualified_steps')}, threshold {diagnostic['qualify_max_normalized_err']})",
+            "",
+        ]
+    else:
+        lines += ["## Stage 2 — not reached (Gate 0 stop)", ""]
     if decision.get("stage3_e2e"):
         stage3 = decision["stage3_e2e"]
         lines += [
