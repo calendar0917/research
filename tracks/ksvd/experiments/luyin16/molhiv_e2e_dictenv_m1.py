@@ -1695,13 +1695,23 @@ def run_all(device: str = "cuda") -> None:
     analyze_stage()
 
 
+def prep(device: str = "cpu") -> dict[str, Any]:
+    """Deterministic CPU preprocessing chain (dictionary -> env -> stats -> lambda -> gates)."""
+    fit_dictionary()
+    build_env_cache("train")
+    build_env_cache("valid")
+    fit_anchor_stats(seed=0)
+    calibrate_lambda(seed=0)
+    return correctness(device=device)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "stage",
         nargs="?",
         default="all",
-        choices=["dict", "env", "stats", "calibrate", "identity", "correct", "smoke", "bench", "train", "freeze", "analyze", "unlock", "all"],
+        choices=["dict", "env", "stats", "calibrate", "identity", "correct", "prep", "smoke", "bench", "train", "freeze", "analyze", "unlock", "all"],
     )
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--seed", type=int, default=0)
@@ -1720,6 +1730,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(identity_stage(), indent=2))
     elif args.stage == "correct":
         print(json.dumps(correctness_stage(device="cpu"), indent=2))
+    elif args.stage == "prep":
+        print(json.dumps(prep(device=args.device), indent=2))
     elif args.stage == "smoke":
         print(json.dumps(smoke_stage(device=args.device, seed=args.seed), indent=2))
     elif args.stage == "bench":
