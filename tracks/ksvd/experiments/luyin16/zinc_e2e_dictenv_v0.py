@@ -1234,9 +1234,9 @@ def train_stage(arm: str, device: str = "cuda", seed: int = 0) -> dict[str, Any]
     soup_model.load_state_dict(soup_state)
     soup_valid = evaluate(soup_model.to(device_obj), eval_loader, device_obj)
 
-    dbar_init = e2e.normalized_dictionary(reference_model.D.detach()).numpy()
-    dbar_best = e2e.normalized_dictionary(best_model.D.detach()).numpy()
-    dbar_soup = e2e.normalized_dictionary(soup_model.D.detach()).numpy()
+    dbar_init = e2e.normalized_dictionary(reference_model.D.detach()).cpu().numpy()
+    dbar_best = e2e.normalized_dictionary(best_model.D.detach()).cpu().numpy()
+    dbar_soup = e2e.normalized_dictionary(soup_model.D.detach()).cpu().numpy()
 
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     torch.save(best_state, STATE_DIR / f"{arm}_seed{seed}_selection_state.pt")
