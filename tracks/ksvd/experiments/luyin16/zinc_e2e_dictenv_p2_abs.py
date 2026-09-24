@@ -57,6 +57,18 @@ P1_SOUP = 0.13197501279687276
 T1_SOUP = 0.125765
 FEC_S1_SOUP = 0.13042183499777457
 
+# Pre-registered durable artifact names (preregistration section 15).
+RUN_ARTIFACT = {
+    "Z1": "stage_a_h320.json",
+    "Z2": "stage_a_lambda0125.json",
+    "Z3": "stage_a_lambda00625.json",
+    "H1": "stage_b_h1.json",
+    "H2": "stage_b_h2.json",
+    "E64": "stage_c_edge64.json",
+    "K64S8": "stage_d_k64s8.json",
+    "K64S12": "stage_d_k64s12.json",
+}
+
 _write_json = v0run._write_json
 _read_json = v0run._read_json
 _write_csv = v0run._write_csv
@@ -263,14 +275,86 @@ def _state_sha256(state: Mapping[str, torch.Tensor]) -> str:
     return digest.hexdigest()
 
 
+def candidate_gate(config: p2.P2Config, device: str = "cpu") -> dict[str, Any]:
+    """Cheap per-candidate integrity gate required by pre-registration section 8."""
+    import ast
+
+    path = RESULTS_DIR / "gates" / f"{config.tag.upper()}_gate.json"
+    if path.exists():
+        return _read_json(path)
+    device_obj = torch.device(device)
+    D, dict_sha = load_dictionary(config.dict_kind)
+    model = p2.build_model(config, D, seed=0).to(device_obj)
+    batch = p1run._first_batch(p1run.load_split("train", subset=32), device_obj, 32)
+    model.train()
+    model.zero_grad(set_to_none=True)
+    prediction, aux = model(batch, return_aux=True)
+    loss = F.l1_loss(prediction.view(-1), batch.y.view(-1)) + lambda_for(config) * model.reconstruction_loss(
+        aux["phi"], aux["coord"]
+    )
+    loss.backward()
+    grad_d = float(model.D.grad.norm()) if model.D.grad is not None else 0.0
+    with torch.no_grad():
+        alpha = model.code(batch.dict_phi)
+    l0 = (alpha.abs() > 0).sum(dim=1)
+    active = int((alpha.abs() > 0).any(dim=0).sum())
+    names: set[str] = set()
+    for module in (p2,):
+        tree = ast.parse(Path(module.__file__).read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Attribute):
+                names.add(node.attr)
+            elif isinstance(node, ast.Name):
+                names.add(node.id)
+    forbidden = sorted(names & {"patch_cont", "atom_shell", "bond_shell", "path_bond_mean", "adjacent_bond_type"})
+    total = p2.total_parameter_count(config)
+    actual = int(sum(p.numel() for p in model.parameters()))
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "git_commit": _git_commit(),
+        "candidate": config.tag.upper(),
+        "config": config.as_dict(),
+        "dictionary_sha256": dict_sha,
+        "loss_finite": bool(torch.isfinite(loss)),
+        "task_gradient_to_D": grad_d,
+        "exact_top_s": bool(int(l0.max()) <= int(config.s)),
+        "max_l0": int(l0.max()),
+        "active_atoms_on_batch": active,
+        "dictionary_not_collapsed": bool(active >= 8),
+        "forbidden_names": forbidden,
+        "parameters_accounted": total["whole_model"],
+        "parameters_actual": actual,
+        "within_budget": bool(total["within_budget"] and actual == total["whole_model"]),
+        "no_message_passing": True,
+        "no_recurrence": True,
+        "official_test_loaded": False,
+    }
+    payload["passed"] = bool(
+        payload["loss_finite"]
+        and grad_d > 0.0
+        and payload["exact_top_s"]
+        and payload["dictionary_not_collapsed"]
+        and not forbidden
+        and payload["within_budget"]
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    _write_json(path, payload)
+    if not payload["passed"]:
+        raise RuntimeError(f"candidate gate failed for {config.tag}: {payload}")
+    print(f"[gate:{config.tag.upper()}] passed grad_D={grad_d:.4f} active={active}", flush=True)
+    return payload
+
+
 def train_candidate(name: str, device: str = "cuda") -> dict[str, Any]:
     config = resolve_candidate(name)
-    run_path = RESULTS_DIR / f"{config.tag.upper()}.json"
-    if run_path.exists():
-        return _read_json(run_path)
+    _canonicalize_run(config.tag)
+    run_path_ = run_path(config.tag)
+    if run_path_.exists():
+        return _read_json(run_path_)
     device_obj = torch.device(device)
     if config.K == 64:
         fit_dictionary_k64(config.s)
+    candidate_gate(config, device="cpu")
     D, dict_sha = load_dictionary(config.dict_kind)
     lam = lambda_for(config)
     train_data = p1run.load_split("train")
@@ -380,7 +464,7 @@ def train_candidate(name: str, device: str = "cuda") -> dict[str, Any]:
         "peak_gpu_memory_mb": float(torch.cuda.max_memory_allocated(device_obj) / (1024 ** 2)) if device_obj.type == "cuda" else None,
         "official_test_loaded": False,
     }
-    _write_json(run_path, payload)
+    _write_json(run_path_, payload)
     print(
         f"[{config.tag}] best={best_mae:.6f}@{best_epoch} soup={float(soup_valid['mae']):.6f} "
         f"members={members} wall={wall:.1f}s",
@@ -394,10 +478,26 @@ def train_candidate(name: str, device: str = "cuda") -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _canonicalize_run(tag: str) -> None:
+    """Mirror a pre-rename run JSON onto its pre-registered artifact name."""
+    tag = str(tag).upper()
+    target = RESULTS_DIR / RUN_ARTIFACT.get(tag, f"{tag}.json")
+    legacy = RESULTS_DIR / f"{tag}.json"
+    if not target.exists() and legacy.exists():
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(legacy.read_bytes())
+
+
+def run_path(tag: str) -> Path:
+    tag = str(tag).upper()
+    return RESULTS_DIR / RUN_ARTIFACT.get(tag, f"{tag}.json")
+
+
 def _soup_of(tag: str) -> float:
     if tag.upper() == "Z0":
         return float(P1_SOUP)
-    path = RESULTS_DIR / f"{tag.upper()}.json"
+    _canonicalize_run(tag)
+    path = run_path(tag)
     if not path.exists():
         raise RuntimeError(f"run {tag} missing")
     return float(_read_json(path)["soup"]["soup_valid_mae"])
@@ -468,7 +568,8 @@ def select_stage_d() -> dict[str, Any]:
 def finalize() -> dict[str, Any]:
     winner = _stage_selection("stage_d_selection")["winner"]
     config = _config_by_tag(winner)
-    run = _read_json(RESULTS_DIR / f"{config.tag.upper()}.json") if config.tag.upper() != "Z0" else None
+    _canonicalize_run(config.tag)
+    run = _read_json(run_path(config.tag)) if config.tag.upper() != "Z0" else None
     D, sha = load_dictionary(config.dict_kind)
     payload = {
         "protocol_version": PROTOCOL_VERSION,
