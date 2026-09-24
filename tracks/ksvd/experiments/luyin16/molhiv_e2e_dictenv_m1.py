@@ -248,7 +248,7 @@ def _env_cache_path(split: str) -> Path:
     return CACHE_DIR / f"env_{split}.pt"
 
 
-def build_env_cache(force: bool = False) -> dict[str, Any]:
+def build_env_cache(*, force: bool = False) -> dict[str, Any]:
     bundle = _load_bundle()
     exports: dict[str, Any] = {}
     for split in ("train", "valid"):
@@ -1699,8 +1699,7 @@ def run_all(device: str = "cuda") -> None:
 def prep(device: str = "cpu") -> dict[str, Any]:
     """Deterministic CPU preprocessing chain (dictionary -> env -> stats -> lambda -> gates)."""
     fit_dictionary()
-    build_env_cache("train")
-    build_env_cache("valid")
+    build_env_cache()
     fit_anchor_stats(seed=0)
     calibrate_lambda(seed=0)
     return correctness(device=device)
