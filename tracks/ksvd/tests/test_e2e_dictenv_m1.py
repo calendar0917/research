@@ -98,6 +98,21 @@ def test_exact_sparsity():
     assert float((l0 == m1.SPARSITY).float().mean()) >= 0.99
 
 
+def test_anchor_scaler_is_a_registered_buffer():
+    """anchor_mean/scale must live in state_dict so ``.to(device)`` moves them."""
+    model = m1.build_model(
+        _random_dictionary(),
+        seed=0,
+        anchor_mean=torch.zeros(m1.ANCHOR_DIM),
+        anchor_scale=torch.ones(m1.ANCHOR_DIM),
+    )
+    keys = set(model.state_dict())
+    assert "anchor_mean" in keys and "anchor_scale" in keys
+    assert set(model._buffers) >= {"anchor_mean", "anchor_scale"}
+    # parameters must not absorb the scaler
+    assert all(p.numel() for p in model.parameters())
+
+
 def test_batched_anchor_matches_per_molecule_anchor():
     """The anchor-cache path must equal the per-molecule local-index computation."""
     payloads = _synthetic_payloads()

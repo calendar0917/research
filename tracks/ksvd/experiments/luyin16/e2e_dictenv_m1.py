@@ -258,7 +258,9 @@ def fit_anchor_scaler(anchor_raw: torch.Tensor, floor: float = 1.0e-6) -> tuple[
 
 
 def standardize_anchor(anchor_raw: torch.Tensor, mean: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
-    return (anchor_raw - mean.to(anchor_raw.dtype)) / scale.to(anchor_raw.dtype)
+    dtype = anchor_raw.dtype
+    device = anchor_raw.device
+    return (anchor_raw - mean.to(device=device, dtype=dtype)) / scale.to(device=device, dtype=dtype)
 
 
 # ---------------------------------------------------------------------------
@@ -580,9 +582,9 @@ def build_model(
     torch.manual_seed(int(seed))
     model = M1Model(dictionary, atom_dims=atom_dims, bond_dims=bond_dims)
     if anchor_mean is not None:
-        model.anchor_mean = anchor_mean.detach().to(torch.float32).clone()
+        model.register_buffer("anchor_mean", anchor_mean.detach().to(torch.float32).clone())
     if anchor_scale is not None:
-        model.anchor_scale = anchor_scale.detach().to(torch.float32).clone()
+        model.register_buffer("anchor_scale", anchor_scale.detach().to(torch.float32).clone())
     return model
 
 
