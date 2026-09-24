@@ -1,0 +1,221 @@
+"""Focused CPU tests for E2E-DictEnv-T1 (no ZINC, no GPU)."""
+
+from __future__ import annotations
+
+import numpy as np
+import torch
+from torch_geometric.data import Data
+
+from tracks.ksvd.code.graph import from_edges
+from tracks.ksvd.experiments.luyin16 import e2e_dictenv_v0 as e2e_v0
+from tracks.ksvd.experiments.luyin16 import e2e_dictenv_t1 as t1
+
+
+def _synthetic_data(n: int, edges: list[tuple[int, int]], *, seed: int = 0):
+    graph = from_edges(n, edges)
+    edge_types = {graph.edge_key(a, b): (index % t1.v0.BOND_CATEGORIES) for index, (a, b) in enumerate(edges)}
+    incidence = e2e_v0.env_incidence(graph, edge_types)
+    rng = np.random.default_rng(seed)
+    data = Data()
+    data.num_nodes = n
+    data.dict_phi = torch.as_tensor(rng.standard_normal((n, t1.PHI_DIM)).astype(np.float32))
+    data.dict_atom = torch.as_tensor(rng.integers(0, t1.ATOM_CATEGORIES, size=n), dtype=torch.long)
+    data.patch_cont = torch.as_tensor(rng.standard_normal((n, t1.COARSE_DIM)).astype(np.float32))
+    data.env_occ_node = incidence["occ_node"]
+    data.env_occ_root = incidence["occ_root"]
+    data.env_occ_shell = incidence["occ_shell"]
+    data.env_bond_root = incidence["bond_root"]
+    data.env_bond_shellpair = incidence["bond_shellpair"]
+    data.env_bond_type = incidence["bond_type"]
+    pairs = [(i, j) for i in range(n) for j in range(i + 1, n)]
+    if pairs:
+        data.pair_index = torch.as_tensor(np.asarray(pairs, dtype=np.int64).T)
+        data.pair_relation = torch.randn(len(pairs), t1.RELATION_WIDTH)
+        data.pair_bucket = torch.as_tensor(rng.integers(0, t1.DISTANCE_BUCKETS, size=len(pairs)), dtype=torch.long)
+    else:
+        data.pair_index = torch.empty((2, 0), dtype=torch.long)
+        data.pair_relation = torch.empty((0, t1.RELATION_WIDTH))
+        data.pair_bucket = torch.empty((0,), dtype=torch.long)
+    data.global_context = torch.randn(1, t1.GLOBAL_WIDTH)
+    data.topology_features = torch.randn(1, 25)
+    data.y = torch.tensor([0.5])
+    return data
+
+
+def _synthetic_batch(n_molecules: int = 3):
+    molecules = [_synthetic_data(4, [(0, 1), (1, 2), (2, 3)], seed=index) for index in range(n_molecules)]
+    return e2e_v0.env_collate(molecules)
+
+
+# ---------------------------------------------------------------------------
+# parameter accounting
+# ---------------------------------------------------------------------------
+
+
+def test_parameter_accounting_matches_preregistration():
+    a1 = t1.total_parameter_count(t1.CANDIDATES["a1"])
+    a2 = t1.total_parameter_count(t1.CANDIDATES["a2"])
+    a3 = t1.total_parameter_count(t1.CANDIDATES["a3"])
+    assert t1.local_parameter_count(t1.CANDIDATES["a1"]) == {"dictionary": 2080, "binding": 4032, "decoder": 44596, "subtotal": 50708}
+    assert t1.local_parameter_count(t1.CANDIDATES["a2"]) == {"dictionary": 2080, "binding": 2880, "decoder": 45813, "subtotal": 50773}
+    assert t1.local_parameter_count(t1.CANDIDATES["a3"]) == {"dictionary": 2080, "binding": 3840, "decoder": 44940, "subtotal": 50860}
+    assert (a1["whole_model"], a1["difference_vs_fec_s1"]) == (66067, -103)
+    assert (a2["whole_model"], a2["difference_vs_fec_s1"]) == (66132, -38)
+    assert (a3["whole_model"], a3["difference_vs_fec_s1"]) == (66219, 49)
+    for key in t1.CANDIDATE_ORDER:
+        assert t1.total_parameter_count(t1.CANDIDATES[key])["backend_total"] == 15359
+
+
+def test_model_parameter_counts_and_init_matching():
+    for key in t1.CANDIDATE_ORDER:
+        candidate = t1.CANDIDATES[key]
+        sparse = t1.build_model(t1.SPARSE_ARM, candidate, seed=0)
+        dense = t1.build_model(t1.DENSE_ARM, candidate, seed=0, reference_state=sparse.state_dict())
+        expected = t1.total_parameter_count(candidate)["whole_model"]
+        assert sum(p.numel() for p in sparse.parameters()) == expected
+        assert sum(p.numel() for p in dense.parameters()) == expected
+        for name, value in sparse.state_dict().items():
+            assert torch.equal(value, dense.state_dict()[name]), (key, name)
+
+
+def test_dictionary_init_is_the_sdb_artifact():
+    from tracks.ksvd.experiments.luyin16 import zinc_sdb_v0 as zsdb
+
+    D_sdb, _rand, _pca = zsdb.load_dictionary()
+    model = t1.build_model(t1.SPARSE_ARM, t1.CANDIDATES["a2"], seed=0)
+    assert np.array_equal(model.D.detach().numpy(), np.asarray(D_sdb, dtype=np.float32))
+
+
+# ---------------------------------------------------------------------------
+# coding / forward
+# ---------------------------------------------------------------------------
+
+
+def test_coding_semantics_and_sparsity():
+    for key in t1.CANDIDATE_ORDER:
+        sparse = t1.build_model(t1.SPARSE_ARM, t1.CANDIDATES[key], seed=0)
+        dense = t1.build_model(t1.DENSE_ARM, t1.CANDIDATES[key], seed=0)
+        phi = torch.randn(16, t1.PHI_DIM)
+        alpha = sparse.code(phi)
+        assert int((alpha.abs() > 0).sum(dim=1).max()) <= t1.SPARSITY
+        dbar = e2e_v0.normalized_dictionary(sparse.D)
+        assert torch.allclose(dense.code(phi), phi @ dbar, atol=1e-6)
+        assert torch.allclose(sparse.reconstruct(phi, alpha), alpha @ dbar.t(), atol=1e-6)
+
+
+def test_forward_shapes_and_coarse_usage():
+    batch = _synthetic_batch()
+    for key in t1.CANDIDATE_ORDER:
+        model = t1.build_model(t1.SPARSE_ARM, t1.CANDIDATES[key], seed=0).eval()
+        with torch.no_grad():
+            prediction, aux = model(batch, return_aux=True)
+        assert prediction.shape[0] == 3
+        assert aux["E"].shape == (int(batch.num_nodes), t1.ENV_DIM)
+        assert aux["coord"].shape == (int(batch.num_nodes), t1.K_ATOMS)
+
+
+def test_environment_freeze_under_pair_relation_mutation():
+    batch = _synthetic_batch(2)
+    model = t1.build_model(t1.SPARSE_ARM, t1.CANDIDATES["a3"], seed=0).eval()
+    captured = {}
+    handle = model.env_mlp.register_forward_hook(lambda _m, _i, out: captured.setdefault("E", out.detach().clone()))
+    try:
+        with torch.no_grad():
+            model(batch)
+        before = captured["E"].clone()
+        mutated = batch.clone()
+        mutated.pair_relation = torch.randn_like(mutated.pair_relation)
+        with torch.no_grad():
+            model(mutated)
+        after = captured["E"].clone()
+    finally:
+        handle.remove()
+    assert torch.equal(before, after)
+
+
+def test_zero_code_independent_of_phi_but_coarse_still_used():
+    batch = _synthetic_batch(2)
+    model = t1.build_model(t1.SPARSE_ARM, t1.CANDIDATES["a1"], seed=0).eval()
+    with torch.no_grad():
+        _p, aux_a = model(batch, coord_zero=True, return_aux=True)
+        mutated = batch.clone()
+        mutated.dict_phi = torch.randn_like(mutated.dict_phi)
+        _p2, aux_b = model(mutated, coord_zero=True, return_aux=True)
+        _p3, aux_c = model(mutated, coord_zero=False, return_aux=True)
+    assert torch.equal(aux_a["E"], aux_b["E"])
+    assert not torch.equal(aux_b["E"], aux_c["E"])
+
+
+def test_pair_encoder_called_once():
+    batch = _synthetic_batch(2)
+    model = t1.build_model(t1.SPARSE_ARM, t1.CANDIDATES["a2"], seed=0).eval()
+    counts = {"pair": 0, "relation": 0}
+
+    def _hook(name):
+        def _inner(_m, _i, _o):
+            counts[name] += 1
+        return _inner
+
+    handles = [
+        model.pair_encoder.register_forward_hook(_hook("pair")),
+        model.relation_encoder.register_forward_hook(_hook("relation")),
+    ]
+    try:
+        with torch.no_grad():
+            model(batch)
+    finally:
+        for handle in handles:
+            handle.remove()
+    assert counts == {"pair": 1, "relation": 1}
+
+
+def test_no_forbidden_modules_in_state_dict():
+    for key in t1.CANDIDATE_ORDER:
+        model = t1.build_model(t1.SPARSE_ARM, t1.CANDIDATES[key], seed=0)
+        for name in model.state_dict():
+            lowered = name.lower()
+            assert "attention" not in lowered
+            assert "lstm" not in lowered and "gru" not in lowered
+            assert "typed" not in lowered and "parent_embedding" not in lowered
+            assert "local_env_adapter" not in lowered
+            assert "bond" not in lowered
+
+
+def test_gradient_reaches_dictionary():
+    batch = _synthetic_batch(2)
+    for key in t1.CANDIDATE_ORDER:
+        model = t1.build_model(t1.SPARSE_ARM, t1.CANDIDATES[key], seed=0).train()
+        model.zero_grad(set_to_none=True)
+        loss = torch.nn.functional.l1_loss(model(batch), batch.y.view(-1))
+        loss.backward()
+        assert model.D.grad is not None
+        assert float(model.D.grad.norm()) > 0.0
+
+
+def test_slot_environment_uses_every_shell():
+    batch = _synthetic_batch(2)
+    model = t1.build_model(t1.SPARSE_ARM, t1.CANDIDATES["a2"], seed=0).eval()
+    with torch.no_grad():
+        _p, aux = model(batch, return_aux=True)
+    # the slot candidate concatenates three per-shell blocks of width r_dict
+    m = model.dictionary_environment(aux["coord"], batch, None)
+    assert m.shape[1] == 3 * t1.CANDIDATES["a2"].r_dict
+    # a pooled candidate produces one block of width r_dict
+    pooled = t1.build_model(t1.SPARSE_ARM, t1.CANDIDATES["a1"], seed=0).eval()
+    with torch.no_grad():
+        _p2, aux2 = pooled(batch, return_aux=True)
+    m2 = pooled.dictionary_environment(aux2["coord"], batch, None)
+    assert m2.shape[1] == t1.CANDIDATES["a1"].r_dict
+
+
+def test_env_collate_offsets_occurrences():
+    molecules = [
+        _synthetic_data(4, [(0, 1), (1, 2), (2, 3)], seed=0),
+        _synthetic_data(3, [(0, 1), (1, 2)], seed=1),
+    ]
+    batch = e2e_v0.env_collate(molecules)
+    first = int(molecules[0].num_nodes)
+    occ_first = int(molecules[0].env_occ_node.shape[0])
+    assert int(batch.env_occ_node[occ_first:].min()) >= first
+    assert int(batch.env_occ_root.max()) == int(batch.num_nodes) - 1
+    assert batch.patch_cont.shape[1] == t1.COARSE_DIM
