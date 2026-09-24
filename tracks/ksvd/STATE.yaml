@@ -415,6 +415,152 @@ e2e_dictenv_v0:
     composition backbone.
 
 # ---------------------------------------------------------------------------
+# E2E-DictEnv-T1 (interface vs core: is the v0 0.145 ceiling the dictionary or
+# the dictionary->environment interface?) — 2026-09-24
+# ---------------------------------------------------------------------------
+# Diagnostic round on top of E2E-DictEnv-v0.  Only three authorised axes were
+# changed: dictionary->environment interface (A1 pooled64 / A2 slot48 / A3
+# slot64), reconstruction balance (lambda_0, 0.5x, 0.25x) and horizon (240,
+# conditional 320); the backend (phi65, K=32, s=8, IHT=10, SDB-v0 K-SVD D init,
+# tied coding, no MP/recurrence/attention) is untouched.  The environment decoder
+# input becomes z_i = [x_i^146 ; m_i^D] (exact FEC-S0 coarse chemistry beside
+# the dictionary code).  Budget: 6 new Sparse runs (3+2+1), spent exactly.  The
+# ceiling was an INTERFACE property (0.145508 -> 0.125765, +0.019743, into the
+# preregistered Breakthrough band and below the FEC-S1 anchor), but the coarse
+# pathway makes the dictionary non-load-bearing: frozen verdict mechanism lost.
+# Official test loaded exactly once, last, for terminal reporting only.
+e2e_dictenv_t1:
+  status: STOPPED_MECHANISM_LOST_INTERFACE_RELIEVES_CEILING
+  round: E2E-DictEnv-T1
+  protocol: e2e_dictenv_t1
+  verdict: E2E_DICTENV_TUNED_MECHANISM_LOST
+  case: '4 (health/zero-code/assignment-shuffle core mechanism fails; precedence over Breakthrough band and seed-1 specificity)'
+  implementation_commit: 6cc5ab19ebd6a9ebde347ae3c2ef36895e595857
+  formal_run_commit: 3c13c816cede53e5e03d5933fdada5e908561201
+  remote_host: hxy@a100-2
+  remote_repo: /home/hxy/cy/research
+  device: NVIDIA A100-SXM4-40GB (a1 on GPU0 shared with a foreign ~37 GB / ~100% job; a2/a3/b/c/confirm/test on GPU1 with a foreign ~35 GB / ~0% job)
+  seed_tuning: 0
+  seed_confirmation: 1
+  epochs: 240 (Stage C 320 not adopted)
+  data: official train 10000 / official valid 1000; official test 1000 (terminal report only)
+  official_valid_loaded: true (tuning only)
+  official_test_loaded: true (single terminal read after freeze)
+  budget:
+    stage_a_runs: 3
+    stage_b_runs: 2
+    stage_c_runs: 1
+    confirmation_runs: 2
+  parameters:
+    a1: 66067
+    a2: 66132
+    a3: 66219
+    backend: 15359
+    fec_s1_reference: 66170
+  correctness:
+    all_passed: true
+    gates: [G0a, G0b, G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11, G12]
+    cpu_tests: 15/15 pass
+  stage_a:
+    a1_pooled64_z210: {soup_valid: 0.128383, best_valid: 0.134283, best_epoch: 201, params: 66067, health: false, failed_gate: task_gradient_to_d, task_grad_to_D: 0.0}
+    a2_slot48_z290:   {soup_valid: 0.126436, best_valid: 0.131860, best_epoch: 237, params: 66132, health: true, task_grad_to_D: 0.0795363}
+    a3_slot64_z338:   {soup_valid: 0.129966, best_valid: 0.135920, best_epoch: 228, params: 66219, health: true, task_grad_to_D: 0.033896}
+    winner: a2
+    eligible: [a2, a3]
+  stage_b:
+    b0_a2:        {lambda_rec: 135.834928, soup_valid: 0.126436}
+    b1_lambda050: {lambda_rec: 67.917464, soup_valid: 0.125997}
+    b2_lambda025: {lambda_rec: 33.958732, soup_valid: 0.125765}
+    chosen: stage_b_lambda025
+  stage_c:
+    triggered: true
+    horizon320_soup_valid: 0.1255223331739544
+    horizon320_best_epoch: 310
+    delta_240_minus_320: 0.0002426711916923563
+    adopted: false
+    adopted_horizon: 240
+  frozen_config:
+    config_id: e2e_dictenv_t1_a2_lam0.25_h240
+    candidate: a2 / A2_COARSE146_SLOT48
+    lambda_rec: 33.95873017865987
+    horizon: 240
+    parameter_count: 66132
+    K: 32
+    s: 8
+    iht_steps: 10
+    D_init_sha256: f31350865f3f27064f3490263dd7a59e5b8cb26aef6610ef32bd08e14fe42f09
+    architecture_source_sha256: 2915d9657ac6d371cc37c024e93e0e0a171999a41df14b064cd0e7f3ae6e92f6
+    seed0_soup_state_sha256: 952337b71d5d747e4a5693dadd529ecd6d254bdca72a0c0f9ca489421dba7637
+    soup_members: [170, 212, 217, 234, 240]
+    official_test_loaded_at_freeze_time: false
+  primary_results:
+    M_S_tuned_seed0_soup: 0.125765
+    band: Breakthrough (<= 0.130); code band field strong (<= 0.135 prefix)
+    improvement_vs_v0: 0.019743
+    v0_reference_soup: 0.145508
+    historical_fec_s1_soup_anchor: 0.13042183499777457
+    tuned_minus_anchor: -0.004657
+    material_improvement: true
+    M_S_sparse_seed1_soup: 0.125496
+    M_D_dense_tied_seed1_soup: 0.131315
+    G_sparse_seed1: 0.005819392208009949
+    G_sparse_seed1_gate: 0.003
+    G_sparse_seed1_pass: true
+    M_zero: 0.143668
+    G_dict_use: 0.017903
+    G_dict_use_gate: 0.01
+    G_dict_use_pass: true
+    G_dict_use_v0: 0.8548392106350512
+    M_shuffle_mean: 0.133393
+    G_assign: 0.007628
+    G_assign_gate: 0.01
+    G_assign_pass: false
+    G_assign_v0: 0.017288576695322994
+  dictionary_health:
+    all_passed: true
+    note: health passes on every tag (exact top-8, 27-29/32 active, effective rank 8.7-12.1, valid reconstruction 1.1-1.9e-4, nonzero task gradient to D) yet the dictionary is no longer behaviourally load-bearing
+  terminal_test:
+    n_test: 1000
+    final_sparse_seed0_soup: 0.098076
+    final_sparse_seed1_soup: 0.104108
+    final_dense_seed1_soup: 0.103006
+    v0_sparse_seed0_soup: 0.109373
+    zero_code_test_mae_seed1: 0.150156
+    assignment_shuffle_test_mae_seed1: 0.117051
+    note: reporting only; the valid-selected seed-1 specificity does not replicate on test (Sparse seed1 0.104108 > Dense seed1 0.103006) and no decision is reopened
+  caveats:
+    single_tuning_seed: true
+    gpu_not_bit_deterministic: true
+    gpu_heterogeneous_stage_a: true
+    coarse_146_shared_by_all_stage_a_candidates: true
+    shuffle_gate_miss_marginal_on_valid: true
+  claims:
+    - claim-e2e-dictenv-t1-interface-relieves-ceiling-mechanism-lost-20260924
+  decision: decision-e2e-dictenv-t1-stop-mechanism-lost-20260924
+  prior_artifact_audit: tracks/ksvd/notes/e2e_dictenv_t1_prior_artifact_audit.md
+  preregistration: tracks/ksvd/notes/e2e_dictenv_t1_preregistration.md
+  implementation_note: tracks/ksvd/notes/e2e_dictenv_t1_implementation.md
+  analysis: tracks/ksvd/notes/e2e_dictenv_t1_analysis.md
+  test_read: tracks/ksvd/notes/e2e_dictenv_t1_test_read.md
+  results_dir: tracks/ksvd/results/e2e_dictenv_t1/
+  runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_t1.py
+  module: tracks/ksvd/experiments/luyin16/e2e_dictenv_t1.py
+  tests: tracks/ksvd/tests/test_e2e_dictenv_t1.py
+  next_step: >-
+    STOP per frozen case 4.  The 0.145 ceiling is answered: it was an
+    interface/architecture property, not a weak dictionary core (interface +
+    lambda + horizon moved the valid soup 0.145508 -> 0.125765 with the core
+    untouched).  But no dictionary-core success may be claimed for the tuned
+    configuration: the authorised coarse-146 pathway made the dictionary
+    auxiliary (G_dict-use 0.855 -> 0.018; G_assign 0.0076 < 0.010).  Forbidden
+    without a NEW preregistration: any K/s/IHT/LISTA/dictionary-count/attention/
+    MP/recurrence/reader/optimizer change, 400/500-epoch runs, or new lambda.
+    Open questions: an interface whose accuracy is routed THROUGH the dictionary
+    (mechanism gates as the primary criterion), or an explicit engineering trade
+    on whether to keep the dictionary given the strong coarse-chemistry
+    backbone.
+
+# ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
 # ---------------------------------------------------------------------------
 # First round to LOCALIZE a validated reusable dictionary coordinate into each

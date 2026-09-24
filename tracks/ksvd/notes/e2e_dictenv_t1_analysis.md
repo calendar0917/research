@@ -267,3 +267,26 @@ preregistration, to be decided by the user:
   then becomes an explicit engineering question rather than a mechanism claim.
 
 Neither is authorised by E2E-DictEnv-T1.
+
+---
+
+## 10. Terminal official test (reporting only)
+
+Loaded exactly once after the freeze was committed; full detail in
+[the test-read note](e2e_dictenv_t1_test_read.md).  `n_test = 1000`:
+
+| object | test MAE |
+|--------|---------:|
+| final Sparse seed 0 soup | 0.098076 |
+| final Sparse seed 1 soup | 0.104108 |
+| final DenseTied seed 1 soup | 0.103006 |
+| v0 Sparse seed 0 soup (historical) | 0.109373 |
+
+Two descriptive observations, neither of which changes any frozen decision:
+
+* the tuned seed-0 Sparse state transfers best (`+0.011297` over the v0 Sparse);
+* the valid-selected seed-1 specificity does **not** replicate on test (Sparse
+  seed 1 is `0.001102` worse than DenseTied seed 1 there), and the two
+  behavioural interventions are larger on test (`G_dict-use` +0.0460,
+  `G_assign` +0.0129, above the 0.010 gate on test but below it on valid).  The
+  verdict is a valid-set decision and stands.
