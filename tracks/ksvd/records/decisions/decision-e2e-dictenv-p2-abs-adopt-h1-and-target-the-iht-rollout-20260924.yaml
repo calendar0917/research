@@ -1,0 +1,73 @@
+decision_id: decision-e2e-dictenv-p2-abs-adopt-h1-and-target-the-iht-rollout-20260924
+created: '2026-09-24T15:40:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  P1 left the dictionary-core mainline absolute-strong but not specific
+  (0.131975 valid), and M1 showed the same core transfers to OGBG-MolHIV.  The
+  open question for the home benchmark was purely absolute: what is the best
+  official-valid MAE this clean primitive-only dictionary core can reach, and
+  which pre-registered capacity / weighting axis buys the gain?  P2-ABS answered
+  it inside a staged 8-run budget with no reader / LR / activation / dropout /
+  attention / MP / recurrence / patch_cont / atom_shell / bond_shell /
+  multi-dictionary sweep and with the official ZINC test never loaded.
+protocol: >-
+  Staged, winner-carries-forward search, one winner per stage, pre-registered
+  before any run and frozen at commit 122db5d.  Stage A lambda/horizon
+  {Z1 x0.25/h320, Z2 x0.125/h240, Z3 x0.0625/h240} against the P1 reference; Stage
+  B hierarchical dictionary-slot decoders {H1 shared compact, H2 shared wider} on
+  the Stage-A winner's lambda and horizon; Stage C edge capacity {E64 d_E 48->64};
+  Stage D dictionary capacity {K64S8 with a matched ZINC-train re-fit and a
+  recalibrated lambda} plus a conditional K64S12 allowed only on a >= 0.001
+  improvement.  Every candidate carried a cheap integrity gate (task gradient to
+  D, exact top-s, dictionary not collapsed, no forbidden bypass, no MP/recurrence,
+  parameter budget).  Remote GPU0 was foreign-occupied for the whole round; a
+  Case-B concurrency gate was run first and passed, and the two workstreams shared
+  GPU1.  Official ZINC test: not read.
+results:
+  implementation_commit: 122db5dcd45e28f5a6dc3b6314a18e1ea328deae
+  device: NVIDIA A100-SXM4-40GB (GPU1; GPU0 foreign-contended)
+  runs_used: 7 of max 8
+  stage_a: {Z0_p1_reference: 0.13197501279687276, Z1: 0.12790690318023554, Z2: 0.1344843177748262, Z3: 0.133573713830614, winner: Z1}
+  stage_b: {Z1: 0.12790690318023554, H1: 0.12354862861608853, H2: 0.1350148720201687, winner: H1}
+  stage_c: {H1: 0.12354862861608853, E64: 0.12970248038595308, winner: H1}
+  stage_d: {H1: 0.12354862861608853, K64S8: 0.1387771822967916, k64s8_improvement: -0.015228553680703055, s12_triggered: false, winner: H1}
+  winner_config: {tag: H1, decoder: h1, d_e: 48, K: 32, s: 8, lambda_factor: 0.25, lambda_rec: 33.95873017865987, horizon: 320, dict_kind: sdb32, params: 97487}
+  zinc_best_clean_dictionary_core_valid_mae: 0.12354862861608853
+  band: target band (0.120-0.125)
+  delta_vs_p1: -0.00842638418078423
+  official_test_loaded: false
+decision: >-
+  ADOPT H1 as the frozen clean dictionary-core configuration for the ZINC
+  mainline, and RE-AIM the next absolute round at the tied-IHT rollout rather
+  than at dictionary or decoder capacity.  H1 (horizon 320, shared compact
+  dictionary-slot decoder, 97,487 parameters, everything else identical to P1)
+  reaches 0.12354862861608853 official-valid Top-5 soup MAE, a -0.008426
+  improvement over P1 and the first entry in the target band.  Every enlargement
+  tried inside the frozen sweep surface lost (H2, E64, K64S8), so the winning
+  interface is the smallest one.  The reporting-only diagnostic
+  (k64_diagnostic.json) shows the frozen 10-step tied IHT is ~700x worse than
+  exact OMP on the winning dictionary while still hitting exact top-8, and that
+  K64/s8 overtakes K32 once the rollout is lengthened (100 steps: 0.001896 versus
+  0.010084).  The binding constraint on this family's absolute performance is
+  therefore the coder, not the representation, and a longer / better sparse-coding
+  rollout is the highest-value next axis.  The K64S8 row is explicitly NOT
+  evidence against K=64 capacities because the mandated lambda recalibration
+  (lambda 12.43) confounded it.
+next: >-
+  Highest-value next round (requires a NEW preregistration, since the IHT step
+  count is outside this round's frozen surface): an IHT-rollout round on the H1
+  interface, e.g. steps {10, 30, 100} at matched lambda recalibration, with the
+  OMP-exact code as an upper-bound reference, and with the MLP decoder readout
+  for the optimal-code path as a diagnostic only.  Carry H1 unchanged into any
+  other ZINC work in the meantime.  Open questions not scheduled: whether the
+  H1 gain survives a second seed, and whether the M1 MolHIV relation-granularity
+  limit (52.2% pair clipping) matters for transfer.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_p2_abs_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_p2_abs_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_p2_abs_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_p2_abs/final_config.json
+  - tracks/ksvd/results/e2e_dictenv_p2_abs/k64_diagnostic.json
+  - tracks/ksvd/results/e2e_dictenv_p2_abs/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_p2_abs/DECISION.md

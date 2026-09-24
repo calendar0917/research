@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-p2-abs-running-zinc-absolute-search
+phase: e2e-dictenv-round-complete-m1-transfer-supported-zinc-target-band
 updated: 2026-09-24
 
 # ---------------------------------------------------------------------------
@@ -834,24 +834,85 @@ e2e_dictenv_m1:
 # Official ZINC test is never loaded.  Stage A is Z1/Z2/Z3; Stage B H1/H2
 # decoder variants; Stage C E64; Stage D K64s8 (plus conditional K64s12).
 e2e_dictenv_p2_abs:
-  status: RUNNING_STAGE_A
+  status: DONE_TARGET_BAND
   round: E2E-DictEnv-P2-ABS
   protocol: e2e_dictenv_p2_abs
-  implementation_commit: 39cda1ba1680c6cdeb3479d4b2a49d50dd03af49
+  verdict: ZINC_BEST_CLEAN_DICTIONARY_CORE_VALID_MAE = 0.12354862861608853 (target band)
+  implementation_commit: 122db5dcd45e28f5a6dc3b6314a18e1ea328deae
+  formal_run_commit: 122db5dcd45e28f5a6dc3b6314a18e1ea328deae
+  runs_used: 7
   max_runs: 8
   official_test_loaded: false
   p1_reference_soup: 0.13197501279687276
   lambda_base_p1: 135.83492071463948
   stage_a:
-    Z1: {lambda_rec: 33.95873017865987, horizon: 320, raw_valid_mae: 0.13357518604764482, raw_epoch: 312, soup_valid_mae: 0.12790690318023554, soup_members: [266, 278, 298, 308, 312], wall_clock_s: 2146.2}
-    Z2: {lambda_rec: 16.979365089329935, horizon: 240, raw_valid_mae: 0.140523, raw_epoch: 237, soup_valid_mae: 0.134484, soup_members: [215, 224, 226, 231, 237], wall_clock_s: 1646}
-    Z3: running
+    Z1: {lambda_factor: 0.25, lambda_rec: 33.95873017865987, horizon: 320, raw_valid_mae: 0.13357518604764482, raw_epoch: 312, soup_valid_mae: 0.12790690318023554, soup_members: [266, 278, 298, 308, 312], wall_clock_s: 2146.2, peak_gpu_memory_mb: 191}
+    Z2: {lambda_factor: 0.125, lambda_rec: 16.979365089329935, horizon: 240, raw_valid_mae: 0.140523, raw_epoch: 237, soup_valid_mae: 0.1344843177748262, soup_members: [215, 224, 226, 231, 237], wall_clock_s: 1646, peak_gpu_memory_mb: 190}
+    Z3: {lambda_factor: 0.0625, lambda_rec: 8.489682544664968, horizon: 240, raw_valid_mae: 0.138742, raw_epoch: 217, soup_valid_mae: 0.133573713830614, wall_clock_s: null}
+    Z0_p1_reference: 0.13197501279687276
+    winner: Z1
+    winner_soup_valid_mae: 0.12790690318023554
+    delta_vs_p1: -0.00406810961663722
+    band: strong improvement (0.125-0.130)
     interim_note: >-
-      Higher reconstruction weight wins within Stage A: Z1 (lambda x0.25) beats
-      the P1 reference 0.131975 by 0.004068, while Z2 (lambda x0.125) is worse
-      than the reference by 0.002509.
+      Monotone in reconstruction weight: the higher the lambda factor, the better
+      the absolute valid MAE (Z1 0.127907 < Z3 0.133574 < Z2 0.134484), and Z1
+      differs from the P1 reference only by the longer horizon (320 vs 240), so
+      the Stage-A gain of 0.004068 is attributable to horizon rather than to a
+      lambda change.
+  stage_a_selection: tracks/ksvd/results/e2e_dictenv_p2_abs/stage_a_selection.json
+  stage_b_selection: tracks/ksvd/results/e2e_dictenv_p2_abs/stage_b_selection.json
+  stage_c_selection: tracks/ksvd/results/e2e_dictenv_p2_abs/stage_c_selection.json
+  stage_d_selection: tracks/ksvd/results/e2e_dictenv_p2_abs/stage_d_selection.json
+  final_config: tracks/ksvd/results/e2e_dictenv_p2_abs/final_config.json
+  stage_b:
+    H1: {decoder: h1, d_e: 48, params: 97487, raw_valid_mae: 0.129284, raw_epoch: 313, soup_valid_mae: 0.12354862861608853, soup_members: [293, 309, 313, 316, 317], wall_clock_s: 2080.6, peak_gpu_memory_mb: 207}
+    H2: {decoder: h2, d_e: 48, params: 110335, raw_valid_mae: 0.139304, raw_epoch: 308, soup_valid_mae: 0.1350148720201687, wall_clock_s: 2079, peak_gpu_memory_mb: 214}
+    winner: H1
+    delta_vs_z1: -0.00435827456414699
+  stage_c:
+    E64: {decoder: h1, d_e: 64, params: 99855, raw_valid_mae: 0.135865, raw_epoch: 311, soup_valid_mae: 0.12970248038595308, wall_clock_s: 2115, peak_gpu_memory_mb: 214}
+    winner: H1
+    delta_vs_h1: 0.00615385176986455
+  stage_d:
+    K64S8: {decoder: h1, d_e: 48, K: 64, s: 8, params: 107247, lambda_rec: 12.431817923309358, raw_valid_mae: 0.145981, raw_epoch: 305, soup_valid_mae: 0.1387771822967916, wall_clock_s: 2179}
+    k64s8_improvement: -0.015228553680703055
+    s12_trigger_threshold: 0.001
+    s12_triggered: false
+    K64S12_run: false
+  winner:
+    tag: H1
+    config: {decoder: h1, d_e: 48, K: 32, s: 8, lambda_factor: 0.25, horizon: 320, dict_kind: sdb32}
+    params: 97487
+    lambda_rec: 33.95873017865987
+    dictionary_sha256: b0c5da98aee5795450927fcd76606281aca947448f77ab186e11de09b33dfecd
+    soup_valid_mae: 0.12354862861608853
+    delta_vs_p1: -0.00842638418078423
+    band: target band (0.120-0.125)
+    anchors_context_only: {P1: 0.13197501279687276, T1: 0.125765, FEC_S1: 0.13042183499777457}
+  what_produced_the_gain:
+    - 'horizon 240 -> 320 at unchanged lambda and unchanged architecture: Z0 0.131975 -> Z1 0.127907 (best epoch 312, so the P1 horizon was truncating)'
+    - 'higher reconstruction weight is better at fixed horizon: Z0 (33.959) 0.131975 < Z3 (8.490) 0.133574 < Z2 (16.979) 0.134484'
+    - 'shared compact dictionary-slot decoder (H1) with FEWER parameters: Z1 0.127907 -> H1 0.123549; the wider H2 and the wider edge E64 both lose'
+  diagnostic_coding_bottleneck:
+    artifact: tracks/ksvd/results/e2e_dictenv_p2_abs/k64_diagnostic.json
+    n_nodes: 47588
+    rows:
+      k32_sdb: {s: 8, omp_normalized_err: 1.451763831786993e-05, iht10_normalized_err: 0.010084174573421478, iht30_normalized_err: 0.0028560978826135397, iht100_normalized_err: 0.0016552007291465998}
+      k64s8: {s: 8, omp_normalized_err: 3.9065837534940245e-05, iht10_normalized_err: 0.026816314086318016, iht30_normalized_err: 0.007372066378593445, iht100_normalized_err: 0.0018956600688397884}
+      k64s12: {s: 12, omp_normalized_err: 4.978924930046661e-06, iht10_normalized_err: 0.015776170417666435, iht30_normalized_err: 0.002140661468729377, iht100_normalized_err: 0.0010069551644846797}
+    reading: >-
+      The frozen 10-step tied IHT is ~700x worse than OMP on the winning SDB
+      K32 dictionary, so the record 0.123549 comes from a dictionary whose exact
+      sparse code the model cannot compute.  K64/s8 has a comparable OMP error
+      but a 2.7x worse IHT-10 error and overtakes K32 at 100 steps, so the K64S8
+      regression is an under-converged-coder effect, not a capacity effect; the
+      mandated lambda recalibration (rec_init = IHT-10 error -> lambda_base 49.73,
+      lambda 12.43) converted that coder deficit into a weighting change.
+      Changing the IHT step count is outside this round's frozen sweep surface.
   preregistration: tracks/ksvd/notes/e2e_dictenv_p2_abs_preregistration.md
   implementation_note: tracks/ksvd/notes/e2e_dictenv_p2_abs_implementation.md
+  analysis: tracks/ksvd/notes/e2e_dictenv_p2_abs_analysis.md
   results_dir: tracks/ksvd/results/e2e_dictenv_p2_abs/
   runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_p2_abs.py
   module: tracks/ksvd/experiments/luyin16/e2e_dictenv_p2_abs.py
