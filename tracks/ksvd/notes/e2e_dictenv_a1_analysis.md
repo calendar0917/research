@@ -27,7 +27,8 @@ Stage 1 (OMP screen), Stage 2 (IHT qualification), Stage 3 (E2E) and Stage 4
 ## 2. What the formal run measured
 
 Run: tag `a1-full`, pid `3802491`, command `... zinc_e2e_dictenv_a1 all --device cuda`,
-log `~/.research_runs/a1-full.log`, wall clock ≈ 1 h 58 m (cache → Gate-0 stop).
+log `~/.research_runs/a1-full.log`, wall clock 1 h 02 m 55 s (01:47:28 → 02:50:23
+remote time; cache → Gate-0 stop).
 All object caches are bit-identical to the local smoke
 (`phi` train `f8641dab…`, `joint_v` `206f4958…`; valid `33db50b8…`), and the
 `TOPO` dictionary reproduces the audited SDB-v0 sha `b0c5da98…` — the frozen

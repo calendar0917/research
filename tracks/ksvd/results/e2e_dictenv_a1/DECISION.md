@@ -92,7 +92,7 @@ result about ATTR-REAL vs ATTR-INDEP.**
 
 ## Spent budget
 
-One formal run (tag `a1-full`, ≈ 1 h 58 m): cache 58 s, three dictionaries
+One formal run (tag `a1-full`, 1 h 02 m 55 s): cache 58 s, three dictionaries
 (TOPO reuse; INDEP 1 687 s; REAL 1 727 s), six OMP caches ≈ 102 s, Gate-0
 audits. No Stage-1/2/3/4 compute, no GPU training epochs, no seed 1.
 
