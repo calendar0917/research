@@ -598,7 +598,7 @@ def bench(name: str = "Z2", batches: int = 20, device: str = "cuda") -> dict[str
     config = resolve_candidate(name)
     D, _sha = load_dictionary(config.dict_kind)
     model = p2.build_model(config, D, seed=0).to(device_obj)
-    data = p1run.load_split("train", subset=2048)
+    data = p1run.load_split("train")
     loader = p1.make_env_loader(data, BATCH_SIZE, True, TRAIN_SHUFFLE_OFFSET)
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
     lam = lambda_for(config)
