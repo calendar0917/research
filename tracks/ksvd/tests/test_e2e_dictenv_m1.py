@@ -98,6 +98,43 @@ def test_exact_sparsity():
     assert float((l0 == m1.SPARSITY).float().mean()) >= 0.99
 
 
+def test_batched_anchor_matches_per_molecule_anchor():
+    """The anchor-cache path must equal the per-molecule local-index computation."""
+    payloads = _synthetic_payloads()
+    model = m1.build_model(_random_dictionary(), seed=0)
+    torch.manual_seed(0)
+    with torch.no_grad():
+        per_molecule = []
+        for payload in payloads:
+            q = model.atom_chem(payload.dict_atom)
+            b = model.bond_chem(payload.env_bond_fields)
+            per_molecule.append(
+                m1.build_anchor_raw(
+                    q,
+                    payload.env_occ_root,
+                    q,
+                    payload.env_occ_node,
+                    payload.env_bond_root,
+                    b,
+                    int(q.shape[0]),
+                )
+            )
+        batch = m1.env_collate(payloads)
+        q = model.atom_chem(batch.dict_atom)
+        b = model.bond_chem(batch.env_bond_fields)
+        batched = m1.build_anchor_raw(
+            q,
+            batch.env_occ_root,
+            q,
+            batch.env_occ_node,
+            batch.env_bond_root,
+            b,
+            int(q.shape[0]),
+        )
+    assert batched.shape[0] == sum(part.shape[0] for part in per_molecule)
+    assert torch.allclose(batched, torch.cat(per_molecule, dim=0), atol=1e-6)
+
+
 def test_no_forbidden_local_descriptors_in_source():
     forbidden = {"patch_cont", "atom_shell", "bond_shell"}
     for module in (m1,):

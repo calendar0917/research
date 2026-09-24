@@ -485,40 +485,30 @@ def load_dictionary() -> np.ndarray:
 # ---------------------------------------------------------------------------
 
 
-def _anchor_raw_chunks(model: m1.M1Model, split: str, chunk: int = ANCHOR_CHUNK):
-    blob = torch.load(_env_cache_path(split), map_location="cpu", weights_only=False)
-    n_graphs = int(blob["node_sizes"].shape[0])
-    node_ptr = torch.cat([torch.zeros(1, dtype=torch.long), torch.cumsum(blob["node_sizes"], 0)])
-    occ_ptr = torch.cat([torch.zeros(1, dtype=torch.long), torch.cumsum(blob["occ_sizes"], 0)])
-    bond_ptr = torch.cat([torch.zeros(1, dtype=torch.long), torch.cumsum(blob["bond_sizes"], 0)])
-    for start in range(0, n_graphs, chunk):
-        end = min(start + chunk, n_graphs)
-        n_start, n_end = int(node_ptr[start]), int(node_ptr[end])
-        o_start, o_end = int(occ_ptr[start]), int(occ_ptr[end])
-        b_start, b_end = int(bond_ptr[start]), int(bond_ptr[end])
-        atom = blob["atom"][n_start:n_end]
-        q = model.atom_chem(atom)
-        b = model.bond_chem(blob["bond_fields"][b_start:b_end])
-        occ_node = blob["occ_node"][o_start:o_end] - n_start
-        occ_root = blob["occ_root"][o_start:o_end] - n_start
-        bond_root = blob["bond_root"][b_start:b_end] - n_start
-        anchor = m1.build_anchor_raw(
-            q, occ_root, q, occ_node, bond_root, b, int(n_end - n_start)
-        )
-        yield anchor
-
-
 def fit_anchor_stats(seed: int = 0, force: bool = False) -> dict[str, Any]:
     stats_path = RESULTS_DIR / "anchor_stats.json"
     if stats_path.exists() and not force:
         return _read_json(stats_path)
-    model = m1.build_model(load_dictionary(), seed=int(seed))
+    model = m1.build_model(load_dictionary(), seed=int(seed)).eval()
+    data = attach_env("train")
+    loader = m1.make_env_loader(data, ANCHOR_CHUNK, False, 0)
     count = 0
     total = torch.zeros(m1.ANCHOR_DIM, dtype=torch.float64)
     total_sq = torch.zeros(m1.ANCHOR_DIM, dtype=torch.float64)
     with torch.no_grad():
-        for anchor in _anchor_raw_chunks(model, "train"):
-            values = anchor.to(torch.float64)
+        for batch in loader:
+            q = model.atom_chem(batch.dict_atom)
+            b = model.bond_chem(batch.env_bond_fields)
+            raw = m1.build_anchor_raw(
+                q,
+                batch.env_occ_root,
+                q,
+                batch.env_occ_node,
+                batch.env_bond_root,
+                b,
+                int(q.shape[0]),
+            )
+            values = raw.to(torch.float64)
             total += values.sum(dim=0)
             total_sq += (values * values).sum(dim=0)
             count += int(values.shape[0])
