@@ -446,6 +446,7 @@ def fit_dictionary(force: bool = False) -> dict[str, Any]:
     started = time.perf_counter()
     D, info = sdb.fit_ksvd(X, atoms=m1.K_ATOMS, s=m1.SPARSITY, epochs=DICT_EPOCHS, seed=sdb.DICT_SEED)
     D = np.asarray(D, dtype=np.float32)
+    DICT_PATH.parent.mkdir(parents=True, exist_ok=True)
     torch.save({"D": torch.as_tensor(D, dtype=torch.float32)}, DICT_PATH)
     payload = {
         "protocol_version": PROTOCOL_VERSION,
