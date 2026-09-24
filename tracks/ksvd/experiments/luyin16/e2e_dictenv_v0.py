@@ -219,6 +219,8 @@ def env_incidence(
     * ``bond_root``  [n_bond_occ] root index of each bond occurrence
     * ``bond_shellpair`` [n_bond_occ]  shellpair class in {0..5}
     * ``bond_type``  [n_bond_occ] primitive bond category in {0..3}
+    * ``bond_u`` / ``bond_v`` [n_bond_occ] local endpoint node indices of each
+      bond occurrence (additive; used by E2E-DictEnv-P1, ignored by v0/T1)
 
     Node order is assumed to be ``0..n-1`` (the audited graph convention).
     """
@@ -232,6 +234,8 @@ def env_incidence(
     bond_root: list[int] = []
     bond_shellpair: list[int] = []
     bond_type: list[int] = []
+    bond_u: list[int] = []
+    bond_v: list[int] = []
     for root in nodes:
         root = int(root)
         distances = bfs_distances(graph, root, int(radius))
@@ -248,6 +252,8 @@ def env_incidence(
             bond_root.append(root)
             bond_shellpair.append(int(sp))
             bond_type.append(bond)
+            bond_u.append(int(a))
+            bond_v.append(int(b))
     out: dict[str, torch.Tensor] = {}
     out["occ_node"] = torch.as_tensor(occ_node, dtype=torch.long) if occ_node else torch.empty(0, dtype=torch.long)
     out["occ_root"] = torch.as_tensor(occ_root, dtype=torch.long) if occ_root else torch.empty(0, dtype=torch.long)
@@ -255,6 +261,8 @@ def env_incidence(
     out["bond_root"] = torch.as_tensor(bond_root, dtype=torch.long) if bond_root else torch.empty(0, dtype=torch.long)
     out["bond_shellpair"] = torch.as_tensor(bond_shellpair, dtype=torch.long) if bond_shellpair else torch.empty(0, dtype=torch.long)
     out["bond_type"] = torch.as_tensor(bond_type, dtype=torch.long) if bond_type else torch.empty(0, dtype=torch.long)
+    out["bond_u"] = torch.as_tensor(bond_u, dtype=torch.long) if bond_u else torch.empty(0, dtype=torch.long)
+    out["bond_v"] = torch.as_tensor(bond_v, dtype=torch.long) if bond_v else torch.empty(0, dtype=torch.long)
     out["n"] = torch.tensor(n, dtype=torch.long)
     return out
 
