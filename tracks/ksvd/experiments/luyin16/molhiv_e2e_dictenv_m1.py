@@ -1104,7 +1104,7 @@ def bench(seed: int = 0, batches: int = 20, device: str = "cuda") -> dict[str, A
     stats = fit_anchor_stats(seed=int(seed))
     calibration = calibrate_lambda(seed=int(seed))
     lam = float(calibration["lambda_M"])
-    data = attach_env("train", subset=2048)
+    data = attach_env("train")
     model = make_model(int(seed), stats).to(device_obj)
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
     loader = m1.make_env_loader(data, BATCH_SIZE, True, int(seed) + TRAIN_SHUFFLE_OFFSET)
