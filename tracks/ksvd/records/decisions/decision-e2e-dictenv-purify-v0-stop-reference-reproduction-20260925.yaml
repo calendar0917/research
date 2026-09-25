@@ -1,0 +1,175 @@
+decision_id: decision-e2e-dictenv-purify-v0-stop-reference-reproduction-20260925
+created: '2026-09-25T08:55:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The retained line of record is topology sparse code -> post-code chemistry
+  binding, built on the H1 "clean dictionary core" (97,487 params, Top-5 soup
+  valid MAE 0.123549).  Its remaining weakness is architectural: local
+  zeroth-order chemistry re-enters the model through three raw bypasses in the
+  62-D anchor (root atom identity 28, patch atom marginal 28, patch bond
+  marginal 4), so the environment slice is not purely structural and the
+  dictionary's opportunity set is contaminated.  The user authorised exactly one
+  consolidation round: a pre-registered, GPU1-only attempt to fold that
+  chemistry into the attributed structural measure (node beta_v = [1; alpha_v],
+  edge gamma_uv = [1; g_uv], size-only 2-D anchor) while preserving performance,
+  with a functionally-equivalent semantic refactor as Stage 0, a fresh matched
+  reference, and no rescue paths.
+protocol: >-
+  Local-first with remote A100 GPU1 compute.  Architecture audit
+  (notes/e2e_dictenv_purify_v0_architecture_audit.md) and frozen preregistration
+  (notes/e2e_dictenv_purify_v0_preregistration.md) committed at bbcaf58 before
+  any run; implementation and runner at 8657ffc; amendment A1 at 6ec6218
+  (device-aware equivalence gate, rules unchanged); reproducibility probe at
+  79fb460; 24 CPU tests green.  Remote: preflight pass (uv 0.12.13, torch
+  2.5.1+cu124, doctor 12 ok / 0 warn / 0 fail), clean deploy, GPU1 smoke on both
+  arms, then the formal pipeline `all --device cuda`: Stage 0 equivalence on CPU
+  and CUDA, matched seed-0 320-epoch arms (seed 0, lambda 33.95873017865987,
+  Adam 1e-3 / wd 1e-5 / clip 5, batch 128, Top-5 soup on official valid), paired
+  comparison, then (only if authorised) seed 1 and the mechanism / ablation /
+  health stages.  GPU0 was foreign-contended throughout and was never touched;
+  the official ZINC test was never loaded.  The runner stopped itself in-process
+  when the pre-registered reproduction check failed.
+results:
+  protocol: e2e_dictenv_purify_v0
+  preregistration_commit: bbcaf58
+  implementation_commit: 8657ffc
+  amendment_commit: 6ec6218
+  probe_commit: 79fb460
+  run_commits: [6ec6218]
+  device: A100-SXM4-40GB GPU1 only
+  seed: 0
+  horizon: 320
+  lambda_rec: 33.95873017865987
+  stage0_equivalence_cpu_max_abs: 0.0
+  stage0_equivalence_cpu_bit_identical: true
+  stage0_equivalence_cuda_prediction_max_abs: 8.345e-07
+  stage0_equivalence_cuda_rerun_noise_floor: 5.722e-06
+  parameters_reference: 97487
+  parameters_purified: 95711
+  parameter_delta: -1776
+  local_raw_chemistry_bypasses: {reference: 3, purified: 0}
+  local_chemistry_entry_points: {reference: 5, purified: 2}
+  reference_seed0_soup: 0.1298781834495603
+  reference_seed0_best: 0.13576880361413352
+  reference_seed0_best_epoch: 274
+  purified_seed0_soup: 0.13549722206493606
+  purified_seed0_best: 0.14364955635269872
+  purified_seed0_best_epoch: 246
+  delta_purification_seed0: 0.005619038615375743
+  historical_h1_context: 0.12354862861608853
+  reference_reproduction_drift: 0.006329554833471779
+  reference_reproduction_tolerance: 0.005
+  reference_reproduction_passed: false
+  seed0_case: performance_failure
+  seed1_authorized: false
+  candidate_interpreted: false
+  verdict: REFERENCE_REPRODUCTION_FAILURE
+  independent_local_recomputation_errors: 0
+  independent_local_recomputation_checks: 38
+  gpu_wall_minutes: 71
+  official_test_loaded: false
+decision: >-
+  STOP the round at its frozen pre-registration 10.2 verdict
+  REFERENCE_REPRODUCTION_FAILURE, before interpreting the candidate, and record
+  the round as an architecture-consolidation success plus an unmeasured
+  performance question.  The purified structure is real and verified (all three
+  local raw-chemistry bypasses gone, 1.8 % fewer parameters, deterministic path
+  bit-identical to H1), but no non-inferiority statement may be made: the fresh
+  matched reference drifted +0.006330 above the historical H1 context, more than
+  the frozen 0.005 tolerance and more than the candidate's own
+  delta_purification (+0.005619).  Do not buy seed 1, do not run the mechanism /
+  constant-channel-ablation / dictionary-health stages, do not re-read
+  delta_seed0 as evidence, and do not re-anchor the round on any other historical
+  number.  Adopt the diagnosis as a programme-level protocol fact: this training
+  protocol is not bit-reproducible on the shared A100 (identical CUDA forwards
+  differ by up to 1.4e-04 in the pooled read-outs while CPU is exactly 0.0, and
+  two identical 2-epoch runs differ by 0.009-0.042 in valid MAE), so historical
+  point estimates are context only and every future non-inferiority claim needs a
+  same-round paired baseline with >= 2 seeds and a tolerance that exceeds the
+  measured dispersion of the gated quantity.  The purified architecture stays
+  open but unmeasured; re-asking it requires a new preregistration and must not
+  reuse this round's delta_seed0.
+because: >-
+  The preregistration was explicit and one-sided: if (fresh reference seed-0
+  soup) - 0.12354862861608853 > 0.005 then verdict REFERENCE_REPRODUCTION_FAILURE,
+  STOP, diagnose, and "the candidate is not interpreted while the baseline
+  drifts".  The measured drift is +0.006329554833471779, so the rule fired and
+  the runner raised by itself.  The mandated diagnosis excluded every
+  implementational cause by direct evidence (data cache predates H1's run;
+  dictionary sha256 identical; no commit touched the model or trainer since H1's
+  commit 122db5dc; init is `torch.manual_seed(0)` in a dropout-free model; the
+  round's evaluator reproduces H1's recorded soup 0.12354863 and rec 1.4615e-04
+  exactly from the stored H1 state; batch order is generator-seeded) and
+  localised the drift to the execution regime: non-deterministic CUDA
+  accumulation in the `index_add_` pooling read-outs, whose two-epoch
+  amplification (0.009-0.042 valid MAE) already exceeds the 0.005 tolerance.  The
+  fresh reference's own epoch-1 train MAE (1.011811) falls between two identical
+  probe reruns (1.011238, 1.012584), i.e. it is an ordinary draw of the protocol
+  rather than a mis-specified baseline, so no re-run was warranted and no rescue
+  was available inside the frozen rules.
+alternatives_rejected:
+  - >-
+    Re-running the fresh reference (or the whole paired round) hoping to land
+    within 0.005 of the historical H1 point.  Rejected: the protocol's measured
+    run-to-run dispersion (0.009-0.042 at two epochs, and the H1 curve's own
+    +-0.02 epoch-to-epoch jitter) makes this a lottery, i.e. seed hunting on the
+    baseline, and the frozen rule forbids rescues after a failure.
+  - >-
+    Reporting delta_seed0 = +0.005619 as a non-inferiority result or as a
+    performance failure of the purified architecture.  Rejected: the baseline
+    drifted by more than the effect being read, there is no seed-1 replicate, and
+    section 10.2 explicitly forbids interpreting the candidate while the baseline
+    drifts.
+  - >-
+    Switching the decision baseline to the fresh reference only and calling the
+    round valid (the within-round comparison is paired, matched and arguably
+    cleaner than the historical anchor).  Rejected: the frozen preregistration
+    makes the historical-anchor check a blocking gate that is checked *before*
+    the candidate, and silently re-basing a frozen rule after seeing the numbers
+    is exactly the goalpost move this round was designed to prevent.  The
+    within-round design stays on record as the correct pattern for a future
+    round; this round simply cannot supply the verdict.
+  - >-
+    Continuing into seed 1, the mechanism interventions, the constant-channel
+    ablation or dictionary health because "the architecture work is clearly
+    fine".  Rejected: those stages exist to interpret a performance verdict that
+    this round is not allowed to produce; running them would spend GPU1 on
+    uninterpretable evidence and pre-empt the next preregistration.
+  - >-
+    Quietly relaxing the 0.005 tolerance to, e.g., the measured dispersion.
+    Rejected: changing a frozen threshold after seeing the data is the same
+    violation as switching the baseline; the tolerance is recorded as exceeded
+    and the *future* protocol recommendation (dispersion-aware tolerances, or a
+    deterministic measurement) is recorded separately in the analysis note.
+revisit_if: >-
+  The user re-opens the purification question with a new preregistration that
+  (a) makes the measurement deterministic first — torch.use_deterministic_algorithms
+  with a deterministic pooling replacement (or CPU pooling) and a re-measured
+  dispersion — so that a 0.002 band is testable at all, or (b) keeps the current
+  stochastic regime but budgets >= 2 seeds per arm and derives the tolerance from
+  the measured protocol dispersion instead of anchoring it to a historical point,
+  or (c) chooses a different, dispersion-tolerant primary quantity.  The purified
+  architecture itself (constant structural channel, size-only anchor, zero local
+  raw-chemistry bypasses, 95,711 params) may be re-tested under any such round,
+  but this round's delta_seed0 must not be reused as evidence.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_amendment_a1.md
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_architecture_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/decision.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/paired_performance.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/reproducibility_probe.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/semantic_refactor_equivalence.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/purity_audit.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/parameter_ledger.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/local_analysis.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/REPORT.md
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_purify_v0.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_purify_v0.py
+  - tracks/ksvd/code/analyze_e2e_dictenv_purify_v0.py
+  - tracks/ksvd/code/diag_e2e_dictenv_purify_v0_reproducibility.py
+  - tracks/ksvd/tests/test_e2e_dictenv_purify_v0.py

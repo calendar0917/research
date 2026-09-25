@@ -10,5 +10,6 @@ verdict            = REFERENCE_REPRODUCTION_FAILURE
 
 * reference seed 0 soup 0.129878 (historical context 0.123549, drift +0.006330)
 * purified seed 0 soup 0.135497
+* candidate interpreted: False
 * parameter ledger 97487 -> 95711
 * official test never loaded

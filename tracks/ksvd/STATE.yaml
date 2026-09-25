@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-a2-confirm-case-c-pairing-material-not-competitive-attributed-route-stopped
+phase: e2e-dictenv-purify-v0-structural-consolidation-verified-performance-unmeasured-reference-reproduction-failure
 updated: 2026-09-25
 
 # ---------------------------------------------------------------------------
@@ -1709,7 +1709,70 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_e2e_dictenv_a2_confirm_case_c_attributed_route_stopped
+  status: stop_e2e_dictenv_purify_v0_reference_reproduction_failure_candidate_not_interpreted
+  # -------------------------------------------------------------------------
+  # E2E-DictEnv-Purify-v0 (2026-09-25, remote A100 GPU1 only, protocol
+  # e2e_dictenv_purify_v0, prereg bbcaf58, implementation 8657ffc, amendment A1
+  # 6ec6218, probe 79fb460) is CLOSED at its frozen verdict
+  # REFERENCE_REPRODUCTION_FAILURE.  Stage 0 succeeded completely: the four-module
+  # refactor (StructuralBasis / AttributedLocalMeasure / StaticComposer /
+  # PropertyReader) is bit-identical to H1 on the deterministic path (max abs
+  # diff 0.0 on all twelve comparison points) and the single authorised change
+  # (node beta_v = [1; alpha_v], edge gamma_uv = [1; g_uv], size-only 2-D anchor)
+  # removes ALL three local raw-chemistry anchor bypasses (3 -> 0; chemistry
+  # entry points 5 -> 2) at 97,487 -> 95,711 parameters (-1,776, -1.822 %).  Both
+  # matched seed-0 arms trained to completion on GPU1.  The round was then stopped
+  # by its own pre-registered section 10.2: the fresh reference soup
+  # 0.1298781834495603 drifted +0.006329554833471779 above the historical H1
+  # context 0.12354862861608853 (tolerance 0.005), i.e. more than the candidate's
+  # own delta_purification (+0.005619038615375743), so the candidate is NOT
+  # interpreted: no seed 1, no mechanism, no constant-channel ablation, no
+  # dictionary health, no claim about performance.
+  #
+  # The mandated diagnosis excluded data, dictionary, initialization, evaluation
+  # and code as causes (identical dictionary sha, cache predating H1's run, no
+  # model/trainer commits since 122db5dc, seeded init in a dropout-free model,
+  # evaluator reproducing H1's stored soup 0.12354863 exactly) and located the
+  # drift in the execution regime: identical CUDA forwards differ by up to
+  # 1.4e-04 in the pooled index_add_ read-outs (CPU exactly 0.0), and two
+  # identical 2-epoch runs differ by 0.009-0.042 official-valid MAE.  Programme
+  # consequence: historical ZINC points in this line are context only (O(0.01)
+  # protocol dispersion), and any future non-inferiority claim needs a same-round
+  # paired baseline, >= 2 seeds and either a dispersion-derived tolerance or a
+  # deterministic measurement (torch.use_deterministic_algorithms / deterministic
+  # pooling).
+  #
+  # Do not re-read delta_seed0, do not buy seed 1 for this round, do not re-anchor
+  # on another historical number, do not run the withheld stages, and do not open
+  # the official ZINC test.  Re-asking the purification question requires a new
+  # preregistration.
+  e2e_dictenv_purify_v0:
+    status: stopped_reference_reproduction_failure_candidate_not_interpreted
+    round: e2e-dictenv-purify-v0
+    verdict: REFERENCE_REPRODUCTION_FAILURE
+    stage0_equivalence: bit_identical_cpu (max abs diff 0.0, twelve comparison points)
+    parameters: {reference: 97487, purified: 95711, delta: -1776}
+    local_raw_chemistry_bypasses: {reference: 3, purified: 0}
+    delta_purification_seed0: 0.005619038615375743
+    reference_reproduction_drift: 0.006329554833471779
+    seed1_authorized: false
+    candidate_interpreted: false
+    claims:
+      - claim-e2e-dictenv-purify-v0-structural-consolidation-equivalent-and-pure-20260925
+      - claim-e2e-dictenv-training-protocol-not-bit-reproducible-20260925
+    decision: decision-e2e-dictenv-purify-v0-stop-reference-reproduction-20260925
+    not_run:
+      - reference_seed1.json / purified_seed1.json (10.2 stop, no seed 1)
+      - mechanism_interventions.json / constant_channel_ablation.json / dictionary_health.json
+    forbidden_without_new_preregistration:
+      - re-reading delta_seed0 as a non-inferiority or performance result
+      - buying seed 1 or the withheld mechanism / ablation / health stages for this round
+      - re-anchoring the round on any historical ZINC number
+      - changing the 0.005 reproduction tolerance after the fact
+      - official ZINC test access
+    reopen_only_with:
+      - a deterministic-measurement round (use_deterministic_algorithms + deterministic pooling) with a re-measured dispersion
+      - or a >= 2-seed paired round whose tolerance is derived from the measured protocol dispersion
   # -------------------------------------------------------------------------
   # E2E-DictEnv-A2-Confirm (2026-09-25, remote A100 GPU1 only, protocol
   # e2e_dictenv_a2_confirm, prereg 4b9e206, runs 45d53df/a9d3e08/76f65af) is
@@ -1727,10 +1790,7 @@ authorized_next_action:
   # representation than the topology-only route (the REAL object also carries
   # a large OMP reconstruction residual, 0.1965 vs INDEP 0.0212 / TOPO 1.4e-05).
   # The attributed E2E/IHT route is therefore STOPPED and the retained route is
-  # topology sparse code -> post-code chemistry binding.  Do not start any
-  # further stage (IHT, E2E, mechanism, liveness, specificity, seed 1, PCA32,
-  # continuity-v2, K64, s12, sweeps, official test) without a new
-  # pre-registration and explicit user authorisation.
+  # topology sparse code -> post-code chemistry binding.
   e2e_dictenv_a2_confirm:
     status: stopped_case_c_pairing_material_not_competitive
     round: e2e-dictenv-a2-confirm
@@ -2422,6 +2482,43 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-e2e-dictenv-purify-v0-stop-reference-reproduction-20260925: >-
+      E2E-DictEnv-Purify-v0 (2026-09-25, remote A100-SXM4-40GB GPU1 only,
+      protocol e2e_dictenv_purify_v0, prereg bbcaf58, implementation 8657ffc,
+      amendment A1 6ec6218, reproducibility probe 79fb460, official test never
+      loaded) closed with the frozen verdict REFERENCE_REPRODUCTION_FAILURE.
+      Stage 0 succeeded completely: the Luyin-16 clean dictionary core was
+      refactored into four concept modules (StructuralBasis /
+      AttributedLocalMeasure / StaticComposer / PropertyReader) whose CPU path
+      is bit-identical to H1 (max abs diff 0.0 on all twelve comparison points,
+      loaded from the trained H1 soup state), and the single authorised change
+      (node beta_v = [1; alpha_v] 33x96, edge gamma_uv = [1; g_uv] 97x48,
+      size-only 2-D anchor, fusion width 368) removes all three local
+      raw-chemistry anchor bypasses (3 -> 0, chemistry entry points 5 -> 2) at
+      97,487 -> 95,711 params (-1,776, -1.822 %), with both GPU1 smokes passing.
+      Both matched seed-0 arms then trained to completion (reference soup
+      0.1298781834495603, purified soup 0.13549722206493606, ~2,140 s each), and
+      the runner stopped itself in-process on pre-registration 10.2: the fresh
+      reference drifted +0.006329554833471779 above the historical H1 context
+      0.12354862861608853 (> 0.005) and further than the candidate's own
+      delta_purification +0.005619038615375743, so seed 1, the mechanism
+      interventions, the constant-channel ablation and dictionary health were
+      NOT RUN and delta_seed0 is recorded but not interpreted.  The mandated
+      diagnosis excluded data, dictionary, initialization, evaluation and code
+      (identical dictionary sha256, cache predating H1's run, no model/trainer
+      commits since 122db5dc, torch.manual_seed(0) init in a dropout-free model,
+      evaluator reproducing H1's stored soup 0.12354863 with rec 1.4615e-04) and
+      located the drift in the CUDA execution regime: identical forwards differ
+      by up to 1.4e-04 in the pooled index_add_ read-outs (CPU exactly 0.0) and
+      two identical 2-epoch runs differ by 0.009-0.042 official-valid MAE, while
+      the IHT codes stay bit-identical (0 support flips).  Durable consequences:
+      historical ZINC points in this line are context only (O(0.01) protocol
+      dispersion), and a future non-inferiority round needs a same-round paired
+      baseline, >= 2 seeds and either a dispersion-derived tolerance or a
+      deterministic measurement.  See notes/e2e_dictenv_purify_v0_analysis.md,
+      claim-e2e-dictenv-purify-v0-structural-consolidation-equivalent-and-pure-20260925,
+      claim-e2e-dictenv-training-protocol-not-bit-reproducible-20260925,
+      decision-e2e-dictenv-purify-v0-stop-reference-reproduction-20260925.
   - decision-e2e-dictenv-a2-confirm-case-c-stop-attributed-route-20260925: >-
       E2E-DictEnv-A2-Confirm (2026-09-25, remote A100-SXM4-40GB GPU1 only,
       protocol e2e_dictenv_a2_confirm, prereg commit 4b9e206, implementation

@@ -1080,8 +1080,13 @@ def decision() -> dict[str, Any]:
 
     not_run = []
     if not paired["seed1_authorized"]:
-        not_run.append({"artifact": "reference_seed1.json", "status": "NOT RUN", "reason": "seed-0 Delta > +0.004 (PURIFICATION_PERFORMANCE_FAILURE)"})
-        not_run.append({"artifact": "purified_seed1.json", "status": "NOT RUN", "reason": "seed-0 Delta > +0.004 (PURIFICATION_PERFORMANCE_FAILURE)"})
+        reason = (
+            "round stopped by 10.2 (reference reproduction failure); the candidate is not interpreted"
+            if not paired["reference_reproduction"]["passed"]
+            else "seed-0 Delta > +0.004 (PURIFICATION_PERFORMANCE_FAILURE)"
+        )
+        not_run.append({"artifact": "reference_seed1.json", "status": "NOT RUN", "reason": reason})
+        not_run.append({"artifact": "purified_seed1.json", "status": "NOT RUN", "reason": reason})
     if mechanism is None:
         not_run.append({"artifact": "mechanism_interventions.json", "status": "NOT RUN", "reason": "candidate not accepted"})
     if ablation is None:
@@ -1106,14 +1111,42 @@ def decision() -> dict[str, Any]:
         "dictionary_health": None if health is None else {arm: {k: health[arm][k] for k in ("train", "valid", "reconstruction", "task_gradient_to_D", "environment_effective_rank", "dictionary")} for arm in health},
         "not_run": not_run,
         "official_test_loaded": False,
+        "candidate_interpreted": bool(paired["reference_reproduction"]["passed"]),
         "scope_of_claim": (
-            "local zeroth-order chemistry can be consolidated into the attributed structural measure "
-            "without material loss under the frozen H1 architecture"
+            "no architecture claim is made: the round stopped on pre-registration 10.2 because the fresh "
+            "reference did not reproduce the historical H1 context within 0.005, so delta_purification "
+            "(seed 0) is recorded but not interpreted"
+            if not paired["reference_reproduction"]["passed"]
+            else (
+                "local zeroth-order chemistry can be consolidated into the attributed structural measure "
+                "without material loss under the frozen H1 architecture"
+            )
         ),
         "not_claimed": ["all chemistry bypasses are unnecessary", "global composition is redundant"],
     }
     _write_json(RESULTS_DIR / "decision.json", payload)
     return payload
+
+
+def _equivalence_lines(equivalence: Mapping[str, Any]) -> list[str]:
+    blocks = equivalence.get("blocks", {})
+    cpu_block = blocks.get("cpu", {})
+    lines = [
+        f"* deterministic CPU path: max |old - new| = {float(cpu_block.get('max_abs', float('nan'))):.3e} "
+        f"(frozen tolerance 1e-6, prediction {float(cpu_block.get('comparisons_max_abs', {}).get('prediction', float('nan'))):.3e}, "
+        f"bit-identical: {bool(cpu_block.get('bit_identical'))})",
+    ]
+    for device, block in sorted(blocks.items()):
+        if device == "cpu":
+            continue
+        noise = float(max(block.get("rerun_noise_floor", {}).get("legacy_intermediates", 0.0), block.get("rerun_noise_floor", {}).get("refactor_intermediates", 0.0)))
+        lines.append(
+            f"* {device}: prediction max |old - new| = {float(block.get('prediction_max_abs', float('nan'))):.3e}, "
+            f"intermediate max |old - new| = {float(block.get('intermediate_max_abs', float('nan'))):.3e} at a measured "
+            f"same-implementation rerun noise floor of {noise:.3e} (passed: {bool(block.get('passed'))})"
+        )
+    lines.append(f"* gate (all checked devices): {bool(equivalence.get('passed'))}")
+    return lines
 
 
 def report() -> dict[str, Any]:
@@ -1129,8 +1162,9 @@ def report() -> dict[str, Any]:
         "",
         "## Stage 0 — semantic refactor equivalence",
         "",
-        f"* reference checkpoint comparison max |old - new| = {payload['semantic_refactor_equivalence']['max_abs']:.3e} "
-        f"(tolerance 1e-6, bit-identical: {payload['semantic_refactor_equivalence']['bit_identical']})",
+    ]
+    lines += _equivalence_lines(_read_json(RESULTS_DIR / "semantic_refactor_equivalence.json"))
+    lines += [
         f"* parameter ledger: reference {ledger['reference']} -> purified {ledger['purified']} "
         f"({ledger['delta']['absolute']:+d}, {ledger['delta']['percent']:+.3f} %)",
         "",
@@ -1150,6 +1184,35 @@ def report() -> dict[str, Any]:
         f"* fresh reference reproduction drift vs historical H1 context = {paired['reference_reproduction']['drift']:+.6f} "
         f"(tolerance {paired['reference_reproduction']['tolerance']})",
     ]
+    if not paired["reference_reproduction"]["passed"]:
+        lines += [
+            "",
+            "## Diagnosis (pre-registration 10.2)",
+            "",
+            f"The fresh reference is {paired['reference_reproduction']['drift']:+.6f} above the historical H1 context, so the round "
+            "stopped before the candidate was interpreted.  The drift is **not** a data, dictionary, initialization, evaluation "
+            "or code change:",
+            "",
+            "* same data cache (written before H1's run) and identical dictionary sha256,",
+            "* no commit touched the P2 model/training module since H1's commit,",
+            "* `build_model` seeds the init with `torch.manual_seed(0)` and the model has **no dropout**,",
+            "* the round's evaluator reproduces H1's recorded soup exactly from the stored H1 state "
+            + (lambda value: f"({value:.8f} vs recorded 0.12354863)" if value is not None else "(see notes)")(
+                (_read_json(RESULTS_DIR / "local_analysis.json").get("h1_state_under_round_evaluator")
+                 if (RESULTS_DIR / "local_analysis.json").exists()
+                 else None)
+            )
+            + ",",
+            "* the batch order is generator-seeded, so it is identical across runs.",
+            "",
+            "The cause is the *execution regime*: repeated identical CUDA forward passes differ by up to "
+            "1.4e-04 in the pooled read-outs (`index_add_` accumulation order) while CPU is exactly 0.0, and two "
+            "back-to-back runs of the identical protocol (same seed, same GPU) differ by 0.001-0.042 in valid MAE "
+            "after only two epochs.  A historical point therefore cannot be reproduced to within 0.005, and the "
+            "historical H1 number is not a usable decision baseline.",
+            "",
+            "Evidence: `reproducibility_probe.json`, `notes/e2e_dictenv_purify_v0_analysis.md`.",
+        ]
     if paired["mean_delta"] is not None:
         lines.append(f"* mean Delta = {paired['mean_delta']:+.6f}; worst seed Delta = {paired['worst_seed_delta']:+.6f}")
     if payload["mechanism"] is not None:
@@ -1198,6 +1261,7 @@ def _write_decision(payload: Mapping[str, Any]) -> None:
         f"* reference seed 0 soup {paired['reference_soup']['0']:.6f} (historical context {H1_HISTORICAL_SOUP:.6f}, "
         f"drift {paired['reference_reproduction']['drift']:+.6f})",
         f"* purified seed 0 soup {paired['purified_soup']['0']:.6f}",
+        f"* candidate interpreted: {bool(paired['reference_reproduction']['passed'])}",
         f"* parameter ledger {payload['parameter_ledger']['reference']} -> {payload['parameter_ledger']['purified']}",
         f"* official test never loaded",
     ]

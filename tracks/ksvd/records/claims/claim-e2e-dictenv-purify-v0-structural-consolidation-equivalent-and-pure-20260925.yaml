@@ -1,0 +1,109 @@
+claim_id: claim-e2e-dictenv-purify-v0-structural-consolidation-equivalent-and-pure-20260925
+created: '2026-09-25T09:05:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  Under the frozen round E2E-DictEnv-Purify-v0 (protocol e2e_dictenv_purify_v0,
+  preregistration bbcaf58, implementation 8657ffc, amendment A1 6ec6218, remote
+  NVIDIA A100-SXM4-40GB GPU1 only, official ZINC test never loaded), the H1
+  "clean dictionary core" architecture (dictionary 2080 + node binding 5760 +
+  edge binding 4800 + decoder 69744 + backend 15103 = 97,487 trainable
+  parameters) can be consolidated into four concept modules (StructuralBasis,
+  AttributedLocalMeasure, StaticComposer, PropertyReader) whose deterministic
+  execution path is *bit-identical* to the original implementation: loading the
+  trained H1 soup checkpoint and comparing old vs new on the same official-valid
+  molecules gives max |old - new| = 0.0 on every one of the twelve comparison
+  points (alpha, node/edge slots, anchor, pair_value, unary, relation_readout,
+  global, topology, unified, environment, prediction), i.e. 0.0 <= the frozen
+  1e-6 tolerance, with the same result for the untrained matched initial state.
+  The single authorised architectural change replaces the three local
+  raw-chemistry anchor bypasses (root atom identity 28-D, patch atom marginal
+  28-D, patch bond marginal 4-D, together 60 of the 62 anchor dims) with a
+  constant structural channel — node beta_v = [1; alpha_v] (33x96) and edge
+  gamma_uv = [1; g_uv] (97x48) — and a size-only 2-D anchor, keeping the fusion
+  width at 368.  The result has *zero* local raw-chemistry bypasses (3 -> 0),
+  local chemistry entry points 5 -> 2 (only the global zeroth-order attribute
+  measure and the attributed atom/bond valuation remain), and 1.8 % *fewer*
+  parameters (97,487 -> 95,711, delta -1,776), with all smoke gates passing on
+  GPU1 including non-zero gradient into both constant channel rows.
+scope: >-
+  One architecture, one dataset (ZINC canonical official train 10000 / official
+  valid 1000), one frozen dictionary (sdb32, sha256 b0c5da98...dfecd) and one
+  frozen H1 checkpoint.  The equivalence statement is about execution semantics
+  and parameters, not about predictive quality: it is measured on the CPU
+  deterministic path (bit-identical) and additionally on CUDA, where the shared
+  pooling read-outs are limited by `index_add_` accumulation order (prediction
+  8.345e-07 against a measured same-implementation rerun noise floor of
+  5.722e-06, amendment A1).  The purity statement is a static audit of parameter
+  allocation and information flow (notes/e2e_dictenv_purify_v0_architecture_audit.md,
+  purity_audit.json); it does not claim that the removed bypasses were
+  unnecessary for performance.
+supporting_evidence:
+  - >-
+    Stage 0 equivalence artifact semantic_refactor_equivalence.json: CPU block
+    max_abs 0.0 on all twelve comparison points and bit_identical true; CUDA
+    block prediction_max_abs 8.345e-07 inside its measured noise floor with the
+    gate passed on both devices; 48 shared tensors copied exactly (max_abs_diff
+    0.0) and the candidate-only constant rows initialised from a separate
+    deterministic generator (matched-initialisation check).
+  - >-
+    Parameter ledger parameter_ledger.json and the live counts recorded in the
+    arm artifacts: 97,487 (reference) vs 95,711 (purified), delta -1,776
+    (-1.822 %), mapping node binding +96, edge binding +48, anchor decoder
+    -1,920.
+  - >-
+    Purity audit purity_audit.json: local_raw_chemistry_bypass_count 3 -> 0 with
+    the three bypasses named (q_i 28-D, sum_{v in P_i} q_v 28-D, sum_{e in E_i}
+    b_e 4-D), local_chemistry_entry_points 5 -> 2, chemistry-specific parameter
+    mass 7,570.6 -> 4,498.6.
+  - >-
+    Both arms trained to completion on GPU1 under the frozen protocol (seed 0,
+    320 epochs, lambda 33.95873017865987, Adam 1e-3 / wd 1e-5 / clip 5, batch
+    128, <= 219 MB peak, ~2,140 s each) with healthy smoke gates and finite
+    losses; curves and states are retained.
+  - >-
+    Independent local recomputation (code/analyze_e2e_dictenv_purify_v0.py
+    --write): 38 checks, 0 errors, including a re-derivation of the ledger, the
+    equivalence flags, the purity counts and the stop semantics.
+contradicting_evidence:
+  - >-
+    The round produced *no* usable performance statement: the fresh matched
+    reference drifted +0.006330 above the historical H1 context (tolerance
+    0.005), so the frozen rule 10.2 stopped the round before the candidate was
+    interpreted.  Nothing here shows that the purified architecture is
+    non-inferior, competitive, better or worse than H1.
+  - >-
+    The candidate's own seed-0 Top-5 soup is 0.005619 worse than its fresh
+    reference (0.13549722206493606 vs 0.1298781834495603), i.e. a difference of
+    the same order as the protocol's measured run-to-run dispersion
+    (0.009-0.042 valid MAE after two epochs); it is recorded, not interpreted.
+limitations:
+  - >-
+    Equivalence is verified on a single 16-molecule batch (2979 nodes) plus the
+    local CPU rerun; it is an execution-semantics identity, not a proof of
+    equivalent training dynamics.
+  - >-
+    The constant channel adds a parameter-free intercept to every node/edge
+    code; its *utility* (rather than its existence) is unmeasured, because the
+    constant-channel ablation stage was not authorised after the stop.
+  - >-
+    No seed-1 replicate, no mechanism intervention, no dictionary health and no
+    official-test read exist for the purified arm.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_architecture_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_amendment_a1.md
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_implementation.md
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/semantic_refactor_equivalence.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/parameter_ledger.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/purity_audit.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/information_flow.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/reference_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/purified_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/local_analysis.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/REPORT.md
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_purify_v0.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_purify_v0.py
+  - tracks/ksvd/tests/test_e2e_dictenv_purify_v0.py

@@ -1,0 +1,95 @@
+claim_id: claim-e2e-dictenv-training-protocol-not-bit-reproducible-20260925
+created: '2026-09-25T09:10:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  The frozen E2E-DictEnv H1 training protocol (ZINC canonical official train
+  10000 / official valid 1000, seed 0, 320 epochs, lambda 33.95873017865987,
+  Adam 1e-3 / wd 1e-5 / clip 5, batch 128, generator-seeded batch order, Top-5
+  soup by official-valid MAE) is **not bit-reproducible** on the shared A100
+  under the current execution regime, and therefore historical point estimates
+  such as the H1 Top-5 soup 0.12354862861608853 carry an unquantified run-to-run
+  uncertainty of the order of 0.01 rather than being fixed constants.  Direct
+  measurements (GPU1, commit 79fb460,
+  results/e2e_dictenv_purify_v0/reproducibility_probe.json, two independent
+  executions): (i) two *identical* forward passes on the same weights and the
+  same batch differ by up to 1.37e-04 in the pooled read-outs
+  (relation_readout / unified) and 2.4-2.9e-06 in the prediction, while the IHT
+  codes are bit-identical (0 support flips) and the same comparison on CPU is
+  exactly 0.0 everywhere; (ii) two back-to-back runs of the identical protocol
+  (same code, seed, GPU, data; epoch body copied verbatim from the formal
+  trainer) already differ after two epochs by 0.0089-0.0422 in official-valid
+  MAE and 0.0013-0.0163 in train MAE.  The cause is the CUDA accumulation order
+  of the `index_add_` pooling helpers, which propagates through training and
+  makes the protocol's own dispersion (>= 0.009 in valid MAE within two epochs)
+  exceed both the 0.005 reference-reproduction tolerance and the 0.002
+  non-inferiority band used by E2E-DictEnv-Purify-v0.
+scope: >-
+  Measured on the shared remote A100 box (hxy@a100-2, torch 2.5.1+cu124) with
+  the frozen P2/H1 model and trainer at commit 79fb460 and the local P1
+  environment cache; two epochs per repetition, two repetitions per execution,
+  two independent executions, one GPU (GPU1), no dropout in the model and a
+  seeded batch order, i.e. every *other* determinism source was excluded by
+  direct evidence (data cache predates the historical run, dictionary sha256
+  identical, no model/trainer commits since H1's run 122db5dc, init via
+  `torch.manual_seed(0)`, batch order via an explicitly seeded
+  `torch.Generator`, and the round's evaluator reproducing H1's stored soup
+  state as 0.12354863 with rec 1.4615e-04).  The statement is about this
+  protocol/regime, not about CUDA in general, and it does not quantify
+  long-horizon soup-level dispersion beyond the observed pair of full runs
+  (historical 0.123549 vs fresh 0.129878).
+supporting_evidence:
+  - >-
+    Repeated-forward probe on CUDA: prediction_max_abs_diff 2.38e-06 / 2.86e-06
+    (two executions), codes_max_abs_diff 0.0 with 0 support flips, unified
+    read-out difference 1.07e-04 / 1.37e-04; CPU control exactly 0.0 for every
+    quantity.
+  - >-
+    Repeated-protocol probe: execution 1 epoch-1/2 valid MAE differences
+    +0.0414 / +0.0291 and train MAE differences +0.0056 / +0.0163; execution 2
+    -0.0089 / -0.0422 and +0.0013 / -0.0026.
+  - >-
+    The fresh matched reference of the formal round (epoch-1 train MAE 1.011811)
+    falls between the two probe reruns (1.011238 and 1.012584), and its full-run
+    soup 0.1298781834495603 lies +0.006330 above the historical H1 soup
+    0.12354862861608853 - consistent with an ordinary draw of the protocol
+    rather than a mis-specified configuration.
+  - >-
+    The historical H1 curve's own epoch-to-epoch official-valid jitter is of the
+    same order (+-0.02 within a few epochs; best 0.129284 @313 versus 0.145299
+    @320), independently of the repeat experiments.
+contradicting_evidence:
+  - >-
+    The effect is an execution-regime property, not a mathematical
+    irreproducibility: on CPU the same comparisons are exactly 0.0, so a
+    deterministic CUDA path (`torch.use_deterministic_algorithms`, a
+    deterministic pooling replacement, or CPU pooling) should remove it - which
+    is untested here.
+  - >-
+    Only two repetitions per execution and two epochs per repetition were
+    measured; the soup-level dispersion of the full 320-epoch protocol is
+    therefore inferred from one historical/fresh pair plus the epoch-level
+    measurements rather than estimated from many full runs.
+limitations:
+  - >-
+    Single machine and single GPU model (A100-SXM4-40GB, GPU1); the magnitude of
+    the dispersion may differ on other hardware, other torch versions or under
+    different CUDA workspace/cuBLAS settings.
+  - >-
+    Two-epoch dispersion (0.009-0.042) is an upper-bound-flavoured diagnostic of
+    the regime, not a calibrated error bar for a 320-epoch soup; it does show
+    that the 0.002 non-inferiority band cannot be resolved in this regime.
+  - >-
+    No mechanism-level attribution beyond the `index_add_` pooling read-outs was
+    established (the code path itself is deterministic; no support flips were
+    observed).
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_analysis.md
+  - tracks/ksvd/notes/e2e_dictenv_purify_v0_amendment_a1.md
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/reproducibility_probe.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/reference_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/paired_performance.json
+  - tracks/ksvd/results/e2e_dictenv_purify_v0/semantic_refactor_equivalence.json
+  - tracks/ksvd/results/e2e_dictenv_p2_abs/curves/H1_curve.csv
+  - tracks/ksvd/code/diag_e2e_dictenv_purify_v0_reproducibility.py
