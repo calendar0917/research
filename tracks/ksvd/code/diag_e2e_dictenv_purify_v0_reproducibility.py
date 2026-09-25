@@ -135,7 +135,7 @@ def probe_two_epochs(seed: int, device: torch.device, epochs: int = 2) -> dict[s
     return {"curve": curve, "weight_max_abs_from_init": drift}
 
 
-def main() -> int:
+def main(write: bool = False) -> int:
     started = time.perf_counter()
     device = resolve_device("cuda")
     print(f"device={device}", flush=True)
@@ -186,4 +186,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write", action="store_true", help="write results/e2e_dictenv_purify_v0/reproducibility_probe.json")
     args = parser.parse_args()
-    raise SystemExit(main())
+    raise SystemExit(main(write=bool(args.write)))
