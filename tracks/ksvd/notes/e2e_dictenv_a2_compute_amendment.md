@@ -166,10 +166,17 @@ its own, whatever the label.
 
 ## 5. A2 truncation boundary (appended after the boundary was reached)
 
-See the `A2 truncation boundary` section of
-`tracks/ksvd/results/e2e_dictenv_a2/README.md` for the byte-level boundary
-record (completed artifacts, partial checkpoints — there are none, because the
-frozen `train_arm` writes state/curve/JSON only after the final epoch — and the
-exact stop point).  This section is appended in a later commit than §1–§4 and
-changes no rule: the protocol that the lite run executes was frozen in the
-commit that first introduced this document.
+Recorded in full (per-file sha256 table) in
+`tracks/ksvd/results/e2e_dictenv_a2/README.md`.  Compact record:
+
+| item | value |
+|---|---|
+| stop | `2026-09-25 09:44:51 CST (+08:00)`, `SIGTERM` at a clean arm boundary |
+| completed before the stop | `artifact_identity.json` (26/26, `all_passed`), `correctness.json`, `assignment_semantics.json`, `dictionary_health*.json`, `parameter_accounting.json`, `qualification.json`, `continuity_v2.json`, `smoke/`, and the **complete** frozen Stage-1 TOPO arm `omp_screen_topo.json` (horizon 320; soup valid MAE `0.12681294702464949`, best `0.13136472144449363 @ 314`, wall `2255.3 s`) |
+| partial checkpoints | **none** — the frozen `train_arm` writes state/curve/JSON only after the final epoch, so the mid-flight `INDEP` arm (≈3 s) left nothing on disk |
+| `NOT RUN — deferred by user compute-budget amendment` | `omp-screen` `I0`/`R0`, `omp-decision`, `compression`, `compression-decision`, `coder`, `formal`, `mechanism`, `liveness`, `specificity`, `decision`, `report` |
+| artifact provenance | `git_commit 24d528635fab49c082115d90592cb7d5938eeb37`, `preregistration_commit 1813f53`, `official_test_loaded = false` |
+
+This section is appended in a later commit than §1–§4 and changes no rule: the
+protocol that the lite run executes was frozen in the commit that first
+introduced this document.
