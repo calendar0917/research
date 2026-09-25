@@ -37,6 +37,7 @@ EXPECTED_STAGE_CHOICES = (
     "verify",
     "continuation",
     "screen",
+    "arm",
     "decision",
     "report",
     "smoke",
@@ -487,6 +488,26 @@ def test_arm_tag_uses_the_confirm_horizon():
 # ---------------------------------------------------------------------------
 # 6. stage wiring, reuse discipline and safety
 # ---------------------------------------------------------------------------
+
+
+def test_arm_stage_is_guarded_and_single_arm(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(run, "RESULTS_DIR", tmp_path)
+    monkeypatch.setattr(run, "CURVE_DIR", tmp_path / "curves")
+    monkeypatch.setattr(run, "STAGE_STATUS", {})
+    _fake_identity(tmp_path)
+    _fake_continuation(tmp_path)
+    with pytest.raises(RuntimeError, match="not authorised"):
+        run.arm_stage("TOPO", device="cuda")
+    monkeypatch.setattr(run, "RESULTS_DIR", tmp_path / "unverified")
+    (tmp_path / "unverified").mkdir()
+    with pytest.raises(RuntimeError, match="verify stage"):
+        run.arm_stage("INDEP", device="cuda")
+    # the parallel entry point shares the no-mixing gate with the sequential one
+    monkeypatch.setattr(run, "RESULTS_DIR", tmp_path)
+    _fake_continuation(tmp_path, mode=confirm.CONTINUATION_RESUME)
+    with pytest.raises(RuntimeError, match="mix regimes"):
+        run.arm_stage("INDEP", device="cuda")
+    assert "arm" in EXPECTED_STAGE_CHOICES
 
 
 def test_screen_refuses_to_mix_regimes(monkeypatch, tmp_path: Path):

@@ -7,6 +7,8 @@ Preregistration: ``tracks/ksvd/notes/e2e_dictenv_a2_confirm_preregistration.md``
 Stage order (each stage refuses to run out of order):
 
 ``verify continuation screen decision report``  (+ ``smoke``, plumbing only)
+``arm --arm {REAL,INDEP}`` trains exactly one arm (the user-authorised parallel
+schedule entry point; the frozen protocol is identical either way).
 
 ``verify`` re-reads the completed parent A2 artifact identity *by reference*
 (no cache, scaler, dictionary or OMP recomputation), pins the live dictionary
@@ -550,9 +552,48 @@ def _require_continuation() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def screen_stage(device: str = "cuda") -> dict[str, Any]:
-    """Train ``ATTR-REAL-OMP`` and ``ATTR-INDEP-OMP`` at the frozen 320 horizon."""
-    started = time.perf_counter()
+def _train_one_arm(arm: str, device: str, *, mode: str, schedule: str) -> dict[str, Any]:
+    """Train exactly one matched frozen-OMP arm at the frozen confirmation horizon."""
+    tag = _arm_tag(arm)
+    with a1_emits_into(RESULTS_DIR), matched_init_enforced():
+        payload = a1run.train_arm(
+            arm,
+            stage="omp",
+            device=device,
+            tag=tag,
+            horizon=int(HORIZON),
+            out_dir=RESULTS_DIR,
+        )
+    if int(payload.get("horizon", -1)) != int(HORIZON):
+        raise RuntimeError(
+            f"{arm}: trainer horizon {payload.get('horizon')!r} != frozen {HORIZON}"
+        )
+    if not bool(payload.get("frozen_dictionary")):
+        raise RuntimeError(f"{arm}: dictionary was not frozen during the confirmation run")
+    if payload.get("dictionary_sha256_f32") != a2run.EXPECTED_DICT_SHA[arm]:
+        raise RuntimeError(f"{arm}: trained against an unexpected dictionary")
+    if not _complete_curve(_curve_path(tag), int(HORIZON)):
+        raise RuntimeError(f"{arm}: {HORIZON}-epoch curve missing or incomplete")
+    payload = _reemit(
+        payload,
+        source="zinc_e2e_dictenv_a1.train_arm(stage='omp')",
+        confirm_arm=f"ATTR-{arm}-OMP-{int(HORIZON)}",
+        dictionary_kind="frozen_ksvd_k32_s8_omp",
+        confirm_horizon=int(HORIZON),
+        continuation_mode=mode,
+        schedule=schedule,
+    )
+    payload["source_preregistration_commit"] = payload.get("preregistration_commit")
+    payload["preregistration_commit"] = _prereg_commit()
+    payload["parent_a2_preregistration_commit"] = a2conf.PARENT_A2_PREREG_COMMIT
+    payload["parent_a2_commit"] = a2conf.PARENT_A2_COMMIT
+    payload["predecessor_round"] = a2conf.PREDECESSOR_ROUND
+    _write_json(RESULTS_DIR / f"{arm.lower()}_{int(HORIZON)}.json", payload)
+    return payload
+
+
+def _authorised_mode() -> str:
+    """Shared gate for every training entry point (verify + continuation first)."""
     _require_verified()
     continuation = _require_continuation()
     mode = str(continuation.get("mode"))
@@ -563,43 +604,19 @@ def screen_stage(device: str = "cuda") -> dict[str, Any]:
             "exact continuation was authorised but this runner implements only the "
             "fresh matched 320 regime; refusing to mix regimes"
         )
+    return mode
+
+
+def screen_stage(device: str = "cuda") -> dict[str, Any]:
+    """Train ``ATTR-REAL-OMP`` and ``ATTR-INDEP-OMP`` at the frozen 320 horizon."""
+    started = time.perf_counter()
+    mode = _authorised_mode()
     _set_device_policy(device)
     values: dict[str, float] = {}
     for arm in a2conf.confirm_arm_list():
-        tag = _arm_tag(arm)
-        with a1_emits_into(RESULTS_DIR), matched_init_enforced():
-            payload = a1run.train_arm(
-                arm,
-                stage="omp",
-                device=device,
-                tag=tag,
-                horizon=int(HORIZON),
-                out_dir=RESULTS_DIR,
-            )
-        if int(payload.get("horizon", -1)) != int(HORIZON):
-            raise RuntimeError(
-                f"{arm}: trainer horizon {payload.get('horizon')!r} != frozen {HORIZON}"
-            )
-        if not bool(payload.get("frozen_dictionary")):
-            raise RuntimeError(f"{arm}: dictionary was not frozen during the confirmation run")
-        if payload.get("dictionary_sha256_f32") != a2run.EXPECTED_DICT_SHA[arm]:
-            raise RuntimeError(f"{arm}: trained against an unexpected dictionary")
-        if not _complete_curve(_curve_path(tag), int(HORIZON)):
-            raise RuntimeError(f"{arm}: {HORIZON}-epoch curve missing or incomplete")
-        payload = _reemit(
-            payload,
-            source="zinc_e2e_dictenv_a1.train_arm(stage='omp')",
-            confirm_arm=f"ATTR-{arm}-OMP-{int(HORIZON)}",
-            dictionary_kind="frozen_ksvd_k32_s8_omp",
-            confirm_horizon=int(HORIZON),
-            continuation_mode=mode,
+        payload = _train_one_arm(
+            arm, device, mode=mode, schedule="sequential within one job"
         )
-        payload["source_preregistration_commit"] = payload.get("preregistration_commit")
-        payload["preregistration_commit"] = _prereg_commit()
-        payload["parent_a2_preregistration_commit"] = a2conf.PARENT_A2_PREREG_COMMIT
-        payload["parent_a2_commit"] = a2conf.PARENT_A2_COMMIT
-        payload["predecessor_round"] = a2conf.PREDECESSOR_ROUND
-        _write_json(RESULTS_DIR / f"{arm.lower()}_{int(HORIZON)}.json", payload)
         values[arm] = float(payload["soup"]["soup_valid_mae"])
     seconds = float(time.perf_counter() - started)
     _mark(
@@ -612,6 +629,36 @@ def screen_stage(device: str = "cuda") -> dict[str, Any]:
     )
     print(f"[confirm-screen] {json.dumps(values)}", flush=True)
     return values
+
+
+def arm_stage(arm: str, device: str = "cuda") -> dict[str, Any]:
+    """Train exactly one arm: the entry point for a user-authorised parallel schedule.
+
+    The two arms are independent single-process CUDA jobs that share nothing but
+    read-only frozen artifacts (seed, init, batch order, frozen dictionary and
+    exact-OMP codes are fixed per arm), so running them as two concurrent
+    processes on the same physical GPU1 changes scheduling only.  Both arms are
+    written to the same result directory with distinct tags.
+    """
+    started = time.perf_counter()
+    mode = _authorised_mode()
+    if arm not in a2conf.confirm_arm_list():
+        raise RuntimeError(f"arm {arm!r} is not authorised by the frozen preregistration")
+    _set_device_policy(device)
+    payload = _train_one_arm(
+        arm, device, mode=mode, schedule="single-arm job (user-authorised parallel GPU1 schedule)"
+    )
+    _mark(
+        f"arm-{arm.lower()}",
+        "RUN",
+        artifact=f"{arm.lower()}_{int(HORIZON)}.json",
+        seconds=float(time.perf_counter() - started),
+        device=device,
+        reason="single-arm job (user-authorised parallel schedule on GPU1)",
+    )
+    value = float(payload["soup"]["soup_valid_mae"])
+    print(f"[confirm-arm] {arm} {json.dumps({arm: value})}", flush=True)
+    return {arm: value}
 
 
 # ---------------------------------------------------------------------------
@@ -1021,9 +1068,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="E2E-DictEnv-A2-Confirm runner")
     parser.add_argument(
         "stage",
-        choices=("verify", "continuation", "screen", "decision", "report", "smoke", "all"),
+        choices=("verify", "continuation", "screen", "arm", "decision", "report",
+                 "smoke", "all"),
     )
     parser.add_argument("--device", default="cpu")
+    parser.add_argument("--arm", default="REAL", choices=tuple(a2conf.CONFIRM_ARMS))
     parser.add_argument("--smoke-molecules", type=int, default=SMOKE_MOLECULES)
     parser.add_argument("--smoke-horizon", type=int, default=SMOKE_HORIZON)
     args = parser.parse_args(argv)
@@ -1035,6 +1084,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         continuation_stage()
     elif args.stage == "screen":
         screen_stage(device=args.device)
+    elif args.stage == "arm":
+        arm_stage(args.arm, device=args.device)
     elif args.stage == "decision":
         decision_stage()
     elif args.stage == "report":
