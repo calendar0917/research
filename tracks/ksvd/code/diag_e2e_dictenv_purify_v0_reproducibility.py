@@ -42,6 +42,7 @@ from tracks.ksvd.experiments.luyin16.zinc_e2e_dictenv_purify_v0 import (
     TRAIN_SHUFFLE_OFFSET,
     WEIGHT_DECAY,
     dictionary,
+    evaluate as evaluate_model,
     load_split,
     resolve_device,
 )
@@ -115,7 +116,7 @@ def probe_two_epochs(seed: int, device: torch.device, epochs: int = 2) -> dict[s
             n_mol += int(batch.y.numel())
             rec_sum += float(((aux["phi"] - model.reconstruct(aux["coord"])).pow(2).sum(1) / (aux["phi"].pow(2).sum(1) + 1e-12)).sum().item())
             n_nodes += int(aux["phi"].shape[0])
-        valid = p1.evaluate(model, eval_loader, device)
+        valid = evaluate_model(model, eval_loader, device)
         curve.append({"epoch": epoch, "train_mae": task_sum / max(n_mol, 1), "valid_mae": float(valid["mae"])})
     drift = float(max((model.state_dict()[k].float() - v.float()).abs().max().item() for k, v in initial.items()))
     return {"curve": curve, "weight_max_abs_from_init": drift}
