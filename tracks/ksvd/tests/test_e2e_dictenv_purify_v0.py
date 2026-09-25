@@ -127,6 +127,9 @@ def test_stage0_equivalence_runner_stage(monkeypatch):
     assert payload["passed"], payload["comparisons_max_abs"]
     assert payload["max_abs"] <= 1.0e-6
     assert payload["comparisons_max_abs"]["prediction"] <= 1.0e-6
+    assert payload["bit_identical"] is True, "the deterministic CPU path must be bit-identical"
+    assert payload["cpu_bit_identical"] is True
+    assert payload["rerun_noise_floor"]["refactor_prediction"] == 0.0
 
 
 # ---------------------------------------------------------------------------

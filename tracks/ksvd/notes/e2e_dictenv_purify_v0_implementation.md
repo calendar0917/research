@@ -77,7 +77,11 @@ molecules with the **trained H1 soup checkpoint** loaded
 | environment `E` | 0.0 |
 | **prediction** | **0.0** |
 
-Requirement was `<= 1e-6`; the refactor is bit-identical.  Artifact:
+Requirement was `<= 1e-6`; the refactor is bit-identical.  On CUDA the same
+comparison is limited by `index_add_` atomic reduction order (prediction
+4.77e-07, pooled read-outs up to 5.7e-06); amendment A1 makes that explicit and
+gates CUDA against the implementation's own measured rerun noise floor while
+keeping the deterministic CPU path bit-identical.  Artifact:
 `results/e2e_dictenv_purify_v0/semantic_refactor_equivalence.json`
 (`bit_identical: true`, `passed: true`).  The deterministic-init comparison is
 also bit-identical, and the model initialization is bit-identical to

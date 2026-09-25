@@ -5,6 +5,8 @@ Round **E2E-DictEnv-Purify-v0** · protocol `e2e_dictenv_purify_v0` · study
 
 Architecture audit (written first, same commit range):
 [`e2e_dictenv_purify_v0_architecture_audit.md`](e2e_dictenv_purify_v0_architecture_audit.md).
+Amendment: [`e2e_dictenv_purify_v0_amendment_a1.md`](e2e_dictenv_purify_v0_amendment_a1.md)
+(equivalence-gate execution regime; rules unchanged).
 
 This is the frozen specification.  It is written **before** any refactor,
 implementation, cache build, training or GPU use.  Any deviation requires a
