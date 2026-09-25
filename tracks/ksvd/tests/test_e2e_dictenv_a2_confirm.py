@@ -596,6 +596,43 @@ def test_report_stage_records_the_verdict_and_defers_everything_else(
     assert "seed 1 replication" in deferred
 
 
+def test_report_stage_detects_artifacts_from_other_processes(monkeypatch, tmp_path: Path):
+    """The arms ran as separate processes; the stage record must show them."""
+    monkeypatch.setattr(run, "RESULTS_DIR", tmp_path)
+    monkeypatch.setattr(run, "CURVE_DIR", tmp_path / "curves")
+    monkeypatch.setattr(run, "STAGE_STATUS", {})
+    _prepare_decision_dir(tmp_path, real=0.100, indep=0.104, topo=0.098)
+    # simulate the parallel schedule recorded in the arm artifacts
+    for arm in confirm.CONFIRM_ARMS:
+        path = tmp_path / f"{arm.lower()}_320.json"
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["schedule"] = "single-arm job (user-authorised parallel GPU1 schedule)"
+        payload["wall_clock_s"] = 2453.4
+        path.write_text(json.dumps(payload), encoding="utf-8")
+    smoke = tmp_path / "smoke"
+    smoke.mkdir(parents=True, exist_ok=True)
+    (smoke / "smoke.json").write_text(
+        json.dumps({"device": "cuda", "seconds": 0.7}), encoding="utf-8"
+    )
+    run.decision_stage()  # the decision artifact must exist for ``report``
+    run.report_stage()
+    status = json.loads((tmp_path / "stage_status.json").read_text(encoding="utf-8"))
+    stages = status["stages"]
+    for name in ("verify", "continuation", "decision", "report", "screen",
+                 "arm-real", "arm-indep", "smoke"):
+        assert stages[name]["status"] in ("RUN", "RUN (plumbing only)"), name
+    assert stages["arm-indep"]["device"] == "cuda"
+    assert stages["verify"]["device"] == "cpu"
+    assert stages["arm-real"]["seconds"] == pytest.approx(2453.4)
+    assert status["cuda_stages_run"] == ["arm-indep", "arm-real", "screen", "smoke"]
+    assert any(name.startswith("IHT") for name in stages if stages[name]["status"] == "NOT RUN")
+    assert status["arm_schedules"] == {
+        arm: "single-arm job (user-authorised parallel GPU1 schedule)"
+        for arm in confirm.CONFIRM_ARMS
+    }
+    assert "parallel" in status["schedule_note"]
+
+
 def test_gpu_policy_is_delegated_and_enforced(monkeypatch):
     monkeypatch.setattr(a2run, "_set_device_policy", lambda device: ("delegated", device))
     assert run._set_device_policy("cuda") == ("delegated", "cuda")

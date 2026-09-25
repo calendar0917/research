@@ -698,7 +698,8 @@ def decision_stage() -> dict[str, Any]:
             "horizon": int(payload["horizon"]),
             "dictionary_sha256_f32": payload.get("dictionary_sha256_f32"),
             "frozen_dictionary": bool(payload.get("frozen_dictionary")),
-            "seconds": payload.get("seconds"),
+            "seconds": payload.get("wall_clock_s"),
+            "schedule": payload.get("schedule"),
         }
     curves_finite = bool(
         len(curves) == len(a2conf.CONFIRM_ARMS)
@@ -786,23 +787,81 @@ def decision_stage() -> dict[str, Any]:
     return payload
 
 
-def _device_of_stage(stage: str) -> str:
-    entry = STAGE_STATUS.get(stage, {})
-    return "cuda" if entry.get("status") == "RUN" else "cpu"
+def _detect_completed_stages() -> None:
+    """Record stages whose artifacts already exist.
 
+    The confirmation arms ran as separate processes (user-authorised parallel
+    schedule), so ``report`` may be the first place that sees them; an accurate
+    stage record must reflect artifacts on disk, not only this process' memory.
+    Existing marks are never overwritten.
+    """
+    def _mark_if_absent(name: str, status: str, **kwargs: Any) -> None:
+        if STAGE_STATUS.get(name, {}).get("status") != status:
+            _mark(name, status, **kwargs)
 
-# ---------------------------------------------------------------------------
-# stage: report
-# ---------------------------------------------------------------------------
+    if (RESULTS_DIR / "artifact_identity.json").exists():
+        _mark_if_absent("verify", "RUN", artifact="artifact_identity.json", device="cpu",
+                        reason="frozen references verified (artifact present)")
+    if (RESULTS_DIR / "continuation_mode.json").exists():
+        _mark_if_absent("continuation", "RUN", artifact="continuation_mode.json",
+                        device="cpu", reason="continuation regime recorded (artifact present)")
+    schedules: dict[str, Any] = {}
+    arm_seconds = 0.0
+    for arm in a2conf.CONFIRM_ARMS:
+        path = RESULTS_DIR / f"{_arm_tag(arm)}.json"
+        if not path.exists():
+            continue
+        payload = _read_json(path)
+        schedule = str(payload.get("schedule") or "unknown")
+        schedules[arm] = schedule
+        seconds = payload.get("wall_clock_s")
+        if isinstance(seconds, (int, float)):
+            arm_seconds += float(seconds)
+        _mark_if_absent(
+            f"arm-{arm.lower()}", "RUN", artifact=path.name, device="cuda",
+            seconds=seconds if isinstance(seconds, (int, float)) else None,
+            reason=f"320-epoch frozen-OMP arm completed; schedule={schedule}",
+        )
+    if len(schedules) == len(a2conf.CONFIRM_ARMS):
+        _mark_if_absent("screen", "RUN", artifact=f"{{real,indep}}_{int(HORIZON)}.json",
+                        device="cuda", seconds=arm_seconds or None,
+                        reason="both matched arms complete (see arm_schedules)")
+    if (RESULTS_DIR / "decision.json").exists():
+        _mark_if_absent("decision", "RUN", artifact="decision.json", device="cpu",
+                        reason="frozen decision matrix applied (artifact present)")
+    smoke_path = RESULTS_DIR / "smoke" / "smoke.json"
+    if smoke_path.exists():
+        smoke = _read_json(smoke_path)
+        _mark_if_absent(
+            "smoke", "RUN (plumbing only)", artifact="smoke/smoke.json",
+            device=str(smoke.get("device") or "cuda"),
+            seconds=smoke.get("seconds"),
+            reason="confirmation trainer smoke (separate process)",
+        )
 
 
 def report_stage() -> dict[str, Any]:
+    _detect_completed_stages()
     decision = _read_json(RESULTS_DIR / "decision.json")
     paired = _read_json(RESULTS_DIR / "paired_analysis.json")
     continuation = _require_continuation()
     arms = paired["arms"]
     late = decision.get("late_window")
     change = decision["from_160_to_320"]["G_pair"]
+    schedules = {
+        arm: _read_json(RESULTS_DIR / f"{_arm_tag(arm)}.json").get("schedule")
+        for arm in a2conf.CONFIRM_ARMS
+        if (RESULTS_DIR / f"{_arm_tag(arm)}.json").exists()
+    }
+    parallel_schedule = any(
+        str(schedule).startswith("single-arm") for schedule in schedules.values()
+    )
+    gpu_line = (
+        "* GPU: physical GPU1 only; user-authorised parallel schedule "
+        f"(arm schedules: {schedules})"
+        if parallel_schedule
+        else "* GPU: physical GPU1 only (`CUDA_VISIBLE_DEVICES=1`), one CUDA process at a time"
+    )
     lines = [
         f"# {ROUND} — DECISION",
         "",
@@ -810,7 +869,7 @@ def report_stage() -> dict[str, Any]:
         f"* parent round: `{a2conf.PARENT_ROUND}` (frozen protocol "
         f"`{a2conf.PARENT_PROTOCOL_VERSION}`, prereg `{a2conf.PARENT_A2_PREREG_COMMIT}`)",
         f"* predecessor: `{a2conf.PREDECESSOR_ROUND}` / `{a2conf.PREDECESSOR_PROTOCOL_VERSION}`",
-        "* GPU: physical GPU1 only (`CUDA_VISIBLE_DEVICES=1`), one CUDA process at a time",
+        gpu_line,
         f"* seed: {SEED}; horizon: {HORIZON}; arms: `REAL`, `INDEP` (TOPO not retrained)",
         f"* continuation regime: `{continuation['mode']}` (mixing prohibited)",
         "",
@@ -952,14 +1011,23 @@ def report_stage() -> dict[str, Any]:
     for name in _not_run_stages:
         if name not in STAGE_STATUS:
             _mark(name, "NOT RUN", reason="deferred by the frozen confirmation preregistration")
+    _mark("report", "RUN", artifact="REPORT.md, DECISION.md, stage_status.json", device="cpu",
+          reason=f"final label {decision['verdict']}")
     payload = {
-        **provenance(_device_of_stage("screen")),
+        **provenance("cpu"),
         "stage": "confirm_report",
         "verdict": decision["verdict"],
         "case": decision["case"],
         "G_pair_320": decision["G_pair_320"],
         "Delta_vs_TOPO": decision["Delta_vs_TOPO"],
         "continuation_mode": continuation["mode"],
+        "arm_schedules": schedules,
+        "schedule_note": (
+            "user-authorised parallel GPU1 schedule: the two 320-epoch arms ran as two "
+            "concurrent single-process CUDA jobs with identical frozen protocol "
+            "(seed, matched init, batch order, frozen dictionary and exact-OMP codes); "
+            "GPU0 was never used and no DDP/multi-GPU was involved"
+        ),
         "stages": STAGE_STATUS,
         "cuda_stages_run": sorted(
             name for name, item in STAGE_STATUS.items() if item.get("device") == "cuda"
@@ -970,8 +1038,6 @@ def report_stage() -> dict[str, Any]:
         "official_test_loaded": False,
     }
     _write_json(RESULTS_DIR / "stage_status.json", payload)
-    _mark("report", "RUN", artifact="REPORT.md, DECISION.md, stage_status.json", device="cpu",
-          reason=f"final label {decision['verdict']}")
     return payload
 
 
