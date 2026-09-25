@@ -1,0 +1,113 @@
+claim_id: claim-e2e-dictenv-a2-confirm-pairing-material-but-not-competitive-20260925
+created: '2026-09-25T05:30:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  Under the frozen round E2E-DictEnv-A2-Confirm (protocol e2e_dictenv_a2_confirm,
+  preregistration commit 4b9e206, implementation 45d53df with the single-arm
+  stage a9d3e08, remote NVIDIA A100-SXM4-40GB GPU1 only, seed 0, official ZINC
+  test never loaded), the frozen exact-OMP representation was finally run at the
+  parent protocol's own horizon for the two matched arms: ATTR-REAL-OMP-320
+  Top-5 soup official-valid MAE 0.1369818167760386 (best 0.14135768095491222
+  @290) versus ATTR-INDEP-OMP-320 0.1425485412654816 (best 0.14588125765224685
+  @319), i.e. G_pair_320 = +0.005566724489443009 >= the frozen 0.003 material
+  bar.  The gap is stable: it changed by +5.56e-06 from the completed 160-epoch
+  lite screen (+0.005561161399818965), both arms improved by essentially the
+  same amount (REAL -0.017389, INDEP -0.017384), the paired late window 241-320
+  has mean +0.006539, median +0.006300 and 76.25 % positive epochs, so the real
+  structure<->attribute assignment carries material predictive value over the
+  assignment-independent marginal control inside the same 32-D frozen sparse
+  bottleneck.  The same run shows REAL is NOT competitive with the completed
+  topology-only arm: MAE(REAL) - MAE(TOPO-OMP-320, 0.12681294702464949) =
+  Delta_vs_TOPO = +0.010168869751389115 > the frozen 0.003 practical tolerance,
+  so placing the chemistry inside the attributed dictionary/code formation does
+  not beat topology sparse code -> post-code chemistry binding even though the
+  pairing itself carries more task information.  Frozen verdict:
+  ATTRIBUTED_PAIRING_SUPPORTED_BUT_NOT_COMPETITIVE (case C), which per the
+  preregistration records the pairing as a mechanism finding and stops the
+  attributed route (no IHT qualification, no task-coupled E2E, no mechanism or
+  specificity work, no second seed).
+scope: >-
+  Two matched 320-epoch frozen-OMP arms (REAL, INDEP) plus the already-completed
+  parent TOPO-OMP-320 arm used as the practical comparator without retraining,
+  one seed (0), frozen K=32/s=8 exact-OMP codes and dictionaries reused
+  bit-identically from the identity-verified parent round (REAL c1cafb08...,
+  INDEP 400821ee..., dictionary/horizon/official-test blockers re-checked by an
+  independent local analysis).  Both arms restarted fresh (exact continuation of
+  the 160-epoch lite segments was impossible: no optimizer, scheduler, RNG,
+  loader or soup-member state was persisted; the frozen trainer has no resume
+  path), and both ran under the same fresh uninterrupted 320-epoch regime as the
+  parent TOPO arm.  The two arms ran under a user-authorised parallel GPU1
+  schedule (two independent single-process CUDA jobs, no DDP, no multi-GPU, GPU0
+  never touched); no other stage of the parent round was executed.
+supporting_evidence:
+  - >-
+    Primary: G_pair_320 = +0.005566724489443009 with the frozen 0.003 bar, from
+    top-5 soups of complete 320-epoch curves (both curves verified finite and
+    complete 1..320, dictionary shas verified live and frozen during training).
+  - >-
+    Stability: 160 -> 320 gap change +5.563089624044393e-06 (KEPT, no sign
+    reversal) with near-identical per-arm improvements; late window 241-320 mean
+    +0.006539, median +0.006300, positive fraction 0.7625, first +0.001825, last
+    +0.021618; the earlier lite screen's 0.65 late agreement is not the whole
+    story at the full horizon.
+  - >-
+    Provenance: verify stage passed in 3 s by reference alone (A2 identity record
+    all_passed 26/26 at commit 24d5286 / prereg 1813f53, producer and parent
+    preregistration sha256 pins matched, live dictionary shas, four frozen
+    OMP caches re-hashed, completed TOPO-OMP-320 reference and lite 160 screen
+    re-read with pinned values); every artifact records official_test_loaded
+    false; continuation_mode.json documents why resume was refused.
+  - >-
+    Independent local recomputation (code/analyze_e2e_dictenv_a2_confirm.py
+    --write: own decision-matrix, late-window, 160->320 and provenance checks):
+    43 checks, 0 errors, verdict reproduced exactly.
+contradicting_evidence:
+  - >-
+    The same round fails the competitiveness criterion: Delta_vs_TOPO =
+    +0.010169 > 0.003 (REAL is ~7.7 % worse in relative MAE than the
+    topology-only arm), so the attributed dictionary/code formation is not a
+    better overall representation on this evidence.
+  - >-
+    The pairing gap has no seed-level error bar (seed 0 only) and no mechanism
+    attribution: nothing here localises the effect to particular nodes/edges or
+    shows that removing the code-level pairing destroys it.
+  - >-
+    Structural asymmetry is part of the picture: the frozen OMP code
+    reconstructs REAL's 433-D object with a large residual (train_rec
+    1.965e-01) versus INDEP 2.119e-02 and TOPO 1.41e-05, so the winner of the
+    REAL-vs-INDEP comparison still pays a reconstruction cost the topology-only
+    route does not.
+limitations:
+  - >-
+    Single seed, single horizon (320), one soup rule (Top-5) and one paired
+    statistic per arm; no seed-1 replication was authorised.
+  - >-
+    The late-window and 160->320 analyses are diagnostics by preregistration and
+    were deliberately not turned into gates.
+  - >-
+    The two arms ran under a user-authorised parallel GPU1 schedule (recorded in
+    stage_status.json); determinism per arm is preserved by construction, but
+    the round cannot self-prove scheduling invariance with a sequential rerun.
+  - >-
+    No IHT coder, task-coupled E2E dictionary, mechanism/liveness or DenseTied
+    specificity evidence exists in this round; every one is deferred.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_a2_confirm_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_a2_confirm_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/artifact_identity.json
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/continuation_mode.json
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/real_320.json
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/indep_320.json
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/paired_analysis.json
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/decision.json
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/analysis.json
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/stage_status.json
+  - tracks/ksvd/results/e2e_dictenv_a2/omp_screen_topo.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_a2_confirm.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_a2_confirm.py
+  - tracks/ksvd/code/analyze_e2e_dictenv_a2_confirm.py
+  - tracks/ksvd/tests/test_e2e_dictenv_a2_confirm.py

@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-a2-compute-budget-truncated-lite-screen-no-signal-at-32d
+phase: e2e-dictenv-a2-confirm-case-c-pairing-material-not-competitive-attributed-route-stopped
 updated: 2026-09-25
 
 # ---------------------------------------------------------------------------
@@ -1078,6 +1078,66 @@ e2e_dictenv_a2_lite:
     - any architecture / hyper-parameter sweep
 
 # ---------------------------------------------------------------------------
+# E2E-DictEnv-A2-Confirm (frozen 320-epoch OMP pairing confirmation) — 2026-09-25
+# ---------------------------------------------------------------------------
+# Preregistration tracks/ksvd/notes/e2e_dictenv_a2_confirm_preregistration.md
+# (rules commit 4b9e206), implementation 45d53df (+ single-arm stage a9d3e08,
+# stage-record fix 76f65af).  Minimal confirmation of the parent protocol's own
+# horizon: the two missing matched frozen-OMP arms (REAL, INDEP) at 320 epochs,
+# compared against the already-completed TOPO-OMP-320 parent arm.  Exact
+# continuation of the 160-epoch lite segments was inspected and refused (no
+# optimizer/RNG/loader/soup-member state), so both arms restarted fresh, no
+# mixing.  User-authorised parallel GPU1 schedule: two independent
+# single-process CUDA jobs; GPU0 never touched, no DDP.  Official test never
+# loaded.
+e2e_dictenv_a2_confirm:
+  status: STOPPED_ATTRIBUTED_PAIRING_SUPPORTED_BUT_NOT_COMPETITIVE
+  round: E2E-DictEnv-A2-Confirm
+  protocol: e2e_dictenv_a2_confirm
+  verdict: ATTRIBUTED_PAIRING_SUPPORTED_BUT_NOT_COMPETITIVE
+  case: C
+  preregistration_commit: '4b9e206'
+  run_commits: ['45d53df', 'a9d3e08', '76f65af']
+  remote_run_tags: [a2confirm-all, a2confirm-indep]
+  device: NVIDIA A100-SXM4-40GB (GPU1 only; user-authorised parallel schedule)
+  seed: 0
+  horizon: 320
+  continuation_mode: fresh_matched_320
+  real_320_soup: 0.1369818167760386
+  indep_320_soup: 0.1425485412654816
+  topo_320_soup: 0.12681294702464949
+  G_pair_320: 0.005566724489443009
+  material_bar: 0.003
+  primary_pass: true
+  Delta_vs_TOPO: 0.010168869751389115
+  topo_tolerance: 0.003
+  competitive: false
+  gap_160_to_320: KEPT
+  late_window_positive_fraction: 0.7625
+  independent_local_recomputation_errors: 0
+  gpu_wall_minutes: 42
+  claims:
+    - claim-e2e-dictenv-a2-confirm-pairing-material-but-not-competitive-20260925
+  decision: decision-e2e-dictenv-a2-confirm-case-c-stop-attributed-route-20260925
+  analysis_note: tracks/ksvd/notes/e2e_dictenv_a2_confirm_analysis.md
+  results_dir: tracks/ksvd/results/e2e_dictenv_a2_confirm
+  kept_route: topology sparse code -> post-code chemistry binding
+  deferred_pending_user_authorization:
+    - seed 1 replication
+    - PCA32 dense control
+    - continuity-v2 diagnostic
+    - IHT-10/30/100/200 coder qualification
+    - task-coupled E2E sparse dictionary (E0/E1/E2)
+    - REAL->INDEP code-pairing-removal mechanism
+    - node-only / edge-only pairing interventions
+    - DenseTied specificity control
+    - TOPO-OMP retraining
+    - K64 dictionary
+    - s12 dictionary
+    - official test split
+    - any architecture / hyper-parameter sweep
+
+# ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
 # ---------------------------------------------------------------------------
 # First round to LOCALIZE a validated reusable dictionary coordinate into each
@@ -1649,23 +1709,47 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_e2e_dictenv_a2_lite_no_confirmed_signal_at_32d_user_decides_next_compute
+  status: stop_e2e_dictenv_a2_confirm_case_c_attributed_route_stopped
   # -------------------------------------------------------------------------
-  # E2E-DictEnv-A2-Lite (2026-09-25, remote A100 GPU1 only, protocol
-  # e2e_dictenv_a2_lite, run commit 4f184dd, amendment rules 457c276) is
-  # CLOSED at its frozen label NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D.
-  # 160-epoch matched screen: REAL-OMP soup 0.15437116196932038 vs INDEP-OMP
-  # 0.15993232336913935 (G_pair_screen +0.005561161399818965), late-window
-  # agreement 0.65 < 0.75 and gap < the 0.006 strong bar, so the frozen rule
-  # authorised only the cheap train-only rank-32 PCA control, which returned
-  # G_pair_PCA -0.0014047007597982886 (< 0.003).  The sparse direction is
-  # positive but sub-material and epoch-noisy, and neither sparse arm had
-  # converged at 160 epochs; the parent round's 320-epoch Stage-1 REAL/INDEP
-  # arms were never run (COMPUTE_BUDGET_TRUNCATED).  Next compute decision is
-  # the user's: (a) buy the two 320-epoch frozen-OMP arms (~1.4 h GPU1) for the
-  # parent pre-registered G_pair_OMP >= 0.003 verdict, (b) buy a freshly
-  # pre-registered second seed of the 160-epoch screen to size screen noise, or
-  # (c) close the attributed-code-formation line at 32-D.
+  # E2E-DictEnv-A2-Confirm (2026-09-25, remote A100 GPU1 only, protocol
+  # e2e_dictenv_a2_confirm, prereg 4b9e206, runs 45d53df/a9d3e08/76f65af) is
+  # CLOSED at its frozen Case-C verdict
+  # ATTRIBUTED_PAIRING_SUPPORTED_BUT_NOT_COMPETITIVE.  The two missing matched
+  # frozen-OMP arms were run at the parent horizon 320 for the first time:
+  # REAL soup 0.1369818167760386 vs INDEP soup 0.1425485412654816, i.e.
+  # G_pair_320 = +0.005566724489443009 >= the frozen 0.003 material bar (the
+  # lite 160 screen's +0.005561161399818965 was KEPT, not a short-horizon
+  # artefact), but MAE(REAL) - MAE(TOPO-OMP-320 0.12681294702464949) =
+  # +0.010168869751389115 > the 0.003 practical tolerance.  Interpretation:
+  # the real structure<->attribute assignment carries material task value
+  # inside the same 32-D frozen sparse bottleneck, yet placing the chemistry
+  # inside the attributed dictionary/code formation is not a better overall
+  # representation than the topology-only route (the REAL object also carries
+  # a large OMP reconstruction residual, 0.1965 vs INDEP 0.0212 / TOPO 1.4e-05).
+  # The attributed E2E/IHT route is therefore STOPPED and the retained route is
+  # topology sparse code -> post-code chemistry binding.  Do not start any
+  # further stage (IHT, E2E, mechanism, liveness, specificity, seed 1, PCA32,
+  # continuity-v2, K64, s12, sweeps, official test) without a new
+  # pre-registration and explicit user authorisation.
+  e2e_dictenv_a2_confirm:
+    status: stopped_case_c_pairing_material_not_competitive
+    round: e2e-dictenv-a2-confirm
+    verdict: ATTRIBUTED_PAIRING_SUPPORTED_BUT_NOT_COMPETITIVE
+    seed1_authorized: false
+    claims:
+      - claim-e2e-dictenv-a2-confirm-pairing-material-but-not-competitive-20260925
+    decision: decision-e2e-dictenv-a2-confirm-case-c-stop-attributed-route-20260925
+    kept_route: topology sparse code -> post-code chemistry binding
+    forbidden_without_new_preregistration:
+      - resuming the attributed route (IHT qualification, task-coupled E2E, mechanism, DenseTied specificity)
+      - re-labelling the material pairing gap as competitive, or TOPO as retrainable
+      - adding late-window or per-epoch win-rate gates after seeing the curves
+      - seed 1, PCA32, continuity-v2, K64, s12, any architecture or hyper-parameter sweep
+      - official ZINC test access
+    reopen_only_with:
+      - a new preregistration that attacks the real bottleneck (capacity/rank or E2E code quality) before any attribution claim
+      - a mechanism design (REAL->INDEP code-pairing-removal, node-only / edge-only, liveness) that can attribute the +0.00557
+      - a seed-level noise estimate for the pairing gap
   e2e_dictenv_a2_lite:
     status: stopped_no_confirmed_signal_at_32d
     round: e2e-dictenv-a2-lite
@@ -2338,6 +2422,37 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-e2e-dictenv-a2-confirm-case-c-stop-attributed-route-20260925: >-
+      E2E-DictEnv-A2-Confirm (2026-09-25, remote A100-SXM4-40GB GPU1 only,
+      protocol e2e_dictenv_a2_confirm, prereg commit 4b9e206, implementation
+      45d53df with single-arm stage a9d3e08 and stage-record fix 76f65af,
+      official test never loaded) closed the parent round's unanswered question
+      by running the two missing matched frozen-OMP arms at the parent horizon
+      320 for the first time (REAL 0.1369818167760386, INDEP 0.1425485412654816,
+      both complete curves, dictionaries verified frozen and live by sha).
+      Exact continuation of the 160-epoch lite segments was inspected and
+      refused (no optimizer, scheduler, RNG, loader or soup-member state; the
+      frozen trainer has no resume path), so both arms restarted fresh with no
+      mixing, under a user-authorised parallel GPU1 schedule (two independent
+      single-process CUDA jobs, ~0.84 GiB each, no DDP; GPU0 never touched, and
+      the sequential job was stopped at the REAL->INDEP boundary so nothing was
+      duplicated).  Frozen verdict ATTRIBUTED_PAIRING_SUPPORTED_BUT_NOT_COMPETITIVE
+      (case C): G_pair_320 = +0.005566724489443009 >= the 0.003 material bar,
+      with the lite screen's +0.005561161399818965 KEPT (change +5.56e-06,
+      both arms improving by ~0.0174) and the late window 241-320 favouring
+      REAL (mean +0.006539, median +0.006300, 76.25 % positive), while
+      MAE(REAL) - MAE(TOPO-OMP-320 0.12681294702464949) = +0.010168869751389115
+      exceeds the 0.003 practical tolerance.  Reading: the real
+      structure<->attribute assignment carries material task value inside the
+      same 32-D frozen sparse bottleneck, but placing chemistry inside the
+      attributed dictionary/code formation is not a better overall
+      representation than the topology-only route (the REAL object also carries
+      a large OMP residual, 0.1965 vs INDEP 0.0212 and TOPO 1.4e-05).  The
+      attributed E2E/IHT route is stopped and the retained route is topology
+      sparse code -> post-code chemistry binding.  Independent local
+      recomputation of every gate, sign convention and diagnostic: 43 checks,
+      0 errors.  GPU1 wall ~42 min; no second seed, mechanism, liveness,
+      specificity, PCA32, continuity-v2, K64, s12 or sweep was run.
   - decision-e2e-dictenv-a2-lite-stop-no-confirmed-signal-at-32d-20260925: >-
       E2E-DictEnv-A2-Lite (2026-09-25, remote A100-SXM4-40GB GPU1 only, protocol
       e2e_dictenv_a2_lite, amendment rules commit 457c276, run commit 4f184dd,

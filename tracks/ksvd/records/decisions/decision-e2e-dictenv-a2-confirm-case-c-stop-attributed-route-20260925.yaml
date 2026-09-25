@@ -1,0 +1,138 @@
+decision_id: decision-e2e-dictenv-a2-confirm-case-c-stop-attributed-route-20260925
+created: '2026-09-25T05:40:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The lite compute-budget screen answered only a 160-epoch version of the
+  question: with the frozen exact-OMP code, ATTR-REAL was better than
+  ATTR-INDEP by +0.005561161399818965, below the amendment's 0.006 strong bar
+  and with an unstable late direction (0.65), while both arms were still
+  improving at the horizon — so the parent round's own pre-registered 320-epoch
+  Stage-1 gate (G_pair_OMP >= 0.003) remained formally unanswered, and the
+  parent round itself had been truncated after its TOPO arm.  The user
+  authorised exactly one more step: a minimal confirmation round that runs the
+  two missing matched arms at the parent horizon and compares REAL with the
+  already-completed TOPO arm.  No representation redesign, no PCA, no IHT/E2E.
+protocol: >-
+  Local-first: short preregistration written and committed before any training
+  (4b9e206), reuse-only implementation 45d53df (+ single-arm stage a9d3e08 and
+  stage-record fix 76f65af), targeted CPU tests (43) on the frozen protocol,
+  then the remote-research-runner workflow on the shared A100 box: preflight
+  (doctor 12 ok / 0 fail, GPU1 free, GPU0 foreign-occupied and never touched),
+  clean deploy, GPU1 smoke, training, pull, independent local recomputation.
+  Two matched 320-epoch frozen-OMP arms (REAL, INDEP) with the frozen H1 trainer
+  (seed 0, matched init, batch order SEED+91011/91012, Adam 1e-3 / wd 1e-5 /
+  clip 5.0, lambda 33.95873017865987, Top-5 soup, per-epoch official-valid
+  evaluation), frozen K=32/s=8 dictionaries and exact-OMP codes reused
+  bit-identically (verified by reference in 3 s), horizon 320 = the parent
+  protocol, official ZINC test never loaded.  Exact continuation of the
+  completed 160-epoch lite segments was inspected and refused: no optimizer,
+  scheduler, RNG, loader or soup-member state was persisted and the frozen
+  trainer has no resume path, so both arms restarted fresh under the same
+  regime as the parent TOPO arm (no mixing, no pseudo-resume).  The two arms ran
+  under a user-authorised parallel GPU1 schedule (two independent single-process
+  CUDA jobs, ~0.84 GiB each, no DDP, no multi-GPU); the sequential job was
+  stopped at the REAL->INDEP boundary so no arm was duplicated.
+results:
+  protocol: e2e_dictenv_a2_confirm
+  preregistration_commit: 4b9e206
+  implementation_commit: 45d53df
+  run_commits: [45d53df, a9d3e08, 76f65af]
+  device: A100-SXM4-40GB GPU1 only
+  seed: 0
+  horizon: 320
+  continuation_mode: fresh_matched_320
+  real_320_soup: 0.1369818167760386
+  real_320_best: 0.14135768095491222
+  real_320_best_epoch: 290
+  indep_320_soup: 0.1425485412654816
+  indep_320_best: 0.14588125765224685
+  indep_320_best_epoch: 319
+  topo_320_soup: 0.12681294702464949
+  G_pair_320: 0.005566724489443009
+  material_bar: 0.003
+  primary_pass: true
+  Delta_vs_TOPO: 0.010168869751389115
+  topo_tolerance: 0.003
+  competitive: false
+  case: C
+  verdict: ATTRIBUTED_PAIRING_SUPPORTED_BUT_NOT_COMPETITIVE
+  late_window_241_320: {mean: 0.006538768048032944, median: 0.006299895591568197, positive_fraction: 0.7625, first: 0.0018247949490323712, last: 0.021618235073052328}
+  G_pair_160: 0.005561161399818965
+  gap_change_classification: KEPT
+  independent_local_recomputation_errors: 0
+  gpu_wall_minutes: 42
+  official_test_loaded: false
+decision: >-
+  STOP the attributed-code-formation route at its frozen Case-C verdict.  Record
+  the pairing signal as a positive mechanism finding (the real
+  structure<->attribute assignment carries material task value inside the same
+  32-D frozen sparse bottleneck: +0.00557, stable from 160 to 320 epochs), but do
+  not invest further in placing chemistry inside the attributed dictionary: REAL
+  is +0.01017 worse than the completed topology-only arm, outside the 0.003
+  practical tolerance.  Keep the simpler retained route (topology sparse code
+  followed by post-code chemistry binding) as the line of record.  Do not start
+  IHT qualification, task-coupled E2E, mechanism/liveness, DenseTied specificity,
+  a second seed, PCA32, continuity-v2, K64, s12 or any sweep; all of them stay
+  DEFERRED_PENDING_USER_AUTHORIZATION.  The two earlier verdicts are untouched:
+  E2E-DictEnv-A2 stays COMPUTE-BUDGET-TRUNCATED and E2E-DictEnv-A2-Lite stays
+  NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D.
+because: >-
+  The preregistration froze the matrix before the run: G_pair_320 >= 0.003 makes
+  the pairing material, and Delta_vs_TOPO = MAE(REAL) - MAE(TOPO) <= 0.003 is
+  required for competitiveness.  The run delivered +0.005567 and +0.010169, i.e.
+  exactly Case C: the pairing is real and material, yet the attributed
+  dictionary/code formation is not a better overall representation than the
+  topology-only dictionary.  The structural asymmetry explains the direction
+  without excusing it: the REAL 433-D object is reconstructed poorly by the
+  frozen OMP code (train_rec 1.965e-01 vs INDEP 2.119e-02 and TOPO 1.41e-05), so
+  the attributed route pays a reconstruction cost that the topology-only route
+  avoids while still losing the *assignment* comparison to nobody.  Case C is
+  precisely the preregistered instruction to stop the attributed E2E/IHT route
+  and keep the simpler one.
+alternatives_rejected:
+  - >-
+    Reading the +0.00557 as a licence to continue into IHT qualification and
+    task-coupled E2E.  Rejected: the preregistered Case-C rule forbids it, and
+    the comparison that matters for the programme (REAL vs the completed TOPO
+    arm) is unfavourable by more than 3x the practical tolerance.
+  - >-
+    Reading the round as a flat negative ("no pairing signal").  Rejected as
+    false: G_pair_320 clears the frozen 0.003 bar and the gap is KEPT from the
+    160 screen; the honest record is "material pairing signal, uncompetitive
+    placement".
+  - >-
+    Re-labelling by adding a new late-window gate (0.7625 positive fraction) or a
+    per-epoch win-rate criterion after seeing the curves.  Rejected: the
+    preregistration declared those statistics diagnostic-only and forbids new
+    gates after the fact.
+  - >-
+    Re-running the arms sequentially to remove the scheduling deviation.
+    Rejected: it would cost another ~80 min of GPU1 for a scheduling-only
+    difference that cannot change either arm's fixed-seed trajectory semantics,
+    and the deviation is already recorded in stage_status.json and the notes.
+  - >-
+    Retraining TOPO or widening the comparison to other baselines.  Rejected:
+    TOPO-OMP-320 is a completed parent artifact, and no new baseline was
+    pre-registered.
+revisit_if: >-
+  The user re-opens the attributed route with a new preregistration that either
+  (a) attacks the real bottleneck directly — e.g. a capacity/rank study (K, s or
+  dictionary size) or a task-coupled E2E dictionary whose code can represent the
+  real object at INDEP-like reconstruction quality before any attribution claim
+  is made, or (b) tests whether the pairing effect is mechanistically tied to the
+  code (REAL->INDEP code-pairing-removal, node-only / edge-only interventions,
+  liveness audit) under a design that can attribute the +0.00557, or (c) buys a
+  seed-level error bar for the pairing gap.  Any such round must be separately
+  pre-registered and authorised; this round stops here.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_a2_confirm_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_a2_confirm_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/decision.json
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/paired_analysis.json
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/stage_status.json
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/analysis.json
+  - tracks/ksvd/results/e2e_dictenv_a2_confirm/continuation_mode.json
+  - tracks/ksvd/results/e2e_dictenv_a2/omp_screen_topo.json
