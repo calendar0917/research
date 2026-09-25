@@ -12,8 +12,8 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-a1-stopped-gate0-continuity-fail-new-preregistration-required
-updated: 2026-09-24
+phase: e2e-dictenv-a2-compute-budget-truncated-lite-screen-no-signal-at-32d
+updated: 2026-09-25
 
 # ---------------------------------------------------------------------------
 # FINAL STANDALONE STATUS (TCCD-v7, 2026-09-22)
@@ -990,6 +990,94 @@ e2e_dictenv_a1:
   diagnostic_script: tracks/ksvd/code/analyze_e2e_dictenv_a1_gate0_stratum.py
 
 # ---------------------------------------------------------------------------
+# E2E-DictEnv-A2 (attributed code value & compression control) — 2026-09-25
+# ---------------------------------------------------------------------------
+# Frozen preregistration tracks/ksvd/notes/e2e_dictenv_a2_preregistration.md
+# (commit 1813f53), implementation commit 24d5286.  User-requested
+# compute-budget contraction while the round was running: amendment record
+# tracks/ksvd/notes/e2e_dictenv_a2_compute_amendment.md (rules 457c276,
+# boundary 02bc3f5).  The round was stopped at the clean arm boundary after
+# its complete 320-epoch TOPO arm; the minimum REAL-vs-INDEP question moved to
+# the separately labelled protocol e2e_dictenv_a2_lite.  Official test never
+# loaded in either round.
+e2e_dictenv_a2:
+  status: COMPUTE_BUDGET_TRUNCATED
+  round: E2E-DictEnv-A2
+  protocol: e2e_dictenv_a2
+  preregistration_commit: '1813f53'
+  implementation_commit: '24d5286'
+  amendment_commit: '02bc3f5'
+  amendment_rules_commit: '457c276'
+  device: NVIDIA A100-SXM4-40GB (GPU1 only; GPU0 foreign-contended, never touched)
+  completed: >-
+    artifact_identity.json (all_passed, 26/26 entries: 3 dictionary pins, 10 cache
+    pins, 2 scalers, 6 exact-OMP recomputations, matched-init no-op),
+    correctness.json (19/19), assignment_semantics.json (REAL sensitive 3.6243,
+    INDEP invariant 0.0), dictionary_health*.json (holdout rec TOPO 1.41e-05 /
+    INDEP 2.109e-02 / REAL 1.971e-01), parameter_accounting.json,
+    qualification.json, continuity_v2.json (diagnostic), smoke/, and the complete
+    frozen Stage-1 TOPO arm omp_screen_topo.json (horizon 320, soup
+    0.12681294702464949, best 0.13136472144449363 @314, wall 2255.3 s)
+  boundary: '2026-09-25 09:44:51 CST (wrapper) / 09:45:51 (python child, SIGTERM)'
+  partial_checkpoints: none
+  not_run_deferred: >-
+    omp-screen I0/R0 (REAL/INDEP), omp-decision, compression,
+    compression-decision, coder, formal, mechanism, liveness, specificity,
+    decision, report — NOT RUN - deferred by user compute-budget amendment
+  result_record: tracks/ksvd/results/e2e_dictenv_a2/README.md
+  continuation: e2e_dictenv_a2_lite
+
+# ---------------------------------------------------------------------------
+# E2E-DictEnv-A2-Lite (minimum paired frozen-OMP screen) — 2026-09-25
+# ---------------------------------------------------------------------------
+# User-requested minimum protocol answering only: under the frozen exact-OMP
+# code, does REAL (real structure<->attribute pairing) carry task value over
+# INDEP?  160-epoch matched screen, seed 0, frozen H1 trainer, frozen K32/s8
+# dictionaries and exact OMP codes reused by reference; optional cheap
+# train-only rank-32 PCA32 control.  One CUDA process at a time, physical GPU1
+# only.  Every expensive stage is DEFERRED_PENDING_USER_AUTHORIZATION.
+e2e_dictenv_a2_lite:
+  status: STOPPED_NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D
+  round: E2E-DictEnv-A2-Lite
+  protocol: e2e_dictenv_a2_lite
+  verdict: NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D
+  amendment: tracks/ksvd/notes/e2e_dictenv_a2_compute_amendment.md
+  amendment_rules_commit: '457c276'
+  run_commit: 4f184dd3a16da4b1b3f35ba3d690f99438bf3a0a
+  remote_run_tag: a2lite-all
+  device: NVIDIA A100-SXM4-40GB (GPU1 only)
+  seed: 0
+  horizon: 160
+  screen_real_omp_soup: 0.15437116196932038
+  screen_indep_omp_soup: 0.15993232336913935
+  G_pair_screen: 0.005561161399818965
+  screen_late_positive_fraction: 0.65
+  screen_late_mean_delta: 0.0038183560276782375
+  screen_direction_stable: false
+  pca_real_soup: 0.15774420121958246
+  pca_indep_soup: 0.15633950045978418
+  G_pair_PCA: -0.0014047007597982886
+  independent_local_recomputation_errors: 0
+  gpu_wall_minutes: 94
+  claims:
+    - claim-e2e-dictenv-a2-lite-sparse-real-ahead-dense-tied-20260925
+  decision: decision-e2e-dictenv-a2-lite-stop-no-confirmed-signal-at-32d-20260925
+  analysis_note: tracks/ksvd/notes/e2e_dictenv_a2_lite_analysis.md
+  results_dir: tracks/ksvd/results/e2e_dictenv_a2_lite
+  deferred_pending_user_authorization:
+    - TOPO-OMP predictor baseline
+    - IHT-10/30/100/200 coder qualification
+    - task-coupled E2E sparse dictionary (E0/E1/E2)
+    - REAL->INDEP code-pairing-removal mechanism
+    - node-only / edge-only pairing interventions
+    - DenseTied specificity control
+    - seed 1 replication
+    - official test split
+    - K64 dictionary
+    - s12 dictionary
+    - any architecture / hyper-parameter sweep
+
+# ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
 # ---------------------------------------------------------------------------
 # First round to LOCALIZE a validated reusable dictionary coordinate into each
@@ -1561,7 +1649,40 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_e2e_dictenv_a1_gate0_continuity_fail_new_preregistration_required
+  status: stop_e2e_dictenv_a2_lite_no_confirmed_signal_at_32d_user_decides_next_compute
+  # -------------------------------------------------------------------------
+  # E2E-DictEnv-A2-Lite (2026-09-25, remote A100 GPU1 only, protocol
+  # e2e_dictenv_a2_lite, run commit 4f184dd, amendment rules 457c276) is
+  # CLOSED at its frozen label NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D.
+  # 160-epoch matched screen: REAL-OMP soup 0.15437116196932038 vs INDEP-OMP
+  # 0.15993232336913935 (G_pair_screen +0.005561161399818965), late-window
+  # agreement 0.65 < 0.75 and gap < the 0.006 strong bar, so the frozen rule
+  # authorised only the cheap train-only rank-32 PCA control, which returned
+  # G_pair_PCA -0.0014047007597982886 (< 0.003).  The sparse direction is
+  # positive but sub-material and epoch-noisy, and neither sparse arm had
+  # converged at 160 epochs; the parent round's 320-epoch Stage-1 REAL/INDEP
+  # arms were never run (COMPUTE_BUDGET_TRUNCATED).  Next compute decision is
+  # the user's: (a) buy the two 320-epoch frozen-OMP arms (~1.4 h GPU1) for the
+  # parent pre-registered G_pair_OMP >= 0.003 verdict, (b) buy a freshly
+  # pre-registered second seed of the 160-epoch screen to size screen noise, or
+  # (c) close the attributed-code-formation line at 32-D.
+  e2e_dictenv_a2_lite:
+    status: stopped_no_confirmed_signal_at_32d
+    round: e2e-dictenv-a2-lite
+    verdict: NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D
+    seed1_authorized: false
+    claims:
+      - claim-e2e-dictenv-a2-lite-sparse-real-ahead-dense-tied-20260925
+    decision: decision-e2e-dictenv-a2-lite-stop-no-confirmed-signal-at-32d-20260925
+    next_options_requiring_user_authorization:
+      - buy two 320-epoch frozen-OMP arms (REAL, INDEP) for the parent G_pair_OMP gate
+      - new preregistration for a second-seed 160-epoch screen (screen-noise sizing)
+      - close the attributed-code-formation line at 32-D
+    forbidden_without_new_preregistration:
+      - re-labelling the +0.005561 screen as PAIRING_SIGNAL_WORTH_FULL_CONFIRMATION
+      - starting IHT qualification, task-coupled E2E, mechanism, DenseTied specificity or seed 1
+      - K / s / lambda / horizon sweeps or capacity work (no bottleneck label was earned)
+      - official ZINC test access
   # -------------------------------------------------------------------------
   # E2E-DictEnv-A1 (2026-09-24, remote A100 GPU1, protocol e2e_dictenv_a1,
   # preregistration bd3700a, formal run 37324eb) is CLOSED.  Frozen verdict
@@ -2217,6 +2338,36 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-e2e-dictenv-a2-lite-stop-no-confirmed-signal-at-32d-20260925: >-
+      E2E-DictEnv-A2-Lite (2026-09-25, remote A100-SXM4-40GB GPU1 only, protocol
+      e2e_dictenv_a2_lite, amendment rules commit 457c276, run commit 4f184dd,
+      official test never loaded) was the user-requested compute-budget
+      continuation of the truncated round E2E-DictEnv-A2.  It asked the minimum
+      paired question with the frozen exact-OMP code: does the real
+      structure<->attribute pairing (REAL) carry task value over the
+      assignment-independent control (INDEP)?  160-epoch matched screen, seed 0,
+      frozen H1 trainer, frozen K32/s8 dictionaries and exact OMP codes reused
+      by reference (verify 3.0 s, no recomputation): REAL-OMP soup
+      0.15437116196932038 vs INDEP-OMP 0.15993232336913935, i.e. G_pair_screen =
+      +0.005561161399818965 in favour of REAL, but the paired late-window
+      (121-160) agreement was 0.65 (frozen bar 0.75; window mean +0.003818,
+      best-epoch delta +0.005376) and the gap is below the amendment's 0.006
+      strong bar, so the frozen rule did NOT declare the signal material and
+      authorised only the cheap diagnostic.  The train-only rank-32 PCA32
+      control returned REAL 0.15774420121958246 vs INDEP 0.15633950045978418,
+      i.e. G_pair_PCA = -0.0014047007597982886 (< 0.003), so no compression
+      bottleneck either, and REAL's dense arm was worse than its sparse arm
+      despite a better affine reconstruction of its object (0.1119 vs 0.197).
+      Frozen label NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D; the positive but
+      sub-material sparse direction is recorded, both sparse arms were still
+      improving at epoch 160 (best 158/160 and 145/160), and the parent round's
+      320-epoch Stage-1 REAL/INDEP arms remain NOT RUN — deferred by user
+      compute-budget amendment, so the parent G_pair_OMP >= 0.003 gate stays
+      formally unanswered.  IHT qualification, task-coupled E2E, mechanism,
+      DenseTied specificity, seed 1, capacity work (K/s) and the official test
+      remain DEFERRED_PENDING_USER_AUTHORIZATION.  Independent local
+      recomputation of both gaps, the direction rule and every provenance flag:
+      0 errors.
   - decision-e2e-dictenv-a1-stop-gate0-representation-not-qualified-20260924: >-
       E2E-DictEnv-A1 (2026-09-24, remote A100-SXM4-40GB GPU1, protocol
       e2e_dictenv_a1, preregistration bd3700a, formal-run commit 37324eb,

@@ -1,0 +1,130 @@
+decision_id: decision-e2e-dictenv-a2-lite-stop-no-confirmed-signal-at-32d-20260925
+created: '2026-09-25T03:35:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The user asked for a compute-budget contraction of the running round
+  E2E-DictEnv-A2 (its parent preregistration 1813f53 is unchanged) and for the
+  minimum paired experiment that answers one question: under the frozen
+  exact-OMP code, does the real structure<->attribute pairing (REAL) carry task
+  value over the assignment-independent control (INDEP)?  The parent round had
+  already completed its identity gate (26/26), Gate-0 reproduction, the
+  continuity-v2 diagnostic and its TOPO arm, but no REAL/INDEP prediction
+  comparison existed anywhere (A1's decision.json records stage1_omp = null).
+  The amendment therefore truncated the parent plan at that arm boundary and
+  registered a separate minimum protocol (E2E-DictEnv-A2-Lite) with a 160-epoch
+  two-arm screen and an optional cheap train-only PCA32 diagnostic.
+protocol: >-
+  Local-first implementation with targeted CPU tests (28 tests), amendment and
+  lite modules frozen and committed (rules 457c276, boundary 02bc3f5, run
+  4f184dd) before execution, then the remote-research-runner workflow on the
+  shared A100 box: deploy of the committed revision, durable detached launch on
+  physical GPU1 only (CUDA_VISIBLE_DEVICES=1, one CUDA process at a time,
+  deterministic algorithms, CUBLAS_WORKSPACE_CONFIG=4096:8), await, pull,
+  independent local recomputation.  Screen: REAL-OMP vs INDEP-OMP, 160 epochs,
+  the frozen H1 trainer (seed 0, identical init/batch order/optimizer/lambda/
+  Top-5 soup), frozen K=32/s=8 dictionaries and exact OMP codes reused
+  bit-identically by reference (verify 3.0 s, no recomputation).  Dense control
+  (only because the screen was not strong): REAL/INDEP-PCA32, train-only rank-32
+  PCA via sdb_v0.fit_pca_rank, same horizon/trainer.  Official ZINC train 10000 /
+  valid 1000, test never loaded.
+results:
+  protocol: e2e_dictenv_a2_lite
+  parent_round: E2E-DictEnv-A2 (COMPUTE-BUDGET-TRUNCATED)
+  amendment_rule_commit: 457c276
+  run_commit: 4f184dd3a16da4b1b3f35ba3d690f99438bf3a0a
+  device: A100-SXM4-40GB GPU1 only
+  seed: 0
+  horizon: 160
+  screen_real_omp_soup: 0.15437116196932038
+  screen_indep_omp_soup: 0.15993232336913935
+  G_pair_screen: 0.005561161399818965
+  screen_late_positive_fraction: 0.65
+  screen_late_mean_delta: 0.0038183560276782375
+  screen_late_best_delta: 0.005376214825548231
+  screen_direction_stable: false
+  screen_strong_positive: false
+  screen_verdict: PCA_DIAGNOSTIC_AUTHORISED
+  pca_real_soup: 0.15774420121958246
+  pca_indep_soup: 0.15633950045978418
+  G_pair_PCA: -0.0014047007597982886
+  pca_best_epoch_gap: 0.00035935521498316656
+  pca_verdict: NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D
+  final_label: NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D
+  screen_wall_s: 2548.9674702470656
+  dense_wall_s: 2801.324675733922
+  verify_wall_s: 3.015147142112255
+  total_gpu_wall_min: 94
+  independent_local_recomputation_errors: 0
+  official_test_loaded: false
+decision: >-
+  STOP this round at the frozen label NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D
+  and do not start any further stage automatically.  Do not treat the
+  +0.005561 sparse direction as a qualified pairing signal, and do not treat the
+  -0.001405 dense gap as a compression bottleneck.  The parent round stays
+  COMPUTE-BUDGET-TRUNCATED with its 320-epoch Stage-1 REAL/INDEP arms NOT RUN;
+  the frozen 0.003 gate of the parent protocol remains formally unanswered.  The
+  next compute decision belongs to the user: (a) buy the two 320-epoch
+  frozen-OMP arms (approximately 1.4 h of GPU1 at 7.1-8.1 s/epoch, producing the
+  parent pre-registered G_pair_OMP verdict with TOPO already complete), (b) buy a
+  fresh pre-registered second seed of the 160-epoch screen to size the screen
+  noise before spending on 320 epochs, or (c) close the attributed-code-formation
+  line at 32-D.  IHT qualification, task-coupled E2E, mechanism, DenseTied
+  specificity, capacity work (K/s), seed 1 and the official test stay
+  DEFERRED_PENDING_USER_AUTHORIZATION in every case.
+because: >-
+  The amendment's frozen rule requires both a material gap (>= 0.006) and a
+  stable paired late-window direction (>= 0.75 agreement, positive mean and
+  best-epoch deltas) for PAIRING_SIGNAL_WORTH_FULL_CONFIRMATION.  The screen
+  delivered +0.005561 with 0.65 late agreement, i.e. a positive but
+  sub-material, epoch-noisy direction, and neither sparse arm had converged at
+  160 epochs (REAL best 158/160, INDEP 145/160).  The dense rank-32 control then
+  failed to reproduce the direction (soup -0.001405; best-epoch +0.000359), so
+  the alternative compression-bottleneck label (>= 0.003) is unsupported: REAL's
+  advantage is not a low-rank linear-compression effect, and REAL's dense arm is
+  even worse than its sparse arm despite the denser code reconstructing its
+  object better in the affine sense (0.1119 vs 0.197).  With both frozen bars
+  unmet, the only labels the rule permits are NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D
+  or a stop-and-report, and the label is reported together with the two
+  qualifications above so the numbers are never hidden behind it.
+alternatives_rejected:
+  - >-
+    Declaring PAIRING_SIGNAL_WORTH_FULL_CONFIRMATION from the +0.005561 soup gap.
+    Rejected: it is below the amendment's own 0.006 strong bar and the frozen
+    late-window stability check failed (0.65 < 0.75); re-labelling it would be a
+    post-hoc gate change.
+  - >-
+    Declaring ATTRIBUTED_PAIRING_SUPPORTED_COMPRESSION_BOTTLENECK from the dense
+    control.  Rejected: G_pair_PCA = -0.001405 < 0.003, and the dense REAL arm is
+    worse than its sparse counterpart.
+  - >-
+    Declaring a flat negative (no signal at all, full stop) from the frozen
+    label.  Rejected as an overstatement: the sparse screen did favour REAL by
+    +0.005561 (above the parent MATERIAL bar) and the arms were still improving,
+    so the honest record is "positive direction, sub-material screen, parent
+    320-epoch Stage 1 unanswered".
+  - >-
+    Rescuing the screen by extending it to 320 epochs, adding seeds, sweeping
+    K/s/lambda/horizon, or entering IHT/E2E/mechanism now.  Rejected: the
+    amendment defers all of these to explicit user authorisation, and no gate
+    may be modified after seeing the screen value.
+revisit_if: >-
+  The user authorises the frozen 320-epoch parent Stage-1 arms (the direct
+  answer to the parent 0.003 gate), or authorises a new pre-registration with a
+  second seed / longer screen and a pre-declared noise model for the paired
+  late-window direction.  A materially positive, directionally stable 320-epoch
+  G_pair_OMP would open the parent's own sparse route (coder qualification then
+  E2E), and a material dense gap would open the compression/capacity route
+  (K/s) under a new pre-registration.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_a2_compute_amendment.md
+  - tracks/ksvd/notes/e2e_dictenv_a2_lite_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/lite_verify.json
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/lite_screen_decision.json
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/lite_pca_decision.json
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/lite_report.json
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/analysis.json
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_a2/README.md
+  - tracks/ksvd/results/e2e_dictenv_a2/omp_screen_topo.json

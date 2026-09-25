@@ -1,0 +1,106 @@
+claim_id: claim-e2e-dictenv-a2-lite-sparse-real-ahead-dense-tied-20260925
+created: '2026-09-25T03:30:00Z'
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+statement: >-
+  Under the user-requested compute-budget amendment of round E2E-DictEnv-A2
+  (protocol e2e_dictenv_a2_lite, amendment rule commit 457c276, run commit
+  4f184dd, remote NVIDIA A100-SXM4-40GB GPU1 only, seed 0, official ZINC test
+  never loaded), a minimum paired screen was run with the frozen exact-OMP
+  code at horizon 160: ATTR-REAL-OMP Top-5 soup official-valid MAE
+  0.15437116196932038 versus ATTR-INDEP-OMP 0.15993232336913935, i.e.
+  G_pair_screen = +0.005561161399818965 in favour of the real
+  structure<->attribute pairing.  The frozen screen rule did NOT declare the
+  signal material: the paired late-window (epochs 121-160) agreement was 0.65,
+  below the frozen 0.75 stability bar (window mean delta +0.003818, best-epoch
+  delta +0.005376), and the gap is below the amendment's 0.006 strong bar (it
+  is above the parent round's MATERIAL = 0.003 bar).  The cheap train-only
+  rank-32 dense control did not reproduce the direction: ATTR-REAL-PCA32
+  0.15774420121958246 versus ATTR-INDEP-PCA32 0.15633950045978418, i.e.
+  G_pair_PCA = -0.0014047007597982886, below the 0.003 bar.  The frozen verdict
+  is therefore NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D, with the sparse
+  REAL-over-INDEP direction left as an unanswered, sub-material screen signal.
+scope: >-
+  One screen run pair plus one dense control pair, 160 epochs each, seed 0,
+  frozen K=32 / s=8 K-SVD dictionaries and exact OMP codes reused bit-identically
+  from the identity-verified parent round (dictionary sha REAL c1cafb08...,
+  INDEP 400821ee...; 433-D objects, train-only scaler, frozen trainer and Top-5
+  soup rule unchanged); train-only rank-32 PCA delegated to sdb_v0.fit_pca_rank
+  through e2e_dictenv_a2.fit_dense_rank; one CUDA process at a time on physical
+  GPU1.  This is a screen, not the frozen parent Stage 1 (which was truncated
+  after its TOPO arm), so no 320-epoch G_pair_OMP value exists.  IHT
+  qualification, task-coupled E2E dictionaries, mechanism interventions,
+  node-only/edge-only interventions, DenseTied specificity, seed 1, the official
+  test and every capacity/sweep variant are DEFERRED_PENDING_USER_AUTHORIZATION.
+supporting_evidence:
+  - >-
+    lite_verify.json (passed, 3.0 s): parent identity all_passed with 26/26
+    entries at commit 24d5286 / prereg 1813f53, all required reference entries
+    passed, producer module and parent-preregistration sha256 pins matched, live
+    dictionary shas equal to the tracked pins, and the four frozen OMP caches
+    verified by byte digest (REAL/INDEP train [231664,32], valid [23083,32]) with
+    no recomputation.
+  - >-
+    Every arm artifact records horizon = 160, frozen_dictionary = true, the arm's
+    frozen dictionary sha256, protocol_version = e2e_dictenv_a2_lite and
+    official_test_loaded = false.
+  - >-
+    Late-window detail: delta(e) = MAE_INDEP(e) - MAE_REAL(e) positive in 26/40
+    late epochs (0.65), window mean +0.003818, best-epoch delta +0.005376,
+    delta_first +0.006360, delta_last +0.006443; whole-screen mean +0.002038 with
+    57.5 % positive epochs, so the direction is real but noisy per epoch.
+  - >-
+    Dense control detail: best-epoch gap +0.000359 (0.160995 @153 vs 0.161354
+    @153) while the soup gap is -0.001405, and the dense REAL arm is worse than
+    its sparse arm (0.157744 vs 0.154371) even though the rank-32 PCA is the
+    better affine reconstruction of the REAL object (valid_affine_normalized_rec
+    0.1119 vs the sparse 0.197).
+  - >-
+    Independent local recomputation (code/analyze_e2e_dictenv_a2_lite.py
+    --write, analysis.json) reproduces both gaps, the late-window statistics,
+    the frozen label mapping and every provenance flag with 0 errors.
+contradicting_evidence:
+  - >-
+    The frozen screen rule rejects the sparse signal: late-window agreement 0.65
+    < 0.75 and 0.005561 < 0.006, so PAIRING_SIGNAL_WORTH_FULL_CONFIRMATION was
+    not declared; the label produced is NO_ATTRIBUTED_CODE_FORMATION_SIGNAL_AT_32D.
+  - >-
+    The dense control points the other way on the soup (-0.001405) and the
+    best-epoch gap is +0.000359, i.e. the rank-32 compression does not carry a
+    REAL advantage, so the sparse direction is not reproduced by a different
+    coding of the same object.
+  - >-
+    Neither sparse arm had converged at epoch 160 (REAL best epoch 158/160,
+    INDEP 145/160), so the screen horizon itself can move the ranking; the frozen
+    320-epoch parent Stage 1 does not exist for these two arms.
+limitations:
+  - >-
+    Single seed (0), single screen horizon (160), soup statistic of five late
+    epochs; no seed-level noise estimate, because the amendment defers seed 1.
+  - >-
+    The dense absolute levels are not comparable to the sparse levels: the frozen
+    tied convention is mean-free (valid_tied_normalized_rec 0.5862 REAL / 0.4935
+    INDEP) and both dense arms train with that large reconstruction term.
+  - >-
+    No mechanism (code-pairing removal), node-only/edge-only intervention,
+    liveness audit or DenseTied specificity control was run, so nothing is claimed
+    about which part of the REAL object carries the screen-level direction.
+  - >-
+    Running the screen at 160 epochs below the parent protocol's 320 is a
+    compute-budget decision by the user, not an optimisation of the endpoint.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_a2_compute_amendment.md
+  - tracks/ksvd/notes/e2e_dictenv_a2_lite_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/lite_verify.json
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/lite_screen_decision.json
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/lite_pca_decision.json
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/lite_report.json
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_a2_lite/analysis.json
+  - tracks/ksvd/results/e2e_dictenv_a2/README.md
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_a2_lite.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_a2_lite.py
+  - tracks/ksvd/code/analyze_e2e_dictenv_a2_lite.py
+  - tracks/ksvd/tests/test_e2e_dictenv_a2_lite.py
