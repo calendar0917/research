@@ -27,7 +27,9 @@ probe C  the same forward comparison on CPU (expected exactly deterministic),
 
 from __future__ import annotations
 
+import json
 import time
+from pathlib import Path
 
 import torch
 import torch.nn.functional as F
@@ -46,6 +48,17 @@ from tracks.ksvd.experiments.luyin16.zinc_e2e_dictenv_purify_v0 import (
     load_split,
     resolve_device,
 )
+
+
+def _git_commit() -> str:
+    try:
+        import subprocess
+
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=False
+        ).stdout.strip()
+    except Exception:  # pragma: no cover - diagnostics only
+        return "unknown"
 
 
 def _batch(device: torch.device) -> object:
@@ -126,24 +139,51 @@ def main() -> int:
     started = time.perf_counter()
     device = resolve_device("cuda")
     print(f"device={device}", flush=True)
-    print(f"[B/cuda] {probe_forward(device)}", flush=True)
-    print(f"[C/cpu ] {probe_forward(torch.device('cpu'), n_molecules=64)}", flush=True)
+    payload: dict[str, object] = {"device": str(device), "git_commit": _git_commit()}
+    probe_cuda = probe_forward(device)
+    probe_cpu = probe_forward(torch.device("cpu"), n_molecules=64)
+    print(f"[B/cuda] {probe_cuda}", flush=True)
+    print(f"[C/cpu ] {probe_cpu}", flush=True)
     first = probe_two_epochs(0, device)
     second = probe_two_epochs(0, device)
+    payload["forward_repeat"] = {"cuda": probe_cuda, "cpu": probe_cpu}
+    payload["two_epoch_repeat"] = {"run1": first, "run2": second}
+    dispersion = []
+    for epoch in range(len(first["curve"])):
+        left, right = first["curve"][epoch], second["curve"][epoch]
+        dispersion.append(
+            {
+                "epoch": epoch + 1,
+                "train_mae_diff": float(right["train_mae"] - left["train_mae"]),
+                "valid_mae_diff": float(right["valid_mae"] - left["valid_mae"]),
+            }
+        )
+    payload["protocol_dispersion"] = dispersion
+    payload["wall_clock_s"] = time.perf_counter() - started
+    payload["official_test_loaded"] = False
     for tag, run in (("A1", first), ("A2", second)):
         print(f"[{tag}] {run['curve']} weight_drift_from_init={run['weight_max_abs_from_init']:.6f}", flush=True)
-    for epoch in range(2):
-        left, right = first["curve"][epoch], second["curve"][epoch]
+    for row in dispersion:
         print(
-            f"[A] epoch={epoch + 1} train_mae {left['train_mae']:.8f} vs {right['train_mae']:.8f} "
-            f"(diff {right['train_mae'] - left['train_mae']:+.8f}) "
-            f"valid_mae {left['valid_mae']:.8f} vs {right['valid_mae']:.8f} "
-            f"(diff {right['valid_mae'] - left['valid_mae']:+.8f})",
+            f"[A] epoch={row['epoch']} train_mae diff {row['train_mae_diff']:+.8f} "
+            f"valid_mae diff {row['valid_mae_diff']:+.8f}",
             flush=True,
         )
+    if write:
+        results = Path("tracks/ksvd/results/e2e_dictenv_purify_v0")
+        results.mkdir(parents=True, exist_ok=True)
+        (results / "reproducibility_probe.json").write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        print(f"[write] {results / 'reproducibility_probe.json'}", flush=True)
     print(f"wall_clock_s={time.perf_counter() - started:.1f}", flush=True)
     return 0
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--write", action="store_true", help="write results/e2e_dictenv_purify_v0/reproducibility_probe.json")
+    args = parser.parse_args()
     raise SystemExit(main())

@@ -119,10 +119,22 @@ def analyze() -> dict[str, Any]:
     for seed, delta in deltas.items():
         check(f"paired.delta_seed{seed}", abs(float(recorded["delta"][str(seed)]) - delta) < 1e-12, (recorded["delta"], delta))
     reference_drift = float(recorded["reference_soup"]["0"] - H1_HISTORICAL_SOUP)
-    check("paired.reproduction", abs(reference_drift) <= REPRODUCTION_TOLERANCE, reference_drift)
+    check("paired.reproduction_value", abs(float(recorded["reference_reproduction"]["drift"]) - reference_drift) < 1e-12, (recorded["reference_reproduction"]["drift"], reference_drift))
+    check(
+        "paired.reproduction_flag",
+        bool(recorded["reference_reproduction"]["passed"]) == (abs(reference_drift) <= REPRODUCTION_TOLERANCE),
+        (recorded["reference_reproduction"]["passed"], reference_drift),
+    )
     if deltas:
         check("paired.seed0_case", recorded["seed0_case"] == seed0_case(deltas[0]), (recorded["seed0_case"], deltas[0]))
-        check("paired.seed1_authorized", bool(recorded["seed1_authorized"]) == (seed0_case(deltas[0]) != "performance_failure"), recorded["seed1_authorized"])
+        authorized = bool(recorded["reference_reproduction"]["passed"] and seed0_case(deltas[0]) != "performance_failure")
+        check("paired.seed1_authorized", bool(recorded["seed1_authorized"]) == authorized, recorded["seed1_authorized"])
+        seeds_run = sorted(int(key.rsplit("seed", 1)[1]) for key in arms if key.startswith("reference"))
+        if not authorized:
+            check("stop.no_seed1_artifacts", seeds_run == [0], seeds_run)
+            check("stop.no_mechanism", not (RESULTS / "mechanism_interventions.json").exists(), "mechanism artifact present after a stop")
+            check("stop.no_ablation", not (RESULTS / "constant_channel_ablation.json").exists(), "ablation artifact present after a stop")
+            check("stop.no_health", not (RESULTS / "dictionary_health.json").exists(), "health artifact present after a stop")
     if len(deltas) > 1:
         mean_delta = sum(deltas.values()) / len(deltas)
         worst = max(deltas.values())
@@ -153,6 +165,31 @@ def analyze() -> dict[str, Any]:
     decision = read_json(RESULTS / "decision.json")
     check("decision.test_blocked", decision["official_test_loaded"] is False, decision["official_test_loaded"])
     check("decision.verdict_present", isinstance(decision["verdict"], str) and decision["verdict"], decision["verdict"])
+    if not recorded["reference_reproduction"]["passed"]:
+        check("decision.stop_verdict", decision["verdict"] == "REFERENCE_REPRODUCTION_FAILURE", decision["verdict"])
+        check("decision.candidate_not_interpreted", decision["mechanism"] is None and decision["dictionary_health"] is None, decision["verdict"])
+        not_run = {record["artifact"] for record in decision["not_run"]}
+        check(
+            "decision.not_run_complete",
+            {"reference_seed1.json", "purified_seed1.json", "mechanism_interventions.json", "constant_channel_ablation.json", "dictionary_health.json"} <= not_run,
+            sorted(not_run),
+        )
+
+    state_protocol = None
+    h1_state = TRACK / "results/e2e_dictenv_p2_abs/states/H1_soup_state.pt"
+    if h1_state.exists() and (results_ok := not errors):
+        import torch
+        from tracks.ksvd.experiments.luyin16 import e2e_dictenv_p1 as p1
+        from tracks.ksvd.experiments.luyin16 import e2e_dictenv_purify_v0 as pur
+        from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_purify_v0 as run
+
+        D, _sha = run.dictionary()
+        loader = p1.make_env_loader(run.load_split("valid"), 128, False, run.EVAL_SHUFFLE_OFFSET)
+        model = pur.build_model(pur.reference_config(), D, seed=0).eval()
+        pur.load_p2_state(model, torch.load(h1_state, map_location="cpu", weights_only=False))
+        value = float(run.evaluate(model, loader, torch.device("cpu"))["mae"])
+        check("diagnosis.evaluator_identical", abs(value - H1_HISTORICAL_SOUP) <= 1e-8, (value, H1_HISTORICAL_SOUP))
+        state_protocol = value
 
     seed1_status = "RUN" if 1 in deltas else "NOT RUN"
     return {
@@ -168,6 +205,8 @@ def analyze() -> dict[str, Any]:
         "reference_reproduction_drift": reference_drift,
         "mechanism_degradation": None if mechanism is None else mechanism["degradation"],
         "ablation": None if ablation is None else {tag: ablation["ablations"][tag]["mae_delta"] for tag in ablation["ablations"]},
+        "h1_state_under_round_evaluator": state_protocol,
+        "candidate_not_interpreted": bool(decision["verdict"] == "REFERENCE_REPRODUCTION_FAILURE"),
         "purity": {
             "reference_bypasses": purity["reference"]["local_raw_chemistry_bypass_count"],
             "purified_bypasses": purity["purified"]["local_raw_chemistry_bypass_count"],
