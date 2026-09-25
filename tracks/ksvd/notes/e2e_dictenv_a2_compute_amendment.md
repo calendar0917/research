@@ -171,7 +171,7 @@ Recorded in full (per-file sha256 table) in
 
 | item | value |
 |---|---|
-| stop | `2026-09-25 09:44:51 CST (+08:00)`, `SIGTERM` at a clean arm boundary |
+| stop | `2026-09-25 09:44:51 CST (+08:00)` wrapper / `09:45:51` python child (`SIGTERM`) at a clean arm boundary; the `INDEP` arm reached ≈ 8 of 320 epochs and left nothing |
 | completed before the stop | `artifact_identity.json` (26/26, `all_passed`), `correctness.json`, `assignment_semantics.json`, `dictionary_health*.json`, `parameter_accounting.json`, `qualification.json`, `continuity_v2.json`, `smoke/`, and the **complete** frozen Stage-1 TOPO arm `omp_screen_topo.json` (horizon 320; soup valid MAE `0.12681294702464949`, best `0.13136472144449363 @ 314`, wall `2255.3 s`) |
 | partial checkpoints | **none** — the frozen `train_arm` writes state/curve/JSON only after the final epoch, so the mid-flight `INDEP` arm (≈3 s) left nothing on disk |
 | `NOT RUN — deferred by user compute-budget amendment` | `omp-screen` `I0`/`R0`, `omp-decision`, `compression`, `compression-decision`, `coder`, `formal`, `mechanism`, `liveness`, `specificity`, `decision`, `report` |

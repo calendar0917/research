@@ -33,14 +33,17 @@ Provenance of every artifact above: `git_commit 24d528635fab49c082115d90592cb7d5
 
 ## Truncation boundary
 
-* stop time **2026-09-25 09:44:51 CST (+08:00)**, immediately after the `T0`
-  arm's artifacts were written and before the `INDEP` arm produced anything.
+* stop time **2026-09-25 09:44:51 CST (+08:00)** (session wrapper) / **09:45:51**
+  (python child, `SIGTERM`), immediately after the `T0` arm's artifacts were
+  written and before the `INDEP` arm produced anything.  The `INDEP` arm had
+  reached ≈ 8 of 320 epochs when it was stopped.
 * **partial checkpoints: none.**  The frozen `train_arm` writes state, curve and
   run JSON only after the final epoch, so stopping the runner mid-arm leaves no
-  artifact at all; the `omp_screen_I0` training that had just started (≈3 s) left
-  nothing on disk.
-* the runner was stopped with `SIGTERM` at this boundary; the round was never
-  abandoned and no result was deleted or edited.
+  artifact at all; `curves/` holds only `omp_screen_T0_curve.csv` and `states/`
+  only the two `T0` state files.
+* the runner was stopped with `SIGTERM` at this boundary (no `.exit` file was
+  produced because the wrapper was killed first); the round was never abandoned
+  and no result was deleted or edited.
 
 ## NOT RUN — deferred by user compute-budget amendment
 

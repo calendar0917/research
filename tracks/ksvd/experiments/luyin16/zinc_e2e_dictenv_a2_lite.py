@@ -96,15 +96,24 @@ def _set_device_policy(device: str) -> torch.device:
     return a2run._set_device_policy(device)
 
 
-def _prereg_commit() -> str:
-    """Commit that froze this amendment (``e2e_dictenv_a2_lite``)."""
+def _git_commit_for(path: str, *args: str) -> str:
     try:
         return subprocess.check_output(
-            ["git", "log", "-1", "--format=%h", "--", a2lite.AMENDMENT_NOTE],
+            ["git", "log", "-1", "--format=%h", *args, "--", path],
             cwd=str(REPO_ROOT), text=True,
         ).strip()
     except Exception:  # pragma: no cover
         return "unknown"
+
+
+def _prereg_commit() -> str:
+    """Commit that last touched this amendment (``e2e_dictenv_a2_lite``)."""
+    return _git_commit_for(a2lite.AMENDMENT_NOTE)
+
+
+def _prereg_rule_commit() -> str:
+    """Commit that first introduced the amendment (its rules were frozen there)."""
+    return _git_commit_for(a2lite.AMENDMENT_NOTE, "--diff-filter=A", "--follow")
 
 
 def provenance(device: str = "cpu") -> dict[str, Any]:
@@ -119,6 +128,8 @@ def provenance(device: str = "cpu") -> dict[str, Any]:
             "parent_protocol_version": a2lite.PARENT_PROTOCOL_VERSION,
             "amendment": "user_requested_compute_budget_reduction",
             "amendment_note": a2lite.AMENDMENT_NOTE,
+            "amendment_commit": _prereg_commit(),
+            "amendment_rule_commit": _prereg_rule_commit(),
             "screen_horizon": int(HORIZON),
             "screen_arms": list(a2lite.SCREEN_ARMS),
             "strong_positive_threshold": float(a2lite.STRONG_POSITIVE),
@@ -228,6 +239,7 @@ def verify_stage() -> dict[str, Any]:
         "path": a2lite.AMENDMENT_NOTE,
         "sha256": _sha256_file(amendment_path) if amendment_path.exists() else None,
         "prereg_commit": _prereg_commit(),
+        "rule_commit": _prereg_rule_commit(),
         "passed": bool(amendment_path.exists()),
     }
     # the referenced identity entries that this round depends on must all pass
