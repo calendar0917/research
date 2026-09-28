@@ -225,6 +225,7 @@ def pool_moments_masked(
     batch: torch.Tensor,
     n_graphs: int,
     zero_blocks: Sequence[str] = (),
+    fill: Mapping[str, torch.Tensor] | None = None,
 ) -> torch.Tensor:
     counts = torch.bincount(batch, minlength=int(n_graphs)).to(value.dtype).unsqueeze(1)
     total = torch.zeros((int(n_graphs), value.shape[1]), device=value.device, dtype=value.dtype)
@@ -232,12 +233,12 @@ def pool_moments_masked(
     total.index_add_(0, batch, value)
     squared.index_add_(0, batch, value * value)
     if "first" in zero_blocks:
-        total = torch.zeros_like(total)
+        total = _block_fill_or_zero(total, "unary:first", fill, value.shape[1])
     if "second" in zero_blocks:
-        squared = torch.zeros_like(squared)
+        squared = _block_fill_or_zero(squared, "unary:second", fill, value.shape[1])
     count_block = torch.log1p(counts)
     if "count" in zero_blocks:
-        count_block = torch.zeros_like(count_block)
+        count_block = _block_fill_or_zero(count_block, "unary:count", fill, 1)
     return torch.cat([total, squared, count_block], dim=1)
 
 
@@ -247,6 +248,7 @@ def pool_pair_moments_masked(
     pair_bucket: torch.Tensor,
     n_graphs: int,
     zero_blocks: Sequence[str] = (),
+    fill: Mapping[str, torch.Tensor] | None = None,
 ) -> torch.Tensor:
     blocks: list[torch.Tensor] = []
     for bucket in range(p2.DISTANCE_BUCKETS):
@@ -265,23 +267,123 @@ def pool_pair_moments_masked(
                 torch.ones((current_batch.shape[0], 1), device=value.device, dtype=value.dtype),
             )
         if "first" in zero_blocks:
-            total = torch.zeros_like(total)
+            total = _bucket_block_fill_or_zero(total, "pair:first", fill, value.shape[1], bucket)
         if "second" in zero_blocks:
-            squared = torch.zeros_like(squared)
+            squared = _bucket_block_fill_or_zero(squared, "pair:second", fill, value.shape[1], bucket)
         count_block = torch.log1p(counts)
         if "count" in zero_blocks:
-            count_block = torch.zeros_like(count_block)
+            count_block = _bucket_block_fill_or_zero(count_block, "pair:count", fill, 1, bucket)
         blocks.append(torch.cat([total, squared, count_block], dim=1))
     return torch.cat(blocks, dim=1)
 
 
-def _zero_grouped_columns(value: torch.Tensor, groups: Mapping[str, tuple[int, int]], names: Sequence[str]) -> torch.Tensor:
-    """Return ``value`` with the named column groups zeroed (in place on a clone)."""
+def _bucket_block_fill_or_zero(
+    block: torch.Tensor, key: str, fill: Mapping[str, torch.Tensor] | None, width: int, bucket: int
+) -> torch.Tensor:
+    if fill is not None and key in fill:
+        table = fill[key]
+        if table.dim() != 2 or int(table.shape[0]) != p2.DISTANCE_BUCKETS:
+            raise ValueError(f"fill[{key!r}] must be [{p2.DISTANCE_BUCKETS}, W], got {tuple(table.shape)}")
+        if int(table.shape[1]) != int(width):
+            raise ValueError(f"fill[{key!r}] width {int(table.shape[1])} != {width}")
+        replacement = table[int(bucket)].to(device=block.device, dtype=block.dtype).reshape(1, -1)
+        return replacement.expand(block.shape[0], -1).contiguous()
+    return torch.zeros_like(block)
+
+
+def _replace_grouped_columns(
+    value: torch.Tensor,
+    groups: Mapping[str, tuple[int, int]],
+    names: Sequence[str],
+    fill: Mapping[str, torch.Tensor] | None = None,
+    prefix: str = "",
+) -> torch.Tensor:
+    """Return ``value`` with the named column groups zeroed or mean-filled.
+
+    ``fill`` (when given) maps ``f"{prefix}{name}"`` to a per-coordinate vector;
+    masked blocks present in ``fill`` are replaced by that vector instead of by
+    zero, which keeps the intervention closer to the data distribution.
+    """
     out = value.clone()
     for name in names:
         low, high = groups[name]
-        out[:, int(low) : int(high)] = 0.0
+        width = int(high) - int(low)
+        key = f"{prefix}{name}"
+        if fill is not None and key in fill:
+            replacement = fill[key].to(device=out.device, dtype=out.dtype).reshape(-1)
+            if int(replacement.numel()) != width:
+                raise ValueError(f"fill[{key!r}] width {int(replacement.numel())} != {width}")
+            out[:, int(low) : int(high)] = replacement.reshape(1, width)
+        else:
+            out[:, int(low) : int(high)] = 0.0
     return out
+
+
+def _zero_grouped_columns(value: torch.Tensor, groups: Mapping[str, tuple[int, int]], names: Sequence[str]) -> torch.Tensor:
+    """Backwards-compatible alias for zero-mode grouped replacement."""
+    return _replace_grouped_columns(value, groups, names, None, "")
+
+
+def _block_fill_or_zero(
+    block: torch.Tensor, key: str, fill: Mapping[str, torch.Tensor] | None, width: int
+) -> torch.Tensor:
+    if fill is not None and key in fill:
+        replacement = fill[key].to(device=block.device, dtype=block.dtype).reshape(-1)
+        if int(replacement.numel()) != int(width):
+            raise ValueError(f"fill[{key!r}] width {int(replacement.numel())} != {width}")
+        return replacement.reshape(1, -1).expand(block.shape[0], -1).contiguous()
+    return torch.zeros_like(block)
+
+
+#: readout blocks addressable by the cross-graph row-shuffle probe.
+READOUT_SHUFFLE_BLOCKS = (
+    "unary_first",
+    "unary_second",
+    "unary_count",
+    "pair_first",
+    "pair_second",
+    "pair_count",
+)
+
+
+def apply_readout_permutation(
+    unary: torch.Tensor,
+    relation_readout: torch.Tensor,
+    blocks: Sequence[str],
+    permutation: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Cross-graph row shuffle of pooled readout blocks (distribution-preserving).
+
+    Each selected block's rows are replaced by the same block of another graph
+    in the batch, so the block marginal is untouched while its graph pairing is
+    destroyed.  This is the cleanest probe for "does this graph's own pooled
+    statistic matter?".
+    """
+    unary_out = unary
+    readout_out = relation_readout
+    if any(name.startswith("unary") for name in blocks):
+        unary_out = unary.clone()
+        for name in blocks:
+            if name == "unary_first":
+                low, high = UNARY_BLOCKS["first"]
+                unary_out[:, low:high] = unary[permutation][:, low:high]
+            elif name == "unary_second":
+                low, high = UNARY_BLOCKS["second"]
+                unary_out[:, low:high] = unary[permutation][:, low:high]
+            elif name == "unary_count":
+                low, high = UNARY_BLOCKS["count"]
+                unary_out[:, low:high] = unary[permutation][:, low:high]
+    if any(name.startswith("pair") for name in blocks):
+        n_graphs = int(relation_readout.shape[0])
+        view = relation_readout.reshape(n_graphs, p2.DISTANCE_BUCKETS, PAIR_BLOCK_DIM)
+        permuted = view[permutation]
+        readout_out = relation_readout.clone().reshape(n_graphs, p2.DISTANCE_BUCKETS, PAIR_BLOCK_DIM)
+        for name in blocks:
+            if name.startswith("pair_"):
+                low, high = PAIR_BLOCKS[name[len("pair_") :]]
+                readout_out[:, :, low:high] = permuted[:, :, low:high]
+        readout_out = readout_out.reshape(n_graphs, p2.DISTANCE_BUCKETS * PAIR_BLOCK_DIM)
+    return unary_out, readout_out
 
 
 # ---------------------------------------------------------------------------
@@ -301,13 +403,19 @@ class AuditModel(p2.P2Model):
 
     # -- local environment ---------------------------------------------------
 
-    def environments_masked(self, coord: torch.Tensor, data: Any, mask: AuditMask) -> torch.Tensor:
+    def environments_masked(
+        self,
+        coord: torch.Tensor,
+        data: Any,
+        mask: AuditMask,
+        fill: Mapping[str, torch.Tensor] | None = None,
+    ) -> torch.Tensor:
         n = int(coord.shape[0])
         anchor = data.anchor.to(coord.dtype)
         if int(anchor.shape[1]) != ANCHOR_DIM_EXPECTED:
             raise RuntimeError(f"anchor width {int(anchor.shape[1])} != {ANCHOR_DIM_EXPECTED}")
         if mask.anchor_zero_groups:
-            anchor = _zero_grouped_columns(anchor, ANCHOR_GROUPS, mask.anchor_zero_groups)
+            anchor = _replace_grouped_columns(anchor, ANCHOR_GROUPS, mask.anchor_zero_groups, fill, "anchor:")
 
         q = torch.nn.functional.one_hot(data.dict_atom, num_classes=p2.ATOM_CATEGORIES).to(coord.dtype)
         occ_coord_node = data.env_occ_node
@@ -364,18 +472,27 @@ class AuditModel(p2.P2Model):
 
     # -- forward -------------------------------------------------------------
 
-    def forward(self, data: Any, *, mask: AuditMask | None = None, return_aux: bool = False, **_kwargs: Any):
+    def forward(
+        self,
+        data: Any,
+        *,
+        mask: AuditMask | None = None,
+        fill: Mapping[str, torch.Tensor] | None = None,
+        readout_perm: tuple[Sequence[str], torch.Tensor] | None = None,
+        return_aux: bool = False,
+        **_kwargs: Any,
+    ):
         if mask is None:
             return super().forward(data, return_aux=return_aux)
 
         coord = self.code(data.dict_phi)
         if mask.coord_zero:
             coord = torch.zeros_like(coord)
-        E = self.environments_masked(coord, data, mask)
+        E = self.environments_masked(coord, data, mask, fill)
 
         n_graphs = int(data.global_context.shape[0])
         batch = data.batch
-        unary = pool_moments_masked(E, batch, n_graphs, mask.unary_zero_blocks)
+        unary = pool_moments_masked(E, batch, n_graphs, mask.unary_zero_blocks, fill)
 
         source = data.pair_index[0]
         target = data.pair_index[1]
@@ -386,7 +503,9 @@ class AuditModel(p2.P2Model):
         right = u[target]
         relation_input = data.pair_relation[:, list(p1.P1_RELATION_INDICES)]
         if mask.relation_zero_groups:
-            relation_input = _zero_grouped_columns(relation_input, RELATION_GROUPS, mask.relation_zero_groups)
+            relation_input = _replace_grouped_columns(
+                relation_input, RELATION_GROUPS, mask.relation_zero_groups, fill, "relation:"
+            )
         relation = self.relation_encoder(relation_input)
         product = left * right
         gate = 1.0 + torch.tanh(self.distance_gate(data.pair_bucket))
@@ -396,23 +515,35 @@ class AuditModel(p2.P2Model):
         pair_value = self.pair_encoder(pair_input)
         pair_batch = batch[source]
         relation_readout = pool_pair_moments_masked(
-            pair_value, pair_batch, data.pair_bucket, n_graphs, mask.pair_zero_blocks
+            pair_value, pair_batch, data.pair_bucket, n_graphs, mask.pair_zero_blocks, fill
         )
+        if readout_perm is not None:
+            blocks, permutation = readout_perm
+            unary, relation_readout = apply_readout_permutation(unary, relation_readout, blocks, permutation)
 
         global_input = data.global_context
         if mask.global_zero_groups:
-            global_input = _zero_grouped_columns(global_input, GLOBAL_GROUPS, mask.global_zero_groups)
+            global_input = _replace_grouped_columns(global_input, GLOBAL_GROUPS, mask.global_zero_groups, fill, "global:")
         graph_hidden = self.global_encoder(global_input)
         if mask.graph_hidden_zero:
             graph_hidden = torch.zeros_like(graph_hidden)
         topology_input = data.topology_features
         if mask.topology_zero:
-            topology_input = torch.zeros_like(topology_input)
+            if fill is not None and "topology" in fill:
+                topology_input = fill["topology"].to(topology_input.device, topology_input.dtype).reshape(1, -1).expand_as(topology_input).contiguous()
+            else:
+                topology_input = torch.zeros_like(topology_input)
         topology = self.topology_encoder(topology_input)
         unified = torch.cat([unary, relation_readout, graph_hidden, topology], dim=1)
         prediction = self.reader(unified).view(-1)
         if return_aux:
-            return prediction, {"E": E, "coord": coord, "phi": data.dict_phi}
+            return prediction, {
+                "E": E,
+                "coord": coord,
+                "phi": data.dict_phi,
+                "unary": unary,
+                "relation_readout": relation_readout,
+            }
         return prediction
 
 
@@ -442,6 +573,15 @@ class Intervention:
     notes: str = ""
     shuffle_kind: str | None = None  # "node" | "edge" | "both"
     seeds: tuple[int, ...] = ()
+    #: when True the masked input blocks are replaced by their per-coordinate
+    #: official-valid mean (distribution-aware probe) instead of by zero.
+    use_fill: bool = False
+    #: cross-molecule row shuffle of a graph-level block: "global" | "topology" | "both".
+    graph_shuffle: str | None = None
+    #: cross-graph row shuffle of pooled readout blocks (``READOUT_SHUFFLE_BLOCKS``).
+    readout_shuffle: tuple[str, ...] = ()
+    #: cross-pair row shuffle of relation groups (``RELATION_SHUFFLE_KINDS``).
+    relation_shuffle: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -451,6 +591,10 @@ class Intervention:
             "notes": self.notes,
             "shuffle_kind": self.shuffle_kind,
             "seeds": list(self.seeds),
+            "use_fill": bool(self.use_fill),
+            "graph_shuffle": self.graph_shuffle,
+            "readout_shuffle": list(self.readout_shuffle),
+            "relation_shuffle": self.relation_shuffle,
         }
 
 
@@ -460,6 +604,7 @@ SHUFFLE_SEEDS = (101, 202, 303, 404, 505)
 
 def interventions(include_extended: bool = True) -> list[Intervention]:
     """The pre-registered frozen-intervention registry (preregistration §3)."""
+    graph_seeds = GRAPH_SHUFFLE_SEEDS
     rows: list[Intervention] = [
         # -- anchor ---------------------------------------------------------
         Intervention("A0", "anchor", AuditMask(), "control: audit path, identity mask"),
@@ -604,6 +749,115 @@ def clear_shuffles(data_list: Sequence[Any]) -> None:
         data.env_bond_v_shuffled = None
 
 
+#: seeds used for the cross-molecule graph-level row shuffle.
+GRAPH_SHUFFLE_SEEDS = (4242, 5150, 6262)
+
+#: cross-molecule row-shuffle targets: ``kind -> ((attribute, low, high), ...)``.
+GRAPH_SHUFFLE_KINDS: dict[str, tuple[tuple[str, int, int], ...]] = {
+    "global_chemistry": (("global_context", 30, 62),),
+    "global_structure": (("global_context", 0, 30),),
+    "global_all": (("global_context", 0, 62),),
+    "topology": (("topology_features", 0, 25),),
+    "global_topology": (("global_context", 0, 62), ("topology_features", 0, 25)),
+}
+
+
+def permute_graph_rows(data_list: Sequence[Any], kind: str, seed: int):
+    """Cross-molecule row shuffle of graph-level blocks (distribution-preserving).
+
+    The marginal distribution of each shuffled block is untouched; only the
+    molecule it belongs to changes.  This is the cleanest frozen probe for
+    "is this graph's own value used?" on graph-level variables.  Returns a
+    ``restore()`` callable that puts the original rows back.
+    """
+    if kind not in GRAPH_SHUFFLE_KINDS:
+        raise ValueError(f"unknown graph-shuffle kind {kind!r}")
+    generator = torch.Generator().manual_seed(int(seed))
+    n = len(data_list)
+    saved: list[tuple[Any, str, torch.Tensor]] = []
+    if n == 0:
+        return lambda: None
+    for attribute, low, high in GRAPH_SHUFFLE_KINDS[kind]:
+        stacked = torch.stack([getattr(data, attribute).reshape(-1) for data in data_list])
+        permutation = torch.randperm(n, generator=generator)
+        shuffled = stacked[permutation]
+        for index, data in enumerate(data_list):
+            original = getattr(data, attribute)
+            replacement = original.clone()
+            replacement[..., int(low) : int(high)] = shuffled[index, int(low) : int(high)]
+            saved.append((data, attribute, original))
+            setattr(data, attribute, replacement)
+
+    def restore() -> None:
+        for data, attribute, original in saved:
+            setattr(data, attribute, original)
+
+    return restore
+
+
+def build_fill_policy(
+    model: "AuditModel", loader: Any, device: torch.device, mask: AuditMask | None = None
+) -> dict[str, torch.Tensor]:
+    """Per-coordinate official-valid means of every mappable input/output block.
+
+    Computed from an identity-mask pass, so the means are the values the trained
+    H1 forward actually sees.  Used as the distribution-aware replacement for
+    masked blocks (``Intervention.use_fill``).
+    """
+    mask = AuditMask() if mask is None else mask
+    model.eval()
+    sums: dict[str, torch.Tensor] = {}
+    n_nodes = 0
+    n_graphs = 0
+    n_pairs = 0
+
+    def _accumulate(key: str, value: torch.Tensor) -> None:
+        value = value.detach().double()
+        if key in sums:
+            sums[key] = sums[key] + value
+        else:
+            sums[key] = value.clone()
+
+    with torch.no_grad():
+        for batch in loader:
+            batch = batch.to(device)
+            _prediction, aux = model(batch, mask=mask, return_aux=True)
+            anchor = batch.anchor
+            for name, (low, high) in ANCHOR_GROUPS.items():
+                _accumulate(f"anchor:{name}", anchor[:, low:high].sum(dim=0))
+            n_nodes += int(anchor.shape[0])
+            for name, (low, high) in GLOBAL_GROUPS.items():
+                _accumulate(f"global:{name}", batch.global_context[:, low:high].sum(dim=0))
+            _accumulate("topology", batch.topology_features.sum(dim=0))
+            n_graphs += int(batch.global_context.shape[0])
+            relation = batch.pair_relation[:, list(p1.P1_RELATION_INDICES)]
+            for name, (low, high) in RELATION_GROUPS.items():
+                _accumulate(f"relation:{name}", relation[:, low:high].sum(dim=0))
+            n_pairs += int(relation.shape[0])
+            unary = aux["unary"]
+            _accumulate("unary:first", unary[:, UNARY_BLOCKS["first"][0] : UNARY_BLOCKS["first"][1]].sum(dim=0))
+            _accumulate("unary:second", unary[:, UNARY_BLOCKS["second"][0] : UNARY_BLOCKS["second"][1]].sum(dim=0))
+            _accumulate("unary:count", unary[:, UNARY_BLOCKS["count"][0] : UNARY_BLOCKS["count"][1]].sum(dim=0))
+            readout = aux["relation_readout"].reshape(int(batch.global_context.shape[0]), p2.DISTANCE_BUCKETS, PAIR_BLOCK_DIM)
+            for block in ("first", "second", "count"):
+                low, high = PAIR_BLOCKS[block]
+                _accumulate(f"pair:{block}", readout[:, :, low:high].sum(dim=0))
+
+    policy: dict[str, torch.Tensor] = {}
+    for key, value in sums.items():
+        if key.startswith("anchor:"):
+            denominator = max(n_nodes, 1)
+        elif key.startswith("relation:"):
+            denominator = max(n_pairs, 1)
+        else:
+            denominator = max(n_graphs, 1)
+        policy[key] = (value / float(denominator)).float()
+    policy["pair:first"] = policy["pair:first"].reshape(p2.DISTANCE_BUCKETS, p2.PAIR_HIDDEN)
+    policy["pair:second"] = policy["pair:second"].reshape(p2.DISTANCE_BUCKETS, p2.PAIR_HIDDEN)
+    policy["pair:count"] = policy["pair:count"].reshape(p2.DISTANCE_BUCKETS, 1)
+    return policy
+
+
 # ---------------------------------------------------------------------------
 # CPU evaluation
 # ---------------------------------------------------------------------------
@@ -615,17 +869,33 @@ def attach_cpu(threads: int) -> torch.device:
     return device
 
 
-def evaluate_mask(model: AuditModel, loader: Any, device: torch.device, mask: AuditMask | None = None) -> dict[str, Any]:
-    """Prediction-only CPU evaluation with a mask (no reconstruction readout)."""
+def evaluate_mask(
+    model: AuditModel,
+    loader: Any,
+    device: torch.device,
+    mask: AuditMask | None = None,
+    fill: Mapping[str, torch.Tensor] | None = None,
+    readout_shuffle: tuple[Sequence[str], int] | None = None,
+) -> dict[str, Any]:
+    """Prediction-only CPU evaluation with a mask (no reconstruction readout).
+
+    ``readout_shuffle=(blocks, seed)`` additionally cross-graph row-shuffles the
+    named pooled readout blocks (``READOUT_SHUFFLE_BLOCKS``).
+    """
     if device.type != "cpu":
         raise RuntimeError(f"clarity audit is CPU-only, got device={device}")
     model.eval()
+    generator = torch.Generator().manual_seed(int(readout_shuffle[1])) if readout_shuffle else None
     predictions: list[np.ndarray] = []
     targets: list[np.ndarray] = []
     with torch.no_grad():
         for batch in loader:
             batch = batch.to(device)
-            prediction = model(batch, mask=mask)
+            readout_perm = None
+            if readout_shuffle is not None:
+                n_graphs = int(batch.y.numel())
+                readout_perm = (tuple(readout_shuffle[0]), torch.randperm(n_graphs, generator=generator))
+            prediction = model(batch, mask=mask, fill=fill, readout_perm=readout_perm)
             predictions.append(prediction.view(-1).cpu().numpy())
             targets.append(batch.y.view(-1).cpu().numpy())
     target = np.concatenate(targets).astype(np.float64)
@@ -653,17 +923,38 @@ def run_intervention(
     device: torch.device,
     intervention: Intervention,
     baseline_predictions: np.ndarray | None = None,
+    fill_policy: Mapping[str, torch.Tensor] | None = None,
 ) -> dict[str, Any]:
     """Run one frozen intervention (averaging over shuffle seeds when relevant)."""
     started = time.perf_counter()
-    seeds: Iterable[Any] = intervention.seeds if intervention.shuffle_kind else (None,)
+    multiple = bool(
+        intervention.shuffle_kind
+        or intervention.graph_shuffle
+        or intervention.readout_shuffle
+        or intervention.relation_shuffle
+    )
+    seeds: Iterable[Any] = intervention.seeds if multiple else (None,)
+    fill = fill_policy if intervention.use_fill else None
     rows: list[dict[str, Any]] = []
     for seed in seeds:
+        restore = None
+        relation_restore = None
         try:
             if intervention.shuffle_kind:
                 prepare_shuffles(data_list, intervention.shuffle_kind, seed)
-            result = evaluate_mask(model, loader, device, intervention.mask)
+            if intervention.graph_shuffle:
+                restore = permute_graph_rows(data_list, intervention.graph_shuffle, int(seed))
+            if intervention.relation_shuffle:
+                relation_restore = permute_pair_rows(data_list, intervention.relation_shuffle, int(seed))
+            readout_shuffle = (
+                (intervention.readout_shuffle, int(seed)) if intervention.readout_shuffle else None
+            )
+            result = evaluate_mask(model, loader, device, intervention.mask, fill, readout_shuffle)
         finally:
+            if restore is not None:
+                restore()
+            if relation_restore is not None:
+                relation_restore()
             if intervention.shuffle_kind:
                 clear_shuffles(data_list)
         row: dict[str, Any] = {
@@ -688,6 +979,10 @@ def run_intervention(
         "mask": intervention.mask.as_dict(),
         "notes": intervention.notes,
         "shuffle_kind": intervention.shuffle_kind,
+        "graph_shuffle": intervention.graph_shuffle,
+        "readout_shuffle": list(intervention.readout_shuffle),
+        "relation_shuffle": intervention.relation_shuffle,
+        "use_fill": bool(intervention.use_fill),
         "seeds": [row["seed"] for row in rows],
         "intervention_mae": float(np.mean([row["mae"] for row in rows])),
         "intervention_mae_std": float(np.std([row["mae"] for row in rows])),
@@ -868,6 +1163,160 @@ def verify_topology_groups() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Phase A: static information-flow inventory
 # ---------------------------------------------------------------------------
+
+
+#: seeds used for the cross-graph pooled-readout row shuffle.
+READOUT_SHUFFLE_SEEDS = (9101, 9202)
+
+
+def interventions_readout_shuffle() -> list[Intervention]:
+    """Cross-graph row-shuffle probes for the pooled readout blocks."""
+    def row(name: str, blocks: tuple[str, ...], note: str) -> Intervention:
+        return Intervention(
+            name,
+            "readout_shuffle",
+            AuditMask(),
+            note,
+            seeds=READOUT_SHUFFLE_SEEDS,
+            readout_shuffle=blocks,
+        )
+
+    return [
+        row("PS1", ("unary_first",), "shuffle unary first-moment rows across graphs"),
+        row("PS2", ("unary_second",), "shuffle unary second-moment rows across graphs"),
+        row("PS3", ("unary_count",), "shuffle unary count rows across graphs"),
+        row("PS4", ("pair_first",), "shuffle pair first-moment rows across graphs"),
+        row("PS5", ("pair_second",), "shuffle pair second-moment rows across graphs"),
+        row("PS6", ("pair_count",), "shuffle pair count rows across graphs"),
+        row("PS7", ("unary_first", "unary_second", "unary_count"), "shuffle full unary pool rows"),
+        row("PS8", ("pair_first", "pair_second", "pair_count"), "shuffle full pair readout rows"),
+        row("PS9", ("unary_second", "pair_second"), "shuffle both second-moment blocks"),
+    ]
+
+
+def interventions_graph_shuffle() -> list[Intervention]:
+    """Distribution-preserving graph-level probes (cross-molecule row shuffle)."""
+    return [
+        Intervention("GS1", "global_shuffle", AuditMask(), "shuffle graph atom+bond histogram rows",
+                     graph_shuffle="global_chemistry", seeds=GRAPH_SHUFFLE_SEEDS),
+        Intervention("GS2", "global_shuffle", AuditMask(), "shuffle graph structure (short+long) rows",
+                     graph_shuffle="global_structure", seeds=GRAPH_SHUFFLE_SEEDS),
+        Intervention("GS3", "global_shuffle", AuditMask(), "shuffle full global62 rows",
+                     graph_shuffle="global_all", seeds=GRAPH_SHUFFLE_SEEDS),
+        Intervention("GS4", "global_shuffle", AuditMask(), "shuffle topology25 rows",
+                     graph_shuffle="topology", seeds=GRAPH_SHUFFLE_SEEDS),
+        Intervention("GS5", "global_shuffle", AuditMask(), "shuffle global62 + topology25 rows",
+                     graph_shuffle="global_topology", seeds=GRAPH_SHUFFLE_SEEDS),
+    ]
+
+
+def interventions_fill() -> list[Intervention]:
+    """Mean-fill variants of every input-block intervention (distribution-aware).
+
+    Concrete (external) input blocks are replaced by their official-valid
+    per-coordinate mean instead of by zero; internal activation masks
+    (``node_binding_zero``, ``edge_binding_zero``, ``coord_zero``,
+    ``graph_hidden_zero``, ``gate_off``, ``pair_projection_zero``) have no
+    distribution-matched replacement and are therefore excluded.
+    """
+    excluded = {
+        "N1", "N2", "N6", "EB1", "EB2", "EB3", "N0",
+        "A0", "G0", "T0", "R0", "P0",
+    }
+    fillable = [
+        intervention
+        for intervention in interventions()
+        if intervention.name not in excluded and intervention.mask is not None
+    ]
+    rows: list[Intervention] = []
+    for intervention in fillable:
+        mask = intervention.mask
+        touches_input = bool(
+            mask.anchor_zero_groups
+            or mask.global_zero_groups
+            or mask.topology_zero
+            or mask.relation_zero_groups
+            or mask.unary_zero_blocks
+            or mask.pair_zero_blocks
+        )
+        if not touches_input:
+            continue
+        rows.append(
+            Intervention(
+                intervention.name,
+                intervention.category + "_fill",
+                mask,
+                intervention.notes + " [mean-fill probe]",
+                shuffle_kind=intervention.shuffle_kind,
+                seeds=intervention.seeds,
+                use_fill=True,
+                graph_shuffle=intervention.graph_shuffle,
+            )
+        )
+    return rows
+
+
+#: species of relation-row-shuffle targets: ``kind -> raw column slices``.
+RELATION_SHUFFLE_KINDS: dict[str, tuple[tuple[int, int], ...]] = {
+    "distance": ((0, 6),),
+    "overlap": ((6, 11),),
+    "boundary": ((11, 14),),
+    "path_count": ((18, 19),),
+    "all": ((0, 14), (18, 19)),
+}
+
+
+def permute_pair_rows(data_list: Sequence[Any], kind: str, seed: int):
+    """Cross-pair row shuffle of relation columns (distribution-preserving).
+
+    The marginal distribution of each shuffled relation block is untouched;
+    only the pair it belongs to changes.  Returns a ``restore()`` callable.
+    """
+    if kind not in RELATION_SHUFFLE_KINDS:
+        raise ValueError(f"unknown relation-shuffle kind {kind!r}")
+    generator = torch.Generator().manual_seed(int(seed))
+    saved: list[tuple[Any, torch.Tensor]] = []
+    if not data_list:
+        return lambda: None
+    for low, high in RELATION_SHUFFLE_KINDS[kind]:
+        concatenated = torch.cat([data.pair_relation for data in data_list], dim=0)
+        permutation = torch.randperm(int(concatenated.shape[0]), generator=generator)
+        shuffled = concatenated[permutation]
+        offset = 0
+        for data in data_list:
+            original = data.pair_relation
+            rows = int(original.shape[0])
+            replacement = original.clone()
+            replacement[:, int(low) : int(high)] = shuffled[offset : offset + rows, int(low) : int(high)]
+            offset += rows
+            saved.append((data, original))
+            data.pair_relation = replacement
+
+    def restore() -> None:
+        for data, original in saved:
+            data.pair_relation = original
+
+    return restore
+
+
+def interventions_relation_shuffle() -> list[Intervention]:
+    """Cross-pair row-shuffle probes for the 15-D used relation groups."""
+    return [
+        Intervention("RS1", "relation_shuffle", AuditMask(), "shuffle distance block rows across pairs",
+                     seeds=READOUT_SHUFFLE_SEEDS, relation_shuffle="distance"),
+        Intervention("RS2", "relation_shuffle", AuditMask(), "shuffle overlap block rows across pairs",
+                     seeds=READOUT_SHUFFLE_SEEDS, relation_shuffle="overlap"),
+        Intervention("RS3", "relation_shuffle", AuditMask(), "shuffle boundary block rows across pairs",
+                     seeds=READOUT_SHUFFLE_SEEDS, relation_shuffle="boundary"),
+        Intervention("RS4", "relation_shuffle", AuditMask(), "shuffle log-path-count rows across pairs",
+                     seeds=READOUT_SHUFFLE_SEEDS, relation_shuffle="path_count"),
+        Intervention("RS5", "relation_shuffle", AuditMask(), "shuffle all used relation rows across pairs",
+                     seeds=READOUT_SHUFFLE_SEEDS, relation_shuffle="all"),
+    ]
+
+
+def _relation_shuffle_kind(name: str) -> str:
+    return {"RS1": "distance", "RS2": "overlap", "RS3": "boundary", "RS4": "path_count", "RS5": "all"}[name]
 
 
 def _entry(
@@ -1287,6 +1736,20 @@ PHASE_C_CANDIDATES: dict[str, tuple[AuditMask, str]] = {
         ),
         "clean model + no explicit second moments",
     ),
+    # Not in the original preregistration list: Phase B's distribution-preserving
+    # probes classified four blocks as dormant (unary count, pair count, relation
+    # log-path-count, global bond histogram), so this is the minimal "delete only
+    # what is dormant" candidate.  Declared before the first adaptation run and
+    # applied to every candidate identically.
+    "C6": (
+        AuditMask(
+            global_zero_groups=GLOBAL_CHEMISTRY_GROUPS + ("bond_histogram",),
+            unary_zero_blocks=("count",),
+            pair_zero_blocks=("count",),
+            relation_zero_groups=("path_count",),
+        ),
+        "remove graph chemistry marginal + the four frozen-dormant statistic blocks",
+    ),
 }
 
 
@@ -1312,6 +1775,11 @@ __all__ = [
     "PAIR_BLOCKS",
     "READER_IN_DIM",
     "SHUFFLE_SEEDS",
+    "GRAPH_SHUFFLE_SEEDS",
+    "GRAPH_SHUFFLE_KINDS",
+    "RELATION_SHUFFLE_KINDS",
+    "READOUT_SHUFFLE_SEEDS",
+    "READOUT_SHUFFLE_BLOCKS",
     "AuditMask",
     "Intervention",
     "AuditModel",
@@ -1319,7 +1787,15 @@ __all__ = [
     "build_audit_model",
     "load_h1_soup_state",
     "interventions",
+    "interventions_fill",
+    "interventions_graph_shuffle",
+    "interventions_readout_shuffle",
+    "apply_readout_permutation",
     "candidate_mask",
+    "build_fill_policy",
+    "permute_graph_rows",
+    "permute_pair_rows",
+    "interventions_relation_shuffle",
     "prepare_shuffles",
     "clear_shuffles",
     "attach_cpu",
@@ -1332,6 +1808,8 @@ __all__ = [
     "verify_topology_groups",
     "pool_moments_masked",
     "pool_pair_moments_masked",
+    "_replace_grouped_columns",
+    "_zero_grouped_columns",
     "train_cpu",
     "state_sha256",
 ]

@@ -251,6 +251,76 @@ def _frozen_context(threads: int):
     return model, valid, loader, dict_sha, replay, runtime
 
 
+def _run_table(
+    model: audit.AuditModel,
+    loader: Any,
+    valid: Sequence[Any],
+    device_obj: torch.device,
+    registered: Sequence[audit.Intervention],
+    baseline_mae: float,
+    baseline_predictions: np.ndarray,
+    fill_policy: Mapping[str, torch.Tensor] | None,
+    controls: Sequence[str],
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    identity_row: dict[str, Any] | None = None
+    for intervention in registered:
+        if intervention.name in controls:
+            if identity_row is None:
+                identity_row = audit.run_intervention(
+                    model, loader, valid, device_obj, audit.Intervention("IDENTITY", "control"),
+                    baseline_predictions, fill_policy=None,
+                )
+                identity_row["intervention"] = "IDENTITY"
+            row = dict(identity_row)
+            row["intervention"] = intervention.name
+            row["category"] = intervention.category
+            row["mask"] = intervention.mask.as_dict()
+            row["graph_shuffle"] = intervention.graph_shuffle
+            row["use_fill"] = bool(intervention.use_fill)
+            row["notes"] = intervention.notes + " (control: identity mask, shared run)"
+            row["control_reused"] = True
+            row["runtime_seconds"] = 0.0
+        else:
+            row = audit.run_intervention(
+                model, loader, valid, device_obj, intervention, baseline_predictions, fill_policy
+            )
+            row["control_reused"] = False
+        rows.append(row)
+        print(
+            f"[{row.get('use_fill') and 'fill' or ('shuf' if intervention.graph_shuffle else 'zero')}] "
+            f"{row['intervention']:>4} mae={row['intervention_mae']:.6f} "
+            f"d={row['intervention_mae'] - baseline_mae:+.6f} "
+            f"|dp|={row.get('mean_abs_prediction_delta', float('nan')):.5f} "
+            f"r={row.get('prediction_correlation', float('nan')):.4f}",
+            flush=True,
+        )
+    return audit.summarise_interventions(rows, baseline_mae)
+
+
+def _write_table(name: str, payload_prefix: Mapping[str, Any], rows: Sequence[Mapping[str, Any]]) -> None:
+    payload = {**payload_prefix, "rows": list(rows)}
+    _write_json(RESULTS_DIR / f"{name}.json", payload)
+    _write_csv(
+        RESULTS_DIR / f"{name}.csv",
+        [
+            {
+                "intervention": row["intervention"],
+                "category": row["category"],
+                "baseline_mae": row["baseline_mae"],
+                "intervention_mae": row["intervention_mae"],
+                "delta_mae": row["delta_mae"],
+                "mean_abs_prediction_delta": row.get("mean_abs_prediction_delta"),
+                "prediction_correlation": row.get("prediction_correlation"),
+                "runtime_seconds": row["runtime_seconds"],
+                "load_bearing": row["load_bearing"],
+                "notes": row["notes"],
+            }
+            for row in rows
+        ],
+    )
+
+
 def stage_frozen(threads: int, include_extended: bool = True) -> dict[str, Any]:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     model, valid, loader, dict_sha, replay, runtime = _frozen_context(int(threads))
@@ -280,65 +350,73 @@ def stage_frozen(threads: int, include_extended: bool = True) -> dict[str, Any]:
         flush=True,
     )
 
-    baseline_predictions = replay["predictions"]
-    rows: list[dict[str, Any]] = []
-    identity_row: dict[str, Any] | None = None
-    controls = {"A0", "G0", "T0", "N0", "R0", "P0"}
-    for intervention in audit.interventions(include_extended=include_extended):
-        if intervention.name in controls:
-            if identity_row is None:
-                identity_row = audit.run_intervention(
-                    model, loader, valid, device, audit.Intervention("IDENTITY", "control"), baseline_predictions
-                )
-                identity_row["intervention"] = "IDENTITY"
-            row = dict(identity_row)
-            row["intervention"] = intervention.name
-            row["category"] = intervention.category
-            row["mask"] = intervention.mask.as_dict()
-            row["notes"] = intervention.notes + " (control: identity mask, shared run)"
-            row["control_reused"] = True
-            row["runtime_seconds"] = 0.0
-        else:
-            row = audit.run_intervention(model, loader, valid, device, intervention, baseline_predictions)
-            row["control_reused"] = False
-        rows.append(row)
-        print(
-            f"[frozen] {row['intervention']:>4} mae={row['intervention_mae']:.6f} "
-            f"d={row['intervention_mae'] - baseline['official_valid_mae']:+.6f} "
-            f"|dp|={row.get('mean_abs_prediction_delta', float('nan')):.5f} "
-            f"r={row.get('prediction_correlation', float('nan')):.4f}",
-            flush=True,
-        )
+    fill_policy = audit.build_fill_policy(model, loader, device)
+    _write_json(
+        RESULTS_DIR / "fill_policy.json",
+        {
+            "protocol_version": PROTOCOL_VERSION,
+            "git_commit": _git_commit(),
+            "source": "official valid, identity-mask pass of the H1 soup checkpoint",
+            "blocks": {key: list(value.shape) for key, value in sorted(fill_policy.items())},
+            "official_test_loaded": False,
+        },
+    )
 
-    enriched = audit.summarise_interventions(rows, float(baseline["official_valid_mae"]))
-    payload = {
+    baseline_predictions = replay["predictions"]
+    baseline_mae = float(baseline["official_valid_mae"])
+    shared = {
         "protocol_version": PROTOCOL_VERSION,
         "git_commit": _git_commit(),
         "device": "cpu",
         "baseline": baseline,
-        "rows": enriched,
         "official_test_loaded": False,
     }
-    _write_json(RESULTS_DIR / "frozen_interventions.json", payload)
-    _write_csv(
-        RESULTS_DIR / "frozen_interventions.csv",
-        [
-            {
-                "intervention": row["intervention"],
-                "category": row["category"],
-                "baseline_mae": row["baseline_mae"],
-                "intervention_mae": row["intervention_mae"],
-                "delta_mae": row["delta_mae"],
-                "mean_abs_prediction_delta": row.get("mean_abs_prediction_delta"),
-                "prediction_correlation": row.get("prediction_correlation"),
-                "runtime_seconds": row["runtime_seconds"],
-                "load_bearing": row["load_bearing"],
-                "notes": row["notes"],
-            }
-            for row in enriched
-        ],
+    controls = ("A0", "G0", "T0", "N0", "R0", "P0")
+    zero_rows = _run_table(
+        model, loader, valid, device, audit.interventions(include_extended=include_extended),
+        baseline_mae, baseline_predictions, None, controls,
     )
-    return payload
+    _write_table("frozen_interventions", shared, zero_rows)
+    fill_rows = _run_table(
+        model, loader, valid, device, audit.interventions_fill(),
+        baseline_mae, baseline_predictions, fill_policy, (),
+    )
+    _write_table("frozen_interventions_fill", {**shared, "probe": "mean_fill"}, fill_rows)
+    shuffle_rows = _run_table(
+        model, loader, valid, device, audit.interventions_graph_shuffle(),
+        baseline_mae, baseline_predictions, None, (),
+    )
+    _write_table(
+        "frozen_interventions_graph_shuffle",
+        {**shared, "probe": "cross_molecule_row_shuffle"},
+        shuffle_rows,
+    )
+    readout_rows = _run_table(
+        model, loader, valid, device, audit.interventions_readout_shuffle(),
+        baseline_mae, baseline_predictions, None, (),
+    )
+    _write_table(
+        "frozen_interventions_readout_shuffle",
+        {**shared, "probe": "cross_graph_readout_row_shuffle"},
+        readout_rows,
+    )
+    relation_rows = _run_table(
+        model, loader, valid, device, audit.interventions_relation_shuffle(),
+        baseline_mae, baseline_predictions, None, (),
+    )
+    _write_table(
+        "frozen_interventions_relation_shuffle",
+        {**shared, "probe": "cross_pair_relation_row_shuffle"},
+        relation_rows,
+    )
+    return {
+        "zero": zero_rows,
+        "fill": fill_rows,
+        "graph_shuffle": shuffle_rows,
+        "readout_shuffle": readout_rows,
+        "relation_shuffle": relation_rows,
+        "baseline": baseline,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -533,17 +611,18 @@ def stage_matched(
 
 
 def stage_report() -> dict[str, Any]:
-    frozen_path = RESULTS_DIR / "frozen_interventions.json"
-    if not frozen_path.exists():
+    zero_path = RESULTS_DIR / "frozen_interventions.json"
+    if not zero_path.exists():
         raise RuntimeError("frozen_interventions.json missing; run the frozen stage first")
-    frozen = _read_json(frozen_path)
-    rows = frozen["rows"]
-    ordered = sorted(rows, key=lambda row: float(row["delta_mae"]), reverse=True)
-    payload = {
-        "protocol_version": PROTOCOL_VERSION,
-        "git_commit": _git_commit(),
-        "baseline": frozen["baseline"],
-        "ranking_by_delta_mae": [
+    zero = _read_json(zero_path)
+    tables = {"zero": zero}
+    for name in ("fill", "graph_shuffle", "readout_shuffle", "relation_shuffle"):
+        path = RESULTS_DIR / f"frozen_interventions_{name}.json"
+        if path.exists():
+            tables[name] = _read_json(path)
+
+    def _compact(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+        return [
             {
                 "intervention": row["intervention"],
                 "category": row["category"],
@@ -552,27 +631,40 @@ def stage_report() -> dict[str, Any]:
                 "prediction_correlation": row.get("prediction_correlation"),
                 "load_bearing": row["load_bearing"],
             }
-            for row in ordered
-        ],
+            for row in sorted(rows, key=lambda item: float(item["delta_mae"]), reverse=True)
+        ]
+
+    def _index(rows: Sequence[Mapping[str, Any]]) -> dict[str, Mapping[str, Any]]:
+        return {row["intervention"]: row for row in rows}
+
+    zero_index = _index(zero["rows"])
+    fill_index = _index(tables.get("fill", {}).get("rows", []))
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "git_commit": _git_commit(),
+        "baseline": zero["baseline"],
+        "ranking_by_delta_mae": _compact(zero["rows"]),
+        "tables": {name: _compact(table["rows"]) for name, table in tables.items()},
+        "probe_agreement": {
+            name: {
+                "zero_delta": zero_index[name]["delta_mae"] if name in zero_index else None,
+                "fill_delta": fill_index[name]["delta_mae"] if name in fill_index else None,
+                "delta_ratio_fill_over_zero": (
+                    float(fill_index[name]["delta_mae"] / zero_index[name]["delta_mae"])
+                    if name in fill_index and name in zero_index and float(zero_index[name]["delta_mae"]) != 0.0
+                    else None
+                ),
+            }
+            for name in ("A1", "A2", "A3", "A4", "A5", "A6", "G1", "G2", "G3", "T1", "R1", "R3", "R5", "P1", "P2", "P3")
+        },
         "classes": {
-            label: [row["intervention"] for row in rows if row["load_bearing"] == label]
+            label: [row["intervention"] for row in zero["rows"] if row["load_bearing"] == label]
             for label in (
                 "strongly_load_bearing",
                 "moderately_used",
                 "weakly_used",
                 "weak_or_dormant",
             )
-        },
-        "suspicious_bypasses": {
-            "topology25": next(
-                (row["delta_mae"] for row in rows if row["intervention"] == "T1"), None
-            ),
-            "global_chemistry": next(
-                (row["delta_mae"] for row in rows if row["intervention"] == "G1"), None
-            ),
-            "anchor_patch_marginals": next(
-                (row["delta_mae"] for row in rows if row["intervention"] == "A2"), None
-            ),
         },
         "adaptation_available": (RESULTS_DIR / "adaptation" / "adaptation_summary.json").exists(),
         "matched_cpu_available": (RESULTS_DIR / "matched_cpu" / "matched_summary.json").exists(),
@@ -627,7 +719,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         _write_json(RESULTS_DIR / "baseline_replay.json", payload)
         print(json.dumps(payload, indent=2))
     elif args.stage == "frozen":
-        print(json.dumps({"rows": len(stage_frozen(args.threads, not args.no_extended)["rows"])}, indent=2))
+        result = stage_frozen(args.threads, not args.no_extended)
+        print(
+            json.dumps(
+                {name: len(rows) for name, rows in result.items() if isinstance(rows, list)},
+                indent=2,
+            )
+        )
     elif args.stage == "adapt":
         names = (
             [name.strip() for name in str(args.candidates).split(",") if name.strip()]

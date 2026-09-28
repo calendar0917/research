@@ -420,6 +420,53 @@ def test_second_moment_mask_affects_only_intended_readout_block():
     assert torch.equal(counts[:, 0:96], base[:, 0:96])
 
 
+def test_mean_fill_replaces_exactly_the_masked_blocks():
+    global_context = torch.randn(4, audit.GLOBAL_DIM_EXPECTED)
+    policy = {
+        "global:atom_histogram": torch.full((28,), 3.0),
+        "global:bond_histogram": torch.full((4,), -2.0),
+    }
+    filled = audit._replace_grouped_columns(
+        global_context, audit.GLOBAL_GROUPS, audit.GLOBAL_CHEMISTRY_GROUPS, policy, "global:"
+    )
+    assert torch.equal(filled[:, 0:30], global_context[:, 0:30])
+    assert torch.equal(filled[:, 30:58], torch.full((4, 28), 3.0))
+    assert torch.equal(filled[:, 58:62], torch.full((4, 4), -2.0))
+    with pytest.raises(ValueError):
+        audit._replace_grouped_columns(
+            global_context, audit.GLOBAL_GROUPS, ("atom_histogram",), {"global:atom_histogram": torch.zeros(3)}, "global:"
+        )
+
+
+def test_mean_fill_on_pooled_moment_blocks():
+    value = torch.randn(6, p2.ENV_DIM)
+    batch = torch.tensor([0, 0, 1, 1, 1, 1])
+    policy = {"unary:second": torch.full((p2.ENV_DIM,), 5.0), "unary:count": torch.full((1,), -1.0)}
+    filled = audit.pool_moments_masked(value, batch, 2, ("second", "count"), policy)
+    assert torch.equal(filled[:, 0:48], audit.pool_moments_masked(value, batch, 2)[:, 0:48])
+    assert torch.equal(filled[:, 48:96], torch.full((2, 48), 5.0))
+    assert torch.equal(filled[:, 96:97], torch.full((2, 1), -1.0))
+
+
+def test_graph_row_shuffle_preserves_marginals_and_restores():
+    data_list = []
+    for index in range(6):
+        item = types.SimpleNamespace(
+            global_context=torch.full((audit.GLOBAL_DIM_EXPECTED,), float(index)),
+            topology_features=torch.tensor([float(index)] * audit.TOPOLOGY_DIM_EXPECTED),
+        )
+        data_list.append(item)
+    originals = [item.global_context.clone() for item in data_list]
+    restore = audit.permute_graph_rows(data_list, "global_chemistry", 4242)
+    shuffled = torch.stack([item.global_context for item in data_list])
+    assert torch.equal(shuffled[:, 0:30], torch.stack(originals)[:, 0:30])
+    assert sorted(shuffled[:, 30].tolist()) == sorted(torch.stack(originals)[:, 30].tolist())
+    restore()
+    assert all(torch.equal(item.global_context, original) for item, original in zip(data_list, originals))
+    with pytest.raises(ValueError):
+        audit.permute_graph_rows(data_list, "nope", 1)
+
+
 def test_pair_second_moment_mask_affects_only_intended_blocks():
     value = torch.randn(7, p2.PAIR_HIDDEN)
     pair_batch = torch.tensor([0, 0, 1, 1, 1, 1, 1])
@@ -436,6 +483,109 @@ def test_pair_second_moment_mask_affects_only_intended_blocks():
 # ---------------------------------------------------------------------------
 # interventions / registry
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.skipif(not CHECKPOINT.exists(), reason="H1 soup checkpoint not available locally")
+def test_fill_policy_shapes_on_real_checkpoint():
+    from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
+    from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run
+
+    audit.attach_cpu(2)
+    dictionary, _sha = p2run.load_dictionary(audit.H1_CONFIG.dict_kind)
+    model = audit.build_audit_model(dictionary, seed=0)
+    model.load_state_dict(audit.load_h1_soup_state(CHECKPOINT))
+    model.eval()
+    valid = p1run.load_split("valid", subset=8)
+    loader = p1.make_env_loader(valid, 8, False, int(p2run.EVAL_SHUFFLE_OFFSET))
+    policy = audit.build_fill_policy(model, loader, torch.device("cpu"))
+    for name, (low, high) in audit.ANCHOR_GROUPS.items():
+        assert policy[f"anchor:{name}"].shape == (high - low,)
+    for name, (low, high) in audit.GLOBAL_GROUPS.items():
+        assert policy[f"global:{name}"].shape == (high - low,)
+    for name, (low, high) in audit.RELATION_GROUPS.items():
+        assert policy[f"relation:{name}"].shape == (high - low,)
+    assert policy["topology"].shape == (audit.TOPOLOGY_DIM_EXPECTED,)
+    assert policy["unary:second"].shape == (p2.ENV_DIM,)
+    assert policy["pair:second"].shape == (p2.DISTANCE_BUCKETS, p2.PAIR_HIDDEN)
+    # fill and zero must differ for a non-degenerate block
+    filled = audit.evaluate_mask(model, loader, torch.device("cpu"), audit.AuditMask(global_zero_groups=audit.GLOBAL_CHEMISTRY_GROUPS), policy)
+    zeroed = audit.evaluate_mask(model, loader, torch.device("cpu"), audit.AuditMask(global_zero_groups=audit.GLOBAL_CHEMISTRY_GROUPS), None)
+    assert filled["mae"] != zeroed["mae"]
+
+
+def test_readout_shuffle_permutation_touches_only_named_blocks():
+    unary = torch.randn(5, audit.UNARY_DIM)
+    readout = torch.randn(5, audit.RELATION_READOUT_DIM)
+    permutation = torch.tensor([1, 0, 2, 4, 3])
+    left, right = audit.apply_readout_permutation(unary, readout, ("unary_second",), permutation)
+    assert torch.equal(left[:, 0:48], unary[:, 0:48])
+    assert torch.equal(left[:, 48:96], unary[permutation][:, 48:96])
+    assert torch.equal(left[:, 96:97], unary[:, 96:97])
+    assert torch.equal(right, readout)
+    left2, right2 = audit.apply_readout_permutation(unary, readout, ("pair_first",), permutation)
+    assert torch.equal(left2, unary)
+    view = readout.reshape(5, audit.p2.DISTANCE_BUCKETS, audit.PAIR_BLOCK_DIM)
+    view2 = right2.reshape(5, audit.p2.DISTANCE_BUCKETS, audit.PAIR_BLOCK_DIM)
+    assert torch.equal(view2[:, :, 0:16], view[permutation][:, :, 0:16])
+    assert torch.equal(view2[:, :, 16:33], view[:, :, 16:33])
+
+
+def test_readout_shuffle_registry_is_well_formed():
+    rows = audit.interventions_readout_shuffle()
+    assert [row.name for row in rows] == ["PS1", "PS2", "PS3", "PS4", "PS5", "PS6", "PS7", "PS8", "PS9"]
+    for row in rows:
+        assert row.readout_shuffle
+        assert set(row.readout_shuffle) <= set(audit.READOUT_SHUFFLE_BLOCKS)
+        assert row.seeds == audit.READOUT_SHUFFLE_SEEDS
+        assert row.mask.is_identity()
+
+
+def test_relation_shuffle_preserves_marginals_and_restores():
+    data_list = []
+    # deliberately unequal pair counts per molecule (the real cache is ragged)
+    for index, rows in enumerate((5, 2, 7, 3)):
+        relation = torch.zeros((rows, 23))
+        relation[:, 0] = float(index)
+        relation[:, 6] = float(index) * 2.0
+        relation[:, 18] = float(index) + 1.0
+        data_list.append(types.SimpleNamespace(pair_relation=relation))
+    originals = [item.pair_relation.clone() for item in data_list]
+    restore = audit.permute_pair_rows(data_list, "overlap", 77)
+    stacked = torch.cat([item.pair_relation for item in data_list], dim=0)
+    original = torch.cat(originals, dim=0)
+    assert torch.equal(stacked[:, 0:6], original[:, 0:6])
+    assert torch.equal(stacked[:, 11:23], original[:, 11:23])
+    assert sorted(stacked[:, 6].tolist()) == sorted(original[:, 6].tolist())
+    restore()
+    assert all(torch.equal(item.pair_relation, original) for item, original in zip(data_list, originals))
+    with pytest.raises(ValueError):
+        audit.permute_pair_rows(data_list, "nope", 1)
+
+
+def test_relation_shuffle_registry_is_well_formed():
+    rows = audit.interventions_relation_shuffle()
+    assert [row.name for row in rows] == ["RS1", "RS2", "RS3", "RS4", "RS5"]
+    for row in rows:
+        assert row.relation_shuffle in audit.RELATION_SHUFFLE_KINDS
+        assert row.mask.is_identity()
+    assert audit.RELATION_SHUFFLE_KINDS["path_count"] == ((18, 19),)
+    assert audit.RELATION_SHUFFLE_KINDS["all"] == ((0, 14), (18, 19))
+
+
+def test_fill_and_graph_shuffle_registries_are_well_formed():
+    fill_rows = audit.interventions_fill()
+    assert fill_rows, "fill registry must not be empty"
+    assert all(row.use_fill for row in fill_rows)
+    assert {row.name for row in fill_rows} >= {"A1", "A2", "G1", "T1", "R1", "P3"}
+    for row in fill_rows:
+        assert row.mask.anchor_zero_groups or row.mask.global_zero_groups or row.mask.topology_zero \
+            or row.mask.relation_zero_groups or row.mask.unary_zero_blocks or row.mask.pair_zero_blocks
+    shuffle_rows = audit.interventions_graph_shuffle()
+    assert [row.name for row in shuffle_rows] == ["GS1", "GS2", "GS3", "GS4", "GS5"]
+    for row in shuffle_rows:
+        assert row.graph_shuffle in audit.GRAPH_SHUFFLE_KINDS
+        assert row.seeds == audit.GRAPH_SHUFFLE_SEEDS
+        assert row.mask.is_identity()
 
 
 def test_all_interventions_build_and_controls_are_identity():
