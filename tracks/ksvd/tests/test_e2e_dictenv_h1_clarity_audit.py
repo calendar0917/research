@@ -16,6 +16,7 @@ Covers the pre-registered test surface (preregistration / task §15):
 
 from __future__ import annotations
 
+import hashlib
 import types
 from pathlib import Path
 from typing import Any
@@ -26,11 +27,14 @@ import torch
 
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_p1 as p1
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_p2_abs as p2
+from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
+from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_h1_clarity_audit as audit
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CHECKPOINT = REPO_ROOT / "tracks/ksvd/results/e2e_dictenv_p2_abs/states/H1_soup_state.pt"
 BASELINE_ARTIFACT = REPO_ROOT / "tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/baseline_replay.json"
+VALID_CACHE = p1run.CACHE_DIR / "env_valid.pt"
 
 
 # ---------------------------------------------------------------------------
@@ -138,7 +142,6 @@ def test_identity_mask_reproduces_parent_aux_environments():
 
 @pytest.mark.skipif(not CHECKPOINT.exists(), reason="H1 soup checkpoint not available locally")
 def test_baseline_audit_mode_reproduces_h1_prediction():
-    from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
     from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run
 
     audit.attach_cpu(2)
@@ -496,7 +499,6 @@ def test_pair_second_moment_mask_affects_only_intended_blocks():
 
 @pytest.mark.skipif(not CHECKPOINT.exists(), reason="H1 soup checkpoint not available locally")
 def test_fill_policy_shapes_on_real_checkpoint():
-    from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
     from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run
 
     audit.attach_cpu(2)
@@ -675,3 +677,56 @@ def test_masked_model_parameter_count_matches_h1():
         p2.total_parameter_count(audit.H1_CONFIG)["whole_model"]
     )
     assert int(sum(parameter.numel() for parameter in model.parameters())) == 97487
+
+
+def _init_hash(seed: int) -> tuple[str, tuple[str, ...]]:
+    """Parameter hash of a freshly built model, exactly as ``train_cpu`` builds it."""
+    dictionary = np.random.RandomState(0).randn(p2.PHI_DIM, 32).astype(np.float32)
+    dictionary /= np.maximum(np.linalg.norm(dictionary, axis=0, keepdims=True), 1e-6)
+    p2run._seed_everything(int(seed))
+    model = audit.build_audit_model(dictionary, seed=int(seed))
+    digest = hashlib.sha256()
+    for name, tensor in model.state_dict().items():
+        digest.update(name.encode())
+        digest.update(tensor.detach().cpu().numpy().tobytes())
+    return digest.hexdigest(), tuple(model.state_dict().keys())
+
+
+@pytest.mark.skipif(not VALID_CACHE.exists(), reason="P1 valid cache not available locally")
+def test_matched_arms_share_initialisation_and_parameter_shapes():
+    """The Tier 2 comparison is only matched if init and shapes are mask-independent.
+
+    ``train_cpu`` calls ``p2run._seed_everything(seed)`` immediately before
+    ``build_audit_model``, so every arm of a matched round gets the same initial
+    weights; an ``AuditMask`` only changes the forward pass.  This test pins that
+    contract because the whole removal claim (BASE 0.143298 vs C6 0.128499)
+    rests on it.
+    """
+    hashes = {_init_hash(0)[0] for _ in range(3)}
+    assert len(hashes) == 1, hashes
+    keys = _init_hash(0)[1]
+    for candidate in ("C1", "C6"):
+        model = _model()
+        model.mask = audit.candidate_mask(candidate)
+        assert tuple(model.state_dict().keys()) == keys
+        assert _init_hash(0)[0] == next(iter(hashes))
+
+
+def test_matched_arms_use_the_same_batch_order():
+    """The training loader is mask-independent, so the data order is shared.
+
+    ``train_cpu`` builds the loader from the module-level ``TRAIN_SHUFFLE_OFFSET``
+    and never from the mask, and ``make_env_loader`` derives its generator from
+    that seed alone, so two arms of a matched round see the same batch sequence.
+    """
+    graphs = p1run.load_split("valid", subset=6)
+    offset = int(p2run.TRAIN_SHUFFLE_OFFSET)
+
+    def batches() -> list[torch.Tensor]:
+        return [batch.y.clone() for batch in p1.make_env_loader(graphs, 2, True, offset)]
+
+    first, second = batches(), batches()
+    assert len(first) == 3
+    assert all(torch.equal(a, b) for a, b in zip(first, second, strict=True))
+    unshuffled = torch.tensor([graph.y.item() for graph in graphs], dtype=first[0].dtype)
+    assert not torch.equal(torch.cat(first), unshuffled), "loader did not actually shuffle"
