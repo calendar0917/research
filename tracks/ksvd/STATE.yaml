@@ -12,8 +12,8 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-h1-clarity-audit-closed-keep-h1-frozen-c6-candidate
-updated: 2026-09-28
+phase: e2e-dictenv-clean-mechanism-v1-closed-keep-c6-paired-paired-sparse
+updated: 2026-09-29
 
 # ---------------------------------------------------------------------------
 # FINAL STANDALONE STATUS (TCCD-v7, 2026-09-22)
@@ -1061,6 +1061,58 @@ e2e_dictenv_a1:
     runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_h1_clarity_audit.py
     module: tracks/ksvd/experiments/luyin16/e2e_dictenv_h1_clarity_audit.py
     tests: tracks/ksvd/tests/test_e2e_dictenv_h1_clarity_audit.py
+
+  # -------------------------------------------------------------------------
+  # e2e_dictenv_clean_mechanism_v1 — 2026-09-29
+  # -------------------------------------------------------------------------
+  # The C6 candidate from the clarity audit was re-tested across seeds and its
+  # mechanism interrogated under the matched CPU protocol (official test never
+  # loaded, no GPU/SSH, no architecture search).  C6 is SAFE (3/3 matched
+  # deltas negative, max -0.000116, frozen gate STRONG_SUPPORT) but the mean
+  # gain is carried by the BASE seed-0 outlier, so adoption is justified as a
+  # cleaning/stability result.  The clean model is structurally blind to the
+  # removed graph-chemistry shortcut (GS1 shuffle delta exactly 0.0 in both
+  # views, 3 seeds).  Fine per-occurrence correspondence is NOT replaceable by
+  # shell marginals: frozen independence-null deltas (C6) are node +0.0093 and
+  # edge +0.0401 on average, and from-scratch controls fail adoption for both
+  # (node mean +0.00434 max +0.00925; edge mean +0.00755) -> paired/paired kept.
+  # Distance-only relation is rejected (320-epoch delta +0.005661,
+  # INCONCLUSIVE_KEEP_FULL); full distance+overlap+boundary bundle kept.
+  # Sparse dictionary specificity is NOT established (matched DenseTied
+  # 0.125563 vs sparse 0.128499, G_dict -0.002936 vs +0.003 gate); the sparse
+  # code is load-bearing but strongly concentrated (8/32 nnz per row, top-5
+  # atoms carry 4.4-5.0 activations).  Stage E not run (precondition unmet).
+  e2e_dictenv_clean_mechanism_v1:
+    status: closed_round_complete
+    round: e2e-dictenv-clean-mechanism-v1
+    verdict: KEEP_C6_PAIRED_PAIRED_SPARSE_FULL_RELATION_NO_SPARSE_SPECIFICITY
+    device: cpu_only
+    official_test_loaded: false
+    preregistration: tracks/ksvd/notes/e2e_dictenv_clean_mechanism_v1_preregistration.md
+    analysis: tracks/ksvd/notes/e2e_dictenv_clean_mechanism_v1_analysis.md
+    claims:
+      - claim-zinc-clean-mechanism-c6-binding-correspondence-20260929
+    decision: decision-zinc-clean-mechanism-keep-c6-paired-paired-20260929
+    results_dir: tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/
+    report: tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/REPORT.md
+    decision_report: tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/DECISION.md
+    summary: tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/summary.json
+    runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_clean_mechanism_v1.py
+    module: tracks/ksvd/experiments/luyin16/e2e_dictenv_clean_mechanism_v1.py
+    tests: tracks/ksvd/tests/test_e2e_dictenv_clean_mechanism_v1.py
+    q1_c6: {gate: STRONG_SUPPORT, deltas: [-0.014799, -0.000116, -0.009229], mean: -0.008048, base_outlier_seed0: true}
+    q2_binding: {frozen_node_mean_c6: 0.009327, frozen_edge_mean_c6: 0.040073, node_adopted: false, edge_adopted: false}
+    q3_relation: {rel_dist_320_delta: 0.005661, verdict: INCONCLUSIVE_KEEP_FULL, adopted: null}
+    q4_specificity: {g_dict: -0.002936, verdict: SPECIFICITY_NOT_ESTABLISHED, nnz_per_row: 8.0}
+    forbidden_without_new_preregistration:
+      - a sparse-specificity confirmatory round (matched dense control is not worse)
+      - adopting node/edge independence or a relation simplification on these gates
+      - Stage E shell simplification (its precondition NODE-INDEP supported is unmet)
+      - re-running the gates with different thresholds or extra seeds to change the verdicts
+    next_round_shape: >-
+      New preregistration on the observed sparse-code concentration (top-5 atoms
+      ~60 % of activations; one atom active in nearly every row) with the matched
+      dense control and >= 3 seeds.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
@@ -2291,6 +2343,20 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-zinc-clean-mechanism-keep-c6-paired-paired-20260929: >-
+      e2e_dictenv_clean_mechanism_v1 (2026-09-29, local CPU-only, preregistration
+      ace4187 / implementation 19d69d2, official test never loaded) answered the
+      four frozen questions.  Q1: C6 is safe across seeds (deltas -0.014799 /
+      -0.000116 / -0.009229, STRONG_SUPPORT) and structurally blind to the removed
+      graph-chemistry shortcut (GS1 shuffle 0.0000 in all views/seeds); mean gain
+      is carried by the BASE seed-0 outlier, so it is a cleaning result.  Q2: fine
+      correspondence, not shell marginals -- frozen independence-null deltas (C6)
+      node +0.0093 / edge +0.0401 mean and from-scratch controls fail adoption
+      (node +0.00434 mean / +0.00925 max; edge +0.00755 mean) -> paired/paired kept.
+      Q3: distance-only relation rejected (+0.005661, INCONCLUSIVE_KEEP_FULL)
+      -> full bundle kept.  Q4: sparse specificity not established (matched
+      DenseTied -0.002936 vs +0.003 gate).  Final clean = C6 + paired/paired +
+      sparse, full relation; Stage E not run.
   - decision-e2e-dictenv-a1-stop-gate0-representation-not-qualified-20260924: >-
       E2E-DictEnv-A1 (2026-09-24, remote A100-SXM4-40GB GPU1, protocol
       e2e_dictenv_a1, preregistration bd3700a, formal-run commit 37324eb,

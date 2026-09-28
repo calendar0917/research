@@ -1,0 +1,113 @@
+decision_id: decision-zinc-clean-mechanism-keep-c6-paired-paired-20260929
+created: '2026-09-29T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The clarity audit left one seed-0 CPU result: deleting the graph-level chemistry
+  marginal plus four dormant statistic blocks IMPROVED the matched base (0.143298 ->
+  0.128499). Two things were unknown and blocked any further work: (i) is the C6 removal
+  stable across seeds or a seed-0 accident, and (ii) if the chemistry shortcut is gone,
+  what carries the reader -- fine per-occurrence structure-semantic correspondence, or only
+  shell marginals, and how much of the relation bundle is actually needed? A third,
+  orthogonal question was whether the sparse dictionary coordinate code is specific
+  against a matched dense-tied control once the architecture is clean.
+protocol: >-
+  Preregistration and frozen implementation before any training
+  (notes/e2e_dictenv_clean_mechanism_v1_preregistration.md, commits 19d69d2 / ace4187).
+  CPU-only (CUDA_VISIBLE_DEVICES="", no GPU/SSH), 3 processes x 4 threads, matched
+  protocol: official ZINC 10000/1000, Adam 1e-3 / wd 1e-5, batch 128, clip 5.0, 320
+  epochs, Top-5 soup, matched init/data order per seed; official test never loaded.
+  Stage A: BASE vs C6 seeds 1,2 (seed 0 reused bit-exactly), frozen 3-seed gate.
+  Stage B: the full frozen clarity-audit probe registry re-run on every BASE/C6 checkpoint
+  in two views (own mask, identity). Stage C: analytic assignment-independence nulls --
+  frozen distribution-preserving replacement on the trained checkpoints, 20-epoch
+  warm-start adaptations against a matched continuation control, and from-scratch 320-epoch
+  controls, with frozen adoption rules. Stage D: relation provenance re-verification, a
+  20-epoch screen of two nested candidates, then one 320-epoch run of the simplest
+  survivor. Stage F: matched DenseTied vs sparse on the final clean architecture.
+  Stage E deliberately not run.
+results:
+  implementation_commit: 19d69d2
+  preregistration_commit: ace4187
+  harness_fix_commits: [bb004bf, 21fc45d, fa5ea5f, 84a188f, 38dda2a, b21cf91, f6a8c57]
+  device: cpu
+  official_test_loaded: false
+  stage_a_base: {0: 0.143297936, 1: 0.130622, 2: 0.131494}
+  stage_a_c6: {0: 0.128498517, 1: 0.130505, 2: 0.122265}
+  stage_a_delta_c6_minus_base: {0: -0.014799418874084952, 1: -0.00011605809628961739, 2: -0.009228536580689256}
+  stage_a_gate: STRONG_SUPPORT
+  stage_a_gate_mean: -0.008048004517021276
+  stage_a_gate_range: 0.014683360777795335
+  clean_base: C6
+  frozen_node_delta_c6_mean: 0.009327
+  frozen_edge_delta_c6_mean: 0.040073
+  frozen_node_delta_base_mean: 0.006397
+  frozen_edge_delta_base_mean: 0.034542
+  independence_from_scratch_node_deltas: {0: 8.080906420945833e-05, 1: 0.0036835423288866798, 2: 0.009250776488333945}
+  independence_from_scratch_edge_deltas: {0: 0.009004500763490797, 1: 0.00471133267413823, 2: 0.008945909378118816}
+  independence_adaptation_node: 0.002612298446707434
+  independence_adaptation_edge: 0.008325838241130837
+  node_independence_adopted: false
+  edge_independence_adopted: false
+  relation_screen_rel_dist: 0.014882040811702635
+  relation_screen_rel_dist_boundary: 0.005182697399519404
+  relation_320_delta_rel_dist: 0.005660657159052784
+  relation_gate: INCONCLUSIVE_KEEP_FULL
+  relation_adopted: null
+  g_dict_dense_minus_sparse: -0.002935989641584452
+  specificity_verdict: SPECIFICITY_NOT_ESTABLISHED
+  stage_b_gs1_c6: [0.0, 0.0, 0.0]
+  stage_b_gs1_base: [0.05498629594675749, 0.07875416638877281, 0.07780807551334588]
+  dictionary_nnz_per_row: 8.0
+  dictionary_active_atoms: [27, 28, 28, 27, 27, 28]
+  dictionary_effective_atoms: [14.1201, 13.6764, 14.66, 14.5205, 14.8011, 15.3462]
+  full_training_runs_320: 12
+  screen_runs_20: 5
+  frozen_variant_evaluations: 18
+decision: >-
+  Keep C6 as CLEAN_BASE and adopt it as FINAL-CLEAN with paired node binding, paired edge
+  binding and sparse tied-IHT coding; keep the full relation bundle
+  (distance + overlap + boundary). Do not run any sparse-specificity confirmatory round,
+  any relation simplification, any independence-null adoption, or Stage E. The next round,
+  if any, must be a NEW preregistration about the concentration of the sparse code.
+because: >-
+  Q1: C6 costs nothing on every matched seed (max delta -0.000116) and passes the frozen
+  gate; the honest reason is safety/stability, since the mean gain is carried by the BASE
+  seed-0 outlier. Q2: both roles read fine correspondence and the effect is larger in C6
+  than in BASE; the from-scratch controls fail adoption (node max +0.00925 > 0.005, edge
+  mean +0.00755 > 0.003), so marginal-only bindings would lose real accuracy, most clearly
+  in the edge channel. Q3: distance-only costs +0.005661 at the full horizon
+  (inconclusive-keep-full), so the preregistered minimal supported relation is the full
+  bundle. Q4: the matched dense control is not worse (it is marginally better), so sparse
+  specificity cannot be claimed and no confirmatory spend is justified.
+alternatives_rejected:
+  - >-
+    Adopting node independence from the 2/3 near-zero seeds. Rejected: the frozen rule
+    requires max <= 0.005 and seed 2 costs +0.00925.
+  - >-
+    Falling back to C1 after the initial harness bug made gate A see only seed 0. Rejected:
+    the fix was a lookup defect; the wave-1 runs were valid and the corrected 3-seed gate
+    is STRONG_SUPPORT.
+  - >-
+    Adopting distance-only relation from the 20-epoch screen. Rejected: the prescribed
+    320-epoch run is +0.005661 (INCONCLUSIVE_KEEP_FULL).
+  - >-
+    Extending dense seeds on a negative G_dict or re-running with a different threshold.
+    Rejected: the gate is frozen and only licenses extension on G_dict >= +0.003.
+  - >-
+    Running Stage E because the round had CPU budget left. Rejected: its precondition
+    (NODE-INDEP supported) is unmet.
+revisit_if: >-
+  A new preregistration targets the observed code concentration (top-5 atoms carry
+  ~4.4-5.0 of the 8 activations per row; one atom active in nearly every row) and asks
+  whether rebalancing or regularizing the coordinate usage changes the Sparse/DenseTied
+  comparison, with the matched dense control and at least three seeds. Secondary: a 4th C6
+  seed would pin down the near-threshold spread (range 0.014683 vs the 0.015 threshold) if
+  a future claim needs tighter stability.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_clean_mechanism_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_clean_mechanism_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/summary.json
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/analysis_tables.md

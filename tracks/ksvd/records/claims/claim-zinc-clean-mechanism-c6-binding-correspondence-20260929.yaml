@@ -1,0 +1,132 @@
+claim_id: claim-zinc-clean-mechanism-c6-binding-correspondence-20260929
+created: '2026-09-29T00:00:00Z'
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+statement: >-
+  A CPU-only (no GPU, no SSH), preregistered, multi-seed mechanism round on the ZINC
+  dictionary-environment line (official test never loaded; matched protocol: official ZINC
+  10000 train / 1000 valid, Adam 1e-3 / wd 1e-5, batch 128, clip 5.0, 320 epochs, Top-5
+  soup, matched init and data order per seed; seed 0 reused bit-exactly from the clarity
+  audit) answers four frozen questions. (Q1) The C6 removal (graph atom/bond histogram,
+  path_count, unary/pair count rows) is a safe cleaning: matched deltas C6-BASE are
+  -0.014799 / -0.000116 / -0.009229 (mean -0.008048, max -0.000116, range 0.014683),
+  frozen gate STRONG_SUPPORT, C6 adopted as CLEAN_BASE. The mean gain is dominated by the
+  BASE seed-0 outlier (0.143298 against its own seeds 0.130622 / 0.131494), so the honest
+  claim is "costs nothing, more stable", not "reliably better". Distribution-preserving
+  graph-chemistry row shuffle (GS1) changes C6 valid MAE by exactly 0.0000 on all three
+  seeds in both the own-mask and re-opened (identity) views (BASE +0.055 / +0.079 /
+  +0.078): the shortcut is structurally unused, not merely masked. Log-path-count shuffle
+  RS4 is 0.0000 in C6 and non-zero in BASE; unary/pair count rows (PS3/PS6) are dormant
+  everywhere. (Q2) The node/edge structure-semantic binding is fine per-occurrence
+  correspondence, not shell marginals, and it is at least as load-bearing in C6 as in
+  BASE. Frozen, distribution-preserving replacement of the paired statistic by the
+  analytic assignment-independence null (same weights) costs, on C6, node +0.0068 /
+  +0.0093 / +0.0120 and edge +0.0571 / +0.0308 / +0.0324 (BASE node +0.0124 / +0.0047 /
+  +0.0020, edge +0.0365 / +0.0408 / +0.0263), i.e. edge correspondence is 4-6x the node
+  effect. From-scratch C6+independence controls (320 epochs) give node +0.00008 / +0.00368
+  / +0.00925 (mean +0.00434, max +0.00925) and edge +0.00900 / +0.00471 / +0.00895 (mean
+  +0.00755); 20-epoch warm adaptations give node +0.00261 and edge +0.00833. Neither
+  simplification passes its frozen adoption rule, so paired/paired is kept: "shell
+  marginals suffice" is rejected for edges and unconfirmed (not removable) for nodes.
+  Per-slot residual structure grows with range (node shell1 0.10-0.13, shell2 0.14-0.22;
+  edge shellpair1 0.10-0.20, shellpair4 0.22-0.28, p90 0.52-0.68); n=1 groups (shell0
+  23083 slots, shellpair3 70 slots) are exactly paired = independence and carry no
+  evidence. (Q3) Distance-only relation is not sufficient: after a 20-epoch screen
+  (REL-DIST +0.01488, REL-DIST-BOUNDARY +0.00518 against control 0.128782), the simplest
+  survivor's prescribed 320-epoch run costs +0.005661 (INCONCLUSIVE_KEEP_FULL), so the
+  full distance + overlap + boundary bundle stays; provenance re-verified 9/9 on 200000
+  pairs. (Q4) Sparse dictionary specificity is not established: the matched DenseTied
+  control (only the coding operator differs) scores 0.125563 against sparse 0.128499,
+  G_dict = -0.002936 against a +0.003 gate. The sparse code is a real, load-bearing
+  coordinate code (8/32 nonzeros per row, sparsity fraction 0.25, 27-28 active atoms,
+  effective atoms 13.7-15.3, N6 code-zero +0.27...+0.38) but concentrated (top-5 atoms
+  carry 4.4-5.0 of the 8 activations per row, one atom active in nearly every row).
+scope: >-
+  Preregistration and frozen implementation at commits 19d69d2 / ace4187 with
+  harness-only follow-ups bb004bf, 21fc45d, fa5ea5f, 84a188f, 38dda2a, b21cf91, f6a8c57
+  (artifact lookup, binding-override evaluation path, matched-seed gates C/F, stage-B
+  delta enrichment, dictionary-diagnostic definitions; no training-path, protocol, mask or
+  gate change). Local CPU only (CUDA_VISIBLE_DEVICES="", no GPU, no SSH), 3 worker
+  processes x 4 threads, ~1.93 GiB RSS per process. Official ZINC train 10000 / official
+  valid 1000; official test never loaded (official_test_loaded false in every artifact).
+  12 x 320-epoch formal runs (A: BASE/C6 seeds 1,2; C: node/edge independence seeds 0,1,2;
+  D: REL-DIST seed 0; F: DenseTied seed 0) + 5 x 20-epoch screens/adaptations. Seed 0
+  BASE/C6/C1 reused from results/e2e_dictenv_h1_clarity_audit/matched_cpu and re-verified
+  bit-exact at round start. No architecture/hyperparameter search; Stage E not run.
+supporting_evidence:
+  - >-
+    Q1 gate artifact stage_a_cpu_baseline/gate_a.json: STRONG_SUPPORT, per-seed
+    {-0.014799418874084952, -0.00011605809628961739, -0.009228536580689256}, mean
+    -0.008048004517021276, range 0.014683360777795335 (< 0.015), C6 adopted.
+  - >-
+    Stage B GS1 (graph-chemistry row shuffle) is exactly 0.0000 for C6 seeds 0/1/2 in
+    both own-mask and identity views versus +0.0550/+0.0788/+0.0778 for BASE; EG2 exactly
+    0.0000 for C6; RS4 exactly 0.0000 for C6.
+  - >-
+    node_edge_independence_diagnostics.json: per-checkpoint baselines, paired/independence
+    norm means, residual/paired ratios and zero-residual fractions for the 6 checkpoints;
+    C6 edge means +0.0401 vs node +0.0093; BASE edge +0.0345 vs node +0.0064.
+  - >-
+    stage_c_independence/gate_c.json uses matched same-seed baselines and records the
+    frozen adoption rules: node max/mean <= 0.005, edge mean <= 0.003; both not adopted.
+  - >-
+    stage_d_relation/gate_d.json: REL-DIST 320-epoch delta +0.005660657159052784 ->
+    INCONCLUSIVE_KEEP_FULL; relation_groups.json provenance 9/9 checks on 200000 pairs.
+  - >-
+    stage_f_dictionary_specificity/gate_f.json: G_dict -0.002935989641584452 vs threshold
+    0.003 -> SPECIFICITY_NOT_ESTABLISHED; sparse reference is the matched C6 seed-0 soup.
+  - >-
+    Stage B dictionary diagnostics: nnz/row 8.0 and sparsity fraction 0.25 for all six
+    checkpoints; active atoms 27/28; effective atoms 13.68-15.35; top-5 activation share
+    4.41-4.98; Frobenius movement 5.42-5.74.
+contradicting_evidence:
+  - >-
+    The C6 mean gain overstates a performance claim: the BASE seed-0 run (0.143298) is an
+    outlier against BASE seeds 1/2 (0.130622 / 0.131494), so the mean -0.008048 is not a
+    stable C6 advantage; the support rests on "no seed worse" (max -0.000116).
+  - >-
+    The C6 gate range 0.014683 is just below the frozen 0.015 instability threshold, and a
+    fourth seed was not authorised by the gate; the across-seed stability of C6 is
+    therefore established at three seeds only.
+  - >-
+    Node independence was nearly adoptable on two seeds (+0.00008, +0.00368) and only seed
+    2 (+0.00925, the best C6 run) blocked it; the node verdict is "kept", not "strongly
+    needed".
+  - >-
+    DenseTied was marginally better (G_dict -0.002936), so the round cannot claim any
+    sparse-specific benefit; this is a single-seed comparison by protocol.
+limitations:
+  - >-
+    Three seeds; seed 0 reused. No seed-3 C6/C1 extension (gate did not fire), no dense or
+    relation seed extensions (gates did not fire). Q4 rests on one seed.
+  - >-
+    Identity-view absolute MAEs are out-of-distribution diagnostics (for C6 seed 0 the
+    identity baseline is 0.358015 vs 0.128499 own-mask) and are never used as verdicts.
+  - >-
+    CPU-only matched regime; the numbers are not comparable with the historical GPU H1
+    result (0.123549).
+  - >-
+    No PCA32 control, no shell/radius/shellpair experiment, no Stage E (its precondition
+    "NODE-INDEP supported" is unmet), no regularizer/K/tau sweep.
+  - >-
+    Harness defects discovered mid-round were fixed and the affected diagnostics
+    recomputed; wave-1 Stage-A artifacts were produced before two of the fixes, but no
+    fix touched the training path, protocol, masks, initialisation or gates (documented in
+    the analysis note).
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_clean_mechanism_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_clean_mechanism_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/analysis_tables.md
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/summary.json
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/stage_a_cpu_baseline/gate_a.json
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/stage_c_independence/gate_c.json
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/node_edge_independence_diagnostics.json
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/stage_d_relation/gate_d.json
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/stage_f_dictionary_specificity/gate_f.json
+  - tracks/ksvd/results/e2e_dictenv_clean_mechanism_v1/stage_b_mechanism/mechanism_summary.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_clean_mechanism_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_clean_mechanism_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_clean_mechanism_v1.py
