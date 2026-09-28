@@ -773,8 +773,9 @@ def dictionary_diagnostics(
         for batch in loader:
             batch = batch.to(device)
             phi = batch.dict_phi
-            coord = model.code(phi).detach().double()
-            usage += (coord != 0).double().sum(dim=0)
+            coord = model.code(phi).detach()
+            coord64 = coord.double()
+            usage += (coord64 != 0).double().sum(dim=0)
             n_rows += int(coord.shape[0])
             reconstruction = model.reconstruct(phi, coord).detach()
             numerator += float(((phi.double() - reconstruction.double()) ** 2).sum())

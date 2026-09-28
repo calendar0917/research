@@ -621,6 +621,21 @@ def stage_b(threads: int = THREADS, arms: Sequence[str] | None = None) -> dict[s
             fill_policy = audit.build_fill_policy(model, loader, device, mask=None)
             per_view: dict[str, Any] = {}
             for view in ("own_mask", "identity"):
+                view_path = out_dir / f"{tag}_{view}.json"
+                if view_path.exists():
+                    cached = _read_json(view_path)
+                    per_view[view] = {
+                        "baseline_valid_mae": float(cached["baseline_valid_mae"]),
+                        "deltas": {
+                            name: {row["probe"]: float(row["delta_mae"]) for row in rows}
+                            for name, rows in cached["tables"].items()
+                        },
+                    }
+                    print(
+                        f"[stage-b] {tag} {view} cached baseline={float(cached['baseline_valid_mae']):.6f}",
+                        flush=True,
+                    )
+                    continue
                 base_mask = arm_mask_value if view == "own_mask" else None
                 start = time.perf_counter()
                 replay = audit.evaluate_mask(model, loader, device, base_mask)
