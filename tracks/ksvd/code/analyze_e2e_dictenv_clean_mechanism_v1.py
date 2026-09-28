@@ -26,32 +26,34 @@ STAGES = {
     "f": RESULTS / "stage_f_dictionary_specificity",
 }
 
-#: core Stage-B read-out set (distribution-preserving unless noted).
+#: core Stage-B read-out set (distribution-preserving unless noted) as
+#: (family, probe) pairs; families are the frozen intervention registries.
 CORE_PROBES = (
-    "GS1",
-    "EG2",
-    "PS1",
-    "PS2",
-    "PS3",
-    "PS4",
-    "PS5",
-    "PS6",
-    "RS1",
-    "RS2",
-    "RS3",
-    "RS4",
-    "RS5",
-    "N3",
-    "N4",
-    "N6",
-    "N1",
-    "N2",
-    "A2",
-    "A4",
-    "A5",
-    "T1",
-    "EB2",
-    "EB3",
+    ("graph_shuffle", "GS1"),   # graph-chemistry row shuffle
+    ("graph_shuffle", "GS4"),   # topology row shuffle
+    ("fill", "EG2"),            # bond-histogram mean fill
+    ("readout_shuffle", "PS1"),
+    ("readout_shuffle", "PS2"),
+    ("readout_shuffle", "PS3"),
+    ("readout_shuffle", "PS4"),
+    ("readout_shuffle", "PS5"),
+    ("readout_shuffle", "PS6"),
+    ("relation_shuffle", "RS1"),
+    ("relation_shuffle", "RS2"),
+    ("relation_shuffle", "RS3"),
+    ("relation_shuffle", "RS4"),
+    ("relation_shuffle", "RS5"),
+    ("zero", "N1"),
+    ("zero", "N2"),
+    ("zero", "N3"),
+    ("zero", "N4"),
+    ("zero", "N6"),
+    ("zero", "EB2"),
+    ("zero", "EB3"),
+    ("zero", "T1"),
+    ("fill", "A2"),
+    ("fill", "A4"),
+    ("fill", "A5"),
 )
 
 
@@ -126,19 +128,25 @@ def section_b() -> None:
         print("## Stage B — no mechanism summary yet")
         return
     print("## Stage B — core probe deltas by arm/seed (distribution-preserving)\n")
+    print("| arm_seed | " + " | ".join(f"{family[:4]}:{name}" for family, name in CORE_PROBES) + " |")
+    print("|---" * (len(CORE_PROBES) + 1) + "|")
     for tag, payload in sorted(summary.items()):
-        print(f"### {tag} (spec {payload['spec']})\n")
-        for view in ("own_mask", "identity"):
-            deltas = (payload.get("views", {}).get(view) or {}).get("deltas", {})
-            core = {key: deltas.get(key) for key in CORE_PROBES if key in deltas}
-            line = " | ".join(f"{key} {fmt(value, 4)}" for key, value in core.items())
-            print(f"* **{view}**: {line}")
+        matrix = (payload.get("views", {}).get("own_mask") or {}).get("deltas", {})
+        cells = []
+        for family, name in CORE_PROBES:
+            value = (matrix.get(family) or {}).get(name)
+            cells.append(f"{value:+.4f}" if isinstance(value, (int, float)) else "—")
+        print(f"| {tag} | " + " | ".join(cells) + " |")
+    print()
+    for tag, payload in sorted(summary.items()):
         dictionary = payload.get("dictionary", {})
         print(
-            f"* dictionary: active={dictionary.get('active_atoms')} "
-            f"effective={fmt(dictionary.get('effective_atoms'), 3)} "
+            f"* {tag}: spec={payload['spec']} dictionary: active={dictionary.get('active_atoms')} "
+            f"effective={fmt(dictionary.get('effective_atoms'), 2)} "
             f"sparsity={fmt(dictionary.get('coord_sparsity_mean'), 4)} "
-            f"movement={fmt(dictionary.get('dictionary_movement_frobenius'), 3)}\n"
+            f"top1={fmt(dictionary.get('usage_top1_share'), 3)} "
+            f"rec={fmt(dictionary.get('valid_reconstruction_relative'), 3)} "
+            f"movement={fmt(dictionary.get('dictionary_movement_frobenius'), 3)}"
         )
 
 

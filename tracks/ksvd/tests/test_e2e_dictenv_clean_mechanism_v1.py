@@ -575,6 +575,31 @@ def test_binding_variant_override_is_honoured_without_a_mask():
 
 
 @pytest.mark.skipif(not VALID_CACHE.exists(), reason="P1 valid cache not available locally")
+def test_dictionary_diagnostics_counts_nonzeros_per_row():
+    from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
+    from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run
+
+    device = audit.attach_cpu(2)
+    dictionary, _sha = p2run.load_dictionary("sdb32")
+    graphs = p1run.load_split("valid", subset=4)
+    loader = p1.make_env_loader(graphs, 4, False, 0)
+    sparse = cm.dictionary_diagnostics(
+        cm.build_clean_mech_model(dictionary, seed=0), loader, device, dictionary
+    )
+    sparse_spec = cm.make_spec("dense", mask_kind="C6", coding="dense_tied")
+    dense = cm.dictionary_diagnostics(
+        cm.build_clean_mech_model(dictionary, seed=0, spec=sparse_spec), loader, device, dictionary
+    )
+    assert 0.0 < sparse["coord_nnz_per_row_mean"] <= float(p1.SPARSITY) + 1e-6
+    assert dense["coord_nnz_per_row_mean"] > 30.0
+    assert sparse["coord_sparsity_fraction"] < dense["coord_sparsity_fraction"]
+    for payload in (sparse, dense):
+        assert 0 <= payload["active_atoms"] <= payload["n_atoms"]
+        assert payload["n_rows"] > 0
+        assert 0.0 < payload["usage_top1_share"] <= 1.0
+
+
+@pytest.mark.skipif(not VALID_CACHE.exists(), reason="P1 valid cache not available locally")
 def test_independence_norm_stats_and_binding_variants_on_real_data():
     from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
     from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run

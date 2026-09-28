@@ -767,6 +767,7 @@ def dictionary_diagnostics(
     model.eval()
     usage = torch.zeros(int(model.D.shape[1]), dtype=torch.float64)
     n_rows = 0
+    nnz_total = 0.0
     numerator = 0.0
     denominator = 0.0
     with torch.no_grad():
@@ -777,6 +778,7 @@ def dictionary_diagnostics(
             coord64 = coord.double()
             usage += (coord64 != 0).double().sum(dim=0)
             n_rows += int(coord.shape[0])
+            nnz_total += float((coord64 != 0).double().sum())
             reconstruction = model.reconstruct(phi, coord).detach()
             numerator += float(((phi.double() - reconstruction.double()) ** 2).sum())
             denominator += float((phi.double() ** 2).sum())
@@ -787,14 +789,19 @@ def dictionary_diagnostics(
     entropy = float(-(nonzero * nonzero.log()).sum()) if int(nonzero.numel()) else 0.0
     first = torch.as_tensor(np.asarray(dictionary_init, dtype=np.float32))
     movement = float((model.D.detach().cpu() - first).norm())
+    n_atoms = int(model.D.shape[1])
     payload = {
         "active_atoms": active,
+        "active_atom_fraction": active / max(n_atoms, 1),
         "effective_atoms": float(math.exp(entropy)),
-        "coord_sparsity_mean": float((usage > 0).double().sum() / max(n_rows, 1)),
+        "coord_nnz_per_row_mean": float(nnz_total / max(n_rows, 1)),
+        "coord_sparsity_fraction": float(nnz_total / max(n_rows * n_atoms, 1)),
         "usage_top1_share": float(share.max()) if int(share.numel()) else float("nan"),
+        "usage_top5_share": float(torch.sort(share, descending=True).values[:5].sum()) if int(share.numel()) else float("nan"),
         "valid_reconstruction_relative": float(numerator / max(denominator, 1e-12)),
         "dictionary_movement_frobenius": movement,
         "n_rows": int(n_rows),
+        "n_atoms": n_atoms,
     }
     if gradient_batch is not None:
         model.train()
