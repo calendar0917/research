@@ -39,6 +39,7 @@ from tracks.ksvd.experiments.luyin16 import e2e_dictenv_clean_mechanism_v1 as cm
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_h1_clarity_audit as audit
 from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
 from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run
+from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_v0 as v0run
 from tracks.ksvd.experiments.luyin16.zinc_compact_v4_smallhead_e2e import REPO_ROOT
 
 PROTOCOL_VERSION = cm.PROTOCOL_VERSION
@@ -198,7 +199,7 @@ def stage_preflight(threads: int = THREADS, epochs_sample: int = 1) -> dict[str,
         "threads_per_process": int(threads),
         "concurrency": int(CONCURRENCY),
         "dictionary_sha256": dict_sha,
-        "checkpoint_sha256": p2run._sha256(CHECKPOINT) if CHECKPOINT.exists() else None,
+        "checkpoint_sha256": v0run._sha256(CHECKPOINT) if CHECKPOINT.exists() else None,
         "valid_inference": {
             "molecules": int(replay["n_molecules"]),
             "seconds": valid_seconds,
