@@ -12,8 +12,8 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-a1-stopped-gate0-continuity-fail-new-preregistration-required
-updated: 2026-09-24
+phase: e2e-dictenv-h1-clarity-audit-closed-keep-h1-frozen-c6-candidate
+updated: 2026-09-28
 
 # ---------------------------------------------------------------------------
 # FINAL STANDALONE STATUS (TCCD-v7, 2026-09-22)
@@ -989,8 +989,82 @@ e2e_dictenv_a1:
   tests: tracks/ksvd/tests/test_e2e_dictenv_a1.py
   diagnostic_script: tracks/ksvd/code/analyze_e2e_dictenv_a1_gate0_stratum.py
 
+  # -------------------------------------------------------------------------
+  # E2E-DictEnv-H1-Clarity-Audit (2026-09-28, local CPU only, protocol
+  # e2e_dictenv_h1_clarity_audit, commit 72b490a) is CLOSED.  Frozen verdict
+  # AUDIT_COMPLETE_KEEP_H1_FREEZE_C6_AS_CANDIDATE.  The information map is
+  # verified from the generating code (reader input 302 = 97 dictionary-mediated
+  # unary + 165 distance-bucketed pair readout + 32 global + 8 topology;
+  # global_context62 carries a 32-coordinate graph chemistry marginal;
+  # anchor62 carries 32 coordinates of patch chemistry marginals; the consumed
+  # relation is raw[0:14]+raw[18] so raw 14-17 never reach the model), the anchor
+  # chemistry marginals are load-bearing under every probe (A1 +1.0167 zero /
+  # +1.0147 fill; A3 +0.4490; A4 +0.4420), the relation block is bundle-read
+  # with a dominant 3-D boundary group (row shuffle +0.5541) and only the log
+  # path count dormant (+0.0044), and the graph chemistry marginal plus four
+  # dormant statistic blocks are removable: matched from-scratch CPU retraining
+  # improved Top-5 soup valid MAE 0.143298 -> 0.128499 (C6) with identical
+  # initialisation and data order.  H1 stays frozen because the untouched
+  # architecture is itself 0.0197 worse on CPU than its own historical GPU run,
+  # so the CPU regime is offset and the confirmatory design is a GPU round.
+  e2e_dictenv_h1_clarity_audit:
+    status: closed_audit_complete
+    round: e2e-dictenv-h1-clarity-audit
+    verdict: KEEP_H1_FROZEN_C6_RECORDED_AS_REMOVABLE_BYPASS_CANDIDATE
+    device: cpu_only
+    seed1_authorized: false
+    claims:
+      - claim-zinc-h1-clarity-audit-information-flow-and-removable-bypass-20260928
+    decision: decision-zinc-h1-clarity-audit-keep-h1-freeze-c6-candidate-20260928
+    removable_candidate:
+      name: C6
+      mask: graph atom_histogram + graph bond_histogram + relation path_count + unary count + pair count
+      tier2_matched_cpu_soup: 0.128499
+      tier2_matched_cpu_baseline_soup: 0.143298
+      delta: -0.014799
+    not_removable:
+      - anchor root identity (A3 zero +0.4490)
+      - anchor patch atom mass (A4 zero +0.4420)
+      - anchor patch bond mass (A5 zero +0.1934)
+      - anchor size (A6 zero +0.1488)
+      - topology25 cycle spectrum (row shuffle +0.2666)
+      - relation boundary / overlap / distance groups (+0.5541 / +0.0890 / +0.0738)
+      - unary first and second moments (+1.4088 / +0.3692 under row shuffle)
+      - pair first and second moments (+0.1690 / +0.1332 under row shuffle)
+    forbidden_without_new_preregistration:
+      - claiming C6 beats the historical GPU H1 from the CPU screening result
+      - any cross-regime comparison of CPU and GPU mask deltas
+      - re-running "distance-only relation" (C4) as a simplification
+      - removing the anchor marginals or the second moments on this checkpoint
+      - a second CPU seed or extra adaptation epochs as a substitute for the GPU confirmation
+    next_round_must_fix:
+      - 'GPU two-arm two-seed round (BASE vs C6) with identical initialisation and data order, 320 epochs, official-valid only, gate 0.003 on the seed-mean soup'
+      - 're-run the frozen probe table on every new checkpoint and require GS1 / EG2 / PS3 / PS6 / RS4 to reproduce'
+    artifacts:
+      report: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/REPORT.md
+      decision: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/DECISION.md
+      summary: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/summary.json
+      baseline_replay: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/baseline_replay.json
+      information_inventory: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/information_inventory.json
+      runtime_budget: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/runtime_budget.json
+      frozen_zero: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/frozen_interventions.json
+      frozen_fill: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/frozen_interventions_fill.json
+      frozen_graph_shuffle: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/frozen_interventions_graph_shuffle.json
+      frozen_readout_shuffle: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/frozen_interventions_readout_shuffle.json
+      frozen_relation_shuffle: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/frozen_interventions_relation_shuffle.json
+      tier1_adaptation: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/adaptation/adaptation_summary.json
+      tier2_matched_cpu: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/matched_cpu/matched_summary.json
+    preregistration: tracks/ksvd/notes/e2e_dictenv_h1_clarity_audit_preregistration.md
+    information_flow: tracks/ksvd/notes/e2e_dictenv_h1_clarity_audit_information_flow.md
+    analysis: tracks/ksvd/notes/e2e_dictenv_h1_clarity_audit_analysis.md
+    results_dir: tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/
+    runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_h1_clarity_audit.py
+    module: tracks/ksvd/experiments/luyin16/e2e_dictenv_h1_clarity_audit.py
+    tests: tracks/ksvd/tests/test_e2e_dictenv_h1_clarity_audit.py
+
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
+# ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
 # First round to LOCALIZE a validated reusable dictionary coordinate into each
 # rooted chemical environment and BIND it to atom chemistry during environment

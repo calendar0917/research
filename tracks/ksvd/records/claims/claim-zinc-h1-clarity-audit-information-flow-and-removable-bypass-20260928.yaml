@@ -1,0 +1,131 @@
+claim_id: claim-zinc-h1-clarity-audit-information-flow-and-removable-bypass-20260928
+created: '2026-09-28T00:00:00Z'
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+statement: >-
+  A CPU-only (no GPU, no SSH) information-flow / mechanism audit of the frozen
+  H1 P2-ABS checkpoint (decoder h1, K=32, s=8, IHT-10, d_e=48,
+  lambda_rec=33.95873017865987, Top-5 soup epochs 293/309/313/316/317, official
+  test never loaded) yields four results. (A) The information map is verified
+  from the generating code, not inferred: the reader input is exactly
+  302 = 97 (unary moments of the dictionary environment E) + 165 (pair readout
+  pooled per distance bucket, 5 x [mean16, mean2_16, log1p(count)1]) + 32
+  (global_encoder(global_context62)) + 8 (topology_encoder(topology_features25));
+  global_context62 = structure_short(15) + structure_long(15) + atom_histogram(28)
+  + bond_histogram(4), so the graph-level chemistry marginal is 32 of its 62
+  coordinates; anchor62 = root(28) + atom_mass(28) + bond_mass(4) + size(2), so
+  the patch-level chemistry marginals are 32 of 62; and the consumed
+  pair_relation is raw[0:14] + raw[18:19], i.e. raw coordinates 14-17 never reach
+  the model. 19 of 42 inventoried entries reach the reader without passing
+  through the frozen dictionary and 19 also bypass the local structure-chemistry
+  binding. (B) The anchor is a load-bearing chemistry channel, so the
+  "minimal root-relative information" reading of H1 is NOT supported: zeroing
+  the full anchor62 changes valid MAE by +1.0167 and mean-fill by +1.0147;
+  dropping root identity alone +0.4490/+0.4461, patch atom mass +0.4420/+0.4404,
+  patch bond mass +0.1934/+0.1901, size +0.1488/+0.1487. (C) The relation block
+  is read as an all-or-nothing bundle, so single-block zero ablations are
+  out-of-distribution artefacts: removing the 3-D boundary block alone costs
+  +0.7341 (zero) but removing all 15 relation coordinates costs only +0.1638.
+  Distribution-preserving cross-pair row shuffle gives boundary +0.5541,
+  overlap +0.0890, distance +0.0738, log path count +0.0044, all +0.1534, so
+  "distance-only" is rejected and only the path-count coordinate is dormant.
+  Likewise the unary second moment appeared the most fragile block under zeroing
+  (+1.0045) but only +0.3692 under shuffle (fill +0.2346). (D) The graph-level
+  chemistry marginal is redundant and removable: shuffling its rows across
+  molecules costs +0.0574, and in a matched from-scratch CPU retraining (320
+  epochs, identical initialisation and data order, seed 0) deleting it plus four
+  frozen-dormant statistic blocks (bond histogram +0.0030, relation log path
+  count +0.0044, unary count +0.0002, pair count +0.0054) IMPROVED Top-5 soup
+  valid MAE from 0.143298 (matched baseline) to 0.128499 (-0.014799), with
+  removing the graph chemistry marginal alone at 0.133530 (-0.009768). Node-level
+  binding behaves as a bag over local codes (slot content +0.3476 but the
+  alpha<->atom correspondence only +0.0122) while edge-level binding is a real
+  pairing (role<->bond-type correspondence +0.0930, about all of the combined
+  +0.0977).
+scope: >-
+  CPU-only local audit (CUDA_VISIBLE_DEVICES=""), no GPU and no remote host used
+  at any point; commit 72b490a of this track; frozen checkpoint
+  tracks/ksvd/results/e2e_dictenv_p2_abs/states/H1_soup_state.pt (sha256
+  9d9e657292557e6259f5c49d0dc7c0b4ca93c8108fb26db799fc77dbbe5622f3) and frozen
+  dictionary sdb32 (sha256 b0c5da98aee5795450927fcd76606281aca947448f77ab186e11de09b33dfecd);
+  official ZINC train 10000 / official valid 1000; official test never loaded
+  (official_test_loaded false in every artifact); one seed (0); no
+  hyper-parameter search, no architecture search, no second seed. The CPU replay
+  of the H1 soup reproduces the historical GPU soup MAE to 1.25e-09
+  (0.123548630 vs 0.123548629) and the masked audit path is bit-identical to the
+  parent forward at an identity mask, but the CPU training regime itself is
+  offset from the GPU regime and no cross-regime comparison is made anywhere in
+  this round.
+supporting_evidence:
+  - >-
+    Phase A provenance: information_inventory.json re-derives every slice from
+    its producer on 64 real molecules and reconstructs it with min_abs_corr
+    1.000000 (worst deviation 3e-15); the pair_relation per-coordinate checks
+    (distance one-hot rows sum to 1, bucket argmax identity, log-distance match,
+    binary boundary indicator, adjacent bond-type agreement) all pass. Recorded
+    in notes/e2e_dictenv_h1_clarity_audit_information_flow.md.
+  - >-
+    Reproducibility: the whole frozen stage was executed twice and all 88
+    recorded intervention rows (82 real + 6 identity controls) agree with
+    max|delta| = 0.0; the identity controls A0/G0/T0/N0/R0/P0 are exactly 0.
+  - >-
+    Anchor sensitivity is probe-robust (zero and mean-fill agree within 0.003
+    for every anchor row), which excludes an OOD artefact: A1 +1.0167/+1.0147,
+    A2 +0.5617/+0.5624, A3 +0.4490/+0.4461, A4 +0.4420/+0.4404, A5
+    +0.1934/+0.1901, A6 +0.1488/+0.1487, EA1 (keep size only) +1.0093/+1.0079,
+    EA2 (keep bond mass only) +0.8526/+0.8524.
+  - >-
+    Topology25 is a major structure bypass: graph-row shuffle +0.2666 versus
+    zero +0.1447 / fill +0.1443, i.e. the zero probe understates it.
+  - >-
+    Readout moments under distribution-preserving cross-graph row shuffle:
+    unary first +1.4088, unary second +0.3692, unary count +0.0002, pair first
+    +0.1690, pair second +0.1332, pair count +0.0054, full unary pool +1.5426,
+    full pair readout +0.3013, both second moments +0.4769.
+  - >-
+    Tier 1 warm-start adaptation (20 epochs from the frozen soup, matched
+    batches, seed 0) against a same-protocol continuation control M0 (0.123116):
+    C1 remove graph chemistry marginal +0.003957, C6 C1 + four dormant blocks
+    +0.005088, C2 minimal anchor +0.021623, C3 +0.023294, C5 no second moments
+    +0.038877. Extended to 40 epochs, C2 closes only to +0.015068 against the
+    matched 40-epoch continuation M0 (0.138306 vs 0.123238).
+  - >-
+    Tier 2 matched from-scratch CPU retraining (320 epochs, seed 0, identical
+    initialisation and data order for all arms, 4 threads/process, 3 processes):
+    BASE 0.143298, C1 0.133530, C6 0.128499 Top-5 soup valid MAE, at 12.6
+    s/epoch/process. The historical GPU H1 (0.123548629) is still better than
+    every CPU arm, and the untouched architecture is 0.0197 worse on CPU than its
+    own GPU run, so the CPU regime is offset.
+contradicting_evidence:
+  - >-
+    The historical GPU H1 soup (0.123548629) beats every Tier 2 CPU arm,
+    including the cleaned candidate C6 (0.128499). The removal result is
+    therefore a CPU-regime screening statement; whether C6 also improves on the
+    GPU H1 baseline is not established and must not be inferred from this round.
+  - >-
+    Tier 2 used a single seed. Although the arms share initialisation and data
+    order, a one-seed gap of 0.0148 cannot by itself exclude an
+    initialisation-interaction effect.
+  - >-
+    The anchor and the second moments are "not recoverable under short
+    adaptation" only for 20-40 epochs at lr 1e-3; a longer or differently
+    scheduled adaptation was not tested, so the irreplaceability statement is
+    bounded by the tested budget.
+limitations: >-
+  Frozen probes are causal interventions on one fixed checkpoint, so they
+  support sensitivity / insensitivity statements only; removal claims rest
+  exclusively on the Tier 2 matched retraining, and "recoverable" statements
+  exclusively on the Tier 1 adaptation against its matched control. The zero
+  probe is an OOD corruption (three rows are flagged zero_probe_inflated and the
+  R1-R5 relation ablations are distorted by the bundle effect); every verdict in
+  the report uses the strongest distribution-preserving probe available. Small
+  effects (N3 +0.0122, count blocks +0.0002/+0.0054, path count +0.0044) are
+  reported as insensitive / nearly insensitive rather than proven absent.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_h1_clarity_audit_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_h1_clarity_audit_information_flow.md
+  - tracks/ksvd/notes/e2e_dictenv_h1_clarity_audit_analysis.md
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_h1_clarity_audit.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_h1_clarity_audit.py
+  - tracks/ksvd/tests/test_e2e_dictenv_h1_clarity_audit.py

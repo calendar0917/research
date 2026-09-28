@@ -1,0 +1,178 @@
+decision_id: decision-zinc-h1-clarity-audit-keep-h1-freeze-c6-candidate-20260928
+created: '2026-09-28T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The H1 / P2-ABS main line was carried by a single GPU number and a
+  description ("decoder h1, K=32, s=8, IHT-10, d_e=48") rather than by a
+  verified account of WHERE its information comes from.  Two specific risks
+  motivated a CPU-only audit before any further GPU budget was spent: (i) the
+  reader input may be dominated by hand-written summaries that bypass the
+  frozen dictionary entirely, in which case the dictionary-mediated part of the
+  story is not the mechanism that produces the number; and (ii) parts of the
+  302-D input may be removable, in which case the line is carrying unnecessary
+  shortcut capacity.  The audit was therefore scoped to one question: what does
+  this checkpoint actually read, and what can be deleted without loss?
+protocol: >-
+  Local-first CPU-only round (CUDA_VISIBLE_DEVICES="", no GPU, no SSH to the
+  remote host at any point).  Preregistration and frozen intervention registry
+  written before any run:
+  notes/e2e_dictenv_h1_clarity_audit_preregistration.md.  Phase A is a
+  zero-training static inventory that re-derives every reader-input slice from
+  its producing function and verifies it against the forward pass on 64 real
+  molecules.  Phase B is a frozen table of 82 pre-registered interventions on
+  the frozen checkpoint (anchor A0-A6/EA1-EA2, global G0-G3/EG1-EG2, topology25
+  T0-T1, node/edge binding N0-N6/EB1-EB3, relation R0-R5/ER1, readout
+  P0-P4/EP1-EP3) evaluated under four probe families: zero, mean-fill,
+  cross-molecule graph-row shuffle, cross-graph readout-row shuffle and
+  cross-pair relation-row shuffle.  Phase C is a tiered training budget: Tier 1
+  is 20-epoch warm-start adaptation from the frozen soup with a same-protocol
+  continuation control (extended to 40 epochs for candidates with a visible
+  recovery trend), Tier 2 is matched from-scratch CPU retraining of one baseline
+  plus two finalists at the inherited 320-epoch protocol with identical
+  initialisation, data order, optimizer, LR, wd, batch and split.  Official
+  ZINC train 10000 / official valid 1000; official test never loaded.
+results:
+  implementation_commit: 72b490a
+  device: cpu
+  nproc: 16
+  torch_threads_per_process: 4
+  baseline_cpu_valid_mae: 0.12354862986778607
+  baseline_historical_gpu_valid_mae: 0.12354862861608853
+  baseline_abs_diff_vs_historical: 1.251697537285601e-09
+  audit_identity_mask_bit_identical: true
+  frozen_rows_recorded: 88
+  frozen_rerun_max_abs_delta: 0.0
+  frozen_stage_wall_clock_s: 41.816
+  reader_input_dim: 302
+  global_context_chemistry_coords: 32
+  anchor_chemistry_coords: 32
+  relation_raw_coordinates_never_read: [14, 15, 16, 17]
+  bypasses_dictionary_entries: 19
+  anchor_A1_zero: 1.0167
+  anchor_A1_fill: 1.0147
+  anchor_A2_zero: 0.5617
+  anchor_A3_zero: 0.4490
+  anchor_A4_zero: 0.4420
+  anchor_A5_zero: 0.1934
+  anchor_A6_zero: 0.1488
+  topology_T1_zero: 0.1447
+  topology_GS4_row_shuffle: 0.2666
+  relation_RS3_boundary_shuffle: 0.5541
+  relation_RS2_overlap_shuffle: 0.0890
+  relation_RS1_distance_shuffle: 0.0738
+  relation_RS4_path_count_shuffle: 0.0044
+  relation_RS5_all_shuffle: 0.1534
+  relation_R3_zero_gt_R5_zero: true
+  readout_PS1_unary_first_shuffle: 1.4088
+  readout_PS2_unary_second_shuffle: 0.3692
+  readout_PS2_zero_inflation_ratio: 2.72
+  readout_PS3_unary_count_shuffle: 0.0002
+  readout_PS5_pair_second_shuffle: 0.1332
+  readout_PS6_pair_count_shuffle: 0.0054
+  global_GS1_chemistry_shuffle: 0.0574
+  global_EG2_bond_histogram_fill: 0.0030
+  node_N1_content_zero: 0.3476
+  node_N3_alpha_atom_correspondence_shuffle: 0.0122
+  edge_N2_content_zero: 0.2726
+  edge_N4_role_bond_correspondence_shuffle: 0.0930
+  tier1_epochs: 20
+  tier1_M0_continuation_soup: 0.12311620266264071
+  tier1_C1_delta_vs_M0: 0.003957003296352915
+  tier1_C2_delta_vs_M0: 0.021623038140158064
+  tier1_C3_delta_vs_M0: 0.023294184166691817
+  tier1_C5_delta_vs_M0: 0.03887702254214845
+  tier1_C6_delta_vs_M0: 0.005088445838230553
+  tier1_M0_40ep_soup: 0.123238
+  tier1_C2_40ep_soup: 0.138306
+  tier1_C2_40ep_residual_gap: 0.015068
+  tier2_epochs: 320
+  tier2_BASE_soup: 0.14329793557984521
+  tier2_C1_soup: 0.1335300679653301
+  tier2_C6_soup: 0.12849913656336333
+  tier2_C1_delta_vs_BASE: -0.009767867614515119
+  tier2_C6_delta_vs_BASE: -0.014798799016481884
+  tier2_seconds_per_epoch_per_process: 12.55570217881559
+  tier2_wall_clock_s: 4022.995175293996
+  candidate_C6_mask: >-
+    zero graph atom_histogram + graph bond_histogram + relation path_count +
+    unary count + pair count
+  official_test_loaded: false
+decision: >-
+  Keep H1 / P2-ABS frozen as the current main-line baseline; do NOT replace it
+  with candidate C6 on the strength of this round; do NOT authorise any GPU
+  budget for the cleanup until a preregistered two-arm two-seed GPU round
+  exists.  Accept C6 (remove the graph-level atom and bond histograms, the
+  relation log path count, and the unary and pair count blocks) as the recorded
+  removable-bypass candidate, and record the verified information map as the
+  canonical description of what the H1 reader actually consumes.  Stop this
+  round here: the structural questions are answered and further CPU work would
+  not change the verdicts.
+because: >-
+  Three findings settle the round.  (1) The information map is now verified
+  rather than described: global_context62 really does carry a 32-coordinate
+  graph chemistry marginal, anchor62 really does carry 32 coordinates of patch
+  chemistry marginals, and the used relation block really is raw[0:14]+raw[18],
+  so any future claim about "the dictionary-mediated environment" must be
+  qualified against 205 of the 302 reader coordinates arriving as direct
+  hand-written summaries.  (2) The anchor is load-bearing under every probe
+  (zero and mean-fill agree within 0.003 for every anchor row), so the
+  "minimal root-relative information" framing of this line is refuted for this
+  checkpoint, and removing the patch marginals is not recoverable under short
+  adaptation (+0.0216 at 20 epochs, still +0.0151 at 40 epochs against a
+  matched continuation).  (3) The graph chemistry marginal behaves as
+  redundant shortcut capacity: it is materially used by the frozen model
+  (+0.0574 under a distribution-preserving row shuffle) yet deleting it, plus
+  four blocks that every distribution-preserving probe classifies as dormant,
+  IMPROVED the matched from-scratch CPU result by 0.0148 in MAE with identical
+  initialisation and data order.  The decision is nevertheless to keep H1
+  frozen, because the same matched protocol shows the untouched architecture is
+  itself 0.0197 worse on CPU than its own historical GPU run: the CPU regime is
+  offset, C6 has only been tested in that offset regime, and at 12.6
+  s/epoch/process the confirmatory two-arm two-seed design is a GPU round, not
+  a CPU round.
+alternatives_rejected:
+  - >-
+    Promoting C6 to the main line from the CPU Tier 2 result alone.  Rejected:
+    single seed, and the historical GPU H1 (0.123549) still beats every CPU arm
+    (best 0.128499); the regime offset makes the CPU comparison informative
+    about the removal, not about the absolute number.
+  - >-
+    Reporting the zero-probe table as the mechanism table.  Rejected: zeroing is
+    an out-of-distribution corruption.  R3 (boundary zeroed, +0.7341) is worse
+    than R5 (all 15 relation coordinates zeroed, +0.1638), and the unary second
+    moment reads +1.0045 under zeroing but +0.3692 under a marginal-preserving
+    row shuffle.  Three rows are flagged zero_probe_inflated in the artifacts.
+  - >-
+    Running the preregistered candidate C4 ("clean model + distance-only
+    relation").  Rejected on Phase B evidence: the 3-D boundary block alone
+    carries +0.5541, so "distance-only" is the deletion of the dominant relation
+    block and not a simplification.  The registered definition is kept in the
+    registry and documented as never trained.
+  - >-
+    Removing the anchor marginals (C2/C3) or the second moments (C5).  Rejected:
+    +0.0216 / +0.0233 / +0.0389 behind the matched continuation control, with C2
+    still +0.0151 behind after 40 epochs.
+  - >-
+    Adding a second seed, more adaptation epochs, or an architecture search in
+    this round.  Rejected as out of scope; the round was explicitly a
+    mechanism/information audit, and the next step (if any) is a preregistered
+    GPU confirmation, not further CPU screening.
+revisit_if: >-
+  A preregistered GPU round runs BASE and C6 as two arms on >=2 seeds with
+  identical initialisation and data order and shows C6 not worse than BASE by
+  more than 0.003 on the seed-mean Top-5 soup while the frozen GS1 / EG2 / PS3 /
+  PS6 / RS4 deltas reproduce on the new checkpoints; then C6 becomes the
+  candidate main-line architecture.  Also revisit if a future checkpoint's
+  frozen table stops reproducing the anchor load-bearing pattern (e.g. A3/A4
+  collapse below 0.05), which would mean the model found a different route to
+  chemistry and the "anchor is required" statement is checkpoint-specific.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_h1_clarity_audit_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_h1_clarity_audit_information_flow.md
+  - tracks/ksvd/notes/e2e_dictenv_h1_clarity_audit_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_h1_clarity_audit/DECISION.md
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_h1_clarity_audit.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_h1_clarity_audit.py
+  - tracks/ksvd/tests/test_e2e_dictenv_h1_clarity_audit.py
