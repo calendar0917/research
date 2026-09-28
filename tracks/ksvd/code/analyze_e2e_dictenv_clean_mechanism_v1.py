@@ -141,10 +141,10 @@ def section_b() -> None:
     for tag, payload in sorted(summary.items()):
         dictionary = payload.get("dictionary", {})
         print(
-            f"* {tag}: spec={payload['spec']} dictionary: active={dictionary.get('active_atoms')} "
+            f"* {tag}: spec={payload['spec']} dictionary: active={dictionary.get('active_atoms')}/{dictionary.get('n_atoms')} "
             f"effective={fmt(dictionary.get('effective_atoms'), 2)} "
-            f"sparsity={fmt(dictionary.get('coord_sparsity_mean'), 4)} "
-            f"top1={fmt(dictionary.get('usage_top1_share'), 3)} "
+            f"nnz_per_row={fmt(dictionary.get('coord_nnz_per_row_mean'), 2)} "
+            f"top5_share={fmt(dictionary.get('usage_top5_share'), 2)} "
             f"rec={fmt(dictionary.get('valid_reconstruction_relative'), 3)} "
             f"movement={fmt(dictionary.get('dictionary_movement_frobenius'), 3)}"
         )
