@@ -30,7 +30,6 @@ import os
 import subprocess
 import sys
 import time
-from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import numpy as np
@@ -65,9 +64,7 @@ device = torch.device("cpu")
 
 def _load_valid():
     valid = p1run.load_split("valid")
-    loader = p1.make_env_loader(
-        valid, int(p2run.BATCH_SIZE), False, int(p2run.EVAL_SHUFFLE_OFFSET)
-    )
+    loader = p1.make_env_loader(valid, int(p2run.BATCH_SIZE), False, int(p2run.EVAL_SHUFFLE_OFFSET))
     return valid, loader
 
 
@@ -119,10 +116,6 @@ def stage_inventory() -> dict[str, Any]:
 
 def stage_budget(threads: int, scaling_threads: Sequence[int] = (2, 4, 8)) -> dict[str, Any]:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    import resource
-
-    from tracks.ksvd.experiments.luyin16 import e2e_dictenv_v0 as v0
-
     nproc = int(os.cpu_count() or 1)
     mem = {}
     try:
@@ -268,8 +261,13 @@ def _run_table(
         if intervention.name in controls:
             if identity_row is None:
                 identity_row = audit.run_intervention(
-                    model, loader, valid, device_obj, audit.Intervention("IDENTITY", "control"),
-                    baseline_predictions, fill_policy=None,
+                    model,
+                    loader,
+                    valid,
+                    device_obj,
+                    audit.Intervention("IDENTITY", "control"),
+                    baseline_predictions,
+                    fill_policy=None,
                 )
                 identity_row["intervention"] = "IDENTITY"
             row = dict(identity_row)
@@ -372,42 +370,91 @@ def stage_frozen(threads: int, include_extended: bool = True) -> dict[str, Any]:
         "official_test_loaded": False,
     }
     controls = ("A0", "G0", "T0", "N0", "R0", "P0")
+    stage_start = time.perf_counter()
+
+    def _timed(rows: list[dict[str, Any]], table: str, extra: Mapping[str, Any]) -> None:
+        _write_table(
+            table,
+            {
+                **shared,
+                **extra,
+                "rows_evaluated": len(rows),
+                "wall_clock_s": round(time.perf_counter() - stage_start, 3),
+            },
+            rows,
+        )
+
     zero_rows = _run_table(
-        model, loader, valid, device, audit.interventions(include_extended=include_extended),
-        baseline_mae, baseline_predictions, None, controls,
+        model,
+        loader,
+        valid,
+        device,
+        audit.interventions(include_extended=include_extended),
+        baseline_mae,
+        baseline_predictions,
+        None,
+        controls,
     )
-    _write_table("frozen_interventions", shared, zero_rows)
+    _timed(zero_rows, "frozen_interventions", {})
     fill_rows = _run_table(
-        model, loader, valid, device, audit.interventions_fill(),
-        baseline_mae, baseline_predictions, fill_policy, (),
+        model,
+        loader,
+        valid,
+        device,
+        audit.interventions_fill(),
+        baseline_mae,
+        baseline_predictions,
+        fill_policy,
+        (),
     )
-    _write_table("frozen_interventions_fill", {**shared, "probe": "mean_fill"}, fill_rows)
+    _timed(fill_rows, "frozen_interventions_fill", {"probe": "mean_fill"})
     shuffle_rows = _run_table(
-        model, loader, valid, device, audit.interventions_graph_shuffle(),
-        baseline_mae, baseline_predictions, None, (),
+        model,
+        loader,
+        valid,
+        device,
+        audit.interventions_graph_shuffle(),
+        baseline_mae,
+        baseline_predictions,
+        None,
+        (),
     )
-    _write_table(
-        "frozen_interventions_graph_shuffle",
-        {**shared, "probe": "cross_molecule_row_shuffle"},
+    _timed(
         shuffle_rows,
+        "frozen_interventions_graph_shuffle",
+        {"probe": "cross_molecule_row_shuffle"},
     )
     readout_rows = _run_table(
-        model, loader, valid, device, audit.interventions_readout_shuffle(),
-        baseline_mae, baseline_predictions, None, (),
+        model,
+        loader,
+        valid,
+        device,
+        audit.interventions_readout_shuffle(),
+        baseline_mae,
+        baseline_predictions,
+        None,
+        (),
     )
-    _write_table(
-        "frozen_interventions_readout_shuffle",
-        {**shared, "probe": "cross_graph_readout_row_shuffle"},
+    _timed(
         readout_rows,
+        "frozen_interventions_readout_shuffle",
+        {"probe": "cross_graph_readout_row_shuffle"},
     )
     relation_rows = _run_table(
-        model, loader, valid, device, audit.interventions_relation_shuffle(),
-        baseline_mae, baseline_predictions, None, (),
+        model,
+        loader,
+        valid,
+        device,
+        audit.interventions_relation_shuffle(),
+        baseline_mae,
+        baseline_predictions,
+        None,
+        (),
     )
-    _write_table(
-        "frozen_interventions_relation_shuffle",
-        {**shared, "probe": "cross_pair_relation_row_shuffle"},
+    _timed(
         relation_rows,
+        "frozen_interventions_relation_shuffle",
+        {"probe": "cross_pair_relation_row_shuffle"},
     )
     return {
         "zero": zero_rows,
@@ -416,6 +463,7 @@ def stage_frozen(threads: int, include_extended: bool = True) -> dict[str, Any]:
         "readout_shuffle": readout_rows,
         "relation_shuffle": relation_rows,
         "baseline": baseline,
+        "frozen_stage_wall_clock_s": round(time.perf_counter() - stage_start, 3),
     }
 
 
@@ -499,7 +547,11 @@ def stage_matched_one(threads: int, name: str, epochs: int, seed: int = 0) -> di
     train = p1run.load_split("train")
     valid, _loader = _load_valid()
     mask = None if name == "BASE" else audit.candidate_mask(name)
-    notes = "matched CPU baseline (H1 architecture, from scratch)" if mask is None else audit.PHASE_C_CANDIDATES[name][1]
+    notes = (
+        "matched CPU baseline (H1 architecture, from scratch)"
+        if mask is None
+        else audit.PHASE_C_CANDIDATES[name][1]
+    )
     payload = audit.train_cpu(
         tag=f"{name}_e{epochs}",
         mask=mask,
@@ -610,62 +662,146 @@ def stage_matched(
 # ---------------------------------------------------------------------------
 
 
+#: intervention id -> (channel label, probe id preferred for the verdict).
+#: The preferred probe is distribution-preserving whenever one exists; the zero
+#: probe is kept only as the cross-check because it is an OOD input corruption.
+CHANNEL_VERDICTS = {
+    "A1": ("anchor (full 62)", "A1"),
+    "A2": ("anchor patch marginals (atom+bond mass)", "A2"),
+    "A3": ("anchor root atom identity", "A3"),
+    "A4": ("anchor patch atom mass", "A4"),
+    "A5": ("anchor patch bond mass", "A5"),
+    "A6": ("anchor size", "A6"),
+    "G1": ("graph-level chemistry marginal (atom+bond histogram)", "GS1"),
+    "G2": ("graph-level topology summary (short+long)", "GS2"),
+    "G3": ("graph-level global62 (full)", "GS3"),
+    "EG2": ("graph-level bond histogram", "EG2"),
+    "T1": ("topology25 cycle-spectrum bypass", "GS4"),
+    "N1": ("node structure-semantic binding (slot input)", "N1"),
+    "N2": ("edge structure-semantic binding (role input)", "N2"),
+    "N3": ("node alpha<->atom correspondence", "N3"),
+    "N4": ("edge role<->bond-type correspondence", "N4"),
+    "N6": ("dictionary coordinate alpha", "N6"),
+    "R1": ("relation: distance+overlap+boundary (no path count)", "R1"),
+    "R2": ("relation: overlap block", "RS2"),
+    "R3": ("relation: boundary block", "RS3"),
+    "R4": ("relation: log path count", "RS4"),
+    "R5": ("relation: full 15-D", "RS5"),
+    "P1": ("unary second moment", "PS2"),
+    "P2": ("pair second moment", "PS5"),
+    "P3": ("unary + pair second moments", "PS9"),
+    "P4": ("unary + pair counts", "PS3+PS6"),
+    "EP1": ("unary first moment", "PS1"),
+    "EP2": ("unary pool (all blocks)", "PS7"),
+    "EP3": ("pair readout (all blocks)", "PS8"),
+    "EB1": ("global encoder output", "EB1"),
+    "EB2": ("distance gate", "EB2"),
+    "EB3": ("pair composition (projected E)", "EB3"),
+}
+
+
+def _verdict_class(delta: float) -> str:
+    if delta >= 0.10:
+        return "strongly_load_bearing"
+    if delta >= 0.02:
+        return "moderately_used"
+    if delta >= 0.005:
+        return "weakly_used"
+    return "weak_or_dormant"
+
+
 def stage_report() -> dict[str, Any]:
     zero_path = RESULTS_DIR / "frozen_interventions.json"
     if not zero_path.exists():
         raise RuntimeError("frozen_interventions.json missing; run the frozen stage first")
-    zero = _read_json(zero_path)
-    tables = {"zero": zero}
+    tables = {"zero": _read_json(zero_path)}
     for name in ("fill", "graph_shuffle", "readout_shuffle", "relation_shuffle"):
         path = RESULTS_DIR / f"frozen_interventions_{name}.json"
         if path.exists():
             tables[name] = _read_json(path)
 
-    def _compact(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
-        return [
+    def _index(table: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
+        return {row["intervention"]: row for row in table.get("rows", [])}
+
+    indices = {name: _index(table) for name, table in tables.items()}
+
+    def _delta(table: str, name: str) -> float | None:
+        row = indices.get(table, {}).get(name)
+        return None if row is None else float(row["delta_mae"])
+
+    channel_rows: list[dict[str, Any]] = []
+    for identifier, (label, probe) in CHANNEL_VERDICTS.items():
+        if "+" in probe:  # combined count probe: sum of the two count rows
+            parts = probe.split("+")
+            delta = sum(
+                value for value in (_delta("readout_shuffle", part) for part in parts) if value is not None
+            )
+            probe_used = "readout_shuffle:count(sum)"
+        elif probe in indices["graph_shuffle"]:
+            delta = _delta("graph_shuffle", probe)
+            probe_used = "graph_shuffle"
+        elif probe in indices["relation_shuffle"]:
+            delta = _delta("relation_shuffle", probe)
+            probe_used = "relation_shuffle"
+        elif probe in indices["readout_shuffle"]:
+            delta = _delta("readout_shuffle", probe)
+            probe_used = "readout_shuffle"
+        else:
+            delta = _delta("fill", probe)
+            probe_used = "fill" if delta is not None else "zero"
+            if delta is None:
+                delta = _delta("zero", probe)
+        zero_delta = _delta("zero", identifier)
+        fill_delta = _delta("fill", identifier)
+        channel_rows.append(
             {
-                "intervention": row["intervention"],
-                "category": row["category"],
-                "delta_mae": row["delta_mae"],
-                "mean_abs_prediction_delta": row.get("mean_abs_prediction_delta"),
-                "prediction_correlation": row.get("prediction_correlation"),
-                "load_bearing": row["load_bearing"],
+                "id": identifier,
+                "channel": label,
+                "verdict_probe": probe_used,
+                "delta_primary": None if delta is None else float(delta),
+                "delta_zero": zero_delta,
+                "delta_fill": fill_delta,
+                "verdict": None if delta is None else _verdict_class(float(delta)),
+                "zero_probe_inflated": bool(
+                    zero_delta is not None
+                    and delta is not None
+                    and float(zero_delta) > 2.0 * max(float(delta), 1e-9)
+                ),
             }
-            for row in sorted(rows, key=lambda item: float(item["delta_mae"]), reverse=True)
-        ]
+        )
+    channel_rows.sort(key=lambda row: (row["delta_primary"] is None, -(row["delta_primary"] or 0.0)))
 
-    def _index(rows: Sequence[Mapping[str, Any]]) -> dict[str, Mapping[str, Any]]:
-        return {row["intervention"]: row for row in rows}
+    classes: dict[str, list[str]] = {
+        "strongly_load_bearing": [],
+        "moderately_used": [],
+        "weakly_used": [],
+        "weak_or_dormant": [],
+    }
+    for row in channel_rows:
+        if row["verdict"]:
+            classes[row["verdict"]].append(row["id"])
 
-    zero_index = _index(zero["rows"])
-    fill_index = _index(tables.get("fill", {}).get("rows", []))
     payload = {
         "protocol_version": PROTOCOL_VERSION,
         "git_commit": _git_commit(),
-        "baseline": zero["baseline"],
-        "ranking_by_delta_mae": _compact(zero["rows"]),
-        "tables": {name: _compact(table["rows"]) for name, table in tables.items()},
-        "probe_agreement": {
-            name: {
-                "zero_delta": zero_index[name]["delta_mae"] if name in zero_index else None,
-                "fill_delta": fill_index[name]["delta_mae"] if name in fill_index else None,
-                "delta_ratio_fill_over_zero": (
-                    float(fill_index[name]["delta_mae"] / zero_index[name]["delta_mae"])
-                    if name in fill_index and name in zero_index and float(zero_index[name]["delta_mae"]) != 0.0
-                    else None
-                ),
-            }
-            for name in ("A1", "A2", "A3", "A4", "A5", "A6", "G1", "G2", "G3", "T1", "R1", "R3", "R5", "P1", "P2", "P3")
+        "baseline": tables["zero"]["baseline"],
+        "channel_verdicts": channel_rows,
+        "classes": classes,
+        "tables": {
+            name: [
+                {
+                    "intervention": row["intervention"],
+                    "category": row["category"],
+                    "delta_mae": row["delta_mae"],
+                    "mean_abs_prediction_delta": row.get("mean_abs_prediction_delta"),
+                    "prediction_correlation": row.get("prediction_correlation"),
+                    "load_bearing_zero_probe": row["load_bearing"],
+                }
+                for row in sorted(table["rows"], key=lambda item: float(item["delta_mae"]), reverse=True)
+            ]
+            for name, table in tables.items()
         },
-        "classes": {
-            label: [row["intervention"] for row in zero["rows"] if row["load_bearing"] == label]
-            for label in (
-                "strongly_load_bearing",
-                "moderately_used",
-                "weakly_used",
-                "weak_or_dormant",
-            )
-        },
+        "dormant_blocks": [row["id"] for row in channel_rows if row["verdict"] == "weak_or_dormant"],
         "adaptation_available": (RESULTS_DIR / "adaptation" / "adaptation_summary.json").exists(),
         "matched_cpu_available": (RESULTS_DIR / "matched_cpu" / "matched_summary.json").exists(),
         "official_test_loaded": False,
@@ -739,7 +875,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             if args.candidates
             else ["BASE", "C1", "C3"]
         )
-        print(json.dumps(stage_matched(args.threads, names, args.epochs, args.concurrency, args.seed), indent=2))
+        print(
+            json.dumps(stage_matched(args.threads, names, args.epochs, args.concurrency, args.seed), indent=2)
+        )
     elif args.stage == "matched-one":
         print(json.dumps(stage_matched_one(args.threads, args.candidate, args.epochs, args.seed), indent=2))
     elif args.stage == "report":

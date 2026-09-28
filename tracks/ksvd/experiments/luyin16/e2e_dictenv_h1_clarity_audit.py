@@ -35,7 +35,6 @@ from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_p1 as p1
@@ -56,19 +55,19 @@ H1_LAMBDA = 33.95873017865987
 
 #: ``e2e_dictenv_p1.build_anchor_raw`` layout (62-D, standardized with train stats).
 ANCHOR_GROUPS: dict[str, tuple[int, int]] = {
-    "root": (0, 28),        # root atom identity one-hot q_i
+    "root": (0, 28),  # root atom identity one-hot q_i
     "atom_mass": (28, 56),  # unconditioned patch atom-type mass
     "bond_mass": (56, 60),  # unconditioned patch bond-type mass
-    "size": (60, 62),       # [log1p|V_i|, log1p|E_i|]
+    "size": (60, 62),  # [log1p|V_i|, log1p|E_i|]
 }
 ANCHOR_DIM_EXPECTED = 62
 
 #: ``zinc_long_range_proxy.global_feature_views(...)["global_all"]`` (62-D).
 GLOBAL_GROUPS: dict[str, tuple[int, int]] = {
-    "structure_short": (0, 15),    # degree / density / triangle / clustering summary
-    "structure_long": (15, 30),    # shortest-path + eccentricity summary
-    "atom_histogram": (30, 58),    # whole-molecule atom-type frequency
-    "bond_histogram": (58, 62),    # whole-molecule bond-type frequency
+    "structure_short": (0, 15),  # degree / density / triangle / clustering summary
+    "structure_long": (15, 30),  # shortest-path + eccentricity summary
+    "atom_histogram": (30, 58),  # whole-molecule atom-type frequency
+    "bond_histogram": (58, 62),  # whole-molecule bond-type frequency
 }
 GLOBAL_CHEMISTRY_GROUPS = ("atom_histogram", "bond_histogram")
 GLOBAL_STRUCTURE_GROUPS = ("structure_short", "structure_long")
@@ -79,10 +78,10 @@ TOPOLOGY_DIM_EXPECTED = 25
 
 #: positions inside ``pair_relation[:, p1.P1_RELATION_INDICES]`` (15-D used slice).
 RELATION_GROUPS: dict[str, tuple[int, int]] = {
-    "distance": (0, 6),     # 5-bucket one-hot + log shortest-path distance
-    "overlap": (6, 11),     # patch-overlap block (5)
-    "boundary": (11, 14),   # patch-boundary block (3)
-    "path_count": (14, 15), # log number of shortest paths
+    "distance": (0, 6),  # 5-bucket one-hot + log shortest-path distance
+    "overlap": (6, 11),  # patch-overlap block (5)
+    "boundary": (11, 14),  # patch-boundary block (3)
+    "path_count": (14, 15),  # log number of shortest paths
 }
 RELATION_DIM_EXPECTED = 15
 #: raw 23-D relation layout, for provenance checks only.
@@ -91,7 +90,7 @@ RELATION_RAW_LAYOUT = {
     "log_distance": (5, 6),
     "overlap": (6, 11),
     "boundary": (11, 14),
-    "path_bond_mean": (14, 18),   # dropped by P1_RELATION_INDICES
+    "path_bond_mean": (14, 18),  # dropped by P1_RELATION_INDICES
     "log_path_count": (18, 19),
     "adjacent_bond_type": (19, 23),  # dropped by P1_RELATION_INDICES
 }
@@ -182,8 +181,7 @@ class AuditMask:
 
     def as_dict(self) -> dict[str, Any]:
         payload = {
-            key: (list(value) if isinstance(value, tuple) else value)
-            for key, value in self.__dict__.items()
+            key: (list(value) if isinstance(value, tuple) else value) for key, value in self.__dict__.items()
         }
         payload["is_identity"] = self.is_identity()
         return payload
@@ -319,7 +317,9 @@ def _replace_grouped_columns(
     return out
 
 
-def _zero_grouped_columns(value: torch.Tensor, groups: Mapping[str, tuple[int, int]], names: Sequence[str]) -> torch.Tensor:
+def _zero_grouped_columns(
+    value: torch.Tensor, groups: Mapping[str, tuple[int, int]], names: Sequence[str]
+) -> torch.Tensor:
     """Backwards-compatible alias for zero-mode grouped replacement."""
     return _replace_grouped_columns(value, groups, names, None, "")
 
@@ -456,7 +456,8 @@ class AuditModel(p2.P2Model):
         flat_e = torch.zeros((n * p2.SHELLPAIR_CLASSES, d_e), device=ue.device, dtype=ue.dtype)
         flat_e.index_add_(
             0,
-            data.env_bond_root.to(coord.device) * p2.SHELLPAIR_CLASSES + data.env_bond_shellpair.to(coord.device),
+            data.env_bond_root.to(coord.device) * p2.SHELLPAIR_CLASSES
+            + data.env_bond_shellpair.to(coord.device),
             ue,
         )
         edge_slots = flat_e.view(n, p2.SHELLPAIR_CLASSES, d_e)
@@ -523,14 +524,22 @@ class AuditModel(p2.P2Model):
 
         global_input = data.global_context
         if mask.global_zero_groups:
-            global_input = _replace_grouped_columns(global_input, GLOBAL_GROUPS, mask.global_zero_groups, fill, "global:")
+            global_input = _replace_grouped_columns(
+                global_input, GLOBAL_GROUPS, mask.global_zero_groups, fill, "global:"
+            )
         graph_hidden = self.global_encoder(global_input)
         if mask.graph_hidden_zero:
             graph_hidden = torch.zeros_like(graph_hidden)
         topology_input = data.topology_features
         if mask.topology_zero:
             if fill is not None and "topology" in fill:
-                topology_input = fill["topology"].to(topology_input.device, topology_input.dtype).reshape(1, -1).expand_as(topology_input).contiguous()
+                topology_input = (
+                    fill["topology"]
+                    .to(topology_input.device, topology_input.dtype)
+                    .reshape(1, -1)
+                    .expand_as(topology_input)
+                    .contiguous()
+                )
             else:
                 topology_input = torch.zeros_like(topology_input)
         topology = self.topology_encoder(topology_input)
@@ -557,7 +566,9 @@ def load_h1_soup_state(path: Any) -> dict[str, torch.Tensor]:
     state = torch.load(path, map_location="cpu", weights_only=False)
     if not isinstance(state, Mapping) or "D" not in state:
         raise RuntimeError(f"{path}: unexpected H1 soup checkpoint payload")
-    return {key: value.detach().cpu().float() if torch.is_tensor(value) else value for key, value in state.items()}
+    return {
+        key: value.detach().cpu().float() if torch.is_tensor(value) else value for key, value in state.items()
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -604,16 +615,19 @@ SHUFFLE_SEEDS = (101, 202, 303, 404, 505)
 
 def interventions(include_extended: bool = True) -> list[Intervention]:
     """The pre-registered frozen-intervention registry (preregistration §3)."""
-    graph_seeds = GRAPH_SHUFFLE_SEEDS
     rows: list[Intervention] = [
         # -- anchor ---------------------------------------------------------
         Intervention("A0", "anchor", AuditMask(), "control: audit path, identity mask"),
         Intervention(
-            "A1", "anchor", AuditMask(anchor_zero_groups=("root", "atom_mass", "bond_mass", "size")),
+            "A1",
+            "anchor",
+            AuditMask(anchor_zero_groups=("root", "atom_mass", "bond_mass", "size")),
             "zero full anchor62",
         ),
         Intervention(
-            "A2", "anchor", AuditMask(anchor_zero_groups=("atom_mass", "bond_mass")),
+            "A2",
+            "anchor",
+            AuditMask(anchor_zero_groups=("atom_mass", "bond_mass")),
             "keep root atom + size only",
         ),
         Intervention("A3", "anchor", AuditMask(anchor_zero_groups=("root",)), "remove root atom identity"),
@@ -623,15 +637,20 @@ def interventions(include_extended: bool = True) -> list[Intervention]:
         # -- graph-level global context -------------------------------------
         Intervention("G0", "global", AuditMask(), "control: identity mask"),
         Intervention(
-            "G1", "global", AuditMask(global_zero_groups=GLOBAL_CHEMISTRY_GROUPS),
+            "G1",
+            "global",
+            AuditMask(global_zero_groups=GLOBAL_CHEMISTRY_GROUPS),
             "zero graph-level chemistry marginal (atom+bond histogram)",
         ),
         Intervention(
-            "G2", "global", AuditMask(global_zero_groups=GLOBAL_STRUCTURE_GROUPS),
+            "G2",
+            "global",
+            AuditMask(global_zero_groups=GLOBAL_STRUCTURE_GROUPS),
             "zero graph-level topology part (short+long)",
         ),
         Intervention(
-            "G3", "global",
+            "G3",
+            "global",
             AuditMask(global_zero_groups=GLOBAL_STRUCTURE_GROUPS + GLOBAL_CHEMISTRY_GROUPS),
             "zero full global62",
         ),
@@ -642,34 +661,54 @@ def interventions(include_extended: bool = True) -> list[Intervention]:
         Intervention("N0", "binding", AuditMask(), "control: identity mask"),
         Intervention("N1", "binding", AuditMask(node_binding_zero=True), "zero node-binding slot input"),
         Intervention(
-            "N2", "binding", AuditMask(edge_binding_zero=True),
+            "N2",
+            "binding",
+            AuditMask(edge_binding_zero=True),
             "zero edge-binding role input (bond type kept)",
         ),
         Intervention(
-            "N3", "binding", AuditMask(use_node_shuffle=True),
-            "node assignment shuffle", shuffle_kind="node", seeds=SHUFFLE_SEEDS,
+            "N3",
+            "binding",
+            AuditMask(use_node_shuffle=True),
+            "node assignment shuffle",
+            shuffle_kind="node",
+            seeds=SHUFFLE_SEEDS,
         ),
         Intervention(
-            "N4", "binding", AuditMask(use_edge_shuffle=True),
-            "edge assignment shuffle", shuffle_kind="edge", seeds=SHUFFLE_SEEDS,
+            "N4",
+            "binding",
+            AuditMask(use_edge_shuffle=True),
+            "edge assignment shuffle",
+            shuffle_kind="edge",
+            seeds=SHUFFLE_SEEDS,
         ),
         Intervention(
-            "N5", "binding", AuditMask(use_node_shuffle=True, use_edge_shuffle=True),
-            "node + edge assignment shuffle", shuffle_kind="both",
+            "N5",
+            "binding",
+            AuditMask(use_node_shuffle=True, use_edge_shuffle=True),
+            "node + edge assignment shuffle",
+            shuffle_kind="both",
             seeds=tuple((s, 1000 + s) for s in SHUFFLE_SEEDS),
         ),
         Intervention("N6", "binding", AuditMask(coord_zero=True), "zero dictionary coordinate alpha"),
         # -- pair relation ---------------------------------------------------
         Intervention("R0", "relation", AuditMask(), "control: identity mask"),
         Intervention(
-            "R1", "relation", AuditMask(relation_zero_groups=("overlap", "boundary", "path_count")),
+            "R1",
+            "relation",
+            AuditMask(relation_zero_groups=("overlap", "boundary", "path_count")),
             "distance-only relation",
         ),
         Intervention("R2", "relation", AuditMask(relation_zero_groups=("overlap",)), "remove overlap block"),
-        Intervention("R3", "relation", AuditMask(relation_zero_groups=("boundary",)), "remove boundary block"),
-        Intervention("R4", "relation", AuditMask(relation_zero_groups=("path_count",)), "remove log path count"),
         Intervention(
-            "R5", "relation",
+            "R3", "relation", AuditMask(relation_zero_groups=("boundary",)), "remove boundary block"
+        ),
+        Intervention(
+            "R4", "relation", AuditMask(relation_zero_groups=("path_count",)), "remove log path count"
+        ),
+        Intervention(
+            "R5",
+            "relation",
             AuditMask(relation_zero_groups=("distance", "overlap", "boundary", "path_count")),
             "no explicit relation",
         ),
@@ -678,11 +717,15 @@ def interventions(include_extended: bool = True) -> list[Intervention]:
         Intervention("P1", "readout", AuditMask(unary_zero_blocks=("second",)), "zero unary second moment"),
         Intervention("P2", "readout", AuditMask(pair_zero_blocks=("second",)), "zero pair second moments"),
         Intervention(
-            "P3", "readout", AuditMask(unary_zero_blocks=("second",), pair_zero_blocks=("second",)),
+            "P3",
+            "readout",
+            AuditMask(unary_zero_blocks=("second",), pair_zero_blocks=("second",)),
             "zero unary + pair second moments",
         ),
         Intervention(
-            "P4", "readout", AuditMask(unary_zero_blocks=("count",), pair_zero_blocks=("count",)),
+            "P4",
+            "readout",
+            AuditMask(unary_zero_blocks=("count",), pair_zero_blocks=("count",)),
             "zero unary + pair count terms",
         ),
     ]
@@ -690,30 +733,58 @@ def interventions(include_extended: bool = True) -> list[Intervention]:
         return rows
     rows.extend(
         [
-            Intervention("EA1", "anchor_ext", AuditMask(anchor_zero_groups=("root", "atom_mass", "bond_mass")),
-                         "keep size only"),
-            Intervention("EA2", "anchor_ext", AuditMask(anchor_zero_groups=("root", "atom_mass", "size")),
-                         "keep patch bond mass only"),
-            Intervention("EG1", "global_ext", AuditMask(global_zero_groups=("atom_histogram",)),
-                         "zero atom histogram only"),
-            Intervention("EG2", "global_ext", AuditMask(global_zero_groups=("bond_histogram",)),
-                         "zero bond histogram only"),
             Intervention(
-                "ER1", "relation_ext", AuditMask(relation_zero_groups=("overlap", "boundary", "path_count")),
+                "EA1",
+                "anchor_ext",
+                AuditMask(anchor_zero_groups=("root", "atom_mass", "bond_mass")),
+                "keep size only",
+            ),
+            Intervention(
+                "EA2",
+                "anchor_ext",
+                AuditMask(anchor_zero_groups=("root", "atom_mass", "size")),
+                "keep patch bond mass only",
+            ),
+            Intervention(
+                "EG1",
+                "global_ext",
+                AuditMask(global_zero_groups=("atom_histogram",)),
+                "zero atom histogram only",
+            ),
+            Intervention(
+                "EG2",
+                "global_ext",
+                AuditMask(global_zero_groups=("bond_histogram",)),
+                "zero bond histogram only",
+            ),
+            Intervention(
+                "ER1",
+                "relation_ext",
+                AuditMask(relation_zero_groups=("overlap", "boundary", "path_count")),
                 "distance-only relation (duplicate of R1 for extended table)",
             ),
-            Intervention("EP1", "readout_ext", AuditMask(unary_zero_blocks=("first",)),
-                         "zero unary first moment only"),
-            Intervention("EP2", "readout_ext", AuditMask(unary_zero_blocks=("first", "second", "count")),
-                         "zero full unary pool"),
-            Intervention("EP3", "readout_ext",
-                         AuditMask(pair_zero_blocks=("first", "second", "count")),
-                         "zero full relation readout"),
-            Intervention("EB1", "backend_ext", AuditMask(graph_hidden_zero=True),
-                         "zero global encoder output"),
+            Intervention(
+                "EP1", "readout_ext", AuditMask(unary_zero_blocks=("first",)), "zero unary first moment only"
+            ),
+            Intervention(
+                "EP2",
+                "readout_ext",
+                AuditMask(unary_zero_blocks=("first", "second", "count")),
+                "zero full unary pool",
+            ),
+            Intervention(
+                "EP3",
+                "readout_ext",
+                AuditMask(pair_zero_blocks=("first", "second", "count")),
+                "zero full relation readout",
+            ),
+            Intervention(
+                "EB1", "backend_ext", AuditMask(graph_hidden_zero=True), "zero global encoder output"
+            ),
             Intervention("EB2", "backend_ext", AuditMask(gate_off=True), "distance gate off (gate=1)"),
-            Intervention("EB3", "backend_ext", AuditMask(pair_projection_zero=True),
-                         "zero pair-projection output"),
+            Intervention(
+                "EB3", "backend_ext", AuditMask(pair_projection_zero=True), "zero pair-projection output"
+            ),
         ]
     )
     return rows
@@ -835,10 +906,18 @@ def build_fill_policy(
                 _accumulate(f"relation:{name}", relation[:, low:high].sum(dim=0))
             n_pairs += int(relation.shape[0])
             unary = aux["unary"]
-            _accumulate("unary:first", unary[:, UNARY_BLOCKS["first"][0] : UNARY_BLOCKS["first"][1]].sum(dim=0))
-            _accumulate("unary:second", unary[:, UNARY_BLOCKS["second"][0] : UNARY_BLOCKS["second"][1]].sum(dim=0))
-            _accumulate("unary:count", unary[:, UNARY_BLOCKS["count"][0] : UNARY_BLOCKS["count"][1]].sum(dim=0))
-            readout = aux["relation_readout"].reshape(int(batch.global_context.shape[0]), p2.DISTANCE_BUCKETS, PAIR_BLOCK_DIM)
+            _accumulate(
+                "unary:first", unary[:, UNARY_BLOCKS["first"][0] : UNARY_BLOCKS["first"][1]].sum(dim=0)
+            )
+            _accumulate(
+                "unary:second", unary[:, UNARY_BLOCKS["second"][0] : UNARY_BLOCKS["second"][1]].sum(dim=0)
+            )
+            _accumulate(
+                "unary:count", unary[:, UNARY_BLOCKS["count"][0] : UNARY_BLOCKS["count"][1]].sum(dim=0)
+            )
+            readout = aux["relation_readout"].reshape(
+                int(batch.global_context.shape[0]), p2.DISTANCE_BUCKETS, PAIR_BLOCK_DIM
+            )
             for block in ("first", "second", "count"):
                 low, high = PAIR_BLOCKS[block]
                 _accumulate(f"pair:{block}", readout[:, :, low:high].sum(dim=0))
@@ -997,9 +1076,7 @@ def run_intervention(
     return payload
 
 
-def summarise_interventions(
-    rows: Sequence[Mapping[str, Any]], baseline_mae: float
-) -> list[dict[str, Any]]:
+def summarise_interventions(rows: Sequence[Mapping[str, Any]], baseline_mae: float) -> list[dict[str, Any]]:
     """Attach ``baseline_mae`` / ``delta_mae`` / load-bearing class to each row."""
     out: list[dict[str, Any]] = []
     for row in rows:
@@ -1077,7 +1154,7 @@ def verify_global_context_provenance(n_molecules: int = 64) -> dict[str, Any]:
         ),
         "groups": groups,
         "provenance": "zinc_long_range_proxy.global_feature_views(...)['global_all'] "
-                      "= concat([structure_short(15), structure_long(15), atom_hist(28), bond_hist(4)])",
+        "= concat([structure_short(15), structure_long(15), atom_hist(28), bond_hist(4)])",
         "official_test_loaded": False,
     }
 
@@ -1101,7 +1178,9 @@ def verify_relation_groups(n_pairs: int = 200_000) -> dict[str, Any]:
         np.allclose(relation[exact, 5], np.log1p(bucket[exact] + 1.0), atol=1e-5)
     )
     overlap = relation[:, 6:11]
-    checks["overlap_block_within_unit_interval"] = bool(np.all(overlap >= -1e-6) and np.all(overlap <= 1.0 + 1e-6))
+    checks["overlap_block_within_unit_interval"] = bool(
+        np.all(overlap >= -1e-6) and np.all(overlap <= 1.0 + 1e-6)
+    )
     boundary = relation[:, 11:14]
     checks["boundary_indicator_is_binary"] = bool(np.all(np.isin(np.round(boundary[:, 2]), (0.0, 1.0))))
     log_path_count = relation[:, 18]
@@ -1142,7 +1221,9 @@ def verify_topology_groups() -> dict[str, Any]:
     for column in range(stored.shape[1]):
         left, right = stored[:, column], raw[:, column]
         correlations.append(
-            0.0 if (float(left.std()) == 0.0 or float(right.std()) == 0.0) else float(np.corrcoef(left, right)[0, 1])
+            0.0
+            if (float(left.std()) == 0.0 or float(right.std()) == 0.0)
+            else float(np.corrcoef(left, right)[0, 1])
         )
     correlations = np.asarray(correlations)
     names = ztopo.feature_names("hinge")
@@ -1154,8 +1235,8 @@ def verify_topology_groups() -> dict[str, Any]:
         "feature_names": list(names),
         "correlations": [float(value) for value in correlations],
         "provenance": "zinc_topology_features.raw_vector(mode='hinge'): "
-                      "[longest, n3..n10, n>10, mcb_count, mcb_max, mcb_mean, mcb_total, cycle_rank] "
-                      "+ [longest, longest^2, ReLU(longest-3)..ReLU(longest-10)]",
+        "[longest, n3..n10, n>10, mcb_count, mcb_max, mcb_mean, mcb_total, cycle_rank] "
+        "+ [longest, longest^2, ReLU(longest-3)..ReLU(longest-10)]",
         "official_test_loaded": False,
     }
 
@@ -1171,6 +1252,7 @@ READOUT_SHUFFLE_SEEDS = (9101, 9202)
 
 def interventions_readout_shuffle() -> list[Intervention]:
     """Cross-graph row-shuffle probes for the pooled readout blocks."""
+
     def row(name: str, blocks: tuple[str, ...], note: str) -> Intervention:
         return Intervention(
             name,
@@ -1197,16 +1279,46 @@ def interventions_readout_shuffle() -> list[Intervention]:
 def interventions_graph_shuffle() -> list[Intervention]:
     """Distribution-preserving graph-level probes (cross-molecule row shuffle)."""
     return [
-        Intervention("GS1", "global_shuffle", AuditMask(), "shuffle graph atom+bond histogram rows",
-                     graph_shuffle="global_chemistry", seeds=GRAPH_SHUFFLE_SEEDS),
-        Intervention("GS2", "global_shuffle", AuditMask(), "shuffle graph structure (short+long) rows",
-                     graph_shuffle="global_structure", seeds=GRAPH_SHUFFLE_SEEDS),
-        Intervention("GS3", "global_shuffle", AuditMask(), "shuffle full global62 rows",
-                     graph_shuffle="global_all", seeds=GRAPH_SHUFFLE_SEEDS),
-        Intervention("GS4", "global_shuffle", AuditMask(), "shuffle topology25 rows",
-                     graph_shuffle="topology", seeds=GRAPH_SHUFFLE_SEEDS),
-        Intervention("GS5", "global_shuffle", AuditMask(), "shuffle global62 + topology25 rows",
-                     graph_shuffle="global_topology", seeds=GRAPH_SHUFFLE_SEEDS),
+        Intervention(
+            "GS1",
+            "global_shuffle",
+            AuditMask(),
+            "shuffle graph atom+bond histogram rows",
+            graph_shuffle="global_chemistry",
+            seeds=GRAPH_SHUFFLE_SEEDS,
+        ),
+        Intervention(
+            "GS2",
+            "global_shuffle",
+            AuditMask(),
+            "shuffle graph structure (short+long) rows",
+            graph_shuffle="global_structure",
+            seeds=GRAPH_SHUFFLE_SEEDS,
+        ),
+        Intervention(
+            "GS3",
+            "global_shuffle",
+            AuditMask(),
+            "shuffle full global62 rows",
+            graph_shuffle="global_all",
+            seeds=GRAPH_SHUFFLE_SEEDS,
+        ),
+        Intervention(
+            "GS4",
+            "global_shuffle",
+            AuditMask(),
+            "shuffle topology25 rows",
+            graph_shuffle="topology",
+            seeds=GRAPH_SHUFFLE_SEEDS,
+        ),
+        Intervention(
+            "GS5",
+            "global_shuffle",
+            AuditMask(),
+            "shuffle global62 + topology25 rows",
+            graph_shuffle="global_topology",
+            seeds=GRAPH_SHUFFLE_SEEDS,
+        ),
     ]
 
 
@@ -1220,8 +1332,18 @@ def interventions_fill() -> list[Intervention]:
     distribution-matched replacement and are therefore excluded.
     """
     excluded = {
-        "N1", "N2", "N6", "EB1", "EB2", "EB3", "N0",
-        "A0", "G0", "T0", "R0", "P0",
+        "N1",
+        "N2",
+        "N6",
+        "EB1",
+        "EB2",
+        "EB3",
+        "N0",
+        "A0",
+        "G0",
+        "T0",
+        "R0",
+        "P0",
     }
     fillable = [
         intervention
@@ -1302,16 +1424,46 @@ def permute_pair_rows(data_list: Sequence[Any], kind: str, seed: int):
 def interventions_relation_shuffle() -> list[Intervention]:
     """Cross-pair row-shuffle probes for the 15-D used relation groups."""
     return [
-        Intervention("RS1", "relation_shuffle", AuditMask(), "shuffle distance block rows across pairs",
-                     seeds=READOUT_SHUFFLE_SEEDS, relation_shuffle="distance"),
-        Intervention("RS2", "relation_shuffle", AuditMask(), "shuffle overlap block rows across pairs",
-                     seeds=READOUT_SHUFFLE_SEEDS, relation_shuffle="overlap"),
-        Intervention("RS3", "relation_shuffle", AuditMask(), "shuffle boundary block rows across pairs",
-                     seeds=READOUT_SHUFFLE_SEEDS, relation_shuffle="boundary"),
-        Intervention("RS4", "relation_shuffle", AuditMask(), "shuffle log-path-count rows across pairs",
-                     seeds=READOUT_SHUFFLE_SEEDS, relation_shuffle="path_count"),
-        Intervention("RS5", "relation_shuffle", AuditMask(), "shuffle all used relation rows across pairs",
-                     seeds=READOUT_SHUFFLE_SEEDS, relation_shuffle="all"),
+        Intervention(
+            "RS1",
+            "relation_shuffle",
+            AuditMask(),
+            "shuffle distance block rows across pairs",
+            seeds=READOUT_SHUFFLE_SEEDS,
+            relation_shuffle="distance",
+        ),
+        Intervention(
+            "RS2",
+            "relation_shuffle",
+            AuditMask(),
+            "shuffle overlap block rows across pairs",
+            seeds=READOUT_SHUFFLE_SEEDS,
+            relation_shuffle="overlap",
+        ),
+        Intervention(
+            "RS3",
+            "relation_shuffle",
+            AuditMask(),
+            "shuffle boundary block rows across pairs",
+            seeds=READOUT_SHUFFLE_SEEDS,
+            relation_shuffle="boundary",
+        ),
+        Intervention(
+            "RS4",
+            "relation_shuffle",
+            AuditMask(),
+            "shuffle log-path-count rows across pairs",
+            seeds=READOUT_SHUFFLE_SEEDS,
+            relation_shuffle="path_count",
+        ),
+        Intervention(
+            "RS5",
+            "relation_shuffle",
+            AuditMask(),
+            "shuffle all used relation rows across pairs",
+            seeds=READOUT_SHUFFLE_SEEDS,
+            relation_shuffle="all",
+        ),
     ]
 
 
@@ -1354,120 +1506,402 @@ def information_inventory() -> dict[str, Any]:
     """Complete machine-readable information-flow inventory (preregistration §2)."""
     rows: list[dict[str, Any]] = [
         # -- structural dictionary path -------------------------------------
-        _entry("phi65", "65", "fsar_r2_ar0.build_phi (pure topology, no chemistry)", "code()",
-               is_structure=True, handcrafted=True,
-               note="radius-2 rooted operator basis; chemistry-free by construction"),
-        _entry("dictionary_D", "65x32", "sdb_v0 K-SVD init, trainable", "code()",
-               is_structure=True,
-               note="column-normalized tied dictionary; K32/s8/IHT10 frozen"),
-        _entry("alpha_coord", "32", "tied IHT10(Dbar, phi65), exact top-8", "code()",
-               is_structure=True, dictionary_mediated=True,
-               note="the only fine-grained learned structural coordinate"),
-        _entry("dict_atom_one_hot_q", "28", "raw ZINC node type (encoded cache)", "environments()",
-               is_chemistry=True, note="per-occurrence atom one-hot, not dictionary-mediated"),
-        _entry("bond_type_b", "4", "raw ZINC edge_attr (encoded cache)", "environments()",
-               is_chemistry=True, note="per-bond-occurrence bond one-hot"),
-        _entry("shell_s_iv", "3 (routing)", "e2e_dictenv_v0.env_incidence BFS distance", "environments()",
-               is_structure=True, handcrafted=True,
-               note="root-relative BFS shell / routing index, no chemistry"),
-        _entry("shellpair_p_uv", "6 (routing)", "e2e_dictenv_v0.env_incidence sorted shell pair", "environments()",
-               is_structure=True, handcrafted=True, note="root-relative shellpair / routing index"),
+        _entry(
+            "phi65",
+            "65",
+            "fsar_r2_ar0.build_phi (pure topology, no chemistry)",
+            "code()",
+            is_structure=True,
+            handcrafted=True,
+            note="radius-2 rooted operator basis; chemistry-free by construction",
+        ),
+        _entry(
+            "dictionary_D",
+            "65x32",
+            "sdb_v0 K-SVD init, trainable",
+            "code()",
+            is_structure=True,
+            note="column-normalized tied dictionary; K32/s8/IHT10 frozen",
+        ),
+        _entry(
+            "alpha_coord",
+            "32",
+            "tied IHT10(Dbar, phi65), exact top-8",
+            "code()",
+            is_structure=True,
+            dictionary_mediated=True,
+            note="the only fine-grained learned structural coordinate",
+        ),
+        _entry(
+            "dict_atom_one_hot_q",
+            "28",
+            "raw ZINC node type (encoded cache)",
+            "environments()",
+            is_chemistry=True,
+            note="per-occurrence atom one-hot, not dictionary-mediated",
+        ),
+        _entry(
+            "bond_type_b",
+            "4",
+            "raw ZINC edge_attr (encoded cache)",
+            "environments()",
+            is_chemistry=True,
+            note="per-bond-occurrence bond one-hot",
+        ),
+        _entry(
+            "shell_s_iv",
+            "3 (routing)",
+            "e2e_dictenv_v0.env_incidence BFS distance",
+            "environments()",
+            is_structure=True,
+            handcrafted=True,
+            note="root-relative BFS shell / routing index, no chemistry",
+        ),
+        _entry(
+            "shellpair_p_uv",
+            "6 (routing)",
+            "e2e_dictenv_v0.env_incidence sorted shell pair",
+            "environments()",
+            is_structure=True,
+            handcrafted=True,
+            note="root-relative shellpair / routing index",
+        ),
         # -- node structure-semantic binding ---------------------------------
-        _entry("node_slot_u_v", "96", "(alpha_v W_A^S) * (q_v W_A^C) / sqrt(96)", "environments()",
-               is_structure=True, is_chemistry=True, correspondence=True, dictionary_mediated=True,
-               note="node structure-semantic binding (outer product)"),
-        _entry("node_slots_A_i", "3x96=288", "per-(root,shell) index_add of node_slot_u_v", "node_encoder",
-               is_structure=True, is_chemistry=True, correspondence=True, dictionary_mediated=True,
-               note="shell-routed; each slot is a sum over occurrences"),
-        _entry("node_encoder_out", "3x48=144", "shared MLP 96->64->48", "fusion",
-               note="per-shell learned re-encoding, shared across shells"),
+        _entry(
+            "node_slot_u_v",
+            "96",
+            "(alpha_v W_A^S) * (q_v W_A^C) / sqrt(96)",
+            "environments()",
+            is_structure=True,
+            is_chemistry=True,
+            correspondence=True,
+            dictionary_mediated=True,
+            note="node structure-semantic binding (outer product)",
+        ),
+        _entry(
+            "node_slots_A_i",
+            "3x96=288",
+            "per-(root,shell) index_add of node_slot_u_v",
+            "node_encoder",
+            is_structure=True,
+            is_chemistry=True,
+            correspondence=True,
+            dictionary_mediated=True,
+            note="shell-routed; each slot is a sum over occurrences",
+        ),
+        _entry(
+            "node_encoder_out",
+            "3x48=144",
+            "shared MLP 96->64->48",
+            "fusion",
+            note="per-shell learned re-encoding, shared across shells",
+        ),
         # -- edge structure-semantic binding ---------------------------------
-        _entry("edge_role_g_uv", "96", "[a_u+a_v; |a_u-a_v|; a_u*a_v]", "environments()",
-               is_structure=True, dictionary_mediated=True,
-               note="symmetric dictionary-role pair descriptor"),
-        _entry("edge_slot_ue_uv", "48", "(g_uv W_E^S) * (b_uv W_E^C) / sqrt(48)", "environments()",
-               is_structure=True, is_chemistry=True, correspondence=True, dictionary_mediated=True,
-               note="edge structure-semantic binding"),
-        _entry("edge_slots_E_i", "6x48=288", "per-(root,shellpair) index_add of edge_slot_ue_uv", "edge_encoder",
-               is_structure=True, is_chemistry=True, correspondence=True, dictionary_mediated=True,
-               note="shellpair-routed"),
-        _entry("edge_encoder_out", "6x32=192", "shared MLP 48->48->32", "fusion",
-               note="per-shellpair learned re-encoding, shared across shellpairs"),
+        _entry(
+            "edge_role_g_uv",
+            "96",
+            "[a_u+a_v; |a_u-a_v|; a_u*a_v]",
+            "environments()",
+            is_structure=True,
+            dictionary_mediated=True,
+            note="symmetric dictionary-role pair descriptor",
+        ),
+        _entry(
+            "edge_slot_ue_uv",
+            "48",
+            "(g_uv W_E^S) * (b_uv W_E^C) / sqrt(48)",
+            "environments()",
+            is_structure=True,
+            is_chemistry=True,
+            correspondence=True,
+            dictionary_mediated=True,
+            note="edge structure-semantic binding",
+        ),
+        _entry(
+            "edge_slots_E_i",
+            "6x48=288",
+            "per-(root,shellpair) index_add of edge_slot_ue_uv",
+            "edge_encoder",
+            is_structure=True,
+            is_chemistry=True,
+            correspondence=True,
+            dictionary_mediated=True,
+            note="shellpair-routed",
+        ),
+        _entry(
+            "edge_encoder_out",
+            "6x32=192",
+            "shared MLP 48->48->32",
+            "fusion",
+            note="per-shellpair learned re-encoding, shared across shellpairs",
+        ),
         # -- anchor ----------------------------------------------------------
-        _entry("anchor_root_identity", "28", "one-hot q_i (root atom)", "anchor_encoder",
-               is_chemistry=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="zeroth-order identity, no patch context"),
-        _entry("anchor_patch_atom_mass", "28", "sum_{v in P_i} q_v (whole patch, unconditioned)", "anchor_encoder",
-               is_chemistry=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="patch-level atom marginal; shell information is summed away"),
-        _entry("anchor_patch_bond_mass", "4", "sum_{e in E_i} b_e (whole patch, unconditioned)", "anchor_encoder",
-               is_chemistry=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="patch-level bond marginal"),
-        _entry("anchor_size", "2", "[log1p|V_i|, log1p|E_i|]", "anchor_encoder",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="root-relative patch size only"),
+        _entry(
+            "anchor_root_identity",
+            "28",
+            "one-hot q_i (root atom)",
+            "anchor_encoder",
+            is_chemistry=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="zeroth-order identity, no patch context",
+        ),
+        _entry(
+            "anchor_patch_atom_mass",
+            "28",
+            "sum_{v in P_i} q_v (whole patch, unconditioned)",
+            "anchor_encoder",
+            is_chemistry=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="patch-level atom marginal; shell information is summed away",
+        ),
+        _entry(
+            "anchor_patch_bond_mass",
+            "4",
+            "sum_{e in E_i} b_e (whole patch, unconditioned)",
+            "anchor_encoder",
+            is_chemistry=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="patch-level bond marginal",
+        ),
+        _entry(
+            "anchor_size",
+            "2",
+            "[log1p|V_i|, log1p|E_i|]",
+            "anchor_encoder",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="root-relative patch size only",
+        ),
         # -- decoder ---------------------------------------------------------
         _entry("anchor_encoder_out", "32", "MLP 62->32->32", "fusion", note="anchor re-encoding"),
         _entry("fusion_input", "368", "cat[anchor32, node144, edge192]", "fusion()", note="H1 slot fusion"),
-        _entry("local_environment_E_i", "48", "fusion MLP 368->128->48", "pair/graph backend",
-               is_structure=True, is_chemistry=True, correspondence=True, dictionary_mediated=True,
-               note="frozen after formation; the only local representation the backend sees"),
+        _entry(
+            "local_environment_E_i",
+            "48",
+            "fusion MLP 368->128->48",
+            "pair/graph backend",
+            is_structure=True,
+            is_chemistry=True,
+            correspondence=True,
+            dictionary_mediated=True,
+            note="frozen after formation; the only local representation the backend sees",
+        ),
         # -- relation --------------------------------------------------------
-        _entry("pair_relation_raw", "23", "zinc_patch_path_pooling._pair_relation", "relation_encoder",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="pure topology (path-bond-mean and adjacent-bond blocks dropped by P1)"),
-        _entry("pair_relation_distance", "6", "raw [0:5] one-hot + [5] log distance", "relation_encoder",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="used coords 0..5"),
-        _entry("pair_relation_overlap", "5", "raw [6:11]", "relation_encoder",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="used coords 6..10; patch node-set overlap ratios"),
-        _entry("pair_relation_boundary", "3", "raw [11:14]", "relation_encoder",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="used coords 11..13; boundary overlap + centre containment indicator"),
-        _entry("pair_relation_path_count", "1", "raw [18] log1p(number of shortest paths)", "relation_encoder",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="used coord 14"),
-        _entry("pair_bucket", "5 cats", "argmax distance one-hot", "distance_gate",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="also selects the pair-pool bucket"),
+        _entry(
+            "pair_relation_raw",
+            "23",
+            "zinc_patch_path_pooling._pair_relation",
+            "relation_encoder",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="pure topology (path-bond-mean and adjacent-bond blocks dropped by P1)",
+        ),
+        _entry(
+            "pair_relation_distance",
+            "6",
+            "raw [0:5] one-hot + [5] log distance",
+            "relation_encoder",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="used coords 0..5",
+        ),
+        _entry(
+            "pair_relation_overlap",
+            "5",
+            "raw [6:11]",
+            "relation_encoder",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="used coords 6..10; patch node-set overlap ratios",
+        ),
+        _entry(
+            "pair_relation_boundary",
+            "3",
+            "raw [11:14]",
+            "relation_encoder",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="used coords 11..13; boundary overlap + centre containment indicator",
+        ),
+        _entry(
+            "pair_relation_path_count",
+            "1",
+            "raw [18] log1p(number of shortest paths)",
+            "relation_encoder",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="used coord 14",
+        ),
+        _entry(
+            "pair_bucket",
+            "5 cats",
+            "argmax distance one-hot",
+            "distance_gate",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="also selects the pair-pool bucket",
+        ),
         # -- graph-level -----------------------------------------------------
-        _entry("global_structure_short", "15", "global_feature_views short block", "global_encoder",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="degree/density/triangle/clustering summary"),
-        _entry("global_structure_long", "15", "global_feature_views long block", "global_encoder",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="all-pairs shortest-path + eccentricity summary"),
-        _entry("global_atom_histogram", "28", "whole-molecule atom-type frequency", "global_encoder",
-               is_chemistry=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="whole-molecule chemistry marginal"),
-        _entry("global_bond_histogram", "4", "whole-molecule bond-type frequency", "global_encoder",
-               is_chemistry=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="whole-molecule chemistry marginal"),
-        _entry("topology_features_25", "25", "zinc_topology_features raw_vector('hinge')", "topology_encoder",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True,
-               note="cycle spectrum / MCB / longest-cycle hinge features; graph-level structure bypass"),
+        _entry(
+            "global_structure_short",
+            "15",
+            "global_feature_views short block",
+            "global_encoder",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="degree/density/triangle/clustering summary",
+        ),
+        _entry(
+            "global_structure_long",
+            "15",
+            "global_feature_views long block",
+            "global_encoder",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="all-pairs shortest-path + eccentricity summary",
+        ),
+        _entry(
+            "global_atom_histogram",
+            "28",
+            "whole-molecule atom-type frequency",
+            "global_encoder",
+            is_chemistry=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="whole-molecule chemistry marginal",
+        ),
+        _entry(
+            "global_bond_histogram",
+            "4",
+            "whole-molecule bond-type frequency",
+            "global_encoder",
+            is_chemistry=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="whole-molecule chemistry marginal",
+        ),
+        _entry(
+            "topology_features_25",
+            "25",
+            "zinc_topology_features raw_vector('hinge')",
+            "topology_encoder",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+            note="cycle spectrum / MCB / longest-cycle hinge features; graph-level structure bypass",
+        ),
         # -- pools -----------------------------------------------------------
-        _entry("unary_first_moment", "48", "sum_v E_i over graph nodes", "reader",
-               is_structure=True, is_chemistry=True, correspondence=True, dictionary_mediated=True),
-        _entry("unary_second_moment", "48", "sum_v E_i^2", "reader",
-               is_structure=True, is_chemistry=True, correspondence=True, dictionary_mediated=True,
-               note="explicit second-order statistics"),
-        _entry("unary_count", "1", "log1p(number of nodes)", "reader",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True),
-        _entry("pair_first_moment", "5x16=80", "sum over pairs per distance bucket of pair_value", "reader",
-               is_structure=True, dictionary_mediated=True),
-        _entry("pair_second_moment", "5x16=80", "sum of pair_value^2 per bucket", "reader",
-               is_structure=True, dictionary_mediated=True,
-               note="explicit second-order statistics"),
-        _entry("pair_count", "5", "log1p(number of pairs) per bucket", "reader",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True),
-        _entry("graph_hidden", "32", "global_encoder MLP 62->32->32 on global_context", "reader",
-               is_chemistry=True, is_structure=True, handcrafted=True, bypasses_dictionary=True,
-               bypasses_local_binding=True),
-        _entry("topology_hidden", "8", "topology_encoder MLP 25->16->8", "reader",
-               is_structure=True, handcrafted=True, bypasses_dictionary=True, bypasses_local_binding=True),
-        _entry("reader_input", f"302 = 97 + 165 + 32 + 8", "cat[unary, relation_readout, graph_hidden, topology]", "reader"),
+        _entry(
+            "unary_first_moment",
+            "48",
+            "sum_v E_i over graph nodes",
+            "reader",
+            is_structure=True,
+            is_chemistry=True,
+            correspondence=True,
+            dictionary_mediated=True,
+        ),
+        _entry(
+            "unary_second_moment",
+            "48",
+            "sum_v E_i^2",
+            "reader",
+            is_structure=True,
+            is_chemistry=True,
+            correspondence=True,
+            dictionary_mediated=True,
+            note="explicit second-order statistics",
+        ),
+        _entry(
+            "unary_count",
+            "1",
+            "log1p(number of nodes)",
+            "reader",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+        ),
+        _entry(
+            "pair_first_moment",
+            "5x16=80",
+            "sum over pairs per distance bucket of pair_value",
+            "reader",
+            is_structure=True,
+            dictionary_mediated=True,
+        ),
+        _entry(
+            "pair_second_moment",
+            "5x16=80",
+            "sum of pair_value^2 per bucket",
+            "reader",
+            is_structure=True,
+            dictionary_mediated=True,
+            note="explicit second-order statistics",
+        ),
+        _entry(
+            "pair_count",
+            "5",
+            "log1p(number of pairs) per bucket",
+            "reader",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+        ),
+        _entry(
+            "graph_hidden",
+            "32",
+            "global_encoder MLP 62->32->32 on global_context",
+            "reader",
+            is_chemistry=True,
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+        ),
+        _entry(
+            "topology_hidden",
+            "8",
+            "topology_encoder MLP 25->16->8",
+            "reader",
+            is_structure=True,
+            handcrafted=True,
+            bypasses_dictionary=True,
+            bypasses_local_binding=True,
+        ),
+        _entry(
+            "reader_input",
+            "302 = 97 + 165 + 32 + 8",
+            "cat[unary, relation_readout, graph_hidden, topology]",
+            "reader",
+        ),
         _entry("prediction", "1", "GenericReader 302->13->13->1", "output"),
     ]
     flags = (
@@ -1481,11 +1915,11 @@ def information_inventory() -> dict[str, Any]:
     )
     summary = {
         "n_entries": len(rows),
-        "counts": {
-            flag: int(sum(1 for row in rows if row[flag])) for flag in flags
-        },
+        "counts": {flag: int(sum(1 for row in rows if row[flag])) for flag in flags},
         "non_dictionary_bypasses": [
-            row["name"] for row in rows if row["bypasses_dictionary"] and row["bypasses_local_structure_semantic_binding"]
+            row["name"]
+            for row in rows
+            if row["bypasses_dictionary"] and row["bypasses_local_structure_semantic_binding"]
         ],
     }
     return {
@@ -1520,7 +1954,7 @@ def _rss_mb() -> float:
     try:
         with open("/proc/self/statm", "r", encoding="utf-8") as handle:
             pages = int(handle.read().split()[1])
-        return float(pages) * 4096.0 / (1024.0 ** 2)
+        return float(pages) * 4096.0 / (1024.0**2)
     except Exception:  # pragma: no cover - non-Linux fallback
         import resource
 
@@ -1537,7 +1971,9 @@ def state_sha256(state: Mapping[str, torch.Tensor]) -> str:
     return digest.hexdigest()
 
 
-def _evaluate_model(model: AuditModel, loader: Any, device: torch.device, mask: AuditMask | None) -> dict[str, Any]:
+def _evaluate_model(
+    model: AuditModel, loader: Any, device: torch.device, mask: AuditMask | None
+) -> dict[str, Any]:
     result = evaluate_mask(model, loader, device, mask)
     return {"mae": float(result["mae"]), "n_molecules": int(result["n_molecules"])}
 
@@ -1565,7 +2001,6 @@ def train_cpu(
     """
     from pathlib import Path
 
-    from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
     from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run
 
     device = attach_cpu(threads)
@@ -1616,7 +2051,7 @@ def train_cpu(
             n_mol += int(batch.y.numel())
             phi = aux["phi"]
             phi_hat = model.reconstruct(phi, aux["coord"]).detach()
-            rec_sum += float((((phi - phi_hat) ** 2).sum(dim=1) / ((phi ** 2).sum(dim=1) + v0.EPS)).sum())
+            rec_sum += float((((phi - phi_hat) ** 2).sum(dim=1) / ((phi**2).sum(dim=1) + v0.EPS)).sum())
             n_nodes += int(phi.shape[0])
         train_mae = float(task_sum / max(n_mol, 1))
         train_rec = float(rec_sum / max(n_nodes, 1))
@@ -1647,8 +2082,13 @@ def train_cpu(
             )
     wall = float(time.perf_counter() - started)
     assert best_state is not None
-    members = sorted(int(i) + 1 for i in sorted(range(len(curve)), key=lambda i: float(curve[i]["valid_mae"]))[:soup_k])
-    soup_state = {k: torch.stack([epoch_states[e][k].float() for e in members]).mean(0) for k in epoch_states[members[0]]}
+    members = sorted(
+        int(i) + 1 for i in sorted(range(len(curve)), key=lambda i: float(curve[i]["valid_mae"]))[:soup_k]
+    )
+    soup_state = {
+        k: torch.stack([epoch_states[e][k].float() for e in members]).mean(0)
+        for k in epoch_states[members[0]]
+    }
     soup_model = build_audit_model(dictionary, seed=int(seed))
     soup_model.load_state_dict(soup_state)
     soup_valid = _evaluate_model(soup_model, eval_loader, device, mask)
@@ -1687,7 +2127,10 @@ def train_cpu(
     if save_states:
         torch.save(best_state, out_dir / f"{tag}_raw_state.pt")
         torch.save(soup_state, out_dir / f"{tag}_soup_state.pt")
-        torch.save({k: v.detach().to("cpu", copy=True) for k, v in model.state_dict().items()}, out_dir / f"{tag}_final_state.pt")
+        torch.save(
+            {k: v.detach().to("cpu", copy=True) for k, v in model.state_dict().items()},
+            out_dir / f"{tag}_final_state.pt",
+        )
     payload["best_state_sha256"] = state_sha256(best_state)
     payload["soup_state_sha256"] = state_sha256(soup_state)
     return payload

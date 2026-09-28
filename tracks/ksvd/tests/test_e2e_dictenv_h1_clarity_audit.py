@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import types
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pytest
@@ -218,7 +219,9 @@ def test_anchor_mask_only_affects_intended_coordinates():
     coord = model.code(data.dict_phi)
     with torch.no_grad():
         left = model.environments_masked(coord, data, mask)
-        reference = model.environments_masked(coord, types.SimpleNamespace(**{**data.__dict__, "anchor": zeroed}), audit.AuditMask())
+        reference = model.environments_masked(
+            coord, types.SimpleNamespace(**{**data.__dict__, "anchor": zeroed}), audit.AuditMask()
+        )
     assert torch.equal(left, reference)
     assert torch.equal(data.anchor[:, 0:28], zeroed[:, 0:28])
     assert torch.equal(data.anchor[:, 60:62], zeroed[:, 60:62])
@@ -244,9 +247,7 @@ def test_anchor_full_zero_differs_from_unmasked():
 
 def test_global_chemistry_mask_only_affects_chemistry_block():
     global_context = torch.randn(4, audit.GLOBAL_DIM_EXPECTED)
-    masked = audit._zero_grouped_columns(
-        global_context, audit.GLOBAL_GROUPS, audit.GLOBAL_CHEMISTRY_GROUPS
-    )
+    masked = audit._zero_grouped_columns(global_context, audit.GLOBAL_GROUPS, audit.GLOBAL_CHEMISTRY_GROUPS)
     assert torch.equal(masked[:, 0:30], global_context[:, 0:30])
     assert torch.equal(masked[:, 30:62], torch.zeros(4, 32))
     structure = audit._zero_grouped_columns(
@@ -259,7 +260,9 @@ def test_global_chemistry_mask_only_affects_chemistry_block():
 def test_topology_mask_only_affects_topology25():
     model = _model()
     data = _synthetic()
-    other = types.SimpleNamespace(**{**data.__dict__, "topology_features": torch.randn_like(data.topology_features) * 5.0})
+    other = types.SimpleNamespace(
+        **{**data.__dict__, "topology_features": torch.randn_like(data.topology_features) * 5.0}
+    )
     with torch.no_grad():
         masked_a = model(data, mask=audit.AuditMask(topology_zero=True))
         masked_b = model(other, mask=audit.AuditMask(topology_zero=True))
@@ -402,7 +405,9 @@ def test_relation_masks_use_verified_coordinate_groups():
     )
     assert torch.equal(full, torch.zeros_like(full))
     with torch.no_grad():
-        prediction = model(data, mask=audit.AuditMask(relation_zero_groups=("distance", "overlap", "boundary", "path_count")))
+        prediction = model(
+            data, mask=audit.AuditMask(relation_zero_groups=("distance", "overlap", "boundary", "path_count"))
+        )
     assert prediction.shape == (2,)
 
 
@@ -434,7 +439,11 @@ def test_mean_fill_replaces_exactly_the_masked_blocks():
     assert torch.equal(filled[:, 58:62], torch.full((4, 4), -2.0))
     with pytest.raises(ValueError):
         audit._replace_grouped_columns(
-            global_context, audit.GLOBAL_GROUPS, ("atom_histogram",), {"global:atom_histogram": torch.zeros(3)}, "global:"
+            global_context,
+            audit.GLOBAL_GROUPS,
+            ("atom_histogram",),
+            {"global:atom_histogram": torch.zeros(3)},
+            "global:",
         )
 
 
@@ -508,8 +517,20 @@ def test_fill_policy_shapes_on_real_checkpoint():
     assert policy["unary:second"].shape == (p2.ENV_DIM,)
     assert policy["pair:second"].shape == (p2.DISTANCE_BUCKETS, p2.PAIR_HIDDEN)
     # fill and zero must differ for a non-degenerate block
-    filled = audit.evaluate_mask(model, loader, torch.device("cpu"), audit.AuditMask(global_zero_groups=audit.GLOBAL_CHEMISTRY_GROUPS), policy)
-    zeroed = audit.evaluate_mask(model, loader, torch.device("cpu"), audit.AuditMask(global_zero_groups=audit.GLOBAL_CHEMISTRY_GROUPS), None)
+    filled = audit.evaluate_mask(
+        model,
+        loader,
+        torch.device("cpu"),
+        audit.AuditMask(global_zero_groups=audit.GLOBAL_CHEMISTRY_GROUPS),
+        policy,
+    )
+    zeroed = audit.evaluate_mask(
+        model,
+        loader,
+        torch.device("cpu"),
+        audit.AuditMask(global_zero_groups=audit.GLOBAL_CHEMISTRY_GROUPS),
+        None,
+    )
     assert filled["mae"] != zeroed["mae"]
 
 
@@ -578,8 +599,14 @@ def test_fill_and_graph_shuffle_registries_are_well_formed():
     assert all(row.use_fill for row in fill_rows)
     assert {row.name for row in fill_rows} >= {"A1", "A2", "G1", "T1", "R1", "P3"}
     for row in fill_rows:
-        assert row.mask.anchor_zero_groups or row.mask.global_zero_groups or row.mask.topology_zero \
-            or row.mask.relation_zero_groups or row.mask.unary_zero_blocks or row.mask.pair_zero_blocks
+        assert (
+            row.mask.anchor_zero_groups
+            or row.mask.global_zero_groups
+            or row.mask.topology_zero
+            or row.mask.relation_zero_groups
+            or row.mask.unary_zero_blocks
+            or row.mask.pair_zero_blocks
+        )
     shuffle_rows = audit.interventions_graph_shuffle()
     assert [row.name for row in shuffle_rows] == ["GS1", "GS2", "GS3", "GS4", "GS5"]
     for row in shuffle_rows:
@@ -632,7 +659,7 @@ def test_attach_cpu_is_cpu_only_and_evaluate_rejects_accelerators():
 
 def test_audit_module_declares_no_accelerator_use():
     source = Path(audit.__file__).read_text(encoding="utf-8")
-    for token in ("cuda", "device=\"gpu\"", "device='gpu'"):
+    for token in ("cuda", 'device="gpu"', "device='gpu'"):
         assert token not in source, token
 
 
