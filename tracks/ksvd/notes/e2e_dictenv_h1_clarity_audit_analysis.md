@@ -405,7 +405,12 @@ Conclusions:
    than its own historical GPU run, so the whole regime is offset. The honest claim is
    "removing these channels does not hurt, and helps, in the tested CPU regime", not
    "the cleaned model beats H1 on ZINC".
-3. The improvement is consistent with the frozen evidence: the deleted blocks are either dormant
+3. The arm-matching contract that this comparison rests on — one parameter hash per seed
+   regardless of mask, and one mask-independent shuffled batch order — is pinned by
+   `test_matched_arms_share_initialisation_and_parameter_shapes` and
+   `test_matched_arms_use_the_same_batch_order` in
+   `tracks/ksvd/tests/test_e2e_dictenv_h1_clarity_audit.py` (38 focused CPU tests, all passing).
+4. The improvement is consistent with the frozen evidence: the deleted blocks are either dormant
    or covered by an existing channel (patch-level bond/atom mass, size scalars, mean pooling),
    i.e. the graph chemistry marginal is **redundant**, and in this regime the extra 32 input
    coordinates act as shortcut capacity rather than as new information.
