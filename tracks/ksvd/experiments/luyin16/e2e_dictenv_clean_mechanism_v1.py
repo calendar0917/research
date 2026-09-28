@@ -572,7 +572,13 @@ def evaluate_binding_variant(
         ),
     )
     model.load_state_dict({key: value.float() for key, value in state.items()})
-    result = audit.evaluate_mask(model, loader, device, mask)
+    # ``AuditModel.forward(mask=None)`` delegates to the untouched P2Model path and
+    # would silently ignore a non-default binding operator, so force the masked
+    # (semantically identical) path whenever the operator is overridden.
+    effective_mask = mask
+    if effective_mask is None and (node_binding != "paired" or edge_binding != "paired"):
+        effective_mask = audit.AuditMask()
+    result = audit.evaluate_mask(model, loader, device, effective_mask)
     payload = {
         "node_binding": node_binding,
         "edge_binding": edge_binding,

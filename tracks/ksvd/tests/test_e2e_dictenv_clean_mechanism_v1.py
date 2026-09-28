@@ -530,6 +530,39 @@ def test_find_artifact_resolves_seed_suffixed_runs(tmp_path, monkeypatch):
 
 
 @pytest.mark.skipif(not VALID_CACHE.exists(), reason="P1 valid cache not available locally")
+def test_binding_variant_override_is_honoured_without_a_mask():
+    """Regression: ``mask=None`` must not bypass a non-default binding operator.
+
+    ``AuditModel.forward(mask=None)`` delegates to the untouched P2Model path,
+    which is exactly what the BASE control rows of stage C hit; the variant
+    evaluation has to force the semantically identical masked path instead.
+    """
+    from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
+    from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run
+
+    device = audit.attach_cpu(2)
+    dictionary, _sha = p2run.load_dictionary("sdb32")
+    graphs = p1run.load_split("valid", subset=8)
+    loader = p1.make_env_loader(graphs, 4, False, 0)
+    model = cm.build_clean_mech_model(dictionary, seed=0)
+    state = model.state_dict()
+    with torch.no_grad():
+        baseline = audit.evaluate_mask(model, loader, device, None)
+    variant = cm.evaluate_binding_variant(
+        dictionary,
+        state,
+        loader,
+        device,
+        None,
+        node_binding="indep",
+        edge_binding="indep",
+        baseline_predictions=baseline["predictions"],
+    )
+    assert variant["mean_abs_prediction_delta"] > 0.0
+    assert variant["prediction_correlation"] < 1.0
+
+
+@pytest.mark.skipif(not VALID_CACHE.exists(), reason="P1 valid cache not available locally")
 def test_independence_norm_stats_and_binding_variants_on_real_data():
     from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
     from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run
