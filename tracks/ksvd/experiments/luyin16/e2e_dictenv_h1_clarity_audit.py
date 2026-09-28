@@ -31,7 +31,7 @@ from __future__ import annotations
 import math
 import time
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence
 
 import numpy as np
 import torch
@@ -1991,6 +1991,8 @@ def train_cpu(
     seed: int = 0,
     save_states: bool = True,
     log: bool = True,
+    model_factory: Callable[[np.ndarray, int], "AuditModel"] | None = None,
+    arm_spec: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """One CPU training run of the frozen H1 protocol with an optional mask.
 
@@ -2011,7 +2013,8 @@ def train_cpu(
 
     dictionary, dict_sha = p2run.load_dictionary(H1_CONFIG.dict_kind)
     p2run._seed_everything(int(seed))
-    model = build_audit_model(dictionary, seed=int(seed))
+    factory = build_audit_model if model_factory is None else model_factory
+    model = factory(dictionary, int(seed))
     if init_state is not None:
         missing = model.load_state_dict({k: v.float() for k, v in init_state.items()})
         if getattr(missing, "missing_keys", None) or getattr(missing, "unexpected_keys", None):
@@ -2089,7 +2092,7 @@ def train_cpu(
         k: torch.stack([epoch_states[e][k].float() for e in members]).mean(0)
         for k in epoch_states[members[0]]
     }
-    soup_model = build_audit_model(dictionary, seed=int(seed))
+    soup_model = factory(dictionary, int(seed))
     soup_model.load_state_dict(soup_state)
     soup_valid = _evaluate_model(soup_model, eval_loader, device, mask)
     payload = {
@@ -2133,6 +2136,8 @@ def train_cpu(
         )
     payload["best_state_sha256"] = state_sha256(best_state)
     payload["soup_state_sha256"] = state_sha256(soup_state)
+    if arm_spec is not None:
+        payload["arm_spec"] = dict(arm_spec)
     return payload
 
 
