@@ -692,6 +692,35 @@ def independence_gate(role: str, deltas: Mapping[int, float]) -> dict[str, Any]:
     }
 
 
+def independence_adoption(role: str, deltas: Mapping[int, float]) -> dict[str, Any]:
+    """Pre-registered adoption rule for a learned independence-null arm.
+
+    ``node``: every matched-seed delta ``<= 0.005`` *and* the mean ``<= 0.005``.
+    ``edge``: the matched-seed mean ``<= 0.003``.
+    """
+    if role not in ("node", "edge"):
+        raise ValueError(f"unknown independence role {role!r}")
+    values = [float(value) for value in deltas.values()]
+    if not values:
+        return {"adopted": False, "n": 0, "reason": "no matched-seed deltas"}
+    mean = float(np.mean(values))
+    maximum = float(np.max(values))
+    if role == "node":
+        adopted = bool(maximum <= 0.005 and mean <= 0.005)
+        rule = "max<=0.005 and mean<=0.005"
+    else:
+        adopted = bool(mean <= 0.003)
+        rule = "mean<=0.003"
+    return {
+        "adopted": adopted,
+        "n": len(values),
+        "mean": mean,
+        "max": maximum,
+        "rule": rule,
+        "per_seed": {int(seed): float(value) for seed, value in deltas.items()},
+    }
+
+
 def relation_gate(delta: float) -> dict[str, Any]:
     """Pre-registered Q3 gate for a 320-epoch relation candidate."""
     value = float(delta)

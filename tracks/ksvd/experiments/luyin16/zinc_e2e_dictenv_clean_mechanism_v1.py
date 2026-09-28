@@ -789,23 +789,35 @@ def stage_gate_c() -> dict[str, Any]:
         "device": "cpu",
         "official_test_loaded": False,
         "clean_base": str(clean_base),
-        "base_soup_valid_mae": base_mae,
+        "base_soup_valid_mae_seed0": base_mae,
     }
     for role in ("node", "edge"):
         tag = clean_base_arm(clean_base, role)
         deltas: dict[int, float] = {}
+        unmatched: list[int] = []
         for seed in range(4):
             entry = find_artifact(tag, seed)
-            if entry is not None:
-                deltas[int(seed)] = soup_mae(entry) - base_mae
+            reference = find_artifact(clean_base, seed)  # matched-seed baseline
+            if entry is None:
+                continue
+            if reference is None:
+                unmatched.append(int(seed))
+                continue
+            deltas[int(seed)] = soup_mae(entry) - soup_mae(reference)
         gate = cm.independence_gate(role, deltas) if deltas else {"verdict": "NO_DATA"}
+        decision = cm.independence_adoption(role, deltas)
         adaptation = None
         adapt_path = STAGE_DIRS["c"] / f"adaptation_summary_e{ADAPT_EPOCHS}.json"
         if adapt_path.exists():
             adaptation = _read_json(adapt_path).get(role)
-        payload[role] = {"gate": gate, "adaptation": adaptation}
+        payload[role] = {
+            "gate": gate,
+            "decision": decision,
+            "adaptation": adaptation,
+            "unmatched_seeds": unmatched,
+        }
     _write_json(STAGE_DIRS["c"] / "gate_c.json", payload)
-    print(f"[gate-c] {json.dumps({k: v for k, v in payload.items() if k in ('node', 'edge')}, default=str)[:500]}", flush=True)
+    print(f"[gate-c] {json.dumps({k: v for k, v in payload.items() if k in ('node', 'edge')}, default=str)[:600]}", flush=True)
     return payload
 
 
@@ -954,6 +966,9 @@ def _adopted_map() -> dict[str, Any]:
         gate_c = _read_json(gate_c_path)
         for role, key in (("node", "node_indep"), ("edge", "edge_indep")):
             row = gate_c.get(role) or {}
+            if isinstance(row.get("decision"), Mapping):
+                result[key] = bool(row["decision"].get("adopted"))
+                continue
             per_seed = (row.get("gate") or {}).get("per_seed") or {}
             values = [float(value) for value in per_seed.values()]
             if not values:
@@ -994,22 +1009,27 @@ def stage_final_clean() -> dict[str, Any]:
     return {"adopted": adopted, "final_spec": spec.as_dict()}
 
 
-def _final_sparse_reference() -> dict[str, Any] | None:
-    """Locate (or train) the seed-0 FINAL-CLEAN sparse reference."""
+def _matched_sparse_reference(seed: int) -> dict[str, Any] | None:
+    """Matched-seed sparse reference for the final clean specification."""
     final = _read_json(RESULTS_DIR / "final_clean.json")
     adopted = final["adopted"]
     clean_base = adopted["clean_base"]
     # single-simplification cases can reuse an existing run
     if adopted["relation"] is None and not adopted["node_indep"] and not adopted["edge_indep"]:
-        return find_artifact(clean_base, 0)
+        return find_artifact(clean_base, seed)
     if adopted["relation"] is not None and not adopted["node_indep"] and not adopted["edge_indep"]:
-        return find_artifact(str(adopted["relation"]), 0)
+        return find_artifact(str(adopted["relation"]), seed)
     if adopted["relation"] is None and (adopted["node_indep"] or adopted["edge_indep"]) and not (
         adopted["node_indep"] and adopted["edge_indep"]
     ):
         role = "node" if adopted["node_indep"] else "edge"
-        return find_artifact(clean_base_arm(clean_base, role), 0)
-    return None
+        return find_artifact(clean_base_arm(clean_base, role), seed)
+    return find_artifact("FINAL-CLEAN-SPARSE", seed)
+
+
+def _final_sparse_reference() -> dict[str, Any] | None:
+    """Locate (or train) the seed-0 FINAL-CLEAN sparse reference."""
+    return _matched_sparse_reference(0)
 
 
 def stage_final_sparse(threads: int = THREADS, concurrency: int = CONCURRENCY) -> None:
@@ -1043,20 +1063,28 @@ def stage_gate_f() -> dict[str, Any]:
         "device": "cpu",
         "official_test_loaded": False,
         "final_spec": spec.as_dict(),
-        "sparse_reference": {"json": str(reference["json"].relative_to(REPO_ROOT)), "source": reference["source"], "soup_valid_mae": sparse_mae},
+        "sparse_reference": {"json": str(reference["json"].relative_to(REPO_ROOT)), "source": reference["source"], "soup_valid_mae": soup_mae(reference)},
         "deltas": {},
     }
     for seed in range(4):
         entry = find_artifact("FINAL-CLEAN-DENSE-TIED", seed)
         if entry is None:
             continue
+        matched = _matched_sparse_reference(seed)
         dense_mae = soup_mae(entry)
-        payload["deltas"][int(seed)] = {
+        row: dict[str, Any] = {
             "dense_soup_valid_mae": dense_mae,
-            "sparse_soup_valid_mae": sparse_mae,
-            "delta_dense_minus_sparse": dense_mae - sparse_mae,
+            "matched_seed_reference": matched is not None,
+            "sparse_reference_json": None if matched is None else str(matched["json"].relative_to(REPO_ROOT)),
+            "sparse_soup_valid_mae": None if matched is None else soup_mae(matched),
+            "delta_dense_minus_sparse": None if matched is None else dense_mae - soup_mae(matched),
         }
-    values = [float(row["delta_dense_minus_sparse"]) for row in payload["deltas"].values()]
+        payload["deltas"][int(seed)] = row
+    values = [
+        float(row["delta_dense_minus_sparse"])
+        for row in payload["deltas"].values()
+        if row["delta_dense_minus_sparse"] is not None
+    ]
     payload["gate"] = cm.specificity_gate(float(np.mean(values))) if values else {"verdict": "NO_DATA"}
     _write_json(STAGE_DIRS["f"] / "gate_f.json", payload)
     print(f"[gate-f] {json.dumps(payload['gate'], default=str)}", flush=True)
@@ -1070,6 +1098,7 @@ def stage_f_extend(threads: int = THREADS, concurrency: int = CONCURRENCY) -> No
     final = _read_json(RESULTS_DIR / "final_clean.json")
     spec = cm.CleanMechSpec(**final["final_spec"])
     missing = [seed for seed in (1, 2) if find_artifact("FINAL-CLEAN-DENSE-TIED", seed) is None]
+    missing = [seed for seed in missing if _matched_sparse_reference(seed) is not None]
     if missing:
         launch(stage_f_jobs(spec.mask_kind, spec.node_binding, spec.edge_binding, missing), threads, concurrency)
 

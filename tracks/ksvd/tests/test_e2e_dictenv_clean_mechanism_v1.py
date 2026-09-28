@@ -505,6 +505,18 @@ def test_module_never_touches_official_test_or_accelerators():
         assert spec.coding in cm.CODINGS
 
 
+def test_independence_adoption_rules():
+    assert cm.independence_adoption("node", {0: 0.001, 1: 0.002, 2: 0.004})["adopted"] is True
+    assert cm.independence_adoption("node", {0: 0.001, 1: 0.002, 2: 0.006})["adopted"] is False
+    assert cm.independence_adoption("node", {0: 0.004, 1: 0.004, 2: 0.004})["adopted"] is True
+    assert cm.independence_adoption("edge", {0: 0.002, 1: 0.002, 2: 0.004})["adopted"] is True
+    assert cm.independence_adoption("edge", {0: 0.002, 1: 0.003, 2: 0.005})["adopted"] is False
+    assert cm.independence_adoption("edge", {"0": 0.0})["n"] == 1
+    assert cm.independence_adoption("node", {})["adopted"] is False
+    with pytest.raises(ValueError):
+        cm.independence_adoption("both", {0: 0.0})
+
+
 def test_find_artifact_resolves_seed_suffixed_runs(tmp_path, monkeypatch):
     """Regression: formal runs live in ``<tag>_seed<k>_e<epochs>.json`` files."""
     from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_clean_mechanism_v1 as runner
