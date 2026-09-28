@@ -582,6 +582,7 @@ def _probe_rows(
     *,
     use_fill: bool,
     baseline_predictions: np.ndarray,
+    baseline_mae: float,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for intervention in interventions:
@@ -596,7 +597,7 @@ def _probe_rows(
             fill_policy if use_fill else None,
         )
         row["probe"] = intervention.name
-        rows.append(row)
+        rows.extend(audit.summarise_interventions([row], float(baseline_mae)))
     return rows
 
 
@@ -628,26 +629,31 @@ def stage_b(threads: int = THREADS, arms: Sequence[str] | None = None) -> dict[s
                         model, loader, valid, device, base_mask, fill_policy,
                         audit.interventions(), use_fill=False,
                         baseline_predictions=replay["predictions"],
+                        baseline_mae=replay["mae"],
                     ),
                     "fill": _probe_rows(
                         model, loader, valid, device, base_mask, fill_policy,
                         audit.interventions_fill(), use_fill=True,
                         baseline_predictions=replay["predictions"],
+                        baseline_mae=replay["mae"],
                     ),
                     "graph_shuffle": _probe_rows(
                         model, loader, valid, device, base_mask, fill_policy,
                         audit.interventions_graph_shuffle(), use_fill=False,
                         baseline_predictions=replay["predictions"],
+                        baseline_mae=replay["mae"],
                     ),
                     "readout_shuffle": _probe_rows(
                         model, loader, valid, device, base_mask, fill_policy,
                         audit.interventions_readout_shuffle(), use_fill=False,
                         baseline_predictions=replay["predictions"],
+                        baseline_mae=replay["mae"],
                     ),
                     "relation_shuffle": _probe_rows(
                         model, loader, valid, device, base_mask, fill_policy,
                         audit.interventions_relation_shuffle(), use_fill=False,
                         baseline_predictions=replay["predictions"],
+                        baseline_mae=replay["mae"],
                     ),
                 }
                 payload = {
