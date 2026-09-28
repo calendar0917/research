@@ -105,8 +105,10 @@ def find_artifact(tag: str, seed: int, epochs: int = EPOCHS) -> dict[str, Any] |
                 "spec": cm.CLEAN_MECH_ARMS.get(str(tag)).as_dict() if str(tag) in cm.CLEAN_MECH_ARMS else None,
             }
     for stage in ("a", "c", "d", "f"):
-        path = artifact_json(stage, tag, epochs)
-        if path.exists():
+        for name in (f"{tag}_seed{seed}", str(tag)):
+            path = artifact_json(stage, name, epochs)
+            if not path.exists():
+                continue
             payload = _read_json(path)
             return {
                 "arm": str(tag),
@@ -114,7 +116,7 @@ def find_artifact(tag: str, seed: int, epochs: int = EPOCHS) -> dict[str, Any] |
                 "epochs": int(epochs),
                 "json": path,
                 "payload": payload,
-                "soup_state": path.parent / f"{tag}_soup_state.pt",
+                "soup_state": path.parent / f"{name}_soup_state.pt",
                 "source": str(stage),
                 "spec": payload.get("arm_spec"),
             }
@@ -500,11 +502,19 @@ def stage_gate_a(threads: int = THREADS, concurrency: int = CONCURRENCY, launch_
             if missing:
                 launch(stage_a_fallback_jobs(missing), threads, concurrency)
         c1_deltas = collect_seed_deltas("C1")
-        if c1_deltas:
+        if len(c1_deltas) >= 3:
             fallback = cm.c6_gate(c1_deltas)
             fallback["arm"] = "C1"
             if fallback.get("adopted"):
                 clean_base = "C1"
+        elif c1_deltas:
+            fallback = {
+                "arm": "C1",
+                "verdict": "INSUFFICIENT_SEEDS",
+                "adopted": False,
+                "per_seed": {int(seed): float(value) for seed, value in c1_deltas.items()},
+                "note": "the frozen gate needs seeds 0, 1, 2",
+            }
         if clean_base is None:
             clean_base = "BASE"
     entries = {}

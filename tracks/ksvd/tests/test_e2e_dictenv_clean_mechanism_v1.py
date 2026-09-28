@@ -19,6 +19,7 @@ Covers the pre-registered test surface
 
 from __future__ import annotations
 
+import json
 import types
 from pathlib import Path
 
@@ -502,6 +503,30 @@ def test_module_never_touches_official_test_or_accelerators():
         assert spec.node_binding in cm.NODE_BINDINGS
         assert spec.edge_binding in cm.EDGE_BINDINGS
         assert spec.coding in cm.CODINGS
+
+
+def test_find_artifact_resolves_seed_suffixed_runs(tmp_path, monkeypatch):
+    """Regression: formal runs live in ``<tag>_seed<k>_e<epochs>.json`` files."""
+    from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_clean_mechanism_v1 as runner
+
+    stage_dirs = {key: tmp_path / key for key in ("a", "c", "d", "f")}
+    for path in stage_dirs.values():
+        path.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(runner, "STAGE_DIRS", stage_dirs)
+    monkeypatch.setattr(runner, "REUSED", {})
+    payload = {
+        "soup": {"soup_valid_mae": 0.5},
+        "arm_spec": cm.CLEAN_MECH_ARMS["C6"].as_dict(),
+    }
+    (stage_dirs["a"] / "C6_seed1_e320.json").write_text(json.dumps(payload), encoding="utf-8")
+    (stage_dirs["a"] / "C6_seed1_soup_state.pt").write_text("stub", encoding="utf-8")
+    entry = runner.find_artifact("C6", 1)
+    assert entry is not None
+    assert entry["source"] == "a"
+    assert runner.soup_mae(entry) == pytest.approx(0.5)
+    assert entry["soup_state"].name == "C6_seed1_soup_state.pt"
+    assert runner.find_artifact("C6", 2) is None
+    assert runner.find_artifact("C1", 1) is None
 
 
 @pytest.mark.skipif(not VALID_CACHE.exists(), reason="P1 valid cache not available locally")
