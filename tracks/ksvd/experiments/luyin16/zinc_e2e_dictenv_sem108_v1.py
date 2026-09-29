@@ -370,7 +370,7 @@ def stage_preflight() -> dict[str, Any]:
                 for key, value in layout.items()
             },
             "node_slots": [int(p2.N_SHELLS), int(p2.D_A)],
-            "edge_slots": [int(p2.SHELLPAIR_CLASSES), int(p2.D_E)],
+            "edge_slots": [int(p2.SHELLPAIR_CLASSES), int(model.config.d_e)],
             "env_dim": int(p2.ENV_DIM),
             "reader_input_dim": int(97 + p2.DISTANCE_BUCKETS * (2 * p2.PAIR_HIDDEN + 1) + 32 + p2.TOPOLOGY_OUT),
         },
