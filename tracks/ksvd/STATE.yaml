@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-clean-mechanism-v1-closed-keep-c6-paired-paired-sparse
+phase: e2e-dictenv-dictionary-coder-audit-v1-closed-no-training-intrinsic-concentration
 updated: 2026-09-29
 
 # ---------------------------------------------------------------------------
@@ -1113,6 +1113,80 @@ e2e_dictenv_a1:
       New preregistration on the observed sparse-code concentration (top-5 atoms
       ~60 % of activations; one atom active in nearly every row) with the matched
       dense control and >= 3 seeds.
+
+  # -------------------------------------------------------------------------
+  # e2e_dictenv_dictionary_coder_audit_v1 — 2026-09-29 (latest)
+  # -------------------------------------------------------------------------
+  # Zero-training CPU-only audit of the three reused C6 soup dictionaries and
+  # the DenseTied seed-0 control.  Question: why is sparse specificity not
+  # established?  Answer: the IHT-10 coder's support is already the IHT fixed
+  # point (IHT-10 vs IHT-30 Jaccard 0.972-0.980, exact support 0.889-0.916,
+  # code cosine 0.9999; IHT-30/100 only refine amplitudes, cutting
+  # reconstruction 27-40 %) and the trained dictionary is intrinsically
+  # concentrated: atoms 6/24/27 are active in 100 % of rows and 0.76-0.98
+  # aligned with the mean direction mu (6 and 24 0.88-0.99 collinear), atom 23
+  # is the PC1 atom (|cos PC1| 0.71-0.80, active 0.83-0.98), and the dominant
+  # coefficient is a patch-mass coordinate (Spearman 0.93-0.94 with
+  # patch_nodes) - not the 57.7 %-variance PC1.  The sparse tie code and the
+  # dense tied coordinate are near-linear re-parameterisations of each other
+  # (dense->IHT-10 R2 0.971-0.977, IHT-10->dense R2 0.9988-0.9989, CKA ~0.999;
+  # same on the DenseTied control's own D), so sparsification loses no
+  # linearly recoverable information and adds almost none.  OMP is NOT an
+  # oracle on a trained dictionary (OMP 0.0398/0.0418/0.0654 vs IHT-10
+  # 0.0124/0.0109/0.0119, top1/L1 0.56-0.67 vs 0.28-0.30; the prior
+  # 'exact OMP 1.45e-5' was on the K-SVD dictionary fit for OMP).  Cross-seed
+  # vocabulary stability is PARTIAL (mean matched |cos| 0.775, #>=0.90 11.7/32,
+  # median profile cos 0.853; universal atoms replicate, rare atoms partly).
+  # Frozen IHT-30 gate fired = False on 3/3 seeds (condition-1 factor
+  # 0.683/0.732/0.704 vs <=0.5; condition-2 support/concentration/geometry
+  # fails everywhere with |gain| <= 0.006 vs +0.05, N_eff <= +0.32 vs +1.0,
+  # top-5 <= 0.063 vs 0.10) -> NO NEW TRAINING WAS SCIENTIFICALLY JUSTIFIED;
+  # robust to the condition-1 threshold because condition 2 is flat.
+  e2e_dictenv_dictionary_coder_audit_v1:
+    status: closed_round_complete_no_training
+    round: e2e-dictenv-dictionary-coder-audit-v1
+    verdict: CODER_AMPLITUDE_ONLY_DICTIONARY_INTRINSICALLY_CONCENTRATED_SPARSE_DENSE_NEAR_EQUIVALENT
+    device: cpu_only
+    official_test_loaded: false
+    preregistration: tracks/ksvd/notes/e2e_dictenv_dictionary_coder_audit_v1_preregistration.md
+    preregistration_commit: b325770
+    preregistration_sha256_prefix: cc8856d96f6a
+    analysis: tracks/ksvd/notes/e2e_dictenv_dictionary_coder_audit_v1_analysis.md
+    claims:
+      - claim-e2e-dictenv-dict-coder-audit-20260929
+    decision: decision-e2e-dictenv-dict-coder-audit-20260929
+    results_dir: tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/
+    report: tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/REPORT.md
+    decision_report: tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/DECISION.md
+    summary: tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/summary.json
+    runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_dictionary_coder_audit_v1.py
+    module: tracks/ksvd/experiments/luyin16/e2e_dictenv_dictionary_coder_audit_v1.py
+    tests: tracks/ksvd/tests/test_e2e_dictenv_dictionary_coder_audit_v1.py
+    audited_dictionaries: C6_soup_seed0_1_2, DENSE-TIED_soup_seed0 (context)
+    stage_a: {iht10_fro: [0.012388, 0.010885, 0.011858], iht30_fro: [0.008463, 0.007968, 0.008352], iht100_fro: [0.007359, 0.007238, 0.007297], omp_fro: [0.039774, 0.041820, 0.065397], iht10_neff: [14.520, 14.801, 15.346], omp_neff: [19.960, 22.537, 21.337], iht10_iht30_support_jaccard: [0.9721, 0.9799, 0.9753]}
+    stage_b: {dominant_atom: 6, dominant_activation: 1.0, dominant_cos_mu: [0.965, 0.983, 0.941], dominant_cos_pc1: [0.342, 0.436, 0.322], universal_atoms: [6, 24, 27], pc1_atom: 23, pc1_var_ratio: 0.577}
+    stage_c: {median_spec_iht10: [0.564, 0.349, 0.619], usage_weighted_spec_iht10: [0.207, 0.191, 0.237], median_top_response_spec_iht10: [0.837, 0.953, 1.067], min_profile_cosine: 0.926}
+    stage_d: {verdict: PARTIAL_VOCABULARY, mean_matched_abs_cosine: 0.775, mean_n_above_090: 11.7, median_profile_cosine: 0.853}
+    stage_e: {dense_to_iht10_r2: [0.9708, 0.9763, 0.9770], iht10_to_dense_r2: [0.9988, 0.9989, 0.9989], dense_tied_own_d_dense_to_iht10_r2: 0.9720, dense_tied_own_d_iht10_to_dense_r2: 0.9978}
+    gate: {fired: false, supported_seeds: [], classification: [NONE, NONE, NONE], condition_1_factor: [0.683, 0.732, 0.704], condition_2_all_failed: true}
+    new_training_runs: 0
+    iht30_training_run: false
+    focused_tests: 20/20 pass
+    forbidden_without_new_preregistration:
+      - IHT-30/OMP/IHT-100 training, IHT-10 retraining, any new seed, or any K/s/lambda/step-count change
+      - re-tuning the frozen gate or relaxing its condition-1 factor post hoc
+      - using OMP as the ground-truth coder reference on a trained dictionary
+      - orthogonalising atoms 6/24/27 or adding coherence/usage penalties (recorded as next-round shape only)
+      - reading the official test for this audit
+    next_round_shape: >-
+      New preregistration on the dictionary STRUCTURE, not the coder:
+      (a) remove the DC-triplet redundancy (orthogonalise atoms 6/24/27, or a
+      coherence / usage-balance penalty on D) and test at matched capacity
+      whether reconstruction, concentration and the Sparse-vs-DenseTied margin
+      move; (b) test the sparse arm on a phi65 variant not dominated by one DC
+      direction.  Secondary: a 4th dictionary seed for the PARTIAL_VOCABULARY
+      boundary; drop the two identically-zero descriptors
+      (root_neighbour_shell1, root_walk1) in any descriptor revision.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24

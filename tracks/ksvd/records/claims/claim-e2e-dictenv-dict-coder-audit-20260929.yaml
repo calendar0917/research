@@ -1,0 +1,159 @@
+claim_id: claim-e2e-dictenv-dict-coder-audit-20260929
+created: '2026-09-29T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  In the closed ZINC dictionary-environment line (FINAL-CLEAN = C6 + paired node
+  binding + paired edge binding + sparse tied-IHT K=32/s=8/IHT-10 + full
+  relation; CPU-only; official test never loaded), a zero-training audit of the
+  three reused C6 soup dictionaries disentangles the previously unestablished
+  sparse specificity into two structural facts and excludes two coder
+  explanations.  (1) The frozen 10-step IHT support is already the IHT fixed
+  point: IHT-30/100 reduce valid Frobenius reconstruction 27-40 % (absolute
+  2.9e-3 to 3.9e-3) but change support (IHT-10 vs IHT-30 Jaccard 0.972-0.980,
+  exact support 0.889-0.916, code cosine 0.9999), usage concentration
+  (N_eff 14.5-15.3, top-5 4.4-4.8 of 8, max activation rate 1.000) and
+  coefficient geometry (top1/L1 0.28-0.30) only in the third decimal, so the
+  coder's residual defect is amplitude-only.  (2) The learned dictionary is
+  intrinsically concentrated: in every seed atoms 6, 24 and 27 are active in
+  100 % of valid rows and are 0.76-0.98 aligned with the dataset mean direction
+  mu (6 and 24 are 0.884-0.987 collinear), a fourth atom 23 is the PC1 atom
+  (|cos(., PC1)| 0.71-0.80, active 0.83-0.98), and the dominant atom-6
+  coefficient is a patch-mass coordinate (Spearman 0.93-0.94 with patch_nodes;
+  |cos(atom 6, PC1)| only 0.32-0.44 although PC1 carries 57.7 % of phi65
+  variance).  (3) The sparse tie code and the dense tied coordinate are
+  near-linear re-parameterisations of each other: train-only OLS on valid gives
+  dense->IHT-10 R2 0.9708/0.9763/0.9770 and IHT-10->dense R2
+  0.9988/0.9989/0.9989 (code cosine 0.9996-1.0000, CKA 0.9987-0.9999), and the
+  DenseTied control's own dictionary reproduces the pattern (0.9720/0.9978),
+  so sparsification loses no linearly recoverable information (H4 not
+  supported) while adding almost no independent content (H3 supported).
+  Frozen gate fired = False on all three seeds (condition 1 factor
+  0.683/0.732/0.704 vs the frozen <=0.5; condition 2 support / concentration /
+  geometry fails on every axis with |gain| <= 0.006 vs +0.05, N_eff
+  <= +0.32 vs +1.0, top-5 <= 0.063 vs 0.10, max-rate 0.000, top1/L1
+  <= 0.001 vs 0.05, code cosine <= 0.0007 vs 0.05), so NO NEW TRAINING WAS
+  SCIENTIFICALLY JUSTIFIED and the decision is robust to the condition-1
+  threshold because the substantive condition 2 fails everywhere.  (4) OMP is
+  not an oracle coder on a trained dictionary: with the same normalised Dbar,
+  OMP(s=8) reconstructs 3.2-5.5x worse than IHT-10 (0.0398/0.0418/0.0654 vs
+  0.0124/0.0109/0.0119) with much heavier top-1 mass (0.56-0.67 vs 0.28-0.30),
+  verified against an independent sklearn.orthogonal_mp call with
+  well-conditioned selected supports; the prior 'exact OMP is 700x better'
+  diagnostic was measured on the K-SVD dictionary that was fit for OMP.
+  (5) Cross-seed vocabulary stability is PARTIAL (mean matched |cos| 0.775,
+  #>=0.90 = 11.7 of 32, median profile cosine 0.853): universal/mid-frequency
+  atoms replicate exactly, rare atoms only partially.
+scope: >-
+  CPU-only local audit (3 processes x 4 threads), preregistration and
+  implementation commit b325770, preregistration sha256 cc8856d96f6a...,
+  treated as frozen before the first Stage-A process.  Reused checkpoints (no
+  retraining): C6 soup D of seeds 0/1/2 from
+  results/e2e_dictenv_h1_clarity_audit/matched_cpu/C6_e320_soup_state.pt and
+  results/e2e_dictenv_clean_mechanism_v1/stage_a_cpu_baseline/C6_seed{1,2}_soup_state.pt,
+  plus the DenseTied seed-0 control dictionary (context only).  Splits: official
+  ZINC train 10000 (231664 nodes) / valid 1000 (23083 nodes) from the frozen
+  phi65 cache; official test never loaded (official_test_loaded = false in every
+  payload).  Dictionary always column-normalised (the model operator); every
+  coder sees one identical Dbar per seed.  No architecture, loss, feature,
+  relation, split, K/s/lambda/step-count change; no GPU, no SSH.
+supporting_evidence:
+  - >-
+    coder_geometry/seed{0,1,2}/summary.json and coder_geometry/convergence.json:
+    IHT-10->IHT-30 support Jaccard 0.9721/0.9799/0.9753, exact support
+    0.9158/0.9096/0.8888, code cosine 0.9999, normalised L2
+    0.0117/0.0104/0.0114; IHT-30->IHT-100 Jaccard 0.9932/0.9743/0.9959.
+  - >-
+    dominant_atom/seed{0,1,2}.json: dominant atom 6 (IHT-10/IHT-30; OMP seeds
+    0/1), activation 1.000, |cos(atom, mu)| 0.965/0.983/0.941,
+    |cos(atom, PC1)| 0.342/0.436/0.322, PC1 ratio 0.577; universal atoms
+    {6,24,27} at activation 1.000 with cos(6,24) 0.987/0.932/0.884.
+  - >-
+    atom_specialization/seed{0,1,2}.json and atom_specialization.csv: median
+    Spec 0.564/0.349/0.619, usage-weighted 0.207/0.191/0.237, median
+    top-response Spec 0.837/0.953/1.067; every finite train->valid profile
+    cosine >= 0.926 (median 1.000); highest-Spec atoms are rare
+    (usage 0.001-0.06).
+  - >-
+    cross_seed_stability/summary.json and dictionary_stability.csv:
+    0<->1 mean 0.738 / #>=0.90 13; 0<->2 0.777 / 10; 1<->2 0.809 / 12;
+    universal atoms match to themselves (6 0.989/0.969/0.971, 24
+    0.975/0.982/0.961, 27 0.905/0.939/0.939, 23 0.681/0.787/0.949);
+    Spearman(|cos|, max usage) 0.443; verdict PARTIAL_VOCABULARY.
+  - >-
+    sparse_dense_recoverability/summary.json and recoverability.csv: dense->IHT-10
+    R2 0.9708/0.9763/0.9770 (per-dim median 0.975/0.978/0.982), IHT-10->dense
+    R2 0.9988/0.9989/0.9989, dense->IHT-30 0.970-0.975, IHT-30->dense
+    0.9993-0.9994, OMP directions 0.74-0.87 / 0.998-0.999; DenseTied own-D
+    0.9720/0.9978.
+  - >-
+    gate.json: fired false, supported_seeds [], classification ['NONE'];
+    condition-1 factors 0.683/0.732/0.704 and absolute drops
+    3.93e-3/2.92e-3/3.51e-3; condition-2 support gains
+    -0.0041/+0.0060/-0.0051, N_eff deltas +0.32/-0.01/-0.13, top-5 drops
+    0.063/0.000/0.000, max-rate drops 0.000, top1/L1 drops
+    <=0.001, code-cosine gains <=0.0007.
+  - >-
+    Independent verification (analysis note section 8): direct
+    sklearn.linear_model.orthogonal_mp(Dbar, X.T, n_nonzero_coefs=8) reproduces
+    the frozen wrapper on 500 valid rows; OMP Frobenius 0.0406 vs IHT-10 0.0157
+    on the subsample consistent with the full-split 0.0398 vs 0.0124; worst
+    OMP-row supports have cond 1.8-3.5.
+  - >-
+    Focused tests tests/test_e2e_dictenv_dictionary_coder_audit_v1.py 20/20 pass
+    (IHT-10 exact reproduction, top-s contract, same-D identity, Jaccard /
+    activation / N_eff / Gini / entropy toy checks, Hungarian matching under
+    permutation and sign, train-only PCA and recoverability, profile train
+    normalisation, CPU guard, official-test blocker, frozen gate thresholds,
+    IHTStepModel bit-identical to CleanMechModel at 10 steps).
+contradicting_evidence:
+  - >-
+    Condition 1 of the frozen gate shows a large absolute reconstruction
+    improvement from IHT-30 (2.9e-3 to 3.9e-3), so calling the coder fully
+    'converged' is true for the support / usage structure but not for the
+    amplitude; a downstream task could in principle exploit the coefficient
+    refinement even though this audit did not test it.
+  - >-
+    dense->IHT-10 R2 is 0.971-0.977, not 1.0; a 2-3 % nonlinear residual of the
+    sparse code is not explained by the dense coordinate and is left
+    unresolved.
+  - >-
+    cross-seed stability is only partial; the claim of a stable learned
+    vocabulary holds for the universal/mid-frequency core and not for the rare
+    atoms.
+limitations:
+  - 'Three seeds, one architecture family, one dataset, valid split only.'
+  - >-
+    OMP is an approximate greedy solver, never a proven globally optimal top-8
+    solver; no exact-optimum sparse code is claimed anywhere in this round.
+  - >-
+    The DC-triplet explanation is correlational (cosines, usage, Spearman);
+    no causal intervention on atoms 6/24/27 was authorised or run.
+  - >-
+    Two of the 32 structural descriptors (root_neighbour_shell1, root_walk1)
+    are identically zero in the frozen phi65 provenance; their entries are nan
+    and carry no information (recorded defect, no verdict affected).
+  - >-
+    The convergence table, the CSV exports and the per-atom markdown section
+    were added after the gate decision; they re-read stored payloads or
+    re-call frozen coder functions and change no threshold.
+implication: >-
+  Sparse specificity cannot be recovered by a longer IHT; the actionable object
+  is the dictionary's DC/scale redundancy and usage balance.  A justified next
+  preregistration would (a) remove the 6/24/27 DC-triplet redundancy
+  (orthogonalise the triplet, or add a coherence / usage-balance penalty on D)
+  and test at matched capacity whether reconstruction, concentration and the
+  Sparse-vs-DenseTied margin move, and (b) test the sparse arm on a phi65
+  variant not dominated by one DC direction.  OMP must not be used as the
+  ground-truth coder reference on a trained dictionary in future rounds.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_dictionary_coder_audit_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_dictionary_coder_audit_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/analysis_tables.md
+  - tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/gate.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_dictionary_coder_audit_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_dictionary_coder_audit_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_dictionary_coder_audit_v1.py

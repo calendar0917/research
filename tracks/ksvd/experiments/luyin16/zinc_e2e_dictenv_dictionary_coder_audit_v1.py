@@ -23,6 +23,7 @@ never loaded (``official_test_loaded = false`` in every payload).
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import os
 import subprocess
@@ -933,6 +934,91 @@ def _fmt(value: Any, digits: int = 4) -> str:
     return f"{number:.{digits}f}"
 
 
+def stage_convergence(threads: int = THREADS) -> dict[str, Any]:
+    """Descriptive IHT step-count convergence audit on the valid split.
+
+    Added after the formal gate result; it only re-runs the frozen coder
+    functions and never feeds a gate or threshold.
+    """
+    _ensure_dirs()
+    dca.cpu_only_guard(torch.device("cpu"))
+    torch.set_num_threads(int(threads))
+    phi = load_phi("valid")
+    rows: list[dict[str, Any]] = []
+    for seed in dca.SEEDS:
+        entry = load_dictionary_entry(("C6", seed))
+        Dbar = dca.effective_dictionary(entry["dictionary"])
+        Dbar_torch = dca.effective_dictionary_torch(entry["dictionary"])
+        codes = {
+            coder: dca.codes_for(coder, phi, Dbar, Dbar_torch=Dbar_torch)
+            for coder in ("iht10", "iht30", "iht100")
+        }
+        for left, right in (("iht10", "iht30"), ("iht30", "iht100"), ("iht10", "iht100")):
+            support = dca.support_agreement(codes[left], codes[right])
+            coefficient = dca.coefficient_agreement(codes[left], codes[right])
+            rows.append(
+                {
+                    "seed": seed,
+                    "coder_a": left,
+                    "coder_b": right,
+                    "support_jaccard_mean": support["jaccard"]["mean"],
+                    "support_exact_rate": support["exact_support_match_rate"],
+                    "code_cosine_mean": coefficient["cosine"]["mean"],
+                    "code_pearson_mean": coefficient["pearson"]["mean"],
+                    "code_normalized_l2_mean": coefficient["normalized_l2_difference"]["mean"],
+                    "recon_frobenius_a": next(
+                        r["recon_frobenius"] for r in _summary_rows_for(seed) if r["coder"] == left
+                    ),
+                    "recon_frobenius_b": next(
+                        r["recon_frobenius"] for r in _summary_rows_for(seed) if r["coder"] == right
+                    ),
+                }
+            )
+        print(f"[convergence] seed {seed} done", flush=True)
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "git_commit": _git_commit(),
+        "device": "cpu",
+        "official_test_loaded": False,
+        "note": "descriptive step-count convergence; does not feed the frozen gate",
+        "rows": rows,
+    }
+    _write_json(CODER_DIR / "convergence.json", payload)
+    _write_csv(
+        CODER_DIR / "convergence.csv",
+        rows,
+        [
+            "seed",
+            "coder_a",
+            "coder_b",
+            "support_jaccard_mean",
+            "support_exact_rate",
+            "code_cosine_mean",
+            "code_pearson_mean",
+            "code_normalized_l2_mean",
+            "recon_frobenius_a",
+            "recon_frobenius_b",
+        ],
+    )
+    return payload
+
+
+def _summary_rows_for(seed: int) -> list[dict[str, Any]]:
+    payload = _read_json(CODER_DIR / f"seed{seed}" / "summary.json")
+    return [
+        {"coder": coder, **payload["tables"]["valid"][coder]["reconstruction"]}
+        for coder in payload["tables"]["valid"]
+    ]
+
+
+def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]], fields: Sequence[str]) -> None:
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(fields))
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({field: row.get(field, "") for field in fields})
+
+
 def stage_report() -> dict[str, Any]:
     _ensure_dirs()
     geometry = {seed: _read_json(CODER_DIR / f"seed{seed}" / "summary.json") for seed in dca.SEEDS}
@@ -1132,6 +1218,56 @@ def stage_report() -> dict[str, Any]:
                 f"node indep delta {_fmt(audit_payload['probes']['node_assignment_correspondence']['delta_mae'])}; "
                 f"edge indep delta {_fmt(audit_payload['probes']['edge_assignment_correspondence']['delta_mae'])}."
             )
+    lines.append("")
+    lines.append("## 8. Per-atom profile (IHT-10, valid usage >= 0.50 plus the 3 highest-Spec atoms)")
+    lines.append("")
+    lines.append("| seed | atom | usage | |cos(mu)| | |cos(PC1)| | Spec | top-3 descriptors |")
+    lines.append("|---|---|---|---|---|---|---|")
+    for seed in dca.SEEDS:
+        usage = np.asarray(geometry[seed]["activation_frequency"]["valid"]["iht10"], dtype=np.float64)
+        entry = dominant[seed]["iht10"]
+        cos_mu = np.asarray(entry["atom_cosine_to_mean_direction"], dtype=np.float64)
+        cos_pc1 = np.asarray(entry["atom_cosine_to_pcs"][0], dtype=np.float64)
+        spec_rows = specialization[seed]["coders"]["iht10"]["rows"]
+        specs = np.nan_to_num(np.asarray([r["specialization_score"] for r in spec_rows], dtype=np.float64))
+        keep = sorted(
+            set(int(j) for j in np.where(usage >= 0.50)[0])
+            | set(int(j) for j in np.argsort(-specs)[:3])
+        )
+        for atom in keep:
+            row = spec_rows[atom]
+            lines.append(
+                "| {} | {} | {} | {} | {} | {} | {} |".format(
+                    seed,
+                    atom,
+                    _fmt(usage[atom], 3),
+                    _fmt(cos_mu[atom], 3),
+                    _fmt(cos_pc1[atom], 3),
+                    _fmt(row["specialization_score"], 3),
+                    ", ".join(row["top_structural_features"][:3]) or "-",
+                )
+            )
+    convergence_path = CODER_DIR / "convergence.json"
+    if convergence_path.exists():
+        convergence = _read_json(convergence_path)
+        lines.append("")
+        lines.append("## 9. IHT step-count convergence (valid, descriptive; no gate)")
+        lines.append("")
+        lines.append("| seed | pair | support Jaccard | exact support rate | code cosine | normalized L2 |")
+        lines.append("|---|---|---|---|---|---|")
+        for row in convergence["rows"]:
+            lines.append(
+                "| {} | {} vs {} | {} | {} | {} | {} |".format(
+                    row["seed"],
+                    row["coder_a"],
+                    row["coder_b"],
+                    _fmt(row["support_jaccard_mean"], 4),
+                    _fmt(row["support_exact_rate"], 4),
+                    _fmt(row["code_cosine_mean"], 4),
+                    _fmt(row["code_normalized_l2_mean"], 4),
+                )
+            )
+    _export_csv_tables(geometry, specialization)
     (RESULTS_DIR / "analysis_tables.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     summary = {
         "protocol_version": PROTOCOL_VERSION,
@@ -1187,9 +1323,96 @@ def launch_stage_a(threads: int = THREADS, concurrency: int = CONCURRENCY, force
                     raise RuntimeError(f"stage-a seed {seed} failed with exit code {process.returncode}")
 
 
+def _export_csv_tables(
+    geometry: Mapping[int, Mapping[str, Any]],
+    specialization: Mapping[int, Mapping[str, Any]],
+) -> None:
+    """Write the required machine-readable diagnostic tables (added post-hoc)."""
+    coder_fields = [
+        "seed",
+        "split",
+        "coder",
+        "recon_frobenius",
+        "recon_mean_row_squared",
+        "active_atoms",
+        "effective_atoms",
+        "top1_share",
+        "top5_share",
+        "max_activation_rate",
+        "usage_entropy",
+        "gini",
+        "support_jaccard_to_omp",
+        "exact_support_match_rate_to_omp",
+        "code_cosine_to_omp",
+        "code_normalized_l2_to_omp",
+    ]
+    rows: list[dict[str, Any]] = []
+    for seed in dca.SEEDS:
+        for split in ("train", "valid"):
+            for coder in dca.CODERS:
+                table = geometry[seed]["tables"][split][coder]
+                support = table["support_vs_omp"]
+                coefficient = table["coefficient_vs_omp"]
+                rows.append(
+                    {
+                        "seed": seed,
+                        "split": split,
+                        "coder": coder,
+                        "recon_frobenius": table["reconstruction"]["recon_frobenius"],
+                        "recon_mean_row_squared": table["reconstruction"]["recon_mean_row_squared"],
+                        "active_atoms": table["concentration"]["active_atoms"],
+                        "effective_atoms": table["concentration"]["effective_atoms"],
+                        "top1_share": table["concentration"]["top1_share"],
+                        "top5_share": table["concentration"]["top5_share"],
+                        "max_activation_rate": table["concentration"]["max_activation_rate"],
+                        "usage_entropy": table["concentration"]["usage_entropy"],
+                        "gini": table["concentration"]["gini"],
+                        "support_jaccard_to_omp": None if support is None else support["jaccard"]["mean"],
+                        "exact_support_match_rate_to_omp": None if support is None else support["exact_support_match_rate"],
+                        "code_cosine_to_omp": None if coefficient is None else coefficient["cosine"]["mean"],
+                        "code_normalized_l2_to_omp": None if coefficient is None else coefficient["normalized_l2_difference"]["mean"],
+                    }
+                )
+    _write_csv(CODER_DIR / "coder_geometry.csv", rows, coder_fields)
+    spec_rows: list[dict[str, Any]] = []
+    for seed in dca.SEEDS:
+        for coder in ("iht10", "iht30", "omp"):
+            payload = specialization[seed]["coders"][coder]
+            for row in payload["rows"]:
+                spec_rows.append(
+                    {
+                        "seed": seed,
+                        "coder": coder,
+                        "atom": row["atom"],
+                        "activation_rate_train": row["activation_rate_train"],
+                        "activation_rate_valid": row["activation_rate_valid"],
+                        "specialization_score": row["specialization_score"],
+                        "specialization_score_top_response": row["top_response_specialization_score"],
+                        "train_valid_profile_cosine": row["train_valid_profile_cosine"],
+                        "top_structural_features": ";".join(row["top_structural_features"]),
+                    }
+                )
+    _write_csv(
+        SPECIALIZATION_DIR / "atom_specialization.csv",
+        spec_rows,
+        [
+            "seed",
+            "coder",
+            "atom",
+            "activation_rate_train",
+            "activation_rate_valid",
+            "specialization_score",
+            "specialization_score_top_response",
+            "train_valid_profile_cosine",
+            "top_structural_features",
+        ],
+    )
+
+
 def chain(threads: int = THREADS, concurrency: int = CONCURRENCY) -> None:
     stage_preflight()
     launch_stage_a(threads=threads, concurrency=concurrency)
+    stage_convergence(threads=threads)
     stage_d()
     stage_e()
     gate = stage_gate()
@@ -1213,6 +1436,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "stage-d",
             "stage-e",
             "gate",
+            "convergence",
             "stage-g-sanity",
             "stage-g-train",
             "stage-g-audit",
@@ -1235,6 +1459,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         stage_e()
     elif args.stage == "gate":
         stage_gate()
+    elif args.stage == "convergence":
+        stage_convergence(threads=int(args.threads))
     elif args.stage == "stage-g-sanity":
         stage_g_sanity(threads=int(args.threads), force=bool(args.force))
     elif args.stage == "stage-g-train":

@@ -1,0 +1,159 @@
+decision_id: decision-e2e-dictenv-dict-coder-audit-20260929
+created: '2026-09-29T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The preceding clean-mechanism round left sparse dictionary specificity
+  unestablished (matched DenseTied 0.125563 vs sparse 0.128499, G_dict
+  -0.002936) with a strongly concentrated code (top-5 atoms carry 4.4-5.0 of 8
+  activations; one atom active in nearly every row), and explicitly recorded a
+  follow-up shape: a new preregistration on the observed concentration.  Before
+  spending any training, this round asked a zero-training question: why is
+  sparse specificity not established - is it (1) IHT-10 under-convergence,
+  (2) an intrinsically concentrated dictionary, (3) sparse/dense redundancy, or
+  (4) sparsification losing downstream information?
+protocol: >-
+  Local CPU only (CUDA_VISIBLE_DEVICES="", no GPU/SSH), preregistration and
+  implementation frozen at commit b325770 before the first Stage-A process.
+  Reused C6 soup dictionaries (seeds 0/1/2) and the DenseTied seed-0 control
+  dictionary; official ZINC train 10000 / valid 1000 phi65 cache; every coder
+  runs on one identical column-normalised Dbar per seed.  Stage A: same-D
+  coder audit with IHT-10 / IHT-30 / IHT-100 / exact OMP(s=8) and DenseTied,
+  with reconstruction, usage concentration, coefficient geometry, support /
+  coefficient agreement vs OMP.  Stage B: dominant atom, mean direction, PCA.
+  Stage C: train-only SMD atom profiles with frozen train normalisation,
+  active and top-response populations.  Stage D: Hungarian cross-seed
+  dictionary matching.  Stage E: train-only OLS recoverability between sparse
+  and dense representations.  Stage F: the frozen IHT-30 training gate.  No
+  predictor trained; official test never loaded.
+results:
+  implementation_commit: b325770
+  preregistration_sha256_prefix: cc8856d96f6a
+  device: cpu
+  official_test_loaded: false
+  focused_tests: 20/20 pass
+  stage_a_valid_iht10_recon_frobenius: [0.012388, 0.010885, 0.011858]
+  stage_a_valid_iht30_recon_frobenius: [0.008463, 0.007968, 0.008352]
+  stage_a_valid_iht100_recon_frobenius: [0.007359, 0.007238, 0.007297]
+  stage_a_valid_omp_recon_frobenius: [0.039774, 0.041820, 0.065397]
+  stage_a_valid_iht10_neff: [14.520, 14.801, 15.346]
+  stage_a_valid_omp_neff: [19.960, 22.537, 21.337]
+  stage_a_valid_iht10_top5_share: [4.796, 4.559, 4.409]
+  stage_a_valid_iht10_max_activation_rate: [1.0, 1.0, 1.0]
+  stage_a_valid_omp_top1_over_l1: [0.607, 0.671, 0.561]
+  stage_a_valid_iht10_top1_over_l1: [0.280, 0.301, 0.290]
+  iht10_iht30_support_jaccard_valid: [0.9721, 0.9799, 0.9753]
+  iht10_iht30_exact_support_rate: [0.9158, 0.9096, 0.8888]
+  iht10_iht30_code_cosine: [0.9999, 0.9999, 0.9999]
+  dominant_atom_iht10: [6, 6, 6]
+  dominant_atom_activation_rate: [1.0, 1.0, 1.0]
+  dominant_atom_cosine_to_mean_direction: [0.965, 0.983, 0.941]
+  dominant_atom_cosine_to_pc1: [0.342, 0.436, 0.322]
+  universal_atoms_activation_100pct: [6, 24, 27]
+  pc1_atom: 23
+  pc1_explained_variance_ratio: 0.577
+  median_specialization_iht10: [0.564, 0.349, 0.619]
+  usage_weighted_specialization_iht10: [0.207, 0.191, 0.237]
+  median_top_response_specialization_iht10: [0.837, 0.953, 1.067]
+  min_train_valid_profile_cosine: 0.926
+  cross_seed_verdict: PARTIAL_VOCABULARY
+  cross_seed_mean_matched_abs_cosine: 0.7745
+  cross_seed_mean_n_above_090: 11.667
+  cross_seed_median_profile_cosine: 0.8530
+  dense_to_iht10_r2: [0.9708, 0.9763, 0.9770]
+  iht10_to_dense_r2: [0.9988, 0.9989, 0.9989]
+  dense_to_iht10_cka: [0.9987, 0.9991, 0.9988]
+  dense_tied_own_d_dense_to_iht10_r2: 0.9720
+  dense_tied_own_d_iht10_to_dense_r2: 0.9978
+  gate_fired: false
+  gate_supported_seeds: []
+  gate_classification: [NONE, NONE, NONE]
+  gate_condition_1_recon_factor: [0.683, 0.732, 0.704]
+  gate_condition_1_absolute_drop: [0.00393, 0.00292, 0.00351]
+  gate_condition_2_support_gain: [-0.0041, 0.0060, -0.0051]
+  gate_condition_2_all_subcriteria_failed: true
+  new_training_runs: 0
+  iht30_training_dir_exists: false
+decision: >-
+  NO NEW TRAINING WAS SCIENTIFICALLY JUSTIFIED.  The frozen IHT-30 gate did not
+  fire (fired = False, supported seeds [], classification ['NONE']) and the
+  decision is robust to the condition-1 reconstruction factor because the
+  substantive condition 2 fails on every axis on all three seeds.  Keep
+  FINAL-CLEAN unchanged (C6 + paired node binding + paired edge binding +
+  sparse tied-IHT K=32/s=8/IHT-10 + full relation).  Do not train IHT-30, do
+  not retrain IHT-10, do not re-tune the gate, do not start any coder or
+  dictionary intervention.  Record the localisation of the specificity
+  problem: (a) intrinsic DC/scale redundancy of the learned dictionary
+  (atoms 6/24/27 in 100 % of rows, aligned with the mean direction, 6 and 24
+  0.884-0.987 collinear; atom 23 the PC1 atom) and (b) near-linear sparse/dense
+  equivalence (R2 >= 0.97 both directions).  OMP is not a ground-truth coder
+  reference on a trained dictionary.
+because: >-
+  (1) The IHT-10 support is the IHT fixed point (IHT-10 vs IHT-30 Jaccard
+  0.972-0.980, exact support 0.889-0.916) and usage / concentration do not move
+  with step count (N_eff deltas +0.32/-0.01/-0.13, top-5 drop <= 0.063, max
+  activation rate 1.000 everywhere), so the extra iterations cannot produce the
+  structural change a coder-fix hypothesis would require.  (2) The
+  concentration is present in every seed and already in OMP (atom 6 active in
+  97.6/97.7 % of rows on seeds 0/1), and the dominant coefficient is a
+  patch-mass coordinate (Spearman 0.93-0.94 with patch_nodes) rather than the
+  variance direction (|cos with PC1| 0.32-0.44 at 57.7 % PC1 variance), so it
+  is a dictionary-geometry fact.  (3) Bidirectional OLS recoverability
+  (dense->sparse R2 0.971-0.977, sparse->dense R2 0.9988-0.9989, CKA ~0.999)
+  shows the two coordinates span nearly the same linearly recoverable subspace;
+  sparsification loses essentially nothing (H4 excluded) and adds almost no
+  independent content (H3 supported), which is why the matched dense control
+  was not worse in the preceding round.  (4) Condition 2 of the gate is the
+  substantive test of 'would a predictor see a difference', and it fails with
+  margins far outside noise on 0/3 seeds for every sub-criterion, so permitting
+  IHT-30 training would contradict the frozen protocol without scientific
+  justification.  (5) The OMP anomaly (OMP 3.2-5.5x worse than IHT-10 on the
+  trained dictionary, independently reproduced with sklearn and with
+  well-conditioned supports) shows coder fidelity is a dictionary-coder pair
+  property; reading OMP support agreement as distance to truth is invalid
+  here, which also explains why the prior K-SVD-dictionary diagnostic looked so
+  different.
+alternatives_rejected:
+  - >-
+    Running the single IHT-30 seed-0 training anyway because the absolute
+    reconstruction drop (2.9e-3 to 3.9e-3) is material.  Rejected: the
+    preregistered gate did not fire; condition 2 (support / concentration /
+    geometry) is exactly the observable that would justify training, and it is
+    flat on all three seeds.
+  - >-
+    Lowering the condition-1 factor (<=0.5) after seeing 0.68-0.73.  Rejected:
+    post-hoc threshold changes are forbidden, and the outcome is invariant to
+    any reasonable relaxation because condition 2 fails everywhere.
+  - >-
+    Treating OMP as the ground-truth coder and declaring IHT-10 support-bad.
+    Rejected: OMP is a worse coder on this dictionary (worse l2 and heavier
+    coefficients), so its code cannot define the target support; the
+    'exact OMP 1.45e-5' figure belongs to the K-SVD dictionary that was fit for
+    OMP.
+  - >-
+    Claiming sparse specificity from retain-all-information (sparse->dense R2
+    0.9988).  Rejected: near-equivalence of the two representations explains the
+    specificity failure; information retention is not specificity.
+  - >-
+    Acting on the audit by orthogonalising atoms 6/24/27, adding a coherence /
+    usage penalty, changing K/s/lambda/IHT steps, or adding seeds.  Rejected:
+    this round is an audit and authorises no intervention; the next round shape
+    is recorded only.
+revisit_if: >-
+  A new preregistration targets the dictionary structure instead of the coder:
+  (a) remove the DC-triplet redundancy (orthogonalise atoms 6/24/27 or add a
+  coherence / usage-balance penalty on D) and test at matched capacity whether
+  reconstruction, usage concentration and the Sparse-vs-DenseTied margin move;
+  (b) test the sparse arm on a phi65 variant not dominated by one DC direction.
+  Secondary: a fourth dictionary seed would tighten the PARTIAL_VOCABULARY
+  boundary; dropping the two identically-zero descriptors
+  (root_neighbour_shell1, root_walk1) is a mechanical cleanup for any descriptor
+  revision.  None of these is authorised or started by this audit.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_dictionary_coder_audit_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_dictionary_coder_audit_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/analysis_tables.md
+  - tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/gate.json
+  - tracks/ksvd/results/e2e_dictenv_dictionary_coder_audit_v1/summary.json
