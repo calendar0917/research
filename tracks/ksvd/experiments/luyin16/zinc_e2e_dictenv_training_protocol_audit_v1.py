@@ -454,7 +454,7 @@ def _run_continuation(
         rng_state=checkpoint["rng_state"],
         loader_state=checkpoint["train_loader_state"],
         soup_seed=checkpoint["keeper"],
-        best_seed=tuple(int(value) for value in checkpoint["best"]),
+        best_seed=(int(checkpoint["best"][0]), float(checkpoint["best"][1])),
         track_tail=True,
         log=True,
     )
@@ -533,6 +533,54 @@ def _batch_order_check(control: Mapping[str, Any], low_lr: Mapping[str, Any]) ->
     }
 
 
+def _merged_best_epoch(
+    prefix_curve: Sequence[Mapping[str, Any]], continuation_curve: Sequence[Mapping[str, Any]]
+) -> tuple[int, float]:
+    """Frozen full-run best: min valid MAE over epochs 1-320, ties by earlier epoch."""
+    rows = list(prefix_curve) + list(continuation_curve)
+    best = min(rows, key=lambda row: (float(row["valid_mae"]), int(row["epoch"])))
+    return int(best["epoch"]), float(best["valid_mae"])
+
+
+def _repair_continuation_best(
+    prefix: Mapping[str, Any], payload: dict[str, Any], out_dir: Path, tag: str
+) -> dict[str, Any]:
+    """Harness fix: recompute the full-run best seed from the stored curves.
+
+    The first continuation pass received an integer-cast prefix best-MAE seed
+    (``best=0.000000`` in the log).  Training and every other recorded metric
+    were untouched; this function recomputes the two derived fields from the
+    stored per-epoch journals and records the fix in the artifact.
+    """
+    epoch, mae = _merged_best_epoch(prefix["curve"], payload["curve"])
+    needs_fix = (
+        abs(float(payload.get("best_valid_mae", float("inf"))) - mae) > 1e-15
+        or int(payload.get("best_epoch", -1)) != epoch
+    )
+    if not needs_fix:
+        return payload
+    payload["best_valid_mae"] = mae
+    payload["best_epoch"] = epoch
+    payload["harness_fix"] = {
+        "reason": (
+            "runner-side integer cast on the prefix best-MAE seed (bookkeeping only; "
+            "training math, loss, optimizer states and batch order untouched)"
+        ),
+        "recomputed_from": "prefix curve + continuation curve, min valid MAE, ties by earlier epoch",
+        "best_valid_mae": float(mae),
+        "best_epoch": int(epoch),
+    }
+    _write_json(out_dir / "result.json", payload)
+    checkpoint_path = out_dir / f"{tag}_resume_checkpoint.pt"
+    if checkpoint_path.exists():
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+        if [int(checkpoint["best"][0]), float(checkpoint["best"][1])] != [epoch, mae]:
+            checkpoint["best"] = [int(epoch), float(mae)]
+            torch.save(checkpoint, checkpoint_path)
+    print(f"[repair] {tag}: best_valid_mae={mae:.6f} @ {epoch} (harness fix)", flush=True)
+    return payload
+
+
 def stage_compare(threads: int = THREADS, force: bool = False) -> dict[str, Any]:
     _ensure_dirs()
     tpa.cpu_only_guard(torch.device("cpu"))
@@ -543,6 +591,8 @@ def stage_compare(threads: int = THREADS, force: bool = False) -> dict[str, Any]
     prefix = _read_json(PREFIX_DIR / "prefix_summary.json")
     control = _read_json(CONTROL_DIR / "result.json")
     low_lr = _read_json(LOW_LR_DIR / "result.json")
+    control = _repair_continuation_best(prefix, control, CONTROL_DIR, CONTROL_TAG)
+    low_lr = _repair_continuation_best(prefix, low_lr, LOW_LR_DIR, LOW_LR_TAG)
     fork = _read_json(FORK_DIR / "fork_integrity.json")
     if not fork["passed"]:
         raise RuntimeError("fork integrity failed; comparison is invalid")

@@ -22,6 +22,7 @@ from tracks.ksvd.experiments.luyin16 import e2e_dictenv_h1_clarity_audit as audi
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_training_protocol_audit_v1 as tpa
 from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
 from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run
+from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_training_protocol_audit_v1 as runner
 from tracks.ksvd.experiments.luyin16.zinc_compact_v4_smallhead_e2e import REPO_ROOT
 
 CACHE_DIR = REPO_ROOT / "tracks/ksvd/results/e2e_dictenv_p1/cache"
@@ -95,7 +96,7 @@ def _run_small(prefix_epochs: int = 2, tail_epochs: int = 2, tmp_path: Path | No
         rng_state=checkpoint["rng_state"],
         loader_state=checkpoint["train_loader_state"],
         soup_seed=checkpoint["keeper"],
-        best_seed=tuple(int(value) for value in checkpoint["best"]),
+        best_seed=(int(checkpoint["best"][0]), float(checkpoint["best"][1])),
         track_tail=True,
         log=False,
     )
@@ -115,7 +116,7 @@ def _run_small(prefix_epochs: int = 2, tail_epochs: int = 2, tmp_path: Path | No
         rng_state=checkpoint["rng_state"],
         loader_state=checkpoint["train_loader_state"],
         soup_seed=checkpoint["keeper"],
-        best_seed=tuple(int(value) for value in checkpoint["best"]),
+        best_seed=(int(checkpoint["best"][0]), float(checkpoint["best"][1])),
         track_tail=True,
         log=False,
     )
@@ -510,3 +511,33 @@ def test_optimizer_state_comparison_detects_only_lr() -> None:
     strict = tpa.optimizer_state_comparison(left, right)
     assert strict["differing_param_group_fields"] == ["lr"]
     assert tpa.optimizer_state_sha256(left) != tpa.optimizer_state_sha256(right)
+
+
+# ---------------------------------------------------------------------------
+# runner-side merged-best rule and harness repair
+# ---------------------------------------------------------------------------
+
+
+def test_merged_best_epoch_and_harness_repair(tmp_path: Path) -> None:
+    prefix = {"curve": [{"epoch": 1, "valid_mae": 0.20}, {"epoch": 2, "valid_mae": 0.15}]}
+    payload = {
+        "protocol_version": runner.PROTOCOL_VERSION,
+        "official_test_loaded": False,
+        "curve": [{"epoch": 3, "valid_mae": 0.14}, {"epoch": 4, "valid_mae": 0.16}],
+        "best_valid_mae": 0.0,
+        "best_epoch": 2,
+    }
+    assert runner._merged_best_epoch(prefix["curve"], payload["curve"]) == (3, 0.14)
+    _write = tmp_path / "result.json"
+    import json
+
+    _write.write_text(json.dumps(payload), encoding="utf-8")
+    repaired = runner._repair_continuation_best(prefix, payload, tmp_path, "UT-ARM")
+    assert repaired["best_valid_mae"] == 0.14
+    assert repaired["best_epoch"] == 3
+    assert repaired["harness_fix"]["best_epoch"] == 3
+    stored = json.loads(_write.read_text(encoding="utf-8"))
+    assert stored["best_valid_mae"] == 0.14
+    assert stored["best_epoch"] == 3
+    again = runner._repair_continuation_best(prefix, stored, tmp_path, "UT-ARM")
+    assert "harness_fix" in again
