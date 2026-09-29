@@ -1070,7 +1070,7 @@ def _evaluate(model: sem.SEM108Model, valid_data: Sequence[Any], mask: Any) -> f
 
 def stage_interventions(force: bool = False) -> dict[str, Any]:
     _ensure_dirs()
-    out = MECHANISM_DIR / "dictionary_health.json"
+    out = MECHANISM_DIR / "sem_root_shuffle.json"
     if out.exists() and not force:
         print("[interventions] cache hit", flush=True)
         return {"cached": True}
