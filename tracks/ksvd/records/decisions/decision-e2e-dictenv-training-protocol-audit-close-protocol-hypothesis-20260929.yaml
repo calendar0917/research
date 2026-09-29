@@ -1,0 +1,152 @@
+decision_id: decision-e2e-dictenv-training-protocol-audit-close-protocol-hypothesis-20260929
+created: '2026-09-29T00:00:00Z'
+kind: decision
+status: accepted
+study_id: zinc-context-gap
+round: e2e-dictenv-training-protocol-audit-v1
+why_this_experiment: >-
+  The CSSD-q1 line plateaued at 0.128-0.130 Top-5 soup across several rounds,
+  and the capacity-localization rounds left one standing explanation for the
+  remaining gap: the frozen training protocol itself (fixed Adam lr=1e-3 for
+  the full 320 epochs).  All prior evidence was cross-run (historical CSSD
+  soup 0.130028, v2 low-rate warm soup 0.128723, FINAL-CLEAN 0.128499) and
+  therefore could not separate the LR schedule from run-to-run/basin
+  variation.  v2 explicitly measured that CPU soup-level reproducibility floor
+  at ~6e-4, which made a cheap, exact paired audit finally decisive: one
+  shared trajectory to epoch 280, clone everything, change only the learning
+  rate for the last 40 epochs.
+protocol: >-
+  Preregistered (sha256
+  0fdcef2099cc4fb6141642685e90d1160e41af3f4ff7ab37ca772564364713a2,
+  frozen with module/runner/tests at commit ea54826; harness bookkeeping
+  repair ced2570) and executed CPU only, 4 threads, no SSH/GPU.  Exactly one
+  architecture (CSSD-q1, 97727 params, mismatch stops the round), one seed
+  (0), one dictionary (sdb32, sha256 b0c5da98...), one data cache (frozen
+  phi65, official train 10000 / valid 1000, official test never loaded).
+  Shared prefix: epochs 1-280 at Adam lr=1e-3, wd 1e-5, batch 128, clip 5.0,
+  the CSSD objective.  Fork at epoch 280 after a frozen integrity check:
+  deep-copy model, optimizer (no reset; only param_group lr edited), global
+  torch RNG and train-loader generator state; prediction max |delta| must be
+  exactly 0.0 in eval and train mode.  Continuations: epochs 281-320 with
+  CONTROL lr=1e-3 and LOW-LR lr=1e-4; per-epoch batch_order_hash recorded on
+  both arms and required equal.  Primary metric: Top-5-by-valid soup over
+  epochs 1-320, M_control - M_low_lr = G_schedule against the frozen
+  thresholds (<0.002 Case A, 0.002-0.003 directional, >=0.003 Case B,
+  >=0.005 or M_low_lr <= 0.125 Case C, M_low_lr <= 0.120 Case D).  Forbidden
+  and not run: LR sweep, scheduler, second switch epoch, horizon extension,
+  seed 1/2, any architecture/dictionary/fusion/relation/readout change,
+  official test access.  docs/luyin/luyin19.txt untouched.
+results: >-
+  Prefix PREFIX_HEALTHY: epoch-280 valid 0.139555 (historical 0.141159;
+  tolerance +0.02), 9/9 gate checks, params 97727, prefix soup (1-280)
+  0.129726 (members [239, 258, 265, 277, 280]); historical drift mean |delta|
+  0.007038 / median 0.003433 / p90 0.020866 / max 0.055604 with epoch 40 exact
+  (delta 0.0).  Fork FORK_INTEGRITY_OK: prediction max |delta| 0.0 eval and
+  0.0 train-mode, model/optimizer moments/step identical, only lr differs,
+  40/40 batch-order hashes equal.  Primary: M_control 0.127428 (members
+  [258, 277, 297, 311, 313], 3 after 280; tail soup 0.128055; best 0.133430 @
+  311) vs M_low_lr 0.126818 (members [294, 300, 309, 310, 313], 5 after 280;
+  tail soup 0.126818; best 0.127857 @ 309); G_schedule +0.000610 = 1.016x the
+  ~6e-4 floor -> Case A TRAINING_PROTOCOL_NOT_PRIMARY_BOTTLENECK.  Secondary:
+  epoch-320 valid 0.148608 vs 0.128793, last-10 0.146977 vs 0.128832,
+  train/valid readings overfitting_or_noise vs
+  joint_improvement_late_optimization, update norm ~9x smaller at low LR,
+  dictionary healthy on both arms (32/32 active, N_eff 20.28, movement vs
+  fork 1.079 vs 0.281), reconstruction term preserved on both.
+  horizon_may_still_be_binding false.  Budget 360 epoch-equivalents, wall
+  clock 2601.95 s, peak RSS 2348 MB, focused tests 18/18.
+decision: >-
+  1. Frozen Case A applies: close the training-protocol-as-primary-bottleneck
+  hypothesis for the CSSD-q1 0.128-0.130 plateau.  2. The canonical protocol
+  for subsequent architecture comparisons stays 320@1e-3; the Case B/C
+  promotion rule for 280@1e-3 + 40@1e-4 did not fire (G_schedule < 0.003),
+  so the low-LR tail is NOT adopted as the canonical training protocol.
+  3. The low-LR tail is recorded as a validated late-run stabiliser (it holds
+  valid MAE near the run's best and preserves the dictionary) but not as a
+  source of better attainable models under the frozen soup metric.  4. No
+  horizon extension is authorised: low-LR best epoch 309 and late slope
+  +7.66e-05/epoch give no evidence 320 epochs is binding for this protocol.
+  5. The next round is the architecture study frozen in the preregistration:
+  a Dictionary-Conditioned Semantic Operator (e_v = sum_k alpha_vk f_k(q_v),
+  shared dictionary roles driving a transferable structure->semantics map),
+  still with no message passing and no environment update, under a new
+  preregistration.  6. Forbidden without a new preregistration: LR sweep,
+  scheduler, second switch epoch, seed 1/2 of this round, re-running the
+  continuations, changing the fork epoch, or reading the official test for
+  this round.
+why: >-
+  The primary comparison is a matched single-variable experiment with an
+  exact fork, so it is the strongest evidence the line can produce at CPU
+  cost.  The effect is 1.0x the measured noise floor and an order of magnitude
+  below the 0.003 material threshold, while the cross-run drift of the same
+  protocol is 10x larger - therefore a material training-protocol effect is
+  excluded, and any residual sub-floor effect is unresolvable and not worth
+  more compute.  The large secondary stability gap is real but is precisely
+  what the frozen best-of-run metric is designed to be robust against: the
+  architecture's attainable quality is unchanged, only the fraction of late
+  epochs that are near-best changes.  Promoting the low-LR tail to canonical
+  on that basis would be post-hoc metric substitution.
+alternatives_rejected:
+  - >-
+    An LR sweep (3e-4 / 5e-4 / 5e-5), a scheduler, or a second switch epoch:
+    rejected by the frozen contract; a 4e-4-scale effect is not a research
+    direction, and the round is powered only for >= 0.003.
+  - >-
+    Extending the horizon beyond 320 epochs for the low-LR arm: rejected;
+    best epoch 309 with a positive late slope gives no support, and
+    "LR schedule vs more compute" must stay unconfounded.
+  - >-
+    Buying seed 1/2 of the whole schedule: rejected by the frozen rule (seed
+    1 only if a material effect appeared) and unnecessary because the paired
+    fork already removes seed/architecture variance for this question.
+  - >-
+    Re-running the two continuations after the harness repair: rejected; the
+    repair was bookkeeping-only (best_epoch / best_valid_mae recomputed from
+    the stored journals), both trajectories and all training math were
+    untouched, and the decision does not depend on the repaired fields
+    (G_schedule uses the soups).
+  - >-
+    Adopting 280@1e-3 + 40@1e-4 as canonical despite Case A because of the
+    strong secondary stability result: rejected; the preregistration froze
+    both the metric and the promotion threshold, and the control soup already
+    matches the low-LR soup within the floor.
+  - >-
+    Attributing the v2 warm-adaptation improvement (0.128723) or the control
+    result here (0.127428) to the low learning rate: rejected; the shared
+    prefix alone soups to 0.129726 before the fork, and the fresh-vs-historical
+    drift of the same protocol is mean 0.007 - larger than every LR-related
+    difference in play.
+revisit_if:
+  - >-
+    A future substrate or architecture shows late-run valid divergence or
+    dictionary churn at the fixed protocol, in which case the validated
+    low-lr=1e-4 tail is a cheap stabiliser worth adopting under a new
+    preregistration.
+  - >-
+    The CPU soup-level reproducibility floor is re-measured and turns out
+    materially smaller than ~6e-4, which would make the +6.1e-4 paired
+    difference worth reinterpreting.
+  - >-
+    A new architecture round produces a best-so-far soup at or below 0.125 on
+    this base, which would reopen the question of whether late-run
+    under-optimization matters once the representation changes.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_training_protocol_audit_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_training_protocol_audit_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/analysis_tables.md
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/comparison.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/preflight.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/preregistration_snapshot.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/shared_prefix/prefix_summary.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/shared_prefix/prefix_gate.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/fork/fork_integrity.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/control_lr1e3/result.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/low_lr1e4/result.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_training_protocol_audit_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_training_protocol_audit_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_training_protocol_audit_v1.py
+related_claims:
+  - claim-e2e-dictenv-training-protocol-audit-low-lr-tail-not-primary-20260929
+  - claim-e2e-dictenv-capacity-localization-v2-local-widening-not-supported-20260929

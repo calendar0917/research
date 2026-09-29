@@ -1,0 +1,195 @@
+claim_id: claim-e2e-dictenv-training-protocol-audit-low-lr-tail-not-primary-20260929
+created: '2026-09-29T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the frozen ZINC dictionary-environment base CSSD-q1 (C6 clean mask + q1
+  common structural coordinate + q1-orthogonal sparse residual dictionary
+  K=32/s=8/IHT-10 + paired node/edge structure-semantic binding + full clean
+  relation + first/second-moment readout; exactly 97727 params; CPU only;
+  official test never loaded), the fixed training protocol (Adam lr=1e-3,
+  weight decay 1e-5, batch 128, clip 5.0, 320 epochs) is NOT the primary
+  bottleneck of the 0.128-0.130 Top-5 soup plateau.  Design: one shared
+  trajectory for epochs 1-280 at lr=1e-3, then an exact clone of
+  model/optimizer/RNG/loader state at epoch 280 and a single-variable fork for
+  epochs 281-320 - CONTROL keeps lr=1e-3, LOW-LR uses lr=1e-4, with no
+  optimizer reset (only param_group lr changes) and identical per-epoch batch
+  order (40/40 tail hashes equal).  The fork is exact: prediction max |delta|
+  0.0 in eval mode and 0.0 in train mode with dropout active, model state
+  identical, optimizer exp_avg/exp_avg_sq/step identical before the lr edit.
+  Primary frozen metric (Top-5 by valid MAE over epochs 1-320, averaged state,
+  evaluated on official valid): M_control = 0.12742769679048796, M_low_lr =
+  0.1268179698883905, G_schedule = M_control - M_low_lr =
+  +0.0006097269020974572 = 1.016x the v2-measured CPU soup-level
+  reproducibility floor (~6e-4) -> frozen Case A
+  TRAINING_PROTOCOL_NOT_PRIMARY_BOTTLENECK (G < 0.002; Case C/D conditions
+  also fail: G << 0.005 and M_low_lr = 0.126818 > 0.125).  The shared prefix
+  alone soups to 0.12972567650018027 over epochs 1-280, already better than
+  the historical fixed-protocol soup 0.13002798487985273, and both
+  continuations are also below the v2 low-rate warm soup 0.1287231611124589;
+  the plateau is therefore a property of the architecture/data regime, not of
+  the LR schedule.  Secondary (reported, not primary): the low LR is a strong
+  LATE-RUN STABILITY effect, not a capacity effect - epoch-320 valid 0.128793
+  vs 0.148608, last-10 mean 0.128832 vs 0.146977, tail-only soup (281-320)
+  0.126818 vs 0.128055 (delta 0.001237, 2.1x floor), full-run best 0.127857 @
+  309 vs 0.133430 @ 311; update norm drops ~9x (0.0479 -> 0.0056) and
+  pre-clip grad norm ~1.6x (4.34 -> 2.64); train/valid deltas read
+  joint_improvement_late_optimization (train -0.024452, valid -0.010762) vs
+  overfitting_or_noise (train -0.002202, valid +0.009053) for the control;
+  the reconstruction term is preserved in both arms (lambda*rec at 320
+  5.99e-05 low / 4.96e-05 control).  Dictionary health is preserved on both
+  arms (32/32 active, N_eff 20.281 at 320, N_eff 20.762 at 280; max activation
+  rate 0.928 low vs 0.847 control; movement vs fork 0.281 low vs 1.079
+  control, i.e. the control tail churns the dictionary ~3.8x more).  The
+  control's full-run soup still selects 3 tail epochs [297, 311, 313], so the
+  best-of-run metric absorbs the low-LR stability gain at the floor; only
+  epoch 313 is a soup member in both arms.  horizon_may_still_be_binding =
+  False (low-LR best epoch 309, late slope 311-320 +7.66e-05/epoch vs control
+  +1.51e-03).  Historical attribution caveat: the fresh prefix reproduces the
+  historical trajectory exactly at epoch 40 (delta 0.0) and then drifts
+  chaotically (mean |delta| 0.007038, median 0.003433, p90 0.020866, max
+  0.055604 over epochs 1-280), an order of magnitude larger than the LR
+  effect, so cross-run comparisons against 0.130028 / 0.128723 cannot isolate
+  the LR schedule; only the paired fork is decision-grade.
+scope: >-
+  Local CPU-only round (4 threads, peak RSS 2348 MB), preregistration sha256
+  0fdcef2099cc4fb6141642685e90d1160e41af3f4ff7ab37ca772564364713a2 frozen
+  with module and runner at commit ea54826 before the first training process;
+  harness repair of a runner-side best-seed integer cast (bookkeeping only, no
+  re-training, both trajectories untouched) committed as ced2570.  One
+  architecture only (exactly 97727 params, mismatch would stop the round), one
+  seed (0), one candidate rate (1e-4, no sweep and no scheduler), one fork
+  epoch (280, frozen before the run; historical soup members 282/299/307/312/
+  313 all lie after it), both arms stop at exactly epoch 320 even if the best
+  epoch is 320 (no horizon extension).  Data: frozen phi65 cache from the
+  official ZINC train (10000) / valid (1000) splits; official test never
+  loaded in any payload; dictionary sha256 b0c5da98... and the stored q1
+  subspace are unchanged.  The claim is about the fixed 320-epoch protocol on
+  this base, not about optimizers in general and not about warm adaptation
+  from a different checkpoint.
+supporting_evidence:
+  - >-
+    shared_prefix/prefix_summary.json: epoch-280 valid 0.1395545493317186
+    (historical 0.14115870875114342; tolerance gate +0.02 PASS ->
+    PREFIX_HEALTHY), all 9 gate checks true, exact params 97727, prefix soup
+    (1-280) 0.12972567650018027 (members [239, 258, 265, 277, 280]), best
+    0.13397847388027004 @ 277, final train 0.10147324115037919,
+    dictionary_health_epoch280 {active 32, N_eff 20.76163031483802,
+    max_activation_rate 0.9281722479747, reconstruction_frobenius
+    0.05256609884874613, movement vs init 5.082641631290673},
+    historical_comparison {mean_abs_delta 0.007038312499433022, median
+    0.003432905256282537, p90 0.020866231499891707, max_abs_delta
+    0.055604065846651785, epoch40 delta 0.0, epoch280 delta
+    -0.001604159419424822}, wall clock 2022.3 s, 7.22 s/epoch.
+  - >-
+    fork/fork_integrity.json: verdict FORK_INTEGRITY_OK; prediction_max_abs_diff
+    0.0, train_mode_prediction_max_abs_diff 0.0 (dropout RNG identical),
+    model_state_identical true, exp_avg_identical true, exp_avg_sq_identical
+    true, step_identical true, optimizer_state_identical_before_lr_edit true,
+    only_lr_differs true, next_epoch_batch_order_hash
+    ce0df339c4c47620aa64134d8f5f8161cf431e9e757e2d1dfc4db268721fe723.
+  - >-
+    comparison.json: g_schedule 0.0006097269020974572, g_over_noise_floor
+    1.0162, verdict TRAINING_PROTOCOL_NOT_PRIMARY_BOTTLENECK, canonical
+    protocol 320@1e-3, horizon_may_still_be_binding false; M_control
+    0.12742769679048796 (members [258, 277, 297, 311, 313], 3 after 280),
+    M_low_lr 0.1268179698883905 (members [294, 300, 309, 310, 313], 5 after
+    280); low-LR best 0.12785674245277187 @ 309, late slope
+    7.66005075339128e-05, epoch320 valid 0.12879268781089923, train
+    0.07702139154076576, last-10 0.12883192185530207; control best
+    0.13343025157874217 @ 311, epoch320 valid 0.14860793908307096, train
+    0.09927114769816399, last-10 0.14697728347512895; batch_order all_equal
+    true for 40/40 epochs.
+  - >-
+    comparison.json task_vs_valid + reconstruction_balance: control train
+    delta -0.002202093452215198 / valid delta +0.009053389751352364 (reading
+    overfitting_or_noise), task-loss delta -0.0027576229900498905, rec-term
+    delta -1.038780939342348e-05; low-LR train delta -0.024451849609613427 /
+    valid delta -0.010761861520819371 (reading
+    joint_improvement_late_optimization), task-loss delta
+    -0.024893048301905016, rec-term delta -7.801033081958223e-08.
+  - >-
+    comparison.json dictionary_health: epoch280 {32 active, N_eff
+    20.76163031483802, top5 3.196594896677208, max rate 0.9281722479747, rec
+    0.05256609884874613}; control @320 {32, 20.280647716658493, 3.2008837672746173,
+    max rate 0.8473768574275441, rec 0.04954466546680574, movement vs fork
+    1.079225648800936}; low @320 {32, 20.280918325901244, 3.1566520816185073,
+    max rate 0.928042282199021, rec 0.054423595384051074, movement vs fork
+    0.2814354259184881}.
+  - >-
+    comparison.json dynamics (epochs 280/285/290/300/310/320): low-LR valid
+    0.139555 0.129705 0.130137 0.128121 0.127895 0.128793 vs control 0.139555
+    0.142080 0.147670 0.155437 0.146396 0.148608; low-LR update norm 0.05040
+    0.00495 0.00482 0.00521 0.00566 0.00557 vs control 0.05040 0.04973 0.04670
+    0.04556 0.04528 0.04790; low-LR grad norm 3.8278 2.6342 2.3779 2.6808
+    2.3867 2.6421 vs control 3.8278 4.1440 4.7107 5.5276 3.7458 4.3409.
+  - >-
+    budget/wall clock: 360 epoch-equivalents (280 shared + 40 + 40), total
+    2601.95 s (~43.4 min) at 4 CPU threads; peak RSS 2347.8 MB; focused tests
+    18/18 pass including architecture identity, loop bit-equivalence against
+    the frozen CSSD loop, fork-exactness, batch-order equality, soup rule,
+    prefix gate, decision thresholds and the harness-repair regression.
+contradicting_evidence:
+  - >-
+    The secondary views show a large, consistent late-run effect of the low
+    LR: epoch-320 and last-10 gaps of ~0.018-0.020, and a tail-only soup gap
+    of 0.001237 (2.1x the floor).  This does not change the primary verdict
+    (the frozen metric is the full-run soup, chosen to measure attainable
+    model quality), but it shows the LR schedule is not irrelevant: it
+    controls late-run stability, and a metric that read out the final epochs
+    instead of the best-of-run would have reported a material difference.
+  - >-
+    The control continuation did produce one epoch better than the entire
+    prefix (best 0.133430 @ 311 vs prefix 0.133978 @ 277), so lr=1e-3 is not
+    strictly harmful late in training; the control tail remains a high-energy
+    random walk that occasionally visits good points.
+  - >-
+    Single seed (0) and a single trajectory pair: the sub-floor effect
+    estimate cannot exclude an even smaller true effect of either sign; the
+    round was powered only to exclude a material effect (>= 0.003 = 5x floor).
+limitations:
+  - >-
+    Single seed; no seed 1/2 (forbidden by the frozen contract unless a
+    material effect appeared), so the +0.000610 estimate rests on one paired
+    trajectory.
+  - >-
+    The primary effect is at the measured CPU soup floor (1.02x), so the sign
+    of a smaller true effect is unresolved; this was pre-declared.
+  - >-
+    Historical references (0.130028, 0.128723) are confounded by chaotic
+    cross-run drift of the same protocol (mean |delta| 0.007), so the round
+    answers the question only through the paired fork.
+  - >-
+    The stability interpretation is supported by large secondary deltas but
+    was not the primary endpoint; no last-epoch or tail-only metric was
+    preregistered as a decision variable.
+implication: >-
+  The fixed 320-epoch lr=1e-3 protocol is not what holds CSSD-q1 at the
+  0.128-0.130 plateau, so the next round should not search optimizers or
+  schedules: per the frozen preregistration decision tree (Case A,
+  G_schedule < 0.003) the next architecture study is a
+  Dictionary-Conditioned Semantic Operator (e_v = sum_k alpha_vk f_k(q_v),
+  shared dictionary roles driving a transferable structure->semantics map),
+  still with no message passing and no environment update.  The canonical
+  protocol remains 320@1e-3 for comparison against the historical baseline;
+  the low-lr=1e-4 tail is recorded as a cheap late-run stabiliser (not
+  adopted as canonical, since the Case B/C promotion rule did not fire) to be
+  reconsidered only if a future substrate shows late-run divergence.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_training_protocol_audit_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_training_protocol_audit_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/analysis_tables.md
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/comparison.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/preflight.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/preregistration_snapshot.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/shared_prefix/prefix_summary.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/shared_prefix/prefix_gate.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/fork/fork_integrity.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/control_lr1e3/result.json
+  - tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/low_lr1e4/result.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_training_protocol_audit_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_training_protocol_audit_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_training_protocol_audit_v1.py

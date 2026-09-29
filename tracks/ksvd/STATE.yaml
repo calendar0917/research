@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-capacity-localization-v2-closed-validated-screen-local-widening-not-supported
+phase: e2e-dictenv-training-protocol-audit-v1-closed-protocol-not-primary-bottleneck
 updated: 2026-09-29
 
 # ---------------------------------------------------------------------------
@@ -1393,6 +1393,105 @@ e2e_dictenv_a1:
       relative to the measured ~6e-4 soup-level floor.  Test whether the
       0.13 plateau comes from one-shot static composition rather than any
       single block's width; do not re-widen F/R/G as standalone candidates.
+
+  # -------------------------------------------------------------------------
+  # e2e_dictenv_training_protocol_audit_v1 — 2026-09-29
+  # -------------------------------------------------------------------------
+  # Training-protocol audit, not an architecture round.  One architecture
+  # only (CSSD-q1, exactly 97727 params), one seed (0), CPU only, official
+  # test never loaded.  Shared prefix epochs 1-280 at Adam lr=1e-3, then an
+  # exact clone at epoch 280 (model/optimizer/RNG/loader; no optimizer reset,
+  # only param_group lr changes) and a single-variable fork: CONTROL lr=1e-3
+  # vs LOW-LR lr=1e-4 for epochs 281-320, with per-epoch batch_order_hash
+  # required equal.  Frozen primary: G_schedule = Top5Soup(CONTROL) -
+  # Top5Soup(LOW-LR) against the v2 ~6e-4 floor and the 0.002/0.003/0.005
+  # thresholds.  G_schedule +0.000610 (+1.0x floor) -> Case A
+  # TRAINING_PROTOCOL_NOT_PRIMARY_BOTTLENECK: the 0.128-0.130 plateau is not
+  # a training-protocol artifact.  Canonical protocol stays 320@1e-3; the
+  # low-LR tail is recorded as a late-run stabiliser only; no horizon
+  # extension (low-LR best @309, late slope +7.7e-5/epoch).  A runner-side
+  # best-seed integer cast was repaired as bookkeeping only (no re-training).
+  e2e_dictenv_training_protocol_audit_v1:
+    status: closed_round_complete_shared_prefix_exact_fork
+    round: e2e-dictenv-training-protocol-audit-v1
+    verdict: TRAINING_PROTOCOL_NOT_PRIMARY_BOTTLENECK
+    case: A
+    device: cpu_only
+    official_test_loaded: false
+    preregistration: tracks/ksvd/notes/e2e_dictenv_training_protocol_audit_v1_preregistration.md
+    preregistration_sha256_prefix: 0fdcef2099cc
+    implementation_commit: ea54826
+    harness_fix_commit: ced2570
+    analysis: tracks/ksvd/notes/e2e_dictenv_training_protocol_audit_v1_analysis.md
+    claims:
+      - claim-e2e-dictenv-training-protocol-audit-low-lr-tail-not-primary-20260929
+    decision: decision-e2e-dictenv-training-protocol-audit-close-protocol-hypothesis-20260929
+    results_dir: tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/
+    report: tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/REPORT.md
+    decision_report: tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/DECISION.md
+    analysis_tables: tracks/ksvd/results/e2e_dictenv_training_protocol_audit_v1/analysis_tables.md
+    runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_training_protocol_audit_v1.py
+    module: tracks/ksvd/experiments/luyin16/e2e_dictenv_training_protocol_audit_v1.py
+    tests: tracks/ksvd/tests/test_e2e_dictenv_training_protocol_audit_v1.py
+    architecture: {base: CSSD-q1, actual_params: 97727, seed: 0}
+    prefix: >-
+      PREFIX_HEALTHY (9/9 gate checks): epoch-280 valid 0.139555 vs
+      historical 0.141159 (tolerance +0.02), params 97727, dictionary sha
+      b0c5da98... unchanged; prefix soup 1-280 0.129726 (members [239, 258,
+      265, 277, 280]), best 0.133978 @ 277; historical drift mean |delta|
+      0.007038 / median 0.003433 / p90 0.020866 / max 0.055604, epoch 40
+      exact (delta 0.0) - cross-run attribution against 0.130028 / 0.128723
+      is confounded by chaotic trajectory drift, so only the paired fork is
+      decision-grade.
+    fork: >-
+      FORK_INTEGRITY_OK: prediction max |delta| 0.0 (eval and train mode),
+      model identical, optimizer exp_avg / exp_avg_sq / step identical
+      before the lr edit, only lr differs, next-epoch batch order hash
+      ce0df339..., 40/40 tail per-epoch batch_order_hash equal.
+    primary: >-
+      G_schedule = M_control - M_low_lr = 0.12742769679048796 -
+      0.1268179698883905 = +0.0006097269020974572 = 1.016x the ~6e-4 CPU
+      soup floor -> Case A; M_control members [258, 277, 297, 311, 313] (3
+      after 280, tail soup 0.128055, best 0.133430 @ 311), M_low_lr members
+      [294, 300, 309, 310, 313] (5 after 280, tail soup 0.126818, best
+      0.127857 @ 309); both soups are better than historical 0.130028 and
+      v2 0.128723, and the shared prefix alone already soups to 0.129726.
+    secondary: >-
+      Low LR is a late-run stability effect, not a capacity effect:
+      epoch-320 valid 0.128793 vs 0.148608, last-10 mean 0.128832 vs
+      0.146977, tail soup 0.126818 vs 0.128055 (delta 0.001237 = 2.1x
+      floor); update norm 0.0056 vs 0.0479 (~9x), pre-clip grad norm 2.64
+      vs 4.34; train/valid deltas joint_improvement_late_optimization
+      (-0.024452 / -0.010762) vs overfitting_or_noise (-0.002202 /
+      +0.009053); lambda*rec at 320 5.99e-05 low vs 4.96e-05 control (no
+      reconstruction trade-off); dictionary healthy on both arms (32/32
+      active, N_eff 20.281, movement vs fork 0.281 low vs 1.079 control,
+      max activation rate 0.928 vs 0.847); only epoch 313 is a soup member
+      in both arms.
+    classification:
+      case_a: true
+      g_over_noise_floor: 1.0162
+      case_c: false
+      case_d: false
+      canonical_protocol: 320@1e-3
+      low_lr_tail_adopted: false
+      horizon_may_still_be_binding: false
+      low_lr_best_epoch: 309
+      low_lr_late_slope_311_320: 7.66005075339128e-05
+    budget: {prefix_epochs: 280, control_epochs: 40, low_lr_epochs: 40, epoch_equivalents: 360, wall_clock_s: 2601.95, peak_rss_mb: 2347.8}
+    focused_tests: 18/18 pass
+    forbidden_without_new_preregistration:
+      - LR sweep (3e-4 / 5e-4 / 5e-5 / 1e-5), any scheduler, a second switch epoch
+      - horizon extension beyond 320 epochs, seed 1/2 of this schedule, re-running the continuations
+      - architecture / dictionary / fusion / relation / readout changes inside this round
+      - reading the official test for this round
+    next_round_shape: >-
+      New preregistration only (nothing implemented): Dictionary-Conditioned
+      Semantic Operator e_v = sum_k alpha_vk f_k(q_v), shared dictionary
+      roles driving a transferable structure->semantics map, still with no
+      message passing and no environment update.  Close the
+      training-protocol-as-primary-bottleneck hypothesis; do not run another
+      optimizer/scheduler search.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
