@@ -179,7 +179,13 @@ Claim B  : not excluded (unchanged top-profile diversity, unchanged MAE,
   1/2 run, no `docs/luyin/luyin19.txt` modification.
 * Frozen preregistration untouched after the first Stage-A process; the only
   post-freeze implementation commits are a runner import fix (`34fb311`) and
-  a logging-only fix (`5f0f284`), both before training.
+  a logging-only fix (`5f0f284`), both before the formal training process.
+* Transparency on the single trajectory: the first launch of `stage-train`
+  was killed at ~epoch 20 to apply the logging-only fix (the frozen-loop
+  `train_rec` diagnostic was being reported where the optimised residual term
+  belonged).  That attempt wrote **no checkpoint and no artifact** (the
+  `training/` directory was emptied before the restart); the formal run is the
+  restarted process, and it is the only trajectory whose artifacts exist.
 * Focused tests 24/24 passing, including bit-equivalence of the training loop
   with the frozen audit loop and the `Uᵀ D̄⊥ = 0` hard constraint.
 

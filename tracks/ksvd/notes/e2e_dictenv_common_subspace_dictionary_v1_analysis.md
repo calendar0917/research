@@ -16,6 +16,9 @@ never loaded (`official_test_loaded = false` everywhere).
 * Frozen tests: `tests/test_e2e_dictenv_common_subspace_dictionary_v1.py`,
   24/24 passing, including the bit-equivalence of `train_cssd` with the frozen
   `audit.train_cpu` loop and the projected-dictionary hard constraint.
+* Transparency: the first launch of `stage-train` was killed at ~epoch 20 to
+  apply the logging-only fix (`5f0f284`); that attempt wrote no checkpoint and
+  no artifact, and the formal trajectory is the restarted single process.
 
 ## 0. Question
 
