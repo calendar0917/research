@@ -1,0 +1,174 @@
+claim_id: claim-e2e-dictenv-capacity-localization-v2-local-widening-not-supported-20260929
+created: '2026-09-29T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the frozen ZINC dictionary-environment base CAP-BASE = CSSD-q1 (C6 clean
+  mask + q1 common structural coordinate + q1-orthogonal sparse dictionary
+  K=32/s=8/IHT-10 + paired node/edge structure-semantic binding + full
+  relation + first/second-moment readout; 97727 params; seed-0 soup valid MAE
+  0.13002798487985273; CPU only; official test never loaded), the repaired
+  capacity-localization round establishes two things.  (1) A warm-adaptation
+  protocol that does NOT destroy the trained representation exists: M0 from
+  the frozen soup with fresh Adam(lr = 1e-4, wd 1e-5), batch 128, clip 5.0,
+  the CSSD objective and 20 epochs gives soup(1-20) 0.128984 <= 0.1320,
+  mean(valid 16-20) 0.130331 <= 0.1350, epoch20 0.129672 <= 0.137 and a late
+  slope of -1.55e-4/epoch, i.e. the frozen gate
+  WARM_ADAPTATION_PROTOCOL_VALIDATED; deltas vs the anchor are -0.000356
+  (best), -0.001044 (soup) and +0.000303 (last-5), so the low-rate
+  continuation holds and slowly improves the checkpoint (the v1 failure was
+  the fresh-Adam lr = 1e-3 restart: same control went 0.1435 at epoch 1 and
+  0.1356 best at lr 1e-3).  (2) Under that validated protocol (40 epochs,
+  base lr 1e-4 / new-capacity lr 1e-3, Top-5 soup over epochs 21-40 as
+  primary metric), none of the three frozen single-block capacity directions
+  beats the matched control or the absolute anchor: soup M0 0.128723, F
+  0.128613 (Delta -0.000110), R 0.129422 (+0.000699), G 0.128879 (+0.000156);
+  last-10 M0 0.130721, F 0.130971 (+0.000250), R 0.133506 (+0.002785),
+  G 0.130604 (-0.000116); best single-epoch valid M0 0.128668, F 0.129047,
+  R 0.129948, G 0.128998.  The frozen gate S1 (matched Delta <= -0.003),
+  S2 (absolute soup <= 0.1270) and S3 (last-10 Delta <= -0.003) fail for all
+  three candidates; S4 (finite non-zero new-branch gradient AND update) passes
+  for all three, so the branches were trainable and trained (per-epoch
+  new-group gradient norms: F 0.19 falling to 0.011-0.024, R 7.4 falling to
+  1.2-1.4, G 0.054 falling to 0.003-0.02).  Frozen decision
+  LOCAL_CAPACITY_AUGMENTATION_NOT_SUPPORTED; no full 320-epoch run was bought
+  (180/500 authorised epochs spent; full/NOT_RUN.json; mechanism/probes.json
+  run=false).  (3) The round also measures its own resolution: the M0
+  calibration run and the M0 screening arm are the same configuration under
+  different CPU concurrency (no dropout exists, RNG streams equal by test) and
+  differ by mean 0.00121 / median 0.00082 / max 0.00490 valid MAE per epoch,
+  with a Top-5-mean(1-20) difference of -0.00060; the soup-level
+  reproducibility floor is therefore ~6e-4, the frozen -0.003 effect size is
+  ~5x it, F and G sit at or under the floor and R exceeds it by 2-5x as a
+  small regression.  Conclusion, scoped: one extra bilinear-rank fusion block
+  (H=4/d_h=24, +29568), two extra residual FiLM pair-composition blocks
+  (hidden 256, +34400) or one extra gated invariant readout summary (dim 192,
+  +30336) is not the missing ingredient that moves this base off the
+  0.128-0.130 plateau in a 40-epoch adaptation at the frozen sizes and rates;
+  the tested objects are one-shot static compositions, and simple local
+  widening in this regime is not supported.
+scope: >-
+  CPU-only local round (16 cores / 27 GiB; wave 1 = M0/F/R as 3 processes x 4
+  threads, wave 2 = G as 1 x 4), preregistration sha256
+  c5004e3d2aee8de377a6b66c822a92483a397eb6794a2d5f0bbe46ff9e042f8e,
+  implementation frozen at commit dccc149 (harness fix cc11654) before the
+  first training process.  Candidates are v1's architectures verbatim (same
+  parameter names, shapes and counts; shape fingerprints recorded in
+  architecture_fingerprints.json) with only the residual-projection scale
+  changed (F 0.0008, R 0.0016, G unchanged 0.01) to satisfy the near-zero
+  residual contract (step-0 mean shift 0.00080 / 0.00059 / 0.00113 versus v1
+  0.01053 / 0.01948 / 0.00113; zeroing the residual reproduces CAP-BASE
+  exactly for all three; all new-module gradients finite and strictly
+  positive).  Data: frozen phi65 cache from the official ZINC train (10000)
+  and valid (1000) splits; official test never loaded.  Single seed (0), one
+  frozen size per direction, no hyper-parameter search, no combination
+  candidate, no second LR protocol.  The claim is about 40-epoch warm
+  adaptation on the converged CAP-BASE checkpoint; it does not test
+  from-scratch 320-epoch training of the same blocks.
+supporting_evidence:
+  - >-
+    preflight.json / preregistration_snapshot.json: preregistration sha256
+    c5004e3d2aee..., CAP-BASE soup MAE recomputed 0.130028 (|delta| < 5e-7),
+    checkpoint sha256 5fc41ab4..., subspace sha256 36636ce9...,
+    official_test_loaded false.
+  - >-
+    calibration/m0/result.json + curve.csv + calibration_decision.json +
+    calibration_summary.json: soup 0.128984 (members 8, 10, 11, 12, 20),
+    best/epoch20 0.129672, last5 0.130331, late slope -1.548e-4,
+    delta_best -0.000356, delta_soup -0.001044, delta_last5 +0.000303,
+    C1/C2/C3 all true, verdict WARM_ADAPTATION_PROTOCOL_VALIDATED.
+  - >-
+    init_audit.json: step-0 valid MAE M0 0.130028, F 0.130073, R 0.129986,
+    G 0.129941; mean |prediction shift| 0 / 0.000803 / 0.000590 / 0.001127;
+    median 0 / 0.000781 / 0.000496 / 0.001139; max 0 / 0.003891 / 0.003784 /
+    0.003001; residual-zero max |prediction delta| exactly 0.0 for F/R/G;
+    18/18, 20/20 and 9/9 new-module gradients finite and > 0.
+  - >-
+    architecture_fingerprints.json + parameter_budget.json: v2 totals equal
+    v1 exactly (97727 / 127295 / 132127 / 128063), added params 0 / 29568 /
+    34400 / 30336, ratio 1.1634 <= 1.5, shape fingerprints
+    4d4d8ceb... / e00737ab... / 326cf787... / f0606a21...
+  - >-
+    screening/decision.json + screening_summary.csv + */curve.csv: soup
+    (21-40) M0 0.128723, F 0.128613, R 0.129422, G 0.128879; last-10 M0
+    0.130721, F 0.130971, R 0.133506, G 0.130604; best valid M0 0.128668,
+    F 0.129047, R 0.129948, G 0.128998; S1/S2/S3 false for F/R/G, S4 true for
+    all; passing [], winner null, reason
+    LOCAL_CAPACITY_AUGMENTATION_NOT_SUPPORTED; soup members M0 [21,28,29,32,37],
+    F [25,28,29,37,39], R [22,24,28,30,33], G [29,32,33,34,39].
+  - >-
+    screening/decision.json calibration_vs_screen_m0: the same M0
+    configuration run twice (solo calibration vs 3-way concurrent screen)
+    differs by max_abs_valid_mae_delta 0.004902 and max_abs_train_mae_delta
+    0.001566 over epochs 1-20; Top-5-mean(1-20) differs by -0.000603.
+  - >-
+    full/NOT_RUN.json (reason LOCAL_CAPACITY_AUGMENTATION_NOT_SUPPORTED) and
+    mechanism/probes.json (run false, reason full winner run not available).
+  - >-
+    Focused tests 59/59 pass (tests/test_e2e_dictenv_capacity_localization_v2.py):
+    CAP-BASE identity, exact parameter partition and differential-LR groups,
+    v1 architecture equality (F/R scaled-projection identity, G transplanted
+    functional equality), exact residual-zero repro, M0 guard, step-0 shift
+    accounting, finite non-zero new-branch gradients, calibration gate,
+    S1-S4 gate with the 0.1270 absolute anchor, winner/tie-break, bands,
+    guards, tiny warm-loop smoke, runner plumbing.  v1 regression tests 40/40
+    pass.
+contradicting_evidence:
+  - >-
+    All three candidates pass S4 with live branches, so the null is a real
+    measurement, not dead initialisation; and R's branch was the most active
+    (gradient 7.4 at step 0) while producing a small regression, which shows
+    the protocol can move the model when the new branch is strongly driven.
+  - >-
+    Every arm, candidates included, improves on the absolute anchor
+    M_start = 0.130028 (soup -0.0006...-0.0014), but that improvement comes
+    from the low-rate base adaptation (M0 alone: -0.001305); no candidate
+    adds to it, so this supports the "adapter, not capacity" reading and does
+    not support a capacity gain.
+  - >-
+    The screen is a 40-epoch warm adaptation at one frozen size per direction;
+    it cannot exclude that these blocks help under 320-epoch from-scratch
+    training (that run was never authorised by the frozen gate) or at other
+    widths/ranks/depths.
+limitations:
+  - >-
+    Single seed (0), single base checkpoint, one 40-epoch adapter per arm and
+    one frozen size per candidate direction.
+  - >-
+    The soup-level reproducibility floor (~6e-4) is measured from two runs of
+    the same M0 configuration in different CPU-concurrency regimes, not from
+    repeated full batches of arms; the F/G deltas lie at that floor, so they
+    are recorded as "no detectable effect" rather than as exact zeros.
+  - >-
+    No from-scratch 320-epoch evidence exists for any candidate; no P1-P5
+    mechanism probe was run (no winner checkpoint exists).
+implication: >-
+  Two one-shot local-widening families have now been tested on this base -
+  v1's lr = 1e-3 warm restart (no measurement power) and v2's validated
+  stable screen (no effect) - so the next capacity round should stop widening
+  single blocks and test the compositional hypothesis instead: whether
+  one-shot static composition itself is the ceiling, via a small number of
+  controlled iterative environment-contextualisation stages
+  (E_i^(l+1) = E_i^(l) + eta_l Agg_j psi(E_i^(l), E_j^(l), r_ij), l = 0, 1)
+  under the v2 residual-zero contract and the validated low-rate/differential
+  adapter, with the gate effect size stated relative to the ~6e-4 floor.
+  CAP-BASE remains CSSD-q1; the F/R/G blocks are not authorised for
+  standalone full training by this round.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_capacity_localization_v2_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_capacity_localization_v2_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/analysis_tables.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/summary.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/preflight.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/architecture_fingerprints.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/init_audit.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/calibration/calibration_decision.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/screening/decision.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/screening/screening_summary.csv
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/full/NOT_RUN.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_capacity_localization_v2.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_capacity_localization_v2.py
+  - tracks/ksvd/tests/test_e2e_dictenv_capacity_localization_v2.py

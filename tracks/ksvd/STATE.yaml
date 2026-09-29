@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-capacity-localization-v1-closed-no-clear-capacity-localization
+phase: e2e-dictenv-capacity-localization-v2-closed-validated-screen-local-widening-not-supported
 updated: 2026-09-29
 
 # ---------------------------------------------------------------------------
@@ -1255,7 +1255,7 @@ e2e_dictenv_a1:
       the binding).
 
   # -------------------------------------------------------------------------
-  # e2e_dictenv_capacity_localization_v1 — 2026-09-29 (latest)
+  # e2e_dictenv_capacity_localization_v1 — 2026-09-29
   # -------------------------------------------------------------------------
   # Capacity Localization + One-Winner Full Training round on the frozen
   # CAP-BASE = CSSD-q1 checkpoint (0.130028).  Four 40-epoch warm-start arms
@@ -1321,6 +1321,78 @@ e2e_dictenv_a1:
       spread measured and preregistered, gate above that floor; (c) optional
       secondary question: does added capacity slow late-epoch valid drift
       (stabilisation hypothesis, never a bottleneck claim).
+
+  # -------------------------------------------------------------------------
+  # e2e_dictenv_capacity_localization_v2 — 2026-09-29 (latest)
+  # -------------------------------------------------------------------------
+  # Protocol repair of v1, not an architecture search: F/R/G architectures
+  # completely frozen (v1-identical shapes/counts), only the residual-
+  # projection scale changed for a near-zero residual contract.  Phase A:
+  # M0 from the frozen soup at fresh Adam lr 1e-4 for 20 epochs -> soup
+  # 0.128984, mean(16-20) 0.130331, epoch20 0.129672, late slope -1.55e-4
+  # -> WARM_ADAPTATION_PROTOCOL_VALIDATED (the v1 failure was the lr 1e-3
+  # restart: same control 0.1435 @ep1, 0.1356 best, vs 0.1297 best @1e-4).
+  # Phase B: 4 arms x 40 epochs (base lr 1e-4 / new capacity 1e-3, wd 1e-5,
+  # batch 128, clip 5.0), soup(21-40): M0 0.128723, F 0.128613 (-0.000110),
+  # R 0.129422 (+0.000699), G 0.128879 (+0.000156); last-10: M0 0.130721,
+  # F 0.130971 (+0.000250), R 0.133506 (+0.002785), G 0.130604 (-0.000116).
+  # S1/S2/S3 fail for all three, S4 live for all three (new-group grads
+  # 0.19/7.4/0.054) -> no winner, LOCAL_CAPACITY_AUGMENTATION_NOT_SUPPORTED;
+  # full/NOT_RUN.json, mechanism/probes.json run=false.  Measured protocol
+  # floor from two M0 runs (solo calibration vs 3-way concurrent screen):
+  # mean |valid delta| 0.00121/epoch, Top-5-mean(1-20) delta -0.00060, i.e.
+  # ~6e-4 at the soup level; the frozen -0.003 gate is ~5x it, F/G sit at
+  # the floor and R exceeds it as a small regression.  One-shot local
+  # widening (fusion rank / pair depth / readout width) is not supported in
+  # this regime; from-scratch 320-epoch behaviour of the frozen blocks was
+  # never authorised and remains untested.  Next step (new preregistration
+  # only): controlled iterative environment composition, at most two stages.
+  # 180/500 epochs, ~64 min CPU, official test never loaded.
+  e2e_dictenv_capacity_localization_v2:
+    status: closed_round_complete_no_full_run
+    round: e2e-dictenv-capacity-localization-v2
+    verdict: LOCAL_CAPACITY_AUGMENTATION_NOT_SUPPORTED_WARM_PROTOCOL_VALIDATED
+    device: cpu_only
+    official_test_loaded: false
+    preregistration: tracks/ksvd/notes/e2e_dictenv_capacity_localization_v2_preregistration.md
+    preregistration_sha256_prefix: c5004e3d2aee
+    implementation_commit: dccc149
+    harness_fix_commit: cc11654
+    cap_base: CSSD-q1
+    cap_base_soup_mae: 0.13002798487985273
+    analysis: tracks/ksvd/notes/e2e_dictenv_capacity_localization_v2_analysis.md
+    claims:
+      - claim-e2e-dictenv-capacity-localization-v2-local-widening-not-supported-20260929
+    decision: decision-e2e-dictenv-capacity-localization-v2-stop-after-validated-screen-20260929
+    results_dir: tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/
+    report: tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/REPORT.md
+    decision_report: tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/DECISION.md
+    summary: tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/summary.json
+    runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_capacity_localization_v2.py
+    module: tracks/ksvd/experiments/luyin16/e2e_dictenv_capacity_localization_v2.py
+    tests: tracks/ksvd/tests/test_e2e_dictenv_capacity_localization_v2.py
+    parameter_budget: {cap_base: 97727, F: 127295, R: 132127, G: 128063, ratio: 1.1634}
+    init_audit: {step0_valid_mae: {M0: 0.130028, F: 0.130073, R: 0.129986, G: 0.129941}, mean_shift: {M0: 0.0, F: 0.000803, R: 0.000590, G: 0.001127}, residual_zero_identity: {F: exact, R: exact, G: exact}}
+    calibration: {soup: 0.128984, best: 0.129672, epoch20: 0.129672, last5: 0.130331, late_slope: -0.000155, verdict: WARM_ADAPTATION_PROTOCOL_VALIDATED}
+    screening: {soup: {M0: 0.128723, F: 0.128613, R: 0.129422, G: 0.128879}, last10: {M0: 0.130721, F: 0.130971, R: 0.133506, G: 0.130604}, delta_soup: {F: -0.000110, R: 0.000699, G: 0.000156}, delta_last10: {F: 0.000250, R: 0.002785, G: -0.000116}, best_valid: {M0: 0.128668, F: 0.129047, R: 0.129948, G: 0.128998}, S4_pass: {F: true, R: true, G: true}, gate: LOCAL_CAPACITY_AUGMENTATION_NOT_SUPPORTED}
+    protocol_floor: {source: M0 calibration vs M0 screen arm, mean_abs_valid_delta_per_epoch: 0.001207, median_abs_valid_delta_per_epoch: 0.000817, max_abs_valid_delta_per_epoch: 0.004902, top5_mean_1_20_delta: -0.000603, soup_level_floor: 0.0006}
+    full_run: {bought: false, artifact: full/NOT_RUN.json, budget_spent_epochs: 180}
+    mechanism_probes: {run: false, artifact: mechanism/probes.json}
+    focused_tests: 59/59 pass
+    screening_runs: 5
+    forbidden_without_new_preregistration:
+      - F/R/G standalone 320-epoch training, seed 1/2, F+G / F+R / R+G combinations
+      - screening-lr / horizon / concurrency rescue of this round
+      - reading the official test for this round
+    next_round_shape: >-
+      New preregistration only (nothing implemented): controlled iterative
+      environment composition, E_i^(l+1) = E_i^(l) + eta_l Agg_j
+      psi(E_i^(l), E_j^(l), r_ij) with at most two stages l = 0, 1, under
+      the v2 residual-zero contract and the validated low-rate/differential
+      adapter (base 1e-4 / new 1e-3), with the gate effect size stated
+      relative to the measured ~6e-4 soup-level floor.  Test whether the
+      0.13 plateau comes from one-shot static composition rather than any
+      single block's width; do not re-widen F/R/G as standalone candidates.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24

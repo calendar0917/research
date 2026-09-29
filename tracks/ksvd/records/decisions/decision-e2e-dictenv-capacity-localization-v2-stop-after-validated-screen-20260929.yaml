@@ -1,0 +1,141 @@
+decision_id: decision-e2e-dictenv-capacity-localization-v2-stop-after-validated-screen-20260929
+created: '2026-09-29T00:00:00Z'
+kind: decision
+status: accepted
+study_id: zinc-context-gap
+round: e2e-dictenv-capacity-localization-v2
+why_this_experiment: >-
+  v1 (e2e_dictenv_capacity_localization_v1) closed as
+  NO_CLEAR_CAPACITY_LOCALIZATION but with no measurement power: the M0
+  continuation control under fresh Adam(lr = 1e-3) degraded from 0.130028 to
+  0.135621 (best) and 0.156383 (epoch 40), so every arm ran in a degradation
+  regime and the late-window "stabilisation" ordering carried no capacity
+  information.  v2 is a protocol repair, not a new architecture search: hold
+  the F/R/G architectures completely frozen, repair the warm adaptation so
+  the trained CSSD-q1 representation survives, and only then ask whether any
+  single frozen capacity direction beats the absolute anchor
+  M_start = 0.13002798487985273 over epochs 21-40.
+protocol: >-
+  Preregistered (sha256
+  c5004e3d2aee8de377a6b66c822a92483a397eb6794a2d5f0bbe46ff9e042f8e,
+  implementation frozen at commit dccc149, harness fix cc11654) and executed
+  CPU only.  Phase A: M0 from the frozen CAP-BASE soup, fresh Adam
+  lr = 1e-4, wd 1e-5, batch 128, clip 5.0, the CSSD objective, 20 epochs,
+  frozen gate C1 soup(1-20) <= 0.1320, C2 mean(valid 16-20) <= 0.1350,
+  C3 epoch20 <= 0.137 and slope(16-20) <= +5e-4/epoch.  Phase B (only if A
+  passes): 4 arms x 40 epochs from the same checkpoint with the optimizer
+  split into base (lr 1e-4) and new-capacity (lr 1e-3) groups; primary metric
+  Top-5-by-valid soup over epochs 21-40; gate S1 matched Delta soup vs M0
+  <= -0.003, S2 absolute soup <= 0.1270, S3 Delta last-10 vs M0 <= -0.003,
+  S4 finite non-zero new-branch gradient AND update; winner = all of S1-S4,
+  tie-break F > R > G within 0.002.  Phase C (only on a winner): at most one
+  from-scratch 320-epoch seed-0 run under the frozen CSSD protocol with
+  bands <= 0.125 useful / <= 0.120 strong / <= 0.110 major.  Strict
+  residual-augmentation contract: zero residual -> prediction equals
+  CAP-BASE exactly, step-0 mean shift <= 0.002 hard (<= 0.001 preferred);
+  frozen F/R/G shapes (+29568 / +34400 / +30336); budget <= 500 epochs;
+  official test never loaded; docs/luyin/luyin19.txt untouched.
+results: >-
+  Phase A PASSED: soup(1-20) 0.128984 (C1), mean(16-20) 0.130331 (C2),
+  epoch20 0.129672 and late slope -1.55e-4/epoch (C3) ->
+  WARM_ADAPTATION_PROTOCOL_VALIDATED; deltas vs anchor best -0.000356,
+  soup -0.001044, last-5 +0.000303.  Phase B: soup(21-40) M0 0.128723, F
+  0.128613 (Delta -0.000110), R 0.129422 (+0.000699), G 0.128879
+  (+0.000156); last-10 M0 0.130721, F 0.130971 (+0.000250), R 0.133506
+  (+0.002785), G 0.130604 (-0.000116); best single-epoch valid M0 0.128668,
+  F 0.129047, R 0.129948, G 0.128998.  S1/S2/S3 fail for all three
+  candidates, S4 passes for all three (per-epoch new-group gradient norms
+  F 0.19 -> 0.011-0.024, R 7.4 -> 1.2-1.4, G 0.054 -> 0.003-0.02) ->
+  passing [], winner none, reason
+  LOCAL_CAPACITY_AUGMENTATION_NOT_SUPPORTED.  Init audit: step-0 mean
+  |prediction shift| 0.00080 / 0.00059 / 0.00113 (v1 0.01053 / 0.01948 /
+  0.00113), zero-residual max |Delta prediction| exactly 0.0, all
+  new-module gradients finite > 0, parameter counts identical to v1.  No
+  Phase C run: full/NOT_RUN.json; no mechanism probe:
+  mechanism/probes.json run=false.  180/500 epochs spent; training wall
+  clock 3855 s (~64 min); 59/59 focused tests and 40/40 v1 regression tests
+  pass; research verify 11/11.
+decision: >-
+  1. The warm-adaptation protocol is validated and becomes the adapter of
+  record for this base (fresh Adam lr 1e-4 for the base, 1e-3 for new
+  capacity, wd 1e-5, batch 128, clip 5.0); the v1 lr = 1e-3 restart is
+  retired as a measurement instrument.  2. Frozen branch 1 applies:
+  LOCAL_CAPACITY_AUGMENTATION_NOT_SUPPORTED - no candidate is a winner, no
+  full 320-epoch run is bought, no combination candidate, no second LR
+  protocol, no seeds 1/2, no mechanism probe.  3. CAP-BASE stays CSSD-q1
+  (97727 params, soup 0.130028); F/R/G remain screened-only and
+  unauthorised for standalone training.  4. Simple local widening - fusion
+  rank, pair-composition depth, invariant readout width - is not supported
+  as the route off the 0.128-0.130 plateau in the tested 40-epoch
+  warm-adaptation regime, with the boundary stated (single frozen size per
+  direction, single seed; from-scratch behaviour untested).  5. The next
+  capacity round must be a new preregistration testing controlled iterative
+  environment composition (at most two contextualisation stages) under the
+  residual-zero contract and the validated adapter, with its gate effect
+  size stated relative to the measured soup-level floor (~6e-4).
+why: >-
+  The calibration gate passed with margin and the control improved the
+  checkpoint, so the screen finally ran in a stable baseline neighbourhood.
+  All three candidates satisfied the residual contract exactly, had live
+  branches (S4), and were v1-identical in architecture, yet none reached even
+  a third of the 3e-3 gate effect size; the only deviation above the measured
+  ~6e-4 floor was R's small regression.  Reading F/G's neutrality or R's
+  regression as a general verdict on those capacity families would exceed the
+  round's scope; reading the frozen gate as failed would ignore that the gate
+  was frozen precisely to prevent post-hoc rescue.
+alternatives_rejected:
+  - >-
+    Buying the full 320-epoch run for the best raw screen arm (F, 0.128613):
+    rejected because S1/S2/S3 all fail and the frozen rule authorises Phase C
+    only on a gate pass; buying it on a 1.1e-4 difference below the measured
+    floor would be post-hoc selection.
+  - >-
+    Re-running the screen at another lr/horizon/concurrency after seeing the
+    result: rejected as a forbidden rescue of this round.
+  - >-
+    Retiring the frozen F/R/G blocks permanently: rejected; the decision
+    retires them as standalone full-run candidates, not as components of a
+    future preregistered composition.
+  - >-
+    Combining F+G or F+R to accumulate effect: rejected (forbidden
+    combinations; two sub-floor effects do not compose into a preregistered
+    claim).
+  - >-
+    Carrying v1's screening numbers forward or comparing v2 deltas to them:
+    rejected; v1 measured a degradation regime and its ordering is retired.
+  - >-
+    Rolling the base back to FINAL-CLEAN sparse (0.128499): rejected;
+    historical reference only, no rollback authorised.
+revisit_if:
+  - >-
+    A new preregistration tests multi-stage iterative environment
+    composition with the residual-zero contract and the validated
+    low-rate/differential adapter, and freezes its gate effect size against
+    the ~6e-4 floor measured here.
+  - >-
+    A new preregistration proposes from-scratch 320-epoch training of the
+    frozen F/R/G blocks with an epoch-40 checkpoint gate in the style of the
+    CSSD round (the regime this screen deliberately did not test).
+  - >-
+    The soup-level floor is re-measured and turns out much smaller on some
+    future substrate, which would make F's -1.1e-4 worth re-examining.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_capacity_localization_v2_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_capacity_localization_v2_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/analysis_tables.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/summary.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/preflight.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/init_audit.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/calibration/calibration_summary.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/calibration/calibration_decision.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/screening/decision.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/screening/screening_summary.csv
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/full/NOT_RUN.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v2/mechanism/probes.json
+supersedes:
+  - decision-e2e-dictenv-capacity-localization-stop-screen-had-no-power-20260929
+related_claims:
+  - claim-e2e-dictenv-capacity-localization-v2-local-widening-not-supported-20260929
+  - claim-e2e-dictenv-capacity-localization-no-clear-capacity-localization-20260929
