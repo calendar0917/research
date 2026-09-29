@@ -1,0 +1,106 @@
+decision_id: decision-e2e-dictenv-capacity-localization-stop-screen-had-no-power-20260929
+created: '2026-09-29T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The line's frozen base CAP-BASE = CSSD-q1 sits on a 0.128-0.130 valid-MAE
+  plateau, and the mentor's open question is which expressive capacity is
+  missing: structure-semantic fusion (the model's binding is a single
+  rank-1 product per channel), static environment-environment composition
+  (one shallow pair encoder, no residual blocks) or graph-level invariant
+  readout (fixed first/second moments).  The round was designed to isolate
+  exactly one of those three per candidate with one frozen architecture,
+  one shared warm start, a 40-epoch screen and at most one full run.
+protocol: >-
+  Local CPU only (CUDA_VISIBLE_DEVICES="", no GPU/SSH/remote), preregistration
+  sha256 f5c4a8d2e489fbe1... and implementation frozen at commit becc6f6
+  before any screening training; official ZINC test never loaded.  Four arms
+  built with the exact CAP-BASE initialisation stream and warmed from the
+  same CSSD-q1 seed-0 Top-5 soup checkpoint: M0 (control, no capacity
+  module), F (multi-rank factorized bilinear fusion H=4/d_h=24), R (two
+  static residual FiLM blocks on the pair state, hidden 256), G (gated
+  DeepSets summaries dim 192 appended to the reader).  Per arm: step-0 audit
+  in eval mode, then fresh Adam(lr=1e-3, wd=1e-5), batch 128, clip 5.0,
+  H1_LAMBDA=33.95873017865987 reconstruction term, exactly 40 epochs,
+  epoch-21-40 states retained; primary metric Top-5-by-valid soup over
+  epochs 21-40, secondary mean valid MAE over epochs 31-40; frozen gate
+  Delta_soup <= -0.004 AND Delta_last10 <= -0.003; frozen tie order F > R >
+  G within 0.002; at most one from-scratch 320-epoch seed-0 winner run.
+results:
+  implementation_commit: becc6f6
+  preregistration_sha256_prefix: f5c4a8d2e489
+  device: cpu
+  official_test_loaded: false
+  focused_tests: 40/40 pass
+  parameter_budget: {cap_base: 97727, F: 127295, R: 132127, G: 128063, ratio: 1.1634}
+  init_audit: {step0_valid_mae: {M0: 0.130028, F: 0.131102, R: 0.130860, G: 0.129941}, capacity_grads: {F: '18/18 > 0', R: '20/20 > 0', G: '8/8 > 0'}}
+  screening: {soup: {M0: 0.129662, F: 0.129464, R: 0.129168, G: 0.129663}, last10: {M0: 0.154314, F: 0.150048, R: 0.149848, G: 0.147582}, delta_soup: {F: -0.000198, R: -0.000494, G: 0.000002}, delta_last10: {F: -0.004266, R: -0.004466, G: -0.006732}, best_valid: {M0: 0.135621, F: 0.136613, R: 0.138940, G: 0.135855}, best_epoch: {M0: 21, F: 37, R: 28, G: 27}, epoch40_valid: {M0: 0.156383, F: 0.156190, R: 0.142631, G: 0.136734}}
+  gate: {passing: [], verdict: NO_CLEAR_CAPACITY_LOCALIZATION}
+  full_run: {bought: false, artifact: full/NOT_RUN.json}
+  budget_spent_epochs: 160
+decision: >-
+  1. STOP THIS ROUND at the frozen branch 1: NO_CLEAR_CAPACITY_LOCALIZATION;
+  no 320-epoch run, no mechanism probes, no seed 1/2, no F/R/G combination.
+  2. KEEP CAP-BASE = CSSD-q1 (0.130028) unchanged; the capacity candidates
+  remain screened-only and their added parameters unauthorised for training
+  until a new preregistration authorises them.  3. Record the limiting
+  ingredient as the screening adapter, not the architectures: the fresh-Adam
+  warm restart degrades the control itself (step-0 0.130028 -> best 0.135621
+  @ 21 -> 0.156383 @ 40), the control soup-vs-start floor is -0.00037, and
+  the candidate Delta_soup values are at or below it.  4. Record the
+  secondary late-window stabilisation signal (all three capacities slow the
+  epoch-31-40 drift by -0.0043...-0.0067, largest for G) as a hypothesis
+  only, explicitly not a bottleneck localisation and not usable for
+  selection.  5. The next capacity round must first repair the screen: reuse
+  the frozen F/R/G architectures verbatim but with either the from-scratch
+  epoch-40 checkpoint gate style of the CSSD round or a low-rate warm
+  adaptation (e.g. lr 1e-4) whose M0 noise floor is measured and
+  preregistered, and with a gate effect size above that floor.
+alternatives_rejected:
+  - >-
+    Buy the full 320-epoch run anyway for G (best Delta_last10 -0.006732).
+    Rejected: the frozen gate requires both conditions and fired for nobody;
+    buying a run on the non-frozen secondary metric is post-hoc selection.
+  - >-
+    Re-run the screen with lower lr, fewer/more epochs or an adjusted
+    threshold.  Rejected: changing the protocol after seeing results is the
+    forbidden rescue; it must enter a new preregistration.
+  - >-
+    Train F+R, F+G or R+G to chase the secondary signal.  Rejected:
+    combination candidates are explicitly forbidden in this round, and no
+    candidate passed the gate.
+  - >-
+    Roll the base back to FINAL-CLEAN sparse (0.128499) because the screen
+    was uninformative.  Rejected: historical reference only; CSSD-q1 is the
+    frozen base and no rollback was authorised.
+  - >-
+    Interpret G's near-zero capacity gradient (0.001) as evidence that the
+    readout is not a bottleneck.  Rejected: it reflects the near-zero
+    initialisation of the gated summaries during a 40-epoch warm restart,
+    not the readout's expressive role.
+  - >-
+    Treat the late-window improvement as capacity localisation.  Rejected:
+    best valid accuracy does not improve (all >= 0.1356); the difference is
+    drift speed in an overfitting regime on one seed.
+revisit_if: >-
+  A new preregistration writes a discriminative screen for the same three
+  frozen architectures: (a) from-scratch epoch-40 checkpoint gate in the
+  style of the CSSD round, or (b) low-rate warm adaptation (lr 1e-4 or a
+  non-fresh-Adam schedule) with the M0 soup-vs-start floor and the
+  epoch-to-epoch valid spread measured inside the round and the gate effect
+  size set above that floor; (c) optionally preregister the stabilisation
+  hypothesis as a secondary, explicitly non-bottleneck question under an
+  adapter where late-epoch drift is the measured phenomenon.  The exact
+  F/R/G definitions, widths and parameter budgets from this preregistration
+  may be reused verbatim.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_capacity_localization_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_capacity_localization_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/analysis_tables.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/summary.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/preflight.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/init_audit.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/screening/decision.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/full/NOT_RUN.json

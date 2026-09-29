@@ -1,0 +1,151 @@
+claim_id: claim-e2e-dictenv-capacity-localization-no-clear-capacity-localization-20260929
+created: '2026-09-29T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the frozen ZINC dictionary-environment base CAP-BASE = CSSD-q1 (C6 clean
+  mask + q1 common structural coordinate + q1-orthogonal sparse dictionary
+  K=32/s=8/IHT-10 + paired node/edge structure-semantic binding + full
+  relation + first/second-moment readout; 97727 params; seed-0 soup valid MAE
+  0.13002798487985273; CPU only; official test never loaded), the
+  preregistered Capacity Localization screen cannot localise the current
+  expressive bottleneck among structure-semantic fusion (F), static
+  environment-environment composition (R) and graph-level invariant readout
+  (G).  (1) The screen was four 40-epoch warm-start arms from the same
+  CAP-BASE seed-0 Top-5 soup with fresh Adam (lr 1e-3, wd 1e-5, batch 128,
+  clip 5.0, H1 reconstruction term), primary metric = Top-5-by-valid soup
+  over epochs 21-40, secondary = mean valid MAE over epochs 31-40, frozen
+  gate Delta_soup <= -0.004 AND Delta_last10 <= -0.003.  (2) Result: M0 soup
+  0.129662 / last10 0.154314; F 0.129464 / 0.150048 (Delta -0.000198 /
+  -0.004266); R 0.129168 / 0.149848 (Delta -0.000494 / -0.004466);
+  G 0.129663 / 0.147582 (Delta +0.000002 / -0.006732).  Every candidate
+  passes the secondary condition and fails the primary one by 8-20x
+  (required -0.004), so the frozen branch
+  NO_CLEAR_CAPACITY_LOCALIZATION applies; full/NOT_RUN.json was written and
+  no 320-epoch run was bought (160 of the authorised 480 epochs spent).
+  (3) The screen is the limiting ingredient, not (demonstrably) the
+  capacities: the pure M0 continuation control itself degrades from step-0
+  0.130028 to best 0.135621 at epoch 21 and 0.156383 at epoch 40, the
+  control's own soup differs from its own start by -0.00037 (the protocol
+  noise floor), and the candidate Delta_soup values sit at or below that
+  floor; the soup metric mostly averages away the ~0.02-wide epoch-to-epoch
+  valid fluctuation (individual window states 0.1356-0.1424).  (4) The only
+  systematic separation is late-window (epochs 31-40) degradation speed:
+  all three capacities slow the drift (Delta -0.0043, -0.0045, -0.0067;
+  largest for G) without improving best valid accuracy (all >= 0.1356).
+  This is recorded as a stabilisation hypothesis, not a bottleneck
+  localisation, and it does not fire the frozen gate.  (5) Engineering
+  checks passed for all candidates: bit-identical warm load, finite strictly
+  positive step-0 capacity gradients (F 18/18, R 20/20, G 8/8), step-0 MAE
+  deltas +0.001074 / +0.000832 / -0.000087 (bound +0.03), added-parameter
+  ratio max/min 1.1634 <= 1.5, totals 127295 / 132127 / 128063 inside the
+  preferred 120000-160000 band.  G's added branch is nearly gradient-starved
+  (max capacity grad norm 0.001 vs 0.239 for F and 2.513 for R).  No
+  threshold, width, rank, seed, epoch or tie-break was changed after the
+  first screening process started; no combination candidate, no seed 1/2,
+  no post-hoc rescue.  CAP-BASE stays CSSD-q1 and FINAL-CLEAN sparse
+  (0.12849851670576026) remains a historical performance reference only.
+scope: >-
+  CPU-only local round (16 cores / 27 GiB; wave 1 = M0/F/R as 3 processes x 4
+  threads, wave 2 = G as 1 x 4), preregistration sha256
+  f5c4a8d2e489fbe1..., implementation frozen at commit becc6f6 before any
+  screening training; exactly four 40-epoch warm-start adaptation runs, no
+  from-scratch training.  Data: frozen phi65 cache from the official ZINC
+  train (10000 molecules) and valid (1000 molecules) splits; official test
+  never loaded (official_test_loaded = false in every payload).  Single seed
+  (0), one architecture per candidate, no hyper-parameter search.  The
+  warm-start screen measures adaptation *from* a 320-epoch soup optimum, not
+  from-scratch training capacity.
+supporting_evidence:
+  - >-
+    preflight.json / preregistration_snapshot.json: CAP-BASE soup MAE
+    recomputed 0.130028 (frozen value 0.13002798487985273, |delta| < 5e-7),
+    subspace q1 asserted, checkpoint and subspace sha256 recorded,
+    official_test_loaded false.
+  - >-
+    parameter_budget.json: F +29568 (total 127295), R +34400 (total 132127),
+    G +30336 (total 128063), ratio 1.1634199134199135 <= 1.5, preferred band
+    and hard ceiling satisfied.
+  - >-
+    init_audit.json: step-0 valid MAE M0 0.130028, F 0.131102, R 0.130860,
+    G 0.129941; mean |delta prediction| 0.01003 / 0.01741 / 0.00113; all
+    capacity gradients finite and strictly positive; shared state
+    bit-identical on every arm.
+  - >-
+    screening/decision.json + screening_summary.csv: soup (21-40) M0
+    0.129662, F 0.129464, R 0.129168, G 0.129663; last-10 (31-40) M0
+    0.154314, F 0.150048, R 0.149848, G 0.147582; gates {F, R, G} all
+    NO_CAPACITY_SIGNAL, selection winner null, reason
+    NO_CLEAR_CAPACITY_LOCALIZATION, passing [].
+  - >-
+    screening/*/result.json + curve.csv: M0 best valid 0.135621 @ 21 and
+    epoch-40 0.156383; F 0.136613 @ 37 / 0.156190; R 0.138940 @ 28 /
+    0.142631; G 0.135855 @ 27 / 0.136734; soup members F [33,34,35,36,37],
+    M0 [21,26,29,30,37], R [25,28,30,34,35], G [25,27,29,35,40]; all arms
+    finite and stable.
+  - >-
+    full/NOT_RUN.json and mechanism/probes.json: full run not bought
+    (reason: no candidate passed the preregistered capacity gate), mechanism
+    probes not run (they require a frozen winner soup checkpoint).
+  - >-
+    Focused tests tests/test_e2e_dictenv_capacity_localization_v1.py 40/40
+    pass: CAP-BASE identity, bit-identical warm load, global RNG stream
+    equality with CSSDModel, F shape/permutation/gradient checks, R
+    single-pass no-writeback and FiLM zero-init, G permutation invariance
+    and empty-graph safety, reader-column transfer, CPU guard,
+    official-test blocker, budget/gate/winner/band logic, tiny train_screen
+    smoke, runner plumbing.
+contradicting_evidence:
+  - >-
+    All three candidates passed the secondary Delta_last10 <= -0.003
+    condition (-0.004266 / -0.004466 / -0.006732), i.e. the added capacity
+    does change the late-window behaviour; this is not part of the frozen
+    primary metric and does not fire the gate.
+  - >-
+    Step-0 prediction shifts and the F/R residual projections are non-zero,
+    so the null is not caused by an inert architecture at initialisation;
+    the gate failure is a measurement-power failure of the adapter, which
+    means the claim is about the protocol as executed, not a proof that
+    F/R/G cannot help capacity.
+limitations:
+  - >-
+    Single seed, one base checkpoint, one 40-epoch warm-start adapter
+    (fresh Adam lr 1e-3); the screen ran in a degradation regime where even
+    the control lost 0.0056 (best) to 0.026 (epoch 40) of valid MAE.
+  - >-
+    The Top-5 soup over a noisy window is dominated by variance reduction;
+    its noise floor (control soup minus control start = -0.00037) is of the
+    same order as the candidate deltas.
+  - >-
+    The late-window stabilisation signal is descriptive (post-hoc), based on
+    epochs 31-40 of a single seed, and cannot distinguish added capacity
+    from a different noise trajectory.
+  - >-
+    No from-scratch 320-epoch evidence exists for any candidate; no
+    mechanism probes P1-P5 were run.
+implication: >-
+  The capacity question on this line stays open, but it requires a
+  discriminative screen first: a new preregistration should either use the
+  from-scratch epoch-40 checkpoint gate style of the CSSD round or a
+  low-rate warm adaptation (e.g. lr 1e-4) whose M0-measured noise floor is
+  preregistered and whose gate effect size exceeds that floor, before any
+  capacity search or combination candidate is authorised.  CAP-BASE remains
+  CSSD-q1; no width/rank/seed/epoch rescue of this round is allowed, and the
+  stabilisation hypothesis (added capacity slows late-epoch valid drift) is
+  recorded only as a candidate secondary question for such a new round.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_capacity_localization_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_capacity_localization_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/analysis_tables.md
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/preflight.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/init_audit.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/parameter_budget.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/screening/decision.json
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/screening/screening_summary.csv
+  - tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/full/NOT_RUN.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_capacity_localization_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_capacity_localization_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_capacity_localization_v1.py

@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-common-subspace-dictionary-v1-closed-q1-supported-structure-task-neutral-single-seed
+phase: e2e-dictenv-capacity-localization-v1-closed-no-clear-capacity-localization
 updated: 2026-09-29
 
 # ---------------------------------------------------------------------------
@@ -1189,7 +1189,7 @@ e2e_dictenv_a1:
       (root_neighbour_shell1, root_walk1) in any descriptor revision.
 
   # -------------------------------------------------------------------------
-  # e2e_dictenv_common_subspace_dictionary_v1 — 2026-09-29 (latest)
+  # e2e_dictenv_common_subspace_dictionary_v1 — 2026-09-29
   # -------------------------------------------------------------------------
   # First round to change the DICTIONARY INPUT SPACE instead of the coder:
   # explicit train-only common subspace (c = U^T x, dense, never dropped) with
@@ -1253,6 +1253,74 @@ e2e_dictenv_a1:
       as gates.  Secondary: cross-seed Hungarian alignment of CSSD atoms; a
       c1 binding ablation (keep c1 in the reconstruction term, remove it from
       the binding).
+
+  # -------------------------------------------------------------------------
+  # e2e_dictenv_capacity_localization_v1 — 2026-09-29 (latest)
+  # -------------------------------------------------------------------------
+  # Capacity Localization + One-Winner Full Training round on the frozen
+  # CAP-BASE = CSSD-q1 checkpoint (0.130028).  Four 40-epoch warm-start arms
+  # from the same seed-0 Top-5 soup with fresh Adam 1e-3: M0 control, F
+  # (multi-rank factorized structure-semantic fusion H=4/d_h=24), R (two
+  # static residual FiLM pair-composition blocks, hidden 256), G (gated
+  # DeepSets invariant summaries dim 192 appended to the reader).  Frozen
+  # primary metric: Top-5 soup over epochs 21-40; secondary: mean valid over
+  # epochs 31-40; gate Delta_soup <= -0.004 AND Delta_last10 <= -0.003.
+  # Result: soup M0 0.129662 | F 0.129464 (-0.000198) | R 0.129168 (-0.000494)
+  # | G 0.129663 (+0.000002); last10 M0 0.154314 | F 0.150048 | R 0.149848 |
+  # G 0.147582.  Every candidate passed the secondary condition and failed
+  # the primary one by 8-20x -> frozen branch NO_CLEAR_CAPACITY_LOCALIZATION;
+  # full/NOT_RUN.json written, no 320-epoch run bought (160/480 epochs spent),
+  # no mechanism probes (winner soup does not exist).  Limiting ingredient is
+  # the screen, not (demonstrably) the capacities: the M0 control itself
+  # degrades from step-0 0.130028 to best 0.135621 @21 and 0.156383 @40; the
+  # control soup-vs-start floor is -0.00037 and candidate Delta_soup values
+  # sit at/below it; only the late window separates (all three slow the drift
+  # by -0.0043..-0.0067, largest for G) without improving best valid (all
+  # >= 0.1356).  Step-0 audit clean (F +0.001074, R +0.000832, G -0.000087;
+  # all capacity grads finite > 0); budget ratio 1.1634 <= 1.5; totals
+  # 127295/132127/128063.  CAP-BASE unchanged; no rescue, no combination, no
+  # seed 1/2.  Official test never loaded.
+  e2e_dictenv_capacity_localization_v1:
+    status: closed_round_complete_no_full_run
+    round: e2e-dictenv-capacity-localization-v1
+    verdict: NO_CLEAR_CAPACITY_LOCALIZATION_SCREEN_HAD_NO_POWER
+    device: cpu_only
+    official_test_loaded: false
+    preregistration: tracks/ksvd/notes/e2e_dictenv_capacity_localization_v1_preregistration.md
+    preregistration_sha256_prefix: f5c4a8d2e489
+    implementation_commit: becc6f6
+    cap_base: CSSD-q1
+    cap_base_soup_mae: 0.13002798487985273
+    analysis: tracks/ksvd/notes/e2e_dictenv_capacity_localization_v1_analysis.md
+    claims:
+      - claim-e2e-dictenv-capacity-localization-no-clear-capacity-localization-20260929
+    decision: decision-e2e-dictenv-capacity-localization-stop-screen-had-no-power-20260929
+    results_dir: tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/
+    report: tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/REPORT.md
+    decision_report: tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/DECISION.md
+    summary: tracks/ksvd/results/e2e_dictenv_capacity_localization_v1/summary.json
+    runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_capacity_localization_v1.py
+    module: tracks/ksvd/experiments/luyin16/e2e_dictenv_capacity_localization_v1.py
+    tests: tracks/ksvd/tests/test_e2e_dictenv_capacity_localization_v1.py
+    parameter_budget: {cap_base: 97727, F: 127295, R: 132127, G: 128063, ratio: 1.1634}
+    init_audit: {step0_valid_mae: {M0: 0.130028, F: 0.131102, R: 0.130860, G: 0.129941}, capacity_grads_positive: {F: 18, R: 20, G: 8}}
+    screening: {soup: {M0: 0.129662, F: 0.129464, R: 0.129168, G: 0.129663}, last10: {M0: 0.154314, F: 0.150048, R: 0.149848, G: 0.147582}, delta_soup: {F: -0.000198, R: -0.000494, G: 0.000002}, delta_last10: {F: -0.004266, R: -0.004466, G: -0.006732}, best_valid: {M0: 0.135621, F: 0.136613, R: 0.138940, G: 0.135855}, gate: NO_CLEAR_CAPACITY_LOCALIZATION}
+    full_run: {bought: false, artifact: full/NOT_RUN.json, budget_spent_epochs: 160}
+    focused_tests: 40/40 pass
+    new_training_runs: 0
+    screening_runs: 4
+    forbidden_without_new_preregistration:
+      - F/R/G 320-epoch training, seed 1/2, F+R / F+G / R+G combinations
+      - threshold / width / rank / epoch / lr rescue of this round
+      - reading the official test for this round
+    next_round_shape: >-
+      Repair the screen first, then re-ask the capacity question with the
+      frozen F/R/G architectures: (a) from-scratch epoch-40 checkpoint gate
+      in the style of the CSSD round, or (b) low-rate warm adaptation
+      (lr 1e-4) with the M0 soup-vs-start floor and epoch-to-epoch valid
+      spread measured and preregistered, gate above that floor; (c) optional
+      secondary question: does added capacity slow late-epoch valid drift
+      (stabilisation hypothesis, never a bottleneck claim).
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
