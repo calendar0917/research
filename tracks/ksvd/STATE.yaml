@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-training-protocol-audit-v1-closed-protocol-not-primary-bottleneck
+phase: e2e-dictenv-rndb-v1-closed-task-no-go-mechanism-strongly-supported
 updated: 2026-09-29
 
 # ---------------------------------------------------------------------------
@@ -1492,6 +1492,74 @@ e2e_dictenv_a1:
       message passing and no environment update.  Close the
       training-protocol-as-primary-bottleneck hypothesis; do not run another
       optimizer/scheduler search.
+
+  # -------------------------------------------------------------------------
+  # e2e_dictenv_rndb_v1 — 2026-09-29
+  # -------------------------------------------------------------------------
+  # Rolewise Nonlinear Dictionary Binding: insert one small SHARED nonlinear
+  # operator between the individual residual dictionary-role responses and
+  # their aggregation (p_k -> p_k + psi(p_k) -> sum), on top of the frozen
+  # CSSD-q1 parent (bit-identical parent params; psi shared across all 32 roles
+  # / nodes / shells; bias-free; q=1 common coordinate excluded from psi).
+  # New params 7680 (psi_A 6144 + psi_E 1536), total 105407 (parent 97727).
+  # Correctness G0-G6 all pass (psi-off forward bit-identical to parent), 12
+  # focused tests pass.  Exactly one seed-0 trajectory, 320 epochs, 8 CPU
+  # threads.  Best valid 0.139599 @ 256; Top-5 soup 0.133117.  Band P3
+  # RNDB_NO_USEFUL_TASK_GAIN; historical CSSD-q1 soup 0.130028 (unmatched,
+  # G_hist -0.003089).  Mechanism VERY strongly supported: psi off -> 0.323797
+  # (G_psi +0.190679 vs gate 0.003; node-only +0.140770, edge-only +0.063024),
+  # residual dictionary alpha->0 -> 0.421944 (G_dict +0.288827 vs gate 0.010),
+  # assignment shuffle node +0.137391 / edge +0.157791.  psii alive, dictionary
+  # 32/32 active, N_eff 22.16.  Boundary case: no pre-registered case covers
+  # M_R > 0.126 WITH strong new mechanism evidence (Case F also needs no strong
+  # mechanism; Case C needs M_R <= 0.126) -> reported Case F
+  # RNDB_NO_GO_TASK_LEVEL_MECHANISM_STRONGLY_SUPPORTED.  No seed 1, no rescue,
+  # official test never loaded.
+  e2e_dictenv_rndb_v1:
+    status: closed_round_complete_one_trajectory
+    round: e2e-dictenv-rndb-v1
+    verdict: RNDB_NO_GO_TASK_LEVEL_MECHANISM_STRONGLY_SUPPORTED
+    case: F
+    case_boundary: true
+    device: cpu_only
+    official_test_loaded: false
+    preregistration: tracks/ksvd/notes/e2e_dictenv_rndb_v1_preregistration.md
+    preregistration_sha256_prefix: 5d6bb0d87305
+    prior_artifact_audit: tracks/ksvd/notes/e2e_dictenv_rndb_v1_prior_artifact_audit.md
+    implementation_commit: e233beb
+    analysis: tracks/ksvd/notes/e2e_dictenv_rndb_v1_analysis.md
+    claims:
+      - claim-e2e-dictenv-rndb-v1-rolewise-nonlinear-binding-load-bearing-task-no-gain-20260929
+    decision: decision-e2e-dictenv-rndb-v1-stop-task-no-go-mechanism-open-20260929
+    results_dir: tracks/ksvd/results/e2e_dictenv_rndb_v1/
+    report: tracks/ksvd/results/e2e_dictenv_rndb_v1/REPORT.md
+    decision_report: tracks/ksvd/results/e2e_dictenv_rndb_v1/DECISION.md
+    summary: tracks/ksvd/results/e2e_dictenv_rndb_v1/summary.json
+    runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_rndb_v1.py
+    module: tracks/ksvd/experiments/luyin16/e2e_dictenv_rndb_v1.py
+    tests: tracks/ksvd/tests/test_e2e_dictenv_rndb_v1.py
+    architecture: {base: CSSD-q1, seed: 0, params: 105407, parent_params: 97727, new_params: 7680, ratio: 0.07858, psi_A: '96->32->96 SiLU bias=False', psi_E: '48->16->48 SiLU bias=False'}
+    training: {epochs: 320, best_valid_mae: 0.1395986, best_epoch: 256, soup_valid_mae: 0.1331175, soup_members: [248, 256, 258, 298, 314], wall_clock_s: 5727.46}
+    task: {band: P3, label: RNDB_NO_USEFUL_TASK_GAIN, historical_cssd_q1_soup: 0.1300280, g_hist_unmatched: -0.003089}
+    mechanism: {G_psi: 0.190679, G_psi_gate: 0.003, G_psi_node: 0.140770, G_psi_edge: 0.063024, G_dict: 0.288827, G_dict_gate: 0.010, M_psi0: 0.3237969, M_dict0: 0.4219441}
+    assignment_shuffle: {node_mean_delta: 0.137391, edge_mean_delta: 0.157791, seeds: [101, 202, 303, 404, 505]}
+    psi_health: {psi_A_param_norm: 6.201, psi_E_param_norm: 3.183, psi_A_frac_abs_lt_1e12: 0.0208, alive: true}
+    dictionary_health: {active_atoms: 32, effective_atoms: 22.16, top1_activation_rate: 0.658}
+    focused_tests: 12/12 pass
+    forbidden_without_new_preregistration:
+      - seed 1/2/3 of RNDB, a matched CSSD rerun, or any second RNDB variant
+      - psi width / W2 init / bias / weight-decay / LayerNorm / residual-scale change
+      - node-only or edge-only training, gate / hypernetwork / coarse146
+      - LR / lambda / horizon / batch / soup changes
+      - reading the official test for this round
+    next_round_shape: >-
+      New preregistration only (nothing implemented): a matched-capacity
+      task-conversion experiment — an explicit residual-scale or normalised psi
+      branch, or RNDB vs a matched dense control at equal params — with >= 3
+      seeds, same soup protocol and a same-round matched baseline.  Secondary:
+      separate the linear residual coordinate from its psi term to decompose
+      G_dict; study the W2-init vs Adam step-size transient as architecture
+      trainability, not as a rescue.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24

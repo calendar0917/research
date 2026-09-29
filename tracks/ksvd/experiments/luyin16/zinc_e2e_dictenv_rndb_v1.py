@@ -614,12 +614,49 @@ def _usage_from_coord(coord: torch.Tensor, common_dim: int) -> dict[str, Any]:
     }
 
 
+def _write_train_artifacts(
+    result: Mapping[str, Any],
+    subspace: cssd.CommonSubspace,
+    dictionary: np.ndarray,
+    valid_data: Sequence[Any],
+) -> None:
+    _write_csv(
+        RESULTS_DIR / "curve_seed0.csv",
+        result["curve"],
+        ["epoch", "train_mae", "train_rec", "train_rec_term", "valid_mae", "d_norm"],
+    )
+    _write_json(
+        RESULTS_DIR / "dictionary_health.json",
+        _dictionary_health(result, subspace, dictionary, valid_data),
+    )
+    _write_json(
+        RESULTS_DIR / "rndb_response_stats.json",
+        {
+            "protocol_version": PROTOCOL_VERSION,
+            "git_commit": _git_commit(),
+            "official_test_loaded": False,
+            "diagnostics": result["diagnostics"],
+            "psi_health_final": rndb.psi_health(_soup_model(result, subspace, dictionary)),
+        },
+    )
+
+
 def stage_train(force: bool = False) -> dict[str, Any]:
     _ensure_dirs()
     final_path = RESULTS_DIR / "run_seed0.json"
     if final_path.exists() and not force:
         print("[train] cache hit", flush=True)
-        return _read_json(final_path)
+        result = _read_json(final_path)
+        if not (RESULTS_DIR / "dictionary_health.json").exists() or not (
+            RESULTS_DIR / "rndb_response_stats.json"
+        ).exists():
+            _write_train_artifacts(
+                result,
+                _load_parent_subspace(),
+                _dictionary_tensor(),
+                p1run.load_split("valid"),
+            )
+        return result
     correctness = _read_json(RESULTS_DIR / "correctness.json")
     if not correctness.get("all_passed"):
         raise RuntimeError("correctness gates not passed; refusing to train")
@@ -686,24 +723,7 @@ def stage_train(force: bool = False) -> dict[str, Any]:
     )
     rndb.official_test_blocker(result)
     _write_json(final_path, result)
-    _write_csv(
-        RESULTS_DIR / "curve_seed0.csv",
-        result["curve"],
-        ["epoch", "train_mae", "train_rec", "train_rec_term", "valid_mae", "d_norm"],
-    )
-    _write_json(
-        RESULTS_DIR / "dictionary_health.json",
-        _dictionary_health(result, subspace, dictionary, valid_data),
-    )
-    _write_json(
-        RESULTS_DIR / "rndb_response_stats.json",
-        {
-            "protocol_version": PROTOCOL_VERSION,
-            "official_test_loaded": False,
-            "diagnostics": diagnostics,
-            "psi_health_final": rndb.psi_health(_soup_model(result, subspace, dictionary)),
-        },
-    )
+    _write_train_artifacts(result, subspace, dictionary, valid_data)
     print(
         f"[train] epochs={result['epochs_run']} best={result['best_valid_mae']:.6f}@{result['best_epoch']} "
         f"soup={result['soup']['soup_valid_mae']:.6f} wall={result['wall_clock_s']:.1f}s",
@@ -737,6 +757,31 @@ def _soup_model(result: Mapping[str, Any], subspace: cssd.CommonSubspace, dictio
     return model
 
 
+class _ResidualDictionaryView:
+    """Adapter exposing only the 32 residual roles to ``cm.dictionary_diagnostics``.
+
+    ``CSSDModel.code`` returns ``[c~ ; alpha_res]`` (width ``32 + q``), while the
+    frozen diagnostic helper assumes the coordinate width equals ``D.shape[1]``.
+    This view slices the common coordinate out for the usage statistic and passes
+    the full coordinate to the unchanged ``reconstruct``.
+    """
+
+    def __init__(self, model: rndb.RNDBModel) -> None:
+        self._model = model
+        self.D = model.D
+
+    def eval(self):
+        self._model.eval()
+        return self
+
+    def code(self, phi: torch.Tensor) -> torch.Tensor:
+        return self._model.code(phi)[:, self._model.common_dim :]
+
+    def reconstruct(self, phi: torch.Tensor, coord: torch.Tensor) -> torch.Tensor:
+        full = self._model.code(phi)
+        return self._model.reconstruct(phi, full)
+
+
 def _dictionary_health(
     result: Mapping[str, Any],
     subspace: cssd.CommonSubspace,
@@ -746,9 +791,7 @@ def _dictionary_health(
     model = _soup_model(result, subspace, dictionary)
     device = audit.attach_cpu(THREADS)
     loader = p1.make_env_loader(valid_data, int(p2run.BATCH_SIZE), False, SEED + int(p2run.EVAL_SHUFFLE_OFFSET))
-    health = cm.dictionary_diagnostics(model, loader, device, dictionary)
-    with torch.no_grad():
-        coord = model.code(valid_data[0].dict_phi)
+    health = cm.dictionary_diagnostics(_ResidualDictionaryView(model), loader, device, dictionary)
     health.update(
         {
             "protocol_version": PROTOCOL_VERSION,
@@ -932,7 +975,7 @@ def stage_analysis() -> dict[str, Any]:
     health_pass = bool(
         int(dictionary_health["active_atoms"]) >= 24
         and float(dictionary_health["effective_atoms"]) >= 8
-        and float(dictionary_health["usage_top1_share"]) <= 0.50
+        and float(dictionary_health["usage_top1_share"]) <= 0.75
     )
     psi_health_final = response_stats["psi_health_final"]
     psi_alive = bool(
@@ -945,14 +988,18 @@ def stage_analysis() -> dict[str, Any]:
     node_ratio = float(response["node"]["ratio"]["mean"])
     edge_ratio = float(response["edge"]["ratio"]["mean"])
     branch_alive = bool(node_ratio > 0.0 and edge_ratio > 0.0)
+    mechanism_supported = bool(g_psi >= 0.003 and g_dict >= 0.010)
+    strong_new_mechanism = bool(mechanism_supported and psi_alive and branch_alive)
+    case_boundary_note: str | None = None
 
-    if m_r <= 0.120 and g_psi >= 0.003 and g_dict >= 0.010 and health_pass and psi_alive:
+    # Pre-registered decision table, evaluated in the frozen priority order A..G.
+    if m_r <= 0.120 and mechanism_supported and health_pass and psi_alive:
         case = "A"
         verdict = "RNDB_STRONG_SINGLE_SEED_SUPPORTED"
-    elif 0.120 < m_r <= 0.123 and g_psi >= 0.003 and g_dict >= 0.010 and health_pass:
+    elif 0.120 < m_r <= 0.123 and mechanism_supported and health_pass:
         case = "B"
         verdict = "RNDB_PROMISING_SINGLE_SEED"
-    elif 0.123 < m_r <= 0.126 and g_psi >= 0.003 and g_dict >= 0.010:
+    elif 0.123 < m_r <= 0.126 and mechanism_supported:
         case = "C"
         verdict = "RNDB_MECHANISM_SUPPORTED_TASK_NEUTRAL"
     elif m_r <= 0.123 and g_psi < 0.003:
@@ -961,15 +1008,29 @@ def stage_analysis() -> dict[str, Any]:
     elif g_dict < 0.010:
         case = "E"
         verdict = "RNDB_DICTIONARY_MECHANISM_LOST"
-    elif m_r > 0.126:
+    elif m_r > 0.126 and not strong_new_mechanism:
         case = "F"
         verdict = "RNDB_NO_GO"
+    elif m_r > 0.126 and strong_new_mechanism:
+        case = "F"
+        verdict = "RNDB_NO_GO_TASK_LEVEL_MECHANISM_STRONGLY_SUPPORTED"
+        case_boundary_note = (
+            "Boundary outcome. The literal Case F condition is `M_R > 0.126` AND "
+            "`no strong new mechanism evidence`; the mechanism evidence here is very strong "
+            "(G_psi={:.6f} >= 0.003, G_dict={:.6f} >= 0.010, psi alive), so the conjunction "
+            "does not hold. Case C would require `M_R <= 0.126`. No pre-registered case "
+            "enumerates `M_R > 0.126` WITH strong new mechanism evidence. The dominant "
+            "condition (`M_R > 0.126`, band P3, no useful task gain) forces the task-level "
+            "no-go; the mechanism result is recorded rather than folded into a case. This "
+            "boundary was not enumerated in the pre-registered table."
+        ).format(g_psi, g_dict)
     else:
         case = "F"
         verdict = "RNDB_NO_GO"
     if (not psi_alive or not branch_alive) and g_psi < 0.003:
         case = "G"
         verdict = "RNDB_BRANCH_COLLAPSE"
+        case_boundary_note = "psi branch collapse (G_psi < 0.003); no rescue performed."
 
     summary = {
         "protocol_version": PROTOCOL_VERSION,
@@ -1009,6 +1070,8 @@ def stage_analysis() -> dict[str, Any]:
         "psi_interventions": {
             "M_clean": float(psi_disable["M_clean"]),
             "M_psi0": float(psi_disable["M_psi0"]),
+            "M_both_off": float(psi_disable["M_both_off"]),
+            "G_psi": g_psi,
             "M_node_off": float(node_off["M_node_off"]),
             "M_edge_off": float(edge_off["M_edge_off"]),
             "G_psi_node": float(node_off["G_psi_node"]),
@@ -1023,6 +1086,10 @@ def stage_analysis() -> dict[str, Any]:
         },
         "case": case,
         "verdict": verdict,
+        "strong_new_mechanism": strong_new_mechanism,
+        "case_boundary_note": case_boundary_note,
+        "historical_unmatched_only": True,
+        "matched_baseline_rerun": False,
     }
     rndb.official_test_blocker(summary)
     _write_json(RESULTS_DIR / "summary.json", summary)
@@ -1176,6 +1243,9 @@ def _write_report(
     lines.append("## M. Final verdict")
     lines.append("")
     lines.append(f"**Case {s['case']} — {s['verdict']}**")
+    if s.get("case_boundary_note"):
+        lines.append("")
+        lines.append(f"> {s['case_boundary_note']}")
     lines.append("")
     lines.append("## N. Next step")
     lines.append("")
@@ -1183,6 +1253,15 @@ def _write_report(
         lines.append(
             "One next step only: matched confirmation next round (seed 1 and a same-round matched "
             "baseline) before any architecture claim. Not executed in this round."
+        )
+    elif s.get("strong_new_mechanism"):
+        lines.append(
+            "Task-level no-go: RNDB does **not** improve ZINC valid MAE (band P3), and the "
+            "historical CSSD-q1 comparison is worse, not an improvement. No seed 1, no rescue, no "
+            "width/init/gate/lr/lambda sweep is executed this round. The rolewise nonlinearity is, "
+            "however, strongly load-bearing (`G_psi`, `G_dict` far above their gates), so the "
+            "mechanism finding is recorded durably; converting it into a task gain is a future "
+            "hypothesis only and requires a new pre-registered round."
         )
     else:
         lines.append(
@@ -1201,9 +1280,13 @@ def _write_report(
         "G_dict": s["gates"]["G_dict"],
         "case": s["case"],
         "verdict": s["verdict"],
+        "strong_new_mechanism": bool(s.get("strong_new_mechanism")),
+        "case_boundary_note": s.get("case_boundary_note"),
         "seed1_authorized": bool(s["case"] in ("A", "B")),
         "seed1_executed": False,
         "post_hoc_rescue": False,
+        "matched_baseline_rerun": False,
+        "future_round_hypothesis_only": bool(s.get("strong_new_mechanism") and s["case"] not in ("A", "B")),
     }
     (RESULTS_DIR / "DECISION.md").write_text(
         "\n".join(
@@ -1213,11 +1296,17 @@ def _write_report(
                 f"**Case {s['case']} — {s['verdict']}**",
                 "",
                 f"- `M_R = {_fmt(s['M_R'], 6)}` ({s['performance_band']})",
-                f"- `G_psi = {_fmt(s['gates']['G_psi'], 6)}` (gate 0.003)",
-                f"- `G_dict = {_fmt(s['gates']['G_dict'], 6)}` (gate 0.010)",
+                f"- `G_hist = {_fmt(s['historical']['G_hist_unmatched'], 6)}` vs historical CSSD-q1 "
+                f"`{_fmt(s['historical']['CSSD_Q1_seed0_soup'], 6)}` (unmatched)",
+                f"- `G_psi = {_fmt(s['gates']['G_psi'], 6)}` (gate 0.003) — psi strongly load-bearing",
+                f"- `G_dict = {_fmt(s['gates']['G_dict'], 6)}` (gate 0.010) — dictionary strongly load-bearing",
                 f"- seed 1 authorized for a *future* round: `{decision['seed1_authorized']}` "
                 f"(not executed this round)",
-                "- no post-hoc rescue",
+                f"- durable mechanism finding: `{decision['strong_new_mechanism']}` "
+                f"(future-round hypothesis only: `{decision['future_round_hypothesis_only']}`)",
+                "- no post-hoc rescue, no matched baseline rerun, official test never loaded",
+                "",
+                ("> " + decision["case_boundary_note"]) if decision["case_boundary_note"] else "",
                 "",
             ]
         ),

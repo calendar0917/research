@@ -1,0 +1,108 @@
+decision_id: decision-e2e-dictenv-rndb-v1-stop-task-no-go-mechanism-open-20260929
+created: '2026-09-29T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The closed CSSD-q1 round established a task-neutral, structurally healthier
+  dictionary and left the open question whether the *binding* itself can be
+  improved.  The parent CSSD / FINAL-CLEAN binding sums the per-role
+  structure x chemistry responses linearly and only then passes the summed
+  vector into the environment nonlinear decoder.  RNDB tested a single
+  function-class change: insert one small shared nonlinear operator between the
+  individual residual dictionary-role responses and their aggregation
+  (rolewise product -> shared psi -> role sum), at essentially fixed capacity,
+  with the dictionary required to stay behaviourally load-bearing.  The
+  question was a narrow falsification: does this improve ZINC valid MAE while
+  keeping the dictionary genuinely load-bearing?
+protocol: >-
+  Local CPU only (CUDA_VISIBLE_DEVICES="", no GPU/SSH/DDP), preregistration
+  sha256 5d6bb0d87305..., implementation commit e233beb.  Stages: read-only
+  historical references -> preflight (parent object / params / mask / subspace
+  identity) -> correctness gates G0-G6 on synthetic and real ZINC batches ->
+  8-epoch smoke (finite loss, non-zero D and psi gradients) -> exactly one
+  from-scratch RNDB seed-0 trajectory (320 epochs, Top-5 soup) -> frozen
+  inference-only interventions (psi off, node-only, edge-only, residual
+  dictionary alpha -> 0, assignment shuffle node/edge at seeds
+  101/202/303/404/505) -> analysis.  No baseline rerun, no seed 1, no sweep.
+  Official ZINC test never loaded.
+results:
+  implementation_commit: e233beb
+  preregistration_sha256_prefix: 5d6bb0d87305
+  device: cpu
+  threads: 8
+  official_test_loaded: false
+  focused_tests: 12/12 pass
+  correctness_gates: G0-G6 all pass (psi-off forward bit-identical to parent; decomposition max_abs_diff 4.3e-19 node / 3.5e-18 edge)
+  params: {parent: 97727, rndb: 105407, new: 7680, ratio: 0.07858}
+  training: {epochs: 320, seed: 0, wall_clock_s: 5727.46, best_valid_mae: 0.1395986, best_epoch: 256, soup_valid_mae: 0.1331175, soup_members: [248, 256, 258, 298, 314]}
+  task_band: {band: P3, label: RNDB_NO_USEFUL_TASK_GAIN, historical_cssd_q1_soup: 0.1300280, g_hist_unmatched: -0.003089}
+  mechanism: {M_R: 0.1331175, M_psi0: 0.3237969, G_psi: 0.190679, G_psi_gate: 0.003, M_node_off: 0.2738873, G_psi_node: 0.140770, M_edge_off: 0.1961412, G_psi_edge: 0.063024, M_dict0: 0.4219441, G_dict: 0.288827, G_dict_gate: 0.010}
+  assignment_shuffle: {node_mean_delta: 0.137391, edge_mean_delta: 0.157791, seeds: [101, 202, 303, 404, 505]}
+  psi_health: {psi_A_param_norm: 6.201, psi_A_W1_norm: 5.111, psi_A_W2_norm: 3.512, psi_E_param_norm: 3.183, psi_E_W1_norm: 2.418, psi_E_W2_norm: 2.070, psi_A_frac_abs_lt_1e12: 0.0208}
+  dictionary_health: {active_atoms: 32, effective_atoms: 22.16, top1_activation_rate: 0.658, valid_reconstruction_relative: 0.97696, movement: 5.37}
+  case: F
+  verdict: RNDB_NO_GO_TASK_LEVEL_MECHANISM_STRONGLY_SUPPORTED
+  case_boundary: >-
+    No pre-registered case enumerates M_R > 0.126 with strong new mechanism
+    evidence: Case F literally also requires "no strong new mechanism evidence"
+    and Case C requires M_R <= 0.126.  The dominant condition (M_R > 0.126,
+    band P3) forces the task-level no-go; the strong mechanism is recorded.
+decision: >-
+  1. STOP RNDB as a task method: it does not improve ZINC valid MAE (band P3)
+   and is 0.0031 worse than the historical CSSD-q1 soup (unmatched; not a
+   regression claim because no baseline was rerun).  2. DO NOT run seed 1, do
+   not sweep width / init / activation / lr / lambda / horizon, and do not
+   apply a post-hoc rescue.  3. RECORD a durable mechanism finding: the shared
+   rolewise nonlinearity is strongly load-bearing (G_psi = +0.1907 vs a 0.003
+   gate) and the sparse residual dictionary is strongly load-bearing
+   (G_dict = +0.2888 vs a 0.010 gate), and the learned node/edge assignment
+   correspondence matters (shuffle deltas +0.137 / +0.158).  4. KEEP
+   FINAL-CLEAN / CSSD-q1 as the line's reference; RNDB is not adopted.
+  5. The next step is a *new* pre-registration only, and it must target task
+   conversion (not a rescue): an explicit pre-registered psi-branch
+   scale/normalisation variant or a matched dense control, with >= 3 seeds and
+   a same-round matched baseline.  This round authorises no such implementation.
+alternatives_rejected:
+  - >-
+    Buying seed 1 to firm up the P3 result.  Rejected: the round is frozen at
+    one trajectory and the task band is not close to a useful gain.
+  - >-
+    Reporting the strong G_psi / G_dict as evidence that RNDB "works".
+    Rejected: the pre-registered question is task improvement, and the task
+    moved the wrong way; mechanism load-bearingness is not a task gain.
+  - >-
+    Rescaling / normalising / re-initialising the psi branch to "fix" the early
+    transient.  Rejected: post-hoc rescue, forbidden by the pre-registration.
+  - >-
+    Calling Case C (mechanism supported, task neutral).  Rejected: Case C
+    requires M_R <= 0.126 and M_R = 0.133117.
+  - >-
+    Calling the literal Case F "no strong new mechanism evidence".  Rejected:
+    the mechanism evidence is very strong, so the conjunction does not hold;
+    the boundary is flagged instead of silently forcing a case.
+  - >-
+    Reading G_hist as a regression against CSSD-q1.  Rejected: unmatched
+    historical comparison, no baseline rerun.
+revisit_if: >-
+  A new preregistration is written for a matched-capacity task-conversion
+  experiment: (a) an explicit residual-scale or normalised psi branch, or
+  (b) RNDB vs a matched dense control at equal parameters, both with >= 3
+  seeds, the same soup protocol and a same-round matched baseline.  Secondary:
+  an intervention that separates the linear residual coordinate from its psi
+  term to decompose G_dict; a small controlled study of the W2-init vs Adam
+  step-size transient, read as architecture trainability and not as a rescue.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_rndb_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_rndb_v1_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_rndb_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/summary.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/run_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/psi_disable.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/dictionary_zero.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/assignment_shuffle_node.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/assignment_shuffle_edge.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_rndb_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_rndb_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_rndb_v1.py

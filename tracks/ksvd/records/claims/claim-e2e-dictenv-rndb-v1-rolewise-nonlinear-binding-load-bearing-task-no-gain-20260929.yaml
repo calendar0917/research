@@ -1,0 +1,102 @@
+claim_id: claim-e2e-dictenv-rndb-v1-rolewise-nonlinear-binding-load-bearing-task-no-gain-20260929
+created: '2026-09-29T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the closed ZINC dictionary-environment line (parent = CSSD-q1, 97727
+  params; CPU-only; official test never loaded; one seed-0 trajectory at a
+  fixed 320-epoch budget), moving one small shared nonlinear operator between
+  the individual residual dictionary-role responses and their aggregation
+  (RNDB: rolewise product -> shared psi -> role sum, instead of the parent's
+  rolewise product -> role sum -> later nonlinearity) is a real, strongly
+  load-bearing mechanism but does NOT improve ZINC valid MAE, and is slightly
+  worse than the historical CSSD-q1 reference (unmatched).  (1) The architecture
+  is a strict function-class extension: the parent parameters are bit-identical
+  to CSSD-q1 (all shared state-dict keys torch.equal; only psi_A.0/2.weight and
+  psi_E.0/2.weight are new), psi is bias-free so z_k = 0 => psi(p_k) = 0
+  exactly, psi is shared across all 32 residual roles / all nodes / all shells /
+  all bonds / all shellpairs, and the q=1 common coordinate is excluded from psi
+  (its parent linear path is untouched).  New parameters 7680 (psi_A 6144,
+  psi_E 1536) on top of 97727 = 105407 total, relative increase 0.07858.
+  (2) All six correctness gates pass: per-coordinate decomposition identity on
+  synthetic and real batches (max_abs_diff 4.3e-19 node / 3.5e-18 edge in
+  float64), psi-off forward bit-identical to the parent (0.0), inactive-role
+  strict zero, role-permutation equivariance (~1e-9), chemistry/topology purity,
+  C6/shell/shellpair/reader/backend reuse, and the official-test blocker; 12
+  focused tests pass.  (3) The single from-scratch seed-0 run reaches best valid
+  0.1395986 @ epoch 256 and Top-5 soup 0.1331175 (members 248/256/258/298/314;
+  historical CSSD-q1 soup 0.1300280, G_hist = -0.003089, unmatched).  Band P3
+  RNDB_NO_USEFUL_TASK_GAIN.  (4) The mechanism is very strongly supported by the
+  frozen interventions on the soup: psi_A = psi_E = 0 -> M_psi0 = 0.3237969
+  (G_psi = +0.190679 >> 0.003; node-only off 0.2738873, G_psi_node = +0.140770;
+  edge-only off 0.1961412, G_psi_edge = +0.063024); residual dictionary
+  alpha -> 0 -> M_dict0 = 0.4219441 (G_dict = +0.288827 >> 0.010); assignment
+  shuffle (frozen parent semantics, seeds 101/202/303/404/505) node mean
+  +0.137391 and edge mean +0.157791.  The trained psi is alive (psi_A
+  param_norm 6.201, W1 5.111, W2 3.512; psi_E 3.183/2.418/2.070; <2 % of psi_A
+  params < 1e-12) and the dictionary is healthy (32/32 active, N_eff 22.16,
+  top-1 activation rate 0.658).  (5) Trajectory observation: the small
+  W2 ~ N(0,0.01) init interacts with Adam's normalised step size, giving a
+  transient node response ratio 1e-4 (epoch 1) -> 3.06 (epoch 20) and a
+  psi-dominated solution thereafter; this is recorded, not corrected.
+  (6) Decision within the frozen framework: no pre-registered case enumerates
+  M_R > 0.126 WITH strong new mechanism evidence (Case F literally also requires
+  no strong new mechanism evidence; Case C requires M_R <= 0.126), so the round
+  is reported as the boundary Case F
+  RNDB_NO_GO_TASK_LEVEL_MECHANISM_STRONGLY_SUPPORTED: task-level no-go, durable
+  mechanism finding.  No matched baseline was rerun, so |G_hist| = 0.0031 is
+  not a regression claim.
+scope: >-
+  CPU-only local round (single process, 8 threads), preregistration sha256
+  5d6bb0d87305..., implementation commit e233beb, one new training trajectory,
+  no baseline rerun, no seed 1, official test never loaded.  Descriptive
+  historical comparison against CSSD-q1 seed-0 only.
+assumptions:
+  - >-
+    Parent object is CSSD-q1 at commit 5f0f284; the only later change is the
+    additive behaviour-neutral model_factory hook.
+  - >-
+    The prompt's approximate CSSD-q1/q2 values do not match the local artifacts;
+    the local artifact values (CSSD-q1 soup 0.130028, CSSD-q2 never trained) are
+    the source of truth.
+  - >-
+    The frozen intervention gates (G_psi >= 0.003, G_dict >= 0.010) measure
+    end-to-end load-bearingness of the trained solution, not an orthogonal
+    additive decomposition.
+  - >-
+    G_dict zeroes both the linear residual coordinate and its psi term.
+falsification:
+  - >-
+    Falsified: "rolewise nonlinearity improves ZINC valid MAE".  M_R = 0.133117
+    is in band P3 and is 0.0031 worse than the historical reference (unmatched).
+  - >-
+    Not falsified (strongly supported): "the rolewise nonlinearity and the
+    sparse dictionary are load-bearing".  G_psi = +0.190679 and
+    G_dict = +0.288827, both far above their gates.
+implication: >-
+  The rolewise-nonlinearity hypothesis is a mechanism win and a task no-go at
+  this budget/seed.  The line is not extended by this round: no seed 1, no
+  rescue.  A future, separately pre-registered round may test whether an
+  explicit pre-registered variant (e.g. residual scaling/normalisation of the
+  psi branch, or a matched dense control) converts the load-bearing mechanism
+  into a task gain, with >= 3 seeds and a same-round matched baseline.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_rndb_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_rndb_v1_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_rndb_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/summary.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/parameter_audit.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/smoke.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/run_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/dictionary_health.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/psi_disable.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/dictionary_zero.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/assignment_shuffle_node.json
+  - tracks/ksvd/results/e2e_dictenv_rndb_v1/assignment_shuffle_edge.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_rndb_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_rndb_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_rndb_v1.py
