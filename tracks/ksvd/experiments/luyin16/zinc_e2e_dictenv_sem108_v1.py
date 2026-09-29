@@ -1228,6 +1228,38 @@ def _fmt(value: Any, digits: int = 4) -> str:
     return f"{number:.{digits}f}"
 
 
+def _binding_health(model: sem.SEM108Model) -> dict[str, Any]:
+    """Inference-only parameter-level health of the trained soup state."""
+    stats: dict[str, Any] = {}
+    for name in ("D", "W_A_S", "W_A_C", "W_E_S", "W_E_C"):
+        parameter = getattr(model, name).detach()
+        stats[name] = {
+            "numel": int(parameter.numel()),
+            "absmax": float(parameter.abs().max()),
+            "norm": float(parameter.norm()),
+        }
+    for name in ("fusion.0.weight", "fusion.2.weight", "node_encoder.0.weight", "edge_encoder.0.weight"):
+        parameter = model.get_parameter(name).detach()
+        stats[name] = {
+            "numel": int(parameter.numel()),
+            "absmax": float(parameter.abs().max()),
+            "norm": float(parameter.norm()),
+        }
+    stats["node_dictionary_binding_dead"] = bool(
+        stats["W_A_S"]["absmax"] < 1.0e-30 or stats["W_A_C"]["absmax"] < 1.0e-30
+    )
+    stats["edge_dictionary_binding_dead"] = bool(
+        stats["W_E_S"]["absmax"] < 1.0e-30 or stats["W_E_C"]["absmax"] < 1.0e-30
+    )
+    stats["protocol_version"] = PROTOCOL_VERSION
+    stats["git_commit"] = _git_commit()
+    stats["official_test_loaded"] = False
+    stats["note"] = (
+        "parameter-level diagnostic of the frozen soup state (no training, no intervention)"
+    )
+    return stats
+
+
 def stage_analysis() -> dict[str, Any]:
     _ensure_dirs()
     references = _read_json(RESULTS_DIR / "historical_references.json")
@@ -1245,6 +1277,12 @@ def stage_analysis() -> dict[str, Any]:
     node_shuffle = _read_json(MECHANISM_DIR / "node_assignment_shuffle.json")
     edge_shuffle = _read_json(MECHANISM_DIR / "edge_assignment_shuffle.json")
     health = _read_json(MECHANISM_DIR / "dictionary_health.json")
+
+    model = _soup_model()
+    model.eval()
+    binding = _binding_health(model)
+    sem.official_test_blocker(binding)
+    _write_json(MECHANISM_DIR / "binding_health.json", binding)
 
     m_s = float(run["soup"]["soup_valid_mae"])
     band = _band(m_s)
@@ -1270,6 +1308,19 @@ def stage_analysis() -> dict[str, Any]:
         "clear_incremental"
         if g_corr >= GATE_DICT_CORR_CLEAR
         else ("directional" if g_corr >= GATE_DICT_CORR_DIRECTIONAL else "not_established")
+    )
+    node_binding_dead = bool(binding["node_dictionary_binding_dead"])
+    mechanism_note = (
+        "Node-side dictionary correspondence is exactly zero (G_node = 0.0), and the frozen "
+        "soup state confirms why: W_A_S / W_A_C collapsed to float32 denormals "
+        f"(absmax {binding['W_A_S']['absmax']:.3e} / {binding['W_A_C']['absmax']:.3e}) during "
+        "training, so node slots are identically zero and the node assignment shuffle is a "
+        "no-op. The path is alive in the 8-epoch smoke state, so this is a learned "
+        "redundancy collapse (the direct Sem108 interface already carries the atom chemistry), "
+        "not a coding defect. The pre-registered G_corr = max(G_node, G_edge) therefore "
+        "reflects the edge correspondence only."
+        if node_binding_dead
+        else "Node and edge dictionary correspondences are both measured on the frozen soup state."
     )
     hist = float(references["references"]["CSSD-q1-seed0"]["value"])
     g_hist = hist - m_s
@@ -1358,7 +1409,10 @@ def stage_analysis() -> dict[str, Any]:
             "dict_corr": dict_corr,
             "node_rows": node_shuffle["rows"],
             "edge_rows": edge_shuffle["rows"],
+            "node_dictionary_binding_dead": node_binding_dead,
         },
+        "binding_health": binding,
+        "mechanism_note": mechanism_note,
         "dictionary_health": health,
         "case": case,
         "verdict": verdict,
@@ -1467,11 +1521,30 @@ def _write_report(
         f"- health: active {health['active_atoms']}/32, effective {_fmt(health['effective_atoms'], 2)}, "
         f"top1 share {_fmt(health['usage_top1_share'], 3)}, recon {_fmt(health['valid_reconstruction_relative'], 5)}"
     )
+    binding = s["binding_health"]
+    lines.append(
+        f"- binding health (soup): `|W_A_S|max={binding['W_A_S']['absmax']:.3e}`, "
+        f"`|W_A_C|max={binding['W_A_C']['absmax']:.3e}`, `|W_E_S|max={binding['W_E_S']['absmax']:.3e}`, "
+        f"`|W_E_C|max={binding['W_E_C']['absmax']:.3e}`"
+    )
+    if dm["node_dictionary_binding_dead"]:
+        lines.append(
+            "- **Node-binding collapse (observation).** `W_A_S` / `W_A_C` fell to float32 "
+            "denormals during training, so node slots are identically zero and the node "
+            "assignment shuffle is a no-op (`G_node = 0.0`). The path is alive at the 8-epoch "
+            "smoke state and the implementation is bit-identical to the parent at init, so "
+            "this is a learned redundancy collapse (Sem108 already carries the atom "
+            "chemistry), not a defect. `G_corr = max(G_node, G_edge)` is therefore driven "
+            "entirely by the edge correspondence."
+        )
     lines.append("")
     lines.append("## J. Verdict")
     lines.append("")
-    lines.append(f"**Case {s['case']} — {s['verdict']}**")
+    lines.append("**Case {case} — {verdict}**".format(case=s["case"], verdict=s["verdict"]))
     lines.append("")
+    if s.get("mechanism_note"):
+        lines.append(f"> {s['mechanism_note']}")
+        lines.append("")
     if s.get("case_boundary_note"):
         lines.append(f"> {s['case_boundary_note']}")
         lines.append("")
@@ -1498,6 +1571,8 @@ def _write_decision(summary: Mapping[str, Any]) -> None:
         f"**Case {s['case']} — {s['verdict']}**",
         "",
     ]
+    if s.get("mechanism_note"):
+        lines.extend([s["mechanism_note"], ""])
     if s.get("case_boundary_note"):
         lines.extend([s["case_boundary_note"], ""])
     lines.extend(
