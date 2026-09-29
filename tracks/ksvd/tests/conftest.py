@@ -35,6 +35,7 @@ SLOW_MODULES = {
     "test_stagewise_representation_collision_audit.py",
     "test_triadic_relation_binding_witness.py",
     "test_e2e_dictenv_rndb_v1.py",
+    "test_e2e_dictenv_sem108_v1.py",
 }
 
 
