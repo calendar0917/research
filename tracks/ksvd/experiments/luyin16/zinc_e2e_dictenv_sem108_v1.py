@@ -355,7 +355,7 @@ def stage_preflight() -> dict[str, Any]:
         "parent": {
             "config": cm.H1_CONFIG.as_dict(),
             "lambda_rec": float(cm.H1_LAMBDA),
-            "c6_mask_identity": bool(cm.CSSD_MASK is cm.C6_MASK),
+            "c6_mask_identity": bool(cssd.CSSD_MASK is cm.C6_MASK),
             "c6_equivalence_check": bool(cm.c6_equivalence_check()),
             "subspace_kind": subspace.kind,
             "common_dim": int(subspace.q),
@@ -649,13 +649,13 @@ def stage_correctness() -> dict[str, Any]:
 
     # -- G8: C6 masks ----------------------------------------------------------
     gates["G8_c6_masks"] = {
-        "cssd_mask_is_c6": bool(cm.CSSD_MASK is cm.C6_MASK),
+        "cssd_mask_is_c6": bool(cssd.CSSD_MASK is cm.C6_MASK),
         "c6_equivalence_check": bool(cm.c6_equivalence_check()),
-        "arm_mask_is_c6": bool(cm.arm_mask(cm.CSSD_SPEC) is cm.C6_MASK),
+        "arm_mask_is_c6": bool(cm.arm_mask(cssd.CSSD_SPEC) is cm.C6_MASK),
         "passed": bool(
-            cm.CSSD_MASK is cm.C6_MASK
+            cssd.CSSD_MASK is cm.C6_MASK
             and cm.c6_equivalence_check()
-            and cm.arm_mask(cm.CSSD_SPEC) is cm.C6_MASK
+            and cm.arm_mask(cssd.CSSD_SPEC) is cm.C6_MASK
         ),
     }
 
