@@ -371,6 +371,20 @@ def stage_preflight() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _residual_zero_prediction(
+    model: cl.CapacityModel,
+    kind: str,
+    loader: Any,
+    device: torch.device,
+    base_prediction: np.ndarray,
+) -> np.ndarray:
+    """Zero the candidate residual and re-predict; M0 has no residual at all."""
+    if str(kind).upper() == "M0":
+        return base_prediction
+    model.zero_residual()
+    return cv2.predictions_for(model, loader, device, cssd.CSSD_MASK)
+
+
 def stage_init_audit() -> dict[str, Any]:
     _ensure_dirs()
     cv2.cpu_only_guard(torch.device("cpu"))
@@ -407,8 +421,9 @@ def stage_init_audit() -> dict[str, Any]:
         positive = all(value > 0.0 for value in norms.values())
         # residual-zero identity: zeroing the residual projection must restore
         # the CAP-BASE prediction exactly (the augmentation is additive).
-        model.zero_residual()
-        zero_prediction = cv2.predictions_for(model, eval_loader, device, cssd.CSSD_MASK)
+        zero_prediction = _residual_zero_prediction(
+            model, kind, eval_loader, device, base_prediction
+        )
         identity_delta = float(np.abs(zero_prediction - base_prediction).max()) if kind != "M0" else 0.0
         rows[kind] = {
             "kind": kind,

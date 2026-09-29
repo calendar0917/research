@@ -855,3 +855,18 @@ def test_screen_arm_requires_calibration(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr(runner, "CALIBRATION_DIR", tmp_path / "calibration")
     with pytest.raises(RuntimeError):
         runner.stage_screen_arm("F")
+
+
+def test_residual_zero_helper_handles_m0_and_candidates() -> None:
+    subspace, state, loader, device, _base, base_prediction = _base_prediction_and_loader()
+    m0 = cv2.build_v2_model(_dictionary(), 0, subspace, "M0")
+    m0.load_state_dict(state)
+    assert np.array_equal(
+        runner._residual_zero_prediction(m0, "M0", loader, device, base_prediction),
+        base_prediction,
+    )
+    for kind in ("F", "R", "G"):
+        model = cv2.build_v2_model(_dictionary(), 0, subspace, kind)
+        cv2.load_capacity_warm_state(model, state)
+        prediction = runner._residual_zero_prediction(model, kind, loader, device, base_prediction)
+        assert float(np.abs(prediction - base_prediction).max()) == 0.0
