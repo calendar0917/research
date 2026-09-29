@@ -34,6 +34,7 @@ SLOW_MODULES = {
     "test_sbci_fit_matched_generalization_frontier.py",
     "test_stagewise_representation_collision_audit.py",
     "test_triadic_relation_binding_witness.py",
+    "test_e2e_dictenv_rndb_v1.py",
 }
 
 
