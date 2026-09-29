@@ -704,9 +704,7 @@ def audit_sem108_identity(
         "standardization": {
             "fit_split": "official train",
             "n_fit_records": int(len(train_records)),
-            "n_fit_patches": int(
-                sum(int(record.patch_cont_raw.shape[0]) for record in train_records)
-            ),
+            "n_fit_patches": int(zpp._patch_matrix(train_records).shape[0]),
             "mean_sha256": _sha256_array(scaler.mean),
             "scale_sha256": _sha256_array(scaler.scale),
             "mean_first_8": [float(v) for v in scaler.mean[:8]],
