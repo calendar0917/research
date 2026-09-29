@@ -826,8 +826,8 @@ def train_cssd(
     started = time.perf_counter()
     for epoch in range(1, int(epochs) + 1):
         model.train()
-        task_sum = rec_sum = 0.0
-        n_mol = n_nodes = 0
+        task_sum = rec_sum = rec_term_sum = 0.0
+        n_mol = n_nodes = n_batches = 0
         for batch in loader:
             batch = batch.to(device)
             prediction, aux = model(batch, mask=mask, return_aux=True)
@@ -839,18 +839,22 @@ def train_cssd(
             optimizer.step()
             task_sum += float((prediction.view(-1) - batch.y.view(-1)).abs().sum())
             n_mol += int(batch.y.numel())
+            rec_term_sum += float(rec.detach())
+            n_batches += 1
             phi = aux["phi"]
             phi_hat = model.reconstruct(phi, aux["coord"]).detach()
             rec_sum += float((((phi - phi_hat) ** 2).sum(dim=1) / ((phi**2).sum(dim=1) + v0.EPS)).sum())
             n_nodes += int(phi.shape[0])
         train_mae = float(task_sum / max(n_mol, 1))
         train_rec = float(rec_sum / max(n_nodes, 1))
+        train_rec_term = float(rec_term_sum / max(n_batches, 1))
         valid = audit._evaluate_model(model, eval_loader, device, mask)
         curve.append(
             {
                 "epoch": int(epoch),
                 "train_mae": train_mae,
                 "train_rec": train_rec,
+                "train_rec_term": train_rec_term,
                 "valid_mae": float(valid["mae"]),
                 "d_norm": float(model.D.detach().norm()),
             }
@@ -866,8 +870,8 @@ def train_cssd(
             best_state = {k: v.detach().to("cpu", copy=True) for k, v in model.state_dict().items()}
         if log and (epoch == 1 or epoch % 10 == 0 or epoch == int(epochs)):
             print(
-                f"[{tag}] epoch={epoch:03d} train={train_mae:.6f} rec={train_rec:.3e} "
-                f"valid={float(valid['mae']):.6f} best={best_mae:.6f}@{best_epoch}",
+                f"[{tag}] epoch={epoch:03d} train={train_mae:.6f} rec={train_rec_term:.3e} "
+                f"rec_full={train_rec:.3e} valid={float(valid['mae']):.6f} best={best_mae:.6f}@{best_epoch}",
                 flush=True,
             )
         if callback is not None:

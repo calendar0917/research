@@ -560,7 +560,7 @@ def stage_train(threads: int = THREADS, force: bool = False) -> dict[str, Any]:
         catastrophic = cssd.catastrophic_check(
             train_mae=float(row["train_mae"]),
             valid_mae=float(row["valid_mae"]),
-            rec_loss=float(row["train_rec"]),
+            rec_loss=float(row.get("train_rec_term", row["train_rec"])),
         )
         gate = cssd.epoch40_gate(
             dc_count_gt095=dc_count,
@@ -574,6 +574,7 @@ def stage_train(threads: int = THREADS, force: bool = False) -> dict[str, Any]:
             "finite_losses": bool(
                 np.isfinite(row["train_mae"])
                 and np.isfinite(row["train_rec"])
+                and np.isfinite(row.get("train_rec_term", row["train_rec"]))
                 and np.isfinite(row["valid_mae"])
             ),
             "finite_dictionary": bool(torch.isfinite(model.D).all()),
@@ -660,7 +661,7 @@ def stage_train(threads: int = THREADS, force: bool = False) -> dict[str, Any]:
     _write_csv(
         TRAINING_DIR / "curve.csv",
         payload["curve"],
-        ["epoch", "train_mae", "train_rec", "valid_mae", "d_norm"],
+        ["epoch", "train_mae", "train_rec", "train_rec_term", "valid_mae", "d_norm"],
     )
     gate_payload = payload.get("callback_payloads", {}).get(str(GATE_EPOCH))
     if gate_payload is not None:
@@ -1131,12 +1132,12 @@ def stage_report() -> dict[str, Any]:
             lines.append(f"- gradient norm ||dL/dD|| {_fmt(gate['gradient_norm_D'], 3)}; column min {_fmt(gate['projected_column_norm_min'], 3)}")
             lines.append(f"- A: {gate['gate']['condition_a']['satisfied']}; B: {gate['gate']['condition_b']['satisfied']}; C: {gate['gate']['condition_c']['satisfied']}")
         lines.append("")
-        lines.append("| epoch | train_mae | train_rec | valid_mae | d_norm |")
-        lines.append("|---|---|---|---|---|")
+        lines.append("| epoch | train_mae | train_rec_term | train_rec_full | valid_mae | d_norm |")
+        lines.append("|---|---|---|---|---|---|")
         for row in final["curve"][::10] + [final["curve"][-1]]:
             lines.append(
-                f"| {row['epoch']} | {_fmt(row['train_mae'], 4)} | {_fmt(row['train_rec'], 5)} | "
-                f"{_fmt(row['valid_mae'], 4)} | {_fmt(row['d_norm'], 2)} |"
+                f"| {row['epoch']} | {_fmt(row['train_mae'], 4)} | {_fmt(row.get('train_rec_term'), 5)} | "
+                f"{_fmt(row['train_rec'], 5)} | {_fmt(row['valid_mae'], 4)} | {_fmt(row['d_norm'], 2)} |"
             )
     if structure is not None and structure.get("ran"):
         lines.append("")
