@@ -779,6 +779,7 @@ def train_cssd(
     seed: int = 0,
     callback: Callable[[int, CSSDModel, Any, list[dict[str, Any]]], tuple[bool, Mapping[str, Any] | None]]
     | None = None,
+    model_factory: Callable[[np.ndarray, int, CommonSubspace], CSSDModel] | None = None,
     save_states: bool = True,
     log: bool = True,
 ) -> dict[str, Any]:
@@ -786,8 +787,10 @@ def train_cssd(
 
     The only additions over the frozen loop are the optional epoch callback
     (evaluated after the epoch's valid pass, before the next epoch) and the
-    early stop it can request.  Data order, RNG use, loss, optimizer, clipping
-    and the Top-5 soup are unchanged.
+    early stop it can request, plus an optional ``model_factory`` hook so a
+    subclass with an extra capacity module can reuse the identical training
+    path (``None`` keeps the frozen ``build_cssd_model``).  Data order, RNG use,
+    loss, optimizer, clipping and the Top-5 soup are unchanged.
     """
     import time
     from pathlib import Path
@@ -802,7 +805,8 @@ def train_cssd(
 
     dictionary, dict_sha = p2run.load_dictionary(cm.H1_CONFIG.dict_kind)
     p2run._seed_everything(int(seed))
-    model = build_cssd_model(dictionary, int(seed), subspace)
+    factory = build_cssd_model if model_factory is None else model_factory
+    model = factory(dictionary, int(seed), subspace)
     optimizer = torch.optim.Adam(
         model.parameters(), lr=float(p2run.LEARNING_RATE), weight_decay=float(p2run.WEIGHT_DECAY)
     )
@@ -891,7 +895,7 @@ def train_cssd(
         k: torch.stack([epoch_states[e][k].float() for e in members]).mean(0)
         for k in epoch_states[members[0]]
     }
-    soup_model = build_cssd_model(dictionary, int(seed), subspace)
+    soup_model = factory(dictionary, int(seed), subspace)
     soup_model.load_state_dict(soup_state)
     soup_valid = audit._evaluate_model(soup_model, eval_loader, device, mask)
     projected = np.asarray(model.D.detach().cpu(), dtype=np.float64)
