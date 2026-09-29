@@ -1,0 +1,110 @@
+decision_id: decision-e2e-dictenv-common-subspace-dictionary-keep-final-clean-open-matched-control-20260929
+created: '2026-09-29T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The closed audit round localised the sparse-dictionary specificity problem
+  to two structural causes: a near-universal DC/scale triplet (atoms 6/24/27
+  active in 100 % of rows and 0.76-0.98 aligned with the train mean
+  direction) plus a PC1-like atom 23, and a near-linear sparse/dense
+  equivalence.  It recorded the next-round shape: remove the DC-triplet
+  redundancy (or test the sparse arm on a phi65 variant not dominated by one
+  DC direction) without changing anything else.  This round executed the
+  first of those shapes as a representation-only question: if the common
+  structural direction is modelled explicitly (dense c = U^T x, never
+  dropped) and the sparse dictionary only ever sees the residual
+  r = (I - U U^T) x, does the dictionary become a cleaner cross-graph
+  reusable factor vocabulary?
+protocol: >-
+  Local CPU only (CUDA_VISIBLE_DEVICES="", no GPU/SSH), preregistration
+  sha256 8e722afbc757... and implementation frozen at commit 5f0f284 before
+  the first Stage-A process.  Stage A: real pipeline feature-space audit
+  (train 231664x65, valid 23083x65, cache == data.dict_phi bit-identical,
+  zero columns retained).  Stage B: train-only common subspace q1 (mean
+  direction) and q2 (orthogonalised PC1 of r1) with frozen RMS scaling.
+  Stage C: zero-training same-D probe across the three reused C6 soup
+  dictionaries with four descriptor variants (RAW / mean-centred diagnostic /
+  Q1 / Q2), frozen conditions A/B/C/D2 and a representation-only selection
+  rule (valid primary).  Stage D: CSSD architecture - projected dictionary
+  Dbar_perp = colnorm((I-UU^T) D_raw) enforced every forward, IHT-10 always
+  receives the residual, z = [c~; alpha_res] of width 32+q, node/edge binding
+  forms unchanged, widened rows zero-initialised.  Stage E: 24 focused tests
+  including bit-equivalence with the frozen audit training loop.  Stage F:
+  exactly one new trajectory (CSSD q1 seed 0, epochs 1 -> 40 -> 320, one
+  optimizer state) with an in-process epoch-40 gate.  Stage G: frozen
+  reusable-structure audit (usage, coverage, SMD specialization, common
+  coordinate correlations, sparse<->dense recoverability) plus post-hoc
+  descriptive graph-reuse / geometry / reverse-recoverability / profile
+  diversity tables.  Official ZINC test never loaded.
+results:
+  implementation_commit: 5f0f284
+  preregistration_sha256_prefix: 8e722afbc757
+  device: cpu
+  official_test_loaded: false
+  focused_tests: 24/24 pass
+  stage_b: {mean_norm: 5.0662, u1_pc1_cosine: 0.5239, q1_common_raw: 0.9772, q1_centred_residual: 0.7811, q2_centred_residual: 0.3336}
+  stage_c_selection: {selected: q1, q1_passed_seeds: [0, 1, 2], q2_passed_seeds: [0, 1, 2], train_valid_agree: true}
+  stage_c_q1_valid: {triplet_rates_seed0: [0.032, 0.128, 0.069], top5_drop_seed0: 1.874, mc_triplet_rates_seed0: [0.520, 0.393, 0.510]}
+  gate40: {verdict: CSSD_CONTINUE, dc_gt095: 0, top5: 2.746, neff: 22.725, weighted_spec_ratio: 1.320, gradient_norm_D: 0.06647, column_min: 0.31731, u_t_dbar_perp_max: 4.2e-16}
+  training: {epochs: 320, best_valid_mae: 0.136913, best_epoch: 307, soup_valid_mae: 0.130028, soup_members: [282, 299, 307, 312, 313], actual_params: 97727, dead_column_fallbacks: 0}
+  task_band: {reference: 0.128499, delta: 0.001529, verdict: CSSD_REPRESENTATION_SUPPORTED_TASK_NEUTRAL_SINGLE_SEED}
+  structure: {cssd_neff: 21.394, cssd_top5: 3.007, cssd_max_rate: 0.796, cssd_atoms_gt_095: 0, raw_neff: 14.52, raw_top5: 4.796, raw_atoms_gt_095: 4, cssd_active_atoms: 32, raw_active_atoms: 27}
+  graph_reuse: {effective_atoms_per_graph_raw: 6.14, effective_atoms_per_graph_cssd: 16.69, max_share_raw: 0.278, max_share_cssd: 0.133, argmax_raw: 'a6:1.000', argmax_cssd: 'a19:0.755'}
+  fate: {atom6: 'rate 1.000 -> 0.010, Spec 0.000 -> 0.965', atom24: '1.000 -> 0.495', atom27: '1.000 -> 0.366', atom23: '0.977 -> 0.409', raw_u1_cos: [0.965, 0.941, 0.819], cssd_u1_cos_max: 8.0e-8}
+  recoverability: {dense_to_iht10: 0.9709, iht10_to_dense: 0.9993, raw_iht10_to_cssd: 0.9704, cssd_to_raw_iht10: 0.9813, c1_cssd_to_raw: 0.9815}
+  claims: {C: refuted, A: supported_usage_reuse_single_seed, B: not_excluded}
+decision: >-
+  1. KEEP FINAL-CLEAN as the line's reference model; CSSD q1 is adopted only
+  as a supported exploratory variant (single seed, task-neutral, no
+  demonstrated representation distinctness).  2. The common-subspace
+  hypothesis is supported for dictionary structure: the frozen selection
+  fired on 3/3 reused dictionaries, the epoch-40 gate passed, and the trained
+  dictionary improves on every frozen structure metric while the soup MAE
+  stays inside the neutral band.  3. No architecture adoption and no further
+  training in this round.  4. The next round shape is a matched-capacity
+  design (CSSD q1 vs DenseTied at 97727 params, >= 3 seeds, identical soup
+  protocol) with usage-structure metrics preregistered as gates.
+alternatives_rejected:
+  - >-
+    Adopting CSSD q1 as the new FINAL-CLEAN.  Rejected: task-neutral on one
+    seed, +240 parameters, no matched dense control.
+  - >-
+    Running CSSD seed 1/2 or a second q to firm up the gain.  Rejected: the
+    round is frozen at one trajectory; seed noise belongs to a new round.
+  - >-
+    Buying a DenseTied full run now for a like-for-like comparison.
+    Rejected: it is a second training process and the historical 0.125563 is
+    not matched; it belongs to the next preregistration.
+  - >-
+    Reporting the tiny residual reconstruction term as a task improvement.
+    Rejected: the soup is +0.0015 worse than the reference; reconstruction is
+    a diagnostic.
+  - >-
+    Reading the usage-structure gain as a new representation.  Rejected:
+    recovery directions (0.9704 / 0.9813) and unchanged profile diversity
+    leave Claim B open.
+  - >-
+    Dropping the nine identically-zero descriptors or editing the frozen
+    phi65 layout.  Rejected: layout frozen; defect recorded only.
+revisit_if: >-
+  A new preregistration is written with a matched-capacity design: CSSD q1
+  (97727 params) vs DenseTied at the same parameter count, >= 3 seeds, same
+  soup protocol, and the usage-structure metrics (effective atoms per graph,
+  minimum graph coverage, coherence max, top-5 share, atoms above 0.95) as
+  frozen gates.  Secondary: cross-seed Hungarian alignment of CSSD atoms to
+  test whether the rare specialists replicate; an ablation that keeps c1 in
+  the reconstruction term but removes it from the binding (separating extra
+  width from extra information); a q2 arm only if a new representation-level
+  reason appears (q2 keeps too little centred variation and is not authorised
+  here).
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_common_subspace_dictionary_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_common_subspace_dictionary_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/analysis_tables.md
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/summary.json
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/zero_training/selection.json
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/training/final.json
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/training/epoch40_gate.json
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/reusable_structure/summary.json

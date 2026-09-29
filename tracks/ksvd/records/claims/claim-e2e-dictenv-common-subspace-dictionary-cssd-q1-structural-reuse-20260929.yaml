@@ -1,0 +1,178 @@
+claim_id: claim-e2e-dictenv-common-subspace-dictionary-cssd-q1-structural-reuse-20260929
+created: '2026-09-29T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the closed ZINC dictionary-environment line (FINAL-CLEAN = C6 + paired
+  node/edge structure-semantic binding + sparse tied-IHT K=32/s=8/IHT-10 +
+  full relation; CPU-only; official test never loaded), the near-universal
+  concentration of the sparse dictionary is caused by the dataset-common
+  structural direction, and separating that direction explicitly (CSSD q1:
+  c = U^T x dense, dictionary sees only r = (I - U U^T) x with
+  Dbar_perp = colnorm((I - U U^T) D_raw)) yields a structurally healthier,
+  reusability-shaped dictionary at unchanged task accuracy, on one seed.
+  (1) The only three RAW atoms with |cos(atom, u1)| > 0.5 are exactly the
+  universal triplet 6/24/27 (0.965/0.941/0.819; all-atom median 0.022; only
+  two atoms above 0.9), and the mean direction u1 = mu/||mu|| is not PC1
+  (|cos(u1, PC1)| = 0.524; PC1 = 57.7 % of centred variance); raw energy is
+  DC-dominated (E_common(q1) = 0.9772 of ||x||^2) while the centred residual
+  fraction is 0.7811 train / 0.7851 valid.  (2) The zero-training same-D
+  probe on 3/3 reused C6 soup dictionaries selects q1 by the frozen rule:
+  the triplet falls to 0.03-0.40 activation (condition A, 3/3), top-5 usage
+  drops 1.06-1.87 (condition B, 3/3) and the residual keeps >= 0.5 of the
+  centred variation (condition C); q2 also passes A/B and demotes atom 23
+  (ratio 0.10-0.38) but keeps only 0.334 of the centred variation, so it was
+  stored as a diagnostic only.  (3) The epoch-40 gate passed on the live
+  model (0 atoms above 0.95 vs reference 3; top-5 2.746 vs 4.796; N_eff
+  22.725 vs 14.520; weighted-Spec ratio 1.320; ||dL/dD|| = 6.65e-2;
+  projected column min 0.317; max |U^T Dbar_perp| = 4.2e-16) and the single
+  trajectory ran to epoch 320 (97727 = 97487 + 240 params, 0 dead-column
+  fallbacks), soup valid MAE 0.130028 vs the frozen FINAL-CLEAN sparse
+  seed-0 soup 0.128499, delta +0.001529 (inside the frozen neutral band
+  |delta| <= 0.003 -> CSSD_REPRESENTATION_SUPPORTED /
+  TASK_NEUTRAL_SINGLE_SEED; the no-representation-gain clause is not
+  triggered).  (4) The trained dictionary is healthier on every frozen
+  metric: 32/32 active atoms (RAW 27), N_eff 21.39 vs 14.52, top-5 3.007 vs
+  4.796, max activation rate 0.796 vs 1.000, zero atoms above 0.95 (RAW 4),
+  coherence max 0.780 vs 0.987, usage-weighted Spec 0.258 vs 0.207,
+  minimum graph coverage 0.0126 (126/10000 graphs) vs five never-active RAW
+  atoms; atom 6 becomes the most specialized atom (rate 1.000 -> 0.010,
+  Spec 0.000 -> 0.965) and atom 19 the broad generalist (rate 0.796,
+  Spec 0.080); post-hoc graph-mass statistics give 6.14 -> 16.69 effective
+  atoms per graph, 4.01 -> 7.67 atoms with >= 5 % mass and 0.278 -> 0.133
+  maximum atom share, identical train/valid (6.15/16.66).  (5) The common
+  coordinate c1 is a patch-scale coordinate (valid Spearman patch_nodes
+  0.960, patch_edges 0.952, root degree/shell2/walk2 0.891).  (6) Claim
+  decision within the frozen framework: Claim C (separation does not
+  resolve concentration) refuted; Claim A (reusable cross-graph structural
+  factors beyond the common background) supported at the usage/reuse level;
+  Claim B (shared coordinate, no distinct reusable vocabulary) NOT excluded,
+  because task MAE is unchanged, top-5 SMD profile diversity is unchanged
+  (Jaccard 0.136 over 32 CSSD atoms vs 0.125 over 27 active RAW atoms; 28 vs
+  29 of 65 descriptors) and RAW<->CSSD sparse codes remain mutually 0.9704 /
+  0.9813 linearly recoverable.  Sparse/dense equivalence is preserved:
+  dense residual -> IHT-10 R2 0.9709 and IHT-10 -> dense R2 0.9993 vs the
+  RAW audit reference 0.970825 / 0.998845.
+scope: >-
+  CPU-only local round (single process, 4 threads), preregistration sha256
+  8e722afbc757..., implementation freeze commit 5f0f284, treated as frozen
+  before the first Stage-A process; one new training trajectory (CSSD q1
+  seed 0, epochs 1 -> 40 -> 320, one optimizer state).  Data: frozen phi65
+  cache from the official ZINC train (10000 molecules / 231664 nodes) and
+  valid (1000 / 23083) splits; official test never loaded
+  (official_test_loaded = false in every payload).  Reused, never retrained:
+  the three C6 soup dictionaries (seeds 0/1/2) for the zero-training probe
+  and RAW seed-0 for the audit; historical DenseTied seed-0 soup 0.125563 is
+  context only and is NOT a matched control.  No architecture/coder/feature/
+  relation/split change beyond the frozen CSSD substitution; no GPU, no SSH.
+  Single-seed exploratory evidence only.
+supporting_evidence:
+  - >-
+    stage_a.json / preflight.json: phi train 231664x65, valid 23083x65
+    float32; pipeline cache == data.dict_phi bit-identical; zero columns
+    [2,3,5,7,8,33,35,48,50] retained.
+  - >-
+    common_subspace.json: ||mu|| 5.0662, |cos(u1,PC1)| 0.5239, q1 rms
+    5.08285, q2 rms 5.08285/0.58760; energies q1 0.9772/0.0228 raw and
+    0.2189/0.7811 centred (valid 0.9769/0.7851); q2 centred 0.6664/0.3336.
+  - >-
+    zero_training/*.csv and selection.json: valid q1 triplet rates
+    0.032/0.128/0.069 (seed 0), 0.052/0.258/0.402 (seed 1),
+    0.029/0.155/0.246 (seed 2); top-5 drops 1.874/1.392/1.056; centred
+    residual 0.7851; q2 atom23 ratio 0.103/0.378/0.192; MC diagnostic
+    0.39-0.56 triplet rates and top-5 2.69-3.23; selection q1,
+    train_valid_agree true.
+  - >-
+    training/epoch40_gate.json: verdict CSSD_CONTINUE, condition A
+    dc_count_gt095 0, condition B top-5 2.746 / N_eff 22.725 / weighted Spec
+    0.27297 (ratio 1.320), condition C gradient 6.647e-2 and column min
+    0.31731, U^T Dbar_perp max 4.2e-16, catastrophic false.
+  - >-
+    training/final.json: completed true, 320 epochs, 97727 actual params,
+    0 fallbacks, best valid 0.136913 @ 307, soup members
+    [282,299,307,312,313] with individual MAE 0.13691-0.13926, soup
+    0.130028.
+  - >-
+    reusable_structure/summary.json + atom_profiles.csv: CSSD active 32,
+    N_eff 21.394, top-5 3.007, max rate 0.796 (atom 19), 0 atoms > 0.95,
+    weighted Spec 0.258, coherence mean/max 0.206/0.780; RAW active 27,
+    N_eff 14.520, top-5 4.796, max rate 1.0, 4 atoms > 0.95, coherence
+    0.182/0.987; atom 6 rate 0.010 Spec 0.965, atom 24 0.495/0.180, atom 27
+    0.366/0.336, atom 23 0.409/0.356; rare specialists atoms 11/16/12 Spec
+    3.85/4.19/4.19 at rates 0.001-0.011.
+  - >-
+    reusable_structure/extra_summary.json, graph_reuse.csv,
+    argmax_atom_hist.csv, dictionary_geometry.csv,
+    reverse_recoverability.csv, common_coordinates.csv: effective atoms per
+    graph train 6.14 (RAW) -> 16.69 (CSSD) and valid 6.15 -> 16.66; atoms
+    >= 5 % mass 4.01 -> 7.67; max share 0.278 -> 0.133; argmax train
+    a6:1.000 (RAW) vs a19:0.755/a9:0.165 (CSSD); RAW |cos(atom,u1)|
+    0.965/0.941/0.819 for 6/24/27 and 0.324 for 23, only 3 atoms > 0.5;
+    max |cos(CSSD atom, u1)| = 8.0e-8; mean cos(RAW, CSSD) 0.444; c1
+    Spearman patch_nodes 0.9597, patch_edges 0.9520, root degree/shell2/
+    walk2 0.8910, shell_pop1 0.8821; recoverability CSSD IHT10 -> RAW IHT10
+    0.9813 and [c1;CSSD] -> RAW 0.9815; diversity Jaccard 0.136 (32 CSSD
+    atoms) vs 0.125 (27 active RAW atoms).
+  - >-
+    Focused tests tests/test_e2e_dictenv_common_subspace_dictionary_v1.py
+    24/24 pass: train-only U, q1/q2 identities and orthonormality, RMS
+    scaling, projected-dictionary hard constraint, CSSD node/edge shapes,
+    bit-identical non-CSSD initialization and C6 checkpoint compatibility,
+    bit-equivalence of train_cssd with the frozen audit loop, epoch-40 gate
+    and selection logic, graph coverage, CPU guard, official-test blocker,
+    frozen reference provenance.
+contradicting_evidence:
+  - >-
+    The task metric did not improve: soup 0.130028 vs 0.128499 (+0.001529)
+    for +240 parameters, so no task claim exists and DenseTied 0.125563 was
+    not re-measured under matched capacity.
+  - >-
+    RAW and CSSD sparse codes remain mutually near-linear (R2 0.9704 /
+    0.9813; c1 adds nothing beyond the CSSD code: 0.9815), and the top-5 SMD
+    feature-profile diversity is unchanged (0.136 vs 0.125), so the new
+    vocabulary is not demonstrably a distinct information channel.
+  - >-
+    The graph argmax stays concentrated: atom 19 is the top-mass atom in
+    75.5 % of CSSD train graphs (atom 9 in 16.5 %), i.e. a single generalist
+    still dominates graph-level ranking even though the mass is spread.
+  - >-
+    Single seed only; the historical DenseTied reference is not matched; the
+    graph-reuse, geometry, reverse-recoverability and diversity tables are
+    post-hoc descriptive additions.
+limitations:
+  - 'One new seed (0), one dataset, one architecture family, valid split only.'
+  - >-
+    No matched-capacity DenseTied control, no CSSD seed 1/2, no q2 training;
+    the specificity comparison remains open.
+  - >-
+    The MC (mean-centering) diagnostic shows part of the raw concentration is
+    the non-zero mean magnitude, so the separation effect is a combination of
+    removing the mean and removing the common direction; the two were not
+    split into separate arms.
+  - >-
+    train_rec in training/curve.csv is the frozen full-descriptor
+    diagnostic (~0.976); the optimised residual term is train_rec_term.
+  - >-
+    phi65 is topology-only; no chemistry motif names are assigned to atoms.
+implication: >-
+  The dictionary-concentration problem localises to the dataset-common
+  direction and is fixable without touching the task model, at neutral task
+  cost, single seed.  The decisive next experiment is a matched-capacity
+  comparison (CSSD q1 vs DenseTied at 97727 parameters, >= 3 seeds, same
+  soup protocol) with the usage-structure metrics preregistered as gates;
+  until then FINAL-CLEAN remains the reference model and no specificity
+  claim is made.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_common_subspace_dictionary_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_common_subspace_dictionary_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/analysis_tables.md
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/zero_training/selection.json
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/training/epoch40_gate.json
+  - tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/reusable_structure/extra_summary.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_common_subspace_dictionary_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_common_subspace_dictionary_v1.py
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_common_subspace_dictionary_v1_extra.py
+  - tracks/ksvd/tests/test_e2e_dictenv_common_subspace_dictionary_v1.py

@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-dictionary-coder-audit-v1-closed-no-training-intrinsic-concentration
+phase: e2e-dictenv-common-subspace-dictionary-v1-closed-q1-supported-structure-task-neutral-single-seed
 updated: 2026-09-29
 
 # ---------------------------------------------------------------------------
@@ -1187,6 +1187,72 @@ e2e_dictenv_a1:
       direction.  Secondary: a 4th dictionary seed for the PARTIAL_VOCABULARY
       boundary; drop the two identically-zero descriptors
       (root_neighbour_shell1, root_walk1) in any descriptor revision.
+
+  # -------------------------------------------------------------------------
+  # e2e_dictenv_common_subspace_dictionary_v1 — 2026-09-29 (latest)
+  # -------------------------------------------------------------------------
+  # First round to change the DICTIONARY INPUT SPACE instead of the coder:
+  # explicit train-only common subspace (c = U^T x, dense, never dropped) with
+  # the sparse dictionary restricted to the residual
+  # (Dbar_perp = colnorm((I-UU^T) D_raw), IHT always sees r).  q1 selected on
+  # 3/3 reused C6 dictionaries by the frozen zero-training A/B/C rule (triplet
+  # 6/24/27 1.000 -> 0.03-0.40, top-5 -1.06..-1.87, centred residual kept
+  # 0.785; the MC diagnostic shows part of the concentration is the mean
+  # magnitude, and atom 23 stays 0.60-0.90 so it is residual structure, not
+  # common).  Epoch-40 gate passed on the live model (0 atoms >0.95, top-5
+  # 2.746, N_eff 22.73, Spec ratio 1.32, grad 6.6e-2, |U^T Dbar_perp| 4.2e-16)
+  # -> one seed-0 trajectory to 320.  Soup 0.130028 vs FINAL-CLEAN 0.128499
+  # (+0.0015, inside the neutral band) at 97727 params.  The RAW universal
+  # triplet was exactly the common-direction atom set (|cos(atom,u1)|
+  # 0.965/0.941/0.819; only 3 atoms >0.5); CSSD has 32/32 live atoms, N_eff
+  # 21.39, no atom >0.95, coherence max 0.78, 2.7x more atoms per graph, and
+  # atom 6 becomes the most specialized atom (rate 0.010, Spec 0.965).
+  # Claim C refuted; Claim A supported at usage/reuse level; Claim B NOT
+  # excluded (unchanged top-profile diversity, RAW<->CSSD codes 0.9704/0.9813
+  # linearly recoverable).  FINAL-CLEAN unchanged.  Official test never loaded.
+  e2e_dictenv_common_subspace_dictionary_v1:
+    status: closed_round_complete_one_trajectory
+    round: e2e-dictenv-common-subspace-dictionary-v1
+    verdict: CSSD_Q1_SUPPORTED_FOR_STRUCTURE_TASK_NEUTRAL_SINGLE_SEED_CLAIM_C_REFUTED_CLAIM_B_OPEN
+    device: cpu_only
+    official_test_loaded: false
+    preregistration: tracks/ksvd/notes/e2e_dictenv_common_subspace_dictionary_v1_preregistration.md
+    preregistration_sha256_prefix: 8e722afbc757
+    implementation_commit: 5f0f284
+    analysis: tracks/ksvd/notes/e2e_dictenv_common_subspace_dictionary_v1_analysis.md
+    claims:
+      - claim-e2e-dictenv-common-subspace-dictionary-cssd-q1-structural-reuse-20260929
+    decision: decision-e2e-dictenv-common-subspace-dictionary-keep-final-clean-open-matched-control-20260929
+    results_dir: tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/
+    report: tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/REPORT.md
+    decision_report: tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/DECISION.md
+    summary: tracks/ksvd/results/e2e_dictenv_common_subspace_dictionary_v1/summary.json
+    runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_common_subspace_dictionary_v1.py
+    module: tracks/ksvd/experiments/luyin16/e2e_dictenv_common_subspace_dictionary_v1.py
+    extra_analysis: tracks/ksvd/experiments/luyin16/e2e_dictenv_common_subspace_dictionary_v1_extra.py
+    tests: tracks/ksvd/tests/test_e2e_dictenv_common_subspace_dictionary_v1.py
+    stage_a: {train_rows: 231664, valid_rows: 23083, phi_dim: 65, zero_columns: [2, 3, 5, 7, 8, 33, 35, 48, 50], cache_equals_dict_phi: true}
+    stage_b: {mean_norm: 5.0662, u1_pc1_cosine: 0.5239, q1_common_raw: 0.9772, q1_centred_residual: 0.7811, q2_centred_residual: 0.3336}
+    stage_c: {selected: q1, q1_passed_seeds: [0, 1, 2], q2_passed_seeds: [0, 1, 2], q1_triplet_rates_seed0: [0.032, 0.128, 0.069], q1_top5_drop_seed0: 1.874, mc_triplet_rates_seed0: [0.520, 0.393, 0.510], centred_residual_valid: 0.7851}
+    gate40: {verdict: CSSD_CONTINUE, dc_gt095: 0, top5: 2.746, neff: 22.725, spec_ratio: 1.320, grad: 0.0665, u_t_dbar_perp_max: 4.2e-16}
+    training: {epochs: 320, seeds: [0], best_valid_mae: 0.136913, soup_valid_mae: 0.130028, actual_params: 97727, dead_column_fallbacks: 0}
+    task_band: {reference: 0.128499, delta: 0.001529, class: CSSD_REPRESENTATION_SUPPORTED_TASK_NEUTRAL_SINGLE_SEED}
+    structure: {cssd_active_atoms: 32, raw_active_atoms: 27, cssd_neff: 21.394, raw_neff: 14.520, cssd_top5: 3.007, raw_top5: 4.796, cssd_atoms_gt_095: 0, raw_atoms_gt_095: 4, weighted_spec: [0.258, 0.207], coherence_max: [0.780, 0.987], effective_atoms_per_graph: [16.69, 6.14], cssd_u1_cos_max: 8.0e-8, raw_triplet_u1_cos: [0.965, 0.941, 0.819]}
+    claim_decision: {A: supported_usage_reuse_single_seed, B: not_excluded, C: refuted}
+    new_training_runs: 1
+    focused_tests: 24/24 pass
+    forbidden_without_new_preregistration:
+      - CSSD seed 1/2, q2 training, matched DenseTied full run
+      - K/s/lambda/step-count changes, coherence/usage/entropy penalties, new features/relations/fusion, q3+
+      - reading the official test for this round
+    next_round_shape: >-
+      Matched-capacity design: CSSD q1 (97727 params) vs DenseTied at the same
+      parameter count, >= 3 seeds, identical soup protocol, with the
+      usage-structure metrics (effective atoms per graph, minimum graph
+      coverage, coherence max, top-5 share, atoms above 0.95) preregistered
+      as gates.  Secondary: cross-seed Hungarian alignment of CSSD atoms; a
+      c1 binding ablation (keep c1 in the reconstruction term, remove it from
+      the binding).
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24

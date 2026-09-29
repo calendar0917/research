@@ -87,6 +87,18 @@ def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]], header: Sequence[s
             writer.writerow([row.get(key, "") for key in header])
 
 
+def _read_json(path: Path) -> Any:
+    with open(path, encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _read_csv_rows(path: Path) -> list[dict[str, str]]:
+    import csv
+
+    with open(path, encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
+
+
 # ---------------------------------------------------------------------------
 # stage: preflight
 # ---------------------------------------------------------------------------
@@ -1164,6 +1176,61 @@ def stage_report() -> dict[str, Any]:
                 f"{_fmt(row['valid_normalized_error'], 4)} | {_fmt(row['valid_mean_cosine']['mean'], 4)} | "
                 f"{_fmt(row['linear_cka'], 4)} |"
             )
+        lines.append("")
+        lines.append("RAW seed-0 reference (audit round, dense_tied vs iht10): "
+                     "dense_tied->iht10 R2 0.970825, iht10->dense_tied R2 0.998845.")
+
+        extra_path = STRUCTURE_DIR / "extra_summary.json"
+        if extra_path.exists():
+            extra = _read_json(extra_path)
+            lines.append("")
+            lines.append("## 6. Graph-level reuse (post-hoc descriptive, |alpha| mass)")
+            lines.append("")
+            lines.append("| split | representation | effective atoms/graph (mean / median / p10 / p90) | atoms >=5% mass | max atom share |")
+            lines.append("|---|---|---|---|---|")
+            for row in extra["graph_reuse"]:
+                lines.append(
+                    f"| {row['split']} | {row['representation']} | "
+                    f"{_fmt(row['effective_atoms_mean'], 2)} / {_fmt(row['effective_atoms_median'], 2)} / "
+                    f"{_fmt(row['effective_atoms_p10'], 2)} / {_fmt(row['effective_atoms_p90'], 2)} | "
+                    f"{_fmt(row['atoms_ge_5pct_mean'], 2)} | {_fmt(row['max_share_mean'], 3)} |"
+                )
+            lines.append("")
+            lines.append("Graph argmax atom (train): " + "; ".join(
+                f"{key} -> " + ", ".join(
+                    f"a{atom}:{count / 10000:.3f}"
+                    for atom, count in sorted(extra["argmax_hist"][key].items(), key=lambda kv: -kv[1])[:4]
+                )
+                for key in sorted(extra["argmax_hist"])
+                if key.startswith("train/")
+            ))
+            lines.append("")
+            lines.append("## 7. Dictionary geometry (RAW atom vs common direction / CSSD atom)")
+            lines.append("")
+            lines.append(f"- `max |cos(CSSD atom, u1)| = {_fmt(extra['geometry_summary']['max_cssd_u1_abs_cos'], 3)}` (hard constraint)")
+            lines.append(f"- RAW `|cos(atom, u1)|`: mean {_fmt(extra['geometry_summary']['raw_u1_abs_cos_mean'], 3)}, median {_fmt(extra['geometry_summary']['raw_u1_abs_cos_median'], 3)}; atoms >0.5: {extra['geometry_summary']['n_atoms_abs_cos_gt_050']} (>0.9: {extra['geometry_summary']['n_atoms_abs_cos_gt_090']})")
+            lines.append(f"- mean cos(RAW atom, CSSD atom) {_fmt(extra['geometry_summary']['mean_cos_raw_cssd'], 3)}; mean cos(RAW_perp atom, CSSD atom) {_fmt(extra['geometry_summary']['mean_cos_raw_perp_cssd'], 3)}")
+            lines.append("")
+            lines.append("| atom | RAW \\|cos(u1)\\| | cos(RAW, CSSD) | cos(RAW_perp, CSSD) | CSSD rate | CSSD Spec |")
+            lines.append("|---|---|---|---|---|---|")
+            profiles = {int(float(row["atom"])): row for row in _read_csv_rows(STRUCTURE_DIR / "atom_profiles.csv")}
+            for row in _read_csv_rows(STRUCTURE_DIR / "dictionary_geometry.csv"):
+                atom = int(float(row["atom"]))
+                profile = profiles.get(atom, {})
+                lines.append(
+                    f"| {atom} | {_fmt(row['raw_u1_abs_cos'], 3)} | {_fmt(row['cos_raw_cssd'], 3)} | "
+                    f"{_fmt(row['cos_raw_perp_cssd'], 3)} | {_fmt(profile.get('activation_rate_valid'), 3)} | "
+                    f"{_fmt(profile.get('specialization_valid'), 3)} |"
+                )
+            lines.append("")
+            lines.append("## 8. Common coordinate c1 (valid, Spearman)")
+            lines.append("")
+            for row in extra["common_coordinate_top_correlations_valid"][:10]:
+                lines.append(f"- `{row['feature']}` rho = {_fmt(row['spearman'], 4)}")
+            lines.append("")
+            lines.append("## 9. Atom-profile roll-up (CSSD soup, valid)")
+            lines.append("")
+            lines.append(f"- atoms with rate > 0.9: {extra['atom_profiles']['n_atoms_rate_gt_090']}; > 0.5: {extra['atom_profiles']['n_atoms_rate_gt_050']}; max rate {_fmt(extra['atom_profiles']['max_rate'], 3)} (atom {extra['atom_profiles']['top_rate_atom']})")
     (RESULTS_DIR / "analysis_tables.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     summary = {
         "protocol_version": PROTOCOL_VERSION,
