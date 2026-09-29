@@ -1,0 +1,129 @@
+claim_id: claim-e2e-dictenv-sem108-v1-direct-interface-load-bearing-node-binding-collapse-task-band-20260930
+created: '2026-09-30T00:00:00Z'
+kind: claim
+status: supported
+study_id: zinc-context-gap
+statement: >-
+  On the closed ZINC dictionary-environment line (parent = CSSD-q1, 97727
+  params; CPU-only; official test never loaded; one seed-0 trajectory at the
+  fixed 320-epoch budget), deleting the early anchor compression
+  (anchor62 -> anchor_encoder -> 32D) and feeding the raw standardized
+  shell-resolved primitive semantic blocks [Sem108 ; size2] = 110D directly into
+  the environment fusion (446 -> 114 -> 48, closed-form parameter matching)
+  makes the primitive semantic interface the strongest load-bearing input of the
+  line so far, but does NOT open a new task band: the soup lands at the low end
+  of the existing band, 0.000705 above the pre-registered "promising" threshold,
+  and the node dictionary-binding path is annihilated during training.
+  (1) The architecture changes exactly one thing: the frozen parent anchor
+  encoder is removed and only the fusion width is re-matched in closed form
+  (495 H + 48 = 56496 -> H = 114, gap 18); candidate 97709 params vs parent
+  97727, relative 0.0184 %.  All 45 shared parent state-dict keys are
+  torch.equal to CSSD-q1, and a parent-equivalence model reproduces the parent
+  forward bit-for-bit (coord / node slots / edge slots / relation / global /
+  topology / environment / prediction all 0.0).  (2) Zero-training audit A1:
+  the Sem108 geometry is resolved from the current implementation (atom_shell
+  84, bond_shell 24, sem_dim 108) and the rebuilt descriptor is bit-identical to
+  the durable encoded cache on 64 train + 64 valid molecules (cache max abs
+  diff 0.0) with exact independent role x primitive reconstruction; the
+  patch scaler is fit on official train only (231664 patches).  A2 on the full
+  train (231664 rows) / valid (23083 rows): root argmax agreement 1.0, atom
+  mass max abs error 5.7e-7 / 5.2e-7, bond mass 6.5e-7 / 6.4e-7, all
+  fraction_exact 1.0, size2 bit-identical.  A4: Sem108 strictly refines the
+  anchor (7016 distinct anchors vs 10893 distinct Sem108 keys on train; 77.4 %
+  of rows share an anchor with >= 2 distinct Sem108 values).  A3 =
+  T1_BLOCK_AUDIT_UNAVAILABLE: the exact T1 state tensors are not durable, so no
+  T1 block attribution is measured and no T1 retraining is performed.  (3) All
+  14 correctness gates G0-G13 pass; 14 focused tests pass.  (4) The single
+  from-scratch seed-0 run reaches best valid 0.1313133 @ epoch 309 and Top-5
+  soup M_S = 0.123704927947314 (members 238/255/257/282/309), wall 1916.8 s.
+  Band SEM108_WITHIN_EXISTING_PERFORMANCE_BAND (0.123 < M_S <= 0.127).  This is
+  the best single-run soup of the line (historical, unmatched): CSSD-q1
+  0.130028 (G_hist = +0.006323), FINAL-CLEAN C6 0.128499, training-protocol
+  control 0.127428, T1 0.125765, RNDB 0.133117.  (5) The semantic interface is
+  strongly load-bearing on the frozen soup: Sem108 block zero (train-mean
+  neutralization) gives M = 1.430745 (G_sem0 = +1.307040); the 5-seed root-row
+  shuffle gives G_sem_shuffle = +0.493259 (range 0.4811-0.5054); atom block
+  zero G_atom = +1.097573 and bond block zero G_bond = +0.480401.  (6) The
+  dictionary mechanism is edge-only: residual alpha -> 0 gives +0.066549
+  (diagnostic), the edge assignment shuffle gives G_edge = +0.038245 (0.0344 to
+  0.0428) but the node assignment shuffle gives exactly G_node = 0.0 because
+  W_A_S and W_A_C collapsed to float32 denormals (7.05e-38) during training
+  (healthy in the 8-epoch smoke state, norms 1.58 / 1.47, and alive in the
+  parent CSSD-q1 soup at 1.45), so node slots are identically zero.  The
+  pre-registered G_corr = max(G_node, G_edge) = +0.038245 >= 0.010 is therefore
+  carried by the edge correspondence alone.  (7) Verdict: Case D
+  DICTIONARY_INCREMENT_RETAINED_BUT_NO_NEW_TASK_BAND.  The early-compression
+  hypothesis is not confirmed as the plateau breaker: removing the compression
+  gives the line's best unmatched soup but stays inside the existing band, and
+  the model responds to the direct interface by switching off the compressed
+  node dictionary binding rather than by reaching a new performance band.
+scope: >-
+  CPU-only local round (single process, 8 threads), preregistration sha256
+  838b46fc0874..., formal-run commit f836b04 (audit commit 69435e3, analysis
+  additions c841c6d), one new training trajectory, no baseline rerun, no seed 1,
+  official test never loaded.  Descriptive historical comparison against the
+  line's single-run references only.
+assumptions:
+  - >-
+    Parent object is CSSD-q1 with the frozen H1 config and C6 mask; the parent
+    parameters are preserved bit-for-bit apart from the replaced fusion module
+    and the removed anchor encoder.
+  - >-
+    Standardized zero of the Sem108 block is equivalent to replacing it with the
+    official-train mean (the scaler is train-fit only), which is what S1
+    measures.
+  - >-
+    G_corr is defined by the pre-registration as max(G_node, G_edge); the node
+    side being a structural zero (dead binding) narrows the claim to the edge
+    path but does not change the case rule.
+  - >-
+    All historical soup values are unmatched context; no baseline was rerun.
+falsification:
+  - >-
+    Falsified: "removing the early anchor compression moves the soup outside the
+    existing plateau".  M_S = 0.123705 > 0.123, i.e. inside the existing band
+    and 0.000705 above the promising threshold.
+  - >-
+    Not falsified (strongly supported): "the decoder can use the raw
+    shell-resolved primitive chemistry directly and it is load-bearing".
+    G_sem0 = +1.307 and G_sem_shuffle = +0.493 are far above the gates.
+  - >-
+    Partially supported: "the sparse dictionary stays genuinely load-bearing".
+    The edge correspondence (G_edge = +0.038) and residual-alpha diagnostic
+    (+0.067) are positive, but the node dictionary binding is exactly
+    non-load-bearing because it collapses to zero.
+implication: >-
+  The plateau is not explained by the decoder being starved of primitive
+  chemistry.  Feeding the raw Sem108 blocks changes the mechanism the model
+  uses (the node dictionary binding is switched off entirely, so the direct
+  interface substitutes for it) far more than it changes the task number.
+  The line keeps CSSD-q1 / FINAL-CLEAN / T1 as references; CSSD-Sem108 is not
+  adopted as a task improvement, and its one durable addition is a
+  negative-mechanism finding (the compressed node binding is redundant once the
+  raw shell-resolved interface is present).  No seed 1, no rescue, no
+  hyper-parameter change is authorized by this round.  Converting the strong
+  semantic-interface result into a task band requires a new preregistration
+  with a matched node-binding-amputation control and/or >= 3 seeds and a
+  same-round matched baseline.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_sem108_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_sem108_v1_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_sem108_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/summary.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/audit/audit_decision.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/audit/anchor_relation.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/parameter_audit.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/smoke.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/run_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/mechanism/dictionary_health.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/mechanism/binding_health.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/mechanism/sem_meanfill.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/mechanism/sem_root_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/mechanism/node_assignment_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/mechanism/edge_assignment_shuffle.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_sem108_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_sem108_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_sem108_v1.py

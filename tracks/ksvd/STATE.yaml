@@ -12,8 +12,8 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-rndb-v1-closed-task-no-go-mechanism-strongly-supported
-updated: 2026-09-29
+phase: e2e-dictenv-sem108-v1-closed-task-band-edge-dictionary-increment
+updated: 2026-09-30
 
 # ---------------------------------------------------------------------------
 # FINAL STANDALONE STATUS (TCCD-v7, 2026-09-22)
@@ -1560,6 +1560,89 @@ e2e_dictenv_a1:
       separate the linear residual coordinate from its psi term to decompose
       G_dict; study the W2-init vs Adam step-size transient as architecture
       trainability, not as a rescue.
+
+# ---------------------------------------------------------------------------
+# E2E-DictEnv-Sem108-v1 (Shell-Resolved Primitive Semantic Interface) — 2026-09-30
+# ---------------------------------------------------------------------------
+# Single-question round on the closed ZINC dictionary-environment line: is the
+# ~0.13 plateau caused by the primitive chemistry being compressed too early
+# (anchor62 -> anchor_encoder -> 32D) before the environment decoder rather
+# than by a weak dictionary fusion?  Exactly one architectural change over the
+# frozen CSSD-q1 + C6 parent: delete the anchor compression and feed the raw
+# standardized [Sem108 ; size2] = 110D blocks straight into the fusion
+# (446 -> 114 -> 48; closed form 495 H + 48 = 56496 -> H = 114, gap 18;
+# candidate 97709 vs parent 97727, 0.0184 %; all 45 shared parent params
+# bit-identical, parent-equivalence forward bit-identical).  Zero-training
+# Phase-A audit: A1 Sem108 identity bit-identical to the durable cache with
+# exact independent reconstruction (231664 train-fit patches, train-only
+# scaler); A2 full-split marginals exact (root agreement 1.0, atom/bond max
+# error 5.7e-7/6.5e-7, size2 bit-identical); A3 T1_BLOCK_AUDIT_UNAVAILABLE (no
+# T1 retrain); A4 Sem108 strictly refines anchor62 (7016 anchors vs 10893
+# Sem108 keys, 77.4 % of rows anchor-shared with >= 2 Sem108 values).  All 14
+# correctness gates G0-G13 and 14 focused tests pass.  One seed-0 trajectory,
+# 320 epochs, 8 CPU threads, wall 1916.8 s: best valid 0.1313133 @ 309, Top-5
+# soup M_S = 0.1237049 (members 238/255/257/282/309) — the line's best
+# unmatched single-run soup (G_hist +0.006323 vs CSSD-q1 0.130028) but inside
+# the existing 0.123-0.127 band, 0.000705 above the promising threshold.
+# Mechanism: the direct interface is strongly load-bearing (G_sem0 +1.307040,
+# G_sem_shuffle +0.493259 over 5 seeds, G_atom +1.097573, G_bond +0.480401),
+# the edge dictionary correspondence survives (G_edge +0.038245, G_corr
+# +0.038245 -> clear_incremental), and the node dictionary binding is dead:
+# W_A_S / W_A_C collapsed to float32 denormals (7.05e-38) during training
+# (healthy in smoke, alive in the parent at 1.45), so G_node = 0.0 exactly and
+# the pre-registered G_corr is carried by the edge path alone.  Case D
+# DICTIONARY_INCREMENT_RETAINED_BUT_NO_NEW_TASK_BAND; no seed 1, no rescue,
+# official test never loaded.
+e2e_dictenv_sem108_v1:
+  status: closed_round_complete_one_trajectory
+  round: e2e-dictenv-sem108-v1
+  verdict: DICTIONARY_INCREMENT_RETAINED_BUT_NO_NEW_TASK_BAND
+  case: D
+  case_boundary: false
+  device: cpu_only
+  official_test_loaded: false
+  preregistration: tracks/ksvd/notes/e2e_dictenv_sem108_v1_preregistration.md
+  preregistration_sha256_prefix: 838b46fc0874
+  prior_artifact_audit: tracks/ksvd/notes/e2e_dictenv_sem108_v1_prior_artifact_audit.md
+  implementation_commit: f836b04
+  audit_commit: 69435e3
+  analysis_commit: c841c6d
+  analysis: tracks/ksvd/notes/e2e_dictenv_sem108_v1_analysis.md
+  claims:
+    - claim-e2e-dictenv-sem108-v1-direct-interface-load-bearing-node-binding-collapse-task-band-20260930
+  decision: decision-e2e-dictenv-sem108-v1-stop-no-new-task-band-edge-dictionary-increment-20260930
+  results_dir: tracks/ksvd/results/e2e_dictenv_sem108_v1/
+  report: tracks/ksvd/results/e2e_dictenv_sem108_v1/REPORT.md
+  decision_report: tracks/ksvd/results/e2e_dictenv_sem108_v1/DECISION.md
+  summary: tracks/ksvd/results/e2e_dictenv_sem108_v1/summary.json
+  runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_sem108_v1.py
+  module: tracks/ksvd/experiments/luyin16/e2e_dictenv_sem108_v1.py
+  tests: tracks/ksvd/tests/test_e2e_dictenv_sem108_v1.py
+  architecture: {base: CSSD-q1-C6, seed: 0, params: 97709, parent_params: 97727, delta: -18, ratio: 0.000184, interface: '[Sem108;size2]=110 raw standardized', fusion: '446->114->48 closed form', anchor_encoder: removed}
+  audit: {decision: PROCEED, a1_identity: established, a2_pass: true, a4_pass: true, t1_block_audit: T1_BLOCK_AUDIT_UNAVAILABLE}
+  training: {epochs: 320, best_valid_mae: 0.1313133, best_epoch: 309, soup_valid_mae: 0.1237049, soup_members: [238, 255, 257, 282, 309], wall_clock_s: 1916.8}
+  task: {band: SEM108_WITHIN_EXISTING_PERFORMANCE_BAND, historical_cssd_q1_soup: 0.1300280, g_hist_unmatched: 0.006323, historical_t1_soup: 0.1257650, historical_rndb_soup: 0.1331175, promising_gap: 0.000705}
+  mechanism: {G_sem0: 1.307040, G_sem_shuffle: 0.493259, G_sem_shuffle_gate: 0.005, G_atom: 1.097573, G_bond: 0.480401, G_dict0: 0.066549, G_node: 0.0, G_edge: 0.038245, G_corr: 0.038245, G_corr_gate: 0.010, M_sem0: 1.4307452, M_dict0: 0.1902536}
+  binding_health: {W_A_S_absmax: 7.05e-38, W_A_C_absmax: 7.05e-38, node_encoder_0_absmax: 7.04e-38, W_E_S_absmax: 0.724, W_E_C_absmax: 0.579, node_binding_dead: true, smoke_W_A_S_norm: 1.58}
+  assignment_shuffle: {node_mean_delta: 0.0, edge_mean_delta: 0.038245, seeds: [101, 202, 303, 404, 505]}
+  dictionary_health: {active_atoms: 32, effective_atoms: 20.71, top1_activation_share: 0.823, valid_reconstruction_relative: 0.97696, movement: 5.24}
+  focused_tests: 14/14 pass
+  forbidden_without_new_preregistration:
+    - seed 1/2/3 of CSSD-Sem108, a matched CSSD-q1 rerun, or any second Sem108 variant
+    - node-binding rescue / zero-init rerun / amputation control
+    - width / init / lr / lambda / horizon / batch / soup / top-1 regularisation change
+    - Sem108-only control, RNDB or coarse146 reintroduction
+    - reading the official test for this round
+  next_round_shape: >-
+    New preregistration only (nothing implemented): a matched
+    node-binding-amputation control (the identical Sem108 architecture with the
+    node dictionary binding removed or zero-initialised, >= 3 seeds, same soup)
+    to separate "the direct interface replaces the compressed node path" from
+    "the collapse is an Adam/coupled-weight-decay accident"; a multi-seed
+    confirmation of the 0.1237 band position; or a same-round matched
+    anchor-vs-Sem108 interface pair at identical capacity.  Secondary:
+    sparse-usage regularisation to move the 0.823 top-1 usage under 0.75 is a
+    new hypothesis, not a rescue.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24

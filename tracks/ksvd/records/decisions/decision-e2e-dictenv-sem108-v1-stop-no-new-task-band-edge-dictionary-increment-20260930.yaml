@@ -1,0 +1,121 @@
+decision_id: decision-e2e-dictenv-sem108-v1-stop-no-new-task-band-edge-dictionary-increment-20260930
+created: '2026-09-30T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  Every round of the closed CSSD / DictEnv line compresses the primitive
+  chemistry of a patch into the coarse 62-D anchor and then through
+  anchor_encoder (62 -> 32 -> 32) before the environment decoder, so the
+  decoder never reads the shell-resolved primitive semantic blocks directly.
+  Three independent rounds (FINAL-CLEAN C6 0.1285, T1 0.1258, CSSD-q1 0.1300)
+  and RNDB 0.1331 sit in the same 0.126-0.133 band.  The round asked a single
+  either/or question: is the plateau caused by that early compression (and not
+  by a weak dictionary fusion function)?  One architectural change, one
+  trajectory, one pre-registered decision table.
+protocol: >-
+  Local CPU only (CUDA_VISIBLE_DEVICES="", no GPU/SSH/DDP), preregistration
+  sha256 838b46fc0874..., formal-run commit f836b04 (audit commit 69435e3,
+  analysis additions c841c6d).  Stages: read-only historical references ->
+  zero-training Phase-A audit A1-A4 (exact Sem108 identity and scaler
+  provenance, full-split anchor relations, T1 block audit availability,
+  redundancy/collision structure) -> preflight (parameter contract) ->
+  14 correctness gates G0-G13 -> 8-epoch / 64-step smoke -> exactly one
+  from-scratch seed-0 trajectory (320 epochs, Top-5 soup) -> frozen
+  inference-only probes (Sem108 block zero, 5-seed Sem108 row shuffle, atom and
+  bond block zero, residual alpha -> 0, node/edge assignment shuffle at seeds
+  101/202/303/404/505) -> analysis.  No baseline rerun, no seed 1, no sweep,
+  official ZINC test never loaded.
+results:
+  implementation_commit: f836b04
+  audit_commit: 69435e3
+  analysis_commit: c841c6d
+  preregistration_sha256_prefix: 838b46fc0874
+  device: cpu
+  threads: 8
+  official_test_loaded: false
+  focused_tests: 14/14 pass
+  correctness_gates: G0-G13 all pass (14/14)
+  audit: {decision: PROCEED, a1_identity: established, a2_pass: true, a4_pass: true, t1_status: T1_BLOCK_AUDIT_UNAVAILABLE}
+  params: {parent: 97727, candidate: 97709, delta: -18, relative: 0.000184, fusion_hidden: 114}
+  training: {epochs: 320, seed: 0, wall_clock_s: 1916.8, best_valid_mae: 0.1313133, best_epoch: 309, soup_valid_mae: 0.1237049, soup_members: [238, 255, 257, 282, 309]}
+  task_band: {band: SEM108_WITHIN_EXISTING_PERFORMANCE_BAND, label: DICTIONARY_INCREMENT_RETAINED_BUT_NO_NEW_TASK_BAND, historical_cssd_q1_soup: 0.1300280, g_hist_unmatched: 0.006323, historical_t1_soup: 0.1257650, historical_rndb_soup: 0.1331175}
+  semantic_mechanism: {M_S: 0.1237049, M_sem0: 1.4307452, G_sem0: 1.3070403, G_sem_shuffle: 0.4932591, G_sem_shuffle_range: [0.4811046, 0.5053539], G_atom: 1.0975730, G_bond: 0.4804013, sem_use: strong}
+  dictionary_mechanism: {M_dict0: 0.1902536, G_dict0: 0.0665487, G_node: 0.0, G_edge: 0.0382455, G_edge_range: [0.0344360, 0.0427950], G_corr: 0.0382455, dict_corr: clear_incremental, node_binding_dead: true, W_A_S_absmax: 7.05e-38, W_A_C_absmax: 7.05e-38, W_E_S_absmax: 0.724, W_E_C_absmax: 0.579}
+  dictionary_health: {active_atoms: 32, effective_atoms: 20.71, top1_share: 0.823, valid_reconstruction_relative: 0.97696, movement: 5.24, task_gradient_norm_D: 0.0234}
+  case: D
+  verdict: DICTIONARY_INCREMENT_RETAINED_BUT_NO_NEW_TASK_BAND
+  mechanism_note: >-
+    The node-side dictionary correspondence is exactly zero because W_A_S and
+    W_A_C collapsed to float32 denormals during training (healthy in the
+    8-epoch smoke state, alive in the parent CSSD-q1 soup at absmax 1.45), so
+    node slots are identically zero and the node assignment shuffle is a no-op.
+    The pre-registered G_corr = max(G_node, G_edge) therefore reflects the edge
+    correspondence only.
+decision: >-
+  1. STOP the round after the single pre-registered seed-0 trajectory and the
+  frozen probes.  CSSD-Sem108 is NOT adopted as a task improvement: M_S =
+  0.123705 is inside the existing 0.123-0.127 band and 0.000705 above the
+  pre-registered promising threshold; the strong claim (<= 0.120) and the
+  promising band (<= 0.123) are both missing.  2. DO NOT run seed 1, do not
+  change width / init / lr / lambda / horizon / batch / soup, do not add a
+  node-binding rescue, do not rerun a baseline.  3. RECORD the durable
+  mechanism findings: the direct shell-resolved semantic interface is strongly
+  load-bearing (G_sem0 = +1.307, G_sem_shuffle = +0.493, atom/bond blocks
+  +1.098 / +0.480), while the compressed node dictionary-atom binding is
+  fully redundant and collapses to zero; the edge dictionary correspondence
+  remains load-bearing (G_edge = +0.038) and is the only basis of the
+  pre-registered G_corr.  4. KEEP CSSD-q1 / FINAL-CLEAN / T1 as the line's
+  references; the early-compression hypothesis is neither adopted nor
+  refuted by a task break-out.  5. Authorize nothing further in this round:
+  any follow-up needs a new pre-registration.
+alternatives_rejected:
+  - >-
+    Claiming a task improvement from the unmatched historical comparison
+    (+0.006323 vs CSSD-q1).  Rejected: no matched baseline was rerun and the
+    round's thresholds were not reached.
+  - >-
+    Buying seed 1 to firm up the band position.  Rejected: the round is frozen
+    at one trajectory and the pre-registration forbids it.
+  - >-
+    Re-running with a node-binding removal / zero init to "fix" the collapse.
+    Rejected: post-hoc rescue; the collapse is reported as an observation.
+  - >-
+    Reporting the round as Case C (backbone signal, dictionary increment not
+    established).  Rejected: the pre-registered G_corr = +0.038 >= 0.010, so
+    Case D is the frozen rule.
+  - >-
+    Reporting a joint node+edge dictionary increment.  Rejected: the node side
+    is a structural zero (dead binding), so the increment claim is edge-only;
+    this is recorded as a mechanism note rather than silently folded in.
+  - >-
+    Using the T1 block ablation to attribute T1's 0.12577.  Rejected: A3
+    returned T1_BLOCK_AUDIT_UNAVAILABLE (non-durable state tensors) and the
+    round forbids retraining T1.
+revisit_if: >-
+  A new preregistration is written for: (a) a matched node-binding-amputation
+  control — the identical Sem108 architecture trained with the node dictionary
+  binding removed or zero-initialised, >= 3 seeds, same soup — to separate
+  "the direct interface replaces the compressed node path" (mechanism) from
+  "the collapse is an Adam/coupled-weight-decay accident" (trainability);
+  (b) a multi-seed confirmation of the 0.1237 band position; or (c) a
+  same-round matched anchor-interface vs Sem108-interface pair at identical
+  capacity to isolate the compression effect without historical comparison.
+  Secondary: sparse-usage regularisation to move the 0.823 top-1 usage back
+  under 0.75 is a new hypothesis, not a rescue.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_sem108_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_sem108_v1_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_sem108_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/summary.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/run_seed0.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/mechanism/binding_health.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/mechanism/sem_meanfill.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/mechanism/sem_root_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/mechanism/node_assignment_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_sem108_v1/mechanism/edge_assignment_shuffle.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_sem108_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_sem108_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_sem108_v1.py

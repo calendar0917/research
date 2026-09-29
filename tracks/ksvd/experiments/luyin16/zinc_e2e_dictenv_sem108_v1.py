@@ -1444,7 +1444,8 @@ def _write_report(
     lines.append("")
     lines.append("## A. Provenance")
     lines.append("")
-    lines.append(f"- formal commit `{s['git_commit']}`")
+    lines.append(f"- formal-run commit `{run.get('git_commit', 'n/a')}`")
+    lines.append(f"- analysis / report commit `{s['git_commit']}`")
     lines.append(f"- device `cpu` · threads `{s['threads']}`")
     lines.append("- `official_test_loaded = false`")
     lines.append("")
@@ -1490,6 +1491,7 @@ def _write_report(
     lines.append("## G. Performance interpretation")
     lines.append("")
     lines.append(f"- `M_S = {_fmt(s['M_S'], 6)}` → band **{s['performance_band']}**")
+    lines.append(f"- distance to the pre-registered promising threshold (0.123): `{s['M_S'] - 0.123:+.6f}`")
     lines.append(
         f"- `G_hist = {_fmt(s['historical']['G_hist_unmatched'], 6)}` vs historical CSSD-q1 "
         f"`{_fmt(s['historical']['CSSD_q1_seed0_soup'], 6)}` — historical, unmatched"
