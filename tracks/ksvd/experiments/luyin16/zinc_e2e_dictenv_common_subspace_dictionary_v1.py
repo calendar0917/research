@@ -31,6 +31,7 @@ from tracks.ksvd.experiments.luyin16 import e2e_dictenv_clean_mechanism_v1 as cm
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_common_subspace_dictionary_v1 as cssd
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_dictionary_coder_audit_v1 as dca
 from tracks.ksvd.experiments.luyin16 import e2e_dictenv_h1_clarity_audit as audit
+from tracks.ksvd.experiments.luyin16 import e2e_dictenv_p1 as p1
 from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_dictionary_coder_audit_v1 as dcarun
 from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
 from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p2_abs as p2run
