@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-sem108-v1-closed-task-band-edge-dictionary-increment
+phase: e2e-dictenv-jointbond-v1-closed-branch-exactly-inert-denormal-collapse
 updated: 2026-09-30
 
 # ---------------------------------------------------------------------------
@@ -1643,6 +1643,96 @@ e2e_dictenv_sem108_v1:
     anchor-vs-Sem108 interface pair at identical capacity.  Secondary:
     sparse-usage regularisation to move the 0.823 top-1 usage under 0.75 is a
     new hypothesis, not a rescue.
+
+# ---------------------------------------------------------------------------
+# E2E-DictEnv-JointBond-v1 (key-level joint structure-semantics fusion) — 2026-09-30
+# ---------------------------------------------------------------------------
+# Single-question follow-up on the Sem108 asymmetry (edge channel live, node
+# binding dead): if the 32-D residual code and the 28-class atom type are bound
+# at the KEY (per-bond-endpoint) level instead of being pooled through the node
+# path, does the fusion become load-bearing and move the ~0.13 band?  Exactly
+# one architectural change over frozen CSSD-Sem108: a 48-D per-bond residual
+# j_uv = F([h_u+h_v ; |h_u-h_v| ; h_u*h_v]) * (b_uv @ B) with
+# h_v = (alpha_v @ A) * (q_v @ C), A 32->16, C 28->16, B 4->48 bias-free,
+# F = 48->32->48 SiLU bias-free (F2 ~ Normal(0,0.01)), summed into the edge
+# response BEFORE the shellpair index_add_ (parent hook _edge_response_delta,
+# default None => bit-identical parent forward; 45/45 shared tensors
+# bit-identical, parent-equivalence forward 0.0, frozen parent soup reproduced
+# exactly 0.123704927947314).  All 14 correctness gates J0-J13 and 12 focused
+# tests pass.  One seed-0 320-epoch CPU trajectory (8 threads, 2334.2 s): best
+# valid 0.1319279600828304 @309, Top-5 soup M_S = 0.12793026330223073
+# (members 259/271/290/309/311) -> JOINTBOND_NO_NEW_TASK_BAND, +0.004225 worse
+# than the historical UNMATCHED parent soup, but the branch is EXACTLY INERT at
+# the endpoint so the gap is a trajectory-level difference, not a branch
+# effect.  Mechanism: G_branch_off = 0.0 exactly (every prediction bit
+# unchanged with j_uv removed), G_joint_alpha0 = 0.0, branch-local
+# residual-code and atom-type row shuffles 0.0 at seeds 101/202/303; all five
+# branch tensors sit at the float32 denormal floor (absmax 7.008e-38 A /
+# 7.055e-38 C / 7.020e-38 B / 7.032e-38 F0 / 7.051e-38 F2), so joint_A
+# underflows to exactly 0 and j_uv = F(0)*(bB) = 0.  The branch was numerically
+# sub-resolution from initialisation (smoke response norm 2.219e-02, absmax
+# 2.816e-04, prediction influence 5.96e-06, first-epoch dL/dA 1.73e-06) and
+# Adam's L2 weight decay (wd=1e-5) annihilated it against a gradient reading
+# exactly 0.00e+00 from epoch 20 on - the same denormal attractor that already
+# holds the parent's dead node binding (W_A_C/W_A_S/node_encoder.0 7.05e-38,
+# G_node = 0.0) while the live edge channel keeps carrying the content
+# (W_E_C 0.636, W_E_S 0.564, G_edge +0.026822, G_sem_shuffle +0.573315,
+# G_dict0 +0.045849).  Both clauses of the matched-control rule fail (band
+# <= 0.123 AND G_branch_off >= 0.003): no matched control, no seed 1, no
+# rescue, official test never loaded.
+e2e_dictenv_jointbond_v1:
+  status: closed_round_complete_one_trajectory
+  round: e2e-dictenv-jointbond-v1
+  verdict: JOINTBOND_NO_NEW_TASK_BAND_BRANCH_EXACTLY_INERT
+  case: 'no_breakthrough + endpoint_correspondence not_established'
+  device: cpu_only
+  official_test_loaded: false
+  preregistration: tracks/ksvd/notes/e2e_dictenv_jointbond_v1_preregistration.md
+  preregistration_sha256_prefix: 7384eca4a61a
+  prior_artifact_audit: tracks/ksvd/notes/e2e_dictenv_jointbond_v1_prior_artifact_audit.md
+  implementation_commit: a27f2dd
+  analysis: tracks/ksvd/notes/e2e_dictenv_jointbond_v1_analysis.md
+  claims:
+    - claim-e2e-dictenv-jointbond-v1-key-level-fusion-inert-denormal-collapse-20260930
+  decision: decision-e2e-dictenv-jointbond-v1-stop-branch-inert-no-task-band-20260930
+  promoted_run: 20260930-100245-e164e7e7
+  results_dir: tracks/ksvd/results/e2e_dictenv_jointbond_v1/
+  report: tracks/ksvd/results/e2e_dictenv_jointbond_v1/REPORT.md
+  decision_report: tracks/ksvd/results/e2e_dictenv_jointbond_v1/DECISION.md
+  summary: tracks/ksvd/results/e2e_dictenv_jointbond_v1/summary.json
+  runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_jointbond_v1.py
+  module: tracks/ksvd/experiments/luyin16/e2e_dictenv_jointbond_v1.py
+  control_plane: tracks/ksvd/src/ksvd_research/runners/zinc_jointbond_v1.py
+  tests: tracks/ksvd/tests/test_e2e_dictenv_jointbond_v1.py
+  architecture: {base: CSSD-Sem108-C6, parent_commit: da2af28, seed: 0, params: 101933, parent_params: 97709, delta: 4224, ratio: 0.04323, matched: false, branch: 'A 32->16 / C 28->16 / B 4->48 / F 48->32->48 SiLU, all bias-free, added before shellpair index_add_', init: 'A/C/B/F0 Kaiming-uniform, F2 ~ Normal(0,0.01)'}
+  audit: {decision: PROCEED}
+  training: {epochs: 320, best_valid_mae: 0.1319279600828304, best_epoch: 309, soup_valid_mae: 0.12793026330223073, soup_members: [259, 271, 290, 309, 311], wall_clock_s: 2334.2, seconds_per_epoch: 7.29}
+  task: {band: JOINTBOND_NO_NEW_TASK_BAND, band_boundary: 0.123, historical_parent_soup: 0.123704927947314, gap_vs_parent_unmatched: 0.004225, historical_t1_soup: 0.125765, historical_cssd_q1_soup: 0.13002798487985273, historical_rndb_soup: 0.1331174676119699}
+  mechanism: {G_branch_off: 0.0, G_branch_gate: 0.003, G_joint_alpha0: 0.0, G_joint_alpha_shuffle: 0.0, G_joint_atom_shuffle: 0.0, shuffle_seeds: [101, 202, 303], G_dict0: 0.045849, G_edge: 0.026822, G_node: 0.0, G_sem_shuffle: 0.573315, endpoint_correspondence: not_established}
+  branch_death: {delta_at_soup_absmax: 0.0, delta_at_soup_norm: 0.0, params_absmax: {joint_A: 7.008e-38, joint_C: 7.055e-38, joint_B: 7.020e-38, joint_F0: 7.032e-38, joint_F2: 7.051e-38}, init_response_norm: 0.022185, init_response_absmax: 0.0002816, init_prediction_influence: 5.96e-06, grad_jointA_epoch1: 1.73e-06, grad_jointA_epoch20: 0.0, grad_jointA_epoch320: 0.0}
+  binding_health: {W_A_C_absmax: 7.043e-38, W_A_S_absmax: 7.056e-38, node_encoder_0_absmax: 7.055e-38, W_E_C_absmax: 0.636, W_E_S_absmax: 0.564, node_binding_dead: true, branch_dead: true}
+  dictionary_health: {active_atoms: 32, effective_atoms: 19.57, top1_activation_share: 0.795, valid_reconstruction_relative: 0.97696, movement: 5.024, task_gradient_norm_D: 0.0239}
+  focused_tests: 12/12 pass
+  pre_training_gate_fixes:
+    - 'J0 read the wrong dict key (pass vs passed) -> reported passed=None'
+    - 'J7 compared alpha-zero vs branch-off with > instead of the exact equality the pre-registration specifies (and now also requires branch-on != branch-off)'
+    - 'J10/J12 compared forwards in train() mode, so backend dropout masks differed between the two sides (0.066 / 0.079 artefacts)'
+  forbidden_without_new_preregistration:
+    - seed 1/2/3 of JointBond, a retrained branch-off arm, or any second JointBond variant
+    - branch rescue (wider F, larger/zero init, tanh/linear gate, bias, LayerNorm, no weight decay on the branch)
+    - matched-control purchase (rule not met: band > 0.123 and G_branch_off = 0.0)
+    - width / lr / lambda / horizon / batch / soup change, or any Sem108/Q1/RNDB rerun
+    - reading the official test for this round
+  next_round_shape: >-
+    New preregistration only (nothing implemented): an optimizer-level diagnostic
+    of the Adam-L2-decay/denormal attractor (no weight decay on residual
+    channels, an explicit denormal guard, or a decoupled-decay formulation)
+    that measures how many Sem108 channels already sit at the 7e-38 floor and
+    whether the dead node binding revives under that single change.  Key-level
+    binding only becomes a candidate again after that, and then only as an
+    additive unit-scale increment with matched controls, >= 2 seeds and
+    mandatory liveness gates (|w|max > 1e-3, G_branch_off >= 0.003) before any
+    task interpretation.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24

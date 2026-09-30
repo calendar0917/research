@@ -1,0 +1,146 @@
+claim_id: claim-e2e-dictenv-jointbond-v1-key-level-fusion-inert-denormal-collapse-20260930
+created: '2026-09-30T00:00:00Z'
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+statement: >-
+  Key-level joint structure-semantics fusion (JointBond-v1: 4224 parameters
+  binding each bond endpoint's 32-D residual code to that endpoint's 28-class
+  atom type through A(32->16)/C(28->16), combining the two endpoints by
+  [sum, abs-diff, product], gating with a 48->32->48 SiLU MLP ending in
+  Normal(0,0.01) and multiplying by the 4-class bond-type embedding B(4->48)
+  before the shellpair index_add_) is EXACTLY INERT in the frozen CSSD-Sem108
+  ZINC dictionary-environment system, and does not move the ~0.13 task band.
+  Single seed-0 320-epoch CPU trajectory (commit a27f2dd, official test never
+  loaded): best official-valid MAE 0.1319279600828304 @309, Top-5 soup
+  M_S = 0.12793026330223073 (members 259/271/290/309/311) -> band
+  JOINTBOND_NO_NEW_TASK_BAND, +0.004225 worse than the historical unmatched
+  parent soup 0.123704927947314. Mechanism: G_branch_off = 0.0 exactly (all
+  predictions bit-identical with j_uv removed), G_joint_alpha0 = 0.0, and both
+  branch-local row shuffles (residual code, atom type) read 0.0 at seeds
+  101/202/303; at the soup state every branch tensor sits at the float32
+  denormal floor (absmax 7.008e-38 / 7.055e-38 / 7.020e-38 / 7.032e-38 /
+  7.051e-38 for A/C/B/F0/F2), so joint_A underflows to exactly 0 and
+  j_uv = F(0)*SiLU(0)*(bB) = 0. The branch was already numerically
+  sub-resolution at initialisation (smoke: response norm 2.219e-02, absmax
+  2.816e-04, prediction influence 5.96e-06, first-epoch dL/dA = 1.73e-06) and
+  was then driven to the denormal floor by Adam's L2 weight decay
+  (weight_decay=1e-5) against a gradient that reads exactly 0.00e+00 from
+  epoch 20 onward. The frozen parent's edge channel already survives and
+  already carries this information (W_E_C absmax 0.636, W_E_S 0.564,
+  G_edge = +0.026822 over 5 seeds, G_sem_shuffle = +0.573315 over 5 seeds,
+  G_dict0 = +0.045849), while the parent's node-level binding is dead at the
+  same denormal scale (W_A_C/W_A_S/node_encoder.0 = 7.05e-38, G_node = 0.0), so
+  the round repeats an attractor already in the record: in this architecture
+  any added channel whose initialising loss gradient is below float32
+  resolution is deleted by weight decay.
+scope: >-
+  Preregistration/implementation commit a27f2ddb69fb8b5f25266e9dc10bfaed48df9a49
+  (parent SEM108Model at da2af280d4229aa96fac248eecf38109ee56716b); local CPU
+  only, 8 threads; seed 0; exactly one 320-epoch trajectory; frozen architecture
+  (phi65, CSSD-q1 subspace, K=32, s=8, IHT-10, C6 mask, interface/size2,
+  fusion, readout), frozen optimizer (Adam lr=1e-3, wd=1e-5, batch 128, clip
+  5.0), frozen Top-5 soup; official ZINC train 10000 / official valid 1000;
+  official test never loaded, no baseline retrained, no parameter search, no
+  seed 1, no rescue. Frozen historical references are unmatched and read-only.
+  The 14 correctness gates J0-J13 (parents' interface, bit-identical shared
+  parameters, branch-off equivalence, endpoint swap correspondence,
+  residual-code-zero exactness, gradients, routing/batch offsets,
+  structure-shuffle endpoint semantics, frozen-parent reproduction, relabel
+  invariance, test blocker) all passed before training.
+supporting_evidence:
+  - >-
+    G_branch_off = 0.0 exactly (M_branch_off == M_S == 0.12793026330223073):
+    removing j_uv changes no prediction bit, so the branch has zero causal
+    benefit at the endpoint. Not a tolerance statement - the two float64 soup
+    MAEs are identical.
+  - >-
+    Branch-local interventions all read 0.0 exactly: residual-code zero and
+    residual-code row shuffle and atom-type row shuffle at seeds 101/202/303
+    each reproduce M_S bit-for-bit (mechanism/joint_alpha_zero.json,
+    joint_alpha_shuffle.json, joint_atom_shuffle.json).
+  - >-
+    Direct state inspection of the soup checkpoint: all five branch tensors
+    absmax 7.008e-38 (A), 7.055e-38 (C), 7.020e-38 (B), 7.032e-38 (F0),
+    7.051e-38 (F2), i.e. float32 denormals; recomputed branch delta absmax 0.0
+    and norm 0.0 on a 16-molecule valid batch, and pred(on) bit-identical to
+    pred(off).
+  - >-
+    Training dynamics: smoke branch response norm 2.219e-02 (absmax 2.816e-04)
+    at init vs prediction influence 5.96e-06; gradient diagnostic jointA
+    1.73e-06 at epoch 1 and exactly 0.00e+00 at epochs 20/40/80/160/240/320.
+    Adam with weight_decay=1e-5 adds L2 to an (effectively) zero gradient, so
+    the update degenerates to ~lr*sign(w) and the weights decay to the denormal
+    floor.
+  - >-
+    The same attractor already exists in the frozen parent: W_A_C 7.043e-38,
+    W_A_S 7.056e-38, node_encoder.0.weight 7.055e-38 with G_node = 0.0 exactly,
+    while the edge binding stays alive (W_E_C 0.636, W_E_S 0.564) and the parent
+    probes remain strongly positive (G_edge +0.026822, G_sem_shuffle +0.573315,
+    G_dict0 +0.045849).
+  - >-
+    Correctness of the implementation is independently established: 14/14
+    gates J0-J13 pass, including bit-identical parent equivalence with the
+    branch off, bit-identical shared parent parameters, endpoint swap
+    correspondence (both-swap 0.0, single-swap 2.70e-04, 44.9% of bonds moved),
+    float64 edge-slot routing agreement (4.8e-09), and exact reproduction of the
+    frozen parent soup 0.123704927947314.
+  - >-
+    Dictionary and reconstruction health are intact, so the null result is not
+    a broken run: 32/32 atoms active, effective atoms 19.57, top-1 usage share
+    0.795, valid reconstruction relative 0.97696, dictionary movement 5.024,
+    task gradient on D 0.0239, finite 64-step smoke with gradients on every
+    parameter group.
+contradicting_evidence:
+  - >-
+    The candidate soup 0.12793026330223073 is +0.004225 WORSE than the
+    historical unmatched parent soup 0.123704927947314. Because
+    G_branch_off = 0.0 exactly, this gap cannot be attributed to the branch;
+    it is a trajectory-level difference between two single unmatched runs
+    (seed/RNG stream and early branch perturbation of the shared dictionary).
+    It is therefore not evidence against the architecture, and equally not
+    evidence for it - the round cannot say whether the early (pre-denormal)
+    branch activity helped or hurt.
+  - >-
+    The J5/J6 endpoint-swap contrasts (single-swap 2.70e-04 in the dictionary
+    setting and 1.67e-03 in the synthetic setting vs both-swap 0.0) show the
+    branch's *response shape* is well-formed at the tested parameter scale, so
+    the architecture is not structurally broken; only its trained state is
+    inert. A different gate/decay regime could in principle behave differently,
+    which this round did not test.
+  - >-
+    Causal attribution of the collapse to the optimiser decays is supported by
+    the denormal floor and the exactly-zero gradient but was not isolated by a
+    controlled probe (no no-decay or larger-gate variant was run, by design).
+limitations:
+  - >-
+    One seed, one trajectory, no contemporaneous baseline, no matched control,
+    un-matched +4224 parameters; the frozen-soup interventions are not
+    retrained controls.
+  - >-
+    The +0.004225 gap to the parent soup is between-trajectory, not a mechanism
+    effect, because the endpoint branch is exactly inert and the two runs
+    differ in more than the branch.
+  - >-
+    The design-time near-zero gate (F2 ~ Normal(0,0.01) multiplied by b*B) and
+    the L2-decay/denormal attractor were not separated; the evidence supports
+    "sub-resolution at init, then annihilated" rather than a specific split.
+  - >-
+    G_branch_off = 0.0 is a frozen-soup measurement, so early-branch effects on
+    the shared parameters are invisible to it.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_jointbond_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_jointbond_v1_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_jointbond_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/summary.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/smoke.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/mechanism/branch_off.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/mechanism/branch_health.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/mechanism/binding_health.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/mechanism/joint_alpha_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/mechanism/joint_atom_shuffle.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/REPORT.md
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_jointbond_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_jointbond_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_jointbond_v1.py

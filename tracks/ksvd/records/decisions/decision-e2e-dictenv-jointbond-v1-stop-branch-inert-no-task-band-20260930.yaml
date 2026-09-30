@@ -1,0 +1,132 @@
+decision_id: decision-e2e-dictenv-jointbond-v1-stop-branch-inert-no-task-band-20260930
+created: '2026-09-30T00:00:00Z'
+kind: decision
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The parent round (e2e-dictenv-sem108-v1) left a specific asymmetry: the
+  direct shell-resolved interface is strongly load-bearing, the node-level
+  dictionary binding is exactly dead (G_node = 0.0, W_A_C/W_A_S at float32
+  denormals), and the surviving increment is carried by the edge assignment
+  (G_edge = +0.038245). This round tested the single falsifiable follow-up:
+  if structure and semantics are bound at the key (per-bond-endpoint) level
+  instead of being pooled through the node path, does the fusion become
+  load-bearing and move the ~0.13 valid-MAE band? One architecture change, one
+  seed-0 trajectory, no baseline rerun, no sweep, no rescue.
+protocol: >-
+  Local-first implementation with targeted CPU tests, preregistration frozen
+  before the run, then the formal control-plane run
+  (uv run research run zinc_jointbond_v1 --mode scratch, run id
+  20260930-100245-e164e7e7, test_access blocked). CPU only, 8 threads, seed 0,
+  320 epochs, official ZINC train 10000 / official valid 1000. Parent parameters
+  keep the exact build_sem108_model RNG stream and are bit-identical; the
+  branch is initialised afterwards. Required correctness gates J0-J13 ran and
+  passed before the 64-step smoke and before training; then frozen-soup
+  interventions (branch off, residual-code zero, branch-local residual-code and
+  atom-type row shuffles at seeds 101/202/303) plus the parent probes. No
+  matched control (the pre-registered rule for buying one was not met), no
+  seed 1, no parameter search, official test never loaded.
+results:
+  implementation_commit: a27f2ddb69fb8b5f25266e9dc10bfaed48df9a49
+  preregistration_sha256_prefix: 7384eca4a61a
+  device: cpu
+  threads: 8
+  seed: 0
+  epochs: 320
+  parameters: {parent: 97709, candidate: 101933, new: 4224, relative: 0.04323, matched: false}
+  correctness_gates: 14/14 pass (J0-J13)
+  smoke: {optimizer_steps: 64, best_valid_mae: 0.6803723739931229, finite: true, gradient_ok: true}
+  best_valid_mae: 0.1319279600828304
+  best_epoch: 309
+  soup_valid_mae: 0.12793026330223073
+  soup_members: [259, 271, 290, 309, 311]
+  wall_clock_s: 2334.2012584350305
+  performance_band: JOINTBOND_NO_NEW_TASK_BAND
+  G_branch_off: 0.0
+  G_joint_alpha0: 0.0
+  G_joint_alpha_shuffle: 0.0
+  G_joint_atom_shuffle: 0.0
+  G_dict0: 0.04584894011169674
+  G_edge: 0.026822117618122154
+  G_node: 0.0
+  G_sem_shuffle: 0.5733153076524846
+  branch_load_gate: 0.003
+  endpoint_correspondence: not_established
+  branch_parameters_at_soup_absmax: {joint_A.weight: 7.008310646511393e-38, joint_C.weight: 7.05477434047209e-38, joint_B.weight: 7.020204307357197e-38, joint_F.0.weight: 7.031985864325854e-38, joint_F.2.weight: 7.05115002212396e-38}
+  branch_delta_at_soup: {absmax: 0.0, norm: 0.0}
+  branch_init_response: {norm: 0.022185079125784466, absmax: 0.0002815963525790721, prediction_influence: 5.9604644775390625e-06}
+  branch_gradient_trace: {epoch_1_jointA: 1.73e-06, epoch_20_jointA: 0.0, epoch_320_jointA: 0.0}
+  historical_references: {sem108_parent_soup: 0.123704927947314, t1_soup: 0.125765, final_clean_c6: 0.128499, cssd_q1: 0.13002798487985273, rndb: 0.1331174676119699, control_lr1e3: 0.127428}
+  gap_vs_parent_unmatched: 0.004225335354916732
+  buy_matched_control: false
+  official_test_loaded: false
+decision: >-
+  STOP the key-level joint structure-semantics branch. Do not run a matched
+  control, seed 1/2, a width/init/gate rescue, a bias/norm variant, or a
+  retrained branch-off arm in this round; do not open the official test. Record
+  the negative mechanism result and move the line to the optimizer-level
+  diagnostic below under a new preregistration.
+because: >-
+  The branch has exactly zero causal benefit at the endpoint: G_branch_off = 0.0
+  exactly (every prediction bit unchanged when j_uv is removed), and the
+  residual-code zero probe and both branch-local shuffles at seeds 101/202/303
+  each reproduce M_S = 0.12793026330223073 bit-for-bit. The state explains why:
+  every branch tensor is at the float32 denormal floor (absmax ~7.0e-38), so
+  joint_A underflows to exactly 0 and j_uv = F(0)*(bB) = 0. The branch was
+  already numerically sub-resolution at initialisation (response norm 2.2e-02
+  vs a parent edge response of O(1); prediction influence 5.96e-06; first-epoch
+  dL/dA = 1.73e-06) and Adam's L2 weight decay (wd=1e-5) then annihilated it
+  against a gradient that reads exactly 0.00e+00 from epoch 20 on. The channel
+  was also redundant: the frozen parent edge path still carries the same
+  content (W_E_C 0.636, W_E_S 0.564, G_edge +0.026822, G_sem_shuffle +0.573315)
+  while the parent's node binding is dead at the same denormal scale. The task
+  band did not move: M_S = 0.127930 > 0.123, and the +0.004225 gap to the
+  historical unmatched parent soup cannot be attributed to the branch (with the
+  branch exactly inert the soup is a Sem108 parent, so the gap is a
+  trajectory-level difference between two single unmatched runs). Both clauses
+  of the pre-registered matched-control rule fail (band <= 0.123 AND
+  G_branch_off >= 0.003), so buying a control would spend budget on an arm
+  whose mechanism is already known to be inert.
+alternatives_rejected:
+  - >-
+    Buying the matched branch-off control because G_branch_off is only 0.000.
+    Rejected: the measured branch effect is exactly zero, not merely below the
+    0.003 gate; a retrained control would answer a question the frozen-soup
+    interventions have already answered decisively.
+  - >-
+    Rescuing the branch (larger F init, tanh/linear gate, bias, LayerNorm,
+    wider hidden width, no weight decay on the branch). Rejected: forbidden by
+    the round, and it would be an architecture rescue of a channel that is both
+    numerically dead and redundant with the live edge channel.
+  - >-
+    Reading the +0.004225 gap to the parent soup as "the branch hurts".
+    Rejected: G_branch_off = 0.0 exactly proves the endpoint branch contributes
+    nothing; the gap mixes seed/RNG trajectory effects and the early
+    (pre-denormal) branch perturbation of the shared dictionary and cannot
+    isolate a mechanism.
+  - >-
+    Declaring a candidate signal on the strength of the branch's well-formed
+    swap response (J5/J6). Rejected: response shape at untrained scale is not a
+    trained mechanism; the trained branch is exactly inert.
+revisit_if: >-
+  A preregistered optimizer-level diagnostic shows the Adam-L2-decay/denormal
+  attractor can be switched off (e.g. no weight decay on residual channels, a
+  denormal guard, or a decoupled-decay formulation) and that the frozen Sem108
+  parent's dead node binding (W_A_C 7.04e-38, W_A_S 7.06e-38, G_node = 0.0) is
+  revived by that single change. Only then does a key-level binding round
+  (additive, unit-scale init, matched controls, >= 2 seeds, mandatory liveness
+  gates |w|max > 1e-3 and G_branch_off >= 0.003 before any task
+  interpretation) become a candidate next experiment.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_jointbond_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_jointbond_v1_prior_artifact_audit.md
+  - tracks/ksvd/notes/e2e_dictenv_jointbond_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/summary.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/DECISION.md
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/REPORT.md
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/mechanism/branch_off.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/mechanism/branch_health.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_v1/mechanism/binding_health.json
+  - tracks/ksvd/records/runs/20260930-100245-e164e7e7.json
+  - tracks/ksvd/experiments/luyin16/e2e_dictenv_jointbond_v1.py
+  - tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_jointbond_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_jointbond_v1.py
