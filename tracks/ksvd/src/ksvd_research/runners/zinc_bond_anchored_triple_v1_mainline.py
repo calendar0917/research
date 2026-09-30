@@ -99,6 +99,9 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
 
     metrics: dict[str, Any] = {
         "measure": "soup_valid_mae",
+        "valid_mae": float(summary["M_soup"]),
+        "valid_soup_mae": float(summary["M_soup"]),
+        "valid_best_mae": float(summary["best_valid_mae"]),
         "M_soup": float(summary["M_soup"]),
         "M_parent_replay": float(summary["M_parent_replay"]),
         "M_parent_recorded": float(summary["M_parent_recorded"]),
