@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-bond-anchored-triple-v1-no-strong-signal
+phase: e2e-dictenv-bond-anchored-triple-joint-tune-v1-no-strong-signal
 updated: 2026-09-30
 
 # ---------------------------------------------------------------------------
@@ -1803,7 +1803,7 @@ e2e_dictenv_jointbond_decay_diagnostic_v1:
 
 # ---------------------------------------------------------------------------
 # E2E-DictEnv-BondAnchoredTriple-v1 (three-environment static composition screen
-# on a frozen parent) — 2026-09-30, LATEST
+# on a frozen parent) — 2026-09-30
 # ---------------------------------------------------------------------------
 # Single-candidate mainline performance screen (not a matched control, not a
 # mechanism test): freeze the original Sem108+C6 parent soup and cache its
@@ -1888,6 +1888,103 @@ e2e_dictenv_bond_anchored_triple_v1:
     gates and matched controls at equal parameter budget, or a separate
     optimizer/budget round isolating the 80-vs-320-epoch and re-initialised-Reader
     confounds before any accuracy claim.
+
+# ---------------------------------------------------------------------------
+# E2E-DictEnv-BondAnchoredTriple-JointTune-v1 (fixed dictionary coordinates,
+# joint representation + composition fine-tune) — 2026-09-30, LATEST
+# ---------------------------------------------------------------------------
+# Single-candidate mainline performance screen (not a matched control, not a
+# mechanism test): hold the shared structural coordinates fixed (D/U/common_rms,
+# C6 mask, semantic interface, W_A_S/W_A_C/node_encoder, global_encoder,
+# topology_encoder, all fixed normalisation buffers), hot start from the BAT-v1
+# M1 soup (F + 366-D Reader + standardisers), and fine-tune the edge
+# structure-semantics binding (W_E_S/W_E_C/edge_encoder), fusion, pair path
+# (pair_projection/relation_encoder/distance_gate/pair_encoder), the
+# three-environment operator F and the 366-D Reader jointly - the whole dynamic
+# chain is recomputed online with autograd every step from the raw inputs (no
+# cached E / p_ij / z_old as training input).  82805 trainable / 103757
+# full-model params (34 tensors; fusion 56478, pair_encoder 5328, F 5216,
+# edge_binding 4944, reader 4967, edge_encoder 3920, relation_encoder 1104,
+# pair_projection 768, distance_gate 80); 20952 frozen params / 17 tensors; the
+# old 302-D Reader (4135) is removed from the registered model.  Seed 0, fixed
+# 40 epochs, batch 128, new Adam lr 1e-4 all unfrozen, coupled wd 1e-5, clip 5
+# unfrozen-only, graph-level L1, no scheduler/early stop/dropout-add; Top-5
+# soup by valid MAE over epochs 21-40 (earlier epoch wins ties), averaging all
+# unfrozen params.  Local CPU 8 threads, float32.
+# RESULT: complete and valid but NO strong signal - M_joint_soup
+# 0.12315951417008182, +0.00015659775584936364 worse than the exact online hot
+# start M_start 0.12300291641423246 and 0.0031595 above the frozen 0.120 gate ->
+# verdict JOINT_TUNE_SCREEN_NO_STRONG_SIGNAL.  Best valid 0.12297315568843624
+# @6 (above the gate), last-10 mean 0.12425338722536106, final train MAE
+# 0.04675897518694401 (epoch 1 train 0.05708); soup members
+# [27, 25, 40, 38, 22] valid [0.123404, 0.123408, 0.123430, 0.123519,
+# 0.123659].  Train MAE fell ~18% while valid never improved past the hot-start
+# band 0.1233-0.1261, i.e. the added joint freedom fits train-only structure
+# under this protocol.  All 8 correctness groups passed before training: online
+# hot start abs diff 0.0; structure cache bit-identical to the BAT-v1 cache
+# (5511568 train / 546830 valid triples); online-vs-cached pair 6.48e-07 /
+# z_old 1.91e-06 / z3 5.96e-08 / prediction 0.0; train-vs-eval forward diff 0.0
+# with backbone and dropout modules always eval; one-batch loss 0.0392 with
+# non-zero grads on all 9 unfrozen groups (min 0.0109); frozen `.grad is None`;
+# optimizer/clip set exactly the whitelist; frozen subset and both source
+# checkpoints byte-identical before/after.  Official test never loaded
+# (test_access blocked).  One seed, one trajectory, no matched control: no
+# attribution to the triple operator, the three-environment mechanism or the
+# dictionary coordinates; nothing follows about other horizons/lrs/scope/seeds.
+e2e_dictenv_bond_anchored_triple_joint_tune_v1:
+  status: closed_round_complete_no_strong_signal
+  round: e2e-dictenv-bond-anchored-triple-joint-tune-v1
+  verdict: JOINT_TUNE_SCREEN_NO_STRONG_SIGNAL
+  case: complete_and_valid_but_M_joint_soup_above_the_frozen_0.120_gate_and_above_the_hot_start
+  device: cpu_only_local
+  official_test_loaded: false
+  test_access: blocked
+  preregistration: tracks/ksvd/notes/e2e_dictenv_bond_anchored_triple_joint_tune_v1_preregistration.md
+  preregistration_commit: be2686e
+  implementation_commit: 088b1ab
+  analysis: tracks/ksvd/notes/e2e_dictenv_bond_anchored_triple_joint_tune_v1_analysis.md
+  claims:
+    - claim-e2e-dictenv-bond-anchored-triple-joint-tune-v1-no-strong-signal-20260930
+  decision: decision-e2e-dictenv-bond-anchored-triple-joint-tune-v1-stop-no-strong-signal-20260930
+  promoted_run: 20260930-154827-2dc792ad
+  results_dir: tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_joint_tune_v1/
+  report: tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_joint_tune_v1/REPORT.md
+  decision_report: tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_joint_tune_v1/DECISION.md
+  summary: tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_joint_tune_v1/summary.json
+  runner: tracks/ksvd/experiments/luyin16/zinc_bond_anchored_triple_joint_tune_v1_mainline.py
+  module: tracks/ksvd/experiments/luyin16/e2e_dictenv_bond_anchored_triple_joint_tune_v1.py
+  control_plane: tracks/ksvd/src/ksvd_research/runners/zinc_bond_anchored_triple_joint_tune_v1_mainline.py
+  config: tracks/ksvd/configs/luyin16/zinc_bond_anchored_triple_joint_tune_v1_mainline.yaml
+  tests: tracks/ksvd/tests/test_e2e_dictenv_bond_anchored_triple_joint_tune_v1.py
+  hot_start:
+    backbone: {checkpoint: tracks/ksvd/results/e2e_dictenv_sem108_v1/checkpoints/SEM108-seed0_soup_state.pt, checkpoint_sha256: 6ec0fdef824d2c93973eaba1847c1173b9d939c75276476caf672d8010a74f89, canonical_state_sha256: 7a721984c5579dd76f9bcaff13a2055b8efba71da553eefb3645d94207f5050a, params: 97709, old_reader_params: 4135}
+    m1_soup: {checkpoint: tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_v1/checkpoints/BAT-v1-seed0_soup_full_state.pt, soup_members: [50, 57, 43, 49, 71], soup_member_valid_mae: [0.12457566673675319, 0.12526434687146684, 0.12543719803908607, 0.12559466538199923, 0.12566622048983117], soup_valid_mae: 0.12300291641423246}
+    buffers: [mu_p, scale_p, mu_old, scale_old, mu_3, scale_3]
+    buffers_match_standardizers_json: true
+    M_start_online: 0.12300291641423246
+    M_start_expected: 0.12300291641423246
+    M_start_abs_diff: 0.0
+    tolerance: 1.0e-06
+  frozen: {frozen_params: 20952, frozen_tensors: 17, coordinate_groups: {D: 2080, W_A_S: 3168, W_A_C: 2688, node_encoder: 9328, global_encoder: 3136, topology_encoder: 552}}
+  trainable: {tensors: 34, params: 82805, full_model_params: 103757, old_reader_removed_params: 4135, groups: {fusion: 56478, pair_encoder: 5328, F: 5216, edge_binding: 4944, reader: 4967, edge_encoder: 3920, relation_encoder: 1104, pair_projection: 768, distance_gate: 80}}
+  protocol: {seed: 0, epochs: 40, batch_size: 128, lr: 0.0001, weight_decay: 1.0e-05, grad_clip: 5.0, soup_window: [21, 40], soup_k: 5}
+  structure: {train_triples: 5511568, valid_triples: 546830, bit_identical_to_bat_cache: true}
+  result: {M_joint_soup: 0.12315951417008182, M_start: 0.12300291641423246, delta_joint_minus_start: 0.00015659775584936364, M_parent_replay: 0.123704927947314, delta_joint_minus_parent: -0.000545413777232176, promising_threshold: 0.12, promising: false, best_valid_mae: 0.12297315568843624, best_epoch: 6, last_10_valid_mean: 0.12425338722536106, final_train_mae: 0.04675897518694401, soup_members: [27, 25, 40, 38, 22], soup_member_valid_mae: [0.12340396, 0.123408022, 0.123430381, 0.123518861, 0.123658941], epochs_run: 40, wall_clock_s: 405.3, seconds_per_epoch: 10.133, peak_rss_mb: 2743.9}
+  correctness: {all_passed: true, n_groups: 8, hot_start_abs_diff: 0.0, online_pair_max_diff: 6.48200511932373e-07, online_z_old_max_diff: 1.9073486328125e-06, online_z3_max_diff: 5.960464477539063e-08, online_prediction_max_diff: 0.0, mode_forward_max_abs_diff: 0.0, one_batch_loss: 0.03920827805995941, one_batch_min_grad_norm: 0.010938562427802207, frozen_grads_none: true, optimizer_set_equals_whitelist: true, structure_cache_bit_identical: true, source_files_unchanged: true, frozen_subset_unchanged: true}
+  not_claimed:
+    - operator / representation / composition attribution (joint adaptation with no matched control and no mechanism arm)
+    - three-environment mechanism usage / specificity / liveness, or dictionary-coordinate necessity
+    - any statement about other horizons, learning rates, unfreeze scopes or seeds
+  forbidden_without_new_preregistration:
+    - seed 1 or any rerun of this candidate, or an lr / unfreeze-scope / init / normalisation / soup / horizon change
+    - M0 or readout-only retrain, matched control, shuffle, ablation, branch-off or mechanism arm purchased off this result
+    - dictionary-coordinate adaptation under this preregistration
+    - reading the official test for this round
+  next_round_shape: >-
+    New preregistration only (nothing implemented): a mechanism-bearing design
+    (matched control / liveness at equal parameter and optimiser budget, or a
+    separately pre-registered dictionary-coordinate adaptation) before any
+    accuracy claim.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24

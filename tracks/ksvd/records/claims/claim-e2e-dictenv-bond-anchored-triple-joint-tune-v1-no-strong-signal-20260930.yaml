@@ -1,0 +1,54 @@
+claim_id: claim-e2e-dictenv-bond-anchored-triple-joint-tune-v1-no-strong-signal-20260930
+contradicting_evidence: []
+created: '2026-09-30T15:59:52'
+implication: null
+kind: claim
+limitations:
+- 'One seed, one trajectory, no contemporaneous matched control and no mechanism arm:
+  the Delta_vs_start cannot be attributed to the triple operator, to representation
+  adaptation, to composition adaptation or to the frozen coordinates individually.'
+- The dictionary coordinates were frozen by design, so this round cannot say whether
+  they are the binding constraint; that requires a separately pre-registered coordinate-adaptation
+  round.
+- Only the single 40-epoch / lr 1e-4 / top-5-soup protocol is measured; no statement
+  about longer horizons, other learning rates, other unfreeze scopes or other seeds.
+- The verdict is a frozen-threshold accuracy statement on official valid only; no
+  statistical significance is claimed and the official test was never read.
+scope: Preregistration committed before the run (be2686e) and implementation committed
+  (088b1ab) before the formal run; single seed-0 40-epoch trajectory on official ZINC
+  train 10000 / official valid 1000; official test never instantiated (test_access
+  blocked, official_test_loaded=false); online hot start reproduces the BAT-v1 soup
+  valid MAE exactly (abs diff 0.0); the frozen subset and both source checkpoints
+  are byte-identical before/after training; the new data-only structure cache is cross-checked
+  bit-identical against the BAT-v1 cache (5511568 train / 546830 valid triples); all
+  correctness gates passed; no M0 retrain, matched control, shuffle, ablation, branch-off,
+  mechanism arm, extra seed, lr search, initialisation/normalisation/soup/horizon
+  change.
+statement: 'With the shared structural coordinates (dictionary D/U/common_rms, C6
+  mask, semantic interface, dead-node binding W_A_S/W_A_C/node_encoder, global/topology
+  encoders, fixed normalisation buffers) frozen and hot-started from the BAT-v1 M1
+  soup, a joint representation+composition+three-environment-operator+Reader fine-tune
+  (82,805 trainable params of 103,757, online autograd forward recomputed every step,
+  seed 0, 40 epochs, batch 128, new Adam lr 1e-4, coupled wd 1e-5, clip 5, graph-level
+  L1, Top-5 soup over epochs 21-40) does NOT reach the frozen 0.120 gate on official
+  ZINC valid: M_joint_soup = 0.12315951417008182 vs the exact online hot start M_start
+  = 0.12300291641423246 (Delta_vs_start = +0.00015659775584936364), best valid 0.12297315568843624
+  @ epoch 6 (still above the gate), last-10-epoch mean 0.12425338722536106, final
+  train MAE 0.04675897518694401. Train MAE fell ~18% (0.0571 -> 0.0468) while valid
+  MAE never improved past the hot-start band 0.1233-0.1261, i.e. the added joint freedom
+  is used for train-only structure under this protocol. This is a single-candidate
+  unmatched performance screen: it does not attribute anything to the triple operator,
+  the three-environment mechanism or the dictionary coordinates, and says nothing
+  about other seeds, horizons, learning rates or unfreeze scopes.'
+status: tentative
+study_id: zinc-context-gap
+supporting_evidence:
+- tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_joint_tune_v1/REPORT.md
+- tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_joint_tune_v1/run_seed0.json
+- tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_joint_tune_v1/curve_seed0.csv
+- tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_joint_tune_v1/correctness.json
+- tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_joint_tune_v1/soup.json
+- tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_joint_tune_v1/structure_report.json
+- tracks/ksvd/notes/e2e_dictenv_bond_anchored_triple_joint_tune_v1_preregistration.md
+- tracks/ksvd/notes/e2e_dictenv_bond_anchored_triple_joint_tune_v1_analysis.md
+- tracks/ksvd/records/runs/20260930-154827-2dc792ad.json

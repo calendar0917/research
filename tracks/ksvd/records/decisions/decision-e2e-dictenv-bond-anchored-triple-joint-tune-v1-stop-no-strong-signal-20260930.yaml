@@ -1,0 +1,40 @@
+alternatives_rejected:
+- 'Seed-1 confirmation or a rerun of the same candidate (rejected: the pre-registered
+  question is answered by one seed; a second seed would only re-measure a non-signal).'
+- 'Learning-rate search, unfreeze-scope extension, initialisation or normalisation
+  change (rejected: post-hoc tuning outside the frozen preregistration; the soup is
+  worse than the hot start, so the failure is not a tuning artefact to rescue).'
+- 'Horizon extension beyond 40 epochs (rejected: not pre-registered; the round answers
+  the fixed-budget question and no plateau-based rescue is licensed).'
+- 'M0 retrain / readout-only retrain on old features (rejected: not the question of
+  this round and unavailable without a new preregistration).'
+- 'Matched control, shuffle, ablation, branch-off or mechanism arms (rejected: this
+  was a deliberately single-candidate performance screen; mechanism questions need
+  their own preregistration at equal parameter and optimiser budget).'
+- 'Dictionary-coordinate adaptation (rejected: explicitly out of scope here; the frozen-coordinate
+  question would need a new preregistration).'
+- 'Official test read (rejected: test_access blocked, terminal policy, and a valid-side
+  non-signal does not license a test read).'
+because: 'The round is complete and valid (40/40 epochs, all correctness gates passed,
+  hot start reproduced exactly, frozen subset and both source checkpoints byte-identical
+  before/after, official test never loaded) and the result is negative on the pre-registered
+  question: the Top-5 soup over epochs 21-40 (0.12315951417008182) is worse than the
+  hot start it began from and 0.0031595 above the frozen 0.120 gate; the only epoch
+  below the hot start (epoch 6, 0.12297315568843624) is still above the gate. Train
+  MAE fell from 0.0571 to 0.0468 while valid MAE stayed in the hot-start band, so
+  continuing to spend runs on this candidate is not justified by the evidence.'
+created: '2026-09-30T15:59:52'
+decision: STOP the BondAnchoredTriple-JointTune-v1 round after the frozen seed-0 40-epoch
+  joint-adaptation screen returned JOINT_TUNE_SCREEN_NO_STRONG_SIGNAL (M_joint_soup
+  0.12315951417008182 > the 0.120 gate and +0.00015659775584936364 worse than the
+  exact online hot start 0.12300291641423246). Do not buy a seed-1 confirmation, a
+  rerun with changed lr / unfreeze scope / initialisation / normalisation / soup window
+  / horizon, an M0 or readout-only retrain, a matched control, shuffle, ablation,
+  branch-off or mechanism arm, or a dictionary-coordinate adaptation under this preregistration.
+decision_id: decision-e2e-dictenv-bond-anchored-triple-joint-tune-v1-stop-no-strong-signal-20260930
+kind: decision
+revisit_if: A NEW preregistration poses a mechanism-bearing question, e.g. a matched
+  control / liveness design that isolates the three-environment operator or the shared
+  dictionary coordinates at equal parameter and optimiser budget, before any accuracy
+  claim is made.
+study_id: zinc-context-gap
