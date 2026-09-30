@@ -1,0 +1,69 @@
+claim_id: claim-e2e-dictenv-rolecorr-v1-no-material-gain-20261001
+contradicting_evidence: []
+created: '2026-10-01T00:04:29'
+implication: null
+kind: claim
+limitations:
+- 'The 2% screening gate did not fire, so the frozen controls C (refit D_C on the
+  within-group attribute-permuted object) and D (train-fitted PCA16 of the same object)
+  were never trained: this round cannot separate the sparse dictionary from a dense
+  linear code of C, and cannot compare C against a permuted C in task terms.'
+- The candidate trades structural capacity for the new coordinate (16 atoms, s=4,
+  versus the baseline's 32 atoms, s=8, at identical readout width and parameter count),
+  so the measured loss is the cost of that frozen budget trade, not a refutation of
+  the role<->attribute object or of correspondence dictionaries in general.
+- Only ~303 of the 536 C coordinates are live (224/392 node and 109/144 edge coordinates
+  are zero-RMS and masked; the (1,1) and (2,2) edge shellpair blocks are empty in
+  ~100%/~99.7% of patches), so the object carries less information on ZINC radius-2
+  patches than its nominal width suggests.
+- Single seed, single trajectory per arm, no significance testing; the official test
+  split was never read and this valid-side screen licenses no terminal claim.
+- 'dirty_at_run=true: the round''s files were committed after the run (the run record
+  snapshots their hashes); model/training code was byte-identical between the training
+  invocation and the completed invocation, only probe/analysis stage code changed.'
+scope: Preregistration, module, runner, config and focused tests authored before the
+  run, committed after it (dirty_at_run=true; the run record snapshots every untracked
+  file's SHA-256, module 2ff144bd26049afa3edbfa23f0b896f950afd3dbf4ef708ea0389059e268b826).
+  Single seed-0 trajectory per arm on official ZINC train 10000 / official valid 1000;
+  320 epochs, batch 128, Adam lr 1e-3, weight_decay 1e-5, clip 5, Top-5 soup; dictionaries
+  frozen (95,629 trainable parameters in both arms, bit-identical readout initialisation
+  over 48 shared tensors); official test never instantiated (test_access blocked,
+  official_test_loaded=false); no width/horizon/seed/lr/sparsity/dictionary rescue.
+  The TO(PO) arm reproduces the historical Sem108 soup band (0.123254 vs 0.123705)
+  under the frozen-dictionary protocol.
+statement: 'Under the frozen CSSD-Sem108+C6 protocol with only the dictionary coordinate
+  changed, a shared sparse dictionary over the 536-D within-patch role<->attribute
+  correspondence C (D_S in R^{65x16}, s=4, fitted on the train residual; D_C in R^{536x16},
+  s=4, fitted on the train-scaled C; coordinate [c~; alpha_S(16); alpha_C(16)] of
+  width 33, identical to the pure-topology baseline''s width) does NOT reach the pre-registered
+  >=2% relative soup-MAE gate on official ZINC valid: M_B(CORR soup) = 0.1264472215277492
+  versus M_A(TOPO soup) = 0.12325370528450003, relative = -2.5910% (best valid 0.1328787
+  @ 313 versus 0.1288103 @ 309). The correspondence coordinate is nonetheless load-bearing
+  inside the candidate: zeroing alpha_C costs +0.035520 MAE (M_C0 = 0.161967) and
+  the frozen within-group attribute permutation costs +0.037430 MAE on average over
+  seeds [101,202,303,404,505] (range +0.015202..+0.060752), both above the pre-registered
+  directional (0.003) and clear (0.010) mechanism thresholds, with all 16 alpha_C
+  atoms active (effective atoms 7.89, top1 share 0.53) and the per-molecule paired
+  difference showing B better in only 48.2% of molecules (mean |err_B|-|err_A| = +0.003194,
+  median +0.002643). The pre-registered 2% screen therefore did not fire, the frozen
+  controls C (shuffled-object refit) and D (PCA16 of the same object) were never trained,
+  and this round does not support the claim that a sparse dictionary over the role<->attribute
+  correspondence earns its coordinate budget against a pure-topology coordinate under
+  matched width - it does not refute the correspondence object itself, and it does
+  not separate sparse from dense codes of C.'
+status: tentative
+study_id: zinc-context-gap
+supporting_evidence:
+- tracks/ksvd/results/e2e_dictenv_rolecorr_v1/REPORT.md
+- tracks/ksvd/results/e2e_dictenv_rolecorr_v1/summary.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_v1/interventions.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_v1/run_TOPO.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_v1/run_CORR.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_v1/soup_TOPO.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_v1/soup_CORR.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_v1/correctness.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_v1/audit.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_v1/dictionaries.json
+- tracks/ksvd/notes/e2e_dictenv_rolecorr_v1_preregistration.md
+- tracks/ksvd/notes/e2e_dictenv_rolecorr_v1_analysis.md
+- tracks/ksvd/records/runs/20260930-235241-20a4104e.json

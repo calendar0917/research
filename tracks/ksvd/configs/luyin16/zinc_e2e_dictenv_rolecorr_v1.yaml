@@ -1,0 +1,20 @@
+protocol_id: e2e-dictenv-rolecorr-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  # frozen CSSD-Sem108 + C6 parent with the dictionary coordinate replaced by
+  # the shared sparse dictionary over the 536-D role x attribute
+  # correspondence object (see notes/e2e_dictenv_rolecorr_v1_preregistration.md).
+  # `stage: primary` runs the seed-0 A/B screen; `stage: controls` is only
+  # authorised after the 2 % screening gate has fired.
+  variant: rolecorr_frozen_dictionary
+  stage: primary
+  epochs: 320
+  relative_gate: 0.02
+
+runtime:
+  torch_threads: 8

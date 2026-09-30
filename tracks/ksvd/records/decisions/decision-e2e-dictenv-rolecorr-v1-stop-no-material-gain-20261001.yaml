@@ -1,0 +1,46 @@
+alternatives_rejected:
+- 'Seed-1 confirmation of either arm (rejected: the preregistered question is a single-seed
+  screen and a second seed would only re-measure a sub-gate result).'
+- 'Appending alpha_C to the full 32-atom structural coordinate (width 49) or otherwise
+  re-balancing the budget (rejected: that is a different, unfrozen coordinate budget;
+  it needs a new preregistration and a matched same-width pure-topology arm).'
+- 'Training the gated controls C (CORR-SHUF) and D (CORR-PCA) anyway (rejected: the
+  preregistration authorises them only after the 2% screen fires; running them post
+  hoc would convert a failed screen into an unregistered exploration).'
+- 'Widening / deepening the readout, extending epochs, or re-tuning the optimiser
+  (rejected: post-hoc tuning outside the frozen protocol; both arms share the identical
+  readout budget).'
+- 'End-to-end fine-tuning of the frozen dictionaries (rejected: explicitly out of
+  scope for this round; the frozen-dictionary question was ''does the new coordinate
+  earn its place'', not ''can adaptation rescue it'').'
+- 'Reading the official ZINC test split (rejected: test_access blocked, terminal policy,
+  and a valid-side non-signal does not license a test read).'
+because: 'The round is complete and valid (all construction/correctness gates passed
+  with a bit-identical TOPO-vs-Sem108 forward, all audits passed, official test never
+  loaded) and the frozen question is answered negatively: the shared sparse dictionary
+  over the role<->attribute correspondence is 2.591% worse than the frozen pure-topology
+  coordinate at identical width, parameter count and readout initialisation. The correspondence
+  coordinate is used (zeroing costs +0.0355, permuting costs +0.0374) but it does
+  not pay for the structural capacity it displaces, and the loss is a broad per-molecule
+  shift (B better in only 48.2% of molecules, median paired difference +0.00264),
+  not a few outliers. With the gate not fired, the preregistration''s own stop rule
+  forbids further runs of this candidate.'
+created: '2026-10-01T00:04:29'
+decision: STOP the E2E-DictEnv-RoleCorr-v1 round after the frozen seed-0 frozen-dictionary
+  screen returned ROLE_CORR_NO_MATERIAL_GAIN (M_B(CORR soup) 0.1264472215277492 versus
+  M_A(TOPO soup) 0.12325370528450003, relative improvement -2.5910% against the frozen
+  >=2% gate). Do not buy a second seed, a wider or taller coordinate, a longer horizon,
+  a re-tuned dictionary (K / sparsity / K-SVD epochs / scaler / PCA rank), an end-to-end
+  (unfrozen-dictionary) fine-tune, or the gated controls C/D under this preregistration,
+  and do not read the official test split.
+decision_id: decision-e2e-dictenv-rolecorr-v1-stop-no-material-gain-20261001
+kind: decision
+revisit_if: A NEW preregistration poses a separable question with a matched capacity
+  budget, e.g. (i) the same-width pure-topology arm versus a full 32-atom structural
+  coordinate plus the 16 alpha_C coordinates, so 'does C add information on top of
+  the structural budget' is separated from 'does C pay for structural capacity'; or
+  (ii) a pre-registered dense linear code of C (PCA16) as its own candidate with the
+  sparse arm as control, which this round never measured. Either way the round stays
+  frozen-coordinate, seed-0 and official-valid-only unless a new preregistration says
+  otherwise.
+study_id: zinc-context-gap

@@ -12,8 +12,8 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-bond-anchored-triple-joint-tune-v1-no-strong-signal
-updated: 2026-09-30
+phase: e2e-dictenv-rolecorr-v1-no-material-gain
+updated: 2026-10-01
 
 # ---------------------------------------------------------------------------
 # FINAL STANDALONE STATUS (TCCD-v7, 2026-09-22)
@@ -1985,6 +1985,108 @@ e2e_dictenv_bond_anchored_triple_joint_tune_v1:
     (matched control / liveness at equal parameter and optimiser budget, or a
     separately pre-registered dictionary-coordinate adaptation) before any
     accuracy claim.
+
+# ---------------------------------------------------------------------------
+# E2E-DictEnv-RoleCorr-v1 (role<->attribute correspondence dictionary) — 2026-09-30/10-01
+# ---------------------------------------------------------------------------
+# Frozen-dictionary screen: the ONLY change vs the CSSD-Sem108 + C6 parent is
+# the dictionary coordinate.  New object C in R^536 = within-patch centred
+# role x attribute cross statistic per node shell (392) and edge shellpair
+# (144), with a shared sparse dictionary D_C in R^{536x16} (s=4, K-SVD on the
+# official train object) plus D_S in R^{65x16} (s=4, K-SVD on the common-1
+# residual).  Arm A TOPO keeps the historical SDB K32/s8 coordinate
+# [c~; alpha32] (width 33); arm B CORR is [c~; alpha_S(16); alpha_C(16)]
+# (width 33).  Same bindings, same 95,629 trainable parameters, bit-identical
+# readout init, 320 epochs, Top-5 soup, seed 0, CPU only, official test never
+# instantiated.  Gate not fired and the pre-registered stop rule applies.
+e2e_dictenv_rolecorr_v1:
+  status: closed_round_complete_no_material_gain
+  round: e2e-dictenv-rolecorr-v1
+  verdict: ROLE_CORR_NO_MATERIAL_GAIN
+  case: complete_and_valid_but_relative_improvement_minus_2.591pct_against_the_frozen_plus_2pct_screen
+  device: cpu_only_local
+  official_test_loaded: false
+  test_access: blocked
+  dirty_at_run: true
+  preregistration: tracks/ksvd/notes/e2e_dictenv_rolecorr_v1_preregistration.md
+  analysis: tracks/ksvd/notes/e2e_dictenv_rolecorr_v1_analysis.md
+  claims:
+    - claim-e2e-dictenv-rolecorr-v1-no-material-gain-20261001
+  decision: decision-e2e-dictenv-rolecorr-v1-stop-no-material-gain-20261001
+  promoted_run: 20260930-235241-20a4104e
+  training_run: 20260930-222706-25bb8cdf
+  results_dir: tracks/ksvd/results/e2e_dictenv_rolecorr_v1/
+  report: tracks/ksvd/results/e2e_dictenv_rolecorr_v1/REPORT.md
+  decision_report: tracks/ksvd/results/e2e_dictenv_rolecorr_v1/DECISION.md
+  summary: tracks/ksvd/results/e2e_dictenv_rolecorr_v1/summary.json
+  run_chain: tracks/ksvd/results/e2e_dictenv_rolecorr_v1/run_chain.sh
+  runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_rolecorr_v1.py
+  module: tracks/ksvd/experiments/luyin16/e2e_dictenv_rolecorr_v1.py
+  control_plane: tracks/ksvd/src/ksvd_research/runners/zinc_e2e_dictenv_rolecorr_v1.py
+  config: tracks/ksvd/configs/luyin16/zinc_e2e_dictenv_rolecorr_v1.yaml
+  tests: tracks/ksvd/tests/test_e2e_dictenv_rolecorr_v1.py
+  object:
+    dimension: 536
+    blocks: {node: 392, edge: 144}
+    node_shells: [1, 2]
+    edge_shellpairs: [[0, 1], [1, 1], [1, 2], [2, 2]]
+    train_patches: 231664
+    valid_patches: 23083
+    nonzero_object_fraction: {train: 0.565974860142275, valid: 0.5701165359788589}
+    masked_coordinates: {node: 224, edge: 109}
+    block_weights: {node: 0.077152, edge: 0.169031}
+    group_size_lt2_fraction: {shell1: 0.178, shell2: 0.044, pair01: 0.178, pair11: 1.0, pair12: 0.043, pair22: 0.997}
+    audit: {passed: true, hand_reference_max_abs_error: 0.0, relabel_max_abs_error: 2.22e-16, endpoint_order_max_abs_error: 0.0, permutation_changed_patches: 259, zero_group_examples: 1344, label_free: true}
+  dictionaries:
+    D_S: {shape: [65, 16], atoms: 16, sparsity: 4, ksvd_final_fit_mse: 0.002817322071807058, seconds: 152.4, sha256_f32: 57494647b90a46f0890f6e67df2d772f5c964c34c2f37f0e0b26fa7a0a660bdd}
+    D_C: {shape: [536, 16], atoms: 16, sparsity: 4, ksvd_final_fit_mse: 1.1097888605124908, seconds: 459.9, sha256_f32: 8d21e24b1c67e16a48e8a8c29a9ad5ee0ac88e4dc15a2ad8798c93197b1d94da}
+    ksvd_epochs: 10
+    dict_seed: 20260924
+  correctness: {all_passed: true, coordinate_dim: 33, common_reconstruction_max_abs_error: 1.1920928955078125e-07, alpha_struct_max_l0: 4, alpha_corr_max_l0: 4, topo_arm_vs_sem108_forward_max_abs_error: 0.0, readout_init_bit_identical: true, shared_keys: 48, trainable_parameters_A: 95629, trainable_parameters_B: 95629, dictionaries_frozen: true, zero_corr_purity: true, zero_struct_purity: true}
+  protocol: {seed: 0, epochs: 320, batch_size: 128, lr: 0.001, weight_decay: 1.0e-05, grad_clip: 5.0, soup_k: 5, mode: screen}
+  result:
+    M_A_soup: 0.12325370528450003
+    M_B_soup: 0.1264472215277492
+    M_A_best: 0.12881029683997622
+    M_B_best: 0.13287869646766923
+    relative_improvement: -0.025910103358578577
+    screen_gate: 0.02
+    screen_gate_fired: false
+    per_molecule_fraction_B_better: 0.482
+    per_molecule_mean_abs_error_delta: 0.0031935162432491777
+    per_molecule_median_abs_error_delta: 0.0026429295539855957
+    wall_clock_s: {TOPO: 1964.8, CORR: 2187.9}
+  interventions:
+    M_A0: 0.17161302130116382
+    M_C0: 0.1619672350892215
+    M_S0: 0.16527604095166315
+    G_A0: 0.048359316016663795
+    G_C0: 0.0355200135614723
+    G_S0: 0.038828819423913946
+    G_Cshuf_mean: 0.03742950152643025
+    G_Cshuf_range: [0.015202484314329912, 0.060751525488682095]
+    corr_shuffle_seeds: [101, 202, 303, 404, 505]
+    code_usage: {alpha_S_active: 16, alpha_S_effective: 13.828862792026515, alpha_C_active: 16, alpha_C_effective: 7.885437668526688, alpha_C_top1_share: 0.5306502620976477, alpha_C_exact_l0_mean: 2.2804661439154357}
+    reading: correspondence coordinate is load-bearing inside the candidate but does not pay for the structural capacity it displaces under the frozen width-33 budget
+  controls:
+    trained: false
+    reason: frozen 2% screening gate did not fire; CORR-SHUF and CORR-PCA were never run
+  not_claimed:
+    - that the role<->attribute correspondence object is worthless (the zero/shuffle probes show it is used, and the sparse-vs-dense and real-vs-permuted-object controls were never authorised)
+    - any statement about other widths, capacity budgets, sparsities, horizons or seeds
+    - any replacement of the historical end-to-end Sem108 number (arm A is a frozen-dictionary re-run)
+  forbidden_without_new_preregistration:
+    - seed 1 of either arm, or any rerun of this candidate
+    - K / sparsity / K-SVD-epoch / scaler / PCA-rank / width / horizon changes
+    - end-to-end (unfrozen-dictionary) fine-tuning of either arm
+    - training the gated controls C/D off a failed screen
+    - reading the official test for this round
+  next_round_shape: >-
+    New preregistration only (nothing implemented): a matched capacity budget
+    (keep the full 32-atom structural coordinate and append alpha_C at width 49
+    against a same-width pure-topology control) to separate "does C add
+    information" from "does C pay for structural capacity"; or a pre-registered
+    dense affine code of the same object (PCA16) with the sparse arm as control.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
