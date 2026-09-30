@@ -1,0 +1,190 @@
+{
+  "candidate_id": "e2e-dictenv-jointbond-decay-diagnostic-v1",
+  "ended_at": "2026-09-30T11:47:44",
+  "fingerprint": "7c0746db43b1ddf769a878a0f2245182e8c082a88b848451fad0c0620580608d",
+  "kind": "run_record",
+  "meta": {
+    "note": "JointBond-Decay-Diagnostic-v1: branch learns under a frozen parent in both arms; wd=1e-5 suppresses by 8.6e-4 MAE"
+  },
+  "metrics": {
+    "branch_params": 4224,
+    "correctness_all_passed": true,
+    "coupled_l2_confirmed": true,
+    "fit_fingerprint": "59fc4820c1570817c7e5fa37fc61a1242a032d9a671130c55c497746da3d50de",
+    "fit_size": 128,
+    "measure": "d_fit_mae",
+    "nowd_d_fit": -0.028868223656900227,
+    "nowd_fit_mae_final": 0.02923428756184876,
+    "nowd_fit_mae_step0": 0.05810251121874899,
+    "nowd_learns": true,
+    "nowd_probe_mae_final": 0.05914346027202555,
+    "official_test_loaded": false,
+    "parent_state_unchanged": true,
+    "probe_fingerprint": "c3033fb59c6336f0eaf39ebe043290bcb44b1a3263ec489e8cb0ca1edf9a0dba",
+    "probe_size": 128,
+    "seed": 0,
+    "split_sizes": {
+      "test": null,
+      "train": 10000,
+      "valid": null
+    },
+    "steps_per_arm": 200,
+    "test_access": "blocked",
+    "verdict": "WD_SUPPRESSES_BUT_BOTH_LEARN",
+    "wall_clock_s": 29.693900372018106,
+    "wd_d_fit": -0.0280067432904616,
+    "wd_fit_mae_final": 0.030095767928287387,
+    "wd_fit_mae_step0": 0.05810251121874899,
+    "wd_learns": true
+  },
+  "mode": "scratch",
+  "promoted_at": "2026-09-30T11:50:20",
+  "protocol_hash": "52b50e0bdd50dbceec6baebce549e2d4d74d80ae634ce8825770834c9585a82f",
+  "protocol_id": "zinc-context-gap",
+  "provenance": {
+    "code_state_hash": "222c9cdf1c7750ece8b53f57df801afbb8233177bc0081a853d8ecd2f95cf4e4",
+    "config_hash": "f94c52d2013dade3d015d36e3cef1672e055c738efbd1ccec8ed66edbb7f93bf",
+    "dataset_fingerprint": {
+      "dataset_fingerprint": "f03ae64d1126f7f0417d5ab4d4f82128dcc2ce60abb79de2a5217c65e3a10da3",
+      "policy": "official_pyg_zinc_data",
+      "raw_files": [
+        {
+          "bytes": 765,
+          "name": "atom_dict.pickle",
+          "sha256": "c4c8e8625c9773bb725ec2771552eccb2b6cf6550c8fef0f6139627aa8fe51c6"
+        },
+        {
+          "bytes": 239,
+          "name": "bond_dict.pickle",
+          "sha256": "623359be444efd15db6eec412ea9ba9a12bf1afec57305f9f5abd4b4a52c541a"
+        },
+        {
+          "bytes": 4782,
+          "name": "test.index",
+          "sha256": "6aa50d98976044fb36089afef5b4c991b429ca1c8e009d33a0319e42a2d9b525"
+        },
+        {
+          "bytes": 7690132,
+          "name": "test.pickle",
+          "sha256": "33c7d2bcf6332be422aaea4baaf056e36f2c80eb6f7d0f5d68a8264d1b94e65b"
+        },
+        {
+          "bytes": 65110,
+          "name": "train.index",
+          "sha256": "575d6acd72ac207a95947e2bdd16411ef6fc3faa88c2f55a2c496ea43022a6d8"
+        },
+        {
+          "bytes": 338943042,
+          "name": "train.pickle",
+          "sha256": "9c76df5a1ab90aac200df22902893827168aeced3df87aab4b6bee100235d7f2"
+        },
+        {
+          "bytes": 5541,
+          "name": "val.index",
+          "sha256": "fe48c38157f0d38e7fc441903a143392eda080511a79e8fb8f60f5c1b0a9c164"
+        },
+        {
+          "bytes": 37634758,
+          "name": "val.pickle",
+          "sha256": "4c6015ec483224c55593c862b0334ae4b64e14679eab041c0655c6a7b603e47a"
+        }
+      ],
+      "split": {
+        "expected_sizes": {
+          "test": 1000,
+          "train": 10000,
+          "val": 1000
+        },
+        "index_sha256": {
+          "test.index": "6aa50d98976044fb36089afef5b4c991b429ca1c8e009d33a0319e42a2d9b525",
+          "train.index": "575d6acd72ac207a95947e2bdd16411ef6fc3faa88c2f55a2c496ea43022a6d8",
+          "val.index": "fe48c38157f0d38e7fc441903a143392eda080511a79e8fb8f60f5c1b0a9c164"
+        },
+        "policy": "official_pyg_zinc_subset_split",
+        "sizes": {
+          "test": 1000,
+          "train": 10000,
+          "val": 1000
+        },
+        "splits": [
+          "train",
+          "val",
+          "test"
+        ]
+      },
+      "split_fingerprint": "58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a"
+    },
+    "environment": {
+      "cwd": "/home/calendar/code/research",
+      "executable": "/home/calendar/code/research/.venv/bin/python",
+      "machine": "x86_64",
+      "packages": {
+        "networkx": "3.4.2",
+        "numpy": "2.1.3",
+        "ogb": "1.3.6",
+        "optuna": "4.2.1",
+        "pandas": "2.2.3",
+        "pynauty": "2.8.8.1",
+        "pytest": "8.3.4",
+        "pyyaml": "6.0.2",
+        "scikit-learn": "1.5.2",
+        "scipy": "1.14.1",
+        "torch": "2.5.1",
+        "torch-geometric": "2.6.1"
+      },
+      "platform": "Linux-6.18.52-1-lts-x86_64-with-glibc2.44",
+      "python": "3.12.14",
+      "python_full": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]"
+    },
+    "git": {
+      "code_state_hash": "222c9cdf1c7750ece8b53f57df801afbb8233177bc0081a853d8ecd2f95cf4e4",
+      "commit": "3b5da6b887a11de8d68a8690d607752274ea1158",
+      "diff_hash": "",
+      "dirty": true,
+      "patch": "",
+      "untracked": [
+        {
+          "path": "tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/REPORT.md",
+          "sha256": "4e0e59b798d77725c9711f53620fcaac9f5d0620b567a6f7043f3aaff6c9419e",
+          "size": 1292,
+          "snapshot": true
+        },
+        {
+          "path": "tracks/ksvd/results/e2e_dictenv_jointbond_v1/DECISION.md",
+          "sha256": "c797c8f619975518dbf0f94b8c9fbd81f38b2a0e753b35dd5e640de885a98fcb",
+          "size": 454,
+          "snapshot": true
+        },
+        {
+          "path": "tracks/ksvd/results/e2e_dictenv_jointbond_v1/REPORT.md",
+          "sha256": "0ceac0cd670681857e1e7e7ba9845d6bf75a55ac5c11525b1d682de5d426bbdc",
+          "size": 3506,
+          "snapshot": true
+        }
+      ]
+    },
+    "runner": "zinc_jointbond_decay_diagnostic_v1",
+    "runtime_seconds": 40.24897,
+    "split_fingerprint": "58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a",
+    "test_access": "blocked"
+  },
+  "purpose": "JointBond-Decay-Diagnostic-v1: fixed-parent WD vs NO-WD 2x200 steps (diagnostic only)",
+  "record_id": "record-20260930-114703-8e2b5e5e",
+  "run_id": "20260930-114703-8e2b5e5e",
+  "scientific_config": {
+    "data": {
+      "root": "data/ZINC"
+    },
+    "model": {
+      "variant": "jointbond_decay_diagnostic"
+    },
+    "protocol_id": "e2e-dictenv-jointbond-decay-diagnostic-v1",
+    "seed": 0
+  },
+  "seeds": [
+    0
+  ],
+  "started_at": "2026-09-30T11:47:03",
+  "status": "completed",
+  "study_id": "zinc-context-gap"
+}

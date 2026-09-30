@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-jointbond-v1-closed-branch-exactly-inert-denormal-collapse
+phase: e2e-dictenv-jointbond-decay-diagnostic-v1-closed-branch-trainable-decay-slows-not-blocks
 updated: 2026-09-30
 
 # ---------------------------------------------------------------------------
@@ -1733,6 +1733,73 @@ e2e_dictenv_jointbond_v1:
     additive unit-scale increment with matched controls, >= 2 seeds and
     mandatory liveness gates (|w|max > 1e-3, G_branch_off >= 0.003) before any
     task interpretation.
+
+# ---------------------------------------------------------------------------
+# E2E-DictEnv-JointBond-Decay-Diagnostic-v1 (frozen-parent branch trainability) — 2026-09-30
+# ---------------------------------------------------------------------------
+# Short diagnostic (2 x 200 optimizer steps, no full training) closing the two
+# explanations JointBond-v1 could not separate: (a) an untrainable
+# initialisation/parameterisation and (b) Adam's coupled L2 weight decay
+# annihilating the branch.  Frozen parent = the original Sem108 soup
+# (canonical sha 7a721984..., 49 keys, never updated), one fresh v1 branch init
+# (seed 0, joint state sha 0a9d7ae7 != dead v1 soup joint sha 2e1d23b4)
+# deep-copied into two arms whose optimizers differ only in weight decay
+# (1e-5 coupled L2 vs 0.0) and hold only the 5 branch tensors (4224 params).
+# Official train only: seed-0 permutation, fit = first 128 graphs repeated 200x
+# (fingerprint 59fc4820...), probe = next 128 disjoint graphs (c3033fb5...),
+# observation only.  eval() (dropout off) with autograd, C6 mask, L1 objective,
+# global clip 5, CPU 8 threads, wall 29.7 s.  All 15 gates D0-D12 pass
+# (parent identity, fresh-and-alive branch, arms bit-identical at init, step-0
+# predictions identical, branch-off == frozen parent bit-wise, coupled-L2
+# confirmed empirically, parent bit-identical after both arms, data
+# provenance, reporting self-test).  RESULT: WD_SUPPRESSES_BUT_BOTH_LEARN -
+# fit MAE 0.058102511 -> 0.030095768 (wd 1e-5) / 0.029234288 (wd 0), d_fit
+# -0.0280067 / -0.0288682, G_branch -3.138e-05 -> +0.027975 / +0.028837,
+# branch/parent edge RMS 0.00467 -> 0.2752 / 0.3106, corr(pred shift, residual)
+# 0.083 -> 0.596 / 0.608, while MAE(branch_off) stays exactly 0.0580711.  Weight
+# decay only slows learning: +8.615e-04 MAE (3.0 %), weight norm 6.764 vs
+# 8.448, decay/task ratios 0.0009-0.203 at step 1 and < 0.008 at step 200;
+# both arms still improving at step 200.  Numerics: first per-tensor gradients
+# 2.0e-04 ... 4.2e-03, no float32-norm-zero/float64-nonzero case anywhere, all
+# weights/grads normal floats - so a small gradient is not a float32 precision
+# failure and weight decay is not the general cause.  The fitted branch does
+# NOT transfer even in-split (probe MAE 0.0569302 -> 0.0588561 / 0.0591435,
+# G_branch_probe -1.968e-03 / -2.256e-03).  No branch rescue, no JointBond-v2,
+# no matched control, no second seed, no soup, official valid/test never loaded;
+# the next shape stays the optimizer-level denormal-attractor diagnostic.
+e2e_dictenv_jointbond_decay_diagnostic_v1:
+  status: closed_diagnostic_complete
+  round: e2e-dictenv-jointbond-decay-diagnostic-v1
+  verdict: WD_SUPPRESSES_BUT_BOTH_LEARN
+  case: branch_trainable_under_frozen_parent_decay_slows_not_blocks
+  device: cpu_only
+  official_test_loaded: false
+  valid_loaded: false
+  preregistration: tracks/ksvd/notes/e2e_dictenv_jointbond_decay_diagnostic_v1_preregistration.md
+  preregistration_sha256_prefix: 019d295cfd2b
+  implementation_commit: 2648d81
+  promoted_run: 20260930-114703-8e2b5e5e
+  analysis: tracks/ksvd/notes/e2e_dictenv_jointbond_decay_diagnostic_v1_analysis.md
+  claims:
+    - claim-e2e-dictenv-jointbond-decay-diagnostic-v1-frozen-parent-branch-trainable-decay-slows-not-blocks-20260930
+  decision: decision-e2e-dictenv-jointbond-decay-diagnostic-v1-no-branch-rescue-optimizer-attractor-next-20260930
+  results_dir: tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/
+  report: tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/REPORT.md
+  summary: tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/decay_diagnostic.json
+  runner: tracks/ksvd/experiments/luyin16/zinc_jointbond_decay_diagnostic_v1.py
+  control_plane: tracks/ksvd/src/ksvd_research/runners/zinc_jointbond_decay_diagnostic_v1.py
+  tests: tracks/ksvd/tests/test_e2e_dictenv_jointbond_decay_diagnostic_v1.py
+  setting: {parent: 'SEM108-seed0_soup_state.pt sha 7a721984... (49 keys, never updated)', branch_init: 'fresh v1 seed-0 sha 0a9d7ae7... (dead v1 soup joint sha 2e1d23b4...)', arms: 'Adam lr=1e-3 wd=1e-5 (coupled L2) vs wd=0.0', optimizer_params: 4224, steps_per_arm: 200, fit: '128 official-train graphs repeated (sha 59fc4820...)', probe: '128 disjoint official-train graphs (sha c3033fb5...), observation only', objective: 'L1, C6 mask, eval(), global clip 5', wall_clock_s: 29.69}
+  gates: {all_passed: true, n_gates: 15, coupled_l2_confirmed: true, parent_state_unchanged: true, arms_bit_identical_at_init: true, step0_predictions_identical: true, branch_off_equals_frozen_parent: true}
+  learning: {fit_mae_step0: 0.058102511, fit_mae_off_step0: 0.058071133, fit_mae_off_step200: 0.058071133, wd_fit_mae_final: 0.030095768, nowd_fit_mae_final: 0.029234288, wd_d_fit: -0.028006743, nowd_d_fit: -0.028868224, d_fit_difference: 0.000861480, wd_G_branch_final: 0.027975365, nowd_G_branch_final: 0.028836845, wd_branch_over_parent_rms_final: 0.275231, nowd_branch_over_parent_rms_final: 0.310636, wd_corr_final: 0.596210, nowd_corr_final: 0.608047}
+  decay: {reference: 'coupled L2 ||1e-5*w||', decay_over_task_step1: {joint_F: 0.0009, joint_C: 0.0456, joint_A: 0.0777, joint_B: 0.2025}, decay_over_task_step200_max: 0.0073, weight_norm_final: {wd: 6.764365, nowd: 8.448370}}
+  numerics: {first_grad_norm_float32_range: [0.0002009, 0.004192], first_fit_backward_grad_absmax: 8.051e-05, float32_norm_zero_float64_nonzero_cases: 0, subnormal_weights_or_grads: 0, note: 'small gradient is not by itself a float32 precision failure'}
+  transfer: {probe_mae_step0: 0.056930190, wd_probe_mae_final: 0.058856100, nowd_probe_mae_final: 0.059143460, wd_G_branch_probe_final: -0.001968141, nowd_G_branch_probe_final: -0.002255501, note: 'probe is official-train data; this is not a generalisation measurement, but the fitted batch response does not transfer even in-split'}
+  forbidden_without_new_preregistration:
+    - JointBond-v2 / branch rescue (larger or zero init, additive unit-scale, bias, LayerNorm, tanh gate, no-decay-on-branch)
+    - matched control, second seed, soup, or any full training run of this branch
+    - denormal guard / reviving the parent node binding (only under the new optimizer-level preregistration)
+    - reading official valid or official test for this diagnostic
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24

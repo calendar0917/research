@@ -1,0 +1,130 @@
+claim_id: claim-e2e-dictenv-jointbond-decay-diagnostic-v1-frozen-parent-branch-trainable-decay-slows-not-blocks-20260930
+created: '2026-09-30T00:00:00Z'
+kind: claim
+status: tentative
+study_id: zinc-context-gap
+statement: >-
+  With the frozen CSSD-Sem108 soup as the parent (canonical state sha
+  7a721984c5579dd76f9bcaff13a2055b8efba71da553eefb3645d94207f5050a, 49 keys,
+  soup valid MAE 0.123704927314), a fixed repeated 128-graph official-train fit
+  batch and one fresh JointBond-v1 branch initialisation (A/C/B/F0
+  Kaiming-uniform, F2 ~ Normal(0,0.01), 4224 params, joint state sha 0a9d7ae7,
+  never the dead v1 soup weights), the branch LEARNS in both arms within 200
+  optimizer steps: fit L1 MAE falls 0.058102511 -> 0.030095768 (weight_decay
+  1e-5) and -> 0.029234288 (weight_decay 0.0), i.e. d_fit = -0.0280067 /
+  -0.0288682, the branch contribution G_branch = MAE(branch_off) -
+  MAE(branch_on) climbs from -3.138e-05 to +0.027975 / +0.028837, the
+  branch/parent edge-response RMS ratio climbs 0.00467 -> 0.2752 / 0.3106 and
+  corr(prediction shift, parent residual) climbs 0.083 -> 0.596 / 0.608, while
+  MAE(branch_off) stays exactly 0.0580711 (frozen parent).  Adam's coupled L2
+  weight decay (1e-5, empirically confirmed coupled: a zero-gradient w=1 probe
+  moves -9.9897e-04 ~ -lr under Adam(wd=1e-5), 0.0 under AdamW) only SLOWS this:
+  +8.615e-04 MAE at step 200 (3.0 % of the NO-WD improvement), final joint
+  weight norm 6.764 vs 8.448, branch/parent RMS 0.275 vs 0.311.  The reference
+  decay norm ||1e-5*w|| never dominates the task gradient (decay/task at step 1:
+  F2 0.0009, C 0.046, A 0.078, B 0.203; below 0.008 by step 200), both arms are
+  still improving at step 200 (15 % of the improvement in the last 50 steps),
+  and every weight/gradient is a normal float32 number (no float32-norm-zero
+  with float64-norm-nonzero case).  Therefore the JointBond-v1 endpoint
+  observations (exactly-zero branch output, joint_* at the 7e-38 denormal floor,
+  dL/dA = 0.00e+00 from epoch 20) must be read as a from-scratch
+  training-dynamics fact about an exactly-zero endpoint gradient path - not as
+  an untrainable parameterisation, not as weight decay preventing learning, and
+  not as evidence that the key-level structure-semantics signal is redundant.
+  However the branch that does fit the fixed batch does NOT transfer even to a
+  disjoint same-split probe batch: probe MAE rises 0.0569302 -> 0.0588561 /
+  0.0591435 with G_branch_probe = -1.968e-03 / -2.256e-03 at step 200.
+scope: >-
+  Preregistration/implementation commit 2648d81 (control-plane metrics fix
+  committed before the promoted run); promoted run 20260930-114703-8e2b5e5e;
+  protocol e2e-dictenv-jointbond-decay-diagnostic-v1; local CPU only, 8 threads,
+  seed 0, 2 x 200 optimizer steps; parent frozen and verified bit-identical
+  after both arms; optimizers hold only the 5 branch tensors (4224 params);
+  fresh identical optimizer state; eval() (dropout off) with autograd so
+  gradients flow through the frozen parent; C6 mask; L1 objective; global
+  clip=5 (coefficients 0.367-1.000); fit = first 128 official-train graphs of
+  the seed-0 permutation (fingerprint 59fc4820...), probe = next 128 disjoint
+  graphs (fingerprint c3033fb5..., observation only, never optimised); official
+  valid and test never loaded; no soup, no second seed, no architecture change,
+  no initialisation search, no denormal guard, no parent retraining.  This is a
+  diagnostic, not a performance round.
+supporting_evidence:
+  - >-
+    Both arms learn from a bit-identical start: full-state hashes equal at init
+    (D3), step-0 predictions bit-identical (D4), branch-off predictions
+    bit-identical to the separately built frozen Sem108 parent (D5), parent
+    state bit-identical after both arms, and the D9 throwaway step changes only
+    the branch.
+  - >-
+    The branch response is real, not a rounding artifact: branch/parent edge RMS
+    ratio 0.00467 -> 0.2752/0.3106 over the 200 steps with an all-normal weight
+    classification at every logged step, and the branch's prediction shift
+    correlates with the parent residual up to 0.596/0.608.
+  - >-
+    Weight decay is empirically coupled L2 (D8 probe: Adam(wd=1e-5) zero-grad
+    step -9.9897e-04 ~ -lr; AdamW -1e-8 = 0.0 in float32; Adam(wd=0) exactly
+    0.0), and its measured effect is a 3.0 % retardation plus a lower weight
+    norm and response ratio - not a block.
+  - >-
+    Numerics are clean in this regime: first per-tensor task gradients 2.0e-04
+    ... 4.2e-03 (float32 absmax 8.051e-05 on the first fit backward), float32
+    and float64 norms agreeing to ~7 digits, and no tensor (weight or gradient,
+    either arm, any logged step) showing float32-norm-zero with float64-norm
+    nonzero; the reporting self-test (D12) confirms a subnormal tensor is
+    correctly classified (float32 norm 0.0, float64 norm 5.877e-39).
+  - >-
+    The probe behaviour is a genuine negative: G_branch_probe is negative
+    (-1.968e-03 / -2.256e-03) and probe MAE worsens in both arms, so the fitted
+    response is batch fitting rather than a transferable improvement.
+contradicting_evidence:
+  - >-
+    The measured suppression (8.615e-04) is above the pre-registered 5e-4
+    threshold but is a rate difference at a fixed step count: both arms are
+    still improving at step 200 (min loss at the last step, 15 % of the
+    improvement in the last 50 steps), so a longer horizon could shrink or
+    eliminate the gap.  The round cannot claim a converged "wd costs X" number.
+  - >-
+    Frozen-parent trainability does not imply from-scratch trainability: in
+    JointBond-v1 the branch's inputs (the code and edge paths) moved during
+    training, whereas here they are constant, and the branch has no competition
+    from a co-adapting parent.  So this round removes two explanations of the
+    JointBond-v1 death without explaining what actually happens from scratch.
+  - >-
+    The fit batch is small (128 graphs) and repeated 200 times, so the observed
+    d_fit is an overfitting-style residual reduction; the probe batch is also
+    official-train data, so neither number is a generalisation result.  A branch
+    that fits this batch is not evidence that the key-level channel would help
+    on official valid.
+limitations:
+  - >-
+    One seed, one fit/probe pair, one architecture (frozen widths, init, gate
+    and scale as pre-registered), 200 steps per arm; no matched control, no
+    second initialisation, no weight-decay sweep.
+  - >-
+    eval() (dropout off) and the L1-only objective deviate from the original
+    training loop, and only the branch is optimised, so the setting is a
+    controlled probe of the branch, not the original optimisation problem.
+  - >-
+    The global clip (coefficient 0.367-1.000) is the frozen protocol's, applied
+    identically to both arms; branch-only clipping would change step sizes and
+    was not used.
+  - >-
+    Two gate-implementation defects (D5 "unmasked" sub-check compared the
+    branch-on forward; D8 payload lacked its passed key) and one control-plane
+    metrics KeyError were found and fixed before any optimizer step / before the
+    promoted run; the frozen design and reported numbers are unaffected, but
+    they are disclosed rather than hidden.
+evidence:
+  - tracks/ksvd/notes/e2e_dictenv_jointbond_decay_diagnostic_v1_preregistration.md
+  - tracks/ksvd/notes/e2e_dictenv_jointbond_decay_diagnostic_v1_analysis.md
+  - tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/decay_diagnostic.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/correctness.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/data.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/records_wd.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/records_nowd.json
+  - tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/trace_wd.csv
+  - tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/trace_nowd.csv
+  - tracks/ksvd/results/e2e_dictenv_jointbond_decay_diagnostic_v1/REPORT.md
+  - tracks/ksvd/records/runs/20260930-114703-8e2b5e5e.json
+  - tracks/ksvd/experiments/luyin16/zinc_jointbond_decay_diagnostic_v1.py
+  - tracks/ksvd/tests/test_e2e_dictenv_jointbond_decay_diagnostic_v1.py
