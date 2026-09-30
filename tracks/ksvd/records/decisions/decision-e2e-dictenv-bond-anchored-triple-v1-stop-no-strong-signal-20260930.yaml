@@ -1,0 +1,38 @@
+alternatives_rejected:
+- 'Seed-1 confirmation or a rerun of the same candidate (rejected: the screen question
+  is answered by one pre-registered seed; a second seed would only re-measure a non-signal)'
+- '320-epoch or otherwise extended horizon (rejected: the curve plateaus after epoch
+  30, so horizon is not the binding constraint; the parent''s 320-epoch budget is
+  a confound, not a rescue)'
+- 'Larger F, different initialisation, changed normalisation, dropout/gates/scheduler
+  (rejected: post-hoc architecture search outside the frozen preregistration)'
+- 'Third-environment / code / atom / semantic shuffle arms and mechanism or ablation
+  arms (rejected: not the question of this performance screen; mechanism work needs
+  a new preregistration)'
+- 'Matched control against a retrained parent or a re-initialised-Reader baseline
+  (rejected: the round declares the -0.000702 Delta explicitly unmatched/uninterpretable;
+  a matched control requires a new preregistration with a mechanism hypothesis)'
+- 'Reading the official test (rejected: test_access blocked, terminal policy, and
+  the valid-side result does not license a test read)'
+because: The single pre-registered candidate is complete and valid (80/80 epochs,
+  all 10 correctness checks pass, parent state/checkpoint byte-identical before and
+  after training, official test never loaded) and its Top-5 soup valid MAE is 0.12300291641423246,
+  only -0.0007020115330815396 below the historical unmatched parent soup replay 0.123704927947314
+  and 0.0030029164142325 above the frozen 0.120 gate. The valid curve sits at the
+  parent band (0.124-0.135) from epoch 20 and stops improving after epoch 30 (best
+  0.1239305234811618), while train MAE keeps falling to 0.0601, i.e. the 64-D static
+  triple composition adds no measurable valid accuracy under this protocol; continuing
+  to spend runs on it is not justified by the evidence.
+created: '2026-09-30T14:34:25'
+decision: STOP the BondAnchoredTriple-v1 round after the frozen seed-0 80-epoch screen
+  returned FROZEN_TRIPLE_SCREEN_NO_STRONG_SIGNAL (M_soup 0.12300291641423246 > 0.120).
+  Do not buy a matched control, a seed-1 confirmation, a rerun with a different width/init/normalisation,
+  an extended horizon, or any shuffle/mechanism/ablation arm under this preregistration.
+decision_id: decision-e2e-dictenv-bond-anchored-triple-v1-stop-no-strong-signal-20260930
+kind: decision
+revisit_if: A NEW preregistration proposes a composition operator that is causally
+  load-bearing (e.g. computed from the frozen parent inside the forward pass with
+  liveness gates) and a matched-control design at equal parameter budget, or a separate
+  optimizer/budget round isolates the 80-vs-320-epoch and re-initialised-Reader confounds
+  before any accuracy claim
+study_id: zinc-context-gap

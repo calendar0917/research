@@ -1,0 +1,49 @@
+claim_id: claim-e2e-dictenv-bond-anchored-triple-v1-no-strong-signal-20260930
+contradicting_evidence: []
+created: '2026-09-30T14:34:09'
+implication: null
+kind: claim
+limitations:
+- One seed, one trajectory, no contemporaneous control, no matched parameter budget
+  (+10183 trainable params); the parent anchor is a frozen historical soup, so the
+  -0.000702 Delta is an unmatched screen difference.
+- The Reader is re-initialised and all inputs are train-only standardised, so no part
+  of Delta isolates the triple operator from the training-regime change.
+- The 80-epoch screen cannot say whether the composition would become useful at a
+  longer horizon (the parent used 320 epochs) or under a different soup/selection
+  protocol.
+- Only the 0.120 Gate is measured; correctness checks verify plumbing and preservation,
+  not mechanism usage or statistical significance.
+scope: Preregistration committed before the run (623ef09 + c02ae61), single seed-0
+  80-epoch trajectory, official ZINC train 10000 / official valid 1000, official test
+  never loaded (test_access blocked); frozen parent Sem108+C6 soup state sha 7a721984c5579dd76f9bcaff13a2055b8efba71da553eefb3645d94207f5050a,
+  checkpoint sha 6ec0fdef824d2c93973eaba1847c1173b9d939c75276476caf672d8010a74f89,
+  unchanged before/after training; caches keyed on full parent checkpoint sha + canonical
+  state sha + C6 + module sha + split + order; no third-environment/code/atom/semantic
+  shuffle arm, no mechanism arm, no ablation, no second seed, no hyper-parameter search,
+  no 320-epoch extension, no baseline retraining.
+statement: 'A frozen-parent BondAnchoredTriple-v1 static composition screen (three-environment
+  F(48->64->32) on cached C6 pair tokens, z3 = [mean(t), mean(t*t)], re-initialised
+  366->13->13->1 Reader, 10183 trainable params, seed 0, 80 epochs, batch 128, Adam
+  lr 1e-3 wd 1e-5 clip 5, Top-5 soup over epochs 41-80) does NOT produce a strong
+  80-epoch signal on official ZINC valid: M_soup = 0.12300291641423246 > the frozen
+  0.120 gate, only -0.0007020115330815396 below the historical unmatched parent soup
+  replay 0.123704927947314 (exact diff 0.0). Best valid 0.1239305234811618 @30, last-20-epoch
+  mean 0.1276113124455675, final train MAE 0.0601091604590416; the training curve
+  sits at the parent band (0.124-0.135) from epoch 20 onward and stops improving at
+  epoch 30, so the frozen parent already supplies essentially all available valid
+  accuracy and the added static triple composition is not load-bearing for the task.
+  This is an unmatched one-candidate performance screen, not a mechanism or specificity
+  claim: the Reader is re-initialised, p/z_old/z3 are standardised with fixed train-only
+  statistics and the budget is 80 epochs, so Delta is not the treatment effect of
+  the triple operator.'
+status: tentative
+study_id: zinc-context-gap
+supporting_evidence:
+- tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_v1/REPORT.md
+- tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_v1/run_seed0.json
+- tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_v1/curve_seed0.csv
+- tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_v1/correctness.json
+- tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_v1/cache_report.json
+- tracks/ksvd/notes/e2e_dictenv_bond_anchored_triple_v1_preregistration.md
+- tracks/ksvd/records/runs/20260930-143250-4edd72a2.json

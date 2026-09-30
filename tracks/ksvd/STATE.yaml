@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-jointbond-decay-diagnostic-v1-closed-branch-trainable-decay-slows-not-blocks
+phase: e2e-dictenv-bond-anchored-triple-v1-no-strong-signal
 updated: 2026-09-30
 
 # ---------------------------------------------------------------------------
@@ -1800,6 +1800,94 @@ e2e_dictenv_jointbond_decay_diagnostic_v1:
     - matched control, second seed, soup, or any full training run of this branch
     - denormal guard / reviving the parent node binding (only under the new optimizer-level preregistration)
     - reading official valid or official test for this diagnostic
+
+# ---------------------------------------------------------------------------
+# E2E-DictEnv-BondAnchoredTriple-v1 (three-environment static composition screen
+# on a frozen parent) — 2026-09-30, LATEST
+# ---------------------------------------------------------------------------
+# Single-candidate mainline performance screen (not a matched control, not a
+# mechanism test): freeze the original Sem108+C6 parent soup and cache its
+# per-graph pair_value p_ij (16-D) and Reader input z_old (302-D), then train
+# ONLY a new path: a shared F = Linear(48,64)+SiLU+Linear(64,32) applied to
+# every real-bond-anchored triple (i,j;k) in both endpoint orders
+# (t = 0.5*(F([p_ij,p_ik,p_jk]) + F([p_ij,p_jk,p_ik])), z3 = [mean(t);
+# mean(t*t)] 64-D, one triple per real bond anchor x every third node, m*(n-2)
+# per graph, zero summary for degenerate graphs) and a new Reader
+# 366->13->13->1.  Fixed train-only standardizers for p, z_old and the initial
+# z3 (z_old has 6 near-constant C6 count channels, scale=1 recorded).  10183
+# trainable / 103757 full-model params (F 5216, Reader 4967 = +832); the parent
+# 97709 params never enter the training graph.  Seed 0, fixed 80 epochs, batch
+# 128, Adam lr 1e-3, coupled wd 1e-5, clip 5 over exactly F+Reader, graph-level
+# L1, no dropout/gates/scheduler/early stop; Top-5 soup over epochs 41-80.
+# Local CPU 8 threads (remote A100 GPU0 unavailable: NVML "Unable to determine
+# the device handle for GPU0000:4B:00.0: Unknown Error"; no GPU used per user
+# instruction).  RESULT: complete and valid but NO strong signal - M_soup
+# 0.12300291641423246, only -0.0007020115330815396 vs the historical UNMATCHED
+# parent soup replay 0.123704927947314, and 0.0030029164 above the frozen 0.120
+# gate -> verdict FROZEN_TRIPLE_SCREEN_NO_STRONG_SIGNAL.  Best valid
+# 0.1239305234811618 @30, last-20 mean 0.1276113124455675, final train
+# 0.0601091604590416; the valid curve sits in the parent band 0.124-0.135 from
+# epoch 20 and stops improving at epoch 30 while train keeps falling, so the
+# 64-D query-free composition adds no measurable valid accuracy.  All 10
+# correctness checks passed before training: parent replay diff 0.0 (<=1e-7);
+# cache alignment pair 4.25e-07 / z_old 3.81e-06 / cached-z_old-through-Reader
+# 2.98e-07 (<=1e-6) with bit-identical targets; brute-force triple audits
+# 5511568 train / 546830 valid (no OOB, no cross-graph offsets, anchors ==
+# unique real bonds); endpoint swap and hand/batch pooling max abs diff 0.0
+# incl. empty triples; one-batch finite loss 1.4602 with non-zero grads on all
+# 10 tensors (min 0.0669); parent `.grad is None`, optimizer/clip set exactly
+# F+Reader, parent state and checkpoint sha byte-identical before/after.
+# Official test never loaded (test_access blocked).  The -0.000702 is explicitly
+# an unmatched screen difference (re-initialised Reader, standardised inputs, 80
+# vs the parent's 320 epochs), not the triple-operator effect.
+e2e_dictenv_bond_anchored_triple_v1:
+  status: closed_round_complete_no_strong_signal
+  round: e2e-dictenv-bond-anchored-triple-v1
+  verdict: FROZEN_TRIPLE_SCREEN_NO_STRONG_SIGNAL
+  case: complete_and_valid_but_M_soup_above_the_frozen_0.120_gate
+  device: cpu_only
+  official_test_loaded: false
+  test_access: blocked
+  preregistration: tracks/ksvd/notes/e2e_dictenv_bond_anchored_triple_v1_preregistration.md
+  preregistration_commit: 623ef09
+  implementation_commit: c02ae61
+  report_fix_commit: 9c858e3
+  metrics_alias_commit: e742a9e
+  analysis: tracks/ksvd/notes/e2e_dictenv_bond_anchored_triple_v1_analysis.md
+  claims:
+    - claim-e2e-dictenv-bond-anchored-triple-v1-no-strong-signal-20260930
+  decision: decision-e2e-dictenv-bond-anchored-triple-v1-stop-no-strong-signal-20260930
+  promoted_run: 20260930-143250-4edd72a2
+  training_run: 20260930-143004-e4df458c
+  failed_report_run: 20260930-141312-a9db89b7
+  results_dir: tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_v1/
+  report: tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_v1/REPORT.md
+  decision_report: tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_v1/DECISION.md
+  summary: tracks/ksvd/results/e2e_dictenv_bond_anchored_triple_v1/summary.json
+  runner: tracks/ksvd/experiments/luyin16/zinc_bond_anchored_triple_v1_mainline.py
+  module: tracks/ksvd/experiments/luyin16/e2e_dictenv_bond_anchored_triple_v1.py
+  control_plane: tracks/ksvd/src/ksvd_research/runners/zinc_bond_anchored_triple_v1_mainline.py
+  config: tracks/ksvd/configs/luyin16/zinc_bond_anchored_triple_v1_mainline.yaml
+  tests: tracks/ksvd/tests/test_e2e_dictenv_bond_anchored_triple_v1.py
+  parent: {checkpoint_sha256_prefix: 6ec0fdef824d, canonical_state_sha256: 7a721984c5579dd76f9bcaff13a2055b8efba71da553eefb3645d94207f5050a, keys: 49, params: 97709, reader_params: 4135, pair_token_dim: 16, environment_dim: 48, reader_input_dim: 302, mask: C6, replay_valid_mae: 0.123704927947314, replay_abs_diff: 0.0, unchanged_before_after: true}
+  candidate: {F: 5216, reader: 4967, reader_increment: 832, trainable_params: 10183, full_model_params: 103757, batch_size: 128, epochs: 80, lr: 0.001, weight_decay: 1.0e-05, grad_clip: 5.0, soup_window: [41, 80], soup_k: 5}
+  caches: {train_graphs: 10000, train_pairs: 2668346, train_triples: 5511568, valid_graphs: 1000, valid_pairs: 264776, valid_triples: 546830, near_constant_z_old_channels: 6}
+  result: {M_soup: 0.12300291641423246, M_parent_replay: 0.123704927947314, M_parent_recorded: 0.123704927947314, delta_soup_minus_parent: -0.0007020115330815396, promising_threshold: 0.12, promising: false, best_valid_mae: 0.1239305234811618, best_epoch: 30, last_20_valid_mean: 0.1276113124455675, final_train_mae: 0.0601091604590416, soup_members: [50, 57, 43, 49, 71], soup_member_valid_mae: [0.124576, 0.125264, 0.125437, 0.125595, 0.125666], epochs_run: 80, wall_clock_s: 330.9, seconds_per_epoch: 4.136, peak_rss_mb: 3517.2}
+  correctness: {all_passed: true, n_checks: 10, parent_replay_abs_diff: 0.0, cache_alignment_pair_max_diff: 4.246830940246582e-07, cache_alignment_z_old_max_diff: 3.814697265625e-06, cache_alignment_reader_pred_max_diff: 2.980232238769531e-07, targets_bit_identical: true, endpoint_swap_max_diff: 0.0, batch_pooling_max_diff: 0.0, one_batch_loss: 1.4601792097091675, one_batch_min_grad_norm: 0.06685101985931396, parent_grads_none: true, optimizer_and_clip_equal_F_plus_reader: true}
+  not_claimed:
+    - triple-operator treatment effect (Delta is an unmatched screen difference: re-initialised Reader, standardised inputs, 80 vs 320 epochs)
+    - mechanism usage / specificity / liveness of the triple composition
+    - any statement about horizons other than 80 epochs, other seeds, or other composition widths
+  forbidden_without_new_preregistration:
+    - seed 1 or any rerun of this candidate, or a width/init/normalisation/soup/horizon change
+    - third-environment / code / atom / semantic shuffle arms, mechanism arms, ablations, or a matched control purchased off this result
+    - reading the official test for this round
+  next_round_shape: >-
+    New preregistration only (nothing implemented): either a composition operator
+    computed from the frozen parent inside the forward pass with mandatory liveness
+    gates and matched controls at equal parameter budget, or a separate
+    optimizer/budget round isolating the 80-vs-320-epoch and re-initialised-Reader
+    confounds before any accuracy claim.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
