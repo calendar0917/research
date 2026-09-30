@@ -489,6 +489,77 @@ class SEM108Model(cssd.CSSDModel):
 
     # -- environment -----------------------------------------------------------
 
+    def _edge_response_delta(
+        self,
+        coord: torch.Tensor,
+        data: Any,
+        bond_u: torch.Tensor,
+        bond_v: torch.Tensor,
+        mask: audit.AuditMask | None = None,
+        *,
+        edge_binding_zero: bool = False,
+    ) -> torch.Tensor | None:
+        """Optional additive per-bond edge-response residual (default: none).
+
+        A subclass may return a ``[n_bond, d_e]`` tensor which is summed into the
+        per-bond edge response **before** the shellpair ``index_add_``
+        aggregation.  Returning ``None`` (the parent behaviour) leaves the frozen
+        forward bit-identical; no other code path reads this hook.
+        """
+        return None
+
+    def _edge_env_parts(
+        self,
+        coord: torch.Tensor,
+        data: Any,
+        bond_u: torch.Tensor,
+        bond_v: torch.Tensor,
+        *,
+        edge_binding_zero: bool = False,
+        mask: audit.AuditMask | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        """``(parent_edge_response, hook_delta)`` for every real bond."""
+        d_e = int(self.config.d_e)
+        cu = coord[bond_u]
+        cv = coord[bond_v]
+        g = torch.cat([cu + cv, torch.abs(cu - cv), cu * cv], dim=1)
+        if edge_binding_zero:
+            g = torch.zeros_like(g)
+        b = F.one_hot(data.env_bond_type, num_classes=int(p2.BOND_CATEGORIES)).to(coord.dtype)
+        ue = (g @ self.W_E_S) * (b @ self.W_E_C) / math.sqrt(float(d_e))
+        return ue, self._edge_response_delta(
+            coord, data, bond_u, bond_v, mask, edge_binding_zero=bool(edge_binding_zero)
+        )
+
+    def _edge_env_slots(
+        self,
+        coord: torch.Tensor,
+        data: Any,
+        bond_u: torch.Tensor,
+        bond_v: torch.Tensor,
+        *,
+        edge_binding_zero: bool = False,
+        mask: audit.AuditMask | None = None,
+    ) -> torch.Tensor:
+        """Per-(root, shellpair) edge slots ``[n, SHELLPAIR_CLASSES, d_e]``."""
+        n = int(coord.shape[0])
+        d_e = int(self.config.d_e)
+        ue, delta = self._edge_env_parts(
+            coord, data, bond_u, bond_v, edge_binding_zero=edge_binding_zero, mask=mask
+        )
+        if delta is not None:
+            ue = ue + delta
+        flat_e = torch.zeros(
+            (n * int(p2.SHELLPAIR_CLASSES), d_e), device=ue.device, dtype=ue.dtype
+        )
+        flat_e.index_add_(
+            0,
+            data.env_bond_root.to(coord.device) * int(p2.SHELLPAIR_CLASSES)
+            + data.env_bond_shellpair.to(coord.device),
+            ue,
+        )
+        return flat_e.view(n, int(p2.SHELLPAIR_CLASSES), d_e)
+
     def _environment_from_parts(
         self,
         coord: torch.Tensor,
@@ -500,6 +571,7 @@ class SEM108Model(cssd.CSSDModel):
         bond_v: torch.Tensor | None = None,
         node_binding_zero: bool = False,
         edge_binding_zero: bool = False,
+        mask: audit.AuditMask | None = None,
     ) -> torch.Tensor:
         """Frozen parent slot construction + the semantic-interface fusion."""
         n = int(coord.shape[0])
@@ -523,30 +595,20 @@ class SEM108Model(cssd.CSSDModel):
         )
         node_slots = flat.view(n, int(p2.N_SHELLS), int(p2.D_A))
 
-        d_e = int(self.config.d_e)
         if bond_u is None:
             bond_u = data.env_bond_u
         if bond_v is None:
             bond_v = data.env_bond_v
         bond_u = bond_u.to(coord.device)
         bond_v = bond_v.to(coord.device)
-        cu = coord[bond_u]
-        cv = coord[bond_v]
-        g = torch.cat([cu + cv, torch.abs(cu - cv), cu * cv], dim=1)
-        if edge_binding_zero:
-            g = torch.zeros_like(g)
-        b = F.one_hot(data.env_bond_type, num_classes=int(p2.BOND_CATEGORIES)).to(coord.dtype)
-        ue = (g @ self.W_E_S) * (b @ self.W_E_C) / math.sqrt(float(d_e))
-        flat_e = torch.zeros(
-            (n * int(p2.SHELLPAIR_CLASSES), d_e), device=ue.device, dtype=ue.dtype
+        edge_slots = self._edge_env_slots(
+            coord,
+            data,
+            bond_u,
+            bond_v,
+            edge_binding_zero=bool(edge_binding_zero),
+            mask=mask,
         )
-        flat_e.index_add_(
-            0,
-            data.env_bond_root.to(coord.device) * int(p2.SHELLPAIR_CLASSES)
-            + data.env_bond_shellpair.to(coord.device),
-            ue,
-        )
-        edge_slots = flat_e.view(n, int(p2.SHELLPAIR_CLASSES), d_e)
 
         node_out = self.node_encoder(node_slots)
         edge_out = self.edge_encoder(edge_slots)
@@ -598,6 +660,7 @@ class SEM108Model(cssd.CSSDModel):
             bond_v=bond_v,
             node_binding_zero=bool(getattr(mask, "node_binding_zero", False)),
             edge_binding_zero=bool(getattr(mask, "edge_binding_zero", False)),
+            mask=mask,
         )
 
 
