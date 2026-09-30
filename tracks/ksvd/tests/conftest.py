@@ -37,6 +37,7 @@ SLOW_MODULES = {
     "test_e2e_dictenv_rndb_v1.py",
     "test_e2e_dictenv_sem108_v1.py",
     "test_e2e_dictenv_bond_anchored_triple_v1.py",
+    "test_e2e_dictenv_bond_anchored_triple_joint_tune_v1.py",
 }
 
 

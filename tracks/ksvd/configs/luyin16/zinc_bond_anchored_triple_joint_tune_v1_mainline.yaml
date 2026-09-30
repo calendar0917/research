@@ -1,0 +1,22 @@
+protocol_id: e2e-dictenv-bond-anchored-triple-joint-tune-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  # frozen Sem108 + C6 dictionary coordinates + BAT-v1 M1 soup hot start;
+  # joint representation + composition fine-tune
+  # (see notes/e2e_dictenv_bond_anchored_triple_joint_tune_v1_preregistration.md)
+  variant: bond_anchored_triple_joint_tune_mainline
+  epochs: 40
+  batch_size: 128
+  soup_window: [21, 40]
+  promising_threshold: 0.120
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+
+runtime:
+  torch_threads: 8
