@@ -1161,6 +1161,8 @@ def stage_analysis() -> dict[str, Any]:
                 )
             ),
             "optimizer_state_entries_before": arms[arm]["optimizer_state_entries_before"],
+            "optimizer_numel": int(arms[arm]["optimizer_numel"]),
+            "optimizer": str(arms[arm]["optimizer"]),
             "wall_clock_s": arms[arm]["wall_clock_s"],
         }
     summary["verdict"] = _classify(
