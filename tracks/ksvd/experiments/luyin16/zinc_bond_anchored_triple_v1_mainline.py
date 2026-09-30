@@ -459,6 +459,44 @@ def _fmt(value: Any, digits: int = 6) -> str:
         return str(value)
 
 
+def _mask_summary(mask: Mapping[str, Any]) -> str:
+    parts: list[str] = []
+    for key, label in (
+        ("unary_zero_blocks", "unary"),
+        ("pair_zero_blocks", "pair"),
+        ("relation_zero_groups", "relation"),
+        ("global_zero_groups", "global"),
+        ("anchor_zero_groups", "anchor"),
+    ):
+        value = mask.get(key)
+        if value:
+            items = value if isinstance(value, (list, tuple)) else [value]
+            parts.append(f"{label}={'+'.join(str(item) for item in items)}")
+    off = [
+        key
+        for key in (
+            "coord_zero",
+            "topology_zero",
+            "edge_binding_zero",
+            "node_binding_zero",
+            "gate_off",
+            "graph_hidden_zero",
+            "pair_projection_zero",
+            "use_node_shuffle",
+            "use_edge_shuffle",
+        )
+        if mask.get(key)
+    ]
+    text = "C6"
+    if parts:
+        text = "C6 (" + ", ".join(parts) + ")"
+    else:
+        text = "identity" if mask.get("is_identity") else "custom"
+    if off:
+        text += "; also set: " + ", ".join(off)
+    return text
+
+
 def _write_report(summary: Mapping[str, Any], run: Mapping[str, Any]) -> None:
     lines: list[str] = []
     lines.append("# BondAnchoredTriple-v1 — mainline performance screen\n")
@@ -502,7 +540,7 @@ def _write_report(summary: Mapping[str, Any], run: Mapping[str, Any]) -> None:
         f"- params {parent['total_params']} (reader {parent['reader_params']}), "
         f"pair width {parent['pair_token_dim']}, env width {parent['environment_dim']}, "
         f"reader input {parent['reader_input_dim']}\n"
-        f"- mask `{parent['mask']['signature']}`\n"
+        f"- mask `{_mask_summary(parent.get('mask', {}))}`\n"
         f"- parent state unchanged before/after training: "
         f"`{summary['parent_state_unchanged']}`\n"
     )
