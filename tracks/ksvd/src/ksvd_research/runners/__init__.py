@@ -15,6 +15,7 @@ from ksvd_research.runner_api import Runner, RunnerError
 
 def _registry() -> dict[str, Runner]:
     from . import (
+        zinc_bond_anchored_triple_v1_mainline,
         zinc_icrate,
         zinc_jointbond_decay_diagnostic_v1,
         zinc_jointbond_v1,
@@ -30,6 +31,7 @@ def _registry() -> dict[str, Runner]:
             zinc_icrate.build_runner(),
             zinc_jointbond_v1.build_runner(),
             zinc_jointbond_decay_diagnostic_v1.build_runner(),
+            zinc_bond_anchored_triple_v1_mainline.build_runner(),
         )
     }
 

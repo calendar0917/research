@@ -36,6 +36,7 @@ SLOW_MODULES = {
     "test_triadic_relation_binding_witness.py",
     "test_e2e_dictenv_rndb_v1.py",
     "test_e2e_dictenv_sem108_v1.py",
+    "test_e2e_dictenv_bond_anchored_triple_v1.py",
 }
 
 

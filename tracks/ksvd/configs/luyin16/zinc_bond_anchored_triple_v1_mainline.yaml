@@ -1,0 +1,18 @@
+protocol_id: e2e-dictenv-bond-anchored-triple-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  # frozen CSSD-Sem108 + C6 parent soup + the new F/Reader triple path
+  # (see notes/e2e_dictenv_bond_anchored_triple_v1_preregistration.md)
+  variant: bond_anchored_triple_mainline
+  epochs: 80
+  batch_size: 128
+  soup_window: [41, 80]
+  promising_threshold: 0.120
+
+runtime:
+  torch_threads: 8
