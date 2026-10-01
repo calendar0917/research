@@ -1,0 +1,161 @@
+alternatives_rejected:
+- >-
+  Widening further (m = 4/5, larger K or d, wider fusion/reader) to push M_S
+  below 0.115.  Rejected: the pre-registration's case C (0.115 < M_S <= 0.120)
+  closes the capacity route without further widening, and the round bought
+  mostly fitting (soup train 0.055133 -> 0.045397) rather than validated
+  generalisation (soup valid 0.121058 -> 0.119154).
+- >-
+  Buying a second seed or a matched control for this candidate post hoc
+  (parameter-matched dense adapter, random/frozen dictionary, no-dictionary
+  rerun, paired seeds).  Rejected: not pre-registered for this round, and the
+  round's question (does the unified Full m=3 reach the pre-registered bands,
+  and is the shared dictionary learned and used) is already answered; a
+  post-hoc arm could not ground a performance claim in either direction.
+- >-
+  Rescuing the run (lambda1/lambda2, unrolled ISTA steps, sparsity regime,
+  lr, horizon, dropout, refitting the frozen scaler or the Sem108 body).
+  Rejected: each is a new candidate; the pre-registration forbids them in this
+  round, and the previous round already established that the soft-threshold
+  regime stays near-dense (this round measured 250.89/288 = 0.871 non-zero).
+- >-
+  Reading the endpoint differences against the unmatched backgrounds
+  (latent-bridge 0.121058, Sem108 0.123705) as increments.  Rejected:
+  different parameter counts (106,925 / 97,709 vs 408,651), single seed each,
+  unmatched protocols; the analysis note lines them up as context only.
+- >-
+  Reading the zero-code (+1.436962), permutation (+0.394184) or reset-to-init
+  (+1.329684 MAE) probes as evidence that dictionary learning beats a matched
+  trained alternative.  Rejected: they are sensitivity statements inside one
+  model, and the insertion topology makes a large zero-code delta expected by
+  construction.
+- >-
+  Fixing the near-dense code with post-hoc thresholding or a top-k readout at
+  evaluation time.  Rejected: the density is a measured endpoint property of
+  the frozen lambda regime; any sparsity intervention would be a new candidate
+  and would invalidate the frozen comparison.
+- >-
+  Reading the official ZINC test split for a limited-signal candidate.
+  Rejected: screen-mode discipline (test blocked) and the frozen band rule;
+  the test was never instantiated (official_test_loaded false).
+because: >-
+  The unified Small/Full model was implemented, accepted by the seven
+  zero-training correctness gates, authorised by the pre-registered CPU timing
+  gate (6657 s with margin vs 14400 s budget, confirmed by the actual 6274 s
+  training wall) and trained for the full 320 epochs on the official train
+  split with one evaluation on the official valid split through the new
+  control-plane runner; the pre-registered band rule returned case C
+  (limited signal, 0.115 < 0.119154 <= 0.120), which closes the capacity route
+  without authorising widening, seed 1 or matched controls.  The mechanism
+  diagnostics are positive but only establish liveness and use of the shared
+  task dictionary, not comparative value; the near-dense code, the widened
+  train-to-valid gap and the unmatched backgrounds block any stronger reading.
+created: '2026-10-02T03:10:00'
+decision: >-
+  Close the E2E-DictEnv-Scale-v1 round after seed 0
+  (SCALE_LIMITED_SIGNAL_CLOSE_CAPACITY_ROUTE) without further widening, without
+  seed 1, without a matched control and without any K / d / lambda / steps / lr
+  rescue.  Record the band result (Full m=3 soup official-valid MAE 0.119154,
+  best 0.123307 @ 299; unmatched backgrounds latent-bridge 0.121058, Sem108
+  0.123705), the construction result (m=1 = 106,925 bit-identical to the
+  LatentBridgeSEM108 parent, m=2 = 233,203 audit-only, m=3 = 408,651 exact with
+  all Sem108 modules frozen and a containment witness) and, separately, the
+  mechanism result (learned: D_L/V_L movement 16.4566/12.8033 with MAE-only
+  gradients 0.0963/0.2431; load-bearing: zero-code +1.436962, permutation
+  +0.394184, reset-to-init +1.329684 MAE; near-dense code mean 250.89/288).
+  Do not merge the three readings, do not present the endpoint as an
+  improvement over any background, and do not continue this representation by
+  widening K or d.
+decision_id: decision-e2e-dictenv-scale-v1-close-capacity-route-after-seed0-20261002
+kind: decision
+protocol: >-
+  Local CPU only (runtime.device=cpu, 8 threads), official ZINC train 10000 /
+  official valid 1000, official test never instantiated.  Pre-registration and
+  code committed before the formal run (5335301; reporting-only dtype fix
+  638d6a3 for the completion run; prereg sha c65d6e223aa9 enforced by
+  preflight).  Formal stages executed through the control-plane runner
+  zinc_e2e_dictenv_scale_v1: training run 20261002-004025-2196abdb completed
+  320/320 epochs at 19.608 s/epoch (wall 6274.4 s, peak RSS 3053.4 MB) and
+  failed only in a probe-reporting dtype line after writing run_seed0.json /
+  soup.json / checkpoints; completion run 20261002-023535-07a8b584 cache-hit
+  the frozen training state (identical state hashes) and produced the probes,
+  summary, REPORT and DECISION in 58.9 s.  One candidate, seed 0, 320 epochs,
+  batch 128, Adam lr 1e-3 / wd 1e-5 / clip 5.0, fixed LR, Top-5 soup by valid
+  MAE, no early stop, no control arm, no sweep.  Separately: 9 focused local
+  tests, a 7-gate zero-training correctness stage, a timing gate, a smoke stage
+  and inference-only mechanism probes at the frozen soup state.
+results:
+  verdict: SCALE_LIMITED_SIGNAL_CLOSE_CAPACITY_ROUTE
+  absolute_band: SCALE_LIMITED_SIGNAL_CLOSE_CAPACITY_ROUTE
+  case: C
+  soup_valid_mae: 0.1191540920053958
+  best_valid_mae: 0.1233068444346427
+  best_epoch: 299
+  soup_members: [268, 276, 289, 299, 317]
+  soup_member_valid_mae: [0.1238041272041737, 0.12553235689172287, 0.12568868541618577, 0.1233068444346427, 0.12354528857668629]
+  valid_first: 0.5261173484799802
+  valid_last: 0.12583213828405132
+  soup_train_mae_same_protocol: 0.04539669677615166
+  train_valid_gap: 0.07375739522924414
+  train_min_mae: 0.0588940632224083
+  epochs_run: 320
+  seconds_per_epoch: 19.607565030602927
+  wall_clock_s: 6274.420809792937
+  peak_rss_mb: 3053.41796875
+  small_parameters: 106925
+  full_body_parameters: 325707
+  task_dictionary_parameters: 82944
+  full_parameters: 408651
+  audit_only_m2_parameters: 233203
+  latent_bridge_background_soup_mae: 0.12105831989174476
+  delta_vs_latent_bridge_background: -0.001904227886348961
+  sem108_background_soup_mae: 0.123704927947314
+  delta_vs_sem108_background: -0.004550835941918199
+  dictionary_learned: true
+  dictionary_load_bearing: true
+  bridge_task_grad_D_L: 0.09625795483589172
+  bridge_task_grad_V_L: 0.24310365319252014
+  bridge_D_L_movement_frobenius: 16.456621170043945
+  bridge_V_L_movement_frobenius: 12.803261756896973
+  zero_code_delta_mae: 1.4369618967175484
+  zero_code_delta_pred_rms: 1.9407180547714233
+  permutation_mean_delta_mae: 0.39418414384126665
+  permutation_mean_delta_pred_rms: 0.6074774980545044
+  reset_to_init_delta_mae: 1.3296835497021675
+  reset_to_init_delta_pred_rms: 1.746171474456787
+  code_mean_nonzero: 250.88959306204137
+  code_mean_nonzero_fraction: 0.8711444203543103
+  low_dim_reconstruction_mean_relative: 0.05878305889352882
+  correctness_all_passed: true
+  timing_authorized: true
+  smoke_passed: true
+  official_valid_loaded: true
+  official_test_loaded: false
+  screen_run: 20261002-023535-07a8b584
+  training_run: 20261002-004025-2196abdb
+  revision: 638d6a3f9017b15ba1af2127fda59a3f2fed46ae
+  training_revision: 5335301d0e8f36c67b1acd8fb192d92c79769e3e
+revisit_if: >-
+  Revisit only with a new pre-registration that either (a) buys a confirmation
+  design for the shared task dictionary — paired seeds plus a parameter-matched
+  dense/random adapter under one protocol, with the band rule and the code
+  density report pre-declared — or (b) changes the local object / learning
+  objective instead of widening K or d on this representation.  A future round
+  may reuse the validated unified Small/Full construction (exact parameter
+  budgets, containment witness, frozen Sem108 modules) and the measured
+  liveness of the shared task dictionary as building blocks, but must not
+  present the 0.119154 endpoint or the unmatched background differences as a
+  validated gain of this round.
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The previous round trained a 9,216-parameter shared task dictionary at the
+  Sem108 fusion output and ended borderline (0.121058) with a near-dense code
+  and no capacity comparison.  This round asked the plan's capacity question
+  with one unified Small/Full model and one authorised Full seed-0 screen: does
+  widening the task-local path (m=3, 408,651 exact parameters) reach the
+  pre-registered absolute bands on official valid, and is the enlarged shared
+  task dictionary actually learned and used?  Both questions were answered at
+  the frozen endpoint before any rescue, seed 1 or control was considered: the
+  candidate landed in the limited-signal band, and the enlarged dictionary is
+  learned and load-bearing but again near-dense and unvalidated against any
+  matched alternative.

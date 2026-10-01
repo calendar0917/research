@@ -1,0 +1,179 @@
+claim_id: claim-e2e-dictenv-scale-v1-full-limited-signal-dictionary-learned-unconfirmed-20261002
+contradicting_evidence:
+- >-
+  The valid endpoint moved by only -0.001904 against the unmatched
+  latent-bridge background and -0.004551 against the unmatched Sem108
+  background, both single-seed context with different parameter counts, so no
+  increment is demonstrated in either direction.
+- >-
+  The extra capacity mostly bought fitting: same-protocol soup train MAE fell
+  from 0.055133 (Small) to 0.045397 (Full) while the valid endpoint fell only
+  from 0.121058 to 0.119154, and the train-to-valid gap widened from +0.065926
+  to +0.073757.
+- >-
+  The code is again near-dense at the frozen lambda regime (mean non-zero
+  250.89/288, fraction 0.871, p50 255, p95 275), so the round cannot claim
+  sparse dictionary coding; the diagnostic low-dimensional reconstruction also
+  degraded from mean relative 0.0048 (Small) to 0.0588 (Full).
+- >-
+  The zero-code (+1.436962), permutation (+0.394184) and reset-to-init
+  (+1.329684 MAE) probes are sensitivity statements inside one model: zeroing
+  the code removes the whole local encoding from the readout by construction,
+  and no parameter-matched dense/random control was run, so nothing is shown
+  about dictionary learning versus a matched trained alternative.
+- >-
+  The round is one seed, one trajectory and one authoring CPU machine; no
+  seed-variance estimate exists, and the 0.004846 margin below the 0.115
+  promising edge is far below anything this design could resolve.
+created: '2026-10-02T03:10:00'
+evidence:
+- tracks/ksvd/notes/zinc_e2e_dictenv_scale_v1_preregistration.md
+- tracks/ksvd/notes/zinc_e2e_dictenv_scale_v1_analysis.md
+- tracks/ksvd/results/e2e_dictenv_scale_v1/REPORT.md
+- tracks/ksvd/results/e2e_dictenv_scale_v1/DECISION.md
+- tracks/ksvd/results/e2e_dictenv_scale_v1/summary.json
+- tracks/ksvd/results/e2e_dictenv_scale_v1/run_seed0.json
+- tracks/ksvd/results/e2e_dictenv_scale_v1/soup.json
+- tracks/ksvd/results/e2e_dictenv_scale_v1/mechanism/bridge_probes.json
+- tracks/ksvd/results/e2e_dictenv_scale_v1/mechanism/dictionary_health.json
+- tracks/ksvd/results/e2e_dictenv_scale_v1/correctness.json
+- tracks/ksvd/results/e2e_dictenv_scale_v1/timing.json
+- tracks/ksvd/results/e2e_dictenv_scale_v1/smoke.json
+- tracks/ksvd/results/e2e_dictenv_scale_v1/preflight.json
+- tracks/ksvd/results/e2e_dictenv_scale_v1/audit/audit_decision.json
+- tracks/ksvd/results/e2e_dictenv_scale_v1/historical_references.json
+- tracks/ksvd/experiments/luyin16/e2e_dictenv_scale_v1.py
+- tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_scale_v1.py
+- tracks/ksvd/tests/test_e2e_dictenv_scale_v1.py
+- records/runs/20261002-023535-07a8b584.json
+implication: >-
+  The capacity route is CLOSED after seed 0: m=3 reached the limited-signal
+  band (0.115 < M_S <= 0.120) and the pre-registration forbids further widening
+  (m, K, d, lambda, steps, lr) and any seed-1 / matched-control rescue of this
+  round.  The unified Small/Full construction itself is validated as a
+  building block: m=1 is bit-identical to the frozen LatentBridgeSEM108
+  (106,925), m=2 audits exactly (233,203), m=3 is exact (408,651 = 325,707
+  body + 82,944 dictionary) with an eval-mode containment witness and all
+  Sem108 modules frozen and identical.  A continuation requires a new
+  pre-registration and must be either (a) a confirmation design for the shared
+  task dictionary (paired seeds plus a parameter-matched dense/random adapter,
+  band and code density pre-declared) or (b) a different local object /
+  learning objective; a further widening of K or d is not authorised by this
+  round.
+kind: claim
+limitations:
+- >-
+  Single seed, single trajectory, no matched control arm (no parameter-matched
+  dense or random adapter, no no-dictionary rerun), so no increment or
+  dictionary-vs-dense causal statement is made; the frozen absolute band and
+  the exact mechanism measurements are the only claims.
+- >-
+  The zero-code / permutation / reset probes show the channel carries
+  prediction inside this one model, not that learning D_L / V_L beats a matched
+  trained alternative.
+- >-
+  All historical comparisons (latent-bridge 0.121058, Sem108 0.123705, T1
+  0.125765, FINAL-CLEAN-C6 0.128499, CSSD-q1 0.130028, P1-sparse 0.131975) are
+  unmatched background: different architectures, parameter counts and
+  protocols, single seed each.
+- >-
+  CPU regime (runtime.device=cpu, 8 threads) on one authoring machine; one
+  geometry only (d 144, K 288, 16 unrolled ISTA steps, lambda1 0.05,
+  lambda2 0.01, tied V_L); no K / d / lambda / steps / width / horizon / lr
+  variation authorised; m=1 and m=2 were never retrained this round.
+- >-
+  The probes were produced by the completion run at revision 638d6a3 on the
+  frozen training state of run 20261002-004025-2196abdb (revision 5335301);
+  the only change is a reporting-only dtype fix in the density accumulator,
+  and the completion run reproduced the identical training state hashes.
+scope: >-
+  Pre-registration committed before the formal run (preregistration sha
+  c65d6e223aa9 enforced by preflight).  One Full candidate, seed 0, 320 epochs,
+  batch 128, Adam lr 1e-3 / weight_decay 1e-5 / clip 5.0, fixed LR, Top-5 soup
+  by official valid, local CPU 8 threads; unified Small 106,925 / Full 408,651
+  (task dictionary 82,944, body 325,707), m=2 233,203 audit-only; official
+  ZINC train 10000 / official valid 1000; the official test split was never
+  instantiated (official_test_loaded false); no seed 1, no control arm, no
+  sweep.
+statement: >-
+  The single authorised Full candidate of this round — the unified Small/Full
+  model at scale m=3 (exactly 408,651 parameters: 325,707-parameter widened
+  Sem108 body plus an 82,944-parameter shared task dictionary D_L[144,288] /
+  V_L[288,144], h -> rho-normalised 16-step unrolled ISTA -> alpha[288] ->
+  E = rho * alpha @ V_L, no bypass) — reached an official-valid soup MAE of
+  0.11915409201 (best single epoch 0.12330684 @ 299, Top-5 soup members
+  268/276/289/299/317) under the local CPU seed-0 regime, landing in the
+  pre-registered limited-signal band (0.115 < M_S <= 0.120, case C): so the
+  promotion condition M_S <= 0.115 was NOT met and the capacity route closes
+  without further widening, seed 1 or matched controls.  The mechanism
+  statement is separate and positive: D_L / V_L moved 16.4566 / 12.8033 from
+  the frozen frame with non-zero MAE-only task gradients (0.0963 / 0.2431 at
+  the endpoint), zeroing the task-dictionary code costs +1.436962 valid MAE
+  (prediction RMS +1.940718), a 5-seed within-molecule code permutation costs
+  +0.394184 (+0.607477) and resetting D_L / V_L to init costs +1.329684
+  (+1.746171).  The measured limitation is that the code is again near-dense
+  at the endpoint (mean non-zero 250.89/288, fraction 0.871, p50 255, p95 275),
+  so this round cannot call it a sparse code, and the valid endpoint differences
+  against the unmatched backgrounds (latent-bridge 0.121058, difference
+  -0.001904; Sem108 0.123705, difference -0.004551) are not causal increments
+  because the parameter counts differ and no matched control was run.  The
+  band result, the mechanism liveness result and the construction-exactness
+  result are three separate statements and must not be merged.
+status: tentative
+study_id: zinc-context-gap
+supporting_evidence:
+- >-
+  Endpoint and band: soup 0.1191540920053958 (members 268/276/289/299/317 =
+  0.1238041272041737 / 0.12553235689172287 / 0.12568868541618577 /
+  0.1233068444346427 / 0.12354528857668629), best 0.1233068444346427 @ 299,
+  valid first/last 0.5261173484799802 / 0.12583213828405132, training-loop
+  train min 0.0588940632224083, final 0.05927236256599426; same-protocol soup
+  train MAE 0.04539669677615166, gap +0.07375739522924414; 320/320 epochs,
+  19.607565030602927 s/epoch, wall 6274.420809792937 s, peak RSS 3053.4 MB;
+  unmatched backgrounds: latent-bridge 0.121058 (-0.001904), Sem108 0.123705
+  (-0.004551).
+- >-
+  Exact construction (correctness.json, all gates passed): S1 m=1 = 106,925
+  parameters, state dict identical to the frozen LatentBridgeSEM108 (zero
+  mismatches), plain/masked prediction delta 0.0; S2 m=3 = 408,651 exact with
+  inclusive per-module inventory exact, widths h/E/alpha/u/pair/reader_input =
+  144/144/288/48/48/814, 25 fixed Sem108 tensors identical, m=2 = 233,203;
+  S3 eval-mode containment plain 1.07e-06 / masked 1.19e-06 (tolerance 1e-4);
+  S4 identity relative L2 1.13e-07 and formal-init relative squared error
+  0.00237 (threshold 0.05); S5 non-zero MAE-only gradients at init (D_L 0.669,
+  V_L 0.704), Adam delta 0.204, SGD loss 1.116 -> 1.030; S6 exactly one
+  dictionary call per path, no h bypass (0.0229), relabel 2.4e-05, batch offset
+  3.0e-08, endpoint swap 0, relation no-writeback 0, zero code gives E = 0;
+  S7 official-test blocker raises.
+- >-
+  Resource gate and smoke: timing AUTHORISED (steady train step 0.2320 s,
+  eval step 0.0730 s -> 18.913 s/epoch -> 6052 s x 1.10 = 6657 s vs 14400 s
+  budget; actual training wall 6274.4 s confirms it); smoke 24 steps,
+  final_train 0.904365, finite, non-zero gradients, 6.3 s.
+- >-
+  Mechanism at the frozen soup state (mechanism/bridge_probes.json): D_L / V_L
+  movement 16.456621170043945 / 12.803261756896973, endpoint MAE-only task
+  gradients 0.09625795483589172 / 0.24310365319252014; zero-code delta MAE
+  +1.4369618967175484 (prediction RMS +1.9407180547714233), 5-seed
+  within-molecule permutation mean delta MAE +0.39418414384126665 (RMS
+  +0.6074774980545044, min 0.3858688548207283, max 0.40216393023729324),
+  reset-to-init delta MAE +1.3296835497021675 (RMS +1.746171474456787); code
+  density mean non-zero 250.88959306204137/288 (fraction 0.8711444203543103,
+  p50 255.0, p95 275.0, max 286.0, n = 2998 objects); diagnostic low-dimensional
+  reconstruction mean relative 0.05878305889352882 (p95 0.1238278246791254);
+  frozen readout block layout unary 288+289, pair 96+97, relation readout 485,
+  reader input 814.
+- >-
+  Formal chain before training: references (latent-bridge background 0.121058),
+  audit PROCEED with T1_BLOCK_AUDIT_UNAVAILABLE reused byte-identically,
+  preflight prereg sha c65d6e223aa9 with small 106925 / full 408651 /
+  fixed_identical True, correctness all gates passed, smoke passed, then the
+  320-epoch Full training (run 20261002-004025-2196abdb) and the completion run
+  20261002-023535-07a8b584 (probes + analysis, 58.9 s) on the cached frozen
+  training state (identical best/soup state hashes).
+- >-
+  Provenance: preregistration and code committed before the formal run
+  (5335301; reporting-only dtype fix 638d6a3 for the completion run);
+  vendored handoff package dictionary_scaling/v1_20261001 with sha256 README;
+  reported in the analysis note section 8; official_test_loaded false
+  throughout; m=2 never trained.

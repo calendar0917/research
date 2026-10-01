@@ -12,8 +12,8 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-latent-bridge-v1-borderline-unconfirmed
-updated: 2026-10-01
+phase: e2e-dictenv-scale-v1-limited-signal-capacity-route-closed
+updated: 2026-10-02
 
 # ---------------------------------------------------------------------------
 # FINAL STANDALONE STATUS (TCCD-v7, 2026-09-22)
@@ -2628,6 +2628,127 @@ e2e_dictenv_latent_bridge_v1:
     - 'carry matched arms for any performance claim; do not read the unmatched +0.002647 against Sem108 0.123705 as a gain'
 
 # ---------------------------------------------------------------------------
+# E2E-DictEnv-Scale-v1 (2026-10-02, local CPU, revision 5335301 training /
+# 638d6a3 probes+analysis) is CLOSED with verdict
+# SCALE_LIMITED_SIGNAL_CLOSE_CAPACITY_ROUTE: the single authorised unified
+# Full m=3 candidate (exact 408,651 = 325,707 widened Sem108 body + 82,944
+# shared task dictionary D_L[144,288]/V_L[288,144], h -> 16-step unrolled ISTA
+# -> alpha[288] -> E, no bypass) reached soup official-valid MAE 0.119154
+# (best 0.123307 @299), i.e. inside the 0.115-0.120 limited-signal band and
+# 0.004846 above the 0.115 promotion edge; case C closes the capacity route
+# without widening, seed 1, matched controls or rescue.  The construction
+# statement is exact (m=1 106,925 bit-identical to the LatentBridgeSEM108
+# parent, m=2 233,203 audit-only, m=3 exact with all 25 Sem108 tensors frozen
+# and an eval-mode containment witness); the mechanism statement is separate
+# and positive (D_L/V_L movement 16.4566/12.8033, MAE-only gradients
+# 0.0963/0.2431, zero-code +1.436962 / permutation +0.394184 / reset-to-init
+# +1.329684 MAE) but the code is again near-dense (mean 250.89/288 non-zero)
+# and no matched control was run, so the endpoint differences against the
+# unmatched backgrounds (latent-bridge 0.121058, Sem108 0.123705) are not
+# increments.
+# ---------------------------------------------------------------------------
+e2e_dictenv_scale_v1:
+  status: STOPPED_LIMITED_SIGNAL_CAPACITY_ROUTE_CLOSED
+  round: zinc-e2e-dictenv-scale-v1
+  protocol: zinc-context-gap
+  verdict: SCALE_LIMITED_SIGNAL_CLOSE_CAPACITY_ROUTE
+  absolute_band: SCALE_LIMITED_SIGNAL_CLOSE_CAPACITY_ROUTE
+  case: C
+  preregistration: tracks/ksvd/notes/zinc_e2e_dictenv_scale_v1_preregistration.md
+  analysis: tracks/ksvd/notes/zinc_e2e_dictenv_scale_v1_analysis.md
+  claim: claim-e2e-dictenv-scale-v1-full-limited-signal-dictionary-learned-unconfirmed-20261002
+  decision: decision-e2e-dictenv-scale-v1-close-capacity-route-after-seed0-20261002
+  core_module: tracks/ksvd/experiments/luyin16/e2e_dictenv_scale_v1.py
+  stage_runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_scale_v1.py
+  control_plane_runner: tracks/ksvd/src/ksvd_research/runners/zinc_e2e_dictenv_scale_v1.py
+  config: tracks/ksvd/configs/luyin16/zinc_e2e_dictenv_scale_v1.yaml
+  tests: tracks/ksvd/tests/test_e2e_dictenv_scale_v1.py
+  vendor_reference: tracks/ksvd/experiments/luyin16/dictionary_scaling/v1_20261001/
+  results_dir: tracks/ksvd/results/e2e_dictenv_scale_v1/
+  report: tracks/ksvd/results/e2e_dictenv_scale_v1/REPORT.md
+  decision_report: tracks/ksvd/results/e2e_dictenv_scale_v1/DECISION.md
+  prereg_sha: c65d6e223aa9
+  formal_commit: 5335301d0e8f36c67b1acd8fb192d92c79769e3e
+  analysis_commit: 638d6a3f9017b15ba1af2127fda59a3f2fed46ae
+  formal_runs:
+    training:
+      run_id: 20261002-004025-2196abdb
+      status: completed_320_epochs_then_probe_reporting_error
+      wall_clock_s: 6274.4
+      seconds_per_epoch: 19.608
+      peak_rss_mb: 3053.4
+    completion:
+      run_id: 20261002-023535-07a8b584
+      status: completed
+      run_record: tracks/ksvd/records/runs/20261002-023535-07a8b584.json
+      runtime_s: 58.9
+    official_test_loaded: false
+  candidate:
+    tag: SCALE-FULL-m3
+    scale: 3
+    body_parameters: 325707
+    task_dictionary_parameters: 82944
+    trainable_parameters: 408651
+    task_dim: 144
+    task_atoms: 288
+    bridge_steps: 16
+    seed: 0
+    soup: top-5 by official valid
+  result:
+    soup_valid_mae: 0.1191540920053958
+    soup_members: [268, 276, 289, 299, 317]
+    soup_member_valid_mae: [0.1238041272041737, 0.12553235689172287, 0.12568868541618577, 0.1233068444346427, 0.12354528857668629]
+    best_valid_mae: 0.1233068444346427
+    best_epoch: 299
+    valid_first: 0.5261173484799802
+    valid_last: 0.12583213828405132
+    train_min_mae: 0.0588940632224083
+    soup_train_mae_same_protocol: 0.04539669677615166
+    train_valid_gap: 0.07375739522924414
+    band_thresholds: {strong: 0.11, promising: 0.115, limited: 0.12}
+    latent_bridge_background_soup_mae: 0.12105831989174476
+    delta_vs_latent_bridge_background: -0.001904227886348961
+    sem108_background_soup_mae: 0.123704927947314
+    delta_vs_sem108_background: -0.004550835941918199
+    recommendation: >-
+      close - limited signal (0.004846 above the 0.115 promotion edge); no
+      further widening, seed 1, matched control, rescue or official-test read.
+  construction_separate_statement:
+    small_parameters: 106925
+    small_identity: bit-identical state dict to LatentBridgeSEM108
+    audit_only_m2_parameters: 233203
+    full_parameters: 408651
+    containment_witness: {plain: 1.07e-06, masked: 1.19e-06, tolerance: 1.0e-4}
+    fixed_sem108_tensors: 25 identical
+    official_test_blocker: raises
+  mechanism_separate_statement:
+    dictionary_learned: true
+    dictionary_load_bearing: true
+    task_grad_D_L: 0.09625795483589172
+    task_grad_V_L: 0.24310365319252014
+    movement_frobenius: {D_L: 16.456621170043945, V_L: 12.803261756896973}
+    intervention_delta_mae: {zero_code: 1.4369618967175484, permutation_mean: 0.39418414384126665, reset_to_init: 1.3296835497021675}
+    code_density: {mean_nonzero: 250.88959306204137, fraction: 0.8711444203543103, p50: 255.0, p95: 275.0, max: 286.0}
+    low_dim_reconstruction_mean_relative: 0.05878305889352882
+    reading: >-
+      learned and load-bearing, but again near-dense at the frozen lambda
+      regime and without any matched control; the intervention deltas establish
+      channel liveness only, and the endpoint differences against the unmatched
+      backgrounds must not be read as increments.
+  forbidden_without_new_preregistration:
+    - further widening (m, K, d, fusion/reader width) of this candidate
+    - seed 1 of this candidate
+    - matched control arm (dense/random/no-dictionary) built post hoc to reinterpret the endpoint
+    - any rescue (lambda1/lambda2, ISTA steps, sparsity regime, lr, horizon, dropout, refitting the frozen scaler or the Sem108 body)
+    - post-hoc thresholding / top-k of the task-dictionary code
+    - reading the official ZINC test for this round
+  next_round_must_fix:
+    - 'state whether the purchase is confirmation of the shared task dictionary (paired seeds + parameter-matched dense/random adapter, band and code density pre-declared) or a different local object / learning objective'
+    - 'report code density under any claim of sparse dictionary coding; the frozen lambda regime produced mean 250.89/288 non-zero at m=3'
+    - 'carry matched arms for any performance claim; do not read the endpoint or the unmatched background differences (latent-bridge 0.121058, Sem108 0.123705) as gains'
+    - 'account for the widened train-to-valid gap (0.045397 vs 0.119154) before adding more capacity'
+
+# ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
@@ -3200,7 +3321,43 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_e2e_dictenv_latent_bridge_v1_new_preregistration_required
+  status: stop_e2e_dictenv_scale_v1_capacity_route_closed_new_preregistration_required
+  # -------------------------------------------------------------------------
+  # E2E-DictEnv-Scale-v1 (2026-10-02, local CPU, training revision 5335301,
+  # probes/analysis revision 638d6a3) is CLOSED with verdict
+  # SCALE_LIMITED_SIGNAL_CLOSE_CAPACITY_ROUTE: the unified Full m=3 candidate
+  # (exact 408,651 = 325,707 body + 82,944 shared task dictionary; m=1
+  # bit-identical to the latent-bridge parent at 106,925; m=2 audit-only at
+  # 233,203) reached soup official-valid MAE 0.119154 (best 0.123307 @299),
+  # i.e. inside the 0.115-0.120 limited-signal band, 0.004846 above the 0.115
+  # promotion edge.  Case C closes the capacity route: no further widening, no
+  # seed 1, no matched control, no rescue, no official-test read.  The
+  # mechanism statement is separate and positive (movement 16.4566/12.8033,
+  # gradients 0.0963/0.2431, zero-code +1.436962 / permutation +0.394184 /
+  # reset-to-init +1.329684 MAE) but the code is again near-dense
+  # (250.89/288) and the endpoint differences vs latent-bridge 0.121058 and
+  # Sem108 0.123705 are unmatched.
+  # -------------------------------------------------------------------------
+  e2e_dictenv_scale_v1:
+    status: stopped_limited_signal_capacity_route_closed
+    round: zinc-e2e-dictenv-scale-v1
+    verdict: SCALE_LIMITED_SIGNAL_CLOSE_CAPACITY_ROUTE
+    seed1_authorized: false
+    claims:
+      - claim-e2e-dictenv-scale-v1-full-limited-signal-dictionary-learned-unconfirmed-20261002
+    decision: decision-e2e-dictenv-scale-v1-close-capacity-route-after-seed0-20261002
+    analysis: tracks/ksvd/notes/zinc_e2e_dictenv_scale_v1_analysis.md
+    forbidden_without_new_preregistration:
+      - further widening (m, K, d, fusion/reader width)
+      - seed 1 of this candidate
+      - post-hoc matched control to reinterpret the endpoint
+      - any rescue (lambda1/lambda2, ISTA steps, sparsity regime, lr, horizon, dropout, refitting the frozen scaler or body)
+      - post-hoc thresholding / top-k of the task-dictionary code
+      - reading the official ZINC test for this round
+    next_round_must_fix:
+      - 'state whether the purchase is confirmation of the shared task dictionary (paired seeds + parameter-matched dense/random adapter) or a different local object / learning objective'
+      - 'report code density under any claim of sparse dictionary coding (this round measured mean 250.89/288 non-zero at m=3)'
+      - 'carry matched arms for any performance claim; latent-bridge 0.121058 and Sem108 0.123705 are unmatched backgrounds'
   # -------------------------------------------------------------------------
   # E2E-DictEnv-Latent-Bridge-v1 (2026-10-01, local CPU, revision 9d4cbed) is
   # CLOSED with verdict LATENT_BRIDGE_BORDERLINE: the frozen Sem108 model plus
