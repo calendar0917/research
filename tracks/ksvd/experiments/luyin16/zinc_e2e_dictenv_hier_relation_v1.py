@@ -2022,19 +2022,18 @@ def stage_train(force: bool = False) -> dict[str, Any]:
         for row in sorted(curve, key=lambda r: float(r["valid_mae"]))[: int(core.SOUP_K)]
     )
     reference_keys = list(epoch_states[members[0]].keys())
+    buffer_keys = {name for name, _ in model.named_buffers()}
     for member in members:
-        for key in reference_keys:
-            if key not in ("D_node", "D_rel") and not torch.equal(
-                epoch_states[member][key], epoch_states[members[0]][key]
-            ):
-                raise RuntimeError(f"soup member {member} buffer {key} differs")
+        for key in sorted(buffer_keys):
+            if not torch.equal(epoch_states[member][key], epoch_states[members[0]][key]):
+                raise RuntimeError(f"soup member {member} fixed buffer {key} differs")
     soup_state = {
         key: torch.stack([epoch_states[member][key].float() for member in members]).mean(0)
         for key in reference_keys
+        if key not in buffer_keys
     }
-    for key in reference_keys:
-        if key not in ("D_node", "D_rel"):
-            soup_state[key] = epoch_states[members[0]][key]
+    for key in sorted(buffer_keys):
+        soup_state[key] = epoch_states[members[0]][key]
     soup_model = build_model(initialised=True)
     soup_model.load_state_dict(soup_state)
     soup_valid = evaluate(soup_model, valid, mode="none")
@@ -2247,6 +2246,7 @@ def stage_analysis(force: bool = False) -> dict[str, Any]:
             "relation_delta_channel_load_bearing": delta_used,
             "relation_code_channel_load_bearing": beta_used,
             "any_relation_channel_load_bearing": bool(beta_used or delta_used),
+            "rms_floor": float(interventions["rms_floor"]),
             "interventions": interventions["soup"]["valid"],
             "code_usage": interventions["soup"]["code_usage"],
         },
@@ -2359,7 +2359,7 @@ Mechanism (reported separately): {summary['mechanism_note']}.
 * relation object 228 dims = S(mu) 96 + S(delta) 96 + cross 32 + bond one-hot 4;
   one undirected physical edge counted once.
 * relation dictionary 228 x {summary['parameters']['relation_atoms']},
-  tied-IHT s={REL_SPARSITY}, steps={REL_IHT_STEPS}.
+  tied-IHT s={core.REL_SPARSITY}, steps={core.REL_IHT_STEPS}.
 * readout {summary['parameters']['readout_dim']} =
   384 node (sum/mean/std) + 192 relation (sum/mean/std) + 2 log-counts + 8 topology.
 * single head 586 -> 64 -> 32 -> 1 (`SiLU`, dropout 0.05).
@@ -2399,7 +2399,7 @@ effective atoms {mechanism['code_usage']['relation_effective_atoms']:.2f} /
 {summary['parameters']['relation_atoms']}.
 
 Endpoint interventions on the **soup** state (official valid 1000; pre-registered
-`RMS > {summary['mechanism']['interventions']['rms_floor']:.0e}` = clear sensitivity,
+`RMS > {summary['mechanism']['rms_floor']:.0e}` = clear sensitivity,
 which is not by itself a performance claim):
 
 | intervention | valid MAE | ΔMAE | pred RMS | ΔRMS | mean abs Δpred | sensitive |
