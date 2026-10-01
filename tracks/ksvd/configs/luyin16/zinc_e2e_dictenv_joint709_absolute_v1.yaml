@@ -1,0 +1,28 @@
+protocol_id: e2e-dictenv-joint709-absolute-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  # Single-candidate absolute-performance screen of the frozen K48/s12
+  # dictionary over the train-only scale-balanced 709-D joint input
+  # (struct residual 65 + Sem108 108 + RoleCorr 536), coordinate
+  # [c~ ; IHT_10(alpha_48)] width 49.  No control arm in this round.
+  # `stage: prepare` builds the train-only scaler/caches/dictionary (scratch);
+  # `stage: screen` (default) runs correctness -> smoke -> 320-epoch training
+  # -> frozen probes -> analysis.  See
+  # notes/e2e_dictenv_joint709_absolute_v1_preregistration.md.
+  variant: joint709_frozen_dictionary_absolute
+  stage: screen
+  epochs: 320
+  absolute_thresholds:
+    strong_max: 0.115
+    promising_max: 0.120
+    borderline_max: 0.1233
+
+runtime:
+  # Explicit device; this round is authorised as a LOCAL CPU regime only.
+  device: cpu
+  torch_threads: 8

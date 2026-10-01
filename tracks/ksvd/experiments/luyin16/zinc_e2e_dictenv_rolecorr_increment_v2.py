@@ -126,6 +126,24 @@ def _ensure_dirs() -> None:
         path.mkdir(parents=True, exist_ok=True)
 
 
+def _res_dir(results_dir: Any = None) -> Path:
+    """Resolve an explicit output directory (defaults to the round's own dir).
+
+    Route-2 preparation objects are parameterised by ``results_dir`` so a new
+    round can own its own scaler / cache / dictionary without mutating the
+    module-global directory of an earlier (already recorded) round.
+    """
+    path = RESULTS_DIR if results_dir is None else Path(results_dir)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _joint_cache_paths(results_dir: Any = None) -> tuple[Path, Path, Path]:
+    base = RESULTS_DIR if results_dir is None else Path(results_dir)
+    cache_dir = base / "cache"
+    return base, cache_dir / "corr_joint_train.pt", cache_dir / "corr_joint_valid.pt"
+
+
 def _sha256_array(array: np.ndarray) -> str:
     return hashlib.sha256(np.ascontiguousarray(array).tobytes()).hexdigest()
 
@@ -147,9 +165,9 @@ def _device_payload() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def stage_cache(force: bool = False) -> dict[str, Any]:
+def stage_cache(force: bool = False, results_dir: Any = None) -> dict[str, Any]:
     """Build (or verify) the frozen 536-D correspondence caches read-only."""
-    _ensure_dirs()
+    out = _res_dir(results_dir)
     checks: dict[str, Any] = {}
     for split in ("train", "valid"):
         meta = rcrun.build_corr_cache(split, force=force)
@@ -176,7 +194,7 @@ def stage_cache(force: bool = False) -> dict[str, Any]:
         "official_test_loaded": False,
     }
     inc.official_test_blocker(payload)
-    _write_json(RESULTS_DIR / "cache_check.json", payload)
+    _write_json(out / "cache_check.json", payload)
     print(f"[cache] verified {checks['train']['n_patches']}/{checks['valid']['n_patches']}", flush=True)
     return payload
 
@@ -202,9 +220,9 @@ def load_reused_dictionary(name: str) -> np.ndarray:
     return dictionary
 
 
-def stage_verify_reused(force: bool = False) -> dict[str, Any]:
+def stage_verify_reused(force: bool = False, results_dir: Any = None) -> dict[str, Any]:
     """Verify every re-used RoleCorr-v1 artifact (SHAs + scaler refit)."""
-    _ensure_dirs()
+    out = _res_dir(results_dir)
     payload: dict[str, Any] = {
         "protocol_version": PROTOCOL_VERSION,
         "git_commit": _git_commit(),
@@ -250,7 +268,7 @@ def stage_verify_reused(force: bool = False) -> dict[str, Any]:
         payload["common_subspace_matches_frozen"] and scaler_ok
     )
     inc.official_test_blocker(payload)
-    _write_json(RESULTS_DIR / "verify_reused.json", payload)
+    _write_json(out / "verify_reused.json", payload)
     print(
         f"[verify] subspace={payload['common_subspace_matches_frozen']} "
         f"scaler_refit={scaler_ok} passed={payload['passed']}",
@@ -363,7 +381,12 @@ def _state_sha256(state: Mapping[str, torch.Tensor]) -> str:
 
 
 def _attach_arm_block(
-    data: Sequence[Any], split: str, arm: str, *, permute_seed: int | None = None
+    data: Sequence[Any],
+    split: str,
+    arm: str,
+    *,
+    permute_seed: int | None = None,
+    joint_values: np.ndarray | None = None,
 ) -> None:
     """Attach the arm-specific third-block input to a split subset (in place)."""
     if arm in (inc.ARM_CORR_ADD, inc.ARM_CORR_PCA_ADD):
@@ -375,7 +398,7 @@ def _attach_arm_block(
             values = values[rng.permutation(int(values.shape[0]))]
             _attach_values(data, split, values)
     elif arm in (inc.ARM_JOINT_SPARSE, inc.ARM_JOINT_PCA):
-        values = load_joint(split)
+        values = load_joint(split) if joint_values is None else np.asarray(joint_values)
         if permute_seed is not None:
             rng = np.random.default_rng(int(permute_seed) + 7777)
             values = values[rng.permutation(int(values.shape[0]))]
@@ -647,6 +670,7 @@ def train_arm_device(
     resume: bool = True,
     write_arm_artifacts: bool = True,
     log: bool = True,
+    model_factory: Any = None,
 ) -> dict[str, Any]:
     """One frozen-protocol run on ``_DEVICE`` with epoch-level resumability.
 
@@ -658,8 +682,9 @@ def train_arm_device(
     device = _DEVICE
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    factory = build_arm if model_factory is None else model_factory
     p2run._seed_everything(int(SEED))
-    model = build_arm(arm, reference_state=reference_state).to(device)
+    model = factory(arm, reference_state=reference_state).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=float(p2run.LEARNING_RATE),
@@ -788,7 +813,7 @@ def train_arm_device(
         k: torch.stack([epoch_states[e][k].float() for e in members]).mean(0)
         for k in epoch_states[members[0]]
     }
-    soup_model = build_arm(arm, reference_state=reference_state).to(device)
+    soup_model = factory(arm, reference_state=reference_state).to(device)
     soup_model.load_state_dict(soup_state)
     soup_valid = _evaluate_device(soup_model, eval_loader, device, mask)
     payload: dict[str, Any] = {
@@ -1026,9 +1051,10 @@ def stage_train(force: bool = False) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def _soup_model(arm: str) -> Any:
+def _soup_model(arm: str, model_factory: Any = None) -> Any:
     reference = _readout_reference_state()
-    model = build_arm(arm, reference_state=reference).to(_DEVICE)
+    factory = build_arm if model_factory is None else model_factory
+    model = factory(arm, reference_state=reference).to(_DEVICE)
     path = CHECKPOINT_DIR / f"INC-{arm}-seed0_soup_state.pt"
     if not path.exists():
         raise RuntimeError(f"soup checkpoint missing: {path}")
@@ -1455,8 +1481,7 @@ def _write_decision(summary: Mapping[str, Any]) -> None:
 # route 2 (conditional): joint 709-D encoding
 # ---------------------------------------------------------------------------
 
-JOINT_CACHE_TRAIN = RESULTS_DIR / "cache/corr_joint_train.pt"
-JOINT_CACHE_VALID = RESULTS_DIR / "cache/corr_joint_valid.pt"
+JOINT_CACHE_TRAIN, JOINT_CACHE_VALID = _joint_cache_paths()[1:]
 
 _JOINT_MEMORY: dict[str, np.ndarray] = {}
 
@@ -1484,9 +1509,9 @@ def _joint_raw_blocks(split: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return struct, sem, corr
 
 
-def stage_joint_scaler(force: bool = False) -> dict[str, Any]:
-    _ensure_dirs()
-    path = RESULTS_DIR / "joint_standardizers.json"
+def stage_joint_scaler(force: bool = False, results_dir: Any = None) -> dict[str, Any]:
+    out = _res_dir(results_dir)
+    path = out / "joint_standardizers.json"
     if path.exists() and not force:
         return _read_json(path)
     struct, sem, corr = _joint_raw_blocks("train")
@@ -1512,21 +1537,24 @@ def stage_joint_scaler(force: bool = False) -> dict[str, Any]:
     return payload
 
 
-def load_joint_scaler() -> inc.JointScaler:
-    path = RESULTS_DIR / "joint_standardizers.json"
+def load_joint_scaler(results_dir: Any = None) -> inc.JointScaler:
+    path = _res_dir(results_dir) / "joint_standardizers.json"
     if not path.exists():
         raise RuntimeError("joint_standardizers.json missing; run the `joint_scaler` stage first")
     return inc.JointScaler.from_json(_read_json(path))
 
 
-def build_joint_cache(split: str, force: bool = False) -> dict[str, Any]:
-    path = JOINT_CACHE_TRAIN if split == "train" else JOINT_CACHE_VALID
-    meta_path = RESULTS_DIR / f"cache_meta_joint_{split}.json"
+def build_joint_cache(
+    split: str, force: bool = False, results_dir: Any = None
+) -> dict[str, Any]:
+    base, train_path, valid_path = _joint_cache_paths(results_dir)
+    path = train_path if split == "train" else valid_path
+    meta_path = base / f"cache_meta_joint_{split}.json"
     if path.exists() and meta_path.exists() and not force:
         return _read_json(meta_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     struct, sem, corr = _joint_raw_blocks(split)
-    scaled = inc.apply_joint_scaler(load_joint_scaler(), struct, sem, corr)
+    scaled = inc.apply_joint_scaler(load_joint_scaler(results_dir), struct, sem, corr)
     torch.save({"joint": torch.as_tensor(scaled, dtype=torch.float32)}, path)
     report = {
         "protocol_version": PROTOCOL_VERSION,
@@ -1542,11 +1570,12 @@ def build_joint_cache(split: str, force: bool = False) -> dict[str, Any]:
     return report
 
 
-def load_joint(split: str) -> np.ndarray:
-    key = split
+def load_joint(split: str, results_dir: Any = None) -> np.ndarray:
+    _base, train_path, valid_path = _joint_cache_paths(results_dir)
+    key = f"{train_path.parent}:{split}"
     if key in _JOINT_MEMORY:
         return _JOINT_MEMORY[key]
-    path = JOINT_CACHE_TRAIN if split == "train" else JOINT_CACHE_VALID
+    path = train_path if split == "train" else valid_path
     if not path.exists():
         raise RuntimeError(f"joint cache missing: {path}; run the `joint_cache` stage first")
     blob = torch.load(path, map_location="cpu", weights_only=True)
@@ -1555,24 +1584,26 @@ def load_joint(split: str) -> np.ndarray:
     return values
 
 
-def stage_joint_objects(force: bool = False) -> dict[str, Any]:
-    """Fit the frozen K48/s12 joint dictionary and the PCA48 control (train only)."""
-    _ensure_dirs()
-    meta_path = RESULTS_DIR / "joint_objects.json"
+def stage_joint_objects(
+    force: bool = False, results_dir: Any = None, fit_pca: bool = True
+) -> dict[str, Any]:
+    """Fit the frozen K48/s12 joint dictionary (train only).
+
+    ``fit_pca=False`` skips the PCA48 dense control; a round that does not run
+    the control must not produce its object.  The default stays ``True`` so the
+    original route-2 preparation semantics are unchanged.
+    """
+    out = _res_dir(results_dir)
+    meta_path = out / "joint_objects.json"
     if meta_path.exists() and not force:
-        return _read_json(meta_path)
-    scaled = load_joint("train")
+        cached = _read_json(meta_path)
+        if fit_pca or "joint_pca48" not in cached:
+            return cached
+    scaled = load_joint("train", results_dir)
     started = time.perf_counter()
     D, info = inc.fit_joint_dictionary(scaled, log=print)
-    torch.save({"D": torch.as_tensor(D, dtype=torch.float32)}, RESULTS_DIR / "dictionary_joint.pt")
-    pca_started = time.perf_counter()
-    pca = inc.fit_joint_pca(scaled, rank=inc.JOINT_ATOMS)
-    torch.save(
-        {"mean": torch.as_tensor(pca.mean), "components": torch.as_tensor(pca.components)},
-        RESULTS_DIR / "joint_pca48.pt",
-    )
-    _write_json(RESULTS_DIR / "joint_pca48.json", pca.to_json())
-    payload = {
+    torch.save({"D": torch.as_tensor(D, dtype=torch.float32)}, out / "dictionary_joint.pt")
+    payload: dict[str, Any] = {
         "protocol_version": PROTOCOL_VERSION,
         "git_commit": _git_commit(),
         "official_test_loaded": False,
@@ -1580,47 +1611,66 @@ def stage_joint_objects(force: bool = False) -> dict[str, Any]:
             "shape": list(D.shape),
             "atoms": inc.JOINT_ATOMS,
             "sparsity": inc.JOINT_SPARSITY,
+            "iht_steps": int(inc.IHT_STEPS),
             "ksvd_epochs": inc.DICT_EPOCHS,
             "dict_seed": inc.DICT_SEED,
             "n_fit_rows": int(scaled.shape[0]),
+            "fit_split": "official train",
             "ksvd_final_fit_mse": float(info["history"][-1]["mean_sq_err"]),
+            "ksvd_history": [dict(row) for row in info["history"]],
             "sha256_f32": _sha256_array(D),
             "seconds": float(time.perf_counter() - started),
-        },
-        "joint_pca48": {
-            "shape": list(pca.components.shape),
-            "seconds": float(time.perf_counter() - pca_started),
             **_device_payload(),
         },
     }
+    if fit_pca:
+        pca_started = time.perf_counter()
+        pca = inc.fit_joint_pca(scaled, rank=inc.JOINT_ATOMS)
+        torch.save(
+            {"mean": torch.as_tensor(pca.mean), "components": torch.as_tensor(pca.components)},
+            out / "joint_pca48.pt",
+        )
+        _write_json(out / "joint_pca48.json", pca.to_json())
+        payload["joint_pca48"] = {
+            "shape": list(pca.components.shape),
+            "seconds": float(time.perf_counter() - pca_started),
+            **_device_payload(),
+        }
     inc.official_test_blocker(payload)
     _write_json(meta_path, payload)
     print(
-        f"[joint-objects] ksvd_mse={payload['dictionary_joint']['ksvd_final_fit_mse']:.6f}",
+        f"[joint-objects] ksvd_mse={payload['dictionary_joint']['ksvd_final_fit_mse']:.6f} "
+        f"pca={fit_pca}",
         flush=True,
     )
     return payload
 
 
-def load_joint_dictionary() -> np.ndarray:
-    blob = torch.load(RESULTS_DIR / "dictionary_joint.pt", map_location="cpu", weights_only=True)
+def load_joint_dictionary(results_dir: Any = None) -> np.ndarray:
+    path = _res_dir(results_dir) / "dictionary_joint.pt"
+    blob = torch.load(path, map_location="cpu", weights_only=True)
     return np.asarray(blob["D"].numpy(), dtype=np.float32)
 
 
-def load_joint_pca() -> rc.PCA16:
-    return rc.PCA16.from_json(_read_json(RESULTS_DIR / "joint_pca48.json"))
+def load_joint_pca(results_dir: Any = None) -> rc.PCA16:
+    return rc.PCA16.from_json(_read_json(_res_dir(results_dir) / "joint_pca48.json"))
 
 
-def arm_kwargs_route2(arm: str) -> dict[str, Any]:
+def arm_kwargs_route2(arm: str, results_dir: Any = None) -> dict[str, Any]:
     if arm == inc.ARM_JOINT_SPARSE:
-        return {"block_dictionary": load_joint_dictionary()}
+        return {"block_dictionary": load_joint_dictionary(results_dir)}
     if arm == inc.ARM_JOINT_PCA:
-        pca = load_joint_pca()
+        pca = load_joint_pca(results_dir)
         return {"pca_mean": pca.mean, "pca_components": pca.components}
     raise KeyError(f"arm {arm} is not a route-2 arm")
 
 
-def build_arm_route2(arm: str, *, reference_state: Mapping[str, torch.Tensor] | None = None):
+def build_arm_route2(
+    arm: str,
+    *,
+    reference_state: Mapping[str, torch.Tensor] | None = None,
+    results_dir: Any = None,
+):
     return inc.build_increment_model(
         arm=arm,
         dictionary=rcrun.sdb_dictionary(),
@@ -1628,15 +1678,15 @@ def build_arm_route2(arm: str, *, reference_state: Mapping[str, torch.Tensor] | 
         subspace=rcrun.load_subspace(),
         freeze_dictionary=True,
         reference_state=reference_state,
-        **arm_kwargs_route2(arm),
+        **arm_kwargs_route2(arm, results_dir),
     )
 
 
-def _route2_reference_state() -> dict[str, torch.Tensor]:
-    path = RESULTS_DIR / "readout_reference_state_route2.pt"
+def _route2_reference_state(results_dir: Any = None) -> dict[str, torch.Tensor]:
+    path = _res_dir(results_dir) / "readout_reference_state_route2.pt"
     if path.exists():
         return torch.load(path, map_location="cpu", weights_only=False)
-    model = build_arm_route2(inc.ARM_JOINT_SPARSE)
+    model = build_arm_route2(inc.ARM_JOINT_SPARSE, results_dir=results_dir)
     state = {
         key: value.detach().clone()
         for key, value in model.state_dict().items()
@@ -1646,16 +1696,16 @@ def _route2_reference_state() -> dict[str, torch.Tensor]:
     return state
 
 
-def run_route2(stages: Sequence[str]) -> dict[str, Any]:
+def run_route2(stages: Sequence[str], results_dir: Any = None) -> dict[str, Any]:
     print("[route2] conditional joint-encoding screen", flush=True)
     results: dict[str, Any] = {}
     if "joint_scaler" in stages:
-        results["joint_scaler"] = stage_joint_scaler()
+        results["joint_scaler"] = stage_joint_scaler(results_dir=results_dir)
     if "joint_cache" in stages:
         for split in ("train", "valid"):
-            build_joint_cache(split)
+            build_joint_cache(split, results_dir=results_dir)
     if "joint_objects" in stages:
-        results["joint_objects"] = stage_joint_objects()
+        results["joint_objects"] = stage_joint_objects(results_dir=results_dir)
     return results
 
 
