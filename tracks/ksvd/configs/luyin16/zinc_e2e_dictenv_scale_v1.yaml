@@ -1,0 +1,35 @@
+protocol_id: zinc-context-gap
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  # Single candidate: one model implementation driven by one immutable ScaleSpec.
+  # Small (m=1) = frozen latent-bridge model (106,925 parameters, never retrained).
+  # Full (m=3) = task-path widening only:
+  #   fusion 446 -> 342 -> 144; D_L [144, 288] / V_L [288, 144];
+  #   pair_projection 144 -> 48; relation encoder 15 -> 96 -> 48;
+  #   pair encoder 192 -> 192 -> 48; reader 814 -> 39 -> 39 -> 1.
+  # Fixed modules are byte-identical to Small (structural dictionary K32/s8,
+  # bindings, slot encoders, global/topology auxiliaries, C6 mask).
+  # `stage: screen` runs correctness -> CPU timing gate -> smoke -> 320-epoch
+  # Full seed-0 CPU training -> frozen probes -> analysis.
+  # The formal run starts only when the measured timing fits the 4-hour budget.
+  # See notes/zinc_e2e_dictenv_scale_v1_preregistration.md.
+  variant: scale_full
+  stage: screen
+  epochs: 320
+  scale_multiplier: 3
+  # Pre-registered resource-decision bands for the Full soup valid MAE.
+  # These are budget gates, not significance tests.
+  absolute_thresholds:
+    strong_max: 0.110
+    promising_max: 0.115
+    limited_max: 0.120
+
+runtime:
+  # Explicit device; this round is authorised as a LOCAL CPU regime only.
+  device: cpu
+  torch_threads: 8
