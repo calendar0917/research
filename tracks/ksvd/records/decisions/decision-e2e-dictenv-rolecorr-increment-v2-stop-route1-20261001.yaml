@@ -1,0 +1,63 @@
+alternatives_rejected:
+- 'Seed-1 confirmation of arm B (rejected: the pre-registered primary gate did not
+  fire, and the frozen stop rule forbids buying a seed to re-measure a sub-gate
+  result; per-molecule fraction B better = 49.3% shows there is nothing to
+  confirm anyway).'
+- 'Ignoring the gate because the descriptive A-vs-C difference is +0.003101 and
+  promoting the dense PCA16 arm by re-labelling it as the primary (rejected:
+  post-hoc promotion of an unregistered control; C also differs from A/B in
+  block family as well as content, is single-seed, and the round''s control
+  reason for training it was the auxiliary sparse-vs-dense comparison only).'
+- 'Rescuing the sparse arm (refitting D_C, changing K / sparsity / IHT steps /
+  scaler / PCA rank / width / horizon / lr) (rejected: explicitly forbidden by
+  the pre-registration; every one of those changes would need its own frozen
+  question and matched control).'
+- 'End-to-end (unfrozen-dictionary) fine-tuning of any arm (rejected: out of
+  scope for this round; the question was whether the appended frozen coordinate
+  earns its place, not whether adaptation can rescue it).'
+- 'Entering route 2 (joint 709-D environment dictionary) in the same breath
+  (rejected: its training/inference stages were deliberately not implemented in
+  this round to avoid a half-finished delivery; entering it needs fresh budget
+  and an explicit authorization, which the round does not have).'
+- 'Reading the official ZINC test split (rejected: test_access blocked, terminal
+  policy, and a valid-side negative screen licenses no terminal read).'
+because: >-
+  The round is complete and clean (revision 8244602 committed before the run,
+  tracked diff clean, all construction/correctness gates passed, smoke passed,
+  official test never instantiated) and the frozen question is answered
+  negatively: appending the frozen sparse correspondence coordinate on top of
+  the full K32/s8 structural budget improves the official-valid Top-5 soup MAE
+  by only +0.000731 over the matched appended structural control, far below the
+  pre-registered 0.003 absolute gate, even though the appended correspondence
+  block is demonstrably load-bearing (zero +0.017293, within-molecule shuffle
+  +0.018822, within-group object shuffle +0.021111; all 16 atoms active).  The
+  auxiliary sparse-vs-dense comparison also fails directionally (B - C =
+  +0.002369, C better), so the round supports neither an increment nor a sparse
+  advantage for this object/placement.  Per the pre-registration''s own stop
+  rule, route 1 stops here.
+created: '2026-10-01T12:50:00'
+decision: >-
+  STOP the E2E-DictEnv-RoleCorr-Increment-v2 route-1 round after the frozen
+  seed-0 width-49 appended-block screen returned INCREMENT_NO_MATERIAL_GAIN
+  (M_A(EXTRA-STRUCT soup) 0.126393070, M_B(CORR-ADD soup) 0.125661825,
+  improvement +0.000731 against the frozen >= 0.003 absolute gate; dense control
+  M_C(CORR-PCA-ADD soup) 0.123292468 with B - C = +0.002369).  Do not buy a
+  second seed, do not rescue K / sparsity / IKSV epochs / scaler / PCA rank /
+  width / horizon / lr, do not promote arm C post hoc into a supported claim,
+  do not fine-tune the frozen dictionaries end-to-end, and do not read the
+  official test split.  Route 2 stays prepared-but-not-entered.
+decision_id: decision-e2e-dictenv-rolecorr-increment-v2-stop-route1-20261001
+kind: decision
+revisit_if: >-
+  A NEW preregistration poses one separable question with paired seeds.  Two
+  candidates exist, neither authorised now: (i) the dense affine code of the
+  same correspondence object appended to the full structural budget as its own
+  primary candidate with the sparse arm and the matched structural arm as
+  controls (motivated only by an unregistered, single-seed +0.0031 descriptive
+  difference, so it needs paired seeds and its own gate); or (ii) the
+  conditional route 2 (frozen K48/s12 over the train-scale-balanced 709-D
+  structural-residual + Sem108 + correspondence input, versus a PCA48 control),
+  whose preparation stages already exist but whose training stages must be
+  implemented first.  Any future route reuses the frozen objects/SHAs, keeps
+  the official test closed and must not re-run this frozen screen.
+study_id: zinc-context-gap

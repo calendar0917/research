@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-rolecorr-increment-v2-ready-gpu-blocked
+phase: e2e-dictenv-rolecorr-increment-v2-no-material-gain
 updated: 2026-10-01
 
 # ---------------------------------------------------------------------------
@@ -2102,18 +2102,41 @@ e2e_dictenv_rolecorr_v1:
 # Pre-registration, implementation and focused CPU tests are frozen before the
 # first formal run; nothing may change after it.
 e2e_dictenv_rolecorr_increment_v2:
-  status: READY_GPU_BLOCKED
+  status: STOPPED_NO_MATERIAL_GAIN
   round: E2E-DictEnv-RoleCorr-Increment-v2
   protocol: zinc-context-gap
   stage: route1
+  verdict: INCREMENT_NO_MATERIAL_GAIN
   preregistration: tracks/ksvd/notes/e2e_dictenv_rolecorr_increment_v2_preregistration.md
   blocker: tracks/ksvd/notes/e2e_dictenv_rolecorr_increment_v2_blocker.md
+  analysis: tracks/ksvd/notes/e2e_dictenv_rolecorr_increment_v2_analysis.md
+  claim: claim-e2e-dictenv-rolecorr-increment-v2-no-material-gain-20261001
+  decision: decision-e2e-dictenv-rolecorr-increment-v2-stop-route1-20261001
   core_module: tracks/ksvd/experiments/luyin16/e2e_dictenv_rolecorr_increment_v2.py
   stage_runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_rolecorr_increment_v2.py
   control_plane_runner: tracks/ksvd/src/ksvd_research/runners/zinc_e2e_dictenv_rolecorr_increment_v2.py
   config: tracks/ksvd/configs/luyin16/zinc_e2e_dictenv_rolecorr_increment_v2.yaml
   tests: tracks/ksvd/tests/test_e2e_dictenv_rolecorr_increment_v2.py
-  expected_results_dir: tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/
+  results_dir: tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/
+  report: tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/REPORT.md
+  run_record: tracks/ksvd/records/runs/20261001-110113-4ed73ccc.json
+  formal_run:
+    run_id: 20261001-110113-4ed73ccc
+    commit: 8244602b2e5341d38a1dbe21b3dda6465e1debf0
+    dirty_at_run: false
+    tracked_diff_clean: true
+    untracked_at_run: two pre-existing result dirs outside this round only
+    device: cpu
+    regime_note: >-
+      pre-registration amendment 1 (2026-10-01, committed before the first
+      formal run): explicit user authorisation of the local CPU regime because
+      the remote A100 host cannot initialise CUDA at all (GPU0 wedged,
+      cuInit(0)=999).  Arms, gates, probes, seeds and stop rules unchanged; the
+      result is matched within A/B/C and is a CPU-regime result only.
+    epochs: 320
+    wall_clock_s: {EXTRA-STRUCT: 1832.5, CORR-ADD: 2165.1, CORR-PCA-ADD: 2142.7}
+    control_plane_runtime_s: 6216.9
+    official_test_loaded: false
   question: >-
     With the full frozen structural dictionary, common-1 coordinate, Sem108
     interface, C6 mask, composition, reader, optimiser and 320-epoch budget
@@ -2134,34 +2157,73 @@ e2e_dictenv_rolecorr_increment_v2:
     changes PLACEMENT only (appended instead of replacing half the structural
     budget); no new object is invented, so no mechanism-identification prereg
     is needed.
+  result:
+    M_A_best: 0.1317692947126343
+    M_A_soup: 0.12639307009795447
+    M_B_best: 0.12874732698121807
+    M_B_soup: 0.12566182507475604
+    M_C_best: 0.13017120488075307
+    M_C_soup: 0.12329246830841294
+    improvement_B_minus_A: 0.0007312450231984347
+    screen_abs_gate: 0.003
+    screen_gate_fired: false
+    B_minus_C: 0.002369356766343103
+    sparse_advantage: false
+    per_molecule_B_better_fraction: 0.493
+    mechanism:
+      G_block_zero_B: 0.017293090449646137
+      G_block_shuffle_B: 0.018821782985143386
+      G_object_shuffle_B: 0.021111250384710734
+      block_load_bearing_B: true
+      base_path_shared: {effective_atoms: 21.481621053035575, exact_l0_mean: 8.0, active_atoms: 31}
+      block_usage_B: {active_atoms: 16, effective_atoms: 7.885437668526688, exact_l0_mean: 2.2804661439154357, top1_share: 0.5306502620976477}
+    descriptive_unregistered:
+      M_A_minus_M_C: 0.0031006017895415425
+      note: >-
+        arm C of the same object is 0.0031 lower in mean soup MAE than the
+        structural control A, and 0.0024 lower than the sparse arm B; NOT a
+        pre-registered primary comparison, single seed, and C differs from A/B
+        in block family as well as content (dense continuous 16-D vs exact
+        l0<=4 atoms).  Recorded as a thread a future preregistration may pose
+        as its own primary question; never as a claim of this round.
   implementation_verified:
     unit_tests: 13 passed (tracks/ksvd/tests/test_e2e_dictenv_rolecorr_increment_v2.py)
-    local_integration: >-
-      full stage-runner dry run on local CPU with a temporary results dir and a
-      2-epoch toy budget; cache/verify/pca16/correctness/smoke/train/
-      interventions/analysis all completed, correctness all_passed=true; not a
-      formal run and not recorded as evidence for the scientific gate.
+    correctness_gates: all_passed=true (geometry, bit-identical base/appended codes, binding extension, shared init, purity, freezing, wiring)
+    smoke: passed=true (finite loss, gradients on readout/bindings/appended rows, no gradients on frozen dictionaries)
+    note: >-
+      unit tests and a temporary-results-dir 2-epoch integration dry run were
+      executed before the formal run; the formal run itself is the evidence.
   device_policy:
-    formal: remote physical GPU1 only, exposed as logical cuda:0 (CUDA_VISIBLE_DEVICES=1)
-    forbidden: remote GPU0 (currently wedged at the driver level)
-    cpu_regime: preserved for scratch/validation only; correctness and smoke caches
-      are device-keyed and analysis refuses mixed-device runs
-  blocked_on: >-
+    as_run: local CPU (8 torch threads), user-authorised by amendment 1
+    formal_alternative: remote physical GPU1 only, exposed as logical cuda:0 (CUDA_VISIBLE_DEVICES=1), never GPU0
+    guard: correctness and smoke caches are device-keyed; interventions/analysis refuse runs from a different device
+  environment_blocker: >-
     remote host `res` cannot initialise CUDA: GPU0 (0000:4b:00.0,
     GPU-5b51f95e-...) is in a driver-level failed state (nvidia-smi "Unknown
     Error", cuInit(0)=999 CUDA_ERROR_UNKNOWN), which makes the healthy GPU1
     (0000:b1:00.0, GPU-7c4f57e5-...) unreachable through CUDA; no sudo.  Fix
     needs root: nvidia-smi --gpu-reset -i 0, or nvidia module reload, or reboot.
-  not_yet_run:
-    - route-1 formal A/B/C 320-epoch screen (no official-valid model selection has happened)
-    - route-2 joint environment dictionary (conditional on a route-1 gate miss)
+  not_run:
+    - route-2 joint environment dictionary (gate condition met, but its training stages were deliberately not implemented and it needs fresh explicit authorisation + budget)
   not_claimed:
-    - any performance statement about the appended correspondence coordinate
+    - any material increment of the appended sparse correspondence coordinate over the matched structural block (it did not reach the gate)
+    - that the correspondence object is dead code (it is load-bearing inside B) or that its information has no value under other encodings
+    - the descriptive dense-control thread (A-vs-C) as a supported result
     - any statement about route 2, other widths, horizons, fresh seeds or the official test
   forbidden_without_new_preregistration:
+    - seed 1 of any arm, or any rerun/rescue of this frozen screen
     - changing arms, gates, epochs, seeds, lr, lambda, width or binding extension rule
+    - promoting arm C post hoc into a supported claim
+    - end-to-end (unfrozen-dictionary) fine-tuning of any arm
     - reading the official test for this round
     - any K/s/LR/horizon rescue after the frozen gate
+  revisit_if: >-
+    new preregistration only: (i) dense affine code of the same correspondence
+    object appended to the full structural budget as its own primary candidate
+    with paired seeds (motivated by an unregistered single-seed +0.0031
+    descriptive difference), or (ii) conditional route 2 (K48/s12 over the
+    train-scale-balanced 709-D structural-residual + Sem108 + correspondence
+    input vs PCA48), whose preparation stages exist.
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24

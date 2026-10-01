@@ -1,0 +1,92 @@
+claim_id: claim-e2e-dictenv-rolecorr-increment-v2-no-material-gain-20261001
+contradicting_evidence: []
+created: '2026-10-01T12:48:00'
+implication: >-
+  Under a matched width-49 interface that keeps the full frozen K32/s8 structural
+  budget, the frozen sparse correspondence dictionary does not buy accuracy over
+  matched extra-structural capacity; the correspondence channel is nonetheless
+  causally used, and the descriptive dense PCA16 control of the same object did
+  move the mean by +0.0031 over the structural control (single seed, unregistered),
+  which is the only thread a future preregistration could pick up (with paired
+  seeds, as its own primary question), not a rescue of this round.
+kind: claim
+limitations:
+- 'Single seed, single trajectory per arm, no significance testing; the frozen
+  gate is an absolute soup-MAE screen (>= 0.003), not a significance test, and
+  the official test split was never read.'
+- 'CPU regime (preregistration amendment 1, user-authorised because the remote
+  A100 host could not initialise CUDA). The result is matched within A/B/C and
+  comparable to other CPU-regime runs, but not to historical A100 numbers as
+  if the regime were identical.'
+- 'The A-vs-C difference (C better by +0.003101 mean soup MAE, median per-molecule
+  delta -0.001380, C better in 51.2% of molecules) was NOT a pre-registered
+  primary comparison: C is the dense affine PCA16 control of the same
+  correspondence object, and its block differs from A/B in family as well as in
+  content (continuous 16-D dense code with no atomic l0 constraint, versus an
+  exact l0 <= 4 selection of 16 frozen atoms). It is a descriptive observation
+  with a single seed that merely sits at the round''s gate magnitude.'
+- 'The appended-block probes show the correspondence block is used, so the
+  negative primary result is "the increment is not material under this frozen
+  sparse encoding", not "the correspondence object is useless" and not "the
+  coordinate is dead code".'
+- 'Only the frozen placement/encoding choices of this round are tested: the
+  full K32/s8 structural budget, appended width 16, K16/s4 IHT with 10 steps,
+  frozen D_S / D_C / scaler, 320 epochs, Top-5 soup, seed 0. Other widths,
+  sparsities, dictionaries, horizons or objects are untouched.'
+- 'Trainable parameter counts are exactly equal across arms (99,469) but total
+  parameter counts differ (102,589 / 110,125 / 101,549 for A / B / C) because
+  the frozen block dictionaries differ in shape; only the trainable budget and
+  the shared initialisation are matched.'
+scope: >-
+  Preregistration, core module, stage runner, control-plane runner, config and
+  focused tests committed BEFORE the run (revision 8244602b2e5341d38a1dbe21b3dda6465e1debf0,
+  execution-regime amendment committed as 8244602; tracked diff clean at run
+  time, only pre-existing untracked result directories present).  Single seed-0
+  trajectory per arm on official ZINC train 10000 / official valid 1000; 320
+  epochs, batch 128, Adam lr 1e-3, weight_decay 1e-5, clip 5.0, Top-5 soup by
+  official valid; width-49 coordinate [c~ (1); frozen SDB K32/s8 alpha_base (32);
+  appended block (16)] with a bit-identical readout initialisation over all 48
+  shared tensors and zero-initialised appended binding rows; the official test
+  split was never instantiated (test_access blocked, official_test_loaded=false);
+  no seed/horizon/width/lr/K/sparsity/scaler/PCA-rank rescue.
+statement: >-
+  Holding the full frozen SDB K32/s8 structural coordinate and the frozen
+  common-1 coordinate fixed, appending the frozen sparse dictionary code of the
+  536-D role<->attribute correspondence object (arm B, RoleCorr D_C in
+  R^{536x16}, s=4, frozen scaler) does NOT reach the pre-registered absolute
+  soup-MAE gate against the matched appended structural control (arm A, frozen
+  RoleCorr D_S residual block of the same width 16): M_A(soup) = 0.126393070,
+  M_B(soup) = 0.125661825, improvement = +0.000731 (< 0.003, gate not fired;
+  best valid 0.1317693 @ epoch 288 vs 0.1287473 @ epoch 317).  The correspondence
+  block is nonetheless load-bearing inside arm B: zeroing it costs +0.017293
+  MAE, shuffling it within each molecule costs +0.018822 (5 seeds 11/22/33/44/55),
+  and the frozen within-group attribute-permuted object costs +0.021111 (5 seeds
+  101/202/303/404/505), all above the pre-registered clear threshold (0.010),
+  with all 16 block atoms active (effective atoms 7.89, exact l0 mean 2.28,
+  top1 share 0.531) and the base 32-coordinate path bit-identical across arms
+  (effective atoms 21.48, exact l0 mean 8.0).  The paired per-molecule difference
+  is a wash (B better in 49.3% of molecules; mean delta -0.000731, median
+  +0.000621).  The auxiliary sparse-vs-dense comparison does not support a
+  sparse advantage: the dense PCA16 arm C of the same object reached
+  M_C(soup) = 0.123292468 (B - C = +0.002369, tolerance 0).  Descriptively
+  (not a pre-registered primary comparison, single seed), C was also 0.003101
+  lower in mean soup MAE than arm A, i.e. at the magnitude of this round's gate.
+status: tentative
+study_id: zinc-context-gap
+supporting_evidence:
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/REPORT.md
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/DECISION.md
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/summary.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/interventions.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/run_EXTRA-STRUCT.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/run_CORR-ADD.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/run_CORR-PCA-ADD.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/soup_EXTRA-STRUCT.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/soup_CORR-ADD.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/soup_CORR-PCA-ADD.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/correctness.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/smoke.json
+- tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/per_molecule_errors.npz
+- tracks/ksvd/notes/e2e_dictenv_rolecorr_increment_v2_preregistration.md
+- tracks/ksvd/notes/e2e_dictenv_rolecorr_increment_v2_analysis.md
+- tracks/ksvd/records/runs/20261001-110113-4ed73ccc.json
