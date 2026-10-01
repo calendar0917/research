@@ -1,0 +1,162 @@
+claim_id: claim-e2e-dictenv-latent-bridge-v1-borderline-near-dense-code-no-control-20261001
+contradicting_evidence:
+- >-
+  The insertion topology makes the intervention deltas weak evidence of value:
+  zeroing the code sets E = 0 and removes the whole local encoding from the
+  readout, so the +1.185274 MAE is expected by construction, and the
+  reset-to-init +1.231997 shows only that the trained dictionary differs from
+  the frozen frame, not that it is better than any trained alternative.
+- >-
+  The code is near-dense at the endpoint (mean non-zero 89.10/96, fraction
+  0.928, p50 89, p95 94), so the round cannot claim sparse dictionary coding in
+  this lambda regime; it measures a low-dimensional soft-threshold re-encoding,
+  and the "dictionary" interpretation is structural, not sparse.
+- >-
+  The training-loop fit at epoch 320 is essentially identical to the Sem108
+  parent (0.085155 vs 0.085076), i.e. the bridge did not buy fitting capacity;
+  the small endpoint difference is at the level single-seed noise, and the
+  same-protocol train-to-valid gap is +0.065926, so no generalisation benefit
+  is demonstrated either.
+- >-
+  The round did not run seed 1, a matched parameter-count dense/random adapter,
+  a no-bridge rerun, or any K/s/lambda/steps variation; the borderline endpoint
+  is 0.001058 above the promising edge and 0.002242 below the stop edge, both
+  far below any resolution this design could claim.
+created: '2026-10-01T23:05:00'
+evidence:
+- tracks/ksvd/notes/zinc_e2e_dictenv_latent_bridge_v1_preregistration.md
+- tracks/ksvd/notes/zinc_e2e_dictenv_latent_bridge_v1_analysis.md
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/REPORT.md
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/DECISION.md
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/summary.json
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/run_seed0.json
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/soup.json
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/mechanism/bridge_probes.json
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/mechanism/dictionary_health.json
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/dev/acceptance.json
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/dev/short_trainability.json
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/correctness.json
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/smoke.json
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/audit/audit_decision.json
+- tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/preflight.json
+- tracks/ksvd/experiments/luyin16/e2e_dictenv_latent_bridge_v1.py
+- tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_latent_bridge_v1.py
+- tracks/ksvd/tests/test_e2e_dictenv_latent_bridge_v1.py
+- records/runs/20261001-220925-9bbcc5c9.json
+implication: >-
+  The Sem108 + low-dimensional task-dictionary bridge route is CLOSED as an
+  unconfirmed borderline candidate: it is usable (trained, load-bearing) but not
+  demonstrated to be valuable (borderline absolute performance, near-dense code
+  at the frozen lambda regime, no matched control, single seed).  No rescue
+  (K/s/lambda/steps/dim), no seed 1 and no post-hoc control is authorised under
+  this round.  A continuation requires a new pre-registration that either buys
+  confirmation (seed 1 + parameter-matched dense/random adapter + paired seeds
+  for a performance claim) or changes the local object / learning objective per
+  the task package's section 6 warning against iterating K/s/lambda on this
+  representation.  The proven-live insertion point (fusion output h) remains a
+  building block, but must never be presented as a gain of this round.
+kind: claim
+limitations:
+- >-
+  Single seed, single trajectory, no control arm (no parameter-matched dense or
+  random adapter, no no-bridge rerun, no shuffled-dictionary arm), so no
+  increment, sparsity or dictionary-vs-dense causal statement is made; the
+  frozen absolute band is the only endpoint rule applied.
+- >-
+  The zero-code / permutation / reset probes are sensitivity statements inside
+  this one model: they show the bridge channel carries prediction, not that
+  learning D_L / V_L beats a matched trained alternative.
+- >-
+  Sem108 0.123705 (and T1 0.125765, FINAL-CLEAN-C6 0.128499, CSSD-q1 0.130028,
+  P1-sparse 0.131975) are unmatched historical background: the candidate adds
+  9,216 parameters and the comparison is a single seed, so the +0.002647
+  difference is NOT a causal or significant improvement in either direction.
+- >-
+  CPU regime (runtime.device=cpu, 8 threads) on a single authoring machine; one
+  bridge geometry only (d 48, K 96, 16 unrolled ISTA steps, lambda1 0.05,
+  lambda2 0.01, tied V_L), no K / s / lambda / steps / width / horizon / lr
+  variation authorised; the frozen Sem108 body, relations and readout were
+  never modified.
+- >-
+  The short-trainability parent-vs-candidate gap (0.362907 vs 0.317501 at 40
+  epochs) is scratch/dev evidence outside the formal chain and is not used as a
+  claim.
+scope: >-
+  Pre-registration committed before the formal run (preregistration commit
+  039355e, runner stage-mapping fix 34d7c0e, endpoint patch 9d4cbed; prereg sha
+  00faf4d52b98 enforced by preflight).  One candidate only, seed 0, 320 epochs,
+  batch 128, Adam lr 1e-3 / weight_decay 1e-5 / clip 5.0, fixed LR, Top-5 soup
+  by official valid, local CPU 8 threads; Sem108 body 97,709 params + bridge
+  9,216 (D_L 48x96, V_L 96x48) = 106,925; official ZINC train 10000 / official
+  valid 1000; the official test split was never instantiated
+  (official_test_loaded false); no seed 1, no control arm, no sweep.  Formal
+  screen run 20261001-220925-9bbcc5c9 (train wall 2434.8 s, 7.609 s/epoch,
+  peak RSS 2313.1 MB, plus 61.3 s interventions/analysis).
+statement: >-
+  The single authorised candidate of this round — the frozen Sem108 model with
+  one shared low-dimensional task dictionary inserted at the fusion output
+  (h[48] -> rho-normalised 16-step unrolled ISTA -> alpha[96] -> E = rho * alpha
+  @ V_L[48], D_L 48x96 / V_L 96x48, 9,216 new parameters, no bypass, static
+  relations and readout unchanged) — reached an official-valid soup MAE of
+  0.12105831989 (best single epoch 0.12997499 @ 309, Top-5 soup members
+  285/296/303/307/309) under the local CPU seed-0 regime, landing in the
+  pre-registered borderline band (0.120 < M_S <= 0.1233): 0.001058 above the
+  promising edge and 0.002242 below the stop edge, so the frozen confirmation
+  rule (M_S <= 0.120 with a learned dictionary) was NOT met and no seed 1,
+  control arm, rescue or sweep is authorised.  The mechanism statement is
+  positive and separate: D_L / V_L moved 5.7622 / 5.6371 from the frozen frame
+  and both receive non-zero MAE-only task gradients (0.2694 / 0.2401 at the
+  endpoint), zeroing the bridge code costs +1.185274 valid MAE (prediction-RMS
+  +1.696537), a 5-seed within-molecule code permutation costs +0.288035
+  (+0.473635) and resetting D_L / V_L to init costs +1.231997 (+1.809348).
+  The measured limitation is that the code is near-dense at the endpoint (mean
+  non-zero 89.10/96, fraction 0.928, p50 89, p95 94), so this round cannot call
+  the bridge a sparse code, and the +0.002647 difference against the unmatched
+  Sem108 background (0.123705) is not a causal increment because the candidate
+  adds 9,216 parameters and no matched control was run.  The borderline band
+  result and the positive liveness result are two separate statements and must
+  not be merged.
+status: tentative
+study_id: zinc-context-gap
+supporting_evidence:
+- >-
+  Endpoint and band: soup 0.12105831989 (members 285/296/303/307/309 = 0.131193
+  / 0.131298 / 0.131306 / 0.130226 / 0.129975), best 0.12997499 @ 309, valid
+  first/last 0.588556 / 0.140250, training-loop train min 0.080422 @ 310, final
+  train 0.085155; same-protocol soup train MAE 0.055133 (gap +0.065926);
+  320/320 epochs, 7.609 s/epoch, 2434.8 s, peak RSS 2313.1 MB; background
+  Sem108 soup 0.123705 (difference +0.002647, unmatched).
+- >-
+  Zero-training acceptance audit (dev/acceptance.json, one real official-train
+  batch of 32, no training, test never loaded): all 13 gates passed —
+  lambda1 = lambda2 = 0 identity relative L2 1.23e-07, prediction max diff
+  8.3e-07 vs the Sem108 parent, formal-init composite relative squared error
+  0.00236, init MAE-only gradients D_L 1.03 / V_L 1.07, Adam delta 0.068, small
+  SGD step loss 1.604 -> 0.963, exactly one bridge call on both paths, unary
+  and pair outputs exact, relabel 1.57e-05, batch offset 4.5e-08, endpoint swap
+  0, relation no-writeback 0, zero-code E = 0 with live deltas, test blocker
+  raises.
+- >-
+  Mechanism at the frozen soup state (mechanism/bridge_probes.json): D_L / V_L
+  movement 5.7622 / 5.6371, endpoint MAE-only task gradients 0.269395 /
+  0.240133 (0.720755 / 0.758306 already at epoch 1); zero-code delta MAE
+  +1.185274 (prediction RMS +1.696537), 5-seed within-molecule permutation mean
+  delta MAE +0.288035 (RMS +0.473635), reset-to-init delta MAE +1.231997
+  (RMS +1.809348); code density mean non-zero 89.10/96 (fraction 0.928101, p50
+  89.0, p95 94.0, max 96, n = 2998 objects), low-dimensional diagnostic
+  reconstruction mean relative 0.004798 (p95 0.010850), structural dictionary
+  health active atoms 31/32 with effective atoms 18.82, top-1 usage share
+  0.818958, valid reconstruction relative residual 0.976955.
+- >-
+  Formal chain before training: references (Sem108 background 0.123705), audit
+  PROCEED with T1_BLOCK_AUDIT_UNAVAILABLE (durable-state limitation, no T1
+  retraining), preflight exact parameter audit 97,709 + 9,216 = 106,925 with
+  prereg sha 00faf4d52b98, correctness all gates passed, smoke passed (8
+  epochs, best valid 0.665411).
+- >-
+  Provenance: preregistration and code committed before the formal run
+  (039355e + 34d7c0e + 9d4cbed; the two earlier local attempts of 2026-10-01
+  were discarded before training or interrupted for the endpoint patch and
+  contributed no results); formal screen run 20261001-220925-9bbcc5c9; vendored
+  reference package latent_bridge_reference/v1_20261001 with sha256 README;
+  official_test_loaded false throughout.

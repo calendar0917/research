@@ -1,0 +1,157 @@
+alternatives_rejected:
+- >-
+  Buying a second seed for this candidate.  Rejected: the pre-registered
+  confirmation rule requires M_S <= 0.120 AND a learned dictionary before seed 1
+  is considered; the endpoint is 0.121058 (borderline, 0.001058 above the
+  edge), so seed 1 would buy a variance estimate for a configuration that did
+  not clear its own gate.
+- >-
+  Building a matched control post hoc (parameter-matched dense adapter, random
+  or frozen bridge, no-bridge rerun) to reinterpret the borderline endpoint or
+  the +0.002647 difference against Sem108.  Rejected: a post-hoc arm is not
+  pre-registered and could not ground a performance claim in either direction;
+  the round's question (absolute band of one frozen candidate) is already
+  answered.
+- >-
+  Rescuing the run (dictionary size K, sparsity/lambda regime, more or fewer
+  IHT steps, d != 48, learning rate, horizon, dropout, refitting the frozen
+  scaler or the Sem108 body).  Rejected: each is a new candidate, the
+  pre-registration forbids them in this round, and the task package's section 6
+  explicitly warns against iterating K/s/lambda on this representation after a
+  non-promising outcome.
+- >-
+  Reading the intervention deltas (+1.185 zero-code, +0.288 permutation, +1.232
+  reset-to-init) as evidence that dictionary learning beats a matched trained
+  alternative.  Rejected: they are sensitivity statements inside one model, and
+  the insertion topology guarantees a large zero-code delta because E = 0
+  removes the whole local encoding from the readout.
+- >-
+  Reading the +0.002647 difference against Sem108 0.123705 (or the other
+  historical numbers T1 0.125765, FINAL-CLEAN-C6 0.128499, CSSD-q1 0.130028,
+  P1-sparse 0.131975) as a causal increment.  Rejected: the candidate adds
+  9,216 parameters, the comparison is single-seed and unmatched, and the
+  training-loop fit at epoch 320 is essentially identical to the parent
+  (0.085155 vs 0.085076).
+- >-
+  Fixing the near-dense code with post-hoc thresholding or a top-k readout at
+  evaluation time.  Rejected: the code density is a measured endpoint property
+  of the frozen lambda regime, not a defect to repair after the fact; any
+  sparsity intervention would be a new candidate and would invalidate the
+  frozen comparison.
+- >-
+  Reading the official ZINC test split for a borderline candidate.  Rejected:
+  screen-mode discipline (test blocked) and the frozen band rule; the test was
+  never instantiated (official_test_loaded false).
+because: >-
+  The frozen candidate was implemented, gated by the zero-training acceptance
+  audit and a smoke stage, trained for the full 320 epochs on the official
+  train split and evaluated once on the official valid split through the new
+  control-plane runner; the pre-registered band rule returned the borderline
+  band, which by the pre-registered confirmation rule does not authorise seed 1
+  or matched controls.  The mechanism diagnostics are positive but only
+  establish channel liveness and dictionary movement, not comparative value;
+  the near-dense code measurement additionally blocks any sparse-coding
+  reading.  The round therefore closes with both statements recorded separately
+  and no further runs.
+created: '2026-10-01T23:10:00'
+decision: >-
+  Close the E2E-DictEnv-Latent-Bridge-v1 round after seed 0
+  (`LATENT_BRIDGE_BORDERLINE`) without seed 1, without a matched control, and
+  without tuning dictionary size / sparsity / steps / lambda.  Record the band
+  result (soup official-valid MAE 0.12105831989, best 0.12997499 @ 309,
+  borderline 0.120 < M_S <= 0.1233; background Sem108 0.123705 unmatched) and,
+  separately, the mechanism result (learned: D_L / V_L movement 5.7622 / 5.6371
+  with MAE-only gradients 0.269395 / 0.240133; load-bearing: zero-code +1.185274,
+  permutation +0.288035, reset-to-init +1.231997 MAE; near-dense code mean
+  non-zero 89.10/96).  Do not merge the two readings, do not present the result
+  as an improvement over Sem108 or as sparse coding, and do not continue this
+  representation by iterating K/s/lambda.  Any continuation requires a new
+  pre-registration that buys either confirmation (seed 1 + parameter-matched
+  dense/random adapter + paired seeds) or a different local object / learning
+  objective.
+decision_id: decision-e2e-dictenv-latent-bridge-v1-close-borderline-after-seed0-20261001
+kind: decision
+protocol: >-
+  Local CPU only (runtime.device=cpu, 8 threads), official ZINC train 10000 /
+  official valid 1000, official test never instantiated.  Pre-registration and
+  code committed before the formal run (039355e + 34d7c0e, endpoint patch
+  9d4cbed; prereg sha 00faf4d52b98 enforced by preflight).  Formal stages
+  executed through the new control-plane runner
+  `zinc_e2e_dictenv_latent_bridge_v1` (screen run 20261001-220925-9bbcc5c9,
+  train wall 2434.8 s at 7.609 s/epoch, plus 61.3 s interventions/analysis;
+  two earlier local attempts of 2026-10-01 were discarded before training or
+  interrupted for the endpoint patch and contributed no results).  One
+  candidate, seed 0, 320 epochs, batch 128, Adam lr 1e-3 / wd 1e-5 / clip 5.0,
+  fixed LR, Top-5 soup by valid MAE, no early stop, no control arm, no sweep.
+  Separately: 10 focused local tests, a 13-gate zero-training acceptance audit,
+  a correctness stage (all gates passed), a smoke stage (8 epochs on
+  2048/512), a 40-epoch paired short-trainability dev check and inference-only
+  mechanism probes at epochs 1/20/40/80/160/240/320.
+results:
+  verdict: LATENT_BRIDGE_BORDERLINE
+  absolute_band: LATENT_BRIDGE_BORDERLINE
+  soup_valid_mae: 0.12105831989174476
+  best_valid_mae: 0.12997498991707107
+  best_epoch: 309
+  soup_members: [285, 296, 303, 307, 309]
+  soup_member_valid_mae: [0.1311928801414906, 0.13129826574394246, 0.13130574494967004, 0.13022567288478604, 0.12997498991707107]
+  valid_first: 0.5885562009894638
+  valid_last: 0.1402500635301112
+  soup_train_mae_same_protocol: 0.055132780224084854
+  train_valid_gap: 0.0659255396676599
+  train_min_mae: 0.080422
+  epochs_run: 320
+  seconds_per_epoch: 7.608750025025074
+  wall_clock_s: 2434.8000080080237
+  peak_rss_mb: 2313.05078125
+  sem108_body_parameters: 97709
+  bridge_parameters: 9216
+  candidate_parameters: 106925
+  sem108_background_soup_mae: 0.123704927947314
+  delta_vs_sem108_background: 0.0026466080555692384
+  bridge_learned: true
+  bridge_load_bearing: true
+  bridge_task_grad_D_L: 0.26939523220062256
+  bridge_task_grad_V_L: 0.24013327062129974
+  bridge_D_L_movement_frobenius: 5.762197971343994
+  bridge_V_L_movement_frobenius: 5.637075901031494
+  zero_bridge_code_delta_mae: 1.1852742657065392
+  zero_bridge_code_delta_pred_rms: 1.6965370178222656
+  permutation_mean_delta_mae: 0.28803536742925645
+  permutation_mean_delta_pred_rms: 0.4736353099346161
+  reset_to_init_delta_mae: 1.2319966778159142
+  reset_to_init_delta_pred_rms: 1.8093483448028564
+  code_mean_nonzero: 89.09773182121414
+  code_l0_p50: 89.0
+  code_l0_p95: 94.0
+  low_dim_reconstruction_mean_relative: 0.004797861194335604
+  correctness_all_passed: true
+  smoke_passed: true
+  official_valid_loaded: true
+  official_test_loaded: false
+  screen_run: 20261001-220925-9bbcc5c9
+  revision: 9d4cbedf69adf6e15d4dbfa2cdefab65306b8f61
+revisit_if: >-
+  Revisit only with a new pre-registration that either (a) buys confirmation of
+  this exact candidate — a second paired seed plus a parameter-matched control
+  (dense 48x96x48 adapter, random/frozen bridge, no-bridge rerun) under one
+  protocol, with the band rule and the code-density report pre-declared — or
+  (b) changes the local object / learning objective instead of iterating
+  K / s / lambda on this representation, per the task package's section 6.  A
+  future round may reuse the proven-live insertion point (fusion output h) and
+  the moved-but-near-dense dictionary as building blocks, but must not present
+  that as a gain of this round, and must not read the unmatched +0.002647
+  background difference as an increment without a matched control.
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The previous round showed that a live hierarchical static relation dictionary
+  can be learned but loses on absolute performance (soup 0.182343 vs the Sem108
+  background 0.123705).  This round asked the narrower question the task
+  package posed: with the effective Sem108 local encoding, static relations and
+  readout frozen, does one shared low-dimensional task dictionary inserted at
+  the fusion output (h[48] -> alpha[96] -> E[48], tied unrolled ISTA, 9,216 new
+  parameters) reach the pre-registered absolute bands on a single seed-0 screen,
+  and is the inserted dictionary actually learned and used?  Both questions were
+  answered at the frozen endpoint before any rescue or control was considered:
+  the candidate landed in the borderline band, and the bridge is learned and
+  load-bearing but near-dense and unvalidated against any matched alternative.

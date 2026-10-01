@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-hier-relation-v1-stop-band-live-channel
+phase: e2e-dictenv-latent-bridge-v1-borderline-unconfirmed
 updated: 2026-10-01
 
 # ---------------------------------------------------------------------------
@@ -2519,6 +2519,115 @@ e2e_dictenv_hier_relation_v1:
     from this round.
 
 # ---------------------------------------------------------------------------
+# E2E-DictEnv-Latent-Bridge-v1 (2026-10-01, local CPU, revision 9d4cbed) is
+# CLOSED with verdict LATENT_BRIDGE_BORDERLINE: the single authorised candidate
+# (frozen Sem108 body 97,709 params + one shared low-dimensional task
+# dictionary at the fusion output, h[48] -> rho-normalised 16-step unrolled
+# ISTA -> alpha[96] -> E = rho*alpha@V_L[48], D_L 48x96 / V_L 96x48, 9,216 new
+# parameters, no bypass, static relations and readout unchanged) reached soup
+# official-valid MAE 0.121058 (best 0.129975 @309), i.e. 0.001058 ABOVE the
+# 0.120 promising edge and 0.002242 BELOW the 0.1233 stop edge.  The frozen
+# confirmation rule (M_S <= 0.120 with a learned dictionary) was NOT met, so no
+# seed 1, no matched control, no K/s/lambda sweep, no rescue, no official-test
+# read.  The mechanism statement is separate and positive (D_L/V_L moved
+# 5.7622/5.6371 with MAE-only task gradients 0.269/0.240; zero-code +1.185,
+# permutation +0.288, reset-to-init +1.232 MAE) but the code is near-dense
+# (mean 89.10/96 non-zero) and the +0.002647 difference against the unmatched
+# Sem108 background (0.123705) is not a causal increment (+9,216 parameters,
+# single seed).
+# ---------------------------------------------------------------------------
+e2e_dictenv_latent_bridge_v1:
+  status: STOPPED_BORDERLINE_UNCONFIRMED
+  round: zinc-e2e-dictenv-latent-bridge-v1
+  protocol: zinc-context-gap
+  verdict: LATENT_BRIDGE_BORDERLINE
+  absolute_band: LATENT_BRIDGE_BORDERLINE
+  preregistration: tracks/ksvd/notes/zinc_e2e_dictenv_latent_bridge_v1_preregistration.md
+  analysis: tracks/ksvd/notes/zinc_e2e_dictenv_latent_bridge_v1_analysis.md
+  claim: claim-e2e-dictenv-latent-bridge-v1-borderline-near-dense-code-no-control-20261001
+  decision: decision-e2e-dictenv-latent-bridge-v1-close-borderline-after-seed0-20261001
+  core_module: tracks/ksvd/experiments/luyin16/e2e_dictenv_latent_bridge_v1.py
+  stage_runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_latent_bridge_v1.py
+  control_plane_runner: tracks/ksvd/src/ksvd_research/runners/zinc_e2e_dictenv_latent_bridge_v1.py
+  config: tracks/ksvd/configs/luyin16/zinc_e2e_dictenv_latent_bridge_v1.yaml
+  tests: tracks/ksvd/tests/test_e2e_dictenv_latent_bridge_v1.py
+  vendor_reference: tracks/ksvd/experiments/luyin16/latent_bridge_reference/v1_20261001/
+  results_dir: tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/
+  report: tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/REPORT.md
+  decision_report: tracks/ksvd/results/e2e_dictenv_latent_bridge_v1/DECISION.md
+  prereg_commit: 039355e
+  formal_commit: 9d4cbedf69adf6e15d4dbfa2cdefab65306b8f61
+  formal_run:
+    run_id: 20261001-220925-9bbcc5c9
+    mode: screen
+    device: cpu
+    threads: 8
+    run_record: tracks/ksvd/records/runs/20261001-220925-9bbcc5c9.json
+    runtime_s: 2496.1
+    epochs: 320
+    wall_clock_s: 2434.8
+    seconds_per_epoch: 7.609
+    peak_rss_mb: 2313.1
+    official_test_loaded: false
+  candidate:
+    tag: LATENT-BRIDGE
+    body: frozen Sem108 local encoding, static relations, readout
+    bridge_dim: 48
+    bridge_atoms: 96
+    bridge_steps: 16
+    lambda1: 0.05
+    lambda2: 0.01
+    encoder: unrolled ISTA, tied V_L, rho-normalised, detached step
+    body_parameters: 97709
+    bridge_parameters: 9216
+    trainable_parameters: 106925
+    seed: 0
+    soup: top-5 by official valid
+  result:
+    soup_valid_mae: 0.12105831989174476
+    soup_members: [285, 296, 303, 307, 309]
+    soup_member_valid_mae: [0.1311928801414906, 0.13129826574394246, 0.13130574494967004, 0.13022567288478604, 0.12997498991707107]
+    best_valid_mae: 0.12997498991707107
+    best_epoch: 309
+    valid_first: 0.5885562009894638
+    valid_last: 0.1402500635301112
+    train_min_mae: 0.080422
+    soup_train_mae_same_protocol: 0.055132780224084854
+    train_valid_gap: 0.0659255396676599
+    band_thresholds: {strong: 0.115, promising: 0.12, borderline: 0.1233}
+    sem108_background_soup_mae: 0.123704927947314
+    delta_vs_sem108_background: 0.0026466080555692384
+    recommendation: >-
+      close — borderline (0.001058 above the promising edge); the frozen
+      confirmation rule (M_S <= 0.120) was not met, so no seed 1, no matched
+      control, no K/s/lambda sweep, no official-test read.
+  mechanism_separate_statement:
+    bridge_learned: true
+    bridge_load_bearing: true
+    task_grad_D_L: 0.26939523220062256
+    task_grad_V_L: 0.24013327062129974
+    movement_frobenius: {D_L: 5.762197971343994, V_L: 5.637075901031494}
+    intervention_delta_mae: {zero_code: 1.1852742657065392, permutation_mean: 0.28803536742925645, reset_to_init: 1.2319966778159142}
+    intervention_delta_pred_rms: {zero_code: 1.6965370178222656, permutation_mean: 0.4736353099346161, reset_to_init: 1.8093483448028564}
+    code_density: {mean_nonzero: 89.09773182121414, fraction: 0.9281013731376473, p50: 89.0, p95: 94.0, max: 96.0}
+    low_dim_reconstruction_mean_relative: 0.004797861194335604
+    reading: >-
+      learned and load-bearing, but near-dense at the frozen lambda regime and
+      without any matched control; the intervention deltas establish channel
+      liveness only, and the +0.002647 background difference must not be read
+      as an increment.
+  forbidden_without_new_preregistration:
+    - seed 1 of this candidate
+    - matched control arm (dense/random/no-bridge) built post hoc to reinterpret the endpoint
+    - any rescue (K, s, lambda1/lambda2, unrolled steps, bridge dim, lr, horizon, dropout, refitting the frozen scaler or the Sem108 body)
+    - post-hoc thresholding / top-k of the bridge code
+    - reading the official ZINC test for this round
+  next_round_must_fix:
+    - 'state whether the purchase is confirmation of this candidate (seed 1 + parameter-matched dense/random adapter + paired seeds) or a different local object / learning objective'
+    - 'report code density under any claim of sparse dictionary coding; the frozen lambda regime produced mean 89.10/96 non-zero'
+    - 'carry matched arms for any performance claim; do not read the unmatched +0.002647 against Sem108 0.123705 as a gain'
+
+# ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
@@ -3091,7 +3200,41 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_e2e_dictenv_hier_relation_v1_new_preregistration_required
+  status: stop_e2e_dictenv_latent_bridge_v1_new_preregistration_required
+  # -------------------------------------------------------------------------
+  # E2E-DictEnv-Latent-Bridge-v1 (2026-10-01, local CPU, revision 9d4cbed) is
+  # CLOSED with verdict LATENT_BRIDGE_BORDERLINE: the frozen Sem108 model plus
+  # one shared low-dimensional task dictionary at the fusion output (h[48] ->
+  # alpha[96] -> E[48], 9,216 new parameters, no bypass) reached soup
+  # official-valid MAE 0.121058 (best 0.129975 @309), i.e. 0.001058 above the
+  # 0.120 promising edge and 0.002242 below the 0.1233 stop edge.  The
+  # pre-registered confirmation rule (M_S <= 0.120 with a learned dictionary)
+  # was NOT met, so the round closes without seed 1, without a matched control
+  # and without any K/s/lambda rescue.  The mechanism statement is separate and
+  # positive (D_L/V_L moved 5.7622/5.6371, MAE-only task gradients 0.269/0.240,
+  # zero-code +1.185 / permutation +0.288 / reset-to-init +1.232 MAE) but the
+  # code is near-dense (mean 89.10/96 non-zero) and the +0.002647 difference
+  # against the unmatched Sem108 background 0.123705 is not a causal increment.
+  # -------------------------------------------------------------------------
+  e2e_dictenv_latent_bridge_v1:
+    status: stopped_borderline_unconfirmed
+    round: zinc-e2e-dictenv-latent-bridge-v1
+    verdict: LATENT_BRIDGE_BORDERLINE
+    seed1_authorized: false
+    claims:
+      - claim-e2e-dictenv-latent-bridge-v1-borderline-near-dense-code-no-control-20261001
+    decision: decision-e2e-dictenv-latent-bridge-v1-close-borderline-after-seed0-20261001
+    analysis: tracks/ksvd/notes/zinc_e2e_dictenv_latent_bridge_v1_analysis.md
+    forbidden_without_new_preregistration:
+      - seed 1 of this candidate
+      - post-hoc matched control (dense / random / no-bridge) to reinterpret the borderline endpoint
+      - any rescue (bridge dim, K, s, lambda1/lambda2, unrolled steps, lr, horizon, dropout, refitting the frozen scaler or the Sem108 body)
+      - post-hoc thresholding or top-k of the bridge code
+      - reading the official ZINC test for this round
+    next_round_must_fix:
+      - 'state whether the purchase is confirmation of this exact candidate (seed 1 + parameter-matched dense/random adapter + paired seeds) or a different local object / learning objective'
+      - 'report code density under any claim of sparse dictionary coding (this round measured mean 89.10/96 non-zero at the frozen lambda regime)'
+      - 'carry matched arms for any performance claim; the +0.002647 against Sem108 0.123705 is unmatched background only'
   # -------------------------------------------------------------------------
   # E2E-DictEnv-Hier-Relation-v1 (2026-10-01, local CPU, revision cc4cf83) is
   # CLOSED with verdict HIERREL_STOP: the single authorised from-scratch static
