@@ -120,6 +120,13 @@ bash $SKILL/scripts/pull_results.sh --light tracks/ksvd/results/e2e_dictenv_role
 fail while GPU0 is wedged; treat the GPU1-only acceptance check above as the
 preflight until the host is repaired.
 
+`deploy.sh` refuses to run on a non-empty `git status --porcelain`, which
+includes untracked files.  At freeze time the worktree contained two
+pre-existing untracked result directories outside this round
+(`tracks/ksvd/results/e2e_dictenv_jointbond_v1/` and
+`..._decay_diagnostic_v1/`); move them aside (or add a local ignore) before
+running `deploy.sh`.
+
 Required on-machine artifacts (RoleCorr-v1 read-only upstream): the frozen SDB
 dictionary `results/sdb_v0/dictionary.pt` and shared env caches already exist
 remotely; the correspondence caches, `standardizers.json`,
