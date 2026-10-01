@@ -1,0 +1,31 @@
+protocol_id: zinc-context-gap
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  # Single candidate: one model, one relation dictionary, no node write-back.
+  # node input [Joint709 (709) ; common1 ; size2] (712) -> node dictionary
+  # (712 x 128, all coordinates kept, no top-k) -> within-molecule same-atom-type
+  # shared environment mu / deviation delta -> 228-D relation object
+  # -> sparse relation dictionary (228 x 64, tied-IHT s=8, steps=10)
+  # -> 586-D graph readout -> one head (64 -> 32 -> 1).
+  # `stage: prepare` builds the train-only node input / unique physical edges /
+  # fixed P / spectral dictionary initialisation (scratch);
+  # `stage: screen` (default) runs correctness -> smoke -> 320-epoch CPU training
+  # -> endpoint interventions -> analysis.  See
+  # notes/zinc_e2e_dictenv_hier_relation_v1_preregistration.md.
+  variant: hier_relation_dictionary_absolute
+  stage: screen
+  epochs: 320
+  absolute_thresholds:
+    strong_max: 0.115
+    promising_max: 0.120
+    borderline_max: 0.1233
+
+runtime:
+  # Explicit device; this round is authorised as a LOCAL CPU regime only.
+  device: cpu
+  torch_threads: 8
