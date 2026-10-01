@@ -1441,7 +1441,7 @@ def stage_interventions(force: bool = False) -> dict[str, Any]:
     }
     alpha = bridge_aux["alpha"].detach().double()
     support = alpha != 0.0
-    per_object = support.sum(dim=1)
+    per_object = support.sum(dim=1).to(dtype=torch.float64)
     payload = {
         "protocol_version": PROTOCOL_VERSION,
         "git_commit": _git_commit(),
