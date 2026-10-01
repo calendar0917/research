@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-rolecorr-v1-no-material-gain
+phase: e2e-dictenv-rolecorr-increment-v2-ready-gpu-blocked
 updated: 2026-10-01
 
 # ---------------------------------------------------------------------------
@@ -2087,6 +2087,81 @@ e2e_dictenv_rolecorr_v1:
     against a same-width pure-topology control) to separate "does C add
     information" from "does C pay for structural capacity"; or a pre-registered
     dense affine code of the same object (PCA16) with the sparse arm as control.
+
+# ---------------------------------------------------------------------------
+# E2E-DictEnv-RoleCorr-Increment-v2 (matched width-49 increment) — 2026-10-01
+# ---------------------------------------------------------------------------
+# Implements the rolecorr_v1 next_round_shape: keep the full frozen SDB K32/s8
+# structural coordinate, append a 16-wide frozen block at width 49, and ask
+# whether the correspondence coordinate has an increment ON TOP OF the full
+# structural budget (A = appended struct16, B = appended corr16, C = PCA16 of
+# the same object).  Route 2 (joint 709-D environment dictionary) is defined in
+# the preregistration but conditional on a route-1 gate miss.  No formal run
+# yet: the remote host cannot initialise CUDA (GPU0 wedged, cuInit=999), so
+# this entry records the frozen implementation + prereg + blocker only.
+# Pre-registration, implementation and focused CPU tests are frozen before the
+# first formal run; nothing may change after it.
+e2e_dictenv_rolecorr_increment_v2:
+  status: READY_GPU_BLOCKED
+  round: E2E-DictEnv-RoleCorr-Increment-v2
+  protocol: zinc-context-gap
+  stage: route1
+  preregistration: tracks/ksvd/notes/e2e_dictenv_rolecorr_increment_v2_preregistration.md
+  blocker: tracks/ksvd/notes/e2e_dictenv_rolecorr_increment_v2_blocker.md
+  core_module: tracks/ksvd/experiments/luyin16/e2e_dictenv_rolecorr_increment_v2.py
+  stage_runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_rolecorr_increment_v2.py
+  control_plane_runner: tracks/ksvd/src/ksvd_research/runners/zinc_e2e_dictenv_rolecorr_increment_v2.py
+  config: tracks/ksvd/configs/luyin16/zinc_e2e_dictenv_rolecorr_increment_v2.yaml
+  tests: tracks/ksvd/tests/test_e2e_dictenv_rolecorr_increment_v2.py
+  expected_results_dir: tracks/ksvd/results/e2e_dictenv_rolecorr_increment_v2/
+  question: >-
+    With the full frozen structural dictionary, common-1 coordinate, Sem108
+    interface, C6 mask, composition, reader, optimiser and 320-epoch budget
+    identical, does appending the frozen correspondence coordinate (16 sparse
+    codes, frozen RoleCorr object) improve official-valid Top-5 soup MAE over a
+    matched appended structural coordinate (A-B >= 0.003 absolute), and is any
+    increment sparse-specific versus a dense PCA16 control?
+  arms:
+    A: EXTRA-STRUCT (frozen D_S 65x16, s=4, on the structural residual)
+    B: CORR-ADD (frozen RoleCorr scaler + D_C 536x16, s=4)
+    C: CORR-PCA-ADD (affine PCA16 of the same correspondence object, fit on train only)
+  frozen_reuse:
+    - frozen SDB K32/s8 base dictionary + frozen CSSD-q1 common coordinate
+    - RoleCorr-v1 D_S, D_C, scaler, raw cache (SHA-256 pinned in the runner)
+    - Sem108 interface, C6 mask, backend, reader, loader seeds, soup rule
+  axis_under_test: >-
+    an EXISTING verification object: the RoleCorr correspondence coordinate
+    changes PLACEMENT only (appended instead of replacing half the structural
+    budget); no new object is invented, so no mechanism-identification prereg
+    is needed.
+  implementation_verified:
+    unit_tests: 13 passed (tracks/ksvd/tests/test_e2e_dictenv_rolecorr_increment_v2.py)
+    local_integration: >-
+      full stage-runner dry run on local CPU with a temporary results dir and a
+      2-epoch toy budget; cache/verify/pca16/correctness/smoke/train/
+      interventions/analysis all completed, correctness all_passed=true; not a
+      formal run and not recorded as evidence for the scientific gate.
+  device_policy:
+    formal: remote physical GPU1 only, exposed as logical cuda:0 (CUDA_VISIBLE_DEVICES=1)
+    forbidden: remote GPU0 (currently wedged at the driver level)
+    cpu_regime: preserved for scratch/validation only; correctness and smoke caches
+      are device-keyed and analysis refuses mixed-device runs
+  blocked_on: >-
+    remote host `res` cannot initialise CUDA: GPU0 (0000:4b:00.0,
+    GPU-5b51f95e-...) is in a driver-level failed state (nvidia-smi "Unknown
+    Error", cuInit(0)=999 CUDA_ERROR_UNKNOWN), which makes the healthy GPU1
+    (0000:b1:00.0, GPU-7c4f57e5-...) unreachable through CUDA; no sudo.  Fix
+    needs root: nvidia-smi --gpu-reset -i 0, or nvidia module reload, or reboot.
+  not_yet_run:
+    - route-1 formal A/B/C 320-epoch screen (no official-valid model selection has happened)
+    - route-2 joint environment dictionary (conditional on a route-1 gate miss)
+  not_claimed:
+    - any performance statement about the appended correspondence coordinate
+    - any statement about route 2, other widths, horizons, fresh seeds or the official test
+  forbidden_without_new_preregistration:
+    - changing arms, gates, epochs, seeds, lr, lambda, width or binding extension rule
+    - reading the official test for this round
+    - any K/s/LR/horizon rescue after the frozen gate
 
 # ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24

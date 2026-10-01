@@ -1,0 +1,23 @@
+protocol_id: e2e-dictenv-rolecorr-increment-v2
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  # Appended-block increment screen over the full frozen K32/s8 structural
+  # budget (see notes/e2e_dictenv_rolecorr_increment_v2_preregistration.md).
+  # `stage: route1` runs the seed-0 A/B/C screen on the configured device;
+  # `stage: route2` prepares the conditional joint 709-D encoding objects.
+  variant: rolecorr_increment_frozen_dictionary
+  stage: route1
+  epochs: 320
+  screen_abs_gate: 0.003
+
+runtime:
+  # `device: cuda` requires a healthy CUDA device (the round uses physical
+  # GPU1 through `CUDA_VISIBLE_DEVICES=1`, i.e. logical `cuda:0` inside the
+  # process); `cpu` preserves the historical execution regime.
+  device: cpu
+  torch_threads: 8
