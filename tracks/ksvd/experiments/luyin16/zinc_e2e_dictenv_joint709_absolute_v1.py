@@ -923,7 +923,11 @@ def stage_train(force: bool = False) -> dict[str, Any]:
         {
             "round": core.ROUND,
             "candidate": core.CANDIDATE,
-            "results_dir": str(RESULTS_DIR.relative_to(REPO_ROOT)),
+            "results_dir": (
+                str(RESULTS_DIR.relative_to(REPO_ROOT))
+                if str(RESULTS_DIR).startswith(str(REPO_ROOT))
+                else str(RESULTS_DIR)
+            ),
             "joint_dim": int(core.JOINT_DIM),
             "coord_dim": int(core.COORD_DIM),
             "s": int(core.JOINT_SPARSITY),
