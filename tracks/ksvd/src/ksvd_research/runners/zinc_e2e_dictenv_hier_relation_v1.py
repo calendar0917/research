@@ -110,7 +110,7 @@ def _metrics(stage: str, device: str) -> dict[str, Any]:
         "relation_input_dim": int(stages.core.REL_INPUT_DIM),
         "relation_atoms": int(stages.core.REL_ATOMS),
         "relation_sparsity": int(stages.core.REL_SPARSITY),
-        "relation_iht_steps": int(stages.core.IHT_STEPS),
+        "relation_iht_steps": int(stages.core.REL_IHT_STEPS),
         "readout_dim": int(stages.core.READOUT_DIM),
         "split_sizes": {"train": 10_000, "valid": 1_000, "test": None},
         "official_valid_loaded": True,
