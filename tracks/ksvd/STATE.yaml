@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-joint709-absolute-v1-stop-inert-coordinate
+phase: e2e-dictenv-hier-relation-v1-stop-band-live-channel
 updated: 2026-10-01
 
 # ---------------------------------------------------------------------------
@@ -2365,6 +2365,160 @@ e2e_dictenv_joint709_absolute_v1:
     one) and paired seeds, and (iv) keep the official test closed.
 
 # ---------------------------------------------------------------------------
+# E2E-DictEnv-Hier-Relation-v1 (single-model hierarchical static relation
+# dictionary) — 2026-10-01
+# ---------------------------------------------------------------------------
+# Answers the route-2 question a second time with a DIFFERENT dictionary
+# placement, in ONE from-scratch static model: node input [Joint709; common1;
+# size2] (712) -> linear node dictionary 712x128 (all coordinates kept, no
+# top-k, no write-back) -> within-molecule same-atom-type shared environment mu
+# + deviation delta -> one symmetric 228-D relation object per unique physical
+# edge -> learnable 228x64 relation dictionary with tied-IHT s=8 steps=10 ->
+# one 586-D graph readout -> one head.  Loss MAE + 0.05*R_N + 0.02*R_R.  Local
+# CPU only, one seed-0 candidate, no control arm, official test never loaded.
+e2e_dictenv_hier_relation_v1:
+  status: STOPPED_STOP_BAND_WITH_LIVE_CHANNELS
+  round: zinc-e2e-dictenv-hier-relation-v1
+  protocol: zinc-context-gap
+  verdict: HIERREL_STOP
+  absolute_band: stop
+  preregistration: tracks/ksvd/notes/zinc_e2e_dictenv_hier_relation_v1_preregistration.md
+  analysis: tracks/ksvd/notes/zinc_e2e_dictenv_hier_relation_v1_analysis.md
+  claim: claim-e2e-dictenv-hier-relation-v1-stop-band-with-live-relation-channel-20261001
+  decision: decision-e2e-dictenv-hier-relation-v1-stop-after-seed0-20261001
+  core_module: tracks/ksvd/experiments/luyin16/e2e_dictenv_hier_relation_v1.py
+  stage_runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_hier_relation_v1.py
+  control_plane_runner: tracks/ksvd/src/ksvd_research/runners/zinc_e2e_dictenv_hier_relation_v1.py
+  config: tracks/ksvd/configs/luyin16/zinc_e2e_dictenv_hier_relation_v1.yaml
+  tests: tracks/ksvd/tests/test_e2e_dictenv_hier_relation_v1.py
+  results_dir: tracks/ksvd/results/e2e_dictenv_hier_relation_v1/
+  report: tracks/ksvd/results/e2e_dictenv_hier_relation_v1/REPORT.md
+  decision_report: tracks/ksvd/results/e2e_dictenv_hier_relation_v1/DECISION.md
+  prereg_commit: a90584b
+  formal_commit: cc4cf83dbce3c40977c36ff5125a47c73afd525c
+  prepare_run:
+    run_id: 20261001-173750-21b32689
+    mode: scratch
+    runtime_s: 30.9
+    run_record: tracks/ksvd/records/runs/20261001-173750-21b32689.json
+    note: >-
+      source verification (frozen joint scaler / caches / env caches / subspace,
+      joint sample recompute 8.98e-07 train, 4.53e-07 valid against 1e-5),
+      712-D node input build, unique-undirected-edge structure (249279 train /
+      24846 valid from 1232844 / 122934 occurrence entries), alignment checks
+      (node_ptr == env node_sizes, raw-ZINC edge spot checks 806 + 414 edges,
+      zero mismatch), spectral node/relation dictionary initialisation (rank
+      128 / 64, no supplements) and save of the init state.
+  formal_run:
+    run_id: 20261001-173831-2814f28e
+    mode: screen
+    device: cpu
+    threads: 8
+    run_record: tracks/ksvd/records/runs/20261001-173831-2814f28e.json
+    runtime_s: 1328.3
+    epochs: 320
+    wall_clock_s: 1320.9
+    seconds_per_epoch: 4.128
+    peak_rss_bytes: 1772240896
+    official_test_loaded: false
+  candidate:
+    tag: HIER-RELATION
+    node_input_dim: 712
+    node_atoms: 128
+    relation_input_dim: 228
+    relation_atoms: 64
+    relation_sparsity: 8
+    iht_steps: 10
+    readout_dim: 586
+    projection: 128x32 fixed, seed 20261001, not trained
+    trainable_parameters: 145961
+    seed: 0
+    soup: top-5 by official valid
+  result:
+    soup_valid_mae: 0.18234309387207032
+    soup_members: [291, 294, 313, 316, 320]
+    soup_member_valid_mae: [0.193753, 0.195304, 0.194067, 0.193210, 0.195031]
+    best_valid_mae: 0.19320968627929688
+    best_epoch: 316
+    valid_first: 0.5744201354980468
+    valid_last20_mean: 0.202198
+    min_valid_epochs_101_320: 0.193210
+    soup_train_mae: 0.09118126945495605
+    train_min_mae: 0.13854471073150634
+    train_valid_gap: -0.09116182441711426
+    valid_r_node: 0.07109121698886156
+    valid_r_rel: 0.26629809010773897
+    band_thresholds: {strong_prospect: 0.115, promising: 0.12, borderline: 0.1233}
+    recommendation: >-
+      stop — 0.0590 above the borderline edge; per the frozen rule no seed 1, no
+      rescue, no K/s/width/LR/lambda/horizon sweep, no official-test read.
+  mechanism_separate_statement:
+    node_channel_load_bearing: true
+    relation_code_channel_load_bearing: true
+    relation_delta_channel_load_bearing: true
+    intervention_delta_mae: {zero_beta: 0.4730515289306641, zero_node_pool: 0.6449316787719725,
+      zero_delta_rel: 0.23027838897705077, permute_endpoints_11: 0.206115,
+      permute_endpoints_22: 0.199758}
+    intervention_delta_pred_rms: 0.11-0.62 (pre-registered sensitivity floor 1e-4)
+    dictionary_movement: {node_column_cosine_init_to_soup: 0.625, relation_column_cosine_init_to_soup: 0.265,
+      soup_vs_best_cosine: [0.9986, 0.9975], mean_column_coherence: [-0.0001, 0.0014]}
+    code_health_valid: {node_activation_rate: 0.9891, node_norm_mean: 1.8464,
+      relation_l0_mean: 8.0, relation_top1_share: 0.4482, relation_effective_atoms: 16.92}
+    probe_trajectory_zero_beta_delta_mae: [0.020, 0.180, 0.255, 0.318, 0.358, 0.416, 0.496]
+    reading: >-
+      unlike the Joint709 coordinate, this relation channel is demonstrably USED
+      at the endpoint (four orders of magnitude above the sensitivity floor) and
+      the dependence grows monotonically during training; that is a sensitivity
+      statement inside this model only, not a performance gain, and it does not
+      change the negative band verdict.
+  limitation_read:
+    gap: >-
+      soup train 0.0912 vs valid 0.1823 (gap -0.0912): the 145961-parameter
+      static model fits the train split far better than it generalises, so the
+      binding limit is generalisation/regularisation, not a dead channel or a
+      broken gate (all correctness gates passed, 320/320 epochs, stable
+      4.0-4.2 s/epoch).
+    node_dictionary_capacity: >-
+      the linear 128-atom node map misses sparse high-magnitude columns: at
+      initialisation R_N = 0.3411 on the 256-molecule probe batch with 99.3 % of
+      the residual in the Sem108 (48.3 %) and RoleCorr (51.0 %) blocks; the
+      lambda_N = 0.05 term then does real work (R_N 0.341 -> 0.143 probe, 0.079
+      full train / 0.071 valid) without becoming the binding constraint.
+    correctness_caveat: >-
+      the correctness gate's quoted initial R_N (0.004538) came from a
+      single-molecule batch and is not population-representative; the probe
+      batch value 0.3411 is used in the analysis.  Recorded, not repaired.
+  not_claimed:
+    - >-
+      any increment / sparse-vs-dense / dictionary-vs-no-dictionary statement
+      (no matched control arm: no dense or PCA node projection, no random /
+      shuffled dictionary, no no-relation arm)
+    - >-
+      any statistical-significance statement (single seed, single trajectory)
+    - >-
+      any statement about the official test split (never loaded)
+    - >-
+      any matched comparison against A/B/C, Sem108, Joint709 or the legacy RPD
+      numbers (different architectures, representations and parameter counts)
+  forbidden_without_new_preregistration:
+    - seed 1 of this candidate, or any rescue (node/relation K, s, IHT steps,
+      dropout, weight decay, horizon, lr, lambda, stacked relation layers, an MLP
+      endpoint encoder, refitting the frozen relation scaler)
+    - message passing / GNN / attention / node write-back in this round's name
+    - reading the official test for this round
+    - presenting the live-channel interventions as a performance result
+  revisit_if: >-
+    new preregistration only, and it should buy a diagnosis rather than another
+    structure: the measured failure is a generalisation gap, so a
+    capacity/regularity split of the frozen architecture (train-set size
+    10000/5000/2500 and/or dropout/weight-decay-only variation at a fixed epoch
+    budget) is the cheapest question that would say whether this static model is
+    data-limited or regularisation-limited.  Any performance claim still needs
+    matched arms and paired seeds, and the proven-live relation channel may be
+    reused as a building block in a different backbone without claiming a gain
+    from this round.
+
+# ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
@@ -2937,7 +3091,41 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_e2e_dictenv_a1_gate0_continuity_fail_new_preregistration_required
+  status: stop_e2e_dictenv_hier_relation_v1_new_preregistration_required
+  # -------------------------------------------------------------------------
+  # E2E-DictEnv-Hier-Relation-v1 (2026-10-01, local CPU, revision cc4cf83) is
+  # CLOSED with verdict HIERREL_STOP: the single authorised from-scratch static
+  # candidate (712-D node input -> linear 712x128 node dictionary -> mu/delta
+  # environments -> 228-D symmetric relation object -> 228x64 tied-IHT(s=8)
+  # relation dictionary -> 586-D readout) reached soup official-valid MAE
+  # 0.182343094 (best 0.193210 @316), i.e. 0.0590 ABOVE the pre-registered
+  # 0.1233 borderline edge.  No seed 1, no rescue, no sweep, no control arm, no
+  # official-test read.  The mechanism statement is separate and positive (all
+  # channels live: +0.473 / +0.645 / +0.230 / +0.206 / +0.200 MAE interventions)
+  # and must never be merged with the negative band result.  The measured
+  # limitation is a generalisation gap (train 0.0912 vs valid 0.1823) plus a
+  # linear node dictionary that misses sparse Sem108/RoleCorr columns.
+  # -------------------------------------------------------------------------
+  e2e_dictenv_hier_relation_v1:
+    status: stopped_stop_band_live_channels
+    round: zinc-e2e-dictenv-hier-relation-v1
+    verdict: HIERREL_STOP
+    seed1_authorized: false
+    claims:
+      - claim-e2e-dictenv-hier-relation-v1-stop-band-with-live-relation-channel-20261001
+    decision: decision-e2e-dictenv-hier-relation-v1-stop-after-seed0-20261001
+    analysis: tracks/ksvd/notes/zinc_e2e_dictenv_hier_relation_v1_analysis.md
+    forbidden_without_new_preregistration:
+      - seed 1 of this candidate
+      - any rescue (node/relation K, s, IHT steps, dropout, weight decay,
+        horizon, lr, lambda, stacked relation layers, endpoint MLP, refitting
+        the frozen relation scaler)
+      - message passing / GNN / attention / node write-back under this round's name
+      - reading the official ZINC test for this round
+    next_round_must_fix:
+      - 'state whether the purchase is mechanism liveness (already established on seed 0) or absolute performance (this candidate failed at 0.182343)'
+      - 'address the measured generalisation gap (train 0.0912 vs valid 0.1823) instead of adding structure'
+      - 'carry matched arms (dense/PCA node projection, random/shuffled dictionary, no-relation variant) and paired seeds for any performance claim'
   # -------------------------------------------------------------------------
   # E2E-DictEnv-A1 (2026-09-24, remote A100 GPU1, protocol e2e_dictenv_a1,
   # preregistration bd3700a, formal run 37324eb) is CLOSED.  Frozen verdict
@@ -3593,6 +3781,25 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-e2e-dictenv-hier-relation-v1-stop-after-seed0-20261001: >-
+      e2e_dictenv_hier_relation_v1 (2026-10-01, local CPU-only, preregistration
+      a90584b / formal revision cc4cf83, prepare run 20261001-173750-21b32689 /
+      screen run 20261001-173831-2814f28e, official test never loaded) ran ONE
+      from-scratch static candidate: 712-D node input -> linear node dictionary
+      712x128 (all coordinates kept) -> within-molecule same-atom-type mu/delta
+      -> 228-D symmetric relation object per unique physical edge -> learnable
+      228x64 tied-IHT(s=8) relation dictionary -> 586-D readout -> one head;
+      145961 parameters, seed 0, 320 epochs, Top-5 soup.  Result: soup valid MAE
+      0.182343094 (best 0.193210 @316) -> pre-registered band `stop` (> 0.1233),
+      verdict HIERREL_STOP, 0.0590 above the borderline edge; no control arm, no
+      seed 1, no rescue.  Mechanism is SEPARATE and positive: zeroing the
+      relation codes / node pooling / relation delta and two in-group endpoint
+      permutations cost +0.473 / +0.645 / +0.230 / +0.206 / +0.200 valid MAE with
+      prediction-RMS changes 0.11-0.62 (floor 1e-4), the relation dictionary
+      rotated away from its spectral init (column cosine 0.265) while staying
+      incoherent, l0 = 8 exactly, node activation 0.989.  Limitation: soup train
+      0.0912 vs valid 0.1823, and the initial linear node dictionary reconstructs
+      the Sem108/RoleCorr columns poorly (R_N 0.341 -> 0.143 probe).
   - decision-e2e-dictenv-joint709-absolute-v1-stop-route2-20261001: >-
       e2e_dictenv_joint709_absolute_v1 (2026-10-01, local CPU-only, revision
       d287b1d, prepare run 20261001-131619-843f4adc / screen run

@@ -1,0 +1,156 @@
+claim_id: claim-e2e-dictenv-hier-relation-v1-stop-band-with-live-relation-channel-20261001
+contradicting_evidence:
+- >-
+  The best single epoch is epoch 316 of 320 and valid MAE was still falling
+  (last-20 mean 0.2022, last epoch 0.1950), so a longer horizon would improve
+  slightly; this does not move the band, because no epoch in the last 220 was
+  below 0.19 and the endpoint is 0.059 above the 0.1233 edge.
+- >-
+  The endpoint cannot be read as the ceiling of the hierarchical static
+  relation-dictionary idea: the model overfits (train 0.0912 vs valid 0.1823),
+  and no capacity or regularisation variant was authorised, so the failure is
+  compatible with a data/regularisation limit rather than with the dictionary
+  mechanism.
+created: '2026-10-01T18:30:00'
+evidence:
+- tracks/ksvd/notes/zinc_e2e_dictenv_hier_relation_v1_preregistration.md
+- tracks/ksvd/notes/zinc_e2e_dictenv_hier_relation_v1_analysis.md
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/REPORT.md
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/DECISION.md
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/summary.json
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/run_HIER-RELATION.json
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/soup_HIER-RELATION.json
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/interventions.json
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/correctness.json
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/smoke.json
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/hier_init.json
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/hier_node_input.json
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/hier_structure.json
+- tracks/ksvd/results/e2e_dictenv_hier_relation_v1/source_verify.json
+- tracks/ksvd/experiments/luyin16/e2e_dictenv_hier_relation_v1.py
+- tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_hier_relation_v1.py
+- tracks/ksvd/tests/test_e2e_dictenv_hier_relation_v1.py
+- records/runs/20261001-173750-21b32689.json
+- records/runs/20261001-173831-2814f28e.json
+implication: >-
+  The single-model hierarchical static relation dictionary is CLOSED as a
+  standalone absolute-performance candidate (band `stop`).  The mechanism result
+  is retained as a positive building block: unlike the Joint709 coordinate, this
+  relation channel is demonstrably used by the trained model (interventions
+  0.20-0.65 MAE), so a future round does not need to re-establish liveness.  Any
+  continuation must attack the generalisation gap (train 0.0912 vs valid 0.1823)
+  or the representation capacity of the linear 128-atom node dictionary, and
+  must carry its own preregistration, matched arms and paired seeds if it wants
+  to make a performance claim.  No larger-K / smaller-s / stacked-layer /
+  message-passing rescue of this candidate is authorised by this round.
+kind: claim
+limitations:
+- >-
+  Single seed, single trajectory, no control arm (no dense/PCA arm, no
+  random/shuffled-dictionary arm, no no-relation arm), so no increment,
+  sparse-vs-dense or dictionary-vs-no-dictionary causal statement is made; the
+  frozen absolute band is the only endpoint rule applied.
+- >-
+  The intervention results are sensitivity statements inside this model only:
+  they show the channels carry prediction, not that the channels are better than
+  a matched dense or random alternative.  No matched-training control exists in
+  this round.
+- >-
+  The historical numbers of other rounds (Joint709 0.132442, the legacy
+  A/B/C / Sem108 / RPD values) are background only; the architectures, input
+  representations and parameter counts differ, so this run's 0.182343 is NOT a
+  matched comparison against them in either direction.
+- >-
+  CPU regime (runtime.device=cpu, 8 threads) on a single authoring machine; one
+  dictionary geometry only (D_N 712x128 all coordinates kept, P 128x32 fixed
+  seed 20261001, D_R 228x64 tied-IHT s=8 steps=10); no K / s / IHT-steps /
+  width / horizon / lr / lambda variation was authorised, and the frozen
+  relation scaler was never refit.
+- >-
+  The correctness gate's quoted initial R_N (0.004538) was measured on a
+  single-molecule batch and is not population-representative; the
+  population value on the probe batch is 0.3411.  The discrepancy is recorded
+  in the analysis note rather than repaired.
+scope: >-
+  Preregistration and code committed BEFORE the formal runs (preregistration
+  commit a90584b; the three later commits f25984a / 934ed97 / cc4cf83 fix
+  runner metric keys, a training-loop key and the soup-buffer handling found by
+  a two-epoch dry run before any formal run).  One candidate only, seed 0,
+  320 epochs, batch 128, Adam lr 1e-3 / weight_decay 1e-5 / clip 5.0, fixed LR,
+  Top-5 soup by official valid, local CPU 8 threads; node input
+  [Joint709(709); common1; size2] = 712, relation object 228 dims, readout 586,
+  145961 trainable parameters; official ZINC train 10000 / official valid 1000;
+  the official test split was never instantiated (official_test_loaded false);
+  no seed 1, no control arm, no K/s/width/LR/lambda/horizon sweep.  Prepare run
+  20261001-173750-21b32689 (scratch, 30.9 s); screen run
+  20261001-173831-2814f28e (1328.3 s wall, 4.128 s/epoch, peak RSS 1.77 GB).
+statement: >-
+  The single authorised candidate of this round — a from-scratch 145961-parameter
+  static model whose input is a linear 712x128 node dictionary, whose relation
+  object is built from within-molecule same-atom-type shared environments mu and
+  deviations delta of the node codes, and whose edges are coded by a learnable
+  228x64 tied-IHT(s=8, steps=10) relation dictionary — reached an official-valid
+  soup MAE of 0.182343094 (best single epoch 0.193210 @ 316) under the local CPU
+  regime, landing in the pre-registered `stop` band (> 0.1233): the candidate is
+  0.0590 MAE above the borderline edge and the frozen rule terminates it without
+  seed 1, rescue or sweep.  Unlike the previous round's inert joint coordinate,
+  the mechanism is live at the endpoint: zeroing the relation codes costs
+  +0.473052 valid MAE, zeroing the node pooling +0.644932, zeroing the relation
+  delta channel +0.230278, and two in-group endpoint permutations cost
+  +0.206115 / +0.199758 (all with prediction-RMS changes of 0.11-0.62, four
+  orders of magnitude above the pre-registered 1e-4 sensitivity floor); the
+  relation dictionary rotated away from its spectral initialisation (column
+  cosine 0.27) while staying incoherent, the relation code uses exactly l0 = 8
+  atoms with effective atoms 16.9 of 64, and both dictionaries receive finite
+  non-zero MAE-only gradients in every probe epoch.  The limitation is
+  generalisation, not liveness: soup train MAE 0.091181 (gap -0.091162), with the
+  initial node dictionary reconstructing the Sem108/RoleCorr columns poorly
+  (R_N = 0.3411 on the probe batch, 99.3 % of the residual in those two blocks)
+  and the auxiliary reconstruction term then doing real work (R_N 0.341 -> 0.143
+  on the probe, 0.079 full train / 0.071 valid).  The negative absolute band
+  result and the positive mechanism result are two separate statements and must
+  not be merged.
+status: tentative
+study_id: zinc-context-gap
+supporting_evidence:
+- >-
+  Endpoint and band: soup 0.182343094 (members 291/294/313/316/320 = 0.193753 /
+  0.195304 / 0.194067 / 0.193210 / 0.195031), best 0.193210 @ 316, valid
+  first/last/last-20 0.574420 / 0.195031 / 0.202198, min over epochs 101-320
+  0.193210, soup train 0.091181269, train min 0.138545; 320/320 epochs,
+  4.128 s/epoch, 1320.9 s, peak RSS 1.77 GB.
+- >-
+  Correctness gates all passed before training (layout 712/128/228/586; 249279
+  unique undirected physical edges out of 1232844 occurrence entries, ratio
+  4.9456, spot-checked against raw ZINC; endpoint swap 0.0, relabel 7.08e-08,
+  batch composition 0.0 against 1e-5; singleton groups delta = 0 exactly; no
+  write-back; hand-recomputed reconstruction error 0.0 with l0 = 8 exactly;
+  MAE-only gradients finite and non-zero into both dictionaries with normalised
+  directions moving under a MAE-only Adam step; test blocker effective,
+  official_test_loaded false).
+- >-
+  Channel liveness trajectory (fixed 256-molecule train probe, no parameter
+  update): zero_beta delta-MAE +0.020 (epoch 0) -> +0.180 (5) -> +0.255 (20) ->
+  +0.318 (80) -> +0.358 (160) -> +0.416 (240) -> +0.496 (320);
+  zero_node_pool +0.742 ... +0.728; zero_delta_rel +0.009 ... +0.255; the model
+  starts by ignoring the relation code and ends by depending on it.
+- >-
+  Dictionary health: relation dictionary column-cosine init->soup 0.265, node
+  0.625; mean column coherence -0.0001 (node) / +0.0014 (relation); soup vs best
+  state cosine 0.9986 / 0.9975; node activation rate 0.989 with all 128
+  coordinates kept (no top-k); relation code l0 = 8.00, norm 1.063, top-1 share
+  0.4482, effective atoms 16.92.
+- >-
+  Provenance: frozen inputs re-verified (joint scaler 0ea418fa..., joint cache
+  b7da4437... / 224adf5a..., common subspace 36636ce9..., sample recompute
+  8.98e-07 / 4.53e-07 against 1e-5); prepared objects (node input 0ec77547... /
+  f9762156..., projection P e22f9978..., relation scaler fit on 249279 train
+  edges, node dict init 08f24b38..., relation dict init 55c31d86..., init state
+  926cddc6bd3520e26e482f2e4dc9b8c5d90b864b7afaed149ee2515fad3d4943, soup
+  757596b2..., best 769ce9f8...); prepared spectral inits had full effective
+  rank (128/64) with zero supplements; tracked tree unchanged during the run.
+- >-
+  Recorded provenance nuance: the upstream cache_meta_joint_*.json field
+  sha256_f32 hashes the float64 array before float32 serialisation, so it does
+  not reproduce as a file hash; this round verifies content by recomputation
+  instead.

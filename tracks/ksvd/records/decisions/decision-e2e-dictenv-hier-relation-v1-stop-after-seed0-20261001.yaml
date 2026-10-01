@@ -1,0 +1,133 @@
+alternatives_rejected:
+- >-
+  Buying a second seed for this candidate.  Rejected: the pre-registered
+  absolute band returned `stop` (0.182343 versus a 0.1233 borderline edge), and
+  the mechanism question was answered on seed 0 (all channels live, four orders
+  of magnitude above the sensitivity floor), so a second seed would add a
+  variance estimate for a configuration that is already 0.059 MAE out of band.
+- >-
+  Rescuing the run (larger node/relation K, different sparsity, more IHT steps,
+  stacked relation layers, a second relation pass, an MLP endpoint encoder,
+  refitting the frozen relation scaler, lowering dropout / raising weight decay,
+  extending the horizon).  Rejected: every one of these is a new candidate, the
+  pre-registration forbids them in this round, and the endpoint is not near the
+  band edge where a small change could plausibly cross it.
+- >-
+  Building a matched control post hoc (dense/PCA node projection, random or
+  shuffled dictionaries, no-relation arm) to reinterpret the 0.182343.  Rejected:
+  post-hoc arms would not be pre-registered, could not be used as a performance
+  comparison either way, and the round's question (absolute performance of the
+  single frozen candidate) is already answered.
+- >-
+  Re-using the previous rounds' numbers (Joint709 0.132442, legacy A/B/C /
+  Sem108 / RPD) as a control for this model.  Rejected: the architectures, input
+  representations, parameter counts and inheritance differ; those numbers are
+  background orientation only.
+- >-
+  Reading the positive intervention results as "the relation dictionary route
+  works".  Rejected: they are sensitivity statements without a matched control
+  and without a performance gain, and the band verdict is negative; both
+  statements are reported separately.
+because: >-
+  The frozen candidate was implemented, gated, trained for the full 320 epochs
+  on the official train split and evaluated once on the official valid split;
+  the pre-registered band rule returned `stop`, so the configuration is closed.
+  The mechanism diagnostics came out positive (unlike the previous round's
+  inert coordinate), which makes the round scientifically informative without
+  making it a success: sensitivity without absolute performance is exactly the
+  case the preregistration required to be reported as two separate statements.
+created: '2026-10-01T18:40:00'
+decision: >-
+  Stop the E2E-DictEnv-Hier-Relation-v1 candidate after seed 0
+  (`HIERREL_STOP`).  Record the band result (soup official-valid MAE
+  0.182343094, best 0.193210 @ 316, `stop` > 0.1233) and, separately, the
+  mechanism result (relation code, node pooling, relation delta and endpoint
+  pairing are all load-bearing: +0.473 / +0.645 / +0.230 / +0.206 / +0.200 MAE
+  with prediction-RMS changes 0.11-0.62).  Do not retrain, do not seed 1, do not
+  tune K / s / dropout / horizon / lambda for this candidate.  Treat the
+  hierarchical static relation dictionary as a live mechanism with an
+  unresolved generalisation gap (train 0.0912 vs valid 0.1823), not as a failed
+  mechanism, and do not merge the two readings.
+decision_id: decision-e2e-dictenv-hier-relation-v1-stop-after-seed0-20261001
+kind: decision
+protocol: >-
+  Local CPU only (runtime.device=cpu, 8 threads), official ZINC train 10000 /
+  official valid 1000, official test never instantiated.  Preregistration and
+  code committed before the formal runs (a90584b + runner/report fixes
+  f25984a / 934ed97 / cc4cf83 found by a two-epoch dry run); formal stages
+  executed through the new control-plane runner
+  `zinc_e2e_dictenv_hier_relation_v1` (prepare `20261001-173750-21b32689`
+  scratch 30.9 s; screen `20261001-173831-2814f28e` 1328.3 s).  One candidate,
+  seed 0, 320 epochs, batch 128, Adam lr 1e-3 / wd 1e-5 / clip 5.0, fixed LR,
+  Top-5 soup by valid MAE, no early stop, no control arm, no sweep.  Separately:
+  17 focused local tests, a correctness stage (all gates passed), a smoke stage
+  (3 epochs on 2048/512) and a fixed-probe activity diagnostic at epochs
+  0/5/20/80/160/240/320 that never updates parameters.
+results:
+  verdict: HIERREL_STOP
+  absolute_band: stop
+  soup_valid_mae: 0.18234309387207032
+  best_valid_mae: 0.19320968627929688
+  best_epoch: 316
+  soup_members: [291, 294, 313, 316, 320]
+  soup_member_valid_mae: [0.193753, 0.195304, 0.194067, 0.193210, 0.195031]
+  valid_first: 0.5744201354980468
+  valid_last: 0.195031
+  valid_tail20_mean: 0.202198
+  valid_min_epochs_101_320: 0.193210
+  soup_train_mae: 0.09118126945495605
+  train_valid_gap: -0.09116182441711426
+  train_min_mae: 0.13854471073150634
+  epochs_run: 320
+  seconds_per_epoch: 4.127790613278194
+  wall_clock_s: 1320.892996249022
+  peak_rss_bytes: 1772240896
+  trainable_parameters: 145961
+  buffer_elements: 5039
+  valid_r_node: 0.07109121698886156
+  valid_r_rel: 0.26629809010773897
+  soup_train_r_node: 0.0786791023668609
+  soup_train_r_rel: 0.267536154276208
+  node_channel_load_bearing: true
+  relation_code_channel_load_bearing: true
+  relation_delta_channel_load_bearing: true
+  zero_beta_delta_mae: 0.4730515289306641
+  zero_node_pool_delta_mae: 0.6449316787719725
+  zero_delta_rel_delta_mae: 0.23027838897705077
+  permute_endpoints_11_delta_mae: 0.206115
+  permute_endpoints_22_delta_mae: 0.199758
+  correctness_all_passed: true
+  smoke_passed: true
+  official_valid_loaded: true
+  official_test_loaded: false
+  prepare_run: 20261001-173750-21b32689
+  screen_run: 20261001-173831-2814f28e
+  revision: cc4cf83dbce3c40977c36ff5125a47c73afd525c
+  init_state_sha256: 926cddc6bd3520e26e482f2e4dc9b8c5d90b864b7afaed149ee2515fad3d4943
+  soup_state_sha256: 757596b2b64c85ae262876cb1979943dbb5d11e022e8a88336c16a27f25ce88e
+  best_state_sha256: 769ce9f888ec150433d0f2a25b59cd8dfbf040bfe8429246a213358312f53a3d
+revisit_if: >-
+  Revisit only with a new preregistration that (a) explains how it will close
+  the measured generalisation gap (soup train 0.0912 vs valid 0.1823) rather
+  than adding structure, (b) carries matched arms for any performance claim
+  (dense/PCA node projection, random or shuffled dictionaries, no-relation
+  variant) and paired seeds, and (c) states in advance which of the two
+  questions it is buying — mechanism liveness (already established on seed 0)
+  or absolute performance (this candidate failed at 0.182343).  A future round
+  may legitimately reuse the proven-live relation channel as a building block
+  inside a different backbone, but must not present that as a gain of this
+  round.
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The previous round's Joint709 coordinate collapsed to the denormal floor and
+  was inert at its endpoint, leaving the question "is a learnable static
+  dictionary over local environments useful at all?" unanswered, and leaving the
+  cluster's older absolute numbers (0.1198-0.1324) unexplained by any live
+  mechanism.  This round asked a narrower, falsifiable question: with the
+  dictionary entering the prediction in a *different* way — all 128 node
+  coordinates kept (no top-k), environments shared within (molecule, atom type)
+  and split into mu/delta, a single symmetric 228-D relation object per physical
+  edge, one sparse relation dictionary and one graph readout — what is the
+  absolute official-valid performance of one seed-0 candidate, and are the
+  channels actually used?  Both questions were answered before any rescue was
+  considered.
