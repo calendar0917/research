@@ -1,0 +1,29 @@
+protocol_id: zinc-context-gap
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  # Single candidate: one model, one insertion point.
+  # Sem108 frozen local interface (fusion -> h in R^48) -> shared task dictionary
+  # D_L [48, 96] / V_L [96, 48] -> per-object soft-threshold 16-step unrolled
+  # ISTA codes alpha [96] -> E = rho * alpha @ V_L [48] -> unchanged unary
+  # pooling, unchanged static pair computation and unchanged graph readout.
+  # No graph index, no message passing, no residual bypass, no new raw features.
+  # `stage: screen` (default) runs correctness -> smoke -> 320-epoch CPU training
+  # -> frozen bridge probes -> analysis.  See
+  # notes/zinc_e2e_dictenv_latent_bridge_v1_preregistration.md.
+  variant: latent_bridge_sem108
+  stage: screen
+  epochs: 320
+  absolute_thresholds:
+    strong_max: 0.115
+    promising_max: 0.120
+    borderline_max: 0.1233
+
+runtime:
+  # Explicit device; this round is authorised as a LOCAL CPU regime only.
+  device: cpu
+  torch_threads: 8
