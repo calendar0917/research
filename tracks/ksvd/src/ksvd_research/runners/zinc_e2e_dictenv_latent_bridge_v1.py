@@ -189,7 +189,7 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
     if stage == "prepare":
         print("[latent-bridge] prepare is a no-op: Sem108 / SDB / common objects are reused", flush=True)
     if stage in ("screen", "all"):
-        stages.run_stages("screen")
+        stages.run_stages("chain")
     artifacts = _copy_artifacts(context)
     metrics = _metrics(stage, configured["device"])
     (context.artifact_dir / "metrics.json").write_text(
