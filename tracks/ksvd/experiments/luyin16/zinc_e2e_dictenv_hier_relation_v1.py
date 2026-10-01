@@ -1971,7 +1971,7 @@ def stage_train(force: bool = False) -> dict[str, Any]:
                 "epoch": int(epoch),
                 "train_mae": float(stats["train_mae"]),
                 "train_loss": float(stats["train_loss"]),
-                "train_r_node": float(stats["train_r_node"]),
+                "train_r_node": float(stats["r_node"]),
                 "valid_mae": float(valid_result["mae"]),
                 "seconds": float(epoch_times[-1]),
             }
