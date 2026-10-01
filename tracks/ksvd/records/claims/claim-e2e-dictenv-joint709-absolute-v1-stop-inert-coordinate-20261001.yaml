@@ -1,0 +1,148 @@
+claim_id: claim-e2e-dictenv-joint709-absolute-v1-stop-inert-coordinate-20261001
+contradicting_evidence:
+- >-
+  The best single epoch is the LAST epoch (0.135177988 @ 320) and the top-5
+  members all come from the final 36 epochs, so the curve had not flattened;
+  a longer horizon would continue to improve slightly.  This does not change
+  the band: the endpoint is 0.0091 MAE above the borderline edge 0.1233, i.e.
+  the verdict is not a few-epochs artifact.
+- >-
+  The endpoint does not measure the joint dictionary route's ceiling, because
+  the coordinate channel was inert; a statement of the form "the joint K48/s12
+  dictionary route cannot pass 0.1233" is NOT supported by this run.
+created: '2026-10-01T17:05:00'
+evidence:
+- tracks/ksvd/notes/e2e_dictenv_joint709_absolute_v1_preregistration.md
+- tracks/ksvd/notes/e2e_dictenv_joint709_absolute_v1_analysis.md
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/REPORT.md
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/DECISION.md
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/summary.json
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/run_JOINT-SPARSE.json
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/soup_JOINT-SPARSE.json
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/interventions.json
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/correctness.json
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/smoke.json
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/verify_frozen.json
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/reconstruction.json
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/joint_standardizers.json
+- tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/run_chain.sh
+- tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_joint709_absolute_v1.py
+- tracks/ksvd/experiments/luyin16/e2e_dictenv_joint709_absolute_v1.py
+- tracks/ksvd/tests/test_e2e_dictenv_joint709_absolute_v1.py
+- records/runs/20261001-144617-89099a3f.json
+implication: >-
+  The joint-object route is answered negatively for this frozen candidate and
+  is stopped; it is not answered as a research question.  A future round that
+  wants the joint dictionary's real ceiling must first pre-register a fix for
+  the observed failure mode (the multiplicative coordinate binding's collapse
+  under the frozen objective) and/or a capacity increase, and must carry its
+  own matched control (e.g. the unbuilt PCA48) and paired seeds.  The frozen
+  dictionary diagnostics (tied-IHT 0.895/0.941 vs OMP(12) 0.646) indicate that
+  a 48-atom code over a 709-D input is itself a major limitation, so capacity
+  is the first thing such a preregistration should justify.
+kind: claim
+limitations:
+- >-
+  Single seed, single trajectory, no control arm (PCA48, random / shuffled /
+  no-dictionary training were explicitly not authorised), so no increment,
+  sparse-vs-dense or causal statement can be made; the frozen absolute band
+  (stop > 0.1233) is the only endpoint rule applied.
+- >-
+  The endpoint measures the frozen protocol with an INERT dictionary
+  coordinate: at the soup/best states all four coordinate binding matrices are
+  denormal-zero (|W_A_S|max = 7.05e-38, |W_A_C| = 7.04e-38, |W_E_S| = 7.05e-38,
+  |W_E_C| = 6.77e-38), and zeroing / row-shuffling the joint code changes the
+  soup MAE by exactly 0.0 (seeds 11 and 22).  The run therefore does not
+  measure the joint-dictionary route's achievable error.
+- >-
+  The zero/shuffle probes are diagnostic only (per the pre-registration they
+  can neither support "the dictionary is useless" nor be converted into a
+  rescue).  The dead *node* pair is pre-existing and already in the record
+  (claim-e2e-dictenv-jointbond-v1-key-level-fusion-inert-denormal-collapse-20260930:
+  frozen-parent node binding at the 7e-38 floor, G_node = 0.0; the route-1 /
+  RoleCorr-v1 soup states checked here show the same floor with only the edge
+  pair alive), so the route-2-specific observation is only that the edge pair
+  also reaches the floor.  The prior decay diagnostic
+  (claim-e2e-dictenv-jointbond-decay-diagnostic-v1-frozen-parent-branch-trainable-decay-slows-not-blocks-20260930)
+  shows weight decay alone does not block a live branch, so this is read as a
+  sub-resolution task signal on this coordinate, not as a global optimizer bug.
+- >-
+  CPU regime (runtime.device=cpu, 8 threads) on the authoring machine; matched
+  within the local CPU runs of this track but not to historical A100 numbers
+  as if the regime were identical.
+- >-
+  One dictionary geometry only (K = 48, s = 12, 10 K-SVD epochs, seed
+  20260924, tied-IHT 10 iterations, train-only scaler); no K / s / epochs /
+  steps / scaler / width / horizon / lr variation was authorised.
+scope: >-
+  Pre-registration, core module, stage runner, control-plane runner, config
+  and focused tests committed BEFORE the run (prepare revision
+  d287b1d6bfbfddadd7733b908f085cee3a3f73c5 for both executed stages; tracked
+  tree equal to the revision, the only dirty entry is the untracked result-dir
+  snapshot run_chain.sh).  One candidate only, seed 0, 320 epochs, batch 128,
+  Adam lr 1e-3 / weight_decay 1e-5 / clip 5.0, Top-5 soup by official valid;
+  coordinate [c~ (1); IHT_10(alpha_48)] width 49; official ZINC train 10000 /
+  official valid 1000; the official test split was never instantiated
+  (test_access blocked, official_test_loaded = false); no seed 1, no PCA48,
+  no random/shuffled/no-dictionary arm, no K/s/LR/horizon sweep, no
+  dictionary fine-tuning.  Prepare run 20261001-131619-843f4adc (scratch,
+  5248.1 s, K-SVD 5194.1 s); screen run 20261001-144617-89099a3f (2680.8 s,
+  training 2631.6 s at 8.224 s/epoch).
+statement: >-
+  The single authorised candidate of this round — the frozen joint K48/s12
+  dictionary over the train-only scale-balanced 709-D input (struct residual 65
+  + Sem108 108 + RoleCorr 536), coordinate [c~; IHT_10(alpha_48)] of width 49,
+  seed 0, 320 epochs, fixed Top-5 soup — reached an official-valid soup MAE of
+  0.132442119 (best single epoch 0.135177988 @ 320) under the local CPU
+  regime, landing in the pre-registered `stop` band (> 0.1233): the candidate
+  did not enter a better absolute interval, and the frozen rule terminates the
+  route without a seed 1, rescue or sweep.  The frozen dictionary's real
+  coding diagnostics are weak: tied-IHT(10) relative error 0.895192 (train) /
+  0.941186 (valid; per block struct 0.979 / sem 0.899 / corr 0.935), OMP(12)
+  reference 0.646282, 60-step IHT 0.772 / 0.865, K-SVD final fit MSE 1.165291
+  with 40/48 atoms active, effective atoms 24.55, exact l0 mean 12.0 and top-1
+  activation share 0.878.  At the soup state the coordinate path is switched
+  off: all four binding matrices are denormal-zero, the joint-code zero probe
+  and both within-molecule row-shuffle probes (seeds 11, 22) give a prediction
+  change of exactly 0.0, and the channel was live before training (init-time
+  prediction shift 8.035e-05, joint binding gradients 1.6e-05), decaying in a
+  reproduced per-epoch probe (~x0.85/epoch node pair, ~x0.975/epoch edge pair).
+  Consequently the 0.132442 endpoint reflects the frozen protocol with an
+  inert dictionary coordinate (soup train MAE 0.056584, train-valid gap
+  -0.075858), not the joint dictionary route's ceiling.
+status: tentative
+study_id: zinc-context-gap
+supporting_evidence:
+- >-
+  Pre-registered endpoint reached with a clean run: 320/320 epochs, no
+  truncation, correctness gates all passed (l0_max 12, coordinate shift 1.125,
+  init-time prediction shift 8.035e-05, relabel 1.19e-07, batch offset
+  7.15e-07 with tolerance 1e-5), smoke passed (best 0.842537, 1.62 s/epoch),
+  official test never loaded.
+- >-
+  Frozen objects and data order verified: CSSD-q1 subspace and RoleCorr cache
+  SHAs match the pinned values, joint scaler refit matches, cache row order
+  passed (attach offsets 0.0, recomputed match 1.1e-07, raw corr vs raw ZINC
+  0.0), dictionary SHA 541125249d2f069f5a81a7a335ac75d09b140977c3970be219aba9d9465b18a4.
+- >-
+  Absolute result: soup 0.132442119 (members 285/315/317/318/320 = 0.140583 /
+  0.137384 / 0.140607 / 0.137621 / 0.135178), best 0.135177988 @ 320,
+  valid first/last 0.619420 / 0.135178, last-20 mean 0.145034, soup train
+  0.056584, train min 0.083834.
+- >-
+  Inert-coordinate evidence: soup/best binding maxima |W_A_S| = 7.05e-38,
+  |W_A_C| = 7.04e-38, |W_E_S| = 7.05e-38, |W_E_C| = 6.77e-38; zero-code and
+  row-shuffle probes exactly 0.0; read-only comparison against the route-1 and
+  RoleCorr-v1 soup states (|W_A_S| ~ 7e-38 there as well, |W_E_S| 0.541-0.982,
+  consistent with the pre-existing dead node binding recorded in
+  claim-e2e-dictenv-jointbond-v1-key-level-fusion-inert-denormal-collapse-20260930);
+  6-epoch / 2048-molecule decay probe with the official factory (~x0.85/epoch
+  node pair, ~x0.975/epoch edge pair).  The prior round's liveness gate shape
+  (|w|max > 1e-3) was NOT an acceptance gate of this round; the endpoint
+  liveness was established post hoc, which is recorded as a pre-registration
+  gap, not repaired.
+- >-
+  Provenance: prepare run 20261001-131619-843f4adc (5248.1 s), screen run
+  20261001-144617-89099a3f (2680.8 s); split fingerprint
+  58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a; parameters
+  trainable 99469 / total 135581; peak RSS 3.57 GB.

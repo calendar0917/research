@@ -1,0 +1,167 @@
+alternatives_rejected:
+- >-
+  Buying seed 1 for the joint candidate.  Rejected: the pre-registered absolute
+  band rule returned `stop` (> 0.1233), and the coordinate channel is inert at
+  the endpoint, so a second seed would re-measure the same switched-off
+  configuration rather than add information.
+- >-
+  Rescuing the run (larger K, different s / K-SVD epochs / IHT steps, scaler
+  refit, dictionary fine-tuning, width / horizon / lr change).  Rejected: all
+  forbidden by the pre-registration; the K48/s12 geometry was frozen precisely
+  so this round answers one absolute question, and the weak reconstruction
+  diagnostics are recorded as a finding, not repaired.
+- >-
+  Training the unbuilt PCA48 control in this round to turn the number into an
+  increment statement.  Rejected: not authorised (the round has no control
+  arm by design); a matched control plus paired seeds is the minimum for any
+  comparative claim and needs its own preregistration.
+- >-
+  Post-hoc re-labelling the run as "the Sem108-only model" and reporting that
+  number as a Sem108 result.  Rejected: the model's other components (frozen
+  common coordinate, fusion, reader) are intact and its initialisation
+  differs from any historical Sem108 run; only the descriptive statement that
+  the dictionary coordinate is inert at the endpoint is recorded.
+- >-
+  Reporting 0.132442 as evidence that the joint K48/s12 dictionary route
+  cannot pass 0.1233 (or that sparse joint coding is worse than PCA).  Rejected:
+  the coordinate channel was switched off during training, so the run does not
+  measure the route's ceiling; per pre-registration the zero/shuffle probes are
+  diagnostic only.
+- >-
+  Reading the official ZINC test split.  Rejected: test_access blocked /
+  terminal policy, and an inert-coordinate stop licenses no terminal read.
+because: >-
+  The round is complete and clean (revision d287b1d6bfbfddadd7733b908f085cee3a3f73c5,
+  tracked tree equal to the revision, correctness gates all passed, smoke
+  passed, 320/320 epochs, official test never instantiated) and the frozen
+  question is answered: the single authorised candidate reached soup valid MAE
+  0.132442119 (best 0.135177988 @ epoch 320), inside the pre-registered `stop`
+  interval (> 0.1233), so the candidate did not enter a better absolute
+  interval and the frozen stop rule applies.  The round additionally recorded a
+  mechanism finding that limits how the number may be read: the frozen
+  dictionary codes the 709-D input poorly (tied-IHT(10) 0.895 / 0.941,
+  OMP(12) 0.646, 60-step IHT 0.772 / 0.865) and, under the frozen objective,
+  the multiplicative coordinate binding decays to denormal-zero (all four
+  binding matrices ~7e-38 at the soup state; zero/shuffle probes exactly 0.0).
+  The dead node pair is pre-existing and already in the record
+  (claim-e2e-dictenv-jointbond-v1-key-level-fusion-inert-denormal-collapse-20260930;
+  the route-1 / RoleCorr-v1 checkpoints show the same 7e-38 node floor with the
+  edge pair alive), the route-2-specific observation is that the edge pair also
+  reaches the floor, and the prior decay diagnostic
+  (claim-e2e-dictenv-jointbond-decay-diagnostic-v1-frozen-parent-branch-trainable-decay-slows-not-blocks-20260930)
+  rules out "weight decay alone blocks learning" as a general explanation.  The
+  endpoint therefore measures the frozen protocol with an inert dictionary
+  coordinate, i.e. the route's real ceiling remains unmeasured and a seed-1
+  confirmation of this configuration is not scientifically useful.
+  This round also did not adopt the prior round's mandated endpoint liveness
+  acceptance gate (|w|max > 1e-3), which is recorded as a pre-registration gap
+  for any future round, not repaired here.
+created: '2026-10-01T17:10:00'
+decision: >-
+  STOP the E2E-DictEnv-Joint709-Absolute-v1 route after the frozen seed-0
+  absolute screen returned `JOINT709_STOP` (soup valid MAE 0.132442119, best
+  0.135177988 @ 320, band `stop` > 0.1233).  Do not buy seed 1, do not rescue
+  K / s / K-SVD epochs / IHT steps / scaler / width / horizon / lr, do not
+  fine-tune the frozen dictionary end-to-end, do not train the PCA48 or any
+  random/shuffled/no-dictionary control, and do not read the official ZINC
+  test split.  Record the inert-coordinate finding (denormal-zero binding
+  matrices, exactly-zero zero/shuffle probes, family-wide node-pair collapse in
+  the previous rounds) and the weak frozen-dictionary reconstruction
+  diagnostics as the durable outcome of this round.  Any future joint-object
+  round must be a NEW preregistration whose first job is to justify and verify
+  a live coordinate channel (non-multiplicative binding) plus a matched control
+  and paired seeds — and it must not re-use this frozen screen as evidence of
+  the route's ceiling.
+decision_id: decision-e2e-dictenv-joint709-absolute-v1-stop-route2-20261001
+kind: decision
+protocol: >-
+  Local-first implementation with targeted CPU tests, then local CPU execution
+  only (runtime.device=cpu, torch_threads=8, no GPU/remote).  Pre-registration,
+  core module, stage runner, control-plane runner, config and focused tests
+  committed before the run (revision d287b1d6bfbfddadd7733b908f085cee3a3f73c5).
+  Two control-plane executions from that revision: a scratch prepare stage
+  (verify frozen objects, fit the train-only 709-D scaler, build the 709-D
+  train/valid caches with row-order checks, fit the frozen K48/s12 K-SVD
+  dictionary, compute the real tied-IHT reconstruction diagnostic:
+  20261001-131619-843f4adc, 5248.1 s) and the formal screen stage
+  (correctness gates -> 3-epoch smoke -> 320-epoch seed-0 training -> frozen
+  soup probes -> analysis: 20261001-144617-89099a3f, 2680.8 s).  Official ZINC
+  train 10000 / official valid 1000; official test never loaded (test_access
+  blocked).  Exactly one candidate, no control arm, no seed 1, no sweep.
+results:
+  absolute_band: stop
+  verdict: JOINT709_STOP
+  prepare_run_id: 20261001-131619-843f4adc
+  screen_run_id: 20261001-144617-89099a3f
+  prepare_runtime_s: 5248.1
+  screen_runtime_s: 2680.8
+  training_wall_s: 2631.648972420953
+  seconds_per_epoch: 8.223903038815479
+  epochs_run: 320
+  soup_valid_mae: 0.1324421192816808
+  soup_members: [285, 315, 317, 318, 320]
+  soup_member_valid_mae: [0.14058268715062877, 0.13738355365017196,
+    0.14060720892244716, 0.13762057510757586, 0.13517798792017857]
+  best_valid_mae: 0.13517798792017857
+  best_epoch: 320
+  valid_last20_mean: 0.14503356061623202
+  soup_train_mae: 0.05658371582465479
+  train_min_mae: 0.08383403084278107
+  train_valid_gap: -0.07585840345702599
+  dictionary_atoms: 48
+  dictionary_sparsity: 12
+  dictionary_iht_steps: 10
+  ksvd_final_fit_mse: 1.1652911060632254
+  ksvd_seconds: 5194.128160872031
+  dictionary_sha256_f32: 541125249d2f069f5a81a7a335ac75d09b140977c3970be219aba9d9465b18a4
+  reconstruction_train_rel_err: 0.8951922349687712
+  reconstruction_valid_rel_err: 0.9411858282660454
+  reconstruction_valid_blocks: {struct: 0.9791577392801276, sem: 0.8985484559543443,
+    corr: 0.9351568977385537}
+  omp_reference_train: 0.6462823465439314
+  iht60_train: 0.772
+  iht60_valid: 0.865
+  active_atoms: 40
+  effective_atoms: 24.54934337179131
+  exact_l0_mean: 12.0
+  top1_share: 0.8784386778148421
+  zero_joint_code_delta: 0.0
+  row_shuffle_seed11_delta: 0.0
+  row_shuffle_seed22_delta: 0.0
+  binding_absmax_W_A_S: 7.052848956382107e-38
+  binding_absmax_W_A_C: 7.04444621027063e-38
+  binding_absmax_W_E_S: 7.047419765611927e-38
+  binding_absmax_W_E_C: 6.770048989661016e-38
+  init_prediction_shift_on_zero_block: 8.035e-05
+  trainable_parameters: 99469
+  total_parameters: 135581
+  peak_rss_bytes: 3574165504
+  split_fingerprint: 58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a
+  commit: d287b1d6bfbfddadd7733b908f085cee3a3f73c5
+  official_test_loaded: false
+  control_arms_run: 0
+revisit_if: >-
+  A NEW preregistration targets one separable question: does a joint
+  representation of the 709-D environment vector earn its place once the
+  coordinate channel is demonstrably live?  Such a round must (i) pre-register
+  a binding mechanism that cannot be shrunk away and make endpoint liveness an
+  acceptance gate (|w|max > 1e-3 and a non-zero intervention delta, the shape
+  already mandated by
+  decision-e2e-dictenv-jointbond-decay-diagnostic-v1-no-branch-rescue-optimizer-attractor-next-20260930),
+  (ii) justify the dictionary capacity, since K=48/s=12 codes the 709-D input
+  at 0.895/0.941 relative error even with 60 IHT steps, (iii) carry its own
+  matched control (the unbuilt PCA48 is the natural one) and paired seeds, and
+  (iv) keep the official test closed.  Only then can a comparative statement
+  about the joint object be attempted.  This decision's stop applies to the
+  frozen candidate of this round, not to the research question.
+study_id: zinc-context-gap
+why_this_experiment: >-
+  The previous round (decision-e2e-dictenv-rolecorr-increment-v2-stop-route1-20261001)
+  left route 2 — the frozen joint dictionary over the train-scale-balanced
+  709-D environment input — prepared but not entered, and the user authorised
+  exactly one candidate this round: a seed-0, 320-epoch absolute-performance
+  screen of that frozen joint representation, with no control arm.  The
+  pre-registered question was whether this candidate lands in a better
+  absolute band (<= 0.115 strong prospect, <= 0.120 promising, <= 0.1233
+  borderline, else stop), before any future round invests in matched controls
+  and paired seeds.

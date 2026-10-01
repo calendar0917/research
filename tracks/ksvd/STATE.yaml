@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-rolecorr-increment-v2-no-material-gain
+phase: e2e-dictenv-joint709-absolute-v1-stop-inert-coordinate
 updated: 2026-10-01
 
 # ---------------------------------------------------------------------------
@@ -2226,6 +2226,145 @@ e2e_dictenv_rolecorr_increment_v2:
     input vs PCA48), whose preparation stages exist.
 
 # ---------------------------------------------------------------------------
+# E2E-DictEnv-Joint709-Absolute-v1 (route-2 absolute screen) — 2026-10-01
+# ---------------------------------------------------------------------------
+# Implements the route-2 option of the increment-v2 revisit list under explicit
+# user authorization: exactly ONE candidate, no control arm.  The frozen K48/s12
+# joint dictionary is fitted train-only from scratch over the scale-balanced
+# 709-D environment input (struct residual 65 + Sem108 108 + RoleCorr 536); the
+# width-49 coordinate is [c~ (1); IHT_10(alpha_48)] (exact top-12, tied IHT),
+# and the pre-registered endpoint is the absolute official-valid Top-5 soup MAE
+# band (<= 0.115 strong prospect / <= 0.120 promising / <= 0.1233 borderline /
+# else stop).  Local CPU only; official test never loaded.
+e2e_dictenv_joint709_absolute_v1:
+  status: STOPPED_ABSOLUTE_STOP_BAND_INERT_COORDINATE
+  round: E2E-DictEnv-Joint709-Absolute-v1
+  protocol: zinc-context-gap
+  stage: route2
+  verdict: JOINT709_STOP
+  absolute_band: stop
+  preregistration: tracks/ksvd/notes/e2e_dictenv_joint709_absolute_v1_preregistration.md
+  analysis: tracks/ksvd/notes/e2e_dictenv_joint709_absolute_v1_analysis.md
+  claim: claim-e2e-dictenv-joint709-absolute-v1-stop-inert-coordinate-20261001
+  decision: decision-e2e-dictenv-joint709-absolute-v1-stop-route2-20261001
+  core_module: tracks/ksvd/experiments/luyin16/e2e_dictenv_joint709_absolute_v1.py
+  stage_runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_joint709_absolute_v1.py
+  control_plane_runner: tracks/ksvd/src/ksvd_research/runners/zinc_e2e_dictenv_joint709_absolute_v1.py
+  config: tracks/ksvd/configs/luyin16/zinc_e2e_dictenv_joint709_absolute_v1.yaml
+  tests: tracks/ksvd/tests/test_e2e_dictenv_joint709_absolute_v1.py
+  results_dir: tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/
+  report: tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/REPORT.md
+  decision_report: tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/DECISION.md
+  run_chain: tracks/ksvd/results/e2e_dictenv_joint709_absolute_v1/run_chain.sh
+  prepare_run:
+    run_id: 20261001-131619-843f4adc
+    mode: scratch
+    runtime_s: 5248.1
+    run_record: tracks/ksvd/records/runs/20261001-131619-843f4adc.json
+    note: >-
+      train-only scaler + 709-D caches (row-order checks) + frozen K48/s12
+      K-SVD (5194.1 s, final fit MSE 1.165291, dictionary sha256_f32
+      541125249d2f069f5a81a7a335ac75d09b140977c3970be219aba9d9465b18a4) +
+      real tied-IHT reconstruction diagnostic; verify_frozen SHAs matched.
+  formal_run:
+    run_id: 20261001-144617-89099a3f
+    commit: d287b1d6bfbfddadd7733b908f085cee3a3f73c5
+    device: cpu
+    threads: 8
+    run_record: tracks/ksvd/records/runs/20261001-144617-89099a3f.json
+    runtime_s: 2680.8
+    epochs: 320
+    wall_clock_s: 2631.6
+    seconds_per_epoch: 8.224
+    official_test_loaded: false
+  candidate:
+    tag: JOINT-SPARSE
+    joint_dim: 709
+    atoms: 48
+    sparsity: 12
+    iht_steps: 10
+    coordinate_width: 49
+    seed: 0
+    soup: top-5 by official valid
+  result:
+    soup_valid_mae: 0.1324421192816808
+    soup_members: [285, 315, 317, 318, 320]
+    soup_member_valid_mae: [0.14058268715062877, 0.13738355365017196,
+      0.14060720892244716, 0.13762057510757586, 0.13517798792017857]
+    best_valid_mae: 0.13517798792017857
+    best_epoch: 320
+    valid_first: 0.6194198261917918
+    valid_last20_mean: 0.14503356061623202
+    soup_train_mae: 0.05658371582465479
+    train_min_mae: 0.08383403084278107
+    train_valid_gap: -0.07585840345702599
+    band_thresholds: {strong_prospect: 0.115, promising: 0.12, borderline: 0.1233}
+    recommendation: >-
+      stop — the candidate did not enter a better absolute interval; per the
+      frozen rule no seed 1, no rescue, no K/s/LR/horizon sweep, no dictionary
+      fine-tuning.
+  dictionary_diagnostics:
+    reconstruction_train_rel_err: 0.8951922349687712
+    reconstruction_valid_rel_err: 0.9411858282660454
+    reconstruction_valid_blocks: {struct: 0.9791577392801276, sem: 0.8985484559543443,
+      corr: 0.9351568977385537}
+    omp_reference_train: 0.6462823465439314
+    iht30: {train: 0.842, valid: 0.900}
+    iht60: {train: 0.772, valid: 0.865}
+    usage: {active_atoms: 40, effective_atoms: 24.54934337179131,
+      exact_l0_mean: 12.0, top1_share: 0.8784386778148421}
+    reading: >-
+      the frozen K48/s12 dictionary is a weak code for the 709-D input; even a
+      60-step IHT budget stays at 0.772 / 0.865 and the OMP(12) optimum is
+      0.646, so capacity/geometry (K=48 vs 709-D) limits it, not only the
+      10-step budget.
+  endpoint_liveness:
+    zero_joint_code_delta: 0.0
+    row_shuffle_delta: {seed_11: 0.0, seed_22: 0.0}
+    binding_absmax: {W_A_S: 7.052848956382107e-38, W_A_C: 7.04444621027063e-38,
+      W_E_S: 7.047419765611927e-38, W_E_C: 6.770048989661016e-38}
+    init_prediction_shift_on_zero_block: 8.035e-05
+    reading: >-
+      at the soup/best states ALL four coordinate binding matrices sit at the
+      float32 denormal floor, so the dictionary coordinate is inert at the
+      endpoint and the zero/shuffle probes are exactly 0.0.  The dead NODE pair
+      is pre-existing and already recorded
+      (claim-e2e-dictenv-jointbond-v1-key-level-fusion-inert-denormal-collapse-20260930;
+      route-1 / RoleCorr-v1 soups show the same node floor with the edge pair
+      alive); the route-2-specific observation is that the EDGE pair also
+      reaches the floor.  The prior decay diagnostic
+      (claim-e2e-dictenv-jointbond-decay-diagnostic-v1-frozen-parent-branch-trainable-decay-slows-not-blocks-20260930)
+      rules out "weight decay alone blocks learning" as a general explanation.
+  pre_registration_gap:
+    - >-
+      the prior round's mandated endpoint liveness acceptance gate
+      (|w|max > 1e-3, intervention delta >= 0.003) was not adopted here;
+      endpoint liveness was established post hoc by the analysis.  Any future
+      channel round must gate on liveness before task interpretation.
+  not_claimed:
+    - any increment / causal / sparse-vs-dense statement (no control arm was
+      run — no PCA48, no random / shuffled / no-dictionary training)
+    - that the joint dictionary route's ceiling has been measured (the coordinate
+      was inert at the endpoint)
+    - any statement about the official test split (never loaded)
+  forbidden_without_new_preregistration:
+    - seed 1 of this candidate, or any rescue (K / s / K-SVD epochs / IHT steps /
+      scaler / width / horizon / lr)
+    - end-to-end (unfrozen) fine-tuning of the joint dictionary
+    - training PCA48 or any random / shuffled / no-dictionary control off this
+      stopped screen
+    - reading the official test for this round
+  revisit_if: >-
+    new preregistration only, targeting one separable question: does a joint
+    representation of the 709-D environment vector earn its place once the
+    coordinate channel is demonstrably live?  It must (i) make endpoint liveness
+    an acceptance gate (|w|max > 1e-3 + non-zero intervention delta, the shape
+    mandated by decision-e2e-dictenv-jointbond-decay-diagnostic-v1-no-branch-rescue-optimizer-attractor-next-20260930),
+    (ii) justify dictionary capacity (K=48/s=12 codes 709-D at 0.895/0.941 even
+    with 60 IHT steps), (iii) carry its own matched control (PCA48 is the natural
+    one) and paired seeds, and (iv) keep the official test closed.
+
+# ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
@@ -3454,6 +3593,21 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-e2e-dictenv-joint709-absolute-v1-stop-route2-20261001: >-
+      e2e_dictenv_joint709_absolute_v1 (2026-10-01, local CPU-only, revision
+      d287b1d, prepare run 20261001-131619-843f4adc / screen run
+      20261001-144617-89099a3f, official test never loaded) ran the single
+      authorised route-2 candidate: frozen K48/s12 joint dictionary over the
+      train-only scale-balanced 709-D input, coordinate [c~; IHT_10(alpha_48)]
+      width 49, seed 0, 320 epochs, Top-5 soup.  Result: soup valid MAE
+      0.132442119 (best 0.135177988 @320) -> pre-registered band `stop`
+      (> 0.1233), verdict JOINT709_STOP; no control arm, no seed 1, no rescue.
+      Endpoint caveat: all four coordinate binding matrices are denormal-zero
+      (7e-38) and the joint-code zero / row-shuffle (seeds 11, 22) probes are
+      exactly 0.0, so the number measures the frozen protocol with an inert
+      dictionary coordinate, not the route's ceiling.  Frozen dictionary
+      diagnostics: tied-IHT(10) 0.895 / 0.941, OMP(12) 0.646, 60-step IHT
+      0.772 / 0.865, K-SVD fit MSE 1.165291.
   - decision-zinc-clean-mechanism-keep-c6-paired-paired-20260929: >-
       e2e_dictenv_clean_mechanism_v1 (2026-09-29, local CPU-only, preregistration
       ace4187 / implementation 19d69d2, official test never loaded) answered the
