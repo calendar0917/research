@@ -26,6 +26,28 @@ still follow the device rules below (physical GPU1 as logical `cuda:0`).
 
 ---
 
+## 0b. Amendment 1 — execution regime (2026-10-01, before the first formal run)
+
+Explicit user authorisation: because the remote host's CUDA stack cannot be
+initialised at all (see §0), the user directed the round to run **locally in
+the CPU regime** instead of waiting for a root-level GPU repair.
+
+* Arms, reused objects, gates, probes, seeds, epoch budget and stop rules are
+  **unchanged**; only the execution device changes (cpu instead of remote
+  GPU1).
+* All three arms run serially in one invocation on the same device, so the
+  paired A/B/C comparison stays matched; the device, torch/thread settings and
+  commit are recorded in every artifact and in the control-plane metrics.
+* Consequences that must be stated with any result: this is a **CPU-regime**
+  result.  It is directly comparable *within* A/B/C and to other CPU-regime
+  runs of this repository, but not to historical A100 numbers as if the
+  regime were identical.
+* Route 2 (if ever entered) is subject to the same CPU-regime amendment.
+* This amendment is committed **before** the first formal run; nothing else in
+  this pre-registration changes.
+
+---
+
 ## 1. Single question
 
 **Primary (route 1).** Holding the full frozen structural dictionary
