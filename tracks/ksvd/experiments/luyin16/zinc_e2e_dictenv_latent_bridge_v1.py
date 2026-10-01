@@ -1239,6 +1239,11 @@ def stage_analysis() -> dict[str, Any]:
     probes = _read_json(MECHANISM_DIR / "bridge_probes.json")
     health = _read_json(MECHANISM_DIR / "dictionary_health.json")
 
+    # same evaluation protocol on train and valid (endpoint reporting only).
+    soup_model = _soup_model()
+    soup_model.eval()
+    train_eval = _evaluate_detailed(soup_model, p1run.load_split("train"), cm.C6_MASK)
+
     soup_mae = float(run["soup"]["soup_valid_mae"])
     band = _band(soup_mae)
     zero_delta = float(probes["modes"]["zero_bridge_code"]["delta_mae"])
@@ -1292,6 +1297,8 @@ def stage_analysis() -> dict[str, Any]:
             "t1_status": str(audit_decision["checks"].get("t1_block_audit", "")),
         },
         "M_S": soup_mae,
+        "soup_train_mae": float(train_eval["mae"]),
+        "train_valid_gap": float(soup_mae - float(train_eval["mae"])),
         "best_valid_mae": float(run["best_valid_mae"]),
         "best_epoch": int(run["best_epoch"]),
         "soup_members": list(run["soup"]["members"]),
@@ -1400,6 +1407,10 @@ def _write_report(
     lines.append(
         f"- best valid `{_fmt(s['best_valid_mae'], 6)}` @ {s['best_epoch']} · Top-5 members "
         f"{s['soup_members']} · soup `{_fmt(s['M_S'], 6)}`"
+    )
+    lines.append(
+        f"- same-protocol soup train MAE `{_fmt(s['soup_train_mae'], 6)}` · "
+        f"train→valid gap `{s['train_valid_gap']:+.6f}`"
     )
     lines.append("")
     lines.append("## F. Performance interpretation")

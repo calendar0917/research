@@ -157,6 +157,12 @@ trainability only.
 
 Interrupt ⇒ `INCOMPLETE`, recorded as such, not as a failure.
 
+Endpoint reporting additionally evaluates the soup model on the official train
+split in eval mode with the identical loader protocol (same mask, same batch
+size, no shuffling) so that the reported train and valid MAE share one
+measurement convention.  This is an endpoint diagnostic only and is never a
+selection criterion.
+
 ## 8. Performance bands and decision table
 
 Bands of `M_S`: `<= 0.115` **strong**; `<= 0.120` **promising**;
