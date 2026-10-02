@@ -596,6 +596,220 @@ def stage_scaffold_smoke() -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# stage: cached-readout diagnostic (read-only; no fit, no new configuration)
+# ---------------------------------------------------------------------------
+
+
+DIAG_JSON = RESULTS_DIR / "readout_diagnostic.json"
+VENDOR_DIR = TRACK_ROOT / "experiments/luyin16/graph_dictionary_readout/v1_20261002"
+VENDOR_SOURCES = (
+    VENDOR_DIR / "prototype_dictionary.py",
+    VENDOR_DIR / "run_cached_head.py",
+    VENDOR_DIR / "torch_readout_scaffold.py",
+    VENDOR_DIR / "extract_full_features.py",
+)
+
+
+def _percentiles(values: np.ndarray) -> dict[str, float]:
+    return {
+        "min": float(np.min(values)),
+        "p05": float(np.percentile(values, 5)),
+        "p25": float(np.percentile(values, 25)),
+        "median": float(np.median(values)),
+        "mean": float(np.mean(values)),
+        "p75": float(np.percentile(values, 75)),
+        "p95": float(np.percentile(values, 95)),
+        "max": float(np.max(values)),
+    }
+
+
+def _mae_rmse(prediction: np.ndarray, target: np.ndarray) -> dict[str, float]:
+    delta = prediction - target
+    return {
+        "MAE": float(np.mean(np.abs(delta))),
+        "RMSE": float(np.sqrt(np.mean(delta * delta))),
+    }
+
+
+def stage_diagnose() -> dict[str, Any]:
+    """Read-only cache diagnostic: replay the frozen head and one fixed SVD
+    projection onto the frozen train ``p_base``; no new configuration is chosen.
+    """
+    _ensure_dirs()
+    configure()
+    watched = {
+        "model.npz": MODEL_PATH,
+        "train_cache": TRAIN_CACHE,
+        "valid_cache": VALID_CACHE,
+        "checkpoint": CHECKPOINT,
+    }
+    watched.update({f"source::{path.name}": path for path in VENDOR_SOURCES})
+    hashes_before = {name: _sha256_file(path) for name, path in watched.items()}
+
+    with np.load(TRAIN_CACHE, allow_pickle=False) as z:
+        r_train = z["R"].astype(np.float64)
+        y_train = z["y"].astype(np.float64)
+        p_base_train = z["p_base"].astype(np.float64)
+        ids_train = z["ids"].copy()
+        train_split = str(z["split"].item())
+        train_frozen = bool(z["frozen_backbone"].item())
+        train_test = bool(z["official_test_loaded"].item())
+        train_chk = str(z["checkpoint_sha"].item())
+        train_groups = z["group_ids"].copy() if "group_ids" in z.files else None
+    with np.load(VALID_CACHE, allow_pickle=False) as z:
+        r_valid = z["R"].astype(np.float64)
+        y_valid = z["y"].astype(np.float64)
+        p_base_valid = z["p_base"].astype(np.float64)
+        ids_valid = z["ids"].copy()
+        valid_split = str(z["split"].item())
+        valid_frozen = bool(z["frozen_backbone"].item())
+        valid_test = bool(z["official_test_loaded"].item())
+        valid_chk = str(z["checkpoint_sha"].item())
+
+    dictionary, coef, median, checkpoint_sha = rch.load_model(MODEL_PATH)
+    checkpoint_now = _sha256_file(CHECKPOINT)
+    state_now = _state_hash(_exclude_reader(_backbone_state_dict()))
+    preflight = _read_json(RESULTS_DIR / "preflight.json")
+
+    # -- 1. replay the existing prototype head ---------------------------------
+    kernel_train = dictionary.kernel(r_train)
+    kernel_valid = dictionary.kernel(r_valid)
+    pred_train = median + np.column_stack(
+        [np.ones(len(r_train)), kernel_train @ dictionary.inverse_root]
+    ) @ coef
+    pred_valid = median + np.column_stack(
+        [np.ones(len(r_valid)), kernel_valid @ dictionary.inverse_root]
+    ) @ coef
+    design_train = np.column_stack([np.ones(len(r_train)), kernel_train @ dictionary.inverse_root])
+    design_valid = np.column_stack([np.ones(len(r_valid)), kernel_valid @ dictionary.inverse_root])
+
+    # -- 2. one fixed float64 SVD least-squares projection onto train p_base ----
+    projection_coef, _res, rank, singular = np.linalg.lstsq(
+        design_train, p_base_train, rcond=1e-12
+    )
+    proj_train = design_train @ projection_coef
+    proj_valid = design_valid @ projection_coef
+    rank_floor = 1e-12 * float(singular[0]) if singular.size else 0.0
+
+    # -- 3. nearest-prototype similarity (train stats exclude prototype rows) --
+    selected = dictionary.selected_rows.astype(np.int64)
+    kernel_train_self = kernel_train.copy()
+    position = {int(row): int(col) for col, row in enumerate(selected)}
+    for row in selected:
+        kernel_train_self[int(row), position[int(row)]] = -np.inf
+    nearest_train_all = kernel_train_self.max(axis=1)
+    is_prototype = np.zeros(len(r_train), dtype=bool)
+    is_prototype[selected] = True
+    nearest_train_nonproto = nearest_train_all[~is_prototype]
+    nearest_valid = kernel_valid.max(axis=1)
+
+    # -- 4. hash / provenance checks -------------------------------------------
+    hashes_after = {name: _sha256_file(path) for name, path in watched.items()}
+    unchanged = {name: hashes_before[name] == hashes_after[name] for name in watched}
+    diagnostics = {
+        "protocol_version": PROTOCOL_VERSION,
+        "git_commit": _git_commit(),
+        "scope": "read-only cached readout diagnostic; empirical L2 approximation only",
+        "official_test_loaded": False,
+        "device": "cpu",
+        "threads": THREADS,
+        "checks": {
+            "checkpoint_sha_match": bool(
+                checkpoint_now == train_chk == valid_chk == checkpoint_sha
+            ),
+            "backbone_state_sha256_no_reader": state_now,
+            "backbone_state_matches_preflight": bool(
+                state_now == preflight["backbone_state_sha256_no_reader"]
+            ),
+            "train_ids_positional": bool(np.array_equal(ids_train, np.arange(len(ids_train)))),
+            "valid_ids_positional": bool(np.array_equal(ids_valid, np.arange(len(ids_valid)))),
+            "train_split": train_split,
+            "valid_split": valid_split,
+            "frozen_backbone_flags": bool(train_frozen and valid_frozen),
+            "official_test_flags": bool(train_test or valid_test),
+            "train_groups_canonical": bool(
+                train_groups is not None
+                and len(np.unique(train_groups)) < len(train_groups)
+            ),
+            "n_train": int(len(y_train)),
+            "n_valid": int(len(y_valid)),
+            "feature_width": int(r_train.shape[1]),
+        },
+        "fit_json": {
+            "train_MAE": float(_read_json(FIT_JSON)["train_MAE"]),
+            "selected_lambda": float(_read_json(FIT_JSON)["selected_lambda"]),
+            "head_dev_MAE_by_lambda": {
+                str(row["lambda_value"]): float(row["head_dev_MAE"])
+                for row in _read_json(FIT_JSON)["candidates"]
+            },
+            "n_prototypes": int(dictionary.centers.shape[0]),
+            "active_dimensions": int(dictionary.centers.shape[1]),
+            "seed": int(pd.SEED),
+        },
+        "replay": {
+            "prototype_head": {
+                "train": _mae_rmse(pred_train, y_train),
+                "valid": _mae_rmse(pred_valid, y_valid),
+            },
+            "old_p_base_same_metric": {
+                "train": _mae_rmse(p_base_train, y_train),
+                "valid": _mae_rmse(p_base_valid, y_valid),
+            },
+        },
+        "projection": {
+            "target": "frozen train p_base only",
+            "rcond": 1e-12,
+            "design_shape_train": list(design_train.shape),
+            "design_shape_valid": list(design_valid.shape),
+            "numerical_rank": int(rank),
+            "rank_floor": rank_floor,
+            "singular_max": float(singular[0]),
+            "singular_min": float(singular[-1]),
+            "condition_number": float(singular[0] / singular[-1]),
+            "n_singular_above_floor": int(np.sum(singular > rank_floor)),
+            "coef_l2_norm": float(np.linalg.norm(projection_coef)),
+            "coef_max_abs": float(np.max(np.abs(projection_coef))),
+            "vs_old_p_base": {
+                "train": _mae_rmse(proj_train, p_base_train),
+                "valid": _mae_rmse(proj_valid, p_base_valid),
+            },
+            "vs_target_y": {
+                "train": _mae_rmse(proj_train, y_train),
+                "valid": _mae_rmse(proj_valid, y_valid),
+            },
+        },
+        "nearest_prototype_similarity": {
+            "train_all_rows_self_excluded": _percentiles(nearest_train_all),
+            "train_non_prototype_rows": _percentiles(nearest_train_nonproto),
+            "valid_rows": _percentiles(nearest_valid),
+            "n_train_prototype_rows": int(is_prototype.sum()),
+            "note": "self-match set to -inf for the 256 train rows used as prototypes",
+        },
+        "immutability": {
+            "hashes_before": hashes_before,
+            "unchanged": unchanged,
+            "all_unchanged": bool(all(unchanged.values())),
+            "projection_coefficients_saved": False,
+        },
+    }
+    diagnostics["passed"] = bool(
+        diagnostics["checks"]["checkpoint_sha_match"]
+        and diagnostics["checks"]["backbone_state_matches_preflight"]
+        and diagnostics["checks"]["train_ids_positional"]
+        and diagnostics["checks"]["valid_ids_positional"]
+        and diagnostics["checks"]["frozen_backbone_flags"]
+        and not diagnostics["checks"]["official_test_flags"]
+        and diagnostics["immutability"]["all_unchanged"]
+    )
+    official_test_blocker(diagnostics)
+    _write_json(DIAG_JSON, diagnostics)
+    print(json.dumps(diagnostics["replay"], indent=2), flush=True)
+    print(json.dumps(diagnostics["projection"], indent=2), flush=True)
+    print(f"[diagnose] passed={diagnostics['passed']}", flush=True)
+    return diagnostics
+
+
+# ---------------------------------------------------------------------------
 # stage: deploy acceptance (positive signal only)
 # ---------------------------------------------------------------------------
 
@@ -963,7 +1177,17 @@ def _write_decision(summary: Mapping[str, Any], deploy: Mapping[str, Any] | None
 # ---------------------------------------------------------------------------
 
 
-STAGES = ("preflight", "export", "fit", "evaluate", "smoke", "deploy", "analysis", "chain")
+STAGES = (
+    "preflight",
+    "export",
+    "fit",
+    "evaluate",
+    "smoke",
+    "diagnose",
+    "deploy",
+    "analysis",
+    "chain",
+)
 
 
 def run_stage(stage: str) -> dict[str, Any]:
@@ -987,6 +1211,8 @@ def run_stage(stage: str) -> dict[str, Any]:
     if stage == "smoke":
         stage_scaffold_smoke()
         return _read_json(SCAFFOLD_SMOKE_JSON)
+    if stage == "diagnose":
+        return stage_diagnose()
     if stage == "deploy":
         return stage_deploy()
     if stage == "analysis":
@@ -1013,6 +1239,7 @@ __all__ = [
     "FIT_JSON",
     "EVAL_JSON",
     "DEPLOY_JSON",
+    "DIAG_JSON",
     "SCAFFOLD_SMOKE_JSON",
     "CHECKPOINT",
     "EXPECTED_VALID_MAE",
@@ -1024,6 +1251,7 @@ __all__ = [
     "stage_fit",
     "stage_evaluate",
     "stage_scaffold_smoke",
+    "stage_diagnose",
     "stage_deploy",
     "stage_analysis",
     "run_stage",

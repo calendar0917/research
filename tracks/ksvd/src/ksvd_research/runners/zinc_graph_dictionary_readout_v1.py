@@ -67,7 +67,7 @@ def fingerprints(config: Mapping[str, Any]) -> tuple[dict[str, Any], str]:
 
 def _stage(config: Mapping[str, Any]) -> str:
     stage = str(config.get("model", {}).get("stage", "fit"))
-    if stage not in ("preflight", "export", "fit", "evaluate", "smoke", "deploy", "analysis", "chain"):
+    if stage not in ("preflight", "export", "fit", "evaluate", "smoke", "diagnose", "deploy", "analysis", "chain"):
         raise ValueError(f"unsupported model.stage={stage!r}")
     return stage
 
@@ -90,6 +90,7 @@ def _copy_artifacts(context: RunContext) -> list[str]:
         ("provenance_valid.json", stages.VALID_CACHE.with_suffix(".provenance.json")),
         ("FIT.json", stages.FIT_JSON),
         ("scaffold_smoke.json", stages.SCAFFOLD_SMOKE_JSON),
+        ("readout_diagnostic.json", stages.DIAG_JSON),
         ("deploy.json", stages.DEPLOY_JSON),
     ):
         if source.exists():
