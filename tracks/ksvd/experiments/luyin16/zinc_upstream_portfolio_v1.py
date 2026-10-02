@@ -390,7 +390,13 @@ def train_arm(
 
 
 def _reader_input_and_code_moments(model: sc.LatentScaleSEM108, data_list: Sequence[Any], device: torch.device) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Frozen-parent forward; returns ``(H39, z, y)`` in fixed row order."""
+    """Frozen-parent forward; returns ``(H39_physical, z, y)`` in fixed row order.
+
+    ``H39_physical`` is the frozen 39-D *second* reader hidden (post-ReLU), i.e.
+    the exact design of the completed ``H39_PHYSICAL`` MAE+L2 fit (see
+    ``physical_head_protocol.json``); the first hidden was the discarded
+    RMS-scaled variant.
+    """
     loader = p1.make_env_loader(data_list, BATCH_SIZE, False, SEED + EVAL_SHUFFLE_OFFSET)
     model.eval()
     captured: dict[str, torch.Tensor] = {}
@@ -402,12 +408,15 @@ def _reader_input_and_code_moments(model: sc.LatentScaleSEM108, data_list: Seque
     targets: list[np.ndarray] = []
     weight = model.reader.net[0].weight.detach()
     bias = model.reader.net[0].bias.detach()
+    weight2 = model.reader.net[2].weight.detach()
+    bias2 = model.reader.net[2].bias.detach()
     with torch.no_grad():
         for batch in loader:
             batch = batch.to(device)
             model(batch, mask=cm.C6_MASK)
             reader_input = captured.pop("reader_input")
-            hidden = torch.clamp(reader_input @ weight.t() + bias, min=0.0)
+            hidden1 = torch.clamp(reader_input @ weight.t() + bias, min=0.0)
+            hidden = torch.clamp(hidden1 @ weight2.t() + bias2, min=0.0)
             coord = model.code(batch.dict_phi)
             interface = model.semantic_interface(coord, batch, cm.C6_MASK, None)
             h = sem.SEM108Model._environment_from_parts(model, coord, batch, interface, mask=cm.C6_MASK)

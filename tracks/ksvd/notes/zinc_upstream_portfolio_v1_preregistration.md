@@ -48,7 +48,9 @@ Small is constructed for the parameter audit only and **never trained**.
 ## 3. CODE stage-0 conditional (before any CODE training)
 
 Frozen-parent (`control`, parent soup) forward over official train/valid
-exports `H39` (first reader hidden, post-ReLU) and `z`. Fixed convex fit
+exports the frozen 39-D *second* reader hidden (the completed `H39_PHYSICAL`
+design; the first hidden was the discarded RMS-scaled variant) and `z`. Fixed
+convex fit
 `[1, H39, z/scale]` with MAE + `1e-5/2 ||w||^2`, certified primal-dual gap
 `<= 1e-6`, solver `upstream_portfolio_v1_reference/prototype_dictionary.py`.
 Baseline `H39_PHYSICAL.npz` valid MAE must reproduce `0.1150237843`.
