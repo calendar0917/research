@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-scale-v1-limited-signal-capacity-route-closed
+phase: e2e-dictenv-typed-cycle-v1-stop-no-absolute-gain
 updated: 2026-10-02
 
 # ---------------------------------------------------------------------------
@@ -2749,6 +2749,120 @@ e2e_dictenv_scale_v1:
     - 'account for the widened train-to-valid gap (0.045397 vs 0.119154) before adding more capacity'
 
 # ---------------------------------------------------------------------------
+# E2E-DictEnv-Typed-Cycle-v1 (static typed chordless-cycle object) — 2026-10-02
+# ---------------------------------------------------------------------------
+# One-candidate round on the frozen Small LatentBridgeSEM108 body plus ONE shared
+# typed-cycle encoder (338 -> 64 -> 48) whose per-cycle latent is decoded by the
+# SAME D_L[48,96] / V_L[96,48] task dictionary; the [sum(E), sum(E^2), count]
+# ring code (97) enters the SAME 399 -> 13 -> 13 -> 1 reader.  Exact 133002
+# parameters (frozen 106925 + ring encoder 24816 + reader 1261, zero new
+# task-dictionary parameters).  Phase A train-only OOF screen passed (gain
+# 0.031298, 3/3 folds); all 8 Phase-B acceptance gates passed on the real
+# PyTorch path; one seed-0 320-epoch CPU run reached soup valid 0.120779
+# (best 0.127393 @269) -> above the 0.120 limited-signal edge ->
+# TYPED_CYCLE_STOP.  The object is live and load-bearing but does not open a
+# better absolute band.  Official test never instantiated.
+e2e_dictenv_typed_cycle_v1:
+  status: STOPPED_NO_ABSOLUTE_GAIN_ONE_TRAJECTORY
+  round: zinc-e2e-dictenv-typed-cycle-v1
+  protocol: zinc-context-gap
+  verdict: TYPED_CYCLE_STOP
+  absolute_band: TYPED_CYCLE_STOP
+  case: A
+  preregistration: tracks/ksvd/notes/zinc_e2e_dictenv_typed_cycle_v1_preregistration.md
+  prereg_sha: a9b58bac5d5f
+  analysis: tracks/ksvd/notes/zinc_e2e_dictenv_typed_cycle_v1_analysis.md
+  claim: claim-e2e-dictenv-typed-cycle-v1-load-bearing-no-absolute-gain-20261002
+  decision: decision-e2e-dictenv-typed-cycle-v1-stop-no-absolute-gain-20261002
+  core_module: tracks/ksvd/experiments/luyin16/e2e_dictenv_typed_cycle_v1.py
+  data_module: tracks/ksvd/experiments/luyin16/typed_cycle_data_v1.py
+  probe_module: tracks/ksvd/experiments/luyin16/typed_cycle_probe_v1.py
+  stage_runner: tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_typed_cycle_v1.py
+  control_plane_runner: tracks/ksvd/src/ksvd_research/runners/zinc_e2e_dictenv_typed_cycle_v1.py
+  config: tracks/ksvd/configs/luyin16/zinc_e2e_dictenv_typed_cycle_v1.yaml
+  tests: tracks/ksvd/tests/test_typed_cycle_v1.py
+  vendor_reference: tracks/ksvd/experiments/luyin16/typed_cycle_reference/v1_20261002/
+  results_dir: tracks/ksvd/results/zinc_e2e_dictenv_typed_cycle_v1/
+  report: tracks/ksvd/results/zinc_e2e_dictenv_typed_cycle_v1/REPORT.md
+  decision_report: tracks/ksvd/results/zinc_e2e_dictenv_typed_cycle_v1/DECISION.md
+  implementation_commit: 8edbb24
+  analysis_commit: 1cb6ba5
+  formal_run:
+    run_id: 20261002-092747-a66ae9c0
+    status: completed
+    run_record: tracks/ksvd/records/runs/20261002-092747-a66ae9c0.json
+    wall_clock_s: 2961.9895648490638
+    seconds_per_epoch: 9.256217390153324
+    peak_rss_mb: 2417.8
+    official_test_loaded: false
+  candidate:
+    base: Small LatentBridgeSEM108 (frozen, 106925 params, bit-identical)
+    parameters: 133002
+    ring_encoder_parameters: 24816
+    reader_increment: 1261
+    new_task_dictionary_parameters: 0
+    seed: 0
+    soup: top-5 by official valid
+  phase_a_screen:
+    verdict: BUY_ONE_TYPED_CYCLE_SCREEN
+    oof_gain: 0.0312978819685969
+    oof_base_mae: 0.3626180394255048
+    oof_typed_mae: 0.3313201574569079
+    positive_folds: 3
+    n_graphs: 10000
+    total_cycles: 27810
+    total_dihedral_views: 313334
+    acyclic_graphs: 55
+    npz_sha256: a795947690230c38c0c54aea518d49649ec0d5fe2efd87ac28a999c5d3166d53
+  result:
+    soup_valid_mae: 0.12077915363007924
+    soup_members: [269, 273, 305, 306, 318]
+    soup_member_valid_mae: [0.12739278285199543, 0.12902123231434962, 0.12896722102159403, 0.13009958250349155, 0.12974365478375693]
+    best_valid_mae: 0.12739278285199543
+    best_epoch: 269
+    soup_train_mae_same_protocol: 0.05485709756612778
+    train_valid_gap: 0.06592205166816711
+    band_thresholds: {promising: 0.115, limited: 0.12}
+    latent_bridge_background_soup_mae: 0.12105831989174476
+    delta_vs_latent_bridge_background: -0.0002791662616655204
+    full_m3_background_soup_mae: 0.1191540920053958
+    delta_vs_full_m3_background: 0.001625061624683437
+  construction_separate_statement:
+    correctness_gates: 8/8 pass
+    containment: bit-identical shared params + zero-initialised new reader columns, plain/masked <= 1e-5
+    old_input_collision: true
+    new_ring_summary_collision: false
+    shared_bridge_calls_per_forward: 2
+    official_test_blocker: raises
+  mechanism_separate_statement:
+    zero_ring: {delta_mae: 0.2793113961815834, delta_pred_rms: 0.6662854552268982}
+    cross_molecule_same_length_permutation:
+      - {seed: 11, delta_mae: 0.21575994044542313, prediction_rms: 0.3854864835739136}
+      - {seed: 22, delta_mae: 0.2080044522881508, prediction_rms: 0.37268733978271484}
+    ring_encoder_task_grad: 0.3386647514998913
+    task_grad_D_L: 0.24007552862167358
+    task_grad_V_L: 0.24419596791267395
+    ring_code_density: {mean_nonzero: 91.18055555555556, fraction: 0.9497974537037037}
+    node_code_density: {mean_nonzero: 87.97331554369579, fraction: 0.9163887035801644}
+    reading: >-
+      the typed-cycle object is live and load-bearing (zero_ring and cross-molecule
+      permutation both degrade MAE substantially, ring-encoder and shared D/V carry
+      task gradient), but the code is near-dense (soft-threshold task dictionary,
+      not a sparse advantage) and the endpoint stayed above the 0.120 edge; the
+      deltas establish liveness only and the endpoint differences against the
+      unmatched backgrounds (0.121058 / 0.119154) must not be read as increments.
+  forbidden_without_new_preregistration:
+    - widening the ring encoder / reader or changing ring length / pooling / loss
+    - seed 1 of this candidate
+    - post-hoc matched control to reinterpret the endpoint
+    - any rescue (lambda1/lambda2, ISTA steps, ring dim, lr, horizon)
+    - reading the official ZINC test for this round
+  next_round_must_fix:
+    - 'explain why the Phase-A train-only OOF gain (0.031298) did not become an absolute full-model gain before any further typed-cycle compute'
+    - 'carry a matched control (parameter-matched ring-free arm, or a graph-level readout/pooling that preserves object identity) with >=3 seeds and a same-round matched baseline'
+    - 'report code density under any claim of sparse dictionary coding; this round measured mean 91.18/96 non-zero for the ring code'
+
+# ---------------------------------------------------------------------------
 # FEC-D1 (localized sparse structural dictionary binding) — 2026-09-24
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
@@ -3321,7 +3435,45 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_e2e_dictenv_scale_v1_capacity_route_closed_new_preregistration_required
+  status: stop_e2e_dictenv_typed_cycle_v1_no_absolute_gain_new_preregistration_required
+  # -------------------------------------------------------------------------
+  # E2E-DictEnv-Typed-Cycle-v1 (2026-10-02, local CPU, prereg sha a9b58bac5d5f,
+  # implementation 8edbb24) is CLOSED with verdict TYPED_CYCLE_STOP: adding one
+  # shared typed chordless-cycle object (338 -> 64 -> 48 encoder, per-cycle
+  # latent decoded by the SAME D_L/V_L task dictionary, [sum(E), sum(E^2),
+  # count] ring code into the SAME 399 -> 13 -> 13 -> 1 reader; exact 133002
+  # params = frozen Small 106925 + 24816 + 1261, zero new dictionary params) to
+  # the frozen Small body reached soup official-valid MAE 0.120779 (best
+  # 0.127393 @269), above the 0.120 limited-signal edge -> STOP.  The Phase-A
+  # train-only OOF gain (0.031298, 3/3 folds) did not transfer to the absolute
+  # band, and the endpoint is flat vs the unmatched Small latent-bridge 0.121058
+  # and worse than Full m=3 0.119154.  The object is genuinely live and
+  # load-bearing (zero_ring +0.279311 MAE, cross-molecule same-length ring
+  # permutations +0.215760/+0.208004 MAE, ring-encoder task grad 0.338665,
+  # shared D_L/V_L 0.240076/0.244196) but near-dense (91.18/96).  Case A closes
+  # the line: no widening, no seed 1, no matched control, no rescue, no
+  # official-test read.  All 8 acceptance gates + the CPU timing gate + the
+  # 24-step smoke passed; official test never instantiated.
+  # -------------------------------------------------------------------------
+  e2e_dictenv_typed_cycle_v1:
+    status: stopped_no_absolute_gain_one_trajectory
+    round: zinc-e2e-dictenv-typed-cycle-v1
+    verdict: TYPED_CYCLE_STOP
+    seed1_authorized: false
+    claims:
+      - claim-e2e-dictenv-typed-cycle-v1-load-bearing-no-absolute-gain-20261002
+    decision: decision-e2e-dictenv-typed-cycle-v1-stop-no-absolute-gain-20261002
+    analysis: tracks/ksvd/notes/zinc_e2e_dictenv_typed_cycle_v1_analysis.md
+    forbidden_without_new_preregistration:
+      - widening the ring encoder / reader or changing ring length / pooling / loss
+      - seed 1 of this candidate
+      - post-hoc matched control to reinterpret the endpoint
+      - any rescue (lambda1/lambda2, ISTA steps, ring dim, lr, horizon)
+      - reading the official ZINC test for this round
+    next_round_must_fix:
+      - 'explain why the Phase-A train-only OOF gain (0.031298) did not become an absolute full-model gain'
+      - 'carry a matched control (parameter-matched ring-free arm, or a graph-level readout/pooling that preserves object identity) with >=3 seeds and a same-round matched baseline'
+      - 'report code density under any claim of sparse dictionary coding (this round measured mean 91.18/96 non-zero for the ring code)'
   # -------------------------------------------------------------------------
   # E2E-DictEnv-Scale-v1 (2026-10-02, local CPU, training revision 5335301,
   # probes/analysis revision 638d6a3) is CLOSED with verdict

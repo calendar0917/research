@@ -1,0 +1,58 @@
+claim_id: claim-e2e-dictenv-typed-cycle-v1-load-bearing-no-absolute-gain-20261002
+contradicting_evidence: []
+created: '2026-10-02T09:29:37'
+implication: Do not purchase a same-family widened/seed/re-tuned typed-cycle variant;
+  any reopening needs a new preregistration that first explains why the Phase-A train-only
+  OOF gain (0.031298) did not transfer to the full model's absolute band.
+kind: claim
+limitations:
+- One seed only, no matched control; the round cannot separate the effect of adding
+  the ring branch from any other difference, and gives no seed-variance estimate.
+- Inference-only interventions establish dependence, not a training gain; the near-dense
+  code is a soft-threshold task dictionary, not a sparse-dictionary advantage.
+- The comparisons against latent-bridge 0.121058, Full 0.119154 and Sem108 0.123705
+  are unmatched historical backgrounds, not increments.
+scope: >-
+  Local CPU only; single seed 0; official ZINC train 10000 / valid 1000; official
+  test never instantiated; frozen Small LatentBridgeSEM108 body plus one shared
+  typed-cycle encoder read through the same D_L/V_L task dictionary and one
+  399->13->13->1 reader; Adam lr 0.001 / wd 1e-5 / clip 5, batch 128, 320 epochs,
+  Top-5 parameter soup by official valid; no seed 1, no matched control, no HPO, no
+  sweep, no official-test read.
+statement: 'In a single-seed-0 local-CPU ZINC screen (run 20261002-092747-a66ae9c0,
+  formal code 8edbb24/52091ca, preregistration sha a9b58bac5d5f, official ZINC train
+  10000 / valid 1000, official test never instantiated), adding one shared typed chordless-cycle
+  object to the frozen Small LatentBridgeSEM108 (exact 133002 params = frozen 106925
+  + ring encoder 24816 + reader 1261, zero new task-dictionary params; each cycle''s
+  338-d dihedral view latent is decoded by the SAME D_L[48,96]/V_L[96,48] task dictionary
+  and the [sum(E), sum(E^2), count] ring code enters the SAME 399->13->13->1 reader)
+  does NOT open a better absolute band: Top-5 soup official-valid MAE 0.120779 (best
+  0.127393 @269), just above the pre-declared 0.120 limited-signal edge and essentially
+  flat against the unmatched Small latent-bridge background 0.121058 (difference -0.000279),
+  so the frozen band rule returns TYPED_CYCLE_STOP. The failure is NOT inertness:
+  zero_ring raises MAE by +0.279311 (pred RMS 0.666285); two fixed-seed cross-molecule
+  same-length ring-object permutations raise MAE by +0.215760/+0.208004 (pred RMS
+  0.385486/0.372687) while preserving per-graph counts and the global multiset; ring-encoder
+  MAE-only task gradient 0.338665 and shared D_L/V_L 0.240076/0.244196; ring code
+  is near-dense (mean 91.18/96 non-zero, 0.9498) just like the node code (87.97/96,
+  0.9164). All 8 acceptance gates pass on the real PyTorch path (containment with
+  bit-identical shared params and zero-initialised new reader columns <=1e-5 plain/masked;
+  permutation/relabel invariance 3e-8..5e-7; genuine old-input collision on two full
+  graphs with the new ring summary separating them; exactly two shared-bridge calls
+  per forward and no node-E write-back; correct cold-start gradient order; finite
+  24-step smoke; zero_ring isolation; test blocker). The supported statement is therefore:
+  a live, load-bearing typed-cycle object read through the same task dictionary and
+  one graph-level readout is still not enough to move the absolute band at this scale/seed.'
+status: tentative
+study_id: zinc-context-gap
+supporting_evidence:
+- tracks/ksvd/notes/zinc_e2e_dictenv_typed_cycle_v1_preregistration.md
+- tracks/ksvd/notes/zinc_e2e_dictenv_typed_cycle_v1_analysis.md
+- tracks/ksvd/results/zinc_e2e_dictenv_typed_cycle_v1/summary.json
+- tracks/ksvd/results/zinc_e2e_dictenv_typed_cycle_v1/screen.json
+- tracks/ksvd/results/zinc_e2e_dictenv_typed_cycle_v1/audit/correctness.json
+- tracks/ksvd/results/zinc_e2e_dictenv_typed_cycle_v1/mechanism/typed_cycle_probes.json
+- tracks/ksvd/records/runs/20261002-092747-a66ae9c0.json
+- tracks/ksvd/experiments/luyin16/e2e_dictenv_typed_cycle_v1.py
+- tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_typed_cycle_v1.py
+- tracks/ksvd/tests/test_typed_cycle_v1.py
