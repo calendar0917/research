@@ -1,0 +1,63 @@
+# Audit protocol for the frozen-Full ZINC bottleneck audit (2026-10-02).
+#
+# Read-only / no-training protocol.  It governs one small supervised head probe
+# on the frozen `SCALE-FULL-seed0` soup representation.  Locked before the fit:
+#   baseline  B  : [1, H2]         H2 = 39-D second reader hidden (post-ReLU)
+#   probe     P1 : [1, H2, Z]      Z  = per-graph [sum(z), sum(z^2)] of the
+#                                     446-D pre-fusion interface (train-RMS scaled)
+#   probe     P2 : [1, H2, NJ]     NJ = per-graph sum_i outer(coord_i, q_i),
+#                                     coord 33-D structural code, q atom onehot 28
+#   control   C  : [1, H2, RP]     RP = fixed random projection of H2 to the same
+#                                     width as the candidate (regularization control)
+# Metric: calibrated valid MAE on official valid (exploratory; the official
+# valid has been reused for exploration and is not an independent test).
+# Purchase gate: gain vs baseline >= 0.003 and > same-width control.
+# No backbone update, no official test.
+
+id: zinc-full-bottleneck-audit-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+
+split:
+  description: PyG ZINC subset=True official train/val indices, row i = split position i
+  fingerprint_policy: index-file SHA-256; this audit reuses the frozen handoff fingerprint
+  folds: 1
+  oof: false
+
+metric:
+  ranking_metric: calibrated_valid_mae
+  metric_direction: lower_is_better
+  unit: MAE on ZINC target
+
+train_only_fitting_scope:
+  description: >-
+    Every head coefficient, RMS scale and control projection is fit/derived from
+    official train only.  Baseline and candidates are evaluated on official valid.
+  backbone_updates: none
+  official_test: never instantiated
+
+probe_policy:
+  solver: upstream_prototype_mae_l2_admm
+  lambda: 1.0e-5
+  gap_tolerance: 1.0e-6
+  baseline_design: "[1, H2]"
+  candidate_designs:
+    - "[1, H2, pre_fusion_interface_moments]"
+    - "[1, H2, node_structural_code_x_atom_type_joint_moments]"
+  controls:
+    - same_width_random_projection_of_H2
+  purchase_gate:
+    gain_min: 0.003
+    note: resource-decision threshold, not a significance threshold
+
+test_policy: terminal
+
+seed_semantics:
+  seed_role: frozen checkpoint seed; the control projection uses a fixed audit seed
+  seeds: [0]
