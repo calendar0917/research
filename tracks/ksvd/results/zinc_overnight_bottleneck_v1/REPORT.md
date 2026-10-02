@@ -63,6 +63,12 @@ Run provenance (all `git_dirty: false`, `backend: slurm`, `node: c05`, driver 52
 The raw `meta.json` for each run is vendored next to the results (`run_meta/`), including
 `git_commit`, `git_diff_hash`, `requested` resources, `runtime` (node, driver, GPU names).
 
+Execution regime: driven through the `remote-research-runner` skill
+(`~/.pi/agent/skills/remote-research-runner/SKILL.md`, incl. `references/execution-regimes.md` and
+`references/gpu-migration.md`) — remote control plane `rr` only (no manual ssh/sbatch), host `res-2`,
+pool `res2-cu124`, Slurm backend, offline `uv` on the air-gapped cluster, `rr doctor` 10 ok / 4 warn /
+0 fail before launch.
+
 ---
 
 ## 2. Direction N — fixed 2×2 node-collapse diagnosis
