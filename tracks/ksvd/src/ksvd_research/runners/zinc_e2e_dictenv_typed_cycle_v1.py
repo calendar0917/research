@@ -30,7 +30,7 @@ from tracks.ksvd.experiments.luyin16 import (  # noqa: E402
 )
 
 EXPECTED_SPLIT_SIZES = {"train": 10_000, "val": 1_000, "test": 1_000}
-DEFAULT_CONFIG = TRACK_ROOT / "configs/luyin16/zinc_typed_cycle_v1.yaml"
+DEFAULT_CONFIG = TRACK_ROOT / "configs/luyin16/zinc_e2e_dictenv_typed_cycle_v1.yaml"
 
 ARTIFACTS = (
     "summary.json",
@@ -50,7 +50,7 @@ def build_runner():
     from ksvd_research.runner_api import Runner
 
     return Runner(
-        name="zinc_typed_cycle_v1",
+        name="zinc_e2e_dictenv_typed_cycle_v1",
         default_config=DEFAULT_CONFIG,
         default_study="zinc-context-gap",
         description=(
