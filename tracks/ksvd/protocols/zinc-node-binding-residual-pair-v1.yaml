@@ -1,0 +1,103 @@
+# Protocol: ZINC node-binding residual pair v1 (2026-10-02).
+#
+# One frozen question: starting from the SAME canonical fresh Full
+# initialisation and the SAME complete 240-epoch protocol, does replacing the
+# pure multiplicative node binding with a fixed-amplitude cross-term + additive
+# residual keep the node channels learnable and change unseen-graph error?
+#
+#   control  u0 = (s * a) / sqrt(D_A)
+#   residual u1 = gamma * [u0 + eta_s * s + eta_a * a]
+#
+# eta_s, eta_a, gamma are computed ONCE from the canonical shared initial state
+# on a fixed random 1024-graph official-train sample (uncentred RMS matching;
+# gamma matches the aggregated 3-shell slot RMS).  They are fixed non-trainable
+# buffers, never selected on valid, never swept.  No new trainable parameter.
+#
+# Metric: calibrated valid MAE on official valid (exploratory).  Purchase gate
+# for a second paired seed (frozen before the run): candidate calibrated gain
+# >= 0.003, gain_without172 > 0, and G0 contribution not worse by more than
+# 0.001.  The official valid is reused for exploration, so a single pair is not
+# a significance claim.
+
+id: zinc-node-binding-residual-pair-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+
+split:
+  description: PyG ZINC subset=True official train/val indices; row i = split position i
+  fingerprint_policy: index-file SHA-256 (identical for both arms)
+  reference_fingerprint: 58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a
+  folds: 1
+  oof: false
+
+metric:
+  ranking_metric: calibrated_valid_mae
+  metric_direction: lower_is_better
+  unit: MAE on ZINC target
+
+training:
+  initialisation: canonical fresh Full (seed=0, scale_seed=0), shared by both arms
+  epochs: 240
+  optimizer: torch.optim.Adam
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  scheduler: none
+  loss: L1 + lambda_rec * structural reconstruction (H1_LAMBDA)
+  soup: fixed mean of epochs 236..240 (parameters only)
+  calibration: train-median residual, one bias per model
+  valid_usage: record only, no early stopping / best-by-valid selection
+  arms:
+    - control
+    - residual
+
+coefficient_rule:
+  fit_split: official train
+  n_graphs: 1024
+  selection: fixed seed-0 random sample, sorted graph ids recorded
+  eta_s: rms(u0) / rms(s)
+  eta_a: rms(u0) / rms(a)
+  gamma: rms(aggregated_slots(u0)) / rms(aggregated_slots(u0 + eta_s*s + eta_a*a))
+  invalid_if: non-finite or denominator <= 1e-12 -> INIT_INVALID
+  trainable: false
+
+node_health:
+  diagnostic_batch: fixed first 128 official-train molecules in fixed eval order
+  epochs: [0, 1, 10, 40, 80, 160, 240]
+  tracked:
+    - W_A_S / W_A_C / node_encoder.0 norm, absmax, relative change vs init
+    - node_slot RMS, zero_frac, cross-sample std
+    - node_out per-column std, constant / zero column fraction
+    - task-only gradient norm / zero fraction for the three groups (no step)
+    - residual product / structural-additive / atomic-additive term RMS
+    - cross-term mixing delta (pairing sensitivity)
+  gradient_policy: task MAE only; reconstruction and weight decay are reported separately
+
+evaluation:
+  raw_then_calibrated: true
+  bias: median_train(y - pred_raw), one fit
+  groups:
+    G0: original-label cycle penalty == 0 (965 valid rows)
+    G1: negative cycle penalty, excluding valid:0172 (34 rows)
+    G172: valid:0172 (1 row)
+  gain: MAE_control - MAE_candidate (positive is improvement)
+  gain_without172: same 999 rows, each arm's own train bias, no re-calibration
+
+purchase_gate:
+  calibrated_gain_min: 0.003
+  gain_without172_min: 0.0
+  g0_contribution_worsening_max: 0.001
+  note: resource-decision threshold, not a significance threshold; one pair only
+
+test_policy: terminal
+
+seed_semantics:
+  seed_role: canonical model seed (0); paired shuffle offsets shared by both arms
+  seeds: [0]

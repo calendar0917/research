@@ -581,7 +581,7 @@ class SEM108Model(cssd.CSSDModel):
         occ_coord_node = occ_coord_node.to(coord.device)
         c = coord[occ_coord_node]
         qc = q[data.env_occ_node.to(coord.device)]
-        u = (c @ self.W_A_S) * (qc @ self.W_A_C) / math.sqrt(float(p2.D_A))
+        u = self._node_binding(c, qc)
         if node_binding_zero:
             u = torch.zeros_like(u)
         flat = torch.zeros(
@@ -620,6 +620,16 @@ class SEM108Model(cssd.CSSDModel):
             [interface, node_out.reshape(n, -1), edge_out.reshape(n, -1)], dim=1
         )
         return self.fusion(fused)
+
+    def _node_binding(self, c: torch.Tensor, qc: torch.Tensor) -> torch.Tensor:
+        """Frozen multiplicative structure x atom-semantics node binding.
+
+        Named hook so a subclass can substitute an equivalent binding (e.g. a
+        fixed-amplitude additive residual) without copying the rest of
+        ``_environment_from_parts``.  The default expression is bit-identical
+        to the historical inline product.
+        """
+        return (c @ self.W_A_S) * (qc @ self.W_A_C) / math.sqrt(float(p2.D_A))
 
     def environments(self, coord: torch.Tensor, data: Any) -> torch.Tensor:
         """Unmasked path (used by diagnostics); same semantics as masked C6-less."""

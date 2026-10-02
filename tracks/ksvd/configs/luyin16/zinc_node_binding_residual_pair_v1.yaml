@@ -1,0 +1,27 @@
+# Node-binding residual pair v1: fresh Full product control vs a fixed-amplitude
+# additive residual node binding.  Same canonical fresh initialisation and the
+# same 240-epoch recipe for both arms; only `model.arm` differs.
+#
+# `model.stage`:
+#   checks : CPU correctness checks (product equivalence / residual reduction /
+#            identical initial parameters / task-gradient reach)
+#   smoke  : short GPU plumbing smoke (both arms, no valid/test)
+#   train  : one formal 240-epoch arm (arm = control | residual)
+protocol_id: zinc-context-gap
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  arm: control
+  stage: checks
+  epochs: 240
+  lr: 1.0e-3
+
+runtime:
+  # Explicit device.  `cpu` keeps the parent threads; `cuda:0` is the opt-in
+  # res-2 A100 regime.  The official ZINC test split is never loaded.
+  device: cpu
+  torch_threads: 8
