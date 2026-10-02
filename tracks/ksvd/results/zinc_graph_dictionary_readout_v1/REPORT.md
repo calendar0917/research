@@ -4,7 +4,7 @@ CPU only · official test never loaded · single frozen Full seed-0 soup.
 
 ## A. Provenance
 
-- commit `339dbea63ade4fa1ab2e51c32bd8f04fd52964d7` · device `cpu` · threads `8` · seed `0`
+- commit `28052f15f308fa68e42a5f5216d76c956cd6af60` · device `cpu` · threads `8` · seed `0`
 - parent checkpoint `17f5fcc3cdf32462657006ec89ebf2ecc72ab6fbc954b926af248aca374574eb` (408,651 parameters, soup valid MAE `0.119154`)
 - backbone state (reader excluded) `ad7e1baacce1d7e075301a622d17df55d5508e6d4b6dd5abbfcf8a135417f2e7`
 - split fingerprint `58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a`
@@ -43,7 +43,18 @@ Not purchased — the screen did not meet all frozen gates.
 
 > One backbone checkpoint; the official valid split has been reused across many historical rounds and selected the Full soup, so this is an exploratory screen, not an independent confirmation.
 
-## G. Evidence discipline
+## G. Storage and capacity accounting
+
+| item | count | storage | nature |
+|---|---|---|---|
+| frozen Full backbone parameters | 408,651 | 1,634,604 B (float32) | trained, frozen this round |
+| prototype / normaliser / scaler buffers | mean 814, scale 814, keep 814, weights 814, centers 256x598, inverse_root 256x256, bandwidth 1, selected_rows 256, spectrum 256 | 1,773,478 B (float64) | fixed transforms, not trainable capacity |
+| fitted readout coefficients | 257 | 2,056 B (float64) | the only fitted head values |
+| head container `model.npz` | - | 1,779,346 B | prototype buffers + 257 coefficients + metadata |
+
+Only the 257 coefficients are fit; the backbone and the prototype/scaler buffers are fixed.
+
+## H. Evidence discipline
 
 - One backbone checkpoint, one reused official-valid screen; no significance claim.
 - A negative result excludes only this fixed dictionary / kernel / lambda family; it does not prove the 814-D representation is sufficient or insufficient.

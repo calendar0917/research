@@ -68,7 +68,23 @@ never touches the official valid split:
 Because the screen is negative, full deployment acceptance is
 `NOT_RUN_NO_POSITIVE_SCREEN` and no deployed unit is claimed.
 
-## 4. Interpretation and limits
+## 4. Storage and capacity accounting
+
+Separated so fixed transforms are never reported as trained capacity:
+
+| item | count | storage | nature |
+|---|---|---|---|
+| frozen Full backbone parameters | 408,651 | 1,634,604 B (float32; checkpoint file 1,651,017 B) | trained, frozen this round |
+| prototype / normaliser / scaler buffers | `mean 814`, `scale 814`, `keep 814`, `weights 814`, `centers 256x598`, `inverse_root 256x256`, `bandwidth 1`, `selected_rows 256`, `spectrum 256` | 1,773,478 B (float64) | fixed transforms, **not** trainable capacity |
+| fitted readout coefficients | 257 | 2,056 B (float64) | the only fitted head values |
+| head container `model.npz` | - | 1,779,346 B | prototype buffers + 257 coefficients + metadata |
+
+Only the 257 coefficients are fit. The prototype centres / normaliser / scaler
+are fixed buffers and the backbone is unchanged, so this round adds **zero**
+trainable backbone capacity; the 216 dropped columns (814 -> 598 active) are
+the C6 zero slots and other zero-variance coordinates removed by the scaler.
+
+## 5. Interpretation and limits
 
 - This is a clean, certified negative for **one fixed** configuration:
   Gaussian kernel on train-selected prototypes, Nyström whitening, direct MAE +
@@ -84,7 +100,7 @@ Because the screen is negative, full deployment acceptance is
   no bandwidth scan, no normaliser or object swap, no backbone training, and no
   new full neural training run.
 
-## 5. Evidence discipline
+## 6. Evidence discipline
 
 - Provider bundle: synthetic NumPy/functional acceptance only (re-run locally;
   all gates passed). No ZINC or PyTorch execution by the provider.
