@@ -1,0 +1,20 @@
+# zinc_full_reader_wd_pilot_v1 — paired warm-start reader-decay pilot.
+# Protocol: tracks/ksvd/protocols/zinc-full-reader-wd-pilot-v1.yaml
+# `model.stage`:
+#   timing : 1 control epoch to measure seconds/epoch (freezes H; no valid decision)
+#   pair   : train control + candidate with the frozen H and evaluate both
+protocol_id: zinc-full-reader-wd-pilot-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  stage: timing
+  h: 20
+  reader_wd_mult: 10
+
+runtime:
+  device: cpu
+  torch_threads: 8

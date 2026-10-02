@@ -1,0 +1,66 @@
+# Pre-registered protocol: zinc_full_reader_wd_pilot_v1 (2026-10-02).
+#
+# One hypothesis, one paired warm-start pilot:
+#   "The current Full nonlinear reader under-constrains its input blocks.
+#    Strengthening ONLY the reader's weight decay improves generalisable error
+#    under the same continued-training protocol, without hurting G0."
+# This is a hypothesis to test; existing results do NOT establish that
+# regularisation is the root cause.
+#
+# Two arms, same parent Full soup, same warm protocol, Adam (coupled L2):
+#   control   : reader weight decay = w   (original warm value)
+#   candidate : reader weight decay = 10*w
+# Both arms use the same explicit 2-group parameter split (other / reader);
+# with Adam this is exactly equivalent to the original single-group protocol
+# when the per-parameter decay is equal.  Only the reader group differs.
+#
+# FORBIDDEN this round: new structure, dictionary/input changes, node-binding
+# revival, new heads, hyper-parameter sweep, a second experiment, official test.
+
+id: zinc-full-reader-wd-pilot-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  official_test: never_instantiated
+
+split:
+  fingerprint: 58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a
+
+parent:
+  checkpoint: tracks/ksvd/results/e2e_dictenv_scale_v1/checkpoints/SCALE-FULL-seed0_soup_state.pt
+  sha256: 17f5fcc3cdf32462657006ec89ebf2ecc72ab6fbc954b926af248aca374574eb
+  published_raw_valid_mae: 0.1191540920053958
+  published_calibrated_valid_mae: 0.11506585458567133
+
+warm_protocol:
+  optimizer: torch.optim.Adam        # COUPLED L2 (weight decay added to the gradient)
+  lr: 1.0e-4
+  global_weight_decay: 1.0e-5
+  reader_weight_decay_multiplier: {control: 1, candidate: 10}
+  loss: "L1(pred, y) + H1_LAMBDA * reconstruction_loss  (H1_LAMBDA = 33.95873017865987)"
+  batch_size: 128
+  grad_clip_norm: 5.0
+  seed: 0
+  epochs_h_freezed: "H in {20,30,40}; chosen as the largest H that fits the wall-clock budget with >=20% margin"
+  soup: "fixed last 5 epochs (H-4..H) parameter average; never best-5-by-valid"
+  calibration: "each arm folds its own b = median_train(y - pred_raw); valid never used"
+
+evaluation:
+  primary_comparison: candidate vs concurrent control (calibrated valid MAE)
+  gain: MAE_control - MAE_candidate  (positive = candidate better)
+  groups:
+    G0: "label_effective_cycle_snapped == 0 and not id172"
+    G1: "label_effective_cycle_snapped < 0 and not id172"
+    G172: "valid:0172"
+  group_contribution: "C_g = sum_{i in g} |pred_cal - y| / 1000"
+
+purchase_gate:
+  all_three_required: true
+  total_calibrated_gain_min: 0.003
+  gain_without_id172_positive: true
+  g0_contribution_worsening_max: 0.001
+  note: resource-decision threshold, not a significance statement
+
+test_policy: terminal
+seed_semantics: {seed_role: paired warm-start seed, seeds: [0]}
