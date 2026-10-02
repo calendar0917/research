@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# rr launcher — resolves its own real path so it works from a symlink.
+set -euo pipefail
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+SKILL_DIR="$(cd "$(dirname "$SELF")/.." && pwd)"
+exec env PYTHONPATH="$SKILL_DIR${PYTHONPATH:+:$PYTHONPATH}" python3 -m rr "$@"

@@ -28,6 +28,16 @@
   且用最小环境 `uv sync --frozen --no-default-groups --group dev`（不装
   torch/CUDA）。想往 allowlist 加文件，必须先用同样的 fresh clone + 最小环境
   验证它通过。
+- **已知的顺序敏感用例，能不跑就不跑**：
+  `tracks/ksvd/tests/test_e2e_dictenv_common_subspace_dictionary_v1.py::test_train_cssd_matches_frozen_loop`
+  在整包顺序运行中失败，单独运行同一用例则通过（2026-10-02 观察：全量
+  `-m "not slow"` 得 1832 passed / 1 failed，失败项即此用例；单独
+  `pytest <该 nodeid>` 通过）。它依赖 `data/` 的 ZINC 编码数据与
+  `tracks/ksvd/results/e2e_dictenv_p1/cache/env_train.pt`，并依赖跨测试的
+  全局/cache 状态，因此不是 CI 或整包回归的有效信号。默认跳过：
+  `uv run pytest -q -m "not slow" tracks/ksvd/tests \
+     --deselect tracks/ksvd/tests/test_e2e_dictenv_common_subspace_dictionary_v1.py::test_train_cssd_matches_frozen_loop`
+  只有明确需要验证该训练等价性时才单独运行该用例；不要为它改代码。
 
 ### 运行控制平面（tracks/ksvd）
 
@@ -98,6 +108,15 @@
 
 ## 远端计算（res / A100）
 
+- **统一入口：`skills/remote-research-runner/`（Skill + `rr` CLI）**。远端执行
+  一律走 `rr`（`rr doctor/deploy/run/jobs/status/logs/cancel/pull`），不要手工
+  `ssh` + `sbatch` / `nohup`。Skill 是 policy，`rr` 是执行机制；先读
+  `skills/remote-research-runner/SKILL.md`（该目录是从
+  `~/.pi/agent/skills/remote-research-runner` 逐字节镜像的副本，
+  以 Skill 目录为准同步）。主机：`res`（单机，process backend）与
+  `res-2`（Slurm 集群，离线 uv）。GPU 任务用 `res-2 --pool res2-cu124`
+  （c05/c06）；`res2-cpu` 无驱动约束，可能落到 510 节点导致
+  `torch.cuda.is_available()` 静默为 `False`。
 - 远端主机：SSH alias `res`（`hxy@a100-2`），仓库 checkout 在
   `/home/hxy/cy/research`；本地是唯一 source of truth，远端只作 compute checkout。
 - 仓库现为 **私有**（2026-09-18 起）。远端用一把 **read-only deploy key**

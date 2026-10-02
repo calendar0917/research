@@ -1,0 +1,134 @@
+# rr default configuration (bundled).
+#
+# This file is the ONLY place host / pool / regime specifics belong.  Adding a
+# new server, Slurm cluster, offline host, or execution regime must be a config
+# change here (or in ~/.config/rr/rr.toml), never a Skill change and never a
+# shell special-case scattered through scripts.
+#
+# User overrides are deep-merged on top of this file from
+#   ~/.config/rr/rr.toml   (or $RR_CONFIG / `rr --config PATH`).
+#
+# Concepts:
+#   host   – an access entry point (ssh alias) + remote checkout + backend
+#   pool   – WHERE a job may be scheduled (eligible nodes / scheduler hints)
+#   regime – WHAT it actually ran on (recorded per-run as provenance)
+#
+# Keep network topology (IPs, ports, ProxyJump) in ~/.ssh/config.  rr never
+# reimplements SSH topology.
+
+[ssh]
+# Safe, non-interactive defaults.  ControlMaster is intentionally left to the
+# user's ~/.ssh/config so rr does not fight an existing setup.
+opts = [
+  "-o", "BatchMode=yes",
+  "-o", "ConnectTimeout=20",
+  "-o", "ServerAliveInterval=30",
+  "-o", "ServerAliveCountMax=3",
+]
+
+# ---------------------------------------------------------------------------
+# Hosts
+# ---------------------------------------------------------------------------
+
+[hosts.res]
+ssh_alias = "res"
+backend = "process"
+code = "/home/hxy/cy/research"
+runs = "/home/hxy/cy/rr-runs"
+# Pre-rr runs launched by the legacy launch_remote.sh live here; rr reads them
+# read-only so `rr jobs/status/logs` can still explain what happened before.
+legacy_runs = "$HOME/.research_runs"
+default_pool = "res-local"
+deploy_method = "bundle"
+
+[hosts.res.env]
+uv_bin = "$HOME/.local/bin/uv"
+offline = false
+
+# res-2 is a Slurm cluster login node.  No public internet, no DNS.  The uv
+# runtime + Python + cache are bootstrapped offline under ~/opt/uv (see
+# references/res2-bootstrap.md).
+[hosts.res-2]
+ssh_alias = "res-2"
+backend = "slurm"
+code = "/share/home/snsun/rr/research"
+runs = "/share/home/snsun/rr/runs"
+default_pool = "res2-cu124"
+deploy_method = "bundle"
+
+[hosts.res-2.env]
+uv_bin = "$HOME/opt/uv/bin/uv"
+uv_cache_dir = "$HOME/opt/uv/cache"
+uv_python_install_dir = "$HOME/opt/uv/python"
+offline = true
+
+[hosts.res-2.slurm]
+partition = "gpu"
+# Non-interactive SSH does not load the cluster Slurm environment.
+login_setup = "source /share/config/zz-hpc-env.sh"
+cpus = 4
+mem = "32G"
+time = "24:00:00"
+
+# ---------------------------------------------------------------------------
+# Pools — "where can this job be scheduled?"
+# ---------------------------------------------------------------------------
+
+[pools.res-local]
+host = "res"
+backend = "process"
+gpus = 2
+
+# Explicit single-GPU pools for the process backend.  The non-Slurm host has no
+# scheduler, so isolation is done the same way launch_remote.sh always did it:
+# pin the process to one device with CUDA_VISIBLE_DEVICES.  Two parallel runs
+# pick different pools to get different GPUs, unambiguously.
+[pools.res-gpu0]
+host = "res"
+backend = "process"
+gpus = 1
+torch_backend = "cu124"
+env = { CUDA_VISIBLE_DEVICES = "0" }
+
+[pools.res-gpu1]
+host = "res"
+backend = "process"
+gpus = 1
+torch_backend = "cu124"
+env = { CUDA_VISIBLE_DEVICES = "1" }
+
+# CPU-only pool (also used for infrastructure smoke tests and non-GPU work).
+# No GPU is requested and no node constraint is applied, so it is very easy for
+# Slurm to schedule.
+[pools.res2-cpu]
+host = "res-2"
+backend = "slurm"
+gpus = 0
+torch_backend = "cu124"
+provisioned = true
+
+# Stage-1 regime: torch 2.5.1+cu124 needs driver >= 525.60.13, so only c05/c06.
+[pools.res2-cu124]
+host = "res-2"
+backend = "slurm"
+eligible_nodes = ["c05", "c06"]
+min_driver = "525.60.13"
+torch_backend = "cu124"
+provisioned = true
+
+# All-node regime: torch +cu118 runs on driver 510.x (c01-c04, c07, c08) and is
+# also valid on 525 (c05/c06).  Architecture-ready; the cu118 environment is
+# NOT provisioned yet (see `rr doctor res-2`).  Enable only after the cu118
+# lockfile + venv exist and `rr doctor` confirms torch reports cuda 11.8.
+[pools.res2-cu118-all]
+host = "res-2"
+backend = "slurm"
+eligible_nodes = ["c01", "c02", "c03", "c04", "c05", "c06", "c07", "c08"]
+min_driver = "450.80.02"
+torch_backend = "cu118"
+provisioned = false
+venv = "/share/home/snsun/rr/research/.venv-cu118"
+# Per-pool environment: a *separate committed* lockfile.  Deploy refuses to
+# build this pool's venv from the main uv.lock, so the cu124 environment can
+# never be silently reused as if it were cu118.
+lock_file = "uv.cu118.lock"
