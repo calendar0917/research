@@ -1,0 +1,26 @@
+protocol_id: zinc-context-gap
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  # Single candidate: frozen Small LatentBridgeSEM108 (106,925 params) plus one
+  # shared typed-cycle encoder (338 -> 64 -> 48) whose per-ring latent is
+  # decoded by the SAME D_L[48,96] / V_L[96,48] task dictionary (16-step ISTA,
+  # lambda1=0.05, lambda2=0.01).  The pooled ring code [sum(E), sum(E^2), 0]
+  # (97) concatenates to the frozen 302-D unified readout and enters the same
+  # reader 399 -> 13 -> 13 -> 1.  Exact parameters 106925 + 24816 + 1261 =
+  # 133002; new task-dictionary parameters = 0.
+  # `stage: screen` runs ring cache -> 8 acceptance gates -> CPU timing gate ->
+  # 24-step smoke -> one seed-0 320-epoch CPU run -> frozen probes -> analysis.
+  # See notes/zinc_e2e_dictenv_typed_cycle_v1_preregistration.md.
+  variant: typed_cycle_sem108
+  stage: screen
+  epochs: 320
+
+runtime:
+  # Explicit device; this round is authorised as a LOCAL CPU regime only.
+  device: cpu
+  torch_threads: 8
