@@ -176,6 +176,7 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
         smoke["device"] = str(device)
         smoke["official_test_loaded"] = False
         _write_json(context.artifact_dir / "smoke.json", smoke)
+        _write_json(stages.EXPORT_DIR / "smoke" / "smoke.json", smoke)
         metrics = {
             "measure": "node_binding_residual_smoke",
             "stage": stage,
