@@ -1,0 +1,92 @@
+# Pre-registered protocol: zinc_full_nonlinear_probe_v1 (2026-10-02).
+#
+# Purpose: decide whether to BUY the next small pilot ("readout change" vs
+# "node-binding revival") for the frozen Full ZINC soup.  One cheap supervised
+# nonlinear head probe, three configurations, two fixed seeds.
+#
+# Frozen object: parent Full soup SCALE-FULL-seed0_soup_state.pt
+#   sha256 17f5fcc3cdf32462657006ec89ebf2ecc72ab6fbc954b926af248aca374574eb
+#   calibrated valid MAE (parent baseline) = 0.11506585458567133
+#
+# THIS ROUND DOES NOT: update any backbone parameter, start node-revival
+# training, run any end-to-end model, or instantiate the official test split.
+
+id: zinc-full-nonlinear-probe-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes: {train: 10000, val: 1000, test: 1000}
+  official_test: never_instantiated
+
+split:
+  description: PyG ZINC subset=True official train/val indices, row i = split position i
+  fingerprint: 58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a
+  oof: false
+
+metric:
+  ranking_metric: calibrated_valid_mae
+  metric_direction: lower_is_better
+  calibration: b = median_train(y - pred); calibrated = pred + b  (each head uses its own b)
+
+# ---------------------------------------------------------------------------
+# FROZEN HEAD CONFIGURATION (written before any valid result was inspected)
+# ---------------------------------------------------------------------------
+head:
+  architecture: "input -> 64 -> 32 -> 1 ; SiLU between layers ; linear output ; no dropout"
+  loss: uniform MAE over all train rows (no tail weighting / resampling / target change)
+  optimizer: AdamW
+  lr: 1.0e-3
+  weight_decay: 1.0e-4
+  decay_policy: weights decayed, biases and (none present) norms not decayed
+  batch_size: 256
+  grad_clip_norm: 5.0
+  seeds: [0, 1]
+  max_epochs: 150
+  epoch_count_freeze: >-
+    A short speed test on the widest config (B, seed 0) runs first; the common
+    epoch count is frozen as min(150, floor(80s / seconds_per_epoch)) BEFORE any
+    valid evaluation.  Single-fit hard cap 90 s.
+  selection: fixed last-epoch parameters; no valid early-stop / checkpoint / soup
+  shared_init: >-
+    For each seed one torch.Generator seeds: W1 of width max(d); config A uses the
+    first R columns, B/C use the full width; b1/W2/b2/W3/b3 identical across A/B/C.
+    So the R-input block and all deeper layers share one initialization.
+
+features:
+  R: "frozen Full reader input, 814-D (handoff train_reader/valid_reader cache)"
+  z: >-
+    graph-level sum over all occurrences (nodes) i of outer(coord_i, onehot(atom_i)):
+    coord = per-occurrence 33-D structural code (model.code(dict_phi)); atom onehot 28.
+    No shell weighting, no additional statistics.  Reused verbatim from the
+    zinc_full_bottleneck_audit_v1 P2 features (probe_features.npz NJ arrays).
+  standardisation: >-
+    train-only mean/std; valid transform-only.  Columns constant on train
+    (std < 1e-8) are dropped; the drop rule is frozen before the fit.
+  constant_drop_rule: "std_train < 1e-8 -> dropped, recorded per block"
+  z_pca: "not used: z non-constant dims <= 1024, used directly"
+
+configs:
+  A: {input: "[R]", role: "nonlinear readout change"}
+  B: {input: "[R, z]", role: "node-joint information conditional on R"}
+  C: {input: "[R, q(R)]", role: "same-width control; q = fixed-seed linear random projection of R"}
+
+evaluation:
+  report: [raw_train_mae, calibrated_train_mae, raw_valid_mae, calibrated_valid_mae]
+  paired_valid_diffs_vs_parent: [all, ex_id172, lowest_train_decile, id_mod_5_groups]
+  note: >-
+    official valid has been reused repeatedly; results are exploratory.  The
+    backbone saw all train labels, so this is a frozen-representation head split,
+    NOT an end-to-end OOF estimate.
+
+purchase_gate:
+  gain_min: 0.003
+  readout_candidate: "two-seed mean calibrated valid gain vs parent >= 0.003, both seeds positive"
+  node_candidate: "B vs A and B vs C mean gains >= 0.003, both seeds same sign, and B vs parent >= 0.003"
+  exclusions: "main gain must not be only id172; must report central/tail sources"
+  note: resource-decision threshold, not a significance threshold
+
+test_policy: terminal
+seed_semantics:
+  seed_role: head-training seed (two fixed seeds); backbone seed frozen at 0
+  seeds: [0, 1]
