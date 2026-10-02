@@ -902,9 +902,9 @@ def _cross_molecule_ring_permutation(model: tc.TypedCycleSEM108, data_list: Sequ
         "permuted_mae": perm_mae,
         "delta_mae": float(perm_mae - base_mae),
         "prediction_rms": float(torch.sqrt(((perm_prediction - base_prediction) ** 2).mean())),
-        "swapped_objects": int(swapped),
+        "swapped_objects_per_side": int(swapped // 2),
         "total_objects": int(total_cycles),
-        "swapped_fraction": float(swapped / max(total_cycles, 1)),
+        "swapped_fraction": float((swapped // 2) / max(total_cycles, 1)),
         "seed": int(seed),
     }
 
@@ -949,18 +949,27 @@ def stage_interventions(force: bool = False) -> dict[str, Any]:
 
     # code density and MAE-only gradient on one real batch
     batch = next(iter(tc.typed_cycle_loader(data, BATCH_SIZE, False, 0)))
-    aux_capture: dict[str, torch.Tensor] = {}
-    handle = model.local_dictionary_bridge.register_forward_hook(
-        lambda _m, _i, output: aux_capture.__setitem__("alpha", output[1]["alpha"].detach())
-        if isinstance(output, tuple) and len(output) > 1 and isinstance(output[1], dict)
-        else None
-    )
+    bridge = model.local_dictionary_bridge
+    original_bridge_forward = bridge.forward
+    captured: list[torch.Tensor] = []
+
+    def _spy(h: torch.Tensor, *, return_aux: bool = False):
+        E, aux = original_bridge_forward(h, return_aux=True)
+        captured.append(aux["alpha"].detach())
+        return (E, aux) if return_aux else E
+
+    bridge.forward = _spy  # type: ignore[assignment]
+    try:
+        with torch.no_grad():
+            model(batch, mask=mask)
+    finally:
+        bridge.forward = original_bridge_forward  # type: ignore[assignment]
+    ring_alpha = captured[0] if captured else None
+    node_alpha = captured[-1] if captured else None
     model.zero_grad(set_to_none=True)
     prediction = model(batch, mask=mask)
     loss = F.l1_loss(prediction.view(-1), batch.y.view(-1))
     loss.backward()
-    handle.remove()
-    ring_alpha = aux_capture.get("alpha")
     ring_params = [p for p in model.ring_encoder.parameters()]
     ring_grad = float(sum(float(p.grad.norm()) for p in ring_params if p.grad is not None))
     bridge_grad = {
@@ -977,6 +986,7 @@ def stage_interventions(force: bool = False) -> dict[str, Any]:
         "zero_ring": zero_row,
         "cross_molecule_same_length_ring_permutation": permutations,
         "ring_code_density_all_objects": _code_stats(ring_alpha) if ring_alpha is not None else None,
+        "node_code_density_all_objects": _code_stats(node_alpha),
         "ring_encoder_task_grad": ring_grad,
         "shared_bridge_task_grad": bridge_grad,
         "note": (
@@ -1044,6 +1054,7 @@ def stage_analysis() -> dict[str, Any]:
         "zero_ring": probe_payload.get("zero_ring"),
         "cross_molecule_permutations": probe_payload.get("cross_molecule_same_length_ring_permutation"),
         "ring_code_density": probe_payload.get("ring_code_density_all_objects"),
+        "node_code_density": probe_payload.get("node_code_density_all_objects"),
         "ring_encoder_task_grad": probe_payload.get("ring_encoder_task_grad"),
         "shared_bridge_task_grad": probe_payload.get("shared_bridge_task_grad"),
         "screen": screen,
@@ -1072,10 +1083,17 @@ def _write_report(summary: Mapping[str, Any], run: Mapping[str, Any]) -> None:
         f"reader increment `{summary['reader_increment']}`.",
         f"- wall `{summary['wall_clock_s']:.1f}s`; `{summary['seconds_per_epoch']:.3f}s/epoch`; peak RSS `{summary['peak_rss_mb']:.0f} MB`.",
         "",
+        "## Absolute band",
+        f"- band boundaries: `<= 0.115` promising / `0.115-0.120` limited / `> 0.120` stop; "
+        f"observed `{summary['M_S']:.6f}` -> `{summary['verdict']}`.",
+        "- unmatched backgrounds (different params / single seed): Small latent-bridge soup `0.121058`, "
+        "Full `0.119154`; these are context, not a matched comparison.",
+        "",
         "## Inference-only diagnostics",
         f"- zero_ring: {json.dumps(summary.get('zero_ring'))}",
         f"- cross-molecule same-length ring permutation: {json.dumps(summary.get('cross_molecule_permutations'))}",
         f"- ring code density: {json.dumps(summary.get('ring_code_density'))}",
+        f"- node code density: {json.dumps(summary.get('node_code_density'))}",
         f"- ring encoder task gradient `{summary.get('ring_encoder_task_grad')}`; "
         f"shared bridge task gradient `{json.dumps(summary.get('shared_bridge_task_grad'))}`.",
         "",

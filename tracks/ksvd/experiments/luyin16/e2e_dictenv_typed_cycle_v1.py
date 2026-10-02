@@ -274,11 +274,11 @@ class TypedCycleSEM108(lb.LatentBridgeSEM108):
     # -- reader seam -----------------------------------------------------------
 
     # -- ring object -----------------------------------------------------------
-    def ring_pool(self, data: Any) -> torch.Tensor:
+    def _ring_cycle_latent(self, data: Any):
+        """``(h_cycle, graph_of_cycle, n_graphs, n_cycles)``; ``None`` if no rings."""
         n_graphs = int(data.global_context.shape[0])
-        device = data.global_context.device
         if not hasattr(data, "ring_view_atom") or int(data.ring_view_atom.shape[0]) == 0:
-            return torch.zeros((n_graphs, RING_POOL_DIM), device=device, dtype=data.global_context.dtype)
+            return None
         views = assemble_views(
             data.ring_view_atom,
             data.ring_view_bond,
@@ -293,16 +293,39 @@ class TypedCycleSEM108(lb.LatentBridgeSEM108):
         sums.index_add_(0, cycle_ids, h)
         counts = torch.bincount(cycle_ids, minlength=n_cycles).clamp_min(1).to(h.dtype)
         h_cycle = sums / counts.unsqueeze(1)
+        graph_of_cycle = data.batch[data.ring_cycle_anchor.to(data.batch.device)].to(h_cycle.device)
+        return h_cycle, graph_of_cycle, n_graphs, n_cycles
+
+    def ring_pool(self, data: Any) -> torch.Tensor:
+        n_graphs = int(data.global_context.shape[0])
+        device = data.global_context.device
+        latent = self._ring_cycle_latent(data)
+        if latent is None:
+            return torch.zeros((n_graphs, RING_POOL_DIM), device=device, dtype=data.global_context.dtype)
+        h_cycle, graph_of_cycle, n_graphs, _n_cycles = latent
         E_cycle = self.local_dictionary_bridge(h_cycle)
         if self._zero_ring:
             E_cycle = torch.zeros_like(E_cycle)
-        graph_of_cycle = data.batch[data.ring_cycle_anchor.to(data.batch.device)].to(E_cycle.device)
         total = torch.zeros((n_graphs, RING_OUT), device=E_cycle.device, dtype=E_cycle.dtype)
         squared = torch.zeros_like(total)
         total.index_add_(0, graph_of_cycle, E_cycle)
         squared.index_add_(0, graph_of_cycle, E_cycle * E_cycle)
         count_slot = torch.zeros((n_graphs, 1), device=E_cycle.device, dtype=E_cycle.dtype)
         return torch.cat([total, squared, count_slot], dim=1)
+
+    def ring_code_aux(self, data: Any) -> dict[str, Any] | None:
+        """Per-cycle shared-bridge code + support, for inference-only diagnostics."""
+        latent = self._ring_cycle_latent(data)
+        if latent is None:
+            return None
+        h_cycle, graph_of_cycle, _n_graphs, _n_cycles = latent
+        _E, aux = self.local_dictionary_bridge(h_cycle, return_aux=True)
+        return {
+            "alpha": aux["alpha"].detach(),
+            "h_cycle": h_cycle.detach(),
+            "graph_of_cycle": graph_of_cycle.detach(),
+            "n_objects": int(h_cycle.shape[0]),
+        }
 
     # -- forward ---------------------------------------------------------------
     def forward(self, data: Any, **kwargs: Any):
