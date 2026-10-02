@@ -102,6 +102,8 @@ def _resolve_arm_settings(model_cfg: Mapping[str, Any]) -> tuple[str, float, flo
 
 
 def _prepare(device, *, n_graphs: int, train_seed: int, scale_seed: int):
+    import torch
+
     from tracks.ksvd.experiments.luyin16 import zinc_upstream_portfolio_v1 as uprun
 
     stages.seed_everything(int(train_seed))
@@ -109,7 +111,9 @@ def _prepare(device, *, n_graphs: int, train_seed: int, scale_seed: int):
     dictionary = uprun._dictionary_tensor()
     train_data = uprun.load_split("control", "train")
     canonical = stages.build_readout_model(dictionary, subspace, seed=int(train_seed), scale_seed=int(scale_seed))
-    manifest = stages.compute_node_scale(canonical, train_data, device, n_graphs=int(n_graphs), seed=int(train_seed))
+    # The frozen scale rule is computed on CPU so that kappa is device-independent
+    # and reproducible across the CPU audit / GPU training regimes.
+    manifest = stages.compute_node_scale(canonical, train_data, torch.device("cpu"), n_graphs=int(n_graphs), seed=int(train_seed))
     canonical_hash = stages.parameter_state_hash(canonical)
     del canonical
     return dictionary, subspace, train_data, manifest, canonical_hash
@@ -159,7 +163,7 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
             frozen = stages.FROZEN_SCALE_PATH
             if frozen.exists():
                 previous = json.loads(frozen.read_text(encoding="utf-8"))
-                if abs(float(previous["kappa"]) - manifest.kappa) > 1e-12:
+                if abs(float(previous["kappa"]) - manifest.kappa) > 1e-5 * abs(float(previous["kappa"])):
                     raise RuntimeError(f"INIT_INVALID: recomputed kappa {manifest.kappa} != frozen {previous['kappa']}")
             else:
                 _write_json(frozen, manifest.as_dict())
@@ -244,12 +248,17 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
         kappa = float(manifest.kappa)
     else:
         kappa = float(kappa_cfg)
+    frozen_kappa = None
     if arm in ("N1", "N3") and train_seed == stages.SEED:
         frozen = stages.FROZEN_SCALE_PATH
         if frozen.exists():
             previous = json.loads(frozen.read_text(encoding="utf-8"))
-            if abs(float(previous["kappa"]) - kappa) > 1e-12:
-                raise RuntimeError(f"INIT_INVALID: arm kappa {kappa} != frozen {previous['kappa']}")
+            frozen_kappa = float(previous["kappa"])
+            if abs(frozen_kappa - kappa) > 1e-5 * abs(frozen_kappa):
+                raise RuntimeError(f"INIT_INVALID: arm kappa {kappa} != frozen {frozen_kappa}")
+            # use the committed frozen value so seed-0 kappa is identical on every regime
+            kappa = frozen_kappa
+            print(f"[overnight] using frozen kappa={kappa:.10f} (recomputed {manifest.kappa:.10f})", flush=True)
     train_data_local = train_data
     resume_from = model_cfg.get("resume_from")
     valid_data = uprun.load_split("control", "valid") if stage == "train" else None
@@ -355,6 +364,8 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
         "init_state_sha256": arm_hash,
         "canonical_init_sha256": canonical_hash,
         "readout_style": getattr(model, "readout_style", "shared_reader"),
+        "frozen_kappa_used": frozen_kappa is not None,
+        "recomputed_kappa": float(manifest.kappa),
         "official_valid_loaded": bool(stage == "train"),
         "official_test_loaded": False,
     }
