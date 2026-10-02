@@ -99,6 +99,11 @@ _load_parent_subspace = base._load_parent_subspace
 _dictionary_tensor = base._dictionary_tensor
 
 
+def _jsonable(payload: Mapping[str, Any]) -> dict[str, Any]:
+    """Serialisable view: the soup tensors are saved separately, never in JSON."""
+    return {key: value for key, value in payload.items() if key != "soup_state"}
+
+
 def _ensure_dirs() -> None:
     for path in (RESULTS_DIR, CACHE_DIR, CHECKPOINT_DIR):
         path.mkdir(parents=True, exist_ok=True)
@@ -583,7 +588,7 @@ def pilot(arm: str, device: torch.device, *, epochs: int = PILOT_EPOCHS, lr: flo
         }
     )
     up.official_test_blocker(result)
-    _write_json(RESULTS_DIR / f"pilot_{arm}.json", result)
+    _write_json(RESULTS_DIR / f"pilot_{arm}.json", _jsonable(result))
     print(f"[pilot:{arm}] raw={result['raw_valid_mae']:.6f} calibrated={result['calibrated_valid_mae']:.6f} wall={result['wall_clock_s']:.0f}s", flush=True)
     return result
 
@@ -649,7 +654,7 @@ def screen(arm: str, device: torch.device, *, epochs: int = SCREEN_EPOCHS, lr: f
         }
     )
     up.official_test_blocker(result)
-    _write_json(RESULTS_DIR / f"screen_{arm}.json", result)
+    _write_json(RESULTS_DIR / f"screen_{arm}.json", _jsonable(result))
     print(f"[screen:{arm}] raw={result['raw_valid_mae']:.6f} calibrated={result['calibrated_valid_mae']:.6f} wall={result['wall_clock_s']:.0f}s", flush=True)
     return result
 

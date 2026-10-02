@@ -85,7 +85,7 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
         payload = stages.screen(arm, device, epochs=epochs, lr=lr)
     else:
         payload = stages.small_parameter_audit()
-    stages._write_json(stages.RESULTS_DIR / f"last_{stage}_{arm}.json", payload)
+    stages._write_json(stages.RESULTS_DIR / f"last_{stage}_{arm}.json", stages._jsonable(payload))
     (context.artifact_dir / "metrics.json").write_text(
         json.dumps({key: value for key, value in payload.items() if key not in ("soup_state", "curve", "valid_predictions_raw", "valid_predictions_calibrated", "valid_targets")}, indent=2, default=str),
         encoding="utf-8",
