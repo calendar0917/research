@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: zinc-graph-dictionary-readout-v1-stop-fixed-prototype-no-gain
+phase: zinc-upstream-portfolio-v1-stop-no-purchased-candidate
 updated: 2026-10-02
 
 # ---------------------------------------------------------------------------
@@ -3435,7 +3435,7 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_zinc_graph_dictionary_readout_v1_no_absolute_gain_new_preregistration_required
+  status: stop_zinc_upstream_portfolio_v1_no_purchased_candidate_new_preregistration_required
   # -------------------------------------------------------------------------
   # zinc_graph_dictionary_readout_v1 (2026-10-02, local CPU-only, code revision
   # 339dbea6, fit run 20261002-103457-ebc7b526, evaluate run
@@ -3504,6 +3504,86 @@ authorized_next_action:
     next_round_must_fix:
       - 'explain why a fixed-coordinate prototype dictionary cannot reproduce the trained reader (e.g. rank of the trained reader''s function, or an end-to-end coupled dictionary)'
       - 'carry the replayed same-checkpoint Full as the matched baseline with paired seeds before any further compute'
+  # -------------------------------------------------------------------------
+  # zinc-upstream-portfolio-v1 (2026-10-02, res-2 Slurm A100-PCIE-40GB node c05,
+  # code revision 4c2667ee0ace branch upstream-portfolio-v1; CODE stage-0 proxy
+  # revision 574cc091) is CLOSED with verdict NO_PURCHASED_CANDIDATE.  One
+  # immutable Full ScaleSpec (408651 params) plus exactly three single-variation
+  # arms and one shared control were screened; the official test was never
+  # instantiated.  CODE was stopped at its frozen stage-0 conditional convex
+  # proxy (run 20261002-150804-a1c659d2): appending code moments z=[sum c,
+  # sum c^2] (c=rho*alpha, K=288, width 576, two train-only RMS scales) to the
+  # replayed parent H39 (0.11502378425375083) gave 0.11506861603035269, gain
+  # -4.48e-05 vs the required >= +0.003, groups 3/5, solver CONVERGED (gap
+  # 6.17e-07) -> CODE_CONDITIONAL_STOP.  Warm-80 pilot (parent soup by sha256,
+  # lr 1e-4, last-5 soup 76..80, per-arm train-median bias): CONTROL cal
+  # 0.11439932882785797 (408651 params, run 20261002-152611-e30fc31a), DROP cal
+  # 0.11592546850442886 (gain -0.0015261455, groups 1/5, ex-172 -0.0014962786,
+  # run 20261002-152626-c036a7b8), R3 cal 0.11386793851852417 (gain
+  # +0.0005313892, groups 4/5, ex-172 +0.0004424191, 420963 params, run
+  # 20261002-154105-9f1bd08f).  No arm met the four-part purchase gate (cal
+  # <= 0.111, gain >= 0.004, >= 4/5 fixed id%5 groups, ex-172 >= 0.002), so the
+  # fresh-320 stage is NOT_RUN and no seed 1 is bought.  Not permitted without a
+  # new preregistration: seeds, K/s/lambda/dropout-p/shell-radius/LR/horizon
+  # rescue, arm combination/ensembling, any 320-epoch run, reopening the test.
+  # -------------------------------------------------------------------------
+  zinc_upstream_portfolio_v1:
+    status: stopped_no_purchased_candidate
+    round: zinc-upstream-portfolio-v1
+    verdict: NO_PURCHASED_CANDIDATE
+    device: cuda:0 (res-2 Slurm, node c05)
+    seed: 0
+    python: 'torch 2.5.1+cu124 (cuda 12.4)'
+    gpu_model: NVIDIA A100-PCIE-40GB
+    gpu_driver: '525.85.12'
+    parent_checkpoint_sha256: 17f5fcc3cdf32462657006ec89ebf2ecc72ab6fbc954b926af248aca374574eb
+    split_fingerprint: 58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a
+    code_stage0_conditional:
+      run: 20261002-150804-a1c659d2
+      revision: 574cc091
+      baseline_h39_valid_mae: 0.11502378425375083
+      code_valid_mae: 0.11506861603035269
+      gain: -4.483177660186133e-05
+      groups_improved: 3
+      solver_gap: 6.165362760879312e-07
+      decision: CODE_CONDITIONAL_STOP
+    warm80_pilot:
+      control: {run: 20261002-152611-e30fc31a, calibrated_valid_mae: 0.11439932882785797, raw_valid_mae: 0.11441372334957123, parameters: 408651}
+      drop: {run: 20261002-152626-c036a7b8, calibrated_valid_mae: 0.11592546850442886, gain: -0.0015261455439031096, groups_improved: 1, gain_ex172: -0.0014962785736516854, parameters: 408651}
+      r3: {run: 20261002-154105-9f1bd08f, calibrated_valid_mae: 0.11386793851852417, gain: 0.0005313892029225886, groups_improved: 4, gain_ex172: 0.0004424190519748683, parameters: 420963}
+    fresh320:
+      status: NOT_RUN_NO_GATE_PASSED
+    official_test_loaded: false
+    claims:
+      - claim-zinc-upstream-portfolio-v1-no-purchased-candidate-20261002
+    decision: decision-zinc-upstream-portfolio-v1-stop-no-candidate-20261002
+    preregistration: tracks/ksvd/notes/zinc_upstream_portfolio_v1_preregistration.md
+    analysis: tracks/ksvd/notes/zinc_upstream_portfolio_v1_analysis.md
+    results: tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/
+    promoted_runs:
+      - tracks/ksvd/records/runs/20261002-150804-a1c659d2.json
+      - tracks/ksvd/records/runs/20261002-152611-e30fc31a.json
+      - tracks/ksvd/records/runs/20261002-152626-c036a7b8.json
+      - tracks/ksvd/records/runs/20261002-154105-9f1bd08f.json
+    rr_jobs:
+      - up-pilot-control-20261002-152756-17b74fbe
+      - up-pilot-drop-20261002-152811-0fbb708a
+      - up-pilot-r3-20261002-152829-fae8154f
+    implementation:
+      - tracks/ksvd/experiments/luyin16/e2e_dictenv_upstream_portfolio_v1.py
+      - tracks/ksvd/experiments/luyin16/zinc_upstream_portfolio_v1.py
+      - tracks/ksvd/experiments/luyin16/upstream_portfolio_v1_reference/
+      - tracks/ksvd/src/ksvd_research/runners/zinc_upstream_portfolio_v1.py
+      - tracks/ksvd/configs/luyin16/zinc_upstream_portfolio_v1.yaml
+      - tracks/ksvd/tests/test_upstream_portfolio_v1.py
+    forbidden_without_new_preregistration:
+      - seeds, or scanning K / s / lambda / dropout-p / shell-radius / LR / horizon
+      - combining or ensembling CODE / DROP / R3
+      - any 320-epoch screen from these fixed proxies
+      - reading the official ZINC test for this round
+    next_round_must_fix:
+      - 'explain mechanistically why the frozen proxies (code moments, training-only atom dropout, exact shell-3 counts) cannot move the endpoint'
+      - 'carry the same-checkpoint replayed parent Full as the matched baseline with paired seeds before buying any further compute'
   # -------------------------------------------------------------------------
   # E2E-DictEnv-Typed-Cycle-v1 (2026-10-02, local CPU, prereg sha a9b58bac5d5f,
   # implementation 8edbb24) is CLOSED with verdict TYPED_CYCLE_STOP: adding one

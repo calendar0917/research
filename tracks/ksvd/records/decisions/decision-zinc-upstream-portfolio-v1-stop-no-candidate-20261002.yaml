@@ -1,0 +1,61 @@
+alternatives_rejected:
+- 'Buying a fresh-initialized 320-epoch screen for DROP or R3 despite failing the
+  four-part gate -- rejected: no arm reached calibrated valid <= 0.111 or a
+  >= +0.004 gain over the same-round CONTROL; R3''s +0.000531 is ~8x below the
+  gate and its ex-172 +0.000442 is ~4.5x below the descriptive floor.'
+- 'Buying a seed / K / s / lambda / dropout-p / shell-radius / LR / horizon rescue
+  for any arm -- rejected: explicitly excluded by the preregistration once the
+  frozen gate set fails.'
+- 'Running CODE through the 80-epoch pilot anyway -- rejected: the frozen stage-0
+  conditional (valid <= 0.112 and gain >= 0.003) did not fire; the pilot purchase
+  is conditional on it.'
+- 'Reusing the old CPU 0.119 / 0.115 numbers as a matched comparator -- rejected:
+  they are a different protocol and the prompt requires calibrated-vs-calibrated
+  against the same-round GPU CONTROL (0.11439932882785797).'
+- 'Combining the three arms or ensembling / distilling them -- rejected: each arm
+  is an independent single model; no combination is authorized this round.'
+- 'Buying a fresh 320-epoch GPU control to answer an unrequested causal question
+  -- rejected: not asked for, and no candidate passed.'
+because: >-
+  The four-part pre-registered purchase gate fired on none of the three arms.
+  CODE stopped at its own frozen conditional (0.11506861603035269 vs replayed H39
+  0.11502378425375083, gain -4.48e-05, groups 3/5; solver CONVERGED). In the
+  shared warm-80 pilot the matched same-round CONTROL reached calibrated valid
+  0.11439932882785797; DROP reached 0.11592546850442886 (gain -0.0015261455,
+  groups 1/5, ex-172 -0.0014962786) and R3 reached 0.11386793851852417 (gain
+  +0.0005313892, groups 4/5, ex-172 +0.0004424191). DROP fails every clause; R3
+  fails the absolute-MAE and gain clauses and its ex-172 gain is below the
+  descriptive floor. All runs are finite, train correctly, match their audited
+  parameter inventories exactly (control/drop 408651, r3 420963), and never load
+  the official test. CODE''s per-batch check c @ V_L == E passed, so its negative
+  is a genuine information statement for the fixed proxy, not a wiring bug. With
+  no qualifying candidate the fresh-320 stage is correctly left NOT_RUN.
+created: '2026-10-02T16:11:00'
+decision: >-
+  STOP the zinc-upstream-portfolio-v1 round with NO PURCHASED CANDIDATE. Close
+  CODE (CODE_CONDITIONAL_STOP), DROP and R3 (warm-80 gate FAIL). Do not run the
+  fresh 320-epoch screen, do not buy a seed, do not scan K / s / lambda /
+  dropout-p / shell-radius / LR / horizon, and do not combine arms. Keep the
+  official ZINC test uninstantiated.
+decision_id: decision-zinc-upstream-portfolio-v1-stop-no-candidate-20261002
+evidence:
+- tracks/ksvd/notes/zinc_upstream_portfolio_v1_preregistration.md
+- tracks/ksvd/notes/zinc_upstream_portfolio_v1_analysis.md
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/REPORT.md
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/pilot_summary.json
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/valid_predictions.npz
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/stage0_code.json
+- tracks/ksvd/records/runs/20261002-150804-a1c659d2.json
+- tracks/ksvd/records/runs/20261002-152611-e30fc31a.json
+- tracks/ksvd/records/runs/20261002-152626-c036a7b8.json
+- tracks/ksvd/records/runs/20261002-154105-9f1bd08f.json
+- tracks/ksvd/experiments/luyin16/zinc_upstream_portfolio_v1.py
+- tracks/ksvd/src/ksvd_research/runners/zinc_upstream_portfolio_v1.py
+kind: decision
+revisit_if: >-
+  A new preregistration explains mechanistically why these frozen upstream proxies
+  (code moments, training-only atom dropout, exact shell-3 counts) cannot move the
+  endpoint, and carries the same-checkpoint replayed parent Full as the matched
+  baseline with paired seeds. Only a materially positive paired gain over that
+  baseline, with calibrated valid <= 0.111, should buy further compute.
+study_id: zinc-context-gap

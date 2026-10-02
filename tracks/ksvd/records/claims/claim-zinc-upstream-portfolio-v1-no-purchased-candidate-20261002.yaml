@@ -1,0 +1,87 @@
+claim_id: claim-zinc-upstream-portfolio-v1-no-purchased-candidate-20261002
+contradicting_evidence: []
+created: '2026-10-02T16:10:00'
+implication: >-
+  Do not buy any fresh-initialization 320-epoch screen from these three fixed
+  proxies, and do not buy seeds / K / s / lambda / dropout-p / shell-radius / LR
+  / horizon rescues for them. The next round, if any, needs a new preregistration
+  that explains mechanistically why these frozen upstream proxies cannot move the
+  endpoint and that carries the same-checkpoint replayed parent as the matched
+  baseline.
+kind: claim
+limitations:
+- One parent checkpoint (Full m=3 seed-0 soup), one reused official-valid split
+  that historically selected that soup, seed 0 only; short-screen exploratory
+  result, not an independent or multi-seed confirmation.
+- The CODE row is a frozen-parent convex proxy on the historical [1, H39] target,
+  a different protocol from the warm-80 rows; it closes that proxy only and says
+  nothing about the theoretical ceiling of native dictionary codes.
+- The warm-80 arms are short (80 epochs, lr 1e-4, last-5 soup) warm-started
+  screens; a negative there does not prove the ceiling of a fresh-initialized
+  end-to-end model. No fresh 320-epoch run was purchased.
+- R3's ex-172 and group diagnostics are descriptive; the primary metric remains
+  all 1000 official-valid rows.
+scope: >-
+  zinc-context-gap; parent E2E-DictEnv-Scale-v1 Full m=3 LatentScaleSEM108
+  (408651 params, checkpoint sha256
+  17f5fcc3cdf32462657006ec89ebf2ecc72ab6fbc954b926af248aca374574eb, published
+  soup valid 0.1191540920053958, split fingerprint
+  58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a); official
+  ZINC train 10000 / valid 1000; official test never instantiated; no node
+  hidden-state message passing, no Transformer/attention, shared task dictionary
+  kept; single model, no ensemble.
+statement: >-
+  Under the frozen zinc-upstream-portfolio-v1 gates, none of the three single-
+  variation upstream arms (CODE, DROP, R3) earns a fresh-initialized 320-epoch
+  screen, so this round purchases no candidate. (a) CODE is closed at its frozen
+  stage-0 conditional convex proxy (run 20261002-150804-a1c659d2, revision
+  574cc091, local CPU): appending code moments z=[sum c, sum c^2] (c=rho*alpha,
+  K=288, width 576, two train-only RMS scales) to the replayed parent H39
+  (0.11502378425375083, refit 0.11502413546485733) gives calibrated valid
+  0.11506861603035269, gain -4.483177660186133e-05 versus the required >= +0.003,
+  groups 3/5, solver CONVERGED (lambda 1e-5, gap 6.165362760879312e-07); verdict
+  CODE_CONDITIONAL_STOP. (b) In the shared warm-80 pilot (res-2 Slurm node c05,
+  A100-PCIE-40GB, driver 525.85.12, torch 2.5.1+cu124; parent soup loaded by
+  sha256; 80 epochs, train 10000, batch 128, MAE, Adam lr 1e-4, wd 1e-5, clip 5,
+  last-5-epoch soup 76..80, per-arm train-median output bias folded) CONTROL
+  reaches calibrated valid 0.11439932882785797 (raw 0.11441372334957123) with
+  408651 params (run 20261002-152611-e30fc31a). DROP (training-only shared atom
+  mask p=0.10 before V_L decode, eval identical to parent; run
+  20261002-152626-c036a7b8, 408651 params) reaches calibrated valid
+  0.11592546850442886 (raw 0.11719784885644913): gain -0.0015261455439031096,
+  groups 1/5 [per-group -0.000929, +0.000491, -0.002161, -0.002665, -0.002368],
+  ex-172 -0.0014962785736516854 -> FAIL every gate. R3 (exact BFS shell-3 36-D
+  block [28 atom counts in shell3; 4 shell2-3 bond counts; 4 within-shell3 bond
+  counts] appended to the 446-D fusion input, 482 -> 342 -> 144, three train-only
+  block RMS scales learned [0.4826870122023569, 1.4948370986552308,
+  0.1654336744508492]; run 20261002-154105-9f1bd08f, 420963 params) reaches
+  calibrated valid 0.11386793851852417 (raw 0.11384200304746628): gain
+  +0.0005313892029225886 (gate >= 0.004), groups 4/5 [per-group -0.000423,
+  +0.000502, +0.001775, +0.000126, +0.000677], ex-172 +0.0004424190519748683
+  (gate >= 0.002) -> FAIL the absolute and gain gates. All runs report finite
+  values, active training channels, parameters exactly matching the audited
+  inventories, and official_test_loaded = false. Because no candidate passed,
+  the fresh-320 stage is NOT_RUN and no seed 1 is bought. Positive-parameter
+  audits: Full {control 408651, code 431115, drop 408651, r3 420963};
+  Small {control 106925, code 109421, drop 106925, r3 111029}.
+status: tentative
+study_id: zinc-context-gap
+supporting_evidence:
+- tracks/ksvd/notes/zinc_upstream_portfolio_v1_preregistration.md
+- tracks/ksvd/notes/zinc_upstream_portfolio_v1_analysis.md
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/REPORT.md
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/DECISION.md
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/pilot_summary.json
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/pilot_control.json
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/pilot_drop.json
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/pilot_r3.json
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/valid_predictions.npz
+- tracks/ksvd/results/e2e_dictenv_upstream_portfolio_v1/stage0_code.json
+- tracks/ksvd/records/runs/20261002-150804-a1c659d2.json
+- tracks/ksvd/records/runs/20261002-152611-e30fc31a.json
+- tracks/ksvd/records/runs/20261002-152626-c036a7b8.json
+- tracks/ksvd/records/runs/20261002-154105-9f1bd08f.json
+- tracks/ksvd/experiments/luyin16/e2e_dictenv_upstream_portfolio_v1.py
+- tracks/ksvd/experiments/luyin16/zinc_upstream_portfolio_v1.py
+- tracks/ksvd/src/ksvd_research/runners/zinc_upstream_portfolio_v1.py
+- tracks/ksvd/tests/test_upstream_portfolio_v1.py
