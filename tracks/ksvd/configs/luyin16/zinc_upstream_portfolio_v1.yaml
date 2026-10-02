@@ -1,0 +1,28 @@
+# Upstream-Portfolio-v1: one shared control plus three single-variation arms on
+# the frozen E2E-DictEnv-Scale-v1 Full family.  Pre-registration:
+#   tracks/ksvd/notes/zinc_upstream_portfolio_v1_preregistration.md
+#
+# `model.stage` selects one run:
+#   stage0_code : frozen-parent CODE conditional export + convex fit (no training)
+#   pilot       : shared 80-epoch warm-start pilot of `model.arm` (last-5 soup)
+#   screen      : fresh-initialisation 320-epoch screen of `model.arm` (Top-5 soup)
+#   audit       : Small-preset closed-form parameter audit (construction only)
+# `model.arm` is one of control / code / drop / r3.
+protocol_id: zinc-context-gap
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  arm: control
+  stage: pilot
+  epochs: 80
+  lr: 1.0e-4
+
+runtime:
+  # Explicit device.  `cpu` keeps the parent threads; `cuda:0` is opt-in for the
+  # GPU1 (Slurm) regime.  The official ZINC test split is never loaded.
+  device: cpu
+  torch_threads: 8
