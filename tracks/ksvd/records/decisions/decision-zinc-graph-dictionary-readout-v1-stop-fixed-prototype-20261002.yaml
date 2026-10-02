@@ -1,0 +1,51 @@
+alternatives_rejected:
+- 'Increasing K, scanning the kernel bandwidth, swapping the normaliser or the
+  object, or adding an MSE/Huber rescue -- rejected: explicitly excluded by the
+  preregistration once the frozen gate set fails.'
+- 'Buying a new full 320-epoch neural run or a widened/seed/HPO variant from this
+  endpoint -- rejected: the screen reports a large negative gain (-0.129), so a
+  full run is not purchased.'
+- 'Treating the certified liveness of the replay (reader delta 0.0) as a positive
+  signal -- rejected: correctness of the frozen pipeline is not an accuracy gate.'
+- 'Reusing the old weak ridge proxy (0.3626 -> 0.3313) as evidence -- rejected:
+  it answers a different question against a weak reference.'
+because: >-
+  The single paired screen met none of the three frozen gates. The frozen Full
+  H0 readout replayed exactly (valid MAE 0.1191540920053958, delta 0.0), while
+  the fixed prototype-dictionary readout reached 0.2482236020672727 (gain
+  -0.1290695100618769), with 0/5 fixed-ID bins improving. The head train MAE
+  0.222 already exceeds the frozen Full valid error, and the frozen Full trains
+  to 0.0454: a 257-coefficient fixed-kernel prototype readout underfits the
+  814-D representation that the trained MLP reader fits. All solver certificates
+  converged (gap <= 1e-6), so this is a scientific negative for the fixed
+  configuration, not a solver failure.
+created: '2026-10-02T10:41:00'
+decision: >-
+  STOP this fixed graph-dictionary-readout configuration after the single frozen
+  seed-0 screen (verdict GRAPH_DICTIONARY_READOUT_STOP). Do not increase K, scan
+  the bandwidth, change the normaliser or object, train the backbone, or buy a
+  new full neural run. Skip deployment single-unit assembly
+  (NOT_RUN_NO_POSITIVE_SCREEN). The official ZINC test stays uninstantiated.
+decision_id: decision-zinc-graph-dictionary-readout-v1-stop-fixed-prototype-20261002
+kind: decision
+revisit_if: >-
+  A new preregistration explains mechanistically why a fixed-coordinate prototype
+  dictionary cannot reproduce the trained reader (e.g. a learnable / end-to-end
+  coupled dictionary, or an explicit account of the representational rank the
+  trained reader uses), and carries the replayed same-checkpoint Full as the
+  matched baseline with paired seeds. Only a materially positive paired gain over
+  that baseline should buy any further compute.
+study_id: zinc-context-gap
+evidence:
+- tracks/ksvd/notes/zinc_graph_dictionary_readout_v1_preregistration.md
+- tracks/ksvd/notes/zinc_graph_dictionary_readout_v1_analysis.md
+- tracks/ksvd/results/zinc_graph_dictionary_readout_v1/summary.json
+- tracks/ksvd/results/zinc_graph_dictionary_readout_v1/evaluated.json
+- tracks/ksvd/results/zinc_graph_dictionary_readout_v1/evaluated.predictions.npz
+- tracks/ksvd/results/zinc_graph_dictionary_readout_v1/fitted/FIT.json
+- tracks/ksvd/results/zinc_graph_dictionary_readout_v1/deploy/scaffold_smoke.json
+- tracks/ksvd/results/zinc_graph_dictionary_readout_v1/DECISION.md
+- tracks/ksvd/records/runs/20261002-104542-cc3d455f.json
+- tracks/ksvd/records/runs/20261002-103457-ebc7b526.json
+- tracks/ksvd/experiments/luyin16/zinc_graph_dictionary_readout_v1.py
+- tracks/ksvd/src/ksvd_research/runners/zinc_graph_dictionary_readout_v1.py

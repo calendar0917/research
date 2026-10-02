@@ -12,7 +12,7 @@
 # Orient with:        uv run research context
 # Environment:        uv run research doctor
 # Integrity checks:   uv run research verify
-phase: e2e-dictenv-typed-cycle-v1-stop-no-absolute-gain
+phase: zinc-graph-dictionary-readout-v1-stop-fixed-prototype-no-gain
 updated: 2026-10-02
 
 # ---------------------------------------------------------------------------
@@ -3435,7 +3435,75 @@ research_direction:
     - do not re-litigate the closed statistical/ablation families
 
 authorized_next_action:
-  status: stop_e2e_dictenv_typed_cycle_v1_no_absolute_gain_new_preregistration_required
+  status: stop_zinc_graph_dictionary_readout_v1_no_absolute_gain_new_preregistration_required
+  # -------------------------------------------------------------------------
+  # zinc_graph_dictionary_readout_v1 (2026-10-02, local CPU-only, code revision
+  # 339dbea6, fit run 20261002-103457-ebc7b526, evaluate run
+  # 20261002-104542-cc3d455f) is CLOSED with verdict
+  # GRAPH_DICTIONARY_READOUT_STOP.  On the UNCHANGED Full m=3 seed-0 parameter
+  # soup (checkpoint sha 17f5fcc3..., 408651 params, published soup valid MAE
+  # 0.1191540920053958) the exact 814-D tensor reaching model.reader was
+  # captured and read by a FIXED graph-level prototype dictionary (K=256, seed
+  # 20261002, median-pair Gaussian bandwidth, Nystrom whitening, direct MAE + L2
+  # head, lambda grid {1e-5,1e-4,1e-3}, selected 1e-5, all fits CONVERGED with
+  # gap <= 1e-6).  One paired screen on the same 1000 official valid molecules:
+  # replayed Full H0 0.1191540920053958 (delta 0.0), fixed dictionary readout
+  # 0.2482236020672727, gain -0.1290695100618769 (gate >= +0.006), new MAE
+  # 0.248224 (gate <= 0.113), 0/5 fixed-ID bins improved (gate >= 4/5),
+  # per-molecule improvement fraction 0.259.  The head trains the frozen
+  # representation only to MAE 0.222 while the frozen Full trains to 0.0454, so
+  # a 257-coefficient fixed-kernel readout underfits the representation the
+  # trained MLP reader fits.  The provider PyTorch scaffold was re-validated by a
+  # train-only mini-batch gate (max delta 1.92e-07, one backbone forward,
+  # buffers/dtype/state_dict/test-blocker all pass) but full deployment
+  # acceptance is NOT_RUN_NO_POSITIVE_SCREEN.  No new full neural training run
+  # is purchased.  Official test never instantiated.
+  # -------------------------------------------------------------------------
+  zinc_graph_dictionary_readout_v1:
+    status: stopped_fixed_prototype_readout_no_gain
+    round: zinc-graph-dictionary-readout-v1
+    verdict: GRAPH_DICTIONARY_READOUT_STOP
+    device: cpu
+    seed: 0
+    parent_checkpoint_sha256: 17f5fcc3cdf32462657006ec89ebf2ecc72ab6fbc954b926af248aca374574eb
+    backbone_state_sha256_no_reader: ad7e1baacce1d7e075301a622d17df55d5508e6d4b6dd5abbfcf8a135417f2e7
+    split_fingerprint: 58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a
+    feature_width: 814
+    n_prototypes: 256
+    lambda_grid: [1.0e-05, 1.0e-04, 1.0e-03]
+    selected_lambda: 1.0e-05
+    original_valid_mae: 0.1191540920053958
+    graph_dictionary_valid_mae: 0.2482236020672727
+    gain: -0.1290695100618769
+    better_fraction: 0.259
+    five_ID_bins_improved: 0
+    valid_replay_gate_passed: true
+    scaffold_smoke: PASS
+    deployment_acceptance: NOT_RUN_NO_POSITIVE_SCREEN
+    new_full_neural_training_purchased: false
+    claims:
+      - claim-zinc-graph-dictionary-readout-v1-fixed-prototype-stop-20261002
+    decision: decision-zinc-graph-dictionary-readout-v1-stop-fixed-prototype-20261002
+    preregistration: tracks/ksvd/notes/zinc_graph_dictionary_readout_v1_preregistration.md
+    analysis: tracks/ksvd/notes/zinc_graph_dictionary_readout_v1_analysis.md
+    results: tracks/ksvd/results/zinc_graph_dictionary_readout_v1/
+    promoted_runs:
+      - tracks/ksvd/records/runs/20261002-103457-ebc7b526.json
+      - tracks/ksvd/records/runs/20261002-104542-cc3d455f.json
+    implementation:
+      - tracks/ksvd/experiments/luyin16/zinc_graph_dictionary_readout_v1.py
+      - tracks/ksvd/experiments/luyin16/graph_dictionary_readout/v1_20261002/
+      - tracks/ksvd/src/ksvd_research/runners/zinc_graph_dictionary_readout_v1.py
+      - tracks/ksvd/configs/luyin16/zinc_graph_dictionary_readout_v1.yaml
+    forbidden_without_new_preregistration:
+      - increasing K or scanning the kernel bandwidth
+      - changing the normaliser / object / loss or adding an MSE/Huber rescue
+      - training the backbone or adding a second backbone / old-prediction residual
+      - seed 1 of this fixed configuration
+      - reading the official ZINC test for this round
+    next_round_must_fix:
+      - 'explain why a fixed-coordinate prototype dictionary cannot reproduce the trained reader (e.g. rank of the trained reader''s function, or an end-to-end coupled dictionary)'
+      - 'carry the replayed same-checkpoint Full as the matched baseline with paired seeds before any further compute'
   # -------------------------------------------------------------------------
   # E2E-DictEnv-Typed-Cycle-v1 (2026-10-02, local CPU, prereg sha a9b58bac5d5f,
   # implementation 8edbb24) is CLOSED with verdict TYPED_CYCLE_STOP: adding one
@@ -4233,6 +4301,32 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-zinc-graph-dictionary-readout-v1-stop-fixed-prototype-20261002: >-
+      zinc_graph_dictionary_readout_v1 (2026-10-02, local CPU-only, revision
+      339dbea6, fit run 20261002-103457-ebc7b526 / evaluate run
+      20261002-104542-cc3d455f, official test never instantiated) tested whether
+      the UNCHANGED Full m=3 seed-0 parameter soup (408651 params, published
+      soup valid MAE 0.1191540920053958) can be improved by replacing its trained
+      reader with a FIXED graph-level prototype dictionary readout on the exact
+      814-D tensor reaching model.reader (K=256, seed 20261002, median-pair
+      Gaussian bandwidth, Nystrom whitening, direct MAE + L2 head, lambda grid
+      {1e-5,1e-4,1e-3}, selected 1e-5, every fit CONVERGED gap <= 1e-6).  One
+      paired screen on the same 1000 official valid molecules: replayed Full H0
+      0.1191540920053958 (delta 0.0, reader replay max per-molecule delta 0.0),
+      fixed dictionary readout 0.2482236020672727, gain -0.1290695100618769
+      (gate >= +0.006), new MAE 0.248224 (gate <= 0.113), 0/5 fixed-ID bins
+      improved (gate >= 4/5), better fraction 0.259.  Head train MAE 0.222 vs
+      frozen Full train MAE 0.0454: a 257-coefficient fixed-kernel readout
+      underfits the representation the trained MLP reader fits.  Verdict
+      GRAPH_DICTIONARY_READOUT_STOP; no new full neural training run purchased.
+      The provider PyTorch scaffold was re-validated by a train-only mini-batch
+      gate (max delta 1.92e-07, one backbone forward, buffers/dtype/state_dict/
+      test-blocker pass); full deployment acceptance
+      NOT_RUN_NO_POSITIVE_SCREEN.  See
+      claim-zinc-graph-dictionary-readout-v1-fixed-prototype-stop-20261002,
+      decision-zinc-graph-dictionary-readout-v1-stop-fixed-prototype-20261002,
+      notes/zinc_graph_dictionary_readout_v1_preregistration.md,
+      notes/zinc_graph_dictionary_readout_v1_analysis.md.
   - decision-e2e-dictenv-hier-relation-v1-stop-after-seed0-20261001: >-
       e2e_dictenv_hier_relation_v1 (2026-10-01, local CPU-only, preregistration
       a90584b / formal revision cc4cf83, prepare run 20261001-173750-21b32689 /
