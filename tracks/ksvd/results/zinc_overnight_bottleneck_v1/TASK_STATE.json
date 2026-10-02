@@ -1,0 +1,83 @@
+{
+  "task": "zinc_overnight_bottleneck_v1",
+  "protocol": "zinc-overnight-bottleneck-v1",
+  "branch": "task/zinc-overnight-bottleneck-v1",
+  "deployed_commit": "8657343edc6218087286b55ee6cd51dabcafd78a",
+  "prereg_commit": "323b981",
+  "started_utc": "2026-10-02T16:43:29Z",
+  "compute_stop_utc": "2026-10-02T23:16:27Z",
+  "hard_deadline_utc": "2026-10-03T00:43:29Z",
+  "elapsed_compute_hours": 6.55,
+  "gpu_hours_used": 4.9,
+  "gpu_hours_limit": 8.0,
+  "gpus_max_concurrent": 2,
+  "host": "res-2",
+  "pool": "res2-cu124",
+  "backend": "slurm",
+  "node": "c05",
+  "gpu": "NVIDIA A100-PCIE-40GB",
+  "driver": "525.85.12",
+  "torch": "2.5.1+cu124",
+  "test_policy": "terminal",
+  "official_test_loaded": false,
+  "official_valid_role": "exploration/evaluation set only",
+  "split_fingerprint": "58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a",
+  "frozen_kappa_seed0": 4050.2396551095235,
+  "canonical_init_sha256": "93c2f23c39b1654d720d4d7be04a008c25c163a3c21aef682b7250c3be5ac396",
+  "historical_control_cal_mae": 0.10904212416528025,
+  "outcome": {
+    "target_0p09_reached": false,
+    "best_arm": "N0_s0 (the control itself)",
+    "best_cal_valid_mae": 0.11120614409446716,
+    "direction_N": "FAIL (no arm passes gate; gains -0.001207..-0.010476)",
+    "direction_T": "FAIL (gate fails all three clauses; gain -0.004548)",
+    "combination": "not run (precondition false)",
+    "second_seed_confirmation": "not run (no candidate passed seed-0 gate)",
+    "diagnosis": "node-channel collapse is a conjunction of tiny init amplitude AND node-specific weight decay; either factor alone rescues it; the rescue does not improve valid MAE (it increases overfitting), so the collapse is NOT the valid-MAE bottleneck",
+    "outcome_class": "FAIL_TARGET / DIAGNOSIS_DELIVERED"
+  },
+  "arms_240ep": {
+    "N0_s0": {"role": "control", "cal": 0.11120614409446716, "raw": 0.1107364371418953, "bias": -0.012042760848999023, "train_seed": 0, "kappa": 4050.2394974060226},
+    "N0_s1": {"role": "control seed 1 (seed-variance estimate)", "cal": 0.11408018320798874, "raw": 0.11525687575340271, "bias": 0.013867, "train_seed": 1, "kappa": 4293.98},
+    "N1_s0": {"role": "node candidate (unit scale)", "cal": 0.11270982772111893, "gain": -0.001504},
+    "N2_s0": {"role": "node arm (WD=0)", "cal": 0.11241266131401062, "gain": -0.001207},
+    "N3_s0": {"role": "node arm (both)", "cal": 0.12168172001838684, "gain": -0.010476},
+    "T0_s0": {"role": "additive topology", "cal": 0.1157536432147026, "gain": -0.004548}
+  },
+  "control_seed_spread": 0.002874,
+  "prefix_2x2_health": {
+    "N0_s0_prefix": {"amplitude": "original", "node_wd": 1e-5, "slot_rms_ep0": 2.418e-4, "slot_rms_ep80": 0.0, "healthy": "3/6"},
+    "N1_s0_prefix": {"amplitude": "unit", "node_wd": 1e-5, "slot_rms_ep0": 0.979, "slot_rms_ep80": 1.362, "healthy": "6/6"},
+    "N2_s0_prefix": {"amplitude": "original", "node_wd": 0, "slot_rms_ep0": 2.418e-4, "slot_rms_ep80": 2.045e-3, "healthy": "6/6"},
+    "N3_s0_prefix": {"amplitude": "unit", "node_wd": 0, "slot_rms_ep0": 0.979, "slot_rms_ep80": 1.361, "healthy": "6/6"}
+  },
+  "t0_mechanism": {
+    "additivity_residual_max_abs": 5.960464477539063e-08,
+    "fixed_swap_delta_spread_additive": 1.1920928955078125e-07,
+    "fixed_swap_delta_spread_shared": 0.05963784456253052,
+    "independent_of_other": true
+  },
+  "deviations": [
+    "resume path broken on CUDA (torch.cuda.set_rng_state_all received CUDA ByteTensors); 240-epoch arms run as fresh complete trajectories on the single deployed commit instead of prefix+resume",
+    "control re-run inside this protocol is 0.111206 vs historical pair-protocol 0.109042; gains computed against the matched in-protocol control",
+    "prefix (train_prefix) runs do not load official valid; they are RNG-distinct from the 240-epoch runs because the per-epoch eval loader draws its base seed from the global RNG; prefixes are qualitative diagnostics only"
+  ],
+  "jobs": {
+    "smoke": "zinc-ob-smoke-s0",
+    "prefix": ["zinc-ob2-N0-prefix-s0", "zinc-ob2-N1-prefix-s0", "zinc-ob2-N2-prefix-s0", "zinc-ob2-N3-prefix-s0"],
+    "full": ["zinc-ob3-N0-full-s0", "zinc-ob3-N1-full-s0", "zinc-ob3-N2-full-s0", "zinc-ob3-N3-full-s0", "zinc-ob2-T0-full-s0", "zinc-ob3-N0-full-s1"],
+    "failed_resume_attempts": ["zinc-ob2-N0-full-s0 (55782)", "zinc-ob2-N1-full-s0 (55783)"],
+    "cancelled": ["zinc-ob2-N0-full-s0 (55780, superseded)"]
+  },
+  "artifacts": {
+    "report": "tracks/ksvd/results/zinc_overnight_bottleneck_v1/REPORT.md",
+    "decision": "tracks/ksvd/results/zinc_overnight_bottleneck_v1/DECISION.md",
+    "audit": "tracks/ksvd/results/zinc_overnight_bottleneck_v1/AUDIT.md",
+    "audit_json": "tracks/ksvd/results/zinc_overnight_bottleneck_v1/audit_stageA.json",
+    "analysis_json": "tracks/ksvd/results/zinc_overnight_bottleneck_v1/analysis.json",
+    "tables": ["main_table.csv", "group_table.csv", "severity_table.csv", "pair_valid_predictions.csv", "health_2x2.csv"],
+    "t0_mechanism": "tracks/ksvd/results/zinc_overnight_bottleneck_v1/t0_mechanism.json",
+    "run_meta": "tracks/ksvd/results/zinc_overnight_bottleneck_v1/run_meta/"
+  },
+  "next_entry": "Close N/T; next pre-registered experiment must target the G0 generalisation gap (train 0.039 vs valid 0.111) with the two-seed control spread (+-0.0029) as the effect-size floor; primary metric gain_without172 on G0."
+}

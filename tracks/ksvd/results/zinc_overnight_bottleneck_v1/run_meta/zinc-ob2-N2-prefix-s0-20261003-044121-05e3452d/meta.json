@@ -1,0 +1,58 @@
+{
+  "schema": "rr/run-meta/v1",
+  "experiment": "zinc-ob2-N2-prefix-s0",
+  "run_id": "zinc-ob2-N2-prefix-s0-20261003-044121-05e3452d",
+  "host": "res-2",
+  "backend": "slurm",
+  "pool": "res2-cu124",
+  "torch_backend": "cu124",
+  "git_commit": "8657343edc6218087286b55ee6cd51dabcafd78a",
+  "git_branch": "task/zinc-overnight-bottleneck-v1",
+  "git_dirty": false,
+  "git_diff_hash": "e3b0c44298fc1c14",
+  "command": "uv run research run zinc_overnight_bottleneck_v1 --study zinc-context-gap --purpose '80-epoch node-collapse prefix arm N2 (2x2: amplitude x node-WD); health only, official valid not read' --set model.arm=N2 --set model.stage=train_prefix --set runtime.device=cuda --mode screen",
+  "requested": {
+    "gpus": 1,
+    "cpus": 8,
+    "mem": "32G",
+    "time": "60",
+    "partition": "gpu",
+    "eligible_nodes": [
+      "c05",
+      "c06"
+    ]
+  },
+  "result_paths": [
+    "tracks/ksvd/results/zinc_overnight_bottleneck_v1"
+  ],
+  "created_at": "2026-10-03T04:41:21+08:00",
+  "state": "completed",
+  "slurm_job_id": "55778",
+  "runtime": {
+    "hostname": "c05",
+    "node": "c05",
+    "driver_version": "525.85.12",
+    "gpus": {
+      "count": 1,
+      "names": [
+        "NVIDIA A100-PCIE-40GB"
+      ]
+    },
+    "gpu_count": 1,
+    "python_version": "3.12.14",
+    "python_executable": "/share/home/snsun/rr/research/.venv/bin/python",
+    "slurm_job_id": "55778",
+    "slurm_job_nodelist": "c05",
+    "slurm_partition": "gpu",
+    "slurm_cpus": "8",
+    "slurm_gpus": "0",
+    "cuda_visible_devices": "0",
+    "started_at": "2026-10-03T04:52:15+08:00",
+    "torch_version": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "completed_at": "2026-10-03T05:05:22+08:00",
+    "exit_code": 0
+  }
+}
