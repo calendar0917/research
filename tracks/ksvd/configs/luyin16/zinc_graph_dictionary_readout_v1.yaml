@@ -1,0 +1,24 @@
+protocol_id: zinc-context-gap
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  # One frozen backbone only: the already trained Full m=3 seed-0 parameter
+  # soup (408,651 parameters, soup valid MAE 0.1191540920053958).  No backbone
+  # parameter is trained.  The single 814-D tensor that reaches the old
+  # `model.reader` is captured with a forward pre-hook and passed to the
+  # vendored frozen graph-level prototype dictionary + L2-regularised MAE
+  # readout (K=256, seed 20261002, lambda in {1e-5, 1e-4, 1e-3}).
+  # `stage: fit` exports official train and fits the head; `stage: evaluate`
+  # opens the frozen official valid exactly once for the paired screen.
+  # The official ZINC test split is never instantiated.
+  variant: graph_dictionary_full
+  stage: fit
+
+runtime:
+  # Explicit device; this round is authorised as a LOCAL CPU regime only.
+  device: cpu
+  torch_threads: 8

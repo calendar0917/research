@@ -23,6 +23,7 @@ def _registry() -> dict[str, Runner]:
         zinc_e2e_dictenv_rolecorr_increment_v2,
         zinc_e2e_dictenv_rolecorr_v1,
         zinc_e2e_dictenv_scale_v1,
+        zinc_graph_dictionary_readout_v1,
         zinc_icrate,
         zinc_jointbond_decay_diagnostic_v1,
         zinc_jointbond_v1,
@@ -48,6 +49,7 @@ def _registry() -> dict[str, Runner]:
             zinc_e2e_dictenv_latent_bridge_v1.build_runner(),
             zinc_e2e_dictenv_scale_v1.build_runner(),
             zinc_e2e_dictenv_typed_cycle_v1.build_runner(),
+            zinc_graph_dictionary_readout_v1.build_runner(),
         )
     }
 
