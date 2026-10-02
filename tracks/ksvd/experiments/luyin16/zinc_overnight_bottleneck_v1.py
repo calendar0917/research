@@ -102,8 +102,12 @@ def _rng_state_cuda() -> Any:
 
 
 def _restore_cuda_rng(states: Any) -> None:
+    # ``torch.cuda.set_rng_state_all`` expects *CPU* ByteTensors (it clones the
+    # state onto the default generator); passing CUDA tensors raises
+    # ``TypeError: RNG state must be a torch.ByteTensor``.  ``_rng_state_cuda``
+    # already stores CPU copies, so hand them over unchanged.
     if states is not None and torch.cuda.is_available():
-        torch.cuda.set_rng_state_all([state.to("cuda") for state in states])
+        torch.cuda.set_rng_state_all(list(states))
 
 
 # ---------------------------------------------------------------------------
