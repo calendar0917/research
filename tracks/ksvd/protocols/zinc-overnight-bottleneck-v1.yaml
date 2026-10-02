@@ -1,0 +1,160 @@
+# Protocol: ZINC overnight bottleneck v1 (2026-10-02/03).
+#
+# Two independent pre-registered directions, both from the canonical fresh Full
+# initialisation (shared structure dictionary + structure/atom-semantics binding
+# + local-environment statistics; no message passing / transformer), plus a
+# conditional combination and one second-seed confirmation.
+#
+# Direction N — a fixed 2x2 diagnosis of node-channel collapse.  All arms use
+# the ORIGINAL product binding and the SAME canonical fresh initialisation and
+# trainable parameter set (408,651).  The only differences are:
+#   factor A (amplitude): kappa = 1 (original) vs kappa = 1 / r_init, where
+#     r_init is the uncentred RMS of the aggregated 3-shape product slots over a
+#     fixed seed-0 1024-graph official-train sample.  kappa is a non-trainable
+#     buffer multiplying the same product; no new parameter / gate / activation.
+#   factor B (weight decay): original Adam WD=1e-5 on W_A_S, W_A_C,
+#     node_encoder.* (including their biases) vs 0 on exactly those tensors.
+#     fusion node columns are NOT in this factor.
+#   N0 = original/original (shared control); N1 = unit-scale/original;
+#   N2 = original/WD0; N3 = unit-scale/WD0.
+#
+# Direction T — one additive topology readout T0:
+#   pred = GenericReader_other(R[:, :806]) + Linear(8, 1)(R[:, 806:814]).
+#   T0 keeps the ORIGINAL product node binding, node WD and amplitude (no node
+#   winner).  Body/reader layers are copied from the canonical parent fresh
+#   state; the 8->1 head is initialised from a fixed private seed.  Same loss
+#   (L1 + lambda_rec), optimizer, 240 epochs, seed, fixed last-5 soup.
+#
+# Selection (recorded, uses official valid as an exploration set):
+#   * an arm is healthy only if, at epochs 40 AND 80 on both fixed sentinel
+#     batches, node_out has reproducible cross-sample variation
+#     (max column std > max(1e-8, 1e-3 * that arm's initial max column std)),
+#     the W_A_S / W_A_C / node_encoder.0.task gradients are finite with at least
+#     one norm > 1e-10, and the product term is not identically zero;
+#   * node winner order: N1, else N2, else N3, else close the node direction;
+#   * N0 always runs 240; at most one healthy winner continues 80 -> 240;
+#   * T0 is bought when the shared control identity holds and no <=0.09 model
+#     has been confirmed.
+#
+# Metric: calibrated valid MAE (train-median bias, one per model, train only).
+# The official valid is reused for exploration; no significance or SOTA claim.
+
+id: zinc-overnight-bottleneck-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+
+split:
+  description: PyG ZINC subset=True official train/val indices; row i = split position i
+  fingerprint_policy: index-file SHA-256 (identical for all arms)
+  reference_fingerprint: 58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a
+  folds: 1
+  oof: false
+
+metric:
+  ranking_metric: calibrated_valid_mae
+  metric_direction: lower_is_better
+  unit: MAE on ZINC target
+
+training:
+  initialisation: canonical fresh Full (seed=0, scale_seed=0), shared by all seed-0 arms
+  epochs: 240
+  prefix_epochs: 80
+  optimizer: torch.optim.Adam (two parameter groups; single-group-equivalent at equal WD)
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  scheduler: none
+  loss: L1 + lambda_rec * structural reconstruction (H1_LAMBDA)
+  soup: fixed mean of epochs 236..240 (parameters only)
+  calibration: train-median residual, one bias per model
+  valid_usage: record only at the 240-epoch soup; no early stopping / best-by-valid selection
+  prefix_valid_usage: none (the 80-epoch prefix never reads official valid)
+
+node_factor:
+  amplitude:
+    kappa_rule: 1 / uncentred RMS of the aggregated 3-shell product slots
+    fit_split: official train
+    n_graphs: 1024
+    selection: fixed seed-0 random sample, sorted graph ids recorded
+    trainable: false
+    init_valid_if_not_finite: INIT_INVALID
+  weight_decay:
+    scope: [W_A_S, W_A_C, "node_encoder."]
+    original_value: 1.0e-5
+    zero_value: 0.0
+    fusion_node_columns_excluded: true
+
+node_health:
+  sentinel_batches: [train rows 0..127, train rows 2048..2175]  # fixed eval order
+  epochs: [0, 1, 10, 20, 40, 80, 160, 240]
+  gate_epochs: [40, 80]
+  tracked:
+    - slot RMS / zero_frac / per-graph RMS
+    - node_out max column std vs init, per-graph RMS
+    - task-only gradient norm / finiteness for W_A_S, W_A_C, node_encoder.0.weight
+    - product term RMS and zero fraction
+    - dependency response: replace node_out with its own batch mean; delta prediction RMS
+
+topology_readout:
+  family: additive
+  other_input: R[:, 0:806]
+  topology_input: R[:, 806:814]
+  head: Linear(8, 1), private fixed seed
+  body_init: canonical parent fresh reader (first 806 columns + bias + later layers)
+
+evaluation:
+  raw_then_calibrated: true
+  bias: median_train(y - pred_raw), one fit
+  groups:
+    G0: original-label cycle penalty == 0 (965 valid rows)
+    G1: negative cycle penalty, excluding valid:0172 (34 rows)
+    G172: valid:0172 (1 row)
+  gain: MAE_control - MAE_candidate (positive is improvement)
+  gain_without172: same 999 rows, each arm's own train bias, no re-calibration
+
+gates:
+  node_health:
+    node_out_alive: "max column std > max(1e-8, 1e-3 * initial max column std)"
+    task_grad: "finite and at least one norm > 1e-10"
+    product_nonzero: true
+  node_performance:
+    calibrated_gain_min: 0.003
+    gain_without172_min: 0.0
+    g0_contribution_worsening_max: 0.001
+  topology_performance:
+    calibrated_gain_min: 0.003
+    g0_contribution_worsening_max: 0.001
+    gain_without172_min: -0.0005
+    broad_paired_signal: "gain_without172 > 0"
+    outlier_dominated_signal: "overall improves but gain_without172 near zero / slightly negative"
+  combination:
+    require_node_winner_g0_gain_min: 0.001
+    require_t0_g1_plus_g172_gain_min: 0.003
+    require_both_total_gain_min: 0.003
+  confirm:
+    require_mean_gain_min: 0.003
+    require_both_seed_gains_positive: true
+
+panel_budget:
+  fresh_trajectories_max: 8
+  smoke_optimizer_steps_max: 100
+  gpu_hours_max: 8.0
+  node_prefix_arms: 4
+  node_full_arms_max: 2
+  topology_full_arms_max: 1
+  combination_full_arms_max: 1
+  confirm_seed_pair: 2
+
+test_policy: terminal
+
+seed_semantics:
+  seed_role: canonical model seed; paired shuffle offsets shared by all arms
+  seeds: [0, 1]
+  seed0_frozen_kappa_manifest: tracks/ksvd/results/zinc_overnight_bottleneck_v1/frozen_node_scale_seed0.json

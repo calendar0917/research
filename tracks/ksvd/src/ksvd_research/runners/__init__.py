@@ -31,6 +31,7 @@ def _registry() -> dict[str, Runner]:
         zinc_jointbond_decay_diagnostic_v1,
         zinc_jointbond_v1,
         zinc_node_binding_residual_pair_v1,
+        zinc_overnight_bottleneck_v1,
         zinc_patch_path_pooling,
         zinc_e2e_dictenv_typed_cycle_v1,
         zinc_upstream_portfolio_v1,
@@ -60,6 +61,7 @@ def _registry() -> dict[str, Runner]:
             zinc_graph_dictionary_readout_v1.build_runner(),
             zinc_upstream_portfolio_v1.build_runner(),
             zinc_node_binding_residual_pair_v1.build_runner(),
+            zinc_overnight_bottleneck_v1.build_runner(),
         )
     }
 

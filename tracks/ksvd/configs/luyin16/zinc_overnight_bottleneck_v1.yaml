@@ -1,0 +1,35 @@
+# ZINC overnight bottleneck v1 — node-collapse 2x2 + additive topology readout.
+#
+# Two independent pre-registered directions from the canonical fresh Full
+# initialisation, plus a conditional combination and a single second-seed
+# confirmation.  Official ZINC test is never instantiated.
+#
+# `model.stage`:
+#   checks       : CPU correctness checks
+#   scale        : freeze the initial node-slot scale kappa (train only)
+#   smoke        : short GPU plumbing smoke (N1 + T0)
+#   train_prefix : one 80-epoch node arm (no official-valid read)
+#   train        : one 240-epoch arm (fresh or resumed from its epoch-80 ckpt)
+protocol_id: zinc-context-gap
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  arm: N0
+  stage: checks
+  epochs: 240
+  lr: 1.0e-3
+  # node_weight_decay: null -> arm default (N0/N1/T0 = 1e-5, N2/N3 = 0)
+  # kappa: null -> frozen rule value
+  train_seed: 0
+  scale_seed: 0
+  head_seed: 0
+
+runtime:
+  # Explicit device.  `cpu` keeps the parent threads; `cuda:0` is the opt-in
+  # res-2 A100 regime.  The official ZINC test split is never loaded.
+  device: cpu
+  torch_threads: 8
