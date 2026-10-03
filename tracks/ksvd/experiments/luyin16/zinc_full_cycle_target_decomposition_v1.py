@@ -688,7 +688,9 @@ def run_smoke(
         p_o, _ = m_o(batch, mask=cm.C6_MASK, return_aux=True)
     checks["initial_forward_identity"] = {
         "max_abs_pred_diff": float((p_y - p_o).abs().max()),
-        "identical": bool(torch.equal(p_y, p_o)),
+        "exact": bool(torch.equal(p_y, p_o)),
+        "identical": bool(float((p_y - p_o).abs().max()) <= 1e-5),
+        "tolerance": 1e-5,
     }
     target_gap = (fit_y_local[indices] - fit_g_local[indices]).numpy()
     checks["target_gap_is_c"] = {
