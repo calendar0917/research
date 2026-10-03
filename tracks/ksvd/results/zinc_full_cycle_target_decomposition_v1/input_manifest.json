@@ -1,0 +1,102 @@
+{
+  "protocol_version": "zinc-full-cycle-target-decomposition-v1",
+  "official_test_loaded": false,
+  "official_valid_loaded": false,
+  "train_source": "tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt + results/e2e_dictenv_p1/cache/env_train.pt (train-only)",
+  "split": {
+    "n_fit": 8000,
+    "n_dev": 2000,
+    "fit_idx_sha256": "165e87ef4398ba8ef57411c2f118c4cca4ea74007f2485611b84f0c09bbdd9ea",
+    "dev_idx_sha256": "fb8b78063e7c8a5c759bfa7d553738068cee1738a2d67b210e5d9dc492331376",
+    "expected_fit_idx_sha256": "165e87ef4398ba8ef57411c2f118c4cca4ea74007f2485611b84f0c09bbdd9ea",
+    "expected_dev_idx_sha256": "fb8b78063e7c8a5c759bfa7d553738068cee1738a2d67b210e5d9dc492331376",
+    "dev_group_counts": {
+      "k0": 1926,
+      "k-1": 65,
+      "kle-2": 9
+    },
+    "dev_no_group_straddle": true,
+    "dev_group_counts_expected": {
+      "k0": 1926,
+      "k-1": 65,
+      "kle-2": 9
+    }
+  },
+  "prep": {
+    "D_fit_sha256": "898498d14e5d03bf39e8b3030066d8a6dd5799739ea0f887bad5d0e0cc3b8618",
+    "U_components_sha256": "b87fbc56953a610fefcf8eb656e46b8a4f1964fc3ad4523fe674efb4fbb55de3",
+    "fold_objects_file_sha256": "968e82dda591546748f44a0b9825ae341774f37cdec05a11580cd58b5ac4d4bb"
+  },
+  "x175": {
+    "all_train_sha256": "1ca3163cc2ddcec8c25ff1350e963d31105edc081a6bd8d79d5fcd001a1f81f7",
+    "expected_all_train_sha256": "1ca3163cc2ddcec8c25ff1350e963d31105edc081a6bd8d79d5fcd001a1f81f7",
+    "reproduced": true
+  },
+  "targets": {
+    "y": "handoff train.npz y (= encoded .y)",
+    "c": "train_cycle_audit_label.csv label_cycle_component (label-derived oracle)",
+    "g": "y - c (= label y_without_cycle_label)",
+    "k": "round(label_effective_cycle_snapped)",
+    "shapes": {
+      "y": [
+        10000
+      ],
+      "c": [
+        10000
+      ],
+      "g": [
+        10000
+      ],
+      "k": [
+        10000
+      ]
+    },
+    "k_distribution": {
+      "-12": 1,
+      "-6": 2,
+      "-5": 3,
+      "-4": 1,
+      "-2": 40,
+      "-1": 325,
+      "0": 9628
+    },
+    "c_summary": {
+      "mean": -0.15492220895155395,
+      "std": 0.9636508408582907,
+      "min": -41.62049828279109,
+      "max": 0.0004627120960246,
+      "n_negative": 372
+    },
+    "g_summary": {
+      "mean": 0.17021954338760187,
+      "std": 1.7251058008699451,
+      "min": -7.742632569121171,
+      "max": 3.804376660538863
+    },
+    "task_definitions": {
+      "Y": "L1(f(x), y)",
+      "O": "L1(h(x), g), pred=h(x)+c"
+    }
+  },
+  "sources": {
+    "cycle_label_csv": {
+      "path": "tracks/ksvd/results/zinc_long_cycle_audit/train_cycle_audit_label.csv",
+      "sha256": "3be648266a19890d531b9c0b179b4fe4c4d9e10d522e4b942fa60b3108c9b8d5"
+    },
+    "refine_json": {
+      "path": "tracks/ksvd/results/zinc_long_cycle_audit/stage_refine.json",
+      "sha256": "96156fa1d9e60ed0e9c407990b3225d7897fb4bc99272955f1b535f357474c82"
+    },
+    "handoff_train": {
+      "path": "tracks/ksvd/results/zinc_dictionary_real_data_handoff/train.npz",
+      "sha256": "3dda78bc7cab7a33f8df182bba8870c7469209a0482dfa4dda5866eef7674135"
+    },
+    "generator_source": "tracks/ksvd/experiments/luyin16/zinc_long_cycle_audit.py::stage_refine + zinc_long_cycle_summary.py",
+    "c_definition": "label_cycle_component = (label_effective_cycle_snapped - mu_cycle)/sigma_cycle; label-derived oracle"
+  },
+  "flags": {
+    "c_is_model_input": false,
+    "c_used_for": "O supervision target + diagnostic evaluation offset only",
+    "oracle_diagnostic": true
+  }
+}
