@@ -1,0 +1,48 @@
+alternatives_rejected:
+- 'STOP the line now (rejected: the bulk G0 effect is consistently positive across
+  both seeds with a bootstrap interval excluding zero on the mean, and the frozen
+  B1 branch prescribes one bounded test).'
+- 'Treat the severe-tail gain as a deployable improvement (rejected: it requires the
+  true, node-order-dependent label-derived c, which the model cannot read; O is oracle
+  diagnostic).'
+- 'Scan lambda/WD/head width or buy a third seed (rejected: explicitly outside this
+  round''s authorisation).'
+because: Four paired fresh trajectories (seeds 0/1 x Y control / O oracle), canonical
+  Full 408,651 params, fixed 8000/2000 train-only split, 240 epochs, last-5 soup,
+  single external fit-only calibration, replay max diff <= 1.4e-6. Gate/bootstrap/group
+  tables in tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/. Fit/dev
+  g-MAE gap for O is still ~0.069 (dev ~0.100, fit ~0.031), so the remaining chemical
+  target is not solved; the route is continued only because the bulk effect is consistently
+  positive.
+created: '2026-10-03T15:28:43'
+decision: 'CONTINUE the Full target-decomposition line only as a bounded existence
+  test (frozen branch B1). The de-cycling intervention met the pre-registered signal:
+  both seeds'' calibrated dev gain > 0 (+0.024053 seed0, +0.021341 seed1; mean +0.022697),
+  mean G0 MAE gain +0.003599 with both seeds improving (worsen -0.001863 / -0.005335,
+  threshold 0.001). The severe group (k<=-2) is 78.7% of the mean gain and is ORACLE-assisted
+  (true label-derived c added back at evaluation); the strictly non-oracle component
+  is the bulk G0 (+0.0036) and the non-severe gain (+0.0048). O is not deployable
+  and not SOTA. Next action (design only, not run): keep the same canonical Full and
+  input interface and add a training-side auxiliary branch supervised on c, c never
+  used at inference, to decide whether the cycle term is learnable from the existing
+  inputs or is only an oracle offset.'
+decision_id: decision-9309c397
+kind: decision
+revisit_if: The auxiliary cycle branch cannot beat a constant on held-out molecules,
+  or a predicted-c version destroys the G0 gain, or a later equal-information structural-semantic
+  fusion control shows the bulk effect was a fusion artefact; any of these closes
+  the route at small-bulk-effect-only.
+study_id: zinc-context-gap
+evidence:
+- tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/protocol.md
+- tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/REPORT.md
+- tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/DECISION.md
+- tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/gate.json
+- tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/bootstrap.json
+- tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/main_table.csv
+- tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/group_table.csv
+- tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/paired_dev_predictions.csv
+- tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/severe_rows.csv
+- tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/input_manifest.json
+- tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/manifest.json
+- tracks/ksvd/experiments/luyin16/zinc_full_cycle_target_decomposition_v1.py
