@@ -1,0 +1,30 @@
+{
+  "protocol_id": "zinc-topology-crossfit-diagnostic-v1",
+  "runner": "tracks/ksvd/experiments/luyin16/zinc_topology_crossfit_diagnostic_v1.py",
+  "protocol_yaml": "tracks/ksvd/protocols/zinc-topology-crossfit-diagnostic-v1.yaml",
+  "base_ref_commit": "ac8ef5b",
+  "seed": 0,
+  "outer_split": "reused from zinc_joint_dictionary_decision_v1/prep/split.json (fit 8000 / dev 2000)",
+  "subfold_seed": 20261003,
+  "training": {
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "grad_clip": 5.0,
+    "epochs": 240,
+    "soup_epochs": [236, 237, 238, 239, 240],
+    "amp": false,
+    "ddp": false,
+    "fp32": true
+  },
+  "readout": {
+    "klass": "sklearn.ensemble.ExtraTreesRegressor",
+    "n_estimators": 256,
+    "min_samples_leaf": 1,
+    "max_features": 1.0,
+    "random_state": 0,
+    "n_jobs": 8
+  },
+  "topology25_source": "tracks/ksvd/results/zinc_topology_cache/train_topology_features.csv (hinge)",
+  "official_test_loaded": false
+}
