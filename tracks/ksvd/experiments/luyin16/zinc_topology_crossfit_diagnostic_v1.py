@@ -319,7 +319,7 @@ def raw_topology25() -> np.ndarray:
 
 
 def fit_readout(base: Mapping[str, Any], t25: np.ndarray, meta_idx: np.ndarray, dev_idx: np.ndarray,
-                *, log=print) -> dict[str, Any]:
+                pen: np.ndarray | None = None, *, log=print) -> dict[str, Any]:
     from sklearn.ensemble import ExtraTreesRegressor
 
     meta_cal = np.asarray(base["meta_predictions_cal"], np.float64)
@@ -339,6 +339,8 @@ def fit_readout(base: Mapping[str, Any], t25: np.ndarray, meta_idx: np.ndarray, 
     p_TP = dev_cal + q_TP.predict(np.concatenate([T_dev, dev_cal.reshape(-1, 1)], 1))
     const = float(np.median(r_meta))
     p_const = dev_cal + const
+    cov = coverage(t25, meta_idx, dev_idx, np.asarray(pen), r_meta, dev_y - dev_cal, dev_y) \
+        if pen is not None else None
     return {"fold": base["fold"], "r_meta_median": const,
             "meta_mae_base": float(np.abs(meta_cal - meta_y).mean()),
             "dev_mae_base": float(np.abs(dev_cal - dev_y).mean()),
@@ -353,6 +355,7 @@ def fit_readout(base: Mapping[str, Any], t25: np.ndarray, meta_idx: np.ndarray, 
             "dev_gain_base_vs_P": float(np.abs(dev_cal - dev_y).mean() - np.abs(p_P - dev_y).mean()),
             "dev_gain_base_vs_const": float(np.abs(dev_cal - dev_y).mean() - np.abs(p_const - dev_y).mean()),
             "sklearn_version": __import__("sklearn").__version__,
+            "coverage": cov,
             "params": {"n_estimators": N_TREES, "min_samples_leaf": 1, "max_features": 1.0,
                        "random_state": TREE_SEED, "n_jobs": 8}}
 
@@ -362,15 +365,27 @@ def fit_readout(base: Mapping[str, Any], t25: np.ndarray, meta_idx: np.ndarray, 
 # ---------------------------------------------------------------------------
 
 
-def coverage(t25: np.ndarray, meta_idx: np.ndarray, dev_idx: np.ndarray, pen: np.ndarray) -> dict[str, Any]:
+def coverage(t25: np.ndarray, meta_idx: np.ndarray, dev_idx: np.ndarray, pen: np.ndarray,
+             r_meta: np.ndarray, dev_resid: np.ndarray, y_dev: np.ndarray) -> dict[str, Any]:
     T_meta = t25[meta_idx]
     T_dev = t25[dev_idx]
-    # exact-class key = rounded raw integer-valued topology statistics
+    # exact-class key = raw integer/rational statistics read directly from the
+    # graph-only cache (NOT inverse-standardised floats), rounded to 1e-6.
     key_meta = [tuple(np.round(r, 6).tolist()) for r in T_meta]
     meta_classes: dict[tuple, list[int]] = {}
-    for k, pos in zip(key_meta, range(len(key_meta))):
+    for pos, k in enumerate(key_meta):
         meta_classes.setdefault(k, []).append(pos)
-    exact = np.array([1.0 if tuple(np.round(r, 6).tolist()) in meta_classes else 0.0 for r in T_dev])
+    keys_dev = [tuple(np.round(r, 6).tolist()) for r in T_dev]
+    exact = np.array([1.0 if k in meta_classes else 0.0 for k in keys_dev])
+    covered = exact.astype(bool)
+    # residual consistency among exact-covered dev rows
+    consistency = None
+    if covered.any():
+        idx_cov = np.where(covered)[0]
+        cls_med = np.array([float(np.median(r_meta[meta_classes[keys_dev[j]]])) for j in idx_cov])
+        diff = np.abs(dev_resid[idx_cov] - cls_med)
+        consistency = {"n": int(covered.sum()), "mean_abs_dev_vs_class_median_resid": float(diff.mean()),
+                       "median_abs": float(np.median(diff))}
     # nearest meta neighbour under meta-fit column std (zero-variance ignored)
     std = T_meta.std(0)
     keep = std > 1e-12
@@ -378,13 +393,22 @@ def coverage(t25: np.ndarray, meta_idx: np.ndarray, dev_idx: np.ndarray, pen: np
     B = (T_dev[:, keep] - T_meta[:, keep].mean(0)) / std[keep]
     d2 = ((B[:, None, :] - A[None, :, :]) ** 2).sum(-1)
     nn = d2.argmin(1)
+    nn_dist = np.sqrt(d2[np.arange(len(nn)), nn])
+    nn_pen = pen[meta_idx[nn]]
+    severe = pen[dev_idx] <= SEVERE_MAX
     return {"n_dev": int(len(dev_idx)), "exact_class_coverage": float(exact.mean()),
             "exact_hits": int(exact.sum()),
-            "dev_severe_exact": {int(i): float(exact[j]) for j, i in enumerate(dev_idx.tolist())
-                                 if pen[i] <= SEVERE_MAX},
-            "nn_dist_mean": float(np.sqrt(d2[np.arange(len(nn)), nn]).mean()),
-            "nn_penalty_agreement": float(np.mean([pen[meta_idx[nn[j]]] == pen[dev_idx[j]]
-                                                   for j in range(len(nn))]))}
+            "residual_consistency_exact": consistency,
+            "nn_dist_mean": float(nn_dist.mean()), "nn_dist_p50": float(np.percentile(nn_dist, 50)),
+            "nn_dist_p95": float(np.percentile(nn_dist, 95)),
+            "nn_penalty_agreement": float(np.mean(nn_pen == pen[dev_idx])),
+            "nn_penalty_agreement_severe": float(np.mean(nn_pen[severe] == pen[dev_idx][severe]))
+            if severe.any() else None,
+            "severe_rows": [{"dev_row": int(j), "train_index": int(dev_idx[j]),
+                             "penalty": int(pen[dev_idx[j]]), "exact_covered": bool(exact[j]),
+                             "nn_dist": float(nn_dist[j]), "nn_penalty": int(nn_pen[j]),
+                             "dev_resid": float(dev_resid[j]), "y": float(y_dev[j])}
+                            for j in range(len(dev_idx)) if severe[j]]}
 
 
 # ---------------------------------------------------------------------------
@@ -431,11 +455,12 @@ def mode_readout() -> int:
     idx = load_subfold_index()
     t25 = raw_topology25()
     bases = {f: json.loads((RESULTS_DIR / f"F_{f}.json").read_text()) for f in FOLDS}
-    readouts = {f: fit_readout(bases[f], t25, idx["b_idx" if f == "A" else "a_idx"], idx["dev_idx"]) for f in FOLDS}
+    readouts = {f: fit_readout(bases[f], t25, idx["b_idx" if f == "A" else "a_idx"], idx["dev_idx"], pen)
+                for f in FOLDS}
     (RESULTS_DIR / "readouts.json").write_text(json.dumps(readouts, indent=2))
     (RESULTS_DIR / "coverage.json").write_text(json.dumps(
         {"t25_cache": str(ztf.CACHE_ROOT / "train_topology_features.csv"),
-         "coverage": coverage(t25, idx["a_idx"], idx["dev_idx"], pen)}, indent=2))
+         "per_fold": {f: readouts[f]["coverage"] for f in FOLDS}}, indent=2))
     for f in FOLDS:
         r = readouts[f]
         print(f"[{f}] base={r['dev_mae_base']:.6f} P={r['dev_mae_P']:.6f} TP={r['dev_mae_TP']:.6f} "
