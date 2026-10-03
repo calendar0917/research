@@ -41,8 +41,8 @@ folded into the released state); for `O`, `median_fit(y-(h_raw+c))` equals
 Primary gain `MAE(Y_cal) - MAE(O_cal)`: **+0.024053 (seed 0)**, **+0.021341
 (seed 1)**, equal-weight mean **+0.022697** (positive = improvement).  Raw gain
 is the same direction and slightly larger: +0.025846 / +0.022437, mean
-+0.024142.  Both biases are small and of opposite sign between arms, so the
-raw/cal conclusions agree — the gain is not a calibration artefact.
++0.024142.  The fitted biases are small (`|b| <= 0.025`) and the raw/cal gains
+agree in direction and magnitude, so the gain is not a calibration artefact.
 
 For `O`, the calibrated dev error on `y` equals its error on `g` exactly (the
 oracle offset cancels `c`), so the "true `g`-MAE" is `0.101626 / 0.098999`
