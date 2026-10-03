@@ -1,0 +1,101 @@
+{
+  "protocol_version": "zinc-overnight-interface-and-tail-seed0-v1",
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "split": {
+    "n_fit": 8000,
+    "n_dev": 2000,
+    "fit_idx_sha256": "165e87ef4398ba8ef57411c2f118c4cca4ea74007f2485611b84f0c09bbdd9ea",
+    "dev_idx_sha256": "fb8b78063e7c8a5c759bfa7d553738068cee1738a2d67b210e5d9dc492331376",
+    "dev_group_counts": {
+      "k0": 1926,
+      "k-1": 65,
+      "kle-2": 9
+    },
+    "pass": true
+  },
+  "sources": {
+    "source_branch": "task/zinc-structure-semantic-factorial-seed0-v1",
+    "source_branch_head": "4083ee38d8785c5a44d1f9628a5baeed568d4c34",
+    "source_train_commit": "118e2481362f",
+    "zero_binding_exec_commit": "dc96fac",
+    "zero_binding_result_commit": "53ab987",
+    "S_M_raw_soup_sha256": "2def4cb64c1350a60348fb6fc7ce88a07bffe563367ac7e9666ee6f7dff5c5b8",
+    "S_M_raw_soup_sha256_expected": "2def4cb64c1350a60348fb6fc7ce88a07bffe563367ac7e9666ee6f7dff5c5b8",
+    "deploy_state_sha256": "ba13326c76cc6fb851a5c9d5a6799a6b3152bcbba870b2ade49eab083ce6c457",
+    "prep_blob_sha256": "968e82dda591546748f44a0b9825ae341774f37cdec05a11580cd58b5ac4d4bb"
+  },
+  "compressed_identity": {
+    "parameter_audit": {
+      "body_parameters": 267611,
+      "D_parameters": 2080,
+      "adapter_parameters": 126072,
+      "total_parameters": 395763,
+      "expected_adapter": 126072
+    },
+    "adapter_output_absmax_at_init": 0.0,
+    "fixed_fit_pred_vs_replay_max_abs": 9.5367431640625e-07,
+    "dev_replay_file": "results/zinc_zero_binding_baseline_seed0_v1/phaseA_sm_replay.npz",
+    "note": "dev comparison runs over all 2000 rows below",
+    "pass": true,
+    "full_dev_vs_replay_max_abs": 1.9073486328125e-06
+  },
+  "micro_operator": {
+    "node": {
+      "J_changes_under_atom_permutation": 3.686746597290039,
+      "M_invariant_under_atom_permutation": 0.0,
+      "n1_J_equals_M": 0.0,
+      "n0_M_zero": 0.0
+    },
+    "edge": {
+      "J_changes_under_type_permutation": 4.134490013122559,
+      "M_invariant_under_type_permutation": 0.0
+    },
+    "pass": true
+  },
+  "operator_real": {
+    "node_J_neq_M_max_abs": 0.8352221250534058,
+    "edge_J_neq_M_max_abs": 0.8153607845306396,
+    "node_bucket_ge2_fraction": 0.5743879675865173,
+    "edge_bucket_ge2_fraction": 0.28719398379325867,
+    "node_finite": true,
+    "edge_finite": true,
+    "pass": true
+  },
+  "invariance": {
+    "graph_order_map_diff": 2.384185791015625e-07,
+    "label_shuffle_max_abs": 0.0,
+    "pass": true
+  },
+  "registration": {
+    "R_SJ_phase1": {
+      "optimizer_parameters": 126072,
+      "expected_adapter_parameters": 126072,
+      "adapter_only_trainable": true,
+      "step_grads": {
+        "step1": {
+          "adapter0_weight_absmax": 0.0,
+          "adapter2_weight_absmax": 0.019368339329957962
+        },
+        "step2": {
+          "adapter0_weight_absmax": 0.005606180522590876,
+          "adapter2_weight_absmax": 0.021053628996014595
+        }
+      },
+      "step1_upstream_zero": true,
+      "step2_upstream_alive": true,
+      "pass": true
+    },
+    "A0_phase2": {
+      "optimizer_parameters": 395763,
+      "expected_total": 395763,
+      "D_grad_absmax": 0.0015789587050676346,
+      "adapter2_weight_grad_absmax": 0.019368339329957962,
+      "reconstruction_grad_alive": true,
+      "pass": true
+    },
+    "pass": true
+  },
+  "seconds": 12.059743733028881,
+  "pass": true
+}
