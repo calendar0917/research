@@ -1,0 +1,141 @@
+# Protocol: ZINC joint-dictionary decision v1 (2026-10-03).
+#
+# Two questions, one fixed prototype, no architecture fan-out.
+#
+# Q1 (Stage A, read-only): is the severe long-cycle failure explained by
+#   topology25 equivalence-class ambiguity (or by any reuse of the official
+#   test split / accidental label leakage)?
+# Q2 (Stage B/C/D): does moving the dictionary out of a network-varying
+#   latent into a FIXED local structure + semantics description (X175) under a
+#   real sparse-reconstruction constraint improve unseen-graph generalisation
+#   towards a fully official-valid, train-median-calibrated MAE <= 0.09?
+#
+# The official test split is NEVER instantiated, loaded or evaluated.
+
+id: zinc-joint-dictionary-decision-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official train/valid)
+  source_policy: official_pyg_zinc_only
+  official_test_policy: terminal (never loaded)
+  expected_sizes:
+    train: 10000
+    valid: 1000
+
+metric:
+  ranking_metric: calibrated_dev_mae
+  metric_direction: lower_is_better
+  stage_d_metric: calibrated_valid_mae
+  unit: MAE on ZINC target
+  target: 0.09
+
+# ---------------------------------------------------------------------------
+# Stage A — severe-cycle input audit (read-only)
+# ---------------------------------------------------------------------------
+stage_a:
+  a1_identity:
+    replay: N0_s0 soup_state, seed 0
+    checks: [raw/cal valid MAE reproduce to ~1e-8, penalty-accounting sum, bias consistency]
+  a2_exact_topology25_classes:
+    key_spaces: [topo_raw (25-D), topo_model_input (standardised)]
+    queries: [severe5, ring35 in valid]
+    report: [class members, penalty-frequency distribution, class-conditional median, NO_EXACT_MATCH]
+    train_only: true
+  a3_train_only_probe:
+    input: topo_raw (25-D)
+    target: raw train cycle penalty
+    folds: 2 molecule-level OOF by canonical_group_id, fold seed 20261003
+    arms: [exact-class median lookup, fixed ExtraTreesRegressor(256, leaf2, mf1.0, rs0)]
+    refit_all_train_then_eval_valid: true
+  boundary: no Stage-A statistic enters X175, the training target, routing or the model.
+
+# ---------------------------------------------------------------------------
+# Stage B — one fixed joint prototype
+# ---------------------------------------------------------------------------
+stage_b:
+  x175:
+    layout: [phi65 raw (0:65), Sem108 raw (65:173), size2 raw (173:175)]
+    normalisation: fit on fit-molecules only; per-column mean/std (std floor 1e-3,
+      zero-variance scale 1); then each block divided by its standardised
+      block RMS so the three blocks have mean squared norm ~1.
+  arms:
+    F:
+      what: current canonical Full, fresh init (409,651 trainable params)
+      recipe: L1 + H1_LAMBDA * structural reconstruction
+    B:
+      what: X175 -> Linear(175,256) -> SiLU -> Linear(256,144)
+      local_params: 82,064
+      recipe: L1
+    D:
+      what: shared sparse dictionary 175x256 (unit columns) -> alpha (K=256, s=64,
+        10 tied-IHT steps) -> Linear(256,144)
+      local_params: 81,808
+      recipe: L1 + lambda_rec * relative recon of X175
+      lambda_rec: one-shot calibration on 4 fixed fit batches so that the
+        initial rec gradient on the local params is ~0.1x the task gradient
+      unsupervised_prep: fixed-seed Gaussian columns, Adam lr 1e-3, batch 4096,
+        5 passes, <= 15 min, relative reconstruction objective
+    shared_backend: pair_projection, relation_encoder, distance_gate,
+      pair_encoder, unary/pair moments, C6 mask, global_encoder, topology_encoder,
+      reader (R=814).  B/D replace the ENTIRE old local-environment module.
+  b3_availability:
+    checks: [identity, X175 dim, E144, reader dim, param accounting,
+      identical backend init hash across arms, batch-composition invariance,
+      D reconstruction (mean rel err <= 0.30, per block <= 0.50), alpha activity,
+      task+rec gradient reaches local params, finiteness, throughput]
+  boundaries: no message passing, no transformer/attention, no pair->centre update.
+
+# ---------------------------------------------------------------------------
+# Stage C — fixed molecule-level development split
+# ---------------------------------------------------------------------------
+stage_c:
+  split:
+    unit: canonical_group_id (verified molecule key; duplicates never straddle)
+    seed: 20261003
+    dev_fraction: 0.20
+    stratification: [penalty 0, penalty -1, penalty <= -2]
+    target_sizes: [8000 fit, 2000 dev]
+    all_train_fit_objects_refit_on_fit: [normalisers, common subspace, sdb32 dictionary]
+    forbidden: reusing the post-training Full soup / supervised R+H; any upstream
+      object fitted on all 10000 rows used as a strict OOF object.
+  arms: [F, B, D]
+  seed: 0
+  epochs: 240
+  optimizer: torch.optim.Adam
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  scheduler: none
+  amp: none
+  ddp: none
+  soup: fixed mean of epochs 236..240 (parameters only)
+  calibration: median fit-residual bias, one per model, fit part only
+  c3_gate:
+    d_vs_f_total_cal_gain_min: 0.003
+    d_vs_f_g0_gain_min: 0.002
+    d_vs_f_severe_contribution_worsening_max: 0.001
+    d_vs_b_severe_contribution_worsening_max: 0.001
+    mechanism_must_be_ok: true
+  buy: seed 1 only if the C3 gate passes.
+
+# ---------------------------------------------------------------------------
+# Stage D — conditional
+# ---------------------------------------------------------------------------
+stage_d:
+  precondition: C3 passed AND budget remains for 4 paired trajectories
+  data: full 10000 official-train rows refit
+  arms: [F, D]
+  seeds: [0, 1]
+  report: full raw/cal valid MAE
+
+test_policy: terminal
+
+budget:
+  cpu_local: <= 8 threads, one heavy worker
+  remote: res-2, pool res2-cu124, <= 2 GPUs in parallel, single job <= 8 cpu,
+    total <= 6 GPU-hours (smoke + unsupervised prep included)
+
+seed_semantics:
+  seed_role: canonical model seed; paired shuffle offsets shared by all arms
+  seeds: [0, 1]
