@@ -98,11 +98,13 @@ AMP, no DDP, `torch.set_num_threads(4)` inside GPU jobs.
 
 ## 4. Deviations, failures, recovery
 
-1. **First Phase-1 launch failed before training** (5 submissions): remote
+1. **First Phase-1 launch failed before training** (5 submissions at 01:00:40–01:01:40, run ids `66f1209a`, `43418472`, `d871ab91`, `3069fb20`, `8457a988`): remote
    checkout lacked `interface_stats.json` because `tracks/*/results/**/*.json`
-   is git-ignored.  Fix: `git add -f` the Phase-0 evidence (`bfffdae`), redeploy,
-   resubmit.  The failed jobs executed zero training steps and are not counted
-   as trajectories.
+   is git-ignored.  The missing file raises at model construction before the
+   first epoch, so the failed jobs executed zero training steps and are not
+   counted as trajectories (they show `failed` in `rr jobs`; all are
+   terminated).  Fix: `git add -f` the Phase-0 evidence (`bfffdae`), redeploy,
+   resubmit at 01:04:43–01:05:46.
 2. **CPU tail batch scheduling bug** in the first implementation (fresh
    `randperm` per batch).  Fixed before any result was used; `P_U` then
    reproduced the released `P_seed0` exactly.  The buggy run is not reported.
