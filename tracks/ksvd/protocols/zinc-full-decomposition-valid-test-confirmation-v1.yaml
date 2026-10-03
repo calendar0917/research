@@ -1,0 +1,146 @@
+# Protocol — zinc-full-decomposition-valid-test-confirmation-v1 (2026-10-03)
+#
+# Frozen BEFORE any formal Full training / head fitting and BEFORE the single
+# authorised official-valid / official-test read.  This round re-examines the
+# fixed method ("dictionary chemistry branch + independent learned cycle head")
+# at the FULL official-train scale (all 10,000 rows) with two paired seeds, then
+# performs exactly one frozen official-valid and one official-test evaluation.
+#
+# Not a search: no architecture / width / lambda / WD / loss / optimizer / seed
+# search, no change to the dictionary / structural / topology preprocessing, no
+# message passing, no transformer.
+#
+# The historical `test_access: blocked` protection is NOT changed globally; this
+# protocol registers a single, final, frozen evaluation switch.
+
+id: zinc-full-decomposition-valid-test-confirmation-v1
+supersedes_for_this_round:
+  branch: task/zinc-frozen-chemistry-learned-cycle-v1
+  commit: c11342e
+  dir: tracks/ksvd/results/zinc_frozen_chemistry_learned_cycle_v1
+  role: background only (8000 fit / 2000 reused diagnostic dev); not the primary control
+upstream_decomposition:
+  commit: 87894a2
+  dir: tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official train/valid/test)
+  train_rows: 10000
+  official_valid_rows: 1000
+  official_test_rows: 1000
+  source_policy: official_pyg_zinc_only
+  train_only_during_fit: true
+
+metric:
+  ranking_metric: official_valid_mae
+  metric_direction: lower_is_better
+  unit: MAE in y units
+  long_run_target: 0.09  # goal only; not promised or converted this round
+
+data:
+  train: all 10000 official train molecules, stable ids `train:%04d`
+  valid: official valid split (1000), stable ids `valid:%04d`
+  test: official test split (1000), stable ids `test:%04d`
+  split_dispatch: explicit {train, valid, test}; unknown split -> error
+  prep: single all-10000 train-fit object, committed before training
+  prep_algorithm: zinc_joint_dictionary_decision_v1.build_fold_inputs semantics with fit_idx = all rows
+  no_heldout_fit: true
+
+targets:
+  y: encoded train y (handoff; identical to label target)
+  c: label_cycle_component = (label_effective_cycle_snapped - mu_cycle)/sigma_cycle
+  mu_cycle: -0.0001334074230764987
+  sigma_cycle: 0.28831626452532244
+  g: y - c
+  k: round(label_effective_cycle_snapped)
+  c_g_no_missing: true
+  c_not_zeroed_for_k0: true
+  c_is_label_derived_order_dependent: true
+  heldout_cycle_labels: read post-prediction only, for grouping/component tables
+
+arms:
+  Y: {raw: f_s(x), cal: f_s(x) + b_Y,s}                 # matched Full control, loss L1(f,y)
+  H: {raw: h_s(x), cal: h_s(x) + b_H,s}                 # chemistry branch, loss L1(h,g)
+  Q: {raw: q_s(T), model: MLP(25->64->32->1)}           # independent cycle head, loss L1(q,c)
+  P: {raw: h_s(x) + q_s(T), cal: h_s(x) + q_s(T) + b_P,s}   # deployable, no true c
+  K: {raw: h_s(x) + median_train(c), cal: + b_K,s}      # constant-offset descriptive control
+  Y_H_pairing: same canonical fresh init per seed; identical data stream; only task target differs
+  Q_is_separate: true
+
+full_recipe:
+  params: 408651
+  scale_seed: 0
+  epochs: 240
+  optimizer: Adam (coupled L2)
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  precision: fp32
+  scheduler: none
+  amp: false
+  ddp: false
+  final_soup: mean of epoch-end states 236..240
+  loss: mean L1(pred, target) + H1_LAMBDA * structural reconstruction
+  h1_lambda: 33.95873017865987
+  seeds: [0, 1]
+
+head_recipe:
+  params: 3777
+  arch: [Linear(25,64), SiLU, Linear(64,32), SiLU, Linear(32,1)]
+  init: first two layers default per head seed; last layer weight=0, bias=median_train(c)
+  epochs: 300
+  optimizer: Adam (coupled L2)
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  loss: mean L1(q(T), c)
+  precision: fp32
+  scheduler: none
+  dropout: none
+  amp: false
+  ddp: false
+  shuffle: uniform over molecules (independent generator)
+  final_soup: mean of epoch-end states 296..300
+  seeds: [0, 1]
+  optimizer_contains_full: false
+  inference_reads_true_c: false
+
+calibration:
+  fit_only: true
+  eval_mode: true
+  single_overall: true
+  b_Y: median_train(y - f_s(x))
+  b_H: median_train(g - h_s(x))       # diagnostic only
+  b_P: median_train(y - h_s(x) - q_s(T))
+  b_K: median_train(y - h_s(x) - median_train(c))
+  forbidden: [calibrating q separately, heldout offsets, ensemble bias fitting, oracle routing]
+
+comparisons:
+  primary_gain: MAE(Y_cal) - MAE(P_cal)     # positive = improvement
+  primary_summary: arithmetic mean of the two seeds' MAE and gain
+  secondary_ensemble: 0.5/0.5 average of the two seeds' raw and cal predictions
+  group_strata: [k=0, k=-1, k<=-2]
+  residual_definition: residual = y - prediction
+  contribution_definition: sum(|error|)/N_split
+  bootstrap: {n: 1000, seed: 20261003, unit: molecule row (line bootstrap; group labels complete on held-out),
+              joint_across_arms_and_seeds: true, per_split: true}
+
+gate:
+  scope: official-valid interpretation only; test is reported unconditionally
+  conditions:
+    - each seed P vs Y valid cal gain > 0 and two-seed mean gain >= 0.003
+    - each seed G0 MAE(P) - MAE(Y) <= 0.001 on valid
+    - identity, train-only prep, no-true-c inference, single calibration, freeze/replay all pass
+  on_missing_g0_source: mark that gate item UNAVAILABLE
+
+heldout:
+  read_after_frozen_manifest: true
+  predict_then_attach_labels: true
+  test_oracle_columns_forbidden: true
+  access_log: heldout_access.json
+
+stop_rule: after four Full trajectories, two heads, single calibration, freeze and
+  one valid/test evaluation, all compute stops.  No third seed, no re-run for
+  score, no new configuration, no post-test search.
