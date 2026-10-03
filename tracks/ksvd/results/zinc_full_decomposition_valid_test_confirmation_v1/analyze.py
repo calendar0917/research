@@ -326,6 +326,7 @@ def _train_predictions() -> dict[str, Any]:
     out = {"y": np.asarray(decomp["y"], np.float64), "c": np.asarray(decomp["c"], np.float64),
            "g": np.asarray(decomp["g"], np.float64), "k": np.asarray(decomp["k"], np.int64)}
     cal = R.read_json(RESULTS_DIR / "calibration.json")
+    median_c = float(cal["median_train_c"])
     for seed in R.SEEDS:
         yp = np.load(STATE_DIR / f"Y_seed{seed}_fit_pred.npz")
         hp = np.load(STATE_DIR / f"H_seed{seed}_fit_pred.npz")
@@ -341,8 +342,8 @@ def _train_predictions() -> dict[str, Any]:
         out[f"Q_{seed}"] = q
         out[f"P_raw_{seed}"] = h + q
         out[f"P_cal_{seed}"] = h + q + cs["b_P"]
-        out[f"K_raw_{seed}"] = h + cs["median_c"]
-        out[f"K_cal_{seed}"] = h + cs["median_c"] + cs["b_K"]
+        out[f"K_raw_{seed}"] = h + median_c
+        out[f"K_cal_{seed}"] = h + median_c + cs["b_K"]
     return out
 
 
@@ -454,7 +455,8 @@ def bootstrap(data: Mapping[str, Any], y: np.ndarray, *, n_boot: int = R.N_BOOT,
                 "lo": float(np.percentile(draws, 2.5)), "hi": float(np.percentile(draws, 97.5)),
             }
     # G0 (k==0) gain
-    g0 = np.where(k == 0)[0] if k is not None else None
+    kk = data.get("k")
+    g0 = np.where(np.asarray(kk) == 0)[0] if kk is not None else None
     if g0 is not None and len(g0) > 0:
         g0_y = y[g0]
         draws = np.empty(n_boot)
@@ -475,16 +477,20 @@ def bootstrap(data: Mapping[str, Any], y: np.ndarray, *, n_boot: int = R.N_BOOT,
 
 def invariance_checks(data: Mapping[str, Any], y: np.ndarray) -> dict[str, Any]:
     pt = _mae(data["Y_cal_0"], y)
-    # swapped arms -> sign flip
-    y_mae = _mae(data["P_cal_0"], y)
+    p_mae = _mae(data["P_cal_0"], y)
+    gain = pt - p_mae
+    # swapped arms -> gain sign flip
     swapped = _mae(data["P_cal_0"], y) - _mae(data["Y_cal_0"], y)
-    # constant shift applied to both arms -> zero effect on gain
-    shift = _mae(data["Y_cal_0"] + 3.7, y) - _mae(data["P_cal_0"] + 3.7, y)
+    # constant shift applied to BOTH prediction and target -> errors unchanged
+    shift = _mae(data["Y_cal_0"] + 3.7, y + 3.7) - _mae(data["P_cal_0"] + 3.7, y + 3.7)
+    # identical predictions -> zero gain
+    ident = _mae(data["Y_cal_0"], y) - _mae(data["Y_cal_0"], y)
     return {
         "swap_arm_gain": float(swapped),
-        "swap_is_negation": bool(abs(swapped + (pt - y_mae)) < 1e-9),
+        "swap_is_negation": bool(abs(swapped + gain) < 1e-9),
         "constant_shift_gain": float(shift),
-        "constant_shift_invariant": bool(abs(shift - (pt - y_mae)) < 1e-9),
+        "constant_shift_invariant": bool(abs(shift - gain) < 1e-9),
+        "identical_prediction_gain": float(ident),
     }
 
 
@@ -605,12 +611,34 @@ def analyze() -> dict[str, Any]:
         top[name] = rows
     summary["top10_Y_error_rows"] = top
 
+    # fixed paired bootstrap (row-level), separate per split
+    boots = {}
+    for name in ("valid", "test"):
+        data = splits[name]
+        kk = np.asarray(data["k"], np.int64) if data.get("k") is not None else None
+        boots[name] = bootstrap(data, data["y"], n_boot=R.N_BOOT, seed=R.BOOT_SEED)
+    summary["bootstrap"] = boots
+
     R.write_json(RESULTS_DIR / "analysis_summary.json", summary)
+    R.write_json(RESULTS_DIR / "bootstrap.json", boots)
     import csv
     with (RESULTS_DIR / "main_table.csv").open("w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=list(main_rows[0].keys()))
         writer.writeheader()
         writer.writerows(main_rows)
+    for name in ("train", "valid", "test"):
+        gt = summary["group_tables"].get(name)
+        if gt:
+            with (RESULTS_DIR / f"group_table_{name}.csv").open("w", newline="") as fh:
+                writer = csv.DictWriter(fh, fieldnames=list(gt[0].keys()))
+                writer.writeheader()
+                writer.writerows(gt)
+        ct = summary["component_tables"].get(name)
+        if ct:
+            with (RESULTS_DIR / f"component_table_{name}.csv").open("w", newline="") as fh:
+                writer = csv.DictWriter(fh, fieldnames=list(ct[0].keys()))
+                writer.writeheader()
+                writer.writerows(ct)
     return summary
 
 
@@ -634,7 +662,5 @@ def main(argv: Sequence[str] | None = None) -> int:
         s = analyze()
         print(json.dumps({k: s[k] for k in ("valid_minus_test", "gate_valid", "invariance")}, indent=2))
     return 0
-
-
 if __name__ == "__main__":
     raise SystemExit(main())
