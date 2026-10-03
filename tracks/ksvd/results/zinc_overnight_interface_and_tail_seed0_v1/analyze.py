@@ -30,8 +30,8 @@ ZERO_BINDING = TRACK / "results/zinc_zero_binding_baseline_seed0_v1"
 BOOT_SEED = 20261003
 N_BOOT = 1000
 DELTA = 0.003
-GROUP_KEYS = ("k0", "k-1", "kle-2", "kle-3")
-GROUP_NAMES = {"k0": "k=0", "k-1": "k=-1", "kle-2": "k<=-2", "kle-3": "k<=-3"}
+GROUP_KEYS = ("k0", "k-1", "k-2", "kle-3")
+GROUP_NAMES = {"k0": "k=0", "k-1": "k=-1", "k-2": "k=-2", "kle-3": "k<=-3"}
 
 
 def sha256(a: np.ndarray) -> str:
@@ -58,9 +58,13 @@ def group_masks(k: np.ndarray) -> dict[str, np.ndarray]:
     return {
         "k0": k == 0,
         "k-1": k == -1,
-        "kle-2": k <= -2,
+        "k-2": k == -2,
         "kle-3": k <= -3,
     }
+
+
+def aggregate_masks(k: np.ndarray) -> dict[str, np.ndarray]:
+    return {"k<=-2": k <= -2, "k<=-3": k <= -3}
 
 
 def load_dev():
@@ -124,6 +128,16 @@ def metrics(arm: Mapping[str, Any], y: np.ndarray, k: np.ndarray, fit_idx: np.nd
             "raw_mae": float(np.mean(np.abs(dev_raw[mask] - y_dev[mask]))),
             "cal_mae": float(np.mean(res)),
             "contribution_cal": float(res.sum() / len(dev_idx)),
+        }
+    out["aggregates"] = {}
+    for key, mask in aggregate_masks(k_dev).items():
+        res = np.abs(dev_raw[mask] + b - y_dev[mask])
+        out["aggregates"][key] = {
+            "n": int(mask.sum()),
+            "raw_mae": float(np.mean(np.abs(dev_raw[mask] - y_dev[mask]))),
+            "cal_mae": float(np.mean(res)),
+            "contribution_cal": float(res.sum() / len(dev_idx)),
+            "overlaps_partition": True,
         }
     return out
 
@@ -406,6 +420,11 @@ def mechanism(out_dir: Path) -> dict[str, Any]:
     del blob, decomp
     y_fit = np.asarray(y[fit_idx], np.float64)
     spec_by_arm = dict(ov.ARM_SPEC)
+    for arm in ov.PHASE2_ARMS:
+        meta_path = out_dir / f"{arm}.json"
+        if meta_path.exists():
+            meta_arm = json.loads(meta_path.read_text())
+            spec_by_arm[arm] = (meta_arm["code_mode"], meta_arm["block_mode"])
     out: dict[str, Any] = {}
     for arm, (code_mode, block_mode) in spec_by_arm.items():
         if not (out_dir / f"{arm}_raw_soup_state.pt").exists():
@@ -426,7 +445,8 @@ def mechanism(out_dir: Path) -> dict[str, Any]:
             dcache = torch.Generator().manual_seed(0)
             with torch.no_grad():
                 for indices in ov.zftd.epoch_batches(len(data), ov.BATCH_SIZE, dcache, False):
-                    batch = ov.zftd.make_batch(data, indices, torch.zeros(len(indices)), torch.device("cpu"))
+                    targets = torch.zeros(len(data))
+                    batch = ov.zftd.make_batch(data, indices, targets, torch.device("cpu"))
                     coord = model.code(batch.dict_phi)
                     interface = sem.SEM108Model.semantic_interface(model, coord, batch, cm.C6_MASK, None)
                     delta = model.adapter(model.adapter_input(interface, coord, batch))
@@ -459,12 +479,84 @@ def mechanism(out_dir: Path) -> dict[str, Any]:
     return out
 
 
+def replay(out_dir: Path) -> dict[str, Any]:
+    """Rebuild every pulled soup from its state dict alone and compare to the
+    saved predictions (determinism / true-final-state check)."""
+    import torch
+    from tracks.ksvd.experiments.luyin16 import zinc_overnight_interface_and_tail_seed0_v1 as ov
+
+    torch.set_num_threads(8)
+    blob, decomp, train_data, fit_data, dev_data, fit_idx, dev_idx, y = ov.load_data()
+    structural = ov.load_dictionary_objects()
+    stats = ov.load_interface_stats()
+    device = torch.device("cpu")
+    target_fit = torch.as_tensor(y[fit_idx], dtype=torch.float32)
+    target_dev = torch.as_tensor(y[dev_idx], dtype=torch.float32)
+    out: dict[str, Any] = {}
+    specs = dict(ov.ARM_SPEC)
+    for arm in ov.PHASE2_ARMS:
+        meta_path = out_dir / f"{arm}.json"
+        if meta_path.exists():
+            m = json.loads(meta_path.read_text())
+            specs[arm] = (m["code_mode"], m["block_mode"])
+    for arm, (code_mode, block_mode) in specs.items():
+        state_path = out_dir / f"{arm}_raw_soup_state.pt"
+        pred_path = out_dir / f"{arm}_predictions.npz"
+        if not (state_path.exists() and pred_path.exists()):
+            continue
+        with np.load(pred_path, allow_pickle=False) as z:
+            saved_dev = np.asarray(z["dev_raw"], np.float64) if "dev_raw" in z else None
+            saved_fit = np.asarray(z["fit_raw"], np.float64)
+        model = ov.build_interface_model(structural, stats, code_mode=code_mode, block_mode=block_mode, device=device)
+        model.load_state_dict(torch.load(state_path, map_location="cpu", weights_only=False))
+        meta = json.loads((out_dir / f"{arm}.json").read_text())
+        model.adapter_zero = bool(meta.get("adapter_zero", False))
+        fit_pred, _ = ov._predict(model, fit_data, target_fit, device)
+        entry = {
+            "code_mode": code_mode,
+            "block_mode": block_mode,
+            "adapter_zero": bool(model.adapter_zero),
+            "soup_state_sha256": meta.get("soup_state_sha256"),
+            "fit_max_abs_diff": float(np.max(np.abs(fit_pred - saved_fit))),
+            "n_fit": int(len(fit_pred)),
+        }
+        if saved_dev is not None:
+            dev_pred, _ = ov._predict(model, dev_data, target_dev, device)
+            entry["dev_max_abs_diff"] = float(np.max(np.abs(dev_pred - saved_dev)))
+            entry["n_dev"] = int(len(dev_pred))
+        entry["pass"] = bool(entry["fit_max_abs_diff"] <= 1e-4 and entry.get("dev_max_abs_diff", 0.0) <= 1e-4)
+        out[arm] = entry
+    # reference B: fresh compressed body + zero adapter (deterministic)
+    ref = ov.build_interface_model(structural, stats, code_mode="sparse", block_mode="joint", device=device)
+    ref.adapter_zero = True
+    with np.load(ZERO_BINDING / "phaseA_sm_replay.npz") as z:
+        b_fit = np.asarray(z["fit_raw"], np.float64)
+        b_dev = np.asarray(z["dev_raw"], np.float64)
+    fit_pred, _ = ov._predict(ref, fit_data, target_fit, device)
+    dev_pred, _ = ov._predict(ref, dev_data, target_dev, device)
+    out["B"] = {
+        "fit_max_abs_diff": float(np.max(np.abs(fit_pred - b_fit))),
+        "dev_max_abs_diff": float(np.max(np.abs(dev_pred - b_dev))),
+        "pass": bool(np.max(np.abs(fit_pred - b_fit)) <= 1e-4 and np.max(np.abs(dev_pred - b_dev)) <= 1e-4),
+    }
+    return out
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--stage", type=int, choices=(1, 2))
     parser.add_argument("--mechanism", action="store_true")
+    parser.add_argument("--replay", action="store_true")
     args = parser.parse_args(argv)
     out_dir = RESULTS
+    if args.replay:
+        payload = replay(out_dir)
+        write_json(out_dir / "replay_check.json", payload)
+        ok = all(v["pass"] for v in payload.values())
+        print(f"[replay] pass={ok}")
+        for name, v in payload.items():
+            print(f"  {name}: fit={v['fit_max_abs_diff']:.2e} dev={v.get('dev_max_abs_diff', float('nan')):.2e}")
+        return 0 if ok else 1
     if args.mechanism:
         payload = mechanism(out_dir)
         write_json(out_dir / "mechanism_health.json", payload)
