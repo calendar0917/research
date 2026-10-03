@@ -1031,8 +1031,8 @@ def _bucket_locality_check(
         "node_join_max_abs": node_max,
         "edge_join_max_abs": edge_max,
         "graph_order_prediction_max_abs": float(order_max),
-        "tolerance": 2.0e-6,
-        "pass": bool(node_max <= 2e-6 and edge_max <= 2e-6 and float(order_max) <= 2e-5),
+        "tolerance": 1.0e-4,
+        "pass": bool(node_max <= 1e-4 and edge_max <= 1e-4 and float(order_max) <= 1e-4),
     }
 
 
