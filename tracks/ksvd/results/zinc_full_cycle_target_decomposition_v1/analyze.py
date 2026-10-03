@@ -143,10 +143,13 @@ def bootstrap_gains(
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    global RESULTS_DIR
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", default=str(RESULTS_DIR))
+    parser.add_argument("--indir", default=str(RESULTS_DIR))
     args = parser.parse_args(argv)
     out_dir = Path(args.out)
+    RESULTS_DIR = Path(args.indir)
 
     with np.load(DECOMP, allow_pickle=False) as z:
         y_all = z["y"]
@@ -369,7 +372,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "each_seed_g0_worsen_le_0.001": bool(all(g0_worsen[s] <= GATE_G0_WORSEN_MAX for s in SEEDS)),
     }
     gate_conditions["route_signal_met"] = bool(all(gate_conditions.values()))
-    branch = select_branch(gains, mean_cal_gain, mean_group_gain, mean_group_mae_gain, g0_worsen, arms, y, k, preds)
+    branch = select_branch(gains, mean_cal_gain, mean_group_gain, mean_group_mae_gain, g0_worsen, group_gain)
     gate = {
         "thresholds": {
             "mean_cal_gain": GATE_MEAN_GAIN,
@@ -433,19 +436,24 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 0
 
 
-def select_branch(gains, mean_cal_gain, mean_group_gain, mean_group_mae_gain, g0_worsen, arms, y, k, preds) -> dict[str, Any]:
-    severe_share = mean_group_gain["kle-2"]
-    g0_mean_gain = mean_group_mae_gain["k0"]
+def select_branch(gains, mean_cal_gain, mean_group_gain, mean_group_mae_gain, g0_worsen, group_gain) -> dict[str, Any]:
+    severe_contrib = mean_group_gain["kle-2"]
+    g0_contrib = mean_group_gain["k0"]
+    g0_mae_gain = {s: group_gain[s]["k0"]["mae_gain"] for s in SEEDS}
+    mean_g0_mae_gain = float(np.mean(list(g0_mae_gain.values())))
     signal = bool(
         all(gains[s]["cal_gain"] > 0 for s in SEEDS)
         and mean_cal_gain >= GATE_MEAN_GAIN
         and all(g0_worsen[s] <= GATE_G0_WORSEN_MAX for s in SEEDS)
     )
-    if signal and g0_mean_gain >= GATE_G0_MEAN_GAIN and all(mean_group_mae_gain["k0"] > 0 for _ in SEEDS):
+    severe_share = float(severe_contrib / mean_cal_gain) if abs(mean_cal_gain) > 1e-12 else None
+    if signal and mean_g0_mae_gain >= GATE_G0_MEAN_GAIN and all(v > 0 for v in g0_mae_gain.values()):
         name = "B1_bulk_also_moves"
-    elif signal and abs(g0_mean_gain) < GATE_G0_MEAN_GAIN and severe_share > 0:
+    elif signal and abs(g0_contrib) <= GATE_G0_WORSEN_MAX and severe_contrib > 0 and (severe_share or 0) >= 0.5:
         name = "B2_g0_preserved_severe_pool"
-    elif signal and (g0_mean_gain < -GATE_G0_WORSEN_MAX or any(gains[s]["cal_gain"] < 0 for s in SEEDS)):
+    elif (severe_contrib > 0 and any(g0_worsen[s] > GATE_G0_WORSEN_MAX for s in SEEDS)) or any(
+        gains[s]["cal_gain"] < 0 for s in SEEDS
+    ):
         name = "B3_tradeoff_or_conflict"
     elif mean_cal_gain < GATE_MEAN_GAIN and any(gains[s]["cal_gain"] <= 0 for s in SEEDS):
         name = "B4_small_or_negative_gain"
@@ -454,7 +462,11 @@ def select_branch(gains, mean_cal_gain, mean_group_gain, mean_group_mae_gain, g0
     return {
         "name": name,
         "signal_met": signal,
-        "severe_contribution_share_of_mean_gain": float(severe_share / mean_cal_gain) if abs(mean_cal_gain) > 1e-12 else None,
+        "mean_g0_mae_gain": mean_g0_mae_gain,
+        "per_seed_g0_mae_gain": {str(s): g0_mae_gain[s] for s in SEEDS},
+        "severe_contribution_gain": severe_contrib,
+        "g0_contribution_gain": g0_contrib,
+        "severe_contribution_share_of_mean_gain": severe_share,
         "note": "branch chosen top-down from the frozen table; near-threshold conditions are recorded as weak/ambiguous.",
     }
 
