@@ -944,9 +944,9 @@ def run_operator_checks(
         s_e, c_e, idx_e, d_e = arm_models["S_M"].edge_factor_slots(coord_sm, batch)
         je = paired_bucket(s_e, c_e, idx_e, n_nodes * int(p2.SHELLPAIR_CLASSES), d_e)
         me = indep_bucket(s_e, c_e, idx_e, n_nodes * int(p2.SHELLPAIR_CLASSES), d_e)
-        counts_n = torch.zeros(n_nodes * int(p2.N_SHELLS), dtype=torch.long)
+        counts_n = torch.zeros(n_nodes * int(p2.N_SHELLS), dtype=torch.long, device=idx_n.device)
         counts_n.index_add_(0, idx_n, torch.ones_like(idx_n))
-        counts_e = torch.zeros(n_nodes * int(p2.SHELLPAIR_CLASSES), dtype=torch.long)
+        counts_e = torch.zeros(n_nodes * int(p2.SHELLPAIR_CLASSES), dtype=torch.long, device=idx_e.device)
         counts_e.index_add_(0, idx_e, torch.ones_like(idx_e))
     checks["real_input_operator"] = {
         "node_nonzero_bucket_fraction": float((jn - mn).abs().sum(1).gt(0).float().mean()),
