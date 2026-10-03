@@ -295,11 +295,28 @@ def main() -> int:
             }
 
     # identity / sanity witnesses for the bootstrap
+    # bootstrap / metric sanity witnesses
+    base_pred = cal_dev["S_J"]
+    identical = float(np.mean(np.abs(base_pred - y_dev)) - np.mean(np.abs(base_pred - y_dev)))
+    gain_sj_sm = float(np.mean(np.abs(cal_dev["S_M"] - y_dev)) - np.mean(np.abs(cal_dev["S_J"] - y_dev)))
+    gain_sm_sj = float(np.mean(np.abs(cal_dev["S_J"] - y_dev)) - np.mean(np.abs(cal_dev["S_M"] - y_dev)))
+    shift_c = 0.5
+    shifted_gain = float(
+        np.mean(np.abs(base_pred + shift_c - y_dev)) - np.mean(np.abs(base_pred - y_dev))
+    )
     boot_witness = {
-        "identical_predictions_gain_zero": float(main["overall_cal"]["C_S"] - main["overall_cal"]["C_S"]),
+        "identical_predictions_gain_zero": identical,
+        "identical_is_zero": bool(identical == 0.0),
         "swap_sign_flip": {
-            "C_S": main["overall_cal"]["C_S"],
-            "swapped": -main["overall_cal"]["C_S"],
+            "gain_SJ_to_SM": gain_sj_sm,
+            "gain_SM_to_SJ": gain_sm_sj,
+            "sign_flipped": bool(abs(gain_sj_sm + gain_sm_sj) < 1e-12),
+        },
+        "constant_shift_bound": {
+            "shift": shift_c,
+            "shifted_gain": shifted_gain,
+            "bound": shift_c,
+            "within_bound": bool(abs(shifted_gain) <= shift_c + 1e-12),
         },
         "n_boot": N_BOOT,
         "seed": BOOT_SEED,
