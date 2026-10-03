@@ -585,7 +585,7 @@ def train_head(seed: int, T_fit: np.ndarray, c_fit: np.ndarray, bias_value: floa
     with torch.no_grad():
         q_fit = head_forward(head, T_t).numpy().astype(np.float64)
     return {"head": head, "init_state": init_state, "soup_mean": soup_mean,
-            "init_hash": state_hash(init_state), "soup_hash": state_hash(head),
+            "init_hash": state_hash(init_state), "soup_hash": state_hash(head.state_dict()),
             "curve": curve, "steps": steps, "soup_members": sorted(soup), "q_fit": q_fit,
             "seconds": float(time.perf_counter() - started)}
 
