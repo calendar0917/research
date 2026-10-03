@@ -384,7 +384,10 @@ def write_stage1_tables(payload: Mapping[str, Any], out_dir: Path) -> None:
     for key, v in payload["bootstrap"].items():
         if not isinstance(v, dict) or "point" not in v:
             continue
-        blines.append(f"{key},,{v['point']:.6f},{v['ci95'][0]:.6f},{v['ci95'][1]:.6f}")
+        ci = v.get("ci95", ["", ""])
+        lo = f"{ci[0]:.6f}" if isinstance(ci[0], (int, float)) else ""
+        hi = f"{ci[1]:.6f}" if isinstance(ci[1], (int, float)) else ""
+        blines.append(f"{key},,{v['point']:.6f},{lo},{hi}")
     (out_dir / "stage1_gain_table.csv").write_text("\n".join(blines) + "\n", encoding="utf-8")
 
 
