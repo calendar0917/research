@@ -446,7 +446,7 @@ def wrapper_checks(blob: Mapping[str, Any], train: Sequence[Any], T: np.ndarray,
     return {
         "seed": seed,
         "wrapper_vs_cached_max_abs": float(np.max(np.abs(p1 - cached))),
-        "wrapper_equals_cached": bool(float(np.max(np.abs(p1 - cached))) <= 1e-6),
+        "wrapper_equals_cached": bool(float(np.max(np.abs(p1 - cached))) <= REPLAY_TOL),
         "deterministic_repeat_max_abs": float(np.max(np.abs(p1 - p2))),
         "label_permutation_max_abs": float(np.max(np.abs(pre_shuffle - p3))),
         "label_permutation_invariant": bool(np.array_equal(pre_shuffle, p3)),
