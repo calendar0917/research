@@ -813,6 +813,7 @@ def run_arm(arm: str, seed: int, blob: Mapping[str, Any], fit_data: Sequence[Any
                             num_workers=0, collate_fn=p1.env_collate)
 
     soup: dict[int, dict[str, torch.Tensor]] = {}
+    soup_epochs = set(range(max(1, int(epochs) - 4), int(epochs) + 1))
     curve: list[dict[str, Any]] = []
     epoch_seconds: list[float] = []
     grad_log: list[dict[str, Any]] = []
@@ -852,7 +853,7 @@ def run_arm(arm: str, seed: int, blob: Mapping[str, Any], fit_data: Sequence[Any
         curve.append({"epoch": int(epoch), "train_mae": float(task_sum / max(n_mol, 1)),
                       "rec": float(rec_sum / max(n_steps, 1)), "grad_norm": float(gnorm_sum / max(n_steps, 1)),
                       "dev_mae": dev_mae, "seconds": epoch_seconds[-1]})
-        if epoch in SOUP_EPOCHS:
+        if epoch in soup_epochs:
             soup[epoch] = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
         if device.type == "cuda":
             peak_memory = max(peak_memory, float(torch.cuda.max_memory_allocated(device) / (1024.0 ** 2)))
