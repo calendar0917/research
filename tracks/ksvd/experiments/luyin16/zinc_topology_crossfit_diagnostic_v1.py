@@ -74,6 +74,25 @@ def outer_split() -> dict[str, Any]:
     return split
 
 
+def save_subfold_index(outer: Mapping[str, Any], sub: Mapping[str, Any]) -> Path:
+    path = PREP_DIR / "subfold_index.npz"
+    PREP_DIR.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(path, fit_idx=np.asarray(outer["fit_idx"], np.int64),
+                        dev_idx=np.asarray(outer["dev_idx"], np.int64),
+                        a_idx=np.asarray(sub["A"], np.int64), b_idx=np.asarray(sub["B"], np.int64))
+    return path
+
+
+def load_subfold_index() -> dict[str, np.ndarray]:
+    """Load the frozen outer + sub-fold indices (shipped to the remote)."""
+    with np.load(PREP_DIR / "subfold_index.npz", allow_pickle=False) as z:
+        return {k: z[k] for k in z.files}
+
+
+def subfold_manifest() -> dict[str, Any]:
+    return json.loads((PREP_DIR / "subfold_split.json").read_text())
+
+
 def build_subfold_split(fit_idx: np.ndarray, pen: np.ndarray, gid: np.ndarray) -> dict[str, Any]:
     fit_set = set(int(i) for i in fit_idx.tolist())
     by_group: dict[int, list[int]] = {}
@@ -184,6 +203,7 @@ def train_base(fold: str, sub_idx: np.ndarray, meta_idx: np.ndarray, dev_idx: np
     zjd.seed_everything(seed)
     model = zjd.make_arm_model("F", blob, seed=seed).to(device)
     init_hash = zjd.parameter_state_hash(model)
+    init_backend_hash = zjd.backend_hash(model)
     optimizer = torch.optim.Adam(model.parameters(), lr=zjd.LR, weight_decay=zjd.WEIGHT_DECAY)
     train_gen = torch.Generator().manual_seed(seed + zjd.TRAIN_SHUFFLE_OFFSET)
     train_loader = torch.utils.data.DataLoader(list(fit_data), batch_size=zjd.BATCH_SIZE, shuffle=True,
@@ -257,6 +277,9 @@ def train_base(fold: str, sub_idx: np.ndarray, meta_idx: np.ndarray, dev_idx: np
         "soup_members": members, "n_train_rows": int(len(fit_data)),
         "n_meta_rows": int(len(meta_data)), "n_dev_rows": int(len(dev_data)),
         "init_state_sha256": init_hash,
+        "init_backend_sha256": init_backend_hash,
+        "D_fit_sha256": _sha_arr(np.asarray(blob["D_fit"])),
+        "subspace_sha256": _sha_arr(np.asarray(blob["U_components"])),
         "soup_state_sha256": zjd.parameter_state_hash(fresh),
         "soup_state_file_sha256": hashlib.sha256((out_dir / f"F_{fold}_state.pt").read_bytes()).hexdigest(),
         "calibration": {"delta": delta, "reader_bias_before": before, "reader_bias_after": after},
@@ -377,6 +400,7 @@ def mode_prep() -> int:
     sub = build_subfold_split(outer["fit_idx"], pen, gid)
     PREP_DIR.mkdir(parents=True, exist_ok=True)
     (PREP_DIR / "subfold_split.json").write_text(json.dumps(sub["meta"], indent=2))
+    save_subfold_index(outer, sub)
     t0 = time.perf_counter()
     for fold in FOLDS:
         idx = sub[fold]
@@ -392,14 +416,10 @@ def mode_prep() -> int:
 
 
 def mode_train(fold: str, epochs: int, device: str) -> int:
-    pen, _ = zjd._load_penalties()
-    handoff = np.load(zjd.HANDOFF / "train.npz", allow_pickle=True)
-    gid = handoff["canonical_group_id"].astype(np.int64)
-    outer = outer_split()
-    sub = build_subfold_split(outer["fit_idx"], pen, gid)
-    sub_idx = sub[fold]
-    meta_idx = sub["B" if fold == "A" else "A"]
-    result = train_base(fold, sub_idx, meta_idx, outer["dev_idx"], PREP_DIR / f"fold_{fold}.npz",
+    idx = load_subfold_index()
+    sub_idx = idx["a_idx" if fold == "A" else "b_idx"]
+    meta_idx = idx["b_idx" if fold == "A" else "a_idx"]
+    result = train_base(fold, sub_idx, meta_idx, idx["dev_idx"], PREP_DIR / f"fold_{fold}.npz",
                         epochs=epochs, seed=zjd.SEED, out_dir=RESULTS_DIR, device=zjd.resolve_device(device))
     print(json.dumps({k: result[k] for k in ("fold", "dev_raw_mae", "dev_cal_mae", "wall_clock_s",
                                               "soup_state_sha256")}, indent=2))
@@ -408,17 +428,14 @@ def mode_train(fold: str, epochs: int, device: str) -> int:
 
 def mode_readout() -> int:
     pen, _ = zjd._load_penalties()
-    handoff = np.load(zjd.HANDOFF / "train.npz", allow_pickle=True)
-    gid = handoff["canonical_group_id"].astype(np.int64)
-    outer = outer_split()
-    sub = build_subfold_split(outer["fit_idx"], pen, gid)
+    idx = load_subfold_index()
     t25 = raw_topology25()
     bases = {f: json.loads((RESULTS_DIR / f"F_{f}.json").read_text()) for f in FOLDS}
-    readouts = {f: fit_readout(bases[f], t25, sub["B" if f == "A" else "A"], outer["dev_idx"]) for f in FOLDS}
+    readouts = {f: fit_readout(bases[f], t25, idx["b_idx" if f == "A" else "a_idx"], idx["dev_idx"]) for f in FOLDS}
     (RESULTS_DIR / "readouts.json").write_text(json.dumps(readouts, indent=2))
     (RESULTS_DIR / "coverage.json").write_text(json.dumps(
         {"t25_cache": str(ztf.CACHE_ROOT / "train_topology_features.csv"),
-         "coverage": coverage(t25, sub["A"], outer["dev_idx"], pen)}, indent=2))
+         "coverage": coverage(t25, idx["a_idx"], idx["dev_idx"], pen)}, indent=2))
     for f in FOLDS:
         r = readouts[f]
         print(f"[{f}] base={r['dev_mae_base']:.6f} P={r['dev_mae_P']:.6f} TP={r['dev_mae_TP']:.6f} "
