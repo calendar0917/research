@@ -680,7 +680,7 @@ def run_smoke(
 
     # identical inputs -> identical initial predictions; target gap == c.
     indices = list(range(min(32, len(fit_data))))
-    batch = p1.env_collate([fit_data[i] for i in indices])
+    batch = make_batch(fit_data, indices, fit_y_local, device)
     m_y.eval()
     m_o.eval()
     with torch.no_grad():
