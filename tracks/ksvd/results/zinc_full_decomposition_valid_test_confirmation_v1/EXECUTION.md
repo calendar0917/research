@@ -68,7 +68,7 @@ only (no training).
 
 `frozen_eval_manifest.json` pins `analysis_source` at
 `sha256 5150912454c09186…`; the committed `analyze.py` is
-`sha256 7a200b76bc31b569…`.  The difference is **analysis-only bookkeeping**
+`sha256 92631b620aa79337…`.  The difference is **analysis-only bookkeeping**
 added after the held-out predictions were written: a `median_c` lookup fix in
 `_train_predictions`, the corrected constant-shift invariance check, and the
 paired bootstrap/CSV writers.  The held-out prediction path (`heldout`,

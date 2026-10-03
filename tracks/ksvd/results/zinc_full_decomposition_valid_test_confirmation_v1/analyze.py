@@ -621,6 +621,19 @@ def analyze() -> dict[str, Any]:
 
     R.write_json(RESULTS_DIR / "analysis_summary.json", summary)
     R.write_json(RESULTS_DIR / "bootstrap.json", boots)
+    # per-row train raw/cal predictions (all 10k)
+    np.savez_compressed(
+        RESULTS_DIR / "train_predictions.npz",
+        **{k: v for k, v in train.items() if isinstance(v, np.ndarray)},
+    )
+    import csv
+    train_cols = ["y", "c", "g", "k"] + sorted(
+        k for k in train if k not in ("y", "c", "g", "k"))
+    with (RESULTS_DIR / "train_predictions.csv").open("w", newline="") as fh:
+        writer = csv.writer(fh)
+        writer.writerow(train_cols)
+        for i in range(len(train["y"])):
+            writer.writerow([train[c][i] for c in train_cols])
     import csv
     with (RESULTS_DIR / "main_table.csv").open("w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=list(main_rows[0].keys()))
