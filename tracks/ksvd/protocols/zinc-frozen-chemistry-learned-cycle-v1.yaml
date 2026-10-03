@@ -1,0 +1,137 @@
+# Protocol — zinc-frozen-chemistry-learned-cycle-v1 (2026-10-03)
+#
+# Frozen BEFORE any formal head fitting.  This round replaces the old
+# zinc_full_cycle_target_decomposition_v1/DECISION.md suggestion ("supervise the
+# main head on y and add a training-time auxiliary head that is discarded at
+# inference").  Instead, the already-trained g-predictor (the `O` arm) is KEPT
+# FROZEN and a small learned cycle head is ADDED to it at real inference time.
+#
+# Single question: how much of the frozen `O` branch's ORACLE gain can the
+# EXISTING topology25 input already learn, and therefore be retained at
+# inference without reading the true label-derived `c`?
+#
+# This is a fixed-config diagnostic, not an architecture / feature / loss search.
+# Official ZINC test is never instantiated / loaded / evaluated; the official
+# validation split is never loaded.
+
+id: zinc-frozen-chemistry-learned-cycle-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official train)
+  source_policy: official_pyg_zinc_only
+  official_test_policy: terminal (never loaded)
+  train_only: true
+
+metric:
+  ranking_metric: dev_mae
+  metric_direction: lower_is_better
+  unit: MAE in y units
+  long_run_target: 0.09  # goal only; NOT promised or converted this round
+
+frozen_sources:
+  branch_commit: 87894a2
+  o_branch_dir: tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1
+  o_soup_state: O_seed{0,1}_raw_soup_state.pt   # h_s(x), g-predictor, unfolded bias
+  o_predictions: O_seed{0,1}_predictions.npz    # fit_raw/dev_raw are h_raw (not h+c)
+  o_meta: O_seed{0,1}.json                      # calibration b_O, soup hash
+  y_predictions: Y_seed{0,1}_predictions.npz    # original control, reused verbatim
+  y_meta: Y_seed{0,1}.json
+  prep_blob: tracks/ksvd/results/zinc_joint_dictionary_decision_v1/prep/fold_objects.npz
+  decomp: tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/target_decomposition.npz
+
+data:
+  split: fixed 8000 fit / 2000 dev, train-only
+  fit_idx_sha256: 165e87ef4398ba8ef57411c2f118c4cca4ea74007f2485611b84f0c09bbdd9ea
+  dev_idx_sha256: fb8b78063e7c8a5c759bfa7d553738068cee1738a2d67b210e5d9dc492331376
+  expected_dev_strata: {k=0: 1926, k=-1: 65, k<=-2: 9}
+  note: the 2000-row dev is a reused fixed diagnostic set, not a new confirmation set.
+
+targets:
+  y: encoded train y (handoff)
+  c: label_cycle_component = (label_effective_cycle_snapped - mu_cycle)/sigma_cycle
+  mu_cycle: -0.0001334074230764987
+  sigma_cycle: 0.28831626452532244
+  g: y - c
+  k: round(label_effective_cycle_snapped)
+  c_g_no_missing: true
+  c_not_zeroed_for_G0: true
+  c_is_label_derived_order_dependent: true
+
+cycle_head_input:
+  field: existing Full topology25 model input (data.topology_features after apply_prep)
+  dim: 25
+  standardization: same 8000-fit standardization as the frozen Full
+  forbidden: [SMILES, atom/bond features, label, group id, molecule id, raw 25-D stats]
+  readonly_columns_order: true
+
+cycle_head:
+  arch: [Linear(25,64), SiLU, Linear(64,32), SiLU, Linear(32,1)]
+  parameters: 3777
+  init: first two layers PyTorch default from head seed 0/1; last layer weight=0, bias=median_fit(c)
+  optimizer: torch.optim.Adam (coupled L2)
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  epochs: 300
+  batch: 128
+  grad_clip: 5.0
+  loss: mean L1(q(T), c)
+  scheduler: none
+  dropout: none
+  amp: false
+  ddp: false
+  dtype: float32
+  shuffle: uniform over molecules (independent generator); no penalty resampling/weighting
+  target_clipping: false
+  dev_used_for_training: false
+  final_model: mean of epoch-end states 296..300
+  seeds: [0, 1]
+  train_fn_inputs: [fit_T25, fit_c]
+
+arms:
+  Y: {raw: f_raw, cal: f_raw + b_Y}                       # original control, b_Y reused
+  P: {raw: h_raw + q(T), cal: h_raw + q(T) + b_P}         # learned-cycle inference candidate
+  O: {raw: h_raw + c, cal: h_raw + c + b_O}               # oracle reference, b_O reused
+  K: {raw: h_raw + median_fit(c), cal: + b_K}             # constant-offset control
+  calibration: single overall fit-only median for P and K; O/Y keep their old bias
+  forbidden: [calibrating q separately, fitting dev offsets, oracle routing, gating]
+
+comparisons:
+  primary_gain: MAE(Y_cal) - MAE(P_cal)          # positive = improvement
+  learned_vs_constant_gain: MAE(K_cal) - MAE(P_cal)
+  oracle_replacement_loss: MAE(P_cal) - MAE(O_cal)
+  oracle_retention: gain(Y->P) / gain(Y->O)       # per seed and mean
+  raw_and_cal_both_reported: true
+  group_strata: [k=0, k=-1, k<=-2]
+  contribution_definition: sum(|error|)/2000
+  bootstrap: {n: 1000, seed: 20261003, unit: canonical_group_id, joint_across_arms_and_seeds: true}
+
+head_fit_diagnostic:
+  fit_overall_c_mae_drop_vs_constant: ">= 0.50"
+  fit_severe_c_mae: "<= 1.0"
+  note: descriptive reference only, not a purchase gate.
+
+gate:
+  conditions:
+    - P vs Y cal total gain both seeds > 0 and mean >= 0.003
+    - P vs K cal total gain both seeds > 0 and mean >= 0.003
+    - each seed P G0 MAE worsen vs Y <= 0.001
+    - identity, no-true-c inference, single-calibration, replay all pass
+  secondary_marker:
+    - each seed G0 MAE(P) - G0 MAE(O) <= 0.001
+  note: secondary marker is mechanism explanation, not part of the primary gate.
+
+branches_top_down:
+  - observation: gate met and dev severe clearly better than constant
+    supports: preliminary real inference gain; buy one full training/confirmation of the decomposition model
+  - observation: fit overall/severe fit insufficient or near-constant
+    supports: this fixed head did not complete the readout test; function family/optimisation/input ambiguity remain; stop
+  - observation: fit fits but dev severe still poor while G0 protected
+    supports: narrows to a transfer failure of this input/head; report gap size and n
+  - observation: head learns part of c but P hurts G0 or fails gate
+    supports: component/overall trade-off; stop this configuration
+  - observation: identity/deploy/replay failure or missing a head
+    supports: INVALID/INCOMPLETE
+
+stop_rule: after two head seeds and fixed analysis all compute stops.  No third
+  seed, no head-width/lambda/WD/loss/optimizer search, no Full fine-tune, no
+  official-valid/test, no new graph descriptor, no remote training job.
