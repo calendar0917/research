@@ -1,0 +1,78 @@
+{
+  "protocol_version": "zinc-g0-transfer-indexfix-v1",
+  "built_on_branch": "zinc-g0-indexfix-v1",
+  "head": "2284ca17b2a38ef25faf258ee79ff45ab4848622",
+  "source_result_commit": "2284ca1",
+  "source_science_commit": "240bd2b",
+  "bug": "part_c_audit.py::compute_model_keys indexed global node arrays with per-graph local u,v; fix = offsets[mi]+u",
+  "training_path_correct": "e2e_dictenv_p1.env_collate adds Batch.ptr[mi] to env_bond_u/v (verified by code read)",
+  "uses": "soup_state from F_A_state.pt / F_B_state.pt only (not last_state)",
+  "train_only_loading": "encoded_train.pt + env_train.pt via attach_env(\"train\"); load_split(\"train\") NOT called because it deserialises encoded_valid.pt",
+  "frozen_unchanged": {
+    "note": "Part A/B results not refit; hashes below confirm old artifacts untouched",
+    "old_audit_sha256": {
+      "part_a_paired_bootstrap.json": "a77cd831a4fcf091f0000a6a838558f80a168aaf9a23b9b95cdfa48d448402f0",
+      "part_b_class_median_shrinkage.json": "eb435a6961900aace4692f3554cdd26025d1bd297ccc02261fb56c7482b00caa",
+      "part_c_per_molecule.npz": "d7d098ac0f7918795e7f37dc40766ecfd541f7fb3f94fea4b0c98109a41de2a0",
+      "part_c_coverage.json": "281e75c4226ff29bcdab393608763112010171d6496e02dd7be97a789532ccb1",
+      "part_c_class_composition.json": "b565f008cd5efe2c5a082f42e13f699f13ac8b5ea7c6bea24cf1b572039ded88",
+      "part_c_matching.json": "9c33fa8d6e66b00a50e1c14712d9e010effe26259e70493dab31710224d513c8",
+      "part_c_channel_health.json": "8fd7896869d602360133b1262848337432f911c59f107cd180f83d3a66719bf4"
+    }
+  },
+  "source_sha256": {
+    "F_A_state.pt": {
+      "path": "tracks/ksvd/results/zinc_topology_crossfit_diagnostic_v1/F_A_state.pt",
+      "sha256": "b7a09dd2b2fd9fe036dbb8d928e2ea17b6567d0c77461e34e04c1666d22be045",
+      "bytes": 3299834
+    },
+    "F_B_state.pt": {
+      "path": "tracks/ksvd/results/zinc_topology_crossfit_diagnostic_v1/F_B_state.pt",
+      "sha256": "95dabfc3200539ba1088f79db6a706935cc6ebbffddd97fadfbd3fc5fb24dd4d",
+      "bytes": 3299834
+    },
+    "F_A.json": {
+      "path": "tracks/ksvd/results/zinc_topology_crossfit_diagnostic_v1/F_A.json",
+      "sha256": "37ffd9d22145014d845e5bafcad2c5d5e45cbc73d8bf591b6b3f6d1dbb823dc6",
+      "bytes": 488226
+    },
+    "F_B.json": {
+      "path": "tracks/ksvd/results/zinc_topology_crossfit_diagnostic_v1/F_B.json",
+      "sha256": "e3efcb6f73cd860fdbe38924afd1eb644938eb5440e0aa403973aea92cd0e625",
+      "bytes": 487840
+    },
+    "readouts.json": {
+      "path": "tracks/ksvd/results/zinc_topology_crossfit_diagnostic_v1/readouts.json",
+      "sha256": "3401c7f6a2fabf5ba7ae5dc945e415654fd7faadb6878025416b651f6954a17e",
+      "bytes": 533744
+    },
+    "subfold_index.npz": {
+      "path": "tracks/ksvd/results/zinc_topology_crossfit_diagnostic_v1/prep/subfold_index.npz",
+      "sha256": "70f8818959d82a17866361327de0b3ac0ba270fbe139e2b3a0ae6cc6fbae55c4",
+      "bytes": 28401
+    },
+    "fold_A.npz": {
+      "path": "tracks/ksvd/results/zinc_topology_crossfit_diagnostic_v1/prep/fold_A.npz",
+      "sha256": "11cd1c65c35140b4ef2d99b66a94ef4a07edd7288fe0bf61889dfa6734f43e8f",
+      "bytes": 31744
+    },
+    "fold_B.npz": {
+      "path": "tracks/ksvd/results/zinc_topology_crossfit_diagnostic_v1/prep/fold_B.npz",
+      "sha256": "3128ab0007c2ab8e82ba3c01ae4df3c0795caf6a5648981160e2c65b870cfa95",
+      "bytes": 31837
+    },
+    "train.npz": {
+      "path": "tracks/ksvd/results/zinc_dictionary_real_data_handoff/train.npz",
+      "sha256": "3dda78bc7cab7a33f8df182bba8870c7469209a0482dfa4dda5866eef7674135",
+      "bytes": 19760552
+    },
+    "train_topology_features.csv": {
+      "path": "tracks/ksvd/results/zinc_topology_cache/train_topology_features.csv",
+      "sha256": "ce165dd25882b504c6408cc044322801a67497239396ae58955098ef8e5aa998",
+      "bytes": 1079032
+    }
+  },
+  "official_test_loaded": false,
+  "official_valid_loaded": false,
+  "official_valid_reevaluated": false
+}
