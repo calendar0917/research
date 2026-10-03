@@ -1,0 +1,55 @@
+{
+  "protocol_id": "zinc-topology-crossfit-diagnostic-v1",
+  "deployed_commit": "240bd2bb128ec228ad48778e087a5b612a6949b9",
+  "branch": "task/zinc-topology-crossfit-diagnostic-v1",
+  "base_ref_commit": "ac8ef5b",
+  "host": "res-2",
+  "pool": "res2-cu124",
+  "git_dirty": false,
+  "runs": [
+    {
+      "experiment": "ztcd-smoke",
+      "run_id": "ztcd-smoke-20261003-113313-32d1cac4",
+      "purpose": "smoke: exercise prep-blob apply + Full train loop + state save (4 epochs)",
+      "command": "python -m tracks.ksvd.experiments.luyin16.zinc_topology_crossfit_diagnostic_v1 --mode train --fold A --epochs 4 --device cuda",
+      "node": "c05", "driver_version": "525.85.12", "gpu": "1 x NVIDIA A100-PCIE-40GB",
+      "torch": "2.5.1+cu124", "python": "3.12.14",
+      "started_at": "2026-10-03T11:31:14+08:00", "completed_at": "2026-10-03T11:31:59+08:00",
+      "exit_code": 0, "gpu_seconds": 45
+    },
+    {
+      "experiment": "ztcd-FA",
+      "run_id": "ztcd-FA-20261003-113453-080036ff",
+      "purpose": "Full base F_A trained on sub-fold A (4000 rows), 240 epochs, soup 236-240",
+      "command": "python -m tracks.ksvd.experiments.luyin16.zinc_topology_crossfit_diagnostic_v1 --mode train --fold A --epochs 240 --device cuda",
+      "node": "c05", "driver_version": "525.85.12", "gpu": "1 x NVIDIA A100-PCIE-40GB",
+      "torch": "2.5.1+cu124", "python": "3.12.14", "slurm_job_id": 55808,
+      "started_at": "2026-10-03T11:32:56+08:00", "completed_at": "2026-10-03T11:43:44+08:00",
+      "exit_code": 0, "gpu_seconds": 619
+    },
+    {
+      "experiment": "ztcd-FB",
+      "run_id": "ztcd-FB-20261003-113507-20cfc333",
+      "purpose": "Full base F_B trained on sub-fold B (4000 rows), 240 epochs, soup 236-240",
+      "command": "python -m tracks.ksvd.experiments.luyin16.zinc_topology_crossfit_diagnostic_v1 --mode train --fold B --epochs 240 --device cuda",
+      "node": "c05", "driver_version": "525.85.12", "gpu": "1 x NVIDIA A100-PCIE-40GB",
+      "torch": "2.5.1+cu124", "python": "3.12.14", "slurm_job_id": 55809,
+      "started_at": "2026-10-03T11:33:09+08:00", "completed_at": "2026-10-03T11:43:59+08:00",
+      "exit_code": 0, "gpu_seconds": 622
+    }
+  ],
+  "local_cpu": [
+    {"step": "phase0 corrected metrics", "threads": 8, "seconds": 3},
+    {"step": "phase0 mechanism check", "threads": 8, "seconds": 35},
+    {"step": "sub-fold prep A+B (build_fold_inputs per fold)", "threads": 8, "seconds": 274.9},
+    {"step": "fixed CPU readout: 4 ExtraTreesRegressor (2 per fold)", "threads": 8, "seconds": 61},
+    {"step": "checkpoint replay verification (2 folds x 128 rows)", "threads": 8, "seconds": 55}
+  ],
+  "regime_note": "All three remote runs share one regime: res-2 / pool res2-cu124 / node c05 / driver 525.85.12 / torch 2.5.1+cu124 / FP32.",
+  "artifact_paths": {
+    "F_A_state.pt": "tracks/ksvd/results/zinc_topology_crossfit_diagnostic_v1/F_A_state.pt",
+    "F_B_state.pt": "tracks/ksvd/results/zinc_topology_crossfit_diagnostic_v1/F_B_state.pt",
+    "remote_checkout": "/share/home/snsun/rr/research (commit 240bd2b)"
+  },
+  "official_test_loaded": false
+}

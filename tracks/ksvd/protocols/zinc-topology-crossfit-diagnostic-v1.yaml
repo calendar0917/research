@@ -1,0 +1,122 @@
+# Protocol: ZINC topology cross-fit diagnostic v1 (2026-10-03).
+#
+# One bounded question: keeping Full's original local environment, dictionaries
+# and relation channels unchanged, does the EXISTING topology25 channel provide a
+# generalisable error-correction signal beyond the base prediction itself?
+#
+# Fixed design: two identical Full bases on two pre-fixed ~4000-row sub-folds of
+# the frozen 8000 fit, cross-fitted fixed CPU residual readouts (P / TP), equal-
+# weight base averaging on the frozen 2000-row outer dev.  This is a diagnostic,
+# not an architecture search.  The official test split is NEVER instantiated,
+# loaded or evaluated.
+
+id: zinc-topology-crossfit-diagnostic-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official train/valid)
+  source_policy: official_pyg_zinc_only
+  official_test_policy: terminal (never loaded)
+  expected_sizes:
+    train: 10000
+    valid: 1000
+
+metric:
+  ranking_metric: outer_dev_mae
+  metric_direction: lower_is_better
+  unit: MAE on ZINC target
+  target: 0.09  # long-run goal only; NOT promised or converted this round
+
+hypothesis:
+  single: "topology25 provides a generalisable residual-correction signal beyond
+    the base Full prediction, over and above a pure prediction-value recalibration"
+
+splits:
+  outer:
+    source: reused verbatim from zinc-joint-dictionary-decision-v1/prep/split.json
+    unit: canonical_group_id
+    seed: 20261003
+    sizes: [8000 fit, 2000 dev]
+    dev_strata: [penalty 0: 1926, penalty -1: 65, penalty <= -2: 9]
+    note: the outer dev already participated in the previous round's exploration;
+      it is a fixed diagnostic set, not a fresh confirmatory set
+  subfold:
+    seed: 20261003
+    within: outer 8000 fit only
+    unit: canonical_group_id
+    balancing: greedy balance by raw cycle-penalty coarse stratum over groups
+    expected: [A 4000 rows (3851/130/19), B 4000 rows (3851/130/19)]
+    all_rows_kept: true
+    group_labels_use: [subfold assignment, post-hoc diagnostics only]
+    group_labels_forbidden_as: [model feature, sample weight, routing, supervision]
+
+bases:
+  arms: [F_A, F_B]
+  what: canonical Full, 408,651 params, unchanged local module / dictionaries /
+    C6 / relation / topology interfaces
+  recipe: L1 + H1_LAMBDA * structural reconstruction
+  init: same canonical fresh seed-0 algorithm; non-data init params checked equal,
+    data-dependent buffers may differ by fold
+  optimizer: torch.optim.Adam
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  epochs: 240
+  scheduler: none
+  amp: none
+  ddp: none
+  soup: fixed mean of epochs 236..240 (parameters only)
+  calibration: median residual on the base's OWN training sub-fold, folded into
+    the reader output bias exactly ONCE; true unfolded raw and single-calibrated
+    predictions both saved
+  predictors_never_trained_on: [meta sub-fold labels, outer-dev labels]
+  early_stop: none
+  soup_health_selection: none (NaN / identity only)
+
+readout:
+  type: sklearn.ensemble.ExtraTreesRegressor
+  params: {n_estimators: 256, min_samples_leaf: 1, max_features: 1.0, random_state: 0, n_jobs: 8}
+  P: {input: "[p_base_cal]", target: "r = y - p_base_cal on the other sub-fold"}
+  TP: {input: "[raw_topology25, p_base_cal]", target: "r = y - p_base_cal on the other sub-fold"}
+  raw_topology25:
+    source: tracks/ksvd/results/zinc_topology_cache/train_topology_features.csv (hinge mode)
+    verified_identical_to: handoff train.npz topo_raw (max abs diff 0.0)
+    forbidden_inputs: [label-derived cycle values, atom/bond new descriptors, graph id,
+      target y, group labels, oracle lookup]
+  inference_rule: "p_P = p_base_cal + q_P(p_base_cal); p_TP = p_base_cal + q_TP(T25, p_base_cal)"
+  amplitude: fixed 1 for all samples; no clipping; no dev-tuned coefficients;
+    single constant control p_const = p_base_cal + median(r_meta_fit) reported only
+
+main_comparison:
+  aggregation: equal-weight average of the two base predictions BEFORE computing MAE
+  base: "(p_A + p_B)/2"
+  P: "(p_A + q_PA + p_B + q_PB)/2"
+  TP: "(p_A + q_TPA + p_B + q_TPB)/2"
+  reference_only: corrected historical 8000-fit F dev MAE (not used for causal gain)
+
+gate:
+  gain_base_min: 0.003      # MAE(base) - MAE(TP)
+  gain_topo_min: 0.003      # MAE(P) - MAE(TP)
+  tp_vs_base_g0_worsening_max: 0.001
+  per_fold_tp_minus_base_nonnegative: true
+  group_contribution_identity: true
+  identity_checks: true
+  interpretation: purchase signal only; NOT a final SOTA conclusion
+
+budget:
+  wall_clock_minutes: 90  (stop new compute at 75; >=15 min for verification/delivery)
+  gpu_hours_max: 1.0
+  concurrent_gpus_max: 2
+  local_cpu_threads_max: 8
+  remote: res-2, pool res2-cu124, FP32, no AMP/DDP
+  whitelist: [two Full base trajectories, four fixed CPU readout fits, smoke,
+    statistical analysis]
+  forbidden: [D-wide, dictionary capacity/lambda/s sweep, WD/loss/optimizer search,
+    node rescue, extra topology features, third base model, extra seeds,
+    full-data confirmation beyond this round]
+
+test_policy: terminal
+
+seed_semantics:
+  seed_role: canonical model seed; subfold seed fixed at 20261003
+  seeds: [0]
