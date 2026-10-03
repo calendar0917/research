@@ -22,11 +22,13 @@
   local HEAD `4083ee38d8785c5a44d1f9628a5baeed568d4c34` (the four source arms
   were trained at deployed commit `118e2481362f`); source results
   `tracks/ksvd/results/zinc_structure_semantic_factorial_seed0_v1/`.
-* New isolated branch states (`main` working tree, commits local only):
+* Isolated branch `task/zinc-zero-binding-baseline-seed0-v1`:
   * `dc96fac` — Phase A code + artifacts + frozen protocol + N0 runner;
-  * final commit — results, analysis, reports (this document).
-* Nothing pushed, merged, rebased or force-updated; no historical artifact
-  overwritten; other work untouched (pre-existing untracked paths left as-is).
+  * `ca92d8e` — results, analysis, reports, manifest/budget (this document).
+* Local `main` was restored to its pre-round HEAD `1a9db38`; the source branch
+  stays at `4083ee3`.  Nothing pushed, merged, rebased or force-updated; no
+  historical artifact overwritten; other work untouched (pre-existing
+  untracked paths left as-is).
 
 ## 2. Phase 0 and frozen protocol (before fitting)
 
