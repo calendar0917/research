@@ -64,6 +64,19 @@ only (no training).
   train` fallback); verified by `n=1000` and exact label alignment
   (`y_max_abs_diff ≤ 9e−16`).
 
+## Analysis-code deviation after freeze (post-prediction only)
+
+`frozen_eval_manifest.json` pins `analysis_source` at
+`sha256 5150912454c09186…`; the committed `analyze.py` is
+`sha256 7a200b76bc31b569…`.  The difference is **analysis-only bookkeeping**
+added after the held-out predictions were written: a `median_c` lookup fix in
+`_train_predictions`, the corrected constant-shift invariance check, and the
+paired bootstrap/CSV writers.  The held-out prediction path (`heldout`,
+`_load_pair`, `_predict_arms`, `_save_split`, `_access_log`) is byte-identical
+to the frozen revision, so the saved predictions are from the frozen code; only
+post-prediction tables changed.  `runner_source`, `deploy_wrapper_source`,
+`all_train_prep` and `target_decomposition` hashes still match the manifest.
+
 ## `rr` job status / exit codes
 
 | experiment | commit | node | exit | window (local) |
