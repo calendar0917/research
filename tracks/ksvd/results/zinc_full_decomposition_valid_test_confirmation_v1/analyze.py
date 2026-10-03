@@ -103,6 +103,8 @@ def build_manifest() -> dict[str, Any]:
         "protocol": _artifact(PROTOCOL),
         "runner_source": _artifact(Path(R.__file__)),
         "analysis_source": _artifact(Path(__file__)),
+        "deploy_wrapper_source": _artifact(RESULTS_DIR / "deploy_wrapper.py"),
+        "calibration": _artifact(RESULTS_DIR / "calibration.json"),
         "prep_all_train": _artifact(R.PREP_PATH),
         "target_decomposition": _artifact(DECOMP_PATH),
         "eight_k_prep": _artifact(R.OLD_8K_PREP),

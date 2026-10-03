@@ -32,19 +32,21 @@ def build_predictor(seed: int, mode: str = "P", *, blob=None) -> "nn.Module":
     """Return a callable ``p(batch, topo25=None) -> [n]`` in y units."""
     assert mode in ("Y", "P"), mode
     blob = load_prep() if blob is None else blob
-    cal = R.read_json(RESULTS_DIR / "calibration.json")["per_seed"][str(seed)]
+    cal = R.read_json(RESULTS_DIR / "calibration.json")
+    median_c = float(cal["median_train_c"])
+    cs = cal["per_seed"][str(seed)]
     if mode == "Y":
         full = R._full_model(blob, seed)
         full.load_state_dict(torch.load(RESULTS_DIR / f"Y_seed{seed}_raw_soup_state.pt",
                                         map_location="cpu"))
-        return R.FullDecompositionWrapper(full, None, cal["b_Y"], mode="Y")
+        return R.FullDecompositionWrapper(full, None, cs["b_Y"], mode="Y")
     full = R._full_model(blob, seed)
     full.load_state_dict(torch.load(RESULTS_DIR / f"H_seed{seed}_raw_soup_state.pt",
                                     map_location="cpu"))
-    head = R.build_head(seed, float(cal["median_c"]))
+    head = R.build_head(seed, median_c)
     head.load_state_dict(torch.load(RESULTS_DIR / f"Q_seed{seed}_head_soup_state.pt",
                                     map_location="cpu"))
-    return R.FullDecompositionWrapper(full, head, cal["b_P"], mode="P")
+    return R.FullDecompositionWrapper(full, head, cs["b_P"], mode="P")
 
 
 @torch.no_grad()
