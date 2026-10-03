@@ -187,7 +187,8 @@ classes are intrinsically ambiguous (`k<=-3` irreducible `5.55` MAE/row).
   (closed before Phase 2, per protocol).  **No Phase 3 is bought, and the
   single frozen official-valid read is not performed.**  See
   `final_decision.json`; the validation-entry code (`final_eval.py`) is
-  committed and rerunnable but was deliberately not invoked.
+  committed as the standby validation entry for a future passing round; it was
+  deliberately not invoked here.
 * Best frozen-body candidate for any future confirmation: `R_DM` (dense
   marginal).  Best matched unfrozen candidate: `C` (Sem-only adapter), but it
   is not a structural-interface result and it failed the +0.003 gate.

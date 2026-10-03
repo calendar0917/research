@@ -63,7 +63,8 @@ PYTHONPATH=. uv run python tracks/ksvd/results/zinc_overnight_interface_and_tail
 # CPU tail training (local, 4 threads)
 PYTHONPATH=. uv run python -m tracks.ksvd.experiments.luyin16.zinc_overnight_interface_and_tail_seed0_v1_cpu --stage 8k
 
-# final validation entry (committed, deliberately NOT invoked: no gate passed)
+# final validation entry (committed as standby for a future passing round;
+# deliberately NOT invoked: no gate passed)
 # PYTHONPATH=. uv run python .../final_eval.py --mode freeze
 # PYTHONPATH=. uv run python .../final_eval.py --mode heldout
 ```
