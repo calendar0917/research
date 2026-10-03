@@ -110,6 +110,15 @@ no-exact-match rows.  The severe failures are therefore **not** caused by
 topology25 equivalence-class confusion; they are a small set of rows whose
 target is not a function of the local topology key at all.
 
+**T25 ambiguity's share of the valid error budget is exactly zero.**  The only
+ambiguous objects are the 5 mixed train classes (13 of 10000 train rows); **no
+valid row** lands in a mixed class
+(`cycle_input_classes.csv` → `n_class_penalty_mixed = 0` for all 70 query ×
+key-space pairs), and every failing valid ring row is a *no-exact-match* row,
+not an ambiguous-match row.  Ambiguity can therefore account for none of the
+0.111206 published valid error; the severe rows' 0.022482 contribution comes
+from the model failing on rows the topology key simply does not determine.
+
 ## 3. Stage B — the fixed prototype and its availability
 
 `X175 = [raw φ65 ; raw Sem108 ; raw size2]` (one row per root), B1-normalised on
