@@ -55,6 +55,7 @@ def classify(point: float, lo: float, hi: float) -> str:
 
 
 def main() -> int:
+    torch.set_num_threads(8)
     blob = fac.load_prep_blob()
     decomp = fac.load_target()
     train_data = fac.load_train_only()
@@ -95,6 +96,64 @@ def main() -> int:
 
     cal_fit = {arm: raw_fit[arm] + bias[arm] for arm in ARMS}
     cal_dev = {arm: raw_dev[arm] + bias[arm] for arm in ARMS}
+
+    # --- raw-soup replay check against the released fit predictions ----------
+    # The released fit_raw was computed on the GPU during training; the local
+    # replay is CPU.  The criterion is therefore CPU-vs-GPU float32 agreement
+    # (order 1e-6), not bit-identity.
+    CPU_GPU_TOL = 1.0e-5
+    replay = {}
+    for arm in ARMS:
+        saved = np.load(RESULTS_DIR / f"{arm}_predictions.npz")
+        diff = float(np.max(np.abs(raw_fit[arm] - saved["fit_raw"].astype(np.float64))))
+        replay[arm] = {
+            "max_abs_diff_vs_released_fit_raw": diff,
+            "released_b": float(saved["b"]),
+            "recomputed_b": bias[arm],
+            "b_abs_diff": abs(float(saved["b"]) - bias[arm]),
+            "cpu_gpu_tolerance": CPU_GPU_TOL,
+            "pass": bool(diff <= CPU_GPU_TOL and abs(float(saved["b"]) - bias[arm]) <= 1e-6),
+        }
+    (RESULTS_DIR / "replay_check.json").write_text(json.dumps(jsonable(replay), indent=2))
+
+    # --- initial-parameter identity across the four fresh arms ----------------
+    init_states = {
+        arm: torch.load(RESULTS_DIR / f"{arm}_init_state.pt", map_location="cpu") for arm in ARMS
+    }
+    ref = init_states["S_J"]
+    init_identity = {}
+    for arm in ARMS:
+        keys = sorted(set(ref) | set(init_states[arm]))
+        mismatched, max_diff = [], 0.0
+        for key in keys:
+            if key == "kappa":
+                continue
+            if key not in ref or key not in init_states[arm]:
+                mismatched.append(key)
+                continue
+            delta = float((ref[key].float() - init_states[arm][key].float()).abs().max())
+            max_diff = max(max_diff, delta)
+            if not torch.equal(ref[key], init_states[arm][key]):
+                mismatched.append(key)
+        init_identity[arm] = {
+            "max_abs_diff_excluding_kappa": max_diff,
+            "mismatched_tensors": mismatched,
+            "identical": bool(not mismatched),
+        }
+    kappa_values = {arm: float(init_states[arm]["kappa"].reshape(-1)[0]) for arm in ARMS}
+    (RESULTS_DIR / "init_identity.json").write_text(
+        json.dumps(
+            jsonable(
+                {
+                    "per_arm": init_identity,
+                    "all_identical": all(init_identity[a]["identical"] for a in ARMS),
+                    "kappa_values": kappa_values,
+                    "note": "kappa is a non-trainable buffer, identical across arms by construction (shared init D/U)",
+                }
+            ),
+            indent=2,
+        )
+    )
 
     # --- per-row predictions ------------------------------------------------
     rows = []
