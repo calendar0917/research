@@ -1,0 +1,65 @@
+{
+  "protocol_version": "zinc-task-dictionary-and-cycle-witness-seed0-v1",
+  "isolated_branch": "task/zinc-task-dictionary-and-cycle-witness-seed0-v1",
+  "source_anchor": {
+    "previous_round_branch": "task/zinc-overnight-interface-and-tail-seed0-v1",
+    "previous_round_head": "8b4b9b4",
+    "previous_compute_revision": "b7234cfc1561"
+  },
+  "seed": 0,
+  "fold": {
+    "definition": "np.random.default_rng(20261004).permutation(10000); perm[:8000] fit, perm[8000:] dev; np.sort each",
+    "fit_idx_sha256": "7bf1cfb856a79617baf83c4ba95290d08248b4633609fa24725a5c028c9096d9",
+    "dev_idx_sha256": "a61c801073fbda237a46e4f8fe6c8e4f8f24e867e7a8b452f7aaffc86a9cceff",
+    "n_fit": 8000,
+    "n_dev": 2000,
+    "fit_k_counts": {"k=0": 7713, "k=-1": 252, "k=-2": 30, "k<=-3": 5},
+    "dev_k_counts": {"k=0": 1915, "k=-1": 73, "k=-2": 10, "k<=-3": 2},
+    "note": "new model-internal split of the same 10000 official-train rows; not researcher-unseen data"
+  },
+  "schedule": {
+    "generator": "torch.Generator().manual_seed(seed + 101)",
+    "sha256": "7b11a529584a8bdaa8e2f17a8c8413cdc6677714ae855339b5984e9fe6938e65",
+    "steps_per_arm_expected": 15120,
+    "batch_size": 128,
+    "epochs": 240
+  },
+  "arms": {
+    "D": {
+      "bridge": "current task dictionary (144 dim, 288 atoms, 16-step ISTA, lambda1=0.05, lambda2=0.01)",
+      "bridge_parameters": 82944
+    },
+    "M": {
+      "bridge": "bias-free MLP 144->288->144 with SiLU, W1=D_L_init.T, W2=V_L_init.T",
+      "bridge_parameters": 82944
+    }
+  },
+  "shared_body_parameters": 184667,
+  "total_parameters_per_arm": 267611,
+  "optimizer": {"name": "Adam", "lr": 0.001, "weight_decay": 0.00001, "coupled_l2": true},
+  "gradient_clip": 5.0,
+  "loss": "mean L1(y); no reconstruction or auxiliary target",
+  "soup_epochs": [236, 237, 238, 239, 240],
+  "calibration": "b = median(y - p_raw) on fit, eval mode, soup state; p_cal = p_raw + b",
+  "statistics": {"bootstrap": 1000, "bootstrap_seed": 20261004, "delta": 0.003, "g0_tol": 0.001},
+  "data_policy": {
+    "loaded": "official-train only (encoded_train + train env cache)",
+    "official_valid_loaded": false,
+    "official_test_loaded": false,
+    "old_learned_state_in_main_arms": false
+  },
+  "cpu_witness": {
+    "t25_source": "tracks/ksvd/results/zinc_frozen_chemistry_learned_cycle_v1/T25_all.npz",
+    "fit_dev": "original 8000/2000 internal split of the old CPU head",
+    "renumber_seed": 20261004,
+    "renumber_permutations": 16,
+    "purpose": "train-only conflict witnesses and helper order-sensitivity; no new head trained"
+  },
+  "budget": {
+    "wall_clock_limit_min": 180,
+    "compute_stop_min": 150,
+    "gpu_hours_limit": 1.2,
+    "max_parallel_gpu_jobs": 2,
+    "cpu_threads_limit": 8
+  }
+}

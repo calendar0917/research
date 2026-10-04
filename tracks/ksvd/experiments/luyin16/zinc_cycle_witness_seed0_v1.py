@@ -138,7 +138,10 @@ def exact_classes(T: np.ndarray) -> dict[str, Any]:
     new_class = np.ones(Ts.shape[0], dtype=bool)
     if Ts.shape[0] > 1:
         new_class[1:] = np.any(Ts[1:] != Ts[:-1], axis=1)
-    class_id = np.cumsum(new_class) - 1
+    class_id_sorted = np.cumsum(new_class) - 1
+    # map the sorted class ids back to the original row order
+    class_id = np.empty(Ts.shape[0], np.int64)
+    class_id[order] = class_id_sorted
     counts = np.bincount(class_id)
     # byte-key consistency check (would differ only with signed zeros)
     keys = [row.tobytes() for row in Ts]
@@ -358,6 +361,7 @@ def _max_basis_stats(graph: Any) -> dict[str, float]:
 
 def stage_witnesses(out_dir: Path, log: Any = print) -> dict[str, Any]:
     import networkx as nx
+    from networkx.algorithms import isomorphism as nx_iso
     import pandas as pd
 
     from tracks.ksvd.experiments.luyin16.zinc_long_range_proxy import _load_zinc
@@ -575,8 +579,8 @@ def stage_witnesses(out_dir: Path, log: Any = print) -> dict[str, Any]:
             nx.is_isomorphic(
                 _dataset_graph(dataset, int(fit_idx[pair["left_position"]])),
                 _dataset_graph(dataset, int(fit_idx[pair["right_position"]])),
-                node_match=nx.categorical_node_match("t", -1),
-                edge_match=nx.categorical_edge_match("b", -1),
+                node_match=nx_iso.categorical_node_match("t", -1),
+                edge_match=nx_iso.categorical_edge_match("b", -1),
             )
         )
         graph_rows.append(

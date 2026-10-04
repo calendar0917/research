@@ -879,6 +879,46 @@ def _metric_table(error: np.ndarray, k: np.ndarray) -> dict[str, Any]:
     return out
 
 
+def _init_probe(model: nn.Module, batch: Any) -> dict[str, Any]:
+    """Initial input/output RMS and one-step bridge gradients (engineering check)."""
+    model.train()
+    for parameter in model.parameters():
+        parameter.grad = None
+    coord = model.code(batch.dict_phi)
+    interface = model.fusion(sem.SEM108Model.semantic_interface(model, coord, batch, cm.C6_MASK, None))
+    module = model.local_dictionary_bridge
+    if isinstance(module, MLPBridge):
+        scale = torch.sqrt(interface.pow(2).mean(dim=1, keepdim=True) + float(lb.BRIDGE_EPS))
+        x = interface / scale
+        hidden = F.silu(module.fc1(x))
+        output = scale * module.fc2(hidden)
+        extra = {"hidden_abs_mean": float(hidden.abs().mean())}
+    else:
+        output, aux = module(interface, return_aux=True)
+        extra = {
+            "code_nonzero_fraction": float((aux["alpha"] != 0).float().mean()),
+            "code_per_row_nonzero": float((aux["alpha"] != 0).float().sum(dim=1).mean()),
+        }
+    prediction = model(batch, mask=cm.C6_MASK)
+    loss = F.l1_loss(prediction.view(-1), batch.y.view(-1))
+    loss.backward()
+    grads = {}
+    finite = True
+    for name, parameter in model.named_parameters():
+        if name.startswith("local_dictionary_bridge.") and parameter.grad is not None:
+            value = parameter.grad.detach()
+            grads[name] = float(value.norm())
+            finite = finite and bool(torch.isfinite(value).all())
+    model.eval()
+    return {
+        "input_rms": float(interface.pow(2).mean().sqrt()),
+        "output_rms": float(output.pow(2).mean().sqrt()),
+        "grad_norms": grads,
+        "grads_finite": finite,
+        **extra,
+    }
+
+
 def analyze(*, out_dir: Path, device: torch.device, log: Any = print) -> dict[str, Any]:
     torch.set_num_threads(8 if device.type == "cpu" else 4)
     fold, prep_meta, fit_data, dev_data, decomp, _targets = load_and_prepare()
@@ -910,12 +950,52 @@ def analyze(*, out_dir: Path, device: torch.device, log: Any = print) -> dict[st
             contract_errors.append(f"{arm}: official split loaded")
     if meta["D"]["schedule_sha256"] != meta["M"]["schedule_sha256"]:
         contract_errors.append("schedule hash mismatch")
+    schedule_local, schedule_local_hash = build_schedule(len(fit_data), EPOCHS, SEED + TRAIN_SHUFFLE_OFFSET)
+    if schedule_local_hash != meta["D"]["schedule_sha256"]:
+        contract_errors.append("schedule regeneration mismatch")
+    np.savez_compressed(
+        out_dir / "batch_schedule.npz",
+        schedule=np.stack(schedule_local).astype(np.int32),
+        sha256=np.asarray([schedule_local_hash]),
+    )
     if meta["D"]["data_stream_sha256"] != meta["M"]["data_stream_sha256"]:
         contract_errors.append("data stream hash mismatch")
     if meta["D"]["fold"]["fit_idx_sha256"] != meta["M"]["fold"]["fit_idx_sha256"]:
         contract_errors.append("fold mismatch")
 
     b = {arm: float(meta[arm]["calibration_b"]["raw_soup"]) for arm in ARMS}
+
+    # Cross-arm initial shared-parameter identity, from the saved init states.
+    init_states = {
+        arm: torch.load(out_dir / f"{arm}_init_state.pt", map_location="cpu", weights_only=False)
+        for arm in ARMS
+    }
+    bridge_prefix = "local_dictionary_bridge."
+    shared_keys = sorted(key for key in init_states["D"] if not key.startswith(bridge_prefix))
+    shared_mismatch = [
+        key for key in shared_keys if not torch.equal(init_states["D"][key], init_states["M"][key])
+    ]
+    shared_init_hasher = hashlib.sha256()
+    for key in shared_keys:
+        shared_init_hasher.update(key.encode())
+        shared_init_hasher.update(init_states["D"][key].detach().cpu().numpy().tobytes())
+    if shared_mismatch:
+        contract_errors.append(f"init shared tensors differ: {shared_mismatch[:8]}")
+    init_pair_check = {
+        "shared_tensor_count": len(shared_keys),
+        "shared_mismatch_keys": shared_mismatch,
+        "shared_init_sha256": shared_init_hasher.hexdigest(),
+        "bridge_keys_D": sorted(key for key in init_states["D"] if key.startswith(bridge_prefix)),
+    }
+    np.savez_compressed(out_dir / "fold_indices.npz", fit_idx=fold["fit_idx"], dev_idx=fold["dev_idx"])
+    np.savez_compressed(
+        out_dir / "new_fit_prep.npz",
+        **{
+            key: value
+            for key, value in prep_meta.items()
+            if isinstance(value, np.ndarray)
+        },
+    )
     report: dict[str, Any] = {
         "protocol_version": PROTOCOL_VERSION,
         "fold": {
@@ -926,11 +1006,11 @@ def analyze(*, out_dir: Path, device: torch.device, log: Any = print) -> dict[st
         },
         "calibration_b": b,
         "contract_errors": contract_errors,
+        "init_pair_check": init_pair_check,
         "arms": {},
         "gains": {},
         "contributions": {},
         "sensitivity": {},
-        "labels": {},
     }
     for state in ("init", "last", "raw_soup"):
         for part, target_y in (("fit", y_fit), ("dev", y_dev)):
@@ -960,10 +1040,10 @@ def analyze(*, out_dir: Path, device: torch.device, log: Any = print) -> dict[st
 
     strata_overall = [np.ones(k_dev.size, dtype=bool)]
     strata_g0 = [k_dev == 0]
-    report["gains"]["dev_overall_cal"] = paired_bootstrap_gain(err_d_cal, err_m_cal, strata_overall)
-    report["gains"]["dev_overall_raw"] = paired_bootstrap_gain(err_d_raw, err_m_raw, strata_overall)
-    report["gains"]["dev_G0_cal"] = paired_bootstrap_gain(err_d_cal[k_dev == 0], err_m_cal[k_dev == 0], strata_g0)
-    report["gains"]["dev_G0_raw"] = paired_bootstrap_gain(err_d_raw[k_dev == 0], err_m_raw[k_dev == 0], strata_g0)
+    report["gains"]["dev_overall_cal"] = paired_bootstrap_gain(err_d_cal, err_m_cal)
+    report["gains"]["dev_overall_raw"] = paired_bootstrap_gain(err_d_raw, err_m_raw)
+    report["gains"]["dev_G0_cal"] = paired_bootstrap_gain(err_d_cal[k_dev == 0], err_m_cal[k_dev == 0])
+    report["gains"]["dev_G0_raw"] = paired_bootstrap_gain(err_d_raw[k_dev == 0], err_m_raw[k_dev == 0])
 
     # group contributions (soup cal), sum equals overall.
     for arm in ARMS:
@@ -971,6 +1051,28 @@ def analyze(*, out_dir: Path, device: torch.device, log: Any = print) -> dict[st
         report["contributions"][arm] = _metric_table(err, k_dev)
         raw_err = y_dev - prediction[arm]["raw_soup_dev"]
         report["contributions"][arm + "_raw"] = _metric_table(raw_err, k_dev)
+
+    # per-row movement (soup); positive delta means M is worse on that row.
+    def _movement(d_err: np.ndarray, m_err: np.ndarray) -> dict[str, Any]:
+        delta = np.abs(m_err) - np.abs(d_err)
+        return {
+            "n": int(delta.size),
+            "m_better_rows": int((delta < 0).sum()),
+            "m_worse_rows": int((delta > 0).sum()),
+            "tied_rows": int((delta == 0).sum()),
+            "mean_delta_M_minus_D": float(delta.mean()),
+            "sum_delta_M_minus_D": float(delta.sum()),
+            "max_abs_delta": float(np.abs(delta).max()),
+        }
+
+    report["row_movement"] = {
+        "fit_cal": _movement(
+            y_fit - (prediction["D"]["raw_soup_fit"] + b["D"]),
+            y_fit - (prediction["M"]["raw_soup_fit"] + b["M"]),
+        ),
+        "dev_cal": _movement(err_d_cal, err_m_cal),
+        "dev_raw": _movement(err_d_raw, err_m_raw),
+    }
 
     # sensitivity: drop the single dev row with the largest combined cal error.
     combined = np.abs(err_d_cal) + np.abs(err_m_cal)
@@ -989,11 +1091,27 @@ def analyze(*, out_dir: Path, device: torch.device, log: Any = print) -> dict[st
     }
 
     # bootstrap self-tests.
-    report["bootstrap_self_tests"] = {
-        "same_predictions": paired_bootstrap_gain(err_d_cal, err_d_cal, strata_overall),
-        "swapped": paired_bootstrap_gain(err_m_cal, err_d_cal, strata_overall),
-        "constant_shift": paired_bootstrap_gain(err_d_cal + 0.001, err_m_cal, strata_overall),
+    self_tests = {
+        "same_predictions": paired_bootstrap_gain(err_d_cal, err_d_cal),
+        "swapped": paired_bootstrap_gain(err_m_cal, err_d_cal),
+        "constant_shift": paired_bootstrap_gain(err_d_cal + 0.001, err_m_cal),
     }
+    original = report["gains"]["dev_overall_cal"]
+    mirror_ok = bool(
+        abs(self_tests["swapped"]["point"] + original["point"]) < 1e-9
+        and abs(self_tests["swapped"]["ci95"][0] + original["ci95"][1]) < 1e-9
+        and abs(self_tests["swapped"]["ci95"][1] + original["ci95"][0]) < 1e-9
+    )
+    shift_ok = bool(abs(self_tests["constant_shift"]["point"] - original["point"]) <= 0.001 + 1e-9)
+    self_tests["checks"] = {
+        "same_predictions_zero": bool(
+            self_tests["same_predictions"]["point"] == 0.0
+            and self_tests["same_predictions"]["ci95"] == [0.0, 0.0]
+        ),
+        "swapped_mirror": mirror_ok,
+        "constant_shift_bounded": shift_ok,
+    }
+    report["bootstrap_self_tests"] = self_tests
 
     # gate.
     g0_cal = report["gains"]["dev_G0_cal"]
@@ -1048,13 +1166,23 @@ def analyze(*, out_dir: Path, device: torch.device, log: Any = print) -> dict[st
         },
     }
     report["separate_overall_improvement"] = {
-        "exists": bool(ov_cal["point"] >= DELTA),
+        "exists": bool(abs(ov_cal["point"]) >= DELTA),
+        "favored": "M" if ov_cal["point"] < 0 else "D",
         "raw_same_direction": bool(np.sign(ov_raw["point"]) == np.sign(ov_cal["point"])),
         "overall_cal_gain": ov_cal["point"],
         "overall_raw_gain": ov_raw["point"],
     }
     report["official_valid_loaded"] = False
     report["official_test_loaded"] = False
+
+    # initial-function probe on a fixed fit batch (both arms, fresh init).
+    probe_batch = zftd.make_batch(fit_data, list(range(128)), torch.as_tensor(y_fit[:128], dtype=torch.float32), device)
+    init_probe: dict[str, Any] = {}
+    for arm in ARMS:
+        probe_model = build_arm(arm).to(device)
+        probe_model.load_state_dict(torch.load(out_dir / f"{arm}_init_state.pt", map_location="cpu", weights_only=False))
+        init_probe[arm] = _init_probe(probe_model, probe_batch)
+    report["init_probe"] = init_probe
 
     # tables as CSV for the report.
     rows = ["endpoint,arm,raw_mae,cal_mae,raw_G0,cal_G0,raw_k-1,cal_k-1,raw_k-2,cal_k-2,raw_k<=-3,cal_k<=-3,raw_k<=-2,cal_k<=-2"]
@@ -1067,6 +1195,42 @@ def analyze(*, out_dir: Path, device: torch.device, log: Any = print) -> dict[st
                            entry["cal"][name]["mae"] if entry["cal"][name]["mae"] is not None else ""]
             rows.append(",".join(str(v) for v in values))
     (out_dir / "main_table.csv").write_text("\n".join(rows) + "\n", encoding="utf-8")
+
+    # per-graph raw/cal predictions, stable ids, and group contributions.
+    group_rows = ["arm,part,group,n,raw_mae,cal_mae,raw_contribution,cal_contribution"]
+    for part, part_idx in (("fit", fold["fit_idx"]), ("dev", fold["dev_idx"])):
+        target_y = y_fit if part == "fit" else y_dev
+        kk = k[part_idx]
+        for arm in ARMS:
+            raw_pred = prediction[arm][f"raw_soup_{part}"]
+            cal_pred = raw_pred + b[arm]
+            for name, mask in group_masks(kk).items():
+                n = int(mask.sum())
+                raw_mae = float(np.mean(np.abs(target_y[mask] - raw_pred[mask]))) if n else None
+                cal_mae = float(np.mean(np.abs(target_y[mask] - cal_pred[mask]))) if n else None
+                raw_contrib = float(np.abs(target_y[mask] - raw_pred[mask]).sum() / kk.size) if n else None
+                cal_contrib = float(np.abs(target_y[mask] - cal_pred[mask]).sum() / kk.size) if n else None
+                group_rows.append(f"{arm},{part},{name},{n},{raw_mae},{cal_mae},{raw_contrib},{cal_contrib}")
+    (out_dir / "group_table.csv").write_text("\n".join(group_rows) + "\n", encoding="utf-8")
+
+    gain_rows = ["endpoint,gain_point,ci_low,ci_high"]
+    for name, entry in report["gains"].items():
+        gain_rows.append(f"{name},{entry['point']},{entry['ci95'][0]},{entry['ci95'][1]}")
+    (out_dir / "gain_table.csv").write_text("\n".join(gain_rows) + "\n", encoding="utf-8")
+
+    for part, part_idx in (("fit", fold["fit_idx"]), ("dev", fold["dev_idx"])):
+        target_y = y_fit if part == "fit" else y_dev
+        kk = k[part_idx]
+        lines = ["stable_id,k,y,D_raw,D_cal,M_raw,M_cal"]
+        d_raw = prediction["D"][f"raw_soup_{part}"]
+        m_raw = prediction["M"][f"raw_soup_{part}"]
+        for position, stable in enumerate(part_idx.tolist()):
+            lines.append(
+                f"train:{int(stable):04d},{int(kk[position])},{target_y[position]:.10f},"
+                f"{d_raw[position]:.10f},{d_raw[position] + b['D']:.10f},"
+                f"{m_raw[position]:.10f},{m_raw[position] + b['M']:.10f}"
+            )
+        (out_dir / f"per_graph_{part}.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     write_json(out_dir / "analysis.json", report)
     write_json(out_dir / "gate.json", report["gate"])
