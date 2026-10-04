@@ -113,3 +113,14 @@ jobs (`42 s + 42 s`) = `1621 s = 0.450 GPU-h`; training-only `0.4117 GPU-h`
 * See `budget.json` for the GPU-hour ledger and `manifest.json` for hashes.
 * The branch is left isolated (no push, no merge); old result directories are
   byte-preserved.
+
+## Addendum — post-round merge/push (operator instruction)
+
+The round was executed and committed on its isolated branch under the
+original "no push / no merge" constraint.  After the round closed, the
+operator instructed "merge to main, then push".  On 2026-10-04 (CST)
+`task/zinc-chemistry-dictionary-vs-mlp-seed0-v1` (`06d4928`) was merged into
+`main` with `--no-ff` (merge commit `cdf6a70`) and pushed to `origin/main`.
+No result file, model state, prediction, metric or gate changed; the research
+decision is unaffected (no write-back into the model pipeline) — this is a
+code/record merge only.  `manifest.json` was refreshed after this addendum.
