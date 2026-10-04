@@ -1575,6 +1575,23 @@ def analyze(*, out_dir: Path = RESULTS_DIR, device: torch.device | None = None, 
                 "M_err_cal": float(arms["M"]["err_dev_cal"][position]),
             }
         )
+    per_graph_fit = []
+    fit_idx = fold["fit_idx"]
+    k_fit = k[fit_idx]
+    for position, index in enumerate(fit_idx.tolist()):
+        per_graph_fit.append(
+            {
+                "fit_position": position,
+                "train_row": int(index),
+                "gid": int(targets["gid"][index]),
+                "k": int(k_fit[position]),
+                "g": float(g_fit[position]),
+                "B_raw": float(raw["B"]["fit"][position]),
+                "B_cal": float(cal["B"]["fit"][position]),
+                "M_raw": float(raw["M"]["fit"][position]),
+                "M_cal": float(cal["M"]["fit"][position]),
+            }
+        )
 
     analysis = {
         "protocol_version": PROTOCOL_VERSION,
@@ -1614,6 +1631,10 @@ def analyze(*, out_dir: Path = RESULTS_DIR, device: torch.device | None = None, 
         writer = csv.DictWriter(handle, fieldnames=list(per_graph[0]))
         writer.writeheader()
         writer.writerows(per_graph)
+    with open(out_dir / "per_graph_fit.csv", "w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(per_graph_fit[0]))
+        writer.writeheader()
+        writer.writerows(per_graph_fit)
     log(f"[analyze] classification={classification} mechanism={mechanism_class} replay_ok={replay['all_ok']}")
     log(f"[analyze] G0 cal gain={gains['G0_cal']['point']:+.6f} CI={gains['G0_cal']['ci95']}")
     log(f"[analyze] overall cal gain={gains['overall_cal']['point']:+.6f} CI={gains['overall_cal']['ci95']}")

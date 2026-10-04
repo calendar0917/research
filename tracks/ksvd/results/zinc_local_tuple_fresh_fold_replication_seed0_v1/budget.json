@@ -1,0 +1,59 @@
+{
+  "protocol_version": "zinc-local-tuple-fresh-fold-replication-seed0-v1",
+  "round_start": "2026-10-04T20:39:00+08:00",
+  "round_end": "2026-10-04T21:48:00+08:00",
+  "gpu_budget_limit_hours": 1.0,
+  "training_wall_seconds": {
+    "B": 623.2847950421274,
+    "M": 642.4215813539922
+  },
+  "training_gpu_hours_upper_bound": 0.35158510455447767,
+  "steps": {
+    "B": 15120,
+    "M": 15120
+  },
+  "training_gpu_hours": 0.3516,
+  "gpu_allocation": {
+    "B": {
+      "job": "55941",
+      "node": "c05",
+      "pool": "res2-cu124",
+      "gpu": "A100-PCIE-40GB x1",
+      "gres": "gres/gpu:1",
+      "tres": "cpu=4,node=1,billing=4,gres/gpu=1",
+      "wall_s": 623.3
+    },
+    "M": {
+      "job": "55942",
+      "node": "c05",
+      "pool": "res2-cu124",
+      "gpu": "A100-PCIE-40GB x1",
+      "gres": "gres/gpu:1",
+      "tres": "cpu=4,node=1,billing=4,gres/gpu=1",
+      "wall_s": 642.4
+    },
+    "alloc_probe": {
+      "job": "55943",
+      "pool": "res2-cpu",
+      "note": "scontrol during both runs: node c05 Gres=gpu:4, AllocTRES=...,gres/gpu=4; distinct physical GPUs"
+    }
+  },
+  "smoke": {
+    "n_smokes": 2,
+    "device": "local cpu",
+    "steps_each": 3,
+    "states_discarded": true
+  },
+  "regime": {
+    "driver": "525.85.12",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "python": "3.12.14",
+    "fp32": true,
+    "amp": false,
+    "ddp": false,
+    "commit": "2e4ee3f70b14"
+  },
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

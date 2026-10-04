@@ -1,0 +1,87 @@
+=== rr alloc probe log (fresh-fold-alloc, res2-cpu) ===
+NodeName=c05 Arch=x86_64 CoresPerSocket=1 
+   CPUAlloc=16 CPUTot=56 CPULoad=5.14
+   AvailableFeatures=(null)
+   ActiveFeatures=(null)
+   Gres=gpu:4
+   NodeAddr=c05 NodeHostName=c05 Version=21.08.6
+   OS=Linux 5.15.0-58-generic #64~20.04.1-Ubuntu SMP Fri Jan 6 16:42:31 UTC 2023 
+   RealMemory=240000 AllocMem=0 FreeMem=6907 Sockets=56 Boards=1
+   State=MIXED ThreadsPerCore=1 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=gpu 
+   BootTime=2026-02-08T20:15:48 SlurmdStartTime=2026-02-08T20:15:47
+   LastBusyTime=2026-10-04T14:11:43
+   CfgTRES=cpu=56,mem=240000M,billing=56,gres/gpu=4
+   AllocTRES=cpu=16,gres/gpu=4
+   CapWatts=n/a
+
+=== scontrol show job 55941 ===
+=== scontrol show job 55941
+JobId=55941 JobName=rr-fresh-fold-B
+   UserId=snsun(3121) GroupId=snsun(3121) MCS_label=N/A
+   Priority=4294863495 Nice=0 Account=normal QOS=normal
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:07:33 TimeLimit=1-00:00:00 TimeMin=N/A
+   SubmitTime=2026-10-04T21:18:16 EligibleTime=2026-10-04T21:18:16
+   AccrueTime=2026-10-04T21:18:16
+   StartTime=2026-10-04T21:18:16 EndTime=2026-10-05T21:18:16 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-04T21:18:16 Scheduler=Main
+   Partition=gpu AllocNode:Sid=mgt01:1223233
+   ReqNodeList=c05 ExcNodeList=(null)
+   NodeList=c05
+   BatchHost=c05
+   NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,node=1,billing=4,gres/gpu=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/share/home/snsun/rr/runs/fresh-fold-B-20261004-212016-9e354e31/job.slurm
+   WorkDir=/share/home/snsun/rr/runs/fresh-fold-B-20261004-212016-9e354e31
+   StdErr=/share/home/snsun/rr/runs/fresh-fold-B-20261004-212016-9e354e31/slurm-55941.err
+   StdIn=/dev/null
+   StdOut=/share/home/snsun/rr/runs/fresh-fold-B-20261004-212016-9e354e31/slurm-55941.out
+   Power=
+   TresPerNode=gres:gpu:1
+   
+
+
+=== scontrol show job 55942
+=== scontrol show job 55942 ===
+=== scontrol show job 55942
+JobId=55942 JobName=rr-fresh-fold-M
+   UserId=snsun(3121) GroupId=snsun(3121) MCS_label=N/A
+   Priority=4294863494 Nice=0 Account=normal QOS=normal
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:06:54 TimeLimit=1-00:00:00 TimeMin=N/A
+   SubmitTime=2026-10-04T21:18:55 EligibleTime=2026-10-04T21:18:55
+   AccrueTime=2026-10-04T21:18:55
+   StartTime=2026-10-04T21:18:55 EndTime=2026-10-05T21:18:55 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-04T21:18:55 Scheduler=Main
+   Partition=gpu AllocNode:Sid=mgt01:1226423
+   ReqNodeList=c05 ExcNodeList=(null)
+   NodeList=c05
+   BatchHost=c05
+   NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,node=1,billing=4,gres/gpu=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=4 MinMemoryNode=32G MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/share/home/snsun/rr/runs/fresh-fold-M-20261004-212054-6e1f1ee1/job.slurm
+   WorkDir=/share/home/snsun/rr/runs/fresh-fold-M-20261004-212054-6e1f1ee1
+   StdErr=/share/home/snsun/rr/runs/fresh-fold-M-20261004-212054-6e1f1ee1/slurm-55942.err
+   StdIn=/dev/null
+   StdOut=/share/home/snsun/rr/runs/fresh-fold-M-20261004-212054-6e1f1ee1/slurm-55942.out
+   Power=
+   TresPerNode=gres:gpu:1
+   
+
+
+=== sacct -j 55941,55942 --format=JobID,State,AllocTRES%70,NodeList
+
+
+[rr] command exited with code 0 at 2026-10-04T21:25:49+08:00
+
