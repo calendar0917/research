@@ -87,6 +87,7 @@ DELTA = zw.DELTA
 G0_TOL = zw.G0_TOL
 DELTA_SLACK = zw.DELTA_SLACK
 REPLAY_TOL = zw.REPLAY_TOL
+TARGET_NOT_READ_TOL = 1.0e-5  # GPU forward float noise (atomic scatter) is ~5e-7; labels never enter forward
 ARMS = zw.ARMS
 
 jsonable = zw.jsonable
@@ -739,8 +740,10 @@ def run_smoke(*, device: torch.device, out_dir: Path = RESULTS_DIR, log: Any = p
         pred_my = model_m(batch_y, mask=cm.C6_MASK)
     checks["target_not_read_d_maxdiff"] = float((pred_dg - pred_dy).abs().max())
     checks["target_not_read_m_maxdiff"] = float((pred_mg - pred_my).abs().max())
+    checks["target_not_read_tol"] = float(TARGET_NOT_READ_TOL)
     checks["target_not_read_ok"] = bool(
-        checks["target_not_read_d_maxdiff"] == 0.0 and checks["target_not_read_m_maxdiff"] == 0.0
+        checks["target_not_read_d_maxdiff"] <= TARGET_NOT_READ_TOL
+        and checks["target_not_read_m_maxdiff"] <= TARGET_NOT_READ_TOL
     )
 
     # the training loss really is L1 against g.
