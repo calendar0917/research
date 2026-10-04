@@ -82,6 +82,11 @@ artifacts. Bootstrap witnesses pass exactly (same predictions → 0; swap mirror
   intervention would have silently been a no-op for D_J; replaced by a shared per-row
   `root_codes` patch (`_patch_mean_replace`), tested on D_J against stored predictions
   (reload Δ 1.4e-6, restore Δ 0.0) before producing `mechanism_health.json`.
+* One **analysis-only enrichment** after the first mechanism pass: raw (uncalibrated) MAE
+  changes were added to the switch/mean-replacement fields and the D_J operator switch was
+  recomputed on CPU with the identical procedure (it reproduces the previous round to 5.1e-9).
+  No training-path code changed (`build_arm_mj`, `train_arm_mj`, `phase_a`, `run_smoke`
+  untouched across all three commits).
 * No formal-run failure, no recovery, no failed GPU attempt.
 
 ## 5. Budget

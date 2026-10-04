@@ -1411,6 +1411,8 @@ def _intervention_entry(
     extra: dict[str, Any] = {}
     if kind == "operator_switch":
         model.local_tuple.switch_independent = True
+        if hasattr(model.local_tuple, "weight_key"):
+            model.local_tuple.weight_key = "independent"
     elif kind == "mean_replace":
         unscaled = _unscaled_root_codes(model, fit_data, device)
         mu = unscaled.mean(axis=0)
@@ -1423,6 +1425,8 @@ def _intervention_entry(
     pred_dev = prev.evaluate_state(model, dev_data, g_dev, device)
     # restore
     model.local_tuple.switch_independent = False
+    if kind == "operator_switch" and hasattr(model.local_tuple, "weight_key"):
+        model.local_tuple.weight_key = "joint"
     if kind == "mean_replace":
         del model.local_tuple.root_codes
     g0 = k_dev == 0
@@ -1437,9 +1441,14 @@ def _intervention_entry(
             "prediction_delta_p95_abs": float(np.percentile(np.abs(delta), 95)),
             "prediction_delta_max_abs": float(np.max(np.abs(delta))),
             "signed_mean": float(delta.mean()),
+            "mae_orig_raw": _mae(target, orig),
+            "mae_new_raw": _mae(target, pred),
+            "mae_change_raw": float(_mae(target, pred) - _mae(target, orig)),
             "mae_orig_cal": _mae(target, orig + bias),
             "mae_new_cal": _mae(target, pred + bias),
             "mae_change_cal": float(_mae(target, pred + bias) - _mae(target, orig + bias)),
+            "G0_mae_orig_raw": float(np.mean(np.abs((target - orig)[kk]))),
+            "G0_mae_new_raw": float(np.mean(np.abs((target - pred)[kk]))),
             "G0_mae_orig_cal": float(np.mean(np.abs((target - (orig + bias))[kk]))),
             "G0_mae_new_cal": float(np.mean(np.abs((target - (pred + bias))[kk]))),
         }
@@ -1478,6 +1487,11 @@ def collect_mechanism(*, out_dir: Path, device: torch.device, log: Any = print) 
         "probe_log": dj_meta["probe_log"],
         "native_fit_cal": _mae(g_fit, dj_pred["raw_soup_fit"] + dj_bias),
         "native_dev_cal": _mae(g_dev, dj_pred["raw_soup_dev"] + dj_bias),
+        "operator_switch_to_I": _intervention_entry(
+            dj_model, fit_data, dev_data, g_fit, g_dev, k_dev, dj_bias,
+            kind="operator_switch", device=device,
+            native_fit=dj_pred["raw_soup_fit"], native_dev=dj_pred["raw_soup_dev"],
+        ),
         "mean_replace": _intervention_entry(
             dj_model, fit_data, dev_data, g_fit, g_dev, k_dev, dj_bias,
             kind="mean_replace", device=device,
@@ -1546,8 +1560,10 @@ def collect_mechanism(*, out_dir: Path, device: torch.device, log: Any = print) 
         m_model.local_tuple.ablate = False
     m_entry["zero_ablation"] = {
         "fit_prediction_delta_mean_abs": float(np.mean(np.abs(ab_fit - base_fit))),
+        "fit_mae_change_raw": float(_mae(g_fit, ab_fit) - _mae(g_fit, base_fit)),
         "fit_mae_change_cal": float(_mae(g_fit, ab_fit + m_bias) - _mae(g_fit, base_fit + m_bias)),
         "dev_prediction_delta_mean_abs": float(np.mean(np.abs(ab_dev - base_dev))),
+        "dev_mae_change_raw": float(_mae(g_dev, ab_dev) - _mae(g_dev, base_dev)),
         "dev_mae_change_cal": float(_mae(g_dev, ab_dev + m_bias) - _mae(g_dev, base_dev + m_bias)),
     }
     report["M_J"] = m_entry

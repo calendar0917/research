@@ -18,7 +18,7 @@ all four dev endpoints in point estimate (calibrated G0 `+0.002200`, overall `+0
 |---|---|---|
 | 1 | Same tuple input: does the local dictionary win, lose, tie or stay unresolved vs the fixed nonlinear encoder? | **Unresolved (INCONCLUSIVE), directionally M_J.** M_J better in point estimate on all 4 endpoints (G0 cal `+0.002200` CI `[−0.001564,+0.006029]`; overall cal `+0.002526` CI `[−0.001649,+0.006467]`; raw G0 `+0.002245`; raw overall `+0.002684`) but frozen gate demands G0 cal ≥ +0.003 with CI>0 and equivalence is not shown (CIs wider than ±0.003). |
 | 2 | Is there a frozen-gate performance candidate vs the old B? raw vs cal? Mostly from bias? | **No performance candidate.** M_J dev cal overall `0.099381`, G0 `0.098216`; raw overall `0.101414`, G0 `0.100434`. B→M_J: overall cal `+0.004336` CI `[+0.000264,+0.008757]`, G0 cal `+0.003659` CI `[−0.000438,+0.008602]`, G0 raw `+0.006817` CI `[+0.002339,+0.011765]`, overall raw `+0.007542` CI `[+0.003279,+0.012083]`. Not mainly a bias artifact: raw gains are larger than cal gains, and the reported fit-median bias (`−0.015250` vs B `−0.031378`) reduces rather than creates the calibrated gain; but the frozen G0 cal CI still includes zero. |
-| 3 | Are both encoders active, and how sensitive are they to the real pairing right away? Which interventions prove only dependence? | **Both active.** D_J: exactly 8/64 sparse per tuple, `D_loc` drift 0.756, `W_loc` norm 9.18. M_J: `A_raw` drift 0.721, `W_loc` norm 7.62, 0 dead code dims, effective rank 4.53. Immediate real-vs-marginal switch: D_J mean\|Δpred\| `0.003382` (dev MAE `+8.4e-5`), M_J `0.000260` (dev MAE `+7.0e-6`) — ~13× less sensitive for M_J. Zero-ablation (D `0.1019→0.5485`; M `0.0994→0.6229`) and fit-mean replacement (D `0.1019→0.4423`; M `0.0994→0.4845`) prove **dependence only**, and include a large systematic shift plus co-adaptation breakage; they do not estimate an information share. |
+| 3 | Are both encoders active, and how sensitive are they to the real pairing right away? Which interventions prove only dependence? | **Both active.** D_J: exactly 8/64 sparse per tuple, `D_loc` drift 0.756, `W_loc` norm 9.18. M_J: `A_raw` drift 0.721, `W_loc` norm 7.62, 0 dead code dims, effective rank 4.53. Immediate real-vs-marginal switch: D_J mean\|Δpred\| `0.003382` (dev raw MAE `+1.5e-4`, cal `+8.4e-5`), M_J `0.000260` (dev raw MAE `+2.8e-6`, cal `+7.0e-6`) — ~13× less sensitive for M_J. Zero-ablation (D `0.1019→0.5485`; M `0.0994→0.6229`) and fit-mean replacement (D `0.1019→0.4423`; M `0.0994→0.4845`) prove **dependence only**, and include a large systematic shift plus co-adaptation breakage; they do not estimate an information share. |
 | 4 | Which small part of `luyin19` does this support, and what is not tested? | Supports: the real root-local structure–atom–bond tuple interface carries a load-bearing signal, and a same-capacity per-tuple nonlinear encoder **at least matches (directionally beats) the IHT dictionary** at this budget, so the dictionary form is not required for this interface here. Not tested: the J>I correspondence claim (still INCONCLUSIVE), ring/cycle relief, message passing/global structure, multi-seed variance, official-valid/test, and the pre-registered incidence-permuted marginal control. |
 | 5 | What is closed, what is kept, why will the next spend not sweep this encoder family on this dev again? | Closed: the fixed dictionary-vs-SiLU same-capacity local-encoder comparison on this interface/fold — no practically separable encoding gain; this config is frozen. Kept: the local tuple interface as a candidate carrier and the D_J/B references. Next evidence must come from **independent folds/seeds or the permuted-marginal control**, not another encoder on the same repeated dev; the remaining uncertainty is seed/optimisation noise vs a genuine G0-specific effect. |
 
@@ -95,16 +95,19 @@ the two arms (dev pos 1632, gid 8049, in G0) leaves G0 cal gain `+0.001915` and 
   Fit root code (scaled) RMS `0.664`, 0 dead dimensions of 64, effective rank `4.53`
   (a very low-rank learned local code). D_J for comparison: `D_loc` drift 0.756, `W_loc` 9.18,
   8/64 active per tuple.
-* **Sensitivity to the real pairing.** Frozen J→I operator switch on the soups: D_J mean\|Δpred\|
-  `0.003382`, dev cal MAE `+8.4e-5`; M_J `0.000260`, dev cal MAE `+7.0e-6` (fit: `0.003297` vs
-  `0.000251`). After training, the SiLU projection is ~13× less sensitive to replacing the real
-  incidence by the marginal product than the IHT dictionary.
+* **Sensitivity to the real pairing.** Frozen J→I operator switch on the soups (same procedure for
+  both arms; the D_J switch recomputed here reproduces the previous round to `5.1e-9`): D_J
+  mean\|Δpred\| `0.003382` dev / `0.003297` fit, dev MAE change raw `+1.50e-4` / cal `+8.43e-5`
+  (G0 raw `+1.52e-4`); M_J mean\|Δpred\| `0.000260` dev / `0.000251` fit, dev MAE change raw
+  `+2.77e-6` / cal `+6.99e-6` (G0 raw `−1.87e-6`). After training, the SiLU projection is ~13×
+  less sensitive to replacing the real incidence by the marginal product than the IHT dictionary.
 * **Dependence interventions (not information shares).** Zero-ablation dev cal MAE:
-  D_J `0.1019 → 0.5485`, M_J `0.0994 → 0.6229`. Fit-mean replacement (μ of `kappa·e(v)` over fit
-  roots; d=0 roots stay zero; bias untouched) dev cal MAE: D_J `0.1019 → 0.4423` (mean\|Δ\|
-  `0.4266`), M_J `0.0994 → 0.4845` (mean\|Δ\| `0.4754`). Both prove the local channel is
-  load-bearing; both include large systematic offsets and co-adaptation breakage, so they do not
-  attribute an information share.
+  D_J `0.1019 → 0.5485`, M_J `0.0994 → 0.6229` (M raw change `+0.5085`). Fit-mean replacement
+  (μ of `kappa·e(v)` over fit roots; d=0 roots stay zero; bias untouched) dev cal MAE: D_J
+  `0.1019 → 0.4423` (mean\|Δ\| `0.4266`, raw change `+0.3276`), M_J `0.0994 → 0.4845`
+  (mean\|Δ\| `0.4754`, raw change `+0.3725`). Both prove the local channel is load-bearing; both
+  include large systematic offsets and co-adaptation breakage, so they do not attribute an
+  information share.
 * **Four-grid decomposition (previous round, re-read read-only).** Calibrated J/I grid:
 
   | state/operator | overall cal | G0 cal |
