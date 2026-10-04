@@ -52,3 +52,15 @@ Only official-train objects were opened (`T25_all.npz`,
 `official_test_loaded=False`).  No official-valid/test file or old row cache
 was loaded, predicted or scored.  No `load_split("train")` call and no 12k
 cycle re-audit.
+
+## Addendum — post-round merge (operator instruction)
+
+The round was executed, audited and committed on its isolated branch under the
+original "no push / no merge" constraint.  After the round closed, the
+operator instructed "merge to main, then commit and push".  On 2026-10-04
+11:04:12 CST `task/zinc-cycle-head-size-input-repair-seed0-v1` was merged into
+`main` with `--no-ff` (merge commit `2ecbdf7`, amended once to drop a stray
+`__pycache__` file) and pushed to `origin/main`.  No result file, model state,
+prediction or metric changed; the research decision is unaffected (no
+write-back into the model pipeline) — this is a code/record merge only.
+`manifest.json` was refreshed after this addendum.
