@@ -75,3 +75,15 @@ All under `tracks/ksvd/results/zinc_local_tuple_dictionary_joint_vs_independent_
 `gate.json`, `paired_gains.*`, `main_table.csv`, `group_table.csv`, `per_graph_*.csv`,
 `contributions` tables in `analysis.json`, `mechanism_health.json`, `replay_checks.json`,
 `figures/*`, `budget.json`, `manifest.json`).
+
+## Addendum — post-round merge/push (operator instruction)
+
+The round was executed and committed on its isolated branch under the
+original "no push / no merge" constraint.  After the round closed, the
+operator instructed "merge to main, then push".  On 2026-10-04 (CST)
+`task/zinc-local-tuple-dictionary-joint-vs-independent-seed0-v1` (`8995109`)
+was merged into `main` with `--no-ff` (merge commit `ac4dfea`) and pushed to
+`origin/main`.  No result file, model state, prediction, metric or gate
+changed; the research decision is unaffected (no write-back into the model
+pipeline) — this is a code/record merge only.  `manifest.json` was refreshed
+after this addendum.
