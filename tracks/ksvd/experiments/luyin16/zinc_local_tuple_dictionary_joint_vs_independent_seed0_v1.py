@@ -1883,7 +1883,7 @@ def _root_health(model: nn.Module, data_list: Sequence[Any], device: torch.devic
     with torch.no_grad():
         for start in range(0, n_rows, 256):
             indices = list(range(start, min(start + 256, n_rows)))
-            batch = zftd.make_batch(data_list, indices, target[: len(indices)], device)
+            batch = zftd.make_batch(data_list, indices, target, device)
             codes = model.local_tuple.root_codes(batch)
             stats = model.local_tuple.last_stats
             n_tuples += int(stats["n_tuples"])
@@ -1916,7 +1916,7 @@ def _tuple_health(model: nn.Module, data_list: Sequence[Any], device: torch.devi
     with torch.no_grad():
         for start in range(0, len(subset), 128):
             indices = list(range(start, min(start + 128, len(subset))))
-            batch = zftd.make_batch(subset, indices, target[: len(indices)], device)
+            batch = zftd.make_batch(subset, indices, target, device)
             model.local_tuple.root_codes(batch)
             stats = model.local_tuple.last_stats
             n_tuples += int(stats["n_tuples"])
