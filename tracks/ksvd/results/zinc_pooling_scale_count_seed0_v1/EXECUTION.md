@@ -85,3 +85,21 @@ uv run python -m tracks.ksvd.experiments.luyin16.zinc_pooling_scale_count_seed0_
 
 (`--train` on a GPU host follows the same entry point with `--device cuda`; the frozen protocol
 intended res-2 `res2-cu124`.)
+
+## 7. Repo checks and final job states
+
+* Quick local subset `uv run pytest -q -m "not slow" tracks/ksvd/tests` (with the known
+  order-sensitive CSSD case deselected): **1839 passed, 1 failed, 225 deselected** in 358.7 s.
+  The single failure was `test_ksvd_runtime.py::test_git_state_captures_commit`, which asserts
+  that a dirty tree carries a non-empty diff hash; it failed on the pre-commit working tree
+  because the untracked round results make `dirty=True` with an empty tracked diff. Re-run after
+  committing the results: **1 passed** — so it is a working-tree-state artifact, not a code
+  regression. The new runner module adds no existing imports and was exercised end-to-end by the
+  two trajectories, the analysis, and the replay checks.
+* Final self-created job states: `pool-scale-C` (55976) and `pool-scale-N` (55977) cancelled
+  while PENDING; `alloc-probe-pools` (55978) failed on c01 (diagnostic `scontrol` probe only,
+  exit 1); `gpu-probe-poolscale` (res) completed; no self-created job is running or pending.
+  The probe output captured why the GPUs were unavailable: c05/c06 were occupied by other users
+  (e.g. 1 h+ running jobs) at submission time.
+* `training_gpu_hours_upper_bound = 2.0315` in `budget.json` is CPU wall-equivalent, not GPU
+  consumption; actual GPU allocation-hours = 0. No official-valid/test was read.
