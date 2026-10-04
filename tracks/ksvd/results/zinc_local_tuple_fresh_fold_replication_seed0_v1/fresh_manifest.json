@@ -1,0 +1,226 @@
+{
+  "protocol_version": "zinc-local-tuple-fresh-fold-replication-seed0-v1",
+  "fold": "old_perm=rng(20261004).permutation(10000); old_fit=sort(old_perm[:8000]); old_dev=sort(old_perm[8000:]); new_dev=sort(rng(20261005).permutation(old_fit)[:2000]); new_fit=setdiff1d(arange(10000), new_dev)",
+  "fold_checks": {
+    "old_fit_sha256": "7bf1cfb856a79617baf83c4ba95290d08248b4633609fa24725a5c028c9096d9",
+    "old_dev_sha256": "a61c801073fbda237a46e4f8fe6c8e4f8f24e867e7a8b452f7aaffc86a9cceff",
+    "new_fit_sha256": "2a21cb8771f6e24cfb4a5cc50602cf0b4390db9c4367f8bb910052f9f0aebbcb",
+    "new_dev_sha256": "270ab4126b0f0413f1f6ff7ada2e9914bbaca91ae50cc65bbd8ca2673d8f9357",
+    "sizes_ok": true,
+    "new_fit_dev_disjoint": true,
+    "new_fit_dev_cover": true,
+    "new_dev_subset_old_fit": true,
+    "new_dev_not_in_old_dev": true,
+    "fit_intersection_size": 6000,
+    "old_fit_sha256_matches_frozen": true,
+    "old_dev_sha256_matches_frozen": true,
+    "new_fit_sha256_matches_frozen": true,
+    "new_dev_sha256_matches_frozen": true
+  },
+  "group_cross": {
+    "canonical_group_ids_available": true,
+    "n_groups_total": 9997,
+    "n_shared_fit_dev_groups": 1,
+    "n_fit_rows_in_shared_groups": 1,
+    "n_dev_rows_in_shared_groups": 1
+  },
+  "label_source_checks": {
+    "n_rows": 10000,
+    "split_train_only": true,
+    "y_is_train_only_handoff": true,
+    "y_target_handoff_max_abs_diff": 1.7763568394002505e-15,
+    "cycle_matches_audit_order_column": true,
+    "all_finite": true,
+    "sources": {
+      "train_label_csv": "/home/calendar/code/research/tracks/ksvd/results/zinc_long_cycle_audit/train_cycle_audit_label.csv",
+      "train_label_csv_sha256": "3be648266a19890d531b9c0b179b4fe4c4d9e10d522e4b942fa60b3108c9b8d5",
+      "gvae_full_properties_npz": "/home/calendar/code/research/tracks/ksvd/results/zinc_long_cycle_audit/cache/gvae_full_properties.npz",
+      "gvae_full_properties_npz_sha256": "7f95d7b818e064d6e9bd83dab74695caec3c2aaa5387d321828873f7a1db6c6c",
+      "handoff_train": "/home/calendar/code/research/tracks/ksvd/results/zinc_dictionary_real_data_handoff/train.npz",
+      "handoff_train_sha256": "3dda78bc7cab7a33f8df182bba8870c7469209a0482dfa4dda5866eef7674135"
+    }
+  },
+  "target_checks": {
+    "fit_rows_only": true,
+    "uses_dev_labels_in_fit": false,
+    "n_fit": 8000,
+    "n_fit_cycle_free": 7689,
+    "constants_finite": true,
+    "sigma_cycle_nonzero": true,
+    "y_identity_max_abs": 0.0,
+    "mu_logP_fixed": 2.4570953396190123,
+    "k_fit_counts": {
+      "k=0": 7693,
+      "k=-1": 269,
+      "k=-2": 33,
+      "k<=-3": 5,
+      "k<=-2": 38
+    },
+    "k_dev_counts": {
+      "k=0": 1935,
+      "k=-1": 56,
+      "k=-2": 7,
+      "k<=-3": 2,
+      "k<=-2": 9
+    },
+    "c_g0_value": 4.660179918360938e-05,
+    "c_g0_spread_max_abs": 0.0,
+    "historical_anchor": {
+      "old_targets_npz": "/home/calendar/code/research/tracks/ksvd/results/zinc_chemistry_dictionary_vs_mlp_seed0_v1/fit_only_targets.npz",
+      "old_targets_npz_sha256": "e2adf5f2d8ef9fc9ca6e7ecfb948ae73e5b1178645ddc5df74d2e171f08078ac",
+      "refit_vs_saved_constant_max_abs": {
+        "sigma_logP": 6.661338147750939e-16,
+        "sigma_SA": 0.0,
+        "mu_SA": 0.0,
+        "sigma_cycle": 0.0,
+        "mu_cycle": 0.0
+      },
+      "k_diff_rows": 0,
+      "c_max_abs_diff": 0.0,
+      "note": "raw-field lineage check only; old g/c never used as supervision"
+    }
+  },
+  "dev_label_shuffle_check": {
+    "dev_rows_permuted": 2000,
+    "constant_diffs": {
+      "sigma_logP": 0.0,
+      "sigma_SA": 0.0,
+      "mu_SA": 0.0,
+      "sigma_cycle": 0.0,
+      "mu_cycle": 0.0,
+      "fit_rows_cycle_free": 0.0,
+      "fit_rows_snap": 0.0
+    },
+    "identical": true
+  },
+  "payload_checks": {
+    "old_tuple_npz": "/home/calendar/code/research/tracks/ksvd/results/zinc_local_tuple_dictionary_joint_vs_independent_seed0_v1/local_tuple_index.npz",
+    "old_tuple_npz_sha256": "4facb6ec77ff10130d49857bad461d16da0ee097495616ca4d4711de962b2c40",
+    "node_sizes_match_env": true,
+    "root_atom_match_env": true,
+    "pair_ptr_monotone": true,
+    "n_roots": 231664,
+    "n_pairs": 508032,
+    "scaler_old_vs_new": {
+      "phi_mean_max_abs_diff": 0.0005543177308422464,
+      "phi_std_max_abs_diff": 0.0005121742459704703,
+      "phi_scale_old": 0.9114654064178467,
+      "phi_scale_new": 0.9114654303753792,
+      "kappa_old": 2.077404260635376,
+      "kappa_new": 2.0631040776308387
+    },
+    "phi_scaler": {
+      "fitted_on": "new fit rows, realized C>0 incident tuples",
+      "n_samples": 337590,
+      "std_floor": 0.001,
+      "phi_scale_l2_rms": 0.9114654303753792,
+      "phi_mean_sha256": "dabf7cd3e02bdbc63c562fd236fe4596fe1f9e5a8a2c670b8ebe3c14f77f5bac",
+      "phi_std_sha256": "cb54ec839371cdb75b926f5b30a074b932af874ac5012733afa6f37660b165f8"
+    },
+    "kappa": {
+      "value": 2.0631040776308387,
+      "definition": "1 / RMS(initial e_J, e_I) over up to 8192 uniformly sampled new-fit roots",
+      "seed": 20261004,
+      "n_roots": 8192,
+      "sample_sha256": "6702326d5059d9ab06eacc042bc19bb7b7c90bf3c0cf963055379d65c535c875",
+      "sample_head": [
+        2,
+        4,
+        19,
+        66,
+        75,
+        164,
+        188,
+        189
+      ],
+      "raw_rms": 0.4847065210342407,
+      "e_J_rms": 0.4848331809043884,
+      "e_I_rms": 0.48457980155944824,
+      "sample_in_new_fit": true
+    }
+  },
+  "kappa_M": {
+    "definition": "kappa_M = RMS(kappa_D * e_D_init) / RMS(e_M_init) over the fresh fit-only kappa_sample",
+    "kappa_D": 2.0631041526794434,
+    "r_D": 1.0002613488806276,
+    "r_M": 0.5001110434532166,
+    "e_D_init_rms": 0.4848331809043884,
+    "e_M_init_rms": 0.5001110434532166,
+    "kappa_M": 2.00007850651312,
+    "n_roots": 8192,
+    "sample_sha256": "6702326d5059d9ab06eacc042bc19bb7b7c90bf3c0cf963055379d65c535c875",
+    "labels_used": false,
+    "dev_used": false
+  },
+  "init_identity": {
+    "shared_tensor_count": 36,
+    "shared_tensor_max_abs_diff": 0.0,
+    "shared_state_hash_b": "04652ec3d53e03e972f5de70ab2ec59333bc7f25765632689a84646e23ec6af9",
+    "shared_state_hash_m": "04652ec3d53e03e972f5de70ab2ec59333bc7f25765632689a84646e23ec6af9",
+    "A_equals_D_init_T": true,
+    "W_loc_exactly_zero": true,
+    "parameter_audit_b": 267611,
+    "parameter_audit_m": {
+      "total_parameters": 297499,
+      "base_body_parameters": 184667,
+      "bridge_parameters": 82944,
+      "local_tuple_parameters": 29888,
+      "A_parameters": 8000,
+      "W_loc_parameters": 21888
+    },
+    "rng_state_equal_after_construction": true,
+    "rng_after_b_sha256": "a2e8a8ab56091d98d239b81fd15117cb818f1b88d95d2fc1bcff036eee5a8853",
+    "rng_after_m_sha256": "a2e8a8ab56091d98d239b81fd15117cb818f1b88d95d2fc1bcff036eee5a8853"
+  },
+  "prep_check": {
+    "n_fit": 8000,
+    "n_dev": 2000,
+    "fitted_on_new_fit_only": true,
+    "direct_new_fit_recompute": {
+      "patch": {
+        "n_fit_root_rows": 185479,
+        "mean_max_abs_diff": 0.0,
+        "scale_max_abs_diff": 0.0
+      },
+      "ctx": {
+        "n_fit_root_rows": 8000,
+        "mean_max_abs_diff": 0.0,
+        "scale_max_abs_diff": 0.0
+      },
+      "anchor": {
+        "n_fit_root_rows": 185479,
+        "mean_max_abs_diff": 0.0,
+        "scale_max_abs_diff": 0.0
+      },
+      "topo": {
+        "n_fit_root_rows": 8000,
+        "mean_max_abs_diff": 0.0,
+        "scale_max_abs_diff": 0.0
+      }
+    }
+  },
+  "artifacts": {
+    "fold_npz": {
+      "path": "/home/calendar/code/research/tracks/ksvd/results/zinc_local_tuple_fresh_fold_replication_seed0_v1/fresh_fold.npz",
+      "sha256": "941125505af5c769285adecddacd1882950b4010dc358b658df0b949fe014c75",
+      "bytes": 15705
+    },
+    "targets_npz": {
+      "path": "/home/calendar/code/research/tracks/ksvd/results/zinc_local_tuple_fresh_fold_replication_seed0_v1/fresh_targets.npz",
+      "sha256": "2660ecbe16bdec0afb00929b3cd88a97582016e81ea251187e6995e2782d9037",
+      "bytes": 113785
+    },
+    "payload_npz": {
+      "path": "/home/calendar/code/research/tracks/ksvd/results/zinc_local_tuple_fresh_fold_replication_seed0_v1/fresh_tuple_payload.npz",
+      "sha256": "9acf100136ec094a0498b83df08d4f8a4c7ca2558ec7d133cbb872e9fc09b5d2",
+      "bytes": 1057483
+    },
+    "prep_npz": {
+      "path": "/home/calendar/code/research/tracks/ksvd/results/zinc_local_tuple_fresh_fold_replication_seed0_v1/fresh_prep.npz",
+      "sha256": "5804dadb54e22b3ac3a514a86c02c6a68f227feaaba357cf650f7c387ec46312",
+      "bytes": 3456
+    }
+  },
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

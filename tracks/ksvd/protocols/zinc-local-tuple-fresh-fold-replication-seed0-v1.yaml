@@ -1,0 +1,99 @@
+# Protocol: ZINC local-tuple fresh-fold replication (seed 0), 2026-10-04.
+#
+# One question: does the historical B -> M_J chemical-component (g = y - c) gain
+# survive on a pre-fixed new 8000/2000 fold of the same 10000 official-train rows?
+# Two matched arms, one seed, one fixed fold, no search, no official-valid/test.
+
+id: zinc-local-tuple-fresh-fold-replication-seed0-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official train only)
+  source_policy: official_train_only
+  official_test_policy: terminal (never loaded)
+  official_valid_policy: never loaded
+  expected_train_rows: 10000
+
+metric:
+  ranking_metric: calibrated_dev_g_mae
+  metric_direction: lower_is_better
+  unit: MAE on the chemical component g = y - c
+  primary_endpoint: new_dev_G0_calibrated
+  secondary_endpoint: new_dev_overall_calibrated
+  target: 0.09
+  note: g-MAE is an internal chemical-component diagnostic, not an official y-MAE
+
+fold:
+  definition: >-
+    old_perm = rng(20261004).permutation(10000); old_fit = sort(old_perm[:8000]);
+    old_dev = sort(old_perm[8000:]); new_dev = sort(rng(20261005).permutation(old_fit)[:2000]);
+    new_fit = setdiff1d(arange(10000), new_dev)
+  fit_size: 8000
+  dev_size: 2000
+  new_fit_sha256: 2a21cb8771f6e24cfb4a5cc50602cf0b4390db9c4367f8bb910052f9f0aebbcb
+  new_dev_sha256: 270ab4126b0f0413f1f6ff7ada2e9914bbaca91ae50cc65bbd8ca2673d8f9357
+  fit_intersection_with_old_fit: 6000
+  selected_on_dev: false
+
+target:
+  decomposition: g = y - c; k = clip(round(eff*sigma_cycle+mu_cycle), -20, 0)
+  mu_logP_fixed: 2.4570953396190123
+  constants_fitted_on: new fit rows only
+  dev_label_shuffle_invariance_required: true
+
+arms:
+  B:
+    definition: original compressed M_g skeleton (Sem110, posterior MLP bridge, static relations, topology/reader); no local tuple path
+    parameters: 267611
+  M:
+    definition: same B skeleton + original M_J local tuple encoder and fusion first-layer injection
+    parameters: 297499
+    local_encoder: SiLU(x @ row_l2_normalize(A_raw).T), A_raw 64x125
+    aggregation: e_M(v) = sum_{t,a} pair_wJ(v,t,a) f_M(x)
+    injection: preact = fusion0(Sem110) + W_loc (kappa_M * e_M), W_loc zero-init 342x64
+    A_raw_init: D_loc_init.T
+    kappa_M: one-shot label-free RMS scale match on the fresh fit-only kappa_sample
+    no_warm_start: true
+
+training:
+  seed: 0
+  optimizer: Adam
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  batch_size: 128
+  epochs: 240
+  steps: 15120
+  soup: fixed mean of epochs 236..240
+  amp: none
+  ddp: none
+  loss: L1 on g
+
+evaluation:
+  calibration: one fit-median bias per arm
+  bootstrap: 1000 paired per-row draws, seed 20261005, shared endpoint indices
+  sensitivity: drop the unique dev row with max mean calibrated error
+
+gate:
+  performance_replicated:
+    G0_cal_gain_min: 0.003
+    overall_cal_gain_min: 0.003
+    G0_cal_CI_lower_gt: 0.0
+    G0_raw_gain_gt: 0.0
+    overall_raw_gain_gt: 0.0
+  directional_not_confirmed: performance gate not fully passed but G0 cal and overall cal gains both > 0
+  not_replicated: any other complete valid result
+  invalid_incomplete: input/label/prep/init/stream/replay fail or trajectories incomplete
+
+test_policy: terminal
+
+budget:
+  wall_minutes_max: 150
+  compute_stop_minute: 135
+  gpu_hours_max: 1.0
+  gpu_concurrency_max: 2
+  local_cpu_threads_max: 8
+  remote: res-2, pool res2-cu124, A100, torch 2.5.1+cu124, FP32, no AMP/DDP
+
+seed_semantics:
+  seed_role: single canonical seed 0; both arms share the seed, schedule and dropout stream
+  seeds: [0]
