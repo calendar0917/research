@@ -1,0 +1,54 @@
+{
+  "category": "INCONCLUSIVE",
+  "definitions_checked": {
+    "D_CHEM_SUPPORT": false,
+    "M_CHEM_SUPPORT": false,
+    "LOCAL_EQUIVALENCE": false,
+    "TRADEOFF": false
+  },
+  "rules": {
+    "D_CHEM_SUPPORT": "G_g cal>=+0.003 & CI_low>0; G0 raw gain>0; overall g-cal gain>=-0.001",
+    "M_CHEM_SUPPORT": "G_g cal<=-0.003 & CI_high<0; G0 raw gain<0; overall g-cal gain<=+0.001",
+    "LOCAL_EQUIVALENCE": "G0 and overall g-cal CIs inside [-0.003,+0.003]; no raw>=0.003 opposite signal",
+    "TRADEOFF": "G0 cal>=0.003, CI separated, raw same direction, winner overall g-cal worsens >0.001"
+  },
+  "raw_opposite_signal": false,
+  "primary_metrics": {
+    "G_g_cal": {
+      "point": -0.0017387700103942531,
+      "ci95": [
+        -0.005604207516193034,
+        0.002716308544681067
+      ],
+      "n_boot": 1000,
+      "seed": 20261004
+    },
+    "G_g_raw": {
+      "point": 0.0022623623707390904,
+      "ci95": [
+        -0.0020648084935762333,
+        0.0064546501846080104
+      ],
+      "n_boot": 1000,
+      "seed": 20261004
+    },
+    "overall_g_cal": {
+      "point": -0.0017689262719853367,
+      "ci95": [
+        -0.0058035415120046,
+        0.0023412046877814762
+      ],
+      "n_boot": 1000,
+      "seed": 20261004
+    },
+    "overall_g_raw": {
+      "point": 0.002122183840760402,
+      "ci95": [
+        -0.0019817118474229046,
+        0.00624373039256896
+      ],
+      "n_boot": 1000,
+      "seed": 20261004
+    }
+  }
+}

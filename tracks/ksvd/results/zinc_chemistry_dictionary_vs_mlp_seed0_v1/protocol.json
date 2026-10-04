@@ -1,0 +1,81 @@
+{
+  "protocol_version": "zinc-chemistry-dictionary-vs-mlp-seed0-v1",
+  "isolated_branch": "task/zinc-chemistry-dictionary-vs-mlp-seed0-v1",
+  "source_anchor": {
+    "previous_round": "zinc_task_dictionary_and_cycle_witness_seed0_v1",
+    "previous_round_training_revision": "77c40dda9d5b730a64ea653b63b053a11460993d",
+    "previous_round_merge": "7fd0e28",
+    "previous_round_head_notes": "zinc_cycle_head_size_input_repair_seed0_v1 (35471dc), zinc_overnight_interface_and_tail_seed0_v1 (8b4b9b4)"
+  },
+  "seed": 0,
+  "fold": {
+    "definition": "np.random.default_rng(20261004).permutation(10000); perm[:8000] fit, perm[8000:] dev; np.sort each",
+    "fit_idx_sha256": "7bf1cfb856a79617baf83c4ba95290d08248b4633609fa24725a5c028c9096d9",
+    "dev_idx_sha256": "a61c801073fbda237a46e4f8fe6c8e4f8f24e867e7a8b452f7aaffc86a9cceff",
+    "n_fit": 8000,
+    "n_dev": 2000,
+    "fit_k_counts": {"k=0": 7713, "k=-1": 252, "k=-2": 30, "k<=-3": 5},
+    "dev_k_counts": {"k=0": 1915, "k=-1": 73, "k=-2": 10, "k<=-3": 2}
+  },
+  "schedule": {
+    "generator": "torch.Generator().manual_seed(seed + 101)",
+    "sha256": "7b11a529584a8bdaa8e2f17a8c8413cdc6677714ae855339b5984e9fe6938e65",
+    "steps_per_arm_expected": 15120,
+    "batch_size": 128,
+    "epochs": 240
+  },
+  "targets": {
+    "definition": "g = y - c; c = (k - mu_cycle)/sigma_cycle; k = clip(round(eff_norm*sigma_cycle + mu_cycle), -20, 0)",
+    "constant_fitting": "sigma_logP/sigma_SA/mu_SA from OLS y_stored ~ logP + SA on cycle-free fit rows; sigma_cycle/mu_cycle from Nelder-Mead snap fit on fit rows; mu_logP fixed at 2.4570953396190123",
+    "fit_rows_only": true,
+    "dev_labels_used_in_fit": false,
+    "npz": "tracks/ksvd/results/zinc_chemistry_dictionary_vs_mlp_seed0_v1/fit_only_targets.npz",
+    "npz_sha256_at_freeze": "e2adf5f2d8ef9fc9ca6e7ecfb948ae73e5b1178645ddc5df74d2e171f08078ac",
+    "old_vs_new": {"k_diff_rows": 0, "c_max_abs_diff": 0.033654310289506384, "g_max_abs_diff": 0.033654310289506384},
+    "c0_on_G0": 0.0005790572390683467
+  },
+  "arms": {
+    "D": {"bridge": "current task dictionary (144 dim, 288 atoms, 16-step ISTA, lambda1=0.05, lambda2=0.01)", "bridge_parameters": 82944},
+    "M": {"bridge": "bias-free MLP 144->288->144 with SiLU, W1=D_L_init.T, W2=V_L_init.T", "bridge_parameters": 82944}
+  },
+  "shared_body_parameters": 184667,
+  "total_parameters_per_arm": 267611,
+  "optimizer": {"name": "Adam", "lr": 0.001, "weight_decay": 0.00001, "coupled_l2": true},
+  "gradient_clip": 5.0,
+  "loss": "mean L1(pred, g); no reconstruction or auxiliary target",
+  "soup_epochs": [236, 237, 238, 239, 240],
+  "calibration": "b_g = median(g_fit - p_raw) on fit, eval mode, soup state; p_cal = p_raw + b_g",
+  "statistics": {"bootstrap": 1000, "bootstrap_seed": 20261004, "delta": 0.003, "g0_tol": 0.001, "delta_slack": 0.001},
+  "gates": {
+    "dictionary": ["INVALID", "D_CHEM_SUPPORT", "M_CHEM_SUPPORT", "LOCAL_EQUIVALENCE", "TRADEOFF", "INCONCLUSIVE"],
+    "target_interference": ["BULK_RELIEF_SUPPORTED", "D_SPECIFIC_RELIEF", "M_SPECIFIC_RELIEF", "RELIEF_UNCONFIRMED"]
+  },
+  "data_policy": {
+    "loaded": "official-train only (encoded_train + train env cache)",
+    "official_valid_loaded": false,
+    "official_test_loaded": false,
+    "old_learned_state_in_main_arms": false,
+    "old_untrained_init_reused_after_identity_check": true
+  },
+  "budget": {
+    "wall_clock_limit_min": 150,
+    "compute_stop_min": 120,
+    "gpu_hours_limit": 1.0,
+    "max_parallel_gpu_jobs": 2,
+    "cpu_threads_limit": 8,
+    "server": "res-2",
+    "pool": "res2-cu124",
+    "precision": "FP32; no AMP; no DDP"
+  },
+  "search_policy": {
+    "new_seed": false,
+    "new_fold": false,
+    "width_scan": false,
+    "ista_steps_scan": false,
+    "lambda_scan": false,
+    "wd_scan": false,
+    "loss_scan": false,
+    "early_stopping": false,
+    "third_arm": false
+  }
+}
