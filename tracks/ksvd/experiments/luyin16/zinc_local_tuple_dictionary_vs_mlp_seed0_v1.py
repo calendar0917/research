@@ -1335,20 +1335,58 @@ def _load_prev_predictions_from(dirpath: Path, arm: str) -> dict[str, np.ndarray
 # ---------------------------------------------------------------------------
 
 
-def _scaled_root_codes(model: nn.Module, data_list: Sequence[Any], device: torch.device) -> np.ndarray:
+def _unscaled_root_codes(model: nn.Module, data_list: Sequence[Any], device: torch.device) -> np.ndarray:
+    """Per-fit-root unscaled codes ``e(v)`` (the model multiplies by kappa)."""
     model.eval()
-    was_mean = model.local_tuple.mean_replace
-    model.local_tuple.mean_replace = None
     out: list[np.ndarray] = []
     with torch.no_grad():
+        target = torch.zeros(len(data_list), dtype=torch.float32)
         for start in range(0, len(data_list), 128):
             idx = list(range(start, min(start + 128, len(data_list))))
-            target = torch.zeros(len(idx), dtype=torch.float32)
             batch = zftd.make_batch(data_list, idx, target, device)
             codes = model.local_tuple.root_codes(batch)
-            out.append((codes * model.local_tuple.kappa).detach().cpu().numpy())
-    model.local_tuple.mean_replace = was_mean
+            out.append(codes.detach().cpu().numpy())
     return np.concatenate(out, axis=0)
+
+
+def _neighbour_rows(encoder: nn.Module, data: Any) -> torch.Tensor:
+    """Boolean per concatenated row: the root has at least one incident tuple."""
+    phi = data.dict_phi
+    device = phi.device
+    mol = data.local_mol_id.to(torch.long).reshape(-1)
+    n_graphs = int(mol.numel())
+    batch = data.batch.to(torch.long)
+    graph_counts = torch.bincount(batch, minlength=n_graphs)
+    ptr = torch.cat([graph_counts.new_zeros(1), graph_counts.cumsum(0)])
+    rows = torch.arange(int(phi.shape[0]), device=device)
+    local_pos = rows - ptr[batch]
+    root_base = encoder._buf("root_base", device)
+    global_root = root_base[mol][batch] + local_pos
+    pair_ptr = encoder._buf("pair_ptr", device)
+    return pair_ptr[global_root + 1] > pair_ptr[global_root]
+
+
+def _patch_mean_replace(model: nn.Module, mean_unscaled: torch.Tensor) -> None:
+    """Replace the local code by a constant for roots with neighbours.
+
+    Works uniformly for the IHT encoder (previous round) and the M encoder:
+    both return the *unscaled* code from ``root_codes`` and multiply by
+    ``kappa`` in ``forward``, so the mean-preserving value is inserted before
+    that scaling.  Roots without neighbours (d=0) stay exactly zero.
+    """
+    import types
+
+    encoder = model.local_tuple
+    original = encoder.root_codes
+    mean_local = mean_unscaled.detach().clone()
+
+    def patched(self: nn.Module, data: Any) -> torch.Tensor:
+        out = original(data)
+        has = _neighbour_rows(self, data)
+        value = mean_local.to(device=out.device, dtype=out.dtype)
+        return torch.where(has.unsqueeze(1), value.unsqueeze(0), torch.zeros_like(out))
+
+    encoder.root_codes = types.MethodType(patched, encoder)
 
 
 def _intervention_entry(
@@ -1370,21 +1408,25 @@ def _intervention_entry(
         native_fit = prev.evaluate_state(model, fit_data, g_fit, device)
     if native_dev is None:
         native_dev = prev.evaluate_state(model, dev_data, g_dev, device)
+    extra: dict[str, Any] = {}
     if kind == "operator_switch":
         model.local_tuple.switch_independent = True
     elif kind == "mean_replace":
-        codes_unscaled = _scaled_root_codes(model, fit_data, device) / max(model.local_tuple.kappa, 1e-12)
-        mu = codes_unscaled.mean(axis=0)
-        model.local_tuple.mean_replace = torch.as_tensor(mu, dtype=torch.float32, device=device)
+        unscaled = _unscaled_root_codes(model, fit_data, device)
+        mu = unscaled.mean(axis=0)
+        extra["mean_scaled_rms"] = float(np.sqrt(np.mean((model.local_tuple.kappa * mu) ** 2)))
+        extra["mean_unscaled_rms"] = float(np.sqrt(np.mean(mu**2)))
+        _patch_mean_replace(model, torch.as_tensor(mu, dtype=torch.float32))
     else:
         raise ValueError(kind)
     pred_fit = prev.evaluate_state(model, fit_data, g_fit, device)
     pred_dev = prev.evaluate_state(model, dev_data, g_dev, device)
     # restore
     model.local_tuple.switch_independent = False
-    model.local_tuple.mean_replace = None
+    if kind == "mean_replace":
+        del model.local_tuple.root_codes
     g0 = k_dev == 0
-    entry: dict[str, Any] = {}
+    entry: dict[str, Any] = dict(extra)
     for part, target, orig, pred, kk in (
         ("fit", g_fit, native_fit, pred_fit, np.ones(g_fit.shape[0], dtype=bool)),
         ("dev", g_dev, native_dev, pred_dev, g0),
@@ -1458,8 +1500,8 @@ def collect_mechanism(*, out_dir: Path, device: torch.device, log: Any = print) 
     m_model.load_state_dict({k: v.to(device) for k, v in m_soup.items()}, strict=True)
     m_model = m_model.to(device)
     m_bias = float(np.median(g_fit - m_pred["raw_soup_fit"]))
-    # root-code health on fit
-    codes = _scaled_root_codes(m_model, fit_data, device)
+    # root-code health on fit (unscaled codes; kappa recorded separately)
+    codes = _unscaled_root_codes(m_model, fit_data, device) * float(m_model.local_tuple.kappa)
     codes_centered = codes - codes.mean(axis=0, keepdims=True)
     singular = np.linalg.svd(codes_centered, compute_uv=False)
     energy = singular**2
