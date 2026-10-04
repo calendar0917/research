@@ -1,0 +1,60 @@
+protocol_id: zinc-pooling-scale-count-seed0-v1
+
+data:
+  root: data/ZINC
+  policy: official_train_only
+  official_valid: never_loaded
+  official_test: terminal
+
+fold:
+  source_round: zinc_local_tuple_fresh_fold_replication_seed0_v1
+  fit: 8000
+  dev: 2000
+  new_fit_sha256: 2a21cb8771f6e24cfb4a5cc50602cf0b4390db9c4367f8bb910052f9f0aebbcb
+  new_dev_sha256: 270ab4126b0f0413f1f6ff7ada2e9914bbaca91ae50cc65bbd8ca2673d8f9357
+
+arms:
+  - id: C
+    runner_arg: --arm C
+    parameters: 297499
+    pooling: sum_count
+  - id: N
+    runner_arg: --arm N
+    parameters: 297499
+    pooling: mean_count
+  - id: M
+    runner_arg: null
+    source: read_only_source_round
+  - id: B
+    runner_arg: null
+    source: read_only_source_round
+    gate_role: none
+
+training:
+  epochs: 240
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  grad_clip: 5.0
+  soup_epochs: [236, 237, 238, 239, 240]
+  seed: 0
+  amp: false
+  ddp: false
+
+evaluation:
+  calibration: fit_median_bias
+  primary: new_dev_G0_cal
+  secondary: new_dev_overall_cal
+  bootstrap:
+    n: 1000
+    seed: 20261006
+
+gate:
+  g0_cal_gain_min: 0.003
+  overall_cal_gain_min: 0.003
+  g0_cal_ci_lower_gt: 0.0
+  g0_raw_gain_gt: 0.0
+  overall_raw_gain_gt: 0.0
+
+output:
+  dir: tracks/ksvd/results/zinc_pooling_scale_count_seed0_v1

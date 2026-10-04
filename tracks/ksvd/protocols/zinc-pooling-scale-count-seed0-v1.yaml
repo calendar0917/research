@@ -1,0 +1,97 @@
+# Protocol: ZINC pooling-scale / count-accessibility (seed 0), 2026-10-04.
+#
+# One architecture question: same information, same parameters, same training
+# recipe — do count-normalised mean pooling moments (N) beat the sum/count
+# parametrisation (C) for the chemical component g = y - c?  Secondary: does
+# merely exposing the six existing count coordinates already help (C vs M)?
+# Two matched arms, one seed, one frozen fold, no search, no official-valid/test.
+
+id: zinc-pooling-scale-count-seed0-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official train only)
+  source_policy: official_train_only
+  official_test_policy: terminal (never loaded)
+  official_valid_policy: never loaded
+  expected_train_rows: 10000
+
+metric:
+  ranking_metric: calibrated_dev_g_mae
+  metric_direction: lower_is_better
+  unit: MAE on the chemical component g = y - c
+  primary_endpoint: new_dev_G0_calibrated
+  secondary_endpoint: new_dev_overall_calibrated
+  target: 0.09
+  note: g-MAE is an internal chemical-component diagnostic, not an official y-MAE
+
+fold:
+  source_round: zinc_local_tuple_fresh_fold_replication_seed0_v1
+  fit_size: 8000
+  dev_size: 2000
+  new_fit_sha256: 2a21cb8771f6e24cfb4a5cc50602cf0b4390db9c4367f8bb910052f9f0aebbcb
+  new_dev_sha256: 270ab4126b0f0413f1f6ff7ada2e9914bbaca91ae50cc65bbd8ca2673d8f9357
+  selected_on_dev: false
+
+target:
+  decomposition: g = y - c
+  constants: frozen source fresh-fit-only constants (never refit)
+  dev_label_shuffle_invariance_required: true
+
+arms:
+  C:
+    definition: unary/pair blocks [sum z, sum z^2, log1p(n)], C6 minus count zeroing
+    parameters: 297499
+  N:
+    definition: unary/pair blocks [sum z/max(n,1), sum z^2/max(n,1), log1p(n)], otherwise identical
+    parameters: 297499
+  reference:
+    M: read-only source fresh-fold M soup (never retrained)
+    B: read-only source fresh-fold B soup (historical context only, not in any gate)
+
+training:
+  seed: 0
+  optimizer: Adam
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  batch_size: 128
+  epochs: 240
+  steps: 15120
+  soup: fixed mean of epochs 236..240
+  amp: none
+  ddp: none
+  loss: L1 on g
+
+evaluation:
+  calibration: one fit-median bias per arm
+  bootstrap: 1000 paired per-row draws, seed 20261006
+  sensitivity: drop the unique dev row with max mean calibrated error per comparison
+  witnesses: same predictions -> zero; swapped arms -> mirrored sign
+
+gate:
+  conditions:
+    G0_cal_gain_min: 0.003
+    overall_cal_gain_min: 0.003
+    G0_cal_CI_lower_gt: 0.0
+    G0_raw_gain_gt: 0.0
+    overall_raw_gain_gt: 0.0
+  classification_order:
+    - NORMALIZATION_PERFORMANCE_CANDIDATE
+    - INTERFACE_CANDIDATE_ATTRIBUTION_UNRESOLVED
+    - COUNT_ACCESS_CANDIDATE
+    - NORMALIZATION_SIGNAL_NO_PRACTICAL_GAIN
+    - NO_CANDIDATE
+
+test_policy: terminal
+
+budget:
+  wall_minutes_max: 120
+  compute_stop_minute: 90
+  gpu_hours_max: 0.8
+  gpu_concurrency_max: 2
+  local_cpu_threads_max: 8
+  remote: res-2, pool res2-cu124, A100, torch 2.5.1+cu124, FP32, no AMP/DDP
+
+seed_semantics:
+  seed_role: single canonical seed 0; both arms share init, schedule and RNG streams
+  seeds: [0]
