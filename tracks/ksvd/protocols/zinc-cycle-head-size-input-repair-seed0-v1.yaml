@@ -1,0 +1,109 @@
+# Protocol — zinc-cycle-head-size-input-repair-seed0-v1 (2026-10-04)
+#
+# Frozen BEFORE any head training.  One change only: give the existing
+# independent cycle head the actual graph size (N = actual num_nodes,
+# E = number of unique undirected pairs) in addition to the frozen T25 input.
+#
+# Question 1: does T25+N/E remove real full-fit target conflicts that T25 has?
+# Question 2: under the same chemistry branch, init and training protocol, does
+#             the size-augmented head fit / transfer better?
+# Question 3: if not, is the failure remaining input conflict, fit capacity, or
+#             transfer/extrapolation?
+#
+# Not a search: no new chemistry branch, no dictionary/ISTA change, no
+# reweighting, no input/width/epoch/optimizer sweep, no extra seed, no
+# ensemble.  CPU only (8 threads, GPU=0).  Official-valid and official-test are
+# never loaded, predicted or scored (including old per-row caches).
+
+id: zinc-cycle-head-size-input-repair-seed0-v1
+supersedes_for_this_round: none
+source_rounds:
+  cycle_witness: {commit: 4797d06, dir: tracks/ksvd/results/zinc_task_dictionary_and_cycle_witness_seed0_v1}
+  overnight_cpu_head: {commit: 8b4b9b4, dir: tracks/ksvd/results/zinc_overnight_interface_and_tail_seed0_v1}
+  frozen_chemistry_head: {commit: c11342e, dir: tracks/ksvd/results/zinc_frozen_chemistry_learned_cycle_v1}
+  target_decomposition: {commit: 87894a2, dir: tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1}
+
+dataset:
+  name: ZINC (PyG, subset=True, official train only)
+  source_policy: official_pyg_zinc_only
+  official_test_policy: terminal (never loaded)
+  train_only: true
+  n_train: 10000
+  stable_id: "train:%04d (row index in the encoded official-train list)"
+
+data:
+  split: fixed old 8000 fit / 2000 dev internal fold (reused diagnostic)
+  fit_idx_sha256: 165e87ef4398ba8ef57411c2f118c4cca4ea74007f2485611b84f0c09bbdd9ea
+  dev_idx_sha256: fb8b78063e7c8a5c759bfa7d553738068cee1738a2d67b210e5d9dc492331376
+  expected_fit_k: {k=0: 7702, k=-1: 260, k=-2: 33, k<=-3: 5}
+  expected_dev_k: {k=0: 1926, k=-1: 65, k=-2: 7, k<=-3: 2}
+  note: the 2000-row dev was explored before; all head results are exploratory signals.
+
+frozen_sources:
+  t25: tracks/ksvd/results/zinc_frozen_chemistry_learned_cycle_v1/T25_all.npz (sha dc2e1516…)
+  o_raw: tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/O_seed0_raw_soup_state.pt (sha 61d4aeb…)
+  o_predictions: tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/O_seed0_predictions.npz (sha 5cee5782…)
+  targets: tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/target_decomposition.npz
+  prep_blob: tracks/ksvd/results/zinc_joint_dictionary_decision_v1/prep/fold_objects.npz (sha 968e82dd…)
+  graphs: tracks/ksvd/results/zinc_dictionary_real_data_handoff/train.npz (official_test_loaded=False)
+  targets_supervision: c/g/k come from the existing train-only decomposition object; cycle/g are extra supervision disclosure.
+
+new_inputs:
+  N: actual num_nodes per graph (isolated nodes included)
+  E: number of unique undirected pairs {min(u,v), max(u,v)} (never 2x edge_index columns)
+  scaler: fit-8000 graph-level mean/std, float64, std floor 1e-6, frozen for fit/dev
+  X25: existing T25 (25 dims, unchanged, old scaler)
+  X27: [T25, standardized N, standardized E] float32
+  forbidden: atom/bond labels, y, c, molecule id, SMILES, precomputed cycle targets as input
+
+phase_a_structure_gate:
+  conditions:
+    - identity/no-label input/count invariants pass (incl. NetworkX reference, renumbering, endpoint/self-loop/duplicate audits)
+    - global_min_l1(X25) - global_min_l1(X27) >= 0.001 on the 8000 fit rows
+    - at least one original k<=-3 fit row that sat in an X25 conflict class has X27 class target span <= 1e-10
+  failure_class: INPUT_REPAIR_NOT_SUFFICIENT (stop, no head bought, no substitute input)
+
+phase_b_heads:
+  arms:
+    Q0: "T25 effective only; size branch multiplied by gate=0; W_S still in the optimizer"
+    QNE: "T25 and N/E both effective; gate=1"
+  arch: "Linear_T25(25,64) + gate * Linear_size(2,64,bias=False) -> SiLU -> Linear(64,32) -> SiLU -> Linear(32,1)"
+  parameters_per_arm: 3905  # 3777 + 128
+  init: "copy the original seed-0 fresh 25-dim first/last layers and biases; last weight=0, bias=median_fit(c); W_S all-zero"
+  optimizer: Adam lr=1e-3 coupled wd=1e-5, global clip 5
+  loss: unweighted mean L1(q, c)
+  batch: 128; epochs: 300; steps: 18900/arm
+  schedule: torch.Generator(seed=20261003), one randperm per epoch, shared by both arms
+  soup: mean of epoch-end states 296..300
+  seeds: [0]
+  dev_used_for_training: false
+
+inference:
+  h: frozen O_seed0 raw soup, never updated
+  P_raw: h_raw + q(input)
+  b_P: single median_fit(y - P_raw)
+  P_cal: P_raw + b_P
+  Q0 must reproduce the published P_U q predictions within 1e-6; otherwise INVALID unless only numerical CPU-op differences, in which case this round's matched Q0 stays the control.
+
+evaluation:
+  gain: MAE(P_Q0) - MAE(P_QNE) (positive = QNE better); raw and calibrated both reported
+  groups: [k=0, k=-1, k=-2, k<=-3]; k<=-2 cumulative shown but never double-summed
+  bootstrap: 1000 draws seed 20261004; main uniform over all dev rows same-index paired; G0 within G0; severity-stratified secondary
+  performance_gate:
+    - dev overall cal gain >= 0.003 and main paired CI lower > 0
+    - dev overall raw gain > 0
+    - dev G0 cal worsening <= 0.001
+    - count/identity/no-label/single-calibration/replay contracts pass
+  fit_improvement_marker: original 5 fit k<=-3 rows q-MAE drop vs Q0 >= 25%
+
+decision_table:
+  INPUT_REPAIR_NOT_SUFFICIENT: structure gate failed
+  INPUT_REPAIRED_NOT_FIT: structure gate passed, no meaningful conflict/tail q fit improvement
+  FIT_GAIN_NO_TRANSFER: fit improved but performance gate failed
+  TRANSFER_SIGNAL: performance gate passed; one frozen full-scale confirmation recommended in a future round, not run here
+  INCONCLUSIVE: mixed / too small
+  INVALID: function/data/identity/training contract failure
+
+stop_rule: after Phase A (and, only on gate pass, the two Phase-B heads) all
+  compute stops.  No third arm, no input/width/epoch/optimizer/seed/loss search,
+  no Full training, no official-valid/test, no remote job, no push/merge.
