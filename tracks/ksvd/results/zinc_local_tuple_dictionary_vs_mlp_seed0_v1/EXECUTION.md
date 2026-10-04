@@ -104,3 +104,14 @@ All under `tracks/ksvd/results/zinc_local_tuple_dictionary_vs_mlp_seed0_v1/`; ha
 `manifest.json`, inputs in `input_manifest.json`, remote allocation in
 `gpu_allocation_probe.txt`. Old D_J/B results were read-only by hash/stable id; no old report or
 state was edited.
+
+## Addendum — post-round merge/push (operator instruction)
+
+The round was executed and committed on its isolated branch under the original
+"no push / no merge" constraint.  After the round closed, the operator
+instructed "merge to main, then push".  On 2026-10-04 (CST)
+`task/zinc-local-tuple-dictionary-vs-mlp-seed0-v1` (`8119059`) was merged into
+`main` with `--no-ff` (merge commit `e40836f`) and pushed to `origin/main`.
+No result file, model state, prediction, metric or gate changed; the research
+decision is unaffected (no write-back into the model pipeline) — this is a
+code/record merge only.  `manifest.json` was refreshed after this addendum.
