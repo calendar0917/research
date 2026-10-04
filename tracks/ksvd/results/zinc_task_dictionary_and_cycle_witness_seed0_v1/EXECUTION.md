@@ -120,3 +120,14 @@ no AMP, no DDP, `torch.set_num_threads(4)` inside GPU jobs.
 * Old result directories byte-preserved; this round only adds the new result
   dir and the two committed source files.
 * Branch left isolated: no push, no merge into main.
+
+## Addendum — post-round merge (operator instruction)
+
+The round was executed, audited and committed on its isolated branch under the
+original "no push / no merge" constraint.  After the round closed, the
+operator instructed "merge to main, commit, push".  On 2026-10-04 10:00:53 CST
+`task/zinc-task-dictionary-and-cycle-witness-seed0-v1` was merged into `main`
+with `--no-ff` (merge commit `7fd0e28`) and pushed to `origin/main`.  No result
+file, model state, prediction or metric changed; the research decision is
+unaffected (no write-back into the model pipeline) — this is a code/record
+merge only.  `manifest.json` was refreshed after this addendum.
