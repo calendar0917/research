@@ -926,10 +926,11 @@ def _four_arm_bootstrap(
 
 
 def _bootstrap_self_tests(err_d: np.ndarray, err_m: np.ndarray) -> dict[str, Any]:
-    same = _bootstrap_ci(np.abs(np.asarray(err_d)) - np.abs(np.asarray(err_d)), seed=BOOT_SEED, n_boot=N_BOOT)
-    swapped = _bootstrap_ci(np.abs(np.asarray(err_d)) - np.abs(np.asarray(err_m)), seed=BOOT_SEED, n_boot=N_BOOT)
-    forward = _bootstrap_ci(np.abs(np.asarray(err_m)) - np.abs(np.asarray(err_d)), seed=BOOT_SEED, n_boot=N_BOOT)
-    shift = _bootstrap_ci((np.abs(err_d) + 0.001) - np.abs(err_m), seed=BOOT_SEED, n_boot=N_BOOT)
+    diff = np.abs(np.asarray(err_d)) - np.abs(np.asarray(err_m))
+    same = _bootstrap_ci(diff - diff, seed=BOOT_SEED, n_boot=N_BOOT)
+    swapped = _bootstrap_ci(diff, seed=BOOT_SEED, n_boot=N_BOOT)
+    forward = _bootstrap_ci(-diff, seed=BOOT_SEED, n_boot=N_BOOT)
+    shift = _bootstrap_ci(diff + 0.001, seed=BOOT_SEED, n_boot=N_BOOT)
     return {
         "same_predictions": same,
         "swapped": swapped,
@@ -942,7 +943,14 @@ def _bootstrap_self_tests(err_d: np.ndarray, err_m: np.ndarray) -> dict[str, Any
                 abs(swapped["ci95"][0] + forward["ci95"][1]) < 1e-9
                 and abs(swapped["ci95"][1] + forward["ci95"][0]) < 1e-9
             ),
-            "constant_shift_bounded": bool(shift["point"] <= forward["point"] + 0.001 + 1e-9),
+            "constant_shift_exact": bool(
+                abs(shift["point"] - (swapped["point"] + 0.001)) < 1e-9
+                and abs(shift["ci95"][0] - (swapped["ci95"][0] + 0.001)) < 1e-9
+                and abs(shift["ci95"][1] - (swapped["ci95"][1] + 0.001)) < 1e-9
+            ),
+            "constant_shift_bounded": bool(
+                abs(shift["point"] - swapped["point"]) <= 0.001 + 1e-9
+            ),
         },
     }
 
