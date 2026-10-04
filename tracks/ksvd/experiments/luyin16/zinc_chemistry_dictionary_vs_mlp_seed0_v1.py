@@ -1572,6 +1572,7 @@ def make_budget(*, out_dir: Path, round_start: str, round_end: str) -> dict[str,
         path = out_dir / f"{arm}_meta.json"
         new_meta[arm] = json.loads(path.read_text()) if path.exists() else None
     gpu_seconds = sum(float(new_meta[arm]["wall_clock_s"]) for arm in ARMS if new_meta[arm])
+    smoke_seconds = 84.0  # two 1-GPU smoke jobs (one failed on a float-noise check, one passed), measured from rr
     budget = {
         "round_start_cst": round_start,
         "round_end_cst": round_end,
@@ -1579,12 +1580,19 @@ def make_budget(*, out_dir: Path, round_start: str, round_end: str) -> dict[str,
         "seed": SEED,
         "epochs": EPOCHS,
         "max_parallel_gpus": 2,
-        "gpu_hours_used_reported": gpu_seconds / 3600.0,
+        "gpu_hours_training_only": gpu_seconds / 3600.0,
+        "smoke_gpu_seconds": smoke_seconds,
+        "gpu_hours_total_including_smoke": (gpu_seconds + smoke_seconds) / 3600.0,
         "gpu_hours_limit": 1.0,
         "per_arm": {arm: (float(new_meta[arm]["wall_clock_s"]) if new_meta[arm] else None) for arm in ARMS},
         "steps_per_arm": {arm: (int(new_meta[arm]["steps_done"]) if new_meta[arm] else None) for arm in ARMS},
+        "slurm_jobs": {
+            "zcdm-smoke-failed": 55896,
+            "zcdm-smoke2-passed": 55897,
+            "zcdm-d": 55898,
+            "zcdm-m": 55899,
+        },
         "cpu_threads_cap": 8,
-        "smoke_note": "smoke + replay + analysis are included in the GPU-hour ledger where they used a GPU",
         "note": "budget is an upper bound; the round stops computing before the wall-clock limit",
     }
     write_json(out_dir / "budget.json", budget)
