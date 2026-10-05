@@ -1115,19 +1115,19 @@ def phase_freeze(log=print) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def paired_bootstrap_ci(ref: np.ndarray, cand: np.ndarray, n: int, seed: int = BOOT_SEED) -> dict[str, Any]:
-    ref = np.asarray(ref, np.float64)
-    cand = np.asarray(cand, np.float64)
+def paired_bootstrap_ci(ref_pred: np.ndarray, cand_pred: np.ndarray, y: np.ndarray,
+                         n: int, seed: int = BOOT_SEED) -> dict[str, Any]:
+    """Paired row bootstrap of gain = MAE(ref) - MAE(cand); positive = cand improves."""
+    y = np.asarray(y, np.float64)
+    abs_ref = np.abs(np.asarray(ref_pred, np.float64) - y)
+    abs_cand = np.abs(np.asarray(cand_pred, np.float64) - y)
     rng = np.random.default_rng(seed)
     gains = np.empty(N_BOOT)
-    abs_ref = np.abs(ref)
-    abs_cand = np.abs(cand)
-    point = float(abs_ref.mean() - abs_cand.mean())
     for b in range(N_BOOT):
         idx = rng.integers(0, n, size=n)
         gains[b] = float(abs_ref[idx].mean() - abs_cand[idx].mean())
     return {
-        "point": point,
+        "point": float(abs_ref.mean() - abs_cand.mean()),
         "ci95": [float(np.percentile(gains, 2.5)), float(np.percentile(gains, 97.5))],
         "n_boot": N_BOOT, "seed": seed,
     }
@@ -1307,17 +1307,17 @@ def eval_split(split: str, log=print) -> dict[str, Any]:
     for ref, cand in pairs:
         comps[f"{cand}_minus_{ref}"] = {
             "reference": ref, "candidate": cand,
-            "gain_cal": paired_bootstrap_ci(systems[ref]["cal"], systems[cand]["cal"], n),
-            "gain_raw": paired_bootstrap_ci(systems[ref]["raw"], systems[cand]["raw"], n),
+            "gain_cal": paired_bootstrap_ci(systems[ref]["cal"], systems[cand]["cal"], y, n),
+            "gain_raw": paired_bootstrap_ci(systems[ref]["raw"], systems[cand]["raw"], y, n),
         }
     out["comparisons"] = comps
 
     # bootstrap witnesses (deterministic statistics checks)
-    w_ident = paired_bootstrap_ci(systems["B"]["cal"], systems["B"]["cal"], n)
-    w_swap = paired_bootstrap_ci(systems["B"]["cal"], systems["H"]["cal"], n)
-    w_swap_mirror = paired_bootstrap_ci(systems["H"]["cal"], systems["B"]["cal"], n)
+    w_ident = paired_bootstrap_ci(systems["B"]["cal"], systems["B"]["cal"], y, n)
+    w_swap = paired_bootstrap_ci(systems["B"]["cal"], systems["H"]["cal"], y, n)
+    w_swap_mirror = paired_bootstrap_ci(systems["H"]["cal"], systems["B"]["cal"], y, n)
     shifted = systems["H"]["cal"] + 0.25
-    w_shift = paired_bootstrap_ci(systems["B"]["cal"], shifted, n)
+    w_shift = paired_bootstrap_ci(systems["B"]["cal"], shifted, y, n)
     out["bootstrap_witnesses"] = {
         "identical_point": w_ident["point"],
         "identical_is_zero": bool(w_ident["point"] == 0.0),
