@@ -1006,19 +1006,30 @@ def _fit_path_diagnostic(model: torch.nn.Module, data_list: Sequence[Any], y_loc
 
 
 def _metrics(pred_fit: np.ndarray, pred_dev: np.ndarray, g_fit: np.ndarray,
-             g_dev: np.ndarray, k_dev: np.ndarray) -> dict[str, Any]:
+             g_dev: np.ndarray, k_fit: np.ndarray, k_dev: np.ndarray) -> dict[str, Any]:
     bias = float(np.median(g_fit - pred_fit))
     cal_fit = pred_fit + bias
     cal_dev = pred_dev + bias
-    g0 = k_dev == 0
+    fit_g0 = k_fit == 0
+    dev_g0 = k_dev == 0
     return {
         "bias": bias,
         "fit_overall_raw_mae": float(np.mean(np.abs(g_fit - pred_fit))),
         "fit_overall_cal_mae": float(np.mean(np.abs(g_fit - cal_fit))),
         "dev_overall_raw_mae": float(np.mean(np.abs(g_dev - pred_dev))),
         "dev_overall_cal_mae": float(np.mean(np.abs(g_dev - cal_dev))),
-        "dev_G0_raw_mae": float(np.mean(np.abs((g_dev - pred_dev)[g0]))),
-        "dev_G0_cal_mae": float(np.mean(np.abs((g_dev - cal_dev)[g0]))),
+        "fit_G0_raw_mae": float(np.mean(np.abs((g_fit - pred_fit)[fit_g0]))),
+        "fit_G0_cal_mae": float(np.mean(np.abs((g_fit - cal_fit)[fit_g0]))),
+        "dev_G0_raw_mae": float(np.mean(np.abs((g_dev - pred_dev)[dev_g0]))),
+        "dev_G0_cal_mae": float(np.mean(np.abs((g_dev - cal_dev)[dev_g0]))),
+        "fit_overall_raw_to_cal_change": float(np.mean(np.abs(g_fit - cal_fit)) - np.mean(np.abs(g_fit - pred_fit))),
+        "fit_G0_raw_to_cal_change": float(np.mean(np.abs((g_fit - cal_fit)[fit_g0])) - np.mean(np.abs((g_fit - pred_fit)[fit_g0]))),
+        "dev_overall_raw_to_cal_change": float(np.mean(np.abs(g_dev - cal_dev)) - np.mean(np.abs(g_dev - pred_dev))),
+        "dev_G0_raw_to_cal_change": float(np.mean(np.abs((g_dev - cal_dev)[dev_g0])) - np.mean(np.abs((g_dev - pred_dev)[dev_g0]))),
+        "dev_fit_overall_raw_gap": float(np.mean(np.abs(g_dev - pred_dev)) - np.mean(np.abs(g_fit - pred_fit))),
+        "dev_fit_overall_cal_gap": float(np.mean(np.abs(g_dev - cal_dev)) - np.mean(np.abs(g_fit - cal_fit))),
+        "dev_fit_G0_raw_gap": float(np.mean(np.abs((g_dev - pred_dev)[dev_g0])) - np.mean(np.abs((g_fit - pred_fit)[fit_g0]))),
+        "dev_fit_G0_cal_gap": float(np.mean(np.abs((g_dev - cal_dev)[dev_g0])) - np.mean(np.abs((g_fit - cal_fit)[fit_g0]))),
         "err_fit_raw": np.abs(g_fit - pred_fit), "err_fit_cal": np.abs(g_fit - cal_fit),
         "err_dev_raw": np.abs(g_dev - pred_dev), "err_dev_cal": np.abs(g_dev - cal_dev),
     }
@@ -1074,6 +1085,7 @@ def analyze(*, out_dir: Path = RESULTS_DIR) -> dict[str, Any]:
     k = np.asarray(targets["k"], np.int64)
     g_fit = g[fold["fit_idx"]]
     g_dev = g[fold["dev_idx"]]
+    k_fit = k[fold["fit_idx"]]
     k_dev = k[fold["dev_idx"]]
     arms: dict[str, Any] = {}
     for arm in ARMS:
@@ -1082,7 +1094,7 @@ def analyze(*, out_dir: Path = RESULTS_DIR) -> dict[str, Any]:
             predictions = {key: z[key].astype(np.float64) for key in z.files}
         arms[arm] = {
             "meta": meta, "predictions": predictions,
-            "metrics": _metrics(predictions["raw_soup_fit"], predictions["raw_soup_dev"], g_fit, g_dev, k_dev),
+            "metrics": _metrics(predictions["raw_soup_fit"], predictions["raw_soup_dev"], g_fit, g_dev, k_fit, k_dev),
         }
 
     endpoints = (
@@ -1160,6 +1172,8 @@ def analyze(*, out_dir: Path = RESULTS_DIR) -> dict[str, Any]:
             arm: {key: value for key, value in arms[arm]["metrics"].items() if not isinstance(value, np.ndarray)}
             for arm in ARMS
         },
+        "calibration_qualification": calibration_qualification,
+        "practical_equivalence_within_0.003": practical_equivalence,
         "gains": gains, "group_table": group, "group_gain_contributions": group_gain,
         "group_gain_sum": float(sum(x["gain_contribution"] for x in group_gain)),
         "raw_cal_accounting_identity": float(identity),
@@ -1193,15 +1207,22 @@ def analyze(*, out_dir: Path = RESULTS_DIR) -> dict[str, Any]:
     })
 
     rows = []
+    fit_rows = {arm: _group_rows(arms[arm]["metrics"]["err_fit_cal"], k_fit) for arm in ARMS}
     for arm in ARMS:
         m = arms[arm]["metrics"]
         rows.append({
             "arm": arm, "fit_overall_raw": m["fit_overall_raw_mae"], "fit_overall_cal": m["fit_overall_cal_mae"],
+            "fit_G0_raw": m["fit_G0_raw_mae"], "fit_G0_cal": m["fit_G0_cal_mae"],
             "dev_G0_raw": m["dev_G0_raw_mae"], "dev_G0_cal": m["dev_G0_cal_mae"],
             "dev_overall_raw": m["dev_overall_raw_mae"], "dev_overall_cal": m["dev_overall_cal_mae"],
+            "dev_overall_raw_gap": m["dev_fit_overall_raw_gap"], "dev_overall_cal_gap": m["dev_fit_overall_cal_gap"],
+            "dev_G0_raw_gap": m["dev_fit_G0_raw_gap"], "dev_G0_cal_gap": m["dev_fit_G0_cal_gap"],
+            "raw_to_cal_fit_overall": m["fit_overall_raw_to_cal_change"], "raw_to_cal_fit_G0": m["fit_G0_raw_to_cal_change"],
+            "raw_to_cal_dev_overall": m["dev_overall_raw_to_cal_change"], "raw_to_cal_dev_G0": m["dev_G0_raw_to_cal_change"],
             "bias": m["bias"],
         })
     _write_csv(out_dir / "main_table.csv", rows)
+    _write_csv(out_dir / "fit_group_table.csv", [{"arm": arm, **row} for arm in ARMS for row in fit_rows[arm]])
     _write_csv(out_dir / "group_table.csv", [{"arm": arm, **row} for arm in ARMS for row in group[arm]])
     _write_csv(out_dir / "group_gain_table.csv", group_gain)
     _write_csv(out_dir / "per_graph_dev.csv", [
