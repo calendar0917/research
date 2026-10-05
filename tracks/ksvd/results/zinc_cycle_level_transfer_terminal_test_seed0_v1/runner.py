@@ -312,41 +312,78 @@ def phase_identity(log=print) -> dict[str, Any]:
     with np.load(SRC / "COMP_raw_predictions.npz", allow_pickle=False) as z:
         comp_cache = z["raw_soup_train"].astype(np.float64)
     out["comp_train_head512_replay_max_abs"] = float(np.max(np.abs(sums - comp_cache[:512])))
-
-    # valid replay from the frozen cache: published metrics
-    with np.load(SRC / "valid_frozen_predictions.npz", allow_pickle=False) as z:
-        vp = {k: z[k] for k in z.files}
     cal = json.loads((SRC / "calibration.json").read_text())
+
+    # valid replay from the frozen models in float64 (published metrics)
+    valid_data, _vmeta = load_valid_data()
+    T_valid = src.topology_matrix(valid_data)
+    q_valid = q_forward_np(q_head, T_valid)
+    sum_body = load_body("SUM")
+    comp_body = load_body("COMP")
+    SUM_h_v, _ = src.evaluate_state_components(sum_body, valid_data, torch.device("cpu"))
+    COMP_h_v, _ = src.evaluate_state_components(comp_body, valid_data, torch.device("cpu"))
     b_y_comp = float(cal["per_arm"]["COMP"]["b_y"])
     b_y_sum = float(cal["per_arm"]["SUM"]["b_y"])
     b_g_comp = float(cal["per_arm"]["COMP"]["b_g"])
-    y_v = vp["y"].astype(np.float64)
+    diag = src.load_valid_diagnostics(SRC)
+    y_v64 = np.asarray(diag["y"], np.float64)
+    g_v64 = np.asarray(diag["g"], np.float64)
+    c_v64 = np.asarray(diag["c"], np.float64)
+    B_y_cal = COMP_h_v + q_valid + b_y_comp
+    SUM_y_cal = SUM_h_v + q_valid + b_y_sum
+    B_g_cal = COMP_h_v + b_g_comp
+    # H = prototype route on the same float64 h/q
+    pkg = torch.load(PROTO / "H_model_package.pt", map_location="cpu", weights_only=False)
+    key_map = {bytes.fromhex(kk): int(ss) for kk, ss in zip(pkg["key_order"], pkg["key_slot"])}
+    proto_val = np.asarray(pkg["proto_val"], np.float64)
+    consistent = np.asarray(pkg["consistent"], bool)
+    q_H = q_valid.copy()
+    route_H = np.empty(len(T_valid), dtype=object)
+    for i in range(len(T_valid)):
+        slot = key_map.get(key_bytes(T_valid[i]))
+        if slot is None:
+            route_H[i] = "UNSEEN_FALLBACK"
+        elif not consistent[slot]:
+            route_H[i] = "TRAIN_CONFLICT_FALLBACK"
+        else:
+            route_H[i] = "CONSISTENT_HIT"
+            q_H[i] = float(proto_val[slot])
+    H_y_cal = COMP_h_v + q_H + float(pkg["b_H"])
     out["valid_replay"] = {
-        "B_y_cal_mae": mae(vp["COMP_y_cal"].astype(np.float64), y_v),
+        "B_y_cal_mae": mae(B_y_cal, y_v64),
         "B_y_cal_mae_expected": 0.11740618350630393,
-        "B_y_cal_match": bool(abs(mae(vp["COMP_y_cal"].astype(np.float64), y_v) - 0.11740618350630393) <= IDENT_TOL),
-        "B_g_cal_mae": mae(vp["COMP_g_cal"].astype(np.float64), vp["g"].astype(np.float64)),
+        "B_g_cal_mae": mae(B_g_cal, g_v64),
         "B_g_cal_mae_expected": 0.08930046045603672,
-        "SUM_y_cal_mae": mae(vp["SUM_y_cal"].astype(np.float64), y_v),
+        "SUM_y_cal_mae": mae(SUM_y_cal, y_v64),
         "SUM_y_cal_mae_expected": 0.12265322754724184,
-        "biases": {"b_y_COMP": b_y_comp, "b_y_SUM": b_y_sum, "b_g_COMP": b_g_comp},
+        "H_y_cal_mae": mae(H_y_cal, y_v64),
+        "H_y_cal_mae_expected": 0.09669437497661369,
+        "H_route_counts": {r: int((route_H == r).sum()) for r in set(route_H.tolist())},
+        "biases": {"b_y_COMP": b_y_comp, "b_y_SUM": b_y_sum, "b_g_COMP": b_g_comp, "b_H": float(pkg["b_H"])},
+        "note": "recomputed float64 from frozen bodies + Q replay (prototype-round method)",
     }
+    out["valid_replay"]["B_y_cal_match"] = bool(
+        abs(out["valid_replay"]["B_y_cal_mae"] - 0.11740618350630393) <= IDENT_TOL
+    )
     out["valid_replay"]["B_g_match"] = bool(
         abs(out["valid_replay"]["B_g_cal_mae"] - 0.08930046045603672) <= IDENT_TOL
     )
     out["valid_replay"]["SUM_match"] = bool(
         abs(out["valid_replay"]["SUM_y_cal_mae"] - 0.12265322754724184) <= IDENT_TOL
     )
-
-    # H replay: prototype round published valid numbers from its own cache
-    per_row = np.loadtxt(PROTO / "per_row_valid.csv", delimiter=",", names=True, encoding="utf-8", dtype=None)
-    out["H_valid_replay"] = {
-        "y_cal_mae_from_per_row_cache": float(np.mean(np.abs(per_row["y_cal_H"] - per_row["y"]))),
-        "expected": 0.09669437497661369,
-        "b_H": -0.011446799464432368,
-        "route_counts": {
-            r: int((per_row["route"] == r).sum()) for r in set(per_row["route"].tolist())
-        },
+    out["valid_replay"]["H_match"] = bool(
+        abs(out["valid_replay"]["H_y_cal_mae"] - 0.09669437497661369) <= IDENT_TOL
+    )
+    out["valid_replay"]["c_from_k_rule_max_abs"] = float(np.max(np.abs(
+        c_v64 - (np.asarray(diag["k"], np.int64).astype(np.float64) - const["mu_cycle"]) / const["sigma_cycle"]
+    )))
+    # float32 cache agreement at prediction tolerance 1e-5
+    with np.load(SRC / "valid_frozen_predictions.npz", allow_pickle=False) as z:
+        vp = {k: z[k] for k in z.files}
+    out["valid_cache_prediction_tolerance"] = {
+        "COMP_h_max_abs": float(np.max(np.abs(COMP_h_v - vp["COMP_h_raw"].astype(np.float64)))),
+        "SUM_h_max_abs": float(np.max(np.abs(SUM_h_v - vp["SUM_h_raw"].astype(np.float64)))),
+        "q_max_abs": float(np.max(np.abs(q_valid - vp["q_raw"].astype(np.float64)))),
     }
 
     # prototype package hashes
@@ -367,7 +404,7 @@ def phase_identity(log=print) -> dict[str, Any]:
         and out["valid_replay"]["B_y_cal_match"]
         and out["valid_replay"]["B_g_match"]
         and out["valid_replay"]["SUM_match"]
-        and abs(out["H_valid_replay"]["y_cal_mae_from_per_row_cache"] - 0.09669437497661369) <= IDENT_TOL
+        and out["valid_replay"]["H_match"]
     )
     out["all_source_identity_ok"] = bool(ok)
     out["seconds"] = float(time.perf_counter() - t0)
@@ -526,8 +563,9 @@ def build_head(kind: str, out_dim: int, bias_value: float) -> nn.Module:
     return head
 
 
-def hidden_state(head: nn.Module) -> dict[str, torch.Tensor]:
-    return {k: v.detach().clone() for k, v in head.state_dict().items() if not k.startswith("4.")}
+def hidden_of_state(state: Mapping[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+    """Hidden (non-output-layer) entries of a head state dict."""
+    return {k: v.detach().clone() for k, v in state.items() if not k.startswith("4.")}
 
 
 def train_one_head(
@@ -584,7 +622,7 @@ def train_one_head(
     return {
         "head": head, "init_state": init_state, "soup_state": soup_state,
         "init_hash": state_hash(init_state), "soup_hash": state_hash(soup_state),
-        "hidden_init": hidden_state(head), "curve": curve, "steps": steps,
+        "hidden_init": hidden_of_state(init_state), "curve": curve, "steps": steps,
         "soup_members": members, "seconds": float(time.perf_counter() - started),
         "gen_seed": int(gen_seed),
     }
@@ -782,6 +820,118 @@ def phase_train_folds(log=print) -> dict[str, Any]:
         f"CI={ci['overall_gain_ci95']} ({gate['seconds']:.1f}s)")
     results["gate"] = gate
     return results
+
+
+# ---------------------------------------------------------------------------
+# phase: fold_metrics (deterministic reload recovery; no retraining)
+# ---------------------------------------------------------------------------
+
+
+def phase_fold_metrics(log=print) -> dict[str, Any]:
+    """Rebuild per-fold R/D metrics + the init-identity witness from SAVED states.
+
+    Recovery for the bookkeeping bug where `hidden_init` was captured post-
+    training; the trained weights, recipe, OOF predictions and gate scores are
+    unchanged and re-verified here from the saved artifacts (deterministic
+    reload, not a retrain).
+    """
+    t0 = time.perf_counter()
+    torch.set_num_threads(8)
+    with np.load(OUT / "T25_group_folds.npz", allow_pickle=False) as z:
+        d = {k: z[k] for k in z.files}
+    T_train, row_fold = d["T_train"], d["row_fold"]
+    k_train, c_train = d["k_train"], d["c_train"]
+    vocab, c_levels = d["vocab"], d["c_levels"]
+    K = len(vocab)
+    k_to_idx = {int(v): i for i, v in enumerate(vocab.tolist())}
+    k_idx_train = np.array([k_to_idx[int(v)] for v in k_train.tolist()], np.int64)
+    with np.load(OUT / "OOF_predictions.npz", allow_pickle=False) as z:
+        oof = {k: z[k] for k in z.files}
+
+    # Q's untrained hidden init (the seed-0 construction rule reference)
+    q_init = torch.load(SRC / "Q_init_state.pt", map_location="cpu", weights_only=True)
+    q_hidden = hidden_of_state(q_init)
+
+    summary: dict[str, Any] = {"protocol_version": PROTOCOL_VERSION, "folds": {}}
+    oof_R_check = np.empty(len(T_train), np.float64)
+    oof_D_check = np.empty(len(T_train), np.float64)
+    for j in range(N_FOLDS):
+        fit_mask = row_fold != j
+        held_mask = row_fold == j
+        T_fit, c_fit = T_train[fit_mask], c_train[fit_mask]
+        idx_fit = k_idx_train[fit_mask]
+        bias_value = float(np.median(c_fit))
+        gen_seed = TRAIN_GEN_BASE + j
+        r_init = torch.load(OUT / f"R_fold{j}_init_state.pt", map_location="cpu", weights_only=True)
+        r_soup = torch.load(OUT / f"R_fold{j}_soup_state.pt", map_location="cpu", weights_only=True)
+        d_init = torch.load(OUT / f"D_fold{j}_init_state.pt", map_location="cpu", weights_only=True)
+        d_soup = torch.load(OUT / f"D_fold{j}_soup_state.pt", map_location="cpu", weights_only=True)
+        r_hid, d_hid = hidden_of_state(r_init), hidden_of_state(d_init)
+        hid_equal = all(torch.equal(r_hid[k2], d_hid[k2]) for k2 in r_hid)
+        hid_equal_q = all(torch.equal(r_hid[k2], q_hidden[k2]) for k2 in r_hid)
+        # reload soup heads and recompute fit/held predictions
+        r_head = build_head("R", 1, bias_value)
+        r_head.load_state_dict(r_soup, strict=True)
+        r_head.eval()
+        d_head = build_head("D", K, 0.0)
+        d_head.load_state_dict(d_soup, strict=True)
+        d_head.eval()
+        with torch.no_grad():
+            q_R_fit = r_head(torch.as_tensor(T_fit, dtype=torch.float32)).view(-1).double().numpy()
+            q_R_held = r_head(torch.as_tensor(T_train[held_mask], dtype=torch.float32)).view(-1).double().numpy()
+            logits_fit = d_head(torch.as_tensor(T_fit, dtype=torch.float32)).double().numpy()
+            logits_held = d_head(torch.as_tensor(T_train[held_mask], dtype=torch.float32)).double().numpy()
+        q_D_fit, probs_fit = decode_levels(logits_fit, c_levels)
+        q_D_held, probs_held = decode_levels(logits_held, c_levels)
+        pred_idx_held = probs_held.argmax(1)
+        pred_idx_fit = probs_fit.argmax(1)
+        oof_R_check[held_mask] = q_R_held
+        oof_D_check[held_mask] = q_D_held
+        per_k = {}
+        for kk in vocab.tolist():
+            m = k_train[held_mask] == kk
+            entry = {"n": int(m.sum())}
+            if m.sum():
+                ch = c_train[held_mask]
+                entry.update({
+                    "R_c_mae": mae(q_R_held[m], ch[m]),
+                    "D_c_mae": mae(q_D_held[m], ch[m]),
+                    "D_k_acc": float(np.mean(pred_idx_held[m] == k_idx_train[held_mask][m])),
+                })
+            per_k[str(kk)] = entry
+        conf = np.zeros((K, K), np.int64)
+        for a, b in zip(k_idx_train[held_mask].tolist(), pred_idx_held.tolist()):
+            conf[a, b] += 1
+        summary["folds"][str(j)] = {
+            "fold": j, "gen_seed": gen_seed,
+            "n_fit": int(fit_mask.sum()), "n_held": int(held_mask.sum()),
+            "R_init_hash": state_hash(r_init), "R_soup_hash": state_hash(r_soup),
+            "D_init_hash": state_hash(d_init), "D_soup_hash": state_hash(d_soup),
+            "R_hidden_init_equals_D_hidden_init": bool(hid_equal),
+            "R_hidden_init_equals_Q_untrained_hidden_init": bool(hid_equal_q),
+            "R_params": R_PARAMS, "D_params": R_PARAMS + D_PARAMS_EXTRA_PER_LEVEL * (K - 1),
+            "R_bias_value_median_c_fit": bias_value,
+            "R_fit_c_mae": mae(q_R_fit, c_fit),
+            "D_fit_c_mae": mae(q_D_fit, c_fit),
+            "R_OOF_c_mae": mae(q_R_held, c_train[held_mask]),
+            "D_OOF_c_mae": mae(q_D_held, c_train[held_mask]),
+            "D_OOF_k_accuracy": float(np.mean(pred_idx_held == k_idx_train[held_mask])),
+            "D_fit_k_accuracy": float(np.mean(pred_idx_fit == idx_fit)),
+            "held_per_k": per_k,
+            "held_confusion": conf.tolist(),
+        }
+        log(f"[fold_metrics {j}] hidden_init_equal(R,D)={hid_equal} equal_Q_untrained={hid_equal_q}")
+    # OOF cross-check vs the saved OOF arrays (must be identical: deterministic reload)
+    check = {
+        "oof_R_reload_vs_saved_max_abs": float(np.max(np.abs(oof_R_check - oof["oof_R"]))),
+        "oof_D_reload_vs_saved_max_abs": float(np.max(np.abs(oof_D_check - oof["oof_D"]))),
+    }
+    summary["oof_reload_check"] = check
+    summary["oof_reload_identical"] = bool(check["oof_R_reload_vs_saved_max_abs"] == 0.0 and check["oof_D_reload_vs_saved_max_abs"] == 0.0)
+    summary["seconds"] = float(time.perf_counter() - t0)
+    write_json(OUT / "folds_summary.json", summary)
+    log(f"[fold_metrics] reload identical={summary['oof_reload_identical']} ({summary['seconds']:.1f}s)")
+    return summary
 
 
 # ---------------------------------------------------------------------------
@@ -1019,19 +1169,17 @@ def eval_split(split: str, log=print) -> dict[str, Any]:
     gate = json.loads((OUT / "gate.json").read_text())
     purchased = bool(gate["D_FULL_PURCHASE"])
 
-    # bodies (h_raw = g-part prediction)
+    # bodies (h_raw = g-part prediction); replayed in float64 from frozen states on both
+    # splits (the valid float32 cache is cross-checked at 1e-5 prediction tolerance)
+    sum_body = load_body("SUM")
+    comp_body = load_body("COMP")
+    SUM_h, _ = src.evaluate_state_components(sum_body, data, torch.device("cpu"))
+    COMP_h, _ = src.evaluate_state_components(comp_body, data, torch.device("cpu"))
+    q_cache = None
     if split == "valid":
         with np.load(SRC / "valid_frozen_predictions.npz", allow_pickle=False) as z:
             vp = {kk: z[kk] for kk in z.files}
-        SUM_h = vp["SUM_h_raw"].astype(np.float64)
-        COMP_h = vp["COMP_h_raw"].astype(np.float64)
         q_cache = vp["q_raw"].astype(np.float64)
-    else:
-        sum_body = load_body("SUM")
-        comp_body = load_body("COMP")
-        SUM_h, _ = src.evaluate_state_components(sum_body, data, torch.device("cpu"))
-        COMP_h, _ = src.evaluate_state_components(comp_body, data, torch.device("cpu"))
-        q_cache = None
 
     wrapper = CWrapper()
     # replay witness: wrapper's frozen Q on this split T vs cache (valid) / fresh (test)
@@ -1299,7 +1447,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     torch.set_num_threads(8)
     parser = argparse.ArgumentParser(description=PROTOCOL_VERSION)
     parser.add_argument("--phase", required=True,
-                        choices=("identity", "folds", "train_folds", "dfull", "freeze", "terminal", "analyze"))
+                        choices=("identity", "folds", "train_folds", "fold_metrics", "dfull", "freeze", "terminal", "analyze"))
     args = parser.parse_args(argv)
     OUT.mkdir(parents=True, exist_ok=True)
     if args.phase == "identity":
@@ -1308,6 +1456,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         phase_folds()
     elif args.phase == "train_folds":
         phase_train_folds()
+    elif args.phase == "fold_metrics":
+        phase_fold_metrics()
     elif args.phase == "dfull":
         phase_dfull()
     elif args.phase == "freeze":
