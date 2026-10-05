@@ -1,0 +1,46 @@
+{
+  "protocol_version": "zinc-cycle-prototype-transfer-cpu-v1",
+  "purpose": "Test whether train-consistent T25 exact classes can be used as prototype lookup for cycle label c, replacing frozen Q on matched valid rows, and whether this improves complete deployable y.",
+  "scope": {
+    "train_only": true,
+    "no_new_training": true,
+    "no_backward": true,
+    "no_optimizer": true,
+    "gpu_hours": 0,
+    "cpu_threads": 8,
+    "wall_clock_limit_min": 45,
+    "hard_limit_min": 60
+  },
+  "source": {
+    "commit": "947d2837c4936ef1276fcbbf0e9189e7d44ace23",
+    "results_dir": "tracks/ksvd/results/zinc_component_supervision_fulltrain_confirmation_seed0_v1"
+  },
+  "frozen_reuse": {
+    "COMP_body": "raw_soup state, fully frozen",
+    "Q_head": "raw_soup state, fully frozen",
+    "b_y_COMP": -0.011630002409219742,
+    "b_g_COMP": -0.01144399804612788,
+    "b_y_SUM": -0.01399996131658554,
+    "b_g_SUM": -0.013785951152352593,
+    "prep": "frozen full-train 10000-row standardizers",
+    "constants": "frozen full-train target constants",
+    "valid_cache": "valid_frozen_predictions.npz (read-only)"
+  },
+  "reference_b": "COMP body + frozen Q + b_y_COMP (published deploy)",
+  "candidate_h": {
+    "rule": "if T25 key in train_table AND train_table[key].k_is_unanimous: q_H = median(c_train[key]); else: q_H = frozen Q(T25)",
+    "bias": "b_H = median(y_train - h_raw_train - q_H_raw_train)"
+  },
+  "bootstrap": {
+    "n": 1000,
+    "seed": 20261010,
+    "paired_row": true,
+    "groups": ["overall", "G0", "k=0", "k=-1", "k=-2", "k<=-3"]
+  },
+  "gate_prototype_deploy_support": {
+    "1_overall_cal_y_gain_ge_0.003": true,
+    "2_ci_lower_gt_0": true,
+    "3_overall_raw_y_gain_gt_0": true,
+    "4_G0_cal_y_worsening_le_0.001": true
+  }
+}

@@ -1,0 +1,57 @@
+claim_id: claim-zinc-cycle-prototype-transfer-cpu-v1-targeted-repair-only-20261005
+contradicting_evidence: []
+created: '2026-10-05T16:00:00'
+implication: >-
+  Close the exact train-consistent T25 prototype lookup as a broad transfer mechanism. Do not
+  change the coverage gate/key/consistent-class rule or add any support threshold, nearest
+  neighbour, rounding grid, smoothing, shrinkage or extra seed. Do not open official-test or
+  start a new training run. The next legitimate question concerns the chemistry body error
+  h - g and its cancellation with the cycle term, not the cycle head or the lookup. A learnable
+  cross-class cycle regularity needs a separate preregistration; a train-conflict interface must
+  first show it adds distinguishable information in train.
+kind: claim
+limitations:
+- Single seed (0); one frozen COMP+Q body; a REUSED and already-exposed official-valid split;
+  exploratory targeted repair, not independent confirmation.
+- The whole measured gain is one row (valid:0172, k=-6); excluding the reference's worst row the
+  gain is negative. No broad transfer is demonstrated.
+- 988 valid rows are covered; 12 are uncovered and unchanged by construction. The rule does not
+  address those, and a miss is not evidence that T25 lacks usable class information.
+- Does not prove a learned shared structure-attribute dictionary; it is only a topology-class
+  prototype lookup. Whole-graph permutation invariance is not derived from the lookup.
+- The oracle h + c + b_B is a label-reading diagnostic, not reachable deployable performance.
+scope: >-
+  Local CPU only (8 threads); FP32; seed 0; official ZINC train 10000 / valid 1000; official
+  test never instantiated; frozen COMP body raw_soup and frozen Q raw_soup reused byte-for-byte;
+  train-only exact T25 class grouping, per-class c median and one train-only scalar bias b_H;
+  no optimizer, no backward, no GPU, no remote job.
+statement: >-
+  On the reused official-valid split, replacing the frozen Q cycle output with a train-only
+  prototype (train class median c) on exact T25 key hits changes COMP+Q whole-valid calibrated
+  y-MAE from 0.1174061835 to 0.0966943750 (overall cal gain +0.0207118085; 95% paired-bootstrap
+  CI [-0.0002260, +0.0623398]; raw gain +0.0207312735; G0 cal worsening +0.0000116891). The
+  point gate conditions 1/3/4 hold but the CI condition 2 fails, so the round is
+  TARGETED_REPAIR_ONLY, and it is SINGLE_ROW_DOMINATED: valid:0172 alone contributes +20.74 of
+  the +21.17 positive-gain sum (share 0.980), and removing the reference's worst row makes the
+  gain -0.0000288. Mechanism: on the 987 CONSISTENT_HIT rows excluding valid:0172 the q-vs-c MAE
+  falls 0.001139 -> 8.6e-10 while y_cal MAE moves 0.087806 -> 0.087835 (slightly worse); the
+  chemistry body error h - g (MAE 0.087004) dominates and the small favourable cancellation
+  (triangle gap -0.001149) is removed. Train has 355 exact T25 classes, 350 consistent, 5
+  conflict (same T25, different k) with c = (k - mu_cycle)/sigma_cycle at full precision; valid
+  coverage is 988 CONSISTENT_HIT / 0 conflict-fallback / 12 UNSEEN_FALLBACK, 0 new conflicts,
+  train-k vs valid-k match rate 1.0. y_cal < 0.09 is not observed (H 0.09669; oracle 0.08933).
+  Verdict: TARGETED_REPAIR_ONLY + SINGLE_ROW_DOMINATED for this fixed rule; no broad transfer
+  confirmed, no new compute purchased.
+status: tentative
+study_id: zinc-context-gap
+supporting_evidence:
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/PROTOCOL.md
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/METHOD_CONTRACT.md
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/REPORT.md
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/DECISION.md
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/source_identity.json
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/frozen_eval_manifest.json
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/gate.json
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/bootstrap.json
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/analysis.json
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/replay_checks.json

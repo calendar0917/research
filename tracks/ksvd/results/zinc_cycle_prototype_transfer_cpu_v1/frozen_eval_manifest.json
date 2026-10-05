@@ -1,0 +1,58 @@
+{
+  "manifest_version": "frozen-eval-manifest-v1",
+  "protocol_version": "zinc-cycle-prototype-transfer-cpu-v1",
+  "frozen_at_utc": "2026-10-05T08:38:09Z",
+  "execution_commit": "947d2837c4936ef1276fcbbf0e9189e7d44ace23",
+  "artifacts": {
+    "source_dir": "tracks/ksvd/results/zinc_component_supervision_fulltrain_confirmation_seed0_v1",
+    "runner_source": {
+      "path": "tracks/ksvd/experiments/luyin16/zinc_component_supervision_fulltrain_confirmation_seed0_v1.py",
+      "sha256": "3eeca2e8964b675e6de796303a83f0eda8171054ce9b5ec29ae38b5c2f40c09a"
+    },
+    "targets": {
+      "path": "tracks/ksvd/results/zinc_component_supervision_fulltrain_confirmation_seed0_v1/full_train_targets.npz",
+      "sha256": "56ec0178c06f728fa362fb6d686df9ed74b9b7d3de3add13f046d01701811f68"
+    },
+    "prep": {
+      "path": "tracks/ksvd/results/zinc_component_supervision_fulltrain_confirmation_seed0_v1/full_train_prep.npz",
+      "sha256": "db8a2baf1451ca34f7418fd4ec6d98dea30c7e22639f584ed951a5f093d93b06"
+    },
+    "COMP_soup": {
+      "path": "tracks/ksvd/results/zinc_component_supervision_fulltrain_confirmation_seed0_v1/COMP_raw_soup_state.pt",
+      "sha256": "fc7b18bc9f654e13c0f37bca72e80701b54836012dfa3e1f66b2541980f0430c"
+    },
+    "Q_soup": {
+      "path": "tracks/ksvd/results/zinc_component_supervision_fulltrain_confirmation_seed0_v1/Q_raw_soup_state.pt",
+      "sha256": "804da0d021af3c78cd0da643b5c56f67f088c7b233d1256637f4f3533dca175f"
+    },
+    "prototype_table": {
+      "path": "prototype_table.npz",
+      "sha256": "0c78616b570bc88531fa1f72de8536786199394a70374db4ba2f9e235de55c9c"
+    },
+    "H_model_package": {
+      "path": "H_model_package.pt",
+      "sha256": "65c433ce41ec50b40ceec4c80e0ec82219f14eb62e5f97d74472030c9036842e"
+    }
+  },
+  "key": {
+    "dim": 25,
+    "dtype": "float32",
+    "encoding": "contiguous little-endian float32, -0 normalised to +0, NaN/Inf forbidden",
+    "collision_free": true,
+    "n_classes": 355
+  },
+  "prototype": {
+    "n_slots": 355,
+    "n_consistent_slots": 350,
+    "n_conflict_slots": 5,
+    "rule": "median(c_train) per train class; conflict classes held for fallback routing"
+  },
+  "bias": {
+    "b_H": -0.011446799464432368,
+    "b_y_COMP": -0.011630002409219742
+  },
+  "prediction_rule": "if input_key in train_table and k_is_unanimous: q_H = median_c else q_H = frozen_Q(T25); y = h_raw + q_H + b_H",
+  "official_valid_loaded_in_freeze": false,
+  "official_test_loaded": false,
+  "freeze_before_heldout": true
+}

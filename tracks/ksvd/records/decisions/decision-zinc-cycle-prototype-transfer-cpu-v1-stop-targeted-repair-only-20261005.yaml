@@ -1,0 +1,50 @@
+alternatives_rejected:
+- 'Changing the coverage gate, the key, the consistent-class rule, or adding a support threshold
+  / nearest neighbour / rounding grid / smoothing -- rejected: explicitly excluded by the
+  preregistration once the frozen gate fails, and no new feature is added to force a conclusion.'
+- 'Selecting the result by raw vs cal vs fixed-b_b, or re-tuning b_H, or preferring the two
+  biases -- rejected: the fixed train-only calibration rule is frozen and the fixed-b_b variant
+  is a diagnostic only.'
+- 'Re-confirming COMP, re-training SUM, scanning component-supervision coefficients, or reopening
+  dictionary / binding / aggregation / reader branches -- rejected: out of scope; COMP stays the
+  single-seed working reference.'
+- 'Reading official-test or buying a new neural run from this endpoint -- rejected: the gain is
+  one row on an exposed valid and does not support generalization.'
+because: >-
+  The single frozen rule passed the point conditions (overall cal y gain +0.0207118 >= 0.003,
+  raw gain +0.0207313 > 0, G0 cal worsening +0.0000117 <= 0.001) but failed the CI condition
+  (95% CI [-0.0002260, +0.0623398] lower bound not > 0), giving TARGETED_REPAIR_ONLY. The gain is
+  single-row dominated: valid:0172 alone is +20.74 of the +21.17 positive sum (share 0.980) and
+  removing the reference's worst row makes the gain -0.0000288. On the remaining 987 covered rows
+  the q error collapses (0.001139 -> 8.6e-10) while y_cal MAE moves 0.087806 -> 0.087835 because
+  the body error h-g (MAE 0.087004) dominates and removes a small favourable cancellation. The
+  12 uncovered rows are unchanged. So the rule repairs one covered extreme-cycle tail row and
+  delivers no broad complete-y gain.
+created: '2026-10-05T16:00:00'
+decision: >-
+  STOP this exact-lookup train-consistent T25 prototype line as a broad transfer mechanism. Keep
+  H only as a documented single-row tail repair (valid:0172) on this fixed exposed valid. Do not
+  change the gate/key/rule/threshold, do not add rescue mechanisms or seeds, do not open
+  official-test or a new training run, and do not re-confirm COMP. official ZINC test stays
+  uninstantiated.
+decision_id: decision-zinc-cycle-prototype-transfer-cpu-v1-stop-targeted-repair-only-20261005
+kind: decision
+revisit_if: >-
+  A new preregistration mechanistically explains why a train-consistent exact T25 class can
+  generalize to held-out rows (describes the alias structure), or establishes a reduced body
+  error h - g while preserving the cycle cancellation, and carries the replayed COMP+Q as the
+  matched reference with paired seeds. Only a materially positive paired gain over that reference
+  should buy further compute.
+study_id: zinc-context-gap
+evidence:
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/PROTOCOL.md
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/METHOD_CONTRACT.md
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/REPORT.md
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/DECISION.md
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/EXECUTION.md
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/EVIDENCE_SCOPE.md
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/gate.json
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/bootstrap.json
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/analysis.json
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/manifest.json
+- tracks/ksvd/results/zinc_cycle_prototype_transfer_cpu_v1/frozen_eval_manifest.json

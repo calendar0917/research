@@ -4381,6 +4381,45 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-zinc-cycle-prototype-transfer-cpu-v1-stop-targeted-repair-only-20261005: >-
+      zinc_cycle_prototype_transfer_cpu_v1 (2026-10-05, local CPU-only, 8 threads,
+      FP32; no optimizer, no backward, no GPU, no remote job; official test never
+      instantiated; REUSED exposed official ZINC valid 1000) asked whether the
+      exact T25 classes the frozen COMP+Q cycle head Q sees, restricted to classes
+      already TRAIN-CONSISTENT (all train members share one integer k), can be
+      served by a train-only PROTOTYPE (per-class median c) lookup instead of Q.
+      The source round (zinc_component_supervision_fulltrain_confirmation_seed0_v1,
+      execution commit 947d2837c4936ef1276fcbbf0e9189e7d44ace23, CHEM_PASS_DEPLOY_PASS)
+      replays exactly: train COMP y_cal 0.03859298209673725, valid COMP y_cal
+      0.11740618350630393, valid COMP g_cal 0.08930046045603672, valid SUM y_cal
+      0.12265322754724184, and the frozen Q raw_soup state reproduces the cached
+      q_raw with max abs diff 0.0 (train and valid). Only the cycle route and the
+      same-rule train-only bias changed; the COMP body h, the Q weights, prep,
+      constants and targets are untouched (g unchanged and only replayed). Train:
+      355 exact T25 classes, 350 consistent / 5 conflict / 151 singletons;
+      c = (k - mu_cycle)/sigma_cycle at full precision (consistent-class c span 0).
+      Valid: 988 CONSISTENT_HIT / 0 TRAIN_CONFLICT_FALLBACK / 12 UNSEEN_FALLBACK,
+      0 new conflicts, train-k vs valid-k match rate 1.0. Result: H y_cal
+      0.0966943750 vs B 0.1174061835, overall cal gain +0.0207118085 (95% paired
+      bootstrap CI [-0.0002260, +0.0623398]), raw gain +0.0207312735, G0 cal
+      worsening +0.0000116891. Gate points 1/3/4 pass, CI point 2 fails ->
+      TARGETED_REPAIR_ONLY, and SINGLE_ROW_DOMINATED: valid:0172 (k=-6, singleton
+      train class train:3776 with the exact same T25) is +20.74 of the +21.17
+      positive-gain sum (share 0.980); removing the reference's worst row makes
+      the gain -0.0000288. On the 987 CONSISTENT_HIT rows excluding valid:0172 the
+      q-vs-c MAE falls 0.001139 -> 8.6e-10 while y_cal MAE moves 0.087806 ->
+      0.087835 (slightly worse): the chemistry body error h-g (MAE 0.087004)
+      dominates and the small favourable cancellation (triangle gap -0.001149) is
+      removed. y_cal < 0.09 not observed (H 0.09669; oracle h+c+b_B 0.08933).
+      Decision: STOP the exact-lookup train-consistent T25 prototype as a broad
+      transfer mechanism; keep H only as a documented single-row tail repair; do
+      not change the gate/key/rule/threshold, do not add rescue or seeds, do not
+      open official-test or a new training run, do not re-confirm COMP. Next
+      responsibility returns to the chemistry body error h-g and its cancellation.
+      See notes/zinc_cycle_prototype_transfer_cpu_v1_analysis.md,
+      results/zinc_cycle_prototype_transfer_cpu_v1/REPORT.md,
+      claim-zinc-cycle-prototype-transfer-cpu-v1-targeted-repair-only-20261005,
+      decision-zinc-cycle-prototype-transfer-cpu-v1-stop-targeted-repair-only-20261005.
   - decision-zinc-graph-dictionary-readout-v1-stop-fixed-prototype-20261002: >-
       zinc_graph_dictionary_readout_v1 (2026-10-02, local CPU-only, revision
       339dbea6, fit run 20261002-103457-ebc7b526 / evaluate run
