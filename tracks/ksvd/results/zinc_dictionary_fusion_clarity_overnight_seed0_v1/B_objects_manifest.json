@@ -1,0 +1,104 @@
+{
+  "protocol_version": "zinc-dictionary-fusion-clarity-overnight-seed0-v1",
+  "fold": {
+    "definition": "perm=np.random.default_rng(20261007).permutation(10000); fit_idx=np.sort(perm[:8000]); dev_idx=np.sort(perm[8000:])",
+    "fit_idx_sha256": "18a2d2ebfbc09abd9924b588ebae2f4ea6c0af6e7e54e11430fdd154bd12470b",
+    "dev_idx_sha256": "19a768d1e26c227b73e5dfb94456663162b59918cdd9c887bdb9c05ad3f91c6e"
+  },
+  "constants": {
+    "sigma_logP": 1.4359316376932079,
+    "sigma_SA": 0.8308859001064995,
+    "mu_SA": -3.191748256196587,
+    "sigma_cycle": 0.2885287566230853,
+    "mu_cycle": -0.00015323671739228545,
+    "fit_rows_cycle_free": 7712,
+    "fit_rows_snap": 8000
+  },
+  "target_checks": {
+    "n_rows": 10000,
+    "n_fit": 8000,
+    "uses_dev_labels_in_fit": false,
+    "y_identity_max_abs": 0.0,
+    "g_equals_ell_plus_s_max_abs": 4.440892098500626e-16,
+    "constants_finite": true,
+    "sigma_cycle_nonzero": true,
+    "k_fit_counts": {
+      "k=0": 7714,
+      "k=-1": 251,
+      "k=-2": 28,
+      "k<=-3": 7,
+      "k<=-2": 35
+    },
+    "k_dev_counts": {
+      "k=0": 1914,
+      "k=-1": 74,
+      "k=-2": 12,
+      "k<=-3": 0,
+      "k<=-2": 12
+    }
+  },
+  "payload_checks": {
+    "old_tuple_npz": "/home/calendar/code/research/tracks/ksvd/results/zinc_local_tuple_dictionary_joint_vs_independent_seed0_v1/local_tuple_index.npz",
+    "old_tuple_npz_sha256": "4facb6ec77ff10130d49857bad461d16da0ee097495616ca4d4711de962b2c40",
+    "node_sizes_match_env": true,
+    "root_atom_match_env": true,
+    "pair_ptr_monotone": true,
+    "n_roots": 231664,
+    "n_pairs": 508032,
+    "phi_scaler": {
+      "fitted_on": "new rng(20261006) fit rows, realized C>0 incident tuples",
+      "n_samples": 337452,
+      "std_floor": 0.001,
+      "phi_scale_l2_rms": 0.9114654303753983,
+      "phi_mean_sha256": "aecd2cb636ab2de56bb1b6e38e5debab0cdf1bfd91446350514baa8cb21cf5fe",
+      "phi_std_sha256": "a7804f65cd2f0859731ffb6498b380d0cd6d9a00e89fa46588616b958b7b0a29"
+    },
+    "kappa_D": {
+      "value": 2.0764760092568273,
+      "definition": "1 / RMS(initial e_J, e_I) over up to 8192 sampled new-fit roots",
+      "seed": 20261004,
+      "n_roots": 8192,
+      "sample_sha256": "1f5ece6518fcdafb4a0bb81f369be47c95644bd513b4a63eadc4870ac18479e6",
+      "raw_rms": 0.48158514499664307,
+      "e_J_rms": 0.4816887378692627,
+      "e_I_rms": 0.48148155212402344
+    }
+  },
+  "kappa_M": {
+    "definition": "r_D = RMS(kappa_D * e_D_init); r_M = RMS(e_M_init); kappa_M = r_D/r_M on the frozen fit-root sample",
+    "kappa_D": 2.0764760971069336,
+    "r_D": 1.0002151727676392,
+    "r_M": 0.4965820908546448,
+    "e_D_init_rms": 0.4816887378692627,
+    "e_M_init_rms": 0.4965820908546448,
+    "kappa_M": 2.0141990442027713,
+    "n_roots": 8192,
+    "sample_sha256": "1f5ece6518fcdafb4a0bb81f369be47c95644bd513b4a63eadc4870ac18479e6",
+    "labels_used": false,
+    "dev_used": false,
+    "note": "r_D is not assumed to be 1; it is the RMS of the scaled initial dictionary codes"
+  },
+  "kappa_D": 2.0764760092568273,
+  "prep": {
+    "fitted_on": "split B fit rows only",
+    "fit_root_rows": 185202,
+    "n_fit_molecules": 8000
+  },
+  "artifacts": {
+    "B_fold.npz": {
+      "sha256": "c33e5b1ed88b9b2fa9d86c8592ac24b4f32ec05523be7cdaf642b85a90b482a5"
+    },
+    "B_targets.npz": {
+      "sha256": "56918955f92ff0686007da5646a04c0b53f9b9efd3b7395aeaf48d4e6d9af1ed"
+    },
+    "B_tuple_payload.npz": {
+      "sha256": "9bd2c61f4272b6e14547ea0a5fe54b1b4080cff1051255c3b98b301087fd1a05"
+    },
+    "B_prep.npz": {
+      "sha256": "ec8de8883799d9c9ec13749fc56ad45e70a6b9fe333f1f529263bab84fd0f8d7"
+    }
+  },
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "seconds": 6.302011386025697
+}
