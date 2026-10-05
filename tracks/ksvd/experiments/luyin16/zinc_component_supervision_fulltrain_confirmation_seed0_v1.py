@@ -1281,6 +1281,8 @@ def load_valid_data(out_dir: Path) -> tuple[list[Any], dict[str, Any]]:
     zjd._unstack(ctx_fit.transform(ctx_all.inverse(c)), cc, "global_context", valid)
     zjd._unstack(anchor_fit.transform(anchor_all.inverse(a)), ac, "anchor", valid)
     zjd._unstack(topo_fit.transform(topo_all.inverse(t)), tc, "topology_features", valid)
+    for index, data in enumerate(valid):
+        data.local_mol_id = torch.tensor([int(index)], dtype=torch.long)
     meta = {
         "n_rows": int(len(valid)),
         "source": "encoded_valid.pt + env_valid.pt",
