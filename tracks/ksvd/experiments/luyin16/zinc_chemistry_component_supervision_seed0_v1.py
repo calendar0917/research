@@ -614,8 +614,8 @@ def train_arm(
         raise RuntimeError("g != ell + s on fit rows")
 
     target_g = torch.as_tensor(g_fit, dtype=torch.float32)
-    target_ell = torch.as_tensor(ell_fit, dtype=torch.float32)
-    target_s = torch.as_tensor(s_fit, dtype=torch.float32)
+    target_ell = torch.as_tensor(ell_fit, dtype=torch.float32, device=device)
+    target_s = torch.as_tensor(s_fit, dtype=torch.float32, device=device)
 
     prep_meta, fit_data, dev_data = zfr.build_prepared_data(fresh, verify_prep=True)
     schedule, schedule_hash = zw.build_schedule(len(fit_data), int(epochs), SEED + TRAIN_SHUFFLE_OFFSET)
@@ -651,6 +651,7 @@ def train_arm(
         for start in range(0, len(schedule[epoch - 1]), BATCH_SIZE):
             indices = schedule[epoch - 1][start : start + BATCH_SIZE]
             index_list = [int(i) for i in indices.tolist()]
+            batch_index_t = torch.as_tensor(index_list, dtype=torch.long, device=device)
             id_stream.update(np.asarray(index_list, np.int64).tobytes())
             gid_stream.update(np.asarray(fresh["targets"]["gid"][fit_idx[index_list]], np.int64).tobytes())
             batch = zftd.make_batch(fit_data, index_list, target_g, device)
@@ -664,8 +665,8 @@ def train_arm(
                 raise RuntimeError("reader component output is not (batch, 2)")
             # one body computation produced both the total and the two components
             l_g = F.l1_loss(prediction.view(-1), batch.y.view(-1))
-            l_ell = F.l1_loss(components[:, 0], target_ell[indices])
-            l_s = F.l1_loss(components[:, 1], target_s[indices])
+            l_ell = F.l1_loss(components[:, 0], target_ell[batch_index_t])
+            l_s = F.l1_loss(components[:, 1], target_s[batch_index_t])
             if arm == "COMP":
                 loss = l_g + COMPONENT_LOSS_WEIGHT * (l_ell + l_s)
             else:
@@ -677,8 +678,8 @@ def train_arm(
                 probe_log.append(_probe(model, arm, epoch, 1, total_norm))
             optimizer.step()
             g_sum += float((prediction.view(-1) - batch.y.view(-1)).abs().sum())
-            ell_sum += float((components[:, 0].detach() - target_ell[indices]).abs().sum())
-            s_sum += float((components[:, 1].detach() - target_s[indices]).abs().sum())
+            ell_sum += float((components[:, 0].detach() - target_ell[batch_index_t]).abs().sum())
+            s_sum += float((components[:, 1].detach() - target_s[batch_index_t]).abs().sum())
             total_sum += float(loss.detach()) * int(len(index_list))
             n_mol += int(batch.y.numel())
             n_steps += 1
@@ -868,8 +869,8 @@ def run_smoke(
     ell_fit = ell_all[fold["fit_idx"]]
     s_fit = s_all[fold["fit_idx"]]
     target_g = torch.as_tensor(g_fit, dtype=torch.float32)
-    target_ell = torch.as_tensor(ell_fit, dtype=torch.float32)
-    target_s = torch.as_tensor(s_fit, dtype=torch.float32)
+    target_ell = torch.as_tensor(ell_fit, dtype=torch.float32, device=device)
+    target_s = torch.as_tensor(s_fit, dtype=torch.float32, device=device)
     schedule, schedule_hash = zw.build_schedule(len(fit_data), EPOCHS, SEED + TRAIN_SHUFFLE_OFFSET)
     checks: dict[str, Any] = {
         "arm": arm,
