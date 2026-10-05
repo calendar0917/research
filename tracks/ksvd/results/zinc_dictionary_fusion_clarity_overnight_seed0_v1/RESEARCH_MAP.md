@@ -97,3 +97,44 @@ Evidence pointers: `tracks/ksvd/results/zinc_local_dictionary_component_supervis
 (REPORT/DECISION/EXECUTION/dev_eval/mechanism_health), this round's
 `parallel_evidence.json`, `frozen_folds.json`, `init_identity.json`,
 `kappa_fusion_A.json`, `PROTOCOL.md`.
+
+## 6. Round outcome (2026-10-06 ~04:00; stages 1-3 complete, stage 4 not purchased)
+
+1. **The joint J_D-vs-J_M gap is dominated by run-to-run training noise.**
+   The source round had M better (G0 cal −0.002045, raw CI < 0); this round's
+   contemporaneous J_D/J_M control under the identical recipe flipped the sign
+   (G_J G0 cal +0.00304 [−0.00055, +0.0064]; **raw +0.0119 [+0.0081, +0.0157]**,
+   CI entirely above zero). Two matched runs, two opposite sign verdicts →
+   neither sign is a robust property of the encoder class in this interface.
+2. **The separate-structure×semantics construction (F) produced no robust
+   signal.** Stage-1 contrasts C_D/C_M/G_F all cross zero; the interaction
+   I_derived = −0.0047 [−0.0119, +0.0025].
+3. **Stage-2's two qualifying signals failed the pre-registered B-split
+   replication (frozen gates require both raw gains > 0):**
+   - F_D_RAND vs J_M (A: +0.0032 cal, +0.0101 raw) reversed on B to
+     −0.0025 [−0.0061, +0.0011] cal with both raws negative.
+   - F_M_I vs J_M (A: +0.0055 cal CI>0, +0.0087 raw CI>0 — a full "clear
+     signal") kept its calibrated gain on B (+0.0051 [+0.0017, +0.0084]) but
+     **reversed raw to −0.0176 [−0.0214, −0.0137]**: the replicated advantage
+     rides entirely on the per-arm median bias (B_F_M_I bias −0.0695 vs
+     B_J_M −0.0193), i.e. a calibration-offset effect, not per-molecule
+     accuracy. Purchase rejected; the official-valid read never happened.
+4. **Task adaptation of the structure dictionary directionally hurts**
+   (A split, all CI-crossing): F_D < F_D_RAND (−0.0025), REC_TASK < REC
+   (−0.0024), REC ≤ RAND (−0.0011). Frozen/random dictionaries are at least as
+   good as any trained variant in this interface — but see 3: the whole
+   family failed replication.
+5. **ERRATA (material, historical)**: the fulltrain-round official-valid body
+   inference attached *train* incidence structures to valid roots
+   (`local_mol_id` 0..999 indexing the train payload's `root_base`/`pair_ptr`;
+   exact reproduction of the frozen predictions confirmed, max_abs 0.0).
+   Re-scoring the frozen COMP soup on the valid graphs' **own** incidence
+   improves valid y_cal MAE **0.11741 → 0.11216** (h_raw mean |Δ| 0.0243, max
+   0.1314). The same loader pattern was used for the cycle round's official
+   **test** body inference — its terminal test numbers inherit the same
+   defect and need one re-scoring pass before being quoted again
+   (`valid_structure_check.py/.json/.npz` in this round's dir).
+6. Interface health at every stage: zero-injection collapses G0 cal to
+   0.46-0.63 (the local channel carries real signal); J↔I weight swap moves
+   G0 cal by ≤0.01; dictionary codes stay exactly top-8 sparse; frozen
+   dictionaries by construction drift 0.

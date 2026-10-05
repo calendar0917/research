@@ -124,6 +124,45 @@ def main() -> None:
     fig.tight_layout()
     fig.savefig(OUT / "figure_dictionary_task_division.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.0))
+    # panel 1: Stage-2 A-split candidates vs J_M (cal + raw)
+    d2 = _load("dev_eval_A_J_D_J_M_F_D_F_D_RAND_F_D_REC_F_D_REC_TASK.json")
+    d3 = _load("dev_eval_A_J_D_J_M_F_D_F_M_F_D_I_F_M_I.json")
+    cand = [("F_M_I vs J_M (A)", d3["gains"]["F_M_I_vs_J_M"]),
+            ("F_D_RAND vs J_M (A)", d2["gains"]["F_D_RAND_vs_J_M"])]
+    ax = axes[0]
+    for y, (label, g) in enumerate(cand[::-1]):
+        for off, metric, color, marker in ((-0.10, "G0_cal", "#333", "o"), (0.10, "G0_raw", "#999", "s")):
+            m = g[metric]
+            ax.errorbar(m["point"], y + off,
+                        xerr=[[m["point"] - m["ci95"][0]], [m["ci95"][1] - m["point"]]],
+                        fmt=marker, color=color, capsize=4)
+    ax.axvline(0.0, color="k", lw=0.8)
+    ax.set_yticks(range(len(cand)))
+    ax.set_yticklabels([l for l, _g in cand[::-1]])
+    ax.set_xlabel("dev G0 gain (o = calibrated, s = raw); positive = candidate better")
+    ax.set_title("Stage-2 signals (split A)")
+    ax.grid(alpha=0.3)
+    # panel 2: Stage-3 B-split replication of the same two candidates
+    db = _load("dev_eval_B_B_J_M_B_F_D_RAND_B_F_M_I.json")
+    cand_b = [("B_F_M_I vs B_J_M (B)", db["gains"]["B_MI_vs_JM"]),
+              ("B_F_D_RAND vs B_J_M (B)", db["gains"]["B_RAND_vs_JM"])]
+    ax = axes[1]
+    for y, (label, g) in enumerate(cand_b[::-1]):
+        for off, metric, color, marker in ((-0.10, "G0_cal", "#333", "o"), (0.10, "G0_raw", "#999", "s")):
+            m = g[metric]
+            ax.errorbar(m["point"], y + off,
+                        xerr=[[m["point"] - m["ci95"][0]], [m["ci95"][1] - m["point"]]],
+                        fmt=marker, color=color, capsize=4)
+    ax.axvline(0.0, color="k", lw=0.8)
+    ax.set_yticks(range(len(cand_b)))
+    ax.set_yticklabels([l for l, _g in cand_b[::-1]])
+    ax.set_xlabel("dev G0 gain (o = calibrated, s = raw); positive = candidate better")
+    ax.set_title("Stage-3 replication (split B, fresh retrain)")
+    ax.grid(alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(OUT / "figure_stage23_replication.png", dpi=150)
+    plt.close(fig)
     print("figures written")
 
 

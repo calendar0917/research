@@ -2268,7 +2268,8 @@ def phase_mechanism_health(
             f"atoms={ep240['batch_stats'].get('structure_atoms_used', '-')} "
             f"injRMS={ep240['injection_rms']:.4g}"
         )
-    write_json(out_dir / "mechanism_health.json", results)
+    has_b = any(a.startswith("B_") for a in arms)
+    write_json(out_dir / ("mechanism_health_B.json" if has_b else "mechanism_health.json"), results)
     return results
 
 
