@@ -1298,14 +1298,35 @@ def eval_split(split: str, log=print) -> dict[str, Any]:
                 "row_indices": np.nonzero(m)[0].tolist(),
             }
 
-    # fixed comparisons with paired CI
+    # fixed comparisons with paired CI; gain = MAE(reference) - MAE(candidate),
+    # positive = candidate improves over the reference (B over SUM_Q, H over B, C over H)
     comps = {}
-    for ref, cand in (("B", "SUM_Q"), ("H", "B")) + ((("C", "H"),) if purchased else ()):
+    pairs = [("SUM_Q", "B"), ("B", "H")]
+    if purchased:
+        pairs.append(("H", "C"))
+    for ref, cand in pairs:
         comps[f"{cand}_minus_{ref}"] = {
+            "reference": ref, "candidate": cand,
             "gain_cal": paired_bootstrap_ci(systems[ref]["cal"], systems[cand]["cal"], n),
             "gain_raw": paired_bootstrap_ci(systems[ref]["raw"], systems[cand]["raw"], n),
         }
     out["comparisons"] = comps
+
+    # bootstrap witnesses (deterministic statistics checks)
+    w_ident = paired_bootstrap_ci(systems["B"]["cal"], systems["B"]["cal"], n)
+    w_swap = paired_bootstrap_ci(systems["B"]["cal"], systems["H"]["cal"], n)
+    w_swap_mirror = paired_bootstrap_ci(systems["H"]["cal"], systems["B"]["cal"], n)
+    shifted = systems["H"]["cal"] + 0.25
+    w_shift = paired_bootstrap_ci(systems["B"]["cal"], shifted, n)
+    out["bootstrap_witnesses"] = {
+        "identical_point": w_ident["point"],
+        "identical_is_zero": bool(w_ident["point"] == 0.0),
+        "swap_point": w_swap["point"],
+        "swap_mirror_ok": bool(abs(w_swap["point"] + w_swap_mirror["point"]) <= 1e-12),
+        "constant_shift_delta": 0.25,
+        "constant_shift_gain_changes_by": float(w_shift["point"] - comps["H_minus_B"]["gain_cal"]["point"] + 0.25) if "H_minus_B" in comps else None,
+        "constant_shift_inside_bound": bool(w_shift["point"] < 0.0),
+    }
 
     # cancellation diagnostics for B and H (+C)
     for name in ("B", "H", "C"):
