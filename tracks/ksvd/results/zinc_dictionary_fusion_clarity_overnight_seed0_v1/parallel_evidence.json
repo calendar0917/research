@@ -1,0 +1,65 @@
+{
+  "unified_recomputation": {
+    "per_arm": {
+      "D_COMP": {
+        "bias": -0.04280893077017206,
+        "dev_G0_raw": 0.09927870111408557,
+        "dev_G0_cal": 0.09010790383136011,
+        "dev_overall_raw": 0.09970447688011357,
+        "dev_overall_cal": 0.09045088052511928,
+        "e_g_raw_identity_max_abs": 2.384185793236071e-07,
+        "triangle_gap_raw_G0": 0.031947207157882754
+      },
+      "M_COMP": {
+        "bias": -0.02246060912372009,
+        "dev_G0_raw": 0.09034005661005048,
+        "dev_G0_cal": 0.0880624208265818,
+        "dev_overall_raw": 0.09175883352499858,
+        "dev_overall_cal": 0.08931265259288156,
+        "e_g_raw_identity_max_abs": 2.384185793236071e-07,
+        "triangle_gap_raw_G0": 0.034231405881590495
+      }
+    },
+    "M_minus_D_gaps": {
+      "G0_raw_gap": -0.008938644504035087,
+      "G0_cal_gap": -0.0020454830047783035,
+      "overall_raw_gap": -0.007945643355114981,
+      "overall_cal_gap": -0.0011382279322377231
+    },
+    "calibration_note": "The raw G0 gap (~0.0089) shrinks to ~0.0020 after each arm's own fit-median calibration (D bias -0.0428 vs M -0.0225): a large part of the raw deficit is a fit-side median offset, NOT a bias-independent signal-quality statement. This retracts the earlier 'not bias-related' phrasing; the calibrated comparison (still MLP-favouring, CI crossing 0) is the honest endpoint."
+  },
+  "dictionary_change": {
+    "init_L2": 88.77986145019531,
+    "raw_drift_last": 0.0,
+    "raw_drift_soup": 71.51434326171875,
+    "raw_drift_relative_to_init_L2": 0.8055243846245203,
+    "col_normalized_same_index_change": 6.018388748168945,
+    "col_normalized_same_index_change_relative": 4.255643495647078,
+    "best_abs_cosine_to_init_atoms": {
+      "mean": 0.7187645435333252,
+      "median": 0.7561028599739075,
+      "fraction_above_0.9": 0.0,
+      "fraction_flipped_sign": 0.0
+    },
+    "note": "raw drift 71.6 vs init L2 ~89.4 is a raw-matrix distance, not a unit-free 'mechanism progress' metric; the column-normalised same-index change and the best-cosine matches are the comparable shape-change measures. Sign flips mean atom-identity symmetry is not sign-fixed; permutation symmetry means same-index comparison understates shape preservation.",
+    "health_epoch240": {
+      "atoms_used_of_64": 61,
+      "per_tuple_nnz": 8.0,
+      "root_code_effective_rank": 61,
+      "root_code_rms": 0.30347752571105957,
+      "injection_rms": 0.41500890254974365
+    }
+  },
+  "responsibility_map": {
+    "phi65": {
+      "content": "root_basis(11: root indicator, shell one-hot 0..2, log1p degree, log1p per-shell neighbour counts, log1p walk counts) + node mean/std + edge mean/std (15: shell-pair one-hot, degree sums, common neighbours, per-shell edge stats) + [log1p(n_nodes), log1p(n_edges)]",
+      "chemistry": "none: only adjacency and rooted distances (fsar_r2.phi_for_center)",
+      "verdict": "pure topology; calling p65 'pure topology' is accurate"
+    },
+    "semantics_in_the_tuple": "q60 = [onehot28(root atom); onehot28(neighbour atom); onehot4(bond)] - the ONLY chemistry inside the joint 125-D tuple input",
+    "Sem108_bypass": "patch_cont[:, 0:108] = atom_shell (84 = (radius+1) x 28 shell-resolved atom counts) + bond_shell (24 = 6 shell-pairs x 4 bond types); plus anchor size2 -> the 110-D fusion input. Shell-resolved means it is structure-CONDITIONED semantics, not pure global chemistry.",
+    "J_vs_I": "w_J = C[t,a]/d (realised incidence); w_I = n_t n_a / d^2 (marginal product over the support union); both enter only the local tuple pooling, nowhere else",
+    "static_relations": "enter the body reader through the frozen node (3x48)/edge (6x32) encoded slots and the C6-mask relation groups; unchanged this round",
+    "posterior_D_L_V_L": "the 144->288->144 matched MLP bridge replaced the historical D_L/V_L linear dictionary bridge in BOTH arms of the source round; the old node/edge slot dictionaries are dead in this body family"
+  }
+}

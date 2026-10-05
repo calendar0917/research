@@ -731,10 +731,10 @@ def load_split_objects(split: str, out_dir: Path = RESULTS_DIR, *, require_fusio
     if split == "A":
         new = src.load_new_objects(src.RESULTS_DIR)
         fusion_path = out_dir / "kappa_fusion_A.json"
-        if require_fusion:
-            if not fusion_path.exists():
-                raise FileNotFoundError("kappa_fusion_A.json missing; run --compute-kappa-fusion first")
+        if fusion_path.exists():
             fusion = json.loads(fusion_path.read_text())
+        elif require_fusion:
+            raise FileNotFoundError("kappa_fusion_A.json missing; run --compute-kappa-fusion first")
         else:
             fusion = None
         return {
@@ -1991,7 +1991,7 @@ def phase_dev_eval(
                 "dev_G0": cancellation(hat_ell_dev[g0_dev], ell_dev[g0_dev], hat_s_dev[g0_dev], s_dev[g0_dev]),
             },
             "cal_g_identity_max_abs": float(np.max(np.abs(
-                (g_dev - sums[arm]["dev"]) - (e_ell_dev + e_s_dev)))),
+                (g_dev - sums[arm]["dev"]) + (e_ell_dev + e_s_dev)))),
         }
 
     # sensitivity: drop the common reference's worst dev row once
