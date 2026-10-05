@@ -1,0 +1,155 @@
+{
+  "fold_A": {
+    "fit_sha": "734d27f2818c5a1e13cd415ecb153eb0316036f72ffc0cf520c47c9538bd40c4",
+    "dev_sha": "cb5f49dcb5e46b8f00314b3264b620e159219a273bfe0f058aa0fd85523309e4",
+    "verified_on_load": true
+  },
+  "fold_B": {
+    "definition": "perm=np.random.default_rng(20261007).permutation(10000); fit_idx=np.sort(perm[:8000]); dev_idx=np.sort(perm[8000:])",
+    "fit_sha256": "18a2d2ebfbc09abd9924b588ebae2f4ea6c0af6e7e54e11430fdd154bd12470b",
+    "dev_sha256": "19a768d1e26c227b73e5dfb94456663162b59918cdd9c887bdb9c05ad3f91c6e",
+    "differs_from_A": true
+  },
+  "J_vs_I": {
+    "synthetic_checks": {
+      "n0_both_zero": true,
+      "n1_joint_equals_independent": true,
+      "n1_marginal_identity": true,
+      "n2_supports_differ": true,
+      "n2_marginal_identity": true
+    },
+    "passed": true,
+    "fresh_state_F_interface": {
+      "e_F_D_J_minus_I_rms": 0.0005887549486942589,
+      "e_F_M_J_minus_I_rms": 0.0007979298825375736,
+      "note": "if ~0 the I-weights contrast is unidentifiable in this interface (Stage 2 I arms must then be skipped)"
+    },
+    "identifiable": true
+  },
+  "J_vs_I_fit": {
+    "n_realized_tuples": 422061,
+    "realized_wJI_rms_diff": 0.08907694320700996,
+    "realized_fraction_differing": 0.3118577646359176,
+    "marginal_support_extra_mass_I": 14496.34034664929
+  },
+  "build_rng_equal": true,
+  "shared_tensors_identical_1e-5": true,
+  "shared_tensor_max_abs_diff": 0.0,
+  "J_D_D_equals_D0": true,
+  "J_M_A_equals_D0T": true,
+  "F_D_DS_equals_D0_first65": true,
+  "F_M_AS_equals_D0_first65T": true,
+  "F_arms_share_B_init": true,
+  "F_B_equals_D0_last60T": true,
+  "W_loc_exactly_zero_all": true,
+  "parameter_audit": {
+    "J_D": {
+      "total_parameters": 297539,
+      "base_body_parameters": 184707,
+      "bridge_parameters": 82944,
+      "local_tuple_parameters": 29888,
+      "reader_output_parameters": 80
+    },
+    "J_M": {
+      "total_parameters": 297539,
+      "base_body_parameters": 184707,
+      "bridge_parameters": 82944,
+      "local_tuple_parameters": 29888,
+      "reader_output_parameters": 80
+    },
+    "F_D": {
+      "total_parameters": 297539,
+      "base_body_parameters": 184707,
+      "bridge_parameters": 82944,
+      "local_tuple_parameters": 29888,
+      "reader_output_parameters": 80,
+      "local_parts": {
+        "structure": 4160,
+        "semantic_B": 3840,
+        "W_loc": 21888,
+        "structure_trainable": 4160
+      }
+    },
+    "F_M": {
+      "total_parameters": 297539,
+      "base_body_parameters": 184707,
+      "bridge_parameters": 82944,
+      "local_tuple_parameters": 29888,
+      "reader_output_parameters": 80,
+      "local_parts": {
+        "structure": 4160,
+        "semantic_B": 3840,
+        "W_loc": 21888,
+        "structure_trainable": 4160
+      }
+    }
+  },
+  "bridge_is_MLP_all": true,
+  "kappa": {
+    "kappa_D": 2.0429909229278564,
+    "kappa_M": 1.9839533380615402,
+    "kappa_F_D": 17.911594824656138,
+    "kappa_F_M": 14.057879317893306,
+    "r_star": 1.0002365112304688
+  },
+  "forward_shapes": {
+    "J_D": {
+      "sum": [
+        8
+      ],
+      "components": [
+        8,
+        2
+      ]
+    },
+    "J_M": {
+      "sum": [
+        8
+      ],
+      "components": [
+        8,
+        2
+      ]
+    },
+    "F_D": {
+      "sum": [
+        8
+      ],
+      "components": [
+        8,
+        2
+      ]
+    },
+    "F_M": {
+      "sum": [
+        8
+      ],
+      "components": [
+        8,
+        2
+      ]
+    }
+  },
+  "initial_graph_function_equal_all_arms": true,
+  "label_independence_max_abs": 0.0,
+  "root_codes_production_vs_reference_max_abs": {
+    "J_D": 0.0,
+    "J_M": 0.0,
+    "F_D": 0.0,
+    "F_M": 0.0
+  },
+  "naive_vs_production_max_abs": {
+    "F_D_max_abs_diff": 8.606343220307622e-07,
+    "F_M_max_abs_diff": 1.0046228071658447e-06
+  },
+  "F_D_structure_code_nnz_max": 8,
+  "F_D_structure_code_nnz_le_8": true,
+  "power_iter_sigma_deterministic": true,
+  "schedule_and_loader_rng_neutral": true,
+  "schedule_sha256": "7b11a529584a8bdaa8e2f17a8c8413cdc6677714ae855339b5984e9fe6938e65",
+  "steps_expected": 15120,
+  "serialization_round_trip_ok": true,
+  "state_save_reload_round_trip_max_abs": 0.0,
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}
