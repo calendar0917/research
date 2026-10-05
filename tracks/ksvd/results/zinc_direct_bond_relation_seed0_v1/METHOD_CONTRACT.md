@@ -47,7 +47,7 @@ Any data identity, fold, target, preprocessing, init, schedule, global graph-ID 
 
 Under `tracks/ksvd/results/zinc_direct_bond_relation_seed0_v1/`:
 
-`PROTOCOL.md`, `METHOD_CONTRACT.md`, `REPORT.md`, `DECISION.md`, `EXECUTION.md`; frozen input copies/manifests and beta provenance; `input_checks.json`, `smoke_checks.json`; O/T init/last/raw-soup states, complete curves, probes, metadata, GPU runtime and raw fit/dev predictions; fit calibration biases; `analysis.json`, `gains.json`, `gate.json`, `main_table.csv`, `group_table.csv`, `group_gain_table.csv`, `per_graph_dev.csv`, replay checks and artifact manifest. If T passes only: native-vs-graph-marginal diagnostic artifacts and compute-purchase design note.
+`PROTOCOL.md`, `METHOD_CONTRACT.md`, `REPORT.md`, `DECISION.md`, `EXECUTION.md`; frozen input copies/manifests and beta provenance; `input_checks.json`, `smoke_checks.json`; O/T init/last/raw-soup states, complete curves, probes, metadata, GPU runtime and raw fit/dev predictions; fit calibration biases; `analysis.json`, `gains.json`, `gate.json`, `main_table.csv`, `group_table.csv`, `group_gain_table.csv`, `per_graph_dev.csv`, replay checks and artifact manifest. If T passes only: native-vs-graph-marginal diagnostic artifacts and a compute-purchase design note; if T does not pass the gate, no marginal diagnostic is run and only a brief no-purchase note is written.
 
 Commands (from repository root):
 
