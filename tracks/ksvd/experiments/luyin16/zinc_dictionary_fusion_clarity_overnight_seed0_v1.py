@@ -2148,7 +2148,10 @@ def phase_mechanism_health(
                         "col_normalized_same_index_change": float(
                             (F.normalize(d_now, dim=0) - F.normalize(d_init, dim=0)).norm()
                         ),
-                        "rel_recon_structure": _rel_recon_structure(d_now, payload, device),
+                        # the joint 125x64 dictionary reconstructs 125-D tuples, not
+                        # phi65: a different object, not computed here (the F-arm
+                        # structure dictionaries report rel_recon_structure)
+                        "rel_recon_structure": None,
                     }
                 elif hasattr(enc, "A_raw"):
                     a_now = enc.A_raw.detach().cpu()
