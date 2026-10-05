@@ -1,0 +1,61 @@
+{
+  "manifest_version": "terminal-eval-manifest-v1",
+  "protocol_version": "zinc-cycle-level-transfer-terminal-test-seed0-v1",
+  "frozen_at_utc": "2026-10-05T10:57:59Z",
+  "execution_commit_source": "947d2837c4936ef1276fcbbf0e9189e7d44ace23",
+  "prototype_round_commit": "5a510d9",
+  "purchase_gate_passed": true,
+  "roster": {
+    "SUM_Q": {
+      "body": "source SUM_raw_soup_state.pt",
+      "cycle": "source Q_raw_soup_state.pt",
+      "bias": -0.01399996131658554
+    },
+    "B": {
+      "body": "source COMP_raw_soup_state.pt",
+      "cycle": "source Q_raw_soup_state.pt",
+      "bias": -0.011630002409219742
+    },
+    "H": {
+      "body": "source COMP_raw_soup_state.pt",
+      "cycle": "prototype_table.npz CONSISTENT_HIT median_c + frozen Q fallback",
+      "bias": -0.011446799464432368
+    },
+    "C": {
+      "body": "source COMP_raw_soup_state.pt",
+      "cycle": "prototype + conflict Q + unseen D_full decode",
+      "bias": -0.011446799464432368
+    }
+  },
+  "roster_decided_by": "train-only purchase gate only; never by this round's valid scores",
+  "artifacts_sha256": {
+    "SUM_soup": "ed3fd1248da51d037a1ee591bba635676808b7f5477703dfecc077dbb47cde3d",
+    "COMP_soup": "fc7b18bc9f654e13c0f37bca72e80701b54836012dfa3e1f66b2541980f0430c",
+    "Q_soup": "804da0d021af3c78cd0da643b5c56f67f088c7b233d1256637f4f3533dca175f",
+    "prototype_table": "0c78616b570bc88531fa1f72de8536786199394a70374db4ba2f9e235de55c9c",
+    "full_train_targets": "56ec0178c06f728fa362fb6d686df9ed74b9b7d3de3add13f046d01701811f68",
+    "full_train_prep": "db8a2baf1451ca34f7418fd4ec6d98dea30c7e22639f584ed951a5f093d93b06",
+    "full_train_payload": "82bb8e671975e8eebebe395d2b2c52f370c0fdf0a1105673be9641f53da61917",
+    "calibration": "ce85b20f6b47bb71627faf6effd5de72a581da0626884693de5a884553453cb2",
+    "T25_group_folds": "b601be18ef15a9a5defec99e7041060c8538b8cf4c0a3d19e58e3420fc68774e",
+    "gate": "057d7889c2db11f954e41b9fe1d5118f5e33b3a8f705a6c69abc8243c224d365",
+    "D_full_soup": "b3e94dcd81bd4c1cccca4f560f5aebf2c76fda05c2f869b58aa1262cd3fbe309"
+  },
+  "decoder": "softmax; levels ascending by c_level; first cumulative >= 0.5 -> that c_level (median rule)",
+  "input_builder": {
+    "train": "zftd.load_train_only + build_fulltrain_data (frozen full-train prep)",
+    "valid": "encoded_valid.pt + env_valid.pt + frozen full-train prep (source loader)",
+    "test": "official ZINC subset test (PyG) via zinc_compact_v4_training_sufficiency loader + _attach_test_env + frozen full-train prep (zinc_full_decomposition_valid_test_confirmation_v1.load_test_data engineering path)"
+  },
+  "test_label_mapping": {
+    "source": "zinc_long_cycle_audit/test_cycle_audit_label.csv + cache/gvae_full_properties.npz",
+    "rule": "k=round(label_effective_cycle_snapped); c=(k-mu_cycle)/sigma_cycle frozen full-train constants; g=y-c; ell=(logP-MU_LOGP)/sigma_logP; s=g-ell; csv label_cycle_component column unused (old 8k constants)"
+  },
+  "valid_status": "exposed/replayed (source + prototype rounds already used it)",
+  "test_status": "this round reads it after this manifest; project has used test before (disclosed)",
+  "metric_definitions": {
+    "primary": "MAE (y units) raw/cal per system per split",
+    "gain": "reference MAE - candidate MAE, positive = improvement",
+    "paired_bootstrap": "1000 draws, seed 20261012, shared row indices"
+  }
+}
