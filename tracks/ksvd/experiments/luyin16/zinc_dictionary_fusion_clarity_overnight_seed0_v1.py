@@ -1740,7 +1740,7 @@ def run_interventions(
     device: torch.device,
     fit_data: Sequence[Any],
     dev_data: Sequence[Any],
-    comps: Mapping[str, np.ndarray],
+    comps_dev: np.ndarray,
     bias: float,
     g_dev: np.ndarray,
     k_dev: np.ndarray,
@@ -1792,8 +1792,8 @@ def run_interventions(
             "g_raw_mae": _mae(g_dev - variant_sum),
             "g_cal_mae": _mae(g_dev - (variant_sum + float(bias))),
             "G0_cal_mae": _mae(g_dev[k_dev == 0] - (variant_sum[k_dev == 0] + float(bias))),
-            "delta_ell_mean_output": float(np.mean(np.abs(variant_comp[:, 0] - comps[arm][:, 0]))),
-            "delta_s_mean_output": float(np.mean(np.abs(variant_comp[:, 1] - comps[arm][:, 1]))),
+            "delta_ell_mean_output": float(np.mean(np.abs(variant_comp[:, 0] - comps_dev[:, 0]))),
+            "delta_s_mean_output": float(np.mean(np.abs(variant_comp[:, 1] - comps_dev[:, 1]))),
         }
 
     results = {
@@ -2016,7 +2016,7 @@ def phase_dev_eval(
     interventions = {
         arm: run_interventions(
             arm, objects=objects, out_dir=out_dir, device=device,
-            fit_data=fit_data, dev_data=dev_data, comps=comps[arm], bias=bias[arm],
+            fit_data=fit_data, dev_data=dev_data, comps_dev=comps[arm]["dev"], bias=bias[arm],
             g_dev=g_dev, k_dev=k_dev, log=log,
         )
         for arm in arms
