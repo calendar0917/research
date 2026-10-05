@@ -149,9 +149,9 @@ def state_hash(state: Mapping[str, torch.Tensor]) -> str:
     return digest.hexdigest()
 
 
-def write_json(path: Path, payload: Mapping[str, Any]) -> None:
+def write_json(path: Path, payload: Mapping[str, Any] | Sequence[Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(zw.jsonable(dict(payload)), indent=2, sort_keys=False) + "\n")
+    path.write_text(json.dumps(zw.jsonable(payload), indent=2, sort_keys=False) + "\n")
 
 
 def seed_everything(seed: int) -> None:
