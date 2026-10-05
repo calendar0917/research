@@ -98,6 +98,9 @@ from tracks.ksvd.experiments.luyin16 import (
     zinc_local_tuple_fresh_fold_replication_seed0_v1 as zfr,
 )
 from tracks.ksvd.experiments.luyin16 import zinc_task_dictionary_and_cycle_witness_seed0_v1 as zw
+from tracks.ksvd.experiments.luyin16 import (
+    zinc_component_supervision_fulltrain_confirmation_seed0_v1 as zft,
+)
 
 PROTOCOL_VERSION = "zinc-dictionary-fusion-clarity-overnight-seed0-v1"
 RESULT_SLUG = "zinc_dictionary_fusion_clarity_overnight_seed0_v1"
@@ -117,8 +120,10 @@ N_FIT = 8000
 N_DEV = 2000
 STEPS_PER_EPOCH = 63
 STEPS_TOTAL = EPOCHS * STEPS_PER_EPOCH
-FULL_STEPS_PER_EPOCH = 78            # ceil(10000/128) -> 18,960 steps at 240 ep
+FULL_STEPS_PER_EPOCH = 79            # ceil(10000/128) -> 18,960 steps at 240 ep
 FULL_STEPS_TOTAL = EPOCHS * FULL_STEPS_PER_EPOCH
+FULL_PREFIX = "T_"                   # Stage-4 full-10k arms (purchase only)
+N_TRAIN = 10000
 REPLAY_TOL = 1.0e-5
 MU_LOGP = src.MU_LOGP
 COMPONENT_LOSS_WEIGHT = 0.5
@@ -208,8 +213,8 @@ def arm_spec(arm: str) -> dict[str, Any]:
     """Decode an arm name into its frozen construction spec."""
     if not isinstance(arm, str) or not arm:
         raise ValueError(arm)
-    split = "B" if arm.startswith("B_") else "A"
-    base = arm[2:] if split == "B" else arm
+    split = "FULL" if arm.startswith(FULL_PREFIX) else ("B" if arm.startswith("B_") else "A")
+    base = arm[2:] if split in ("B", "FULL") else arm
     spec: dict[str, Any] = {
         "arm": arm,
         "split": split,
@@ -235,7 +240,9 @@ def arm_spec(arm: str) -> dict[str, Any]:
 
 def known_arms() -> list[str]:
     bases = list(STAGE1_ARMS) + list(STAGE2_ARMS)
-    return bases + [f"B_{b}" for b in ("J_M", "F_D", "F_M", "F_D_I", "F_M_I", "F_D_RAND", "F_D_REC", "F_D_REC_TASK")]
+    return bases + [f"B_{b}" for b in ("J_M", "F_D", "F_M", "F_D_I", "F_M_I", "F_D_RAND", "F_D_REC", "F_D_REC_TASK")] + [
+        f"{FULL_PREFIX}{b}" for b in ("J_D", "J_M", "F_D", "F_M", "F_D_I", "F_M_I", "F_D_RAND")
+    ]
 
 
 def requires_rec(arm: str) -> bool:
@@ -789,6 +796,48 @@ def load_split_objects(split: str, out_dir: Path = RESULTS_DIR, *, require_fusio
             "fusion_kappa": fusion,
             "manifest": manifest,
         }
+    if split == "FULL":
+        manifest = json.loads((out_dir / "FULL_objects_manifest.json").read_text())
+        paths = {
+            "FULL_fold.npz": out_dir / "FULL_fold.npz",
+            "FULL_targets.npz": out_dir / "FULL_targets.npz",
+            "FULL_tuple_payload.npz": out_dir / "FULL_tuple_payload.npz",
+            "FULL_prep.npz": out_dir / "FULL_prep.npz",
+        }
+        for name, path in paths.items():
+            if not path.exists():
+                raise FileNotFoundError(f"FULL artifact {name} missing; run --build-FULL-objects first")
+            expected = manifest["artifacts"][name]["sha256"]
+            if file_sha256(path) != expected:
+                raise RuntimeError(f"FULL artifact {name} sha256 mismatch")
+        with np.load(paths["FULL_fold.npz"], allow_pickle=False) as z:
+            fold = {"fit_idx": z["fit_idx"].astype(np.int64), "dev_idx": z["dev_idx"].astype(np.int64)}
+        with np.load(paths["FULL_targets.npz"], allow_pickle=False) as z:
+            targets = {key: z[key] for key in ("y", "c", "g", "k", "ell", "s", "gid")}
+            constants = {
+                str(n): float(v) for n, v in zip(z["constant_names"].tolist(), z["constants"].tolist())
+            }
+        with np.load(paths["FULL_tuple_payload.npz"], allow_pickle=False) as z:
+            payload_arrays = {key: z[key] for key in z.files}
+        with np.load(paths["FULL_prep.npz"], allow_pickle=False) as z:
+            prep = {key: z[key] for key in z.files}
+        kappa = json.loads((out_dir / "FULL_kappa.json").read_text())
+        fusion_path = out_dir / f"kappa_fusion_FULL.json"
+        if require_fusion and not fusion_path.exists():
+            raise FileNotFoundError("kappa_fusion_FULL.json missing; run --compute-kappa-fusion --split FULL first")
+        fusion = json.loads(fusion_path.read_text()) if fusion_path.exists() else None
+        return {
+            "split": "FULL",
+            "fold": fold,
+            "targets": targets,
+            "constants": constants,
+            "payload_arrays": payload_arrays,
+            "payload": prev.TuplePayload(payload_arrays),
+            "prep": prep,
+            "kappa": kappa,
+            "fusion_kappa": fusion,
+            "manifest": manifest,
+        }
     raise ValueError(split)
 
 
@@ -803,6 +852,14 @@ def build_prepared_data(objects: Mapping[str, Any]) -> tuple[dict[str, Any], lis
         for key, value in objects["prep"].items():
             if key not in prep_meta or not np.array_equal(np.asarray(prep_meta[key], np.float32), np.asarray(value, np.float32)):
                 raise RuntimeError(f"split-A prep mismatch at {key}")
+    elif objects["split"] == "FULL":
+        prep_meta = zw.apply_new_fit_prep(
+            train_data, np.load(zfr.PREP_BLOB, allow_pickle=False), np.arange(N_TRAIN, dtype=np.int64)
+        )
+        for key in ("patch_fit_mean", "patch_fit_scale", "ctx_fit_mean", "ctx_fit_scale",
+                    "anchor_fit_mean", "anchor_fit_scale", "topo_fit_mean", "topo_fit_scale"):
+            if not np.array_equal(np.asarray(prep_meta[key], np.float32), np.asarray(objects["prep"][key], np.float32)):
+                raise RuntimeError(f"split-FULL prep mismatch at {key}")
     else:
         prep_meta = zw.apply_new_fit_prep(train_data, np.load(zfr.PREP_BLOB, allow_pickle=False), fold["fit_idx"])
         for key in ("patch_fit_mean", "patch_fit_scale", "ctx_fit_mean", "ctx_fit_scale",
@@ -1433,6 +1490,8 @@ def train_arm(
     steps_expected = int(math.ceil(len(fit_data) / BATCH_SIZE)) * int(epochs)
     if len(fit_data) == N_FIT and steps_expected != STEPS_TOTAL:
         raise RuntimeError("step count does not match the frozen 15,120 for an 8,000-fit arm")
+    if len(fit_data) == N_TRAIN and steps_expected != FULL_STEPS_TOTAL:
+        raise RuntimeError("step count does not match the frozen 18,960 for a full-10k arm")
 
     seed_everything(SEED)
     model = build_arm_model(arm, objects)
@@ -2289,6 +2348,527 @@ def phase_build_b_objects(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> d
 
 
 # ---------------------------------------------------------------------------
+# Stage 4 (purchase only): full-10k objects, cycle-module reuse, one valid read
+# ---------------------------------------------------------------------------
+
+ZFT_RESULTS_DIR = zjd.TRACK_ROOT / "results" / "zinc_component_supervision_fulltrain_confirmation_seed0_v1"
+CYCLE_RESULTS_DIR = zjd.TRACK_ROOT / "results" / "zinc_cycle_level_transfer_terminal_test_seed0_v1"
+PROTO_RESULTS_DIR = zjd.TRACK_ROOT / "results" / "zinc_cycle_prototype_transfer_cpu_v1"
+VALID_PROCESSED = zjd.REPO_ROOT / "data/ZINC/subset/processed/val.pt"
+CYCLE_BUILD_SEED = 0
+CYCLE_TOPOLOGY_IN = 25
+CYCLE_HIDDEN = (64, 32)
+
+
+def phase_build_full_objects(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> dict[str, Any]:
+    """Build the full-10k fitted objects with the frozen fulltrain recipes
+    (target constants, tuple payload + phi scaler + kappa sample, prep
+    standardizers, kappa_M) — every statistic refit on all 10,000 official-train
+    rows; then the F-arm kappa match.  No valid/test object is touched."""
+    torch.set_num_threads(8)
+    t0 = time.perf_counter()
+    rows, gid, label_checks = zft.load_train_only_raw_rows()
+    targets = zft.refit_fulltrain_targets(rows)
+    constants = targets["constants"]
+    components = zft.build_component_targets(rows, constants, targets["g"])
+    np.savez_compressed(
+        out_dir / "FULL_targets.npz",
+        y=targets["y"], c=targets["c"], g=targets["g"], k=targets["k"], gid=gid,
+        ell=components["ell"], s=components["s"],
+        constants=np.asarray(
+            [constants[name] for name in ("sigma_logP", "sigma_SA", "mu_SA", "sigma_cycle", "mu_cycle")],
+            np.float64,
+        ),
+        constant_names=np.asarray(["sigma_logP", "sigma_SA", "mu_SA", "sigma_cycle", "mu_cycle"]),
+        mu_logP=np.asarray(MU_LOGP, np.float64),
+    )
+    payload = zft.build_fulltrain_payload()
+    np.savez_compressed(out_dir / "FULL_tuple_payload.npz", **payload["arrays"])
+    kappa_m = src.compute_kappa_M_new(payload["arrays"])
+    kappa_record = dict(kappa_m)
+    kappa_record["kappa_D"] = float(payload["checks"]["kappa"]["value"])
+    kappa_record["definition"] = (
+        "kappa_D via the source recipe on the full-10k fit-root sample (seed 20261004, <=8192); "
+        "kappa_M = r_D/r_M on the same full-10k sample"
+    )
+    write_json(out_dir / "FULL_kappa.json", kappa_record)
+    prep_meta = zft.build_fulltrain_prep()
+    np.savez_compressed(
+        out_dir / "FULL_prep.npz",
+        patch_fit_mean=prep_meta["patch_fit_mean"], patch_fit_scale=prep_meta["patch_fit_scale"],
+        ctx_fit_mean=prep_meta["ctx_fit_mean"], ctx_fit_scale=prep_meta["ctx_fit_scale"],
+        anchor_fit_mean=prep_meta["anchor_fit_mean"], anchor_fit_scale=prep_meta["anchor_fit_scale"],
+        topo_fit_mean=prep_meta["topo_fit_mean"], topo_fit_scale=prep_meta["topo_fit_scale"],
+    )
+    np.savez_compressed(
+        out_dir / "FULL_fold.npz",
+        fit_idx=np.arange(N_TRAIN, dtype=np.int64),
+        dev_idx=np.zeros(0, dtype=np.int64),
+    )
+    manifest = {
+        "protocol_version": PROTOCOL_VERSION,
+        "fold": {
+            "definition": "full 10,000 official-train rows are fit; no internal dev",
+            "fit_idx_sha256": _hash_bytes(np.arange(N_TRAIN, dtype=np.int64).tobytes()),
+            "dev_idx_sha256": _hash_bytes(np.zeros(0, dtype=np.int64).tobytes()),
+        },
+        "constants": constants,
+        "target_checks": targets["checks"],
+        "component_checks": components["checks"],
+        "label_checks": label_checks,
+        "payload_checks": payload["checks"],
+        "kappa": kappa_record,
+        "prep": {"fitted_on": "all 10,000 official-train rows",
+                 "fit_root_rows": prep_meta["fit_root_rows"]},
+        "recipes": {
+            "targets": "zft.refit_fulltrain_targets + zft.build_component_targets (frozen fulltrain recipes)",
+            "payload": "zft.build_fulltrain_payload (structure reused byte-for-byte; scaler/kappa refit on 10k)",
+            "prep": "zft.build_fulltrain_prep (all 10,000 fit rows)",
+            "kappa_M": "src.compute_kappa_M_new on the full-10k payload",
+        },
+        "artifacts": {
+            name: {"sha256": file_sha256(out_dir / name)}
+            for name in ("FULL_fold.npz", "FULL_targets.npz", "FULL_tuple_payload.npz", "FULL_prep.npz")
+        },
+        "official_valid_loaded": False,
+        "official_test_loaded": False,
+        "seconds": float(time.perf_counter() - t0),
+    }
+    write_json(out_dir / "FULL_objects_manifest.json", manifest)
+    compute_fusion_kappa("FULL", out_dir=out_dir, log=log)
+    log(
+        f"[FULL-objects] built in {manifest['seconds']:.1f}s kappa_D={kappa_record['kappa_D']:.6f} "
+        f"kappa_M={kappa_m['kappa_M']:.6f}"
+    )
+    return manifest
+
+
+def load_raw_valid_graphs() -> list[tuple[np.ndarray, np.ndarray, np.ndarray]]:
+    """Raw official-valid PyG graphs (positional; the single authorized read)."""
+    loaded = torch.load(VALID_PROCESSED, map_location="cpu", weights_only=False)
+    data, slices, _cls = loaded
+    x = data["x"].reshape(-1).numpy().astype(np.int64, copy=False)
+    edge_index = data["edge_index"].numpy().astype(np.int64, copy=False)
+    edge_attr = data["edge_attr"].reshape(-1).numpy().astype(np.int64, copy=False)
+    node_slices = slices["x"].numpy().astype(np.int64)
+    edge_slices = slices["edge_index"].numpy().astype(np.int64)
+    graphs: list[tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+    for index in range(len(node_slices) - 1):
+        lo, hi = int(node_slices[index]), int(node_slices[index + 1])
+        elo, ehi = int(edge_slices[index]), int(edge_slices[index + 1])
+        graphs.append((x[lo:hi].copy(), edge_index[:, elo:ehi].copy(), edge_attr[elo:ehi].copy()))
+    if len(graphs) != 1000:
+        raise RuntimeError(f"raw valid graph count {len(graphs)} != 1000")
+    return graphs
+
+
+def build_valid_structure() -> dict[str, np.ndarray]:
+    """Incidence structure of the 1,000 official-valid graphs (label-free).
+
+    The historical fulltrain valid read indexed the *train* payload's
+    root_base/pair_ptr with valid local_mol_id (0..999), attaching unrelated
+    train pair structures to valid roots (ERRATA; see valid_structure_check).
+    This builder gives each valid root its own adjacency; the train-frozen
+    phi scaler / kappa of the FULL payload are kept.
+    """
+    env = torch.load(
+        zjd.TRACK_ROOT / "results/e2e_dictenv_p1/cache/env_valid.pt",
+        map_location="cpu", weights_only=False,
+    )
+    phi = env["phi"].numpy()
+    atom = env["atom"].numpy().astype(np.int64)
+    node_sizes = env["node_sizes"].numpy().astype(np.int64)
+    graphs = load_raw_valid_graphs()
+    if int(node_sizes.sum()) != int(phi.shape[0]):
+        raise RuntimeError("env_valid node-size mismatch")
+    for index, (atom_types, _ei, _ea) in enumerate(graphs):
+        if int(atom_types.shape[0]) != int(node_sizes[index]):
+            raise RuntimeError(f"valid graph {index} node count mismatch")
+        if not np.array_equal(
+            atom[int(node_sizes[:index].sum()):int(node_sizes[: index + 1].sum())], atom_types
+        ):
+            raise RuntimeError(f"valid graph {index} root atom order mismatch")
+    root_base = np.concatenate([[0], np.cumsum(node_sizes)]).astype(np.int64)
+    total_roots = int(node_sizes.sum())
+    pair_t: list[np.ndarray] = []
+    pair_a: list[np.ndarray] = []
+    pair_j: list[np.ndarray] = []
+    pair_i: list[np.ndarray] = []
+    counts: list[int] = []
+    for index in range(1000):
+        atom_types, edge_index, edge_attr = graphs[index]
+        count, _stats = prev.molecule_incidence(atom_types, edge_index, edge_attr)
+        _d, n_t, n_a, w_joint, w_ind = prev.root_weights(count)
+        support = prev._support_union(count, n_t, n_a)
+        base = int(root_base[index])
+        for local in range(len(n_t)):
+            rows = np.nonzero(support[local].reshape(-1))[0]
+            if rows.size == 0:
+                counts.append(0)
+                continue
+            pair_t.append((rows // prev.ATOM_CATEGORIES).astype(np.int64))
+            pair_a.append((rows % prev.ATOM_CATEGORIES).astype(np.int64))
+            pair_j.append(w_joint[local].reshape(-1)[rows].astype(np.float32))
+            pair_i.append(w_ind[local].reshape(-1)[rows].astype(np.float32))
+            counts.append(int(rows.size))
+    return {
+        "root_base": root_base,
+        "pair_ptr": np.concatenate([[0], np.cumsum(np.asarray(counts, dtype=np.int64))]).astype(np.int64),
+        "pair_t": np.concatenate(pair_t).astype(np.int64),
+        "pair_a": np.concatenate(pair_a).astype(np.int64),
+        "pair_wJ": np.concatenate(pair_j).astype(np.float32),
+        "pair_wI": np.concatenate(pair_i).astype(np.float32),
+        "root_atom": atom.astype(np.int64),
+        "node_sizes": node_sizes,
+    }
+
+
+def load_valid_data_full_prep(objects: Mapping[str, Any]) -> tuple[list[Any], dict[str, Any]]:
+    """Official-valid encoded cache + env cache, frozen FULL prep, own ids."""
+    from tracks.ksvd.experiments.luyin16 import zinc_e2e_dictenv_p1 as p1run
+    from tracks.ksvd.experiments.luyin16 import zinc_static_dictionary_pair as sdp
+
+    valid = list(torch.load(sdp.CACHE_DIR / "encoded_valid.pt", map_location="cpu", weights_only=False))
+    p1run.attach_env(valid, "valid")
+    blob = np.load(zfr.PREP_BLOB, allow_pickle=False)
+    prep = objects["prep"]
+    patch_all = zjd.Std(blob["patch_all_mean"], blob["patch_all_scale"])
+    ctx_all = zjd.Std(blob["ctx_all_mean"], blob["ctx_all_scale"])
+    anchor_all = zjd.Std(blob["anchor_all_mean"], blob["anchor_all_scale"])
+    topo_all = zjd.Std(blob["topo_all_mean"], blob["topo_all_scale"])
+    patch_fit = zjd.Std(prep["patch_fit_mean"], prep["patch_fit_scale"])
+    ctx_fit = zjd.Std(prep["ctx_fit_mean"], prep["ctx_fit_scale"])
+    anchor_fit = zjd.Std(prep["anchor_fit_mean"], prep["anchor_fit_scale"])
+    topo_fit = zjd.Std(prep["topo_fit_mean"], prep["topo_fit_scale"])
+    p, pc = zjd._stack(valid, "patch_cont")
+    c, cc = zjd._stack(valid, "global_context")
+    a, ac = zjd._stack(valid, "anchor")
+    t, tc = zjd._stack(valid, "topology_features")
+    zjd._unstack(patch_fit.transform(patch_all.inverse(p)), pc, "patch_cont", valid)
+    zjd._unstack(ctx_fit.transform(ctx_all.inverse(c)), cc, "global_context", valid)
+    zjd._unstack(anchor_fit.transform(anchor_all.inverse(a)), ac, "anchor", valid)
+    zjd._unstack(topo_fit.transform(topo_all.inverse(t)), tc, "topology_features", valid)
+    for index, data in enumerate(valid):
+        data.local_mol_id = torch.tensor([int(index)], dtype=torch.long)
+    meta = {
+        "n_rows": int(len(valid)),
+        "source": "encoded_valid.pt + env_valid.pt",
+        "prep": "frozen FULL prep (10,000-row standardizers, no valid refit)",
+        "structure": "valid graphs' own incidence (build_valid_structure)",
+        "official_valid_loaded": True,
+        "official_test_loaded": False,
+    }
+    return valid, meta
+
+
+def _cycle_key_bytes(row: np.ndarray) -> bytes:
+    row = np.ascontiguousarray(row, np.float32)
+    if np.isnan(row).any() or np.isinf(row).any():
+        raise RuntimeError("T25 key contains NaN/Inf")
+    neg = np.signbit(row) & (row == 0.0)
+    if neg.any():
+        row = row.copy()
+        row[neg] = 0.0
+    return row.tobytes()
+
+
+def _cycle_decode_levels(logits: np.ndarray, c_levels: np.ndarray) -> np.ndarray:
+    probs = np.exp(logits - logits.max(axis=1, keepdims=True))
+    probs = probs / probs.sum(axis=1, keepdims=True)
+    order = np.argsort(c_levels, kind="stable")
+    sorted_probs = probs[:, order]
+    cum = np.cumsum(sorted_probs, axis=1)
+    hit = (cum >= 0.5).argmax(axis=1)
+    return c_levels[order[hit]]
+
+
+def load_cycle_deployment() -> dict[str, Any]:
+    """The frozen deployed cycle module (candidate C) and its pieces.
+
+    C rule per METHOD_CONTRACT \u00a76: consistent table hit -> class median c;
+    conflict hit -> frozen Q(T25); unseen -> decode(D_full(T25)).
+    """
+    pkg = torch.load(PROTO_RESULTS_DIR / "H_model_package.pt", map_location="cpu", weights_only=False)
+    key_map = {bytes.fromhex(kk): int(ss) for kk, ss in zip(pkg["key_order"], pkg["key_slot"])}
+    with np.load(CYCLE_RESULTS_DIR / "T25_group_folds.npz", allow_pickle=False) as z:
+        vocab = z["vocab"].astype(np.int64)
+        c_levels = z["c_levels"].astype(np.float64)
+    with np.load(ZFT_RESULTS_DIR / "full_train_targets.npz", allow_pickle=False) as z:
+        q_bias = float(np.median(z["c"]))
+    q_head = zft.build_q_head(CYCLE_BUILD_SEED, q_bias)
+    q_head.load_state_dict(
+        torch.load(ZFT_RESULTS_DIR / "Q_raw_soup_state.pt", map_location="cpu", weights_only=True),
+        strict=True,
+    )
+    q_head.eval()
+    torch.manual_seed(CYCLE_BUILD_SEED)
+    d_full = nn.Sequential(
+        nn.Linear(CYCLE_TOPOLOGY_IN, CYCLE_HIDDEN[0]), nn.SiLU(),
+        nn.Linear(CYCLE_HIDDEN[0], CYCLE_HIDDEN[1]), nn.SiLU(),
+        nn.Linear(CYCLE_HIDDEN[1], len(vocab)),
+    )
+    nn.init.zeros_(d_full[4].weight)
+    with torch.no_grad():
+        d_full[4].bias.zero_()
+    d_full.load_state_dict(
+        torch.load(CYCLE_RESULTS_DIR / "D_full_soup_state.pt", map_location="cpu", weights_only=True),
+        strict=True,
+    )
+    d_full.eval()
+    return {
+        "key_map": key_map,
+        "proto_val": np.asarray(pkg["proto_val"], np.float64),
+        "consistent": np.asarray(pkg["consistent"], bool),
+        "b_H": float(pkg["b_H"]),
+        "vocab": vocab,
+        "c_levels": c_levels,
+        "q_head": q_head,
+        "d_full": d_full,
+    }
+
+
+def cycle_q_c(dep: Mapping[str, Any], T: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Frozen candidate-C c-channel on T25 rows (train-only rule, no labels)."""
+    T = np.asarray(T, np.float32)
+    with torch.no_grad():
+        q = zft.q_forward(dep["q_head"], torch.as_tensor(T)).double().numpy()
+    route = np.empty(len(T), dtype=object)
+    unseen: list[int] = []
+    for i in range(len(T)):
+        slot = dep["key_map"].get(_cycle_key_bytes(T[i]))
+        if slot is None:
+            route[i] = "UNSEEN_FALLBACK"
+            unseen.append(i)
+        elif not dep["consistent"][slot]:
+            route[i] = "TRAIN_CONFLICT_FALLBACK"
+        else:
+            route[i] = "CONSISTENT_HIT"
+            q[i] = float(dep["proto_val"][slot])
+    if unseen:
+        idx = np.asarray(unseen, np.int64)
+        with torch.no_grad():
+            logits = dep["d_full"](torch.as_tensor(T[idx])).double().numpy()
+        q[idx] = _cycle_decode_levels(logits, dep["c_levels"])
+        # the deployed decoder fills unseen with the D_full decode (route kept)
+    return q, route
+
+
+def phase_valid_read(
+    arms: Sequence[str],
+    *,
+    out_dir: Path = RESULTS_DIR,
+    device: torch.device | None = None,
+    log: Any = print,
+) -> dict[str, Any]:
+    """The single frozen official-valid read for purchased FULL arms.
+
+    Order: verify the cycle deployment and constants identities first; then
+    evaluate each frozen FULL soup on the valid graphs' own incidence
+    structure; compose y = h_raw + q_C + b_y with per-arm full-train biases;
+    paired bootstrap vs the matched reference.  If any cycle identity fails,
+    only g metrics are reported (no y composition).
+    """
+    device = device or torch.device("cpu")
+    torch.set_num_threads(8)
+    manifest = json.loads((out_dir / "FULL_objects_manifest.json").read_text())
+    objects = load_split_objects("FULL", out_dir)
+    for arm in arms:
+        spec = arm_spec(arm)
+        if spec["split"] != "FULL":
+            raise RuntimeError(f"--valid-read requires FULL (T_) arms, got {arm}")
+        meta = json.loads((out_dir / f"{arm}_meta.json").read_text())
+        if meta.get("stopped_reason") != "completed" or meta.get("steps_done") != FULL_STEPS_TOTAL:
+            raise RuntimeError(f"{arm} is not a completed full-10k arm")
+
+    # ---- identity 1: constants vs the frozen fulltrain round ----
+    with np.load(ZFT_RESULTS_DIR / "full_train_targets.npz", allow_pickle=False) as z:
+        zft_constants = {
+            str(n): float(v) for n, v in zip(z["constant_names"].tolist(), z["constants"].tolist())
+        }
+    constants_identity = {
+        name: float(objects["constants"][name]) - float(zft_constants[name])
+        for name in ("sigma_logP", "sigma_SA", "mu_SA", "sigma_cycle", "mu_cycle")
+    }
+    constants_ok = all(abs(v) <= 1e-12 for v in constants_identity.values())
+
+    # ---- valid data (the single authorized read) + own incidence structure ----
+    valid, valid_meta = load_valid_data_full_prep(objects)
+    log(f"[valid-read] n={valid_meta['n_rows']} (single frozen read)")
+    vstruct = build_valid_structure()
+    valid_arrays = dict(objects["payload_arrays"])
+    for key in ("root_base", "pair_ptr", "pair_t", "pair_a", "pair_wJ", "pair_wI", "root_atom"):
+        valid_arrays[key] = vstruct[key].astype(valid_arrays[key].dtype)
+    valid_payload = prev.TuplePayload(valid_arrays)
+    valid_objects = dict(objects)
+    valid_objects["payload"] = valid_payload
+    valid_objects["payload_arrays"] = valid_arrays
+
+    # ---- valid labels/diagnostics (frozen train constants) ----
+    diag = zft.load_valid_diagnostics(ZFT_RESULTS_DIR)
+    y_v = np.asarray(diag["y"], np.float64)
+    g_v = np.asarray(diag["g"], np.float64)
+    k_v = np.asarray(diag["k"], np.int64)
+
+    # ---- identity 2: cycle deployment reproduces the frozen valid C-channel ----
+    dep = load_cycle_deployment()
+    T_valid = zft.topology_matrix(valid)
+    q_c_valid, route_valid = cycle_q_c(dep, T_valid)
+    with np.load(CYCLE_RESULTS_DIR / "valid_row_predictions.npz", allow_pickle=True) as z:
+        frozen_c_q = np.asarray(z["C_q"], np.float64)
+    cycle_identity = {
+        "q_C_valid_vs_frozen_max_abs": float(np.max(np.abs(q_c_valid - frozen_c_q))),
+        "route_counts": {r: int((route_valid == r).sum()) for r in set(route_valid.tolist())},
+        "constants_max_abs_delta": max(abs(v) for v in constants_identity.values()),
+    }
+    # ---- identity 3: T25 train keys reproduce the frozen cache ----
+    with np.load(PROTO_RESULTS_DIR / "T25_cache.npz", allow_pickle=False) as z:
+        T_train_frozen = np.asarray(z["T_train"], np.float32)
+    prep_meta, fit_data, _dev = build_prepared_data(objects)
+    T_train_mine = np.asarray(zft.topology_matrix(fit_data), np.float32)
+    cycle_identity["T25_train_vs_cache_max_abs"] = float(np.max(np.abs(T_train_mine - T_train_frozen)))
+    q_c_train, route_train = cycle_q_c(dep, T_train_frozen)
+    cycle_identity["train_route_counts"] = {r: int((route_train == r).sum()) for r in set(route_train.tolist())}
+    cycle_ok = (
+        cycle_identity["q_C_valid_vs_frozen_max_abs"] <= REPLAY_TOL
+        and cycle_identity["T25_train_vs_cache_max_abs"] <= REPLAY_TOL
+        and constants_ok
+        and int((route_train == "UNSEEN_FALLBACK").sum()) == 0
+    )
+    log(
+        f"[valid-read] cycle identity ok={cycle_ok} "
+        f"qC_valid_diff={cycle_identity['q_C_valid_vs_frozen_max_abs']:.2e} "
+        f"T25_train_diff={cycle_identity['T25_train_vs_cache_max_abs']:.2e}"
+    )
+
+    out: dict[str, Any] = {
+        "protocol_version": PROTOCOL_VERSION,
+        "arms": list(arms),
+        "valid_meta": valid_meta,
+        "constants_identity": constants_identity,
+        "cycle_identity": cycle_identity,
+        "cycle_verified": bool(cycle_ok),
+        "n_valid": int(len(valid)),
+        "y": y_v.astype(np.float32),
+        "g": g_v.astype(np.float32),
+        "k": k_v,
+        "k_counts": {name: int(mask.sum()) for name, mask in group_masks(k_v).items()},
+        "q_c_valid": q_c_valid.astype(np.float32),
+        "route_valid_counts": cycle_identity["route_counts"],
+    }
+
+    # ---- per-arm valid evaluation on the valid structure ----
+    per_arm: dict[str, dict[str, Any]] = {}
+    for arm in arms:
+        meta = json.loads((out_dir / f"{arm}_meta.json").read_text())
+        replay = build_arm_model(arm, valid_objects)   # valid incidence structure
+        state = torch.load(out_dir / f"{arm}_raw_soup_state.pt", map_location="cpu", weights_only=True)
+        replay.load_state_dict({key: value.to("cpu") for key, value in state.items()}, strict=True)
+        replay = replay.to(device)
+        h_v, comp_v = src.evaluate_state_components(replay, valid, device)
+        with np.load(out_dir / f"{arm}_fit_predictions.npz", allow_pickle=False) as z:
+            h_train = np.asarray(z["raw_soup_fit"], np.float64)
+        y_train = np.asarray(objects["targets"]["y"], np.float64)
+        b_g = float(meta["calibration_b_g_fit_only"]["raw_soup"])
+        entry: dict[str, Any] = {
+            "h_raw": h_v.astype(np.float32),
+            "ell_raw": comp_v[:, 0].astype(np.float32),
+            "s_raw": comp_v[:, 1].astype(np.float32),
+            "b_g": b_g,
+            "g_raw": h_v.astype(np.float32),
+            "g_cal": (h_v + b_g).astype(np.float32),
+        }
+        if cycle_ok:
+            b_y = float(np.median(y_train - h_train - q_c_train))
+            entry["b_y"] = b_y
+            entry["y_raw"] = (h_v + q_c_valid).astype(np.float32)
+            entry["y_cal"] = (h_v + q_c_valid + b_y).astype(np.float32)
+        per_arm[arm] = entry
+        log(
+            f"[valid-read] {arm} g_cal={np.mean(np.abs(entry['g_cal'] - y_v)):.6f}"
+            + (f" y_cal={np.mean(np.abs(entry['y_cal'] - y_v)):.6f}" if cycle_ok else " (g-only)")
+        )
+    out["per_arm"] = per_arm
+
+    # ---- metrics + paired bootstrap vs the first arm as reference ----
+    def _paired_gain(err_ref: np.ndarray, err_cand: np.ndarray) -> dict[str, Any]:
+        gain = float(np.mean(err_ref) - np.mean(err_cand))
+        rng = np.random.default_rng(int(BOOT_SEED))
+        n = int(err_ref.shape[0])
+        draws = np.empty(int(N_BOOT), np.float64)
+        for d in range(int(N_BOOT)):
+            idx = rng.choice(n, size=n, replace=True)
+            draws[d] = float(err_ref[idx].mean() - err_cand[idx].mean())
+        return {
+            "gain": gain,
+            "ci95": [float(np.percentile(draws, 2.5)), float(np.percentile(draws, 97.5))],
+            "n_boot": int(N_BOOT), "seed": int(BOOT_SEED),
+            "definition": "gain = MAE(reference) - MAE(candidate); positive = candidate better",
+        }
+
+    metrics: dict[str, Any] = {"reference": reference, "n_valid": int(len(y_v)),
+                              "k_counts": out["k_counts"]}
+    ref = per_arm[reference]
+    for arm in arms[1:]:
+        cand = per_arm[arm]
+        gains: dict[str, Any] = {}
+        for metric in ("g_cal", "g_raw", "y_cal", "y_raw"):
+            if metric.startswith("y") and not cycle_ok:
+                continue
+            target = y_v if metric.startswith("y") else g_v
+            err_ref = np.abs(np.asarray(ref[metric], np.float64) - target)
+            err_cand = np.abs(np.asarray(cand[metric], np.float64) - target)
+            gains[metric] = _paired_gain(err_ref, err_cand)
+        gains["mae"] = {
+            metric: float(np.mean(np.abs(np.asarray(per_arm[arm][metric], np.float64)
+                                        - (y_v if metric.startswith("y") else g_v))))
+            for metric in ("g_cal", "g_raw", "y_cal", "y_raw")
+            if metric.startswith("g") or cycle_ok
+        }
+        metrics[arm] = gains
+    metrics["mae"][reference] = {
+        metric: float(np.mean(np.abs(np.asarray(per_arm[reference][metric], np.float64)
+                                    - (y_v if metric.startswith("y") else g_v))))
+        for metric in ("g_cal", "g_raw", "y_cal", "y_raw")
+        if metric.startswith("g") or cycle_ok
+    }
+    out["metrics"] = metrics
+
+    # ---- context: the frozen fulltrain COMP body (old deployment) on the
+    # clean valid structure, with the same frozen cycle C channel ----
+    if cycle_ok:
+        comp_h_clean = np.load(out_dir / "valid_structure_check.npz")["h_valid_payload"].astype(np.float64) \
+            if (out_dir / "valid_structure_check.npz").exists() else None
+        if comp_h_clean is not None:
+            cal = json.loads((ZFT_RESULTS_DIR / "calibration.json").read_text())
+            b_y_comp = float(cal["per_arm"]["COMP"]["b_y"])
+            old_y = comp_h_clean + q_c_valid + b_y_comp
+            out["context_old_deployment_C"] = {
+                "note": "frozen fulltrain COMP soup + frozen cycle C channel + frozen b_y, "
+                        "re-scored on the valid graphs' own incidence structure (ERRATA fix)",
+                "y_cal_mae_clean_structure": float(np.mean(np.abs(old_y - y_v))),
+                "y_cal_mae_historical_train_structure": 0.11740618350630393,
+            }
+
+    np.savez_compressed(
+        out_dir / "valid_read_predictions.npz",
+        **{
+            key: value for key, value in {
+                **{k: v for k, v in out.items() if isinstance(v, np.ndarray)},
+                **{f"{arm}_{key}": value for arm, entry in per_arm.items()
+                  for key, value in entry.items() if isinstance(value, np.ndarray)},
+            }.items()
+        },
+    )
+    write_json(out_dir / "valid_read_summary.json", {
+        key: value for key, value in out.items() if not isinstance(value, dict) or key in (
+            "constants_identity", "cycle_identity", "metrics", "context_old_deployment_C"
+        )
+    })
+    log(f"[valid-read] done cycle_verified={cycle_ok}")
+    return out
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -2304,6 +2884,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--dev-eval", action="store_true")
     parser.add_argument("--mechanism-health", action="store_true")
     parser.add_argument("--build-B-objects", action="store_true")
+    parser.add_argument("--build-FULL-objects", action="store_true")
+    parser.add_argument("--valid-read", action="store_true")
     parser.add_argument("--arm")
     parser.add_argument("--arms", default=None, help="comma-separated arm list for eval/health phases")
     parser.add_argument("--contrasts", default=None,
@@ -2331,6 +2913,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         train_arm(args.arm, out_dir=out_dir, device=device)
     elif args.build_B_objects:
         phase_build_b_objects(out_dir=out_dir)
+    elif args.build_FULL_objects:
+        phase_build_full_objects(out_dir=out_dir)
+    elif args.valid_read:
+        if not args.arms:
+            raise SystemExit("--valid-read requires --arms (FULL T_ arms; first arm = reference)")
+        arms = [a.strip() for a in args.arms.split(",") if a.strip()]
+        phase_valid_read(arms, out_dir=out_dir, device=device)
     elif args.dev_eval:
         if not args.arms:
             raise SystemExit("--dev-eval requires --arms")
