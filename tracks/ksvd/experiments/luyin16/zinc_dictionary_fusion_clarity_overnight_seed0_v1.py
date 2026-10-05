@@ -1999,17 +1999,16 @@ def phase_dev_eval(
     worst = int(np.argmax(np.abs(err_by_arm[reference]["overall_cal"])))
     keep = np.ones(k_dev.size, dtype=bool)
     keep[worst] = False
+    keep_g0 = keep[g0_dev]
     sensitivity = {
         "reference": reference,
         "dropped_dev_position": worst,
         "dropped_in_G0": bool(k_dev[worst] == 0),
     }
     for name, a, b in contrasts:
-        sel = g0_dev & keep if name.endswith("_G0") else keep
-        # apply to each endpoint's row set: G0 uses g0&keep, overall uses keep
         sensitivity[name] = {
-            metric: _mae(np.abs(err_by_arm[a][metric])[(g0_dev & keep) if metric.startswith("G0") else keep])
-            - _mae(np.abs(err_by_arm[b][metric])[(g0_dev & keep) if metric.startswith("G0") else keep])
+            metric: _mae(np.abs(err_by_arm[a][metric])[keep_g0 if metric.startswith("G0") else keep])
+            - _mae(np.abs(err_by_arm[b][metric])[keep_g0 if metric.startswith("G0") else keep])
             for metric in ("G0_cal", "overall_cal", "G0_raw", "overall_raw")
         }
 
