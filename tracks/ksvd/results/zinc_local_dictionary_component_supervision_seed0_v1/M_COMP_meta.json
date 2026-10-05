@@ -1,0 +1,76 @@
+{
+  "protocol_version": "zinc-local-dictionary-component-supervision-seed0-v1",
+  "arm": "M_COMP",
+  "optimised_loss": "L_g + 0.5*(L_ell + L_s)",
+  "supervision": {
+    "g": "g = y - c (new rng(20261006) fold fit-only constants)",
+    "ell": "(logP - MU_LOGP) / sigma_logP",
+    "s": "g - ell (residual chemistry component)"
+  },
+  "seed": 0,
+  "epochs": 240,
+  "steps_done": 15120,
+  "steps_expected": 15120,
+  "stopped_reason": "completed",
+  "lr": 0.001,
+  "weight_decay": 1e-05,
+  "grad_clip": 5.0,
+  "batch_size": 128,
+  "soup_epochs": [
+    236,
+    237,
+    238,
+    239,
+    240
+  ],
+  "n_fit": 8000,
+  "n_dev": 2000,
+  "kappa_D": 2.0429909229278564,
+  "kappa_M": 1.9839533380615402,
+  "fold": {
+    "fit_idx_sha256": "734d27f2818c5a1e13cd415ecb153eb0316036f72ffc0cf520c47c9538bd40c4",
+    "dev_idx_sha256": "cb5f49dcb5e46b8f00314b3264b620e159219a273bfe0f058aa0fd85523309e4"
+  },
+  "schedule_sha256": "7b11a529584a8bdaa8e2f17a8c8413cdc6677714ae855339b5984e9fe6938e65",
+  "position_stream_sha256": "7b11a529584a8bdaa8e2f17a8c8413cdc6677714ae855339b5984e9fe6938e65",
+  "global_gid_stream_sha256": "21ada660deb69a24f0ae26f755a83334d63f5dfdf8fea7aa62c5bfff144923fd",
+  "init_state_hash": "60d6cfa38011cb1aea983fee975aa023a540015b8b28d63f2f1f4a17f56248f6",
+  "raw_soup_state_hash": "4aed8d40a62c875d36ae208407a51dd780458238cdd26a445fc7e6a609ee4bce",
+  "last_state_hash": "5d38955a378be42c5e7b933a9129d689c3f5e6a21f3f96252592220501369686",
+  "build_rng_sha256": "a2e8a8ab56091d98d239b81fd15117cb818f1b88d95d2fc1bcff036eee5a8853",
+  "train_rng_sha256": "1ccf17250133dec5e96478acd63e13d728d0dbbabb30389415a302c6f872f81f",
+  "curve_final": {
+    "epoch": 240,
+    "train_L_g": 0.06109965229034424,
+    "train_L_ell": 0.04565137466788292,
+    "train_L_s": 0.04860178554058075,
+    "train_loss": 0.10822623288631439,
+    "grad_norm": 11.089554726131379,
+    "clip_fraction": 0.9365079365079365,
+    "seconds": 2.863607794046402
+  },
+  "wall_clock_s": 690.0757405310869,
+  "device": "cuda",
+  "allocation_probe": {
+    "CUDA_VISIBLE_DEVICES": "0",
+    "SLURM_JOB_ID": "56049",
+    "SLURM_JOB_NODELIST": "c05",
+    "SLURM_GPUS_ON_NODE": "1",
+    "SLURM_JOB_PARTITION": "gpu",
+    "hostname": "c05",
+    "nvidia_smi_L": "GPU 0: NVIDIA A100-PCIE-40GB (UUID: GPU-afab53a3-3153-cf22-9c18-43d754ad0fac)",
+    "nvidia_smi_query": "0, GPU-afab53a3-3153-cf22-9c18-43d754ad0fac, 00000000:16:00.0, NVIDIA A100-PCIE-40GB, 525.85.12",
+    "torch_device_index": 0,
+    "torch_device_name": "NVIDIA A100-PCIE-40GB",
+    "torch_total_memory": 42331013120,
+    "torch_uuid": "afab53a3-3153-cf22-9c18-43d754ad0fac"
+  },
+  "dev_scores_computed_during_training": false,
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "calibration_b_g_fit_only": {
+    "init": 0.7909014416777954,
+    "last": -0.03565103878141773,
+    "raw_soup": -0.02246060912372009
+  }
+}

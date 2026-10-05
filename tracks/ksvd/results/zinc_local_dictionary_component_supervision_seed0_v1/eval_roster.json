@@ -1,0 +1,42 @@
+{
+  "protocol_version": "zinc-local-dictionary-component-supervision-seed0-v1",
+  "arms": [
+    "D_COMP",
+    "M_COMP"
+  ],
+  "main_endpoint": "dev G0(k=0) calibrated g-MAE; overall cal is the common gate; raw reported in parallel",
+  "bias": {
+    "D_COMP": -0.04280893077017206,
+    "M_COMP": -0.02246060912372009
+  },
+  "soup_state_hashes": {
+    "D_COMP": "1fadae1a72f54da3c4800da9d220c74dd19dd8f9fa6385e61e8e37aa6f3b6807",
+    "M_COMP": "4aed8d40a62c875d36ae208407a51dd780458238cdd26a445fc7e6a609ee4bce"
+  },
+  "schedule_sha256": {
+    "D_COMP": "7b11a529584a8bdaa8e2f17a8c8413cdc6677714ae855339b5984e9fe6938e65",
+    "M_COMP": "7b11a529584a8bdaa8e2f17a8c8413cdc6677714ae855339b5984e9fe6938e65"
+  },
+  "position_streams_equal": true,
+  "global_gid_streams_equal": true,
+  "bootstrap": {
+    "seed": 20261006,
+    "n_boot": 1000,
+    "paired_same_indices": true
+  },
+  "gates": {
+    "dictionary_candidate": [
+      "G0_cal_gain >= 0.003",
+      "overall_cal_gain >= 0.003",
+      "G0_cal_ci_lower > 0",
+      "G0_raw_gain > 0",
+      "overall_raw_gain > 0"
+    ],
+    "equivalence_band": [
+      -0.003,
+      0.003
+    ]
+  },
+  "dev_split": "rng(20261006) fold dev 2000 rows; labels frozen in new_targets.npz",
+  "dev_scores_computed_before_freeze": false
+}
