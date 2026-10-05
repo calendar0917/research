@@ -768,12 +768,13 @@ def train_arm(
         payload_arrays = {key: z[key] for key in z.files}
     payload = prev.TuplePayload(payload_arrays)
     kappa_M = float(payload_arrays["kappa"].reshape(-1)[0])
-    with np.load(out_dir / "full_train_targets.npz", allow_pickle=False) as z:
-        g_all = z["g"].astype(np.float64)
-        ell_all = z["ell"].astype(np.float64)
-        s_all = z["s"].astype(np.float64)
+    with np.load(out_dir / 'full_train_targets.npz', allow_pickle=False) as z:
+        g_all = z['g'].astype(np.float64)
+        ell_all = z['ell'].astype(np.float64)
+        s_all = z['s'].astype(np.float64)
+        gid_all = z['gid'].astype(np.int64)
     if np.max(np.abs(g_all - (ell_all + s_all))) > 1e-12:
-        raise RuntimeError("g != ell + s on the full-train target cache")
+        raise RuntimeError('g != ell + s on the full-train target cache')
 
     prep_meta = _read_npz(out_dir / "full_train_prep.npz")
     train_data = build_fulltrain_data(prep_meta)
