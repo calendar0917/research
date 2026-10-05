@@ -2273,7 +2273,7 @@ def phase_build_b_objects(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> d
                  "n_fit_molecules": prep_meta["n_fit_molecules"]},
         "artifacts": {
             name: {"sha256": file_sha256(out_dir / name)}
-            for name in ("B_targets.npz", "B_tuple_payload.npz", "B_prep.npz")
+            for name in ("B_fold.npz", "B_targets.npz", "B_tuple_payload.npz", "B_prep.npz")
         },
         "official_valid_loaded": False,
         "official_test_loaded": False,
