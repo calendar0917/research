@@ -1,0 +1,51 @@
+alternatives_rejected:
+- 'Rescuing the dictionary (second seed, sparsity/IHT-step/width/loss tuning,
+  class-style weighting, extra decoder, marginal-control arm, new fold) --
+  rejected: explicitly excluded by the preregistration once the frozen gate
+  fails; the raw CIs lie entirely below zero.'
+- 'Claiming MLP_SUPPORTED_IN_THIS_INTERFACE -- rejected: the swapped-role gate
+  fails its two calibrated thresholds (+0.003) and the CI condition; only the
+  raw direction is unambiguous.'
+- 'Claiming LOCAL_EQUIVALENCE -- rejected: the raw CIs lie far outside
+  [-0.003, +0.003] and the G0-cal CI lower bound -0.005525 is below the band.'
+- 'Reading official valid/test or launching a full-train confirmation from this
+  endpoint -- rejected: the confirmation purchase required D to win.'
+- 'Re-running trajectories for the bad scores -- rejected and not done; the only
+  restarts were the two disclosed engineering failures (delivery-layer JSON bug,
+  pre-metric analysis crash), each before any dev score was seen, with the
+  recipe unchanged.'
+because: >-
+  The frozen five-condition dictionary gate failed on every condition (G0 cal
+  gain -0.002045 CI [-0.005525, +0.001502]; overall cal -0.001138 CI
+  [-0.004850, +0.002301]; G0 raw -0.008939 CI [-0.012561, -0.005426]; overall
+  raw -0.007946 CI [-0.011362, -0.004266]); the direction (MLP better) survives
+  the drop-worst-row sensitivity and agrees on the fit side; the dictionary
+  mechanism is alive, so the negative is performance, not mechanism; the gap
+  concentrates in the s component and is not a bias/cancellation artifact.
+created: '2026-10-05T23:00:00'
+decision: >-
+  STOP the fixed local IHT tuple dictionary recipe in this interface. Keep the
+  COMP + matched local MLP recipe (M_COMP, internal dev G0 cal 0.088062) as the
+  working internal reference for the body line. No further compute on this
+  comparison; no dev-driven tuning of either arm; no full-train/official-valid
+  confirmation; official valid/test stay uninstantiated by this round. The next
+  preregistration addresses luyin19's actual subject (the structure/semantics
+  fusion construction and the body error channel), with the matched-MLP local
+  encoder as reference.
+decision_id: decision-zinc-local-dictionary-component-supervision-seed0-v1-stop-fixed-iht-recipe-20261005
+kind: decision
+revisit_if: >-
+  A new preregistration changes the supervision condition or the interface
+  itself (not the encoder recipe), or provides a mechanistic account of why the
+  sparse-code local channel underfits the s component specifically, paired with
+  a train-only purchase gate of equal strength and the matched-MLP reference.
+study_id: zinc-context-gap
+evidence:
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/PROTOCOL.md
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/METHOD_CONTRACT.md
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/REPORT.md
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/DECISION.md
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/EXECUTION.md
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/EVIDENCE_SCOPE.md
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/dev_eval.json
+- tracks/ksvd/records/claims/claim-zinc-local-dictionary-component-supervision-seed0-v1-directional-not-confirmed-20261005.yaml

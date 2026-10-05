@@ -1,0 +1,66 @@
+claim_id: claim-zinc-local-dictionary-component-supervision-seed0-v1-directional-not-confirmed-20261005
+contradicting_evidence: []
+created: '2026-10-05T22:55:00'
+implication: >-
+  Close the fixed local IHT tuple dictionary recipe in this interface: no
+  rescue, no second seed, no sparsity/IHT-step/width/loss tuning, no marginal
+  control arm, no new fold. Keep the COMP + matched local MLP recipe (M_COMP)
+  as the working internal reference for the body line. The next legitimate
+  question is luyin19's actual subject (how the structure/semantics fusion is
+  built) and the body error channel, under a fresh preregistration with a
+  train-only purchase gate of equal strength. No full-train/official-valid
+  confirmation run is purchased from this endpoint.
+kind: claim
+limitations:
+- Single seed (0), single new fold rng(20261006), one fixed K/scheduler recipe;
+  no CI coverage of training-seed uncertainty.
+- The D-M gap shrinks after calibration (raw -0.0079 -> cal -0.0011 overall):
+  part of the raw deficit is the larger fit-side median offset, not pure signal
+  quality; causal attribution is open.
+- M is better on the k=0 bulk but worse on rare k=-1/k=-2 dev rows; the overall
+  direction is bulk-dominated.
+- No g-supervised pair under the identical new fold, so no supervision-x-encoder
+  interaction claim; both arms use the J incidence, so no J-vs-marginal claim;
+  the converged-state J->I switch is nearly inert in both arms (sensitivity
+  only).
+- Internal fold g-component only: never an official-valid y-MAE, deployment or
+  SOTA statement; no cross-fold/regime gain splicing.
+scope: >-
+  Local CPU build/smoke + res-2 res2-cu124 formal runs (two A100 allocations,
+  distinct UUIDs, FP32, no AMP/DDP); official ZINC train 10000 only (train-only
+  loader); official valid/test never loaded; new fold rng(20261006) 8000/2000
+  with all fitted statistics (body standardizers, tuple phi scaler, kappa_D,
+  kappa_M, target constants) refit on the new fit; fresh init (no trained soup
+  reuse); matched 297,539-parameter arms; identical seed-0 recipe, position and
+  gid streams; b_g from fit-only medians; dev predictions only after the roster
+  freeze.
+statement: >-
+  Under identical chemical component supervision (L = MAE(hat_g,g) +
+  0.5*(MAE(hat_ell,ell)+MAE(hat_s,s)), reader 39->2 half-init), the same M_g
+  skeleton and the same real J incidence aggregation, the shared tied-IHT
+  local tuple dictionary (D_COMP, 125x64, 10 steps, hard top-8) does not beat
+  the parameter-matched SiLU local MLP (M_COMP, A_raw = D_init.T): internal dev
+  G0(k=0) calibrated g-MAE 0.090108 vs 0.088062 (gain -0.002045, paired 95% CI
+  [-0.005525, +0.001502]); overall cal 0.090451 vs 0.089313 (-0.001138,
+  [-0.004850, +0.002301]); G0 raw -0.008939 CI [-0.012561, -0.005426] and
+  overall raw -0.007946 CI [-0.011362, -0.004266] (both entirely below zero);
+  fit cal 0.031079 vs 0.027889. All five dictionary-candidate gate conditions
+  fail; the swapped-role M gate passes only its raw conditions, failing the
+  +0.003 cal thresholds; classification DIRECTIONAL_NOT_CONFIRMED. The
+  dictionary mechanism is alive (8-sparse per-tuple codes, 61/64 atoms, drift
+  71.6, live task gradients from epoch 40, injection RMS 0.415, zero-injection
+  collapse 0.090->0.494), so this is a performance negative, not a mechanism
+  failure. The gap concentrates in the s component (M better by 0.006832 dev
+  raw; ell D better by 0.000811) with comparable cancellation (triangle gaps
+  0.032/0.034, opposite-sign 48.9%/51.1%) and same-direction calibration, so it
+  is not a bias/cancellation artifact.
+study_id: zinc-context-gap
+supporting_evidence:
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/REPORT.md
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/DECISION.md
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/EXECUTION.md
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/EVIDENCE_SCOPE.md
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/dev_eval.json
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/eval_roster.json
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/mechanism_health.json
+- tracks/ksvd/results/zinc_local_dictionary_component_supervision_seed0_v1/new_objects_manifest.json

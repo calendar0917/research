@@ -4381,6 +4381,50 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-zinc-local-dictionary-component-supervision-seed0-v1-stop-fixed-iht-recipe-20261005: >-
+      zinc_local_dictionary_component_supervision_seed0_v1 (2026-10-05, ~90 min,
+      local CPU build/smoke + res-2 res2-cu124 two parallel A100 allocations,
+      FP32, ~0.78 allocation-GPU-hours incl. two disclosed failed-fragment jobs;
+      official valid/test never loaded) asked whether, at the SAME local 125-D
+      tuple input, the same real J incidence aggregation, the same M_g skeleton
+      (posterior MLP bridge in both arms) and the same two-component COMP
+      supervision (L = MAE(hat_g,g) + 0.5*(MAE(hat_ell,ell)+MAE(hat_s,s)),
+      reader 39->2 half-init), the shared tied-IHT local tuple dictionary
+      (D_COMP) beats the parameter-matched SiLU local MLP (M_COMP). New fold
+      rng(20261006) 8000/2000; every fitted statistic (body standardizers,
+      tuple phi scaler, kappa_D=2.042991, kappa_M=1.983953, target constants)
+      refit on the new fit; fresh init (A_raw = D_init.T element-wise; W_loc=0;
+      297,539 parameters per arm); seed 0, 240 epochs, 15,120 steps each,
+      identical position and gid streams; soup 236-240; b_g from fit-only
+      medians; roster frozen before any dev prediction. Result: M_COMP internal
+      dev G0(k=0) calibrated g-MAE 0.088062 (raw 0.090340; overall cal
+      0.089313) vs D_COMP 0.090108 (raw 0.099279; overall cal 0.090451); gain
+      (M-D, positive = dictionary improves) G0 cal -0.002045 CI [-0.005525,
+      +0.001502], overall cal -0.001138 CI [-0.004850, +0.002301], G0 raw
+      -0.008939 CI [-0.012561, -0.005426], overall raw -0.007946 CI
+      [-0.011362, -0.004266] (both raw CIs entirely below zero); fit cal
+      0.031079 vs 0.027889. All five dictionary gate conditions FAIL; swapped-
+      role M gate passes only its raw conditions (fails +0.003 cal thresholds);
+      classification DIRECTIONAL_NOT_CONFIRMED (direction favours the MLP;
+      survives drop-M-worst-row sensitivity). Dictionary mechanism alive
+      (per-tuple codes exactly 8-sparse, 61/64 atoms, drift 71.6, live task
+      grads from epoch 40, injection RMS 0.415, zero-injection collapse
+      0.090->0.494): a genuine performance negative, not MECHANISM_FAILED. Gap
+      concentrated in the s component (M better 0.006832 dev raw; ell D better
+      0.000811), comparable cancellation (triangle gaps 0.032/0.034): not a
+      bias/cancellation artifact. Converged-state J->I switch nearly inert in
+      both arms (mean |dpred| <= 0.003; sensitivity only, no J-vs-marginal
+      claim). Decision: STOP the fixed local IHT dictionary recipe in this
+      interface; keep COMP+matched-local-MLP (M_COMP) as the working internal
+      reference; next preregistration is luyin19's actual subject
+      (structure/semantics fusion construction and the body error channel);
+      no confirmation run, no dev-driven tuning. Engineering deviations
+      disclosed: first pair (jobs 56046/56047) finished all epochs then crashed
+      at the post-training JSON write (no dev score existed; one-line fix;
+      deterministic re-runs 56048/56049); dev-eval attempt 1 crashed pre-metric.
+      See results/zinc_local_dictionary_component_supervision_seed0_v1/REPORT.md,
+      claim-zinc-local-dictionary-component-supervision-seed0-v1-directional-not-confirmed-20261005,
+      decision-zinc-local-dictionary-component-supervision-seed0-v1-stop-fixed-iht-recipe-20261005.
   - decision-zinc-cycle-level-transfer-terminal-test-seed0-v1-stop-cycle-channel-20261005: >-
       zinc_cycle_level_transfer_terminal_test_seed0_v1 (2026-10-05, local CPU-only,
       8 threads, FP32, ~90 min; no GPU/remote job; official ZINC subset test 1000
