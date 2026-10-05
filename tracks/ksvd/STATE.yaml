@@ -4381,6 +4381,47 @@ fec_s0:
 # official ZINC test was never loaded (test_access=blocked) and the test read
 # count is unchanged.
 recent_closures:
+  - decision-zinc-cycle-level-transfer-terminal-test-seed0-v1-stop-cycle-channel-20261005: >-
+      zinc_cycle_level_transfer_terminal_test_seed0_v1 (2026-10-05, local CPU-only,
+      8 threads, FP32, ~90 min; no GPU/remote job; official ZINC subset test 1000
+      read ONCE, terminal-only, under terminal_eval_manifest frozen before any
+      test prediction) asked whether the exact-T25-UNSEEN rows can be served by
+      a discrete k-level classification head (D, fixed train vocabulary K=7,
+      cross-entropy, median cumulative-probability level decode) instead of
+      the continuous c regression (R). Train-only 3-fold class-grouped OOF
+      (355 classes, held classes never in fit; R/D hidden init equal and equal
+      to Q's untrained seed-0 hidden init, all folds): pooled OOF c-MAE 0.019068
+      vs 0.023745 (overall gain +0.004677; k=-2 +0.734451; k=-1 +0.062642; k=0
+      +0.002545; all 4 frozen purchase conditions PASS; descriptive class-
+      resampled CI [-0.004195, +0.012589]). Honest failure boundary: extreme
+      singleton levels k <= -3 (pooled n=7) all NEGATIVE OOF (no extrapolation);
+      fold 0 fit lacked level -4, fold 2 lacked -12. Exactly one D_full was
+      then trained (3975 params, gen seed 20261003, 23700 steps, soup 296-300,
+      train decoded c-MAE 0.005200, k acc 0.9995) and deployed as C (identical
+      to H on CONSISTENT_HIT/TRAIN_CONFLICT; UNSEEN_FALLBACK only). Terminal
+      official-test (unconditional report): C y_cal 0.081174 vs H 0.084719,
+      paired gain +0.003545, 95% CI [+0.000153, +0.009389] lower>0; D_full
+      decoded the EXACT correct k level on 20/20 unseen test rows (unseen q
+      c-MAE 0.196480 -> 0.000000; k=-2 test group y_cal 0.432424 -> 0.074199);
+      overall test q c-MAE 1.1e-05, e_c 1.02e-05 vs body e_g 0.080928
+      (triangle_gap 2.0e-05 >= 0). First frozen system of this line below 0.09
+      on official test. On the exposed valid the same C-H gain is +0.000544,
+      CI [-0.014359, +0.015802], single-row dominated (valid:0935, share
+      0.951); H-B on test only +0.000388 CI [-0.000262, +0.001205] (prototype
+      transfer does not generalize broadly); B-SUM_Q +0.007512 CI
+      [+0.001810, +0.012664] on test and +0.005247 CI [+0.000133, +0.009954]
+      on valid (component supervision confirmed out-of-sample). Decision:
+      STOP the cycle channel (after C the remaining y error is 99.98% body
+      error h-g); keep C as the matched reference for any future body-error
+      preregistration; no more cycle-head variants/rescues/seeds; official
+      test of this line is now read (reporting-only); do not push/merge the
+      isolated branch task/zinc-cycle-level-transfer-terminal-test-seed0-v1.
+      ERRATA (prior rounds, text only): "oracle 0.089325 above 0.09" was a
+      text error (0.089325 < 0.09); the old negative triangle_gap used the
+      reversed sign convention. See
+      results/zinc_cycle_level_transfer_terminal_test_seed0_v1/REPORT.md,
+      claim-zinc-cycle-level-transfer-terminal-test-seed0-v1-test-supported-20261005,
+      decision-zinc-cycle-level-transfer-terminal-test-seed0-v1-stop-cycle-channel-20261005.
   - decision-zinc-cycle-prototype-transfer-cpu-v1-stop-targeted-repair-only-20261005: >-
       zinc_cycle_prototype_transfer_cpu_v1 (2026-10-05, local CPU-only, 8 threads,
       FP32; no optimizer, no backward, no GPU, no remote job; official test never

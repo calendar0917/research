@@ -1,0 +1,56 @@
+alternatives_rejected:
+- 'More cycle-head variants (ensembles, class weights, focal, temperature, label smoothing,
+  extra decoders, k <= -3 rescue rules) -- rejected: the purchase gate bought exactly one
+  D_full under the frozen recipe; the test cycle error after C is 1.02e-05, so any further
+  cycle-head compute cannot move y; the k <= -3 singleton failure (n=7 pooled OOF) is an honest
+  extrapolation boundary, not a tuning target.'
+- 'Selecting the better-looking split or re-running the terminal statistics after seeing test
+  -- rejected: the roster and gate were frozen before the test read; the only post-test code
+  change was the deterministic statistics-direction fix (errors vs predictions), re-run as a
+  bit-identical replay of the same frozen predictors, with no training/calibration/rule change.'
+- 'Using the audit CSV label_cycle_component column or refitting any statistic (prep, kappa,
+  vocabulary, prototype table, biases) on test -- rejected: all test inputs use the frozen
+  full-train constants; y = g + c verified exact.'
+- 'Reopening official test again, pushing/merging the isolated branch, or re-confirming
+  COMP/SUM/Q with new seeds -- rejected: terminal-only authorization; the test of this line is
+  now read and reporting-only.'
+because: >-
+  The train-only purchase gate passed all four frozen conditions (pooled OOF overall c gain
+  +0.004677 >= 0.003; k=-2 gain +0.734451 >= 0.25; k=0 improvement +0.002545; k=-1 improvement
+  +0.062642), so exactly one D_full was trained under the frozen recipe and deployed as C
+  (identical to H on CONSISTENT_HIT and TRAIN_CONFLICT, D_full median-level decode only on
+  UNSEEN_FALLBACK). The unconditional terminal test read (manifest frozen first) then showed
+  C y_cal 0.081174 vs H 0.084719 (paired gain +0.003545, 95% CI [+0.000153, +0.009389],
+  lower > 0), with the exact correct integer k level on 20/20 unseen test rows and the cycle
+  channel error eliminated (e_c 1.02e-05 vs body e_g 0.080928). On valid the same gain was
+  single-row dominated and CI-crossing, so the test is the deciding evidence. After C the
+  remaining y error is 99.98% chemistry body error: the cycle channel is exhausted.
+created: '2026-10-05T19:10:00'
+decision: >-
+  BUY was already decided train-only; now STOP the cycle channel entirely. Keep C as the best
+  deployed system of this line (test y_cal 0.081174, CI-supported over H). Do not run more
+  cycle-head variants or rescues; do not reopen official test (read once, terminal-only, under
+  the frozen manifest); do not change the gate/key/rules/thresholds; do not retrain or re-seed
+  the bodies; do not push/merge the isolated branch. The next question is the chemistry body
+  error h - g (test MAE 0.0809) and its cancellation, carrying C as the matched reference.
+decision_id: decision-zinc-cycle-level-transfer-terminal-test-seed0-v1-stop-cycle-channel-20261005
+kind: decision
+revisit_if: >-
+  A new preregistration attacks the chemistry body error h - g while preserving the
+  now-essentially-exact cycle channel (C as the matched reference, paired seeds, train-only
+  purchase gate of equal strength), or a mechanistic account of why exact-T25 singleton
+  extreme-cycle classes (k <= -3) fail to extrapolate with a fix that does not read test.
+study_id: zinc-context-gap
+evidence:
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/PROTOCOL.md
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/METHOD_CONTRACT.md
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/REPORT.md
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/DECISION.md
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/EXECUTION.md
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/EVIDENCE_SCOPE.md
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/gate.json
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/folds_summary.json
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/terminal_eval_manifest.json
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/test_evaluation.json
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/replay_checks.json
+- tracks/ksvd/records/claims/claim-zinc-cycle-level-transfer-terminal-test-seed0-v1-test-supported-20261005.yaml

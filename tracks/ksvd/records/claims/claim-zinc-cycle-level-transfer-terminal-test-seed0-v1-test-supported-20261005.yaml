@@ -1,0 +1,61 @@
+claim_id: claim-zinc-cycle-level-transfer-terminal-test-seed0-v1-test-supported-20261005
+contradicting_evidence: []
+created: '2026-10-05T19:00:00'
+implication: >-
+  Close the cycle channel as a source of further deployable y gains: after C the official-test
+  cycle error e_c is 1.02e-05 while the chemistry body error e_g is 0.0809 (99.98% of the
+  remaining error). Do not run more cycle-head variants (continuous, prototype, level,
+  ensemble, class weights, temperature, extra decoders) from this endpoint. The next legitimate
+  target is the chemistry body error h - g and its cancellation, carrying C as the matched
+  reference under a train-only purchase gate of equal strength. The official ZINC test of this
+  line is now read; any further test read needs a new preregistration.
+kind: claim
+limitations:
+- Single seed (0); one frozen COMP body + prototype table + Q; one fixed K=7 train vocabulary;
+  one median-level decoder; no ensemble. CPU FP32.
+- The valid endpoint of the same C is single-row dominated (valid:0935, 95.1% share; gain
+  excluding H's worst row negative) with CI crossing zero; the test is what supports the claim,
+  and it rests on 20/1000 unseen rows (all 20 levels exactly right).
+- Extreme singleton levels k <= -3 (12 train rows, 7 in pooled OOF) are an honest extrapolation
+  failure of D (all pooled-OOF gains negative); the claim does not cover them. Test has none.
+- 5 train conflict classes route to frozen Q by construction; C only replaces the UNSEEN branch.
+- The B - SUM_Q out-of-sample confirmation (CI-supported on both splits) is a single frozen
+  seed-0 pair, not an ensemble or multi-seed claim.
+- Test split has no k <= -3 rows and a smaller extreme-cycle mass than valid; per-split regimes
+  differ (valid - test gaps -0.0120 to -0.0323 for all systems).
+scope: >-
+  Local CPU only (8 threads); FP32; seed 0; official ZINC train 10000 / exposed valid 1000
+  (reused) / official subset test 1000 read once, terminal-only, under a manifest frozen before
+  any test prediction (roster SUM_Q/B/H/C decided by a train-only purchase gate). Frozen reuse
+  byte-identical: SUM/COMP soup states, Q soup state, full-train prep/targets/constants,
+  prototype table + b_H, calibration biases. New trained parameters this round: R/D fold heads
+  (3777 / 3975) and D_full (3975); no body retraining, no new seeds, single decoder.
+statement: >-
+  A discrete k-level classification head (D, cross-entropy, fixed train vocabulary K=7, median
+  cumulative-probability level decode) carries cross-exact-T25-class signal that the continuous
+  c regression (R) misses: train-only 3-fold class-grouped OOF pooled c-MAE 0.019068 vs 0.023745
+  (gain +0.004677; k=-2 +0.734451; k=-1 +0.062642; k=0 +0.002545; all 4 purchase conditions
+  PASS; descriptive class-resampled CI [-0.004195, +0.012589]). Deployed as C (identical to H
+  except the UNSEEN_FALLBACK branch served by D_full), on the official test C reaches y_cal
+  0.081174 vs H 0.084719 (paired gain +0.003545, 95% CI [+0.000153, +0.009389], lower > 0); on
+  the 20 unseen test rows D_full decodes the exact correct k level 20/20 (unseen q c-MAE 0.196480
+  -> 0.000000; k=-2 test group y_cal 0.432424 -> 0.074199); overall test q c-MAE 1.1e-05 and
+  e_c MAE 1.02e-05 vs body e_g 0.080928 (triangle_gap 2.0e-05 >= 0). On the exposed valid the
+  same C-H gain is only +0.000544, CI [-0.014359, +0.015802], single-row dominated (valid:0935,
+  share 0.951). Fixed neighbors on test: B - SUM_Q +0.007512 CI [+0.001810, +0.012664]
+  (component supervision confirmed out-of-sample); H - B +0.000388 CI [-0.000262, +0.001205]
+  (prototype transfer does not generalize broadly). Test labels y = g + c exact (1.7e-18) with
+  frozen full-train constants; test k counts {0: 948, -1: 44, -2: 8}.
+study_id: zinc-context-gap
+supporting_evidence:
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/REPORT.md
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/DECISION.md
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/EXECUTION.md
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/EVIDENCE_SCOPE.md
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/gate.json
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/folds_summary.json
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/terminal_eval_manifest.json
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/test_evaluation.json
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/valid_evaluation.json
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/replay_checks.json
+- tracks/ksvd/results/zinc_cycle_level_transfer_terminal_test_seed0_v1/heldout_access.json
