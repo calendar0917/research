@@ -1345,7 +1345,7 @@ def phase_dev_eval(*, out_dir: Path = RESULTS_DIR, device: torch.device | None =
                 "fit_overall": cancellation(hat_ell, ell_fit, hat_s, s_fit),
                 "fit_G0": cancellation(hat_ell[g0_fit], ell_fit[g0_fit], hat_s[g0_fit], s_fit[g0_fit]),
                 "dev_overall": cancellation(hat_ell_dev, ell_dev, hat_s_dev, s_dev),
-                "dev_G0": cancellation(hat_ell_dev[g0_dev], ell_dev[g0_dev], hat_s_dev[g0_dev]),
+                "dev_G0": cancellation(hat_ell_dev[g0_dev], ell_dev[g0_dev], hat_s_dev[g0_dev], s_dev[g0_dev]),
             },
             "cal_g_identity_max_abs": float(np.max(np.abs(
                 (arms[arm]["err_dev_raw"]) - (e_ell_dev + e_s_dev)))),
