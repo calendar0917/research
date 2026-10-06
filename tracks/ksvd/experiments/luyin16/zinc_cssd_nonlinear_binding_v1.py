@@ -2144,7 +2144,9 @@ def train_arm(
     T_fit = topology_matrix(fit_data)
     q_raw = _q_predictions(q_soup, T_fit, device)
     y_raw = preds["ell_hat"] + preds["s_hat"] + q_raw
-    if float(np.max(np.abs(y_raw - (h + q_raw)))) > 1e-9:
+    # the in-forward component sum rounds at float32, so the float64
+    # per-component re-sum agrees only to float32 epsilon (~1e-7)
+    if float(np.max(np.abs(y_raw - (h + q_raw)))) > 1e-5:
         raise RuntimeError("y_raw != h + Q_raw")
     b_g = float(np.median(g_fit - h))
     b_y = float(np.median(y_fit - y_raw))
@@ -2291,7 +2293,7 @@ def evaluate_split(
     ell = np.asarray(targets["ell"], np.float64)[split_idx]
     s = np.asarray(targets["s"], np.float64)[split_idx]
     gid = np.asarray(targets["gid"], np.int64)[split_idx]
-    if float(np.max(np.abs(y_raw - (h + q_raw)))) > 1e-9:
+    if float(np.max(np.abs(y_raw - (h + q_raw)))) > 1e-5:
         raise RuntimeError("y_raw != h + Q_raw on eval")
     result = {
         "arm": arm, "seed": int(seed), "split": split,
