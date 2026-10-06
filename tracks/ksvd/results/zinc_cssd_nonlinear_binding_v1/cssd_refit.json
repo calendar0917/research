@@ -1,0 +1,88 @@
+{
+  "protocol_version": "zinc-cssd-nonlinear-binding-v1",
+  "stage": "cssd-refit",
+  "seconds": 2223.151363122044,
+  "device": "cpu",
+  "threads": 8,
+  "scheme": {
+    "q": 1,
+    "k_atoms": 32,
+    "sparsity": 8,
+    "iht_steps": 10,
+    "h1_lambda": 33.95873017865987,
+    "epochs": 320,
+    "soup": "mean of D over epochs 316..320 (never selected on holdout)",
+    "ksvd": {
+      "epochs": 10,
+      "seed": 20260924,
+      "meta": {
+        "history": [
+          {
+            "epoch": 1,
+            "mean_sq_err": 2.113377496172026
+          },
+          {
+            "epoch": 2,
+            "mean_sq_err": 0.023995281463025
+          },
+          {
+            "epoch": 3,
+            "mean_sq_err": 0.0063546076756347825
+          },
+          {
+            "epoch": 4,
+            "mean_sq_err": 0.002628475591761156
+          },
+          {
+            "epoch": 5,
+            "mean_sq_err": 0.0020891060426692304
+          },
+          {
+            "epoch": 6,
+            "mean_sq_err": 0.0020584808268939866
+          },
+          {
+            "epoch": 7,
+            "mean_sq_err": 0.0016174376569970585
+          },
+          {
+            "epoch": 8,
+            "mean_sq_err": 0.0013656148771998171
+          },
+          {
+            "epoch": 9,
+            "mean_sq_err": 0.0015142109251895602
+          },
+          {
+            "epoch": 10,
+            "mean_sq_err": 0.001238592195515248
+          }
+        ]
+      }
+    },
+    "train_seed": 0,
+    "deviations_from_train_cssd": [
+      "dictionary initialised from K-SVD on fit phi rows (not the all-10k sdb32)",
+      "last-5-epoch D soup (not Top-5 by a holdout)",
+      "monitoring on fit rows only (official valid never loaded)"
+    ]
+  },
+  "phi_checks": {
+    "n_fit_molecules": 8001,
+    "n_phi_rows": 185470,
+    "expected_rows": 185470,
+    "phi_dim": 65,
+    "source": "results/e2e_dictenv_p1/cache/env_train.pt (train-only)"
+  },
+  "monitor_rows": 1024,
+  "monitor_note": "informational only; the soup is the last-5 average, never selected by the monitor",
+  "U_sha256": "f1338b03b9aef42d691b5a408d49b9b2d0c91c8538c07d08394f1a826f644efd",
+  "common_rms_sha256": "5f6338d043681f2d5e10956c43946b8a4ff0918be7bd7d98dc167961e704dc87",
+  "D_init_sha256": "2aab63cfa2bb81d65151cfb159ab1b48449ba6149c4bbb70d4654c0a8c86d78d",
+  "D_frozen_sha256": "76b667acc623b4cd797a81f94d0645a7ca7071fd287a15bacaa437379ae25cd2",
+  "fit_monitor_mae_last": 0.09178501588365862,
+  "curve_sha256": "35193541db68ec02342f1cf525e8d828b866bb35c132dbbc98678ad502e718b9",
+  "fit_only": true,
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

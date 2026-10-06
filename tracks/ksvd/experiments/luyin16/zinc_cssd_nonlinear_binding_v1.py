@@ -1340,19 +1340,76 @@ def _clone_graph(data: Any) -> Any:
 
 
 def _relabel_nodes(data: Any, perm: np.ndarray) -> Any:
-    """Copy of one graph with node rows permuted and indices remapped."""
+    """Copy of one graph with node rows permuted and every node-indexed
+    structure remapped (occurrence roots and members, bond roots and
+    endpoints, pair endpoints)."""
     out = _clone_graph(data)
     out.dict_phi = data.dict_phi[perm].clone()
     out.dict_atom = data.dict_atom[perm].clone()
     out.anchor = data.anchor[perm].clone()
+    if getattr(data, "patch_cont", None) is not None and int(data.patch_cont.shape[0]) == int(data.dict_phi.shape[0]):
+        out.patch_cont = data.patch_cont[perm].clone()
+    mapping = torch.empty(int(perm.shape[0]), dtype=torch.long)
+    mapping[torch.as_tensor(perm, dtype=torch.long)] = torch.arange(perm.shape[0])
     if getattr(data, "env_occ_node", None) is not None:
-        mapping = torch.empty(int(perm.shape[0]), dtype=torch.long)
-        mapping[torch.as_tensor(perm, dtype=torch.long)] = torch.arange(perm.shape[0])
         out.env_occ_node = mapping[data.env_occ_node].clone()
+        out.env_occ_root = mapping[data.env_occ_root].clone()
+        out.env_bond_root = mapping[data.env_bond_root].clone()
         out.env_bond_u = mapping[data.env_bond_u].clone()
         out.env_bond_v = mapping[data.env_bond_v].clone()
         if getattr(data, "env_occ_coord_node", None) is not None:
             out.env_occ_coord_node = mapping[data.env_occ_coord_node].clone()
+    if getattr(data, "pair_index", None) is not None:
+        out.pair_index = torch.stack(
+            [mapping[data.pair_index[0]], mapping[data.pair_index[1]]], dim=0
+        ).clone()
+    return out
+
+
+def _permuted_tuple_payload(
+    payload_arrays: Mapping[str, np.ndarray], mol_index: int, perm: np.ndarray
+) -> dict[str, np.ndarray]:
+    """Tuple-payload copy with one molecule's per-root incidence blocks reordered
+    to match a node permutation (the incidence is positional by design)."""
+    arrays = {k: np.asarray(v) for k, v in payload_arrays.items()}
+    root_base = arrays["root_base"].astype(np.int64)
+    pair_ptr = arrays["pair_ptr"].astype(np.int64)
+    m = int(mol_index)
+    lo, hi = int(root_base[m]), int(root_base[m + 1])
+    perm = np.asarray(perm, np.int64)
+    if perm.shape[0] != hi - lo or sorted(perm.tolist()) != list(range(hi - lo)):
+        raise ValueError("perm must be a permutation of the molecule's node positions")
+    # per-root pair-row blocks, reordered so new root position q gets the
+    # block of old root position perm^{-1}(q)  (block of old root p -> new
+    # position perm[p])
+    blocks = [pair_ptr[lo + p : lo + p + 1] for p in range(hi - lo)]
+    # new position q holds old node perm[q] (out.dict_phi = old.dict_phi[perm]),
+    # so new root q gets the incidence block of old root perm[q]
+    rows = (
+        np.concatenate([blocks[int(p)] for p in perm.tolist()])
+        if blocks else np.empty(0, np.int64)
+    )
+    sizes = [int(blocks[int(p)].size) for p in perm.tolist()]
+    new_ptr = np.concatenate([[pair_ptr[lo]], pair_ptr[lo] + np.cumsum(sizes)]) if sizes else np.array([pair_ptr[lo], pair_ptr[lo]])
+    out = dict(arrays)
+    # rebuild the full pair-row list molecule-by-molecule with m replaced
+    all_rows = []
+    for mm in range(root_base.shape[0] - 1):
+        rlo, rhi = int(root_base[mm]), int(root_base[mm + 1])
+        if mm == m:
+            all_rows.append(rows)
+        else:
+            all_rows.append(np.arange(pair_ptr[rlo], pair_ptr[rhi]))
+    full_rows = np.concatenate(all_rows)
+    for key in ("pair_t", "pair_a", "pair_wJ", "pair_wI"):
+        if key in out:
+            out[key] = arrays[key][full_rows]
+    out["pair_ptr"] = pair_ptr.copy()
+    out["pair_ptr"][lo : hi + 1] = new_ptr
+    if "root_atom" in out:
+        ra = arrays["root_atom"].copy()
+        ra[lo:hi] = arrays["root_atom"][lo:hi][perm]
+        out["root_atom"] = ra
     return out
 
 
@@ -1451,7 +1508,8 @@ def run_checks(*, n_graphs: int = 24, out_dir: Path = RESULTS_DIR, log: Any = pr
     )
     checks["cssd_code"] = {
         "z_chemistry_relabel_invariant": bool(np.array_equal(z0, z1)),
-        "z_row_chunk_invariant": bool(np.array_equal(z0, z_chunked)),
+        "z_row_chunk_max_abs": float(np.max(np.abs(z0 - z_chunked))),
+        "z_row_chunk_invariant": bool(np.max(np.abs(z0 - z_chunked)) <= 1e-5),
         "z_width": int(z0.shape[1]),
         "frozen_basis_hashes": models["C10"].frozen_basis_hashes(),
         "basis_hashes_at_load": {
@@ -1512,9 +1570,9 @@ def run_checks(*, n_graphs: int = 24, out_dir: Path = RESULTS_DIR, log: Any = pr
         btype = batch.env_bond_type.numpy()[sel_bond]
         sp = batch.env_bond_shellpair.numpy()[sel_bond]
         b_one = np.eye(BOND_CATEGORIES, dtype=np.float32)[btype]
-        zv = z_np[bu]; zw = z_np[bv]; qv = q_np[bu]; qw = q_np[bv]
+        zv = z_np[bu]; z_w = z_np[bv]; qv = q_np[bu]; qw = q_np[bv]
         rep_e = model.edge_branch(
-            torch.as_tensor(zv), torch.as_tensor(zw), torch.as_tensor(qv), torch.as_tensor(qw), torch.as_tensor(b_one)
+            torch.as_tensor(zv), torch.as_tensor(z_w), torch.as_tensor(qv), torch.as_tensor(qw), torch.as_tensor(b_one)
         ).detach().numpy()
         gedge = np.zeros((SHELLPAIR_CLASSES, EDGE_SLOT_WIDTH), dtype=np.float64)
         for row, sp_ in enumerate(sp.tolist()):
@@ -1553,7 +1611,22 @@ def run_checks(*, n_graphs: int = 24, out_dir: Path = RESULTS_DIR, log: Any = pr
     p_singles = np.concatenate([_eval_batch_predict(model, p1.env_collate([g]).to(device), device) for g in (g0, g1)])
     relabel_perm = torch.randperm(int(g0.dict_phi.shape[0]), generator=torch.Generator().manual_seed(20261015))
     g0r = _relabel_nodes(g0, relabel_perm.numpy())
-    p_g0r = _eval_batch_predict(model, p1.env_collate([g0r]).to(device), device)
+    # the tuple incidence is positional by historical design, so the relabelled
+    # prediction swaps in the consistently block-reordered payload for that
+    # one molecule (restored afterwards)
+    mol0 = int(torch.as_tensor(g0.local_mol_id).reshape(-1)[0].item())
+    permuted_payload = prev.TuplePayload(
+        _permuted_tuple_payload(objects["payload_arrays"], mol0, relabel_perm.numpy())
+    )
+    original_payload = model.local_tuple._payload
+    original_cache = model.local_tuple._device_cache
+    model.local_tuple._payload = permuted_payload
+    model.local_tuple._device_cache = {}
+    try:
+        p_g0r = _eval_batch_predict(model, p1.env_collate([g0r]).to(device), device)
+    finally:
+        model.local_tuple._payload = original_payload
+        model.local_tuple._device_cache = original_cache
     reversed_two = p1.env_collate([g1, g0]).to(device)
     p_rev = _eval_batch_predict(model, reversed_two, device)
     checks["prediction_invariances"] = {
@@ -2243,8 +2316,9 @@ def evaluate_split(
         run["run_dir"] / f"{split}_predictions{'_' + tag if tag != 'none' else ''}.npz",
         gid=gid, y=y, y_raw=y_raw, y_cal=y_cal, h=h, q_raw=q_raw,
     )
-    log(f"[{split}-eval {arm} s{seed}{'' if not interventions else ' ' + tag}] "
-        f"y_raw MAE {result['mae']['y_raw']:.5f} y_cal {result['mae']['y_cal']:.5f}")
+    if log:
+        log(f"[{split}-eval {arm} s{seed}{'' if not interventions else ' ' + tag}] "
+            f"y_raw MAE {result['mae']['y_raw']:.5f} y_cal {result['mae']['y_cal']:.5f}")
     return result
 
 

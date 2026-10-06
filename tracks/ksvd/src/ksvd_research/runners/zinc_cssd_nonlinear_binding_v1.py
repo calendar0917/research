@@ -33,6 +33,8 @@ from ksvd_research.runtime.paths import REPO_ROOT, TRACK_ROOT, resolve_path
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from ksvd_research.runner_api import RunnerError  # noqa: E402
+
 from tracks.ksvd.experiments.luyin16 import (  # noqa: E402
     zinc_cssd_nonlinear_binding_v1 as stages,
 )
