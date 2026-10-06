@@ -1,0 +1,71 @@
+{
+  "protocol_version": "zinc-cssd-nonlinear-binding-v1",
+  "stage": "train",
+  "arm": "C00",
+  "seed": 0,
+  "run_dir": "runs/C00_s0",
+  "recipe": {
+    "epochs": 240,
+    "batch_size": 128,
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "grad_clip": 5.0,
+    "soup_epochs": [
+      236,
+      237,
+      238,
+      239,
+      240
+    ],
+    "log_epochs": [
+      1,
+      40,
+      120,
+      240
+    ],
+    "component_loss_weight": 0.5,
+    "train_shuffle_offset": 101
+  },
+  "steps_done": 15120,
+  "stopped_reason": "completed",
+  "schedule_sha256": "1d0c186b8434e05bdf556f894867f91fa9a1f7240d1ea07ba006248dc6a86b41",
+  "init_state_sha256": "b19da8c9bed9cef4e3a55340376ceaa2e63467676bb235a60d70d8d7b19d9875",
+  "soup_state_sha256": "c34e37239fd641fbd3fa4f2d6c9bf84c0ba25288bb98ecf9240ce693bde1d9e7",
+  "frozen_basis_hashes": {
+    "U": "f1338b03b9aef42d691b5a408d49b9b2d0c91c8538c07d08394f1a826f644efd",
+    "common_rms": "5f6338d043681f2d5e10956c43946b8a4ff0918be7bd7d98dc167961e704dc87",
+    "D": "76b667acc623b4cd797a81f94d0645a7ca7071fd287a15bacaa437379ae25cd2"
+  },
+  "q_soup_sha256": "14d175e371e31f00bd043bcece1e5a44150bd6c9cadea6b2eed3ec86f4f41b21",
+  "parameter_audit": {
+    "arm": "C00",
+    "total_parameters": 429783,
+    "trainable_parameters": 429783,
+    "branch_parameters": 17332,
+    "original_slot_parameters": 0,
+    "n_branch_modules": 16,
+    "n_original_slot_modules": 0,
+    "frozen_buffers": [
+      "D",
+      "U",
+      "common_rms"
+    ]
+  },
+  "calibration": {
+    "b_g": 0.005214978560195926,
+    "b_y": 0.004522908478975296,
+    "note": "single fit-median bias; never stacked"
+  },
+  "fit_diagnostics": {
+    "fit_L_g_raw_mae": 0.03085352673428774,
+    "fit_L_g_cal_mae": 0.030541438519133664,
+    "fit_y_raw_mae": 0.03887018585674976,
+    "fit_y_cal_mae": 0.03862703771699348,
+    "fit_q_mae": 0.009237879666307043
+  },
+  "curve_seconds_total": 1437.065378818661,
+  "peak_gpu_memory_mb": 452.28857421875,
+  "flops_note": "not measured; per-arm op counts differ by construction (arm A product binding vs C-arm MLPs)",
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}
