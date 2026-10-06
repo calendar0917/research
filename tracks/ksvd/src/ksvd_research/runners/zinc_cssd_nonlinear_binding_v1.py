@@ -93,6 +93,13 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
 
 
+def _as_seed_list(value: Any) -> list[int]:
+    """Accept a single seed or a list of seeds from ``--set model.seeds``."""
+    if isinstance(value, (list, tuple)):
+        return [int(s) for s in value]
+    return [int(value)]
+
+
 def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
     if context.test_access == "granted":
         raise RuntimeError(
@@ -112,14 +119,7 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
     threads = int(runtime.get("torch_threads", 8))
     print(f"[cssd-bind-v1] stage={stage} arm={arm} seed={seed} device={device_name}", flush=True)
 
-    def _as_seed_list(value: Any) -> list[int]:
-    """Accept a single seed or a list of seeds from ``--set model.seeds``."""
-    if isinstance(value, (list, tuple)):
-        return [int(s) for s in value]
-    return [int(value)]
-
-
-def _metrics(payload: Mapping[str, Any]) -> dict[str, Any]:
+    def _metrics(payload: Mapping[str, Any]) -> dict[str, Any]:
         base = {
             "measure": f"zinc_cssd_nonlinear_binding_v1::{stage}",
             "stage": stage,
