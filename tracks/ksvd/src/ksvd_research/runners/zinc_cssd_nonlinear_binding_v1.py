@@ -112,7 +112,14 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
     threads = int(runtime.get("torch_threads", 8))
     print(f"[cssd-bind-v1] stage={stage} arm={arm} seed={seed} device={device_name}", flush=True)
 
-    def _metrics(payload: Mapping[str, Any]) -> dict[str, Any]:
+    def _as_seed_list(value: Any) -> list[int]:
+    """Accept a single seed or a list of seeds from ``--set model.seeds``."""
+    if isinstance(value, (list, tuple)):
+        return [int(s) for s in value]
+    return [int(value)]
+
+
+def _metrics(payload: Mapping[str, Any]) -> dict[str, Any]:
         base = {
             "measure": f"zinc_cssd_nonlinear_binding_v1::{stage}",
             "stage": stage,
@@ -196,7 +203,7 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
         return RunResult(metrics=metrics, status="completed", artifacts=["artifacts/train_manifest.json"])
 
     if stage == "select-eval":
-        seeds = [int(s) for s in model_cfg.get("seeds", [stages.SEED])]
+        seeds = _as_seed_list(model_cfg.get("seeds", stages.SEED))
         result = stages.select_eval(
             seeds=seeds, device_name=device_name, out_dir=out_dir
         )
@@ -221,7 +228,7 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
         return RunResult(metrics=metrics, status="completed", artifacts=["artifacts/confirm_eval.json"])
 
     if stage == "interventions":
-        seeds = [int(s) for s in model_cfg.get("seeds", [stages.SEED])]
+        seeds = _as_seed_list(model_cfg.get("seeds", stages.SEED))
         result = stages.run_interventions(device_name=device_name, out_dir=out_dir, seeds=seeds)
         _write_json(context.artifact_dir / "interventions.json", result)
         metrics = _metrics(result)
