@@ -1,0 +1,37 @@
+# ZINC CSSD nonlinear binding v1 — frozen-basis joint vs separate node/edge binding.
+#
+# `model.stage`:
+#   build-objects : stage-0 phase A (fold/targets/payload/kappa_M/prep, fit-only)
+#   cssd-refit    : stage-0 CSSD q1 basis refit on fit (CPU, last-5 average)
+#   train-q       : stage-0 shared Q(topology25) head on fit (CPU)
+#   checks        : focused pre-training correctness checks (CPU)
+#   smoke         : short GPU plumbing smoke on real fit batches (all arms)
+#   train         : one 240-epoch body run (model.arm, model.seed)
+#   select-eval   : Stage A (select y raw/cal + contrasts + frozen rules)
+#   confirm-eval  : Stage B (one-shot, frozen roster in confirm_roster.json)
+#   interventions : post-training N/E pairing-shuffle diagnostics
+#
+# Official ZINC valid and test are never instantiated.
+protocol_id: zinc-cssd-nonlinear-binding-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  arm: C00
+  stage: checks
+  seed: 0
+  epochs: 240
+  # max_steps: null (full budget)
+  seeds: [0]
+  check_graphs: 24
+  smoke_batches: 4
+
+runtime:
+  # `cpu` for the stage-0 builds/checks (the CSSD refit is CPU-faithful);
+  # `cuda:0` is the res-2 A100 regime for smoke/train/evals.  No silent
+  # CPU fallback: a cuda request on a CPU-only host raises.
+  device: cpu
+  torch_threads: 8

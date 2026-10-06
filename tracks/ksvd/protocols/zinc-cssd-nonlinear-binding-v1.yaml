@@ -1,0 +1,175 @@
+# Protocol: ZINC CSSD nonlinear binding v1 (2026-10-06 design basis 50eaf5f7).
+#
+# Freezes the CSSD structural basis and tests whether the *pre-pooling,
+# member-level nonlinear joint mapping* of each node's frozen structure code
+# z_v (33-D CSSD) with its atom-type one-hot q_v (28-D) — and of each real
+# induced bond's endpoint pair ([z_v;q_v];[z_w;q_w];b_e) — beats a *separated
+# additive binding* of the same marginal inputs, before occurrence pooling
+# into the fixed 446-D fusion layout of the canonical Full skeleton.
+#
+# The strength reference A restores the ORIGINAL product node/edge binding
+# slots (W_A_S/W_A_C/W_E_S/W_E_C + slot encoders) on the same frozen basis
+# with the M_COMP + Q task path (matched MLP bridge, ComponentReader 39->2,
+# root-tuple local MLP W_loc injection).  The C arms delete the original slot
+# path and attach N/E branches only (C00/C10/C01/C11 = the 2x2 joint/separate
+# factorial).  All five arms share one skeleton, one frozen basis, one Q head
+# and one recipe; only the local slot generation differs.
+#
+# Historical evidence boundary (why this round is new): the recent F fusion
+# construction factorises into z(root) x semantic aggregation and never tested
+# a member-level nonlinear joint map before pooling; the current Full's old
+# node product binding is inactive and merely reviving the same product is
+# insufficient; the old edge binding used sum/diff/product of endpoint
+# structure codes and never binds each endpoint's own atom type in the edge
+# branch; old frozen convex head / covariance / triad witness negatives do
+# not rule out a nonlinear joint mechanism.
+
+id: zinc-cssd-nonlinear-binding-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+
+split:
+  description: >-
+    official-train-only internal fold: perm = np.random.default_rng(20261006)
+    .permutation(10000); fit=sort(perm[:8000]), select=sort(perm[8000:9000]),
+    confirm=sort(perm[9000:]); SMILES-duplicate groups straddling a boundary
+    move wholly into fit (actual sizes + moved rows recorded in the manifest).
+  fingerprint_policy: index-array SHA-256 (identical for all arms and seeds)
+  folds: 1
+  oof: false
+  official_valid_usage: never_loaded
+  official_test_usage: never_loaded
+
+frozen_dictionary:
+  scheme: CSSD q1 (U = fit-mean direction; r = (I-UU^T)phi; D_perp colnorm;
+    top-8 tied-IHT-10), K=32 atoms, phi65 untyped radius-2 rooted patch
+  refit: >-
+    K-SVD (10 epochs, seed 20260924) on fit phi rows only; 320-epoch CSSD
+    training on fit (train_cssd semantics: L1(pred,y)+H1_LAMBDA*rec, Adam
+    1e-3/1e-5, clip 5, batch 128, locked shuffle offsets); soup = mean of D
+    over epochs 316..320 (never selected on select/confirm); CPU-faithful to
+    the historical runner (no GPU port, no numeric drift)
+  sharing: U / common RMS / D identical (buffer, never trained) in all arms
+    and both seeds; sha256 recorded in every run manifest
+  z_width: 33 ([c/RMS; alpha_perp]); node-centric (same node reuses one code
+    across root windows)
+  pool_reach_note: pooling z_v into B2(u) lets the effective environment
+    exceed radius-2; the same occurrence objects as the strong baselines are
+    used, and the model is not claimed to be radius-2-only
+
+arms:
+  reference_A:
+    slot_path: original product binding + slot encoders (24,048 params kept)
+    body: M_COMP+Q task path (matched MLP bridge, ComponentReader, W_loc
+      root-tuple injection), fresh untrained init per body seed
+  candidates:
+    N_joint: MLP([z_v;q_v]) 61-64-48 SiLU (7,088 params)
+    N_sep: MLP_S(z_v) 33-44-48 + MLP_C(q_v) 28-44-48 (7,092 params)
+    E_joint: 0.5*(psi([x_v;x_w;b_e])+psi([x_w;x_v;b_e])), psi 126-64-32,
+      x=[z;q] (10,208 params)
+    E_sep: symmetric psi_S 66-53-32 + symmetric psi_C 60-53-32 (10,240 params)
+    pooling: original sum/index_add + empty-cell semantics; node 3x48=144,
+      edge 6x32=192 fused columns; C6/effective-slot conventions; no new
+      graph-level statistics
+    table:
+      C00: N_sep + E_sep
+      C10: N_joint + E_sep
+      C01: N_sep + E_joint
+      C11: N_joint + E_joint
+    parameter_matching: C-to-C differences are tens of params (max 36); no
+      filler balancing; A is not parameter-matched (strength reference)
+
+static_boundary:
+  branch_inputs: [z_v (frozen CSSD), dict_atom/dict_bond one-hots,
+    env root-shell/shellpair membership indices]
+  forbidden: [pair hidden state, graph summary, neighbour-fused E, pair->node
+    write-back, pair recomputation, attention, transformers, centre updates,
+    recursion]
+  contract: pair_relation mutation must leave pre-pair slots unchanged; local
+    E is built once then the original pair path computes once
+
+supervision:
+  components: g = y_stored - c; ell = (logP - MU_LOGP)/sigma_fit; s = g - ell
+    (residual, not "pure SA"); constants refit on fit rows only
+  loss: L = L1(g_hat) + 0.5*(L1(ell_hat) + L1(s_hat))  # all five arms
+  y_benchmark: y_stored is always the original canonical target (never
+    redefined by component refits)
+  q_head: one shared Q(topology25->64->32->1, 3,777 params) on fit only,
+    300 epochs, last-5 average, frozen hash shared by all arms/seeds
+  prediction: y_raw = ell_hat + s_hat + Q_raw; y_cal = y_raw + b_y with a
+    single fit-median b_y (never stacked with b_g)
+
+training:
+  epochs: 240
+  batch_size: 128
+  optimizer: Adam 1e-3, weight_decay 1e-5, grad clip 5
+  soup: fixed mean of epochs 236..240 (never Top-5 by holdout)
+  schedule: locked zw schedule per seed (seed + 101)
+  body_init: canonical Full global stream per body seed (shared modules
+    bit-identical across arms; branch modules on private generators
+    20261007+100*arm+seed; seed-1 init/schedule/branch seeds all differ)
+  component_identity: g_hat == ell_hat + s_hat exactly (asserted each step)
+  diagnostics_epochs: [1, 40, 120, 240]
+  no_warm_start: true
+  no_hp_search: true
+  amp_or_compile: none (not in the existing recipe)
+
+evaluation:
+  primary: full y_raw MAE on select (Stage A ranking)
+  secondary: y_cal MAE (reported alongside; calibration-only improvements are
+    not a positive signal for the correspondence claim)
+  contrasts: G_N = 0.5*((M00-M10)+(M01-M11)); G_E = 0.5*((M00-M01)+(M10-M11));
+    I = M10+M01-M00-M11; plus A vs C00
+  paired_predictions: saved with canonical gid for every arm/seed
+  bootstrap: paired molecule resampling (2,000, seed 20261011), descriptive
+    uncertainty only, never a replacement for seed repetition
+  component_diagnostics: g/ell/s MAEs recorded, never mixed with historical
+    official-valid tables
+
+decision_rules_frozen:
+  all_joint_active_no_gain: STOP (negative result; no seed-1 rescue, no
+    relation/loss/statistics grid)
+  only_c00_improves: common local interface/capacity signal only; re-check
+    A + C00 (seed 1)
+  one_candidate: seed 1 runs A + C00 + chosen candidate (3 runs)
+  two_candidates_or_c11_interaction: seed 1 runs the same five arms (5 runs)
+  budget: max 10 full body runs total (normal 5+3=8; clean negative 5);
+    one CSSD refit + one shared Q are counted as stage-0, not hidden zero-cost
+  no_gate_arbitrary_thresholds: no single-seed p-values or uniform +0.003
+    labels; training health, absolute strength and per-sample error changes
+    are reported instead
+
+mechanism_interventions:
+  timing: after training, on selected (frozen soup) models only
+  n_shuffle: permute q-vs-z correspondence within each (root, shell) group,
+    keep both multisets; other inputs (incl. Sem108) untouched
+  e_shuffle: permute complete chemistry endpoint tuples vs structure
+    endpoint pairs within (root, shellpair, bondtype) groups; marginals and
+    bond type preserved; other branches untouched
+  expected: C00 invariant under both (numerical tolerance 1e-4 relative);
+    joint arms must respond; a toy joint example must change
+  reporting: actual pairing-change fractions; single-element/same-type groups
+    are not strong interventions; shuffle deltas show dependence, not
+    incremental benefit
+
+panel_budget:
+  stage0_builds: 1 (fold/prep/CSSD/Q) + focused checks + GPU smoke
+  seed0_body_runs: 5 (A, C00, C10, C01, C11)
+  seed1_body_runs_max: 5
+  total_body_runs_max: 10
+  confirm: one-shot on the frozen roster after both seeds' soups/calibrations
+    are frozen
+
+test_policy: never_loaded
+
+seed_semantics:
+  seeds: [0, 1]
+  seed0: the primary complete run
+  seed1: purchased only per decision_rules_frozen; init, schedule hash and
+    branch seeds all genuinely different from seed 0 (asserted in checks)

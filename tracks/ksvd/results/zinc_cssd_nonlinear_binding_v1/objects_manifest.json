@@ -1,0 +1,173 @@
+{
+  "protocol_version": "zinc-cssd-nonlinear-binding-v1",
+  "stage": "build-objects",
+  "seconds": 6.748853928875178,
+  "fold": {
+    "definition": "perm=np.random.default_rng(20261006).permutation(10000); fit=sort(perm[:8000]); select=sort(perm[8000:9000]); confirm=sort(perm[9000:]); straddling SMILES-duplicate groups moved wholly into fit",
+    "fit_sha256": "429150b7fc2d9cc95fbd28717463a8800b05e31770f2ecf81b36cae2f54aaa48",
+    "select_sha256": "f224a4f388b1f6c1d502543f26cc6a995716212e51042d09bd166dd517ce11d3",
+    "confirm_sha256": "5a476d41afdfec4b13be2b5f782f16d63c61032ee3666482a315a10fc14bb221",
+    "checks": {
+      "sizes": {
+        "fit": 8001,
+        "select": 999,
+        "confirm": 1000
+      },
+      "disjoint": true,
+      "cover": true,
+      "n_duplicate_smi_groups": 4,
+      "duplicate_group_sizes": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "n_groups_moved": 1,
+      "smi_groups_unsplit": true
+    },
+    "moved": [
+      {
+        "smi_line": 145081,
+        "group_size": 2,
+        "rows_moved_into_fit": [
+          3646
+        ],
+        "source_split": [
+          "select"
+        ]
+      }
+    ]
+  },
+  "constants": {
+    "sigma_logP": 1.4349896289111392,
+    "sigma_SA": 0.8326523857170384,
+    "mu_SA": -3.1924649122545463,
+    "sigma_cycle": 0.28860259686402157,
+    "mu_cycle": -2.2262525958142054e-05,
+    "fit_rows_cycle_free": 7694,
+    "fit_rows_snap": 8001
+  },
+  "mu_logP": 2.4570953396190123,
+  "target_checks": {
+    "n_rows": 10000,
+    "n_fit": 8001,
+    "uses_dev_labels_in_fit": false,
+    "y_identity_max_abs": 0.0,
+    "g_equals_ell_plus_s_max_abs": 8.881784197001252e-16,
+    "constants_finite": true,
+    "sigma_cycle_nonzero": true,
+    "k_fit_counts": {
+      "k=0": 7698,
+      "k=-1": 265,
+      "k=-2": 33,
+      "k<=-3": 5,
+      "k<=-2": 38
+    },
+    "k_dev_counts": {
+      "k=0": 963,
+      "k=-1": 29,
+      "k=-2": 5,
+      "k<=-3": 2,
+      "k<=-2": 7
+    }
+  },
+  "label_source_checks": {
+    "n_rows": 10000,
+    "split_train_only": true,
+    "y_is_train_only_handoff": true,
+    "y_target_handoff_max_abs_diff": 1.7763568394002505e-15,
+    "cycle_matches_audit_order_column": true,
+    "all_finite": true,
+    "sources": {
+      "train_label_csv": "/home/calendar/code/research/tracks/ksvd/results/zinc_long_cycle_audit/train_cycle_audit_label.csv",
+      "train_label_csv_sha256": "3be648266a19890d531b9c0b179b4fe4c4d9e10d522e4b942fa60b3108c9b8d5",
+      "gvae_full_properties_npz": "/home/calendar/code/research/tracks/ksvd/results/zinc_long_cycle_audit/cache/gvae_full_properties.npz",
+      "gvae_full_properties_npz_sha256": "7f95d7b818e064d6e9bd83dab74695caec3c2aaa5387d321828873f7a1db6c6c",
+      "handoff_train": "/home/calendar/code/research/tracks/ksvd/results/zinc_dictionary_real_data_handoff/train.npz",
+      "handoff_train_sha256": "3dda78bc7cab7a33f8df182bba8870c7469209a0482dfa4dda5866eef7674135"
+    }
+  },
+  "payload_checks": {
+    "old_tuple_npz": "/home/calendar/code/research/tracks/ksvd/results/zinc_local_tuple_dictionary_joint_vs_independent_seed0_v1/local_tuple_index.npz",
+    "old_tuple_npz_sha256": "4facb6ec77ff10130d49857bad461d16da0ee097495616ca4d4711de962b2c40",
+    "node_sizes_match_env": true,
+    "root_atom_match_env": true,
+    "pair_ptr_monotone": true,
+    "n_roots": 231664,
+    "n_pairs": 508032,
+    "phi_scaler": {
+      "fitted_on": "new rng(20261006) fit rows, realized C>0 incident tuples",
+      "n_samples": 337811,
+      "std_floor": 0.001,
+      "phi_scale_l2_rms": 0.9114654303753885,
+      "phi_mean_sha256": "a9066a033e88655765ed35902d919ed35e77d03568d368a4abc101d3234d2367",
+      "phi_std_sha256": "9b8eb8d7aa0077537e510597cc3313fd8e0e215a07cfc50dc268a91d4ba5b152"
+    },
+    "kappa_D": {
+      "value": 2.0784306656807967,
+      "definition": "1 / RMS(initial e_J, e_I) over up to 8192 sampled new-fit roots",
+      "seed": 20261004,
+      "n_roots": 8192,
+      "sample_sha256": "f6c26bc9b038dc313f15c59217666e23c6708f46d396b2928d6517f50a675daa",
+      "raw_rms": 0.48113223910331726,
+      "e_J_rms": 0.48125505447387695,
+      "e_I_rms": 0.4810093939304352
+    }
+  },
+  "kappa_M": {
+    "definition": "r_D = RMS(kappa_D * e_D_init); r_M = RMS(e_M_init); kappa_M = r_D/r_M on the frozen fit-root sample",
+    "kappa_D": 2.078430652618408,
+    "r_D": 1.0002552270889282,
+    "r_M": 0.49559861421585083,
+    "e_D_init_rms": 0.48125505447387695,
+    "e_M_init_rms": 0.49559861421585083,
+    "kappa_M": 2.0182768845541634,
+    "n_roots": 8192,
+    "sample_sha256": "f6c26bc9b038dc313f15c59217666e23c6708f46d396b2928d6517f50a675daa",
+    "labels_used": false,
+    "dev_used": false,
+    "note": "r_D is not assumed to be 1; it is the RMS of the scaled initial dictionary codes"
+  },
+  "recipe": {
+    "epochs": 240,
+    "batch_size": 128,
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "grad_clip": 5.0,
+    "soup_epochs": [
+      236,
+      237,
+      238,
+      239,
+      240
+    ],
+    "component_loss_weight": 0.5,
+    "source_constants": {
+      "p2run.LEARNING_RATE": 0.001,
+      "p2run.WEIGHT_DECAY": 1e-05,
+      "p2run.GRAD_CLIP": 5.0,
+      "p2run.BATCH_SIZE": 128,
+      "p2run.SOUP_K": 5,
+      "cm.H1_LAMBDA": 33.95873017865987
+    }
+  },
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "artifacts": {
+    "fold.npz": {
+      "sha256": "06a50b257f5eea717150c51ce6e634e898d641e583cc88897dbaf2f279d2aba1"
+    },
+    "targets.npz": {
+      "sha256": "ed54b6e5289d8ed5e9269a503d66ee4d5f2cd9fdf453a3fa57074debd6eb55eb"
+    },
+    "tuple_payload.npz": {
+      "sha256": "d024c4c90b22d216caf4ac690912d6c1bfa4623b1c621b6d4eef2aad4fdb3d9e"
+    },
+    "kappa_M.json": {
+      "sha256": "b2742350ecdf73baaf0a6af13828f53a10d4ae8329d74095be4dd84c19a07974"
+    },
+    "prep.npz": {
+      "sha256": "94daecd562e5d41665aa476cca597efc87b178d4aa114f9e5a5e6a8073420605"
+    }
+  }
+}
