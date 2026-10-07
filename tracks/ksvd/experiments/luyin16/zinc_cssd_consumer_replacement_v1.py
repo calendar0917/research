@@ -1270,6 +1270,11 @@ def train_arm(
             break
 
     members = sorted(soup)
+    if not members:
+        # short smoke runs (max_steps) never reach the soup epochs; take the
+        # final state so the downstream manifest/soup path stays exercisable
+        soup[int(epoch)] = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+        members = sorted(soup)
     if max_steps is None and members != [int(e) for e in SOUP_EPOCHS]:
         raise RuntimeError(f"soup epochs missing: {members}")
     soup_state = {key: torch.stack([soup[e][key].float() for e in members]).mean(0) for key in soup[members[0]]}
@@ -1413,7 +1418,6 @@ def evaluate_run(
     device_name: str = "cuda:0",
     round_objects: Mapping[str, Any] | None = None,
     data: tuple[list[Any], list[Any]] | None = None,
-    identity_hook: bool = False,
     log: Any = print,
 ) -> dict[str, Any]:
     device = resolve_device(device_name)
@@ -1430,7 +1434,7 @@ def evaluate_run(
         _pm, _fit_data, dev_data = build_round_data(round_objects)
     else:
         dev_data = data[1]
-    model = build_arm(arm, payload, kappa_M, basis_parts, int(seed), decode=not identity_hook)
+    model = build_arm(arm, payload, kappa_M, basis_parts, int(seed))
     model.load_state_dict({k: v for k, v in run["soup_state"].items()}, strict=True)
     model = model.to(device)
     model.eval()
@@ -1850,6 +1854,8 @@ def terminal_eval(
             "terminal_eval.json already exists: the terminal stage is one-shot and must not be overwritten"
         )
     started = time.perf_counter()
+    device = resolve_device(device_name)
+    torch.set_num_threads(8 if device.type == "cpu" else 4)
     seeds = tuple(int(s) for s in seeds)
     if sorted(set(seeds)) != sorted(set(int(s) for s in SEEDS)):
         raise RuntimeError(f"terminal eval expects the pre-registered body seeds {SEEDS}")
@@ -1859,6 +1865,9 @@ def terminal_eval(
     dev_idx = round_objects["dev_idx"]
     _pm, fit_data, dev_data = build_round_data(round_objects)
     data = (fit_data, dev_data)
+    payload = prev.TuplePayload(objects["payload_arrays"])
+    kappa_M = float(objects["kappa"]["kappa_M"])
+    basis_parts = frozen_basis_parts(basis)
 
     # (1) roster: all four runs completed; same-seed arms share the plan
     roster: dict[str, Any] = {}
@@ -1920,7 +1929,12 @@ def terminal_eval(
     bootstrap = group_paired_bootstrap(errs, smiles[dev_idx])
     avg_delta = float(np.mean([per_seed[s]["delta"] for s in seeds]))
 
-    # (4) FP32 noise bound eta: repeated evaluation + identity hook
+    # (4) FP32 noise bound eta: repeated evaluation of every run (same soup,
+    #     rebuilt model, second pass) + the identity hook on the trained DICT
+    #     soups (the subclass machinery engaged with a pass-through input vs
+    #     the same soup loaded through the parent-encoder path — both are the
+    #     same pass-through forward, so this measures hook noise, never the
+    #     decode effect)
     eta = 0.0
     noise: dict[str, Any] = {}
     for seed in seeds:
@@ -1933,12 +1947,16 @@ def terminal_eval(
             noise[f"{arm}_s{seed}"] = {"repeat_max_abs_dpred": d}
             eta = max(eta, d)
     for seed in seeds:
-        ident = evaluate_run(
-            "DICT", seed, out_dir=out_dir, device_name=device_name,
-            round_objects=round_objects, data=data, log=None,
-            identity_hook=True,
-        )
-        d = float(np.abs(np.asarray(ident["y_raw"]) - np.asarray(results[f"DICT_s{seed}"]["y_raw"])).max())
+        run = load_run("DICT", seed, out_dir)
+        model_hook = build_arm("DICT", payload, kappa_M, basis_parts, int(seed), decode=False)
+        model_hook.load_state_dict({k: v for k, v in run["soup_state"].items()}, strict=True)
+        model_hook = model_hook.to(device).eval()
+        model_parent = build_arm("RAW", payload, kappa_M, basis_parts, int(seed))
+        model_parent.load_state_dict({k: v for k, v in run["soup_state"].items()}, strict=True)
+        model_parent = model_parent.to(device).eval()
+        h_hook = _predict_rows(model_hook, dev_data, device)["h"]
+        h_parent = _predict_rows(model_parent, dev_data, device)["h"]
+        d = float(np.abs(np.asarray(h_hook) - np.asarray(h_parent)).max())
         noise[f"DICT_s{seed}"]["identity_hook_max_abs_dpred"] = d
         eta = max(eta, d)
 
