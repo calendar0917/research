@@ -1,0 +1,64 @@
+{
+  "protocol_version": "zinc-cssd-consumer-generalization-v1",
+  "stage": "noise-addendum",
+  "read_only": true,
+  "terminal_eval_never_modified": true,
+  "bug": "the terminal identity hook set decode_enabled on the model wrapper instead of the encoder, so the hook model kept decoding; the recorded eta/marker were inflated by the decode effect (~0.5) instead of the hook noise (~1e-6) and the alpha-responsive gate condition was wrongly recorded as False despite p95 2.38/1.76 and response fraction 1.000",
+  "identity_hook_max_abs_dpred_corrected": {
+    "CTRL240_s0": 9.5367431640625e-07,
+    "WIDE5_240_s0": 1.430511474609375e-06,
+    "CTRL240_s1": 1.430511474609375e-06,
+    "WIDE5_240_s1": 9.5367431640625e-07
+  },
+  "repeat_max_abs_dpred_from_terminal": {
+    "CTRL240_s0": 1.0728836059570312e-06,
+    "WIDE5_240_s0": 1.0728836059570312e-06,
+    "CTRL240_s1": 7.152557373046875e-07,
+    "WIDE5_240_s1": 1.430511474609375e-06
+  },
+  "eta_corrected": 1.430511474609375e-06,
+  "marker_corrected": 0.0001,
+  "alpha_responsive_corrected": {
+    "WIDE5_240": true
+  },
+  "decision_recomputed": {
+    "gate_frozen": {
+      "both_seeds_y_improve": "Delta_y_s < 0 for both seeds",
+      "mean_delta_y": "<= -0.003",
+      "g_band": "per-seed Delta_g <= +0.0001, mean Delta_g < 0",
+      "alpha_response": "p95 |dPred| > max(1e-4, 10*eta) on both seeds",
+      "checks": "model/source/training checks without substantive problems"
+    },
+    "per_candidate": {
+      "WIDE5_240": {
+        "delta_y": {
+          "0": -0.00047706322662491307,
+          "1": -0.004744846018377408
+        },
+        "delta_g": {
+          "0": -0.00037823737917405675,
+          "1": -0.0051368635718330585
+        },
+        "mean_delta_y": -0.0026109546225011604,
+        "mean_delta_g": -0.0027575504755035576,
+        "conditions": {
+          "both_seeds_y_improve": true,
+          "mean_delta_y_le_gate": false,
+          "both_seeds_g_within_band": true,
+          "mean_g_improves": true,
+          "both_seeds_alpha_responsive": true,
+          "checks_ok": true
+        },
+        "passed": false
+      }
+    },
+    "passed_candidates": [],
+    "winner": null,
+    "tie_break_applied": null,
+    "reading": "this is THIS round's resource gate \u2014 never a significance or SOTA claim; a bootstrap CI crossing 0 is reported as uncertainty; failing candidates are recorded in full, never hidden"
+  },
+  "gate_outcome_unchanged_by_bug": true,
+  "seconds": 20.43201956152916,
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

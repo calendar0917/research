@@ -1,0 +1,121 @@
+{
+  "protocol_version": "zinc-cssd-consumer-generalization-v1",
+  "stage": "train-trajectory",
+  "arm": "DICT",
+  "seed": 1,
+  "smoke": false,
+  "run_dir": "runs/traj_s1",
+  "recipe": {
+    "epochs": 240,
+    "batch_size": 128,
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "grad_clip": 5.0,
+    "component_loss_weight": 0.5,
+    "train_shuffle_offset": 101,
+    "amp": null,
+    "ddp": null,
+    "scheduler": null,
+    "early_stopping": null
+  },
+  "estimators": {
+    "CTRL240": {
+      "members": [
+        236,
+        237,
+        238,
+        239,
+        240
+      ],
+      "member_state_sha256": {
+        "236": "bd906c3d64883d9b11a11034fad28eb8af11d801d526c8887a7be58f5bfe074e",
+        "237": "7c2e43fc699c471bb02b94343b6f19158d6011bea5befe3e1ada3424bcc24b0e",
+        "238": "d7ce50a85c0e98c05bfddd725788b4c61d51005b719edaf62a799320cb336a0c",
+        "239": "2a053c6a668f4426ab98af3ceaddd442e57429d5790acbddb97ccea5ed8db9e7",
+        "240": "e507f98cd5f0b86883cf3a64c16d4a1e99f7320132a84a71027fc0633db829da"
+      },
+      "state_sha256": "96e6dc5c99cdd08c532d19b8a74e4f3b4b3a8a30d092acdfe5385f3357b66f3a",
+      "candidate": false,
+      "strict_load_ok": true,
+      "save_reload_prediction_max_abs": 2.980232238769531e-07,
+      "save_reload_prediction_within_band": true
+    },
+    "WIDE5_240": {
+      "members": [
+        200,
+        210,
+        220,
+        230,
+        240
+      ],
+      "member_state_sha256": {
+        "200": "07c17d3df0f636920ec4f1d3550db2d9fa00524ffd92db312c41a80f9434b90d",
+        "210": "2e1c1f980a60dfa71243da1b76a6481f8aaafbb390acf4062e9bf086552d4a0e",
+        "220": "36a61652dffff0438c2936c00beed4066913f01300f55a2b2beea72d9e0f5248",
+        "230": "22452ad3785b44c4f62460d0e1f1f2d1fe7e259002c5273361f1cef2a6cc4d69",
+        "240": "e507f98cd5f0b86883cf3a64c16d4a1e99f7320132a84a71027fc0633db829da"
+      },
+      "state_sha256": "d344deb2cc4d0d03109b53d76e08782ce3be930a5e741dd9a5f79d164dc091b8",
+      "candidate": true,
+      "strict_load_ok": true,
+      "save_reload_prediction_max_abs": 2.980232238769531e-07,
+      "save_reload_prediction_within_band": true
+    }
+  },
+  "supervision": "COMP: L = MAE(ell_hat+s_hat, g) + 0.5*(MAE(ell_hat,ell)+MAE(s_hat,s)) (unchanged disclosed auxiliary condition)",
+  "steps_done": 15120,
+  "steps_expected": 15120,
+  "stopped_reason": "completed",
+  "schedule_sha256": "a06879efae3f96b8f4f16eab5c32fd5c0f70c890592030420d3e66959241df09",
+  "schedule_prefix_matches_historical_240": true,
+  "position_stream_sha256": "a06879efae3f96b8f4f16eab5c32fd5c0f70c890592030420d3e66959241df09",
+  "global_gid_stream_sha256": "0b29943d3eeb9a954925e42c7ec31c2d72fbcd97b8a47e5b15637a9bd2c2f1ac",
+  "init_state_sha256": "d556cca07a3e1d4287a19d15bcdc9328bb32d962e0c478bdca8a40d1fbadaa57",
+  "init_matches_historical": true,
+  "init_differs_from_other_seed": true,
+  "build_rng_sha256": "e57f40db6c1103c6a1c0a245eb735061254547f6f174eb952cf2d85cad0484c4",
+  "train_rng_sha256": "f5defda135ec2e0d1513e6979390f58397d31a904d5f6540f8b88ae64d1decc1",
+  "last_state_sha256": "e507f98cd5f0b86883cf3a64c16d4a1e99f7320132a84a71027fc0633db829da",
+  "frozen_basis_hashes": {
+    "U": "f1338b03b9aef42d691b5a408d49b9b2d0c91c8538c07d08394f1a826f644efd",
+    "common_rms": "5f6338d043681f2d5e10956c43946b8a4ff0918be7bd7d98dc167961e704dc87",
+    "D": "76b667acc623b4cd797a81f94d0645a7ca7071fd287a15bacaa437379ae25cd2"
+  },
+  "encoder_frozen_basis_hashes": {
+    "U": "f1338b03b9aef42d691b5a408d49b9b2d0c91c8538c07d08394f1a826f644efd",
+    "common_rms": "5f6338d043681f2d5e10956c43946b8a4ff0918be7bd7d98dc167961e704dc87",
+    "Dbar": "f0b55dd111f41af67586bb7d71ceb7d68ba52a55bb03055e91106d2e24ef5287"
+  },
+  "frozen_basis_unchanged": true,
+  "q_soup_sha256": "14d175e371e31f00bd043bcece1e5a44150bd6c9cadea6b2eed3ec86f4f41b21",
+  "parameter_audit": {
+    "total_parameters": 297539,
+    "base_body_parameters": 184707,
+    "bridge_parameters": 82944,
+    "local_tuple_parameters": 29888,
+    "reader_output_parameters": 80
+  },
+  "curve_seconds_total": 990.1398848295212,
+  "estimator_construction_seconds": 2.5037358067929745,
+  "wall_clock_s": 992.824719298631,
+  "peak_gpu_memory_mb": 377.84912109375,
+  "device": "cuda:0",
+  "allocation_probe": {
+    "CUDA_VISIBLE_DEVICES": "0",
+    "SLURM_JOB_ID": "56255",
+    "SLURM_JOB_NODELIST": "c05",
+    "SLURM_GPUS_ON_NODE": "1",
+    "SLURM_JOB_PARTITION": "gpu",
+    "hostname": "c05",
+    "nvidia_smi_L": "GPU 0: NVIDIA A100-PCIE-40GB (UUID: GPU-0c6f2aa8-cd1b-242d-4f94-052642143c9d)",
+    "nvidia_smi_query": "0, GPU-0c6f2aa8-cd1b-242d-4f94-052642143c9d, 00000000:25:00.0, NVIDIA A100-PCIE-40GB, 525.85.12",
+    "torch_device_index": 0,
+    "torch_device_name": "NVIDIA A100-PCIE-40GB",
+    "torch_total_memory": 42331013120,
+    "torch_uuid": "0c6f2aa8-cd1b-242d-4f94-052642143c9d"
+  },
+  "cost_note": "multiple estimators share this ONE trajectory (not independent training repeats); the reported cost is the actual shared-trajectory cost, with no virtual saving claimed for the shared epochs",
+  "dev_scores_computed_during_training": false,
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

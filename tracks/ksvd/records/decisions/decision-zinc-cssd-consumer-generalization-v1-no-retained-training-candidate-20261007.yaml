@@ -1,0 +1,59 @@
+alternatives_rejected:
+- 'Retaining WIDE5_240 anyway because its bootstrap CI95 excludes 0 and both seeds
+  improve -- rejected: the frozen resource gate required mean <= -0.003; gates are
+  not moved by results, and the CI covers molecular sampling only (not training-seed/basis
+  uncertainty, not corrected for branch/candidate selection).'
+- 'Purchasing EARLY120 or LONG360 or a third seed / wider windows / EMA/SWA -- rejected:
+  the frozen route (FLAT_OR_MIXED) purchased exactly the 240-epoch trajectories with
+  WIDE5_240 as the only candidate; exclusions were frozen before training.'
+- 'Reading the result as ''data noise floor reached'' or ''dictionary dead'' -- rejected:
+  the k=0 diffuse e_g structure was not tested for a noise floor (different question),
+  and the alpha intervention shows the sparse code is still read out with harmful-to-swap
+  magnitude after aggregation; the dictionary milestone (performance carriage + real
+  readout) is untouched.'
+- 'Rescuing via calibration or component reweighting -- rejected: y_cal shows no added
+  signal (WIDE5 0.12085/0.11593 vs CTRL 0.11775/0.11579) and COMP weights are a frozen
+  disclosed condition.'
+because: Stage A (read-only forward exports of historical DICT_s0/s1 epoch40/120/240/soup
+  on fit+dev, soup replay <=1.4e-6 same A100 regime) showed the g generalization gap
+  (dev-fit g-MAE) growing monotonically with training and largest after 5-epoch averaging
+  (2.85x/3.08x), with seed-inconsistent late-phase dynamics; the frozen routing rule
+  judged FLAT_OR_MIXED mechanically. Stage B reproduced the historical anchors bit-verified
+  (init hashes, 240-epoch schedule prefix, 297,539-param audit, frozen basis/Q hashes;
+  residual CTRL-vs-historical-soup gaps +0.0004/+0.0034 are GPU training nondeterminism,
+  reported as-is) and the single candidate WIDE5_240 failed exactly one frozen gate
+  condition (mean Delta_y -0.00261 > -0.003) while satisfying every other condition
+  including genuine sparse-code readout after aggregation.
+created: '2026-10-07T21:58:50'
+decision: 'STOP zinc_cssd_consumer_generalization_v1 with NO retained training candidate:
+  under the frozen verified DICT consumer (frozen CSSD basis + access + fold + recipe),
+  the purchased training-length/fixed-aggregation exploration (two from-scratch 240-epoch
+  trajectories, CTRL240=mean(236..240) control vs WIDE5_240=mean(200,210,220,230,240))
+  improved full dev y_raw consistently on both seeds (deltas -0.00048/-0.00474, mean
+  -0.00261, group-paired CI95 [-0.0039,-0.0013], g-MAE improved both seeds, k=0 carries
+  67-102% of the delta, alpha-mean intervention still hugely responsive p95 2.38/1.76
+  resp 1.000) but MISSED the frozen retention gate (mean Delta_y <= -0.003 required;
+  -0.00261 observed). Route was FLAT_OR_MIXED (F240-F120 +0.00108; seed dev directions
+  flip: seed1 single checkpoints oscillate and worsen 120->240 while its 5-epoch mean
+  improves massively). No seed 3, no gate change, no new window purchase, no COMP/semantic/relational
+  reopening. Negative is scoped to these two fixed estimators at this budget under
+  this recipe - never ''dictionaries useless'', ''all neural consumers useless'' or
+  ''data noise floor reached''.'
+decision_id: decision-zinc-cssd-consumer-generalization-v1-no-retained-training-candidate-20261007
+evidence:
+- tracks/ksvd/protocols/zinc-cssd-consumer-generalization-v1.yaml
+- tracks/ksvd/results/zinc_cssd_consumer_generalization_v1/REPORT.md
+- tracks/ksvd/results/zinc_cssd_consumer_generalization_v1/roster_lock.json
+- tracks/ksvd/results/zinc_cssd_consumer_generalization_v1/terminal_eval.json
+- tracks/ksvd/results/zinc_cssd_consumer_generalization_v1/noise_bound_addendum.json
+- tracks/ksvd/results/zinc_cssd_consumer_generalization_v1/runs/diag_s0/diagnosis.json
+- tracks/ksvd/results/zinc_cssd_consumer_generalization_v1/runs/diag_s1/diagnosis.json
+- tracks/ksvd/records/runs/20261007-212635-434c5518.json
+kind: decision
+revisit_if: A new preregistration either (a) targets the seed-dependent late-phase
+  trajectory oscillation directly (s1 single checkpoints worsen 120->240 while their
+  5-epoch mean improves by -0.035 dev g) with a pre-registered estimator family and
+  a matched control, or (b) changes the interface/supervision condition itself; any
+  new purchase needs the same two-seed paired control and the historical-anchor verification
+  used here.
+study_id: zinc-context-gap
