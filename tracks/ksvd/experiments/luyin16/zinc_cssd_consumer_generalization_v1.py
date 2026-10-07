@@ -1445,7 +1445,16 @@ def terminal_eval(
             checks["trajectories_completed"] = False
         if tman["parameter_audit"] != expected_audit:
             checks["param_audit_ok"] = False
-        if tman["encoder_frozen_basis_hashes"] != ctx["basis_parts"]["hashes"]:
+        if tman["frozen_basis_hashes"] != ctx["basis_parts"]["hashes"]:
+            checks["frozen_basis_ok"] = False
+        # the encoder-side hashes key the normalized Dbar (U/common_rms/Dbar),
+        # not the package hashes (U/common_rms/D) — compare like for like
+        expected_encoder_hashes = {
+            "U": array_sha256(ctx["basis_parts"]["U"].numpy()),
+            "common_rms": array_sha256(ctx["basis_parts"]["common_rms"].numpy()),
+            "Dbar": array_sha256(ctx["basis_parts"]["Dbar"].numpy()),
+        }
+        if tman["encoder_frozen_basis_hashes"] != expected_encoder_hashes:
             checks["frozen_basis_ok"] = False
         if not tman["frozen_basis_unchanged"] or not tman["schedule_prefix_matches_historical_240"]:
             checks["frozen_basis_ok"] = checks["schedule_prefix_ok"] = False
