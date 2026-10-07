@@ -1,0 +1,37 @@
+# ZINC CSSD performance triage v1 — read-only error attribution on the saved
+# predictions of zinc_cssd_consumer_replacement_v1 (promote commit 32b8c96,
+# four formal runs at revision a308e3490bfe).
+#
+# Single stage `analyze` (CPU, seconds; no torch, no GPU, no model loading, no
+# forward replays, no official valid/test):
+#   * row alignment (gid/y vs targets at the saved fold positions; fit 8001 /
+#     dev 1999 = sorted union(select, confirm)) and the stored identities
+#     (y = g + c; y_raw ≈ h + q_raw; h = ell_hat + s_hat),
+#   * frozen-Q object checks (one shared soup hash; bit-identical q_raw),
+#     one-shot terminal-eval MAE reproduction at full precision,
+#   * e_g/e_Q/e_y error synthesis with B_Q = mean(|e_g+e_Q| - |e_g|) and the
+#     composition cancellation gap (component MAEs never summed into a
+#     budget),
+#   * four k-group contributions (k=0 / k=-1 / k=-2 / k<=-3) normalised by the
+#     FULL split row count with exact add-back checks,
+#   * dev top-20 by the two-seed mean DICT |e_y| (ties by subset_index),
+#     top-2/5/20 contributions, exclusion scores as sensitivity only,
+#     the located gid=3775/1424 localisation kept from the q-spotcheck note,
+#   * the component cancellation gap (erratum support) and the two text
+#     errata of the previous round's REPORT (no historical number modified).
+#
+# The analysis runs under the analyzed round's frozen protocol (same
+# dataset/split fingerprints); it trains nothing and buys nothing.
+protocol_id: zinc-cssd-consumer-replacement-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  stage: analyze
+
+runtime:
+  device: cpu
+  torch_threads: 8

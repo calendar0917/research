@@ -1,0 +1,64 @@
+alternatives_rejected:
+- 'Buying a Q-side cycle-path training candidate (bigger T25 head, prototype-style
+  class repair, new global-topology features) -- rejected: >=75.8% of B_Q sits in
+  two rows that are same-input-conflicted (gid1424: identical T25 carries k=0 at fit
+  row 1270) or uncovered+ordering-dependent (gid3775: singleton class fell into select;
+  the penalty is a function of (graph, generator node order), not a graph invariant);
+  the exact-class repair route already failed its deploy gate single-row-dominated
+  (gain -2.9e-5 excluding the worst row) and the 25D hinge global-topology channel
+  already exists with a negative official-terminal history; remaining unlocated budget
+  k=-2/-1 <= 0.0067 < 6% of MAE_y.'
+- 'Purchasing a g-side consumer candidate now (wider reader, code-injection, COMP
+  reweighting, new seeds) -- rejected as unpurchased: no current observation isolates
+  a recoverable e_g mechanism (no per-row ell/s predictions on dev; CI95 of the DICT-RAW
+  delta crosses zero; RAW with strictly more local information is not better; the
+  old trainable IHT local dictionary lost to a matched MLP and was stopped; N/E joint
+  closed; hyperparameter/capacity scans and COMP-weight changes on s-MAE-alone are
+  explicitly not purchasable).'
+- 'Re-running forward passes to regenerate per-row dev ell_hat/s_hat for component
+  localisation -- rejected this round: explicitly forbidden (would load model objects
+  and replay terminal evaluation); the missing fields must be saved by a future round''s
+  own terminal-eval pipeline, not backfilled.'
+because: 'Read-only error attribution on the four saved consumer-replacement runs
+  (promote 32b8c96, revision a308e3490bfe), with exact add-back checks, frozen-Q object
+  checks (one soup hash, bit-identical q_raw) and full-precision terminal-eval reproduction.
+  Group contributions: k=0 C_y 0.0888/B_Q -0.0001/C_g 0.0889; k=-1 C_y 0.0042/B_Q
+  +0.0013; k=-2 C_y 0.0062/B_Q +0.0054 (in-group MAE_Q 1.675 vs MAE_g 0.230); k<=-3
+  C_y 0.0208/B_Q +0.0208 (|e_g| 0.03-0.06, |e_Q| 20.80). Top20 covers 98.3% of B_Q;
+  the located pair carries 75.8% (gid3775 = audit train:3776 subset_index 3776; gid1424
+  = subset_index 1424). The DICT-RAW paired delta -0.00102 is 83% from the k=0 group.
+  Fit/dev directions are opposite (fit +0.00193 DICT worse, dev -0.00102 better),
+  so no stable regularisation claim; component cancellation gap 0.0410->0.0451 is
+  an error-composition change only.'
+created: '2026-10-07T15:27:01'
+decision: 'PRIORITIZE the next ZINC training budget on the dictionary consumer''s
+  g generalization/readout, NOT on the Q cycle path; PURCHASE NO TRAINING CANDIDATE
+  this round. The saved-prediction triage (zinc_cssd_performance_triage_v1) shows
+  the shared frozen Q''s net harm B_Q=+0.02736 on dev is 95.7% concentrated in 9 rare-k
+  rows (k<=-3 two located rows 75.8%: gid1424 = T25 input conflict, gid3775 = uncovered
+  singleton class + ordering-dependent label; k=-2 seven rows 19.8% unlocated), while
+  74.0% of the complete dev y_raw MAE (C_g(k=0)=0.0889 of 0.1199) is the consumer
+  body error e_g on the 1930 common molecules where Q contributes ~0 (B_Q(k=0)=-0.0001).
+  Q''s recoverable budget inside the frozen T25 interface is ~0 (conflict is same-input-unsplittable;
+  the exact-class repair route already stopped single-row-dominated in zinc_cycle_prototype_transfer_cpu_v1;
+  the global-topology/T25 hinge direction already exists with negative terminal history).
+  No g-side candidate is purchased either: dev has no per-row ell_hat/s_hat to localize
+  e_g to a component channel, the k=-2/-1 tail is unlocated, k=0 e_g structure is
+  uncharacterised, RAW (strictly more local information) is not better, and every
+  adjacent recipe (trainable IHT local dictionary, N/E joint, prototype rescue, capacity/hyperparameter
+  scans, COMP-weight change on s MAE alone) has a stopped/negative record. Keep DICT
+  as the main development baseline (performance carried over, sparse differences really
+  read out); two text errata of the previous REPORT recorded, no historical number
+  changed.'
+decision_id: decision-cf70d97e
+kind: decision
+revisit_if: 'A cheap read-only follow-up (new authorization) localises the missing
+  information: (a) dev e_g component/channel structure (from a future round''s own
+  saved per-row predictions), (b) the k=-2/-1 tail (is it the same conflict/uncovered
+  structure -> then the Q route is formally closed with ~0 recoverable budget; or
+  covered-but-unfitted classes -> at most a <=0.005 Q repair candidate, pre-warned
+  by its single-row-dominated history), (c) k=0 e_g structure (concentrated subgroups
+  like large molecules / |g| tails -> a consumer readout candidate under a new preregistration
+  with the basis and its injection frozen; diffuse -> the interface family is near
+  its data floor and the budget moves to the open whole-graph representation question).'
+study_id: zinc-context-gap

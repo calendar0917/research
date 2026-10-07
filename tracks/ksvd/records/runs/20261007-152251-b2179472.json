@@ -1,0 +1,179 @@
+{
+  "candidate_id": "zinc-cssd-consumer-replacement-v1",
+  "ended_at": "2026-10-07T15:22:51",
+  "fingerprint": "6d8ae009acdc9332e9b3556c2f22873d95227f1f9ce81c8a8d7b0ccdb866beaa",
+  "kind": "run_record",
+  "meta": {
+    "note": "zinc-cssd-performance-triage-v1 (read-only, CPU, commit 32b8c96+triage code): dev 1999-row error synthesis on the saved consumer-replacement predictions — Q net harm B_Q +0.02736 is 95.7% in 9 rare-k rows (k<=-3 two located rows 75.8%: T25 input conflict gid1424 / unseen singleton class + ordering-dependent label gid3775; k=-2 19.8% unlocated), while 74.0% of the full dev MAE (C_g(k=0)=0.0889/0.1199) is the consumer g error on the 1930 common molecules where Q contributes ~0 (B_Q(k=0)=-0.0001); DICT-RAW paired delta -0.00102 is 83% from k=0; budget priority = g generalization/readout, NO training candidate purchased (missing: dev per-row ell/s localization, k=-2/-1 tail localization, k=0 e_g structure); two text errata recorded, no historical numbers changed; zero GPU, no forward replays, official valid/test never loaded"
+  },
+  "metrics": {
+    "all_checks_pass": true,
+    "avg_delta_dev": -0.0010158257866897877,
+    "budget_priority": "g-generalization-readout",
+    "dict_dev_mean_B_Q": 0.02736035291961992,
+    "dict_dev_mean_MAE_g": 0.09257365554541631,
+    "dict_dev_mean_MAE_y": 0.11993400846503624,
+    "k0_share_of_dict_dev_MAE_y": 0.7400610972956481,
+    "k_leq_minus3_share_of_dict_dev_B_Q": 0.7584751297086478,
+    "measure": "zinc_cssd_performance_triage_v1::analyze",
+    "official_test_loaded": false,
+    "official_valid_loaded": false,
+    "one_shot": true,
+    "purchased_candidate": "none",
+    "purpose": "saved-prediction performance attribution and next-candidate design",
+    "q_tail_share_of_dict_dev_B_Q": 0.9566453494036421,
+    "read_only": true,
+    "seconds": 0.09892087383195758,
+    "stage": "analyze"
+  },
+  "mode": "scratch",
+  "promoted_at": "2026-10-07T15:26:39",
+  "protocol_hash": "52b50e0bdd50dbceec6baebce549e2d4d74d80ae634ce8825770834c9585a82f",
+  "protocol_id": "zinc-context-gap",
+  "provenance": {
+    "code_state_hash": "c14f910ed3c34e371f8e59b9deac1fe5064ebbcd88f32076eda4989130fa202e",
+    "config_hash": "193684b3bcb397e504cc62802b49d758b83f8b9273fb696cd712c8aff4a4eef9",
+    "dataset_fingerprint": {
+      "dataset_fingerprint": "f03ae64d1126f7f0417d5ab4d4f82128dcc2ce60abb79de2a5217c65e3a10da3",
+      "policy": "official_pyg_zinc_data",
+      "raw_files": [
+        {
+          "bytes": 765,
+          "name": "atom_dict.pickle",
+          "sha256": "c4c8e8625c9773bb725ec2771552eccb2b6cf6550c8fef0f6139627aa8fe51c6"
+        },
+        {
+          "bytes": 239,
+          "name": "bond_dict.pickle",
+          "sha256": "623359be444efd15db6eec412ea9ba9a12bf1afec57305f9f5abd4b4a52c541a"
+        },
+        {
+          "bytes": 4782,
+          "name": "test.index",
+          "sha256": "6aa50d98976044fb36089afef5b4c991b429ca1c8e009d33a0319e42a2d9b525"
+        },
+        {
+          "bytes": 7690132,
+          "name": "test.pickle",
+          "sha256": "33c7d2bcf6332be422aaea4baaf056e36f2c80eb6f7d0f5d68a8264d1b94e65b"
+        },
+        {
+          "bytes": 65110,
+          "name": "train.index",
+          "sha256": "575d6acd72ac207a95947e2bdd16411ef6fc3faa88c2f55a2c496ea43022a6d8"
+        },
+        {
+          "bytes": 338943042,
+          "name": "train.pickle",
+          "sha256": "9c76df5a1ab90aac200df22902893827168aeced3df87aab4b6bee100235d7f2"
+        },
+        {
+          "bytes": 5541,
+          "name": "val.index",
+          "sha256": "fe48c38157f0d38e7fc441903a143392eda080511a79e8fb8f60f5c1b0a9c164"
+        },
+        {
+          "bytes": 37634758,
+          "name": "val.pickle",
+          "sha256": "4c6015ec483224c55593c862b0334ae4b64e14679eab041c0655c6a7b603e47a"
+        }
+      ],
+      "split": {
+        "expected_sizes": {
+          "test": 1000,
+          "train": 10000,
+          "val": 1000
+        },
+        "index_sha256": {
+          "test.index": "6aa50d98976044fb36089afef5b4c991b429ca1c8e009d33a0319e42a2d9b525",
+          "train.index": "575d6acd72ac207a95947e2bdd16411ef6fc3faa88c2f55a2c496ea43022a6d8",
+          "val.index": "fe48c38157f0d38e7fc441903a143392eda080511a79e8fb8f60f5c1b0a9c164"
+        },
+        "policy": "official_pyg_zinc_subset_split",
+        "sizes": {
+          "test": 1000,
+          "train": 10000,
+          "val": 1000
+        },
+        "splits": [
+          "train",
+          "val",
+          "test"
+        ]
+      },
+      "split_fingerprint": "58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a"
+    },
+    "environment": {
+      "cwd": "/home/calendar/code/research",
+      "executable": "/home/calendar/code/research/.venv/bin/python",
+      "machine": "x86_64",
+      "packages": {
+        "networkx": "3.4.2",
+        "numpy": "2.1.3",
+        "ogb": "1.3.6",
+        "optuna": "4.2.1",
+        "pandas": "2.2.3",
+        "pynauty": "2.8.8.1",
+        "pytest": "8.3.4",
+        "pyyaml": "6.0.2",
+        "scikit-learn": "1.5.2",
+        "scipy": "1.14.1",
+        "torch": "2.5.1",
+        "torch-geometric": "2.6.1"
+      },
+      "platform": "Linux-6.18.52-1-lts-x86_64-with-glibc2.44",
+      "python": "3.12.14",
+      "python_full": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]"
+    },
+    "git": {
+      "code_state_hash": "c14f910ed3c34e371f8e59b9deac1fe5064ebbcd88f32076eda4989130fa202e",
+      "commit": "32b8c96341018f5ba5f0d8a248649b058976b48e",
+      "diff_hash": "163e909293c6bf9b2b984c737f3d5ae2dad0de912b1641de524226cbd4e43693",
+      "dirty": true,
+      "patch": "diff --git a/tracks/ksvd/src/ksvd_research/runners/__init__.py b/tracks/ksvd/src/ksvd_research/runners/__init__.py\nindex cb1c888..c4cac52 100644\n--- a/tracks/ksvd/src/ksvd_research/runners/__init__.py\n+++ b/tracks/ksvd/src/ksvd_research/runners/__init__.py\n@@ -26,6 +26,7 @@ def _registry() -> dict[str, Runner]:\n         zinc_cssd_basis_reuse_v1,\n         zinc_cssd_consumer_replacement_v1,\n         zinc_cssd_nonlinear_binding_v1,\n+        zinc_cssd_performance_triage_v1,\n         zinc_full_bottleneck_audit_v1,\n         zinc_full_nonlinear_probe_v1,\n         zinc_full_reader_wd_pilot_v1,\n@@ -60,6 +61,7 @@ def _registry() -> dict[str, Runner]:\n             zinc_cssd_basis_reuse_v1.build_runner(),\n             zinc_cssd_consumer_replacement_v1.build_runner(),\n             zinc_cssd_nonlinear_binding_v1.build_runner(),\n+            zinc_cssd_performance_triage_v1.build_runner(),\n             zinc_full_bottleneck_audit_v1.build_runner(),\n             zinc_full_nonlinear_probe_v1.build_runner(),\n             zinc_full_reader_wd_pilot_v1.build_runner(),\n",
+      "untracked": [
+        {
+          "path": "tracks/ksvd/configs/luyin16/zinc_cssd_performance_triage_v1.yaml",
+          "sha256": "0fbcdcb213566b870ec626cbc3580fbe5ff90f36c5426e80cd6f4ca25338d7b6",
+          "size": 1631,
+          "snapshot": true
+        },
+        {
+          "path": "tracks/ksvd/experiments/luyin16/zinc_cssd_performance_triage_v1.py",
+          "sha256": "61373616a83c4f45dbe7141022645d179bc3f2a8303584ce712960a67eea874d",
+          "size": 31610,
+          "snapshot": true
+        },
+        {
+          "path": "tracks/ksvd/src/ksvd_research/runners/zinc_cssd_performance_triage_v1.py",
+          "sha256": "a89037aebf0e742189405693f048d05fb9b7d6c9f9ccd83fec79993cb5f6b124",
+          "size": 6393,
+          "snapshot": true
+        }
+      ]
+    },
+    "runner": "zinc_cssd_performance_triage_v1",
+    "runtime_seconds": 0.101377,
+    "split_fingerprint": "58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a",
+    "test_access": "blocked"
+  },
+  "purpose": "saved-prediction performance attribution and next-candidate design (read-only)",
+  "record_id": "record-20261007-152251-b2179472",
+  "run_id": "20261007-152251-b2179472",
+  "scientific_config": {
+    "data": {
+      "root": "data/ZINC"
+    },
+    "model": {
+      "stage": "analyze"
+    },
+    "protocol_id": "zinc-cssd-consumer-replacement-v1",
+    "seed": 0
+  },
+  "seeds": [
+    0
+  ],
+  "started_at": "2026-10-07T15:22:51",
+  "status": "completed",
+  "study_id": "zinc-context-gap"
+}
