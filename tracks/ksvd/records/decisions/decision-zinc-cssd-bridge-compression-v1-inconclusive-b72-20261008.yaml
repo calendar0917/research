@@ -1,0 +1,89 @@
+alternatives_rejected:
+- 'Retaining B72 as a cheaper candidate anyway because its parameter count is 20.9%
+  lower and its seed-0 dev y_raw improved (-0.00050) -- rejected: the frozen branch-B
+  tolerance required per-seed Delta_y <= +0.002 and mean-Delta_y CI95 upper <= +0.002;
+  seed 1 is +0.00221 and the CI upper is +0.00345, so the effect is not separable from
+  seed/molecule sampling at two seeds. Branch A also fails (seed 1 worsens).'
+- 'Closing the capacity-constraint direction (branch E: close-b72) because the narrower
+  bridge did not help -- rejected: a sign flip with a CI spanning the whole decision
+  space is D (inconclusive), not a demonstrated negative; closing a direction requires
+  a bounded, consistent effect, which was not observed.'
+- 'Purchasing a third seed, another bridge width, an init search, or an extra
+  aggregation window to resolve the flip -- rejected: the protocol froze exactly four
+  from-scratch runs (CTRL288/B72 x seed 0/1) with the pre-registered estimator
+  mean(236..240); no seed 3, no other width, no gate change, and EARLY120/LONG360 were
+  never run in any round and are not run now.'
+- 'Reading B72 vs the historical DICT soup (seed 0 +0.00003) as an improvement over the
+  strong historical model -- rejected: the historical soup is not the same-round control
+  and carries GPU training nondeterminism; the frozen comparison is the paired same-round
+  CTRL288 only.'
+- 'Reopening calibration, COMP weights, head-only, N/E joint, trainable IHT, prototype,
+  atom/K/T search, message passing/Transformer, or statistical-feature expansion as a
+  rescue -- rejected: all were excluded before training; y_cal shows no added signal
+  (B72 seed 0 equals y_raw, seed 1 higher) and calibration never counts as positive.'
+because: 'Under the frozen verified DICT consumer (frozen CSSD basis + access + fold +
+  recipe, clean committed revision 021c07f), the single purchased candidate B72 (bridge
+  144->72->144, 20,736 bridge params, 235,331 total, teacher-free fork_rng init) was
+  trained from scratch for 240 epochs / 15,120 steps on both seeds, bit-identical
+  schedule to the historical DICT schedule, frozen basis and Q hashes unchanged, and
+  the non-bridge parameters bitwise equal to the same-seed CTRL288 (roster 11/11 checks
+  ok). The one-shot terminal eval showed: dev y_raw Delta = -0.00050 (seed 0) and
+  +0.00221 (seed 1), mean +0.00086; dev g Delta = +0.0000003 and +0.00180, mean +0.00090;
+  group-paired bootstrap (2000 draws, seed 20261007, shared picks) mean-Delta_y CI95
+  [-0.00189, +0.00345] and mean-Delta_g CI95 [-0.00183, +0.00354], both spanning the
+  A/B decision space; fit deltas move in the same direction as dev within each seed
+  (fit y_raw -0.01117/+0.00556) with no systematic dev-fit g gap reduction (0.05413 ->
+  0.06518 and 0.06486 -> 0.06141); the alpha-mean intervention on all four soups is
+  hugely responsive (B72 p95 2.84/2.64 >> marker 1e-4, response fraction 1.000, harmful
+  swap dMAE +1.42/+1.37), so the sparse-code readout is intact and not diluted; noise
+  eta = 1.67e-6, marker 1e-4. The frozen branch rule therefore judged D (inconclusive):
+  a strict two-seed direction flip AND a mean-Delta CI spanning the decision space.'
+created: '2026-10-08T01:47:00'
+decision: 'STOP zinc_cssd_bridge_compression_v1 with branch D (inconclusive) and NO
+  retained candidate: under the frozen verified DICT consumer, narrowing the posterior
+  MLP bridge from 144->288->144 to 144->72->144 (bridge params 82,944 -> 20,736, total
+  297,539 -> 235,331, -62,208 = -20.9%) in the complete B72 recipe produced no decidable
+  effect on dev generalization: the paired dev y_raw delta flips sign across seeds
+  (-0.00050 / +0.00221, mean +0.00086) and the molecule-sampling CI95 [-0.00189, +0.00345]
+  spans the entire A-E decision space, so neither the performance-keeping branch (A)
+  nor the cheaper-within-tolerance branch (B) is met, while the readout branch (C) is
+  refuted (B72 alpha-mean p95 2.84/2.64 >> marker 1e-4, response 1.000). B72 is neither
+  retained as a candidate nor closed as a direction. Measured cost is parameter-only:
+  training wall time is mixed (seed 0 -42s, seed 1 +87s) and peak GPU memory is unchanged
+  (~372 vs ~378 MB), so no time/memory saving was demonstrated either. The same-round
+  CTRL288 reproduces the historical DICT soup within +0.00053/+0.00143 dev y_raw (same
+  c05 A100 regime; GPU training nondeterminism class), and the historical strong DICT
+  models remain. No seed 3, no other width, no init search, no window/aggregation/COMP/
+  WD/LR change, no reopening of any excluded direction. The negative is scoped to this
+  frozen interface, this recipe, two seeds and this fixed estimator - never "dictionaries
+  useless", "all neural consumers useless", "capacity constraints do not matter", or
+  "data noise floor reached".'
+decision_id: decision-zinc-cssd-bridge-compression-v1-inconclusive-b72-20261008
+evidence:
+- tracks/ksvd/protocols/zinc-cssd-bridge-compression-v1.yaml
+- tracks/ksvd/results/zinc_cssd_bridge_compression_v1/REPORT.md
+- tracks/ksvd/results/zinc_cssd_bridge_compression_v1/terminal_eval.json
+- tracks/ksvd/results/zinc_cssd_bridge_compression_v1/source_manifest.json
+- tracks/ksvd/results/zinc_cssd_bridge_compression_v1/pretrain_checks.json
+- tracks/ksvd/results/zinc_cssd_bridge_compression_v1/smoke.json
+- tracks/ksvd/results/zinc_cssd_bridge_compression_v1/runs/CTRL288_s0/manifest.json
+- tracks/ksvd/results/zinc_cssd_bridge_compression_v1/runs/CTRL288_s1/manifest.json
+- tracks/ksvd/results/zinc_cssd_bridge_compression_v1/runs/B72_s0/manifest.json
+- tracks/ksvd/results/zinc_cssd_bridge_compression_v1/runs/B72_s1/manifest.json
+- tracks/ksvd/records/runs/20261008-000635-aa9ecf2c.json
+- tracks/ksvd/records/runs/20261008-000819-c990737d.json
+- tracks/ksvd/records/runs/20261008-000835-dac63487.json
+- tracks/ksvd/records/runs/20261008-001210-ad3151e2.json
+- tracks/ksvd/records/runs/20261008-003121-48cf7bb4.json
+- tracks/ksvd/records/runs/20261008-004952-32237d89.json
+- tracks/ksvd/records/runs/20261008-010723-b4899f9c.json
+- tracks/ksvd/records/runs/20261008-013505-26dc2817.json
+kind: decision
+revisit_if: A new preregistration either (a) states an explicit precision target and
+  a matched paired control able to separate a ~+/-0.002 dev effect from training-seed
+  and molecule-sampling variance (i.e. a design that fixes the two-seed direction flip
+  observed here), or (b) changes the interface/supervision condition itself; any new
+  purchase needs the same two-seed paired same-round control, the frozen verified
+  basis/access, and the historical-anchor verification used here. A compression claim
+  additionally needs a demonstrated time/memory saving, not only a parameter-count drop.
+study_id: zinc-context-gap
