@@ -1,0 +1,216 @@
+# Protocol: ZINC CSSD consumer replacement v1 (2026-10-08, design basis f7cf87c).
+
+# Freezes the single question of the shared-local-structure-dictionary line:
+# replacing the strong M_COMP consumer's local phi65 input with the FULL
+# reconstruction supplied by the frozen CSSD basis package — can complete-y
+# prediction performance be held while the sparse residual actually shows
+# molecular differences in the read-out?  RAW is the performance-carrying
+# reference; this round never asks DICT to beat RAW, never claims the
+# dictionary must be used, and makes no y-only/SOTA claim.  COMP supervision
+# is retained as a disclosed auxiliary condition.
+
+id: zinc-cssd-consumer-replacement-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+
+split:
+  description: >-
+    universe = the source round's committed fit fold (8001 official-train
+    rows; verified from fold.npz / fold_manifest.json, never hardcoded);
+    dev = sorted union(select_idx, confirm_idx) = 1999 rows, i.e. the
+    historical development rows — a DEVELOPMENT COMPARISON set (already used
+    in historical development), never a new independent confirm; canonical-
+    SMILES groups never straddle fit/dev (verified against the committed
+    train_canonical_smiles.npz table).  No re-splitting, no group leakage
+    repair, no score-driven selection.
+  fingerprint_policy: index-array SHA-256 (identical for both arms and seeds)
+  folds: 1
+  oof: false
+  official_valid_usage: never_loaded
+  official_test_usage: never_loaded
+
+reused_objects_read_only:
+  source: results/zinc_cssd_nonlinear_binding_v1 (stage-0 of the source round)
+  artifacts: >-
+    fold.npz, fold_manifest.json, targets.npz, tuple_payload.npz, kappa_M.json,
+    prep.npz (all sha256-verified against objects_manifest.json), cssd_basis.npz
+    (U/common_rms/D vs cssd_refit.json), Q_soup_state.pt (vs Q_meta.json)
+  fit_domain: >-
+    every fitted statistic reused as-is (phi scaler, kappa_M, prep, targets,
+    Q) was fitted on the SAME 8001-row fit fold; nothing is refitted this
+    round; the DICT arm gets NO extra amplitude tuning or separate scaler
+  basis_note: >-
+    the CSSD basis refit included training-task supervision in its temporary
+    head (recorded as-is; NOT claimed as a purely unsupervised basis)
+  missing_objects: >-
+    missing objects are first looked up in existing rr artifacts; only then
+    may they be rebuilt to the ORIGINAL specification on the same fit (never
+    overwriting the historical directories); if the source cannot be
+    guaranteed the concrete blocker is delivered instead of substituting
+    constants fitted on other data
+
+frozen_dictionary:
+  spec: CSSD q1 (U fit-mean direction; r = (I-UU^T)phi; Dbar column-normalised;
+    top-8 tied-IHT-10), 32 atoms, radius-2 untyped phi65 rooted patch
+  consumer_math: >-
+    Dbar = normalized_dictionary(D - U @ (U.T @ D)); c = phi @ U;
+    r = phi - c @ U.T; alpha = tied_iht_codes(Dbar, r, s=8, steps=10);
+    phi_hat = c @ U.T + alpha @ Dbar.T (the common term is KEPT — never the
+    sparse residual alone); CSSD encodes in the ORIGINAL phi coordinates and
+    the historical phi_mean/phi_std/phi_scale are applied AFTER decoding
+    (never twice, never in the wrong coordinates)
+  freezing: U / common_rms / Dbar carried as non-persistent buffers inside
+    the DICT encoder (never trainable, never in the optimizer, never in the
+    state dict); sha256 asserted before/after training
+  intervention_patch_point: >-
+    the single local structure input inside local_tuple.root_codes (the one
+    place data.dict_phi is read): a thin subclass + attribute view swaps phi
+    for phi_hat there and nowhere else; data.dict_phi is never globally
+    modified; no parallel raw-phi branch and no bypass is added
+
+arms:
+  RAW:
+    local_input: original phi65 (the historical M_COMP consumer untouched)
+  DICT:
+    local_input: frozen CSSD full reconstruction phi_hat (same consumer,
+      same trainable parameters, same everything else)
+  identical_except_input: >-
+    same-seed RAW/DICT bodies start bit-identical per trainable tensor
+    (asserted); the residual structural inputs are kept and their consumption
+    sites listed: chemistry one-hot28/one-hot28/one-hot4 inside the tuple
+    features, the real J incidence weights (pair_wJ), the Sem108 semantic
+    interface + size2 into fusion layer 1 (where the zero-init W_loc 342x64
+    injects the local channel), the static relations, the posterior MLP
+    bridge, the reader inputs, the shared frozen Q(topology25).  The round
+    claims at most "this ONE effective local structure interface is supplied
+    by the basis" — never that all structural information flows through CSSD.
+  parameter_contract: 297,539 trainable (base body 184,707 incl. reader
+    39->2; bridge 82,944; local encoder 29,888); asserted per arm/seed
+
+seed_semantics:
+  seeds: [0, 1]
+  penetration: >-
+    the skeleton constructor resets the global torch RNG to a fixed 0
+    internally, so the factory substitutes the seed constant for the duration
+    of construction only (scoped, restored immediately; the historical module
+    global is never permanently modified and parallel runs are unaffected);
+    verified by init tensors: same-seed RAW/DICT identical, seed-1 bodies
+    genuinely different, the FRAME_SEED A frame and the zero W_loc identical
+    across seeds by design
+  schedule: locked zw schedule per body seed (seed + 101); the batch-order
+    plan and the training RNG state are saved explicitly per run and asserted
+    equal across arms at the same seed; the deterministic CSSD encoding
+    consumes no training RNG (asserted in smoke)
+
+supervision:
+  components: g = y_stored - c; ell = (logP - MU_LOGP)/sigma; s = g - ell
+    (the residual component, never named "pure SA"); all targets/constants
+    reused from the source round's fit
+  loss: L = MAE(ell_hat + s_hat, g) + 0.5*(MAE(ell_hat, ell) + MAE(s_hat, s))
+    (COMP — a disclosed auxiliary condition of this round)
+  q_head: the frozen shared Q(topology25->64->32->1) from the source round
+    (fit-only, last-5 soup); never retrained
+  prediction: y_raw = ell_hat + s_hat + Q_raw; y_cal = y_raw + b_y with a
+    single fit-median b_y per run (never stacked with any older bias)
+
+training:
+  epochs: 240
+  batch_size: 128
+  optimizer: Adam 1e-3, coupled weight_decay 1e-5, grad clip 5
+  precision: FP32 (no AMP, no DDP, no scheduler, no early stopping)
+  soup: fixed mean of epochs 236..240
+  from_scratch: true (never warm-started from any historical soup)
+  diagnostics_epochs: [1, 40, 120, 240] (light local-channel probes; the
+    epoch-1 zero upstream gradient through the zero-init W_loc is the known
+    null, never misread as a dead channel)
+  no_dev_during_training: dev rows are touched only in the one-shot terminal
+    stage (no epoch peeking, no soup selection, no candidate edits)
+
+evaluation:
+  primary: full dev y_raw MAE per run (M_DICT / M_RAW)
+  paired: delta_s = M_DICT_s - M_RAW_s (positive = DICT worse), per seed and
+    the two-seed mean
+  bootstrap: >-
+    canonical-SMILES-group-paired resampling of dev groups (2000 draws, seed
+    20261012); the SAME group resampling shared by both arms and both seeds;
+    each draw first averages the two seeds' MAE differences, then CI95 is
+    taken; the molecular bootstrap carries no training-seed/basis
+    uncertainty; 2 body seeds are not a method-stability claim
+  secondary: y_cal, g_raw, ell, s MAEs and fit metrics and training cost
+    (never only G0; component MAEs are never summed into an error budget)
+  one_shot: terminal_eval.json is written once and never overwritten
+
+dictionary_intervention:
+  timing: after training, on the frozen DICT soups, inside terminal-eval
+  unique_intervention: >-
+    every local structure input's alpha_v is replaced by the SAME fit-root
+    mean alpha (computed under the frozen basis on the fit rows); c is kept;
+    phi_hat re-decoded and re-forwarded; chemistry one-hots, J incidence,
+    Sem108, reader and Q untouched; no retraining, no recalibration
+  noise_bound: >-
+    eta is estimated by repeated evaluation + an identity hook on the same
+    soups; the engineering response marker is p95 > max(1e-4, 10*eta);
+    a response beyond the marker shows the consumer READS the sparse code —
+    it is never incremental benefit
+  localization_conditional: >-
+    only if the alpha intervention is unresponsive on both seeds: one
+    pre-registered read-only diagnostic replaces each arm's whole local
+    structure input (phi for RAW / phi_hat for DICT) with that arm's own
+    fit-root mean input at the same interface, to separate common-term
+    carriage from whole-interface bypass; never a new training arm, never a
+    rescue purchase
+
+decision_rules_frozen:
+  tolerance: >-
+    keep-DICT-as-candidate budget rule: two-seed mean delta <= +0.003 AND
+    each seed delta <= +0.005 — an engineering tolerance for THIS round only,
+    never a general equivalence threshold; the bootstrap CI must be shown
+    alongside; satisfying the point estimate or a CI crossing zero is never
+    "proven lossless"; calibration-only improvement never passes a
+    raw-performance verdict
+  order: [C, D, A, B]
+  C_performance_clearly_worse: >-
+    mean delta > +0.003 and the worst seed > +0.005: report the fit/dev gap,
+    the phi_hat reconstruction error and the consumer wiring; representation-
+    approximation loss and training adaptation remain competing explanations;
+    no general verdict against dictionaries; no automatic architecture
+    purchase
+  D_flip_or_boundary: >-
+    seed directions flip (or the evidence sits on the boundary, including
+    outside tolerance without being clearly worse): unconfirmed — no seed 3,
+    no threshold change, no roster change
+  A_held_and_responsive: >-
+    within tolerance AND the alpha intervention responds beyond the noise
+    marker on both seeds: keep DICT as a next-stage candidate (supports only
+    "this effective local structure interface can be supplied by the basis");
+    if the CI95 crosses the tolerance boundary, statistical carriage is noted
+    as still unconfirmed; the next research step is decided by the user, never
+    auto-started
+  B_held_but_unresponsive: >-
+    performance held but alpha is near-unresponsive: use the conditional
+    localisation to separate common-term carriage from whole-interface
+    bypass; sparse-atom responsibility is NOT established; performance
+    maintenance must not be packaged as successful reuse
+  engineering_failure: >-
+    implementation/infrastructure failures are fixed and disclosed (at most
+    one located-fix retry); scientific results are never rescued by
+    implementation or hyperparameter changes
+
+panel_budget:
+  body_runs: 4 (RAW/DICT x seeds 0/1)
+  checks_smoke: focused checks + probe + short GPU smoke
+  terminal: one one-shot terminal-eval
+  gpu_budget: 3 hours total allocated (incl. smoke/failures/retries); no
+    extra formal candidates purchased
+  no_third_seed: true
+  no_re_split: true
+  no_new_architecture: true
+  no_early_rescored_history: true
+
+test_policy: never_loaded

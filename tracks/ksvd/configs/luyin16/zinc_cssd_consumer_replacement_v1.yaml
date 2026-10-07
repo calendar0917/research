@@ -1,0 +1,42 @@
+# ZINC CSSD consumer replacement v1 — the frozen basis supplies the M_COMP
+# consumer's local phi65 interface.
+#
+# `model.stage`:
+#   source-objects : verify + record every read-only reused object (fold,
+#                    targets, payload, kappa_M, prep, CSSD basis, frozen Q)
+#                    and the round fold view (fit 8001 / dev = sorted
+#                    union(select, confirm)); CPU
+#   checks         : focused pre-training correctness checks (CPU)
+#   probe          : fit-only interface probe, <=256 molecules by gid,
+#                    including the read-only historical M_COMP soup probe; CPU
+#   smoke          : short GPU plumbing smoke (RAW/DICT x seeds 0/1, <=4
+#                    batches per arm)
+#   train          : one 240-epoch body run (model.arm in {RAW, DICT},
+#                    model.seed in {0, 1}); identical consumer/recipe, only
+#                    the local structure input differs
+#   terminal-eval  : the one-shot terminal stage (roster -> dev scoring ->
+#                    shared-group bootstrap -> noise bound -> the unique
+#                    alpha-mean intervention -> conditional localisation ->
+#                    frozen A-D decision rules)
+#
+# Official ZINC valid and test are never instantiated.
+protocol_id: zinc-cssd-consumer-replacement-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  arm: RAW
+  stage: source-objects
+  seed: 0
+  epochs: 240
+  # max_steps: null (full budget)
+  smoke_batches: 4
+
+runtime:
+  # `cpu` for source-objects/checks/probe; `cuda:0` is the res-2 A100 regime
+  # for smoke/train/terminal-eval.  No silent CPU fallback.
+  device: cpu
+  torch_threads: 8
