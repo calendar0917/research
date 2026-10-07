@@ -1,0 +1,240 @@
+# Protocol: ZINC CSSD bridge compression v1 (2026-10-08, design basis b0d3721).
+
+# Freezes the single question of the shared-local-structure-dictionary line at
+# the consumer's capacity: with the VERIFIED frozen CSSD basis and its
+# effective local access (the DICT arm of zinc_cssd_consumer_replacement_v1)
+# held fixed, does ONE smaller-capacity neural consumer — the posterior MLP
+# bridge narrowed from 144->288->144 to 144->72->144 — improve the development-set
+# performance of g while holding full-y performance and the dictionary
+# readout?  This is a single-candidate exploration; it does NOT claim the
+# bridge has been located as the bottleneck, and the fit-dev gap alone can
+# never prove overfitting.  This round never asks the dictionary to beat plain
+# encoding, never adds a RAW arm, and never re-opens negative recipes.
+
+id: zinc-cssd-bridge-compression-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+
+split:
+  description: >-
+    identical to zinc_cssd_consumer_replacement_v1: fit = the source round's
+    committed 8001-row fit fold; dev = sorted union(select_idx, confirm_idx) =
+    1999 historical development rows (a DEVELOPMENT COMPARISON set, repeatedly
+    used by this line — never a new independent confirm); canonical-SMILES
+    groups never straddle fit/dev; no re-splitting, no row deletion.
+  fingerprint_policy: index-array SHA-256 (identical for all runs)
+  folds: 1
+  oof: false
+  official_valid_usage: never_loaded
+  official_test_usage: never_loaded
+
+reused_objects_read_only:
+  source: results/zinc_cssd_nonlinear_binding_v1 (unchanged stage-0 objects)
+  historical_runs: results/zinc_cssd_consumer_replacement_v1/runs (DICT_s0/s1 anchors)
+  artifacts: >-
+    fold, targets, tuple payload, kappa_M, prep, the CSSD basis
+    (U/common_rms/D; q=1, 32 atoms, top-8 tied-IHT-10; the historical refit
+    included task supervision in its temporary head — recorded as-is, never
+    claimed purely unsupervised), the frozen shared Q(topology25) soup, and
+    the replacement round's saved DICT_s0/s1 run artifacts.  U/common_rms/Dbar
+    are non-persistent buffers: loading any checkpoint always requires the
+    original basis package; nothing is refitted; missing objects are first
+    looked up in known rr artifacts; if the source cannot be guaranteed the
+    concrete blocker is delivered.
+
+frozen_model:
+  spec: >-
+    both arms are DICT consumers built by the replacement round's factory
+    build_arm("DICT", payload, kappa_M, basis_parts, seed) (which completes its
+    own historical 297,539-parameter audit first — this round NEVER feeds B72
+    into a hardcoded 297,539/DICT historical check).  CTRL288 = that factory
+    untouched (the historical 144->288->144 zw.MLPBridge, 82,944 bridge
+    parameters, 297,539 total, original factory initialization that
+    reproduces the historical DICT init bit-for-bit).  B72 = the same factory,
+    then ONLY model.local_dictionary_bridge replaced by SmallMLPBridge:
+    144->72->144, no biases, SiLU, the EXACT historical forward formula
+    (scale = sqrt(mean(h^2, dim=1, keepdim=True) + BRIDGE_EPS); x = h/scale;
+    out = scale * fc2(silu(fc1(x)))) — no normalization/epsilon change, no
+    residual/dropout/LayerNorm/bias, no downstream width change; 20,736
+    bridge parameters, 235,331 total (-62,208, ~20.9%).  B72 initialization is
+    FIXED and teacher-free: built on CPU under torch.random.fork_rng(devices=[])
+    with the private seed 20261007 + body_seed, the two nn.Linear layers keep
+    their default reset_parameters init (no distillation from trained bridges/
+    soups/labels, no per-prediction scaling, no init candidate search); the
+    fork restores the global CPU RNG and the formal training re-seeds via
+    seed_everything(body_seed) exactly like the control, so same-seed arms
+    share the batch schedule and the training RNG stream and every NON-bridge
+    initial tensor is bit-identical across arms; seed 0/1 bodies genuinely
+    differ.  Because the width change necessarily defines a new init, this
+    round compares the B72 COMPLETE recipe: a positive result is never
+    causally attributed to the parameter count alone, and step-0 function
+    equality is never claimed.  A_raw/W_loc and every other consumer tensor
+    stays trainable (no head-only training — the canonical_late_readout
+    head-only failure is not re-run); CSSD and Q stay frozen; no raw-phi
+    bypass; COMP supervision unchanged
+    (L = MAE(ell_hat+s_hat, g) + 0.5*(MAE(ell_hat,ell)+MAE(s_hat,s)));
+    y_raw = ell_hat + s_hat + Q_raw; g = y - c (the original target
+    decomposition term); ell = the normalized logP term; s = g - ell (a
+    residual, never a pure SA); b_y = each run's own fit-median residual.
+
+training_contract_frozen:
+  optimizer: Adam lr 1e-3, coupled weight_decay 1e-5, batch 128, grad clip 5
+  precision: FP32 (no AdamW, no scheduler/AMP/DDP/early stopping)
+  runs: exactly four formal body trainings (CTRL288/B72 x seeds 0/1), each
+    from scratch for 240 epochs (15,120 optimizer steps, asserted), fit rows
+    only during training (no dev read, no mid-training replay/rebuild — only
+    detach/clone captures)
+  schedule: the original zw.build_schedule, seed = body seed + 101; must be
+    bit-identical to the historical DICT schedule of the same seed (hash +
+    element-wise)
+  estimator: the UNIQUE estimator per run = the equal-weight FP32 parameter
+    mean of the FULL member states of epochs 236..240 (historical soup
+    semantics; non-float state entries must be identical and are copied; the
+    basis buffers never enter the average, the optimizer or the state dict —
+    checkpoints are loaded together with the basis package)
+  trace_artifacts: epoch120/epoch240 states and the 236..240 members are saved
+    for traceability only — they are NEVER scoring candidates and dev is
+    never scanned over checkpoints; every run saves init/schedule/members/
+    soup/manifest/curve/probes/resume state
+  frozen_basis: sha256 asserted before/after training; CSSD buffers never in
+    the optimizer; Q fixed and shared across all four runs (never retrained,
+    topology25 unchanged)
+  budget: total GPU budget 3 hours including smoke, the four trainings, the
+    terminal eval and necessary engineering retries; at most 2 GPUs in
+    parallel, one body training per GPU at a time; no seed 3, no rescue recipe
+
+pretrain_checks_frozen:
+  scope: >-
+    fit-only, before any training: (1) source/basis/Q/prep hashes + the
+    historical runs (schedule + init reproduction); official valid/test never
+    instantiated; (2) per-arm parameter contracts, bridge shapes/no-bias/
+    forward formula, non-bridge init bitwise pairing across arms, B72 build
+    RNG neutrality (fork_rng restored), two seeds genuinely differ; (3) a
+    small-batch fit-only optimization smoke — finite outputs/loss, gradients
+    reaching BOTH bridge layers and the local W_loc after short steps (the
+    step-0 zero upstream gradient through W_loc=0 is the known null — checked
+    after steps, never misread as dead), CSSD buffers never in the optimizer
+    or state dict, basis hashes unchanged; (4) ell_hat/s_hat/h from the SAME
+    forward — the torch-internal identity exactly 0, the exported float64 sum
+    within the FP32 rounding band; (5) save -> CORRECT-factory reload ->
+    replay for all four arm x seed cells (cross-instance GPU FP32 band; the
+    old fixed-path/fixed-factory loaders are replaced by per-arm factories —
+    a B72 state must never load through the CTRL288 factory); (6) batch/row
+    order + label invariance on fit molecules via the existing helpers; (7)
+    the alpha_replace patch sits on model.local_tuple (the CSSD encoder,
+    never the wrapper) and its entry replacement changes phi_hat while the
+    common term and every other input/Q stay untouched (the source round's
+    decode_enabled-on-the-wrapper wiring bug is not repeated).
+
+terminal_evaluation:
+  one_shot: terminal_eval.json is written once and never overwritten; the
+    protocol/roster/init rules/metrics/decision rules are committed frozen
+    BEFORE the first dev scoring of this round; smoke is fit-only; if this
+    round's dev has already been read anywhere before the freeze, it must be
+    disclosed.  A genuine pre-scoring engineering failure may be fixed and
+    retried with disclosure; a successful terminal_eval.json is never covered.
+  roster: all four trainings must be complete before the single eval.
+  exports: >-
+    per run x split (fit AND dev) per-row: row_index, gid, canonical-SMILES
+    group id, n_nodes, k, y/g/ell/s targets, ell_hat/s_hat/h (same forward),
+    q_raw, y_raw, b_y.  Main metric: full dev y_raw MAE; secondary: dev
+    g_raw MAE; y_cal reportable (b_y = each run's own fit-median residual;
+    calibration improvement is never a positive performance signal).
+    Component MAEs are never summed; the fit-dev difference/ratio is never
+    reported in place of the dev error; gap = MAE_dev(g) - MAE_fit(g) is
+    listed per run in its own column.
+  bootstrap: >-
+    canonical-SMILES-group-paired resampling of dev groups, 2000 draws, fixed
+    seed 20261007; the SAME group picks shared by both arms, both seeds and
+    BOTH metrics; per-seed Delta_y and Delta_g CIs computed separately, then
+    the two-seed average Delta for each metric, then its CI.  The molecular
+    bootstrap carries no training-seed/basis uncertainty; 2 seeds are not a
+    method-stability claim; dev is the historical development set, never a
+    new confirm/test.
+  historical_anchors: >-
+    replacement DICT_s0/s1 dev y_raw = 0.1215175080/0.1183505085 (and the
+    generalization round's terminal_eval.json for CTRL/WIDE); the new CTRL288
+    vs historical DICT gap is reported; B72 vs history is descriptive ONLY —
+    the recipe effect is judged against the same-round paired CTRL288, and a
+    weakened new control is never packaged as a big win over the old strong
+    model.
+  noise_bound: >-
+    eta from repeated forwards AND same-weight save/reload replay of the four
+    soups; NO raw/decoded identity hook this round (the real input change from
+    disabling CSSD decoding is never counted as numerical noise); marker =
+    max(1e-4, 10*eta).
+  dictionary_intervention: >-
+    the unique alpha-mean intervention on ALL FOUR soups: alpha_v := the
+    fit-root mean alpha (computed from fit under the frozen basis, or a
+    hash-consistent historical mean) via model.local_tuple.alpha_replace;
+    c/chemistry/J/Sem108/relations/Q untouched; no retraining, no
+    recalibration.  Reported: the actual input change, |Delta pred|
+    mean/median/p95/max, the response fraction at the marker threshold,
+    DeltaMAE(y_raw) and DeltaMAE(g), and whether the destructive intervention
+    damages performance.  p95 > marker supports a clear response; this is
+    dependence evidence, never dictionary incremental benefit and never a
+    RAW comparison (no RAW arm this round).
+
+decision_branches_frozen: >-
+  Performance and parameter cost are judged SEPARATELY; the previous round's
+  "mean improvement at least -0.003" cliff gate is NOT inherited.  All numbers
+  below are THIS round's engineering decision thresholds, never significance
+  claims.  Priority order:
+  (A) keep-performance-candidate: both seeds Delta_y < 0; both Delta_g <=
+  +1e-4; mean Delta_g < 0; mean Delta_y <= -1e-4; the mean-Delta_y group-paired
+  CI95 upper bound < 0; the B72 intervention p95 > marker on both seeds.
+  -> retained as a performance candidate; the fit/dev pattern decides the
+  READING (fit worse or improving clearly less than dev supports the
+  capacity-constraint/sample-efficiency interpretation; fit+dev improving
+  together is a recipe performance improvement, never a solved-generalization
+  claim; the molecule-axis CI is never called training stability).
+  (B) keep-cheaper-candidate: A missed; every seed Delta_y <= +0.002 and mean
+  <= +0.001 with CI upper <= +0.002; the same three conditions on g; B72
+  intervention p95 > marker on both seeds.  -> recorded as a
+  lower-parameter-cost candidate within THIS round's tolerance (62,208 fewer
+  parameters; training-time savings read from the measured cost, never
+  assumed); never a statistically proven equivalence and never a
+  generalization improvement.
+  (C) dictionary-readout-not-supported: execution valid but the B72
+  intervention p95 <= marker on any seed.  -> B72 is NOT upgraded to the
+  dictionary performance mainline; the readout problem of THIS recipe is
+  reported; only a genuinely large input change may explain the non-response;
+  an implementation failure is never counted as a scientific negative.
+  (D) inconclusive: A/B/C missed and the two seeds' Delta_y directions flip,
+  or the mean-Delta_y CI95 simultaneously spans A territory (lower < -1e-4)
+  and beyond-B territory (upper > +0.002) — the molecule-sampling uncertainty
+  alone spans the whole decision space.  -> uncertainty recorded; no seed 3,
+  no other width, no forced "compression is dead" verdict.
+  (E) close-b72: everything else.  -> THIS bridge-72 recipe is closed (fit
+  worse + dev worse = restricted-capacity expression; fit ~unchanged + dev
+  worse = no benefit seen); the whole capacity-constraint direction, the
+  dictionary line and the data noise floor are never closed by it.
+  Every branch ends the round: no automatic canonical-recipe change, no
+  extra arm/seed/window; the old strong DICT models and this round's CTRL288
+  are kept; A/B candidates and their data enter the records and the
+  researcher decides any upgrade.
+
+exclusions_frozen:
+  - no third seed, no other bridge width, no init search, no distillation
+  - no XGBoost/CatBoost/FM, head-only, N/E joint, old trainable IHT,
+    prototype, dictionary atom/K/s/T search, extra statistical features,
+    message passing/Transformer, COMP reweighting, WD/LR/EMA/SWA/aggregation
+    window search
+  - EARLY120/LONG360 were NOT run by the previous round and are NOT run here;
+    they must never be reported as existing negative results
+  - no RAW arm (the intervention tests dependence, never dictionary-vs-raw
+    incremental benefit)
+  - no row deletion, no clipping, no oracle Q, no calibration counted as a
+    positive signal, no dev re-scoring of history
+  - no new subgroup/feature search beyond the existing k groups and the k=0
+    n_nodes bins (<=23 / 24..27 / >=28); no deletion of long rings or hard
+    molecules; the ell/s cancellation diagnostics stay descriptive
+  - official valid/test never instantiated
+
+test_policy: never_loaded

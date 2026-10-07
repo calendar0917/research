@@ -1,0 +1,36 @@
+# ZINC CSSD bridge compression v1 — frozen basis + access; a smaller posterior
+# MLP bridge (144->72->144) vs the historical 144->288->144, both DICT consumers.
+#
+# `model.stage`:
+#   source-checks  : verify every reused object + the historical DICT runs +
+#                    the per-arm contracts / non-bridge init pairing / RNG
+#                    neutrality of the B72 bridge swap; CPU
+#   pretrain-checks: the meaningful fit-only pre-training checks; CPU
+#   smoke          : one 1-epoch end-to-end trajectory per arm; GPU
+#   train          : one from-scratch 240-epoch training per arm x seed
+#                    (model.arm in {CTRL288, B72}, model.seed in {0, 1});
+#                    15,120 steps asserted; members 236..240 captured;
+#                    estimator = their equal-weight FP32 mean
+#   terminal-eval  : the ONE-SHOT frozen comparison (roster verification,
+#                    full fit+dev scoring + per-row exports, paired deltas,
+#                    group-paired bootstrap, noise bound, the alpha-mean
+#                    intervention on all four soups, decision branches A-E)
+#
+# Official ZINC valid and test are never instantiated.
+protocol_id: zinc-cssd-bridge-compression-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  stage: source-checks
+  arm: CTRL288
+  seed: 0
+
+runtime:
+  # `cpu` for source-checks/pretrain-checks; `cuda:0` is the res-2 A100 regime
+  # for smoke/train/terminal-eval. No silent CPU fallback.
+  device: cpu
+  torch_threads: 8
