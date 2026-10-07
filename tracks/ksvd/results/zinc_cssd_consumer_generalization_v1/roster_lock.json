@@ -1,0 +1,78 @@
+{
+  "protocol_version": "zinc-cssd-consumer-generalization-v1",
+  "stage": "freeze-roster",
+  "one_shot": true,
+  "route": {
+    "route": "FLAT_OR_MIXED",
+    "F120": 0.07035376206752843,
+    "F240": 0.07143729674394872,
+    "F240_minus_F120": 0.0010835346764202919,
+    "d_s": {
+      "0": -0.007973999970118356,
+      "1": 0.006551636836657909
+    },
+    "mean_d": -0.0007111815667302235,
+    "scale": 0.002,
+    "rule": "OVERFIT: F240-F120 <= -0.002 and both d_s >= 0 and mean(d_s) >= +0.002; STILL_IMPROVING: F240-F120 <= -0.002 and both d_s <= 0 and mean(d_s) <= -0.002; else FLAT_OR_MIXED; single checkpoints 120/240 only; the scale is this round's budget-routing engineering number, not a significance standard"
+  },
+  "epochs": 240,
+  "estimators": {
+    "CTRL240": {
+      "members": [
+        236,
+        237,
+        238,
+        239,
+        240
+      ],
+      "candidate": false,
+      "effective_epochs": 240,
+      "contiguous_last5": true,
+      "window": "236..240",
+      "note": "the same-trajectory control (historical soup semantics)"
+    },
+    "WIDE5_240": {
+      "members": [
+        200,
+        210,
+        220,
+        230,
+        240
+      ],
+      "candidate": true,
+      "effective_epochs": 240,
+      "contiguous_last5": false,
+      "window": "200,210,220,230,240",
+      "note": "the single purchased fixed aggregation: K=5, wider time spread"
+    }
+  },
+  "candidates": [
+    "WIDE5_240"
+  ],
+  "control": "CTRL240",
+  "seeds": [
+    0,
+    1
+  ],
+  "bootstrap": {
+    "n_boot": 2000,
+    "seed": 20261007,
+    "grouping": "canonical-SMILES groups of the dev rows",
+    "shared_resampling": true,
+    "avg_seeds_first": true
+  },
+  "gates": {
+    "delta_y_mean": -0.003,
+    "delta_y_seed": 0.0,
+    "g_band": 0.0001,
+    "response_marker": "p95 > max(1e-4, 10*eta)"
+  },
+  "tie_break": "smallest two-seed mean full y_raw; differences < 1e-4 tie and prefer the shorter effective training length; still tied -> contiguous last-five-epoch mean",
+  "diagnosis_files": {
+    "0": "1014af1eb6d53685401d65ba7900793becc69a3a31116356ce31746339742c27",
+    "1": "c17503f28dda8622674624c56b602f106d78e2847f25254dc3da01a4bb117076"
+  },
+  "generated_at": "2026-10-07T20:27:34",
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}
