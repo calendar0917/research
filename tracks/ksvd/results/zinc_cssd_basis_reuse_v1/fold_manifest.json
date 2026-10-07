@@ -1,0 +1,93 @@
+{
+  "protocol_version": "zinc-cssd-basis-reuse-v1",
+  "threshold": 23,
+  "definition": {
+    "universe": "the design-basis (zinc_cssd_nonlinear_binding_v1) fit fold; old select/confirm and official valid/test never enter this round",
+    "threshold_rule": "t = argmin_t |#{n_nodes<=t} - #{n_nodes>t}| over the parent fit fold (both pools nonempty); ties take the smaller t",
+    "eval_prefix_rule": "T_eval = prefix of target_pool canonical-SMILES groups ordered by sha256('cssd-reuse-v1-20261006|' + canonical_smiles) ascending, row count closest to 25% of target_pool; ties take the shorter prefix",
+    "n_selection_rule": "N = min(|source_pool|, |T_fit_candidate|); S_fit and T_fit each select whole groups in the same hash order to exactly N rows; if exact N is unreachable because of group sizes, the largest common achievable count <= N is used; remainders are UNUSED and never a second eval set",
+    "hash_string": "cssd-reuse-v1-20261006",
+    "eval_fraction": 0.25,
+    "min_fit_rows": 1000,
+    "min_eval_rows": 300,
+    "label_blind": true
+  },
+  "checks": {
+    "universe_is_parent_fit_fold": true,
+    "smi_groups_never_split": true,
+    "threshold_uses_only_graph_identity": true,
+    "disjoint": true,
+    "covering": true,
+    "equal_cssd_fit_molecule_counts": true,
+    "min_sizes_ok": true,
+    "threshold_gap": 251,
+    "sizes": {
+      "threshold": 23,
+      "universe": 8001,
+      "s_pool": 4126,
+      "t_pool": 3875,
+      "t_eval": 969,
+      "t_fit_candidate": 2906,
+      "n_common": 2906,
+      "s_fit": 2906,
+      "t_fit": 2906,
+      "s_unused": 1220,
+      "t_unused": 0
+    },
+    "equal_count_note": "the two CSSD refits fit the same number of molecules; source molecules are smaller so phi rows and runtime differ"
+  },
+  "distributions": {
+    "s_fit": {
+      "n": 2906,
+      "n_nodes_min": 9,
+      "n_nodes_median": 20.0,
+      "n_nodes_max": 23,
+      "phi_rows": 57181
+    },
+    "t_fit": {
+      "n": 2906,
+      "n_nodes_min": 24,
+      "n_nodes_median": 26.0,
+      "n_nodes_max": 37,
+      "phi_rows": 78084
+    },
+    "t_eval": {
+      "n": 969,
+      "n_nodes_min": 24,
+      "n_nodes_median": 26.0,
+      "n_nodes_max": 37,
+      "phi_rows": 25995
+    },
+    "s_unused": {
+      "n": 1220,
+      "n_nodes_min": 9,
+      "n_nodes_median": 20.0,
+      "n_nodes_max": 23,
+      "phi_rows": 24210
+    },
+    "t_unused": {
+      "n": 0,
+      "n_nodes_min": null,
+      "n_nodes_median": null,
+      "n_nodes_max": null,
+      "phi_rows": 0
+    }
+  },
+  "smiles_fingerprints": {
+    "s_fit": "7f261bd93b7ea67aab0006e1cd51ed3edc0184d7931f10d35fb4b2a4bb09956f",
+    "t_fit": "6b36de1850c9aa8b4bf4259e3a42b378a4aa42453ed1865759ded5c6236eaa2f",
+    "t_eval": "b9540419d9bb2573de3fc3591f9779d011305f8b3fb5f4467627a92e2bd25972",
+    "s_unused": "2d2ff16c9ac38c0907b9c706733bec79e32b752aeece680932dc3a10e9938c59",
+    "t_unused": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "hashes": {
+    "s_pool_sha256": "af7bf7033db8f61b228f19dea1f975050841203d2ad213ac3c0626efecfecb0c",
+    "t_pool_sha256": "1d19ff2de21f17b74c3aa3b808b2bb6e2388c75d2a1aa17877b8312ccecba137",
+    "t_eval_sha256": "9c33533265030796eafc89acdcca12386a2bba58f738196861ec6265ddbdbd98",
+    "t_fit_sha256": "212cd9bb11be2767e8f65ad4b1c7de7e50414bdd2bc341194d4a839aa1db3454",
+    "s_fit_sha256": "41acbae4e22f7ea9ede05ba3d42f1a45af23db4523b8db7e9be69b13a7a0fb28",
+    "s_unused_sha256": "7396d7107646cd4e2a2bd71eef0403b1383682176ff06e21bbad98d8478d0614",
+    "t_unused_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "smiles_table_sha256": "04a590355fb7bba71e35e52bed60c974999b92af9e96e4ee99bed4afe42dcaff"
+}

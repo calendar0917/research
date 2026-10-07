@@ -1,0 +1,166 @@
+{
+  "protocol_version": "zinc-cssd-basis-reuse-v1",
+  "stage": "build-objects",
+  "seconds": 6.0478444788604975,
+  "fit_set": "T_fit (target domain minus the sealed T_eval group prefix)",
+  "sizes": {
+    "threshold": 23,
+    "universe": 8001,
+    "s_pool": 4126,
+    "t_pool": 3875,
+    "t_eval": 969,
+    "t_fit_candidate": 2906,
+    "n_common": 2906,
+    "s_fit": 2906,
+    "t_fit": 2906,
+    "s_unused": 1220,
+    "t_unused": 0
+  },
+  "distributions": {
+    "s_fit": {
+      "n": 2906,
+      "n_nodes_min": 9,
+      "n_nodes_median": 20.0,
+      "n_nodes_max": 23,
+      "phi_rows": 57181
+    },
+    "t_fit": {
+      "n": 2906,
+      "n_nodes_min": 24,
+      "n_nodes_median": 26.0,
+      "n_nodes_max": 37,
+      "phi_rows": 78084
+    },
+    "t_eval": {
+      "n": 969,
+      "n_nodes_min": 24,
+      "n_nodes_median": 26.0,
+      "n_nodes_max": 37,
+      "phi_rows": 25995
+    },
+    "s_unused": {
+      "n": 1220,
+      "n_nodes_min": 9,
+      "n_nodes_median": 20.0,
+      "n_nodes_max": 23,
+      "phi_rows": 24210
+    },
+    "t_unused": {
+      "n": 0,
+      "n_nodes_min": null,
+      "n_nodes_median": null,
+      "n_nodes_max": null,
+      "phi_rows": 0
+    }
+  },
+  "body_seeds": [
+    0,
+    1
+  ],
+  "target_checks": {
+    "n_rows": 10000,
+    "n_fit": 2906,
+    "uses_dev_labels_in_fit": false,
+    "y_identity_max_abs": 0.0,
+    "g_equals_ell_plus_s_max_abs": 4.440892098500626e-16,
+    "constants_finite": true,
+    "sigma_cycle_nonzero": true,
+    "k_fit_counts": {
+      "k=0": 2776,
+      "k=-1": 106,
+      "k=-2": 20,
+      "k<=-3": 4,
+      "k<=-2": 24
+    },
+    "k_dev_counts": {
+      "k=0": 929,
+      "k=-1": 36,
+      "k=-2": 4,
+      "k<=-3": 0,
+      "k<=-2": 4
+    }
+  },
+  "payload_checks": {
+    "old_tuple_npz": "/home/calendar/code/research/tracks/ksvd/results/zinc_local_tuple_dictionary_joint_vs_independent_seed0_v1/local_tuple_index.npz",
+    "old_tuple_npz_sha256": "4facb6ec77ff10130d49857bad461d16da0ee097495616ca4d4711de962b2c40",
+    "node_sizes_match_env": true,
+    "root_atom_match_env": true,
+    "pair_ptr_monotone": true,
+    "n_roots": 231664,
+    "n_pairs": 508032,
+    "phi_scaler": {
+      "fitted_on": "new rng(20261006) fit rows, realized C>0 incident tuples",
+      "n_samples": 144233,
+      "std_floor": 0.001,
+      "phi_scale_l2_rms": 0.9114654303754,
+      "phi_mean_sha256": "bece21639d4caf8b193eb859066ff805a91b2b637d755500bdbacd8105b03d45",
+      "phi_std_sha256": "b86415e3eefa68cd832b207e0ce5e4532089a00444af264497a11678734264df"
+    },
+    "kappa_D": {
+      "value": 2.066222966689496,
+      "definition": "1 / RMS(initial e_J, e_I) over up to 8192 sampled new-fit roots",
+      "seed": 20261004,
+      "n_roots": 8192,
+      "sample_sha256": "06e17bf4d32d3ff3a082a9d100bcadbed54082238ec93fb9f607675678349073",
+      "raw_rms": 0.4839748740196228,
+      "e_J_rms": 0.4840601980686188,
+      "e_I_rms": 0.4838895797729492
+    }
+  },
+  "kappa_M": {
+    "definition": "r_D = RMS(kappa_D * e_D_init); r_M = RMS(e_M_init); kappa_M = r_D/r_M on the frozen fit-root sample",
+    "kappa_D": 2.066222906112671,
+    "r_D": 1.000176191329956,
+    "r_M": 0.5005602836608887,
+    "e_D_init_rms": 0.4840601980686188,
+    "e_M_init_rms": 0.5005602836608887,
+    "kappa_M": 1.9981133621211125,
+    "n_roots": 8192,
+    "sample_sha256": "06e17bf4d32d3ff3a082a9d100bcadbed54082238ec93fb9f607675678349073",
+    "labels_used": false,
+    "dev_used": false,
+    "note": "r_D is not assumed to be 1; it is the RMS of the scaled initial dictionary codes"
+  },
+  "recipe": {
+    "epochs": 240,
+    "batch_size": 128,
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "grad_clip": 5.0,
+    "soup_epochs": [
+      236,
+      237,
+      238,
+      239,
+      240
+    ],
+    "component_loss_weight": 0.5,
+    "skeleton_arm": "A"
+  },
+  "source_constants": {
+    "p2run.LEARNING_RATE": 0.001,
+    "p2run.WEIGHT_DECAY": 1e-05,
+    "p2run.GRAD_CLIP": 5.0,
+    "p2run.BATCH_SIZE": 128,
+    "cm.H1_LAMBDA": 33.95873017865987
+  },
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "artifacts": {
+    "fold.npz": {
+      "sha256": "1ba73e8bbe3dabf8ec003d2db0462a5c7e2fd56a6a9262e2a639866af6359a16"
+    },
+    "targets.npz": {
+      "sha256": "2e03d074fab1f026eb06c607c7b3c4cc2f6f457625b239537078d913d6406db9"
+    },
+    "tuple_payload.npz": {
+      "sha256": "cd8e529f0522d45180a2423cbe543a83da151571edad3bdf859ed86ebb03d771"
+    },
+    "kappa_M.json": {
+      "sha256": "252391905a65c1b0173182557913fb9f1c1ea2b1cb2743c0b92126778595910e"
+    },
+    "prep.npz": {
+      "sha256": "b90ac42719946781b1bd2684b15e0c84790c0310d8ca26e85b4a524ab3a5aae2"
+    }
+  }
+}

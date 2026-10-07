@@ -1,0 +1,214 @@
+# Protocol: ZINC CSSD basis reuse v1 (2026-10-07, design basis 97b414b).
+#
+# Freezes the WHOLE CSSD structural basis package (U / common_rms / D) fit on
+# a SOURCE domain (small molecules) and asks whether a downstream consumer
+# learned on a TARGET domain (larger molecules) can use that frozen package,
+# versus the identical-method package refit on the target domain.  Research
+# question: can the same local structural coordinates be used by a new
+# molecule-domain predictor — a reuse diagnostic, not a
+# dictionary-vs-plain-encoding purchase and not a SOTA run.
+
+id: zinc-cssd-basis-reuse-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+
+split:
+  description: >-
+    universe = the design-basis (zinc_cssd_nonlinear_binding_v1) fit fold
+    (8001 official-train rows; old select/confirm and official valid/test
+    never enter this round).  Single axis: n_nodes (rooted-graph size),
+    label-blind.  t = argmin_t |#{n_nodes<=t} - #{n_nodes>t}| over the
+    universe, ties take the smaller t (t=23 -> source_pool 4126 /
+    target_pool 3875).  Groups are canonical SMILES (identical molecules
+    never split; committed derived table train_canonical_smiles.npz).
+    T_eval = prefix of target_pool groups ordered by
+    sha256("cssd-reuse-v1-20261006|" + canonical_smiles) ascending, row count
+    closest to 25% of target_pool (ties -> shorter prefix) = 969 rows,
+    sealed until the one-shot terminal stage.  N = min(|source_pool|,
+    |T_fit_candidate|) = 2906; S_fit and T_fit each select whole groups in
+    the same hash order to exactly N rows (the two CSSD refits fit the same
+    number of molecules, 2906 each); remainders are UNUSED, never a second
+    eval set (unused_source 1220 / unused_target 0).  All numbers frozen by
+    fold_manifest.json and re-asserted (EXPECTED_SPLIT).
+  fingerprint_policy: index-array SHA-256 (identical for both arms and seeds)
+  folds: 1
+  oof: false
+  official_valid_usage: never_loaded
+  official_test_usage: never_loaded
+
+frozen_dictionary:
+  scheme: CSSD q1 (U = own-domain fit-mean direction; r = (I-UU^T)phi;
+    D_perp colnorm; top-8 tied-IHT-10), K=32 atoms, phi65 untyped radius-2
+    rooted patch
+  refit: >-
+    per arm: K-SVD (10 epochs, seed 20260924) + 320-epoch task-informed CSSD
+    training on the arm's own domain rows (SOURCE -> S_fit, TARGET -> T_fit;
+    identical recipe and train seed, equal molecule counts asserted); soup =
+    mean of D over epochs 316..320; CPU-faithful to the design basis; the
+    temporary task-informed training head is discarded (only U/common_rms/D
+    enter the consumer; verified by parameter audit in checks)
+  sharing: each arm's U / common RMS / D frozen as buffers (never trained,
+    never in the body optimizer, sha256 in every manifest); SOURCE package
+    stays frozen on the target domain (no resetting of U/RMS/input scalers
+    with target-domain statistics)
+  z_width: 33 ([c/RMS; alpha_perp]); node-centric (same node reuses one code
+    across root windows)
+
+arms:
+  SOURCE:
+    basis_rows: s_fit (n_nodes 9..23, 2906 molecules, 57181 phi rows)
+    consumer: identical Full446 / M_COMP+Q skeleton trained fresh on T_fit
+  TARGET:
+    basis_rows: t_fit (n_nodes 24..37, 2906 molecules, 78084 phi rows)
+    consumer: identical skeleton/recipe/seed init on the same T_fit
+  identical_except_basis: same-seed SOURCE/TARGET bodies start from a
+    bit-identical state per tensor (only the frozen dictionary buffers
+    differ, asserted in checks); body seeds 0 and 1 are genuinely different
+    runs (init, schedule and seed-1 module states all differ)
+
+static_boundary:
+  branch_inputs: [z_v (frozen CSSD of the arm), dict_atom/dict_bond one-hots,
+    env root-shell/shellpair membership indices]
+  forbidden: [pair hidden state, graph summary, neighbour-fused E, pair->node
+    write-back, pair recomputation, attention, transformers, centre updates,
+    recursion]
+  contract: pair_relation mutation must leave pre-pair slots unchanged;
+    chemistry relabelling leaves phi/z unchanged; occurrence-row order
+    invariances hold; same-node-count different-structure graphs use their
+    own real incidence
+
+supervision:
+  components: g = y_stored - c; ell = (logP - MU_LOGP)/sigma_Tfit; s = g -
+    ell (residual, not "pure SA"); all non-dictionary downstream fit
+    quantities (targets constants, payload, kappa, prep, Q, calibration)
+    come from T_fit only and are identical across arms/seeds
+  loss: L = L1(g_hat) + 0.5*(L1(ell_hat) + L1(s_hat))
+  y_benchmark: y_stored is always the original canonical target (never
+    redefined by component refits)
+  q_head: one shared Q(topology25->64->32->1, 3,777 params) on T_fit only,
+    300 epochs, last-5 average, one frozen hash shared by both arms and both
+    body seeds; recipe unchanged (no rare-class weighting, no monotone head,
+    no new cycle input)
+  prediction: y_raw = ell_hat + s_hat + Q_raw; y_cal = y_raw + b_y with a
+    single fit-median b_y per arm/seed (never stacked with b_g; never reads
+    T_eval)
+
+training:
+  epochs: 240
+  batch_size: 128
+  optimizer: Adam 1e-3, weight_decay 1e-5, grad clip 5
+  soup: fixed mean of epochs 236..240 (never Top-5 by holdout)
+  schedule: locked zw schedule per body seed (seed + 101)
+  component_identity: g_hat == ell_hat + s_hat exactly (asserted each step)
+  diagnostics_epochs: [1, 40, 120, 240]
+  no_warm_start: true
+  no_hp_search: true
+  no_select_stage: true
+  amp_or_compile: none (not in the existing recipe)
+
+evaluation:
+  primary: full y_raw MAE on T_eval per arm/seed (M_S / M_T; delta = M_S -
+    M_T, positive = reuse worse; R = M_S / M_T; tolerance R <= 1.05 is a
+    budget rule, not a theoretical bound, and is never re-tuned on this
+    round's noise)
+  secondary: y_cal MAE, g_raw and Q diagnostics (calibration-only or g-only
+    improvements do not certify full-prediction reuse)
+  bootstrap: SMILES-group-paired resampling of T_eval groups (2,000 draws,
+    seed 20261011) per seed and on the two-seed averaged errors; the
+    molecular bootstrap carries no basis or training-seed uncertainty; 2 body
+    seeds are not a claim of method stability
+  one_shot: T_eval is opened once at terminal-eval after every soup, bias,
+    roster, coverage and intervention script is frozen; no result of one
+    seed alters another; T_eval is this round's pre-registered comparison
+    set, not claimed as a never-used final test of the whole research
+  no_mixed_tables: new target-domain scores are never mixed with old
+    random-holdout select/confirm scores (different sample counts, graph
+    sizes, fit protocols)
+
+coverage_diagnostics:
+  definition: full relative reconstruction phi_hat = U*(common*RMS) +
+    Dbar*alpha per molecule (mean over roots of ||phi-phi_hat||/(||phi||+eps)),
+    macro median/p95 on T_fit and T_eval; atom usage counts/mass, N_eff,
+    unused atoms, finiteness; T_fit -> T_eval change
+  severe_rule: any non-finite code/reconstruction, or SOURCE T_eval macro
+    median relative error > 1.0 (phi_hat worse than the zero predictor)
+  no_success_threshold_on_N_eff: true
+  residual_metrics: not reported as a ranking (different U changes the
+    residual denominators); health is not task gain
+
+dictionary_intervention:
+  timing: after training, on the frozen soups, inside terminal-eval
+  unique_intervention: replace every CSSD consumption entry's alpha_v with
+    the arm's T_fit mean root-code alpha (patched at model.code, the single
+    coding point, so every alpha-derived branch is regenerated; common c_v,
+    original graphs, raw/root-MLP, Sem108 and Q inputs untouched; no
+    retraining, no recalibration)
+  reporting: |Δpred| mean/median/p95/max, fraction beyond the numerical
+    replay tolerance 1e-4, full ΔMAE (y_raw and y_cal), and the g change with
+    Q unchanged; response shows dependence, never incremental benefit; no
+    response does not prove absence of information
+  reading: performance close + sparse branch unresponsive -> "this consumer
+    is insufficient to validate sparse-basis usability (a bypass may carry
+    it)", not counted as successful reuse; responsive but mean-alpha swap
+    does not hurt -> dependence shows no favorable role, stop and keep the
+    competing explanations; responsive and the swap hurts both seeds ->
+    the current predictor depends on the sparse code and the perturbation is
+    harmful (still not "dictionary beats plain encoding")
+
+decision_rules_frozen:
+  order: [F, C, A, E, D, B]
+  F_both_arms_weak: two-seed mean T_eval y_raw MAE > 1.0 for both arms ->
+    report the common failure (relative closeness does not establish a
+    strong model); insufficient-pause
+  C_source_clearly_worse: R > 1.05 on both seeds -> separate basis-coverage
+    failure from consumer wiring/optimization using the coverage
+    diagnostics (reconstruction also worse -> coverage problem;
+    reconstruction close with a large prediction gap -> coverage
+    insufficiency is not the sole explanation); reuse-not-supported-stop
+  A_continue: both seeds R <= 1.05 AND averaged-ratio bootstrap upper <=
+    1.05 AND no severe coverage failure AND favorable sparse-branch
+    dependence (all arm/seed runs: ΔMAE > 0 and response fraction >= 0.5)
+    -> continue with the frozen SOURCE package (limited to this basis pair
+    and this size-domain shift; the saved target-basis refit cost is
+    reported; total training cost is not zero); continue-frozen-source
+  E_source_stably_better: R < 1.0 on both seeds -> possibly source-domain
+    structural prior/regularization or target overfit; recorded, still not
+    a dictionary-specific advantage; continue-frozen-source
+  D_no_favorable_sparse_role: performance close but the sparse branch shows
+    no favorable dependence -> this round cannot support the sparse-basis
+    claim from performance maintenance; keep bypass/shared-common-direction
+    explanations; no N/E or prototype rescue; reuse-not-supported-stop
+  B_uncertain: point estimates close but the ratio CI crosses 1.05 or seed
+    disagreement |R0 - R1| > 0.10 -> not equivalence; record uncertainty and
+    stop (no seed-3 purchase); insufficient-pause
+  final_recommendations_only: [continue-frozen-source-package,
+    reuse-not-supported-stop, insufficient-pause]
+
+panel_budget:
+  cssd_refits: 2 (SOURCE on S_fit, TARGET on T_fit; train seed 0 each)
+  shared_q: 1 (T_fit only)
+  body_runs: 4 (SOURCE/TARGET x body seeds 0/1)
+  checks_smoke: focused checks + short GPU smoke
+  terminal: one one-shot terminal-eval (coverage + intervention + T_eval +
+    bootstrap + rules)
+  no_third_seed: true
+  no_second_split: true
+  no_new_architecture: true
+  retries: at most one located-fix retry for implementation/infrastructure
+    failures; failures are not hidden; idle GPUs do not buy scientific rescue
+
+test_policy: never_loaded
+
+seed_semantics:
+  seeds: [0, 1]
+  seed0: primary complete run (both arms)
+  seed1: pre-registered second body run (both arms; not a rescue purchase)
+  init_identity: same-seed SOURCE/TARGET init bit-identical per tensor;
+    seed-1 init, schedule and module states genuinely different (asserted
+    in checks)
