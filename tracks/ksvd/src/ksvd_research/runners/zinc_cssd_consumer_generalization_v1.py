@@ -25,6 +25,11 @@ limited training arrangement improve the DICT consumer's g generalization?).
                            gap, shared-group bootstrap, noise bound, the
                            unique alpha-mean intervention, the frozen
                            retention gate + tie-break.
+* ``noise-addendum``        read-only correction of the terminal noise bound's
+                           identity hook (the hook set decode_enabled on the
+                           model wrapper instead of the encoder; the gate
+                           outcome is recomputed mechanically and the one-shot
+                           terminal_eval.json is never modified).
 
 Official ZINC **valid** and **test** are never instantiated; a granted
 ``test_access`` is refused.
@@ -59,6 +64,7 @@ STAGES = (
     "smoke",
     "train-trajectory",
     "terminal-eval",
+    "noise-addendum",
 )
 SEED_STAGES = ("checkpoint-diagnostics", "train-trajectory")
 
@@ -194,5 +200,14 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
         metrics["one_shot"] = True
         _write_json(context.artifact_dir / "metrics.json", metrics)
         return RunResult(metrics=metrics, status="completed", artifacts=["artifacts/terminal_eval.json"])
+
+    if stage == "noise-addendum":
+        result = stages.noise_bound_addendum(device_name=device_name, out_dir=out_dir)
+        _write_json(context.artifact_dir / "noise_bound_addendum.json", result)
+        metrics = _metrics(result)
+        metrics["eta_corrected"] = result["eta_corrected"]
+        metrics["gate_outcome_unchanged_by_bug"] = result["gate_outcome_unchanged_by_bug"]
+        _write_json(context.artifact_dir / "metrics.json", metrics)
+        return RunResult(metrics=metrics, status="completed", artifacts=["artifacts/noise_bound_addendum.json"])
 
     raise RunnerError(f"unhandled stage {stage}")

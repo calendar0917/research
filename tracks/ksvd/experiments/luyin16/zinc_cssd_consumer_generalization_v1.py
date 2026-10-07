@@ -1681,6 +1681,120 @@ def terminal_eval(
 
 
 # ---------------------------------------------------------------------------
+# 7b. read-only addendum: corrected identity-hook noise bound
+# ---------------------------------------------------------------------------
+
+def noise_bound_addendum(
+    *,
+    out_dir: Path = RESULTS_DIR,
+    device_name: str = "cuda:0",
+    log: Any = print,
+) -> dict[str, Any]:
+    """Corrected identity-hook noise bound (never overwrites the one-shot).
+
+    The terminal stage's identity hook set ``decode_enabled`` on the model
+    wrapper instead of the ENCODER, so the hook model kept decoding and the
+    recorded eta/marker were inflated by the decode effect (~0.5) instead of
+    the hook noise (~1e-6).  This read-only addendum recomputes the
+    identity-hook noise correctly (decode disabled through the factory
+    argument, exactly like the source round's terminal stage) on the SAME
+    estimator states, rebuilds the marker, re-derives the alpha-responsive
+    booleans from the recorded intervention p95 values, and re-applies the
+    frozen retention gate with the corrected inputs.  terminal_eval.json is
+    never modified; the gate outcome is recomputed mechanically.
+    """
+    out_dir = Path(out_dir)
+    started = time.perf_counter()
+    terminal = read_json(out_dir / "terminal_eval.json")
+    roster = load_roster(out_dir=out_dir)
+    estimators = roster["estimators"]
+    control = roster["control"]
+    candidates = [n for n, e in estimators.items() if e["candidate"]]
+    device = resolve_device(device_name)
+    torch.set_num_threads(8 if device.type == "cpu" else 4)
+    ctx = load_round_context()
+    dev_data = ctx["dev_data"]
+
+    identity: dict[str, float] = {}
+    eta_corrected = 0.0
+    for s in SEEDS:
+        for name in estimators:
+            state = torch.load(traj_dir(s, out_dir) / f"{name}_state.pt", map_location="cpu", weights_only=False)
+            model_hook = repl.build_arm(ARM, ctx["payload"], ctx["kappa_M"], ctx["basis_parts"], int(s), decode=False)
+            model_hook.load_state_dict({k: v for k, v in state.items()}, strict=True)
+            model_hook = model_hook.to(device).eval()
+            model_parent = repl.build_arm("RAW", ctx["payload"], ctx["kappa_M"], ctx["basis_parts"], int(s))
+            model_parent.load_state_dict({k: v for k, v in state.items()}, strict=True)
+            model_parent = model_parent.to(device).eval()
+            h_hook = _predict_rows_checked(model_hook, dev_data, device)["h"]
+            h_parent = _predict_rows_checked(model_parent, dev_data, device)["h"]
+            d = float(np.max(np.abs(np.asarray(h_hook) - np.asarray(h_parent))))
+            identity[f"{name}_s{s}"] = d
+            eta_corrected = max(eta_corrected, d)
+            del model_hook, model_parent
+            if device.type == "cuda":
+                torch.cuda.empty_cache()
+    # the repeat evaluations in the terminal stage were correct; keep them
+    for key, rec in terminal["noise_bound"]["per_run"].items():
+        eta_corrected = max(eta_corrected, float(rec["repeat_max_abs_dpred"]))
+    marker_corrected = float(max(REPLAY_TOL, 10.0 * eta_corrected))
+
+    responsive: dict[str, bool] = {}
+    for c in candidates:
+        responsive[c] = bool(all(
+            float(terminal["interventions"][c][str(s)]["abs_dpred"]["p95"]) > marker_corrected
+            for s in SEEDS
+        ))
+
+    decision_orig = terminal["decision"]
+    delta_y = {c: {int(s): float(v) for s, v in decision_orig["per_candidate"][c]["delta_y"].items()} for c in candidates}
+    delta_g = {c: {int(s): float(v) for s, v in decision_orig["per_candidate"][c]["delta_g"].items()} for c in candidates}
+    mean_y_raw = {
+        c: float(np.mean([terminal["main_table"][f"{c}_s{s}"]["mae_dev"]["y_raw"] for s in SEEDS]))
+        for c in candidates
+    }
+    decision_corrected = retention_gate(
+        candidates, delta_y, delta_g, mean_y_raw, responsive, all(terminal["roster_checks"].values()),
+    )
+
+    payload = {
+        "protocol_version": PROTOCOL_VERSION,
+        "stage": "noise-addendum",
+        "read_only": True,
+        "terminal_eval_never_modified": True,
+        "bug": (
+            "the terminal identity hook set decode_enabled on the model wrapper "
+            "instead of the encoder, so the hook model kept decoding; the recorded "
+            "eta/marker were inflated by the decode effect (~0.5) instead of the "
+            "hook noise (~1e-6) and the alpha-responsive gate condition was wrongly "
+            "recorded as False despite p95 2.38/1.76 and response fraction 1.000"
+        ),
+        "identity_hook_max_abs_dpred_corrected": identity,
+        "repeat_max_abs_dpred_from_terminal": {
+            k: float(v["repeat_max_abs_dpred"]) for k, v in terminal["noise_bound"]["per_run"].items()
+        },
+        "eta_corrected": eta_corrected,
+        "marker_corrected": marker_corrected,
+        "alpha_responsive_corrected": responsive,
+        "decision_recomputed": decision_corrected,
+        "gate_outcome_unchanged_by_bug": bool(
+            decision_corrected["passed_candidates"] == decision_orig["passed_candidates"]
+            and decision_corrected["winner"] == decision_orig["winner"]
+        ),
+        "seconds": float(time.perf_counter() - started),
+        "official_valid_loaded": False,
+        "official_test_loaded": False,
+    }
+    write_json(out_dir / "noise_bound_addendum.json", payload)
+    log(
+        f"[noise-addendum] eta {terminal['noise_bound']['eta']:.3g} -> {eta_corrected:.3g}; "
+        f"marker {marker_corrected:.3g}; gate outcome unchanged: "
+        f"{payload['gate_outcome_unchanged_by_bug']}"
+    )
+    return payload
+
+
+# ---------------------------------------------------------------------------
 # 8. CLI (local use; the registered runner calls the same functions)
 # ---------------------------------------------------------------------------
 
@@ -1688,7 +1802,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--stage", default="source-checks", choices=(
         "source-checks", "checkpoint-diagnostics", "freeze-roster", "smoke",
-        "train-trajectory", "terminal-eval"))
+        "train-trajectory", "terminal-eval", "noise-addendum"))
     parser.add_argument("--seed", type=int, default=0, choices=SEEDS)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--out-dir", default=str(RESULTS_DIR))
@@ -1704,6 +1818,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         run_smoke(device_name=args.device, out_dir=out_dir)
     elif args.stage == "train-trajectory":
         train_trajectory(args.seed, device_name=args.device, out_dir=out_dir)
+    elif args.stage == "noise-addendum":
+        noise_bound_addendum(device_name=args.device, out_dir=out_dir)
     else:
         terminal_eval(device_name=args.device, out_dir=out_dir)
     return 0
