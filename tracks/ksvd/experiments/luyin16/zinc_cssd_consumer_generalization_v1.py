@@ -1112,15 +1112,21 @@ def train_trajectory(
         model_r = model_r.to(device).eval()
         with torch.no_grad():
             p_disk = model_r(probe_batch, mask=cm.C6_MASK).detach().cpu().clone()
-        if float((p_mem - p_disk).abs().max()) != 0.0:
-            raise RuntimeError(f"estimator {name} save/reload predictions differ")
+        # weights are hash-verified identical; two separately allocated model
+        # instances may still pick different GPU kernels (allocation-dependent
+        # cuBLAS behaviour), so the prediction check carries the cross-device
+        # FP32 band instead of CPU-style bitwise equality
+        d_reload = float((p_mem - p_disk).abs().max())
+        if d_reload > CROSS_DEVICE_TOL:
+            raise RuntimeError(f"estimator {name} save/reload predictions differ by {d_reload}")
         estimator_records[name] = {
             "members": [int(e) for e in spec["members"]],
             "member_state_sha256": {str(int(e)): member_hashes[int(e)] for e in spec["members"] if int(e) in member_hashes} if not smoke else None,
             "state_sha256": est_hash,
             "candidate": bool(spec["candidate"]),
             "strict_load_ok": True,
-            "save_reload_prediction_equal": True,
+            "save_reload_prediction_max_abs": d_reload,
+            "save_reload_prediction_within_band": True,
         }
         del model_e, model_r
         if device.type == "cuda":
@@ -1258,8 +1264,10 @@ def run_smoke(
             "members_captured": True,
             "aggregation_strict_load": all(
                 v["strict_load_ok"] for v in traj["estimators"].values()),
-            "save_reload_predictions_equal": all(
-                v["save_reload_prediction_equal"] for v in traj["estimators"].values()),
+            "save_reload_predictions_within_band": all(
+                v["save_reload_prediction_within_band"] for v in traj["estimators"].values()),
+            "save_reload_prediction_max_abs": max(
+                v["save_reload_prediction_max_abs"] for v in traj["estimators"].values()),
             "dev_never_touched": True,
         },
         "all_passed": True,
