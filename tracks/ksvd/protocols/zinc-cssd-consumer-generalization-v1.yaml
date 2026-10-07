@@ -1,0 +1,211 @@
+# Protocol: ZINC CSSD consumer generalization v1 (2026-10-08, design basis b385f11).
+
+# Freezes the single question of the shared-local-structure-dictionary line at
+# the consumer side: with the VERIFIED frozen CSSD basis and its access path
+# (the DICT arm of zinc_cssd_consumer_replacement_v1) held fixed, can a
+# limited, explainable training arrangement — training length + ONE fixed
+# weight aggregation — improve the existing consumer's g generalization on
+# the historical development rows?  This round never asks the dictionary to
+# beat plain encoding, never re-opens negative recipes, and never runs an
+# unbounded search.  RAW is not retrained: the reference is the SAME new
+# trajectory's CTRL240 and the historical DICT soup.
+
+id: zinc-cssd-consumer-generalization-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+
+split:
+  description: >-
+    identical to zinc_cssd_consumer_replacement_v1: fit = the source round's
+    committed 8001-row fit fold; dev = sorted union(select_idx, confirm_idx) =
+    1999 historical development rows (a DEVELOPMENT COMPARISON set, already
+    used in historical development — Stage A additionally uses it to select
+    the training branch, so final numbers are never an independent confirm);
+    canonical-SMILES groups never straddle fit/dev; no re-splitting, no
+    worst-row deletion, no unused-rows-as-new-eval.
+  fingerprint_policy: index-array SHA-256 (identical for all runs)
+  folds: 1
+  oof: false
+  official_valid_usage: never_loaded
+  official_test_usage: never_loaded
+
+reused_objects_read_only:
+  source: results/zinc_cssd_nonlinear_binding_v1 (unchanged)
+  consumer_round: results/zinc_cssd_consumer_replacement_v1 (read-only)
+  artifacts: >-
+    every frozen object of the replacement round is reused as-is: fold,
+    targets, tuple payload, kappa_M, prep, the CSSD basis (U/common_rms/D),
+    the frozen shared Q soup, and the replacement round's saved DICT_s0/s1
+    run artifacts (init/epoch40/epoch120/epoch240/soup/last states,
+    schedule.npz, fit/dev predictions, manifests, terminal_eval).  Nothing is
+    refitted; missing objects are first looked up in rr artifacts; if the
+    source cannot be guaranteed the concrete blocker is delivered.
+
+frozen_model:
+  spec: >-
+    build_arm("DICT", payload, kappa_M, basis_parts, seed) from the
+    replacement round, byte-for-byte: the 297,539-parameter M_COMP consumer
+    with the frozen-CSSD full-reconstruction local phi65 input
+    (phi_hat = c @ U.T + alpha @ Dbar.T, common term kept; q1, radius-2
+    untyped phi65, 32 atoms, top-8 tied-IHT-10; U/common_rms/Dbar carried as
+    non-persistent buffers — a loaded model always needs the original basis
+    package).  A_raw/W_loc and every other consumer tensor stays trainable;
+    A_raw is NOT a frozen CSSD atom.  All other inputs (chemistry one-hots,
+    J incidence, Sem108, size, static relations, bridge, reader) unchanged;
+    no raw-phi bypass.  COMP supervision unchanged
+    (L = MAE(ell_hat+s_hat, g) + 0.5*(MAE(ell_hat,ell)+MAE(s_hat,s)));
+    y_raw = ell_hat + s_hat + Q_raw; b_y = the estimator's own fit-median
+    residual (calibration is a secondary metric only).
+
+training_contract_frozen:
+  optimizer: Adam lr 1e-3, coupled weight_decay 1e-5, batch 128, grad clip 5
+  precision: FP32 (no AdamW, no scheduler/AMP/DDP)
+  epochs: 240 (OVERFIT/FLAT_OR_MIXED routes) or 360 (STILL_IMPROVING route)
+  seeds: [0, 1] (the only two replicates; schedule seed = body seed + 101,
+    same locked zw schedule; a longer schedule's first 240 epochs must be
+    bit-identical to the historical schedule.npz)
+  init: from-scratch, must reproduce the historical DICT_s{seed}
+    init_state hash; seed 1 must genuinely differ from seed 0
+  no_dev_during_training: fit rows only during training; all scoring after
+    the trajectory completes
+  frozen_basis: sha256 asserted before/after training; basis never in the
+    optimizer or the state dict
+
+stage_a_checkpoint_diagnostics:
+  scope: >-
+    read-only forward export (eval + no_grad) of the historical DICT_s0/s1
+    epoch40/epoch120/epoch240/soup states on fit (8001) and dev (1999):
+    per-row y/g/ell/s/k targets, gid + fold index, h, ell_hat, s_hat (same
+    forward), q_raw (fixed shared Q, cached once per split), y_raw; the
+    torch-internal component identity and the exported float64 sum identity
+    are checked separately; the historical soup replay must match the saved
+    predictions within 1e-5 (cross-device FP32); calibration, if shown, uses
+    each checkpoint's OWN fit median residual.
+  analysis: >-
+    (1) eval-mode fit/dev g-MAE over epochs (40/120/240/soup) alongside full
+    y_raw MAE; (2) e_ell/e_s/e_g signed means, opposite-sign fraction and the
+    triangle gap mean(|e_ell|+|e_s|-|e_g|) (component MAEs are never summed
+    into an error budget); (3) inside k=0 ONLY the two pre-registered
+    grouping axes: n_nodes (<=23 / 24..27 / >=28) and |g| (<= fit |g| p90 /
+    > p90).  No Q-tail audit, no NN-geometry audit, no descriptor battery, no
+    post-hoc subgroup search.  Group axes are analysis-only: never model
+    inputs, never training reweighting.
+  routing_rule_frozen: >-
+    F_t = two-seed mean eval fit g-MAE at epoch t; D_t = two-seed mean full
+    dev g-MAE; d_s = dev_g_MAE(epoch240, s) - dev_g_MAE(epoch120, s); single
+    checkpoints 120/240 only (never the soup).  OVERFIT: F240-F120 <= -0.002
+    AND both d_s >= 0 AND mean(d_s) >= +0.002.  STILL_IMPROVING: F240-F120
+    <= -0.002 AND both d_s <= 0 AND mean(d_s) <= -0.002.  Everything else:
+    FLAT_OR_MIXED.  0.002 is this round's budget-routing engineering scale
+    only — never a significance or universal standard; thresholds are not
+    moved by results.  This rule is committed before the first read of these
+    checkpoints' dev metrics.
+
+stage_b_trajectories:
+  purchase: >-
+    at most TWO new formal training trajectories (seeds 0/1), from scratch,
+    each at most 360 epochs; same-trajectory estimators share the trajectory
+    (they are NOT independent training replicates and their shared cost is
+    reported as actually spent); total GPU budget 3 hours including
+    diagnostics/smoke/retries; at most one located engineering-fix retry.
+  estimators_by_route:
+    OVERFIT: >-
+      trajectories to 240 epochs; CTRL240 = mean(236..240) (the control,
+      deep-copied at its member epochs); EARLY120 = mean(116..120) (fixed at
+      epoch 120 by deep copy, immune to the later training); WIDE5_240 =
+      mean(200,210,220,230,240).  Candidates: EARLY120, WIDE5_240.
+    STILL_IMPROVING: >-
+      trajectories to 360 epochs; CTRL240 = mean(236..240) (deep-copied at
+      epoch 240 so the continued training cannot drift it); LONG360 =
+      mean(356..360); WIDE5_240 = mean(200,210,220,230,240).  Candidates:
+      LONG360, WIDE5_240.
+    FLAT_OR_MIXED: >-
+      trajectories to 240 epochs; CTRL240 = mean(236..240); WIDE5_240 =
+      mean(200,210,220,230,240).  Candidate: WIDE5_240 only (a capped
+      exploratory purchase — a mixed result is never judged data noise).
+  aggregation_semantics: >-
+    equal-weight FP32 parameter mean of the five full member states (the
+    replacement round's soup semantics); K=5 for every estimator, the
+    variable is the time distribution; NO top-K screening, NO greedy soup,
+    NO window scan, NO prediction ensemble; fixed non-float state entries
+    are copied identically (integers are never float-averaged); the basis
+    never enters the average or the optimizer.  Captured states are
+    independent deep copies (no live state_dict references).
+  roster_lock: >-
+    after Stage A the route is applied mechanically and roster_lock.json is
+    generated (route, epochs, estimator members/candidate flags/effective
+    training length, seeds, bootstrap, gates, tie-breaks) and committed;
+    all Stage-B training runs on that frozen revision.
+
+terminal_evaluation:
+  one_shot: terminal_eval.json is written once and never overwritten
+  roster: all declared candidates must be complete before the single eval
+  exports: >-
+    per estimator x seed: full fit/dev predictions, components, targets,
+    indices and the estimator's own calibration value.
+  main_contrast: >-
+    Delta_s = MAE_y_raw(candidate_s) - MAE_y_raw(CTRL240_s) on full dev
+    (negative = improvement); Delta_g alongside; fit side, ell/s component
+    MAEs, k-group contributions (k=0 detail), the two pre-registered k=0
+    groupings, and training/inference cost are all reported.  The CTRL240-vs-
+    historical-DICT-soup reproduction gap is listed; if the historical anchor
+    is clearly different, the located code/env checks (init tensors, data/
+    basis/Q hashes, schedule, parameter count, execution regime) are
+    verified and reported; pure numerical/training-randomness differences
+    are reported as-is; no hyperparameter 'repair' of a scientific result.
+  bootstrap: >-
+    canonical-SMILES-group-paired resampling of dev groups, 2000 draws,
+    fixed seed 20261007; the SAME group resampling shared by every estimator
+    and both seeds; each draw first averages the two seeds' paired
+    differences, then CI95 is taken; the molecular bootstrap carries no
+    training-seed/basis uncertainty and is not corrected for the branch or
+    candidate selection.  All candidates are reported, never only winners.
+  dictionary_intervention: >-
+    the unique alpha-mean intervention is replayed (not retrained, not
+    recalibrated) on every candidate: alpha_v := the fit-root mean alpha at
+    the single local structure input via model.local_tuple.alpha_replace,
+    c/chemistry/J/Sem108/Q untouched; input change, |Delta pred|
+    mean/median/p95/max, response fraction and DeltaMAE reported; noise eta
+    from repeated normal evals + the identity hook; response marker
+    p95 > max(1e-4, 10*eta).  A destructive mean-intervention loss is never a
+    dictionary gain; an unresponsive new estimator can never be upgraded to
+    a dictionary-core model.
+  retention_gate_frozen: >-
+    the 'retained-performance candidate' engineering gate, frozen before the
+    first new scoring: BOTH seeds' full y_raw improve with two-seed mean
+    Delta_y <= -0.003; both seeds' g-MAE not worse (<= +1e-4 numerical band)
+    with two-seed mean g-MAE improving; both seeds' alpha intervention
+    responsive beyond the marker; model/source/training checks without
+    substantive problems.  This is a resource gate for THIS round, never a
+    significance or SOTA claim; a CI crossing 0 is stated as uncertainty.
+  tie_break_frozen: >-
+    among passing candidates: smallest two-seed mean full y_raw; differences
+    < 1e-4 count as a tie and prefer the SHORTER effective training length;
+    still tied -> prefer the contiguous last-five-epoch mean.
+  failure_reading: >-
+    if no candidate passes, the conclusion is exactly 'these fixed
+    training-length / fixed weight-aggregation adjustments did not resolve
+    the current g generalization gap' — never 'dictionaries are useless',
+    never 'all neural consumers are useless', never 'data noise floor
+    reached'.  No seed 3, no gate change, no new window purchase, no COMP
+    reweighting, no semantic-binding/relational-architecture reopening on
+    the strength of a single-component MAE, component-cancellation change,
+    or subgroup correlation.
+
+exclusions_frozen:
+  - no third seed; no WD knob / EMA / SWA / window or HPO search
+  - no RAW retraining, no per-estimator separate trajectories
+  - no XGBoost/CatBoost/FM, head-only replacement, N/E joint, old trainable
+    IHT tuple, prototype, K/T/atom-count search, message passing or
+    Transformer additions
+  - no row deletion, no clipping/re-targeting, no oracle Q, no calibration
+    counted as a positive signal, no dev re-scoring of history
+  - official valid/test never instantiated
+
+test_policy: never_loaded

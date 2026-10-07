@@ -1,0 +1,36 @@
+# ZINC CSSD consumer generalization v1 — frozen basis + access, limited
+# training-arrangement exploration of the verified DICT consumer.
+#
+# `model.stage`:
+#   source-checks         : verify every reused object + the historical DICT
+#                           run artifacts (hashes, schedule prefix, init);
+#                           CPU
+#   checkpoint-diagnostics: stage A per seed (model.seed in {0, 1}); read-only
+#                           forward export + pre-registered analysis of the
+#                           historical epoch40/120/240/soup checkpoints
+#   freeze-roster         : apply the frozen routing rule; write the one-shot
+#                           roster_lock.json; CPU
+#   smoke                 : short end-to-end GPU plumbing smoke
+#   train-trajectory      : one from-scratch DICT trajectory per seed
+#                           (model.seed in {0, 1}); deterministic member capture
+#   terminal-eval         : the one-shot terminal stage (roster verification,
+#                           full scoring, bootstrap, intervention, frozen gate)
+#
+# Official ZINC valid and test are never instantiated.
+protocol_id: zinc-cssd-consumer-generalization-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  stage: source-checks
+  seed: 0
+
+runtime:
+  # `cpu` for source-checks/freeze-roster; `cuda:0` is the res-2 A100 regime
+  # for checkpoint-diagnostics/smoke/train-trajectory/terminal-eval.
+  # No silent CPU fallback.
+  device: cpu
+  torch_threads: 8
