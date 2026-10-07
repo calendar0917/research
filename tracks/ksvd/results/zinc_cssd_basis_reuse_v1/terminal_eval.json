@@ -1,0 +1,687 @@
+{
+  "protocol_version": "zinc-cssd-basis-reuse-v1",
+  "stage": "terminal-eval",
+  "seconds": 82.18510487303138,
+  "split": "T_eval (sealed one-shot comparison set; never used in training)",
+  "one_shot": true,
+  "roster": {
+    "SOURCE_s0": {
+      "soup_state_sha256": "f04e7c1a0c87f54ff739637f6d19e1c5c9eb62196d3573c370e83859e1c3e00d",
+      "b_y": 0.045208640396595,
+      "steps_done": 5520,
+      "frozen_basis_hashes": {
+        "U": "cbdd5f6819cbdc60c372eef48ef3fa14f254a360a807b6f58db746c69fd33db6",
+        "common_rms": "d19c45b2682b59199c23fc69c8140fe6dba10ab9432f4f2e3606e99e3f63c8a0",
+        "D": "1347329d85cfbe5dea239a2a99aff2d587fb6f93ab1e8cf0c7c4fbca6a60d533"
+      },
+      "q_soup_sha256": "38840d781ac368958ae726768c46c8880a2af3f2c663064ad59a565f4009cf9d"
+    },
+    "TARGET_s0": {
+      "soup_state_sha256": "f977d091b48b9f9a5975c449a24de0aea46736459020ef96cc53185a859b270c",
+      "b_y": 0.034457409754395485,
+      "steps_done": 5520,
+      "frozen_basis_hashes": {
+        "U": "3eb6d7a26b7e232f2121a83fa4b7ddf9fa22357ff82977d7b53f0092ee8d6d32",
+        "common_rms": "a98a039e3d8aa30cb8d0746a407dd852aed437c0bbdfaf7bd47e552d8573410a",
+        "D": "09c41ded77f51de2b5396d9f0ca150bd1e5e338f0d6151db1015dcbc55ebc359"
+      },
+      "q_soup_sha256": "38840d781ac368958ae726768c46c8880a2af3f2c663064ad59a565f4009cf9d"
+    },
+    "SOURCE_s1": {
+      "soup_state_sha256": "10b11d88f455ea81589892126d88a10a4fe502a874bc3d855f12d084caa5b119",
+      "b_y": -0.035832354798913,
+      "steps_done": 5520,
+      "frozen_basis_hashes": {
+        "U": "cbdd5f6819cbdc60c372eef48ef3fa14f254a360a807b6f58db746c69fd33db6",
+        "common_rms": "d19c45b2682b59199c23fc69c8140fe6dba10ab9432f4f2e3606e99e3f63c8a0",
+        "D": "1347329d85cfbe5dea239a2a99aff2d587fb6f93ab1e8cf0c7c4fbca6a60d533"
+      },
+      "q_soup_sha256": "38840d781ac368958ae726768c46c8880a2af3f2c663064ad59a565f4009cf9d"
+    },
+    "TARGET_s1": {
+      "soup_state_sha256": "9f364ea0573a3af7e00a1773eaf27ab675f143813e7c8db85b64f22f557625ac",
+      "b_y": 0.016139429062604904,
+      "steps_done": 5520,
+      "frozen_basis_hashes": {
+        "U": "3eb6d7a26b7e232f2121a83fa4b7ddf9fa22357ff82977d7b53f0092ee8d6d32",
+        "common_rms": "a98a039e3d8aa30cb8d0746a407dd852aed437c0bbdfaf7bd47e552d8573410a",
+        "D": "09c41ded77f51de2b5396d9f0ca150bd1e5e338f0d6151db1015dcbc55ebc359"
+      },
+      "q_soup_sha256": "38840d781ac368958ae726768c46c8880a2af3f2c663064ad59a565f4009cf9d"
+    }
+  },
+  "coverage": {
+    "protocol_version": "zinc-cssd-basis-reuse-v1",
+    "stage": "coverage",
+    "definition": "full relative reconstruction phi_hat = U*(common*RMS) + Dbar*alpha; per molecule mean over roots of ||phi-phi_hat||/(||phi||+eps), macro median/p95; atom usage = nonzero alpha entries per atom (count / |alpha| mass); N_eff = mass^2/sum mass^2; no success threshold on N_eff",
+    "severe_rule": "severe if any code/reconstruction is non-finite, or the SOURCE T_eval macro median relative reconstruction error exceeds 1.0",
+    "arms": {
+      "SOURCE": {
+        "t_fit": {
+          "n_molecules": 2906,
+          "n_phi_rows": 78084,
+          "phi_rows_check": {
+            "n_molecules": 2906,
+            "n_phi_rows": 78084,
+            "expected_rows": 78084,
+            "phi_dim": 65,
+            "source": "results/e2e_dictenv_p1/cache/env_train.pt (train-only)"
+          },
+          "rel_err_macro_median": 0.004956658082648218,
+          "rel_err_macro_p95": 0.007970119222300127,
+          "rel_err_row_median": 0.004218699410557747,
+          "atom_usage_count": [
+            33674,
+            22595,
+            14783,
+            1022,
+            54990,
+            7301,
+            31,
+            99,
+            5594,
+            574,
+            43979,
+            16720,
+            15,
+            2906,
+            0,
+            38225,
+            39799,
+            548,
+            37847,
+            46606,
+            20366,
+            560,
+            63328,
+            43369,
+            1584,
+            38782,
+            23268,
+            26905,
+            11974,
+            612,
+            26580,
+            36
+          ],
+          "atom_usage_mass": [
+            5087.317773722112,
+            2955.0269713699818,
+            2494.0361650809646,
+            176.04526560939848,
+            6066.058804210275,
+            757.5087643861771,
+            7.464453645050526,
+            22.538749085739255,
+            398.61890313215554,
+            265.1635600402951,
+            6362.550818607211,
+            2097.904175091535,
+            1.4171579647809267,
+            478.2014157138765,
+            0.0,
+            9056.798895701766,
+            7616.602649752982,
+            400.5100854933262,
+            2478.8074983190745,
+            7511.469226928428,
+            1626.2438191361725,
+            435.48482228815556,
+            7941.281742632389,
+            3365.598350009648,
+            93.58396601118147,
+            7151.341511629522,
+            3484.98713462241,
+            2109.089316740632,
+            948.4301858693361,
+            137.46541526913643,
+            2594.753205852583,
+            5.656850904226303
+          ],
+          "n_eff": 14.776754012538305,
+          "unused_atoms": 1,
+          "codes_finite": true
+        },
+        "t_eval": {
+          "n_molecules": 969,
+          "n_phi_rows": 25995,
+          "phi_rows_check": {
+            "n_molecules": 969,
+            "n_phi_rows": 25995,
+            "expected_rows": 25995,
+            "phi_dim": 65,
+            "source": "results/e2e_dictenv_p1/cache/env_train.pt (train-only)"
+          },
+          "rel_err_macro_median": 0.004883943088186372,
+          "rel_err_macro_p95": 0.007988404128193523,
+          "rel_err_row_median": 0.004218699410557747,
+          "atom_usage_count": [
+            11045,
+            7494,
+            5047,
+            345,
+            18280,
+            2426,
+            3,
+            35,
+            1880,
+            156,
+            14796,
+            5430,
+            2,
+            996,
+            0,
+            12591,
+            13130,
+            150,
+            12649,
+            15423,
+            6959,
+            151,
+            21117,
+            14468,
+            496,
+            12982,
+            7673,
+            9049,
+            4023,
+            169,
+            8977,
+            18
+          ],
+          "atom_usage_mass": [
+            1663.8132174164057,
+            976.7519034221768,
+            848.048556663096,
+            60.723572318442166,
+            2011.983461651951,
+            249.46942008286715,
+            0.6832040995359421,
+            9.195834085345268,
+            129.93104898557067,
+            72.37917027622461,
+            2135.9346371144056,
+            676.9009676203132,
+            0.08303206786513329,
+            164.4493496865034,
+            0.0,
+            2978.9982204288244,
+            2481.2635516729206,
+            109.33917601406574,
+            812.7698546191677,
+            2461.067247930914,
+            556.2379308007658,
+            118.88312192633748,
+            2622.888548053801,
+            1124.4176388501655,
+            29.38846468552947,
+            2385.3790654921904,
+            1155.9943819902837,
+            695.2786113284528,
+            329.9652896337211,
+            38.25789252668619,
+            866.1568606644869,
+            2.954758733510971
+          ],
+          "n_eff": 14.766123489439906,
+          "unused_atoms": 1,
+          "codes_finite": true
+        },
+        "t_fit_to_t_eval_change": {
+          "rel_err_macro_median": -7.271499446184597e-05,
+          "unused_atoms": 0,
+          "n_eff": -0.01063052309839918
+        }
+      },
+      "TARGET": {
+        "t_fit": {
+          "n_molecules": 2906,
+          "n_phi_rows": 78084,
+          "phi_rows_check": {
+            "n_molecules": 2906,
+            "n_phi_rows": 78084,
+            "expected_rows": 78084,
+            "phi_dim": 65,
+            "source": "results/e2e_dictenv_p1/cache/env_train.pt (train-only)"
+          },
+          "rel_err_macro_median": 0.004674716840292184,
+          "rel_err_macro_p95": 0.00811190246846915,
+          "rel_err_row_median": 0.003600585972890258,
+          "atom_usage_count": [
+            34487,
+            4327,
+            38010,
+            17250,
+            57961,
+            3548,
+            10256,
+            9625,
+            1394,
+            26421,
+            22614,
+            50758,
+            400,
+            19844,
+            91,
+            36,
+            13159,
+            549,
+            42244,
+            14360,
+            221,
+            36365,
+            8129,
+            549,
+            25662,
+            43174,
+            35594,
+            25524,
+            77,
+            23412,
+            19959,
+            38672
+          ],
+          "atom_usage_mass": [
+            2305.3150308625773,
+            317.6636232584715,
+            3532.3579539619386,
+            2762.081665150821,
+            7475.996989103034,
+            614.6900085713714,
+            1427.2264523021877,
+            1444.9689399339259,
+            511.91597987525165,
+            1589.1288823690265,
+            881.7868511117995,
+            7827.497861646116,
+            84.13891217857599,
+            3216.5678680837154,
+            6.535293605178595,
+            8.863614873029292,
+            1971.4743467662483,
+            495.1276160478592,
+            6449.697852667421,
+            1465.3410382457078,
+            41.23991736397147,
+            6241.393860399723,
+            1104.1045545917004,
+            478.5858021378517,
+            4484.361628077924,
+            3950.007389910519,
+            4929.677718002349,
+            2470.332245191559,
+            11.418956018984318,
+            2699.4662835896015,
+            3040.967828175053,
+            6301.956956110895
+          ],
+          "n_eff": 17.27691569311221,
+          "unused_atoms": 0,
+          "codes_finite": true
+        },
+        "t_eval": {
+          "n_molecules": 969,
+          "n_phi_rows": 25995,
+          "phi_rows_check": {
+            "n_molecules": 969,
+            "n_phi_rows": 25995,
+            "expected_rows": 25995,
+            "phi_dim": 65,
+            "source": "results/e2e_dictenv_p1/cache/env_train.pt (train-only)"
+          },
+          "rel_err_macro_median": 0.004604423158945372,
+          "rel_err_macro_p95": 0.007898547985435773,
+          "rel_err_row_median": 0.003600585972890258,
+          "atom_usage_count": [
+            11691,
+            1459,
+            12789,
+            5820,
+            19445,
+            1225,
+            3324,
+            3075,
+            499,
+            8901,
+            7604,
+            16985,
+            113,
+            6603,
+            32,
+            17,
+            4393,
+            150,
+            13985,
+            4783,
+            54,
+            12029,
+            2615,
+            150,
+            8515,
+            14484,
+            11695,
+            8677,
+            30,
+            7658,
+            6398,
+            12762
+          ],
+          "atom_usage_mass": [
+            779.4233119841665,
+            105.35973412543535,
+            1182.397241871804,
+            937.0903044193983,
+            2490.381687015295,
+            211.71639765240252,
+            461.8204841352999,
+            460.6158174946904,
+            185.57219161652029,
+            533.6195332128555,
+            290.9175590761006,
+            2601.3047723490745,
+            23.82991671562195,
+            1089.543863054365,
+            3.3772348277270794,
+            3.6764146387577057,
+            654.3445932865143,
+            135.26141500473022,
+            2111.0974859818816,
+            487.24441758170724,
+            10.996276948601007,
+            2054.1468438357115,
+            357.74051528424025,
+            130.56493321061134,
+            1479.9059009887278,
+            1312.3410426769406,
+            1603.767439302057,
+            839.2408434469253,
+            4.427049815654755,
+            883.905615977943,
+            979.0261690206826,
+            2055.7641508951783
+          ],
+          "n_eff": 17.25138673890806,
+          "unused_atoms": 0,
+          "codes_finite": true
+        },
+        "t_fit_to_t_eval_change": {
+          "rel_err_macro_median": -7.029368134681135e-05,
+          "unused_atoms": 0,
+          "n_eff": -0.025528954204148135
+        }
+      }
+    },
+    "severe": {
+      "SOURCE": false,
+      "TARGET": false,
+      "any": false
+    },
+    "note": "residual-only reconstruction/energy metrics are not reported: the two arms have different U so the residual denominators differ and residual metrics cannot rank the packages directly; health is not task gain",
+    "official_valid_loaded": false,
+    "official_test_loaded": false
+  },
+  "per_arm": {
+    "SOURCE_s0": {
+      "mae": {
+        "y_raw": 0.13821627813599469,
+        "y_cal": 0.12997398389946915,
+        "g_raw": 0.12945466588479182,
+        "ell": 0.08390371890342774,
+        "s": 0.0961689558839143
+      },
+      "b_y": 0.045208640396595,
+      "n": 969,
+      "soup_state_sha256": "f04e7c1a0c87f54ff739637f6d19e1c5c9eb62196d3573c370e83859e1c3e00d"
+    },
+    "TARGET_s0": {
+      "mae": {
+        "y_raw": 0.1368717770730131,
+        "y_cal": 0.13275307406523815,
+        "g_raw": 0.12885878637983134,
+        "ell": 0.08252810394089871,
+        "s": 0.1014458904598386
+      },
+      "b_y": 0.034457409754395485,
+      "n": 969,
+      "soup_state_sha256": "f977d091b48b9f9a5975c449a24de0aea46736459020ef96cc53185a859b270c"
+    },
+    "SOURCE_s1": {
+      "mae": {
+        "y_raw": 0.1365495850479853,
+        "y_cal": 0.13330390015018717,
+        "g_raw": 0.13083574736295522,
+        "ell": 0.08091619270982477,
+        "s": 0.1010660428900996
+      },
+      "b_y": -0.035832354798913,
+      "n": 969,
+      "soup_state_sha256": "10b11d88f455ea81589892126d88a10a4fe502a874bc3d855f12d084caa5b119"
+    },
+    "TARGET_s1": {
+      "mae": {
+        "y_raw": 0.13939518000153484,
+        "y_cal": 0.13863893402622623,
+        "g_raw": 0.1311618095787645,
+        "ell": 0.08454256201476881,
+        "s": 0.1004507806648418
+      },
+      "b_y": 0.016139429062604904,
+      "n": 969,
+      "soup_state_sha256": "9f364ea0573a3af7e00a1773eaf27ab675f143813e7c8db85b64f22f557625ac"
+    }
+  },
+  "interventions": {
+    "SOURCE_s0": {
+      "arm": "SOURCE",
+      "seed": 0,
+      "mechanism": "alpha_v := the arm's T_fit mean root-code alpha, patched at model.code (the single CSSD consumption entry); c_v, original graphs, raw/root-MLP, Sem108 and Q inputs untouched; no retraining, no recalibration",
+      "base_y_raw_mae": 0.13821627813599469,
+      "y_raw_mae": 0.13821628025045254,
+      "y_cal_mae": 0.12997398584477038,
+      "delta_y_raw_mae": 2.114457858803931e-09,
+      "delta_y_cal_mae": 1.9453012256587243e-09,
+      "delta_g_mae": 2.8141511898560623e-09,
+      "g_note": "g change with Q unchanged: g reads only the A binding path, so q_raw is identical by construction",
+      "abs_dpred": {
+        "mean": 1.0708383485382679e-07,
+        "median": 8.940696716308594e-08,
+        "p95": 2.980232238769531e-07,
+        "max": 8.940696716308594e-07
+      },
+      "response_fraction": 0.0,
+      "replay_tol": 0.0001,
+      "mean_alpha_sha256": "4f67e500cd657a2400f440360622d17c85304afc935920e8302b0c8654fdf288"
+    },
+    "TARGET_s0": {
+      "arm": "TARGET",
+      "seed": 0,
+      "mechanism": "alpha_v := the arm's T_fit mean root-code alpha, patched at model.code (the single CSSD consumption entry); c_v, original graphs, raw/root-MLP, Sem108 and Q inputs untouched; no retraining, no recalibration",
+      "base_y_raw_mae": 0.1368717770730131,
+      "y_raw_mae": 0.13687177583509413,
+      "y_cal_mae": 0.13275307382688106,
+      "delta_y_raw_mae": -1.2379189617828246e-09,
+      "delta_y_cal_mae": -2.383570840702731e-10,
+      "delta_g_mae": -2.7987733242085255e-09,
+      "g_note": "g change with Q unchanged: g reads only the A binding path, so q_raw is identical by construction",
+      "abs_dpred": {
+        "mean": 1.0909064758426756e-07,
+        "median": 8.940696716308594e-08,
+        "p95": 2.980232238769531e-07,
+        "max": 5.960464477539062e-07
+      },
+      "response_fraction": 0.0,
+      "replay_tol": 0.0001,
+      "mean_alpha_sha256": "90c862d61f6a57138425d11c9c7603165853eaad44cd0065c0b4f92a26994a40"
+    },
+    "SOURCE_s1": {
+      "arm": "SOURCE",
+      "seed": 1,
+      "mechanism": "alpha_v := the arm's T_fit mean root-code alpha, patched at model.code (the single CSSD consumption entry); c_v, original graphs, raw/root-MLP, Sem108 and Q inputs untouched; no retraining, no recalibration",
+      "base_y_raw_mae": 0.1365495850479853,
+      "y_raw_mae": 0.13654958521906418,
+      "y_cal_mae": 0.1333039052729419,
+      "delta_y_raw_mae": 1.7107887329004257e-10,
+      "delta_y_cal_mae": 5.122754720421341e-09,
+      "delta_g_mae": 3.213975946492198e-09,
+      "g_note": "g change with Q unchanged: g reads only the A binding path, so q_raw is identical by construction",
+      "abs_dpred": {
+        "mean": 9.269591024908611e-08,
+        "median": 5.960464477539063e-08,
+        "p95": 2.384185791015625e-07,
+        "max": 5.960464477539062e-07
+      },
+      "response_fraction": 0.0,
+      "replay_tol": 0.0001,
+      "mean_alpha_sha256": "4f67e500cd657a2400f440360622d17c85304afc935920e8302b0c8654fdf288"
+    },
+    "TARGET_s1": {
+      "arm": "TARGET",
+      "seed": 1,
+      "mechanism": "alpha_v := the arm's T_fit mean root-code alpha, patched at model.code (the single CSSD consumption entry); c_v, original graphs, raw/root-MLP, Sem108 and Q inputs untouched; no retraining, no recalibration",
+      "base_y_raw_mae": 0.13939518000153484,
+      "y_raw_mae": 0.13939518230821615,
+      "y_cal_mae": 0.13863893364177934,
+      "delta_y_raw_mae": 2.306681318176018e-09,
+      "delta_y_cal_mae": -3.8444689098859897e-10,
+      "delta_g_mae": 2.006812716004447e-09,
+      "g_note": "g change with Q unchanged: g reads only the A binding path, so q_raw is identical by construction",
+      "abs_dpred": {
+        "mean": 1.0043290377401346e-07,
+        "median": 5.960464477539063e-08,
+        "p95": 2.980232238769531e-07,
+        "max": 8.344650268554688e-07
+      },
+      "response_fraction": 0.0,
+      "replay_tol": 0.0001,
+      "mean_alpha_sha256": "90c862d61f6a57138425d11c9c7603165853eaad44cd0065c0b4f92a26994a40"
+    }
+  },
+  "per_seed": {
+    "0": {
+      "M_S": 0.13821627813599469,
+      "M_T": 0.1368717770730131,
+      "delta": 0.0013445010629815901,
+      "R": 1.00982307011521,
+      "mae": {
+        "SOURCE": {
+          "y_raw": 0.13821627813599469,
+          "y_cal": 0.12997398389946915,
+          "g_raw": 0.12945466588479182,
+          "ell": 0.08390371890342774,
+          "s": 0.0961689558839143
+        },
+        "TARGET": {
+          "y_raw": 0.1368717770730131,
+          "y_cal": 0.13275307406523815,
+          "g_raw": 0.12885878637983134,
+          "ell": 0.08252810394089871,
+          "s": 0.1014458904598386
+        }
+      },
+      "bootstrap": {
+        "n_rows": 969,
+        "n_groups": 969,
+        "n_boot": 2000,
+        "boot_seed": 20261011,
+        "source_mae": 0.13821627813599469,
+        "target_mae": 0.1368717770730131,
+        "mean_diff": 0.0013445010629815901,
+        "diff_ci95": [
+          -0.004664531080830761,
+          0.007151814042883689
+        ],
+        "ratio": 1.00982307011521,
+        "ratio_ci95": [
+          0.9668929049042833,
+          1.0531572637086606
+        ]
+      }
+    },
+    "1": {
+      "M_S": 0.1365495850479853,
+      "M_T": 0.13939518000153484,
+      "delta": -0.002845594953549524,
+      "R": 0.9795861309299346,
+      "mae": {
+        "SOURCE": {
+          "y_raw": 0.1365495850479853,
+          "y_cal": 0.13330390015018717,
+          "g_raw": 0.13083574736295522,
+          "ell": 0.08091619270982477,
+          "s": 0.1010660428900996
+        },
+        "TARGET": {
+          "y_raw": 0.13939518000153484,
+          "y_cal": 0.13863893402622623,
+          "g_raw": 0.1311618095787645,
+          "ell": 0.08454256201476881,
+          "s": 0.1004507806648418
+        }
+      },
+      "bootstrap": {
+        "n_rows": 969,
+        "n_groups": 969,
+        "n_boot": 2000,
+        "boot_seed": 20261011,
+        "source_mae": 0.1365495850479853,
+        "target_mae": 0.13939518000153484,
+        "mean_diff": -0.002845594953549524,
+        "diff_ci95": [
+          -0.010430339426311637,
+          0.003907837831272037
+        ],
+        "ratio": 0.9795861309299346,
+        "ratio_ci95": [
+          0.9249953466753246,
+          1.0290530305169252
+        ]
+      }
+    }
+  },
+  "two_seed_average": {
+    "M_S": 0.13738293159199,
+    "M_T": 0.13813347853727395,
+    "R": 0.9945665094861024,
+    "bootstrap": {
+      "n_rows": 969,
+      "n_groups": 969,
+      "n_boot": 2000,
+      "boot_seed": 20261011,
+      "source_mae": 0.13738293159199,
+      "target_mae": 0.13813347853727395,
+      "mean_diff": -0.000750546945283953,
+      "diff_ci95": [
+        -0.0054075532993859065,
+        0.0037897492050586222
+      ],
+      "ratio": 0.9945665094861024,
+      "ratio_ci95": [
+        0.9610073312431615,
+        1.027982047121588
+      ]
+    },
+    "note": "two-seed averaged per-row errors; the molecular bootstrap carries no basis or training-seed uncertainty and 2 body seeds are not a claim of method stability"
+  },
+  "decision": {
+    "branch": "D",
+    "recommendation": "reuse-not-supported-stop",
+    "conditions": {
+      "per_seed_R": {
+        "0": 1.00982307011521,
+        "1": 0.9795861309299346
+      },
+      "avg_ratio_upper": 1.027982047121588,
+      "rel_tol": 1.05,
+      "coverage_severe": false,
+      "sparse_favorable": false,
+      "sparse_favorable_rule": "all arm/seed runs: delta_y_raw_mae > 0 AND response_fraction >= 0.5",
+      "both_weak": false,
+      "seed_disagreement": false
+    },
+    "reasoning": "performance close but the sparse branch shows no favorable dependence: this round cannot support the sparse-basis claim from performance maintenance alone; keep the bypass / shared-common-direction competing explanations",
+    "pre_registered": true
+  },
+  "sign_convention": "M_S/M_T = SOURCE/TARGET full y_raw MAE; delta = M_S - M_T, positive = reuse worse",
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

@@ -1,0 +1,73 @@
+{
+  "protocol_version": "zinc-cssd-basis-reuse-v1",
+  "stage": "train",
+  "arm": "SOURCE",
+  "skeleton_arm": "A",
+  "basis_arm": "SOURCE",
+  "seed": 1,
+  "run_dir": "runs/SOURCE_s1",
+  "recipe": {
+    "epochs": 240,
+    "batch_size": 128,
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "grad_clip": 5.0,
+    "soup_epochs": [
+      236,
+      237,
+      238,
+      239,
+      240
+    ],
+    "log_epochs": [
+      1,
+      40,
+      120,
+      240
+    ],
+    "component_loss_weight": 0.5,
+    "train_shuffle_offset": 101
+  },
+  "steps_done": 5520,
+  "stopped_reason": "completed",
+  "schedule_sha256": "9da8b20dc9a0ed8382eccd6eaf2d99c7d8a012f562b5e1952e85f8fb57ee4ce9",
+  "init_state_sha256": "21ee79219fd71b786e8e933d8a4c576e4685dd93c1e3e648732481e0a1c422e7",
+  "soup_state_sha256": "10b11d88f455ea81589892126d88a10a4fe502a874bc3d855f12d084caa5b119",
+  "frozen_basis_hashes": {
+    "U": "cbdd5f6819cbdc60c372eef48ef3fa14f254a360a807b6f58db746c69fd33db6",
+    "common_rms": "d19c45b2682b59199c23fc69c8140fe6dba10ab9432f4f2e3606e99e3f63c8a0",
+    "D": "1347329d85cfbe5dea239a2a99aff2d587fb6f93ab1e8cf0c7c4fbca6a60d533"
+  },
+  "q_soup_sha256": "38840d781ac368958ae726768c46c8880a2af3f2c663064ad59a565f4009cf9d",
+  "parameter_audit": {
+    "arm": "A",
+    "total_parameters": 436499,
+    "trainable_parameters": 436499,
+    "branch_parameters": 0,
+    "original_slot_parameters": 24048,
+    "n_branch_modules": 0,
+    "n_original_slot_modules": 12,
+    "frozen_buffers": [
+      "D",
+      "U",
+      "common_rms"
+    ]
+  },
+  "calibration": {
+    "b_g": -0.03547130081075023,
+    "b_y": -0.035832354798913,
+    "note": "single fit-median bias; never stacked"
+  },
+  "fit_diagnostics": {
+    "fit_L_g_raw_mae": 0.047703004253330655,
+    "fit_L_g_cal_mae": 0.0360746293756083,
+    "fit_y_raw_mae": 0.06352765179102687,
+    "fit_y_cal_mae": 0.05198312179215576,
+    "fit_q_mae": 0.017443422942335557
+  },
+  "curve_seconds_total": 426.67184391617775,
+  "peak_gpu_memory_mb": 520.65380859375,
+  "flops_note": "not measured; both arms share the identical skeleton so op counts match by construction",
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}
