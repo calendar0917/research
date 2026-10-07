@@ -150,7 +150,16 @@ array_sha256 = parent.array_sha256
 state_hash = parent.state_hash
 seed_everything = parent.seed_everything
 resolve_device = parent.resolve_device
-allocation_probe = parent.allocation_probe
+
+
+def allocation_probe(device: torch.device | None = None) -> dict[str, Any]:
+    """Current-process allocation probe (the no-arg zldc probe).
+
+    The source module's wrapper forwards a device argument to a no-arg
+    probe (a latent signature bug caught by this round's first train runs);
+    this round calls the underlying no-arg probe directly.
+    """
+    return zldc.allocation_probe()
 
 _residual_structure_inputs = (
     "The consumer keeps every structure input except the local phi65 patch: "
