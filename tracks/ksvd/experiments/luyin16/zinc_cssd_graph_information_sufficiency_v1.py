@@ -603,11 +603,14 @@ def stage_rg_export(*, out_dir: Path = RESULTS_DIR, device_name: str = "cpu", lo
             raise RuntimeError(f"DICT_s{seed} rg-export replay mismatch {replay}")
         n_fit_nodes = sum(int(d.dict_phi.shape[0]) for d in fit_data)
         n_dev_nodes = sum(int(d.dict_phi.shape[0]) for d in dev_data)
-        if cap_fit["R"].shape != (n_fit_nodes, R_DIM) or cap_dev["R"].shape != (n_dev_nodes, R_DIM):
+        if cap_fit["R"].shape != (len(fit_data), R_DIM) or cap_dev["R"].shape != (len(dev_data), R_DIM):
             raise RuntimeError(
                 f"unexpected R shape fit={cap_fit['R'].shape} dev={cap_dev['R'].shape} "
-                f"expected ({n_fit_nodes},{R_DIM})/({n_dev_nodes},{R_DIM})"
+                f"expected ({len(fit_data)},{R_DIM})/({len(dev_data)},{R_DIM})"
             )
+        # sanity: R_G is per-GRAPH (the reader input after pooling), never
+        # per-node; the node/pair counts only enter through the pools
+        assert n_fit_nodes > len(fit_data) and n_dev_nodes > len(dev_data)
         np.savez_compressed(
             out_dir / f"rg_export_s{seed}.npz",
             R_fit=cap_fit["R"].astype(np.float32),
