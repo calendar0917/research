@@ -1,0 +1,27 @@
+# ZINC CSSD graph information sufficiency v1 — does the graph-level aggregation
+# R_G of the frozen DICT consumers discard task-relevant information about the
+# binding between CSSD dictionary-atom supports and REAL patch co-coverage of
+# physical atoms?  Label-free witness export + frozen 3-arm residual-head
+# protocol (design basis 7a0a1ebc; preregistration committed before scoring).
+#
+# `model.stage`:
+#   witness-export : label-free W_real/W_shuf + mechanism diagnostics (10k rows)
+#   restore-checks : frozen-run restore, hashes, prediction replay, alpha
+#                    operator equivalence, batch/relabel invariances
+#   rg-export      : capture the true reader input R (814D), fit+dev, both seeds
+#   heads          : frozen 3-arm OOF + dev scoring (the only labelled stage)
+#   report         : assemble the report manifest
+#
+# Official ZINC valid and test are never instantiated.  0 GPU, no backbone
+# training, no architecture search.
+protocol_id: zinc-cssd-graph-information-sufficiency-v1
+
+data:
+  root: data/ZINC
+
+model:
+  stage: witness-export
+
+runtime:
+  device: cpu
+  torch_threads: 8

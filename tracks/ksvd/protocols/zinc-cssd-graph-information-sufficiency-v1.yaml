@@ -1,0 +1,145 @@
+# Protocol: ZINC CSSD graph information sufficiency v1 (2026-10-09, design
+# basis 7a0a1ebc — the stop-no-purchased-candidate STATE, user brief).
+
+# Freezes ONE diagnostic question: with the CSSD dictionary and the downstream
+# DICT consumers (zinc_cssd_consumer_replacement_v1 DICT_s0/DICT_s1) FROZEN,
+# does the graph-level aggregation R_G (reader input, verified 814D) discard
+# task-relevant information about the THREE-WAY binding between CSSD
+# dictionary-atom supports b[v,k] = 1[alpha[v,k] != 0] (frozen basis, exact
+# top-8 IHT-10, extracted from data.dict_phi via the deployed operator math —
+# NEVER from the zero-placeholder DeployFull.code()/aux["coord"]) and the REAL
+# radius-2 patch co-coverage of physical atoms C(x) (from the env cache
+# env_occ_node/env_occ_root)?  The witness is the 32D label-free vector
+# W_k = sum_x C(n[x,k],3) / (sum_x C(|C(x)|,3) + 1e-9), n[x,k] = #roots covering
+# atom x whose support contains k.  This targets ONLY the aggregation stage of
+# the pipeline; phi65 expressivity, the CSSD representation itself, and
+# reader/training generalisation are held as controlled competing explanations.
+
+# Decisive controls: (1) a capacity reference R-only residual head;
+# (2) a SHAM witness computed from support rows permuted WITHIN each molecule
+# (fixed seed 20261021+gid) while the real patch incidence is untouched — this
+# preserves every molecule-level marginal (per-atom-k usage counts, |C(x)|,
+# denominator) and destroys only the support—atom-coverage binding;
+# (3) two frozen DICT seeds reported separately.  A label-free mechanism gate
+# (mean L1 distance between real and sham witnesses on fit rows) must pass
+# BEFORE any labelled scoring; if it fails the round STOPs as Case C.
+
+# Judgment branches frozen below (never moved after seeing labels):
+#   GO   = A  (aggregation information gap; still NOT a dictionary-value claim)
+#   NO-GO= B  (no evidence the consumer misses THIS dictionary-patch statistic)
+#   STOP = C  (mechanism failure / equivalence / unrestorable / unverifiable)
+
+id: zinc-cssd-graph-information-sufficiency-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+
+split:
+  description: >-
+    witness + R_G export run on ALL 10000 official-train rows (label-free);
+    residual-head training/scoring uses the committed fit fold (8001 rows) with
+    a fixed 5-fold canonical-SMILES-grouped OOF (groups = unique canonical
+    SMILES from the committed train_canonical_smiles.npz table; permuted once
+    with default_rng(20261021) and split into 5 contiguous group chunks);
+    dev = sorted union(select_idx, confirm_idx) = 1999 historical development
+    rows (a DEVELOPMENT COMPARISON set — never a new independent confirm);
+    canonical-SMILES groups never straddle fit/dev (historically verified).
+  fingerprint_policy: index-array SHA-256 (identical for all arms and seeds)
+  folds: 5            # grouped OOF of the SMALL RESIDUAL HEADS only
+  oof: true           # heads only; the frozen backbone itself is NOT OOF
+  official_valid_usage: never_loaded
+  official_test_usage: never_loaded
+
+reused_objects_read_only:
+  frozen_objects: results/zinc_cssd_nonlinear_binding_v1 (fold/targets/tuple_payload/prep/cssd_basis/Q_soup)
+  frozen_runs: results/zinc_cssd_consumer_replacement_v1/runs/DICT_s0 and DICT_s1 (soup/init/last states + saved fit/dev predictions)
+  smiles_table: results/zinc_cssd_basis_reuse_v1/train_canonical_smiles.npz
+  env_cache: the train-only prepared data of the source round (dict_phi, env_occ_*)
+  provenance_caveat: >-
+    the CSSD basis' historical refit included task-supervised training heads —
+    the pipeline is NOT purely unsupervised; recorded, never claimed otherwise.
+
+witness_definition_frozen:
+  alpha: tied_iht_codes(Dbar, phi - (phi@U)@U^T, s=8, steps=10) on raw dict_phi rows (deployed operator math; equality with the deployed cssd_decode checked at export)
+  support: b[v,k] = 1[alpha[v,k] != 0]
+  co_coverage: C(x) = {roots v : (v,x) in env_occ} (unbatched per molecule; root row == original atom row)
+  witness: W_k = sum_x C(n[x,k],3) / (sum_x C(|C(x)|,3) + 1e-9), n[x,k] = sum_{v in C(x)} b[v,k], W in R^32
+  sham: b_shuf[v,:] = b[pi(v),:], pi = default_rng(20261021 + gid).permutation(n), same formula; fixed points recorded; incidence NEVER touched
+  edge_cases: zero denominator -> W = 0 (fraction recorded); no new atom/bond/ring/RDKit features; no state updates; no attention; read-only frozen-state math
+  mechanism_gate_label_free: >-
+    fit rows: mean ||W_real - W_shuf||_1 >= 0.1 AND >= 95% of denom>0 molecules
+    have nonzero distance (probe: 0.86 mean, 24/24 nonzero on 24 fit molecules)
+
+export_checks_label_free:
+  - object hashes vs source_manifest.json (soups, basis, Q, fold, targets, payload, prep)
+  - prediction replay of DICT_s0/s1 vs saved fit/dev npz (<= 1e-4, fp32 save precision)
+  - R_G captured via forward_pre_hook on model.reader (814D), never aux["coord"]
+  - env-cache phi rows == data.dict_phi rows on all 10000 rows; occ index sanity; (v,x) uniqueness
+  - alpha operator equivalence (zreuse._root_codes phi_hat == deployed cssd_decode, <= 1e-6)
+  - batch concatenation/order invariance and real-molecule node-relabel invariance of W
+  - witness/R export stages structurally never import targets.npz
+
+residual_head_protocol_frozen:
+  form: g_new = g_frozen + head(inputs); head = MLP(input -> 13 -> 13 -> 1, ReLU)
+  arms:
+    R_only:      input R (814D), 10,791 params
+    R_W_shuffled: input [R; W_shuf] (846D), 11,207 params
+    R_W_real:    input [R; W_real] (846D), 11,207 params
+  param_note: >-
+    +416 params = the 32 W input columns x 13 first-layer weights (input-width
+    difference, not hidden capacity); the decisive sham contrast is
+    architecture-identical; no width/LR/depth/feature search anywhere
+  training: L1 loss, Adam lr 1e-3, full batch, max 1500 epochs, grouped
+    selection carve-out (20% of the fold's train groups) with patience 300,
+    best-checkpoint selection; per-fold-train standardization (zero-variance
+    columns scale 1); init seed 20261021 shared construction order across arms
+  seeds: the TWO frozen DICT soups (s0/s1) provide g_frozen and R; each seed's
+    pipeline run separately and reported separately; heads use a single init
+    seed (head-init uncertainty is NOT dressed up as a molecule bootstrap CI)
+  oof: 5-fold grouped OOF on fit rows; caveat recorded: the backbone saw these
+    fit labels, so head-OOF != an independent OOF of the whole model
+  dev_secondary_exploratory: heads trained on ALL fit rows, applied once to the
+    1999 dev rows (g_new = h_dev + head; y_new = g_new + q_raw, Q untouched)
+
+metrics_frozen:
+  primary: uncalibrated g_raw MAE; dG_R = MAE(R_only) - MAE(R_W_real);
+    dG_sham = MAE(R_W_shuffled) - MAE(R_W_real) (positive = real witness helps)
+  secondary: dev g_raw / y_raw MAE (exploratory), fit OOF y via g+q_raw
+  strata: k=0 rows, k-groups, n_nodes terciles, top-20 molecule share of dG
+  uncertainty: canonical-SMILES-group paired bootstrap, 2000 draws, seed
+    20261021, shared group picks across arms AND seeds (per-draw two-seed mean
+    of the paired MAE differences before the CI)
+
+decision_rules_frozen:
+  thresholds_basis: >-
+    full 240-epoch training trajectory noise is +-0.001..0.003 g-MAE
+    (measured repeatedly in this line); this design is a paired head
+    comparison on 8001 rows with identical data/protocol, so its sampling
+    noise is ~an order lower (audit precedent: 2000-row CIs of +-0.002..0.003);
+    0.003 = decision-scale; 0.001 = the smallest difference this design can
+    reliably separate; thresholds fixed BEFORE any labelled scoring
+  GO_A: >-
+    both seeds same direction AND seed-averaged OOF dG_R >= +0.0010 AND
+    dG_sham >= +0.0005 AND bootstrap CI95 lower bound of dG_sham > 0 AND the
+    mechanism gate passed AND top-20 molecule share of the improvement < 50%;
+    dG_R >= +0.003 additionally = decision-scale signal; 0.001..0.003 = real
+    but sub-decision-scale (would need an independent confirm design)
+  NO_GO_B: GO not met while the mechanism gate passed
+  STOP_C: mechanism gate fails, or witness provably equivalent to existing R_G
+    statistics, or restore/consistency checks fail, or provenance unverifiable
+  no_rescue: no second witness statistic, no threshold/width sweep, no extra
+    seeds after seeing results, no architecture work triggered by this round
+
+budget_frozen:
+  compute: local CPU only (export + 36 small full-batch head trainings); 0 GPU;
+    res-2 only if a locally-present checkpoint failed to restore (none expected)
+  forbidden: any 240-epoch full-model training, architecture search, official
+    valid/test access, official test in any form
+
+metric_semantics: valid_mae (lower_is_better), internal fit/dev only
+test_policy: terminal
