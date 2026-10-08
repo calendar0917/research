@@ -190,12 +190,15 @@ def test_relabel_invariance_of_witness():
     inv = np.empty(n, dtype=np.int64)
     inv[perm] = np.arange(n)
     rem = m.remap_molecule(phi, atom, occ_node, occ_root, occ_shell, perm)
-    # every node-addressed field is remapped by the SAME involution
-    assert np.array_equal(rem["occ_node"], inv[occ_node])
-    assert np.array_equal(rem["occ_root"], inv[occ_root])
+    # every node-addressed field is remapped consistently: new index of old v
+    # is perm[v]; new_phi[perm[v]] = phi[v]; occurrences move with their nodes
+    assert np.array_equal(rem["occ_node"], perm[occ_node])
+    assert np.array_equal(rem["occ_root"], perm[occ_root])
     assert np.array_equal(rem["phi"], phi[inv])
     assert np.array_equal(rem["atom"], atom[inv])
     # witness-level invariance with the support rows relabelled consistently:
+    # alpha follows the phi rows (alpha_new = alpha[inv]), so the relabelled
+    # witness must be identical
     b = (rng.random((n, 4)) < 0.4).astype(np.int64)
     W1, d1 = m.witness_from_supports(b, occ_node, occ_root, n)
     W2, d2 = m.witness_from_supports(b[inv], rem["occ_node"], rem["occ_root"], n)

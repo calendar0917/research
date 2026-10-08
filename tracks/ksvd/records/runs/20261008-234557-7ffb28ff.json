@@ -1,0 +1,144 @@
+{
+  "candidate_id": "zinc-cssd-graph-information-sufficiency-v1",
+  "ended_at": "2026-10-08T23:46:15",
+  "fingerprint": "34e7d093cf4264e4276a2453070be921343d2bd6c27cce4963f3c5fab2a22786",
+  "kind": "run_record",
+  "metrics": {
+    "label_free": true,
+    "measure": "zinc_cssd_graph_information_sufficiency_v1::rg-export",
+    "official_test_loaded": false,
+    "official_valid_loaded": false,
+    "seconds": 17.59971002698876,
+    "stage": "rg-export"
+  },
+  "mode": "scratch",
+  "promoted_at": "2026-10-08T23:59:24",
+  "protocol_hash": "52b50e0bdd50dbceec6baebce549e2d4d74d80ae634ce8825770834c9585a82f",
+  "protocol_id": "zinc-context-gap",
+  "provenance": {
+    "code_state_hash": "4fa7011fc770eb9a40cabef5982253e4a22f7826527426abadbbf7fd0a31c696",
+    "config_hash": "12172c33d9c1dca44d87290ede3078ccd12e0a74243ebcaada0dec7131abc8a7",
+    "dataset_fingerprint": {
+      "dataset_fingerprint": "f03ae64d1126f7f0417d5ab4d4f82128dcc2ce60abb79de2a5217c65e3a10da3",
+      "policy": "official_pyg_zinc_data",
+      "raw_files": [
+        {
+          "bytes": 765,
+          "name": "atom_dict.pickle",
+          "sha256": "c4c8e8625c9773bb725ec2771552eccb2b6cf6550c8fef0f6139627aa8fe51c6"
+        },
+        {
+          "bytes": 239,
+          "name": "bond_dict.pickle",
+          "sha256": "623359be444efd15db6eec412ea9ba9a12bf1afec57305f9f5abd4b4a52c541a"
+        },
+        {
+          "bytes": 4782,
+          "name": "test.index",
+          "sha256": "6aa50d98976044fb36089afef5b4c991b429ca1c8e009d33a0319e42a2d9b525"
+        },
+        {
+          "bytes": 7690132,
+          "name": "test.pickle",
+          "sha256": "33c7d2bcf6332be422aaea4baaf056e36f2c80eb6f7d0f5d68a8264d1b94e65b"
+        },
+        {
+          "bytes": 65110,
+          "name": "train.index",
+          "sha256": "575d6acd72ac207a95947e2bdd16411ef6fc3faa88c2f55a2c496ea43022a6d8"
+        },
+        {
+          "bytes": 338943042,
+          "name": "train.pickle",
+          "sha256": "9c76df5a1ab90aac200df22902893827168aeced3df87aab4b6bee100235d7f2"
+        },
+        {
+          "bytes": 5541,
+          "name": "val.index",
+          "sha256": "fe48c38157f0d38e7fc441903a143392eda080511a79e8fb8f60f5c1b0a9c164"
+        },
+        {
+          "bytes": 37634758,
+          "name": "val.pickle",
+          "sha256": "4c6015ec483224c55593c862b0334ae4b64e14679eab041c0655c6a7b603e47a"
+        }
+      ],
+      "split": {
+        "expected_sizes": {
+          "test": 1000,
+          "train": 10000,
+          "val": 1000
+        },
+        "index_sha256": {
+          "test.index": "6aa50d98976044fb36089afef5b4c991b429ca1c8e009d33a0319e42a2d9b525",
+          "train.index": "575d6acd72ac207a95947e2bdd16411ef6fc3faa88c2f55a2c496ea43022a6d8",
+          "val.index": "fe48c38157f0d38e7fc441903a143392eda080511a79e8fb8f60f5c1b0a9c164"
+        },
+        "policy": "official_pyg_zinc_subset_split",
+        "sizes": {
+          "test": 1000,
+          "train": 10000,
+          "val": 1000
+        },
+        "splits": [
+          "train",
+          "val",
+          "test"
+        ]
+      },
+      "split_fingerprint": "58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a"
+    },
+    "environment": {
+      "cwd": "/home/calendar/code/research",
+      "executable": "/home/calendar/code/research/.venv/bin/python",
+      "machine": "x86_64",
+      "packages": {
+        "networkx": "3.4.2",
+        "numpy": "2.1.3",
+        "ogb": "1.3.6",
+        "optuna": "4.2.1",
+        "pandas": "2.2.3",
+        "pynauty": "2.8.8.1",
+        "pytest": "8.3.4",
+        "pyyaml": "6.0.2",
+        "scikit-learn": "1.5.2",
+        "scipy": "1.14.1",
+        "torch": "2.5.1",
+        "torch-geometric": "2.6.1"
+      },
+      "platform": "Linux-6.18.52-1-lts-x86_64-with-glibc2.44",
+      "python": "3.12.14",
+      "python_full": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]"
+    },
+    "git": {
+      "code_state_hash": "4fa7011fc770eb9a40cabef5982253e4a22f7826527426abadbbf7fd0a31c696",
+      "commit": "6f9856c04c825cea4ea3bc1f3182cd926e1bd6c7",
+      "diff_hash": "da98eed683e3763cb382492bc0123e90d76173f7fe712b1641391a24f76c6652",
+      "dirty": true,
+      "patch": "diff --git a/tracks/ksvd/experiments/luyin16/zinc_cssd_graph_information_sufficiency_v1.py b/tracks/ksvd/experiments/luyin16/zinc_cssd_graph_information_sufficiency_v1.py\nindex f08d00f..02d7d45 100644\n--- a/tracks/ksvd/experiments/luyin16/zinc_cssd_graph_information_sufficiency_v1.py\n+++ b/tracks/ksvd/experiments/luyin16/zinc_cssd_graph_information_sufficiency_v1.py\n@@ -603,11 +603,14 @@ def stage_rg_export(*, out_dir: Path = RESULTS_DIR, device_name: str = \"cpu\", lo\n             raise RuntimeError(f\"DICT_s{seed} rg-export replay mismatch {replay}\")\n         n_fit_nodes = sum(int(d.dict_phi.shape[0]) for d in fit_data)\n         n_dev_nodes = sum(int(d.dict_phi.shape[0]) for d in dev_data)\n-        if cap_fit[\"R\"].shape != (n_fit_nodes, R_DIM) or cap_dev[\"R\"].shape != (n_dev_nodes, R_DIM):\n+        if cap_fit[\"R\"].shape != (len(fit_data), R_DIM) or cap_dev[\"R\"].shape != (len(dev_data), R_DIM):\n             raise RuntimeError(\n                 f\"unexpected R shape fit={cap_fit['R'].shape} dev={cap_dev['R'].shape} \"\n-                f\"expected ({n_fit_nodes},{R_DIM})/({n_dev_nodes},{R_DIM})\"\n+                f\"expected ({len(fit_data)},{R_DIM})/({len(dev_data)},{R_DIM})\"\n             )\n+        # sanity: R_G is per-GRAPH (the reader input after pooling), never\n+        # per-node; the node/pair counts only enter through the pools\n+        assert n_fit_nodes > len(fit_data) and n_dev_nodes > len(dev_data)\n         np.savez_compressed(\n             out_dir / f\"rg_export_s{seed}.npz\",\n             R_fit=cap_fit[\"R\"].astype(np.float32),\ndiff --git a/tracks/ksvd/tests/test_zinc_cssd_graph_information_sufficiency_v1.py b/tracks/ksvd/tests/test_zinc_cssd_graph_information_sufficiency_v1.py\nindex 6ed64b0..a1a53db 100644\n--- a/tracks/ksvd/tests/test_zinc_cssd_graph_information_sufficiency_v1.py\n+++ b/tracks/ksvd/tests/test_zinc_cssd_graph_information_sufficiency_v1.py\n@@ -190,12 +190,15 @@ def test_relabel_invariance_of_witness():\n     inv = np.empty(n, dtype=np.int64)\n     inv[perm] = np.arange(n)\n     rem = m.remap_molecule(phi, atom, occ_node, occ_root, occ_shell, perm)\n-    # every node-addressed field is remapped by the SAME involution\n-    assert np.array_equal(rem[\"occ_node\"], inv[occ_node])\n-    assert np.array_equal(rem[\"occ_root\"], inv[occ_root])\n+    # every node-addressed field is remapped consistently: new index of old v\n+    # is perm[v]; new_phi[perm[v]] = phi[v]; occurrences move with their nodes\n+    assert np.array_equal(rem[\"occ_node\"], perm[occ_node])\n+    assert np.array_equal(rem[\"occ_root\"], perm[occ_root])\n     assert np.array_equal(rem[\"phi\"], phi[inv])\n     assert np.array_equal(rem[\"atom\"], atom[inv])\n     # witness-level invariance with the support rows relabelled consistently:\n+    # alpha follows the phi rows (alpha_new = alpha[inv]), so the relabelled\n+    # witness must be identical\n     b = (rng.random((n, 4)) < 0.4).astype(np.int64)\n     W1, d1 = m.witness_from_supports(b, occ_node, occ_root, n)\n     W2, d2 = m.witness_from_supports(b[inv], rem[\"occ_node\"], rem[\"occ_root\"], n)\n",
+      "untracked": []
+    },
+    "runner": "zinc_cssd_graph_information_sufficiency_v1",
+    "runtime_seconds": 17.792764,
+    "split_fingerprint": "58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a",
+    "test_access": "blocked"
+  },
+  "purpose": "label-free R_G capture (reader forward-pre-hook, 814D per graph, fit+dev, both frozen seeds)",
+  "record_id": "record-20261008-234557-7ffb28ff",
+  "run_id": "20261008-234557-7ffb28ff",
+  "scientific_config": {
+    "data": {
+      "root": "data/ZINC"
+    },
+    "model": {
+      "stage": "rg-export"
+    },
+    "protocol_id": "zinc-cssd-graph-information-sufficiency-v1"
+  },
+  "seeds": [
+    0
+  ],
+  "started_at": "2026-10-08T23:45:57",
+  "status": "completed",
+  "study_id": "zinc-context-gap"
+}

@@ -1,0 +1,144 @@
+{
+  "candidate_id": "zinc-cssd-graph-information-sufficiency-v1",
+  "ended_at": "2026-10-08T23:42:36",
+  "fingerprint": "f7173b711139d052ffd2f733a8f355d1a8d525b25d391d0b55005c63870e2701",
+  "kind": "run_record",
+  "metrics": {
+    "label_free": true,
+    "measure": "zinc_cssd_graph_information_sufficiency_v1::restore-checks",
+    "official_test_loaded": false,
+    "official_valid_loaded": false,
+    "seconds": 21.27027149288915,
+    "stage": "restore-checks"
+  },
+  "mode": "scratch",
+  "promoted_at": "2026-10-08T23:59:24",
+  "protocol_hash": "52b50e0bdd50dbceec6baebce549e2d4d74d80ae634ce8825770834c9585a82f",
+  "protocol_id": "zinc-context-gap",
+  "provenance": {
+    "code_state_hash": "00336f5da9f0b392109cdccb38346893cf684518567b97717bca1ccffdde373c",
+    "config_hash": "18770208baefa67884bd3bbdce351693f049d1b0b9f23883866fb5851942a1ae",
+    "dataset_fingerprint": {
+      "dataset_fingerprint": "f03ae64d1126f7f0417d5ab4d4f82128dcc2ce60abb79de2a5217c65e3a10da3",
+      "policy": "official_pyg_zinc_data",
+      "raw_files": [
+        {
+          "bytes": 765,
+          "name": "atom_dict.pickle",
+          "sha256": "c4c8e8625c9773bb725ec2771552eccb2b6cf6550c8fef0f6139627aa8fe51c6"
+        },
+        {
+          "bytes": 239,
+          "name": "bond_dict.pickle",
+          "sha256": "623359be444efd15db6eec412ea9ba9a12bf1afec57305f9f5abd4b4a52c541a"
+        },
+        {
+          "bytes": 4782,
+          "name": "test.index",
+          "sha256": "6aa50d98976044fb36089afef5b4c991b429ca1c8e009d33a0319e42a2d9b525"
+        },
+        {
+          "bytes": 7690132,
+          "name": "test.pickle",
+          "sha256": "33c7d2bcf6332be422aaea4baaf056e36f2c80eb6f7d0f5d68a8264d1b94e65b"
+        },
+        {
+          "bytes": 65110,
+          "name": "train.index",
+          "sha256": "575d6acd72ac207a95947e2bdd16411ef6fc3faa88c2f55a2c496ea43022a6d8"
+        },
+        {
+          "bytes": 338943042,
+          "name": "train.pickle",
+          "sha256": "9c76df5a1ab90aac200df22902893827168aeced3df87aab4b6bee100235d7f2"
+        },
+        {
+          "bytes": 5541,
+          "name": "val.index",
+          "sha256": "fe48c38157f0d38e7fc441903a143392eda080511a79e8fb8f60f5c1b0a9c164"
+        },
+        {
+          "bytes": 37634758,
+          "name": "val.pickle",
+          "sha256": "4c6015ec483224c55593c862b0334ae4b64e14679eab041c0655c6a7b603e47a"
+        }
+      ],
+      "split": {
+        "expected_sizes": {
+          "test": 1000,
+          "train": 10000,
+          "val": 1000
+        },
+        "index_sha256": {
+          "test.index": "6aa50d98976044fb36089afef5b4c991b429ca1c8e009d33a0319e42a2d9b525",
+          "train.index": "575d6acd72ac207a95947e2bdd16411ef6fc3faa88c2f55a2c496ea43022a6d8",
+          "val.index": "fe48c38157f0d38e7fc441903a143392eda080511a79e8fb8f60f5c1b0a9c164"
+        },
+        "policy": "official_pyg_zinc_subset_split",
+        "sizes": {
+          "test": 1000,
+          "train": 10000,
+          "val": 1000
+        },
+        "splits": [
+          "train",
+          "val",
+          "test"
+        ]
+      },
+      "split_fingerprint": "58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a"
+    },
+    "environment": {
+      "cwd": "/home/calendar/code/research",
+      "executable": "/home/calendar/code/research/.venv/bin/python",
+      "machine": "x86_64",
+      "packages": {
+        "networkx": "3.4.2",
+        "numpy": "2.1.3",
+        "ogb": "1.3.6",
+        "optuna": "4.2.1",
+        "pandas": "2.2.3",
+        "pynauty": "2.8.8.1",
+        "pytest": "8.3.4",
+        "pyyaml": "6.0.2",
+        "scikit-learn": "1.5.2",
+        "scipy": "1.14.1",
+        "torch": "2.5.1",
+        "torch-geometric": "2.6.1"
+      },
+      "platform": "Linux-6.18.52-1-lts-x86_64-with-glibc2.44",
+      "python": "3.12.14",
+      "python_full": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]"
+    },
+    "git": {
+      "code_state_hash": "00336f5da9f0b392109cdccb38346893cf684518567b97717bca1ccffdde373c",
+      "commit": "495e4d94a45ad2cda80e2f470908a6474de06796",
+      "diff_hash": "325a5a65e8c006ab686cb3b8f496cc2f6d6a75e31b8bea5113584c5f439a8d42",
+      "dirty": true,
+      "patch": "diff --git a/tracks/ksvd/experiments/luyin16/zinc_cssd_graph_information_sufficiency_v1.py b/tracks/ksvd/experiments/luyin16/zinc_cssd_graph_information_sufficiency_v1.py\nindex 65cda9a..7f55e0a 100644\n--- a/tracks/ksvd/experiments/luyin16/zinc_cssd_graph_information_sufficiency_v1.py\n+++ b/tracks/ksvd/experiments/luyin16/zinc_cssd_graph_information_sufficiency_v1.py\n@@ -228,11 +228,13 @@ def remap_molecule(\n     occ_shell: np.ndarray,\n     perm: np.ndarray,\n ) -> dict[str, np.ndarray]:\n-    \"\"\"Relabel a molecule's nodes by ``new[old] = perm[old]`` (test helper).\n+    \"\"\"Relabel a molecule's nodes: the new index of old node ``v`` is\n+    ``perm[v]`` (test helper).\n \n-    Every node-addressed field (phi rows, atom ids, occupancy root/node) is\n-    remapped consistently, so any permutation-invariant statistic must be\n-    unchanged.\n+    Every node-addressed field is remapped consistently: ``new_phi[perm[v]] =\n+    phi[v]`` (i.e. ``new_phi = phi[inv]`` with ``inv = perm^-1``) and every\n+    occurrence pair ``(root, node) -> (perm[root], perm[node])``, so any\n+    permutation-invariant statistic must be unchanged.\n     \"\"\"\n     perm = np.asarray(perm, dtype=np.int64)\n     n = int(np.asarray(phi).shape[0])\n@@ -244,8 +246,8 @@ def remap_molecule(\n     return {\n         \"phi\": np.asarray(phi)[inv],\n         \"atom\": np.asarray(atom)[inv],\n-        \"occ_node\": inv[old_occ_node],\n-        \"occ_root\": inv[np.asarray(occ_root, dtype=np.int64)],\n+        \"occ_node\": perm[old_occ_node],\n+        \"occ_root\": perm[np.asarray(occ_root, dtype=np.int64)],\n         \"occ_shell\": np.asarray(occ_shell)[inv[old_occ_node]],\n     }\n \n@@ -413,14 +415,17 @@ def stage_restore_checks(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> di\n \n     checks: dict[str, Any] = {}\n \n-    # (1) frozen-object hashes vs the source round's manifest\n-    src = read_json(SOURCE_DIR / \"source_manifest.json\")\n-    checks[\"basis_file_sha_matches_source_manifest\"] = (\n-        src[\"artifacts\"][\"cssd_basis.npz\"][\"sha256\"] == file_sha256(SOURCE_DIR / \"cssd_basis.npz\")\n+    # (1) frozen-object hashes vs the frozen-round provenance manifests\n+    src = read_json(repl.RESULTS_DIR / \"source_manifest.json\")\n+    checks[\"basis_U_sha_matches_frozen_manifest\"] = src[\"cssd_basis\"][\"U_sha256\"] == parts[\"hashes\"][\"U\"]\n+    checks[\"basis_D_sha_matches_frozen_manifest\"] = src[\"cssd_basis\"][\"D_sha256\"] == parts[\"hashes\"][\"D\"]\n+    checks[\"basis_common_rms_sha_matches_frozen_manifest\"] = (\n+        src[\"cssd_basis\"][\"common_rms_sha256\"] == parts[\"hashes\"][\"common_rms\"]\n     )\n     q_meta = read_json(SOURCE_DIR / \"Q_meta.json\")\n-    q_key = \"soup_sha256\" if \"soup_sha256\" in q_meta else \"soup_state_sha256\"\n-    checks[\"q_soup_sha_matches_meta\"] = file_sha256(SOURCE_DIR / \"Q_soup_state.pt\") == q_meta[q_key]\n+    checks[\"q_soup_sha_matches_meta\"] = (\n+        file_sha256(SOURCE_DIR / \"Q_soup_state.pt\") == q_meta[\"soup_state_sha256\"]\n+    )\n \n     # (2) alpha operator equivalence: frozen-basis math vs deployed cssd_decode\n     model, _run = _restore_model(\"DICT\", 0, basis_parts=parts, payload=payload, kappa=kappa)\n@@ -447,8 +452,10 @@ def stage_restore_checks(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> di\n             \"fit_h_max_abs_diff\": float(np.abs(replay_fit[\"h\"] - saved_fit[\"h\"]).max()),\n             \"dev_h_max_abs_diff\": float(np.abs(replay_dev[\"h\"] - saved_dev[\"h\"]).max()),\n             \"fit_ell_max_abs_diff\": float(np.abs(replay_fit[\"ell_hat\"] - saved_fit[\"ell_hat\"]).max()),\n-            \"dev_ell_max_abs_diff\": float(np.abs(replay_dev[\"ell_hat\"] - saved_dev[\"ell_hat\"]).max()),\n         }\n+        # the saved dev npz deliberately carries no per-row component predictions\n+        # (dev_predictions.npz = gid/y/y_raw/y_cal/h/q_raw); h (the g readout) is\n+        # the replay anchor on dev.\n         if max(entry.values()) > REPLAY_TOL:\n             raise RuntimeError(f\"DICT_s{seed} replay mismatch {entry}\")\n         replay[f\"s{seed}\"] = entry\ndiff --git a/tracks/ksvd/tests/test_zinc_cssd_graph_information_sufficiency_v1.py b/tracks/ksvd/tests/test_zinc_cssd_graph_information_sufficiency_v1.py\nindex 6ed64b0..a1a53db 100644\n--- a/tracks/ksvd/tests/test_zinc_cssd_graph_information_sufficiency_v1.py\n+++ b/tracks/ksvd/tests/test_zinc_cssd_graph_information_sufficiency_v1.py\n@@ -190,12 +190,15 @@ def test_relabel_invariance_of_witness():\n     inv = np.empty(n, dtype=np.int64)\n     inv[perm] = np.arange(n)\n     rem = m.remap_molecule(phi, atom, occ_node, occ_root, occ_shell, perm)\n-    # every node-addressed field is remapped by the SAME involution\n-    assert np.array_equal(rem[\"occ_node\"], inv[occ_node])\n-    assert np.array_equal(rem[\"occ_root\"], inv[occ_root])\n+    # every node-addressed field is remapped consistently: new index of old v\n+    # is perm[v]; new_phi[perm[v]] = phi[v]; occurrences move with their nodes\n+    assert np.array_equal(rem[\"occ_node\"], perm[occ_node])\n+    assert np.array_equal(rem[\"occ_root\"], perm[occ_root])\n     assert np.array_equal(rem[\"phi\"], phi[inv])\n     assert np.array_equal(rem[\"atom\"], atom[inv])\n     # witness-level invariance with the support rows relabelled consistently:\n+    # alpha follows the phi rows (alpha_new = alpha[inv]), so the relabelled\n+    # witness must be identical\n     b = (rng.random((n, 4)) < 0.4).astype(np.int64)\n     W1, d1 = m.witness_from_supports(b, occ_node, occ_root, n)\n     W2, d2 = m.witness_from_supports(b[inv], rem[\"occ_node\"], rem[\"occ_root\"], n)\n",
+      "untracked": []
+    },
+    "runner": "zinc_cssd_graph_information_sufficiency_v1",
+    "runtime_seconds": 21.73315,
+    "split_fingerprint": "58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a",
+    "test_access": "blocked"
+  },
+  "purpose": "label-free restore checks: frozen DICT s0/s1 restore, replay, alpha operator equivalence, invariances",
+  "record_id": "record-20261008-234214-86fd6c4e",
+  "run_id": "20261008-234214-86fd6c4e",
+  "scientific_config": {
+    "data": {
+      "root": "data/ZINC"
+    },
+    "model": {
+      "stage": "restore-checks"
+    },
+    "protocol_id": "zinc-cssd-graph-information-sufficiency-v1"
+  },
+  "seeds": [
+    0
+  ],
+  "started_at": "2026-10-08T23:42:14",
+  "status": "completed",
+  "study_id": "zinc-context-gap"
+}
