@@ -1,0 +1,316 @@
+# Protocol: ZINC CSSD pair joint residual v1 (design basis 5d33c9a — the
+# zinc_cssd_relation_projection_v1 terminal results).
+
+# Freezes the single question of this round: keeping C's shared endpoint
+# projection and the existing pair path, does adding a SHARED,
+# endpoint-swap-symmetric joint residual that reads BOTH full endpoints and
+# the existing relation improve the complete y_raw and g of the development
+# set?  C is kept as the working base (a directional single-seed lead, NOT a
+# repeat-confirmed upgrade).  The purchase reason is a possible INFORMATION
+# LOSS of the pair interface — the per-coordinate sum/abs-diff/product cannot
+# distinguish the endpoint pair {(1,0),(0,1)} from {(1,1),(0,0)} — and never a
+# proven error mechanism: C's learning, the unary/other branches and the
+# relation itself may compensate, and nothing here claims the whole model is
+# non-identifiable or that the g error is localised.  Budgeted discovery
+# probe: single body seed 0, TWO arms, ONE from-scratch training each; no
+# parameter-matched third arm exists, so any benefit carries added-capacity /
+# implicit-regularisation / training-trajectory / endpoint-own-nonlinear /
+# relation-own corrections as competing explanations.
+
+id: zinc-cssd-pair-joint-residual-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+
+split:
+  description: >-
+    identical to zinc_cssd_consumer_replacement_v1: fit = the source round's
+    committed 8001-row fit fold; dev = sorted union(select_idx, confirm_idx) =
+    1999 historical development rows (a DEVELOPMENT COMPARISON set, repeatedly
+    used by this line — never a new independent confirm, and never made
+    "unseen" by evaluating only once); canonical-SMILES groups never straddle
+    fit/dev; no re-splitting, no row deletion.
+  fingerprint_policy: index-array SHA-256 (identical for all runs)
+  folds: 1
+  oof: false
+  official_valid_usage: never_loaded
+  official_test_usage: never_loaded
+
+reused_objects_read_only:
+  source: results/zinc_cssd_nonlinear_binding_v1 (unchanged stage-0 objects)
+  historical_runs: results/zinc_cssd_consumer_replacement_v1/runs (DICT_s0 anchor)
+  prev_round_anchor: results/zinc_cssd_relation_projection_v1/runs/SHARED_MLP_s0
+    (READ-ONLY: its init_state hash is the bitwise anchor of CTRL_C; its
+    terminal numbers are descriptive anchors only)
+  artifacts: >-
+    fold, targets, tuple payload, kappa_M, prep, the CSSD basis
+    (U/common_rms/D; q=1, 32 atoms, top-8 tied-IHT-10; the historical refit
+    included task supervision in its temporary head — recorded as-is, never
+    claimed purely unsupervised), and the frozen shared Q(topology25) soup.
+    U/common_rms/Dbar are non-persistent buffers: loading any checkpoint
+    always requires the original basis package; nothing is refitted; the phi
+    scaler is applied exactly once; the common term is kept.
+
+frozen_model:
+  spec: >-
+    every arm starts from the PRIMARY factory
+    proj.build_arm_round("SHARED_MLP", payload, kappa_M, basis_parts, 0,
+    decode=True) — the previous round's untrained C factory (itself starting
+    from the original untrained DICT factory, completing the historical
+    297,539-parameter audit, swapping pair_projection to the shared no-bias
+    144->180->48 SiLU SharedEndpointMLP under the private seed 20261008 with
+    the function-preserving identity init, and asserting C's 325,187-parameter
+    contract).  The relation side stays: E_i in R^144 generated once (frozen
+    CSSD phi_hat decode -> 125-D tuple -> local encoder + real J-incidence ->
+    Sem108/size2 fusion -> the historical 144->288->144 posterior MLP bridge),
+    the shared projection gives the endpoint views, then
+    [left+right, |left-right|, left*right*gate, relation] (192-D) through the
+    original pair encoder (192->192->48), pooled by the five EXISTING
+    distance buckets.  CTRL_C = that factory promoted to this round's model
+    class with NO joint module (325,187 parameters; init must hash-match the
+    previous round's SHARED_MLP s0 init bit-for-bit).  JOINT_RESIDUAL = the
+    SAME factory and every common tensor, plus ONE new module
+    joint_residual (12,288 parameters; 337,475 total, +3.78%): psi = no-bias
+    Linear(144,64) -> SiLU -> no-bias Linear(64,48), input
+    [left, right, relation] (48+48+48 = 144), the last layer an ORDINARY
+    Linear followed by nothing (no activation, norm, dropout, gamma or extra
+    learnable scale), delta_ij = 0.5*(psi([left,right,relation]) +
+    psi([right,left,relation])), h_pair = h_old + delta_ij inserted after
+    h_old and BEFORE the original pair pooling.  Both orderings are evaluated
+    by the SAME psi (concatenated to [2P,144] for one call, split, averaged —
+    a STATIC function evaluation of the two orders, not two propagation
+    rounds and not a relation refresh).  psi has no dropout, so the two
+    orders share the function exactly.
+  untouched: >-
+    the old h_old path, the shared projection C, the relation_encoder, the
+    distance_gate, the original pair_encoder, the original five-bucket pair
+    moments pooling, unary/global/topology/reader, the C6 mask semantics and
+    the COMP supervision are kept verbatim (original recipe, original module
+    names); no new input statistics, no chemical features, no attention, no
+    message passing, no recurrence, no environment update, no pair->node
+    write-back, no new pool, no second environment generation; relation is
+    the SAME post-mask relation_encoder output the pair input already uses;
+    data.pair_bucket is never written; E_i is generated before any pair
+    computation and never updated by the pairs; any pair output (including
+    delta) never writes back into E_i.  All original consumers remain jointly
+    trainable (the "frozen interface" is the recipe, not the weights).
+  targets_frozen: >-
+    g = y - c_target; ell = the normalized logP; s = g - ell (a residual, not
+    pure SA); g_hat = ell_hat + s_hat; y_raw = g_hat + Q_raw;
+    L = L1(g_hat, g) + 0.5*(L1(ell_hat, ell) + L1(s_hat, s)) — the COMP
+    auxiliary supervision is disclosed and its weights are never tuned; the
+    frozen shared Q and the targets/COMP definitions never change.
+  initialization_frozen: >-
+    the joint_residual module is built on CPU under
+    torch.random.fork_rng(devices=[]) with the private seed 202610081; the
+    fork restores the global CPU RNG (asserted bitwise against the CTRL_C
+    post-construction state).  W1 keeps the nn.Linear default draw; W2 is
+    EXACTLY zero, so the step-0 delta is exactly zero, both arms start
+    function-identical, and W1's first-backward gradient is zero BY
+    CONSTRUCTION (expected, never misread as dead, never rescued by
+    re-initialization); W2's gradient is reachable at step 0 and W1 must be
+    active with a non-zero delta after a few optimizer steps (fit-only smoke,
+    checked).  Not simultaneously zero-W1-and-W2 and no zero gamma: a dead
+    branch must not be manufactured.  No historical trained soup weight is
+    read as an initialisation; no warm start from any of the three previous
+    soups; no init search.  Both arms are trained from scratch with
+    seed_everything(0) exactly like the historical recipe; every non-joint
+    initial tensor is bitwise identical across arms and to the previous
+    round's SHARED_MLP s0 init.
+
+training_contract_frozen:
+  optimizer: Adam lr 1e-3, coupled weight_decay 1e-5, batch 128, grad clip 5
+  precision: FP32 (no AdamW, no scheduler/AMP/DDP/early stopping)
+  runs: exactly TWO formal body trainings (CTRL_C/JOINT_RESIDUAL x body seed
+    0), each from scratch for 240 epochs (15,120 optimizer steps, asserted),
+    fit rows only during training (no dev read, no mid-training
+    replay/rebuild — only detach/clone captures); no warm start from any
+    historical soup, no head-only training; CSSD and Q stay frozen
+  schedule: the original zw.build_schedule, seed = 0 + 101; must be
+    bit-identical to the historical DICT seed-0 schedule (hash + element-wise)
+  estimator: the UNIQUE estimator per run = the equal-weight FP32 parameter
+    mean of the FULL member states of epochs 236..240 (historical soup
+    semantics; non-float state entries must be identical and are copied; the
+    basis buffers never enter the average, the optimizer or the state dict);
+    the estimator is fixed — no checkpoint/dev scanning, no window search
+  trace_artifacts: epoch120/epoch240 states and the 236..240 members are saved
+    for traceability only — never scoring candidates; dev is never scanned
+    over checkpoints; every run saves init/schedule/members/soup/manifest/
+    curve/probes/resume state (optimizer/RNG/schedule kept to explain the
+    execution; no new heavyweight audit system)
+  frozen_basis: sha256 asserted before/after training; CSSD buffers never in
+    the optimizer; Q fixed and shared (never retrained)
+  budget: total GPU budget 2 aggregate hours including smoke, the two
+    trainings, the terminal eval and necessary engineering fixes (two
+    simultaneous GPUs count separately and are added); res-2 res2-cu124 A100;
+    the two arms run in parallel when two GPUs are free, otherwise serially
+    with identical hardware/software regime; ONE body training per GPU at a
+    time; Slurm allocation, no manual GPU grabbing; when the budget is
+    insufficient the blocker is reported honestly, never silently absorbed by
+    shortening the scientific recipe; no additional body seed, no third arm,
+    no longer training and no width/scale/init sweep under any outcome
+
+pretrain_checks_frozen:
+  scope: >-
+    fit-only, CPU before any training: (1) stage-0/source hashes, the
+    historical seed-0 run, the previous round's SHARED_MLP s0 anchor, the
+    schedule reproduction, the dimension/bucket contracts (d=144, p=48,
+    relation 48, psi input 144, five buckets, reader input 814); (2) per-arm
+    parameter contracts (CTRL_C 325,187 / JOINT_RESIDUAL 337,475, joint
+    residual 12,288 recorded separately and reconciled against
+    named_parameters), no-bias modules, W2 exactly zero, W1 live, non-joint
+    init bitwise pairing, fork_rng RNG neutrality; (3) CTRL_C forward/
+    component/aux parity BIT-EXACT vs the previous round's untouched
+    SHARED_MLP factory on fit batches under cm.C6_MASK; (4) step-0 agreement
+    (JOINT bitwise vs CTRL_C on CPU — delta exactly 0); (5) the same-forward
+    component identity (torch exact 0, float64 sum in band); (6) invariances
+    on fit molecules: endpoint-swap symmetry of the pair input AND of delta,
+    pair-row permutation, node relabelling (the positional tuple payload
+    swapped exactly like the nonlinear-binding round's pattern), batch
+    composition/order and label independence; (7) mask/fill wiring of the new
+    branch (forward-hook evidence): psi reads the MASKED endpoint views and
+    the MASKED relation (the same tensor the pair input reads),
+    pair_zero_blocks pooling is not bypassed, and with joint_enabled=False
+    every probe-mask response is bitwise identical to CTRL_C's; (8) a
+    3-step optimization smoke: finite outputs, gradients reaching the bridge,
+    W_loc, A_raw, the reader; JOINT W1 zero-grad at step 0 by construction,
+    W2 grad > 0 at step 0, W1 active and delta non-zero by step 3; CSSD
+    buffers never in the optimizer or state dict, basis hashes unchanged;
+    (9) save -> CORRECT-factory reload -> replay (CPU bit-exact) and
+    wrong-factory strict load blocked; (10) the joint_enabled=False switch on
+    a temporary copy with an artificially non-zero W2 (fit-only, never a
+    training arm, never written into the formal init): ONLY delta is affected
+    — predictions/aux bitwise equal CTRL_C when off and different when on;
+    CTRL_C's switch is a no-op.  Plus the small 2-D collision demo
+    (function-family expressiveness only).  No full historical audit is
+    copied; only these checks.
+
+terminal_evaluation:
+  one_shot: terminal_eval.json is written once and never overwritten; the
+    protocol/roster rules are committed frozen BEFORE the first dev scoring of
+    this round; smoke and all checks are fit-only; a genuine pre-scoring
+    engineering failure may be fixed and retried with disclosure; a successful
+    terminal_eval.json is never covered.  If a fix changes training semantics,
+    the affected results are not mixed: the affected formal runs are rerun
+    within budget and the incident disclosed; debugging is never upgraded into
+    scientific rescue.  The runner is invoked in the round's non-test mode
+    (--mode scratch); stage=terminal-eval does NOT grant test access.
+  roster: both trainings complete before the single eval; both inits hash-equal
+    the previous round's SHARED_MLP s0 init; JOINT's non-joint init bitwise
+    equal to CTRL_C's; per-arm parameter audits; schedule hash == historical;
+    frozen-basis and Q hashes unchanged; members/soups hash-checked.
+  exports: >-
+    per run x split (fit AND dev) per-row: row_index, gid, canonical-SMILES
+    group id, n_nodes, k, y/g/ell/s targets, ell_hat/s_hat/h (same forward),
+    q_raw (ONE shared frozen-Q prediction per split, bitwise shared), y_raw,
+    b_y.  Main metric: full dev y_raw MAE; g_raw MAE is the common research
+    endpoint; y_cal reportable (b_y = each run's own fit-median residual;
+    calibration improvement is never a positive signal).  Component MAEs are
+    never summed and never reweight COMP; the fit-dev gap is listed per run in
+    its own column, never a substitute for the dev error; the fit numbers are
+    the FIXED SOUP's fit MAE (never called a training optimum or lower bound);
+    the end-of-training online train loss and the soup-fit MAE are named
+    separately and never ranked against each other.
+  paired_contrast: exactly ONE — JOINT_RESIDUAL - CTRL_C — on dev y_raw and
+    dev g (absolute AND relative), with the fit-side deltas, the fit-dev gaps
+    and the gap reductions reported alongside; the previous round's
+    C = 0.11659/0.08935 (and BASE 0.11920/0.09169) are descriptive anchors
+    ONLY (the recipe effect is judged against the paired same-round CTRL_C,
+    never against the weaker or stronger historical numbers).
+  bootstrap: >-
+    canonical-SMILES-group-paired resampling of dev groups, 2000 draws, fixed
+    seed 20261008; the SAME group picks shared by both arms and BOTH metrics;
+    a CI per metric (delta = JOINT - CTRL_C).  The molecular bootstrap carries
+    no training-seed or basis uncertainty; there is only ONE body seed, so
+    even a CI excluding 0 is NOT a repeatability or method-stability claim;
+    dev is the historical development set, never a new confirm/test.
+  noise_bound: >-
+    eta from repeated forwards AND same-weight save/reload replay of the two
+    soups; marker = max(1e-4, 10*eta); prediction responses and MAE changes
+    are reported separately.
+  dictionary_intervention: >-
+    intervention A on BOTH soups: alpha_v := the fit-root mean alpha (computed
+    from fit under the frozen basis via the verified repl.fit_mean_codes) via
+    model.local_tuple.alpha_replace; c/chemistry/J/Sem108/relations/Q
+    untouched; no retraining, no recalibration; no raw/decoded identity hook.
+    Reported: the actual input change, |Delta pred| mean/median/p95/max, the
+    response fraction at the marker, DeltaMAE(y_raw) and DeltaMAE(g).  A
+    strong alpha response does NOT mean the dictionary benefit is larger;
+    dependence evidence, never incremental benefit.
+  joint_toggle_intervention: >-
+    intervention B on the JOINT soup ONLY: joint_enabled := False (delta := 0);
+    every old path and weight untouched; no retraining, no recalibration; Q
+    reused bitwise.  Reported: the delta scale relative to h_old (|delta| and
+    |delta|/|h_old| distributions from detached eval diagnostics), the soup's
+    joint-parameter norms, |Delta pred| distribution, the response fraction at
+    the marker, DeltaMAE(y_raw) and DeltaMAE(g) of DISABLING.  This is
+    additional-path dependence / direction of action — never a substitute for
+    the paired performance result; disabling IMPROVING the dev MAE means the
+    fixed checkpoint's additional path is net harmful for dev (a large
+    response is never good news by itself).  CTRL_C's switch is verified as a
+    no-op on a small batch (no repeated full scoring).  No third training arm
+    is created from any intervention result.
+
+exploratory_reading_frozen: >-
+  The purpose of this round is to find a performance lead, not to confirm a
+  repeatable mechanism; the historical 0.003 gates and A-E classes are NOT
+  inherited.  The round ENDS after the two runs, the one-shot terminal eval,
+  the two interventions and the report; no automatic canonical upgrade, no
+  automatic seed 1, no matched-capacity arm, no width/depth/residual-scale
+  sweep, no closing of the whole fusion/relational route by a single seed.
+  The full effect sizes, CIs, fit/dev changes and costs are reported first;
+  the reading then uses exactly the following branches (point estimates
+  decide, CIs annotate):
+  (1) joint-residual-single-seed-lead [+ -weak-uncertain when a CI crosses 0]:
+  JOINT improves BOTH complete dev y and g vs the same-round CTRL_C, the
+  dictionary readout is intact (alpha p95 > marker) and the new branch
+  genuinely responds (toggle p95 > marker): a single-seed performance lead of
+  the shared symmetric endpoint joint residual.  The candidate is saved but
+  NOT auto-promoted; a CI crossing 0 is explicitly recorded as weak/uncertain;
+  even without a crossing this is ONE seed (never a repeatability claim) and
+  the added-capacity/trajectory explanations stay open (no paired-information-
+  recovery claim is ever made).
+  (2) mixed-inconclusive: y and g move in opposite directions, or both
+  |deltas| are at/below the noise marker, or the statistical ranges are wide —
+  reported honestly as mixed/uncertain, never packaged as a success.
+  (3) joint-residual-configuration-not-retained: JOINT does not improve both
+  dev metrics or is clearly worse — THIS configuration is not retained and its
+  additional budget is closed; no width/depth/residual-scaling rescue sweeps;
+  no verdict on relation fusion in general.
+  (4) performance-lead-without-branch-response: JOINT improves both metrics
+  but the toggle intervention shows almost no response — the lead is retained
+  as a training-parameterisation/trajectory observation and NOT upgraded to a
+  verified endpoint-joint readout; the initialization is never re-purposed as
+  a rescue.
+  (5) dictionary-readout-lost-no-dictionary-mainline-upgrade: JOINT's alpha
+  intervention is unresponsive — performance is recorded but JOINT is NOT
+  upgraded to this round's dictionary mainline candidate; the observation and
+  competing explanations are kept.
+  Every branch ends the round; only a recommendation for the researcher is
+  given, never an automatic purchase.
+
+exclusions_frozen:
+  - no second body seed, no third arm (not even a parameter-matched one), no
+    WIDE5, no new windows, no warm start, no head-only training, no init
+    search, no distillation, no residual-scale/width/depth sweeps
+  - no bridge-width or bucket re-partitioning, no distance-gate or relation
+    input changes, no attention/MP/recurrence/pair->node write-back, no new
+    statistical features, no COMP reweighting, no WD/LR/EMA/SWA changes
+  - no reopening of the dictionary prototype relation algebra, the N/E
+    pooling-time joint-binding family, the bucket-routed projection R, or any
+    other historical negative recipe; no RAW/DICT redo, no cross-domain
+    baseline reuse, no interpretability redo
+  - no row deletion, no clipping, no oracle Q, no calibration counted as a
+    positive signal, no dev re-scoring of history, no XGBoost, no Q fix
+  - no new subgroup/feature search beyond the existing k groups and the k=0
+    n_nodes bins (<=23 / 24..27 / >=28); error analysis stays at those cuts;
+    no per-molecule mega-audit
+  - no route-shuffle redo, no semantic shuffle, no new intervention menu
+  - official valid/test never instantiated
+
+test_policy: never_loaded
