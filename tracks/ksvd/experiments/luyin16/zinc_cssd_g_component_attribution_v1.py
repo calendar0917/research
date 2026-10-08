@@ -845,7 +845,9 @@ def analyze(out_dir: Path = RESULTS_DIR, log: Any = print) -> dict[str, Any]:
         }
         summary["k0_bootstrap"] = {
             "overall": {
-                comp: paired_group_bootstrap(k0_err, k0_codes)
+                comp: paired_group_bootstrap(
+                    {run: k0_err[run][comp] for run in RUN_NAMES}, k0_codes
+                )
                 for comp in ("e_s", "e_ell")
             },
             "subgroup_delta": {k: v for k, v in boot.items() if "/e_s" in k or "/e_ell" in k},
