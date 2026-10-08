@@ -886,6 +886,30 @@ def analyze(out_dir: Path = RESULTS_DIR, log: Any = print) -> dict[str, Any]:
                     row["located"] = LOCATED_GIDS[int(gid0[pos])]
         summary["k0_concentration"] = conc
 
+        # fit-side stability view (in-sample; secondary reference only)
+        fit_idx = splits["fit"]
+        fit_k = errors[RUN_NAMES[0]]["fit"]["k"]
+        fk0 = fit_k == 0
+        fit_k0_err = {
+            run: {c: errors[run]["fit"][c][fk0] for c in ("e_ell", "e_s", "e_g")}
+            for run in RUN_NAMES
+        }
+        fit_masks = {
+            "node_tercile": {f"tercile_{i}": (assign["node_tercile"][fit_idx][fk0] == i) for i in range(3)},
+            "atom_group": {g: (assign["atom_group"][fit_idx][fk0] == g) for g in ATOM_GROUP_NAMES},
+            "bond_group": {g: (assign["bond_group"][fit_idx][fk0] == g) for g in BOND_GROUP_NAMES},
+        }
+        fit_codes0 = group_codes["fit"][fk0]
+        fit_tables, _ = _subgroup_tables(
+            fit_k0_err, fit_masks, fit_codes0, int(fit_idx.size), int(fk0.sum()),
+            with_bootstrap=False,
+        )
+        summary["fit_stability"] = {
+            "n_k0": int(fk0.sum()),
+            "tables": fit_tables,
+            "note": "in-sample (fit rows trained on); direction reference only, no bootstrap",
+        }
+
         # ---- CSV outputs ----
         _write_subgroup_csv(out_dir, tables)
         _write_concentration_csv(out_dir, conc, gid0)

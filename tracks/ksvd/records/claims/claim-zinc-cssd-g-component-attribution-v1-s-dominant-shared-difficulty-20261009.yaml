@@ -1,0 +1,70 @@
+claim_id: claim-zinc-cssd-g-component-attribution-v1-s-dominant-shared-difficulty-20261009
+contradicting_evidence: []
+created: '2026-10-09T01:30:00'
+implication: >-
+  Do not buy a dictionary-object redesign as the next study on this evidence:
+  the frozen basis substitution has no component-level positive effect (its only
+  dev g advantage is within-row cancellation) and the dominant s difficulty is
+  arm-symmetric, so the evidence-weighted next direction is the consumer's s
+  channel (readout/generalization), which must go through a new preregistration.
+  Equally, do not claim the current dictionary is optimal - only that replacing
+  it with raw phi65 does not help and no subgroup-specific dictionary failure
+  exists. dev is the historical development set: exploratory localization only,
+  never a confirmation.
+kind: claim
+limitations:
+- dev (1999 rows) is the historical development comparison set, used many times
+  for development; all dev findings are exploratory and not independent
+  confirmation; no official valid/test was loaded.
+- Four runs share one consumer family, one fold and one supervision; arm
+  symmetry cannot exclude a family-wide generalization limit.
+- The group bootstrap covers molecular resampling only (canonical-SMILES
+  groups); training-seed and basis uncertainty are disclosed separately via
+  per-seed directions.
+- The atom/bond groupings are coarse pre-registered one-way partitions; they
+  describe gradients, not causal mechanisms, and the mapping cross-check
+  tolerates <=10 atoms per element (observed <=5).
+scope: >-
+  Local CPU only; zero training; zero GPU. Frozen objects of
+  zinc_cssd_consumer_replacement_v1 (four soups RAW/DICT x seed 0/1 at revision
+  a308e3490bfe, frozen CSSD basis, shared Q soup) replayed against the promoted
+  prediction npz (max |dh| 1.06e-5 fp32 save precision; strict reader identity
+  h = ell_hat + s_hat max 2.38e-7); the only new forward is the label-free
+  per-row dev component export (24.6 s CPU, runs 20261009-010541-e7679165);
+  the labeled analysis (run 20261009-011036-aa14e10b) is pure numpy with
+  pre-registered groupings fixed before any label read (preregistration commit
+  186135a).
+statement: >-
+  On the four frozen CSSD consumers (g = ell + s; fit 8001 / dev 1999 rows of
+  the frozen fold), the residual chemistry component s is the dominant,
+  maximally stable out-of-sample difficulty and the dictionary channel has no
+  component-level marginal value.  (1) dev MAE_s is 0.0804-0.0824 in ALL FOUR
+  runs (RAW/DICT x seed 0/1) while MAE_ell varies 0.0518-0.0590; |e_s| carries
+  59-60% of the summed absolute component error; the fit-to-dev inflation is
+  x2.37/x2.66 (DICT/RAW) for s versus x1.77/x1.81 for ell.  (2) On dev k=0 the
+  paired DICT-RAW delta is +0.00053 (CI95 [-0.00148, +0.00257], cross-zero) on
+  s and +0.00271 (CI95 [+0.00101, +0.00447], DICT significantly WORSE) on ell,
+  while the g delta is -0.0007 - the dictionary's only dev advantage is
+  stronger within-row cancellation (triangle gap 0.04513 vs 0.04104,
+  opposite-sign 0.582 vs 0.558), not component accuracy.  (3) s error has two
+  arm- and seed-stable coarse conditions on k=0: the smallest node-count
+  tercile (MAE_s 0.098 vs 0.067/0.074; subgroup-vs-complement +0.028 CI
+  [0.020, 0.036] in both arms; fit-side terciles are flat, so this is a
+  generalization effect) and N/O-containing versus halogen-containing
+  molecules (+0.015 CI [0.007, 0.023] / -0.013 CI [-0.021, -0.006]); but no
+  subgroup dominates (top-20 rows = 1% of k=0 carry 7.7% of sum|e_s|, uniform
+  reference 1.0%) and the DICT-RAW delta CI crosses zero inside EVERY
+  subgroup - there is no subgroup where the dictionary specifically fails.
+  (4) A readout-level mirror-bias structure is present in all four runs
+  (dev bias_s > 0 > bias_ell; g bias within +-0.009).  The chemistry
+  information the s residual needs is already available to the consumer
+  through the bypass channels (one-hot28/28/4, Sem108), which the RAW
+  containment (equal-or-worse with strictly more local information) makes
+  decisive against a pure information-addition story.
+study_id: zinc-context-gap
+supporting_evidence:
+- records/runs/20261009-010541-e7679165.json
+- records/runs/20261009-011036-aa14e10b.json
+- results/zinc_cssd_g_component_attribution_v1/REPORT.md
+- results/zinc_cssd_g_component_attribution_v1/component_summary.json
+- notes/zinc_cssd_g_component_attribution_v1.md

@@ -1,0 +1,167 @@
+{
+  "candidate_id": "zinc-cssd-consumer-replacement-v1",
+  "ended_at": "2026-10-09T01:10:51",
+  "fingerprint": "b2df204496b55de3a6b5911332c4443411a64fd1791cf0ac96f72446b0b5f620",
+  "kind": "run_record",
+  "meta": {
+    "note": "zinc_cssd_g_component_attribution_v1 analyze: s is the shared dominant out-of-sample component (dev MAE_s 0.0804-0.0824 all four runs; fit->dev x2.4-2.7 vs ell x1.7-1.8); stable k=0 gradients (small molecules, N_or_O) in both arms; DICT-RAW null on s (+0.0005 CI [-0.0015,+0.0026]), significantly negative on ell (+0.0027 CI [+0.0010,+0.0047]); g advantage purely cancellation"
+  },
+  "metrics": {
+    "all_checks_pass": true,
+    "bootstrap_delta_MAE_ell_ci95": [
+      0.0010141531503078303,
+      0.004474178182227901
+    ],
+    "bootstrap_delta_MAE_ell_point": 0.002710582909982273,
+    "bootstrap_delta_MAE_s_ci95": [
+      -0.0014755194365046172,
+      0.0025688728221205212
+    ],
+    "bootstrap_delta_MAE_s_point": 0.0005327425488254433,
+    "dev_DICT_MAE_ell": 0.056331025281926475,
+    "dev_DICT_MAE_g": 0.09257377757429777,
+    "dev_DICT_MAE_s": 0.08137142639792655,
+    "dev_DICT_opposite_sign_fraction": 0.5820410205102551,
+    "dev_DICT_triangle_gap": 0.045128674105555246,
+    "dev_RAW_MAE_ell": 0.05356307014489749,
+    "dev_RAW_MAE_g": 0.09359055466480173,
+    "dev_RAW_MAE_s": 0.08106568046468221,
+    "k0_top20_share_of_abs_s_DICT": 0.07687083499101711,
+    "measure": "zinc_cssd_g_component_attribution_v1::analyze",
+    "official_test_loaded": false,
+    "official_valid_loaded": false,
+    "purpose": "frozen-consumer ell/s component error attribution (exploratory, dev)",
+    "stage": "analyze"
+  },
+  "mode": "scratch",
+  "promoted_at": "2026-10-09T01:14:42",
+  "protocol_hash": "52b50e0bdd50dbceec6baebce549e2d4d74d80ae634ce8825770834c9585a82f",
+  "protocol_id": "zinc-context-gap",
+  "provenance": {
+    "code_state_hash": "8f97ca41344ff2dcf3253121fafa255684c6d33d27b1ea19db2312425a46070c",
+    "config_hash": "193684b3bcb397e504cc62802b49d758b83f8b9273fb696cd712c8aff4a4eef9",
+    "dataset_fingerprint": {
+      "dataset_fingerprint": "f03ae64d1126f7f0417d5ab4d4f82128dcc2ce60abb79de2a5217c65e3a10da3",
+      "policy": "official_pyg_zinc_data",
+      "raw_files": [
+        {
+          "bytes": 765,
+          "name": "atom_dict.pickle",
+          "sha256": "c4c8e8625c9773bb725ec2771552eccb2b6cf6550c8fef0f6139627aa8fe51c6"
+        },
+        {
+          "bytes": 239,
+          "name": "bond_dict.pickle",
+          "sha256": "623359be444efd15db6eec412ea9ba9a12bf1afec57305f9f5abd4b4a52c541a"
+        },
+        {
+          "bytes": 4782,
+          "name": "test.index",
+          "sha256": "6aa50d98976044fb36089afef5b4c991b429ca1c8e009d33a0319e42a2d9b525"
+        },
+        {
+          "bytes": 7690132,
+          "name": "test.pickle",
+          "sha256": "33c7d2bcf6332be422aaea4baaf056e36f2c80eb6f7d0f5d68a8264d1b94e65b"
+        },
+        {
+          "bytes": 65110,
+          "name": "train.index",
+          "sha256": "575d6acd72ac207a95947e2bdd16411ef6fc3faa88c2f55a2c496ea43022a6d8"
+        },
+        {
+          "bytes": 338943042,
+          "name": "train.pickle",
+          "sha256": "9c76df5a1ab90aac200df22902893827168aeced3df87aab4b6bee100235d7f2"
+        },
+        {
+          "bytes": 5541,
+          "name": "val.index",
+          "sha256": "fe48c38157f0d38e7fc441903a143392eda080511a79e8fb8f60f5c1b0a9c164"
+        },
+        {
+          "bytes": 37634758,
+          "name": "val.pickle",
+          "sha256": "4c6015ec483224c55593c862b0334ae4b64e14679eab041c0655c6a7b603e47a"
+        }
+      ],
+      "split": {
+        "expected_sizes": {
+          "test": 1000,
+          "train": 10000,
+          "val": 1000
+        },
+        "index_sha256": {
+          "test.index": "6aa50d98976044fb36089afef5b4c991b429ca1c8e009d33a0319e42a2d9b525",
+          "train.index": "575d6acd72ac207a95947e2bdd16411ef6fc3faa88c2f55a2c496ea43022a6d8",
+          "val.index": "fe48c38157f0d38e7fc441903a143392eda080511a79e8fb8f60f5c1b0a9c164"
+        },
+        "policy": "official_pyg_zinc_subset_split",
+        "sizes": {
+          "test": 1000,
+          "train": 10000,
+          "val": 1000
+        },
+        "splits": [
+          "train",
+          "val",
+          "test"
+        ]
+      },
+      "split_fingerprint": "58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a"
+    },
+    "environment": {
+      "cwd": "/home/calendar/code/research",
+      "executable": "/home/calendar/code/research/.venv/bin/python",
+      "machine": "x86_64",
+      "packages": {
+        "networkx": "3.4.2",
+        "numpy": "2.1.3",
+        "ogb": "1.3.6",
+        "optuna": "4.2.1",
+        "pandas": "2.2.3",
+        "pynauty": "2.8.8.1",
+        "pytest": "8.3.4",
+        "pyyaml": "6.0.2",
+        "scikit-learn": "1.5.2",
+        "scipy": "1.14.1",
+        "torch": "2.5.1",
+        "torch-geometric": "2.6.1"
+      },
+      "platform": "Linux-6.18.52-1-lts-x86_64-with-glibc2.44",
+      "python": "3.12.14",
+      "python_full": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]"
+    },
+    "git": {
+      "code_state_hash": "8f97ca41344ff2dcf3253121fafa255684c6d33d27b1ea19db2312425a46070c",
+      "commit": "266d66057fd37e13df0031b6bed87799b37b3742",
+      "diff_hash": "829c4991056386cad5e49dcac197b408b308c2d9d7f6b871edbc9ff2e756cdef",
+      "dirty": true,
+      "patch": "diff --git a/tracks/ksvd/experiments/luyin16/zinc_cssd_g_component_attribution_v1.py b/tracks/ksvd/experiments/luyin16/zinc_cssd_g_component_attribution_v1.py\nindex 9b2c745..4e809d8 100644\n--- a/tracks/ksvd/experiments/luyin16/zinc_cssd_g_component_attribution_v1.py\n+++ b/tracks/ksvd/experiments/luyin16/zinc_cssd_g_component_attribution_v1.py\n@@ -886,6 +886,30 @@ def analyze(out_dir: Path = RESULTS_DIR, log: Any = print) -> dict[str, Any]:\n                     row[\"located\"] = LOCATED_GIDS[int(gid0[pos])]\n         summary[\"k0_concentration\"] = conc\n \n+        # fit-side stability view (in-sample; secondary reference only)\n+        fit_idx = splits[\"fit\"]\n+        fit_k = errors[RUN_NAMES[0]][\"fit\"][\"k\"]\n+        fk0 = fit_k == 0\n+        fit_k0_err = {\n+            run: {c: errors[run][\"fit\"][c][fk0] for c in (\"e_ell\", \"e_s\", \"e_g\")}\n+            for run in RUN_NAMES\n+        }\n+        fit_masks = {\n+            \"node_tercile\": {f\"tercile_{i}\": (assign[\"node_tercile\"][fit_idx][fk0] == i) for i in range(3)},\n+            \"atom_group\": {g: (assign[\"atom_group\"][fit_idx][fk0] == g) for g in ATOM_GROUP_NAMES},\n+            \"bond_group\": {g: (assign[\"bond_group\"][fit_idx][fk0] == g) for g in BOND_GROUP_NAMES},\n+        }\n+        fit_codes0 = group_codes[\"fit\"][fk0]\n+        fit_tables, _ = _subgroup_tables(\n+            fit_k0_err, fit_masks, fit_codes0, int(fit_idx.size), int(fk0.sum()),\n+            with_bootstrap=False,\n+        )\n+        summary[\"fit_stability\"] = {\n+            \"n_k0\": int(fk0.sum()),\n+            \"tables\": fit_tables,\n+            \"note\": \"in-sample (fit rows trained on); direction reference only, no bootstrap\",\n+        }\n+\n         # ---- CSV outputs ----\n         _write_subgroup_csv(out_dir, tables)\n         _write_concentration_csv(out_dir, conc, gid0)\n",
+      "untracked": []
+    },
+    "runner": "zinc_cssd_g_component_attribution_v1",
+    "runtime_seconds": 15.00545,
+    "split_fingerprint": "58c69506df857bd8452481c6dcdd608ad230ba1a1aa90624850068fdd8faf28a",
+    "test_access": "blocked"
+  },
+  "purpose": "pre-registered ell/s component error attribution on the four frozen consumers (exploratory, dev)",
+  "record_id": "record-20261009-011036-aa14e10b",
+  "run_id": "20261009-011036-aa14e10b",
+  "scientific_config": {
+    "data": {
+      "root": "data/ZINC"
+    },
+    "model": {
+      "stage": "analyze"
+    },
+    "protocol_id": "zinc-cssd-consumer-replacement-v1",
+    "seed": 0
+  },
+  "seeds": [
+    0
+  ],
+  "started_at": "2026-10-09T01:10:36",
+  "status": "completed",
+  "study_id": "zinc-context-gap"
+}
