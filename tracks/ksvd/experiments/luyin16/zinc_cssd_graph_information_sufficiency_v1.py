@@ -292,10 +292,20 @@ def stage_witness_export(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> di
     started = time.perf_counter()
     torch.set_num_threads(8)
     out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
     basis_parts = basis_only(load_basis_parts())
     train_data = zftd.load_train_only()
     if len(train_data) != 10000:
         raise RuntimeError("train-only cache length mismatch")
+    # the row's global train index IS its position in the train-only cache
+    # (build_prepared_data sets local_mol_id = the source fold index); verify
+    # this identity on a sample of the committed fit fold before use.
+    ro = repl.load_round_objects()
+    pm, fit_data, _dev_data = repl.build_round_data(ro)
+    fit_idx = np.asarray(ro["fit_idx"], np.int64)
+    for pos in (0, 1, 2, len(fit_data) // 2, len(fit_data) - 1):
+        if int(fit_data[pos].local_mol_id.reshape(-1)[0].item()) != int(fit_idx[pos]):
+            raise RuntimeError("local_mol_id / train-row-position identity violated")
     W_real = np.zeros((10000, W_DIM), np.float64)
     W_shuf = np.zeros((10000, W_DIM), np.float64)
     diag_rows: list[dict[str, Any]] = []
@@ -304,7 +314,7 @@ def stage_witness_export(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> di
         phi = d.dict_phi.numpy().astype(np.float64)
         occ_node = d.env_occ_node.numpy()
         occ_root = d.env_occ_root.numpy()
-        gid = int(d.local_mol_id.reshape(-1)[0].item())
+        gid = row_id
         w = molecule_witness(phi, occ_node, occ_root, gid, basis_parts)
         W_real[row_id] = w["W_real"]
         W_shuf[row_id] = w["W_shuf"]
@@ -393,6 +403,7 @@ def stage_restore_checks(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> di
     started = time.perf_counter()
     torch.set_num_threads(8)
     out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
     parts = load_basis_parts()
     ro = parts["round_objects"]
     pm, fit_data, dev_data = repl.build_round_data(ro)
@@ -453,9 +464,9 @@ def stage_restore_checks(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> di
         molecule_witness(
             d.dict_phi.numpy().astype(np.float64),
             d.env_occ_node.numpy(), d.env_occ_root.numpy(),
-            int(d.local_mol_id.reshape(-1)[0].item()), basis_parts,
+            int(i), basis_parts,
         )["W_real"]
-        for d in chunk
+        for i, d in zip(rows, chunk)
     ]
     batch = p1.env_collate(list(chunk))
     alpha_batch = alpha_from_phi(batch.dict_phi.numpy().astype(np.float64), basis_parts)
@@ -484,7 +495,7 @@ def stage_restore_checks(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> di
         d.dict_phi.numpy().astype(np.float64), d.dict_atom.numpy(),
         d.env_occ_node.numpy(), d.env_occ_root.numpy(), d.env_occ_shell.numpy(), perm,
     )
-    gid = int(d.local_mol_id.reshape(-1)[0].item())
+    gid = 7  # d = train_data[7]: the global train row index IS the list position
     w_orig = molecule_witness(d.dict_phi.numpy().astype(np.float64), d.env_occ_node.numpy(),
                               d.env_occ_root.numpy(), gid, basis_parts)
     w_relab = molecule_witness(rem["phi"], rem["occ_node"], rem["occ_root"], gid, basis_parts)
@@ -555,6 +566,7 @@ def stage_rg_export(*, out_dir: Path = RESULTS_DIR, device_name: str = "cpu", lo
     started = time.perf_counter()
     torch.set_num_threads(8)
     out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
     device = resolve_device(device_name)
     parts = load_basis_parts()
     ro = parts["round_objects"]
@@ -746,6 +758,7 @@ def stage_heads(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> dict[str, A
     started = time.perf_counter()
     torch.set_num_threads(8)
     out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
     ro = repl.load_round_objects()
     fit_idx = np.asarray(ro["fit_idx"], np.int64)
     dev_idx = np.asarray(ro["dev_idx"], np.int64)
