@@ -142,11 +142,18 @@ def test_group_bootstrap_deterministic_and_sign_correct():
     assert all(d < 0 for d in b3["directions_by_seed"])
 
 
-def test_group_bootstrap_requires_dense_codes():
-    groups = np.array([0, 2, 2])
-    errs = _make_errs(groups, delta=0.0)
-    with pytest.raises(RuntimeError):
-        m.group_resample_indices(groups, 10, 0)
+def test_group_bootstrap_remaps_sparse_codes():
+    # subgroup-restricted code arrays carry gaps; remapping must reproduce
+    # exactly the result of the equivalent dense relabeling
+    rng = np.random.default_rng(6)
+    e = rng.normal(size=30)
+    sparse = np.array([0, 0, 5, 5, 9, 9] * 5)
+    dense = np.searchsorted(np.unique(sparse), sparse)
+    errs = {f"RAW_s{s}": e for s in (0, 1)}
+    errs.update({f"DICT_s{s}": e + 0.01 for s in (0, 1)})
+    a = m.paired_group_bootstrap(errs, sparse, n_draws=100, seed=3)
+    b = m.paired_group_bootstrap(errs, dense, n_draws=100, seed=3)
+    assert a == b
 
 
 def test_subgroup_contrast_bootstrap():

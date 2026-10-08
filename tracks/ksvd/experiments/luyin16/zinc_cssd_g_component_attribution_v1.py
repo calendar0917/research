@@ -327,13 +327,15 @@ def element_mapping_crosscheck(
 def group_resample_indices(
     group_codes: np.ndarray, n_draws: int, seed: int
 ) -> list[np.ndarray]:
-    """Canonical-SMILES-group bootstrap: resample whole groups (dense codes
-    0..G-1, ``default_rng(seed)``); per-draw concatenated row indices."""
+    """Canonical-SMILES-group bootstrap: resample whole groups
+    (``default_rng(seed)``); per-draw concatenated row indices.  Codes are
+    remapped to a dense partition internally, so subgroup-restricted code
+    arrays (with gaps) work unchanged."""
     codes = np.asarray(group_codes, np.int64)
-    n_groups = int(codes.max()) + 1
-    if n_groups != len(np.unique(codes)):
-        raise RuntimeError("group codes must be a dense 0..G-1 partition")
-    members = [np.flatnonzero(codes == g) for g in range(n_groups)]
+    unique = np.unique(codes)
+    n_groups = int(unique.size)
+    dense = np.searchsorted(unique, codes)
+    members = [np.flatnonzero(dense == g) for g in range(n_groups)]
     rng = np.random.default_rng(seed)
     picks = rng.integers(0, n_groups, size=(int(n_draws), n_groups))
     return [np.concatenate([members[g] for g in row]) for row in picks]
@@ -661,7 +663,6 @@ def _top_n_share(
 
 
 def _subgroup_tables(
-    err: Mapping[str, Mapping[str, np.ndarray]],
     k0_err: Mapping[str, Mapping[str, np.ndarray]],
     k0_masks: Mapping[str, Mapping[str, np.ndarray]],
     k0_codes: np.ndarray,
