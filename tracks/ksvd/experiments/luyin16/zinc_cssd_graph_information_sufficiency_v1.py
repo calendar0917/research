@@ -228,11 +228,13 @@ def remap_molecule(
     occ_shell: np.ndarray,
     perm: np.ndarray,
 ) -> dict[str, np.ndarray]:
-    """Relabel a molecule's nodes by ``new[old] = perm[old]`` (test helper).
+    """Relabel a molecule's nodes: the new index of old node ``v`` is
+    ``perm[v]`` (test helper).
 
-    Every node-addressed field (phi rows, atom ids, occupancy root/node) is
-    remapped consistently, so any permutation-invariant statistic must be
-    unchanged.
+    Every node-addressed field is remapped consistently: ``new_phi[perm[v]] =
+    phi[v]`` (i.e. ``new_phi = phi[inv]`` with ``inv = perm^-1``) and every
+    occurrence pair ``(root, node) -> (perm[root], perm[node])``, so any
+    permutation-invariant statistic must be unchanged.
     """
     perm = np.asarray(perm, dtype=np.int64)
     n = int(np.asarray(phi).shape[0])
@@ -244,8 +246,8 @@ def remap_molecule(
     return {
         "phi": np.asarray(phi)[inv],
         "atom": np.asarray(atom)[inv],
-        "occ_node": inv[old_occ_node],
-        "occ_root": inv[np.asarray(occ_root, dtype=np.int64)],
+        "occ_node": perm[old_occ_node],
+        "occ_root": perm[np.asarray(occ_root, dtype=np.int64)],
         "occ_shell": np.asarray(occ_shell)[inv[old_occ_node]],
     }
 
@@ -392,10 +394,14 @@ def _run_state_hashes() -> dict[str, dict[str, str]]:
     for seed in SEEDS:
         run_dir = repl.RESULTS_DIR / "runs" / f"DICT_s{seed}"
         out[f"DICT_s{seed}"] = {
-            "soup": file_sha256(run_dir / "soup_state.pt"),
-            "init": file_sha256(run_dir / "init_state.pt"),
-            "last": file_sha256(run_dir / "last_state.pt"),
+            "soup_state_hash": state_hash(torch.load(run_dir / "soup_state.pt", map_location="cpu", weights_only=False)),
+            "init_state_hash": state_hash(torch.load(run_dir / "init_state.pt", map_location="cpu", weights_only=False)),
         }
+    q_meta = read_json(SOURCE_DIR / "Q_meta.json")
+    out["Q_soup_state_hash"] = state_hash(
+        torch.load(SOURCE_DIR / "Q_soup_state.pt", map_location="cpu", weights_only=False)
+    )
+    out["Q_meta_soup_state_hash"] = q_meta["soup_state_sha256"]
     return out
 
 
@@ -413,14 +419,19 @@ def stage_restore_checks(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> di
 
     checks: dict[str, Any] = {}
 
-    # (1) frozen-object hashes vs the source round's manifest
-    src = read_json(SOURCE_DIR / "source_manifest.json")
-    checks["basis_file_sha_matches_source_manifest"] = (
-        src["artifacts"]["cssd_basis.npz"]["sha256"] == file_sha256(SOURCE_DIR / "cssd_basis.npz")
+    # (1) frozen-object hashes vs the frozen-round provenance manifests
+    src = read_json(repl.RESULTS_DIR / "source_manifest.json")
+    checks["basis_U_sha_matches_frozen_manifest"] = src["cssd_basis"]["U_sha256"] == parts["hashes"]["U"]
+    checks["basis_D_sha_matches_frozen_manifest"] = src["cssd_basis"]["D_sha256"] == parts["hashes"]["D"]
+    checks["basis_common_rms_sha_matches_frozen_manifest"] = (
+        src["cssd_basis"]["common_rms_sha256"] == parts["hashes"]["common_rms"]
     )
     q_meta = read_json(SOURCE_DIR / "Q_meta.json")
-    q_key = "soup_sha256" if "soup_sha256" in q_meta else "soup_state_sha256"
-    checks["q_soup_sha_matches_meta"] = file_sha256(SOURCE_DIR / "Q_soup_state.pt") == q_meta[q_key]
+    checks["q_soup_state_hash_matches_meta"] = state_hash(
+        torch.load(SOURCE_DIR / "Q_soup_state.pt", map_location="cpu", weights_only=False)
+    ) == q_meta["soup_state_sha256"]
+    if not checks["q_soup_state_hash_matches_meta"]:
+        raise RuntimeError("frozen Q soup state hash mismatch")
 
     # (2) alpha operator equivalence: frozen-basis math vs deployed cssd_decode
     model, _run = _restore_model("DICT", 0, basis_parts=parts, payload=payload, kappa=kappa)
@@ -447,8 +458,10 @@ def stage_restore_checks(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> di
             "fit_h_max_abs_diff": float(np.abs(replay_fit["h"] - saved_fit["h"]).max()),
             "dev_h_max_abs_diff": float(np.abs(replay_dev["h"] - saved_dev["h"]).max()),
             "fit_ell_max_abs_diff": float(np.abs(replay_fit["ell_hat"] - saved_fit["ell_hat"]).max()),
-            "dev_ell_max_abs_diff": float(np.abs(replay_dev["ell_hat"] - saved_dev["ell_hat"]).max()),
         }
+        # the saved dev npz deliberately carries no per-row component predictions
+        # (dev_predictions.npz = gid/y/y_raw/y_cal/h/q_raw); h (the g readout) is
+        # the replay anchor on dev.
         if max(entry.values()) > REPLAY_TOL:
             raise RuntimeError(f"DICT_s{seed} replay mismatch {entry}")
         replay[f"s{seed}"] = entry
@@ -512,7 +525,7 @@ def stage_restore_checks(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> di
         "stage": "restore-checks",
         "label_free": True,
         "checks": checks,
-        "run_state_file_hashes": _run_state_hashes(),
+        "run_state_hashes": _run_state_hashes(),
         "basis_sha256": parts["hashes"],
         "seconds": float(time.perf_counter() - started),
         "official_valid_loaded": False,
