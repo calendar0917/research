@@ -1,0 +1,34 @@
+# ZINC CSSD g-component attribution v1 — frozen-consumer ell/s component error
+# attribution on the four frozen soups of zinc_cssd_consumer_replacement_v1
+# (promote commit 32b8c96, four formal runs at revision a308e3490bfe).
+#
+# Two stages (CPU; no training, no GPU, no official valid/test):
+#   * export  (label-free): restore the four frozen soups, replay-check the
+#     promoted prediction npz (<=1e-4 fp32 save precision), verify the strict
+#     reader identity h == ell_hat + s_hat, export the missing per-row dev
+#     component predictions, and fix the pre-registered label-free structure
+#     groupings (node terciles / coarse atom composition / coarse bond
+#     composition) with their validation cross-checks.  targets.npz is never
+#     opened in this stage.
+#   * analyze (labels): pre-registered diagnostics fixed before any label read
+#     (see notes/zinc_cssd_g_component_attribution_v1.md): component synthesis
+#     per run/split/k-group, k=0 subgroup tables with DICT-RAW paired deltas,
+#     top-20 concentration shares, canonical-SMILES group paired bootstrap CIs
+#     (2000 draws, seed 20261022).  dev = historical development set:
+#     exploratory localization only, never a confirmation.
+#
+# The analysis runs under the analyzed round's frozen protocol (same
+# dataset/split fingerprints); it trains nothing and buys nothing.
+protocol_id: zinc-cssd-consumer-replacement-v1
+
+data:
+  root: data/ZINC
+
+seed: 0
+
+model:
+  stage: export
+
+runtime:
+  device: cpu
+  torch_threads: 8
