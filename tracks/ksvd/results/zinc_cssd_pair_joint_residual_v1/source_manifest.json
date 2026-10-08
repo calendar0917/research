@@ -1,0 +1,101 @@
+{
+  "protocol_version": "zinc-cssd-pair-joint-residual-v1",
+  "stage": "source-checks",
+  "source_dir": "results/zinc_cssd_nonlinear_binding_v1",
+  "source_read_only": true,
+  "prev_anchor_dir": "results/zinc_cssd_relation_projection_v1",
+  "arms": [
+    "CTRL_C",
+    "JOINT_RESIDUAL"
+  ],
+  "seeds": [
+    0
+  ],
+  "dim_contract": {
+    "d_environments": 144,
+    "p_endpoints": 48,
+    "relation_width_after_encoder": 48,
+    "psi_input_width": 144,
+    "distance_buckets": 5,
+    "pair_projection_weight_shape": [
+      96,
+      144
+    ],
+    "relation_input_width": 15,
+    "reader_input": 814,
+    "fit_n": 8001,
+    "dev_n": 1999,
+    "row_pair_bucket_values": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "historical_schedule_sha256": "1d0c186b8434e05bdf556f894867f91fa9a1f7240d1ea07ba006248dc6a86b41",
+  "rebuilt_schedule_sha256": "1d0c186b8434e05bdf556f894867f91fa9a1f7240d1ea07ba006248dc6a86b41",
+  "schedule_bit_identical_240": true,
+  "init_contracts": {
+    "ctrl_c_init_sha256": "ac18cb280a1de1c15db2cfd0a180d316512c9c6d851a5ead64980de016526e32",
+    "ctrl_c_matches_prev_shared_mlp_s0": true,
+    "prev_shared_mlp_s0_init_sha256": "ac18cb280a1de1c15db2cfd0a180d316512c9c6d851a5ead64980de016526e32",
+    "non_joint_bitwise_equal_across_arms": true,
+    "joint_residual": {
+      "w1_shape": [
+        64,
+        144
+      ],
+      "w2_shape": [
+        48,
+        64
+      ],
+      "no_bias": true,
+      "w2_exactly_zero": true,
+      "w1_default_draw_nonzero": true,
+      "private_seed": 202610081,
+      "joint_residual_parameters": 12288
+    },
+    "joint_residual_sha256": "a718730f120f44c78706fcbc2dd4d1afb78906e6bcc32478aeb910c69f3d5efc",
+    "rng_stream_identical_after_construction": true,
+    "joint_init_private_seed": 202610081
+  },
+  "parameter_contracts": {
+    "CTRL_C": {
+      "total_parameters": 325187,
+      "base_body_parameters": 212355,
+      "bridge_parameters": 82944,
+      "local_tuple_parameters": 29888,
+      "reader_output_parameters": 80
+    },
+    "JOINT_RESIDUAL": {
+      "total_parameters": 337475,
+      "base_body_parameters": 224643,
+      "bridge_parameters": 82944,
+      "local_tuple_parameters": 29888,
+      "reader_output_parameters": 80
+    }
+  },
+  "joint_residual_parameters": 12288,
+  "total_parameters": {
+    "CTRL_C": 325187,
+    "JOINT_RESIDUAL": 337475
+  },
+  "frozen_basis_hashes": {
+    "U": "f1338b03b9aef42d691b5a408d49b9b2d0c91c8538c07d08394f1a826f644efd",
+    "common_rms": "5f6338d043681f2d5e10956c43946b8a4ff0918be7bd7d98dc167961e704dc87",
+    "D": "76b667acc623b4cd797a81f94d0645a7ca7071fd287a15bacaa437379ae25cd2"
+  },
+  "q_soup_sha256": "14d175e371e31f00bd043bcece1e5a44150bd6c9cadea6b2eed3ec86f4f41b21",
+  "old_run": {
+    "run_dir": "results/zinc_cssd_consumer_replacement_v1/runs/DICT_s0",
+    "manifest_hashes_verified": true,
+    "init_state_sha256": "60d6cfa38011cb1aea983fee975aa023a540015b8b28d63f2f1f4a17f56248f6",
+    "schedule_sha256": "1d0c186b8434e05bdf556f894867f91fa9a1f7240d1ea07ba006248dc6a86b41"
+  },
+  "reuse_note": "no basis/Q/prep/target refit; the previous round's C s0 init is the bitwise anchor of CTRL_C; official valid/test never loaded",
+  "all_passed": true,
+  "seconds": 7.224764994112775,
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

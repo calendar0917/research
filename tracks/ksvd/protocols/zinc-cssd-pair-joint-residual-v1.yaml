@@ -44,8 +44,9 @@ split:
 reused_objects_read_only:
   source: results/zinc_cssd_nonlinear_binding_v1 (unchanged stage-0 objects)
   historical_runs: results/zinc_cssd_consumer_replacement_v1/runs (DICT_s0 anchor)
-  prev_round_anchor: results/zinc_cssd_relation_projection_v1/runs/SHARED_MLP_s0
-    (READ-ONLY: its init_state hash is the bitwise anchor of CTRL_C; its
+  prev_round_anchor: >-
+    results/zinc_cssd_relation_projection_v1/runs/SHARED_MLP_s0
+    (READ-ONLY — its init_state hash is the bitwise anchor of CTRL_C; its
     terminal numbers are descriptive anchors only)
   artifacts: >-
     fold, targets, tuple payload, kappa_M, prep, the CSSD basis
@@ -191,7 +192,8 @@ pretrain_checks_frozen:
     copied; only these checks.
 
 terminal_evaluation:
-  one_shot: terminal_eval.json is written once and never overwritten; the
+  one_shot: >-
+    terminal_eval.json is written once and never overwritten; the
     protocol/roster rules are committed frozen BEFORE the first dev scoring of
     this round; smoke and all checks are fit-only; a genuine pre-scoring
     engineering failure may be fixed and retried with disclosure; a successful
@@ -200,11 +202,13 @@ terminal_evaluation:
     within budget and the incident disclosed; debugging is never upgraded into
     scientific rescue.  The runner is invoked in the round's non-test mode
     (--mode scratch); stage=terminal-eval does NOT grant test access.
-  roster: both trainings complete before the single eval; both inits hash-equal
+  roster: >-
+    both trainings complete before the single eval; both inits hash-equal
     the previous round's SHARED_MLP s0 init; JOINT's non-joint init bitwise
     equal to CTRL_C's; per-arm parameter audits; schedule hash == historical;
     frozen-basis and Q hashes unchanged; members/soups hash-checked.
   exports: >-
+    >-
     per run x split (fit AND dev) per-row: row_index, gid, canonical-SMILES
     group id, n_nodes, k, y/g/ell/s targets, ell_hat/s_hat/h (same forward),
     q_raw (ONE shared frozen-Q prediction per split, bitwise shared), y_raw,
@@ -216,13 +220,15 @@ terminal_evaluation:
     the FIXED SOUP's fit MAE (never called a training optimum or lower bound);
     the end-of-training online train loss and the soup-fit MAE are named
     separately and never ranked against each other.
-  paired_contrast: exactly ONE — JOINT_RESIDUAL - CTRL_C — on dev y_raw and
+  paired_contrast: >-
+    exactly ONE — JOINT_RESIDUAL - CTRL_C — on dev y_raw and
     dev g (absolute AND relative), with the fit-side deltas, the fit-dev gaps
     and the gap reductions reported alongside; the previous round's
     C = 0.11659/0.08935 (and BASE 0.11920/0.09169) are descriptive anchors
     ONLY (the recipe effect is judged against the paired same-round CTRL_C,
     never against the weaker or stronger historical numbers).
   bootstrap: >-
+    >-
     canonical-SMILES-group-paired resampling of dev groups, 2000 draws, fixed
     seed 20261008; the SAME group picks shared by both arms and BOTH metrics;
     a CI per metric (delta = JOINT - CTRL_C).  The molecular bootstrap carries
@@ -230,10 +236,12 @@ terminal_evaluation:
     even a CI excluding 0 is NOT a repeatability or method-stability claim;
     dev is the historical development set, never a new confirm/test.
   noise_bound: >-
+    >-
     eta from repeated forwards AND same-weight save/reload replay of the two
     soups; marker = max(1e-4, 10*eta); prediction responses and MAE changes
     are reported separately.
   dictionary_intervention: >-
+    >-
     intervention A on BOTH soups: alpha_v := the fit-root mean alpha (computed
     from fit under the frozen basis via the verified repl.fit_mean_codes) via
     model.local_tuple.alpha_replace; c/chemistry/J/Sem108/relations/Q
@@ -243,6 +251,7 @@ terminal_evaluation:
     strong alpha response does NOT mean the dictionary benefit is larger;
     dependence evidence, never incremental benefit.
   joint_toggle_intervention: >-
+    >-
     intervention B on the JOINT soup ONLY: joint_enabled := False (delta := 0);
     every old path and weight untouched; no retraining, no recalibration; Q
     reused bitwise.  Reported: the delta scale relative to h_old (|delta| and

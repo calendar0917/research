@@ -1,0 +1,204 @@
+{
+  "ctrl_c_parity_vs_prev_factory": {
+    "prediction_max_abs": 0.0,
+    "components_max_abs": 0.0,
+    "E_max_abs": 0.0,
+    "unary_max_abs": 0.0,
+    "relation_readout_max_abs": 0.0
+  },
+  "joint_module_contracts": {
+    "w1_shape": [
+      64,
+      144
+    ],
+    "w2_shape": [
+      48,
+      64
+    ],
+    "no_bias": true,
+    "parameters": 12288,
+    "w2_init_zero": true,
+    "w1_init_nonzero": true,
+    "delta_endpoint_swap_symmetric": true,
+    "delta_step0_exactly_zero": true
+  },
+  "collision_demo": {
+    "pair_a": [
+      [
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0
+      ]
+    ],
+    "pair_b": [
+      [
+        1.0,
+        1.0
+      ],
+      [
+        0.0,
+        0.0
+      ]
+    ],
+    "sum_absdiff_product_identical": true,
+    "concat_distinguishable": true,
+    "note": "per-coordinate sum/abs-diff/product collide on {(1,0),(0,1)} vs {(1,1),(0,0)}; a shared function on [left,right] separates them \u2014 an interface-property demo, never a trained-behaviour claim"
+  },
+  "step0_agreement": {
+    "joint_vs_ctrl_c_max_abs": 0.0,
+    "joint_vs_prev_factory_max_abs": 0.0,
+    "components_max_abs": 0.0,
+    "unary_max_abs": 0.0,
+    "relation_readout_max_abs": 0.0
+  },
+  "same_forward_components": {
+    "CTRL_C": {
+      "torch_identity_max": 0.0,
+      "float64_sum_max_abs": 0.0
+    },
+    "JOINT_RESIDUAL": {
+      "torch_identity_max": 0.0,
+      "float64_sum_max_abs": 0.0
+    }
+  },
+  "invariances": {
+    "CTRL_C": {
+      "batch_order_max_abs": 7.748603820800781e-07,
+      "label_independence_max_abs": 0.0,
+      "pair_row_permutation_max_abs": 4.172325134277344e-07,
+      "node_relabel_max_abs": 2.980232238769531e-07,
+      "endpoint_swap_pair_input_max_abs": 0.0,
+      "endpoint_swap_joint_delta_max_abs": 0.0
+    },
+    "JOINT_RESIDUAL": {
+      "batch_order_max_abs": 7.748603820800781e-07,
+      "label_independence_max_abs": 0.0,
+      "pair_row_permutation_max_abs": 4.172325134277344e-07,
+      "node_relabel_max_abs": 2.980232238769531e-07,
+      "endpoint_swap_pair_input_max_abs": 0.0,
+      "endpoint_swap_joint_delta_max_abs": 0.0
+    }
+  },
+  "mask_wiring": {
+    "psi_reads_masked_views": {
+      "natural_input_nonzero": true,
+      "pair_projection_zero_endpoints_exactly_zero": true,
+      "pair_projection_zero_relation_intact": true
+    },
+    "relation_shared_with_pair_input": {
+      "natural_relation_blocks_equal": true,
+      "masked_relation_blocks_equal": true,
+      "masked_relation_changed": true
+    },
+    "CTRL_C_pair_zero_blocks_changes_predictions": 0.6170522570610046,
+    "JOINT_RESIDUAL_pair_zero_blocks_changes_predictions": 0.6170522570610046,
+    "joint_enabled_switch_equivalence": {
+      "c6": {
+        "off_vs_ctrl_c_max_abs": 0.0,
+        "on_vs_ctrl_c_max_abs": 0.10801267623901367,
+        "off_aux_E_max_abs": 0.0,
+        "off_aux_unary_max_abs": 0.0,
+        "off_aux_relation_readout_max_abs": 0.0
+      },
+      "pair_projection_zero": {
+        "off_vs_ctrl_c_max_abs": 0.0,
+        "on_vs_ctrl_c_max_abs": 0.0630679726600647,
+        "off_aux_E_max_abs": 0.0,
+        "off_aux_unary_max_abs": 0.0,
+        "off_aux_relation_readout_max_abs": 0.0
+      },
+      "relation_zero_groups": {
+        "off_vs_ctrl_c_max_abs": 0.0,
+        "on_vs_ctrl_c_max_abs": 0.12659496068954468,
+        "off_aux_E_max_abs": 0.0,
+        "off_aux_unary_max_abs": 0.0,
+        "off_aux_relation_readout_max_abs": 0.0
+      },
+      "pair_zero_blocks": {
+        "off_vs_ctrl_c_max_abs": 0.0,
+        "on_vs_ctrl_c_max_abs": 0.06326025724411011,
+        "off_aux_E_max_abs": 0.0,
+        "off_aux_unary_max_abs": 0.0,
+        "off_aux_relation_readout_max_abs": 0.0
+      },
+      "gate_off": {
+        "off_vs_ctrl_c_max_abs": 0.0,
+        "on_vs_ctrl_c_max_abs": 0.09744775295257568,
+        "off_aux_E_max_abs": 0.0,
+        "off_aux_unary_max_abs": 0.0,
+        "off_aux_relation_readout_max_abs": 0.0
+      },
+      "ctrl_c_switch_noop_max_abs": 0.0
+    }
+  },
+  "gradient_smoke": {
+    "CTRL_C": {
+      "loss_values": [
+        1.6593754291534424,
+        2.8733620643615723,
+        1.3807299137115479
+      ],
+      "bridge_fc1_grad_norm_after_3_steps": 0.2674108147621155,
+      "bridge_fc2_grad_norm_after_3_steps": 0.3012199401855469,
+      "W_loc_grad_norm_after_3_steps": 0.6001722812652588,
+      "A_raw_grad_norm_after_3_steps": 0.0025459181051701307,
+      "reader_grad_norm_after_3_steps": 5.395054340362549,
+      "joint_grad_trace": [
+        {
+          "step": 0,
+          "note": "no joint residual"
+        }
+      ],
+      "delta_active_after_3_steps": false,
+      "cssd_buffers_not_in_optimizer": true,
+      "optimizer_matches_named_parameters": true,
+      "frozen_basis_hashes_unchanged": true
+    },
+    "JOINT_RESIDUAL": {
+      "loss_values": [
+        1.6593754291534424,
+        2.895677328109741,
+        1.3845733404159546
+      ],
+      "bridge_fc1_grad_norm_after_3_steps": 0.2592700123786926,
+      "bridge_fc2_grad_norm_after_3_steps": 0.29429638385772705,
+      "W_loc_grad_norm_after_3_steps": 0.5839878916740417,
+      "A_raw_grad_norm_after_3_steps": 0.002546559553593397,
+      "reader_grad_norm_after_3_steps": 5.411036968231201,
+      "joint_grad_trace": [
+        {
+          "step": 0,
+          "w1_grad_norm": 0.0,
+          "w2_grad_norm": 1.4217414855957031
+        },
+        {
+          "step": 2,
+          "w1_grad_norm": 0.01159756537526846,
+          "w2_grad_norm": 0.3687703013420105
+        }
+      ],
+      "delta_active_after_3_steps": true,
+      "cssd_buffers_not_in_optimizer": true,
+      "optimizer_matches_named_parameters": true,
+      "frozen_basis_hashes_unchanged": true
+    }
+  },
+  "save_reload_replay": {
+    "CTRL_C": {
+      "reload_replay_max_abs": 0.0,
+      "cross_factory_strict_load_blocked": true
+    },
+    "JOINT_RESIDUAL": {
+      "reload_replay_max_abs": 0.0,
+      "cross_factory_strict_load_blocked": true
+    }
+  },
+  "all_passed": true,
+  "seconds": 16.56697991793044,
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "dev_rows_touched": false
+}

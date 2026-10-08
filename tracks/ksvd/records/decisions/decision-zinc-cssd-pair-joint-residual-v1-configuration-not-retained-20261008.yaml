@@ -1,0 +1,62 @@
+alternatives_rejected:
+- 'Retaining JOINT_RESIDUAL because its trained branch is genuinely loaded (toggle response
+  99.8%, |delta|/|h_old| median 0.34, disabling worsens its own checkpoint by +0.0055/+0.0058)
+  -- rejected: being used inside one model is not evidence of dev benefit; both dev point
+  estimates are worse than the same-round CTRL_C and the fit is worse too, so the frozen
+  rubric closes the configuration.'
+- 'Reading the reduced fit-dev gap(g) (-0.0017) or the better y_cal (0.11716 vs 0.11803)
+  as a generalisation gain -- rejected: the gap reduction is entirely the fit degradation
+  (+0.0031/+0.0032) and y_cal is descriptive-only by frozen protocol (JOINT''s larger fit
+  bias +0.01337 happens to cancel more dev bias); the primary y_raw got worse on both
+  metrics.'
+- 'Rescuing the candidate with width/depth/residual-scale sweeps or a different insertion
+  point after the negative -- rejected: excluded before training (no sweeps, no init
+  search, no result-directed redesign); one seed of one configuration cannot license them.'
+- 'Attributing the negative to "joint endpoint reads cannot work" or re-opening the
+  bucket-routed projection R family / RAW-DICT / cross-domain questions by analogy --
+  rejected: this round tested exactly one insertion point (after h_old, before pooling),
+  one width, one relation encoding, one seed; the historical negative recipes stay closed
+  on their own evidence and this negative adds no evidence about them.'
+because: 'The frozen single-seed rubric''s not-retained branch fires exactly: JOINT does
+  not improve both dev metrics (y +0.00039 CI95 [-0.0030,+0.0040], g +0.00147 CI95
+  [-0.0020,+0.0050], both worse at the point estimate), while the dictionary readout
+  stays intact (alpha p95 2.95 >> marker 1e-4) and the branch itself is verified live
+  (disabling it worsens the checkpoint''s own dev MAE by +0.0055/+0.0058) -- a real,
+  loaded, insufficient addition. The round''s purpose was to buy or exclude a performance
+  lead with one seed and a fixed 2-aggregate-GPU-hour budget, which was met (measured
+  aggregate ~44.6 min GPU including smoke, both formal runs, one failed and one
+  successful terminal). Per the frozen protocol the round ends here; only a
+  recommendation is forwarded.'
+created: '2026-10-08T14:55:00'
+decision: 'STOP zinc_cssd_pair_joint_residual_v1 with the frozen single-seed reading
+  branch ''joint-residual-configuration-not-retained'' and NO retained candidate: under
+  the frozen verified DICT consumer with C as the working base (clean committed revision
+  7264ff2 on the frozen design 518c984, design basis 5d33c9a), two from-scratch
+  240-epoch/15,120-step trainings on body seed 0 (CTRL_C = the previous round''s untrained
+  C factory, init hash-anchored bitwise to the previous SHARED_MLP s0 init, 325,187
+  params; JOINT_RESIDUAL = same factory + one shared endpoint-swap-symmetric joint
+  residual psi [left,right,relation] -> delta=1/2(psi[l,r,rel]+psi[r,l,rel]) added to
+  h_old before the original pooling, W2 exactly zero at init under private seed 202610081,
+  +12,288 params = 337,475, +3.78%) gave dev y_raw 0.11804 / 0.11843 and dev g 0.09001 /
+  0.09148, with fit y_raw 0.04003 / 0.04314. The joint residual is CI-crossing worse on
+  both dev metrics and worse on fit; its gap reduction is a fit-degradation artifact.
+  Mechanism verified live: both soups still read the dictionary (alpha-mean p95 4.05 /
+  2.95 >> 1e-4, response 1.000) and the trained branch genuinely carries predictions
+  (toggle p95 0.068, response 0.998, disabling worsens its own checkpoint) -- the
+  negative is a performance verdict on this configuration, not evidence that the branch
+  was inert or that the dictionary stopped being read. One body seed only: the round
+  closes this candidate''s additional budget without licensing any claim about relation
+  fusion in general, the C base (which reproduced the previous round''s C within +0.0014
+  dev y, inside documented GPU trajectory variance), or any untested insertion point.
+  No second seed, no third arm, no sweeps, no rescue; the historical 0.003 gates and
+  A-E classes were not inherited.'
+decision_id: decision-zinc-cssd-pair-joint-residual-v1-configuration-not-retained-20261008
+kind: decision
+revisit_if: 'A new preregistration (a) gives the interface-collision idea a different
+  testable form (e.g. a parameter-matched redistribution of the +12k parameters, or
+  joint endpoint conditioning at a different interface such as into the pair encoder or
+  the distance gate) AND (b) first gives the C base the line''s paired two-seed
+  same-round control with a stated precision target, since C itself is still only a
+  single-seed directional lead; any purchase keeps the frozen basis/access, the verified
+  init identity, the no-write-back guarantee and the one-shot terminal.'
+study_id: zinc-context-gap
