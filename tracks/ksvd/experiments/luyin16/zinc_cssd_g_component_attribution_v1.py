@@ -500,9 +500,16 @@ def stage_export(*, out_dir: Path = RESULTS_DIR, device_name: str = "cpu", log: 
 
     # -- frozen-soup replay + component export --
     replay: dict[str, Any] = {}
-    dev_gid_from_rows = np.array(
+    # positional anchor: dev rows are ordered by dev_idx; local_mol_id IS the
+    # global train row position (verified identity from the witness round).
+    # gid (canonical_group_id) is a DIFFERENT id space - the exported gid
+    # column is copied verbatim from the promoted dev npz and re-checked
+    # against targets in the analyze stage.
+    dev_row_positions = np.array(
         [int(r.local_mol_id.reshape(-1)[0].item()) for r in dev_data], np.int64
     )
+    if not np.array_equal(dev_row_positions, dev_idx):
+        raise RuntimeError("dev data rows are not ordered by dev_idx")
     for name in RUN_NAMES:
         arm, seed_s = name.rsplit("_s", 1)
         model, _run = _restore_model(
@@ -523,16 +530,14 @@ def stage_export(*, out_dir: Path = RESULTS_DIR, device_name: str = "cpu", log: 
             "dev_identity_max_abs": float(
                 np.abs(dev_preds["h"] - (dev_preds["ell_hat"] + dev_preds["s_hat"])).max()
             ),
-            "dev_gid_matches_saved": bool(
-                (saved_dev["gid"].astype(np.int64) == dev_gid_from_rows).all()
-            ),
+            "dev_rows_match_dev_idx": bool((dev_row_positions == dev_idx).all()),
         }
         failures = {k: v for k, v in entry.items() if isinstance(v, float) and v > REPLAY_TOL}
         failures.update({
             k: v for k, v in entry.items()
             if k.endswith("identity_max_abs") and v > IDENTITY_TOL
         })
-        if failures or not entry["dev_gid_matches_saved"]:
+        if failures or not entry["dev_rows_match_dev_idx"]:
             raise RuntimeError(f"{name} export replay/identity failure: {failures}")
         np.savez_compressed(
             out_dir / f"dev_components_{name}.npz",
