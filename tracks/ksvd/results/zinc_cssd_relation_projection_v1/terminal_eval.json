@@ -1,0 +1,735 @@
+{
+  "protocol_version": "zinc-cssd-relation-projection-v1",
+  "stage": "terminal-eval",
+  "one_shot": true,
+  "roster_checks": {
+    "runs_completed": true,
+    "steps_ok": true,
+    "schedule_ok": true,
+    "init_ok": true,
+    "non_projection_ok": true,
+    "param_audit_ok": true,
+    "frozen_basis_ok": true,
+    "members_ok": true,
+    "soup_ok": true,
+    "q_soup_ok": true
+  },
+  "main_table": {
+    "BASE": {
+      "mae_dev": {
+        "y_raw": 0.11919657929927174,
+        "y_cal": 0.11812815296472054,
+        "g_raw": 0.09169247844630331,
+        "ell": 0.05091620470913542,
+        "s": 0.0807132390421414
+      },
+      "mae_fit": {
+        "y_raw": 0.037972874912407605,
+        "g_raw": 0.029850500171023083,
+        "ell": 0.025833324780423182,
+        "s": 0.029407254399853797
+      },
+      "b_y": 0.011333052068948746,
+      "gap_dev_minus_fit_g": 0.06184197827528022,
+      "gap_dev_minus_fit_y_raw": 0.08122370438686413,
+      "component_stats_dev": {
+        "mean_e_ell": -0.012675839456068842,
+        "mean_e_s": 0.004078277602679673,
+        "mean_e_g": -0.00859756168194009,
+        "opposite_sign_fraction_ell_s": 0.5597798899449725,
+        "triangle_gap_mean": 0.03993696530497348,
+        "mae_ell": 0.05091620470913542,
+        "mae_s": 0.0807132390421414,
+        "mae_g": 0.09169247844630331,
+        "note": "component MAEs are never summed into an error budget or loss weights"
+      },
+      "k_groups_dev": {
+        "k=0": {
+          "n": 1930,
+          "C_y": 0.08804099853364858,
+          "C_g": 0.08772169768428019,
+          "in_group_mae_y": 0.09118857827397073,
+          "in_group_mae_g": 0.09085786200563528
+        },
+        "k=-1": {
+          "n": 60,
+          "C_y": 0.004011000705516714,
+          "C_g": 0.0031738216910429306,
+          "in_group_mae_y": 0.1336331735054652,
+          "in_group_mae_g": 0.10574115933991364
+        },
+        "k=-2": {
+          "n": 7,
+          "C_y": 0.006382431296362407,
+          "C_g": 0.0007513363669879315,
+          "in_group_mae_y": 1.8226400230612074,
+          "in_group_mae_g": 0.21456019965841072
+        },
+        "k<=-3": {
+          "n": 2,
+          "C_y": 0.02076214876374404,
+          "C_g": 4.562270399225756e-05,
+          "in_group_mae_y": 20.75176768936217,
+          "in_group_mae_g": 0.04559989264026143
+        }
+      },
+      "k0_subgroups_dev": {
+        "g_abs_p90_fit": 2.639640916689621,
+        "n_k0": 1930,
+        "n_nodes<=23": {
+          "n": 1034,
+          "C_y": 0.05090429511523641,
+          "C_g": 0.05093057069420576,
+          "in_group_mae_y": 0.0984116885254909,
+          "in_group_mae_g": 0.09846248628405929
+        },
+        "n_nodes=24..27": {
+          "n": 603,
+          "C_y": 0.0230123688752906,
+          "C_g": 0.02293014266948541,
+          "in_group_mae_y": 0.07628810179387381,
+          "in_group_mae_g": 0.07601551442172692
+        },
+        "n_nodes>=28": {
+          "n": 293,
+          "C_y": 0.014124334543121567,
+          "C_g": 0.01386098432058902,
+          "in_group_mae_y": 0.09636363396484646,
+          "in_group_mae_g": 0.0945669203305715
+        },
+        "|g|<=fit_p90": {
+          "n": 1718,
+          "C_y": 0.07359678984508794,
+          "C_g": 0.0733011548372962,
+          "in_group_mae_y": 0.08563444871963376,
+          "in_group_mae_g": 0.08529045897541042
+        },
+        "|g|>fit_p90": {
+          "n": 212,
+          "C_y": 0.014444208688560637,
+          "C_g": 0.014420542846983997,
+          "in_group_mae_y": 0.13619798664355054,
+          "in_group_mae_g": 0.13597483561849533
+        }
+      },
+      "steps": 15120,
+      "curve_seconds_total": 837.4394568279386,
+      "wall_clock_s": 842.5272453129292,
+      "peak_gpu_memory_mb": 378.25390625,
+      "soup_state_sha256": "f955c14ceba932266210ef86653f2c66a5fa3bb39e6404c2bfa977384621599a"
+    },
+    "SHARED_MLP": {
+      "mae_dev": {
+        "y_raw": 0.11659036964546608,
+        "y_cal": 0.11563337097126616,
+        "g_raw": 0.08935491886314945,
+        "ell": 0.051087716157254895,
+        "s": 0.0761097471516295
+      },
+      "mae_fit": {
+        "y_raw": 0.04344687293442645,
+        "g_raw": 0.03506818222778832,
+        "ell": 0.02864142281932767,
+        "s": 0.030933231547033882
+      },
+      "b_y": -0.018516551703214645,
+      "gap_dev_minus_fit_g": 0.05428673663536113,
+      "gap_dev_minus_fit_y_raw": 0.07314349671103963,
+      "component_stats_dev": {
+        "mean_e_ell": 0.01452252036328483,
+        "mean_e_s": 0.010360869773540752,
+        "mean_e_g": 0.024883390617628426,
+        "opposite_sign_fraction_ell_s": 0.5502751375687844,
+        "triangle_gap_mean": 0.03784254444573497,
+        "mae_ell": 0.051087716157254895,
+        "mae_s": 0.0761097471516295,
+        "mae_g": 0.08935491886314945,
+        "note": "component MAEs are never summed into an error budget or loss weights"
+      },
+      "k_groups_dev": {
+        "k=0": {
+          "n": 1930,
+          "C_y": 0.08577361816958268,
+          "C_g": 0.08601366453420256,
+          "in_group_mae_y": 0.08884013612486827,
+          "in_group_mae_g": 0.08908876445796421
+        },
+        "k=-1": {
+          "n": 60,
+          "C_y": 0.003662292504978514,
+          "C_g": 0.00254173225805081,
+          "in_group_mae_y": 0.12201537862420082,
+          "in_group_mae_g": 0.08468204639739281
+        },
+        "k=-2": {
+          "n": 7,
+          "C_y": 0.006311201196482564,
+          "C_g": 0.0007640357642100411,
+          "in_group_mae_y": 1.8022987416812353,
+          "in_group_mae_g": 0.2181867846651246
+        },
+        "k<=-3": {
+          "n": 2,
+          "C_y": 0.020843257774422322,
+          "C_g": 3.54863066860247e-05,
+          "in_group_mae_y": 20.83283614553511,
+          "in_group_mae_g": 0.035468563532681685
+        }
+      },
+      "k0_subgroups_dev": {
+        "g_abs_p90_fit": 2.639640916689621,
+        "n_k0": 1930,
+        "n_nodes<=23": {
+          "n": 1034,
+          "C_y": 0.04901389338310459,
+          "C_g": 0.04901645980242644,
+          "in_group_mae_y": 0.09475703372613742,
+          "in_group_mae_g": 0.09476199530469097
+        },
+        "n_nodes=24..27": {
+          "n": 603,
+          "C_y": 0.023051819370397034,
+          "C_g": 0.022978870852364854,
+          "in_group_mae_y": 0.07641888378345552,
+          "in_group_mae_g": 0.07617705279249974
+        },
+        "n_nodes>=28": {
+          "n": 293,
+          "C_y": 0.013707905416081046,
+          "C_g": 0.014018333879411263,
+          "in_group_mae_y": 0.09352253558616386,
+          "in_group_mae_g": 0.09564044172335534
+        },
+        "|g|<=fit_p90": {
+          "n": 1718,
+          "C_y": 0.07223875941012171,
+          "C_g": 0.07252307824788368,
+          "in_group_mae_y": 0.08405429572807527,
+          "in_group_mae_g": 0.08438511840367839
+        },
+        "|g|>fit_p90": {
+          "n": 212,
+          "C_y": 0.013534858759460954,
+          "C_g": 0.013490586286318875,
+          "in_group_mae_y": 0.1276235031139738,
+          "in_group_mae_g": 0.1272060471054313
+        }
+      },
+      "steps": 15120,
+      "curve_seconds_total": 1144.704986039549,
+      "wall_clock_s": 1149.7976327687502,
+      "peak_gpu_memory_mb": 383.24267578125,
+      "soup_state_sha256": "97a2998e7bc03139baba05105aea37f1c28ab1b7ab53fad7b53c391cf4f9b3b2"
+    },
+    "BUCKET_LINEAR": {
+      "mae_dev": {
+        "y_raw": 0.12823895856227005,
+        "y_cal": 0.1192917146408076,
+        "g_raw": 0.10098453489570655,
+        "ell": 0.057188976459631446,
+        "s": 0.07975353952736737
+      },
+      "mae_fit": {
+        "y_raw": 0.05579614601809908,
+        "g_raw": 0.04748077662685078,
+        "ell": 0.03327382435769995,
+        "s": 0.02921593199379948
+      },
+      "b_y": -0.04249000549316406,
+      "gap_dev_minus_fit_g": 0.05350375826885577,
+      "gap_dev_minus_fit_y_raw": 0.07244281254417097,
+      "component_stats_dev": {
+        "mean_e_ell": 0.02804665189821437,
+        "mean_e_s": 0.017403150227291397,
+        "mean_e_g": 0.04544980142713031,
+        "opposite_sign_fraction_ell_s": 0.4882441220610305,
+        "triangle_gap_mean": 0.03595798109129227,
+        "mae_ell": 0.057188976459631446,
+        "mae_s": 0.07975353952736737,
+        "mae_g": 0.10098453489570655,
+        "note": "component MAEs are never summed into an error budget or loss weights"
+      },
+      "k_groups_dev": {
+        "k=0": {
+          "n": 1930,
+          "C_y": 0.09592392688708891,
+          "C_g": 0.09610608581200704,
+          "in_group_mae_y": 0.09935333152709365,
+          "in_group_mae_g": 0.09954200286953475
+        },
+        "k=-1": {
+          "n": 60,
+          "C_y": 0.0049305795363451975,
+          "C_g": 0.003838942373190412,
+          "in_group_mae_y": 0.16427047488590082,
+          "in_group_mae_g": 0.1279007634001272
+        },
+        "k=-2": {
+          "n": 7,
+          "C_y": 0.00645819227357934,
+          "C_g": 0.0008704050235686862,
+          "in_group_mae_y": 1.8442751935550146,
+          "in_group_mae_g": 0.24856280601625766
+        },
+        "k<=-3": {
+          "n": 2,
+          "C_y": 0.020926259865256595,
+          "C_g": 0.00016910168694042455,
+          "in_group_mae_y": 20.915796735323966,
+          "in_group_mae_g": 0.16901713609695435
+        }
+      },
+      "k0_subgroups_dev": {
+        "g_abs_p90_fit": 2.639640916689621,
+        "n_k0": 1930,
+        "n_nodes<=23": {
+          "n": 1034,
+          "C_y": 0.053225515274612376,
+          "C_g": 0.05323273551186302,
+          "in_group_mae_y": 0.10289923117403302,
+          "in_group_mae_g": 0.10291318983386284
+        },
+        "n_nodes=24..27": {
+          "n": 603,
+          "C_y": 0.026809023932440616,
+          "C_g": 0.026698414500426676,
+          "in_group_mae_y": 0.0888743596035635,
+          "in_group_mae_g": 0.08850767924768313
+        },
+        "n_nodes>=28": {
+          "n": 293,
+          "C_y": 0.015889387680035925,
+          "C_g": 0.01617493579971732,
+          "in_group_mae_y": 0.10840575417198571,
+          "in_group_mae_g": 0.11035391352776425
+        },
+        "|g|<=fit_p90": {
+          "n": 1718,
+          "C_y": 0.08069935319407108,
+          "C_g": 0.08088927393968737,
+          "in_group_mae_y": 0.09389872353605826,
+          "in_group_mae_g": 0.09411970815217406
+        },
+        "|g|>fit_p90": {
+          "n": 212,
+          "C_y": 0.01522457369301783,
+          "C_g": 0.015216811872319656,
+          "in_group_mae_y": 0.14355623968086154,
+          "in_group_mae_g": 0.14348305156965563
+        }
+      },
+      "steps": 15120,
+      "curve_seconds_total": 1091.9027681872249,
+      "wall_clock_s": 1098.3552364744246,
+      "peak_gpu_memory_mb": 378.43310546875,
+      "soup_state_sha256": "fb167651303ea1312f477c453ceb781d2abf12ea8dda703b2e73cbb504fa65b8"
+    }
+  },
+  "paired_deltas": {
+    "R-BASE_y_dev": 0.009042379262998307,
+    "R-BASE_y_fit": 0.017823271105691478,
+    "R-BASE_g_dev": 0.009292056449403244,
+    "R-BASE_g_fit": 0.0176302764558277,
+    "C-BASE_y_dev": -0.0026062096538056606,
+    "C-BASE_y_fit": 0.005473998022018846,
+    "C-BASE_g_dev": -0.0023375595831538615,
+    "C-BASE_g_fit": 0.005217682056765236,
+    "R-C_y_dev": 0.011648588916803967,
+    "R-C_y_fit": 0.012349273083672632,
+    "R-C_g_dev": 0.011629616032557105,
+    "R-C_g_fit": 0.012412594399062463,
+    "definition": "Delta = MAE(candidate) - MAE(reference), same-seed paired, full dev (negative = improvement); fit side reported separately, never as a ratio in place of the dev error",
+    "gap_table": {
+      "BASE": 0.06184197827528022,
+      "SHARED_MLP": 0.05428673663536113,
+      "BUCKET_LINEAR": 0.05350375826885577
+    }
+  },
+  "historical_anchor": {
+    "historical_dict_s0_dev_y_raw": 0.12151750804669596,
+    "historical_dict_s0_dev_g_raw": 0.09390312910616606,
+    "base_dev_y_raw": 0.11919657929927174,
+    "base_dev_g_raw": 0.09169247844630331,
+    "note": "descriptive anchor ONLY: the historical seed-0 soup is not the same-round control and carries GPU training nondeterminism; the recipe effect is judged against the paired same-round BASE"
+  },
+  "bootstrap": {
+    "n_rows": 1999,
+    "n_groups": 1999,
+    "n_boot": 2000,
+    "boot_seed": 20261008,
+    "shared_group_resampling": true,
+    "shared_picks_across_arms_and_metrics": true,
+    "contrasts": {
+      "R-BASE": {
+        "delta_y_ci95": [
+          0.005521103933666936,
+          0.012590577960122187
+        ],
+        "delta_y_mean": 0.008986588104434447,
+        "delta_g_ci95": [
+          0.005779706956372851,
+          0.012757452639901053
+        ],
+        "delta_g_mean": 0.009235058339838929
+      },
+      "C-BASE": {
+        "delta_y_ci95": [
+          -0.005899448060545205,
+          0.000852232733790316
+        ],
+        "delta_y_mean": -0.0026172171098044076,
+        "delta_g_ci95": [
+          -0.005829716524326217,
+          0.001269152584471479
+        ],
+        "delta_g_mean": -0.002359740645227742
+      },
+      "R-C": {
+        "delta_y_ci95": [
+          0.00783354542534959,
+          0.015235756844850078
+        ],
+        "delta_y_mean": 0.011603805214238858,
+        "delta_g_ci95": [
+          0.00788965841831185,
+          0.015176973269414648
+        ],
+        "delta_g_mean": 0.011594798985066672
+      }
+    },
+    "reading": "CI covers molecule resampling only \u2014 not training-seed or basis uncertainty; a single body seed is trained, so no contrast here is a repeatability or method-stability claim"
+  },
+  "noise_bound": {
+    "eta": 1.0728836059570312e-06,
+    "marker": 0.0001,
+    "per_run": {
+      "BASE": {
+        "repeat_max_abs_dpred": 1.0728836059570312e-06,
+        "save_reload_max_abs_dpred": 9.5367431640625e-07
+      },
+      "SHARED_MLP": {
+        "repeat_max_abs_dpred": 8.344650268554688e-07,
+        "save_reload_max_abs_dpred": 9.5367431640625e-07
+      },
+      "BUCKET_LINEAR": {
+        "repeat_max_abs_dpred": 8.344650268554688e-07,
+        "save_reload_max_abs_dpred": 1.0728836059570312e-06
+      }
+    },
+    "method": "repeated forwards + same-weight save/reload replay"
+  },
+  "alpha_mean_intervention": {
+    "BASE": {
+      "arm": "BASE",
+      "seed": 0,
+      "mechanism": "alpha_v := the fit-root mean alpha at the single local structure input (model.local_tuple.alpha_replace on the CSSD encoder); c kept; chemistry one-hots, J incidence, Sem108, reader and the frozen Q untouched; re-decoded and re-forwarded; no retraining, no recalibration",
+      "input_change": {
+        "alpha_vs_mean_l2_median": 0.4096344598361886,
+        "alpha_vs_mean_l2_p95": 0.8609098485564042,
+        "alpha_vs_mean_l2_max": 1.612953787845125,
+        "phi_hat_abs_change_median": 0.031496032601019075,
+        "phi_hat_abs_change_max": 1.1130061237624964
+      },
+      "abs_dpred": {
+        "mean": 1.1981864099629809,
+        "median": 1.1712025254964828,
+        "p95": 2.3707128480076785,
+        "max": 3.4339753352105618
+      },
+      "response_fraction_gt_marker": 1.0,
+      "delta_y_raw_mae": 1.111167613972489,
+      "delta_g_mae": 1.1170118328345107,
+      "g_note": "Q input unchanged by construction: q_raw reused bitwise from the base evaluation",
+      "reading": "response shows the consumer reads the sparse code; never incremental benefit",
+      "response_beyond_noise": true
+    },
+    "SHARED_MLP": {
+      "arm": "SHARED_MLP",
+      "seed": 0,
+      "mechanism": "alpha_v := the fit-root mean alpha at the single local structure input (model.local_tuple.alpha_replace on the CSSD encoder); c kept; chemistry one-hots, J incidence, Sem108, reader and the frozen Q untouched; re-decoded and re-forwarded; no retraining, no recalibration",
+      "input_change": {
+        "alpha_vs_mean_l2_median": 0.4096344598361886,
+        "alpha_vs_mean_l2_p95": 0.8609098485564042,
+        "alpha_vs_mean_l2_max": 1.612953787845125,
+        "phi_hat_abs_change_median": 0.031496032601019075,
+        "phi_hat_abs_change_max": 1.1130061237624964
+      },
+      "abs_dpred": {
+        "mean": 3.889000539113956,
+        "median": 3.762258231639862,
+        "p95": 6.657658543437719,
+        "max": 13.692003294825554
+      },
+      "response_fraction_gt_marker": 1.0,
+      "delta_y_raw_mae": 3.755184691982868,
+      "delta_g_mae": 3.7774691634438673,
+      "g_note": "Q input unchanged by construction: q_raw reused bitwise from the base evaluation",
+      "reading": "response shows the consumer reads the sparse code; never incremental benefit",
+      "response_beyond_noise": true
+    },
+    "BUCKET_LINEAR": {
+      "arm": "BUCKET_LINEAR",
+      "seed": 0,
+      "mechanism": "alpha_v := the fit-root mean alpha at the single local structure input (model.local_tuple.alpha_replace on the CSSD encoder); c kept; chemistry one-hots, J incidence, Sem108, reader and the frozen Q untouched; re-decoded and re-forwarded; no retraining, no recalibration",
+      "input_change": {
+        "alpha_vs_mean_l2_median": 0.4096344598361886,
+        "alpha_vs_mean_l2_p95": 0.8609098485564042,
+        "alpha_vs_mean_l2_max": 1.612953787845125,
+        "phi_hat_abs_change_median": 0.031496032601019075,
+        "phi_hat_abs_change_max": 1.1130061237624964
+      },
+      "abs_dpred": {
+        "mean": 1.4120854209708316,
+        "median": 1.3982677459716797,
+        "p95": 2.6938215881586074,
+        "max": 4.057372212409973
+      },
+      "response_fraction_gt_marker": 1.0,
+      "delta_y_raw_mae": 1.2680898111098338,
+      "delta_g_mae": 1.273882734862167,
+      "g_note": "Q input unchanged by construction: q_raw reused bitwise from the base evaluation",
+      "reading": "response shows the consumer reads the sparse code; never incremental benefit",
+      "response_beyond_noise": true
+    }
+  },
+  "route_shuffle_intervention": {
+    "BASE": {
+      "arm": "BASE",
+      "seed": 0,
+      "mechanism": "within each dev molecule the EXISTING projection-route bucket labels are permuted (per-bucket usage counts preserved; fixed stream seed 20261008); ONLY the endpoint-view gather follows the permuted route \u2014 relation input, distance gate, pair readout pooling, pair endpoints, E_i and Q untouched; data.pair_bucket never written",
+      "reads_route": false,
+      "plan": {
+        "n_pairs_total": 531246,
+        "n_pairs_changed": 346280,
+        "fraction_pairs_changed": 0.6518260843375762,
+        "molecules_covered": 1999,
+        "n_molecules": 1999
+      },
+      "route_forward_stats": {
+        "note": "shared-mode endpoint projection: the route is not read"
+      },
+      "p_divergence": {
+        "note": "not a bucket projection"
+      },
+      "abs_dpred": {
+        "mean": 1.1624247506596316e-07,
+        "median": 8.940696716308594e-08,
+        "p95": 3.5762786865234375e-07,
+        "max": 9.5367431640625e-07
+      },
+      "abs_dpred_h": {
+        "mean": 1.1745193649853034e-07,
+        "p95": 4.6342611312866075e-07,
+        "max": 9.5367431640625e-07
+      },
+      "response_fraction_gt_marker": 0.0,
+      "delta_y_raw_mae": 1.369729052402846e-10,
+      "delta_g_mae": -3.857604236046086e-10,
+      "pair_bucket_unmodified": true,
+      "reading": "for R: response beyond the noise marker AND diverged P_b means different relation viewpoints are actually used; a no-response with equal P_b means no different viewpoints were learned (recorded, never rescued); for BASE/C: predictions may move only by numerical noise"
+    },
+    "SHARED_MLP": {
+      "arm": "SHARED_MLP",
+      "seed": 0,
+      "mechanism": "within each dev molecule the EXISTING projection-route bucket labels are permuted (per-bucket usage counts preserved; fixed stream seed 20261008); ONLY the endpoint-view gather follows the permuted route \u2014 relation input, distance gate, pair readout pooling, pair endpoints, E_i and Q untouched; data.pair_bucket never written",
+      "reads_route": false,
+      "plan": {
+        "n_pairs_total": 531246,
+        "n_pairs_changed": 346280,
+        "fraction_pairs_changed": 0.6518260843375762,
+        "molecules_covered": 1999,
+        "n_molecules": 1999
+      },
+      "route_forward_stats": {
+        "note": "shared-mode endpoint projection: the route is not read"
+      },
+      "p_divergence": {
+        "note": "not a bucket projection"
+      },
+      "abs_dpred": {
+        "mean": 1.2433692149486226e-07,
+        "median": 1.043081283569336e-07,
+        "p95": 3.5762786865234375e-07,
+        "max": 1.0728836059570312e-06
+      },
+      "abs_dpred_h": {
+        "mean": 1.246434799011139e-07,
+        "p95": 4.76837158203125e-07,
+        "max": 1.1920928955078125e-06
+      },
+      "response_fraction_gt_marker": 0.0,
+      "delta_y_raw_mae": -4.143663329125857e-09,
+      "delta_g_mae": -5.672728203842681e-09,
+      "pair_bucket_unmodified": true,
+      "reading": "for R: response beyond the noise marker AND diverged P_b means different relation viewpoints are actually used; a no-response with equal P_b means no different viewpoints were learned (recorded, never rescued); for BASE/C: predictions may move only by numerical noise"
+    },
+    "BUCKET_LINEAR": {
+      "arm": "BUCKET_LINEAR",
+      "seed": 0,
+      "mechanism": "within each dev molecule the EXISTING projection-route bucket labels are permuted (per-bucket usage counts preserved; fixed stream seed 20261008); ONLY the endpoint-view gather follows the permuted route \u2014 relation input, distance gate, pair readout pooling, pair endpoints, E_i and Q untouched; data.pair_bucket never written",
+      "reads_route": true,
+      "plan": {
+        "n_pairs_total": 531246,
+        "n_pairs_changed": 346280,
+        "fraction_pairs_changed": 0.6518260843375762,
+        "molecules_covered": 1999,
+        "n_molecules": 1999
+      },
+      "route_forward_stats": {
+        "n_pairs": 531246,
+        "n_pairs_route_changed": 351555,
+        "fraction_route_changed": 0.6617555708654748,
+        "source_view_rel_change_median_across_batches": 1.0991915464401245,
+        "source_view_rel_change_mean_across_batches": 1.1055726185441017
+      },
+      "p_divergence": {
+        "per_bucket_rel_dev_from_mean": [
+          1.2209858894348145,
+          1.219836711883545,
+          1.2901078462600708,
+          1.3189674615859985,
+          1.1065279245376587
+        ],
+        "mean_rel_dev_from_mean": 1.2312850952148438,
+        "max_pairwise_rel_diff": 1.3297723531723022
+      },
+      "abs_dpred": {
+        "mean": 0.2929270792125411,
+        "median": 0.266251252964139,
+        "p95": 0.6633016020059584,
+        "max": 1.6576101779937744
+      },
+      "abs_dpred_h": {
+        "mean": 0.29292708258328587,
+        "p95": 0.6633016705512998,
+        "max": 1.6576104164123535
+      },
+      "response_fraction_gt_marker": 1.0,
+      "delta_y_raw_mae": 0.18816755055913467,
+      "delta_g_mae": 0.18956154518086862,
+      "pair_bucket_unmodified": true,
+      "reading": "for R: response beyond the noise marker AND diverged P_b means different relation viewpoints are actually used; a no-response with equal P_b means no different viewpoints were learned (recorded, never rescued); for BASE/C: predictions may move only by numerical noise"
+    }
+  },
+  "route_shuffle_plan": {
+    "seed": 20261008,
+    "n_pairs_total": 531246,
+    "n_pairs_changed": 346280,
+    "molecules_covered": 1999,
+    "plan_file": "route_shuffle_plan.npz"
+  },
+  "exploratory_reading": {
+    "branch": "shared-nonlinear-projection-directional-signal",
+    "note": "C improves while R does not: the shared nonlinear projection carries a directional signal; the distance-split projection is not supported.",
+    "point_estimates": {
+      "R-BASE_y": 0.009042379262998307,
+      "R-BASE_g": 0.009292056449403244,
+      "C-BASE_y": -0.0026062096538056606,
+      "C-BASE_g": -0.0023375595831538615,
+      "R-C_y": 0.011648588916803967,
+      "R-C_g": 0.011629616032557105
+    },
+    "r_improves_both_vs_base": false,
+    "c_improves_both_vs_base": true,
+    "r_vs_c_y_better": false,
+    "r_vs_c_g_not_worse": false,
+    "r_ci_crossings": {
+      "R-BASE_y_ci_contains_zero": false,
+      "R-BASE_g_ci_contains_zero": false,
+      "R-C_y_ci_contains_zero": false,
+      "R-C_g_ci_contains_zero": false
+    },
+    "dictionary_readout_responds": true,
+    "route_viewpoints_learned_and_used": true,
+    "single_seed_caveat": "a directional signal is this seed's screening result only \u2014 not a statistical-significance or repeatability claim; C is a parameter-matched different function recipe, so R>C is never a universal causal mechanism claim"
+  },
+  "mean_codes": {
+    "mean_alpha_sha256": "4ea68e60ee206abc1f0ab3adbd7ac597f8e132775a06eee616216d70839c34dd",
+    "fit_rel_err_median": 0.003586831735447049,
+    "fit_alpha_nnz": 8.0
+  },
+  "cost": {
+    "per_run": {
+      "BASE": {
+        "steps": 15120,
+        "curve_seconds_total": 837.4394568279386,
+        "wall_clock_s": 842.5272453129292,
+        "peak_gpu_memory_mb": 378.25390625,
+        "device": "cuda:0",
+        "allocation_probe": {
+          "CUDA_VISIBLE_DEVICES": "0",
+          "SLURM_JOB_ID": "56319",
+          "SLURM_JOB_NODELIST": "c05",
+          "SLURM_GPUS_ON_NODE": "1",
+          "SLURM_JOB_PARTITION": "gpu",
+          "hostname": "c05",
+          "nvidia_smi_L": "GPU 0: NVIDIA A100-PCIE-40GB (UUID: GPU-0c6f2aa8-cd1b-242d-4f94-052642143c9d)",
+          "nvidia_smi_query": "0, GPU-0c6f2aa8-cd1b-242d-4f94-052642143c9d, 00000000:25:00.0, NVIDIA A100-PCIE-40GB, 525.85.12",
+          "torch_device_index": 0,
+          "torch_device_name": "NVIDIA A100-PCIE-40GB",
+          "torch_total_memory": 42331013120,
+          "torch_uuid": "0c6f2aa8-cd1b-242d-4f94-052642143c9d"
+        }
+      },
+      "SHARED_MLP": {
+        "steps": 15120,
+        "curve_seconds_total": 1144.704986039549,
+        "wall_clock_s": 1149.7976327687502,
+        "peak_gpu_memory_mb": 383.24267578125,
+        "device": "cuda:0",
+        "allocation_probe": {
+          "CUDA_VISIBLE_DEVICES": "0",
+          "SLURM_JOB_ID": "56313",
+          "SLURM_JOB_NODELIST": "c05",
+          "SLURM_GPUS_ON_NODE": "1",
+          "SLURM_JOB_PARTITION": "gpu",
+          "hostname": "c05",
+          "nvidia_smi_L": "GPU 0: NVIDIA A100-PCIE-40GB (UUID: GPU-0c6f2aa8-cd1b-242d-4f94-052642143c9d)",
+          "nvidia_smi_query": "0, GPU-0c6f2aa8-cd1b-242d-4f94-052642143c9d, 00000000:25:00.0, NVIDIA A100-PCIE-40GB, 525.85.12",
+          "torch_device_index": 0,
+          "torch_device_name": "NVIDIA A100-PCIE-40GB",
+          "torch_total_memory": 42331013120,
+          "torch_uuid": "0c6f2aa8-cd1b-242d-4f94-052642143c9d"
+        }
+      },
+      "BUCKET_LINEAR": {
+        "steps": 15120,
+        "curve_seconds_total": 1091.9027681872249,
+        "wall_clock_s": 1098.3552364744246,
+        "peak_gpu_memory_mb": 378.43310546875,
+        "device": "cuda:0",
+        "allocation_probe": {
+          "CUDA_VISIBLE_DEVICES": "0",
+          "SLURM_JOB_ID": "56314",
+          "SLURM_JOB_NODELIST": "c05",
+          "SLURM_GPUS_ON_NODE": "1",
+          "SLURM_JOB_PARTITION": "gpu",
+          "hostname": "c05",
+          "nvidia_smi_L": "GPU 0: NVIDIA A100-PCIE-40GB (UUID: GPU-0c6f2aa8-cd1b-242d-4f94-052642143c9d)",
+          "nvidia_smi_query": "0, GPU-0c6f2aa8-cd1b-242d-4f94-052642143c9d, 00000000:25:00.0, NVIDIA A100-PCIE-40GB, 525.85.12",
+          "torch_device_index": 0,
+          "torch_device_name": "NVIDIA A100-PCIE-40GB",
+          "torch_total_memory": 42331013120,
+          "torch_uuid": "0c6f2aa8-cd1b-242d-4f94-052642143c9d"
+        }
+      }
+    },
+    "total_wall_clock_s": 3090.680114556104,
+    "parameter_cost": {
+      "BASE_total": 297539,
+      "SHARED_MLP_total": 325187,
+      "BUCKET_LINEAR_total": 325187,
+      "projection": {
+        "BASE": 6912,
+        "SHARED_MLP": 34560,
+        "BUCKET_LINEAR": 34560
+      },
+      "note": "cost reads the MEASURED seconds/memory; parameter deltas never imply time deltas"
+    }
+  },
+  "g_abs_p90_fit": 2.639640916689621,
+  "scope": "single body seed (0), development comparison on the historical dev rows (union of the old select/confirm), repeatedly used by this line \u2014 never an independent confirm, never official valid/test; the reading is a single-seed directional screen, not significance or repeatability",
+  "seconds": 50.06325614824891,
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

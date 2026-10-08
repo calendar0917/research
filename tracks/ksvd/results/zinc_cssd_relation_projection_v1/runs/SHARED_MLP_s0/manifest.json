@@ -1,0 +1,113 @@
+{
+  "protocol_version": "zinc-cssd-relation-projection-v1",
+  "stage": "train",
+  "arm": "SHARED_MLP",
+  "seed": 0,
+  "smoke": false,
+  "run_dir": "runs/SHARED_MLP_s0",
+  "recipe": {
+    "epochs": 240,
+    "batch_size": 128,
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "grad_clip": 5.0,
+    "soup_epochs": [
+      236,
+      237,
+      238,
+      239,
+      240
+    ],
+    "trace_checkpoints": [
+      120,
+      240
+    ],
+    "log_epochs": [
+      1,
+      40,
+      120,
+      240
+    ],
+    "component_loss_weight": 0.5,
+    "train_shuffle_offset": 101,
+    "amp": null,
+    "ddp": null,
+    "scheduler": null,
+    "early_stopping": null
+  },
+  "supervision": "COMP: L = MAE(ell_hat+s_hat, g) + 0.5*(MAE(ell_hat,ell)+MAE(s_hat,s)) (the unchanged disclosed auxiliary condition)",
+  "steps_done": 15120,
+  "steps_expected": 15120,
+  "stopped_reason": "completed",
+  "schedule_sha256": "1d0c186b8434e05bdf556f894867f91fa9a1f7240d1ea07ba006248dc6a86b41",
+  "schedule_bit_identical_to_historical": true,
+  "position_stream_sha256": "1d0c186b8434e05bdf556f894867f91fa9a1f7240d1ea07ba006248dc6a86b41",
+  "global_gid_stream_sha256": "5461a4a3d68531e143c3c581649eb3bf85c057d3009a5378792cff2766ee659d",
+  "init_state_sha256": "ac18cb280a1de1c15db2cfd0a180d316512c9c6d851a5ead64980de016526e32",
+  "init_non_projection_sha256": "394b51bcf8bc3c434875784ac673fe6c28a8c07b15339a6b3513727b5febf55a",
+  "init_projection_sha256": "55bf47d90287a89516d45cd334ce651ccbfcd4e88979c6cbd566595f62211468",
+  "non_projection_bitwise_equal_base": true,
+  "member_state_sha256": {
+    "236": "6dcd1355862ecd3d2bbcc909a6a774bddbb040a3629ed7d532872a509969665c",
+    "237": "ef9fb2b80b1abf163b050bde058c62debb0e79f5125fa3bb1c7da449ca8eca42",
+    "238": "1a4c779f08fb6fe16b9953acb75996e996c1ddfe5fd22416f172bee1354c9b42",
+    "239": "a07a05818d4588ba852cff6269f60c2fc208f798503c1c8cc4c59a67f64b9f7c",
+    "240": "e5dd2a5edea1129dfc8cf9c3512ad2973c5616108edc54cd85c6b70e98870859"
+  },
+  "soup_state_sha256": "97a2998e7bc03139baba05105aea37f1c28ab1b7ab53fad7b53c391cf4f9b3b2",
+  "last_state_sha256": "e5dd2a5edea1129dfc8cf9c3512ad2973c5616108edc54cd85c6b70e98870859",
+  "build_rng_sha256": "a2e8a8ab56091d98d239b81fd15117cb818f1b88d95d2fc1bcff036eee5a8853",
+  "train_rng_sha256": "1ccf17250133dec5e96478acd63e13d728d0dbbabb30389415a302c6f872f81f",
+  "frozen_basis_hashes": {
+    "U": "f1338b03b9aef42d691b5a408d49b9b2d0c91c8538c07d08394f1a826f644efd",
+    "common_rms": "5f6338d043681f2d5e10956c43946b8a4ff0918be7bd7d98dc167961e704dc87",
+    "D": "76b667acc623b4cd797a81f94d0645a7ca7071fd287a15bacaa437379ae25cd2"
+  },
+  "encoder_frozen_basis_hashes": {
+    "U": "f1338b03b9aef42d691b5a408d49b9b2d0c91c8538c07d08394f1a826f644efd",
+    "common_rms": "5f6338d043681f2d5e10956c43946b8a4ff0918be7bd7d98dc167961e704dc87",
+    "Dbar": "f0b55dd111f41af67586bb7d71ceb7d68ba52a55bb03055e91106d2e24ef5287"
+  },
+  "frozen_basis_unchanged": true,
+  "q_soup_sha256": "14d175e371e31f00bd043bcece1e5a44150bd6c9cadea6b2eed3ec86f4f41b21",
+  "parameter_audit": {
+    "total_parameters": 325187,
+    "base_body_parameters": 212355,
+    "bridge_parameters": 82944,
+    "local_tuple_parameters": 29888,
+    "reader_output_parameters": 80
+  },
+  "calibration": {
+    "b_y": -0.018516670912504196,
+    "note": "single fit-median b_y = median(y_fit - y_raw_fit); never stacked with any old bias"
+  },
+  "fit_diagnostics": {
+    "fit_y_raw_mae": 0.04344687584677376,
+    "fit_y_cal_mae": 0.03953798759866372,
+    "fit_g_raw_mae": 0.03506818464240593,
+    "fit_ell_mae": 0.02864142019006704,
+    "fit_s_mae": 0.030933230721054004,
+    "fit_q_mae": 0.009237879666307043
+  },
+  "curve_seconds_total": 1144.704986039549,
+  "wall_clock_s": 1149.7976327687502,
+  "peak_gpu_memory_mb": 383.24267578125,
+  "device": "cuda:0",
+  "allocation_probe": {
+    "CUDA_VISIBLE_DEVICES": "0",
+    "SLURM_JOB_ID": "56313",
+    "SLURM_JOB_NODELIST": "c05",
+    "SLURM_GPUS_ON_NODE": "1",
+    "SLURM_JOB_PARTITION": "gpu",
+    "hostname": "c05",
+    "nvidia_smi_L": "GPU 0: NVIDIA A100-PCIE-40GB (UUID: GPU-0c6f2aa8-cd1b-242d-4f94-052642143c9d)",
+    "nvidia_smi_query": "0, GPU-0c6f2aa8-cd1b-242d-4f94-052642143c9d, 00000000:25:00.0, NVIDIA A100-PCIE-40GB, 525.85.12",
+    "torch_device_index": 0,
+    "torch_device_name": "NVIDIA A100-PCIE-40GB",
+    "torch_total_memory": 42331013120,
+    "torch_uuid": "0c6f2aa8-cd1b-242d-4f94-052642143c9d"
+  },
+  "dev_scores_computed_during_training": false,
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

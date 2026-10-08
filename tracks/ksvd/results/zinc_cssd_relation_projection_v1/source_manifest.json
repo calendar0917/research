@@ -1,0 +1,106 @@
+{
+  "protocol_version": "zinc-cssd-relation-projection-v1",
+  "stage": "source-checks",
+  "source_dir": "results/zinc_cssd_nonlinear_binding_v1",
+  "source_read_only": true,
+  "arms": [
+    "BASE",
+    "SHARED_MLP",
+    "BUCKET_LINEAR"
+  ],
+  "seeds": [
+    0
+  ],
+  "dim_contract": {
+    "d_environments": 144,
+    "p_endpoints": 48,
+    "distance_buckets": 5,
+    "pair_projection_weight_shape": [
+      48,
+      144
+    ],
+    "relation_width": 15,
+    "reader_input": 814,
+    "fit_n": 8001,
+    "dev_n": 1999,
+    "row_pair_bucket_values": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "historical_schedule_sha256": "1d0c186b8434e05bdf556f894867f91fa9a1f7240d1ea07ba006248dc6a86b41",
+  "rebuilt_schedule_sha256": "1d0c186b8434e05bdf556f894867f91fa9a1f7240d1ea07ba006248dc6a86b41",
+  "schedule_bit_identical_240": true,
+  "init_contracts": {
+    "base_init_sha256": "60d6cfa38011cb1aea983fee975aa023a540015b8b28d63f2f1f4a17f56248f6",
+    "base_matches_historical_dict_s0": true,
+    "non_projection_bitwise_equal_across_arms": true,
+    "shared_mlp_identity": {
+      "w1_rows_plus_p0": true,
+      "w1_rows_minus_p0": true,
+      "w2_cols_plus_identity": true,
+      "w2_cols_minus_identity": true,
+      "w2_supplementary_zero": true,
+      "no_bias": true
+    },
+    "bucket_p0_copies": {
+      "bucket_0_bitwise_p0": true,
+      "bucket_1_bitwise_p0": true,
+      "bucket_2_bitwise_p0": true,
+      "bucket_3_bitwise_p0": true,
+      "bucket_4_bitwise_p0": true
+    },
+    "shared_mlp_projection_sha256": "55bf47d90287a89516d45cd334ce651ccbfcd4e88979c6cbd566595f62211468",
+    "bucket_projection_sha256": "70b6072538a52248800a0aafeb2619638e6405a424491930df3c8a41831bfac1",
+    "rng_stream_identical_after_construction": true,
+    "projection_init_private_seed": 20261008
+  },
+  "parameter_contracts": {
+    "BASE": {
+      "total_parameters": 297539,
+      "base_body_parameters": 184707,
+      "bridge_parameters": 82944,
+      "local_tuple_parameters": 29888,
+      "reader_output_parameters": 80
+    },
+    "SHARED_MLP": {
+      "total_parameters": 325187,
+      "base_body_parameters": 212355,
+      "bridge_parameters": 82944,
+      "local_tuple_parameters": 29888,
+      "reader_output_parameters": 80
+    },
+    "BUCKET_LINEAR": {
+      "total_parameters": 325187,
+      "base_body_parameters": 212355,
+      "bridge_parameters": 82944,
+      "local_tuple_parameters": 29888,
+      "reader_output_parameters": 80
+    }
+  },
+  "projection_parameters": {
+    "BASE": 6912,
+    "SHARED_MLP": 34560,
+    "BUCKET_LINEAR": 34560
+  },
+  "frozen_basis_hashes": {
+    "U": "f1338b03b9aef42d691b5a408d49b9b2d0c91c8538c07d08394f1a826f644efd",
+    "common_rms": "5f6338d043681f2d5e10956c43946b8a4ff0918be7bd7d98dc167961e704dc87",
+    "D": "76b667acc623b4cd797a81f94d0645a7ca7071fd287a15bacaa437379ae25cd2"
+  },
+  "q_soup_sha256": "14d175e371e31f00bd043bcece1e5a44150bd6c9cadea6b2eed3ec86f4f41b21",
+  "old_run": {
+    "run_dir": "results/zinc_cssd_consumer_replacement_v1/runs/DICT_s0",
+    "manifest_hashes_verified": true,
+    "init_state_sha256": "60d6cfa38011cb1aea983fee975aa023a540015b8b28d63f2f1f4a17f56248f6",
+    "schedule_sha256": "1d0c186b8434e05bdf556f894867f91fa9a1f7240d1ea07ba006248dc6a86b41"
+  },
+  "reuse_note": "no basis/Q/prep/target refit; the historical DICT s0 trajectory is a read-only anchor; official valid/test never loaded",
+  "all_passed": true,
+  "seconds": 6.418839019956067,
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

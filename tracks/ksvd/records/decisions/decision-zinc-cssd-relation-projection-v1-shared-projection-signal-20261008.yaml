@@ -1,0 +1,59 @@
+alternatives_rejected:
+- 'Retaining R as a candidate because its five P_b learned genuinely different relation-dependent
+  viewpoints (verified by divergence and shuffle response) -- rejected: its dev harm
+  is CI-separated on both metrics and present on fit as well, so the viewpoints are
+  loaded but harmful in this frozen consumer; a mechanism being used is not evidence
+  it helps.'
+- 'Upgrading C to a canonical candidate on a single seed with CI-crossing deltas --
+  rejected: the protocol froze a directional screen; a -0.0026 dev effect needs the
+  line''s paired two-seed same-round standard before any retention claim.'
+- 'Rescuing R with a different initialization or scaling after the negative -- rejected:
+  excluded before training (no init search, no scaling tuned for results); the shuffle
+  response shows the model already uses its route, so re-initialization would be result-directed
+  tuning.'
+- 'Reading R''s lowest streaming train Lg (0.0586) as a better optimizer sabotaged
+  by regularization -- rejected: the soup fit MAE is the worst of the three and the
+  dev harm is CI-separated; with one seed the trajectory observation stays descriptive.'
+because: 'The frozen single-seed rubric''s branch 3 fires exactly: C improves both
+  metrics while R improves neither (R is CI-separated worse on both), the dictionary
+  readout stays intact in all arms, and the route viewpoints were genuinely learned
+  and used, so neither the relational branch (1), the both-improve branch (2), nor
+  a readout-failure branch (5) applies. The round''s purpose was to buy or exclude
+  a lead with one seed and a fixed 2-hour budget, which was met (total measured GPU
+  ~51 min train + smoke + terminal). Per the frozen protocol the round ends here;
+  only a recommendation is forwarded.'
+created: '2026-10-08T12:12:49'
+decision: 'STOP zinc_cssd_relation_projection_v1 with the frozen single-seed reading
+  branch ''shared-nonlinear-projection-directional-signal'' and NO retained candidate:
+  under the frozen verified DICT consumer (clean committed revision 404b7a5, design
+  basis 7aec57f), three from-scratch 240-epoch/15,120-step trainings on body seed
+  0 (BASE = the historical shared no-bias Linear(144,48) endpoint projection, init/schedule
+  bit-identical to the historical DICT s0; SHARED_MLP = a parameter-matched shared
+  144->180->48 SiLU MLP with the fixed function-preserving init C(E)=P0E verified
+  at 6e-8; BUCKET_LINEAR = five no-bias P_b[48,144], one per EXISTING distance bucket,
+  each a bitwise copy of P0 so step 0 is function-identical to BASE) gave dev y_raw
+  0.11920 / 0.11659 / 0.12824 and dev g 0.09169 / 0.08935 / 0.10098. The bucket-routed
+  relational projection R is reliably WORSE than BASE on both metrics (Delta_y +0.00904
+  CI95 [+0.0055,+0.0126]; Delta_g +0.00929 CI95 [+0.0058,+0.0128]) and worse on fit
+  too (+0.0178 y), while the parameter-matched shared nonlinear projection C directionally
+  improves both (Delta_y -0.00261 CI95 [-0.0059,+0.0009]; Delta_g -0.00234 CI95 [-0.0058,+0.0013];
+  both CIs cross zero). The mechanism is verified live: all three soups still read
+  the dictionary (alpha-mean |dPred| p95 2.37/6.66/2.69 >> marker 1e-4, response 1.000),
+  R''s five P_b genuinely diverged (rel deviation from their mean 1.10-1.32) and the
+  one fixed route shuffle (66.2% of 531,246 dev pair rows, all 1999 molecules, data.pair_bucket
+  untouched, BASE/C provably unaffected at 3.6e-7) degrades R massively (p95 0.663,
+  dMAE_y +0.188) - the route is causally loaded, so the negative is not ''the route
+  never mattered''. One body seed only: directional screening, never a repeatability
+  claim; C is a different function recipe, so C>R does not isolate a universal mechanism.
+  No second seed, no fourth arm, no rescue re-initialization, no window/width/recipe
+  change; the historical B72 A-E gates were not inherited.'
+decision_id: decision-zinc-cssd-relation-projection-v1-shared-projection-signal-20261008
+kind: decision
+revisit_if: A new preregistration (a) gives the shared nonlinear endpoint projection
+  (C) the line's paired two-seed same-round control with a stated precision target
+  able to separate a ~0.002-0.003 dev effect, or (b) tests relational endpoint conditioning
+  at a different interface (e.g. conditioning that also feeds the pair encoder or
+  gate, or learned routes) rather than the pre-compression linear bucket split; any
+  purchase keeps the frozen basis/access, the verified init identity, the route-untouched
+  guarantee and the one-shot terminal.
+study_id: null
