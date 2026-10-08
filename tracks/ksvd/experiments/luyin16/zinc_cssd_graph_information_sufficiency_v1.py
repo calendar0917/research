@@ -810,7 +810,6 @@ def stage_heads(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> dict[str, A
             eval_rows = np.flatnonzero(fold_of_row == k)
             train_rows = np.flatnonzero(fold_of_row != k)
             sel_rows, fit_rows = _selection_split(train_rows, smiles_fit, OOF_SEED + 1 + k)
-            mean, scale = _standardize(x_R_fit[fit_rows])
             for arm in ARMS:
                 block = arm_block[arm]
                 if block is None:
@@ -819,18 +818,20 @@ def stage_heads(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> dict[str, A
                     w_fit = torch.as_tensor(block, dtype=torch.float32)
                     x_fit = torch.cat([x_R_fit, w_fit], dim=1)
                     x_eval = torch.cat([x_R_fit[eval_rows], w_fit[eval_rows]], dim=1)
+                # standardization statistics from THIS arm's train rows only
+                mean, scale = _standardize(x_fit[fit_rows])
                 x_fit_n = (x_fit - mean) / scale
+                x_eval_n = (x_eval - mean) / scale
                 head = train_residual_head(
-                    x_fit_n[fit_rows], torch.as_tensor(residual_fit[fit_rows], np.float32),
-                    x_fit_n[sel_rows], torch.as_tensor(residual_fit[sel_rows], np.float32),
+                    x_fit_n[fit_rows], torch.as_tensor(residual_fit[fit_rows], dtype=torch.float32),
+                    x_fit_n[sel_rows], torch.as_tensor(residual_fit[sel_rows], dtype=torch.float32),
                 )
                 with torch.no_grad():
-                    oof_residual[arm][eval_rows] = head(x_eval).view(-1).numpy().astype(np.float64)
+                    oof_residual[arm][eval_rows] = head(x_eval_n).view(-1).numpy().astype(np.float64)
             log(f"[heads] seed {seed} fold {k + 1}/{N_OOF_FOLDS} done")
 
         # dev heads: trained on ALL fit rows (same grouped selection protocol)
         sel_rows, fit_rows = _selection_split(np.arange(len(fit_idx)), smiles_fit, OOF_SEED + 100)
-        mean, scale = _standardize(x_R_fit[fit_rows])
         dev_residual: dict[str, np.ndarray] = {}
         dev_blocks = {"R_only": None, "R_W_shuffled": W_shuf_dev, "R_W_real": W_real_dev}
         for arm in ARMS:
@@ -839,10 +840,11 @@ def stage_heads(*, out_dir: Path = RESULTS_DIR, log: Any = print) -> dict[str, A
                 x_fit = x_R_fit
             else:
                 x_fit = torch.cat([x_R_fit, torch.as_tensor(block, dtype=torch.float32)], dim=1)
+            mean, scale = _standardize(x_fit[fit_rows])
             x_fit_n = (x_fit - mean) / scale
             head = train_residual_head(
-                x_fit_n[fit_rows], torch.as_tensor(residual_fit[fit_rows], np.float32),
-                x_fit_n[sel_rows], torch.as_tensor(residual_fit[sel_rows], np.float32),
+                x_fit_n[fit_rows], torch.as_tensor(residual_fit[fit_rows], dtype=torch.float32),
+                x_fit_n[sel_rows], torch.as_tensor(residual_fit[sel_rows], dtype=torch.float32),
             )
             dev_block = dev_blocks[arm]
             if dev_block is None:
@@ -924,14 +926,19 @@ def _score(
         return float(np.abs(err).mean())
 
     def strata(err: np.ndarray, k: np.ndarray, node_sizes: np.ndarray) -> dict[str, Any]:
+        """Stratum-level SIGNED mean of per-row |e_A| - |e_B| (the MAE
+        contrast within the stratum; negative = the real witness is better
+        there)."""
         k0 = k == 0
         t = np.quantile(node_sizes, [1 / 3, 2 / 3])
         small = node_sizes <= t[0]
         large = node_sizes > t[1]
         mid = ~(small | large)
         return {
-            "k0_mae": mae(err[k0]), "k0_n": int(k0.sum()),
-            "size_small_mae": mae(err[small]), "size_mid_mae": mae(err[mid]), "size_large_mae": mae(err[large]),
+            "k0_mean": float(err[k0].mean()), "k0_n": int(k0.sum()),
+            "size_small_mean": float(err[small].mean()),
+            "size_mid_mean": float(err[mid].mean()),
+            "size_large_mean": float(err[large].mean()),
         }
 
     # ---- OOF contrasts (primary)
@@ -971,6 +978,7 @@ def _score(
     per_mol_gain = diff_R.mean(axis=0)
     total_gain = float(per_mol_gain.sum())
     order = np.argsort(per_mol_gain)[::-1]
+    oof["total_gain_signed"] = total_gain
     oof["top20_gain_share"] = float(per_mol_gain[order[:20]].sum() / total_gain) if total_gain > 0 else None
     oof["strata_R_W_real_vs_R_only"] = {
         f"s{seed}": strata(abs_err["R_W_real"][si] - abs_err["R_only"][si], k_fit, sizes_fit)
