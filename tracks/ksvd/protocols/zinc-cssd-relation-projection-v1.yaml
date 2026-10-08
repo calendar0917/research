@@ -1,0 +1,278 @@
+# Protocol: ZINC CSSD relation projection v1 (2026-10-08, design basis 7aec57f).
+
+# Freezes the single question of this round: with the VERIFIED frozen CSSD
+# basis and its effective local access held fixed (the DICT consumer of
+# zinc_cssd_consumer_replacement_v1), does letting the EXISTING distance
+# buckets select the endpoint projection — before the local representation is
+# compressed — improve the complete y and g?  This is a budgeted, single-seed
+# discovery probe: it does NOT claim a shared projection is a proven
+# bottleneck, does not continue window/bridge-width tuning, does not redo
+# basis reuse, and does not reopen any historical negative recipe.  One body
+# seed (0), three arms, ONE from-scratch training each; no seed 1, no fourth
+# arm, no automatic upgrades.
+
+id: zinc-cssd-relation-projection-v1
+
+dataset:
+  name: ZINC (PyG, subset=True, official splits)
+  source_policy: official_pyg_zinc_only
+  expected_sizes:
+    train: 10000
+    val: 1000
+    test: 1000
+
+split:
+  description: >-
+    identical to zinc_cssd_consumer_replacement_v1: fit = the source round's
+    committed 8001-row fit fold; dev = sorted union(select_idx, confirm_idx) =
+    1999 historical development rows (a DEVELOPMENT COMPARISON set, repeatedly
+    used by this line — never a new independent confirm, and never made
+    "unseen" by evaluating only once); canonical-SMILES groups never straddle
+    fit/dev; no re-splitting, no row deletion.
+  fingerprint_policy: index-array SHA-256 (identical for all runs)
+  folds: 1
+  oof: false
+  official_valid_usage: never_loaded
+  official_test_usage: never_loaded
+
+reused_objects_read_only:
+  source: results/zinc_cssd_nonlinear_binding_v1 (unchanged stage-0 objects)
+  historical_runs: results/zinc_cssd_consumer_replacement_v1/runs (DICT_s0 anchor)
+  artifacts: >-
+    fold, targets, tuple payload, kappa_M, prep, the CSSD basis
+    (U/common_rms/D; q=1, 32 atoms, top-8 tied-IHT-10; the historical refit
+    included task supervision in its temporary head — recorded as-is, never
+    claimed purely unsupervised), and the frozen shared Q(topology25) soup.
+    U/common_rms/Dbar are non-persistent buffers: loading any checkpoint
+    always requires the original basis package; nothing is refitted.
+
+frozen_model:
+  spec: >-
+    every arm starts from the ORIGINAL untrained DICT factory
+    build_arm("DICT", payload, kappa_M, basis_parts, 0) (which completes its
+    own historical 297,539-parameter audit first).  In the deployed consumer
+    the relation side is: every environment E_i in R^144 is generated once
+    (frozen CSSD phi_hat decode -> 125-D tuple -> local encoder + real
+    J-incidence -> Sem108/size2 fusion -> the historical 144->288->144
+    posterior MLP bridge), then ONE shared projection P: E_i -> 48
+    (pair_projection, no-bias Linear 144->48) gives the endpoint views, and
+    only then are the endpoint sum / absolute difference / product * distance
+    gate computed, the relation encoded (15 inputs -> 144 -> 48), the 192-D
+    pair input pushed through the pair encoder (192->144->48) and pooled by
+    the five EXISTING distance buckets.  BASE = that factory untouched
+    (projection 6,912 parameters, 297,539 total; init and schedule must
+    reproduce the historical seed-0 run bit-for-bit).  SHARED_MLP (C) = ONLY
+    model.pair_projection replaced by a shared no-bias 144->180->48 MLP with
+    SiLU (34,560 projection parameters, 325,187 total); still one projection
+    for every bucket, reading no distance, no relation and no graph id.
+    BUCKET_LINEAR (R) = ONLY model.pair_projection replaced by five no-bias
+    P_b[48,144], one per EXISTING distance bucket (34,560 projection
+    parameters, 325,187 total); for a pair (i,j) the endpoint views are
+    P_b(E_i), P_b(E_j) with b the pair's projection ROUTE (normally
+    data.pair_bucket); both endpoints share P_b (endpoint-swap symmetric);
+    buckets are never added, removed or remapped.
+  relation_side_untouched: >-
+    the relation input, the distance gate and the pair readout pooling ALWAYS
+    read data.pair_bucket (never the route override); the route override is a
+    separate entry that never writes data.pair_bucket; E_i is generated before
+    any pair conditioning exists and is never updated by the pairs (no pair ->
+    node write-back, no attention, no message passing, no recurrence, no new
+    statistical features); topology25, the targets and the shared frozen Q
+    are untouched and bitwise shared by all three arms (g = y - c_target;
+    ell = the normalized logP; s = g - ell; y_raw = ell_hat + s_hat + Q_raw).
+  initialization_frozen: >-
+    C and R projection modules are built on CPU under
+    torch.random.fork_rng(devices=[]) with the private seed 20261008; the
+    fork restores the global CPU RNG (asserted bitwise against the BASE
+    post-construction state).  C uses the fixed function-preserving identity
+    W1[0:48]=P0, W1[48:96]=-P0, W1[96:180]=the private-stream nn.Linear
+    default draw, W2[:,0:48]=I48, W2[:,48:96]=-I48, W2[:,96:180]=0, so the
+    initial function is P0*E (SiLU(x)-SiLU(-x)=x) up to float rounding; the
+    supplementary rows' first-step gradient is zero BY CONSTRUCTION and must
+    move by step 3 (checked, never misread as dead).  R's five P_b start as
+    bitwise copies of P0, so step 0 is function-identical to BASE regardless
+    of route.  No scaling tuned for test results, no init search, no
+    distillation from trained weights.  All three arms are trained from
+    scratch with seed_everything(0) exactly like the historical recipe; every
+    non-projection initial tensor is bitwise identical across arms.  Initial-
+    function equality does NOT guarantee equal trajectories/gradients/implicit
+    regularization: C and R are two complete function recipes and parameter
+    matching clears no other confound (disclosed).
+
+training_contract_frozen:
+  optimizer: Adam lr 1e-3, coupled weight_decay 1e-5, batch 128, grad clip 5
+  precision: FP32 (no AdamW, no scheduler/AMP/DDP/early stopping)
+  runs: exactly THREE formal body trainings (BASE/SHARED_MLP/BUCKET_LINEAR x
+    body seed 0), each from scratch for 240 epochs (15,120 optimizer steps,
+    asserted), fit rows only during training (no dev read, no mid-training
+    replay/rebuild — only detach/clone captures); no warm start from any
+    historical soup, no head-only training; CSSD and Q stay frozen
+  schedule: the original zw.build_schedule, seed = 0 + 101; must be
+    bit-identical to the historical DICT seed-0 schedule (hash + element-wise)
+  estimator: the UNIQUE estimator per run = the equal-weight FP32 parameter
+    mean of the FULL member states of epochs 236..240 (historical soup
+    semantics; non-float state entries must be identical and are copied; the
+    basis buffers never enter the average, the optimizer or the state dict)
+  trace_artifacts: epoch120/epoch240 states and the 236..240 members are saved
+    for traceability only — never scoring candidates; dev is never scanned
+    over checkpoints; every run saves init/schedule/members/soup/manifest/
+    curve/probes/resume state
+  frozen_basis: sha256 asserted before/after training; CSSD buffers never in
+    the optimizer; Q fixed and shared (never retrained)
+  budget: total GPU budget 2 hours including smoke, the three trainings, the
+    terminal eval and necessary engineering fixes; res-2 res2-cu124; three
+    arms in parallel when three GPUs are free, otherwise two waves; ONE body
+    training per GPU at a time; when the budget is insufficient the blocker is
+    reported, never silently absorbed by shortening the scientific recipe; no
+    additional body seed and no fourth arm under any outcome
+
+pretrain_checks_frozen:
+  scope: >-
+    fit-only, CPU before any training: (1) stage-0/source hashes, the
+    historical seed-0 run, schedule reproduction, the dimension/bucket
+    contracts (d=144, p=48, five buckets, reader input 814); (2) per-arm
+    parameter contracts (BASE 297,539 / C,R 325,187 — the historical
+    all-arms-297,539 assertion is NOT inherited), no-bias projections, the C
+    identity blocks, R's bitwise P0 copies, non-projection init bitwise
+    pairing, fork_rng RNG neutrality; (3) BASE forward/component parity
+    BIT-EXACT vs the untouched replacement factory on fit batches; (4) step-0
+    agreement of all three arms (R bit-exact vs BASE on CPU, C within the
+    SiLU-rounding band 1e-4) with the endpoint view tensors checked directly;
+    (5) the same-forward component identity (torch exact 0, float64 sum in
+    band); (6) invariances on fit molecules: endpoint-swap symmetry of the
+    pair input (exact), pair-row permutation, node relabelling (the positional
+    tuple payload swapped exactly like the nonlinear-binding round's pattern),
+    batch composition/order and label independence; (7) a 3-step optimization
+    smoke: finite outputs, gradients reaching the bridge, W_loc, A_raw, the
+    reader and the projection modules (C's supplementary W1 rows zero-grad at
+    step 0 by construction and moving by step 3; R's per-bucket gradients read
+    with the batch's bucket coverage — a missing bucket may be zero-grad on a
+    short batch, never misread as dead), CSSD buffers never in the optimizer
+    or state dict, basis hashes unchanged; (8) save -> CORRECT-factory reload
+    -> replay (CPU bit-exact) and wrong-factory strict load blocked; (9)
+    route-override wiring: BASE/C strictly unaffected (bit-exact), R with
+    equal P_b a no-op, R with an artificially different P responsive at the
+    endpoint views, data.pair_bucket never modified.  No full historical audit
+    is copied; only these checks.
+
+terminal_evaluation:
+  one_shot: terminal_eval.json is written once and never overwritten; the
+    protocol/roster rules are committed frozen BEFORE the first dev scoring of
+    this round; smoke and all checks are fit-only; a genuine pre-scoring
+    engineering failure may be fixed and retried with disclosure; a successful
+    terminal_eval.json is never covered.  If a fix changes training semantics,
+    the affected results are not mixed: the affected formal runs are rerun
+    within budget and the incident disclosed; debugging is never upgraded into
+    scientific rescue.
+  roster: all three trainings complete before the single eval; BASE init ==
+    the historical DICT s0 init (hash); C/R non-projection init bitwise equal
+    to BASE's; per-arm parameter audits; schedule hash == historical;
+    frozen-basis and Q hashes unchanged; members/soups hash-checked.
+  exports: >-
+    per run x split (fit AND dev) per-row: row_index, gid, canonical-SMILES
+    group id, n_nodes, k, y/g/ell/s targets, ell_hat/s_hat/h (same forward),
+    q_raw, y_raw, b_y.  Main metric: full dev y_raw MAE; g_raw MAE is the
+    common research endpoint; y_cal reportable (b_y = each run's own
+    fit-median residual; calibration improvement is never a positive signal).
+    Component MAEs are never summed and never reweight COMP; the fit-dev gap
+    is listed per run in its own column, never a substitute for the dev error.
+  paired_contrasts: exactly three — R-BASE, C-BASE, R-C — on dev y_raw and
+    dev g (absolute and relative changes), with the fit-side deltas and the
+    fit-dev gaps reported alongside; the historical seed-0 DICT
+    y_raw = 0.1215175080 is a descriptive anchor ONLY (the recipe effect is
+    judged against the paired same-round BASE, never against the weaker
+    historical number).
+  bootstrap: >-
+    canonical-SMILES-group-paired resampling of dev groups, 2000 draws, fixed
+    seed 20261008; the SAME group picks shared by all three arms and BOTH
+    metrics; a CI per contrast per metric (delta = candidate - reference).
+    The molecular bootstrap carries no training-seed or basis uncertainty;
+    there is only ONE body seed, so even a CI excluding 0 is NOT a
+    repeatability or method-stability claim; dev is the historical development
+    set, never a new confirm/test.
+  noise_bound: >-
+    eta from repeated forwards AND same-weight save/reload replay of the three
+    soups; marker = max(1e-4, 10*eta).
+  dictionary_intervention: >-
+    the unique alpha-mean intervention on ALL THREE soups: alpha_v := the
+    fit-root mean alpha (computed from fit under the frozen basis, or a
+    hash-consistent historical mean) via model.local_tuple.alpha_replace;
+    c/chemistry/J/Sem108/relations/Q untouched; no retraining, no
+    recalibration; no raw/decoded identity hook.  Reported: the actual input
+    change, |Delta pred| mean/median/p95/max, the response fraction at the
+    marker, DeltaMAE(y_raw) and DeltaMAE(g).  p95 > marker supports a clear
+    dictionary readout; dependence evidence, never incremental benefit.
+  route_intervention: >-
+    intervention 2: within each dev molecule the EXISTING projection-route
+    bucket labels are permuted (per-bucket usage counts preserved exactly;
+    ONE fixed stream, seed 20261008; per-molecule permutations generated from
+    the saved dev row order and flattened molecule pair order, independent of
+    batch composition); the SAME override set is applied to all three arms.
+    ONLY the endpoint-view gather follows the permuted route: the relation
+    input, the distance gate, the pair readout pooling, the pair endpoints,
+    E_i and Q are untouched and data.pair_bucket is never written.  BASE/C do
+    not read the route (predictions may move only by numerical noise; asserted
+    within a tiny band).  For R the report includes the changed-pair fraction,
+    the covered molecules, the actual endpoint-view change, the five P_b's
+    relative deviation from their mean, |Delta pred| and DeltaMAE(y/g).  A
+    route-label change with still-identical P_b does NOT effectively change
+    the model input: if R does not respond because its P_b never diverged,
+    that is recorded as "no different relation viewpoints were learned", never
+    rescued by re-initialization.  The route response test is dependence
+    evidence: a degradation under shuffling cannot alone prove incremental
+    benefit.  The model itself must be permutation-invariant; the saved row
+    order of the random intervention exists for reproducibility only and is
+    never presented as a graph-canonicalization proof.
+
+exploratory_reading_frozen: >-
+  The purpose of this round is to see the effect and buy/exclude follow-up
+  leads; the round ENDS after the three runs, the one-shot terminal eval, the
+  interventions and the report.  No automatic canonical upgrade, no automatic
+  seed 1, no closing of the whole fusion/relational route by a single seed,
+  and the historical B72 A-E branches (including the +/-0.003 gates) are NOT
+  inherited.  The full effect sizes and CIs are reported first; the reading
+  then uses exactly the following branches (a "directional signal" is this
+  seed's screening result, never a significance substitute; numerical noise
+  and training-trajectory variance are reported separately and init equality
+  proves the latter was not eliminated):
+  (1) relational-conditional-projection-directional-signal: R improves BOTH
+  complete y and g vs BASE, is better than C on y and not worse than C on g,
+  keeps the dictionary readout (alpha p95 > marker) and really uses different
+  routes (P_b diverged, route shuffle responds beyond the marker).  If the
+  R-C CI crosses 0 this is explicitly recorded: the parameter-matched
+  comparison remains uncertain and no "relational mechanism won" claim is
+  made.
+  (2) stronger-endpoint-projection-directional-signal: both C and R improve
+  y and g vs BASE but the R-C contrast shows no clear difference — a stronger
+  endpoint projection carries a directional signal; the relational split did
+  not separate at this seed.
+  (3) shared-nonlinear-projection-directional-signal: C improves while R does
+  not — the shared nonlinear projection carries a directional signal; the
+  distance-split projection is not supported.
+  (4) mixed-signals / no-clear-signal: y and g move in opposite directions
+  for a contrast, or neither candidate reliably improves both metrics —
+  record no-clear/mixed honestly; this round's extra budget is closed and no
+  fourth candidate is invented.
+  (5) dictionary-readout-not-supported / route-viewpoints-not-learned: R's
+  alpha intervention is unresponsive, or R's P_b never diverged so the route
+  shuffle cannot change the input — no upgrade to the claimed dictionary
+  relational candidate; the actual observation and competing explanations are
+  kept.
+  Every branch ends the round; only a recommendation for the researcher is
+  given, never an automatic purchase.
+
+exclusions_frozen:
+  - no second/third body seed, no fourth arm, no WIDE5, no new windows, no
+    warm start, no head-only training, no init search, no distillation
+  - no bridge-width or bucket re-partitioning, no distance-gate or relation
+    input changes, no attention/MP/recurrence/pair->node write-back, no new
+    statistical features, no COMP reweighting, no WD/LR/EMA/SWA changes
+  - no reopening of the dictionary prototype relation algebra, the N/E joint
+    candidate family, or any other historical negative recipe
+  - no row deletion, no clipping, no oracle Q, no calibration counted as a
+    positive signal, no dev re-scoring of history
+  - no new subgroup/feature search beyond the existing k groups and the k=0
+    n_nodes bins (<=23 / 24..27 / >=28); error analysis stays at those cuts
+  - official valid/test never instantiated
+
+test_policy: never_loaded
