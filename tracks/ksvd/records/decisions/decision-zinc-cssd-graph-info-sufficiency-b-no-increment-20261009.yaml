@@ -1,0 +1,71 @@
+alternatives_rejected:
+- 'Rescuing the negative with a second witness statistic (alpha values instead of
+  supports, cross-atom-k joint distributions, per-shell co-coverage, larger or
+  learned witness projections) -- rejected: the preregistration froze ONE
+  statistic and forbids salvage additions after seeing labels; the sham-vs-real
+  separation is null, so no variant of the binding content is licensed by this
+  evidence.'
+- 'Treating the dev point estimates (R+W_real g 0.09323 vs R-only 0.09327; y
+  0.12030 vs 0.12053) as a directional GO -- rejected: both deltas are 20-25x
+  below the pre-registered minimum (+0.001), both CIs cross zero, dev is the
+  historical development set, and the sham beats the real witness on the OOF
+  side; a sub-noise ordering is not a purchase.'
+- 'Buying a second head-init seed or wider heads to chase the dev ordering --
+  rejected: head-seed uncertainty is real but the effect size is below the
+  design''s resolution; more seeds would measure noise, not binding information.'
+- 'Re-running the discarded buggy heads run (20261008-234818, unstandardized eval
+  inputs) or mixing its numbers -- rejected: its OOF MAEs (0.23-0.82 vs base rate
+  0.031) identified a wiring bug before any contrast was read; the repaired rerun
+  used the identical frozen protocol, seed and data.'
+because: >-
+  The pre-registered GO gate failed on every clause while the label-free
+  mechanism gate passed. On the 8001 fit rows under the frozen 5-fold
+  canonical-SMILES grouped OOF, the real witness is significantly WORSE than the
+  capacity-matched R-only head (dG_R two-seed mean -0.00248, CI95
+  [-0.00302, -0.00191], both seeds negative) and shows no separation from the
+  same-architecture sham witness whose only content is destroyed binding
+  (dG_sham +0.00022, CI95 [-0.00016, +0.00060]). On the 1999 dev rows the real
+  witness is a wash vs R-only (dG_R +0.00005, CI95 [-0.00127, +0.00133]) and the
+  sham ordering (+0.00062) is the opposite of what binding information would
+  predict. No head beats the frozen consumer itself (dev g two-seed 0.09257,
+  y 0.11993). The mechanism intervention is genuine (mean L1(W_real, W_shuf) =
+  0.781, 100% of molecules affected, alpha exactly 8-sparse, 10.9 distinct
+  support rows per molecule), restore/replay/operator-equivalence/invariance
+  checks all passed (R_G captured via reader forward-pre-hook, verified 814D,
+  never the zero-placeholder aux["coord"]), and no subgroup (k=0, size terciles)
+  shows a consistent favourable direction. Official valid/test were never
+  instantiated; 0 GPU seconds were spent.
+created: '2026-10-09T01:20:00'
+decision: >-
+  CLOSE the pre-registered witness statistic (CSSD dictionary-atom support x
+  real radius-2 patch co-coverage) for the frozen zinc_cssd_consumer_replacement_v1
+  DICT consumers: NO evidence that the graph-level aggregation R_G (814D reader
+  input) misses task-relevant information through THIS binding (Decision Branch
+  B of the frozen protocol). Do not add further dictionary-patch statistics, do
+  not sweep witness widths/projections, and do not train any backbone on this
+  evidence. The general questions (phi65 input expressivity, dictionary
+  mechanism, Reader generalisation) remain open and are untouched by this round.
+decision_id: decision-zinc-cssd-graph-info-sufficiency-b-no-increment-20261009
+evidence:
+- tracks/ksvd/notes/zinc_cssd_graph_information_sufficiency_v1.md
+- tracks/ksvd/protocols/zinc-cssd-graph-information-sufficiency-v1.yaml
+- tracks/ksvd/results/zinc_cssd_graph_information_sufficiency_v1/REPORT.md
+- tracks/ksvd/results/zinc_cssd_graph_information_sufficiency_v1/witness_export.json
+- tracks/ksvd/results/zinc_cssd_graph_information_sufficiency_v1/restore_checks.json
+- tracks/ksvd/results/zinc_cssd_graph_information_sufficiency_v1/heads_results.json
+- tracks/ksvd/records/runs/20261008-233715-de46e411.json
+- tracks/ksvd/records/runs/20261008-234214-86fd6c4e.json
+- tracks/ksvd/records/runs/20261008-234557-7ffb28ff.json
+- tracks/ksvd/records/runs/20261008-235547-0a69702d.json
+kind: decision
+revisit_if: >-
+  A new preregistration (a) identifies a DIFFERENT frozen-statistic family with a
+  label-free mechanism argument for why it must be non-injective w.r.t. R_G AND
+  materially different from all five closed statistics (richer set readout,
+  endpoint association, centre covariance, triad closure, this co-coverage
+  binding), and (b) powers a design whose paired head comparison can separate
+  >= +0.001 g-MAE with head-seed replication. Absent both, the next zinc-context-gap
+  budget belongs to the input representation (phi65/chemistry interface) or the
+  Reader/generalisation side, not to further post-hoc statistics on this frozen
+  consumer.
+study_id: zinc-context-gap
