@@ -172,6 +172,23 @@ def rich_features_573(dataset) -> np.ndarray:
     return np.stack(rows).astype(np.float32)
 
 
+def standardize_rich(R: np.ndarray, fit_rows: np.ndarray, clip: float = 10.0) -> tuple[np.ndarray, dict]:
+    """Fit-only standardization of the rich feature matrix with bounded tails.
+
+    Several base573 columns are (near-)constant on fit_inner (e.g. rare
+    ring-length counts) while dev molecules can deviate far from the fit
+    mean; naive z-scoring then produces ~1e9-magnitude inputs (measured:
+    max|Rz| = 2e9 unclipped), which destroys any linear/nonlinear head.
+    Rule (label-free, fixed protocol constant — the clip bound is not a fit
+    statistic): z-score with fit_inner mean/std (std floored at 1e-9), then
+    clip to ``[-clip, +clip]``.
+    """
+    mu = R[fit_rows].mean(axis=0)
+    sd = R[fit_rows].std(axis=0) + 1e-9
+    Rz = np.clip((R - mu) / sd, -clip, clip)
+    return Rz.astype(np.float32), {"mu": mu, "sd": sd, "clip": clip}
+
+
 # ---------------------------------------------------------------------------
 # audit mode
 # ---------------------------------------------------------------------------
@@ -466,9 +483,7 @@ def run_screen(out_dir: Path, log=print) -> dict:
     log("building rich573 feature matrix ...")
     dataset = cf.load_official_train()
     R = rich_features_573(dataset)
-    mu = R[idx["fit_inner"]].mean(axis=0)
-    sd = R[idx["fit_inner"]].std(axis=0) + 1e-9
-    Rz = (R - mu) / sd
+    Rz, _ = standardize_rich(R, idx["fit_inner"])
     X_rich = {"fit": Rz[idx["fit_inner"]], "mon": Rz[idx["monitor"]], "dev": Rz[idx["dev"]]}
 
     y_in = y[idx["fit_inner"], 0]
@@ -651,9 +666,8 @@ def run_train(arm: str, seed: int, device: str, out_dir: Path, smoke: bool, log=
     elif arm == "orich":
         dataset = cf.load_official_train()
         R = rich_features_573(dataset)
-        mu = R[idx["fit_inner"]].mean(axis=0)
-        sd = R[idx["fit_inner"]].std(axis=0) + 1e-9
-        res = train_rich_arm(seed, device, {"rich": (R - mu) / sd, "y": y, "idx": idx}, epochs=3 if smoke else 300, log=log)
+        Rz, _ = standardize_rich(R, idx["fit_inner"])
+        res = train_rich_arm(seed, device, {"rich": Rz, "y": y, "idx": idx}, epochs=3 if smoke else 300, log=log)
     else:
         raise ValueError(arm)
     payload = {**payload_common, **{k: v for k, v in res.items() if not k.startswith("_")}}
