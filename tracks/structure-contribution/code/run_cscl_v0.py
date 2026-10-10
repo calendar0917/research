@@ -271,6 +271,7 @@ def export_contributions(model, arm: str, seed: int, data: dict, device: str, ou
         y_dev = y_dev[:max_mols]
     gen = torch.Generator().manual_seed(int(seed) + 777)
 
+    model = model.to(dev)
     model.eval()
     rows_unit: list[dict] = []
     rows_rel: list[dict] = []
@@ -588,6 +589,7 @@ def run_synthetic(arm: str, seed: int, device: str, out_dir: Path, log=print) ->
     if arm != "xgb":
         model = cm.build_model(arm, stats.vocab.n_total, seed)
         model.load_state_dict(res["_best_state"])
+        model = model.to(torch.device(device))
         model.eval()
         set_model_centering(model, stats)
 
