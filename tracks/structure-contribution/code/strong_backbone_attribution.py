@@ -569,6 +569,8 @@ def replay_predictions(model, train_rows, idx, device="cpu", log=print) -> dict[
 
     from run_prediction_feasibility_v2 import predict_raw
 
+    model = model.to(torch.device(device))
+    model.eval()
     out: dict[str, float] = {}
     for name, path, rows_key in (
         ("dev", DEV_PREDS_NPZ, "dev"),
