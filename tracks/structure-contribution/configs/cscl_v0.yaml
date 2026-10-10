@@ -1,0 +1,55 @@
+# CSCL-v0 frozen configuration (notes/v0_protocol.md; protocol_id cscl-v0)
+# Do not edit semantics after the formal round starts; changes = new protocol id.
+
+protocol: cscl-v0
+data:
+  root: data/ZINC
+  official_split: train            # train only; valid/test never loaded this round
+  n_official_train: 10000
+  smiles_table: tracks/ksvd/results/zinc_cssd_basis_reuse_v1/train_canonical_smiles.npz
+  split:
+    fit_n: 8000
+    dev_n: 2000
+    split_seed: cscl-v0
+    inner_fit_n: 7200
+    inner_monitor_n: 800
+    inner_seed: cscl-v0-inner
+  supervision: raw_y_only
+  official_test_access: forbidden
+  official_valid_access: forbidden_this_round
+
+units:
+  scheme: RINGCHAIN-v0
+  fallback: ring-whole + branch-split chains (auto if trigger lines fire; preregistered)
+  wl_rounds: 4
+  vocab_min_count: 3
+  unk_buckets: kind x size_bucket(1,2,3,4,6,8,10,inf)
+
+model:
+  emb_dim: 16
+  hidden: 64
+  mlp_layers: 1_hidden_silu
+  separate_unary_relation_params: true
+  centering: fit_inner_per_type_desc + fit_rel_mean
+  identifiability_penalty: {lambda_delta: 0.01, lambda_gamma: 0.01}
+
+train:
+  optimizer: adamw
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  max_epochs: 300
+  early_stop_patience: 30
+  soup: top5_monitor
+  primary_metric: soup_dev_mae_raw_y
+
+seeds: [0, 1]          # paired; smoke = seed 0 only
+smoke: {seed: 0}
+
+comparison:
+  paired_bootstrap: {n: 2000, ci: 0.95, unit: molecule}
+  tolerance_bands:   # this round's decision standard (v0_protocol §5)
+    competitive_mae_gap_le: 0.010   # B vs D and B vs XGB
+    degraded_mae_gap_gt: 0.020
+    warn_band_requires: both seeds same direction and CI half-width < 0.010
+  relation_value: (A-B) and (C-B) mean > 0, same direction both seeds, >=1 CI excluding 0
