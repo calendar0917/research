@@ -353,14 +353,30 @@ class OpaqueHead(nn.Module):
 # ---------------------------------------------------------------------------
 
 
-def prepare_all(log=print):
-    """Load frozen features + split; build vocab/stats; return a namespace."""
+def prepare_all(log=print, device="cpu"):
+    """Load frozen features (building the cache if absent) + split + stats."""
     blob = sba.load_features(log=log)
     if blob is None:
-        raise RuntimeError(
-            "frozen-feature cache missing; run `strong_backbone_attribution` "
-            "extraction first (python -c CLI in the module or the v3 checks mode)"
-        )
+        log("[features] cache missing; building frozen features from committed artifacts ...")
+        import torch
+
+        from run_prediction_feasibility_v2 import apply_prep_fit7200, verify_row_alignment
+
+        model, prep, blob10 = sba.load_frozen_backbone(log=log)
+        train = sba.load_train_rows(log=log)
+        idx0 = cf.build_split_indices([str(s) for s in cf.load_canonical_smiles()])
+        verify_row_alignment(train, log=log)
+        apply_prep_fit7200(train, prep, blob10)
+        dataset = cf.load_official_train()
+        smiles = [str(s) for s in cf.load_canonical_smiles()]
+        alignment = sba.check_atom_alignment(train, dataset, None, log=log)
+        mols_raw = sba.raw_ringchain(dataset, smiles)
+        ys = np.asarray([float(dataset[i].y.reshape(-1)[0]) for i in range(10000)])
+        features, audit = sba.extract_all_features(dataset, train, mols_raw, ys, model=model, device=device, log=log)
+        sba.save_features(sba.FEAT_CACHE, features, {**audit, **alignment})
+        log(f"[features] saved cache {sba.FEAT_CACHE}")
+        blob = sba.load_features(log=log)
+        assert blob is not None
     features = blob["features"]
     idx = cf.build_split_indices([str(s) for s in cf.load_canonical_smiles()])
     vocab, type_means, global_mean, rel_mean = sba.fit_unit_vocab(features, idx["fit_inner"])
@@ -981,6 +997,9 @@ def main() -> int:
         synthetic_task(ns, args.out, torch.device("cpu"), log=log)
         return 0
     if args.mode == "all":
+        log("[all] Phase-A checks on the run device ...")
+        run_checks(args.out, device=str(device), log=log)
+        ns = prepare_all(log=log, device=str(device))
         log("[all] training S (seed 0) ...")
         train_arm("S", ns, device, args.out, seed=args.seed, epochs=args.epochs, log=log)
         log("[all] training O (seed 0, sequential) ...")
