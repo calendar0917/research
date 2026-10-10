@@ -1,7 +1,8 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-v0-h1-refuted-current-form-stopped
+phase: cscl-correctness-v1-audit-and-prediction-info
+current_round: cscl-correctness-v1
 updated: 2026-10-10
 
 track:
@@ -44,6 +45,37 @@ results_index:
 decisions:
   - notes/decisions/decision_cscl_v0_h1_refuted_20261010.md
     # 停止当前方法形态; 划分/管线资产保留; 下一轮需新预注册
+
+# ---------------------------------------------------------------------------
+# round: cscl-correctness-v1 (正确性审计 + 预测信息充分性)
+# ---------------------------------------------------------------------------
+
+round_cscl-correctness-v1:
+  audit_doc: notes/correctness_information_audit_v1.md
+  driver: code/run_cscl_v1.py (audit/screen/train; 特征版本 cscl-correctness-v1)
+  confirmed_bugs:
+    - BUG-1 v0 签名稠密重编号抹除原子/键类型且重标号不稳定（最小反例已复现，已修复为 hash-based 1-WL）
+    - BUG-2 PyG 双向边双计：六元环环秩 7（应 1）、关系直方图双计、is_terminal 失效（已修复为唯一无向物理键）
+    - BUG-3 SMILES↔PyG 核对仅原子数却表述为对齐 10000/10000（已升级为带属性 VF2 同构：t1 9885 + t2 111 = 10000/10000）
+  key_facts:
+    - v0 词表假共享：同 v0 类型单元对仅 21.35% 真实同构；98.19% 实例位于化学混合的 v0 类型组
+    - v1 同签名抽样 100% 同构；划分（原子归属）不变且经测试仍成立
+    - C 臂评估依赖 batch 组成，只能作机制对照（旧结论降格）
+    - D−B 混合了输入信息差（实例描述子进 pair 通道），不能全归因分解形态（旧结论降格）
+  cpu_screen (dev raw-y MAE):
+    ridge_a1: v0 0.5026 / v1 0.4171 / rich573 0.3366
+    xgb:      v0 0.4771 / v1 0.4532 / rich573 0.3912
+    # 修复提升单元特征信息量；rich 静态特征仍大幅领先 → GPU 实验有价值
+  gpu_plan:
+    - 仅 seed 0；O-unit(修复后单元表示+opaque 头) vs O-rich(base573+等容量 MLP)
+    - res GPU1 / pool res-gpu1 / 进程内 cuda:0；顺序运行，不追加种子
+  results_index:
+    - path: results/cscl_v1_units_audit/audit.json
+      one_line: 标签盲审计+v0→v1 差异+假共享量化+SMILES 全量带属性同构对齐（10k/10k，111 行芳香松弛层）
+      date: 2026-10-10
+    - path: results/cscl_v1_screen/screen.json
+      one_line: CPU 筛查 Ridge/HGB/XGB × {v0,v1,rich573}，固定配置无搜索
+      date: 2026-10-10
 
 next_action: >-
   若继续本轨: 以 RINGCHAIN 划分为归因单元、在强 backbone 特征上做单元级分解的新

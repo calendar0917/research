@@ -37,6 +37,11 @@ from cscl_units import (  # noqa: E402
 ZINC_ROOT = REPO_ROOT / "data/ZINC"
 SMILES_TABLE = REPO_ROOT / "tracks/ksvd/results/zinc_cssd_basis_reuse_v1/train_canonical_smiles.npz"
 
+#: feature-code version (cscl-correctness-v1: fixed signature + unique bonds)
+FEATURE_VERSION = "cscl-correctness-v1"
+#: signature algorithm id baked into every unit signature string's provenance
+SIGNATURE_VERSION = "wl-hash-v1"
+
 SPLIT_SEED = "cscl-v0"
 INNER_SEED = "cscl-v0-inner"
 
@@ -184,11 +189,50 @@ def molecule_units(mol_index: int, x: np.ndarray, edge_index: np.ndarray, edge_a
     )
 
 
+def code_fingerprint() -> str:
+    """sha256 over the feature-defining source files (cscl_units/features)."""
+    h = hashlib.sha256()
+    for name in ("cscl_units.py", "cscl_features.py"):
+        h.update((_CODE_DIR / name).read_bytes())
+    return h.hexdigest()[:16]
+
+
+def load_or_build_units_cache(cache: Path | None, builder):
+    """Version-guarded unit cache.
+
+    The cache stores ``feature_version`` + ``code_fp``; a cache whose fields
+    are missing (e.g. the pre-fix ``cscl_v0_units.pt``) or whose fingerprint
+    does not match the current feature code is rejected instead of silently
+    mixing v0 units with v1 signatures.  This makes the stale-v0-cache
+    misuse required by the correctness round impossible.
+    """
+    import torch  # local import: keep module import cheap for CPU audits
+
+    if cache is not None and cache.exists():
+        blob = torch.load(cache, weights_only=False)
+        if blob.get("feature_version") != FEATURE_VERSION or blob.get("code_fp") != code_fingerprint():
+            raise RuntimeError(
+                f"stale unit cache {cache}: feature_version={blob.get('feature_version')!r} "
+                f"code_fp={blob.get('code_fp')!r}, expected {FEATURE_VERSION!r}/{code_fingerprint()!r}. "
+                "Delete the file or point --cache at a fresh path (cscl-correctness-v1)."
+            )
+        return blob["mols"], blob["y"], blob["smiles"]
+    mols, y, smiles = builder()
+    if cache is not None:
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(
+            {"feature_version": FEATURE_VERSION, "code_fp": code_fingerprint(), "mols": mols, "y": y, "smiles": smiles},
+            cache,
+        )
+    return mols, y, smiles
+
+
 def extract_all() -> tuple[list[MolUnits], np.ndarray, list[str]]:
     """Extract unit summaries for all 10000 official-train molecules.
 
     Label-free: reads x/edge_index/edge_attr; y is returned verbatim but only
-    used downstream as supervision.
+    used downstream as supervision.  Physical bonds are canonicalized to
+    unique undirected bonds inside ``build_partition`` (v1 fix).
     """
     import torch  # local import: keep module import cheap for CPU audits
 

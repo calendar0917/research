@@ -424,15 +424,14 @@ def train_xgb(seed: int, data: dict, log=print) -> dict:
 
 
 def prepare_data(cache: Path | None = None) -> dict:
-    """Extract units (with optional disk cache) and build all splits/stats."""
-    if cache is not None and cache.exists():
-        blob = torch.load(cache, weights_only=False)
-        mols, y, smiles = blob["mols"], blob["y"], blob["smiles"]
-    else:
-        mols, y, smiles = cf.extract_all()
-        if cache is not None:
-            cache.parent.mkdir(parents=True, exist_ok=True)
-            torch.save({"mols": mols, "y": y, "smiles": smiles}, cache)
+    """Extract units (with optional disk cache) and build all splits/stats.
+
+    cscl-correctness-v1 note: the cache is version-guarded
+    (:func:`cscl_features.load_or_build_units_cache`); the pre-fix
+    ``cscl_v0_units.pt`` is rejected instead of silently mixing v0 units with
+    the fixed signature code.
+    """
+    mols, y, smiles = cf.load_or_build_units_cache(cache, cf.extract_all)
     idx = cf.build_split_indices(smiles)
 
     fit_inner_mols = [mols[i] for i in idx["fit_inner"]]
@@ -725,6 +724,12 @@ def main() -> None:
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--no-export", action="store_true")
     args = ap.parse_args()
+
+    print(
+        f"[cscl driver] feature code = {cf.FEATURE_VERSION} (signature {cf.SIGNATURE_VERSION}); "
+        "the published cscl-v0 REPORT numbers belong to commit 6549c04 (pre-fix code)",
+        flush=True,
+    )
 
     if args.mode == "audit":
         run_audit(args.out)
