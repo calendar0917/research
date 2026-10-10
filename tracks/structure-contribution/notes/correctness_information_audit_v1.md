@@ -187,17 +187,42 @@ v0 的 `crosscheck_atom_counts` 只做 SMILES 字符串的粗略原子计数（�
 
 ## 5. CPU 筛查（任务 §6.3；`results/cscl_v1_screen/screen.json`）
 
-见 screen.json 的完整表（Ridge α∈{1,10} 固定、HGB 固定、XGB 固定配置，
-无超参搜索）。要点在 §6 汇总。
+固定配置（无超参搜索），同一 fit/monitor/dev 划分，dev raw-y MAE：
 
-## 6. GPU seed-0 预测信息实验（任务 §7；O-unit vs O-rich）
+| 模型 | v0 特征 | v1 修复特征 | rich573 |
+|---|---:|---:|---:|
+| Ridge α=1 | 0.5026 | 0.4171 | **0.3370** |
+| Ridge α=10 | 0.5257 | 0.4609 | 0.3392 |
+| HistGB | 0.5361 | 0.5421 | 0.4136 |
+| XGBoost | 0.4771 | 0.4532 | **0.3717** |
 
-协议要点：同一 fit/dev 划分与标签（raw y）；同 seed 0；同训练预算
-（≤300 epochs、batch 128、AdamW 1e-3/1e-5、monitor 早停 patience 30、
-top-5 soup + best-epoch 双报）；非 GNN/Transformer 头。**容量不完全匹配**
-（O-unit opaque ≈27k 参数 vs O-rich MLP ≈29.8k；输入 790 维单元特征 vs
-573 维 rich 特征）——如实声明，非严格等价控制。结果与判断见
-`results/cscl_v1_gpu/REPORT.md`（如 GPU 阶段完成）。
+读法：(a) 修复一致提升单元特征的信息量（Ridge −0.086，XGB −0.024）；
+(b) rich 静态特征明显强于两套单元特征 → 进入 GPU 阶段的依据；rich 的
+Ridge 在 clip 修复前后几乎不变（0.3366→0.3370），XGB 用原始特征不受影响，
+旧筛查结论不变。
+
+## 6. GPU seed-0 预测信息实验（任务 §7；`results/cscl_v1_gpu/REPORT.md`）
+
+同一 fit/dev 划分与标签（raw y）、同 seed 0、同训练预算与监控规则；
+非 GNN/Transformer 头。**容量与输入不严格等价**（36.3k vs 30.0k 参数；
+单元特征 vs 573 维全局特征），如实声明。
+
+| 臂 | soup dev MAE | best-epoch dev | fit | params |
+|---|---:|---:|---:|---:|
+| O-unit（修复后单元表示） | 0.35708 | 0.36393 | 0.26291 | 36 289 |
+| O-rich（base573） | **0.33206** | 0.34345 | 0.25340 | 29 953 |
+
+- 配对差 O-unit − O-rich = **+0.02502**，分子级 bootstrap 95% CI
+  **[+0.00124, +0.05078]**（同一 seed 内部 dev 重采样，非跨 seed 证据）。
+- 子群：ring_units≥2 分子上两臂持平（−0.003）；差距几乎全部来自
+  0–1 个环系的分子（+0.23）。
+- 对照：v0 同族 opaque（缺陷特征）0.40005 → 修复后 0.35708
+  （**仅修复 +0.043**）。
+- **判断：情况一成立** —— 修复后单元表示仍缺少 rich 静态特征的部分
+  信息（集中在少环分子），且 v0 差距的实质部分来自表示实现错误
+  （H-R 获证实），“归因于贡献分解”仍无证据支持。
+- 过程记录：orich 首跑因未 clip 标准化爆炸（1309）作废重跑（详见
+  REPORT §6）；逐分子导出初版为标准化单位，已精确重建并修正导出路径。
 
 ## 7. 对既有记录的勘误边界（不删改原文）
 

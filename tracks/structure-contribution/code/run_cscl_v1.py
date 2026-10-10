@@ -619,7 +619,7 @@ def train_rich_arm(seed: int, device: str, data: dict, epochs: int = 300, patien
     with torch.no_grad():
         model.load_state_dict(avg)
         model.eval()
-        dev_pred = model(dev_X).squeeze(-1).detach().cpu().numpy().astype(np.float32)
+        dev_pred = (model(dev_X).squeeze(-1) * y_std + y_mean).detach().cpu().numpy().astype(np.float32)
     return {
         "arm": "orich",
         "seed": seed,

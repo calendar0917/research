@@ -250,7 +250,7 @@ def train_torch_arm(arm: str, seed: int, device: str, data: dict, epochs: int = 
     with torch.no_grad():
         model.load_state_dict(avg)
         model.eval()
-        out["_dev_pred"] = dev_pred_std.detach().cpu().numpy().astype(np.float32)
+        out["_dev_pred"] = (dev_pred_std * y_std + y_mean).detach().cpu().numpy().astype(np.float32)
         out["_dev_row"] = data["dev_idx"].astype(np.int64)
     # keep soup + best states for save/load round-trip tests and export
     out["_state"] = {k: v for k, v in avg.items()}

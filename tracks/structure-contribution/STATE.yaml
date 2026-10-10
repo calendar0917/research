@@ -62,19 +62,29 @@ round_cscl-correctness-v1:
     - v1 同签名抽样 100% 同构；划分（原子归属）不变且经测试仍成立
     - C 臂评估依赖 batch 组成，只能作机制对照（旧结论降格）
     - D−B 混合了输入信息差（实例描述子进 pair 通道），不能全归因分解形态（旧结论降格）
-  cpu_screen (dev raw-y MAE):
-    ridge_a1: v0 0.5026 / v1 0.4171 / rich573 0.3366
-    xgb:      v0 0.4771 / v1 0.4532 / rich573 0.3912
+  cpu_screen (dev raw-y MAE, clip 修复后):
+    ridge_a1: v0 0.5026 / v1 0.4171 / rich573 0.3370
+    xgb:      v0 0.4771 / v1 0.4532 / rich573 0.3717
     # 修复提升单元特征信息量；rich 静态特征仍大幅领先 → GPU 实验有价值
-  gpu_plan:
-    - 仅 seed 0；O-unit(修复后单元表示+opaque 头) vs O-rich(base573+等容量 MLP)
-    - res GPU1 / pool res-gpu1 / 进程内 cuda:0；顺序运行，不追加种子
+  gpu_results (seed 0, res GPU1, commit 9eb51d0):
+    ounit: soup dev 0.35708 (best-epoch 0.36393, fit 0.26291, params 36289)
+    orich: soup dev 0.33206 (best-epoch 0.34345, fit 0.25340, params 29953)
+    paired: ounit-orich +0.02502, 分子 bootstrap CI95 [+0.00124, +0.05078]
+    subgroup: ring>=2 两臂持平(-0.003); 0-1 环分子差距 +0.23 → 缺口集中在全局拓扑信息
+    对照: v0 opaque(缺陷特征) 0.40005 → 修复后 0.35708 (仅修复 +0.043)
+    判断: 情况一 — O-rich 显著更好; H-R(表示实现错误)获证实; 分解归因无证据
+  gpu_discipline:
+    - 仅 seed 0；两臂顺序运行；无超参搜索；official valid/test 未加载
+    - orich 首跑因标准化缺陷作废重跑（记录于 REPORT §6）；导出单位缺陷已本地精确重建
   results_index:
     - path: results/cscl_v1_units_audit/audit.json
       one_line: 标签盲审计+v0→v1 差异+假共享量化+SMILES 全量带属性同构对齐（10k/10k，111 行芳香松弛层）
       date: 2026-10-10
     - path: results/cscl_v1_screen/screen.json
-      one_line: CPU 筛查 Ridge/HGB/XGB × {v0,v1,rich573}，固定配置无搜索
+      one_line: CPU 筛查 Ridge/HGB/XGB × {v0,v1,rich573}，固定配置无搜索（clip 修复后重跑）
+      date: 2026-10-10
+    - path: results/cscl_v1_gpu/REPORT.md
+      one_line: seed-0 O-unit 0.35708 vs O-rich 0.33206（配对 CI 不含 0）；子群缺口在少环分子；H-R 证实
       date: 2026-10-10
 
 next_action: >-
