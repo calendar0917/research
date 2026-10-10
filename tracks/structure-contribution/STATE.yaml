@@ -1,7 +1,7 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-v0-implementation
+phase: cscl-v0-h1-refuted-current-form-stopped
 updated: 2026-10-10
 
 track:
@@ -28,5 +28,23 @@ next_action: >-
   实现 RINGCHAIN-v0 划分与 A/B/C/D/E 五臂 → CPU 标签盲数据审计（§8 触发线）
   → 测试 → seed-0 冒烟 → GPU1 正式 seeds {0,1}。
 
-results_index: []
-# 每完成一个正式结果追加一行: {path, one_line, date}
+results_index:
+  - path: results/cscl_v0_units_audit/audit.json
+    one_line: RINGCHAIN-v0 划分标签盲审计全过(5.5 单元/分子, 168 类型, top-10 覆盖 77%), 无需后备
+    date: 2026-10-10
+  - path: results/cscl_v0_smoke_s0/
+    one_line: seed-0 CPU 冒烟(冻结配置), 五臂可复现, additivity ≤1e-6
+    date: 2026-10-10
+  - path: results/cscl_v0_synthetic/synthetic_relational_s0.json
+    one_line: 合成真值 — α 方向恢复 0.875(λ 惩罚有效), 真交互 γ 检出 0.134 vs 陷阱 0.069; soup 破坏归因(addendum)
+    date: 2026-10-10
+  - path: results/cscl_v0_gpu/REPORT.md
+    one_line: 正式 GPU1 round (seeds {0,1}) — A 0.4255 / B 0.4673 / C 0.4311 / D 0.4043 / XGB 0.4760; B<A 且 B<C(两 seed CI<0), B-D≈+0.063 DEGRADED, B≈XGB; H1 被反驳
+    date: 2026-10-10
+decisions:
+  - notes/decisions/decision_cscl_v0_h1_refuted_20261010.md
+    # 停止当前方法形态; 划分/管线资产保留; 下一轮需新预注册
+
+next_action: >-
+  若继续本轨: 以 RINGCHAIN 划分为归因单元、在强 backbone 特征上做单元级分解的新
+  预注册(需用户/导师确认); 不在 v0 形态上自动续做。
