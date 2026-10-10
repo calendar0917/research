@@ -1,0 +1,79 @@
+# cscl-prediction-feasibility-v2 — frozen protocol constants (pre-registered).
+# Question: can the historical non-GNN Full-Y computation, refit strictly on the
+# current fit_inner 7200 rows with raw-y-only supervision, beat the frozen
+# O-rich seed-0 reference (dev MAE 0.33206) on the same internal split?
+# Written BEFORE the formal run; no field may change after results are seen.
+
+protocol_id: cscl-prediction-feasibility-v2
+candidate_name: Full-Y-fit7200-seed0
+seeds_allowed: [0]
+
+split:
+  source: cscl_features.build_split_indices  # unchanged from cscl-v0/v1
+  fit_inner: 7200
+  monitor: 800
+  dev: 2000
+  grouping: canonical SMILES (duplicates never cross sides)
+  official_valid_test: never loaded
+
+data_sources:
+  encoded_train: tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt
+  env_train: tracks/ksvd/results/e2e_dictenv_p1/cache/env_train.pt
+  legacy_prep_10k: tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/all_train_prep.npz
+  legacy_prep_use: >
+    ONLY as the inversion basis (patch/ctx/topo/anchor *_all_* standardizers)
+    to recover raw features from the all-10k-standardized caches, after an
+    invert+refit-on-all-10000 identity check (nondegenerate columns <= 1e-5).
+    Every new fitted object is refit on fit_inner 7200 rows only.
+
+preprocessing_fit7200:
+  patch_ctx_topo_anchor: raw -> z-score with fit_inner mean/std (Std.fit, floor 1e-6)
+  ksvd_dictionary:
+    atoms: 32
+    sparsity: 8
+    epochs: 10
+    seed: 20260924
+    fit_rows: fit_inner phi rows only
+  common_subspace: {q: 1, kind: q1, fit_rows: fit_inner phi rows only}
+  vocabularies_typed_parent: not fitted, not consumed (model inputs verified independent of them)
+
+model:
+  builder: e2e_dictenv_scale_v1.build_scale_model(spec=FULL)
+  parameters_expected: 408651
+  scale_seed: 0
+  init_seed: 0
+  frozen_mask: C6_MASK (clean-mechanism canonical; topology NOT zeroed)
+  non_gnn_audit: >
+    single-round static incidence aggregation into per-atom shell slots,
+    per-object 10-step IHT / 16-step ISTA sparse coders (no neighbor state),
+    static precomputed pair index + relation descriptors, graph-level moment
+    pooling, MLP reader. No message passing / Transformer / attention.
+
+training:
+  supervision: raw y L1  (raw units; no target standardization)
+  auxiliary_loss: label-free structural reconstruction (CSSD residual), disclosed
+  h1_lambda_frozen: 33.95873017865987
+  optimizer: Adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  batch_size: 128
+  epochs_fixed: 240            # no early stop (historical budget)
+  train_shuffle_offset: 101    # train_gen = seed + 101 (historical)
+  monitor_eval_every: 1 epoch, raw-y MAE on monitor 800 (selection only)
+
+checkpoint_selection_frozen:
+  primary: top-5 monitor-epoch parameter soup (ties -> earlier epoch) -> THE reported dev MAE
+  secondary: single best-monitor-epoch checkpoint
+  tertiary: last-epoch (240) state
+  auxiliary_disclosed: primary soup + median fit-y calibration b (fit-only)
+  no_dev_based_selection: true
+
+reference:
+  orich_seed0_dev_mae: 0.33206
+  source: results/cscl_v1_gpu (frozen; not retrained)
+
+evaluation:
+  metric: internal dev raw-y MAE
+  paired_analysis: per-molecule bootstrap vs O-rich (2000 resamples, seed 0)
+  official_valid_test: never loaded
