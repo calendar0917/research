@@ -193,9 +193,13 @@ def train_torch_arm(arm: str, seed: int, device: str, data: dict, epochs: int = 
         if epoch - (best_epoch + 1) >= patience:
             break
 
-    # top-5 soup (v0_protocol §3)
+    # top-5 soup (v0_protocol §3) — primary performance metric; NOTE: soup
+    # averages embedding tables across epochs, which destroys attribution
+    # geometry, so the *interpretation object* is the best-epoch checkpoint
+    # (see notes/v0_protocol_addendum.md)
     soup_states = [s for _, s in ckpts]
     avg = {k: torch.stack([s[k].float() for s in soup_states]).mean(0) for k in soup_states[0]}
+    best_state = dict(ckpts[0][1])
     model.load_state_dict(avg)
     model.eval()
 
@@ -207,6 +211,14 @@ def train_torch_arm(arm: str, seed: int, device: str, data: dict, epochs: int = 
         else:
             dev_pred_std = cm.forward_arm(model, db, arm, gen_eval).pred
         dev_mae = float((dev_pred_std - dev_y).abs().mean()) * y_std
+        # best-epoch (non-soup) dev MAE — the interpretation object's metric
+        model.load_state_dict(best_state)
+        model.eval()
+        if isinstance(model, cm.OpaqueModel):
+            dev_pred_std_b = model(db)
+        else:
+            dev_pred_std_b = cm.forward_arm(model, db, arm, gen_eval).pred
+        best_dev_mae = float((dev_pred_std_b - dev_y).abs().mean()) * y_std
         fb_best = torch.tensor(0.0)
         # fit MAE on fit_inner (first 2000 rows to bound cost; full fit reported too)
         fit_eval_batches = [assemble(fit_ts[i : i + 512]).to(dev) for i in range(0, len(fit_ts), 512)]
@@ -223,6 +235,7 @@ def train_torch_arm(arm: str, seed: int, device: str, data: dict, epochs: int = 
         "seed": seed,
         "device": str(dev),
         "soup_dev_mae": dev_mae,
+        "best_epoch_dev_mae": best_dev_mae,
         "fit_inner_mae": fit_mae,
         "best_monitor_mae": best_mon,
         "best_epoch": int(np.argmin([h["monitor_mae"] for h in history])) + 1,
@@ -233,8 +246,9 @@ def train_torch_arm(arm: str, seed: int, device: str, data: dict, epochs: int = 
         "y_std": y_std,
         "soup_members_monitor_mae": [float(m) for m, _ in ckpts],
     }
-    # keep state for save/load round-trip tests and export
+    # keep soup + best states for save/load round-trip tests and export
     out["_state"] = {k: v for k, v in avg.items()}
+    out["_best_state"] = best_state
     log(f"[{arm} s{seed}] soup dev MAE {dev_mae:.5f} | fit MAE {fit_mae:.5f} | params {n_params} | {wall:.0f}s")
     return out
 
@@ -298,21 +312,21 @@ def export_contributions(model, arm: str, seed: int, data: dict, device: str, ou
                     }
                 )
                 k += 1
-            for rr in np.where(mr)[0]:
+            for local_slot, rr in enumerate(np.where(mr)[0]):
                 rid = int(rr)
-                pair = m.rel_pairs[rid]
+                pair = m.rel_pairs[local_slot]
                 rows_rel.append(
                     {
                         "mol_row": int(data["dev_idx"][start + i]),
-                        "rel_slot": rid,
+                        "rel_slot": local_slot,
                         "unit_a": int(pair[0]),
                         "unit_b": int(pair[1]),
                         "gamma": float(gamma[rid]),
                     }
                 )
     metrics = {
-        "additivity_max_abs_error": worst,
-        "n_dev_mols": n,
+        "additivity_max_abs_error": float(worst),
+        "n_dev_mols": int(n),
         "n_unit_rows": len(rows_unit),
         "n_rel_rows": len(rows_rel),
     }
@@ -545,7 +559,12 @@ def crosscheck_atom_counts(mols: list[cf.MolUnits], smiles: list[str]) -> dict:
 def run_synthetic(arm: str, seed: int, device: str, out_dir: Path, log=print) -> dict:
     data = prepare_data(cache=REPO_ROOT / "data/cache/cscl_v0_units.pt")
     stats: cf.FitStats = data["stats"]
-    eff = csyn.build_synthetic_effect(data["fit_inner_mols"], stats, seed=20261010)
+    mols_all = [None] * 10000
+    for slot in ("fit_inner_mols", "monitor_mols", "dev_mols"):
+        rows = {"fit_inner_mols": "fit_inner_idx", "monitor_mols": "monitor_idx", "dev_mols": "dev_idx"}[slot]
+        for r, m in zip(data[rows], data[slot]):
+            mols_all[int(r)] = m
+    eff = csyn.build_synthetic_effect(data["fit_inner_mols"], mols_all, stats, seed=20261010)
 
     syn_data = dict(data)
     syn_data["y"] = np.zeros_like(data["y"])
@@ -563,10 +582,12 @@ def run_synthetic(arm: str, seed: int, device: str, out_dir: Path, log=print) ->
         res = train_torch_arm(arm, seed, device, syn_data, log=log)
 
     # --- interpretation diagnostics on the trained model -------------------
+    # interpretation object = best-epoch checkpoint (soup destroys embedding
+    # attribution geometry; see notes/v0_protocol_addendum.md)
     model = None
     if arm != "xgb":
         model = cm.build_model(arm, stats.vocab.n_total, seed)
-        model.load_state_dict(res["_state"])
+        model.load_state_dict(res["_best_state"])
         model.eval()
         set_model_centering(model, stats)
 
@@ -585,13 +606,17 @@ def run_synthetic(arm: str, seed: int, device: str, out_dir: Path, log=print) ->
                 b = assemble(chunk_ts)
                 with torch.no_grad():
                     o = cm.forward_arm(model, b, arm, gen)
-                for i, mol in enumerate(chunk_mols):
+                u_off = 0
+                r_off = 0
+                for mol in chunk_mols:
                     for k, sig in enumerate(mol.unit_sigs):
                         t = stats.vocab.to_id(sig, mol.unit_kinds[k], len(mol.unit_atoms[k]))
-                        alpha_by_type.setdefault(t, []).append(float(o.alpha[k]))
+                        alpha_by_type.setdefault(t, []).append(float(o.alpha[u_off + k]))
+                    u_off += len(mol.unit_sigs)
                     for j, (a, bb) in enumerate(mol.rel_pairs):
                         pair = tuple(sorted((stats.type_id(mol, a), stats.type_id(mol, bb))))
-                        gamma_by_pair.setdefault(pair, []).append(float(o.gamma[j]))
+                        gamma_by_pair.setdefault(pair, []).append(float(o.gamma[r_off + j]))
+                    r_off += len(mol.rel_pairs)
         theta = eff["theta"]
         types_eval = sorted(set(theta) & set(alpha_by_type))
         th = np.array([theta[t] for t in types_eval])
@@ -631,7 +656,7 @@ def run_synthetic(arm: str, seed: int, device: str, out_dir: Path, log=print) ->
         diag = {"note": "xgb: per-type contributions read from gain not implemented in v0"}
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    payload = {"arm": arm, "seed": seed, "synthetic_performance": {k: v for k, v in res.items() if k != "_state"}, "diagnostics": diag}
+    payload = {"arm": arm, "seed": seed, "synthetic_performance": {k: v for k, v in res.items() if not k.startswith("_")}, "diagnostics": diag}
     (out_dir / f"synthetic_{arm}_s{seed}.json").write_text(json.dumps(payload, indent=2))
     log(json.dumps(diag, indent=2))
     return payload
@@ -648,7 +673,7 @@ def run_train(arm: str, seed: int, device: str, out_dir: Path, log=print, export
         res = train_xgb(seed, data, log=log)
     else:
         res = train_torch_arm(arm, seed, device, data, log=log)
-    payload = {k: v for k, v in res.items() if k != "_state"}
+    payload = {k: v for k, v in res.items() if not k.startswith("_")}
     payload["official_test_loaded"] = False
     payload["official_valid_loaded"] = False
     payload["supervision"] = "raw y only"
@@ -658,10 +683,10 @@ def run_train(arm: str, seed: int, device: str, out_dir: Path, log=print, export
     payload["cuda_device_name"] = torch.cuda.get_device_name(0) if device.startswith("cuda") and torch.cuda.is_available() else "cpu"
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    if export and arm not in {"xgb"}:
+    if arm in {"additive", "relational", "shuffled"}:
         metrics = export_contributions(
-            # rebuild + load soup state to export from a clean instance
-            _reload_model(arm, seed, res["_state"], data),
+            # export from the best-epoch model (interpretation object)
+            _reload_model(arm, seed, res["_best_state"], data),
             arm,
             seed,
             data,
@@ -671,7 +696,9 @@ def run_train(arm: str, seed: int, device: str, out_dir: Path, log=print, export
         )
         payload["export"] = metrics
     (out_dir / f"train_{arm}_s{seed}.json").write_text(json.dumps(payload, indent=2))
-    torch.save(res["_state"], out_dir / f"state_{arm}_s{seed}.pt")
+    if "_state" in res:
+        torch.save(res["_state"], out_dir / f"state_{arm}_s{seed}.pt")
+        torch.save(res["_best_state"], out_dir / f"best_state_{arm}_s{seed}.pt")
     return payload
 
 

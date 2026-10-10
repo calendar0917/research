@@ -29,14 +29,15 @@ INTERACT_SCALE = 0.5
 
 
 def build_synthetic_effect(
-    mols,  # list[MolUnits]
+    fit_mols,  # list[MolUnits]: fit_inner molecules (effect/pair selection)
+    all_mols,  # list[MolUnits]: all molecules to score (fit+monitor+dev)
     fit_stats,  # FitStats (vocab fitted)
     seed: int = 20261010,
 ) -> dict:
     """Draw θ_t / θ_tt' over fit-known types; compute y_syn for every molecule.
 
-    Returns effects + per-molecule y + bookkeeping (which pairs are real /
-    traps with their co-occurrence counts on the fit side).
+    θ and the real/trap pair sets are selected on **fit molecules only**; the
+    returned y is then scored for all molecules with the frozen effects.
     """
     rng = np.random.RandomState(seed)
     known = sorted(fit_stats.vocab.known_sigs)
@@ -44,10 +45,10 @@ def build_synthetic_effect(
 
     theta = {t: float(v) for t, v in zip(tids, rng.randn(len(tids)) * UNARY_SCALE)}
 
-    # candidate pairs: top-frequency types (present in enough molecules)
+    # candidate pairs: top-frequency types (present in enough FIT molecules)
     presence: dict[int, int] = {t: 0 for t in tids}
     cooc: dict[tuple[int, int], int] = {}
-    for m in mols:
+    for m in fit_mols:
         tset = {fit_stats.type_id(m, k) for k in range(len(m.unit_sigs))}
         for t in tset:
             if t in presence:
@@ -69,8 +70,8 @@ def build_synthetic_effect(
     trap_pairs = [p for p in by_cooc[N_INTERACTING_PAIRS : N_INTERACTING_PAIRS + N_TRAP_PAIRS]]
     theta_pair = {p: float(v) for p, v in zip(real_pairs, rng.randn(len(real_pairs)) * INTERACT_SCALE)}
 
-    y = np.zeros((len(mols),), dtype=np.float32)
-    for i, m in enumerate(mols):
+    y = np.zeros((len(all_mols),), dtype=np.float32)
+    for i, m in enumerate(all_mols):
         tset = [fit_stats.type_id(m, k) for k in range(len(m.unit_sigs))]
         acc = sum(theta.get(t, 0.0) for t in tset)
         ts = set(tset)

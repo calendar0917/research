@@ -271,8 +271,12 @@ class OpaqueModel(nn.Module):
 def build_model(arm: str, vocab_size: int, seed: int) -> nn.Module:
     torch.manual_seed(int(seed))
     if arm == "opaque":
-        return OpaqueModel(vocab_size)
-    return CSCLModel(vocab_size, "relational" if arm == "relational" else "additive")
+        # hidden=48 -> ~27k params, closest config to arm B's ~20k (v0_protocol
+        # §3 "capacity close to B"; larger-than-B reference keeps the D
+        # comparison conservative for the decomposition-cost claim)
+        return OpaqueModel(vocab_size, hidden=48)
+    core = "relational" if arm in ("relational", "shuffled") else "additive"
+    return CSCLModel(vocab_size, core)
 
 
 def forward_arm(model: nn.Module, batch: Batch, arm: str, generator: torch.Generator | None = None):
