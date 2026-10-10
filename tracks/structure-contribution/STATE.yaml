@@ -1,8 +1,8 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-correctness-v1-audit-and-prediction-info
-current_round: cscl-correctness-v1
+phase: cscl-prediction-feasibility-v2
+next_round_candidate: structure-contribution-decomposition-on-strong-backbone
 updated: 2026-10-10
 
 track:
@@ -87,6 +87,59 @@ round_cscl-correctness-v1:
       one_line: seed-0 O-unit 0.35708 vs O-rich 0.33206（配对 CI 不含 0）；子群缺口在少环分子；H-R 证实
       date: 2026-10-10
 
+# ---------------------------------------------------------------------------
+# round: cscl-prediction-feasibility-v2 (强预测骨架可行性, seed 0)
+# ---------------------------------------------------------------------------
+
+round_cscl-prediction-feasibility-v2:
+  protocol: configs/prediction_feasibility_v2.yaml (冻结后才看结果)
+  report: notes/prediction_feasibility_v2.md
+  driver: code/run_prediction_feasibility_v2.py (prep/train/compare) + code/analyze_feasibility_v2.py
+  question: >-
+    在当前 CSCL 固定划分下，历史非 GNN Full-Y 骨架以 raw-y 为唯一任务监督、
+    fit 仅 7200 行，能否显著突破 O-rich 0.332？
+  gate_audits:
+    non_gnn: >-
+      通过。单轮静态 incidence 聚合 + 每对象 IHT10/ISTA16 稀疏求解器 + 静态
+      预计算 pair 路径 + moment 池化 + reader MLP；无消息传递/注意力/邻居状态迭代。
+    leakage: >-
+      通过。历史缓存的全 10k 标准化仅作反演基（恒等检查 ≤2.2e-8，容差 1e-5）；
+      全部拟合对象（patch/ctx/topo/anchor 标准化、D_fit K-SVD、U 子空间）重建于
+      fit_inner 7200；g/c/decomp 零引用（AST 测试）；行对齐全 10000 逐位核实。
+  cpu_audit:
+    error_structure: >-
+      0.332 误差重尾：y≤-3 的 6.4% 分子占 ~14% 误差质量；corr(|e|,y)≈-0.30；
+      两臂误差相关仅 0.215；拓扑子群差距非 y 分布混杂（交互表核实）。
+    topology25: >-
+      O-rich base573 [412:437] 确认全零；已核验无标签 hinge25 缓存与历史 Full-Y
+      输入同定义（反演一致 ≤6.1e-5）；fit-only 可满足。
+  "gpu_result (seed 0, res GPU1, commit a0f0f7ed7cfb)":
+    "primary (frozen rule: monitor top-5 soup, ep 205-239)":
+      dev_mae: 0.11641
+      monitor_mae: 0.11826
+      fit_mae: 0.04220
+      calibrated_dev_mae (auxiliary, fit-only b): 0.11452
+    secondary_best_monitor_dev: 0.12102
+    tertiary_last_dev: 0.12112
+    epochs: 240 fixed / wall 1231s / params 408651 / 5.1s per epoch
+    supervision: raw y L1 + label-free reconstruction (H1_LAMBDA=33.9587 frozen, disclosed)
+    paired_vs_orich: -0.21565, bootstrap CI95 [-0.26895, -0.24133], 81.0% molecules better, corr 0.44
+    subgroup: 全部子群一致改善; 最大改善在 y<=-3 (-0.40) 与 cyc>=4 (-0.27)
+    judgment: 情况 A — 已拥有足够强的非 GNN 预测基础; 下一轮研究强计算上的结构贡献分解
+  results_index:
+    - path: results/feasibility_v2_cpu/v1_error_structure.json
+      one_line: v1 dev 误差结构（分布/重尾/子群/混杂控制/top-k 贡献）
+      date: 2026-10-10
+    - path: results/feasibility_v2_cpu/topology25_audit.json
+      one_line: base573 topo 块全零确认 + hinge25 缓存与历史 Full-Y 输入同定义
+      date: 2026-10-10
+    - path: results/feasibility_v2_gpu/train_Full-Y-fit7200-seed0.json
+      one_line: 正式 seed-0 Full-Y（曲线/选择规则/纪律声明/逐分子导出）
+      date: 2026-10-10
+    - path: results/feasibility_v2_cpu/paired_vs_orich.json
+      one_line: Full-Y vs O-rich 配对 bootstrap + 子群表（报告 §6.2）
+      date: 2026-10-10
+
 next_action: >-
-  若继续本轨: 以 RINGCHAIN 划分为归因单元、在强 backbone 特征上做单元级分解的新
-  预注册(需用户/导师确认); 不在 v0 形态上自动续做。
+  若继续本轨：以 Full-Y 骨架为预测基础，设计单元级贡献分解的新预注册
+  (需用户/导师确认)；不在本轮追加模型或 seed。
