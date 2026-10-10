@@ -584,7 +584,7 @@ def train_rich_arm(seed: int, device: str, data: dict, epochs: int = 300, patien
         best_epoch = int(np.argmin(history))
         if epoch - (best_epoch + 1) >= patience:
             break
-    avg = {k: torch.stack([s[k].float() for s in ckpts]).mean(0) for k in ckpts[0][1]}
+    avg = {k: torch.stack([s[1][k].float() for s in ckpts]).mean(0) for k in ckpts[0][1]}
     best_state = dict(ckpts[0][1])
     model.load_state_dict(avg)
     model.eval()
@@ -656,7 +656,7 @@ def run_train(arm: str, seed: int, device: str, out_dir: Path, smoke: bool, log=
         res = train_rich_arm(seed, device, {"rich": (R - mu) / sd, "y": y, "idx": idx}, epochs=3 if smoke else 300, log=log)
     else:
         raise ValueError(arm)
-    payload = {**payload_common, **{k: v for k, v in res.items()}}
+    payload = {**payload_common, **{k: v for k, v in res.items() if not k.startswith("_")}}
     (out_dir / f"train_{arm}_s{seed}.json").write_text(json.dumps(payload, indent=2))
     return payload
 
