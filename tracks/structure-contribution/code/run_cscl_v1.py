@@ -615,6 +615,11 @@ def train_rich_arm(seed: int, device: str, data: dict, epochs: int = 300, patien
             fit_preds.append(model(fit_X[lo : lo + 512].to(dev)).squeeze(-1).cpu())
         fit_mae = float((torch.cat(fit_preds).numpy() * y_std + y_mean - y_in).astype(np.float64).__abs__().mean())
     n_params = int(sum(p.numel() for p in model.parameters()))
+    # per-molecule dev predictions (soup model) for paired comparisons
+    with torch.no_grad():
+        model.load_state_dict(avg)
+        model.eval()
+        dev_pred = model(dev_X).squeeze(-1).detach().cpu().numpy().astype(np.float32)
     return {
         "arm": "orich",
         "seed": seed,
@@ -628,6 +633,8 @@ def train_rich_arm(seed: int, device: str, data: dict, epochs: int = 300, patien
         "n_params": n_params,
         "input_dim": int(dim),
         "wall_seconds": wall,
+        "_dev_pred": dev_pred,
+        "_dev_row": idx["dev"].astype(np.int64),
     }
 
 
@@ -671,6 +678,13 @@ def run_train(arm: str, seed: int, device: str, out_dir: Path, smoke: bool, log=
     else:
         raise ValueError(arm)
     payload = {**payload_common, **{k: v for k, v in res.items() if not k.startswith("_")}}
+    if "_dev_pred" in res:
+        np.savez_compressed(
+            out_dir / f"dev_preds_{arm}_s{seed}.npz",
+            row=res["_dev_row"],
+            pred=res["_dev_pred"],
+            y=y[res["_dev_row"], 0].astype(np.float32),
+        )
     (out_dir / f"train_{arm}_s{seed}.json").write_text(json.dumps(payload, indent=2))
     return payload
 
