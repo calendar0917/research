@@ -1,9 +1,9 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-prediction-feasibility-v2
-next_round_candidate: structure-contribution-decomposition-on-strong-backbone
-updated: 2026-10-10
+phase: cscl-v3-strong-backbone
+next_round_candidate: reduce-identifiability-cost-of-typed-delta (pre-registered separately)
+updated: 2026-10-11
 
 track:
   slug: structure-contribution
@@ -13,7 +13,7 @@ track:
   protocol: notes/v0_protocol.md          # cscl-v0 预注册（冻结后再看结果）
   prior_work: notes/prior_work_positioning.md
 
-current_round: cscl-v0
+current_round: cscl-v3-strong-backbone
 hypotheses:
   H1: B(加性+真实关系) > A 且 B > C(关系打乱) 且 B 接近 D(不透明) —— 未验证
   H2: 可辨识性约束(参数分离+中心化+惩罚)使 α/δ/γ 分工跨 seed 稳定 —— 未验证
@@ -143,3 +143,73 @@ round_cscl-prediction-feasibility-v2:
 next_action: >-
   若继续本轨：以 Full-Y 骨架为预测基础，设计单元级贡献分解的新预注册
   (需用户/导师确认)；不在本轮追加模型或 seed。
+
+# ---------------------------------------------------------------------------
+# round: cscl-v3 (strong-backbone structural contribution, SB-CSCL, seed 0)
+# ---------------------------------------------------------------------------
+
+round_cscl-v3-strong-backbone:
+  protocol: configs/strong_backbone_contribution_v3.yaml (冻结后才训练)
+  report: notes/strong_backbone_contribution_v3.md
+  driver: code/run_cscl_v3.py (S/O heads + training/analyze/synthetic) + code/strong_backbone_attribution.py (attribution core)
+  question: >-
+    在冻结 Full-Y seed-0 编码器上，把预测改造成共享类型基础贡献 α + 上下文修正 δ
+    + 显式单元对关系 γ + 逐特征全局 bank 的严格加和，损失多少预测能力？
+  phase_a (all pass, results/cscl_v3/phase_a_checks.json):
+    mapping: >-
+      dict_phi 行序 = 原子序（25 分子从原始行重建 phi 逐位相等）；dict_atom==x
+      全 10000；pair_index 覆盖全部 i<j 对且 source<target；重标号/batch 不变性测试钉住
+    pooled_reconstruction: 单元/关系统计重建 reader 池化 ≤7e-7；C6 掩码后 reader 输入逐位一致；count 由总量 log1p
+    replay: 冻结 soup 回放 dev/monitor max|dpred| 9.5e-7 (GPU 同设备) / 1.9e-6 (CPU)，MAE 0.11641 复现
+  erratum: >-
+    feasibility-v2 run_compare bootstrap 统计量由 mean|e_f-e_o| 修复为有符号差；
+    正确 CI [-0.23064,-0.20123]（原报告 [-0.269,-0.241] 是手工变号的错误区间）；
+    原始文件未覆盖，paired_vs_orich_erratum.json + 回归测试
+  heads:
+    S_structured: 118168 params (α 表/类型 + δ MLP + 对称 γ MLP + 逐特征全局 bank，严格加和)
+    O_opaque: 138753 params (同输入不透明 DeepSets 读出；类型经 16 维 embedding；比值 1.17 披露)
+    identifiability: 逐类型 δ 均值惩罚 + γ 均值惩罚 + 参数分离 (research_core §5)
+    design_revision: >-
+      Phase C rehearsal (batch 均值版惩罚) 显示 δ̂–α* 混淆 0.63，不满足 research_core
+      的逐类型中心化要求；正式训练前改为逐类型惩罚。两版 rehearsal 数字均记录于报告 §4。
+  "gpu_result (seed 0, res GPU1, run cscl-v3-s0-20261011-011520-b6076970, commit b04c64ad8e45)":
+    mae: {F: 0.11641, O: 0.14129, S: 0.19551}   # primary = best-monitor 单检查点
+    paired:
+      S_minus_O: "+0.05422 [0.04459, 0.06405]"
+      S_minus_F: "+0.07909 [0.06906, 0.08908]"
+      O_minus_F: "+0.02487 [0.01789, 0.03211]"
+    bands: >-
+      S−O +0.054 略越预冻结 0.05 带（CI 下沿 0.045 重叠）→ 结构化读出有明显
+      预测代价；O−F +0.025 → 重训冻结本身占 S−F 的约 1/3
+    additivity_residual: 7.4e-07 (导出值独立重建)
+    channel_var_shares: {unit: 0.132, rel: 0.402, g_ctx: 0.009, g_topo: 0.131}   # 全局合计~14%，非主导
+    synthetic: >-
+      α 符号 1.00/ρ 0.997；δ-r 0.996、混淆 0.025；真交互 +0.856/-0.690/+0.496
+      (真值 +0.9/-0.7/+0.5)；混淆对 0.043≈0；未见对 |γ̂| 0.026 vs 可见 0.090
+    subgroup: S 退化集中在 y≤-3 (0.470 vs O 0.316) 与 0-1 环小分子 (n=12)
+    judgment: >-
+      有条件支持继续：内生贡献可行且可验证；逐类型可辨识性约束代价 ≈+0.05
+      处于带边界；下一轮预注册应在不放弃类型锚定下降低约束代价。本轮停止，
+      不追加实验。
+  results_index:
+    - path: results/cscl_v3/phase_a_checks.json
+      one_line: GPU 上 Phase-A 复验（对齐/重建/回放全过）
+      date: 2026-10-11
+    - path: results/cscl_v3/analysis_s0.json
+      one_line: F/O/S 主结果 + 配对 bootstrap + 子群 + S 贡献审计（通道占比/α/δ/γ/逐特征全局）
+      date: 2026-10-11
+    - path: results/cscl_v3/train_S_s0.json
+      one_line: S 正式训练（曲线/选择规则/纪律声明）
+      date: 2026-10-11
+    - path: results/cscl_v3/train_O_s0.json
+      one_line: O 对照训练（同协议）
+      date: 2026-10-11
+    - path: results/cscl_v3/synthetic_s0.json
+      one_line: 合成已知真值机制验证（CPU seed 0）
+      date: 2026-10-11
+    - path: results/feasibility_v2_cpu/paired_vs_orich_erratum.json
+      one_line: bootstrap 统计量勘误（有符号差 CI [-0.23064,-0.20123]）
+      date: 2026-10-11
+  local_rehearsal: >-
+    CPU 全协议 rehearsal 结果（非正式）：S(逐类型) 0.19749 / O 0.13842 / F 0.11641；
+    batch 均值版 S 0.16823 但 δ̂–α* 混淆 0.63。目录 results/cscl_v3_cpu_rehearsal/
