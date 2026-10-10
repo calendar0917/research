@@ -58,6 +58,33 @@ def test_seed_zero_only():
     assert "choices=[0]" in text, "driver must enforce seed 0 only"
 
 
+def test_compare_statistic_is_signed_difference():
+    """Erratum regression (2026-10-11): the paired bootstrap statistic in
+    ``run_compare`` must be the signed difference ``(e_full - e_or).mean()``
+    per resample, never ``np.abs(e_full - e_or).mean()`` (which measures the
+    mean absolute per-molecule error gap and is always positive; the original
+    run stored [+0.24133, +0.26895] and the report hand-flipped its sign)."""
+    import ast
+
+    drv = _driver()
+    tree = ast.parse(Path(drv.__file__).read_text())
+    fn = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "run_compare")
+    src = ast.unparse(fn)
+    assert "boots[b] = (e_full[smp] - e_or[smp]).mean()" in src
+    assert "np.abs(e_full[smp] - e_or[smp]).mean()" not in src.replace("boots_abs[b] = np.abs(e_full[smp] - e_or[smp]).mean()", "")
+    # the disclosed abs-gap statistic is kept under a different name
+    assert "boots_abs[b] = np.abs(e_full[smp] - e_or[smp]).mean()" in src
+
+    # and the numeric behaviour: on synthetic errors the CI must bracket the
+    # signed point estimate, not a positive gap
+    rng = np.random.default_rng(0)
+    e_a = rng.random(500)
+    e_b = rng.random(500)
+    boots = [(e_a[rng.integers(0, 500, 500)] - e_b[rng.integers(0, 500, 500)]).mean() for _ in range(500)]
+    lo, hi = np.percentile(boots, [2.5, 97.5])
+    assert lo <= (e_a - e_b).mean() <= hi
+
+
 def test_no_decomp_or_heldout_access_in_driver():
     import ast
 

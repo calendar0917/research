@@ -1,0 +1,97 @@
+# cscl-v3 — Strong-Backbone Structural Contribution Learning (SB-CSCL)
+# Frozen protocol constants.  Written BEFORE any S/O training; no field may
+# change after results are seen.  Round question: on top of the frozen
+# Full-Y seed-0 encoder (dev MAE 0.11641, F reference), how much predictive
+# performance does an endogenous unit/relation/global contribution readout
+# (S) cost, compared with an opaque readout of the same frozen information (O)?
+
+protocol_id: cscl-v3-strong-backbone-contribution
+seeds_allowed: [0]
+
+references:
+  F_full_y_seed0_dev_mae: 0.11641      # frozen, not retrained (feasibility-v2)
+  O_rich_seed0_dev_mae: 0.33206        # frozen historical control
+  source: results/feasibility_v2_gpu + results/cscl_v1_gpu
+
+data:
+  split: cscl_features.build_split_indices   # unchanged: 7200 fit / 800 monitor / 2000 dev
+  official_valid_test: never loaded
+  supervision: raw y (L1) only
+  frozen_encoder: full_y_seed0_soup_state.pt (feasibility-v2 primary soup, parameters frozen)
+  frozen_feature_cache: data/cache/cscl_v3_frozen_features.pt (version-guarded)
+  disclosure: >
+    The frozen encoder was trained on fit_inner raw y in feasibility-v2; the
+    S/O heads therefore consume representations that have seen fit_inner y.
+    monitor/dev representations are computed by the frozen encoder only.
+
+frozen_information_range (C6_MASK-consistent):
+  kept: [unit E moments (sum/mean/rms), intra-unit pair moments,
+         cross-unit pair aggregates (pair values, relation slice 15, distance buckets,
+         physical bond histogram), global context structure_short+long (30),
+         topology25 (25), unit descriptors (36, local structure incl. unit size)]
+  excluded_as_inputs: [full-y prediction, global atom/bond histograms (C6 zeroed),
+                       graph-level count blocks (C6 zeroed), official labels beyond raw y]
+  note: unit size (log1p atoms) is local structure information also carried by
+        Full-Y's per-root anchor block and is NOT a graph-level count.
+
+head_architecture:
+  hidden: 64
+  S_structured:
+    alpha: embedding(vocab_size, 1) per unit type (fit-only vocab 746 known + UNK buckets, total 761)
+    delta: MLP([z_u 384 ; type-centered desc 36] -> 64 -> 64 -> 1)
+    gamma: MLP([zu+zv ; |zu-zv| ; zu*zv ; pair moments 96 ; bucket hist 5 ; bond hist 4 ;
+                log1p count ; centered mean relation 15] -> 64 -> 64 -> 1)   # symmetric inputs
+    global_ctx: per-feature additive bank, 30 features x [linear + 3 hinges at fit q25/q50/q75]
+    global_topo: per-feature additive bank, 25 features x [linear + 3 hinges]
+    bias: scalar
+    prediction: bias + sum_u (alpha + delta) + sum_r gamma + g_ctx + g_topo   # strict sum
+  O_opaque:
+    unit_enc: MLP([z_u 384 ; desc 36 ; type embedding 16] -> 64 -> 64 -> 16)
+    rel_enc: MLP([same 1273-d relation input as S] -> 64 -> 64 -> 16)
+    glob_enc: Linear(55 -> 16) + ReLU
+    head: MLP([masked mean+sum pool units 32 ; mean+sum pool relations 32 ; global 16] -> 64 -> 1)
+    note: no additive structure; same frozen inputs; type access via 16-d embedding
+  params_expected: {S: ~117.9k, O: ~138.2k, ratio: ~1.17}   # disclosed, not exactly matched
+
+identifiability:
+  alpha_vs_delta: context descriptors centered by fit-only per-type means; weighted average of squared PER-TYPE batch means of delta penalized (coeff 1.0) - the type's average contribution belongs to alpha (research_core sect. 5)
+  gamma_vs_bias: relation descriptors centered by fit-only mean; batch-mean(gamma)^2 penalty (coeff 1.0)
+  global_vs_local: architecture (distinct inputs; additive per-feature banks only)
+  alpha_vs_bias: pinned by unit-count variation across molecules (no exact gauge freedom); soft penalties disclosed
+  O: no identifiability machinery (control)
+
+training:
+  optimizer: Adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  batch_size: 128
+  epochs_fixed: 240
+  train_shuffle_seed: 101        # seed + 101 (historical offset)
+  loss: L1 (S adds identifiability penalty, coeff 1.0, disclosed; O plain L1)
+  init_seed: 0 (deterministic per arm)
+  monitor_eval: every epoch, raw-y MAE on monitor 800
+
+selection_frozen:
+  primary: best-monitor single checkpoint  (THE reported dev MAE for S and O)
+  secondary: top-5 monitor soup (pre-registered副指标, reported but not primary)
+  tertiary: last epoch
+  no_dev_based_selection: true
+
+judgment_bands (engineering scale, frozen before results; not significance tests):
+  S_minus_O_abs_le_0.02: structured-readout cost acceptable; continue this line
+  S_minus_O_ge_0.05: clear predictive limitation of the structured readout
+  both_S_O_clearly_worse_than_F: reader-retraining / freezing limitation dominates; cannot blame decomposition alone
+  S_close_to_F_but_decomposition_degenerate: no interpretability claim
+
+evaluation:
+  metric: internal dev raw-y MAE (+ fit/monitor)
+  paired: per-molecule signed-difference bootstrap, 2000 resamples, seed 0
+  subgroups: [y quartiles + y<=-3 tail, cyclomatic number, ring_units, n_atoms]
+  contribution_audit: strict-additivity export, alpha table, per-type delta,
+    gamma distribution, per-feature global contributions, channel variance shares
+  synthetic: known-truth unit/context/interaction task on real frozen features (CPU, seed 0)
+
+compute:
+  gpu: res GPU1 only (pool res-gpu1, CUDA_VISIBLE_DEVICES=1), S then O sequentially
+  forbidden: seed 1, extra architectures, hyperparameter search, end-to-end encoder fine-tuning

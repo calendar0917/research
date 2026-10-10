@@ -571,10 +571,19 @@ def run_compare(full_npz: Path, out_dir: Path, log=print) -> dict[str, Any]:
     rng = np.random.default_rng(0)
     n = len(y)
     boots = np.empty(2000)
+    boots_abs = np.empty(2000)
     for b in range(2000):
         smp = rng.integers(0, n, n)
-        boots[b] = np.abs(e_full[smp] - e_or[smp]).mean()
+        # paired signed difference of the two MAEs (ERRATUM 2026-10-11: the
+        # original run bootstrapped np.abs(e_full - e_or).mean(), i.e. the
+        # mean absolute per-molecule error GAP E|e_full - e_or|, not the
+        # signed MAE difference; see results/feasibility_v2_cpu/
+        # paired_vs_orich_erratum.json and the errata section of
+        # notes/prediction_feasibility_v2.md).
+        boots[b] = (e_full[smp] - e_or[smp]).mean()
+        boots_abs[b] = np.abs(e_full[smp] - e_or[smp]).mean()
     lo, hi = np.percentile(boots, [2.5, 97.5])
+    lo_abs, hi_abs = np.percentile(boots_abs, [2.5, 97.5])
     out = {
         "protocol": PROTOCOL_ID,
         "paired": True,
@@ -584,6 +593,16 @@ def run_compare(full_npz: Path, out_dir: Path, log=print) -> dict[str, Any]:
         "bootstrap_ci95": [float(lo), float(hi)],
         "bootstrap_resamples": 2000,
         "bootstrap_seed": 0,
+        "statistic": "paired signed difference of absolute errors, (e_full - e_orich).mean() per resample",
+        "erratum": {
+            "original_statistic": "np.abs(e_full - e_or).mean() per resample (= E|e_full - e_orich|, always positive)",
+            "original_stored_ci95": [0.2413257844797554, 0.26895494117447233],
+            "original_report_ci95": [-0.26895494117447233, -0.2413257844797554],
+            "note": "the report interval was the stored (bugged) interval with the sign flipped by hand; it is NOT a bootstrap of the signed MAE difference",
+        },
+        "mean_abs_pairwise_error_gap": float(np.abs(diff).mean()),
+        "abs_gap_bootstrap_ci95": [float(lo_abs), float(hi_abs)],
+        "frac_molecules_full_y_better": float((diff < 0).mean()),
         "note": "molecule-level resampling on internal dev; NOT cross-seed training-variance evidence",
     }
     log(json.dumps(out, indent=1))

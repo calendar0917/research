@@ -4,6 +4,18 @@ Track: `structure-contribution` · 日期: 2026-10-10 · 协议: `configs/predic
 代码: `code/run_prediction_feasibility_v2.py`（prep/train/compare）、`code/analyze_feasibility_v2.py`（analyze/topo-audit）
 测试: `tests/test_prediction_feasibility_v2.py`
 
+> **勘误（2026-10-11，cscl-v3 轮开始时发现并修复）**：§6.1 报告的配对 bootstrap 区间
+> **[−0.26895, −0.24133]** 不是有符号 MAE 差的置信区间。当时 `run_compare` 的
+> 重采样统计量误写为 `np.abs(e_full[smp] − e_or[smp]).mean()`（两模型逐分子绝对误差
+> 距离的均值 E|e_full−e_orich|，恒为正），保存于 `paired_vs_orich.json` 的区间为
+> **[+0.24133, +0.26895]**，报告数值是把该错误区间手工变号后的结果。正确的有符号差
+> 统计量 `(e_full − e_or).mean()` 的 bootstrap 95% CI 为 **[−0.23064, −0.20123]**
+> （点估计 −0.21565 不变，81.05% 分子上 Full-Y 更好；2000 次重采样，seed 0）。
+> 定性结论（Full-Y 显著优于 O-rich）不变；区间本身以
+> `results/feasibility_v2_cpu/paired_vs_orich_erratum.json` 为准。原始运行文件未覆盖。
+> 修复后的 `run_compare` 同时输出有符号差 CI 与 E|e_full−e_or| 的 CI（后者作为披露量），
+> 并由 `tests/test_prediction_feasibility_v2.py::test_compare_statistic_is_signed_difference` 钉住。
+
 > 本轮只回答一个问题：在当前 CSCL 固定数据划分下，已有强非 GNN 结构预测骨架
 > （历史 Full-Y）以原始 y 为唯一任务监督，能达到什么预测水平——
 > 以判断下一步是研究结构贡献分解，还是继续解决预测表示问题。
