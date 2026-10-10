@@ -1,0 +1,32 @@
+# CSCL track state — research pointer, not a result dump.
+# Durable statements live in notes/research_core.md (goals) and
+# notes/v0_protocol.md (frozen protocol); results land in results/.
+phase: cscl-v0-implementation
+updated: 2026-10-10
+
+track:
+  slug: structure-contribution
+  title: 跨分子结构贡献与上下文交互 (CSCL)
+  charter: TRACK.md
+  research_core: notes/research_core.md   # 权威文档：目标/假设/可反驳条件
+  protocol: notes/v0_protocol.md          # cscl-v0 预注册（冻结后再看结果）
+  prior_work: notes/prior_work_positioning.md
+
+current_round: cscl-v0
+hypotheses:
+  H1: B(加性+真实关系) > A 且 B > C(关系打乱) 且 B 接近 D(不透明) —— 未验证
+  H2: 可辨识性约束(参数分离+中心化+惩罚)使 α/δ/γ 分工跨 seed 稳定 —— 未验证
+  H3: 合成真值任务上恢复方向/识别真交互/不误报共现 —— 未验证
+
+constraints:
+  - 不使用 GNN/Transformer/消息传递作为核心预测机制
+  - 每个预测项可归因（单元 / 单元对 / bias）；无隐藏全局旁路
+  - 第一版 y-only；official test 本轮禁读
+  - GPU 正式实验仅 `res` GPU1 (pool res-gpu1, 进程内 cuda:0)，经 rr
+
+next_action: >-
+  实现 RINGCHAIN-v0 划分与 A/B/C/D/E 五臂 → CPU 标签盲数据审计（§8 触发线）
+  → 测试 → seed-0 冒烟 → GPU1 正式 seeds {0,1}。
+
+results_index: []
+# 每完成一个正式结果追加一行: {path, one_line, date}

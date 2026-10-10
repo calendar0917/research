@@ -38,6 +38,7 @@
 | gnn-gsn | **archived** | 双协议图分类 + 官方 GSN；[TRACK](../tracks/gnn-gsn/TRACK.md)；实现 `../paper` |
 | ksvd | **active** | luyin16：概念复现 → 机制研究 → 显式模型路线（MolHIV + ZINC）；主判 K-SVD=压缩器；总览 [`tracks/ksvd/results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md`](../tracks/ksvd/results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md)；[TRACK](../tracks/ksvd/TRACK.md) |
 | hod-gnn-replication | **active** | HOD-GNN 基线复现审计；[TRACK](../tracks/hod-gnn-replication/TRACK.md)；独立官方环境 |
+| structure-contribution | **active** | 新路线 CSCL：跨分子结构贡献与上下文交互——非重叠保环单元 + 显式加性/关系分解，非 GNN 核心；核心见 [`tracks/structure-contribution/notes/research_core.md`](../tracks/structure-contribution/notes/research_core.md)；[TRACK](../tracks/structure-contribution/TRACK.md) |
 
 ### 下一步
 
