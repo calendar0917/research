@@ -208,3 +208,27 @@ XGBoost，则该生态位不成立。**
   同 seed 同 GPU 的训练轨迹并非逐位可复现（重新 seed 的复制在 epoch 1 即相差
   ~0.008，探针 `code/probe_seed0_determinism_v1.py`；CPU 逐位一致），
   故 Δ 只能作臂级对照解读。
+
+- 2026-10-11 `cscl-distance-pooling-bottleneck-v1`（Full-Y 硬距离桶 vs 一个冻结的
+  连续距离矩基，用户授权轮）：问题 = 只把图级 pair 矩的硬桶划分（d=1,2,3,4,≥5，
+  每桶 Σh/Σh²/log1p(count)）换成预冻结的 Soft5 连续核（log1p 空间五个归一化高斯
+  权重，σ=0.35，中心 [1,2,3,4,8]；一阶 Σw·h、二阶 Σw·h²（先平方再加权）、count 仍
+  被 C6_MASK 清零；无新参数，reader 仍 814，参数量仍 408651；distance_gate、关系
+  15 维输入、pair encoder、reader、监督全部不变），official-valid raw-y MAE 是否改变。
+  协议 `configs/distance_pooling_bottleneck_v1.yaml`；报告
+  `notes/distance_pooling_bottleneck_v1.md`（含 15 问终报）。Phase A/B（CPU，标签盲）：
+  距离 = 无权重 BFS；`pair_relation[:,5]`=log1p(distance)；桶截断规则 min(max(d,1),5)−1；
+  距离门仍是 5 桶 Embedding；训练集 10000 分子 2,668,346 对，最后一个桶内平均 8.46 个
+  不同真实距离（99.25% 分子同时含 d=5 与 d≥7，条件熵 1.91 nats），全对 BFS 交叉验证
+  0 失配。Phase D：Hard5 与冻结路径逐位一致；Soft5 守恒/不变性/梯度/参数门全过；
+  100% 分子特征差 >1%（均值 0.495）→ 购买门通过。Phase E（两条 matched seed-0 GPU
+  臂，res-gpu1，commit 3a09c573，同 init/同训练程序/RNG 流哈希逐 epoch 一致、
+  18960 步、last-5 soup）：新 Hard5 臂 0.118474（历史只读参考 0.118618，Δ−0.00014），
+  Soft5 0.119218。**结果**：Δ = MAE(Soft5)−MAE(Hard5) = **+0.000743**，配对 bootstrap
+  CI95 **[−0.006523, +0.008980]**（51.2% 分子更好）→ 预冻结 band C，
+  **SOFT5_NO_USEFUL_GAIN**；y≤−3 尾部 +0.050（CI 跨零），y>−3 −0.0027（CI 跨零），
+  无子群 CI 支持改善；去掉 valid:0172 后 Δ=−0.0011；绝对水平 Soft5 0.119218
+  （距 0.09 +0.0292、距 0.08 +0.0392）。结论：≥5 桶内真实距离异质性很大，但预冻结
+  连续矩基在 official validation 上无可测增益——把这一表示层改变换算为预测增益的
+  方向在本轮被反驳（单 seed、GPU 非确定性、official valid 已暴露；official test 未读）。
+  按规则停止：无 seed 1、无第三臂、无核/中心/宽度搜索、无重训。
