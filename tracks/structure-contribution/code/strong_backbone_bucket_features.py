@@ -634,6 +634,7 @@ def build_bucket_cache(device: str = "cpu", log=print, rows: Sequence[int] | Non
     from run_prediction_feasibility_v2 import apply_prep_fit7200, verify_row_alignment
 
     model, prep, blob10 = sba.load_frozen_backbone(log=log)
+    model = model.to(torch.device(device))
     train = sba.load_train_rows(log=log)
     verify_row_alignment(train, log=log)
     apply_prep_fit7200(train, prep, blob10)
