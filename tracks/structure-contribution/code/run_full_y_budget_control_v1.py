@@ -269,6 +269,21 @@ def read_csv_col(path: Path, column: str) -> np.ndarray:
     return np.asarray([float(r[column]) for r in rows], dtype=np.float64)
 
 
+def background_v3d_f_valid() -> dict[str, Any]:
+    """Frozen background number (historical F7200 monitor-top-5 soup).
+
+    The historical evaluation directory is git-ignored and may not exist on a
+    compute checkout; the protocol-frozen constant is used as fallback.
+    """
+    path = V3D_EVAL_DIR / "valid_metrics.json"
+    if path.exists():
+        return {"value": float(read_json(path)["mae"]["F"]),
+                "source": str(path.relative_to(REPO_ROOT)), "file_available": True}
+    return {"value": 0.1329529655483202,
+            "source": "protocol config background reference (cscl_v3d_official_eval absent on this checkout)",
+            "file_available": False}
+
+
 def _batches(n: int, batch_size: int, generator: torch.Generator, shuffle: bool) -> list[list[int]]:
     if shuffle:
         order = torch.randperm(int(n), generator=generator).tolist()
@@ -599,7 +614,7 @@ def stage_audit(device: torch.device) -> dict[str, Any]:
             "soup_state_sha256": file_sha256(F7200_HIST_SOUP),
             "prep_fit7200_sha256": file_sha256(PREP7200),
             "recorded_dev_mae": read_json(F7200_HIST_JSON)["primary_soup"]["dev_mae"],
-            "recorded_valid_raw_mae": read_json(V3D_EVAL_DIR / "valid_metrics.json")["mae"]["F"],
+            "recorded_valid_raw_mae": background_v3d_f_valid(),
             "role": "background reference only (monitor top-5 soup, different soup rule)",
         },
         "historical_F10000_seed0": {
@@ -1013,9 +1028,11 @@ def stage_predict(device: torch.device, smoke: int | None) -> dict[str, Any]:
 
     preds_hist = read_csv_col(HIST_Y_VALID_CSV, "Y_raw_0")
     diff_hist = float(np.max(np.abs(pred10 - preds_hist)))
-    v3d = np.load(V3D_EVAL_F_PREDS, allow_pickle=False)
-    pred_v3d = np.asarray(v3d["pred"], dtype=np.float64)
-    diff_v3d = float(np.max(np.abs(pred72 - pred_v3d))) if pred_v3d.shape[0] == 1000 else None
+    diff_v3d = None
+    if V3D_EVAL_F_PREDS.exists():
+        v3d = np.load(V3D_EVAL_F_PREDS, allow_pickle=False)
+        pred_v3d = np.asarray(v3d["pred"], dtype=np.float64)
+        diff_v3d = float(np.max(np.abs(pred72 - pred_v3d))) if pred_v3d.shape[0] == 1000 else None
     manifest = {
         "protocol_id": PROTOCOL_ID,
         "git_commit": git_commit(),
@@ -1138,7 +1155,7 @@ def stage_score(device: torch.device) -> dict[str, Any]:
             "F10000": read_json(HIST_Y_JSON)["fit_raw_mae_y"],
         },
         "background": {
-            "historical_F7200_monitor_top5_valid_raw": read_json(V3D_EVAL_DIR / "valid_metrics.json")["mae"]["F"],
+            "historical_F7200_monitor_top5_valid_raw": background_v3d_f_valid(),
             "historical_F10000_seed0_valid_raw": 0.11861754740116885,
             "note": "background only; the matched comparison uses the shared last-5 soup rule",
         },
