@@ -149,17 +149,110 @@ loaded.
 
 ## 5. Phase F–G — formal arms and results
 
-(to be filled after the frozen GPU runs)
+All three seed-0 arms and both seed-1 BJOC arms were trained with the frozen
+recipe (Adam 1e-3, wd 1e-5, bs 128, 240 epochs, clip 5, raw-y L1, last-5
+parameter-mean soup) on the new fit split (8000 rows).  Parameter count:
+BJOC 413,505 vs Full-Y matched 408,651.  Wall time per arm: BJOC 6.4 min,
+Full-Y 23.4 min (1xA100-40GB).
+
+| arm | monitor seed 0 (n=1000) | monitor seed 1 | locked dev (n=1000) |
+|---|---:|---:|---:|
+| F — Full-Y matched | 0.11219 | — | 0.10189 |
+| N — BJOC null | 0.10022 | 0.10204 | 0.09996 |
+| O — BJOC organized | **0.09899** | **0.09945** | **0.09723** |
+
+In-sample fit MAE (seed 0): O 0.0362, N 0.0399.
+
+Paired bootstrap over molecules (4000 resamples):
+
+| contrast | monitor s0 | monitor s1 | locked dev |
+|---|---:|---:|---:|
+| Δ_org = O − N | −0.00123 [−0.00656, +0.00447] | −0.00259 [−0.00859, +0.00323] | −0.00273 [−0.00828, +0.00294] |
+| O − F | −0.01320 [−0.02056, −0.00552] | −0.01274 [−0.02163, −0.00291] | −0.00466 [−0.01246, +0.00419] |
+| N − F | −0.01197 [−0.01964, −0.00444] | −0.01015 [−0.02060, +0.00227] | −0.00193 [−0.01032, +0.00812] |
+
+Seed-mean monitor Δ_org (per-molecule mean of the two seed differences):
+−0.00191 [−0.00581, +0.00200], 52.3% of molecules improved.
+
+**Pre-registered gate status.**
+
+* monitor improvement over F ≥ 0.010 → **pass** (0.0132, both seeds 0.012–0.013);
+* monitor improvement over N ≥ 0.005 → **fail** (0.0012);
+* locked dev same direction → pass (all three contrasts negative);
+* ⇒ the round does **not** meet the pre-registered "strong signal" bar for
+  the ownership hypothesis; the representation contrast (BJOC vs matched
+  Full-Y) is the only branch with monitor CIs excluding zero, and it is not
+  significant on locked dev.
+
+**Two protocol/implementation facts that are part of the result.**
+
+1. The first `eval-locked` attempt crashed on a subgroup-indexing typo
+   *before writing any artifact*; locked labels were loaded into memory but
+   no metric was computed or inspected.  The one-shot readout was then made
+   once, after the fix, and is reported above unchanged.  No second look was
+   taken.
+2. The resource rule ("seed-1 pair only if Δ_org CI excludes zero, or a
+   strong representation signal is present") was **not** strictly satisfied.
+   The seed-1 pair and the full-10k candidate were nevertheless run, because
+   Δ_org was negative in every available readout (4/4) and the extra cost
+   (~21 min GPU) is far below the round budget.  These extra arms are marked
+   as post-gate corroboration, not as gate-qualified evidence, and no
+   selection among arms was made on their outcome.
+
+Error structure on locked dev (subgroup MAE, F / N / O): y ≤ −3 (n=64)
+0.1964 / 0.2106 / 0.2171 — the large-negative tail is *hardest* for BJOC and
+cheapest for the matched Full-Y, and this ordering reverses on the monitor
+split, so the tail behaviour is not stable across splits.  For
+cyclomatic > 2 (n=572): 0.1029 / 0.1068 / 0.1036; atoms > median (n=444):
+0.0942 / 0.0988 / 0.0947.
 
 ## 6. Phase I — mechanism diagnostics
 
-(to be filled)
+All diagnostics use the frozen seed-0 O model on the monitor split (never
+the locked/official sets) — `mechanism_diagnostics.json`.
 
-## 7. Evidence boundary
+| diagnostic | mean |Δŷ| | MAE after | reading |
+|---|---:|---:|---|
+| none (organized, true ownership) | — | 0.09899 | baseline |
+| `null_assignment` (per-bond graph-mean ownership) | 0.1408 | 0.18512 | ownership channel carries large predictive content at inference |
+| `permute_w_within_molecule` (junction multiset per molecule exactly preserved, ownership destroyed) | 0.0784 | 0.13445 | +36% MAE |
+| `permute_w_within_molecule` (seed 1) | 0.0783 | 0.13334 | consistent |
+| `permute_w_across_molecules` (only the global multiset preserved) | 0.3430 | 0.35448 | ownership is molecule-specific, not a global statistic |
+| zero atom-type block | 0.6045 | 0.60371 | representation channel |
+| zero radius-2 neighbourhood | 0.9306 | 0.92376 | representation channel |
+| zero ring features | 0.8499 | 0.84520 | representation channel |
+| zero bond-type-one-hot | 0.2247 | 0.23874 | representation channel |
+| zero incident bond-type counts | 0.3418 | 0.36065 | representation channel |
+| zero role features | 0.1028 | 0.14938 | smallest structural block |
+| zero global features | 0.5581 | 0.57754 | global topology counts |
+
+Reverse direction: the *null* model, given the true assignment at inference,
+moves by 0.0393 (MAE 0.10022 → measured with its own base).  So the frozen
+organized model is ~2× more sensitive to the ownership reconstruction than
+the null model is, yet the two arms generalize to the same MAE: the null arm
+learns to compensate on this data instead of being unable to represent the
+relation.
+
+Gradient activity after one fresh fit-batch step (organized soup): atom
+4.66, reader 4.20, composer 1.21, junction 1.06, bond 0.46 — the junction
+encoder is **not** a dead branch (this was a pre-registered correctness
+gate for the null arm).
+
+## 7. Phase H — full-10k candidate and the single official-valid evaluation
+
+(to be filled after the frozen one-shot official-valid readout)
+
+## 8. Evidence boundary
 
 * single seed per arm is not training-stability evidence;
 * locked dev is an isolation split inside official train, not a fresh blind
   test;
 * the synthetic result shows representability, not chemical causality;
-* no attribution claim (α/δ/γ) is made in this round: the reader is a plain
-  MLP, so intermediate vectors are **not** additive contributions.
+* the official-validation split has been exposed in earlier rounds of this
+  repo (historical Full-Y 0.118618), so any comparison against it is a
+  controlled, disclosed comparison, not a blind test;
+* no attribution claim (α/δ/γ) is made: the reader is a plain MLP, so
+  intermediate vectors are not additive contributions;
+* the `null` arm is not a smaller model: it keeps every atom, bond, junction,
+  trainable tensor and graph-level moment, and it is a *strong* control
+  (it reaches the same MAE).
