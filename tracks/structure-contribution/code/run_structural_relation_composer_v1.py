@@ -1167,7 +1167,7 @@ def cmd_eval_locked(args: argparse.Namespace) -> int:
         }
         payload["subgroups"] = {}
         for label, mask in subgroups.items():
-            entry: dict[str, Any] = {"n": int(mask.sum()), "mae": {k: float(np.abs(p[k][mask] - y_locked[mask]).mean()) for k, p in preds.items()}}
+            entry: dict[str, Any] = {"n": int(mask.sum()), "mae": {k: float(np.abs(p[mask] - y_locked[mask]).mean()) for k, p in preds.items()}}
             if "organized" in preds and "null" in preds:
                 d = np.abs(preds["organized"][mask] - y_locked[mask]) - np.abs(preds["null"][mask] - y_locked[mask])
                 entry["org_minus_null"] = paired_bootstrap(d)
