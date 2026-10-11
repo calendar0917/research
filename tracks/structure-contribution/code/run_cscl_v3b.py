@@ -594,13 +594,21 @@ def analyze(ns, out_dir: Path, device, log=print) -> dict:
     saved_f = np.load(sba.DEV_PREDS_NPZ)
     assert np.array_equal(saved_f["row"], rows)
     arms["F"] = saved_f["pred"].astype(np.float64)
+    # v3 run artifacts are git-ignored; they exist on the compute checkout that
+    # produced them (res) and locally.  Missing files degrade gracefully and
+    # are recorded (the full comparison is rerun locally after rr pull).
+    availability: dict[str, bool] = {}
     for name, fn in (("O", "O_s0_dev_preds.npz"), ("S_v3", "S_s0_dev_preds.npz")):
-        z = np.load(V3_OUT_DIR / fn)
-        assert np.array_equal(z["row"], rows)
-        arms[name] = z["pred"].astype(np.float64)
+        p = V3_OUT_DIR / fn
+        availability[name] = p.exists()
+        if p.exists():
+            z = np.load(p)
+            assert np.array_equal(z["row"], rows)
+            arms[name] = z["pred"].astype(np.float64)
     zg = np.load(out_dir / "S_gauge_s0_dev_preds.npz")
     assert np.array_equal(zg["row"], rows)
     arms["S_gauge"] = zg["pred"].astype(np.float64)
+    summary_input = {"v3_reference_files_available": availability}
 
     train_res = json.loads((out_dir / "train_S_gauge_s0.json").read_text())
     mae_g = float(np.abs(arms["S_gauge"] - y_dev).mean())
@@ -608,6 +616,7 @@ def analyze(ns, out_dir: Path, device, log=print) -> dict:
         "protocol": PROTOCOL_ID,
         "git_commit": git_commit(),
         "model": "S-gauge-seed0",
+        "v3_reference_files_available": availability,
         "mae": {a: float(np.abs(p - y_dev).mean()) for a, p in arms.items()},
         "mae_S_gauge_fit_monitor_dev": {
             "fit": train_res["primary_best_monitor"]["fit_mae"],
@@ -615,9 +624,8 @@ def analyze(ns, out_dir: Path, device, log=print) -> dict:
             "dev": train_res["primary_best_monitor"]["dev_mae"],
         },
         "delta_dev_mae_vs": {
-            "S_v3": mae_g - float(np.abs(arms["S_v3"] - y_dev).mean()),
-            "O": mae_g - float(np.abs(arms["O"] - y_dev).mean()),
-            "F": mae_g - float(np.abs(arms["F"] - y_dev).mean()),
+            key: (mae_g - float(np.abs(arms[ref] - y_dev).mean()))
+            for key, ref in (("S_v3", "S_v3"), ("O", "O"), ("F", "F")) if ref in arms
         },
         "gauge_invariance_of_mae": {
             "note": "canonicalization itself cannot change MAE; the train-side penalty removal may",
@@ -627,14 +635,16 @@ def analyze(ns, out_dir: Path, device, log=print) -> dict:
         },
     }
     for a, b in (("S_gauge", "S_v3"), ("S_gauge", "O"), ("S_gauge", "F")):
-        summary[f"paired_{a}_minus_{b}"] = paired_bootstrap(np.abs(arms[a] - y_dev), np.abs(arms[b] - y_dev))
+        if b in arms:
+            summary[f"paired_{a}_minus_{b}"] = paired_bootstrap(np.abs(arms[a] - y_dev), np.abs(arms[b] - y_dev))
 
     dataset = cf.load_official_train()
     summary["subgroups"] = subgroup_table_v3b(rows, y_dev, arms, ns, dataset)
 
     # ---- contribution audit: canonical AND raw ----
     z = np.load(out_dir / "S_gauge_s0_dev_contribs.npz")
-    zv3 = np.load(V3_OUT_DIR / "S_s0_dev_contribs.npz")
+    zv3_path = V3_OUT_DIR / "S_s0_dev_contribs.npz"
+    zv3 = np.load(zv3_path) if zv3_path.exists() else None
     offsets = np.asarray(torch.load(out_dir / "gauge_offsets_s0.pt", map_location="cpu", weights_only=False)["offsets"])
     ut = z["unit_type"]
 
@@ -704,14 +714,16 @@ def analyze(ns, out_dir: Path, device, log=print) -> dict:
     means_b, stds_b, w_b = per_type_delta(z["delta"])
     means_r, stds_r, w_r = per_type_delta(z["delta_raw"])
     # v3 S per-type delta on dev (for the within-type std comparison)
-    zv3_ut = zv3["unit_type"]
-    _, stds_v3, _ = per_type_delta(zv3["delta"]) if np.array_equal(zv3_ut, ut) else ([], [], [])
-    if not stds_v3:
-        stds_v3 = []
-        for t in np.unique(zv3_ut):
-            m = zv3_ut == t
-            if m.sum() >= 3:
-                stds_v3.append(float(zv3["delta"][m].std()))
+    stds_v3: list = []
+    if zv3 is not None:
+        zv3_ut = zv3["unit_type"]
+        if np.array_equal(zv3_ut, ut):
+            _, stds_v3, _ = per_type_delta(zv3["delta"])
+        if not stds_v3:
+            for t in np.unique(zv3_ut):
+                m = zv3_ut == t
+                if m.sum() >= 3:
+                    stds_v3.append(float(zv3["delta"][m].std()))
     audit["delta_within_type_std_on_dev"] = {
         "v3b_instance_weighted_mean_std": float(np.average(stds_r, weights=w_r)) if stds_r else None,
         "v3_instance_weighted_mean_std": float(np.mean(stds_v3)) if stds_v3 else None,
@@ -720,17 +732,16 @@ def analyze(ns, out_dir: Path, device, log=print) -> dict:
     }
     audit["gamma_vs_unit_compensation"] = {
         "v3b_corr_rel_unit": float(np.corrcoef(channels(z, "alpha", "delta")["rel"], channels(z, "alpha", "delta")["unit"])[0, 1]),
-        "v3_corr_rel_unit": float(np.corrcoef(
-            (lambda c: c["rel"])(channels(zv3, "alpha", "delta")),
-            (lambda c: c["unit"])(channels(zv3, "alpha", "delta")),
-        )[0, 1]),
+        "v3_corr_rel_unit": (float(np.corrcoef(
+            channels(zv3, "alpha", "delta")["rel"],
+            channels(zv3, "alpha", "delta")["unit"],
+        )[0, 1]) if zv3 is not None else None),
         "note": "if gamma reduced compensation, its variance share and rel-unit correlation should drop vs v3",
     }
     summary["S_gauge_audit"] = audit
     write_json(out_dir / "analysis_s0.json", summary)
     log("[analyze] " + json.dumps(summary["mae"]))
     return summary
-
 
 # ---------------------------------------------------------------------------
 # corrected synthetic known-truth task (CPU, seed 0) — mechanism evidence
