@@ -1,8 +1,8 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-v3b-gauge-normalization
-next_round_candidate: full-distance-bucket-pair-moments-separable-readout (new preregistration required)
+phase: cscl-v3c-type-conditioned-gauge
+next_round_candidate: "full-distance-bucket-pair-moments x type-conditioned unified design (case A follow-up needs a capacity-matched control for strict mechanism attribution; new preregistration required)"
 updated: 2026-10-11
 
 track:
@@ -13,11 +13,12 @@ track:
   protocol: notes/v0_protocol.md          # cscl-v0 预注册（冻结后再看结果）
   prior_work: notes/prior_work_positioning.md
 
-current_round: cscl-v3-strong-backbone
+current_round: cscl-v3c-type-conditioned-gauge
 hypotheses:
   H1: B(加性+真实关系) > A 且 B > C(关系打乱) 且 B 接近 D(不透明) —— 未验证
   H2: 可辨识性约束(参数分离+中心化+惩罚)使 α/δ/γ 分工跨 seed 稳定 —— 未验证
   H3: 合成真值任务上恢复方向/识别真交互/不误报共现 —— 未验证
+  Hv3c: 给 δ 显式共享类型条件（16 维 embedding，仅进 δ）可恢复结构化读出的部分表达能力 —— 情况 A 初步支持（单 seed，容量混杂未消除）
 
 constraints:
   - 不使用 GNN/Transformer/消息传递作为核心预测机制
@@ -298,3 +299,91 @@ round_cscl-v3b-gauge-normalization:
       one_line: F/O/S_v3/S_gauge 对比 + 配对 bootstrap + 子群 + 贡献统计 raw/canonical
       date: 2026-10-11
   rr_run_meta: results/cscl_v3b/rr_run/ (meta.json/stdout/stderr, run cscl-v3b-s0-20261011-085706-7ae31a06)
+
+# ---------------------------------------------------------------------------
+# round: cscl-v3c (type-conditioned gauge contribution learning, seed 0)
+# ---------------------------------------------------------------------------
+
+round_cscl-v3c-type-conditioned-gauge:
+  protocol: configs/cscl_v3c_type_conditioned.yaml (冻结后才训练)
+  report: notes/type_conditioned_gauge_v3c.md
+  driver: code/run_cscl_v3c.py (唯一新架构 TypeCondContribHead) + code/phase_a_audit_v3c.py (Phase A)
+    + code/contribution_gauge.py (gauge 复用; GaugedHead 委托 unit_terms, 服务 v3b+v3c)
+  question: >-
+    v3b S-gauge 的 δ 无类型通道（类型仅经 α 进入），而 O 把 16 维类型 embedding 送进单元编码器。
+    给 δ 加显式共享类型条件 delta_u = h(z_u, c_u, Emb(t_u))（其余全部保持 v3b），能否缩小与 O 的
+    剩余差距并保持内生贡献 + fit-only 预测无损规范化？
+  phase_a_type_access_audit (results/cscl_v3c/phase_a_type_access_and_gauge_stability_s0.json):
+    doc_erratum: >-
+      v3/v3b 报告与任务书的 "36 维 ctx / 420 维 δ 输入" 是记录错误；代码 DESC_DIM=40,
+      v3b δ 输入 424 (参数量 118168 锁定), O 单元编码器 440; v3c 新 δ 输入 = 440 (+16 列)
+    s_vs_o: "S: α=逐类型 1 标量(实测), δ 无类型输入(类型打乱逐位不变), γ 1273 维无类型; O: 16 维 embedding 进单元编码器(实测); 其余输入逐位同 collate"
+    v3b_gauge_split_half (同一已训练 checkpoint, fit 固定对半, 非 cross-seed): >-
+      可靠类型(每半≥10 实例)151/690; mean|m_t^A-m_t^B|=0.0402 (p90 0.089); α 排序 Spearman 0.9953;
+      分层 <20:0.086 / 20-99:0.052 / 100-499:0.038 / ≥500:0.0076; 539 类型低于门槛单独报告
+  single_intervention: >-
+    唯一结构变化 = δ 输入 [z|c] 424 → [z|c|Emb(t)] 440 (Embedding(761,16) 仅 δ 读取, AST 钉住);
+    α/gamma/global/bias/冻结编码器/split/目标(L1+1.0·γ 惩罚, 无 δ 惩罚/无 embedding 正则)/超参/
+    batch 序列(generator 101, 与 v3/v3b 相同)/checkpoint 规则全部不变;
+    初始化纪律: 未训练 v3b 头 seed-0 逐位复制 + δ 旧 424 列逐位 + 新 16 列零初始化 +
+    embedding 独立 generator(seed 0, N(0,0.1²)); 未训练预测 CPU 逐位相等(diff 0.0)/GPU 1.2e-7;
+    通道可学习性: 新列先获梯度, 一步后 embedding 梯度非零且扰动即改 δ (测试钉住);
+    从头训练, 禁止加载 v3b 已训 checkpoint; +13,200 参数(emb 12176+列 1024)——容量混杂已披露
+  "gpu_result (seed 0, res GPU1, run cscl-v3c-s0-20261011-121953-9ff4ae81, commit a3d7dae30b8b, exit 0)":
+    mae: {F: 0.11641, O: 0.14129, S_v3: 0.19551, S_gauge_v3b: 0.17317, S_typecond: 0.15209}  # primary = best-monitor
+    fit_monitor_dev: "fit 0.08119 / monitor 0.14867 / dev 0.15209; best_epoch 115; soup_dev 0.14583"
+    paired:
+      S_typecond_minus_S_gauge: "-0.02108 [-0.02966, -0.01310]"
+      S_typecond_minus_O: "+0.01080 [+0.00367, +0.01757]"
+      S_typecond_minus_F: "+0.03567 [+0.02688, +0.04321]"
+    judgment_band: 情况 A (dev ≤ 0.16) —— 且机制检查全部通过 (见下)
+    gates: >-
+      gauge 全门通过: pred|Δ|≤1.9e-6, fit 逐类型 canonical δ 均值 1.9e-7, γ/global/bias 逐位不变,
+      导出加和 1.8e-6, batch 组成 1.5e-6, 覆盖率与 v3b 相同 (760/761, fallback GLOBAL_UNK 0 单元)
+    mechanism: >-
+      γ 未重新吸收类型信号 (canonical 占比 1.8% vs v3b 2.6%, γ-unit 相关 -0.416);
+      全局 13% 未主导; δ 类型内 std 0.236 (v3b 0.2423);
+      类型条件响应真实使用: 18 个高频类型 δ-附着数斜率 std 0.252 范围 [-0.67,+0.41] (合成真值斜率类型无关 0.8)
+    split_half_new_checkpoint: 可靠 151, mean|m_t^A-m_t^B|=0.0380, α Spearman 0.9963 —— 未恶化 (仍是单 checkpoint 统计稳定性, 非 cross-seed)
+    synthetic (同 v3b 真值生成器/数据/种子, 同口径): >-
+      δ raw 0.702 → canonical 0.9988, 混淆 0.677 → -0.013; α 符号 0.906/Spearman 0.950 (v3b 0.938/0.914);
+      真交互 +0.874/-0.702/+0.498 (真值 +0.9/-0.7/+0.5); 混淆对 -0.005≈0; 未见对 0.014 vs 可见 0.082;
+      规范化前后预测差 0.0; 无不必要贡献补偿
+    subgroup: >-
+      y≤-3 尾部 0.296 首次反超 O (0.316; v3b 0.373); 0-1 环小分子 0.329 (v3b 0.597, O 0.292);
+      改善遍布所有 y 带与拓扑子群; UNK 分子 (874/2000) MAE 0.206 vs 0.111 —— 剩余误差集中 UNK
+    attribution_limit: >-
+      类型条件与容量 (+13,200 参数) 同时引入, 无同容量对照 —— 即使情况 A, 改善也不能全部归因类型条件本身;
+      O−F=+0.025 的距离桶 pair 矩压缩解释不变; S−F 仍 +0.036
+    next_round_candidate: >-
+      完整距离桶 pair 矩 × 类型条件贡献的统一设计; 若要严格机制结论必须先补同容量反事实控制;
+      新预注册, 本轮不执行
+  results_index:
+    - path: results/cscl_v3c/phase_a_type_access_and_gauge_stability_s0.json
+      one_line: S/O 类型访问对照表(真实模块+checkpoint 验证, 含 36/420 文档勘误) + v3b gauge 分半稳定性
+      date: 2026-10-11
+    - path: results/cscl_v3c/train_S_typecond_s0.json
+      one_line: 唯一正式 seed-0 训练 (曲线/目标/判断带/纪律)
+      date: 2026-10-11
+    - path: results/cscl_v3c/init_report_s0.json
+      one_line: 初始化哈希/未训练预测一致性/参数分解 (118168→131368)
+      date: 2026-10-11
+    - path: results/cscl_v3c/gauge_verification_s0.json + gauge_meta_s0.json
+      one_line: gauge 全门 + fit-only offsets 元数据 (覆盖率/fallback/哈希)
+      date: 2026-10-11
+    - path: results/cscl_v3c/analysis_s0.json
+      one_line: F/O/S_v3/S_gauge/S_typecond 对比 + 配对 bootstrap + 子群 + raw/canonical 贡献审计 + 斜率离散 + UNK
+      date: 2026-10-11
+    - path: results/cscl_v3c/synthetic_typecond_s0.json
+      one_line: 同口径合成真值 (canonical δ 0.9988, 无补偿)
+      date: 2026-10-11
+    - path: results/cscl_v3c/split_half_gauge_stability_s0.json
+      one_line: 新 checkpoint 分半规范化稳定性 (未恶化)
+      date: 2026-10-11
+    - path: results/cscl_v3c/S_typecond_s0_dev_contribs.npz
+      one_line: raw+canonical 逐单元贡献/原子归属/offset/逐特征全局 (严格加和可独立重建)
+      date: 2026-10-11
+  rr_run_meta: results/cscl_v3c/rr_run/ (meta.json/stdout/stderr, run cscl-v3c-s0-20261011-121953-9ff4ae81)
+  local_rehearsal: >-
+    CPU 全协议 rehearsal (非正式): dev 0.14978 / soup 0.14476; 目录 results/cscl_v3c_cpu_rehearsal/;
+    与 GPU 正式差 -0.0023 (历史轮次同量级)
