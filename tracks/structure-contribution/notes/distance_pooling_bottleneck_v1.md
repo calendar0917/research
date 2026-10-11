@@ -240,9 +240,10 @@ fresh blind test. Official test was never loaded or scored.
 Phases A–D are label-blind. They establish a real representational loss in the
 hard bucket and a non-trivial, exactly specified alternative; they say nothing
 about prediction quality. The frozen Full-Y `distance_gate` remains hard-bucket;
-Soft5 changes only the graph-level pooling of the pair states. Official
-validation was already exposed in earlier rounds, so the upcoming evaluation is
-a controlled comparison on an exposed instrument, not a fresh blind test.
+Soft5 changes only the graph-level pooling of the pair states. The Phase E/F
+evaluation was run on the already-exposed official validation split with the
+historical Hard5 0.118618 as a read-only reference, so it is a controlled
+comparison, not a fresh blind test.
 
 Provenance note: the audit's read-only Hard5 reference is the frozen
 confirmation-dir soup, pinned by SHA256 `7792c560…` (valid raw MAE 0.118618) in
