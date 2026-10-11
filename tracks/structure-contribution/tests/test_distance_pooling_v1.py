@@ -483,6 +483,44 @@ def test_decision_bands():
     assert drv.decide_case(+0.01) == "C"
 
 
+def test_resolve_decision_requires_all_predictive_conditions():
+    drv = _driver()
+    assert drv.resolve_decision("A", True, True, True, True) == "SOFT5_PREDICTIVE_SIGNAL"
+    assert drv.resolve_decision("A", False, True, True, True) == "UNCERTAIN"
+    for ordinary, not_extreme, engineering in ((False, True, True), (True, False, True), (True, True, False)):
+        assert (
+            drv.resolve_decision("A", True, ordinary, not_extreme, engineering)
+            == "SOFT5_PREDICTIVE_SIGNAL_UNCERTAIN"
+        )
+    assert drv.resolve_decision("B", False, False, False, False) == "SOFT5_LIMITED_SIGNAL"
+    assert drv.resolve_decision("C", True, True, True, True) == "SOFT5_NO_USEFUL_GAIN"
+
+
+def test_subgroup_and_stratified_helpers():
+    drv = _driver()
+    n = 200
+    y = np.linspace(-4.0, -1.0, n)
+    errors = {
+        "Hard5": np.full(n, 0.2),
+        "Soft5": np.full(n, 0.1),
+    }
+    payload = drv._subgroup_report(
+        y, errors, y <= -3.0, y > -3.0, "y<=-3", "y>-3"
+    )
+    assert payload["y<=-3"]["n"] + payload["y>-3"]["n"] == n
+    for name in ("y<=-3", "y>-3"):
+        assert abs(payload[name]["delta"] + 0.1) < 1e-12
+        assert payload[name]["mae_hard5"] > payload[name]["mae_soft5"]
+    strata = drv._stratified_report(
+        np.arange(n, dtype=np.float64), errors, qs=(0.0, 0.5, 1.0), label="index"
+    )
+    assert len(strata["strata"]) >= 2
+    assert strata["strata"][0]["range"][0] == 0.0
+    assert strata["strata"][-1]["range"][1] == float(n - 1)
+    for cell in strata["strata"]:
+        assert cell["n"] > 0 and abs(cell["delta"] + 0.1) < 1e-12
+
+
 def test_hashes_are_content_addressed():
     drv = _driver()
     a = {"x": torch.zeros(3), "y": torch.ones(2)}

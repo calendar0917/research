@@ -295,6 +295,31 @@ def predict_raw(model: nn.Module, rows: Sequence[Any], device: torch.device) -> 
     return torch.cat(outputs).numpy().astype(np.float64)
 
 
+def resolve_decision(
+    band: str,
+    ci_excludes_zero: bool,
+    ordinary_ci_excludes_zero: bool,
+    not_extreme: bool,
+    engineering_ok: bool,
+) -> str:
+    """Frozen band -> final label map (pure function, unit-tested).
+
+    ``SOFT5_PREDICTIVE_SIGNAL`` requires band A *and* a CI entirely below zero
+    *and* the y>-3 subgroup CI entirely below zero *and* the delta not being
+    single-row driven (valid:0172) *and* the engineering gates.  A band-A point
+    estimate whose CI contains zero is reported as ``UNCERTAIN``.
+    """
+    if band == "A":
+        if ci_excludes_zero and ordinary_ci_excludes_zero and not_extreme and engineering_ok:
+            return "SOFT5_PREDICTIVE_SIGNAL"
+        if not ci_excludes_zero:
+            return "UNCERTAIN"
+        return "SOFT5_PREDICTIVE_SIGNAL_UNCERTAIN"
+    if band == "B":
+        return "SOFT5_LIMITED_SIGNAL"
+    return "SOFT5_NO_USEFUL_GAIN"
+
+
 def mae(pred: np.ndarray, y: np.ndarray) -> float:
     return float(np.abs(pred - y).mean())
 
@@ -1491,6 +1516,8 @@ def stage_score() -> dict[str, Any]:
             raise RuntimeError(f"{arm}: checkpoint changed after freeze")
     if file_sha256(Path(__file__)) != manifest["extraction_program_sha256"]:
         raise RuntimeError("extraction program changed after freeze")
+    if file_sha256(OUT / "valid_predictions.npz") != manifest["combined_predictions"]["sha256"]:
+        raise RuntimeError("combined prediction file changed after freeze")
 
     preds = np.load(OUT / "valid_predictions.npz")
     pred_hard = preds["pred_Hard5"].astype(np.float64)
@@ -1514,13 +1541,23 @@ def stage_score() -> dict[str, Any]:
     delta = float(diff.mean())
     metrics["delta_soft5_minus_hard5"] = delta
     metrics["gap_to_target"] = {str(level): float(metrics["mae"]["Soft5"] - level) for level in TARGET_LEVELS}
+    metrics["fit_valid_gap"] = {
+        arm: {
+            "fit_all_mae": float(read_json(OUT / f"{arm}_train_meta.json")["auxiliary_internal_mae"]["fit_all_mae"]),
+            "valid_minus_fit": float(
+                metrics["mae"][arm]
+                - read_json(OUT / f"{arm}_train_meta.json")["auxiliary_internal_mae"]["fit_all_mae"]
+            ),
+        }
+        for arm in ARM_NAMES
+    }
     paired = bootstrap_paired(diff)
 
     # subgroups (all pre-declared)
     valid_rows = load_valid_rows()
     subgroup_payload: dict[str, Any] = {}
     subgroup_payload["y_bands"] = _subgroup_report(
-        y, errors, np.where(y <= -3.0)[0], np.where(y > -3.0)[0], "y<=-3", "y>-3"
+        y, errors, y <= -3.0, y > -3.0, "y<=-3", "y>-3"
     )
     atom_counts = np.asarray([int(valid_rows[i].dict_phi.shape[0]) for i in range(1000)])
     ring_rank = np.asarray([_valid_ring_rank(valid_rows[i]) for i in range(1000)])
@@ -1581,12 +1618,9 @@ def stage_score() -> dict[str, Any]:
         and read_json(OUT / "matching_audit.json")["all_match"]
     )
     if band == "A":
-        if ci_excludes_zero and ordinary_ci_excludes_zero and not_extreme and engineering_ok:
-            decision = "SOFT5_PREDICTIVE_SIGNAL"
-        elif not ci_excludes_zero:
-            decision = "UNCERTAIN"
-        else:
-            decision = "SOFT5_PREDICTIVE_SIGNAL_UNCERTAIN"
+        decision = resolve_decision(
+            band, ci_excludes_zero, ordinary_ci_excludes_zero, not_extreme, engineering_ok
+        )
     elif band == "B":
         decision = "SOFT5_LIMITED_SIGNAL"
     else:
