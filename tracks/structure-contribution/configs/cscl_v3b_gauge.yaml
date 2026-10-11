@@ -1,0 +1,108 @@
+# cscl-v3b — fit-only gauge normalization of the structured contribution head
+# Frozen protocol constants.  Written BEFORE the S-gauge training run; no field
+# may change after results are seen.
+#
+# Round question (single-variable intervention): does the v3 per-type minibatch
+# mean penalty on delta (a) constrain the type-conditional mean AND (b)
+# suppress legitimate within-type contextual variation, causing part of the
+# S-O gap?  We remove ONLY the delta term from the training objective and
+# replace the delta convention post-hoc by a prediction-invariant, fit-only
+# gauge fixing (alpha(t) += m_t, delta(i) -= m_{t(i)}, m_t = fit mean of delta
+# over type-t units).  Prediction must be bit-stable under the gauge change;
+# MAE may change (that is the intervention being tested) and the two effects
+# are reported separately.
+
+protocol_id: cscl-v3b-gauge-normalization
+seeds_allowed: [0]
+
+inherits: configs/strong_backbone_contribution_v3.yaml   # all architecture/data/optimizer constants
+
+references (frozen, not retrained):
+  F_full_y_seed0_dev_mae: 0.11641      # results/feasibility_v2_gpu
+  O_opaque_seed0_dev_mae: 0.14129      # results/cscl_v3 (primary best-monitor)
+  S_v3_per_type_pen_seed0_dev_mae: 0.19551   # results/cscl_v3 (primary best-monitor)
+
+data:
+  split: cscl_features.build_split_indices (unchanged 7200/800/2000, SMILES-grouped)
+  official_valid_test: never loaded
+  supervision: raw y (L1) only (NOT the frozen Full-Y prediction)
+  frozen_encoder: full_y_seed0_soup_state.pt (parameters frozen, unchanged)
+  frozen_feature_cache: data/cache/cscl_v3_frozen_features.pt (version-guarded)
+
+head_architecture: identical to v3 SBContribHead (118,168 params, same modules,
+  same init procedure seed 0, same alpha/delta/gamma/global banks).  No width,
+  embedding, relation-structure or reader change of any kind.
+
+training_intervention (THE ONLY mechanism change):
+  v3:   loss = L1(pred, y) + 1.0 * ( L_delta_batch_type_means + L_gamma_batch )
+  v3b:  loss = L1(pred, y) + 1.0 * L_gamma_batch
+  - L_delta_batch_type_means (weighted per-type minibatch mean-squared penalty
+    on delta) is REMOVED from training.
+  - L_gamma_batch = mean(gamma)^2 over the batch, implementation unchanged
+    (numerically identical to the v3 gamma term).
+  - penalty coefficient stays 1.0.
+  - all other hyperparameters identical: Adam, lr 1e-3, weight_decay 1e-5,
+    grad clip 5, batch 128, 240 epochs, shuffle seed 0+101, raw-y L1.
+  - checkpoint selection: primary best-monitor single checkpoint; secondary
+    top-5 monitor soup (pre-registered); no dev-based selection.
+
+gauge_normalization (post-training, prediction-invariant, fit-only):
+  m_t = mean of delta_raw over ALL fit_inner unit instances of type t
+        (unit-instance counts, not molecule counts; eval mode; float64)
+  alpha_canonical(t) = alpha_raw(t) + m_t
+  delta_canonical(i) = delta_raw(i) - m_{t(i)}
+  discipline:
+    - m_t uses fit_inner units and model outputs ONLY; no monitor/dev labels
+      or monitor/dev structural statistics;
+    - types with zero fit instances (expected: only the GLOBAL_UNK bucket):
+      deterministic fallback m_t = 0, count reported;
+    - offsets stored as a frozen buffer shipped with the checkpoint; the raw
+      trained parameters are not modified;
+    - every export labels raw vs canonical; the two are never mixed.
+
+verification_gates (frozen before the run):
+  pred_canonical == pred_raw on fit/monitor/dev within atol 1e-5
+  alpha_raw + delta_raw == alpha_canonical + delta_canonical within atol 1e-5
+  mean_fit(delta_canonical | type t) == 0 within atol 1e-6 (float64 accumulation)
+  within-type std of delta unchanged and same-type pairwise delta differences
+    unchanged: exact identity in real arithmetic; checked at atol 1e-6, which
+    only covers float32 output rounding (CPU rehearsal observed <= 1.4e-8;
+    tolerance calibrated BEFORE the formal run)
+  gamma / global banks / bias bit-identical under the gauge
+  batch-composition invariance and save/load roundtrip exact
+
+judgment_bands (engineering scale, frozen before results; not significance tests):
+  dev_mae_le_0.16:  the training-time delta identifiability penalty caused a
+    substantial predictive loss; next round may study keeping Full-Y's
+    per-bucket pair information and better type/relation separation WITHOUT
+    the strong penalty (not automatic).
+  0.16 < dev_mae_le_0.18: partial recovery; inspect whether the remaining gap
+    is the additive readout, the pooled-information compression, or
+    relation/unit interaction limits.  No penalty-coefficient search.
+  dev_mae_gt_0.18: removing the delta penalty does not close the structured
+    gap in this configuration; stop direct re-parameterisation of S and pivot
+    the next round to a separable readout that preserves Full-Y's strong
+    information path (not automatic).
+  special_case: better MAE with worse contribution semantics (unstable alpha,
+    worse delta/gamma compensation, failed synthetic recovery) => only a
+    predictive improvement may be claimed, not methodological success.
+
+evaluation:
+  metric: internal fit/monitor/dev raw-y MAE; primary = best-monitor checkpoint
+  paired: per-molecule signed-difference bootstrap vs F/O/S(v3), 2000 resamples,
+    seed 0 (statistic (e_a - e_b).mean(); erratum-consistent)
+  contribution_audit: raw AND canonical alpha distribution, per-type delta
+    mean/std, m_t distribution, gamma distribution, global channels, channel
+    covariance; delta within-type std comparison v3-S vs v3b-S (context
+    variation recovered?); gamma variance share comparison (compensation
+    reduced?); Var-channel/Var(pred) shares are descriptive, NOT independent
+    explained-variance percentages
+  synthetic: corrected known-truth attachment task (index D_HIST+4 = 36) on
+    real frozen features, CPU, seed 0, NEW objective; NOT numerically
+    comparable to the v3 synthetic (ground-truth definition changed)
+
+compute:
+  gpu: res GPU1 only (pool res-gpu1, CUDA_VISIBLE_DEVICES=1), single model
+    S-gauge-seed0
+  forbidden: seed 1, retraining F/O/S(v3), penalty-coefficient or lr arms,
+    architecture changes, end-to-end fine-tuning, automatic follow-up runs
