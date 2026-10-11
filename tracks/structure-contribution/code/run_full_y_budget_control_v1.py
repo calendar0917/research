@@ -1183,7 +1183,7 @@ def stage_score(device: torch.device) -> dict[str, Any]:
         "p95_abs_error": {"F7200": float(np.percentile(e72, 95)), "F10000": float(np.percentile(e10, 95))},
         "max_abs_error": {"F7200": float(e72.max()), "F10000": float(e10.max())},
         "fit_mae_y": {
-            "F7200": read_json(F7200_META)["auxiliary_internal_mae"]["fit"],
+            "F7200": read_json(F7200_META)["auxiliary_internal_mae"]["fit_mae"],
             "F10000": read_json(HIST_Y_JSON)["fit_raw_mae_y"],
         },
         "background": {
@@ -1284,12 +1284,19 @@ def stage_score(device: torch.device) -> dict[str, Any]:
     delta = float(d.mean())
     ci = paired["ci95"]
     band = decide_band(delta)
+    # uncertainty rule frozen in the protocol: a CI that contradicts the band
+    # label (or straddles the decision threshold) makes the verdict "uncertain".
+    ci_conflict = bool((band in ("A", "B") and ci[1] >= 0.0) or (band == "C" and ci[1] < 0.0))
     decision = {
         "protocol_id": PROTOCOL_ID,
         "delta_F10000_minus_F7200": delta,
         "paired_ci95": ci,
         "ci_supports_negative_improvement": bool(ci[1] < 0.0),
         "band": band,
+        "ci_conflict": ci_conflict,
+        "final_label": "uncertain" if ci_conflict else {"A": "budget_gain_clear",
+                                                      "B": "budget_gain_marginal",
+                                                      "C": "budget_gain_absent"}[band],
         "thresholds": DECISION_BANDS,
         "not_dominated_by_extreme_rows": bool(
             abs(subgroup["extreme_rows"]["delta_without_valid_0172"]) <= 1.5 * abs(delta) + 1e-9
