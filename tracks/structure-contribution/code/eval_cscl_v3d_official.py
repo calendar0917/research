@@ -50,9 +50,10 @@ import run_prediction_feasibility_v2 as rpv2  # noqa: E402
 from run_cscl_v3d import SBucketContribHead, OBucketHead, collate_bucket  # noqa: E402
 
 from torch_geometric.datasets import ZINC  # noqa: E402
-from tracks.ksvd.experiments.luyin16 import e2e_dictenv_p1 as p1run  # noqa: E402
+from tracks.ksvd.experiments.luyin16 import e2e_dictenv_p1 as p1  # noqa: E402
 from tracks.ksvd.experiments.luyin16 import (  # noqa: E402
     zinc_compact_v4_training_sufficiency as ztraining,
+    zinc_e2e_dictenv_p1 as p1run,
     zinc_static_dictionary_pair as sdp,
 )
 from tracks.ksvd.experiments.luyin16 import zinc_long_range_proxy as zlr  # noqa: E402
@@ -306,7 +307,7 @@ def stage_freeze(log=log):
     artifacts = {
         "F_soup": sba.SOUP_STATE, "O_bucket": V3D_DIR / "O_bucket_s0_best_state.pt",
         "S_bucket": V3D_DIR / "S_bucket_s0_best_state.pt", "gauge": V3D_DIR / "gauge_offsets_s0.pt",
-        "prep_fit7200": rpv2.PREP_NPZ, "legacy_prep_10k": rpv2.LEGACY_PREP,
+        "prep_fit7200": sba.PREP_NPZ, "legacy_prep_10k": sba.LEGACY_PREP,
         "encoded_train": ENCODED_TRAIN, "encoded_valid": ENCODED_VALID,
         "env_train": REPO_ROOT / "tracks/ksvd/results/e2e_dictenv_p1/cache/env_train.pt",
         "env_valid": REPO_ROOT / "tracks/ksvd/results/e2e_dictenv_p1/cache/env_valid.pt",
@@ -447,7 +448,7 @@ def stage_replay(log=log) -> dict:
     smiles = cf.load_canonical_smiles()
     subset = list(range(64))
     mols = _build_mols_raw(dataset_train, subset, smiles)
-    batch = p1run.env_collate([train[i] for i in subset])
+    batch = p1.env_collate([train[i] for i in subset])
     batch.y = torch.zeros(len(subset))
     feats_new, aud_new = bf.extract_batch_bucket(models["F"], batch, mols, [0.0] * len(subset), "cpu")
     blob = bf.load_bucket_cache(log=log)
@@ -585,7 +586,7 @@ def _predict_split(split: str, device: str, log=log, limit: int | None = None) -
     audit_totals: dict[str, float] = {}
     for s in range(0, n_mol, bf.EXTRACT_BATCH):
         chunk = list(range(s, min(s + bf.EXTRACT_BATCH, n_mol)))
-        batch = p1run.env_collate([rows[i] for i in chunk])
+        batch = p1.env_collate([rows[i] for i in chunk])
         batch.y = torch.zeros(len(chunk))
         ys_passed = [0.0] * len(chunk)   # y isolation: extraction never sees labels
         mols, aud = bf.extract_batch_bucket(models["F"], batch, [mols_raw[i] for i in chunk], ys_passed, device)
@@ -601,20 +602,27 @@ def _predict_split(split: str, device: str, log=log, limit: int | None = None) -
 
     # ---- batch-composition invariance (first 16 molecules, two groupings) ----
     subset = list(range(min(16, n_mol)))
-    b_all = p1run.env_collate([rows[i] for i in subset]); b_all.y = torch.zeros(len(subset))
+    b_all = p1.env_collate([rows[i] for i in subset]); b_all.y = torch.zeros(len(subset))
     f_all, _ = bf.extract_batch_bucket(models["F"], b_all, [mols_raw[i] for i in subset], [0.0] * len(subset), device)
     worst_bc = 0.0
+    mismatch_fields: list[str] = []
     for g in range(4):
         sub = subset[g * 4:(g + 1) * 4]
         if not sub:
             continue
-        b_part = p1run.env_collate([rows[i] for i in sub]); b_part.y = torch.zeros(len(sub))
+        b_part = p1.env_collate([rows[i] for i in sub]); b_part.y = torch.zeros(len(sub))
         f_part, _ = bf.extract_batch_bucket(models["F"], b_part, [mols_raw[i] for i in sub], [0.0] * len(sub), device)
         for j, m in enumerate(f_part):
             eq, w, wf = _features_equal(m, f_all[g * 4 + j])
-            worst_bc = max(worst_bc, w if eq else np.inf)
-    batch_inv = {"n": len(subset), "max_abs_float_diff": float(worst_bc), "ok": bool(worst_bc <= FEATURE_REPLAY_ATOL)}
-    log(f"[extract:{split}{suffix}] batch-composition invariance max|d|={worst_bc:.3e} ok={batch_inv['ok']}")
+            if not eq and not np.isfinite(w):
+                mismatch_fields.append(f"g{g}j{j}:{wf}")   # structural mismatch
+                worst_bc = np.inf
+            else:
+                worst_bc = max(worst_bc, w)                # float32 batch-shape drift
+    batch_inv = {"n": len(subset), "max_abs_float_diff": float(worst_bc),
+                 "structural_mismatch_fields": mismatch_fields[:16],
+                 "ok": bool(np.isfinite(worst_bc) and worst_bc <= FEATURE_REPLAY_ATOL)}
+    log(f"[extract:{split}{suffix}] batch-composition invariance max|d|={worst_bc:.3e} ok={batch_inv['ok']} {mismatch_fields[:4]}")
 
     # ---- S/O predictions + gauge invariance on the official split ----
     picks = list(range(n_mol))
@@ -656,7 +664,7 @@ def _predict_split(split: str, device: str, log=log, limit: int | None = None) -
     mol_has_unk = np.zeros(batch.n_mols, dtype=bool)
     mol_has_unk[umol[tids >= n_known]] = True
     unk_stats["molecules_with_unk"] = int(mol_has_unk.sum())
-    log(f"[extract:{split}] UNK: {unk_stats['unk_units']}/{unk_stats['n_units']} units "
+    log(f"[extract:{split}{suffix}] UNK: {unk_stats['unk_bucket_units']}/{unk_stats['n_units']} units "
         f"(GLOBAL_UNK {unk_stats['global_unk_units']}); molecules with UNK = {unk_stats['molecules_with_unk']}")
 
     # ---- S contribution export + independent additivity reconstruction ----
