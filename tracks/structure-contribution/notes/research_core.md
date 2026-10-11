@@ -188,3 +188,23 @@ XGBoost，则该生态位不成立。**
   不调参、不重训；official valid/test 从未加载。可解释溯源已导出
   （`results/strong_nongnn_predictor_v1/provenance_dev_s0.npz`：2000 分子 / 46,507 原子 /
   49,999 键 / 69,453 三体）。下一步若继续高阶表示或容量对照，需新的预注册 + 用户授权。
+
+- 2026-10-11 `zinc-full-y-budget-control-v1`（严格匹配的训练预算对照，用户授权的
+  单问题轮次）：把 Full-Y raw-y-only 训练从 fit_inner 7200 扩到 official-train 10000，
+  同代码/同超参（Adam 1e-3, wd 1e-5, clip 5, batch 128, 240 epochs, shuffle seed 101,
+  λ 33.95873017865987）/同 soup 规则（last-5, ep 236–240）/同评测路径，seed 0；
+  协议冻结于 `configs/zinc_full_y_budget_control_v1.yaml`（commit `a5409ee`），
+  报告 `notes/zinc_full_y_budget_control_v1.md`。
+  Phase A 复用审计通过（runner/artifact SHA、配方逐项、AST 只读 `decomp["y"]`、
+  init 仅数据 buffer 不同、y 逐位对齐、g+c−y<1e-9）且 10000 行 forward replay
+  通过（max|dpred| ≤5.7e-6）→ 10k 臂复用历史 seed-0 Y checkpoint，本轮只新增
+  1 条 7200 轨迹。**结果（official validation，1000 分子，raw-y）**：
+  F10000 − F7200 = **−0.015440**，配对 bootstrap CI95 **[−0.022937, −0.008017]**
+  （5000 次，seed 0；59.2% 分子更好）→ 预冻结 band A（clear budget gain），
+  去掉历史极值行 `valid:0172` 后 Δ'=−0.015225；子群方向一致，唯小分子（≤20 原子，
+  n=266）Δ≈0。绝对水平：F10000 valid 0.118618（= 历史记录，评测路径逐位复现），
+  距 0.09 差 0.0286、距 0.08 差 0.0386，因此 **Q2 答案是需要新的预测架构/表示，
+  而非继续购买预算**；official test 本轮未访问。附带发现（已记录）：
+  同 seed 同 GPU 的训练轨迹并非逐位可复现（重新 seed 的复制在 epoch 1 即相差
+  ~0.008，探针 `code/probe_seed0_determinism_v1.py`；CPU 逐位一致），
+  故 Δ 只能作臂级对照解读。

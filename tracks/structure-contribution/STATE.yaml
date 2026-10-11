@@ -1,15 +1,17 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-strong-prediction-route-audit-v1-completed
-current_round: cscl-strong-prediction-route-audit-v1
+phase: cscl-zinc-full-y-budget-control-v1-completed
+current_round: zinc-full-y-budget-control-v1
 next_round_candidate: >-
-  AWAITING USER AUTHORIZATION (audit decision C — do not change the y-only contract yet).
-  Recommended single purchase = strictly matched budget control `zinc-full-y-budget-control-v1`
-  (2 arms: fit7200 vs fit10000; same code/hyper/lambda/soup rule=last-5/epochs/eval; one official-valid
-  read, reuse disclosed; ~0.8 GPU-h).  Conditional alternative = `zinc-full-y-component-supervision-matched-v1`
-  only if the budget control shows <=0.003 valid-raw effect (preregistration drafts in
-  notes/decisions/decision_strong_prediction_route_v1.md).  Prior screen v1 stays STOPPED per its own
+  AWAITING USER AUTHORIZATION. The matched budget control is COMPLETE: band A
+  (F10000 - F7200 = -0.015440, paired CI95 [-0.022937, -0.008017]) but the absolute level is still
+  valid raw 0.118618, i.e. +0.0286 from 0.09 and +0.0386 from 0.08, with 20.5% of the error mass in
+  10 rows and no budget benefit on small molecules (<=20 atoms).  Per Q2 the next purchase must be a
+  NEW PREDICTION ARCHITECTURE / REPRESENTATION inside the y-only contract (not budget, hyper-parameters
+  or soup selection): needs a new preregistration + explicit user authorization.  The conditional
+  `zinc-full-y-component-supervision-matched-v1` draft is NOT triggered (its precondition was a
+  <=0.003 budget effect, which was refuted by band A).  Prior screen v1 stays STOPPED per its own
   pre-frozen rule (case D): both CPU candidates failed the first signal (monitor <= 0.10826): XGB-A Typed-WL
   monitor 0.34104 / dev 0.36880 (+0.25239 vs Full-Y 0.11641), XGB-B frozen-814 XGB monitor 0.20334 /
   dev 0.19727 (+0.08085); paired CIs entirely positive, robust to trimming. No seed 1, no third model,
@@ -26,7 +28,7 @@ track:
   protocol: notes/v0_protocol.md          # cscl-v0 预注册（冻结后再看结果）
   prior_work: notes/prior_work_positioning.md
 
-current_round: cscl-strong-representation-readout-screen-v1
+current_round: zinc-full-y-budget-control-v1
 hypotheses:
   H1: B(加性+真实关系) > A 且 B > C(关系打乱) 且 B 接近 D(不透明) —— 未验证
   H2: 可辨识性约束(参数分离+中心化+惩罚)使 α/δ/γ 分工跨 seed 稳定 —— 未验证
@@ -41,12 +43,8 @@ constraints:
   - GPU 正式实验仅 `res` GPU1 (pool res-gpu1, 进程内 cuda:0)，经 rr
 
 next_action: >-
-  cscl-strong-nongnn-predictor-v1 is COMPLETE with case C (stop the branch):
-  soup dev 0.11589 vs historical 0.11641, paired CI [-0.0053,+0.0041] crossing
-  zero; no seed 1 / second model / tuning / retraining. Durable results in
-  notes/strong_nongnn_predictor_v1.md and this round's block; raw artifacts in
-  (git-ignored) results/strong_nongnn_predictor_v1/. Next work requires a new
-  preregistration + user authorization.
+  see the effective top-level next_action block below (later duplicate key); this
+  pointer is kept only for historical readability.
 
 results_index:
   - path: results/cscl_v0_units_audit/audit.json
@@ -160,8 +158,16 @@ round_cscl-prediction-feasibility-v2:
       date: 2026-10-10
 
 next_action: >-
-  若继续本轨：以 Full-Y 骨架为预测基础，设计单元级贡献分解的新预注册
-  (需用户/导师确认)；不在本轮追加模型或 seed。
+  zinc-full-y-budget-control-v1 is COMPLETE: band A (F10000 - F7200 = -0.015440,
+  paired CI95 [-0.022937, -0.008017], 59.2% of molecules better) but the absolute
+  level is still valid raw 0.118618 (+0.0286 to 0.09, +0.0386 to 0.08) with a
+  heavy-tailed error mass and no gain on small molecules.  Q2 answer: the next
+  purchase must be a NEW PREDICTION ARCHITECTURE / REPRESENTATION inside the
+  y-only contract - not budget, hyper-parameters or soup selection.  No seed 1,
+  no third trajectory, no retraining, official test untouched.  Durable results in
+  notes/zinc_full_y_budget_control_v1.md and this round's block; raw artifacts in
+  (git-ignored) results/zinc_full_y_budget_control_v1/.  Next work requires a new
+  preregistration + user authorization.
 
 # ---------------------------------------------------------------------------
 # round: cscl-v3 (strong-backbone structural contribution, SB-CSCL, seed 0)
@@ -713,3 +719,85 @@ round_cscl-strong-prediction-route-audit-v1:
     已保存的 heldout npz（含 test 标签），仅复算历史 MAE，未用于任何选择；结论不依赖该复算。
   official_valid_test_loaded: false (no official split file; saved heldout artifacts read-only, disclosed)
   gpu_used: false
+
+# ---------------------------------------------------------------------------
+# round: zinc-full-y-budget-control-v1 (strictly matched training-budget control,
+# fit_inner 7200 vs official train 10000, seed 0; one new trajectory under REUSE_10K)
+# ---------------------------------------------------------------------------
+
+round_zinc-full-y-budget-control-v1:
+  protocol: configs/zinc_full_y_budget_control_v1.yaml (frozen commit a5409ee; driver + tests committed before the run)
+  report: notes/zinc_full_y_budget_control_v1.md
+  driver: code/run_full_y_budget_control_v1.py (audit/replay/train/predict/score)
+  tests: tests/test_full_y_budget_control_v1.py (13 passed)
+  probe: code/probe_seed0_determinism_v1.py (diagnostics only, writes no artifacts)
+  question: >-
+    (Q1) Does expanding Full-Y raw-y-only training from fit_inner 7200 to official train 10000
+    (same code/hyper/soup rule/eval path, seed 0) really improve official-validation raw MAE,
+    and does it clear the pre-frozen A band?  (Q2) Is the absolute level still far from the
+    0.09/0.08 targets, i.e. does the branch still need a new prediction architecture?
+  arms:
+    F7200: new seed-0 run, fit_inner 7200 rows, 57 steps/epoch x 240 = 13,680 steps, last-5 soup [236..240]
+    F10000: historical seed-0 Y checkpoint reused under REUSE_10K (10000 rows, 79 x 240 = 18,960 steps, soup [236..240])
+  phase_a_discipline:
+    reuse_decision: REUSE_10K
+    checks: >-
+      runner source SHA vs frozen manifest; artifact SHAs (soup/prep/last/init); recipe equality
+      (epochs/steps/lr/wd/clip/batch/lambda/shuffle); AST proof that training decomp reads only
+      decomp["y"]/decomp["g"] and c/gid/k only inside the np.savez export; label-free reconstruction;
+      408651 params both preps; init differs only in data buffers ['D','U','common_rms']; prep fit_idx
+      == fit_inner (7200) / arange(10000); y alignment exact (max diff 0.0); g + c - y < 1e-9; non-GNN scan
+    replay_gate: "10000 train rows, max|dpred| 5.72e-06 local / 3.82e-06 remote, MAE diff 5.7e-09, ok=true"
+  "gpu_run (res / a100-2 / pool res-gpu1 / cuda:0 / commit 92462c3 / exit 0)":
+    run_id: full-y-budget-f7200-20261011-204542-8d5fb6d5
+    F7200_wall_seconds: 1206.8
+    F7200_seconds_per_epoch: 5.028
+    F7200_soup_state_sha256: 8382c49c1116329ee5cea928a55e21952fe65f1dd1088b002c57779adc32c827
+    F7200_init_state_sha256: fc69a75a2723c23ed352c7e24584c0a53c6f9357370f973a4fadfa2464c2b092
+    F7200_internal_mae: {fit: 0.038478, monitor: 0.114280, dev: 0.113951}
+    F10000_reused_checkpoint_sha256: 7792c56045459a37c569424501352afb4f3fd8ebc06643522192710bfe85ecfe
+    F10000_internal_mae_historical: {fit_raw: 0.038638, monitor: 0.118258, dev: 0.116413}
+  freeze_and_eval_path (engineering gates, all pass):
+    frozen_predictions_sha256: {F7200: f8e9abb33e382f7b7438b98bcc148a291bf92c1d9fec77fc38a8b3178c777ab3,
+                                F10000: e59400cdf354717451058a12c5f356c0c8785da5b65a48e8828c6070451decd8,
+                                combined: f82cd75dca813bcdc8a1994a256654245c77b555117481fbaf32abc090e11aeb}
+    crosscheck_F10000_vs_historical_csv: "max|d| = 0.0 (bit-identical; 0.118618 independently reproduced)"
+    crosscheck_historical_F7200_soup_vs_v3d_export: "max|d| = 0.0"
+    label_source_crosscheck: "val y vs historical CSV y column: 0.0; row alignment 0 mismatches"
+    valid_label_reads: 2 (first score invocation crashed on a band-label KeyError after computing the
+      metrics; second invocation = final; same sha256-frozen prediction files and same pre-frozen rule)
+  "official_valid_result (1000 molecules, raw y, read after freeze)":
+    mae: {F7200: 0.134058, F10000: 0.118618}
+    delta_F10000_minus_F7200: -0.015440
+    paired_bootstrap_ci95: [-0.022937, -0.008017]   # 5000 resamples, seed 0
+    frac_F10000_better: 0.592
+    band: A_clear_budget_gain   # delta <= -0.010; CI excludes 0; ci_conflict=false
+    extreme_row_robustness: "delta without valid:0172 = -0.015225 (top row = 15.0% of F7200 error mass)"
+    rmse: {F7200: 0.668938, F10000: 0.653580}
+    median_p90_p95: {F7200: [0.072359, 0.247060, 0.359641], F10000: [0.060427, 0.224687, 0.308601]}
+    subgroups: "consistent improvement across y bands / cyclomatic / quartiles; only exception =
+      atoms <= 20 (n=266, delta +0.000381); atoms > 20 delta -0.021174; cyclomatic >= 4 -0.031478"
+    absolute_gaps: {F10000_to_0.09: 0.028618, F10000_to_0.08: 0.038618, F7200_to_0.09: 0.044058}
+    mae_excluding_valid_0172_derived: {F7200: 0.114036, F10000: 0.098810}
+  trajectory_reproducibility_finding: >-
+    Historical F7200 and the new F7200 share recipe/seed/GPU/prep but differ at epoch 1
+    (0.906464 vs 0.872567).  probe_seed0_determinism_v1 ran two freshly re-seeded 1-epoch replicas
+    in one process on the same GPU: identical init hash (fc69a75a..., also the formal run's),
+    identical first-batch loss, but different post-step weights and epoch-1 MAE (0.910273 vs
+    0.902745) -> GPU-level kernel nondeterminism amplified by Adam's sign-like updates; on CPU the
+    two replicas were bitwise identical (0.876541 twice).  Consequence: the delta is an arm-level
+    contrast and cannot be read as a bitwise-reproducible controlled variable.
+  official_valid_test_loaded: false (never accessed this round)
+  artifacts: >-
+    results/zinc_full_y_budget_control_v1/ (git-ignored): historical_reuse_audit.json,
+    protocol_replay.json, data_prep_audit.json, F7200_train_meta.json, F10000_train_or_reuse_meta.json,
+    F7200_last5_soup_state.pt, F7200_fit_pred.npz, valid_predictions.npz (+F7200/F10000_valid_preds.npz),
+    freeze_manifest.json, valid_metrics.json, paired_bootstrap.json, subgroup_analysis.json,
+    decision.json, seed0_determinism_probe_{gpu,cpu}.json
+  judgment: >-
+    Q1 = yes, the budget gain is real and clears band A (delta -0.015440, CI entirely below zero,
+    59.2% of molecules better, robust to the extreme row).  Q2 = yes, the absolute level is still far
+    from target (0.118618; +0.0286 to 0.09, +0.0386 to 0.08; heavy-tailed error mass; no gain on small
+    molecules), so the next purchase must be a new prediction architecture/representation inside the
+    y-only contract, not budget/hyper-parameters/soup selection.  Round stops here; no seed 1, no
+    third trajectory, no retraining, official test untouched.
