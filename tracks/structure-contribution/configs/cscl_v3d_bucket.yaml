@@ -1,0 +1,178 @@
+# cscl-v3d — distance-conditioned information fidelity + endogenous structural
+# contribution readout (bucket-complete S/O arms).
+# Frozen protocol constants.  Written BEFORE any v3d feature build, CPU test or
+# formal GPU training; no field may change after results are seen.
+#
+# Round question (single information intervention on top of v3c): the S/O
+# inputs of v3/v3b/v3c keep only bucket-MARGINAL pair moments, while the frozen
+# Full-Y reader consumes per-distance-bucket first/second moments.  Does
+# completely restoring those distance-conditioned statistics -- fed through the
+# SAME additive unit/relation channels to both a structured head and an opaque
+# control -- shrink (S_bucket - O_bucket) and (O_bucket - F)?
+
+protocol_id: cscl-v3d-distance-conditioned-contribution
+seeds_allowed: [0]
+
+inherits: configs/cscl_v3c_type_conditioned.yaml   # objective/data/optimizer/gauge discipline
+
+references (frozen, not retrained):
+  F_full_y_seed0_dev_mae: 0.11641            # results/feasibility_v2_gpu (monitor top-5 soup selection -- DIFFERENT checkpoint rule, disclosed)
+  O_opaque_seed0_dev_mae: 0.14129            # results/cscl_v3 (best-monitor)
+  S_v3_per_type_pen_seed0_dev_mae: 0.19551   # results/cscl_v3
+  S_gauge_v3b_seed0_dev_mae: 0.17317         # results/cscl_v3b
+  S_typecond_v3c_seed0_dev_mae: 0.15209      # results/cscl_v3c (soup secondary 0.14583 NOT substitutable)
+
+data:
+  split: cscl_features.build_split_indices (unchanged 7200/800/2000, SMILES-grouped)
+  official_valid_test: never loaded
+  supervision: raw y (L1) only (NOT the frozen Full-Y prediction)
+  frozen_encoder: full_y_seed0_soup_state.pt (parameters frozen, unchanged)
+  old_feature_cache: data/cache/cscl_v3_frozen_features.pt (read-only; never overwritten)
+  new_feature_cache: data/cache/cscl_v3d_bucket_features.pt (version-guarded; rebuildable)
+  fit-only vocab / type means / rel means / hinge knots: unchanged (refit on fit_inner only)
+
+phase_b_bucket_features (THE information intervention, defined before any build):
+  per RINGCHAIN unit u, per distance bucket b in {0,1,2,3,4} (Full-Y pair_bucket
+  = min(max(topological distance,1),5)-1, argmax of pair_relation[:5]):
+    count_intra[u,b], sum_pv_intra[u,b,:], sum_pv2_intra[u,b,:]   (pv2 = pair_value**2)
+  per unordered cross-unit relation (u,v), per bucket b:
+    count_cross[u,v,b] (already stored as rel_bucket_counts), sum_pv_cross[u,v,b,:], sum_pv2_cross[u,v,b,:]
+  assignment rules (verified per molecule):
+    every atom pair i<j appears exactly once in pair_index; same-unit pairs go
+    ONLY to intra; different-unit pairs ONLY to the unordered unit pair
+    (min,max) with no double counting; physical direct bonds remain the
+    rel_bond_hist/rel_pairs channel and are NOT equated with cross-unit pairs
+    (pair_index covers ALL i<j pairs, bonded or not).
+  conservation gates (frozen thresholds = v3 Phase-A tolerances):
+    - per molecule per bucket: sum_u intra + sum_(u,v) cross == Full-Y pooled
+      first/second moment blocks (relative <= 2e-4 / abs <= 2e-3 vs float32 pool)
+    - sum_b log1p(count) == Full-Y per-bucket log1p count blocks
+    - total per-bucket counts == n_pairs; bucket sums add up to the OLD stored
+      marginals exactly (unit_sum_pv / rel_sum_pv / unit_n_pv / rel_count)
+    - the STORED cache (not the live extraction) must rebuild Full-Y's pair
+      pooled first/second moments; reference blocks stored in the cache as
+      audit-only fields; S/O collate never reads the reference blocks
+    - C6-masked count blocks stay zero in Full-Y reader input; the new features
+      do NOT re-open a graph-level count channel
+  y is never used by the extraction.
+  provenance recorded in the cache: feature version, code fingerprint, frozen
+  checkpoint sha256, prep_fit7200 sha256, legacy prep sha256, split row hashes,
+  RINGCHAIN feature version + code fp, pair bucket rule, audit errors.
+
+heads (THE ONLY architecture change vs v3c / v3-O: appended input columns):
+  frozen numeric representation (chosen a priori, no search):
+    unit bucket block  = per bucket [count_intra, mean_pv, rms_pv]  -> 5*(1+48+48) = 485 cols
+    rel bucket block   = per bucket [mean_pv_cross, rms_pv_cross]   -> 5*(48+48)   = 480 cols
+    (bucket counts for relations already present as old rel_bucket_counts cols;
+     zero-count buckets -> mean=0, rms=0, count=0; means/rms recoverable from
+     sums + counts by construction)
+  S_bucket (SBucketContribHead):
+    pred = bias + sum_u(alpha_t + delta_u) + sum_r gamma_r + g_ctx + g_topo
+    delta input: [z 384 | ctx 40 | type_emb 16 | unit bucket 485] = 925
+    gamma input: [v3 rel row 1273 | rel bucket 480]               = 1753
+    alpha = Embedding(vocab,1); 16-D type embedding (delta only); banks/bias
+    unchanged; NO post-sum fusion; NO learned global bucket residual; intra-unit
+    bucket info enters ONLY unit contributions, cross-unit bucket info ONLY the
+    corresponding unit-pair contributions (AST-pinned)
+  O_bucket (OBucketHead):
+    identical input extension: unit_enc input 440 -> 925, rel_enc input
+    1273 -> 1753; DeepSets mean+sum pooling + opaque graph reader, hidden
+    width/depth/readout principle unchanged; NO extra capacity beyond the
+    appended input columns
+  same-information contract: S and O read the SAME BucketBatch tensors;
+    neither arm can access bucket information the other lacks (tests pin this).
+
+initialization (deterministic seed-0; frozen rule):
+  1. build the UNTRAINED v3c TypeCondContribHead (resp. v3 OpaqueHead) seed 0
+  2. build the new head seed 0; copy every shape-unchanged parameter BIT-EXACT
+  3. delta[0] (resp. unit_enc[0]): old 440 columns copied bit-exact, new 485
+     columns ZERO-initialized; gamma[0] (resp. rel_enc[0]): old 1273 columns
+     copied bit-exact, new 480 columns ZERO-initialized
+  4. trained historical checkpoints are NEVER loaded; new heads train from scratch
+  5. untrained predictions of new head == reference head (zero-init; device
+     float noise tolerated, exact equality expected on CPU)
+  recorded: param counts (+61,760 for BOTH arms -> S 193,128 / O 200,513),
+  shared-init hashes, zero-column checks, new-channel gradient reachability
+  capacity confound: the appended columns add the SAME +61,760 params to both
+  arms; S_bucket vs O_bucket therefore compares equal-added-capacity heads, but
+  the improvement of either arm vs its historical version confounds information
+  with +capacity (disclosed; no capacity-matched no-bucket ablation this round)
+
+training_intervention:
+  S_bucket: loss = L1(raw y) + 1.0 * gamma_batch_mean_penalty  (v3b/v3c verbatim;
+    NO delta penalty, NO embedding regulariser, NO distillation)
+  O_bucket: loss = L1(raw y) only (historical O objective; no hidden extras)
+  optimizer Adam lr 1e-3, weight_decay 1e-5, grad clip 5, batch 128, 240 epochs,
+  shuffle generator seed 0+101 (same batch sequence as v3/v3b/v3c), both arms
+  trained SEQUENTIALLY (S first, then O) on res GPU1
+  checkpoint rule: primary best-monitor single checkpoint; secondary pre-defined
+  top-5 monitor soup; no early stopping; dev NEVER used for selection; dev
+  metrics computed only AFTER both arms have finished training + selection
+
+gauge_normalization (S_bucket only; identical to v3b/v3c):
+  m_t from ALL fit_inner unit instances; alpha+=m_t, delta-=m_t; fit-only,
+  prediction-invariant, offsets frozen buffer; zero-fit types fallback m_t=0;
+  O receives NO gauge treatment (not defined for the opaque head).
+
+verification_gates (frozen; all must pass BEFORE the GPU run):
+  - bucket mapping: unique atom->unit; pairs partition intra/cross exactly once;
+    endpoint swap / relabel / batch composition invariance
+  - stored-cache reconstruction of Full-Y pair pooled moments (first/second)
+  - new columns receive gradients and change predictions after one step
+  - untrained new heads == historical heads exactly (CPU)
+  - S strict additivity; gauge losslessness; O has no undisclosed inputs
+  - official valid/test never loaded; F prediction never an input/supervision
+  - synthetic tasks pass (see below)
+
+synthetic known-truth (CPU seed 0; TWO SEPARATE tasks, reported separately):
+  task A (corrected attachment task, v3b/v3c verbatim): truth generator/data/
+    seeds identical to results/cscl_v3b/synthetic_gauge_s0.json (attachment idx
+    D_HIST+4=36; gamma*-only objective; noise 0.05); same-protocol comparison to
+    v3b/v3c allowed
+  task B (NEW, pre-frozen bucket-specific interaction): identical to task A
+    EXCEPT pair_A's contribution is bucket-modulated: gamma_r = 0.9 *
+    frac_0(r), frac_0(r) = rel_bucket_counts[r,0]/rel_count[r] (bucket-0 =
+    bonded distance); pair_B stays constant -0.7, pair_C constant +0.5.
+    metrics: slope/correlation of gamma_hat vs 0.9*frac_0 over dev pair_A
+    instances (~1 expected), pair_B/C slope vs frac_0 ~0, confuser ~0,
+    canonicalization invariance
+  no generator tuning to make a model pass; failures are reported as failures.
+
+judgment_bands (pre-registered, exploratory engineering scale; not significance):
+  case_A: S and O both improve AND S_bucket-O_bucket <= 0.02 AND
+    S_bucket-F <= 0.02 with all mechanism checks passing -> structured readout
+    approaches the strong backbone under the internal protocol; freeze method,
+    next step INDEPENDENT VALIDATION (new authorization; not this round)
+  case_B: O_bucket approaches F but S_bucket lags (S_bucket-O_bucket > 0.02) ->
+    additive exit underuses the restored information; reflect on expression
+    limits; do NOT grow encoders
+  case_C: neither arm improves materially (both vs historical within noise) ->
+    bucket compression is NOT the main O-F explanation; stop claiming it; next
+    round studies the Full-Y reader's nonlinear mixing instead
+  case_D: S_bucket improves but O_bucket improves more -> bucket information has
+    predictive value but does not close the structured-vs-opaque gap; no success
+    claim from a new S record alone
+  case_E: prediction ok but mechanism checks fail -> predictive improvement
+    only; no interpretability claim
+  disclosure: arms keep their historical loss difference (S has the gamma
+    penalty); F's checkpoint rule differs (soup); both vs historical comparisons
+    carry +61,760 params of capacity confound.
+
+evaluation:
+  metric: internal fit/monitor/dev raw-y MAE; primary = best-monitor checkpoint
+  primary judgment: same-information S/O comparison + the three gaps
+    (S_bucket-O_bucket, S_bucket-F, O_bucket-F) plus historical deltas
+    (S_bucket-S_v3c, O_bucket-O_v3), all on the SAME dev rows, signed paired
+    bootstrap 2000 resamples seed 0 (statistic (e_a-e_b).mean())
+  contribution_audit: raw+canonical exports, channel var shares (descriptive),
+    gamma bonded-vs-not and per-dominant-bucket stats, gamma var share vs v3c
+    1.8%, alpha split-half gauge stability, UNK stratified MAE for all arms,
+    subgroup table
+  forbidden: seed 1, third arm, no-bucket ablation training, hyperparameter or
+    normalization search, extra relation mechanisms, global black-box bypass,
+    end-to-end unfreezing, dev-driven追加训练, official valid/test access
+
+compute:
+  gpu: res GPU1 only (pool res-gpu1, CUDA_VISIBLE_DEVICES=1), sequential
+    S_bucket-seed0 then O_bucket-seed0, ONE successful formal run each
+  stop after the round: report, commit, no automatic next round.
