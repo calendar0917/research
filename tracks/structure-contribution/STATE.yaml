@@ -18,7 +18,7 @@ next_round_candidate: >-
   no tuning (tree depth/lr/trees/radius/hash width), no full-8000/10000 refit, no feature fusion,
   no official valid/test. Next prediction work needs a NEW preregistration + user authorization;
   candidate directions listed in the audit decision doc.
-updated: 2026-10-11
+updated: 2026-10-12
 
 track:
   slug: structure-contribution
@@ -56,6 +56,9 @@ results_index:
   - path: results/cscl_v0_synthetic/synthetic_relational_s0.json
     one_line: 合成真值 — α 方向恢复 0.875(λ 惩罚有效), 真交互 γ 检出 0.134 vs 陷阱 0.069; soup 破坏归因(addendum)
     date: 2026-10-10
+  - path: results/structural_relation_composer_v1/round_summary.json
+    one_line: BJOC one-shot composer round — matched F 0.10189 / N 0.09996 / O 0.09723 locked dev (Δ_org −0.00273 CI跨零); official valid full-10k N 0.103423 / O 0.108399 vs historical 0.118618; verdict PROMISING_REPRESENTATION_ONLY
+    date: 2026-10-12
   - path: results/cscl_v0_gpu/REPORT.md
     one_line: 正式 GPU1 round (seeds {0,1}) — A 0.4255 / B 0.4673 / C 0.4311 / D 0.4043 / XGB 0.4760; B<A 且 B<C(两 seed CI<0), B-D≈+0.063 DEGRADED, B≈XGB; H1 被反驳
     date: 2026-10-10
@@ -882,3 +885,95 @@ round_cscl-distance-pooling-bottleneck-v1:
   status: COMPLETED 2026-10-11; round stopped (no seed 1, no third arm, no search,
     no retuning, no test access)
   results_dir: results/distance_pooling_bottleneck_v1/ (git-ignored)
+
+# ---------------------------------------------------------------------------
+# round: cscl-structural-relation-composer-v1 (BJOC one-shot object composer,
+# matched organization contrast N/O + Full-Y reference, grouped split, one-shot
+# locked-dev readout, conditional full-10k candidate + one official-valid read)
+# ---------------------------------------------------------------------------
+
+phase: cscl-structural-relation-composer-v1-completed
+current_round: structural-relation-composer-v1
+next_round_candidate: >-
+  AWAITING USER AUTHORIZATION.  The BJOC round is COMPLETE and its report is
+  notes/structural_relation_composer_v1.md with verdict PROMISING_REPRESENTATION_ONLY.
+  Open items for a possible next round: (1) the predictor advantage over the matched
+  Full-Y is only significant on the internal monitor split (monitor −0.0132/−0.0127 CI<0)
+  and not on the one-shot locked dev (−0.0047 CI includes 0) — a higher-power replication
+  (e.g. 2 more seeds × a fresh grouped split, or a full-10k N/O pair evaluated on the same
+  frozen split) would settle it; (2) the ownership (organization) effect is sign-unstable
+  (monitor/locked negative, official valid +0.00498) and never CI-supported, while the
+  mechanism is demonstrably functional (within-molecule ownership permutation costs 36%
+  MAE) — a targeted next step is a task/representation where ownership is *predictively*
+  necessary (e.g. per-bond property targets, atom-mapped spectra-style targets, or
+  multi-task supervision) rather than more ZINC MAE power; (3) the historical reference
+  0.118618 is from another trajectory, so a matched full-10k Full-Y arm would be needed
+  before any "BJOC beats Full-Y on official validation" claim.  No further GPU work is
+  authorized without a new preregistration.
+
+round_cscl-structural-relation-composer-v1:
+  protocol: configs/structural_relation_composer_v1.yaml (frozen before the formal runs)
+  report: notes/structural_relation_composer_v1.md
+  driver: code/run_structural_relation_composer_v1.py (audit/prep/synthetic/train-f/train-bjoc/eval-locked/mechanism/eval-valid)
+  model: code/structural_relation_composer_v1.py (BJOC, 413,505 params; object builder code/structural_relation_objects_v1.py)
+  tests: tests/test_structural_relation_composer_v1.py (16 fast passed; 3 slow)
+  question: >-
+    With identical atoms/bonds/junctions and one shared parameter set, does keeping the
+    TRUE junction-to-bond ownership (W_b = sum_{j touches b} w_j, V_b = sum w_j^2) buy
+    generalisable predictive value over a null arm that preserves every marginal
+    (W_b = n_b * graph_mean(w), V_b = n_b * graph_mean(w^2); sum_b W_b and sum_b V_b exactly
+    conserved), and does the one-shot object composer work as a predictor at all?
+  phase_a_audit: >-
+    counterexample (4 bonds {P,P,Q,Q} / 4 junctions {X,X,Y,Y}, A vs B) has identical bond and
+    junction multisets, per-bond counts and graph moments: organized W_b differ 3.3e-2, null
+    W_b bit-identical, incidence targets differ (56 vs 54).  Negative control: the alternating
+    chain relabel is NOT graph-observable.  Label audit: 9,996 unique SMILES, 4 duplicate
+    groups, 1 with inconsistent y (spread 0.0197, rows 941/2264), 0 WL-collision conflicts.
+  phase_d_synthetic: >-
+    object-level incidence target: organized beats null in 5/5 seeds (0.076-0.117 vs 0.291-0.429);
+    marginal-only control: tie / null slightly ahead; molecular random graphs: 0.0186 vs 0.0296.
+    Proves representability of the ownership function, not that ZINC rewards it.
+  phase_e_split: >-
+    new grouped split by canonical SMILES, group order sha256("cscl-structural-relation-composer-v1"|smiles),
+    greedy fill: fit 8000 / monitor 1000 / locked 1000; duplicated molecules never cross
+    boundaries; fit-only prep (Full-Y patch/ctx/topo/anchor stats, K-SVD dictionary, global standardiser).
+  phase_f_gpu_seed0 (pool res-gpu1, commits 950448e0/f34f4a36): >-
+    identical init and shuffle streams across arms (identical seeds); last-5 soup 236-240; wall
+    F 1405 s / N 385 s / O 381 s.  Monitor: F 0.11219, N 0.10022, O 0.09899.
+    Matched contrasts: O-F -0.01320 [-0.02056,-0.00552], N-F -0.01197 [-0.01964,-0.00444],
+    O-N -0.00123 [-0.00656,+0.00447].
+  phase_g_locked_dev (one-shot, after all three seed-0 arms frozen): >-
+    O 0.09723 / N 0.09996 / F 0.10189; O-N -0.00273 [-0.00828,+0.00294]; O-F -0.00466
+    [-0.01246,+0.00419]; N-F -0.00193 [-0.01032,+0.00812]; 52.4% of molecules better for O vs F.
+    RMSE/median/p90: O 0.1831/0.0626/0.1961, N 0.1960/0.0619/0.2052, F 0.1680/0.0661/0.2161
+    (F best tail, worst mean/median/p90).  First eval-locked attempt crashed on a subgroup
+    indexing typo BEFORE writing any artifact; the readout was then taken exactly once.
+  phase_h_full10k_official_valid (conditional; one label read after freeze): >-
+    full-10k N fit 0.0521 / O fit 0.0670; official-valid MAE N 0.103423, O 0.108399
+    (historical Full-Y reference 0.118618, disclosed/not matched); O-N +0.00498
+    [-0.00198,+0.01115]; RMSE N 0.2559 / O 0.2158 vs historical 0.5987.  Predictions and
+    checkpoint hashes frozen in official_valid_freeze.json before the single y read.
+    Official test never loaded.
+  phase_i_mechanism (frozen O model, monitor rows only): >-
+    within-molecule permutation of w (junction multiset exactly preserved): mean |dpred| 0.0784,
+    MAE 0.0990 -> 0.1345 (+36%, 2 seeds 0.1345/0.1333); null assignment: 0.1851; across-molecule
+    permutation: 0.3545; masking atom type 0.6037, radius2 0.9238, ring 0.8452, bond-type one-hot
+    0.2387, global 0.5775, roles 0.1494.  Null model given the true assignment moves 0.0393.
+    Junction encoder receives gradient (1.06 after one fit-batch step) - not a dead branch.
+  deviation_notes: >-
+    seed-1 pair and full-10k pair were run although the pre-registered resource rule was not
+    triggered (4/4 then-available Δ_org point estimates negative but CIs crossing zero); a
+    crashed full-10k O run had already saved its 240-epoch checkpoint and was reused (hash-frozen);
+    7 trained models vs the 6-trajectory cap (seed-1 pair is the overrun); total GPU ~1.1 h of 5 h.
+  judgment: >-
+    PROMISING_REPRESENTATION_ONLY.  The strictly one-shot object composer (no GNN/attention/
+    recurrence, 413,505 params) is consistently better than the matched Full-Y (6/6 matched
+    comparisons negative; 3/6 paired CIs exclude zero, all on the monitor split) and 0.010-0.015
+    MAE better than the historical Full-Y on official validation.  The ownership hypothesis H-ORG
+    is NOT established: Δ_org is negative on monitor seed 0/1 and locked dev but positive on
+    official valid (+0.00498), every CI includes zero, while the mechanism shows the ownership
+    channel is functional but compensable by the marginal arm.  H-REP (local representation is
+    the binding constraint) is the better-supported reading; the synthetic experiment remains the
+    only setting where ownership dominates.
+  status: COMPLETED 2026-10-12; round stopped (no further seeds, no tuning, no test access)
+  results_dir: results/structural_relation_composer_v1/ (git-ignored)

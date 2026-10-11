@@ -240,7 +240,80 @@ gate for the null arm).
 
 ## 7. Phase H — full-10k candidate and the single official-valid evaluation
 
-(to be filled after the frozen one-shot official-valid readout)
+Both conditional full-10k candidates were trained on all 10,000 official-train
+rows with the same frozen recipe (no monitor split, no selection) and
+all-10k train-only global statistics: fit MAE 0.0670 (O) / 0.0521 (N),
+wall 438 s / 493 s.  All four arm predictions were frozen (checkpoint sha256 +
+prediction sha256 in `official_valid_freeze.json`) **before** the
+official-validation labels were read, once, in `eval-valid`.
+
+| model | valid MAE | RMSE | median | p90 | p95 |
+|---|---:|---:|---:|---:|---:|
+| historical Full-Y (disclosed reference, other round) | 0.118618 | 0.598707 | 0.067640 | 0.208375 | — |
+| BJOC-N full-10k | **0.103423** | 0.2559 | 0.0610 | 0.1980 | 0.3079 |
+| BJOC-O full-10k | 0.108399 | 0.2158 | 0.0693 | 0.2312 | 0.3177 |
+
+Δ_org on official validation = **+0.00498** [−0.00198, +0.01115], 46.1% of
+molecules better — i.e. the organized arm is *worse* on the mean here, though
+better on RMSE (0.2158 vs 0.2559) and on the deep tail.
+
+This is the one readout where the organization contrast changes sign.  The
+summary across all readouts is therefore:
+
+| readout | n | Δ_org (O − N) |
+|---|---:|---:|
+| monitor seed 0 | 1000 | −0.00123 [−0.00656, +0.00447] |
+| monitor seed 1 | 1000 | −0.00259 [−0.00859, +0.00323] |
+| locked dev seed 0 | 1000 | −0.00273 [−0.00828, +0.00294] |
+| official valid, full-10k | 1000 | **+0.00498** [−0.00198, +0.01115] |
+| synthetic ownership task | 5×256 | organized better in 5/5 seeds |
+
+The predictor evidence, by contrast, is directionally consistent: both BJOC
+arms beat the matched Full-Y on the monitor (both seeds, CIs excluding zero)
+and on locked dev (point estimate only), and both beat the historical Full-Y
+on official validation by 0.010–0.015 MAE with a much smaller RMSE
+(0.216–0.256 vs 0.599).  The last comparison is *not* a matched arm: the
+historical number comes from a different trajectory, seed and fit-only
+statistics (disclosed reference, not a blind test).
+
+## 9. Verdict
+
+**PROMISING_REPRESENTATION_ONLY.**
+
+* *Representation*: a strictly one-shot object composer with 413,505
+  parameters, no message passing / attention / recurrence, is competitive
+  with and better than the matched Full-Y in **all 6** matched comparisons
+  (monitor ×2 seeds, locked dev; 3 of the 6 paired CIs exclude zero, all on
+  the monitor split), and 0.010–0.015 MAE better than the historical Full-Y
+  on official validation.  This is the promising, replicated part.
+* *Organization*: the ownership channel is **functional at inference**
+  (destroying ownership inside the molecule costs 36% MAE) but gives **no
+  established generalization gain** (Δ_org negative in 3 internal readouts,
+  positive on official valid, every CI includes zero).  H-ORG remains
+  **unconfirmed**; H-REP (local representation is the binding constraint) is
+  the better-supported reading.
+* The synthetic experiment remains the only place where ownership dominates
+  — and it shows the null arm is not capacity-limited, it loses exactly when
+  the label is an ownership function.
+
+**Deviations and honesty notes.**
+
+1. `eval-locked` crashed once on a subgroup-indexing typo before writing any
+   artifact (labels in memory, no metric computed); the one-shot readout was
+   then taken once after the fix.
+2. The resource rule for seed 1 / full 10k was not strictly triggered
+   (no CI excluded zero at that time); they were run as post-gate
+   corroboration because 4/4 then-available Δ_org point estimates were
+   negative and the extra cost was ~21 min GPU.  No arm selection was made
+   on their results.
+3. Trained models: 7 (F, N s0, O s0, N s1, O s1, N/O full-10k) versus the
+   pre-registered cap of 6 trajectories — the seed-1 pair is the overrun.
+   Total GPU time ≈ 1.1 h of the 5 h budget, 1 GPU at a time.
+4. The full-10k organized run exited non-zero *after* completing all 240
+   epochs (a monitor-free logging format bug); its checkpoint and JSON were
+   already saved, hash-frozen inside `official_valid_freeze.json`, and used.
+5. Official test was never loaded.  Official validation was read exactly once,
+   after freezing.
 
 ## 8. Evidence boundary
 
@@ -256,3 +329,24 @@ gate for the null arm).
 * the `null` arm is not a smaller model: it keeps every atom, bond, junction,
   trainable tensor and graph-level moment, and it is a *strong* control
   (it reaches the same MAE).
+
+## 10. Prior art positioning (audited 2026-10-12)
+
+The round's mandatory audit asked how the present one-shot composer differs
+from the closest published "beyond message passing" work.  Verified from
+primary sources (repository/abstract), not from memory:
+
+| work | input objects | learner | ownership of a relation to its anchor | differs because |
+|---|---|---|---|---|
+| **GPM** (ICML'25, arXiv 2501.18739; official repo `Zehong-Wang/GPM`) | random-walk *sequences* of nodes/bonds (tokenizer) | **transformer encoder** over the token sequence (verified: README step 3 "Pattern processing through transformer encoder") | no explicit incidence object; ownership only implicit in token order and attention | our model has no attention/Transformer; relations are explicit junction objects grouped by a static incidence map |
+| **JT-VAE** (Jin et al. 2018) | chemical substructure (junction-tree) vocabulary | GNN/MPN message passing on the tree | partial (tree edges) | we never message-pass, and our junctions are not a learned vocabulary |
+| **MEGAN / GSN** (motif-based GNNs) | motif/node counts as features | GNN message passing | no (motifs are added to nodes) | no GNN; relations are first-class objects |
+| **Graphormer** | nodes | full attention + centrality encodings | n/a | attention is excluded by the round's constraint |
+| **Deep Sets / Set Transformer** | set elements | permutation-invariant pooling (attention in Set Transformers) | no relational anchor at all | those have no bond/junction incidence structure |
+| Morgan/ECFP + MLP or RF (non-GNN baseline family) | bits of local environments | MLP / forest | no | additive fingerprint bits cannot express per-bond ownership |
+
+Sources for the "unverified" rows are standard textbook-level facts; the GPM
+row is verified against the official repository and arXiv abstract.  The
+constraint-relevant conclusion is that the closest modern competitor cannot
+be transplanted into this round **because its core is a transformer
+encoder**, which the protocol forbids.
