@@ -1122,9 +1122,14 @@ def cmd_eval_locked(args: argparse.Namespace) -> int:
         locked_data = [train[i] for i in locked]
         preds["full_y"] = rpv2.predict_raw(model, locked_data, device)
 
+    ckpt_hashes = {}
+    for f in sorted(OUT.glob("*_soup_state.pt")):
+        ckpt_hashes[f.name] = file_sha256(f)
     payload: dict[str, Any] = {
         "protocol": PROTOCOL_ID,
         "stage": "eval_locked",
+        "git_commit": git_commit(),
+        "checkpoints_sha256": ckpt_hashes,
         "n_locked": len(locked),
         "locked_rows_sha256": hashlib.sha256(np.ascontiguousarray(locked, dtype=np.int64).tobytes()).hexdigest(),
         "locked_labels_read": True,
