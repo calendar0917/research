@@ -39,15 +39,16 @@ pass (static source checks + live module inspection on the frozen checkpoint).
 | reader | `[unary 289 \| pair moments 485 \| global 32 \| topology 8]` = **814** | live `reader_in=814`, params **408,651** |
 | C6_MASK | zeroes unary count, pair count, relation path-count; topology **not** zeroed | `e2e_dictenv_clean_mechanism_v1.py:63` + live tuple check |
 
-Frozen pair-state descriptor audit (`distance_descriptor_audit.json`, historical
-soup checkpoint, 10,000 label-blind forward passes):
+Frozen pair-state descriptor audit (`distance_descriptor_audit.json`, the
+historical full-10k soup checkpoint with SHA256 `7792c560…` = the frozen
+0.118618 reference, 10,000 label-blind forward passes):
 
 * the masked relation input still carries `log1p(distance)` (max abs gap < 1e-6)
   and the path-count column is exactly 0;
 * the `distance_gate` output is exactly constant inside each hard bucket;
 * the pair encoder output **does** vary with exact distance, including inside the
-  last bucket (cosine distance of mean `pair_value` vs d=8: d=5 0.0236, d=6
-  0.0103, d=7 0.0026, d=9 0.0014, d=10 0.0055, d=11 0.0100, d=12 0.0191).
+  last bucket (cosine distance of mean `pair_value` vs d=8: d=5 0.0052, d=6
+  0.0027, d=7 0.0009, d=9 0.0016, d=10 0.0071, d=11 0.0163, d=12 0.0477).
 
 This establishes that (a) the continuous distance coordinate is already
 consumed by the relation encoder, so Soft5 introduces **no new information**,
@@ -117,7 +118,7 @@ parameters, no new RNG consumption (`pair_pooling` is a plain attribute).
 * Hard5 pooled features and prediction are **bit-identical** to the frozen
   `AuditModel.forward` path (max |Δ| = 0.0, readout and prediction);
 * Soft5 weights: finite, non-negative, row sums 1 (max dev 1.19e-7);
-* conservation vs a float64 reference: first 3.7e-8, second 3.5e-8, count
+* conservation vs a float64 reference: first 3.7e-8, second 3.9e-8, count
   2.0e-8 relative;
 * endpoint-swap, pair-permutation, batch-composition and single-molecule
   invariants hold; the C6 pair-count block is exactly zero;
@@ -127,10 +128,10 @@ parameters, no new RNG consumption (`pair_pooling` is a plain attribute).
 * forward output is unchanged when `batch.y` is randomised (y-independence).
 
 `hard5_soft5_feature_audit.json` — on identical frozen pair states over all
-10,000 train molecules: mean relative feature difference 0.459 (p50 0.458,
-p90 0.538, max 0.695); **100%** of molecules differ by >1%. Loss of effective
-rank inside the 480-D moment block: participation ratio 10.60 (Hard5) → 8.06
-(Soft5); flattened correlation 0.888.
+10,000 train molecules: mean relative feature difference 0.495 (p50 0.496,
+p90 0.573, max 0.702); **100%** of molecules differ by >1%. Loss of effective
+rank inside the 480-D moment block: participation ratio 5.21 (Hard5) → 4.16
+(Soft5); flattened correlation 0.872.
 
 `cpu_purchase_gate.json`:
 
@@ -171,6 +172,11 @@ about prediction quality. The frozen Full-Y `distance_gate` remains hard-bucket;
 Soft5 changes only the graph-level pooling of the pair states. Official
 validation was already exposed in earlier rounds, so the upcoming evaluation is
 a controlled comparison on an exposed instrument, not a fresh blind test.
+
+Provenance note: the audit's read-only Hard5 reference is the frozen
+confirmation-dir soup, pinned by SHA256 `7792c560…` (valid raw MAE 0.118618) in
+the driver; an earlier draft pointed at the older cycle-dir soup copy and was
+caught by the hash pin before any formal run.
 
 <!-- RESULTS_SECTION -->
 

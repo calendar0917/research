@@ -77,10 +77,10 @@ ENCODED_VALID = sdp.CACHE_DIR / "encoded_valid.pt"
 KSVD_CONF = REPO_ROOT / "tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1"
 HIST_PREP = KSVD_CONF / "all_train_prep.npz"
 HIST_PREP_META = KSVD_CONF / "prep_meta.json"
-HIST_Y_SOUP = (
-    REPO_ROOT
-    / "tracks/ksvd/results/zinc_full_cycle_target_decomposition_v1/Y_seed0_raw_soup_state.pt"
-)
+HIST_Y_SOUP = KSVD_CONF / "Y_seed0_raw_soup_state.pt"
+#: frozen historical full-10k Hard5 checkpoint (valid raw MAE 0.118618); the
+#: SHA256 is pinned so the audit cannot silently pick a different soup copy.
+HIST_Y_SOUP_SHA256 = "7792c56045459a37c569424501352afb4f3fd8ebc06643522192710bfe85ecfe"
 BUDGET_FREEZE = (
     REPO_ROOT
     / "tracks/structure-contribution/results/zinc_full_y_budget_control_v1/freeze_manifest.json"
@@ -167,6 +167,30 @@ def sha256_rows(rows: np.ndarray) -> str:
     import hashlib
 
     return hashlib.sha256(np.ascontiguousarray(rows, dtype=np.int64).tobytes()).hexdigest()
+
+
+def training_program_hash() -> str:
+    """Hash of the exact modules that define the training program.
+
+    This is the matching criterion that matters across arms: two runs with the
+    same training-program hash executed identical training code even if an
+    unrelated file changed between commits.
+    """
+    import hashlib
+
+    digest = hashlib.sha256()
+    for path in (
+        Path(__file__),
+        _CODE_DIR / "distance_pooling_v1.py",
+        Path(zpp.__file__),
+        Path(audit.__file__),
+        Path(cm.__file__),
+        Path(p1.__file__),
+        Path(sc.__file__),
+    ):
+        digest.update(path.name.encode())
+        digest.update(file_sha256(path).encode())
+    return digest.hexdigest()
 
 
 def state_hash(state: Mapping[str, torch.Tensor]) -> str:
@@ -1204,6 +1228,7 @@ def train_arm(
         "batches_per_epoch": int(math.ceil(len(rows) / BATCH_SIZE)),
         "n_train_rows": int(len(rows)),
         "fit_rows_sha256": sha256_rows(fit_rows),
+        "training_program_sha256": training_program_hash(),
         "soup_members": members,
         "soup_rule": "mean(state_dict at epochs 236..240)",
         "hyper": {
@@ -1284,6 +1309,9 @@ def arm_matching_audit() -> dict[str, Any]:
     metas = {arm: read_json(OUT / f"{arm}_train_meta.json") for arm in ARM_NAMES}
     checks: dict[str, Any] = {}
     checks["same_git_commit"] = len({m["git_commit"] for m in metas.values()}) == 1
+    checks["same_training_program_sha256"] = (
+        len({m["training_program_sha256"] for m in metas.values()}) == 1
+    )
     checks["same_n_train_rows"] = len({m["n_train_rows"] for m in metas.values()}) == 1
     checks["same_fit_rows_sha256"] = len({m["fit_rows_sha256"] for m in metas.values()}) == 1
     checks["same_prep_sha256"] = len({m["prep_sha256"] for m in metas.values()}) == 1
@@ -1301,14 +1329,24 @@ def arm_matching_audit() -> dict[str, Any]:
         "protocol_id": PROTOCOL_ID,
         "checks": checks,
         "all_match": bool(all(bool(v) for v in checks.values())),
-        "arms": {arm: {"pair_pooling": m["pair_pooling"], "init_state_sha256": m["init_state_sha256"],
-                       "soup_state_sha256": m["soup_state_sha256"], "wall_seconds": m["wall_seconds"]}
-                 for arm, m in metas.items()},
+        "arms": {
+            arm: {
+                "pair_pooling": m["pair_pooling"],
+                "git_commit": m["git_commit"],
+                "training_program_sha256": m["training_program_sha256"],
+                "init_state_sha256": m["init_state_sha256"],
+                "soup_state_sha256": m["soup_state_sha256"],
+                "wall_seconds": m["wall_seconds"],
+            }
+            for arm, m in metas.items()
+        },
         "note": (
-            "RNG state hashes are identical because both arms execute the identical op "
-            "sequence (only the pooling arithmetic differs); this is evidence of matched "
-            "dropout masks and batch streams, not of bitwise training reproducibility (the "
-            "GPU reduction order remains nondeterministic, documented in the report)"
+            "the primary matching criteria are the training-program hash, initial-state "
+            "hash, row/prep/cache hashes and RNG-stream hashes; the git commit is recorded "
+            "for provenance.  RNG state hashes are expected to be identical because both "
+            "arms execute the identical op sequence (only the pooling arithmetic differs); "
+            "this is evidence of matched dropout masks and batch streams, not of bitwise "
+            "training reproducibility (GPU reduction order remains nondeterministic)"
         ),
     }
     write_json(OUT / "matching_audit.json", result)
@@ -1672,6 +1710,11 @@ def stage_audit(max_descriptor_molecules: int = 10000, max_bfs: int | None = Non
     alignment = rpv2.verify_row_alignment(rows, log=log)
 
     frozen_model = dp.build_pooling_model(prep, 0, mode="hard5")
+    if file_sha256(HIST_Y_SOUP) != HIST_Y_SOUP_SHA256:
+        raise RuntimeError(
+            "historical Hard5 soup hash mismatch: "
+            f"{file_sha256(HIST_Y_SOUP)} != {HIST_Y_SOUP_SHA256}"
+        )
     state = torch.load(HIST_Y_SOUP, map_location="cpu", weights_only=True)
     frozen_model.load_state_dict({k: v.to("cpu") for k, v in state.items()}, strict=True)
     frozen_model.eval()

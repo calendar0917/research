@@ -29,6 +29,10 @@ HIST_PREP = (
     REPO_ROOT
     / "tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/all_train_prep.npz"
 )
+HIST_Y_SOUP = (
+    REPO_ROOT
+    / "tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/Y_seed0_raw_soup_state.pt"
+)
 
 
 def _dp():
@@ -406,6 +410,24 @@ def test_soft5_weights_read_the_already_consumed_log_distance_column():
 # ---------------------------------------------------------------------------
 # model construction (local data artifacts; skipped when absent)
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.skipif(not HIST_PREP.exists(), reason="prep artifact not present")
+def test_historical_reference_checkpoint_is_pinned():
+    """The audit's read-only Hard5 reference must be the frozen confirmation-dir soup."""
+    drv = _driver()
+    assert drv.HIST_Y_SOUP.parent.name == "zinc_full_decomposition_valid_test_confirmation_v1"
+    assert drv.HIST_Y_SOUP_SHA256 == (
+        "7792c56045459a37c569424501352afb4f3fd8ebc06643522192710bfe85ecfe"
+    )
+    if HIST_Y_SOUP.exists():
+        assert drv.file_sha256(HIST_Y_SOUP) == drv.HIST_Y_SOUP_SHA256
+
+
+def test_matching_audit_uses_training_program_hash():
+    src = _driver_source()
+    assert "training_program_sha256" in src
+    assert "same_training_program_sha256" in src
 
 
 @pytest.mark.skipif(not HIST_PREP.exists(), reason="prep artifact not present")
