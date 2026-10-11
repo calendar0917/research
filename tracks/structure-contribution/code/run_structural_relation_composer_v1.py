@@ -582,6 +582,21 @@ def train_bjoc_arm(
     """
     assert arm in (src.ORGANIZED, src.NULL), arm
     objs = torch.load(objects_path or OBJECTS_CACHE, map_location="cpu", weights_only=False)
+    if full10k and not (norm_path or NORM_JSON).exists():
+        gfit = np.stack([o.global_feat for o in objs], 0).astype(np.float64)
+        mean = gfit.mean(0)
+        scale = np.where(gfit.std(0) < 1e-6, 1.0, gfit.std(0))
+        write_json(
+            norm_path or NORM_JSON,
+            {
+                "protocol": PROTOCOL_ID,
+                "fit_only": True,
+                "n_fit": len(objs),
+                "global_mean": mean.tolist(),
+                "global_scale": scale.tolist(),
+                "names": list(sro.GLOBAL_FEAT_NAMES),
+            },
+        )
     norm = json.loads((norm_path or NORM_JSON).read_text())
     # rows are recomputed deterministically from the raw table (same as prep)
     smiles = [str(s) for s in cf.load_canonical_smiles()]
@@ -604,13 +619,6 @@ def train_bjoc_arm(
     assert [o.mol_index for o in mon_objs] == [int(i) for i in mon_rows]
     y_fit = torch.as_tensor(y_all[fit_rows], dtype=torch.float32)
     y_mon = y_all[mon_rows]
-
-    if full10k and not (norm_path or NORM_JSON).exists():
-        gfit = np.stack([o.global_feat for o in objs], 0).astype(np.float64)
-        mean = gfit.mean(0)
-        scale = np.where(gfit.std(0) < 1e-6, 1.0, gfit.std(0))
-        write_json(norm_path or NORM_JSON, {"protocol": PROTOCOL_ID, "fit_only": True, "n_fit": len(objs), "global_mean": mean.tolist(), "global_scale": scale.tolist(), "names": list(sro.GLOBAL_FEAT_NAMES)})
-        norm = json.loads((norm_path or NORM_JSON).read_text())
 
     cfg = src.BJOCConfig()
     seed_everything(seed)
@@ -668,7 +676,10 @@ def train_bjoc_arm(
         states.append({k: v.detach().cpu().clone() for k, v in model.state_dict().items()})
         if log and (epoch % 20 == 0 or epoch == 1 or epoch == epochs):
             log(f"[{arm}] ep={epoch:03d} train={curve[-1]['train_mae']:.6f} mon={mon_mae:.6f} {curve[-1]['seconds']:.1f}s")
-        if not np.isfinite(mon_mae) or not np.isfinite(curve[-1]["train_mae"]):
+        finite_ok = np.isfinite(curve[-1]["train_mae"]) and (
+            np.isfinite(mon_mae) if mon_rows else True
+        )
+        if not finite_ok:
             raise RuntimeError(f"non-finite loss at epoch {epoch}")
     wall = time.perf_counter() - started
     members, soup = _last_soup(list(states), len(curve))
