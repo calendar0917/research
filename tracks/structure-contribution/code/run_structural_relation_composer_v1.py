@@ -1314,6 +1314,75 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
             "max_abs_dpred": float(np.abs(alt - base).max()),
             "mae": float(np.abs(alt - y_mon).mean()),
         }
+        # (1b) graded ownership destruction: permute the junction codes w
+        # within each molecule (junction multiset identical, ownership gone)
+        # and across molecules (only the global multiset survives).
+        def forward_with_w(batch, w_override):
+            a = model.encode_atoms(batch)
+            b = model.encode_bonds(a, batch)
+            W, V, n_b = model.group_to_bonds(w_override, batch, src.ORGANIZED)
+            compose_in = torch.cat(
+                [b, W, V, torch.log1p(n_b).unsqueeze(1), batch["bond_feat"]], dim=1
+            )
+            c = model.group_composer(compose_in)
+            n_graphs = int(batch["n_graphs"])
+            z = torch.zeros((n_graphs, c.shape[1]), device=c.device, dtype=c.dtype)
+            z.index_add_(0, batch["bond_batch"], c)
+            a_sum = torch.zeros((n_graphs, a.shape[1]), device=a.device, dtype=a.dtype)
+            a_sum.index_add_(0, batch["atom_batch"], a)
+            a_sq = torch.zeros_like(a_sum)
+            a_sq.index_add_(0, batch["atom_batch"], a * a)
+            g = (batch["global_feat"].to(a.dtype) - model.global_mean) / model.global_scale
+            reader_in = torch.cat([z, a_sum, a_sq, g], dim=1)
+            return model.reader(reader_in), w_override
+
+        import random as _random
+
+        def _permute_within(w, junc_batch, seed):
+            groups: dict[int, list[int]] = {}
+            for i, gidx in enumerate(junc_batch.tolist()):
+                groups.setdefault(gidx, []).append(i)
+            perm = list(range(len(w)))
+            rnd = _random.Random(seed)
+            for idxs in groups.values():
+                shuffled = idxs[:]
+                rnd.shuffle(shuffled)
+                for i, j in zip(idxs, shuffled):
+                    perm[i] = j
+            return w[perm]
+
+        for tag, seed in (("permute_w_within_molecule", 0), ("permute_w_within_molecule_seed1", 1)):
+            batch = _mv(sro.batch_objects(monitor_objs), device)
+            with torch.no_grad():
+                a_ = model.encode_atoms(batch)
+                b_ = model.encode_bonds(a_, batch)
+                w_ = model.encode_junctions(a_, b_, batch)
+                w_perm = _permute_within(w_, batch["junc_batch"], seed)
+                p_perm, _ = forward_with_w(batch, w_perm)
+                p_base, _ = forward_with_w(batch, w_)
+                p_perm = p_perm.cpu().numpy()
+                d_base = float(np.abs(p_base.cpu().numpy() - base).max())
+            counterfactuals[tag] = {
+                "mean_abs_dpred": float(np.abs(p_perm - base).mean()),
+                "max_abs_dpred": float(np.abs(p_perm - base).max()),
+                "mae": float(np.abs(p_perm - y_mon).mean()),
+                "recompute_consistency_max": d_base,
+            }
+        # across-molecule permutation of w (global multiset preserved)
+        batch = _mv(sro.batch_objects(monitor_objs), device)
+        with torch.no_grad():
+            a_ = model.encode_atoms(batch)
+            b_ = model.encode_bonds(a_, batch)
+            w_ = model.encode_junctions(a_, b_, batch)
+            rnd = _random.Random(0)
+            perm = list(range(w_.shape[0]))
+            rnd.shuffle(perm)
+            p_perm, _ = forward_with_w(batch, w_[perm])
+        counterfactuals["permute_w_across_molecules"] = {
+            "mean_abs_dpred": float(np.abs(p_perm.cpu().numpy() - base).mean()),
+            "max_abs_dpred": float(np.abs(p_perm.cpu().numpy() - base).max()),
+            "mae": float(np.abs(p_perm.cpu().numpy() - y_mon).mean()),
+        }
         # (2) input masking counterfactuals: rebuild objects with masked features
         import copy
 
