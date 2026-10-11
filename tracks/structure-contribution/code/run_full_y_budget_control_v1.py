@@ -1028,11 +1028,20 @@ def stage_predict(device: torch.device, smoke: int | None) -> dict[str, Any]:
 
     preds_hist = read_csv_col(HIST_Y_VALID_CSV, "Y_raw_0")
     diff_hist = float(np.max(np.abs(pred10 - preds_hist)))
+    # checkpoint-matched replay of the historical F7200 monitor-top-5 soup against
+    # the stored v3d evaluation export (same frozen checkpoint, different process).
     diff_v3d = None
+    state72h = torch_load_state(F7200_HIST_SOUP, device)
     if V3D_EVAL_F_PREDS.exists():
-        v3d = np.load(V3D_EVAL_F_PREDS, allow_pickle=False)
+        model72h = build_model(prep7200, 0).to(device)
+        model72h.load_state_dict({k: v.to(device) for k, v in state72h.items()}, strict=True)
+        model72h.eval()
+        pred72h = rpv2.predict_raw(model72h, rows72, device)
+        v3d = np.load(V3D_EVAL_F_PREDS, allow_pickle=True)
         pred_v3d = np.asarray(v3d["pred"], dtype=np.float64)
-        diff_v3d = float(np.max(np.abs(pred72 - pred_v3d))) if pred_v3d.shape[0] == 1000 else None
+        v3d_rows = np.asarray(v3d["rows"], dtype=np.int64)
+        if pred_v3d.shape[0] == n_mol and np.array_equal(v3d_rows, np.arange(n_mol)):
+            diff_v3d = float(np.max(np.abs(pred72h - pred_v3d)))
     manifest = {
         "protocol_id": PROTOCOL_ID,
         "git_commit": git_commit(),
@@ -1049,6 +1058,12 @@ def stage_predict(device: torch.device, smoke: int | None) -> dict[str, Any]:
                       "state_sha256": state_hash(state72)},
             "F10000": {"path": str(HIST_Y_SOUP.relative_to(REPO_ROOT)), "sha256": file_sha256(HIST_Y_SOUP),
                        "state_sha256": state_hash(state10)},
+            "F7200_historical_monitor_top5": {
+                "path": str(F7200_HIST_SOUP.relative_to(REPO_ROOT)),
+                "sha256": file_sha256(F7200_HIST_SOUP),
+                "state_sha256": state_hash(state72h),
+                "role": "background reference only (not an arm)",
+            },
         },
         "preps": {
             "F7200": {"path": str(PREP7200.relative_to(REPO_ROOT)), "sha256": file_sha256(PREP7200)},
@@ -1070,7 +1085,7 @@ def stage_predict(device: torch.device, smoke: int | None) -> dict[str, Any]:
         "engineering_crosschecks": {
             "F10000_cpu_replay_vs_historical_valid_csv_max_abs": diff_hist,
             "F10000_cpu_replay_vs_historical_valid_csv_ok": bool(diff_hist <= REPLAY_ATOL),
-            "F7200_top5_background_replay_vs_v3d_eval_max_abs": diff_v3d,
+            "F7200_historical_soup_replay_vs_v3d_eval_max_abs": diff_v3d,
             "note": "historical valid predictions were produced on GPU; CPU float32 replay is not bit-exact",
         },
     }
