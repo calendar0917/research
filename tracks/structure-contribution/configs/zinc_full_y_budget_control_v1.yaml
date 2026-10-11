@@ -1,0 +1,160 @@
+# zinc-full-y-budget-control-v1 — frozen pre-registration for the matched
+# Full-Y 7200 vs 10000 training-budget control.
+#
+# Written and committed BEFORE the single new formal GPU trajectory and BEFORE
+# any official-value read.  The historical 10k seed-0 Y checkpoint is reused if
+# the Phase-A audit says REUSE_10K (see historical_reuse_audit.json); otherwise
+# the protocol falls back to RETRAIN_BOTH, or stops on AUDIT_BLOCK.
+
+protocol_id: zinc-full-y-budget-control-v1
+question: >-
+  Under the same Full-Y non-GNN skeleton, raw-y-only supervision, hyper
+  parameters, 240 epochs and last-5 soup rule, how much does expanding the
+  supervised training set from the internal fit_inner 7200 rows to all 10000
+  official-train molecules change the official-validation raw-y MAE?
+
+authorization: >-
+  User-authorized round: CPU-only audits, at most two seed-0 formal training
+  arms on res GPU1, one pre-registered official-validation evaluation of the
+  two frozen models, and an explicit stop.
+
+reuse_gate:
+  historical_models: tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1
+  checkpoint_reused_if: REUSE_10K (all hard checks + full-row forward replay pass)
+  fallback_if_mismatch: RETRAIN_BOTH (both arms retrained with this frozen driver)
+  stop_if_provenance_broken: AUDIT_BLOCK (no substitution, no looser comparison)
+  reuse_evidence: historical_reuse_audit.json + protocol_replay.json
+
+arms:
+  F7200:
+    train_rows: fit_inner 7200 (canonical-SMILES-grouped split, cscl-v0-inner)
+    task_label: raw y
+    checkpoint: parameter mean of epochs 236,237,238,239,240 (last-5)
+    new_training: true
+  F10000:
+    train_rows: official train 10000
+    task_label: raw y
+    checkpoint: parameter mean of epochs 236,237,238,239,240 (last-5)
+    new_training: false   # reusable historical seed-0 checkpoint, audit-gated
+    metadata_must_record: reused_historical_checkpoint=true
+
+model:
+  builder: e2e_dictenv_scale_v1.build_scale_model(spec=FULL, scale_seed=0)
+  parameters_expected: 408651
+  mask: C6_MASK (canonical clean-mechanism mask; topology NOT zeroed)
+  forbidden: [GNN, Transformer, graph attention, iterative message passing,
+             new triplet branch, S/O bucket readers, alpha/delta/gamma heads,
+             distillation, hidden global bypass]
+  non_data_init_rule: >-
+    same seed-0 initialisation for all non-data-dependent parameters; only the
+    data-fitted buffers D (K-SVD dictionary), U and common_rms may differ
+    between arms and are recorded as exceptions.
+
+supervision:
+  task_loss: L1(pred, raw y)
+  auxiliary_loss: label-free structural reconstruction (CSSD residual on phi)
+  h1_lambda: 33.95873017865987
+  forbidden_targets: [g, ell, s, c, k, logP, SA, true cycle targets,
+                      old-model soft labels]
+  audit: AST/source inspection of the historical Y branch (historical_reuse_audit.json)
+
+training:
+  seed: 0
+  optimizer: Adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  batch_size: 128
+  epochs: 240
+  scheduler: none
+  amp: false
+  ddp: false
+  precision: fp32
+  train_shuffle_seed: 101   # seed + 101
+  steps_expected: {F7200: 13680, F10000: 18960}
+  monitor_or_dev_used_for_selection: false
+
+preprocessing:
+  F7200:
+    source: prep_fit7200.npz (already audited; fit_idx == fit_inner 7200)
+    rule: >-
+      every fitted object refit on fit_inner 7200 only: patch/ctx/topo/anchor
+      standardisers, K-SVD D_fit, common subspace U.  monitor/dev rows are
+      never used for fitting.
+  F10000:
+    source: tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/all_train_prep.npz
+    rule: all fitted objects from the 10000 official-train rows.
+  raw_recovery: >-
+    the all-10k-standardised caches are used only as an inversion basis
+    (inverse(legacy_std) -> transform(arm_specific_std)); identity checks
+    <= 1e-5 on nondegenerate columns (already audited in feasibility-v2).
+  disclosure: >-
+    the two arms necessarily have different standardiser constants, K-SVD
+    dictionaries and common subspaces; this is part of the training-budget
+    regime intervention, not a held-fixed nuisance.
+
+checkpoints_primary:
+  rule: last-5 soup for BOTH arms
+  forbidden:
+    - using monitor/valid to choose soup members
+    - comparing a new F7200 last-5 soup against the historical F7200 monitor
+      top-5 soup and selecting the better one for the headline table
+  background_only:
+    F7200_monitor_top5_official_valid_raw: 0.13295
+    F10000_seed0_last5_official_valid_raw: 0.118618
+
+endpoint:
+  primary: official ZINC validation (1000 molecules) raw-y MAE
+  official_test: forbidden
+  order:
+    - both checkpoints frozen and hashed
+    - preprocessing hashes locked
+    - official-valid predictions written and hashed (y never read)
+    - then official y read exactly once and metrics computed
+  statistics:
+    paired_diff: "d_i = |pred_F10000_i - y_i| - |pred_F7200_i - y_i|"
+    bootstrap: 5000 resamples, seed 0, percentile 95% CI
+    frac_better: fraction of molecules with d_i < 0
+  robustness_predeclared:
+    - median / p90 / p95 absolute error, RMSE
+    - subgroups y<=-3, y>-3, atom-count split, cyclomatic buckets
+    - extreme-row contributions (top-1/top-10 error mass, max-error rows)
+    - delta without valid:0172 and without each arm's max-error row (descriptive)
+    - never delete rows from the primary metric
+
+decision_rule:
+  delta: MAE(F10000) - MAE(F7200)
+  case_A: delta <= -0.010 and paired CI supports negative improvement and
+          not dominated by one extreme molecule
+  case_B: -0.010 < delta <= -0.003 (limited directional gain; no automatic
+          follow-on scaling of epochs/width/components)
+  case_C: delta > -0.003 (stop local Full-Y budget/architecture patching)
+  ci_conflict: if the point estimate crosses a threshold but the CI is wide or
+          contains zero, record the band and mark the evidence uncertain.
+  absolute_target:
+    report_gap: F10000_valid_MAE - 0.09 and - 0.08
+    test_claim: forbidden; official test is not re-evaluated
+
+budget:
+  formal_new_training_trajectories: 1   # F7200 seed 0 only under REUSE_10K
+  gpu: res GPU1 (pool res-gpu1), process backend
+  wall_estimate: ~25 min
+
+discipline:
+  seeds: [0]
+  no_seed_1: true
+  no_third_trajectory: true
+  no_hyperparameter_search: true
+  no_architecture_search: true
+  no_component_supervision: true
+  no_official_test: true
+  no_retraining_after_valid: true
+  exposed_instrument_disclosure: >-
+    official validation has been read in earlier rounds; this is a controlled
+    comparison on an already-exposed instrument, not a fresh blind test.
+
+intervention_scope: >-
+  delta measures the whole training-budget regime change: +2800 rows
+  (+38.9%), +5280 optimizer steps (+38.6%), different standardiser constants,
+  different K-SVD dictionary and common subspace fitted on different data
+  ranges.  It is NOT the isolated causal effect of 2800 extra labels.
