@@ -12,6 +12,21 @@ Track: `structure-contribution` · 日期: 2026-10-11 · 协议:
 三参照设计：**F** = 冻结 Full-Y（0.11641，不重训）；**O** = 同一冻结特征 +
 不透明读出（新训 seed 0）；**S** = 同一冻结特征 + 结构化贡献读出（新训 seed 0）。
 
+> **勘误（2026-10-11，cscl-v3b 轮发现；原文保留，结论强度调整）**：
+> (1) §5.4/§3 合成任务的上下文真值误用 `unit_desc[k, 4]`（原子直方图 bin 4）
+> 充当 attachment count；正确槽位是 `D_HIST+4 = 36`（标量块第 5 个 = 单元边界
+> 附着数）。历史合成结果的α/γ 结论不受影响，但**关于 attachment context 恢复
+> 的结论强度降级**；修正后的任务（真值定义已变，不与本文数字直接比较）见
+> `notes/contribution_gauge_v3b.md` §7 与 `results/cscl_v3b/synthetic_gauge_s0.json`。
+> (2) §5.3 子群表的 `ring_units` 行由 `nx.cycle_basis()` 计算（基环数），不是
+> RINGCHAIN 环系单元数（抽样 40 个 dev 分子中 11 个两种计数不同）；历史子群
+> 解读应读作环复杂度代理。v3b 子群表已改用 `KIND_RING` 计数并显式标注。
+> (3) 本轮 δ 逐类型 minibatch 惩罚的实际形态经审计：期望惩罚的 93.6% 是类型内
+> 方差泄漏项 `Σ w_t σ_t²/n_t`，69.6% 的 (batch,类型) 格子单例、32.4% 的实例被
+> 实例级 `δ²/N` 直接惩罚（`results/cscl_v3b/penalty_audit_s0.json`）——
+> §5.5-6 的"贡献转移"推断在 cscl-v3b 中被直接证实并部分修复（v3b S dev
+> 0.17317，γ 方差占比 40.2%→2.6%）。
+
 ---
 
 ## 0. 勘误（上一轮统计代码）

@@ -1,8 +1,8 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-v3-strong-backbone
-next_round_candidate: reduce-identifiability-cost-of-typed-delta (pre-registered separately)
+phase: cscl-v3b-gauge-normalization
+next_round_candidate: full-distance-bucket-pair-moments-separable-readout (new preregistration required)
 updated: 2026-10-11
 
 track:
@@ -213,3 +213,88 @@ round_cscl-v3-strong-backbone:
   local_rehearsal: >-
     CPU 全协议 rehearsal 结果（非正式）：S(逐类型) 0.19749 / O 0.13842 / F 0.11641；
     batch 均值版 S 0.16823 但 δ̂–α* 混淆 0.63。目录 results/cscl_v3_cpu_rehearsal/
+
+# ---------------------------------------------------------------------------
+# round: cscl-v3b (fit-only gauge normalization + penalty diagnosis, seed 0)
+# ---------------------------------------------------------------------------
+
+round_cscl-v3b-gauge-normalization:
+  protocol: configs/cscl_v3b_gauge.yaml (冻结后才训练)
+  report: notes/contribution_gauge_v3b.md
+  driver: code/run_cscl_v3b.py (唯一训练干预 + 审计/分析) + code/contribution_gauge.py (gauge 核心)
+  question: >-
+    v3 的逐类型 minibatch 均值惩罚是否人为压制 δ 的类型内变化？移除该训练期惩罚
+    （γ 项逐字保留）并用训练后预测无损的 fit-only gauge（alpha+=m_t, delta-=m_t）
+    承担类型均值约定，能恢复多少被压制的预测能力？
+  errata_for_v3 (notes/strong_backbone_contribution_v3.md 头部勘误框):
+    - 合成 attachment 真值槽位: v3 用 unit_desc[k,4]（原子直方图 bin），正确为 D_HIST+4=36；历史合成关于 attachment context 的结论降级（修正任务不与 v3 数字比较）
+    - v3 子群 ring_units 行是 nx.cycle_basis 基环数，不是 RINGCHAIN 环系单元数；解读降级为环复杂度代理
+  phase_a_penalty_audit (frozen v3-S + exact batch replay, 无训练):
+    variance_share_of_penalty: 0.936   # Σ w_t σ_t²/n_t 项占比；类型偏置项仅 6.4%
+    singleton_cells: 0.696             # (batch,类型) 格子 n=1 占比
+    units_in_n1_cells: 0.324           # 实例被 (1/N)δ_i² 直接惩罚的占比
+    types_per_batch_mean: 58.3
+    v3S_fit_delta: 类型均值 |μ_t|≤0.125（多数<0.01），类型内 std 0.015–0.70
+  single_intervention: >-
+    唯一机制变化 = 训练目标移除 δ 的 batch-type 均值惩罚（L1 + 1.0·L_gamma_batch）；
+    架构/参数量 118168 / 初始化 / collate / split / 优化器 / checkpoint 规则与 v3 S 逐位一致；
+    监督仍为 raw y；测试钉住 split 惩罚≡v3 组合惩罚、γ 项与 v3 逐位相等
+  gpu_result (seed 0, res GPU1, run cscl-v3b-s0-20261011-085706-7ae31a06, commit a01968886525):
+    mae: {F: 0.11641, O: 0.14129, S_v3: 0.19551, S_gauge: 0.17317}   # primary = best-monitor 单检查点
+    fit_monitor_dev_S_gauge: {fit: 0.08023, monitor: 0.15712, dev: 0.17317}
+    soup_dev_secondary: 0.16709
+    paired:
+      S_gauge_minus_S_v3: "-0.02234 [-0.03092, -0.01435]"
+      S_gauge_minus_O: "+0.03188 [0.02389, 0.04057]"
+      S_gauge_minus_F: "+0.05675 [0.04769, 0.06645]"
+    judgment_band: >-
+      情况 B（0.16 < 0.17317 ≤ 0.18）：移除 δ 惩罚只能部分恢复能力；不搜索惩罚系数，
+      不追加训练。剩余差距 S_gauge−O=+0.032 的首要候选解释 = Full-Y 每距离桶 pair 矩压缩。
+  gauge (fit-only, prediction-invariant, all gates pass):
+    definition: m_t = fit_inner 全类型实例的 delta_raw 均值；alpha_canon=alpha_raw+m_t, delta_canon=delta_raw-m_t
+    coverage: 39689 fit 单元；760/761 类型有 fit 实例；唯一 fallback=GLOBAL_UNK(id 760, m_t=0)，三划分均 0 单元
+    pred_invariance: fit/monitor/dev pred|Δ|≤9.5e-7；MAE 差≤3.8e-9
+    fit_per_type_delta_mean_max: 1.19e-07
+    within_type_std_and_pairwise_diff: 实数恒等式（数值≤1.4e-8，float32 舍入量级）
+    gamma_global_bias: 逐位不变（diff=0.0）
+    save_load: roundtrip 逐位一致；offsets+哈希随 checkpoint 保存
+  contribution_semantics (dev, raw vs canonical):
+    delta_within_type_std: v3 0.0625 → v3b 0.2423   # δ 恢复上下文变化
+    gamma_var_share: v3 0.402 → v3b 0.026           # γ 不再补偿类型信号
+    gamma_unit_corr: v3 +0.595 → v3b -0.324
+    unit_var_share: v3 0.132 → v3b 0.906
+    m_t_abs_mean: 0.657 (p90 1.60, max 3.34)        # α 语义由规范化约定承载，非训练约束
+    alpha_spearman_synthetic: 0.914 (v3 受约束版 0.997)   # 预测改善不自动等于 α 更准确
+    note: >-
+      Var(channel)/Var(pred) 为描述性占比，非独立解释率；canonical 下 unit-rel 相关 -0.324，
+      通道间仍有统计相关；不宣称分解唯一可辨识
+  synthetic_corrected (attachment idx D_HIST+4=36, γ-only 目标, CPU seed 0):
+    delta_recovery: raw 0.848 → canonical 0.998; confusion 0.432 → -0.013
+    gamma_truth_pairs: +0.875/-0.704/+0.500 (真值 +0.9/-0.7/+0.5); 混淆对 0.0045; 未见对 0.013 vs 可见 0.083
+    gauge_pred_gap: 9.5e-07; alpha_sign 0.938 / spearman 0.914
+    not_comparable_to_v3_synthetic: 真值定义已变（槽位修正）
+  subgroup: 全部 y 带与拓扑子群 S_gauge < S_v3；最大恢复 y≤-3（0.470→0.373）；0-1 环小分子 (n=12) 仍弱 (0.597 vs O 0.292) → 与 δ 惩罚无关的输入/读出限制
+  judgment: >-
+    情况 B：可辨识性约定可从训练期强约束移到训练后预测无损的规范选择（成立），
+    预测能力部分恢复（−0.022 dev，CI 不含 0）；α/δ/γ 分解整体唯一可辨识仍不成立；
+    本轮停止，不追加实验；下一轮单一问题 = 完整保留 Full-Y 每距离桶 pair 矩的可分解读出
+  results_index:
+    - path: results/cscl_v3b/penalty_audit_s0.json
+      one_line: v3 minibatch 惩罚形态（93.6% 方差泄漏/单例格子/实例级惩罚/burden 分布/v3 fit δ 逐类型）
+      date: 2026-10-11
+    - path: results/cscl_v3b/phase_a_boundaries.json
+      one_line: Full-Y 距离桶 pair 矩压缩缺失清单 + ring_units 命名勘误
+      date: 2026-10-11
+    - path: results/cscl_v3b/synthetic_gauge_s0.json
+      one_line: 修正 attachment 槽位的合成真值（γ-only 目标；δ canonical 恢复 0.998）
+      date: 2026-10-11
+    - path: results/cscl_v3b/train_S_gauge_s0.json
+      one_line: S-gauge 正式训练（曲线/目标声明/纪律）
+      date: 2026-10-11
+    - path: results/cscl_v3b/gauge_verification_s0.json + gauge_meta_s0.json
+      one_line: 全部验证门 + fit-only offsets 元数据（计数/哈希/覆盖/fallback）
+      date: 2026-10-11
+    - path: results/cscl_v3b/analysis_s0.json
+      one_line: F/O/S_v3/S_gauge 对比 + 配对 bootstrap + 子群 + 贡献统计 raw/canonical
+      date: 2026-10-11
+  rr_run_meta: results/cscl_v3b/rr_run/ (meta.json/stdout/stderr, run cscl-v3b-s0-20261011-085706-7ae31a06)
