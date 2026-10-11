@@ -1,8 +1,9 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-v3c-type-conditioned-gauge
-next_round_candidate: "full-distance-bucket-pair-moments x type-conditioned unified design (case A follow-up needs a capacity-matched control for strict mechanism attribution; new preregistration required)"
+phase: cscl-v3d-distance-conditioned-contribution
+current_round: cscl-v3d-distance-conditioned-contribution
+next_round_candidate: "STOPPED per protocol: case A met (S_bucket 0.12694 / O_bucket 0.11610 / F 0.11641; S-O +0.011 unchanged by information) -> independent validation on isolated data needs a NEW preregistration + explicit authorization; parallel candidate for later: additive-readout expression boundary (Full-Y reader nonlinear mixing)"
 updated: 2026-10-11
 
 track:
@@ -13,12 +14,13 @@ track:
   protocol: notes/v0_protocol.md          # cscl-v0 预注册（冻结后再看结果）
   prior_work: notes/prior_work_positioning.md
 
-current_round: cscl-v3c-type-conditioned-gauge
+current_round: cscl-v3d-distance-conditioned-contribution
 hypotheses:
   H1: B(加性+真实关系) > A 且 B > C(关系打乱) 且 B 接近 D(不透明) —— 未验证
   H2: 可辨识性约束(参数分离+中心化+惩罚)使 α/δ/γ 分工跨 seed 稳定 —— 未验证
   H3: 合成真值任务上恢复方向/识别真交互/不误报共现 —— 未验证
   Hv3c: 给 δ 显式共享类型条件（16 维 embedding，仅进 δ）可恢复结构化读出的部分表达能力 —— 情况 A 初步支持（单 seed，容量混杂未消除）
+  Hv3d: 完整恢复 Full-Y 距离桶 pair 矩后，O 应追平 F，且 S−O 剩余差距与信息无关 —— 已证实（O−F −0.0003 CI 跨零；S−O +0.0108 与 v3c 持平；情况 A 预注册判据满足；单 seed，容量混杂已对称化）
 
 constraints:
   - 不使用 GNN/Transformer/消息传递作为核心预测机制
@@ -387,3 +389,83 @@ round_cscl-v3c-type-conditioned-gauge:
   local_rehearsal: >-
     CPU 全协议 rehearsal (非正式): dev 0.14978 / soup 0.14476; 目录 results/cscl_v3c_cpu_rehearsal/;
     与 GPU 正式差 -0.0023 (历史轮次同量级)
+
+# ---------------------------------------------------------------------------
+# round: cscl-v3d (distance-conditioned contribution learning, seed 0)
+# ---------------------------------------------------------------------------
+
+round_cscl-v3d-distance-conditioned-contribution:
+  protocol: configs/cscl_v3d_bucket.yaml (冻结于任何构建/训练之前)
+  report: notes/distance_conditioned_contribution_v3d.md
+  driver: code/run_cscl_v3d.py (S/O bucket arms) + code/strong_backbone_bucket_features.py (桶级特征)
+    + code/phase_a_audit_v3d.py (Phase A)
+  question: >-
+    v3/v3b/v3c 输入只保留跨桶边际 pair 矩，而冻结 Full-Y reader 消费按距离桶的一阶/二阶矩。
+    完整恢复这些统计量并经同一加性单元/关系通道供给结构化读出与不透明对照后，
+    S−O 与 O−F 差距如何变化？
+  phase_a (results/cscl_v3d/phase_a_s0.json): >-
+    UNK 是 O/S 共同瓶颈 (含 UNK n=874: F 0.149 / O 0.194 / S_v3c 0.206; 不含: 0.091/0.101/0.111);
+    冻结 v3c γ 诊断: 无任何关系实例主导桶为 bucket-0 (bonded pair 总与远距 pair 混在同一无序单元对,
+    单标量 γ 原则上不可分); dev pair 50.6% 在 bucket-4; 丢失清单 = per-(unit×bucket) 与
+    per-(unit-pair×bucket) 一阶/二阶矩
+  phase_b_information_fidelity: >-
+    新缓存 data/cache/cscl_v3d_bucket_features.pt (旧缓存未动): 存储数组从缓存重建 Full-Y reader
+    每桶 first/second 矩至 5.8e-7 (门 2e-4); 桶和精确包含旧边际; 计数精确守恒; 本地 CPU 提取与
+    v3 缓存共享 float 场逐位一致; C6 掩码 count 块未恢复; 完整溯源 (代码指纹/checkpoint/prep/split 哈希)
+  arms: >-
+    S_bucket (v3c 头 + 桶列, delta 925 / gamma 1753, 193,128 params) vs O_bucket (v3 O 头 + 桶列,
+    200,513 params); 同一 BucketBatch; 两臂各 +61,760 (同容量); 零初始化新列; 未训练预测与
+    参考头逐位相等; 桶信息路由 AST 钉住 (单元内→δ, 跨单元→γ)
+  "gpu_result (seed 0, res GPU1, run cscl-v3d-s0-20261011-142219-64d434c8, commit b51608841650, exit 0)":
+    mae: {F: 0.11641, O: 0.14129, S_v3: 0.19551, S_gauge: 0.17317, S_v3c: 0.15209, S_bucket: 0.12694, O_bucket: 0.11610}  # primary = best-monitor
+    paired:
+      S_bucket_minus_O_bucket: "+0.01084 [+0.00573, +0.01596]"
+      S_bucket_minus_F: "+0.01053 [+0.00424, +0.01700]"
+      O_bucket_minus_F: "-0.00031 [-0.00500, +0.00435]  # 追平, CI 跨零"
+      S_bucket_minus_S_v3c: "-0.02515 [-0.03357, -0.01708]"
+      O_bucket_minus_O_v3: "-0.02518 [-0.03182, -0.01854]"
+    judgment_band: >-
+      情况 A (预注册判据满足: 两臂均改善, S−O ≤ 0.02, S−F ≤ 0.02, 机制检查全过) ——
+      结构化读出接近强预测基础; 下一步是冻结方法+独立验证 (需新授权, 本轮不执行);
+      关键机制结论: O−F ≈ 0 证实距离桶压缩是 O−F 差距的主体; S−O 稳定 +0.011 与信息无关,
+      是加性读出结构的表达/优化边界
+    mechanism: >-
+      gauge 全门 (pred ≤1.9e-6, fit 逐类型 1.79e-7, 加和 9.4e-7, fallback GLOBAL_UNK 0 单元);
+      分半 0.0409/Spearman 0.9951 (未恶化); γ canonical 占比 1.5% (v3c 1.8%, 未重新吸收);
+      全局 ~13% 未主导; 合成 A (v3b/v3c 同口径): δ can 0.9973, 真交互 +0.874/−0.689/+0.492;
+      合成 B (预冻结桶调制真值): pair_A 斜率 0.781/corr 0.979 —— γ 学会区分同一类型对不同距离组成
+    subgroup: >-
+      y≤−3: S_bucket 0.311 (首平 F 0.315); 0-1 环小分子 0.226; UNK 分子 0.166 (v3c 0.206);
+      组内 S−O 差 UNK/非 UNK 同质 (+0.013/+0.009)
+    disclosures: >-
+      两臂 vs 历史版本混杂 +61,760 容量 (对称, 无无桶消融); S 保留 γ 惩罚而 O 纯 L1;
+      F checkpoint 规则为 soup 而 O_bucket 为 best-monitor; 单 seed 0; dev 六轮复用后仅内部证据;
+      γ 桶敏感 ≠ 化学因果
+  results_index:
+    - path: results/cscl_v3d/phase_a_s0.json
+      one_line: 七臂同分子 UNK/混杂/γ 冻结诊断/桶丢失清单 (CPU, 无训练)
+      date: 2026-10-11
+    - path: results/cscl_v3d/train_S_bucket_s0.json + train_O_bucket_s0.json
+      one_line: "两臂正式训练 (曲线/best ep 208,210/纪律: dev 不参与选择, 训练期不读 dev)"
+      date: 2026-10-11
+    - path: results/cscl_v3d/init_report_S_bucket_s0.json + init_report_O_bucket_s0.json
+      one_line: 参数 131368→193128 / 138753→200513 (各 +61760), 共享初始化哈希, 未训练预测 diff 0.0
+      date: 2026-10-11
+    - path: results/cscl_v3d/gauge_verification_s0.json + gauge_meta_s0.json
+      one_line: gauge 全门 + fit-only offsets 元数据
+      date: 2026-10-11
+    - path: results/cscl_v3d/analysis_s0.json
+      one_line: 七臂对比 + 五组配对 bootstrap + 子群 + γ 桶审计 + UNK 分层 + 判据 band=case_A
+      date: 2026-10-11
+    - path: results/cscl_v3d/synthetic_A_attachment_s0.json + synthetic_B_bucket_modulated_s0.json
+      one_line: 任务 A (v3b/v3c 逐字真值, δ can 0.9973) + 任务 B (预冻结桶调制, pair_A 斜率 0.781/corr 0.979)
+      date: 2026-10-11
+    - path: results/cscl_v3d/S_bucket_s0_dev_preds.npz + S_bucket_s0_dev_contribs.npz
+      one_line: canonical 逐分子预测 + raw/canonical 严格加和贡献导出 (原子归属/offset)
+      date: 2026-10-11
+    - path: results/cscl_v3d/split_half_gauge_stability_s0.json
+      one_line: 新 checkpoint 分半规范化稳定性 (0.0409/0.9951, 未恶化)
+      date: 2026-10-11
+  rr_run_meta: results/cscl_v3d/rr_run/ (meta.json/stdout/stderr, run cscl-v3d-s0-20261011-142219-64d434c8)
+  local_rehearsal: >-
+    CPU rehearsal (非正式, 30 epochs): S_bucket 0.15164 / O_bucket 0.13808; 目录 results/cscl_v3d_cpu_rehearsal/
