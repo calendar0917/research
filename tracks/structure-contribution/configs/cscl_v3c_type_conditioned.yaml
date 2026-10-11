@@ -1,0 +1,146 @@
+# cscl-v3c — type-conditioned gauge contribution learning
+# Frozen protocol constants.  Written BEFORE the S-typecond-gauge training
+# run; no field may change after results are seen.
+#
+# Round question (single-variable architecture intervention on top of v3b):
+# the v3b S-gauge delta is delta_u = h(z_u, c_u); the shared structural type
+# enters only through alpha(t_u).  The opaque control O feeds a 16-D type
+# embedding into its nonlinear unit encoder.  Does giving delta an explicit
+# type-conditional channel  delta_u = h(z_u, c_u, Emb(t_u))  recover part of
+# the remaining S_gauge-O predictive gap while preserving endogenous
+# contributions and the fit-only prediction-invariant gauge normalization?
+
+protocol_id: cscl-v3c-type-conditioned-gauge
+seeds_allowed: [0]
+
+inherits: configs/cscl_v3b_gauge.yaml   # objective/data/optimizer/gauge discipline
+
+references (frozen, not retrained):
+  F_full_y_seed0_dev_mae: 0.11641        # results/feasibility_v2_gpu
+  O_opaque_seed0_dev_mae: 0.14129        # results/cscl_v3 (primary best-monitor)
+  S_v3_per_type_pen_seed0_dev_mae: 0.19551  # results/cscl_v3
+  S_gauge_v3b_seed0_dev_mae: 0.17317     # results/cscl_v3b (primary best-monitor)
+
+data:
+  split: cscl_features.build_split_indices (unchanged 7200/800/2000, SMILES-grouped)
+  official_valid_test: never loaded
+  supervision: raw y (L1) only (NOT the frozen Full-Y prediction)
+  frozen_encoder: full_y_seed0_soup_state.pt (parameters frozen, unchanged)
+  frozen_feature_cache: data/cache/cscl_v3_frozen_features.pt (version-guarded)
+  fit-only vocab: unchanged 746 known types + UNK policy; unknown types never
+    get dev-fitted embeddings (UNK buckets are ordinary vocab rows)
+
+# NOTE (Phase A documentation finding, recorded 2026-10-11): older reports and
+# the round brief state a "36-D context descriptor / 420-D delta input"; the
+# code (cscl_features.DESC_DIM = D_HIST 32 + D_SCALARS 8 = 40) gives a 40-D
+# descriptor and a 424-D delta input.  Param counts (118,168 v3/v3b;
+# 138,753 O) pin the 40-D/424-D reality.  v3c dims below use the code values.
+
+head_architecture (THE ONLY mechanism change):
+  new_head: TypeCondContribHead (run_cscl_v3c.py)
+  delta_input: "[unit_feat 384 | unit_ctx 40 | type_emb 16] = 440
+                (v3b: 424; +16 embedding columns)"
+  type_embedding: Embedding(vocab_size=761, 16); enters delta ONLY
+  unchanged_vs_v3b:
+    - alpha = Embedding(vocab_size, 1): one shared scalar per type
+    - gamma: input rows (1273), params, width, output -- untouched; NO type input
+    - global context bank (30 features) + topology bank (25 features): untouched
+    - bias: untouched
+    - RINGCHAIN partition, unit/relation aggregation, frozen Full-Y encoder
+    - NO post-sum fusion MLP; prediction stays
+      bias + sum_u(alpha_u + delta_u) + sum_r gamma_r + g_ctx + g_topo
+  forbidden: type embedding into gamma or global channels; fusion MLPs; new
+    relation paths; global prediction bypasses
+
+initialization (maximal control of init confounds; disclosed capacity delta):
+  1. build the UNTRAINED v3b SBContribHead under seed 0
+  2. copy every shape-unchanged parameter BIT-EXACT into the new head
+  3. delta first layer: legacy 424 input columns copied bit-exact; the 16 new
+     columns ZERO-initialized (frozen deterministic rule)
+  4. type embedding ~ N(0, 0.1^2) from an INDEPENDENT torch.Generator(seed=0)
+     stream; the shared seed-0 stream is not consumed
+  5. the trained v3b checkpoint is NEVER loaded; the new head trains from scratch
+  recorded: param counts (v3b 118,168 -> v3c 131,368; +12,176 embedding table
+  +1,024 new first-layer columns), shared-init hashes, zero-column check,
+  untrained prediction equality vs the reference head
+  capacity confound: +10,176 params vs v3b is unavoidable and disclosed; no
+  capacity-matched control is trained this round
+
+training_intervention (objective = v3b verbatim):
+  loss = L1(raw y) + 1.0 * gamma_batch_mean_penalty
+  - NO delta penalty (v3b state), NO embedding regulariser, NO alpha anchoring,
+    NO distillation, NO Full-Y predictions as labels
+  - optimizer Adam lr 1e-3, weight_decay 1e-5, grad clip 5, batch 128,
+    240 epochs, shuffle generator seed 0+101 (identical batch sequence to v3/v3b)
+  - checkpoint selection: primary best-monitor single checkpoint; secondary
+    pre-registered top-5 monitor soup (secondary metric only); no early
+    stopping; no dev-based selection
+
+gauge_normalization (identical to v3b; reused from contribution_gauge.py):
+  m_t = mean of delta_raw over ALL fit_inner unit instances of type t
+        (unit-instance counts; eval mode; float64)
+  alpha_canonical(t) = alpha_raw(t) + m_t ;  delta_canonical(u) = delta_raw(u) - m_{t(u)}
+  discipline: fit_inner instances only (no monitor/dev labels or statistics);
+  zero-fit-instance types get deterministic fallback m_t = 0; offsets stored
+  as a frozen buffer shipped with the checkpoint; raw parameters unmodified.
+  semantics boundary: with a type-conditioned delta, canonical alpha is "the
+  fit-distribution type-average base contribution under the normalization
+  convention", NOT a context-independent chemical constant.
+
+verification_gates (frozen before the run):
+  untrained new head predicts identically to the untrained v3b head (zero-init
+    of the new columns; device float noise tolerated, exact equality expected)
+  new-channel learnability: new weight columns and the embedding receive
+    gradients; a training step makes the embedding effective on delta
+  only delta reads type_emb (AST); alpha still 1 shared scalar per type
+  gamma / global banks / bias params bit-exact vs v3b init; gamma penalty
+    numerically identical to v3b; delta penalty absent
+  strict sum identity (exported values); pred_canonical == pred_raw on
+    fit/monitor/dev within atol 1e-5; fit per-type canonical delta mean 0
+    within 1e-6; within-type std preserved; UNK fallback deterministic;
+    relabel / endpoint-swap / batch-composition invariance; save/load roundtrip
+  official valid/test never loaded; raw y only; no Full-Y predictions as
+    inputs or labels
+
+judgment_bands (engineering scale, frozen before results; not significance tests):
+  dev_mae_le_0.16 (case A): type conditioning recovered expressive capacity;
+    if mechanism checks hold (additivity, lossless canonicalization, alpha
+    split-half stability not worse, synthetic recovery not degraded, no
+    gamma/global bypass), supports the hypothesis; the NEXT round (not this
+    one) may unify full distance-bucket moments with type-conditioned
+    contributions.
+  0.16 < dev_mae < 0.17 (case B): limited improvement; inspect frequent-type
+    concentration, low-frequency overfit, delta absorbing type main effects,
+    alpha split stability.  No embedding-width search.
+  dev_mae_ge_0.17 (case C): type conditioning does not close the gap; do NOT
+    grow the embedding; next round pivots to the full per-distance-bucket
+    pair-moment separable readout (not automatic).
+  special_case: better MAE with worse interpretation => only predictive
+    improvement may be claimed, not methodological success.
+  attribution limit: the intervention adds BOTH the type channel and
+    +10,176 params without a capacity-matched control; even a positive result
+    cannot attribute the full improvement to type conditioning alone.
+
+evaluation:
+  metric: internal fit/monitor/dev raw-y MAE; primary = best-monitor checkpoint
+  paired: per-molecule signed-difference bootstrap vs F / O / S(v3) / S_gauge,
+    2000 resamples, seed 0 (statistic (e_a - e_b).mean())
+  contribution_audit: raw AND canonical alpha/delta/gamma/global exports with
+    per-unit atom membership and offsets; channel var shares (descriptive, NOT
+    independent explained variance); per-type canonical delta dispersion and
+    attach-count response slopes; UNK audit; subgroup table (RINGCHAIN ring
+    unit count, cyclomatic, n_atoms, y bands)
+  split_half: same fit-half gauge stability audit as Phase A, on the new
+    trained checkpoint (statistical normalization stability of ONE checkpoint,
+    NOT cross-seed stability)
+  synthetic: the v3b corrected known-truth attachment task (index D_HIST+4=36)
+    with the IDENTICAL truth generator/data/seeds -- same-protocol comparison
+    to v3b allowed; ONE predefined seed-0 CPU run; no task tuning
+
+compute:
+  gpu: res GPU1 only (pool res-gpu1, CUDA_VISIBLE_DEVICES=1), single model
+    S-typecond-gauge-seed0, single formal run
+  forbidden: seed 1, second candidates, retraining F/O/S(v3)/S-gauge(v3b),
+    embedding-width / lr / regularisation searches, architecture additions,
+    end-to-end fine-tuning, config changes after seeing dev results,
+    automatic follow-up runs

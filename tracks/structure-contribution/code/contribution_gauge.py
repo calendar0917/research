@@ -131,10 +131,17 @@ def _hash_array(a: np.ndarray) -> str:
 
 
 class GaugedHead(nn.Module):
-    """Wraps a trained (frozen) SBContribHead and applies the gauge offsets.
+    """Wraps a trained (frozen) structured head and applies the gauge offsets.
 
     alpha_canonical = alpha_embedding[type] + offset[type]
     delta_canonical = delta_mlp(local_input) - offset[type]
+
+    The unit terms are delegated to ``head.unit_terms(batch)`` -> (alpha, delta),
+    so the SAME gauged wrapper serves any head whose prediction is
+    ``bias + sum_u(alpha_u + delta_u) + sum_r gamma + g_ctx + g_topo``
+    (cscl-v3/v3b ``SBContribHead`` and the cscl-v3c type-conditioned head;
+    for v3c ``unit_terms`` returns the type-conditioned delta, which does not
+    change the gauge algebra: the offset is still a per-type constant).
 
     ``offset`` is a frozen buffer (not a parameter); gamma / global banks /
     bias are passed through untouched, so the prediction is invariant up to
@@ -150,8 +157,7 @@ class GaugedHead(nn.Module):
 
     def forward(self, batch):
         h = self.head
-        alpha_raw = h.alpha(batch.unit_type).squeeze(-1)
-        delta_raw = h.delta(torch.cat([batch.unit_feat, batch.unit_ctx], dim=1)).squeeze(-1)
+        alpha_raw, delta_raw = h.unit_terms(batch)
         off = self.offset[batch.unit_type]
         alpha_canon = alpha_raw + off
         delta_canon = delta_raw - off
@@ -183,12 +189,12 @@ class GaugedHead(nn.Module):
 # ---------------------------------------------------------------------------
 
 
-def save_gauge(path: Path, offsets: np.ndarray, meta: Mapping[str, Any], head_state: Mapping[str, torch.Tensor]) -> None:
+def save_gauge(path: Path, offsets: np.ndarray, meta: Mapping[str, Any], head_state: Mapping[str, torch.Tensor], protocol_id: str = PROTOCOL_ID) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(
         {
-            "protocol": PROTOCOL_ID,
+            "protocol": protocol_id,
             "offsets": np.asarray(offsets, dtype=np.float64),
             "meta": dict(meta),
             "head_state": head_state,
@@ -197,12 +203,16 @@ def save_gauge(path: Path, offsets: np.ndarray, meta: Mapping[str, Any], head_st
     )
 
 
-def load_gauge(path: Path, vocab_size: int, tau_ctx: np.ndarray, tau_topo: np.ndarray, device="cpu"):
-    """Rebuild (GaugedHead, meta) from a gauge checkpoint; strict state load."""
+def load_gauge(path: Path, vocab_size: int, tau_ctx: np.ndarray, tau_topo: np.ndarray, device="cpu", head_builder=None):
+    """Rebuild (GaugedHead, meta) from a gauge checkpoint; strict state load.
+
+    ``head_builder(vocab_size, tau_ctx, tau_topo) -> head`` defaults to the
+    cscl-v3/v3b ``SBContribHead``; cscl-v3c passes its type-conditioned head.
+    """
     from run_cscl_v3 import SBContribHead
 
     blob = torch.load(path, map_location="cpu", weights_only=False)
-    head = SBContribHead(vocab_size, tau_ctx, tau_topo)
+    head = (head_builder or SBContribHead)(vocab_size, tau_ctx, tau_topo)
     head.load_state_dict(blob["head_state"], strict=True)
     offsets = np.asarray(blob["offsets"], dtype=np.float64)
     assert offsets.shape == (vocab_size,)
