@@ -142,6 +142,11 @@ REPLAY_ATOL = 5.0e-5          # CPU float32 replay vs saved GPU export
 REPLAY_MAE_ATOL = 1.0e-4
 EXTREME_VALID_ID = "valid:0172"   # historically observed extreme row (index 172)
 DECISION_BANDS = {"A": -0.010, "B": -0.003}  # delta <= A : clear; (A,B] : mid; > B : none
+BAND_LABELS = {
+    "A_clear_budget_gain": "budget_gain_clear",
+    "B_moderate_gain": "budget_gain_marginal",
+    "C_no_useful_gain": "budget_gain_absent",
+}
 
 #: expected SHA256 of the frozen historical artifacts (from frozen_eval_manifest.json)
 EXPECTED_ARTIFACT_SHA = {
@@ -1294,9 +1299,7 @@ def stage_score(device: torch.device) -> dict[str, Any]:
         "ci_supports_negative_improvement": bool(ci[1] < 0.0),
         "band": band,
         "ci_conflict": ci_conflict,
-        "final_label": "uncertain" if ci_conflict else {"A": "budget_gain_clear",
-                                                      "B": "budget_gain_marginal",
-                                                      "C": "budget_gain_absent"}[band],
+        "final_label": "uncertain" if ci_conflict else BAND_LABELS[band],
         "thresholds": DECISION_BANDS,
         "not_dominated_by_extreme_rows": bool(
             abs(subgroup["extreme_rows"]["delta_without_valid_0172"]) <= 1.5 * abs(delta) + 1e-9
@@ -1308,6 +1311,16 @@ def stage_score(device: torch.device) -> dict[str, Any]:
             "gap_to_0.08": float(e10.mean() - 0.08),
             "reached_0.09": bool(e10.mean() <= 0.09),
             "reached_0.08": bool(e10.mean() <= 0.08),
+        },
+        "scoring_provenance": {
+            "predictions_frozen_before_any_valid_read": True,
+            "valid_label_reads": 2,
+            "read_1": "first score invocation: computed metrics, then crashed on a band-label "
+                       "KeyError while assembling decision.json (no metric or threshold changed)",
+            "read_2": "final invocation after the label fix; identical frozen prediction files",
+            "note": "both reads used the same sha256-verified prediction files and the same "
+                    "pre-frozen decision rule; this disclosure exists because the protocol asks "
+                    "for a single read and engineering retries after the read must be declared",
         },
         "test_status": (
             "official test NOT re-evaluated in this round; the historical F10000 test number is an "

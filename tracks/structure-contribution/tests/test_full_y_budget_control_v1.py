@@ -224,3 +224,14 @@ def test_state_hash_and_row_hash_are_content_addressed():
     assert drv.state_hash(a) != drv.state_hash(c)
     assert drv.sha256_rows(np.array([0, 1, 2])) == drv.sha256_rows(np.array([0, 1, 2]))
     assert drv.sha256_rows(np.array([0, 1, 2])) != drv.sha256_rows(np.array([0, 1, 3]))
+
+
+def test_band_labels_cover_every_band():
+    """decide_band must only return bands that the final-label map knows."""
+    drv = _driver()
+    for delta in (-0.05, -0.010, -0.0099, -0.003, -0.0029, 0.0, 0.02):
+        band = drv.decide_band(delta)
+        assert band in drv.BAND_LABELS, band
+    assert drv.decide_band(-0.010) == "A_clear_budget_gain"
+    assert drv.decide_band(-0.005) == "B_moderate_gain"
+    assert drv.decide_band(0.0) == "C_no_useful_gain"
