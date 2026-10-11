@@ -1,8 +1,8 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-zinc-full-y-budget-control-v1-completed
-current_round: zinc-full-y-budget-control-v1
+phase: cscl-distance-pooling-bottleneck-v1-cpu-audit-complete-purchase-granted
+current_round: distance-pooling-bottleneck-v1
 next_round_candidate: >-
   AWAITING USER AUTHORIZATION. The matched budget control is COMPLETE: band A
   (F10000 - F7200 = -0.015440, paired CI95 [-0.022937, -0.008017]) but the absolute level is still
@@ -158,16 +158,16 @@ round_cscl-prediction-feasibility-v2:
       date: 2026-10-10
 
 next_action: >-
-  zinc-full-y-budget-control-v1 is COMPLETE: band A (F10000 - F7200 = -0.015440,
-  paired CI95 [-0.022937, -0.008017], 59.2% of molecules better) but the absolute
-  level is still valid raw 0.118618 (+0.0286 to 0.09, +0.0386 to 0.08) with a
-  heavy-tailed error mass and no gain on small molecules.  Q2 answer: the next
-  purchase must be a NEW PREDICTION ARCHITECTURE / REPRESENTATION inside the
-  y-only contract - not budget, hyper-parameters or soup selection.  No seed 1,
-  no third trajectory, no retraining, official test untouched.  Durable results in
-  notes/zinc_full_y_budget_control_v1.md and this round's block; raw artifacts in
-  (git-ignored) results/zinc_full_y_budget_control_v1/.  Next work requires a new
-  preregistration + user authorization.
+  cscl-distance-pooling-bottleneck-v1 is IN PROGRESS: CPU audit complete, purchase gate GRANTED
+  (G1 0.9925 >= 0.10, G2 1.0000 >= 0.25, G3 all correctness gates pass).  The hard >=5
+  bucket mixes 8.46 distinct exact distances per molecule on average and 99.25% of
+  train molecules hold both d=5 and d>=7; the frozen Soft5 basis differs from Hard5 on
+  100% of molecules (mean relative 0.459) with no new parameters.  Authorised follow-up:
+  exactly two fresh matched seed-0 GPU arms (Hard5 / Soft5) on res pool res-gpu1 and one
+  frozen official-validation evaluation (prompts written before y is read).  No seed 1,
+  no third arm, no kernel/center/width search, no retraining after valid, official test
+  untouched.  Durable CPU facts in notes/distance_pooling_bottleneck_v1.md; raw artifacts
+  in (git-ignored) results/distance_pooling_bottleneck_v1/.
 
 # ---------------------------------------------------------------------------
 # round: cscl-v3 (strong-backbone structural contribution, SB-CSCL, seed 0)
@@ -801,3 +801,69 @@ round_zinc-full-y-budget-control-v1:
     molecules), so the next purchase must be a new prediction architecture/representation inside the
     y-only contract, not budget/hyper-parameters/soup selection.  Round stops here; no seed 1, no
     third trajectory, no retraining, official test untouched.
+
+# ---------------------------------------------------------------------------
+# round: cscl-distance-pooling-bottleneck-v1 (Hard5 hard buckets vs one frozen
+# continuous-distance moment basis, seed 0, two matched arms; CPU audit done)
+# ---------------------------------------------------------------------------
+
+round_cscl-distance-pooling-bottleneck-v1:
+  protocol: configs/distance_pooling_bottleneck_v1.yaml (frozen before the formal runs)
+  report: notes/distance_pooling_bottleneck_v1.md
+  driver: code/run_distance_pooling_v1.py (audit/train/check/predict/score)
+  operator: code/distance_pooling_v1.py (Soft5, frozen kernel)
+  tests: tests/test_distance_pooling_v1.py (24 passed)
+  question: >-
+    Full-Y summarises the 48-D pair state through five HARD shortest-path buckets
+    (1,2,3,4,>=5), each contributing sum(h), sum(h^2), log1p(count) to the 814-D
+    reader input.  Does replacing only that graph-level hard grouping by one
+    PRE-FROZEN continuous-distance basis (Soft5: five normalised Gaussian RBF
+    weights in log1p(distance) space, sigma 0.35, centers [1,2,3,4,8]) change
+    official-validation raw-y MAE, everything else held fixed?
+  phase_a_source_path_audit: >-
+    all pass: bucket = min(max(int(d),1),5)-1; 23-D relation carries log1p(distance)
+    at index 5; consumed 15-D slice = 0..13 + 18 (keeps log distance, C6 zeroes
+    path count); distance_gate = 1 + tanh(Embedding(5,48))[bucket] (hard bucket
+    only, NOT swapped); pair_value 48-D; pooling per bucket sum/sum-square/log-count;
+    reader [289 | 485 | 32 | 8] = 814; params 408651; C6_MASK topology not zeroed
+  phase_b_distance_distribution (results/distance_distribution.json, label-blind): >-
+    2,668,346 pairs over 10,000 molecules; bucket shares 9.34/12.90/12.78/11.58/53.40%;
+    the >=5 bucket is NOT one distance: mean 8.46 distinct exact distances per
+    molecule (p50 8, max 18), 99.80% mix >=2, 97.49% span >=3, 99.25% hold BOTH d=5
+    and d>=7; conditional entropy 1.91 nats; full all-pairs BFS cross-check on the
+    raw graphs: 0 mismatches / 2,668,346 pairs, max |log1p round-trip| 8.6e-8
+  phase_c_operator: >-
+    s = log1p(d); mu_k = log1p([1,2,3,4,8]); a_k = exp(-(s-mu_k)^2/(2*0.35^2));
+    w_k = a_k / sum_j a_j; first_k = sum w_k h, second_k = sum w_k h^2 (square h
+    first), count_k = sum w_k stored log1p but still zeroed by C6_MASK; 485 output,
+    814 reader, 408651 params, zero new trainable parameters, no new RNG, no
+    center/width/parameter search
+  phase_d_gates (all pass):
+    correctness: "Hard5 bit-identical to frozen path; Soft5 weights finite/non-negative/sum-1;
+      conservation (first 3.7e-8, second 3.5e-8, count 2.0e-8 relative); endpoint-swap /
+      pair-permutation / batch-composition / single-molecule invariants; C6 count block zero;
+      gradient flow; y-independence; identical init state for both arms"
+    feature_audit: "mean relative Hard5/Soft5 feature difference 0.459 (p90 0.538, max 0.695);
+      100.00% of 10,000 train molecules >1% different; participation ratio 10.60 -> 8.06"
+    purchase_gate: {G1_long_distance_heterogeneity: 0.9925 (>=0.10 pass),
+                    G2_feature_difference: 1.0000 (>=0.25 pass), G3_correctness: true (pass)}
+    label: CPU_PURCHASE_GRANTED
+  phase_e_gpu (authorised, two fresh matched seed-0 arms, pool res-gpu1): >-
+    Hard5 and Soft5 both start from the identical untrained init state, all official
+    train 10,000 rows, all_train_prep.npz, Adam lr 1e-3 / wd 1e-5 / clip 5 / batch
+    128 / FP32, 240 epochs = 18,960 steps, raw-y L1 + label-free reconstruction,
+    lambda 33.95873017865987, C6_MASK, shuffle seed 101, last-5 soup epochs 236-240;
+    historical full-10k Hard5 checkpoint (valid raw 0.118618) is read-only reference;
+    GPU nondeterminism recorded, single-seed results exploratory
+  phase_f_evaluation (pre-frozen): >-
+    freeze both soup checkpoints and hash them; write official-validation predictions
+    WITHOUT reading y; then read y once; paired bootstrap Delta = MAE(Soft5)-MAE(Hard5)
+    (5000, seed 0); pre-declared subgroups (y<=-3, atoms, ring rank, diameter, bucket-4
+    fraction, last-bucket diversity, valid:0172 influence, top-10 error mass); bands
+    A: <=-0.010 -> SOFT5_PREDICTIVE_SIGNAL, B: -0.010..-0.003 -> SOFT5_LIMITED_SIGNAL,
+    C: >-0.003 -> SOFT5_NO_USEFUL_GAIN; CI conflict -> UNCERTAIN; report gaps to 0.09/0.08
+  status: >-
+    CPU audit COMPLETE with CPU_PURCHASE_GRANTED; GPU arms and the frozen official-valid
+    evaluation pending.  No seed 1, no third arm, no kernel/center/width search, no
+    retraining after valid, official test never accessed.
+  results_dir: results/distance_pooling_bottleneck_v1/ (git-ignored)

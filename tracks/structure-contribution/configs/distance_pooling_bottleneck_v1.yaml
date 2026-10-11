@@ -1,0 +1,212 @@
+# cscl-distance-pooling-bottleneck-v1 — frozen pre-registration for the
+# Hard5 (historical five hard shortest-path buckets) vs Soft5 (one fixed
+# continuous-distance weighted moment basis) matched comparison.
+#
+# Written and committed BEFORE the single new formal GPU training pair and
+# BEFORE any official-validation y read in this round.  The only authorised
+# fallback is CPU_NO_PURCHASE (stop); there is no retune, no seed 1, no third
+# arm, no kernel search, no architecture search, no test access.
+
+protocol_id: cscl-distance-pooling-bottleneck-v1
+track: tracks/structure-contribution (CSCL)
+question: >-
+  Full-Y summarises the 48-D pair state through five HARD shortest-path buckets
+  (distance 1, 2, 3, 4, >=5), each contributing sum(h), sum(h^2) and
+  log1p(count) to the 814-D reader input.  Does replacing only that graph-level
+  hard grouping by a single PRE-FROZEN continuous-distance basis (Soft5:
+  five normalised Gaussian RBF weights in log1p(distance) space) change
+  official-validation raw-y MAE, when everything else is held fixed?
+
+authorization: >-
+  User-authorized round: CPU-only audit first (Phase A-E locally), then — only
+  if the pre-frozen purchase gate passes — exactly two fresh matched seed-0
+  GPU arms on res pool res-gpu1, one frozen official-validation evaluation, and
+  an explicit stop.
+
+# ---------------------------------------------------------------------------
+# Phase A — source-path audit (CPU)
+# ---------------------------------------------------------------------------
+source_path_audit:
+  distance_source: >-
+    unweighted BFS shortest path in zinc_patch_path_pooling._shortest_path_summary
+  pair_relation_23d: >-
+    [5 one-hot bucket | log1p(distance) col 5 | 5 overlap | 3 boundary |
+     4 path_bond_mean | log_path_count col 18 | 4 adjacent bond]
+  bucket_rule: bucket = min(max(int(distance), 1), 5) - 1   # 5+ truncation
+  reader_relation_slice: e2e_dictenv_p1.P1_RELATION_INDICES = 0..13 + 18 (15-D)
+  relation_slice_keeps_log_distance: true        # index 5
+  relation_slice_keeps_path_count: true          # index 18 (C6-masked to 0)
+  distance_gate: 1.0 + tanh(Embedding(5, 48))[bucket]   # hard bucket only
+  pair_value: 48-D from pair_encoder([left+right, |left-right|, product*gate, rel])
+  pooling: per-bucket sum(h), sum(h^2), log1p(count); count zeroed by C6_MASK
+  reader_input_expected: "[unary 289 | pair moments 485 | global 32 | topology 8] = 814"
+  parameters_expected: 408651
+
+# ---------------------------------------------------------------------------
+# Phase B — distance distribution over official train 10000 (CPU, label-blind)
+# ---------------------------------------------------------------------------
+distance_distribution:
+  rows: official-train 10000 (encoded cache)
+  exact_distance_census: true
+  diameter: true
+  last_bucket_diversity: >-
+    distinct exact distances, span, mean/variance and entropy of the exact
+    distances inside the >=5 bucket, per molecule, plus correlations with atom
+    count and ring rank
+  crosscheck: full all-pairs BFS on the raw PyG graphs vs pair_relation[:, 5]
+  no_label_use: true
+
+# ---------------------------------------------------------------------------
+# Phase C — the ONE alternative operator (frozen, never tuned)
+# ---------------------------------------------------------------------------
+soft5_operator:
+  name: Soft5
+  s: log1p(d)
+  centers: [1, 2, 3, 4, 8]
+  mu_k: log1p(center_k)
+  sigma: 0.35                                   # fixed, never tuned
+  amplitude: a_k = exp(-(s - mu_k)^2 / (2 sigma^2))
+  weights: w_k = a_k / sum_j a_j                # non-negative, row sums 1
+  first_k: sum_ij w_k(d_ij) * h_ij
+  second_k: sum_ij w_k(d_ij) * h_ij^2           # square h first, then weight
+  count_k: sum_ij w_k(d_ij), stored log1p, still zeroed under C6_MASK
+  output_width: 5 * (48 + 48 + 1) = 485
+  parameters_added: 0
+  source_coordinate: data.pair_relation[:, 5]   # already-consumed log1p(d)
+  explicit_non_variants:
+    - (sum_j w_j h_j)^2 is NOT used as the second moment
+    - sum_j w_j h_j^2 is NOT used as the second moment
+    - no kernel/center/width/parameter search
+  fixed_once_applied_to: "tracks/structure-contribution/code/distance_pooling_v1.py"
+
+held_fixed:
+  - K-SVD / CSSD coding
+  - environment encoder
+  - 15-D relation input (including log1p(distance))
+  - distance_gate hard-bucket embedding (NOT swapped for a soft gate)
+  - pair encoder, global encoder, topology encoder, reader
+  - raw-y L1 task loss + label-free reconstruction loss
+  - C6_MASK semantics (pair counts still zeroed)
+  - parameter count 408651, reader width 814
+
+# ---------------------------------------------------------------------------
+# Phase D — CPU correctness + purchase gate
+# ---------------------------------------------------------------------------
+correctness_gates:
+  hard5_numeric_reproduction: bit-identical pooled features and prediction vs frozen path
+  soft5_weights: finite, non-negative, row sums 1
+  conservation:
+    first: sum_k first_k == sum_ij h_ij          (float64 reference, rtol 1e-4)
+    second: sum_k second_k == sum_ij h_ij^2      (float64 reference, rtol 1e-4)
+    count: sum_k count_k == n_pairs              (weighted-once, absolute 1e-3)
+  invariants: [pair relabel/permutation, endpoint swap, batch composition, single molecule]
+  c6_count_block_zero: true
+  params_and_init: 408651, identical init state for both arms, no new trainable params
+  gradient_flow: gradients reach pair_encoder, relation_encoder, distance_gate
+  y_independence: forward output unchanged when batch.y is randomised
+  no_label_reads: no y / valid / test access in the audit
+
+purchase_gate:
+  G1_long_distance_heterogeneity:
+    metric: fraction of train molecules with both d=5 and d>=7 pairs in bucket 4
+    threshold: ">= 0.10"
+  G2_feature_difference:
+    metric: fraction of train molecules with >1% normalised Hard5/Soft5 difference
+    threshold: ">= 0.25"
+  G3_correctness: all correctness gates pass
+  on_failure: CPU_NO_PURCHASE (stop; no retuning, no widening)
+
+# ---------------------------------------------------------------------------
+# Phases E/F — matched GPU arms and frozen evaluation
+# ---------------------------------------------------------------------------
+arms:
+  Hard5:
+    pooling: historical hard 5-bucket moments (bit-identical frozen path)
+    train_rows: official train 10000
+    new_training: true
+  Soft5:
+    pooling: frozen Soft5 weighted moments (only difference)
+    train_rows: official train 10000
+    new_training: true
+  matched: >-
+    both arms start from the identical seed-0 untrained init state, use the
+    same prepared rows (all_train_prep.npz), batch stream, 18960 steps and
+    last-5 soup rule; the only difference is the kernel attributes.
+
+training:
+  seed: 0
+  device: one GPU on pool res-gpu1
+  optimizer: Adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  batch_size: 128
+  epochs: 240
+  steps_expected: 18960
+  soup: parameter mean of epochs 236..240 (last-5)
+  scheduler: none
+  amp: false
+  ddp: false
+  precision: fp32
+  train_shuffle_seed: 101
+  task_loss: L1(pred, raw y)
+  auxiliary_loss: label-free structural reconstruction (CSSD residual on phi)
+  h1_lambda: 33.95873017865987
+  monitor_or_valid_used_for_selection: false
+  nondeterminism: >-
+    GPU reduction order is not bitwise deterministic; single-seed results are
+    exploratory.  Cross-arm RNG-state hashes and initial-state hashes are
+    recorded in the matching audit; soup checkpoints are frozen and hashed.
+
+evaluation:
+  endpoint: official ZINC validation (1000 molecules) raw-y MAE
+  official_test: forbidden
+  order:
+    - both soup checkpoints written and hashed
+    - official-valid predictions written and hashed (y never read)
+    - freeze manifest hashed
+    - then official y read exactly once and metrics computed
+  statistics:
+    paired_diff: "d_i = |e_Soft5_i| - |e_Hard5_i|"
+    bootstrap: 5000 resamples, seed 0, percentile 95% CI
+  subgroups_predeclared:
+    - y <= -3 vs y > -3
+    - atom-count quartiles
+    - cyclomatic ring-rank quartiles
+    - graph-diameter quartiles
+    - bucket-4 pair fraction quartiles
+    - last-bucket distinct-distance quartiles
+    - valid:0172 influence (descriptive only; never removed from the primary)
+    - top-10 error mass share per arm
+  fit_valid_gap: reported for both arms
+
+decision_rule:
+  delta: MAE(Soft5) - MAE(Hard5)
+  case_A: "delta <= -0.010 and paired CI < 0 and y>-3 subgroup improves and not single-row driven -> SOFT5_PREDICTIVE_SIGNAL"
+  case_B: "-0.010 < delta <= -0.003 -> SOFT5_LIMITED_SIGNAL"
+  case_C: "delta > -0.003 -> SOFT5_NO_USEFUL_GAIN"
+  ci_conflict: if the point estimate crosses a threshold but the CI is wide or contains zero -> UNCERTAIN
+  absolute_target:
+    report_gap: valid Soft5 MAE - 0.09 and - 0.08
+    test_claim: forbidden
+
+budget:
+  formal_new_training_trajectories: 2
+  gpu: res pool res-gpu1 (process backend), two separate rr runs
+  cpu_only_fallback: CPU_NO_PURCHASE stops before any GPU run
+
+discipline:
+  seeds: [0]
+  no_seed_1: true
+  no_third_arm: true
+  no_bucket_center_width_search: true
+  no_new_trainable_parameters: true
+  no_architecture_search: true
+  no_component_supervision: true
+  no_official_test: true
+  no_valid_driven_change: true
+  no_auto_extension: true
+  exposed_instrument_disclosure: >-
+    official validation has been read in earlier rounds (e.g. the historical
+    Hard5 0.118618 result); this round is a controlled comparison on an
+    already-exposed instrument, not a fresh blind test.
