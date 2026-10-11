@@ -350,3 +350,29 @@ row is verified against the official repository and arXiv abstract.  The
 constraint-relevant conclusion is that the closest modern competitor cannot
 be transplanted into this round **because its core is a transformer
 encoder**, which the protocol forbids.
+
+## 11. Twenty engineering correctness gates
+
+All gates are covered by `tests/test_structural_relation_composer_v1.py`
+(19 tests, all passing, `uv run pytest ... -q` → 19 passed) plus the frozen
+split/prep artifacts; the pair-matching gates are additionally verified on the
+real runs in `round_summary.json → pairing_audit`.
+
+| # | gate | where |
+|---|---|---|
+| 1 | atom-relabelling invariance of the object build | `test_gate1_...` |
+| 2 | PyG double edges deduplicated to one physical bond | `test_gate2_...` |
+| 3,4 | endpoint swap invariance (bond, junction) | `test_gate3_gate4_...` |
+| 5,6,7 | bond/junction counting, incidence consistency, per-bond counts | `test_gate5_gate6_gate7_...` |
+| 8,9,10 | null-arm marginals conserved; `Σ_b W_b`, `Σ_b V_b` conserved; N/O pairing | `test_gate8_gate9_gate10_...` |
+| 11 | gradients reach atom/bond/junction/composer/reader | `test_gate11_...` |
+| 12 | forward is y-independent | `test_gate12_...` |
+| 13 | batch-grouping invariance | `test_gate13_...` |
+| 14 | save/load replay determinism | `test_gate14_...` |
+| 15 | no NaN/Inf, empty-junction robustness | `test_gate15_...` |
+| 16 | forbidden-module scan (no GNN/attention/Transformer/recurrence) | `test_gate16_...` |
+| 17 | object/writeup marginal-preserving ownership switch on real shapes | `test_object_level_...` |
+| 18,19 | locked dev / monitor never used by the training path | `test_gate18_gate19_...` |
+| 20 | official test never touched (static + runtime check) | `test_gate20_...` |
+| + | frozen split determinism/grouping; fresh-vs-cached objects; split json rebuild | three extra tests |
+| + | identical init/hyper/config within each N/O pair (real runs) | `round_summary.json → pairing_audit` |
