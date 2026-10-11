@@ -1075,6 +1075,8 @@ def stage_analyze(device: str = "cpu", log=log) -> dict:
             if m.sum() > 1:
                 alpha_spread = max(alpha_spread, float(np.ptp(contrib["alpha"][m])))
         per_type_fit_counts = fit_counts[ut]
+        rsum = np.bincount(contrib["rel_mol"].astype(np.int64), weights=contrib["gamma"], minlength=n_mols) \
+            if contrib["gamma"].size else np.zeros(n_mols)
         integrity[split] = {
             **ver,
             "alpha_within_type_spread_max": alpha_spread,
@@ -1084,8 +1086,9 @@ def stage_analyze(device: str = "cpu", log=log) -> dict:
             "units_of_unk_buckets": int((ut >= ns.vocab.n_known).sum()),
             "units_global_unk": int((ut == ns.vocab.n_total - 1).sum()),
             "fit_types_present": int(np.unique(ut[ut < ns.vocab.n_known]).size),
-            "gamma_sum_mean": float(contrib["gamma"].sum(axis=1).mean()) if contrib["gamma"].size else 0.0,
-            "gamma_sum_std": float(contrib["gamma"].sum(axis=1).std()) if contrib["gamma"].size else 0.0,
+            "gamma_sum_per_molecule_mean": float(rsum.mean()),
+            "gamma_sum_per_molecule_std": float(rsum.std()),
+            "gamma_sum_per_molecule_abs_mean": float(np.abs(rsum).mean()),
             "per_unit_fit_instance_count_at_its_type": {
                 "min": int(per_type_fit_counts.min()), "median": float(np.median(per_type_fit_counts))},
         }
