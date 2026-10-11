@@ -588,6 +588,11 @@ def train_bjoc_arm(
     del train
     if smoke:
         fit_rows, mon_rows = fit_rows[:512], mon_rows[:128]
+    # objects are indexed by dataset row; training indexes by position
+    fit_objs = [objs[int(i)] for i in fit_rows]
+    mon_objs = [objs[int(i)] for i in mon_rows]
+    assert [o.mol_index for o in fit_objs] == [int(i) for i in fit_rows]
+    assert [o.mol_index for o in mon_objs] == [int(i) for i in mon_rows]
     y_fit = torch.as_tensor(y_all[fit_rows], dtype=torch.float32)
     y_mon = y_all[mon_rows]
 
@@ -621,7 +626,7 @@ def train_bjoc_arm(
         total, n_mol, steps = 0.0, 0, 0
         t_ep = time.perf_counter()
         for indices in _shuffle_batches(len(fit_rows), BATCH_SIZE, gen):
-            batch = _mv(sro.batch_objects([objs[i] for i in indices]), device)
+            batch = _mv(sro.batch_objects([fit_objs[i] for i in indices]), device)
             pred = model(batch)
             loss = F.l1_loss(pred.view(-1), y_fit[indices].to(device).view(-1))
             optimizer.zero_grad()
@@ -631,7 +636,7 @@ def train_bjoc_arm(
             total += float((pred.view(-1) - y_fit[indices].to(device).view(-1)).abs().sum())
             n_mol += len(indices)
             steps += 1
-        mon_pred = predict_bjoc(model, objs, mon_rows, device)
+        mon_pred = predict_bjoc(model, mon_objs, list(range(len(mon_rows))), device)
         mon_mae = float(np.abs(mon_pred - y_mon).mean())
         curve.append(
             {
@@ -649,8 +654,8 @@ def train_bjoc_arm(
     wall = time.perf_counter() - started
     members, soup = _last_soup(list(states), len(curve))
     model.load_state_dict({k: v.to(device) for k, v in soup.items()})
-    fit_pred = predict_bjoc(model, objs, fit_rows, device)
-    mon_pred = predict_bjoc(model, objs, mon_rows, device)
+    fit_pred = predict_bjoc(model, fit_objs, list(range(len(fit_rows))), device)
+    mon_pred = predict_bjoc(model, mon_objs, list(range(len(mon_rows))), device)
     b_cal = float(np.median(y_all[fit_rows] - fit_pred))
     results = {
         "protocol": PROTOCOL_ID,
