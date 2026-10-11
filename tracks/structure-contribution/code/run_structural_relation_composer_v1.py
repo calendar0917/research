@@ -1334,7 +1334,7 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
             a_sq.index_add_(0, batch["atom_batch"], a * a)
             g = (batch["global_feat"].to(a.dtype) - model.global_mean) / model.global_scale
             reader_in = torch.cat([z, a_sum, a_sq, g], dim=1)
-            return model.reader(reader_in), w_override
+            return model.reader(reader_in).view(-1), w_override
 
         import random as _random
 
@@ -1360,8 +1360,10 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
                 w_perm = _permute_within(w_, batch["junc_batch"], seed)
                 p_perm, _ = forward_with_w(batch, w_perm)
                 p_base, _ = forward_with_w(batch, w_)
+                p_base_np = p_base.cpu().numpy()
                 p_perm = p_perm.cpu().numpy()
-                d_base = float(np.abs(p_base.cpu().numpy() - base).max())
+                d_base = float(np.abs(p_base_np - base).max())
+                assert p_base_np.shape == base.shape and d_base < 1e-4, (p_base_np.shape, base.shape, d_base)
             counterfactuals[tag] = {
                 "mean_abs_dpred": float(np.abs(p_perm - base).mean()),
                 "max_abs_dpred": float(np.abs(p_perm - base).max()),
