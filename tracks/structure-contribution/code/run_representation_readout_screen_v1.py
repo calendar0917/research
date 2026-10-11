@@ -713,10 +713,26 @@ def build_arm_b_features(
 
     started = time.perf_counter()
     sha_before = file_sha256(FULL_Y_SOUP)
-    model, _prep, _blob10 = sba.load_frozen_backbone(log=log)
+    model, prep, blob10 = sba.load_frozen_backbone(log=log)
     train_rows = load_train_rows(log=log)
     if len(train_rows) != len(dataset):
         raise RuntimeError("encoded cache and dataset length differ")
+
+    # The frozen Full-Y model consumes the **fit7200-standardized** features:
+    # the historical training driver applied ``apply_prep_fit7200`` in memory
+    # before every forward (run_prediction_feasibility_v2.train_candidate).
+    # Skipping it would feed all-10k-standardized values and silently shift the
+    # reader input (this was caught by the replay gate below).
+    import run_prediction_feasibility_v2 as v2
+
+    prep_blob = {k: z for k, z in np.load(FULL_Y_PREP, allow_pickle=False).items()}
+    if int(prep_blob["fit_idx"].shape[0]) != 7200:
+        raise RuntimeError("frozen prep_fit7200 does not contain 7200 fit rows")
+    d_fit_sha = sha256_array(np.asarray(prep_blob["D_fit"], np.float32))
+    if d_fit_sha != "e8b6c8a1fc9cb6705a52265f5afe026f02e5340d30acf2764e9f573422efea51":
+        raise RuntimeError(f"D_fit hash mismatch: {d_fit_sha}")
+    v2.apply_prep_fit7200(train_rows, prep_blob, blob10)
+    log("[armB] fit7200 preprocessing applied to rows (identical to the historical training path)")
 
     # read-only replay of the committed Full-Y soup
     replay = sba.replay_predictions(model, train_rows, idx, device="cpu", log=log)
@@ -824,6 +840,9 @@ def build_arm_b_features(
             "soup_state": str(FULL_Y_SOUP.relative_to(REPO_ROOT)),
             "soup_state_sha256": sha_before,
             "prep": str(FULL_Y_PREP.relative_to(REPO_ROOT)),
+            "prep_sha256": file_sha256(FULL_Y_PREP),
+            "d_fit_sha256": d_fit_sha,
+            "fit7200_preprocessing_applied": True,
             "forward_path": "AuditModel.forward(data, mask=C6_MASK); eval(); torch.no_grad(); parameters frozen",
             "extraction": "reader pre-forward hook captures args[0] (unified)",
         },
