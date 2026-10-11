@@ -1,0 +1,208 @@
+# cscl-v3d-frozen-official-eval — 冻结模型的官方 validation/test 终点评估协议
+#
+# 冻结时间: 2026-10-11 (在任何 official validation/test 特征构建与评分之前)
+# 授权: 用户已明确授权本轮读取 official validation 与 official test 并实际评分。
+# 性质: 终点评估（zero training）。不选择、不修改、不重训任何模型。
+#
+# 历史 test 接触披露（预冻结声明）:
+#   本仓库 KSVD 路线历史上有 official-test 访问记录
+#   (tracks/ksvd/experiments/luyin16/zinc_e2e_dictenv_p1.py::unlock_test_stage,
+#    "project_wide_pristine": false, 理由 "historical unrelated ZINC official-test
+#    reads already exist")。CSCL-v3d 本身的训练/分析 (results/cscl_v3d/) 从未加载
+#   official valid/test (train json 的 discipline.official_valid_loaded=false /
+#   official_test_loaded=false; code/run_prediction_feasibility_v2.py::load_train_rows
+#   docstring "encoded_valid.pt / official valid / official test are never touched")。
+#   因此本轮结果不得表述为"全项目首次官方 test 盲测"，只能表述为:
+#   "CSCL-v3d 的方法/checkpoint 在本轮读取 official validation/test 之前已冻结;
+#   本次是该冻结版本在两个官方 split 上的终点评估。"
+
+protocol_id: cscl-v3d-frozen-official-eval
+derived_from_training_round: cscl-v3d-distance-conditioned-contribution
+training_run_id: cscl-v3d-s0-20261011-142219-64d434c8
+training_commit: b51608841650
+final_report_commit: 011dc99
+git_commit_at_freeze: 011dc99
+
+zero_training_assertions:
+  optimizer_steps: 0
+  trainable_parameter_updates: 0
+  seed1_runs: 0
+  no_fitting_on_valid_or_test: true   # 词表/标准化/gauge/tau 全部来自 fit_inner(train)
+
+# ---------------------------------------------------------------------------
+# 评估模型（恰好三个, 全部冻结）
+# ---------------------------------------------------------------------------
+models:
+  F:
+    description: "Full-Y-fit7200 seed0 frozen soup reader (历史 monitor top-5 soup checkpoint 规则)"
+    definition: run_prediction_feasibility_v2.build_model + strong_backbone_attribution.load_frozen_backbone
+    checkpoint: tracks/structure-contribution/results/feasibility_v2_gpu/full_y_seed0_soup_state.pt
+    checkpoint_sha256: 75d1737cf028a5beb988be0972bbac0aa80a1e16cb5cd72e668331a2bb7de2b6
+    internal_dev_mae_recorded: 0.11641
+    checkpoint_selection_rule_disclosure: "monitor top-5 soup (与 S/O 的 best-monitor 单检查点规则不同; 比较时披露)"
+  O_bucket:
+    description: "CSCL-v3d seed0 OpaqueHead + bucket columns, best-monitor 单检查点"
+    definition: run_cscl_v3d.OBucketHead (200,513 params)
+    checkpoint: tracks/structure-contribution/results/cscl_v3d/O_bucket_s0_best_state.pt
+    checkpoint_sha256: f9135fc44e7ca6794c0e0fd030c6fc01c052b519860ee16ac64752fb2a583e89
+    best_epoch: 210
+    internal_dev_mae_recorded: 0.11610
+    checkpoint_selection_rule: "best-monitor (800 内部 monitor 分子, 训练期不读 dev)"
+  S_bucket:
+    description: "CSCL-v3d seed0 SBucketContribHead + bucket columns, best-monitor 单检查点 + fit-only gauge offsets"
+    definition: "run_cscl_v3d.SBucketContribHead (193,128 params) wrapped by contribution_gauge.GaugedHead"
+    checkpoint: tracks/structure-contribution/results/cscl_v3d/S_bucket_s0_best_state.pt
+    checkpoint_sha256: 915f63e599701e8ad671a3ad7d826a7c67226c9a8edadcb1d03be41f32e078ca
+    gauge_checkpoint: tracks/structure-contribution/results/cscl_v3d/gauge_offsets_s0.pt
+    gauge_checkpoint_sha256: 60b22be3b52e3a0a18cac6a61e3fc4c8604883f316ba8eedbad8be050139b23d
+    best_epoch: 208
+    internal_dev_mae_recorded: 0.12694
+    gauge_rule: "offsets 原样加载 (fit_inner 39689 单元上的 per-type 常数), 绝不在 valid/test 上重新计算或重新中心化"
+
+# ---------------------------------------------------------------------------
+# 预处理与数据来源（全部 train 拟合; SHA256 在 freeze_manifest.json 复核）
+# ---------------------------------------------------------------------------
+preprocessing:
+  prep_fit7200:
+    path: tracks/structure-contribution/results/feasibility_v2_gpu/prep_fit7200.npz
+    sha256: 6b797e27a8fa870b7cfbecb59d3d0e398c2dd32c9e52d3f23f5d79122234fd39
+    fitted_on: "fit_inner 7200 (official train 内部划分), 唯一允许的拟合型预处理来源"
+  legacy_prep_10k:
+    path: tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/all_train_prep.npz
+    sha256: a7dbcc43fe3949c529db3b92dce3e3e0600a6c43c7277746552df5f05273bc03
+    role: "仅作为 affine 反演基底 (all.inverse -> fit.transform); 统计拟合于 official train 10000"
+  encoded_train_cache:
+    path: tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt
+    sha256: 10d764955ef1b040a317105be1dd3fbb2e81292b03b79e7d078cce08e18e5f1d
+    standardization_stats_fitted_on: "official train (zinc_patch_path_pooling._phase_data 的 fit_records=train)"
+  encoded_valid_cache:
+    path: tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_valid.pt
+    sha256: 35e90da3c46963084c13aa07ebb0112a60ce58c1eadcdd52cfd8030ab100b9bc
+    standardization_stats_fitted_on: "official train (同一 _phase_data 管线; audit 记录 official_test_loaded=false)"
+  env_cache_train_valid:
+    paths:
+      - tracks/ksvd/results/e2e_dictenv_p1/cache/env_train.pt
+      - tracks/ksvd/results/e2e_dictenv_p1/cache/env_valid.pt
+    anchor_stats: "tracks/ksvd/results/e2e_dictenv_p1/anchor_stats.json (train 拟合; build_env_cache 强制 anchor stats 先于 valid cache 拟合于 train)"
+  test_encoded_path:
+    method: "复用历史 test 解锁管线: zinc_compact_v4_training_sufficiency.extract_test_records + build_encoded(train_records, test_records, base_config) + zinc_e2e_dictenv_p1._attach_test_env"
+    records_cache: tracks/ksvd/results/compact_v4_training_sufficiency/cache/v4_records_test.pkl.gz
+    records_cache_sha256: 41f4f7e503d4d6435a447eccc784a18ebac2a308f6c1bad454015bc97213bd04
+    standardization_stats_fitted_on: "official train (zpp._phase_data 的所有 Standardizer/词表只 fit fit_records)"
+    config: "tracks/ksvd/configs/luyin16/zinc_compact_v4_topology_hinge.yaml (与 encoded_valid 同一 config 文件)"
+  official_dataset:
+    source: "PyG ZINC (root=data/ZINC, subset=True)"
+    expected_sizes: {train: 10000, val: 1000, test: 1000}
+    processed_sha256:
+      train: e0f1837b4a19714fcf3a5c6727a30c23f57c3398c8987cab2983214a0e76955b
+      val:   3f343e47281b85a52bae4b996beb8a230c3d9146d39a45f443bdc36e7e7ab809
+      test:  bd7a1ceb5b4ec126160bc095fb2bf28c0019a736c5575afa3ed11fb844a3aced
+    naming_note: 'PyG split 名 "val"; 部分历史缓存名 "valid" (同一 split)'
+  v3d_bucket_feature_cache_train:
+    path: data/cache/cscl_v3d_bucket_features.pt
+    sha256: e57cb76a744b45165c0acfd1758492f7ed78f490116db0143b1f8fcdee432243
+    role: "仅用于 (a) fit-only 统计重算的确定性来源 (b) 训练回放对照; valid/test 特征现场只读提取"
+
+fit_only_statistics:
+  vocab_type_means_global_mean_rel_mean:
+    recomputed_deterministically_from: "train v3d bucket cache + cf.build_split_indices (SPLIT_SEED cscl-v0, INNER_SEED cscl-v0-inner, fit_inner=7200)"
+    min_count: 3
+    cross_check: "gauge_meta_s0.json 的 fit_unit_type_hash / fit_rows_hash / offsets_hash 必须复现"
+  tau_ctx_tau_topo:
+    source: "run_cscl_v3.build_fit_stats(features, idx[fit_inner]) (fit 分位铰点; 确定性)"
+  unknown_type_routing:
+    rule: "cscl_units.UnitVocab.to_id — unseen 签名 -> (kind,size) UNK 桶 -> GLOBAL_UNK; 词表不得为新 split 扩展"
+  gauge_offsets: "由 gauge_offsets_s0.pt 原样加载, 不重算"
+
+# ---------------------------------------------------------------------------
+# 推理入口与工程门槛（评分前必须全部通过; 全部是工程完整性检查, 非性能判断）
+# ---------------------------------------------------------------------------
+engineering_gates:
+  input_replay_on_train:
+    desc: "新推理入口对 official train 固定小子集 (前 64 分子) 重建 v3d 特征, 与已验证缓存逐字段一致"
+    tolerance: "float 字段逐位一致 (同设备同代码); 结构字段完全相等"
+  frozen_model_replay_internal:
+    desc: "F 在 monitor+dev 的重放 vs 已存导出; S/O 对 dev 2000 重放 vs 正式分析读数"
+    tolerances: {F_pred_atol: 5.0e-5, S_dev_mae_atol: 1.0e-4, O_dev_mae_atol: 1.0e-4, S_pred_atol: 1.0e-5}
+    reference: {F_dev: 0.11641, O_bucket_dev: 0.11610, S_bucket_dev: 0.12694}
+  input_conservation_on_official_splits:
+    desc: "extract_batch_bucket 内建门 (对每个 valid/test 分子): 原子数匹配; dict_atom==x; 每 pair 恰好一个 unit/relation 分桶; 每桶 count 与矩守恒; 从存储块重建 Full-Y 每桶 pooled 一/二阶矩; 新旧边际一致; C6_MASK 语义 (masked count blocks == 0); pair 总数 = n(n-1)/2"
+    tolerance: "与 v3d 相同 (POOL_RTOL=2e-4, POOL_ATOL=2e-3; bf 内部断言)"
+  s_additivity_and_gauge_on_official_splits:
+    desc: "对 valid/test 全部分子: pred = bias + sum(alpha+delta) + sum(gamma) + g_ctx + g_topo 从导出贡献独立重建; raw/canonical pred 一致; alpha/delta 逐单元平移互相抵消 (canonical 与 raw 的逐分子 unit_sum 相等); gamma/global/bias 不受 offsets 影响; 输出全部有限"
+    tolerance: "1.0e-5 (= contribution_gauge.GAUGE_ATOL, v3d 同一容差, 评分前冻结)"
+  determinism:
+    desc: "checkpoint SHA256 在评估前后相同; 三个模型 eval()+no_grad(); 预测长度 == split 长度"
+  y_isolation:
+    desc: "特征提取与预测生成接口不读 y (extract 的 ys 参数只写入 MolFrozen.y 审计字段, collate/predict 只消费结构特征); 官方 y 仅在 score 阶段读取一次"
+
+# ---------------------------------------------------------------------------
+# 主指标与预冻结判断规则（在读取任何 official 分数之前冻结）
+# ---------------------------------------------------------------------------
+metrics:
+  primary: "official raw-y MAE, valid 与 test 分别报告 (全量 1000, 不删重复)"
+  paired_differences: [S_bucket_minus_O_bucket, S_bucket_minus_F, O_bucket_minus_F]
+  bootstrap:
+    resamples: 5000
+    seed: 0
+    ci: "percentile 95"
+    unit: "有符号逐分子配对差 d_i = |pred_A_i - y_i| - |pred_B_i - y_i|"
+    note: "valid 与 test 分别计算, 不混合; 区间反映固定模型的分子采样不确定性, 不反映训练种子随机性"
+  secondary:
+    - "每模型 internal dev -> official valid/test 的 MAE 变化"
+    - "S 相对 O 的绝对 MAE 增量与相对增幅"
+    - "逐分子三模型谁误差更低 (win counts)"
+  exploratory_bands_prefrozen:
+    strong_support:
+      - "test 上 S-O 配对 CI 上界 <= 0.02"
+      - "test 上 S-F 配对 CI 上界 <= 0.02"
+      - "validation 方向与 test 无严重矛盾"
+      - "全部工程门与贡献完整性检查通过"
+    strong_support_meaning: "支持结构化贡献读出的预测代价处于预设可接受范围"
+    limited_support:
+      - "S-O、S-F 点估计均 <= 0.02 但 CI 上界 > 0.02"
+    limited_support_meaning: "点估计达到工程目标, 统计证据不足以稳健确认容忍带"
+    no_support:
+      - "test 上 S 相对 O/F 差距明显扩大超出容忍带, 或关键不变性/加和验证失败"
+    no_support_meaning: "不得以内部 dev 的情况 A 取代独立结果"
+  o_vs_f_equivalence:
+    equivalence_region: [-0.01, 0.01]
+    rule: "仅当 O-F 配对差 95% CI 完整落入该区间才使用统计等价表述; 否则只报告观察差与不确定性"
+
+structure_overlap_audit:
+  method: "标签无关; PyG ZINC 的 Data 无 smiles 字段且本地无 RDKit, 故重复检测在模型输入空间进行: Weisfeiler-Lehman 图哈希 (原子类别+键类型) 候选分桶 + 精确标签图同构确认 (networkx vf2)"
+  validity_check: "在 official train 上验证该方法与 committed RDKit canonical-SMILES 表的一致性 (哈希+同构组 <-> smiles 组)"
+  disclosure: "图同构 = 模型视角的同一输入 (x/edge_index/edge_attr 即模型输入的全部信息); 不冒充完整化学同一性 (立体化学/质子化细节不在输入中, 对本评估无关, 如实记录)"
+  groups: ["valid 内部", "test 内部", "valid<->test", "valid/test <-> train (fit_inner/monitor/dev)"]
+  policy: "不删除重复; 主指标始终为官方 split 全量; 重叠子群另报并披露 n"
+
+attribution_audit:
+  export: "S-bucket 对 valid/test 全部分子的逐单元 (type, alpha_can, delta_can, atoms) 与逐关系 (unit pair, gamma, bucket counts) 贡献 + 全局通道 + bias + 逐分子加和残差"
+  analyses:
+    - "跨分子共享: 同类型同 alpha; fit-frequent/rare/UNK 覆盖与误差"
+    - "结构泛化子群: has_UNK, n_UNK, 原子数, 环系数, bucket-0 占比, y<=-3 描述性切片; 每组给 n; 不据此调模型"
+    - "关系贡献: gamma 和分布, bonded vs 非 bonded, gamma 与桶组成的敏感性, 通道相关, 贡献抵消"
+  wording_limits: "通道占比不称独立解释率; gamma 不作化学因果解释; gauge offsets 不在官方 split 重估"
+  new_moment_usage_diagnostic:
+    desc: "冻结敏感性诊断 (零训练, 标签无关, 不用 test 标签设计扰动): 置换/扰动 v3d 新增 per-bucket moment 数值列 (unit_bucket/rel_bucket 的 mean48/rms48) 观察 pred 与贡献变化; 并与合成任务 B 的定位修正一并报告 (任务 B 真值只含 bucket count 调制, 是 v3c 已有信息的恢复, 不能单独证明新增 moment 列被使用)"
+    samples: "official train fit_inner 固定 1000 分子 (训练域) + official valid 1000 (结构外推域)"
+
+test_access_rules:
+  user_authorised: true
+  one_formal_scoring: "valid 与 test 各正式评分一次, 在全部工程门通过后执行"
+  sequence: "特征/预测全部生成并落盘 (含哈希) 之后, 才读取 y 评分; validation 分数不影响是否评估 test"
+  no_adaptation: "若 validation 分数不理想, 仍按本协议完成 test (禁止跳过/换模型/调参)"
+  failure_policy: "工程故障记录故障与修复依据; 禁止静默重复 test 只保留较好结果"
+  access_record: results/cscl_v3d_official_eval/test_access_record.json
+  result_status: "本次 test 结果仅属于本冻结版本; 后续任何新模型配置不得再声称该 test 独立"
+
+deliverables:
+  - tracks/structure-contribution/code/eval_cscl_v3d_official.py
+  - tracks/structure-contribution/tests/test_cscl_v3d_official_eval.py
+  - "tracks/structure-contribution/results/cscl_v3d_official_eval/{freeze_manifest,data_provenance,input_replay_audit}.json"
+  - "tracks/structure-contribution/results/cscl_v3d_official_eval/{valid,test}_predictions.npz (F/O/S 三模型可区分)"
+  - "tracks/structure-contribution/results/cscl_v3d_official_eval/{valid,test}_metrics.json"
+  - tracks/structure-contribution/results/cscl_v3d_official_eval/paired_comparisons.json
+  - "tracks/structure-contribution/results/cscl_v3d_official_eval/{attribution_integrity,subgroup_analysis}.json"
+  - tracks/structure-contribution/results/cscl_v3d_official_eval/test_access_record.json
+  - tracks/structure-contribution/notes/cscl_v3d_official_validation_test.md
