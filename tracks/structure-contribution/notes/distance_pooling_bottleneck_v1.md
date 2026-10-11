@@ -5,9 +5,11 @@ runs). Track: `tracks/structure-contribution` (CSCL). Driver:
 `code/run_distance_pooling_v1.py`. Operator: `code/distance_pooling_v1.py`.
 Tests: `tests/test_distance_pooling_v1.py` (24 fast tests).
 
-Status: **CPU audit complete — CPU_PURCHASE_GRANTED**. GPU arms and the frozen
-official-validation evaluation are the only authorised follow-up (two fresh
-seed-0 arms: Hard5, Soft5).
+Status: **COMPLETE**. CPU audit → `CPU_PURCHASE_GRANTED`; two matched seed-0
+GPU arms (Hard5 0.118474 / Soft5 0.119218 on official validation) →
+**`SOFT5_NO_USEFUL_GAIN`** (Δ = +0.000743, CI95 [−0.006523, +0.008980]). The
+round stops here: no seed 1, no third arm, no kernel/center/width search, no
+retuning, official test untouched.
 
 ## 1. Question
 
@@ -145,24 +147,93 @@ rank inside the 480-D moment block: participation ratio 5.21 (Hard5) → 4.16
 near-identity reparameterisation acting on molecules with real long-distance
 heterogeneity; they are not predictive evidence.
 
-## 6. Phase E/F — frozen plan (executed only after purchase)
+## 6. Phase E — matched GPU arms (seed 0, pool res-gpu1)
 
-* two fresh matched seed-0 GPU arms on `res` pool `res-gpu1`: `Hard5` (frozen
-  path) and `Soft5`, both from the identical untrained init, all official train
-  10,000 rows, `all_train_prep.npz`, Adam lr 1e-3 / wd 1e-5 / clip 5 / batch
-  128 / FP32, 240 epochs = 18,960 steps, raw-y L1 + label-free reconstruction,
-  λ = 33.95873017865987, C6_MASK, shuffle seed 101, last-5 soup (epochs
-  236–240);
-* the historical full-10k Hard5 checkpoint (valid raw MAE 0.118618) is a
-  read-only sanity reference only;
-* GPU reduction-order nondeterminism is recorded; single-seed results are
-  exploratory;
-* after freezing both checkpoints: official-validation predictions written and
-  hashed **without reading y**, then y read once, metrics computed, paired
-  per-molecule bootstrap Δ = MAE(Soft5) − MAE(Hard5) (5000 resamples, seed 0),
-  pre-frozen subgroups and the pre-frozen decision bands
-  (A: Δ ≤ −0.010 / B: −0.010 < Δ ≤ −0.003 / C: Δ > −0.003; CI conflict →
-  UNCERTAIN).
+Two fresh arms, same commit `3a09c573`, sequentially on the same GPU (a100-2,
+CUDA_VISIBLE_DEVICES=1, torch 2.5.1+cu124, driver 550.163.01):
+
+| | Hard5 | Soft5 |
+|---|---|---|
+| run_id | `distance-pooling-hard5-20261011-222946-a3305c09` | `distance-pooling-soft5-20261011-230556-b65adb15` |
+| init-state SHA256 | `93c2f23c39b1654d…` | `93c2f23c39b1654d…` (identical) |
+| training-program SHA256 | `d5d08f36086409b2…` | `d5d08f36086409b2…` (identical) |
+| RNG state at epochs 1/40/120/240 | identical | identical |
+| steps / epochs | 18,960 / 240 | 18,960 / 240 |
+| soup members | 236–240 | 236–240 |
+| parameters | 408,651 | 408,651 |
+| wall (240 epochs) | 1,683 s (7.0 s/epoch) | 1,607 s (6.7 s/epoch) |
+
+The matching audit (`matching_audit.json`) passes every check: same git commit,
+same training-program hash, same fit rows, prep and encoded-cache hashes, same
+initial-state hash, same step count, same RNG-stream hashes. This proves the
+two arms executed the identical op sequence (only the pooling arithmetic
+differs); it is **not** a claim of bitwise training reproducibility (GPU
+reduction order remains nondeterministic, as measured in the budget round's
+seed-0 probe).
+
+The new Hard5 arm is an independent seed-0 re-run of the historical full-10k
+recipe and reaches **valid MAE 0.118474** vs the historical 0.118618 read-only
+reference (Δ = −0.000144; the frozen historical soup itself reproduces the
+historical CSV bit-identically on this CPU, max|d| = 0.0).
+
+Internal loss values recorded by the arms (fit_all 0.0469 Hard5 / 0.0471 Soft5;
+monitor 0.0464 / 0.0437; dev 0.0455 / 0.0409) are measured on rows that are part
+of the all-10k training set, so they quantify fit, not generalisation — the
+fit→valid gap is 0.0716 (Hard5) / 0.0721 (Soft5).
+
+The two frozen checkpoints produce quite different official-validation
+predictions: mean |Δpred| = 0.0920, max |Δpred| = 1.862. So the null result is
+not an "operator barely did anything" artefact.
+
+## 6b. Phase F — frozen official-validation evaluation (y read once)
+
+`freeze_manifest.json` → `valid_predictions.npz` → single label read:
+
+| metric | Hard5 | Soft5 |
+|---|---|---|
+| **MAE** | **0.118474** | **0.119218** |
+| RMSE | 0.598707 | 0.658496 |
+| median abs | 0.067640 | 0.065110 |
+| p90 abs | 0.208375 | 0.214412 |
+| p95 abs | 0.291278 | 0.297743 |
+| max abs | 18.228 | 20.090 |
+| fit→valid gap | 0.071611 | 0.072081 |
+
+Paired per-molecule Δ = |e_Soft5| − |e_Hard5|: **Δ = +0.000743**,
+bootstrap 95% CI **[−0.006523, +0.008980]** (5000 resamples, seed 0), 51.2% of
+molecules better under Soft5. Subgroups (all pre-declared):
+
+| subgroup | n | Δ (Soft5 − Hard5) | CI95 |
+|---|---|---|---|
+| y ≤ −3 | 65 | +0.05046 | [−0.02179, +0.14053] |
+| y > −3 | 935 | −0.00271 | [−0.00840, +0.00296] |
+| atoms 10–20 | 207 | +0.0092 | — |
+| atoms 20–26 | 511 | +0.0006 | — |
+| atoms 26–36 | 282 | −0.0051 | — |
+| diameter 5–13 | 487 | +0.0063 | — |
+| diameter 13–19 | 513 | −0.0045 | — |
+| bucket-4 fraction low half | 485 | +0.0101 | — |
+| bucket-4 fraction high half | 515 | −0.0081 | — |
+| last-bucket diversity low half | 487 | +0.0063 | — |
+| last-bucket diversity high half | 513 | −0.0045 | — |
+
+(Quartile strata in `subgroup_analysis.json`; the coarse half-split deltas above
+are computed from the same strata.) The `valid:0172` extreme row is 15.4% of
+Hard5 error mass and 16.9% of Soft5 error mass; excluding it gives Δ = −0.00112,
+i.e. the small positive sign is not row-driven but the overall magnitude stays
+within ±0.01. Top-10 error mass share: 22.5% Hard5 / 24.7% Soft5.
+
+**Pre-frozen decision: band C (Δ > −0.003), `SOFT5_NO_USEFUL_GAIN`.** CI
+contains zero; no subgroup shows a CI-supported improvement; the y ≤ −3 tail is
+slightly worse under Soft5 (+0.05) while ordinary molecules are slightly better
+(−0.0027, CI crossing zero). Absolute level: Soft5 valid 0.119218 → +0.02922 to
+0.09 and +0.03922 to 0.08 (Hard5: +0.02951 / +0.03951).
+
+Evidence boundary: single seed per arm; GPU reduction order is nondeterministic,
+so this is an arm-level contrast, not a bitwise controlled variable. Official
+validation was already exposed in earlier rounds (and the historical Hard5
+0.118618 is a read-only reference), so this is a controlled comparison, not a
+fresh blind test. Official test was never loaded or scored.
 
 ## 7. Evidence boundary
 
@@ -178,8 +249,86 @@ confirmation-dir soup, pinned by SHA256 `7792c560…` (valid raw MAE 0.118618) i
 the driver; an earlier draft pointed at the older cycle-dir soup copy and was
 caught by the hash pin before any formal run.
 
-<!-- RESULTS_SECTION -->
 
 ## 8. Final report — the 15 questions
 
-<!-- FINAL_REPORT -->
+1. **How is the distance actually computed?** Unweighted BFS shortest path over
+the hydrogen-free bonded graph in `zinc_patch_path_pooling._shortest_path_summary`
+(line 387); the cached `pair_relation[:, 5]` equals the raw-graph BFS on all
+2,668,346 train pairs (0 mismatches).
+
+2. **Does `pair_relation` contain `log1p(distance)`?** Yes, raw 23-D column 5
+(`np.log1p(float(distance))`, line 656), and the consumed 15-D slice
+`P1_RELATION_INDICES = 0..13 + 18` keeps it while dropping the path-bond-mean and
+adjacent-bond blocks.
+
+3. **Where does the bucket truncate to 5+?** `bucket = min(max(int(distance),1),
+DISTANCE_BUCKETS) - 1` with `DISTANCE_BUCKETS = 5` (line 620); distances ≥5 all
+map to one one-hot position and to the same `distance_gate` row.
+
+4. **What is `distance_gate`, and was it swapped?** `Embedding(5,48)` applied as
+`1 + tanh(...)` on the hard bucket only; it was **not** swapped — Soft5 changes
+only the graph-level pooling, not the gate.
+
+5. **What goes into the pair encoder and what is `pair_value`?** 192-D input
+`[left+right, |left−right|, product*gate, relation(15)]` → 48-D `pair_value`;
+`pair_projection` is 144→48 (live audit).
+
+6. **How is pooling actually done, and what does C6_MASK do to counts?** Per hard
+bucket `first=Σh`, `second=Σh²`, `count=log1p(n)`; C6_MASK zeroes the unary
+count, pair count and relation path-count channels (topology untouched). Soft5
+keeps the count zeroed.
+
+7. **What is the real reader input and parameter count?**
+`[unary 289 | pair moments 485 | global 32 | topology 8] = 814`; 408,651
+trainable parameters; both unchanged by Soft5.
+
+8. **What does the real train-10k distance distribution look like, and how much
+distance diversity is hidden inside the ≥5 bucket?** 2,668,346 pairs; bucket
+shares 9.34/12.90/12.78/11.58/53.40%; diameter mean 12.46 (max 22). Inside the
+≥5 bucket: mean 8.46 distinct exact distances per molecule (p50 8, p90 12, max
+18), 99.80% mix ≥2 distances, 97.49% span ≥3, **99.25% hold both d=5 and d≥7**,
+conditional entropy 1.91 nats — the last bucket is not one distance.
+
+9. **Mean/variance/entropy of the distances inside the last bucket?** Per
+molecule mean distance 7.46, variance 4.43, conditional entropy 1.91 nats
+(p50 1.96); diversity correlates with atom count (0.80 for distinct distances,
+0.77 for entropy) and bucket-4 pair share correlates 0.88 with atom count / 0.54
+with ring rank.
+
+10. **Was Soft5 a genuine replacement, not a cosmetic one?** On identical frozen
+pair states over all 10,000 train molecules, the 480-D moment block differs by
+mean relative 0.495 (p90 0.573, max 0.702); 100% of molecules differ >1%;
+effective participation ratio drops 5.21→4.16. On official valid, the two frozen
+models' predictions differ by mean |Δ| 0.092 (max 1.86).
+
+11. **Did every correctness gate pass?** Yes (`correctness_gates.json`): Hard5
+bit-identical to the frozen path (prediction and readout, max|Δ| = 0.0); Soft5
+weights finite/non-negative/sum-1; conservation first 3.7e-8, second 3.9e-8,
+count 2.0e-8 relative; endpoint-swap, pair-permutation, batch-composition and
+single-molecule invariants; C6 count block exactly zero; 408,651 parameters;
+identical init for both arms; gradients flow; forward is y-independent.
+
+12. **Did the pre-frozen purchase gate pass?** Yes — `CPU_PURCHASE_GRANTED`:
+G1 0.9925 ≥ 0.10, G2 1.0000 ≥ 0.25, G3 all correctness gates. (The gate shows
+the operator is non-trivial on genuinely heterogeneous molecules; it is not
+predictive evidence.)
+
+13. **Were the two GPU arms truly matched, and did Hard5 reproduce the historical
+level?** Yes: same commit, same training-program hash, same init-state hash, same
+rows/prep/cache hashes, same 18,960 steps and last-5 soup, and identical RNG-state
+hashes at epochs 1/40/120/240. The new Hard5 arm scores valid 0.118474 vs the
+historical read-only 0.118618 reference (Δ = −0.000144).
+
+14. **Soft5 vs Hard5 on frozen official validation?** Hard5 0.118474, Soft5
+0.119218, Δ = **+0.000743**, bootstrap CI95 [−0.006523, +0.008980], 51.2% of
+molecules better under Soft5; the y ≤ −3 tail is +0.050 (CI [−0.022, +0.141]) and
+y > −3 is −0.0027 (CI [−0.0084, +0.0030]); no pre-declared subgroup shows a
+CI-supported improvement; excluding `valid:0172` gives Δ = −0.00112.
+
+15. **Decision, absolute gap, and boundary?** `SOFT5_NO_USEFUL_GAIN` (band C,
+CI contains zero). Soft5 valid 0.119218 = +0.0292 to 0.09 and +0.0392 to 0.08
+(Hard5 +0.0295 / +0.0395). Single seed per arm, GPU nondeterminism, official
+validation already exposed (historical reference 0.118618), official test never
+loaded; the round stops here — no seed 1, no third arm, no kernel/center/width
+search, no retuning.

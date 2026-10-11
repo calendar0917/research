@@ -1,7 +1,7 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-distance-pooling-bottleneck-v1-cpu-audit-complete-purchase-granted
+phase: cscl-distance-pooling-bottleneck-v1-completed
 current_round: distance-pooling-bottleneck-v1
 next_round_candidate: >-
   AWAITING USER AUTHORIZATION. The matched budget control is COMPLETE: band A
@@ -158,16 +158,17 @@ round_cscl-prediction-feasibility-v2:
       date: 2026-10-10
 
 next_action: >-
-  cscl-distance-pooling-bottleneck-v1 is IN PROGRESS: CPU audit complete, purchase gate GRANTED
-  (G1 0.9925 >= 0.10, G2 1.0000 >= 0.25, G3 all correctness gates pass).  The hard >=5
-  bucket mixes 8.46 distinct exact distances per molecule on average and 99.25% of
-  train molecules hold both d=5 and d>=7; the frozen Soft5 basis differs from Hard5 on
-  100% of molecules (mean relative 0.495) with no new parameters.  Authorised follow-up:
-  exactly two fresh matched seed-0 GPU arms (Hard5 / Soft5) on res pool res-gpu1 and one
-  frozen official-validation evaluation (prompts written before y is read).  No seed 1,
-  no third arm, no kernel/center/width search, no retraining after valid, official test
-  untouched.  Durable CPU facts in notes/distance_pooling_bottleneck_v1.md; raw artifacts
-  in (git-ignored) results/distance_pooling_bottleneck_v1/.
+  cscl-distance-pooling-bottleneck-v1 is COMPLETE: CPU purchase gate GRANTED
+  (G1 0.9925 >= 0.10, G2 1.0000 >= 0.25, G3 all correctness gates), two matched
+  seed-0 GPU arms on res-gpu1 (Hard5 0.118474 / Soft5 0.119218 official-valid raw
+  MAE), Delta = +0.000743, paired bootstrap CI95 [-0.006523, +0.008980], 51.2% of
+  molecules better, decision = SOFT5_NO_USEFUL_GAIN (band C).  A fixed
+  continuous-distance moment basis does not beat the historical hard >=5 bucket on
+  official validation.  Absolute level unchanged (~+0.029 to 0.09, ~+0.039 to 0.08).
+  Round stopped: no seed 1, no third arm, no kernel/center/width search, no retuning,
+  official test untouched.  Durable facts in notes/distance_pooling_bottleneck_v1.md
+  (15-question final report); raw artifacts in (git-ignored)
+  results/distance_pooling_bottleneck_v1/.
 
 # ---------------------------------------------------------------------------
 # round: cscl-v3 (strong-backbone structural contribution, SB-CSCL, seed 0)
@@ -848,22 +849,36 @@ round_cscl-distance-pooling-bottleneck-v1:
     purchase_gate: {G1_long_distance_heterogeneity: 0.9925 (>=0.10 pass),
                     G2_feature_difference: 1.0000 (>=0.25 pass), G3_correctness: true (pass)}
     label: CPU_PURCHASE_GRANTED
-  phase_e_gpu (authorised, two fresh matched seed-0 arms, pool res-gpu1): >-
-    Hard5 and Soft5 both start from the identical untrained init state, all official
-    train 10,000 rows, all_train_prep.npz, Adam lr 1e-3 / wd 1e-5 / clip 5 / batch
-    128 / FP32, 240 epochs = 18,960 steps, raw-y L1 + label-free reconstruction,
-    lambda 33.95873017865987, C6_MASK, shuffle seed 101, last-5 soup epochs 236-240;
-    historical full-10k Hard5 checkpoint (valid raw 0.118618) is read-only reference;
-    GPU nondeterminism recorded, single-seed results exploratory
-  phase_f_evaluation (pre-frozen): >-
-    freeze both soup checkpoints and hash them; write official-validation predictions
-    WITHOUT reading y; then read y once; paired bootstrap Delta = MAE(Soft5)-MAE(Hard5)
-    (5000, seed 0); pre-declared subgroups (y<=-3, atoms, ring rank, diameter, bucket-4
-    fraction, last-bucket diversity, valid:0172 influence, top-10 error mass); bands
-    A: <=-0.010 -> SOFT5_PREDICTIVE_SIGNAL, B: -0.010..-0.003 -> SOFT5_LIMITED_SIGNAL,
-    C: >-0.003 -> SOFT5_NO_USEFUL_GAIN; CI conflict -> UNCERTAIN; report gaps to 0.09/0.08
-  status: >-
-    CPU audit COMPLETE with CPU_PURCHASE_GRANTED; GPU arms and the frozen official-valid
-    evaluation pending.  No seed 1, no third arm, no kernel/center/width search, no
-    retraining after valid, official test never accessed.
+  phase_e_gpu (two fresh matched seed-0 arms, pool res-gpu1, commit 3a09c573): >-
+    run_ids distance-pooling-hard5-20261011-222946-a3305c09 and
+    distance-pooling-soft5-20261011-230556-b65adb15; identical init-state hash
+    93c2f23c..., identical training-program hash d5d08f36..., identical RNG-stream
+    hashes at epochs 1/40/120/240, 18,960 steps each, last-5 soup 236-240, 408,651
+    params, wall 1683 s / 1607 s on a100-2 GPU1; matching_audit all_match=true.
+    Historical full-10k Hard5 checkpoint (valid raw 0.118618) read-only reference;
+    the new Hard5 arm reaches 0.118474 (Delta -0.000144) and the frozen historical
+    soup reproduces the historical CSV bit-identically (max|d| 0.0)
+  phase_f_evaluation (pre-frozen, y read once after freeze): >-
+    freeze manifest + hashed predictions written without reading y; then one official
+    y read.  MAE Hard5 0.118474 / Soft5 0.119218; RMSE 0.598707 / 0.658496; median
+    0.067640 / 0.065110; p90 0.208375 / 0.214412; max 18.228 / 20.090; fit->valid gap
+    0.071611 / 0.072081.  Paired Delta = +0.000743, bootstrap CI95 [-0.006523,
+    +0.008980], 51.2% Soft5-better.  Subgroups: y<=-3 n=65 +0.05046 [-0.02179,
+    +0.14053]; y>-3 n=935 -0.00271 [-0.00840, +0.00296]; best quartile for Soft5 =
+    largest diameter / last-bucket-diversity (-0.0131), worst = smallest atom-count /
+    bucket-4 fraction (+0.009..+0.015); valid:0172 is 15.4% of Hard5 error mass and
+    16.9% of Soft5; delta without it = -0.00112; top-10 error mass share 22.5% / 24.7%.
+    Prediction difference between arms: mean |dpred| 0.0920, max 1.862
+  judgment: >-
+    SOFT5_NO_USEFUL_GAIN (band C, CI contains zero).  The hard >=5 bucket's real
+    distance heterogeneity (99.25% of molecules hold d=5 and d>=7) is not converted
+    into a prediction gain by a fixed continuous-distance moment basis: the change is
+    large at the representation level (100% of molecules >1% different, prediction
+    mean |d| 0.092) but indistinguishable from noise on official validation.  The
+    small positive point estimate is not row-driven (delta without valid:0172 is
+    -0.0011) and no subgroup shows a CI-supported improvement.  Single seed per arm
+    and GPU nondeterminism keep this exploratory; official validation was already
+    exposed (historical 0.118618 reference); official test never loaded.
+  status: COMPLETED 2026-10-11; round stopped (no seed 1, no third arm, no search,
+    no retuning, no test access)
   results_dir: results/distance_pooling_bottleneck_v1/ (git-ignored)
