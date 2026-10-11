@@ -1,9 +1,21 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-strong-representation-readout-screen-v1-completed
-current_round: cscl-strong-representation-readout-screen-v1
-next_round_candidate: "STOPPED per pre-frozen rule (case D): both CPU candidates failed the first signal (monitor <= 0.10826): XGB-A Typed-WL monitor 0.34104 / dev 0.36880 (+0.25239 vs Full-Y 0.11641), XGB-B frozen-814 XGB monitor 0.20334 / dev 0.19727 (+0.08085); paired CIs entirely positive, robust to trimming. No seed 1, no third model, no tuning (tree depth/lr/trees/radius/hash width), no full-8000/10000 refit, no feature fusion, no official valid/test. Next prediction work needs a NEW preregistration + user authorization; candidate directions: full training budget, learned readout/regularisation over the Full-Y representation, label-blind screening of new structural priors, other non-GNN architectures."
+phase: cscl-strong-prediction-route-audit-v1-completed
+current_round: cscl-strong-prediction-route-audit-v1
+next_round_candidate: >-
+  AWAITING USER AUTHORIZATION (audit decision C — do not change the y-only contract yet).
+  Recommended single purchase = strictly matched budget control `zinc-full-y-budget-control-v1`
+  (2 arms: fit7200 vs fit10000; same code/hyper/lambda/soup rule=last-5/epochs/eval; one official-valid
+  read, reuse disclosed; ~0.8 GPU-h).  Conditional alternative = `zinc-full-y-component-supervision-matched-v1`
+  only if the budget control shows <=0.003 valid-raw effect (preregistration drafts in
+  notes/decisions/decision_strong_prediction_route_v1.md).  Prior screen v1 stays STOPPED per its own
+  pre-frozen rule (case D): both CPU candidates failed the first signal (monitor <= 0.10826): XGB-A Typed-WL
+  monitor 0.34104 / dev 0.36880 (+0.25239 vs Full-Y 0.11641), XGB-B frozen-814 XGB monitor 0.20334 /
+  dev 0.19727 (+0.08085); paired CIs entirely positive, robust to trimming. No seed 1, no third model,
+  no tuning (tree depth/lr/trees/radius/hash width), no full-8000/10000 refit, no feature fusion,
+  no official valid/test. Next prediction work needs a NEW preregistration + user authorization;
+  candidate directions listed in the audit decision doc.
 updated: 2026-10-11
 
 track:
@@ -663,4 +675,41 @@ round_cscl-strong-representation-readout-screen-v1:
     main_table.json, paired_comparison.json, subgroup_analysis.json,
     decision.json, features/{x_a.npy,x_b.npy,feature_hashes.json}
   official_valid_test_loaded: false (both splits)
+  gpu_used: false
+
+# ---------------------------------------------------------------------------
+# round: cscl-strong-prediction-route-audit-v1 (read-only evidence audit of the
+# historical component-supervised system vs the current y-only track; route
+# decision A / B / C).  Zero GPU, zero training, no new seed, no test recompute.
+# ---------------------------------------------------------------------------
+
+round_cscl-strong-prediction-route-audit-v1:
+  type: read-only research evidence audit + route decision (not a training round)
+  report: notes/strong_prediction_route_audit_v1.md
+  decision: notes/decisions/decision_strong_prediction_route_v1.md   # 含表 4 + 两份预注册草案
+  analysis: code/audit_strong_prediction_route_v1.py,
+    full_y_dev_k_strata.csv, evidence_index.json   # 本轮全部只读复算，可复跑
+  question: >-
+    历史分量监督系统（终点 C，official-test y MAE 0.080918 raw）相对当前 y-only 的增益，
+    来自 (1) 7200 vs 10000 数据、(2) 架构、(3) 分量监督、(4) 分解/环惩罚/校准利用方式中的哪些项？
+    下一次 GPU 训练该买什么能力？
+  decision_outcome: >-
+    C — 证据不足以改变研究合同；继续 y-only 合同，下一笔唯一推荐购买 = 严格匹配的预算对照
+    (`zinc-full-y-budget-control-v1`: fit7200 vs fit10000，同代码/超参/soup 规则/eval，1 seed，2 臂，
+    一次 official-valid 读取并在预注册中披露重用)；B（分量监督合同）仅在预算对照显示 <=0.003
+    valid-raw 效应时升级为更优选择。
+  key_findings:
+    - "严格匹配的分量监督增益（同 init/参数/调度，仅损失不同）：dev g-cal +0.009974 [+0.006459,+0.013493]；10k valid y-cal +0.005247 [+0.000499,+0.010275]；10k test y-cal +0.007512 [+0.001810,+0.012664]（B−SUM_Q）；10k 双门 CHEM+DEPLOY 通过"
+    - "quasi-matched 预算对照（CSCL F 跑的就是历史 Full-Y 代码路径、仅 refit 到 7200）：valid raw 0.132953 vs Y@10k 0.118156（+0.014797）；test raw 0.114098 vs 0.095616（+0.018482）；但 rows/steps/refit/soup 同时变 → 独立因果收益无法估计"
+    - "C 终点 = body g_cal 0.081184（环通道残差 1.02e-05）；分解：分量监督 ~0.0075 + 离散级别解码 ~0.0035（test，20/20 unseen 行）+ 骨架/口径余项"
+    - "环通道可部署上限很小：oracle O-arm − Y@8k dev +0.022697 中 78.7% 来自 9 个 severe 行；G0 仅 +0.00360 [+0.00074,+0.00658]；prototype 路由在 valid 门限 FAIL（单行 valid:0172 占正和 98.0%）"
+    - "标签溯源：logP/SA 图可算；ell 是归一化 RDKit logP；s=g−ell≈归一化 SA 但非纯 SA（ε-MAE 0.002662，max 0.370362）；c/k 由 y 反演（round+clip，19/12000 与独立重算不一致）；k 依赖历史 cycle_basis 原子序（94.8% 稳定 / 5.2% 不稳定）；训练 10k 中 c 块占 var(y) 26.4% 但信息集中在 372 行"
+    - "部署链不使用真值 c（inference_reads_true_c=false 已核实）；oracle 只出现在 O-arm 与 prototype B-oracle marker"
+    - "文档-产物不一致披露：tracks/ksdv 的 SUMMARY/REPORT 表格写 SUM y_cal 0.1169 / COMP 0.1122，产物 (main_table.csv/gate.json) 为 0.122653/0.117406；本审计以产物为准（不得再引用 0.1169/0.1122）"
+    - "CSCL F dev 分层（本轮复算）：k=0 n=1930 cal 0.103613；k=−1 n=63 0.367526；k<=−2 n=7 0.843198；3.5% 的 k<0 行占 12.7% 误差质量"
+    - "官方 test 实质耗尽：CSCL 正式读取一次（test_access_record.json, project_wide_pristine=false，历史 KSVD 已读过 test）；任何新配置的 test 提升都不可作为独立确认"
+  boundary_disclosure: >-
+    零 GPU/零训练/零新 seed/零 test 重算；未加载官方 split 文件。为核验已发布数字读取了结果目录中
+    已保存的 heldout npz（含 test 标签），仅复算历史 MAE，未用于任何选择；结论不依赖该复算。
+  official_valid_test_loaded: false (no official split file; saved heldout artifacts read-only, disclosed)
   gpu_used: false
