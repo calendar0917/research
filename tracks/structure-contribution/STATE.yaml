@@ -1,9 +1,9 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-v3d-distance-conditioned-contribution
-current_round: cscl-v3d-distance-conditioned-contribution
-next_round_candidate: "STOPPED per protocol: case A met (S_bucket 0.12694 / O_bucket 0.11610 / F 0.11641; S-O +0.011 unchanged by information) -> independent validation on isolated data needs a NEW preregistration + explicit authorization; parallel candidate for later: additive-readout expression boundary (Full-Y reader nonlinear mixing)"
+phase: cscl-v3d-frozen-official-eval
+current_round: cscl-v3d-frozen-official-eval
+next_round_candidate: "STOPPED per protocol: frozen-version terminal evaluation complete (official valid/test scored ONCE; test MAE F 0.11410 / O 0.11349 / S 0.12511; strong_support band met; O-F statistically equivalent within [-0.01,+0.01] on test). This test result must NOT be reused to claim independence for any future configuration. Open questions needing a NEW preregistration + authorization: cross-seed stability, capacity-matched attribution control, additive-readout expression boundary."
 updated: 2026-10-11
 
 track:
@@ -469,3 +469,49 @@ round_cscl-v3d-distance-conditioned-contribution:
   rr_run_meta: results/cscl_v3d/rr_run/ (meta.json/stdout/stderr, run cscl-v3d-s0-20261011-142219-64d434c8)
   local_rehearsal: >-
     CPU rehearsal (非正式, 30 epochs): S_bucket 0.15164 / O_bucket 0.13808; 目录 results/cscl_v3d_cpu_rehearsal/
+
+# ---------------------------------------------------------------------------
+# round: cscl-v3d-frozen-official-eval (terminal evaluation of the frozen version)
+# ---------------------------------------------------------------------------
+
+round_cscl-v3d-frozen-official-eval:
+  protocol: configs/cscl_v3d_frozen_official_eval.yaml (frozen 55e088b before any valid/test build; amendment-1 direction operationalization committed a3d0842 before any official number)
+  report: notes/cscl_v3d_official_validation_test.md
+  driver: code/eval_cscl_v3d_official.py (freeze/replay/extract/score/analyze/judgment) + tests/test_cscl_v3d_official_eval.py (16 fast tests)
+  authorization: user explicitly authorized reading official validation AND test in this round (terminal evaluation; zero training)
+  results_dir: results/cscl_v3d_official_eval/ (git-ignored per results convention; numbers below are the durable record)
+  "official_result (both splits scored exactly once)":
+    mae: {F: {valid: 0.13295, test: 0.11410}, O_bucket: {valid: 0.13789, test: 0.11349}, S_bucket: {valid: 0.15048, test: 0.12511}}
+    internal_dev_reference: {F: 0.11641, O_bucket: 0.11610, S_bucket: 0.12694}
+    paired:
+      S_minus_O: {valid: "+0.01260 [+0.00554,+0.02002]", test: "+0.01162 [+0.00403,+0.01897]"}
+      S_minus_F: {valid: "+0.01753 [+0.00698,+0.03062]", test: "+0.01101 [+0.00243,+0.01947]"}
+      O_minus_F: {valid: "+0.00494 [-0.00350,+0.01465]", test: "-0.00061 [-0.00785,+0.00711]"}
+    bands: >-
+      judgment = strong_support (pre-frozen: test S-O CI upper 0.01897 <= 0.02, S-F upper 0.01947 <= 0.02,
+      direction consistent across splits); O-F test CI fully inside the pre-declared [-0.01,+0.01]
+      equivalence region -> "statistically equivalent on test" allowed;
+      on valid O-F +0.00494 CI crosses zero -> equivalence not established, observation only.
+    dev_to_official: {F: "+0.0165 / -0.0023", O: "+0.0218 / -0.0026", S: "+0.0235 / -0.0018 (valid/test)"}
+    S_minus_O_relative_increment: {valid: 0.091, test: 0.102}
+  engineering_gates (all pass, pre-scoring):
+    freeze: artifact SHA256 match protocol; strict checkpoint loads; fit-only stat cross-check reproduces gauge meta (39,689 units / 761 types / 746 known); label-free overlap audit (valid dups 0, test 1 pair, valid~test 0, valid~train 1 pair, test~train 1 pair; method validated vs RDKit SMILES table 2000/2000)
+    replay: F monitor/dev max|dpred| 1.67e-6/1.91e-6; new feature entry vs GPU-built cache max|df| 3.81e-6 (structural exact; CPU float32 device rounding, cache built on res GPU1); S/O dev replay MAE 0.12694/0.11610; gauge |d| 9.5e-7
+    official_extract: row alignment 0 mismatches (dict_atom==x, atom counts); conservation <=7.0e-7; batch-composition max|df| <=9.5e-7; C6_MASK intact; y never read (ys=zeros asserted); checkpoint hashes unchanged
+    s_additivity_official: residual <=1.65e-6 from the SAVED exports; alpha/delta offset identities ~1e-7; shift cancellation ~3e-7; alpha shared-scalar spread exactly 0; GLOBAL_UNK 0 units on both splits
+  attribution_external_audit:
+    coverage: "fit-known types 417/746 (valid) / 437/746 (test); UNK units 484 (446 mols) / 446 (417 mols); all via fit-only UNK buckets"
+    unk_gap: "UNK molecules F/O/S 0.191/0.202/0.224 (valid), 0.146/0.157/0.171 (test); S-O gap UNK +0.021/+0.014 vs no-UNK +0.006/+0.010 (homogeneous, not widened)"
+    subgroups: "y<=-3 tail remains the largest gap (S-O +0.076 valid / +0.058 test); complex ring cyclomatic>=4 S-O CI crosses 0; 0-1-ring small molecules no longer a main gap (n=1/10)"
+    gamma: "per-molecule sum valid mean 0.042 std 0.236; test 0.029/0.208; direct-bond relations 4520/4539"
+  new_moment_usage_diagnostic:
+    summary: "frozen label-free zeroing of the NEW per-bucket moment columns (counts kept) changes S predictions by mean|dpred| 0.365 (fit_inner 1000) / 0.350 (valid 1000); rel moments 0.121/0.121; O same direction (0.33/0.32; 0.14/0.14); per-bucket profile stable across domains -> the new columns are genuinely consumed"
+    limit: "use-evidence only; synthetic task B (count-modulated ground truth) remains the only mechanism-identification evidence and cannot alone certify moment usage"
+  historical_contact_layers:
+    disclosure_note: "disclosed, not hidden"
+    layers:
+      - "KSVD track read official test historically (zinc_e2e_dictenv_p1.py::unlock_test_stage; official_test_unlock.json project_wide_pristine=false)"
+      - "KSVD architecture family was developed with official valid as the headline metric (tracks/ksvd/STATE.yaml *_valid_mae), so Full-Y architecture/hyperparams inherit historical valid feedback"
+      - "CSCL-v3d training/analysis never loaded official valid/test (train json discipline false; encoded_valid audit official_test_loaded=false); all fitted objects from fit_inner 7200; frozen before this round's read"
+    accurate_claim: "frozen-version terminal evaluation, NOT a project-wide first blind test"
+  test_result_status: "one-time; belongs to this frozen version only; must never be reused to claim independence for a future configuration"
