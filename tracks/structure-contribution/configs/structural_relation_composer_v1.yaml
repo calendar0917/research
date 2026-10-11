@@ -1,0 +1,131 @@
+# cscl-structural-relation-composer-v1 — frozen protocol
+#
+# Question: with the same atoms, bonds and junction objects available, does
+# retaining the TRUE junction-to-bond ownership relation buy generalisable
+# predictive value over a matched arm that keeps every marginal (junction
+# multiset, per-bond junction counts, graph-level first/second moments) but
+# destroys the ownership correspondence?
+#
+# Frozen BEFORE any formal GPU run. Any change invalidates the round.
+
+protocol_id: cscl-structural-relation-composer-v1
+track: tracks/structure-contribution
+date_frozen: 2026-10-12
+
+data:
+  source: data/ZINC (official PyG ZINC subset=True, official train split only)
+  n_rows: 10000
+  canonical_smiles_table: tracks/ksvd/results/zinc_cssd_basis_reuse_v1/train_canonical_smiles.npz
+  official_valid: never loaded in this round
+  official_test: never loaded in this round
+
+split:
+  seed: cscl-structural-relation-composer-v1
+  algorithm: >-
+    groups = canonical SMILES; groups ordered by sha256(seed|smiles); greedy
+    fill fit (~8000 rows) then monitor (~1000); remainder locked dev.
+    Duplicate molecules never cross a boundary. y never used.
+  fit_target: 8000
+  monitor_target: 1000
+  locked_dev: remainder (~1000)
+  label_access:
+    fit: training + fit-only preprocessing statistics
+    monitor: reported per-epoch curve and pre-registered resource gate only
+    locked_dev: read once, after all three seed-0 arms are frozen
+
+architecture:
+  name: BJOC (Bond-Junction Organized Composer)
+  objects:
+    atom: raw atom type + degree + ring membership/min ring size + incident bond
+          type histogram + radius-1/2 neighbour type histograms + local
+          triangle/fusion/length-2 statistics (108 raw features)
+    bond: every unique undirected chemical bond once; type one-hot + ring role
+          flags + endpoints' atom embeddings
+    junction: unordered neighbour pair (i,k) at centre j; explicit centre;
+          both real bond embeddings; symmetric bond-type pair encoding;
+          endpoint adjacency / common-neighbour / ring-role features
+    incidence: junction -> the two real bonds it touches (static, no learning)
+  organization:
+    organized: W_b = sum_{j touches b} w_j ; V_b = sum w_j^2 ; n_b = count
+    null:      W_b = n_b * mean_graph(w) ; V_b = n_b * mean_graph(w^2)
+  readout: Z = [sum_b psi(b_b, W_b, V_b, log1p n_b, raw_bond), sum_i a_i,
+            sum_i a_i^2, global topology]; y_hat = MLP reader(Z)
+  widths:
+    atom_hidden: 128
+    atom_out: 96
+    bond_hidden: 160
+    bond_out: 96
+    junc_hidden: 160
+    junc_out: 96
+    compose_hidden: 160
+    compose_out: 96
+    reader_hidden: 256
+    reader_layers: 2
+    dropout: 0.0
+  parameters_expected: 413505
+  forbidden: GNN, Transformer, attention, iterative message passing, recurrent
+    state, cross-round node/bond updates, motif-ID lookup as main input
+
+training_recipe:
+  optimizer: Adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  epochs: 240
+  grad_clip: 5.0
+  seed: 0
+  fp32: true
+  amp: false
+  scheduler: none
+  primary_checkpoint: parameter mean of epochs 236..240 (last-5 soup)
+  loss:
+    full_y: raw-y L1 + disclosed label-free structural reconstruction (lambda 33.95873017865987)
+    bjoc: raw-y L1 only
+
+arms:
+  - id: F
+    name: Full-Y matched reference
+    model: frozen historical Full-Y skeleton (408651 params), fit-only prep on the new fit split
+  - id: N
+    name: BJOC-Null
+    organization_mode: null
+  - id: O
+    name: BJOC-Organized
+    organization_mode: organized
+
+seed0_pairing:
+  identical_init: true
+  identical_data_order: true
+  identical_optimizer: true
+  identical_epochs_steps: true
+  identical_readout_width: true
+  only_difference: organization_mode
+
+pre_registered_decision:
+  primary: Delta_org = MAE_locked(O) - MAE_locked(N)
+  secondary: Delta_pred = MAE_locked(O) - MAE_locked(F)
+  strong_signal:
+    monitor_improvement_over_F: ">= 0.010"
+    monitor_improvement_over_N: ">= 0.005"
+    locked_dev_same_direction: true
+    mechanism_tests_pass: true
+  representation_signal: "N and O both clearly better than F, O-N not clear"
+  organization_signal_without_superiority: "O clearly better than N, both clearly worse than F"
+  no_signal: "N, O both clearly worse than F and O-N unclear"
+  resource_rule: >-
+    seed-1 pair (N, O) only if the seed-0 mechanism contrast is in the
+    pre-registered direction (Delta_org negative) with a bootstrap CI that
+    does not cross zero, or if a strong representation signal is present.
+    full-10k BJOC training only if the seed-0/seed-1 evidence supports it.
+
+budget:
+  gpu_hours_max: 5
+  formal_trajectories_max: 6
+  gpu: 1 at a time (res / res-gpu1)
+  cpu_threads_max: 8
+
+evidence_boundary: >-
+  Single seed per arm is not training-stability evidence. Locked dev is an
+  isolation split inside official train, not a fresh blind test. Synthetic
+  truth only shows the architecture can represent the organisation function.
+  No causal chemical claims.
