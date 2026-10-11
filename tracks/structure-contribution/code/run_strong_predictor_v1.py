@@ -943,8 +943,13 @@ def _export_provenance(
         triplet_summary=np.concatenate(summary_parts, axis=0) if summary_parts else np.zeros((0, stp.TRIPLET_SUMMARY_DIM), dtype=np.float32),
     )
     model._capture_provenance = False
+    provenance_path = out_dir / "provenance_dev_s0.npz"
+    try:
+        shown_path = str(provenance_path.resolve().relative_to(REPO_ROOT))
+    except ValueError:  # pragma: no cover - relative out_dir outside the repo
+        shown_path = str(provenance_path)
     return {
-        "path": str((out_dir / "provenance_dev_s0.npz").relative_to(REPO_ROOT)),
+        "path": shown_path,
         "columns": {
             "bonds": ["atom_i_local", "atom_j_local", "bond_type"],
             "triplets": ["center_local", "end_i_local", "end_k_local", "bond_1_type", "bond_2_type", "closure"],

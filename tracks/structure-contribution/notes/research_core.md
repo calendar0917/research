@@ -180,3 +180,11 @@ XGBoost，则该生态位不成立。**
   不调参、不 full10k、official valid/test 不加载。Phase A CPU 审计、CPU 正确性门
   （初始恒等/梯度活性/敏感性/接线对照）与历史 soup 只读回放门见
   `results/strong_nongnn_predictor_v1/` 与 `notes/strong_nongnn_predictor_v1.md`。
+  **结果（2026-10-11，单 seed 0，res GPU1，commit 4d8d835）**：预冻结判据情况 C —
+  soup dev 0.11589 vs 历史 0.11641（配对 CI [−0.00529,+0.00410] 跨零，改善 0.45%），
+  校准后 0.11466 vs 0.11452（反而 +0.00014）；三体分支被训练且敏感
+  （zero_summary 0.015 / endpoint-env 0.067 / bond-type 0.019，闭合位≈0）但没有
+  可复制的精度收益，所有子群 CI 跨零。按规则停止该分支：不加 seed、不加模型、
+  不调参、不重训；official valid/test 从未加载。可解释溯源已导出
+  （`results/strong_nongnn_predictor_v1/provenance_dev_s0.npz`：2000 分子 / 46,507 原子 /
+  49,999 键 / 69,453 三体）。下一步若继续高阶表示或容量对照，需新的预注册 + 用户授权。

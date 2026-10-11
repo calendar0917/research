@@ -1,9 +1,9 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-strong-nongnn-predictor-v1
+phase: cscl-strong-nongnn-predictor-v1-completed
 current_round: cscl-strong-nongnn-predictor-v1
-next_round_candidate: "cscl-strong-nongnn-predictor-v1 (new user-authorized round; frozen protocol configs/strong_nongnn_predictor_v1.yaml): build the strong non-GNN predictor first (no alpha/delta/gamma decomposition) — historical Full-Y plus ONE new static non-iterative chemical-bond triplet operator (centre + two real-bond neighbours; [sum q; sum q^2] appended to the reader). Single formal seed-0 run on res GPU1; pre-frozen bands dev<=0.095 / <=0.106 / >0.106. Official valid/test stay unloaded. The v3d frozen-version test result must NOT be reused to claim independence for this configuration."
+next_round_candidate: "STOPPED per pre-frozen rule (case C): the single authorized static-triplet experiment on Full-Y gave soup dev 0.11589 vs historical 0.11641 (paired CI [-0.0053,+0.0041] crosses zero; > 0.106 band) -> no signal; no seed 1, no second model, no tuning, no retraining. Official valid/test were never loaded in this round. Any future high-order/triplet variant or capacity-matched control needs a NEW preregistration + user authorization; the v3d official test numbers must not be reused for independence claims."
 updated: 2026-10-11
 
 track:
@@ -29,11 +29,12 @@ constraints:
   - GPU 正式实验仅 `res` GPU1 (pool res-gpu1, 进程内 cuda:0)，经 rr
 
 next_action: >-
-  cscl-strong-nongnn-predictor-v1: commit the frozen protocol/driver/tests →
-  rr deploy res (pool res-gpu1) → ONE formal seed-0 training (240 ep) →
-  rr pull → local analyze (subgroups + frozen ablations + provenance export) →
-  final report. No seed 1, no second model, no hyper-parameter search,
-  official valid/test never loaded.
+  cscl-strong-nongnn-predictor-v1 is COMPLETE with case C (stop the branch):
+  soup dev 0.11589 vs historical 0.11641, paired CI [-0.0053,+0.0041] crossing
+  zero; no seed 1 / second model / tuning / retraining. Durable results in
+  notes/strong_nongnn_predictor_v1.md and this round's block; raw artifacts in
+  (git-ignored) results/strong_nongnn_predictor_v1/. Next work requires a new
+  preregistration + user authorization.
 
 results_index:
   - path: results/cscl_v0_units_audit/audit.json
@@ -544,15 +545,8 @@ round_cscl-strong-nongnn-predictor-v1:
       falling to 0.0652@240 while monitor plateaus 0.123-0.155 -> the bottleneck
       is representation/generalisation, gap ~0.074)
     - y<=-3 (6.4% of molecules) carries ~17.3% of dev error mass; corr(|e|,y)=-0.30
-    - base forward cannot express triplet statistics: pool_moments /
-      pool_pair_moments only do [sum x, sum x^2, log count], no cross-atom
-      products
-    - historical high-order routes audited read-only (PSD-v0 pair-state failed;
-      GSCN-v0 dictionary kernel rejected; BAT-v1 triples+reader 0.12300 vs band
-      0.120 no signal; BAT-joint-tune train -18% but valid flat; JointBond
-      inert/collapsed; RoleCorr/typed-cycle/TCCD mechanism-only). This round
-      differs: live E, real-bond/closure semantics, joint end-to-end training,
-      zero-initialised new reader columns.
+    - "base forward cannot express triplet statistics: pool_moments / pool_pair_moments only do [sum x, sum x^2, log count], no cross-atom products"
+    - "historical high-order routes audited read-only (PSD-v0 pair-state failed; GSCN-v0 dictionary kernel rejected; BAT-v1 triples+reader 0.12300 vs band 0.120 no signal; BAT-joint-tune train -18% but valid flat; JointBond inert/collapsed; RoleCorr/typed-cycle/TCCD mechanism-only). This round differs: live E, real-bond/closure semantics, joint end-to-end training, zero-initialised new reader columns."
   cpu_gates (results/strong_nongnn_predictor_v1/cpu_gates_s0.json, all pass):
     init identity max|dpred| 1.79e-7 <= 5e-5 (shared params bit-identical, new
     columns all zero); reader-new-column grad live at step 1; triplet module grad
@@ -560,13 +554,22 @@ round_cscl-strong-nongnn-predictor-v1:
     random-column 0.123; batch invariance 6.0e-7; y-independence exact;
     save/load bit-identical; non-GNN scan clean; params 429,259 = 408,651 + 18,112
     (triplet) + 2,496 (reader new columns)
-  replay_gate (results/strong_nongnn_predictor_v1/replay_full_y_soup.json):
-    read-only frozen Full-Y soup on dev 2000: enhanced-vs-reference max|dpred|
-    4.77e-7; vs saved dev preds 1.91e-6; replayed dev MAE 0.1164130 vs saved
-    0.1164130
+  replay_gate (results/strong_nongnn_predictor_v1/replay_full_y_soup.json): "read-only frozen Full-Y soup on dev 2000: enhanced-vs-reference max|dpred| 4.77e-7; vs saved dev preds 1.91e-6; replayed dev MAE 0.1164130 vs saved 0.1164130"
   frozen_bands: {A: "<=0.095 stop+report", B: "0.095-0.106 report, no tuning",
     C: ">0.106 stop the branch"}
   discipline: seed 0 only; no second model; no full10k refit; no hyper-parameter
     search; no retraining; official valid/test never loaded; supervision raw y L1
     + disclosed label-free reconstruction auxiliary (h1 lambda 33.95873017865987)
-  status: "awaiting the single formal res GPU1 seed-0 training run"
+  status: "COMPLETED 2026-10-11: single formal seed-0 run (rr run res strong-v1-s0 --pool res-gpu1; run_id strong-v1-s0-20261011-174004-45d95ec3; commit 4d8d835; a100-2, CUDA_VISIBLE_DEVICES=1, torch 2.5.1+cu124, exit 0, 240 epochs, wall 1305s)"
+  formal_result:
+    primary_soup: {fit: 0.04758, monitor: 0.11374, dev: 0.11589, calibrated_dev: 0.11466, soup_members: [187, 200, 226, 229, 240]}
+    best_monitor: {fit: 0.06507, monitor: 0.12033, dev: 0.12360}
+    last: {fit: 0.06101, monitor: 0.12044, dev: 0.13094}
+    historical_full_y: {fit: 0.04220, monitor: 0.11826, dev: 0.11641, calibrated_dev: 0.11452, best_monitor_dev: 0.12102, last_dev: 0.12112}
+    paired_vs_full_y: "signed (e_new - e_hist) mean -0.00052, 95% CI [-0.00529, +0.00410], 2000 resamples, frac new-better 0.5085"
+    judgment_band: case_C (0.11589 > 0.106)
+    decision: STOP this branch per the pre-frozen rule; no seed 1, no second model, no hyper-parameter search, no retraining
+    branch_activity: "triplet params 753.7 -> 352.5 (wd shrink), reader new cols 0 -> 25.95, final-epoch grads nonzero; zero_summary |dpred| 0.0150, zero_endpoint_env 0.0668, zero_bond_types 0.0192, zero_center_env 0.0017, zero_closure 0.00004, zero_atom_type 0.0104 (MAE 0.11513), cyclic_bond_types 0.0096"
+    subgroups: "all paired CIs cross zero; small/low-ring molecules slightly worse, large molecules slightly better (no reproducible subgroup gain)"
+    artifacts_postrun: "results/strong_nongnn_predictor_v1/{train_FullY-StaticTriplet-seed0.json, static_triplet_s0_soup_state.pt, static_triplet_s0_dev_preds.npz, static_triplet_s0_monitor_preds.npz, analysis_s0.json, provenance_dev_s0.npz (2000 mols / 46,507 atoms / 49,999 bonds / 69,453 triplets), rr_run/}"
+  official_valid_test_loaded: false (both splits; not re-evaluated in this round)
