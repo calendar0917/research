@@ -165,6 +165,14 @@ metrics:
     no_support:
       - "test 上 S 相对 O/F 差距明显扩大超出容忍带, 或关键不变性/加和验证失败"
     no_support_meaning: "不得以内部 dev 的情况 A 取代独立结果"
+    # --- 预评分修正 (amendment 1, 在任何 official 数值计算之前提交) ---
+    amendment_1_direction_operationalization:
+      status: "对上方 'validation 方向与 test 无严重矛盾' 的唯一操作化; 冻结于评分前"
+      rule: >-
+        direction_consistent = (sign(S-O 点估计) 在 valid 与 test 一致) AND
+        (sign(S-F 点估计) 在 valid 与 test 一致) AND
+        |S-O 点估计跨 split 之差| <= 0.02 AND |S-F 点估计跨 split 之差| <= 0.02
+      note: "只使用点估计的符号与跨 split 稳定性; 不引入新容忍带, 不改变其它判据"
   o_vs_f_equivalence:
     equivalence_region: [-0.01, 0.01]
     rule: "仅当 O-F 配对差 95% CI 完整落入该区间才使用统计等价表述; 否则只报告观察差与不确定性"
@@ -203,6 +211,6 @@ deliverables:
   - "tracks/structure-contribution/results/cscl_v3d_official_eval/{valid,test}_predictions.npz (F/O/S 三模型可区分)"
   - "tracks/structure-contribution/results/cscl_v3d_official_eval/{valid,test}_metrics.json"
   - tracks/structure-contribution/results/cscl_v3d_official_eval/paired_comparisons.json
-  - "tracks/structure-contribution/results/cscl_v3d_official_eval/{attribution_integrity,subgroup_analysis}.json"
+  - "tracks/structure-contribution/results/cscl_v3d_official_eval/{attribution_integrity,subgroup_analysis,moment_sensitivity,judgment}.json"
   - tracks/structure-contribution/results/cscl_v3d_official_eval/test_access_record.json
   - tracks/structure-contribution/notes/cscl_v3d_official_validation_test.md
