@@ -755,10 +755,12 @@ def train_bjoc_arm(
                 y=y_mon.astype(np.float32),
             )
         write_json(OUT / f"train_bjoc_{arm}{'_full10k' if full10k else ''}_s{seed}.json", results)
-    log(
-        f"[{arm}] soup monitor {results['soup_monitor_mae']:.5f} "
-        f"(cal {results['soup_calibrated_monitor_mae']:.5f}) | wall {wall:.0f}s"
+    mon_txt = (
+        f"{results['soup_monitor_mae']:.5f} (cal {results['soup_calibrated_monitor_mae']:.5f})"
+        if results["soup_monitor_mae"] is not None
+        else "n/a (full-10k candidate, no monitor split)"
     )
+    log(f"[{arm}] soup monitor {mon_txt} | wall {wall:.0f}s")
     return results
 
 
