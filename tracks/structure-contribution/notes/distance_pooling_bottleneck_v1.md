@@ -227,7 +227,7 @@ within ±0.01. Top-10 error mass share: 22.5% Hard5 / 24.7% Soft5.
 contains zero; no subgroup shows a CI-supported improvement; the y ≤ −3 tail is
 slightly worse under Soft5 (+0.05) while ordinary molecules are slightly better
 (−0.0027, CI crossing zero). Absolute level: Soft5 valid 0.119218 → +0.02922 to
-0.09 and +0.03922 to 0.08 (Hard5: +0.02951 / +0.03951).
+0.09 and +0.03922 to 0.08 (Hard5: +0.02847 / +0.03847).
 
 Evidence boundary: single seed per arm; GPU reduction order is nondeterministic,
 so this is an arm-level contrast, not a bitwise controlled variable. Official
@@ -328,7 +328,7 @@ CI-supported improvement; excluding `valid:0172` gives Δ = −0.00112.
 
 15. **Decision, absolute gap, and boundary?** `SOFT5_NO_USEFUL_GAIN` (band C,
 CI contains zero). Soft5 valid 0.119218 = +0.0292 to 0.09 and +0.0392 to 0.08
-(Hard5 +0.0295 / +0.0395). Single seed per arm, GPU nondeterminism, official
+(Hard5 +0.02847 / +0.03847). Single seed per arm, GPU nondeterminism, official
 validation already exposed (historical reference 0.118618), official test never
 loaded; the round stops here — no seed 1, no third arm, no kernel/center/width
 search, no retuning.
