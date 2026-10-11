@@ -1042,6 +1042,8 @@ def stage_predict(device: torch.device, smoke: int | None) -> dict[str, Any]:
         "official_test_loaded": False,
         "y_in_file": False,
         "valid_alignment": align,
+        "extraction_program_sha256": file_sha256(Path(__file__)),
+        "config_sha256": file_sha256(CONFIG_PATH),
         "checkpoints": {
             "F7200": {"path": str(F7200_SOUP.relative_to(REPO_ROOT)), "sha256": file_sha256(F7200_SOUP),
                       "state_sha256": state_hash(state72)},
@@ -1117,6 +1119,12 @@ def decide_band(delta: float) -> str:
 
 def stage_score(device: torch.device) -> dict[str, Any]:
     manifest = read_json(FREEZE_MANIFEST)
+    current_program = file_sha256(Path(__file__))
+    if manifest.get("extraction_program_sha256") != current_program:
+        raise RuntimeError(
+            "evaluation program changed after the freeze manifest was written "
+            f"({manifest.get('extraction_program_sha256')} != {current_program})"
+        )
     z = np.load(VALID_PREDS, allow_pickle=False)
     pred72 = np.asarray(z["pred_F7200"], dtype=np.float64)
     pred10 = np.asarray(z["pred_F10000"], dtype=np.float64)
@@ -1137,6 +1145,15 @@ def stage_score(device: torch.device) -> dict[str, Any]:
     e72 = np.abs(pred72 - y)
     e10 = np.abs(pred10 - y)
     d = e10 - e72
+    # label-source cross-check against the historical evaluation CSV (train-independent artifact)
+    label_crosscheck: dict[str, Any] = {"available": False}
+    if HIST_Y_VALID_CSV.exists():
+        y_hist_csv = read_csv_col(HIST_Y_VALID_CSV, "y")
+        label_crosscheck = {
+            "available": True,
+            "max_abs_diff_vs_historical_csv": float(np.max(np.abs(y - y_hist_csv))),
+            "source": str(HIST_Y_VALID_CSV.relative_to(REPO_ROOT)),
+        }
     metrics = {
         "protocol_id": PROTOCOL_ID,
         "split": "official ZINC validation (1000)",
@@ -1159,6 +1176,7 @@ def stage_score(device: torch.device) -> dict[str, Any]:
             "historical_F10000_seed0_valid_raw": 0.11861754740116885,
             "note": "background only; the matched comparison uses the shared last-5 soup rule",
         },
+        "label_source_crosscheck": label_crosscheck,
         "gap_to_valid_thresholds": {
             "F7200": {"to_0.09": float(e72.mean() - 0.09), "to_0.08": float(e72.mean() - 0.08)},
             "F10000": {"to_0.09": float(e10.mean() - 0.09), "to_0.08": float(e10.mean() - 0.08)},

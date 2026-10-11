@@ -154,6 +154,20 @@ def test_predict_stage_does_not_read_labels_before_freeze():
     assert ".y" not in src
     assert "np.savez_compressed" in src
     assert "write_json(FREEZE_MANIFEST" in src
+    assert "extraction_program_sha256" in src
+
+
+def test_score_locks_the_frozen_evaluation_program():
+    tree = ast.parse(_driver_source())
+    fn = next(
+        node for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "stage_score"
+    )
+    src = ast.unparse(fn)
+    assert "extraction_program_sha256" in src
+    i_prog = src.index("extraction_program_sha256")
+    i_y = src.index("float(ds[i].y")
+    assert i_prog < i_y
 
 
 def test_score_rehashes_predictions_before_reading_y():
