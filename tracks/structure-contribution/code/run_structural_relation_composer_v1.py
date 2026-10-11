@@ -572,8 +572,14 @@ def train_bjoc_arm(
     log=print,
     objects_path: Path | None = None,
     norm_path: Path | None = None,
+    full10k: bool = False,
 ) -> dict[str, Any]:
-    """Formal BJOC training: raw-y L1 only, frozen recipe, last-5 soup."""
+    """Formal BJOC training: raw-y L1 only, frozen recipe, last-5 soup.
+
+    ``full10k=True`` is the conditional Phase-H candidate: all 10000
+    official-train rows, all-10k train-only preprocessing statistics, same
+    frozen architecture and training parameters (no monitor, no selection).
+    """
     assert arm in (src.ORGANIZED, src.NULL), arm
     objs = torch.load(objects_path or OBJECTS_CACHE, map_location="cpu", weights_only=False)
     norm = json.loads((norm_path or NORM_JSON).read_text())
@@ -582,6 +588,9 @@ def train_bjoc_arm(
     rows = build_split_v1(smiles)
     fit_rows = [int(i) for i in rows["fit"]]
     mon_rows = [int(i) for i in rows["monitor"]]
+    if full10k:
+        fit_rows = list(range(10000))
+        mon_rows = []
     # label access: read only the cached rows of fit/monitor (never locked)
     train = torch.load(rpv2.ENCODED_TRAIN, map_location="cpu", weights_only=False)
     y_all = np.asarray([float(train[i].y.reshape(-1)[0]) for i in range(10000)], dtype=np.float64)
@@ -595,6 +604,13 @@ def train_bjoc_arm(
     assert [o.mol_index for o in mon_objs] == [int(i) for i in mon_rows]
     y_fit = torch.as_tensor(y_all[fit_rows], dtype=torch.float32)
     y_mon = y_all[mon_rows]
+
+    if full10k and not (norm_path or NORM_JSON).exists():
+        gfit = np.stack([o.global_feat for o in objs], 0).astype(np.float64)
+        mean = gfit.mean(0)
+        scale = np.where(gfit.std(0) < 1e-6, 1.0, gfit.std(0))
+        write_json(norm_path or NORM_JSON, {"protocol": PROTOCOL_ID, "fit_only": True, "n_fit": len(objs), "global_mean": mean.tolist(), "global_scale": scale.tolist(), "names": list(sro.GLOBAL_FEAT_NAMES)})
+        norm = json.loads((norm_path or NORM_JSON).read_text())
 
     cfg = src.BJOCConfig()
     seed_everything(seed)
@@ -636,8 +652,11 @@ def train_bjoc_arm(
             total += float((pred.view(-1) - y_fit[indices].to(device).view(-1)).abs().sum())
             n_mol += len(indices)
             steps += 1
-        mon_pred = predict_bjoc(model, mon_objs, list(range(len(mon_rows))), device)
-        mon_mae = float(np.abs(mon_pred - y_mon).mean())
+        if mon_rows:
+            mon_pred = predict_bjoc(model, mon_objs, list(range(len(mon_rows))), device)
+            mon_mae = float(np.abs(mon_pred - y_mon).mean())
+        else:
+            mon_mae = float("nan")
         curve.append(
             {
                 "epoch": epoch,
@@ -655,7 +674,11 @@ def train_bjoc_arm(
     members, soup = _last_soup(list(states), len(curve))
     model.load_state_dict({k: v.to(device) for k, v in soup.items()})
     fit_pred = predict_bjoc(model, fit_objs, list(range(len(fit_rows))), device)
-    mon_pred = predict_bjoc(model, mon_objs, list(range(len(mon_rows))), device)
+    mon_pred = (
+        predict_bjoc(model, mon_objs, list(range(len(mon_rows))), device)
+        if mon_rows
+        else np.zeros(0, dtype=np.float64)
+    )
     b_cal = float(np.median(y_all[fit_rows] - fit_pred))
     results = {
         "protocol": PROTOCOL_ID,
@@ -695,8 +718,9 @@ def train_bjoc_arm(
         "curve": curve,
         "wall_seconds": wall,
         "soup_fit_mae": float(np.abs(fit_pred - y_all[fit_rows]).mean()),
-        "soup_monitor_mae": float(np.abs(mon_pred - y_mon).mean()),
-        "soup_calibrated_monitor_mae": float(np.abs(mon_pred + b_cal - y_mon).mean()),
+        "soup_monitor_mae": float(np.abs(mon_pred - y_mon).mean()) if mon_rows else None,
+        "soup_calibrated_monitor_mae": float(np.abs(mon_pred + b_cal - y_mon).mean()) if mon_rows else None,
+        "full10k": bool(full10k),
         "b_fit": b_cal,
         "device": str(device),
         "cuda_device_name": torch.cuda.get_device_name(0) if device.type == "cuda" else "cpu",
@@ -710,15 +734,16 @@ def train_bjoc_arm(
         "official_test_loaded": False,
     }
     if not smoke:
-        name = f"bjoc_{arm}_s{seed}"
+        name = f"bjoc_{arm}_s{seed}" if not full10k else f"bjoc_{arm}_full10k_s{seed}"
         torch.save(soup, OUT / f"{name}_soup_state.pt")
-        np.savez_compressed(
-            OUT / f"{name}_monitor_preds.npz",
-            row=np.asarray(mon_rows, dtype=np.int64),
-            pred=mon_pred.astype(np.float32),
-            y=y_mon.astype(np.float32),
-        )
-        write_json(OUT / f"train_bjoc_{arm}_s{seed}.json", results)
+        if mon_rows:
+            np.savez_compressed(
+                OUT / f"bjoc_{arm}_s{seed}_monitor_preds.npz",
+                row=np.asarray(mon_rows, dtype=np.int64),
+                pred=mon_pred.astype(np.float32),
+                y=y_mon.astype(np.float32),
+            )
+        write_json(OUT / f"train_bjoc_{arm}{'_full10k' if full10k else ''}_s{seed}.json", results)
     log(
         f"[{arm}] soup monitor {results['soup_monitor_mae']:.5f} "
         f"(cal {results['soup_calibrated_monitor_mae']:.5f}) | wall {wall:.0f}s"
@@ -739,7 +764,14 @@ def predict_bjoc(model: src.BJOC, objs: Sequence[sro.MolObjects], rows: Sequence
 
 def cmd_train_bjoc(args: argparse.Namespace) -> int:
     device = torch.device(args.device)
-    train_bjoc_arm(args.arm, int(args.seed), device, smoke=bool(args.smoke))
+    train_bjoc_arm(
+        args.arm,
+        int(args.seed),
+        device,
+        smoke=bool(args.smoke),
+        full10k=bool(getattr(args, "full10k", False)),
+        norm_path=(OUT / "bjoc_global_norm_full10k.json") if getattr(args, "full10k", False) else None,
+    )
     return 0
 
 
@@ -823,8 +855,9 @@ def train_full_y_matched(seed: int, device: torch.device, *, smoke: bool = False
         "curve": curve,
         "wall_seconds": wall,
         "soup_fit_mae": float(np.abs(fit_pred - y_all[fit_rows]).mean()),
-        "soup_monitor_mae": float(np.abs(mon_pred - y_mon).mean()),
-        "soup_calibrated_monitor_mae": float(np.abs(mon_pred + b_cal - y_mon).mean()),
+        "soup_monitor_mae": float(np.abs(mon_pred - y_mon).mean()) if mon_rows else None,
+        "soup_calibrated_monitor_mae": float(np.abs(mon_pred + b_cal - y_mon).mean()) if mon_rows else None,
+        "full10k": bool(full10k),
         "b_fit": b_cal,
         "parameters": int(sum(p.numel() for p in model.parameters())),
         "device": str(device),
@@ -1145,6 +1178,82 @@ def cmd_eval_locked(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 
 
+def _load_official_split(split: str):
+    from tracks.ksvd.experiments.luyin16.zinc_long_range_proxy import _load_zinc
+
+    return _load_zinc(cf.ZINC_ROOT, split)
+
+
+def cmd_eval_valid(args: argparse.Namespace) -> int:
+    """Conditional Phase-H: ONE frozen official-validation evaluation.
+
+    Order (protocol H3): build label-blind valid objects, freeze checkpoint /
+    preprocessing hashes / prediction file / manifest, and only then read the
+    official-validation labels once.  Official test is never touched.
+    """
+    norm_path = OUT / "bjoc_global_norm_full10k.json"
+    soup_path = OUT / f"bjoc_{args.arm}_full10k_s0_soup_state.pt"
+    if not soup_path.exists():
+        raise SystemExit(f"missing frozen checkpoint {soup_path}")
+    device = torch.device(args.device)
+    norm = json.loads(norm_path.read_text())
+    ds = _load_official_split("val")
+    if len(ds) != 1000:
+        raise SystemExit(f"unexpected valid size {len(ds)}")
+    objs = [
+        sro.build_mol_objects(i, d.x.numpy(), d.edge_index.numpy(), d.edge_attr.numpy())
+        for i, d in enumerate(ds)
+    ]
+    cfg = src.BJOCConfig()
+    model = src.build_bjoc(
+        cfg,
+        seed=0,
+        organization_mode=args.arm,
+        global_mean=np.asarray(norm["global_mean"], dtype=np.float32),
+        global_scale=np.asarray(norm["global_scale"], dtype=np.float32),
+        device=device,
+    )
+    model.load_state_dict(torch.load(soup_path, map_location=device, weights_only=False))
+    pred = predict_bjoc(model, objs, list(range(len(objs))), device)
+    if not np.isfinite(pred).all():
+        raise RuntimeError("non-finite official-valid predictions")
+    pred_path = OUT / f"official_valid_preds_{args.arm}_full10k_s0.npz"
+    np.savez_compressed(pred_path, row=np.arange(len(pred), dtype=np.int64), pred=pred.astype(np.float32))
+    manifest = {
+        "protocol": PROTOCOL_ID,
+        "stage": "eval_valid_freeze",
+        "arm": args.arm,
+        "checkpoint": str(soup_path.relative_to(REPO_ROOT)),
+        "checkpoint_sha256": file_sha256(soup_path),
+        "norm_sha256": file_sha256(norm_path),
+        "predictions": str(pred_path.relative_to(REPO_ROOT)),
+        "predictions_sha256": file_sha256(pred_path),
+        "git_commit": git_commit(),
+        "n_valid": len(pred),
+        "official_test_loaded": False,
+    }
+    write_json(OUT / "official_valid_freeze.json", manifest)
+    log(f"[eval-valid] frozen predictions for {args.arm} (sha {manifest['predictions_sha256'][:12]})")
+    # labels read exactly once, after the freeze
+    y = np.asarray([float(d.y.reshape(-1)[0]) for d in ds], dtype=np.float64)
+    err = np.abs(pred.astype(np.float64) - y)
+    payload = {
+        **manifest,
+        "labels_read_after_freeze": True,
+        "metrics": metrics("valid", pred.astype(np.float64), y),
+        "n": int(len(y)),
+        "historical_full_y_valid_mae": 0.118618,
+        "note": (
+            "historical Full-Y official-valid 0.118618 is a disclosed read-only reference from "
+            "earlier rounds (different seed/trajectory/matched split); official validation has been "
+            "exposed before, so this is a controlled comparison, not a fresh blind test"
+        ),
+    }
+    write_json(OUT / "official_valid_eval.json", payload)
+    log(f"[eval-valid] MAE {payload['metrics']['valid_mae']:.6f}")
+    return 0
+
+
 def cmd_mechanism(args: argparse.Namespace) -> int:
     """Phase I: frozen-model sensitivity / counterfactual diagnostics."""
     smiles = [str(s) for s in cf.load_canonical_smiles()]
@@ -1307,10 +1416,15 @@ def main() -> int:
     p.add_argument("--arm", choices=list(src.ORGANIZATION_MODES), required=False)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--smoke", action="store_true")
+    p.add_argument("--full10k", action="store_true")
     p.set_defaults(func=cmd_train_bjoc)
 
     p = sub.add_parser("eval-locked")
     p.set_defaults(func=cmd_eval_locked)
+
+    p = sub.add_parser("eval-valid")
+    p.add_argument("--arm", choices=list(src.ORGANIZATION_MODES), default=src.ORGANIZED)
+    p.set_defaults(func=cmd_eval_valid)
 
     p = sub.add_parser("mechanism")
     p.set_defaults(func=cmd_mechanism)
