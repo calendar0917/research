@@ -1192,14 +1192,13 @@ def _load_official_split(split: str):
 def cmd_eval_valid(args: argparse.Namespace) -> int:
     """Conditional Phase-H: ONE frozen official-validation evaluation.
 
-    Order (protocol H3): build label-blind valid objects, freeze checkpoint /
-    preprocessing hashes / prediction file / manifest, and only then read the
-    official-validation labels once.  Official test is never touched.
+    Order (protocol H3): build label-blind valid objects, freeze every arm's
+    predictions / checkpoint+preprocessing hashes in a single manifest, and
+    only then read the official-validation labels once (for all arms).
+    Official test is never touched.
     """
     norm_path = OUT / "bjoc_global_norm_full10k.json"
-    soup_path = OUT / f"bjoc_{args.arm}_full10k_s0_soup_state.pt"
-    if not soup_path.exists():
-        raise SystemExit(f"missing frozen checkpoint {soup_path}")
+    arms = list(args.arms)
     device = torch.device(args.device)
     norm = json.loads(norm_path.read_text())
     ds = _load_official_split("val")
@@ -1210,52 +1209,64 @@ def cmd_eval_valid(args: argparse.Namespace) -> int:
         for i, d in enumerate(ds)
     ]
     cfg = src.BJOCConfig()
-    model = src.build_bjoc(
-        cfg,
-        seed=0,
-        organization_mode=args.arm,
-        global_mean=np.asarray(norm["global_mean"], dtype=np.float32),
-        global_scale=np.asarray(norm["global_scale"], dtype=np.float32),
-        device=device,
-    )
-    model.load_state_dict(torch.load(soup_path, map_location=device, weights_only=False))
-    pred = predict_bjoc(model, objs, list(range(len(objs))), device)
-    if not np.isfinite(pred).all():
-        raise RuntimeError("non-finite official-valid predictions")
-    pred_path = OUT / f"official_valid_preds_{args.arm}_full10k_s0.npz"
-    np.savez_compressed(pred_path, row=np.arange(len(pred), dtype=np.int64), pred=pred.astype(np.float32))
-    manifest = {
+    manifest: dict[str, Any] = {
         "protocol": PROTOCOL_ID,
         "stage": "eval_valid_freeze",
-        "arm": args.arm,
-        "checkpoint": str(soup_path.relative_to(REPO_ROOT)),
-        "checkpoint_sha256": file_sha256(soup_path),
+        "arms": {},
+        "norm": str(norm_path.relative_to(REPO_ROOT)),
         "norm_sha256": file_sha256(norm_path),
-        "predictions": str(pred_path.relative_to(REPO_ROOT)),
-        "predictions_sha256": file_sha256(pred_path),
         "git_commit": git_commit(),
-        "n_valid": len(pred),
+        "n_valid": len(objs),
         "official_test_loaded": False,
     }
+    preds: dict[str, np.ndarray] = {}
+    for arm in arms:
+        soup_path = OUT / f"bjoc_{arm}_full10k_s0_soup_state.pt"
+        if not soup_path.exists():
+            raise SystemExit(f"missing frozen checkpoint {soup_path}")
+        model = src.build_bjoc(
+            cfg,
+            seed=0,
+            organization_mode=arm,
+            global_mean=np.asarray(norm["global_mean"], dtype=np.float32),
+            global_scale=np.asarray(norm["global_scale"], dtype=np.float32),
+            device=device,
+        )
+        model.load_state_dict(torch.load(soup_path, map_location=device, weights_only=False))
+        pred = predict_bjoc(model, objs, list(range(len(objs))), device)
+        if not np.isfinite(pred).all():
+            raise RuntimeError("non-finite official-valid predictions")
+        pred_path = OUT / f"official_valid_preds_{arm}_full10k_s0.npz"
+        np.savez_compressed(pred_path, row=np.arange(len(pred), dtype=np.int64), pred=pred.astype(np.float32))
+        manifest["arms"][arm] = {
+            "checkpoint": str(soup_path.relative_to(REPO_ROOT)),
+            "checkpoint_sha256": file_sha256(soup_path),
+            "predictions": str(pred_path.relative_to(REPO_ROOT)),
+            "predictions_sha256": file_sha256(pred_path),
+        }
+        preds[arm] = pred.astype(np.float64)
+        log(f"[eval-valid] frozen {arm} predictions (sha {manifest['arms'][arm]['predictions_sha256'][:12]})")
     write_json(OUT / "official_valid_freeze.json", manifest)
-    log(f"[eval-valid] frozen predictions for {args.arm} (sha {manifest['predictions_sha256'][:12]})")
-    # labels read exactly once, after the freeze
+    log("[eval-valid] freeze manifest written; reading labels exactly once")
     y = np.asarray([float(d.y.reshape(-1)[0]) for d in ds], dtype=np.float64)
-    err = np.abs(pred.astype(np.float64) - y)
     payload = {
         **manifest,
         "labels_read_after_freeze": True,
-        "metrics": metrics("valid", pred.astype(np.float64), y),
-        "n": int(len(y)),
         "historical_full_y_valid_mae": 0.118618,
         "note": (
-            "historical Full-Y official-valid 0.118618 is a disclosed read-only reference from "
-            "earlier rounds (different seed/trajectory/matched split); official validation has been "
+            "historical Full-Y official-valid 0.118618 is a disclosed read-only reference from an "
+            "earlier round (different seed/trajectory/matched split); official validation has been "
             "exposed before, so this is a controlled comparison, not a fresh blind test"
         ),
+        "models": {arm: metrics("valid", p, y) for arm, p in preds.items()},
     }
+    if "organized" in preds and "null" in preds:
+        payload["organized_minus_null"] = paired_bootstrap(
+            np.abs(preds["organized"] - y) - np.abs(preds["null"] - y)
+        )
     write_json(OUT / "official_valid_eval.json", payload)
-    log(f"[eval-valid] MAE {payload['metrics']['valid_mae']:.6f}")
+    for arm, m in payload["models"].items():
+        log(f"[eval-valid] {arm}: MAE {m['valid_mae']:.6f}")
     return 0
 
 
@@ -1499,7 +1510,7 @@ def main() -> int:
     p.set_defaults(func=cmd_eval_locked)
 
     p = sub.add_parser("eval-valid")
-    p.add_argument("--arm", choices=list(src.ORGANIZATION_MODES), default=src.ORGANIZED)
+    p.add_argument("--arms", nargs="+", choices=list(src.ORGANIZATION_MODES), default=[src.ORGANIZED])
     p.set_defaults(func=cmd_eval_valid)
 
     p = sub.add_parser("mechanism")
