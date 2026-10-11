@@ -201,19 +201,22 @@ def graph_from_data(data: Any):
 # ---------------------------------------------------------------------------
 
 
-def bucket_collision_stats(color_rows: Iterable[Sequence[str]]) -> dict[str, Any]:
+def bucket_collision_stats(color_rows: Iterable[Sequence[Sequence[str]]]) -> dict[str, Any]:
     """Distinct signatures vs occupied buckets per radius (diagnostic only).
 
-    A collision means two distinct rooted-fragment signatures land in the same
-    fixed bucket.  This count is reported, never used to change the frozen
+    ``color_rows`` is an iterable of ``colors_per_radius`` outputs: one entry
+    per molecule, each a list over radii of per-atom colour lists.  A collision
+    means two distinct rooted-fragment signatures land in the same fixed
+    bucket.  This count is reported, never used to change the frozen
     1024-bucket width this round.
     """
     distinct = [set() for _ in WL_RADII]
     occupied = [set() for _ in WL_RADII]
     for colors in color_rows:
-        for r, color in enumerate(colors):
-            distinct[r].add(color)
-            occupied[r].add(bucket_of(WL_RADII[r], color))
+        for r, color_list in enumerate(colors):
+            for color in color_list:
+                distinct[r].add(color)
+                occupied[r].add(bucket_of(WL_RADII[r], color))
     out: dict[str, Any] = {}
     for r, radius in enumerate(WL_RADII):
         n_sig = len(distinct[r])

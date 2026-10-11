@@ -122,7 +122,8 @@ def test_inconsistent_directed_bond_types_rejected():
 
 
 def test_collision_stats_shape():
-    colors = [["a0", "a1"], ["a0", "a2"], ["a0", "a1"]]
+    # realistic shape: one entry per molecule, each a list over radii of per-atom colours
+    colors = [[["a0", "a1"], ["b0", "b1"]], [["a0", "a2"], ["b0", "b2"]], [["a0", "a1"], ["b0", "b1"]]]
     stats = tw.bucket_collision_stats(colors)
     assert set(stats) == {f"r{r}" for r in tw.WL_RADII}
     for radius in tw.WL_RADII:
