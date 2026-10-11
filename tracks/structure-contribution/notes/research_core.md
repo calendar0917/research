@@ -170,3 +170,13 @@ XGBoost，则该生态位不成立。**
 ## 变更记录
 
 - 2026-10-10 初版：确立 §1–§10；H1/H2/H3 为待验证假设。
+- 2026-10-11 `cscl-strong-nongnn-predictor-v1`（强非 GNN 预测优先；用户授权的
+  新预注册轮）：在**不做** α/δ/γ 分解的前提下，给历史 Full-Y 骨架加入唯一一个
+  一次性的非迭代静态三体算子（中心 j + 两个不同的真实键邻居 i,k，端点无序；
+  每分子 [Σq; Σq²] 64 维拼到原 reader），检验三体联合统计是否构成现有 forward
+  不可表达的新增能力（Full-Y 的矩池化没有跨原子乘积项，Phase A 已验证）。
+  协议冻结于 `configs/strong_nongnn_predictor_v1.yaml`（提交后运行），判据带
+  dev ≤0.095 / 0.095–0.106 / >0.106（参照 0.11641）。单 seed 0、单模型、
+  不调参、不 full10k、official valid/test 不加载。Phase A CPU 审计、CPU 正确性门
+  （初始恒等/梯度活性/敏感性/接线对照）与历史 soup 只读回放门见
+  `results/strong_nongnn_predictor_v1/` 与 `notes/strong_nongnn_predictor_v1.md`。

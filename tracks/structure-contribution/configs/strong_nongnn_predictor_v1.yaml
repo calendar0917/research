@@ -1,0 +1,137 @@
+# cscl-strong-nongnn-predictor-v1 — frozen protocol constants (pre-registered).
+# Question: can the "strong non-GNN predictor" Full-Y model, augmented with a
+# one-shot (non-iterative) static chemical-bond triple interaction
+# (centre atom j + two distinct real-bond neighbours i,k, unordered endpoints),
+# beat the frozen historical Full-Y internal-dev MAE = 0.11641?
+# This file is written and committed BEFORE the single formal seed-0 run.
+
+protocol_id: cscl-strong-nongnn-predictor-v1
+candidate_name: FullY-StaticTriplet
+seeds_allowed: [0]                     # exactly one seed; seed 1 is forbidden
+single_formal_run: true
+
+split:
+  source: cscl_features.build_split_indices  # unchanged from cscl-v0/v1/v2
+  fit_inner: 7200
+  monitor: 800
+  dev: 2000
+  grouping: canonical SMILES (duplicates never cross sides)
+  official_valid_test: never loaded
+
+data_sources:
+  encoded_train: tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt
+  env_train: tracks/ksvd/results/e2e_dictenv_p1/cache/env_train.pt
+  legacy_prep_10k: tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/all_train_prep.npz
+  legacy_prep_use: >
+    ONLY as the inversion basis (patch/ctx/topo/anchor *_all_* standardizers)
+    to recover raw features from the all-10k-standardized caches, after an
+    invert+refit-on-all-10000 identity check (nondegenerate columns <= 1e-5).
+  fitted_objects: refit on fit_inner 7200 rows only (same code path as v2)
+
+triplet_construct:
+  definition: >
+    For every molecule build the unique undirected set of real chemical bonds
+    (pair_bucket == 0, equivalently the deduplicated env bond list), sort by
+    (lo, hi), then enumerate every unordered endpoint pair {i,k} of the
+    neighbours of each centre j.  A triple is (j; i, k) with i != k, both
+    (i,j) and (k,j) real bonds; endpoint order is canonicalised (i < k) so
+    each physical triple occurs exactly once (no double counting, no
+    self-loops, no bidirectional duplicates).
+  n_triplets: sum_j deg(j)*(deg(j)-1)/2, computed per molecule
+  uses: static incidence only — no iteration, no message passing, no
+    neighbour-state updates, no attention / Transformer anywhere
+  atom_slots: env atom slots (E) of i, j, k [E_i, E_j, E_k]
+  bond_slots: static bond-type one-hots of (j,i) and (j,k)
+  features: [E_i || E_k 96 | E_j 32 | bond_sum 4 | bond_outer 16 | atom_cat(j) 28 | closure 1] = 177
+  closure_bit: 1 iff (i,k) is also a real bond (triangle closure), else 0
+
+model:
+  base_builder: e2e_dictenv_scale_v1.build_scale_model(spec=FULL)
+  base_parameters_expected: 408651
+  base_init: historical RNG stream preserved bit-for-bit (torch.manual_seed(0)
+    then the same construction order as the base model); all old parameters are
+    copied positionally bit-wise from the historical seed-0 construction.
+  new_component: StaticTripletOperator
+    env_proj: shared MLP input 177 -> 32 (projection of E_i, E_j, E_k)
+    mlp: 32 -> hidden 64 -> output 32 (SiLU)
+    init: private torch.Generator(seed = triplet_seed); never touches the base RNG
+  triplet_seed: 20261011
+  pooling: per-molecule sum(q) and sum(q^2)  -> 64 dims (no cross-atom products
+    beyond the per-triplet MLP, so this is not expressible by the base model's
+    moment pooling)
+  reader:
+    old_width: 814
+    new_width: 878
+    old_columns: copied bit-wise (first 814 columns of reader.net[0].weight,
+      full bias, deeper layers copied exactly)
+    new_columns: zero-initialised (all 64 new input columns start at 0.0)
+  frozen_mask: C6_MASK (clean-mechanism canonical; topology NOT zeroed)
+  non_gnn_audit: >
+    per-triplet shared MLP over static atom slots + static bond-type one-hots,
+    then graph-level moment pooling into the existing reader.  No message
+    passing, no iterative refinement, no attention.
+
+initial_equivalence:
+  requirement: augmented model prediction equals the historical Full-Y on any
+    batch at step 0 within 5e-5
+  rationale: new reader columns are exactly zero, so the new branch is inert at
+    initialisation; any deviation is a wiring bug, not a modelling effect.
+
+training:
+  supervision: raw y L1  (raw units; no target standardization)
+  auxiliary_loss: label-free structural reconstruction (CSSD residual), same
+    frozen lambda as v2; disclosed
+  h1_lambda_frozen: 33.95873017865987
+  optimizer: Adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  batch_size: 128
+  epochs_fixed: 240            # no early stop (same budget as the Full-Y reference)
+  train_shuffle_offset: 101    # train_gen = seed + 101 (historical)
+  monitor_eval_every: 1 epoch, raw-y MAE on monitor 800 (selection only)
+  fresh_training: true         # from scratch; never warm-started from the
+                               # historical soup (only the initialisation
+                               # constants are shared, per initial_equivalence)
+
+checkpoint_selection_frozen:
+  primary: top-5 monitor-epoch parameter soup (ties -> earlier epoch, mean of
+    the 5 states) -> THE reported dev MAE
+  secondary: single best-monitor-epoch checkpoint
+  tertiary: last-epoch (240) state
+  no_dev_based_selection: true
+
+judgment_band_frozen:
+  case_A: dev MAE <= 0.095   # strong breakthrough: stop the line, report
+  case_B: 0.095 < dev MAE <= 0.106  # directional gain vs 0.11641: report, no
+                                    # further tuning without a new protocol
+  case_C: dev MAE > 0.106    # no signal: stop this branch, do not replicate
+  reference_full_y_dev_mae: 0.11641
+  reference_source: results/feasibility_v2_gpu (historical Full-Y soup; frozen)
+
+discipline:
+  no_official_valid_test: true        # official valid/test are never loaded
+  no_seed_1: true
+  no_second_model: true
+  no_full10k_refit: true
+  no_hyperparameter_search: true
+  no_retraining: true                 # exactly one formal seed-0 GPU run
+  no_test_set_tuning: true
+  compute_trace: atom indices, env slots, bond ids, triplet ids and pooled
+    summaries are exported (local analysis only) for future interpretation work
+
+evaluation:
+  metric: internal dev raw-y MAE
+  paired_analysis: per-molecule bootstrap vs historical Full-Y (2000 resamples,
+    seed 0)
+  subgroups: y <= -3, atom-count median split, cyclomatic complexity buckets,
+    has_UNK (recomputed read-only), triplet-count statistics
+  frozen_ablations: zero_summary, zero_endpoint_env, zero_center_env,
+    zero_atom_type, zero_closure, zero_bond_types, cyclic_bond_types
+  official_valid_test: never loaded
+
+compute:
+  host: res (pool res-gpu1)
+  device: CUDA_VISIBLE_DEVICES=1
+  runner: rr run tracks/structure-contribution/code/run_strong_predictor_v1.py
+    train --device cuda:0 --seed 0

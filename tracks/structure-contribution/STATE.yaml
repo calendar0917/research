@@ -1,9 +1,9 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-v3d-frozen-official-eval
-current_round: cscl-v3d-frozen-official-eval
-next_round_candidate: "STOPPED per protocol: frozen-version terminal evaluation complete (official valid/test scored ONCE; test MAE F 0.11410 / O 0.11349 / S 0.12511; strong_support band met; O-F statistically equivalent within [-0.01,+0.01] on test). This test result must NOT be reused to claim independence for any future configuration. Open questions needing a NEW preregistration + authorization: cross-seed stability, capacity-matched attribution control, additive-readout expression boundary."
+phase: cscl-strong-nongnn-predictor-v1
+current_round: cscl-strong-nongnn-predictor-v1
+next_round_candidate: "cscl-strong-nongnn-predictor-v1 (new user-authorized round; frozen protocol configs/strong_nongnn_predictor_v1.yaml): build the strong non-GNN predictor first (no alpha/delta/gamma decomposition) — historical Full-Y plus ONE new static non-iterative chemical-bond triplet operator (centre + two real-bond neighbours; [sum q; sum q^2] appended to the reader). Single formal seed-0 run on res GPU1; pre-frozen bands dev<=0.095 / <=0.106 / >0.106. Official valid/test stay unloaded. The v3d frozen-version test result must NOT be reused to claim independence for this configuration."
 updated: 2026-10-11
 
 track:
@@ -29,8 +29,11 @@ constraints:
   - GPU 正式实验仅 `res` GPU1 (pool res-gpu1, 进程内 cuda:0)，经 rr
 
 next_action: >-
-  实现 RINGCHAIN-v0 划分与 A/B/C/D/E 五臂 → CPU 标签盲数据审计（§8 触发线）
-  → 测试 → seed-0 冒烟 → GPU1 正式 seeds {0,1}。
+  cscl-strong-nongnn-predictor-v1: commit the frozen protocol/driver/tests →
+  rr deploy res (pool res-gpu1) → ONE formal seed-0 training (240 ep) →
+  rr pull → local analyze (subgroups + frozen ablations + provenance export) →
+  final report. No seed 1, no second model, no hyper-parameter search,
+  official valid/test never loaded.
 
 results_index:
   - path: results/cscl_v0_units_audit/audit.json
@@ -515,3 +518,55 @@ round_cscl-v3d-frozen-official-eval:
       - "CSCL-v3d training/analysis never loaded official valid/test (train json discipline false; encoded_valid audit official_test_loaded=false); all fitted objects from fit_inner 7200; frozen before this round's read"
     accurate_claim: "frozen-version terminal evaluation, NOT a project-wide first blind test"
   test_result_status: "one-time; belongs to this frozen version only; must never be reused to claim independence for a future configuration"
+
+# ---------------------------------------------------------------------------
+# round: cscl-strong-nongnn-predictor-v1 (strong non-GNN predictor first; single
+# authorized new component: one static non-iterative chemical-bond triplet op)
+# ---------------------------------------------------------------------------
+
+round_cscl-strong-nongnn-predictor-v1:
+  protocol: configs/strong_nongnn_predictor_v1.yaml (frozen before the formal run)
+  notes: notes/strong_nongnn_predictor_v1.md
+  driver: code/run_strong_predictor_v1.py (prep/cpu-gates/replay/train/analyze)
+  new_model: code/static_triplet_operator.py (StaticTripletFullY + StaticTripletOperator)
+  phase_a_audit: results/strong_nongnn_predictor_v1/phase_a_s0.json
+  question: >-
+    Can the historical strong non-GNN skeleton Full-Y (no alpha/delta/gamma
+    decomposition) plus ONE one-shot non-iterative triplet interaction
+    (centre j + two distinct real-bond neighbours i,k, unordered endpoints)
+    cross the pre-frozen internal-dev bands (<=0.095 / <=0.106 / >0.106)
+    against the frozen reference 0.11641?
+  triplet_construct: bond set = pair_bucket==0 == dedup env bonds (0 mismatch /
+    0 duplicate / 0 self-loop on all 10k; max degree 4); wedges per centre;
+    count = sum_j deg(j)(deg(j)-1)/2 (dev 69,453 total; no molecule with 0)
+  phase_a_findings:
+    - Full-Y soup fit 0.04220 / monitor 0.11826 / dev 0.11641 (train keeps
+      falling to 0.0652@240 while monitor plateaus 0.123-0.155 -> the bottleneck
+      is representation/generalisation, gap ~0.074)
+    - y<=-3 (6.4% of molecules) carries ~17.3% of dev error mass; corr(|e|,y)=-0.30
+    - base forward cannot express triplet statistics: pool_moments /
+      pool_pair_moments only do [sum x, sum x^2, log count], no cross-atom
+      products
+    - historical high-order routes audited read-only (PSD-v0 pair-state failed;
+      GSCN-v0 dictionary kernel rejected; BAT-v1 triples+reader 0.12300 vs band
+      0.120 no signal; BAT-joint-tune train -18% but valid flat; JointBond
+      inert/collapsed; RoleCorr/typed-cycle/TCCD mechanism-only). This round
+      differs: live E, real-bond/closure semantics, joint end-to-end training,
+      zero-initialised new reader columns.
+  cpu_gates (results/strong_nongnn_predictor_v1/cpu_gates_s0.json, all pass):
+    init identity max|dpred| 1.79e-7 <= 5e-5 (shared params bit-identical, new
+    columns all zero); reader-new-column grad live at step 1; triplet module grad
+    live at step 2; zero_summary |dpred| 0.012; zero-column wiring 1.8e-7 vs
+    random-column 0.123; batch invariance 6.0e-7; y-independence exact;
+    save/load bit-identical; non-GNN scan clean; params 429,259 = 408,651 + 18,112
+    (triplet) + 2,496 (reader new columns)
+  replay_gate (results/strong_nongnn_predictor_v1/replay_full_y_soup.json):
+    read-only frozen Full-Y soup on dev 2000: enhanced-vs-reference max|dpred|
+    4.77e-7; vs saved dev preds 1.91e-6; replayed dev MAE 0.1164130 vs saved
+    0.1164130
+  frozen_bands: {A: "<=0.095 stop+report", B: "0.095-0.106 report, no tuning",
+    C: ">0.106 stop the branch"}
+  discipline: seed 0 only; no second model; no full10k refit; no hyper-parameter
+    search; no retraining; official valid/test never loaded; supervision raw y L1
+    + disclosed label-free reconstruction auxiliary (h1 lambda 33.95873017865987)
+  status: "awaiting the single formal res GPU1 seed-0 training run"
