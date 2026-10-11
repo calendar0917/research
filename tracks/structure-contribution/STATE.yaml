@@ -1,9 +1,9 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-strong-nongnn-predictor-v1-completed
-current_round: cscl-strong-nongnn-predictor-v1
-next_round_candidate: "STOPPED per pre-frozen rule (case C): the single authorized static-triplet experiment on Full-Y gave soup dev 0.11589 vs historical 0.11641 (paired CI [-0.0053,+0.0041] crosses zero; > 0.106 band) -> no signal; no seed 1, no second model, no tuning, no retraining. Official valid/test were never loaded in this round. Any future high-order/triplet variant or capacity-matched control needs a NEW preregistration + user authorization; the v3d official test numbers must not be reused for independence claims."
+phase: cscl-strong-representation-readout-screen-v1-completed
+current_round: cscl-strong-representation-readout-screen-v1
+next_round_candidate: "STOPPED per pre-frozen rule (case D): both CPU candidates failed the first signal (monitor <= 0.10826): XGB-A Typed-WL monitor 0.34104 / dev 0.36880 (+0.25239 vs Full-Y 0.11641), XGB-B frozen-814 XGB monitor 0.20334 / dev 0.19727 (+0.08085); paired CIs entirely positive, robust to trimming. No seed 1, no third model, no tuning (tree depth/lr/trees/radius/hash width), no full-8000/10000 refit, no feature fusion, no official valid/test. Next prediction work needs a NEW preregistration + user authorization; candidate directions: full training budget, learned readout/regularisation over the Full-Y representation, label-blind screening of new structural priors, other non-GNN architectures."
 updated: 2026-10-11
 
 track:
@@ -14,7 +14,7 @@ track:
   protocol: notes/v0_protocol.md          # cscl-v0 预注册（冻结后再看结果）
   prior_work: notes/prior_work_positioning.md
 
-current_round: cscl-v3d-distance-conditioned-contribution
+current_round: cscl-strong-representation-readout-screen-v1
 hypotheses:
   H1: B(加性+真实关系) > A 且 B > C(关系打乱) 且 B 接近 D(不透明) —— 未验证
   H2: 可辨识性约束(参数分离+中心化+惩罚)使 α/δ/γ 分工跨 seed 稳定 —— 未验证
@@ -573,3 +573,94 @@ round_cscl-strong-nongnn-predictor-v1:
     subgroups: "all paired CIs cross zero; small/low-ring molecules slightly worse, large molecules slightly better (no reproducible subgroup gain)"
     artifacts_postrun: "results/strong_nongnn_predictor_v1/{train_FullY-StaticTriplet-seed0.json, static_triplet_s0_soup_state.pt, static_triplet_s0_dev_preds.npz, static_triplet_s0_monitor_preds.npz, analysis_s0.json, provenance_dev_s0.npz (2000 mols / 46,507 atoms / 49,999 bonds / 69,453 triplets), rr_run/}"
   official_valid_test_loaded: false (both splits; not re-evaluated in this round)
+
+# ---------------------------------------------------------------------------
+# round: cscl-strong-representation-readout-screen-v1 (Typed-WL structural
+# counts vs a new readout over the frozen Full-Y 814-dim reader input; CPU only)
+# ---------------------------------------------------------------------------
+
+round_cscl-strong-representation-readout-screen-v1:
+  protocol: configs/strong_representation_readout_screen_v1.yaml (frozen commit 7c0d84c before any fit)
+  report: notes/strong_representation_readout_screen_v1.md
+  driver: code/run_representation_readout_screen_v1.py (audit/train/analyze) + code/typed_wl_features.py (Arm A)
+  tests: tests/test_representation_readout_screen_v1.py (14 passed)
+  question: >-
+    Given Full-Y stuck at internal dev ~0.116 and the neutral static-triplet
+    result, should the next stage buy a NEW CHEMICAL STRUCTURE REPRESENTATION
+    (Arm A: Typed-WL / Morgan-style rooted-fragment counts, 4096) or a NEW
+    READOUT over the EXISTING representation (Arm B: the exact 814-dim reader
+    input of the frozen Full-Y soup)?  Two pre-purchased CPU candidates, one
+    fixed XGBoost recipe, seed 0, one formal fit per arm, model+monitor lock
+    before the single dev evaluation.
+  phase_a_audit (results/strong_representation_readout_screen_v1/phase_a_protocol_audit.json): >-
+    split row hashes 7200/800/2000 identical to the frozen cscl-v0 split and
+    historical prep meta; SMILES groups never cross sides (4 duplicate row
+    pairs all same-side); raw y identical to historical Full-Y exports
+    (max diff 0.0); dataset<->encoded-cache alignment y 0.0 / atom mismatches
+    0; A/B same rows and same y; official valid/test and old target components
+    never loaded; no fitted transform outside fit_inner; dev not used for any
+    feature/parameter choice.  Engineering note: the first audit run failed
+    the frozen-Full-Y replay gate (dev max|dpred| 0.168) because
+    apply_prep_fit7200 was missing; after reproducing the historical
+    preprocessing path the replay matched.
+  arm_a_features (typed_wl_feature_audit.json): >-
+    label-blind sha256 Typed-WL counts r=0..3 x 1024 buckets + raw global30 +
+    verified raw topology25 = X_A (10000, 4151) sha 085d0256...; count
+    conservation exact (max dev 0.0); permutation/dedup/bond-exchange/
+    radius-independence/VF2-isomorphism checks all pass; collisions r0 14.3%
+    (21->18), r1 18.5% (476->388), r2 91.5% (12108->1024), r3 98.4%
+    (63032->1024) - diagnostic only, width unchanged; global30 recompute vs
+    cache inversion 9.54e-07; topology25 CSV vs inversion 6.1035e-05 exactly
+    equal to the historical topology25_audit record.  Data fact: same
+    canonical SMILES does not imply the same raw ZINC atom_type codes
+    (rows 941/2264 differ in bins 6/9), while VF2-isomorphic duplicate pairs
+    (3 checked) share identical descriptors.
+  arm_b_features (fully_reader_input_replay.json): >-
+    reader pre-forward hook on AuditModel.forward(mask=C6_MASK), eval +
+    no_grad, backbone frozen; X_B (10000, 814) sha f151284e...; reader
+    recompute max|d| 0.0; batch grouping 1.91e-06; y-independence 0.0;
+    topology row alignment 0.0; C6 count blocks zero; checkpoint sha
+    75d1737c... unchanged; replay dev MAE 0.1164130 vs saved 0.1164130
+    (max|dpred| 1.91e-06) and monitor 0.1182581 vs saved (1.67e-06).
+  frozen_xgb_recipe: >-
+    DEFAULT_XGB_PARAMS exactly: 500 x depth 6 x lr 0.03, min_child_weight 3,
+    subsample/colsample 0.8, lambda 1.0, alpha 0.0, reg:squarederror,
+    eval_metric mae, hist, random_state 0, n_jobs 8; 500 trees fully trained,
+    no early stopping, no refit, no seed 1, no GPU.  Disclosure: L2 training
+    objective vs MAE metric deliberately kept as the historical recipe.
+  cpu_result:
+    mae: {XGB_A: {fit: 0.24654, monitor: 0.34104, dev: 0.36880},
+          XGB_B: {fit: 0.06367, monitor: 0.20334, dev: 0.19727},
+          historical_FullY: {fit: 0.04220, monitor: 0.11826, dev: 0.11641},
+          historical_Obucket: {fit: 0.03641, monitor: 0.11794, dev: 0.11610}}
+    deltas: {A_minus_FullY: "+0.25239 [+0.23707,+0.26828]", B_minus_FullY: "+0.08085 [+0.07116,+0.09121]", A_minus_B: "+0.17154 [+0.15515,+0.18790]"}
+    frac_better_than_FullY: {A: 0.1835, B: 0.3225}
+    gaps: {A_fit_monitor: 0.09450, B_fit_monitor: 0.13967, FullY_historical_fit_monitor: 0.07606}
+    subgroups: >-
+      no subgroup where either arm beats Full-Y; B beats A everywhere but is
+      still +0.0685 on y>-3 and +0.2622 on y<=-3; B error >2x Full-Y on
+      44.35% of dev molecules; both arms robust to trimming the top-10 errors.
+    feature_shift_fit_to_monitor: {A_median: 0.0091, B_median: 0.0152, frac_shift_gt_1: 0.0}
+    historical_context: >-
+      cscl-v1 screen XGB on rich573 dev 0.3717 (600x0.05 recipe) and v1
+      RINGCHAIN 923-dim dev 0.4532 -> XGB-A 0.3688 sits on the same static-
+      feature plateau despite 4151 typed-WL dimensions.
+    monitor_signal_threshold: 0.10826 (both arms far above)
+    judgment_band: case_D (stop; no signal)
+    decision: >-
+      STOP the round.  Neither a new Typed-WL static representation nor a
+      fixed shallow-tree readout over the frozen Full-Y representation
+      provides an internal generalization gain; the evidence is stronger
+      against replacing the MLP reader than for a new structural feature
+      route, but the tree capacity/objective and the two-stage supervision
+      remain confounds.  No GPU purchase justified by this round.
+  artifacts: >-
+    results/strong_representation_readout_screen_v1/ (git-ignored):
+    phase_a_protocol_audit.json, typed_wl_feature_audit.json,
+    fully_reader_input_replay.json, xgb_A_train_metrics.json,
+    xgb_B_train_metrics.json, xgb_{A,B}_dev_metrics.json,
+    xgb_{A,B}.json, xgb_{A,B}_preds_{fit,monitor,dev}.npz, lock.json,
+    main_table.json, paired_comparison.json, subgroup_analysis.json,
+    decision.json, features/{x_a.npy,x_b.npy,feature_hashes.json}
+  official_valid_test_loaded: false (both splits)
+  gpu_used: false
