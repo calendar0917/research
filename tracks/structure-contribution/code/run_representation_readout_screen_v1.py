@@ -352,7 +352,10 @@ def run_phase_a_audit(
         "audited_claims": {
             "A_fit_monitor_dev_rows_identical_to_historical": True,
             "B_canonical_smiles_groups_do_not_cross_splits": grouping_ok,
-            "C_raw_y_labels_match_historical_full_y_replay": bool(hist_mae["full_y_dev_export"] < 1e-4),
+            "C_raw_y_labels_match_historical_full_y_replay": bool(
+                abs(hist_mae["full_y_dev_export"] - REF["full_y"]["dev"]) <= 1e-4
+                and abs(hist_mae["full_y_monitor_export"] - REF["full_y"]["monitor"]) <= 1e-4
+            ),
             "D_AB_train_and_eval_use_same_molecules_and_same_y": max(arm_y_identity.values()) == 0.0,
             "E_features_from_raw_graph_or_frozen_full_y": True,
             "F_official_valid_test_not_read": True,
