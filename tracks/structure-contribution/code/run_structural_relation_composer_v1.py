@@ -555,9 +555,9 @@ def _shuffle_batches(n: int, batch_size: int, generator: torch.Generator) -> lis
 
 
 def _last_soup(states: list[dict[str, torch.Tensor]], last_epoch: int) -> tuple[list[int], dict[str, torch.Tensor]]:
-    """Parameter mean of the final ``SOUP_LAST`` epoch states."""
-    assert len(states) == SOUP_LAST, len(states)
-    members = list(range(last_epoch - SOUP_LAST + 1, last_epoch + 1))
+    """Parameter mean of the final ``SOUP_LAST`` epoch states (or fewer in smoke)."""
+    assert 0 < len(states) <= SOUP_LAST, len(states)
+    members = list(range(last_epoch - len(states) + 1, last_epoch + 1))
     keys = states[0].keys()
     soup = {k: torch.stack([s[k].float() for s in states]).mean(0) for k in keys}
     return members, soup
