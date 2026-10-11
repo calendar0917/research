@@ -1,0 +1,190 @@
+# cscl-strong-representation-readout-screen-v1 — frozen protocol constants.
+# This file is written and committed BEFORE the two formal CPU fits.
+#
+# Question (two pre-purchased CPU candidates, identical XGBoost recipe):
+#   Given that the strong non-GNN Full-Y skeleton stays at internal dev
+#   MAE ~0.116 and the one-shot static-triplet increment was neutral, should
+#   the next stage buy a NEW CHEMICAL STRUCTURE REPRESENTATION
+#   (Arm A: Typed-WL / Morgan-style count features) or a NEW READOUT over the
+#   EXISTING representation (Arm B: frozen Full-Y 814-dim pooled reader input)?
+#
+# This round is a CPU prediction-mechanism screen, NOT a CSCL interpretability
+# experiment and NOT a formal GPU training round.  It produces internal
+# directional evidence only; it does not claim any benchmark target.
+
+protocol_id: cscl-strong-representation-readout-screen-v1
+seeds_allowed: [0]                     # exactly one seed; seed 1 is forbidden
+single_fit_per_arm: true               # one formal fit per arm, no re-fits
+
+split:
+  source: cscl_features.build_split_indices   # unchanged from cscl-v0/v1/v2
+  fit_inner: 7200
+  monitor: 800
+  dev: 2000
+  grouping: canonical SMILES (duplicates never cross sides)
+  official_valid_test: never loaded
+  frozen_row_hashes_expected:
+    fit_inner: ff1fb939f32201f0752761f9789ad49d1869346a1735d8b4ff9538d6b8068609
+    monitor: 835012403f22fedb4d3783872457e1019895bc54e0b27c825cf9f09979a7503f
+    dev: 53fe48f81031e0c2d55c028ee6fb42fda92a8c9faff8fd16bd6de1a08c48bd88
+
+data_sources:
+  official_train_rows: PyG ZINC subset=True official train (10,000), rows only
+  encoded_train: tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt
+  env_attach: tracks/ksvd/results/e2e_dictenv_p1/cache/env_train.pt (Full-Y inputs)
+  legacy_prep_10k: tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/all_train_prep.npz
+  legacy_prep_use: >
+    inversion basis ONLY (ctx_all / topo_all standardizers) to recover the raw
+    label-free global-structure (30) and topology25 values from the
+    all-10k-standardized encoded cache; the recovered raw values are
+    independently cross-checked against fresh raw-graph recomputation
+    (global30 via zinc_long_range_proxy._global_structure_blocks) and the
+    committed raw topology cache CSV (hinge mode) for every row.
+  frozen_full_y:
+    soup_state: tracks/structure-contribution/results/feasibility_v2_gpu/full_y_seed0_soup_state.pt
+    prep: tracks/structure-contribution/results/feasibility_v2_gpu/prep_fit7200.npz
+  no_old_target_components: g / ell / s / c / SA / logP are never loaded
+
+arm_A_typed_wl:
+  feature_name: Typed-WL / Morgan-style structural count
+  definition: >
+    deterministic non-learned rooted-fragment counts over the raw attributed
+    molecular graph (atom category x, unique undirected bonds from
+    edge_index / edge_attr only).
+  colors:
+    color_0: atom category of the root
+    color_r_plus_1: stable_hash(color_r(v), sorted_multiset{(bond_type(v,u), color_r(u))})
+  radii: [0, 1, 2, 3]
+  buckets_per_radius: 1024
+  hash: SHA256-derived 64-bit integer modulo 1024; radius is part of the hash
+    input (independent hash space per radius); Python built-in hash() forbidden
+  count_rule: one count per rooted fragment occurrence (counts, not binary)
+  wl_dim: 4096
+  global_structure_dim: 30        # raw structure_short(15) + structure_long(15)
+  topology_dim: 25                # raw verified topology25 hinge vector
+  total_dim: 4151
+  total_dim_formula: 4*1024 + 30 + 25
+  feature_only_inputs: raw molecule graph + label-free global/topology
+    structural descriptors; never y, never old targets, never model outputs
+
+arm_B_frozen_reader_input:
+  feature_name: Frozen Full-Y pooled reader input
+  source_model: historical seed-0 Full-Y soup (feasibility_v2_gpu)
+  forward_path: AuditModel.forward(data, mask=C6_MASK) — full C6_MASK path
+  extraction: reader pre-forward hook captures the exact tensor consumed by
+    self.reader; no second training stage on the backbone; model in eval()
+    under torch.no_grad(); backbone parameters never updated
+  expected_dim: 814
+  layout: "[unary 289 | relation_readout 5*97=485 | graph_hidden 32 | topology 8]"
+  forbidden: reader output, y, residuals, errors, old target components,
+    monitor/dev labels fed back into feature computation, dev-based feature
+    selection, any backbone gradient step
+
+frozen_xgboost_recipe:
+  source: tracks/ksvd/experiments/luyin16/zinc_long_range_proxy.DEFAULT_XGB_PARAMS
+  params:
+    n_estimators: 500
+    max_depth: 6
+    learning_rate: 0.03
+    min_child_weight: 3
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_lambda: 1.0
+    reg_alpha: 0.0
+    objective: reg:squarederror
+    eval_metric: mae
+    tree_method: hist
+    random_state: 0
+    n_jobs: 8
+  disclosure: >
+    the historical fixed recipe trains with squared error (reg:squarederror)
+    even though evaluation is MAE; this round keeps it unchanged to avoid
+    choosing a more favourable objective after seeing results.
+  protocol:
+    fit_A: XGB-A.fit(X_A[fit_inner], y[fit_inner])
+    fit_B: XGB-B.fit(X_B[fit_inner], y[fit_inner])
+    n_trees: 500 complete (no early stopping, monitor never selects tree count)
+    no_refit_full_8000_or_10000: true
+    no_second_seed: true
+    no_gpu: true
+    no_ensemble: true
+    no_residual_regression: true
+    no_extra_features_or_supervision: true
+
+lock_before_dev:
+  requirement: >
+    features fixed, model config fixed, fits completed, fit/monitor predictions
+    saved, model + feature hashes saved — all BEFORE the first dev metric is
+    computed.  dev is computed once, afterwards, in a separate analysis mode.
+  artefacts:
+    - features/x_a.npy + features/x_b.npy + features/feature_hashes.json
+    - xgb_A.json / xgb_B.json
+    - xgb_A_train_metrics.json / xgb_B_train_metrics.json (fit/monitor only)
+    - lock.json (feature hashes + model hashes + fit/monitor predictions hashes)
+
+evaluation:
+  metric: internal raw-y MAE (lower is better)
+  reference_historical:
+    full_y_fit: 0.04220
+    full_y_monitor: 0.11826
+    full_y_dev: 0.11641
+    o_bucket_fit: 0.03641
+    o_bucket_monitor: 0.11794
+    o_bucket_dev: 0.11610
+  reported:
+    - fit / monitor / dev MAE per arm
+    - "DeltaA = MAE(XGB-A) - MAE(Full-Y); DeltaB = MAE(XGB-B) - MAE(Full-Y)"
+    - "MAE(XGB-A) - MAE(XGB-B)"
+    - fit-monitor gap, fit-dev gap per arm
+    - median absolute error, p90 / p95 absolute error, RMSE (auxiliary)
+    - subgroups y<=-3 / y>-3; atom-count bins [0,15) [15,22) [22,30) [30,inf);
+      cyclomatic bins [0,1) [1,2) [2,3) [3,4) [4,inf); has_UNK / no_UNK using
+      the frozen fit-only RINGCHAIN vocabulary (min_count=3 fit on fit_inner)
+    - B fit->monitor feature distribution shift (fit std as unit)
+  paired_dev:
+    statistic: "signed per-molecule difference d_i = |pred_A_i - y_i| - |pred_B_i - y_i|"
+    bootstrap_resamples: 2000
+    bootstrap_seed: 0
+    ci: 95% percentile
+    also: A-vs-Full-Y and B-vs-Full-Y paired signed absolute-error differences
+
+judgment_rules_preefrozen:
+  monitor_signal_threshold: 0.10826   # historical Full-Y monitor 0.11826 - 0.01
+  dev_signal:
+    direction: "signed paired difference vs Full-Y dev: Delta < 0"
+    statistical: "paired bootstrap 95% CI upper bound < 0"
+    material: "Delta <= -0.005 (about 4% relative on 0.11641)"
+  arm_has_strong_signal: >
+    monitor_mae <= 0.10826 AND dev paired CI upper < 0 AND Delta <= -0.005
+  case_A_typed_wl_preferred: >
+    XGB-A has strong signal AND (XGB-A dev MAE - XGB-B dev MAE) < 0 with
+    paired CI upper < 0
+  case_B_frozen_readout_preferred: >
+    XGB-B has strong signal AND XGB-A does not have strong signal
+  case_C_both: "both arms have strong signal -> report both, pick no fusion"
+  case_D_stop: "neither arm has strong signal -> stop the round, no extra models"
+  note: >
+    cases are evaluated mechanically from the frozen rule; a dev improvement is
+    internal directional evidence only because dev has been reused across CSCL
+    rounds.
+
+compute:
+  device: cpu
+  threads_cap: 8
+  np_jobs: 8
+  no_gpu: true
+
+discipline:
+  no_official_valid_test: true
+  no_old_task_component_targets: true
+  no_fitted_transform_outside_fit_inner: true
+  no_dev_based_feature_or_param_selection: true
+  no_hyperparameter_search: true
+  no_optuna_cv_or_auto_feature_selection: true
+  no_radius_combination_search: true
+  no_multiple_hash_widths: true
+  no_multiple_objectives: true
+  no_tree_depth_or_lr_or_tree_count_trials: true
+  no_model_after_seeing_dev: true
+  no_further_triplet_or_new_component: true
+  stop_after_this_round: true
