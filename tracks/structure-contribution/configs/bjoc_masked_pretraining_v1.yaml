@@ -1,0 +1,193 @@
+# cscl-bjoc-masked-pretraining-v1  (pre-registration; frozen before any GPU)
+#
+# Track: tracks/structure-contribution
+#
+# ONE scientific question: without extra y labels, without extra molecules and
+# without changing the downstream BJOC-Null architecture/recipe, does strictly
+# leak-free masked atom/bond structural pretraining of the three BJOC encoders
+# improve the way the model uses the existing 8k labelled molecules?
+#
+# Everything runs inside the official train 10000.  Official valid/test are
+# never loaded.  One pretext task only; no mask-ratio / length / head search.
+
+protocol: cscl-bjoc-masked-pretraining-v1
+status: frozen
+frozen_utc: "2026-10-13"
+official_splits: never_read
+
+question: >
+  At a fixed downstream recipe (BJOC-Null, 413,505 parameters, raw-y L1,
+  15120 optimizer updates, last-5 soup) and with no extra labelled molecules,
+  does a self-supervised initialization of the atom/bond/junction encoders
+  from masked raw atom/bond reconstruction on the same 8k Fit molecules
+  improve held-out raw-y MAE, stably across two seeds, beyond (a) scratch
+  training and (b) a matched extra-supervision control?
+
+# ---------------------------------------------------------------- mask task
+mask:
+  atom_ratio: 0.15
+  bond_ratio: 0.15
+  atom_token: 27      # unused atom class inside ATOM_CATEGORIES = 28
+  bond_token: 0       # unused raw edge_attr class inside BOND_CATEGORIES = 4
+  token_scan: "Fit8k raw codes only; a conflict stops the round with MASK_TARGET_LEAKAGE_BLOCKED"
+  selection: "max(1, round(ratio * n)) objects per molecule, without replacement"
+  min_one_per_molecule: true
+  rng: "numpy.random.SeedSequence([seed, molecule_id, visit_index])"
+  independent_of_shuffle_rng: true
+  visit_index: "epoch counter of the pretraining stream"
+  physical_bonds_double_edge_sync: true
+  construction_rule: >
+    replace the raw codes on a COPY of the raw PyG arrays, then rebuild every
+    BJOC object field from the masked raw graph with
+    structural_relation_objects_v1.build_mol_objects (full rebuild).
+    No incremental feature patch; no feature derived from the hidden truth
+    survives in the model input.
+
+pretext:
+  task: "masked raw atom-type + masked physical bond-type reconstruction"
+  loss: "CE(masked atoms, 28-way) + CE(masked physical bonds, 4-way); weights 1.0/1.0"
+  backbone: ["atom_encoder", "bond_encoder", "junction_encoder"]   # published BJOC encoders
+  heads: ["atom_head", "bond_head"]                                # shared MLP, discarded after pretraining
+  atom_head_context: ["masked atom embedding", "sum of incident bond embeddings", "sum of junctions centred at the atom", "sum of junctions having the atom as an endpoint"]
+  bond_head_context: ["masked bond embedding", "endpoint atom sum", "absolute endpoint difference", "endpoint product", "sum of junctions touching the bond"]
+  no_extra_message_passing: true
+  updates: 7560
+  batch_size: 128
+  optimizer: adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  precision: fp32
+  checkpoint_rule: "last-step encoder state only; reconstruction accuracy never selects a checkpoint"
+
+# ------------------------------------------------------------------- split
+split:
+  builder: "canonical-SMILES groups ordered by sha256(salt|smiles), greedy fill fit/monitor/locked"
+  salt: cscl-bjoc-maskpretrain-v1-A
+  fit_target: 8000
+  monitor_target: 1000
+  locked_target: 1000
+  read_discipline:
+    fit_y: "training only"
+    monitor_y: "standard training-time readout + the frozen purchase-gate read"
+    locked_y: "read exactly ONCE after every prediction file is written and hashed"
+    official_valid_test: never
+  pretraining_data_boundary: "Fit8k raw graphs only; monitor/locked/official graphs are never used in pretraining"
+
+# -------------------------------------------------------- downstream recipe
+recipe:
+  optimizer: adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  precision: fp32
+  amp: false
+  scheduler: none
+  dropout: 0.0
+  loss: "L1 on raw y only"
+  soup_last: 5
+  train_shuffle_offset: 101
+  parameters_expected: 413505
+
+arms:
+  B:
+    init: scratch
+    epochs: 240
+    updates: 15120
+  P:
+    init: "three encoders from the frozen last-step pretrained state; group_composer/reader from the same scratch init as B"
+    epochs: 240
+    updates: 15120
+  C:
+    init: scratch
+    epochs: 360
+    updates: 22680
+    condition: "purchased only if every monitor purchase-gate check fires"
+  matched_initialization: >
+    per seed: B and P start from the same build_bjoc(seed) state; pretext heads
+    are initialised after the BJOC build and never modify it; B and P use the
+    same fit rows, loss, batch order (torch.Generator seed+101) and soup rule.
+  c_is_not_flop_matched: >
+    C adds 7560 supervised updates; it is an extra-supervision control, not a
+    FLOP- or wall-time-matched causal control.  Encoder updates, supervised
+    updates and GPU seconds are all reported.
+
+# ------------------------------------------------------- purchase gate
+purchase_gate:
+  readout: "monitor split, seed-mean paired over molecules, delta = MAE(P) - MAE(B)"
+  conditions_all_required:
+    - "seed-mean monitor delta <= -0.005"
+    - "both per-seed monitor deltas < 0"
+    - "ordinary molecules (y > -3) mean delta <= 0"
+    - "top-10-error-removed delta < 0"
+    - "paired molecule bootstrap direction supports improvement (CI95 upper < 0)"
+    - "no label leakage or protocol deviation (all correctness gates pass)"
+    - "pretraining actually changed the encoder parameters and fine-tuning started from the pretrained state"
+  if_not_all: "MASK_PRETRAIN_NO_COMPUTE_PURCHASE; C is never trained; status NOT_PURCHASED"
+
+# ------------------------------------------------------- primary endpoint
+locked_analysis:
+  bootstrap: {n_resamples: 5000, seed: 0, unit: molecule}
+  primary_contrast: "MAE(P) - MAE(B), seed-mean over the two seeds"
+  secondaries:
+    - "per-seed locked delta"
+    - "ordinary molecules (y > -3)"
+    - "tail (y <= -3)"
+    - "top-10-error-removed delta"
+    - "RMSE delta"
+    - "fit-locked gap"
+    - "C - B and P - C (if C purchased)"
+  top_k_removed_definition: "rows with the k largest max(|e_candidate|, |e_reference|) are removed before averaging the paired delta"
+  no_post_read_training: true
+
+# ------------------------------------------------------------- budget + bans
+budget:
+  wall_clock_minutes_total: 465
+  reserve_for_report_and_git_minutes: 35
+  gpu_hours_max: 2.0
+  gpus_max: 1
+  max_formal_stages: 8
+  no_full10k_final_training: true
+
+bans:
+  - "mask-ratio search; second pretext task; contrastive / distance / ring / graph-level pretexts"
+  - "changing pretraining length or selecting a checkpoint on reconstruction accuracy"
+  - "reading raw y during pretraining; teacher predictions; g/ell/s/c/k supervision"
+  - "external labelled or unlabelled data"
+  - "new GNN/Transformer/attention/iterative message passing modules"
+  - "changing the downstream BJOC input dims, encoder widths, composer, reader or null grouping"
+  - "official valid / official test access in any form; historical official-test 0.092233 for any decision"
+  - "using monitor or locked results to re-design the pretext task or the arms"
+  - "reporting a trimmed MAE as a headline score"
+  - "training C before the purchase gate fires; any automatic full-10k final training"
+
+decision_vocabulary:
+  - SELF_SUPERVISED_PRETRAINING_USEFUL
+  - PRETRAINING_ONLY_ACCELERATES_OPTIMIZATION
+  - PRETRAINING_NEGATIVE_TRANSFER
+  - PRETEXT_TASK_TRIVIAL_OR_LEAKING
+  - NO_USEFUL_TRANSFER
+  - INCONCLUSIVE_OR_BLOCKED
+
+# ------------------------------------------------------------- frozen plan
+# Written after the local CPU split/object/audit run and asserted by the remote
+# training commands before any GPU step.
+frozen:
+  frozen_block_version: 1
+  split_salt: cscl-bjoc-maskpretrain-v1-A
+  n_fit8k: 8000
+  n_monitor: 1000
+  n_locked: 1000
+  fit8k_sha256_rows: "22cd10eb51b0811b1bc62ca307ecbe60d160ed930539cd88b433c12af9f8f856"
+  monitor_sha256_rows: "414b7f6168b80f2dd35bfce543f5b04fcfc4c651a7614bc5c93a50f59da25421"
+  locked_sha256_rows: "9ff89564ff2c409e5b374ed836280f44c0447f24a9d4cc66362e84174a0c8b2f"
+  objects_fit8k_sha256: "dc0955f18d842f9f970a21427d96396bcf8f0fa8e6a131b167c8db8e0fa1d435"
+  objects_monitor_sha256: "e5b09ba8ec7c24f14c1fbb0c8095687f31ee2b7cba6fe9821bd3726dcdbb2cf8"
+  objects_locked_sha256: "8045a130b7deee3d07b476d1814c7b821d12e33c44599086a21938038d1bb6ad"
+  prep_fit8k_sha256: "168b42319841eeae6a65fc25594b1d9175856ad1d8c626d7898afc77f1157a62"
+  steps_per_epoch: 63
+  supervised_updates_B_P: 15120
+  supervised_updates_C: 22680
+  pretrain_updates: 7560
+  mask_tokens: {atom: 27, bond: 0}
