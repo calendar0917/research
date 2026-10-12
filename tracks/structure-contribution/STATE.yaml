@@ -1,9 +1,34 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-bjoc-masked-pretraining-v1-completed
-current_round: bjoc-masked-pretraining-v1
+phase: cscl-bjoc-full10k-pretraining-transfer-v1-completed
+current_round: bjoc-full10k-pretraining-transfer-v1
 next_round_candidate: >-
+  AWAITING USER AUTHORIZATION. The full-10k pretraining-transfer round is COMPLETE
+  (notes/bjoc_full10k_pretraining_transfer_v1.md,
+  results/bjoc_full10k_pretraining_transfer_v1/REPORT.md).  It ran the official train
+  10000 (SSL on structures + raw-y supervised training, no internal split) and read official
+  valid exactly once after all six prediction files were frozen.  Answer: masked atom/bond
+  pretraining CONFIRMED on official valid — P-B seed-mean -0.015653 (CI95 [-0.021051,-0.009904]),
+  both seeds negative (-0.015387/-0.015919), ordinary -0.017391, top-10-removed -0.015980,
+  valid:0172-removed -0.016400, P 0.083549 vs B 0.099202 (fresh same-GPU matched scratch
+  baseline; the historical B was not reused because the remote replay reference was absent, so B
+  was retrained in-round on the same GPU — the stronger matched baseline).  The conditional Q
+  (encoder LR 3e-4) was purchased (junction CKA SSL->P 0.1015/0.1268 < 0.75) and is decisively
+  harmful: Q-P +0.019484, tail +0.182, RMSE 0.541 vs 0.230, valid:0172 predicted at -7.95/-0.27.
+  Tail cost disclosed: y<=-3 n=65 P-B +0.009341 while ordinary improves; 61/100 of B's worst
+  rows persist.  Frozen decision FULL10K_PRETRAINING_GAIN_CONFIRMED_ON_DEV with flags
+  BULK_GAIN_WITH_TAIL_COST, ENCODER_LR_ADAPTATION_NOT_SUPPORTED.  NEXT (proposed, NOT
+  authorised): Route B — a new full-molecule composition mechanism, specifically a
+  count-conditioned whole-molecule scale calibration (label-free structural counts -> tiny
+  affine/multiplicative term on the object sum, no GNN/attention/iteration, no new
+  junction/3-/4-body modules, keeps alpha/delta/gamma decomposition and the full-LR
+  fine-tuned pretrained encoders).  Rationale: the SSL/exposure route is saturated (96.8
+  exposures/molecule, CE plateau, bond acc 0.994) and its bulk gain trades against the tail,
+  while the residual is a persistent scale-driven tail (65 molecules carry ~0.016 of MAE; fixing
+  it to the ordinary rate lands ~0.072, inside 0.06-0.07); Q proves encoder preservation is not
+  the lever.  No GPU work without a new preregistration + explicit user authorization.
+next_round_candidate_prev_pretraining: >-
   AWAITING USER AUTHORIZATION. The masked-pretraining round is COMPLETE
   (notes/bjoc_masked_pretraining_v1.md, results/bjoc_masked_pretraining_v1/REPORT.md).
   It asked whether strictly leak-free masked atom/bond pretraining of the three existing BJOC
@@ -1531,3 +1556,67 @@ round_cscl-bjoc-masked-pretraining-v1:
     - "training ran on commit 3a25521 (phase F) and 7261e77 (phase G); the latter diff is analysis-only; training-revision manifest preserved as training_manifest_at_phase_f.json"
     - "budget: 2 remote stages, 104.7 min wall on one A100 (~1.75 GPU-h of 2), well inside 7h45m and the 8-formal-stage cap"
   status: COMPLETED 2026-10-13; decision SELF_SUPERVISED_PRETRAINING_USEFUL; report written; recommendation route A (data efficiency / external unlabelled structures) awaiting authorization; no unauthorised follow-up purchased
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-full10k-pretraining-transfer-v1 (official train 10000, no
+# internal split; masked-structure SSL -> matched full-recipe fine-tune; one
+# official-valid read; conditional reduced-LR encoder arm Q purchased by a
+# label-blind junction-CKA gate)
+# ---------------------------------------------------------------------------
+
+phase: cscl-bjoc-full10k-pretraining-transfer-v1-completed
+current_round: bjoc-full10k-pretraining-transfer-v1
+next_round_candidate: >-
+  AWAITING USER AUTHORIZATION. Route B (count-conditioned whole-molecule scale calibration) as in
+  the top-level next_round_candidate of this file; see results/bjoc_full10k_pretraining_transfer_v1/REPORT.md.
+round_cscl-bjoc-full10k-pretraining-transfer-v1:
+  protocol: "configs/bjoc_full10k_pretraining_transfer_v1.yaml (preregistration commit 39f06e7; pre-GPU amendment 9ef5588: remote reuse audit cannot recompute the historical replay because the terminal prediction reference is not part of the deployed revision, so the GPU chains retrain B seed 0/1 on the same GPU with the identical frozen recipe)"
+  notes: notes/bjoc_full10k_pretraining_transfer_v1.md
+  report: results/bjoc_full10k_pretraining_transfer_v1/REPORT.md
+  code:
+    - code/run_bjoc_full10k_pretraining_transfer_v1.py  # objects/consistency/audit-dependency/audit-swap/rebuild-audit/gates/reuse-audit/stage-b/pretrain/train/predict/freeze-predictions/diagnostics/score/error-analysis/decision/init-audit + remote chains stage-remote-prep/stage-ssl-p/stage-q
+    - configs/bjoc_full10k_pretraining_transfer_v1.yaml    # frozen block: object/prep hashes, mask tokens 27/0, 7560 SSL updates, 240x79 downstream updates, Q gate, decision cases, bans
+  tests: tests/test_bjoc_full10k_pretraining_transfer_v1.py (16 fast; 2 skipped result-dependent)
+  data: >-
+    official train 10000 (SSL on structures + raw-y supervised; no internal split), official valid
+    1000 read exactly once, official test never loaded.  objects_train10k.pt 14326a7a...,
+    objects_valid.pt 61fca36a..., prep_train10k.json d0fb86a3...; remote rebuild byte-identical.
+  phase_a: >-
+    consistency all_pass (one disclosed WL train/valid shared fingerprint, train row 337 vs valid
+    row 376, no row deleted); mask tokens free on 10000/10000; 200/200 atom + 200/200 bond swap
+    invariance; 100/100 rebuild leak-free; 10/10 correctness gates; freeze manifest driver
+    40ec29443bec5f83.
+  discipline: >-
+    six predictions (B0/B1/P0/P1/Q0/Q1) written label-blind on CPU and frozen before the read
+    (prediction_freeze.json combined 8bd6d464f7c874fe); single valid read valid_read.lock
+    2026-10-12T18:49:23Z, y sha 8f6ee636..., raw-vs-encoded max_abs 0.0; no training/selection
+    after the read; B and P share init and batch order per seed (initialization_audit.json).
+  formal_result:
+    runs: B0/B1/P0/P1 trained on res-gpu0/res-gpu1 within stage-ssl-p chains; Q0/Q1 stage-q; diagnostics on res-local CPU; predictions/scoring local CPU
+    ssl: [{ce_atom: 0.212589, ce_bond: 0.019277, acc_atom: 0.923010, acc_bond: 0.993935, wall: 1779 s}, {ce_atom: 0.212544, ce_bond: 0.015859, acc_atom: 0.925062, acc_bond: 0.994921, wall: 1666 s}]
+    valid_mae: {B0: 0.100172, B1: 0.098232, P0: 0.084786, P1: 0.082313, Q0: 0.096611, Q1: 0.109456}
+    valid_seed_mean: {B: 0.099202, P: 0.083549, Q: 0.103034}
+    fit_mae: {B0: 0.045902, B1: 0.040928, P0: 0.025333, P1: 0.028498, Q0: 0.024353, Q1: 0.025187}
+    contrasts_valid:
+      "P-B": "-0.015653 [-0.021051,-0.009904], per-seed -0.015387/-0.015919, ordinary -0.017391 (n=935), tail +0.009341 (n=65), top10 -0.015980, without valid:0172 -0.016400, better frac 0.621"
+      "Q-P": "+0.019484 [+0.005177,+0.044905] (worse), per-seed +0.011826/+0.027143, tail +0.182161, RMSE 0.541 vs 0.230"
+      "Q-B": "+0.003831 [-0.012508,+0.032007], per-seed -0.003561/+0.011224"
+    q_gate: "PURCHASE_Q (junction linear CKA SSL->P 0.1015/0.1268 < 0.75; rank-drop condition did not fire: junction rank rose 14.4->17.4 and 15.6->14.4, 0/5 draws above +25%)"
+    diagnostics: >-
+      encoder relative move init->SSL 1.84-2.80, SSL->P 0.73-0.94; junction linear CKA 0.101/0.127,
+      bond 0.558/0.577, atom 0.812/0.807; junction scale 0.658->0.197 (s0) / 0.613->0.202 (s1),
+      bond rank 18.6->28.5.
+    error_analysis: >-
+      persistent common errors 61/100 of B worst rows; tail signed error grows +0.117->+0.168;
+      valid:0172 y=-20.3405 B preds -17.262/-15.320 (abs err 3.078/5.021), P -13.328/-17.892
+      (7.013/2.448), Q -7.946/-0.266 (12.395/20.074); tail is 6.5% of molecules but ~0.016 of
+      P MAE; fixing it to the ordinary rate implies ~0.072 overall.
+    decision: FULL10K_PRETRAINING_GAIN_CONFIRMED_ON_DEV
+    flags: [BULK_GAIN_WITH_TAIL_COST, ENCODER_LR_ADAPTATION_NOT_SUPPORTED]
+    route: >-
+      one recommended next route: Route B, new full-molecule composition mechanism
+      (count-conditioned whole-molecule scale calibration), non-iterative, no GNN/attention, no
+      new junction/3-/4-body modules, decomposition preserved, pretrained encoders fine-tuned at
+      full LR; Route A (sample efficiency/external data) rejected as the next step.
+  budget: 8 GPU stages = 6809 s ~1.89 GPU-h (limit 3); wall ~2 h 20 min (limit 6 h 45 min); two A100s in parallel
+  status: COMPLETED 2026-10-13; decision FULL10K_PRETRAINING_GAIN_CONFIRMED_ON_DEV; report written; Route B proposed awaiting authorization; no unauthorised follow-up purchased

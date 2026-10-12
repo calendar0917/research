@@ -112,6 +112,26 @@ molecule-level paired bootstrap, and the `valid:0172` decomposition.
 Wall ≤ 405 min, one GPU at a time, ≤ 3 GPU-hours.  Phase A is CPU-first; no
 internal-split search; no extra data; no test access.
 
-## 8. Results (completed)
+## 8. Results (completed 2026-10-13)
 
-See `results/bjoc_full10k_pretraining_transfer_v1/REPORT.md`.
+Frozen decision **`FULL10K_PRETRAINING_GAIN_CONFIRMED_ON_DEV`** with flags
+`BULK_GAIN_WITH_TAIL_COST`, `ENCODER_LR_ADAPTATION_NOT_SUPPORTED`.
+
+* Valid single-model MAE (two-seed mean): B `0.099202` → P `0.083549`
+  (`P−B = −0.015653`, CI95 `[-0.021051, -0.009904]`; per seed `−0.015387`
+  / `−0.015919`; ordinary `−0.017391`; top-10-removed `−0.015980`;
+  `valid:0172`-removed `−0.016400`).  B was retrained in-round on the same
+  GPU with the identical frozen recipe because the remote reuse audit could
+  not recompute the historical replay (the amendment is recorded above).
+* Pretext (7,560 updates, 96.8 exposures/molecule): atom CE `0.2126/0.2125`,
+  acc `0.9230/0.9251`; bond CE `0.0193/0.0159`, acc `0.9939/0.9949`.
+* Q was purchased (junction linear CKA SSL→P `0.1015/0.1268 < 0.75`) and is
+  harmful: `Q−P = +0.019484` (CI95 `[+0.005177, +0.044905]`), tail
+  `+0.182`, RMSE `0.541` vs `0.230`, `valid:0172` predicted at `−7.95/−0.27`.
+* Tail is the binding residual: `y≤−3` (n=65) `P−B = +0.009341` while the
+  ordinary 935 molecules improve; 61/100 of B's worst rows persist.  A
+  count-conditioned whole-molecule scale calibration (Route B) is the single
+  recommended next route; the sample-efficiency/external-data route (A) is
+  rejected as the next step.
+
+Full details in `results/bjoc_full10k_pretraining_transfer_v1/REPORT.md`.
