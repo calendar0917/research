@@ -1,0 +1,244 @@
+# cscl-bjoc-predictor-terminal-evaluation-v1 — frozen protocol
+#
+# Round: BJOC double-seed prediction confirmation, error-source audit, and ONE
+# unified terminal evaluation of the official ZINC validation and test splits.
+#
+# Frozen BEFORE (a) the single authorised new training trajectory, (b) any
+# official-test prediction, (c) any official-test label read.  Any change after
+# this commit invalidates the round.
+#
+# Authorised scope (user grant, 2026-10-12):
+#   * reuse the existing BJOC and Full-Y frozen models;
+#   * zero-training per-molecule error analysis on official validation;
+#   * exactly ONE new formal training trajectory: BJOC-Null full10k seed 1;
+#   * frozen evaluation on official validation;
+#   * ONE unified terminal evaluation on official test, after every model and
+#     every evaluation rule is frozen;
+#   * a final prediction-performance judgement and a next-step research plan.
+#
+# NOT authorised: new architectures, BJOC-Organized training, new Full-Y
+# training, a third BJOC seed, model replacement after seeing test, hyper
+# parameter changes, post-test rescue training, target-component supervision.
+
+protocol_id: cscl-bjoc-predictor-terminal-evaluation-v1
+track: tracks/structure-contribution
+date_frozen: 2026-10-12
+supersedes_readout: cscl-structural-relation-composer-v1 (Phase H valid-only read)
+
+# ---------------------------------------------------------------------------
+# the four pre-fixed models (no selection after any readout)
+# ---------------------------------------------------------------------------
+models:
+  - id: Y0
+    name: Full-Y (historical, raw-y arm)
+    seed: 0
+    source: tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/Y_seed0_raw_soup_state.pt
+    parameters: 408651
+    supervision: raw-y L1 + label-free structural reconstruction (lambda 33.95873017865987)
+    prep: tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/all_train_prep.npz
+    checkpoint_rule: parameter mean of epochs 236..240 (last-5 soup)
+  - id: Y1
+    name: Full-Y (historical, raw-y arm)
+    seed: 1
+    source: tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/Y_seed1_raw_soup_state.pt
+    parameters: 408651
+    supervision: raw-y L1 + label-free structural reconstruction (lambda 33.95873017865987)
+    prep: tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/all_train_prep.npz
+    checkpoint_rule: parameter mean of epochs 236..240 (last-5 soup)
+  - id: N0
+    name: BJOC-Null (one-shot object composer)
+    seed: 0
+    source: tracks/structure-contribution/results/structural_relation_composer_v1/bjoc_null_full10k_s0_soup_state.pt
+    parameters: 413505
+    supervision: raw-y L1 only
+    prep: tracks/structure-contribution/results/structural_relation_composer_v1/bjoc_global_norm_full10k.json (train-only global standardiser, n_fit=10000)
+    checkpoint_rule: parameter mean of epochs 236..240 (last-5 soup)
+  - id: N1
+    name: BJOC-Null (one-shot object composer)
+    seed: 1
+    source: tracks/structure-contribution/results/structural_relation_composer_v1/bjoc_null_full10k_s1_soup_state.pt
+    parameters: 413505
+    supervision: raw-y L1 only
+    prep: tracks/structure-contribution/results/structural_relation_composer_v1/bjoc_global_norm_full10k.json (train-only global standardiser, n_fit=10000)
+    checkpoint_rule: parameter mean of epochs 236..240 (last-5 soup)
+    status: NEW — the single authorised trajectory of this round
+
+excluded_from_primary_comparison:
+  BJOC-Organized:
+    seeds: [0, 1]
+    reason: >-
+      no established independent generalization advantage in the previous round
+      (Delta_org sign-unstable, every CI crossing zero, official valid +0.00498);
+      the current authorization names BJOC-Null as the fixed primary candidate.
+      The Organized seed-0 valid predictions are used ONLY as mechanism-explanation
+      evidence in the zero-training validation error audit.
+
+# ---------------------------------------------------------------------------
+# the single authorised new training trajectory
+# ---------------------------------------------------------------------------
+new_trajectory:
+  count: 1
+  id: N1
+  train_rows: 10000 (full official-train split)
+  entry_point: tracks/structure-contribution/code/run_structural_relation_composer_v1.py
+  entry_command: >-
+    uv run python tracks/structure-contribution/code/run_bjoc_predictor_terminal_v1.py
+    --device cuda:0 train-n1
+    # which calls run_structural_relation_composer_v1.train_bjoc_arm("null", 1, full10k=True)
+  recipe:
+    organization_mode: null
+    optimizer: Adam
+    lr: 1.0e-3
+    weight_decay: 1.0e-5
+    batch_size: 128
+    grad_clip: 5.0
+    epochs: 240
+    fp32: true
+    amp: false
+    scheduler: none
+    task_loss: raw-y L1 only
+    train_shuffle_seed: seed + 101 (== 102 for seed 1)
+    soup: parameter mean of epochs 236..240
+    seed: 1
+  frozen_unchanged: >-
+    widths, encoder depths, feature blocks, optimizer, loss, batch size, epochs,
+    soup rule, output transform, augmentation policy, object construction.
+  logging_fix_already_committed: >-
+    commit 95ee15e (monitor-free full-10k runs may not crash the final log line)
+    is an ancestor of the frozen round commit; the monitor-free path is exercised
+    and asserted by the new tests before the formal run.
+  restart_policy: >-
+    on an engineering failure, resume only from a complete model/optimizer/RNG
+    checkpoint; otherwise the trajectory is recorded as interrupted.  The
+    initialization, training rule and seed may never be changed during a restart,
+    and a silent second full training may never be reported as the same trajectory.
+  budget:
+    gpu_hours_max: 0.5
+    gpu: 1 at a time
+    host: res
+    pool: res-gpu1
+
+# ---------------------------------------------------------------------------
+# endpoints
+# ---------------------------------------------------------------------------
+primary_endpoint:
+  split: official test (PyG ZINC subset=True, 1000 molecules)
+  metric: raw-y MAE, mean over the two per-seed MAEs
+  definitions:
+    MAE_N_mean: 0.5 * (MAE_N0 + MAE_N1)
+    MAE_Y_mean: 0.5 * (MAE_Y0 + MAE_Y1)
+    delta_test: MAE_N_mean - MAE_Y_mean      # negative => BJOC-Null better
+  warning: >-
+    the mean of two per-seed MAEs is NOT the MAE of the averaged prediction.
+    Both must be reported separately and never conflated.
+
+paired_primary_contrast:
+  observation: >-
+    d_i = 0.5 * [(|e_N0,i| - |e_Y0,i|) + (|e_N1,i| - |e_Y1,i|)]
+  inference: molecule bootstrap, 5000 resamples, percentile 95% CI
+  seed: 0
+  reported_also:
+    - delta0 = MAE(N0) - MAE(Y0)
+    - delta1 = MAE(N1) - MAE(Y1)
+    - frac of molecules better for N0 vs Y0 and for N1 vs Y1
+    - seed-direction consistency (sign of delta0 and delta1)
+    - ensemble MAE difference (N ensemble minus Y ensemble)
+  limits: >-
+    a molecule bootstrap does not include across-trajectory randomness and two
+    seeds cannot estimate training stability precisely.
+
+secondary_endpoints:    # pre-declared, all descriptive
+  - per-seed raw-y MAE
+  - seed-MAE arithmetic mean
+  - equal-weight seed prediction ensemble MAE: 0.5*(pred_seed0 + pred_seed1)
+  - median absolute error
+  - p90 / p95 absolute error
+  - RMSE
+  - per-molecule improvement fraction
+  - ordinary samples (y > -3) and the low-y tail (y <= -3)
+  - maximum absolute error and top-10 error mass
+  - single-row / single-molecule sensitivity analysis
+  - structural complexity groups (atom count, cyclomatic rank, diameter, min ring size)
+
+ensemble_rule:
+  pred_N_ens: 0.5 * (pred_N0 + pred_N1)
+  pred_Y_ens: 0.5 * (pred_Y0 + pred_Y1)
+  forbidden:
+    - fitting ensemble weights on validation or test
+    - selecting a seed on test
+    - promoting a fit-median calibrated score to the raw primary metric
+    - reporting only the best of {N0, N1, ensemble} after seeing test
+
+# ---------------------------------------------------------------------------
+# Phase C — official-validation per-molecule error audit (zero training, CPU)
+# ---------------------------------------------------------------------------
+validation_error_audit:
+  inputs:
+    - tracks/ksvd/results/zinc_full_decomposition_valid_test_confirmation_v1/heldout_valid_predictions.npz (Y0, Y1 raw)
+    - tracks/structure-contribution/results/structural_relation_composer_v1/official_valid_preds_null_full10k_s0.npz (N0, frozen GPU export)
+    - tracks/structure-contribution/results/structural_relation_composer_v1/official_valid_preds_organized_full10k_s0.npz (O0, mechanism explanation only)
+  alignment_requirement: >-
+    original split, row index, canonical SMILES, y label, raw prediction and
+    calibration state must be matched explicitly; if the correspondence cannot be
+    established the comparison stops and is reported as blocked.
+  required_decomposition:
+    - row-level prediction / label / absolute error for valid:0172
+    - total MAE per model
+    - MAE excluding valid:0172 (auxiliary diagnostic only; never a replacement metric)
+    - total_gain = MAE_Y - MAE_N
+    - gain_from_0172 = (|e_Y,0172| - |e_N,0172|) / 1000
+    - gain_from_other999 = total_gain - gain_from_0172   # must conserve exactly
+    - ordinary vs low-y subgroups, atom-count/ring-rank/diameter strata
+    - top-10 extreme rows, better/worse molecule fractions, tail migration
+  forbidden: >-
+    replacing the official MAE by a trimmed number, or claiming a general
+    architecture gain from the single extreme row before the audit.
+
+# ---------------------------------------------------------------------------
+# Phase E/F — terminal evaluation discipline
+# ---------------------------------------------------------------------------
+freeze_discipline:
+  order:
+    - hash all four checkpoints and their preprocessing
+    - build official valid and test inference objects (label-blind;
+      the test label field is never read, transformed or depended upon)
+    - write all four models' predictions for both splits
+    - hash the prediction files
+    - write terminal_freeze_manifest.json
+    - only then read official validation and official test labels
+  manifest_required_fields:
+    - four checkpoint hashes
+    - four prediction file hashes (per split)
+    - official split fingerprints (processed .pt hashes + row-count + alignment audit)
+    - inference code revision
+    - ensemble rule
+    - primary metric
+    - pre-declared secondary metrics
+    - bootstrap seed and resample count
+    - evaluation rules
+    - official-test historical-exposure declaration
+  label_access: >-
+    this round reads official validation labels and official test labels inside
+    ONE terminal scoring invocation; the number of reads and any deterministic
+    engineering repair are disclosed.  Model predictions may never be regenerated
+    or modified to improve a score after a scoring attempt.
+  forbidden:
+    - choosing among N0 / N1 / ensemble after seeing test
+    - fitting any calibrator after seeing test
+    - deleting a molecule and re-reporting the main score
+    - designing a new architecture from a test outlier
+    - treating this test read as a project-level fresh blind test
+
+# ---------------------------------------------------------------------------
+# what this round may and may not claim
+# ---------------------------------------------------------------------------
+evidence_boundary: >-
+  official test has been read in this repository before (KSVD track, 2026-10-03,
+  project_wide_pristine=false) and the KSVD architecture family was itself
+  developed against official validation.  This round is a frozen-version
+  terminal evaluation of an already-exposed instrument, i.e. a historical
+  exposed-split descriptive performance, NOT an independent blind confirmation.
+  No SOTA claim, no causal structural-mechanism claim from a test improvement,
+  and no reuse of this test split for further model selection.
+  Single-seed differences are not training-stability evidence; a molecule
+  bootstrap does not cover across-trajectory randomness.
