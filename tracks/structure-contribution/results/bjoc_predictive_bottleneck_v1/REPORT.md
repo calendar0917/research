@@ -179,13 +179,19 @@ fails, fall back to P2 — a one-shot 4k-only regularization study (fixed EMA of
 single fixed weight-decay increase) with the same stop rules. If both fail, the next step is an
 architecture question, not more data.
 
+Constraint check: the masked-token head is a discarded module on the frozen BJOC-Null trunk
+(single-pass encoding unchanged, no GNN/attention/iterative message passing); it never reads y
+(labels masked); the fine-tuned model remains the same decomposable BJOC family, so the CSCL
+non-iterative / attributable constraints are untouched by P1 and P2.
+
 ## 7. Discipline, provenance, artifacts
 
 - Official valid/test were never loaded (22/22 correctness gates pass, including source scans
   `official_splits_never_read`, `raw_y_only_supervision`, `no_historical_model_supervision`;
   `correctness_gates.json`).
 - Locked-dev labels read exactly once, after all 16 prediction files were written and hashed
-  (`prediction_manifest.json`, combined sha256 `8c9298d820771ea1…`, `locked_read.lock`);
+  (`prediction_manifest.json` file sha256 `06d9ec32…`, combined prediction hash `8c9298d8…`;
+  `locked_read.lock` records the single locked-dev read);
   the locked set was never used for model selection; the monitor split is the standard
   training-time readout only.
 - Frozen artifacts reproduced exactly on the remote worker: split rows
