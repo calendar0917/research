@@ -1840,7 +1840,9 @@ def _contrast_report(zone: str, keys_new: Sequence[str], keys_ref: Sequence[str]
         "new": list(keys_new),
         "ref": list(keys_ref),
         "delta_seed_mean": float(delta.mean()),
-        "per_seed_delta": {k: float(e_new[k].mean() - e_ref[k].mean()) for k in keys_new},
+        "per_seed_delta": {
+            f"seed{k[1:]}": float(e_new[k].mean() - e_ref[r].mean()) for k, r in zip(keys_new, keys_ref)
+        },
         "bootstrap": paired_bootstrap(delta),
         "ordinary_y_gt_-3": {
             "n": int((y > TAIL_THRESHOLD).sum()),
@@ -1942,11 +1944,17 @@ def _collect_init_audit() -> dict[str, Any]:
         c_path = OUT / f"train_C_seed{s}.json"
         if c_path.exists():
             c = read_json(c_path)
+            fit_n = len(read_split()["fit8k"])
             entry.update(
                 {
                     "C_init_full_sha256": c["init_full_sha256"],
                     "C_same_init_as_B": c["init_full_sha256"] == b["init_full_sha256"],
-                    "C_same_batch_order_prefix": c["batch_order_hash"] != b["batch_order_hash"],
+                    "C_updates": c["updates"],
+                    "C_batch_order_prefix_matches_B": (
+                        int(c["epochs"]) >= int(b["epochs"])
+                        and batch_order_hash(s, fit_n, BATCH_SIZE, int(b["epochs"])) == b["batch_order_hash"]
+                        and batch_order_hash(s, fit_n, BATCH_SIZE, int(c["epochs"])) == c["batch_order_hash"]
+                    ),
                 }
             )
         per_seed[str(s)] = entry
