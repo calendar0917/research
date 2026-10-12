@@ -96,6 +96,7 @@ MONITOR_TARGET = 1000
 OBJECTS_CACHE = OUT / "bjoc_extended_objects_v1.pt"
 SPLIT_FILES = {"A": OUT / "split_a.json", "B": OUT / "split_b.json"}
 STATS_FILES = {"A": OUT / "standardiser_a.json", "B": OUT / "standardiser_b.json"}
+NORM_FILES = {"A": OUT / "global_norm_a.json", "B": OUT / "global_norm_b.json"}
 
 #: frozen pre-registered promotion gate for the TypedPathRing arm (no post-hoc edits)
 GATE_MONITOR_DELTA = -0.006
@@ -337,6 +338,23 @@ def cmd_objects(args: argparse.Namespace) -> int:
             },
         )
         log(f"[objects] standardiser {key} fitted on {len(rows['fit'])} fit rows")
+        # global-feature standardiser, fitted on the SAME fit rows (upstream recipe)
+        gfit = np.stack([objs[int(i)].base.global_feat for i in rows["fit"]], 0).astype(np.float64)
+        gmean, gscale = gfit.mean(0), gfit.std(0)
+        gscale = np.where(gscale < 1e-6, 1.0, gscale)
+        write_json(
+            NORM_FILES[key],
+            {
+                "protocol": PROTOCOL_ID,
+                "split": key,
+                "fit_only": True,
+                "n_fit_rows": len(rows["fit"]),
+                "global_mean": gmean.tolist(),
+                "global_scale": gscale.tolist(),
+                "names": list(sro.GLOBAL_FEAT_NAMES),
+            },
+        )
+        log(f"[objects] global norm {key} fitted on {len(rows['fit'])} fit rows")
     write_json(
         OUT / "objects_summary.json",
         {
@@ -396,6 +414,16 @@ class FeatureProvider:
         batch["atom_new"] = torch.cat(atom_new, 0) if atom_new else torch.zeros(0, tpr.NEW_ATOM_DIM)
         batch["bond_new"] = torch.cat(bond_new, 0) if bond_new else torch.zeros(0, tpr.NEW_BOND_DIM)
         return batch
+
+
+def load_norm(split_key: str) -> tuple[np.ndarray, np.ndarray]:
+    """Global-feature standardiser for a split (fitted on that split's fit rows)."""
+    norm = read_json(NORM_FILES[split_key])
+    assert norm["fit_only"] is True and norm["n_fit_rows"] == FIT_TARGET
+    return (
+        np.asarray(norm["global_mean"], dtype=np.float32),
+        np.asarray(norm["global_scale"], dtype=np.float32),
+    )
 
 
 def load_provider(split_key: str, mode: str) -> FeatureProvider:
@@ -906,8 +934,8 @@ def _mk_graph(n: int, edges: Sequence[tuple[int, int, int]]):
 
 def cmd_params(args: argparse.Namespace) -> int:
     report = bro.junctionless_capacity_report()
-    gm = np.zeros(sro.GLOBAL_DIM, dtype=np.float32)
-    gs = np.ones(sro.GLOBAL_DIM, dtype=np.float32)
+    gm, gs = load_norm("A") if NORM_FILES["A"].exists() else (
+        np.zeros(sro.GLOBAL_DIM, dtype=np.float32), np.ones(sro.GLOBAL_DIM, dtype=np.float32))
     actual = {}
     hashes = {}
     for arm in ("B", "T", "J"):
@@ -932,8 +960,11 @@ def cmd_gates(args: argparse.Namespace) -> int:
     provider_zero = load_provider("A", "zero")
     provider_real = load_provider("A", "real")
     sample = rows["fit"][:64]
-    gmean = np.zeros(sro.GLOBAL_DIM, dtype=np.float32)
-    gscale = np.ones(sro.GLOBAL_DIM, dtype=np.float32)
+    if NORM_FILES["A"].exists():
+        gmean, gscale = load_norm("A")
+    else:
+        gmean = np.zeros(sro.GLOBAL_DIM, dtype=np.float32)
+        gscale = np.ones(sro.GLOBAL_DIM, dtype=np.float32)
     stats_a = read_json(STATS_FILES["A"])
     gates: dict[str, Any] = {"protocol": PROTOCOL_ID}
 
@@ -1176,8 +1207,7 @@ def train_arm(
     y_mon = y_all[mon_rows]
     stats = read_json(STATS_FILES[split_key])
     split_salt = read_json(SPLIT_FILES[split_key])["salt"]
-    gmean = np.zeros(sro.GLOBAL_DIM, dtype=np.float32)
-    gscale = np.ones(sro.GLOBAL_DIM, dtype=np.float32)
+    gmean, gscale = load_norm(split_key)
 
     seed_everything(seed)
     model = bro.build_model(arm, seed=seed, global_mean=gmean, global_scale=gscale, device=device)
@@ -1348,8 +1378,7 @@ def cmd_predict(args: argparse.Namespace) -> int:
             raise FileNotFoundError(ckpt)
         mode = feature_mode_for(arm)
         provider = load_provider(split_key, mode)
-        gmean = np.zeros(sro.GLOBAL_DIM, dtype=np.float32)
-        gscale = np.ones(sro.GLOBAL_DIM, dtype=np.float32)
+        gmean, gscale = load_norm(split_key)
         model = bro.build_model(arm, seed=0, global_mean=gmean, global_scale=gscale, device=device)
         model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=False))
         preds = predict(model, provider, rows["monitor"], device)
@@ -1672,8 +1701,7 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
     mon_rows = rows["monitor"]
     y_mon = y_all[mon_rows]
     payload: dict[str, Any] = {"protocol": PROTOCOL_ID, "split": args.split, "arms": {}}
-    gmean = np.zeros(sro.GLOBAL_DIM, dtype=np.float32)
-    gscale = np.ones(sro.GLOBAL_DIM, dtype=np.float32)
+    gmean, gscale = load_norm(args.split)
     for tag in args.arms:
         arm = tag.split("_")[0]
         mode = feature_mode_for(arm)
@@ -1788,6 +1816,12 @@ def cmd_freeze(args: argparse.Namespace) -> int:
         if (OUT / "architecture_parameter_audit.json").exists() else {},
         "files": {},
         "artifacts": {},
+        "deviations_from_published_backbone": {
+            "capacity": "+4.64% parameters (432,705 vs 413,505) because the new input channels need rows",
+            "j_matched_to_B": "J is matched to B, not to the published backbone, so J-B is not confounded by capacity",
+            "global_standardiser": "fitted on each split's fit rows only (same rule as the upstream prep stage)",
+            "new_channel_standardisation": "per split, fitted on that split's fit rows only; zeroed arms use the fit mean",
+        },
         "discipline": {
             "official_valid_or_test_loaded": False,
             "locked_labels_read_at_freeze_time": False,
@@ -1811,6 +1845,8 @@ def cmd_freeze(args: argparse.Namespace) -> int:
             manifest["splits"][key]["crosstab_with_A"] = payload["crosstab_with_A"]
         manifest["files"][f"split_{key.lower()}.json"] = file_sha256(path)
         manifest["files"][f"standardiser_{key.lower()}.json"] = file_sha256(STATS_FILES[key])
+        manifest["files"][f"global_norm_{key.lower()}.json"] = file_sha256(NORM_FILES[key])
+        manifest["splits"][key]["global_norm_fit_only"] = read_json(NORM_FILES[key])["fit_only"]
     for name, path in (
         ("config.yaml", CONFIG_PATH),
         ("bjoc_representation_optimization_v1.py", _CODE_DIR / "bjoc_representation_optimization_v1.py"),
