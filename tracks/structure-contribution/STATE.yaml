@@ -1,23 +1,25 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-distance-pooling-bottleneck-v1-completed
-current_round: distance-pooling-bottleneck-v1
+phase: cscl-bjoc-predictor-terminal-evaluation-v1-completed
+current_round: bjoc-predictor-terminal-evaluation-v1
 next_round_candidate: >-
-  AWAITING USER AUTHORIZATION. The matched budget control is COMPLETE: band A
-  (F10000 - F7200 = -0.015440, paired CI95 [-0.022937, -0.008017]) but the absolute level is still
-  valid raw 0.118618, i.e. +0.0286 from 0.09 and +0.0386 from 0.08, with 20.5% of the error mass in
-  10 rows and no budget benefit on small molecules (<=20 atoms).  Per Q2 the next purchase must be a
-  NEW PREDICTION ARCHITECTURE / REPRESENTATION inside the y-only contract (not budget, hyper-parameters
-  or soup selection): needs a new preregistration + explicit user authorization.  The conditional
-  `zinc-full-y-component-supervision-matched-v1` draft is NOT triggered (its precondition was a
-  <=0.003 budget effect, which was refuted by band A).  Prior screen v1 stays STOPPED per its own
-  pre-frozen rule (case D): both CPU candidates failed the first signal (monitor <= 0.10826): XGB-A Typed-WL
-  monitor 0.34104 / dev 0.36880 (+0.25239 vs Full-Y 0.11641), XGB-B frozen-814 XGB monitor 0.20334 /
-  dev 0.19727 (+0.08085); paired CIs entirely positive, robust to trimming. No seed 1, no third model,
-  no tuning (tree depth/lr/trees/radius/hash width), no full-8000/10000 refit, no feature fusion,
-  no official valid/test. Next prediction work needs a NEW preregistration + user authorization;
-  candidate directions listed in the audit decision doc.
+  AWAITING USER AUTHORIZATION. The terminal BJOC evaluation is COMPLETE
+  (notes/bjoc_predictor_terminal_v1.md). It settled the two open items of the BJOC round and
+  changed the reading of the previous headline: (1) the official-valid gain 0.118618 -> 0.103423
+  is 91.27% the single molecule valid:0172; on the 935 ordinary validation molecules the BJOC-Null
+  arm is slightly WORSE than historical Full-Y (+0.00074) and better on only 47.9% of molecules;
+  (2) on official test the two-seed BJOC-Null mean MAE 0.092233 is lower than the historical Full-Y
+  0.095616 by -0.003383 (CI95 [-0.009859, +0.003465], crosses zero; per-seed deltas -0.00003 and
+  -0.00674; within-BJOC seed spread 0.004660 > the between-system difference; RMSE moves the other
+  way, +0.0040).  Branch: point_estimate_negative_ci_crosses_zero.  The next purchase is therefore
+  NOT more seeds or tuning: it is (a) a MATCHED full-10k Full-Y control on this same evaluation path
+  (the current reference is another trajectory with different preprocessing, so no architecture
+  attribution is possible), and/or (b) a representation/optimisation route aimed at ORDINARY
+  molecules at matched budget (the only stable deficit; on test the BJOC arm wins on y>-3 and loses
+  on the y<=-3 tail, the opposite of the validation pattern).  A targeted mechanism experiment is
+  still the one-shot object route described in scientific_decision.json.next_steps.  No further GPU
+  work without a new preregistration + explicit user authorization.
 updated: 2026-10-12
 
 track:
@@ -977,3 +979,89 @@ round_cscl-structural-relation-composer-v1:
     only setting where ownership dominates.
   status: COMPLETED 2026-10-12; round stopped (no further seeds, no tuning, no test access)
   results_dir: results/structural_relation_composer_v1/ (git-ignored)
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-predictor-terminal-evaluation-v1 (frozen-version terminal
+# evaluation: four pre-fixed models Y0/Y1/N0/N1, ONE new trajectory
+# BJOC-Null full-10k seed 1, label-blind freeze, one unified scoring
+# invocation on official valid + official test)
+# ---------------------------------------------------------------------------
+
+phase: cscl-bjoc-predictor-terminal-evaluation-v1-completed
+current_round: bjoc-predictor-terminal-evaluation-v1
+next_round_candidate: >-
+  AWAITING USER AUTHORIZATION.  Terminal evaluation COMPLETE and STOPPED after the single test
+  scoring; report notes/bjoc_predictor_terminal_v1.md, results/bjoc_predictor_terminal_v1/REPORT.md.
+  Two consequences for the programme: (1) the official-valid BJOC-Null advantage 0.118618 ->
+  0.103423 is 91.27% one molecule (valid:0172) and the arm is slightly worse than historical Full-Y
+  on the 935 ordinary validation molecules - the validation number may no longer be quoted as a
+  general accuracy gain; (2) on official test the two-seed BJOC-Null mean lower by -0.003383
+  (CI95 [-0.009859, +0.003465]) with seed deltas -0.00003/-0.00674, within-system seed spread
+  0.004660 > the between-system difference, RMSE worse by +0.0040, and the tail sign flipped
+  relative to validation.  Branch point_estimate_negative_ci_crosses_zero.  Next purchase must be
+  a MATCHED full-10k Full-Y control on this evaluation path (the 0.095616 reference is another
+  trajectory, so no architecture attribution exists yet) or a representation/optimisation route
+  aimed at ORDINARY molecules at matched budget.  No further GPU work without a new preregistration
+  + explicit user authorization; no seed 2, no re-tuning, no reuse of this test split for selection.
+
+round_cscl-bjoc-predictor-terminal-evaluation-v1:
+  protocol: configs/bjoc_predictor_terminal_v1.yaml (frozen and committed before the seed-1 run)
+  report: notes/bjoc_predictor_terminal_v1.md (+ results/bjoc_predictor_terminal_v1/REPORT.md)
+  driver: code/run_bjoc_predictor_terminal_v1.py (reuse-audit/valid-audit/train-n1/predict/freeze/score)
+  tests: tests/test_bjoc_predictor_terminal_v1.py (14 fast + 3 slow, all passing)
+  question: >-
+    With the four models frozen (historical Full-Y soup seed 0 and seed 1, BJOC-Null full-10k soup
+    seed 0, and the single new BJOC-Null full-10k soup seed 1), what is the honest terminal
+    comparison of BJOC-Null vs historical Full-Y on official test raw-y MAE, does the
+    official-valid gain 0.118618 -> 0.103423 survive as a broad improvement, and does the seed-1
+    trajectory reproduce the BJOC-Null direction?
+  budget: >-
+    exactly one new training trajectory (authorised): BJOC-Null full-10k seed 1, 240 epochs,
+    raw-y L1, last-5 soup 236-240, shuffle seed 102, 482.6 s train wall on res/a100-2 GPU1 via rr
+    (pool res-gpu1) = 0.134 GPU-h of the 0.5 GPU-h cap.  Zero-training reuse of Y0/Y1/N0.
+  reuse_audit: >-
+    hard_checks_pass=true, decision REUSE_FROZEN_MODELS; Y0 sha 7792c560 / state 6c1e81ce, Y1 sha
+    f40c2f5b / state 6b7ab1b3 (paired recipe identical, states differ); CPU replay of the 10k train
+    fit reproduces the stored exports (max|dpred| 5.7e-06 / 2.4e-06, fit MAE to 5.7e-09);
+    N0 sha e5a2619e, 413505 params exact, forbidden-module scan empty, raw-y-only supervision,
+    norm fit on 10000 train rows only, N1 absent at round start.
+  phase_c_valid_audit (zero training, CPU, one valid label read): >-
+    valid:0172 y=-20.3405, |e| Y0 19.9057 -> N0 6.0375 (O0 4.0069); total gain N0-Y0 0.015194 of
+    which 0.013868 (91.27%) is that single row, conservation exact; residual 999-row gain 0.001326;
+    y>-3 (n=935) N0-Y0 +0.00074 (worse), N0 better on only 47.9% of molecules; y<=-3 without 0172
+    (n=64) -0.03153; complexity strata: cyclomatic>=4 +0.00583, diameter>median +0.01399 (worse).
+    Alignment: 0 atom/label mismatches vs historical raw PyG; official test never loaded.
+  phase_d_freeze (label-blind): >-
+    all four models run on CPU behind a LabelGuard with every label tensor zeroed; 0-vs-999 relabel
+    changes predictions by exactly 0.0 (4 models x 2 splits); alignment and structure signatures
+    per split; Y0/Y1 CPU replay bit-identical to the historical GPU exports; prediction hashes
+    valid cd7b3231 / test 82ba72c0; terminal_freeze_manifest.json written before any label read.
+  phase_e_terminal_score (ONE invocation, 2 label reads): >-
+    official test raw-y MAE Y0 0.094589 / Y1 0.096643 (mean 0.095616) vs N0 0.094563 / N1 0.089903
+    (mean 0.092233): Delta_test -0.003383, paired bootstrap CI95 [-0.009859, +0.003465] (5000 draws,
+    seed 0), 53.5% of molecules better; per-seed Delta0 -0.000026, Delta1 -0.006740; equal-weight
+    ensembles Y 0.085955 / N 0.085233 (Delta -0.000722, CI crossing zero); test RMSE seed-mean
+    N 0.173639 vs Y 0.169682 (BJOC worse); ordinary y>-3 (n=923) -0.004316 [+/-CI crossing zero],
+    tail y<=-3 (n=77) +0.007807, all-rows-minus-worst-row -0.005266.  Official valid (secondary):
+    Y mean 0.118156 / N mean 0.100926, Delta -0.017230 CI95 [-0.048871, +0.001367]; ensembles Y
+    0.109857 / N 0.094636; N RMSE 0.2559-0.2971 vs Y 0.6536-0.6644 (driven by row 0172).
+  judgment: >-
+    POINT_ESTIMATE_FAVOURS_BJOC_NULL_NOT_STATISTICALLY_SEPARATED.  Branch
+    point_estimate_negative_ci_crosses_zero.  The BJOC-Null two-seed official-test MAE is lower than
+    the historical Full-Y two-seed system by 0.003383 (3.5% relative) and the test gain is broad-based
+    (survives worst-row deletion, favourable on ordinary molecules, 53.5% of molecules better), but it
+    is not resolvable at two seeds: one seed is an exact tie, the within-system seed spread 0.004660
+    exceeds the between-system difference, RMSE moves against BJOC-Null and the tail subgroup flips
+    sign relative to validation.  The earlier official-valid claim must be re-scoped: 91.27% of that
+    gain is a single molecule and the arm is slightly worse on ordinary validation molecules.  No
+    ownership/architecture attribution is possible without a matched full-10k Full-Y control.
+  disclosures: >-
+    official test was read by the KSVD track on 2026-10-03 (project_wide_pristine=false) - this is a
+    terminal descriptive evaluation of an exposed instrument, not a blind confirmation; the historical
+    Full-Y reference has different preprocessing and recipe (not a matched control); two seeds cannot
+    estimate across-trajectory variance; the stale local copy of the BJOC round's prep_fit7200.npz was
+    replaced with the canonical remote version during the pull (not used by this round's inference);
+    no test-driven selection, no calibrator, no molecule deletion, no regeneration after scoring, no
+    training after the test read.
+  status: COMPLETED 2026-10-12; terminal; round stopped
+  results_dir: results/bjoc_predictor_terminal_v1/ (git-ignored)
