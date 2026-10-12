@@ -1,9 +1,28 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-bjoc-predictor-terminal-evaluation-v1-completed
-current_round: bjoc-predictor-terminal-evaluation-v1
+phase: cscl-bjoc-representation-optimization-v1-completed
+current_round: bjoc-representation-optimization-v1
 next_round_candidate: >-
+  AWAITING USER AUTHORIZATION. The representation/optimisation round is COMPLETE
+  (notes/bjoc_representation_optimization_v1.md, results/bjoc_representation_optimization_v1/REPORT.md).
+  It asked which of three candidate improvable points is real and answered: (1) NOT optimisation -
+  the curve audit showed no late plateau and a healthy constant-LR Adam regime, so the pre-registered
+  stabilisation candidate S was never run; (2) the learned JUNCTION CONTENT IS NECESSARY - at exactly
+  matched capacity (both arms 432,705 params) removing the junction reader costs +0.019825 locked-dev
+  MAE, paired CI95 [+0.013324, +0.026108], worse on every pre-frozen subgroup, so the earlier
+  "the junction reader may be decorative" hypothesis is refuted; (3) the TYPED short-path +
+  ring-block representation does NOT transfer - T fits the training rows better (fit delta -0.013760)
+  while making unseen molecules worse (monitor +0.015322, locked-dev +0.012389 CI [+0.004238,
+  +0.021133]), so the round's decision is TYPED_STRUCTURE_OVERFIT and the pre-registered T promotion
+  rule failed every informative check (no stage 2, 3 of 10 trajectories used).  The channels ARE
+  consumed by the network (zeroing them moves predictions by 0.72 and raises monitor MAE to 0.778)
+  and the damage is broad, not outlier-driven.  A future representation round must pre-register an
+  input-scale / regularisation control for the sparse one-hot channels (|z| up to 304 from
+  fit-set standardisation) or an input dropout on the new blocks, and must gate on an a-priori
+  monitor read; split B is frozen and unread if a replication contrast is wanted.  No further GPU
+  work without a new preregistration + explicit user authorization.
+next_round_candidate_previous: >-
   AWAITING USER AUTHORIZATION. The terminal BJOC evaluation is COMPLETE
   (notes/bjoc_predictor_terminal_v1.md). It settled the two open items of the BJOC round and
   changed the reading of the previous headline: (1) the official-valid gain 0.118618 -> 0.103423
@@ -49,6 +68,13 @@ next_action: >-
   pointer is kept only for historical readability.
 
 results_index:
+  - path: results/bjoc_representation_optimization_v1/REPORT.md
+    one_line: >-
+      表征/优化归因 round (Split A seed 0, 三臂同容量 432705) — B fit 0.041495 / locked 0.096063,
+      T fit 0.027735 / locked 0.108452, J fit 0.051586 / locked 0.115888; T 预注册晋级判据全败
+      (T_NO_PURCHASE, 无 stage 2), J−B +0.019825 CI [+0.0133,+0.0261] → JUNCTION_NECESSITY_SUPPORTED,
+      稳定性审计 NO_STABILITY_TRAINING_PURCHASE; 终局判定 TYPED_STRUCTURE_OVERFIT
+    date: 2026-10-12
   - path: results/cscl_v0_units_audit/audit.json
     one_line: RINGCHAIN-v0 划分标签盲审计全过(5.5 单元/分子, 168 类型, top-10 覆盖 77%), 无需后备
     date: 2026-10-10
@@ -1065,3 +1091,55 @@ round_cscl-bjoc-predictor-terminal-evaluation-v1:
     training after the test read.
   status: COMPLETED 2026-10-12; terminal; round stopped
   results_dir: results/bjoc_predictor_terminal_v1/ (git-ignored)
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-representation-optimization-v1 (表征优化归因)
+# ---------------------------------------------------------------------------
+
+phase: cscl-bjoc-representation-optimization-v1-completed
+current_round: bjoc-representation-optimization-v1
+next_round_candidate: >-
+  see the top-level next_round_candidate block (representation route needs an input-scale
+  or regularisation control before any retry; junction content confirmed necessary; no GPU
+  work without a new preregistration + explicit user authorization).
+
+round_cscl-bjoc-representation-optimization-v1:
+  preregistration: configs/bjoc_representation_optimization_v1.yaml (frozen before training)
+  design_doc: notes/bjoc_representation_optimization_v1.md
+  driver: code/run_bjoc_representation_optimization_v1.py
+  code:
+    - code/bjoc_typed_path_ring_features_v1.py    # typed length-2/3 bond-type paths + Tarjan ring blocks
+    - code/bjoc_representation_optimization_v1.py # arms B / T / J (+ S candidate)
+  arms:
+    B: ExtendedBJOC published widths with the new channels structurally zero, 432705 params, init 5fa89bc879fd
+    T: same class/widths/seed with real standardised channels, 432705 params, SAME init 5fa89bc879fd
+    J: NoJunctionBJOC (no junction module/content), 432705 params, init 3c9dcaa0f3b4
+  deviations_disclosed:
+    - all arms are +4.64% over the published 413505-parameter backbone (cost of the new input rows)
+    - J is matched to B, not to the published backbone, so J-B is capacity-free
+    - global-feature standardiser fitted on each split's fit rows only (upstream prep rule)
+  fitted_results_split_A_seed0 (240 epochs, last-5 soup, raw-y L1):
+    B: fit 0.041495 / monitor 0.140670 / locked 0.096063 (wall 395s)
+    T: fit 0.027735 / monitor 0.155992 / locked 0.108452 (wall 418s)
+    J: fit 0.051586 / monitor 0.159042 / locked 0.115888 (wall 265s)
+  paired_locked:
+    T_minus_B: +0.012389 CI95 [+0.004238, +0.021133], 47.0% molecules better
+    J_minus_B: +0.019825 CI95 [+0.013324, +0.026108], 42.6% molecules better
+  judgments:
+    stability: NO_STABILITY_TRAINING_PURCHASE (audited before training; S never run)
+    typed_structure: T_NO_PURCHASE -> final decision TYPED_STRUCTURE_OVERFIT
+    junction: JUNCTION_NECESSITY_SUPPORTED (pre-registered band; vocabulary has no headline for it)
+  mechanism:
+    - "new channels are consumed: zeroing all new atom channels moves monitor predictions by 0.719
+      and raises monitor MAE from 0.156 to 0.778 (bond channels 0.042)"
+    - "the T fit gain is broad (fit rows carrying a channel entry with abs z > 10 improve by -0.01372,
+      rows without such an entry by -0.01378)"
+    - "no optimisation pathology (final-state gradient norm T 2.10 < B 3.04; clipping inactive for both)"
+    - "held-out rows lie inside the fitted channel range (fraction of monitor entries above the fit
+      maximum is ~0 for every block), so the failure is not distribution shift in channel values"
+  discipline:
+    - official valid / official test never loaded (gate19, gate22)
+    - locked-dev labels read exactly once inside score, after prediction files were hashed
+    - 22/22 correctness gates pass; a relabelling helper bug was caught by the gate and fixed
+  status: COMPLETED 2026-10-12; round stopped (stage-2 gate failed); 3 of 10 trajectories used
+  results_dir: results/bjoc_representation_optimization_v1/ (git-ignored, REPORT.md tracked)
