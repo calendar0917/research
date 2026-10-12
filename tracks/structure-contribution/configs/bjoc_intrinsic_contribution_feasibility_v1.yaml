@@ -1,0 +1,231 @@
+# cscl-bjoc-intrinsic-contribution-feasibility-v1  (pre-registration, frozen before training)
+#
+# Track: tracks/structure-contribution
+# Question: can the strong BJOC-Null prediction baseline be kept when the
+# prediction is forced to be a sum of per-junction scalar contributions that are
+# shared across molecules and reusable as intrinsic junction attribution?
+#
+# This is a FEASIBILITY round about the predictive cost of an interpretable head,
+# not a performance round.  The prediction loss is a hard constraint: if the
+# intrinsic-junction additive head degrades generalisation beyond the frozen
+# stop-loss, the next round must go back to prediction research and the
+# attribution question is parked.
+
+protocol: cscl-bjoc-intrinsic-contribution-feasibility-v1
+status: frozen
+frozen_utc: "2026-10-12"
+official_splits: never_read   # official valid/test are off-limits in every form
+
+question: >
+  On the same frozen 8000/1000/1000 canonical-SMILES grouped split of official
+  train, with the same encoders and the same last-5-soup recipe, what is the
+  measured prediction cost of replacing BJOC's joint global reader by a strictly
+  additive sum of scalar atom / bond / junction contributions, and is the
+  resulting junction contribution vector identifiable and gauge-stable enough to
+  be reported as an intrinsic attribution?
+
+# ---------------------------------------------------------------- hypotheses
+hypotheses:
+  H_FEASIBLE:
+    claim: a fixed additive contribution head with molecule-shared per-type
+      baselines plus context-only corrections keeps locked MAE within the frozen
+      stop-loss of BJOC-Null, so intrinsic junction contributions can be pursued.
+  H_COSTLY:
+    claim: the additive restriction removes useful global mixing (especially
+      interaction between junctions) and costs more than the stop-loss, so the
+      interpretable head is not viable at this capacity.
+  H_UNDERFIT:
+    claim: the additive head cannot even fit the training distribution as well
+      as the joint reader, i.e. the bottleneck is optimisation/expressivity of
+      the constrained form, not generalisation.
+  H_NONID:
+    claim: even when predictions are close, the fitted per-junction
+      contributions are not identifiable (branch transfer between atom, bond,
+      junction and global branches), so a single "intrinsic" vector cannot be
+      reported without an explicit gauge.
+  reading_rules: >
+    These are separated by the split-A monitor gate (resource purchase), the
+    optional single locked read, the split-B replication, and the gauge /
+    synthetic audits.  A failure of this one frozen additive head is reported as
+    a failure of this design, not of intrinsic attribution in general.
+
+# ---------------------------------------------------------------- intervention
+intervention:
+  location: "IJCM.forward: encoder -> per-instance scalar heads -> plain sum"
+  arms:
+    B: BJOC-Null (joint global reader; same encoders, same recipe, 413505 params)
+    S: IJCM (additive per-type baseline + per-instance context scalar; no joint reader)
+  forbidden_variants:
+    - any interaction / cross term between junction objects
+    - any gating, attention, normalization across objects, or message passing
+    - any change to the encoder widths, inputs, loss, optimizer or preprocessing
+    - any target-component supervision (g/ell/s/c/k)
+    - tuning after the single locked read
+  conservation:
+    - prediction is exactly bias + sum of atom/bond/junction scalars + eta features
+    - contributions are computed per instance from that molecule's features only
+  gauge:
+    - fit-set per-type mean of context corrections is folded into the type baseline
+    - reported contributions are the canonical (gauge-fixed) values; raw values
+      are an equally valid but non-canonical representative
+  forbidden_rescue:
+    - adding explicit interaction terms, changing optimizers, extra supervision,
+      or special schedules to close the gap
+
+# -------------------------------------------------------------------- model
+model:
+  backbone: code/structural_relation_objects_v1.py objects (read-only)
+  module: code/bjoc_intrinsic_contribution_v1.py
+  atom_encoder: "108 -> 128 -> 96 (unchanged)"
+  bond_encoder: "160 -> 96 (unchanged)"
+  junction_encoder: "610 -> 160 -> 96 (unchanged)"
+  parameter_B: 413505
+  parameter_tolerance_abs_fraction: 0.05
+  new_trainable_parameters:
+    - per-type zero-initialised baseline embeddings (atom/bond/junction)
+    - shared scalar context heads (atom/bond/junction), 96 -> hidden -> 1
+    - eta heads for the 33 global features (1 -> 8 -> 1)
+    - scalar output bias
+  unchanged:
+    - raw atom/bond/junction features
+    - encoders, hidden widths and initialisation rule
+    - raw-y L1 loss, Adam, lr, wd, clipping, batch, epochs, soup
+
+# ------------------------------------------------------------------ recipe
+recipe:  # frozen for every formal trajectory in this round
+  optimizer: adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  epochs: 240
+  precision: fp32
+  amp: false
+  scheduler: none
+  loss: L1 on raw y
+  selection: last-5 parameter soup (epochs 236-240)
+  train_shuffle_offset: 101
+  seeds: [0, 1]
+
+# ------------------------------------------------------------------ splits
+splits:
+  builder: canonical-SMILES groups, ordered by sha256(salt|smiles), greedy fill 8000/1000/1000
+  A:
+    salt: cscl-ijcm-feasibility-v1-A
+    fit: 8000
+    monitor: 1000
+    locked: 1000
+    fit_sha256_rows: c8ced76e0bf870ffb8cc1dbd5e011bea42b90bf4153a1a7cb256814307d76d3f
+    monitor_sha256_rows: 3ffb4387e41b5a1f642bad81d8cce9d81815f6fe4a56724d0abcfc171a97e80b
+    locked_sha256_rows: 3a976606bd4a6d4c96ef52e98bbbafe4cb70676a94b65d03fac313fb046a50ad
+  B:
+    salt: cscl-ijcm-feasibility-v1-B
+    fit: 8000
+    monitor: 1000
+    locked: 1000
+    fit_sha256_rows: 7307e637f6fc5e543749f8c59e86b8183028f87f09dbc3979789c0c467f7dd38
+    monitor_sha256_rows: 6dda87808c98ae4e3669ba2391c95f5a67cb11074fa54ccd760eb4dd92520dd3
+    locked_sha256_rows: 7e11b30fa8a9a4fb4bcefb51c3e6cc120161fa04d9956f2cc33b19d1e07d3556
+  split_interpretation: >
+    Both splits come from the same official-train 10000 rows and are not independent
+    datasets. The observed cross-tab (rows): B fit x A: fit 6386 / monitor 809 / locked 805;
+    B monitor x A: fit 828 / monitor 83 / locked 89; B locked x A: fit 786 / monitor 108 /
+    locked 106. Split B therefore replicates fit-set/partition sensitivity, not external
+    data; the locked-locked overlap is 106/1000 and was not optimised (the salts were fixed
+    a priori and no salt selection was performed). The smiles hash is
+    b9ea41d23001bdb39e0d3ba6f9bc090298e6d738449da4e8a4f9a921b5f6b873.
+  read_discipline:
+    train_stages: fit + monitor labels only
+    locked: read exactly once per split inside score, after predictions are hashed
+    split_B_locked: unreadable during any split-A decision (decide reads JSONs only)
+
+# -------------------------------------------------------------- read protocol
+staged_design:
+  stage_split_a: [B/A/s0, S/A/s0, B/A/s1, S/A/s1]
+  seed0_gate: monitor delta (S - B) decides whether seed 1 is purchased
+  split_b_gate: split-A locked seed-mean delta decides whether B is purchased
+  stage_split_b: [B/B/s0, S/B/s0, B/B/s1, S/B/s1]
+  max_total_trajectories: 8
+  seed_interpretation: seeds are robustness checks only; no seed may be used for selection
+
+# ----------------------------------------------------------- promotion rules
+promotion:
+  seed1_purchase:
+    monitor_seed0_delta_S_minus_B_max: 0.005    # <= -> buy seed 1
+    edge_band_max: 0.008                        # <= -> buy but flag as costly
+  split_b_purchase:
+    locked_seed_mean_delta_S_minus_B_max: 0.005
+    clearly_unacceptable_min: 0.010
+  correctness_gates: pass
+  note: >
+    The thresholds are frozen GPU-resource purchase rules, not significance
+    definitions.  A favourable point estimate with a bootstrap interval crossing
+    zero is recorded as directional with its uncertainty.
+
+# --------------------------------------------------------- bootstrap settings
+bootstrap:
+  n_resamples: 5000
+  seed: 0
+  unit: molecule
+  seed_mean_definition: "d_i = 0.5 * (d_i_seed0 + d_i_seed1)"
+  training_randomness: >
+    Molecule bootstrap does not cover training randomness; the cross-seed spread
+    is reported separately and never replaced by the molecule interval.
+
+# ------------------------------------------------------- synthetic audits
+synthetic:
+  A_identifiability:
+    design: random chains/trees, known additive rule, noiseless and noised
+    claim: type counts span the fit design; type and context effects recoverable
+  B_collinearity:
+    design: two junction types that are exactly collinear in every molecule
+      (A always co-occurs with B); true A=1.5, true B=0
+    claim: the additive model necessarily splits the effect non-identifiably;
+      report cross-seed instability and the documented limitation
+  C_non_additivity:
+    design: interaction target = 1.2 x count of adjacent A/B junction pairs
+    claim: an additive head cannot represent a pairwise interaction; measure the
+      residual gap vs an interaction oracle (do not add the interaction)
+
+# ------------------------------------------------------------- budget + bans
+budget:
+  wall_clock_minutes_total: 465
+  reserve_for_pull_verify_report_git_minutes: 35
+  gpu: 1
+  gpu_hours_max: 1.5
+  formal_trajectories_max: 8
+  concurrency: 1
+bans:
+  - interaction / cross terms between junction objects
+  - GNN / Transformer / attention / message passing
+  - new structural features or changes to the distance buckets
+  - changing the model definition based on results
+  - additional unauthorised training trajectories
+  - target-component supervision (g/ell/s/c/k)
+  - teacher / distilled predictions
+  - reading official valid / official test in any form, including saved per-molecule predictions
+  - using the exposed historical official-test number 0.092233 for any decision
+  - auto-training the full 10k final candidate
+
+# ------------------------------------------------------- expected outcomes
+final_decision_vocabulary:  # exactly one of
+  - INTRINSIC_CONTRIBUTION_FEASIBLE
+  - ATTRIBUTION_WORKS_BUT_PREDICTIVE_COST_TOO_HIGH
+  - ADDITIVE_HEAD_UNDERFITS
+  - CONTRIBUTIONS_NOT_IDENTIFIABLE
+  - INCONCLUSIVE_OR_BLOCKED
+
+expected:
+  historical_context: >
+    BJOC-Null is the strongest predictor in this track (official-test seed-mean
+    0.092233 official historical number, user target band 0.06-0.07, which is
+    still unreached).  Prior junction-regularisation and typed-structure attempts
+    were negative.  The irreducible-error question is open: on the exposed
+    split-A locked rows the error is dominated by a few extreme molecules, so
+    attribution work must not be sold as a shortcut to the target band.
+  possible_outcomes: >
+    Feasible: keep the additive attribution head and publish gauge-stable
+    contributions + uncertainty.  Too costly: park attribution, return to
+    prediction research (capacity/representation/ensemble) with the locked-read
+    evidence.  Non-identifiable: report the gauge/branch-transfer limits and do
+    not publish a single contribution vector.
