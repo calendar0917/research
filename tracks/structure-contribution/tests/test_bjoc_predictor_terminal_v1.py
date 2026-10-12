@@ -305,10 +305,9 @@ def test_score_plumbing_with_synthetic_labels(tmp_path, monkeypatch):
                          "sha256": term.file_sha256(out / f"{split}_predictions.npz")},
             "per_model": per_model,
         }
-    ckpt_paths = {
-        tag: (term.Y_SOUP.get(tag) or (term.N_SOUP["N1"] if term.N_SOUP["N1"].exists() else term.N_SOUP["N0"]))
-        for tag in term.MODELS
-    }
+    n1_path = term.N_SOUP["N1"] if term.N_SOUP["N1"].exists() else term.N_SOUP["N0"]
+    ckpt_paths = {tag: (term.Y_SOUP[tag] if tag in term.Y_SOUP else (n1_path if tag == "N1" else term.N_SOUP[tag]))
+                  for tag in term.MODELS}
     manifest = {
         "protocol_id": term.PROTOCOL_ID,
         "predictions": manifest_preds,
