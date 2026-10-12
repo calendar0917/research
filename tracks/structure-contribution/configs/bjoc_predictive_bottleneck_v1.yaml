@@ -1,0 +1,237 @@
+# cscl-predictive-bottleneck-diagnosis-v1  (pre-registration; frozen before any GPU)
+#
+# Track: tracks/structure-contribution
+#
+# The round does NOT design a new predictor and does NOT add structural features.
+# It spends the minimum formal training budget (6 trajectories: BJOC-Null and
+# BJOC-Organized only) to separate three competing explanations of the current
+# BJOC plateau:
+#
+#   1. sample efficiency   -- official-train ~10k molecules may be too few for the
+#      existing BJOC family to learn a stable relation;
+#   2. structure ownership -- BJOC-Null's graph-level junction summary may destroy
+#      useful relational structure; BJOC-Organized may generalise better;
+#   3. architectural inductive bias -- the model fits its training rows but the
+#      one-shot object encoding + global readout may not generalise to unseen
+#      molecules, i.e. the missing ingredient is a genuinely different molecular
+#      composition architecture, not another local feature.
+#
+# plus an independent CPU-only investigation:
+#
+#   4. input observability -- are molecules with different y mapped to the same
+#      raw model input?
+#
+# Everything runs on the official train split only.  Official valid/test are
+# never loaded in any form.  No new architecture is trained this round; if the
+# evidence points at inductive bias, the deliverable is a written hypothesis.
+
+protocol: cscl-predictive-bottleneck-diagnosis-v1
+status: frozen
+frozen_utc: "2026-10-12"
+official_splits: never_read
+
+question: >
+  With the published BJOC-Null / BJOC-Organized backbone (413,505 parameters),
+  the frozen raw-y L1 recipe and a NEW canonical-SMILES grouped internal split,
+  what separates the competing explanations of the BJOC plateau: sample
+  efficiency (4k vs 8k at matched optimizer updates), structural ownership
+  (Organized vs Null at matched data/seed/updates), or inductive bias
+  (persistent common errors across seeds and ownership modes), given an
+  independent audit of the raw input observability?
+
+# ---------------------------------------------------------------- hypotheses
+hypotheses:
+  H_sample:
+    claim: at matched optimizer update count T, 8k unique fit molecules buy a
+      genuine held-out improvement over 4k that extra optimization on 4k cannot
+      explain.
+  H_ownership:
+    claim: at matched 8k data, seed and update count, BJOC-Organized improves
+      held-out MAE over BJOC-Null, consistently across seeds and not through
+      parameter or recipe differences.
+  H_architecture:
+    claim: 4k->8k and Null->Organized leave held-out MAE nearly unchanged while
+      fit MAE is much lower; difficult molecules are shared across seeds and
+      ownership modes, and no strict input collision explains them.
+  H_observability:
+    claim: distinct molecules with different y map to exactly the same model
+      input representation.
+
+# ---------------------------------------------------------------- sample-size
+fit4k_is_not_a_learning_curve: >
+  Fit4k and Fit8k are two controlled points on a data-size response curve, not a
+  complete learning curve.  No extrapolation to 20k/50k/100k is licensed.  The
+  primary sample-size contrast is N8 - N4-stepmatched at the SAME number of
+  optimizer updates; N4-short (first ~240 epochs on Fit4k) is reported to show
+  what extra optimization alone does with the same 4k molecules.
+
+# -------------------------------------------------------------------- model
+model:
+  backbone: code/structural_relation_composer_v1.BJOC (unchanged)
+  arms:
+    N: organization_mode = null
+    O: organization_mode = organized
+  parameters_expected: 413505
+  init_rule: >
+    build_bjoc(config, seed, organization_mode); the organization mode never
+    touches initialisation, so N and O share an identical init state for a seed.
+  no_hidden_differences: >
+    the two arms instantiate the same class with the same config; the only
+    functional difference is the incidence grouping branch selected by
+    organization_mode.
+
+# ------------------------------------------------------------------ recipe
+recipe:  # frozen for every formal trajectory in this round
+  optimizer: adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  base_epochs: 240
+  precision: fp32
+  amp: false
+  scheduler: none
+  dropout: 0.0
+  loss: L1 on raw y only
+  train_shuffle_offset: 101
+  soup_last: 5
+
+# ------------------------------------------------------------------ splits
+split:
+  builder: canonical-SMILES groups ordered by sha256(salt|smiles), greedy fill fit/monitor/locked
+  salt: cscl-predictive-bottleneck-v1-A
+  fit_target: 8000
+  monitor_target: 1000
+  locked_target: 1000
+  fit4k:
+    selection: >
+      the SAME group order as the fit assignment; take whole groups greedily
+      until the running row count first reaches 4000.  Label-blind, nested in
+      Fit8k by construction, never chosen by y or by any existing error.
+    target: 4000
+  read_discipline:
+    fit_y: training only
+    monitor_y: standard training-time logging plus the frozen paired analysis read
+    locked_y: read exactly ONCE after every prediction file is written and hashed
+    official_valid_test: never
+
+# ---------------------------------------------------------------- trajectories
+step_matching:
+  T_definition: "T = 240 * ceil(n_fit8k / 128)"
+  equal_updates_for_every_trajectory: true
+  n4_short: "soup of the last five complete epochs among the first 240 epochs on Fit4k"
+  n4_stepmatched: "soup of five snapshots taken at the same global update numbers as the 8k last five epoch endpoints"
+  n8_o8_soup: "soup of the last five complete epochs (frozen, monitor never used for selection)"
+  snapshots_frozen_before_training: true
+
+trajectories:
+  - {id: N4-s0, arm: N, fit: fit4k, seed: 0}
+  - {id: N4-s1, arm: N, fit: fit4k, seed: 1}
+  - {id: N8-s0, arm: N, fit: fit8k, seed: 0}
+  - {id: N8-s1, arm: N, fit: fit8k, seed: 1}
+  - {id: O8-s0, arm: O, fit: fit8k, seed: 0}
+  - {id: O8-s1, arm: O, fit: fit8k, seed: 1}
+max_formal_trajectories: 6
+
+# -------------------------------------------------------------- primary reads
+readouts:
+  # N4-s0 and N4-s1 are two readouts of one trajectory each, so the six
+  # trajectories produce eight readout models.
+  - N4-short
+  - N4-stepmatched
+  - N8
+  - O8
+
+primary_metrics: [mae_raw_y, rmse, median_ae, p90, p95]
+bootstrap: {n_resamples: 5000, seed: 0, unit: molecule}
+
+# ------------------------------------------------------------- decision rules
+# Frozen before any GPU run.  All comparisons are seed-mean paired over
+# molecules on the unlocked monitor and on the one-shot locked split; a rule
+# fires only when its threshold holds on locked.
+decision_rules:
+  observability:
+    claim_when: >
+      a strict labelled-graph-isomorphism group with identical model input has
+      >= 2 rows with different y AND the total number of such rows is >= 20
+      AND the empirical indistinguishable floor (mean |y - group median| over
+      affected rows) is >= 0.005.  Otherwise record
+      INPUT_COLLISION_FLOOR_NOT_ESTABLISHED.
+  sample_efficiency:
+    claim_when: >
+      locked seed-mean (N8 - N4-stepmatched) <= -0.006 AND both per-seed deltas
+      < 0 AND locked paired CI95 upper < 0 AND the top-10-removed delta <= 0.
+  ownership:
+    claim_when: >
+      locked seed-mean (O8 - N8) <= -0.005 AND both per-seed deltas < 0 AND
+      the y>-3 delta <= 0 AND the top-10-removed delta <= 0 AND locked paired
+      CI95 upper < 0.
+  architecture:
+    claim_when: >
+      observability not established AND (N8 - N4-stepmatched) locked CI95
+      contains 0 AND (O8 - N8) locked CI95 contains 0 AND every readout has fit
+      MAE < 0.06 AND the four primary models (N8/O8 x seed 0/1) have a
+      locked top-10% four-way high-error intersection of >= 25% of each
+      model's high-error set (mean pairwise Jaccard >= 0.35).
+  priority: observability > (sample_efficiency vs ownership by larger |locked seed-mean delta|) > architecture
+  tie_break: >
+    if both the sample-efficiency and the ownership threshold fire, the primary judgement
+    is the larger |locked seed-mean effect| (sample efficiency preferred on an exact tie);
+    the other is reported as a secondary signal.  Architecture only fires when neither of
+    the two positive-effect rules nor observability fires.
+  top_k_removed_definition: >
+    rows with the k largest max(|e_candidate|, |e_reference|) on the scored split are
+    removed before averaging the paired delta.
+  fallback: INCONCLUSIVE_OR_BLOCKED
+
+final_decision_vocabulary:
+  - SAMPLE_EFFICIENCY_BOTTLENECK_SUPPORTED
+  - OWNERSHIP_GENERALIZATION_SIGNAL
+  - ARCHITECTURAL_INDUCTIVE_BIAS_SUSPECTED
+  - INPUT_OBSERVABILITY_LIMITATION_FOUND
+  - INCONCLUSIVE_OR_BLOCKED
+  - BOTTLENECK_NOT_IDENTIFIED
+
+# ------------------------------------------------------------- budget + bans
+budget:
+  wall_clock_minutes_total: 465
+  reserve_for_pull_verify_report_git_minutes: 35
+  gpu: 1
+  gpu_hours_max: 1.5
+  concurrency: 1
+bans:
+  - new architecture / new structural features / Cross-Bond v2 / TypedPathRing repair
+  - dropout search / IJCM interactions / longer arbitrary training budgets
+  - a third seed / O4k / Cross-Bond P arm / any new architecture candidate
+  - target-component supervision (g/ell/s/c/k)
+  - teacher / distilled predictions
+  - external labelled data
+  - reading official valid / official test in any form
+  - using the exposed historical official-test number 0.092233 for any decision
+  - changing the model / split / recipe after seeing locked-dev results
+  - using monitor or locked results to select Fit4k
+  - deleting hard molecules and reporting the trimmed MAE as a headline score
+
+# ----------------------------------------------------------------- frozen plan
+# Filled by the CPU `splits` + `steps` commands before the freeze commit; asserted
+# by `gates` and re-checked on the remote execution host.  This is the artefact
+# that makes "freeze before GPU" machine-checkable.
+frozen:
+  frozen_block_version: 1
+  n_fit8k: 8000
+  n_monitor: 1000
+  n_locked: 1000
+  n_fit4k: 4000
+  fit8k_sha256_rows: "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a"
+  monitor_sha256_rows: "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b"
+  locked_sha256_rows: "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d"
+  fit4k_sha256_rows: "3f6b5d69097476b02f5c6fe0cc180e564180fb0da5a241bb5ba1c5b88e7b3ecd"
+  steps_per_epoch_8k: 63
+  steps_per_epoch_4k: 32
+  T: 15120
+  n4_short_snapshot_steps: [7552, 7584, 7616, 7648, 7680]
+  n4_stepmatched_snapshot_steps: [14868, 14931, 14994, 15057, 15120]
+  n8_o8_soup_steps: [14868, 14931, 14994, 15057, 15120]
+  prep_fit8k_sha256: "0b807c023492190ff120dfee1884b2cdbe7fea0dacb10f8a2c2815094fa56acb"
+  prep_fit4k_sha256: "02938c53a000060f256cd3c2a752dcb7c7b608b7ad2c856ea583e568ac389a76"
+  objects_cache_sha256: "08e3ab137e7a4829f5488eb912cd1b01e4a0c87fbf3ef2c1cd9cef6efe61eb12"
