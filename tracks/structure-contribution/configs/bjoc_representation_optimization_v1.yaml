@@ -1,0 +1,176 @@
+# cscl-bjoc-representation-optimization-v1  (pre-registration, frozen before training)
+#
+# Track: tracks/structure-contribution
+# Question: the BJOC main improvable point is one of
+#   (A) optimization stability, (B) learned junction content,
+#   (C) missing typed short-path + ring-block structural representation.
+# All three are pre-registered as falsifiable contrasts on internal splits only.
+
+protocol: cscl-bjoc-representation-optimization-v1
+status: frozen
+frozen_utc: "2026-10-12"
+official_splits: never_read   # valid/test y, predictions and raw structures are off-limits
+
+question: >
+  For the BJOC relation-composer predictor on ZINC, is the dominant improvable
+  point training optimization stability (S), the learned junction content (J),
+  or a missing typed short-path + ring-block structural representation (T)?
+
+# ---------------------------------------------------------------- hypotheses
+hypotheses:
+  H_stability:
+    claim: the last 40 epochs are worth a real gain, so a decayed-LR run buys fit.
+    audit_evidence: results/bjoc_representation_optimization_v1/historical_training_audit.json
+    verdict: NO_STABILITY_TRAINING_PURCHASE
+    reason: >
+      no late plateau (both seeds still improving at epoch 240), the seed gap comes
+      from last-5 soup geometry rather than an unstable optimum, and the Adam step
+      is lr-dominated (gradient clip hit 60-100% of steps) so the constant-LR
+      regime is already benign.
+  H_junction:
+    claim: the learned per-centre junction reader contributes predictive content.
+    contrast: J - B on internal splits (capacity-matched, exact).
+  H_typed:
+    claim: typed length-2/3 bond-type sequences and ring-block descriptors add
+      information that the original atom/bond/junction objects cannot express.
+    contrast: T - B on internal splits (identical capacity, B channels zeroed).
+
+# -------------------------------------------------------------------- arms
+arms:
+  B:  # capacity-matched baseline; new channels are exactly zero after standardisation
+    model: ExtendedBJOC
+    feature_mode: zero
+    parameters: 432705
+  T:  # typed-path + ring-block arm; same class/widths/seed as B -> identical init
+    model: ExtendedBJOC
+    feature_mode: real
+    parameters: 432705
+  J:  # junctionless ablation: no junction module, no junction content, count only
+    model: NoJunctionBJOC
+    feature_mode: zero
+    parameters: 432705
+  S:  # isolated stabilisation contrast (only if separately justified; not part of stage 1)
+    model: ExtendedBJOC
+    feature_mode: zero
+    lr_schedule: staged(160->1e-3, 200->3e-4, 240->1e-4)
+    parameters: 432705
+
+capacity_policy:
+  original_bjoc_parameters: 413505
+  arms_parameters: 432705
+  delta_vs_original: +19200        # +4.64%, the unavoidable cost of the new input channels
+  B_equals_T: true                 # identical class, widths and seed
+  J_equals_B: true                 # exact match removes capacity as an explanation for J-B
+  disclosure: >
+    J is matched to B (+4.64% over the published BJOC backbone) rather than to the
+    published backbone, because J-B is the causal contrast and an undersized J would
+    bias the junction verdict in the direction that flatters our hypothesis.
+
+# -------------------------------------------------------------------- model
+model:
+  backbone: code/structural_relation_composer_v1.py (reused unchanged)
+  wrapper: code/bjoc_representation_optimization_v1.py
+  new_features: code/bjoc_typed_path_ring_features_v1.py
+  atom_in_B_T: 243    # 108 original + 135 new
+  bond_in_B_T: 307    # 3*96 + 7 + 12
+  reader_in: 321      # unchanged
+  new_atom_channels: 135
+  new_bond_channels: 12
+  new_atom_blocks:
+    path2_bondtype_sequence: 16   # log1p counts of length-2 bond-type sequences
+    path3_bondtype_sequence: 64   # log1p counts of length-3 bond-type sequences
+    path2_ring_count: 3           # how many of the 2 bonds are ring bonds
+    path3_ring_count: 4
+    path3_endpoint_type: 28       # atom category at the far end of a length-3 path
+    path_totals: 2
+    ring_block: 18                # Tarjan biconnected ring-block descriptors
+  new_bond_blocks:
+    ring_block: 12                # bridge, block size/rank/attachments, fused edge, ...
+  standardisation: per-split, fitted on that split's fit rows only
+  zero_padding: standardised mean value (never a negative raw zero)
+
+# ------------------------------------------------------------------ recipe
+recipe:  # frozen for every formal trajectory in this round
+  optimizer: adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  epochs: 240
+  precision: fp32
+  amp: false
+  scheduler: none
+  loss: L1 on raw y
+  selection: last-5 parameter soup (epochs 236-240)
+  train_shuffle_offset: 101
+
+# ------------------------------------------------------------------ splits
+splits:
+  builder: canonical-SMILES groups, ordered by sha256(salt|smiles), greedy fill
+  A: {salt: cscl-bjoc-repr-opt-v1-discovery, fit: 8000, monitor: 1000, locked: 1000}
+  B: {salt: cscl-bjoc-repr-opt-v1-replication, fit: 8000, monitor: 1000, locked: 1000}
+  read_discipline:
+    monitor: read after each arm's training completes, for that arm only
+    locked: read exactly once per arm after the model is frozen, predictions hashed first
+  disclosure: B's locked molecules were mostly inside A's fit set (A_fit cap B_locked = 805).
+    B is therefore a replication of the *fit-set* variation, not of the locked rows.
+
+# -------------------------------------------------------------- read protocol
+staged_design:
+  stage1: [B/A/s0, J/A/s0, T/A/s0]        # same split, same seed, 3 arms
+  stage2_gate: T passes the promotion rule on split A
+  stage2_A: [B/A/s1, T/A/s1]              # seed replication of an internal contrast
+  stage2_B: [B/B/s0, T/B/s0, B/B/s1, T/B/s1]  # split replication (B models frozen before its locked read)
+  max_total_trajectories: 10
+  seed_interpretation: seeds are robustness checks only; no seed may be used for selection
+
+# ----------------------------------------------------------- promotion rules
+promotion:
+  T_confirmation_purchase:
+    monitor_delta_T_minus_B_max: -0.006          # split A monitor, seed 0
+    locked_delta_T_minus_B: "< 0"                # one-shot read; -0.003 is the expected-scale target
+    ordinary_molecules: not worse               # y > -3 subgroup must not degrade
+    not_single_row_driven:
+      delta_after_removing_top10_worst: "< 0"
+      worst_row_delta_share: "< 0.05"
+    capacity_and_correctness_gates: pass
+  else: T_NO_PURCHASE
+  J_interpretation:
+    clearly_worse: {criterion: "locked J-B > +0.005 and CI95 lower bound > 0", meaning: JUNCTION_NECESSITY_UNRESOLVED}
+    indistinguishable: {criterion: "|locked J-B| <= 0.005", meaning: JUNCTION_NECESSITY_UNRESOLVED}
+    clearly_better: {criterion: "locked J-B < -0.005 and CI95 upper bound < 0", meaning: JUNCTION_SIMPLIFICATION_SIGNAL}
+
+final_decision_vocabulary:  # exactly one of
+  - TYPED_STRUCTURE_PROMISING
+  - TYPED_STRUCTURE_OVERFIT
+  - JUNCTION_SIMPLIFICATION_PROMISING
+  - OPTIMIZATION_SIGNAL_ONLY
+  - NO_USEFUL_GAIN
+  - INCONCLUSIVE_OR_BLOCKED
+
+# ------------------------------------------------------------- budget + bans
+budget:
+  wall_clock_minutes_total: 465
+  reserve_for_pull_verify_report_git_minutes: 35
+  gpu: 1
+  gpu_hours_max: 2.5
+  formal_trajectories_max: 10
+  concurrency: 1
+bans:
+  - bounded-free hyperparameter search
+  - extra seeds beyond the pre-registered ones
+  - GNN / Transformer / attention architecture
+  - target-component supervision
+  - re-deriving the ZINC label formula
+  - feature chasing based on eval results
+  - reading official valid / official test in any form
+
+# ------------------------------------------------------- expected outcomes
+expected:
+  missing_information: >
+    53.4% of original-feature groups (5715/10699 atom rows over the 10k set) are split
+    by the new channels, so the new blocks are not a relabelling of the old ones.
+  sparsity_risk: >
+    of the 9 (resp. 27) possible length-2 (length-3) bond-type sequences over the
+    bond types that actually occur, 6 (resp. 12) appear in the training set.
+  rare_channels: ring_is_spiro_center fires on 199 atom rows; any spiro-specific claim is out of scope.
