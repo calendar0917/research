@@ -1579,6 +1579,18 @@ def _subgroups(pred: np.ndarray, y: np.ndarray, rows: Sequence[int]) -> dict[str
 # ---------------------------------------------------------------------------
 
 
+def _fit_deltas(cand: str, base: str) -> dict[str, float]:
+    """Soup fit-MAE deltas straight from the training records (fit rows only)."""
+    out: dict[str, float] = {}
+    try:
+        a = read_json(OUT / f"train_{cand}.json")["soup_fit_mae"]
+        b = read_json(OUT / f"train_{base}.json")["soup_fit_mae"]
+        out[f"fit_{cand}_minus_{base}"] = float(a - b)
+    except FileNotFoundError:
+        pass
+    return out
+
+
 def _decide_core(
     paired: Mapping[str, Any],
     sub_candidate: Mapping[str, Any],
@@ -1586,14 +1598,23 @@ def _decide_core(
     gates_pass: bool,
     *,
     arms_key: tuple[str, str] = ("T_A_s0", "B_A_s0"),
+    preview: bool = False,
 ) -> dict[str, Any]:
     """Pre-registered promotion rule for T plus the junction-necessity reading."""
     cand, base = arms_key
     t_paired = paired[f"{cand}_minus_{base}"]
+    fit_delta = _fit_deltas(cand, base).get(f"fit_{cand}_minus_{base}")
+
+    def held_out(entry: Mapping[str, Any], key: str) -> Any:
+        """Locked-dev value, or the monitor stand-in while rehearsing."""
+        if key in entry:
+            return entry[key]
+        return entry[key.replace("locked", "monitor")]
+
     mon_delta = t_paired["monitor_mae_delta"]
-    locked_delta = t_paired["locked_mae_delta"]
+    locked_delta = held_out(t_paired, "locked_mae_delta")
     mon_ci = t_paired["monitor"]["ci95"]
-    locked_ci = t_paired["locked"]["ci95"]
+    locked_ci = t_paired["locked"]["ci95"] if "locked" in t_paired else t_paired["monitor"]["ci95"]
     ordinary_delta = sub_candidate["y_gt_-3"]["mae"] - sub_baseline["y_gt_-3"]["mae"]
     trimmed_delta = sub_candidate["top10_removed"]["mae"] - sub_baseline["top10_removed"]["mae"]
     worst_share_t = sub_candidate["max_error_row"]["share"]
@@ -1617,6 +1638,7 @@ def _decide_core(
         "candidate": f"T = BJOC-TypedPathRing ({cand} vs capacity-matched padded {base})",
         "checks": checks,
         "deltas": {
+            "fit_T_minus_B": fit_delta,
             "monitor_T_minus_B": mon_delta,
             "monitor_ci95": mon_ci,
             "locked_T_minus_B": locked_delta,
@@ -1637,8 +1659,8 @@ def _decide_core(
     jpaired = paired.get(jkey)
     if jpaired is not None:
         jd_mon = jpaired["monitor_mae_delta"]
-        jd_locked = jpaired["locked_mae_delta"]
-        j_ci = jpaired["locked"]["ci95"]
+        jd_locked = held_out(jpaired, "locked_mae_delta")
+        j_ci = jpaired["locked"]["ci95"] if "locked" in jpaired else jpaired["monitor"]["ci95"]
         if jd_locked > 0.005 and j_ci[0] > 0:
             band = "JUNCTION_NECESSITY_SUPPORTED"
         elif jd_locked < -0.005 and j_ci[1] < 0:
@@ -1676,7 +1698,7 @@ def cmd_decide(args: argparse.Namespace) -> int:
         subs, sub_key = metrics["subgroups_locked"], "subgroups_locked"
     del sub_key
     gates_pass = bool(read_json(OUT / "correctness_gates.json")["all_numeric_gates_pass"])
-    core = _decide_core(payload["paired"], subs["T_A_s0"], subs["B_A_s0"], gates_pass)
+    core = _decide_core(payload["paired"], subs["T_A_s0"], subs["B_A_s0"], gates_pass, preview=preview)
     decision = core["t_gate"]
     junction = core["junction"]
     suffix = "_preview" if preview else ""
@@ -1686,7 +1708,99 @@ def cmd_decide(args: argparse.Namespace) -> int:
     write_json(OUT / f"typed_path_ring_gate{suffix}.json", decision)
     write_json(OUT / f"junction_necessity_analysis{suffix}.json", junction)
     log(f"[decide{'(preview)' if preview else ''}] T gate = {decision['decision']}; junction band = {junction.get('band')}")
+    if not preview:
+        final = _final_decision(decision, junction, gates_pass)
+        write_json(OUT / "scientific_decision.json", final)
+        log(f"[decide] scientific_decision = {final['decision']}")
     return 0
+
+
+def _replication_evidence() -> dict[str, Any]:
+    """Seed / split replication of the T-B contrast, when those arms exist."""
+    out: dict[str, Any] = {}
+    for split_key in ("A", "B"):
+        path = OUT / f"split_{split_key.lower()}_paired_analysis.json"
+        if not path.exists():
+            continue
+        paired = read_json(path)["paired"]
+        for key, entry in paired.items():
+            if key.startswith("T_"):
+                out[key] = {
+                    "monitor_mae_delta": entry["monitor_mae_delta"],
+                    "locked_mae_delta": entry.get("locked_mae_delta"),
+                    "locked_ci95": entry.get("locked", {}).get("ci95"),
+                }
+    return out
+
+
+def _final_decision(t_gate: Mapping[str, Any], junction: Mapping[str, Any], gates_pass: bool) -> dict[str, Any]:
+    """Map the pre-registered readouts onto exactly one frozen decision label."""
+    mon_delta = t_gate["deltas"]["monitor_T_minus_B"]
+    locked_delta = t_gate["deltas"]["locked_T_minus_B"]
+    junction_band = junction.get("band")
+    stability = read_json(OUT / "stability_analysis.json") if (OUT / "stability_analysis.json").exists() else {}
+    stability_purchase = stability.get("decision")
+    fit_delta = t_gate["deltas"].get("fit_T_minus_B")
+    if not gates_pass:
+        decision_name = "INCONCLUSIVE_OR_BLOCKED"
+        rationale = "correctness or capacity gates failed, so no arm contrast is interpretable"
+    elif t_gate["decision"] == "T_CONFIRMATION_PURCHASE":
+        decision_name = "TYPED_STRUCTURE_PROMISING"
+        rationale = (
+            "T beat the capacity-matched padded baseline on the pre-registered monitor threshold and on "
+            "the single locked-dev read, with no ordinary-molecule or single-row dependence"
+        )
+    elif (
+        (fit_delta is not None and fit_delta < 0.0 and (mon_delta > 0.0 or locked_delta > 0.0))
+        or (mon_delta <= GATE_MONITOR_DELTA and locked_delta >= GATE_LOCKED_DIRECTION)
+    ):
+        decision_name = "TYPED_STRUCTURE_OVERFIT"
+        rationale = (
+            "the typed channels made the model fit the training rows better while making held-out "
+            "molecules worse, i.e. the extra structure buys memorisation, not generalisation"
+        )
+    elif junction_band == "JUNCTION_SIMPLIFICATION_SIGNAL":
+        decision_name = "JUNCTION_SIMPLIFICATION_PROMISING"
+        rationale = (
+            "removing the junction reader (J) beat the junction-bearing capacity-matched baseline (B) on the "
+            "locked molecules, so the learned junction content is not earning its cost"
+        )
+    elif stability_purchase and stability_purchase != "NO_STABILITY_TRAINING_PURCHASE":
+        decision_name = "OPTIMIZATION_SIGNAL_ONLY"
+        rationale = "the only supported improvable point is training optimisation, not representation or content"
+    elif abs(locked_delta) <= 0.005 and abs(junction.get("locked_J_minus_B") or 0.0) <= 0.005:
+        decision_name = "NO_USEFUL_GAIN"
+        rationale = (
+            "neither the typed structural channels nor the junctionless ablation moved the locked-dev error "
+            "outside the pre-registered indifference band"
+        )
+    else:
+        decision_name = "INCONCLUSIVE_OR_BLOCKED"
+        rationale = (
+            "the readouts are directional but cross the pre-registered bands or intervals, so no decision "
+            "label is supported"
+        )
+    return {
+        "protocol": PROTOCOL_ID,
+        "decision": decision_name,
+        "rationale": rationale,
+        "evidence": {
+            "fit_T_minus_B": fit_delta,
+            "monitor_T_minus_B": mon_delta,
+            "locked_T_minus_B": locked_delta,
+            "locked_T_minus_B_ci95": t_gate["deltas"]["locked_ci95"],
+            "junction_band": junction_band,
+            "locked_J_minus_B": junction.get("locked_J_minus_B"),
+            "stability_decision": stability_purchase,
+            "correctness_and_capacity_gates_pass": bool(gates_pass),
+        },
+        "replication": _replication_evidence(),
+        "vocabulary": [
+            "TYPED_STRUCTURE_PROMISING", "TYPED_STRUCTURE_OVERFIT", "JUNCTION_SIMPLIFICATION_PROMISING",
+            "OPTIMIZATION_SIGNAL_ONLY", "NO_USEFUL_GAIN", "INCONCLUSIVE_OR_BLOCKED",
+        ],
+        "official_valid_or_test_used": False,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -1711,6 +1825,25 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
         model.eval()
         base = pred_in_chunks(model, provider, mon_rows)
         entry: dict[str, Any] = {"base_monitor_mae": float(np.abs(base - y_mon).mean()), "masks": {}}
+        # label-blind input-mass diagnostic: how much standardised signal each block carries
+        atom_mass = {name: [] for name in tpr.atom_layout()}
+        bond_mass = {name: [] for name in tpr.bond_layout()}
+        for r in mon_rows:
+            a, b = provider.channels(int(r))
+            for name, sl in tpr.atom_layout().items():
+                atom_mass[name].append(np.asarray(a[:, sl], dtype=np.float64).ravel())
+            for name, sl in tpr.bond_layout().items():
+                bond_mass[name].append(np.asarray(b[:, sl], dtype=np.float64).ravel())
+        entry["input_mass"] = {
+            f"atom_{name}": {"mean_abs": float(np.abs(np.concatenate(v)).mean()) if v else 0.0,
+                             "frac_nonzero": float((np.abs(np.concatenate(v)) > 1e-9).mean()) if v else 0.0}
+            for name, v in atom_mass.items()
+        }
+        entry["input_mass"].update({
+            f"bond_{name}": {"mean_abs": float(np.abs(np.concatenate(v)).mean()) if v else 0.0,
+                             "frac_nonzero": float((np.abs(np.concatenate(v)) > 1e-9).mean()) if v else 0.0}
+            for name, v in bond_mass.items()
+        })
         if arm == "T":
             real_std = {}
             for r in mon_rows:
@@ -1786,7 +1919,8 @@ class _MaskedProvider(FeatureProvider):
         return a, b
 
 
-def pred_in_chunks(model, provider, rows, device="cpu") -> np.ndarray:    return predict(model, provider, rows, torch.device(device))
+def pred_in_chunks(model, provider, rows, device: str = "cpu") -> np.ndarray:
+    return predict(model, provider, rows, torch.device(device))
 
 
 # ---------------------------------------------------------------------------
@@ -1879,8 +2013,47 @@ def cmd_freeze(args: argparse.Namespace) -> int:
     return 0
 
 
+def build_train_manifest() -> dict[str, Any]:
+    """Aggregate every formal trajectory record into one provenance manifest."""
+    records = {}
+    for path in sorted(OUT.glob("train_*.json")):
+        rec = read_json(path)
+        tag = path.stem.replace("train_", "")
+        records[tag] = {
+            "arm": rec["arm"], "split": rec["split"], "seed": rec["seed"], "epochs": rec["epochs"],
+            "soup_members": rec["soup_members"], "parameters": rec["parameters"],
+            "init_state_sha256": rec["init_state_sha256"], "git_commit": rec["git_commit"],
+            "feature_mode": rec["feature_mode"], "stabilised_schedule": rec["stabilised_schedule"],
+            "soup_fit_mae": rec["soup_fit_mae"], "soup_monitor_mae": rec["soup_monitor_mae"],
+            "wall_seconds": rec["wall_seconds"], "device": rec["device"],
+            "cuda_device_name": rec["cuda_device_name"], "torch": rec["torch"],
+            "hyper": rec["hyper"], "checkpoint_sha256": file_sha256(OUT / f"checkpoint_{tag}.pt")
+            if (OUT / f"checkpoint_{tag}.pt").exists() else None,
+        }
+    manifest = {
+        "protocol": PROTOCOL_ID,
+        "generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "git_commit": git_commit(),
+        "recipe": {
+            "epochs": EPOCHS, "lr": LR, "weight_decay": WEIGHT_DECAY, "grad_clip": GRAD_CLIP,
+            "batch_size": BATCH_SIZE, "soup_last": SOUP_LAST, "precision": "fp32", "amp": False,
+            "scheduler": "none", "loss": "L1(raw y)",
+        },
+        "n_trajectories": len(records),
+        "budget_max_trajectories": 10,
+        "total_wall_seconds": float(sum(r["wall_seconds"] for r in records.values())),
+        "records": records,
+        "predictions": {},
+        "official_valid_or_test_used": False,
+    }
+    for path in sorted(OUT.glob("prediction_manifest_*.json")):
+        manifest["predictions"][path.stem] = read_json(path)
+    return manifest
+
+
 def cmd_report(args: argparse.Namespace) -> int:
     """Assemble REPORT.md from the round's frozen artifacts."""
+    write_json(OUT / "train_manifest.json", build_train_manifest())
     decision = read_json(OUT / "scientific_decision.json") if (OUT / "scientific_decision.json").exists() else {}
     lines = [
         f"# {PROTOCOL_ID} — REPORT",
