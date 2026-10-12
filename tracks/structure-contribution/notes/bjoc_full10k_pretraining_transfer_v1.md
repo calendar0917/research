@@ -63,8 +63,7 @@ hold (computed pre-GPU, `reuse_audit.json`):
 5. the frozen soup state replays the historical official-valid predictions
    bit-identically on the frozen structure cache.
 
-All five held; B contributes **zero new GPU training**.  A genuinely different
-recipe would have forced a retrain rather than a silent substitution.
+All five held locally; B would contribute **zero new GPU training**.  **Amendment before any GPU run:** on the remote compute checkout the historical terminal-round prediction files are not part of the deployed revision, so the replay condition cannot be recomputed there; the audit therefore conservatively returns `RETRAIN_B` on the cluster.  The GPU chains retrain B seed 0/1 with the identical frozen recipe on the same GPU as P (adding ~16 GPU-min), which is the stronger matched-baseline guarantee; the locally verified historical replay (max `|dpred| = 0.0`) is recorded as supporting evidence only and is never used for selection.
 
 ## 4. Phase D representation diagnostics and the Q purchase gate
 

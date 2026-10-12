@@ -1243,10 +1243,10 @@ def cmd_stage_b(args: argparse.Namespace) -> int:
     audit = read_json(REUSE_AUDIT)
     norm = read_json(PREP_TRAIN)
     device = torch.device(args.device)
+    if audit["decision"] != "REUSE_HISTORICAL_FULL10K_B":
+        log("[stage-b] reuse audit decision RETRAIN_B; B is trained on the GPU chains")
+        return 0
     for seed in SEEDS:
-        if audit["decision"] != "REUSE_HISTORICAL_FULL10K_B":
-            _train_downstream("B", seed, device)
-            continue
         if (OUT / f"train_B_seed{seed}.json").exists():
             log(f"[stage-b] seed {seed} already staged")
             continue
@@ -2129,7 +2129,10 @@ def cmd_decision(args: argparse.Namespace) -> int:
 def cmd_init_audit(args: argparse.Namespace) -> int:
     per_seed: dict[str, Any] = {}
     for s in SEEDS:
-        b = read_json(OUT / f"train_B_seed{s}.json")
+        b_path = OUT / f"train_B_seed{s}.json"
+        if not b_path.exists():
+            continue
+        b = read_json(b_path)
         p_path = OUT / f"train_P_seed{s}.json"
         entry: dict[str, Any] = {
             "B_init_full_sha256": b["init_full_sha256"],
@@ -2203,6 +2206,8 @@ def cmd_stage_remote_prep(args: argparse.Namespace) -> int:
 def cmd_stage_ssl_p(args: argparse.Namespace) -> int:
     seed = int(args.seed)
     device = torch.device(args.device)
+    if not (OUT / f"train_B_seed{seed}.json").exists():
+        _train_downstream("B", seed, device)
     if not (OUT / f"pretraining_seed{seed}.json").exists():
         pretrain_full10k(seed, device)
     if not (OUT / f"train_P_seed{seed}.json").exists():
