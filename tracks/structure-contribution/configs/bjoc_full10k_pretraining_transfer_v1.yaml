@@ -1,0 +1,209 @@
+# cscl-bjoc-full10k-pretraining-transfer-v1  (pre-registration; frozen before any GPU)
+#
+# Track: tracks/structure-contribution
+#
+# ONE scientific question: does the already-validated leak-free masked
+# atom/bond pretraining still improve single-model raw-y MAE when the
+# downstream model is trained on the COMPLETE official train 10000 and
+# evaluated once on the official valid 1000?
+#
+# No internal split.  Pretraining sees only x / edge_index / edge_attr of the
+# official train 10k.  Official valid is an exposed development set; its
+# labels are read exactly once, after every prediction file is frozen.
+# Official test is never loaded in any form.
+
+protocol: cscl-bjoc-full10k-pretraining-transfer-v1
+status: frozen
+frozen_utc: "2026-10-13"
+official_test: never_read
+
+question: >
+  With (a) no extra molecules, (b) no extra labels, (c) the exact published
+  BJOC-Null architecture (413,505 parameters), (d) the exact frozen masked
+  pretraining recipe, and (e) the downstream model trained on the whole
+  official train 10000, does the pretrained initialization lower the single
+  model official-valid raw-y MAE relative to a matched scratch full-10k
+  baseline, stably across two seeds and outside the single extreme row
+  valid:0172?  A second, conditional question: if the label-blind
+  representation gate shows strong encoder rewriting, does a fixed reduced
+  encoder fine-tuning learning rate (3e-4 vs 1e-3) further improve
+  generalization?
+
+# ---------------------------------------------------------------- data
+data:
+  train: "official PyG ZINC subset=True train, 10000 rows, original order"
+  valid: "official PyG ZINC subset=True val, 1000 rows (exposed development set)"
+  test: forbidden
+  internal_split: none
+  pretraining_inputs: ["x", "edge_index", "edge_attr"]   # official train only
+  normalisation: "global-feature standardiser fit on the 10,000 official train objects only"
+  duplicate_structures: "disclosed (canonical SMILES within train, WL fingerprints train vs valid); no row deleted"
+
+# ---------------------------------------------------------------- mask task
+mask:
+  atom_ratio: 0.15
+  bond_ratio: 0.15
+  atom_token: 27      # unused atom class inside ATOM_CATEGORIES = 28
+  bond_token: 0       # unused raw edge_attr class inside BOND_CATEGORIES = 4
+  token_scan: "full official train 10,000 raw codes; a conflict stops the round"
+  selection: "max(1, round(ratio * n)) objects per molecule, without replacement"
+  min_one_per_molecule: true
+  rng: "numpy.random.SeedSequence([seed, molecule_id, visit_index])"
+  independent_of_shuffle_rng: true
+  physical_bonds_double_edge_sync: true
+  construction_rule: >
+    replace the raw codes on a COPY of the raw PyG arrays, then rebuild every
+    BJOC object field from the masked raw graph with build_mol_objects (full
+    rebuild).  No incremental feature patch; no feature derived from the
+    hidden truth survives in the model input.
+
+pretext:
+  task: "masked raw atom-type + masked physical bond-type reconstruction"
+  loss: "CE(masked atoms, 28-way) + CE(masked physical bonds, 4-way); weights 1.0/1.0"
+  backbone: ["atom_encoder", "bond_encoder", "junction_encoder"]
+  heads: ["atom_head", "bond_head"]        # discarded after pretraining
+  updates: 7560
+  batch_size: 128
+  optimizer: adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  precision: fp32
+  checkpoint_rule: "last-step encoder state only; no selection on reconstruction accuracy"
+  exposure_disclosure: >
+    fixed 7,560 updates at batch 128 = 967,680 molecule-visits, i.e. ~96.8
+    mean exposures per train molecule here versus ~121.0 in the 8k Fit round;
+    the difference is recorded but no length search is performed.
+
+# -------------------------------------------------------- downstream recipe
+recipe:
+  optimizer: adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  precision: fp32
+  amp: false
+  scheduler: none
+  dropout: 0.0
+  loss: "L1 on raw y only"
+  epochs: 240
+  steps_per_epoch: 79
+  updates: 18960
+  soup_last: 5
+  train_shuffle_offset: 101
+  parameters_expected: 413505
+
+arms:
+  B:
+    init: scratch
+    reuse: >
+      the historical full-10k BJOC-Null seed 0/1 checkpoints may be reused iff
+      the frozen reuse audit proves: bit-identical object cache, bit-identical
+      train-only normaliser, bit-identical init-state hash, identical recipe
+      (Adam 1e-3 / wd 1e-5 / clip 5 / batch 128 / 240 epochs / last-5 soup /
+      shuffle seed seed+101) and bit-level valid forward replay from the stored
+      soup state.  Otherwise B is retrained with the same recipe.
+  P:
+    init: "three encoders from the frozen last-step pretrained state; composer/reader from the same scratch init as B"
+  Q:
+    condition: "purchased only if the frozen label-blind representation gate fires"
+    encoder_lr: 3.0e-4
+    composer_reader_lr: 1.0e-3
+    everything_else: "identical to P (same pretrained encoders, same init, same row order, same 18960 updates, same loss, same soup)"
+  matched:
+    - "B/P/Q share per-seed init state, fit rows, loss, batch order (torch.Generator seed+101) and soup rule"
+    - "Q differs from P only in the two optimizer learning rates"
+
+# ------------------------------------------- conditional Q purchase gate
+q_purchase_gate:
+  readout: "label-blind representation diagnostics on 2,000 frozen official-train structures"
+  conditions_any:
+    - "junction linear CKA (pretrained -> fine-tuned P) < 0.75 for at least one seed"
+    - "junction effective rank drop (pretrained -> fine-tuned P) > 25% with >= 4/5 repeated 1,000-molecule draws above 25% for at least one seed"
+  if_not: "NO_ENCODER_PRESERVATION_PURCHASE; Q is never trained; no other candidate"
+
+# ------------------------------------------------------- primary endpoint
+evaluation:
+  order: >
+    complete all authorised training; run every frozen model forward on the
+    official-valid structures without reading any label; hash every prediction
+    file into prediction_freeze.json; only then read the official-valid labels
+    exactly once in score.
+  primary_metric: "official-valid raw-y MAE, seed-mean of the two per-seed MAEs"
+  seed_mean_definition: "arithmetic mean of the two independent single-model MAEs (never an ensemble)"
+  bootstrap: {n_resamples: 5000, seed: 0, unit: molecule}
+  secondaries:
+    - "per-seed MAE and RMSE"
+    - "median absolute error, p90, p95, p99, max absolute error"
+    - "ordinary molecules (y > -3) and tail molecules (y <= -3)"
+    - "top-1 / top-5 / top-10 error sensitivity"
+    - "per-molecule paired improvement fraction"
+    - "valid:0172 contribution and all-rows-minus-0172 delta"
+  no_post_read_training: true
+  no_ensemble_headline: true
+
+# ------------------------------------------------------- decision cases
+decision_rules:
+  FULL10K_PRETRAINING_GAIN_CONFIRMED_ON_DEV:
+    - "P - B seed-mean MAE <= -0.005"
+    - "both per-seed deltas < 0"
+    - "ordinary molecules delta < 0"
+    - "top-10-removed delta < 0"
+    - "all-rows-minus-valid:0172 delta < 0 (gain is not all from the extreme row)"
+    - "paired bootstrap CI95 upper < 0"
+    - "no leakage or data-protocol deviation"
+  FULL10K_PRETRAINING_GAIN_WEAK_OR_UNSTABLE:
+    - "some negative evidence (e.g. seed-mean < 0 but one seed >= 0, or a gain carried by the extreme row, or ordinary molecules not improved)"
+  FULL10K_PRETRAINING_NO_GAIN:
+    - "P does not beat B consistently in any pre-registered readout"
+  ENCODER_LR_ADAPTATION_USEFUL:
+    - "Q purchased and both per-seed Q-P deltas < 0 and seed-mean Q-P <= -0.003 and ordinary molecules improve and the gain is not extreme-row driven and RMSE does not blow up"
+  ENCODER_LR_ADAPTATION_NOT_SUPPORTED:
+    - "Q purchased but the above fail, or Q not purchased (status NO_ENCODER_PRESERVATION_PURCHASE)"
+  BULK_GAIN_WITH_TAIL_COST:
+    - "median / ordinary / p90 improve while RMSE or the y <= -3 tail worsens"
+  INCONCLUSIVE_OR_BLOCKED:
+    - "engineering, gate or data-blocking failure"
+
+# ------------------------------------------------------------- budget + bans
+budget:
+  wall_clock_minutes_total: 405
+  gpu_hours_max: 3.0
+  gpus_max: 1
+  no_test_access: true
+
+bans:
+  - "ensemble as a headline result; prediction calibration; label clipping; target transforms/standardisation; tail-weighted regression"
+  - "new internal split; mask-ratio search; pretraining-length search; encoder-LR multiplier search (only 3e-4 is allowed, and only if the gate fires)"
+  - "new junction / three-body / four-body modules; GNN / Transformer / attention / iterative message passing"
+  - "external labelled or unlabelled data; full ZINC-250K"
+  - "official test access in any form; historical official-test 0.092233 for any decision"
+  - "re-tuning after the official-valid read; deleting rows; substituting a trimmed MAE as the headline"
+
+decision_vocabulary:
+  - FULL10K_PRETRAINING_GAIN_CONFIRMED_ON_DEV
+  - FULL10K_PRETRAINING_GAIN_WEAK_OR_UNSTABLE
+  - FULL10K_PRETRAINING_NO_GAIN
+  - ENCODER_LR_ADAPTATION_USEFUL
+  - ENCODER_LR_ADAPTATION_NOT_SUPPORTED
+  - BULK_GAIN_WITH_TAIL_COST
+  - NO_ENCODER_PRESERVATION_PURCHASE
+  - INCONCLUSIVE_OR_BLOCKED
+
+# ------------------------------------------------------------- frozen plan
+# Hash values are filled from the local CPU run before the preregistration
+# commit; the remote freeze step refuses to train when they do not match.
+frozen:
+  frozen_block_version: 1
+  n_train: 10000
+  n_valid: 1000
+  objects_train10k_sha256: 14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d
+  objects_valid_sha256: 61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c
+  prep_train10k_sha256: d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a
+  pretrain_updates: 7560
+  updates: 18960
+  train_shuffle_offset: 101
+  encoder_lr_q: 3.0e-4
+  q_cka_threshold: 0.75
+  q_rank_drop_threshold: 0.25
