@@ -1,9 +1,31 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-bjoc-representation-optimization-v1-completed
-current_round: bjoc-representation-optimization-v1
+phase: cscl-bjoc-junction-regularization-v1-completed
+current_round: bjoc-junction-regularization-v1
 next_round_candidate: >-
+  AWAITING USER AUTHORIZATION. The junction-regularisation round is COMPLETE
+  (notes/bjoc_junction_regularization_v1.md, results/bjoc_junction_regularization_v1/REPORT.md).
+  It asked whether ONE frozen training-time intervention — inverted dropout p=0.10 on the learned
+  junction embedding w before the null incidence grouping (R0 p=0.0 vs R1 p=0.10, both 413,505
+  params, identical init and batch order per seed) — improves real generalisation.  Answer:
+  NO — R1 was worse on both held-out readouts on split A (locked seed-mean Δ +0.010101,
+  CI95 [+0.005413,+0.014749]; monitor +0.010560, CI95 [+0.006709,+0.014528]; per-seed locked
+  +0.014973 / +0.005230), ordinary molecules (y>-3) were worse (+0.008715), and the top-10-removed
+  delta stayed positive (+0.010358), so the degradation is broad, not outlier-driven.  The
+  pre-registered purchase gate failed every substantive check, so split B was never trained
+  (4 of 8 trajectories used, ~0.42 GPU-h) and no p search was performed.  The frozen decision is
+  JUNCTION_DROPOUT_HURTS_GENERALIZATION.  Mechanism reading: the intervention DID move the system
+  in the intended direction (R1 |w| 0.091 vs 0.063, less damage under cross-molecule junction
+  shuffling, smaller seed spread 0.00098 vs 0.01072) but paid a fit cost it never recovered
+  (soup fit 0.0555 vs 0.0351); the within-molecule permutation audit is a numerical no-op
+  (~4e-8, conservation ~2e-7), proving the null predictor can only see the junction channel as a
+  permutation-invariant per-molecule multiset — per-junction attribution is structurally
+  impossible for it.  Next stage (proposed, NOT authorised): build an ownership-preserving
+  IDENTIFIABLE JUNCTION-CONTRIBUTION model with a pre-registered predictive-cost band and a
+  synthetic identifiability task; do not tune dropout further.  No GPU work without a new
+  preregistration + explicit user authorization.
+next_round_candidate_previous: >-
   AWAITING USER AUTHORIZATION. The representation/optimisation round is COMPLETE
   (notes/bjoc_representation_optimization_v1.md, results/bjoc_representation_optimization_v1/REPORT.md).
   It asked which of three candidate improvable points is real and answered: (1) NOT optimisation -
@@ -22,7 +44,7 @@ next_round_candidate: >-
   fit-set standardisation) or an input dropout on the new blocks, and must gate on an a-priori
   monitor read; split B is frozen and unread if a replication contrast is wanted.  No further GPU
   work without a new preregistration + explicit user authorization.
-next_round_candidate_previous: >-
+next_round_candidate_previous_2: >-
   AWAITING USER AUTHORIZATION. The terminal BJOC evaluation is COMPLETE
   (notes/bjoc_predictor_terminal_v1.md). It settled the two open items of the BJOC round and
   changed the reading of the previous headline: (1) the official-valid gain 0.118618 -> 0.103423
@@ -1096,12 +1118,13 @@ round_cscl-bjoc-predictor-terminal-evaluation-v1:
 # round: cscl-bjoc-representation-optimization-v1 (表征优化归因)
 # ---------------------------------------------------------------------------
 
-phase: cscl-bjoc-representation-optimization-v1-completed
-current_round: bjoc-representation-optimization-v1
+phase: cscl-bjoc-junction-regularization-v1-completed
+current_round: bjoc-junction-regularization-v1
 next_round_candidate: >-
-  see the top-level next_round_candidate block (representation route needs an input-scale
-  or regularisation control before any retry; junction content confirmed necessary; no GPU
-  work without a new preregistration + explicit user authorization).
+  see the top-level next_round_candidate block (junction-dropout failed its frozen gate on
+  split A; split B untrained; next stage = ownership-preserving identifiable junction-contribution
+  model, not more dropout tuning; no GPU work without a new preregistration + explicit user
+  authorization).
 
 round_cscl-bjoc-representation-optimization-v1:
   preregistration: configs/bjoc_representation_optimization_v1.yaml (frozen before training)
@@ -1143,3 +1166,57 @@ round_cscl-bjoc-representation-optimization-v1:
     - 22/22 correctness gates pass; a relabelling helper bug was caught by the gate and fixed
   status: COMPLETED 2026-10-12; round stopped (stage-2 gate failed); 3 of 10 trajectories used
   results_dir: results/bjoc_representation_optimization_v1/ (git-ignored, REPORT.md tracked)
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-junction-regularization-v1 (单干预: 学习 junction 嵌入的
+# 训练期 dropout; R0 p=0.0 vs R1 p=0.10, 其他全部冻结)
+# ---------------------------------------------------------------------------
+
+round_cscl-bjoc-junction-regularization-v1:
+  preregistration: configs/bjoc_junction_regularization_v1.yaml (frozen before training; split hashes + gate thresholds embedded)
+  design_doc: notes/bjoc_junction_regularization_v1.md
+  driver: code/run_bjoc_junction_regularization_v1.py
+  code:
+    - code/bjoc_junction_dropout_v1.py   # JunctionDropoutBJOC: F.dropout(w) before group_to_bonds, p in {0.0, 0.10}
+  question: >-
+    Can ONE frozen training-time regularisation of the learned junction embedding (inverted dropout
+    p=0.10 before the null incidence grouping) improve BJOC prediction on molecules it never saw,
+    at identical architecture (413,505 params), supervision and data order?
+  design:
+    arms: R0 p=0.0 (bit-identical to frozen BJOC-Null) vs R1 p=0.10; same init/order/steps per seed
+    splits: A salt cscl-bjoc-jdrop-v1-discovery, B salt cscl-bjoc-jdrop-v1-replication (fit 8000 / monitor 1000 / locked 1000 each, row hashes frozen)
+    recipe: Adam lr 1e-3, wd 1e-5, batch 128, clip 5, 240 epochs, last-5 soup, raw-y L1
+    gate: 6 pre-registered checks -> JDROP_REPLICATION_PURCHASE (split-B training) or immediate stop
+  correctness_gates: 20/20 PASS before GPU (R0 bitwise backbone identity, init hash equality, eval identity, dropout only on w, both moments use w_used, permutation invariance, save/load replay, label independence, no official-split strings, no NaN)
+  "formal_result (split A only, 4 trajectories, res-gpu1, commit 65bcd20, ~1498s train wall)":
+    mae_locked: {R0_s0: 0.137930, R1_s0: 0.152903, R0_s1: 0.148650, R1_s1: 0.153880}
+    mae_monitor: {R0_s0: 0.098953, R1_s0: 0.114460, R0_s1: 0.105001, R1_s1: 0.110613}
+    soup_fit: {R0_s0: 0.033786, R1_s0: 0.060690, R0_s1: 0.036416, R1_s1: 0.050343}
+    paired_locked: "seed-mean +0.010101 CI95 [+0.005413, +0.014749]; s0 +0.014973 [+0.007233,+0.024285]; s1 +0.005230 [-0.001297,+0.011318]"
+    paired_monitor: "seed-mean +0.010560 CI95 [+0.006709, +0.014528]"
+    heterogeneity_checks: "ordinary y>-3 +0.008715 (n=931); top-10-removed +0.010358; worst-row error-mass share R0 0.210 / R1 0.195 -> broad degradation, not single-row driven"
+    seed_spread_locked: "R0 0.010720 vs R1 0.000977 (dropout stabilises the trajectory but toward a worse optimum)"
+    gate: JDROP_NO_REPLICATION_PURCHASE (all 5 substantive checks fail; gates pass) -> split B NOT trained
+    decision: JUNCTION_DROPOUT_HURTS_GENERALIZATION
+  mechanism (frozen checkpoints, eval-mode counterfactuals):
+    - "R1 learns larger junction embeddings: mean |w| 0.0910 vs 0.0626; near-zero fraction 0.0256 vs 0.0366"
+    - "within-molecule junction permutation is a numerical no-op (|dpred| ~4e-8, conservation ~2e-7): the null predictor sees the junction channel only as a permutation-invariant per-molecule multiset; per-junction identity is unrecoverable by construction"
+    - "cross-molecule junction shuffle costs R1 less (monitor MAE +0.246 vs R0 +0.343): R1 relies less on molecule-specific junction content (intended direction), but the fit cost (0.0555 vs 0.0351) is never recovered on held-out molecules"
+  next_stage_decision: >-
+    PROPOSE_IDENTIFIABLE_JUNCTION_CONTRIBUTION_MODEL (rank 1): ownership-preserving per-junction
+    scalar contribution with shared types, explicit bias/base terms, fit-only gauge, conservation
+    identity, synthetic-cooccurrence identifiability task, matched-parameter predictive-cost band,
+    and cross-seed contribution stability.  Dropout tuning rejected (failed gate; no p search);
+    typed structural channels rejected (already shown to overfit held-out molecules); attribution
+    from the frozen Null predictor impossible.
+  discipline:
+    - "official valid / official test never referenced or loaded; historical official-test 0.092233 not used for any decision"
+    - "locked-dev labels read exactly once per split inside score, after prediction-file hashing; split B locked labels never read at all"
+    - "single frozen p in {0.0, 0.10}; no location search; no architecture/feature/distance-bucket change; no g/ell/s/c/k supervision"
+    - "trajectory budget: 4 of 8 used; ≤2 MIG-free GPU-hours (actual ~0.42 GPU-h on one A100)"
+  status: COMPLETED 2026-10-12; stopped at split A per the pre-registered gate; split B frozen but untrained
+  results_dir: results/bjoc_junction_regularization_v1/ (git-ignored, REPORT.md tracked)
+  errata: >-
+    mechanism/report stages were run on a local driver revision newer than the training commit
+    (helpers _junction_grad_norm mode fix, report text); training/prediction artifacts come from
+    commits 65bcd20 / f419ca0; no trained artifact was recomputed.

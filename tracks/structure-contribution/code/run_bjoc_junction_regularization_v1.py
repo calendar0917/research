@@ -1922,7 +1922,8 @@ def _junction_grad_norm(model, objs, rows, device="cpu") -> float:
     batch = _mv(sro.batch_objects([objs[int(r)] for r in rows[:256]]), device)
     model.zero_grad(set_to_none=True)
     _, feats = model(batch, return_features=True)
-    F.l1_loss(feats["w_used"].sum(dim=1), torch.zeros(len(rows[:256]))).backward()
+    feats["w"].retain_grad()
+    F.l1_loss(feats["reader_in"].sum(dim=1), torch.zeros(len(rows[:256]))).backward()
     return float(feats["w"].grad.pow(2).sum().sqrt()) if feats["w"].grad is not None else 0.0
 
 
@@ -1975,22 +1976,24 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
                 },
                 "junction_grad_norm_train_mode": _junction_grad_norm(model, objs, rows["fit"]),
             }
-            # null-grouping conservation audit (eval mode)
+            # null-grouping conservation audit (eval mode; compare the effective tensor)
+            model.eval()
             batch = sro.batch_objects([objs[int(r)] for r in mon_rows[:64]])
             with torch.no_grad():
                 feats = model.forward_features(batch)
+                w_eff = feats["w_used"]
                 jb = batch["junc_batch"]
                 bb = batch["bond_batch"]
                 rel_w, rel_v = [], []
                 for g in range(int(batch["n_graphs"])):
-                    w_g = feats["w"][jb == g].sum(0)
+                    w_g = w_eff[jb == g].sum(0)
                     W_g = feats["W"][bb == g].sum(0)
                     V_g = feats["V"][bb == g].sum(0)
                     # null: sum_b W_b = 2 * sum_j w_j and sum_b V_b = 2 * sum_j w_j^2
                     rel_w.append(float((W_g - 2.0 * w_g).abs().sum() / (2.0 * w_g.abs().sum() + 1e-12)))
                     rel_v.append(
-                        float((V_g - 2.0 * (feats["w"][jb == g] ** 2).sum(0)).abs().sum()
-                              / (2.0 * (feats["w"][jb == g] ** 2).sum(0).abs().sum() + 1e-12))
+                        float((V_g - 2.0 * (w_eff[jb == g] ** 2).sum(0)).abs().sum()
+                              / (2.0 * (w_eff[jb == g] ** 2).sum(0).abs().sum() + 1e-12))
                     )
             entry["null_grouping_conservation_max_relative_error"] = max(max(rel_w), max(rel_v))
             entry["parameters"] = int(sum(q.numel() for q in model.parameters()))
@@ -1999,7 +2002,7 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
     # R1-vs-R0 summary (seed-mean)
     try:
         summary = {}
-        for name in ("junction_zero", "junction_cross_molecule_shuffle"):
+        for name in ("junction_zero", "junction_within_molecule_permutation", "junction_cross_molecule_shuffle"):
             v0 = np.mean([payload["arms"][arm_tag(R0_P, split_key, s)][name]["mae_after"] for s in SEEDS])
             v1 = np.mean([payload["arms"][arm_tag(R1_P, split_key, s)][name]["mae_after"] for s in SEEDS])
             summary[f"{name}_mae_after"] = {"R0": float(v0), "R1": float(v1), "delta": float(v1 - v0)}
@@ -2063,7 +2066,10 @@ def _final_decision() -> dict[str, Any]:
         label = "JUNCTION_DROPOUT_HURTS_GENERALIZATION"
         rationale = (
             "R1 was materially no better than R0 on at least one held-out readout and not "
-            "favourable on either; the frozen regularisation did not buy generalisation in this regime"
+            "favourable on either; the frozen regularisation did not buy generalisation in this "
+            f"regime (monitor Δ {mon_mean:+.5f}, locked Δ {locked_mean:+.5f}, ordinary molecules "
+            f"Δ {a_boot['gate_inputs_locked']['ordinary_seed_mean_delta']:+.5f}, top-10-removed "
+            f"locked Δ {a_boot['gate_inputs_locked']['top10_removed_seed_mean_delta']:+.5f})"
         )
     elif flat:
         label = "JUNCTION_DROPOUT_NO_USEFUL_GAIN"
@@ -2130,6 +2136,27 @@ def _final_decision() -> dict[str, Any]:
             "that all regularisation methods fail or succeed",
             "a chemical causal interpretation of any mechanism diagnostic",
         ],
+        "next_stage": {
+            "decision": "PROPOSE_IDENTIFIABLE_JUNCTION_CONTRIBUTION_MODEL",
+            "why": (
+                "the frozen null junction block is a permutation-invariant per-molecule multiset "
+                "average (within-molecule permutation is a numerical no-op, conservation error "
+                "~2e-7), so dropout can only shift embeddings, not per-junction contributions; "
+                "the CSCL question needs an ownership-preserving decomposable object with a "
+                "pre-registered predictive-cost band and synthetic identifiability validation"
+            ),
+            "alternatives_considered": [
+                "tune the dropout probability or location (rejected: failed gate, no p search)",
+                "add typed structural channels (rejected: already shown to overfit held-out molecules)",
+                "attribute contributions from the frozen null predictor (impossible: no per-junction "
+                "readout exists in its weights or predictions)",
+            ],
+            "requires": [
+                "re-introduce true junction->bond ownership in a new model",
+                "synthetic known-contribution task with co-occurrence confound",
+                "matched-parameter predictive-cost band and seed-stability pre-registration",
+            ],
+        },
         "official_valid_or_test_loaded": False,
     }
     return payload
@@ -2291,6 +2318,26 @@ def cmd_report(args: argparse.Namespace) -> int:
             v = s[f"{name}_mae_after"]
             lines.append(f"| monitor MAE after {name} | {v['R0']:.5f} | {v['R1']:.5f} (Δ {v['delta']:+.5f}) |")
     lines.append("")
+    if mechanism and mechanism.get("R1_vs_R0_summary"):
+        s = mechanism["R1_vs_R0_summary"]
+        lines.append(
+            "Mechanism reading: dropout did move the frozen system in the intended direction. R1's "
+            f"junction embeddings are larger ({s['w_abs_mean_fit']['R1']:.4f} vs "
+            f"{s['w_abs_mean_fit']['R0']:.4f} mean |w|) and less frequently near zero "
+            f"({s['w_frac_near_zero_fit']['R1']:.4f} vs {s['w_frac_near_zero_fit']['R0']:.4f}), "
+            "and cross-molecule replacement of junction content damages R1's monitor predictions "
+            f"less ({s['junction_cross_molecule_shuffle_mae_after']['delta']:+.5f}) — the trained "
+            "model relies less on the molecule-specific junction multiset. But the price is paid "
+            "in fit: R1's soup fit is 0.0555 vs R0's 0.0351, and the held-out readouts are worse. "
+            "The within-molecule permutation is a numerical no-op (|Δpred| ~ 4e-8, grouping "
+            "conservation error ~2e-7), confirming that the null architecture sees the junction "
+            "channel only through permutation-invariant multiset sums: 'which junction' is not "
+            "recoverable from this predictor, only the multiset of embeddings. The regulariser "
+            "therefore flattens/shifts embeddings, not junction selection. The seed spread of R1's "
+            "locked MAE is smaller than R0's (0.00098 vs 0.01072): dropout stabilised the "
+            "trajectory but toward a worse optimum."
+        )
+    lines.append("")
     lines.append("## 4. Phase A — historical audits (zero training)")
     lines.append("")
     if err_audit:
@@ -2314,6 +2361,14 @@ def cmd_report(args: argparse.Namespace) -> int:
     lines.append("")
     lines.append("## 5. Pre-registered promotion gate")
     lines.append("")
+    lines.append(
+        "Training budget used: 4 formal trajectories (split A only), 1498 s of train wall on one "
+        "A100 (≈0.42 GPU-h). Split B was **not** trained: the frozen gate requires a purchase on "
+        "split A, and all five substantive checks failed; the stop rule forbids any further "
+        "trajectory or p search after a failed gate. `split_b.json` (the frozen split definition) "
+        "exists, but no split-B metrics, checkpoints or predictions exist."
+    )
+    lines.append("")
     if a_gate:
         lines.append(f"Split A: `{a_gate['decision']}`")
         lines.append("")
@@ -2327,7 +2382,22 @@ def cmd_report(args: argparse.Namespace) -> int:
         lines.append(json.dumps(b_gate["checks"], indent=2, sort_keys=True))
         lines.append("```")
     lines.append("")
-    lines.append("## 6. Next-stage CSCL research proposition (no training this round)")
+    lines.append("## 6. Next-stage CSCL decision (no training this round)")
+    lines.append("")
+    lines.append("**NEXT_STAGE_DECISION: `PROPOSE_IDENTIFIABLE_JUNCTION_CONTRIBUTION_MODEL` (rank 1).** "
+                 "Two mutually exclusive readings of this round's result are considered. "
+                 "(a) *Regularisation failure*: junction dropout is simply not a useful regulariser "
+                 "here (fit cost 0.020, held-out cost 0.010). (b) *Mechanism mismatch*: the frozen "
+                 "null predictor cannot express per-junction contributions at all — its junction "
+                 "block is a per-molecule multiset average — so a dropout regulariser is forced to "
+                 "operate on the wrong object and necessarily trades fit for a shifted but not "
+                 "better solution. Reading (b) is favoured by the conservation audit (within-molecule "
+                 "permutation is a no-op) and by the observation that the intended mechanism change "
+                 "did occur (larger |w|, smaller cross-molecule-shuffle damage, smaller seed spread) "
+                 "while held-out error rose. Both readings agree on the next stage: do not tune "
+                 "dropout further; instead build the object that the CSCL question actually needs — "
+                 "an identifiable, ownership-preserving per-junction contribution model — and require "
+                 "it to pay only a pre-registered predictive-cost band.")
     lines.append("")
     lines.append(_csl_proposal_text())
     lines.append("")
