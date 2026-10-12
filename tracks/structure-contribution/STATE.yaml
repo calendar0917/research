@@ -1368,3 +1368,95 @@ round_cscl-bjoc-cross-bond-interaction-v1:
     - "analysis-only post-run fixes disclosed: _monitor_maes suffix parsing; decision classifier requires marginal P-O < 0 for WEAK_SIGNAL"
     - "budget: 3 of 12 trajectories; ~0.33 GPU-h of 2.5"
   status: COMPLETED 2026-10-12; stopped at split A seed 0 after the frozen monitor gate failed; seed 1 / locked / split B not purchased
+
+# ---------------------------------------------------------------------------
+# round: cscl-predictive-bottleneck-diagnosis-v1 (three-way plateau diagnosis:
+# sample efficiency vs junction ownership vs architecture; 6 matched trajectories
+# on a fresh grouped split + independent CPU input-observability audit)
+# ---------------------------------------------------------------------------
+
+phase: cscl-predictive-bottleneck-diagnosis-v1-completed
+current_round: bjoc-predictive-bottleneck-v1
+next_round_candidate: >-
+  AWAITING USER AUTHORIZATION. The predictive-bottleneck-diagnosis round is COMPLETE
+  (notes/bjoc_predictive_bottleneck_v1.md, results/bjoc_predictive_bottleneck_v1/REPORT.md).
+  It asked which explanation dominates the BJOC plateau: too few labelled samples, junction
+  ownership, architectural inductive bias, or input observability.  Design: new label-blind
+  grouped split cscl-predictive-bottleneck-v1-A (Fit8k 8000 / Monitor 1000 / Locked-dev 1000,
+  nested Fit4k 4000), six trajectories (N4-s0, N4-s1, N8-s0, N8-s1, O8-s0, O8-s1, all 413505
+  params, raw-y L1, frozen recipe) at matched update count T=15120, two pre-frozen N4 readouts
+  (short at 7680, stepmatched at 15120), soups of five pre-frozen snapshots, no monitor-based
+  selection, locked read exactly once after all predictions were hashed.  Answer: frozen rule
+  SAMPLE_EFFICIENCY_BOTTLENECK_SUPPORTED.  Locked seed-mean MAE N4short 0.155688, N4stepmatched
+  0.147022, N8 0.109719, O8 0.103300.  N8 - N4stepmatched = -0.037304 CI95 [-0.043517,
+  -0.031045], both seeds negative, top-10-removed -0.036507 (broad), ~4x the extra-optimization
+  effect (N4stepmatched - N4short -0.008665 CI [-0.011539,-0.005733]); 4k models fit better
+  (0.0293 vs 0.0397) yet generalize far worse -> memorization.  O8 - N8 = -0.006419 CI95
+  [-0.010001,-0.002772], but seed1 is +0.000861 -> frozen two-seed ownership condition fails and
+  the signal is recorded as a near-miss; historical cross-bond O-N (-0.008423) was partly carried
+  by a few large-N-error rows (top-10-removed -0.004404, tail reversal +0.0151).  Input
+  observability audit: 3 strict VF2 groups / 6 rows, all with identical y (floor 0.0) ->
+  INPUT_COLLISION_FLOOR_NOT_ESTABLISHED; the one duplicate-SMILES y-inconsistent pair is not
+  isomorphic and not input-equal.  Common errors: four-way top-10% intersection 36/100, mean
+  pairwise Jaccard 0.414, residual correlation 0.907-0.949, N seed overlap 53/100, O 58/100;
+  of stable N errors O fixes only 8/53 -> shared model-family error, not an ownership repairable
+  set.  Budget: 6 trajectories + predict ~0.68 GPU-h of 1.5; wall well inside.  Official valid/test
+  never loaded; historical official-test 0.092233 used only as context (report states both gaps
+  0.022233/0.032233 and no extrapolation to it).  Next stage (proposed, NOT authorised): label-blind
+  structural-utilization experiments (masked graph-attribute pretraining on official-train graphs,
+  labels never read, discarded head, then frozen-recipe raw-y L1 fine-tune at 4k and 8k, two seeds,
+  new pre-registered grouped split, monitor gate with pre-registered stop conditions); do not change
+  architecture until that fails.  No further GPU work without a new preregistration + explicit user
+  authorization.
+updated: 2026-10-12
+
+round_cscl-bjoc-predictive-bottleneck-v1:
+  protocol: configs/bjoc_predictive_bottleneck_v1.yaml (frozen fd26214 before any GPU run; driver run_bjoc_predictive_bottleneck_v1.py)
+  notes: notes/bjoc_predictive_bottleneck_v1.md
+  report: results/bjoc_predictive_bottleneck_v1/REPORT.md
+  code:
+    - code/run_bjoc_predictive_bottleneck_v1.py   # splits/objects/steps/gates/freeze/train/predict/freeze-predictions/score/common-errors/historical/observability/decision/report
+    - configs/bjoc_predictive_bottleneck_v1.yaml  # split/step/prep/object-cache frozen block + decision rules
+  tests: tests/test_bjoc_predictive_bottleneck_v1.py (13 fast tests; 22 correctness gates all pass)
+  split:
+    name: cscl-predictive-bottleneck-v1-A
+    rows: {fit8k: 8000, monitor: 1000, locked: 1000, fit4k: 4000}
+    hashes: {fit8k: 1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a, monitor: d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b, locked: 9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d, fit4k: 3f6b5d69097476b02f5c6fe0cc180e564180fb0da5a241bb5ba1c5b88e7b3ecd}
+    prep_hashes: {fit8k: 0b807c023492190ff120dfee1884b2cdbe7fea0dacb10f8a2c2815094fa56acb, fit4k: 02938c53a000060f256cd3c2a752dcb7c7b608b7ad2c856ea583e568ac389a76}
+    steps: {T: 15120, steps_per_epoch_8k: 63, steps_per_epoch_4k: 32, n4_short: [7552,7584,7616,7648,7680], n4_stepmatched_and_8k_soup: [14868,14931,14994,15057,15120]}
+  formal_result:
+    runs: {n4: bjoc-pbn-n4-20261012-202529-f5401b00, n8o8: bjoc-pbn-n8o8-20261012-204318-3547020d, predict: bjoc-pbn-predict-20261012-211343-33eb893d}
+    locked_seed_mean_mae: {N4short: 0.155688, N4stepmatched: 0.147022, N8: 0.109719, O8: 0.103300}
+    monitor_seed_mean_mae: {N4short: 0.197306, N4stepmatched: 0.192280, N8: 0.151196, O8: 0.144556}
+    contrasts_locked:
+      "N4stepmatched-N4short": "-0.008665 [-0.011539,-0.005733], per-seed -0.012666/-0.004665, top10 -0.008210"
+      "N8-N4stepmatched": "-0.037304 [-0.043517,-0.031045], per-seed -0.033340/-0.041267, top10 -0.036507"
+      "O8-N8": "-0.006419 [-0.010001,-0.002772], per-seed -0.013698/+0.000861, top10 -0.005735"
+    fit_mae_4k_vs_8k: "N4stepmatched 0.029290 < N8 0.039697 while locked 0.147022 > 0.109719 (memorization)"
+    decision: SAMPLE_EFFICIENCY_BOTTLENECK_SUPPORTED
+    near_miss: "OWNERSHIP_GENERALIZATION_SIGNAL (seed1 +0.000861 fails the both-seeds-negative rule)"
+  observability:
+    strict_vf2_groups: 3
+    rows_affected: 6
+    y_inconsistent_rows: 0
+    empirical_floor: 0.0
+    verdict: INPUT_COLLISION_FLOOR_NOT_ESTABLISHED
+  common_errors:
+    four_way_intersection: 36
+    mean_pairwise_jaccard: 0.414
+    seed_overlap: "N 53/100 (Jaccard 0.361), O 58/100 (0.408)"
+    stable_fix: "O fixes 8/53 stable N-high; N fixes 2/58 stable O-high"
+    residual_correlation: "0.907-0.949"
+  historical_ownership_audit: >-
+    Cross-bond split-A seed-0 monitor O-N -0.008423 CI [-0.017744,-0.001120] but top-10-removed
+    -0.004404 and tail reversal +0.0151; composer matched monitor -0.001230/-0.002588 CIs cross
+    zero; full-10k official-valid N/O +0.004975 is background only.  Matched old N/O gains were
+    partly molecule-driven and not seed-stable.
+  discipline:
+    - "official valid/test never loaded; historical official-test 0.092233 context only; no extrapolation to it"
+    - "locked-dev labels read exactly once in score after all 16 prediction files were hashed (prediction_manifest.json combined sha256 8c9298d820771ea1...); no locked-based selection"
+    - "monitor is the standard training-time readout only; soups are means of five pre-frozen snapshots; no monitor-based checkpoint selection"
+    - "raw-y L1 only; no component supervision; no teacher; no external data; no new architecture trained"
+    - "budget: 6 trajectories + label-blind predict ~0.68 GPU-h of 1.5; wall inside 7h45m"
+    - "disclosed provenance: freeze manifest driver_sha256 34e86a87 (pre-commit HEAD 67db049); trained commit fd26214 driver_sha256 bc617c2b (driver edit between freeze and commit); config frozen block byte-identical (sha 4769d7bf); post-training edits analysis-only (cmd_common_errors/cmd_decision)"
+  status: COMPLETED 2026-10-12; decision SAMPLE_EFFICIENCY_BOTTLENECK_SUPPORTED; report written; no unauthorised follow-up purchased

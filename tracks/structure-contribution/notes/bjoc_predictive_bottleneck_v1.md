@@ -127,3 +127,49 @@ Verdict: `INPUT_COLLISION_FLOOR_NOT_ESTABLISHED`.
   seed distribution;
 - Fit4k/8k are two controlled points, not a learning curve; no extrapolation to
   20k/50k/100k.
+
+## 8. Phase D (GPU) — six trajectories, matched updates
+
+All six trajectories ran from commit `fd26214` on the remote A100 (pool `res-gpu1`), 413,505
+params each, raw-y L1, T = 15120 for every trajectory and every readout; N4 ran 473 epochs
+(32 steps/epoch), N8/O8 240 epochs (63 steps/epoch).  Wall: 398/395 s per N4 seed, 364–391 s per
+8k seed; total ≈ 0.64 GPU-h, plus ≈2 min for the label-blind prediction stage.
+
+Locked seed-mean MAE: N4short 0.155688, N4stepmatched 0.147022, N8 0.109719, O8 0.103300.
+Monitor seed-mean MAE: 0.197306 / 0.192280 / 0.151196 / 0.144556.
+
+Frozen primary contrasts (locked, paired molecule bootstrap):
+
+| contrast | seed-mean Δ | CI95 | per-seed | top-10 removed |
+|---|---:|---|---:|---:|
+| N4stepmatched − N4short | −0.008665 | [−0.011539, −0.005733] | −0.012666 / −0.004665 | −0.008210 |
+| N8 − N4stepmatched | −0.037304 | [−0.043517, −0.031045] | −0.033340 / −0.041267 | −0.036507 |
+| O8 − N8 | −0.006419 | [−0.010001, −0.002772] | −0.013698 / **+0.000861** | −0.005735 |
+
+The 4k trajectories overfit (N4stepmatched fit 0.0293 vs N8 0.0397) while generalizing much
+worse; the data effect is ~4x the extra-optimization effect and survives top-10-removal in both
+the ordinary and tail subgroups.  The ownership direction is average-negative but fails the
+frozen two-seed condition (seed1 +0.0009); it is recorded as a `near_miss_signal`.
+
+## 9. Phase E — common errors, decision, report
+
+Common errors (locked, four primary models): four-way top-10% intersection 36/100, mean pairwise
+Jaccard 0.414, pairwise residual correlation 0.907–0.949, error-sign agreement 93–98%; seed
+stability N 53/100 (Jaccard 0.361), O 58/100 (0.408); of the molecules high-error in both N seeds
+O fixes only 8/53, and of those high-error in both O seeds N fixes 2/58.  The dominant failure
+mode is a shared, seed-stable model-family error, not an input collision.
+
+Locked labels were read exactly once in `score` after all 16 prediction files were hashed
+(`prediction_manifest.json` combined sha256 `8c9298d820771ea1…`; `locked_read.lock`); monitor was
+never used for checkpoint selection; official valid/test never accessed.
+
+**Decision: `SAMPLE_EFFICIENCY_BOTTLENECK_SUPPORTED`** (`scientific_decision.json`; frozen rule
+from the config).  Next round: label-blind structural utilization experiments (masked graph-attribute
+pretraining) with pre-registered stop conditions; no new architecture until that fails.
+
+Provenance disclosure: the freeze manifest was written at the pre-commit working-tree revision
+(driver_sha256 `34e86a87…`, HEAD `67db049`); the trained commit `fd26214` has driver_sha256
+`bc617c2b…` because a driver edit occurred between `freeze` and the commit.  The config frozen
+block is byte-identical (config sha256 `4769d7bf…` unchanged), remote `splits/objects/steps`
+reproduced the frozen hashes, and the only post-training edits are analysis-only
+(`cmd_common_errors` / `cmd_decision`; `git diff fd26214` touches no training or prediction code).

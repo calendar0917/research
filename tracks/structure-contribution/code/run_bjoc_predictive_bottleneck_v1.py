@@ -961,13 +961,21 @@ def cmd_common_errors(args: argparse.Namespace) -> int:
         fixed = hi[a] - hi[b]
         n_fix[label] = {"count": len(fixed), "mean_err_a_on_fixed": float(err[a][sorted(fixed)].mean()) if fixed else None}
     for key in ("N8_s0", "N8_s1", "O8_s0", "O8_s1"):
-        other = key.replace("_s0", "_s1").replace("_s1", "_s0")
+        other = key[:-1] + ("1" if key.endswith("0") else "0")
         if other in hi:
             n_fix[f"seed_stability_{key}"] = {
                 "top10_overlap": len(hi[key] & hi[other]),
                 "jaccard": len(hi[key] & hi[other]) / len(hi[key] | hi[other]),
+                "high_in_this_seed_only": len(hi[key] - hi[other]),
+                "high_in_other_seed_only": len(hi[other] - hi[key]),
             }
-    # does a larger O-N prediction change actually reduce error?
+    stable_fix = {}
+    for pair, seed_keys in (("N", ("N8_s0", "N8_s1")), ("O", ("O8_s0", "O8_s1"))):
+        other = "O" if pair == "N" else "N"
+        stable = hi[seed_keys[0]] & hi[seed_keys[1]]
+        other_any = hi[f"{other}8_s0"] | hi[f"{other}8_s1"]
+        stable_fix[f"stable_{pair}_high_fixed_by_{other}"] = len(stable - other_any)
+        stable_fix[f"stable_{pair}_high_not_fixed_by_{other}"] = len(stable & other_any)
     bins: dict[str, Any] = {}
     for a, b in (("N8_s0", "O8_s0"), ("N8_s1", "O8_s1")):
         dpred = np.abs(pred[b] - pred[a])
@@ -994,6 +1002,7 @@ def cmd_common_errors(args: argparse.Namespace) -> int:
         "residual_correlation": res_corr,
         "same_direction_fraction_among_shared_high_error": sign_agree,
         "cross_seed_and_cross_ownership_fixes": n_fix,
+        "stable_fix_counts": stable_fix,
         "prediction_difference_bins": bins,
         "four_way_structural_profile": structural,
         "official_valid_or_test_loaded": False,
@@ -1785,11 +1794,36 @@ def cmd_decision(args: argparse.Namespace) -> int:
             secondary.append(name)
     if arch_ok and decision != "ARCHITECTURAL_INDUCTIVE_BIAS_SUSPECTED":
         secondary.append("ARCHITECTURAL_INDUCTIVE_BIAS_SUSPECTED")
+    near_miss: list[dict[str, Any]] = []
+    if (
+        not ownership_ok
+        and ownership["seed_mean"]["delta"] <= -0.005
+        and ownership["seed_mean"]["paired_bootstrap"]["ci95"][1] < 0
+    ):
+        failing = []
+        if not ownership["seed0"]["delta"] < 0:
+            failing.append("seed0_delta_not_negative")
+        if not ownership["seed1"]["delta"] < 0:
+            failing.append("seed1_delta_not_negative")
+        if not ownership["seed_mean"]["subgroups"]["ordinary_y_gt_-3"]["delta"] <= 0:
+            failing.append("ordinary_subgroup_delta_not_le_0")
+        if not ownership["seed_mean"]["top10_removed"] <= 0:
+            failing.append("top10_removed_not_le_0")
+        near_miss.append(
+            {
+                "signal": "OWNERSHIP_GENERALIZATION_SIGNAL",
+                "seed_mean_delta": ownership["seed_mean"]["delta"],
+                "per_seed": [ownership["seed0"]["delta"], ownership["seed1"]["delta"]],
+                "ci95": ownership["seed_mean"]["paired_bootstrap"]["ci95"],
+                "failing_conditions": failing,
+            }
+        )
     payload = {
         "protocol": PROTOCOL_ID,
         "decision": decision,
         "bottleneck_identified": bool(identified),
         "secondary_signals": secondary,
+        "near_miss_signals": near_miss,
         "evidence": {
             "observability_floor": floor_full,
             "sample_efficiency": {
