@@ -562,6 +562,10 @@ def run_synthetic_b(out_dir: Path, device: torch.device, log=print) -> dict[str,
             or float(np.abs(b_vals).mean()) > 0.05 * 1.5
         )
     )
+    false_attribution = bool(float(np.abs(b_vals).mean()) > 0.05)  # non-causal type gets material mass
+    allocation_seed_unstable = bool(float(np.std(a_vals - b_vals)) > 0.02 or float(np.std(b_vals)) > 0.02)
+    split_unresolved = bool(float(np.mean(np.abs(a_vals - b_vals))) <= 0.1 * float(np.mean(np.abs(a_vals + b_vals)) + 1e-12))
+    trap_pass = bool(exact_collinear and false_attribution and split_unresolved)
     payload = {
         "protocol": "cscl-bjoc-intrinsic-contribution-feasibility-v1",
         "task": "synthetic_B_cooccurrence_trap",
@@ -577,6 +581,14 @@ def run_synthetic_b(out_dir: Path, device: torch.device, log=print) -> dict[str,
             "Type-level co-occurrence cannot be resolved by the additive model; the uncertainty must be exported."
         ),
         "limitation_documented": limitation,
+        "false_attribution_present": false_attribution,
+        "allocation_seed_unstable": allocation_seed_unstable,
+        "split_unresolved": split_unresolved,
+        "trap_pass": trap_pass,
+        "trap_pass_meaning": (
+            "the audit detected the exact collinearity, showed material mass on the non-causal type, "
+            "and showed seed-unstable allocation; it is NOT a claim that the true contribution was recovered"
+        ),
     }
     (out_dir / "synthetic_b.json").write_text(json.dumps(payload, indent=2, sort_keys=True, default=float), encoding="utf-8")
     return payload
