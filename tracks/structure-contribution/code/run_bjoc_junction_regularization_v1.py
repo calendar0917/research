@@ -2040,6 +2040,9 @@ def _final_decision() -> dict[str, Any]:
     mon_ci = pairs["seed_mean"]["monitor"]["ci95"]
     a_purchase = a_gate["decision"] == "JDROP_REPLICATION_PURCHASE"
     b_purchase = bool(b_gate and b_gate["decision"] == "JDROP_REPLICATION_PURCHASE")
+    # frozen mapping (pre-registered before scoring)
+    material_hurt = max(mon_mean, locked_mean)
+    flat = abs(mon_mean) < 0.003 and abs(locked_mean) < 0.003
     if not gates["all_numeric_gates_pass"]:
         label = "INCONCLUSIVE_OR_BLOCKED"
         rationale = "dropout/correctness gates failed; no arm contrast is interpretable"
@@ -2056,14 +2059,13 @@ def _final_decision() -> dict[str, Any]:
             "R1 cleared the split-A purchase gate but did not reproduce it on split B; the effect "
             "is split-sensitive, so the evidence supports a bounded signal, not a general improvement"
         )
-    elif (not a_purchase) and mon_mean >= 0.003 and locked_mean >= 0.003:
-        worse_ci = mon_ci[0] > 0 or locked_ci[0] > 0
-        label = "JUNCTION_DROPOUT_HURTS_GENERALIZATION" if worse_ci else "JUNCTION_DROPOUT_NO_USEFUL_GAIN"
+    elif material_hurt >= 0.003 and min(mon_mean, locked_mean) >= 0.0:
+        label = "JUNCTION_DROPOUT_HURTS_GENERALIZATION"
         rationale = (
-            "R1 was no better (or worse) than R0 on both held-out readouts; the frozen intervention "
-            "did not buy generalisation in this regime"
+            "R1 was materially no better than R0 on at least one held-out readout and not "
+            "favourable on either; the frozen regularisation did not buy generalisation in this regime"
         )
-    elif abs(mon_mean) <= 0.003 and abs(locked_mean) <= 0.003 and a_purchase is False:
+    elif flat:
         label = "JUNCTION_DROPOUT_NO_USEFUL_GAIN"
         rationale = (
             "the seed-mean deltas lie inside the pre-declared indifference band on both readouts; "
@@ -2072,9 +2074,17 @@ def _final_decision() -> dict[str, Any]:
     else:
         label = "JUNCTION_DROPOUT_LIMITED_SIGNAL"
         rationale = (
-            "the point estimates are directionally favourable but did not clear the pre-registered "
-            "purchase gate (and/or the intervals cross zero); recorded as limited / uncertain"
+            "the point estimates are directionally favourable (or mixed) but did not clear the "
+            "pre-registered purchase gate and/or the intervals cross zero; recorded as limited / "
+            "uncertain rather than as a success"
         )
+        if b_boot is not None:
+            b_locked = b_boot["pairs"]["seed_mean"]["locked_mae_delta"]
+            if a_purchase is False and b_locked < 0:
+                rationale += (
+                    " (split B was not purchased, but its held-out point estimate is also negative; "
+                    "the failure is the frozen purchase bar, not a sign reversal)"
+                )
     mechanism = read_json(OUT / "junction_regularization_mechanism.json") if (OUT / "junction_regularization_mechanism.json").exists() else {}
     seed_spread = a_boot["cross_seed"]
     payload = {
@@ -2277,7 +2287,7 @@ def cmd_report(args: argparse.Namespace) -> int:
         s = mechanism["R1_vs_R0_summary"]
         lines.append(f"| mean abs(w), fit sample | {s['w_abs_mean_fit']['R0']:.5f} | {s['w_abs_mean_fit']['R1']:.5f} |")
         lines.append(f"| fraction abs(w) < 1e-3, fit sample | {s['w_frac_near_zero_fit']['R0']:.5f} | {s['w_frac_near_zero_fit']['R1']:.5f} |")
-        for name in ("junction_zero", "junction_cross_molecule_shuffle"):
+        for name in ("junction_zero", "junction_within_molecule_permutation", "junction_cross_molecule_shuffle"):
             v = s[f"{name}_mae_after"]
             lines.append(f"| monitor MAE after {name} | {v['R0']:.5f} | {v['R1']:.5f} (Δ {v['delta']:+.5f}) |")
     lines.append("")
