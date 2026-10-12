@@ -2316,7 +2316,8 @@ def cmd_report(args: argparse.Namespace) -> int:
         lines.append(f"| fraction abs(w) < 1e-3, fit sample | {s['w_frac_near_zero_fit']['R0']:.5f} | {s['w_frac_near_zero_fit']['R1']:.5f} |")
         for name in ("junction_zero", "junction_within_molecule_permutation", "junction_cross_molecule_shuffle"):
             v = s[f"{name}_mae_after"]
-            lines.append(f"| monitor MAE after {name} | {v['R0']:.5f} | {v['R1']:.5f} (Δ {v['delta']:+.5f}) |")
+            suffix = " (no-op: |Δpred| ≈ 4e-8)" if name == "junction_within_molecule_permutation" else ""
+            lines.append(f"| monitor MAE after {name} | {v['R0']:.5f} | {v['R1']:.5f} (Δ R1−R0 {v['delta']:+.5f}{suffix}) |")
     lines.append("")
     if mechanism and mechanism.get("R1_vs_R0_summary"):
         s = mechanism["R1_vs_R0_summary"]

@@ -31,9 +31,9 @@ cross-seed (A): R0 locked MAE per seed ['0.137930', '0.148650'] (spread 0.010720
 |---|---:|---:|
 | mean abs(w), fit sample | 0.06260 | 0.09100 |
 | fraction abs(w) < 1e-3, fit sample | 0.03663 | 0.02562 |
-| monitor MAE after junction_zero | 0.35490 | 0.31457 (Δ -0.04033) |
-| monitor MAE after junction_within_molecule_permutation | 0.10198 | 0.11254 (Δ +0.01056) |
-| monitor MAE after junction_cross_molecule_shuffle | 0.42419 | 0.35887 (Δ -0.06531) |
+| monitor MAE after junction_zero | 0.35490 | 0.31457 (Δ R1−R0 -0.04033) |
+| monitor MAE after junction_within_molecule_permutation | 0.10198 | 0.11254 (Δ R1−R0 +0.01056 (no-op: |Δpred| ≈ 4e-8)) |
+| monitor MAE after junction_cross_molecule_shuffle | 0.42419 | 0.35887 (Δ R1−R0 -0.06531) |
 
 Mechanism reading: dropout did move the frozen system in the intended direction. R1's junction embeddings are larger (0.0910 vs 0.0626 mean |w|) and less frequently near zero (0.0256 vs 0.0366), and cross-molecule replacement of junction content damages R1's monitor predictions less (-0.06531) — the trained model relies less on the molecule-specific junction multiset. But the price is paid in fit: R1's soup fit is 0.0555 vs R0's 0.0351, and the held-out readouts are worse. The within-molecule permutation is a numerical no-op (|Δpred| ~ 4e-8, grouping conservation error ~2e-7), confirming that the null architecture sees the junction channel only through permutation-invariant multiset sums: 'which junction' is not recoverable from this predictor, only the multiset of embeddings. The regulariser therefore flattens/shifts embeddings, not junction selection. The seed spread of R1's locked MAE is smaller than R0's (0.00098 vs 0.01072): dropout stabilised the trajectory but toward a worse optimum.
 
