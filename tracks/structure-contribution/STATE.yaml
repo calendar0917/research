@@ -1305,3 +1305,66 @@ round_cscl-bjoc-intrinsic-contribution-feasibility-v1:
     B trap_pass criterion (commit 59bd1e7, before any locked label read); the frozen driver/report
     code hashes (manifest da3f0ae) are unchanged; report/decision were assembled locally from the
     pulled remote artifacts.
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-cross-bond-interaction-v1 (two-endpoint cross-bond channel over
+# the published BJOC-Organized predictor; CPU purchase gate -> one matched GPU stage)
+# ---------------------------------------------------------------------------
+
+phase: cscl-bjoc-cross-bond-interaction-v1-completed
+current_round: bjoc-cross-bond-interaction-v1
+next_round_candidate: >-
+  AWAITING USER AUTHORIZATION. The cross-bond (two-endpoint) interaction round is COMPLETE
+  (notes/bjoc_cross_bond_interaction_v1.md, results/bjoc_cross_bond_interaction_v1/REPORT.md).
+  It asked whether the explicit two-endpoint junction combination q_b = sqrt(96)*mu_u*mu_v adds
+  prediction information beyond the published W/V/n summaries. Phase A (CPU, committed 9f890dd
+  before any GPU) proved the channel is real: 322 scalar collision keys + a 96-D partition pair
+  colliding in (W,V) with max|dq|=7.3485; real-molecule valid pair fraction 0.8350; exact identity
+  q/sqrt(96) = (W^2-V)/(2 n_u n_v) - P_net (gap 3.6e-15) with the functionally-new component P_net
+  at 0.3136 of q variance / 0.4347 of its L1; synthetic projection-only 0.1238 vs +q 0.1008.
+  One matched stage (N/O/P, split A seed 0, all 428865 params, same init/batch order) on res-gpu1
+  gave fit/monitor N 0.039239/0.098266, O 0.038275/0.089843, P 0.034149/0.091796: the channel is
+  actively consumed (q weights 0.0202 vs 0.0167, zero-q |dpred| 0.24, endpoint swap exact) and
+  lowers fit MAE, but the marginal monitor contrast P-O is +0.001952 (CI95 [-0.003703,+0.007767]),
+  ordinary (y>-3) +0.004350, top-10-removed +0.001587 -> every substantive seed-1 purchase check
+  failed, so seed 1, the split-A locked read and split B were NOT purchased; split-A locked labels
+  remain unread. Frozen decision: CROSSBOND_INFORMATION_BUT_NO_PREDICTIVE_GAIN. Reading: this
+  explicit cross-bond endpoint-combination channel is genuinely new information but not a
+  prediction route at the frozen capacity/recipe; local optimization of the one-shot BJOC module
+  by this channel is stopped. 3 of 12 trajectories used, ~0.33 GPU-h of 2.5. Recorded hypotheses
+  only (NOT authorized): a tail (y<=-3) effect (P-O -0.030 on n=69) and a fine-tune-the-new-columns
+  variant; both would need a new pre-registration and the locked split-A labels must not be reused
+  for model selection. No further GPU work without a new preregistration + explicit user
+  authorization.
+updated: 2026-10-12
+
+round_cscl-bjoc-cross-bond-interaction-v1:
+  protocol: configs/bjoc_cross_bond_interaction_v1.yaml (frozen 9f890dd before any GPU run; includes the disclosed Phase-A metric amendment made before the commit and before any GPU)
+  notes: notes/bjoc_cross_bond_interaction_v1.md
+  report: results/bjoc_cross_bond_interaction_v1/REPORT.md
+  code:
+    - code/bjoc_cross_bond_interaction_v1.py   # CBIC: BJOC subclass + side decomposition + frozen q channel; build_cbic zero-init copy of published weights
+    - code/run_bjoc_cross_bond_interaction_v1.py  # splits/objects/Phase-A audits/synthetic/gates/params/freeze/train/predict/monitor-gate/mechanism/report/decision
+  tests: tests/test_bjoc_cross_bond_interaction_v1.py (20 fast tests; data-free algebra/invariance/builder/discipline scans)
+  phase_a:
+    gate: results/bjoc_cross_bond_interaction_v1/phase_a_gate.json -> PHASE_A_PURCHASE_GRANTED
+    collision: "scalar witness products 21 vs 24 at W=10,V=30,n=4; 322 collision keys; 96-D W/V-equal collision max|dq|=7.3485"
+    real_molecules: "valid pair fraction 0.8350; exact identity gap 3.6e-15; functional new-variance share 0.3136 (L1 0.4347); per class (1,1) 0 / (1,2) 0.313 / (2,2) 0.247; all 96 dims have variance; invariances exact"
+    probes: "linear view-probe residual 0.0148 and simple-feature probe residual 0.389 reported but NOT gating (see amendment disclosure)"
+    synthetic: "projection-only test MAE 0.1238 vs +q 0.1008; collision prediction gap 5.54 vs 0.32"
+    correctness_gates: "24/24 pass; N/O/P 428865 params; equal init hash b4f1de541f0f8692; O==P at init; no GNN/attention/iteration; official valid/test never loaded"
+  formal_result:
+    stage: pair-a-s0 (N,O,P; split A, seed 0) on res/res-gpu1, commit 9f890dd, run bjoc-cbic-pair-a-s0-20261012-190941-52050b03, exit 0
+    fit_monitor: {N: [0.039239, 0.098266], O: [0.038275, 0.089843], P: [0.034149, 0.091796]}
+    paired_monitor: {"P-O": "+0.001952 [-0.003703,+0.007767]", "P-N": "-0.006471 [-0.016748,+0.001645]", "O-N": "-0.008423 [-0.017744,-0.001120]"}
+    subgroups_PO: {ordinary_y_gt_-3: +0.004350, tail_y_le_-3: -0.030399, top10_removed: +0.001587}
+    monitor_gate: "CROSSBOND_NO_SEED_REPLICATION_PURCHASE (P-O threshold False; ordinary False; top-10 False; overfit guard True)"
+    mechanism: "q input weights |w| 0.0202 vs base 0.0167; zero-q |dpred| 0.2407; permuted-q 0.2473; endpoint swap gap 0.0; ring 0.157 vs non-ring 0.126"
+    decision: CROSSBOND_INFORMATION_BUT_NO_PREDICTIVE_GAIN
+  discipline:
+    - "one intervention only (q = sqrt(96)*mu_u*mu_v, frozen); no bilinear/rank/second variant; no GNN/attention/iteration; raw-y L1 only; no component supervision/teacher"
+    - "official valid/test never loaded; historical official-test 0.092233 not used; split-A locked labels never read (no locked_read_A.lock); split B never trained"
+    - "P vs O capacity-matched (428865), seed-matched, batch-order-matched; identical init hash"
+    - "analysis-only post-run fixes disclosed: _monitor_maes suffix parsing; decision classifier requires marginal P-O < 0 for WEAK_SIGNAL"
+    - "budget: 3 of 12 trajectories; ~0.33 GPU-h of 2.5"
+  status: COMPLETED 2026-10-12; stopped at split A seed 0 after the frozen monitor gate failed; seed 1 / locked / split B not purchased

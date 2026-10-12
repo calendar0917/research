@@ -1754,7 +1754,7 @@ def _monitor_maes(split_key: str) -> dict[str, Any]:
     y_mon = load_y_rows(mon_rows, subset_name=f"{split_key} monitor")
     out: dict[str, Any] = {"per_arm": {}}
     for key in sorted(k for k in preds.files if k.startswith("pred_")):
-        tag = key[len("pred_") :]
+        tag = key[len("pred_") : -len("_monitor")]
         pred = preds[key].astype(np.float64)
         out["per_arm"][tag] = metrics(pred, y_mon)
     return out
@@ -2307,15 +2307,22 @@ def cmd_decision(args: argparse.Namespace) -> int:
         if fit_p < fit_o - GATE_OVERFIT_GAP_TOL and po > 0:
             label = "CROSSBOND_OVERFITS"
             reading = "P fits the training relation better than O but its monitor MAE is worse: the new channel is an overfitting route."
-        elif min(po, pn) < 0.0:
+        elif po < 0.0:
+            # only the marginal contrast against the matched Organized control
+            # (P - O) can attribute any movement to the interaction channel;
+            # P - N alone is dominated by the shared Organized pathway.
             label = "CROSSBOND_WEAK_SIGNAL"
             reading = (
-                f"The seed-0 monitor margins are in the right direction but below the frozen purchase bar "
+                f"The marginal seed-0 monitor contrast is in the right direction but below the frozen purchase bar "
                 f"(P−O {po:+.6f}, P−N {pn:+.6f}); recorded as a weak internal signal, no seed 1 purchased."
             )
         else:
             label = "CROSSBOND_INFORMATION_BUT_NO_PREDICTIVE_GAIN"
-            reading = "The channel is implemented and active but does not improve held-out MAE over either control on split A seed 0."
+            reading = (
+                "The channel is implemented, invariant and used by the trained model, but it does not improve "
+                "held-out MAE over the matched Organized control on split A seed 0 "
+                f"(P−O {po:+.6f}, P−N {pn:+.6f})."
+            )
         payload = {
             "protocol": PROTOCOL_ID,
             "decision": label,
