@@ -1,0 +1,199 @@
+# cscl-bjoc-junction-regularization-v1  (pre-registration, frozen before training)
+#
+# Track: tracks/structure-contribution
+# Question: can one fixed training-time regularisation of the learned junction
+# representation improve BJOC generalisation to unseen molecules without any
+# change to the inference architecture, the supervision or the inputs?
+#
+# The round has exactly ONE predictive intervention:
+#   elementwise inverted dropout on the learned junction embedding w,
+#   applied before the static incidence grouping (thus before both moments).
+# Two arms only: R0 p=0.0 (the original BJOC-Null) and R1 p=0.10.
+
+protocol: cscl-bjoc-junction-regularization-v1
+status: frozen
+frozen_utc: "2026-10-12"
+official_splits: never_read   # official valid/test are off-limits in every form
+
+question: >
+  For the frozen BJOC-Null relation-composer predictor on ZINC, does training-time
+  elementwise dropout on the learned junction embedding w (p=0.10, applied before
+  mean(w) and mean(w^2)) buy held-out prediction accuracy on molecules that were
+  never seen, at unchanged inference capacity?
+
+# ---------------------------------------------------------------- hypotheses
+hypotheses:
+  H_REG:
+    claim: the model over-relies on accidental training-set co-occurrence patterns in
+      individual learned junction channels; moderate training-time dropout reduces that
+      reliance, lowering fit quality but improving held-out prediction.
+  H_NULL:
+    claim: the existing inductive bias is already appropriate; the dropout only removes
+      useful signal.
+  H_OPT:
+    claim: dropout changes optimisation and the stochastic trajectory but has no stable
+      generalisation benefit.
+  H_DATA:
+    claim: any observed MAE difference is dominated by a handful of extreme molecules
+      rather than a broad ordinary-molecule effect.
+  reading_rules: >
+    The round must separate these using the pre-frozen split-A gate, the split-B
+    replication (conditional on the gate), ordinary-molecule and tail deltas, per-seed
+    directions, and the frozen-model mechanism diagnostics. A failed intervention is
+    reported as a failure of this one frozen dropout, not of regularisation in general.
+
+# ---------------------------------------------------------------- intervention
+intervention:
+  location: "JunctionDropoutBJOC.forward_features: w -> F.dropout(w, p, training) -> group_to_bonds"
+  arms:
+    R0: {junction_dropout_p: 0.0}
+    R1: {junction_dropout_p: 0.10}
+  forbidden_variants:
+    - any other dropout probability
+    - any other dropout location (bond dropout, input dropout, DropPath, global dropout)
+    - any change to the model architecture, inputs, loss, optimizer or preprocessing
+  inference_semantics: >
+    model.eval() makes w_used == w exactly, so R0 and R1 with the same weights are
+    prediction-identical. Only the training-time stochastic regularisation is new.
+  moment_semantics: >
+    Dropout precedes the grouping, so it perturbs both mean(w) and mean(w^2); the
+    intervention is not a faithful simulation of deleting individual junction objects.
+
+# -------------------------------------------------------------------- model
+model:
+  backbone: code/structural_relation_composer_v1.py (reused unchanged)
+  wrapper: code/bjoc_junction_dropout_v1.py
+  organization_mode: null
+  parameters_R0: 413505
+  parameters_R1: 413505
+  atom_input_dim: 108
+  new_trainable_parameters: []
+  unchanged:
+    - original raw atom/bond/junction features
+    - junction encoder
+    - null grouping (graph mean of junction content)
+    - bond composer
+    - graph reader
+    - hidden widths and initialisation rule
+    - raw-y L1 loss
+
+# ------------------------------------------------------------------ recipe
+recipe:  # frozen for every formal trajectory in this round
+  optimizer: adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  epochs: 240
+  precision: fp32
+  amp: false
+  scheduler: none
+  loss: L1 on raw y
+  selection: last-5 parameter soup (epochs 236-240)
+  train_shuffle_offset: 101
+  seeds: [0, 1]
+
+# ------------------------------------------------------------------ splits
+splits:
+  builder: canonical-SMILES groups, ordered by sha256(salt|smiles), greedy fill 8000/1000/1000
+  A:
+    salt: cscl-bjoc-jdrop-v1-discovery
+    fit: 8000
+    monitor: 1000
+    locked: 1000
+    fit_sha256_rows: d701a2f46fd4abaf4f293b62bd677da5de2d938d984b3ebbf7fef7deef7b2d88
+    monitor_sha256_rows: 9db56a63f42dea895cc854b9264438ab2ed68d0e332b171ccaff430b0bc9ef51
+    locked_sha256_rows: 36a81e171aaec2902b2ee91f3a59fffcdd5b62d680b2a67ee82cc933c07d3b7f
+  B:
+    salt: cscl-bjoc-jdrop-v1-replication
+    fit: 8000
+    monitor: 1000
+    locked: 1000
+    fit_sha256_rows: 9bd64358d5d1b552553ccb1c08cf3af439f88701dcc3c90b4f01e7a31fd5382b
+    monitor_sha256_rows: 241b477cb031e38dbc959c0192f5f5202782ddf40afe4fcd3a8cbf6278af3098
+    locked_sha256_rows: d4cf4ac2ff8137e5c92e59cb0cb183757ab33da19016c50dad1912a96372f515
+  split_interpretation: >
+    Both splits come from the same official-train 10000 rows and are not independent
+    datasets. The observed cross-tab (rows): B fit x A: fit 6419 / monitor 778 / locked 803;
+    B monitor x A: fit 800 / monitor 110 / locked 90; B locked x A: fit 781 / monitor 112 /
+    locked 107. Split B therefore replicates fit-set/partition sensitivity, not external
+    data; the locked-locked overlap is 107/1000 and was not optimised (the salts were fixed
+    a priori and no salt selection was performed).
+  read_discipline:
+    train_stages: fit + monitor labels only
+    locked: read exactly once per split inside score, after predictions are hashed
+    split_B_locked: unreadable during any split-A decision (decide reads metric JSONs only)
+
+# -------------------------------------------------------------- read protocol
+staged_design:
+  stage_split_a: [R0/A/s0, R1/A/s0, R0/A/s1, R1/A/s1]
+  split_b_gate: split A clears JDROP_REPLICATION_PURCHASE
+  stage_split_b: [R0/B/s0, R1/B/s0, R0/B/s1, R1/B/s1]
+  max_total_trajectories: 8
+  seed_interpretation: seeds are robustness checks only; no seed may be used for selection
+
+# ----------------------------------------------------------- promotion rules
+promotion:
+  JDROP_REPLICATION_PURCHASE:
+    monitor_seed_mean_delta_R1_minus_R0_max: -0.006
+    both_seed_monitor_delta: "< 0"
+    both_seed_locked_delta: "<= 0"
+    locked_seed_mean_delta_R1_minus_R0_max: -0.003
+    ordinary_molecules_seed_mean_locked_delta_max: 0.0
+    top10_removed_seed_mean_locked_delta: "< 0"
+    worst_row_error_mass_share_max: 0.05
+    correctness_gates: pass
+  else: JDROP_NO_REPLICATION_PURCHASE
+  note: >
+    The thresholds are frozen GPU-resource purchase rules, not significance definitions.
+    A favourable point estimate with a bootstrap interval crossing zero is recorded as
+    directional with its uncertainty.
+
+# --------------------------------------------------------- bootstrap settings
+bootstrap:
+  n_resamples: 5000
+  seed: 0
+  unit: molecule
+  seed_mean_definition: "d_i = 0.5 * (d_i_seed0 + d_i_seed1)"
+  training_randomness: >
+    Molecule bootstrap does not cover training randomness; the cross-seed spread is
+    reported separately and never replaced by the molecule interval.
+
+# ------------------------------------------------------------- budget + bans
+budget:
+  wall_clock_minutes_total: 465
+  reserve_for_pull_verify_report_git_minutes: 35
+  gpu: 1
+  gpu_hours_max: 2.0
+  formal_trajectories_max: 8
+  concurrency: 1
+bans:
+  - searching multiple dropout probabilities
+  - other dropout locations (bond, input, DropPath, global)
+  - new structural features or changes to the distance buckets
+  - changing the model definition based on results
+  - additional unauthorised training trajectories
+  - target-component supervision (g/ell/s/c/k)
+  - GNN / Transformer / attention / iterative message passing
+  - reading official valid / official test in any form, including saved per-molecule predictions
+  - using the exposed historical official-test number 0.092233 for any decision
+
+# ------------------------------------------------------- expected outcomes
+final_decision_vocabulary:  # exactly one of
+  - JUNCTION_DROPOUT_PROMISING
+  - JUNCTION_DROPOUT_LIMITED_SIGNAL
+  - JUNCTION_DROPOUT_NO_USEFUL_GAIN
+  - JUNCTION_DROPOUT_HURTS_GENERALIZATION
+  - INCONCLUSIVE_OR_BLOCKED
+
+expected:
+  historical_context: >
+    The completed representation round found typed structural channels overfit and
+    removing learned junction content hurts at matched capacity. The question here is
+    not "more structure" but "less reliance on accidental training co-occurrence",
+    without changing inference capacity.
+  possible_outcomes: >
+    Positive: keep junction dropout as a candidate training technique and replicate.
+    Negative: stop bounded local regularisation searches on BJOC and move the next
+    round's resources to the identifiability / faithfulness / cross-molecule
+    generalisation of structural contributions (see notes and REPORT section 6).
