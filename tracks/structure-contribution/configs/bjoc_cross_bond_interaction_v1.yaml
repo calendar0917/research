@@ -1,0 +1,217 @@
+# cscl-bjoc-cross-bond-interaction-v1  (pre-registration, frozen before any formal GPU run)
+#
+# Track: tracks/structure-contribution
+# Question: with the published one-shot BJOC predictor kept intact, does
+# explicitly preserving the combination of the two *endpoint environments* of a
+# real physical bond (which junctions are centred on the left atom, which on the
+# right, and their element-wise product) provide information that the existing
+# W_b / V_b / n_b summaries cannot express, and does it buy held-out prediction?
+#
+# The round is a PREDICTION round.  The first purchase gate is CPU-only and must
+# pass before any GPU trajectory: the new channel must be provably outside the
+# old projection and non-degenerate on real training molecules.
+
+protocol: cscl-bjoc-cross-bond-interaction-v1
+status: frozen
+frozen_utc: "2026-10-12"
+official_splits: never_read   # official valid/test are off-limits in every form
+
+question: >
+  On a frozen canonical-SMILES grouped 8000/1000/1000 split of official train,
+  with the published BJOC-Null / BJOC-Organized backbones and the same raw-y L1
+  last-5-soup recipe, does appending ONE fixed cross-bond channel
+  q_e = sqrt(96) * mu_u * mu_v (mu = per-side mean of the learned junction
+  embedding, sides = the two endpoints of the physical bond) to the existing
+  bond composer improve held-out MAE over both matched controls?
+
+# ---------------------------------------------------------------- hypotheses
+hypotheses:
+  H1_cross_bond_side_pairing:
+    claim: the two-endpoint combination of a physical bond is not uniquely
+      recoverable from (W_b, V_b, n_b) and carries usable held-out signal.
+  H0_existing_summaries_sufficient:
+    claim: the old organized summaries plus the nonlinear composer/reader
+      already express the same information; the new channel is an optimisation
+      bias, not new generalisable information.
+  H2_train_only:
+    claim: the new channel lowers training fit without improving held-out MAE
+      (an overfit / like the typed-structure round).
+  reading_rules: >
+    Separated by the CPU Phase-A information gate, the split-A seed-0 monitor
+    purchase gate, the split-A seed-1 replication and locked-dev gate, and the
+    split-B partition replication.  A failure of this one frozen channel is a
+    failure of this design only.
+
+# ---------------------------------------------------------------- intervention
+intervention:
+  location: "CBIC.forward_features: composer input gains one q_e block"
+  arms:
+    N: "null incidence grouping + q = 0"
+    O: "true (organized) grouping + q = 0"
+    P: "true (organized) grouping + real q_e"
+  fixed_interaction:
+    sides: "junction centre == bond endpoint u (side u) or v (side v)"
+    mu_u: "sum_{j in J_u(e)} w_j / max(n_u, 1)"
+    mu_v: "sum_{j in J_v(e)} w_j / max(n_v, 1)"
+    q_e: "sqrt(96) * (mu_u * mu_v), element-wise, 96 dims"
+    empty_side: "q_e = 0 if n_u == 0 or n_v == 0"
+    scale: "sqrt(96), frozen before training, never tuned"
+  forbidden_variants:
+    - learned bilinear matrix / low-rank factorisation / rank search
+    - attention / gating / GNN / message passing / iterative propagation
+    - more than one interaction definition, second q, larger MLP, new reader
+    - removing the old W/V statistics from the control arms
+  parameter_matching:
+    base_bjoc: 413505
+    added: "96 composer input columns * 160 = 15360"
+    expected_total: 428865
+    all_three_arms_equal: true
+    caveat: >
+      Parameter totals are matched; effective optimisation differs because the
+      N/O new columns are identically zero at every step and receive no data
+      gradient, while P learns to use them.  This is disclosed, not hidden.
+
+# -------------------------------------------------------------------- model
+model:
+  backbone: code/structural_relation_composer_v1.BJOC (unchanged encoders/reader)
+  module: code/bjoc_cross_bond_interaction_v1.py
+  init_rule: >
+    Build the published BJOC backbone with BJOCConfig and the seed; copy every
+    shared tensor bit-identically into CBIC; zero-initialise the 96 new first
+    composer columns.  Identical initial parameters for N/O/P.
+  unchanged:
+    - raw atom/bond/junction features and the object cache
+    - encoders, hidden widths, reader, loss, optimizer, batch, epochs, soup
+    - W_b/V_b/n_b definition for the O arm (true incidence)
+
+# ------------------------------------------------------------------ recipe
+recipe:  # frozen for every formal trajectory in this round
+  optimizer: adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  epochs: 240
+  precision: fp32
+  amp: false
+  scheduler: none
+  loss: L1 on raw y
+  selection: last-5 parameter soup (epochs 236-240)
+  train_shuffle_offset: 101
+  seeds: [0, 1]
+
+# ------------------------------------------------------------------ splits
+splits:
+  builder: canonical-SMILES groups, ordered by sha256(salt|smiles), greedy fill 8000/1000/1000
+  A:
+    salt: cscl-bjoc-crossbond-v1-discovery
+    fit: 8000
+    monitor: 1000
+    locked: 1000
+  B:
+    salt: cscl-bjoc-crossbond-v1-replication
+    fit: 8000
+    monitor: 1000
+    locked: 1000
+  read_discipline:
+    fit_y: training only
+    monitor_y: frozen purchase gate only (single read after predictions frozen)
+    locked_y: read exactly once per split after ALL corresponding predictions are hashed
+    official_valid_test: never
+    split_b: only if the split-A locked gate passes
+
+# -------------------------------------------------------------- read protocol
+staged_design:
+  stage_split_a_seed0: [N/A/s0, O/A/s0, P/A/s0]
+  stage_split_a_seed1: [N/A/s1, O/A/s1, P/A/s1]   # conditional
+  stage_split_b_seed0: [N/B/s0, O/B/s0, P/B/s0]   # conditional
+  stage_split_b_seed1: [N/B/s1, O/B/s1, P/B/s1]   # conditional
+  max_total_trajectories: 12
+  seed_interpretation: seeds are robustness checks only; no seed may be used for selection
+
+# ----------------------------------------------------------- promotion rules
+promotion:
+  phase_a_purchase:
+    requirement: "projection collision exists AND real-data channel non-degenerate AND synthetic distinguisher passes"
+  seed1_purchase:
+    p_minus_o_monitor_mae_max: -0.006
+    p_minus_n_monitor_mae_max: -0.004
+    ordinary_delta_max: 0.0
+    top10_removed_delta_max: 0.0
+    overfit_guard: "P.monitor - P.fit <= max(N,O gaps) + 0.01 and P.fit >= O.fit - 0.01"
+    gates: pass
+  split_b_purchase:  # after the single split-A locked read (seed mean)
+    p_minus_o_locked_max: 0.0
+    p_minus_n_locked_max: 0.0
+    better_of_n_o_improvement_max: -0.003
+    both_seeds_p_minus_o_negative: true
+    ordinary_delta_max: 0.0
+    top10_removed_delta_max: 0.0
+    tail_delta_max: 0.05
+  note: >
+    Thresholds are frozen GPU-resource purchase rules, not significance
+    definitions.  A favourable point estimate with a bootstrap interval crossing
+    zero is recorded as directional with its uncertainty; it is never promoted
+    into a stable claim.
+
+# --------------------------------------------------------- bootstrap settings
+bootstrap:
+  n_resamples: 5000
+  seed: 0
+  unit: molecule
+  seed_mean_definition: "d_i = 0.5 * (d_i_seed0 + d_i_seed1)"
+  training_randomness: >
+    Molecule bootstrap does not cover training randomness; the cross-seed spread
+    is reported separately and never replaced by the molecule interval.
+
+# ------------------------------------------------------- phase-A CPU audits
+phase_a:
+  # AMENDMENT (2026-10-12, before the freeze commit and before any GPU run):
+  # the first draft of this block gated on the residual of a *linear* ridge probe
+  # from the composer input to q (threshold >= 0.05).  Running the audit showed the
+  # linear probe conflates same-distribution statistical predictability with
+  # functional non-expressibility, while the exact identity
+  #   q / sqrt(96) = (W^2 - V)/2/(n_u n_v) - P_net
+  # (P_net = same-side pair correction, verified to 1e-15) gives exactly the part of
+  # q that no function of (W, V, n) can express.  The governing non-degeneracy
+  # criterion is therefore the functional new-variance share (threshold >= 0.10);
+  # both probe numbers remain reported and do not gate.  This amendment was made
+  # after seeing Phase-A outputs but before the protocol commit and before any GPU.
+  projection_collision:
+    scalar_witness: "values {1,2,3,4}: A 1+2 vs 3+4 -> 21; B 1+3 vs 2+4 -> 24; W=10 V=30 n=4"
+    systematic: "combinations-with-replacement of small values, group by (W,V,n_u,n_v), count distinct side products"
+    vector: "96-D construction with per-dimension partitions colliding in (W,V) but not in q"
+  real_data:
+    non_degeneracy: "valid cross-bond pairs are common; q has variance in all 96 dims; the exact functional component P_net is >= 10% of q variance; relabelling/endpoint swaps are exact invariants"
+    reported_not_gating: "linear view-probe residual and simple-feature probe residual (both reported in the audit JSON)"
+    invariants: "endpoint swap, junction endpoint swap, atom relabelling"
+  synthetic:
+    task: "known-truth sum over bonds of a side-combination function"
+    requirement: "projection-only model cannot separate collision cases; q model can; symmetries hold"
+
+# ------------------------------------------------------------- budget + bans
+budget:
+  wall_clock_minutes_total: 465
+  reserve_for_pull_verify_report_git_minutes: 35
+  gpu: 1
+  gpu_hours_max: 2.5
+  formal_trajectories_max: 12
+  concurrency: 1
+bans:
+  - a second interaction definition / second q / bilinear matrix / rank search
+  - GNN / Transformer / attention / message passing / iterative state
+  - target-component supervision (g/ell/s/c/k)
+  - teacher / distilled predictions
+  - reading official valid / official test in any form, including saved per-molecule predictions
+  - using the exposed historical official-test number 0.092233 for any decision
+  - changing the model after seeing locked-dev results
+  - auto-training the full-10k candidate
+
+# ------------------------------------------------------- expected outcomes
+final_decision_vocabulary:  # exactly one of
+  - CROSSBOND_NO_NEW_INFORMATION
+  - CROSSBOND_INFORMATION_BUT_NO_PREDICTIVE_GAIN
+  - CROSSBOND_OVERFITS
+  - CROSSBOND_WEAK_SIGNAL
+  - CROSSBOND_PROMISING_INTERNAL
+  - INCONCLUSIVE_OR_BLOCKED
