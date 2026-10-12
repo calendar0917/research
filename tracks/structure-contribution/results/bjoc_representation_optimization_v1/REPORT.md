@@ -149,8 +149,8 @@ Three independent diagnostics on the frozen checkpoints:
    `path3_endpoint_type` 0.386, `path2_seq` 0.322, `ring_block_bondtype_frac` 0.219, `path3_seq`
    0.212, `path_totals` 0.177.
 2. **It is not a few extreme molecules** (`new_channel_extreme_value_analysis.json`): 2,941/8,000
-   fit molecules contain a channel entry with |z| > 10 (max |z| = 304, from the sparsity of the
-   sequence one-hots), yet the T fit gain is uniform — Δ = −0.01372 for molecules with such an entry
+   fit molecules contain a channel entry with |z| > 10 (max |z| = 304, from the extreme sparsity of the
+   sequence/endpoint-type blocks), yet the T fit gain is uniform — Δ = −0.01372 for molecules with such an entry
    vs −0.01378 for those without it, and the top-5% by max |z| carry only 6.7% of the total fit gain.
    The held-out damage is equally broad (every subgroup, 47% of molecules better).
 3. **It is not an optimisation pathology** (`gradient_contrast_B_T.json`): at the identical init the
@@ -167,7 +167,7 @@ resource conclusion is therefore "do not buy this representation **under this re
 
 Related audit from before training: `feature_information_audit.json`, `numeric_scale_audit.json`
 (only `global_feat` is standardised upstream; 11 junction columns are constant), and
-`new_channel_range_audit.json` (held-out rows are *inside* the fitted range: `frac_mon_gt_fitmax ≈ 0`
+`new_channel_range_audit.json` (held-out rows are *inside* the fitted range: `frac_mon_gt_fitmax ≤ 0.001`
 for every block, so the failure is not distribution shift in the channel values).
 
 ## 9. Optimisation audit (S) — no purchase
