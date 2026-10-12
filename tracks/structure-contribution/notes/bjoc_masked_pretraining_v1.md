@@ -129,6 +129,20 @@ fixed 5000-resample paired molecule bootstrap.  No further training or model sel
 At most 8 formal stages, one GPU, ≤2 GPU-hours, total wall ≤7 h 45 min, ≥35 min reserve
 for analysis/report/commit.  No full-10k final training.
 
-## Results (appended after the round)
+## Results (completed 2026-10-13)
 
-See `results/bjoc_masked_pretraining_v1/REPORT.md`.
+**Frozen decision: `SELF_SUPERVISED_PRETRAINING_USEFUL`.**  Locked-dev seed-mean raw-y MAE:
+B 0.104023, P 0.092039, C 0.099752; `P − B = -0.011984` (CI95 `[-0.017530, -0.005974]`,
+per-seed `-0.007380 / -0.016588`), ordinary molecules `-0.013472`, top-10-removed `-0.013204`;
+the frozen monitor gate fired 7/7 (`P − B` monitor `-0.010851`) so C was purchased, and P still
+beats C by `-0.007713` (CI95 `[-0.013252, -0.001911]`) — not merely optimization acceleration.
+Pretext: atom acc `0.9268/0.9289` (CE `0.2104/0.1990` vs prior `1.1181`), bond acc
+`0.9952/0.9946` (CE `0.0154/0.0186` vs prior `0.6051`).  Leak audits: 22/22 gates, 400/400
+randomized hidden-truth swaps, 100/100 rebuild cases.  Caveat: the `y ≤ -3` tail is not improved
+(locked `+0.0075`, seed-mixed) and P's locked RMSE (`0.1842`) is worse than B's (`0.1663`) while
+MAE/median/p90 improve; the junction encoder moves most (relative `2.07×`) and its effective rank
+rises `5.0 → 18–21`.  Mechanism and subgroup tables are in the report; the recommended (not yet
+authorised) next route is the data-efficiency / external-unlabelled-structure scale-up of this
+exact frozen protocol.
+
+Full record: `results/bjoc_masked_pretraining_v1/REPORT.md`.

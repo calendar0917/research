@@ -2176,8 +2176,19 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
         rare = set(np.where(counts < 200)[0].tolist())
         lock_codes = [set(o.atom_feat[:, : sro.ATOM_CATEGORIES].argmax(1).tolist()) for o in lock_objects]
         stats["rare_atom_env"] = np.asarray([len(c & rare) > 0 for c in lock_codes])
+        bcounts = np.zeros(sro.BOND_CATEGORIES, dtype=np.int64)
+        for o in fit_objs:
+            if o.bond_feat.shape[0]:
+                bcounts += np.bincount(o.bond_feat[:, : sro.BOND_CATEGORIES].argmax(1), minlength=sro.BOND_CATEGORIES)
+        brare = set(np.where(bcounts < 200)[0].tolist())
+        lock_bcodes = [set(o.bond_feat[:, : sro.BOND_CATEGORIES].argmax(1).tolist()) for o in lock_objects]
+        stats["rare_bond_env"] = np.asarray([len(c & brare) > 0 for c in lock_bcodes])
+        payload["rare_vocabulary"] = {"atom_codes_lt_200_fit8k": sorted(rare), "bond_codes_lt_200_fit8k": sorted(brare)}
         m3 = {}
         for name, mask in stats.items():
+            if mask is None:
+                m3[name] = {"n": 0, "note": "not computed in v1"}
+                continue
             entry = {"n": int(np.asarray(mask).sum())}
             if entry["n"]:
                 for key in ("P0", "P1", "B0", "B1"):
