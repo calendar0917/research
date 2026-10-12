@@ -1175,6 +1175,7 @@ def train_arm(
     y_fit = torch.as_tensor(y_all[fit_rows], dtype=torch.float32)
     y_mon = y_all[mon_rows]
     stats = read_json(STATS_FILES[split_key])
+    split_salt = read_json(SPLIT_FILES[split_key])["salt"]
     gmean = np.zeros(sro.GLOBAL_DIM, dtype=np.float32)
     gscale = np.ones(sro.GLOBAL_DIM, dtype=np.float32)
 
@@ -1229,7 +1230,7 @@ def train_arm(
         "protocol": PROTOCOL_ID,
         "arm": arm,
         "split": split_key,
-        "split_salt": stats["split"],
+        "split_salt": split_salt,
         "seed": int(seed),
         "git_commit": git_commit(),
         "smoke": bool(smoke),
@@ -1326,12 +1327,20 @@ def arm_tag(arm: str, split_key: str, seed: int, stabilised: bool = False) -> st
 
 
 def cmd_predict(args: argparse.Namespace) -> int:
-    """Label-blind predictions for a list of trained arms on one split."""
+    """Label-blind predictions for a list of trained arms on one split.
+
+    ``--rows monitor`` is a dry-run mode used to rehearse the predict/score
+    pipeline before the single locked-dev read; it never writes a locked file.
+    """
     device = torch.device(args.device)
     split_key = args.split
     rows = read_split_rows(split_key)
     y_all = load_train_y()
-    manifest: dict[str, Any] = {"protocol": PROTOCOL_ID, "split": split_key, "arms": {}, "labels_read": False}
+    want_locked = args.rows == "both"
+    manifest: dict[str, Any] = {
+        "protocol": PROTOCOL_ID, "split": split_key, "arms": {}, "labels_read": False,
+        "rows_mode": args.rows, "locked_predictions_written": want_locked,
+    }
     for tag in args.arms:
         arm = tag.split("_")[0]
         ckpt = OUT / f"checkpoint_{tag}.pt"
@@ -1344,29 +1353,32 @@ def cmd_predict(args: argparse.Namespace) -> int:
         model = bro.build_model(arm, seed=0, global_mean=gmean, global_scale=gscale, device=device)
         model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=False))
         preds = predict(model, provider, rows["monitor"], device)
-        locked = predict(model, provider, rows["locked"], device)
         np.savez_compressed(
             OUT / f"pred_{tag}_monitor.npz",
             row=np.asarray(rows["monitor"], dtype=np.int64),
             pred=preds.astype(np.float32),
             y=y_all[rows["monitor"]].astype(np.float32),
         )
-        np.savez_compressed(
-            OUT / f"pred_{tag}_locked.npz",
-            row=np.asarray(rows["locked"], dtype=np.int64),
-            pred=locked.astype(np.float32),
-        )
-        manifest["arms"][tag] = {
+        entry = {
             "checkpoint_sha256": file_sha256(ckpt),
             "monitor_pred_sha256": file_sha256(OUT / f"pred_{tag}_monitor.npz"),
-            "locked_pred_sha256": file_sha256(OUT / f"pred_{tag}_locked.npz"),
             "parameters": int(sum(p.numel() for p in model.parameters())),
             "feature_mode": mode,
         }
-        log(f"[predict] {tag} monitor+locked written")
+        if want_locked:
+            locked = predict(model, provider, rows["locked"], device)
+            np.savez_compressed(
+                OUT / f"pred_{tag}_locked.npz",
+                row=np.asarray(rows["locked"], dtype=np.int64),
+                pred=locked.astype(np.float32),
+            )
+            entry["locked_pred_sha256"] = file_sha256(OUT / f"pred_{tag}_locked.npz")
+        manifest["arms"][tag] = entry
+        log(f"[predict] {tag} written (rows={args.rows})")
         del model
     manifest["locked_labels_loaded_during_prediction"] = False
-    write_json(OUT / f"prediction_manifest_{split_key}.json", manifest)
+    suffix = "" if want_locked else "_monitor_only"
+    write_json(OUT / f"prediction_manifest_{split_key}{suffix}.json", manifest)
     return 0
 
 
@@ -1399,24 +1411,26 @@ def paired_bootstrap(delta: np.ndarray, n: int = 5000, seed: int = 0) -> dict[st
     }
 
 
-def cmd_score(args: argparse.Namespace) -> int:
-    """ONE read of the internal-split labels (monitor + locked) for the frozen arms."""
-    split_key = args.split
-    rows = read_split_rows(split_key)
-    y_all = load_train_y()
+def _score_core(
+    rows: Mapping[str, Any],
+    y_all: np.ndarray,
+    arms: Sequence[str],
+    baseline: str,
+    *,
+    include_locked: bool,
+) -> dict[str, Any]:
     y_mon = y_all[rows["monitor"]]
-    y_locked = y_all[rows["locked"]]
-    arms = list(args.arms)
-    baseline = arms[0]
     preds_mon, preds_locked = {}, {}
     for tag in arms:
         mon = np.load(OUT / f"pred_{tag}_monitor.npz")
-        locked = np.load(OUT / f"pred_{tag}_locked.npz")
         assert (mon["row"] == np.asarray(rows["monitor"])).all()
-        assert (locked["row"] == np.asarray(rows["locked"])).all()
         preds_mon[tag] = mon["pred"].astype(np.float64)
-        preds_locked[tag] = locked["pred"].astype(np.float64)
-    payload: dict[str, Any] = {"protocol": PROTOCOL_ID, "split": split_key, "baseline": baseline, "arms": {}}
+        if include_locked:
+            locked = np.load(OUT / f"pred_{tag}_locked.npz")
+            assert (locked["row"] == np.asarray(rows["locked"])).all()
+            preds_locked[tag] = locked["pred"].astype(np.float64)
+    y_locked = y_all[rows["locked"]] if include_locked else None
+    payload: dict[str, Any] = {"protocol": PROTOCOL_ID, "baseline": baseline, "arms": {}, "paired": {}}
     fit_mae = {}
     for tag in arms:
         train = read_json(OUT / f"train_{tag}.json")
@@ -1424,31 +1438,64 @@ def cmd_score(args: argparse.Namespace) -> int:
         payload["arms"][tag] = {
             "fit_mae": train["soup_fit_mae"],
             "monitor": metrics(preds_mon[tag], y_mon),
-            "locked": metrics(preds_locked[tag], y_locked),
             "parameters": train["parameters"],
             "wall_seconds": train["wall_seconds"],
         }
-    payload["paired"] = {}
+        if include_locked:
+            payload["arms"][tag]["locked"] = metrics(preds_locked[tag], y_locked)
     for tag in arms:
         if tag == baseline:
             continue
         d_mon = np.abs(preds_mon[tag] - y_mon) - np.abs(preds_mon[baseline] - y_mon)
-        d_locked = np.abs(preds_locked[tag] - y_locked) - np.abs(preds_locked[baseline] - y_locked)
-        payload["paired"][f"{tag}_minus_{baseline}"] = {
+        entry = {
             "monitor": paired_bootstrap(d_mon, seed=0),
-            "locked": paired_bootstrap(d_locked, seed=0),
             "monitor_mae_delta": float(np.abs(preds_mon[tag] - y_mon).mean() - np.abs(preds_mon[baseline] - y_mon).mean()),
-            "locked_mae_delta": float(
-                np.abs(preds_locked[tag] - y_locked).mean() - np.abs(preds_locked[baseline] - y_locked).mean()
-            ),
         }
-    payload["subgroups_locked"] = {tag: _subgroups(preds_locked[tag], y_locked, rows["locked"]) for tag in arms}
+        if include_locked:
+            d_locked = np.abs(preds_locked[tag] - y_locked) - np.abs(preds_locked[baseline] - y_locked)
+            entry["locked"] = paired_bootstrap(d_locked, seed=0)
+            entry["locked_mae_delta"] = float(
+                np.abs(preds_locked[tag] - y_locked).mean() - np.abs(preds_locked[baseline] - y_locked).mean()
+            )
+        payload["paired"][f"{tag}_minus_{baseline}"] = entry
     payload["subgroups_monitor"] = {tag: _subgroups(preds_mon[tag], y_mon, rows["monitor"]) for tag in arms}
-    payload["label_reads"] = {"monitor": 1, "locked": 1}
+    if include_locked:
+        payload["subgroups_locked"] = {tag: _subgroups(preds_locked[tag], y_locked, rows["locked"]) for tag in arms}
+    payload["fit_mae"] = fit_mae
+    return payload
+
+
+def cmd_score(args: argparse.Namespace) -> int:
+    """Scoring for the frozen arms.
+
+    Without ``--preview`` this is the ONE read of the locked-dev labels; with
+    ``--preview`` only the (already readable) monitor rows are used and the
+    locked rows are not touched, so the pipeline can be rehearsed safely.
+    """
+    split_key = args.split
+    rows = read_split_rows(split_key)
+    y_all = load_train_y()
+    arms = list(args.arms)
+    baseline = arms[0]
+    preview = bool(args.preview)
+    payload = _score_core(rows, y_all, arms, baseline, include_locked=not preview)
+    payload["split"] = split_key
+    payload["preview"] = preview
+    payload["label_reads"] = {"monitor": 1, "locked": 0 if preview else 1}
+    if preview:
+        write_json(OUT / f"split_{split_key.lower()}_monitor_preview.json", payload)
+        write_json(OUT / f"split_{split_key.lower()}_paired_preview.json", {
+            "protocol": PROTOCOL_ID, "split": split_key, "preview": True, "baseline": baseline,
+            "paired": payload["paired"], "fit_mae": payload["fit_mae"],
+        })
+        log(f"[score {split_key} PREVIEW] " + ", ".join(
+            f"{t} mon={payload['arms'][t]['monitor']['mae']:.5f}" for t in arms
+        ))
+        return 0
     write_json(OUT / f"split_{split_key.lower()}_metrics.json", payload)
     write_json(OUT / f"split_{split_key.lower()}_paired_analysis.json", {
         "protocol": PROTOCOL_ID, "split": split_key, "baseline": baseline,
-        "paired": payload["paired"], "fit_mae": fit_mae,
+        "paired": payload["paired"], "fit_mae": payload["fit_mae"],
     })
     log(f"[score {split_key}] " + ", ".join(
         f"{t} mon={payload['arms'][t]['monitor']['mae']:.5f} locked={payload['arms'][t]['locked']['mae']:.5f}" for t in arms
@@ -1503,36 +1550,42 @@ def _subgroups(pred: np.ndarray, y: np.ndarray, rows: Sequence[int]) -> dict[str
 # ---------------------------------------------------------------------------
 
 
-def cmd_decide(args: argparse.Namespace) -> int:
-    """Pre-registered晋级 decision for T using Split A monitor + locked-dev."""
-    payload = read_json(OUT / "split_a_paired_analysis.json")
-    key = "T_A_s0_minus_B_A_s0"
-    paired = payload["paired"][key]
-    mon_delta = paired["monitor_mae_delta"]
-    locked_delta = paired["locked_mae_delta"]
-    mon_ci = paired["monitor"]["ci95"]
-    locked_ci = paired["locked"]["ci95"]
-    metrics = read_json(OUT / "split_a_metrics.json")
-    sub_b = metrics["subgroups_locked"]["B_A_s0"]
-    sub_t = metrics["subgroups_locked"]["T_A_s0"]
-    ordinary_delta = sub_t["y_gt_-3"]["mae"] - sub_b["y_gt_-3"]["mae"]
-    trimmed_delta = sub_t["top10_removed"]["mae"] - sub_b["top10_removed"]["mae"]
-    worst_share_t = sub_t["max_error_row"]["share"]
+def _decide_core(
+    paired: Mapping[str, Any],
+    sub_candidate: Mapping[str, Any],
+    sub_baseline: Mapping[str, Any],
+    gates_pass: bool,
+    *,
+    arms_key: tuple[str, str] = ("T_A_s0", "B_A_s0"),
+) -> dict[str, Any]:
+    """Pre-registered promotion rule for T plus the junction-necessity reading."""
+    cand, base = arms_key
+    t_paired = paired[f"{cand}_minus_{base}"]
+    mon_delta = t_paired["monitor_mae_delta"]
+    locked_delta = t_paired["locked_mae_delta"]
+    mon_ci = t_paired["monitor"]["ci95"]
+    locked_ci = t_paired["locked"]["ci95"]
+    ordinary_delta = sub_candidate["y_gt_-3"]["mae"] - sub_baseline["y_gt_-3"]["mae"]
+    trimmed_delta = sub_candidate["top10_removed"]["mae"] - sub_baseline["top10_removed"]["mae"]
+    worst_share_t = sub_candidate["max_error_row"]["share"]
     checks = {
         "monitor_delta_le_-0.006": bool(mon_delta <= GATE_MONITOR_DELTA),
         "locked_delta_lt_0": bool(locked_delta < GATE_LOCKED_DIRECTION),
         "locked_delta_point_estimate_target": bool(locked_delta <= GATE_LOCKED_DELTA),
         "ordinary_molecules_not_worse": bool(ordinary_delta <= 0.0),
         "not_driven_by_single_row": bool(trimmed_delta < 0.0 and worst_share_t < 0.05),
-        "correctness_and_capacity_gates": bool(read_json(OUT / "correctness_gates.json")["all_numeric_gates_pass"]),
+        "correctness_and_capacity_gates": bool(gates_pass),
     }
-    purchase = all(checks[k] for k in (
-        "monitor_delta_le_-0.006", "locked_delta_lt_0", "ordinary_molecules_not_worse",
-        "not_driven_by_single_row", "correctness_and_capacity_gates",
-    ))
+    purchase = all(
+        checks[k]
+        for k in (
+            "monitor_delta_le_-0.006", "locked_delta_lt_0", "ordinary_molecules_not_worse",
+            "not_driven_by_single_row", "correctness_and_capacity_gates",
+        )
+    )
     decision = {
         "protocol": PROTOCOL_ID,
-        "candidate": "T = BJOC-TypedPathRing (Split A seed 0 vs capacity-matched padded B)",
+        "candidate": f"T = BJOC-TypedPathRing ({cand} vs capacity-matched padded {base})",
         "checks": checks,
         "deltas": {
             "monitor_T_minus_B": mon_delta,
@@ -1550,11 +1603,9 @@ def cmd_decide(args: argparse.Namespace) -> int:
             "not established, even when the point estimate passes."
         ),
     }
-    write_json(OUT / "typed_path_ring_gate.json", decision)
-    # junction-necessity reading
-    jkey = "J_A_s0_minus_B_A_s0"
-    jpaired = payload["paired"].get(jkey)
-    junction = {"protocol": PROTOCOL_ID}
+    junction: dict[str, Any] = {"protocol": PROTOCOL_ID}
+    jkey = f"J_A_s0_minus_{base}"
+    jpaired = paired.get(jkey)
     if jpaired is not None:
         jd_mon = jpaired["monitor_mae_delta"]
         jd_locked = jpaired["locked_mae_delta"]
@@ -1577,8 +1628,35 @@ def cmd_decide(args: argparse.Namespace) -> int:
                 "capacity_note": "J and B have exactly the same parameter count (432,705)",
             }
         )
-    write_json(OUT / "junction_necessity_analysis.json", junction)
-    log(f"[decide] T gate = {decision['decision']}; junction band = {junction.get('band')}")
+    return {"t_gate": decision, "junction": junction}
+
+
+def cmd_decide(args: argparse.Namespace) -> int:
+    """Pre-registered promotion decision for T using Split A monitor + locked-dev.
+
+    ``--preview`` runs the identical decision code on monitor rows only.
+    """
+    preview = bool(args.preview)
+    if preview:
+        payload = read_json(OUT / "split_a_paired_preview.json")
+        metrics = read_json(OUT / "split_a_monitor_preview.json")
+        subs, sub_key = metrics["subgroups_monitor"], "subgroups_monitor"
+    else:
+        payload = read_json(OUT / "split_a_paired_analysis.json")
+        metrics = read_json(OUT / "split_a_metrics.json")
+        subs, sub_key = metrics["subgroups_locked"], "subgroups_locked"
+    del sub_key
+    gates_pass = bool(read_json(OUT / "correctness_gates.json")["all_numeric_gates_pass"])
+    core = _decide_core(payload["paired"], subs["T_A_s0"], subs["B_A_s0"], gates_pass)
+    decision = core["t_gate"]
+    junction = core["junction"]
+    suffix = "_preview" if preview else ""
+    decision["preview"] = preview
+    decision["evaluated_on"] = "monitor rows only (rehearsal)" if preview else "monitor + one-shot locked-dev read"
+    junction["preview"] = preview
+    write_json(OUT / f"typed_path_ring_gate{suffix}.json", decision)
+    write_json(OUT / f"junction_necessity_analysis{suffix}.json", junction)
+    log(f"[decide{'(preview)' if preview else ''}] T gate = {decision['decision']}; junction band = {junction.get('band')}")
     return 0
 
 
@@ -1680,13 +1758,115 @@ class _MaskedProvider(FeatureProvider):
         return a, b
 
 
-def pred_in_chunks(model, provider, rows, device="cpu") -> np.ndarray:
-    return predict(model, provider, rows, torch.device(device))
+def pred_in_chunks(model, provider, rows, device="cpu") -> np.ndarray:    return predict(model, provider, rows, torch.device(device))
 
 
 # ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
+
+
+def cmd_freeze(args: argparse.Namespace) -> int:
+    """Write the protocol freeze manifest (evidence that the design predates training)."""
+    manifest: dict[str, Any] = {
+        "protocol": PROTOCOL_ID,
+        "frozen_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "git_commit": git_commit(),
+        "recipe": {
+            "epochs": EPOCHS, "lr": LR, "weight_decay": WEIGHT_DECAY, "grad_clip": GRAD_CLIP,
+            "batch_size": BATCH_SIZE, "soup_last": SOUP_LAST, "shuffle_offset": TRAIN_SHUFFLE_OFFSET,
+            "optimizer": "adam", "amp": False, "scheduler": "none", "loss": "L1(raw y)",
+            "stabilised_lr_segments": [list(s) for s in STABILISED_LR_SEGMENTS],
+        },
+        "gate_thresholds": {
+            "monitor_delta_T_minus_B": GATE_MONITOR_DELTA,
+            "locked_delta_T_minus_B_expected_scale": GATE_LOCKED_DELTA,
+            "locked_delta_must_be_negative": GATE_LOCKED_DIRECTION,
+        },
+        "splits": {},
+        "capacity": json.loads((OUT / "architecture_parameter_audit.json").read_text())
+        if (OUT / "architecture_parameter_audit.json").exists() else {},
+        "files": {},
+        "artifacts": {},
+        "discipline": {
+            "official_valid_or_test_loaded": False,
+            "locked_labels_read_at_freeze_time": False,
+            "stage1_plan": [["B", "A", 0], ["J", "A", 0], ["T", "A", 0]],
+            "stage2_plan_if_T_passes": [["B", "A", 1], ["T", "A", 1], ["B", "B", 0], ["T", "B", 0], ["B", "B", 1], ["T", "B", 1]],
+            "max_trajectories": 10,
+        },
+    }
+    for key, path in SPLIT_FILES.items():
+        payload = read_json(path)
+        manifest["splits"][key] = {
+            "salt": payload["salt"],
+            "fit_sha256_rows": payload["fit_sha256_rows"],
+            "monitor_sha256_rows": payload["monitor_sha256_rows"],
+            "locked_sha256_rows": payload["locked_sha256_rows"],
+            "sizes": {"fit": payload["n_fit"], "monitor": payload["n_monitor"], "locked": payload["n_locked"]},
+            "duplicate_groups": payload["duplicate_group_sizes"],
+            "locked_labels_read": payload["locked_labels_read"],
+        }
+        if payload.get("crosstab_with_A"):
+            manifest["splits"][key]["crosstab_with_A"] = payload["crosstab_with_A"]
+        manifest["files"][f"split_{key.lower()}.json"] = file_sha256(path)
+        manifest["files"][f"standardiser_{key.lower()}.json"] = file_sha256(STATS_FILES[key])
+    for name, path in (
+        ("config.yaml", CONFIG_PATH),
+        ("bjoc_representation_optimization_v1.py", _CODE_DIR / "bjoc_representation_optimization_v1.py"),
+        ("bjoc_typed_path_ring_features_v1.py", _CODE_DIR / "bjoc_typed_path_ring_features_v1.py"),
+        ("run_bjoc_representation_optimization_v1.py", _CODE_DIR / "run_bjoc_representation_optimization_v1.py"),
+        ("structural_relation_composer_v1.py", _CODE_DIR / "structural_relation_composer_v1.py"),
+        ("structural_relation_objects_v1.py", _CODE_DIR / "structural_relation_objects_v1.py"),
+        ("test_bjoc_representation_optimization_v1.py", _CODE_DIR.parent / "tests" / "test_bjoc_representation_optimization_v1.py"),
+        ("bjoc_extended_objects_v1.pt", OBJECTS_CACHE),
+    ):
+        manifest["files"][name] = file_sha256(Path(path))
+    if (OUT / "correctness_gates.json").exists():
+        gates = read_json(OUT / "correctness_gates.json")
+        manifest["artifacts"]["correctness_gates"] = {
+            "all_numeric_gates_pass": gates.get("all_numeric_gates_pass"),
+            "gate07_relabel_invariance_T": gates.get("gate07_relabel_invariance_T"),
+            "gate21_parameter_counts": gates.get("gate21_parameter_counts"),
+        }
+        manifest["discipline"]["correctness_gates_pass"] = bool(gates.get("all_numeric_gates_pass"))
+    if (OUT / "feature_information_audit.json").exists():
+        fia = read_json(OUT / "feature_information_audit.json")
+        manifest["artifacts"]["feature_information_audit"] = {
+            "fraction_of_old_groups_split_by_new_features": fia["old_identical_new_distinct"][
+                "fraction_of_groups_split_by_new_features"
+            ],
+            "n_observed_length3_sequences": fia["typed_path_support"]["n_observed_length3_sequences"],
+        }
+    write_json(OUT / "protocol_freeze_manifest.json", manifest)
+    log("[freeze] protocol_freeze_manifest.json written (git %s)" % manifest["git_commit"][:12])
+    return 0
+
+
+def cmd_report(args: argparse.Namespace) -> int:
+    """Assemble REPORT.md from the round's frozen artifacts."""
+    decision = read_json(OUT / "scientific_decision.json") if (OUT / "scientific_decision.json").exists() else {}
+    lines = [
+        f"# {PROTOCOL_ID} — REPORT",
+        "",
+        "Generated by `run_bjoc_representation_optimization_v1.py report`.",
+        "",
+        "## Decision",
+        "",
+        f"`{decision.get('decision', 'PENDING')}`",
+        "",
+        "```json",
+        json.dumps(decision, indent=2, sort_keys=True)[:4000],
+        "```",
+        "",
+        "## Artifacts",
+        "",
+    ]
+    for path in sorted(OUT.glob("*.json")):
+        lines.append(f"* `{path.name}`")
+    (OUT / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    log("[report] REPORT.md written")
+    return 0
 
 
 def main() -> int:
@@ -1725,15 +1905,24 @@ def main() -> int:
     p.add_argument("--split", required=True, choices=["A", "B"])
     p.add_argument("--arms", nargs="+", required=True)
     p.add_argument("--device", default="cpu")
+    p.add_argument("--rows", default="both", choices=["both", "monitor"])
     p.set_defaults(fn=cmd_predict)
 
     p = sub.add_parser("score")
     p.add_argument("--split", required=True, choices=["A", "B"])
     p.add_argument("--arms", nargs="+", required=True)
+    p.add_argument("--preview", action="store_true")
     p.set_defaults(fn=cmd_score)
 
     p = sub.add_parser("decide")
+    p.add_argument("--preview", action="store_true")
     p.set_defaults(fn=cmd_decide)
+
+    p = sub.add_parser("freeze")
+    p.set_defaults(fn=cmd_freeze)
+
+    p = sub.add_parser("report")
+    p.set_defaults(fn=cmd_report)
 
     p = sub.add_parser("mechanism")
     p.add_argument("--split", default="A", choices=["A", "B"])
