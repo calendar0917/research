@@ -115,3 +115,73 @@ be sold as a shortcut to that band.
 ≤ 8 formal trajectories, concurrency 1. Bans are listed in the config (interaction terms,
 GNN/attention, target-component supervision, teacher predictions, official splits, tuning
 after the locked read, auto-training the full-10k final candidate).
+
+---
+
+## Results (executed 2026-10-12; report: `results/bjoc_intrinsic_contribution_v1/REPORT.md`)
+
+Frozen revision `da3f0ae`; one follow-up commit `59bd1e7` only adds the synthetic-B `trap_pass`
+criterion and was made *before* any locked label was read (the frozen driver/report code hashes are
+unchanged). All numbers below are read from the pulled JSON artifacts, not recomputed.
+
+### Prediction cost (frozen split A, single seed; seed 1 was not purchased)
+
+| arm | soup fit | monitor MAE | locked MAE | locked RMSE | wall |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| B (BJOC-Null) | 0.037033 | 0.132840 | 0.118042 | 0.4314 | 476 s |
+| S (IJCM) | 0.105686 | 0.181423 | 0.165671 | 0.5870 | 1178 s |
+
+* Monitor Δ(S−B) = **+0.048583**, CI95 [+0.027308, +0.083351] → stage-1 gate **C_too_costly**
+  (seed 1 not purchased; no further S training).
+* Locked Δ(S−B) = **+0.047629**, CI95 [+0.034763, +0.063349]; ordinary molecules (y > −3,
+  n = 919) +0.029938; tail +0.248349; top-10-removed +0.041467. Worst-row error-mass share is
+  0.0932 (B) vs 0.0943 (S), so the degradation is broad, not outlier-driven.
+* The mechanism is additive **underfitting**, not a generalisation trade: S's soup fit is 2.85×
+  B's (0.105686 vs 0.037033). The constrained form cannot represent the training relation, so the
+  locked cost is expected rather than surprising.
+* `locked-gate` exited 1 with `seed mean unavailable`: with one seed the pre-registered seed-mean
+  purchase rule cannot be evaluated, so **split B was never trained and its labels were never
+  read**. 2 of 8 trajectories used, ~0.46 GPU-h (well inside the 1.5 GPU-h cap).
+
+### Synthetic known-truth audits (CPU, all three completed)
+
+* **A — identifiability**: type-count design full rank 263/268 (the 5 null dimensions come from
+  duplicated global-feature columns); `identifiability_pass = True`; type recovery r ≈ 0.98
+  (atom/junction) and 0.82–0.92 (bond); context recovery is weaker (bond ≈ 0–0.13), exactly the
+  branch-transfer gauge caveat.
+* **B — collinearity trap**: two junction types that co-occur in every molecule receive a
+  material, seed-unstable allocation on the non-causal type (0.11–0.17 across seeds, sd 0.025,
+  mean |B| 0.139; the exact A/B split is unresolved). `trap_pass = True` documents the audit — it
+  is not a claim that the true contribution was recovered.
+* **C — non-additivity**: with a true pairwise junction interaction, 32 % of the interaction
+  variance is orthogonal to the additive design; additive OLS floor 0.1507 vs interaction oracle
+  0.0194; additive IJCM reaches 0.0923 with residual correlation −0.951 — the residual is exactly
+  the missing interaction. The round measures this gap and does not add the interaction.
+
+### Mechanism (seed 0, canonical branch totals on locked rows; labels never read)
+
+* Canonical branch shares of total |contribution|: atom 0.342, junction 0.257, global-eta 0.221,
+  bond 0.179; OOV rate ≤ 0.03 % on fit / monitor / locked, so vocabulary backoff is not a confound.
+
+### Decision
+
+**`ATTRIBUTION_WORKS_BUT_PREDICTIVE_COST_TOO_HIGH`** (`scientific_decision.json`). The synthetic
+identifiability machinery works, but the additive head buys that with a +0.0476 locked MAE.
+Because the additive head is not a prediction route, the next purchase goes back to prediction
+research: `prediction_route_proposal.json` proposes ONE pre-registered pairwise junction-interaction
+channel (bond-adjacent junction-pair bilinear products) inside the frozen one-shot BJOC family,
+with capacity / wall-time matching and a single monitor gate. The attribution question is parked;
+no single contribution vector should be published without the co-occurrence uncertainty from B.
+
+### Discipline and caveats
+
+* Official valid / official test were never referenced or loaded; the historical official-test
+  0.092233 was not used for any decision. Locked labels were read exactly once, inside `score`,
+  after the prediction file was hashed and written.
+* Only split A was read; split B is untrained and unread. Only one seed exists, so all locked
+  deltas are single-seed; molecule-bootstrap CIs do not cover training randomness.
+* The stage-1 monitor read and the locked read agree closely (+0.0486 vs +0.0476), so there is no
+  monitor/locked reversal to explain.
+* `report` and `decision` were assembled locally from the pulled remote artifacts; `mechanism`
+  ran remotely on the frozen S checkpoint (no labels).
+

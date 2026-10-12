@@ -1,9 +1,33 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-bjoc-junction-regularization-v1-completed
-current_round: bjoc-junction-regularization-v1
+phase: cscl-bjoc-intrinsic-contribution-feasibility-v1-completed
+current_round: bjoc-intrinsic-contribution-feasibility-v1
 next_round_candidate: >-
+  AWAITING USER AUTHORIZATION. The intrinsic-junction-contribution feasibility round is COMPLETE
+  (notes/bjoc_intrinsic_contribution_v1.md, results/bjoc_intrinsic_contribution_v1/REPORT.md).
+  It asked what the held-out prediction cost is of replacing BJOC-Null's joint reader by a strictly
+  additive per-object contribution head (IJCM: bias + Σ atoms + Σ bonds + Σ junctions + Σ global-feature
+  eta; 409,922 params vs 413,505; same encoders, features, recipe, last-5 soup).  Answer: the additive
+  head is NOT a prediction route — on frozen split A (single seed, seed 1 not purchased) locked MAE
+  0.165671 vs 0.118042 (Δ +0.047629, CI95 [+0.034763,+0.063349]); monitor Δ +0.048583 (CI95
+  [+0.027308,+0.083351]); ordinary (y>-3) Δ +0.029938 (n=919); tail Δ +0.248349; top-10-removed
+  Δ +0.041467, so the degradation is broad.  The mechanism is additive UNDERFITTING, not a
+  generalisation trade: soup fit 0.105686 vs 0.037033 (2.85×), so the constrained form cannot even
+  represent the training relation.  The frozen monitor stop-loss fired at C_too_costly, seed 1 was not
+  bought, and locked-gate exited 1 with "seed mean unavailable", so split B was never trained; 2 of 8
+  trajectories used, ~0.46 GPU-h.  Synthetic known-truth audits: A identifiability passes (design rank
+  263/268; 5 null dims from duplicated global columns; type recovery r≈0.98); B documents that exactly
+  collinear junction types are not identifiable (non-causal type receives 0.11-0.17, sd 0.025; the
+  uncertainty must be exported); C shows a true pairwise junction interaction is 32% orthogonal to the
+  additive design (floor 0.1507 vs oracle 0.0194, residual corr -0.95).  Frozen decision:
+  ATTRIBUTION_WORKS_BUT_PREDICTIVE_COST_TOO_HIGH.  Next stage (proposed, NOT authorised): back to
+  PREDICTION research — ONE pre-registered pairwise junction-interaction channel (bond-adjacent
+  junction-pair bilinear products) inside the frozen one-shot BJOC family, with capacity/wall-time
+  matching and a single monitor gate; do not add more additive structure and do not publish a single
+  contribution vector without the co-occurrence uncertainty.  No GPU work without a new preregistration
+  + explicit user authorization.
+next_round_candidate_previous: >-
   AWAITING USER AUTHORIZATION. The junction-regularisation round is COMPLETE
   (notes/bjoc_junction_regularization_v1.md, results/bjoc_junction_regularization_v1/REPORT.md).
   It asked whether ONE frozen training-time intervention — inverted dropout p=0.10 on the learned
@@ -25,7 +49,7 @@ next_round_candidate: >-
   IDENTIFIABLE JUNCTION-CONTRIBUTION model with a pre-registered predictive-cost band and a
   synthetic identifiability task; do not tune dropout further.  No GPU work without a new
   preregistration + explicit user authorization.
-next_round_candidate_previous: >-
+next_round_candidate_previous_2: >-
   AWAITING USER AUTHORIZATION. The representation/optimisation round is COMPLETE
   (notes/bjoc_representation_optimization_v1.md, results/bjoc_representation_optimization_v1/REPORT.md).
   It asked which of three candidate improvable points is real and answered: (1) NOT optimisation -
@@ -44,7 +68,7 @@ next_round_candidate_previous: >-
   fit-set standardisation) or an input dropout on the new blocks, and must gate on an a-priori
   monitor read; split B is frozen and unread if a replication contrast is wanted.  No further GPU
   work without a new preregistration + explicit user authorization.
-next_round_candidate_previous_2: >-
+next_round_candidate_previous_3: >-
   AWAITING USER AUTHORIZATION. The terminal BJOC evaluation is COMPLETE
   (notes/bjoc_predictor_terminal_v1.md). It settled the two open items of the BJOC round and
   changed the reading of the previous headline: (1) the official-valid gain 0.118618 -> 0.103423
@@ -1118,12 +1142,12 @@ round_cscl-bjoc-predictor-terminal-evaluation-v1:
 # round: cscl-bjoc-representation-optimization-v1 (表征优化归因)
 # ---------------------------------------------------------------------------
 
-phase: cscl-bjoc-junction-regularization-v1-completed
-current_round: bjoc-junction-regularization-v1
+phase: cscl-bjoc-intrinsic-contribution-feasibility-v1-completed
+current_round: bjoc-intrinsic-contribution-feasibility-v1
 next_round_candidate: >-
-  see the top-level next_round_candidate block (junction-dropout failed its frozen gate on
-  split A; split B untrained; next stage = ownership-preserving identifiable junction-contribution
-  model, not more dropout tuning; no GPU work without a new preregistration + explicit user
+  see the top-level next_round_candidate block (split A additive head C_too_costly; split B
+  untrained/unread; next stage = pre-registered pairwise junction-interaction channel inside
+  the frozen one-shot BJOC family; no GPU work without a new preregistration + explicit user
   authorization).
 
 round_cscl-bjoc-representation-optimization-v1:
@@ -1220,3 +1244,64 @@ round_cscl-bjoc-junction-regularization-v1:
     mechanism/report stages were run on a local driver revision newer than the training commit
     (helpers _junction_grad_norm mode fix, report text); training/prediction artifacts come from
     commits 65bcd20 / f419ca0; no trained artifact was recomputed.
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-intrinsic-contribution-feasibility-v1 (内在 junction 贡献模型可行性:
+# 冻结预测性能止损下的严格可加贡献头 + 合成真值可辨识性审计)
+# ---------------------------------------------------------------------------
+
+round_cscl-bjoc-intrinsic-contribution-feasibility-v1:
+  preregistration: configs/bjoc_intrinsic_contribution_feasibility_v1.yaml (frozen before training; split hashes, recipe, gate thresholds, decision vocabulary embedded)
+  design_doc: notes/bjoc_intrinsic_contribution_v1.md
+  driver: code/run_bjoc_intrinsic_contribution_v1.py
+  audit: code/audit_predictive_capacity_v1.py (Phase A, CPU)
+  code:
+    - code/bjoc_intrinsic_contribution_v1.py   # IJCM: per-object scalar heads + plain sum; gauge_terms/conservation
+    - code/ijcm_synthetic_v1.py                # synthetic A (identifiability) / B (collinearity trap) / C (non-additivity)
+  question: >-
+    With the same encoders, features, recipe and splits, what is the held-out prediction cost of
+    forcing BJOC's prediction into an exactly additive sum of shared per-type + per-instance
+    junction/atom/bond contributions, and is that contribution vector identifiable?
+  design:
+    arms: B = BJOC-Null (joint reader, 413,505 params) vs S = IJCM (409,922 params)
+    splits: A salt cscl-ijcm-feasibility-v1-A, B salt cscl-ijcm-feasibility-v1-B (8000/1000/1000; row hashes frozen; only A used)
+    recipe: Adam lr 1e-3, wd 1e-5, batch 128, clip 5, 240 epochs, last-5 soup, raw-y L1; shuffle offset 101
+    gates: 24 pytest tests + numeric gates pass (conservation raw/gauged, gauge invariance and per-type fit mean 0, atom relabel, batch recomposition, save/load replay, builder determinism, module whitelist, label-blind batch, parameter tolerance, OOV backoff)
+  phase_a (CPU audit, exposed jdrop split A locked):
+    - "locked seed-mean MAE 0.143290; ordinary (y>-3) 0.092005 on 931 molecules (59.8% of error mass); tail 0.835272 on 69 (40.2%); top-10 rows carry 37.4% of error mass"
+    - "per-molecule seed errors overlap partly (top-100 overlap 60%, Spearman 0.468); the only inconsistent duplicate-SMILES group has different input tensors -> IRREDUCIBLE_ERROR_NOT_ESTABLISHED; paired seeds required"
+  "formal_result (split A only, 2 trajectories, res-gpu0, commit da3f0ae, ~1654 s train wall)":
+    soup_fit: {B_A_s0: 0.037033, S_A_s0: 0.105686}
+    mae_monitor: {B_A_s0: 0.132840, S_A_s0: 0.181423}
+    mae_locked: {B_A_s0: 0.118042, S_A_s0: 0.165671}
+    rmse_locked: {B_A_s0: 0.4314, S_A_s0: 0.5870}
+    paired_monitor: "seed 0 +0.048583 CI95 [+0.027308,+0.083351]"
+    paired_locked: "seed 0 +0.047629 CI95 [+0.034763,+0.063349]; ordinary y>-3 +0.029938 (n=919); tail +0.248349; top-10-removed +0.041467; worst-row error-mass share B 0.0932 / S 0.0943"
+    gate: "stage1 C_too_costly (purchase seed 1 = False); locked-gate exit 1 'seed mean unavailable' -> split B NOT trained"
+    decision: ATTRIBUTION_WORKS_BUT_PREDICTIVE_COST_TOO_HIGH
+  synthetic_known_truth:
+    - "A: type-count design full rank 263/268 (5 null dims from duplicated global-feature columns); identifiability_pass True; type recovery r ~0.98 (atom/junction), 0.82-0.92 (bond); context recovery weaker (bond ~0-0.13) due to branch transfer"
+    - "B: two exactly collinear junction types -> material mass on the non-causal type (0.11-0.17 across seeds, sd 0.025, mean |B| 0.139) and unresolved split; trap_pass True with the limitation documented, uncertainty must be exported"
+    - "C: pairwise interaction target -> 32% of interaction variance orthogonal to the additive design; additive OLS floor 0.1507 vs oracle 0.0194; IJCM 0.0923 with residual corr -0.951 -> the residual gap is exactly the missing interaction"
+  mechanism (seed 0, canonical branch totals, locked rows, labels never read):
+    - "branch share of total |contribution|: atom 0.342, junction 0.257, eta 0.221, bond 0.179; OOV rate <=0.03% on fit/monitor/locked"
+  next_stage_decision: >-
+    PIVOT_TO_PREDICTION (rank 1): one pre-registered pairwise junction-interaction channel
+    (bond-adjacent junction-pair bilinear products) inside the frozen one-shot BJOC family, with
+    capacity/wall-time matching and a single monitor gate before any locked read.  Rejected:
+    more additive structure/vocabulary, more dropout tuning, seed ensembling as the main route,
+    tail-only repair.  The attribution question is parked: synthetic A shows the machinery is
+    identifiable, but B/C show real-chemistry co-occurrence and interaction gaps, so no single
+    contribution vector may be published without uncertainty.
+  discipline:
+    - "official valid / official test never referenced or loaded; historical official-test 0.092233 not used for any decision"
+    - "locked labels read exactly once per split inside score, after prediction-file hashing; split B never trained and its locked labels never read"
+    - "no interaction terms, no attention/GNN, no target-component supervision, no teacher predictions, no tuning after the locked read"
+    - "trajectory budget: 2 of 8 used; <=1.5 GPU-hours (actual ~0.46 GPU-h on one A100)"
+  status: COMPLETED 2026-10-12; stopped at split A per the pre-registered stop-loss; split B unread
+  results_dir: results/bjoc_intrinsic_contribution_v1/ (git-ignored, REPORT.md tracked)
+  errata: >-
+    the synthetic module was patched once after the freeze commit to add the pre-registered
+    B trap_pass criterion (commit 59bd1e7, before any locked label read); the frozen driver/report
+    code hashes (manifest da3f0ae) are unchanged; report/decision were assembled locally from the
+    pulled remote artifacts.
