@@ -77,7 +77,7 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
     health = stages._read_json(stages.MECHANISM_DIR / "dictionary_health.json")
     correctness = stages._read_json(stages.RESULTS_DIR / "correctness.json")
     smoke = stages._read_json(stages.RESULTS_DIR / "smoke.json")
-    run_seed0 = stages._read_json(stages.RESULTS_DIR / "run_seed0.json")
+    stages._read_json(stages.RESULTS_DIR / "run_seed0.json")
 
     context.artifact_dir.mkdir(parents=True, exist_ok=True)
     (context.artifact_dir / "summary.json").write_text(

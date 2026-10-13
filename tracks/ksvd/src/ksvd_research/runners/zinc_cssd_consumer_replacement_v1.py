@@ -108,7 +108,6 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
     if stage == "train" and seed not in stages.SEEDS:
         raise RunnerError(f"stage train requires model.seed in {list(stages.SEEDS)}, got {seed}")
     out_dir = stages.RESULTS_DIR
-    threads = int(runtime.get("torch_threads", 8))
     print(
         f"[cssd-consumer-replacement-v1] stage={stage} arm={arm or '-'} "
         f"seed={seed} device={device_name}",

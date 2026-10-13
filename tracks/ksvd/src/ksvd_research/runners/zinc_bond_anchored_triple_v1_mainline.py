@@ -73,7 +73,7 @@ def run(config: Mapping[str, Any], context: RunContext) -> RunResult:
     stages.stage_cache()
     stages.stage_standardizers()
     stages.stage_correctness()
-    run_payload = stages.stage_train()
+    stages.stage_train()
     summary = stages.stage_analysis(run_id=context.run_id)
 
     context.artifact_dir.mkdir(parents=True, exist_ok=True)
