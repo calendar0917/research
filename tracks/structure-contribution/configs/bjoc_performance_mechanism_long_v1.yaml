@@ -1,0 +1,265 @@
+# cscl-bjoc-performance-mechanism-long-v1  (pre-registration; frozen before any GPU)
+#
+# Track: tracks/structure-contribution
+#
+# Long-horizon performance-first round on BJOC-Null + masked structural
+# pretraining.  Four coupled questions:
+#
+#   Q1  does the 360ep-cosine recipe (R3) replace the SSL advantage
+#       (Scratch + R3 was the missing full-10k cell)?
+#   Q2  does R3 replicate on a NEW internal group-aware split?
+#   Q3  where is the remaining generalisation bottleneck?
+#   Q4  is one low-complexity readout upgrade (per-bond composition second
+#       moment) worth buying?
+#   Q5  what is safe to claim for the paper / attribution programme?
+#
+# Discipline:
+#   * official valid is an exposed development split (descriptive only);
+#   * official test is NEVER loaded in any form;
+#   * the new internal splits are group-aware canonical-SMILES splits of the
+#     official train 10 000; their Monitor/Locked labels are sealed until the
+#     pre-declared read points;
+#   * every reused historical artifact is re-hashed before training;
+#   * all GPU jobs run on `res` GPU1 through `rr` (GPU0 is occupied by an
+#     unrelated external job at freeze time; see notes).
+
+protocol: cscl-bjoc-performance-mechanism-long-v1
+status: frozen
+frozen_utc: "2026-10-13"
+track: tracks/structure-contribution
+official_valid_role: "exposed development split; descriptive Stage-A scoring only"
+official_test: never_read
+
+# --------------------------------------------------------------- Stage A
+stage_a:
+  name: full10k-scratch-r3
+  question: >
+    On the official train 10 000 (no internal split), does scratch training
+    with the R3 recipe (360 epochs, per-step cosine 1e-3 -> 1e-5, wd 1e-5)
+    close the gap to the masked-pretrained P3 arm that the same recipe was
+    selected on?
+  arms:
+    B3: {init: scratch, recipe: R3, epochs: 360, schedule: cosine, lr: 1.0e-3, lr_min: 1.0e-5, weight_decay: 1.0e-5, seeds: [0, 1]}
+  reused_baselines:
+    B0: "results/bjoc_full10k_pretraining_transfer_v1 predictions/valid_B{seed}.npz (scratch, 240ep constant)"
+    P0: "results/bjoc_full10k_pretraining_transfer_v1 predictions/valid_P{seed}.npz (SSL, 240ep constant)"
+    P3: "results/bjoc_recipe_tuning_v1 predictions/valid_R3{seed}.npz (SSL, 360ep cosine)"
+  scoring: "official valid, paired per-molecule, seed-mean of two single-model MAEs"
+  classification:
+    SSL_GAIN_PERSISTS_UNDER_R3: "G_SSL_R3 = MAE(P3) - MAE(B3) seed-mean <= -0.005 and bootstrap CI95 upper < 0"
+    SSL_GAIN_SHRINKS_UNDER_R3: "-0.005 < G_SSL_R3 < 0"
+    NO_SSL_GAIN_UNDER_R3: "G_SSL_R3 >= 0"
+    recipe_ssl_interaction: "interaction = G_SSL_R3 - G_SSL_R0, G_SSL_R0 = MAE(P0) - MAE(B0)"
+  purchase: "mandatory; B3 seed 0 and 1 are trained in this round"
+
+# --------------------------------------------------------------- Stage B
+stage_b:
+  name: new-internal-split-2x2
+  question: >
+    On a new deterministic group-aware split of the official train 10 000,
+    with Fit-only preprocessing and a Fit-only masked SSL encoder, does the
+    2x2 {scratch, SSL} x {R0 240-constant, R3 360-cosine} table reproduce the
+    recipe and pretraining effects?  Is the recipe x SSL interaction stable?
+  split_salt: cscl-bjoc-perfmech-long-v1-B
+  fit_target: 8000
+  monitor_target: 1000
+  locked_target: 1000
+  arms:
+    B0: {init: scratch, recipe: R0}
+    B3: {init: scratch, recipe: R3}
+    P0: {init: ssl, recipe: R0}
+    P3: {init: ssl, recipe: R3}
+  pretraining:
+    reuse: "NONE: the Fit-B encoder is retrained from scratch on the Fit-B rows only"
+    objective: "masked atom-type CE + masked physical bond-type CE (weights 1.0/1.0)"
+    updates: 7560
+    batch_size: 128
+    mask: {atom_ratio: 0.15, bond_ratio: 0.15, atom_token: 27, bond_token: 0}
+    rng: "SeedSequence([seed, molecule_id, visit_index])"
+    checkpoint: "last-step encoder state only"
+  recipes:
+    R0: {epochs: 240, schedule: constant, lr: 1.0e-3, lr_min: null, weight_decay: 1.0e-5}
+    R3: {epochs: 360, schedule: cosine, lr: 1.0e-3, lr_min: 1.0e-5, weight_decay: 1.0e-5}
+  recipe_definition: "identical to cscl-bjoc-recipe-tuning-v1 R0/R3, applied to the Fit-B rows"
+  label_discipline:
+    fit_y: "training only"
+    monitor_y: "read exactly ONCE after every arm's Monitor prediction is written and hashed"
+    locked_y: "read exactly ONCE at the final stage, after all candidate choices are frozen"
+    official_valid_test: never
+  monitor_gates:
+    recipe_effect: "P3 - P0 seed-mean <= -0.003 and both per-seed deltas < 0"
+    recipe_effect_scratch: "B3 - B0 seed-mean <= -0.003 and both per-seed deltas < 0"
+    ssl_effect_r3: "P3 - B3 seed-mean <= -0.005 and both per-seed deltas < 0"
+    ssl_effect_r0: "P0 - B0 seed-mean <= -0.005 and both per-seed deltas < 0"
+    interaction: "(P3 - B3) - (P0 - B0)"
+  classification:
+    RECIPE_GAIN_ROBUST_ON_NEW_SPLIT: "recipe_effect gate passes"
+    SSL_GAIN_ROBUST_UNDER_R3: "ssl_effect_r3 gate passes"
+    RECIPE_GAIN_NOT_ROBUST_ACROSS_SPLITS: "recipe_effect gate fails while the full10k Stage-A recipe gain was positive"
+    NO_ROBUST_GAIN: "all gates fail"
+
+# --------------------------------------------------------------- Stage C
+stage_c:
+  name: bond-composition-second-moment-readout
+  question: >
+    The frozen reader receives the first moment of the composer output
+    (z = sum_b c_b) but never the second moment.  Does adding the per-bond
+    composition second moment (c_sq = sum_b c_b^2) to the reader input improve
+    held-out MAE under the P3 initialisation and recipe?
+  enabled_after: "cpu gate must pass"
+  model:
+    base: "BJOC-Null, 413,505 params, frozen architecture and encoders"
+    change: "reader input [z, c_sq, a_sum, a_sq, g]; new first-layer weight columns zero-initialised"
+    new_parameter_count: 24576
+    total_parameter_count: 438081
+    initial_function: "identical to the P3 initial function (zero new columns)"
+    iteration: "none (single index_add over bond_batch)"
+  cpu_gate:
+    identity_max_abs_diff_max: 1.0e-4
+    algebraic_construction: "explicit vectors with equal sum/count and different square-sum"
+    empirical_novelty: "best linear reconstruction of c_sq from the frozen reader inputs on >= 4000 real Fit-relevant structures leaves >= 0.15 of the centred energy unexplained (median per-dimension ridge-probe test R2 <= 0.90)"
+    nondegenerate: "c_sq finite, per-dimension std > 1e-6 for at least 90% of dims"
+    gradient_activity: "non-zero gradient reaches the new first-layer columns; one Adam step changes predictions"
+    invariance: "atom-order permutation, bond endpoint swap and batch-membership invariance pass"
+    forbidden_modules: "no GNN/attention/iteration token; no label enters feature construction"
+  gpu_gate:
+    split: "Stage-B split, same Fit rows, same SSL encoder per seed"
+    matched_arm: "P3 (same seed, same recipe)"
+    seed_0_gate: "Monitor MAE(C1) - MAE(P3) <= -0.003; ordinary (y > -3) not worse; top-10-error-removed delta < 0; RMSE within +0.005; no single-row carry"
+    seed_1_condition: "seed 0 gate passes"
+    classification:
+      C1_MONITOR_GAIN_SUPPORTED: "seed-mean gate passes for all purchased seeds"
+      C1_GAIN_WEAK_OR_MIXED: "delta < 0 but a gate condition fails"
+      C1_NO_PREDICTIVE_GAIN: "delta >= 0 or no robust improvement"
+      C1_CPU_BLOCKED: "cpu gate fails; no GPU training"
+
+# --------------------------------------------------------------- Stage D
+stage_d:
+  name: second-split-replication
+  question: "Is the Stage-B recipe effect a property of one Monitor sample or a transferable training phenomenon?"
+  purchase_rule: "run iff Stage-B recipe_effect gate passes (P3 - P0 seed-mean <= -0.003, both seeds < 0)"
+  split_salt: cscl-bjoc-perfmech-long-v1-C
+  arms: {P0: {init: ssl, recipe: R0}, P3: {init: ssl, recipe: R3}}
+  optional_scratch_arms: "B0/B3 added only if the Stage-A vs Stage-B interaction estimates disagree in sign and budget remains"
+  monitor_gate: "same shape as Stage-B; report paired deltas and seed directions"
+  skip_rule: "if Stage B fails the recipe gate, record RECIPE_GAIN_NOT_ROBUST_ACROSS_SPLITS and skip Stage D"
+
+# --------------------------------------------------------------- Stage E
+stage_e:
+  name: atom-only-masked-ssl-ablation
+  question: >
+    Under the R3 recipe, is the joint atom+bond masked objective needed, or
+    does atom-only masked pretraining transfer equally well?
+  purchase_rule: >
+    run iff Stage-B ssl_effect_r3 gate passes AND (Stage-B recipe_effect gate
+    passes OR Stage-A G_SSL_R3 <= -0.005); default one seed (0) only
+  arms: {A1: {init: ssl_atom_only, recipe: R3}}
+  contrast: "Monitor MAE(A1) - MAE(P3) at the same seed, same split, same updates"
+  classification:
+    BOND_OBJECTIVE_MATTERS: "delta >= +0.003 (joint is better by a meaningful margin)"
+    BOND_OBJECTIVE_NEUTRAL: "|delta| < 0.003"
+    ATOM_ONLY_BETTER: "delta <= -0.003"
+  seed_1_condition: "only if the seed-0 result changes the pretraining-strategy choice and budget remains"
+
+# --------------------------------------------------------------- locked
+locked:
+  read_rule: "after every final candidate prediction is written and hashed, and after the analysis plan is frozen"
+  table: [B0, B3, P0, P3]
+  optional_table: "C1, A1 only if their Monitor gates passed"
+  metrics: [mae, rmse, median_abs, p90_abs, paired_delta, paired_bootstrap_ci95, ordinary, tail]
+  no_post_read_training: true
+  no_post_read_selection: true
+
+# ------------------------------------------------------------- budget + bans
+budget:
+  gpu_hours_max: 7.0
+  gpu_hours_target: 6.5
+  gpu_pool: res-gpu1
+  gpu0_policy: "not used while the unrelated external job occupies it"
+  stage_guidance:
+    A: 0.5
+    B: 2.4
+    C: 0.8
+    D: 1.5
+    E: 0.7
+    reserve: 0.6
+  ledger: "results/bjoc_performance_mechanism_long_v1/gpu_budget_ledger.json"
+
+bans:
+  - "official test access in any form"
+  - "official-valid score as a selection signal for new architecture choices (descriptive reporting only)"
+  - "post-Monitor-read architecture, recipe, seed or threshold changes outside the frozen conditional rules"
+  - "using Monitor or Locked labels during training or feature construction"
+  - "GNN / Transformer / attention / iterative message passing in any arm"
+  - "reusing the historical split-A locked labels or the historical full-10k SSL encoder for Stage-B/C/D arms"
+  - "more than one new architecture candidate (C1) unless its CPU gate fails, in which case at most one pre-registered replacement is allowed"
+  - "retrying failed trajectories to chase a lower number"
+  - "trimmed MAE as a headline; ensembles as a headline"
+
+decision_vocabulary:
+  - SSL_GAIN_PERSISTS_UNDER_R3
+  - SSL_GAIN_SHRINKS_UNDER_R3
+  - NO_SSL_GAIN_UNDER_R3
+  - RECIPE_GAIN_ROBUST_ON_NEW_SPLIT
+  - RECIPE_GAIN_NOT_ROBUST_ACROSS_SPLITS
+  - SSL_GAIN_ROBUST_UNDER_R3
+  - C1_MONITOR_GAIN_SUPPORTED
+  - C1_NO_PREDICTIVE_GAIN
+  - C1_CPU_BLOCKED
+  - BOND_OBJECTIVE_MATTERS
+  - BOND_OBJECTIVE_NEUTRAL
+  - ATOM_ONLY_BETTER
+  - BLOCKED
+
+# --------------------------------------------------- frozen input fingerprints
+# values re-hashed locally on 2026-10-13 before this pre-registration commit
+frozen:
+  frozen_block_version: 1
+  n_train: 10000
+  n_valid: 1000
+  batch_size: 128
+  soup_last: 5
+  train_shuffle_offset: 101
+  tail_threshold: -3.0
+  expected_parameters: 413505
+  c1_expected_parameters: 438081
+  objects_train10k_sha256: 14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d
+  objects_valid_sha256: 61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c
+  prep_train10k_sha256: d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a
+  pretrain_encoder_s0_sha256: 006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97
+  pretrain_encoder_s1_sha256: ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a
+  soup_P_seed0_sha256: 73118e9be466c62a252eacb83d9c86d1cb4bf0ce01478db2f278b7c27a5fab2a
+  soup_P_seed1_sha256: bf640cd8c11a9f6e0d11ceccd318185e6067ef2ba5a950b4774d5185a9ab053c
+  soup_R3_seed0_sha256: a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782
+  soup_R3_seed1_sha256: b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9
+  split_a_sha256: 19d950f23c27927e755cbf6190387122bfc1552a026f78e0b8c478cb6c875aca
+  canonical_smiles_sha256: 04a590355fb7bba71e35e52bed60c974999b92af9e96e4ee99bed4afe42dcaff
+  # P init hashes recorded by the full-10k round (used as the Stage-A/B init anchor)
+  p_init_full_sha256:
+    "0": d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691
+    "1": c79e6b02521c224e79790382438ca72c08f9e22e691f66fb5ab950dea4b49c0b
+  p_init_group_state_sha256:
+    "0": d9ffbd15356659ed06af4b43077bb7f27403ad0afc3e7ac00c4d34fc98c7415f
+    "1": 98d11fe93b03368e8ea5f66b17c1ccf16d850ee13a43f56f49ddc93dd08a993c
+  p_init_encoder_sha256:
+    "0": 91af980a414ac945ea35b31c114d4e44b636419b62320321a902179112889d12
+    "1": 83d8b086bf1f9ee6c145336a3ea67e710bcf42658151061c293c2a3380ddd303
+  p_encoder_used_sha256:
+    "0": 7165eb90ceaaec8402d973f82c3b60099dd67ffb7e57365585466478d143096f
+    "1": 54a232edfc280537fd3dbae3ae6e02f6c8e68e3bfa5c467ab9a54d7a0663c917
+  r3_recipe:
+    epochs: 360
+    schedule: cosine
+    lr: 1.0e-3
+    lr_min: 1.0e-5
+    weight_decay: 1.0e-5
+    steps_per_epoch_full10k: 79
+    full_batch_order_hash:
+      "0": 3c964a71acc1ca817567cac916a7a59a12b40f750dbceee0848f614a2c71428f
+      "1": 8710751abd8c33739cac5506756fe6ba6abb919aed3235f86619b13fcf2700b9
+    lr_first_step: 1.0e-3
+    lr_last_step: 1.0000003020061353e-05
+  baseline_valid_mae:
+    B0: [0.10017243217205396, 0.09823218293202808]
+    P0: [0.08478566339140525, 0.08231300199305405]
+    P3: [0.07910149778419873, 0.08058639967715135]
