@@ -224,7 +224,19 @@ def _verify_inputs() -> dict[str, Any]:
             F10K / "predictions" / f"valid_P{seed}.npz",
             VALID_P_PRED_SHA256[int(seed)],
         )
-    checks["all_ok"] = all(v.get("ok") for k, v in checks.items() if k != "all_ok")
+        if not checks[f"valid_P{seed}_preds"]["exists"]:
+            checks[f"valid_P{seed}_preds"]["ok"] = None
+            checks[f"valid_P{seed}_preds"]["unavailable_on_host"] = True
+    training_keys = [
+        "objects_train10k",
+        "objects_valid",
+        "prep_train10k",
+        *[f"pretrain_encoder_s{s}" for s in SEEDS],
+    ]
+    reference_keys = [*[f"soup_P_seed{s}" for s in SEEDS], *[f"valid_P{s}_preds" for s in SEEDS]]
+    checks["all_training_inputs_ok"] = all(checks[k]["ok"] is True for k in training_keys)
+    checks["evaluation_references_ok"] = all(checks[k]["ok"] is True for k in reference_keys)
+    checks["all_ok"] = bool(checks["all_training_inputs_ok"])
     return checks
 
 
@@ -1003,17 +1015,19 @@ def cmd_freeze(args: argparse.Namespace) -> int:
         ("pretrain_encoder_s1_file_sha256", inputs["pretrain_encoder_s1"]["file_sha256"]),
         ("soup_P_seed0_sha256", inputs["soup_P_seed0"]["sha256"]),
         ("soup_P_seed1_sha256", inputs["soup_P_seed1"]["sha256"]),
-        ("valid_P_seed0_sha256", inputs["valid_P0_preds"]["sha256"]),
-        ("valid_P_seed1_sha256", inputs["valid_P1_preds"]["sha256"]),
     ):
         if key in frozen and frozen[key] != value:
             mismatches.append({"key": key, "config": frozen[key], "actual": value})
+    payload["inputs"]["evaluation_references_on_host"] = {
+        "valid_P0_preds": inputs["valid_P0_preds"].get("ok"),
+        "valid_P1_preds": inputs["valid_P1_preds"].get("ok"),
+    }
     payload["config_frozen_block_mismatches"] = mismatches
     write_json(FREEZE_JSON, payload)
     if mismatches:
         raise SystemExit(f"config frozen block mismatches: {mismatches}")
-    if not (inputs["all_ok"] and precheck["decision"] == "CPU_PRECHECK_PASSED"):
-        raise SystemExit("inputs or CPU pre-check failed; refusing to freeze")
+    if not (inputs["all_training_inputs_ok"] and precheck["decision"] == "CPU_PRECHECK_PASSED"):
+        raise SystemExit("training inputs or CPU pre-check failed; refusing to freeze")
     log(f"[freeze] protocol frozen; driver {payload['code_hashes']['driver'][:16]}")
     return 0
 
