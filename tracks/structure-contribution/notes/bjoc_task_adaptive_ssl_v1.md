@@ -57,9 +57,18 @@ Monitor 配对对照 `Δ = MAE(TA) − MAE(P3)`（两 seed 平均，bootstrap �
 
 ## 4. Stage A（CPU，GPU 之前）
 
+> **预注册后修订（2026-10-13，仍在任何 GPU 轨迹之前）**：A1 原措辞要求 soup
+> 与 `bp.train_supervised` **逐位一致**。本地工作站上 bp 两次、TA 等价循环两次四份
+> soup 完全逐位相同；远程 `res` CPU 对*同一个冻结循环*两次运行就已在 float32 参数上
+> 相差 ~3e-7（诊断记录在 `code/diag_tat_replay_determinism.py` 的运行输出与
+> `stage_a.json`）。因此远程 A1 改为：batch 顺序 hash、lr/MAE 曲线、init hash 完全一致，
+> 且 `max|soup_new − soup_bp| ≤ max(1e-6, 2 × max|soup_bp_repeat − soup_bp|)`，即新循环
+> 落在本机自身噪声底之内；本地逐位同一性同时记录。该仪器修订写入
+> `post_freeze_amendments.json`，不改模型、配方、aux 计划、λ、seed、门槛、标签规则或预算。
+
 - **A1 frozen-loop replay**：同一初始化 / batch 顺序 / schedule 下，
-  `tat.train_task_adaptive(aux_every=None)` 与 `bp.train_supervised` 的 soup、
-  batch-order hash、lr 曲线逐位一致。
+  `tat.train_task_adaptive(aux_every=None)` 与 `bp.train_supervised` 的 batch-order hash、
+  lr 曲线、init hash 一致，soup 差异不超过本机 bp×2 噪声底（本地额外逐位一致）。
 - **A2 SSL wrapper 等价**：`tat.pretrain_masked_with_head`（对冻结
   `bp.pretrain_masked` 的子类捕获包装，不改任何循环代码）与原函数短程 smoke 的
   encoder final hash、loss 曲线逐位一致；atom head 被捕获且来源为同一 run。

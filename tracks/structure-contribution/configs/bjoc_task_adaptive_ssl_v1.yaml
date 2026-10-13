@@ -132,6 +132,35 @@ candidate:
   inference: "the final model is exactly BJOC-Null (413,505 params); the auxiliary head is removed at prediction time"
   no_search: "lambda, aux frequency, mask ratio, objective mix, head width and schedule are frozen; no post-Monitor change"
 
+# --------------------------------------------------------------- CPU Stage A
+stage_a:
+  role: "gate before any GPU trajectory; all four blocks must pass"
+  A1_frozen_loop_replay: >
+    the new loop with aux_every=None vs bp.train_supervised on the same Fit-D
+    rows, seed, batch order and schedule.  Primary requirement: identical
+    batch-order hash, identical per-epoch lr/train-MAE curve, identical init
+    hash, and soup equality within the machine's own measured run-to-run noise
+    floor (bp trained twice; tolerance max(1e-6, 2 * bp-repeat max abs diff)).
+    On a bitwise-deterministic machine (the local workstation) the stronger
+    bitwise soup identity is also recorded.  Amendment note: the original
+    frozen wording required bitwise soup identity; the remote CPU is run-to-run
+    non-deterministic at ~3e-7 for the same frozen loop, so the noise-floor
+    comparison is used there; this instrument change is recorded in
+    results/bjoc_task_adaptive_ssl_v1/post_freeze_amendments.json before any
+    GPU trajectory and changes no model, recipe, threshold or label rule.
+  A2_ssl_and_mask_audits: >
+    wrapper vs bp.pretrain_masked short smoke (encoder hash and loss steps),
+    hidden-truth mask-swap invariance, masked-rebuild leak audit, zero guarded
+    label accesses.
+  A3_gradient_diagnostics: >
+    property-vs-atom gradients on real Fit minibatches at init and after two
+    short epochs (norms, ratio, cosine, weighted norm, head activity);
+    recorded, never used to tune lambda.
+  A4_invariance: >
+    atom relabel / bond endpoint swap / batch membership / save-load replay
+    within 1e-4; inference path is exactly BJOC-Null 413,505 params with no
+    auxiliary head attribute.
+
 # --------------------------------------------------------------- arms
 arms:
   P3-D-s0: {arm: P3, seed: 0, init: ssl, recipe: R3, aux: none}

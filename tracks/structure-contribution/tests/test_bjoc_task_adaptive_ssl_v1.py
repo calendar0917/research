@@ -158,6 +158,38 @@ def test_adaptive_loop_without_aux_matches_frozen_loop():
 # ---------------------------------------------------------------------------
 
 
+def test_compare_loops_noise_floor_instrument():
+    # The A1 amendment: on a non-bitwise-deterministic machine the new loop must
+    # stay within the frozen loop's own run-to-run noise floor.
+    curve = [{"train_mae": 1.0, "lr_first": 1.0e-3, "lr_last": 1.0e-5}]
+    base = {"w": torch.zeros(8)}
+    tiny = {"w": torch.full((8,), 5.0e-7)}
+    far = {"w": torch.full((8,), 5.0e-3)}
+
+    def payload(state, soup_mae=0.0):
+        return {
+            "soup_state": state,
+            "batch_order": {"full_hash": "order"},
+            "lr_curve": curve,
+            "soup_members": [1],
+            "soup_fit_mae": soup_mae,
+            "updates": 1,
+        }
+
+    ok = drv._compare_loops(payload(base), payload(tiny), payload(tiny))
+    assert ok["soup_bit_identical"] is False
+    assert ok["bp_repeat_max_abs_diff"] == pytest.approx(5.0e-7)
+    assert ok["equivalent_within_noise"] is True
+    assert ok["equivalence_tolerance"] > ok["new_vs_bp_max_abs_diff"]
+
+    bad = drv._compare_loops(payload(base), payload(far), payload(tiny))
+    assert bad["equivalent_within_noise"] is False
+
+    identical = drv._compare_loops(payload(base), payload(base), payload(base))
+    assert identical["soup_bit_identical"] is True
+    assert identical["equivalent_within_noise"] is True
+
+
 def test_ssl_wrapper_captures_head_without_changing_encoders():
     objs, raws = _tiny_world()
     rows = list(range(len(objs)))
