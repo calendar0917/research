@@ -1,0 +1,151 @@
+# cscl-bjoc-strc-predictive-feasibility-v1  (pre-registration)
+#
+# Track: tracks/structure-contribution
+#
+# One scientific question: on the already-successful masked-pretrained
+# BJOC-Null (P), can a tiny cross-molecule-shared, explicitly additive
+# residual channel (28 shared atom-type scalars + 129 shared junction-context
+# scalars = 157 new parameters, zero-initialised) trained jointly under the
+# identical raw-y L1 recipe improve the official-valid single-model MAE?
+#
+# The STRC arm S differs from the frozen P arm ONLY by the alpha/beta channel.
+# Official test is never read, referenced, hashed or scored in this round.
+
+protocol: cscl-bjoc-strc-predictive-feasibility-v1
+status: frozen
+frozen_utc: "2026-10-13"
+track: tracks/structure-contribution
+
+# --------------------------------------------------------------- scope
+fixed_boundaries:
+  train: "official PyG ZINC subset=True train, 10000 rows (raw-y L1 supervision)"
+  valid: "official PyG ZINC subset=True val, 1000 rows (exposed development set, read once after prediction freeze)"
+  test: "never accessed, never loaded, never scored in this round"
+  internal_split: none
+  external_data: forbidden
+  banned_methods:
+    - ensemble (predictions never averaged; seed-mean is the mean of two single-model MAEs)
+    - teacher distillation
+    - prediction calibration / target transformation / clipping / tail-weighted loss
+    - extra property labels
+    - GNN / Transformer / attention / iterative message passing
+    - "a(counts) * f_theta + b(counts) calibration"
+    - residual MLP / deeper residual head / learnable scale
+  supervision: "raw y + L1 loss only"
+
+# --------------------------------------------------------------- model
+model:
+  name: "Shared-Type Residual Composition (STRC)"
+  base: "complete pretrained BJOC-Null forward f_theta (unchanged, 413505 params)"
+  residual: "s_a * sum_i alpha[type_i] + s_j * sum_j beta[context_j]"
+  atom_vocab: 28
+  context_definition: "(endpoint_type_low, centre_type, endpoint_type_high), endpoints sorted, centre explicit"
+  context_keep: 128
+  other_slot: 128
+  beta_size: 129
+  new_parameters: 157
+  total_parameters: 413662
+  initialisation: "alpha = 0, beta = 0; first STRC forward equals the P initialisation"
+  scales:
+    s_a: "1 / mean_train(n_atoms)"
+    s_j: "1 / max(mean_train(n_junctions), 1)"
+    rule: "frozen train10k structure statistics; never tuned on valid; not learnable"
+
+# --------------------------------------------------------------- vocabulary
+vocabulary:
+  source: "official train10k structures only (x/edge_index/edge_attr; labels never read)"
+  rule: >
+    count each junction-context once, sort by occurrence count descending,
+    break ties by lexicographic context order, keep the 128 most frequent
+    contexts, map every other context to OTHER
+  frozen_sha256_from_frozen_block: true
+
+# --------------------------------------------------------------- training
+training:
+  arm: S
+  seeds: [0, 1]
+  matched_baseline: "frozen P (results/bjoc_full10k_pretraining_transfer_v1 soup_P_seed{0,1}.pt)"
+  matched_initialisation: "same SSL encoder checkpoints + same scratch composer/reader init as P"
+  recipe:
+    optimizer: Adam
+    lr: 0.001
+    weight_decay: 0.00001
+    batch_size: 128
+    grad_clip: 5.0
+    loss: "raw-y L1 only"
+    scheduler: none
+    dropout: 0.0
+    epochs: 240
+    steps_per_epoch: 79
+    updates: 18960
+    soup: "parameter mean of the last 5 epoch states"
+    train_shuffle_offset: 101
+  single_gpu: true
+  max_trajectories: 2
+
+# --------------------------------------------------------------- evaluation
+evaluation:
+  primary_metric: "official-valid raw-y MAE, seed-mean of the two single-model MAEs"
+  baseline: {P_seed0: 0.084785663, P_seed1: 0.082313002, P_seed_mean: 0.083549333}
+  bootstrap: {n_resamples: 5000, seed: 0, unit: molecule}
+  top_k_removed: [1, 5, 10]
+  tail_threshold: -3.0
+  extreme_row: "valid:0172"
+  purchase_gate:
+    seed_mean_delta_max: -0.004
+    both_seed_deltas_negative: true
+    ordinary_not_worse: true
+    tail_strictly_better: true
+    rmse_tolerance: 0.005
+    top10_removed_negative: true
+    not_driven_by_extreme_row: true
+    correctness_gates: true
+  decisions:
+    STRC_DEV_GAIN_SUPPORTED: "all purchase-gate conditions hold"
+    STRC_GAIN_WEAK_OR_MIXED: "seed-mean delta < 0 but at least one gate condition fails"
+    STRC_NO_PREDICTIVE_GAIN: "seed-mean delta >= 0 or no robust improvement"
+    STRC_CPU_BLOCKED: "init replay / correctness / gradient path failed before GPU"
+
+# --------------------------------------------------------------- budget + bans
+budget:
+  wall_clock_minutes_total: 390
+  gpu_hours_max: 0.8
+  gpus_max: 1
+  reserved_for_reporting_minutes: 35
+  no_test_access: true
+
+bans:
+  - "a second STRC variant: no 256/512 context vocabulary, no second context definition"
+  - "no learnable scale, no count-conditioned scale calibration, no residual MLP"
+  - "no third seed, no seed selection, no epoch selection on valid"
+  - "no alpha/beta post-hoc re-tuning or separate training"
+  - "no ensemble or output calibration as headline"
+  - "no official test access in any form (including historical per-molecule test errors)"
+  - "no new junction / three-body / four-body module; no GNN/attention/Transformer/iteration"
+  - "no re-tuning after the valid read; no deleting or replacing extreme rows"
+
+# --------------------------------------------------------------- frozen block
+frozen:
+  context_keep: 128
+  beta_size: 129
+  new_parameters: 157
+  total_parameters: 413662
+  lr: 0.001
+  weight_decay: 0.00001
+  batch_size: 128
+  grad_clip: 5.0
+  epochs: 240
+  updates: 18960
+  train_shuffle_offset: 101
+  gain_threshold: -0.004
+  rmse_tolerance: 0.005
+  objects_train10k_sha256: "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d"
+  objects_valid_sha256: "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c"
+  prep_train10k_sha256: "d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a"
+  pretrain_encoder_s0_sha256: "7165eb90ceaaec8402d973f82c3b60099dd67ffb7e57365585466478d143096f"
+  pretrain_encoder_s1_sha256: "54a232edfc280537fd3dbae3ae6e02f6c8e68e3bfa5c467ab9a54d7a0663c917"
+  pretrain_encoder_s0_file_sha256: "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+  pretrain_encoder_s1_file_sha256: "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a"
+  soup_P_seed0_sha256: "73118e9be466c62a252eacb83d9c86d1cb4bf0ce01478db2f278b7c27a5fab2a"
+  soup_P_seed1_sha256: "bf640cd8c11a9f6e0d11ceccd318185e6067ef2ba5a950b4774d5185a9ab053c"
+  vocab_sha256: "18303ee133b580107c9c626ed834f94a45c61320fcec82f123a6aa413973cc40"
