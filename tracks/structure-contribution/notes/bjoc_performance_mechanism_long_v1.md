@@ -115,3 +115,34 @@
   （splits B、objects B、input audit、Stage-A init/recipe 审计、C1 CPU gate）全部通过。
 - Stage B 与 A 的重叠数据来自本地 `split_B.json`；远端重算 `objects:B` 时
   会再次校验 split 行哈希，若不同则拒绝。
+- 远端 `prep`（commit `3bbd9ee`）：所有冻结输入在位；split B 与本地逐位一致；
+  Stage-A init/recipe 审计双 seed OK。远端 C1 CPU gate 复现本地结论。
+- 本地 smoke：SSL 5 updates、B3 1 epoch（CPU）通过，用于验证训练/序列化路径；
+  smoke 事件不产生正式 artifact，不计入 GPU-h。
+
+### Stage A 结果（official valid，已暴露开发集，仅描述性）
+
+2×2（seed mean；B3F 为本轮新增方格）：
+
+| arm | seed 0 | seed 1 | mean |
+|---|---|---|---|
+| B0 scratch + 240 const | 0.100172 | 0.098232 | 0.099202 |
+| P0 SSL + 240 const | 0.084786 | 0.082313 | 0.083550 |
+| B3 scratch + 360 cosine（本轮） | 0.097775 | 0.096714 | 0.097244 |
+| P3 SSL + 360 cosine | 0.079101 | 0.080586 | 0.079844 |
+
+对比：
+
+- `G_SSL_R0 = P0−B0 = −0.01565`，CI95 [−0.02105, −0.00990]；
+- `G_SSL_R3 = P3−B3F = −0.01740`，CI95 [−0.02479, −0.00997]；
+- interaction `G_SSL_R3 − G_SSL_R0 = −0.00175`（per-seed s0 −0.00329 / s1 −0.00021）；
+- recipe effect for scratch `B3F−B0 = −0.00196`，CI95 跨 0；
+- recipe effect for SSL `P3−P0 = −0.00371`，CI95 [−0.00639, −0.00101]。
+
+**决策：`SSL_GAIN_PERSISTS_UNDER_R3`。** 在 360ep cosine 下 SSL 增益没有消失，
+幅度甚至略大于 240ep constant 条件；但交互项很小且 seed 异质（完全由 seed 0 驱动），
+不能声称 R3 放大 SSL。同时 `ordinary_delta = −0.019` 而 `tail_delta = +0.010`
+（65 个尾部分子），复现了已记录的“SSL 改善为普通分子、尾部代价”模式。
+该结果回答了 Q1，并封闭了历史归因缺口：R3 不是以牺牲 SSL 增益为代价。
+GPU 记录：B3F s0 0.1914 h、s1 0.1944 h。
+
