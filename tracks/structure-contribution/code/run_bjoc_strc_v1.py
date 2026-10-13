@@ -102,6 +102,7 @@ CURVE_LOG_EVERY = 20
 # ---- pre-registered purchase gate (official valid only) ---------------------
 GAIN_THRESHOLD = -0.004          # seed-mean S - P must be at most this
 RMSE_TOLERANCE = 0.005           # seed-mean S RMSE <= P RMSE + this
+BASE_GRAD_TOLERANCE = 1.0e-6     # float32 numerical-precision agreement floor
 SEED0_BASELINE_MAE = 0.084785663
 SEED1_BASELINE_MAE = 0.082313002
 P_SEED_MEAN_MAE = 0.083549333
@@ -567,6 +568,8 @@ def cmd_cpu_precheck(args: argparse.Namespace) -> int:
         base_grad_max_diff = float(
             max((base_grads_strc[k] - ctrl_grads[k]).abs().max().item() for k in base_grads_strc)
         )
+        base_grad_scale = float(max(ctrl_grads[k].abs().max().item() for k in ctrl_grads))
+        base_grad_relative = base_grad_max_diff / max(base_grad_scale, 1e-12)
         # independent base-only one-step optimizer with the same base state
         opt_ctrl = torch.optim.Adam(control.base.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
         ctrl_clip = float(torch.nn.utils.clip_grad_norm_(control.base.parameters(), GRAD_CLIP))
@@ -606,6 +609,8 @@ def cmd_cpu_precheck(args: argparse.Namespace) -> int:
             "alpha_changed_after_step": alpha_changed,
             "beta_changed_after_step": beta_changed,
             "base_grad_control_max_abs_diff": base_grad_max_diff,
+            "base_grad_control_relative_to_max_grad": base_grad_relative,
+            "base_grad_control_tolerance": BASE_GRAD_TOLERANCE,
             "clip_norm_first_batch": clip_norm,
             "control_clip_norm_first_batch": ctrl_clip,
             "clip_active": bool(clip_norm > GRAD_CLIP or ctrl_clip > GRAD_CLIP),
@@ -631,7 +636,7 @@ def cmd_cpu_precheck(args: argparse.Namespace) -> int:
             "counting_identity": a_sum_ok and c_sum_ok,
             "finite": finite_params and grad_finite,
             "gradient_activity": alpha_nonzero > 0 and beta_nonzero > 0 and alpha_changed and beta_changed,
-            "base_gradient_control": base_grad_max_diff <= 1e-12,
+            "base_gradient_control": base_grad_max_diff <= BASE_GRAD_TOLERANCE,
             "optimizer_membership": opt_ids == all_ids and id(model.residual.alpha) in opt_ids and id(model.residual.beta) in opt_ids,
             "sharing_identity": alpha_share_diff <= 1e-6 and beta_share_diff <= 1e-6,
             "no_forbidden_modules": not per_seed[str(seed)]["forbidden_modules"] and not per_seed[str(seed)]["forbidden_source_tokens"],
@@ -982,6 +987,7 @@ def cmd_freeze(args: argparse.Namespace) -> int:
         ("train_shuffle_offset", TRAIN_SHUFFLE_OFFSET),
         ("gain_threshold", GAIN_THRESHOLD),
         ("rmse_tolerance", RMSE_TOLERANCE),
+        ("base_gradient_tolerance", BASE_GRAD_TOLERANCE),
         ("vocab_sha256", vocab["vocab_sha256"]),
         ("objects_train10k_sha256", inputs["objects_train10k"]["sha256"]),
         ("objects_valid_sha256", inputs["objects_valid"]["sha256"]),
@@ -1687,12 +1693,12 @@ def cmd_stage_cpu_prep(args: argparse.Namespace) -> int:
             raise SystemExit("existing context vocabulary failed its hash")
     if not DESIGN_AUDIT.exists():
         cmd_design_audit(args)
-    if not CPU_PRECHECK.exists():
-        cmd_cpu_precheck(args)
-    if not SYNTHETIC_JSON.exists():
-        cmd_synthetic(args)
-    dummy = argparse.Namespace()
-    cmd_freeze(dummy)
+    # the pre-check, synthetic audit and freeze are deterministic and cheap;
+    # always re-run them so a corrected revision cannot silently reuse a
+    # blocked pre-check artifact from an earlier deployment
+    cmd_cpu_precheck(args)
+    cmd_synthetic(args)
+    cmd_freeze(argparse.Namespace())
     return 0
 
 

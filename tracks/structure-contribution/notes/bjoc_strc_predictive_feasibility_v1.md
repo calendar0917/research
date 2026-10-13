@@ -69,7 +69,10 @@ from the P soup:
   finite; no forbidden modules.
 * A3 gradients: alpha/beta receive non-zero gradient and move in the first
   optimizer step; optimizer contains every parameter; base gradients equal
-  the zero-residual control **exactly** (max diff 0.0).  Note: the first-batch
+  the zero-residual control (max diff 0.0 on the local CPU; the gate tolerance
+  is 1e-6 because a remote CPU may differ by float32 reduction ordering —
+  observed 3.7e-9 on `res`, i.e. below float32 epsilon relative to the
+  gradient scale).  Note: the first-batch
   global grad norm is 11.98 > 5, so the shared clip is active (it is active
   for the base alone as well, i.e. P also clipped).
 * A4 sharing: `d y_hat / d alpha[t] = s_a * n_t` and
