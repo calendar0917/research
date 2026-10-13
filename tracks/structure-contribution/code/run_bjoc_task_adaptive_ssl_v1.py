@@ -195,10 +195,11 @@ def code_hashes() -> dict[str, str]:
 
 
 def _frozen_input_files() -> dict[str, Path]:
+    # the committed architecture-round config is the pre-registration anchor for
+    # split D; the fingerprint payload split_D.json is an optional cross-check
     return {
         "canonical_smiles": CANONICAL_SMILES,
         "encoded_train": ENCODED_TRAIN,
-        "arch_split_D_payload": ARCH / "split_D.json",
         "arch_config": ARCH_CONFIG,
     }
 
@@ -208,8 +209,7 @@ def audit_inputs() -> dict[str, Any]:
     expected = {
         "canonical_smiles": cfg["frozen_inputs"]["canonical_smiles_sha256"],
         "encoded_train": cfg["frozen_inputs"]["encoded_train_sha256"],
-        "arch_split_D_payload": None,  # recorded, not pre-frozen (recomputed at prep)
-        "arch_config": None,
+        "arch_config": None,  # recorded, not pre-frozen (anchor for split D fingerprints)
     }
     checks: dict[str, Any] = {}
     ok = True
@@ -323,7 +323,12 @@ def _overlap_with(path: Path, fit, monitor, locked) -> dict[str, Any] | None:
 
 def _scan_prior_d_artifacts() -> list[str]:
     """Any D-tagged artifact other than the pre-registration fingerprint payload."""
-    allowed = {str((ARCH / "split_D.json").relative_to(REPO_ROOT))}
+    allowed: set[str] = set()
+    for path in (ARCH / "split_D.json",):
+        try:
+            allowed.add(str(path.relative_to(REPO_ROOT)))
+        except ValueError:
+            pass
     pattern = re.compile(r"(^|_)D(_|\.|$)")
     found: list[str] = []
     results = REPO_ROOT / "tracks/structure-contribution/results"
@@ -358,13 +363,23 @@ def build_split_payload() -> dict[str, Any]:
             raise SystemExit(f"split D fingerprint mismatch for {key}: {got[key]} != {expected}")
     if int(split["duplicate_groups_cross_sides"]) != 0:
         raise SystemExit("split D duplicate canonical-SMILES groups cross sides")
-    arch_payload = read_json(ARCH / "split_D.json")
-    arch_match = all(
-        int(arch_payload[k]) == n for k, n in (("n_fit", 8000), ("n_monitor", 1000), ("n_locked", 1000))
-    ) and all(
-        arch_payload[k] == got[k]
-        for k in ("fit_sha256_rows", "monitor_sha256_rows", "locked_sha256_rows")
+    # primary anchor: the committed architecture-round pre-registration config
+    arch_cfg = yaml.safe_load(ARCH_CONFIG.read_text(encoding="utf-8"))
+    reg = arch_cfg["splits"]["fingerprints"]["D"]
+    config_match = all(int(reg[k]) == n for k, n in (("n_fit", 8000), ("n_monitor", 1000), ("n_locked", 1000))) and all(
+        reg[k] == got[k] for k in ("fit_sha256_rows", "monitor_sha256_rows", "locked_sha256_rows")
     )
+    # optional cross-check: the fingerprint payload written by the arch round (if present)
+    payload_path = ARCH / "split_D.json"
+    arch_match = True
+    if payload_path.exists():
+        arch_payload = read_json(payload_path)
+        arch_match = all(
+            int(arch_payload[k]) == n for k, n in (("n_fit", 8000), ("n_monitor", 1000), ("n_locked", 1000))
+        ) and all(
+            arch_payload[k] == got[k]
+            for k in ("fit_sha256_rows", "monitor_sha256_rows", "locked_sha256_rows")
+        )
     prior_artifacts = _scan_prior_d_artifacts()
     payload = {
         "protocol": PROTOCOL_ID,
@@ -379,8 +394,10 @@ def build_split_payload() -> dict[str, Any]:
         "union_rows": len(set(fit) | set(monitor) | set(locked)),
         "duplicate_canonical_smiles_groups": int(len(split["duplicate_groups"])),
         "duplicate_groups_cross_sides": int(split["duplicate_groups_cross_sides"]),
-        "matches_pre_registered_arch_payload": bool(arch_match),
-        "arch_payload_sha256": file_sha256(ARCH / "split_D.json") if (ARCH / "split_D.json").exists() else None,
+        "matches_pre_registered_arch_config": bool(config_match),
+        "matches_pre_registered_arch_payload": bool(arch_match) if payload_path.exists() else None,
+        "arch_payload_sha256": file_sha256(payload_path) if payload_path.exists() else None,
+        "arch_config_sha256": file_sha256(ARCH_CONFIG),
         "prior_use_audit": {
             "not_purchased_in_arch_round": True,
             "prior_d_artifacts_found": prior_artifacts,
@@ -402,8 +419,10 @@ def build_split_payload() -> dict[str, Any]:
         "official_valid_loaded": False,
         "official_test_loaded": False,
     }
+    if not config_match:
+        raise SystemExit("split D does not match the fingerprints pre-registered in the architecture-round config")
     if not arch_match:
-        raise SystemExit("split D does not match the pre-registered architecture-round fingerprint payload")
+        raise SystemExit("split D does not match the architecture-round fingerprint payload")
     if prior_artifacts:
         raise SystemExit(f"split D was already used by prior artifacts: {prior_artifacts}")
     return payload
