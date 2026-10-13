@@ -33,6 +33,7 @@ def main(argv: list[str] | None = None) -> int:
 
     drv.verify_freeze(strict_code=False)
     tag, arm = args.tag, args.arm
+    split = drv.read_json(drv.split_paths(tag)["split"])
     manifest_path = drv.PRED_MANIFEST[tag]
     manifest = drv.read_json(manifest_path)
     for key, rec in manifest["entries"].items():
@@ -54,6 +55,8 @@ def main(argv: list[str] | None = None) -> int:
             out = drv.pred_path(zone, tag, arm, seed)
             if not out.exists():
                 raise SystemExit(f"missing prediction {out}")
+            n = len(split[zone + "_rows"])
+            drv._read_npz_pred(out, n)  # shape/row/finiteness sanity check
             key = f"{zone}:{arm}:{seed}"
             if key in manifest["entries"]:
                 raise SystemExit(f"{key} already registered; pass --drop to replace")
