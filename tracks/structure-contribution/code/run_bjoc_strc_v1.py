@@ -108,6 +108,12 @@ SEED1_BASELINE_MAE = 0.082313002
 P_SEED_MEAN_MAE = 0.083549333
 P_SEED_MEAN_RMSE = 0.5 * (0.2787137334413769 + 0.1813011166141071)
 
+#: frozen P reference artifacts (recorded in the P round's prediction freeze)
+VALID_P_PRED_SHA256 = {
+    0: "c6a3caba92224a097e73dd61c11388e31eaeaa20e7cdaff8901bb2ab350b6037",
+    1: "0b57560ff05e0f6da0279db3b038048bd46a26d62649a607cbecf91b9a722adb",
+}
+
 # ---- artifacts --------------------------------------------------------------
 VOCAB_JSON = OUT / "context_vocab.json"
 COUNT_MATRIX = OUT / "count_matrix_train10k.npz"
@@ -173,7 +179,6 @@ def _verify_inputs() -> dict[str, Any]:
     """Re-hash every frozen input this round reuses (no valid/test labels)."""
     manifest = read_json(F10K / "objects_manifest.json")
     terminal = read_json(TERMINAL / "model_reuse_audit.json")
-    freeze = read_json(F10K / "prediction_freeze.json")
     checks: dict[str, Any] = {}
 
     def check(name: str, path: Path, expected: str) -> None:
@@ -217,7 +222,7 @@ def _verify_inputs() -> dict[str, Any]:
         check(
             f"valid_P{seed}_preds",
             F10K / "predictions" / f"valid_P{seed}.npz",
-            freeze["prediction_files"][f"P{seed}"]["sha256"],
+            VALID_P_PRED_SHA256[int(seed)],
         )
     checks["all_ok"] = all(v.get("ok") for k, v in checks.items() if k != "all_ok")
     return checks
@@ -998,6 +1003,8 @@ def cmd_freeze(args: argparse.Namespace) -> int:
         ("pretrain_encoder_s1_file_sha256", inputs["pretrain_encoder_s1"]["file_sha256"]),
         ("soup_P_seed0_sha256", inputs["soup_P_seed0"]["sha256"]),
         ("soup_P_seed1_sha256", inputs["soup_P_seed1"]["sha256"]),
+        ("valid_P_seed0_sha256", inputs["valid_P0_preds"]["sha256"]),
+        ("valid_P_seed1_sha256", inputs["valid_P1_preds"]["sha256"]),
     ):
         if key in frozen and frozen[key] != value:
             mismatches.append({"key": key, "config": frozen[key], "actual": value})
@@ -1245,7 +1252,7 @@ def cmd_freeze_predictions(args: argparse.Namespace) -> int:
         raise SystemExit("valid labels were already read; refusing to re-freeze predictions")
     files: dict[str, Any] = {}
     for key in ("S0", "S1", "P0", "P1"):
-        path = PRED_DIR / f"valid_{key}.npz"
+        path = _valid_pred_path(key)
         if not path.exists():
             raise SystemExit(f"missing prediction file {path}")
         with np.load(path) as z:
@@ -1253,9 +1260,9 @@ def cmd_freeze_predictions(args: argparse.Namespace) -> int:
                 raise SystemExit(f"non-finite prediction in {path}")
         files[key] = {"path": str(path.relative_to(REPO_ROOT)), "sha256": file_sha256(path)}
     ckpts = {p.stem: file_sha256(p) for p in sorted(OUT.glob("soup_S_*.pt"))}
-    p_freeze = read_json(F10K / "prediction_freeze.json")
-    for key in ("P0", "P1"):
-        expected = p_freeze["prediction_files"][key]["sha256"]
+    for seed in SEEDS:
+        key = f"P{seed}"
+        expected = VALID_P_PRED_SHA256[int(seed)]
         if files[key]["sha256"] != expected:
             raise SystemExit(f"P reference prediction hash mismatch for {key}")
     combined = hashlib.sha256()
@@ -1286,6 +1293,13 @@ def cmd_freeze_predictions(args: argparse.Namespace) -> int:
 def _load_pred(path: Path) -> np.ndarray:
     with np.load(path) as z:
         return z["pred"].astype(np.float64)
+
+
+def _valid_pred_path(key: str) -> Path:
+    """S predictions live in this round; P references stay in the frozen P round."""
+    if key.startswith("P"):
+        return F10K / "predictions" / f"valid_{key}.npz"
+    return PRED_DIR / f"valid_{key}.npz"
 
 
 def _contrast(new_paths: Sequence[Path], ref_paths: Sequence[Path], y: np.ndarray, tag: str) -> dict[str, Any]:
@@ -1361,7 +1375,7 @@ def cmd_score(args: argparse.Namespace) -> int:
     )
 
     keys = ["S0", "S1", "P0", "P1"]
-    pred_paths = {k: PRED_DIR / f"valid_{k}.npz" for k in keys}
+    pred_paths = {k: _valid_pred_path(k) for k in keys}
     preds = {k: _load_pred(v) for k, v in pred_paths.items()}
     models = {k: f10k.row_metrics(preds[k], y) for k in keys}
     seed_mean = {}
@@ -1533,7 +1547,7 @@ def cmd_error_analysis(args: argparse.Namespace) -> int:
     assert f10k.array_sha256(y) == read_json(VALID_LOCK)["y_sha256"]
     metrics = read_json(VALID_METRICS)
     valid_objs = f10k.load_objects(F10K / "objects_valid.pt")
-    preds = {"S": [_load_pred(PRED_DIR / f"valid_S{s}.npz") for s in SEEDS], "P": [_load_pred(PRED_DIR / f"valid_P{s}.npz") for s in SEEDS]}
+    preds = {"S": [_load_pred(_valid_pred_path(f"S{s}")) for s in SEEDS], "P": [_load_pred(_valid_pred_path(f"P{s}")) for s in SEEDS]}
     e = {arm: np.mean([np.abs(p - y) for p in preds[arm]], axis=0) for arm in preds}
     delta = e["S"] - e["P"]
     tail = y <= TAIL_THRESHOLD
