@@ -1,0 +1,139 @@
+# cscl-bjoc-pretraining-mechanism-terminal-test-v1  (pre-registration)
+#
+# Track: tracks/structure-contribution
+#
+# Three objectives:
+#   (1) confirm the legality of the masked-structure pretraining gain and state
+#       what is demonstrated vs only hypothesised;
+#   (2) ONE controlled development ablation (J-reset: keep the pretrained
+#       atom/bond encoders, restore the junction encoder to its same-seed
+#       scratch initialisation) evaluated on official valid only;
+#   (3) terminal exposed-test evaluation of the already-frozen B/P models
+#       (B0/B1/P0/P1 soup checkpoints) with a single official-test label read
+#       AFTER every prediction is frozen and hashed.
+#
+# Official test is read exactly once for the terminal score of the frozen
+# models.  It is never used for selection, tuning or new training.  The
+# historical official-test number 0.092233 is background only.
+
+protocol: cscl-bjoc-pretraining-mechanism-terminal-test-v1
+status: frozen
+frozen_utc: "2026-10-13"
+track: tracks/structure-contribution
+
+# --------------------------------------------------------------- scope
+fixed_boundaries:
+  train: "official PyG ZINC subset=True train, 10000 rows (raw-y L1 supervision)"
+  valid: "official PyG ZINC subset=True val, 1000 rows (exposed development set)"
+  test: "official PyG ZINC subset=True test, 1000 rows (exposed terminal evaluation, read once)"
+  internal_split: none
+  external_data: forbidden
+  banned_methods:
+    - ensemble (predictions never averaged; seed-mean is the mean of two single-model MAEs)
+    - teacher distillation
+    - prediction calibration
+    - target transformation / clipping / tail-weighted loss
+    - extra property labels
+    - GNN / Transformer / attention / iterative message passing
+  supervision: "raw y + L1 loss only"
+
+# ------------------------------------------------------- frozen models
+frozen_models:
+  B: "BJOC-Null scratch full10k, seeds 0/1 (in-round retrained on the same GPU, identical frozen recipe)"
+  P: "BJOC-Null masked-pretrained full10k, seeds 0/1"
+  Q: "excluded from this round (harmful in the previous round; not scored on test)"
+  checkpoint_hashes_frozen_in: "results/bjoc_full10k_pretraining_transfer_v1/prediction_freeze.json"
+  parameters: 413505
+  downstream_structure: "identical forward for B and P; the only difference is the three-encoder initialisation"
+  pretext_heads_in_forward: false
+
+# ------------------------------------------------------- J-reset ablation
+junction_reset:
+  definition: >
+    same pretrained atom encoder and pretrained bond encoder as P; junction
+    encoder restored to the same-seed original scratch initialisation;
+    composer/reader at their P initial state; all parameters trainable.
+  init_provenance: >
+    pretrained state: results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s{seed}.pt;
+    scratch state: deterministic f10k._make_downstream_model(seed) rebuild whose
+    full-model hash must equal the recorded P/B init_full_sha256.
+  recipe: "identical to P: Adam lr 1e-3 / wd 1e-5 / batch 128 / clip 5 / fp32 / 240 epochs / last-5 soup / same batch order"
+  seeds: [0, 1]
+  evaluation: "official valid only; never brought to official test in this round"
+  purchase_conditions:
+    - "pretrained encoder state files exist and re-hash to the recorded encoder_final_sha256"
+    - "scratch init is reproducible and equals the recorded B/P init_full_sha256"
+    - "the reset hybrid differs from the P encoder init only inside the junction encoder"
+    - "atom/bond/composer/reader parameter groups match the design hashes"
+    - "correctness (parameter count, forbidden scan, relabelling invariance, batch consistency, junction sensitivity) passes"
+    - "the two seeds fit inside the remaining GPU budget without touching the terminal test budget"
+  if_not: "J_RESET_NOT_PURCHASED; proceed directly to the terminal test"
+
+# --------------------------------------------------- terminal test protocol
+terminal_test:
+  models: ["B0", "B1", "P0", "P1"]
+  prediction_input: "original test molecule graphs -> BJOC objects; train10k-only global standardiser"
+  label_access_during_prediction: forbidden (LabelGuard)
+  freeze_before_read: true
+  required_artifacts: >
+    terminal_test_protocol.json, terminal_test_freeze.json (checkpoint hashes,
+    test object hashes, row-order hashes, prediction hashes, code/config
+    revision), test_read.lock, official_test_metrics.json,
+    official_test_paired_bootstrap.json, valid_test_comparison.json
+  primary_metric: "official-test raw-y single-model MAE; seed-mean is the arithmetic mean of the two single-model MAEs"
+  bootstrap: {n_resamples: 5000, seed: 0, unit: molecule}
+  secondaries: [rmse, median_abs, p90, p95, p99, max_abs, ordinary_y_gt_-3, tail_y_le_-3, tail_mean_signed, top1_removed, top5_removed, top10_removed, worst_molecule_share]
+  decisions:
+    PRETRAINING_TEST_GAIN_REPLICATES:
+      - "test delta seed-mean < 0 and both per-seed deltas < 0 and paired CI95 upper < 0"
+      - "ordinary molecules test delta < 0"
+      - "not driven by a single molecule: all-rows-minus-worst delta < 0"
+      - "no provenance / label-source failure"
+    PRETRAINING_TEST_GAIN_SPLIT_SENSITIVE:
+      - "valid gain is CI-supported but the test result is weaker / disappeared / reversed without meeting the INCONCLUSIVE conditions"
+    TERMINAL_TEST_INCONCLUSIVE:
+      - "provenance, checkpoint-hash, row-order or raw-y source failure"
+      - "or the two seed deltas have opposite signs with |delta0 - delta1| > 0.01"
+      - "or the test gain disappears when the single worst-error molecule is removed"
+  target_band: [0.06, 0.07]
+  target_band_rule: >
+    if the P test MAE falls inside the band, say only that this exposed-test
+    version reached the numerical target; never call it a new blind
+    confirmation.  Otherwise report the remaining gap explicitly.
+
+# ------------------------------------------------------ next-round draft
+next_round:
+  draft_rule: >
+    the next-round predictive hypothesis must be drafted from the train/valid
+    diagnostics and the J-reset result BEFORE the official test labels are
+    read; the terminal test result may only be used afterwards as a transfer
+    description, never to choose the next research direction.
+
+# ------------------------------------------------------------- budget + bans
+budget:
+  wall_clock_minutes_total: 390
+  gpu_hours_max: 0.8
+  gpus_max: 2
+  reserved_for_reporting_minutes: 35
+  no_extra_training_after_test_read: true
+
+bans:
+  - "retraining B/P; bringing Q to the terminal test; bringing J-reset to the terminal test"
+  - "seed selection on test; any post-hoc calibration before/after the test read"
+  - "training any model after the single test label read"
+  - "modifying the architecture because of an anomalous test molecule"
+  - "test-guided hyper-parameter proposals"
+  - "calling the historical 0.092233 a matched control"
+  - "calling this exposed-test score a blind confirmation"
+
+decision_vocabulary:
+  - REPLAY_CONFIRMED
+  - TERMINAL_SCORE_BLOCKED
+  - PURCHASE_JRESET
+  - J_RESET_NOT_PURCHASED
+  - J_RESET_IMPROVES_VALID
+  - J_RESET_NEUTRAL_VALID
+  - J_RESET_HURTS_VALID
+  - PRETRAINING_TEST_GAIN_REPLICATES
+  - PRETRAINING_TEST_GAIN_SPLIT_SENSITIVE
+  - TERMINAL_TEST_INCONCLUSIVE
