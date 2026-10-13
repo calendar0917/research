@@ -293,7 +293,20 @@ def audit_inputs() -> dict[str, Any]:
         soup_check["terminal_recorded_sha256"] = audit["checkpoint_records"][f"P{seed}"]["checkpoint_sha256"]
         soup_check["terminal_matches"] = bool(soup_check["terminal_recorded_sha256"] == frozen[f"soup_P_seed{seed}_sha256"])
         soup_check["ok"] = bool(soup_check["ok"] and soup_check["terminal_matches"])
-        file_check(f"valid_P{seed}_preds", F10K / "predictions" / f"valid_P{seed}.npz", frozen[f"valid_P_pred_s{seed}_sha256"])
+        # reference-only: the P prediction npz files are git-ignored and may be
+        # absent from the compute host; replay verifies the regenerated ARRAY
+        # against a frozen hash instead (see replay_r0)
+        pred_path = F10K / "predictions" / f"valid_P{seed}.npz"
+        pred_expected = frozen[f"valid_P_pred_s{seed}_sha256"]
+        checks[f"valid_P{seed}_preds"] = {
+            "path": str(pred_path.relative_to(REPO_ROOT)),
+            "exists": bool(pred_path.exists()),
+            "sha256": file_sha256(pred_path) if pred_path.exists() else None,
+            "expected": pred_expected,
+            "expected_array_sha256": frozen[f"valid_P_pred_s{seed}_array_sha256"],
+            "unavailable_on_host": bool(not pred_path.exists()),
+            "ok": bool(pred_path.exists() and file_sha256(pred_path) == pred_expected) if pred_path.exists() else None,
+        }
 
         # independently rebuild the P supervision-phase initialisation
         norm = read_json(F10K / "prep_train10k.json")
@@ -330,25 +343,54 @@ def audit_inputs() -> dict[str, Any]:
         }
     checks["p_supervision_init_replay"] = {"per_seed": per_seed, "ok": all(v["matches_frozen_config"] and v["matches_P_round_json"] for v in per_seed.values())}
 
-    checks["all_ok"] = all(v.get("ok") is True for v in checks.values() if isinstance(v, dict) and "ok" in v)
+    blocking_keys = [
+        "objects_train10k",
+        "objects_valid",
+        "prep_train10k",
+        "pretrain_encoder_s0",
+        "pretrain_encoder_s1",
+        "soup_P_seed0",
+        "soup_P_seed1",
+        "objects_manifest_recorded",
+        "p_supervision_init_replay",
+    ]
+    reference_keys = ["valid_P0_preds", "valid_P1_preds"]
+    checks["all_training_inputs_ok"] = all(checks[k]["ok"] is True for k in blocking_keys)
+    checks["evaluation_references_ok"] = all(checks[k]["ok"] is True for k in reference_keys)
+    checks["evaluation_references_present"] = all(not checks[k]["unavailable_on_host"] for k in reference_keys)
+    checks["all_ok"] = bool(checks["all_training_inputs_ok"])
     payload = {
         "protocol": PROTOCOL_ID,
         "git_commit": git_commit(),
         "checks": checks,
         "all_ok": checks["all_ok"],
+        "all_training_inputs_ok": checks["all_training_inputs_ok"],
+        "evaluation_references_ok": checks["evaluation_references_ok"],
+        "evaluation_references_present": checks["evaluation_references_present"],
         "official_valid_labels_read": False,
         "official_test_loaded": False,
     }
     write_json(INPUT_AUDIT, payload)
-    log(f"[verify-inputs] all_ok={checks['all_ok']}")
-    if not checks["all_ok"]:
-        bad = [k for k, v in checks.items() if isinstance(v, dict) and v.get("ok") is False]
+    log(
+        f"[verify-inputs] training_ok={checks['all_training_inputs_ok']} "
+        f"references_present={checks['evaluation_references_present']} references_ok={checks['evaluation_references_ok']}"
+    )
+    if not checks["all_training_inputs_ok"]:
+        bad = [k for k in blocking_keys if checks[k]["ok"] is not True]
         raise SystemExit(f"input audit failed: {bad}")
     return payload
 
 
 def replay_r0() -> dict[str, Any]:
-    """CPU replay of the frozen P soups against the frozen P valid predictions."""
+    """CPU replay of the frozen P soups against the frozen P valid predictions.
+
+    The primary check is a device/serialisation-independent hash of the
+    regenerated float32 prediction array against the frozen config constant.
+    When the git-ignored npz reference is present locally, the max|dpred| and
+    the npz file hash are checked as well.
+    """
+    cfg = load_config()
+    frozen = cfg["frozen"]
     norm = read_json(F10K / "prep_train10k.json")
     valid_objs = f10k.load_objects(F10K / "objects_valid.pt")
     per_seed: dict[str, Any] = {}
@@ -357,16 +399,39 @@ def replay_r0() -> dict[str, Any]:
         model = f10k._make_downstream_model(seed, norm, "cpu")
         model.load_state_dict(soup)
         pred = f10k.predict_bjoc(model, valid_objs, "cpu")
-        ref = np.asarray(np.load(F10K / "predictions" / f"valid_P{seed}.npz")["pred"], dtype=np.float64)
+        pred_f32 = np.ascontiguousarray(pred.astype(np.float32))
+        array_hash = f10k.array_sha256(pred_f32)
+        expected_array_hash = frozen[f"valid_P_pred_s{seed}_array_sha256"]
         audit = src.parameter_audit(src.BJOCConfig(), model)
+        ref_path = F10K / "predictions" / f"valid_P{seed}.npz"
+        npz_entry: dict[str, Any] = {"available": bool(ref_path.exists())}
+        npz_ok = True
+        if ref_path.exists():
+            ref = np.asarray(np.load(ref_path)["pred"], dtype=np.float32)
+            npz_entry.update(
+                {
+                    "max_abs_pred_diff_vs_frozen": float(np.abs(pred_f32 - ref).max()),
+                    "mean_abs_pred_diff_vs_frozen": float(np.abs(pred_f32 - ref).mean()),
+                    "array_sha256": f10k.array_sha256(ref),
+                    "file_sha256": file_sha256(ref_path),
+                    "expected_file_sha256": frozen[f"valid_P_pred_s{seed}_sha256"],
+                }
+            )
+            npz_ok = bool(
+                npz_entry["max_abs_pred_diff_vs_frozen"] <= R0_REPLAY_TOLERANCE
+                and npz_entry["file_sha256"] == npz_entry["expected_file_sha256"]
+            )
         per_seed[str(seed)] = {
-            "max_abs_pred_diff_vs_frozen": float(np.abs(pred - ref).max()),
-            "mean_abs_pred_diff_vs_frozen": float(np.abs(pred - ref).mean()),
+            "array_sha256": array_hash,
+            "expected_array_sha256": expected_array_hash,
+            "array_hash_matches": bool(array_hash == expected_array_hash),
+            "npz_reference": npz_entry,
             "predictions_finite": bool(np.isfinite(pred).all()),
             "parameter_audit": audit,
             "forbidden_modules": src.forbidden_module_scan(model),
             "replay_ok": bool(
-                float(np.abs(pred - ref).max()) <= R0_REPLAY_TOLERANCE
+                array_hash == expected_array_hash
+                and npz_ok
                 and np.isfinite(pred).all()
                 and audit["parameter_exact"]
                 and audit["actual_parameters"] == 413505
@@ -384,7 +449,11 @@ def replay_r0() -> dict[str, Any]:
         "official_test_loaded": False,
     }
     write_json(R0_REPLAY_JSON, payload)
-    log(f"[replay-r0] max|dpred| {[v['max_abs_pred_diff_vs_frozen'] for v in per_seed.values()]} all_ok={payload['all_ok']}")
+    log(
+        f"[replay-r0] array-hash match {[v['array_hash_matches'] for v in per_seed.values()]} "
+        f"npz diff {[v['npz_reference'].get('max_abs_pred_diff_vs_frozen') for v in per_seed.values()]} "
+        f"all_ok={payload['all_ok']}"
+    )
     if not payload["all_ok"]:
         raise SystemExit("R0 replay failed")
     return payload
@@ -401,10 +470,12 @@ def write_protocol_freeze(input_audit: Mapping[str, Any], replay: Mapping[str, A
             F10K / "pretrain_encoder_s1.pt",
             F10K / "soup_P_seed0.pt",
             F10K / "soup_P_seed1.pt",
-            F10K / "predictions" / "valid_P0.npz",
-            F10K / "predictions" / "valid_P1.npz",
         )
     }
+    for seed in SEEDS:
+        pred_path = F10K / "predictions" / f"valid_P{seed}.npz"
+        if pred_path.exists():
+            input_files[str(pred_path.relative_to(REPO_ROOT))] = file_sha256(pred_path)
     payload = {
         "protocol": PROTOCOL_ID,
         "git_commit": git_commit(),

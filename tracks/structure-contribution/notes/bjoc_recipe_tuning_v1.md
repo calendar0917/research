@@ -99,3 +99,13 @@ pre-registered winner.
   suite 19 passed, local 1-epoch CPU smoke for R1 (cosine) and R4 (wd 1e-4)
   passed (init/encoder/batch-order hashes exact, LR schedule deviation
   ≤ 4e-19).  No GPU run yet.
+* 2026-10-13 — **pre-GPU amendment (before any training/GPU trajectory).**
+  The remote compute checkout does not carry the git-ignored frozen P valid
+  prediction `npz` files (the same infrastructure fact the STRC round
+  recorded).  The R0 replay check now verifies a frozen, device- and
+  serialisation-independent SHA-256 of the regenerated float32 prediction
+  **array** (`valid_P_pred_s{0,1}_array_sha256` in the config), while the npz
+  file hash and `max|Δpred|` remain an optional local cross-check when the
+  file is present.  Training-input hashes are unchanged and still blocking;
+  no candidate, threshold, gate or analysis changed.  Remote `prep` is then
+  re-run on `res` (GPU1 pool) before any training.
