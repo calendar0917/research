@@ -1,0 +1,86 @@
+{
+  "protocol": "cscl-bjoc-r3-frozen-terminal-test-v1",
+  "git_commit": "a41194153e46b3fd8dca743b754c895cb653c864",
+  "created_utc": "2026-10-13T10:12:41Z",
+  "authorization": "user-authorized terminal evaluation of the frozen P3 model on the official test split of this round",
+  "target_models": {
+    "P30": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed0.pt",
+      "checkpoint_sha256": "a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782",
+      "role": "target",
+      "description": "full-10k masked-SSL encoder + R3 360-epoch cosine last-5 soup, BJOC-Null 413,505 params"
+    },
+    "P31": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed1.pt",
+      "checkpoint_sha256": "b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9",
+      "role": "target",
+      "description": "full-10k masked-SSL encoder + R3 360-epoch cosine last-5 soup, BJOC-Null 413,505 params"
+    }
+  },
+  "control_models": {
+    "P00": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/soup_P_seed0.pt",
+      "checkpoint_sha256": "73118e9be466c62a252eacb83d9c86d1cb4bf0ce01478db2f278b7c27a5fab2a",
+      "role": "historical primary control",
+      "description": "full-10k masked-SSL encoder + R0 240-epoch constant last-5 soup, identical architecture/init/order"
+    },
+    "P01": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/soup_P_seed1.pt",
+      "checkpoint_sha256": "bf640cd8c11a9f6e0d11ceccd318185e6067ef2ba5a950b4774d5185a9ab053c",
+      "role": "historical primary control",
+      "description": "full-10k masked-SSL encoder + R0 240-epoch constant last-5 soup, identical architecture/init/order"
+    }
+  },
+  "input": "official PyG ZINC subset=True split=test processed split (1000 molecules); labels guarded until the prediction freeze",
+  "preprocessing": {
+    "file": "results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json",
+    "sha256": "d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a",
+    "fit": "official train 10000 only; no valid/test statistics"
+  },
+  "primary_metric": "raw-y single-model MAE on the official test split; P3 seed-mean = arithmetic mean of the P3 seed-0 and seed-1 single-model MAEs",
+  "primary_contrast": "paired per-molecule delta d_i = 0.5*[(|e_P3s0|-|e_P0s0|) + (|e_P3s1|-|e_P0s1|)]; 95% bootstrap CI, 5000 resamples, seed 0, unit molecule",
+  "secondary_metrics": [
+    "rmse",
+    "median_abs",
+    "p90_abs",
+    "ordinary y>-3",
+    "tail y<=-3",
+    "top1/top5/top10 removed",
+    "better fraction",
+    "per-seed MAE",
+    "P3-B0 context"
+  ],
+  "p0_replay_expectation": {
+    "P00_mae": 0.074825,
+    "P01_mae": 0.073088,
+    "P0_seed_mean_mae": 0.073957,
+    "source": "results/bjoc_pretraining_mechanism_terminal_test_v1/official_test_metrics.json",
+    "tolerance_abs": 1e-05,
+    "npz_max_abs_tolerance": 5e-05,
+    "action_if_mismatch": "STOP: report the blocker and do not claim the P3 test number is comparable"
+  },
+  "target_band": {
+    "band": [
+      0.06,
+      0.07
+    ],
+    "judged_on": "P3 seed-mean single-model official-test MAE"
+  },
+  "decision_vocabulary": [
+    "P3_TEST_IMPROVES",
+    "P3_TEST_WORSE",
+    "P3_TEST_INCONCLUSIVE_OR_MIXED"
+  ],
+  "decision_rule": {
+    "P3_TEST_IMPROVES": "both per-seed deltas < 0 and paired bootstrap CI95 upper < 0",
+    "P3_TEST_WORSE": "both per-seed deltas > 0 and paired bootstrap CI95 lower > 0",
+    "P3_TEST_INCONCLUSIVE_OR_MIXED": "otherwise"
+  },
+  "exposure_disclosure": "official test was previously read in this project (KSVD track 2026-10-03) and by cscl-bjoc-pretraining-mechanism-terminal-test-v1; this is an exposed-test terminal evaluation, not a first blind test",
+  "no_training": true,
+  "no_tuning": true,
+  "no_model_selection": true,
+  "no_test_driven_followup": true,
+  "single_test_read_this_round": true,
+  "official_test_labels_read": false
+}

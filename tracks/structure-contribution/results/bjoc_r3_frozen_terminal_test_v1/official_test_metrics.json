@@ -1,0 +1,192 @@
+{
+  "protocol": "cscl-bjoc-r3-frozen-terminal-test-v1",
+  "git_commit": "a41194153e46b3fd8dca743b754c895cb653c864",
+  "n_molecules": 1000,
+  "per_model": {
+    "P00": {
+      "mae": 0.07482545961532741,
+      "rmse": 0.16020823832728265,
+      "median_abs": 0.03915357403457165,
+      "p90_abs": 0.15100168585777285,
+      "p95_abs": 0.24076716899871797,
+      "p99_abs": 0.6463360393047332,
+      "max_abs": 2.472285270690918
+    },
+    "P01": {
+      "mae": 0.07308768088836223,
+      "rmse": 0.1389685473428491,
+      "median_abs": 0.04549422487616539,
+      "p90_abs": 0.14250298738479616,
+      "p95_abs": 0.21131502799689764,
+      "p99_abs": 0.6004698216915128,
+      "max_abs": 1.968282699584961
+    },
+    "P30": {
+      "mae": 0.0693043516818434,
+      "rmse": 0.14602759200111937,
+      "median_abs": 0.0361495316028595,
+      "p90_abs": 0.13755555152893068,
+      "p95_abs": 0.210144619643688,
+      "p99_abs": 0.5812512493133541,
+      "max_abs": 1.7693228721618652
+    },
+    "P31": {
+      "mae": 0.07033976497594267,
+      "rmse": 0.13778300818652092,
+      "median_abs": 0.04173684120178223,
+      "p90_abs": 0.14983856976032256,
+      "p95_abs": 0.1976288497447967,
+      "p99_abs": 0.5290756839513775,
+      "max_abs": 1.3795721530914307
+    }
+  },
+  "seed_mean": {
+    "P0": {
+      "mae": 0.07395657025184482,
+      "rmse": 0.14958839283506586,
+      "median_abs": 0.04232389945536852,
+      "p90_abs": 0.1467523366212845,
+      "p95_abs": 0.2260410984978078,
+      "p99_abs": 0.623402930498123,
+      "max_abs": 2.2202839851379395,
+      "per_seed_mae": [
+        0.07482545961532741,
+        0.07308768088836223
+      ]
+    },
+    "P3": {
+      "mae": 0.06982205832889304,
+      "rmse": 0.14190530009382013,
+      "median_abs": 0.03894318640232086,
+      "p90_abs": 0.14369706064462662,
+      "p95_abs": 0.20388673469424234,
+      "p99_abs": 0.5551634666323658,
+      "max_abs": 1.574447512626648,
+      "per_seed_mae": [
+        0.0693043516818434,
+        0.07033976497594267
+      ]
+    }
+  },
+  "p3_minus_p0": {
+    "per_seed": {
+      "seed0": -0.00552110793348401,
+      "seed1": -0.00274791591241956
+    },
+    "delta_seed_mean": -0.0041345119229517875,
+    "ci95": [
+      -0.007342057619977277,
+      -0.001042469758715016
+    ],
+    "better_fraction": 0.569,
+    "bootstrap": {
+      "mean": -0.0041345119229517875,
+      "ci_lo": -0.007342057619977277,
+      "ci_hi": -0.001042469758715016,
+      "frac_better": 0.569,
+      "n_resamples": 5000,
+      "seed": 0,
+      "unit": "molecule"
+    },
+    "both_seeds_same_direction": true,
+    "both_seeds_improve": true,
+    "definition": "d_i = 0.5*[(|e_P3s0|-|e_P0s0|) + (|e_P3s1|-|e_P0s1|)]"
+  },
+  "p3_minus_b0_context": {
+    "delta_seed_mean": -0.02480445166444406,
+    "ci95": [
+      -0.030538312458992002,
+      -0.019661961947986858
+    ],
+    "note": "context only; B0/B1 predictions are the previous round's frozen test files"
+  },
+  "subgroups": {
+    "ordinary_y_gt_-3": {
+      "n": 923,
+      "mae_P3_seed_mean": 0.06430021797903165,
+      "mae_P0_seed_mean": 0.06675000036617626,
+      "delta": -0.0024497823871446134
+    },
+    "tail_y_le_-3": {
+      "n": 77,
+      "mae_P3_seed_mean": 0.13601243031489385,
+      "mae_P0_seed_mean": 0.16034181706317058,
+      "delta": -0.024329386748276748,
+      "mean_signed_P3": 0.03760589872087751,
+      "mean_signed_P0": 0.048272541591099324
+    },
+    "top_k_removed": {
+      "top1": {
+        "delta_top1_removed": -0.003322039255863046,
+        "worst_rows_top1": [
+          402
+        ]
+      },
+      "top5": {
+        "delta_top5_removed": -0.00399422442409486,
+        "worst_rows_top5": [
+          402,
+          702,
+          159,
+          342,
+          669
+        ]
+      },
+      "top10": {
+        "delta_top10_removed": -0.004017583865465389,
+        "worst_rows_top10": [
+          402,
+          702,
+          159,
+          342,
+          669,
+          634,
+          84,
+          567,
+          510,
+          298
+        ]
+      }
+    }
+  },
+  "p0_replay": {
+    "P00": {
+      "expected_mae": 0.074825,
+      "actual_mae": 0.07482545961532741,
+      "mae_diff": 4.59615327408347e-07,
+      "npz_max_abs_diff_vs_previous_round": 0.0,
+      "ok": true
+    },
+    "P01": {
+      "expected_mae": 0.073088,
+      "actual_mae": 0.07308768088836223,
+      "mae_diff": -3.1911163776709994e-07,
+      "npz_max_abs_diff_vs_previous_round": 0.0,
+      "ok": true
+    },
+    "P0_seed_mean": {
+      "expected_mae": 0.073957,
+      "actual_mae": 0.07395657025184482,
+      "ok": true
+    }
+  },
+  "target_band": {
+    "band": [
+      0.06,
+      0.07
+    ],
+    "p3_seed_mean_mae": 0.06982205832889304,
+    "p0_seed_mean_mae": 0.07395657025184482,
+    "reached": true,
+    "statement": "P3 seed-mean official-test MAE 0.069822 is inside the 0.06-0.07 band"
+  },
+  "decision": "P3_TEST_IMPROVES",
+  "ensemble_used": false,
+  "single_read": true,
+  "exposed_test": true,
+  "exposure_disclosure": "official test was previously read in this project; this is an exposed-test terminal evaluation, not a first blind test",
+  "official_test_loaded": true,
+  "no_training_after_test_read": true,
+  "no_test_driven_followup": true,
+  "seconds": 0.8315116940066218
+}
