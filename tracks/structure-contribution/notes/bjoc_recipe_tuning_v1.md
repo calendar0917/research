@@ -99,13 +99,20 @@ pre-registered winner.
   suite 19 passed, local 1-epoch CPU smoke for R1 (cosine) and R4 (wd 1e-4)
   passed (init/encoder/batch-order hashes exact, LR schedule deviation
   ≤ 4e-19).  No GPU run yet.
-* 2026-10-13 — **pre-GPU amendment (before any training/GPU trajectory).**
+* 2026-10-13 — **pre-GPU amendment #1 (before any training/GPU trajectory).**
   The remote compute checkout does not carry the git-ignored frozen P valid
   prediction `npz` files (the same infrastructure fact the STRC round
-  recorded).  The R0 replay check now verifies a frozen, device- and
-  serialisation-independent SHA-256 of the regenerated float32 prediction
-  **array** (`valid_P_pred_s{0,1}_array_sha256` in the config), while the npz
-  file hash and `max|Δpred|` remain an optional local cross-check when the
+  recorded), and a SHA-256 of the prediction array is not portable across
+  CPUs (the res CPU's float32 reduction order differs from the machine that
+  produced the npz).  The frozen float32 prediction arrays are therefore
+  committed as small label-free references in `configs/frozen/`
+  (`README.md` documents provenance; array and file hashes are also in the
+  config), and the R0 replay is a numeric comparison under the pre-declared
+  tolerance `r0_replay_tolerance = 1e-4` (repo precedent).  The npz file hash
+  and its exact `max|Δpred|` remain an optional local cross-check when the
   file is present.  Training-input hashes are unchanged and still blocking;
-  no candidate, threshold, gate or analysis changed.  Remote `prep` is then
-  re-run on `res` (GPU1 pool) before any training.
+  no candidate, threshold, gate or analysis changed.
+* 2026-10-13 — **pre-GPU amendment #2.**  Remote `prep` on the first deployed
+  revision failed only because the git-ignored npz references are absent
+  remotely; with amendment #1 the remote prep is re-run on `res` (GPU1 pool)
+  and must confirm the R0 replay within tolerance before any training starts.

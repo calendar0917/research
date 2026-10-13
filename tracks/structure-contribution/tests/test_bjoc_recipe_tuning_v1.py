@@ -56,6 +56,21 @@ def test_candidate_registry_is_exactly_the_five_frozen_recipes():
     assert rt.CANDIDATES["R2"]["epochs"] * rt.STEPS_PER_EPOCH == 28440
 
 
+def test_committed_replay_references_match_the_frozen_config():
+    cfg = _cfg()
+    assert rt.R0_REPLAY_TOLERANCE == 1.0e-4 == cfg["frozen"]["r0_replay_tolerance"]
+    import numpy as np
+
+    for seed in (0, 1):
+        path = rt.REF_NPY_PATHS[seed]
+        assert path.exists()
+        array = np.load(path)
+        assert array.dtype == np.float32
+        assert array.shape == (rt.N_VALID,)
+        assert rt.f10k.array_sha256(array) == cfg["frozen"][f"valid_P_pred_s{seed}_array_sha256"]
+        assert rt.file_sha256(path) == cfg["frozen"][f"valid_P_pred_s{seed}_npy_sha256"]
+
+
 def test_config_and_code_agree():
     cfg = _cfg()
     rt._check_code_matches_config(cfg)
