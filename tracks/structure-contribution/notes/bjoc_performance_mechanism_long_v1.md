@@ -57,10 +57,18 @@
 - 新 split salt `cscl-bjoc-perfmech-long-v1-B`，canonical-SMILES grouped，
   target 8000/1000/1000；实际规模、group 约束与 hash 记录在
   `split_B.json`。
-- **与历史 split A 的重叠（必须披露）**：本地构建结果 fit 6,432 / monitor 95 /
-  locked 99 行重叠；即新 Monitor 与新 Locked 各约 90% 分子在旧 locked-dev 中
-  未出现过。这不是从未见过标签的真正盲测：official train 10k 的 y 在历史轮次中
-  已被用于训练，但本 split 的 Monitor/Locked y 在本轮之前从未被读取。
+- **与历史 split A 的重叠（必须披露）**：本地与远端构建结果一致：
+
+  |  | 与 A.fit | 与 A.monitor | 与 A.locked |
+  |---|---|---|---|
+  | B.fit (8000) | 6432 | 790 | 778 |
+  | B.monitor (1000) | 782 | 95 | 123 |
+  | B.locked (1000) | 786 | 115 | 99 |
+
+  即 Monitor/Locked 中各约 78–79% 的行在历史 full-10k 训练中作为 fit 行出现过。
+  因此本 split 的价值不是“全新数据”，而是：同一 Fit-B 上训练的匹配臂对比，
+  且 Monitor/Locked 的**评分标签**在本轮前从未被读取。报告不得把该 split 描述为
+  “从未见过的数据”或“新分布测试”。
 - Fit-only 标准化；Fit-only masked SSL（7560 updates，与历史相同预算，objective
   与 mask 规则逐项相同）；P0/P3 共享同 seed 的 SSL encoder。
 - 四臂同 seed、同 batch order（前 240 epoch 与 R0 一致）、同 soup 规则。
