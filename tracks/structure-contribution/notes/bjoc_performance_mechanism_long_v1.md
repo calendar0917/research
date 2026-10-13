@@ -154,6 +154,58 @@
 该结果回答了 Q1，并封闭了历史归因缺口：R3 不是以牺牲 SSL 增益为代价。
 GPU 记录：B3F s0 0.1914 h、s1 0.1944 h。
 
+### Stage B/C/E 结果（split B，Monitor 只读一次；CPU 评分于 `res` 登录节点）
+
+四臂 Fit-B 训练（batch order 审计 `full_matches=True`；P0/P3 共享同 seed SSL
+encoder，A1 用 atom-only encoder，C1 用 P3 encoder）：
+
+Monitor（n=1000，paired，seed-mean of single models）：
+
+| 对比 | Δ | CI95 | per-seed | ordinary | tail | top-10 removed |
+|---|---:|---|---|---:|---:|---:|
+| P3−P0（SSL recipe） | **−0.00101** | [−0.00411, +0.00191] | −0.00496 / **+0.00295** | −0.00240 | +0.01667 | −0.00040 |
+| B3−B0（scratch recipe） | +0.00161 | [−0.00230, +0.00542] | −0.00061 / +0.00383 | +0.00249 | −0.00958 | +0.00259 |
+| P3−B3（R3 SSL gain） | **−0.01659** | [−0.02207, −0.01104] | −0.01744 / −0.01574 | −0.01788 | −0.00023 | −0.01698 |
+| P0−B0（R0 SSL gain） | **−0.01397** | [−0.01903, −0.00870] | −0.01309 / −0.01486 | −0.01299 | −0.02647 | −0.01416 |
+| interaction | −0.00261 | — | −0.00434 / −0.00088 | | | |
+
+Gates：`recipe_effect=FAIL`、`recipe_effect_scratch=FAIL`、`ssl_effect_r3=PASS`、
+`ssl_effect_r0=PASS`；决策 **`RECIPE_GAIN_NOT_ROBUST_ACROSS_SPLITS`** → 按预注册
+跳过 Stage D（省 ~1.4 GPU-h）。
+
+Stage C（seed 0）：Monitor Δ(C1−P3) = −0.00194，ordinary/top-10/RMSE 条件全部
+通过，但未达 −0.003 阈值 → `C1_GAIN_WEAK_OR_MIXED`，不买 seed 1，不入 Locked 主表。
+
+Stage E（A1，seed 0）：Monitor Δ(A1−P3) = +0.00197 → `BOND_OBJECTIVE_NEUTRAL`
+（Locked +0.00101 [−0.00402, +0.00623]）。
+
+最终 Locked 主表（read once，n=1000）：
+
+| arm | seed 0 | seed 1 | seed-mean | RMSE |
+|---|---:|---:|---:|---:|
+| B0 | 0.110946 | 0.115653 | 0.113300 | 0.298374 |
+| B3 | 0.107855 | 0.112969 | 0.110412 | 0.263897 |
+| P0 | 0.097056 | 0.090156 | 0.093606 | 0.249366 |
+| P3 | 0.090440 | 0.091241 | 0.090841 | 0.235368 |
+| A1 | 0.091454 | — | 0.091454 | 0.226296 |
+
+| 对比 | Δ | CI95 | per-seed |
+|---|---:|---|---|
+| P3−P0 | −0.00277 | [−0.00647, +0.00039] | −0.00662 / +0.00108 |
+| B3−B0 | −0.00289 | [−0.01096, +0.00298] | −0.00309 / −0.00268 |
+| P3−B3 | −0.01957 | [−0.03098, −0.00964] | −0.01741 / −0.02173 |
+| P0−B0 | −0.01969 | [−0.02683, −0.01375] | −0.01389 / −0.02550 |
+| A1−P3 | +0.00101 (s0) | [−0.00402, +0.00623] | +0.00101 |
+
+结论：SSL 增益在两种 recipe、两个 seed、Monitor 与 Locked 上全部成立（~0.02）；
+R3 recipe 增益在两个 split 上都不能复现（seed 1 反向）。详见
+`results/bjoc_performance_mechanism_long_v1/REPORT.md`。
+
+### 预算终账
+
+GPU 总消耗 **3.04 / 7.0 h**（A 0.386、B 1.895、C/E 0.753、predict 0.004；
+Stage D 未购买）。Failed predict 尝试两次（共 ~20 s GPU，未计）。
+
 ### 预先记录的执行偏差（在看任何 Monitor 标签之前）
 
 - **D1（Stage E 顺序问题）**：预注册购买规则要求“先看 Stage-B Monitor 的
