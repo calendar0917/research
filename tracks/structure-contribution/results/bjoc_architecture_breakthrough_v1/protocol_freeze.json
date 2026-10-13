@@ -1,0 +1,78 @@
+{
+  "protocol": "cscl-bjoc-architecture-breakthrough-v1",
+  "git_commit": "96ab00d4aefa4c35346ed7e4fbf4a86cf6cae60e",
+  "config_sha256": "a93eaa2b0783ea8e8c262265cd2613893da1cec1c60cf9ba790024020b5f010f",
+  "code_hashes": {
+    "driver": "5dd246301562515071e967e5a163b5763efb59b78392472bcee83b4ea6937084",
+    "module": "31294de0526215e3c998a822346d4dac5baceb24ebd986b61122f78e65d55377",
+    "config": "a93eaa2b0783ea8e8c262265cd2613893da1cec1c60cf9ba790024020b5f010f",
+    "base_module": "cb9796cb45f6fe048f2fd63e96798937cdbd802b28dbad34b2aafdbef0cbafe8",
+    "masked_module": "f27dbfe36ac5a9a0a1915320dba7c955115ccfa36e6b4755f2d2d62d8efb1489",
+    "objects": "8f4ba44dc3c047d674a1a6832f7ed8265eaa2457b15e820b3973a4cbd3a0861c",
+    "composer": "1c83a97ece60a151c6fa0c1ad5d2022b470ede9356b23d8d7b1e6b62daa71f4f",
+    "f10k_driver": "40ec29443bec5f83e20b1dab2dcbdc5290191360c78944408f67f81626c3a90e"
+  },
+  "arm_registry": {
+    "P3": "base",
+    "GLRC": "glrc",
+    "DLP": "dlp",
+    "ORGANIZED": "organized"
+  },
+  "split_salts": {
+    "C": "cscl-bjoc-perfmech-long-v1-C",
+    "D": "cscl-bjoc-arch-breakthrough-v1-repl"
+  },
+  "pre_registered_split_fingerprints": {
+    "C": {
+      "n_fit": 8000,
+      "n_monitor": 1000,
+      "n_locked": 1000,
+      "fit_sha256_rows": "5e1a27bf3c9d4deb2bbdc046282f4f24471216252f4fae5a66e85d53de4b3ffe",
+      "monitor_sha256_rows": "56fc06282fd3484943e2dc893e664a96aaec3f07ca74915e8344a01901aefbce",
+      "locked_sha256_rows": "0aa900cfaab439dbdfcb3e47402d17e7148064501435b049f1439a5b9037651e"
+    },
+    "D": {
+      "n_fit": 8000,
+      "n_monitor": 1000,
+      "n_locked": 1000,
+      "fit_sha256_rows": "9468656affcc2b7c69409f03698b1b6287b3a42dc6e164efd19dfb0190254525",
+      "monitor_sha256_rows": "d196bc75ce898c7cfd61efa133372f25803d5bc1198210f60b6e0f981a400393",
+      "locked_sha256_rows": "f3525ae882114350a57f7b0ddb6889656f40c05cebda21b2611a2c99cdfa22d5"
+    }
+  },
+  "dlp": {
+    "rank": 32,
+    "buckets": [
+      "d3",
+      "d4",
+      "d5plus"
+    ]
+  },
+  "glrc_gate": "tanh(theta0 + theta^T g_G)",
+  "parameter_budgets": {
+    "P3": 413505,
+    "GLRC": 413539,
+    "DLP": 441153,
+    "ORGANIZED": 413505
+  },
+  "input_audit": {
+    "canonical_smiles": "04a590355fb7bba71e35e52bed60c974999b92af9e96e4ee99bed4afe42dcaff",
+    "encoded_train": "10d764955ef1b040a317105be1dd3fbb2e81292b03b79e7d078cce08e18e5f1d",
+    "objects_train10k": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d",
+    "prep_train10k": "d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a",
+    "pretrain_encoder_s0": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "pretrain_encoder_s1": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a"
+  },
+  "input_audit_ok": true,
+  "label_access": {
+    "build_objects": "structure fields x / edge_index / edge_attr only, via ab.LabelGuard",
+    "alignment_precheck": "Fit rows only (first 200)",
+    "ssl": "Fit rows only; no y read at all",
+    "supervised_training": "Fit row raw y only",
+    "monitor": "one label read after the prediction manifest is frozen and hashed; multiple declared scoring rounds reuse that one read",
+    "locked": "one label read after locked-freeze; no post-read training or selection",
+    "hidden_in_declared_features": false
+  },
+  "frozen_utc": "2026-10-13T11:24:32Z",
+  "official_test_loaded": false
+}

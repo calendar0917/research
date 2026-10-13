@@ -1875,3 +1875,82 @@ next_round_candidate: >-
   algebraic/information audit or atom-only/bond-only pretraining ablations,
   since SSL (-0.0156) dominates any recipe effect.  No new hyperparameter
   search is authorised by the recipe round.
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-architecture-breakthrough-v1 (GLRC / DLP architecture test)
+# ---------------------------------------------------------------------------
+
+round_cscl-bjoc-architecture-breakthrough-v1:
+  protocol: configs/bjoc_architecture_breakthrough_v1.yaml (frozen on res at commit 96ab00d before any GPU trajectory)
+  notes: notes/bjoc_architecture_breakthrough_v1.md
+  report: results/bjoc_architecture_breakthrough_v1/REPORT.md
+  question: >-
+    On the frozen BJOC-Null + Fit-only masked SSL + R3 system (413505 params),
+    can (A) a per-molecule global-conditioned gate on the true-incidence local
+    residual (GLRC, +34 params, zero-init) or (B) distance-conditioned rank-32
+    pair products over d=3/4/>=5 buckets (DLP, +27648 params, zero-init) beat a
+    matched in-split P3 baseline?
+  code:
+    - code/bjoc_arch_breakthrough_v1.py      # GLRC/DLP models, LabelGuard, pair cache, arch training loop, contrasts
+    - code/run_bjoc_architecture_breakthrough_v1.py  # prep/splits/objects/freeze/cpu gates/ssl/arm/predict/score-monitor/locked/full10k
+    - code/analyze_bjoc_architecture_breakthrough_v1.py  # post-freeze descriptive analysis
+    - configs/bjoc_architecture_breakthrough_v1.yaml
+  tests: tests/test_bjoc_architecture_breakthrough_v1.py (23 fast tests; all pass; includes training-loop equivalence bitwise vs bp.train_supervised)
+  splits: {primary: C salt cscl-bjoc-perfmech-long-v1-C fit 8000/monitor 1000/locked 1000, replication: D salt cscl-bjoc-arch-breakthrough-v1-repl not purchased}
+  discipline: >-
+    Official test never loaded; official valid never loaded (no full-10k refit
+    purchased).  Monitor/Locked .y unreachable via LabelGuard during
+    preprocessing/SSL/training/prediction; object alignment check is Fit-only.
+    One declared Monitor read (y sha 5720bd1a..., prediction manifest frozen
+    first, 2 declared scoring rounds) and one Locked read (y sha 2dabe97a...).
+    Previous-round label-access defect corrected by erratum, old experiments
+    not rerun.  Matched P3/GLRC per seed share SSL encoder, init hashes and
+    batch order; all GPU work on res-gpu1, one job at a time.
+  cpu_gates: >-
+    GLRC_CPU_GATE_PASS and DLP_CPU_GATE_PASS (identity/parity, gradient
+    activity, conservation, ownership counterexample, pair information
+    witness, recoverability R2 0.723, invariance, parameter budgets, no
+    forbidden modules).
+  monitor_result: >-
+    split C 1000 rows, P3 0.081907.  GLRC 0.083154 delta +0.001247
+    (CI95 [-0.001145,+0.003644], per-seed +0.001670/+0.000824, 6/7 gate
+    conditions fail) -> GLRC_NO_GAIN.  DLP seed 0 0.083348 delta +0.002204
+    (CI95 [-0.001134,+0.005518], ordinary +0.002855, tail -0.005590,
+    4/7 fail) -> DLP_NO_GAIN.  Conditional purchases not made: ORGANIZED,
+    DLP seed 1, split D replication, full-10k refit, capacity control.
+  locked_result: >-
+    P3 0.104454; GLRC 0.103430 (delta -0.001024 CI95 [-0.003390,+0.001288],
+    both seeds better); DLP seed0 0.104691 (delta -0.000348
+    CI95 [-0.003984,+0.003597]).  Monitor/Locked sign flip for GLRC disclosed;
+    both effects within noise, no decision changed after the read.
+  mechanism: >-
+    GLRC gate is active (lambda std 0.40/0.18 over 2000 held-out molecules,
+    range ~[-0.97,+1.00]; nonzero gradients) but its learned direction is
+    not seed-stable (ring/size descriptors in seed 0 vs bond-type3 in seed 1);
+    both candidates shift held-out predictions by ~0.04 mean absolute without
+    reducing error; locked lambda-quartile deltas are mildly negative in the
+    highest quartile only.  Reading: no evidence that missing junction-bond
+    ownership or non-local distance features limit this system.
+  decisions: [GLRC_NO_GAIN, DLP_NO_GAIN]
+  post_freeze_amendment: >-
+    locked finalizer fixed (commit cef2037) to derive per-arm seed sets from
+    the frozen manifest for pre-registered conditional arms; no model,
+    prediction, gate, threshold or selection affected
+    (post_freeze_amendments.json).
+  budget: 1.777 GPU-h of 6.0 (ssl 0.462+0.458, P3 0.155+0.150, GLRC 0.175+0.171, DLP 0.182); res-gpu1 a100-2, driver 550.163.01, torch 2.5.1+cu124
+  status: COMPLETED 2026-10-13; both candidates failed their frozen gates; round stopped with no third architecture; official test never loaded
+
+next_round_candidate: >-
+  AWAITING USER AUTHORIZATION (nothing auto-started).  The architecture test on
+  the BJOC-Null family is complete: true-incidence ownership gating (+34) and
+  distance-conditioned pair products (+27648) both failed their frozen Monitor
+  gates (GLRC +0.001247, DLP +0.002204), and the Locked signs do not rescue
+  them.  Preferred next evidence step is NOT another ownership/distance variant:
+  decide the target level of evidence first, then preregister a matched-budget
+  comparison against the frozen P3 system for (a) label-noise / data-scale
+  confirmation (external unlabelled structures or a larger labelled budget with
+  the same gate discipline), or (b) an independent second molecular endpoint
+  (different property/task) to test whether the BJOC representation transfers.
+  No GPU work without a new preregistration + explicit user authorization.
+
+updated: 2026-10-13

@@ -102,7 +102,41 @@ candidate passes its primary gate); full-10k refit only under the frozen
 condition.  GPU0/GPU1 occupancy is re-probed before any launch (an external
 user occupied GPU0 earlier today).
 
-## 6. Results
+## 6. Results (complete)
 
-(to be appended: Monitor contrasts, classification decisions, replication,
-conditional arms, Locked table, budget ledger)
+Frozen decisions: **`GLRC_NO_GAIN`** and **`DLP_NO_GAIN`**; the round stops
+with no third architecture, no search, no replication and no full-10k refit.
+GPU spend 1.777 / 6.0 h.
+
+* **Monitor (split C, 1000 rows, one read):** P3 seed-mean MAE 0.081907.
+  GLRC +0.001247 seed-mean (both seeds worse; ordinary and RMSE worse; 6/7
+  gate conditions fail). DLP seed 0 +0.002204 (ordinary worse, tail better;
+  4/7 fail). Neither approaches the frozen -0.004 promotion threshold.
+* **Locked (one read, after the stop was fixed):** P3 0.104454, GLRC 0.103430
+  (delta -0.001024, CI [-0.003390, +0.001288], both seeds better), DLP 0.104691
+  (delta -0.000348, CI [-0.003984, +0.003597]). The Monitor/Locked sign flip
+  for GLRC is disclosed; both effects are within noise and no decision changed.
+* **Mechanism:** the GLRC gate is alive (lambda std ~0.40/0.18 over 2000
+  held-out molecules; nonzero gradients; learned direction dominated by ring
+  and size descriptors) but its direction is not seed-stable; both candidates
+  move held-out predictions by ~0.04 mean absolute without reducing error.
+* **Conditional non-purchases:** ORGANIZED (GLRC failed), DLP seed 1 (seed-0
+  gate failed), split D (no candidate passed), full-10k refit (no candidate
+  passed), DLP capacity control (no two-seed gain).
+* **Reading:** the joint body of evidence is a well-controlled negative
+  result for these two channels; the remaining bottleneck is more plausibly
+  label/data-limited generalization than missing incidence/distance features
+  of the Null-composer family. Independent second-task validation is the
+  recommended next evidence step, not another ownership/distance variant.
+
+Full details, tables and the paper-facing answers:
+`results/bjoc_architecture_breakthrough_v1/REPORT.md`.
+
+## 7. Post-freeze note
+
+The locked finalizer was amended after the freeze (commit `cef2037`) so that
+conditional arms contribute only their actually-trained seeds to the Locked
+table. No model, prediction, gate, threshold or selection was affected; see
+`results/bjoc_architecture_breakthrough_v1/post_freeze_amendments.json`. The
+previous round's label-access defect is corrected by erratum, not rewritten:
+`results/bjoc_performance_mechanism_long_v1/ERRATUM_label_access.md`.

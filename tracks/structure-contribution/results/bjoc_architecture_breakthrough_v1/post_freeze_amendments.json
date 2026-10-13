@@ -1,0 +1,20 @@
+{
+  "protocol": "cscl-bjoc-architecture-breakthrough-v1",
+  "note": "Post-freeze code amendments. The protocol freeze (protocol_freeze.json, commit 96ab00d4aefa) was written before any GPU trajectory. These amendments were made after all training and Monitor scoring, and before the single Locked read. They do not alter any model, prediction, gate, threshold or selection; they only make the locked finalizer accept pre-registered conditional arms that have fewer seeds than the full two-seed set.",
+  "amendments": [
+    {
+      "commit": "cef2037e07bf",
+      "file": "tracks/structure-contribution/code/run_bjoc_architecture_breakthrough_v1.py",
+      "frozen_sha256_prefix": "5dd2463015625150",
+      "amended_sha256_prefix": "374e060598d6f47c",
+      "reason": "cmd_locked_freeze/cmd_locked_score iterated the fixed two-seed set for every arm, but the pre-registered conditional purchase rule left DLP at seed 0 only after its seed-0 gate failed. The finalizer now derives each arm's seed set from the frozen prediction manifest and scores paired contrasts on the shared seeds.",
+      "effect_on_results": "none: no prediction file, label read, gate outcome, threshold or model was changed; the Locked table contains exactly the frozen prediction sets (P3 seeds 0/1, GLRC seeds 0/1, DLP seed 0)",
+      "frozen_paths_still_strict": "ssl/arm/full10k-train still verify the frozen code hash; they were not rerun after this amendment"
+    }
+  ],
+  "config": {
+    "config_sha256_prefix_frozen": "a93eaa2b0783ea8e",
+    "changes_after_freeze": "none"
+  },
+  "official_test_loaded": false
+}

@@ -1,0 +1,79 @@
+{
+  "protocol": "cscl-bjoc-architecture-breakthrough-v1",
+  "track": "tracks/structure-contribution",
+  "budget_gpu_hours_max": 6.0,
+  "budget_basis": "GPU-hours accounted from rr job wall-clock spans (each job pinned to one A100 via CUDA_VISIBLE_DEVICES on pool res-gpu1); CPU jobs listed separately at 0 GPU-h",
+  "regime": {
+    "host": "res",
+    "backend": "process",
+    "pool": "res-gpu1",
+    "node": "a100-2",
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "550.163.01",
+    "torch": "2.5.1+cu124",
+    "cuda_visible_devices": "1"
+  },
+  "gpu_jobs": [
+    {
+      "experiment": "bt-c-s0",
+      "run_id": "bt-c-s0-20261013-192738-a7f735f3",
+      "commit": "96ab00d4aefa4c35346ed7e4fbf4a86cf6cae60e",
+      "started": "2026-10-13T19:27:40+08:00",
+      "completed": "2026-10-13T20:16:01+08:00",
+      "span_seconds": 2901,
+      "gpu_hours": 0.8058,
+      "phases": {
+        "fit_masked_ssl_seed0_s": 1679.2,
+        "p3_seed0_r3_s": 558.1,
+        "glrc_seed0_r3_s": 630.4
+      }
+    },
+    {
+      "experiment": "bt-c-s1",
+      "run_id": "bt-c-s1-20261013-202108-8e9423ca",
+      "commit": "96ab00d4aefa4c35346ed7e4fbf4a86cf6cae60e",
+      "started": "2026-10-13T20:21:11+08:00",
+      "completed": "2026-10-13T21:08:31+08:00",
+      "span_seconds": 2840,
+      "gpu_hours": 0.7889,
+      "phases": {
+        "fit_masked_ssl_seed1_s": 1649.0,
+        "p3_seed1_r3_s": 541.4,
+        "glrc_seed1_r3_s": 615.8
+      }
+    },
+    {
+      "experiment": "bt-c-dlp-s0",
+      "run_id": "bt-c-dlp-s0-20261013-211548-2d3c8979",
+      "commit": "96ab00d4aefa4c35346ed7e4fbf4a86cf6cae60e",
+      "started": "2026-10-13T21:15:50+08:00",
+      "completed": "2026-10-13T21:26:46+08:00",
+      "span_seconds": 656,
+      "gpu_hours": 0.1822,
+      "phases": {
+        "dlp_seed0_r3_s": 641.6
+      }
+    }
+  ],
+  "cpu_jobs": [
+    {"experiment": "bt-prep", "run_id": "bt-prep-20261013-192358-5587e571", "gpu_hours": 0.0},
+    {"experiment": "bt-cpu-glrc", "run_id": "bt-cpu-glrc-20261013-192538-28a01ec5", "gpu_hours": 0.0},
+    {"experiment": "bt-cpu-dlp", "run_id": "bt-cpu-dlp-20261013-192545-46a1341f", "gpu_hours": 0.0},
+    {"experiment": "bt-c-predict", "run_id": "bt-c-predict-20261013-211127-cb8f53b1", "gpu_hours": 0.0},
+    {"experiment": "bt-c-score-glrc", "run_id": "bt-c-score-glrc-20261013-211335-3210cc99", "gpu_hours": 0.0},
+    {"experiment": "bt-c-predict-dlp", "run_id": "bt-c-predict-dlp-20261013-212802-e412a08d", "gpu_hours": 0.0},
+    {"experiment": "bt-c-score-dlp", "run_id": "bt-c-score-dlp-20261013-212930-ae956371", "gpu_hours": 0.0},
+    {"experiment": "bt-c-locked-freeze", "run_id": "bt-c-locked-freeze2-20261013-213402-af464d6d", "gpu_hours": 0.0},
+    {"experiment": "bt-c-locked-score", "run_id": "bt-c-locked-score-20261013-213503-aa3b3d81", "gpu_hours": 0.0}
+  ],
+  "total_gpu_hours": 1.7769,
+  "remaining_gpu_hours": 4.2231,
+  "not_purchased": {
+    "organized_contrast": "not purchased: GLRC failed its promotion gate",
+    "dlp_seed1": "not purchased: DLP seed-0 failed its promotion gate",
+    "replication_split_D": "not purchased: neither candidate passed a primary-split gate",
+    "full10k_refit": "not purchased: neither candidate passed a primary-split gate",
+    "matched_capacity_dlp_control": "not purchased: DLP did not show two-seed gains"
+  },
+  "notes": "The external user job on GPU0 was present throughout the round (37 GB, ~100% utilization); all GPU work was scheduled on GPU1, one job at a time, with matched P3/GLRC per seed on the same device."
+}
