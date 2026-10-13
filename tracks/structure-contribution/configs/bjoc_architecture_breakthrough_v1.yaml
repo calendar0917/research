@@ -1,0 +1,338 @@
+# cscl-bjoc-architecture-breakthrough-v1 (pre-registration; frozen before any GPU)
+#
+# Track: tracks/structure-contribution
+#
+# Architecture-mechanism round on the frozen BJOC-Null + masked-SSL + R3 system.
+# Two pre-registered one-shot architecture hypotheses are tested against a
+# matched in-split P3 baseline:
+#
+#   Stage A (priority): GLRC - keep the Null whole-molecule junction statistics
+#       and add a per-molecule, structure-conditioned tanh gate on the
+#       true-incidence local residual.
+#       Question A1: is real junction-to-bond ownership complementary to the
+#       Null whole-graph statistics under a competitive SSL+R3 system?
+#       Question A2 (conditional purchase): if GLRC passes, is the gain simply
+#       a fully-Organized incidence readout, or does adaptive local-global
+#       mixing add value beyond Organized?
+#
+#   Stage B (conditional): DLP - distance-conditioned low-rank pair pooling
+#       (rank 32; pairs at d=3, d=4, d>=5; mean of elementwise products).
+#       Question B1: does explicit non-local distance-relation information add
+#       predictive signal that the first/second moments cannot express?
+#
+# Discipline:
+#   * official test is NEVER loaded in any form (no code path exists);
+#   * official valid is an exposed development split, descriptive only;
+#   * new internal group-aware splits are re-partitions of the official train
+#     10k; their molecules were used in historical experiments, so they are NOT
+#     independent external tests; this is disclosed in every report;
+#   * Monitor is a development block: each candidate prediction is frozen and
+#     hashed before scoring; scoring rounds and the selection count are logged;
+#   * Locked labels are read exactly once, after all architecture/analysis
+#     choices are frozen;
+#   * Monitor/Locked ``.y`` is unreachable during preprocessing, SSL, training
+#     and prediction via ab.LabelGuard (tested);
+#   * historical results are read-only; the known label-access issue of the
+#     previous round is recorded in an erratum, not rewritten.
+
+protocol: cscl-bjoc-architecture-breakthrough-v1
+status: frozen
+frozen_date: "2026-10-13"
+track: tracks/structure-contribution
+official_valid_role: "exposed development split; conditional full-10k refit descriptive scoring only"
+official_test: never_read
+
+# --------------------------------------------------------------- questions
+questions:
+  A1: >
+    Does adding the true junction-to-bond local residual, gated per molecule by
+    the existing standardised global structure vector, improve held-out raw-y
+    MAE over the matched BJOC-Null P3 baseline (same Fit rows, same Fit-only
+    masked-SSL encoder, same R3 recipe, same seeds, same batch order)?
+  A2: >
+    If GLRC passes the promotion gate: is the gain fully explained by replacing
+    the Null composer with the fully Organized composer (same recipe/init/seeds),
+    or does the adaptive local-global gate add value beyond Organized?
+  B1: >
+    If GLRC fails the promotion gate: does distance-conditioned low-rank pair
+    pooling (d=3, d=4, d>=5) add predictive information beyond the reader's
+    existing atom first/second moments and bond-composition sums?
+  C: >
+    Are any gains stable across seeds and across a second pre-registered
+    group-aware split, and what do they imply about the remaining bottleneck?
+
+# --------------------------------------------------------------- splits
+splits:
+  primary: C
+  replication: D
+  salts:
+    C: cscl-bjoc-perfmech-long-v1-C
+    D: cscl-bjoc-arch-breakthrough-v1-repl
+  sizes: {fit: 8000, monitor: 1000, locked: 1000}
+  grouping: "canonical SMILES groups; duplicate molecules never cross sides"
+  fingerprints:  # computed locally 2026-10-13 from the committed SMILES table; asserted at prep
+    C:
+      n_fit: 8000
+      n_monitor: 1000
+      n_locked: 1000
+      fit_sha256_rows: 5e1a27bf3c9d4deb2bbdc046282f4f24471216252f4fae5a66e85d53de4b3ffe
+      monitor_sha256_rows: 56fc06282fd3484943e2dc893e664a96aaec3f07ca74915e8344a01901aefbce
+      locked_sha256_rows: 0aa900cfaab439dbdfcb3e47402d17e7148064501435b049f1439a5b9037651e
+    D:
+      n_fit: 8000
+      n_monitor: 1000
+      n_locked: 1000
+      fit_sha256_rows: 9468656affcc2b7c69409f03698b1b6287b3a42dc6e164efd19dfb0190254525
+      monitor_sha256_rows: d196bc75ce898c7cfd61efa133372f25803d5bc1198210f60b6e0f981a400393
+      locked_sha256_rows: f3525ae882114350a57f7b0ddb6889656f40c05cebda21b2611a2c99cdfa22d5
+  disclosure: >
+    Internal re-partition of the official ZINC train 10000.  The molecules have
+    been used in historical experiments (full-10k training, previously read
+    internal monitor/locked blocks), so these splits are NOT independent
+    external tests; only within-split matched contrasts are interpreted.
+    Per-split overlap with the previously materialised A/B splits is computed
+    at prep, frozen into split_{tag}.json, and disclosed in the report.
+
+label_access:
+  build_objects: "structure fields x / edge_index / edge_attr only, via ab.LabelGuard"
+  alignment_precheck: "Fit rows only (first 200)"
+  ssl: "Fit rows only; no y read at all"
+  supervised_training: "Fit row raw y only"
+  monitor: "one label read after the prediction manifest is frozen and hashed; multiple declared scoring rounds reuse that one read"
+  locked: "one label read after locked-freeze; no post-read training or selection"
+  hidden_in_declared_features: false
+
+# --------------------------------------------------------------- baseline
+baseline:
+  arm: P3
+  definition: "BJOC-Null + Fit-only masked atom+bond SSL (7560 updates) + R3"
+  recipe:
+    epochs: 360
+    schedule: "per-step cosine"
+    lr: 1.0e-3
+    lr_min: 1.0e-5
+    weight_decay: 1.0e-5
+    grad_clip: 5.0
+    batch_size: 128
+    optimizer: Adam
+    loss: "raw-y L1"
+    soup: "parameter mean of the last 5 epoch states"
+  seeds: [0, 1]
+  note: "historical full-10k P3 official-test 0.069822 is a background fact only and is never used for selection"
+
+# --------------------------------------------------------------- Stage A (GLRC)
+stage_a_glrc:
+  hypothesis: >
+    The Null composer uses the whole-molecule junction multiset and loses which
+    junction touches which bond; the masked-SSL pretext head already uses true
+    incidence; a low-capacity adaptive gate on the local residual can recover
+    helpful local ownership information without giving up the Null global
+    statistics.
+  architecture:
+    base: "BJOC-Null, 413,505 params, frozen widths"
+    change: >
+      W'_b = W_null_b + lambda(G) * (W_local_b - W_null_b),
+      V'_b = V_null_b + lambda(G) * (V_local_b - V_null_b),
+      lambda(G) = tanh(theta0 + theta^T g_G)
+    gate_input: "the existing Fit-only standardised 33-dim global structure vector g_G"
+    gate_init: "theta0 = 0, theta = 0 -> lambda(G) == 0 -> initial forward identical to BJOC-Null"
+    new_parameters: 34
+    total_parameters: 413539
+    conservation: "sum_b dW_b = sum_b dV_b = 0 per molecule (lambda is constant in the molecule)"
+    search: "one frozen gate form; no gating network / activation / width search"
+  cpu_gate:
+    identity_max_abs_diff: 1.0e-5
+    conservation_tolerance: 1.0e-3
+    invariance_tolerance: 1.0e-5
+    counterexample_base_tolerance: 1.0e-5
+    counterexample_local_min: 1.0e-6
+    checks:
+      - "lambda=0 forward equals the P3 init forward; base parameter hash equals the P3 init hash"
+      - "gate gradients finite and non-zero on real Fit molecules; lambda moves after 2 Adam steps"
+      - "active-gate prediction differs from the same model with lambda forced to 0 (local path used)"
+      - "per-molecule sum_b dW and sum_b dV zero within tolerance"
+      - "atom relabel / bond endpoint swap / junction row permutation / batch membership invariance"
+      - "marginal-preserving ownership counterexample: Null predicts identically, active GLRC does not"
+      - "no forbidden modules; parameter budget 413,539"
+  arms_on_primary_split:
+    GLRC: {seeds: [0, 1], init: ssl, recipe: R3}
+  monitor_gate:  # frozen promotion rule (resource purchase rule, not a universal claim)
+    delta_seed_mean_le: -0.004
+    per_seed_all_negative: true
+    bootstrap_ci_upper_negative: true
+    ordinary_not_worse: true
+    top10_removed_negative: true
+    rmse_tolerance: 0.005
+    max_single_gain_fraction: 0.25
+    classification:
+      GLRC_MONITOR_GAIN_SUPPORTED: "all conditions pass"
+      GLRC_WEAK_OR_MIXED: "delta_seed_mean < 0 but at least one condition fails"
+      GLRC_NO_GAIN: "delta_seed_mean >= 0"
+  conditional_organized_purchase:
+    rule: "run iff GLRC passes the promotion gate"
+    arms_on_primary_split:
+      ORGANIZED: {seeds: [0, 1], init: ssl, recipe: R3}
+    comparison: "P3 vs ORGANIZED vs GLRC, paired per molecule, Monitor read reused (no new label read)"
+    classification:
+      GLRC_EXPLAINED_BY_ORGANIZED: "ORGANIZED gain <= -0.004 and |gain(ORGANIZED) - gain(GLRC)| <= 0.002"
+      LOCAL_GLOBAL_COOPERATION_SUPPORTED: "gain(GLRC) < gain(ORGANIZED) - 0.002"
+      ORGANIZED_ONLY_OR_MIXED: "otherwise"
+    no_search: "no gate-form, width, or threshold search after the Monitor read"
+
+# --------------------------------------------------------------- Stage B (DLP)
+stage_b_dlp:
+  enabled_rule: >
+    purchased only if GLRC fails its promotion gate, or if GLRC passes but
+    non-local distance relations are a declared remaining bottleneck with
+    budget left; not purchased merely because budget remains.
+  architecture:
+    base: "BJOC-Null, 413,505 params, frozen widths"
+    projection: "h_i = P a_i, P in R^{32 x 96}, no bias"
+    buckets: "unordered pairs i<j at shortest-path distance d=3, d=4, d>=5 (frozen)"
+    pooling: "p_k(G) = (1 / max(1, N_k)) * sum_{i<j, d(i,j) in D_k} (h_i * h_j)"
+    reader: "the three 32-dim vectors appended to the frozen reader input; new first-layer columns zero-initialised"
+    new_parameters: 27648
+    total_parameters: 441153
+    search: "rank, buckets, pooling and reader width are frozen; no search"
+    iteration: "none; distances are precomputed from raw structure, no pair message updates"
+  cpu_gate:
+    identity_max_abs_diff: 1.0e-5
+    zero_std_fraction_max: 0.10
+    recoverability_r2_median_max: 0.90
+    # float32 index_add accumulation over up to ~1e4 pairs per molecule makes a
+    # pure atom-relabelling comparison differ at ~1.5e-5; the tolerance is set
+    # to 1e-4 so that only genuine permutation violations (order 1) fail.
+    invariance_tolerance: 1.0e-4
+    checks:
+      - "pair construction brute-force cross-check on real molecules; cached arrays equal fresh builds"
+      - "same h multiset and same first/second moments, different distance partition -> different pair features"
+      - "zero-init identity with BJOC-Null; base parameter hash equals the P3 init hash"
+      - "non-degenerate finite pair features; <= 10% zero-std dims"
+      - "reader new columns receive non-zero gradient at step 0 and the pair projection at step 1+; predictions change"
+      - "ridge probe: the pair block is not nearly fully linearly recoverable from the frozen reader input"
+      - "atom relabel / bond endpoint swap / pair row order / batch membership invariance"
+      - "no forbidden modules; parameter budget 441,153"
+  arms_on_primary_split:
+    DLP_seed0: {seeds: [0], init: ssl, recipe: R3}
+    DLP_seed1: {seeds: [1], init: ssl, recipe: R3, condition: "seed 0 gate passes"}
+  monitor_gate:
+    seed0: "Monitor MAE(DLP) - MAE(P3) <= -0.004; ordinary not worse; top-10-removed delta < 0; RMSE within +0.005"
+    seed1_condition: "seed 0 gate passes"
+    classification:
+      DLP_MONITOR_GAIN_SUPPORTED: "all purchased-seed conditions pass"
+      DLP_WEAK_OR_MIXED: "delta < 0 but at least one condition fails"
+      DLP_NO_GAIN: "delta >= 0"
+    stop_rule: "on gate failure stop DLP; no rank / bucket / reader-width / regulariser search"
+  capacity_control: >
+    a matched-capacity relation-destruction control is purchased only if DLP
+    shows strong two-seed gains and budget remains; it must be
+    permutation-invariant and batch-invariant or it is not run.
+
+# --------------------------------------------------------------- replication + final
+replication:
+  purchase_rule: "run iff GLRC or DLP passes its primary-split Monitor promotion gate"
+  split: D
+  arms: "P3 (2 seeds) + the promoted candidate (2 seeds), Fit-only SSL retrained on split D, same R3 recipe"
+  never: "reuse split C's SSL encoder as split D's Fit-only encoder"
+  monitor_read: "one declared read; predictions frozen first"
+  classification:
+    REPLICATION_SUPPORTS: "delta_seed_mean <= -0.004 and both seeds < 0 and bootstrap CI upper < 0"
+    REPLICATION_WEAK: "delta_seed_mean < 0 otherwise"
+    REPLICATION_FAILS: "delta_seed_mean >= 0"
+
+locked:
+  rule: >
+    after candidate selection, any replication, and the analysis plan are
+    frozen: read the Locked labels of the primary split once (and the
+    replication split once) and score the frozen prediction sets; no
+    post-read architecture, training-length, threshold or selection change.
+  table: [P3, GLRC, DLP, ORGANIZED]
+  metrics: [per_seed_mae, seed_mean_mae, rmse, median_abs, p90_abs, paired_delta, paired_bootstrap_ci95, ordinary, tail, top10_removed]
+  contradiction_rule: "if Locked contradicts Monitor, disclose and stop; never retune on Locked"
+
+full10k_refit:
+  purchase_rule: >
+    run only if the candidate clearly improves on the primary Monitor and is
+    supported on the replication split; architecture, recipe, seeds and
+    checkpoint rule frozen before any Locked read.
+  encoder: "the existing full-10k Fit-only SSL encoders pretrain_encoder_s0/s1.pt (hash-verified)"
+  data: "official train 10k objects + prep_train10k (Fit-only statistics from the historical full-10k round)"
+  arms: "candidate seeds 0 and 1, R3 recipe"
+  scoring: "official valid (exposed) descriptive MAE only; no model choice from valid; no official test"
+
+budget:
+  gpu_hours_max: 6.0
+  guidance:
+    cpu_and_smoke: 0.2
+    baseline_ssl_and_p3_primary: 1.2
+    glrc_primary: 0.4
+    organized_conditional: 0.4
+    dlp_conditional: 0.8
+    replication: 1.6
+    full10k_or_reserve: 1.4
+  ledger: results/bjoc_architecture_breakthrough_v1/gpu_budget_ledger.json
+  pool_policy: "res GPU0/GPU1 only when verified idle; one training job per GPU; matched P3/candidate per seed on the same device"
+
+bans:
+  - "official test access in any form"
+  - "official-valid score as a selection signal"
+  - "Monitor/Locked y during preprocessing, SSL, training or prediction"
+  - "GNN / Transformer / attention / recurrent or iterative message passing"
+  - "gate-form / rank / bucket / reader-width / loss search after the freeze"
+  - "post-Monitor architecture or threshold changes beyond the frozen conditional purchases"
+  - "retrying failed trajectories or reseeding to chase a lower MAE"
+  - "GLRC and DLP stacked as a third architecture this round"
+  - "overwriting historical frozen models, drivers, predictions, labels or locks"
+  - "using the historical full-10k P3 official-test 0.069822 for any selection"
+
+decision_vocabulary:
+  - GLRC_CPU_GATE_PASS
+  - GLRC_CPU_BLOCKED
+  - GLRC_MONITOR_GAIN_SUPPORTED
+  - GLRC_WEAK_OR_MIXED
+  - GLRC_NO_GAIN
+  - GLRC_EXPLAINED_BY_ORGANIZED
+  - LOCAL_GLOBAL_COOPERATION_SUPPORTED
+  - ORGANIZED_ONLY_OR_MIXED
+  - DLP_CPU_GATE_PASS
+  - DLP_CPU_BLOCKED
+  - DLP_MONITOR_GAIN_SUPPORTED
+  - DLP_WEAK_OR_MIXED
+  - DLP_NO_GAIN
+  - REPLICATION_SUPPORTS
+  - REPLICATION_WEAK
+  - REPLICATION_FAILS
+  - BLOCKED
+
+# --------------------------------------------------- frozen input fingerprints
+# values re-hashed locally on 2026-10-13 before this pre-registration commit
+frozen:
+  frozen_block_version: 1
+  n_train: 10000
+  n_valid: 1000
+  batch_size: 128
+  soup_last: 5
+  train_shuffle_offset: 101
+  tail_threshold: -3.0
+  top_k_removed: 10
+  bootstrap_n: 5000
+  bootstrap_seed: 0
+  expected_parameters: 413505
+  glrc_parameters: 413539
+  dlp_parameters: 441153
+  canonical_smiles_sha256: 04a590355fb7bba71e35e52bed60c974999b92af9e96e4ee99bed4afe42dcaff
+  encoded_train_sha256: 10d764955ef1b040a317105be1dd3fbb2e81292b03b79e7d078cce08e18e5f1d
+  objects_train10k_sha256: 14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d
+  prep_train10k_sha256: d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a
+  pretrain_encoder_s0_sha256: 006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97
+  pretrain_encoder_s1_sha256: ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a
+  # P-init anchors recorded by the full-10k round; the base init is split-independent
+  p_init_full_sha256:
+    "0": d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691
+    "1": c79e6b02521c224e79790382438ca72c08f9e22e691f66fb5ab950dea4b49c0b
+  p_init_group_state_sha256:
+    "0": d9ffbd15356659ed06af4b43077bb7f27403ad0afc3e7ac00c4d34fc98c7415f
+    "1": 98d11fe93b03368e8ea5f66b17c1ccf16d850ee13a43f56f49ddc93dd08a993c
+  p_init_encoder_sha256:
+    "0": 91af980a414ac945ea35b31c114d4e44b636419b62320321a902179112889d12
+    "1": 83d8b086bf1f9ee6c145336a3ea67e710bcf42658151061c293c2a3380ddd303
