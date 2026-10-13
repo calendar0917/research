@@ -1270,11 +1270,18 @@ def cmd_test_protocol(args: argparse.Namespace) -> int:
 
 
 def _label_storage(ds):
-    for attr in ("data", "_data"):
+    """Raw storage object holding the labels (never values, only the storage)."""
+    for attr in ("_data", "data"):
         d = getattr(ds, attr, None)
         if d is not None and hasattr(d, "y"):
             return d
     return None
+
+
+def _clear_slice_cache(ds) -> None:
+    """Drop cached per-row slices so mutated storage is re-sliced."""
+    if hasattr(ds, "_data_list"):
+        ds._data_list = None
 
 
 def cmd_test_predict(args: argparse.Namespace) -> int:
@@ -1297,13 +1304,17 @@ def cmd_test_predict(args: argparse.Namespace) -> int:
     mutation: dict[str, Any] = {"available": store is not None}
     if store is not None:
         orig = store.y.detach().clone()
+        _clear_slice_cache(ds)
         objects_before = build_test_objects([LabelGuard(ds[i]) for i in range(16)], 16)
         h_before, _ = objects_hash(objects_before)
         store.y = torch.zeros_like(store.y)
+        _clear_slice_cache(ds)
         h_zero, _ = objects_hash(build_test_objects([LabelGuard(ds[i]) for i in range(16)], 16))
         store.y = torch.full_like(orig, 999.0)
+        _clear_slice_cache(ds)
         h_999, _ = objects_hash(build_test_objects([LabelGuard(ds[i]) for i in range(16)], 16))
         store.y = orig
+        _clear_slice_cache(ds)
         mutation.update({"objects_hash_before": h_before, "objects_hash_zero_labels": h_zero, "objects_hash_999_labels": h_999, "objects_unchanged": h_before == h_zero == h_999})
 
     # --- relabelling invariance on one test molecule ---
@@ -1330,12 +1341,13 @@ def cmd_test_predict(args: argparse.Namespace) -> int:
         pred_base = predict_test_objs(model, [base], device)[0]
         pred_perm = predict_test_objs(model, [o_perm], device)[0]
         pred_batch8 = predict_test_objs(model, objs[:8], device)[0]
+        pred16 = predict_test_objs(model, objs[:16], device)
         model2 = load_soup_model(key, norm, device)
         pred_replay = predict_test_objs(model2, objs[:16], device)
         invariance[key] = {
             "relabelling_abs_diff": float(abs(pred_base - pred_perm)),
             "batch_composition_abs_diff": float(abs(pred_base - pred_batch8)),
-            "checkpoint_reload_max_abs_diff": float(np.abs(pred[:16] - pred_replay).max()),
+            "checkpoint_reload_max_abs_diff": float(np.abs(pred16 - pred_replay).max()),
         }
         path = OUT / "predictions" / f"test_{key}.npz"
         meta = {
