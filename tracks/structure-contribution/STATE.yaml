@@ -1,29 +1,46 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-bjoc-pretraining-mechanism-terminal-test-v1-completed
-current_round: bjoc-pretraining-mechanism-terminal-test-v1
+phase: cscl-bjoc-strc-predictive-feasibility-v1-completed
+current_round: bjoc-strc-predictive-feasibility-v1
 next_round_candidate: >-
-  AWAITING USER AUTHORIZATION. The pretraining-mechanism terminal-test round is COMPLETE
-  (results/bjoc_pretraining_mechanism_terminal_test_v1/REPORT.md).  It (i) replayed the frozen
-  B/P checkpoints bit-identically (maxdiff 0.0) to prove reuse, (ii) confirmed leakage-free
-  masked-pretraining legality from the recorded audits, (iii) located the mechanism as a
-  bulk/ordinary improvement (-0.017318 train, -0.017391 valid) with a valid-only tail
-  regression concentrated in two rows, (iv) purchased and ran the pre-registered J-reset
-  ablation (scratch junction encoder, identical recipe, 2 seeds, ~0.31 GPU-h): J-P +0.007616
-  (CI95 [-0.000202,+0.019367], both seeds +0.0076, tail +0.111456) -> J_RESET_NEUTRAL_VALID,
-  so the complete pretrained encoder state is retained, and (v) read the exposed official test
-  exactly once after freezing B0/B1/P0/P1 label-blind: B seed-mean 0.094627, P seed-mean
-  0.073957, P-B -0.020670 (CI95 [-0.027157,-0.014712]), both seeds negative, ordinary
-  -0.022785, tail +0.004688, RMSE -0.026519, y crosscheck 0.0 ->
-  PRETRAINING_TEST_GAIN_REPLICATES; target band 0.06-0.07 NOT reached (0.003957 above 0.07);
-  exposed-test comparison, not a blind test.  NEXT (proposed, NOT authorised):
-  results/bjoc_pretraining_mechanism_terminal_test_v1/next_predictive_hypothesis.md —
-  Shared-Type Residual Composition (STRC): a zero-init <=~500-param shared per-atom-type (and
-  small junction-context) additive residual channel trained jointly under raw-y L1, matched to
-  the frozen P recipe; buy only if seed-mean valid MAE improves by >=0.004 with both seeds
-  negative, ordinary non-worse, tail better, RMSE not worse; gate failure stops the route.  No
-  GPU work without a new preregistration + explicit user authorization.
+  AWAITING USER AUTHORIZATION. The STRC predictive-feasibility round is COMPLETE
+  (notes/bjoc_strc_predictive_feasibility_v1.md,
+  results/bjoc_strc_predictive_feasibility_v1/REPORT.md).  It tested one tiny
+  cross-molecule-shared additive residual channel (28 shared atom-type scalars
+  alpha + 129 frozen-vocabulary junction-context scalars beta, zero-init, 157
+  params, total 413,662) added to the successful masked-pretrained BJOC-Null P
+  and trained jointly under the identical recipe (same post-SSL init replayed
+  and verified, same encoders/composer/reader init, same batch order, same
+  Adam/L1/soup).  Answer: NO GAIN, decision STRC_NO_PREDICTIVE_GAIN —
+  official-valid seed-mean S-P +0.004543 (CI95 [+0.000927,+0.009536], both
+  seeds positive +0.007833/+0.001253), ordinary +0.002437, tail +0.034843
+  (excluding valid:0172 still +0.007258), RMSE +0.035848, top-10-removed
+  +0.003033; 7/8 frozen gate conditions fail.  The channel was live and
+  cross-seed stable (Spearman alpha 0.991 / beta 0.892; residual |.| ~6-7% of
+  |base|) but mostly reparameterized the base solution: the S-P prediction
+  difference is explained by the changed base (R2 0.43/0.73), not the additive
+  residual (R2 0.003/0.000005); design rank 149/157 (7 zero-support atom types,
+  one collinear context pair).  Shared additive residual route stopped
+  permanently (no vocabulary/scale/tail-weighting/third-seed follow-up).
+  NEXT (proposed, NOT authorised): scale-separated whole-molecule composition
+  — capacity-matched readout [Sum_c, mean(c), std(c), Sum_a, mean(a), std(a),
+  n_atoms, global] computed from the same object tensors (c per-bond composer
+  outputs, a per-atom encodings), replacing extensive-only sums at the same
+  413,505-param budget; CPU collision/synthetic gate first (identical old
+  extensive inputs, different intensive statistics), then <=2 seeds against
+  the frozen P valid predictions under the same gate shape (~0.35 GPU-h); stop
+  the readout-composition route if the same valid conditions fail.  Official
+  test remains unread in any form; no GPU work without a new preregistration +
+  explicit user authorization.
+next_round_candidate_prev_strc: >-
+  (consumed by this round, now STOPPED) Shared-Type Residual Composition (STRC):
+  a zero-init 157-param shared per-atom-type + frozen junction-context additive
+  residual channel trained jointly under raw-y L1 and the frozen P recipe; CPU
+  pre-check (zero-init identity, gradient activity, synthetic identifiability);
+  <=2 seeds; purchase gate seed-mean valid MAE <= P - 0.004 with both seeds
+  negative, ordinary non-worse, tail better, RMSE within +0.005; gate failure
+  stops the route.  Result: STRC_NO_PREDICTIVE_GAIN.
 next_round_candidate_prev_full10k: >-
   AWAITING USER AUTHORIZATION. The full-10k pretraining-transfer round is COMPLETE
   (notes/bjoc_full10k_pretraining_transfer_v1.md,
@@ -1716,3 +1733,66 @@ round_cscl-bjoc-pretraining-mechanism-terminal-test-v1:
     caveat: exposed-test terminal comparison of frozen models; no architecture/seed/hyper-parameter change after the read
   budget: 2 GPU stages = ~991 s ~0.28 GPU-h training (gate estimate 0.311 GPU-h; limit 0.8); wall ~25 min (limit 6.5 h); no GPU work after the test read
   status: COMPLETED 2026-10-13; decision PRETRAINING_TEST_GAIN_REPLICATES (exposed test); J_RESET_NEUTRAL_VALID; STRC proposed awaiting authorization; no unauthorised follow-up purchased
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-strc-predictive-feasibility-v1 (tiny cross-molecule-shared
+# explicit additive structural residual channel on frozen-P init; official
+# valid only, single read after prediction freeze; official test never loaded)
+# ---------------------------------------------------------------------------
+
+phase: cscl-bjoc-strc-predictive-feasibility-v1-completed
+current_round: bjoc-strc-predictive-feasibility-v1
+round_cscl-bjoc-strc-predictive-feasibility-v1:
+  protocol: "configs/bjoc_strc_predictive_feasibility_v1.yaml (preregistration commit 22d18d8; pre-GPU amendments e996cc0/7e93013/41a49c0; training on the deployed revision 41a49c0)"
+  notes: notes/bjoc_strc_predictive_feasibility_v1.md
+  report: results/bjoc_strc_predictive_feasibility_v1/REPORT.md
+  code:
+    - code/bjoc_strc_v1.py  # STRCResidual: alpha[28] + beta[129] zero-init, non-persistent 28^3 ctx lookup, frozen s_a/s_j, vocab/hash helpers
+    - code/run_bjoc_strc_v1.py  # vocab/design-audit/cpu-precheck/synthetic/freeze/train/predict/train-predict/freeze-predictions/score/train-metrics/params/error-analysis/decision/stage-cpu-prep
+    - configs/bjoc_strc_predictive_feasibility_v1.yaml
+  tests: tests/test_bjoc_strc_v1.py (13 fast; all pass)
+  cpu_gates: >-
+    CPU_PRECHECK_PASSED before any GPU: init equality 0.0; sharing identities 0.0; relabelling
+    0.0; batch composition 2.1e-7; checkpoint roundtrip 0.0; base grads == zero-residual control
+    (max diff 0.0 local; gate 1e-6 for remote float32 reduction ordering); alpha/beta grads
+    non-zero and move after one step; synthetic additive truth recovered (residual RMS 0.0172
+    vs sigma 0.05, gradient-channel R2 1.000, deliberate collinear case correctly reported
+    non-identifiable); design rank 149/157, null dim 8, 7 zero-support atom types (21-27,
+    27 = mask token), one exactly collinear context pair (slots 96/107), nonzero-spectrum
+    condition number 3.1e3; vocab 201 contexts, top-128 cover 99.95% of junctions
+    (vocab_sha256 18303ee1...).
+  training: >-
+    two seeds, sequential on res-gpu0 (one trajectory at a time), commit 41a49c0, torch
+    2.5.1+cu124, both exit 0; strc-s0 (run strc-s0-20261013-095451-c1bc6ba1) wall 547 s,
+    strc-s1 (run strc-s1-20261013-101208-23f1ee0a) wall 668 s (~0.34 GPU-h total).
+    train_S_seed{0,1}.json: same_init_as_P / same_composer_reader_init_as_P /
+    same_encoder_as_P / same_batch_order_as_P all true (batch-order hash 94a8ff7f...);
+    parameter audit 413505 + 157 = 413662 exact; soup fit S0 0.037733 / S1 0.025487
+    (P0 0.025333 / P1 0.028498).
+  valid_result:
+    frozen_before_read: "prediction_freeze combined 7ecdb46a... (S0 114aa805..., S1 9456d9c3..., P0 c6a3caba..., P1 0b57560f...)"
+    read: "valid_read.lock 2026-10-13T02:27:24Z, y sha 8f6ee636..., raw-vs-encoded max abs 0.0"
+    mae: {S0: 0.092619, S1: 0.083566, S_seed_mean: 0.088092, P0: 0.084786, P1: 0.082313, P_seed_mean: 0.083549}
+    delta: "+0.004543 (CI95 [+0.000927,+0.009536], frac better 0.454, 5000 molecule resamples, seed 0); per-seed +0.007833/+0.001253"
+    rmse: "S 0.265855 vs P 0.230007, delta +0.035848"
+    subgroups: "ordinary n=935 +0.002437; tail n=65 +0.034843 (tail excl. valid:0172 +0.007258; overall excl. row +0.002746); top10-removed +0.003033; valid:0172 share 39.6%"
+    strata: "high n_junctions +0.007332 / high n_atoms +0.008515 vs low +0.001885/+0.001035"
+    gate: "7/8 conditions fail (all except cpu_correctness_gates)"
+    decision: STRC_NO_PREDICTIVE_GAIN
+  mechanism: >-
+    alpha/beta live and seed-stable: 21/28 alpha and 128-129/129 beta entries nonzero
+    (>1e-3); |alpha|mean 0.153/0.155, |beta|mean 0.168/0.162; residual |.| ~0.089-0.098
+    = 6-7% of |base| ~1.4-1.5; cross-seed Spearman alpha 0.9907 / beta 0.8921.  But the
+    S-P prediction difference is explained by the changed base solution (R2 0.426/0.731),
+    not by the additive residual (R2 0.0025/0.000005); relative L2 S vs P: atom 0.20/0.22,
+    bond 0.52/0.57, junction 0.58/0.59, composer 0.91/0.96, reader 0.88/0.88.  Train signal
+    opposite to valid: train ordinary +0.005911 worse, train tail -0.011070 better.  Caveat:
+    alpha/beta are explicit additive residual contributions inside the model, not verified
+    chemical contributions; rank 149/157 leaves individual coefficients only partially
+    identified.
+  post_hoc: >-
+    post_hoc_mechanism_analysis.json added after the single valid read (descriptive only; no
+    model, vocabulary, scale, gate or decision change): parameter distances, prediction-delta
+    R2 decomposition, beta-support diagnostics, train-sample residual magnitudes.
+  budget: 2 trainings = 1215 s ~0.34 GPU-h (limit 0.8); wall ~1 h 40 min (limit 6 h 30 min); no GPU work after the read
+  status: COMPLETED 2026-10-13; decision STRC_NO_PREDICTIVE_GAIN; report written; shared additive residual route stopped permanently; next proposition (scale-separated whole-molecule composition at matched capacity) awaiting authorization; official test never loaded

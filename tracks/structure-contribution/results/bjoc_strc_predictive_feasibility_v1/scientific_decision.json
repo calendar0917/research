@@ -1,0 +1,59 @@
+{
+  "protocol": "cscl-bjoc-strc-predictive-feasibility-v1",
+  "git_commit": "41a49c01be9be113e147a5d4c8730c368d9e9df3",
+  "conditions": {
+    "cpu_correctness_gates": true,
+    "seed_mean_gain_at_least_0_004": false,
+    "both_seed_deltas_negative": false,
+    "ordinary_not_worse": false,
+    "tail_strictly_better": false,
+    "rmse_within_tolerance": false,
+    "top10_removed_still_negative": false,
+    "not_driven_by_valid_0172": false
+  },
+  "failed_conditions": [
+    "seed_mean_gain_at_least_0_004",
+    "both_seed_deltas_negative",
+    "ordinary_not_worse",
+    "tail_strictly_better",
+    "rmse_within_tolerance",
+    "top10_removed_still_negative",
+    "not_driven_by_valid_0172"
+  ],
+  "metrics": {
+    "S_seed_mean_mae": 0.08809237635036699,
+    "P_seed_mean_mae": 0.08354933269222965,
+    "delta_seed_mean": 0.004543043658137322,
+    "per_seed_delta": {
+      "seed0": 0.007832845274358985,
+      "seed1": 0.001253242041915667
+    },
+    "seed_mean_rmse_delta": 0.035847712565701684,
+    "bootstrap_ci95": {
+      "mean": 0.004543043658137322,
+      "ci_lo": 0.0009271239877678455,
+      "ci_hi": 0.009536300629656758,
+      "frac_better": 0.454,
+      "n_resamples": 5000,
+      "seed": 0,
+      "unit": "molecule"
+    },
+    "ordinary_delta": 0.0024366635530390203,
+    "tail_delta": 0.03484251132378211,
+    "top10_removed_delta": 0.003033123163487574,
+    "delta_without_extreme_row": 0.0027455400985043807
+  },
+  "purchase_gate": {
+    "seed_mean_delta_max": -0.004,
+    "rmse_tolerance": 0.005,
+    "baseline": {
+      "P_seed0": 0.084785663,
+      "P_seed1": 0.082313002,
+      "P_seed_mean": 0.083549333
+    }
+  },
+  "decision": "STRC_NO_PREDICTIVE_GAIN",
+  "stop_rule": "STRC_DEV_GAIN_SUPPORTED keeps S as the next-stage development candidate but does not query official test; STRC_GAIN_WEAK_OR_MIXED / STRC_NO_PREDICTIVE_GAIN stop the shared additive residual route permanently (no vocabulary/scale/tail-weighting/third-seed follow-up); STRC_CPU_BLOCKED stops before any GPU work.",
+  "official_valid_result_only": true,
+  "official_test_loaded": false
+}

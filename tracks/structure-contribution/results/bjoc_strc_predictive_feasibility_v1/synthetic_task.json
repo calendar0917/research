@@ -1,0 +1,40 @@
+{
+  "protocol": "cscl-bjoc-strc-predictive-feasibility-v1",
+  "git_commit": "7e93013b170a3b5ba3520c9815f92de5df57af7f",
+  "vocab_sha256": "18303ee133b580107c9c626ed834f94a45c61320fcec82f123a6aa413973cc40",
+  "n_molecules": 1024,
+  "noise_sigma": 0.05,
+  "design": {
+    "n_columns": 157,
+    "rank": 115,
+    "null_dim": 42
+  },
+  "full_rank_recovery": {
+    "residual_rms_vs_truth": 0.01720572291356376,
+    "corr_theta_hat_theta_true": 0.9981406155172856,
+    "identifiable_cosine": 0.9981337965991727,
+    "passed": true
+  },
+  "gradient_channel_fit": {
+    "l1_steps": 400,
+    "r2_vs_target_residual": 0.9998489235901284,
+    "ols_r2_vs_target_residual": 0.9998561507571915,
+    "alpha_mean_abs_error_vs_planted": 0.4556649926670534,
+    "beta_mean_abs_error_vs_planted": 0.5257785697114629,
+    "passed": true
+  },
+  "collinear_task": {
+    "n_molecules": 512,
+    "rank": 81,
+    "null_dim": 76,
+    "null_direction_e1_minus_e2_max_abs_Xv": 0.0,
+    "shift_along_null_changes_predictions_max_abs": 0.0,
+    "fitted_truth_rms": 0.01884527598788804,
+    "predictions_still_recovered": true,
+    "identifiability_note": "with count(type2) == count(type1) the atom-type effects are not separately identifiable; only the fitted predictions, not the individual coefficients, are claimed"
+  },
+  "causal_claim": "function-form check only; no chemical causal meaning is claimed for any fitted coefficient",
+  "labels_read": false,
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

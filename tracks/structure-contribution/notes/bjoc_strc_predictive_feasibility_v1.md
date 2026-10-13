@@ -1,4 +1,10 @@
-# STRC predictive-feasibility v1 — note (pre-registration)
+# STRC predictive-feasibility v1 — note
+
+**Status: COMPLETED 2026-10-13 — decision `STRC_NO_PREDICTIVE_GAIN`.**
+Official-valid seed-mean S−P `+0.004543` (CI95 `[+0.000927,+0.009536]`,
+both seeds positive); 7/8 frozen gate conditions fail; shared additive
+residual route stopped permanently; official test never loaded. Full numbers
+in `results/bjoc_strc_predictive_feasibility_v1/REPORT.md`.
 
 Protocol: `cscl-bjoc-strc-predictive-feasibility-v1`
 Config: `configs/bjoc_strc_predictive_feasibility_v1.yaml`
@@ -107,3 +113,27 @@ Official train 10000 for training, official valid 1000 as the exposed
 development set; all prediction files hashed before the single valid label
 read; official test never read in any form; no ensemble; no calibration; no
 target transform; no seed selection.
+
+## Result (completed)
+
+| model | seed 0 | seed 1 | seed-mean | RMSE seed-mean |
+|---|---:|---:|---:|---:|
+| P (frozen) | 0.084786 | 0.082313 | **0.083549** | 0.230007 |
+| S (STRC) | 0.092619 | 0.083566 | **0.088092** | 0.265855 |
+| Δ = S − P | +0.007833 | +0.001253 | **+0.004543** | +0.035848 |
+
+* paired bootstrap CI95 `[+0.000927,+0.009536]`, fraction better 0.454;
+* ordinary (n=935) `+0.002437`; tail (n=65) `+0.034843` (excluding
+  `valid:0172` still `+0.007258`; overall excluding the row `+0.002746`);
+  top-10-removed `+0.003033`;
+* train fit: S0 0.037733 / P0 0.025333; S1 0.025487 / P1 0.028498;
+  train ordinary `+0.005911` worse, train tail `−0.011070` better —
+  the train-tail gain did not transfer (valid tail degraded);
+* mechanism: alpha/beta live and cross-seed stable (Spearman 0.991 / 0.892)
+  but the S−P prediction difference is explained by the changed base solution
+  (R² 0.43/0.73), not by the additive residual (R² 0.003/0.000005);
+  rank 149/157 (7 zero-support atom types, 1 collinear context pair) —
+  coefficients partially identified; these are explicit additive residual
+  contributions inside the model, not verified chemical contributions.
+* post-hoc descriptive diagnostics: `post_hoc_mechanism_analysis.json`
+  (computed after the single valid read; no model/gate/decision change).
