@@ -138,14 +138,15 @@ stage_a:
   A1_frozen_loop_replay: >
     the new loop with aux_every=None vs bp.train_supervised on the same Fit-D
     rows, seed, batch order and schedule.  Primary requirement: identical
-    batch-order hash, identical per-epoch lr/train-MAE curve, identical init
-    hash, and soup equality within the machine's own measured run-to-run noise
-    floor (bp trained twice; tolerance max(1e-6, 2 * bp-repeat max abs diff)).
-    On a bitwise-deterministic machine (the local workstation) the stronger
-    bitwise soup identity is also recorded.  Amendment note: the original
-    frozen wording required bitwise soup identity; the remote CPU is run-to-run
-    non-deterministic at ~3e-7 for the same frozen loop, so the noise-floor
-    comparison is used there; this instrument change is recorded in
+    batch-order hash and init hash, exactly equal LR values at every epoch,
+    and train-MAE curve / soup equality within the machine's own measured
+    run-to-run noise floor (bp trained twice; tolerance max(1e-9, 2 * bp-repeat
+    max abs diff) for the MAE curve and max(1e-6, 2 * bp-repeat max abs diff)
+    for the soup).  On a bitwise-deterministic machine (the local workstation)
+    the stronger bitwise soup identity is also recorded.  Amendment note: the
+    original frozen wording required bitwise soup identity; the remote CPU is
+    run-to-run non-deterministic at ~3e-7 for the same frozen loop, so the
+    noise-floor comparison is used there; this instrument change is recorded in
     results/bjoc_task_adaptive_ssl_v1/post_freeze_amendments.json before any
     GPU trajectory and changes no model, recipe, threshold or label rule.
   A2_ssl_and_mask_audits: >

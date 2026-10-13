@@ -594,6 +594,20 @@ def _soup_max_abs_diff(a: Mapping[str, torch.Tensor], b: Mapping[str, torch.Tens
     return worst
 
 
+def _curve_max_abs_diff(
+    curve_a: Sequence[Mapping[str, Any]], curve_b: Sequence[Mapping[str, Any]], field: str
+) -> float:
+    if len(curve_a) != len(curve_b) or not curve_a:
+        return float("inf")
+    return max(abs(float(a[field]) - float(b[field])) for a, b in zip(curve_a, curve_b))
+
+
+def _lr_values_exact(curve_a: Sequence[Mapping[str, Any]], curve_b: Sequence[Mapping[str, Any]]) -> bool:
+    return len(curve_a) == len(curve_b) and all(
+        a["lr_first"] == b["lr_first"] and a["lr_last"] == b["lr_last"] for a, b in zip(curve_a, curve_b)
+    )
+
+
 def _compare_loops(
     payload_bp: Mapping[str, Any],
     payload_tat: Mapping[str, Any],
@@ -601,10 +615,14 @@ def _compare_loops(
 ) -> dict[str, Any]:
     curve_a = payload_bp["lr_curve"]
     curve_b = payload_tat["lr_curve"]
-    fields = ("train_mae", "lr_first", "lr_last")
-    curve_equal = len(curve_a) == len(curve_b) and all(
-        all(a[f] == b[f] for f in fields) for a, b in zip(curve_a, curve_b)
+    curve_r = payload_bp_repeat["lr_curve"] if payload_bp_repeat else None
+    mae_diff_new = _curve_max_abs_diff(curve_b, curve_a, "train_mae")
+    mae_diff_repeat = _curve_max_abs_diff(curve_r, curve_a, "train_mae") if curve_r is not None else 0.0
+    curve_tol = max(1.0e-9, 2.0 * mae_diff_repeat + 1.0e-12) if curve_r is not None else 0.0
+    lr_exact = _lr_values_exact(curve_b, curve_a) and (
+        _lr_values_exact(curve_r, curve_a) if curve_r is not None else True
     )
+    curve_equal = bool(lr_exact and mae_diff_new <= curve_tol)
     soup_bp = payload_bp["soup_state"]
     soup_new = payload_tat["soup_state"]
     new_vs_bp = _soup_max_abs_diff(soup_new, soup_bp)
@@ -629,7 +647,11 @@ def _compare_loops(
         "batch_order_hash_new": payload_tat["batch_order"]["full_hash"],
         "batch_order_identical": payload_bp["batch_order"]["full_hash"]
         == payload_tat["batch_order"]["full_hash"],
-        "lr_curve_equal": bool(curve_equal),
+        "lr_curve_equal": curve_equal,
+        "lr_values_exact": bool(lr_exact),
+        "train_mae_max_abs_diff_new_vs_bp": mae_diff_new,
+        "train_mae_max_abs_diff_repeat": mae_diff_repeat,
+        "curve_mae_tolerance": curve_tol,
         "soup_members_equal": list(payload_bp["soup_members"]) == list(payload_tat["soup_members"]),
         "soup_fit_mae_bp": payload_bp["soup_fit_mae"],
         "soup_fit_mae_bp_repeat": payload_bp_repeat["soup_fit_mae"] if payload_bp_repeat else None,
@@ -706,6 +728,7 @@ def cmd_stage_a(args: argparse.Namespace) -> int:
         f"order_identical={repl['batch_order_identical']} "
         f"new_vs_bp_max_abs={repl['new_vs_bp_max_abs_diff']:.3e} "
         f"bp_repeat_max_abs={repl['bp_repeat_max_abs_diff']:.3e} "
+        f"mae_diff={repl['train_mae_max_abs_diff_new_vs_bp']:.3e} "
         f"within_noise={repl['equivalent_within_noise']}"
     )
     if not (
@@ -899,9 +922,10 @@ def cmd_stage_a(args: argparse.Namespace) -> int:
                     "new_vs_bp_max_abs_diff": repl["new_vs_bp_max_abs_diff"],
                 },
                 "changed_to": (
-                    "A1 passes when the batch-order hash, lr curve and init hash are identical and "
-                    "max|soup_new - soup_bp| <= max(1e-6, 2 * max|soup_bp_repeat - soup_bp|), i.e. the "
-                    "new loop is within this machine's own measured run-to-run noise floor."
+                    "A1 passes when the batch-order hash and init hash are identical, the LR values at every "
+                    "epoch are exactly equal, the train-MAE curve is within max(1e-9, 2 * bp-repeat curve "
+                    "diff), and max|soup_new - soup_bp| <= max(1e-6, 2 * max|soup_bp_repeat - soup_bp|), i.e. "
+                    "the new loop is within this machine's own measured run-to-run noise floor."
                 ),
                 "why": (
                     "the remote CPU is run-to-run non-deterministic at ~3e-7 in float32 parameters for the "

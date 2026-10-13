@@ -161,16 +161,15 @@ def test_adaptive_loop_without_aux_matches_frozen_loop():
 def test_compare_loops_noise_floor_instrument():
     # The A1 amendment: on a non-bitwise-deterministic machine the new loop must
     # stay within the frozen loop's own run-to-run noise floor.
-    curve = [{"train_mae": 1.0, "lr_first": 1.0e-3, "lr_last": 1.0e-5}]
     base = {"w": torch.zeros(8)}
     tiny = {"w": torch.full((8,), 5.0e-7)}
     far = {"w": torch.full((8,), 5.0e-3)}
 
-    def payload(state, soup_mae=0.0):
+    def payload(state, soup_mae=0.0, curve_shift=0.0):
         return {
             "soup_state": state,
             "batch_order": {"full_hash": "order"},
-            "lr_curve": curve,
+            "lr_curve": [{"train_mae": 1.0 + curve_shift, "lr_first": 1.0e-3, "lr_last": 1.0e-5}],
             "soup_members": [1],
             "soup_fit_mae": soup_mae,
             "updates": 1,
@@ -181,6 +180,12 @@ def test_compare_loops_noise_floor_instrument():
     assert ok["bp_repeat_max_abs_diff"] == pytest.approx(5.0e-7)
     assert ok["equivalent_within_noise"] is True
     assert ok["equivalence_tolerance"] > ok["new_vs_bp_max_abs_diff"]
+
+    mae_near = drv._compare_loops(payload(base), payload(tiny, curve_shift=1.0e-10), payload(tiny, curve_shift=1.0e-10))
+    assert mae_near["lr_values_exact"] is True
+    assert mae_near["lr_curve_equal"] is True
+    mae_far = drv._compare_loops(payload(base), payload(tiny, curve_shift=1.0e-6), payload(tiny, curve_shift=1.0e-10))
+    assert mae_far["lr_curve_equal"] is False
 
     bad = drv._compare_loops(payload(base), payload(far), payload(tiny))
     assert bad["equivalent_within_noise"] is False
