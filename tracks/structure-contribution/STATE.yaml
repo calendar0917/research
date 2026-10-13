@@ -1,9 +1,30 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-bjoc-full10k-pretraining-transfer-v1-completed
-current_round: bjoc-full10k-pretraining-transfer-v1
+phase: cscl-bjoc-pretraining-mechanism-terminal-test-v1-completed
+current_round: bjoc-pretraining-mechanism-terminal-test-v1
 next_round_candidate: >-
+  AWAITING USER AUTHORIZATION. The pretraining-mechanism terminal-test round is COMPLETE
+  (results/bjoc_pretraining_mechanism_terminal_test_v1/REPORT.md).  It (i) replayed the frozen
+  B/P checkpoints bit-identically (maxdiff 0.0) to prove reuse, (ii) confirmed leakage-free
+  masked-pretraining legality from the recorded audits, (iii) located the mechanism as a
+  bulk/ordinary improvement (-0.017318 train, -0.017391 valid) with a valid-only tail
+  regression concentrated in two rows, (iv) purchased and ran the pre-registered J-reset
+  ablation (scratch junction encoder, identical recipe, 2 seeds, ~0.31 GPU-h): J-P +0.007616
+  (CI95 [-0.000202,+0.019367], both seeds +0.0076, tail +0.111456) -> J_RESET_NEUTRAL_VALID,
+  so the complete pretrained encoder state is retained, and (v) read the exposed official test
+  exactly once after freezing B0/B1/P0/P1 label-blind: B seed-mean 0.094627, P seed-mean
+  0.073957, P-B -0.020670 (CI95 [-0.027157,-0.014712]), both seeds negative, ordinary
+  -0.022785, tail +0.004688, RMSE -0.026519, y crosscheck 0.0 ->
+  PRETRAINING_TEST_GAIN_REPLICATES; target band 0.06-0.07 NOT reached (0.003957 above 0.07);
+  exposed-test comparison, not a blind test.  NEXT (proposed, NOT authorised):
+  results/bjoc_pretraining_mechanism_terminal_test_v1/next_predictive_hypothesis.md —
+  Shared-Type Residual Composition (STRC): a zero-init <=~500-param shared per-atom-type (and
+  small junction-context) additive residual channel trained jointly under raw-y L1, matched to
+  the frozen P recipe; buy only if seed-mean valid MAE improves by >=0.004 with both seeds
+  negative, ordinary non-worse, tail better, RMSE not worse; gate failure stops the route.  No
+  GPU work without a new preregistration + explicit user authorization.
+next_round_candidate_prev_full10k: >-
   AWAITING USER AUTHORIZATION. The full-10k pretraining-transfer round is COMPLETE
   (notes/bjoc_full10k_pretraining_transfer_v1.md,
   results/bjoc_full10k_pretraining_transfer_v1/REPORT.md).  It ran the official train
@@ -1620,3 +1641,78 @@ round_cscl-bjoc-full10k-pretraining-transfer-v1:
       full LR; Route A (sample efficiency/external data) rejected as the next step.
   budget: 8 GPU stages = 6809 s ~1.89 GPU-h (limit 3); wall ~2 h 20 min (limit 6 h 45 min); two A100s in parallel
   status: COMPLETED 2026-10-13; decision FULL10K_PRETRAINING_GAIN_CONFIRMED_ON_DEV; report written; Route B proposed awaiting authorization; no unauthorised follow-up purchased
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-pretraining-mechanism-terminal-test-v1 (mechanism location
+# + J-reset ablation on official valid + exposed official-test terminal
+# scoring of the frozen B/P models; test read exactly once after freeze)
+# ---------------------------------------------------------------------------
+
+phase: cscl-bjoc-pretraining-mechanism-terminal-test-v1-completed
+current_round: bjoc-pretraining-mechanism-terminal-test-v1
+round_cscl-bjoc-pretraining-mechanism-terminal-test-v1:
+  protocol: "configs/bjoc_pretraining_mechanism_terminal_test_v1.yaml (frozen decision vocabulary; exposed-test terminal comparison, NOT a blind test)"
+  notes: notes/bjoc_pretraining_mechanism_terminal_test_v1.md
+  report: results/bjoc_pretraining_mechanism_terminal_test_v1/REPORT.md
+  code:
+    - code/run_bjoc_pretraining_mechanism_terminal_test_v1.py  # reuse-audit/legality/mechanism/tail-analysis/jreset-gate/train-jreset/predict-jreset/score-jreset/next-hypothesis/test-protocol/test-predict/test-score/valid-test-compare/decision
+    - configs/bjoc_pretraining_mechanism_terminal_test_v1.yaml
+  tests: tests/test_bjoc_pretraining_mechanism_terminal_test_v1.py (9 fast)
+  phase_a_reuse: >-
+    REPLAY_CONFIRMED: frozen B/P checkpoints replayed on the official valid structures on CPU,
+    bit-identical to the previous round (maxdiff 0.0): B0 0.100172, B1 0.098232, P0 0.084786,
+    P1 0.082313; 413505 params each, prediction_freeze hashes match, no pretext heads.
+  phase_a_legality: >-
+    LEGALITY_CONFIRMED: code hashes match training_manifest.json; inherited leak audits
+    MASK_TOKEN_SLOTS_FREE, MASK_SWAP_INVARIANT 200/200+200/200, MASKED_REBUILD_LEAK_FREE
+    100/100, gates 10/10.  Known facts vs hypotheses written to mechanism_evidence.json.
+  phase_b_mechanism: >-
+    TAIL_GENERALISATION_GAP_SUPPORTED.  Train (n=10000, ordinary 9284 / tail 716): P-B all
+    -0.0165, ordinary -0.017318, tail -0.005891, RMSE -0.009591.  Valid (n=1000, ordinary
+    935 / tail 65): P-B all -0.015653, ordinary -0.017391, tail +0.009341, RMSE +0.015246;
+    tail regression concentrated in valid rows 753 (+1.299) and 172 (+0.681), excluding both
+    tail delta -0.0218; signed tail residual P +0.168 vs B +0.117.  Label-free diagnostic:
+    failing extremes are farther from train in composition/topology space (NN 2.37 vs 1.62)
+    and their label neighbourhood is uninformative (5NN-median-y corr -0.154 tail vs 0.815
+    ordinary); signed error dominates |error| (corr 0.995) -> magnitude shrinkage, not scatter.
+  phase_c_jreset_gate: >-
+    PURCHASE_JRESET (11/11 checks both seeds): hybrid differs from P init only in
+    junction_encoder (112896 params; atom/bond diffs 0), relabel invariance 0.0, batch
+    consistency 1.0e-07, junction swap sensitivity 0.4795; estimated 2-seed cost 1117 s =
+    0.311 GPU-h <= 0.8 cap.
+  jreset_result: >-
+    J_RESET_NEUTRAL_VALID.  J0 0.092369, J1 0.089962, J seed-mean 0.091165 vs P 0.083549:
+    J-P +0.007616 (CI95 [-0.000202,+0.019367], per-seed +0.007584/+0.007649, better fraction
+    0.468); J-P ordinary +0.000397, tail +0.111456; J-P top10-removed +0.002729.  J-B
+    -0.008037 (CI95 [-0.017354,+0.005552]).  Both seeds agree in sign; CI marginally touches
+    zero, so the formal verdict is NEUTRAL, but the point estimate is worse and the tail is
+    the driver -> the complete joint pretrained encoder state is retained; J-reset is not a
+    route.  Training wall 528 s / 463 s (~0.28 GPU-h total).
+  next_hypothesis: >-
+    next_predictive_hypothesis.md drafted BEFORE the test read: Shared-Type Residual
+    Composition (STRC) — zero-init <=~500-param shared per-atom-type + small junction-context
+    additive residual channel, trained jointly under the same raw-y L1 and the frozen P recipe;
+    CPU pre-check (zero-init identity, gradient activity, synthetic identifiability); <=2
+    seeds; purchase gate seed-mean valid MAE <= P - 0.004 with both seeds negative, ordinary
+    non-worse, tail better, RMSE within +0.005; gate failure stops the route.  Not selected
+    using test results.
+  terminal_test: >-
+    test_read.lock 2026-10-13T01:01:33Z (single read this round; exposed instrument, not
+    first-ever read).  Predictions frozen label-blind before the read: combined
+    5925b7eea0a317a1, objects 6b0fd9e0d6bf2fa1, rows 70274682..., structure fp 75668e78...;
+    label-storage sentinel mutation leaves object hashes unchanged; relabel/batch invariance
+    at float32 epsilon, checkpoint replay exact; y cross-check vs KSVD historical
+    heldout_test_predictions.npz max abs 0.0.
+  test_result:
+    per_model_mae: {B0: 0.09424298421759159, B1: 0.09501003576908261, P0: 0.07482545961532741, P1: 0.07308768088836223}
+    seed_mean_mae: {B: 0.0946265099933371, P: 0.07395657025184482}
+    "P-B": "-0.020670 (CI95 [-0.027157,-0.014712]), per-seed -0.019418/-0.021922, better fraction 0.647, relative reduction 21.84%"
+    ordinary: "n=923, P 0.066750 vs B 0.089535, delta -0.022785"
+    tail: "n=77, P 0.160342 vs B 0.155654, delta +0.004688, signed P +0.048272 / B +0.034927"
+    rmse: "P 0.149588 vs B 0.176108, delta -0.026519 (test direction opposite to valid +0.015246)"
+    without_worst: "excluded row 402, delta -0.022160; top1/top5/top10 removed -0.018968/-0.019602/-0.019648"
+    decision: PRETRAINING_TEST_GAIN_REPLICATES
+    target_band: "0.06-0.07 NOT reached: P seed-mean 0.073957 is 0.003957 above 0.07 (P1 0.073088 above by 0.003088)"
+    caveat: exposed-test terminal comparison of frozen models; no architecture/seed/hyper-parameter change after the read
+  budget: 2 GPU stages = ~991 s ~0.28 GPU-h training (gate estimate 0.311 GPU-h; limit 0.8); wall ~25 min (limit 6.5 h); no GPU work after the test read
+  status: COMPLETED 2026-10-13; decision PRETRAINING_TEST_GAIN_REPLICATES (exposed test); J_RESET_NEUTRAL_VALID; STRC proposed awaiting authorization; no unauthorised follow-up purchased

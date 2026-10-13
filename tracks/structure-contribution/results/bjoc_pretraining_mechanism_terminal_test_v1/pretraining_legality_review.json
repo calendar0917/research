@@ -1,0 +1,105 @@
+{
+  "protocol": "cscl-bjoc-pretraining-mechanism-terminal-test-v1",
+  "git_commit": "a3c137779f0f1669ae55da8b7c6cb4d85d4fbe36",
+  "code_version_correspondence": {
+    "driver": {
+      "frozen": "40ec29443bec5f83e20b1dab2dcbdc5290191360c78944408f67f81626c3a90e",
+      "current": "40ec29443bec5f83e20b1dab2dcbdc5290191360c78944408f67f81626c3a90e",
+      "ok": true
+    },
+    "module": {
+      "frozen": "f27dbfe36ac5a9a0a1915320dba7c955115ccfa36e6b4755f2d2d62d8efb1489",
+      "current": "f27dbfe36ac5a9a0a1915320dba7c955115ccfa36e6b4755f2d2d62d8efb1489",
+      "ok": true
+    },
+    "objects": {
+      "frozen": "8f4ba44dc3c047d674a1a6832f7ed8265eaa2457b15e820b3973a4cbd3a0861c",
+      "current": "8f4ba44dc3c047d674a1a6832f7ed8265eaa2457b15e820b3973a4cbd3a0861c",
+      "ok": true
+    },
+    "composer": {
+      "frozen": "1c83a97ece60a151c6fa0c1ad5d2022b470ede9356b23d8d7b1e6b62daa71f4f",
+      "current": "1c83a97ece60a151c6fa0c1ad5d2022b470ede9356b23d8d7b1e6b62daa71f4f",
+      "ok": true
+    },
+    "features": {
+      "frozen": "6b73dcf59fd50a099747ba8809e1c7ab5231d29f44b8b66e6a4f72f00defe24e",
+      "current": "6b73dcf59fd50a099747ba8809e1c7ab5231d29f44b8b66e6a4f72f00defe24e",
+      "ok": true
+    },
+    "config": {
+      "frozen": "c55edeee5aaf06745b0a29df9a25dcf037b847b26f572d06955f839ac4583406",
+      "current": "c55edeee5aaf06745b0a29df9a25dcf037b847b26f572d06955f839ac4583406",
+      "ok": true
+    }
+  },
+  "training_code_commit": "9ef55888499ecef74e0f5c548c7d9efdc2d2a9a1",
+  "audits_inherited": {
+    "correctness_gates_all_pass": true,
+    "correctness_gate_names": [
+      "atom_relabelling_invariance",
+      "batch_order_deterministic",
+      "encoder_save_load_replay",
+      "hidden_truth_absent_and_rebuild",
+      "mask_rng_deterministic_and_visit_dependent",
+      "mask_target_swap_invariance",
+      "mask_token_slots_free",
+      "no_forbidden_modules",
+      "parameter_count_413505",
+      "pretraining_no_label_read"
+    ],
+    "consistency_all_pass": true,
+    "masked_feature_dependency": "MASK_TOKEN_SLOTS_FREE",
+    "mask_target_swap": {
+      "verdict": "MASK_SWAP_INVARIANT",
+      "atom_swap_cases": null,
+      "bond_swap_cases": null
+    },
+    "masked_object_rebuild": "MASKED_REBUILD_LEAK_FREE",
+    "rebuild_cases": null
+  },
+  "pretraining_input_scope": {
+    "pretraining_inputs": "ds[int(o.mol_index)].x / .edge_index / .edge_attr only",
+    "pretraining_function_y_scan": {
+      "found": false,
+      "hits": []
+    },
+    "pretraining_module_reads_y_attribute": false,
+    "downstream_supervision_y_scan": {
+      "found": true,
+      "hits": [
+        "ENCODED_TRAIN",
+        "attribute .y"
+      ]
+    },
+    "supervised_y_source": "ENCODED_TRAIN (official train 10000 rows, raw y)"
+  },
+  "supervised_y_scope": {
+    "source": "official train 10000 raw y only (encoded_train cache, raw-vs-encoded agreement checked by the previous round)",
+    "official_valid_rows_used_for_supervision": false,
+    "official_test_rows_used_in_any_training": false,
+    "downstream_y_scan": {
+      "found": true,
+      "hits": [
+        "ENCODED_TRAIN",
+        "attribute .y"
+      ]
+    },
+    "expected_downstream_y_read_present": true
+  },
+  "normalisation": {
+    "fit": "official train 10000 only",
+    "n_fit": 10000,
+    "official_valid_statistics_used": false,
+    "official_test_statistics_used": false
+  },
+  "pretraining_does_not_touch_valid_test": true,
+  "external_data": "none (no external labels, no external structures, no ZINC-250K)",
+  "verdict": "LEGALITY_CONFIRMED",
+  "disclosures": [
+    "official valid is an exposed development set; its labels were read once by the previous round and are reused as the valid readout here",
+    "one WL fingerprint is shared between train (row 337) and valid (row 376); disclosed, no row deleted",
+    "the historical official-test number 0.092233 was produced by a different trajectory and is background only"
+  ],
+  "official_test_loaded": false
+}

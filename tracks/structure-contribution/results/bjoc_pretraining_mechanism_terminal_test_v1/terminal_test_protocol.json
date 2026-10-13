@@ -1,0 +1,81 @@
+{
+  "protocol": "cscl-bjoc-pretraining-mechanism-terminal-test-v1",
+  "git_commit": "6de655c6de1f41ce7cfc2ed253b4d7766baa442e",
+  "created_utc": "2026-10-13T01:00:15Z",
+  "models": {
+    "B0": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/soup_B_seed0.pt",
+      "checkpoint_sha256": "88809c11a556e9f037d782ad1acf48dac27888865039d7832a1c385236e53ace",
+      "expected_sha256": "88809c11a556e9f037d782ad1acf48dac27888865039d7832a1c385236e53ace",
+      "parameters": 413505,
+      "weight_init": "scratch full10k"
+    },
+    "B1": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/soup_B_seed1.pt",
+      "checkpoint_sha256": "ba756a290299e99f2aeb94291072a4815711d9fc7ab581e2d2fd7e52cb58e694",
+      "expected_sha256": "ba756a290299e99f2aeb94291072a4815711d9fc7ab581e2d2fd7e52cb58e694",
+      "parameters": 413505,
+      "weight_init": "scratch full10k"
+    },
+    "P0": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/soup_P_seed0.pt",
+      "checkpoint_sha256": "73118e9be466c62a252eacb83d9c86d1cb4bf0ce01478db2f278b7c27a5fab2a",
+      "expected_sha256": "73118e9be466c62a252eacb83d9c86d1cb4bf0ce01478db2f278b7c27a5fab2a",
+      "parameters": 413505,
+      "weight_init": "masked-structure pretrained encoders (full10k)"
+    },
+    "P1": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/soup_P_seed1.pt",
+      "checkpoint_sha256": "bf640cd8c11a9f6e0d11ceccd318185e6067ef2ba5a950b4774d5185a9ab053c",
+      "expected_sha256": "bf640cd8c11a9f6e0d11ceccd318185e6067ef2ba5a950b4774d5185a9ab053c",
+      "parameters": 413505,
+      "weight_init": "masked-structure pretrained encoders (full10k)"
+    }
+  },
+  "preprocessing": {
+    "file": "results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json",
+    "sha256": "d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a",
+    "fit": "official train 10000 only"
+  },
+  "input": "official PyG ZINC subset=True test raw graphs -> BJOC objects; labels guarded",
+  "freeze_checks": [
+    "label guard on every test row during object construction and prediction",
+    "label-storage mutation must not change objects or predictions",
+    "atom relabelling invariance of the frozen forward",
+    "batch composition consistency (single vs batched)",
+    "checkpoint reload replay exactness",
+    "row order and length checks"
+  ],
+  "scoring": {
+    "primary": "official-test raw-y single-model MAE; seed-mean = arithmetic mean of the two single-model MAEs",
+    "bootstrap": {
+      "n": 5000,
+      "seed": 0,
+      "unit": "molecule"
+    },
+    "secondary": [
+      "rmse",
+      "median_abs",
+      "p90",
+      "p95",
+      "p99",
+      "max_abs",
+      "ordinary",
+      "tail",
+      "tail_mean_signed",
+      "top1/5/10_removed",
+      "worst_molecule_share"
+    ],
+    "no_ensemble": true,
+    "single_label_read": true
+  },
+  "disclosure": "official test is an exposed instrument (read by the KSVD track on 2026-10-03); this is an exposed-test terminal comparison, not a first blind test",
+  "excluded_models": [
+    "Q0",
+    "Q1",
+    "J0",
+    "J1",
+    "historical Full-Y as a primary control"
+  ],
+  "official_test_labels_read": false
+}

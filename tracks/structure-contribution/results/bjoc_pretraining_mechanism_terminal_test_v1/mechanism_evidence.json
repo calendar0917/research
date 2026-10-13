@@ -1,0 +1,133 @@
+{
+  "protocol": "cscl-bjoc-pretraining-mechanism-terminal-test-v1",
+  "git_commit": "a3c137779f0f1669ae55da8b7c6cb4d85d4fbe36",
+  "known_facts": [
+    {
+      "fact": "P improves 8k internal locked-dev raw-y MAE (both seeds)",
+      "numbers": {
+        "P_minus_B_locked_seed_mean": null,
+        "locked_mae": {}
+      },
+      "source": "results/bjoc_masked_pretraining_v1/"
+    },
+    {
+      "fact": "P improves full10k official-valid raw-y MAE (both seeds)",
+      "numbers": {
+        "P_minus_B_valid_seed_mean": -0.015652974859811365,
+        "ci95": [
+          -0.021050812665955165,
+          -0.009904393280087973
+        ],
+        "per_seed": {
+          "seed0": -0.015386768780648707,
+          "seed1": -0.01591918093897403
+        }
+      },
+      "source": "results/bjoc_full10k_pretraining_transfer_v1/valid_metrics.json"
+    },
+    {
+      "fact": "P fits the official train 10000 more tightly than B while generalising better",
+      "numbers": {
+        "fit_mae": {
+          "B0": 0.04590172900055768,
+          "B1": 0.040928439063753465,
+          "P0": 0.025333098398859145,
+          "P1": 0.028497641515894793,
+          "Q0": 0.024353477254870814,
+          "Q1": 0.025186826244881378
+        },
+        "valid_mae": {
+          "B0": 0.10017243217205396,
+          "B1": 0.09823218293202808,
+          "P0": 0.08478566339140525,
+          "P1": 0.08231300199305405,
+          "Q0": 0.096611410747224,
+          "Q1": 0.10945612117642303
+        }
+      },
+      "source": "results/bjoc_full10k_pretraining_transfer_v1/valid_metrics.json"
+    },
+    {
+      "fact": "the gain survives a 50%-extra-update scratch control on the 8k split",
+      "numbers": {},
+      "source": "results/bjoc_masked_pretraining_v1/"
+    },
+    {
+      "fact": "preserving the pretrained encoders with a reduced encoder LR (Q) is harmful, not helpful",
+      "numbers": {
+        "Q_minus_P_seed_mean": 0.019484433269593864
+      },
+      "source": "results/bjoc_full10k_pretraining_transfer_v1/scientific_decision.json"
+    },
+    {
+      "fact": "the masked pretext tasks are far above their marginal priors",
+      "numbers": {
+        "seed0": {
+          "acc_atom": 0.9230097380551425,
+          "acc_bond": 0.9939348047429865,
+          "ce_atom": 0.21258921243927695,
+          "ce_bond": 0.019276666742834177
+        },
+        "seed1": {
+          "acc_atom": 0.9250621362165972,
+          "acc_bond": 0.994921391660517,
+          "ce_atom": 0.2125437701290304,
+          "ce_bond": 0.015858874402262947
+        }
+      },
+      "source": "results/bjoc_full10k_pretraining_transfer_v1/pretraining_seed*.json"
+    },
+    {
+      "fact": "all three encoders move during pretraining and then move again during fine-tuning",
+      "numbers": {
+        "parameter_relative_move_init_to_ssl": {
+          "0": {
+            "atom_encoder": 1.8441138380038884,
+            "bond_encoder": 2.192687625572138,
+            "junction_encoder": 2.682854120745443
+          },
+          "1": {
+            "atom_encoder": 1.8398207697178488,
+            "bond_encoder": 2.120996504337356,
+            "junction_encoder": 2.797072567886236
+          }
+        },
+        "parameter_relative_move_ssl_to_p": {
+          "0": {
+            "atom_encoder": 0.7322810574203916,
+            "bond_encoder": 0.8850154498063707,
+            "junction_encoder": 0.9438069807463929
+          },
+          "1": {
+            "atom_encoder": 0.7616735039661479,
+            "bond_encoder": 0.9083511250367499,
+            "junction_encoder": 0.9258531891946219
+          }
+        }
+      },
+      "source": "results/bjoc_full10k_pretraining_transfer_v1/representation_diagnostics.json"
+    }
+  ],
+  "reasonable_interpretation": [
+    "restoring masked atom/bond classes from the molecule's own structure forces the three encoders to build a local-structure representation before any target is seen; the resulting parameter state is a more suitable starting point for the raw-y optimisation than the scratch state",
+    "the improvement is an optimisation-path / initialisation effect: it is visible in the fit MAE as well, but it is not only optimisation speed, because the extra-update scratch control C remained worse on the 8k split",
+    "the encoders are still substantially rewritten during fine-tuning (parameter move SSL->P of the same order as init->SSL), so the pretrained state acts as a prior, not as a frozen feature extractor"
+  ],
+  "not_proven": [
+    "which pretraining object (atom types vs bond types vs junction context) contributes the gain; the J-reset ablation below tests only one coarse decomposition",
+    "whether any learned representation corresponds to a named chemical rule; no such identification is claimed",
+    "that the junction encoder pretraining is irreplaceable (J-reset answers only whether the joint-state junction init helps on valid)",
+    "that the method fixes extreme-molecule generalisation; the tail subgroup is not improved and RMSE worsens on valid",
+    "that the improvement is stable under the official-test distribution; that is exactly what Phase D/E measures"
+  ],
+  "representation_metric_caveats": [
+    "junction linear CKA ~0.10 between the SSL state and the P state means the representation changed substantially; it does NOT mean the junction features were 'destroyed' or that the junction channel is useless",
+    "Q (reduced encoder LR, preserving the pretrained state) was worse on both seeds and blew up the tail; this refutes that particular fixed LR ratio, not encoder regularisation or pretrained-state preservation in general",
+    "effective rank / CKA / parameter-move numbers are description of change, not causal attribution of the MAE gain"
+  ],
+  "transfer_mechanism_8k_to_full10k": {
+    "source": "results/bjoc_masked_pretraining_v1/transfer_mechanism.json",
+    "junction_effective_rank_8k": null
+  },
+  "official_test_loaded": false
+}

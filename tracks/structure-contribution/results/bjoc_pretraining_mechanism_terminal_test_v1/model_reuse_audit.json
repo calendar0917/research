@@ -1,0 +1,167 @@
+{
+  "protocol": "cscl-bjoc-pretraining-mechanism-terminal-test-v1",
+  "git_commit": "a3c137779f0f1669ae55da8b7c6cb4d85d4fbe36",
+  "device": "cpu",
+  "network_inputs": "raw atom/bond graph -> BJOC objects (label-blind); train10k-only global standardiser",
+  "checkpoint_records": {
+    "B0": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/soup_B_seed0.pt",
+      "checkpoint_exists": true,
+      "checkpoint_sha256": "88809c11a556e9f037d782ad1acf48dac27888865039d7832a1c385236e53ace",
+      "checkpoint_sha256_matches_frozen_manifest": true,
+      "parameters": 413505,
+      "parameter_exact": true,
+      "forbidden_modules": [],
+      "pretext_head_keys_in_state": [],
+      "replay_max_abs_pred_diff_vs_frozen_valid_npz": 0.0,
+      "valid_mae": 0.10017243217205396,
+      "valid_rmse": 0.19795646478089332,
+      "historical_valid_mae": 0.100172,
+      "valid_mae_diff_vs_historical": 4.3217205396295366e-07
+    },
+    "B1": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/soup_B_seed1.pt",
+      "checkpoint_exists": true,
+      "checkpoint_sha256": "ba756a290299e99f2aeb94291072a4815711d9fc7ab581e2d2fd7e52cb58e694",
+      "checkpoint_sha256_matches_frozen_manifest": true,
+      "parameters": 413505,
+      "parameter_exact": true,
+      "forbidden_modules": [],
+      "pretext_head_keys_in_state": [],
+      "replay_max_abs_pred_diff_vs_frozen_valid_npz": 0.0,
+      "valid_mae": 0.09823218293202808,
+      "valid_rmse": 0.2315664751339267,
+      "historical_valid_mae": 0.098232,
+      "valid_mae_diff_vs_historical": 1.8293202808106201e-07
+    },
+    "P0": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/soup_P_seed0.pt",
+      "checkpoint_exists": true,
+      "checkpoint_sha256": "73118e9be466c62a252eacb83d9c86d1cb4bf0ce01478db2f278b7c27a5fab2a",
+      "checkpoint_sha256_matches_frozen_manifest": true,
+      "parameters": 413505,
+      "parameter_exact": true,
+      "forbidden_modules": [],
+      "pretext_head_keys_in_state": [],
+      "replay_max_abs_pred_diff_vs_frozen_valid_npz": 0.0,
+      "valid_mae": 0.08478566339140525,
+      "valid_rmse": 0.2787137334413769,
+      "historical_valid_mae": 0.084786,
+      "valid_mae_diff_vs_historical": -3.366085947476005e-07
+    },
+    "P1": {
+      "checkpoint": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/soup_P_seed1.pt",
+      "checkpoint_exists": true,
+      "checkpoint_sha256": "bf640cd8c11a9f6e0d11ceccd318185e6067ef2ba5a950b4774d5185a9ab053c",
+      "checkpoint_sha256_matches_frozen_manifest": true,
+      "parameters": 413505,
+      "parameter_exact": true,
+      "forbidden_modules": [],
+      "pretext_head_keys_in_state": [],
+      "replay_max_abs_pred_diff_vs_frozen_valid_npz": 0.0,
+      "valid_mae": 0.08231300199305405,
+      "valid_rmse": 0.1813011166141071,
+      "historical_valid_mae": 0.082313,
+      "valid_mae_diff_vs_historical": 1.9930540551271747e-09
+    }
+  },
+  "valid_seed_mean": {
+    "B": 0.09920230755204101,
+    "P": 0.08354933269222965
+  },
+  "valid_seed_mean_diff_vs_historical": {
+    "B": 3.0755204101506894e-07,
+    "P": 3.3269222965426337e-07
+  },
+  "per_seed_design_invariance": {
+    "0": {
+      "same_init_full_model": true,
+      "same_composer_reader_init": true,
+      "same_batch_order": true,
+      "p_encoder_is_pretrained": true,
+      "b_encoder_is_scratch": true,
+      "recipe_equal": {
+        "optimizer": true,
+        "lr": true,
+        "weight_decay": true,
+        "grad_clip": true,
+        "batch_size": true,
+        "loss": true,
+        "scheduler": true,
+        "dropout": true,
+        "train_shuffle_seed": true
+      },
+      "epochs_updates_soup_equal": true,
+      "parameters_equal_413505": true
+    },
+    "1": {
+      "same_init_full_model": true,
+      "same_composer_reader_init": true,
+      "same_batch_order": true,
+      "p_encoder_is_pretrained": true,
+      "b_encoder_is_scratch": true,
+      "recipe_equal": {
+        "optimizer": true,
+        "lr": true,
+        "weight_decay": true,
+        "grad_clip": true,
+        "batch_size": true,
+        "loss": true,
+        "scheduler": true,
+        "dropout": true,
+        "train_shuffle_seed": true
+      },
+      "epochs_updates_soup_equal": true,
+      "parameters_equal_413505": true
+    }
+  },
+  "normaliser": {
+    "fit_only": true,
+    "n_fit": 10000,
+    "official_valid_statistics_used": false,
+    "official_test_statistics_used": false
+  },
+  "input_hash_checks": {
+    "objects_train10k_sha256": {
+      "frozen": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d",
+      "current": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d",
+      "ok": true
+    },
+    "objects_valid_sha256": {
+      "frozen": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c",
+      "current": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c",
+      "ok": true
+    },
+    "prep_train10k_sha256": {
+      "frozen": "d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a",
+      "current": "d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a",
+      "ok": true
+    },
+    "pretrain_encoder_s0": {
+      "recorded": "7165eb90ceaaec8402d973f82c3b60099dd67ffb7e57365585466478d143096f",
+      "current": "7165eb90ceaaec8402d973f82c3b60099dd67ffb7e57365585466478d143096f",
+      "ok": true
+    },
+    "pretrain_encoder_s1": {
+      "recorded": "54a232edfc280537fd3dbae3ae6e02f6c8e68e3bfa5c467ab9a54d7a0663c917",
+      "current": "54a232edfc280537fd3dbae3ae6e02f6c8e68e3bfa5c467ab9a54d7a0663c917",
+      "ok": true
+    }
+  },
+  "conditions": {
+    "all_checkpoints_exist": true,
+    "all_checkpoint_hashes_match_manifest": true,
+    "all_413505_parameters": true,
+    "no_forbidden_modules": true,
+    "no_pretext_heads_in_forward": true,
+    "replay_within_tolerance": true,
+    "valid_seed_mean_reproduced": true,
+    "b_p_design_invariance": true,
+    "recipe_and_soup_equal": true,
+    "normaliser_train_only": true,
+    "inputs_unchanged": true
+  },
+  "decision": "REPLAY_CONFIRMED",
+  "official_valid_labels_read": true,
+  "official_test_loaded": false
+}

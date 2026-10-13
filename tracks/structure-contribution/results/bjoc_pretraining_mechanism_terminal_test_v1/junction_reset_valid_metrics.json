@@ -1,0 +1,159 @@
+{
+  "protocol": "cscl-bjoc-pretraining-mechanism-terminal-test-v1",
+  "git_commit": "4bf106bda2ecee76a95e0df1178ddab0d21b2284",
+  "per_model": {
+    "B0": {
+      "mae": 0.10017243217205396,
+      "rmse": 0.19795646478089332,
+      "median_abs": 0.06136631965637207,
+      "p90_abs": 0.2047144889831543,
+      "p95_abs": 0.2891721963882446,
+      "p99_abs": 0.7540277564525604,
+      "max_abs": 3.0781593322753906
+    },
+    "B1": {
+      "mae": 0.09823218293202808,
+      "rmse": 0.2315664751339267,
+      "median_abs": 0.05683779716491699,
+      "p90_abs": 0.1859026908874512,
+      "p95_abs": 0.27067703008651717,
+      "p99_abs": 0.648719864115119,
+      "max_abs": 5.020646095275879
+    },
+    "P0": {
+      "mae": 0.08478566339140525,
+      "rmse": 0.2787137334413769,
+      "median_abs": 0.04393467307090759,
+      "p90_abs": 0.1587548285722733,
+      "p95_abs": 0.2543628752231597,
+      "p99_abs": 0.5256972670555108,
+      "max_abs": 7.0128326416015625
+    },
+    "P1": {
+      "mae": 0.08231300199305405,
+      "rmse": 0.1813011166141071,
+      "median_abs": 0.04505179822444916,
+      "p90_abs": 0.17411122322082523,
+      "p95_abs": 0.25386512577533715,
+      "p99_abs": 0.6581353712081907,
+      "max_abs": 2.448272705078125
+    },
+    "J0": {
+      "mae": 0.09236920330865542,
+      "rmse": 0.498843896807088,
+      "median_abs": 0.04355093836784363,
+      "p90_abs": 0.1654409289360047,
+      "p95_abs": 0.2473228296265006,
+      "p99_abs": 0.5280159437656401,
+      "max_abs": 15.028337955474854
+    },
+    "J1": {
+      "mae": 0.08996168369328371,
+      "rmse": 0.2087915691562453,
+      "median_abs": 0.048729538917541504,
+      "p90_abs": 0.18804368674755098,
+      "p95_abs": 0.27595684528350783,
+      "p99_abs": 0.585126931592822,
+      "max_abs": 3.5838623046875
+    }
+  },
+  "seed_mean_mae": {
+    "B": 0.09920230755204101,
+    "P": 0.08354933269222965,
+    "J": 0.09116544350096956
+  },
+  "paired": {
+    "J_minus_P": {
+      "delta_seed_mean": 0.007616110808739905,
+      "per_seed": {
+        "seed0": 0.007583539917250165,
+        "seed1": 0.007648681700229656
+      },
+      "bootstrap": {
+        "mean": 0.007616110808739905,
+        "ci_lo": -0.00020214081130688995,
+        "ci_hi": 0.019367350379296103,
+        "frac_better": 0.468,
+        "n_resamples": 5000,
+        "seed": 0,
+        "unit": "molecule"
+      },
+      "better_fraction": 0.468,
+      "subgroups": {
+        "ordinary_y_gt_-3": {
+          "n": 935,
+          "delta": 0.000397294480415848
+        },
+        "tail_y_le_-3": {
+          "n": 65,
+          "delta": 0.11145600722386287
+        },
+        "top10_removed": {
+          "delta_top10_removed": 0.002729362948865846,
+          "worst_rows_top10": [
+            172,
+            753,
+            917,
+            935,
+            214,
+            659,
+            260,
+            31,
+            29,
+            737
+          ]
+        }
+      }
+    },
+    "J_minus_B": {
+      "delta_seed_mean": -0.00803686405107146,
+      "per_seed": {
+        "seed0": -0.0078032288633985425,
+        "seed1": -0.008270499238744372
+      },
+      "bootstrap": {
+        "mean": -0.00803686405107146,
+        "ci_lo": -0.017353504368755965,
+        "ci_hi": 0.005551529282249947,
+        "frac_better": 0.623,
+        "n_resamples": 5000,
+        "seed": 0,
+        "unit": "molecule"
+      },
+      "better_fraction": 0.623,
+      "subgroups": {
+        "ordinary_y_gt_-3": {
+          "n": 935,
+          "delta": -0.016993234256210233
+        },
+        "tail_y_le_-3": {
+          "n": 65,
+          "delta": 0.12079707659207857
+        },
+        "top10_removed": {
+          "delta_top10_removed": -0.014291334251409885,
+          "worst_rows_top10": [
+            172,
+            753,
+            917,
+            935,
+            214,
+            659,
+            260,
+            31,
+            29,
+            737
+          ]
+        }
+      }
+    }
+  },
+  "verdict": "J_RESET_NEUTRAL_VALID",
+  "what_it_cannot_show": [
+    "it does not separate the causal contributions of the three encoders during joint pretraining",
+    "it does not characterise what the junction encoder learned",
+    "it is evaluated on the exposed official-valid split only"
+  ],
+  "official_valid_labels_read": true,
+  "official_test_loaded": false
+}

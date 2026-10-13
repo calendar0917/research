@@ -1,0 +1,69 @@
+{
+  "protocol": "cscl-bjoc-pretraining-mechanism-terminal-test-v1",
+  "git_commit": "80c9687028f6299c01c342eb2be1e571cd330cbb",
+  "branch": "PRETRAINING_TEST_GAIN_REPLICATES",
+  "reason": "all frozen replication conditions hold on the exposed test split",
+  "inputs": {
+    "per_model_test_mae": {
+      "B0": 0.09424298421759159,
+      "B1": 0.09501003576908261,
+      "P0": 0.07482545961532741,
+      "P1": 0.07308768088836223
+    },
+    "P_test_seed_maes": [
+      0.07482545961532741,
+      0.07308768088836223
+    ],
+    "P_test_seed_mean": 0.07395657025184482,
+    "B_test_seed_mean": 0.0946265099933371,
+    "delta_test": {
+      "seed0": -0.019417524602264175,
+      "seed1": -0.021922354880720377,
+      "seed_mean": -0.020669939741492272,
+      "ci95": [
+        -0.027156951771304012,
+        -0.014711781719024299
+      ],
+      "better_fraction": 0.647,
+      "relative_reduction_vs_B": 0.21843709276552306,
+      "definition": "d_i = 0.5*[(|e_P0|-|e_B0|) + (|e_P1|-|e_B1|)]; seed-mean = arithmetic mean of the two single-model MAEs; never an ensemble"
+    },
+    "seed_conflict": false,
+    "single_molecule_driven": false
+  },
+  "target_band": {
+    "band": [
+      0.06,
+      0.07
+    ],
+    "P_test_seed_mean_mae": 0.07395657025184482,
+    "reached": false,
+    "statement": "P single-model exposed-test MAE seed-mean 0.073957 is 0.003957 above the 0.07 upper edge of the band."
+  },
+  "claims": {
+    "allowed": [
+      "the frozen P/B difference measured on the exposed official-test split is exactly what official_test_metrics.json reports",
+      "the comparison is same-round matched (same GPU regime, same recipe, same init/order per seed)"
+    ],
+    "not_allowed": [
+      "a first independent blind test (the official test instrument was exposed in a previous round)",
+      "a statement about arbitrary new molecule distributions",
+      "any test-driven change of model, seed or hyper-parameter"
+    ]
+  },
+  "valid_vs_test": {
+    "absolute_gain_valid": -0.015652974859811365,
+    "absolute_gain_test": -0.020669939741492272,
+    "gain_retained_fraction": 1.320511910778177,
+    "ordinary_same_direction": true,
+    "tail_same_direction": true,
+    "rmse_cost_same_direction": false,
+    "both_seeds_same_direction_valid": true,
+    "both_seeds_same_direction_test": true,
+    "valid_rmse_delta_P_minus_B": 0.015245955070331996,
+    "test_rmse_delta_P_minus_B": -0.026519155069483658
+  },
+  "next_round": "keep P as the primary baseline and study the residual tail generalisation mechanism with official valid only",
+  "official_test_loaded": true,
+  "no_training_after_test_read": true
+}
