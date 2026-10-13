@@ -1,6 +1,8 @@
 # Recipe tuning v1 — note
 
-**Status: PREREGISTERED 2026-10-13 (frozen before any GPU run).**
+**Status: COMPLETED 2026-10-13 — decision `RECIPE_GAIN_CANDIDATE` (R3;
+flag `TAIL_WORSE`); report
+`results/bjoc_recipe_tuning_v1/REPORT.md`.**
 Protocol: `cscl-bjoc-recipe-tuning-v1`
 Config: `configs/bjoc_recipe_tuning_v1.yaml`
 Driver: `code/run_bjoc_recipe_tuning_v1.py` · Tests: `tests/test_bjoc_recipe_tuning_v1.py`
@@ -116,3 +118,21 @@ pre-registered winner.
   revision failed only because the git-ignored npz references are absent
   remotely; with amendment #1 the remote prep is re-run on `res` (GPU1 pool)
   and must confirm the R0 replay within tolerance before any training starts.
+* 2026-10-13 — remote `prep` passed on revision `4f91d204d600`; replay
+  `max|dpred|` vs the committed references 1.91e-6 / 2.86e-6 (tolerance 1e-4),
+  `input_audit_ok=True`, freeze written (`code 39bf547918bc`, config
+  `19280c71fc5d`, candidates `5d21ddbd…`).  GPU smoke (R1, 2 epochs, GPU1)
+  passed; formal seed-0 runs R1/R2/R3/R4 completed exit 0 with exact init /
+  encoder / batch-order-prefix / schedule audits and 413,505 params.  Screening
+  (single valid read, y sha `8f6ee636…`) selected **R3 uniquely**: R1 fails the
+  extreme-row gate (Δ w/o `valid:0172` −0.00178) and R2/R4 are worse.  R3
+  seed 1 purchased and completed; confirmation passed all six pre-registered
+  conditions: Δ seed-mean −0.003705, CI95 [−0.006390, −0.001011], ordinary
+  −0.004133 (both seeds), tail +0.002443 (sign flips across seeds → flagged),
+  top-10-removed −0.003635, `valid:0172`-excluded −0.004209, RMSE improves.
+  Decision **`RECIPE_GAIN_CANDIDATE`** (selection-conditioned on the exposed
+  valid split; not a blind confirmation; seed 1 alone is −0.0017).  Total GPU
+  time ≈ 0.83 h of the 2.5 h budget; official test never loaded.  Two launch
+  caveats disclosed in the report: R1/R2 overlapped unintentionally (walls
+  contended, numerics unaffected), and the remote R0 replay uses the
+  pre-declared 1e-4 tolerance.

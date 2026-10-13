@@ -1740,32 +1740,75 @@ round_cscl-bjoc-pretraining-mechanism-terminal-test-v1:
 # valid only, single read after prediction freeze; official test never loaded)
 # ---------------------------------------------------------------------------
 
-phase: cscl-bjoc-recipe-tuning-v1-preregistered
+phase: cscl-bjoc-recipe-tuning-v1-completed
 current_round: bjoc-recipe-tuning-v1
 round_bjoc_recipe_tuning_v1:
-  status: PREREGISTERED 2026-10-13; CPU prep + local smoke passed; GPU work not started
-  protocol: configs/bjoc_recipe_tuning_v1.yaml (frozen before any GPU run)
+  status: COMPLETED 2026-10-13; decision RECIPE_GAIN_CANDIDATE (flag TAIL_WORSE); report results/bjoc_recipe_tuning_v1/REPORT.md
+  protocol: >-
+    configs/bjoc_recipe_tuning_v1.yaml (preregistration commit 2cde875;
+    pre-GPU amendments ed15fa03 + 2427560; reference arrays force-added
+    4f91d20; training on deployed revision 4f91d204d600)
   notes: notes/bjoc_recipe_tuning_v1.md
   driver: code/run_bjoc_recipe_tuning_v1.py
-  tests: tests/test_bjoc_recipe_tuning_v1.py (19 fast; all pass)
+  tests: tests/test_bjoc_recipe_tuning_v1.py (20 fast; all pass)
   question: >-
     Holding masked-pretrained BJOC-Null P fixed except for the supervision-phase
     recipe, do 240ep cosine (R1), 360ep constant (R2), 360ep cosine (R3) or
     wd 1e-4 (R4) improve official-valid seed-mean raw-y MAE over the 240ep
     constant wd 1e-5 baseline R0?  R0 is the historical P, replay-only.
   discipline: >-
-    R0 replayed bit-exact (max|dpred| 0.0 both seeds); R1-R4 must replay the
-    recorded P scratch init / composer-reader init / SSL encoder hashes and the
-    240-epoch batch-order prefix; same 413505-param architecture; same raw-y L1,
-    batch 128, clip 5, last-5 soup (of the candidate's own length); predictions
-    frozen before the single official-valid label read; official test never loaded.
+    R0 replayed bit-exact locally (max|dpred| 0.0 both seeds) and within the
+    pre-declared 1e-4 tolerance remotely (1.9e-6 / 2.9e-6 vs committed
+    label-free reference arrays); R1-R4 replayed the recorded P scratch init /
+    composer-reader init / SSL encoder hashes and the 240-epoch batch-order
+    prefix (full order only differs when the trajectory legitimately extends);
+    same 413505-param architecture, raw-y L1, batch 128, clip 5, last-5 soup of
+    the candidate's own length; predictions frozen before the single
+    official-valid label read (y sha 8f6ee636...); official test never loaded.
   gates: >-
     seed-0 screening: MAE delta <= -0.003, ordinary delta <= 0, delta excluding
     valid:0172 <= -0.002, numerics/audits ok; unique winner then seed-1
     confirmation: both seeds negative, seed-mean <= -0.003, ordinary <= 0,
     top-10-removed < 0, extreme-row-excluded < 0, CI95 upper < 0 for
     RECIPE_GAIN_CANDIDATE (CI crossing zero -> WEAK_OR_INCONCLUSIVE).
-  budget: <= 2.5 GPU-h on res pool res-gpu1 (GPU1 only)
+  screening_seed0: >-
+    n=1000 paired vs P0. R1 0.081737 (-0.003049; FAILS the extreme-row gate:
+    without valid:0172 only -0.001780, CI [-0.008213,+0.001395] crosses zero);
+    R2 0.091458 (+0.006673, CI positive); R3 0.079101 (-0.005684, ordinary
+    -0.003865, w/o 0172 -0.004653, top-10-removed -0.003091, CI
+    [-0.009759,-0.001967]); R4 0.089678 (+0.004892).  Unique passer: R3.
+  confirmation: >-
+    R3 seed0 -0.005684, seed1 -0.001727, seed-mean 0.079844 vs P 0.083549
+    (delta -0.003705, bootstrap CI95 [-0.006390,-0.001011]); 56.4% of molecules
+    better (ordinary 56.7%); ordinary n=935 -0.004133 (both seeds negative);
+    tail n=65 +0.002443 but seed-unstable (-0.032/+0.037) -> TAIL_WORSE flag;
+    RMSE 0.227499 vs 0.230007; top-10-removed -0.003635; valid:0172-excluded
+    -0.004209.  All 6 confirmation conditions pass, CI upper < 0 ->
+    RECIPE_GAIN_CANDIDATE.  Selection-conditioned on the exposed valid split:
+    NOT an independent blind test; seed 1 alone (-0.0017) would not clear -0.003.
+  mechanism: >-
+    Seed-0 2x2 factorial: epochs 240->360 at constant +0.006673; epochs at
+    cosine -0.002636; const->cosine at 240 -0.003049 and at 360 -0.012357;
+    interaction -0.009308 -> more updates alone hurt, cosine needs length.  Fit
+    and valid co-move across the 5 configs (R3 fit 0.0018 lowest and valid best;
+    R2/R4 fit worse and valid worse) but fit is schedule-confounded (low terminal
+    LR); ordinary-molecule and RMSE gains support a real distribution shift; WD
+    1e-4 rejected; SSL effect (valid 0.083549 vs scratch 0.099202, -0.0156)
+    remains ~4x the recipe effect.
+  compute: >-
+    smoke 17 s + R1 452 s + R2 658 s + R3-s0 693 s + R4 465 s + R3-s1 690 s
+    = 2975 s ~0.83 GPU-h (limit 2.5); R0 replay-only (0 GPU).  R1/R2
+    overlapped unintentionally (disclosed in the report; all numeric audits
+    exact, wall times contended and unused).
+  artifacts: >-
+    soup_R{1,2,3,4}_seed0.pt, soup_R3_seed1.pt; train_R*.json (init/encoder/
+    batch-order/schedule audits all true, 413505 params exact, cosine deviation
+    ~4e-17); protocol_freeze, input_audit, r0_replay, prediction_freezes,
+    screening_metrics, screening, confirmation_metrics, scientific_decision,
+    analysis, post_hoc_analysis, valid_read.lock.  Evaluation = runner
+    subcommands; no historical file modified.
+  budget: ~0.83 GPU-h of 2.5 used; res pool res-gpu1 (GPU1 only), a100-2,
+    driver 550.163.01, torch 2.5.1+cu124; no GPU work after the single valid read
 round_cscl-bjoc-strc-predictive-feasibility-v1:
   protocol: "configs/bjoc_strc_predictive_feasibility_v1.yaml (preregistration commit 22d18d8; pre-GPU amendments e996cc0/7e93013/41a49c0; training on the deployed revision 41a49c0)"
   notes: notes/bjoc_strc_predictive_feasibility_v1.md
@@ -1820,3 +1863,15 @@ round_cscl-bjoc-strc-predictive-feasibility-v1:
     R2 decomposition, beta-support diagnostics, train-sample residual magnitudes.
   budget: 2 trainings = 1215 s ~0.34 GPU-h (limit 0.8); wall ~1 h 40 min (limit 6 h 30 min); no GPU work after the read
   status: COMPLETED 2026-10-13; decision STRC_NO_PREDICTIVE_GAIN; report written; shared additive residual route stopped permanently; next proposition (scale-separated whole-molecule composition at matched capacity) awaiting authorization; official test never loaded
+
+next_round_candidate: >-
+  AWAITING USER AUTHORIZATION (nothing auto-started).  Preferred: independent
+  confirmation of the R3 candidate on a newly derived internal train/valid/test
+  split (excluding official valid+test), retraining SSL on that split's
+  permitted structures, R0 vs R3 with >=3 seeds under the same paired gates.
+  Optional mechanism follow-up (new preregistration): at 360 epochs compare
+  cosine->1e-5 vs cosine->0 vs linear vs constant+EMA, and last-5 soup vs
+  last-1 vs EMA.  If confirmation fails: Scale-separated Readout
+  algebraic/information audit or atom-only/bond-only pretraining ablations,
+  since SSL (-0.0156) dominates any recipe effect.  No new hyperparameter
+  search is authorised by the recipe round.
