@@ -1283,8 +1283,15 @@ def cmd_locked_freeze(args: argparse.Namespace) -> int:
     manifest = _verify_prediction_manifest(tag)
     arms = _final_arms(tag)
     entries: dict[str, Any] = {}
+    arm_seeds: dict[str, list[int]] = {}
     for arm in arms:
-        for seed in SEEDS:
+        seeds = sorted(
+            {int(k.split(":")[2]) for k in manifest["entries"] if k.startswith(f"locked:{arm}:")}
+        )
+        if not seeds:
+            raise SystemExit(f"missing locked predictions for {arm}; run predict first")
+        arm_seeds[arm] = seeds
+        for seed in seeds:
             key = f"locked:{arm}:{seed}"
             if key not in manifest["entries"]:
                 raise SystemExit(f"missing locked prediction {key}; run predict first")
@@ -1294,6 +1301,7 @@ def cmd_locked_freeze(args: argparse.Namespace) -> int:
         "git_commit": git_commit(),
         "split_tag": tag,
         "arms": arms,
+        "arm_seeds": arm_seeds,
         "entries": entries,
         "monitor_rounds_sha256": file_sha256(MONITOR_ROUNDS[tag]) if MONITOR_ROUNDS[tag].exists() else None,
         "frozen_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -1314,23 +1322,27 @@ def cmd_locked_score(args: argparse.Namespace) -> int:
             raise SystemExit(f"locked prediction drift for {key}")
     y = _read_locked_y_once(tag)
     arms = locked_manifest["arms"]
+    arm_seeds = locked_manifest.get("arm_seeds") or {arm: list(SEEDS) for arm in arms}
     preds: dict[str, dict[int, np.ndarray]] = {}
     for arm in arms:
-        preds[arm] = {s: _read_npz_pred(pred_path("locked", tag, arm, s), len(y)) for s in SEEDS}
+        preds[arm] = {s: _read_npz_pred(pred_path("locked", tag, arm, s), len(y)) for s in arm_seeds[arm]}
     metrics = {}
     for arm in arms:
-        per_seed = {str(s): float(np.abs(preds[arm][s] - y).mean()) for s in SEEDS}
-        m = np.mean([np.abs(preds[arm][s] - y) for s in SEEDS], axis=0)
+        seeds = arm_seeds[arm]
+        per_seed = {str(s): float(np.abs(preds[arm][s] - y).mean()) for s in seeds}
+        m = np.mean([np.abs(preds[arm][s] - y) for s in seeds], axis=0)
         metrics[arm] = {
+            "seeds": seeds,
             "per_seed_mae": per_seed,
             "seed_mean_mae": float(m.mean()),
             "median_abs": float(np.median(m)),
             "p90_abs": float(np.quantile(m, 0.90)),
-            "rmse": float(np.sqrt(np.mean(np.mean([(preds[arm][s] - y) ** 2 for s in SEEDS], axis=0)))),
+            "rmse": float(np.sqrt(np.mean(np.mean([(preds[arm][s] - y) ** 2 for s in seeds], axis=0)))),
         }
     contrasts: dict[str, Any] = {}
     for candidate in [a for a in arms if a != "P3"]:
-        contrasts[f"{candidate}_minus_P3"] = ab.compute_contrast(preds[candidate], preds["P3"], y)
+        shared = {s: preds["P3"][s] for s in arm_seeds[candidate]}
+        contrasts[f"{candidate}_minus_P3"] = ab.compute_contrast(preds[candidate], shared, y)
     payload = {
         "protocol": PROTOCOL_ID,
         "git_commit": git_commit(),
