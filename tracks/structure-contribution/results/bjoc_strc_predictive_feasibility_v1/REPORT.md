@@ -111,8 +111,8 @@ parameter block:
   0.9930 / 0.9303). The two seeds learn nearly the same tables, so unstable
   fitting is not the explanation.
 - **The channel acted mostly as an optimization reparameterization, not as an
-  additive correction.** Seed-mean |S−P| prediction difference is 0.049 while
-  |residual| is 0.094 and |base change| is 0.081–0.120; the S−P prediction
+  additive correction.** The |S−P| prediction difference is 0.049–0.051 while
+  |residual| is 0.089–0.098 and |base change| is 0.081–0.120; the S−P prediction
   difference is explained by the *base change* (R² 0.426 seed 0 / 0.731 seed 1)
   and essentially not by the additive residual (R² 0.0025 / 0.000005). The
   trained base solution moved far from P (relative L2: atom 0.20/0.22, bond
