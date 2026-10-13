@@ -1,0 +1,229 @@
+# cscl-bjoc-recipe-tuning-v1  (pre-registration; frozen before any GPU)
+#
+# Track: tracks/structure-contribution
+#
+# ONE scientific question: how much does the *supervision-phase training
+# recipe* of the already-validated masked-pretrained BJOC-Null P still limit
+# single-model raw-y generalisation?  Five pre-declared recipes only (R0-R4),
+# all other factors frozen.
+#
+# No model change, no architecture change, no new module, no objective change,
+# no pretraining change, no data change, no label change, no target transform.
+# Official valid is the exposed development set used for screening; official
+# test is never loaded in any form.
+
+protocol: cscl-bjoc-recipe-tuning-v1
+status: frozen
+frozen_utc: "2026-10-13"
+official_test: never_read
+
+question: >
+  Holding the BJOC-Null architecture (413,505 params), the frozen full-10k
+  masked-SSL encoder state, the composer/reader initialisation, the training
+  rows, the batch size, the raw-y L1 loss, the gradient clip, the parameter
+  soup window and the per-seed batch order fixed, does changing only
+  (a) the number of supervised epochs, (b) a per-step cosine LR decay
+  1e-3 -> 1e-5, or (c) a 10x weight decay improve the official-valid seed-mean
+  raw-y MAE of the pretrained model P, stably across seeds and outside the
+  extreme row valid:0172?
+
+hypotheses:
+  H1: "the fixed constant LR may limit late optimisation; a cosine decay could help"
+  H2: "240 epochs may under-train; 360 epochs could improve generalisation"
+  H3: "cosine decay and longer training may interact"
+  H4: "a stronger weight decay (1e-4) could improve generalisation at fixed length"
+  null: "none of R1-R4 robustly improves on R0 (NO_ROBUST_RECIPE_GAIN is allowed)"
+
+# ---------------------------------------------------------------- data
+data:
+  train: "official PyG ZINC subset=True train, 10000 rows, original order"
+  valid: "official PyG ZINC subset=True val, 1000 rows (exposed development set)"
+  test: forbidden
+  internal_split: none
+  y_source: "raw y from the frozen ksvd encoded_train.pt cache (train) / PyG val (valid), same path as the P round"
+  pretraining_state: "frozen full-10k masked-SSL encoder files pretrain_encoder_s0/s1.pt reused byte-for-byte; no SSL retraining"
+  normalisation: "global-feature standardiser fit on the 10,000 official train objects only (frozen file reused)"
+
+# -------------------------------------------------------- candidate recipes
+# R0 is the historical P recipe and is evaluated by checkpoint/prediction
+# replay only (no retraining).  R1-R4 are new single-variable perturbations.
+candidates:
+  R0:
+    label: "historical P baseline (replay only)"
+    epochs: 240
+    schedule: constant
+    lr: 1.0e-3
+    lr_min: null
+    weight_decay: 1.0e-5
+    reuse: historical_P_checkpoint
+  R1:
+    label: "240 epochs, cosine 1e-3 -> 1e-5, wd 1e-5"
+    epochs: 240
+    schedule: cosine
+    lr: 1.0e-3
+    lr_min: 1.0e-5
+    weight_decay: 1.0e-5
+    reuse: null
+  R2:
+    label: "360 epochs, constant 1e-3, wd 1e-5"
+    epochs: 360
+    schedule: constant
+    lr: 1.0e-3
+    lr_min: null
+    weight_decay: 1.0e-5
+    reuse: null
+  R3:
+    label: "360 epochs, cosine 1e-3 -> 1e-5, wd 1e-5"
+    epochs: 360
+    schedule: cosine
+    lr: 1.0e-3
+    lr_min: 1.0e-5
+    weight_decay: 1.0e-5
+    reuse: null
+  R4:
+    label: "240 epochs, constant 1e-3, wd 1e-4"
+    epochs: 240
+    schedule: constant
+    lr: 1.0e-3
+    lr_min: null
+    weight_decay: 1.0e-4
+    reuse: null
+
+# ------------------------------------------------------------- fixed recipe
+recipe:
+  optimizer: adam
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  batch_size: 128
+  grad_clip: 5.0
+  precision: fp32
+  amp: false
+  dropout: 0.0
+  loss: "L1 on raw y only"
+  encoder_lr: "single parameter group; all 413,505 parameters share the candidate LR"
+  steps_per_epoch: 79
+  soup_last: 5
+  train_shuffle_offset: 101
+  parameters_expected: 413505
+  cosine_rule:
+    type: "torch.optim.lr_scheduler.CosineAnnealingLR"
+    per: step
+    warmup: none
+    t_max: "epochs * steps_per_epoch"
+    eta_min: 1.0e-5
+    step_order: "scheduler.step() immediately after every optimizer.step(); step 1 uses the base lr"
+    formula: "lr(k) = eta_min + 0.5*(lr0-eta_min)*(1+cos(pi*k/T_max)), k = number of scheduler steps already taken"
+
+# ------------------------------------------------------- screening (seed 0)
+screening:
+  comparison: "paired per-molecule |err(R*_s0) - err(P_s0)| against the SAME seed 0 and the SAME frozen valid split"
+  metrics: ["raw-y MAE", "ordinary (y > -3) MAE", "tail (y <= -3) MAE", "RMSE", "median/p90/p95/p99", "top-1/5/10-removed delta", "valid:0172 exclusion", "fit MAE", "GPU wall time"]
+  gate:
+    - "seed-0 valid MAE delta <= -0.003"
+    - "ordinary (y > -3) MAE delta <= 0.0 (not worse)"
+    - "delta excluding valid:0172 <= -0.002 (gain is not carried by the one extreme row)"
+    - "training numerically finite (no non-finite loss, no non-finite gradient, parameter/init/batch-order audits pass)"
+  selection_if_multiple_pass: "lowest seed-0 valid MAE; tie broken by fewer supervision updates"
+  if_none_pass: "STOP the GPU search; report the negative result; no seed 1, no new candidate, no hyper-parameter search."
+
+# ----------------------------------------- confirmation (unique candidate, seed 1)
+confirmation:
+  purchased: "exactly one candidate, seed 1 only"
+  comparison: "per-seed deltas R*_s - P_s for s in {0,1}, seed-mean delta, molecule-level paired bootstrap (5000, seed 0)"
+  final_gate:
+    - "both seed deltas < 0"
+    - "seed-mean MAE delta <= -0.003"
+    - "seed-mean ordinary (y > -3) delta <= 0.0"
+    - "seed-mean top-10-removed delta < 0"
+    - "seed-mean delta excluding valid:0172 < 0"
+    - "no numerical / evaluation anomaly"
+  classification:
+    RECIPE_GAIN_CANDIDATE: "all final_gate conditions hold AND bootstrap CI95 upper < 0"
+    WEAK_OR_INCONCLUSIVE: "all final_gate conditions hold but CI95 crosses zero, or a partial/conflicting signal"
+    NO_ROBUST_RECIPE_GAIN: "final gate fails, or no candidate passed screening"
+  not_claimed: "the seed-1 check and its CI are NOT an independent blind test; they are conditional on the seed-0 valid screening of the same exposed valid set"
+
+# ------------------------------------------------------- evaluation protocol
+evaluation:
+  order: >
+    (1) replay R0 from the frozen P checkpoints and verify the frozen P valid
+    predictions; (2) train R1-R4 seed 0; (3) forward all frozen soups on the
+    official-valid structures without reading labels; (4) hash every prediction
+    file and freeze; (5) read the official-valid labels exactly once; (6)
+    screen; (7) if and only if a unique candidate passes, train its seed 1,
+    predict, re-freeze, and score; (8) write the frozen decision.
+  primary_metric: "official-valid raw-y MAE, seed-mean of the per-seed single-model MAEs (never an ensemble)"
+  bootstrap: {n_resamples: 5000, seed: 0, unit: molecule}
+  no_post_read_training: true
+  no_ensemble_headline: true
+  no_test_access: true
+
+# ------------------------------------------------------------- budget + bans
+budget:
+  gpu_hours_max: 2.5
+  gpus_max: 1
+  gpu_authorised: "res GPU1 (pool res-gpu1); GPU0 and res-2 are not authorised"
+  r0: "replay only, no retraining"
+  screening: "exactly one seed-0 training per R1-R4"
+  confirmation: "at most one seed-1 training, only for the unique pre-registered winner"
+  no_retry_to_chase_luck: true
+  stop_on_gpu_or_artifact_failure: true
+
+bans:
+  - "sixth candidate; hidden dimensions; layer numbers; dropout; batch size; loss; mask ratio; pretraining objective or length; checkpoint-averaging window"
+  - "per-candidate seed search / third seed / re-running a candidate to chase a lower number"
+  - "ensemble as a headline; calibration; label clipping; target transform/standardisation; tail-weighted loss"
+  - "official test access in any form, including the historical 0.073957 for selection"
+  - "re-tuning after the official-valid read; deleting/trimming rows from the headline"
+
+decision_vocabulary:
+  - RECIPE_GAIN_CANDIDATE
+  - WEAK_OR_INCONCLUSIVE
+  - NO_ROBUST_RECIPE_GAIN
+  - BLOCKED
+
+# --------------------------------------------------- frozen input fingerprints
+# All values below were re-hashed locally on 2026-10-13 before the
+# pre-registration commit.  The runner re-hashes every file before training
+# and refuses to run when any value differs.
+frozen:
+  frozen_block_version: 1
+  n_train: 10000
+  n_valid: 1000
+  ref_epochs: 240
+  steps_per_epoch: 79
+  soup_last: 5
+  train_shuffle_offset: 101
+  tail_threshold: -3.0
+  extreme_valid_row: 172
+  expected_parameters: 413505
+  objects_train10k_sha256: 14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d
+  objects_valid_sha256: 61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c
+  prep_train10k_sha256: d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a
+  pretrain_encoder_s0_sha256: 006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97
+  pretrain_encoder_s1_sha256: ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a
+  soup_P_seed0_sha256: 73118e9be466c62a252eacb83d9c86d1cb4bf0ce01478db2f278b7c27a5fab2a
+  soup_P_seed1_sha256: bf640cd8c11a9f6e0d11ceccd318185e6067ef2ba5a950b4774d5185a9ab053c
+  valid_P_pred_s0_sha256: c6a3caba92224a097e73dd61c11388e31eaeaa20e7cdaff8901bb2ab350b6037
+  valid_P_pred_s1_sha256: 0b57560ff05e0f6da0279db3b038048bd46a26d62649a607cbecf91b9a722adb
+  p_init_full_sha256:
+    "0": d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691
+    "1": c79e6b02521c224e79790382438ca72c08f9e22e691f66fb5ab950dea4b49c0b
+  p_init_group_state_sha256:
+    "0": d9ffbd15356659ed06af4b43077bb7f27403ad0afc3e7ac00c4d34fc98c7415f
+    "1": 98d11fe93b03368e8ea5f66b17c1ccf16d850ee13a43f56f49ddc93dd08a993c
+  p_init_encoder_sha256:
+    "0": 91af980a414ac945ea35b31c114d4e44b636419b62320321a902179112889d12
+    "1": 83d8b086bf1f9ee6c145336a3ea67e710bcf42658151061c293c2a3380ddd303
+  p_encoder_used_sha256:
+    "0": 7165eb90ceaaec8402d973f82c3b60099dd67ffb7e57365585466478d143096f
+    "1": 54a232edfc280537fd3dbae3ae6e02f6c8e68e3bfa5c467ab9a54d7a0663c917
+  p_batch_order_hash:
+    "0": 94a8ff7fde7b0033eef6da487ca1298597ae304d03d62b985124681fedeed501
+    "1": 41add6c8f91a127a363f3300ad2b10e8b10e0acbabc3f54608e9149fb64e7abd
+  p_valid_mae_seed0: 0.08478566339140525
+  p_valid_mae_seed1: 0.08231300199305405
+  p_valid_seed_mean_mae: 0.08354933269222965
+
+# ------------------------------------------------------------- frozen plan
+# confirmed candidate gate lives in screening.gate / confirmation.final_gate

@@ -1,8 +1,8 @@
 # CSCL track state — research pointer, not a result dump.
 # Durable statements live in notes/research_core.md (goals) and
 # notes/v0_protocol.md (frozen protocol); results land in results/.
-phase: cscl-bjoc-strc-predictive-feasibility-v1-completed
-current_round: bjoc-strc-predictive-feasibility-v1
+phase: cscl-bjoc-recipe-tuning-v1-preregistered
+current_round: bjoc-recipe-tuning-v1
 next_round_candidate: >-
   AWAITING USER AUTHORIZATION. The STRC predictive-feasibility round is COMPLETE
   (notes/bjoc_strc_predictive_feasibility_v1.md,
@@ -1740,8 +1740,32 @@ round_cscl-bjoc-pretraining-mechanism-terminal-test-v1:
 # valid only, single read after prediction freeze; official test never loaded)
 # ---------------------------------------------------------------------------
 
-phase: cscl-bjoc-strc-predictive-feasibility-v1-completed
-current_round: bjoc-strc-predictive-feasibility-v1
+phase: cscl-bjoc-recipe-tuning-v1-preregistered
+current_round: bjoc-recipe-tuning-v1
+round_bjoc_recipe_tuning_v1:
+  status: PREREGISTERED 2026-10-13; CPU prep + local smoke passed; GPU work not started
+  protocol: configs/bjoc_recipe_tuning_v1.yaml (frozen before any GPU run)
+  notes: notes/bjoc_recipe_tuning_v1.md
+  driver: code/run_bjoc_recipe_tuning_v1.py
+  tests: tests/test_bjoc_recipe_tuning_v1.py (19 fast; all pass)
+  question: >-
+    Holding masked-pretrained BJOC-Null P fixed except for the supervision-phase
+    recipe, do 240ep cosine (R1), 360ep constant (R2), 360ep cosine (R3) or
+    wd 1e-4 (R4) improve official-valid seed-mean raw-y MAE over the 240ep
+    constant wd 1e-5 baseline R0?  R0 is the historical P, replay-only.
+  discipline: >-
+    R0 replayed bit-exact (max|dpred| 0.0 both seeds); R1-R4 must replay the
+    recorded P scratch init / composer-reader init / SSL encoder hashes and the
+    240-epoch batch-order prefix; same 413505-param architecture; same raw-y L1,
+    batch 128, clip 5, last-5 soup (of the candidate's own length); predictions
+    frozen before the single official-valid label read; official test never loaded.
+  gates: >-
+    seed-0 screening: MAE delta <= -0.003, ordinary delta <= 0, delta excluding
+    valid:0172 <= -0.002, numerics/audits ok; unique winner then seed-1
+    confirmation: both seeds negative, seed-mean <= -0.003, ordinary <= 0,
+    top-10-removed < 0, extreme-row-excluded < 0, CI95 upper < 0 for
+    RECIPE_GAIN_CANDIDATE (CI crossing zero -> WEAK_OR_INCONCLUSIVE).
+  budget: <= 2.5 GPU-h on res pool res-gpu1 (GPU1 only)
 round_cscl-bjoc-strc-predictive-feasibility-v1:
   protocol: "configs/bjoc_strc_predictive_feasibility_v1.yaml (preregistration commit 22d18d8; pre-GPU amendments e996cc0/7e93013/41a49c0; training on the deployed revision 41a49c0)"
   notes: notes/bjoc_strc_predictive_feasibility_v1.md
