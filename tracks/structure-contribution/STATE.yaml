@@ -1954,3 +1954,74 @@ next_round_candidate: >-
   No GPU work without a new preregistration + explicit user authorization.
 
 updated: 2026-10-13
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-task-adaptive-ssl-v1
+# ---------------------------------------------------------------------------
+
+round_cscl-bjoc-task-adaptive-ssl-v1:
+  protocol: configs/bjoc_task_adaptive_ssl_v1.yaml (frozen on res at commit 388c9a7 before any GPU trajectory)
+  notes: notes/bjoc_task_adaptive_ssl_v1.md
+  report: results/bjoc_task_adaptive_ssl_v1/REPORT.md
+  question: >-
+    On the frozen BJOC-Null + Fit-only masked SSL + R3 system (413505 params),
+    under the same per-seed SSL encoder, the same 22,680 supervised updates,
+    batch order, R3 per-step cosine and last-5 soup, does an atom-only masked
+    reconstruction auxiliary loss (lambda 0.1) on every 4th minibatch (t mod 4)
+    improve split-D Monitor raw-y MAE over the matched P3 baseline?
+  code:
+    - code/bjoc_task_adaptive_ssl_v1.py       # TA loop, head-capture wrapper, aux masked view, diagnostics/audits
+    - code/run_bjoc_task_adaptive_ssl_v1.py   # prep/splits/objects/freeze/init-parity/stage-a/ssl/arm/predict/score-monitor/control/locked
+    - code/diag_tat_replay_determinism.py     # CPU environment probe (bp x2, tat x2 soups)
+    - configs/bjoc_task_adaptive_ssl_v1.yaml
+  tests: tests/test_bjoc_task_adaptive_ssl_v1.py (14 fast tests; all pass; includes bitwise adaptive-vs-frozen loop equivalence, wrapper equivalence, atom-context identity, aux branch mechanics, mask audits, noise-floor instrument, gate vocabulary, no-official-path scans)
+  splits: {primary: D salt cscl-bjoc-arch-breakthrough-v1-repl fit 8000/monitor 1000/locked 1000; fingerprints verified against the committed architecture-round config; overlaps with A/B disclosed in split_D.json}
+  discipline: >-
+    Official test never loaded; official valid never loaded. Monitor/Locked .y
+    unreachable via LabelGuard during preprocessing/SSL/training/prediction
+    (0 access attempts). One declared Monitor read (y sha bbcf6faf..., after
+    all 8 prediction files were frozen and manifested). Locked not read: the
+    Monitor gate failed. P3/TA per seed share the SSL encoder, head-init,
+    init hashes and batch order; all GPU work on res-gpu1, one job at a time.
+  stage_a: >-
+    A1 passed within the machine noise floor after a disclosed instrument
+    amendment (remote res CPU is run-to-run non-deterministic at ~1e-7 for the
+    same frozen loop; local workstation bitwise identical); A2 wrapper
+    encoder-bit-identical, 100/100 atom and 100/100 bond mask-swap cases,
+    50/50 leak-free rebuilds; A3 init ratio 0.369/0.403, cosine -0.025/+0.012,
+    head active; A4 invariances <=8.2e-8, inference exactly 413505 params.
+  monitor_result: >-
+    split D 1000 rows. P3 seed-mean 0.104301 (0.103960/0.104642); TA 0.104384
+    (0.104176/0.104591). Delta +0.000083, CI95 [-0.005414,+0.004620], per-seed
+    +0.000216/-0.000051, 47.4% molecules better. Ordinary (y>-3, n=929)
+    +0.002797 worse; tail (y<=-3, n=71) -0.035439 better; RMSE -0.055235
+    better; top-10-removed +0.000705 worse; single-share 0.158. Gate 5/8 fail
+    -> TASSL_NO_GAIN. Compute control P3-EXTRA and Locked read not purchased.
+  mechanism: >-
+    Auxiliary task alive through all 22680 updates (5670/5670 aux steps,
+    720k masked molecules/seed; CE 0.241->0.197 and 0.274->0.201; acc
+    ~0.913->0.925; head grad norm <=0.075), but the net Monitor effect is a
+    seed-consistent trade: ordinary MAE +3.5% relative, tail MAE -8.5%
+    relative, both seeds same signs. TA supervised wall ~4.2x P3 (2291s vs
+    539s; 2318s vs 584s), ~73% of it in the auxiliary branch. No general
+    held-out gain at any level above the CI.
+  budget: 2.537 GPU-h of 3.0 (ssl 0.4658+0.4625, P3 0.1539+0.1664, TA 0.6403+0.6481); commit 388c9a7; a100-2 driver 550.163.01, torch 2.5.1+cu124
+  status: COMPLETED 2026-10-14; decision TASSL_NO_GAIN; round stopped with no compute control and no Locked read; official test never loaded
+
+next_round_candidate: >-
+  AWAITING USER AUTHORIZATION (nothing auto-started).  Three mechanism families
+  on the same BJOC-Null + masked-SSL + R3 system have now failed to improve
+  ordinary-molecule held-out error: shared-type additive residual (STRC),
+  architecture additions (GLRC/DLP), and task-adaptive masked SSL (TA-SSL,
+  seed-mean +0.000083 on split D).  The one seed-consistent residual signal is
+  the severe tail: 71/1000 Monitor molecules carry ~0.42 MAE, and TA-SSL moves
+  tail MAE -8.5% relative while ordinary MAE worsens +3.5%, with RMSE also
+  better, at ~4.2x supervised wall cost.  Recommended next evidence step: a
+  second molecular task (different property/endpoint) under a fresh
+  preregistration, which tests transfer of the BJOC representation and is not
+  another ZINC variant.  The single listed ZINC alternative is a tail/robustness
+  hypothesis (matched-compute quantile or robust objective) with its own
+  pre-registered tail metric; it is NOT authorised by this round.  No GPU work
+  without a new preregistration + explicit user authorization.
+
+updated: 2026-10-14

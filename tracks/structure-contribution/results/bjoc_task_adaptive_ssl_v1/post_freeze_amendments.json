@@ -1,0 +1,16 @@
+{
+  "protocol": "cscl-bjoc-task-adaptive-ssl-v1",
+  "git_commit": "388c9a7082de2bf79aeca7449f864e8e0968a9fb",
+  "utc": "2026-10-13T15:29:11Z",
+  "amendment": "A1 equivalence instrument (CPU Stage A only)",
+  "frozen_text": "A1 required the new loop soup to be bitwise identical to bp.train_supervised.",
+  "evidence": {
+    "local_workstation": "bp twice and tat twice all produced identical soup hashes (max abs diff 0.0)",
+    "remote_res_cpu": "two bp runs differ at the last bits",
+    "bp_repeat_max_abs_diff": 1.2665987014770508e-07,
+    "new_vs_bp_max_abs_diff": 1.2665987014770508e-07
+  },
+  "changed_to": "A1 passes when the batch-order hash and init hash are identical, the LR values at every epoch are exactly equal, the train-MAE curve is within max(1e-9, 2 * bp-repeat curve diff), and max|soup_new - soup_bp| <= max(1e-6, 2 * max|soup_bp_repeat - soup_bp|), i.e. the new loop is within this machine's own measured run-to-run noise floor.",
+  "why": "the remote CPU is run-to-run non-deterministic at ~3e-7 in float32 parameters for the same frozen loop, so bitwise equality cannot witness code equivalence there; the local bitwise identity and the noise-floor comparison together establish loop equivalence",
+  "not_changed": "no model, recipe, auxiliary schedule/lambda, seed, gate threshold, label-access rule, budget or decision vocabulary changed; made after CPU Stage-A probes and before any GPU trajectory; no Monitor or Locked label read"
+}

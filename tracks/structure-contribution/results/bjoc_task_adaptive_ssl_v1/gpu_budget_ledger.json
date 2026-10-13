@@ -1,0 +1,160 @@
+{
+  "protocol": "cscl-bjoc-task-adaptive-ssl-v1",
+  "track": "tracks/structure-contribution",
+  "budget_gpu_hours_max": 3.0,
+  "budget_basis": "GPU-hours accounted from rr job wall-clock spans (each job pinned to one A100 via CUDA_VISIBLE_DEVICES on pool res-gpu1); CPU jobs listed separately at 0 GPU-h; the six GPU jobs ran strictly one at a time",
+  "regime": {
+    "host": "res",
+    "backend": "process",
+    "pool": "res-gpu1",
+    "node": "a100-2",
+    "device": "NVIDIA A100-SXM4-40GB",
+    "driver": "550.163.01",
+    "torch": "2.5.1+cu124",
+    "cuda_visible_devices": "1",
+    "commit": "388c9a7082de2bf79aeca7449f864e8e0968a9fb",
+    "branch": "main"
+  },
+  "gpu_jobs": [
+    {
+      "experiment": "tat-ssl-s0",
+      "run_id": "tat-ssl-s0-20261013-233246-9d3b6c6e",
+      "phase": "Fit-only masked SSL seed 0 + real-state gradient diagnostics",
+      "started": "2026-10-13T23:32:48+08:00",
+      "completed": "2026-10-14T00:00:45+08:00",
+      "span_seconds": 1677,
+      "gpu_hours": 0.4658,
+      "phase_wall_seconds": {
+        "ssl_loop_s": 1663.8
+      },
+      "note": "rr briefly reported state=lost at 23:45 during a transient SSH monitoring gap; the detached setsid process completed normally and rr reconciled the run as completed/exit 0 at 00:00:45; the span above is rr's final record"
+    },
+    {
+      "experiment": "tat-ssl-s1",
+      "run_id": "tat-ssl-s1-20261014-000248-5580b34c",
+      "phase": "Fit-only masked SSL seed 1 + real-state gradient diagnostics",
+      "started": "2026-10-14T00:02:52+08:00",
+      "completed": "2026-10-14T00:30:37+08:00",
+      "span_seconds": 1665,
+      "gpu_hours": 0.4625,
+      "phase_wall_seconds": {
+        "ssl_loop_s": 1650.5
+      }
+    },
+    {
+      "experiment": "tat-p3-s0",
+      "run_id": "tat-p3-s0-20261014-003458-9a19fac4",
+      "phase": "P3 R3 seed 0 (frozen bp.train_supervised)",
+      "started": "2026-10-14T00:35:00+08:00",
+      "completed": "2026-10-14T00:44:14+08:00",
+      "span_seconds": 554,
+      "gpu_hours": 0.1539,
+      "phase_wall_seconds": {
+        "supervised_loop_s": 538.7
+      }
+    },
+    {
+      "experiment": "tat-ta-s0",
+      "run_id": "tat-ta-s0-20261014-004620-a138bedc",
+      "phase": "TA-SSL R3 seed 0 (t mod 4 == 0 atom CE, lambda 0.1, joint step)",
+      "started": "2026-10-14T00:46:23+08:00",
+      "completed": "2026-10-14T01:24:48+08:00",
+      "span_seconds": 2305,
+      "gpu_hours": 0.6403,
+      "phase_wall_seconds": {
+        "supervised_loop_s": 2291.0,
+        "auxiliary_branch_s": 1671.6
+      }
+    },
+    {
+      "experiment": "tat-p3-s1",
+      "run_id": "tat-p3-s1-20261014-012927-d9113c3c",
+      "phase": "P3 R3 seed 1 (frozen bp.train_supervised)",
+      "started": "2026-10-14T01:29:29+08:00",
+      "completed": "2026-10-14T01:39:28+08:00",
+      "span_seconds": 599,
+      "gpu_hours": 0.1664,
+      "phase_wall_seconds": {
+        "supervised_loop_s": 583.6
+      }
+    },
+    {
+      "experiment": "tat-ta-s1",
+      "run_id": "tat-ta-s1-20261014-014011-ff234014",
+      "phase": "TA-SSL R3 seed 1 (t mod 4 == 0 atom CE, lambda 0.1, joint step)",
+      "started": "2026-10-14T01:40:14+08:00",
+      "completed": "2026-10-14T02:19:07+08:00",
+      "span_seconds": 2333,
+      "gpu_hours": 0.6481,
+      "phase_wall_seconds": {
+        "supervised_loop_s": 2318.4,
+        "auxiliary_branch_s": 1680.9
+      }
+    }
+  ],
+  "cpu_jobs": [
+    {
+      "experiment": "tat-diag-determinism",
+      "run_id": "tat-diag-determinism-20261013-231135-7fe4d8df",
+      "commit": "e8cd967ee092",
+      "gpu_hours": 0.0,
+      "role": "environment probe: frozen loop repeated twice on res CPU differs at ~3e-7, while the local workstation is bitwise"
+    },
+    {
+      "experiment": "tat-prep4",
+      "run_id": "tat-prep4-20261013-232639-c7b7adee",
+      "commit": "388c9a7082de",
+      "gpu_hours": 0.0,
+      "role": "final pre-GPU prep: input audit, split D fingerprint/prior-use audit, guarded objects, Fit-only standardiser, protocol freeze, init parity"
+    },
+    {
+      "experiment": "tat-stagea3",
+      "run_id": "tat-stagea3-20261013-232827-19fe9238",
+      "commit": "388c9a7082de",
+      "gpu_hours": 0.0,
+      "role": "final Stage A CPU gates A1-A4 (all pass; A1 noise-floor amendment recorded)"
+    },
+    {
+      "experiment": "tat-predict",
+      "run_id": "tat-predict-20261014-022240-1db71872",
+      "commit": "388c9a7082de",
+      "gpu_hours": 0.0,
+      "role": "label-blind Monitor+Locked predictions for P3/TA x seeds 0,1; prediction manifest frozen"
+    },
+    {
+      "experiment": "tat-score-monitor",
+      "run_id": "tat-score-monitor-20261014-022445-aef26be5",
+      "commit": "388c9a7082de",
+      "gpu_hours": 0.0,
+      "role": "single Monitor read after prediction freeze; TASSL gate evaluation -> TASSL_NO_GAIN"
+    }
+  ],
+  "pre_gpu_calibration_attempts": [
+    {
+      "experiment": "tat-prep",
+      "outcome": "failed at verify-inputs on the remote because the arch-round split_D.json fingerprint payload is an untracked result artifact absent from the deployment; fixed by anchoring split D fingerprints to the committed arch config; no GPU, no labels"
+    },
+    {
+      "experiment": "tat-stagea",
+      "outcome": "A1 failed on the frozen bitwise-soup requirement while all logged epoch MAEs were exactly equal; diagnosed as machine run-to-run non-determinism; no GPU"
+    },
+    {
+      "experiment": "tat-stagea2",
+      "outcome": "A1 soup passed within the measured noise floor but the exact train-MAE curve comparison failed on the same non-determinism; fixed the curve instrument too; no GPU"
+    },
+    {
+      "experiment": "tat-inspect/host diagnostics",
+      "outcome": "short CPU-only inspection jobs; 0 GPU-h"
+    }
+  ],
+  "total_gpu_hours": 2.537,
+  "remaining_gpu_hours": 0.463,
+  "not_purchased": {
+    "compute_control_P3_EXTRA": "not purchased: the frozen Monitor promotion gate failed, and the pre-registered purchase rule requires a gate pass",
+    "locked_read": "not performed: the frozen rule forbids reading Locked after a failed Monitor gate; the split-D Locked block remains unread and unscored",
+    "second_lambda_or_frequency": "not performed: frozen ban",
+    "third_seed": "not performed: frozen ban",
+    "full10k_refit": "not performed: out of scope for this round"
+  },
+  "notes": "An external user job occupied GPU0 throughout the round (~37 GB, ~100% utilization); every task job ran on GPU1, one job at a time, no preemption. TA-SSL supervisory wall time is ~4.2x P3 (2291 s vs 539 s per seed) because the 5670 auxiliary forward/backward passes dominated the wall (1671 s and 1710 s inside the loops); the compute-control purchase would have added an estimated ~0.19 GPU-h per seed if the gate had passed. Official valid and official test were never loaded in any form."
+}
