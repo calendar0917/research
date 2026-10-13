@@ -1,0 +1,217 @@
+# cscl-bjoc-task-adaptive-ssl-v1 (pre-registration; frozen before any GPU)
+#
+# Track: tracks/structure-contribution
+#
+# ONE scientific question:
+#   Under the same pretrained initialisation and the same supervised training
+#   steps, does keeping a low-frequency masked-atom self-supervised auxiliary
+#   task during supervised training improve held-out generalisation over the
+#   plain P3 training programme?
+#
+# Three things must be separated:
+#   1. is SSL-as-initialisation already enough (the historical P3 result);
+#   2. does a continuous structural-recovery task constrain supervised training;
+#   3. is any gain only extra computation.
+#
+# Discipline inherited from cscl-bjoc-architecture-breakthrough-v1:
+#   * official test is NEVER loaded in any form (no code path exists);
+#   * official valid is not used in this round at all;
+#   * split D is the pre-registered replication split of the architecture
+#     round, never trained, monitored or locked before this round;
+#   * Monitor/Locked `.y` is unreachable during preprocessing, SSL, training
+#     and prediction via LabelGuard; Monitor is read once after all
+#     predictions are frozen; Locked is read once only if the promotion gate
+#     passes and every downstream choice is frozen;
+#   * Fit-only standardisation; Fit-only SSL; Fit raw-y supervision only.
+
+protocol: cscl-bjoc-task-adaptive-ssl-v1
+status: frozen
+frozen_date: "2026-10-13"
+track: tracks/structure-contribution
+official_valid_role: "not used in this round"
+official_test: never_read
+
+question: >
+  With the same Fit-only masked-SSL encoder per seed and exactly the same
+  22,680 supervised optimizer updates, batch order, per-step cosine schedule
+  and last-5 soup rule, does adding an atom-only masked reconstruction loss
+  (lambda = 0.1) on every 4th minibatch improve Monitor raw-y MAE over the
+  matched BJOC-Null P3 baseline?
+
+# --------------------------------------------------------------- data split
+split:
+  tag: D
+  salt: cscl-bjoc-arch-breakthrough-v1-repl
+  sizes: {fit: 8000, monitor: 1000, locked: 1000}
+  grouping: "canonical SMILES groups; duplicate molecules never cross sides"
+  fingerprints:  # copied from configs/bjoc_architecture_breakthrough_v1.yaml
+    fit_sha256_rows: 9468656affcc2b7c69409f03698b1b6287b3a42dc6e164efd19dfb0190254525
+    monitor_sha256_rows: d196bc75ce898c7cfd61efa133372f25803d5bc1198210f60b6e0f981a400393
+    locked_sha256_rows: f3525ae882114350a57f7b0ddb6889656f40c05cebda21b2611a2c99cdfa22d5
+  prior_use_disclosure: >
+    Internal re-partition of the official ZINC train 10000.  Split D was
+    pre-registered but never purchased in cscl-bjoc-architecture-breakthrough-v1
+    (no objects, SSL encoder, supervised soup, Monitor or Locked read).  Its
+    molecules were used in historical experiments, including historical
+    full-10k training and previously read internal monitor/locked blocks, so D
+    is NOT an independent external test split and absolute MAE levels are not
+    comparable to official-split numbers; only within-split matched contrasts
+    are interpreted.  The driver re-computes and records the row-level overlap
+    with splits A and B before any training.
+
+label_access:
+  build_objects: "structure fields x / edge_index / edge_attr only, via LabelGuard"
+  alignment_precheck: "Fit rows only (first 200)"
+  ssl: "Fit rows only; no y read at all"
+  supervised_training: "Fit row raw y only"
+  monitor: "one label read after the prediction manifest is frozen and hashed"
+  locked: "one label read only after the promotion gate passes and all choices are frozen"
+  official_valid: "never loaded"
+  official_test: "never loaded"
+
+# --------------------------------------------------------------- baseline
+baseline:
+  arm: P3
+  definition: "BJOC-Null + Fit-only masked atom+bond SSL (7560 updates, batch 128, Adam 1e-3/wd 1e-5/clip 5) + R3"
+  recipe:
+    epochs: 360
+    schedule: "per-step cosine"
+    lr: 1.0e-3
+    lr_min: 1.0e-5
+    weight_decay: 1.0e-5
+    grad_clip: 5.0
+    batch_size: 128
+    optimizer: Adam
+    loss: "raw-y L1"
+    soup: "parameter mean of the last 5 epoch states"
+  seeds: [0, 1]
+  initialization: "per seed, the same split-D Fit-only SSL encoder state as TA-SSL"
+
+# --------------------------------------------------------------- SSL source
+ssl:
+  task: "masked raw atom-type + masked physical bond-type reconstruction"
+  loss: "CE(masked atoms, 28-way) + CE(masked physical bonds, 4-way); weights 1.0/1.0"
+  atom_mask_ratio: 0.15
+  bond_mask_ratio: 0.15
+  updates: 7560
+  batch_size: 128
+  lr: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  checkpoint_rule: "last-step encoder state only"
+  source: >
+    the frozen bp.pretrain_masked loop executed unchanged; the new wrapper only
+    captures the atom pretext head state after the last step (no change to
+    mask RNG, batch RNG, optimizer, encoder training or checkpoint rule).
+
+# --------------------------------------------------------------- candidate
+candidate:
+  name: TA-SSL
+  arms: [TA]
+  initialization: "per seed, the SAME split-D Fit-only SSL encoder as P3; auxiliary atom head initialised from that same SSL run's atom_head"
+  aux_task: "masked atom-type CE only (no bond CE)"
+  aux_atom_head: "the pretext atom head (4*96 -> 160 -> 28) from the same seed's Fit-only masked SSL"
+  aux_mask:
+    atom_ratio: 0.15
+    bond_ratio: 0.15
+    construction: "full rebuild from the masked raw graph, same code path as SSL (mp.build_masked_sample)"
+    visit_index: "epoch - 1 (0-based supervised epoch); masks are a deterministic function of (seed, molecule_id, visit_index)"
+    rng_independent_of_shuffle: true
+  schedule:
+    rule: "L_t = L_property + 0.1 * L_atom if t mod 4 == 0 else L_property"
+    t_definition: "0-based global optimizer-update index within the 22,680-update trajectory"
+    aux_updates: 5670
+    lambda: 0.1
+    single_optimizer_step: true
+  optimizer:
+    shared: "one Adam over BJOC-Null parameters and the auxiliary atom head"
+    lr: "same R3 per-step cosine schedule as P3 (1e-3 -> 1e-5, T_max = 22680)"
+    weight_decay: 1.0e-5
+    grad_clip: "5.0, joint over BJOC-Null + auxiliary head parameters"
+  soup: "parameter mean of the last 5 epoch states of the BJOC-Null inference parameters only; the auxiliary head is never part of the saved model"
+  inference: "the final model is exactly BJOC-Null (413,505 params); the auxiliary head is removed at prediction time"
+  no_search: "lambda, aux frequency, mask ratio, objective mix, head width and schedule are frozen; no post-Monitor change"
+
+# --------------------------------------------------------------- arms
+arms:
+  P3-D-s0: {arm: P3, seed: 0, init: ssl, recipe: R3, aux: none}
+  P3-D-s1: {arm: P3, seed: 1, init: ssl, recipe: R3, aux: none}
+  TA-D-s0: {arm: TA, seed: 0, init: ssl, recipe: R3, aux: "atom CE, every 4th update, lambda 0.1"}
+  TA-D-s1: {arm: TA, seed: 1, init: ssl, recipe: R3, aux: "atom CE, every 4th update, lambda 0.1"}
+
+# --------------------------------------------------------------- monitor gate
+monitor_gate:
+  metric: "Monitor raw-y MAE, paired per molecule, delta = MAE(TA) - MAE(P3), seed-mean"
+  conditions_all_required:
+    - "seed-mean delta <= -0.004"
+    - "every seed delta < 0"
+    - "paired molecule-bootstrap 95% CI upper bound < 0"
+    - "ordinary molecules (y > -3) delta <= 0"
+    - "top-10-error-removed delta < 0"
+    - "RMSE(TA) - RMSE(P3) <= +0.005"
+    - "no single molecule contributes more than 25% of the total gain"
+    - "correctness, label isolation and provenance audits all pass"
+  bootstrap: {n_resamples: 5000, seed: 0, unit: "molecule"}
+  decision_vocabulary:
+    - TASSL_GAIN_PROMISING
+    - TASSL_WEAK_OR_SPLIT_SENSITIVE
+    - TASSL_NO_GAIN
+    - TASSL_INVALID
+  classification:
+    TASSL_GAIN_PROMISING: "all conditions pass"
+    TASSL_WEAK_OR_SPLIT_SENSITIVE: "seed-mean delta < 0 but at least one condition fails"
+    TASSL_NO_GAIN: "seed-mean delta >= 0"
+    TASSL_INVALID: "data, label, initialisation, implementation or evaluation provenance cannot be established"
+
+# ------------------------------------------------- conditional compute control
+compute_control:
+  name: P3-EXTRA
+  purchase_rule: "run only if the TA-SSL Monitor promotion gate passes and the GPU budget allows"
+  design: >
+    same split-D Fit-only SSL encoder and the same scratch init as P3; the R3
+    per-step cosine schedule is stretched to T_max = 28,350 updates
+    (22,680 * 1.25, matching the 5,670 auxiliary forward/backward passes at
+    one extra update-equivalent each), then the same last-5 soup rule.  It is
+    an approximate compute control, not an exact FLOP match: the auxiliary
+    branch only runs the three encoders, while an extra supervised update runs
+    the full model; and P3-EXTRA sees the Fit labels in 5,670 extra updates,
+    which is disclosed.
+  seeds: "0 and 1 (both, if the gate passes and budget remains)"
+  reading: "descriptive: if TA beats P3 but P3-EXTRA matches TA, the gain is explained by extra supervision/compute"
+
+locked:
+  rule: >
+    if the promotion gate does not pass: record Monitor, do NOT read Locked,
+    keep the Locked block unscored, and finish the negative report.
+    if it passes: finish the purchased compute control first, freeze every
+    candidate/seed/analysis/prediction and the final decision rule, then read
+    the Locked labels of split D once and score the frozen predictions.  If
+    Locked contradicts Monitor, disclose and stop; never retune.
+  no_full10k_refit: true
+  never_official_valid_test: true
+
+budget:
+  gpu_hours_max: 3.0
+  priority:
+    - "CPU audits and smoke"
+    - "Fit-only SSL seeds 0 and 1"
+    - "P3 matched baseline seeds 0 and 1"
+    - "TA-SSL seeds 0 and 1"
+    - "conditional compute control"
+  policy: "one training job per GPU; GPU-hours are summed per job wall clock, not wall-clock overlap; do not preempt other users"
+
+bans:
+  - "official test access in any form"
+  - "official-valid score as a selection signal"
+  - "Monitor/Locked y during preprocessing, SSL, training or prediction"
+  - "a second lambda, a second aux frequency, bond CE in the auxiliary task, or any search after the freeze"
+  - "a third seed, checkpoint cherry-picking, or replacing the frozen last-5 soup"
+  - "monitor-driven changes to the auxiliary schedule, mask ratio or head width"
+  - "using split C checkpoints or scores as split D baselines"
+  - "GNN / Transformer / attention / recurrent or iterative message passing"
+  - "overwriting historical frozen models, drivers, predictions, labels or locks"
+  - "reading Locked after a failed Monitor gate"
+
+frozen_inputs:
+  canonical_smiles_sha256: 04a590355fb7bba71e35e52bed60c974999b92af9e96e4ee99bed4afe42dcaff
+  encoded_train_sha256: 10d764955ef1b040a317105be1dd3fbb2e81292b03b79e7d078cce08e18e5f1d
