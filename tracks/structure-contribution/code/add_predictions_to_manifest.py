@@ -38,7 +38,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest = drv.read_json(manifest_path)
     for key, rec in manifest["entries"].items():
         p = drv.REPO_ROOT / rec["path"]
-        if not p.exists() or drv.file_sha256(p) != rec["sha256"]:
+        if not p.exists() or drv.bp.file_sha256(p) != rec["sha256"]:
             raise SystemExit(f"prediction drift for {key}")
     if args.drop:
         manifest["entries"] = {k: v for k, v in manifest["entries"].items() if f":{arm}:" not in k}
@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
         if not soup.exists() or not train_json.exists():
             raise SystemExit(f"missing soup/train json for {arm} s{seed}")
         recorded = drv.read_json(train_json)["soup_sha256"]
-        actual = drv.file_sha256(soup)
+        actual = drv.bp.file_sha256(soup)
         if recorded != actual:
             raise SystemExit(f"soup hash mismatch for {arm} s{seed}: {recorded[:12]} != {actual[:12]}")
         for zone in ("monitor", "locked"):
@@ -62,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
                 raise SystemExit(f"{key} already registered; pass --drop to replace")
             manifest["entries"][key] = {
                 "path": str(out.relative_to(drv.REPO_ROOT)),
-                "sha256": drv.file_sha256(out),
+                "sha256": drv.bp.file_sha256(out),
                 "soup_sha256": actual,
             }
             print(f"[manifest] + {key} -> {out.name}")
