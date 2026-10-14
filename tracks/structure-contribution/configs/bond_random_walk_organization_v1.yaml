@@ -1,0 +1,256 @@
+# cscl-bond-random-walk-organization-v1 (pre-registration; frozen before any GPU)
+#
+# Track: tracks/structure-contribution
+#
+# ONE scientific question (task prompt, do not broaden):
+#   Without presupposing the three-atom two-bond Junction as an independent
+#   object, can Bond-Bond interactions learned from the real molecular
+#   connectivity with a multi-scale topological context beat an
+#   unstructured global pair-summary control?
+#
+# Round structure:
+#   Part A (CPU, label-blind): bond line graph + lazy random walk P^k,
+#       multi-scale structurability audit on the first 2000 split-D Fit rows,
+#       Walktrap / deterministic-partition / TASU 2ECC-Bridge community audit.
+#       GPU is NOT purchased unless the pre-frozen Part-A gate passes.
+#   Part B (GPU, seed 0): two capacity/init/order-matched arms on split D Fit 8000
+#       R = Structured Random Walk  K = (P + P^2 + P^3)/3 on the real line graph
+#       U = Unstructured Global Pair  K_ef = 1/N_bond
+#       Everything else identical: Atom/Bond encoders (same Fit-only SSL init),
+#       Pair MLP, 96D context slot in the composer, reader, raw-y L1, R3
+#       360 epochs / 22,680 updates, last-5 soup.
+#   Part C: mechanism checks C1 / C2 / C3 (frozen before the Monitor read).
+#
+# Deliberately NOT done: TASU re-run, Walktrap-only predictor, conventional
+# Junction redesign, walk-length search, width search, community tuning.
+#
+# Discipline inherited from cscl-bjoc-task-adaptive-ssl-v1 / TASU-v1:
+#   * official test is NEVER loaded in any form (no code path exists);
+#   * official valid is not used in this round at all;
+#   * split D Monitor is historically exposed -> exploratory evaluation only;
+#   * Monitor/Locked `.y` unreachable during preprocessing, training, prediction
+#     via the existing LabelGuard on objects built by the prior round; Monitor is
+#     read once after all predictions are frozen; Locked is never read here;
+#   * Fit-only standardisation; Fit raw-y supervision only.
+
+protocol: cscl-bond-random-walk-organization-v1
+status: frozen
+frozen_date: "2026-10-14"
+track: tracks/structure-contribution
+official_valid_role: "not used in this round"
+official_test: never_read
+
+# --------------------------------------------------------------- data split
+split:
+  tag: D
+  salt: cscl-bjoc-arch-breakthrough-v1-repl
+  sizes: {fit: 8000, monitor: 1000, locked: 1000}
+  reuse:
+    objects_fit: "bjoc_task_adaptive_ssl_v1/objects_fit_D.pt"
+    objects_monitor: "bjoc_task_adaptive_ssl_v1/objects_monitor_D.pt"
+    split: "bjoc_task_adaptive_ssl_v1/split_D.json"
+    ssl_encoder_seed0: "bjoc_task_adaptive_ssl_v1/pretrain_D_s0.pt"
+  fingerprints:
+    fit_sha256_rows: 9468656affcc2b7c69409f03698b1b6287b3a42dc6e164efd19dfb0190254525
+    monitor_sha256_rows: d196bc75ce898c7cfd61efa133372f25803d5bc1198210f60b6e0f981a400393
+    locked_sha256_rows: f3525ae882114350a57f7b0ddb6889656f40c05cebda21b2611a2c99cdfa22d5
+  prior_use_disclosure: >
+    Split D is an internal group-aware re-partition of the official ZINC train
+    10000.  Its Fit/Monitor blocks have been used by previous rounds
+    (bjoc_task_adaptive_ssl_v1, cscl_task_adaptive_structure_units_v1); the
+    Monitor block here is historically exposed and this round is exploratory
+    only.  Locked is never read.  Absolute MAE is not comparable to
+    official-split numbers; only within-split matched contrasts are interpreted.
+
+label_access:
+  build: "reuses prior label-guarded split-D objects; y never touched while building"
+  supervised_training: "Fit raw y only"
+  monitor: "one label read after the prediction manifest is frozen and hashed"
+  locked: "never read in this round"
+  official_valid: "never loaded"
+  official_test: "never loaded"
+
+# --------------------------------------------------------------- Part A audit
+part_a:
+  audit_rows: "first 2000 rows of split-D Fit (sorted split order); label-blind"
+  line_graph: >
+    one node per unique undirected physical bond (cscl_units.unique_undirected_bonds);
+    an edge between two line-graph nodes iff the two physical bonds share at least
+    one atom (and are distinct bonds).
+  transition: >
+    P = (I + D^{-1} A_L) / 2, where A_L is the 0/1 line-graph adjacency and D its
+    degree.  A zero-degree line-graph node (isolated bond) gets row e_i.  Every row
+    of P sums to 1 exactly.
+  kernels: "P^1..P^4 computed exactly by repeated matrix multiplication (float64); no sampled walks"
+  relation: "K = ((P + P^2 + P^3) / 3), symmetrised in the model to Ks = (K + K^T)/2"
+  symmetrisation_disclosure: >
+    phi(b_e,b_f) = MLP([b_e+b_f, |b_e-b_f|, b_e*b_f]) is exactly symmetric in
+    (e,f), so sum_f K_ef phi_ef = sum_f Ks_ef phi_ef identically.  The model
+    stores the unordered (e<=f) pairs of Ks with the correct diagonal handling;
+    the identity is unit-tested.  K is not claimed to be symmetric itself.
+  gate:
+    # frozen BEFORE the audit numbers are produced; the audit does not tune them
+    invariance_max_abs: 1.0e-9
+    min_mean_tv_p3_to_uniform: 0.03
+    min_mean_tv_K_to_uniform: 0.05
+    min_scale_distinctness: 0.05   # mean_m mean_e 0.5*||P^3_e - P^1_e||_1 (row TV); see amendments[0]
+    decision:
+      pass: PART_A_PASS_GPU_PURCHASE
+      fail_invariance: PART_A_STOP_INVARIANCE
+      fail_mixing: PART_A_STOP_RW_DEGENERATES_TO_GLOBAL_MEAN
+      fail_scale: PART_A_STOP_SCALES_REDUNDANT
+
+communities:
+  algorithms:
+    walktrap: "self-contained deterministic Pons-Latapy Walktrap in code/walktrap_partition (networkx 3.4.2 ships no walktrap_communities); exact mean-row distances on P^4, modularity-max along the deterministic merge path"
+    deterministic_reference: "networkx.community.greedy_modularity_communities (label-blind; tie order disclosed)"
+    structural_baseline: "TASU-v1 2-edge-connected blocks + bridges mapped to bond labels"
+  bond_baseline_rule: >
+    a bond whose endpoints lie in one 2-edge-connected block gets that block id;
+    every bridge bond gets its own unique label.  This is the bond-level
+    refinement of the TASU-fixed partition and is used only as a structural
+    baseline for a descriptive comparison, never as a learned readout.
+  claims_boundary: >
+    Community counts/sizes are reported as structure, not as chemistry.
+    Bond communities guarantee unique bond membership but NOT unique atom
+    membership; boundary atoms shared by several communities are counted
+    separately.
+
+# --------------------------------------------------------------- Part B model
+model:
+  name: BondRWComposer
+  components:
+    atom_encoder: "BJOCConfig atom encoder, 128 hidden / 96 out (unchanged)"
+    bond_encoder: "BJOCConfig bond encoder, 160 hidden / 96 out (unchanged)"
+    junction_encoder: "absent (no learned Junction content anywhere)"
+    pair_mlp:
+      form: "phi(b_e,b_f) = MLP([b_e+b_f, |b_e-b_f|, b_e*b_f])"
+      hidden: 128
+      hidden_layers: 1
+      activation: SiLU
+      out: 96
+    aggregation: "r_e = sum_f K_ef phi(b_e,b_f) (index_add scatter)"
+    composer: "same shape as BJOC composer: [b, r, 0, 0, raw bond] -> 160 -> 96"
+    reader: "same shape as BJOC reader: [z, sum_a, sum_a^2, global33] -> 256 -> 256 -> 1"
+  init: "one shared scratch init for R and U (same seed, same module order); SSL only overwrites atom/bond encoders"
+  parameters:
+    expected_R: 349985
+    expected_U: 349985
+  forbidden: "no GNN / attention / iterative message passing / learned Junction encoder"
+  arms:
+    R: "K = (P+P^2+P^3)/3 effective symmetric part on the real bond line graph"
+    U: "K_ef = 1 / N_bond (same shape, same params, same init, same batch order)"
+
+# --------------------------------------------------------------- training
+training:
+  recipe_key: R3
+  epochs: 360
+  batch_size: 128
+  optimizer: Adam
+  lr: 1.0e-3
+  lr_min: 1.0e-5
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  schedule: "per-step cosine over 22,680 updates"
+  loss: "raw-y L1"
+  soup: "parameter mean of the last 5 epoch states (epochs 356..360)"
+  seeds: [0]
+  init: "same split-D Fit-only masked-SSL encoder (pretrain_D_s0.pt) for both arms"
+  batch_order: "identical per arm (torch Generator seed 0 + bp.TRAIN_SHUFFLE_OFFSET=101)"
+  budget_gpu_hours_max: 1.5
+  budget_rule: "stop if the budget is insufficient; do not shorten the trajectory"
+  gpu_discipline: "two sequential rr jobs on host res (pool res-gpu1); no concurrent tuning"
+
+# --------------------------------------------------------------- evaluation
+evaluation:
+  readout: "split-D Monitor, 1000 molecules, raw-y MAE (historically exposed)"
+  primary_contrast: "R - U paired molecule bootstrap 95% CI (5000 resamples, seed 0)"
+  auxiliary:
+    - "ordinary (y > -3) and tail (y <= -3) subgroup MAE"
+    - "RMSE / median / p90 / top-10-error-removed"
+    - "descriptive R - A0 and R - P3 differences (read-only references; different parameter budgets)"
+  reference_reads:
+    a0: "bjoc_junction_sufficiency_audit_v1/predictions/monitor_A0_D_s0.npz"
+    a2_p3: "bjoc_junction_sufficiency_audit_v1/predictions/monitor_A2_D_s0.npz; bjoc_task_adaptive_ssl_v1/predictions/monitor_P3_D_s0.npz"
+  decision:
+    RW_STRUCTURE_USED_AND_GAIN: "R - U CI upper < 0 AND C1/C2 mechanism checks pass"
+    RW_INFORMATION_BUT_NO_GAIN: "K genuinely changes outputs but R - U is not clearly negative"
+    RW_DEGENERATE_NO_GAIN: "R - U >= 0 and/or K has no measurable effect"
+  stop_rule: >
+    If R is not better than U with clear mechanism evidence, stop: no walk-length
+    search, no category weighting, no community-parameter tuning, no second seed.
+    If R > U but < P3, the next question is combining multi-scale real relations
+    with existing local content; this round does not start it.
+
+# --------------------------------------------------------------- Part C
+mechanism:
+  C1_structure_used:
+    - "R vs U prediction difference (mean/max |dpred|) on Monitor"
+    - "Pair MLP gradient norm and output magnitude on real Fit rows"
+    - "inference-time K perturbation: zero-K and K-row-permutation prediction deltas"
+    - "synthetic relation task: R vs U fit gap on a controlled pair-interaction target"
+    - "junction-moment counterexample: identical raw junction/bond marginals and per-bond junction counts, different line graph; legal-molecule search reported separately"
+  C2_joint_not_linear:
+    - "row-stochastic determinant witness: the linear surrogate sum_f (sum_e K_ef) b_f is exactly invariant to row-stochastic K, while the pair aggregate is not"
+    - "fixed-representation relation-reassignment witness with the trained Pair MLP"
+  C3_boundary: >
+    Random-walk relations are not a faithful contribution explanation.  Even if R
+    improves prediction we do not claim discovered functional groups, duplicate-free
+    chemical contributions, or chemical causality.  The round answers only whether
+    the actual topological organisation adds value over an unstructured global
+    pair summary.
+
+# --------------------------------------------------------------- deliverables
+deliverables:
+  dir: results/bond_random_walk_organization_v1
+  files:
+    - REPORT.md
+    - STRUCTURE_AUDIT.md
+    - SYNTHETIC_WITNESSES.md
+    - structure_audit.json
+    - community_audit.json
+    - synthetic_witnesses.json
+    - cpu_gates.json
+    - protocol_freeze.json
+    - rw_fit_D.pt / rw_monitor_D.pt (triplet caches, git-ignored)
+    - train_{R,U}_D_s0.json / soup_{R,U}_D_s0.pt / predictions/
+    - prediction_manifest_D.json / monitor_read_D.lock / monitor_score_D.json
+    - mechanism_audit.json / gpu_budget_ledger.json / decision.json
+    - evidence_manifest.json
+
+# --------------------------------------------------------------- amendments
+# Pre-execution amendments to the frozen text above.  Each one was applied
+# after the config was written but BEFORE any protocol command was run and
+# before any audit number or label was read.  They correct specification
+# defects (mathematical / API), they do not change the scientific question,
+# the arm definitions, the model, the recipe, or any threshold value.
+amendments:
+  - id: amendment-1-scale-distinctness-normalisation
+    date: "2026-10-14"
+    field: part_a.gate.min_scale_distinctness
+    before: "mean_m ||P^3 - P^1||_1 / (2 N^2)"
+    after: "mean_m mean_e 0.5 * ||P^3_e - P^1_e||_1 (mean row total-variation)"
+    reason: >
+      The previous expression is not a scale-distinctness measure: for
+      row-stochastic P^1, P^3 it is bounded above by 1/N per molecule
+      (mean bound 1/N ~ 0.042 on the audit molecules), so the pre-frozen
+      threshold 0.05 was mathematically unsatisfiable, and the statistic
+      shrank as molecule size grew.  The corrected statistic is the standard
+      mean total-variation distance between the 1-step and 3-step walk
+      neighbourhoods; the threshold is unchanged at 0.05.
+    evidence: "bound derivation only; no labels, no audit run, no GPU (checked 2026-10-14)"
+    no_data_used: true
+  - id: amendment-2-walktrap-implementation
+    date: "2026-10-14"
+    field: part_a.communities.algorithms.walktrap
+    before: "networkx.community.walktrap_communities"
+    after: "self-contained deterministic Walktrap in code/bond_random_walk_organization_v1.py"
+    reason: >
+      networkx 3.4.2 (installed environment, also on the remote host) does not
+      provide walktrap_communities.  The replacement implements the same
+      Pons-Latapy procedure deterministically (exact mean of member rows of
+      P1^steps, merge minimising (n1 n2/(n1+n2)) * ||Delta||^2, modularity
+      maximised along the deterministic merge path, first-occurrence tie
+      breaks) and is disclosed in STRUCTURE_AUDIT.md.
+    evidence: "import networkx; hasattr(networkx.community, 'walktrap_communities') is False"
+    no_data_used: true
