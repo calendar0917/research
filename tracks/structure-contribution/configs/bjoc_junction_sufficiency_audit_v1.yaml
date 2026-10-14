@@ -1,0 +1,287 @@
+# cscl-bjoc-junction-sufficiency-audit-v1 (pre-registration)
+#
+# Track: tracks/structure-contribution
+#
+# ONE round, THREE questions, ONE seed, split D:
+#
+#   A. How much of the current BJOC-Null competitive accuracy needs the
+#      learned Junction local content at all (A0 vs A1 vs A2)?
+#   B. Which structural-organization information does the frozen system
+#      provably lose, and where in the forward pass does it happen?
+#
+# The round is a mechanism-exploration round for an advisor discussion.  It is
+# NOT a SOTA search: no second seed, no new split, no new hyper-parameter, no
+# full-10k refit, no official valid/test, no Locked read.  A0/A1 are the only
+# new supervised trajectories (2 x R3, seed 0).  A2 is the frozen historical
+# P3-D-s0 model/predictions, reused read-only.
+#
+# Discipline inherited from cscl-bjoc-task-adaptive-ssl-v1:
+#   * official test is NEVER loaded in any form (no code path exists);
+#   * official valid is not used in this round at all;
+#   * split D is an internal re-partition of official train 10000 that has
+#     already been exposed (TA-SSL round), so its Monitor is
+#     HISTORICALLY EXPOSED EXPLORATORY DEVELOPMENT DATA, not a first blind
+#     validation and not an external test;
+#   * Monitor labels are read exactly once in this round, after every
+#     prediction file is frozen and hash-manifested;
+#   * Locked labels are NEVER read in this round;
+#   * Fit-only standardisation; Fit-only SSL encoder reuse; Fit raw-y
+#     supervision only.
+
+protocol: cscl-bjoc-junction-sufficiency-audit-v1
+status: frozen
+frozen_date: "2026-10-14"
+track: tracks/structure-contribution
+seed: 0
+official_valid_role: "not used in this round"
+official_test: never_read
+locked: never_read
+
+research_question: >
+  In the current BJOC-Null + Fit-only masked-SSL + R3 system, how much does the
+  learned Junction channel contribute (a) as graph-level Junction content and
+  (b) as a per-bond Junction-count conditioning?  And which structural
+  organization information is provably discarded by the Null grouping, at what
+  stage of the representation?
+
+# --------------------------------------------------------------- data split
+split:
+  tag: D
+  salt: cscl-bjoc-arch-breakthrough-v1-repl
+  sizes: {fit: 8000, monitor: 1000, locked: 1000}
+  grouping: "canonical SMILES groups; duplicate molecules never cross sides"
+  fingerprints:
+    fit_sha256_rows: 9468656affcc2b7c69409f03698b1b6287b3a42dc6e164efd19dfb0190254525
+    monitor_sha256_rows: d196bc75ce898c7cfd61efa133372f25803d5bc1198210f60b6e0f981a400393
+    locked_sha256_rows: f3525ae882114350a57f7b0ddb6889656f40c05cebda21b2611a2c99cdfa22d5
+  exposure_disclosure: >
+    Split D was pre-registered in the architecture round and first trained /
+    monitored / scored in cscl-bjoc-task-adaptive-ssl-v1.  Its Fit rows and
+    Monitor labels have been seen by prior experiments.  This round's Monitor
+    evaluation is therefore exploratory development scoring on exposed data.
+    Absolute levels are not comparable to official-split numbers; only the
+    within-split paired contrasts A1-A0, A2-A1, A2-A0 are interpreted.
+
+# --------------------------------------------------------------- reused assets
+reuse:
+  source_round: cscl-bjoc-task-adaptive-ssl-v1
+  source_results_dir: tracks/structure-contribution/results/bjoc_task_adaptive_ssl_v1
+  ssl_encoder_seed0:
+    file: results/bjoc_task_adaptive_ssl_v1/pretrain_D_s0.pt
+    file_sha256: 8da281fac33be1637a0fb4d98ec2f489982202bf257feec6c68ee2ecdeab83b9
+    encoder_used_sha256: 2c2bbd3fd3fec50d545bac46d7bc6a82c83c8ab8ae312bd7f9d51e32c9c7b8dc
+  p3_soup_seed0:
+    file: results/bjoc_task_adaptive_ssl_v1/soup_P3_D_s0.pt
+    file_sha256: 13a78a632fb9fc2825ad1231fe58504230fd1d24f91f6f7a5073e365d94a6277
+  fit_objects:
+    file: results/bjoc_task_adaptive_ssl_v1/objects_fit_D.pt
+    file_sha256: e55cf639522226955556a54f5d063e81b5ecd502f45c3441ff2e3b5567330803
+  monitor_objects:
+    file: results/bjoc_task_adaptive_ssl_v1/objects_monitor_D.pt
+    file_sha256: fd4cb2caad66fd693dd761222571ea7ad88a6cdcc312eb932de94da236f76ec2
+  fit_standardiser:
+    file: results/bjoc_task_adaptive_ssl_v1/prep_fit_D.json
+  p3_monitor_predictions:
+    file: results/bjoc_task_adaptive_ssl_v1/predictions/monitor_P3_D_s0.npz
+  p3_train_record:
+    file: results/bjoc_task_adaptive_ssl_v1/train_P3_D_s0.json
+    init_full_sha256: d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691
+    init_group_state_sha256: d9ffbd15356659ed06af4b43077bb7f27403ad0afc3e7ac00c4d34fc98c7415f
+    init_encoder_sha256: 91af980a414ac945ea35b31c114d4e44b636419b62320321a902179112889d12
+    batch_order_hash: d142e307339b2869f4ad2d3ff8472e28249f1dd1ff887a4ae55f5b837d61c81f
+    soup_fit_mae: 0.0010819498931086855
+    wall_seconds: 538.7026334290276
+  note: >
+    The hex values in this block are re-verified against the source manifests at
+    run time; if any file hash does not match, the runner refuses to train and
+    reports the drift instead of silently substituting another checkpoint.
+
+# --------------------------------------------------------------- arms (A)
+arms:
+  A0:
+    name: NO_LEARNED_J_CONTENT
+    composer_inputs: "W_e = 0, V_e = 0, q_e = 0; b_e and raw bond unchanged"
+    junction_forward: "computed but discarded (kept for identical model spec/forward shape)"
+    interpretation: >
+      No learned Junction content reaches the downstream model.  It is NOT
+      'no junction/second-order topology information', because global_feat and
+      radius-2 atom features remain.
+  A1:
+    name: GLOBAL_J_MOMENTS
+    composer_inputs: "W_e = mu_G (graph mean of w_j), V_e = nu_G (graph mean of w_j^2), q_e = 0"
+    junction_forward: "computed; graph moments broadcast uniformly to every bond"
+    interpretation: >
+      Full-molecule Junction content is available, but no per-bond Junction
+      count conditioning and no true Junction-to-Bond ownership.
+  A2:
+    name: P3_NULL_REFERENCE
+    composer_inputs: "W_e = n_e * mu_G, V_e = n_e * nu_G, q_e = log1p(n_e)"
+    junction_forward: "computed; historical BJOC-Null"
+    interpretation: >
+      Matched historical reference, reused read-only (model + Monitor
+      predictions).  Neither A1 nor A2 restores the true Junction-to-Bond
+      ownership relation; the ownership question was studied historically
+      (Organized vs Null; GLRC) and is not re-run here.
+
+architecture:
+  module: code/structural_relation_composer_v1.py (unchanged)
+  atom_encoder: {in: dropout-free 96 out, hidden 128}
+  bond_encoder: {out: 96, hidden 160}
+  junction_encoder: {out: 96, hidden 160}
+  composer: {out: 96, hidden 160}
+  reader: {hidden: 256, layers: 2}
+  reader_input: "[sum_b c_b (96), sum_i a_i (96), sum_i a_i^2 (96), g_G (33)] = 321"
+  allocated_parameters: 413505
+  no_new_parameters: true
+
+initialization:
+  scratch: "per seed, the historical P3 scratch init (same RNG stream), asserted by hash"
+  ssl: "per seed-0, the same split-D Fit-only masked-SSL encoder (7560 updates)"
+  composer_reader: "scratch init identical to P3-D-s0; asserted by group hash"
+  batch_order: "identical to P3-D-s0 (seed 0, 8000 rows, batch 128, 360 epochs); asserted by hash"
+
+supervised_recipe:
+  name: R3
+  epochs: 360
+  updates: 22680
+  schedule: "per-step cosine"
+  lr: 1.0e-3
+  lr_min: 1.0e-5
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  batch_size: 128
+  optimizer: Adam
+  loss: "raw-y L1"
+  soup: "parameter mean of the last 5 epoch states"
+  checkpoint_selection: "none (no validation-based selection)"
+  fp32: true
+
+budget:
+  gpu_hard_limit_hours: 1.5
+  planned_new_trajectories: 2
+  planned_gpu_hours: "2 x ~0.17 h = ~0.34 h (A0/A1 only; A2 is read-only reuse)"
+  cpu_work: "all correctness gates, prediction freeze, Monitor scoring and Part B audits"
+  no_second_seed: true
+  no_new_hyperparameter: true
+  no_full10k_refit: true
+
+label_access:
+  build_objects: "reused Fit/Monitor objects (structure fields only; built in the TA round under LabelGuard)"
+  alignment_precheck: "Fit rows only"
+  ssl: "reused checkpoint; no new SSL executed"
+  supervised_training: "Fit row raw y only"
+  monitor: "exactly one label read after the new prediction manifest is frozen and hashed"
+  locked: "never read in this round"
+  official_valid: "never loaded"
+  official_test: "never loaded"
+
+# --------------------------------------------------------------- A decisions
+decision_vocabulary:
+  - J_MOMENTS_USEFUL_EXPLORATORY
+  - J_MOMENTS_NO_CLEAR_GAIN
+  - COUNT_CONDITIONING_USEFUL_EXPLORATORY
+  - COUNT_CONDITIONING_NO_CLEAR_GAIN
+  - NULL_OWNERSHIP_BLINDNESS_VERIFIED
+  - REAL_REPRESENTATION_COLLISION_FOUND
+  - REAL_COLLISION_NOT_FOUND_WITHIN_BUDGET
+  - INCONCLUSIVE_SINGLE_SEED
+
+contrasts:
+  delta_10: "MAE(A1) - MAE(A0)"
+  delta_21: "MAE(A2) - MAE(A1)"
+  delta_20: "MAE(A2) - MAE(A0)"
+  bootstrap_unit: "molecule (paired)"
+  bootstrap_resamples: 5000
+  bootstrap_seed: 0
+  useful_threshold: -0.002
+  clear_gain_rule: >
+    A contrast is labelled *_USEFUL_EXPLORATORY only if the point estimate is
+    <= -0.002 and the paired bootstrap 95% CI upper bound is < 0.  Otherwise
+    it is labelled *_NO_CLEAR_GAIN, and INCONCLUSIVE_SINGLE_SEED is added when
+    the CI crosses zero by more than the point estimate.
+
+metrics_reported:
+  - raw_y_mae
+  - rmse
+  - median_absolute_error
+  - p90_absolute_error
+  - ordinary_subgroup (y > -3)
+  - tail_subgroup (y <= -3)
+  - top10_error_removed_mae
+  - fit_mae
+  - training_wall_seconds
+  - paired_bootstrap_ci
+
+stop_rules:
+  - "no second seed"
+  - "no new split"
+  - "no new hyper-parameter"
+  - "no full-10k refit"
+  - "do not read Locked"
+  - "do not load official valid/test"
+  - "no new module on top of A1"
+  - "report the interpretation matrix as frozen; do not chase a better MAE"
+
+# --------------------------------------------------------------- Part B rules
+structural_audit:
+  analysis_subset:
+    fit_rows: "the first 2000 rows of the sorted split-D Fit list (label-blind)"
+    monitor_rows: "all 1000 split-D Monitor rows (structure fields only; labels not read)"
+    note: >
+      The subset is fixed here before any representation is computed, so the
+      B2/B4 summaries are not selected for interest.
+  level0:
+    - "atom type histogram (28)"
+    - "bond type histogram (4)"
+    - "degree histogram (5)"
+    - "junction structural descriptor counts (centre degree, endpoints bonded, ring-bond count, both-ring, bond-type pair)"
+    - "frozen 33-dim global topology vector"
+  level1:
+    - "atom/bond/junction embedding first and second moments per molecule"
+    - "true per-bond junction count multiset"
+    - "true junction-to-bond incidence multiset signature"
+  level2:
+    - "sum_b c_b under A0, A1, A2 (same frozen P3 weights for the representation-only comparison, plus the trained A0/A1 soups for the system-level comparison)"
+  level3:
+    - "the 321-dim reader input [sum_b c_b, sum_i a_i, sum_i a_i^2, g_G]"
+  block_diagnostics:
+    - "shape, mean, std, constant-column fraction"
+    - "effective rank (entropy of the normalised singular-value spectrum)"
+    - "PCA cumulative explained variance (Fit-only fit): dims for 90% and 99%"
+    - "pairwise block linear redundancy: ridge R^2 of each block regressed on the other three (Fit-only fit)"
+    - "pairwise distance quantiles in Fit-only standardised block space"
+  collision_search:
+    scope: "official train 10000 structure fields (x / edge_index / edge_attr only)"
+    exact_key: >
+      identical 33-dim global_feat float32 bytes AND identical atom-type
+      histogram AND identical bond-type histogram AND identical degree
+      histogram AND identical per-bond junction-count multiset AND different
+      canonical SMILES
+    near_rule: >
+      If no exact collision exists, standardise the 33 global features with
+      Fit-only statistics, append atom/bond/degree histograms, and take the
+      pairs with the smallest Euclidean signature distance.  Candidate budget:
+      at most 200 pairs.  Report the distance for every pair.  Never call a
+      near pair 'identical'.
+    isomorphism_check: "different canonical SMILES is the primary check; the reported pairs are re-checked with a NetworkX GraphMatcher on atom/bond-labelled graphs"
+    max_reported_pairs: 20
+    representation_compare:
+      - "Fit-only standardised reader-input L2 distance"
+      - "frozen-prediction absolute difference"
+    not_found_token: REAL_COLLISION_NOT_FOUND_WITHIN_BUDGET
+  interventions:
+    junction_row_permutation:
+      expectation: "A2 W/V and prediction invariant (known property, re-checked)"
+    assignment_switch:
+      construction: "marginal-preserving Junction-to-Bond reassignment at the post-encoding incidence level, using the historical 4-bond/4-junction counterexample and a real-molecule disjoint-pair swap when one exists"
+      expectation: "A2 representation invariant; ORGANIZED representation changes"
+      caveat: "the switch is performed after encoding; it does not have to correspond to a realisable molecule"
+    global_block_neutralisation:
+      neutralise: ["sum_b c_b", "sum_i a_i", "sum_i a_i^2", "g_G"]
+      metric: "frozen-prediction absolute change over the pre-declared subset"
+      caveat: "zeroing a block feeds the reader an out-of-distribution input; the change is a sensitivity diagnostic, not a chemical attribution"
+  synthetic_known_truth:
+    reuse: "results/structural_relation_composer_v1 object-level counterexample (marginal-preserving ownership switch)"
+    target_M: "sum of a fixed function of the junction tokens (depends only on the Junction multiset)"
+    target_O: "sum over selected bonds of a function of the junctions that really touch that bond (depends on ownership)"
+    analysis: "deterministic distinguishability only; no new training this round"
