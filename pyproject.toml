@@ -30,6 +30,13 @@ dev = [
   "pytest==8.3.4",
   "ruff==0.8.6",
 ]
+# CPU-only chemistry stack for the structure-contribution Lipophilicity round.
+# Kept OUT of the default groups so the air-gapped res-2 offline environment is
+# untouched (rdkit is only needed locally for data prep / ECFP baselines); the
+# GPU hosts consume the committed label-free raw-graph artifact instead.
+lipo = [
+  "rdkit==2026.9.1",
+]
 wl-kernel = [
     "grakel==0.1.10",
 ]

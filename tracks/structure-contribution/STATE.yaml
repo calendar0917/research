@@ -2025,3 +2025,58 @@ next_round_candidate: >-
   without a new preregistration + explicit user authorization.
 
 updated: 2026-10-14
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-cross-task-lipophilicity-v1 (cross-task transfer of the
+# frozen BJOC-Null + masked SSL initialisation to MoleculeNet Lipophilicity;
+# preregistered before any GPU trajectory; strict label isolation, one
+# validation read, conditional seed expansion, single terminal test read)
+# ---------------------------------------------------------------------------
+
+round_cscl-bjoc-cross-task-lipophilicity-v1:
+  status: PREREGISTERED 2026-10-14; GPU not yet spent at freeze time
+  protocol: configs/bjoc_cross_task_lipophilicity_v1.yaml (frozen before any GPU run; protocol_freeze.json binds config + code + dataset/split hashes)
+  notes: notes/bjoc_cross_task_lipophilicity_v1.md
+  report: results/bjoc_cross_task_lipophilicity_v1/REPORT.md (to be written after Stage H)
+  question: >-
+    Does the one-shot Atom/Bond/Junction BJOC structural computation plus
+    train-only masked structural SSL initialisation transfer from ZINC to a new
+    molecular property task (MoleculeNet Lipophilicity, logD regression, RMSE),
+    and is the resulting single model competitive with same-protocol ECFP
+    baselines under strict label isolation and prediction freezing?
+  code:
+    - code/bjoc_lipophilicity_adapter_v1.py       # vocabulary, RDKit->RawGraph, object builder, SSL masking, DeepChem-2.8.0 splitter, LipoConfig/pretext model
+    - code/run_bjoc_cross_task_lipophilicity_v1.py # prepare-dataset/prep/gates/smoke/ssl/arm/predict/baselines/score-valid/score-test
+    - configs/bjoc_cross_task_lipophilicity_v1.yaml
+  tests: tests/test_bjoc_cross_task_lipophilicity_v1.py (23 fast RDKit-free tests)
+  data: >-
+    official MoleculeNet Lipophilicity CSV (sha256 aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd,
+    4200 rows, 0 parse failures, 0 canonical duplicates, 1 multi-component molecule kept);
+    DeepChem 2.8.0 ScaffoldSplitter reproduced index-for-index (3360/420/420, 2408 scaffold
+    groups, 0 cross-split scaffolds); raw graphs are label-free; valid/test labels live only in
+    the local data/lipophilicity/labels.npy vault.
+  model: >-
+    frozen BJOC-Null with the Lipophilicity vocabulary: input widths atom 99 / bond 15 /
+    junction 54 / global 38 (the only change); hidden widths, composer, reader, one-shot
+    forward DAG unchanged; 419713 inference parameters (ZINC 413505); no GNN/attention/
+    iteration; the ZINC checkpoints are NOT reused.
+  training: >-
+    R3-Lipo frozen for both arms: train-only mean/std normalisation, MSE, Adam 1e-3 -> 1e-5
+    per-step cosine, wd 1e-5, clip 5, batch 128, 360 epochs (9720 updates), last-5 soup, no
+    validation selection; SSL = CE(atom)+CE(bond), 15%/15% masks, 2520 updates
+    (round(96*3360/128)), train structures only; Arm S scratch vs Arm P same seed init + SSL
+    encoders; per-seed init/batch-order/schedule matched.
+  cpu_gates: >-
+    20/20 pass locally before GPU (raw determinism, split partition + reference agreement,
+    vocab/mask slot disjointness, UNK fallback, ring/bond/junction cross-check, relabel /
+    endpoint-swap / batch-composition invariance, save-load replay, hidden-truth swap,
+    mask round-trip, train-only standardisation, label-free artifacts + runtime guard, no SSL
+    heads at inference, exact parameter budget 419713, init parity, schedule counts, inverse
+    transform, no ZINC access, no GNN/attention).
+  gpu_budget: 4.0 h cap; guidance 0.2 smoke + 0.8 SSL seeds 0/1 + 0.7 supervised seeds 0/1 + 1.3 conditional seeds 2/3/4 + 0.6 conditional control + 0.4 reserve
+  discipline:
+    - "no target leakage: exp / RDKit Crippen logP never enter the BJOC input; Crippen only descriptive"
+    - "valid/test per-molecule labels unreachable on the compute checkout; ssl/arm/predict/smoke refuse when the vault is detectable"
+    - "validation predictions frozen + hashed before the single validation read; test prediction locked until validation_decision.test_authorized; terminal test read once"
+    - "one mask ratio / one backbone / one loss; no ESOL switch on failure; no ensemble headline; no test-driven search"
+  result: NOT YET RUN
