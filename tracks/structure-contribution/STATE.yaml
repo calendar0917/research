@@ -2034,10 +2034,10 @@ updated: 2026-10-14
 # ---------------------------------------------------------------------------
 
 round_cscl-bjoc-cross-task-lipophilicity-v1:
-  status: PREREGISTERED 2026-10-14; GPU not yet spent at freeze time
+  status: COMPLETE 2026-10-14 (Stage A-F-G-H all executed; terminal test read once)
   protocol: configs/bjoc_cross_task_lipophilicity_v1.yaml (frozen before any GPU run; protocol_freeze.json binds config + code + dataset/split hashes)
   notes: notes/bjoc_cross_task_lipophilicity_v1.md
-  report: results/bjoc_cross_task_lipophilicity_v1/REPORT.md (to be written after Stage H)
+  report: results/bjoc_cross_task_lipophilicity_v1/REPORT.md
   question: >-
     Does the one-shot Atom/Bond/Junction BJOC structural computation plus
     train-only masked structural SSL initialisation transfer from ZINC to a new
@@ -2048,7 +2048,7 @@ round_cscl-bjoc-cross-task-lipophilicity-v1:
     - code/bjoc_lipophilicity_adapter_v1.py       # vocabulary, RDKit->RawGraph, object builder, SSL masking, DeepChem-2.8.0 splitter, LipoConfig/pretext model
     - code/run_bjoc_cross_task_lipophilicity_v1.py # prepare-dataset/prep/gates/smoke/ssl/arm/predict/baselines/score-valid/score-test
     - configs/bjoc_cross_task_lipophilicity_v1.yaml
-  tests: tests/test_bjoc_cross_task_lipophilicity_v1.py (23 fast RDKit-free tests)
+  tests: tests/test_bjoc_cross_task_lipophilicity_v1.py (24 fast RDKit-free tests)
   data: >-
     official MoleculeNet Lipophilicity CSV (sha256 aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd,
     4200 rows, 0 parse failures, 0 canonical duplicates, 1 multi-component molecule kept);
@@ -2067,16 +2067,42 @@ round_cscl-bjoc-cross-task-lipophilicity-v1:
     (round(96*3360/128)), train structures only; Arm S scratch vs Arm P same seed init + SSL
     encoders; per-seed init/batch-order/schedule matched.
   cpu_gates: >-
-    20/20 pass locally before GPU (raw determinism, split partition + reference agreement,
-    vocab/mask slot disjointness, UNK fallback, ring/bond/junction cross-check, relabel /
-    endpoint-swap / batch-composition invariance, save-load replay, hidden-truth swap,
-    mask round-trip, train-only standardisation, label-free artifacts + runtime guard, no SSL
-    heads at inference, exact parameter budget 419713, init parity, schedule counts, inverse
-    transform, no ZINC access, no GNN/attention).
+    21/21 pass (local with RDKit and remote res without RDKit; the raw-conversion gate
+    uses a committed 10-row golden raw-graph fixture so the GPU host needs no RDKit);
+    raw determinism, split partition + reference agreement, vocab/mask slot disjointness,
+    UNK fallback, ring/bond/junction cross-check, relabel / endpoint-swap / batch-composition
+    invariance, save-load replay, hidden-truth swap, mask round-trip, train-only
+    standardisation, label-free artifacts + runtime guard, no SSL heads at inference, exact
+    parameter budget 419713, init parity, schedule counts, inverse transform, no ZINC access,
+    no GNN/attention.
   gpu_budget: 4.0 h cap; guidance 0.2 smoke + 0.8 SSL seeds 0/1 + 0.7 supervised seeds 0/1 + 1.3 conditional seeds 2/3/4 + 0.6 conditional control + 0.4 reserve
   discipline:
     - "no target leakage: exp / RDKit Crippen logP never enter the BJOC input; Crippen only descriptive"
     - "valid/test per-molecule labels unreachable on the compute checkout; ssl/arm/predict/smoke refuse when the vault is detectable"
     - "validation predictions frozen + hashed before the single validation read; test prediction locked until validation_decision.test_authorized; terminal test read once"
     - "one mask ratio / one backbone / one loss; no ESOL switch on failure; no ensemble headline; no test-driven search"
-  result: NOT YET RUN
+  result: >-
+    CROSS_TASK_SSL_CONFIRMED + COMPETITIVE_WITH_STRONG_BASELINES (in-protocol ECFP only).
+    Validation (5 seeds, 420 molecules): Arm S RMSE 0.80261 / MAE 0.60856 vs Arm P
+    0.71351 / 0.52853, paired seed-mean delta -0.08904 (95% CI [-0.13291, -0.04270],
+    -11.10% rel), all 5 seeds same direction -> frozen gate decision
+    TRANSFER_SSL_GAIN_PROMISING, test authorized. Terminal test (single read, 420
+    molecules, predictions hashed first): Arm S RMSE 0.77511 +/- 0.02781 / MAE
+    0.57682 vs Arm P 0.73444 +/- 0.01667 / MAE 0.54328, delta -0.04056 (95% CI
+    [-0.08053, -0.00057], -5.23% rel), 5/5 seeds same direction. ECFP4+RF test
+    0.87660, ECFP4+XGB test 0.85973 (same indices, train labels only). No same-protocol
+    public Lipophilicity result exists -> no SOTA claim; graph/message-passing baselines
+    not run -> NOT VERIFIED. GPU 1.7842 of 4.0 h (SSL 1.005 h + supervised 0.772 h).
+  terminal_conclusion: >-
+    The masked-SSL initialisation gain transfers across tasks (ZINC -> Lipophilicity)
+    with matched parameters, schedule and seeds; the test gain is real but smaller than
+    validation (5.23% vs 11.10%) and the test CI upper bound (-0.00057) is close to
+    zero, so the mechanism (representation vs optimisation conditioning) remains open.
+    Recommended next step (not authorized here): frozen-SSL-encoder representation-only
+    control (~0.8 GPU-h) before an ESOL second-target replication.
+  artifacts: >-
+    results/bjoc_cross_task_lipophilicity_v1/{REPORT.md, BENCHMARK_AUDIT.md, validation_metrics.json,
+    validation_decision.json, test_metrics.json, prediction_manifest_valid.json,
+    prediction_manifest_test.json, artifact_manifest_pre_test.json, gpu_budget_ledger.json,
+    cpu_gates.json, cpu_gates_remote.json, gpu_smoke.json}; checkpoints/predictions stay
+    untracked by design (see REPORT section 11).

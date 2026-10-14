@@ -82,14 +82,20 @@ for this dataset"*（`lipo_datasets.py`），因此 scaffold 划分不是我们�
 
 | 方法 | split | 度量 | 值 | 备注 |
 | --- | --- | --- | --- | --- |
-| ECFP4 (2048-bit) + RandomForest(500) | 本协议 | valid RMSE / MAE | 运行后回填 | 本仓库同索引训练 |
-| ECFP4 + XGBoost (hist) | 本协议 | valid RMSE / MAE | 运行后回填 | 本仓库同索引训练 |
-| BJOC-Lipo-Scratch (Arm S) | 本协议 | valid / test RMSE | 运行后回填 | 419,713 参数 |
-| BJOC-Lipo-SSL (Arm P) | 本协议 | valid / test RMSE | 运行后回填 | 同上 + train-only masked SSL |
-| RDKit Crippen logP | — | — | 描述性参考 | 只作化学基线，绝不作为模型输入 |
+| ECFP4 (2048-bit) + RandomForest(500) | 本协议 | valid RMSE / MAE | 0.95976 / 0.75504 | 本仓库同索引训练（`baselines.json`） |
+| ECFP4 (2048-bit) + RandomForest(500) | 本协议 | **test RMSE / MAE** | **0.87660 / 0.70321** | 同上 |
+| ECFP4 + XGBoost (hist, 500×depth6) | 本协议 | valid RMSE / MAE | 0.93787 / 0.73806 | 同索引、同 train 标签 |
+| ECFP4 + XGBoost (hist, 500×depth6) | 本协议 | **test RMSE / MAE** | **0.85973 / 0.68225** | 同上 |
+| BJOC-Lipo-Scratch (Arm S) | 本协议 | valid RMSE / MAE（5 seeds 均值） | 0.80261 / 0.60856 | 419,713 参数，无预训练；test 0.77511 / 0.57682（±0.02781） |
+| BJOC-Lipo-SSL (Arm P) | 本协议 | valid RMSE / MAE（5 seeds 均值） | **0.71351 / 0.52853** | 同上模型 + train-only masked SSL 编码器初始化；test **0.73444 / 0.54328**（±0.01667） |
+| RDKit Crippen logP | — | — | 描述性参考 | 只作化学基线，绝不作为模型输入；本轮未将其与 RMSE 并列排名 |
 
-（Stage H 结束后由 `REPORT.md` 给出的最终数字为准；表 A 由
-`validation_metrics.json` / `test_metrics.json` 回填。）
+表 A 的口径：同一 split 索引、同一逐分子标签、同一 raw-scale 度量、单模型、无
+验证集选模。Arm S/P 的 valid 数字来自 Stage F/G（5 seeds × 420 分子），test 数字
+来自 Stage H 的一次性冻结读取（10 个预测文件先 SHA-256 冻结，见
+`artifact_manifest_pre_test.json` 与 `prediction_manifest_test.json`）。
+ECFP 基线在 valid/test 上均优于 MoleculeNet 原文的 random-split 数字（0.799/0.655 不可比），
+说明 split 难度差异是真实存在的，不能跨 split 引用。
 
 ### 表 B — 无外部分子、但 split 不同的公开数字（不能直接排名）
 

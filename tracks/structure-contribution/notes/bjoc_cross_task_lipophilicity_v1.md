@@ -146,3 +146,31 @@ Arm 命名：**S** = Scratch；**P** = 同 seed init + SSL encoder（composer/re
   随机 scaffold 划分不同；与 MoleculeNet 原文的 random split 不同；
 - 因此任何跨来源比较都必须标注 split 类型与外部数据使用情况；
   分表呈现，且不使用公开榜单数字来断言 SOTA。
+
+---
+
+## 10. 执行记录与结果（后验补记，2026-10-14；不改变 §1–§9 的任何规则）
+
+冻结执行 commit `b56362243cb1`（远端 `res`，A100-SXM4-40GB ×2，torch 2.5.1+cu124），
+终局读取 commit `27f9711cdd02`。CPU 门禁 21/21（本地 + 远端各一次）；单测 24 passed；
+GPU 总支出 **1.7842 / 4.0 h**（`gpu_budget_ledger.json`）。
+
+* **Stage F（预注册门槛，seeds 0/1，valid）**：S 0.82875 vs P 0.71517，
+  Δ=−0.11358（−13.70%）；8 项条件全部满足 → `TRANSFER_SSL_GAIN_PROMISING`，
+  `seeds_to_confirm=[2,3,4]`，`test_authorized=true`。
+* **Stage G（5 seeds，valid）**：S 0.80261 / MAE 0.60856 vs P 0.71351 / MAE 0.52853；
+  Δ=−0.08904（95% CI [−0.13291, −0.04270]，−11.10%）；5/5 seed 同向；
+  尾部子群（n=47）Δ=−0.0796，非离群驱动。
+* **Stage H（终局一次读取，test）**：S 0.77511±0.02781 / MAE 0.57682 vs
+  P 0.73444±0.01667 / MAE 0.54328；Δ=−0.04056（95% CI [−0.08053, −0.00057]，
+  −5.23%）；5/5 seed 同向；预测文件先 SHA-256 冻结（`artifact_manifest_pre_test.json`
+  覆盖 57 个文件，`prediction_manifest_test.json` combined `39c6cc6c…`）。
+* **同协议基线**（同 split 索引、同 train 标签）：ECFP4+RF test 0.87660 / 0.70321，
+  ECFP4+XGB test 0.85973 / 0.68225；P 比二者低 16.2% / 14.6%。
+* **终局结论词**：`CROSS_TASK_SSL_CONFIRMED`、`COMPETITIVE_WITH_STRONG_BASELINES`
+  （仅对协议内 ECFP）；**不主张 SOTA**——2026-10-14 检索显示不存在同协议
+  （DeepChem 2.8.0 确定性 scaffold 3360/420/420、零外部分子、单模型）公开结果。
+* **必须随结果披露的局限**：test 增益小于 valid（5.23% vs 11.10%），test CI 上界
+  −0.00057 非常接近 0；test 尾部仅 20 分子；单数据集、单 split；无同协议图模型基线；
+  机制（表征 vs 优化条件）未分离——P 的 train-fit 好 4–5× 且种子方差更小。
+* 细节、逐 seed 表、哈希与运行清单见 `results/bjoc_cross_task_lipophilicity_v1/REPORT.md`。
