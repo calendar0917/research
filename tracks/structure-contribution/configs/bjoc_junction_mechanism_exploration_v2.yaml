@@ -1,0 +1,323 @@
+# cscl-bjoc-junction-mechanism-exploration-v2 (pre-registration)
+#
+# Track: tracks/structure-contribution
+#
+# ONE round with two parts, driven by the advisor-discussion question:
+#
+#   Which of the following is the current BJOC limit?
+#     (a) the Junction content itself,
+#     (b) where Junction information enters the downstream model,
+#     (c) how whole-graph Junction information is organised, or
+#     (d) training coverage of extreme molecules.
+#
+# Part I  (CPU only): error-complementarity analysis of the ALREADY FROZEN
+#   split-D Monitor predictions A0/A1/A2 seed 0 from the junction-sufficiency
+#   audit round.  No retraining of A0/A1/A2 seed 0.  This is exploratory
+#   analysis of historically exposed development data.
+#
+# Part II (GPU): three pre-declared architecture arms, trained on split D:
+#
+#   C  J_COUNT_ONLY        W=0, V=0, q=log1p(n_e)         (no learned J content)
+#   D  J_DIRECT_READOUT    A0 composer; reader gets [z, zA, zA2, g, mu_G, nu_G]
+#   E  J_TYPE_CONDITIONED  W=n_e*mu_{r_e}, V=n_e*nu_{r_e}, q=log1p(n_e)
+#
+# plus A1 seed 1 as the same-seed control of D, and A2/P3 seed 1 reused
+# read-only.  No third architecture, no GNN/Transformer/attention/iteration,
+# no hyper-parameter search, no new split, no official valid/test, no Locked
+# label read, no full-10k refit.
+#
+# Discipline inherited from prior rounds:
+#   * split D was exposed in the architecture / TA-SSL rounds; its Monitor is
+#     HISTORICALLY EXPOSED EXPLORATORY DEVELOPMENT DATA, not a blind test;
+#   * Monitor labels are read exactly once in this round, after every new
+#     prediction file is frozen and hash-manifested;
+#   * Locked labels are NEVER read; official valid/test are NEVER loaded.
+#
+# Seed-1 purchase rule (frozen before any trajectory): the seed-1 matrix is
+# bought for training completeness and pre-declared budget only, NOT on seed-0
+# Monitor outcomes.  Pre-declared seed-1 priority order:
+#   1. E seed 1, 2. D seed 1, 3. A1 seed 1, 4. C seed 1.
+# A0 seed 1 is NOT trained (does not exist historically); all A0 seed-1
+# contrasts are reported as NOT_RUN.
+
+protocol: cscl-bjoc-junction-mechanism-exploration-v2
+status: frozen
+frozen_date: "2026-10-14"
+track: tracks/structure-contribution
+official_valid_role: "not used in this round"
+official_test: never_read
+locked: never_read
+
+research_question: >
+  Part I: is A2's RMSE (square-error) disadvantage driven by a few extreme
+  molecules, by structural rarity of the molecules A0 predicts better, or is
+  it broad across structurally similar molecules?  Part II: where should
+  Junction information enter the whole-graph predictor?  Tests: (C) is a
+  deterministic per-bond count enough?  (D) is a direct graph-level readout
+  of the Junction moments better than the per-bond broadcast?  (E) does a
+  fixed, label-blind bond-type-conditioned pooling of the same moments add
+  value over the unconditional graph mean?
+
+# --------------------------------------------------------------- data split
+split:
+  tag: D
+  salt: cscl-bjoc-arch-breakthrough-v1-repl
+  sizes: {fit: 8000, monitor: 1000, locked: 1000}
+  grouping: "canonical SMILES groups; duplicate molecules never cross sides"
+  fingerprints:
+    fit_sha256_rows: 9468656affcc2b7c69409f03698b1b6287b3a42dc6e164efd19dfb0190254525
+    monitor_sha256_rows: d196bc75ce898c7cfd61efa133372f25803d5bc1198210f60b6e0f981a400393
+    locked_sha256_rows: f3525ae882114350a57f7b0ddb6889656f40c05cebda21b2611a2c99cdfa22d5
+  exposure_disclosure: >
+    Split D was pre-registered in the architecture round and used in the
+    TA-SSL and junction-sufficiency rounds.  Its Fit rows and Monitor labels
+    have been seen by prior experiments.  This round's Monitor evaluation is
+    exploratory development scoring on exposed data; only within-split paired
+    arm contrasts are interpreted.
+
+# --------------------------------------------------------- reused (read-only)
+reuse:
+  source_round_ssl_p3: cscl-bjoc-task-adaptive-ssl-v1
+  source_results_dir: tracks/structure-contribution/results/bjoc_task_adaptive_ssl_v1
+  junction_audit_dir: tracks/structure-contribution/results/bjoc_junction_sufficiency_audit_v1
+  ssl_encoder_seed0:
+    file: results/bjoc_task_adaptive_ssl_v1/pretrain_D_s0.pt
+    file_sha256: 8da281fac33be1637a0fb4d98ec2f489982202bf257feec6c68ee2ecdeab83b9
+    encoder_used_sha256: 2c2bbd3fd3fec50d545bac46d7bc6a82c83c8ab8ae312bd7f9d51e32c9c7b8dc
+  ssl_encoder_seed1:
+    file: results/bjoc_task_adaptive_ssl_v1/pretrain_D_s1.pt
+    file_sha256: 2e06d2f5067b1a40720f4ee681252bd58d631ec32970091042cac08ffd7a700b
+    encoder_used_sha256: 655633c68a46894805f50416cdc98604e53893e39129545168ef0b39974cd70f
+  p3_soup_seed0:
+    file: results/bjoc_task_adaptive_ssl_v1/soup_P3_D_s0.pt
+    file_sha256: 13a78a632fb9fc2825ad1231fe58504230fd1d24f91f6f7a5073e365d94a6277
+  p3_soup_seed1:
+    file: results/bjoc_task_adaptive_ssl_v1/soup_P3_D_s1.pt
+    file_sha256: 13c5e8124007f3efab1745872acc4f3f976ff732e39cb9311a8e325076c84df3
+  a0_soup_seed0:
+    file: results/bjoc_junction_sufficiency_audit_v1/soup_A0_D_s0.pt
+    file_sha256: 849244a07e28e2727b9f5e76e342ce665945a85c82053dfc93dd4c5c407120bd
+  a1_soup_seed0:
+    file: results/bjoc_junction_sufficiency_audit_v1/soup_A1_D_s0.pt
+    file_sha256: ee6c9729a1679c944a4fbfc7a2f1188fe760a2c2ad722c6971bff273aaf7b89b
+  fit_objects:
+    file: results/bjoc_task_adaptive_ssl_v1/objects_fit_D.pt
+    file_sha256: e55cf639522226955556a54f5d063e81b5ecd502f45c3441ff2e3b5567330803
+  monitor_objects:
+    file: results/bjoc_task_adaptive_ssl_v1/objects_monitor_D.pt
+    file_sha256: fd4cb2caad66fd693dd761222571ea7ad88a6cdcc312eb932de94da236f76ec2
+  fit_standardiser:
+    file: results/bjoc_task_adaptive_ssl_v1/prep_fit_D.json
+  p3_train_seed0:
+    file: results/bjoc_task_adaptive_ssl_v1/train_P3_D_s0.json
+    init_full_sha256: d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691
+    init_group_state_sha256: d9ffbd15356659ed06af4b43077bb7f27403ad0afc3e7ac00c4d34fc98c7415f
+    init_encoder_sha256: 91af980a414ac945ea35b31c114d4e44b636419b62320321a902179112889d12
+    encoder_used_sha256: 2c2bbd3fd3fec50d545bac46d7bc6a82c83c8ab8ae312bd7f9d51e32c9c7b8dc
+    batch_order_hash: d142e307339b2869f4ad2d3ff8472e28249f1dd1ff887a4ae55f5b837d61c81f
+  p3_train_seed1:
+    file: results/bjoc_task_adaptive_ssl_v1/train_P3_D_s1.json
+    init_full_sha256: c79e6b02521c224e79790382438ca72c08f9e22e691f66fb5ab950dea4b49c0b
+    init_group_state_sha256: 98d11fe93b03368e8ea5f66b17c1ccf16d850ee13a43f56f49ddc93dd08a993c
+    init_encoder_sha256: 83d8b086bf1f9ee6c145336a3ea67e710bcf42658151061c293c2a3380ddd303
+    encoder_used_sha256: 655633c68a46894805f50416cdc98604e53893e39129545168ef0b39974cd70f
+    batch_order_hash: 70355ebf55c3409e03bf39bf4da426984a69b3baf0483557b48f01a21d1d1ed9
+  monitor_y:
+    file: results/bjoc_task_adaptive_ssl_v1/monitor_y_D.npy
+    array_sha256: bbcf6faf4ab173cf12e4527645e88144b937f1c234f3e505e36acd368fdbb190
+  part1_frozen_predictions:
+    A0: {file: results/bjoc_junction_sufficiency_audit_v1/predictions/monitor_A0_D_s0.npz, sha256: 4ef6777aa6404dc974a0d445b71a88041510294a1352b6ab98b3caca483c4426}
+    A1: {file: results/bjoc_junction_sufficiency_audit_v1/predictions/monitor_A1_D_s0.npz, sha256: 5964b5c925eaa4da20a819897efb110e12ed2b1894130681345a655c391929ca}
+    A2: {file: results/bjoc_junction_sufficiency_audit_v1/predictions/monitor_A2_D_s0.npz, sha256: 152791eea263475f87cdc7f3856188958926a6154c113608355753facc654093}
+  part1_historical_scores:
+    file: results/bjoc_junction_sufficiency_audit_v1/monitor_scores.json
+    A0_mae: 0.12151426841621288
+    A1_mae: 0.1062394091093447
+    A2_mae: 0.103959675750928
+  p3_monitor_prediction_seed1:
+    file: results/bjoc_task_adaptive_ssl_v1/predictions/monitor_P3_D_s1.npz
+    sha256: ace12b6d71cd627414137e14f48dc817d1efa337b48458d502de54b6f5951d43
+  note: >
+    Every hash in this block is re-verified at run time; the runner refuses to
+    train or score on any drift instead of silently substituting an artifact.
+
+# --------------------------------------------------------------- arms (Part II)
+arms:
+  A0:
+    name: NO_LEARNED_J_CONTENT
+    composer_inputs: "W_e = 0, V_e = 0, q_e = 0"
+    role: "seed-0 baseline for C; seed 1 NOT_RUN by protocol"
+  A1:
+    name: GLOBAL_J_MOMENTS
+    composer_inputs: "W_e = mu_G, V_e = nu_G, q_e = 0"
+    role: "seed-0 reused; seed-1 newly trained as the D control"
+  A2:
+    name: P3_NULL_REFERENCE
+    composer_inputs: "W_e = n_e * mu_G, V_e = n_e * nu_G, q_e = log1p(n_e)"
+    role: "historical reference, reused read-only (both seeds)"
+  C:
+    name: J_COUNT_ONLY
+    composer_inputs: "W_e = 0, V_e = 0, q_e = log1p(n_e)"
+    meaning: >
+      Learned Junction content is entirely absent downstream, but the
+      deterministic per-bond Junction count n_e is still supplied.  The
+      Junction encoder is executed for identical forward shape, discarded,
+      and therefore receives no supervised gradient (disclosed; effective
+      active capacity < A2).  Core contrasts: C-A0 (is the per-bond count
+      useful?) and C-A2 (do learned moments add value on top of the count?).
+  D:
+    name: J_DIRECT_READOUT
+    composer_inputs: "W_e = 0, V_e = 0, q_e = 0 (A0 composer)"
+    reader_input: "[z_B, z_A, z_A2, g_G, mu_G, nu_G]  (321 + 192 = 513)"
+    meaning: >
+      The graph-level Junction moments mu_G / nu_G are appended to the reader
+      input directly instead of being broadcast to every bond and passed
+      through the per-bond composer.  The 192 new first-layer reader columns
+      are zero-initialised, so the initial function equals A0.  Not
+      parameter-matched to A1/A2 (462,657 vs 413,505 allocated parameters).
+  E:
+    name: J_TYPE_CONDITIONED_POOL
+    composer_inputs: "W_e = n_e * mu_{r_e}, V_e = n_e * nu_{r_e}, q_e = log1p(n_e)"
+    grouping_key: "r_e = raw physical bond type (0..3), label blind"
+    meaning: >
+      The same first/second Junction moments are conditioned on the raw bond
+      type of each bond: mu_r = S_r/N_r with S_r = sum_{e:r_e=r} sum_{j in e} w_j.
+      No new parameters, no gates, no attention; the only change versus A2 is
+      which bond receives which conditional mean.  Exactly preserves the
+      per-molecule totals sum_e W_e = 2 sum_j w_j and sum_e V_e = 2 sum_j w_j^2.
+
+architecture:
+  module: code/structural_relation_composer_v1.py (unchanged for A0/A1/A2/C/E layouts)
+  atom_encoder: {in: 96 out, hidden 128}
+  bond_encoder: {out: 96, hidden 160}
+  junction_encoder: {out: 96, hidden 160}
+  composer: {out: 96, hidden 160}
+  reader: {hidden: 256, layers: 2}
+  allocated_parameters:
+    base_and_C_E: 413505
+    D: 462657
+  d_new_reader_columns: 192
+  d_new_first_layer_parameters: 49152
+
+initialization:
+  scratch: "per seed, the historical P3 scratch init (same RNG stream), asserted by hash"
+  ssl: "per seed, the split-D Fit-only masked-SSL encoder (7560 updates), asserted by hash"
+  composer_reader: "scratch init identical to the P3-D-s{seed} group state"
+  d_reader_expansion: "old 321 columns copied tensor-wise; last 192 columns exactly zero; reader bias and later layers copied"
+  batch_order: "identical to P3-D-s{seed} (8000 rows, batch 128, 360 epochs); asserted by hash"
+
+supervised_recipe:
+  name: R3
+  epochs: 360
+  updates: 22680
+  schedule: "per-step cosine"
+  lr: 1.0e-3
+  lr_min: 1.0e-5
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  batch_size: 128
+  optimizer: Adam
+  loss: "raw-y L1"
+  soup: "parameter mean of the last 5 epoch states"
+  checkpoint_selection: "none"
+  fp32: true
+
+training_matrix:
+  seed0: {new: [C, D, E], reused: [A0, A1, A2]}
+  seed1: {new: [A1, C, D, E], reused: [A2], not_run: [A0]}
+  seed1_purchase_priority: [E, D, A1, C]
+  seed1_decision_rule: "bought for completeness and pre-declared budget only; NOT selected on seed-0 Monitor outcome"
+
+# --------------------------------------------------------------- Part I analysis
+part1:
+  frozen_predictions: {A0: "monitor_A0_D_s0", A1: "monitor_A1_D_s0", A2: "monitor_A2_D_s0"}
+  verify: "sha256 + row arange + prediction scale + y hash; recomputed MAE must match the historical monitor_scores.json to 1e-12"
+  pairs: [[A2, A0], [A1, A0], [A2, A1]]
+  top_k: [1, 3, 5, 10, 20]
+  "clearly_better_threshold": 0.05
+  descriptor_blocks:
+    - "raw: [n_atoms, n_bonds, n_junctions, cyclomatic_rank]"
+    - "global_feat: the frozen 33-dim label-blind global topology vector"
+    - "atom_type_histogram: 28 counts"
+    - "bond_type_histogram: 4 counts"
+    - "degree_histogram: 5 counts (0..4, 4 = degree>=4)"
+  novelty:
+    fit_only_standardisation: true
+    distance: "minimum L2 to any of the 8000 Fit molecules in the standardised descriptor space"
+    monitor_strata: "Monitor-distance quartiles Q1..Q4 (thresholds computed on Monitor only; no label used)"
+  structure_vs_label_disclosure: >
+    Structure-based strata support exploratory readings about harder structure
+    types.  Label-based strata describe the relation between y and errors only
+    and cannot become a prediction-time structural rule.
+  forbidden: "no threshold tuning on Monitor labels; no descriptor change after reading the results"
+
+# --------------------------------------------------------------- decisions
+decision_vocabulary:
+  - COUNT_ONLY_NEAR_A2
+  - COUNT_ONLY_INSUFFICIENT
+  - COUNT_ONLY_INCONCLUSIVE
+  - J_DIRECT_READOUT_USEFUL_EXPLORATORY
+  - J_DIRECT_READOUT_NO_GAIN
+  - J_TYPE_POOL_USEFUL_EXPLORATORY
+  - J_TYPE_POOL_NO_GAIN
+  - J_TYPE_POOL_FIT_ONLY
+  - INCONCLUSIVE_SINGLE_SEED
+  - NOT_RUN
+
+decision_rules:
+  useful: "delta <= -0.002 and paired molecule-bootstrap CI95 upper < 0"
+  count_only_near: "|delta(C-A2)| <= 0.002 on the seed-0 pair (or seed-mean when both seeds exist)"
+  count_only_insufficient: "delta(C-A2) >= +0.005"
+  direct_readout_useful: "D-A1 useful by the rule above; RMSE and tail reported descriptively"
+  type_pool_useful: "E-A2 useful by the rule above"
+  type_pool_fit_only: "E fit MAE improves while E-A2 Monitor delta >= 0"
+
+# --------------------------------------------------------------- budget
+budget:
+  gpu_hard_limit_hours: 2.0
+  planned_new_trajectories: 7
+  planned_gpu_hours: "7 x ~0.17 h = ~1.2 h"
+  no_third_architecture: true
+  no_new_hyperparameter: true
+  no_full10k_refit: true
+  no_official_test: true
+  no_locked_read: true
+
+# --------------------------------------------------------------- label access
+label_access:
+  build_objects: "reused Fit/Monitor objects (structure fields only)"
+  alignment_precheck: "Fit rows only"
+  ssl: "reused per-seed Fit-only SSL encoder checkpoints"
+  supervised_training: "Fit row raw y only"
+  monitor: "exactly one label read after the new prediction manifest is frozen and hashed"
+  locked: "never read in this round"
+  official_valid: "never loaded"
+  official_test: "never loaded"
+
+# --------------------------------------------------------------- CPU gates
+cpu_gates:
+  - "C/E allocated parameter count == 413505; D == 462657 checked with named_parameters()"
+  - "E tensor shapes and same-seed init identical to A2 / base"
+  - "C W/V exactly zero; C q exactly log1p(n_e)"
+  - "D first-layer new columns exactly zero; D init forward equals A0 init forward"
+  - "D new reader columns and Junction encoder receive nonzero gradient on one Fit batch"
+  - "C Junction encoder receives no gradient (structurally inactive; disclosed)"
+  - "E moment conservation sum_e W_e == 2 sum_j w_j and sum_e V_e == 2 sum_j w_j^2"
+  - "E type-bucket reduction equals an independent Python loop"
+  - "type relabel / atom relabel / bond endpoint swap / Junction row order / batch composition invariance"
+  - "empty graph / empty junction / empty bucket produce no NaN"
+  - "save-load replay exact"
+  - "Fit-only standardisation and no Monitor/Locked label access, no official valid/test path"
+  - "batch-order hash and SSL encoder hash match the P3-D-s{seed} records"
+  - "no GNN / Transformer / attention / iterative message-passing module"
+
+ban:
+  - "no third architecture candidate"
+  - "no formula change after seeing Monitor scores"
+  - "no Junction hidden-width or pooling-bucket search"
+  - "no learned attention/gates"
+  - "no GLRC / DLP / Organized / typed-path-ring re-run"
+  - "no official valid/test or Lipophilicity test access"
+  - "no seed purchase decided on seed-0 Monitor outcome"
+  - "no bootstrap crossing zero presented as proof of no difference"
+  - "no forward sensitivity presented as causal contribution"
