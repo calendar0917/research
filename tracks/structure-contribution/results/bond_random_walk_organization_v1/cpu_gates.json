@@ -1,0 +1,86 @@
+{
+ "protocol": "cscl-bond-random-walk-organization-v1",
+ "git_commit": "10496f29243c3a55ca7cb123d00c8322f1c55e4f",
+ "device": "cpu",
+ "kernel_checks": {
+  "row_sum_max": 1.1102230246251565e-16,
+  "power_recursion_max": 0.0,
+  "zero_degree_ok": true
+ },
+ "model_checks": {
+  "parameter_count_R": 349985,
+  "parameter_count_U": 349985,
+  "parameter_counts_equal": true,
+  "parameter_count_matches_frozen": true,
+  "init_state_equal": true,
+  "composer_in": 296,
+  "reader_in": 321,
+  "forbidden_modules": [],
+  "ssl_encoder_hash_equal": true,
+  "ssl_encoder_differs_from_scratch": true
+ },
+ "forward_checks": {
+  "batch_membership_max_abs_diff": 3.2782554626464844e-07,
+  "K_vs_uniform_mean_abs_dpred": 0.004921896383166313,
+  "all_finite": true,
+  "atom_relabel_max_abs_dpred": 1.4901161193847656e-07,
+  "save_load_max_abs_dpred": 0.0
+ },
+ "gradient_checks": {
+  "pair_mlp_grad_norms": [
+   0.1463557630777359,
+   0.025389354676008224,
+   0.10929737240076065,
+   0.08679712563753128
+  ],
+  "pair_mlp_grad_live": true,
+  "pair_mlp_grad_norm_mean": 0.09195990394800901
+ },
+ "uniform_checks": {
+  "n_triplets": 45,
+  "expected_n_triplets": 45,
+  "weights_all_equal": true,
+  "weight_value": 0.1111111119389534
+ },
+ "witnesses": {
+  "junction_moment_counterexample": {
+   "legal_molecule": false,
+   "warning": "abstract incidence systems, not realisable as molecules",
+   "raw_marginals_equal": [
+    4,
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     2,
+     2,
+     2,
+     2
+    ]
+   ],
+   "null_projection_equal": true,
+   "K_max_abs_diff": 0.25,
+   "K_A_tv_uniform": 0.14583333333333331,
+   "K_B_tv_uniform": 0.5,
+   "bond_line_graph": {
+    "A_edges": 4.0,
+    "B_edges": 2.0
+   }
+  },
+  "pair_block_ablation": {
+   "zero_sum_mean_abs_dphi": 1.260229468345642,
+   "zero_sum_rel": 0.5969674587249756,
+   "zero_diff_mean_abs_dphi": 1.5000884532928467,
+   "zero_diff_rel": 0.7105880379676819,
+   "zero_prod_mean_abs_dphi": 0.9263099431991577,
+   "zero_prod_rel": 0.43879061937332153,
+   "phi_mean_abs": 2.1110522747039795
+  }
+ },
+ "passed": true,
+ "official_valid_loaded": false,
+ "official_test_loaded": false
+}

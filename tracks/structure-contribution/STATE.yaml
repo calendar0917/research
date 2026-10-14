@@ -2222,3 +2222,69 @@ round_cscl-bjoc-junction-mechanism-exploration-v2:
     official valid/test, no full-10k refit, no seed-1 purchase driven by seed-0
     score. Recorded deviations: two-phase D gradient gate (zero-init readout),
     analysis-optional remote freeze, seed-1 binaries restored from prior rr pull.
+
+# ---------------------------------------------------------------------------
+# round: cscl-bond-random-walk-organization-v1 (bond line-graph multi-scale
+# random-walk relation feeding a shared Bond-Bond Pair MLP vs the same
+# machinery with uniform global pair weights; preregistered before any
+# Part A audit or GPU trajectory)
+# ---------------------------------------------------------------------------
+
+round_cscl-bond-random-walk-organization-v1:
+  status: COMPLETE 2026-10-14 (Part A gate PASS, R/U trained sequentially on res-gpu1, Monitor read once, Locked never read, no next round)
+  protocol: configs/bond_random_walk_organization_v1.yaml (frozen; two pre-execution amendments recorded in-file: amendment-1 scale-distinctness normalisation fix with threshold unchanged, amendment-2 self-contained deterministic Walktrap because networkx 3.4.2 has no walktrap_communities)
+  report: results/bond_random_walk_organization_v1/REPORT.md
+  code:
+    - code/bond_random_walk_organization_v1.py
+    - code/run_bond_random_walk_organization_v1.py
+    - tests/test_bond_random_walk_organization_v1.py (17 fast tests; all pass)
+  question: >-
+    Without presupposing the 3-atom/2-bond Junction as an independent object, can
+    Bond-Bond interactions learned from real molecular connectivity with a
+    multi-scale topological context beat an unstructured global pair-summary
+    control?
+  arms: >-
+    R = fixed Ks = sym((P+P^2+P^3)/3) on the physical bond line graph; U = K_ef = 1/N_bond.
+    Identical scratch init (sha 90bf6322...), identical Fit-only masked-SSL encoders
+    (used 71bb6587...), identical batch order (hash asserted), R3 recipe 360 epochs /
+    22680 updates, raw-y L1, last-5 soup, 349,985 params each; no learned Junction
+    encoder, no GNN/attention/iteration; phi symmetric so K == Ks identically (unit-tested).
+  part_a_gate: >-
+    PASS on the first 2000 split-D Fit rows (label-blind): mean TV(P^3,uniform) 0.688
+    (gate 0.03), mean K TV 0.744 (gate 0.05), mean row-TV(P1,P3) 0.250 (gate 0.05),
+    invariance max 1.11e-16 (gate 1e-9); triplet double-sum reconstruction err <=1.9e-7;
+    208 real molecule pairs with identical raw marginals but different K; abstract
+    non-legal junction-moment counterexample K diff 0.25.
+  communities: >-
+    Same line graph, deterministic Walktrap mean 3.63 communities vs TASU 2ECC/bridge
+    10.16 and greedy 4.33; ARI(wt,tasu) 0.506, ARI(wt,greedy) 0.629; unique bond
+    membership 100%, all partitions cover bonds, 93.1% communities connected,
+    singleton share 3.4%, ring-like 10.6%; relabel ARI mean 0.994 / median 1.000 /
+    98.0% >=0.9 / min -0.024 (near-tied modularity cases, disclosed). Bond communities
+    do not imply unique atom membership: 17.5% of atoms with >1 incident bond have
+    incident bonds in >1 community. No chemistry claims.
+  monitor_result: >-
+    split-D Monitor n=1000, seed 0, read once after prediction freeze
+    (lock 2026-10-14T11:48:13Z, y_sha bbcf6faf..., manifest 078703e4...).
+    MAE R 0.107520 vs U 0.117248; primary R-U -0.009728 CI95 [-0.015539,-0.004015],
+    fraction R better 0.540; ordinary (n=929) -0.009936; tail (n=71) -0.007014;
+    top-10-removed -0.011044; max single-molecule gain share 1.5%.
+    RMSE R 0.319330 vs U 0.306442 (R worse; small number of heavy rows, disclosed).
+    Fit/Monitor gap disclosure: soup Fit MAE 0.001882 (R) / 0.002979 (U), matched
+    overfitting; only the relation weights differ between arms.
+  read_only_references: >-
+    Prior-round published Monitor MAEs (descriptive only, different budgets/trajectories):
+    A0 0.121514 (R -0.013994), A1 0.106239 (R +0.001281), A2/P3 0.103960 (R +0.003560).
+  mechanism: >-
+    C1 R-vs-U mean |dpred| 0.0760 (max 0.971, corr 0.9984), Pair-MLP gradients live,
+    synthetic relation task real-K 0.717 vs uniform-trained 4.451 vs linear 7.643;
+    C2 frozen b/phi relation reassignment mean |dpred| 0.271 uniform / 0.157 row-perm /
+    0.153 bond-perm / 0.220 zero, trained phi block ablation zero-prod 0.762 rel,
+    linear-reweighting surrogate relative residual 0.523. All four frozen acceptance
+    flags true. C3: no contribution-decomposition or chemistry-causality claim.
+  budget: 0.2461 GPU-h of 1.5 (R 446.0 s + U 440.1 s on res-gpu1 / a100-2, driver 550.163.01, torch 2.5.1+cu124; CPU Part A on res-local)
+  decision: RW_STRUCTURE_USED_AND_GAIN (Part A PASS; R<U with CI all-negative; C1/C2 mechanism checks all pass)
+  discipline: >-
+    single seed; no walk-length/width/community tuning; no second seed despite a
+    significant result (not in the frozen purchase rule); no Locked read; no official
+    valid/test load; no next round started.

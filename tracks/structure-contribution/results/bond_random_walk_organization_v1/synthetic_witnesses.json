@@ -1,0 +1,60 @@
+{
+ "protocol": "cscl-bond-random-walk-organization-v1",
+ "git_commit": "10496f29243c3a55ca7cb123d00c8322f1c55e4f",
+ "junction_moment_counterexample": {
+  "legal_molecule": false,
+  "warning": "abstract incidence systems, not realisable as molecules",
+  "raw_marginals_equal": [
+   4,
+   [
+    0,
+    0,
+    1,
+    1
+   ],
+   [
+    2,
+    2,
+    2,
+    2
+   ]
+  ],
+  "null_projection_equal": true,
+  "K_max_abs_diff": 0.25,
+  "K_A_tv_uniform": 0.14583333333333331,
+  "K_B_tv_uniform": 0.5,
+  "bond_line_graph": {
+   "A_edges": 4.0,
+   "B_edges": 2.0
+  }
+ },
+ "pair_block_ablation_random_phi": {
+  "zero_sum_mean_abs_dphi": 1.6080862283706665,
+  "zero_sum_rel": 0.7827678918838501,
+  "zero_diff_mean_abs_dphi": 1.4001071453094482,
+  "zero_diff_rel": 0.6815299391746521,
+  "zero_prod_mean_abs_dphi": 1.0417413711547852,
+  "zero_prod_rel": 0.507088303565979,
+  "phi_mean_abs": 2.054358959197998
+ },
+ "pair_linear_summary_residual_random_phi": {
+  "n_random_graphs": 48,
+  "n_rows": 450,
+  "relative_residual": 0.22992814444251594,
+  "signal_mean_square": 1117.5577392578125,
+  "surrogate": "r_e ~ W (K b)_e + c * rowsum_e (all K-dependence flows through K b)",
+  "verdict": "residual << 1 would mean the pair channel could be a linear reweighting of b_f"
+ },
+ "synthetic_relation_task": {
+  "n_train": 160,
+  "n_test": 80,
+  "target": "sum_ef K_ef (b_e.b_f) + 0.1*sum_e b_e ; b fixed random 8-D",
+  "test_mae_real_K_trained": 0.3754545677512212,
+  "test_mae_real_K_model_evaluated_uniform": 23.983395076588586,
+  "test_mae_uniform_K_trained_uniform": 3.838750423368201,
+  "test_mae_linear_summary": 7.643129269285128,
+  "interpretation": "if the real-K model beats both the uniform-K control and the linear summary, the pair channel uses actual pair organisation; this is a controlled relation target, not evidence about chemistry"
+ },
+ "official_valid_loaded": false,
+ "official_test_loaded": false
+}

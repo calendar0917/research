@@ -1,0 +1,85 @@
+{
+ "protocol": "cscl-bond-random-walk-organization-v1",
+ "git_commit": "10496f29243c3a55ca7cb123d00c8322f1c55e4f",
+ "C1_R_vs_U_predictions": {
+  "mean_abs_dpred": 0.07600942560657858,
+  "max_abs_dpred": 0.970698356628418,
+  "corr": 0.9983828940717421
+ },
+ "C1_pair_gradients": {
+  "per_batch_norms": [
+   [
+    0.6543920040130615,
+    0.07981495559215546,
+    0.23569631576538086,
+    0.203040212392807
+   ],
+   [
+    0.7303412556648254,
+    0.04678929224610329,
+    0.2928016185760498,
+    0.21661780774593353
+   ]
+  ],
+  "live": true
+ },
+ "C2_relation_reassignment": {
+  "n_molecules": 64,
+  "mean_r_delta": {
+   "uniform": 0.18674961267970502,
+   "row_perm": 0.16790312866214663,
+   "bond_perm": 0.24663377949036658,
+   "zero": 0.18977091321721673
+  },
+  "mean_pred_delta": {
+   "uniform": 0.27147239426267333,
+   "row_perm": 0.1569365472823847,
+   "bond_perm": 0.15329328007646836,
+   "zero": 0.21967182777734706
+  },
+  "max_pred_delta": {
+   "uniform": 1.0561628639698029,
+   "row_perm": 0.7972085475921631,
+   "bond_perm": 0.6546539664268494,
+   "zero": 1.6279369741678238
+  },
+  "note": "fixed b and frozen phi; only the relation weights are reassigned"
+ },
+ "C2_pair_block_ablation_trained": {
+  "zero_sum_mean_abs_dphi": 0.12313160300254822,
+  "zero_sum_rel": 0.5452563166618347,
+  "zero_diff_mean_abs_dphi": 0.4959186017513275,
+  "zero_diff_rel": 2.1960465908050537,
+  "zero_prod_mean_abs_dphi": 0.17198479175567627,
+  "zero_prod_rel": 0.7615899443626404,
+  "phi_mean_abs": 0.22582334280014038
+ },
+ "C2_linear_summary_residual_trained": {
+  "n_random_graphs": 48,
+  "n_rows": 450,
+  "relative_residual": 0.522631868031468,
+  "signal_mean_square": 0.034657977521419525,
+  "surrogate": "r_e ~ W (K b)_e + c * rowsum_e (all K-dependence flows through K b)",
+  "verdict": "residual << 1 would mean the pair channel could be a linear reweighting of b_f"
+ },
+ "C1_synthetic_relation_task": {
+  "n_train": 160,
+  "n_test": 80,
+  "target": "sum_ef K_ef (b_e.b_f) + 0.1*sum_e b_e ; b fixed random 8-D",
+  "test_mae_real_K_trained": 0.7174471922503747,
+  "test_mae_real_K_model_evaluated_uniform": 23.78830297370334,
+  "test_mae_uniform_K_trained_uniform": 4.451396973695491,
+  "test_mae_linear_summary": 7.643129555387422,
+  "interpretation": "if the real-K model beats both the uniform-K control and the linear summary, the pair channel uses actual pair organisation; this is a controlled relation target, not evidence about chemistry"
+ },
+ "acceptance": {
+  "k_effect_min": 0.02,
+  "k_effect_pass": true,
+  "linear_summary_residual_min": 0.1,
+  "linear_summary_residual_pass": true,
+  "product_block_used_pass": true,
+  "pair_grad_live_pass": true
+ },
+ "official_valid_loaded": false,
+ "official_test_loaded": false
+}

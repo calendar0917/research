@@ -1,0 +1,202 @@
+{
+ "protocol": "cscl-bond-random-walk-organization-v1",
+ "git_commit": "10496f29243c3a55ca7cb123d00c8322f1c55e4f",
+ "audit_rows": "first 2000 split-D Fit rows (sorted split order)",
+ "n_molecules": 2000,
+ "definitions": {
+  "tv_uniform_k": "mean_e 0.5*sum_f |P^k_ef - 1/N|",
+  "increment_cos_12": "cosine of flattened (P^1-U) and (P^2-U)",
+  "scale_distinctness_p1p3": "mean_e TV(P^1_e, P^3_e) = mean_e 0.5*sum_f |P^3_ef - P^1_ef|; the raw matrix L1 / (2N^2) is kept as scale_distinctness_raw_p1p3",
+  "K_tv_uniform": "mean_e 0.5*sum_f |K_ef - 1/N|"
+ },
+ "summary": {
+  "aggregate": {
+   "tv_uniform_k1": 0.8423365545387395,
+   "tv_uniform_k2": 0.7445816588751609,
+   "tv_uniform_k3": 0.6884769566970663,
+   "tv_uniform_k4": 0.6513589822948803,
+   "tv_stationary_k1": 0.8334670352429874,
+   "tv_stationary_k3": 0.6798721833585446,
+   "entropy_norm_k1": 0.3712321646612962,
+   "entropy_norm_k3": 0.5769828138053381,
+   "reachable_k1": 0.15766344546126043,
+   "reachable_k3": 0.4423478165315537,
+   "increment_cos_12": 0.9615682170755485,
+   "increment_cos_23": 0.986845299439938,
+   "scale_distinctness_p1p3": 0.24972247602993616,
+   "scale_distinctness_raw_p1p3": 0.010440048903721319,
+   "K_tv_uniform": 0.7441097078335044,
+   "K_effective_rank": 8.967791961498195,
+   "row_cos_p2_p3": 0.9882547957760153
+  },
+  "by_category": {
+   "acyclic_branch": {
+    "n_molecules": 9,
+    "mean_n_bonds": 13.0,
+    "mean_tv_uniform_k3": 0.5735563049081955,
+    "mean_K_tv_uniform": 0.638225317372906,
+    "mean_isolated": 0.0
+   },
+   "ring_chain": {
+    "n_molecules": 1990,
+    "mean_n_bonds": 25.093969849246232,
+    "mean_tv_uniform_k3": 0.6889707140665139,
+    "mean_K_tv_uniform": 0.7445716217894055,
+    "mean_isolated": 0.0
+   },
+   "ring_only": {
+    "n_molecules": 1,
+    "mean_n_bonds": 28.0,
+    "mean_tv_uniform_k3": 0.7401856575963718,
+    "mean_K_tv_uniform": 0.7778604497354499,
+    "mean_isolated": 0.0
+   }
+  },
+  "gate_conditions": {
+   "mean_tv_p3_ge_min": true,
+   "mean_tv_K_ge_min": true,
+   "scale_distinctness_ge_min": true
+  }
+ },
+ "invariants": {
+  "atom_relabel_max_kernel_diff": 0.0,
+  "bond_permutation_max_conjugation_diff": 1.1102230246251565e-16,
+  "bond_permutation_max_statistic_diff": 8.881784197001252e-15
+ },
+ "bond_class_diffusion": {
+  "nonring_type1": {
+   "n": 16526,
+   "mean_tv_uniform_k3": 0.7044222908466452
+  },
+  "nonring_type2": {
+   "n": 2991,
+   "mean_tv_uniform_k3": 0.7413498505805987
+  },
+  "nonring_type3": {
+   "n": 139,
+   "mean_tv_uniform_k3": 0.793839847146721
+  },
+  "ring_type1": {
+   "n": 20723,
+   "mean_tv_uniform_k3": 0.6878787584200744
+  },
+  "ring_type2": {
+   "n": 9703,
+   "mean_tv_uniform_k3": 0.6931184372837182
+  }
+ },
+ "real_pair_search": {
+  "signature": "(n_bonds, sorted bond types, sorted line-graph degrees, sorted per-bond junction counts)",
+  "n_molecules": 2000,
+  "n_signature_buckets": 1760,
+  "n_multi_molecule_buckets": 176,
+  "n_pairs_with_identical_marginals_and_different_K": 208,
+  "K_equality_test": "permutation-invariant sorted K entries, 1e-9 tolerance",
+  "mean_K_sorted_max_abs_diff_among_matched_pairs": 0.023190870192307693,
+  "max_K_sorted_max_abs_diff_among_matched_pairs": 0.050346999999999975,
+  "examples": [
+   {
+    "bucket_size": 7,
+    "n_bonds": 26,
+    "example_pair": {
+     "i": 1306,
+     "j": 1936,
+     "K_sorted_max_abs_diff": 0.01996500000000001
+    }
+   },
+   {
+    "bucket_size": 5,
+    "n_bonds": 27,
+    "example_pair": {
+     "i": 374,
+     "j": 1419,
+     "K_sorted_max_abs_diff": 0.03211799999999998
+    }
+   },
+   {
+    "bucket_size": 5,
+    "n_bonds": 20,
+    "example_pair": {
+     "i": 343,
+     "j": 1707,
+     "K_sorted_max_abs_diff": 0.025463000000000013
+    }
+   },
+   {
+    "bucket_size": 5,
+    "n_bonds": 26,
+    "example_pair": {
+     "i": 338,
+     "j": 1069,
+     "K_sorted_max_abs_diff": 0.03211799999999998
+    }
+   },
+   {
+    "bucket_size": 5,
+    "n_bonds": 26,
+    "example_pair": {
+     "i": 1300,
+     "j": 1660,
+     "K_sorted_max_abs_diff": 0.03240700000000002
+    }
+   },
+   {
+    "bucket_size": 4,
+    "n_bonds": 19,
+    "example_pair": {
+     "i": 141,
+     "j": 1269,
+     "K_sorted_max_abs_diff": 0.01924199999999998
+    }
+   },
+   {
+    "bucket_size": 4,
+    "n_bonds": 25,
+    "example_pair": {
+     "i": 179,
+     "j": 689,
+     "K_sorted_max_abs_diff": 0.029947999999999975
+    }
+   },
+   {
+    "bucket_size": 4,
+    "n_bonds": 25,
+    "example_pair": {
+     "i": 450,
+     "j": 575,
+     "K_sorted_max_abs_diff": 0.037422999999999984
+    }
+   },
+   {
+    "bucket_size": 4,
+    "n_bonds": 23,
+    "example_pair": {
+     "i": 694,
+     "j": 1331,
+     "K_sorted_max_abs_diff": 0.02083299999999999
+    }
+   },
+   {
+    "bucket_size": 4,
+    "n_bonds": 23,
+    "example_pair": {
+     "i": 473,
+     "j": 1158,
+     "K_sorted_max_abs_diff": 0.033565
+    }
+   }
+  ],
+  "loose_signature": "(n_bonds, sorted line-graph degrees)",
+  "n_loose_multi_molecule_buckets": 365,
+  "note": "marginal signature is coarse (raw types/degrees/junction counts); K differs within the bucket"
+ },
+ "gate_conditions": {
+  "mean_tv_p3_ge_min": true,
+  "mean_tv_K_ge_min": true,
+  "scale_distinctness_ge_min": true,
+  "invariance_ok": true
+ },
+ "decision": "PART_A_PASS_GPU_PURCHASE",
+ "official_valid_loaded": false,
+ "official_test_loaded": false
+}
