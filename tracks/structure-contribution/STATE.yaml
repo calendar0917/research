@@ -2248,7 +2248,10 @@ round_cscl-bond-random-walk-organization-v1:
     Identical scratch init (sha 90bf6322...), identical Fit-only masked-SSL encoders
     (used 71bb6587...), identical batch order (hash asserted), R3 recipe 360 epochs /
     22680 updates, raw-y L1, last-5 soup, 349,985 params each; no learned Junction
-    encoder, no GNN/attention/iteration; phi symmetric so K == Ks identically (unit-tested).
+    encoder, no GNN/attention/iteration; the model consumed Ks triplets.  (Later audit
+    correction, round_cscl-rw-local-vs-multiscale-v1: phi symmetric makes only the
+    full double sum equal between K and Ks; per-bond r_e differs, so "K == Ks" holds
+    at graph-total level only.  Historical model/predictions unchanged.)
   part_a_gate: >-
     PASS on the first 2000 split-D Fit rows (label-blind): mean TV(P^3,uniform) 0.688
     (gate 0.03), mean K TV 0.744 (gate 0.05), mean row-TV(P1,P3) 0.250 (gate 0.05),
@@ -2288,3 +2291,50 @@ round_cscl-bond-random-walk-organization-v1:
     single seed; no walk-length/width/community tuning; no second seed despite a
     significant result (not in the frozen purchase rule); no Locked read; no official
     valid/test load; no next round started.
+round_cscl-rw-local-vs-multiscale-v1:
+  status: COMPLETE 2026-10-14 (one new R1 arm trained on res-gpu1; Monitor read once; Locked never read; no next round started)
+  protocol: configs/bond_rw_local_vs_multiscale_v1.yaml (frozen before GPU)
+  report: results/bond_rw_local_vs_multiscale_v1/REPORT.md
+  code:
+    - code/bond_rw_local_vs_multiscale_v1.py
+    - code/run_bond_rw_local_vs_multiscale_v1.py
+    - tests/test_bond_rw_local_vs_multiscale_v1.py (21 fast tests; all pass)
+  question: >-
+    Under the identical Bond Pair MLP / Composer / Reader / SSL encoders / init / data
+    and batch order / R3 360 epochs (22,680 updates) / raw-y L1 / last-5 soup, does the
+    three-step mixed relation R123 = sym((P+P^2+P^3)/3) beat the one-step relation
+    R1 = sym(P) for split-D Monitor property prediction?
+  arms: >-
+    R1 (new, seed 0): K1 = sym(P); R123 (historical arm R, reused frozen predictions);
+    U (historical uniform control). All 349,985 params; R1 init sha 90bf6322... matches
+    R123; SSL used sha 71bb6587...; R123 checkpoint replay vs frozen predictions max
+    abs diff 1.9e-6; soup fit MAE 0.001845; ledger 0.1260 h / 0.5 cap.
+  phase0_math_correction: >-
+    Under symmetric phi the FULL double sum of K and Ks is equal (3.55e-14), but the
+    per-bond r_e is NOT: r_e(Ks) = (r_e(K) + (K^T phi)_e)/2, mean max_e |r_e-r'_e| 1.355.
+    The previous round's "using K equals using Ks" holds only at graph-total level;
+    its unit test compared Ks with symmetrize(Ks) (vacuous). Historical model used Ks
+    triplets, so predictions/training are unaffected; explanation revised. Symmetrisation
+    also reallocates row mass: rowsum(Ks) = (rowsum+colsum)/2, symK CV 0.089,
+    corr(line-graph degree, rowsum) 0.888 - a degree/centrality bias in every sym arm.
+    Historical synthetic-task MAE spread (0.3025/0.3755/0.7174) explained by unseeded
+    global torch RNG in the tiny regressors (same manual seed -> bit-identical,
+    different seed -> differs); historical records unchanged.
+  monitor_result: >-
+    split-D Monitor n=1000, seed 0, read once (lock 2026-10-14T14:05:24Z,
+    y_sha bbcf6faf..., manifest 27213bb6e550...). MAE R1 0.104796, R123 0.107520,
+    U 0.117248; primary R123-R1 +0.002724 CI95 [-0.001702,+0.007515] ->
+    MULTISCALE_INDISTINGUISHABLE (point estimate slightly favours one-hop; tail-driven:
+    tail delta +0.0243 vs ordinary +0.0011, frac better 0.470). R1-U -0.012452
+    CI95 [-0.018363,-0.006647] -> LOCAL_TOPOLOGY_GAIN (larger than historical R123-U
+    -0.009728). RMSE R1 0.324548 vs R123 0.319330 vs U 0.306442 (U best; heavy rows,
+    disclosed); MAE/ordinary/tail/top-10-removed all favour R1.
+  read_only_references: >-
+    A0 MAE 0.121514 (R1 -0.016719, R123 -0.013994), A2 MAE 0.103960 (R1 +0.000836 CI
+    crosses 0, R123 +0.003560 CI crosses 0; A2 RMSE 0.493, 413,505 params, historical
+    trajectory - descriptive only, no attribution).
+  decision: MULTISCALE_INDISTINGUISHABLE / LOCAL_TOPOLOGY_GAIN; next_step = one-hop Bond adjacency already sufficient; do not expand multi-scale organisation; stop_after_round=True
+  discipline: >-
+    single seed; exactly one new model R1; no seed1; no second candidate; no walk
+    length/width/community tuning; no LR search; no Locked read; no official valid/test
+    load; no next round started.

@@ -1,0 +1,91 @@
+{
+ "protocol": "cscl-rw-local-vs-multiscale-v1",
+ "git_commit": "fdcbbb43872fb20941623576fc05239fb8a0674c",
+ "n_molecules": 500,
+ "k_vs_ks": {
+  "phi": "symmetric test function phi(b_e,b_f)=B_e+B_f+B_e*B_f",
+  "definition": "r_e=sum_f K_ef phi_ef vs r'_e=sum_f Ks_ef phi_ef, Ks=(K+K^T)/2",
+  "summary": {
+   "aggregate": {
+    "double_sum_equality_max_abs_P": 5.393963053990092e-15,
+    "double_sum_equality_max_abs_K123": 4.8758774795487624e-15,
+    "per_bond_diff_max_abs_P": 0.44192360116211055,
+    "per_bond_diff_max_abs_K123": 0.5050837545306055,
+    "per_bond_diff_mean_abs_K123": 0.08240490661686553,
+    "per_bond_identity_residual_P": 8.708589405159728e-16,
+    "per_bond_identity_residual_K123": 1.0373923942097462e-15,
+    "matrix_max_abs_P_minus_symP": 0.10335000000000003,
+    "matrix_max_abs_K123_minus_symK": 0.10483014236111111,
+    "mean_abs_rowsum_symP_minus_1": 0.05725150724445777,
+    "mean_abs_rowsum_symK_minus_1": 0.07279900379872362,
+    "corr_degree_rowsum_symP": 0.8361466765592616,
+    "corr_degree_rowsum_symK": 0.8877988121555511,
+    "corr_degree_colsum_symP": 0.8361466765592616,
+    "corr_degree_colsum_symK": 0.8877988121555511,
+    "double_sum_equality_max_over_molecules": 3.552713678800501e-14,
+    "double_sum_equality_max_over_molecules_K123": 2.4868995751603507e-14,
+    "per_bond_diff_max_over_molecules": 1.3551094965468744,
+    "per_bond_diff_max_over_molecules_K123": 1.5226182995508708,
+    "per_bond_identity_residual_max_P": 1.7763568394002505e-15,
+    "per_bond_identity_residual_max_K123": 3.552713678800501e-15,
+    "rowsum_P_cv": 5.729285912984085e-17,
+    "rowsum_P_min": 0.9999999999999998,
+    "rowsum_P_max": 1.0,
+    "rowsum_symP_cv": 0.0706402537435252,
+    "rowsum_symP_min": 0.8702166666666667,
+    "rowsum_symP_max": 1.1449583333333333,
+    "rowsum_K123_cv": 8.462223681425735e-17,
+    "rowsum_K123_min": 0.9999999999999998,
+    "rowsum_K123_max": 1.0,
+    "rowsum_symK_cv": 0.08851085117403959,
+    "rowsum_symK_min": 0.8360672700617284,
+    "rowsum_symK_max": 1.17412451408179
+   },
+   "conclusions": {
+    "double_sum_equality_exact": true,
+    "double_sum_equality_exact_K123": true,
+    "per_bond_equality_holds": false,
+    "per_bond_identity_verified": true,
+    "symmetrisation_changes_rows": true,
+    "row_sum_centrality_signal": true
+   }
+  },
+  "note": "r'_e == r_e for EVERY e under symmetric phi; row-weight totals differ"
+ },
+ "synthetic_rng_reconciliation": {
+  "protocol": "cscl-rw-local-vs-multiscale-v1",
+  "runs": [
+   {
+    "torch_manual_seed": 0,
+    "test_mae_real_K_trained": 0.2648833409747263,
+    "test_mae_real_K_model_evaluated_uniform": 23.88169710715194,
+    "test_mae_uniform_K_trained_uniform": 4.278953713215759,
+    "test_mae_linear_summary": 7.643124238653108
+   },
+   {
+    "torch_manual_seed": 0,
+    "test_mae_real_K_trained": 0.2648833409747263,
+    "test_mae_real_K_model_evaluated_uniform": 23.88169710715194,
+    "test_mae_uniform_K_trained_uniform": 4.278953713215759,
+    "test_mae_linear_summary": 7.643124238653108
+   },
+   {
+    "torch_manual_seed": 12345,
+    "test_mae_real_K_trained": 0.5907911108035204,
+    "test_mae_real_K_model_evaluated_uniform": 24.35805528242965,
+    "test_mae_uniform_K_trained_uniform": 4.587267356143996,
+    "test_mae_linear_summary": 7.643119899434969
+   }
+  ],
+  "seed0_repeat_identical": true,
+  "different_seed_differs": true,
+  "historical_values": {
+   "local_bond_random_walk_dry_run_0.3025": 0.3025,
+   "remote_part_a_synthetic_witnesses_0.3755": 0.3755,
+   "remote_mechanism_audit_0.7174": 0.7174
+  },
+  "conclusion": "the historical spread of the real-K synthetic MAE is explained by the unseeded global torch RNG used for the tiny regressors; the qualitative ordering real-K < uniform-K < linear summary is unchanged in every run"
+ },
+ "official_valid_loaded": false,
+ "official_test_loaded": false
+}

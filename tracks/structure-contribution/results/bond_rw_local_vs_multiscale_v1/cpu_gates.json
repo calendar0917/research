@@ -1,0 +1,52 @@
+{
+ "protocol": "cscl-rw-local-vs-multiscale-v1",
+ "git_commit": "fdcbbb43872fb20941623576fc05239fb8a0674c",
+ "device": "cpu",
+ "kernel_checks": {
+  "row_sum_max": 1.1102230246251565e-16,
+  "triplet_recon_max": 1.298450982289978e-07,
+  "single_bond_ok": true
+ },
+ "model_checks": {
+  "parameter_count": 349985,
+  "parameter_count_matches": true,
+  "init_state_hash": "90bf6322d5728654b4739df14236a6f2bcc55c22e74985fbd082bd82f8524769",
+  "init_matches_R123": true,
+  "init_deterministic_same_seed": true,
+  "init_differs_other_seed": true,
+  "forbidden_modules": [],
+  "composer_in": 296,
+  "reader_in": 321,
+  "ssl_init_encoder_hash": "e7446e3264eb75a19e42b6ee35b32b193698249c9027c5e3214848c57108b177",
+  "ssl_used_encoder_hash": "71bb658770097c2b97812aa1b6f42fd9392efa43f4f0a69d77da151ccfafc0ab",
+  "ssl_encoder_matches_R123": true
+ },
+ "forward_checks": {
+  "batch_membership_max_abs_diff": 2.980232238769531e-07,
+  "all_finite": true,
+  "atom_relabel_max_abs_dpred": 1.1920928955078125e-07
+ },
+ "checkpoint_checks": {
+  "save_load_max_abs_dpred": 0.0,
+  "retrain_soup_identical": true,
+  "retrain_batch_order_matches": true
+ },
+ "gradient_checks": {
+  "pair_mlp_grad_norms": [
+   0.12358815222978592,
+   0.022363347932696342,
+   0.09601813554763794,
+   0.07933010160923004
+  ],
+  "pair_mlp_grad_live": true
+ },
+ "r123_checkpoint_replay": {
+  "checked": true,
+  "n_molecules": 128,
+  "soup_sha256": "d5590dc53e91b6e77a5d3b7c7a0de68560aeba71f445a013b2f347d7830a3f3e",
+  "replay_max_abs_diff_vs_frozen_predictions": 1.9073486328125e-06
+ },
+ "passed": true,
+ "official_valid_loaded": false,
+ "official_test_loaded": false
+}

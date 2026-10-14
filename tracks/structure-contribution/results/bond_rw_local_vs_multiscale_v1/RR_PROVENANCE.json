@@ -1,0 +1,70 @@
+{
+ "protocol": "cscl-rw-local-vs-multiscale-v1",
+ "git_commit": "fdcbbb43872fb20941623576fc05239fb8a0674c",
+ "host": "res (a100-2, single box, process backend)",
+ "driver_version": "550.163.01",
+ "torch_version": "2.5.1+cu124",
+ "torch_cuda": "12.4",
+ "runs": [
+  {
+   "experiment": "brw2-cpu-setup4",
+   "run_id": "brw2-cpu-setup4-20261014-214417-50a2a4d7",
+   "pool": "res-local",
+   "purpose": "verify-inputs; math-audit; prep-r1; cpu-gates; freeze",
+   "started_at": "2026-10-14T21:44:19+08:00",
+   "completed_at": "2026-10-14T21:52:12+08:00",
+   "exit_code": 0
+  },
+  {
+   "experiment": "brw2-gpu-train",
+   "run_id": "brw2-gpu-train-20261014-215413-08d68917",
+   "pool": "res-gpu1",
+   "purpose": "train R1 (360 epochs); predict Monitor; freeze-predictions",
+   "cuda_visible_devices": "1",
+   "started_at": "2026-10-14T21:54:15+08:00",
+   "completed_at": "2026-10-14T22:02:06+08:00",
+   "exit_code": 0,
+   "train_wall_seconds": 453.71053968695924,
+   "soup_fit_mae": 0.0018454133989434921
+  },
+  {
+   "experiment": "brw2-score",
+   "run_id": "brw2-score-20261014-220510-5bdf1e11",
+   "pool": "res-local",
+   "purpose": "single Monitor read (score-monitor); finalize",
+   "started_at": "2026-10-14T22:05:13+08:00",
+   "completed_at": "2026-10-14T22:05:27+08:00",
+   "exit_code": 0
+  }
+ ],
+ "superseded_or_cancelled": [
+  {
+   "experiment": "brw2-cpu-setup",
+   "reason": "thread oversubscription; cancelled, no artifacts used"
+  },
+  {
+   "experiment": "brw2-cpu-setup2",
+   "reason": "too slow single-thread; cancelled, no artifacts used"
+  },
+  {
+   "experiment": "brw2-cpu-setup3",
+   "reason": "operator accidentally terminated its math-audit process; failed, no artifacts used"
+  },
+  {
+   "experiment": "brw2-smoke",
+   "reason": "env smoke test; completed"
+  }
+ ],
+ "gpu_budget": {
+  "total_wall_hours": 0.1260307054685998,
+  "cap_hours": 0.5,
+  "within_cap": true
+ },
+ "notes": [
+  "Only brw2-cpu-setup4, brw2-gpu-train, brw2-score produced the reported artifacts.",
+  "Monitor labels were read exactly once during brw2-score (monitor_read_D.lock).",
+  "Locked and official valid/test were never read.",
+  "R123 checkpoint replay in cpu-gates matched the frozen historical predictions within 1.9e-6."
+ ],
+ "written_utc": "2026-10-14T14:10:00Z"
+}
