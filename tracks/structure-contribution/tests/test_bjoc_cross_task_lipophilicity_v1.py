@@ -199,6 +199,21 @@ def test_object_build_is_deterministic():
     assert driver._objects_equal(a, b)
 
 
+def test_raw_fixture_matches_committed_raw_dataset():
+    fixture = _load_json(OUT / "raw_fixture.json")
+    raws, _ = _raws()
+    assert len(fixture["rows"]) >= 8
+    reasons = {entry["reason"] for entry in fixture["rows"]}
+    for required in ("multi-component", "charged atom", "specified chirality", "triple bond",
+                     "UNK-mapped atom", "bond stereo"):
+        assert required in reasons, required
+    for entry in fixture["rows"]:
+        row = int(entry["row"])
+        assert lip.raw_to_record(raws[row]) == entry["record"]
+        # round-trip through the record schema is exact
+        assert lip.raw_to_record(lip.raw_from_record(entry["record"])) == entry["record"]
+
+
 def test_relabelling_and_endpoint_swap_are_invariant():
     raws, _ = _raws()
     raw = raws[17]

@@ -34,6 +34,7 @@ import argparse
 import ast
 import csv
 import hashlib
+import importlib.util
 import json
 import math
 import os
@@ -78,6 +79,7 @@ SPLIT_PATH = OUT / "split_lipo_v1.json"
 VOCAB_PATH = OUT / "vocab_v1.json"
 PROVENANCE = OUT / "provenance.json"
 ROW_MANIFEST = OUT / "row_manifest.json"
+RAW_FIXTURE = OUT / "raw_fixture.json"
 STANDARDIZER = OUT / "standardizer_v1.json"
 FREEZE = OUT / "protocol_freeze.json"
 INIT_PARITY = OUT / "init_parity.json"
@@ -223,6 +225,49 @@ def read_label_vault(zone: str, split: Mapping[str, Any]) -> np.ndarray:
 # ---------------------------------------------------------------------------
 # prepare-dataset (LOCAL, RDKit)
 # ---------------------------------------------------------------------------
+
+
+def select_fixture_rows(raws: Sequence[lip.RawMol], max_rows: int = 12) -> list[tuple[int, str]]:
+    """Deterministic golden-fixture selection: cover every chemistry edge case.
+
+    The fixture is written by ``prepare-dataset`` (RDKit host) and re-checked by
+    the CPU gates on the GPU host, which has no RDKit: it therefore also proves
+    that the deployed raw artifact is byte-for-byte the locally built one.
+    """
+    picks: list[tuple[int, str]] = []
+    seen: set[int] = set()
+
+    def add(row: int, reason: str) -> None:
+        if row not in seen:
+            seen.add(row)
+            picks.append((int(row), reason))
+
+    add(0, "first row")
+    sizes = np.asarray([r.n_atoms for r in raws])
+    add(int(np.argmin(sizes)), "smallest molecule")
+    add(int(np.argmax(sizes)), "largest molecule")
+    checks = (
+        ("multi-component", lambda r: r.n_components > 1),
+        ("charged atom", lambda r: bool(((r.atom_charge < 2) | (r.atom_charge > 2)).any())),
+        ("specified chirality", lambda r: bool((r.atom_chirality > 0).any())),
+        ("triple bond", lambda r: bool((r.edge_class == 2).any())),
+        ("UNK-mapped atom", lambda r: bool((r.atom_class == lip.ATOM_UNK).any())),
+        ("bond stereo", lambda r: bool((r.edge_stereo > 0).any())),
+    )
+    for reason, predicate in checks:
+        for row, raw in enumerate(raws):
+            if predicate(raw):
+                add(row, reason)
+                break
+    blocks = lip.atom_blocks()
+    for row, raw in enumerate(raws):
+        ring = lip.build_lipo_objects(raw).atom_feat[:, blocks["min_ring_size"]]
+        if ring.shape[1] > 5 and float(ring[:, 5].max()) > 0.5:
+            if row not in seen:
+                add(row, "macrocycle (>=8-membered ring)")
+                break
+            continue
+    return picks[:max_rows]
 
 
 def cmd_prepare_dataset(args: argparse.Namespace) -> int:
@@ -380,6 +425,12 @@ def cmd_prepare_dataset(args: argparse.Namespace) -> int:
         "n_components": [r.n_components for r in raws],
         "label_free": True,
     })
+    fixture_rows = select_fixture_rows(raws)
+    write_json(RAW_FIXTURE, {
+        "protocol": PROTOCOL_ID,
+        "note": "label-free golden RDKit->RawGraph fixture; the CPU gates compare the deployed raw dataset against it so the GPUs do not need RDKit",
+        "rows": [dict(row=row, reason=reason, record=lip.raw_to_record(raws[row])) for row, reason in fixture_rows],
+    })
     upstream = OUT / "upstream"
     upstream.mkdir(parents=True, exist_ok=True)
     if args.reference_json:
@@ -427,6 +478,19 @@ def build_zone_objects(zone: str) -> list[Any]:
     raws = load_raws()
     rows = [int(r) for r in split[f"{zone}_rows"]]
     return [lip.build_lipo_objects(raws[i]) for i in rows]
+
+
+def cmd_make_fixture(args: argparse.Namespace) -> int:
+    """Build the golden raw-graph fixture from the committed raw dataset."""
+    raws = load_raws()
+    rows = select_fixture_rows(raws)
+    write_json(RAW_FIXTURE, {
+        "protocol": PROTOCOL_ID,
+        "note": "label-free golden RDKit->RawGraph fixture; the CPU gates compare the deployed raw dataset against it so the GPUs do not need RDKit",
+        "rows": [dict(row=row, reason=reason, record=lip.raw_to_record(raws[row])) for row, reason in rows],
+    })
+    log(f"[make-fixture] {len(rows)} rows: {[(r, why) for r, why in rows]}")
+    return 0
 
 
 def cmd_prep(args: argparse.Namespace) -> int:
@@ -482,20 +546,22 @@ def cmd_prep(args: argparse.Namespace) -> int:
         "git_commit": git_commit(),
         "config_sha256": file_sha256(CONFIG_PATH),
         "code_hashes": code_hashes(),
-        "artifact_sha256": {
-            "raw_dataset": file_sha256(RAW_DATASET),
-            "split": file_sha256(SPLIT_PATH),
-            "vocab": file_sha256(VOCAB_PATH),
-            "standardizer": file_sha256(STANDARDIZER),
-            "init_parity": file_sha256(INIT_PARITY),
-        },
-        "artifact_paths": {
-            "raw_dataset": "dataset/lipo_raw_v1.json.gz",
-            "split": "split_lipo_v1.json",
-            "vocab": "vocab_v1.json",
-            "standardizer": "standardizer_v1.json",
-            "init_parity": "init_parity.json",
-        },
+            "artifact_sha256": {
+                "raw_dataset": file_sha256(RAW_DATASET),
+                "split": file_sha256(SPLIT_PATH),
+                "vocab": file_sha256(VOCAB_PATH),
+                "standardizer": file_sha256(STANDARDIZER),
+                "init_parity": file_sha256(INIT_PARITY),
+                "raw_fixture": file_sha256(RAW_FIXTURE),
+            },
+            "artifact_paths": {
+                "raw_dataset": "dataset/lipo_raw_v1.json.gz",
+                "split": "split_lipo_v1.json",
+                "vocab": "vocab_v1.json",
+                "standardizer": "standardizer_v1.json",
+                "init_parity": "init_parity.json",
+                "raw_fixture": "raw_fixture.json",
+            },
         "n_train": len(split["train_rows"]),
         "n_valid": len(split["valid_rows"]),
         "n_test": len(split["test_rows"]),
@@ -538,12 +604,30 @@ def cmd_gates(args: argparse.Namespace) -> int:
     gscale = np.asarray(norm["scale"], dtype=np.float32)
     gates: list[dict[str, Any]] = []
 
-    # 1. deterministic RDKit -> raw conversion
-    r0 = lip.raw_from_smiles(raws[7].smiles, 7, raws[7].compound_id)
-    r1 = lip.raw_from_smiles(raws[7].smiles, 7, raws[7].compound_id)
-    det = all(np.array_equal(getattr(r0, k), getattr(r1, k)) for k in
-              ("atom_class", "atom_charge", "atom_h", "atom_chirality", "edge_index", "edge_class", "edge_stereo"))
-    gates.append(_gate("raw_conversion_deterministic", det))
+    # 1. RDKit -> raw conversion: committed golden fixture (host-independent)
+    #    plus an optional live RDKit re-parse when RDKit is installed
+    fixture = read_json(RAW_FIXTURE)
+    mismatches = []
+    for entry in fixture["rows"]:
+        row = int(entry["row"])
+        if lip.raw_to_record(raws[row]) != entry["record"]:
+            mismatches.append(row)
+    rebound = all(
+        lip.raw_to_record(lip.raw_from_record(entry["record"])) == entry["record"] for entry in fixture["rows"]
+    )
+    rdkit_present = importlib.util.find_spec("rdkit") is not None
+    reparse_ok = True
+    if rdkit_present:
+        entry = fixture["rows"][-1]
+        row = int(entry["row"])
+        reparsed = lip.raw_from_smiles(raws[row].smiles, row, raws[row].compound_id)
+        reparse_ok = lip.raw_to_record(reparsed) == entry["record"]
+    gates.append(_gate(
+        "raw_conversion_deterministic",
+        (not mismatches) and rebound and reparse_ok,
+        {"fixture_rows": len(fixture["rows"]), "mismatches": mismatches, "rebound_exact": bool(rebound),
+         "rdkit_present": rdkit_present, "live_reparse_ok": bool(reparse_ok)},
+    ))
 
     # 2. row / split alignment (label-free structural form; the local vault is
     #    cross-checked only when it is present)
@@ -1634,6 +1718,8 @@ def _build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_prepare_dataset)
     p = sub.add_parser("prep")
     p.set_defaults(func=cmd_prep)
+    p = sub.add_parser("make-fixture")
+    p.set_defaults(func=cmd_make_fixture)
     p = sub.add_parser("gates")
     p.add_argument("--no-strict-code", action="store_true")
     p.set_defaults(func=cmd_gates, no_strict_code=False)
