@@ -1,0 +1,148 @@
+# cscl-rw-local-vs-multiscale-v1 (pre-registration; frozen before any GPU)
+#
+# Track: tracks/structure-contribution
+#
+# ONE question (do not broaden):
+#   Under the IDENTICAL Bond Pair MLP / Composer / Reader / training recipe,
+#   does the three-step mixed relation K123 = (P + P^2 + P^3)/3 beat the
+#   one-step relation K1 = P on held-out property prediction?
+#
+# Background (already established, reused read-only):
+#   R123 (historical arm R) beat the unstructured uniform pair control U on
+#   split-D Monitor with R-U = -0.009728 CI95 [-0.015539, -0.004015].
+#   That does NOT show that multi-step walks add information over one-step
+#   local bond adjacency.  This round adds exactly one arm, R1.
+#
+# Round structure:
+#   Phase 0 (CPU, label-blind): mathematical audit of K vs Ks (per-bond r_e
+#       equality under symmetric phi vs row-weight reallocation), reconciliation
+#       of the two historical synthetic-task MAE values, and (after prediction
+#       freeze, single Monitor read) per-molecule R/U vs A0/A2 error audit.
+#   Phase 1 (GPU, seed 0): one new arm R1 = sym(P) on the same 349,985-param
+#       BondRWComposer, same SSL encoders, same init, same data/batch order,
+#       same R3 360 epochs / 22,680 updates, same optimizer/LR/WD/last-5 soup.
+#   Phase 2 (CPU): freeze soup + Monitor predictions + manifest + scoring code,
+#       then exactly one Monitor read and paired scoring U/R1/R123 (+ A0/A2
+#       read-only references) with quantiles and extreme-error contributions.
+#
+# Deliberately NOT done: no second seed, no second candidate model, no
+# walk-length search (R1 and R123 lengths are fixed by the previous protocol),
+# no width/recipe change, no Locked read, no official valid/test load.
+
+protocol: cscl-rw-local-vs-multiscale-v1
+status: frozen
+frozen_date: "2026-10-14"
+track: tracks/structure-contribution
+
+split:
+  reuse: D
+  fit_rows: 8000
+  monitor_rows: 1000
+  locked_read: false
+  monitor_status: "historically exposed exploratory data (split D); seed 0 only"
+  fingerprints:
+    fit_sha256_rows: "9468656affcc2b7c69409f03698b1b6287b3a42dc6e164efd19dfb0190254525"
+    monitor_sha256_rows: "d196bc75ce898c7cfd61efa133372f25803d5bc1198210f60b6e0f981a400393"
+    locked_sha256_rows: "f3525ae882114350a57f7b0ddb6889656f40c05cebda21b2611a2c99cdfa22d5"
+
+label_discipline:
+  fit_y: "raw y from encoded_train.pt, Fit rows only, for supervised training"
+  monitor_y: "read exactly once after soup + predictions + manifest + scoring code are frozen"
+  locked_y: "never read"
+  official_valid: "never loaded"
+  official_test: "never loaded"
+
+phase0_math_audit:
+  k_vs_ks:
+    statement: >
+      r_e = sum_f K_ef phi_ef and r'_e = sum_f Ks_ef phi_ef with
+      Ks = (K+K^T)/2.  For exactly symmetric phi, r'_e == r_e for EVERY bond e
+      (not only for the full-graph double sum).  What changes is the row-weight
+      total: sum_f Ks_ef = (rowsum_e(K) + colsum_e(K))/2, so symmetrisation
+      reallocates centrality/degree-like weight across bonds.
+    checks:
+      pointwise_per_bond_equality: "max_e |r_e - r'_e| over random symmetric phi"
+      row_weight_reallocation: "mean/max |rowsum(K)-rowsum(Ks)|, CV, corr with line-graph degree"
+      matrix_change: "max |K-Ks|, diagonal mass change, density change"
+      non_symmetric_control: "use P itself (non-symmetric) for the same check"
+  synthetic_mae_reconciliation:
+    claim: >
+      The two historical real-K MAE values (0.3755 in synthetic_witnesses.json,
+      0.7174 in mechanism_audit.json) come from the same function
+      synthetic_relation_task(seed=0) in different processes.  The numpy data
+      sampling is seeded, but the tiny pair/linear regressors are constructed
+      from the global torch RNG without a manual seed, so their initialisation
+      differs across processes (and after model builders that call
+      torch.manual_seed).  Demonstration: same manual torch seed -> identical
+      MAE; different manual torch seeds -> different MAE.
+    checks:
+      seed0_repeat: "two calls after torch.manual_seed(0) must be bit-identical"
+      different_seed: "a call after torch.manual_seed(12345) must differ"
+      historical_values_recorded: [0.3025, 0.3755, 0.7174]
+  reference_error_audit:
+    note: "executed in score-monitor after the single Monitor y read"
+    references: [A0, A2]
+    focus: "per-molecule |error|, extreme-error contributions, paired deltas vs R1/R123/R123-U"
+
+phase1_model:
+  base: "reuse code/bond_random_walk_organization_v1.py BondRWComposer unchanged"
+  arm_R1:
+    relation: "K1 = sym(P), P = (I + D^{-1} A_L)/2 (lazy one-step walk)"
+    reference_arm_R123:
+      relation: "Ks = sym((P + P^2 + P^3)/3) (historical arm R, read-only reuse)"
+    expected_parameters: 349985
+    expected_init_sha256: "90bf6322d5728654b4739df14236a6f2bcc55c22e74985fbd082bd82f8524769"
+    ssl_encoder_used_sha256: "71bb658770097c2b97812aa1b6f42fd9392efa43f4f0a69d77da151ccfafc0ab"
+  unchanged: "same Atom/Bond SSL encoders, same Pair MLP, Composer, Reader, normalisation, batch order (shuffle seed 101), R3 recipe, last-5 soup"
+  forbidden: "no GNN / attention / iterative message passing / learned Junction encoder; no extra training configuration"
+
+training:
+  recipe: R3
+  epochs: 360
+  updates: 22680
+  loss: "raw-y L1"
+  seed: 0
+  soup: "parameter mean of the last 5 epoch states"
+  gpu_cap_hours: 0.5
+  extra_seeds: 0
+  extra_models: 0
+
+scoring:
+  read_monitor_once: true
+  bootstrap: {n: 5000, seed: 0, unit: molecule}
+  contrasts:
+    primary: "R123_minus_R1 (historical R predictions vs new R1 predictions)"
+    secondary: ["R1_minus_U", "R123_minus_U_reused"]
+    references: ["A0", "A2"]
+  metrics: [MAE, RMSE, median_AE, p90_AE, p95_AE, p99_AE, ordinary_delta, tail_delta]
+  extreme_contributions:
+    - "top-5 |error| rows per arm"
+    - "top +/-5 delta rows per contrast"
+    - "single-worst-row-removed and top-10-removed contrast deltas"
+  decision:
+    primary_ci_upper_negative: MULTISCALE_EXTRA_GAIN
+    primary_ci_lower_positive: ONE_HOP_BETTER
+    primary_ci_crosses_zero: MULTISCALE_INDISTINGUISHABLE
+    local_gain_if_R1_minus_U_ci_upper_negative: LOCAL_TOPOLOGY_GAIN
+    next_step_rule: >
+      MULTISCALE_EXTRA_GAIN -> worth studying Atom/Atom-Bond multi-scale
+      organisation next; otherwise -> one-hop Bond adjacency is already
+      sufficient, do not expand multi-scale organisation.
+    stop_after_round: true
+
+deliverables:
+  dir: results/bond_rw_local_vs_multiscale_v1
+  files:
+    - REPORT.md (Chinese)
+    - MATH_AUDIT.md
+    - math_audit.json
+    - input_audit.json
+    - r1_manifest.json
+    - cpu_gates.json
+    - protocol_freeze.json
+    - train_R1_D_s0.json / soup_R1_D_s0.pt (soup git-ignored)
+    - predictions/monitor_R1_D_s0.npz
+    - prediction_manifest_D.json (+ U/R123 historical hashes)
+    - monitor_read_D.lock / monitor_score_D.json / per_molecule_errors.csv
+    - decision.json / evidence_manifest.json / gpu_budget_ledger.json
+    - references/ (copied A0/A2 Monitor predictions + REFERENCE_MANIFEST.json)
