@@ -1,0 +1,32 @@
+{
+ "protocol": "cscl-task-adaptive-structure-units-v1",
+ "recorded_utc": "2026-10-14T10:11:13Z",
+ "phase": "post-training, post-prediction-freeze, pre-monitor-read",
+ "frozen_git_commit": "fdbd0b2d2c67a978739a4f06b57839de8b20cc84",
+ "frozen_runner_sha256": "138c61d010b54f62ed98203cd46b534c132b272600038c1906377292d291c575",
+ "amended_runner_sha256": "0f9cdb76a385c4f270b75d57bc178190e6b429460f34ef6bc9b0875a50b16fbb",
+ "model_code_changed": false,
+ "scope": "label-blind structural audit functions only",
+ "changed_functions": [
+  "_unit_induced_graph",
+  "_unit_wl_hash",
+  "unit_records_for_zone",
+  "iso_consistency",
+  "_iso_variant",
+  "cmd_audit_sharing",
+  "cmd_audit_contribution (log line only)"
+ ],
+ "bug": "unit records used only the base block atom set instead of the union of all blocks in the merged unit, so iso-consistency compared base blocks while reprs were unit reprs",
+ "fix": "records now store the whole merged unit (union of member blocks) and both a strict-feature and a chemical isomorphism criterion",
+ "evidence_untouched": {
+  "prediction_manifest_sha256": "af17da372f83e9c2ed1911875666aeb9bdbabf5816aec498cd33de7d9ad31d77",
+  "soups_and_train_json": "unchanged",
+  "train_predict_score_code_paths": "unchanged"
+ },
+ "regenerated_evidence": [
+  "partition_audit_D.json",
+  "contribution_audit_D.json",
+  "sharing_audit_D.json"
+ ],
+ "git_diff_stat": ".../code/run_task_adaptive_structure_units_v1.py   | 189 +++++++++++++++------\n 1 file changed, 135 insertions(+), 54 deletions(-)"
+}

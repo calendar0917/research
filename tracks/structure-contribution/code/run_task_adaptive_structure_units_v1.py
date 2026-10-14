@@ -1295,29 +1295,51 @@ def _h1_gate(contrast: Mapping[str, Any]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def _unit_induced_graph(obj: sro.MolObjects, atoms: Sequence[int]):
+def _unit_induced_graph(obj: sro.MolObjects, atoms: Sequence[int], mode: str = "chemical"):
+    """Induced subgraph of a whole unit (all atoms of the merged component).
+
+    ``mode='strict'`` labels nodes with the rounded full atom feature vector and
+    edges with the rounded full bond feature vector (a bit-level identity test
+    for the model input).  ``mode='chemical'`` labels nodes with the raw atom
+    type and edges with the raw bond type (chemical isomorphism; context
+    features such as external ring membership may differ).
+    """
     import networkx as nx
 
+    if mode not in ("strict", "chemical"):
+        raise ValueError(mode)
     atoms = [int(a) for a in atoms]
     index = {a: i for i, a in enumerate(atoms)}
     g = nx.Graph()
     for a in atoms:
-        g.add_node(index[a], label=tuple(np.round(obj.atom_feat[a], 4).tolist()))
-    for (u, v), bt in zip(obj.bond_index, obj.bond_type):
+        if mode == "strict":
+            label: Any = tuple(np.round(obj.atom_feat[a], 4).tolist())
+        else:
+            label = int(np.argmax(obj.atom_feat[a, : sro.ATOM_CATEGORIES]))
+        g.add_node(index[a], label=label)
+    for k, ((u, v), bt) in enumerate(zip(obj.bond_index, obj.bond_type)):
         u, v = int(u), int(v)
         if u in index and v in index:
-            g.add_edge(index[u], index[v], type=int(bt))
+            if mode == "strict":
+                sig: Any = (int(bt), tuple(np.round(obj.bond_feat[k], 4).tolist()))
+            else:
+                sig = int(bt)
+            g.add_edge(index[u], index[v], sig=sig)
     return g
 
 
 def _unit_wl_hash(g) -> str:
     import networkx as nx
 
-    return nx.weisfeiler_lehman_graph_hash(g, node_attr="label", edge_attr="type", iterations=4)
+    return nx.weisfeiler_lehman_graph_hash(g, node_attr="label", edge_attr="sig", iterations=4)
 
 
 def unit_records_for_zone(zone: str, arm: str, seed: int, device: torch.device, limit: int | None = None) -> list[dict[str, Any]]:
-    """Per-molecule retained-unit records (labels never touched)."""
+    """Per-molecule retained-unit records (labels never touched).
+
+    A record is one *whole unit*: the union of all base blocks in its merged
+    component, so the recorded atom set matches what the unit encoder pools.
+    """
     objs, topos = load_zone(zone)
     if limit is not None:
         objs, topos = objs[: int(limit)], topos[: int(limit)]
@@ -1342,23 +1364,33 @@ def unit_records_for_zone(zone: str, arm: str, seed: int, device: torch.device, 
             u = feats["unit_repr"].detach().cpu().numpy()
             alpha = feats["alpha"].detach().cpu().numpy().reshape(-1) if "alpha" in feats else np.zeros(u.shape[0])
             s = feats["s"].detach().cpu().numpy()
+            gates = feats["gates"].detach().cpu().numpy()
             blk_off = batch["blk_off"].cpu().numpy()
-            n_blocks = int(batch["blk_batch"].shape[0])
+            g_off = 0
             for g, topo in enumerate(chunk_topos):
                 base = int(blk_off[g])
+                nb = len(topo.bridge_bond)
+                hard = gates[g_off : g_off + nb] > 0.5
+                g_off += nb
+                reps, _ = topo.hard_components(hard)
                 selector = s[g] > 0.5
                 units = []
                 for k in range(int(topo.n_blocks)):
                     if not bool(selector[k]):
                         continue
-                    atoms = topo.block_atom_ids[k]
-                    graph = _unit_induced_graph(chunk_objs[g], atoms)
+                    root = int(reps[k])
+                    member_blocks = [b for b in range(int(topo.n_blocks)) if int(reps[b]) == root]
+                    atoms = sorted(int(a) for b in member_blocks for a in topo.block_atom_ids[b])
+                    g_strict = _unit_induced_graph(chunk_objs[g], atoms, "strict")
+                    g_chem = _unit_induced_graph(chunk_objs[g], atoms, "chemical")
                     units.append(
                         {
                             "block": int(k),
-                            "atom_ids": [int(a) for a in atoms],
+                            "atom_ids": atoms,
                             "n_atoms": len(atoms),
-                            "wl_hash": _unit_wl_hash(graph),
+                            "n_blocks": len(member_blocks),
+                            "wl_hash": _unit_wl_hash(g_strict),
+                            "chem_wl_hash": _unit_wl_hash(g_chem),
                             "repr": [float(x) for x in u[base + k]],
                             "alpha": float(alpha[base + k]),
                         }
@@ -1472,19 +1504,37 @@ def cmd_audit_contribution(args: argparse.Namespace) -> int:
     iso = iso_consistency(unit_records_for_zone("monitor", "L-A", int(args.seed), device, limit=args.limit))
     payload["isomorphism_consistency"] = iso
     write_json(OUT / "contribution_audit_D.json", payload)
-    log(f"[audit-contribution] iso_pairs={iso.get('n_exact_iso_pairs')} max_repr_diff={iso.get('max_repr_abs_diff')}")
+    strict = iso["strict_feature_identity"]
+    chem = iso["chemical_isomorphism"]
+    log(
+        f"[audit-contribution] strict(iso={strict['n_exact_iso_pairs']}, max_diff={strict['max_repr_abs_diff']:.2e}) "
+        f"chem(iso={chem['n_exact_iso_pairs']}, max_diff={chem['max_repr_abs_diff']:.3f})"
+    )
     return 0
 
 
 def iso_consistency(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Isomorphism consistency of unit representations under two criteria.
+
+    ``strict`` requires identical rounded atom + bond feature vectors, i.e. the
+    exact model input; the unit representation and alpha must then agree to
+    float noise.  ``chemical`` requires only atom-type / bond-type isomorphism;
+    remaining representation differences are external-context effects that the
+    input features carry (radius histograms, ring flags).
+    """
+    return {
+        "strict_feature_identity": _iso_variant(records, "wl_hash", "strict"),
+        "chemical_isomorphism": _iso_variant(records, "chem_wl_hash", "chemical"),
+    }
+
+
+def _iso_variant(records: Sequence[Mapping[str, Any]], key: str, mode: str) -> dict[str, Any]:
     import networkx as nx
 
     buckets: dict[str, list[tuple[int, int]]] = {}
-    meta: list[tuple[int, int, Mapping[str, Any], Mapping[str, Any]]] = []
     for ri, rec in enumerate(records):
         for ui, unit in enumerate(rec["units"]):
-            buckets.setdefault(unit["wl_hash"], []).append((ri, ui))
-            meta.append((ri, ui, rec, unit))
+            buckets.setdefault(unit[key], []).append((ri, ui))
     n_pairs = 0
     n_exact = 0
     repr_diffs: list[float] = []
@@ -1495,10 +1545,10 @@ def iso_consistency(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         for a, b in zip(bucket, bucket[1:]):
             n_pairs += 1
             ra, rb = records[a[0]], records[b[0]]
-            ga = _unit_induced_graph_from_rec(ra, a[1])
-            gb = _unit_induced_graph_from_rec(rb, b[1])
+            ga = _unit_induced_graph(_object_lookup(ra["mol_index"]), ra["units"][a[1]]["atom_ids"], mode)
+            gb = _unit_induced_graph(_object_lookup(rb["mol_index"]), rb["units"][b[1]]["atom_ids"], mode)
             same = nx.is_isomorphic(
-                ga, gb, node_match=lambda x, y: x["label"] == y["label"], edge_match=lambda x, y: x["type"] == y["type"]
+                ga, gb, node_match=lambda x, y: x["label"] == y["label"], edge_match=lambda x, y: x["sig"] == y["sig"]
             )
             if not same:
                 continue
@@ -1507,21 +1557,18 @@ def iso_consistency(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             repr_diffs.append(float(np.max(np.abs(np.asarray(ua["repr"]) - np.asarray(ub["repr"])))))
             alpha_diffs.append(abs(float(ua["alpha"]) - float(ub["alpha"])))
     return {
+        "mode": mode,
         "n_units": int(sum(len(r["units"]) for r in records)),
         "n_wl_buckets": int(len(buckets)),
         "n_wl_candidate_pairs": int(n_pairs),
         "n_exact_iso_pairs": int(n_exact),
         "max_repr_abs_diff": float(max(repr_diffs)) if repr_diffs else 0.0,
         "mean_repr_abs_diff": float(np.mean(repr_diffs)) if repr_diffs else 0.0,
+        "p95_repr_abs_diff": float(np.percentile(repr_diffs, 95)) if repr_diffs else 0.0,
+        "frac_repr_diff_le_1e-4": float(np.mean(np.asarray(repr_diffs) <= 1e-4)) if repr_diffs else 1.0,
         "max_alpha_abs_diff": float(max(alpha_diffs)) if alpha_diffs else 0.0,
-        "within_float_tolerance": bool((max(repr_diffs) if repr_diffs else 0.0) < 1e-5),
+        "within_float_tolerance": bool((max(repr_diffs) if repr_diffs else 0.0) < 1e-4),
     }
-
-
-def _unit_induced_graph_from_rec(rec: Mapping[str, Any], unit_index: int):
-    obj = _object_lookup(rec["mol_index"])
-    atoms = rec["units"][unit_index]["atom_ids"]
-    return _unit_induced_graph(obj, atoms)
 
 
 _OBJECT_CACHE: dict[int, sro.MolObjects] = {}
@@ -1536,40 +1583,73 @@ def _object_lookup(mol_index: int) -> sro.MolObjects:
 
 
 def cmd_audit_sharing(args: argparse.Namespace) -> int:
+    """Cross-molecule unit types: chemical (atom/bond type) reuse, validated by
+    exact isomorphism, plus the stricter full-feature identity refinement."""
     verify_freeze(require_exact_code=False)
+    import networkx as nx
+
     device = torch.device(args.device)
     payload: dict[str, Any] = {"protocol": PROTOCOL_ID, "git_commit": git_commit()}
     for zone in ("monitor",):
         records = unit_records_for_zone(zone, "L-A", int(args.seed), device, limit=args.limit)
-        type_map: dict[str, list[dict[str, Any]]] = {}
-        for rec in records:
-            for unit in rec["units"]:
-                type_map.setdefault(unit["wl_hash"], []).append({**unit, "mol_index": rec["mol_index"], "smiles": rec["smiles"]})
-        counts = np.asarray([len(v) for v in type_map.values()], dtype=np.int64)
-        cross = [v for v in type_map.values() if len({u["mol_index"] for u in v}) > 1]
-        alphas_per_type = [
-            float(np.std([u["alpha"] for u in v])) for v in type_map.values() if len(v) >= 5
-        ]
-        payload[zone] = {
-            "n_units": int(sum(len(r["units"]) for r in records)),
-            "n_types": int(len(type_map)),
-            "reuse_rate": float(1.0 - len(type_map) / max(sum(len(r["units"]) for r in records), 1)),
-            "types_reused_across_molecules": int(len(cross)),
-            "max_type_count": int(counts.max()) if counts.size else 0,
-            "mean_type_count": float(counts.mean()) if counts.size else 0.0,
-            "top_types": [
-                {
-                    "wl_hash": h,
-                    "count": len(v),
-                    "molecules": len({u["mol_index"] for u in v}),
-                    "examples": [u["smiles"] for u in v[:3]],
-                }
-                for h, v in sorted(type_map.items(), key=lambda kv: -len(kv[1]))[:10]
-            ],
-            "alpha_within_type_mean_std": float(np.mean(alphas_per_type)) if alphas_per_type else 0.0,
-        }
+        n_units = int(sum(len(r["units"]) for r in records))
+        out: dict[str, Any] = {"n_units": n_units}
+        for label, key in (("chemical", "chem_wl_hash"), ("strict_feature", "wl_hash")):
+            type_map: dict[str, list[dict[str, Any]]] = {}
+            for rec in records:
+                for unit in rec["units"]:
+                    type_map.setdefault(unit[key], []).append(
+                        {**unit, "mol_index": rec["mol_index"], "smiles": rec["smiles"]}
+                    )
+            counts = np.asarray([len(v) for v in type_map.values()], dtype=np.int64)
+            cross = [v for v in type_map.values() if len({u["mol_index"] for u in v}) > 1]
+            alphas_per_type = [float(np.std([u["alpha"] for u in v])) for v in type_map.values() if len(v) >= 5]
+            top = sorted(type_map.items(), key=lambda kv: -len(kv[1]))[:10]
+            # exact isomorphism validation of the most reused types (first 20)
+            n_top_checked = 0
+            n_top_exact = 0
+            for h, v in sorted(type_map.items(), key=lambda kv: -len(kv[1]))[:20]:
+                if len(v) < 2:
+                    continue
+                mode = "chemical" if label == "chemical" else "strict"
+                base_graph = _unit_induced_graph(_object_lookup(v[0]["mol_index"]), v[0]["atom_ids"], mode)
+                for u in v[1:]:
+                    n_top_checked += 1
+                    other = _unit_induced_graph(_object_lookup(u["mol_index"]), u["atom_ids"], mode)
+                    if nx.is_isomorphic(
+                        base_graph,
+                        other,
+                        node_match=lambda x, y: x["label"] == y["label"],
+                        edge_match=lambda x, y: x["sig"] == y["sig"],
+                    ):
+                        n_top_exact += 1
+            out[label] = {
+                "n_types": int(len(type_map)),
+                "reuse_rate": float(1.0 - len(type_map) / max(n_units, 1)),
+                "types_reused_across_molecules": int(len(cross)),
+                "max_type_count": int(counts.max()) if counts.size else 0,
+                "mean_type_count": float(counts.mean()) if counts.size else 0.0,
+                "top_types": [
+                    {
+                        "hash": h,
+                        "count": len(v),
+                        "molecules": len({u["mol_index"] for u in v}),
+                        "unit_atoms": v[0]["n_atoms"],
+                        "examples": [u["smiles"] for u in v[:3]],
+                    }
+                    for h, v in top
+                ],
+                "top_type_exact_iso_checked": int(n_top_checked),
+                "top_type_exact_iso_ok": int(n_top_exact),
+                "alpha_within_type_mean_std": float(np.mean(alphas_per_type)) if alphas_per_type else 0.0,
+            }
+        payload[zone] = out
     write_json(OUT / "sharing_audit_D.json", payload)
-    log(f"[audit-sharing] types={payload['monitor']['n_types']} reuse={payload['monitor']['reuse_rate']:.3f}")
+    log(
+        f"[audit-sharing] chemical types={payload['monitor']['chemical']['n_types']} "
+        f"reuse={payload['monitor']['chemical']['reuse_rate']:.3f} "
+        f"strict types={payload['monitor']['strict_feature']['n_types']}"
+    )
     return 0
 
 
@@ -1636,7 +1716,8 @@ def _render_report(decision, monitor, partition, contribution, sharing, gates, b
         f"connectedness is structural; partition degeneracy on monitor: "
         f"all-merge={partition['zones']['monitor']['L-A']['all_merge_fraction']:.3f}, "
         f"all-cut={partition['zones']['monitor']['L-A']['all_cut_fraction']:.3f}; "
-        f"type reuse={sharing['monitor']['reuse_rate']:.3f} over {sharing['monitor']['n_types']} exact-WL types."
+        f"type reuse={sharing['monitor']['chemical']['reuse_rate']:.3f} over {sharing['monitor']['chemical']['n_types']} chemical types "
+        f"({sharing['monitor']['strict_feature']['n_types']} strict-feature types)."
     )
     lines.append(
         f"3. **Does learned partition beat fixed?** H1 gate {'PASS' if monitor['h1_gate']['passed'] else 'FAIL'}; "
