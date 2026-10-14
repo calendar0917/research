@@ -186,13 +186,33 @@ def _p3_record(seed: int) -> dict[str, Any]:
     return read_json(P3_TRAIN_PATHS[seed])
 
 
-def audit_sources() -> dict[str, Any]:
+def audit_sources(*, require_analysis: bool = True) -> dict[str, Any]:
+    """Verify reused sources.
+
+    ``require_analysis=True`` (local verification and Part I) additionally
+    requires the locally generated analysis artifacts: the Monitor label file,
+    the frozen Part-I predictions and the historical score table.  The remote
+    compute checkout only holds the training-critical sources (SSL
+    checkpoints, soups, object caches, split/prep records), so ``freeze`` on
+    the remote runs with ``require_analysis=False`` and records those files as
+    absent; the authoritative analysis check always runs locally.
+    """
     cfg = load_config()
     reuse = cfg["reuse"]
     checks: dict[str, Any] = {}
 
-    def chk(name: str, path: Path, expected: str | None) -> bool:
+    def chk(name: str, path: Path, expected: str | None, *, analysis_only: bool = False) -> bool:
         exists = path.exists()
+        if not exists and analysis_only and not require_analysis:
+            checks[name] = {
+                "path": str(path.relative_to(REPO_ROOT)) if path.is_relative_to(REPO_ROOT) else str(path),
+                "exists": False,
+                "sha256": None,
+                "matches": None,
+                "present": False,
+                "note": "analysis-only artifact is absent on this checkout",
+            }
+            return True
         actual = file_sha256(path) if exists else None
         hit = bool(exists and (expected is None or actual == expected))
         checks[name] = {"path": str(path.relative_to(REPO_ROOT)), "exists": exists, "sha256": actual, "matches": hit}
@@ -210,35 +230,48 @@ def audit_sources() -> dict[str, Any]:
     ok &= chk("prep_fit", PREP_PATH, None)
     ok &= chk("p3_train_s0", P3_TRAIN_PATHS[0], None)
     ok &= chk("p3_train_s1", P3_TRAIN_PATHS[1], None)
-    ok &= chk("monitor_y_source", SRC / "monitor_y_D.npy", None)
+    ok &= chk("monitor_y_source", SRC / "monitor_y_D.npy", None, analysis_only=True)
     for arm, rec in reuse["part1_frozen_predictions"].items():
-        ok &= chk(f"part1_pred_{arm}", JAU_PRED[arm], rec["sha256"])
-    ok &= chk("p3_monitor_pred_s1", P3_MON_S1, reuse["p3_monitor_prediction_seed1"]["sha256"])
-    ok &= chk("jau_monitor_scores", JAU_SCORES, None)
+        ok &= chk(f"part1_pred_{arm}", JAU_PRED[arm], rec["sha256"], analysis_only=True)
+    ok &= chk("p3_monitor_pred_s1", P3_MON_S1, reuse["p3_monitor_prediction_seed1"]["sha256"], analysis_only=True)
+    ok &= chk("jau_monitor_scores", JAU_SCORES, None, analysis_only=True)
+    ok &= chk("jau_monitor_lock", JAU_MON_LOCK, None)
 
     cross: dict[str, Any] = {}
-    # source monitors / locks
-    jau_lock = read_json(JAU_MON_LOCK)
-    jau_y = np.asarray(np.load(JAU_MON_Y), dtype=np.float64).reshape(-1)
-    cross["jau_monitor_lock_matches"] = bool(
-        array_sha256(jau_y) == jau_lock["y_sha256"] and jau_lock["n_rows"] == 1000
-    )
-    src_y = np.asarray(np.load(SRC / "monitor_y_D.npy"), dtype=np.float64).reshape(-1)
-    cross["monitor_y_source_equal"] = bool(np.array_equal(np.asarray(src_y, dtype=np.float32), np.asarray(jau_y, dtype=np.float32)))
-    ta_manifest = read_json(SRC / "prediction_manifest_D.json")
-    cross["p3_monitor_s1_matches_ta_manifest"] = bool(
-        ta_manifest["entries"]["monitor:P3:1"]["sha256"] == reuse["p3_monitor_prediction_seed1"]["sha256"]
-    )
-    cross["p3_soup_s1_matches_ta_manifest"] = bool(
-        ta_manifest["entries"]["monitor:P3:1"]["soup_sha256"] == reuse["p3_soup_seed1"]["file_sha256"]
-    )
-    jau_manifest = read_json(JAU / "prediction_manifest.json")
-    cross["part1_predictions_match_jau_manifest"] = bool(
-        all(
-            jau_manifest["entries"][arm]["sha256"] == reuse["part1_frozen_predictions"][arm]["sha256"]
-            for arm in ("A0", "A1", "A2")
+    if JAU_MON_Y.exists() and JAU_MON_LOCK.exists():
+        jau_lock = read_json(JAU_MON_LOCK)
+        jau_y = np.asarray(np.load(JAU_MON_Y), dtype=np.float64).reshape(-1)
+        cross["jau_monitor_lock_matches"] = bool(
+            array_sha256(jau_y) == jau_lock["y_sha256"] and jau_lock["n_rows"] == 1000
         )
-    )
+        src_y = np.asarray(np.load(SRC / "monitor_y_D.npy"), dtype=np.float64).reshape(-1)
+        cross["monitor_y_source_equal"] = bool(
+            np.array_equal(np.asarray(src_y, dtype=np.float32), np.asarray(jau_y, dtype=np.float32))
+        )
+    else:
+        cross["jau_monitor_lock_matches"] = None
+        cross["monitor_y_source_equal"] = None
+    if (SRC / "prediction_manifest_D.json").exists():
+        ta_manifest = read_json(SRC / "prediction_manifest_D.json")
+        cross["p3_monitor_s1_matches_ta_manifest"] = bool(
+            ta_manifest["entries"]["monitor:P3:1"]["sha256"] == reuse["p3_monitor_prediction_seed1"]["sha256"]
+        )
+        cross["p3_soup_s1_matches_ta_manifest"] = bool(
+            ta_manifest["entries"]["monitor:P3:1"]["soup_sha256"] == reuse["p3_soup_seed1"]["file_sha256"]
+        )
+    else:
+        cross["p3_monitor_s1_matches_ta_manifest"] = None
+        cross["p3_soup_s1_matches_ta_manifest"] = None
+    if (JAU / "prediction_manifest.json").exists():
+        jau_manifest = read_json(JAU / "prediction_manifest.json")
+        cross["part1_predictions_match_jau_manifest"] = bool(
+            all(
+                jau_manifest["entries"][arm]["sha256"] == reuse["part1_frozen_predictions"][arm]["sha256"]
+                for arm in ("A0", "A1", "A2")
+            )
+        )
+    else:
+        cross["part1_predictions_match_jau_manifest"] = None
     # P3 train records vs config
     p3_ok = True
     for seed in SEEDS:
@@ -273,14 +306,14 @@ def audit_sources() -> dict[str, Any]:
 
 
 def cmd_verify_inputs(args: argparse.Namespace) -> int:
-    audit = audit_sources()
+    audit = audit_sources(require_analysis=True)
     write_json(OUT / "input_audit.json", {"protocol": PROTOCOL_ID, "git_commit": git_commit(), **audit})
     log(f"[verify-inputs] ok={audit['ok']}")
     return 0 if audit["ok"] else 1
 
 
 def cmd_freeze(args: argparse.Namespace) -> int:
-    audit = audit_sources()
+    audit = audit_sources(require_analysis=False)
     if not audit["ok"]:
         raise SystemExit("source audit failed; refusing to freeze")
     cfg = load_config()
@@ -746,16 +779,18 @@ def cmd_stage_a(args: argparse.Namespace) -> int:
     }
 
     # -- G17 label isolation / no official paths ---------------------------------
-    om = read_json(SRC / "objects_manifest_D.json")
+    om_path = SRC / "objects_manifest_D.json"
+    om_hits = int(read_json(om_path)["forbidden_label_access_attempts"]) if om_path.exists() else None
     scan_files = [_CODE_DIR / "run_bjoc_junction_mechanism_exploration_v2.py", _CODE_DIR / "bjoc_junction_mechanism_models_v2.py"]
     scan_tokens = ["load_official_" + "valid", "load_official_" + "test"]
     hits = [f"{p.name}:{t}" for p in scan_files for t in scan_tokens if t in p.read_text(encoding="utf-8")]
     gates["G17_label_isolation_no_official"] = {
-        "pass": bool(int(om["forbidden_label_access_attempts"]) == 0 and not MONITOR_LOCK.exists() and not hits),
-        "object_build_forbidden_access_attempts": int(om["forbidden_label_access_attempts"]),
+        "pass": bool((om_hits in (None, 0)) and not MONITOR_LOCK.exists() and not hits),
+        "object_build_forbidden_access_attempts": om_hits,
         "monitor_label_read_this_round": bool(MONITOR_LOCK.exists()),
         "locked_label_read_this_round": False,
         "official_path_hits": hits,
+        "note": None if om_hits is not None else "objects manifest absent on this checkout; static scan + no-lock still enforced",
     }
 
     # -- G18 no forbidden modules ------------------------------------------------
