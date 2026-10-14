@@ -1700,14 +1700,43 @@ def cmd_finalize(args: argparse.Namespace) -> int:
             "null_ownership_blindness_verified": blind,
             "worked_example_null_identical": b1["b1_worked_example"]["null_identical"],
             "worked_example_organized_differs": b1["b1_worked_example"]["organized_differs"],
-            "b5_within_group_incidence_diff_pairs": b1["b5_random_marginal_family"]["n_within_group_pairs_different_incidence"],
+            "b5a_scaled_family_max_null_W_diff": max(r["null_W_max_abs_diff"] for r in b1["b5a_scaled_ownership_family"]["records"]),
+            "b5a_scaled_family_min_organized_W_diff": min(r["organized_W_max_abs_diff"] for r in b1["b5a_scaled_ownership_family"]["records"]),
+            "b5a_scaled_family_min_target_incidence_diff": min(r["target_incidence_abs_diff"] for r in b1["b5a_scaled_ownership_family"]["records"]),
+            "b5b_raw_marginal_null_summary_max_abs_diff": b1["b5b_raw_marginal_pairing_leak"]["null_summary_max_abs_diff_over_all_pairs"],
+            "b5b_raw_marginal_pairs": b1["b5b_raw_marginal_pairing_leak"]["n_within_group_pairs_different_incidence"],
         }
-        if blind:
+        family_blind = bool(
+            b1["b5a_scaled_ownership_family"]["records"]
+            and all(r["null_W_max_abs_diff"] == 0.0 and r["null_V_max_abs_diff"] == 0.0 for r in b1["b5a_scaled_ownership_family"]["records"])
+            and all(r["organized_W_max_abs_diff"] > 0.0 for r in b1["b5a_scaled_ownership_family"]["records"])
+        )
+        sections["B1_B4_B5"]["scaled_family_blind"] = family_blind
+        if blind and family_blind:
             tokens.append("NULL_OWNERSHIP_BLINDNESS_VERIFIED")
+    if (OUT / "b2_layerwise.json").exists():
+        b2 = read_json(OUT / "b2_layerwise.json")
+        a2 = b2["representation_only_p3_weights"]["A2"]
+        sections["B2"] = {
+            "subset": b2["subset"],
+            "fit_standardised_pair_distances": b2["fit_standardised_pair_distances"],
+            "a2_reader_block_ridge_r2": a2["reader_block_ridge_r2"],
+            "a2_junction_block_rank_fraction": a2["junction_mean"]["effective_rank_fraction"],
+            "b4_test1_junction_row_permutation": b2.get("b4_test1_junction_row_permutation", {}).get("records", {}),
+            "b4_test4_block_neutralisation": {k: v["mean_abs_change"] for k, v in b2.get("b4_test4_block_neutralisation", {}).get("records", {}).items()},
+            "trained_models_available": sorted(b2.get("trained_models", {}).keys()),
+        }
     if (OUT / "b3_collisions.json").exists():
         b3 = read_json(OUT / "b3_collisions.json")
         sections["B3"] = {
+            "exact_collision_groups": b3["exact_collision_groups"],
             "exact_collision_pairs_different_smiles": b3["exact_collision_pairs_different_smiles"],
+            "exact_collision_pairs_same_smiles": b3["exact_collision_pairs_same_smiles"],
+            "n_structures_scanned": b3["n_structures"],
+            "min_reported_distinct_reader_standardised_l2": min(
+                (r["reader_input_standardised_l2"] for r in b3["reported_pairs"] if r["canonical_smiles_differ"]),
+                default=None,
+            ),
             "verdict": b3["verdict"],
             "n_reported_pairs": len(b3["reported_pairs"]),
         }

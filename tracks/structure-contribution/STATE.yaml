@@ -2106,3 +2106,67 @@ round_cscl-bjoc-cross-task-lipophilicity-v1:
     prediction_manifest_test.json, artifact_manifest_pre_test.json, gpu_budget_ledger.json,
     cpu_gates.json, cpu_gates_remote.json, gpu_smoke.json}; checkpoints/predictions stay
     untracked by design (see REPORT section 11).
+
+updated: 2026-10-14
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-junction-sufficiency-audit-v1 (one-seed functional
+# ablation of the learned Junction channel + label-blind structural
+# information audit; preregistered before any GPU trajectory)
+# ---------------------------------------------------------------------------
+
+round_cscl-bjoc-junction-sufficiency-audit-v1:
+  status: COMPLETE 2026-10-14 (A0/A1 trained, Monitor read once, B1-B5 complete; Locked never read)
+  protocol: configs/bjoc_junction_sufficiency_audit_v1.yaml (frozen on res at commit 82f76cf before any GPU trajectory)
+  notes: notes/bjoc_junction_sufficiency_audit_v1.md
+  report: results/bjoc_junction_sufficiency_audit_v1/REPORT.md
+  brief: results/bjoc_junction_sufficiency_audit_v1/ADVISOR_BRIEF.md
+  question: >-
+    How much of BJOC-Null's accuracy needs the learned Junction local content
+    (A1 vs A0), how much needs the per-bond Junction-count conditioning
+    (A2 vs A1), and which structural-organization information does the Null
+    grouping provably discard (algebra / synthetic / real molecules)?
+  code:
+    - code/bjoc_junction_sufficiency_models_v1.py  # A0/A1/A2 modes, build-from-init, gradient/activation audit, frozen-loop train
+    - code/run_bjoc_junction_sufficiency_audit_v1.py # verify-inputs/freeze/stage-a/grad-audit/train/predict/score-monitor/b-algebraic/b-layerwise/b-collisions/finalize
+    - configs/bjoc_junction_sufficiency_audit_v1.yaml
+  tests: tests/test_bjoc_junction_sufficiency_audit_v1.py (18 fast torch tests; all pass; A2 bitwise parent equality, A0 exact zero/insensitivity, A1 uniformity, permutation invariance, train-loop equivalence vs bp.train_supervised, no-official-path scans)
+  splits: {split: D (reused), fit 8000 / monitor 1000 / locked 1000; Monitor is historically exposed exploratory data; row fingerprints re-verified}
+  reuse: >-
+    P3-D-s0 soup 13a78a63..., Fit-only SSL encoder 8da281fa... (encoder 2c2bbd3f...),
+    objects_fit/monitor/locked (e55cf639/fd4cb2ca/...), monitor_P3_D_s0.npz predictions,
+    monitor_y_D.npy labels (read once, sha bbcf6faf...), frozen split rows.
+  stage_a: >-
+    17/17 CPU gates pass (stage_a.json): A2 bitwise-equal to the parent forward and
+    reproduces the frozen P3 Monitor predictions within 1.9e-6; A0 W/V/q exactly 0 and
+    junction-insensitive; A1 uniform; permutation/relabel/batch/save-load <= 4e-7;
+    A1/A2 junction gradients non-zero; A0 junction branch no gradient; no official path.
+  arm_results: >-
+    seed 0, split-D Monitor 1000, paired molecule bootstrap 5000. MAE A0 0.121514,
+    A1 0.106239, A2 0.103960 (P3 reuse). delta_10 -0.015275 CI95 [-0.028561,+0.003351],
+    delta_21 -0.002280 CI95 [-0.006969,+0.002233], delta_20 -0.017555 CI95
+    [-0.030225,-0.000658]. Ordinary (y>-3, n=929) deltas -0.0201/-0.0013/-0.0215;
+    tail (y<=-3, n=71) +0.0484/-0.0148/+0.0336; RMSE 0.3269 (A0) vs 0.5172/0.4932
+    -> Junction moments trade typical accuracy against the heavy tail. Frozen labels:
+    J_MOMENTS_NO_CLEAR_GAIN, COUNT_CONDITIONING_NO_CLEAR_GAIN. Both trajectories are
+    complete R3 360 epochs / 22680 updates with matched scratch init, SSL encoder and
+    batch order (hashes asserted); A0 designed-active capacity 65.2% vs A1/A2 99.96%.
+  structural_audit: >-
+    B1/B5: conditional representation-level ownership blindness verified (worked example
+    Null [3,3,3,3] vs Organized [2,4,3,3]; scaled m=2..5 family Null diff 0, Organized
+    >=0.0586, ownership target diff 8-36). B5b: raw token multisets do not fix the encoded
+    w multiset (max Null summary diff 785) because f_J consumes incident bond embeddings.
+    B3 (official train 10k structure fields, label-blind): 3 exact structural-statistics
+    collision groups, all same canonical SMILES duplicates, 0 cross-molecule -> verdict
+    REAL_COLLISION_NOT_FOUND_WITHIN_BUDGET; nearest distinct-molecule reader distance 3.35
+    standardised (Fit p01 14.26 / median 22.59). B2: 321-dim reader input, ridge R2 from
+    the rest 0.536 composer / 0.968 atom-sum / 0.927 atom-sq / 0.938 global; A2 composer
+    summary effective rank 27.9 (d90 4). B4: junction-row permutation no-op <=2.4e-7;
+    assignment switch Null-invariant / Organized changes; block neutralisation sensitivity
+    diagnostic only.
+  budget: 0.3417 GPU-h of 1.5 (A0 648.8s on res-gpu0, A1 555.1s on res-gpu1, in parallel; a100-2, driver 550.163.01, torch 2.5.1+cu124); commit 82f76cf; all B audits CPU-only (0 GPU-h)
+  decisions: >-
+    J_MOMENTS_NO_CLEAR_GAIN + COUNT_CONDITIONING_NO_CLEAR_GAIN + NULL_OWNERSHIP_BLINDNESS_VERIFIED
+    + REAL_COLLISION_NOT_FOUND_WITHIN_BUDGET. No second seed, no new hyperparameter, no full-10k
+    refit, no Locked read, no official valid/test load. Post-freeze amendment covered analysis-driver
+    fixes only (module/composer/config hashes unchanged; post_freeze_amendments.json).
