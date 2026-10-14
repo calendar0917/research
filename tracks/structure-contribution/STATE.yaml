@@ -2170,3 +2170,55 @@ round_cscl-bjoc-junction-sufficiency-audit-v1:
     + REAL_COLLISION_NOT_FOUND_WITHIN_BUDGET. No second seed, no new hyperparameter, no full-10k
     refit, no Locked read, no official valid/test load. Post-freeze amendment covered analysis-driver
     fixes only (module/composer/config hashes unchanged; post_freeze_amendments.json).
+
+# ---------------------------------------------------------------------------
+# cscl-bjoc-junction-mechanism-exploration-v2  (Part I frozen error
+# complementarity + Part II arms C/D/E; preregistered before any GPU run)
+# ---------------------------------------------------------------------------
+
+round_cscl-bjoc-junction-mechanism-exploration-v2:
+  status: COMPLETE 2026-10-14 (7 new trajectories trained, single Monitor read, Locked/official never read; final commit pending)
+  protocol: configs/bjoc_junction_mechanism_exploration_v2.yaml (frozen locally and on res at commit f25de47 before any GPU trajectory)
+  report: results/bjoc_junction_mechanism_exploration_v2/REPORT.md
+  brief: results/bjoc_junction_mechanism_exploration_v2/ADVISOR_BRIEF.md
+  question: >-
+    What is the current BJOC limit: (a) Junction content, (b) where Junction
+    information enters, (c) how whole-graph Junction information is organised,
+    or (d) coverage of extreme molecules?  Part I dissects the frozen A0/A1/A2
+    Monitor errors; Part II trains C (count-only), D (direct readout) and
+    E (label-blind type-conditioned pooling) on the frozen backbone.
+  code:
+    - code/bjoc_junction_mechanism_models_v2.py
+    - code/run_bjoc_junction_mechanism_exploration_v2.py
+    - configs/bjoc_junction_mechanism_exploration_v2.yaml
+  tests: tests/test_bjoc_junction_mechanism_exploration_v2.py (20 fast torch tests; all pass; A2 bitwise parent equality, C W/V=0 & q=n_b, E conservation/reference loop/witness, D expansion & two-phase gradient channel, invariances, save/load, train-loop equivalence vs jsm A1, no-official scans)
+  splits: {split: D (reused), fit 8000 / monitor 1000 / locked 1000; Monitor historically exposed exploratory data}
+  part1: >-
+    A2's higher RMSE than A0 is dominated by ONE molecule (row 514, y=-15.327):
+    96.0% of positive SSE increments and 110.1% of net SSE change; remove it
+    and A2 RMSE 0.1977 < A0 0.2299; worst-20 removed 0.1829 < 0.2247. A1-A0
+    identical pattern (95.7%, same row). A2-A1 has no dominant molecule and
+    A1/A2 AE correlate 0.990 vs 0.897 against A0. Novelty: A0-better molecules
+    are slightly rarer (median Fit distance 3.03 vs 2.64) but A2 is better in
+    every novelty quartile (dAE -0.016/-0.030/-0.021/-0.004); A0-vs-A2 error
+    patterns differ within every stratum.
+  arm_results: >-
+    split-D Monitor 1000, one label read after freezing, paired bootstrap 5000.
+    MAE: C 0.125444/0.129983, D 0.099480/0.100665, E 0.104061/0.101182,
+    A1 0.106239/0.099541, A2 (reused) 0.103960/0.104642, A0 0.121514 (seed 0
+    only, no seed-1 run). C-A2 +0.023412 CI95 [+0.014641,+0.032549] ->
+    COUNT_ONLY_INSUFFICIENT (junction content necessary; C worst on the tail).
+    D-A1 -0.002818 CI95 [-0.006791,+0.001298], seed signs -0.006760/+0.001125
+    -> J_DIRECT_READOUT_NO_GAIN (D best single model on seed 0; gain
+    tail-specific; two seeds cannot resolve ~0.003). E-A2 -0.001679 CI95
+    [-0.004045,+0.000592], seed 0 +0.000102 / seed 1 -0.003460; E best Fit MAE
+    (0.00101) and ordinary MAE but seed-0 tail +0.0279 -> J_TYPE_POOL_NO_GAIN.
+    Verdict: content necessary; entry point/organisation not established;
+    extreme molecules dominate remaining error (tail MAE 3.4-4.9x ordinary).
+  budget: 1.2061 GPU-h of 2.0 across 7 new trajectories on 2xA100 (C/D/E seed 0, A1/C/D/E seed 1; 22680 updates each; P3-matched init/SSL/batch-order hashes asserted)
+  decisions: >-
+    COUNT_ONLY_INSUFFICIENT + J_DIRECT_READOUT_NO_GAIN + J_TYPE_POOL_NO_GAIN.
+    No third architecture, no formula change after scoring, no Locked read, no
+    official valid/test, no full-10k refit, no seed-1 purchase driven by seed-0
+    score. Recorded deviations: two-phase D gradient gate (zero-init readout),
+    analysis-optional remote freeze, seed-1 binaries restored from prior rr pull.
