@@ -1,0 +1,97 @@
+{
+ "protocol": "cscl-task-adaptive-structure-units-v1",
+ "git_commit": "fdbd0b2d2c67a978739a4f06b57839de8b20cc84",
+ "frozen_utc": "2026-10-14T08:45:50Z",
+ "code": {
+  "task_adaptive_structure_units_v1.py": "b23c863d8b190d79031e61a73d9b6635eded7e9ef0f57cded858ab9aeb964931",
+  "run_task_adaptive_structure_units_v1.py": "138c61d010b54f62ed98203cd46b534c132b272600038c1906377292d291c575"
+ },
+ "config": {
+  "atom_hidden": 128,
+  "atom_out": 96,
+  "bond_hidden": 160,
+  "bond_out": 96,
+  "contrib_hidden": 64,
+  "dropout": 0.0,
+  "reader_hidden": 64,
+  "reader_layers": 1,
+  "relation_hidden": 160,
+  "relation_out": 96,
+  "scorer_hidden": 160,
+  "unit_hidden": 160,
+  "unit_out": 96
+ },
+ "config_sha256": "7b022688a8b69dff02a30ebfee1db77590c66d315e05d37523eb28135f300e79",
+ "merge_init_bias": -0.5,
+ "recipe": {
+  "epochs": 360,
+  "schedule": "cosine",
+  "lr": 0.001,
+  "lr_min": 1e-05,
+  "weight_decay": 1e-05,
+  "batch_size": 128,
+  "grad_clip": 5.0,
+  "soup_last": 5,
+  "shuffle_offset": 101
+ },
+ "arms": [
+  "F-A",
+  "L-A",
+  "F-O",
+  "L-O"
+ ],
+ "seeds": [
+  0,
+  1
+ ],
+ "split_tag": "D",
+ "init_seed": 0,
+ "ssl_init": {
+  "path": "tracks/structure-contribution/results/bjoc_task_adaptive_ssl_v1/pretrain_D_s0.pt",
+  "sha256": "8da281fac33be1637a0fb4d98ec2f489982202bf257feec6c68ee2ecdeab83b9",
+  "encoders_only": true
+ },
+ "inputs": {
+  "objects_fit_D.pt": "e55cf639522226955556a54f5d063e81b5ecd502f45c3441ff2e3b5567330803",
+  "objects_monitor_D.pt": "fd4cb2caad66fd693dd761222571ea7ad88a6cdcc312eb932de94da236f76ec2",
+  "split_D.json": "258882f40c724a020ddbdc60a22677dfb0f0aa9ac9a8de69620bcb4d1e731e26"
+ },
+ "monitor": {
+  "gate": "paired seed-mean raw-y MAE",
+  "delta_threshold": -0.01,
+  "ordinary_tol": 0.0,
+  "rmse_tol": 0.02,
+  "max_single_gain_fraction": 0.25,
+  "two_seeds": true,
+  "reference": {
+   "source": "bjoc_task_adaptive_ssl_v1/monitor_TA_D.json",
+   "arm": "P3 (BJOC-Null)",
+   "monitor_mae_seed_mean": 0.10430100391665473,
+   "per_seed": {
+    "0": 0.10408494917506238,
+    "1": 0.10451705865824706
+   }
+  }
+ },
+ "budget": {
+  "gpu_cap_hours": 2.5,
+  "runs_planned": 8
+ },
+ "decisions": {
+  "STRUCTURE_UNITS_LEARNING_PROMISING": "L-A beats F-A on the frozen H1 gate",
+  "STRUCTURE_UNITS_READOUT_BOTTLENECK": "L-A ~ F-A but opaque arms beat additive arms",
+  "STRUCTURE_UNITS_NO_GAIN": "no additive boundary gain and no readout gain",
+  "STRUCTURE_UNITS_NONIDENTIFIABLE": "boundary learning works on known truth but monitor partition degenerates",
+  "STRUCTURE_UNITS_STOP": "no learnable boundaries / boundary scorer dead on known truth"
+ },
+ "read_discipline": {
+  "monitor": "read once inside score-monitor after predictions are frozen",
+  "locked": "never read by this protocol",
+  "official_valid_test": "never loaded"
+ },
+ "notes": [
+  "F-A/L-A use the additive readout; F-O/L-O use a capacity-matched opaque reader",
+  "the merge scorer receives the straight-through surrogate from the raw-y L1 loss",
+  "learned boundaries are audited label-blind before monitor labels are read"
+ ]
+}
