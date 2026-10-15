@@ -170,3 +170,15 @@ Junction 邻接定义（用于“相邻组合”）：两个 junction 相邻当�
 
 R1 在主体结果之前生效；驱动 `code/bjoc_source_attribution_feasibility_v1.py` 中
 `COMPLETENESS_REL_THRESHOLD` 仅为记录保留，不再使用。
+
+**R2 — 补充分析 S1：组合层比较（主体结果之后追加；探索性，不改主决策）**
+
+任务清单要求的“排名靠前的**相邻 Junction 组合** vs 同规模/拓扑的随机连通组合”未在 §6 预先固定。
+现以完全相同的方法与干预补做，仅改变聚合单位，并明确标注为**探索性**：
+
+* pair 排序分 = `(|IG_i| + |IG_j|)/2`；top pair = 同分子相邻 pair 中排序分最高者
+  （相邻 = `junc_bond` 集合相交）；
+* joint 响应 `Δ_joint`：同时替换两个 Junction 的编码（匹配自然编码，α=1.0），完整重算 Null；
+* 对照：同分子随机相邻 pair（64 draws；RNG `11000000 + seed*100000 + row`）与随机非相邻 pair（64 draws）；
+* 报告：配对符号检验、`Δ_joint − (Δ_i + Δ_j)` 交互项、|Δ| 均值。
+* S1 若为正，仅作为下一轮预注册实验的动机；**不回溯性修改 §6 判据、R1 校验或 decisions**。

@@ -802,6 +802,7 @@ def cmd_attribute(args: argparse.Namespace) -> int:
             k = min(TOP_K, n)
             top = top_k_indices(ig_mean["ig"], k)
             complement = [i for i in range(n) if i not in set(top)]
+            share = junction_share_matrix(pack)
             rng = np.random.default_rng(7_000_000 + seed * 100_000 + int(row))
             random_means_10, random_means_05, random_links = [], [], []
             for _ in range(RANDOM_DRAWS):
@@ -809,10 +810,40 @@ def cmd_attribute(args: argparse.Namespace) -> int:
                     draw = np.asarray(rng.choice(complement, size=min(k, len(complement)), replace=False), dtype=np.int64)
                     random_means_10.append(float(d10[torch.as_tensor(draw)].abs().mean()))
                     random_means_05.append(float(d05[torch.as_tensor(draw)].abs().mean()))
-                random_links.append(internal_links_from_share(junction_share_matrix(pack), rng.permutation(n)[:k]))
-            share = junction_share_matrix(pack)
+                random_links.append(internal_links_from_share(share, rng.permutation(n)[:k]))
             top_links = internal_links_from_share(share, top)
             random_links_arr = np.asarray(random_links, dtype=np.float64)
+            # S1 (exploratory, PROTOCOL R2): top-ranked adjacent junction pair vs random pairs
+            s1: dict[str, Any] = {}
+            pair_adj = [(i, j) for i in range(n) for j in range(i + 1, n) if share[i, j]]
+            pair_dis = [(i, j) for i in range(n) for j in range(i + 1, n) if not share[i, j]]
+            if pair_adj and pair_dis:
+                abs_ig = np.abs(ig_mean["ig"].numpy())
+                pair_scores = np.asarray([(abs_ig[i] + abs_ig[j]) / 2.0 for i, j in pair_adj])
+                top_pair = pair_adj[int(np.argmax(pair_scores))]
+
+                def joint_delta(pair: tuple[int, int]) -> float:
+                    w2 = pack["w"].clone()
+                    for jj in pair:
+                        w2[jj] = w2[jj] + 1.0 * (w_ref[jj % w_ref.shape[0]] - w2[jj])
+                    with torch.no_grad():
+                        return float(predict_null(model, pack, w=w2)) - float(pred_nat)
+
+                rng_s1 = np.random.default_rng(11_000_000 + seed * 100_000 + int(row))
+                adj_draws = [joint_delta(pair_adj[int(k)]) for k in rng_s1.integers(0, len(pair_adj), size=RANDOM_DRAWS)]
+                dis_draws = [joint_delta(pair_dis[int(k)]) for k in rng_s1.integers(0, len(pair_dis), size=RANDOM_DRAWS)]
+                top_joint = joint_delta(top_pair)
+                single_sum = float(d10[top_pair[0]]) + float(d10[top_pair[1]])
+                s1 = {
+                    "top_pair": [int(x) for x in top_pair],
+                    "top_joint": float(top_joint),
+                    "random_adjacent_mean_abs": float(np.mean(np.abs(adj_draws))),
+                    "random_disconnected_mean_abs": float(np.mean(np.abs(dis_draws))),
+                    "paired_adjacent_diff": abs(top_joint) - float(np.mean(np.abs(adj_draws))),
+                    "paired_disconnected_diff": abs(top_joint) - float(np.mean(np.abs(dis_draws))),
+                    "interaction_signed": float(top_joint) - single_sum,
+                    "single_sum_signed": single_sum,
+                }
             records.append(
                 {
                     "row": int(row),
@@ -837,11 +868,25 @@ def cmd_attribute(args: argparse.Namespace) -> int:
                     "joint_reset_delta": ig_mean["joint_reset_delta"],
                     "ig_sum": ig_mean["ig_sum"],
                     "sum_abs_ig": ig_mean["sum_abs_ig"],
+                    "s1": s1,
                 }
             )
         row_d10 = np.asarray([r["top_mean_abs_d10"] - r["random_mean_abs_d10"] for r in records], dtype=np.float64)
         row_d05 = np.asarray([r["top_mean_abs_d05"] - r["random_mean_abs_d05"] for r in records], dtype=np.float64)
         frac_above_p95 = np.asarray([r["frac_random_draws_below_top"] for r in records], dtype=np.float64)
+        s1_recs = [r["s1"] for r in records if r.get("s1")]
+        s1_payload: dict[str, Any] = {}
+        if s1_recs:
+            s1_payload = {
+                "n_molecules": len(s1_recs),
+                "adjacent_pair": sign_test(np.asarray([x["paired_adjacent_diff"] for x in s1_recs], dtype=np.float64)),
+                "disconnected_pair": sign_test(np.asarray([x["paired_disconnected_diff"] for x in s1_recs], dtype=np.float64)),
+                "interaction_signed": sign_test(np.asarray([x["interaction_signed"] for x in s1_recs], dtype=np.float64)),
+                "mean_top_joint_abs": float(np.mean([abs(x["top_joint"]) for x in s1_recs])),
+                "mean_random_adjacent_abs": float(np.mean([x["random_adjacent_mean_abs"] for x in s1_recs])),
+                "mean_random_disconnected_abs": float(np.mean([x["random_disconnected_mean_abs"] for x in s1_recs])),
+                "mean_single_sum_signed": float(np.mean([x["single_sum_signed"] for x in s1_recs])),
+            }
         per_seed[str(seed)] = {
             "n_molecules": len(records),
             "pooled_spearman_ig_mean_vs_neg_occ_mean": v1.spearman(np.concatenate(pooled["ig_mean"]), -np.concatenate(pooled["occ_mean"])),
@@ -870,6 +915,7 @@ def cmd_attribute(args: argparse.Namespace) -> int:
                 "mean_abs_zero_block_effects": {k: float(np.mean(v)) for k, v in zero_block_effects.items()},
             },
             "records": records,
+            "s1_adjacent_pair_probe": s1_payload,
         }
         for key, vals in per_row_arrays.items():
             arrays[f"seed{seed}__{key}"] = np.concatenate(vals) if vals else np.zeros(0, dtype=np.float32)
@@ -978,6 +1024,7 @@ def cmd_finalize(args: argparse.Namespace) -> int:
             "mean_abs_joint_reset_delta": per_seed[s]["channel"]["mean_abs_joint_reset_delta"],
         }
     metrics["descriptives"] = descriptives
+    metrics["exploratory_s1"] = {s: per_seed[s]["s1_adjacent_pair_probe"] for s in ("0", "1")}
     top_supported = all(
         tr[s][a]["mean"] > 0 and tr[s][a]["median"] > 0 and tr[s][a]["p_two_sided_exact"] < 0.01 for s in ("0", "1") for a in ("alpha_1.0", "alpha_0.5")
     )

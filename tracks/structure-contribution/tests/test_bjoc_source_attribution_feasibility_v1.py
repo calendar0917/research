@@ -213,3 +213,7 @@ def test_attribution_metrics_consistency():
     assert metrics["decisions"]["TOP_JUNCTIONS_RESPONSE_EXCEEDS_RANDOM"] is True
     assert metrics["decisions"]["TOP_JUNCTIONS_FORM_CONNECTED_COMBINATIONS"] is False
     assert metrics["source_manifest"]["reproduction_pass"] is True
+    s1 = metrics["exploratory_s1"]
+    for seed in ("0", "1"):
+        assert s1[seed]["n_molecules"] == attr["n_diagnostic"]
+        assert s1[seed]["adjacent_pair"]["p_two_sided_exact"] < 1e-10  # exploratory only, decisions unchanged
