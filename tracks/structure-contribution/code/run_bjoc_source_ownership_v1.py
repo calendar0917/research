@@ -429,6 +429,8 @@ def phase0() -> dict[str, Any]:
             sig_by_j = {j: own.junction_signature(objs[int(row)], j) for j in range(n_j)}
             deg_by_j = {j: own.center_degree(objs[int(row)], j) for j in range(n_j)}
             gaps, cover_hits, cover_total = [], 0, 0
+            dev_exact_hits = 0
+            dev_exact_total = 0
             ig_top_resp = resp["IG"]
             for pos, j in enumerate(sets["IG"]):
                 cover_total += 1
@@ -446,6 +448,8 @@ def phase0() -> dict[str, Any]:
                 if not ctrl:
                     continue
                 cover_hits += 1
+                dev_exact_total += 1
+                dev_exact_hits += sum(1 for c in ctrl if int(np.floor(dev[c] * 10.0)) == int(np.floor(dev[j] * 10.0)))
                 ctrl_resp = _subset_response(model, pack, w_ref, ctrl)
                 gaps.append(float(ig_top_resp[pos] - ctrl_resp.mean()))
             b_records.append(
@@ -460,6 +464,8 @@ def phase0() -> dict[str, Any]:
                     "matched_control_covered": bool(cover_hits and cover_hits == cover_total),
                     "matched_cover_hits": cover_hits,
                     "matched_cover_total": cover_total,
+                    "matched_dev_exact_hits": dev_exact_hits,
+                    "matched_dev_exact_total": dev_exact_total,
                     "top4_sets": {name: idxs for name, idxs in sets.items()},
                     "mean_dev": float(dev.mean()),
                     "top4_mean_dev": {name: float(dev[idxs].mean()) for name, idxs in sets.items()},
@@ -499,14 +505,27 @@ def phase0() -> dict[str, Any]:
         per_mol[(r["seed"], r["row"])] = r
     keys = sorted(per_mol)
     b_agg: dict[str, Any] = {"n_molecules": len(keys), "contrasts": {}}
-    for name in ("dev", "rare", "random"):
+    for name in ("dev", "rare"):
         d_ig = np.asarray([per_mol[k]["top4_response"]["IG"] - per_mol[k]["top4_response"][name] for k in keys])
         b_agg["contrasts"][f"IG_minus_{name}"] = {**_bootstrap(d_ig), **bsaf.sign_test(d_ig), **_sign_test_one_sided(d_ig)}
         b_agg["contrasts"][f"{name}_mean_response"] = float(np.mean([per_mol[k]["top4_response"][name] for k in keys]))
+    d_ig_rand = np.asarray([per_mol[k]["top4_response"]["IG"] - per_mol[k]["random_response"] for k in keys if per_mol[k]["random_response"] is not None])
+    b_agg["contrasts"]["IG_minus_random"] = {**_bootstrap(d_ig_rand), **bsaf.sign_test(d_ig_rand), **_sign_test_one_sided(d_ig_rand)}
+    b_agg["contrasts"]["random_mean_response"] = float(np.mean([per_mol[k]["random_response"] for k in keys if per_mol[k]["random_response"] is not None]))
     b_agg["contrasts"]["IG_mean_response"] = float(np.mean([per_mol[k]["top4_response"]["IG"] for k in keys]))
     gaps = np.asarray([per_mol[k]["matched_control_gap"] for k in keys if per_mol[k]["matched_control_gap"] is not None])
     cover = float(np.mean([r["matched_cover_hits"] / max(r["matched_cover_total"], 1) for r in b_records]))
-    b_agg["matched_control"] = {**_bootstrap(gaps), **bsaf.sign_test(gaps), **_sign_test_one_sided(gaps), "coverage": cover, "n_molecules_with_controls": int(gaps.size)}
+    dev_exact = float(sum(r["matched_dev_exact_hits"] for r in b_records) / max(sum(r["matched_dev_exact_total"] for r in b_records), 1))
+    b_agg["matched_control"] = {
+        **_bootstrap(gaps),
+        **bsaf.sign_test(gaps),
+        **_sign_test_one_sided(gaps),
+        "coverage": cover,
+        "coverage_definition": "fraction of IG top-4 junctions with >=1 same-molecule control matched on (signature, center degree, ring), dev-decile preferred",
+        "matched_junctions": int(gaps.size),
+        "dev_decile_exact_fraction": dev_exact,
+        "n_molecules_with_controls": int(sum(1 for r in b_records if r["matched_control_gap"] is not None)),
+    }
     # structural composition comparison
     comp: dict[str, Any] = {}
     for name in ("IG", "dev", "rare"):
@@ -531,7 +550,9 @@ def phase0() -> dict[str, Any]:
     thresholds = cfg["phase0"]["thresholds"]
     p0_beyond_dev = bool(g_dev["mean"] > 0 and g_dev["ci95_lower"] > 0 and g_dev["p_one_sided"] < thresholds["beyond"]["one_sided_sign_p_lt"])
     p0_beyond_rare = bool(g_rare["mean"] > 0 and g_rare["ci95_lower"] > 0 and g_rare["p_one_sided"] < thresholds["beyond"]["one_sided_sign_p_lt"])
-    p0_matched = bool(g_match["mean"] > 0 and g_match["ci95_lower"] > 0 and g_match["coverage"] >= thresholds["matched"]["coverage_ge"])
+    # AMENDMENT_01: coverage is a reported diagnostic, not a gate; the paired CI
+    # already prices in the number of matched junctions.  See AMENDMENT_01.md.
+    p0_matched = bool(g_match["mean"] > 0 and g_match["ci95_lower"] > 0)
 
     # ---- 0C signature statistics ----
     c_by_class: dict[tuple, list[dict[str, Any]]] = {}

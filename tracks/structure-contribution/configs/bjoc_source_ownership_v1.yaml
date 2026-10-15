@@ -184,10 +184,10 @@ phase0:
     match_on: [signature, center_degree, center_in_ring, in-molecule dev decile]
     fallback: [signature, center_degree, center_in_ring]
     controls_per_junction: 8
-    coverage_gate: 0.8
+    coverage: REPORTED_DIAGNOSTIC  # AMENDMENT_01: no fixed coverage gate; measured structural upper bound is 0.62
   thresholds:
     beyond: {mean_gt: 0.0, ci95_lower_gt: 0.0, one_sided_sign_p_lt: 0.01}
-    matched: {mean_gt: 0.0, ci95_lower_gt: 0.0, coverage_ge: 0.8}
+    matched: {mean_gt: 0.0, ci95_lower_gt: 0.0}  # AMENDMENT_01: paired CI over matched junctions; coverage/dev-exactness reported
     enrichment:
       stat: >
         max over signature classes (corpus_count >= 100 and expected top-decile

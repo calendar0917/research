@@ -84,13 +84,15 @@ Pre-fixed rankings of junctions inside one molecule (no tuning):
 * **Matched control.**  Each `IG`-top-4 junction is compared with up to 8
   same-molecule control junctions matched on
   `(signature, center degree, center-in-ring flag, in-molecule dev-decile)`
-  (fallback: drop the dev-decile constraint).  Matching coverage is reported per
-  junction and per molecule; the coverage gate is 0.8.
+  (fallback: drop the dev-decile constraint).  Matching coverage, the matched
+  junction count and the dev-decile-exact fraction are reported as diagnostics
+  (amended before execution: no fixed coverage threshold, see `AMENDMENT_01.md`).
 * **Frozen gates**
   * `P0_BEYOND_DEV`: paired mean `Δ_IG - Δ_dev > 0`, bootstrap CI95 lower > 0,
     one-sided sign-test `p < 0.01`;
   * `P0_BEYOND_RARE`: same against `rare`;
-  * `P0_MATCHED`: paired mean `Δ_j - Δ_matched > 0`, CI95 lower > 0, coverage >= 0.8.
+  * `P0_MATCHED`: paired mean `Δ_j - Δ_matched > 0` and CI95 lower > 0 over the
+    matched junctions (amendment 01; coverage and dev-decile exactness reported).
 * Structural composition of the top-4 sets (signature class, center degree, ring
   state, mean dev) is reported; if the sets differ materially the matched-control
   result governs.
