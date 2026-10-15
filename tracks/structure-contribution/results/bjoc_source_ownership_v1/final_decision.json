@@ -1,0 +1,99 @@
+{
+  "protocol": "cscl-bjoc-source-ownership-v1",
+  "phase0_verdict": "SOURCE_SIGNAL_BEYOND_SIMPLE_BASELINES",
+  "cpu_gates": "CPU_GATES_PASS",
+  "monitor_rounds": [
+    {
+      "round": "seed0",
+      "decision": "SEED0_GATES_FAIL",
+      "gates": {
+        "ownership_contrast": false,
+        "sham_separation": false,
+        "not_tail_or_single_driven": true,
+        "parity_vs_p3": true
+      }
+    }
+  ],
+  "mechanism_gates": [
+    {
+      "faithfulness": true,
+      "local_pathway_used": true,
+      "global_block_cannot_change_c": true,
+      "trained_ownership_isolation": true
+    }
+  ],
+  "locked_read": false,
+  "official_valid_loaded_for_secondary_only": true,
+  "official_test_loaded": false,
+  "decision_label": "OWNERSHIP_NOT_MORE_VALUABLE_THAN_SHAM",
+  "secondary_labels": [
+    "OWNERSHIP_NULL"
+  ],
+  "decision_basis": {
+    "seed0_gates": {
+      "ownership_contrast": false,
+      "sham_separation": false,
+      "not_tail_or_single_driven": true,
+      "parity_vs_p3": true
+    },
+    "seed1_purchased": false,
+    "seed1_stop_rule": "seed 1 only if all seed-0 gates pass (frozen)",
+    "observed": {
+      "O_minus_N": {
+        "mean": 0.00301,
+        "ci95": [
+          -0.00269,
+          0.0099
+        ]
+      },
+      "O_minus_S": {
+        "mean": -0.00199,
+        "ci95": [
+          -0.01179,
+          0.00507
+        ]
+      },
+      "O_minus_P3": {
+        "mean": -0.00371,
+        "ci95": [
+          -0.01134,
+          0.0024
+        ]
+      }
+    },
+    "mechanism_gates": {
+      "faithfulness": true,
+      "local_pathway_used": true,
+      "global_block_cannot_change_c": true,
+      "trained_ownership_isolation": true
+    },
+    "mechanism_note": "S abandons the corrupted local channel (deletion delta 0.022 vs O 0.532) and routes through the global pathway"
+  },
+  "next_step": "Motif interpretation",
+  "next_step_rationale": "Phase 0 shows a baseline-beyond, signature-enriched source signal; Phase 2 shows the sum-ownership wiring does not convert it into predictive gain. Characterise the enriched signature classes/ring contexts next; do not buy another structured-prediction head on the failed relational form; do not stop while Q1 is unexplained.",
+  "gpu_budget": {
+    "completed_wall_seconds": 1694.0,
+    "cancelled_attempt_wall_seconds_approx": 640,
+    "cap_hours": 1.5
+  },
+  "q1": {
+    "verdict": "SOURCE_SIGNAL_BEYOND_SIMPLE_BASELINES",
+    "IG_minus_dev": 0.00665,
+    "IG_minus_rare": 0.03297,
+    "IG_minus_random": 0.05038,
+    "matched_gap": 0.01094,
+    "matched_p": 0.00199
+  },
+  "q2": {
+    "verdict": "NO_CONFIRMED_OWNERSHIP_VALUE",
+    "O_minus_N": 0.00301,
+    "O_minus_S": -0.00199
+  },
+  "q3": {
+    "parity": true,
+    "local_pathway_used": true,
+    "faithfulness_O": 0.598,
+    "caveat": "used/faithful local pathway is not whole-model explainability"
+  },
+  "official_valid_secondary_only": true
+}
