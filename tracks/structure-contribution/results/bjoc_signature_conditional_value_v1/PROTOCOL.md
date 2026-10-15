@@ -3,6 +3,7 @@
 **Status:** PREREGISTERED before any validation-set comparison of this round is
 computed.  All method, statistic and decision rules below are frozen (see
 `protocol_freeze.json` for the config/code hashes and the git revision).
+**Created:** 2026-10-15.
 
 **Track:** `tracks/structure-contribution` · **Namespace:** `bjoc_signature_conditional_value_v1`
 **Compute:** CPU only.  No model inference is run this round.
