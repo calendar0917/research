@@ -1,0 +1,97 @@
+{
+  "namespace": "bjoc_source_attribution_feasibility_v1",
+  "purpose": "independent recalculation for ERRATUM points of bjoc_structure_explanation_audit_v1",
+  "history_overwritten": false,
+  "labels_used": false,
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "point4_organized_baseline": {
+    "description": "v1 B3 used pred_null_natural as the baseline for the Organized-mode perturbation; the Organized mode's own natural prediction is the correct within-mode baseline",
+    "per_seed": {
+      "0": {
+        "n_molecules": 64,
+        "v1_recorded": {
+          "null_dose_alpha_1.0_mean_abs_delta_pred": 0.007825157197657973,
+          "organized_mean_abs_delta_pred": 0.040370105765759945
+        },
+        "null_mean_abs_delta_pred_recalc": 0.007825158652849495,
+        "organized_proper_mean_abs_delta_pred": 0.008155656803864986,
+        "organized_v1_style_mean_abs_delta_pred": 0.04037012258777395,
+        "organized_v1_style_minus_proper": 0.03221446578390896,
+        "spearman_null_vs_organized_proper": 0.23562271062271062,
+        "frac_abs_org_proper_below_abs_null": 0.453125,
+        "organized_proper_signed_mean": -0.004091872193384916,
+        "null_signed_mean": 0.0031166450353339314
+      },
+      "1": {
+        "n_molecules": 64,
+        "v1_recorded": {
+          "null_dose_alpha_1.0_mean_abs_delta_pred": 0.011243624612689018,
+          "organized_mean_abs_delta_pred": 0.03208342261496
+        },
+        "null_mean_abs_delta_pred_recalc": 0.011243631655815989,
+        "organized_proper_mean_abs_delta_pred": 0.016602219839114696,
+        "organized_v1_style_mean_abs_delta_pred": 0.03208343044389039,
+        "organized_v1_style_minus_proper": 0.015481210604775697,
+        "spearman_null_vs_organized_proper": 0.7423076923076923,
+        "frac_abs_org_proper_below_abs_null": 0.09375,
+        "organized_proper_signed_mean": -0.008803065691608936,
+        "null_signed_mean": -0.004483445140067488
+      }
+    }
+  },
+  "point2_abs_mean_vs_mean_abs": {
+    "description": "v1 Phase C compared mean|delta| of the connected subset against the magnitude of the mean of signed deltas of the random draws (abs(mean) rather than mean(abs)); both statistics are recomputed here on the same molecules with the same draws",
+    "per_seed": {
+      "0": {
+        "n_molecules": 32,
+        "v1_recorded": {
+          "mean_abs_delta_connected": 0.13296024966984987,
+          "mean_abs_delta_random_connected": 0.11451973090879619,
+          "mean_abs_delta_random_arbitrary": 0.11751283041667193
+        },
+        "v1_style_random_connected_abs_mean_of_signed": 0.1145196740544634,
+        "corrected_random_connected_mean_abs": 0.12372049856639933,
+        "connected_mean_abs_single": 0.132960221497342,
+        "paired_corrected_connected_minus_random": {
+          "mean": 0.009239722930942662,
+          "median": 0.0066585473250597715,
+          "frac_positive": 0.5625
+        },
+        "v1_style_random_arbitrary_abs_mean_of_signed": 0.11751278434530832,
+        "corrected_random_arbitrary_mean_abs": 0.12052970653166994
+      },
+      "1": {
+        "n_molecules": 32,
+        "v1_recorded": {
+          "mean_abs_delta_connected": 0.11464725423138589,
+          "mean_abs_delta_random_connected": 0.11173990117094945,
+          "mean_abs_delta_random_arbitrary": 0.10886426566867158
+        },
+        "v1_style_random_connected_abs_mean_of_signed": 0.11173997538571712,
+        "corrected_random_connected_mean_abs": 0.11506786332756747,
+        "connected_mean_abs_single": 0.11464725714176893,
+        "paired_corrected_connected_minus_random": {
+          "mean": -0.00042060618579853326,
+          "median": 0.001286052167415619,
+          "frac_positive": 0.5625
+        },
+        "v1_style_random_arbitrary_abs_mean_of_signed": 0.10886432997358497,
+        "corrected_random_arbitrary_mean_abs": 0.11177328812482301
+      }
+    }
+  },
+  "point3_semantics": {
+    "description": "norm(c-c_local)/norm(c) is the relative change of a zero-W/V counterfactual, not a strict percentage of global contribution; the measurable quantity is the counterfactual prediction effect",
+    "per_seed": {
+      "0": {
+        "mean_norm_c_minus_c_local_over_norm_c": 0.6503545232117176,
+        "mean_abs_pred_delta_zero_WV_counterfactual": 0.2450130161596462
+      },
+      "1": {
+        "mean_norm_c_minus_c_local_over_norm_c": 0.6566879516467452,
+        "mean_abs_pred_delta_zero_WV_counterfactual": 0.2702493768883869
+      }
+    }
+  }
+}

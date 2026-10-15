@@ -1,0 +1,145 @@
+{
+  "namespace": "bjoc_source_attribution_feasibility_v1",
+  "git_commit": "410aea6920e0601b757c59c730401dd92053576f",
+  "labels_used": false,
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "decisions": {
+    "METHOD_VALIDATED": true,
+    "TOP_JUNCTIONS_RESPONSE_EXCEEDS_RANDOM": true,
+    "TOP_JUNCTIONS_FORM_CONNECTED_COMBINATIONS": false,
+    "SEED_STABLE": true,
+    "BASELINE_STABLE": true,
+    "INTERVENTION_STRENGTH_STABLE": true,
+    "channel_summary": {
+      "0": {
+        "junction_total_effect_zero_WV": 0.36050905744195916,
+        "within_molecule_attributed_abs_ig_sum": 0.12565432343035354,
+        "attribution_mass_sum_abs_ig": 0.8399686650373042,
+        "joint_reset_delta": 0.1408824058889877,
+        "joint_reset_nonadditivity_rel": 0.633418442442092,
+        "other_zero_block_effects": {
+          "z_bond": 0.4516413430173998,
+          "sum_atom": 1.1608249290293315,
+          "sum_atom_squared": 0.9349783436628059,
+          "global_topology": 0.15164795241435058
+        }
+      },
+      "1": {
+        "junction_total_effect_zero_WV": 0.36692881265480537,
+        "within_molecule_attributed_abs_ig_sum": 0.16945512505117222,
+        "attribution_mass_sum_abs_ig": 0.9675486765336245,
+        "joint_reset_delta": 0.19461762873106636,
+        "joint_reset_nonadditivity_rel": 0.22664447766756934,
+        "other_zero_block_effects": {
+          "z_bond": 0.4285540340933949,
+          "sum_atom": 1.1236591567867436,
+          "sum_atom_squared": 0.6902108618814964,
+          "global_topology": 0.15840022773772944
+        }
+      }
+    }
+  },
+  "criteria": {
+    "sign_test_p<0.01_and_positive": "top-k |delta| > random junction |delta| in both seeds and both alphas",
+    "connectivity": "majority of molecules have top-k internal links above the random 95th percentile, both seeds",
+    "seed_stability": "pooled Spearman >= 0.5 and observed top-k Jaccard above random null p95 for majority",
+    "baseline_stability": "Spearman(ig_mean, ig_zero) >= 0.7",
+    "alpha_stability": "Spearman(d05, d10) >= 0.7",
+    "method_validity": "all synthetic checks pass"
+  },
+  "source_manifest": {
+    "historical_hash_checks": {
+      "soups_and_cache_match_records": true
+    },
+    "reproduction_pass": true
+  },
+  "method_validity": {
+    "all_synthetic_checks_pass": true,
+    "checks": {
+      "permutation_equivariance": true,
+      "symmetry": true,
+      "ig_vs_occlusion_identity": true,
+      "ig_vs_occlusion_topk_jaccard": true,
+      "known_truth_witness_top1": true
+    }
+  },
+  "top_vs_random": {
+    "0": {
+      "alpha_1.0": {
+        "n": 256,
+        "n_positive": 236,
+        "n_negative": 20,
+        "mean": 0.048367103163570846,
+        "median": 0.042159212462138385,
+        "frac_positive": 0.921875,
+        "p_two_sided_exact": 5.287848594256759e-48
+      },
+      "alpha_0.5": {
+        "n": 256,
+        "n_positive": 239,
+        "n_negative": 17,
+        "mean": 0.026212338580336336,
+        "median": 0.02230346284341067,
+        "frac_positive": 0.93359375,
+        "p_two_sided_exact": 2.6440517226570627e-51
+      }
+    },
+    "1": {
+      "alpha_1.0": {
+        "n": 256,
+        "n_positive": 237,
+        "n_negative": 19,
+        "mean": 0.05187525805780524,
+        "median": 0.04572605318389833,
+        "frac_positive": 0.92578125,
+        "p_two_sided_exact": 4.440366905395651e-49
+      },
+      "alpha_0.5": {
+        "n": 256,
+        "n_positive": 234,
+        "n_negative": 22,
+        "mean": 0.028166245717727634,
+        "median": 0.023116860538721085,
+        "frac_positive": 0.9140625,
+        "p_two_sided_exact": 6.4119018535671465e-46
+      }
+    }
+  },
+  "descriptives": {
+    "0": {
+      "n_molecules": 256,
+      "mean_n_junctions": 34.3203125,
+      "mean_n_bonds": 24.8828125,
+      "mean_top_mean_abs_d10": 0.08262684017245192,
+      "mean_random_mean_abs_d10": 0.034259737008881075,
+      "mean_abs_d10_all": 0.03999046091121272,
+      "top_share_of_mass_d10": 2.066163737294776,
+      "mean_top_mean_abs_d05": 0.042883132307906635,
+      "mean_random_mean_abs_d05": 0.0166707937275703,
+      "mean_abs_d05_all": 0.019813542177871568,
+      "top_share_of_mass_d05": 2.1643344699768003,
+      "mean_top_k_baseline_jaccard": 0.7314732142857142,
+      "mean_abs_ig_sum": 0.12565432343035354,
+      "mean_sum_abs_ig": 0.8399686650373042,
+      "mean_abs_joint_reset_delta": 0.1408824058889877
+    },
+    "1": {
+      "n_molecules": 256,
+      "mean_n_junctions": 34.3203125,
+      "mean_n_bonds": 24.8828125,
+      "mean_top_mean_abs_d10": 0.09156216977862641,
+      "mean_random_mean_abs_d10": 0.03968691172082117,
+      "mean_abs_d10_all": 0.0455405090979184,
+      "top_share_of_mass_d10": 2.01056535362297,
+      "mean_top_mean_abs_d05": 0.047418848087545484,
+      "mean_random_mean_abs_d05": 0.01925260236981785,
+      "mean_abs_d05_all": 0.022493867600132944,
+      "top_share_of_mass_d05": 2.108078918685608,
+      "mean_top_k_baseline_jaccard": 0.6791666666666667,
+      "mean_abs_ig_sum": 0.16945512505117222,
+      "mean_sum_abs_ig": 0.9675486765336245,
+      "mean_abs_joint_reset_delta": 0.19461762873106636
+    }
+  }
+}
