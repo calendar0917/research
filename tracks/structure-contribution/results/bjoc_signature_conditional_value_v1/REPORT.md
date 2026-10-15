@@ -121,7 +121,7 @@ Mean top-4 |Δ| (molecule unit, two seeds averaged per molecule):
 * **Conditional pseudo-control** (16 replicates; residuals permuted inside
   (seed, molecule, DEV-quartile) strata, keeping all signature/context labels
   and the DEV marginal): mean pseudo-B gain over A across replicates
-  ≈ −0.00018; real B beats the mean pseudo-B by **+0.00068 [0.00002, 0.00133]**
+  ≈ −0.00015; real B beats the mean pseudo-B by **+0.00068 [0.00002, 0.00133]**
   (gate A6 passes).  This is the only positive robustness signal: the real
   table is better than a within-DEV-stratum shuffle of itself.  It does not
   establish the *level* of the gain: the pseudo arm is a noisy control, not a
