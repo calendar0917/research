@@ -1,0 +1,235 @@
+# =============================================================================
+# cscl-bjoc-signature-conditional-value-v1  —  PREREGISTRATION
+#
+# Frozen BEFORE any validation-set comparison of this round is computed.
+# Track: tracks/structure-contribution · Namespace: bjoc_signature_conditional_value_v1
+#
+# Single proposition under test:
+#   Given the frozen model's per-Junction encoder deviation DEV, does the
+#   two-bond Junction signature SIG (and the two already-supported context
+#   variables center_degree / endpoint_ring_count) still carry independent,
+#   stable, transferable information about the frozen model's internal
+#   predictive sensitivity?
+#
+# Explicitly NOT under test:
+#   * chemical causality / chemical contribution values
+#   * a complete explanation of whole-molecule predictions
+#   * any new model, training, GNN, motif search, radius search or vocabulary
+#     expansion; no R3 re-tuning; no supervised property labels
+#
+# Compute: CPU only.  No model inference is performed this round: per-Junction
+# DEV, |IG| and natural-encoding replacement responses are reused from the
+# frozen cscl-bjoc-signature-transfer-v1 raw artifacts, whose provenance was
+# replay-verified against Phase 0 (bit-exact IG / top-k / responses).  This
+# round re-verifies the reuse by reproducing four published per-molecule
+# metrics exactly (reproduction gate R).
+#
+# official test NEVER loaded; internal Locked split NEVER read; official valid
+# is a historically exposed development set and only its structures + frozen
+# model-internal quantities are used.  No prediction labels are read.
+# =============================================================================
+
+protocol_id: cscl-bjoc-signature-conditional-value-v1
+namespace: bjoc_signature_conditional_value_v1
+track: structure-contribution
+created: 2026-10-25
+status: PREREGISTERED
+
+# ---------------------------------------------------------------------------
+# frozen evidence base (read-only reuse)
+# ---------------------------------------------------------------------------
+evidence_base:
+  prior_raw_seed0: results/bjoc_signature_transfer_v1/validation_raw_seed0.npz
+  prior_raw_seed1: results/bjoc_signature_transfer_v1/validation_raw_seed1.npz
+  prior_row_metrics: results/bjoc_signature_transfer_v1/row_metrics.npz
+  prior_discovery_table: results/bjoc_signature_transfer_v1/discovery_table.json
+  prior_structure_overlap: results/bjoc_signature_transfer_v1/structure_overlap.json
+  prior_final_decision: results/bjoc_signature_transfer_v1/final_decision.json
+  prior_finalize: results/bjoc_signature_transfer_v1/finalize.json
+  phase0_results: results/bjoc_source_ownership_v1/phase0_results.json
+  sample_manifest: results/bjoc_source_attribution_feasibility_v1/sample_manifest.json
+  official_valid_objects: results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt
+  official_train_objects: results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt
+  prep_train10k: results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json
+  frozen_r3_soups:
+    seed0: results/bjoc_recipe_tuning_v1/soup_R3_seed0.pt
+    seed1: results/bjoc_recipe_tuning_v1/soup_R3_seed1.pt
+  zinc_dataset: data/ZINC  # structure-only reads; test split never used
+
+# ---------------------------------------------------------------------------
+# junction-level quantities (all reused, never recomputed by inference)
+# ---------------------------------------------------------------------------
+quantities:
+  dev_j: "||w_j - mean_G(w)||_2, the frozen Phase-0 encoder deviation (stored per Junction)"
+  ig_abs_j: "|IG_j| (stored, frozen Phase-0 attribution)"
+  delta_j: "natural-encoding replacement response pred(w_j<-w_ref) - pred(natural), alpha=1.0 (stored)"
+  signature_tau_j: "(center_type, sorted(endpoint_types), sorted(bond_types), center_in_ring, n_ring_bonds)"
+  context_kappa_j: "(center_degree, endpoint_ring_count)  [endpoint_ring_count in {0,1,2}]"
+  d_j: "within-molecule average-rank percentile of dev_j"
+  q_j: "within-molecule average-rank percentile of |ig_abs_j|"
+  percentile_rule: "average-rank min-max (rank-1)/(n_j-1), ties averaged; n_j == 1 -> 0.5"
+
+# ---------------------------------------------------------------------------
+# discovery fit (molecule-capped; molecule is the unit; seeds are repeats)
+# ---------------------------------------------------------------------------
+discovery:
+  molecules: 256
+  seeds: [0, 1]
+  residual: "r_j = q_j - d_j"
+  molecule_cap: >
+    per (seed, molecule, key) take the mean residual of that key's Junctions;
+    then per molecule average over the seeds that contain the key; every
+    molecule then contributes one value to the key statistic.
+  signature_floor_molecules: 20
+  signature_shrink: 20.0
+  signature_rule: "R'_tau = n_tau/(n_tau+20) * R_tau for n_tau >= 20 molecules, else 0"
+  context_floor_molecules: 10
+  context_shrink: 20.0
+  context_residual: "r'_j = r_j - R'_tau(j); R_(tau,kappa) uses the same molecule cap"
+  context_rule: "R'_(tau,kappa) = n/(n+20) * R_(tau,kappa) for n >= 10 molecules, else 0"
+  context_scope: >
+    context units are defined for every signature present in the discovery set
+    (including below-floor signatures), with R'_tau = 0 when the signature
+    itself is below the Arm-B floor.
+
+# ---------------------------------------------------------------------------
+# arms (frozen before any validation comparison)
+# ---------------------------------------------------------------------------
+arms:
+  A: "score_A(j) = d_j                                   (DEV-only control)"
+  B: "score_B(j) = d_j + R'_tau(j)                       (DEV + signature residual)"
+  C: "score_C(j) = d_j + R'_tau(j) + R'_(tau,kappa)(j)   (DEV + signature + fixed context)"
+  reference_arms:
+    SIG: "historical discovery table T_c (unchanged vocabulary, no residual calibration)"
+    ORACLE: "|IG_j| (reference upper bound for scoring only; never used for fitting/selection)"
+    RANDOM: "previous round's 16 uniform draws per molecule (stored)"
+  ties: "descending score, stable argsort -> equal scores break by ascending Junction index"
+
+# ---------------------------------------------------------------------------
+# conditional pseudo-control (pre-fixed; discovery-only table construction)
+# ---------------------------------------------------------------------------
+pseudo_control:
+  replicates: 16
+  dev_bins: 4
+  rule: >
+    within each (seed, molecule) permute the residual values r_j among the
+    Junctions of that molecule inside the same DEV percentile quartile
+    bin = min(floor(4*d_j), 3); every junction keeps its own signature, degree,
+    endpoint ring count and d_j.  Tables R'_tau and R'_(tau,kappa) are then
+    estimated with the identical molecule-capped procedure and the identical
+    shrinkage floors.
+  rng: "numpy default_rng(SeedSequence([810000000, replicate, seed, row]))"
+  preserves: >
+    the per-(seed,molecule,DEV-quartile) multiset of residuals, and therefore
+    the marginal residual distribution and its coarse DEV dependence; the
+    molecule and two-seed pairing; every junction's signature/context labels.
+  destroys: >
+    the association between signature identity (and tau,kappa cell) and the
+    residual magnitude inside a DEV stratum.
+  limitation: >
+    this is NOT a full confound control: it does not preserve continuous DEV
+    values, higher-order class interactions, or molecule-level structure.
+
+# ---------------------------------------------------------------------------
+# validation set
+# ---------------------------------------------------------------------------
+validation:
+  data: official-valid structures, 1000 molecules, frozen model quantities reused
+  exposure_status: >
+    Official valid is a historically exposed development set (model/recipe
+    selection in earlier rounds); NOT a fresh blind test.  Only structures and
+    frozen model-internal quantities are read; no prediction labels anywhere.
+  labels: NEVER READ
+  official_test: NEVER LOADED
+  locked_split: NEVER READ
+  top_k_primary: 4
+  top_k_sensitivity: [1, 2, 4, 8]
+  primary_metric: "A@k = mean over selected top-k Junctions of |delta_j|"
+  primary_contrasts: ["B - A", "C - A", "C - B"]
+  bootstrap_resamples: 5000
+  bootstrap_seed: 0
+  bootstrap_unit: molecule
+  merged_inference: >
+    per molecule average the two seeds' values first; then resample molecule
+    identities with replacement (5000 draws); exact one-sided sign test.
+    Per-seed values are always reported separately.
+  strata:
+    scaffold_unseen_discovery: "Murcko scaffold absent from the 256 discovery molecules"
+    scaffold_not_in_train10k: "Murcko scaffold absent from the supervised official-train 10k"
+    no_exact_dup_train: "canonical dataset-graph SMILES absent from official train 10k"
+    size_terciles: "validation n_junctions terciles (structure-only cutoffs)"
+  historical_references: >
+    SIG / ORACLE / RANDOM and the published DEV number are recomputed from the
+    stored arrays and must reproduce the previous round's row_metrics.npz
+    exactly (tolerance 1e-9); this is the reuse/reproduction gate R.
+
+# ---------------------------------------------------------------------------
+# discovery-internal cross-fitting (anti-memorisation diagnostic)
+# ---------------------------------------------------------------------------
+crossfit:
+  rule: >
+    diagnostic rows sorted ascending; even index -> fold A, odd index -> fold B
+    (same split as the previous round).  Fold tables are estimated on the other
+    fold only and used to rank the held-out fold's molecules; each molecule is
+    evaluated exactly once.  Points/statistics use the same |delta| response.
+  role: "diagnostic condition A7; not a parameter-selection device"
+
+# ---------------------------------------------------------------------------
+# decision gates (exact; frozen before any validation comparison)
+# ---------------------------------------------------------------------------
+decision:
+  recovery_fraction_min: 0.05       # relative to the DEV -> oracle remaining response gap
+  concentration_top1_share_max: 0.5
+  gates:
+    A1: "mean(B-A) > 0"
+    A2: "molecule-bootstrap CI95 lower of (B-A) > 0"
+    A3: "per-seed mean(B-A) >= 0 for both seeds"
+    A4: "scaffold_unseen_discovery subset mean(B-A) > 0"
+    A5: "concentration: mean gain excluding the top driver class > 0 AND top-1 driver positive-gain share < 0.5"
+    A6: "B beats the pseudo-control: mean(B - mean_p pseudoB_p) > 0 AND CI95 lower > 0"
+    A7: "discovery cross-fit mean(B-A) > 0 (anti-memorisation)"
+    A8: "practical: (B-A) / (ORACLE - A) >= 0.05"
+    B1: "mean(C-B) > 0"
+    B2: "molecule-bootstrap CI95 lower of (C-B) > 0"
+    B3: "per-seed mean(C-B) >= 0 for both seeds"
+    B4: "context increment beats the pseudo-control: mean((C-B) - (pseudoC-pseudoB)) > 0 AND CI95 lower > 0"
+    B5: "practical: (C-B) / (ORACLE - B) >= 0.05"
+  labels:
+    SIGNATURE_HAS_CONDITIONAL_VALUE: "A1..A8 all pass"
+    CONTEXT_ADDS_VALUE_BUT_SIGNATURE_WEAK: >
+      A1..A3 do not all hold with CI support, C-B passes B1..B5 (i.e. the fixed
+      context may carry the value, the signature vocabulary itself is not shown
+      to add independent value)
+    INCONCLUSIVE: >
+      B-A positive with CI crossing 0, or context increment positive with CI
+      crossing 0, or the statistical gates pass but the effect is practically
+      marginal (A8/B5 fail) with no context rescue
+    NO_CONFIRMED_CONDITIONAL_VALUE: >
+      B-A/C-B point estimates are non-positive, or a statistically positive
+      B-A fails the robustness gates (A4/A5/A6/A7) so the gain cannot be
+      attributed to stable shared type information
+  interpretation_limits: >
+    a negative result refutes only this fixed signature vocabulary, this fixed
+    context pair and this fixed calibration rule; it never proves that all
+    structural information is replaceable by DEV, and it never proves that DEV
+    is a complete explanation.
+
+# ---------------------------------------------------------------------------
+# discipline / forbidden actions this round
+# ---------------------------------------------------------------------------
+discipline:
+  model_frozen: true
+  new_training: false
+  gpu_used: false
+  model_inference: false
+  labels_read: false
+  official_test_loaded: false
+  locked_split_read: false
+  validation_used_for_fitting: false
+  forbidden:
+    - training or updating any BJOC parameter
+    - new GNN / Transformer / random walk / Junction layer
+    - searching new structure radii or motif partitions
+    - expanding the signature vocabulary or the context variables
+    - tuning weights / thresholds / shrinkage after seeing validation contrasts
+    - reading supervised property labels or accessing official test / Locked
