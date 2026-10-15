@@ -238,6 +238,14 @@ upgraded to Result A.
 
 ## 10. Amendments
 
-*None before the validation comparison.  Any amendment added after this line
-must state the time, the changed rule, and why no validation statistic had been
-computed yet.*
+* **2026-10-15T07:45Z — implementation fix, no math change.** The discovery
+  junction-archive loader in `run_bjoc_signature_conditional_value_v1.py` read
+  the NPZ key `row` instead of the saved key `rows`.  `analyze` aborted in the
+  coverage section before any validation contrast was written or printed; the
+  reproduction gate had already passed with `max|diff| = 0.0` and no contrast
+  value was persisted or reported.  The loader key was corrected; no scoring
+  formula, table rule, floor, shrinkage, gate, statistic or decision vocabulary
+  changed.  `protocol_freeze.json` was regenerated **before** the validation
+  comparison was recomputed.  The discovery-only artifacts (residual tables,
+  pseudo tables, cross-fit) were produced by code identical in every path that
+  generated them (the fixed loader is not used by those commands).

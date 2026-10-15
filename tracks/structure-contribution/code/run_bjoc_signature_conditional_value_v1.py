@@ -224,7 +224,7 @@ def load_discovery_junction_sets() -> list[bcv.JunctionSet]:
     z = np.load(DISCOVERY_JSON, allow_pickle=True)
     offsets = np.asarray(z["offsets"], dtype=np.int64)
     seeds = np.asarray(z["seed"], dtype=np.int64)
-    rows = np.asarray(z["row"], dtype=np.int64)
+    rows = np.asarray(z["rows"], dtype=np.int64)
     keys = [str(k) for k in z["keys"]]
     degree = np.asarray(z["degree"], dtype=np.int64)
     erc = np.asarray(z["endpoint_ring_count"], dtype=np.int64)
