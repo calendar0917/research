@@ -1,0 +1,163 @@
+# =============================================================================
+# cscl-bjoc-signature-transfer-v1  —  PREREGISTRATION
+#
+# Frozen BEFORE any validation outcome (IG / intervention response) is computed.
+# Track: tracks/structure-contribution
+# Namespace: bjoc_signature_transfer_v1
+#
+# Single proposition under test:
+#   Can Junction structure-signature importance discovered on one batch of
+#   molecules transfer to molecules unseen during model weight training, and
+#   thereby predict which local structures the frozen BJOC-R3 model encodes
+#   more sensitively?
+#
+# NOT under test: chemical causal laws, property explanation, new models.
+#
+# Forbidden this round (no search of any kind):
+#   * no new prediction model, no GNN training, no R3 optimisation
+#   * no Motif partition search, no signature-vocabulary expansion
+#   * no change of the statistical method after validation results are seen
+#   * no prediction-label reading (official valid stays label-free here)
+#   * official test NEVER loaded; internal Locked split NEVER read
+#   * no modification of historical reports / models / results
+#
+# Compute: CPU only, frozen R3 soups, no GPU purchase.
+# =============================================================================
+
+protocol_id: cscl-bjoc-signature-transfer-v1
+namespace: bjoc_signature_transfer_v1
+track: structure-contribution
+created: 2026-10-24
+status: PREREGISTERED
+
+# ---------------------------------------------------------------------------
+# frozen evidence base (read-only reuse)
+# ---------------------------------------------------------------------------
+evidence_base:
+  phase0_records: results/bjoc_source_ownership_v1/phase0_results.json
+  phase0_report: results/bjoc_source_ownership_v1/REPORT.md
+  phase0_review: results/bjoc_source_ownership_phase0_review_v1/REVIEW.md
+  sample_manifest: results/bjoc_source_attribution_feasibility_v1/sample_manifest.json
+  frozen_r3_soups:
+    seed0: results/bjoc_recipe_tuning_v1/soup_R3_seed0.pt
+    seed1: results/bjoc_recipe_tuning_v1/soup_R3_seed1.pt
+  official_train_objects: results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt
+  official_train_norm: results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json
+  official_valid_objects: results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt
+  zinc_dataset: data/ZINC  # raw PyG ZINC subset (train 10000 / val 1000), structure-only reads
+
+# ---------------------------------------------------------------------------
+# discovery phase (frozen before validation)
+# ---------------------------------------------------------------------------
+discovery:
+  molecules: 256  # sample_manifest diagnostic_rows, original Phase-0 train molecules
+  seeds: [0, 1]   # frozen full-10k R3 soups
+  signature: bjoc_source_ownership_v1.junction_signature  # unchanged vocabulary
+  importance: >
+    within-molecule |IG| percentile p_{s,m,j} = (average_rank - 1)/(n_j - 1)
+    computed per (seed, molecule) over that molecule's Junctions; n_j == 1 -> 0.5.
+  molecule_weight_cap: >
+    per (seed, molecule, class) the class value is the mean percentile of the
+    class's Junctions in that molecule (one value per molecule-seed-class).
+    Table T_c = mean over molecules of (mean over seeds of that molecule's
+    class value): every molecule carries equal weight, repeated Junctions of a
+    molecule cannot dominate the class statistic.
+  frequency_floor_molecules: 20   # class must appear in >= 20 of the 256 molecules
+  candidate_selection: "all classes with support >= floor; NO top-N cut"
+  unknown_score_primary: 0.5      # class outside the candidate table
+  unknown_score_sensitivity: "min candidate T (pre-declared secondary only)"
+  rarity_baseline: >
+    counts over the discovery 256 molecules only; score = -log2((count+0.5)/
+    (N+0.5*(V+1))) with V = distinct discovery classes; unknown count = 0.
+  internal_positive_control: >
+    diagnostic rows sorted ascending, even index -> fold A, odd -> fold B.
+    Fold tables use the same molecule-cap rule with floor 10 molecules
+    (control only, not part of the decision). Fold-B molecules are ranked by
+    the fold-A table and fold-A molecules by the fold-B table; pooled contrast
+    vs RANDOM is reported as the in-distribution pipeline control.
+
+# ---------------------------------------------------------------------------
+# validation phase
+# ---------------------------------------------------------------------------
+validation:
+  data: results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt  # official valid structures
+  n_molecules: 1000
+  exposure_status: >
+    Official valid is a historically exposed development set (used for model
+    and recipe selection in earlier rounds).  It is NOT a fresh blind test.
+    This round reads NO prediction labels for it; only structures and frozen
+    model internals (IG / encodings / interventions) are computed.
+  labels: NEVER READ
+  official_test: NEVER LOADED
+  locked_split: NEVER READ
+  reference_set: sample_manifest reference_rows (1024 train molecules, frozen)
+  nearest_reference: >
+    minimize |dn_atoms| + |dn_bonds| + |dn_junctions| against frozen reference
+    stats; tie-break smaller row.  Same protocol as Phase 0.
+  replacement: "natural encoding replacement, alpha = 1.0, w_ref[j % n_ref]"
+  response: "delta_j = predict(replaced) - predict(natural); absolute value for ranking metrics"
+  top_k_primary: 4
+  top_k_sensitivity: [1, 2, 4, 8]
+  random_draws: 16
+  random_rng: "123400000 + 100000*seed + valid_row"
+  shuffle_permutations: 16
+  shuffle_rng: "987000000 + 10000*seed + shuffle_id  (permutes candidate T values)"
+  baselines: [RING, DEGREE, RING_DEGREE, DEV, RARE]
+  oracle: "true |IG| ranking (reference upper bound ONLY; never used for selection)"
+  statistical_unit: molecule
+  merged_inference: >
+    per-molecule value = mean of the two seeds' values (same-molecule cross-seed
+    correlation preserved); bootstrap 5000 resamples over molecules, seed 0;
+    exact one-sided sign test.  Per-seed values reported separately.
+  strata:
+    scaffold_unseen_discovery: "Murcko scaffold absent from the 256 discovery molecules"
+    no_exact_dup_train: "canonical dataset-graph SMILES absent from official train 10k"
+    both: intersection of the two
+  scaffold_identity: >
+    canonical SMILES of the dataset graph (element word + charge + explicit H of
+    the ZINC atom dictionary, kekulized bond orders).  The committed ZINC atom
+    dictionary cannot represent uncharged N/O/S H counts; identity and Murcko
+    scaffolds are therefore cache-level graph identities, not full chemical
+    SMILES.  Ring systems are unaffected (kekulized topology).
+  context_variables:
+    endpoint_ring_count: "number of the two endpoint atoms that lie in a ring (0/1/2)"
+    center_degree: "2 / 3 / 4+"
+    size_tercile: "molecule n_junctions validation-structure terciles"
+    mol_ring_terciles: "molecule ring-bond count validation-structure terciles"
+
+# ---------------------------------------------------------------------------
+# decision gates (exact; evaluated on the merged row-unit k=4 contrasts)
+# ---------------------------------------------------------------------------
+decision:
+  M0_coverage: "top-4 SIG junctions with a candidate class >= 0.5 of all selections"
+  G1_transfer: "SIG - RANDOM: mean > 0, CI95 lower > 0, one-sided sign p < 0.01"
+  G2_ring_rule: "SIG - RING: CI95 lower > 0"
+  G3_simple_baselines: "SIG - DEV CI95 lower > 0 AND SIG - RARE mean > 0 AND SIG - RING_DEGREE mean > 0 AND SIG - DEGREE mean > 0"
+  G4_cross_scaffold: "scaffold_unseen_discovery subset: SIG - RANDOM mean > 0 AND CI95 lower > 0"
+  G5_both_seeds: "per-seed SIG - RANDOM mean > 0 for both seeds"
+  G6_specificity: "SIG - SHUFFLE (mean over 16 permutations): mean > 0 AND CI95 lower > 0"
+  G7_oracle_fraction: "(mean SIG - mean RANDOM)/(mean ORACLE - mean RANDOM) >= 0.25"
+  G8_class_level: "Spearman(T_c, validation class percentile) > 0 AND row-bootstrap CI95 lower > 0; candidate classes present in >= 5 valid molecules enter the correlation"
+  labels:
+    TRANSFERABLE_SOURCE_SIGNATURE_SIGNAL: "M0 and G1..G8 all pass"
+    CONTEXT_DEPENDENT_OR_PARTIAL_TRANSFER: "G1 passes (pooled) but at least one of M0/G2..G8 fails"
+    NO_SUPPORTED_SIGNATURE_TRANSFER: "G1 fails, or M0 fails"
+  signed_secondary: >
+    signed delta_j is reported for context only (never positive/negative
+    chemical contribution).  All primary claims use |delta|.
+
+# ---------------------------------------------------------------------------
+# chemical-semantics check (class identities fixed by the discovery table)
+# ---------------------------------------------------------------------------
+semantics:
+  class_selection_rule: >
+    top-3 candidate classes by T with support >= 50, bottom-3 by T with
+    support >= 50, and the single most frequent candidate class.
+  instances: "up to 3 distinct valid molecules per selected class (ascending row)"
+  counterexample: "instance with the minimum within-molecule |IG| percentile in a different molecule"
+  rdkit_checks: "center ring membership, the two bonds' ring membership, bond orders, atom degrees"
+  caveat: >
+    two-bond signatures are not named chemical groups; the check distinguishes
+    (a) reuse of the same two-bond signature across molecules, (b) context
+    effects on that signature; (c) higher-order connected-structure discovery
+    is out of scope this round.
