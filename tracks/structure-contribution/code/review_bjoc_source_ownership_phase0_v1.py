@@ -152,14 +152,19 @@ def row_unit(vals_by_seed_row: Mapping[tuple[int, int], float], seeds: tuple[int
 
 
 def summarize_values(vals_by_seed_row: Mapping[tuple[int, int], float], seeds: tuple[int, ...] = SEEDS) -> dict[str, Any]:
-    """Summmarise with per-seed, pooled, cluster and conservative-row units."""
+    """Summmarise with per-seed, pooled, cluster and conservative-row units.
+
+    Values are processed in ``sorted (seed, row)`` order so the historical
+    bootstrap draws (which used ``sorted(per_mol)``) are reproduced exactly.
+    """
+    items = sorted(vals_by_seed_row.items())
     out: dict[str, Any] = {"per_seed": {}, "pooled_molecule_seed": {}, "row_unit": {}}
     for seed in seeds:
-        per_seed = np.asarray([v for (s, _), v in vals_by_seed_row.items() if s == seed and v is not None], dtype=np.float64)
+        per_seed = np.asarray([v for (s, _), v in items if s == seed and v is not None], dtype=np.float64)
         out["per_seed"][str(seed)] = {**bootstrap_mean_ci(per_seed), **one_sided_sign(per_seed)}
-    pooled = np.asarray([v for v in vals_by_seed_row.values() if v is not None], dtype=np.float64)
+    pooled = np.asarray([v for _, v in items if v is not None], dtype=np.float64)
     out["pooled_molecule_seed"] = {**bootstrap_mean_ci(pooled), **one_sided_sign(pooled)}
-    rows = row_unit(vals_by_seed_row, seeds)
+    rows = row_unit(dict(items), seeds)
     out["row_unit"] = cluster_bootstrap_ci(rows)
     row_means = np.asarray([v.mean() for v in rows.values()], dtype=np.float64)
     out["row_unit"].update(one_sided_sign(row_means))
@@ -404,13 +409,18 @@ def _phase0c(orig: dict[str, Any]) -> list[dict[str, Any]]:
     return list(orig["records_c"])
 
 
+def _sigkey(sig: Any) -> tuple:
+    return tuple(_sigkey(x) if isinstance(x, list) else x for x in sig)
+
+
 def _sig_tables(records_c: list[dict[str, Any]]) -> dict[str, Any]:
-    unc = sorted({tuple(r["signature"]) for r in records_c}, key=lambda s: -sum(1 for r in records_c if tuple(r["signature"]) == s))
+    keys = [_sigkey(r["signature"]) for r in records_c]
+    unc = sorted(set(keys), key=lambda s: -keys.count(s))
     sig_to_id = {s: i for i, s in enumerate(unc)}
-    rec_sig_ids = np.asarray([sig_to_id[tuple(r["signature"])] for r in records_c], dtype=np.int64)
+    rec_sig_ids = np.asarray([sig_to_id[k] for k in keys], dtype=np.int64)
     class_sample = np.bincount(rec_sig_ids, minlength=len(unc))
     hist = read_json(ORIG / "phase0_decision.json")
-    corpus_map = {tuple(c["signature"]): int(c["corpus_count"]) for c in hist["phase0_c"]["classes"]}
+    corpus_map = {_sigkey(c["signature"]): int(c["corpus_count"]) for c in hist["phase0_c"]["classes"]}
     class_freq = np.asarray([corpus_map.get(s, 0) / 346358.0 for s in unc], dtype=np.float64)
     frequent_mask = np.asarray([corpus_map.get(s, 0) >= 100 for s in unc], dtype=bool)
     return {

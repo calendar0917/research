@@ -1,0 +1,113 @@
+{
+  "review": "bjoc_source_ownership_phase0_review_v1",
+  "propositions": {
+    "P1_IG_beyond_dev_corrected_unit": {
+      "pass": true,
+      "evidence": {
+        "mean": 0.006652427467997768,
+        "ci95_lower": 0.004674813419433122,
+        "ci95_upper": 0.008637226573773658,
+        "n_rows": 256,
+        "n_values": 512,
+        "n": 256,
+        "n_positive": 176,
+        "n_negative": 76,
+        "frac_positive": 0.6875,
+        "p_one_sided": 9.434883206283462e-10
+      },
+      "rule": "row-unit mean > 0 and CI95 lower > 0 and one-sided sign p < 0.01",
+      "per_seed": {
+        "0": {
+          "mean": 0.006773562985472381,
+          "ci95_lower": 0.004878955493677495,
+          "ci95_upper": 0.008621180209865993,
+          "median": 0.004164248704910278,
+          "n": 256,
+          "n_positive": 164,
+          "n_negative": 64,
+          "frac_positive": 0.640625,
+          "p_one_sided": 3.9981936985554375e-06
+        },
+        "1": {
+          "mean": 0.006531291950523155,
+          "ci95_lower": 0.0034004990863650162,
+          "ci95_upper": 0.009919476812410719,
+          "median": 0.004087203182280064,
+          "n": 256,
+          "n_positive": 153,
+          "n_negative": 86,
+          "frac_positive": 0.59765625,
+          "p_one_sided": 0.0010668455863778684
+        }
+      }
+    },
+    "P2_absolute_matched_gap_corrected_unit": {
+      "pass": true,
+      "evidence": {
+        "mean": 0.035822292011234734,
+        "ci95_lower": 0.029396459379374032,
+        "ci95_upper": 0.042573969619425694,
+        "n_rows": 217,
+        "n_values": 366,
+        "n": 217,
+        "n_positive": 183,
+        "n_negative": 34,
+        "frac_positive": 0.8433179723502304,
+        "p_one_sided": 3.535656927748492e-26
+      },
+      "rule": "row-unit mean > 0 and CI95 lower > 0 and one-sided sign p < 0.05",
+      "signed_counterpart": {
+        "mean": 0.010941047963362113,
+        "ci95_lower": 0.0012708039585006227,
+        "ci95_upper": 0.020803355660520783,
+        "n_rows": 217,
+        "n_values": 366,
+        "n": 217,
+        "n_positive": 122,
+        "n_negative": 95,
+        "frac_positive": 0.5622119815668203,
+        "p_one_sided": 0.03866162981182697
+      },
+      "direction_consistency": {
+        "n_units": 366,
+        "n_same_sign": 200,
+        "fraction": 0.546448087431694,
+        "p_one_sided_same_sign": 0.0421993855153002
+      },
+      "coverage": {
+        "junction_coverage": 0.3125,
+        "cover_hits": 640,
+        "cover_total": 2048,
+        "dev_decile_exact_fraction": 0.0734375,
+        "dev_exact_hits": 47,
+        "dev_exact_total": 640,
+        "per_seed_coverage": {
+          "0": {
+            "junction_coverage": 0.341796875,
+            "dev_decile_exact_fraction": 0.07142857142857142
+          },
+          "1": {
+            "junction_coverage": 0.283203125,
+            "dev_decile_exact_fraction": 0.07586206896551724
+          }
+        }
+      }
+    },
+    "P3_phase0c_corrected_null": {
+      "pass": true,
+      "enrichment_joint_p": 0.000999000999000999,
+      "sign_reported_joint_p": 0.000999000999000999,
+      "sign_as_implemented_joint_p": 0.000999000999000999,
+      "rule": "joint-permutation p < 0.05 for enrichment AND reported-semantics sign",
+      "independent_null_reproduction": {
+        "enrichment": 0.000999000999000999,
+        "sign_as_implemented": 0.000999000999000999,
+        "sign_reported_semantics": 0.000999000999000999
+      }
+    }
+  },
+  "verdict": "SOURCE_SIGNAL_CONFIRMED_WITH_CORRECTED_STATISTICS",
+  "historical_verdict_untouched": "SOURCE_SIGNAL_BEYOND_SIMPLE_BASELINES",
+  "labels_used": false,
+  "official_test_loaded": false
+}
