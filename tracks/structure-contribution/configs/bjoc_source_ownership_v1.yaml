@@ -1,0 +1,265 @@
+# =============================================================================
+# cscl-bjoc-source-ownership-v1  —  PREREGISTRATION
+#
+# Frozen BEFORE the first Phase-0 execution and BEFORE any GPU trajectory.
+# Track: tracks/structure-contribution
+# Namespace: bjoc_source_ownership_v1
+#
+# Scope of this round (single preregistered protocol):
+#   Phase 0  CPU, frozen model, label-free official-train structures only:
+#            0A  math interpretation facts (single-junction IG vs joint reset)
+#            0B  simple-baseline exclusion with independent matched interventions
+#            0C  deterministic cross-molecule junction signature analysis
+#   Phase 1  ONE model family with real ownership contrast: N / O / S arms,
+#            identical parameters, init, data, SSL and budget; CPU correctness
+#            gates before any GPU job.
+#   Phase 2  frozen masked-SSL init + R3 supervised recipe; seed-0 paired
+#            screen; seed 1 only if every preregistered seed-0 gate passes.
+#
+# Forbidden this round (no search of any kind):
+#   * new random-walk / path-length search
+#   * new junction feature engineering or feature-family search
+#   * new IG baseline/reference search
+#   * model width / depth / hidden-size search
+#   * new training-hyperparameter search
+#   * official test access; Locked-split label access
+#   * label use in Phase 0 or in SSL pretraining
+# =============================================================================
+
+protocol_id: cscl-bjoc-source-ownership-v1
+namespace: bjoc_source_ownership_v1
+track: structure-contribution
+created: 2026-10-15
+status: PREREGISTERED
+
+# ---------------------------------------------------------------------------
+# frozen evidence base (read-only reuse)
+# ---------------------------------------------------------------------------
+evidence_base:
+  structure_explanation_audit: results/bjoc_structure_explanation_audit_v1/  # + ERRATUM.md
+  source_attribution_feasibility: results/bjoc_source_attribution_feasibility_v1/  # PROTOCOL R1/R2
+  architecture_breakthrough: results/bjoc_architecture_breakthrough_v1/
+  cross_bond_interaction: results/bjoc_cross_bond_interaction_v1/
+  frozen_r3_soups:
+    seed0: results/bjoc_recipe_tuning_v1/soup_R3_seed0.pt
+    seed1: results/bjoc_recipe_tuning_v1/soup_R3_seed1.pt
+  frozen_r3_train_records:
+    seed0: results/bjoc_recipe_tuning_v1/train_R3_seed0.json
+    seed1: results/bjoc_recipe_tuning_v1/train_R3_seed1.json
+  official_train_objects: results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt
+  official_train_norm: results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json
+  official_valid_objects: results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt
+
+# ---------------------------------------------------------------------------
+# split / data (Phase 1+2)
+# ---------------------------------------------------------------------------
+split:
+  tag: D
+  reuse_dir: results/bjoc_task_adaptive_ssl_v1
+  fit_target: 8000
+  monitor_target: 1000
+  locked_target: 1000
+  fingerprints:
+    fit_sha256_rows: 9468656affcc2b7c69409f03698b1b6287b3a42dc6e164efd19dfb0190254525
+    monitor_sha256_rows: d196bc75ce898c7cfd61efa133372f25803d5bc1198210f60b6e0f981a400393
+    locked_sha256_rows: f3525ae882114350a57f7b0ddb6889656f40c05cebda21b2611a2c99cdfa22d5
+  monitor_status: >
+    Historically exposed internal Monitor (read by >=5 prior rounds).  This round
+    uses it as an exploratory paired screen, NOT as a blind test.  One declared
+    scoring round for seed 0 and one conditional confirmation round for seed 1.
+  locked_status: NEVER READ this round.
+  official_valid_status: >
+    Exposed development set.  Used only for a secondary descriptive comparison
+    against the frozen full-10k BJOC-R3.  Never used for model/arm/threshold
+    selection.  The frozen R3 evaluation path is replayed first as a guard:
+    recipe-tuning R3 seed-0 valid MAE = 0.079101, seed-1 = 0.080586 (recomputed
+    from the frozen soups through the same object/eval pipeline; replay must
+    reproduce them to 1e-5).
+  official_test_status: NEVER LOADED.
+
+ssl:
+  reuse:
+    seed0: results/bjoc_task_adaptive_ssl_v1/pretrain_D_s0.pt
+    seed1: results/bjoc_task_adaptive_ssl_v1/pretrain_D_s1.pt
+    seed0_record: results/bjoc_task_adaptive_ssl_v1/pretrain_D_s0.json
+    seed1_record: results/bjoc_task_adaptive_ssl_v1/pretrain_D_s1.json
+  recipe:
+    objective: CE(masked atoms) + CE(masked bonds), 15%/15% masks
+    updates: 7560
+    batch: 128
+    lr: 1.0e-3
+    weight_decay: 1.0e-5
+    grad_clip: 5.0
+    fit_rows_only: true
+  note: >
+    Reused read-only; no new SSL trajectory.  Encoder group hash must match the
+    recorded encoder_final_sha256 before any supervised arm starts.
+
+# ---------------------------------------------------------------------------
+# Phase 1 model (N / O / S)
+# ---------------------------------------------------------------------------
+model:
+  base: BJOC one-shot (Atom/Bond/Junction encoders + bond composer + reader)
+  note: >
+    Frozen widths (src.BJOCConfig).  No width search.  The only additions are
+    the ownership grouping switch and one independent global content pathway.
+  local_relation:
+    N: "W_e = n_e * mean_G(w); V_e = n_e * mean_G(w^2)   (no ownership; historical Null)"
+    O: "W_e = sum_{j touching e} w_j; V_e = sum_{j touching e} w_j^2   (true ownership; historical Organized)"
+    S: >
+      count-matched ownership shuffle: W_e = sum of n_e draws w_{r(e,1..n_e)},
+      r drawn deterministically from the molecule's own junction pool ordered by
+      a lossless label-invariant junction key; per-bond counts and the vector
+      format identical to O, true junction-to-bond incidence destroyed, no
+      global junction content enters the local pathway.
+  composer_input: "[b_e (96), W_e (96), V_e (96), log1p(n_e) (1), bond_feat (7)]"
+  global_content_pathway:
+    input: "[mean_G(w) (96), mean_G(w^2) (96), log1p(n_junc) (1)]"
+    module: "MLP 193 -> 96 (SiLU) -> 96"
+    usage: "appended to reader input as a separate 96-dim block; never broadcast to bonds"
+    reader_input: "[z (96), sum_i a_i (96), sum_i a_i^2 (96), g (33), p_global (96)] = 417"
+  init_parity:
+    method: >
+      Build the historical scratch BJOC-Null init for the seed, copy every base
+      module, widen the reader first layer to 417 with zero columns for the new
+      p_global block, initialise the global pathway from the same seeded
+      construction RNG.  Arms then differ only in the grouping switch.  The N
+      arm must reproduce the historical P3 function as a black box to <= 1e-6
+      (float32 reduction order); O and S legitimately change the grouping at
+      init only through ownership, so their init output is not expected to
+      match P3 bit-exactly (verified instead by the zero-p_override
+      inertness proof: with the global block forced to zero, perturbing it
+      cannot change any output).
+    arms_share_init: true
+    arms_share_ssl: true
+    arms_share_batch_order: true
+
+# ---------------------------------------------------------------------------
+# Phase 2 training protocol (frozen recipe R3, no search)
+# ---------------------------------------------------------------------------
+training:
+  recipe: R3
+  epochs: 360
+  schedule: cosine
+  lr: 1.0e-3
+  lr_min: 1.0e-5
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  batch_size: 128
+  loss: raw-y L1
+  soup: last 5 epoch parameter mean
+  seed0_arms: [N, O, S]
+  seed1_arms_conditional: [N, O, S]
+  gpu_budget_cap_hours: 1.5
+  paired_bootstrap: {n: 5000, unit: molecule, seed: 0}
+  tail_threshold: -3.0
+  top_k_removed: 10  # rows with the largest max(error_candidate, error_reference) removed before the delta mean
+  paired_contrast_removal_convention: top-10 by max(err_a, err_b) over the same rows
+
+# ---------------------------------------------------------------------------
+# Phase 0 (CPU, frozen R3 seed 0/1, official train 10k, label-free)
+# ---------------------------------------------------------------------------
+phase0:
+  sample:
+    source: results/bjoc_source_attribution_feasibility_v1/sample_manifest.json
+    diagnostic_rows: hash-rule rank 0-255 (256 molecules)
+    reference_rows: hash-rank 256-1279 (1024 molecules)
+    seeds: [0, 1]
+  ig:
+    method: integrated gradients w.r.t. encoded w_j
+    baseline: per-molecule mean_G(w)
+    steps: 32
+    score: abs(IG_j)
+  rankings:
+    dev: "|| w_j - mean_G(w) ||_2 (encoder-space deviation)"
+    rare: "-log2(p_hat(signature)); p_hat = signature frequency over official train 10k junctions"
+    random: "uniform k-subset draw; 16 draws per molecule; RNG seed 70000000 + 100000*seed + row"
+  top_k: 4
+  intervention:
+    type: matched natural-encoding replacement (alpha = 1.0)
+    reference_molecule: >
+      nearest reference molecule in
+      |dn_atoms|+|dn_bonds|+|dn_junctions| (tie: smaller row); position j mod n_ref_junctions
+  matched_control:
+    match_on: [signature, center_degree, center_in_ring, in-molecule dev decile]
+    fallback: [signature, center_degree, center_in_ring]
+    controls_per_junction: 8
+    coverage_gate: 0.8
+  thresholds:
+    beyond: {mean_gt: 0.0, ci95_lower_gt: 0.0, one_sided_sign_p_lt: 0.01}
+    matched: {mean_gt: 0.0, ci95_lower_gt: 0.0, coverage_ge: 0.8}
+    enrichment:
+      stat: >
+        max over signature classes (corpus_count >= 100 and expected top-decile
+        count >= 3) of observed_top_decile_count / expected_top_decile_count,
+        where "top decile" is computed within each (seed, molecule) block on |IG|
+      null: within-(seed, molecule) |IG| permutation (1000 draws, RNG 20261015)
+      p_lt: 0.05
+    sign_consistency:
+      stat: >
+        sample-size-weighted mean over signature classes (sample_count >= 30)
+        of |mean(sign(centered IG_j))|, where centered IG_j = IG_j - mean over
+        the molecule's junctions; centering removes the molecule-level mass
+        sign shared by all of its junctions
+      null: same within-(seed, molecule) permutation (1000 draws, RNG 20261015)
+      p_lt: 0.05
+  signature:
+    definition: >
+      (center_atom_type argmax over the raw 28 atom-type slots,
+       sorted endpoint atom types, sorted two raw bond categories,
+       center_in_ring, n_ring_bonds)
+    corpus_frequency: all official-train-10k junctions (346k total)
+    sample: the 256x2 diagnostic junction records; classes with corpus < 30 are
+      reported descriptively but not used for the sign test
+  decision_rule: >
+    SOURCE_SIGNAL_BEYOND_SIMPLE_BASELINES iff IG top-4 response beats dev
+    (threshold beyond) AND beats rare (threshold beyond) AND the matched
+    (signature, degree, ring, dev-decile) control gap passes (threshold matched)
+    AND phase-0C enrichment AND sign consistency both pass.
+    SOURCE_SIGNAL_EXPLAINABLE_BY_SIMPLE_BASELINES iff the matched-control gate
+    fails while the dev or rarity ranking has a point estimate >= IG.
+    INCONCLUSIVE otherwise.
+
+# ---------------------------------------------------------------------------
+# Phase 2 frozen decision rules
+# ---------------------------------------------------------------------------
+gates_seed0:
+  ownership_contrast:
+    metric: "Monitor paired MAE delta O - N"
+    require: "delta <= -0.002 and bootstrap CI95 upper < 0"
+  sham_separation:
+    metric: "Monitor paired MAE delta O - S"
+    require: "delta <= -0.002 and bootstrap CI95 upper < 0"
+  not_tail_or_single_driven:
+    require: "ordinary (y > -3) delta O-N < 0 AND top-10-removed delta O-N < 0"
+  parity_vs_p3:
+    metric: "Monitor paired |MAE(O) - MAE(P3-D s0)|"
+    require: "MAE(O) - MAE(P3-D s0) <= +0.004"
+  mechanism:
+    require:
+      - "ownership intervention isolation: in O, editing one junction's incidence changes c only for that junction's bonds (exact)"
+      - "local pathway does not read the global block (randomising p_global leaves c unchanged; code audit)"
+      - "local pathway deletion faithfulness: mean per-molecule Spearman(||c_e||, |delta pred_e|) >= 0.5"
+      - "arms share init/SSL/batch-order hashes and exact parameter count"
+  stability:
+    require: "finite training, encoder hash matches recorded SSL, soup differs from init"
+decision_vocabulary:
+  - OWNERSHIP_RELATION_VALUE_CONFIRMED
+  - OWNERSHIP_LOCAL_VALUE_SEED0_ONLY
+  - OWNERSHIP_NOT_MORE_VALUABLE_THAN_SHAM
+  - OWNERSHIP_NULL
+  - OWNERSHIP_HURTS_PARITY
+  - INCONCLUSIVE
+seed1_confirmation:
+  condition: "all gates_seed0 pass"
+  require: "same sign as seed 0 for O-N and O-S; seed-mean O-N <= -0.002 with CI95 upper < 0"
+  stop_rule: "if any seed-1 condition fails -> OWNERSHIP_LOCAL_VALUE_SEED0_ONLY; no further purchase"
+
+# ---------------------------------------------------------------------------
+# interpretation discipline (writing rules, frozen)
+# ---------------------------------------------------------------------------
+interpretation_rules:
+  - "A local pathway being *used* is not an explanation claim."
+  - "Only bond-anchored c_e quantities may be called local; p_global is a graph-level pathway and must never be reported as a sum of local contributions."
+  - "Phase 0 is a frozen-model measurement tool, not chemical causality."
+  - "Monitor is an exposed exploratory split; official valid is an exposed development set; no blind-test language."
