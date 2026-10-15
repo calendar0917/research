@@ -1,0 +1,896 @@
+{
+  "artifact_hashes": {
+    "data_integrity.json": "f960a2c36bf7dcdf994c6afe443902a7d33b737f7caa8f87b1c7fc9780ca4e16",
+    "module": "c390ec728af42f974cd893e0acd482623269a42771ac2a57cf00abcb2c0e6000",
+    "phase0a_coverage.json": "8ba34a8e4eb9798d878fdca310005ccd9f4c2c7b0a394ec77975eedff987e049",
+    "phase0a_manifest.json": "0eacd0d7bd570e15030ec118dd57068cb69dcdc08a452e0cb6ba1c12eccfbd6e",
+    "phase0b_analysis.json": "dc96e9fd31b2b618119cf1697cf3fe35f4f1ad1c7371caa39a54ccf9150c9e50",
+    "smiles_table": "04a590355fb7bba71e35e52bed60c974999b92af9e96e4ee99bed4afe42dcaff"
+  },
+  "created_utc": "2026-10-15T14:11:50Z",
+  "data_integrity": {
+    "excluded_rows": [
+      941,
+      2210,
+      6071,
+      9766
+    ],
+    "rdkit_parse_failures": 0,
+    "rows_used": 9996,
+    "tiered_check": {
+      "failure_rows": [
+        941
+      ],
+      "kekulization_failed": 11,
+      "note": "independent hand-written SMILES parser + kekulization + VF2 attributed isomorphism (cscl_smiles_graph.check_alignment); no RDKit in the original checker",
+      "sample_rows": 2000,
+      "selection": "sha256('tiered|<row>') ascending",
+      "tiers": {
+        "none": 1,
+        "tier1": 1967,
+        "tier2": 32
+      }
+    },
+    "verdict": "PASS_WITH_FROZEN_EXCLUSIONS"
+  },
+  "decisions": {
+    "A_coverage": "MMP_COVERAGE_INSUFFICIENT",
+    "A_coverage_detail": {
+      "primary_regime": "P0",
+      "primary_stats": {
+        "n_distinct_molecules": 3247,
+        "n_distinct_scaffolds": 2332,
+        "n_pairs": 5039,
+        "n_repeated_rules_exact": 0,
+        "rules_spanning_ge2_contexts": 0,
+        "rules_spanning_ge2_scaffold_pairs": 0
+      },
+      "reason": "coverage of *within-pair* local MMPs is broad, but exact cross-context rule repetition (the requirement for the core question) is absent",
+      "threshold_checks": {
+        "min_distinct_molecules": true,
+        "min_distinct_scaffolds": true,
+        "min_mmp_pairs": true,
+        "min_rules_support_ge2_contexts": false,
+        "min_rules_support_ge2_scaffolds": false
+      }
+    },
+    "B_mechanism": "TARGET_FORMULA_DOMINATED",
+    "B_mechanism_detail": {
+      "composition_ols_r2": 0.6140333941185652,
+      "formula_r2": 0.999338603811748,
+      "formula_residual_abs_median": 0.006938316461693073,
+      "noise_floor_used": 0.013433087681258504,
+      "per_molecule_reconstruction_abs_median": 0.006716543840629252,
+      "zero_baseline_r2": -0.012650275723548043
+    },
+    "C_next": "NO_GO_ON_ZINC",
+    "explicit_claim": "ZINC-12k official train contains no reusable exact local replacement: every distinct (R,R') rule occurs in exactly one context under the frozen single-cut definition, so cross-context effect transfer cannot be estimated at all; and the observed deltas are the known ZINC target formula. Do not use ZINC MMPs as evidence about real chemical substituent effects."
+  },
+  "frozen_date": "2026-10-15",
+  "phase0a": {
+    "P0": {
+      "coarse_class": {
+        "class_definition": "(attachment_environment, element_count_delta)",
+        "max_support": 16,
+        "n_classes": 3624,
+        "support_ge2": 625,
+        "support_ge3": 256,
+        "support_ge5": 88
+      },
+      "cross_murcko_scaffold_pairs": 4534,
+      "n_capped_cores": 0,
+      "n_cut_realizations_uncapped": 5074,
+      "n_distinct_cores": 2449,
+      "n_distinct_molecules": 3247,
+      "n_distinct_scaffolds": 2332,
+      "n_env_rules": 5039,
+      "n_molecule_pairs": 4015,
+      "n_pairs": 5039,
+      "n_pairs_pre_dedup_variants": 5074,
+      "n_repeated_rules_exact": 0,
+      "n_skipped_same_constitution": 0,
+      "n_strict_rules": 5039,
+      "n_uncapped_pair_incidences": 5039,
+      "rule_support_contexts_env": {
+        "ge2": 0,
+        "ge3": 0,
+        "ge5": 0,
+        "max": 1,
+        "n_distinct_rules_exact": 5039,
+        "n_repeated_incidences_exact": 0,
+        "n_repeated_rules_exact": 0
+      },
+      "rule_support_contexts_strict": {
+        "ge2": 0,
+        "ge3": 0,
+        "ge5": 0,
+        "max": 1,
+        "n_distinct_rules_exact": 5039,
+        "n_repeated_incidences_exact": 0,
+        "n_repeated_rules_exact": 0
+      },
+      "rules_spanning": {
+        "definition": "contexts = distinct cores of a strict (R,R') rule; scaffold pairs/values are counted on the materialised table for that rule; touched-scaffold counts are descriptive (a single occurrence already touches its two scaffolds) and are NOT reuse evidence",
+        "ge2_contexts": 0,
+        "ge2_scaffold_pairs": 0,
+        "ge2_touched_scaffolds": 4534,
+        "ge3_scaffold_pairs": 0,
+        "ge3_touched_scaffolds": 0,
+        "ge5_scaffold_pairs": 0,
+        "ge5_touched_scaffolds": 0
+      },
+      "same_murcko_scaffold_pairs": 505
+    },
+    "P0s": {
+      "coarse_class": {
+        "class_definition": "(attachment_environment, element_count_delta)",
+        "max_support": 2,
+        "n_classes": 102,
+        "support_ge2": 7,
+        "support_ge3": 0,
+        "support_ge5": 0
+      },
+      "cross_murcko_scaffold_pairs": 61,
+      "n_capped_cores": 0,
+      "n_cut_realizations_uncapped": 110,
+      "n_distinct_cores": 108,
+      "n_distinct_molecules": 178,
+      "n_distinct_scaffolds": 120,
+      "n_env_rules": 110,
+      "n_molecule_pairs": 92,
+      "n_pairs": 110,
+      "n_pairs_pre_dedup_variants": 110,
+      "n_repeated_rules_exact": 0,
+      "n_skipped_same_constitution": 0,
+      "n_strict_rules": 110,
+      "n_uncapped_pair_incidences": 110,
+      "rule_support_contexts_env": {
+        "ge2": 0,
+        "ge3": 0,
+        "ge5": 0,
+        "max": 1,
+        "n_distinct_rules_exact": 110,
+        "n_repeated_incidences_exact": 0,
+        "n_repeated_rules_exact": 0
+      },
+      "rule_support_contexts_strict": {
+        "ge2": 0,
+        "ge3": 0,
+        "ge5": 0,
+        "max": 1,
+        "n_distinct_rules_exact": 110,
+        "n_repeated_incidences_exact": 0,
+        "n_repeated_rules_exact": 0
+      },
+      "rules_spanning": {
+        "definition": "contexts = distinct cores of a strict (R,R') rule; scaffold pairs/values are counted on the materialised table for that rule; touched-scaffold counts are descriptive (a single occurrence already touches its two scaffolds) and are NOT reuse evidence",
+        "ge2_contexts": 0,
+        "ge2_scaffold_pairs": 0,
+        "ge2_touched_scaffolds": 61,
+        "ge3_scaffold_pairs": 0,
+        "ge3_touched_scaffolds": 0,
+        "ge5_scaffold_pairs": 0,
+        "ge5_touched_scaffolds": 0
+      },
+      "same_murcko_scaffold_pairs": 49
+    },
+    "P1": {
+      "coarse_class": {
+        "class_definition": "(attachment_environment, element_count_delta)",
+        "max_support": 59,
+        "n_classes": 74612,
+        "support_ge2": 16489,
+        "support_ge3": 7829,
+        "support_ge5": 3248
+      },
+      "cross_murcko_scaffold_pairs": 123682,
+      "n_capped_cores": 255,
+      "n_cut_realizations_uncapped": 2947411,
+      "n_distinct_cores": 9566,
+      "n_distinct_molecules": 9828,
+      "n_distinct_scaffolds": 7797,
+      "n_env_rules": 125105,
+      "n_molecule_pairs": 92304,
+      "n_pairs": 125112,
+      "n_pairs_pre_dedup_variants": 125452,
+      "n_repeated_rules_exact": 4,
+      "n_skipped_same_constitution": 0,
+      "n_strict_rules": 125101,
+      "n_uncapped_pair_incidences": 2892616,
+      "rule_support_contexts_env": {
+        "ge2": 0,
+        "ge3": 0,
+        "ge5": 0,
+        "max": 1,
+        "n_distinct_rules_exact": 2892616,
+        "n_repeated_incidences_exact": 0,
+        "n_repeated_rules_exact": 0
+      },
+      "rule_support_contexts_strict": {
+        "ge2": 4,
+        "ge3": 0,
+        "ge5": 0,
+        "max": 2,
+        "n_distinct_rules_exact": 2892612,
+        "n_repeated_incidences_exact": 8,
+        "n_repeated_rules_exact": 4
+      },
+      "rules_spanning": {
+        "definition": "contexts = distinct cores of a strict (R,R') rule; scaffold pairs/values are counted on the materialised table for that rule; touched-scaffold counts are descriptive (a single occurrence already touches its two scaffolds) and are NOT reuse evidence",
+        "ge2_contexts": 4,
+        "ge2_scaffold_pairs": 4,
+        "ge2_touched_scaffolds": 123671,
+        "ge3_scaffold_pairs": 0,
+        "ge3_touched_scaffolds": 4,
+        "ge5_scaffold_pairs": 0,
+        "ge5_touched_scaffolds": 0
+      },
+      "same_murcko_scaffold_pairs": 1430
+    }
+  },
+  "phase0a_verdict": "MMP_COVERAGE_INSUFFICIENT",
+  "phase0b": {
+    "P0": {
+      "baselines": {
+        "composition_ols": {
+          "mae": 0.8586774096307247,
+          "mean_prediction": 0.2210207079838066,
+          "r2": 0.6140333941185652,
+          "rmse": 1.2195176401655066
+        },
+        "global_train_mean": {
+          "mae": 1.4889058431608182,
+          "mean_prediction": 0.2237677494851404,
+          "r2": -0.001128979437875044,
+          "rmse": 1.9640757692179642
+        },
+        "rule_mean_fallback_global": {
+          "mae": 1.4889058431608182,
+          "mean_prediction": 0.2237677494851404,
+          "r2": -0.001128979437875044,
+          "rmse": 1.9640757692179642
+        },
+        "rule_mean_fallback_zero": {
+          "mae": 1.5014125100642575,
+          "mean_prediction": 0.0,
+          "r2": -0.012650275723548043,
+          "rmse": 1.9753450296188546
+        },
+        "zero": {
+          "mae": 1.5014125100642575,
+          "mean_prediction": 0.0,
+          "r2": -0.012650275723548043,
+          "rmse": 1.9753450296188546
+        }
+      },
+      "coarse_class_context": {
+        "n_classes": 3624,
+        "n_repeated_classes": 625,
+        "repeated_class_summary": {
+          "fraction_sign_consistent": 0.7844034937611408,
+          "mean_of_means": 0.19198172927208665,
+          "mean_within_std": 1.0968786005071307,
+          "n": 625
+        }
+      },
+      "delta_y": {
+        "abs_mean": 1.5014125100642575,
+        "abs_median": 1.135951966047287,
+        "max": 9.020764827728271,
+        "mean": 0.22078177318900882,
+        "median": 0.2258371114730835,
+        "min": -7.437346637248993,
+        "n": 5039,
+        "negative_fraction": 0.44135741218495733,
+        "nonzero_positive_fraction": 0.5586425878150426,
+        "positive_fraction": 0.5586425878150426,
+        "quantiles": {
+          "p01": -5.009308967292308,
+          "p05": -3.213436599075794,
+          "p25": -0.8518725857138634,
+          "p50": 0.2258371114730835,
+          "p75": 1.3647741377353668,
+          "p95": 3.4993851393461193,
+          "p99": 4.981276636123655
+        },
+        "std": 1.9629680065318005,
+        "zero_fraction": 0.0
+      },
+      "n_pairs": 5039,
+      "target_formula_community": {
+        "component_scaled_delta": {
+          "SAneg": {
+            "abs_mean": 0.8385235792457832,
+            "abs_median": 0.6125798411795194,
+            "max": 4.225093678558213,
+            "mean": 0.12620863225256027,
+            "median": 0.10482145299369496,
+            "min": -4.751464476041583,
+            "n": 5039,
+            "negative_fraction": 0.4471125223258583,
+            "nonzero_positive_fraction": 0.5528874776741417,
+            "positive_fraction": 0.5528874776741417,
+            "quantiles": {
+              "p01": -2.7541777577039994,
+              "p05": -1.8091323404862956,
+              "p25": -0.44767549271734053,
+              "p50": 0.10482145299369496,
+              "p75": 0.7534694195216265,
+              "p95": 2.0378016861654173,
+              "p99": 2.757759613393291
+            },
+            "std": 1.1136242559910892,
+            "zero_fraction": 0.0
+          },
+          "cyclepen": {
+            "abs_mean": 0.07494711554346772,
+            "abs_median": 0.0,
+            "max": 6.99367620784322,
+            "mean": 0.011103276376810035,
+            "median": 0.0,
+            "min": -6.99367620784322,
+            "n": 5039,
+            "negative_fraction": 0.008930343322087716,
+            "nonzero_positive_fraction": 0.5714285714285714,
+            "positive_fraction": 0.011907124429450288,
+            "quantiles": {
+              "p01": 0.0,
+              "p05": -0.0,
+              "p25": -0.0,
+              "p50": 0.0,
+              "p75": -0.0,
+              "p95": 0.0,
+              "p99": 3.49683810392161
+            },
+            "std": 0.5258464905582374,
+            "zero_fraction": 0.979162532248462
+          },
+          "logP": {
+            "abs_mean": 0.8260224486151586,
+            "abs_median": 0.6731620595914856,
+            "max": 4.132152884445228,
+            "mean": 0.08373579327098088,
+            "median": 0.101801967208712,
+            "min": -3.629488428471586,
+            "n": 5039,
+            "negative_fraction": 0.45643976979559436,
+            "nonzero_positive_fraction": 0.5431068732618196,
+            "positive_fraction": 0.5425679698352848,
+            "quantiles": {
+              "p01": -2.425909151683261,
+              "p05": -1.668159037468399,
+              "p25": -0.5780503300651881,
+              "p50": 0.101801967208712,
+              "p75": 0.7464098164855585,
+              "p95": 1.7841829326164234,
+              "p99": 2.6089267419512367
+            },
+            "std": 1.0450958775356776,
+            "zero_fraction": 0.0009922603691208574
+          }
+        },
+        "constants": {
+          "SA_mean": -3.053662860929663,
+          "SA_std": 0.8315096218718826,
+          "cycle_mean": -0.04856968732876976,
+          "cycle_std": 0.2859726330705808,
+          "logP_mean": 2.4570953396190123,
+          "logP_std": 1.4498737504491803
+        },
+        "corr_formula_vs_delta_y": 0.9996715841420012,
+        "delta_formula": {
+          "abs_mean": 1.497113224118244,
+          "abs_median": 1.1382645654014811,
+          "max": 9.026461662374361,
+          "mean": 0.22104770190035122,
+          "median": 0.22917538181311004,
+          "min": -7.439301854169692,
+          "n": 5039,
+          "negative_fraction": 0.44096050803730896,
+          "nonzero_positive_fraction": 0.559039491962691,
+          "positive_fraction": 0.559039491962691,
+          "quantiles": {
+            "p01": -5.000074786110303,
+            "p05": -3.1977052443039278,
+            "p25": -0.8451625265475164,
+            "p50": 0.22917538181311004,
+            "p75": 1.3627191289171225,
+            "p95": 3.493287168087246,
+            "p99": 4.97660346441493
+          },
+          "std": 1.9580886107841275,
+          "zero_fraction": 0.0
+        },
+        "mean_abs_component": {
+          "SAneg": 0.8385235792457832,
+          "cyclepen": 0.07494711554346772,
+          "logP": 0.8260224486151586
+        },
+        "ols_delta_y_on_components": {
+          "coef_SAneg": 0.9966261111520304,
+          "coef_cyclepen": 0.98507177166045,
+          "coef_logP": 1.0113596623230943,
+          "intercept": -0.0006255729053129594,
+          "r2": 0.9993835998505114
+        },
+        "r2_formula_vs_delta_y": 0.999338603811748,
+        "residual_delta_y_minus_formula": {
+          "abs_mean": 0.009354242169514247,
+          "abs_median": 0.006938316461693073,
+          "max": 0.05079213460173637,
+          "mean": -0.0002659287113423902,
+          "median": 0.0006221228316192207,
+          "min": -3.4963007103869805,
+          "n": 5039,
+          "negative_fraction": 0.4729112919230006,
+          "nonzero_positive_fraction": 0.5270887080769994,
+          "positive_fraction": 0.5270887080769994,
+          "quantiles": {
+            "p01": -0.02680622994992384,
+            "p05": -0.017879671136995866,
+            "p25": -0.006487751983871304,
+            "p50": 0.0006221228316192207,
+            "p75": 0.007450328129354311,
+            "p95": 0.01814705137988959,
+            "p99": 0.02740411226684186
+          },
+          "std": 0.050482172849042675,
+          "zero_fraction": 0.0
+        }
+      }
+    },
+    "P0s": {
+      "baselines": {
+        "composition_ols": {
+          "mae": 0.6556984456935834,
+          "mean_prediction": -0.009037194279976537,
+          "r2": 0.4406366196728019,
+          "rmse": 0.9020288524478056
+        },
+        "global_train_mean": {
+          "mae": 0.9080485787486389,
+          "mean_prediction": -0.010849378047155259,
+          "r2": -0.029558283006463792,
+          "rmse": 1.2237674063611532
+        },
+        "rule_mean_fallback_global": {
+          "mae": 0.9080485787486389,
+          "mean_prediction": -0.010849378047155259,
+          "r2": -0.029558283006463792,
+          "rmse": 1.2237674063611532
+        },
+        "rule_mean_fallback_zero": {
+          "mae": 0.8932891361923381,
+          "mean_prediction": 0.0,
+          "r2": -1.9985932295130127e-05,
+          "rmse": 1.206084548034159
+        },
+        "zero": {
+          "mae": 0.8932891361923381,
+          "mean_prediction": 0.0,
+          "r2": -1.9985932295130127e-05,
+          "rmse": 1.206084548034159
+        }
+      },
+      "coarse_class_context": {
+        "n_classes": 102,
+        "n_repeated_classes": 7,
+        "repeated_class_summary": {
+          "fraction_sign_consistent": 0.8571428571428571,
+          "mean_of_means": 0.054751121926875354,
+          "mean_within_std": 0.13865570844935812,
+          "n": 7
+        }
+      },
+      "delta_y": {
+        "abs_mean": 0.8932891361923381,
+        "abs_median": 0.6896461406722665,
+        "max": 3.218341827392578,
+        "mean": -0.005391822907735001,
+        "median": 0.03823135793209076,
+        "min": -3.237861156463623,
+        "n": 110,
+        "negative_fraction": 0.4909090909090909,
+        "nonzero_positive_fraction": 0.509090909090909,
+        "positive_fraction": 0.509090909090909,
+        "quantiles": {
+          "p01": -2.78035480260849,
+          "p05": -1.8958596281707287,
+          "p25": -0.7632177323102951,
+          "p50": 0.03823135793209076,
+          "p75": 0.622475856449455,
+          "p95": 1.8816388077102593,
+          "p99": 3.130649000108242
+        },
+        "std": 1.2060724958527549,
+        "zero_fraction": 0.0
+      },
+      "n_pairs": 110,
+      "target_formula_community": {
+        "component_scaled_delta": {
+          "SAneg": {
+            "abs_mean": 0.47274008805296525,
+            "abs_median": 0.3457200987415149,
+            "max": 1.5769502054136308,
+            "mean": 0.02437576979023885,
+            "median": 0.039146647964014916,
+            "min": -1.7217199823728497,
+            "n": 110,
+            "negative_fraction": 0.4727272727272727,
+            "nonzero_positive_fraction": 0.5272727272727272,
+            "positive_fraction": 0.5272727272727272,
+            "quantiles": {
+              "p01": -1.5222029080318238,
+              "p05": -1.225096311474514,
+              "p25": -0.24891460416141084,
+              "p50": 0.039146647964014916,
+              "p75": 0.4257990749931144,
+              "p95": 0.9621046921337792,
+              "p99": 1.4194275063248987
+            },
+            "std": 0.6349759153699003,
+            "zero_fraction": 0.0
+          },
+          "cyclepen": {
+            "abs_mean": 0.0,
+            "abs_median": 0.0,
+            "max": -0.0,
+            "mean": 0.0,
+            "median": 0.0,
+            "min": -0.0,
+            "n": 110,
+            "negative_fraction": 0.0,
+            "nonzero_positive_fraction": 0.0,
+            "positive_fraction": 0.0,
+            "quantiles": {
+              "p01": 0.0,
+              "p05": 0.0,
+              "p25": 0.0,
+              "p50": -0.0,
+              "p75": -0.0,
+              "p95": -0.0,
+              "p99": -0.0
+            },
+            "std": 0.0,
+            "zero_fraction": 1.0
+          },
+          "logP": {
+            "abs_mean": 0.6176029901630737,
+            "abs_median": 0.43921065527444436,
+            "max": 1.827400488614385,
+            "mean": -0.029340360268360722,
+            "median": 0.03303735927708226,
+            "min": -2.0455574142791244,
+            "n": 110,
+            "negative_fraction": 0.44545454545454544,
+            "nonzero_positive_fraction": 0.5420560747663551,
+            "positive_fraction": 0.5272727272727272,
+            "quantiles": {
+              "p01": -1.995526851288707,
+              "p05": -1.3874449408969483,
+              "p25": -0.5070786334135852,
+              "p50": 0.03303735927708226,
+              "p75": 0.43545170729824173,
+              "p95": 1.477142405907064,
+              "p99": 1.6929211934760333
+            },
+            "std": 0.8018090822577807,
+            "zero_fraction": 0.02727272727272727
+          }
+        },
+        "constants": {
+          "SA_mean": -3.053662860929663,
+          "SA_std": 0.8315096218718826,
+          "cycle_mean": -0.04856968732876976,
+          "cycle_std": 0.2859726330705808,
+          "logP_mean": 2.4570953396190123,
+          "logP_std": 1.4498737504491803
+        },
+        "corr_formula_vs_delta_y": 0.9999878538141299,
+        "delta_formula": {
+          "abs_mean": 0.8883327330390942,
+          "abs_median": 0.6810509709459422,
+          "max": 3.202471284200728,
+          "mean": -0.004964590478121849,
+          "median": 0.040754076267456134,
+          "min": -3.2188485626809276,
+          "n": 110,
+          "negative_fraction": 0.4909090909090909,
+          "nonzero_positive_fraction": 0.509090909090909,
+          "positive_fraction": 0.509090909090909,
+          "quantiles": {
+            "p01": -2.7671597449165204,
+            "p05": -1.8911410043884442,
+            "p25": -0.7561312176905866,
+            "p50": 0.040754076267456134,
+            "p75": 0.6197146733463473,
+            "p95": 1.8681275622952718,
+            "p99": 3.1167125067419628
+          },
+          "std": 1.199881470949925,
+          "zero_fraction": 0.0
+        },
+        "mean_abs_component": {
+          "SAneg": 0.47274008805296525,
+          "cyclepen": 0.0,
+          "logP": 0.6176029901630737
+        },
+        "ols_delta_y_on_components": {
+          "coef_SAneg": 0.9962878669955131,
+          "coef_cyclepen": 0.0,
+          "coef_logP": 1.0114780427226489,
+          "intercept": 2.357859319152016e-08,
+          "r2": 0.9999999999999939
+        },
+        "r2_formula_vs_delta_y": 0.9999493569863609,
+        "residual_delta_y_minus_formula": {
+          "abs_mean": 0.006750132511435541,
+          "abs_median": 0.005839346365437703,
+          "max": 0.019456611734114282,
+          "mean": -0.0004272324296131424,
+          "median": 0.00021465562831646245,
+          "min": -0.021392718536454414,
+          "n": 110,
+          "negative_fraction": 0.45454545454545453,
+          "nonzero_positive_fraction": 0.5454545454545454,
+          "positive_fraction": 0.5454545454545454,
+          "quantiles": {
+            "p01": -0.018858302144569426,
+            "p05": -0.01614642928894481,
+            "p25": -0.006245391090805616,
+            "p50": 0.00021465562831646245,
+            "p75": 0.00527892539630459,
+            "p95": 0.014540171644290422,
+            "p99": 0.01737680001168003
+          },
+          "std": 0.00857224301683647,
+          "zero_fraction": 0.0
+        }
+      }
+    },
+    "P1": {
+      "baselines": {
+        "composition_ols": {
+          "mae": 0.9579993276298002,
+          "mean_prediction": 0.14928681949582848,
+          "r2": 0.5786772390707221,
+          "rmse": 1.4227325022032233
+        },
+        "global_train_mean": {
+          "mae": 1.6194384631688628,
+          "mean_prediction": 0.14932882071343065,
+          "r2": -1.9399800127439804e-05,
+          "rmse": 2.1918963067492596
+        },
+        "rule_mean_fallback_global": {
+          "mae": 1.61931906196186,
+          "mean_prediction": 0.1494610862027525,
+          "r2": 5.954539114549906e-05,
+          "rmse": 2.191809786883519
+        },
+        "rule_mean_fallback_zero": {
+          "mae": 1.6254992068289271,
+          "mean_prediction": 0.00014197542826090715,
+          "r2": -0.0045554078396552455,
+          "rmse": 2.1968618155279436
+        },
+        "zero": {
+          "mae": 1.6256283179748692,
+          "mean_prediction": 0.0,
+          "r2": -0.004643038400974131,
+          "rmse": 2.1969576330579432
+        }
+      },
+      "coarse_class_context": {
+        "n_classes": 74612,
+        "n_repeated_classes": 16489,
+        "repeated_class_summary": {
+          "fraction_sign_consistent": 0.7764029048213537,
+          "mean_of_means": 0.14968640323606192,
+          "mean_within_std": 1.2867309545478898,
+          "n": 16489
+        }
+      },
+      "delta_y": {
+        "abs_mean": 1.6256283179748692,
+        "abs_median": 1.2146015018224716,
+        "max": 22.20319676399231,
+        "mean": 0.1493540246691415,
+        "median": 0.16239333152770996,
+        "min": -23.622619152069092,
+        "n": 125112,
+        "negative_fraction": 0.4613386405780421,
+        "nonzero_positive_fraction": 0.5386613594219579,
+        "positive_fraction": 0.5386613594219579,
+        "quantiles": {
+          "p01": -5.504421558976174,
+          "p05": -3.4684666991233826,
+          "p25": -1.0476384162902832,
+          "p50": 0.16239333152770996,
+          "p75": 1.3577314503490925,
+          "p95": 3.7284268200397483,
+          "p99": 5.770586194992066
+        },
+        "std": 2.191875045883476,
+        "zero_fraction": 0.0
+      },
+      "n_pairs": 125112,
+      "target_formula_community": {
+        "component_scaled_delta": {
+          "SAneg": {
+            "abs_mean": 0.8597067501125735,
+            "abs_median": 0.6511087850770774,
+            "max": 5.427670988801402,
+            "mean": 0.07318651254157592,
+            "median": 0.07667052765441724,
+            "min": -5.8678594211426045,
+            "n": 125112,
+            "negative_fraction": 0.4644638403990025,
+            "nonzero_positive_fraction": 0.5355361596009975,
+            "positive_fraction": 0.5355361596009975,
+            "quantiles": {
+              "p01": -2.7688247201573173,
+              "p05": -1.8733719837745642,
+              "p25": -0.5619955297275705,
+              "p50": 0.07667052765441724,
+              "p75": 0.724533779044694,
+              "p95": 1.9834052531878654,
+              "p99": 2.862380480142494
+            },
+            "std": 1.1323068644847571,
+            "zero_fraction": 0.0
+          },
+          "cyclepen": {
+            "abs_mean": 0.17658596410077954,
+            "abs_median": 0.0,
+            "max": 24.477866727451268,
+            "mean": 0.0015651810683196662,
+            "median": 0.0,
+            "min": -24.477866727451268,
+            "n": 125112,
+            "negative_fraction": 0.021748513332054478,
+            "nonzero_positive_fraction": 0.5060809584316572,
+            "positive_fraction": 0.022284033505978643,
+            "quantiles": {
+              "p01": -3.49683810392161,
+              "p05": -0.0,
+              "p25": -0.0,
+              "p50": -0.0,
+              "p75": 0.0,
+              "p95": 0.0,
+              "p99": 3.49683810392161
+            },
+            "std": 0.9276100414519809,
+            "zero_fraction": 0.9559674531619669
+          },
+          "logP": {
+            "abs_mean": 0.9090504203948199,
+            "abs_median": 0.7513757661054957,
+            "max": 5.070262150564859,
+            "mean": 0.07323758619653807,
+            "median": 0.0693301744161226,
+            "min": -5.206453318891636,
+            "n": 125112,
+            "negative_fraction": 0.47379148283138306,
+            "nonzero_positive_fraction": 0.526166857179399,
+            "positive_fraction": 0.5261205959460323,
+            "quantiles": {
+              "p01": -2.6823714815135693,
+              "p05": -1.8299145006094772,
+              "p25": -0.676320955321946,
+              "p50": 0.0693301744161226,
+              "p75": 0.823244092549587,
+              "p95": 1.9712199073295664,
+              "p99": 2.8270053849379417
+            },
+            "std": 1.1528363485764819,
+            "zero_fraction": 8.792122258456422e-05
+          }
+        },
+        "constants": {
+          "SA_mean": -3.053662860929663,
+          "SA_std": 0.8315096218718826,
+          "cycle_mean": -0.04856968732876976,
+          "cycle_std": 0.2859726330705808,
+          "logP_mean": 2.4570953396190123,
+          "logP_std": 1.4498737504491803
+        },
+        "corr_formula_vs_delta_y": 0.9961917857263505,
+        "delta_formula": {
+          "abs_mean": 1.6266924011303172,
+          "abs_median": 1.2094869418276342,
+          "max": 29.264292686827037,
+          "mean": 0.14798927980643367,
+          "median": 0.16186267449756675,
+          "min": -30.739554406850097,
+          "n": 125112,
+          "negative_fraction": 0.46101892704137093,
+          "nonzero_positive_fraction": 0.5389810729586291,
+          "positive_fraction": 0.5389810729586291,
+          "quantiles": {
+            "p01": -5.516630153876373,
+            "p05": -3.46554619276237,
+            "p25": -1.0422566987438227,
+            "p50": 0.16186267449756675,
+            "p75": 1.3529534070066098,
+            "p95": 3.7225774843835735,
+            "p99": 5.759867654624179
+          },
+          "std": 2.212592228697513,
+          "zero_fraction": 0.0
+        },
+        "mean_abs_component": {
+          "SAneg": 0.8597067501125735,
+          "cyclepen": 0.17658596410077954,
+          "logP": 0.9090504203948199
+        },
+        "ols_delta_y_on_components": {
+          "coef_SAneg": 0.9890947691088475,
+          "coef_cyclepen": 0.9362455020416066,
+          "coef_logP": 1.0099903394668188,
+          "intercept": 0.0015309796654831389,
+          "r2": 0.9930147558311214
+        },
+        "r2_formula_vs_delta_y": 0.9922218580710656,
+        "residual_delta_y_minus_formula": {
+          "abs_mean": 0.01931160282731928,
+          "abs_median": 0.008228493905039214,
+          "max": 7.132528485284077,
+          "mean": 0.0013647448627078303,
+          "median": 0.000560557672964479,
+          "min": -7.156581634854916,
+          "n": 125112,
+          "negative_fraction": 0.48167242151032674,
+          "nonzero_positive_fraction": 0.5183275784896733,
+          "positive_fraction": 0.5183275784896733,
+          "quantiles": {
+            "p01": -0.03235463531268052,
+            "p05": -0.020500448723996523,
+            "p25": -0.007639577490105687,
+            "p50": 0.000560557672964479,
+            "p75": 0.008802442900153196,
+            "p95": 0.021726205013196616,
+            "p99": 0.03418993598805346
+          },
+          "std": 0.1933049168462938,
+          "zero_fraction": 0.0
+        }
+      }
+    }
+  },
+  "protocol_id": "bjoc-mmp-feasibility-v1",
+  "target_reconstruction_per_molecule": {
+    "community": {
+      "abs_max": 7.122689665326057,
+      "abs_mean": 0.015178558999437382,
+      "abs_median": 0.006716543840629252,
+      "abs_p95": 0.022806919026647672,
+      "constants": {
+        "SA_mean": -3.053662860929663,
+        "SA_std": 0.8315096218718826,
+        "cycle_mean": -0.04856968732876976,
+        "cycle_std": 0.2859726330705808,
+        "logP_mean": 2.4570953396190123,
+        "logP_std": 1.4498737504491803
+      },
+      "n": 9996,
+      "std": 0.16871455757247344
+    },
+    "dataset": {
+      "abs_max": 6.885623874846116,
+      "abs_mean": 0.009229626288041979,
+      "abs_median": 0.001337233012646516,
+      "abs_p95": 0.003787054907280929,
+      "constants": {
+        "SA_mean": -3.053303378915154,
+        "SA_std": 0.8349004334000893,
+        "cycle_mean": -0.049082804181899815,
+        "cycle_std": 0.2902886264277354,
+        "logP_mean": 2.4571235825155546,
+        "logP_std": 1.4343304662156684
+      },
+      "n": 9996,
+      "std": 0.16431506874752583
+    }
+  }
+}
