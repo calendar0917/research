@@ -522,9 +522,10 @@ def phase0() -> dict[str, Any]:
         **_sign_test_one_sided(gaps),
         "coverage": cover,
         "coverage_definition": "fraction of IG top-4 junctions with >=1 same-molecule control matched on (signature, center degree, ring), dev-decile preferred",
-        "matched_junctions": int(gaps.size),
+        "n_matched_molecules": int(gaps.size),
+        "n_matched_junctions": int(sum(r["matched_cover_hits"] for r in b_records)),
+        "unit": "one gap per molecule (mean over its matched top-4 junctions); bootstrap/sign test over molecules",
         "dev_decile_exact_fraction": dev_exact,
-        "n_molecules_with_controls": int(sum(1 for r in b_records if r["matched_control_gap"] is not None)),
     }
     # structural composition comparison
     comp: dict[str, Any] = {}

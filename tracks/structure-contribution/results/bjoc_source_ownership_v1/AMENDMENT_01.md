@@ -44,3 +44,14 @@ Amendment recorded here, in `configs/bjoc_source_ownership_v1.yaml`, and in
 `PROTOCOL.md`.  The protocol freeze is re-issued after this amendment
 (`protocol_freeze.json` hash changes; the git commit of this file is the
 before/after boundary).
+
+## A1.3 Post-execution reporting-label fix (no statistic change)
+
+The first full Phase-0 run (2026-10-15, verdict unchanged) reported the
+matched-control aggregate with a misleading key `matched_junctions = 366`: the
+bootstrap/sign unit is the **molecule** (one gap per molecule = mean over its
+matched top-4 junctions), and the true covered-junction count is 640.  The JSON
+keys are now `n_matched_molecules` (366) and `n_matched_junctions` (640) with an
+explicit `unit` field.  No value, gate, statistic or decision changes.  The
+pre-fix payload is preserved as `phase0_pre_label_fix.json`; the canonical
+payload was regenerated with the frozen seeds and matches it numerically.
