@@ -40,3 +40,17 @@ the old per-graph loop independently and asserts bit-exact equality of
   grouping.  The frozen freeze is re-issued; the comparison stays within one
   protocol because only the implementation speed of the sham changed, and the
   equivalence test pins the semantics.
+
+## A2.1 Trained-soup mechanism completeness (analysis code, pre-mechanism-run)
+
+Before the mechanism audit ran, `cmd_mechanism` was extended to evaluate the two
+frozen mechanism-gate items directly on the trained soups instead of relying on
+the init-time CPU-gate evidence:
+
+* per-molecule `c` invariance under a random `p_global` override
+  (`torch.equal(f0["c"], f_glob["c"])`, all arms/seeds/molecules);
+* for O, editing one junction's incidence on 3 real molecules and asserting
+  `c_e` is bit-identical outside the touched bonds.
+
+These are assertions of already-frozen gate properties (config `gates_seed0.mechanism`),
+not new statistics.  No protocol quantity, gate threshold or decision changes.

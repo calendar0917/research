@@ -1221,7 +1221,7 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
             model = _load_arm_model(arm, seed, device)
             model.eval()
             faith, local_delta, global_delta, c_norm = [], [], [], []
-            bond_grads = []
+            c_global_unchanged = []
             for obj in objs:
                 batch = own.batch_objects_with_keys([obj], own.molecule_keys([obj]))
                 with torch.no_grad():
@@ -1230,6 +1230,8 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
                     p_local = model(batch, zero_local=True)
                     rnd = torch.randn_like(f0["p_global"])
                     p_global = model(batch, p_override=rnd)
+                    f_glob = model.forward_features(batch, p_override=rnd)
+                c_global_unchanged.append(bool(torch.equal(f0["c"], f_glob["c"])))
                 c = f0["c"]
                 attr = c.norm(dim=1).numpy()
                 deltas = np.zeros(c.shape[0])
@@ -1242,14 +1244,36 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
                 c_norm.append(attr)
                 attributions[(arm, seed)] = np.concatenate([attributions.get((arm, seed), np.zeros(0)), attr])
             faith = np.asarray(faith)
-            payload["per_arm_seed"][f"{arm}:{seed}"] = {
+            entry = {
                 "local_pathway_delta_mean_abs": float(np.mean(local_delta)),
                 "global_block_delta_mean_abs": float(np.mean(global_delta)),
                 "faithfulness_spearman_mean": float(np.nanmean(faith)),
                 "faithfulness_spearman_median": float(np.nanmedian(faith)),
                 "faithfulness_above_0.5_fraction": float(np.mean(np.asarray(faith) >= 0.5)),
                 "mean_bond_attribution_norm": float(np.mean([a.mean() for a in c_norm])),
+                "c_unchanged_under_p_global_override": bool(all(c_global_unchanged)),
             }
+            if arm == "O" and seed in seeds:
+                iso_pass, iso_seen = True, 0
+                for obj in objs[:3]:
+                    single = own.batch_objects_with_keys([obj], own.molecule_keys([obj]))
+                    if single["junc_feat"].shape[0] < 1:
+                        continue
+                    bonds = single["junc_bond"][0].tolist()
+                    candidates = [b for b in range(single["bond_feat"].shape[0]) if b not in bonds]
+                    if not candidates:
+                        continue
+                    iso_seen += 1
+                    edited = own.clone_batch(single)
+                    new = torch.as_tensor(candidates[:2] if len(candidates) >= 2 else candidates, dtype=torch.long)
+                    edited["junc_bond"][0] = new
+                    touched = set(bonds) | set(new.tolist())
+                    with torch.no_grad():
+                        c0 = model.forward_features(single)["c"]
+                        c1 = model.forward_features(edited)["c"]
+                    iso_pass = iso_pass and all(torch.equal(c0[e], c1[e]) for e in range(c0.shape[0]) if e not in touched)
+                entry["trained_ownership_isolation"] = {"pass": bool(iso_pass), "molecules_checked": iso_seen}
+            payload["per_arm_seed"][f"{arm}:{seed}"] = entry
     if len(seeds) == 2:
         for arm in ARMS:
             if (arm, 0) in attributions and (arm, 1) in attributions:
@@ -1258,9 +1282,12 @@ def cmd_mechanism(args: argparse.Namespace) -> int:
         "local_pathway_deletion_faithfulness": float(np.nanmean([payload["per_arm_seed"][f"O:{s}"]["faithfulness_spearman_mean"] for s in seeds])),
         "min_local_pathway_delta": float(min(payload["per_arm_seed"][f"{a}:{s}"]["local_pathway_delta_mean_abs"] for a in ("O",) for s in seeds)),
     }
+    iso_entries = [v.get("trained_ownership_isolation", {}).get("pass", True) for k, v in payload["per_arm_seed"].items() if k.startswith("O:")]
     payload["gates"] = {
         "faithfulness": bool(metrics["local_pathway_deletion_faithfulness"] >= 0.5),
         "local_pathway_used": bool(metrics["min_local_pathway_delta"] > 1e-6),
+        "global_block_cannot_change_c": bool(all(v["c_unchanged_under_p_global_override"] for v in payload["per_arm_seed"].values())),
+        "trained_ownership_isolation": bool(all(iso_entries)),
     }
     payload["metrics"] = metrics
     write_json(OUT / f"mechanism_s{'_'.join(str(s) for s in seeds)}.json", payload)
