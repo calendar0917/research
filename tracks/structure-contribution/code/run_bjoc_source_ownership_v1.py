@@ -1312,8 +1312,11 @@ def cmd_valid_secondary(args: argparse.Namespace) -> int:
         sources["P3D"][seed] = _load_pred(valid_pred_path_p3(seed))
     for arm in ARMS:
         for seed in SEEDS:
+            path = valid_pred_path(arm, seed)
+            if not path.exists():
+                continue
             sources[arm] = sources.get(arm, {})
-            sources[arm][seed] = _load_pred(valid_pred_path(arm, seed))
+            sources[arm][seed] = _load_pred(path)
     for name, per_seed in sources.items():
         if not per_seed:
             continue
@@ -1327,6 +1330,7 @@ def cmd_valid_secondary(args: argparse.Namespace) -> int:
         d = _mae(sources["O"][0], y) - _mae(sources["R3"][0], y)
         payload["O_minus_R3_seed0"] = {**_bootstrap(d), **bsaf.sign_test(d)}
     payload["reference_frozen_r3_official_valid"] = VALID_REFERENCE_R3
+    payload["arm_seeds_available"] = {a: sorted(p) for a, p in sources.items() if a in ARMS}
     guard = read_json(OUT / "valid_reference.json").get("replay_guard") if (OUT / "valid_reference.json").exists() else None
     if guard is not None and not guard.get("pass"):
         raise SystemExit("R3 valid replay guard failed; re-run valid-reference before reading this comparison")

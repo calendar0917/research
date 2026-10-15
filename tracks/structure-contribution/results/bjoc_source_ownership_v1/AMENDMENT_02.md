@@ -54,3 +54,10 @@ the init-time CPU-gate evidence:
 
 These are assertions of already-frozen gate properties (config `gates_seed0.mechanism`),
 not new statistics.  No protocol quantity, gate threshold or decision changes.
+
+## A2.2 valid-secondary seed availability (analysis code, post-seed-0 decision)
+
+`cmd_valid_secondary` assumed both seeds existed for every arm.  Seed 1 was not
+purchased (seed-0 gates failed), so the command now uses every seed file that
+exists and records `arm_seeds_available`.  No selection, threshold or gate uses
+the official-valid set; it remains descriptive only.
