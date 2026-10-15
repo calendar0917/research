@@ -533,3 +533,48 @@ def test_runner_prediction_paths_are_frozen_and_locked_never_read():
     assert "objects_test" not in text
     assert "locked_y" not in text
     assert "monitor_read.lock" in text
+
+
+def test_sham_vectorized_grouping_matches_per_graph_reference():
+    """The vectorised S grouping must reproduce the naive per-graph draw exactly."""
+    _, model, _ = _build(own.MODE_S)
+    objs = _tiny_world(8)
+    batch = _batch(objs)
+    with torch.no_grad():
+        a = model.encode_atoms(batch)
+        b = model.encode_bonds(a, batch)
+        w = model.encode_junctions(a, b, batch)
+        W1, V1, n1 = model.group_to_bonds_ownership(w, batch, own.MODE_S)
+        junc_bond, bond_batch, junc_batch = batch["junc_bond"], batch["bond_batch"], batch["junc_batch"]
+        n_bonds = int(batch["bond_feat"].shape[0])
+        n_e = torch.zeros(n_bonds)
+        n_e.index_add_(0, junc_bond.reshape(-1), torch.ones(junc_bond.numel()))
+        jkey = model._junction_key(batch["junc_feat"], w)
+        idx = batch["bond_index"]
+        au = batch["atom_feat"][idx[:, 0]]
+        av = batch["atom_feat"][idx[:, 1]]
+        bkey = model._bond_key(batch["bond_feat"], au, av, n_e).view(torch.int64)
+        W = torch.zeros_like(W1)
+        V = torch.zeros_like(V1)
+        for g in range(int(batch["n_graphs"])):
+            jm = junc_batch == g
+            bm = bond_batch == g
+            nj = int(jm.sum())
+            if nj == 0:
+                continue
+            bg = torch.nonzero(bm).reshape(-1)
+            ne = n_e[bg].to(torch.int64)
+            if int(ne.sum()) == 0:
+                continue
+            wcan = w[jm][torch.argsort(jkey[jm], stable=True)]
+            e_idx = torch.repeat_interleave(bg, ne)
+            k_idx = torch.cat([torch.arange(int(m)) for m in ne.tolist()])
+            h = (batch["mol_key"][g] * own.MIX_MUL_A) ^ (bkey[e_idx] * own.MIX_MUL_B) ^ (k_idx * 2654435761)
+            h = torch.bitwise_and(h, own.MIX_MASK)
+            r = torch.remainder(h, nj).to(torch.int64)
+            drawn = wcan[r]
+            W.index_add_(0, e_idx, drawn)
+            V.index_add_(0, e_idx, drawn * drawn)
+    assert torch.equal(W1, W)
+    assert torch.equal(V1, V)
+    assert torch.equal(n1, n_e)

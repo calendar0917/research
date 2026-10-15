@@ -265,26 +265,29 @@ class BJOCSourceOwnership(src.BJOC):
 
         W = torch.zeros((n_bonds, w.shape[1]), device=device, dtype=dtype)
         V = torch.zeros_like(W)
-        for g in range(n_graphs):
-            jm = junc_batch == g
-            bm = bond_batch == g
-            nj = int(jm.sum())
-            if nj == 0:
-                continue
-            bg = torch.nonzero(bm).reshape(-1)
-            ne = n_e[bg].to(torch.int64)
-            total = int(ne.sum())
-            if total == 0:
-                continue
-            wcan = w[jm][torch.argsort(jkey[jm], stable=True)]
-            e_idx = torch.repeat_interleave(bg, ne)
-            k_idx = torch.cat([torch.arange(int(m), device=device) for m in ne.tolist()])
-            h = (mol_key[g] * MIX_MUL_A) ^ (bkey[e_idx] * MIX_MUL_B) ^ (k_idx * 2654435761)
-            h = torch.bitwise_and(h, MIX_MASK)
-            r = torch.remainder(h, nj).to(torch.int64)
-            drawn = wcan[r]
-            W.index_add_(0, e_idx, drawn)
-            V.index_add_(0, e_idx, drawn * drawn)
+
+        # Canonical pool order per molecule: stable sort by key, then stable sort
+        # by molecule -> lexicographic (molecule, key) with original index as the
+        # final tie-break, matching the per-graph `argsort(jkey[jm], stable=True)`.
+        order = torch.argsort(jkey, stable=True)
+        order = order[torch.argsort(junc_batch[order], stable=True)]
+        wcan_all = w[order]
+        nj_per_mol = torch.bincount(junc_batch, minlength=n_graphs)
+        starts = torch.cumsum(nj_per_mol, 0) - nj_per_mol
+
+        counts_long = n_e.to(torch.int64)
+        e_idx = torch.repeat_interleave(torch.arange(n_bonds, device=device), counts_long)
+        if int(e_idx.numel()) == 0:
+            return W, V, n_e
+        k_idx = torch.arange(e_idx.numel(), device=device, dtype=torch.int64) - torch.repeat_interleave(
+            torch.cumsum(counts_long, 0) - counts_long, counts_long
+        )
+        h = (mol_key[bond_batch[e_idx]] * MIX_MUL_A) ^ (bkey[e_idx] * MIX_MUL_B) ^ (k_idx * 2654435761)
+        h = torch.bitwise_and(h, MIX_MASK)
+        r = torch.remainder(h, nj_per_mol[bond_batch[e_idx]]).to(torch.int64)
+        drawn = wcan_all[starts[bond_batch[e_idx]] + r]
+        W.index_add_(0, e_idx, drawn)
+        V.index_add_(0, e_idx, drawn * drawn)
         return W, V, n_e
 
     # -- forward -------------------------------------------------------------
