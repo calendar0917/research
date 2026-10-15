@@ -1,0 +1,799 @@
+{
+  "namespace": "bjoc_structure_explanation_audit_v1",
+  "git_commit": "3e816cb4ffc74fb6b17fe4c13f1a88b4d3549d56",
+  "layers": [
+    {
+      "layer": "L0_raw_graph",
+      "tensor": "x, edge_index, edge_attr",
+      "computed_from": "molecule atoms/bonds",
+      "dependency_class": "whole molecule (input)",
+      "structural_anchor": "each atom/bond row",
+      "recoverable_after_graph_pooling": true,
+      "evidence": "definition"
+    },
+    {
+      "layer": "L1_atom_features",
+      "tensor": "a_i_raw (108)",
+      "computed_from": "own type; degree/neighbour bond-type histogram (r=1); neighbour-type histogram (r=1); radius-2 atom-type histogram (r=2); 2-path count (r=1); n_d2 (r=2); triangles (r=1); in_ring / min_ring_size / ring-bond counts / fused flag (biconnected component, in the worst case the whole molecule)",
+      "dependency_class": "pointwise + radius-1 + radius-2 + global ring features",
+      "structural_anchor": "atom i",
+      "recoverable_after_graph_pooling": false,
+      "evidence": "code + `_a1_receptive_probe` + `_a1_ring_global_witness`"
+    },
+    {
+      "layer": "L1_bond_features",
+      "tensor": "bond_feat (7)",
+      "computed_from": "bond type; is_ring / endpoint ring flags (biconnected components)",
+      "dependency_class": "pointwise + global ring features",
+      "structural_anchor": "physical bond (u,v)",
+      "recoverable_after_graph_pooling": false,
+      "evidence": "code"
+    },
+    {
+      "layer": "L1_junction_features",
+      "tensor": "junc_feat (32)",
+      "computed_from": "centre degree; i-k adjacency; common neighbours (r=2); ring-bond flags (global); centre ring features (global); two bond types",
+      "dependency_class": "radius-2 (+ global ring features)",
+      "structural_anchor": "junction (i,j,k) centred at j",
+      "recoverable_after_graph_pooling": false,
+      "evidence": "code"
+    },
+    {
+      "layer": "L1_global_features",
+      "tensor": "g (33)",
+      "computed_from": "whole-molecule counts, distances, ring statistics, type fractions",
+      "dependency_class": "global graph summary",
+      "structural_anchor": "none (molecule level)",
+      "recoverable_after_graph_pooling": "already a summary",
+      "evidence": "code"
+    },
+    {
+      "layer": "L2_atom_encoder",
+      "tensor": "a_i (96) = AtomMLP(a_i_raw)",
+      "computed_from": "a_i_raw pointwise (shared MLP)",
+      "dependency_class": "inherits L1_atom_features exactly",
+      "structural_anchor": "atom i",
+      "recoverable_after_graph_pooling": false,
+      "evidence": "code (pointwise MLP adds no receptive field)"
+    },
+    {
+      "layer": "L2_bond_encoder",
+      "tensor": "b_uv (96) = BondMLP(a_u, a_v, bond_feat)",
+      "computed_from": "union of the two atom contexts (<= r=2 from each endpoint) + bond type/global ring flags",
+      "dependency_class": "local (radius <= 3 around the bond) + global ring scalars",
+      "structural_anchor": "physical bond (u,v)",
+      "recoverable_after_graph_pooling": false,
+      "evidence": "code"
+    },
+    {
+      "layer": "L2_junction_encoder",
+      "tensor": "w_ijk (96) = JuncMLP(a_i, a_j, a_k, b_ij, b_jk, junc_feat)",
+      "computed_from": "endpoints i,k and centre j with their radius-2 features + the two incident bond embeddings",
+      "dependency_class": "local (radius <= 3 around centre j) + global ring scalars",
+      "structural_anchor": "junction (i,j,k)",
+      "recoverable_after_graph_pooling": false,
+      "evidence": "code"
+    },
+    {
+      "layer": "L3_null_grouping",
+      "tensor": "W_b (96), V_b (96), n_b (1)",
+      "computed_from": "n_b = deg(u)+deg(v)-2; W_b = n_b * mean_graph(w); V_b = n_b * mean_graph(w^2)",
+      "dependency_class": "n_b local, W_b/V_b global (whole-molecule junction multiset)",
+      "structural_anchor": "bond index only; not a local function",
+      "recoverable_after_graph_pooling": false,
+      "evidence": "code + `_a2_static_identity` + `_a2_model_formula_check` + `_a3_witness`"
+    },
+    {
+      "layer": "L4_composer",
+      "tensor": "c_b (96) = PSI(b_b, W_b, V_b, log1p(n_b), bond_feat)",
+      "computed_from": "local b_b/bond_feat + global W_b/V_b",
+      "dependency_class": "anchored at bond b but globally mixed",
+      "structural_anchor": "bond index only",
+      "recoverable_after_graph_pooling": false,
+      "evidence": "`_a3_witness` (+ Phase B3)"
+    },
+    {
+      "layer": "L5_reader_input",
+      "tensor": "reader_in = [sum_b c_b (96), sum_i a_i (96), sum_i a_i^2 (96), g (33)]",
+      "computed_from": "graph-level sums and the fixed global vector",
+      "dependency_class": "global aggregate",
+      "structural_anchor": "none at instance level",
+      "recoverable_after_graph_pooling": false,
+      "evidence": "code + old audit collision search"
+    },
+    {
+      "layer": "L6_reader",
+      "tensor": "y_hat = READER(reader_in)",
+      "computed_from": "non-linear 2-hidden-layer MLP on the 321-dim graph vector",
+      "dependency_class": "global",
+      "structural_anchor": "none at instance level",
+      "recoverable_after_graph_pooling": false,
+      "evidence": "code"
+    }
+  ],
+  "a1_receptive_probe": {
+    "records": [
+      {
+        "row": 9676,
+        "diameter": 14,
+        "center": 2,
+        "flip_atom": 1,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 9676,
+        "diameter": 14,
+        "center": 2,
+        "flip_atom": 0,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 9676,
+        "diameter": 14,
+        "center": 2,
+        "flip_atom": 6,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 9676,
+        "diameter": 14,
+        "center": 2,
+        "flip_atom": 7,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 794,
+        "diameter": 15,
+        "center": 3,
+        "flip_atom": 2,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 794,
+        "diameter": 15,
+        "center": 3,
+        "flip_atom": 1,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 794,
+        "diameter": 15,
+        "center": 3,
+        "flip_atom": 0,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 794,
+        "diameter": 15,
+        "center": 3,
+        "flip_atom": 7,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 7092,
+        "diameter": 9,
+        "center": 1,
+        "flip_atom": 0,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 7092,
+        "diameter": 9,
+        "center": 1,
+        "flip_atom": 3,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 7092,
+        "diameter": 9,
+        "center": 1,
+        "flip_atom": 5,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 7092,
+        "diameter": 9,
+        "center": 1,
+        "flip_atom": 6,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 9297,
+        "diameter": 13,
+        "center": 1,
+        "flip_atom": 0,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 9297,
+        "diameter": 13,
+        "center": 1,
+        "flip_atom": 4,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 9297,
+        "diameter": 13,
+        "center": 1,
+        "flip_atom": 5,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 9297,
+        "diameter": 13,
+        "center": 1,
+        "flip_atom": 6,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 4542,
+        "diameter": 14,
+        "center": 1,
+        "flip_atom": 0,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 4542,
+        "diameter": 14,
+        "center": 1,
+        "flip_atom": 3,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 4542,
+        "diameter": 14,
+        "center": 1,
+        "flip_atom": 4,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 4542,
+        "diameter": 14,
+        "center": 1,
+        "flip_atom": 5,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 5916,
+        "diameter": 12,
+        "center": 2,
+        "flip_atom": 1,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 5916,
+        "diameter": 12,
+        "center": 2,
+        "flip_atom": 0,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 5916,
+        "diameter": 12,
+        "center": 2,
+        "flip_atom": 7,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 5916,
+        "diameter": 12,
+        "center": 2,
+        "flip_atom": 9,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 1756,
+        "diameter": 18,
+        "center": 2,
+        "flip_atom": 1,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 1756,
+        "diameter": 18,
+        "center": 2,
+        "flip_atom": 0,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 1756,
+        "diameter": 18,
+        "center": 2,
+        "flip_atom": 5,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 1756,
+        "diameter": 18,
+        "center": 2,
+        "flip_atom": 6,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 674,
+        "diameter": 12,
+        "center": 1,
+        "flip_atom": 0,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 674,
+        "diameter": 12,
+        "center": 1,
+        "flip_atom": 3,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 674,
+        "diameter": 12,
+        "center": 1,
+        "flip_atom": 4,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 674,
+        "diameter": 12,
+        "center": 1,
+        "flip_atom": 5,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 5713,
+        "diameter": 11,
+        "center": 2,
+        "flip_atom": 1,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 5713,
+        "diameter": 11,
+        "center": 2,
+        "flip_atom": 0,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 5713,
+        "diameter": 11,
+        "center": 2,
+        "flip_atom": 6,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 5713,
+        "diameter": 11,
+        "center": 2,
+        "flip_atom": 7,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 157,
+        "diameter": 16,
+        "center": 1,
+        "flip_atom": 0,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 157,
+        "diameter": 16,
+        "center": 1,
+        "flip_atom": 3,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 157,
+        "diameter": 16,
+        "center": 1,
+        "flip_atom": 4,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 157,
+        "diameter": 16,
+        "center": 1,
+        "flip_atom": 8,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 6615,
+        "diameter": 13,
+        "center": 3,
+        "flip_atom": 2,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 6615,
+        "diameter": 13,
+        "center": 3,
+        "flip_atom": 1,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 6615,
+        "diameter": 13,
+        "center": 3,
+        "flip_atom": 0,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 6615,
+        "diameter": 13,
+        "center": 3,
+        "flip_atom": 9,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 3884,
+        "diameter": 13,
+        "center": 4,
+        "flip_atom": 3,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 3884,
+        "diameter": 13,
+        "center": 4,
+        "flip_atom": 2,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 3884,
+        "diameter": 13,
+        "center": 4,
+        "flip_atom": 1,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 3884,
+        "diameter": 13,
+        "center": 4,
+        "flip_atom": 0,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 9966,
+        "diameter": 13,
+        "center": 4,
+        "flip_atom": 3,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 9966,
+        "diameter": 13,
+        "center": 4,
+        "flip_atom": 2,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 9966,
+        "diameter": 13,
+        "center": 4,
+        "flip_atom": 1,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 9966,
+        "diameter": 13,
+        "center": 4,
+        "flip_atom": 0,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 7847,
+        "diameter": 14,
+        "center": 2,
+        "flip_atom": 1,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 7847,
+        "diameter": 14,
+        "center": 2,
+        "flip_atom": 0,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 7847,
+        "diameter": 14,
+        "center": 2,
+        "flip_atom": 5,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 7847,
+        "diameter": 14,
+        "center": 2,
+        "flip_atom": 6,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 2808,
+        "diameter": 16,
+        "center": 1,
+        "flip_atom": 0,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 2808,
+        "diameter": 16,
+        "center": 1,
+        "flip_atom": 3,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 2808,
+        "diameter": 16,
+        "center": 1,
+        "flip_atom": 4,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 2808,
+        "diameter": 16,
+        "center": 1,
+        "flip_atom": 5,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      },
+      {
+        "row": 5207,
+        "diameter": 10,
+        "center": 1,
+        "flip_atom": 0,
+        "graph_distance": 1,
+        "changed_blocks": {
+          "neighbour_types": 1.0
+        }
+      },
+      {
+        "row": 5207,
+        "diameter": 10,
+        "center": 1,
+        "flip_atom": 4,
+        "graph_distance": 2,
+        "changed_blocks": {
+          "radius2_types": 1.0
+        }
+      },
+      {
+        "row": 5207,
+        "diameter": 10,
+        "center": 1,
+        "flip_atom": 5,
+        "graph_distance": 3,
+        "changed_blocks": {}
+      },
+      {
+        "row": 5207,
+        "diameter": 10,
+        "center": 1,
+        "flip_atom": 6,
+        "graph_distance": 4,
+        "changed_blocks": {}
+      }
+    ],
+    "block_distance_summary": {
+      "atom_type": {
+        "observed_changed_at_distances": [],
+        "n_records": 0
+      },
+      "degree": {
+        "observed_changed_at_distances": [],
+        "n_records": 0
+      },
+      "in_ring": {
+        "observed_changed_at_distances": [],
+        "n_records": 0
+      },
+      "min_ring_size": {
+        "observed_changed_at_distances": [],
+        "n_records": 0
+      },
+      "ring_bonds": {
+        "observed_changed_at_distances": [],
+        "n_records": 0
+      },
+      "bond_type_counts": {
+        "observed_changed_at_distances": [],
+        "n_records": 0
+      },
+      "neighbour_types": {
+        "observed_changed_at_distances": [
+          1
+        ],
+        "n_records": 16
+      },
+      "radius2_types": {
+        "observed_changed_at_distances": [
+          2
+        ],
+        "n_records": 16
+      },
+      "radius2_stats": {
+        "observed_changed_at_distances": [],
+        "n_records": 0
+      },
+      "roles": {
+        "observed_changed_at_distances": [],
+        "n_records": 0
+      }
+    }
+  },
+  "a1_ring_global_witness": {
+    "synthetic_cycle_14": {
+      "full": {
+        "in_ring_atom0": 1.0,
+        "min_ring_size_bucket_atom0": 5
+      },
+      "remote_bond_cut_(6,7)": {
+        "in_ring_atom0": 0.0,
+        "min_ring_size_bucket_atom0": -1
+      }
+    },
+    "two_cycles_bridge_0_6": {
+      "atom0_ring_features_full": {
+        "in_ring_atom0": 1.0,
+        "min_ring_size_bucket_atom0": 3
+      },
+      "atom0_ring_features_remote_cut": {
+        "in_ring_atom0": 1.0,
+        "min_ring_size_bucket_atom0": 3
+      }
+    },
+    "interpretation": "fixed ring features (in_ring, min_ring_size) are functions of the biconnected component: cutting a remote bond of the SAME cycle changes atom 0, cutting a bond of a different biconnected component does not"
+  },
+  "a2_static_identity": {
+    "n_molecules_checked": 10000,
+    "n_bonds_total": 249279,
+    "n_junctions_total": 346358,
+    "max_abs_n_b_minus_degree_formula": 0.0,
+    "max_abs_sum_n_b_minus_2_n_junc": 0.0,
+    "formula": "n_b = degree(u) + degree(v) - 2",
+    "verdict": "N_B_EXACT"
+  },
+  "a2_model_formula_check": {
+    "formulas": {
+      "W_b": "n_b * mean_graph(w)",
+      "V_b": "n_b * mean_graph(w^2)",
+      "sum_b W_b": "2 * n_junctions * mean_graph(w)"
+    },
+    "checks": {
+      "max_abs_W_model_minus_nb_times_mean_w": 0.0,
+      "max_abs_V_model_minus_nb_times_mean_w2": 0.0,
+      "max_abs_sum_b_W_b_minus_2_n_junc_mean_w": 9.5367431640625e-06,
+      "sum_identity_tolerance": 0.000482768783569336
+    },
+    "verdict": "NULL_FORMULA_EXACT"
+  },
+  "a3_remote_junction_witness": {
+    "junction_row_perturbed": 0,
+    "molecule_junction_count": 36,
+    "perturbation_norm": 0.1,
+    "max_abs_delta_W_minus_formula": 8.048664312809706e-08,
+    "n_bonds_molecule0": 27,
+    "max_abs_delta_c_molecule0": 0.0007912516593933105,
+    "fraction_molecule0_bonds_with_abs_delta_c_gt_1e_6": 1.0,
+    "verdict": "REMOTE_JUNCTION_REACHES_ALL_BONDS"
+  },
+  "labels_used": false,
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+}

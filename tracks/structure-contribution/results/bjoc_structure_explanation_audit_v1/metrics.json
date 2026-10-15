@@ -1,0 +1,130 @@
+{
+  "namespace": "bjoc_structure_explanation_audit_v1",
+  "git_commit": "3e816cb4ffc74fb6b17fe4c13f1a88b4d3549d56",
+  "generated_at_utc": "2026-10-15T02:47:32Z",
+  "decisions": {
+    "NONLOCAL_MIXING_LIMITS_ATTRIBUTION": {
+      "status": "SUPPORTED",
+      "strength": "algebraic + numeric intervention",
+      "reason": "every c_b contains n_b * mean_graph(w); one encoded junction perturbed changes all 24.7/24.7 bonds on average with no decay versus graph distance"
+    },
+    "GLOBAL_BYPASS_OR_REDUNDANCY_OBSERVED": {
+      "status": "SUPPORTED (representation redundancy; reader-usage redundancy weaker)",
+      "strength": "numeric (ridge R2 on frozen reader_in)",
+      "reason": "global_topology ridge R2 0.92 from the other three blocks; sum_atom/sum_atom_squared 0.95/0.90; global block also has the smallest intervention sensitivity"
+    },
+    "EXISTING_INTERFACE_POTENTIALLY_USABLE": {
+      "status": "NOT SUPPORTED for connected-substructure explanation",
+      "strength": "numeric (Phase C) + algebraic",
+      "reason": "connected 8-bond masking is indistinguishable from random same-size masking; ~60% of the c_b norm is the graph-level term"
+    },
+    "INCONCLUSIVE": {
+      "status": "for faithful connected-substructure attribution and for whether local information would improve MAE",
+      "strength": "no evidence either way; would require retraining"
+    }
+  },
+  "evidence_classes": {
+    "algebraic": [
+      "Null grouping W_b = n_b * mean_graph(w), V_b = n_b * mean_graph(w^2) is exact",
+      "n_b = deg(u) + deg(v) - 2 is exact on simple molecular graphs",
+      "ownership (which junction touches which bond) is discarded by the Null grouping after encoding",
+      "any change of one encoded w_j changes W_b for every bond of the molecule"
+    ],
+    "numeric_intervention": [
+      "4 reader-block zero / matched-reference sensitivity",
+      "remote-junction encoded perturbation propagation and dose response",
+      "connected-substructure c-masking probe"
+    ],
+    "unsupported": [
+      "chemical causality of any masking/replacement",
+      "faithful connected-substructure attribution without retraining"
+    ]
+  },
+  "artifact_sha256": {
+    "phase_a_dependency.json": "dd08ee310189b130bf3d2b034df4951a4e87d80d552650b2e53f55ec2db68bc4",
+    "phase_b_baseline.json": "9017c848deaf6511682690c361ce0eb92da17e078a301b51e213d44f0bbce6e0",
+    "phase_b_pathways.json": "c72d75aad5fb469c8628fc605d499447268158be9c0963a743abcba0ee061a29",
+    "phase_b_nonlocal.json": "98edecb4a52eb956353622c235c0c93bc8a4b26efa9d81191daf1a5e3134493d",
+    "phase_c_interface.json": "a2e9a2150b9edacb71cb7ed38ce1a1290e52c974c4f1731d34f1b7448ea4671d",
+    "sample_manifest.json": "fba398dd3df0c651b6543246cff5a168fd67d9cf5e06326f145f09364fafed28",
+    "source_manifest.json": "854d183b68c0235193d37fcbb292107af1b7ed39331772e8c5ca85969bb62132"
+  },
+  "labels_used": false,
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "headline": {
+    "n_b_identity": "N_B_EXACT",
+    "null_formula": "NULL_FORMULA_EXACT",
+    "remote_junction_witness": "REMOTE_JUNCTION_REACHES_ALL_BONDS",
+    "baseline_max_abs": {
+      "0": 0.0,
+      "1": 0.0
+    },
+    "pathway_zero": {
+      "0": {
+        "z_bond": 0.4516413304663729,
+        "sum_atom": 1.1608249357086606,
+        "sum_atom_squared": 0.9349783668294549,
+        "global_topology": 0.15164796407043468
+      },
+      "1": {
+        "z_bond": 0.4285540465498343,
+        "sum_atom": 1.1236591718625277,
+        "sum_atom_squared": 0.6902108633657917,
+        "global_topology": 0.15840018472226802
+      }
+    },
+    "pathway_reference": {
+      "0": {
+        "z_bond": 0.5685192911914783,
+        "sum_atom": 0.9508661889558425,
+        "sum_atom_squared": 0.47071333781059366,
+        "global_topology": 0.07217107265023515
+      },
+      "1": {
+        "z_bond": 0.5698620161274448,
+        "sum_atom": 0.9503079485002672,
+        "sum_atom_squared": 0.45834154036128893,
+        "global_topology": 0.08102952309127431
+      }
+    },
+    "redundancy_r2": {
+      "0": {
+        "z_bond": 0.3650867112983712,
+        "sum_atom": 0.9495028582053198,
+        "sum_atom_squared": 0.899075133841785,
+        "global_topology": 0.9172154646993749
+      },
+      "1": {
+        "z_bond": 0.3637919527856823,
+        "sum_atom": 0.9535380255225983,
+        "sum_atom_squared": 0.9049505087840651,
+        "global_topology": 0.9136641327989548
+      }
+    },
+    "nonlocal": {
+      "0": {
+        "spearman_distance_vs_abs_delta_c": -0.09405142669552491,
+        "organized_mean_abs_delta_pred": 0.040370105765759945,
+        "mean_n_changed_W_organized": 2.0
+      },
+      "1": {
+        "spearman_distance_vs_abs_delta_c": -0.10754149387061569,
+        "organized_mean_abs_delta_pred": 0.03208342261496,
+        "mean_n_changed_W_organized": 2.0
+      }
+    },
+    "phase_c": {
+      "0": {
+        "mean_abs_delta_connected": 0.13296024966984987,
+        "mean_abs_delta_random_connected": 0.11451973090879619,
+        "mean_global_fraction_of_c": 0.6324209570884705
+      },
+      "1": {
+        "mean_abs_delta_connected": 0.11464725423138589,
+        "mean_abs_delta_random_connected": 0.11173990117094945,
+        "mean_global_fraction_of_c": 0.6457005739212036
+      }
+    }
+  }
+}
