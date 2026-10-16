@@ -1,0 +1,4559 @@
+{
+ "composition_selection": {
+  "dev_composition_graphs": 4,
+  "dev_vs_test_composition_accuracy": {
+   "C_seed0_dev": {
+    "hard_accuracy": 0.5,
+    "n": 4
+   },
+   "C_seed0_test": {
+    "hard_accuracy": 0.5,
+    "n": 8
+   },
+   "C_seed1_dev": {
+    "hard_accuracy": 0.5,
+    "n": 4
+   },
+   "C_seed1_test": {
+    "hard_accuracy": 0.5,
+    "n": 8
+   },
+   "D_seed0_dev": {
+    "hard_accuracy": 0.75,
+    "n": 4
+   },
+   "D_seed0_test": {
+    "hard_accuracy": 0.5,
+    "n": 8
+   },
+   "D_seed1_dev": {
+    "hard_accuracy": 0.5,
+    "n": 4
+   },
+   "D_seed1_test": {
+    "hard_accuracy": 0.5,
+    "n": 8
+   }
+  },
+  "model_selection": "train_arm selects the checkpoint by dev balanced accuracy over all 16 dev graphs, 4 of which are composition; composition labels therefore influenced checkpoint selection even though no composition graph contributes training gradients.",
+  "test_composition_graphs": 8,
+  "train_composition_graphs": 0
+ },
+ "determinism_checks": {
+  "interpretation": "Same exact SAP -> same 35-d feature -> same encoder output -> same hard argmax, so every concept is a deterministic coarsening of SAP. Consequences: cross_base_consistency=1.0 is guaranteed up to tie-breaking, and I(concept;label|SAP)=0 is guaranteed by construction; neither is independent evidence of cross-base semantic generalisation.",
+  "per_arm_seed": {
+   "C_seed0": {
+    "examples": {},
+    "n_saps": 215,
+    "n_saps_with_nonunique_concept": 0
+   },
+   "C_seed1": {
+    "examples": {},
+    "n_saps": 215,
+    "n_saps_with_nonunique_concept": 0
+   },
+   "D_seed0": {
+    "examples": {},
+    "n_saps": 215,
+    "n_saps_with_nonunique_concept": 0
+   },
+   "D_seed1": {
+    "examples": {},
+    "n_saps": 215,
+    "n_saps_with_nonunique_concept": 0
+   }
+  }
+ },
+ "explanations_recheck": {
+  "0": {
+   "C": {
+    "N_and_O_same_concept": false,
+    "binding_rank": 2,
+    "binding_top_concept_atom_roles": {
+     "N:triangle": 68,
+     "O:chain": 2,
+     "O:ring": 7,
+     "O:triangle": 22,
+     "S:chain": 42,
+     "S:ring": 9,
+     "S:triangle": 2
+    },
+    "binding_top_key_concept": 10,
+    "relation_concept_N": 12,
+    "relation_concept_O": 3,
+    "top_pair": [
+     3,
+     3
+    ],
+    "top_pair_is_self_pair": true,
+    "top_pair_sensitivity": 0.0,
+    "true_pair": [
+     12,
+     3
+    ],
+    "true_pair_rank": 3
+   },
+   "D": {
+    "N_and_O_same_concept": false,
+    "binding_rank": 1,
+    "binding_top_concept_atom_roles": {
+     "N:chain": 6,
+     "N:triangle": 73,
+     "O:chain": 2,
+     "O:ring": 3,
+     "O:triangle": 54,
+     "S:chain": 37,
+     "S:ring": 4,
+     "S:triangle": 9
+    },
+    "binding_top_key_concept": 9,
+    "relation_concept_N": 10,
+    "relation_concept_O": 5,
+    "top_pair": [
+     7,
+     7
+    ],
+    "top_pair_is_self_pair": true,
+    "top_pair_sensitivity": 1.4235710601011913,
+    "true_pair": [
+     5,
+     10
+    ],
+    "true_pair_rank": 3
+   }
+  },
+  "1": {
+   "C": {
+    "N_and_O_same_concept": false,
+    "binding_rank": 2,
+    "binding_top_concept_atom_roles": {
+     "N:chain": 23,
+     "N:ring": 6,
+     "N:triangle": 85,
+     "O:chain": 16,
+     "O:ring": 18,
+     "O:triangle": 83,
+     "S:chain": 44,
+     "S:ring": 12,
+     "S:triangle": 18
+    },
+    "binding_top_key_concept": 8,
+    "relation_concept_N": 7,
+    "relation_concept_O": 4,
+    "top_pair": [
+     3,
+     3
+    ],
+    "top_pair_is_self_pair": true,
+    "top_pair_sensitivity": 0.0,
+    "true_pair": [
+     7,
+     4
+    ],
+    "true_pair_rank": 10
+   },
+   "D": {
+    "N_and_O_same_concept": false,
+    "binding_rank": 2,
+    "binding_top_concept_atom_roles": {
+     "N:chain": 1,
+     "N:triangle": 75,
+     "O:chain": 5,
+     "O:ring": 6,
+     "O:triangle": 51,
+     "S:chain": 38,
+     "S:ring": 8,
+     "S:triangle": 8
+    },
+    "binding_top_key_concept": 0,
+    "relation_concept_N": 3,
+    "relation_concept_O": 1,
+    "top_pair": [
+     1,
+     3
+    ],
+    "top_pair_is_self_pair": false,
+    "top_pair_sensitivity": 0.08142079412937164,
+    "true_pair": [
+     1,
+     3
+    ],
+    "true_pair_rank": 1
+   }
+  }
+ },
+ "feature_identifiability": {
+  "examples": [
+   {
+    "n_roles": 2,
+    "n_saps": 2,
+    "roles": [
+     "ring",
+     "triangle"
+    ],
+    "saps": [
+     {
+      "desc": "ACd2|ACd4|nCd1|nCd2|nCd2|nNd1;E[(0, 1), (0, 4), (1, 4), (2, 5), (3, 4), (4, 5)]",
+      "sap": "1332a4db"
+     },
+     {
+      "desc": "ACd2|ACd4|nCd1|nCd1|nCd2|nNd2;E[(0, 3), (0, 4), (1, 4), (2, 5), (3, 4), (4, 5)]",
+      "sap": "65746648"
+     }
+    ]
+   },
+   {
+    "n_roles": 2,
+    "n_saps": 1,
+    "roles": [
+     "chain|chain",
+     "ring|ring"
+    ],
+    "saps": [
+     {
+      "desc": "AOd2|ASd2|nCd1|nCd1;E[(0, 2), (1, 3), (2, 3)]",
+      "sap": "954693a1"
+     }
+    ]
+   },
+   {
+    "n_roles": 2,
+    "n_saps": 1,
+    "roles": [
+     "chain|chain",
+     "ring|ring"
+    ],
+    "saps": [
+     {
+      "desc": "ACd2|AOd2|nCd1|nSd1;E[(0, 2), (1, 3), (2, 3)]",
+      "sap": "5efadd74"
+     }
+    ]
+   },
+   {
+    "n_roles": 2,
+    "n_saps": 1,
+    "roles": [
+     "chain|chain",
+     "ring|ring"
+    ],
+    "saps": [
+     {
+      "desc": "ANd2|AOd2|nCd1|nCd1;E[(0, 2), (1, 3), (2, 3)]",
+      "sap": "c3947841"
+     }
+    ]
+   },
+   {
+    "n_roles": 2,
+    "n_saps": 1,
+    "roles": [
+     "chain|chain",
+     "ring|ring"
+    ],
+    "saps": [
+     {
+      "desc": "ACd2|AOd2|nCd1|nNd1;E[(0, 2), (1, 3), (2, 3)]",
+      "sap": "691c6b3e"
+     }
+    ]
+   }
+  ],
+  "feature_groups_merging_distinct_roles": 9,
+  "feature_groups_with_multiple_saps": 6,
+  "max_saps_per_feature": 2,
+  "n_distinct_features": 209,
+  "n_distinct_saps": 215,
+  "n_patch_instances": 1512,
+  "patch_instances_in_multi_sap_feature_groups": 30,
+  "patch_instances_in_role_merging_groups": 142
+ },
+ "generated_utc": "2026-10-16T04:11:25.548401+00:00",
+ "inputs": {
+  "concept_records": [
+   "analysis/concepts_C_seed0.jsonl",
+   "analysis/concepts_C_seed1.jsonl",
+   "analysis/concepts_D_seed0.jsonl",
+   "analysis/concepts_D_seed1.jsonl"
+  ],
+  "graphs": "code/synthetic.py#all_graphs (deterministic regeneration, no training)",
+  "metrics": [
+   "analysis/metrics_seed0.json",
+   "analysis/metrics_seed1.json"
+  ],
+  "predictions": [
+   "predictions/predictions_seed0.jsonl",
+   "predictions/predictions_seed1.jsonl"
+  ]
+ },
+ "metric_audit": {
+  "actual": {
+   "C_seed0": {
+    "dominant_concept": 12,
+    "dominant_share": 0.3080168776371308,
+    "n_concepts": 6,
+    "n_patches": 474
+   },
+   "C_seed1": {
+    "dominant_concept": 8,
+    "dominant_share": 0.3059071729957806,
+    "n_concepts": 8,
+    "n_patches": 474
+   },
+   "D_seed0": {
+    "dominant_concept": 10,
+    "dominant_share": 0.2088607594936709,
+    "n_concepts": 10,
+    "n_patches": 474
+   },
+   "D_seed1": {
+    "dominant_concept": 3,
+    "dominant_share": 0.22784810126582278,
+    "n_concepts": 7,
+    "n_patches": 474
+   }
+  },
+  "demos": {
+   "constant_collapse_seed0": {
+    "dominant_concept": 0,
+    "dominant_share": 1.0,
+    "n_concepts": 1,
+    "n_patches": 474
+   },
+   "constant_collapse_seed1": {
+    "dominant_concept": 0,
+    "dominant_share": 1.0,
+    "n_concepts": 1,
+    "n_patches": 474
+   },
+   "element_pattern_seed0": {
+    "dominant_concept": 1,
+    "dominant_share": 0.21518987341772153,
+    "n_concepts": 6,
+    "n_patches": 474
+   },
+   "element_pattern_seed1": {
+    "dominant_concept": 1,
+    "dominant_share": 0.21518987341772153,
+    "n_concepts": 6,
+    "n_patches": 474
+   },
+   "exact_sap_oracle_seed0": {
+    "dominant_concept": 171,
+    "dominant_share": 0.11814345991561181,
+    "n_concepts": 190,
+    "n_patches": 474
+   },
+   "exact_sap_oracle_seed1": {
+    "dominant_concept": 171,
+    "dominant_share": 0.11814345991561181,
+    "n_concepts": 190,
+    "n_patches": 474
+   }
+  },
+  "hungarian": {
+   "definition": "contingency_stats matched_purity = linear_sum_assignment over the concept x SAP count matrix, i.e. each concept is matched to at most one exact SAP and each SAP to at most one concept; unmatched mass scores zero. Many-to-one role abstraction is therefore punished in proportion to how many distinct exact SAPs a role spans.",
+   "per_seed": {
+    "0": {
+     "actual_hungarian_purity_test": 0.7238562091503268,
+     "actual_n_concepts_used": 10,
+     "actual_n_saps": 77,
+     "mean_saps_per_concept": 7.7,
+     "oracle_constant_hungarian_purity_test": 0.5555555555555556,
+     "oracle_exact_sap_hungarian_purity_test": 1.0,
+     "oracle_global_role_hungarian_purity_test": 0.6535947712418301,
+     "oracle_global_role_n_roles": 18,
+     "oracle_global_role_per_concept_majority_purity_test": 0.6535947712418301,
+     "oracle_local_role_hungarian_purity_test": 0.6470588235294118,
+     "oracle_local_role_n_roles": 17,
+     "oracle_local_role_per_concept_majority_purity_test": 0.6470588235294118,
+     "per_concept_majority_sap_purity_test": 0.7238562091503268,
+     "saps_per_concept_test": {
+      "0": 8,
+      "1": 3,
+      "10": 8,
+      "12": 4,
+      "15": 7,
+      "5": 11,
+      "6": 2,
+      "7": 5,
+      "8": 11,
+      "9": 18
+     },
+     "top16_train_sap_faithful_hungarian_purity_test": 0.8137254901960784
+    },
+    "1": {
+     "actual_hungarian_purity_test": 0.6666666666666666,
+     "actual_n_concepts_used": 7,
+     "actual_n_saps": 77,
+     "mean_saps_per_concept": 11.0,
+     "oracle_constant_hungarian_purity_test": 0.5555555555555556,
+     "oracle_exact_sap_hungarian_purity_test": 1.0,
+     "oracle_global_role_hungarian_purity_test": 0.6535947712418301,
+     "oracle_global_role_n_roles": 18,
+     "oracle_global_role_per_concept_majority_purity_test": 0.6535947712418301,
+     "oracle_local_role_hungarian_purity_test": 0.6470588235294118,
+     "oracle_local_role_n_roles": 17,
+     "oracle_local_role_per_concept_majority_purity_test": 0.6470588235294118,
+     "per_concept_majority_sap_purity_test": 0.6666666666666666,
+     "saps_per_concept_test": {
+      "0": 17,
+      "1": 4,
+      "12": 8,
+      "13": 9,
+      "14": 11,
+      "3": 12,
+      "8": 16
+     },
+     "top16_train_sap_faithful_hungarian_purity_test": 0.8137254901960784
+    }
+   }
+  },
+  "key_sap_purity_definition": "sub = patches whose SAP string is in the key set (any family, any split); dominant_share = share of sub assigned to the single most frequent concept. There is no SAP-to-concept matching and no recall term.",
+  "key_sap_set": {
+   "n_decisive_patches_by_position": 366,
+   "n_patches_matching_key_sap_anywhere": 1896,
+   "n_saps": 190
+  }
+ },
+ "read_only": true,
+ "role_purity_coverage_confusion": {
+  "notes": "coverage = share of test patches whose concept has train support for that role key; accuracy_covered = accuracy restricted to that subset. MI/nmi(concept;role) measures how much role information survives in the 16-prototype code on the test split; MI/nmi(feature;role) is the same for the raw 35-d input, i.e. the information available before the bottleneck (both on the same test sample, so MI(concept;role) <= MI(feature;role) by data processing). concept_purity_test reports, per concept, the share of its test patches matching its train-majority role (purity) next to the per-role recall above. role_cross_base_dominant_concept_agreement is the role-level analogue of the frozen SAP-level cross_base_consistency (which is deterministic by construction).",
+  "per_arm_seed": {
+   "C_seed0": {
+    "element_concept_confusion_test": {
+     "N": {
+      "10": 12,
+      "12": 25,
+      "13": 16,
+      "3": 20,
+      "6": 10
+     },
+     "O": {
+      "12": 34,
+      "3": 34
+     },
+     "S": {
+      "10": 2,
+      "13": 17,
+      "3": 16,
+      "6": 4
+     }
+    },
+    "element_concept_confusion_train": {
+     "N": {
+      "10": 15,
+      "12": 31,
+      "3": 26
+     },
+     "O": {
+      "0": 8,
+      "12": 24,
+      "3": 24,
+      "6": 6
+     },
+     "S": {
+      "10": 5,
+      "12": 2,
+      "13": 26,
+      "3": 24,
+      "6": 15
+     }
+    },
+    "single_atom_element": {
+     "concept_purity_test": {
+      "10": {
+       "n": 14,
+       "test_purity": 0.8571428571428571,
+       "test_role_counts": {
+        "N": 12,
+        "S": 2
+       },
+       "train_majority_role": "N"
+      },
+      "12": {
+       "n": 59,
+       "test_purity": 0.423728813559322,
+       "test_role_counts": {
+        "N": 25,
+        "O": 34
+       },
+       "train_majority_role": "N"
+      },
+      "13": {
+       "n": 33,
+       "test_purity": 0.5151515151515151,
+       "test_role_counts": {
+        "N": 16,
+        "S": 17
+       },
+       "train_majority_role": "S"
+      },
+      "3": {
+       "n": 70,
+       "test_purity": 0.2857142857142857,
+       "test_role_counts": {
+        "N": 20,
+        "O": 34,
+        "S": 16
+       },
+       "train_majority_role": "N"
+      },
+      "6": {
+       "n": 14,
+       "test_purity": 0.2857142857142857,
+       "test_role_counts": {
+        "N": 10,
+        "S": 4
+       },
+       "train_majority_role": "S"
+      }
+     },
+     "mi_concept_role_test_nats": 0.262949313058621,
+     "mi_feature_role_test_nats": 1.0545546058544382,
+     "n_roles_cross_base": 3,
+     "nmi_concept_role_test": 0.21257369958176675,
+     "nmi_feature_role_test": 0.6068369880296844,
+     "role_cross_base_dominant_concept_agreement": 0.7222222222222222,
+     "test_accuracy_covered_subset": 0.4105263157894737,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.2631578947368421,
+       "majority_baseline": 0.5789473684210527,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.2631578947368421,
+       "majority_baseline": 0.5789473684210527,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.5,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.6,
+       "majority_baseline": 0.3,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 1.0
+    },
+    "single_atom_local": {
+     "concept_purity_test": {
+      "10": {
+       "n": 14,
+       "test_purity": 0.7142857142857143,
+       "test_role_counts": {
+        "N|triangle|anchor": 10,
+        "N|triangle|common": 2,
+        "S|triangle|neighbor": 2
+       },
+       "train_majority_role": "N|triangle|anchor"
+      },
+      "12": {
+       "n": 59,
+       "test_purity": 0.423728813559322,
+       "test_role_counts": {
+        "N|no_local_closure|anchor": 25,
+        "O|no_local_closure|anchor": 34
+       },
+       "train_majority_role": "N|no_local_closure|anchor"
+      },
+      "13": {
+       "n": 33,
+       "test_purity": 0.5151515151515151,
+       "test_role_counts": {
+        "N|no_local_closure|neighbor": 4,
+        "N|triangle|common": 4,
+        "N|triangle|neighbor": 8,
+        "S|no_local_closure|anchor": 17
+       },
+       "train_majority_role": "S|no_local_closure|anchor"
+      },
+      "3": {
+       "n": 70,
+       "test_purity": 0.2857142857142857,
+       "test_role_counts": {
+        "N|no_local_closure|neighbor": 20,
+        "O|no_local_closure|neighbor": 34,
+        "S|no_local_closure|neighbor": 16
+       },
+       "train_majority_role": "N|no_local_closure|neighbor"
+      },
+      "6": {
+       "n": 14,
+       "test_purity": 0.14285714285714285,
+       "test_role_counts": {
+        "N|no_local_closure|neighbor": 8,
+        "N|triangle|neighbor": 2,
+        "S|triangle|anchor": 2,
+        "S|triangle|common": 2
+       },
+       "train_majority_role": "S|triangle|anchor"
+      }
+     },
+     "mi_concept_role_test_nats": 1.2213449470170252,
+     "mi_feature_role_test_nats": 2.12969081759136,
+     "n_roles_cross_base": 9,
+     "nmi_concept_role_test": 0.6805484398876097,
+     "nmi_feature_role_test": 0.927784907504276,
+     "role_cross_base_dominant_concept_agreement": 0.8888888888888888,
+     "test_accuracy_covered_subset": 0.3894736842105263,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.2631578947368421,
+       "majority_baseline": 0.10526315789473684,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.2631578947368421,
+       "majority_baseline": 0.10526315789473684,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.0,
+       "majority_baseline": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.6,
+       "majority_baseline": 0.1,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 1.0
+    },
+    "single_ring_triangle_visible": {
+     "concept_purity_test": {
+      "10": {
+       "n": 14,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "triangle_visible": 14
+       },
+       "train_majority_role": "triangle_visible"
+      },
+      "12": {
+       "n": 59,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "not_triangle": 59
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "13": {
+       "n": 33,
+       "test_purity": 0.6363636363636364,
+       "test_role_counts": {
+        "not_triangle": 21,
+        "triangle_visible": 12
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "3": {
+       "n": 70,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "not_triangle": 70
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "6": {
+       "n": 14,
+       "test_purity": 0.42857142857142855,
+       "test_role_counts": {
+        "not_triangle": 8,
+        "triangle_visible": 6
+       },
+       "train_majority_role": "triangle_visible"
+      }
+     },
+     "mi_concept_role_test_nats": 0.28920735577940937,
+     "mi_feature_role_test_nats": 0.41317283991106624,
+     "n_roles_cross_base": 2,
+     "nmi_concept_role_test": 0.30885383043583925,
+     "nmi_feature_role_test": 0.28748488033277825,
+     "role_cross_base_dominant_concept_agreement": 0.5277777777777778,
+     "test_accuracy_covered_subset": 0.8947368421052632,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.7368421052631579,
+       "majority_baseline": 0.7368421052631579,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.7368421052631579,
+       "majority_baseline": 0.7368421052631579,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 1.0,
+       "majority_baseline": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 1.0,
+       "majority_baseline": 0.6,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 1.0
+    },
+    "triangle_visible_element_concept_confusion_test": {
+     "N": {
+      "10": 12,
+      "13": 12,
+      "6": 2
+     },
+     "S": {
+      "10": 2,
+      "6": 4
+     }
+    }
+   },
+   "C_seed1": {
+    "element_concept_confusion_test": {
+     "N": {
+      "0": 16,
+      "4": 20,
+      "7": 21,
+      "8": 26
+     },
+     "O": {
+      "3": 34,
+      "4": 34
+     },
+     "S": {
+      "12": 4,
+      "14": 17,
+      "4": 16,
+      "8": 2
+     }
+    },
+    "element_concept_confusion_train": {
+     "N": {
+      "0": 1,
+      "15": 2,
+      "4": 24,
+      "7": 25,
+      "8": 20
+     },
+     "O": {
+      "15": 2,
+      "3": 24,
+      "4": 24,
+      "8": 12
+     },
+     "S": {
+      "12": 15,
+      "14": 30,
+      "15": 3,
+      "4": 24
+     }
+    },
+    "single_atom_element": {
+     "concept_purity_test": {
+      "0": {
+       "n": 16,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "N": 16
+       },
+       "train_majority_role": "N"
+      },
+      "12": {
+       "n": 4,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "S": 4
+       },
+       "train_majority_role": "S"
+      },
+      "14": {
+       "n": 17,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "S": 17
+       },
+       "train_majority_role": "S"
+      },
+      "3": {
+       "n": 34,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "O": 34
+       },
+       "train_majority_role": "O"
+      },
+      "4": {
+       "n": 70,
+       "test_purity": 0.2857142857142857,
+       "test_role_counts": {
+        "N": 20,
+        "O": 34,
+        "S": 16
+       },
+       "train_majority_role": "N"
+      },
+      "7": {
+       "n": 21,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "N": 21
+       },
+       "train_majority_role": "N"
+      },
+      "8": {
+       "n": 28,
+       "test_purity": 0.9285714285714286,
+       "test_role_counts": {
+        "N": 26,
+        "S": 2
+       },
+       "train_majority_role": "N"
+      }
+     },
+     "mi_concept_role_test_nats": 0.631253205776456,
+     "mi_feature_role_test_nats": 1.0545546058544382,
+     "n_roles_cross_base": 3,
+     "nmi_concept_role_test": 0.45716736052842,
+     "nmi_feature_role_test": 0.6068369880296844,
+     "role_cross_base_dominant_concept_agreement": 0.7222222222222222,
+     "test_accuracy_covered_subset": 0.7263157894736842,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.7894736842105263,
+       "majority_baseline": 0.5789473684210527,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.7894736842105263,
+       "majority_baseline": 0.5789473684210527,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.5,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.8,
+       "majority_baseline": 0.3,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 1.0
+    },
+    "single_atom_local": {
+     "concept_purity_test": {
+      "0": {
+       "n": 16,
+       "test_purity": 0.25,
+       "test_role_counts": {
+        "N|no_local_closure|anchor": 4,
+        "N|no_local_closure|neighbor": 4,
+        "N|triangle|neighbor": 8
+       },
+       "train_majority_role": "N|no_local_closure|anchor"
+      },
+      "12": {
+       "n": 4,
+       "test_purity": 0.5,
+       "test_role_counts": {
+        "S|triangle|anchor": 2,
+        "S|triangle|common": 2
+       },
+       "train_majority_role": "S|triangle|anchor"
+      },
+      "14": {
+       "n": 17,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "S|no_local_closure|anchor": 17
+       },
+       "train_majority_role": "S|no_local_closure|anchor"
+      },
+      "3": {
+       "n": 34,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "O|no_local_closure|anchor": 34
+       },
+       "train_majority_role": "O|no_local_closure|anchor"
+      },
+      "4": {
+       "n": 70,
+       "test_purity": 0.2857142857142857,
+       "test_role_counts": {
+        "N|no_local_closure|neighbor": 20,
+        "O|no_local_closure|neighbor": 34,
+        "S|no_local_closure|neighbor": 16
+       },
+       "train_majority_role": "N|no_local_closure|neighbor"
+      },
+      "7": {
+       "n": 21,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "N|no_local_closure|anchor": 21
+       },
+       "train_majority_role": "N|no_local_closure|anchor"
+      },
+      "8": {
+       "n": 28,
+       "test_purity": 0.35714285714285715,
+       "test_role_counts": {
+        "N|no_local_closure|neighbor": 8,
+        "N|triangle|anchor": 10,
+        "N|triangle|common": 6,
+        "N|triangle|neighbor": 2,
+        "S|triangle|neighbor": 2
+       },
+       "train_majority_role": "N|triangle|anchor"
+      }
+     },
+     "mi_concept_role_test_nats": 1.471219803908999,
+     "mi_feature_role_test_nats": 2.12969081759136,
+     "n_roles_cross_base": 9,
+     "nmi_concept_role_test": 0.7589628359322075,
+     "nmi_feature_role_test": 0.927784907504276,
+     "role_cross_base_dominant_concept_agreement": 0.8941798941798942,
+     "test_accuracy_covered_subset": 0.5684210526315789,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.47368421052631576,
+       "majority_baseline": 0.10526315789473684,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.47368421052631576,
+       "majority_baseline": 0.10526315789473684,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.0,
+       "majority_baseline": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.8,
+       "majority_baseline": 0.1,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 1.0
+    },
+    "single_ring_triangle_visible": {
+     "concept_purity_test": {
+      "0": {
+       "n": 16,
+       "test_purity": 0.5,
+       "test_role_counts": {
+        "not_triangle": 8,
+        "triangle_visible": 8
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "12": {
+       "n": 4,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "triangle_visible": 4
+       },
+       "train_majority_role": "triangle_visible"
+      },
+      "14": {
+       "n": 17,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "not_triangle": 17
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "3": {
+       "n": 34,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "not_triangle": 34
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "4": {
+       "n": 70,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "not_triangle": 70
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "7": {
+       "n": 21,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "not_triangle": 21
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "8": {
+       "n": 28,
+       "test_purity": 0.7142857142857143,
+       "test_role_counts": {
+        "not_triangle": 8,
+        "triangle_visible": 20
+       },
+       "train_majority_role": "triangle_visible"
+      }
+     },
+     "mi_concept_role_test_nats": 0.30683740122786324,
+     "mi_feature_role_test_nats": 0.41317283991106624,
+     "n_roles_cross_base": 2,
+     "nmi_concept_role_test": 0.28405559170085365,
+     "nmi_feature_role_test": 0.28748488033277825,
+     "role_cross_base_dominant_concept_agreement": 0.8194444444444444,
+     "test_accuracy_covered_subset": 0.9157894736842105,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.7894736842105263,
+       "majority_baseline": 0.7368421052631579,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.7894736842105263,
+       "majority_baseline": 0.7368421052631579,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 1.0,
+       "majority_baseline": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 1.0,
+       "majority_baseline": 0.6,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 1.0
+    },
+    "triangle_visible_element_concept_confusion_test": {
+     "N": {
+      "0": 8,
+      "8": 18
+     },
+     "S": {
+      "12": 4,
+      "8": 2
+     }
+    }
+   },
+   "D_seed0": {
+    "element_concept_confusion_test": {
+     "N": {
+      "0": 32,
+      "10": 25,
+      "7": 12,
+      "8": 2,
+      "9": 12
+     },
+     "O": {
+      "10": 34,
+      "5": 34
+     },
+     "S": {
+      "0": 16,
+      "5": 17,
+      "8": 4,
+      "9": 2
+     }
+    },
+    "element_concept_confusion_train": {
+     "N": {
+      "0": 28,
+      "10": 26,
+      "12": 5,
+      "9": 13
+     },
+     "O": {
+      "0": 4,
+      "1": 2,
+      "10": 24,
+      "5": 24,
+      "9": 8
+     },
+     "S": {
+      "0": 26,
+      "12": 5,
+      "5": 26,
+      "6": 2,
+      "8": 13
+     }
+    },
+    "single_atom_element": {
+     "concept_purity_test": {
+      "0": {
+       "n": 48,
+       "test_purity": 0.6666666666666666,
+       "test_role_counts": {
+        "N": 32,
+        "S": 16
+       },
+       "train_majority_role": "N"
+      },
+      "10": {
+       "n": 59,
+       "test_purity": 0.423728813559322,
+       "test_role_counts": {
+        "N": 25,
+        "O": 34
+       },
+       "train_majority_role": "N"
+      },
+      "5": {
+       "n": 51,
+       "test_purity": 0.3333333333333333,
+       "test_role_counts": {
+        "O": 34,
+        "S": 17
+       },
+       "train_majority_role": "S"
+      },
+      "7": {
+       "n": 12,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "N": 12
+       },
+       "train_majority_role": "N"
+      },
+      "8": {
+       "n": 6,
+       "test_purity": 0.6666666666666666,
+       "test_role_counts": {
+        "N": 2,
+        "S": 4
+       },
+       "train_majority_role": "S"
+      },
+      "9": {
+       "n": 14,
+       "test_purity": 0.8571428571428571,
+       "test_role_counts": {
+        "N": 12,
+        "S": 2
+       },
+       "train_majority_role": "N"
+      }
+     },
+     "mi_concept_role_test_nats": 0.4609642276503541,
+     "mi_feature_role_test_nats": 1.0545546058544382,
+     "n_roles_cross_base": 3,
+     "nmi_concept_role_test": 0.35540209462038663,
+     "nmi_feature_role_test": 0.6068369880296844,
+     "role_cross_base_dominant_concept_agreement": 0.8055555555555555,
+     "test_accuracy_covered_subset": 0.5056179775280899,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.5789473684210527,
+       "majority_baseline": 0.5789473684210527,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.5789473684210527,
+       "majority_baseline": 0.5789473684210527,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.5,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.6,
+       "majority_baseline": 0.3,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 0.9368421052631579
+    },
+    "single_atom_local": {
+     "concept_purity_test": {
+      "0": {
+       "n": 48,
+       "test_purity": 0.5833333333333334,
+       "test_role_counts": {
+        "N|no_local_closure|neighbor": 28,
+        "N|triangle|common": 4,
+        "S|no_local_closure|neighbor": 16
+       },
+       "train_majority_role": "N|no_local_closure|neighbor"
+      },
+      "10": {
+       "n": 59,
+       "test_purity": 0.423728813559322,
+       "test_role_counts": {
+        "N|no_local_closure|anchor": 25,
+        "O|no_local_closure|anchor": 34
+       },
+       "train_majority_role": "N|no_local_closure|anchor"
+      },
+      "5": {
+       "n": 51,
+       "test_purity": 0.3333333333333333,
+       "test_role_counts": {
+        "O|no_local_closure|neighbor": 34,
+        "S|no_local_closure|anchor": 17
+       },
+       "train_majority_role": "S|no_local_closure|anchor"
+      },
+      "7": {
+       "n": 12,
+       "test_purity": 0.0,
+       "test_role_counts": {
+        "N|no_local_closure|neighbor": 4,
+        "N|triangle|neighbor": 8
+       },
+       "train_majority_role": "N|no_local_closure|anchor"
+      },
+      "8": {
+       "n": 6,
+       "test_purity": 0.3333333333333333,
+       "test_role_counts": {
+        "N|triangle|neighbor": 2,
+        "S|triangle|anchor": 2,
+        "S|triangle|common": 2
+       },
+       "train_majority_role": "S|triangle|anchor"
+      },
+      "9": {
+       "n": 14,
+       "test_purity": 0.7142857142857143,
+       "test_role_counts": {
+        "N|triangle|anchor": 10,
+        "N|triangle|common": 2,
+        "S|triangle|neighbor": 2
+       },
+       "train_majority_role": "N|triangle|anchor"
+      }
+     },
+     "mi_concept_role_test_nats": 1.4295953426038994,
+     "mi_feature_role_test_nats": 2.12969081759136,
+     "n_roles_cross_base": 9,
+     "nmi_concept_role_test": 0.7708000529381304,
+     "nmi_feature_role_test": 0.927784907504276,
+     "role_cross_base_dominant_concept_agreement": 0.9259259259259258,
+     "test_accuracy_covered_subset": 0.4606741573033708,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.3684210526315789,
+       "majority_baseline": 0.10526315789473684,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.3684210526315789,
+       "majority_baseline": 0.10526315789473684,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.0,
+       "majority_baseline": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.6,
+       "majority_baseline": 0.1,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 0.9368421052631579
+    },
+    "single_ring_triangle_visible": {
+     "concept_purity_test": {
+      "0": {
+       "n": 48,
+       "test_purity": 0.9166666666666666,
+       "test_role_counts": {
+        "not_triangle": 44,
+        "triangle_visible": 4
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "10": {
+       "n": 59,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "not_triangle": 59
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "5": {
+       "n": 51,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "not_triangle": 51
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "7": {
+       "n": 12,
+       "test_purity": 0.3333333333333333,
+       "test_role_counts": {
+        "not_triangle": 4,
+        "triangle_visible": 8
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "8": {
+       "n": 6,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "triangle_visible": 6
+       },
+       "train_majority_role": "triangle_visible"
+      },
+      "9": {
+       "n": 14,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "triangle_visible": 14
+       },
+       "train_majority_role": "triangle_visible"
+      }
+     },
+     "mi_concept_role_test_nats": 0.3407090126126677,
+     "mi_feature_role_test_nats": 0.41317283991106624,
+     "n_roles_cross_base": 2,
+     "nmi_concept_role_test": 0.34192926899971,
+     "nmi_feature_role_test": 0.28748488033277825,
+     "role_cross_base_dominant_concept_agreement": 0.5277777777777778,
+     "test_accuracy_covered_subset": 0.9775280898876404,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.8421052631578947,
+       "majority_baseline": 0.7368421052631579,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.8421052631578947,
+       "majority_baseline": 0.7368421052631579,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 1.0,
+       "majority_baseline": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 1.0,
+       "majority_baseline": 0.6,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 0.9368421052631579
+    },
+    "triangle_visible_element_concept_confusion_test": {
+     "N": {
+      "0": 4,
+      "7": 8,
+      "8": 2,
+      "9": 12
+     },
+     "S": {
+      "8": 4,
+      "9": 2
+     }
+    }
+   },
+   "D_seed1": {
+    "element_concept_confusion_test": {
+     "N": {
+      "0": 16,
+      "1": 20,
+      "3": 37,
+      "8": 10
+     },
+     "O": {
+      "1": 34,
+      "3": 34
+     },
+     "S": {
+      "0": 2,
+      "1": 16,
+      "14": 17,
+      "8": 4
+     }
+    },
+    "element_concept_confusion_train": {
+     "N": {
+      "0": 15,
+      "1": 24,
+      "12": 5,
+      "14": 2,
+      "3": 26
+     },
+     "O": {
+      "0": 12,
+      "1": 24,
+      "13": 2,
+      "3": 24
+     },
+     "S": {
+      "1": 24,
+      "12": 5,
+      "14": 26,
+      "3": 2,
+      "8": 15
+     }
+    },
+    "single_atom_element": {
+     "concept_purity_test": {
+      "0": {
+       "n": 18,
+       "test_purity": 0.8888888888888888,
+       "test_role_counts": {
+        "N": 16,
+        "S": 2
+       },
+       "train_majority_role": "N"
+      },
+      "1": {
+       "n": 70,
+       "test_purity": 0.2857142857142857,
+       "test_role_counts": {
+        "N": 20,
+        "O": 34,
+        "S": 16
+       },
+       "train_majority_role": "N"
+      },
+      "14": {
+       "n": 17,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "S": 17
+       },
+       "train_majority_role": "S"
+      },
+      "3": {
+       "n": 71,
+       "test_purity": 0.5211267605633803,
+       "test_role_counts": {
+        "N": 37,
+        "O": 34
+       },
+       "train_majority_role": "N"
+      },
+      "8": {
+       "n": 14,
+       "test_purity": 0.2857142857142857,
+       "test_role_counts": {
+        "N": 10,
+        "S": 4
+       },
+       "train_majority_role": "S"
+      }
+     },
+     "mi_concept_role_test_nats": 0.33335909685388515,
+     "mi_feature_role_test_nats": 1.0545546058544382,
+     "n_roles_cross_base": 3,
+     "nmi_concept_role_test": 0.27531364245529355,
+     "nmi_feature_role_test": 0.6068369880296844,
+     "role_cross_base_dominant_concept_agreement": 0.7222222222222222,
+     "test_accuracy_covered_subset": 0.49473684210526314,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.47368421052631576,
+       "majority_baseline": 0.5789473684210527,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.47368421052631576,
+       "majority_baseline": 0.5789473684210527,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.5,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.5,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.6,
+       "majority_baseline": 0.3,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 1.0
+    },
+    "single_atom_local": {
+     "concept_purity_test": {
+      "0": {
+       "n": 18,
+       "test_purity": 0.5555555555555556,
+       "test_role_counts": {
+        "N|triangle|anchor": 10,
+        "N|triangle|common": 6,
+        "S|triangle|neighbor": 2
+       },
+       "train_majority_role": "N|triangle|anchor"
+      },
+      "1": {
+       "n": 70,
+       "test_purity": 0.2857142857142857,
+       "test_role_counts": {
+        "N|no_local_closure|neighbor": 20,
+        "O|no_local_closure|neighbor": 34,
+        "S|no_local_closure|neighbor": 16
+       },
+       "train_majority_role": "N|no_local_closure|neighbor"
+      },
+      "14": {
+       "n": 17,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "S|no_local_closure|anchor": 17
+       },
+       "train_majority_role": "S|no_local_closure|anchor"
+      },
+      "3": {
+       "n": 71,
+       "test_purity": 0.352112676056338,
+       "test_role_counts": {
+        "N|no_local_closure|anchor": 25,
+        "N|no_local_closure|neighbor": 4,
+        "N|triangle|neighbor": 8,
+        "O|no_local_closure|anchor": 34
+       },
+       "train_majority_role": "N|no_local_closure|anchor"
+      },
+      "8": {
+       "n": 14,
+       "test_purity": 0.14285714285714285,
+       "test_role_counts": {
+        "N|no_local_closure|neighbor": 8,
+        "N|triangle|neighbor": 2,
+        "S|triangle|anchor": 2,
+        "S|triangle|common": 2
+       },
+       "train_majority_role": "S|triangle|anchor"
+      }
+     },
+     "mi_concept_role_test_nats": 1.189154192186466,
+     "mi_feature_role_test_nats": 2.12969081759136,
+     "n_roles_cross_base": 9,
+     "nmi_concept_role_test": 0.6724074239747655,
+     "nmi_feature_role_test": 0.927784907504276,
+     "role_cross_base_dominant_concept_agreement": 0.9259259259259258,
+     "test_accuracy_covered_subset": 0.3894736842105263,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.2631578947368421,
+       "majority_baseline": 0.10526315789473684,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.2631578947368421,
+       "majority_baseline": 0.10526315789473684,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.5,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "majority_baseline": 0.25,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.25,
+       "majority_baseline": 0.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.0,
+       "majority_baseline": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.6,
+       "majority_baseline": 0.1,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 1.0
+    },
+    "single_ring_triangle_visible": {
+     "concept_purity_test": {
+      "0": {
+       "n": 18,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "triangle_visible": 18
+       },
+       "train_majority_role": "triangle_visible"
+      },
+      "1": {
+       "n": 70,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "not_triangle": 70
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "14": {
+       "n": 17,
+       "test_purity": 1.0,
+       "test_role_counts": {
+        "not_triangle": 17
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "3": {
+       "n": 71,
+       "test_purity": 0.8873239436619719,
+       "test_role_counts": {
+        "not_triangle": 63,
+        "triangle_visible": 8
+       },
+       "train_majority_role": "not_triangle"
+      },
+      "8": {
+       "n": 14,
+       "test_purity": 0.42857142857142855,
+       "test_role_counts": {
+        "not_triangle": 8,
+        "triangle_visible": 6
+       },
+       "train_majority_role": "triangle_visible"
+      }
+     },
+     "mi_concept_role_test_nats": 0.2714897103316083,
+     "mi_feature_role_test_nats": 0.41317283991106624,
+     "n_roles_cross_base": 2,
+     "nmi_concept_role_test": 0.2982605369284813,
+     "nmi_feature_role_test": 0.28748488033277825,
+     "role_cross_base_dominant_concept_agreement": 0.8333333333333333,
+     "test_accuracy_covered_subset": 0.9157894736842105,
+     "test_by_base_with_baseline": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.7894736842105263,
+       "majority_baseline": 0.7368421052631579,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.7894736842105263,
+       "majority_baseline": 0.7368421052631579,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 1.0,
+       "majority_baseline": 1.0,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 1.0,
+       "majority_baseline": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 1.0,
+       "majority_baseline": 0.6,
+       "n": 10
+      }
+     },
+     "test_coverage_concept_seen_in_train": 1.0
+    },
+    "triangle_visible_element_concept_confusion_test": {
+     "N": {
+      "0": 16,
+      "3": 8,
+      "8": 2
+     },
+     "S": {
+      "0": 2,
+      "8": 4
+     }
+    }
+   }
+  }
+ },
+ "role_semantics": {
+  "per_arm_seed": {
+   "C_seed0": {
+    "role_element": {
+     "dev": {
+      "accuracy": 0.6028368794326241,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.5035460992907801,
+      "global_majority_role": "('C_only',)",
+      "macro_recall": 0.18438886322955825,
+      "n": 282,
+      "n_roles": 11,
+      "per_role_recall": {
+       "('C_only',)": 0.9859154929577465,
+       "('N', 'O')": 0.0,
+       "('N', 'O', 'O')": 0.0,
+       "('N', 'O', 'S')": 0.0,
+       "('N', 'S')": 0.0,
+       "('N',)": 0.4634146341463415,
+       "('O', 'O')": 0.0,
+       "('O', 'O', 'S')": 0.0,
+       "('O', 'S')": 0.0,
+       "('O',)": 0.0,
+       "('S',)": 0.5789473684210527
+      },
+      "per_role_support": {
+       "('C_only',)": 142,
+       "('N', 'O')": 5,
+       "('N', 'O', 'O')": 1,
+       "('N', 'O', 'S')": 4,
+       "('N', 'S')": 14,
+       "('N',)": 41,
+       "('O', 'O')": 6,
+       "('O', 'O', 'S')": 1,
+       "('O', 'S')": 5,
+       "('O',)": 44,
+       "('S',)": 19
+      }
+     },
+     "mapping_from_train": {
+      "0": "('O',)",
+      "10": "('N',)",
+      "12": "('N',)",
+      "13": "('S',)",
+      "3": "('C_only',)",
+      "6": "('S',)"
+     },
+     "n_concepts_with_train_support": 6,
+     "test": {
+      "accuracy": 0.6503267973856209,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.5620915032679739,
+      "global_majority_role": "('C_only',)",
+      "macro_recall": 0.16438473033457623,
+      "n": 612,
+      "n_roles": 12,
+      "per_role_recall": {
+       "('C_only',)": 0.9883720930232558,
+       "('N', 'O')": 0.0,
+       "('N', 'O', 'O')": 0.0,
+       "('N', 'O', 'O', 'S')": 0.0,
+       "('N', 'O', 'S')": 0.0,
+       "('N', 'S')": 0.0,
+       "('N',)": 0.4457831325301205,
+       "('O', 'O')": 0.0,
+       "('O', 'O', 'S')": 0.0,
+       "('O', 'S')": 0.0,
+       "('O',)": 0.0,
+       "('S',)": 0.5384615384615384
+      },
+      "per_role_support": {
+       "('C_only',)": 344,
+       "('N', 'O')": 13,
+       "('N', 'O', 'O')": 1,
+       "('N', 'O', 'O', 'S')": 4,
+       "('N', 'O', 'S')": 32,
+       "('N', 'S')": 12,
+       "('N',)": 83,
+       "('O', 'O')": 2,
+       "('O', 'O', 'S')": 1,
+       "('O', 'S')": 13,
+       "('O',)": 68,
+       "('S',)": 39
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.8300653594771242,
+      "n_ambiguous_features": 0,
+      "n_test": 612,
+      "n_train_features": 151,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_element": {
+     "dev": {
+      "accuracy": 0.38461538461538464,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.3942307692307692,
+      "global_majority_role": "N",
+      "macro_recall": 0.4287548138639281,
+      "n": 104,
+      "n_roles": 3,
+      "per_role_recall": {
+       "N": 0.7073170731707317,
+       "O": 0.0,
+       "S": 0.5789473684210527
+      },
+      "per_role_support": {
+       "N": 41,
+       "O": 44,
+       "S": 19
+      }
+     },
+     "mapping_from_train": {
+      "0": "O",
+      "10": "N",
+      "12": "N",
+      "13": "S",
+      "3": "N",
+      "6": "S"
+     },
+     "n_concepts_with_train_support": 6,
+     "test": {
+      "accuracy": 0.4105263157894737,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.4368421052631579,
+      "global_majority_role": "N",
+      "macro_recall": 0.4084028421377819,
+      "n": 190,
+      "n_roles": 3,
+      "per_role_recall": {
+       "N": 0.6867469879518072,
+       "O": 0.0,
+       "S": 0.5384615384615384
+      },
+      "per_role_support": {
+       "N": 83,
+       "O": 68,
+       "S": 39
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_global": {
+     "dev": {
+      "accuracy": 0.38461538461538464,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|ring|anchor",
+      "macro_recall": 0.3854166666666667,
+      "n": 104,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|ring|anchor": 1.0,
+       "N|ring|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|chain|anchor": 0.0,
+       "O|chain|neighbor": 0.0,
+       "O|ring|anchor": 0.0,
+       "O|ring|neighbor": 0.0,
+       "S|ring|anchor": 1.0,
+       "S|ring|neighbor": 0.0,
+       "S|triangle|anchor": 1.0
+      },
+      "per_role_support": {
+       "N|ring|anchor": 12,
+       "N|ring|neighbor": 16,
+       "N|triangle|anchor": 7,
+       "N|triangle|common": 2,
+       "N|triangle|neighbor": 4,
+       "O|chain|anchor": 6,
+       "O|chain|neighbor": 6,
+       "O|ring|anchor": 16,
+       "O|ring|neighbor": 16,
+       "S|ring|anchor": 8,
+       "S|ring|neighbor": 8,
+       "S|triangle|anchor": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "O|triangle|anchor",
+      "10": "N|triangle|anchor",
+      "12": "N|ring|anchor",
+      "13": "S|ring|anchor",
+      "3": "N|ring|neighbor",
+      "6": "S|triangle|anchor"
+     },
+     "n_concepts_with_train_support": 6,
+     "test": {
+      "accuracy": 0.3894736842105263,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|ring|anchor",
+      "macro_recall": 0.3854166666666667,
+      "n": 190,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|ring|anchor": 1.0,
+       "N|ring|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|ring|anchor": 0.0,
+       "O|ring|neighbor": 0.0,
+       "S|ring|anchor": 1.0,
+       "S|ring|neighbor": 0.0,
+       "S|triangle|anchor": 1.0,
+       "S|triangle|common": 0.0,
+       "S|triangle|neighbor": 0.0
+      },
+      "per_role_support": {
+       "N|ring|anchor": 25,
+       "N|ring|neighbor": 32,
+       "N|triangle|anchor": 10,
+       "N|triangle|common": 6,
+       "N|triangle|neighbor": 10,
+       "O|ring|anchor": 34,
+       "O|ring|neighbor": 34,
+       "S|ring|anchor": 17,
+       "S|ring|neighbor": 16,
+       "S|triangle|anchor": 2,
+       "S|triangle|common": 2,
+       "S|triangle|neighbor": 2
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 2,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.2,
+      "test_patches_with_ambiguous_feature": 38
+     }
+    },
+    "single_atom_local": {
+     "dev": {
+      "accuracy": 0.38461538461538464,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|no_local_closure|anchor",
+      "macro_recall": 0.4625,
+      "n": 104,
+      "n_roles": 10,
+      "per_role_recall": {
+       "N|no_local_closure|anchor": 1.0,
+       "N|no_local_closure|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|no_local_closure|anchor": 0.0,
+       "O|no_local_closure|neighbor": 0.0,
+       "S|no_local_closure|anchor": 1.0,
+       "S|no_local_closure|neighbor": 0.0,
+       "S|triangle|anchor": 1.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor": 12,
+       "N|no_local_closure|neighbor": 16,
+       "N|triangle|anchor": 7,
+       "N|triangle|common": 2,
+       "N|triangle|neighbor": 4,
+       "O|no_local_closure|anchor": 22,
+       "O|no_local_closure|neighbor": 22,
+       "S|no_local_closure|anchor": 8,
+       "S|no_local_closure|neighbor": 8,
+       "S|triangle|anchor": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "O|local_ring|common",
+      "10": "N|triangle|anchor",
+      "12": "N|no_local_closure|anchor",
+      "13": "S|no_local_closure|anchor",
+      "3": "N|no_local_closure|neighbor",
+      "6": "S|triangle|anchor"
+     },
+     "n_concepts_with_train_support": 6,
+     "test": {
+      "accuracy": 0.3894736842105263,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|no_local_closure|anchor",
+      "macro_recall": 0.3854166666666667,
+      "n": 190,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|no_local_closure|anchor": 1.0,
+       "N|no_local_closure|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|no_local_closure|anchor": 0.0,
+       "O|no_local_closure|neighbor": 0.0,
+       "S|no_local_closure|anchor": 1.0,
+       "S|no_local_closure|neighbor": 0.0,
+       "S|triangle|anchor": 1.0,
+       "S|triangle|common": 0.0,
+       "S|triangle|neighbor": 0.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor": 25,
+       "N|no_local_closure|neighbor": 32,
+       "N|triangle|anchor": 10,
+       "N|triangle|common": 6,
+       "N|triangle|neighbor": 10,
+       "O|no_local_closure|anchor": 34,
+       "O|no_local_closure|neighbor": 34,
+       "S|no_local_closure|anchor": 17,
+       "S|no_local_closure|neighbor": 16,
+       "S|triangle|anchor": 2,
+       "S|triangle|common": 2,
+       "S|triangle|neighbor": 2
+      }
+     },
+     "test_by_base": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.2631578947368421,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.2631578947368421,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.5,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.25,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.5,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.25,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.6,
+       "n": 10
+      }
+     },
+     "test_by_family": {
+      "binding": {
+       "accuracy": 0.3333333333333333,
+       "n": 18
+      },
+      "composition": {
+       "accuracy": 0.2631578947368421,
+       "n": 76
+      },
+      "relation": {
+       "accuracy": 0.5,
+       "n": 96
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_rich_local": {
+     "dev": {
+      "accuracy": 0.38461538461538464,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|no_local_closure|anchor|CC",
+      "macro_recall": 0.3557692307692308,
+      "n": 104,
+      "n_roles": 13,
+      "per_role_recall": {
+       "N|no_local_closure|anchor|CC": 1.0,
+       "N|no_local_closure|neighbor|CC": 0.625,
+       "N|triangle|anchor|CC": 1.0,
+       "N|triangle|common|CC": 0.0,
+       "N|triangle|neighbor|CC": 0.0,
+       "O|no_local_closure|anchor|CC": 0.0,
+       "O|no_local_closure|anchor|CCCC": 0.0,
+       "O|no_local_closure|neighbor|CC": 0.0,
+       "O|no_local_closure|neighbor|CN": 0.0,
+       "O|no_local_closure|neighbor|CS": 0.0,
+       "S|no_local_closure|anchor|CC": 1.0,
+       "S|no_local_closure|neighbor|CC": 0.0,
+       "S|triangle|anchor|CC": 1.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor|CC": 12,
+       "N|no_local_closure|neighbor|CC": 16,
+       "N|triangle|anchor|CC": 7,
+       "N|triangle|common|CC": 2,
+       "N|triangle|neighbor|CC": 4,
+       "O|no_local_closure|anchor|CC": 16,
+       "O|no_local_closure|anchor|CCCC": 6,
+       "O|no_local_closure|neighbor|CC": 16,
+       "O|no_local_closure|neighbor|CN": 3,
+       "O|no_local_closure|neighbor|CS": 3,
+       "S|no_local_closure|anchor|CC": 8,
+       "S|no_local_closure|neighbor|CC": 8,
+       "S|triangle|anchor|CC": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "O|triangle|anchor|CC",
+      "10": "N|triangle|anchor|CC",
+      "12": "N|no_local_closure|anchor|CC",
+      "13": "S|no_local_closure|anchor|CC",
+      "3": "N|no_local_closure|neighbor|CC",
+      "6": "S|triangle|anchor|CC"
+     },
+     "n_concepts_with_train_support": 6,
+     "test": {
+      "accuracy": 0.3894736842105263,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|no_local_closure|anchor|CC",
+      "macro_recall": 0.2890625,
+      "n": 190,
+      "n_roles": 16,
+      "per_role_recall": {
+       "N|no_local_closure|anchor|CC": 1.0,
+       "N|no_local_closure|neighbor|CC": 0.625,
+       "N|triangle|anchor|CC": 1.0,
+       "N|triangle|common|CC": 0.0,
+       "N|triangle|common|CCS": 0.0,
+       "N|triangle|neighbor|CC": 0.0,
+       "N|triangle|neighbor|CCS": 0.0,
+       "O|no_local_closure|anchor|CC": 0.0,
+       "O|no_local_closure|neighbor|CC": 0.0,
+       "O|no_local_closure|neighbor|CN": 0.0,
+       "O|no_local_closure|neighbor|CS": 0.0,
+       "S|no_local_closure|anchor|CC": 1.0,
+       "S|no_local_closure|neighbor|CC": 0.0,
+       "S|triangle|anchor|CC": 1.0,
+       "S|triangle|common|CCN": 0.0,
+       "S|triangle|neighbor|CCN": 0.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor|CC": 25,
+       "N|no_local_closure|neighbor|CC": 32,
+       "N|triangle|anchor|CC": 10,
+       "N|triangle|common|CC": 4,
+       "N|triangle|common|CCS": 2,
+       "N|triangle|neighbor|CC": 8,
+       "N|triangle|neighbor|CCS": 2,
+       "O|no_local_closure|anchor|CC": 34,
+       "O|no_local_closure|neighbor|CC": 32,
+       "O|no_local_closure|neighbor|CN": 1,
+       "O|no_local_closure|neighbor|CS": 1,
+       "S|no_local_closure|anchor|CC": 17,
+       "S|no_local_closure|neighbor|CC": 16,
+       "S|triangle|anchor|CC": 2,
+       "S|triangle|common|CCN": 2,
+       "S|triangle|neighbor|CCN": 2
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7789473684210526,
+      "n_ambiguous_features": 2,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_ring_triangle": {
+     "dev": {
+      "accuracy": 0.9038461538461539,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8461538461538461,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.7897727272727273,
+      "n": 104,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.9545454545454546,
+       "triangle": 0.625
+      },
+      "per_role_support": {
+       "not_triangle": 88,
+       "triangle": 16
+      }
+     },
+     "mapping_from_train": {
+      "0": "triangle",
+      "10": "triangle",
+      "12": "not_triangle",
+      "13": "not_triangle",
+      "3": "not_triangle",
+      "6": "triangle"
+     },
+     "n_concepts_with_train_support": 6,
+     "test": {
+      "accuracy": 0.8947368421052632,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8315789473684211,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.7871835443037974,
+      "n": 190,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.9493670886075949,
+       "triangle": 0.625
+      },
+      "per_role_support": {
+       "not_triangle": 158,
+       "triangle": 32
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_ring_triangle_visible": {
+     "dev": {
+      "accuracy": 0.9038461538461539,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8461538461538461,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.7897727272727273,
+      "n": 104,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.9545454545454546,
+       "triangle_visible": 0.625
+      },
+      "per_role_support": {
+       "not_triangle": 88,
+       "triangle_visible": 16
+      }
+     },
+     "mapping_from_train": {
+      "0": "triangle_not_visible",
+      "10": "triangle_visible",
+      "12": "not_triangle",
+      "13": "not_triangle",
+      "3": "not_triangle",
+      "6": "triangle_visible"
+     },
+     "n_concepts_with_train_support": 6,
+     "test": {
+      "accuracy": 0.8947368421052632,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8315789473684211,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.7871835443037974,
+      "n": 190,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.9493670886075949,
+       "triangle_visible": 0.625
+      },
+      "per_role_support": {
+       "not_triangle": 158,
+       "triangle_visible": 32
+      }
+     },
+     "test_by_family": {
+      "binding": {
+       "accuracy": 1.0,
+       "n": 18
+      },
+      "composition": {
+       "accuracy": 0.7368421052631579,
+       "n": 76
+      },
+      "relation": {
+       "accuracy": 1.0,
+       "n": 96
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    }
+   },
+   "C_seed1": {
+    "role_element": {
+     "dev": {
+      "accuracy": 0.7446808510638298,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.5035460992907801,
+      "global_majority_role": "('C_only',)",
+      "macro_recall": 0.35179462819629886,
+      "n": 282,
+      "n_roles": 11,
+      "per_role_recall": {
+       "('C_only',)": 0.9859154929577465,
+       "('N', 'O')": 0.0,
+       "('N', 'O', 'O')": 0.0,
+       "('N', 'O', 'S')": 1.0,
+       "('N', 'S')": 0.0,
+       "('N',)": 0.8048780487804879,
+       "('O', 'O')": 0.0,
+       "('O', 'O', 'S')": 0.0,
+       "('O', 'S')": 0.0,
+       "('O',)": 0.5,
+       "('S',)": 0.5789473684210527
+      },
+      "per_role_support": {
+       "('C_only',)": 142,
+       "('N', 'O')": 5,
+       "('N', 'O', 'O')": 1,
+       "('N', 'O', 'S')": 4,
+       "('N', 'S')": 14,
+       "('N',)": 41,
+       "('O', 'O')": 6,
+       "('O', 'O', 'S')": 1,
+       "('O', 'S')": 5,
+       "('O',)": 44,
+       "('S',)": 19
+      }
+     },
+     "mapping_from_train": {
+      "0": "('N', 'O', 'S')",
+      "10": "('C_only',)",
+      "12": "('S',)",
+      "14": "('S',)",
+      "15": "('N', 'O', 'S')",
+      "3": "('O',)",
+      "4": "('N',)",
+      "7": "('N',)",
+      "8": "('N',)"
+     },
+     "n_concepts_with_train_support": 9,
+     "test": {
+      "accuracy": 0.7679738562091504,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.5620915032679739,
+      "global_majority_role": "('C_only',)",
+      "macro_recall": 0.25700521226228706,
+      "n": 612,
+      "n_roles": 12,
+      "per_role_recall": {
+       "('C_only',)": 0.9883720930232558,
+       "('N', 'O')": 0.0,
+       "('N', 'O', 'O')": 0.0,
+       "('N', 'O', 'O', 'S')": 0.0,
+       "('N', 'O', 'S')": 0.25,
+       "('N', 'S')": 0.0,
+       "('N',)": 0.8072289156626506,
+       "('O', 'O')": 0.0,
+       "('O', 'O', 'S')": 0.0,
+       "('O', 'S')": 0.0,
+       "('O',)": 0.5,
+       "('S',)": 0.5384615384615384
+      },
+      "per_role_support": {
+       "('C_only',)": 344,
+       "('N', 'O')": 13,
+       "('N', 'O', 'O')": 1,
+       "('N', 'O', 'O', 'S')": 4,
+       "('N', 'O', 'S')": 32,
+       "('N', 'S')": 12,
+       "('N',)": 83,
+       "('O', 'O')": 2,
+       "('O', 'O', 'S')": 1,
+       "('O', 'S')": 13,
+       "('O',)": 68,
+       "('S',)": 39
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.8300653594771242,
+      "n_ambiguous_features": 0,
+      "n_test": 612,
+      "n_train_features": 151,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_element": {
+     "dev": {
+      "accuracy": 0.7115384615384616,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.3942307692307692,
+      "global_majority_role": "N",
+      "macro_recall": 0.6929824561403509,
+      "n": 104,
+      "n_roles": 3,
+      "per_role_recall": {
+       "N": 1.0,
+       "O": 0.5,
+       "S": 0.5789473684210527
+      },
+      "per_role_support": {
+       "N": 41,
+       "O": 44,
+       "S": 19
+      }
+     },
+     "mapping_from_train": {
+      "0": "N",
+      "12": "S",
+      "14": "S",
+      "15": "S",
+      "3": "O",
+      "4": "N",
+      "7": "N",
+      "8": "N"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.7263157894736842,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.4368421052631579,
+      "global_majority_role": "N",
+      "macro_recall": 0.6794871794871794,
+      "n": 190,
+      "n_roles": 3,
+      "per_role_recall": {
+       "N": 1.0,
+       "O": 0.5,
+       "S": 0.5384615384615384
+      },
+      "per_role_support": {
+       "N": 83,
+       "O": 68,
+       "S": 39
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_global": {
+     "dev": {
+      "accuracy": 0.5192307692307693,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|ring|anchor",
+      "macro_recall": 0.45486111111111116,
+      "n": 104,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|ring|anchor": 0.8333333333333334,
+       "N|ring|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|chain|anchor": 0.0,
+       "O|chain|neighbor": 0.0,
+       "O|ring|anchor": 1.0,
+       "O|ring|neighbor": 0.0,
+       "S|ring|anchor": 1.0,
+       "S|ring|neighbor": 0.0,
+       "S|triangle|anchor": 1.0
+      },
+      "per_role_support": {
+       "N|ring|anchor": 12,
+       "N|ring|neighbor": 16,
+       "N|triangle|anchor": 7,
+       "N|triangle|common": 2,
+       "N|triangle|neighbor": 4,
+       "O|chain|anchor": 6,
+       "O|chain|neighbor": 6,
+       "O|ring|anchor": 16,
+       "O|ring|neighbor": 16,
+       "S|ring|anchor": 8,
+       "S|ring|neighbor": 8,
+       "S|triangle|anchor": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "N|chain|anchor",
+      "12": "S|triangle|anchor",
+      "14": "S|ring|anchor",
+      "15": "N|chain|neighbor",
+      "3": "O|ring|anchor",
+      "4": "N|ring|neighbor",
+      "7": "N|ring|anchor",
+      "8": "N|triangle|anchor"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.5473684210526316,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|ring|anchor",
+      "macro_recall": 0.45541666666666664,
+      "n": 190,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|ring|anchor": 0.84,
+       "N|ring|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|ring|anchor": 1.0,
+       "O|ring|neighbor": 0.0,
+       "S|ring|anchor": 1.0,
+       "S|ring|neighbor": 0.0,
+       "S|triangle|anchor": 1.0,
+       "S|triangle|common": 0.0,
+       "S|triangle|neighbor": 0.0
+      },
+      "per_role_support": {
+       "N|ring|anchor": 25,
+       "N|ring|neighbor": 32,
+       "N|triangle|anchor": 10,
+       "N|triangle|common": 6,
+       "N|triangle|neighbor": 10,
+       "O|ring|anchor": 34,
+       "O|ring|neighbor": 34,
+       "S|ring|anchor": 17,
+       "S|ring|neighbor": 16,
+       "S|triangle|anchor": 2,
+       "S|triangle|common": 2,
+       "S|triangle|neighbor": 2
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 2,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.2,
+      "test_patches_with_ambiguous_feature": 38
+     }
+    },
+    "single_atom_local": {
+     "dev": {
+      "accuracy": 0.5961538461538461,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|no_local_closure|anchor",
+      "macro_recall": 0.5625,
+      "n": 104,
+      "n_roles": 10,
+      "per_role_recall": {
+       "N|no_local_closure|anchor": 1.0,
+       "N|no_local_closure|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|no_local_closure|anchor": 1.0,
+       "O|no_local_closure|neighbor": 0.0,
+       "S|no_local_closure|anchor": 1.0,
+       "S|no_local_closure|neighbor": 0.0,
+       "S|triangle|anchor": 1.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor": 12,
+       "N|no_local_closure|neighbor": 16,
+       "N|triangle|anchor": 7,
+       "N|triangle|common": 2,
+       "N|triangle|neighbor": 4,
+       "O|no_local_closure|anchor": 22,
+       "O|no_local_closure|neighbor": 22,
+       "S|no_local_closure|anchor": 8,
+       "S|no_local_closure|neighbor": 8,
+       "S|triangle|anchor": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "N|no_local_closure|anchor",
+      "12": "S|triangle|anchor",
+      "14": "S|no_local_closure|anchor",
+      "15": "N|no_local_closure|neighbor",
+      "3": "O|no_local_closure|anchor",
+      "4": "N|no_local_closure|neighbor",
+      "7": "N|no_local_closure|anchor",
+      "8": "N|triangle|anchor"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.5684210526315789,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|no_local_closure|anchor",
+      "macro_recall": 0.46875,
+      "n": 190,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|no_local_closure|anchor": 1.0,
+       "N|no_local_closure|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|no_local_closure|anchor": 1.0,
+       "O|no_local_closure|neighbor": 0.0,
+       "S|no_local_closure|anchor": 1.0,
+       "S|no_local_closure|neighbor": 0.0,
+       "S|triangle|anchor": 1.0,
+       "S|triangle|common": 0.0,
+       "S|triangle|neighbor": 0.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor": 25,
+       "N|no_local_closure|neighbor": 32,
+       "N|triangle|anchor": 10,
+       "N|triangle|common": 6,
+       "N|triangle|neighbor": 10,
+       "O|no_local_closure|anchor": 34,
+       "O|no_local_closure|neighbor": 34,
+       "S|no_local_closure|anchor": 17,
+       "S|no_local_closure|neighbor": 16,
+       "S|triangle|anchor": 2,
+       "S|triangle|common": 2,
+       "S|triangle|neighbor": 2
+      }
+     },
+     "test_by_base": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.47368421052631576,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.47368421052631576,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.75,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.5,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.75,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.5,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.8,
+       "n": 10
+      }
+     },
+     "test_by_family": {
+      "binding": {
+       "accuracy": 0.4444444444444444,
+       "n": 18
+      },
+      "composition": {
+       "accuracy": 0.47368421052631576,
+       "n": 76
+      },
+      "relation": {
+       "accuracy": 0.6666666666666666,
+       "n": 96
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_rich_local": {
+     "dev": {
+      "accuracy": 0.5384615384615384,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|no_local_closure|anchor|CC",
+      "macro_recall": 0.4326923076923077,
+      "n": 104,
+      "n_roles": 13,
+      "per_role_recall": {
+       "N|no_local_closure|anchor|CC": 1.0,
+       "N|no_local_closure|neighbor|CC": 0.625,
+       "N|triangle|anchor|CC": 1.0,
+       "N|triangle|common|CC": 0.0,
+       "N|triangle|neighbor|CC": 0.0,
+       "O|no_local_closure|anchor|CC": 1.0,
+       "O|no_local_closure|anchor|CCCC": 0.0,
+       "O|no_local_closure|neighbor|CC": 0.0,
+       "O|no_local_closure|neighbor|CN": 0.0,
+       "O|no_local_closure|neighbor|CS": 0.0,
+       "S|no_local_closure|anchor|CC": 1.0,
+       "S|no_local_closure|neighbor|CC": 0.0,
+       "S|triangle|anchor|CC": 1.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor|CC": 12,
+       "N|no_local_closure|neighbor|CC": 16,
+       "N|triangle|anchor|CC": 7,
+       "N|triangle|common|CC": 2,
+       "N|triangle|neighbor|CC": 4,
+       "O|no_local_closure|anchor|CC": 16,
+       "O|no_local_closure|anchor|CCCC": 6,
+       "O|no_local_closure|neighbor|CC": 16,
+       "O|no_local_closure|neighbor|CN": 3,
+       "O|no_local_closure|neighbor|CS": 3,
+       "S|no_local_closure|anchor|CC": 8,
+       "S|no_local_closure|neighbor|CC": 8,
+       "S|triangle|anchor|CC": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "N|no_local_closure|anchor|CC",
+      "12": "S|triangle|anchor|CC",
+      "14": "S|no_local_closure|anchor|CC",
+      "15": "N|no_local_closure|neighbor|CC",
+      "3": "O|no_local_closure|anchor|CC",
+      "4": "N|no_local_closure|neighbor|CC",
+      "7": "N|no_local_closure|anchor|CC",
+      "8": "N|triangle|anchor|CC"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.5684210526315789,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|no_local_closure|anchor|CC",
+      "macro_recall": 0.3515625,
+      "n": 190,
+      "n_roles": 16,
+      "per_role_recall": {
+       "N|no_local_closure|anchor|CC": 1.0,
+       "N|no_local_closure|neighbor|CC": 0.625,
+       "N|triangle|anchor|CC": 1.0,
+       "N|triangle|common|CC": 0.0,
+       "N|triangle|common|CCS": 0.0,
+       "N|triangle|neighbor|CC": 0.0,
+       "N|triangle|neighbor|CCS": 0.0,
+       "O|no_local_closure|anchor|CC": 1.0,
+       "O|no_local_closure|neighbor|CC": 0.0,
+       "O|no_local_closure|neighbor|CN": 0.0,
+       "O|no_local_closure|neighbor|CS": 0.0,
+       "S|no_local_closure|anchor|CC": 1.0,
+       "S|no_local_closure|neighbor|CC": 0.0,
+       "S|triangle|anchor|CC": 1.0,
+       "S|triangle|common|CCN": 0.0,
+       "S|triangle|neighbor|CCN": 0.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor|CC": 25,
+       "N|no_local_closure|neighbor|CC": 32,
+       "N|triangle|anchor|CC": 10,
+       "N|triangle|common|CC": 4,
+       "N|triangle|common|CCS": 2,
+       "N|triangle|neighbor|CC": 8,
+       "N|triangle|neighbor|CCS": 2,
+       "O|no_local_closure|anchor|CC": 34,
+       "O|no_local_closure|neighbor|CC": 32,
+       "O|no_local_closure|neighbor|CN": 1,
+       "O|no_local_closure|neighbor|CS": 1,
+       "S|no_local_closure|anchor|CC": 17,
+       "S|no_local_closure|neighbor|CC": 16,
+       "S|triangle|anchor|CC": 2,
+       "S|triangle|common|CCN": 2,
+       "S|triangle|neighbor|CCN": 2
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7789473684210526,
+      "n_ambiguous_features": 2,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_ring_triangle": {
+     "dev": {
+      "accuracy": 0.9230769230769231,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8461538461538461,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8522727272727273,
+      "n": 104,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.9545454545454546,
+       "triangle": 0.75
+      },
+      "per_role_support": {
+       "not_triangle": 88,
+       "triangle": 16
+      }
+     },
+     "mapping_from_train": {
+      "0": "not_triangle",
+      "12": "triangle",
+      "14": "not_triangle",
+      "15": "not_triangle",
+      "3": "not_triangle",
+      "4": "not_triangle",
+      "7": "not_triangle",
+      "8": "triangle"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.9157894736842105,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8315789473684211,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8496835443037974,
+      "n": 190,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.9493670886075949,
+       "triangle": 0.75
+      },
+      "per_role_support": {
+       "not_triangle": 158,
+       "triangle": 32
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_ring_triangle_visible": {
+     "dev": {
+      "accuracy": 0.9230769230769231,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8461538461538461,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8522727272727273,
+      "n": 104,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.9545454545454546,
+       "triangle_visible": 0.75
+      },
+      "per_role_support": {
+       "not_triangle": 88,
+       "triangle_visible": 16
+      }
+     },
+     "mapping_from_train": {
+      "0": "not_triangle",
+      "12": "triangle_visible",
+      "14": "not_triangle",
+      "15": "not_triangle",
+      "3": "not_triangle",
+      "4": "not_triangle",
+      "7": "not_triangle",
+      "8": "triangle_visible"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.9157894736842105,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8315789473684211,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8496835443037974,
+      "n": 190,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.9493670886075949,
+       "triangle_visible": 0.75
+      },
+      "per_role_support": {
+       "not_triangle": 158,
+       "triangle_visible": 32
+      }
+     },
+     "test_by_family": {
+      "binding": {
+       "accuracy": 1.0,
+       "n": 18
+      },
+      "composition": {
+       "accuracy": 0.7894736842105263,
+       "n": 76
+      },
+      "relation": {
+       "accuracy": 1.0,
+       "n": 96
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    }
+   },
+   "D_seed0": {
+    "role_element": {
+     "dev": {
+      "accuracy": 0.6702127659574468,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.5035460992907801,
+      "global_majority_role": "('C_only',)",
+      "macro_recall": 0.28096789395493044,
+      "n": 282,
+      "n_roles": 11,
+      "per_role_recall": {
+       "('C_only',)": 0.9859154929577465,
+       "('N', 'O')": 0.0,
+       "('N', 'O', 'O')": 0.0,
+       "('N', 'O', 'S')": 0.0,
+       "('N', 'S')": 0.6428571428571429,
+       "('N',)": 0.6829268292682927,
+       "('O', 'O')": 0.0,
+       "('O', 'O', 'S')": 0.0,
+       "('O', 'S')": 0.2,
+       "('O',)": 0.0,
+       "('S',)": 0.5789473684210527
+      },
+      "per_role_support": {
+       "('C_only',)": 142,
+       "('N', 'O')": 5,
+       "('N', 'O', 'O')": 1,
+       "('N', 'O', 'S')": 4,
+       "('N', 'S')": 14,
+       "('N',)": 41,
+       "('O', 'O')": 6,
+       "('O', 'O', 'S')": 1,
+       "('O', 'S')": 5,
+       "('O',)": 44,
+       "('S',)": 19
+      }
+     },
+     "mapping_from_train": {
+      "0": "('N',)",
+      "1": "('N', 'O')",
+      "10": "('N',)",
+      "12": "('O', 'S')",
+      "15": "('N', 'O', 'O', 'S')",
+      "5": "('S',)",
+      "6": "('N', 'S')",
+      "7": "('C_only',)",
+      "8": "('S',)",
+      "9": "('N', 'S')"
+     },
+     "n_concepts_with_train_support": 10,
+     "test": {
+      "accuracy": 0.6944444444444444,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.5620915032679739,
+      "global_majority_role": "('C_only',)",
+      "macro_recall": 0.26085394050860566,
+      "n": 612,
+      "n_roles": 12,
+      "per_role_recall": {
+       "('C_only',)": 0.9883720930232558,
+       "('N', 'O')": 0.0,
+       "('N', 'O', 'O')": 0.0,
+       "('N', 'O', 'O', 'S')": 0.5,
+       "('N', 'O', 'S')": 0.0,
+       "('N', 'S')": 0.4166666666666667,
+       "('N',)": 0.6867469879518072,
+       "('O', 'O')": 0.0,
+       "('O', 'O', 'S')": 0.0,
+       "('O', 'S')": 0.0,
+       "('O',)": 0.0,
+       "('S',)": 0.5384615384615384
+      },
+      "per_role_support": {
+       "('C_only',)": 344,
+       "('N', 'O')": 13,
+       "('N', 'O', 'O')": 1,
+       "('N', 'O', 'O', 'S')": 4,
+       "('N', 'O', 'S')": 32,
+       "('N', 'S')": 12,
+       "('N',)": 83,
+       "('O', 'O')": 2,
+       "('O', 'O', 'S')": 1,
+       "('O', 'S')": 13,
+       "('O',)": 68,
+       "('S',)": 39
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.8300653594771242,
+      "n_ambiguous_features": 0,
+      "n_test": 612,
+      "n_train_features": 151,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_element": {
+     "dev": {
+      "accuracy": 0.5,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.3942307692307692,
+      "global_majority_role": "N",
+      "macro_recall": 0.5263157894736842,
+      "n": 104,
+      "n_roles": 3,
+      "per_role_recall": {
+       "N": 1.0,
+       "O": 0.0,
+       "S": 0.5789473684210527
+      },
+      "per_role_support": {
+       "N": 41,
+       "O": 44,
+       "S": 19
+      }
+     },
+     "mapping_from_train": {
+      "0": "N",
+      "1": "O",
+      "10": "N",
+      "12": "N",
+      "5": "S",
+      "6": "S",
+      "8": "S",
+      "9": "N"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.5368421052631579,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.4368421052631579,
+      "global_majority_role": "N",
+      "macro_recall": 0.5047883843064566,
+      "n": 190,
+      "n_roles": 3,
+      "per_role_recall": {
+       "N": 0.9759036144578314,
+       "O": 0.0,
+       "S": 0.5384615384615384
+      },
+      "per_role_support": {
+       "N": 83,
+       "O": 68,
+       "S": 39
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_global": {
+     "dev": {
+      "accuracy": 0.5,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|ring|anchor",
+      "macro_recall": 0.40625,
+      "n": 104,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|ring|anchor": 1.0,
+       "N|ring|neighbor": 0.875,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|chain|anchor": 0.0,
+       "O|chain|neighbor": 0.0,
+       "O|ring|anchor": 0.0,
+       "O|ring|neighbor": 1.0,
+       "S|ring|anchor": 0.0,
+       "S|ring|neighbor": 0.0,
+       "S|triangle|anchor": 1.0
+      },
+      "per_role_support": {
+       "N|ring|anchor": 12,
+       "N|ring|neighbor": 16,
+       "N|triangle|anchor": 7,
+       "N|triangle|common": 2,
+       "N|triangle|neighbor": 4,
+       "O|chain|anchor": 6,
+       "O|chain|neighbor": 6,
+       "O|ring|anchor": 16,
+       "O|ring|neighbor": 16,
+       "S|ring|anchor": 8,
+       "S|ring|neighbor": 8,
+       "S|triangle|anchor": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "N|ring|neighbor",
+      "1": "O|triangle|anchor",
+      "10": "N|ring|anchor",
+      "12": "N|chain|anchor",
+      "5": "O|ring|neighbor",
+      "6": "S|triangle|common",
+      "8": "S|triangle|anchor",
+      "9": "N|triangle|anchor"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.5210526315789473,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|ring|anchor",
+      "macro_recall": 0.40625,
+      "n": 190,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|ring|anchor": 1.0,
+       "N|ring|neighbor": 0.875,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|ring|anchor": 0.0,
+       "O|ring|neighbor": 1.0,
+       "S|ring|anchor": 0.0,
+       "S|ring|neighbor": 0.0,
+       "S|triangle|anchor": 1.0,
+       "S|triangle|common": 0.0,
+       "S|triangle|neighbor": 0.0
+      },
+      "per_role_support": {
+       "N|ring|anchor": 25,
+       "N|ring|neighbor": 32,
+       "N|triangle|anchor": 10,
+       "N|triangle|common": 6,
+       "N|triangle|neighbor": 10,
+       "O|ring|anchor": 34,
+       "O|ring|neighbor": 34,
+       "S|ring|anchor": 17,
+       "S|ring|neighbor": 16,
+       "S|triangle|anchor": 2,
+       "S|triangle|common": 2,
+       "S|triangle|neighbor": 2
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 2,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.2,
+      "test_patches_with_ambiguous_feature": 38
+     }
+    },
+    "single_atom_local": {
+     "dev": {
+      "accuracy": 0.4230769230769231,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|no_local_closure|anchor",
+      "macro_recall": 0.4875,
+      "n": 104,
+      "n_roles": 10,
+      "per_role_recall": {
+       "N|no_local_closure|anchor": 1.0,
+       "N|no_local_closure|neighbor": 0.875,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|no_local_closure|anchor": 0.0,
+       "O|no_local_closure|neighbor": 0.0,
+       "S|no_local_closure|anchor": 1.0,
+       "S|no_local_closure|neighbor": 0.0,
+       "S|triangle|anchor": 1.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor": 12,
+       "N|no_local_closure|neighbor": 16,
+       "N|triangle|anchor": 7,
+       "N|triangle|common": 2,
+       "N|triangle|neighbor": 4,
+       "O|no_local_closure|anchor": 22,
+       "O|no_local_closure|neighbor": 22,
+       "S|no_local_closure|anchor": 8,
+       "S|no_local_closure|neighbor": 8,
+       "S|triangle|anchor": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "N|no_local_closure|neighbor",
+      "1": "O|triangle|anchor",
+      "10": "N|no_local_closure|anchor",
+      "12": "N|no_local_closure|anchor",
+      "5": "S|no_local_closure|anchor",
+      "6": "S|triangle|common",
+      "8": "S|triangle|anchor",
+      "9": "N|triangle|anchor"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.43157894736842106,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|no_local_closure|anchor",
+      "macro_recall": 0.40625,
+      "n": 190,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|no_local_closure|anchor": 1.0,
+       "N|no_local_closure|neighbor": 0.875,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|no_local_closure|anchor": 0.0,
+       "O|no_local_closure|neighbor": 0.0,
+       "S|no_local_closure|anchor": 1.0,
+       "S|no_local_closure|neighbor": 0.0,
+       "S|triangle|anchor": 1.0,
+       "S|triangle|common": 0.0,
+       "S|triangle|neighbor": 0.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor": 25,
+       "N|no_local_closure|neighbor": 32,
+       "N|triangle|anchor": 10,
+       "N|triangle|common": 6,
+       "N|triangle|neighbor": 10,
+       "O|no_local_closure|anchor": 34,
+       "O|no_local_closure|neighbor": 34,
+       "S|no_local_closure|anchor": 17,
+       "S|no_local_closure|neighbor": 16,
+       "S|triangle|anchor": 2,
+       "S|triangle|common": 2,
+       "S|triangle|neighbor": 2
+      }
+     },
+     "test_by_base": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.3684210526315789,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.3684210526315789,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.5,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.25,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.5,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.25,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.6,
+       "n": 10
+      }
+     },
+     "test_by_family": {
+      "binding": {
+       "accuracy": 0.3333333333333333,
+       "n": 18
+      },
+      "composition": {
+       "accuracy": 0.3684210526315789,
+       "n": 76
+      },
+      "relation": {
+       "accuracy": 0.5,
+       "n": 96
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_rich_local": {
+     "dev": {
+      "accuracy": 0.4230769230769231,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|no_local_closure|anchor|CC",
+      "macro_recall": 0.375,
+      "n": 104,
+      "n_roles": 13,
+      "per_role_recall": {
+       "N|no_local_closure|anchor|CC": 1.0,
+       "N|no_local_closure|neighbor|CC": 0.875,
+       "N|triangle|anchor|CC": 1.0,
+       "N|triangle|common|CC": 0.0,
+       "N|triangle|neighbor|CC": 0.0,
+       "O|no_local_closure|anchor|CC": 0.0,
+       "O|no_local_closure|anchor|CCCC": 0.0,
+       "O|no_local_closure|neighbor|CC": 0.0,
+       "O|no_local_closure|neighbor|CN": 0.0,
+       "O|no_local_closure|neighbor|CS": 0.0,
+       "S|no_local_closure|anchor|CC": 1.0,
+       "S|no_local_closure|neighbor|CC": 0.0,
+       "S|triangle|anchor|CC": 1.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor|CC": 12,
+       "N|no_local_closure|neighbor|CC": 16,
+       "N|triangle|anchor|CC": 7,
+       "N|triangle|common|CC": 2,
+       "N|triangle|neighbor|CC": 4,
+       "O|no_local_closure|anchor|CC": 16,
+       "O|no_local_closure|anchor|CCCC": 6,
+       "O|no_local_closure|neighbor|CC": 16,
+       "O|no_local_closure|neighbor|CN": 3,
+       "O|no_local_closure|neighbor|CS": 3,
+       "S|no_local_closure|anchor|CC": 8,
+       "S|no_local_closure|neighbor|CC": 8,
+       "S|triangle|anchor|CC": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "N|no_local_closure|neighbor|CC",
+      "1": "O|triangle|anchor|CCC",
+      "10": "N|no_local_closure|anchor|CC",
+      "12": "N|no_local_closure|anchor|CC",
+      "5": "S|no_local_closure|anchor|CC",
+      "6": "S|triangle|common|CC",
+      "8": "S|triangle|anchor|CC",
+      "9": "N|triangle|anchor|CC"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.43157894736842106,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|no_local_closure|anchor|CC",
+      "macro_recall": 0.3046875,
+      "n": 190,
+      "n_roles": 16,
+      "per_role_recall": {
+       "N|no_local_closure|anchor|CC": 1.0,
+       "N|no_local_closure|neighbor|CC": 0.875,
+       "N|triangle|anchor|CC": 1.0,
+       "N|triangle|common|CC": 0.0,
+       "N|triangle|common|CCS": 0.0,
+       "N|triangle|neighbor|CC": 0.0,
+       "N|triangle|neighbor|CCS": 0.0,
+       "O|no_local_closure|anchor|CC": 0.0,
+       "O|no_local_closure|neighbor|CC": 0.0,
+       "O|no_local_closure|neighbor|CN": 0.0,
+       "O|no_local_closure|neighbor|CS": 0.0,
+       "S|no_local_closure|anchor|CC": 1.0,
+       "S|no_local_closure|neighbor|CC": 0.0,
+       "S|triangle|anchor|CC": 1.0,
+       "S|triangle|common|CCN": 0.0,
+       "S|triangle|neighbor|CCN": 0.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor|CC": 25,
+       "N|no_local_closure|neighbor|CC": 32,
+       "N|triangle|anchor|CC": 10,
+       "N|triangle|common|CC": 4,
+       "N|triangle|common|CCS": 2,
+       "N|triangle|neighbor|CC": 8,
+       "N|triangle|neighbor|CCS": 2,
+       "O|no_local_closure|anchor|CC": 34,
+       "O|no_local_closure|neighbor|CC": 32,
+       "O|no_local_closure|neighbor|CN": 1,
+       "O|no_local_closure|neighbor|CS": 1,
+       "S|no_local_closure|anchor|CC": 17,
+       "S|no_local_closure|neighbor|CC": 16,
+       "S|triangle|anchor|CC": 2,
+       "S|triangle|common|CCN": 2,
+       "S|triangle|neighbor|CCN": 2
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7789473684210526,
+      "n_ambiguous_features": 2,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_ring_triangle": {
+     "dev": {
+      "accuracy": 0.9423076923076923,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.8461538461538461,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8125,
+      "n": 104,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 1.0,
+       "triangle": 0.625
+      },
+      "per_role_support": {
+       "not_triangle": 88,
+       "triangle": 16
+      }
+     },
+     "mapping_from_train": {
+      "0": "not_triangle",
+      "1": "triangle",
+      "10": "not_triangle",
+      "12": "not_triangle",
+      "5": "not_triangle",
+      "6": "triangle",
+      "8": "triangle",
+      "9": "triangle"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.9368421052631579,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.8315789473684211,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8125,
+      "n": 190,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 1.0,
+       "triangle": 0.625
+      },
+      "per_role_support": {
+       "not_triangle": 158,
+       "triangle": 32
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_ring_triangle_visible": {
+     "dev": {
+      "accuracy": 0.9423076923076923,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.8461538461538461,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8125,
+      "n": 104,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 1.0,
+       "triangle_visible": 0.625
+      },
+      "per_role_support": {
+       "not_triangle": 88,
+       "triangle_visible": 16
+      }
+     },
+     "mapping_from_train": {
+      "0": "not_triangle",
+      "1": "triangle_visible",
+      "10": "not_triangle",
+      "12": "not_triangle",
+      "5": "not_triangle",
+      "6": "triangle_visible",
+      "8": "triangle_visible",
+      "9": "triangle_visible"
+     },
+     "n_concepts_with_train_support": 8,
+     "test": {
+      "accuracy": 0.9368421052631579,
+      "concept_unseen_in_train": 12,
+      "global_majority_baseline_accuracy": 0.8315789473684211,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8125,
+      "n": 190,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 1.0,
+       "triangle_visible": 0.625
+      },
+      "per_role_support": {
+       "not_triangle": 158,
+       "triangle_visible": 32
+      }
+     },
+     "test_by_family": {
+      "binding": {
+       "accuracy": 1.0,
+       "n": 18
+      },
+      "composition": {
+       "accuracy": 0.8421052631578947,
+       "n": 76
+      },
+      "relation": {
+       "accuracy": 1.0,
+       "n": 96
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    }
+   },
+   "D_seed1": {
+    "role_element": {
+     "dev": {
+      "accuracy": 0.6312056737588653,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.5035460992907801,
+      "global_majority_role": "('C_only',)",
+      "macro_recall": 0.20212722243133208,
+      "n": 282,
+      "n_roles": 11,
+      "per_role_recall": {
+       "('C_only',)": 0.9859154929577465,
+       "('N', 'O')": 0.0,
+       "('N', 'O', 'O')": 0.0,
+       "('N', 'O', 'S')": 0.0,
+       "('N', 'S')": 0.0,
+       "('N',)": 0.6585365853658537,
+       "('O', 'O')": 0.0,
+       "('O', 'O', 'S')": 0.0,
+       "('O', 'S')": 0.0,
+       "('O',)": 0.0,
+       "('S',)": 0.5789473684210527
+      },
+      "per_role_support": {
+       "('C_only',)": 142,
+       "('N', 'O')": 5,
+       "('N', 'O', 'O')": 1,
+       "('N', 'O', 'S')": 4,
+       "('N', 'S')": 14,
+       "('N',)": 41,
+       "('O', 'O')": 6,
+       "('O', 'O', 'S')": 1,
+       "('O', 'S')": 5,
+       "('O',)": 44,
+       "('S',)": 19
+      }
+     },
+     "mapping_from_train": {
+      "0": "('N',)",
+      "1": "('C_only',)",
+      "12": "('N',)",
+      "13": "('N', 'O', 'O')",
+      "14": "('S',)",
+      "3": "('N',)",
+      "8": "('S',)"
+     },
+     "n_concepts_with_train_support": 7,
+     "test": {
+      "accuracy": 0.6764705882352942,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.5620915032679739,
+      "global_majority_role": "('C_only',)",
+      "macro_recall": 0.18044898736268866,
+      "n": 612,
+      "n_roles": 12,
+      "per_role_recall": {
+       "('C_only',)": 0.9883720930232558,
+       "('N', 'O')": 0.0,
+       "('N', 'O', 'O')": 0.0,
+       "('N', 'O', 'O', 'S')": 0.0,
+       "('N', 'O', 'S')": 0.0,
+       "('N', 'S')": 0.0,
+       "('N',)": 0.6385542168674698,
+       "('O', 'O')": 0.0,
+       "('O', 'O', 'S')": 0.0,
+       "('O', 'S')": 0.0,
+       "('O',)": 0.0,
+       "('S',)": 0.5384615384615384
+      },
+      "per_role_support": {
+       "('C_only',)": 344,
+       "('N', 'O')": 13,
+       "('N', 'O', 'O')": 1,
+       "('N', 'O', 'O', 'S')": 4,
+       "('N', 'O', 'S')": 32,
+       "('N', 'S')": 12,
+       "('N',)": 83,
+       "('O', 'O')": 2,
+       "('O', 'O', 'S')": 1,
+       "('O', 'S')": 13,
+       "('O',)": 68,
+       "('S',)": 39
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.8300653594771242,
+      "n_ambiguous_features": 0,
+      "n_test": 612,
+      "n_train_features": 151,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_element": {
+     "dev": {
+      "accuracy": 0.5192307692307693,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.3942307692307692,
+      "global_majority_role": "N",
+      "macro_recall": 0.5392500097249776,
+      "n": 104,
+      "n_roles": 3,
+      "per_role_recall": {
+       "N": 0.9024390243902439,
+       "O": 0.13636363636363635,
+       "S": 0.5789473684210527
+      },
+      "per_role_support": {
+       "N": 41,
+       "O": 44,
+       "S": 19
+      }
+     },
+     "mapping_from_train": {
+      "0": "N",
+      "1": "N",
+      "12": "N",
+      "13": "O",
+      "14": "S",
+      "3": "N",
+      "8": "S"
+     },
+     "n_concepts_with_train_support": 7,
+     "test": {
+      "accuracy": 0.49473684210526314,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.4368421052631579,
+      "global_majority_role": "N",
+      "macro_recall": 0.47265987025023165,
+      "n": 190,
+      "n_roles": 3,
+      "per_role_recall": {
+       "N": 0.8795180722891566,
+       "O": 0.0,
+       "S": 0.5384615384615384
+      },
+      "per_role_support": {
+       "N": 83,
+       "O": 68,
+       "S": 39
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_global": {
+     "dev": {
+      "accuracy": 0.38461538461538464,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|ring|anchor",
+      "macro_recall": 0.3854166666666667,
+      "n": 104,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|ring|anchor": 1.0,
+       "N|ring|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|chain|anchor": 0.0,
+       "O|chain|neighbor": 0.0,
+       "O|ring|anchor": 0.0,
+       "O|ring|neighbor": 0.0,
+       "S|ring|anchor": 1.0,
+       "S|ring|neighbor": 0.0,
+       "S|triangle|anchor": 1.0
+      },
+      "per_role_support": {
+       "N|ring|anchor": 12,
+       "N|ring|neighbor": 16,
+       "N|triangle|anchor": 7,
+       "N|triangle|common": 2,
+       "N|triangle|neighbor": 4,
+       "O|chain|anchor": 6,
+       "O|chain|neighbor": 6,
+       "O|ring|anchor": 16,
+       "O|ring|neighbor": 16,
+       "S|ring|anchor": 8,
+       "S|ring|neighbor": 8,
+       "S|triangle|anchor": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "N|triangle|anchor",
+      "1": "N|ring|neighbor",
+      "12": "N|chain|anchor",
+      "13": "O|triangle|anchor",
+      "14": "S|ring|anchor",
+      "3": "N|ring|anchor",
+      "8": "S|triangle|anchor"
+     },
+     "n_concepts_with_train_support": 7,
+     "test": {
+      "accuracy": 0.3894736842105263,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|ring|anchor",
+      "macro_recall": 0.3854166666666667,
+      "n": 190,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|ring|anchor": 1.0,
+       "N|ring|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|ring|anchor": 0.0,
+       "O|ring|neighbor": 0.0,
+       "S|ring|anchor": 1.0,
+       "S|ring|neighbor": 0.0,
+       "S|triangle|anchor": 1.0,
+       "S|triangle|common": 0.0,
+       "S|triangle|neighbor": 0.0
+      },
+      "per_role_support": {
+       "N|ring|anchor": 25,
+       "N|ring|neighbor": 32,
+       "N|triangle|anchor": 10,
+       "N|triangle|common": 6,
+       "N|triangle|neighbor": 10,
+       "O|ring|anchor": 34,
+       "O|ring|neighbor": 34,
+       "S|ring|anchor": 17,
+       "S|ring|neighbor": 16,
+       "S|triangle|anchor": 2,
+       "S|triangle|common": 2,
+       "S|triangle|neighbor": 2
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 2,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.2,
+      "test_patches_with_ambiguous_feature": 38
+     }
+    },
+    "single_atom_local": {
+     "dev": {
+      "accuracy": 0.38461538461538464,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|no_local_closure|anchor",
+      "macro_recall": 0.4625,
+      "n": 104,
+      "n_roles": 10,
+      "per_role_recall": {
+       "N|no_local_closure|anchor": 1.0,
+       "N|no_local_closure|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|no_local_closure|anchor": 0.0,
+       "O|no_local_closure|neighbor": 0.0,
+       "S|no_local_closure|anchor": 1.0,
+       "S|no_local_closure|neighbor": 0.0,
+       "S|triangle|anchor": 1.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor": 12,
+       "N|no_local_closure|neighbor": 16,
+       "N|triangle|anchor": 7,
+       "N|triangle|common": 2,
+       "N|triangle|neighbor": 4,
+       "O|no_local_closure|anchor": 22,
+       "O|no_local_closure|neighbor": 22,
+       "S|no_local_closure|anchor": 8,
+       "S|no_local_closure|neighbor": 8,
+       "S|triangle|anchor": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "N|triangle|anchor",
+      "1": "N|no_local_closure|neighbor",
+      "12": "N|no_local_closure|anchor",
+      "13": "O|triangle|anchor",
+      "14": "S|no_local_closure|anchor",
+      "3": "N|no_local_closure|anchor",
+      "8": "S|triangle|anchor"
+     },
+     "n_concepts_with_train_support": 7,
+     "test": {
+      "accuracy": 0.3894736842105263,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|no_local_closure|anchor",
+      "macro_recall": 0.3854166666666667,
+      "n": 190,
+      "n_roles": 12,
+      "per_role_recall": {
+       "N|no_local_closure|anchor": 1.0,
+       "N|no_local_closure|neighbor": 0.625,
+       "N|triangle|anchor": 1.0,
+       "N|triangle|common": 0.0,
+       "N|triangle|neighbor": 0.0,
+       "O|no_local_closure|anchor": 0.0,
+       "O|no_local_closure|neighbor": 0.0,
+       "S|no_local_closure|anchor": 1.0,
+       "S|no_local_closure|neighbor": 0.0,
+       "S|triangle|anchor": 1.0,
+       "S|triangle|common": 0.0,
+       "S|triangle|neighbor": 0.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor": 25,
+       "N|no_local_closure|neighbor": 32,
+       "N|triangle|anchor": 10,
+       "N|triangle|common": 6,
+       "N|triangle|neighbor": 10,
+       "O|no_local_closure|anchor": 34,
+       "O|no_local_closure|neighbor": 34,
+       "S|no_local_closure|anchor": 17,
+       "S|no_local_closure|neighbor": 16,
+       "S|triangle|anchor": 2,
+       "S|triangle|common": 2,
+       "S|triangle|neighbor": 2
+      }
+     },
+     "test_by_base": {
+      "comp_fused_cycle22": {
+       "accuracy": 0.2631578947368421,
+       "n": 38
+      },
+      "comp_fused_cycle24": {
+       "accuracy": 0.2631578947368421,
+       "n": 38
+      },
+      "cycle26_NO": {
+       "accuracy": 0.5,
+       "n": 16
+      },
+      "cycle26_NS": {
+       "accuracy": 0.75,
+       "n": 16
+      },
+      "cycle26_OS": {
+       "accuracy": 0.25,
+       "n": 16
+      },
+      "cycle28_NO": {
+       "accuracy": 0.5,
+       "n": 16
+      },
+      "cycle28_NS": {
+       "accuracy": 0.75,
+       "n": 16
+      },
+      "cycle28_OS": {
+       "accuracy": 0.25,
+       "n": 16
+      },
+      "spiro_tail": {
+       "accuracy": 0.0,
+       "n": 8
+      },
+      "tri_fused5": {
+       "accuracy": 0.6,
+       "n": 10
+      }
+     },
+     "test_by_family": {
+      "binding": {
+       "accuracy": 0.3333333333333333,
+       "n": 18
+      },
+      "composition": {
+       "accuracy": 0.2631578947368421,
+       "n": 76
+      },
+      "relation": {
+       "accuracy": 0.5,
+       "n": 96
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_atom_rich_local": {
+     "dev": {
+      "accuracy": 0.38461538461538464,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.11538461538461539,
+      "global_majority_role": "N|no_local_closure|anchor|CC",
+      "macro_recall": 0.3557692307692308,
+      "n": 104,
+      "n_roles": 13,
+      "per_role_recall": {
+       "N|no_local_closure|anchor|CC": 1.0,
+       "N|no_local_closure|neighbor|CC": 0.625,
+       "N|triangle|anchor|CC": 1.0,
+       "N|triangle|common|CC": 0.0,
+       "N|triangle|neighbor|CC": 0.0,
+       "O|no_local_closure|anchor|CC": 0.0,
+       "O|no_local_closure|anchor|CCCC": 0.0,
+       "O|no_local_closure|neighbor|CC": 0.0,
+       "O|no_local_closure|neighbor|CN": 0.0,
+       "O|no_local_closure|neighbor|CS": 0.0,
+       "S|no_local_closure|anchor|CC": 1.0,
+       "S|no_local_closure|neighbor|CC": 0.0,
+       "S|triangle|anchor|CC": 1.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor|CC": 12,
+       "N|no_local_closure|neighbor|CC": 16,
+       "N|triangle|anchor|CC": 7,
+       "N|triangle|common|CC": 2,
+       "N|triangle|neighbor|CC": 4,
+       "O|no_local_closure|anchor|CC": 16,
+       "O|no_local_closure|anchor|CCCC": 6,
+       "O|no_local_closure|neighbor|CC": 16,
+       "O|no_local_closure|neighbor|CN": 3,
+       "O|no_local_closure|neighbor|CS": 3,
+       "S|no_local_closure|anchor|CC": 8,
+       "S|no_local_closure|neighbor|CC": 8,
+       "S|triangle|anchor|CC": 3
+      }
+     },
+     "mapping_from_train": {
+      "0": "N|triangle|anchor|CC",
+      "1": "N|no_local_closure|neighbor|CC",
+      "12": "N|no_local_closure|anchor|CC",
+      "13": "O|triangle|anchor|CCC",
+      "14": "S|no_local_closure|anchor|CC",
+      "3": "N|no_local_closure|anchor|CC",
+      "8": "S|triangle|anchor|CC"
+     },
+     "n_concepts_with_train_support": 7,
+     "test": {
+      "accuracy": 0.3894736842105263,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.13157894736842105,
+      "global_majority_role": "N|no_local_closure|anchor|CC",
+      "macro_recall": 0.2890625,
+      "n": 190,
+      "n_roles": 16,
+      "per_role_recall": {
+       "N|no_local_closure|anchor|CC": 1.0,
+       "N|no_local_closure|neighbor|CC": 0.625,
+       "N|triangle|anchor|CC": 1.0,
+       "N|triangle|common|CC": 0.0,
+       "N|triangle|common|CCS": 0.0,
+       "N|triangle|neighbor|CC": 0.0,
+       "N|triangle|neighbor|CCS": 0.0,
+       "O|no_local_closure|anchor|CC": 0.0,
+       "O|no_local_closure|neighbor|CC": 0.0,
+       "O|no_local_closure|neighbor|CN": 0.0,
+       "O|no_local_closure|neighbor|CS": 0.0,
+       "S|no_local_closure|anchor|CC": 1.0,
+       "S|no_local_closure|neighbor|CC": 0.0,
+       "S|triangle|anchor|CC": 1.0,
+       "S|triangle|common|CCN": 0.0,
+       "S|triangle|neighbor|CCN": 0.0
+      },
+      "per_role_support": {
+       "N|no_local_closure|anchor|CC": 25,
+       "N|no_local_closure|neighbor|CC": 32,
+       "N|triangle|anchor|CC": 10,
+       "N|triangle|common|CC": 4,
+       "N|triangle|common|CCS": 2,
+       "N|triangle|neighbor|CC": 8,
+       "N|triangle|neighbor|CCS": 2,
+       "O|no_local_closure|anchor|CC": 34,
+       "O|no_local_closure|neighbor|CC": 32,
+       "O|no_local_closure|neighbor|CN": 1,
+       "O|no_local_closure|neighbor|CS": 1,
+       "S|no_local_closure|anchor|CC": 17,
+       "S|no_local_closure|neighbor|CC": 16,
+       "S|triangle|anchor|CC": 2,
+       "S|triangle|common|CCN": 2,
+       "S|triangle|neighbor|CCN": 2
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7789473684210526,
+      "n_ambiguous_features": 2,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_ring_triangle": {
+     "dev": {
+      "accuracy": 0.8653846153846154,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8461538461538461,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8181818181818181,
+      "n": 104,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.8863636363636364,
+       "triangle": 0.75
+      },
+      "per_role_support": {
+       "not_triangle": 88,
+       "triangle": 16
+      }
+     },
+     "mapping_from_train": {
+      "0": "triangle",
+      "1": "not_triangle",
+      "12": "not_triangle",
+      "13": "triangle",
+      "14": "not_triangle",
+      "3": "not_triangle",
+      "8": "triangle"
+     },
+     "n_concepts_with_train_support": 7,
+     "test": {
+      "accuracy": 0.9157894736842105,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8315789473684211,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8496835443037974,
+      "n": 190,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.9493670886075949,
+       "triangle": 0.75
+      },
+      "per_role_support": {
+       "not_triangle": 158,
+       "triangle": 32
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    },
+    "single_ring_triangle_visible": {
+     "dev": {
+      "accuracy": 0.8653846153846154,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8461538461538461,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8181818181818181,
+      "n": 104,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.8863636363636364,
+       "triangle_visible": 0.75
+      },
+      "per_role_support": {
+       "not_triangle": 88,
+       "triangle_visible": 16
+      }
+     },
+     "mapping_from_train": {
+      "0": "triangle_visible",
+      "1": "not_triangle",
+      "12": "not_triangle",
+      "13": "triangle_visible",
+      "14": "not_triangle",
+      "3": "not_triangle",
+      "8": "triangle_visible"
+     },
+     "n_concepts_with_train_support": 7,
+     "test": {
+      "accuracy": 0.9157894736842105,
+      "concept_unseen_in_train": 0,
+      "global_majority_baseline_accuracy": 0.8315789473684211,
+      "global_majority_role": "not_triangle",
+      "macro_recall": 0.8496835443037974,
+      "n": 190,
+      "n_roles": 2,
+      "per_role_recall": {
+       "not_triangle": 0.9493670886075949,
+       "triangle_visible": 0.75
+      },
+      "per_role_support": {
+       "not_triangle": 158,
+       "triangle_visible": 32
+      }
+     },
+     "test_by_family": {
+      "binding": {
+       "accuracy": 1.0,
+       "n": 18
+      },
+      "composition": {
+       "accuracy": 0.7894736842105263,
+       "n": 76
+      },
+      "relation": {
+       "accuracy": 1.0,
+       "n": 96
+      }
+     },
+     "test_feature_lookup_ceiling": {
+      "lookup_accuracy": 0.7894736842105263,
+      "n_ambiguous_features": 0,
+      "n_test": 190,
+      "n_train_features": 24,
+      "test_fraction_ambiguous_feature": 0.0,
+      "test_patches_with_ambiguous_feature": 0
+     }
+    }
+   }
+  },
+  "single_atom_coverage": {
+   "C_seed0": {
+    "n_patches": 1512,
+    "n_single_special_atom": 500,
+    "n_special_atom_distribution": {
+     "0": 702,
+     "1": 500,
+     "2": 176,
+     "3": 118,
+     "4": 16
+    },
+    "single_fraction": 0.3306878306878307
+   },
+   "C_seed1": {
+    "n_patches": 1512,
+    "n_single_special_atom": 500,
+    "n_special_atom_distribution": {
+     "0": 702,
+     "1": 500,
+     "2": 176,
+     "3": 118,
+     "4": 16
+    },
+    "single_fraction": 0.3306878306878307
+   },
+   "D_seed0": {
+    "n_patches": 1512,
+    "n_single_special_atom": 500,
+    "n_special_atom_distribution": {
+     "0": 702,
+     "1": 500,
+     "2": 176,
+     "3": 118,
+     "4": 16
+    },
+    "single_fraction": 0.3306878306878307
+   },
+   "D_seed1": {
+    "n_patches": 1512,
+    "n_single_special_atom": 500,
+    "n_special_atom_distribution": {
+     "0": 702,
+     "1": 500,
+     "2": 176,
+     "3": 118,
+     "4": 16
+    },
+    "single_fraction": 0.3306878306878307
+   }
+  },
+  "taxonomy_notes": "role_element = multiset of special elements in the patch (coarse statistic). single_atom_* = only patches with exactly one special atom; global atom role includes 'ring' (not observable from a radius-1 patch when the ring is > 3), the local version replaces ring/chain by the locally observable closure flag, the rich version adds the neighbour-element multiset. single_ring_triangle_visible distinguishes patches where the triangle is inside the patch from atoms globally in a triangle whose closure is not visible."
+ }
+}
