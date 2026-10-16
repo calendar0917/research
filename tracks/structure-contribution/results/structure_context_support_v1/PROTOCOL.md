@@ -69,9 +69,10 @@ results/structure_context_support_v1/
   PROTOCOL.md                   # 本文件
   summary.json                  # 机器可读的全部统计与判断
   analysis/data_integrity.json  # 哈希 + 配对核对（标签隔离证据）
-  analysis/types_zinc_T1_primary.json 等  # 各（数据集×口径×tier）的类型级表
-  analysis/examples.json        # §5.4 的 5 类化学案例
-  analysis/instances.npz        # 压缩实例清单（S/CT/骨架/行号）
+  analysis/types_zinc_T1_primary.json  # 类型级表（仅两个判断数据集的主口径）
+  analysis/types_lipo_T1_primary.json
+  analysis/examples.json        # §5.4 的 5 类化学案例 + 组成受控证据
+  analysis/instances.npz        # 压缩实例清单（主 tier：S/CT/骨架/行号）
   code/                         # 分析代码
   code/attributed_canon.py      # 带属性锚定图的精确同构规范化
   tests/                        # 正确性测试
@@ -187,7 +188,8 @@ results/structure_context_support_v1/
 - 化学组成结构：候选集里纯碳链、环内锚、含杂原子、二者兼有的类型数。
 
 ### 4.4 具体化学结构展示（§5.4）
-固定五类案例（每类最多 3 个，全部来自主数据集/辅助数据集的实际实例）：
+固定五类案例（每类一个代表，全部来自主数据集/辅助数据集的实际实例；
+案例搜索顺序为 主数据集 → 辅助数据集，未出现的类别显式记为 `missing_cases`）：
 
 1. 同一 `S` 出现在**两个不同骨架**的分子中（骨架集合不相交的两个上下文）；
 2. 同一 `S`、**不同的外层环境**（`outer_shell_multiset` 不同）；
@@ -197,6 +199,12 @@ results/structure_context_support_v1/
 
 每个案例给出：数据集、行号（ZINC 行号 / Lipo 序号）、SMILES、锚点原子索引与键、
 `S`/`CT` 证书、骨架字符串、该类型的支持度统计。**不标注**任何性质方向或正负贡献。
+
+此外报告第 6 类（C4 的直接证据，报告级补充）：**组成受控的同 S 不同上下文对** ——
+在同一 `(n_heavy, 分子式, 环数)` 分层内，两个各由 ≥2 分子支持的上下文，
+按"两侧骨架集合不相交"优先排序，给出前 5 个候选及其具体实例、以及成对计数
+（对数、骨架不相交对数、涉及类型数）。该类在 4.4 之外，因为它回答的是 §4.3
+的控制问题而不是"复用"展示。
 
 ## 5. 辅助数据集与敏感性口径
 
@@ -249,6 +257,21 @@ Lipophilicity 的 C2”这类跨数据集拼接。
    同系物放大 —— 这由 §3.4 的阶梯与 `max_scaf_share` 诊断显式暴露。
 
 ## 8. 协议冻结顺序与披露
+
+### 8.1 报告级补充（首次全量运行之后，不改变任何统计量或阈值）
+
+1. `examples` 增加第 6 类"组成受控的同 S 不同上下文对"（§4.4 末尾）：C4 已在冻结
+   规则下判定，此补充只是把该判定落到具体分子对上；
+2. 案例搜索扩展到辅助数据集（`missing_cases` 显式记录哪一类在主数据集中不存在），
+   因为"单一骨架家族支配"的反例只在 Lipophilicity 中出现；
+3. 产物精简：类型级表只写两个判断数据集的主口径，`instances.npz` 只写主 tier；
+   其余（T2/T3 × coarse）仍在 `summary.json` 中完整报告，并可由同一脚本复现。
+
+三处都不触碰 §3 的定义、§6 的阈值与判断组合规则；全量统计量在两次全量运行之间
+逐项核对为逐位相同（`decision`、`support`、`decision_stats`、`cross_dataset` 均
+`identical`），因此判断不依赖这些补充。
+
+### 8.2 冻结顺序
 
 - 实现与协议同时定稿；在定稿前只做过**工程性冒烟测试**：用 `--limit 300/400`
   （即 10 000 行中前 300/400 行）验证代码可运行、哈希与配对核对通过、输出结构正确，

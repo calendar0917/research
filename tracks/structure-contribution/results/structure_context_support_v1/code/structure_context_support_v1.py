@@ -725,6 +725,15 @@ def aggregate(insts: list[Instance], mols: list[MolRec], tier: str, ct_mode: str
     type_ct_inst: dict[str, dict[str, int]] = defaultdict(dict)
     for (s_key, ct), cnt in ct_inst.items():
         type_ct_inst[s_key][ct] = cnt
+    # per-type maxima in one pass (a per-type scan of these counters is quadratic)
+    scaf_max_by_type: dict[str, int] = defaultdict(int)
+    for (s_key, _scaf), cnt in scaf_inst.items():
+        if cnt > scaf_max_by_type[s_key]:
+            scaf_max_by_type[s_key] = cnt
+    inst_max_by_type: dict[str, int] = defaultdict(int)
+    for (s_key, _mol), cnt in inst_per_mol.items():
+        if cnt > inst_max_by_type[s_key]:
+            inst_max_by_type[s_key] = cnt
 
     rows: dict[str, TypeRow] = {}
     for s_key, n_inst in type_inst.items():
@@ -753,7 +762,7 @@ def aggregate(insts: list[Instance], mols: list[MolRec], tier: str, ct_mode: str
                 entries, lambda nh, f, r: (nh // 2, _strip_carbon(f), r)
             ),
         }
-        scaf_max = max(v for (s, _sc), v in scaf_inst.items() if s == s_key)
+        scaf_max = scaf_max_by_type[s_key]
         rows[s_key] = TypeRow(
             s_key=s_key,
             n_inst=n_inst,
@@ -775,7 +784,7 @@ def aggregate(insts: list[Instance], mols: list[MolRec], tier: str, ct_mode: str
             matched_size_formula=matched["size_formula"],
             matched_size_formula_rings=matched["exact_stratum"],
             matched_near_stratum=matched["near_stratum"],
-            max_inst_per_molecule=max(v for (s, _m), v in inst_per_mol.items() if s == s_key),
+            max_inst_per_molecule=inst_max_by_type[s_key],
             patch_has_hetero=type_flags[s_key][0],
             anchor_in_ring=type_flags[s_key][1],
         )
@@ -870,7 +879,11 @@ def support_curves(agg: dict) -> dict:
     }
 
 
-def decision_stats(agg: dict) -> dict:
+def decision_stats(agg: dict, keep_keys: bool = False) -> dict:
+    """Frozen decision statistics.  Per-type detail lives in the type tables
+    (``analysis/types_*.json``); ``summary.json`` only keeps the aggregate
+    numbers plus the type keys of the two decision datasets."""
+    key_fields = {}
     rows: dict[str, TypeRow] = agg["rows"]
     selected = [r for r in rows.values() if r.n_mols >= 5 and r.n_scaf >= 2]
     c2_rows = [r for r in selected if r.n_ct_2mol >= 2]
@@ -884,7 +897,9 @@ def decision_stats(agg: dict) -> dict:
         level: [r for r in c2_rows if agg["strata"][level].get(r.s_key, 0) >= 1]
         for level in STRATUM_LEVELS
     }
-    return {
+    if keep_keys:
+        key_fields = _decision_keys(None, c2_rows, ladder_types)
+    result = {
         "n_types_mol5_scaf2": len(selected),
         "n_types_mol5_scaf2_two_contexts_2mol": len(c2_rows),
         "n_types_mol5_scaf2_two_contexts_2mol_2scaf": sum(1 for r in c2_rows if r.n_ct_2scaf >= 2),
@@ -903,27 +918,16 @@ def decision_stats(agg: dict) -> dict:
         "matched_share": {
             level: (value / disc if disc else 0.0) for level, value in matched.items()
         },
+        **key_fields,
+    }
+    return result
+
+
+def _decision_keys(decision: dict, c2_rows, ladder_types) -> dict:
+    return {
         "c2_type_keys": sorted(r.s_key for r in c2_rows),
         "near_stratum_type_keys": sorted(r.s_key for r in ladder_types["near_stratum"]),
-        "near_stratum_type_table": [
-            _type_summary(r) for r in sorted(ladder_types["near_stratum"], key=lambda r: (-r.n_mols, r.s_key))
-        ],
         "exact_stratum_type_keys": sorted(r.s_key for r in ladder_types["exact_stratum"]),
-        "c2_type_table": [
-            {
-                "s_key": r.s_key,
-                "n_inst": r.n_inst,
-                "n_mols": r.n_mols,
-                "n_scaf": r.n_scaf,
-                "n_ct": r.n_ct,
-                "n_ct_2mol": r.n_ct_2mol,
-                "n_ct_2scaf": r.n_ct_2scaf,
-                "max_scaf_share": round(r.max_scaf_share, 4),
-                "patch_has_hetero": r.patch_has_hetero,
-                "anchor_in_ring": r.anchor_in_ring,
-            }
-            for r in sorted(c2_rows, key=lambda r: (-r.n_mols, r.s_key))
-        ],
     }
 
 
@@ -934,6 +938,15 @@ def triviality_tables(agg: dict) -> dict:
     shares = [r.max_scaf_share for r in hi]
     return {
         "n_types_mol5": len(hi),
+        "max_scaffold_share_at_inst5_max": round(
+            max((r.max_scaf_share for r in rows.values() if r.n_inst >= 5), default=0.0), 4
+        ),
+        "max_scaffold_share_at_inst10_max": round(
+            max((r.max_scaf_share for r in rows.values() if r.n_inst >= 10), default=0.0), 4
+        ),
+        "max_scaffold_share_at_inst50_max": round(
+            max((r.max_scaf_share for r in rows.values() if r.n_inst >= 50), default=0.0), 4
+        ),
         "max_scaffold_share_histogram": jbar(shares, (0.5, 0.8, 0.95, 0.999)),
         "n_types_single_scaffold_family": sum(1 for r in hi if r.max_scaf_share >= 0.999),
         "n_types_mol5_n_scaf_ge2": sum(1 for r in hi if r.n_scaf >= 2),
@@ -1054,148 +1067,328 @@ def _mapped_smiles(mol, atoms: list[int]) -> str:
     return Chem.MolToSmiles(out, canonical=True)
 
 
-def build_examples(agg: dict, insts: list[Instance], mols: list[MolRec], smiles: list[str]) -> list[dict]:
+def build_examples(sources: list[dict]) -> dict:
+    """Five pre-registered example classes (PROTOCOL.md §4.4).
+
+    ``sources`` are searched in order (main dataset first, auxiliary second), so
+    a class that does not occur in the main dataset is still shown with a real
+    instance from the auxiliary one, and its absence is recorded explicitly.
+    No property direction or sign is ever attached to an example.
+    """
     from rdkit import Chem
 
-    rows: dict[str, TypeRow] = agg["rows"]
-    mol_by_uid = {m.mol_uid: m for m in mols}
-    by_type: dict[str, list[Instance]] = defaultdict(list)
-    for inst in insts:
-        by_type[inst.s_key].append(inst)
+    def make_describer(source: dict):
+        smiles = source["smiles"]
+        mol_by_uid = {m.mol_uid: m for m in source["mols"]}
 
-    def describe(inst: Instance) -> dict:
-        mol = Chem.MolFromSmiles(smiles[inst.mol_uid])
-        kek = Chem.Mol(mol)
-        Chem.Kekulize(kek, clearAromaticFlags=True)
-        patch = {inst.u, inst.v}
-        patch |= {n.GetIdx() for n in kek.GetAtomWithIdx(inst.u).GetNeighbors()}
-        patch |= {n.GetIdx() for n in kek.GetAtomWithIdx(inst.v).GetNeighbors()}
-        rec = mol_by_uid[inst.mol_uid]
-        bond = kek.GetBondBetweenAtoms(inst.u, inst.v)
-        return {
-            "row": inst.row,
-            "mol_uid": inst.mol_uid,
-            "smiles": smiles[inst.mol_uid],
-            "mapped_smiles": _mapped_smiles(mol, [inst.u, inst.v]),
-            "anchor_bond": [int(inst.u), int(inst.v)],
-            "anchor_bond_type": BOND_NAMES[bond_order_code(bond)],
-            "local_structure_smiles": _patch_display(kek, sorted(patch), (inst.u, inst.v)),
-            "outer_records": inst.outer_key.split("|") if inst.outer_key else [],
-            "ring_key": list(inst.ring_key),
-            "het_key": list(inst.het_key),
-            "ring_dist": int(inst.ring_dist),
-            "n_heavy": rec.n_heavy,
-            "heavy_formula": rec.heavy_formula,
-            "n_rings": rec.n_rings,
-            "scaffold": rec.scaffold,
-            "topology_family": rec.topo,
-            "primary_context_key": inst.ct_primary,
-            "coarse_context_key": inst.ct_coarse,
-        }
+        def describe(inst: Instance) -> dict:
+            mol = Chem.MolFromSmiles(smiles[inst.mol_uid])
+            kek = Chem.Mol(mol)
+            Chem.Kekulize(kek, clearAromaticFlags=True)
+            patch = {inst.u, inst.v}
+            patch |= {n.GetIdx() for n in kek.GetAtomWithIdx(inst.u).GetNeighbors()}
+            patch |= {n.GetIdx() for n in kek.GetAtomWithIdx(inst.v).GetNeighbors()}
+            rec = mol_by_uid[inst.mol_uid]
+            bond = kek.GetBondBetweenAtoms(inst.u, inst.v)
+            return {
+                "dataset": source["dataset"],
+                "row": inst.row,
+                "mol_uid": inst.mol_uid,
+                "smiles": smiles[inst.mol_uid],
+                "mapped_smiles": _mapped_smiles(mol, [inst.u, inst.v]),
+                "anchor_bond": [int(inst.u), int(inst.v)],
+                "anchor_bond_type": BOND_NAMES[bond_order_code(bond)],
+                "local_structure_smiles": _patch_display(kek, sorted(patch), (inst.u, inst.v)),
+                "outer_records": inst.outer_key.split("|") if inst.outer_key else [],
+                "ring_key": list(inst.ring_key),
+                "het_key": list(inst.het_key),
+                "ring_dist": int(inst.ring_dist),
+                "n_heavy": rec.n_heavy,
+                "heavy_formula": rec.heavy_formula,
+                "n_rings": rec.n_rings,
+                "scaffold": rec.scaffold,
+                "topology_family": rec.topo,
+                "primary_context_key": inst.ct_primary,
+                "coarse_context_key": inst.ct_coarse,
+            }
 
-    examples: list[dict] = []
-    ordered = sorted(rows.values(), key=lambda r: (-r.n_mols, r.s_key))
+        return describe
 
-    # 1. same S in two different scaffolds
-    cand = [r for r in ordered if r.n_scaf >= 2 and r.n_mols >= 5 and r.patch_has_hetero and r.n_ct_2mol >= 2]
-    cand = cand or [r for r in ordered if r.n_scaf >= 2 and r.n_mols >= 5]
-    if cand:
-        row = cand[0]
-        groups: dict[str, list[Instance]] = defaultdict(list)
-        for inst in by_type[row.s_key]:
-            groups[mol_by_uid[inst.mol_uid].scaffold].append(inst)
-        best = sorted(groups, key=lambda s: (-len(groups[s]), s))[:2]
-        examples.append(
+    prepared = []
+    for source in sources:
+        by_type: dict[str, list[Instance]] = defaultdict(list)
+        for inst in source["insts"]:
+            by_type[inst.s_key].append(inst)
+        prepared.append(
             {
-                "case": "same_S_two_different_scaffolds",
-                "why": "同一局部结构在两个不同 Murcko 骨架中重复出现（跨骨架复用）",
-                "type": _type_summary(row),
-                "instances": [describe(sorted(groups[s], key=lambda i: i.row)[0]) for s in best],
-                "scaffold_instance_counts": {s: len(groups[s]) for s in best},
+                "dataset": source["dataset"],
+                "agg": source["agg"],
+                "by_type": by_type,
+                "mols": source["mols"],
+                "describe": make_describer(source),
+                "scaffold": {m.mol_uid: m.scaffold for m in source["mols"]},
             }
         )
 
-    # 2. same S, two independently supported contexts
-    cand2 = [r for r in ordered if r.n_ct_2mol >= 2 and r.n_mols >= 5 and r.patch_has_hetero]
-    cand2 = cand2 or [r for r in ordered if r.n_ct_2mol >= 2]
-    if cand2:
-        row = cand2[0]
+    cases: list[dict] = []
+    missing: dict[str, list[str]] = {}
+
+    def record(name: str, payload: dict, source: dict) -> None:
+        payload["case"] = name
+        payload["dataset"] = source["dataset"]
+        cases.append(payload)
+
+    # class 1: same S in two different scaffolds
+    found = False
+    for s in prepared:
+        rows = s["agg"]["rows"]
+        ordered = sorted(rows.values(), key=lambda r: (-r.n_mols, r.s_key))
+        cand = [r for r in ordered if r.n_scaf >= 2 and r.n_mols >= 5 and r.patch_has_hetero and r.n_ct_2mol >= 2]
+        cand = cand or [r for r in ordered if r.n_scaf >= 2 and r.n_mols >= 5]
+        if not cand:
+            continue
+        row = cand[0]
+        groups: dict[str, list[Instance]] = defaultdict(list)
+        for inst in s["by_type"][row.s_key]:
+            groups[s["scaffold"][inst.mol_uid]].append(inst)
+        best = sorted(groups, key=lambda sc: (-len(groups[sc]), sc))[:2]
+        record(
+            "same_S_two_different_scaffolds",
+            {
+                "why": "同一局部结构在两个不同 Murcko 骨架中重复出现（跨骨架复用）",
+                "type": _type_summary(row),
+                "instances": [s["describe"](sorted(groups[sc], key=lambda i: i.row)[0]) for sc in best],
+                "scaffold_instance_counts": {sc: len(groups[sc]) for sc in best},
+            },
+            s,
+        )
+        found = True
+        break
+    if not found:
+        missing["same_S_two_different_scaffolds"] = [s["dataset"] for s in prepared]
+
+    # class 2: same S, two independently supported contexts
+    found = False
+    for s in prepared:
+        rows = s["agg"]["rows"]
+        ordered = sorted(rows.values(), key=lambda r: (-r.n_mols, r.s_key))
+        cand = [r for r in ordered if r.n_ct_2mol >= 2 and r.n_mols >= 5 and r.patch_has_hetero]
+        cand = cand or [r for r in ordered if r.n_ct_2mol >= 2]
+        if not cand:
+            continue
+        row = cand[0]
         per_ct: dict[str, list[Instance]] = defaultdict(list)
-        for inst in by_type[row.s_key]:
+        for inst in s["by_type"][row.s_key]:
             per_ct[inst.ct_primary].append(inst)
         order = sorted(per_ct, key=lambda c: (-len({i.mol_uid for i in per_ct[c]}), c))[:2]
-        examples.append(
+        record(
+            "same_S_two_independent_contexts",
             {
-                "case": "same_S_two_independent_contexts",
                 "why": "同一局部结构上两个各自有 >=2 个独立分子支持的上下文类型",
                 "type": _type_summary(row),
                 "contexts": [
                     {
                         "n_instances": len(per_ct[c]),
                         "n_molecules": len({i.mol_uid for i in per_ct[c]}),
-                        "n_scaffolds": len({mol_by_uid[i.mol_uid].scaffold for i in per_ct[c]}),
-                        "example": describe(sorted(per_ct[c], key=lambda i: i.row)[0]),
+                        "n_scaffolds": len({s["scaffold"][i.mol_uid] for i in per_ct[c]}),
+                        "example": s["describe"](sorted(per_ct[c], key=lambda i: i.row)[0]),
                     }
                     for c in order
                 ],
-            }
+            },
+            s,
         )
+        found = True
+        break
+    if not found:
+        missing["same_S_two_independent_contexts"] = [s["dataset"] for s in prepared]
 
-    # 3. same S, different *relation* axis (ring / hetero distance) at fixed local structure
-    cand3 = [r for r in ordered if r.n_mols >= 5 and r.n_ring_dist >= 2 and r.n_het_key >= 2 and r.patch_has_hetero]
-    if cand3:
-        row = cand3[0]
+    # class 3: same S, different *relation* axis (ring / hetero distance) at fixed local structure
+    found = False
+    for s in prepared:
+        rows = s["agg"]["rows"]
+        ordered = sorted(rows.values(), key=lambda r: (-r.n_mols, r.s_key))
+        cand = [r for r in ordered if r.n_mols >= 5 and r.n_ring_dist >= 2 and r.n_het_key >= 2 and r.patch_has_hetero]
+        if not cand:
+            continue
+        row = cand[0]
         groups3: dict[int, list[Instance]] = defaultdict(list)
-        for inst in by_type[row.s_key]:
+        for inst in s["by_type"][row.s_key]:
             groups3[inst.ring_dist].append(inst)
         keys = sorted(groups3, key=lambda k: (-len(groups3[k]), k))[:2]
-        examples.append(
+        record(
+            "same_S_different_relation_axis",
             {
-                "case": "same_S_different_relation_axis",
                 "why": "同一局部结构，外部环/杂原子距离关系不同（radius-1 patch 自身不可见）",
                 "type": _type_summary(row),
-                "instances": [describe(sorted(groups3[k], key=lambda i: i.row)[0]) for k in keys],
+                "instances": [s["describe"](sorted(groups3[k], key=lambda i: i.row)[0]) for k in keys],
                 "ring_dist_values": {str(k): len(groups3[k]) for k in keys},
-            }
+            },
+            s,
         )
+        found = True
+        break
+    if not found:
+        missing["same_S_different_relation_axis"] = [s["dataset"] for s in prepared]
 
-    # 4. high frequency, single context (counterexample)
-    cand4 = sorted([r for r in rows.values() if r.n_ct_2mol <= 1], key=lambda r: (-r.n_inst, r.s_key))
-    if cand4:
-        row = cand4[0]
-        first = sorted(by_type[row.s_key], key=lambda i: i.row)[0]
-        examples.append(
+    # class 4: high frequency, single context (counterexample)
+    found = False
+    for s in prepared:
+        rows = s["agg"]["rows"]
+        cand = sorted(
+            [r for r in rows.values() if r.n_ct_2mol <= 1], key=lambda r: (-r.n_inst, r.s_key)
+        )
+        if not cand:
+            continue
+        row = cand[0]
+        first = sorted(s["by_type"][row.s_key], key=lambda i: i.row)[0]
+        record(
+            "high_frequency_single_context_counterexample",
             {
-                "case": "high_frequency_single_context_counterexample",
                 "why": "出现次数很多但只有 <=1 个有独立分子支持的上下文类型 -> 高频 != 上下文多样",
                 "type": _type_summary(row),
-                "instances": [describe(first)],
-            }
+                "instances": [s["describe"](first)],
+            },
+            s,
         )
+        found = True
+        break
+    if not found:
+        missing["high_frequency_single_context_counterexample"] = [s["dataset"] for s in prepared]
 
-    # 5. high frequency, single scaffold family (counterexample)
-    cand5 = sorted(
-        [r for r in rows.values() if r.n_inst >= 50 and r.max_scaf_share >= 0.99],
-        key=lambda r: (-r.n_inst, r.s_key),
-    )
-    if cand5:
-        row = cand5[0]
+    # class 5: single scaffold family (counterexample).  No frequency floor: both
+    # datasets are checked, the largest such type is reported, and the frequency
+    # of the ZINC/auxiliary "closest" case is disclosed in the payload.
+    found = False
+    for s in prepared:
+        rows = s["agg"]["rows"]
+        cand = sorted(
+            [r for r in rows.values() if r.n_inst >= 5 and r.max_scaf_share >= 0.99],
+            key=lambda r: (-r.n_inst, r.s_key),
+        )
+        if not cand:
+            continue
+        row = cand[0]
         groups5: dict[str, list[Instance]] = defaultdict(list)
-        for inst in by_type[row.s_key]:
-            groups5[mol_by_uid[inst.mol_uid].scaffold].append(inst)
-        top_scaf = max(groups5, key=lambda s: len(groups5[s]))
+        for inst in s["by_type"][row.s_key]:
+            groups5[s["scaffold"][inst.mol_uid]].append(inst)
+        top_scaf = max(groups5, key=lambda sc: len(groups5[sc]))
         picks = sorted(groups5[top_scaf], key=lambda i: i.row)[:2]
-        examples.append(
+        record(
+            "high_frequency_single_family_counterexample",
             {
-                "case": "high_frequency_single_family_counterexample",
-                "why": "高频重复几乎全部来自同一骨架家族 -> 独立支持不足",
+                "why": "重复几乎全部来自同一骨架家族 -> 独立支持不足（注意其频率本身可能不高）",
                 "type": _type_summary(row),
                 "scaffold": top_scaf,
                 "scaffold_share": round(row.max_scaf_share, 4),
-                "instances": [describe(i) for i in picks],
-            }
+                "n_instances_single_family_threshold_50": sum(
+                    1 for r in rows.values() if r.n_inst >= 50 and r.max_scaf_share >= 0.99
+                ),
+                "instances": [s["describe"](i) for i in picks],
+            },
+            s,
         )
-    return examples
+        found = True
+        break
+    if not found:
+        missing["high_frequency_single_family_counterexample"] = [s["dataset"] for s in prepared]
+
+    # class 6: composition-controlled pair -- same S, *identical* (n_heavy, formula,
+    # n_rings) molecules, two contexts each with >=2 molecules (the direct evidence
+    # behind criterion C4).  Candidates are ranked by cross-scaffold support first.
+    def composition_matched(source: dict) -> dict:
+        strat_of = {m.mol_uid: (m.n_heavy, m.heavy_formula, m.n_rings) for m in source["mols"]}
+        scaf_of = {m.mol_uid: m.scaffold for m in source["mols"]}
+        agg_rows = source["agg"]["rows"]
+        candidates = []
+        for s_key, n_strata in source["agg"]["strata"]["exact_stratum"].items():
+            if n_strata < 1:
+                continue
+            per: dict[tuple, dict[str, set[int]]] = defaultdict(lambda: defaultdict(set))
+            for inst in source["by_type"][s_key]:
+                per[strat_of[inst.mol_uid]][inst.ct_primary].add(inst.mol_uid)
+            for stratum, per_ct in per.items():
+                good = {ct: mols for ct, mols in per_ct.items() if len(mols) >= 2}
+                if len(good) < 2:
+                    continue
+                order = sorted(good, key=lambda c: (-len(good[c]), c))[:2]
+                scafs = [{scaf_of[m] for m in good[c]} for c in order]
+                candidates.append(
+                    {
+                        "s_key": s_key,
+                        "stratum": {"n_heavy": stratum[0], "heavy_formula": stratum[1], "n_rings": stratum[2]},
+                        "n_strata_for_type": n_strata,
+                        "n_contexts_in_stratum": len(good),
+                        "n_molecules_in_stratum": len({m for mols in good.values() for m in mols}),
+                        "scaffolds_disjoint": scafs[0].isdisjoint(scafs[1]),
+                        "contexts": [
+                            {
+                                "n_molecules": len(good[c]),
+                                "n_scaffolds": len(scafs[k]),
+                                "n_instances": sum(1 for inst in source["by_type"][s_key]
+                                                   if inst.ct_primary == c and strat_of[inst.mol_uid] == stratum),
+                                "example": source["describe"](
+                                    sorted(
+                                        (inst for inst in source["by_type"][s_key]
+                                         if inst.ct_primary == c and strat_of[inst.mol_uid] == stratum),
+                                        key=lambda i: i.row,
+                                    )[0]
+                                ),
+                            }
+                            for k, c in enumerate(order)
+                        ],
+                        "type": _type_summary(agg_rows[s_key]),
+                    }
+                )
+        candidates.sort(
+            key=lambda c: (not c["scaffolds_disjoint"], -c["n_molecules_in_stratum"], c["s_key"])
+        )
+        return {
+            "why": (
+                "同一 S、同一 (n_heavy, 分子式, 环数) 分层内，两个各自有 >=2 分子支持的上下文 "
+                "—— C4 的直接证据（尺寸/组成/环数完全相同的分子之间）"
+            ),
+            "dataset": source["dataset"],
+            "n_candidate_pairs": len(candidates),
+            "n_candidate_pairs_disjoint_scaffolds": sum(
+                1 for c in candidates if c["scaffolds_disjoint"]
+            ),
+            "n_types_with_a_composition_matched_pair": len({c["s_key"] for c in candidates}),
+            "n_types_with_a_composition_matched_pair_in_c2_set": len(
+                {
+                    c["s_key"]
+                    for c in candidates
+                    if agg_rows[c["s_key"]].n_mols >= 5
+                    and agg_rows[c["s_key"]].n_scaf >= 2
+                    and agg_rows[c["s_key"]].n_ct_2mol >= 2
+                }
+            ),
+            "n_types_with_a_cross_scaffold_pair": len(
+                {c["s_key"] for c in candidates if c["scaffolds_disjoint"]}
+            ),
+            "n_types_with_different_molecules_across_contexts": sum(
+                1
+                for c in candidates
+                if c["contexts"][0]["example"]["mol_uid"] != c["contexts"][1]["example"]["mol_uid"]
+            ),
+            "candidates": candidates[:5],
+        }
+
+    return {
+        "sources": [
+            {
+                "dataset": s["dataset"],
+                "n_types": len(s["agg"]["rows"]),
+                "n_candidate_types_inst5_scaf099": sum(
+                    1 for r in s["agg"]["rows"].values() if r.n_inst >= 5 and r.max_scaf_share >= 0.99
+                ),
+            }
+            for s in prepared
+        ],
+        "cases": cases,
+        "missing_cases": missing,
+        "composition_matched_evidence": {s["dataset"]: composition_matched(s) for s in prepared},
+    }
 
 
 def _type_summary(row: TypeRow) -> dict:
@@ -1340,8 +1533,10 @@ def pack_dataset(name: str, mols: list[MolRec], insts: list[Instance], z: dict, 
     )
 
 
-def write_type_tables(analysis_dir: Path, datasets: dict) -> None:
+def write_type_tables(analysis_dir: Path, datasets: dict, only: tuple[str, ...] | None = None) -> None:
     for name, res in datasets.items():
+        if only is not None and name not in only:
+            continue
         data = res["agg"]
         payload = []
         for r in sorted(data["rows"].values(), key=lambda r: (-r.n_mols, r.s_key)):
@@ -1455,11 +1650,30 @@ def main(argv: list[str] | None = None) -> int:
             "support": support_curves(agg),
             "triviality": triviality_tables(agg),
             "chem_composition": chem_composition(agg),
-            "decision_stats": decision_stats(agg),
+            "decision_stats": decision_stats(
+                agg, keep_keys=name in ("zinc__T1__primary", "lipo__T1__primary")
+            ),
         }
 
     primary = datasets["zinc__T1__primary"]
-    examples = build_examples(primary["agg"], zinc["insts"][PRIMARY_TIER], zinc["mols"], zinc_smiles)
+    examples = build_examples(
+        [
+            {
+                "dataset": "zinc_train10k",
+                "agg": datasets["zinc__T1__primary"]["agg"],
+                "insts": zinc["insts"][PRIMARY_TIER],
+                "mols": zinc["mols"],
+                "smiles": zinc_smiles,
+            },
+            {
+                "dataset": "lipo_train",
+                "agg": datasets["lipo__T1__primary"]["agg"],
+                "insts": lipo["insts"][PRIMARY_TIER],
+                "mols": lipo["mols"],
+                "smiles": lipo_smiles,
+            },
+        ]
+    )
     cross = cross_dataset(primary["agg"], datasets["lipo__T1__primary"]["agg"])
     decision = decide(
         {
@@ -1508,13 +1722,16 @@ def main(argv: list[str] | None = None) -> int:
         json.dump(integrity, fh, indent=2)
     with (analysis_dir / "examples.json").open("w") as fh:
         json.dump(examples, fh, indent=2, ensure_ascii=False)
-    write_type_tables(analysis_dir, datasets)
+    # minimal artifact set (PROTOCOL.md §2): type-level tables and the compressed
+    # instance list are written for the two decision datasets / the primary tier
+    # only; the auxiliary tiers and the coarse context mode are summarised in
+    # ``summary.json`` and are reproducible from this script.
+    write_type_tables(analysis_dir, datasets, only=("zinc__T1__primary", "lipo__T1__primary"))
     if not args.no_instances and args.limit is None:
         z: dict[str, np.ndarray] = {
             "meta": np.array([json.dumps({"zinc": zinc["meta"], "lipo": lipo["meta"]})], dtype=object)
         }
-        for tier in (PRIMARY_TIER, *AUX_TIERS):
-            pack_dataset(f"zinc_{tier}", zinc["mols"], zinc["insts"][tier], z)
+        pack_dataset("zinc_T1", zinc["mols"], zinc["insts"][PRIMARY_TIER], z)
         pack_dataset("lipo", lipo["mols"], lipo["insts"][PRIMARY_TIER], z)
         np.savez_compressed(analysis_dir / "instances.npz", **z)
     print(json.dumps({"decision": decision, "runtime_s": summary["runtime_seconds"]}, indent=2))
