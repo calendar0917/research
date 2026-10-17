@@ -2707,3 +2707,59 @@ round_cscl-p3-sam-v1:
     8 predictions (Monitor/Locked x P3/P3SAM x s0/s1) and 4 soups + 2 SSL checkpoints hashed
     before the Monitor read; combined prediction hash eea2790c36e81489...; only Monitor labels
     read; score-locked not run; prior SAC/P3 rounds untouched.
+
+# round: cscl-p3-slim-v1 (does shrinking the P3 reader from 256 to 128 improve held-out MAE?)
+round_cscl-p3-slim-v1:
+  protocol: cscl-p3-slim-v1
+  split_tag: U
+  status: SLIM_NO_USEFUL_GAIN
+  notes: notes/p3_slim_v1.md
+  report: results/p3_slim_v1/REPORT.md
+  deviations: results/p3_slim_v1/DEVIATIONS.md
+  amendments: results/p3_slim_v1/AMENDMENTS.md (amendment 1 = SSL metadata key in cmd_train; amendment 2 = post-SSL shared-hash scope; both failed before any supervised optimizer step/soup/prediction/label read; p3_slim_v1.py byte-identical)
+  code:
+    - code/p3_slim_v1.py       # canonical P3 init, shared-module copy, independent Slim reader init, frozen R3 mirror, G1-G8
+    - code/run_p3_slim_v1.py   # split/verify-inputs/objects/init-audit/cpu-gates/freeze/stage-inputs/smoke/ssl/train/predict/freeze-predictions/score-monitor/score-locked/finalize
+    - configs/p3_slim_v1.yaml
+  question: >-
+    Holding the P3 encoders/composer, Fit-only masked SSL, data, raw-y L1, Adam/cosine R3
+    recipe, batch order and 22,680 updates fixed, does reducing only the graph-level reader
+    from 321-256-256-1 (148,481 params) to 321-128-128-1 (57,857 params) stably lower Monitor
+    and Locked MAE?
+  arms: >-
+    P3 413,505 params (reader 148,481); P3Slim 322,881 params (reader 57,857; -90,624 total,
+    reader -61.0%). Same seed: canonical P3 built first; Slim reader from independent fixed
+    seed seed+10000; four common modules and buffers copied bit-for-bit from canonical P3.
+    Same SSL encoder, same batch order, same 22,680 updates; init/shared/encoder/order hashes
+    asserted equal. No GNN/attention/ensemble/external data/target decomposition.
+  split: >-
+    New identity-grouped split U from official ZINC-12K train 10k, excluding the four known
+    input-mismatch rows (941, 2210, 6071, 9766): 7,996 Fit / 1,000 Monitor / 1,000 Locked.
+    Explicit salt cscl-p3-slim-v1; salt replay and probe asserted; actual split hash
+    9c303656720780ea...; zero zone-hash collisions and no row-identical match vs E/F/S/T.
+    DISCLOSURE: historical_rows_seen_fraction = 1.0, so U is an exposed-pool resample, not an
+    independent blind test. Official valid/test never loaded; labels guarded during
+    objects/SSL/train/predict.
+  cpu_gates: >-
+    8/8 PASS (results/p3_slim_v1/cpu_gates_U.json): G1 P3 413,505 vs Slim 322,881 and reader
+    148,481 vs 57,857; G2 shared modules bitwise equal; G3 P3 new-loop soup/forward/order equals
+    frozen trainer (0.0 diff); G4 reader input 321-d identical; G5 finite nonzero grads for
+    reader and all shared modules; G6 atom relabel/bond swap/batch/save-load invariance;
+    G7 no official valid/test loader and LabelGuard blocks y; G8 same last-5 soup, 22,680
+    updates, identical P3/Slim order. 8/8 pytest pass.
+  result: >-
+    Monitor (n=1,000): P3 0.088836, P3Slim 0.084633, delta -0.004203; per-seed +0.001188 /
+    -0.009594 (directions differ); paired CI [-0.014906,+0.002712]; RMSE -0.144453; ordinary
+    -0.000844; tail (n=74) -0.046231; top-10-removed +0.000771. Gate 4/7: M1/M4/M6/M7 pass,
+    M2/M3/M5 fail -> SLIM_NO_USEFUL_GAIN. Fit MAE 0.001174 vs 0.001311; Monitor-Fit gap
+    0.087662 -> 0.083322 (not success). Seed spread 0.009315 -> 0.001467. Locked unread;
+    no full10k/test; no width/seed/optimizer rescue.
+  budget: >-
+    Formal GPU ledger 1.6045 / 2.0 h including smoke, two SSL runs, four supervised arms,
+    prediction, and failed-retry accounting. Training wall P3 1,189.3 s vs Slim 1,185.4 s
+    (~1.00x); reader width is a small share of compute. Prediction both arms both zones
+    ~9-10 s/seed.
+  discipline: >-
+    8 predictions (Monitor/Locked x P3/P3Slim x s0/s1) and 4 soups + 2 SSL checkpoints hashed
+    before the Monitor read; combined prediction hash 7c407aeefc2a9ae8...; only Monitor labels
+    read; score-locked not run; prior SAC/P3/SAM rounds untouched.
