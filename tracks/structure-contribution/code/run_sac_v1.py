@@ -1323,7 +1323,14 @@ def cmd_cpu_gates(_args: argparse.Namespace) -> int:
 
 
 def cmd_freeze(args: argparse.Namespace) -> int:
-    require(not freeze_path().exists(), "already frozen")
+    amendment = int(getattr(args, "amendment", 0) or 0)
+    if amendment == 0:
+        require(not freeze_path().exists(), "already frozen")
+    else:
+        require(freeze_path().exists(), "an amendment requires an existing freeze")
+        old = read_json(freeze_path())
+        require(int(old.get("amendment", 0)) == amendment - 1, "amendment numbers must be consecutive")
+        require(bool(getattr(args, "amendment_reason", None)), "an amendment requires --amendment-reason")
     gates = read_json(OUT / "cpu_gates.json")
     require(gates["all_passed"], "CPU gates did not all pass")
     require(bool(args.attest_no_gpu_before_freeze), "--attest-no-gpu-before-freeze is required")
@@ -1342,6 +1349,8 @@ def cmd_freeze(args: argparse.Namespace) -> int:
     payload = {
         "protocol": PROTOCOL_ID,
         "split_tag": SPLIT_TAG,
+        "amendment": amendment,
+        "amendment_reason": getattr(args, "amendment_reason", None),
         "git_commit": git_commit(),
         "frozen_utc": now_utc(),
         "code": {name: {"sha256": sha} for name, sha in code_hashes().items()},
@@ -1475,7 +1484,7 @@ def cmd_smoke(args: argparse.Namespace) -> int:
     }
     torch.save({g: {k: v.cpu() for k, v in s.items()} for g, s in enc.items()}, smoke_dir() / "ssl_s1_smoke.pt")
 
-    projected = dict(out["ssl"]["projected_full_seconds"])
+    projected = {"SSL": float(out["ssl"]["projected_full_seconds"])}
     for arm in ARMS:
         model = sac.build_arm(arm, 1, norm, device)
         mp.load_encoder_state(model.base if isinstance(model, sac.SAC) else model, enc, device)
@@ -2194,6 +2203,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     sub.add_parser("cpu-gates")
     p_freeze = sub.add_parser("freeze")
     p_freeze.add_argument("--attest-no-gpu-before-freeze", action="store_true", default=False)
+    p_freeze.add_argument("--amendment", type=int, default=0)
+    p_freeze.add_argument("--amendment-reason", default=None)
     sub.add_parser("stage-inputs")
     p_smoke = sub.add_parser("smoke")
     p_smoke.add_argument("--device", default="cuda:0")
