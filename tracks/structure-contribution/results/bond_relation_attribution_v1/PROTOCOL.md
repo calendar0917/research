@@ -117,6 +117,11 @@ collision。** 本轮评价对象是模型的学习与泛化，不是结构组�
    轮次已在 `bjoc_task_adaptive_ssl_v1` 记录为 ~1e-7；本机逐位一致）**。
    同时记录是否逐位一致。见 §9 amendment-1。
 
+7. SSL 编码器哈希的**前缀约定**必须与历史轮次一致（`atom:`/`bond:`/
+   `junc:`），并断言本脚本重算的整编码器哈希等于 `pretrain_masked` 返回的
+   `encoder_final_sha256`（P3 的 `encoder_used_sha256` 与之相等）。见 §9
+   amendment-2。
+
 原子循环 step 1 与历史 CPU 训练一致性：以 32 个合成/真实图训练 1 epoch，
 `soup` 与直接调用 `bwo.train_supervised_rw` 一致（同一函数，不重实现）。
 
@@ -259,3 +264,11 @@ official valid/test、不据结果重新定义 split。只有在 **CASE_A** 下�
   冻结代码时，D 臂两次 1-epoch micro-smoke 的 soup 出现远端 CPU float32 归约
   的非确定性（本机为 0.0）；此前轮次已记录同一现象。阈值/其它 gate 未变，
   无标签参与，无训练轨迹产生。
+- **amendment-2 (2026-10-18, pre-GPU, post-smoke)**：smoke 门禁发现
+  `full_encoder_group_sha256` 用了 `junction:` 前缀，而历史 P3 约定为
+  `junc:`（`bjoc_perfmech_long_v1.encoder_group_hash`）；修正前缀，并在 SSL
+  结束时断言 `full_encoder_group_sha256 == encoder_final_sha256`，在
+  `freeze-predictions` 中断言 P3 的 `encoder_used_sha256` 等于该值。该 bug
+  会使“P3 与 R/D/U 共用同一 SSL”的匹配审计在冻结预测阶段误报失败，不影响
+  任何已产生结果；仍在任何正式 GPU 训练与标签读取之前，故重新冻结
+  （freeze 重新生成，旧 freeze 仅用于被弃用的 smoke）。

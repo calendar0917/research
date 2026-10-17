@@ -1084,13 +1084,19 @@ def cmd_ssl(args: argparse.Namespace) -> int:
                 {
                     **{f"atom:{k}": v for k, v in enc["atom_encoder"].items()},
                     **{f"bond:{k}": v for k, v in enc["bond_encoder"].items()},
-                    **{f"junction:{k}": v for k, v in enc["junction_encoder"].items()},
+                    **{f"junc:{k}": v for k, v in enc["junction_encoder"].items()},
                 }
             ),
             "forbidden_label_access_attempts": len(guard.access_attempts),
             "official_valid_loaded": False,
             "official_test_loaded": False,
         }
+    )
+    # internal consistency: the recomputed group hash must equal the trainer's
+    # canonical encoder hash (established convention in earlier rounds).
+    require(
+        res["full_encoder_group_sha256"] == res["encoder_final_sha256"],
+        "SSL full-encoder hash convention changed",
     )
     if smoke_updates is None:
         write_json(ssl_json_path(seed), res)
@@ -1377,7 +1383,10 @@ def cmd_freeze_predictions(_args: argparse.Namespace) -> int:
         rec["rdu_encoder_equal_ssl_atom_bond"] = all(
             rec[f"{a}_encoder_used_sha256"] == ssl["atom_bond_group_sha256"] for a in RDU
         )
-        rec["p3_encoder_equal_ssl_full"] = p3["encoder_used_sha256"] == ssl["full_encoder_group_sha256"]
+        rec["p3_encoder_equal_ssl_full"] = (
+            p3["encoder_used_sha256"] == ssl["encoder_final_sha256"]
+            and ssl["encoder_final_sha256"] == ssl["full_encoder_group_sha256"]
+        )
         rec["rdu_init_all_equal"] = len({rec[f"{a}_init"] for a in RDU}) == 1
         rec["batch_order_all_equal"] = len({rec[f"{a}_batch_order"] for a in RDU} | {rec["P3_batch_order"]}) == 1
         rec["updates_all_equal"] = len({rec[f"{a}_updates"] for a in RDU} | {rec["P3_updates"]}) == 1
