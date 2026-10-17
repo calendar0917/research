@@ -1,0 +1,75 @@
+protocol: cscl-bjoc-mfic-v1
+split_tag: V
+salt: cscl-bjoc-mfic-v1
+seeds: [0, 1]
+arms: [P3, MFIC-R, MFIC-U]
+
+alpha: 0.65
+q_dim: 16
+reader_hidden: 256
+reader_layers: 2
+reader_in: 361
+dropout: 0.0
+activation: SiLU
+
+model:
+  p3_parameters: 413505
+  p3_reader_parameters: 148481
+  mfic_parameters: 425297
+  mfic_reader_parameters: 158721
+  q_projection_parameters: 1552
+  shared_parameters: 265024
+
+param_cap: 500000
+
+cpu:
+  folds: 4
+  pca_components: 16
+  ridge_alpha: 1.0
+  trim_k: 10
+  mean_improvement_min: 0.020
+  folds_improved_min: 3
+  tail_threshold: -3.0
+
+recipe:
+  key: R3
+  epochs: 360
+  schedule: cosine
+  lr: 0.001
+  lr_min: 0.00001
+  weight_decay: 0.00001
+  batch_size: 128
+  soup_last: 5
+  shuffle_offset: 101
+  grad_clip: 5.0
+
+ssl:
+  updates: 7560
+  batch_size: 128
+  mode: atom_bond
+  fit_only: true
+
+split:
+  fit_target: 7996
+  monitor_target: 1000
+  locked_target: 1000
+  excluded_rows: [941, 2210, 6071, 9766]
+
+gate:
+  meaningful_delta: 0.004
+  null_delta: 0.003
+  rmse_tol: 0.005
+  tail_tol: 0.005
+  tail_threshold: -3.0
+  top_k_removed: 10
+  bootstrap_n: 5000
+  bootstrap_seed: 0
+  participation_mean: 0.0025
+  participation_max: 0.02
+
+budget:
+  gpu_hours: 3.0
+  smoke_stop_hours: 2.7
+  gpu_assignment:
+    0: 0
+    1: 1
