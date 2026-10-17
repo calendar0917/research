@@ -1,0 +1,112 @@
+{
+ "all_seeds_ok": true,
+ "git_commit": "7fc7ba12319926bffc288de8fcee00436a325d03",
+ "init_rule": "For each seed: build canonical P3 (256-wide reader); build Slim with a separate fixed RNG seed (seed+10000); then copy atom/bond/junction/composer state dicts and the two buffers bit-for-bit from canonical P3. Only the Slim reader remains its own.",
+ "labels_read": false,
+ "n_seeds": 2,
+ "official_test_loaded": false,
+ "official_valid_loaded": false,
+ "protocol": "cscl-p3-slim-v1",
+ "reader_input_dim": 321,
+ "seeds": {
+  "0": {
+   "canonical_p3": {
+    "encoder_sha256": "91af980a414ac945ea35b31c114d4e44b636419b62320321a902179112889d12",
+    "full_sha256": "d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691",
+    "module_parameters": {
+     "atom_encoder": 26336,
+     "bond_encoder": 62816,
+     "group_composer": 62976,
+     "junction_encoder": 112896,
+     "reader": 148481,
+     "total": 413505
+    },
+    "parameters": 413505,
+    "reader_hidden": 256,
+    "reader_in": 321,
+    "reader_sha256": "6ac0964db3cbcf7f9d213d0db9c0e6da9cf23915f7ec2db18d80b1cd189b98ec",
+    "shared_sha256": "e6ed19e5b50a90b11df6c250ec09de14656c176d0a1ea16fa2f0e6c46cd8cbdd"
+   },
+   "encoder_equal": true,
+   "init_rule": "canonical P3 built first; Slim reader built from seed+10000; then all four shared modules and the two buffers copied bit-for-bit from canonical P3",
+   "reader_distinct": true,
+   "reader_input_equal": true,
+   "reader_parameter_reduction": 90624,
+   "seed": 0,
+   "shared_modules_equal": true,
+   "shared_parameter_count": 265024,
+   "slim": {
+    "encoder_sha256": "91af980a414ac945ea35b31c114d4e44b636419b62320321a902179112889d12",
+    "full_sha256": "cd35fb3560688bc88e227b92ed296ed38911b9c29e06a8a379bf402b41edf686",
+    "module_parameters": {
+     "atom_encoder": 26336,
+     "bond_encoder": 62816,
+     "group_composer": 62976,
+     "junction_encoder": 112896,
+     "reader": 57857,
+     "total": 322881
+    },
+    "parameters": 322881,
+    "reader_hidden": 128,
+    "reader_in": 321,
+    "reader_seed": 10000,
+    "reader_sha256": "4e1d9b309a6a2a15c12ff0c3711bd61e97a2944a4705ea40265d9804dd1431bc",
+    "shared_sha256": "e6ed19e5b50a90b11df6c250ec09de14656c176d0a1ea16fa2f0e6c46cd8cbdd"
+   },
+   "total_parameter_reduction": 90624
+  },
+  "1": {
+   "canonical_p3": {
+    "encoder_sha256": "83d8b086bf1f9ee6c145336a3ea67e710bcf42658151061c293c2a3380ddd303",
+    "full_sha256": "c79e6b02521c224e79790382438ca72c08f9e22e691f66fb5ab950dea4b49c0b",
+    "module_parameters": {
+     "atom_encoder": 26336,
+     "bond_encoder": 62816,
+     "group_composer": 62976,
+     "junction_encoder": 112896,
+     "reader": 148481,
+     "total": 413505
+    },
+    "parameters": 413505,
+    "reader_hidden": 256,
+    "reader_in": 321,
+    "reader_sha256": "950ea494b7f8284ffb0ae63bbf7a990ce2cf61f911438c897b486841a6993130",
+    "shared_sha256": "7b9380463ec18f75b2a9dbb71fe27e2738c50b80f50349733af53ffd97b91279"
+   },
+   "encoder_equal": true,
+   "init_rule": "canonical P3 built first; Slim reader built from seed+10000; then all four shared modules and the two buffers copied bit-for-bit from canonical P3",
+   "reader_distinct": true,
+   "reader_input_equal": true,
+   "reader_parameter_reduction": 90624,
+   "seed": 1,
+   "shared_modules_equal": true,
+   "shared_parameter_count": 265024,
+   "slim": {
+    "encoder_sha256": "83d8b086bf1f9ee6c145336a3ea67e710bcf42658151061c293c2a3380ddd303",
+    "full_sha256": "142e4d98e411688115ea18ebb6e83245658eda5bfbd988e9bd3032df75173d6a",
+    "module_parameters": {
+     "atom_encoder": 26336,
+     "bond_encoder": 62816,
+     "group_composer": 62976,
+     "junction_encoder": 112896,
+     "reader": 57857,
+     "total": 322881
+    },
+    "parameters": 322881,
+    "reader_hidden": 128,
+    "reader_in": 321,
+    "reader_seed": 10001,
+    "reader_sha256": "a7de6e505a3192d7694c8885a6ca9fd43a2c04d4654f8829319c776f64110bb6",
+    "shared_sha256": "7b9380463ec18f75b2a9dbb71fe27e2738c50b80f50349733af53ffd97b91279"
+   },
+   "total_parameter_reduction": 90624
+  }
+ },
+ "shared_modules": [
+  "atom_encoder",
+  "bond_encoder",
+  "junction_encoder",
+  "group_composer"
+ ],
+ "slim_reader_seed_offset": 10000
+}
