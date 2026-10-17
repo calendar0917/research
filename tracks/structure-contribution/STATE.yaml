@@ -2763,3 +2763,53 @@ round_cscl-p3-slim-v1:
     8 predictions (Monitor/Locked x P3/P3Slim x s0/s1) and 4 soups + 2 SSL checkpoints hashed
     before the Monitor read; combined prediction hash 7c407aeefc2a9ae8...; only Monitor labels
     read; score-locked not run; prior SAC/P3/SAM rounds untouched.
+
+# round: cscl-bjoc-mfic-v1 (does an analytic matrix-function quadratic form add held-out signal?)
+round_cscl-bjoc-mfic-v1:
+  protocol: cscl-bjoc-mfic-v1
+  split_tag: V
+  status: MFIC_NO_USEFUL_GAIN
+  notes: notes/mfic_v1.md
+  report: results/mfic_v1/REPORT.md
+  cpu_report: results/mfic_v1/REPORT_CPU.md
+  deviations: results/mfic_v1/DEVIATIONS.md
+  code:
+    - code/mfic_v1.py       # analytic A/S/R/K, K_U, 361-d MFIC reader, CPU Ridge probe, audits
+    - code/run_mfic_v1.py   # split V, CPU stages, freeze, smoke/smoke-long, SSL/train/predict/freeze/score
+    - configs/mfic_v1.yaml
+  question: >-
+    Holding the BJOC-P3 encoders/composer, Fit-only masked SSL, data, raw-y L1, Adam/cosine
+    R3 recipe, batch order and 22,680 updates fixed, does replacing the old 96-d sum(a_i^2)
+    block by the 136-d upper triangle of Q^T K Q / max(1,n), with K = sum_{k>=2} 0.65^k S^k
+    from the physical heavy-atom adjacency, lower Monitor/Locked MAE? Three arms: P3 413,505;
+    MFIC-R (real K) and MFIC-U (content-null K_U) both 425,297.
+  cpu_gate: >-
+    PASS, MATRIX_FEATURE_CHEAP_SIGNAL (results/mfic_v1/cpu_gate.json, decision_cpu.json).
+    4-fold identity-grouped Ridge on Fit only: Base 0.496257 -> Matrix 0.395422, delta
+    -0.100835; 4/4 folds negative; trimmed-10 -0.092055; ordinary -0.090967; tail -0.228014.
+    Probe uses fixed 16-d train-fold PCA q and fixed Ridge alpha=1, so it is a cheap-signal
+    test, not a model prediction. Math gates all pass; model audit 20/20 pass; no official
+    valid/test, no model predictions, no Monitor/Locked labels in the CPU probe.
+  result: >-
+    Monitor (n=1,000): P3 0.087845, MFIC-R 0.092489, MFIC-U 0.094765. R-P3 +0.004644
+    (95% CI [+0.001032,+0.008585]; per-seed +0.004711/+0.004577, both positive); ordinary
+    +0.003361; tail (n=58) +0.025482; top-10-removed +0.003229; RMSE 0.243333 vs 0.206378
+    (+0.036955). R-U -0.002276 (CI [-0.005456,+0.000393]; both seeds negative) but fails the
+    pre-registered -0.003 mechanism threshold; U-P3 +0.006920. Only conditions 6b (both seeds
+    R-U negative) and 7 (participation mean 0.0475/0.0491, max 0.647/0.646) pass; 8/10 fail.
+    Fit MAE: MFIC-R 0.000698/0.000811, MFIC-U 0.000788/0.000888, P3 0.001178/0.001016, so the
+    matrix arms fit training better but generalize worse. Decision MFIC_NO_USEFUL_GAIN;
+    Locked labels unread; no full10k, no official test, no rescue.
+  budget: >-
+    Formal GPU ledger 2.0911 / 3.0 h: stage-inputs 0.38 min, first smoke 0.25 min (projected
+    2.855 h and stopped), smoke-long 0.61 min (projected 2.364 h incl. 10% contingency),
+    SSL 26.87/27.62 min, P3 8.96/10.35 min, MFIC-R 11.85/13.09 min, MFIC-U 11.96/13.27 min,
+    predictions 0.03 min/seed, failed retries 0.20 min. res GPU0=seed0, GPU1=seed1; all
+    remote execution via rr at commit 6eabb8b0b367.
+  discipline: >-
+    12 predictions + 6 soups + 2 SSL checkpoints + 4 participation files hashed before the
+    Monitor read; prediction_set_sha256 5fd6b1bc83c0204e3424570b1573efbd6fca9358f779de34b08064191e35baee;
+    prediction freeze 18:35:06 UTC, Monitor read 18:37:23 UTC; Monitor labels read once,
+    Locked read zero times (no locked_read.lock). Official valid/test never loaded; no test
+    0.06 claim; no Batatia et al. ICLR 2024 ZINC 0.063 credit (their model used GCN layers).
+    Split V is an exposed-pool resample (historical_rows_seen_fraction 1.0), not independent.
