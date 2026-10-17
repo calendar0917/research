@@ -482,3 +482,38 @@ def test_json_roundtrip_of_decision_payload():
         r_minus_p3_locked=0.0,
     )
     assert json.loads(json.dumps(payload))["case"].startswith("CASE_")
+
+
+# ---------------------------------------------------------------------------
+# scoring maths on synthetic arrays only (never real held-out labels)
+# ---------------------------------------------------------------------------
+
+
+def _driver():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("bra_driver_under_test", DRIVER)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_arm_stats_formulas_on_synthetic_arrays():
+    drv = _driver()
+    rng = np.random.default_rng(0)
+    # shifted so that the frozen tail region (y <= TAIL_THRESHOLD = -3) is non-empty
+    y = rng.normal(size=64) - 4.0
+    a = {0: y + rng.normal(scale=0.1, size=64), 1: y + rng.normal(scale=0.2, size=64)}
+    b = {0: y + rng.normal(scale=0.3, size=64), 1: y + rng.normal(scale=0.4, size=64)}
+    stats = drv._arm_stats(y, a)
+    per_seed = [float(np.abs(a[s] - y).mean()) for s in (0, 1)]
+    assert abs(stats["mae_seed_mean"] - float(np.mean(per_seed))) < 1e-12
+    assert stats["mae_per_seed"] == {"0": pytest.approx(per_seed[0]), "1": pytest.approx(per_seed[1])}
+    seed_mean_sq = np.mean([(a[s] - y) ** 2 for s in (0, 1)], axis=0)
+    assert abs(stats["rmse_seed_mean"] - float(np.sqrt(seed_mean_sq.mean()))) < 1e-12
+    assert 0.0 <= stats["top10_sse_share"] <= 1.0
+    contrast = drv._contrast(y, a, b)
+    assert abs(contrast["delta_seed_mean"] - (stats["mae_seed_mean"] - drv._arm_stats(y, b)["mae_seed_mean"])) < 1e-12
+    assert contrast["label"] in {"GAIN", "LOSS", "NEUTRAL"}
+    assert contrast["bootstrap"]["ci_lo"] <= contrast["delta_seed_mean"] <= contrast["bootstrap"]["ci_hi"]
+    assert contrast["tail_n"] > 0 and contrast["ordinary_delta"] != contrast["tail_delta"]
