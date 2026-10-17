@@ -1188,12 +1188,14 @@ def cmd_train(args: argparse.Namespace) -> int:
         "shared": sl.shared_hash(p3),
         "encoder": sl.encoder_hash(p3),
         "reader": sl.reader_hash(p3),
+        "composer": sl.module_state_hash(p3.group_composer),
     }
     slim_pre = {
         "full": sl.full_hash(slim),
         "shared": sl.shared_hash(slim),
         "encoder": sl.encoder_hash(slim),
         "reader": sl.reader_hash(slim),
+        "composer": sl.module_state_hash(slim.group_composer),
     }
     require(p3_pre["full"] == rec["canonical_p3"]["full_sha256"], "P3 init full hash does not match audit")
     require(p3_pre["shared"] == rec["canonical_p3"]["shared_sha256"], "P3 init shared hash does not match audit")
@@ -1213,7 +1215,13 @@ def cmd_train(args: argparse.Namespace) -> int:
     slim_enc = sl.encoder_hash(slim)
     require(p3_enc == slim_enc, "P3/Slim SSL encoder hash mismatch")
     require(p3_enc == ssl_meta["full_encoder_group_sha256"], "SSL checkpoint encoder hash mismatch")
-    require(sl.shared_hash(p3) == sl.shared_hash(slim) == p3_pre["shared"], "shared modules changed during SSL load")
+    require(sl.shared_hash(p3) == sl.shared_hash(slim), "P3/Slim shared modules differ after SSL load")
+    require(
+        sl.module_state_hash(p3.group_composer)
+        == sl.module_state_hash(slim.group_composer)
+        == p3_pre["composer"],
+        "composer changed during SSL load",
+    )
 
     info_p3 = sl.train_supervised_model(
         arm="P3",
