@@ -34,7 +34,8 @@ n=1,000: P3 **0.087845**, MFIC-R 0.092489, MFIC-U 0.094765.
 
 Only 6b (both seeds R−U negative) and 7 (participation) pass; 8/10 fail.
 Fit MAE is lower for MFIC-R (0.000698/0.000811) than P3 (0.001178/0.001016):
-the matrix arms overfit the Fit relation rather than generalise.
+the matrix arms show a train-better / held-out-worse overfitting pattern rather
+than useful generalisation. This is descriptive, not a proven causal mechanism.
 
 ## Discipline
 
