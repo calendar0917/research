@@ -892,13 +892,27 @@ def cmd_cpu_gates(_args: argparse.Namespace) -> int:
             norm=norm, device=torch.device("cpu"), ssl_state=None, smoke_epochs=1,
             log_fn=lambda _m: None,
         )
+        sa = {k: v.detach().cpu().float() for k, v in ma.state_dict().items()}
+        sb = {k: v.detach().cpu().float() for k, v in mb.state_dict().items()}
+        max_soup_diff = float(max(float((sa[k] - sb[k]).abs().max()) for k in sa))
         smoke[arm] = {
-            "soup_identical": bwo.state_dict_hash(ma) == bwo.state_dict_hash(mb),
+            "soup_identical_bitwise": bwo.state_dict_hash(ma) == bwo.state_dict_hash(mb),
+            "soup_max_abs_diff": max_soup_diff,
+            "soup_within_float32_noise_floor": bool(max_soup_diff <= 1e-6),
             "batch_order_matches": ia["batch_order"]["full_matches"] and ib["batch_order"]["full_matches"],
             "init_equal_to_reference": ia["init_full_sha256"] == init["0"]["bondrw_init_sha256"][0],
             "finite": bool(np.isfinite(ia["soup_fit_mae"])),
         }
-        require(all(smoke[arm].values()), f"{arm}: micro-smoke gate failed {smoke[arm]}")
+        # Amendment-1 (pre-GPU, no labels): remote CPU float32 reductions are
+        # run-to-run non-deterministic at ~1e-7 (documented in earlier rounds),
+        # so the gate is a noise floor, not bitwise equality.
+        require(
+            smoke[arm]["soup_within_float32_noise_floor"]
+            and smoke[arm]["batch_order_matches"]
+            and smoke[arm]["init_equal_to_reference"]
+            and smoke[arm]["finite"],
+            f"{arm}: micro-smoke gate failed {smoke[arm]}",
+        )
     out["micro_smoke"] = smoke
 
     # --- LabelGuard positive control ---------------------------------------

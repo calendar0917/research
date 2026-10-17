@@ -112,7 +112,10 @@ collision。** 本轮评价对象是模型的学习与泛化，不是结构组�
 3. bond 槽位置换 + 核同步置换：前向输出不变（≤1e-6）。
 4. batch 组成：单分子批量预测 == 混合批量中的对应预测（≤1e-6）。
 5. 保存/加载 checkpoint 后前向一致。
-6. 2 次相同参数的 1-epoch micro-smoke 训练 soup 哈希一致（CPU）。
+6. 2 次相同参数的 1-epoch micro-smoke 训练 soup 一致：**逐位一致，或
+   `max|Δsoup| ≤ 1e-6`（远端 CPU float32 归约 run-to-run 非确定，历史
+   轮次已在 `bjoc_task_adaptive_ssl_v1` 记录为 ~1e-7；本机逐位一致）**。
+   同时记录是否逐位一致。见 §9 amendment-1。
 
 原子循环 step 1 与历史 CPU 训练一致性：以 32 个合成/真实图训练 1 epoch，
 `soup` 与直接调用 `bwo.train_supervised_rw` 一致（同一函数，不重实现）。
@@ -247,3 +250,12 @@ official valid/test、不据结果重新定义 split。只有在 **CASE_A** 下�
 - `holdout_read.lock`、`holdout_score_E.json`、`per_molecule_errors_{locked,monitor}.csv`
 - `post_hoc_mechanism.json`、`gpu_budget_ledger.json`、`decision.json`
 - `REPORT.md`（中文，含 R/D/U/P3 同轮主表、混杂说明、最终判断）
+
+## 9. 预执行修正记录（均在任何本轮标签读取与 GPU 训练之前）
+
+- **amendment-1 (2026-10-18, pre-GPU)**：CPU gate §3.4.6 的 micro-smoke
+  确定性检查由“soup 哈希逐位一致”改为“逐位一致或 `max|Δsoup| ≤ 1e-6`”，
+  并记录 `soup_identical_bitwise`。触发原因：`bra-cpu` 在 `res` 上运行同一份
+  冻结代码时，D 臂两次 1-epoch micro-smoke 的 soup 出现远端 CPU float32 归约
+  的非确定性（本机为 0.0）；此前轮次已记录同一现象。阈值/其它 gate 未变，
+  无标签参与，无训练轨迹产生。

@@ -129,6 +129,14 @@ cpu_gates:
   nondegeneracy_min_max_abs_diff: 1.0e-6
   invariance_tol: 1.0e-6
   param_count: {R: 349985, D: 349985, U: 349985, P3: 413505}
+  micro_smoke_rule: >
+    two identical 1-epoch micro-smoke runs must match bitwise or within
+    max|dsoup| <= 1e-6 (remote CPU float32 reduction noise ~1e-7, documented
+    in earlier rounds); bitwise equality is recorded separately.
+  amendments:
+    - id: amendment-1
+      when: "2026-10-18 pre-GPU (no labels read)"
+      what: "micro-smoke determinism gate is a float32 noise floor, not bitwise soup-hash equality"
   reuse_hashes:
     bond_random_walk_organization_v1.py: "efda1dd72ac4465583b0e913c348a949c0c3e5ec9d92c965cd0631a89e39e7f0"
     bond_rw_local_vs_multiscale_v1.py: "6638b238e36b601f829b83cf30078926430c8f1eab8cf2dbfa0b60f735b46c81"
