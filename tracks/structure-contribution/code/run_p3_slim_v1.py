@@ -1167,6 +1167,7 @@ def cmd_train(args: argparse.Namespace) -> int:
     device = torch.device(args.device)
     norm = load_norm()
     ssl = load_ssl(seed)
+    ssl_meta = read_json(ssl_json_path(seed))
     split = load_split()
     fit_objs = load_zone_objects("fit")
     require([o.mol_index for o in fit_objs] == [int(i) for i in split["fit_rows"]], "fit objects do not match split")
@@ -1211,7 +1212,7 @@ def cmd_train(args: argparse.Namespace) -> int:
     p3_enc = sl.encoder_hash(p3)
     slim_enc = sl.encoder_hash(slim)
     require(p3_enc == slim_enc, "P3/Slim SSL encoder hash mismatch")
-    require(p3_enc == ssl["full_encoder_group_sha256"], "SSL checkpoint encoder hash mismatch")
+    require(p3_enc == ssl_meta["full_encoder_group_sha256"], "SSL checkpoint encoder hash mismatch")
     require(sl.shared_hash(p3) == sl.shared_hash(slim) == p3_pre["shared"], "shared modules changed during SSL load")
 
     info_p3 = sl.train_supervised_model(
