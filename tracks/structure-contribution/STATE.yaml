@@ -2657,3 +2657,53 @@ round_cscl-bjoc-sac-v1:
     training/prediction (LabelGuard, 0 attempts); all 28 prediction files (own 12, content-null
     swap 8, T-zeroing 8) plus the label-free participation diagnostic frozen and hashed before the
     single read; no post-read model/threshold/selection change.
+
+# round: cscl-p3-sam-v1 (can a flatness bias in supervised optimisation alone narrow the P3 gap?)
+round_cscl-p3-sam-v1:
+  protocol: cscl-p3-sam-v1
+  split_tag: T
+  status: SAM_NO_USEFUL_GAIN
+  notes: notes/p3_sam_v1.md
+  report: results/p3_sam_v1/REPORT.md
+  deviations: results/p3_sam_v1/DEVIATIONS.md
+  amendments: results/p3_sam_v1/AMENDMENTS.md (amendment 1 = smoke-only `curve` vs `lr_curve` key; after freeze but before any supervised step/prediction; `p3_sam_v1.py` byte-identical, 7/7 gates and 9/9 tests re-passed)
+  code:
+    - code/p3_sam_v1.py       # TwoStepSAM, frozen R3-mirroring SAM loop, G1-G7 gates
+    - code/run_p3_sam_v1.py   # split/verify-inputs/objects/cpu-gates/freeze/stage-inputs/smoke/ssl/train/predict/freeze-predictions/score-monitor/score-locked/finalize
+    - configs/p3_sam_v1.yaml
+  question: >-
+    Holding architecture, parameters (413,505), Fit-only masked SSL, data, batch order, loss,
+    schedule and update budget fixed, does replacing Adam's outer step with standard two-step SAM
+    (global-L2 perturbation, fixed rho=0.05, same minibatch, clip 5.0 after the second backward)
+    stably reduce P3's Monitor/Locked MAE?
+  arms: >-
+    A = exact frozen P3-R3 trainer (`bjoc_perfmech_long_v1.train_supervised`). B = identical
+    model/init/SSL/samples/updates, SAM only. Same seed: pre-SSL full/group/encoder hashes, SSL
+    encoder hash, batch-order hash and 22,680 updates asserted equal. No rho search, no ASAM,
+    no extra regularisation/dropout/loss change, no capacity or structure input.
+  split: >-
+    New identity-grouped split T from official ZINC-12K train 10k, the four known input-mismatch
+    rows (941, 2210, 6071, 9766) excluded: 7,996 Fit / 1,000 Monitor / 1,000 Locked. Explicit
+    salt `cscl-p3-sam-v1`; salt is re-derived from saved metadata and changed by a probe; actual
+    row hash aceed4408911304e...; no zone-hash or row-identity collision with E/F/S. DISCLOSURE:
+    historical_rows_seen_fraction = 1.0, so T is an exposed-pool resample, not an independent
+    blind test. Official valid/test never loaded; labels guarded during objects/SSL/train/predict.
+  cpu_gates: >-
+    7/7 PASS (results/p3_sam_v1/cpu_gates_T.json): exact parameter restore (0.0), perturbation
+    norm = rho, Adam/scheduler step counts, clip only after second backward, last-5 soup members
+    [2..6], rho=0 soup bitwise equal to the frozen P3 trainer, real Fit-size batch order hashes
+    and 22,680-update budget. tests/test_p3_sam_v1.py 9/9 pass.
+  result: >-
+    Monitor (n=1,000): P3 0.087028, P3SAM 0.131579, delta +0.044551; per-seed +0.053841 /
+    +0.035261 (both positive); paired CI [+0.029202,+0.063349]; RMSE +0.180261; ordinary
+    +0.037459; tail (n=77) +0.129567; top-10-removed +0.043406. All 7 gate conditions false.
+    Seed spread worsened 0.007020 -> 0.011560. Soup Fit MAE 0.001384/0.000993 vs
+    0.008593/0.008615; Monitor-Fit gap 0.085839 -> 0.122975. Train wall 1,146.7 s vs 2,190.6 s
+    (~1.91x). Decision SAM_NO_USEFUL_GAIN; Locked labels unread; no full10k/test.
+  budget: >-
+    Formal GPU ledger 1.8480 / 3.0 h including successful smoke, 20-update failed smoke, SSL,
+    both arms' training and prediction. Training SAM is 2 forward + 2 backward per update.
+  discipline: >-
+    8 predictions (Monitor/Locked x P3/P3SAM x s0/s1) and 4 soups + 2 SSL checkpoints hashed
+    before the Monitor read; combined prediction hash eea2790c36e81489...; only Monitor labels
+    read; score-locked not run; prior SAC/P3 rounds untouched.
