@@ -1030,7 +1030,8 @@ def require_freeze() -> Mapping[str, Any]:
     require(freeze_path().exists(), "protocol_freeze.json missing: run freeze-pre-gpu first")
     payload = read_json(freeze_path())
     require(payload.get("cpu_gate_passed") is True, "freeze does not record a CPU pass")
-    require(payload["code"] == code_hashes(), "code changed after freeze; refusing GPU run")
+    frozen_code = {name: rec["sha256"] for name, rec in payload["code"].items()}
+    require(frozen_code == code_hashes(), "code changed after freeze; refusing GPU run")
     require(payload["config"]["sha256"] == config_sha256(), "config changed after freeze")
     require(payload["protocol_doc"]["sha256"] == file_sha256(PROTOCOL_DOC), "protocol doc changed after freeze")
     return payload
