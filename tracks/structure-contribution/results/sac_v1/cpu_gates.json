@@ -1,0 +1,287 @@
+{
+ "all_passed": true,
+ "device": "cpu",
+ "gates": [
+  {
+   "n_rows": 500,
+   "name": "G1_physical_bonds_deduplicated",
+   "note": "PyG stores every bond twice; one physical bond object per undirected pair",
+   "offenders": [],
+   "ok": true
+  },
+  {
+   "max_pair_multiplicity": 1,
+   "mean_coverage": 0.3485704256559855,
+   "n_molecules": 64,
+   "name": "G2_relations_pairwise_disjoint",
+   "ok": true
+  },
+  {
+   "cases": {
+    "chain": {
+     "m": [
+      5,
+      4,
+      0
+     ],
+     "n_bonds": 6
+    },
+    "disconnected": {
+     "R3_pairs": 0,
+     "unreachable_pairs": 9
+    },
+    "fused": {
+     "all_ring_in_one_block": true,
+     "m": [
+      14,
+      18,
+      23
+     ],
+     "n_bridge_blocks": 0,
+     "n_ring_blocks": 1
+    },
+    "ring6": {
+     "all_bonds_ring": true,
+     "m": [
+      6,
+      6,
+      3
+     ],
+     "n_bonds": 6,
+     "n_bridge_blocks": 0,
+     "n_ring_blocks": 1
+    },
+    "single_bond": {
+     "m": [
+      0,
+      0,
+      0
+     ]
+    },
+    "spiro": {
+     "cross_block_R3_pairs": 0,
+     "cross_block_far_pairs": 4,
+     "n_bridge_blocks": 0,
+     "n_ring_blocks": 2
+    },
+    "two_bonds": {
+     "m": [
+      1,
+      0,
+      0
+     ]
+    }
+   },
+   "name": "G3_ring_block_semantics",
+   "ok": true
+  },
+  {
+   "atom_relabel_P3_max_abs": 7.450580596923828e-09,
+   "atom_relabel_SAC_max_abs": 7.450580596923828e-09,
+   "batch_permutation_max_abs": 0.0,
+   "bond_endpoint_swap": "canonical u<v enforced by unique_undirected_bonds",
+   "name": "G4_permutation_invariance",
+   "ok": true
+  },
+  {
+   "name": "G5_matched_initialisation",
+   "ok": true,
+   "p3_full_state_sha256": "d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691",
+   "p3_parameters": 413505,
+   "p3_repeatable": true,
+   "param_cap_ok": true,
+   "reader_content_columns_match_p3": true,
+   "reader_later_layers_match_p3": true,
+   "sac_full_state_sha256": "01800998ef708818ed43f4eea92c9b92a0dc28fa532334227f4da96aba9d6f35",
+   "sac_new_parameters": 26184,
+   "sac_parameters": 439689,
+   "sac_r_u_full_state_identical": true,
+   "shared_trunk_matches_p3": true,
+   "shared_trunk_sha256": "519ee055234267476deaece1f893529d7875a5c952329265787b551f9c278914"
+  },
+  {
+   "name": "G6_gradient_liveness",
+   "ok": true,
+   "probe_R": {
+    "T_abs_mean": [
+     0.01340261846780777,
+     0.013533477671444416,
+     0.011023182421922684
+    ],
+    "grad_norm_T_R1": 0.007573470938950777,
+    "grad_norm_T_R2": 0.006655328441411257,
+    "grad_norm_T_R3": 0.005872372072190046,
+    "grad_norm_atom_encoder": 0.2381716790431371,
+    "grad_norm_bond_encoder": 0.016826819032006637,
+    "grad_norm_content_block": 0.027152305468916893,
+    "grad_norm_counts_block": 0.0027566449716687202,
+    "grad_norm_group_composer": 0.17427079822240565,
+    "grad_norm_junction_encoder": 0.0602806495247969,
+    "grad_norm_project": 0.005772991105870545,
+    "grad_norm_reader": 1.2062112768349336,
+    "loss": 1.345194697380066,
+    "reader_input_grad_norm": 0.029681341722607613
+   },
+   "probe_U": {
+    "T_abs_mean": [
+     0.013428336009383202,
+     0.013484297320246696,
+     0.011058453470468521
+    ],
+    "grad_norm_T_R1": 0.007573393639177084,
+    "grad_norm_T_R2": 0.006655312143266201,
+    "grad_norm_T_R3": 0.00587237486615777,
+    "grad_norm_atom_encoder": 0.23817184009853934,
+    "grad_norm_bond_encoder": 0.016827482513445798,
+    "grad_norm_content_block": 0.027152273803949356,
+    "grad_norm_counts_block": 0.0027566514909267426,
+    "grad_norm_group_composer": 0.17427137471747875,
+    "grad_norm_junction_encoder": 0.060291923850283737,
+    "grad_norm_project": 0.005760990215530184,
+    "grad_norm_reader": 1.206208293897475,
+    "loss": 1.345194697380066,
+    "reader_input_grad_norm": 0.029681283980607986
+   }
+  },
+  {
+   "T_R_max_abs_change": 0.0016705803573131561,
+   "T_U_max_abs_change": 1.4901161193847656e-08,
+   "bond_content_multiset_preserved": true,
+   "interpretation": "same bond-content multiset, different structural assignment: real tensors move, the content null is invariant",
+   "n_non_automorphism_transpositions": 55,
+   "name": "G7_relation_assignment_witness",
+   "ok": true,
+   "ratio": 112110.75,
+   "transposition": [
+    2,
+    5
+   ]
+  },
+  {
+   "T_matches_explicit_double_loop": true,
+   "composed_bond_vector_unchanged": true,
+   "forbidden_modules": [],
+   "forbidden_tokens": [],
+   "index_add_sites": [
+    "accum = accum.index_add(0, graph, msg)"
+   ],
+   "name": "G8_no_message_passing",
+   "note": "the only index_add is the graph-level pair reduction; c_e is never refreshed",
+   "ok": true,
+   "q_depends_only_on_own_bond": true,
+   "z_unchanged": true
+  },
+  {
+   "R": {
+    "finite": true,
+    "n_pairs_per_relation": [
+     5,
+     0,
+     0
+    ],
+    "single_bond_T_abs_max": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "U": {
+    "finite": true,
+    "n_pairs_per_relation": [
+     5,
+     5,
+     5
+    ],
+    "single_bond_T_abs_max": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "U_single_bond_strict_zero": true,
+   "name": "G9_degenerate_stability",
+   "ok": true
+  },
+  {
+   "guarded_structure_readable": true,
+   "guarded_y_blocked": true,
+   "label_guard_selfcheck": {
+    "guarded_y_blocked": true,
+    "structure_passthrough": true,
+    "unguarded_y_allowed": true
+   },
+   "name": "G10_label_discipline",
+   "official_loader_tokens": [],
+   "ok": true
+  },
+  {
+   "batch_order_equal": true,
+   "epochs": 2,
+   "n_molecules": 64,
+   "name": "G11_trainer_equivalence",
+   "note": "bitwise soup equality with the frozen bjoc_perfmech_long_v1 trainer for P3",
+   "ok": true,
+   "reference_soup_sha256": "d9a921d1267adc4b9bb8109b9b54bb28c8cc764e08f2939bac2135c5044a3d04",
+   "sac_loop_soup_sha256": "d9a921d1267adc4b9bb8109b9b54bb28c8cc764e08f2939bac2135c5044a3d04"
+  },
+  {
+   "detail": {
+    "mol0_s0": {
+     "m": 3,
+     "max_abs_err": 1.5904008492106936e-09,
+     "n": 4
+    },
+    "mol0_s1": {
+     "m": 2,
+     "max_abs_err": 2.5693963796868946e-09,
+     "n": 4
+    },
+    "mol0_s2": {
+     "m": 0,
+     "max_abs_err": 0.0,
+     "n": 4
+    },
+    "mol1_s0": {
+     "m": 8,
+     "max_abs_err": 3.325447557947503e-09,
+     "n": 8
+    },
+    "mol1_s1": {
+     "m": 8,
+     "max_abs_err": 4.382152210546941e-09,
+     "n": 8
+    },
+    "mol1_s2": {
+     "m": 12,
+     "max_abs_err": 3.797973130437171e-09,
+     "n": 8
+    },
+    "mol2_s0": {
+     "m": 14,
+     "max_abs_err": 8.75476961065269e-09,
+     "n": 11
+    },
+    "mol2_s1": {
+     "m": 18,
+     "max_abs_err": 1.4282579147151253e-08,
+     "n": 11
+    },
+    "mol2_s2": {
+     "m": 23,
+     "max_abs_err": 6.175090994098298e-09,
+     "n": 11
+    }
+   },
+   "name": "G12_content_null_identity",
+   "ok": true
+  }
+ ],
+ "git_commit": "d0ffa1800967fb38a57e5628b5d189aabd6931fc",
+ "labels_read": "Fit y only (gate 11 trainer equivalence)",
+ "n_gates": 12,
+ "n_passed": 12,
+ "official_test_loaded": false,
+ "official_valid_loaded": false,
+ "protocol": "cscl-bjoc-sac-v1",
+ "torch": "2.5.1+cu124"
+}

@@ -2559,3 +2559,86 @@ round_cscl-p3-bond-relation-bridge-v1:
     hashed before the single read; no post-read model/threshold/selection change; no extra
     seed or architecture after the decision; amendment 1 pre-GPU and disclosed; deviation
     D-1 (split F == split E) disclosed post-read and NOT repaired by re-running.
+
+# ---------------------------------------------------------------------------
+# round: cscl-bjoc-sac-v1 (can a structurally constrained SECOND-ORDER
+# interaction tensor — graph-level q_e * q_f sums over real R1/R2/R3 bond
+# pairs, no message passing, no gate — improve held-out prediction on top of
+# the unchanged strong BJOC-P3 content trunk, and can any gain be attributed
+# to the real structural assignment rather than to generic second-order
+# capacity?; preregistered, two seeds, one single read of Monitor+Locked,
+# NEW split salt with an asserted split-builder regression test)
+# ---------------------------------------------------------------------------
+
+round_cscl-bjoc-sac-v1:
+  status: PREREGISTERED + FROZEN 2026-10-17; CPU gates 12/12; split S built with a new asserted salt (fit/monitor/locked 7,996/1,000/1,000; no hash collision with splits E/F); pending GPU (seed 0 -> GPU0, seed 1 -> GPU1, cap 4 GPU-h)
+  protocol: >-
+    configs/sac_v1.yaml (protocol id cscl-bjoc-sac-v1).  Frozen by protocol_freeze.json
+    (code + config + split/objects/relations/gates/input-audit sha256) BEFORE any GPU
+    trajectory of this round.
+  notes: results/sac_v1/PROTOCOL.md
+  code:
+    - code/sac_v1.py       # R1/R2/R3 on the physical-bond line graph, ZoneRelations batching, graph-level q_s(e)*q_s(f) tensors, content-null U, SAC model, frozen R3-mirroring trainer, A/B/C/E/D decision vocabulary
+    - code/run_sac_v1.py   # split/verify-inputs/objects/relations/cpu-gates/freeze/stage-inputs/smoke/ssl/train/predict/freeze-predictions/score-holdout/post-hoc/finalize
+    - configs/sac_v1.yaml
+  tests: tests/test_sac_v1.py (17 fast tests, all pass; relation definitions/disjointness/ring-block edge cases, U identity, relation-assignment witness, no-per-bond-aggregation, permutation invariance, parameter/init matching, decision vocabulary)
+  question: >-
+    Replacing only the graph-level composition and the reader input of BJOC-P3 (shared atom/bond/
+    junction encoders, masked SSL, Null composer, per-bond c_e in R^96 all unchanged), do
+    structure-fixed second-order tensors T_s = sum_{R_s} q_s(e)*q_s(f)/sqrt(|R_s|) with
+    q_s = tanh(W_s c_e) (24 dims) give an absolute held-out MAE gain over same-round P3, and is
+    any gain attributable to the real bond-pair <-> structure correspondence rather than to the
+    extra 26,184 parameters + generic second-order interaction?
+  arms: >-
+    P3 413,505 params (unchanged); SACR and SACU 439,689 params (projections 6,984 + widened
+    396-256-256-1 reader 167,681 replacing the 148,481 P3 reader; the P3 reader is REMOVED so
+    there are no dead parameters).  SACR uses real R1 (line distance 1), R2 (distance 2),
+    R3 (same ring-bearing biconnected block AND line distance >= 3) disjoint unordered pair
+    lists; SACU uses the identical computation graph, parameters, init and budget with
+    T_s^U = [m_s/C(n,2)] * sum_{e<f} q_s(e)q_s(f) / sqrt(max(1,m_s)) and the molecule's true
+    m_s.  SACU is explicitly NOT row-sum-matched and NOT equal-FLOP; SACR-SACU therefore does
+    not isolate a pure causal effect of "true connectivity".
+  split: >-
+    New salt cscl-bjoc-sac-v1 passed EXPLICITLY (the p3 round's salt default bug is the
+    regression test): the save-time salt is re-derived, the split is recomputed from the saved
+    metadata salt, a salt probe changes the rows, splits E and F are reproduced row-for-row from
+    their effective salts (E: cscl-bond-relation-attribution-v1; F: the same builder default,
+    confirming the p3 DEVIATIONS D-1 metadata bug), and the new zone hashes
+    (bb01cf9e/517acaab/1c08ea5f) collide with no historical zone hash.  9,996 usable rows,
+    9,993 identity groups, 0 groups crossing zones.  DISCLOSURE: all 9,996 rows were seen in
+    some historical zone (new-locked: F-fit 786, F-locked 106, F-monitor 108; new-monitor:
+    F-fit 787/F-locked 105/F-monitor 108), so this is a NEW PARTITION of a reused pool, not a
+    blind test population.
+  cpu_gates: >-
+    12/12 PASS (results/sac_v1/cpu_gates.json).  Highlights: physical bonds deduplicated on 500
+    real rows; R1/R2/R3 pairwise disjoint (max multiplicity 1) with mean coverage 0.29;
+    ring-block semantics on chain (m=[5,4,0]), C6 (m=[6,6,3]), spiro (2 blocks, cross-ring
+    far pairs exist but R3=0), fused (1 block, R3>0), disconnected (unreachable pairs exist,
+    R3=0); atom relabel 7.5e-9 and batch permutation 0.0 prediction change; SACR/SACU full-state
+    hash identical, shared trunk hash == P3 (d06d5e16...-compatible), reader content columns and
+    later layers bit-identical to P3; relation-assignment witness (same bond-content multiset,
+    non-automorphism transposition) moves the real tensor by 1.67e-3 and the content null by
+    1.5e-8 (ratio 1.1e5); c and z bitwise unchanged vs base, q_s(e) depends only on c_e, T_s equals
+    the explicit double loop, the only index_add is the graph-level pair reduction;
+    P3 loop bitwise-equal soup with the frozen trainer (2 epochs, 64 molecules).
+  parameters_audit: "P3 413,505; SAC 439,689 (+26,184, +6.3%); cap 500,000 satisfied; no dead/unused parameters"
+  recipe: >-
+    Three arms share, per seed, the Fit-only masked atom+bond SSL checkpoint (7,560 updates),
+    raw-y L1, R3 (360 epochs cosine 1e-3->1e-5, wd 1e-5, clip 5, batch 128, last-5 soup), the
+    same batch order, and the same update count.  No width/LR/dropout/optimizer/epoch search and
+    no extra seed.
+  scoring: >-
+    Pre-registered: primary zone Locked, replication zone Monitor, molecule-level paired
+    bootstrap (5,000, molecule unit).  Strong-positive requires SACR-P3 <= -0.004,
+    SACR-SACU <= -0.003, both seeds same sign, both paired CIs excluding 0, ordinary and
+    top-10-removed not worse, and a label-free participation check (trained SACR with the
+    content-null tensors: mean|dpred| >= 0.0025 and max|dpred| >= 0.02 on Locked, frozen with
+    the predictions before the single label read).  Cases: A mechanism gain / B relation used but
+    no headline gain / C generic second-order / E unattributed / D no gain.  Stop rules: no
+    full10k, no official test, no rank/kernel/width/init rescue, no extra seed unless the full
+    strong-positive set is met.
+  discipline: >-
+    official valid/test never loaded; Monitor/Locked y unreachable during objects/relations/SSL/
+    training/prediction (LabelGuard, 0 attempts); all 28 prediction files (own 12, content-null
+    swap 8, T-zeroing 8) plus the label-free participation diagnostic frozen and hashed before the
+    single read; no post-read model/threshold/selection change.

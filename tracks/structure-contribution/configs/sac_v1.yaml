@@ -1,0 +1,93 @@
+# Frozen configuration for protocol cscl-bjoc-sac-v1 (BJOC-SAC).
+# Pre-registered BEFORE any this-round GPU trajectory.  Changing any value
+# after `freeze` invalidates the round (protocol_freeze.json binds the sha256).
+protocol: cscl-bjoc-sac-v1
+split_tag: S
+salt: cscl-bjoc-sac-v1
+
+seeds: [0, 1]
+arms: [P3, SACR, SACU]
+relation_arms: [SACR, SACU]
+relation_mode_of_arm:
+  SACR: R
+  SACU: U
+
+# ---- relation projections -------------------------------------------------
+project_dim: 24
+project_init_offset: 104729
+project_activation: tanh
+project_input: "per-bond composed vector c_e (96 dims) produced by the frozen P3 Null composer"
+
+# ---- relations (structurally fixed, label-blind, unordered e<f) ----------
+relations:
+  R1: "dist_line(e,f) == 1  (the two physical bonds share exactly one atom)"
+  R2: "dist_line(e,f) == 2"
+  R3: "both bonds in the same ring-bearing biconnected block AND dist_line(e,f) >= 3"
+disjoint_relations: true
+self_pairs: false
+ring_block_definition: >
+  Tarjan biconnected components of the atom graph; a block is ring-bearing iff it
+  has >= 3 edges.  Bridges form their own 1-edge blocks and can never enter R3;
+  spiro rings (one shared atom) are two blocks, so cross-ring pairs are excluded;
+  fused/polycyclic rings share edges and therefore one block; disconnected
+  components never share a block.
+graph_tensor: "T_s = sum_{(e,f) in R_s} (q_s(e) * q_s(f)) / sqrt(max(1, |R_s|))"
+
+# ---- content null (SACU) --------------------------------------------------
+content_null: "T_s^U = [m_s / C(n,2)] * sum_{e<f} (q_s(e) * q_s(f)) / sqrt(max(1, m_s)); zero when n<2 or m_s==0"
+content_null_not: "not a row-sum/degree-matched null and not an equal-FLOP control"
+
+# ---- readout --------------------------------------------------------------
+readout_input: "concat(P3_original_reader_input, T_1, T_2, T_3, log1p(|R_1|), log1p(|R_2|), log1p(|R_3|))"
+reader_hidden: 256
+reader_layers: 2
+reader_activation: silu
+reader_gate: none
+reader_content_path: "first 321 columns + bias of the first reader layer and all later layers copied from the P3 reader init; the 75 new input columns use the standard independent uniform(-1/sqrt(fan_in), +1/sqrt(fan_in)) init"
+
+# ---- parameters ----------------------------------------------------------
+base_parameters: 413505
+sac_parameters: 439689
+sac_new_parameters: 26184
+param_cap: 500000
+soup_shared_with_p3: "atom/bond/junction encoders + group composer + Null organisation mode"
+
+# ---- data ----------------------------------------------------------------
+excluded_rows: [941, 2210, 6071, 9766]
+n_usable: 9996
+fit_target: 7996
+monitor_target: 1000
+locked_target: 1000
+size_tolerance: 10
+
+# ---- training recipe (identical for all three arms) ----------------------
+recipe: R3
+batch_size: 128
+epochs: 360
+soup_last: 5
+shuffle_offset: 101
+lr: 1.0e-3
+lr_min: 1.0e-5
+weight_decay: 1.0e-5
+grad_clip: 5.0
+loss: "raw-y L1"
+
+# ---- Fit-only masked SSL (no labels; shared per seed across arms) --------
+ssl_mode: atom_bond
+ssl_updates: 7560
+
+# ---- frozen scoring / decision constants --------------------------------
+meaningful_delta_r_vs_p3: 0.004
+meaningful_delta_r_vs_u: 0.003
+tail_threshold: -3.0
+top_k_removed: 10
+bootstrap_n: 5000
+bootstrap_seed: 0
+zones: [monitor, locked]
+primary_zone: locked
+replication_zone: monitor
+participation: "mean|dpred| >= 0.0025 and max|dpred| >= 0.02 when the trained SACR model is given the content-null tensors instead of the real ones (Locked, label-free, before the label read)"
+
+# ---- budget --------------------------------------------------------------
+budget_gpu_hours: 4.0
+gpu_assignment: "res-gpu0 -> seed 0, res-gpu1 -> seed 1"
