@@ -2571,12 +2571,15 @@ round_cscl-p3-bond-relation-bridge-v1:
 # ---------------------------------------------------------------------------
 
 round_cscl-bjoc-sac-v1:
-  status: PREREGISTERED + FROZEN 2026-10-17; CPU gates 12/12; split S built with a new asserted salt (fit/monitor/locked 7,996/1,000/1,000; no hash collision with splits E/F); pending GPU (seed 0 -> GPU0, seed 1 -> GPU1, cap 4 GPU-h)
+  status: COMPLETE 2026-10-17; decision CASE_D_NO_GAIN (Locked SACR-P3 -0.001916, CI [-0.005909,+0.001287] crossing 0, seeds opposite sign +0.001206/-0.005038, Monitor -0.000296 not replicated; SACR-SACU -0.003088 CI excluding 0 on Locked but -0.000493 with a seed sign flip on Monitor; 4/6 strong-positive conditions met, S1/S3a/S4a failed); SAC route stopped, no full10k, official valid/test never loaded; GPU 2.101 h of 4.0
+  notes: results/sac_v1/PROTOCOL.md
+  report: results/sac_v1/REPORT.md
+  deviations: results/sac_v1/DEVIATIONS.md
+  amendments: results/sac_v1/AMENDMENTS.md (amendment 1 = smoke budget-projection scalar bug, amendment 2 = cmd_train gradient-probe batch dict; both after the freeze but before any supervised trajectory, sac_v1.py byte-identical, 12/12 gates re-run each time)
   protocol: >-
     configs/sac_v1.yaml (protocol id cscl-bjoc-sac-v1).  Frozen by protocol_freeze.json
     (code + config + split/objects/relations/gates/input-audit sha256) BEFORE any GPU
     trajectory of this round.
-  notes: results/sac_v1/PROTOCOL.md
   code:
     - code/sac_v1.py       # R1/R2/R3 on the physical-bond line graph, ZoneRelations batching, graph-level q_s(e)*q_s(f) tensors, content-null U, SAC model, frozen R3-mirroring trainer, A/B/C/E/D decision vocabulary
     - code/run_sac_v1.py   # split/verify-inputs/objects/relations/cpu-gates/freeze/stage-inputs/smoke/ssl/train/predict/freeze-predictions/score-holdout/post-hoc/finalize
@@ -2622,6 +2625,18 @@ round_cscl-bjoc-sac-v1:
     the explicit double loop, the only index_add is the graph-level pair reduction;
     P3 loop bitwise-equal soup with the frozen trainer (2 epochs, 64 molecules).
   parameters_audit: "P3 413,505; SAC 439,689 (+26,184, +6.3%); cap 500,000 satisfied; no dead/unused parameters"
+  result: >-
+    Locked (n=1,000, seed-mean MAE): P3 0.086783, SACR 0.084867, SACU 0.087956.
+    SACR-P3 -0.001916 (CI [-0.005909,+0.001287], NEUTRAL, seeds +0.001206/-0.005038);
+    SACR-SACU -0.003088 (CI [-0.005548,-0.000741], GAIN, both seeds negative, ordinary
+    -0.002001, top-10-removed -0.002617); SACU-P3 +0.001172 (NEUTRAL).  Monitor: SACR-P3
+    -0.000296, SACR-SACU -0.000493 (seed sign flip) -> neither replicated.  Fit soup MAE
+    0.00093-0.00103 for all arms.  Participation (label-free, frozen before the read):
+    Locked SACR swap-to-U mean|dpred| 0.006970 / max 0.574720 (thresholds 0.0025/0.02);
+    zeroing T costs SACR +0.0147 MAE, SACU +0.0061; SACU's T1 gradient collapses to 2.3e-9
+    while SACR keeps 3.5e-4..6.6e-3.  Interpretation: the tensors are demonstrably used,
+    but that use does not translate into a net gain over P3; the single Locked R-U signal
+    is not replicated, is not FLOP/row-sum matched, and therefore is not causal.
   recipe: >-
     Three arms share, per seed, the Fit-only masked atom+bond SSL checkpoint (7,560 updates),
     raw-y L1, R3 (360 epochs cosine 1e-3->1e-5, wd 1e-5, clip 5, batch 128, last-5 soup), the
