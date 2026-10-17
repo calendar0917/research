@@ -1,0 +1,21 @@
+{
+ "protocol_id": "explicit-composition-signal-audit-v1",
+ "stage": "C_gate_only_no_training",
+ "strict_tier": "M01",
+ "strict_n_pairs": 0,
+ "strict_n_groups": 0,
+ "strict_n_molecules": 0,
+ "strict_n_scaffolds": 0,
+ "strict_n_scaffold_disjoint_pairs": 0,
+ "strict_residual_median_abs": null,
+ "strict_residual_cluster_ci95": null,
+ "strict_formula_r2": null,
+ "b1_diffC_groups": 0,
+ "b1_injective_on_distinct_constitutions": true,
+ "G1_strict_samples": false,
+ "G2_nonformula_signal": false,
+ "G3_fair_control": false,
+ "run_stage_c": false,
+ "reason": "No strict same-B0+same-B1 different-C bags exist, so G1/G2 fail.  B1 is injective on distinct constitutions (B1 different-C groups = 0), so a Control that uses B1 already contains C implicitly; a Control restricted to B0 would reintroduce the very marginal confounds this audit controls.  No fair Control/Real/Null probe can be constructed, hence G3 fails.",
+ "note": "This is a screening gate, not a test of non-GNN composition mechanisms in general.  No training was run and no GPU was used."
+}

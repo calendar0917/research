@@ -1,0 +1,273 @@
+{
+ "protocol_id": "explicit-composition-signal-audit-v1",
+ "stage": "A_complete_frozen_before_labels",
+ "created_utc": "2026-10-17T03:11:54Z",
+ "git_commit": "40bbfe96444f585a1f5d543f98f4aa8d451c3c67",
+ "git_dirty": false,
+ "git_status_short": "",
+ "environment": {
+  "python": "3.12.14",
+  "platform": "Linux-6.18.54-1-lts-x86_64-with-glibc2.44",
+  "numpy": "2.1.3",
+  "networkx": "3.4.2",
+  "rdkit": "2026.09.1",
+  "pynauty": "2.8.8.1",
+  "torch": "2.5.1+cu124",
+  "git_commit": "40bbfe96444f585a1f5d543f98f4aa8d451c3c67",
+  "git_dirty": false
+ },
+ "inputs": {
+  "smiles_npz": {
+   "path": "tracks/ksvd/results/zinc_cssd_basis_reuse_v1/train_canonical_smiles.npz",
+   "sha256": "04a590355fb7bba71e35e52bed60c974999b92af9e96e4ee99bed4afe42dcaff",
+   "expected": "04a590355fb7bba71e35e52bed60c974999b92af9e96e4ee99bed4afe42dcaff"
+  },
+  "pyg_train_pt": {
+   "path": "data/ZINC/subset/processed/train.pt",
+   "sha256": "e0f1837b4a19714fcf3a5c6727a30c23f57c3398c8987cab2983214a0e76955b",
+   "expected": "e0f1837b4a19714fcf3a5c6727a30c23f57c3398c8987cab2983214a0e76955b"
+  },
+  "sascorer": {
+   "path": "tracks/ksvd/results/zinc_long_cycle_audit/upstream/sascorer_gvae.py",
+   "sha256": "abc9575e0ec7b5faf7dc106dff775a38f05d895185840f577b66d31039a95824"
+  },
+  "fpscores": {
+   "path": "tracks/ksvd/results/zinc_long_cycle_audit/upstream/fpscores.pkl.gz",
+   "sha256": "10dcef9340c873e7b987924461b0af5365eb8dd96be607203debe8ddf80c1e73"
+  }
+ },
+ "excluded_rows": [
+  941,
+  2210,
+  6071,
+  9766
+ ],
+ "pairing_verification": {
+  "n_rows_checked": 10000,
+  "n_mismatch": 4,
+  "mismatch_rows": [
+   941,
+   2210,
+   6071,
+   9766
+  ],
+  "n_rdkit_errors": 0,
+  "expected_mismatch_rows": [
+   941,
+   2210,
+   6071,
+   9766
+  ],
+  "reproduces_frozen_exclusion_list": true
+ },
+ "definitions": {
+  "M01": "same B0 AND same B1(T1), different C  [strictest bag]",
+  "M0": "same B0, different C  [strict marginal control; B1 may differ]",
+  "M0_ring": "same B0 AND same n_rings, different C",
+  "B1": "same B1(T1), different C  [local-patch bag only]",
+  "A1": "same n_heavy+n_bonds+atom-class counts+bond-class counts+n_rings, different C [relaxes B0 line-graph-degree and junction-count distributions]",
+  "A3": "same n_heavy+n_bonds+element counts+bond-class counts+n_rings+line-graph-degree distribution+junction-count distribution, different C [relaxes atom-class detail: H/charge/aromatic]",
+  "A4": "same n_heavy+n_bonds+element counts+bond-class counts+n_rings, different C [large exploratory: relaxes atom-class detail and degree/junction distributions]",
+  "L_old": "same (n_bonds, bond-class counts, line-graph-degree distribution, junction-count distribution), different C [the historical bond-RW coarse marginal signature; NOT composition-controlled]"
+ },
+ "protocol_sha256": "dec74052148a08bb05b820d7f04eec25154fd5633e802d16a2d6b5815fa8dfd4",
+ "code_sha256": {
+  "code/ecsa_objects.py": "1db8cc14444e415cfcdd9c261b70d4757e45f481f2444a00d6f363163485206f",
+  "code/run_explicit_composition_signal_audit_v1.py": "73870a044a2369febb55813f4155a7c77bdf3773d529ccd357c99cc010c53a05",
+  "tests/test_ecsa_objects.py": "eebf19a76803dfb69c96953d85bb30873c315b579f5789dbfb9eebf535f0672d"
+ },
+ "stage_a_artifacts_sha256": {
+  "stage_a_summary": "bfad479a86debc2d650c839427e4505d8b365050421c525012920bdf0a044fbf",
+  "stage_a_molecules": "4bee670227422dc51246b5b6f5815985051a07e49b69191ccd11c3db8808abd7",
+  "stage_a_ring_instability": "a9a0b156f0b62babe32b216d7dea0e6eb6816b04d90e3fca8aae894d835ac8c5",
+  "stage_a_legacy_nesting": "0b30827300cfa4d0aeee6ac6b60a11443fff7a3ed79e4591b0112dc74a0485a3",
+  "stage_a_tier_M01": "05057386f531da4cb9514cbe32ca1b242b18027ee3eff6d5b85c4916e78f3b36",
+  "stage_a_tier_M0": "4c2a50cd704cec3bf75226192ae3db2c3dccd81d2d765df04c6749113edce4ec",
+  "stage_a_tier_M0_ring": "3247c2ba1ded9c8984461a9f88164546b2f7b424e3497a48004365c59a134eb3",
+  "stage_a_tier_B1": "4be967be51b9123435a9cb8600614c005fcc81c5a014ac7806c435b6ebcc0153",
+  "stage_a_tier_A1": "c54bba1b5750a4a31c38256880052da13d430d783cf4f31f4ffef364dc85bf77",
+  "stage_a_tier_A3": "ca7b2c8c4fbc2adccf51007d8be316664bed4bf950a830b7713d143cade5d172",
+  "stage_a_tier_A4": "34a2bec8be0c62cdb7985340b7e32b6c0361d3ed3b1bb1f53c15875cb9da43ac",
+  "stage_a_tier_L_old": "c5bc615b654041aaac0ee20a026926264220010576aae94fcb90f9da36ac2c97"
+ },
+ "tier_counts": {
+  "M01": {
+   "definition": "same B0 AND same B1(T1), different C  [strictest bag]",
+   "n_molecules": 9996,
+   "n_groups": 9993,
+   "n_singleton_groups": 9990,
+   "n_multi_groups": 3,
+   "n_diffC_groups": 0,
+   "n_molecules_in_diffC_groups": 0,
+   "n_scaffolds_in_diffC_groups": 0,
+   "n_topologies_in_diffC_groups": 0,
+   "n_pairs_diffC": 0,
+   "n_scaffold_disjoint_pairs_diffC": 0,
+   "max_group_size": 2,
+   "max_diffC_group_size": 0,
+   "group_size_histogram": {
+    "1": 9990,
+    "2": 3
+   },
+   "pair_enumeration_capped": false
+  },
+  "M0": {
+   "definition": "same B0, different C  [strict marginal control; B1 may differ]",
+   "n_molecules": 9996,
+   "n_groups": 9982,
+   "n_singleton_groups": 9968,
+   "n_multi_groups": 14,
+   "n_diffC_groups": 11,
+   "n_molecules_in_diffC_groups": 22,
+   "n_scaffolds_in_diffC_groups": 21,
+   "n_topologies_in_diffC_groups": 22,
+   "n_pairs_diffC": 11,
+   "n_scaffold_disjoint_pairs_diffC": 10,
+   "max_group_size": 2,
+   "max_diffC_group_size": 2,
+   "group_size_histogram": {
+    "1": 9968,
+    "2": 14
+   },
+   "pair_enumeration_capped": false
+  },
+  "M0_ring": {
+   "definition": "same B0 AND same n_rings, different C",
+   "n_molecules": 9996,
+   "n_groups": 9982,
+   "n_singleton_groups": 9968,
+   "n_multi_groups": 14,
+   "n_diffC_groups": 11,
+   "n_molecules_in_diffC_groups": 22,
+   "n_scaffolds_in_diffC_groups": 21,
+   "n_topologies_in_diffC_groups": 22,
+   "n_pairs_diffC": 11,
+   "n_scaffold_disjoint_pairs_diffC": 10,
+   "max_group_size": 2,
+   "max_diffC_group_size": 2,
+   "group_size_histogram": {
+    "1": 9968,
+    "2": 14
+   },
+   "pair_enumeration_capped": false
+  },
+  "B1": {
+   "definition": "same B1(T1), different C  [local-patch bag only]",
+   "n_molecules": 9996,
+   "n_groups": 9993,
+   "n_singleton_groups": 9990,
+   "n_multi_groups": 3,
+   "n_diffC_groups": 0,
+   "n_molecules_in_diffC_groups": 0,
+   "n_scaffolds_in_diffC_groups": 0,
+   "n_topologies_in_diffC_groups": 0,
+   "n_pairs_diffC": 0,
+   "n_scaffold_disjoint_pairs_diffC": 0,
+   "max_group_size": 2,
+   "max_diffC_group_size": 0,
+   "group_size_histogram": {
+    "1": 9990,
+    "2": 3
+   },
+   "pair_enumeration_capped": false
+  },
+  "A1": {
+   "definition": "same n_heavy+n_bonds+atom-class counts+bond-class counts+n_rings, different C [relaxes B0 line-graph-degree and junction-count distributions]",
+   "n_molecules": 9996,
+   "n_groups": 9950,
+   "n_singleton_groups": 9906,
+   "n_multi_groups": 44,
+   "n_diffC_groups": 41,
+   "n_molecules_in_diffC_groups": 84,
+   "n_scaffolds_in_diffC_groups": 78,
+   "n_topologies_in_diffC_groups": 84,
+   "n_pairs_diffC": 45,
+   "n_scaffold_disjoint_pairs_diffC": 40,
+   "max_group_size": 3,
+   "max_diffC_group_size": 3,
+   "group_size_histogram": {
+    "1": 9906,
+    "2": 42,
+    "3": 2
+   },
+   "pair_enumeration_capped": false
+  },
+  "A3": {
+   "definition": "same n_heavy+n_bonds+element counts+bond-class counts+n_rings+line-graph-degree distribution+junction-count distribution, different C [relaxes atom-class detail: H/charge/aromatic]",
+   "n_molecules": 9996,
+   "n_groups": 9932,
+   "n_singleton_groups": 9868,
+   "n_multi_groups": 64,
+   "n_diffC_groups": 61,
+   "n_molecules_in_diffC_groups": 122,
+   "n_scaffolds_in_diffC_groups": 120,
+   "n_topologies_in_diffC_groups": 122,
+   "n_pairs_diffC": 61,
+   "n_scaffold_disjoint_pairs_diffC": 59,
+   "max_group_size": 2,
+   "max_diffC_group_size": 2,
+   "group_size_histogram": {
+    "1": 9868,
+    "2": 64
+   },
+   "pair_enumeration_capped": false
+  },
+  "A4": {
+   "definition": "same n_heavy+n_bonds+element counts+bond-class counts+n_rings, different C [large exploratory: relaxes atom-class detail and degree/junction distributions]",
+   "n_molecules": 9996,
+   "n_groups": 8683,
+   "n_singleton_groups": 7741,
+   "n_multi_groups": 942,
+   "n_diffC_groups": 940,
+   "n_molecules_in_diffC_groups": 2251,
+   "n_scaffolds_in_diffC_groups": 1894,
+   "n_topologies_in_diffC_groups": 2246,
+   "n_pairs_diffC": 1909,
+   "n_scaffold_disjoint_pairs_diffC": 1835,
+   "max_group_size": 8,
+   "max_diffC_group_size": 8,
+   "group_size_histogram": {
+    "1": 7741,
+    "2": 707,
+    "3": 156,
+    "4": 46,
+    "5": 18,
+    "6": 8,
+    "7": 5,
+    "8": 2
+   },
+   "pair_enumeration_capped": false
+  },
+  "L_old": {
+   "definition": "same (n_bonds, bond-class counts, line-graph-degree distribution, junction-count distribution), different C [the historical bond-RW coarse marginal signature; NOT composition-controlled]",
+   "n_molecules": 9996,
+   "n_groups": 8531,
+   "n_singleton_groups": 7511,
+   "n_multi_groups": 1020,
+   "n_diffC_groups": 1017,
+   "n_molecules_in_diffC_groups": 2479,
+   "n_scaffolds_in_diffC_groups": 2163,
+   "n_topologies_in_diffC_groups": 2449,
+   "n_pairs_diffC": 2154,
+   "n_scaffold_disjoint_pairs_diffC": 2093,
+   "max_group_size": 9,
+   "max_diffC_group_size": 9,
+   "group_size_histogram": {
+    "1": 7511,
+    "2": 728,
+    "3": 198,
+    "4": 57,
+    "5": 23,
+    "6": 10,
+    "7": 1,
+    "8": 2,
+    "9": 1
+   },
+   "pair_enumeration_capped": false
+  }
+ },
+ "labels_loaded": false,
+ "official_valid_or_test_loaded": false,
+ "model_predictions_loaded": false,
+ "freeze_rule": "Stage B refuses to run unless protocol, code, inputs and every stage_a_artifact hash match this manifest.  Stage A never reads y."
+}

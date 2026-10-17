@@ -1,0 +1,368 @@
+{
+ "protocol_id": "explicit-composition-signal-audit-v1",
+ "stage": "A_structure_only",
+ "created_utc": "2026-10-17T03:11:54Z",
+ "runtime_seconds": 141.111,
+ "labels_loaded": false,
+ "official_valid_or_test_loaded": false,
+ "model_predictions_loaded": false,
+ "inputs": {
+  "smiles_npz": {
+   "path": "tracks/ksvd/results/zinc_cssd_basis_reuse_v1/train_canonical_smiles.npz",
+   "sha256": "04a590355fb7bba71e35e52bed60c974999b92af9e96e4ee99bed4afe42dcaff",
+   "expected": "04a590355fb7bba71e35e52bed60c974999b92af9e96e4ee99bed4afe42dcaff"
+  },
+  "pyg_train_pt": {
+   "path": "data/ZINC/subset/processed/train.pt",
+   "sha256": "e0f1837b4a19714fcf3a5c6727a30c23f57c3398c8987cab2983214a0e76955b",
+   "expected": "e0f1837b4a19714fcf3a5c6727a30c23f57c3398c8987cab2983214a0e76955b"
+  },
+  "sascorer": {
+   "path": "tracks/ksvd/results/zinc_long_cycle_audit/upstream/sascorer_gvae.py",
+   "sha256": "abc9575e0ec7b5faf7dc106dff775a38f05d895185840f577b66d31039a95824"
+  },
+  "fpscores": {
+   "path": "tracks/ksvd/results/zinc_long_cycle_audit/upstream/fpscores.pkl.gz",
+   "sha256": "10dcef9340c873e7b987924461b0af5365eb8dd96be607203debe8ddf80c1e73"
+  }
+ },
+ "excluded_rows": [
+  941,
+  2210,
+  6071,
+  9766
+ ],
+ "pairing_verification": {
+  "n_rows_checked": 10000,
+  "n_mismatch": 4,
+  "mismatch_rows": [
+   941,
+   2210,
+   6071,
+   9766
+  ],
+  "n_rdkit_errors": 0,
+  "expected_mismatch_rows": [
+   941,
+   2210,
+   6071,
+   9766
+  ],
+  "reproduces_frozen_exclusion_list": true
+ },
+ "n_molecules_analysed": 9996,
+ "n_reconstruction_failures": 0,
+ "c_partition_check": {
+  "n_molecules": 9996,
+  "n_C_keys": 9993,
+  "n_C_smiles": 9993,
+  "n_key_to_multiple_smiles": 0,
+  "n_smiles_to_multiple_keys": 0,
+  "key_collision_examples": {},
+  "key_split_examples": {},
+  "one_to_one": true,
+  "note": "C key is the exact unit\u2013atom incidence certificate; C smiles is an independent RDKit constitution canonicalisation.  Equality of the two partitions validates both invariance and completeness on this dataset."
+ },
+ "invariance": {
+  "n_molecules": 200,
+  "n_relabelings_per_molecule": 3,
+  "n_checks": 600,
+  "n_failures": 0,
+  "failures": [],
+  "seed": 20261016
+ },
+ "ring_instability": {
+  "n_molecules_checked": 3894,
+  "n_permutations_per_molecule": 16,
+  "seed": 20261016,
+  "n_unstable": 7,
+  "fraction_unstable": 0.0017976373908577298,
+  "n_default_penalty_nonzero": 145,
+  "n_minimum_basis_differs": 7,
+  "n_symm_sssr_differs": 7,
+  "examples": [
+   {
+    "row": 421,
+    "smiles": "C[NH+]1[C@H]2CC[C@@H]1CN(C(=O)c1cccc(-n3cncn3)c1)CC2",
+    "default_penalty": 2,
+    "permutation_penalties": [
+     2
+    ],
+    "minimum_cycle_basis_penalty": 1,
+    "symm_sssr_penalty": 1
+   },
+   {
+    "row": 1424,
+    "smiles": "O=C(NCC1CCN(c2ncccn2)CC1)C(=O)Nc1cc2c3c(c1)CCC(=O)N3CCC2",
+    "default_penalty": 6,
+    "permutation_penalties": [
+     6
+    ],
+    "minimum_cycle_basis_penalty": 0,
+    "symm_sssr_penalty": 0
+   },
+   {
+    "row": 1649,
+    "smiles": "COCCn1nnnc1C[NH+]1[C@@H]2CCC[C@H]1CC(NC(C)=O)C2",
+    "default_penalty": 2,
+    "permutation_penalties": [
+     2
+    ],
+    "minimum_cycle_basis_penalty": 0,
+    "symm_sssr_penalty": 0
+   },
+   {
+    "row": 3776,
+    "smiles": "COc1c(C=O)cc2c3c1CCCN3CCC2",
+    "default_penalty": 6,
+    "permutation_penalties": [
+     6
+    ],
+    "minimum_cycle_basis_penalty": 0,
+    "symm_sssr_penalty": 0
+   },
+   {
+    "row": 4235,
+    "smiles": "CC(C)[NH+]1[C@H]2CC[C@@H]1CN(C(=O)Nc1c[nH]nc1-c1ccccn1)CC2",
+    "default_penalty": 2,
+    "permutation_penalties": [
+     2
+    ],
+    "minimum_cycle_basis_penalty": 1,
+    "symm_sssr_penalty": 1
+   },
+   {
+    "row": 6503,
+    "smiles": "CCC(CC)C[NH+]1[C@@H]2CC[C@H]1CC(CC(=O)[O-])C2",
+    "default_penalty": 1,
+    "permutation_penalties": [
+     1
+    ],
+    "minimum_cycle_basis_penalty": 0,
+    "symm_sssr_penalty": 0
+   },
+   {
+    "row": 7708,
+    "smiles": "C[NH+]1[C@H]2CC[C@@H]1CN(c1ccc(C(=O)Nc3ccccc3)nn1)CC2",
+    "default_penalty": 2,
+    "permutation_penalties": [
+     2
+    ],
+    "minimum_cycle_basis_penalty": 1,
+    "symm_sssr_penalty": 1
+   }
+  ]
+ },
+ "legacy_nesting": {
+  "tier": "L_old",
+  "definition": "same (n_bonds, bond-class counts, line-graph-degree distribution, junction-count distribution), different C [the historical bond-RW coarse marginal signature; NOT composition-controlled]",
+  "n_pairs": 2154,
+  "n_pairs_same_B0": 11,
+  "fraction_same_B0": 0.00510677808727948,
+  "n_pairs_same_atom_class_composition": 11,
+  "fraction_same_atom_class_composition": 0.00510677808727948,
+  "n_pairs_same_element_composition": 61,
+  "fraction_same_element_composition": 0.028319405756731662,
+  "n_pairs_same_B1": 0,
+  "fraction_same_B1": 0.0,
+  "n_pairs_same_ring_count": 2153,
+  "note": "L_old is the historical bond-RW coarse marginal signature.  It does not include atom/element composition, so its C-different pairs are mostly composition-confounded.  The nesting counts quantify that."
+ },
+ "tiers": {
+  "M01": {
+   "definition": "same B0 AND same B1(T1), different C  [strictest bag]",
+   "n_molecules": 9996,
+   "n_groups": 9993,
+   "n_singleton_groups": 9990,
+   "n_multi_groups": 3,
+   "n_diffC_groups": 0,
+   "n_molecules_in_diffC_groups": 0,
+   "n_scaffolds_in_diffC_groups": 0,
+   "n_topologies_in_diffC_groups": 0,
+   "n_pairs_diffC": 0,
+   "n_scaffold_disjoint_pairs_diffC": 0,
+   "max_group_size": 2,
+   "max_diffC_group_size": 0,
+   "group_size_histogram": {
+    "1": 9990,
+    "2": 3
+   },
+   "pair_enumeration_capped": false
+  },
+  "M0": {
+   "definition": "same B0, different C  [strict marginal control; B1 may differ]",
+   "n_molecules": 9996,
+   "n_groups": 9982,
+   "n_singleton_groups": 9968,
+   "n_multi_groups": 14,
+   "n_diffC_groups": 11,
+   "n_molecules_in_diffC_groups": 22,
+   "n_scaffolds_in_diffC_groups": 21,
+   "n_topologies_in_diffC_groups": 22,
+   "n_pairs_diffC": 11,
+   "n_scaffold_disjoint_pairs_diffC": 10,
+   "max_group_size": 2,
+   "max_diffC_group_size": 2,
+   "group_size_histogram": {
+    "1": 9968,
+    "2": 14
+   },
+   "pair_enumeration_capped": false
+  },
+  "M0_ring": {
+   "definition": "same B0 AND same n_rings, different C",
+   "n_molecules": 9996,
+   "n_groups": 9982,
+   "n_singleton_groups": 9968,
+   "n_multi_groups": 14,
+   "n_diffC_groups": 11,
+   "n_molecules_in_diffC_groups": 22,
+   "n_scaffolds_in_diffC_groups": 21,
+   "n_topologies_in_diffC_groups": 22,
+   "n_pairs_diffC": 11,
+   "n_scaffold_disjoint_pairs_diffC": 10,
+   "max_group_size": 2,
+   "max_diffC_group_size": 2,
+   "group_size_histogram": {
+    "1": 9968,
+    "2": 14
+   },
+   "pair_enumeration_capped": false
+  },
+  "B1": {
+   "definition": "same B1(T1), different C  [local-patch bag only]",
+   "n_molecules": 9996,
+   "n_groups": 9993,
+   "n_singleton_groups": 9990,
+   "n_multi_groups": 3,
+   "n_diffC_groups": 0,
+   "n_molecules_in_diffC_groups": 0,
+   "n_scaffolds_in_diffC_groups": 0,
+   "n_topologies_in_diffC_groups": 0,
+   "n_pairs_diffC": 0,
+   "n_scaffold_disjoint_pairs_diffC": 0,
+   "max_group_size": 2,
+   "max_diffC_group_size": 0,
+   "group_size_histogram": {
+    "1": 9990,
+    "2": 3
+   },
+   "pair_enumeration_capped": false
+  },
+  "A1": {
+   "definition": "same n_heavy+n_bonds+atom-class counts+bond-class counts+n_rings, different C [relaxes B0 line-graph-degree and junction-count distributions]",
+   "n_molecules": 9996,
+   "n_groups": 9950,
+   "n_singleton_groups": 9906,
+   "n_multi_groups": 44,
+   "n_diffC_groups": 41,
+   "n_molecules_in_diffC_groups": 84,
+   "n_scaffolds_in_diffC_groups": 78,
+   "n_topologies_in_diffC_groups": 84,
+   "n_pairs_diffC": 45,
+   "n_scaffold_disjoint_pairs_diffC": 40,
+   "max_group_size": 3,
+   "max_diffC_group_size": 3,
+   "group_size_histogram": {
+    "1": 9906,
+    "2": 42,
+    "3": 2
+   },
+   "pair_enumeration_capped": false
+  },
+  "A3": {
+   "definition": "same n_heavy+n_bonds+element counts+bond-class counts+n_rings+line-graph-degree distribution+junction-count distribution, different C [relaxes atom-class detail: H/charge/aromatic]",
+   "n_molecules": 9996,
+   "n_groups": 9932,
+   "n_singleton_groups": 9868,
+   "n_multi_groups": 64,
+   "n_diffC_groups": 61,
+   "n_molecules_in_diffC_groups": 122,
+   "n_scaffolds_in_diffC_groups": 120,
+   "n_topologies_in_diffC_groups": 122,
+   "n_pairs_diffC": 61,
+   "n_scaffold_disjoint_pairs_diffC": 59,
+   "max_group_size": 2,
+   "max_diffC_group_size": 2,
+   "group_size_histogram": {
+    "1": 9868,
+    "2": 64
+   },
+   "pair_enumeration_capped": false
+  },
+  "A4": {
+   "definition": "same n_heavy+n_bonds+element counts+bond-class counts+n_rings, different C [large exploratory: relaxes atom-class detail and degree/junction distributions]",
+   "n_molecules": 9996,
+   "n_groups": 8683,
+   "n_singleton_groups": 7741,
+   "n_multi_groups": 942,
+   "n_diffC_groups": 940,
+   "n_molecules_in_diffC_groups": 2251,
+   "n_scaffolds_in_diffC_groups": 1894,
+   "n_topologies_in_diffC_groups": 2246,
+   "n_pairs_diffC": 1909,
+   "n_scaffold_disjoint_pairs_diffC": 1835,
+   "max_group_size": 8,
+   "max_diffC_group_size": 8,
+   "group_size_histogram": {
+    "1": 7741,
+    "2": 707,
+    "3": 156,
+    "4": 46,
+    "5": 18,
+    "6": 8,
+    "7": 5,
+    "8": 2
+   },
+   "pair_enumeration_capped": false
+  },
+  "L_old": {
+   "definition": "same (n_bonds, bond-class counts, line-graph-degree distribution, junction-count distribution), different C [the historical bond-RW coarse marginal signature; NOT composition-controlled]",
+   "n_molecules": 9996,
+   "n_groups": 8531,
+   "n_singleton_groups": 7511,
+   "n_multi_groups": 1020,
+   "n_diffC_groups": 1017,
+   "n_molecules_in_diffC_groups": 2479,
+   "n_scaffolds_in_diffC_groups": 2163,
+   "n_topologies_in_diffC_groups": 2449,
+   "n_pairs_diffC": 2154,
+   "n_scaffold_disjoint_pairs_diffC": 2093,
+   "max_group_size": 9,
+   "max_diffC_group_size": 9,
+   "group_size_histogram": {
+    "1": 7511,
+    "2": 728,
+    "3": 198,
+    "4": 57,
+    "5": 23,
+    "6": 10,
+    "7": 1,
+    "8": 2,
+    "9": 1
+   },
+   "pair_enumeration_capped": false
+  }
+ },
+ "definitions": {
+  "M01": "same B0 AND same B1(T1), different C  [strictest bag]",
+  "M0": "same B0, different C  [strict marginal control; B1 may differ]",
+  "M0_ring": "same B0 AND same n_rings, different C",
+  "B1": "same B1(T1), different C  [local-patch bag only]",
+  "A1": "same n_heavy+n_bonds+atom-class counts+bond-class counts+n_rings, different C [relaxes B0 line-graph-degree and junction-count distributions]",
+  "A3": "same n_heavy+n_bonds+element counts+bond-class counts+n_rings+line-graph-degree distribution+junction-count distribution, different C [relaxes atom-class detail: H/charge/aromatic]",
+  "A4": "same n_heavy+n_bonds+element counts+bond-class counts+n_rings, different C [large exploratory: relaxes atom-class detail and degree/junction distributions]",
+  "L_old": "same (n_bonds, bond-class counts, line-graph-degree distribution, junction-count distribution), different C [the historical bond-RW coarse marginal signature; NOT composition-controlled]"
+ },
+ "environment": {
+  "python": "3.12.14",
+  "platform": "Linux-6.18.54-1-lts-x86_64-with-glibc2.44",
+  "numpy": "2.1.3",
+  "networkx": "3.4.2",
+  "rdkit": "2026.09.1",
+  "pynauty": "2.8.8.1",
+  "torch": "2.5.1+cu124",
+  "git_commit": "40bbfe96444f585a1f5d543f98f4aa8d451c3c67",
+  "git_dirty": false
+ }
+}
