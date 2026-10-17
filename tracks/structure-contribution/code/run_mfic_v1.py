@@ -1255,6 +1255,107 @@ def cmd_smoke(args: argparse.Namespace) -> int:
     return 0
 
 
+
+
+def cmd_smoke_long(args: argparse.Namespace) -> int:
+    """Longer steady-state calibration smoke; does not write formal checkpoints."""
+    require_freeze()
+    device = _gpu_device(args.device)
+    started = time.perf_counter()
+    fit_objs, fit_rows, y_fit, norm = _fit_inputs()
+    split, ds, guard = build_guard()
+    n_ssl = 100
+    t0 = time.perf_counter()
+    ssl = bp.pretrain_masked(
+        seed=0, fit_objs=fit_objs, fit_rows=fit_rows, raw_dataset=guard,
+        device=device, mode="atom_bond", smoke_updates=n_ssl, log_fn=log,
+    )
+    ssl_wall = time.perf_counter() - t0
+    require(guard.access_attempts == [], "guarded label access during long SSL smoke")
+    trio = mf.build_three_arms(0, norm, device)
+    for m in trio.values():
+        mp.load_encoder_state(m, ssl["encoder_state"], device=device)
+    n_smoke = 2048
+    epochs = 5
+    smoke_objs = fit_objs[:n_smoke]
+    smoke_y = y_fit[:n_smoke]
+    kr = _kernels_np("fit", "R")[:n_smoke]
+    t0 = time.perf_counter()
+    p3_info = sl.train_supervised_model(
+        arm="P3", seed=0, model=trio["P3"], train_objs=smoke_objs, y_fit=smoke_y,
+        device=device, epochs=epochs, batch_size=bp.BATCH_SIZE, log_fn=log,
+    )
+    p3_wall = time.perf_counter() - t0
+    t0 = time.perf_counter()
+    mfic_info = mf.train_supervised_mfic(
+        arm="MFIC-R", seed=0, model=trio["MFIC-R"], train_objs=smoke_objs, kernels=kr,
+        y_fit=smoke_y, device=device, epochs=epochs, batch_size=bp.BATCH_SIZE, log_fn=log,
+    )
+    mfic_wall = time.perf_counter() - t0
+    mon_objs = load_zone_objects("monitor")[:512]
+    mon_kr = _kernels_np("monitor", "R")[:512]
+    t0 = time.perf_counter()
+    mf.predict_mfic(trio["MFIC-R"], mon_objs, mon_kr, device)
+    pred_wall = time.perf_counter() - t0
+    wall = time.perf_counter() - started
+    steps_smoke = math.ceil(n_smoke / bp.BATCH_SIZE) * epochs
+    steps_full = math.ceil(len(fit_objs) / bp.BATCH_SIZE) * 360
+    ssl_full = ssl_wall / n_ssl * bp.PRETRAIN_UPDATES
+    p3_full = p3_wall / steps_smoke * steps_full
+    mfic_full = mfic_wall / steps_smoke * steps_full
+    train_all = 2.0 * (p3_full + 2.0 * mfic_full)
+    pred_full = pred_wall * (1000.0 / 512.0) * 16.0
+    raw = 2.0 * ssl_full + train_all + pred_full + wall
+    contingency = 0.10
+    projected = raw * (1.0 + contingency)
+    hours = projected / 3600.0
+    stop = bool(device.type == "cuda" and hours > GPU_SMOKE_STOP_HOURS)
+    payload = {
+        "protocol": PROTOCOL_ID,
+        "stage": "gpu_smoke_long",
+        "git_commit": git_commit(),
+        "utc": now_utc(),
+        "device": str(device),
+        "cuda_device_name": torch.cuda.get_device_name(device) if device.type == "cuda" else "",
+        "torch": torch.__version__,
+        "python": platform.python_version(),
+        "wall_seconds": wall,
+        "ssl_updates": n_ssl,
+        "ssl_seconds": ssl_wall,
+        "train_molecules": n_smoke,
+        "train_epochs": epochs,
+        "train_updates_per_arm": steps_smoke,
+        "p3_seconds": p3_wall,
+        "mfic_seconds": mfic_wall,
+        "prediction_512_seconds": pred_wall,
+        "estimated_full": {
+            "ssl_per_seed_seconds": ssl_full,
+            "p3_train_per_seed_seconds": p3_full,
+            "mfic_train_per_arm_per_seed_seconds": mfic_full,
+            "three_arms_two_seeds_train_seconds": train_all,
+            "predictions_seconds": pred_full,
+            "raw_total_seconds": raw,
+            "contingency_fraction": contingency,
+            "total_seconds_with_contingency": projected,
+            "total_gpu_hours_with_contingency": hours,
+        },
+        "budget_stop_hours": GPU_SMOKE_STOP_HOURS,
+        "hard_cap_hours": GPU_CAP_HOURS,
+        "stop": stop,
+        "parameter_audit": {"p3": p3_info["parameter_audit"], "mfic": mfic_info["parameter_audit"]},
+        "forbidden_label_access_attempts": len(guard.access_attempts),
+        "official_valid_loaded": False,
+        "official_test_loaded": False,
+    }
+    write_json(OUT / "smoke_long_V.json", payload)
+    append_ledger("smoke-long", wall, {"device": str(device), "note": "100 SSL updates + 5 epochs on 2048 + 512 predictions"})
+    log(f"[smoke-long] projected {hours:.3f} GPU-h incl. {int(contingency*100)}% contingency; stop={stop}")
+    if stop:
+        log("[smoke-long] BUDGET STOP: projection still exceeds 2.7 GPU-h; do not start formal SSL/train")
+        return 3
+    return 0
+
+
 def cmd_ssl(args: argparse.Namespace) -> int:
     require_freeze()
     seed = int(args.seed)
@@ -1847,6 +1948,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     sp.add_argument("--device", default=None)
     sp.add_argument("--no-budget-stop", action="store_true")
     sp.set_defaults(func=cmd_smoke)
+    sp = sub.add_parser("smoke-long")
+    sp.add_argument("--device", default=None)
+    sp.set_defaults(func=cmd_smoke_long)
     sp = sub.add_parser("ledger-note")
     sp.add_argument("--label", required=True)
     sp.add_argument("--seconds", type=float, required=True)
