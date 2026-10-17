@@ -1,0 +1,45 @@
+{
+ "protocol": "cscl-bond-relation-attribution-v1",
+ "git_commit": "877a0f7d5e99d01c91230a5c2b3f0fb83695fdc0",
+ "pairing_verification": {
+  "n_rows_checked": 10000,
+  "n_mismatch": 4,
+  "mismatch_rows": [
+   941,
+   2210,
+   6071,
+   9766
+  ],
+  "n_rdkit_errors": 0,
+  "expected_mismatch_rows": [
+   941,
+   2210,
+   6071,
+   9766
+  ],
+  "reproduces_frozen_exclusion_list": true
+ },
+ "n_rows_official_train": 10000,
+ "n_rows_excluded": 4,
+ "n_rows_usable": 9996,
+ "n_graph_groups": 9993,
+ "n_committed_smiles_groups": 9993,
+ "identity_partition_equal": true,
+ "n_duplicate_identity_groups": 3,
+ "duplicate_identities_sha256": "9ab8cdea19af1de55c45b7000af80ec86e6a442faed65c8b106a1471fefe8952",
+ "split_sizes": {
+  "fit": 7996,
+  "monitor": 1000,
+  "locked": 1000
+ },
+ "split_fingerprints": {
+  "fit_sha256_rows": "b73ed7f75cc7acffd4bde2319d90fe8925796a6c5103fd7fb7a7c76f74ea30a2",
+  "monitor_sha256_rows": "77e794630e81951f2ca9a7e0f81fe16d2979a9f151c360702e17aafd8ecfc903",
+  "locked_sha256_rows": "7015fb0152d4a8f3ebe0ca66cdc3b03a7b8fe08f69efde208b22b14657767245"
+ },
+ "identity_digest_sha256": "db1ecdf3170115873f842223670164e4f9fb8a991859b6a3ff5be9f2039b009f",
+ "why_excluded": "the committed canonical-SMILES identity contradicts the official PyG graph constitution for exactly these four rows; using the SMILES string as the identity would silently group/separate the wrong molecules.  All arms use the same 9,996-row usable set.  Historical 10k splits kept those rows, so absolute MAE is not comparable to historical split numbers.",
+ "labels_read": false,
+ "official_valid_loaded": false,
+ "official_test_loaded": false
+}
