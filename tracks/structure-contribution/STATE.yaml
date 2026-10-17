@@ -2338,3 +2338,114 @@ round_cscl-rw-local-vs-multiscale-v1:
     single seed; exactly one new model R1; no seed1; no second candidate; no walk
     length/width/community tuning; no LR search; no Locked read; no official valid/test
     load; no next round started.
+
+# ---------------------------------------------------------------------------
+# round: cscl-bond-relation-attribution-v1 (real one-hop Bond-Bond relation R
+# vs a row-sum-matched Null D with no real incidence, plus the historical
+# uniform kernel U and the same-round strong reference P3; preregistered,
+# single internal split E, two seeds, one single read of Monitor+Locked)
+# ---------------------------------------------------------------------------
+
+round_cscl-bond-relation-attribution-v1:
+  status: COMPLETE 2026-10-17; decision CASE_C_INCONCLUSIVE (R-D/R-U GAIN replicated, R-P3 +0.015207 above the frozen +0.010 bar); round stopped, no extra seed/architecture, official valid/test never loaded
+  protocol: >-
+    configs/bond_relation_attribution_v1.yaml (protocol id cscl-bond-relation-attribution-v1,
+    split E salt cscl-bond-relation-attribution-v1; frozen on res at commit 42949d20 before
+    any formal GPU trajectory; amendments 1-3 recorded in PROTOCOL.md section 9, all
+    pre-GPU/pre-label: remote-CPU float32 micro-smoke noise floor, junc: SSL hash
+    convention, fcntl lock for the shared manifest/ledger)
+  notes: results/bond_relation_attribution_v1/PROTOCOL.md
+  report: results/bond_relation_attribution_v1/REPORT.md
+  code:
+    - code/bond_relation_attribution_v1.py      # R/D/U kernels, row-sum Null, kernel audit, split builder, frozen decision vocabulary
+    - code/run_bond_relation_attribution_v1.py  # split/verify-inputs/objects/kernels/cpu-gates/freeze/smoke/ssl/train/predict/predict-cross/freeze-predictions/score-holdout/post-hoc/finalize
+    - configs/bond_relation_attribution_v1.yaml
+  tests: tests/test_bond_relation_attribution_v1.py (32 fast tests; all pass; includes kernel maths, identical triplet layout, invariances, gradient liveness, scoring maths, concurrent-lock test, no-official-path scan)
+  question: >-
+    Under the same graph input, parameter count (349,985), supervision rows, SSL
+    initialisation and training recipe, does the real one-hop Bond-Bond relation R
+    (K = sym(P) on the physical bond line graph) beat a Null D whose row sums and total
+    weight match R exactly per molecule but which contains no real incidence
+    (K_D_ij = s_i s_j / sum(s), s = rowsum(K), rank one, dense), and the historical
+    uniform kernel U?  Is the remaining gap to the same-round strong reference P3
+    (BJOC-Null junction objects, 413,505 params) small enough to justify more work?
+  split: >-
+    Split E on the official train split only: 4 committed-SMILES/PyG mismatches
+    [941,2210,6071,9766] excluded -> 9,996 rows; identity = canonical constitution SMILES
+    rebuilt from the PyG graph (stereo removed), verified to give the identical partition
+    as the committed SMILES (0 diff); sha256(salt|identity) greedy grouping ->
+    fit 7,996 / monitor 1,000 / locked 1,000, 9,993 groups, 0 groups crossing zones.
+  matching: >-
+    R/D/U share 349,985 params, the same per-seed scratch init (90bf6322... / 9f656c4d...),
+    the same Fit-only masked SSL atom+bond encoder (805ac9d8... / 54284a16...), the same
+    batch order (05acc80a... / 2efdfa33...), 22,680 supervised updates and last-5 soup;
+    they enumerate the same n(n+1)/2 pair list and differ only in the weights.  P3 shares
+    the SSL full encoder (08e5f613... / 5289b180...) and batch order.  All asserted in
+    freeze-predictions (matching_audit both seeds all true).
+  kernel_audit: >-
+    1,200 molecules (400 per zone).  D row sums match R to 6.7e-16 and total weight exactly;
+    K_D rank 1 (formula err 0); bond-slot permutation invariant 6.9e-17.  R nonzero mass
+    0.157 vs D 1.000; R diagonal 0.500 vs D 0.042; rowsum CV 0.0710 both; corr(line-graph
+    degree, rowsum) 0.836 both; corr(K_R,K_D) 0.043; 83.9% of D mass on R's zero support;
+    R top-eigen share 0.123 vs D 1.000; TV to uniform 0.843 vs 0.040.  D == U in 0/1,200
+    molecules (degeneracy only on regular line graphs, absent here).
+  cpu_gates: >-
+    32/32 fast tests + ruff clean; parameter audits 349,985 / 413,505 exact; init hashes
+    replay the historical R3/P3 values; relabel/permutation/batch invariance <= 4.5e-8;
+    save-load 0.0; gradients live in all five modules for R/D/U; kernel consumption at init
+    (pair aggregate |dr| 0.0056 R-D and 0.0181 D-U on mean |r| 0.043); micro-smoke soup
+    max diff 1.9e-9/1.5e-8/2.2e-8 within the documented 1e-6 remote-CPU noise floor;
+    end-to-end smoke (20 SSL updates + 1 epoch per arm) passed before formal training.
+  gpu: >-
+    two seeds in parallel on res-gpu0/res-gpu1 (a100-2, driver 550.163.01, torch 2.5.1+cu124);
+    SSL 1634/1661 s, R 431/450 s, D 447/478 s, U 444/479 s, P3 510/616 s; ledger
+    1.9859 GPU-h of the 4.0 cap (prediction forwards ~1 GPU-min/seed not ledgered); wall ~63 min.
+  result_locked: >-
+    n=1,000, seed-mean MAE R 0.097797, D 0.115334, U 0.116949, P3 0.082591 (RMSE 0.352268 /
+    0.492583 / 0.503530 / 0.223794; median AE 0.059641/0.072032/0.071212/0.049305).
+    R-D -0.017537 CI95 [-0.028753,-0.010111] GAIN (per seed -0.018341/-0.016733,
+    top-10-removed -0.012470, tail n=58 -0.1077, 61.5% molecules better, max single-molecule
+    gain share 0.138); R-U -0.019151 CI95 [-0.032227,-0.010933] GAIN; D-U -0.001615
+    CI95 [-0.004897,+0.001499] NEUTRAL; R-P3 +0.015207 CI95 [+0.008281,+0.025570] LOSS;
+    D-P3 +0.032743; U-P3 +0.034358.
+  result_monitor: >-
+    n=1,000. R 0.101878, D 0.114121, U 0.115647, P3 0.090922.  R-D -0.012243
+    CI95 [-0.016668,-0.008023] (both seeds negative), R-U -0.013768 CI95
+    [-0.018786,-0.009170], D-U -0.001526 NEUTRAL, R-P3 +0.010957.
+  decision: >-
+    CASE_C_INCONCLUSIVE.  P1 (R-D) and P2 (R-U) are GAIN on Locked and replicated on
+    Monitor (both seeds), but R-P3 locked +0.015207 exceeds the frozen +0.010 practical
+    bar, and no Case-B condition holds (reasons: no_condition_met).  Per protocol the
+    round stops: no additional seed, architecture or protocol change.  R closes 53.6% of
+    the D->P3 MAE gap (52.2% of the RMSE gap) but only 29.5% of the tail gap.
+  mechanism: >-
+    Frozen-model x frozen-kernel swaps (Locked): D model with U kernel 0.1155 vs own 0.1153
+    and U model with D kernel 0.1170 vs own 0.1169 (mean |dpred| 0.0038), while R model
+    with D/U kernel 0.305/0.308 and D/U models with R kernel 0.232/0.235 (mean |dpred|
+    0.19-0.28): D and U lead to essentially the same function, R does not; the models really
+    consume the kernel.  R's gain is tail-concentrated (locked ordinary n=942: R 0.0843 /
+    D 0.0963 / P3 0.0728; tail n=58: 0.3165 / 0.4241 / 0.2417) and corr(delta_RD,delta_RU)=0.956,
+    consistent with D~U.  Post-training gradients nonzero in all five modules, both seeds.
+  confounds: >-
+    R-D still mixes real one-hop incidence with local sparsity/support (R sparse 15.7% vs D
+    dense 100%, D diagonal mass 0.042 vs R 0.500, 84% of D mass on R's zero support), so the
+    gain cannot be attributed to real-incidence alone.  Two seeds, one internal split, one
+    dataset/endpoint; P3 is not parameter-matched (413,505 vs 349,985) and uses a different
+    inductive bias; historical numbers are not directly comparable.
+  predictions_frozen: >-
+    prediction_manifest_E.json complete with 40 files (4 arms x 2 seeds x 2 zones + 6
+    cross-kernel combos x 2 seeds x 2 zones), combined sha256
+    d3b23d1cc756cc8833122946950a95965b53c80c9bcbbd8c6386b3d9d9dd7354; holdout_read.lock
+    2026-10-17T05:17:20Z, monitor y 531953fd..., locked y e0e798a8..., single read of both zones.
+  artifacts: >-
+    results/bond_relation_attribution_v1/{PROTOCOL.md,REPORT.md,protocol_freeze.json,
+    split_E.json,kernel_audit.json,cpu_gates.json,reuse_audit.json,ssl_E_s*.json,
+    train_{R,D,U,P3}_E_s*.json,prediction_manifest_E.json,holdout_read.lock,
+    holdout_score_E.json,decision.json,per_molecule_errors_*.csv,post_hoc_mechanism.json,
+    gpu_budget_ledger.json,evidence_manifest.json,predictions/*.npz}; checkpoints, objects
+    and kernel caches stay untracked.
+  discipline: >-
+    official valid/test never loaded; Monitor/Locked y unreachable via LabelGuard during
+    preprocessing/SSL/training/prediction (0 attempts); predictions frozen and hashed before
+    the single read; no post-read model/threshold/selection change; no extra seed or
+    architecture after the decision; amendments 1-3 all pre-GPU and disclosed.
