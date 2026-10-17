@@ -26,7 +26,9 @@ Stages
 from __future__ import annotations
 
 import argparse
+import contextlib
 import csv
+import fcntl
 import hashlib
 import json
 import math
@@ -122,6 +124,24 @@ def write_json(path: Path | str, payload: Mapping[str, Any]) -> None:
     with path.open("w") as fh:
         json.dump(payload, fh, indent=1, sort_keys=False, default=_json_default)
         fh.write("\n")
+
+
+@contextlib.contextmanager
+def _file_lock(path: Path | str):
+    """Exclusive cross-process lock for read-modify-write JSON updates.
+
+    Two seed jobs run concurrently on two GPUs and share the prediction
+    manifest and the budget ledger; without the lock one job can silently
+    drop the other's records/entries.
+    """
+    lock_path = Path(str(path) + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+") as fh:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
 
 
 def read_json(path: Path | str) -> Any:
@@ -278,13 +298,14 @@ def build_guard():
 
 
 def _append_ledger(entry: Mapping[str, Any]) -> None:
-    payload = read_json(ledger_path()) if ledger_path().exists() else {"protocol": PROTOCOL_ID, "entries": []}
-    payload["entries"].append({**entry, "recorded_utc": now_utc()})
-    total = float(sum(float(e.get("wall_seconds", 0.0)) for e in payload["entries"]))
-    payload["total_wall_hours"] = total / 3600.0
-    payload["cap_hours"] = GPU_BUDGET_CAP_HOURS
-    payload["within_cap"] = bool(total / 3600.0 <= GPU_BUDGET_CAP_HOURS)
-    write_json(ledger_path(), payload)
+    with _file_lock(ledger_path()):
+        payload = read_json(ledger_path()) if ledger_path().exists() else {"protocol": PROTOCOL_ID, "entries": []}
+        payload["entries"].append({**entry, "recorded_utc": now_utc()})
+        total = float(sum(float(e.get("wall_seconds", 0.0)) for e in payload["entries"]))
+        payload["total_wall_hours"] = total / 3600.0
+        payload["cap_hours"] = GPU_BUDGET_CAP_HOURS
+        payload["within_cap"] = bool(total / 3600.0 <= GPU_BUDGET_CAP_HOURS)
+        write_json(ledger_path(), payload)
     log(f"[ledger] total {payload['total_wall_hours']:.4f} h / cap {GPU_BUDGET_CAP_HOURS} h")
     if not payload["within_cap"]:
         raise SystemExit("GPU budget cap exceeded; stop per protocol")
@@ -1245,9 +1266,10 @@ def _save_prediction(path: Path, pred: np.ndarray, meta: Mapping[str, Any], mani
         "labels_used": "none",
     }
     manifest_path = OUT / manifest_name
-    manifest = read_json(manifest_path) if manifest_path.exists() else {"protocol": PROTOCOL_ID, "records": {}}
-    manifest["records"][path.name] = record
-    write_json(manifest_path, manifest)
+    with _file_lock(manifest_path):
+        manifest = read_json(manifest_path) if manifest_path.exists() else {"protocol": PROTOCOL_ID, "records": {}}
+        manifest["records"][path.name] = record
+        write_json(manifest_path, manifest)
     return record
 
 

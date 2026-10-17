@@ -517,3 +517,33 @@ def test_arm_stats_formulas_on_synthetic_arrays():
     assert contrast["label"] in {"GAIN", "LOSS", "NEUTRAL"}
     assert contrast["bootstrap"]["ci_lo"] <= contrast["delta_seed_mean"] <= contrast["bootstrap"]["ci_hi"]
     assert contrast["tail_n"] > 0 and contrast["ordinary_delta"] != contrast["tail_delta"]
+
+
+def test_concurrent_ledger_and_manifest_appends_are_not_lost(tmp_path):
+    """Two seed jobs update the same JSON files; the file lock must serialise them."""
+    import threading
+
+    drv = _driver()
+    ledger = tmp_path / "budget_ledger.json"
+    manifest = tmp_path / "prediction_manifest_E.json"
+    lock = threading.Barrier(8)
+
+    def worker(k: int) -> None:
+        lock.wait()
+        for i in range(25):
+            with drv._file_lock(ledger):
+                payload = drv.read_json(ledger) if ledger.exists() else {"entries": []}
+                payload["entries"].append({"k": k, "i": i})
+                drv.write_json(ledger, payload)
+            with drv._file_lock(manifest):
+                m = drv.read_json(manifest) if manifest.exists() else {"records": {}}
+                m["records"][f"k{k}_i{i}"] = {"k": k}
+                drv.write_json(manifest, m)
+
+    threads = [threading.Thread(target=worker, args=(k,)) for k in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(drv.read_json(ledger)["entries"]) == 200
+    assert len(drv.read_json(manifest)["records"]) == 200

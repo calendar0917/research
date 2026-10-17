@@ -135,6 +135,9 @@ cpu_gates:
     in earlier rounds); bitwise equality is recorded separately.
   ssl_hash_convention: "atom:/bond:/junc: prefixes; asserted equal to pretrain_masked.encoder_final_sha256"
   amendments:
+    - id: amendment-3
+      when: "2026-10-18 pre-GPU"
+      what: "file lock (fcntl.flock) around the shared prediction manifest and budget ledger, required by the two-GPU parallel seed run; no protocol semantics change"
     - id: amendment-2
       when: "2026-10-18 pre-GPU, after smoke (no labels read)"
       what: "full-encoder group hash uses the historical junc: prefix; SSL self-check and P3 matching audit compare against encoder_final_sha256; freeze regenerated"

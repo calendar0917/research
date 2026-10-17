@@ -272,3 +272,7 @@ official valid/test、不据结果重新定义 split。只有在 **CASE_A** 下�
   会使“P3 与 R/D/U 共用同一 SSL”的匹配审计在冻结预测阶段误报失败，不影响
   任何已产生结果；仍在任何正式 GPU 训练与标签读取之前，故重新冻结
   （freeze 重新生成，旧 freeze 仅用于被弃用的 smoke）。
+- **amendment-3 (2026-10-18, pre-GPU)**：两个 seed 在两块 GPU 上并行，共享
+  `prediction_manifest_E.json` 与 `budget_ledger.json`；为这两个
+  read-modify-write 加上 `fcntl.flock` 文件锁（`*.lock` 文件随证据一并哈希），
+  防止并行时丢失预测记录或预算条目。无协议语义变化；重新冻结。
