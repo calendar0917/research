@@ -48,7 +48,10 @@ from __future__ import annotations
 
 import hashlib
 import math
+import platform
 import sys
+import time
+from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
@@ -1404,3 +1407,239 @@ def run_model_audit(real_objects: Sequence[sro.MolObjects], *, seed: int = 0, n_
         "official_valid_loaded": False,
         "official_test_loaded": False,
     }
+
+
+# ---------------------------------------------------------------------------
+# frozen R3 training / prediction for MFIC (Stage B)
+# ---------------------------------------------------------------------------
+
+
+def _train_batch(
+    *,
+    arm: str,
+    train_objs: Sequence[sro.MolObjects],
+    kernels: Sequence[np.ndarray] | None,
+    indices: Sequence[int],
+    device: torch.device,
+) -> dict[str, Any]:
+    objs = [train_objs[i] for i in indices]
+    if arm == "P3":
+        return bp._mv(sro.batch_objects(objs), device)
+    require(kernels is not None, "MFIC arm requires kernels")
+    return move_batch(batch_objects_with_k(objs, [kernels[i] for i in indices]), device)
+
+
+def train_supervised_mfic(
+    *,
+    arm: str,
+    seed: int,
+    model: nn.Module,
+    train_objs: Sequence[sro.MolObjects],
+    kernels: Sequence[np.ndarray] | None,
+    y_fit: np.ndarray,
+    device: torch.device,
+    epochs: int = 360,
+    batch_size: int = bp.BATCH_SIZE,
+    grad_clip: float = bp.GRAD_CLIP,
+    collect_epoch_states: bool = False,
+    log_fn: Callable[[str], None] = bp.log,
+) -> dict[str, Any]:
+    """Frozen R3 loop with a pluggable batch builder (P3 or MFIC).
+
+    The optimizer, per-step cosine schedule, shuffle generator, clip, soup and
+    logging are the frozen ``p3_slim_v1.train_supervised_model`` / R3 body.  The
+    only difference for MFIC is that each minibatch also carries the cached
+    padded ``K`` matrix; no per-atom state is updated by ``K``.
+    """
+    require(arm in ARMS, f"unknown arm {arm!r}")
+    recipe = bp.RECIPES[RECIPE_KEY]
+    require(int(epochs) >= 1, "epochs must be positive")
+    require(int(batch_size) >= 1, "batch_size must be positive")
+    require(float(grad_clip) == float(bp.GRAD_CLIP), "gradient clip changed")
+    require(int(len(train_objs)) == int(len(y_fit)), "train objects / targets length mismatch")
+    if arm != "P3":
+        require(kernels is not None and len(kernels) == len(train_objs), "MFIC kernel list mismatch")
+
+    n = int(len(train_objs))
+    steps_per_epoch = math.ceil(n / int(batch_size))
+    total_updates = int(epochs) * steps_per_epoch
+    optimizer = torch.optim.Adam(
+        model.parameters(),
+        lr=float(recipe["lr"]),
+        weight_decay=float(recipe["weight_decay"]),
+    )
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=total_updates, eta_min=float(recipe["lr_min"])
+    )
+    gen = torch.Generator().manual_seed(int(seed) + bp.TRAIN_SHUFFLE_OFFSET)
+    states: deque = deque(maxlen=bp.SOUP_LAST)
+    epoch_states: list[dict[str, torch.Tensor]] = []
+    curve: list[dict[str, Any]] = []
+    order_hash = hashlib.sha256()
+    lr_deviation_max = 0.0
+    grad_norm_max = 0.0
+    clip_events = 0
+    total_mol = 0
+    started = time.perf_counter()
+
+    for epoch in range(1, int(epochs) + 1):
+        model.train()
+        total, n_mol, steps = 0.0, 0, 0
+        lr_first = lr_last = None
+        lr_sum = 0.0
+        t_ep = time.perf_counter()
+        for indices in bp.shuffle_batches(n, int(batch_size), gen):
+            arr = np.ascontiguousarray(np.asarray(indices, dtype=np.int64))
+            order_hash.update(arr.tobytes())
+            batch = _train_batch(
+                arm=arm,
+                train_objs=train_objs,
+                kernels=kernels,
+                indices=indices,
+                device=device,
+            )
+            y = torch.as_tensor(y_fit[indices], dtype=torch.float32, device=device)
+            pred = model(batch)
+            loss = F.l1_loss(pred.view(-1), y.view(-1))
+            optimizer.zero_grad()
+            loss.backward()
+            gn = float(torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip))
+            if not math.isfinite(gn):
+                raise MFICError(f"non-finite gradient norm at epoch {epoch} {arm} seed {seed}")
+            grad_norm_max = max(grad_norm_max, gn)
+            if gn > grad_clip:
+                clip_events += 1
+            actual_lr = float(optimizer.param_groups[0]["lr"])
+            expected_lr = bp.schedule_lr(recipe, steps + (epoch - 1) * steps_per_epoch, total_updates)
+            lr_deviation_max = max(lr_deviation_max, abs(actual_lr - expected_lr))
+            if lr_first is None:
+                lr_first = actual_lr
+            lr_last = actual_lr
+            lr_sum += actual_lr
+            optimizer.step()
+            scheduler.step()
+            total += float((pred.view(-1) - y.view(-1)).abs().sum())
+            n_mol += len(indices)
+            steps += 1
+        train_mae = total / max(n_mol, 1)
+        total_mol += n_mol
+        curve.append(
+            {
+                "epoch": epoch,
+                "updates": epoch * steps,
+                "train_mae": train_mae,
+                "lr_first": lr_first,
+                "lr_last": lr_last,
+                "lr_mean": lr_sum / max(steps, 1),
+                "seconds": time.perf_counter() - t_ep,
+            }
+        )
+        state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+        states.append(state)
+        if collect_epoch_states:
+            epoch_states.append({k: v.detach().cpu().clone() for k, v in state.items()})
+        if epoch % 20 == 0 or epoch == 1 or epoch == int(epochs):
+            log_fn(
+                f"[{arm} s{seed}] ep={epoch:03d} train={train_mae:.6f} "
+                f"lr={lr_last:.3e} {curve[-1]['seconds']:.1f}s"
+            )
+        if not math.isfinite(train_mae):
+            raise MFICError(f"non-finite loss at epoch {epoch} {arm} seed {seed}")
+
+    wall = time.perf_counter() - started
+    members, soup = bp._last_soup(list(states), int(epochs))
+    model.load_state_dict({k: v.to(device) for k, v in soup.items()})
+    fit_pred = predict_mfic(model, list(train_objs), kernels, device)
+    soup_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+    independent_order = bp.batch_order_hash(int(seed), n, int(batch_size), int(epochs))
+    expected_parameters = P3_PARAMETERS if arm == "P3" else MFIC_PARAMETERS
+    info: dict[str, Any] = {
+        "protocol": PROTOCOL_ID,
+        "arm": arm,
+        "seed": int(seed),
+        "recipe_key": RECIPE_KEY,
+        "recipe": dict(recipe),
+        "reader_hidden": int(model.config.reader_hidden),
+        "reader_in": int(model.config.reader_in),
+        "kernel_mode": getattr(model, "kernel_mode", None),
+        "epochs": int(epochs),
+        "updates": int(total_updates),
+        "steps_per_epoch": steps_per_epoch,
+        "batch_size": int(batch_size),
+        "n_train_rows": n,
+        "soup_rule": f"parameter mean of the last {bp.SOUP_LAST} epoch states",
+        "soup_members": members,
+        "soup_state": soup_state,
+        "soup_fit_mae": float(np.abs(fit_pred - y_fit).mean()),
+        "schedule": {
+            "type": recipe["schedule"],
+            "per": "step",
+            "warmup": "none",
+            "lr0": float(recipe["lr"]),
+            "lr_min": None if recipe["lr_min"] is None else float(recipe["lr_min"]),
+            "t_max_updates": total_updates,
+            "lr_first_step": curve[0]["lr_first"],
+            "lr_last_step": curve[-1]["lr_last"],
+            "cosine_formula_max_abs_deviation": lr_deviation_max,
+        },
+        "anomalies": {
+            "grad_clip_events": int(clip_events),
+            "grad_norm_max": float(grad_norm_max),
+            "lr_schedule_deviation_max": float(lr_deviation_max),
+        },
+        "lr_curve": curve,
+        "wall_seconds": float(wall),
+        "molecules_seen": int(total_mol),
+        "device": str(device),
+        "cuda_device_name": torch.cuda.get_device_name(device) if device.type == "cuda" else "cpu",
+        "torch": torch.__version__,
+        "python": platform.python_version(),
+        "batch_order": {
+            "full_hash": order_hash.hexdigest(),
+            "full_hash_independent_recomputation": independent_order,
+            "full_matches": order_hash.hexdigest() == independent_order,
+        },
+        "parameter_audit": {
+            "actual_parameters": model_parameters(model),
+            "expected_parameters": int(expected_parameters),
+            "parameter_exact": bool(model_parameters(model) == expected_parameters),
+            "reader_parameters": int(sum(p.numel() for p in model.reader.parameters())),
+            "q_projection_parameters": int(sum(p.numel() for p in model.q_proj.parameters())) if hasattr(model, "q_proj") else 0,
+        },
+        "cost": {
+            "optimizer_updates": int(total_updates),
+            "forward_calls": int(total_updates),
+            "backward_calls": int(total_updates),
+            "relative_forward_backward_multiplier_vs_p3": 1.0,
+            "note": "Same update count and loss; MFIC adds one dense padded K matmul per forward.",
+        },
+        "labels_used": "train rows raw y only",
+        "official_valid_loaded": False,
+        "official_test_loaded": False,
+    }
+    require(info["parameter_audit"]["parameter_exact"], f"{arm} parameter audit failed")
+    if collect_epoch_states:
+        info["epoch_states"] = epoch_states
+    return info
+
+
+def predict_mfic(
+    model: nn.Module,
+    objects: Sequence[sro.MolObjects],
+    kernels: Sequence[np.ndarray] | None,
+    device: torch.device | str,
+    *,
+    batch_size: int = 256,
+) -> np.ndarray:
+    model.eval()
+    out = []
+    with torch.no_grad():
+        for i in range(0, len(objects), int(batch_size)):
+            objs = list(objects[i : i + int(batch_size)])
+            if kernels is None:
+                batch = sro.batch_objects(objs)
+            else:
+                batch = batch_objects_with_k(objs, kernels[i : i + int(batch_size)])
+            batch = move_batch(batch, device)
+            out.append(model(batch).detach().cpu().numpy())
+    return np.concatenate(out, 0) if out else np.zeros((0,), dtype=np.float32)
