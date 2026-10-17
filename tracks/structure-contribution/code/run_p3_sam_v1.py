@@ -917,7 +917,7 @@ def cmd_smoke(args: argparse.Namespace) -> int:
         smoke_epochs=1,
         log_fn=log,
     )
-    p3_epoch = float(p3_info["curve"][-1]["seconds"])
+    p3_epoch = float(p3_info["lr_curve"][-1]["seconds"])
     p3_projected = p3_epoch * (len(fit_objs) / len(mini)) * int(bp.RECIPES[ps.RECIPE_KEY]["epochs"])
 
     model_sam = ps.build_p3(1, norm, device)
