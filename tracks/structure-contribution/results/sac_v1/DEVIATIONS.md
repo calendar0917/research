@@ -98,7 +98,9 @@
 ## D-9 本地结果目录是从远端拷回的副本
 
 本地 `results/sac_v1/` 用 `rsync` 从 `res` 的权威目录取回，
-并逐项对照 `evidence_manifest.json` 校验：**88/88** artifact 的 sha256 与字节数一致。
+并逐项对照 `evidence_manifest.json` 校验：**88/88** artifact 的 sha256 与字节数一致
+（该清单是在写 REPORT/DEVIATIONS 之前于远端生成的；两份 Markdown 落盘后在本地重跑
+`finalize`，最终清单为 **91** 项，同样逐项哈希）。
 `.lock` 辅助文件（`prediction_manifest_S.json.lock`、`gpu_budget_ledger.json.lock`）
 未拷回；`holdout_read.lock` 作为标签读取凭证保留并提交。
 

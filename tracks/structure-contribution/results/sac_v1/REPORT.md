@@ -107,7 +107,7 @@ soup 之后 SACR 对 T₁/T₃ 的梯度仍有 3.5e-4…6.6e-3，而 **SACU 对 
 | predict ×2 | res-gpu0 / gpu1 | 每 seed 12 个 own + 4 个 swap + 4 个 zero-T |
 | freeze-predictions | res | **28** 个预测文件 + label-free 参与度，combined `137cab44343528c7…` |
 | score-holdout | res | **唯一一次** Monitor+Locked 标签读取（`holdout_read.lock`） |
-| post-hoc / finalize | res | 梯度、机制、分区、分位、证据清单 88 项哈希 |
+| post-hoc / finalize | res | 梯度、机制、分区、分位；最终证据清单 91 项哈希 |
 
 - GPU 时间 **2.101 h**（cap 4.0 h，未超）；未做任何超参/宽度/初始化/核函数搜索，未加 seed。
 - 训练期间 `LabelGuard` 的 forbidden-label 访问尝试 = **0**（SSL 与训练 JSON 内均有记录）；
@@ -290,7 +290,7 @@ rr run res sac-pred --pool res-gpu0 --result tracks/structure-contribution/resul
 - SSL encoder `a1ede1c7…`（s0）、`5df561c6…`（s1）
 - soup：P3 `b44ad052…`/`a5069c7b…`，SACR `c0af629c…`/`9f0659d3…`，SACU `ccf9d06e…`/`6f7bf498…`
 - 28 个预测 combined `137cab44343528c7…`
-- 完整清单：`evidence_manifest.json`（88 项 artifact + 8 项 GPU ledger + checkpoints）
+- 完整清单：`evidence_manifest.json`（91 项 artifact，含 REPORT/DEVIATIONS + 8 项 GPU ledger + checkpoints）
 
 ---
 
@@ -311,4 +311,4 @@ rr run res sac-pred --pool res-gpu0 --result tracks/structure-contribution/resul
 | `post_hoc_S.json` | 梯度、机制、分区、Δ 分位 |
 | `per_molecule_errors_{locked,monitor}.csv` | 逐分子误差 |
 | `gpu_budget_ledger.json` | 2.101 h ≤ 4.0 h |
-| `evidence_manifest.json` | 88 项 artifact 的 sha256 |
+| `evidence_manifest.json` | 91 项 artifact 的 sha256 |
