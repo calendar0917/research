@@ -123,6 +123,33 @@ provenance 不依赖该字段。
 
 教训（写给下一轮）：`verify-inputs` 不是只读命令；冻结之后不应再运行它。
 
+## D-13 证据清单的自引用条目
+
+`finalize` 会把 `results/sac_v1/` 下所有文件逐一哈希并写进 `evidence_manifest.json`，
+而清单文件本身已经存在（远端生成的那一版），于是它也被列进自己的 artifact 列表，
+记录的是**被覆盖之前**的哈希。因此 91 项里有且仅有 1 项
+（`evidence_manifest.json` 自己）无法与最终文件逐字节吻合，这是自引用的必然结果，
+不是文件被篡改。其余 **90/90** 项均可逐字节复算通过。
+
+为闭合链条（不再改动任何被哈希的 artifact）：
+
+- 最终 `evidence_manifest.json` 的 sha256 写在本轮**最后一个 commit 的 message** 里；
+- 清单里的 `git_commit` 字段是 `finalize` 运行时的 HEAD，即"加入清单的那个 commit 的父提交"；
+- 复算脚本示例：
+
+```bash
+cd <repo>
+python - <<'EOF'
+import json, hashlib, pathlib
+m = json.load(open("tracks/structure-contribution/results/sac_v1/evidence_manifest.json"))
+bad = [a["path"] for a in m["artifacts"] if hashlib.sha256(pathlib.Path(a["path"]).read_bytes()).hexdigest() != a["sha256"]]
+print(len(m["artifacts"]), "artifacts; mismatched:", bad)  # 期望只有 evidence_manifest.json 自己
+EOF
+```
+
+下一轮若要避免这个瑕疵，应让 `finalize` 在遍历时排除 `evidence_manifest.json` 自身
+（本轮协议已冻结，不做读标签后的代码改动）。
+
 ## D-11 发现（不是本轮偏离）：p3 轮的 salt 元数据 bug
 
 构建 split S 时把 salt **显式**传入，并新增回归测试：用保存的 metadata salt 重算 split、
