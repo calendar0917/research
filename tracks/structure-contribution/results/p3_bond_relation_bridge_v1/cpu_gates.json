@@ -1,0 +1,235 @@
+{
+ "protocol": "cscl-p3-bond-relation-bridge-v1",
+ "git_commit": "9a2f9468a8eb002f7ab10bf6f23d9dc18448fefb",
+ "device": "cpu",
+ "gates": [
+  {
+   "gate": "G1_kernel_properties",
+   "passed": true,
+   "n_molecules": 300,
+   "checks": {
+    "R_diag_zero": 300,
+    "U_diag_zero": 300,
+    "R_rowsum_ok": 300,
+    "U_rowsum_ok": 300,
+    "R_pair_reconstruction_exact": 300,
+    "U_pair_reconstruction_exact": 300,
+    "R_rows_equal_U_rows": 300,
+    "R_equals_U": 0
+   },
+   "renumbering_max_abs_diff": 0.0,
+   "single_bond_ok": true,
+   "R_equals_U_fraction": 0.0
+  },
+  {
+   "gate": "G2_matched_parameters_and_init",
+   "passed": true,
+   "parameters": {
+    "P3": 413505,
+    "P3R": 422945,
+    "P3U": 422945
+   },
+   "state_hash_P3R": "62929068ed6294357dfb0f57f1a7062f2abaad14f9f77f95aaea00fbce212cfe",
+   "state_hash_P3U": "62929068ed6294357dfb0f57f1a7062f2abaad14f9f77f95aaea00fbce212cfe",
+   "base_init_hash": "d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691",
+   "new_parameter_tensors_identical": true,
+   "rel_scale_all_zero": true,
+   "batch_order_sha256": [
+    "9417f79b0649f6a2802a54ee9b82647e8d48cbdcdd088863bbd8af7eaa7989bd",
+    "04101960a47652ef905712fd98ea1fd8902e3f3a5a9555c2ec9f089d6fdf1120"
+   ],
+   "batch_orders_differ_by_seed": true
+  },
+  {
+   "gate": "G3_zero_init_equals_P3",
+   "passed": true,
+   "max_abs_pred_diff_vs_P3": 0.0,
+   "max_abs_z_block_diff": 0.0,
+   "bitwise_identical": true
+  },
+  {
+   "gate": "G4_relation_affects_forward",
+   "passed": true,
+   "max_abs_delta_with_nonzero_gamma": 0.015410363674163818,
+   "max_abs_delta_R_kernel_vs_U_kernel": 3.3855438232421875e-05,
+   "max_abs_aggregate_diff_R_vs_U": 0.0078497976064682,
+   "kernel_is_consumed": true,
+   "note": "gamma=0.05 probe at initialisation; the trained residual is measured in post-hoc"
+  },
+  {
+   "gate": "G5_gradient_flow",
+   "passed": true,
+   "probe": {
+    "1": {
+     "loss": 1.1180388927459717,
+     "pair_mlp_grad_norm": 0.0,
+     "rel_scale_grad_norm": 0.03441546857357025
+    },
+    "2": {
+     "loss": 0.9275888800621033,
+     "pair_mlp_grad_norm": 3.9897776852318775e-05,
+     "rel_scale_grad_norm": 0.0034664105623960495
+    },
+    "3": {
+     "loss": 0.965734601020813,
+     "pair_mlp_grad_norm": 0.0005321777122806232,
+     "rel_scale_grad_norm": 0.03165121376514435
+    }
+   },
+   "first_step_pair_mlp_grad_zero_by_construction": true
+  },
+  {
+   "gate": "G6_no_label_leak_and_base_untouched",
+   "passed": true,
+   "batch_keys": [
+    "atom_batch",
+    "atom_feat",
+    "bond_batch",
+    "bond_feat",
+    "bond_index",
+    "global_feat",
+    "junc_batch",
+    "junc_bond",
+    "junc_feat",
+    "junc_index",
+    "n_graphs"
+   ],
+   "base_hash_before": "d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691",
+   "base_hash_after": "d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691",
+   "base_unchanged": true,
+   "junction_and_atom_blocks_identical": true,
+   "relation_inputs": "bond representation b + pair indices + kernel weights only",
+   "labels_in_model_path": false,
+   "differences_from_history": {
+    "organized_null_bjoc": "re-broadcast junction content into a bond-gated context; no explicit bond-bond pair MLP",
+    "glrc": "jointly re-weighted existing per-bond composer inputs; no new pair interactions",
+    "this_round": "explicit shared symmetric pair MLP over real one-hop bond pairs, added as a zero-init residual on c"
+   },
+   "new_information_independence_guaranteed": false
+  },
+  {
+   "gate": "G7_edge_cases",
+   "passed": true,
+   "cases": [
+    {
+     "mol_index": 0,
+     "n_bonds": 1,
+     "kernel": "R",
+     "n_pairs": 0,
+     "finite": true,
+     "agg_abs_max": 0.0
+    },
+    {
+     "mol_index": 0,
+     "n_bonds": 1,
+     "kernel": "U",
+     "n_pairs": 0,
+     "finite": true,
+     "agg_abs_max": 0.0
+    },
+    {
+     "mol_index": 1,
+     "n_bonds": 3,
+     "kernel": "R",
+     "n_pairs": 2,
+     "finite": true,
+     "agg_abs_max": 0.18451713025569916
+    },
+    {
+     "mol_index": 1,
+     "n_bonds": 3,
+     "kernel": "U",
+     "n_pairs": 3,
+     "finite": true,
+     "agg_abs_max": 0.1844063103199005
+    },
+    {
+     "mol_index": 2,
+     "n_bonds": 6,
+     "kernel": "R",
+     "n_pairs": 5,
+     "finite": true,
+     "agg_abs_max": 0.1852421909570694
+    },
+    {
+     "mol_index": 2,
+     "n_bonds": 6,
+     "kernel": "U",
+     "n_pairs": 15,
+     "finite": true,
+     "agg_abs_max": 0.1853487491607666
+    },
+    {
+     "mol_index": 3,
+     "n_bonds": 5,
+     "kernel": "R",
+     "n_pairs": 5,
+     "finite": true,
+     "agg_abs_max": 0.1809898316860199
+    },
+    {
+     "mol_index": 3,
+     "n_bonds": 5,
+     "kernel": "U",
+     "n_pairs": 10,
+     "finite": true,
+     "agg_abs_max": 0.18107500672340393
+    },
+    {
+     "mol_index": 4,
+     "n_bonds": 8,
+     "kernel": "R",
+     "n_pairs": 8,
+     "finite": true,
+     "agg_abs_max": 0.18128547072410583
+    },
+    {
+     "mol_index": 4,
+     "n_bonds": 8,
+     "kernel": "U",
+     "n_pairs": 28,
+     "finite": true,
+     "agg_abs_max": 0.1812346875667572
+    },
+    {
+     "mol_index": 5,
+     "n_bonds": 5,
+     "kernel": "R",
+     "n_pairs": 7,
+     "finite": true,
+     "agg_abs_max": 0.1851905733346939
+    },
+    {
+     "mol_index": 5,
+     "n_bonds": 5,
+     "kernel": "U",
+     "n_pairs": 10,
+     "finite": true,
+     "agg_abs_max": 0.18474143743515015
+    }
+   ],
+   "single_bond_zero_pairs": true
+  },
+  {
+   "gate": "G8_frozen_loop_equivalence",
+   "passed": true,
+   "max_abs_soup_diff": 0.0,
+   "batch_order_equal": true,
+   "soup_fit_mae_mine": 0.9038609234848991,
+   "soup_fit_mae_frozen_trainer": 0.9038609234848991,
+   "tolerance": "1e-6 (CPU float32 reduction noise floor)"
+  }
+ ],
+ "all_passed": true,
+ "frozen_constants": {
+  "pair_hidden": 32,
+  "pair_init_offset": 7919,
+  "meaningful_delta": 0.004,
+  "tail_threshold": -3.0,
+  "bootstrap_n": 5000
+ },
+ "official_valid_loaded": false,
+ "official_test_loaded": false,
+ "monitor_labels_read": false,
+ "locked_labels_read": false
+}

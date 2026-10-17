@@ -1,0 +1,68 @@
+# Frozen configuration for protocol cscl-p3-bond-relation-bridge-v1.
+# Everything here is pre-registered: changing any value invalidates the round.
+protocol: cscl-p3-bond-relation-bridge-v1
+split_tag: F
+salt: cscl-p3-bond-relation-bridge-v1
+
+seeds: [0, 1]
+arms: [P3, P3R, P3U]
+bridge_arms: [P3R, P3U]
+kernel_of_arm:
+  P3R: R
+  P3U: U
+
+# relation branch (identical implementation and parameter count for P3R / P3U)
+pair_hidden: 32
+pair_init_offset: 7919
+base_parameters: 413505
+pair_mlp_parameters: 9344
+rel_scale_parameters: 96
+bridge_parameters: 422945
+residual_init: zero
+pair_mlp_activation: silu
+pair_input: "[b_e + b_f, |b_e - b_f|]"
+
+# kernels
+kernel_R: "K_R[e,f] = A_line[e,f] / deg_line(e); zero diagonal; row sum 1"
+kernel_U: "K_U[e,f] = 1/(n_bonds - 1) for e != f; n_bonds = 1 -> zero; row sum 1"
+kernel_self_loops: false
+relations_added_to: "composed per-bond vector c (z block of the reader input)"
+
+# data
+excluded_rows: [941, 2210, 6071, 9766]
+n_usable: 9996
+fit_target: 7996
+monitor_target: 1000
+locked_target: 1000
+size_tolerance: 10
+
+# training recipe (must equal bjoc_perfmech_long_v1.RECIPES[R3])
+recipe: R3
+batch_size: 128
+epochs: 360
+steps_per_epoch: 63
+updates: 22680
+soup_last: 5
+shuffle_offset: 101
+lr: 1.0e-3
+lr_min: 1.0e-5
+weight_decay: 1.0e-5
+grad_clip: 5.0
+loss: "raw-y L1"
+
+# Fit-only masked SSL (no labels)
+ssl_mode: atom_bond
+ssl_updates: 7560
+
+# frozen scoring / decision constants
+meaningful_delta: 0.004
+tail_threshold: -3.0
+top_k_removed: 10
+bootstrap_n: 5000
+bootstrap_seed: 0
+zones: [monitor, locked]
+primary_zone: locked
+replication_zone: monitor
+
+# budget
+budget_gpu_hours: 4.0
