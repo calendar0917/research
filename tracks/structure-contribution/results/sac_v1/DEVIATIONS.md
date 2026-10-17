@@ -110,6 +110,19 @@
 因为关系是在首次提交前构建的。其内容哈希已被 `protocol_freeze.json` 绑定，
 provenance 不依赖该字段。
 
+## D-12 冻结后再跑 `verify-inputs` 导致 `input_audit.json` 漂移（已还原）
+
+收尾复核时重跑了一次 `verify-inputs`（本意是只读检查），但该命令会**重写**
+`input_audit.json` 的 `git_commit` 字段（从 `d0ffa18…` 改为当时的 HEAD `762faec…`），
+而 `protocol_freeze.json` 绑定了这个文件的 sha256，于是 `finalize` 报
+`frozen input changed: input_audit.json` 并中止。
+
+处理：`git checkout -- input_audit.json` 还原到已提交版本，sha256 回到
+`a633b05869c05513…`，与冻结值精确一致（内容层面 `input_hashes` 从未改变，
+只有 `git_commit` 字段变过），然后重跑 `finalize` 成功（91 项）。
+
+教训（写给下一轮）：`verify-inputs` 不是只读命令；冻结之后不应再运行它。
+
 ## D-11 发现（不是本轮偏离）：p3 轮的 salt 元数据 bug
 
 构建 split S 时把 salt **显式**传入，并新增回归测试：用保存的 metadata salt 重算 split、
