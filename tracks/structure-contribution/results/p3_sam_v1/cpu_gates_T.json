@@ -1,0 +1,88 @@
+{
+ "aggregate_ok": true,
+ "all_passed": true,
+ "device": "cpu",
+ "fit_updates_expected": 22680,
+ "gates": [
+  {
+   "max_abs_error_after_restore": 0.0,
+   "max_abs_move": 0.03165444731712341,
+   "name": "G1_parameter_perturbation_restore_exact",
+   "ok": true,
+   "perturbation_norm": 0.05000000060535967
+  },
+  {
+   "name": "G2_perturbation_norm_equals_rho",
+   "ok": true,
+   "perturbation_norm": 0.05000000060535967,
+   "rho": 0.05
+  },
+  {
+   "expected_updates": 4,
+   "name": "G3_optimizer_step_count_matches_update_budget",
+   "ok": true,
+   "optimizer_step_count": 4,
+   "scheduler_last_epoch": 4,
+   "scheduler_step_count": 4,
+   "updates": 4
+  },
+  {
+   "clip_calls": 4,
+   "clip_return_minus_computed_max": 1.3553557858259069e-06,
+   "first_grad_norm_max": 1.7898691552891328,
+   "grad_clip_calls": 4,
+   "grad_clip_events": 4,
+   "name": "G4_clip_only_after_second_backward",
+   "ok": true,
+   "second_grad_norm_max": 1.7872702323852048
+  },
+  {
+   "expected_members": [
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "max_abs_soup_diff": 0.0,
+   "name": "G5_last5_soup_rule",
+   "ok": true,
+   "soup_members": [
+    2,
+    3,
+    4,
+    5,
+    6
+   ]
+  },
+  {
+   "batch_order_match": true,
+   "max_abs_soup_diff": 0.0,
+   "name": "G6_rho0_equals_frozen_p3_trainer",
+   "ok": true,
+   "updates_a": 2,
+   "updates_b": 2
+  },
+  {
+   "expected_updates": 22680,
+   "n_fit": 7996,
+   "name": "G7_fit_size_update_budget",
+   "ok": true,
+   "seed0_order_sha256": "05acc80a35ba74e47c1db9d6da875fcfc7acc242ba032992f1af7abed1ffcf5c",
+   "seed1_order_sha256": "2efdfa330ed308cda573b9b28c97af9bc0bc13d363846eb92bdcc6e5a4a84109"
+  }
+ ],
+ "gpu_used": false,
+ "labels_read": false,
+ "protocol": "cscl-p3-sam-v1",
+ "python": "3.12.14",
+ "split_sha256": "aceed4408911304e083c859cc050d2a993cb0df3daea9ae2e488ed4d8bf08538",
+ "split_sizes": {
+  "fit": 7996,
+  "locked": 1000,
+  "monitor": 1000
+ },
+ "suite": "cpu_sam_two_step_and_frozen_loop",
+ "torch": "2.5.1+cu124",
+ "zinc_loaded": false
+}

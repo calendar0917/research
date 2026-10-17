@@ -1,0 +1,68 @@
+# Frozen configuration for protocol cscl-p3-sam-v1 (P3 vs P3-SAM).
+# Pre-registered BEFORE any this-round GPU trajectory.  Changing any value
+# after `freeze` invalidates the round (protocol_freeze.json binds the sha256).
+protocol: cscl-p3-sam-v1
+split_tag: T
+salt: cscl-p3-sam-v1
+
+seeds: [0, 1]
+arms: [P3, P3SAM]
+
+# ---- the one change: standard two-step SAM outside Adam -------------------
+sam:
+  rho: 0.05
+  steps: 2
+  perturbation: "global L2 over all parameters with gradients"
+  first_gradient_clipped: false
+  second_gradient_clipped: true
+  clip_after_second_backward: true
+  same_minibatch_for_both_steps: true
+  restore: "exact parameter clone copied back before clip and Adam step"
+
+# ---- unchanged P3 model ---------------------------------------------------
+base_parameters: 413505
+param_cap: 500000
+
+# ---- data / split ---------------------------------------------------------
+split:
+  excluded_rows: [941, 2210, 6071, 9766]
+  n_usable: 9996
+  fit_target: 7996
+  monitor_target: 1000
+  locked_target: 1000
+  size_tolerance: 10
+
+# ---- frozen R3 training recipe (identical for both arms) ------------------
+recipe:
+  key: R3
+  batch_size: 128
+  epochs: 360
+  soup_last: 5
+  shuffle_offset: 101
+  lr: 1.0e-3
+  lr_min: 1.0e-5
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  loss: "raw-y L1"
+
+# ---- Fit-only masked SSL (no labels; shared per seed across arms) --------
+ssl:
+  mode: atom_bond
+  updates: 7560
+
+# ---- frozen scoring / growth gate ---------------------------------------
+gate:
+  meaningful_delta: 0.004
+  tail_threshold: -3.0
+  top_k_removed: 10
+  bootstrap_n: 5000
+  bootstrap_seed: 0
+  rmse_tol: 0.005
+  tail_tol: 0.005
+  zones: [monitor, locked]
+  purchase_zone: monitor
+
+# ---- budget --------------------------------------------------------------
+budget:
+  gpu_hours: 3.0
+  gpu_assignment: "res-gpu0 -> seed 0, res-gpu1 -> seed 1"
