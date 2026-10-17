@@ -11,6 +11,9 @@ Stages
 ``objects``             LabelGuard build of Fit/Monitor/Locked objects and the
                         Fit-only global standardiser (Monitor/Locked ``.y``
                         unreachable).
+``stage-inputs``        rebuild the machine-local, gitignored object/pair
+                        artifacts on a compute checkout and verify them against
+                        the frozen split/standardiser/pair totals (amendment 1).
 ``kernels``             R/U pair lists for every zone + label-blind kernel audit.
 ``cpu-gates``           the eight pre-registered gates of PROTOCOL.md §6.
 ``freeze``              protocol_freeze.json (code + config + inputs + budgets).
@@ -561,6 +564,79 @@ def cmd_objects(_args: argparse.Namespace) -> int:
         f"[objects] {manifest['build_seconds']:.1f}s fit={len(objs['fit'])} monitor={len(objs['monitor'])} "
         f"locked={len(objs['locked'])} alignment={max_diff:.2e}"
     )
+    return 0
+
+
+
+# ---------------------------------------------------------------------------
+# stage-inputs (amendment 1): machine-local artifacts on a compute checkout
+# ---------------------------------------------------------------------------
+
+
+def cmd_stage_inputs(_args: argparse.Namespace) -> int:
+    """Rebuild the gitignored ``.pt`` artifacts and verify them semantically.
+
+    ``objects_*.pt`` / ``pairs_*.pt`` are deterministic, label-free functions of
+    the official PyG graphs, but they are machine-local (torch serialisation is
+    not byte-stable across checkouts), so a compute checkout rebuilds them and
+    checks: identical row order, identical Fit-only standardiser, identical
+    bond/pair totals per zone, and zero guarded label access.
+    """
+    fr = verify_freeze(require_exact_code=True)
+    require(not (OUT / "holdout_read.lock").exists(), "refusing to restage inputs after labels were read")
+    split, ds, guard = build_guard()
+    frozen_pairs = read_json(OUT / "pairs_manifest_F.json")
+    frozen_prep = read_json(prep_path())
+    started = time.perf_counter()
+    objs: dict[str, list[sro.MolObjects]] = {}
+    for zone in ("fit", "monitor", "locked"):
+        rows = [int(i) for i in split[f"{zone}_rows"]]
+        built = []
+        for i in rows:
+            d = guard[int(i)]
+            built.append(sro.build_mol_objects(int(i), d.x.numpy(), d.edge_index.numpy(), d.edge_attr.numpy()))
+        require([o.mol_index for o in built] == rows, f"object row order mismatch in {zone}")
+        torch.save(built, objects_path(zone))
+        objs[zone] = built
+
+    prep = bp.fit_standardiser(objs["fit"])
+    mean_diff = float(np.abs(np.asarray(prep["global_mean"]) - np.asarray(frozen_prep["global_mean"])).max())
+    scale_diff = float(np.abs(np.asarray(prep["global_scale"]) - np.asarray(frozen_prep["global_scale"])).max())
+    require(mean_diff <= 1e-12 and scale_diff <= 1e-12, "rebuild changed the Fit-only standardiser")
+
+    payload: dict[str, Any] = {"protocol": PROTOCOL_ID, "git_commit": git_commit(), "zones": {}}
+    for zone in ("fit", "monitor", "locked"):
+        zone_payload = {}
+        for arm in pb.BRIDGE_ARMS:
+            pset = pb.build_pair_set(objs[zone], pb.KERNEL_OF_ARM[arm])
+            zone_payload[pb.KERNEL_OF_ARM[arm]] = pset.to_state()
+        torch.save(zone_payload, pairs_path(zone))
+        totals = {k: int(v["src"].shape[0]) for k, v in zone_payload.items()}
+        expected = {k: int(frozen_pairs["zones"][zone]["n_pairs"][k]) for k in totals}
+        require(totals == expected, f"{zone}: pair totals changed {totals} vs {expected}")
+        payload["zones"][zone] = {
+            "n_molecules": len(objs[zone]),
+            "n_pairs": totals,
+            "n_pairs_match_frozen": True,
+            "objects_file_sha256": file_sha256(objects_path(zone)),
+            "pairs_file_sha256": file_sha256(pairs_path(zone)),
+        }
+        log(f"[stage-inputs {zone}] n={len(objs[zone])} pairs={totals} (match frozen)")
+    require(guard.access_attempts == [], "guarded label access during staging")
+    payload.update(
+        {
+            "freeze_sha256": file_sha256(freeze_path()),
+            "freeze_amendment": fr.get("amendment", 0),
+            "standardiser_max_abs_diff": {"mean": mean_diff, "scale": scale_diff},
+            "build_seconds": time.perf_counter() - started,
+            "forbidden_label_access_attempts": len(guard.access_attempts),
+            "note": "torch .pt bytes are machine-local; equality is verified semantically",
+            "monitor_labels_read": False,
+            "locked_labels_read": False,
+        }
+    )
+    write_json(OUT / "staged_inputs_F.json", payload)
+    log(f"[stage-inputs] ok in {payload['build_seconds']:.1f}s")
     return 0
 
 
@@ -1675,6 +1751,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "verify-inputs",
         "objects",
         "kernels",
+        "stage-inputs",
         "cpu-gates",
         "freeze",
         "smoke",
@@ -1700,6 +1777,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "verify-inputs": cmd_verify_inputs,
         "objects": cmd_objects,
         "kernels": cmd_kernels,
+        "stage-inputs": cmd_stage_inputs,
         "cpu-gates": cmd_cpu_gates,
         "freeze": cmd_freeze,
         "smoke": cmd_smoke,

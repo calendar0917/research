@@ -67,6 +67,9 @@ z'  = Σ_e c'_e ;  reader_in' = [z', a_sum, a_sq, g]
   本轮三臂的差异只来自 §2–§3 的预注册设计。
 - **不读取 official valid / official test**；Monitor/Locked 的 `.y` 在预处理、SSL、训练、
   预测阶段通过 `LabelGuard` 不可达；预测先冻结哈希，之后**单次**读取两区标签。
+- 计算 checkout 只携带提交进 Git 的 JSON 证据；被 gitignore 的无标签 `.pt` 中间产物
+  （objects/pairs）由 `stage-inputs` 依**冻结的** split/standardiser/pair 总数确定性重建并
+  语义校验（amendment-1，见 `AMENDMENTS.md`），不读标签。
 - 限制：split F 与历史各轮共用同一 10k 分子总体（不同划分、不同 SSL、不同轨迹），
   因此**不是独立外部验证**；绝对 MAE 也不与历史轮次直接可比。
 
