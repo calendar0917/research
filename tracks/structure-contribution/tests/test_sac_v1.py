@@ -322,3 +322,57 @@ def test_sac_case_rules():
     assert (
         sac.sac_case(**{**kw, "label_r_p3": "NEUTRAL", "label_r_u": "NEUTRAL"})["case"] == "CASE_D_NO_GAIN"
     )
+
+
+def test_scoring_path_on_synthetic_predictions() -> None:
+    """Exercise the score-holdout maths (arm stats + contrasts + case rule) on label-free fakes."""
+    import run_sac_v1 as drv
+
+    rng = np.random.default_rng(7)
+    n = 96
+    y = rng.normal(0.5, 0.9, n)
+    preds = {arm: {s: y + rng.normal(0.0, 0.25, n) for s in drv.SEEDS} for arm in drv.ARMS}
+    preds["SACR"] = {s: y + rng.normal(0.0, 0.10, n) for s in drv.SEEDS}
+
+    stats = {arm: drv._arm_stats(y, preds[arm]) for arm in drv.ARMS}
+    for arm in drv.ARMS:
+        assert set(stats[arm]) >= {"mae_seed_mean", "mae_per_seed", "ordinary_mae", "tail_mae", "top10_sse_share"}
+    assert stats["SACR"]["mae_seed_mean"] < stats["P3"]["mae_seed_mean"]
+
+    contrasts = {
+        name: drv._contrast(y, preds[a], preds[b], 0.004) for name, a, b in drv.sac.CONTRASTS
+    }
+    for name, c in contrasts.items():
+        assert set(c) >= {"delta_seed_mean", "per_seed_delta", "bootstrap", "label", "top10_removed_delta"}
+        assert set(c["per_seed_delta"]) == {str(s) for s in drv.SEEDS}
+        assert c["bootstrap"]["ci_lo"] <= c["bootstrap"]["ci_hi"]
+        assert c["label"] in {"GAIN", "NEUTRAL", "HARM"}
+        for seed_info in c["per_seed_bootstrap"].values():
+            assert seed_info["ci_lo"] <= seed_info["ci_hi"]
+    assert contrasts["SACR_minus_P3"]["delta_seed_mean"] < 0.0
+
+    rep = {
+        name: {
+            "seed_mean_delta": float(np.mean(list(c["per_seed_delta"].values()))),
+            "per_seed_delta": dict(c["per_seed_delta"]),
+            "replicated": bool(all(v < 0.0 for v in c["per_seed_delta"].values())),
+        }
+        for name, c in contrasts.items()
+    }
+    primary = contrasts
+    case = drv.sac.sac_case(
+        label_r_p3=primary["SACR_minus_P3"]["label"],
+        label_r_u=primary["SACR_minus_SACU"]["label"],
+        label_u_p3=primary["SACU_minus_P3"]["label"],
+        replicated_r_p3=rep["SACR_minus_P3"]["replicated"],
+        replicated_r_u=rep["SACR_minus_SACU"]["replicated"],
+        replicated_u_p3=rep["SACU_minus_P3"]["replicated"],
+        top10_r_p3=primary["SACR_minus_P3"]["top10_removed_delta"],
+        participation=True,
+    )
+    assert case["case"].startswith("CASE_")
+    assert isinstance(case["reasons"], list) and case["reasons"]
+
+    # deterministic: the same inputs give the same bootstrap interval
+    again = drv._contrast(y, preds["SACR"], preds["P3"], 0.004)
+    assert again["bootstrap"] == contrasts["SACR_minus_P3"]["bootstrap"]

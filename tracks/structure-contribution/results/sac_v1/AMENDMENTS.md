@@ -38,3 +38,43 @@ counts only SSL/train trajectories, but it is disclosed here and in
 re-running the 12 CPU gates on the amended code (`cpu_gates.json` unchanged in
 verdict, 12/12). All other frozen inputs (split S, objects/relations manifests,
 relation audit, input audit) are unchanged.
+
+## Amendment 2 — 2026-10-17T09:47Z (post-freeze, pre-formal-supervised-run)
+
+**Trigger.** `train` for both seeds exited with code 1 nine seconds after launch:
+
+```
+File "run_sac_v1.py", line 1632, in cmd_train
+    probe_batch = {k: v.to(device) for k, v in sro.batch_objects(probe_objs).items()}
+AttributeError: 'int' object has no attribute 'to'
+```
+
+`sro.batch_objects` returns a dict that mixes tensors with Python ints (row
+counts), so the dict comprehension must only move tensors. `sac.move_batch`
+already does exactly that and is used everywhere else.
+
+**Change.** One line in `cmd_train`:
+
+```python
+- probe_batch = {k: v.to(device) for k, v in sro.batch_objects(probe_objs).items()}
++ probe_batch = sac.move_batch(sro.batch_objects(probe_objs), device)
+```
+
+**No protocol semantics changed.** The failing statement builds the fixed
+128-molecule batch used only by the *gradient probe* at initialisation. It fires
+before the first optimizer step of the first arm for each seed, so no supervised
+epoch, soup checkpoint, ledger entry or prediction exists from the failed
+attempts. Arms, relations, projections, reader, initialisation, recipe, seeds,
+GPU assignment, thresholds and decision rule are unchanged; `sac_v1.py` is
+byte-identical to the original freeze. Because of amendments 1+2 the SSL
+checkpoints of seed 0 and seed 1 were produced by the already-frozen SSL routine
+(`bjoc_masked_pretraining_v1.pretrain_masked`, unchanged upstream file) and are
+unaffected.
+
+**Re-freeze.** `protocol_freeze.json` regenerated with `amendment: 2` after
+re-running 12/12 CPU gates and the fast test file (18 tests, including a new
+synthetic test of the score-holdout maths so that the scoring path is proven
+before the single label read).
+
+**Cost.** ~18 s of A100 time total (two immediate failures); not ledgered,
+disclosed in `DEVIATIONS.md`.

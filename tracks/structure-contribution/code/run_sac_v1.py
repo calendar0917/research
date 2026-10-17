@@ -1629,7 +1629,7 @@ def cmd_train(args: argparse.Namespace) -> int:
 
     probe_n = min(128, len(fit_objs))
     probe_objs = list(fit_objs[:probe_n])
-    probe_batch = {k: v.to(device) for k, v in sro.batch_objects(probe_objs).items()}
+    probe_batch = sac.move_batch(sro.batch_objects(probe_objs), device)
     probe_y = torch.as_tensor(y_fit[:probe_n], dtype=torch.float32, device=device)
 
     for arm in arms:
