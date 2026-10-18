@@ -57,7 +57,10 @@ model:
     S: 622336384
     X: 877730176
     G: 170472000
-  flop_note: "FlopCounterMode forward, PyG scatter may be uncounted (lower bound); X/S ~1.41x"
+  actual_run_forward_flops:
+    n253: {S: 622336384, X: 944085376, G: 170472000}
+    n2352: {S: 584163072, X: 936648448, G: 159456384}
+  flop_note: "FlopCounterMode forward, PyG scatter may be uncounted (lower bound); CPU-gate fixed batch X/S ~1.41x; actual run batches X/S ~1.52x (n=253) and ~1.60x (n=2352)"
 
 training:
   loss: l1

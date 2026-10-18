@@ -20,8 +20,10 @@
 
 - FLOP counter is `torch.utils.flop_counter.FlopCounterMode`; PyG scatter ops may be
   uncounted, so these are lower bounds.
-- X uses ~1.41× S forward FLOPs at matched parameters. This is a real compute
-  difference and is reported; if X wins, extra compute is an alternative explanation.
+- On the CPU-gate fixed batch X uses ~1.41× S forward FLOPs at matched parameters.
+  Actual training batches are higher: ~1.52× (n=253) and ~1.60× (n=2352).
+  This is a real compute difference and is reported; if X wins, extra compute is
+  an alternative explanation.
 - Preprocessing is CPU-only patch extraction from the committed label-free raw
   graph artifact; GPU hosts do not need RDKit.
 - Phase 0 LOO used all 3360 official-train labels, so the internal Reserved split
