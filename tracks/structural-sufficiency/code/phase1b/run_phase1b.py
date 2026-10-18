@@ -150,6 +150,12 @@ def train(args: argparse.Namespace) -> int:
     if torch.isnan(y_all[torch.as_tensor(split["fit"] + split["monitor"], dtype=torch.long)]).any():
         raise SystemExit("missing allowed labels")
 
+    rewire_report = None
+    if args.edge_rewire_seed is not None:
+        from ssrc_rewire import rewire_root_adjacency
+
+        cache, rewire_report = rewire_root_adjacency(cache, seed=int(args.edge_rewire_seed))
+
     train_rows = list(split["fit"])
     monitor_rows = list(split["monitor"])
     reserved_rows = list(split["reserved"])
@@ -170,7 +176,8 @@ def train(args: argparse.Namespace) -> int:
         raise SystemExit("CUDA requested but unavailable")
 
     out_dir = Path(args.out_dir) if args.out_dir else (SMOKE_RUNS if args.smoke else RUNS)
-    out_path = out_dir / dataset / f"{args.model}_seed{args.seed}{'_smoke' if args.smoke else ''}.json"
+    suffix = ("_smoke" if args.smoke else "") + (f"_{args.label}" if args.label else "")
+    out_path = out_dir / dataset / f"{args.model}_seed{args.seed}{suffix}.json"
     provenance = {
         "dataset": dataset,
         "cache_sha256": sha256_file(paths["cache"]),
@@ -181,9 +188,11 @@ def train(args: argparse.Namespace) -> int:
         "labels_sha256": sha256_file(paths["labels"]),
         "label_vault": vault.audit(),
         "row_sha256": {k: row_sha256(v) for k, v in split.items()},
+        "edge_rewiring": rewire_report,
     }
     payload = train_one(
         model_name=args.model,
+        model_label=args.label,
         dataset=dataset,
         seed=int(args.seed),
         train_rows=train_rows,
@@ -239,6 +248,13 @@ def main() -> int:
     p_train.add_argument("--patience", type=int, default=None)
     p_train.add_argument("--batch-size", type=int, default=None)
     p_train.add_argument("--smoke", action="store_true")
+    p_train.add_argument("--label", default=None, help="suffix for the output file name (e.g. rewire, long)")
+    p_train.add_argument(
+        "--edge-rewire-seed",
+        type=int,
+        default=None,
+        help="degree-preserving double-edge-swap rewiring of the root adjacency (B1 control)",
+    )
 
     args = ap.parse_args()
     if args.mode == "prep":

@@ -12,7 +12,7 @@ HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[3]))
 
-from ssrc_data import MolGraph, build_cache, gather_batch, zinc_internal_split  # noqa: E402
+from ssrc_data import MolGraph, build_cache, gather_batch, load_zinc_train, zinc_internal_split  # noqa: E402
 from ssrc_models import ModelConfig, build_model, parameter_count  # noqa: E402
 from ssrc_train import _model_batch  # noqa: E402
 
@@ -137,3 +137,36 @@ def test_s0_matches_phase1a_modelS_on_real_lipo() -> None:
     ours.eval()
     with torch.no_grad():
         assert torch.equal(ref(b), ours(b))
+
+
+def test_rewire_control() -> None:
+    """B1 control: degree-preserving, type-multiset-preserving root rewiring."""
+    import numpy as np
+    from ssrc_rewire import rewire_mol_bonds, rewire_root_adjacency
+
+    u = np.array([0, 0, 1, 2, 3, 3], dtype=np.int64)
+    v = np.array([1, 2, 2, 3, 4, 5], dtype=np.int64)
+    attr = np.stack([np.full(6, k, dtype=np.int64) for k in range(4)], axis=1).astype(np.float32)
+    u1, v1, attempted, applied = rewire_mol_bonds(u, v, attr, seed=0, mol_id=3)
+    assert attempted > 0 and applied > 0
+    # no self loops
+    assert not np.any(u1 == v1)
+    # same edge count, same degree sequence, no duplicate edges
+    assert len(u1) == len(u)
+    deg = lambda a, b: np.bincount(np.concatenate([a, b]), minlength=6)
+    assert np.array_equal(deg(u, v), deg(u1, v1))
+    pairs = {(int(a), int(b)) for a, b in zip(u1, v1)}
+    assert len(pairs) == len(u1)
+
+    mols, _, _ = load_zinc_train()
+    cache = build_cache(mols[:6])
+    out, report = rewire_root_adjacency(cache, seed=0)
+    n0 = cache["root_edge_start"].diff().numpy()
+    n1 = out["root_edge_start"].diff().numpy()
+    assert np.array_equal(n0, n1)
+    assert report["degree_sequence_preserved"] and report["edge_count_preserved"]
+    assert report["total_swaps_applied"] > 0 and report["molecules_changed"] > 0
+    # patches untouched
+    assert torch.equal(cache["patch_node_feat_flat"], out["patch_node_feat_flat"])
+    # root edge count unchanged
+    assert int(out["root_edge_src_flat"].shape[0]) == int(cache["root_edge_src_flat"].shape[0])

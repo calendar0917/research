@@ -249,6 +249,7 @@ def train_one(
     out_path: Path,
     provenance: Mapping[str, Any],
     smoke: bool = False,
+    model_label: str | None = None,
 ) -> dict[str, Any]:
     seed_everything(seed)
     atom_dim = int(cache["meta"]["atom_dim"])
@@ -355,6 +356,7 @@ def train_one(
         "protocol_id": f"ssrc-phase1b-{dataset}-v1",
         "dataset": dataset,
         "model": model_name,
+        "model_label": model_label,
         "seed": int(seed),
         "smoke": bool(smoke),
         "n_train": len(train_rows),

@@ -23,6 +23,7 @@ sys.path.insert(0, str(HERE.parent))
 from ssrc_data import LIPO_SPLIT  # noqa: E402
 
 MODELS = ["S0", "R1", "M1", "M2", "G_ref"]
+EXTRA_MODELS = {"R1_rewire": "R1_seed0_rewire.json", "M1_long": "M1_seed0_long.json"}
 BANDS = {"zinc": {"negligible": 0.01, "meaningful": 0.02}, "lipo": {"negligible": 0.02, "meaningful": 0.04}}
 
 
@@ -30,6 +31,10 @@ def load_runs(root: Path, dataset: str) -> dict[str, dict[str, Any]]:
     out = {}
     for model in MODELS:
         path = root / dataset / f"{model}_seed0.json"
+        if path.exists():
+            out[model] = json.loads(path.read_text())
+    for model, fname in EXTRA_MODELS.items():
+        path = root / dataset / fname
         if path.exists():
             out[model] = json.loads(path.read_text())
     return out
@@ -128,6 +133,9 @@ def summarize_dataset(dataset: str, runs: Mapping[str, dict[str, Any]], n_boot: 
         "gap_R1_minus_Gref": ("R1", "G_ref"),
         "gap_M1_minus_Gref": ("M1", "G_ref"),
         "gap_M2_minus_Gref": ("M2", "G_ref"),
+        # pre-registered controls
+        "control_broken_adjacency_R1rewire_minus_R1": ("R1_rewire", "R1"),
+        "control_matched_compute_M1long_minus_M2": ("M1_long", "M2"),
     }
     for name, (a, b) in pairs.items():
         if a in errs and b in errs:
