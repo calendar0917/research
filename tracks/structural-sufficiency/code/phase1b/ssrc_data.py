@@ -534,12 +534,22 @@ def gather_batch(
     cache: Mapping[str, Any],
     mol_indices: Sequence[int],
     y: torch.Tensor | None = None,
+    include_size: bool = False,
+    include_edge_mol: bool = False,
 ) -> dict[str, Any]:
     """Vectorised batch gather.
 
     Patch tokens and root-graph nodes are in the same order (one patch / one
     root atom per atom), so the token tensor can be used directly as the root
     graph node feature.
+
+    ``include_size`` adds ``mol_size_feat`` (Phase 1c only).  The feature is
+    read from ``cache['mol_size_feat']`` when present (a frozen sidecar built by
+    Phase 1c prep), otherwise it is derived from the structure counts as
+    ``[n_atoms/10, n_bonds/10, n_bonds - n_atoms + 1]`` for connected molecular
+    graphs.  ``include_edge_mol`` adds ``root_edge_mol`` (molecule id per
+    directed edge) and ``root_edge_unique`` (the canonical undirected copy) for
+    the marginal-correspondence arm; no endpoint indices are added.
     """
     sel_mols = torch.as_tensor([int(i) for i in mol_indices], dtype=torch.long)
     B = int(sel_mols.numel())
@@ -587,7 +597,6 @@ def gather_batch(
     root_edge_index = torch.stack([root_edge_src, root_edge_dst], dim=0)
     root_edge_attr = cache["root_edge_attr_flat"][rflat].float()
     root_batch = torch.repeat_interleave(torch.arange(B, dtype=torch.long), mol_n_atoms)
-
     # raw atom features for the full-graph G_ref model
     astarts = cache["atom_start"][sel_mols]
     total_atoms = int(mol_n_atoms.sum())
@@ -612,6 +621,17 @@ def gather_batch(
         "mol_index": sel_mols,
         "n_molecules": B,
     }
+    if include_size:
+        if "mol_size_feat" in cache:
+            batch["mol_size_feat"] = cache["mol_size_feat"][sel_mols].float()
+        else:
+            n_atoms = mol_n_atoms.float()
+            n_bonds = (cache["root_n_edges"][sel_mols].float() / 2.0)
+            rings = (n_bonds - n_atoms + 1.0).clamp(min=0.0)
+            batch["mol_size_feat"] = torch.stack([n_atoms / 10.0, n_bonds / 10.0, rings], dim=-1)
+    if include_edge_mol:
+        batch["root_edge_mol"] = torch.repeat_interleave(torch.arange(B, dtype=torch.long), rcounts)
+        batch["root_edge_unique"] = root_edge_src < root_edge_dst
     if y is not None:
         batch["y"] = y
     return batch

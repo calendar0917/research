@@ -282,6 +282,8 @@ class ModelConfig:
 
 def build_model(name: str, atom_dim: int, edge_dim: int, cfg: ModelConfig) -> nn.Module:
     node_dim = atom_dim + 4
+    if name in _BUILDERS:
+        return _BUILDERS[name](atom_dim, edge_dim, cfg)
     if name == "S0":
         return ModelS0(node_dim, edge_dim, cfg)
     if name == "R1":
@@ -292,6 +294,16 @@ def build_model(name: str, atom_dim: int, edge_dim: int, cfg: ModelConfig) -> nn
     if name == "G_ref":
         return ModelGRef(atom_dim, edge_dim, cfg)
     raise ValueError(f"unknown model {name!r}")
+
+
+# Extension point for later phases.  Phase 1b arms keep their original
+# construction path unchanged; a later phase can register a builder without
+# editing the frozen Phase 1b branches.
+_BUILDERS: dict[str, Any] = {}
+
+
+def register_builder(name: str, builder: Any) -> None:
+    _BUILDERS[str(name)] = builder
 
 
 def parameter_count(model: nn.Module) -> int:
@@ -337,6 +349,17 @@ GRAPH_ONLY_KEYS = frozenset(
     }
 )
 
+# Phase 1c: explicit graph-size features enter the readout only.
+SIZE_ONLY_KEYS = frozenset(set(PATCH_ONLY_KEYS) | {"mol_size_feat"})
+RELATIONAL_SIZE_KEYS = frozenset(set(RELATIONAL_KEYS) | {"mol_size_feat"})
+# Marginal-correspondence arm: no endpoint indices and no root node ids are
+# present at all.  It receives only patch tokens, per-edge attributes, the
+# molecule id of each directed edge, and the unique-edge mask.
+MARGINAL_SIZE_KEYS = frozenset(
+    set(PATCH_ONLY_KEYS)
+    | {"root_edge_attr", "root_edge_mol", "root_edge_unique", "mol_size_feat"}
+)
+
 
 def _check_keys(batch: Mapping[str, Any], allowed: frozenset[str], required: frozenset[str], label: str) -> None:
     extra = set(batch) - allowed
@@ -355,6 +378,18 @@ def assert_relational_batch(batch: Mapping[str, Any]) -> None:
 
 def assert_graph_only_batch(batch: Mapping[str, Any]) -> None:
     _check_keys(batch, GRAPH_ONLY_KEYS, GRAPH_ONLY_KEYS, "G_ref")
+
+
+def assert_size_only_batch(batch: Mapping[str, Any]) -> None:
+    _check_keys(batch, SIZE_ONLY_KEYS, SIZE_ONLY_KEYS, "S_cap_size")
+
+
+def assert_relational_size_batch(batch: Mapping[str, Any]) -> None:
+    _check_keys(batch, RELATIONAL_SIZE_KEYS, RELATIONAL_SIZE_KEYS, "R1_size")
+
+
+def assert_marginal_size_batch(batch: Mapping[str, Any]) -> None:
+    _check_keys(batch, MARGINAL_SIZE_KEYS, MARGINAL_SIZE_KEYS, "R1_marginal_size")
 
 
 def filter_batch(batch: Mapping[str, Any], keys: frozenset[str]) -> dict[str, Any]:

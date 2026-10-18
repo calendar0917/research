@@ -49,6 +49,12 @@ MODEL_ASSERT = {
 }
 
 
+def register_model_keys(name: str, keys: frozenset[str], assert_fn: Any) -> None:
+    """Register a later-phase arm without changing any Phase 1b branch."""
+    MODEL_KEYS[str(name)] = keys
+    MODEL_ASSERT[str(name)] = assert_fn
+
+
 @dataclass(frozen=True)
 class TrainConfig:
     batch_size: int = 64
@@ -124,6 +130,10 @@ def _model_batch(model_name: str, batch: Mapping[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _gather(cache: Mapping[str, Any], rows: Sequence[int], y: torch.Tensor | None, batch_kwargs: Mapping[str, Any] | None):
+    return gather_batch(cache, rows, y, **(dict(batch_kwargs) if batch_kwargs else {}))
+
+
 @torch.no_grad()
 def predict_rows(
     model: torch.nn.Module,
@@ -133,6 +143,7 @@ def predict_rows(
     cache: Mapping[str, Any],
     cfg: TrainConfig,
     device: torch.device,
+    batch_kwargs: Mapping[str, Any] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     model.eval()
     preds: list[np.ndarray] = []
@@ -140,7 +151,7 @@ def predict_rows(
     for start in range(0, len(rows), cfg.batch_size):
         chunk = [int(r) for r in rows[start : start + cfg.batch_size]]
         y = y_all[torch.as_tensor(chunk, dtype=torch.long)]
-        batch = _to_device(gather_batch(cache, chunk, y), device)
+        batch = _to_device(_gather(cache, chunk, y, batch_kwargs), device)
         batch = _model_batch(model_name, batch)
         pred = model(batch).detach().cpu().numpy()
         preds.append(pred)
@@ -156,6 +167,7 @@ def _measure_flops(
     cache: Mapping[str, Any],
     cfg: TrainConfig,
     device: torch.device,
+    batch_kwargs: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     try:
         from torch.utils.flop_counter import FlopCounterMode
@@ -163,7 +175,7 @@ def _measure_flops(
         model.eval()
         chunk = [int(r) for r in rows[: cfg.batch_size]]
         y = y_all[torch.as_tensor(chunk, dtype=torch.long)]
-        batch = _to_device(gather_batch(cache, chunk, y), device)
+        batch = _to_device(_gather(cache, chunk, y, batch_kwargs), device)
         batch = _model_batch(model_name, batch)
         with FlopCounterMode(display=False) as fcm:
             model(batch)
@@ -186,12 +198,13 @@ def _measure_step_time(
     cfg: TrainConfig,
     device: torch.device,
     n_steps: int = 10,
+    batch_kwargs: Mapping[str, Any] | None = None,
 ) -> float:
     model.train()
     opt = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     chunk = [int(r) for r in rows[: cfg.batch_size]]
     y = y_all[torch.as_tensor(chunk, dtype=torch.long)]
-    batch = _to_device(gather_batch(cache, chunk, y), device)
+    batch = _to_device(_gather(cache, chunk, y, batch_kwargs), device)
     batch = _model_batch(model_name, batch)
     times: list[float] = []
     for _ in range(n_steps):
@@ -250,6 +263,9 @@ def train_one(
     provenance: Mapping[str, Any],
     smoke: bool = False,
     model_label: str | None = None,
+    batch_kwargs: Mapping[str, Any] | None = None,
+    protocol_id: str | None = None,
+    scope_extra: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     seed_everything(seed)
     atom_dim = int(cache["meta"]["atom_dim"])
@@ -284,7 +300,7 @@ def train_one(
             idx = perm[start : start + cfg.batch_size]
             chunk = [int(train_rows[int(i)]) for i in idx]
             y = y_all[torch.as_tensor(chunk, dtype=torch.long)]
-            batch = _to_device(gather_batch(cache, chunk, y), device)
+            batch = _to_device(_gather(cache, chunk, y, batch_kwargs), device)
             batch = _model_batch(model_name, batch)
             opt.zero_grad(set_to_none=True)
             if device.type == "cuda":
@@ -301,13 +317,13 @@ def train_one(
             losses.append(float(loss.detach().cpu()))
         scheduler.step()
 
-        mon_pred, mon_true = predict_rows(model, model_name, monitor_rows, y_all, cache, cfg, device)
+        mon_pred, mon_true = predict_rows(model, model_name, monitor_rows, y_all, cache, cfg, device, batch_kwargs)
         mon_metrics = regression_metrics(mon_true, mon_pred)
         last_monitor_metrics = mon_metrics
 
         do_train_eval = (epoch % cfg.eval_train_every == 0) or (epoch == cfg.epochs - 1)
         if do_train_eval:
-            tr_pred, tr_true = predict_rows(model, model_name, train_rows, y_all, cache, cfg, device)
+            tr_pred, tr_true = predict_rows(model, model_name, train_rows, y_all, cache, cfg, device, batch_kwargs)
             tr_metrics = regression_metrics(tr_true, tr_pred)
             last_train_metrics = tr_metrics
         else:
@@ -344,16 +360,16 @@ def train_one(
     if best_state is None:
         raise RuntimeError(f"{model_name}/{dataset}/seed{seed}: no finite monitor MAE")
     model.load_state_dict(best_state)
-    best_mon_pred, best_mon_true = predict_rows(model, model_name, monitor_rows, y_all, cache, cfg, device)
+    best_mon_pred, best_mon_true = predict_rows(model, model_name, monitor_rows, y_all, cache, cfg, device, batch_kwargs)
     best_monitor_metrics = regression_metrics(best_mon_true, best_mon_pred)
-    best_tr_pred, best_tr_true = predict_rows(model, model_name, train_rows, y_all, cache, cfg, device)
+    best_tr_pred, best_tr_true = predict_rows(model, model_name, train_rows, y_all, cache, cfg, device, batch_kwargs)
     best_train_metrics = regression_metrics(best_tr_true, best_tr_pred)
 
-    flops = _measure_flops(model, model_name, train_rows, y_all, cache, cfg, device)
-    step_ms = _measure_step_time(model, model_name, train_rows, y_all, cache, cfg, device)
+    flops = _measure_flops(model, model_name, train_rows, y_all, cache, cfg, device, batch_kwargs)
+    step_ms = _measure_step_time(model, model_name, train_rows, y_all, cache, cfg, device, batch_kwargs=batch_kwargs)
 
     payload: dict[str, Any] = {
-        "protocol_id": f"ssrc-phase1b-{dataset}-v1",
+        "protocol_id": protocol_id or f"ssrc-phase1b-{dataset}-v1",
         "dataset": dataset,
         "model": model_name,
         "model_label": model_label,
@@ -395,6 +411,7 @@ def train_one(
             "reserved_labels_retained": 0,
             "labels_used": "Fit/Monitor only",
             "model_selection": "best Monitor MAE; monitor used for early stopping",
+            **(dict(scope_extra) if scope_extra else {}),
         },
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)

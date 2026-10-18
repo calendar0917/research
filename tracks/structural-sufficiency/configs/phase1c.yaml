@@ -1,0 +1,172 @@
+# SSRC Phase 1c frozen configuration (pre-GPU).
+protocol_id: ssrc-phase1c-zinc-v1
+protocol_file: tracks/structural-sufficiency/notes/phase1c_protocol.md
+protocol_sha256: 545e58037386fde248a84b9ad104cbb7dab8ccd0f961a0392fdb933a14547ca5
+corrigendum_file: tracks/structural-sufficiency/notes/phase1b_corrigendum.md
+corrigendum_sha256: 4947d8cb4f34beffef164a3dac40edc8f41d981b32f4fdb00b773239648ad13d
+upstream_phase1b_commit: 8e53ba5
+
+data:
+  source: "PyG ZINC(subset=True, split=train)"
+  n_rows: 10000
+  target: "logP_SA_cycle_normalized"
+  extra_standardization: false
+  official_valid_test: never_loaded
+  internal_split: {fit: 8000, monitor: 1000, reserved: 1000}
+  split_file: tracks/structural-sufficiency/results/phase1b/split_zinc_phase1b.json
+  split_sha256: fbca5fd5ac9c82c457bf4d78781fbe9936dd7068082377ff8cc2bf2309d72b49
+  row_sha256:
+    fit: 8351cbee52e06e504a7113a4649afbfcd840321e057c554811b4aec910d786d0
+    monitor: 2e4801c644acece7431d892ecf8fe6588335c079a5a300da0cd8f8fe7133b790
+    reserved: cf1e8c6c662add9a6c38e34df49c5bae7d0ede8e35a92693f481a82d3c21477d
+  labels_file: tracks/structural-sufficiency/results/phase1b/zinc_labels_fit_monitor.json
+  labels_sha256: 631dae5fe93f543599c5cdfe92057fa8ee0fcb3e3faaf4e51aceed1e8312ab78
+  cache: tracks/structural-sufficiency/results/phase1b/cache/zinc_phase1b.pt
+  cache_sha256: 76c1749277f1c4019f8b94b5a3a9bc7b9f83abb8b11b7feed60449f47a9ed84c
+  size_features: tracks/structural-sufficiency/results/phase1c/zinc_size_features.pt
+  size_features_sha256: 8a20858e8b660f2b7befee0ba36e17a339667393aa4d40cabb04a05c5e6fd434
+  size_feature_formula: "[n_atoms/10, n_bonds/10, n_bonds - n_atoms + n_components]"
+  size_feature_note: "structure-only counts; ZINC graphs all connected; no penalized-logP components"
+
+models:
+  shared_trunk:
+    source: "Phase 1b SharedTrunk, bitwise-identical"
+    hidden: 64
+    patch_gine_layers: 2
+    token_ffn_blocks: 2
+    token_ffn_hidden: 128
+    dropout: 0.1
+    node_feature: "raw atom feature block + root flag + distance one-hot"
+    edge_feature: "raw bond feature block"
+  S_cap_size:
+    root_edges: false
+    node_pools: [mean, sum]
+    size_input: true
+    readout: "LayerNorm([node_mean, node_sum, size]) -> 64 -> SiLU -> Dropout -> 64"
+    graph_ffns: "2 x residual LayerNorm(64) -> 177 -> SiLU -> Dropout -> 64"
+    head: "LayerNorm(64) -> 64 -> SiLU -> Dropout -> 1"
+  R1_size:
+    root_edges: true
+    relation: "Phase 1b RelationMLP: [h_u+h_v, |h_u-h_v|, h_u*h_v, e_uv] 196 -> 128 -> SiLU -> Dropout -> 64"
+    edge_aggregate: "mean and sum over each physical undirected bond once"
+    readout: "same node/size readout as S_cap_size + EdgeReadout([edge_mean, edge_sum])"
+    edge_readout: "LayerNorm(128) -> 64 -> SiLU -> Dropout -> 64"
+    node_state_update: false
+  R1_marginal_size:
+    root_edges: "no endpoint indices or root-node ids"
+    relation: "exactly the same RelationMLP and parameters as R1_size"
+    endpoint_slots: "both replaced by the molecule-level mean node token"
+    edge_aggregate: "same mean/sum over the true bond-type multiset and edge count"
+    readout: "exactly the same modules and parameters as R1_size"
+    information_note: "endpoint-correspondence ablation; not a chemical causal experiment"
+  M_keep_edge:
+    status: "implemented/CPU-tested; NOT in seed-0 first round"
+    readout: "R1 direct edge readout + size-aware node readout"
+    update: "one tied LayerNorm(h + Dropout(MLP(mean incident relation)))"
+    matched_compute: "R1_size_long 322 epochs vs M_keep_edge 300 epochs (CPU FLOP ratio 1.0743)"
+
+capacity_cpu_measured:
+  params:
+    S0: 56963
+    R1: 94659
+    S_cap_size: 115883
+    R1_size: 115977
+    R1_marginal_size: 115977
+    G_ref: 439559
+    M_keep_edge: 132681
+  params_s_cap_over_r1_size: 0.9991894944687308
+  forward_flops_batch64:
+    S0: 434141824
+    R1: 644196992
+    S_cap_size: 441539200
+    R1_size: 646843008
+    R1_marginal_size: 646843008
+    G_ref: 1185134336
+    M_keep_edge: 694913664
+  flops_r1_size_over_s_cap_size: 1.4650
+  flops_r1_size_over_s0: 1.490
+  flop_note: "FlopCounterMode forward; PyG scatter/GINE message ops may be uncounted; lower bound. R1_size is heavier than S_cap_size because it runs the relation MLP per edge."
+
+training:
+  loss: L1
+  optimizer: AdamW
+  lr: 0.001
+  lr_min: 0.00001
+  weight_decay: 0.00001
+  batch_size: 64
+  grad_clip: 5.0
+  dropout: 0.1
+  epochs: 300
+  patience: 30
+  min_delta: 0.0001
+  seeds_first_round: [0]
+  data_order: "default_rng([seed, epoch])"
+  model_selection: "best Monitor MAE"
+  soup_ensemble_ssl: none
+
+endpoints:
+  gain_pair: "MAE(R1_marginal_size) - MAE(R1_size); positive = true endpoint correspondence better"
+  gain_over_capacity: "MAE(S_cap_size) - MAE(R1_size); positive = R1_size better"
+  gain_readout_vs_R1: "MAE(R1) - MAE(R1_size); positive = new readout better"
+  gain_readout_vs_S0: "MAE(S0) - MAE(S_cap_size)"
+  gap_vs_Gref: "MAE(candidate) - MAE(G_ref); positive = candidate worse"
+  uncertainty: "paired bootstrap over Monitor molecules, 5000 reps, 95% percentile CI"
+  bands_zinc: {negligible_below: 0.01, meaningful_at_least: 0.02}
+  decision_labels:
+    - CORRESPONDENCE_SURVIVES_CAPACITY
+    - CORRESPONDENCE_VS_MARGINAL_ONLY
+    - CAPACITY_READOUT_EXPLAINS
+    - READOUT_BOTTLENECK_DOMINATES
+    - NO_ENDPOINT_CORRESPONDENCE_GAIN
+    - ABSOLUTE_GAP_PERSISTS
+    - INSUFFICIENT_EVIDENCE
+
+seed1_gate:
+  buy_only_if:
+    - "Gain_pair >= 0.02"
+    - "Gain_pair CI95 lower > 0"
+    - "Gain_over_capacity >= -0.01"
+    - "Gain_pair > 0.0031 (Phase 1b R1 run-to-run spread)"
+  buy: ["R1_size", "R1_marginal_size"]
+  do_not_buy_if: "pair gain not meaningful, or S_cap_size clearly dominates R1_size"
+
+m_keep_edge_gate:
+  buy_only_if:
+    - "seed0 and seed1 Gain_pair same positive sign and two-seed mean >= 0.02"
+    - "R1_size gap to G_ref >= 0.02"
+    - "remaining budget can finish both runs"
+  buy: ["M_keep_edge seed0", "R1_size_long 322 epochs seed0"]
+  endpoint: "MAE(R1_size_long) - MAE(M_keep_edge); positive = one update helps with the direct edge readout"
+
+budget_gpu_hours:
+  P0_smoke_reserve: 0.05
+  A_seed0: 0.60
+  B_seed1_pair: 0.40
+  C_m_keep_edge: 0.50
+  reserve: 0.45
+  total: 2.00
+
+forbidden:
+  - global attention token / R1-G / GraphGPS / GRIT / ESA+
+  - deeper residual trunk or new structural encoding family
+  - distance channels, SSL, ensembles, external unlabelled data
+  - official ZINC valid/test
+  - internal Reserved scoring
+  - hyperparameter / width / depth / LR / dropout search after seeing results
+  - calling R1_marginal_size a chemical causal experiment
+  - calling G_ref a global-attention model
+  - claiming SOTA or leaderboard comparability from internal Monitor
+
+cpu_gates:
+  file: tracks/structural-sufficiency/results/phase1c/cpu_gates_phase1c.json
+  sha256_at_freeze: aa91573e138f8910b92f96d31235ccb67a571320fd8edf2b0a0a14272ff75c4a
+  n_checks: 17
+  n_pass: 17
+  tests_phase1c: "11 passed"
+  tests_phase1b: "7 passed"
+
+artifacts:
+  runs: tracks/structural-sufficiency/runs/phase1c
+  analysis: tracks/structural-sufficiency/results/phase1c/analysis_phase1c.json
+  run_manifest: tracks/structural-sufficiency/results/phase1c/run_manifest.tsv
+  report: tracks/structural-sufficiency/results/phase1c/REPORT.md
