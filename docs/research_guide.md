@@ -27,6 +27,10 @@
 
 **Graph Kernel**（预定义结构特征 + 核）→ **GNN/GIN**（消息传递、≤1-WL）→ **GSN**（显式子结构计数 + MPNN）→ **KSVD**（字典学习出的结构原子）
 
+当前新增主线 **SSRC — Structural Sufficiency & Relational Computation**：
+显式结构表示 \(E_r\) 的信息充分性 → 学习式关系计算的必要性/可学习性。
+旧 `structure-contribution` 暂停为非主线，全部历史保留，不覆盖旧结论。
+
 各轨只做主线的一段；对照表见 [concepts.md](literature/deep/concepts.md)。
 
 ---
@@ -38,16 +42,18 @@
 | gnn-gsn | **archived** | 双协议图分类 + 官方 GSN；[TRACK](../tracks/gnn-gsn/TRACK.md)；实现 `../paper` |
 | ksvd | **active** | luyin16：概念复现 → 机制研究 → 显式模型路线（MolHIV + ZINC）；主判 K-SVD=压缩器；总览 [`tracks/ksvd/results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md`](../tracks/ksvd/results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md)；[TRACK](../tracks/ksvd/TRACK.md) |
 | hod-gnn-replication | **active** | HOD-GNN 基线复现审计；[TRACK](../tracks/hod-gnn-replication/TRACK.md)；独立官方环境 |
-| structure-contribution | **active** | 新路线 CSCL：跨分子结构贡献与上下文交互——非重叠保环单元 + 显式加性/关系分解，非 GNN 核心；核心见 [`tracks/structure-contribution/notes/research_core.md`](../tracks/structure-contribution/notes/research_core.md)；[TRACK](../tracks/structure-contribution/TRACK.md) |
+| **structural-sufficiency** | **active（主线）** | **SSRC**：精确 \(E_r\) 的信息充分性 vs 有限样本可学习性；Phase 0 = `REFRAME_NEEDED`（原“MP 是否必要”不新颖；重述后条件性 GO）；[TRACK](../tracks/structural-sufficiency/TRACK.md)；[Phase 0 REPORT](../tracks/structural-sufficiency/results/phase0/REPORT.md) |
+| structure-contribution | **paused（非主线）** | CSCL 旧主线暂停；历史、冻结结果与关闭决定全部保留，不覆盖、不改写；新主线见 SSRC；[TRACK](../tracks/structure-contribution/TRACK.md) |
 
 ### 下一步
 
-1. ksvd：luyin16 机制阶段已冻结（统计交互 + XGBoost）；显式模型路线最佳 ZINC `test 0.1346`（层级关系上下文）
-2. ksvd：两个待答问题 —— 跨中心交互在新骨架划分的稳定性；ZINC 0.13–0.18 差距来自 patch 身份 / 关系 / 读出还是全图上下文
-3. ksvd：待导师定稿 —— 正式论文表；K-SVD 在文中的定位（诊断/压缩器 vs 表征学习器）
-4. hod-gnn-replication：按 `TRACK.md` 维护 paper-seeds 与 official-seeds 两套协议
-5. 需要历史 GNN 数字 → `../paper` xlsx/registry（不拷进本仓主表）
-6. 录音 → `docs/luyin/`（当前 KSVD 阶段主来源：`luyin16`；历史机制：`luyin10`、`luyin3`/`luyin4`）
+1. **SSRC（主线）**：Phase 0 完成；等待用户裁决是否接受“信息充分性 vs 统计可学习性”的重述。接受 → 冻结 `ssrc-lipo-pilot-v1`；不接受 → 停止原表述。见 [REPORT](../tracks/structural-sufficiency/results/phase0/REPORT.md)。
+2. ksvd：luyin16 机制阶段已冻结（统计交互 + XGBoost）；显式模型路线最佳 ZINC `test 0.1346`（层级关系上下文）
+3. ksvd：两个待答问题 —— 跨中心交互在新骨架划分的稳定性；ZINC 0.13–0.18 差距来自 patch 身份 / 关系 / 读出还是全图上下文
+4. ksvd：待导师定稿 —— 正式论文表；K-SVD 在文中的定位（诊断/压缩器 vs 表征学习器）
+5. hod-gnn-replication：按 `TRACK.md` 维护 paper-seeds 与 official-seeds 两套协议
+6. 需要历史 GNN 数字 → `../paper` xlsx/registry（不拷进本仓主表）
+7. 录音 → `docs/luyin/`（当前 KSVD 阶段主来源：`luyin16`；历史机制：`luyin10`、`luyin3`/`luyin4`）
 
 
 ---

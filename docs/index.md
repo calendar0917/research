@@ -1,6 +1,7 @@
 # 图学习 · 研究工作台
 
-主线：Kernel → GNN → GSN → KSVD（结构如何被编码）
+主线：Kernel → GNN → GSN → KSVD（结构如何被编码）  
+新增主线：**SSRC** — 显式结构充分性 → 关系计算（旧 CSCL 暂停为非主线，历史保留）
 
 | 入口 | 用途 |
 |------|------|
@@ -8,5 +9,6 @@
 | [概念与谱系](literature/deep/concepts.md) | 对照表（短） |
 | [tracks/](../tracks/) | 各课题 TRACK.md |
 | [HOD-GNN 复现](tracks/hod-gnn-replication.md) | 独立基线复现审计 |
+| [SSRC](tracks/structural-sufficiency.md) | 结构充分性 & 关系计算（主线；Phase 0） |
 | [录音 luyin](luyin/README.md) | 组会原文存档 |
 | 旧仓 `../paper` | GNN 阶段完整代码与结果（只读） |

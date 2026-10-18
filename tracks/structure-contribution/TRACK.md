@@ -1,11 +1,15 @@
 # Track: 跨分子结构贡献与上下文交互 (CSCL)
 
+> 2026-10-18：全局主线切换至 **SSRC**（`tracks/structural-sufficiency`）。
+> 本轨标记为 **paused / 非主线**；全部历史、冻结结果与关闭决定保留，
+> 不重开已关闭的 BJOC 模块/配方族，不改写旧结论。新工作进入 SSRC。
+
 | 项 | 内容 |
 |----|------|
 | slug | `structure-contribution` |
-| 状态 | `active` |
+| 状态 | `paused`（非主线；2026-10-18 起；历史/冻结结果保留） |
 | 创建 | 2026-10-10 |
-| 主线位置 | 独立新路线；与 `tracks/ksvd` 平行，选择性继承其数据/特征基础设施，不继承其研究命题 |
+| 主线位置 | 已由 `tracks/structural-sufficiency`（SSRC）接替为全局主线；本轨暂停，不覆盖旧结论 |
 
 ## 问题（一句话）
 

@@ -1,0 +1,86 @@
+# SSRC track state — navigation pointer, not a result dump.
+# Durable scientific statements: notes/research_core.md
+# Literature boundary: notes/prior_work_boundary.md
+# Phase 0 evidence: results/phase0/REPORT.md + results/phase0/analysis/*.json
+phase: phase0
+current_round: ssrc-phase0-v1
+status: PHASE0_COMPLETE_REFRAME_NEEDED
+updated: 2026-10-18
+main_line: true
+supersedes_main_line: structure-contribution
+superseded_track_status: paused-non-main-line-history-preserved
+
+decision:
+  original_formulation: >-
+    REFRAME_NEEDED. "When is message passing necessary given E_r?" is already
+    directly studied by Eijkelboom et al. 2023 and strongly countered by
+    no-MP SOTA results (GRIT/CSA/MoSE/SPSE/GPM). A direct static-vs-MPNN pilot
+    would confound information access with estimation/learnability.
+  reframed_formulation: >-
+    CONDITIONAL_GO. Test whether exact structural sufficiency (E_r) translates
+    into statistical sufficiency on small molecular data, and whether iterative
+    relational computation helps by information supplementation or by
+    learnability/sample efficiency. Requires the 2x2+oracle design in
+    results/phase0/REPORT.md §7.
+  stop_condition: >-
+    If the user rejects the reframe, stop the original formulation. If the pilot
+    finds S_patch(E_r) matches D(G) at all n, or S(G) fully explains D(G), stop
+    the relational-computation claim.
+
+phase0_evidence:
+  cpu_toy:
+    report: tracks/structural-sufficiency/results/phase0/REPORT.md
+    json: tracks/structural-sufficiency/results/phase0/analysis/phase0_results.json
+    tests: 17 passed
+    key_facts:
+      - E_0/E_1/E_2 collide for d=6 vs d=9 on cycle, caterpillar, grid.
+      - E_3 separates them; a patch contains both marks iff d <= 2r.
+      - positive control label [d<=4] is perfect at r=2 on all three families.
+      - one-shot full-graph distance oracle separates d6/d9 (iteration not necessary).
+      - dynamic full-graph propagation detects d6 at depth 3, d9 at depth 5.
+  real_data:
+    feasibility_json: tracks/structural-sufficiency/results/phase0/analysis/lipo_feasibility_audit.json
+    train_only_json: tracks/structural-sufficiency/results/phase0/analysis/train_only_er_information_audit.json
+    key_facts:
+      - Lipophilicity split 3360/420/420; 2408 scaffold groups; cross-split leakage 0.
+      - label-free objects_train.pt matches RDKit source rows; no label attribute.
+      - candidate internal split 2352/504/504; scaffold-group overlap 0; NOT frozen.
+      - exact E_r cost ~3-4 s for 3360 molecules at r=2/3.
+      - E_2/E_3 are near-unique (94.5% singleton) and LOO MAE 0.927 vs global 0.979.
+      - Murcko scaffold LOO MAE 0.730; coarse grouping is much more statistically efficient.
+      - increasing r 2->3 gives no LOO improvement.
+  note_json_is_local: >-
+    analysis/*.json are local evidence and are git-ignored per repo convention;
+    regenerate with the commands in results/phase0/REPORT.md §9.1.
+  official_labels:
+    valid_read: false
+    test_read: false
+    label_vault_opened: false
+    note: >-
+      The old track consumed official valid/test. This round used only train
+      rows and train labels for a train-only LOO diagnostic; no official
+      valid/test label or metric was opened.
+
+pilot_preregistration:
+  status: DRAFT_CONDITIONAL_NOT_AUTHORIZED
+  protocol_id: ssrc-lipo-pilot-v1
+  location: tracks/structural-sufficiency/results/phase0/REPORT.md#7
+  primary_endpoint: >-
+    Paired MAE contrast D(G) - S_patch(E_r) at n=250, and the interaction
+    [Delta(250) - Delta(2352)] across 5 seeds, on the frozen internal locked split.
+  arms:
+    - S_bag(E_r): exact patch-key bag + non-iterative readout (fingerprint diagnostic).
+    - S_patch(E_r): shared GNN per patch + pooling; no cross-patch iteration.
+    - D(E_r): L-layer self-attention over patch tokens; same information as S_patch.
+    - D(G): L-layer MPNN on the full graph.
+    - S(G): static readout over a lossless/sufficient structural summary (oracle).
+  resources: 1x A100-40GB, <=12 GPU-hours, 5 seeds, 4 training sizes.
+  no_go_without: frozen split + config + endpoint + user authorization.
+
+open_questions:
+  - ESA+ could not be uniquely identified; need exact title/authors/venue.
+  - Accept or reject the reframe from "MP necessity" to "sufficiency vs learnability".
+  - Is the internal locked 504-row split adequately powered for a 0.05 MAE effect?
+  - Does a fair static patch encoder already capture the scaffold-level signal?
+  - Are Lipophilicity labels sensitive to >2r global relations? Current LOO diagnostic
+    only shows that exact E_r groups are statistically sparse.

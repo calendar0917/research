@@ -59,6 +59,8 @@ cat tracks/<name>/TRACK.md          # 该课题 charter
 | [gsn-replication](tracks/gsn-replication/TRACK.md) | **active** | 官方 GSN 在 IMDB-B/M、REDDIT-B、COLLAB 的严格复现（vendor 官方仓 + 论文 Table 5 超参） |
 | [ksvd](tracks/ksvd/TRACK.md) | **active** | KSVD 结构字典学习 |
 | [hod-gnn-replication](tracks/hod-gnn-replication/TRACK.md) | **active** | HOD-GNN 论文基线复现审计；独立官方环境 |
+| [structural-sufficiency](tracks/structural-sufficiency/TRACK.md) | **active（主线）** | SSRC：精确结构充分性 vs 关系计算；Phase 0 = `REFRAME_NEEDED`，条件性 GO |
+| [structure-contribution](tracks/structure-contribution/TRACK.md) | **paused（非主线）** | CSCL 旧主线暂停；历史与冻结结果保留，不覆盖；新主线见 SSRC |
 | 录音 | — | [docs/luyin/](docs/luyin/) |
 
 ## 原则（短）
