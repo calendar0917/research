@@ -1,0 +1,130 @@
+# SSRC Phase 1b frozen configuration (pre-GPU).
+protocol_ids:
+  zinc: ssrc-phase1b-zinc-v1
+  lipo: ssrc-phase1b-lipo-v1
+
+data:
+  zinc:
+    source: "PyG ZINC(subset=True, split=train)"
+    n_rows: 10000
+    target: "logP_SA_cycle_normalized"
+    extra_standardization: false
+    official_valid_test: never_loaded
+    split_rule: "default_rng(20260922).permutation(10000); fit=perm[:8000]; dev=perm[8000:]; monitor=dev[:1000]; reserved=dev[1000:]"
+    split_file: tracks/structural-sufficiency/results/phase1b/split_zinc_phase1b.json
+    split_file_sha256: fbca5fd5ac9c82c457bf4d78781fbe9936dd7068082377ff8cc2bf2309d72b49
+    row_sha256:
+      fit: 8351cbee52e06e504a7113a4649afbfcd840321e057c554811b4aec910d786d0
+      monitor: 2e4801c644acece7431d892ecf8fe6588335c079a5a300da0cd8f8fe7133b790
+      reserved: cf1e8c6c662add9a6c38e34df49c5bae7d0ede8e35a92693f481a82d3c21477d
+    labels_file: tracks/structural-sufficiency/results/phase1b/zinc_labels_fit_monitor.json
+    labels_sha256: 631dae5fe93f543599c5cdfe92057fa8ee0fcb3e3faaf4e51aceed1e8312ab78
+  lipo:
+    source: "MoleculeNet/DeepChem Lipophilicity"
+    n_rows: 4200
+    official_train_rows: 3360
+    split_file: tracks/structural-sufficiency/results/phase1a/split_phase1a.json
+    split_file_sha256: 9fa96d49efd94cd2ff381922f83a07f963d832064c75469657b4ce5f68c332b6
+    row_sha256:
+      fit: c474e38cdecf10071965527409901403ec8b670b96fe4a3c42452531dd0210e9
+      monitor: fe81cc7904a6da9378f5bf5ae7452ac71629adad83a2a98b917f87299a85f39f
+      reserved: bc28c5d37c2fe2fbe39c01d5bf2ab9c56630eee2d0a4454a108d150ab2f42d86
+    labels_file: tracks/structural-sufficiency/results/phase1a/labels_fit_monitor.json
+    labels_sha256: 0260a3909eec30900df646bc760e65360315f4a1398c7092c7c72d04a4e404f7
+
+cache:
+  radius: 2
+  one_patch_per_atom: true
+  node_feature: "raw atom feature block + root flag + 3-way distance one-hot"
+  edge_feature: "raw bond feature block"
+  zinc: tracks/structural-sufficiency/results/phase1b/cache/zinc_phase1b.pt
+  lipo: tracks/structural-sufficiency/results/phase1b/cache/lipo_phase1b.pt
+
+models:
+  shared_trunk:
+    hidden: 64
+    local_layers: 2
+    token_ffn_blocks: 2
+    ffn_hidden: 128
+    dropout: 0.1
+  S0:
+    root_edges: false
+    readout: "mean patch tokens -> head"
+  R1:
+    root_edges: true
+    relation: "MLP([h_i+h_j, |h_i-h_j|, h_i*h_j, e_ij])"
+    readout: "concat(mean node tokens, mean unique-edge relations) -> head"
+    node_state_update: false
+  M1:
+    root_edges: true
+    relation: "same as R1"
+    update: "LayerNorm(h + Dropout(MLP(mean incident relation)))"
+    rounds: 1
+  M2:
+    root_edges: true
+    relation: "same weights as M1"
+    update: "same weights as M1"
+    rounds: 2
+  G_ref:
+    input: "raw atom graph"
+    hidden: 128
+    gine_layers: 6
+    ffn_hidden: 128
+    readout: "concat(sum, mean) -> head"
+
+training:
+  loss: L1
+  optimizer: AdamW
+  lr: 0.001
+  lr_min: 0.00001
+  weight_decay: 0.00001
+  batch_size: 64
+  grad_clip: 5.0
+  dropout: 0.1
+  epochs:
+    zinc: 300
+    lipo: 200
+  patience: 30
+  min_delta: 0.0001
+  seeds_phase_a: [0]
+  data_order: "default_rng([seed, epoch])"
+  model_selection: "best Monitor MAE"
+
+capacity_cpu_measured:
+  lipo: {S0: 59011, R1: 97731, M1: 110211, M2: 110211, G_ref: 447751}
+  zinc: {S0: 56963, R1: 94659, M1: 107139, M2: 107139, G_ref: 439559}
+
+endpoints:
+  relation: "MAE(S0)-MAE(R1)"
+  update: "MAE(R1)-MAE(M1)"
+  iteration: "MAE(M1)-MAE(M2)"
+  gap: "MAE(candidate)-MAE(G_ref)"
+  negligible:
+    zinc: 0.01
+    lipo: 0.02
+  meaningful:
+    zinc: 0.02
+    lipo: 0.04
+
+phase_a_runs:
+  count: 10
+  seed: 0
+  matrix: ["S0", "R1", "M1", "M2", "G_ref"] x ["zinc", "lipo"]
+
+budget_gpu_hours:
+  A: 2.0
+  B: 2.0
+  C: 2.0
+  D: 1.5
+  reserve: 0.5
+  total: 8.0
+  wall_clock_hours: 8
+
+forbidden:
+  - official ZINC valid/test
+  - Lipophilicity official valid/test
+  - Lipophilicity internal Reserved
+  - ZINC internal Reserved scoring
+  - SSL / external unlabelled data / ensembles
+  - hyperparameter or architecture sweep
+  - old BJOC junction-ownership / fixed-signature / distance-channel / SSL-objective searches
