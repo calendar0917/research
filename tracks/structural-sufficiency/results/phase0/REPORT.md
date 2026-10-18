@@ -12,7 +12,8 @@ Track: `tracks/structural-sufficiency`
 > [`notes/phase0_corrigendum.md`](../notes/phase0_corrigendum.md) 纠正。
 > 凡与纠错文件冲突处，以纠错文件为准；本报告的 CPU 数字与证据不删除、
 > 不改写。Phase 1a 的设计见
-> [`notes/phase1a_protocol.md`](../notes/phase1a_protocol.md)。
+> [`notes/phase1a_protocol.md`](../notes/phase1a_protocol.md)；R1+R2 结果与判定见
+> [`results/phase1a/REPORT.md`](../results/phase1a/REPORT.md)。
 
 ---
 
