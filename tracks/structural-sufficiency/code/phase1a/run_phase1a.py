@@ -30,6 +30,7 @@ from phase1a_train import TrainConfig, train_one  # noqa: E402
 
 SPLIT = REPO / "tracks/structural-sufficiency/results/phase1a/split_phase1a.json"
 RAW = REPO / "tracks/structure-contribution/results/bjoc_cross_task_lipophilicity_v1/dataset/lipo_raw_v1.json.gz"
+LABELS = REPO / "tracks/structural-sufficiency/results/phase1a/labels_fit_monitor.json"
 CSV = REPO / "data/lipophilicity/Lipophilicity.csv"
 
 
@@ -42,7 +43,8 @@ def main() -> int:
     ap.add_argument("--out-dir", default=str(REPO / "tracks/structural-sufficiency/runs/phase1a"))
     ap.add_argument("--split", default=str(SPLIT))
     ap.add_argument("--raw-graph", default=str(RAW))
-    ap.add_argument("--csv", default=str(CSV))
+    ap.add_argument("--labels", default=str(LABELS), help="Fit/Monitor-only label JSON")
+    ap.add_argument("--csv", default=str(CSV), help="local CSV fallback only")
     # Smoke overrides; the frozen GPU protocol uses the TrainConfig defaults.
     ap.add_argument("--epochs", type=int, default=None)
     ap.add_argument("--patience", type=int, default=None)
@@ -68,7 +70,10 @@ def main() -> int:
         raise SystemExit("reserved row leak")
 
     raws = load_raw_graphs(args.raw_graph)
-    vault = LabelVault(args.csv, fit_rows=train_rows, monitor_rows=monitor_rows, reserved_rows=reserved_rows)
+    label_source = Path(args.labels)
+    if not label_source.exists():
+        label_source = Path(args.csv)
+    vault = LabelVault(label_source, fit_rows=train_rows, monitor_rows=monitor_rows, reserved_rows=reserved_rows)
     vault.load()
     train_y = vault.labels(train_rows, "train")
     monitor_y = vault.labels(monitor_rows, "monitor")
@@ -109,6 +114,7 @@ def main() -> int:
                 "train_seconds": payload["train_seconds"],
                 "gpu_seconds": payload["gpu_seconds"],
                 "peak_gpu_mb": payload["peak_gpu_memory_mb_allocated"],
+                "label_source": str(label_source),
                 "label_audit": vault.audit(),
             },
             indent=2,

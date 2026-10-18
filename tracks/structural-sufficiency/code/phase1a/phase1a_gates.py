@@ -50,6 +50,7 @@ from phase1a_train import TrainConfig, _make_batch, build_models, seed_everythin
 
 SPLIT = REPO / "tracks/structural-sufficiency/results/phase1a/split_phase1a.json"
 RAW = REPO / "tracks/structure-contribution/results/bjoc_cross_task_lipophilicity_v1/dataset/lipo_raw_v1.json.gz"
+LABELS = REPO / "tracks/structural-sufficiency/results/phase1a/labels_fit_monitor.json"
 CSV = REPO / "data/lipophilicity/Lipophilicity.csv"
 OUT = REPO / "tracks/structural-sufficiency/results/phase1a/cpu_gates.json"
 TOL = 1e-6
@@ -167,7 +168,7 @@ def gate_split() -> dict[str, Any]:
 
 def gate_labels() -> dict[str, Any]:
     split = load_frozen_split(SPLIT)
-    vault = LabelVault(CSV, split.small, split.monitor, split.reserved)
+    vault = LabelVault(LABELS, split.small, split.monitor, split.reserved)
     vault.load()
     audit = vault.audit()
     attempted_reserved = False
@@ -379,7 +380,7 @@ def gate_smoke_training() -> dict[str, Any]:
     raws = load_raw_graphs(RAW)
     rows = split.small[:32]
     mon = split.monitor[:32]
-    vault = LabelVault(CSV, rows, mon, split.reserved)
+    vault = LabelVault(LABELS, rows, mon, split.reserved)
     vault.load()
     train_y = vault.labels(rows, "train")
     mon_y = vault.labels(mon, "monitor")

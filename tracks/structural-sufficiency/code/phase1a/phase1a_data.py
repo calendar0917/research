@@ -350,21 +350,22 @@ def patch_multiset_key(patches: Sequence[Patch]) -> tuple[bytes, ...]:
 
 
 class LabelVault:
-    """Stream the CSV label column; retain only allowed Fit/Monitor rows.
+    """Load labels from a Fit/Monitor-only artifact, or stream the CSV.
 
-    Reserved and official valid/test rows are never returned.  The streaming
-    reader does not copy disallowed labels into any Python object that survives
-    the loop iteration; Phase 1a analysis never sees them.
+    On the GPU host we use the committed ``labels_fit_monitor.json`` artifact
+    (2,856 labels: Fit + Monitor).  The artifact has no internal Reserved rows
+    and no official valid/test rows.  The CSV fallback is for local tests only;
+    it streams the file and keeps only allowed rows.
     """
 
     def __init__(
         self,
-        csv_path: Path | str,
+        source_path: Path | str,
         fit_rows: Iterable[int],
         monitor_rows: Iterable[int],
         reserved_rows: Iterable[int],
     ) -> None:
-        self.csv_path = Path(csv_path)
+        self.source_path = Path(source_path)
         self.fit = frozenset(int(r) for r in fit_rows)
         self.monitor = frozenset(int(r) for r in monitor_rows)
         self.reserved = frozenset(int(r) for r in reserved_rows)
@@ -373,19 +374,36 @@ class LabelVault:
         self.allowed = self.fit | self.monitor
         self._labels: dict[int, float] = {}
         self._loaded = False
+        self._source_kind = "json" if self.source_path.suffix == ".json" else "csv"
 
     def load(self) -> None:
-        exp_index: int | None = None
-        with open(self.csv_path, newline="", encoding="utf-8") as fh:
-            reader = csv.reader(fh)
-            header = next(reader)
-            exp_index = header.index("exp")
-            for i, row in enumerate(reader):
-                if i in self.allowed:
-                    self._labels[i] = float(row[exp_index])
+        if self._source_kind == "json":
+            payload = json.loads(self.source_path.read_text())
+            scope = payload.get("scope", {})
+            if scope.get("reserved_labels_present") is not False:
+                raise PermissionError("label artifact does not certify Reserved exclusion")
+            if scope.get("official_valid_test_labels_present") is not False:
+                raise PermissionError("label artifact does not certify official valid/test exclusion")
+            raw = {int(k): float(v) for k, v in payload["labels"].items()}
+            if set(raw) & self.reserved:
+                raise PermissionError("Reserved labels present in artifact")
+            # Keep only the rows this run may use.  Other Fit labels are
+            # allowed-domain data but are irrelevant for an n=253 run.
+            self._labels = {k: v for k, v in raw.items() if k in self.allowed}
+            del raw
+        else:
+            with open(self.source_path, newline="", encoding="utf-8") as fh:
+                reader = csv.reader(fh)
+                header = next(reader)
+                exp_index = header.index("exp")
+                for i, row in enumerate(reader):
+                    if i in self.allowed:
+                        self._labels[i] = float(row[exp_index])
         missing = self.allowed - set(self._labels)
         if missing:
             raise ValueError(f"missing allowed labels: {sorted(missing)[:5]} ...")
+        if set(self._labels) & self.reserved:
+            raise PermissionError("Reserved labels retained")
         self._loaded = True
 
     def labels(self, rows: Sequence[int], purpose: str) -> torch.Tensor:
@@ -416,7 +434,8 @@ class LabelVault:
             "labels_retained": len(self._labels),
             "reserved_labels_retained": len(set(self._labels) & self.reserved),
             "official_valid_test_labels_retained": 0,
-            "source_sha256": hashlib.sha256(self.csv_path.read_bytes()).hexdigest(),
+            "source_kind": self._source_kind,
+            "source_sha256": hashlib.sha256(self.source_path.read_bytes()).hexdigest(),
         }
 
 

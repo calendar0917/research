@@ -8,7 +8,7 @@
 | # | Gate | Result | Key evidence |
 |---|---|---|---|
 | 1 | `split_structure` | PASS | Fit/Monitor/Reserved = 2352/504/504; small=253; scaffold group overlap all 0; row hashes match; Phase 0 candidate 逐行一致 |
-| 2 | `label_isolation` | PASS | label vault retains 757 rows for n=253 (253 Fit + 504 Monitor), `reserved_labels_retained=0`; Reserved request and wrong-purpose request both `PermissionError` |
+| 2 | `label_isolation` | PASS | committed `labels_fit_monitor.json` has 2,856 Fit+Monitor labels, no Reserved/valid/test; n=253 vault retains 757 rows (253 Fit + 504 Monitor), `reserved_labels_retained=0`; Reserved and wrong-purpose requests both `PermissionError` |
 | 3 | `e2_collision_identity` | PASS | C24/caterpillar/grid: `E_2(d6)=E_2(d9)`; S/X prediction max abs diff 5.96e-8 / 0.0 / 1.49e-8 |
 | 4 | `permutation_invariance` | PASS | patch order / atom relabel / patch edge order max abs diff ≤ 5.96e-8 for S and X |
 | 5 | `input_isolation` | PASS | S/X batch keys exactly patch-only; G batch exactly graph-only; injected `full_edge_index` rejected |

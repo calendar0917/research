@@ -63,6 +63,10 @@ Protocol ID: `ssrc-phase1a-lipo-v1`
 - 官方 split：DeepChem 2.8.0 scaffold，train/valid/test = 3360/420/420；
   本协议只使用官方 **train 3360 行**建立内部 Fit/Monitor/Reserved。
 - 官方 valid/test 标签**不读**；内部 Reserved 标签**不读**。
+- GPU 主机只使用提交的 `results/phase1a/labels_fit_monitor.json`
+  （sha256 `0260a390…`）：恰好 2,856 条 Fit+Monitor 标签，无 Reserved、
+  无官方 valid/test。它由 `freeze_labels.py` 从 CSV 流式生成；
+  生成时 Reserved/valid/test 标签不进入输出映射。
 
 ### 2.2 内部 split（structure-only, label-blind）
 
@@ -302,11 +306,12 @@ rr run res ssrc-p1a-S-small-s0 --pool res-gpu0 --result tracks/structural-suffic
 |---|---|
 | split | `results/phase1a/split_phase1a.json` sha256 `9fa96d49…` |
 | raw graph | sha256 `8416837e…` |
-| data code | `phase1a_data.py` sha256 `e1be61e1…` |
-| model code | `phase1a_models.py` sha256 `2d1a87b2…` |
-| train code | `phase1a_train.py` sha256 `8bf3d8c6…` |
-| runner | `run_phase1a.py` sha256 `906d113c…` |
-| gates | `phase1a_gates.py` sha256 `035cc8cb…` |
+| labels artifact | `results/phase1a/labels_fit_monitor.json` sha256 `0260a390…`（Fit+Monitor only） |
+| data code | `phase1a_data.py` sha256 `4fa0e432…`（label artifact 支持） |
+| model code | `phase1a_models.py` sha256 `160c050a…` |
+| train code | `phase1a_train.py` sha256 `0c5c6738…` |
+| runner | `run_phase1a.py` sha256 `219495af…` |
+| gates | `phase1a_gates.py` sha256 `5e3066b1…` |
 | config | `configs/phase1a.yaml`（与本文一致） |
 | CPU gates | 8/8 PASS；S/X params 59,011/59,075；FLOPs 622.3M/877.7M/170.5M |
 

@@ -37,6 +37,7 @@ from phase1a_train import TrainConfig, _make_batch, build_models  # noqa: E402
 
 SPLIT = REPO / "tracks/structural-sufficiency/results/phase1a/split_phase1a.json"
 RAW = REPO / "tracks/structure-contribution/results/bjoc_cross_task_lipophilicity_v1/dataset/lipo_raw_v1.json.gz"
+LABELS = REPO / "tracks/structural-sufficiency/results/phase1a/labels_fit_monitor.json"
 CSV = REPO / "data/lipophilicity/Lipophilicity.csv"
 
 
@@ -66,15 +67,26 @@ def test_split_sizes_hashes_and_groups(split) -> None:
 
 
 def test_label_vault_only_retains_allowed(split) -> None:
-    vault = LabelVault(CSV, split.small, split.monitor, split.reserved)
+    vault = LabelVault(LABELS, split.small, split.monitor, split.reserved)
     vault.load()
     audit = vault.audit()
     assert audit["reserved_labels_retained"] == 0
     assert audit["labels_retained"] == len(split.small) + len(split.monitor)
+    assert audit["source_kind"] == "json"
     with pytest.raises(PermissionError):
         vault.labels(split.reserved[:1], "train")
     with pytest.raises(PermissionError):
         vault.labels(split.small[:1], "monitor")
+
+
+def test_label_artifact_scope() -> None:
+    import json
+
+    payload = json.loads(LABELS.read_text())
+    assert payload["scope"]["reserved_labels_present"] is False
+    assert payload["scope"]["official_valid_test_labels_present"] is False
+    assert payload["scope"]["reserved_rows_excluded"] == 504
+    assert len(payload["labels"]) == 2856
 
 
 def _raw_from_toy(g: toy.AttributedGraph) -> RawMol:
