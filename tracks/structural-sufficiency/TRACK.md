@@ -3,12 +3,13 @@
 | 项 | 内容 |
 |----|------|
 | slug | `structural-sufficiency` |
-| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a 预 GPU 冻结** |
+| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a 完成（S≥X，无稳定小样本 X 优势）** |
 | 创建 | 2026-10-18 |
 | 主线位置 | **SSRC（新主线）**：显式结构充分性 → 关系计算；旧 `structure-contribution` 标记 **paused / 非主线**，全部历史保留，不覆盖、不改写 |
 | Phase 0 结论 | **REFRAME_NEEDED**：原表述“MP 是否必要”已被文献覆盖且实验易混淆；重述为“精确 \(E_r\) 的信息充分性 vs 有限样本可学习性”，条件性 GO 到受控 pilot |
 | Phase 0.5 | **纠错完成**：三层概念、风险分解符号、pilot 方向/停止规则、Eijkelboom train/test 口径、ESA+ 文献、S(G) oracle 降级；见 `notes/phase0_corrigendum.md` |
-| Phase 1a | **FROZEN_PRE_GPU**：同信息 S/X + G 参照；split 2352/504/504 + n=253；CPU gates 8/8；18 条轨迹、≤4 GPU-h |
+| Phase 1a | **COMPLETE**：18/18 轨迹；S 在 n=2352 3/3 seeds 优于 X（Adv −0.0435），小 n 平均也更好；小样本交互 +0.0145 但 1/3 seeds 为正、CI 跨零。实际 0.62 GPU-h |
+| Phase 1a 判定 | **`NO_CLEAR_INTERACTION_VALUE_IN_THIS_PILOT`**；限定 `S_AT_LEAST_AS_GOOD`、`NO_STABLE_SMALL_N_X_ADVANTAGE` |
 
 ## 问题（一句话）
 
@@ -72,9 +73,10 @@
 | Phase 0 CPU | 完成：17 tests；三家族 C24 碰撞；正对照；真实数据可行性 |
 | Phase 0 train-only 诊断 | 完成：\(E_2/E_3\) 近唯一；scaffold 更统计高效 |
 | Phase 0.5 纠错 | 完成：三层概念、风险符号、pilot 方向、文献口径、S(G) 降级 |
-| Phase 1a 协议/代码 | 完成：S/X/G、split、label vault、8/8 CPU gates、7 tests |
-| Phase 1a GPU screening | **待执行**：18 条轨迹，≤4 GPU-h；结果后写 REPORT |
-| 交付 | Phase 0 REPORT（含纠错链接）+ 纠错文件 + Phase 1a 协议 + STATE/TRACK |
+| Phase 1a 协议/代码 | 完成：S/X/G、split、label vault、8/8 CPU gates（远端复跑通过）、8 tests |
+| Phase 1a GPU screening | **完成**：18/18 exit 0；0.619 GPU-h 实际占用（训练循环 0.575 h），≤4 h 预算 |
+| Phase 1a 结果 | **S≥X**：n=2352 3/3 seeds S 更好；n=253 平均 S 更好但 1/3 seeds X 更好；无稳定小样本 X 优势；G 未支配 S |
+| 交付 | Phase 0 REPORT（含纠错链接）+ 纠错文件 + Phase 1a 协议/REPORT + STATE/TRACK |
 
 ## 入口
 
@@ -87,7 +89,10 @@
 | `configs/phase1a.yaml` | 冻结配置/hash/预算 |
 | `results/phase0/REPORT.md` | Phase 0 完整报告（顶部有纠错链接） |
 | `results/phase1a/split_phase1a.json` | 冻结 split（structure-only） |
-| `results/phase1a/REPORT.md` | Phase 1a 结果报告（GPU 后生成） |
+| `results/phase1a/REPORT.md` | Phase 1a 结果报告（主表、CI、判定、限制） |
+| `results/phase1a/run_manifest.tsv` | 18 条 run 的 rr run_id/时间/占用 |
+| `results/phase1a/analysis_summary.json` | 无逐行标签的汇总分析 |
+| `runs/phase1a/` | 逐 run JSON（含 Monitor 预测，git-ignored） |
 | `code/phase1a/` | S/X/G、数据、训练、CPU gates、runner、tests |
 | `results/phase0/code/ssrc_toy.py` | 精确 \(E_r\)、pynauty/exhaustive/networkx 交叉验证、oracle |
 | `results/phase0/tests/` | 17 个 Phase 0 CPU 测试 |
@@ -103,15 +108,16 @@
 
 ## 下一步
 
-1. **提交 Phase 0.5 + Phase 1a 冻结**：纠错文件、协议、config、split、代码、
-   CPU gates、tests。
-2. **在 `res` 上执行 18 条探索性轨迹**（S/X/G × n=253/2352 × seeds 0/1/2），
-   只读 Fit/Monitor；记录 GPU 峰值显存、step 时间、实际 GPU 秒数；≤4 GPU-h。
-3. 汇总主端点 \(\mathrm{Adv}_{\rm set}(n)=\mathrm{MAE}_S-\mathrm{MAE}_X\) 与
-   小样本交互 \(\mathrm{Adv}(253)-\mathrm{Adv}(2352)\)；按 scaffold cluster
-   bootstrap 给条件性 CI；写 `results/phase1a/REPORT.md`。
-4. 按预注册判定：`PROMISING_SAME_INFORMATION_INTERACTION` /
-   `UNRESOLVED_INFORMATION_VS_INDUCTIVE_BIAS` /
-   `NO_CLEAR_INTERACTION_VALUE_IN_THIS_PILOT` /
-   `IMPLEMENTATION_OR_OPTIMIZATION_FAILURE`。
-5. **不**自动做新架构、追加 seed、扩大 n 或读 Reserved/test。
+1. **不调 attention、不追加 seed/架构**。Phase 1a 的负结果已经足够清楚：
+   在本任务/本 split/本配方下，跨 patch attention 没有正价值。
+2. **唯一允许的下一步**：在独立 scaffold split 或第二个任务上，原样重复
+   冻结的 S/X 对比（同 \(E_2\)、同局部编码器/头、同配方、3 seeds）。
+3. 判定/停止：
+   - 若独立 split/任务上仍是 **S ≥ X**（尤其 full-n 3/3 seeds 或 CI 支持），
+     **停止 cross-patch-attention 分支**；下一轮转向固定的信息访问实验
+     （加入一跳/边 incidence，匹配非迭代 vs 迭代），而不是继续调 attention。
+   - 若 X 稳定胜出，再检查优化/正则化差异（预注册对照），不直接宣布
+     “交互有效”。
+   - 若仍无法区分，保持 `UNRESOLVED`，不扩大搜索。
+4. **不**读官方 valid/test 或内部 Reserved 做选择；**不**把本轮负结果
+   写成“消息传递普遍无用”或“S/X 等价”。

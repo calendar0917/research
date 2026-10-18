@@ -7,7 +7,7 @@
 
 phase: phase1a
 current_round: ssrc-phase1a-lipo-v1
-status: PHASE1A_PRE_GPU_FROZEN
+status: PHASE1A_SCREENING_COMPLETE
 updated: 2026-10-19
 main_line: true
 supersedes_main_line: structure-contribution
@@ -30,7 +30,12 @@ phase0_5_corrections:
 phase1a:
   protocol_id: ssrc-phase1a-lipo-v1
   protocol: tracks/structural-sufficiency/notes/phase1a_protocol.md
-  status: FROZEN_PRE_GPU
+  status: COMPLETE
+  report: tracks/structural-sufficiency/results/phase1a/REPORT.md
+  freeze_commit: f73334a
+  run_commit: 54651711af787757ab6866097d512c08caaad289
+  decision: NO_CLEAR_INTERACTION_VALUE_IN_THIS_PILOT
+  direction_qualifier: "S_AT_LEAST_AS_GOOD; NO_STABLE_SMALL_N_X_ADVANTAGE"
   question: >-
     With exactly the same E_2 rooted-patch multiset, does cross-patch learned
     interaction (X) beat local shared encoding + pooling (S), and is the
@@ -65,8 +70,13 @@ phase1a:
     collision_max_abs_diff: 6.0e-8
     permutation_max_abs_diff: 6.0e-8
   run_matrix: 3 models x 2 n x 3 seeds = 18 trajectories
+  completed_runs: 18
   gpu_budget_limit_hours: 4.0
+  gpu_hours_actual_occupancy: 0.619
+  gpu_hours_train_loop: 0.575
   gpu_host: res (A100, process backend)
+  run_manifest: tracks/structural-sufficiency/results/phase1a/run_manifest.tsv
+  analysis: tracks/structural-sufficiency/results/phase1a/analysis_summary.json
   endpoints:
     primary: "Adv_set(n)=MAE_S(n)-MAE_X(n); positive = X better"
     interaction: "Adv_set(253)-Adv_set(2352); positive = small-n X advantage"
@@ -77,6 +87,23 @@ phase1a:
     - UNRESOLVED_INFORMATION_VS_INDUCTIVE_BIAS
     - NO_CLEAR_INTERACTION_VALUE_IN_THIS_PILOT
     - IMPLEMENTATION_OR_OPTIMIZATION_FAILURE
+  results:
+    monitor_mae_mean:
+      n253: {S: 0.8853, X: 0.9143, G: 0.9123}
+      n2352: {S: 0.5585, X: 0.6021, G: 0.5843}
+    adv_set_S_minus_X:
+      n253: {mean: -0.0290, range: [-0.0547, 0.0142], positive_seeds: 1}
+      n2352: {mean: -0.0435, range: [-0.0507, -0.0399], positive_seeds: 0}
+    interaction_Adv253_minus_Adv2352:
+      mean: 0.0145
+      range: [-0.0066, 0.0541]
+      positive_seeds: 1
+      bootstrap_ci95: [-0.0295, 0.0569]
+    bootstrap_ci95_adv_set:
+      n253: [-0.0618, 0.0040]
+      n2352: [-0.0720, -0.0148]
+    constant_baseline_monitor_mae: {n253: 0.9553, n2352: 0.9652}
+    interpretation: "X did not beat S; at n=2352 S was better in 3/3 seeds. Small-n X advantage is not stable (1/3 seeds, CI crosses zero). G did not dominate S. Not an equivalence claim and not a general claim about message passing."
 
 phase0_evidence:
   report: tracks/structural-sufficiency/results/phase0/REPORT.md
@@ -107,8 +134,9 @@ open_questions:
   - If S≈X and G better: add fixed one-hop/edge-incidence information with matched non-iterative/iterative controls.
 
 next_action: >-
-  Commit the frozen Phase 0.5 corrigendum + Phase 1a protocol/code/split/config
-  and CPU-gate evidence. Then run the 18 trajectories on res via rr with a
-  4 GPU-hour cap. Do not read official valid/test or internal Reserved. After
-  the run, write results/phase1a/REPORT.md and update this STATE with the
-  observed Adv/interaction and the pre-registered decision label.
+  Do not tune attention or add architectures. The only next direction is an
+  independent scaffold split (or a second task) with the exact frozen S/X
+  comparison. Stop the cross-patch-attention branch if S remains >= X on the
+  independent split/task; then move to a fixed information-access experiment
+  (one-hop/edge incidence, matched non-iterative vs iterative), not to more
+  attention tuning. Do not read official valid/test or internal Reserved.
