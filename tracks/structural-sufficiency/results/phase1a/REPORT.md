@@ -296,8 +296,11 @@ X 约 0.03–0.37），所以不是“没学会”的实现失败。
   因此不能回答“调过的 X 是否会更好”。
 - 没有做 per-scaffold 或标签区间的探索性误差分析；避免结果驱动的新分析。
 - R1 的 `git_dirty=true` 来自无关 untracked locks；R2 clean worktree 用于
-  消除该 provenance 歧义。R2 的 `rr` 元数据仍指向共享 checkout，但 run JSON
-  的 `environment.git_commit=5465171`、`git_dirty=false`，且训练代码 diff 为空。
+  消除该 provenance 歧义。R2 的 `rr` 元数据指向共享 checkout 的 analysis-only
+  commit `65525ba`，但实际训练进程在 `/tmp/ssrc-clean` 的 `5465171` clean
+  worktree 中执行；每条 R2 run JSON 的 `environment.git_commit=5465171`、
+  `git_dirty=false`。`5465171..65525ba` 只新增
+  `analyze_phase1a.py`、REPORT、analysis/manifest，训练/模型/数据代码 diff 为空。
 
 ---
 
