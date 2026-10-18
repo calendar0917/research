@@ -3,6 +3,9 @@
 Protocol ID: `ssrc-phase1a-lipo-v1`  
 日期: 2026-10-19  
 状态: **FROZEN_PRE_GPU**（本文件与同 commit 的代码/split/config 构成冻结；GPU 后不再改口径）  
+Post-run（2026-10-18）: R1 + R2 两套 18-run replicate 已完成；结果与判定见
+`results/phase1a/REPORT.md`。R2 仅用于复现性/run-to-run 检查，未改模型、口径、
+端点或判定规则。  
 上游: `notes/phase0_corrigendum.md`（纠错优先）, `notes/research_core.md`,
 `results/phase0/REPORT.md`
 

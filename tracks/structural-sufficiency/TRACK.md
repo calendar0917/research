@@ -3,12 +3,12 @@
 | 项 | 内容 |
 |----|------|
 | slug | `structural-sufficiency` |
-| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a 完成（S≥X，无稳定小样本 X 优势）** |
+| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a 完成（R1+R2，S≥X，无稳定小样本 X 优势）** |
 | 创建 | 2026-10-18 |
 | 主线位置 | **SSRC（新主线）**：显式结构充分性 → 关系计算；旧 `structure-contribution` 标记 **paused / 非主线**，全部历史保留，不覆盖、不改写 |
 | Phase 0 结论 | **REFRAME_NEEDED**：原表述“MP 是否必要”已被文献覆盖且实验易混淆；重述为“精确 \(E_r\) 的信息充分性 vs 有限样本可学习性”，条件性 GO 到受控 pilot |
 | Phase 0.5 | **纠错完成**：三层概念、风险分解符号、pilot 方向/停止规则、Eijkelboom train/test 口径、ESA+ 文献、S(G) oracle 降级；见 `notes/phase0_corrigendum.md` |
-| Phase 1a | **COMPLETE**：18/18 轨迹；S 在 n=2352 3/3 seeds 优于 X（Adv −0.0435），小 n 平均也更好；小样本交互 +0.0145 但 1/3 seeds 为正、CI 跨零。实际 0.62 GPU-h |
+| Phase 1a | **COMPLETE（R1+R2）**：36/36 轨迹；n=2352 S 在 6/6 draws 优于 X（pooled Adv −0.0387），n=253 为 5/6（pooled −0.0230）；交互 +0.0157 但仅 3/6 draws 为正、CI 跨零。总 1.21 GPU-h |
 | Phase 1a 判定 | **`NO_CLEAR_INTERACTION_VALUE_IN_THIS_PILOT`**；限定 `S_AT_LEAST_AS_GOOD`、`NO_STABLE_SMALL_N_X_ADVANTAGE` |
 
 ## 问题（一句话）
@@ -74,8 +74,9 @@
 | Phase 0 train-only 诊断 | 完成：\(E_2/E_3\) 近唯一；scaffold 更统计高效 |
 | Phase 0.5 纠错 | 完成：三层概念、风险符号、pilot 方向、文献口径、S(G) 降级 |
 | Phase 1a 协议/代码 | 完成：S/X/G、split、label vault、8/8 CPU gates（远端复跑通过）、8 tests |
-| Phase 1a GPU screening | **完成**：18/18 exit 0；0.619 GPU-h 实际占用（训练循环 0.575 h），≤4 h 预算 |
-| Phase 1a 结果 | **S≥X**：n=2352 3/3 seeds S 更好；n=253 平均 S 更好但 1/3 seeds X 更好；无稳定小样本 X 优势；G 未支配 S |
+| Phase 1a GPU screening | **完成**：R1+R2 共 36/36 exit 0；1.208 GPU-h 实际占用（训练循环 1.120 h），≤4 h 预算 |
+| Phase 1a 结果 | **S≥X**：n=2352 6/6 draws S 更好；n=253 5/6 draws S 更好；交互 3/6 为正、CI 跨零；无稳定小样本 X 优势；G 未支配 S |
+| Phase 1a 复现性 | R2 在 clean worktree 重跑同 18 条；同 seed run-to-run 最大差：n=253 S 0.040、n=2352 S/X ≤0.012；full-n 结论稳，small-n 噪声与效应同量级 |
 | 交付 | Phase 0 REPORT（含纠错链接）+ 纠错文件 + Phase 1a 协议/REPORT + STATE/TRACK |
 
 ## 入口
@@ -90,8 +91,11 @@
 | `results/phase0/REPORT.md` | Phase 0 完整报告（顶部有纠错链接） |
 | `results/phase1a/split_phase1a.json` | 冻结 split（structure-only） |
 | `results/phase1a/REPORT.md` | Phase 1a 结果报告（主表、CI、判定、限制） |
-| `results/phase1a/run_manifest.tsv` | 18 条 run 的 rr run_id/时间/占用 |
-| `results/phase1a/analysis_summary.json` | 无逐行标签的汇总分析 |
+| `results/phase1a/run_manifest.tsv` | R1 18 条 run 的 rr run_id/时间/占用 |
+| `results/phase1a/run_manifest_r2.tsv` | R2 clean-worktree 18 条 run |
+| `results/phase1a/analysis_summary.json` | R1 无逐行标签的汇总分析 |
+| `results/phase1a/analysis_summary_r2.json` | R2 汇总分析 |
+| `results/phase1a/analysis_replicates.json` | R1+R2 pooled/复现性分析 |
 | `runs/phase1a/` | 逐 run JSON（含 Monitor 预测，git-ignored） |
 | `code/phase1a/` | S/X/G、数据、训练、CPU gates、runner、tests |
 | `results/phase0/code/ssrc_toy.py` | 精确 \(E_r\)、pynauty/exhaustive/networkx 交叉验证、oracle |

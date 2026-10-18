@@ -69,14 +69,18 @@ phase1a:
     file: tracks/structural-sufficiency/results/phase1a/cpu_gates.json
     collision_max_abs_diff: 6.0e-8
     permutation_max_abs_diff: 6.0e-8
-  run_matrix: 3 models x 2 n x 3 seeds = 18 trajectories
-  completed_runs: 18
+  run_matrix: 3 models x 2 n x 3 seeds = 18 trajectories per replicate
+  replicates: 2
+  completed_runs: 36
   gpu_budget_limit_hours: 4.0
-  gpu_hours_actual_occupancy: 0.619
-  gpu_hours_train_loop: 0.575
+  gpu_hours_actual_occupancy: 1.208
+  gpu_hours_train_loop: 1.120
   gpu_host: res (A100, process backend)
   run_manifest: tracks/structural-sufficiency/results/phase1a/run_manifest.tsv
+  run_manifest_r2: tracks/structural-sufficiency/results/phase1a/run_manifest_r2.tsv
   analysis: tracks/structural-sufficiency/results/phase1a/analysis_summary.json
+  analysis_r2: tracks/structural-sufficiency/results/phase1a/analysis_summary_r2.json
+  analysis_replicates: tracks/structural-sufficiency/results/phase1a/analysis_replicates.json
   endpoints:
     primary: "Adv_set(n)=MAE_S(n)-MAE_X(n); positive = X better"
     interaction: "Adv_set(253)-Adv_set(2352); positive = small-n X advantage"
@@ -88,22 +92,30 @@ phase1a:
     - NO_CLEAR_INTERACTION_VALUE_IN_THIS_PILOT
     - IMPLEMENTATION_OR_OPTIMIZATION_FAILURE
   results:
-    monitor_mae_mean:
-      n253: {S: 0.8853, X: 0.9143, G: 0.9123}
-      n2352: {S: 0.5585, X: 0.6021, G: 0.5843}
-    adv_set_S_minus_X:
-      n253: {mean: -0.0290, range: [-0.0547, 0.0142], positive_seeds: 1}
-      n2352: {mean: -0.0435, range: [-0.0507, -0.0399], positive_seeds: 0}
-    interaction_Adv253_minus_Adv2352:
-      mean: 0.0145
-      range: [-0.0066, 0.0541]
-      positive_seeds: 1
-      bootstrap_ci95: [-0.0295, 0.0569]
+    note: "R1 and R2 are two complete replicates of the same frozen design; pooled = 6 paired draws per n."
+    monitor_mae_mean_pooled_6_draws:
+      n253: {S: 0.8951, X: 0.9181, G: 0.9071}
+      n2352: {S: 0.5610, X: 0.5997, G: 0.5827}
+    adv_set_S_minus_X_pooled:
+      n253: {mean: -0.0230, range: [-0.0547, 0.0142], X_better_draws: 1, n_draws: 6}
+      n2352: {mean: -0.0387, range: [-0.0507, -0.0281], X_better_draws: 0, n_draws: 6}
+    adv_set_S_minus_X_by_replicate:
+      R1: {n253: -0.0290, n2352: -0.0435}
+      R2: {n253: -0.0170, n2352: -0.0339}
+    interaction_Adv253_minus_Adv2352_pooled:
+      mean: 0.0157
+      range: [-0.0099, 0.0541]
+      positive_draws: 3
+      n_draws: 6
+      ci95_by_replicate: {R1: [-0.0295, 0.0569], R2: [-0.0212, 0.0548]}
     bootstrap_ci95_adv_set:
-      n253: [-0.0618, 0.0040]
-      n2352: [-0.0720, -0.0148]
+      R1: {n253: [-0.0618, 0.0040], n2352: [-0.0720, -0.0148]}
+      R2: {n253: [-0.0446, 0.0111], n2352: [-0.0596, -0.0062]}
+    run_to_run_max_abs_monitor_mae:
+      n253: {S: 0.0400, X: 0.0242, G: 0.0165}
+      n2352: {S: 0.0110, X: 0.0112, G: 0.0191}
     constant_baseline_monitor_mae: {n253: 0.9553, n2352: 0.9652}
-    interpretation: "X did not beat S; at n=2352 S was better in 3/3 seeds. Small-n X advantage is not stable (1/3 seeds, CI crosses zero). G did not dominate S. Not an equivalence claim and not a general claim about message passing."
+    interpretation: "X did not beat S in any full-n draw (0/6) and in 1/6 small-n draws. Small-n X advantage is not stable; interaction is positive in only 3/6 draws and both CIs cross zero. Full-n S advantage is larger than same-seed run-to-run noise. Not an equivalence claim and not a general claim about message passing."
 
 phase0_evidence:
   report: tracks/structural-sufficiency/results/phase0/REPORT.md
