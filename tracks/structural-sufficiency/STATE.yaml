@@ -5,9 +5,9 @@
 # Phase 0 evidence: results/phase0/REPORT.md + results/phase0/analysis/*.json
 # Phase 1a: notes/phase1a_protocol.md + results/phase1a/
 
-phase: phase1a
-current_round: ssrc-phase1a-lipo-v1
-status: PHASE1A_SCREENING_COMPLETE
+phase: phase1b
+current_round: ssrc-phase1b-v1
+status: PHASE1B_COMPLETE
 updated: 2026-10-19
 main_line: true
 supersedes_main_line: structure-contribution
@@ -138,6 +138,146 @@ phase0_evidence:
     test_read: false
     label_vault_opened: false
 
+phase1b:
+  protocol_id: ssrc-phase1b-v1
+  protocol: tracks/structural-sufficiency/notes/phase1b_protocol.md
+  protocol_sha256: 25bfff0cd9810c397c5a66fa247a365ab72a52800bd08710b14dd917ad9f3d36
+  config: tracks/structural-sufficiency/configs/phase1b.yaml
+  config_sha256: ccb4dccb1600f4efa959732c4769c08a85929f516fd4137b8aa94b350dbd076a
+  status: COMPLETE
+  report: tracks/structural-sufficiency/results/phase1b/REPORT.md
+  decision_log: tracks/structural-sufficiency/results/phase1b/decision_log.md
+  freeze_commit: 43313de
+  control_commit: 066ee94
+  run_window: "2026-10-19 00:15-02:35 +08:00"
+  host: res (2xA100-SXM4-40GB, process backend)
+  decision: PURSUE_RELATIONAL_SUFFICIENCY
+  question: >-
+    Given the same exact E_2 rooted-patch representation, does exposing true
+    root edges to a one-shot endpoint-swap-invariant relation (R1) add
+    predictive value over the same local encoder with pooling (S0); does a
+    tied GINE update round (M1/M2) add value beyond a matched compute budget;
+    and how large is the gap to a strong 6-layer GINE reference (G_ref)?
+  data:
+    zinc:
+      source: "official train only (10,000 rows); official valid/test never instantiated"
+      internal_split: {fit: 8000, monitor: 1000, reserved: 1000}
+      split_file: tracks/structural-sufficiency/results/phase1b/split_zinc_phase1b.json
+      split_sha256: fbca5fd5ac9c82c457bf4d78781fbe9936dd7068082377ff8cc2bf2309d72b49
+      labels_file: tracks/structural-sufficiency/results/phase1b/zinc_labels_fit_monitor.json
+      labels_sha256: 631dae5fe93f543599c5cdfe92057fa8ee0fcb3e3faaf4e51aceed1e8312ab78
+      reserved_labels_retained: 0
+      target: "PyG logP_SA_cycle_normalized (benchmark-normalized; no extra standardization)"
+    lipo:
+      internal_split: {fit: 2352, monitor: 504, reserved: 504}
+      split_sha256: 9fa96d49efd94cd2ff381922f83a07f963d832064c75469657b4ce5f68c332b6
+      labels_sha256: 0260a3909eec30900df646bc760e65360315f4a1398c7092c7c72d04a4e404f7
+      reserved_labels_retained: 0
+      note: "Phase 1a raw graphs/split/labels reused; no official valid/test"
+  models:
+    S0: "shared 2-layer GINE E_2 patch encoder + 2 residual token-FFN blocks + mean pool + head; no root edges"
+    R1: "same trunk + one-shot endpoint-swap-invariant relation MLP([h_i+h_j, |h_i-h_j|, h_i*h_j, e_ij]) on true root edges; edge readout each undirected bond once; no node update"
+    M1: "R1 + 1 tied GINE update round (parameter-identical to M2)"
+    M2: "R1 + 2 tied GINE update rounds"
+    G_ref: "6-layer residual GINE + FFN on raw atom graph; sum+mean readout"
+  capacity:
+    zinc_params: {S0: 56963, R1: 94659, M1: 107139, M2: 107139, G_ref: 439559}
+    lipo_params: {S0: 59011, R1: 97731, M1: 110211, M2: 110211, G_ref: 447751}
+  endpoints:
+    gain_relation: "MAE(S0)-MAE(R1); positive = relation better"
+    gain_update: "MAE(R1)-MAE(M1); positive = one update round better"
+    gain_iteration: "MAE(M1)-MAE(M2); positive = two rounds better"
+    gap: "MAE(candidate)-MAE(G_ref); positive = candidate worse"
+    uncertainty: "paired bootstrap over Monitor scaffold clusters (Lipo) / molecules (ZINC), 5000 reps, 95% percentile CI"
+  bands:
+    lipo: {negligible_below: 0.02, meaningful_at_least: 0.04}
+    zinc: {negligible_below: 0.01, meaningful_at_least: 0.02}
+  results:
+    zinc_monitor_mae_seed0:
+      S0: 0.317303
+      R1: 0.260161
+      M1: 0.275609
+      M2: 0.252220
+      G_ref: 0.165290
+      constant_baseline: 1.5339
+    lipo_monitor_mae_seed0:
+      S0: 0.560954
+      R1: 0.552062
+      M1: 0.571637
+      M2: 0.547017
+      G_ref: 0.564440
+      constant_baseline: 0.9545
+    gains_zinc:
+      relation_S0_minus_R1: {delta: 0.057141, ci95: [0.0307, 0.0863]}
+      update_R1_minus_M1: {delta: -0.015448, ci95: [-0.0404, 0.0088]}
+      iteration_M1_minus_M2: {delta: 0.023389, ci95: [0.0018, 0.0453]}
+      gap_M2_minus_Gref: {delta: 0.086930, ci95: [0.0641, 0.1124]}
+      gap_R1_minus_Gref: {delta: 0.094871, ci95: [0.0697, 0.1217]}
+      gap_S0_minus_Gref: {delta: 0.152013, ci95: [0.1161, 0.1916]}
+    gains_lipo:
+      relation_S0_minus_R1: {delta: 0.008892, ci95: [-0.0214, 0.0400]}
+      update_R1_minus_M1: {delta: -0.019575, ci95: [-0.0567, 0.0166]}
+      iteration_M1_minus_M2: {delta: 0.024620, ci95: [-0.0050, 0.0556]}
+      gap_M2_minus_Gref: {delta: -0.017423, ci95: [-0.0588, 0.0226]}
+      gap_R1_minus_Gref: {delta: -0.012378, ci95: [-0.0537, 0.0282]}
+      gap_S0_minus_Gref: {delta: -0.003486, ci95: [-0.0428, 0.0356]}
+    controls:
+      b1_broken_adjacency:
+        run: zinc R1 seed0 rewire
+        broken_mae: 0.330730
+        true_mae: 0.260161
+        delta_broken_minus_true: 0.070569
+        ci95: [0.0480, 0.0948]
+        invariants: "degree sequence, edge count, bond-type multiset preserved; patches unchanged; 10000/10000 molecules changed"
+        interpretation: "correspondence is real; broken-R1 is even worse than S0"
+      b2_matched_compute:
+        run: zinc M1 seed0 600-epoch budget
+        m1_long_mae: 0.249525
+        m2_mae: 0.252220
+        delta_m1long_minus_m2: -0.002695
+        ci95: [-0.0209, 0.0152]
+        epochs: {m1_long: 285, m2: 195}
+        relation_rounds: {m1_long: 285, m2: 390}
+        gpu_seconds: {m1_long: 713.8, m2: 705.6}
+        interpretation: "iteration advantage is compute/schedule, not mechanism"
+    seed_replication_zinc:
+      seed0: {S0: 0.317303, R1: 0.260161, gain: 0.057141}
+      seed1: {S0: 0.356265, R1: 0.257054, gain: 0.099211}
+      pooled_mean_gain: 0.078176
+      run_to_run_abs_diff: {S0: 0.038962, R1: 0.003107}
+      sign_consistent: true
+  budget:
+    gpu_hours_run_level: 1.601
+    gpu_hours_job_occupancy: 1.642
+    cap_hours: 8.0
+    by_phase: {A: 1.076, B: 0.298, C: 0.000, D: 0.224, smoke_reserve: 0.002}
+    wall_clock_gpu_window_hours: 2.30
+    failed_jobs_gpu_hours: 0.0
+  artifacts:
+    cpu_gates: tracks/structural-sufficiency/results/phase1b/cpu_gates_phase1b.json
+    cpu_gates_sha256: e5e826b48df3bad62523951d3921d3fc49f1f7b7800d8a5515718522a1ae1552
+    analysis: tracks/structural-sufficiency/results/phase1b/analysis_phase1b.json
+    analysis_sha256: ae5de61b550c0c538c1a30ee18b8b3fd882ec12e525670a8251ee4e338927625
+    run_manifest: tracks/structural-sufficiency/results/phase1b/run_manifest.tsv
+    run_manifest_sha256: bda11c2d0aca9c6001406d2989e98de98e9550c27f2f851d796c4f6983c565fa
+    runs: tracks/structural-sufficiency/runs/phase1b/
+  non_claims:
+    - "not a proof of E_2 task-information sufficiency or Bayes-risk equality"
+    - "not a general claim that message passing is unnecessary"
+    - "not SOTA; internal train-only Monitor, not official ZINC test"
+    - "broken-adjacency control is not a surgical null (global topology changes; degree/type/count preserved)"
+    - "Lipo relation gain is not established (CI crosses zero)"
+    - "capacity vs relation in R1-S0 is not fully decomposed (R1 has +66% params)"
+  next_action: >-
+    Keep the one-shot endpoint-swap-invariant relation on true root edges as
+    the core. Add a static global/depth pathway (global tokens or deeper
+    residual trunk) to close the ZINC gap to G_ref, with capacity-matched S0,
+    broken-adjacency R1, and matched-capacity G_ref controls. Do not add
+    iterative MP rounds; if tested, use the M1_long matched-compute protocol.
+    Evaluate on ZINC plus a third task/split before a paper-level claim. If
+    capacity-matched S0 closes the relation gap or the global pathway closes
+    the ZINC gap without the relation, switch to PERFORMANCE_GAP_DOMINATES.
+
 open_questions:
   - Does X beat S at n=253 and/or n=2352 under exactly matched E_2 input?
   - Is any advantage stable across 3 seeds and larger at n=253 (sample-efficiency) or only at n=2352?
@@ -146,9 +286,8 @@ open_questions:
   - If S≈X and G better: add fixed one-hop/edge-incidence information with matched non-iterative/iterative controls.
 
 next_action: >-
-  Do not tune attention or add architectures. The only next direction is an
-  independent scaffold split (or a second task) with the exact frozen S/X
-  comparison. Stop the cross-patch-attention branch if S remains >= X on the
-  independent split/task; then move to a fixed information-access experiment
-  (one-hop/edge incidence, matched non-iterative vs iterative), not to more
-  attention tuning. Do not read official valid/test or internal Reserved.
+  Phase 1b is complete; decision PURSUE_RELATIONAL_SUFFICIENCY. The next round
+  keeps the one-shot relation and adds a static global/depth pathway to close
+  the ZINC gap, with capacity-matched S0 / broken-adjacency R1 / matched-
+  capacity G_ref controls. Do not add iterative MP rounds (B2 control), do not
+  tune attention, and do not read official valid/test or internal Reserved.

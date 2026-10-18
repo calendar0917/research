@@ -3,13 +3,15 @@
 | 项 | 内容 |
 |----|------|
 | slug | `structural-sufficiency` |
-| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a 完成（R1+R2，S≥X，无稳定小样本 X 优势）** |
+| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a 完成；Phase 1b 完成（关系对应真实、迭代非机制；下一路线 `PURSUE_RELATIONAL_SUFFICIENCY`）** |
 | 创建 | 2026-10-18 |
 | 主线位置 | **SSRC（新主线）**：显式结构充分性 → 关系计算；旧 `structure-contribution` 标记 **paused / 非主线**，全部历史保留，不覆盖、不改写 |
 | Phase 0 结论 | **REFRAME_NEEDED**：原表述“MP 是否必要”已被文献覆盖且实验易混淆；重述为“精确 \(E_r\) 的信息充分性 vs 有限样本可学习性”，条件性 GO 到受控 pilot |
 | Phase 0.5 | **纠错完成**：三层概念、风险分解符号、pilot 方向/停止规则、Eijkelboom train/test 口径、ESA+ 文献、S(G) oracle 降级；见 `notes/phase0_corrigendum.md` |
 | Phase 1a | **COMPLETE（R1+R2）**：36/36 轨迹；n=2352 S 在 6/6 draws 优于 X（pooled Adv −0.0387），n=253 为 5/6（pooled −0.0230）；交互 +0.0157 但仅 3/6 draws 为正、CI 跨零。总 1.21 GPU-h |
 | Phase 1a 判定 | **`NO_CLEAR_INTERACTION_VALUE_IN_THIS_PILOT`**；限定 `S_AT_LEAST_AS_GOOD`、`NO_STABLE_SMALL_N_X_ADVANTAGE` |
+| Phase 1b | **COMPLETE**：5 臂 × 2 任务 seed 0；B1 broken-adjacency 控制；B2 matched-compute 控制；ZINC seed 1 复现。总 1.60 GPU-h |
+| Phase 1b 判定 | **`PURSUE_RELATIONAL_SUFFICIENCY`**：S0→R1 ZINC +0.0571/+0.0992；broken-R1 更差 +0.0706；M1_long ≈ M2（Δ=−0.0027，CI 跨零）⇒ 迭代增益是计算量不是机制 |
 
 ## 问题（一句话）
 
@@ -77,7 +79,10 @@
 | Phase 1a GPU screening | **完成**：R1+R2 共 36/36 exit 0；1.208 GPU-h 实际占用（训练循环 1.120 h），≤4 h 预算 |
 | Phase 1a 结果 | **S≥X**：n=2352 6/6 draws S 更好；n=253 5/6 draws S 更好；交互 3/6 为正、CI 跨零；无稳定小样本 X 优势；G 未支配 S |
 | Phase 1a 复现性 | R2 在 clean worktree 重跑同 18 条；同 seed run-to-run 最大差：n=253 S 0.040、n=2352 S/X ≤0.012；full-n 结论稳，small-n 噪声与效应同量级 |
-| 交付 | Phase 0 REPORT（含纠错链接）+ 纠错文件 + Phase 1a 协议/REPORT + STATE/TRACK |
+| Phase 1b 协议/代码 | 完成：S0/R1/M1/M2/G_ref、ZINC 内部 8k/1k/1k、Lipo 复用、label vault、23/23 CPU gates、7 tests、broken-adjacency 重连 |
+| Phase 1b GPU | **完成**：Phase A 10/10、B1 1/1、B2 1/1、D 2/2，全部 exit 0；1.601 GPU-h（占用 1.642 h），20% 预算 |
+| Phase 1b 结果 | ZINC：S0 0.3173 / R1 0.2602 / M2 0.2522 / G_ref 0.1653；Lipo：S0 0.5610 / R1 0.5521 / M2 0.5470 / G_ref 0.5644；两任务均超常数基线 |
+| 交付 | Phase 0 REPORT（含纠错链接）+ 纠错文件 + Phase 1a 协议/REPORT + Phase 1b 协议/决策日志/REPORT/run manifest + STATE/TRACK |
 
 ## 入口
 

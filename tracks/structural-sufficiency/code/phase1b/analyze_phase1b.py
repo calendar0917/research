@@ -162,6 +162,35 @@ def main() -> int:
     for dataset in ["zinc", "lipo"]:
         runs = load_runs(root, dataset)
         out["datasets"][dataset] = summarize_dataset(dataset, runs, n_boot=args.n_boot)
+        # Phase D: paired seed replication for the gate-passing relation candidate.
+        rep = {}
+        for seed in (0, 1):
+            s0 = root / dataset / f"S0_seed{seed}.json"
+            r1 = root / dataset / f"R1_seed{seed}.json"
+            if s0.exists() and r1.exists():
+                a = json.loads(s0.read_text())
+                b = json.loads(r1.read_text())
+                ma = a["best_metrics"]["monitor"]["mae"]
+                mb = b["best_metrics"]["monitor"]["mae"]
+                rep[f"seed{seed}"] = {
+                    "S0_monitor_mae": ma,
+                    "R1_monitor_mae": mb,
+                    "gain_relation": ma - mb,
+                    "S0_best_epoch": a["best_epoch"],
+                    "R1_best_epoch": b["best_epoch"],
+                }
+        if rep:
+            gains = [v["gain_relation"] for v in rep.values()]
+            rep["pooled"] = {
+                "n_seeds": len(gains),
+                "mean_gain_relation": float(np.mean(gains)),
+                "min_gain_relation": float(np.min(gains)),
+                "max_gain_relation": float(np.max(gains)),
+                "sign_consistent": bool(all(g > 0 for g in gains) or all(g < 0 for g in gains)),
+                "s0_run_to_run_abs_diff": abs(rep["seed0"]["S0_monitor_mae"] - rep["seed1"]["S0_monitor_mae"]) if len(gains) > 1 else None,
+                "r1_run_to_run_abs_diff": abs(rep["seed0"]["R1_monitor_mae"] - rep["seed1"]["R1_monitor_mae"]) if len(gains) > 1 else None,
+            }
+        out["datasets"][dataset]["seed_replication"] = rep
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(out, indent=2) + "\n")
 
