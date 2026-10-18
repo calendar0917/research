@@ -1,8 +1,15 @@
 # 研究核心 — SSRC: Structural Sufficiency & Relational Computation
 
 Track: `structural-sufficiency`  
-状态: Phase 0 权威概念文档（2026-10-18）  
+状态: Phase 0 权威概念文档（2026-10-18）；**2026-10-19 已加纠错**  
 上游语境: `docs/luyin/luyin20.txt`, `docs/luyin/luyin21.txt`; 旧轨 `structure-contribution` 的关闭决定仅作边界，不继承其模型约束。
+
+> **CORRIGENDUM (2026-10-19):** 本文的 §2.5 风险分解符号、§4.3/§5 对
+> LOO 单例的解释、以及 pilot 的方向/停止规则，已由
+> [`phase0_corrigendum.md`](./phase0_corrigendum.md) 纠正。本文保留 Phase 0
+> 原始表述以保持历史可审计；凡与纠错文件冲突处，以纠错文件为准。
+> 三层概念（A 身份可辨识性 / B 任务信息充分性 / C 有限样本可学习性）
+> 的定义见纠错文件 §1。
 
 > 本文只记录**可检验命题、定义、反例与未定假设**。所有数字的出处是
 > `results/phase0/`；文献边界见 `prior_work_boundary.md`。  
@@ -94,22 +101,31 @@ label-conflicting 碰撞是数据问题。
 改善样本效率。反之，若 \(E_r\) 信息不足，Dynamic(\(G,L\)) 的收益首先是
 **补信息**，不能归因于“迭代更好”。
 
-### 2.5 观测差距的分解【已确定】
+### 2.5 观测差距的分解【已确定；2026-10-19 符号纠正】
 
-对训练得到的 \(\hat h_{\rm stat}(E_r)\) 与 \(\hat h_{\rm dyn}(G)\)：
+> **原 Phase 0 版本把信息项写成 \(+[R^\star(E_r)-R^\star(G)]\)，这是
+> 符号错误。正确式子如下；旧式已废弃，详见
+> [`phase0_corrigendum.md`](./phase0_corrigendum.md) §2。**
+
+令
 \[
-\underbrace{R(\hat h_{\rm dyn}(G))-R(\hat h_{\rm stat}(E_r))}_{\text{observed gap}}
-=
-\underbrace{[R^\star(E_r)-R^\star(G)]}_{\text{information}}
-+
-\underbrace{[R(\hat h_{\rm dyn}(G))-R^\star(G)]}_{\text{estimation(dyn)}}
--
-\underbrace{[R(\hat h_{\rm stat}(E_r))-R^\star(E_r)]}_{\text{estimation(stat)}}.
+I:=R^\star(E_r)-R^\star(G)\ge 0,\qquad
+\mathrm{excess}_{\rm dyn}:=R(\hat h_{\rm dyn})-R^\star(G),\qquad
+\mathrm{excess}_{\rm stat}:=R(\hat h_{\rm stat})-R^\star(E_r).
+\]
+则
+\[
+\boxed{
+R(\hat h_{\rm dyn})-R(\hat h_{\rm stat})
+= -I+\mathrm{excess}_{\rm dyn}-\mathrm{excess}_{\rm stat}
+}
 \]
 这个恒等式是 pilot 设计的基础：只比较“静态 \(E_r\)”与“MPNN on \(G\)”会把
-information 与 estimation 混在一起。要分离两者，至少需要
-\(S(E_r)\), \(D(E_r)\), \(S(G)\)（信息充分/无损的静态 oracle）,
-\(D(G)\) 四个臂。
+information 与 estimation 混在一起。若两个模型都只以 \(E_r\) 为输入
+（S vs X），则信息项为 0，只剩
+\(\mathrm{excess}_{X}-\mathrm{excess}_{S}\)。
+Phase 1a 不训练旧草案的 \(S(G)\) oracle，也不声称四/三个有限容量模型能
+识别真实 Bayes 风险；详见纠错文件 §2.2 与 §5。
 
 ---
 
@@ -271,38 +287,45 @@ E_r(G_{24,6})=E_r(G_{24,9}),
 数据：Lipophilicity 官方 train 3360 行；冻结候选内部 scaffold split
 （fit 2352 / valid 504 / locked 504）；官方 valid/test 不参与选择。
 
-四个核心臂：
+**Phase 1a 只实施三个臂（2026-10-19 修正；旧五臂草案不执行）：**
 
-1. \(S_{\rm bag}(E_r)\)：精确 patch key 的 bag/count + 线性/DeepSets 读出。
-   这是“身份级指纹”诊断臂，预计高方差。
-2. \(S_{\rm patch}(E_r)\)：每个 patch 用共享 GNN 编码，再 DeepSets/attention
-   池化；**不做跨 patch 的全图迭代**。这是公平的非迭代关系对照。
-3. \(D(E_r)\)：在 patch token 上做 \(L\) 层 self-attention；信息与
-   \(S_{\rm patch}\) 相同，只多迭代。用于分离“迭代”与“关系”。
-4. \(D(G)\)：完整图上的 \(L\) 层 MPNN/GNN；信息严格更多。
-5. \(S(G)\)：信息充分/无损的静态 oracle（如全 pairs 距离 + 属性，
-   或 \(r_{\max}=\text{diameter}\) 的 \(E_{r_{\max}}\)）+ 非迭代读出。
-   用于检验“信息够时迭代是否仍必要”。
+1. **S（无跨 patch 交互）**：每个 patch 用共享的局部 GINE 编码成 patch
+token；逐 token 的残差 FFN（无跨 patch 交互）；sum/mean pooling +统一回归头。patch 内局部 GNN 允许，因此 S 不是“完全没有消息传递”。
+2. **X（同信息、跨 patch 交互）**：与 S 相同的 \(E_2\)、patch 构造、局部共享编码器与回归头；在 patch token 之间加固定深度的全局 self-attention（例如 2 层），不使用位置编码、root ID、原图 adjacency、patch 间 incidence 或原子编号。
+3. **G（原始图 GINE 参照）**：原始分子图 + `edge_index` 的常规 GINE/MPNN；信息访问与 S/X 不同，**只作应用表现参照**，\(G-S\)/\(G-X\) 不得解释为纯信息增益。
 
-**H1（可学习性/样本效率）**  
-在相同信息（\(E_r\)）下，\(D(E_r)\) 优于 \(S_{\rm patch}(E_r)\)，且
-\(D(G)\) 相对 \(S_{\rm patch}(E_r)\) 的优势在 n=250 时大于 n=2352 时
-（负交互）。→ 迭代/关系计算改善的是可学习性，不是信息。
+旧草案的 \(S_{\rm bag}\)、\(S(G)\)（全对距离 oracle）、五臂分解、结构编码家族搜索
+本轮**不执行**。\(S(G)\) 的“oracle”称呼已降级：全对距离直方图不保证无损，
+训练后的模型也不是 Bayes oracle；详见
+[`phase0_corrigendum.md`](./phase0_corrigendum.md) §5。
 
-**H2（信息补充）**  
-\(D(G)\) 在 n=2352 时仍显著优于 \(S_{\rm patch}(E_r)\)，且
-\(S(G)\) 接近 \(D(G)\)。→ 收益主要来自 \(G\) 的额外全局信息；
-若 \(S(G)\) 明显差于 \(D(G)\)，则即使信息充分，迭代仍有归纳偏置价值。
+**主端点（方向修正）**
+\[
+\mathrm{Adv}_{\rm set}(n):=\mathrm{MAE}_S(n)-\mathrm{MAE}_X(n)
+\]
+正值表示同信息下 X 更好。小样本优势检验：
+\[
+\mathrm{Adv}_{\rm set}(n_{\rm small})-\mathrm{Adv}_{\rm set}(n_{\rm large})>0.
+\]
+辅助比较 \(\mathrm{MAE}_S-\mathrm{MAE}_G\) 与 \(\mathrm{MAE}_X-\mathrm{MAE}_G\)
+只用于应用性能差距，不作因果信息分解。
 
-**H0（无效应）**  
-所有主对照的 |ΔMAE| < 0.02（Lipophilicity 原始 logD 单位），
-置信区间跨 0。→ 停止该表述。
+**H1（同信息交互/样本效率）**  
+\(\mathrm{Adv}_{\rm set}(n_{\rm small})>0\)，且
+\(\mathrm{Adv}_{\rm set}(n_{\rm small})-\mathrm{Adv}_{\rm set}(n_{\rm large})>0\)，
+并在 3 个种子上方向稳定。→ 跨 patch 交互改善有限样本可学习性；
+不能据此声称突破 \(E_2\) 碰撞或识别 Bayes 风险。
 
-**可反驳条件**：
+**H0（本 pilot 无清晰交互价值）**  
+S≈X≈G，或效应小于预设的实际意义阈值（0.02 MAE），或在种子间不稳定。
+→ 报告为不确定/未定，不自动扩大模型或数据集；
+“差异不显著”不等于“等价”。
 
-- H1 被反驳：\(D(E_r)\le S_{\rm patch}(E_r)\) 且无交互；
-- H2 被反驳：\(S(G)\approx D(G)\) 且 \(D(G)\) 的优势不随 n 缩小；
-- H0 被反驳：至少一个预注册对照的效应超过阈值且 CI 排除 0。
+**停止/解释规则**  
+- S/X 都未学到基本有效预测 → 先排查实现/优化；正确仍不行则停止该 pilot，
+  不推断机制不存在。
+- X 仅在更大 n 上更好，或结果与种子强相关 → 如实报告，不硬解释成样本效率收益。
+- 一轮结果不能直接证明或否定整个 SSRC 方向。
 
 ---
 

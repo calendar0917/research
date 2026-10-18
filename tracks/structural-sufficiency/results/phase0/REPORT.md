@@ -5,6 +5,15 @@ Track: `tracks/structural-sufficiency`
 父 commit: `666083e82a3a2482bd55c925fb3398553be7b756`  
 本轮性质: **CPU-only、无训练、无 GPU、无官方 valid/test 标签读取、无 ZINC 排行榜搜索**
 
+> **CORRIGENDUM (2026-10-19):** 本报告保留 Phase 0 原始证据与历史表述，
+> 但其中 §2.1 的 Eijkelboom train/test 口径、§4.2 的风险分解符号、
+> §7.7–7.8 的 pilot 方向/停止规则、§7.3 的 \(S(G)\) oracle 称呼，
+> 以及“94.5% 单例 ⇒ 结构充分性”的解释，均已被
+> [`notes/phase0_corrigendum.md`](../notes/phase0_corrigendum.md) 纠正。
+> 凡与纠错文件冲突处，以纠错文件为准；本报告的 CPU 数字与证据不删除、
+> 不改写。Phase 1a 的设计见
+> [`notes/phase1a_protocol.md`](../notes/phase1a_protocol.md)。
+
 ---
 
 ## 0. 结论摘要

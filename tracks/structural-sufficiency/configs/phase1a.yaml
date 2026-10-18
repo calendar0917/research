@@ -1,0 +1,94 @@
+# Frozen Phase 1a configuration (ssrc-phase1a-lipo-v1).
+# The code's TrainConfig defaults must match this file; tests/gates check the
+# parameter budget.  Do not tune after GPU results are seen.
+
+protocol_id: ssrc-phase1a-lipo-v1
+status: FROZEN_PRE_GPU
+date: 2026-10-19
+
+data:
+  dataset: Lipophilicity
+  csv: data/lipophilicity/Lipophilicity.csv
+  csv_sha256: aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd
+  raw_graph: tracks/structure-contribution/results/bjoc_cross_task_lipophilicity_v1/dataset/lipo_raw_v1.json.gz
+  raw_graph_sha256: 8416837ea3e56e3e5218865391c88913bb16948b48b7a61be1ee890ea4dda6dd
+  split: tracks/structural-sufficiency/results/phase1a/split_phase1a.json
+  split_sha256: 9fa96d49efd94cd2ff381922f83a07f963d832064c75469657b4ce5f68c332b6
+  internal_split:
+    fit_rows: 2352
+    monitor_rows: 504
+    reserved_rows: 504
+    small_n: 253
+    small_selection: "Fit scaffold groups of size <=10, sorted by scaffold, shuffled with seed 20261018, whole groups until >=250"
+  label_policy:
+    official_valid_test: never read
+    internal_reserved: never read / never scored in Phase 1a
+    fit_monitor: read only for training/standardization/monitor
+    phase0_disclosure: "Phase 0 LOO used all 3360 official-train labels; Reserved is not historically fully blind"
+
+model:
+  patch_radius: 2
+  patch_node_dim: 41
+  patch_edge_dim: 12
+  hidden: 64
+  local_layers: 2
+  dropout: 0.1
+  s_ffn_layers: 2
+  s_ffn_hidden: 128
+  x_attn_layers: 2
+  x_heads: 4
+  x_ffn_hidden: 128
+  g_hidden: 96
+  g_layers: 2
+  expected_parameters:
+    S: 59011
+    X: 59075
+    G: 53379
+  expected_forward_flops_fixed_64:
+    S: 622336384
+    X: 877730176
+    G: 170472000
+  flop_note: "FlopCounterMode forward, PyG scatter may be uncounted (lower bound); X/S ~1.41x"
+
+training:
+  loss: l1
+  optimizer: AdamW
+  lr: 0.001
+  lr_min: 0.00001
+  weight_decay: 0.00001
+  batch_size: 64
+  epochs: 200
+  patience: 30
+  min_delta: 0.0001
+  grad_clip: 5.0
+  seeds: [0, 1, 2]
+  n_values: [253, 2352]
+  models: [S, X, G]
+  data_order: "numpy default_rng([seed, epoch]).permutation(n); shared across S/X/G for same n/seed"
+  target_standardization: "train-row mean/std only; same transform for Monitor"
+
+endpoints:
+  primary: "Adv_set(n) = MAE_S(n) - MAE_X(n); positive means X better"
+  interaction: "Adv_set(253) - Adv_set(2352); positive means small-n advantage for X"
+  auxiliary: ["MAE_S - MAE_G", "MAE_X - MAE_G"]
+  primary_metric: "best-monitor MAE on 504 Monitor rows; last-epoch MAE reported as sensitivity"
+  uncertainty: "scaffold-cluster bootstrap over 421 Monitor scaffold groups, 5000 reps; seed range; no equivalence claim"
+  practical_thresholds: {negligible: 0.02, weak: 0.05}
+
+gates:
+  cpu_status: 8/8 PASS
+  cpu_gates_json: tracks/structural-sufficiency/results/phase1a/cpu_gates.json
+  collision_tolerance: 1.0e-6
+  required_before_gpu: true
+  gpu_measurements_required: [peak_memory_mb, step_time_ms, gpu_seconds]
+
+budget:
+  gpu_hours_limit: 4.0
+  n_trajectories: 18
+  no_additional_seeds_or_architectures: true
+
+commands:
+  freeze_split: "uv run python tracks/structural-sufficiency/code/phase1a/freeze_split.py"
+  gates: "uv run python tracks/structural-sufficiency/code/phase1a/phase1a_gates.py"
+  tests: "uv run pytest -q tracks/structural-sufficiency/code/phase1a/tests"
+  run: "uv run python tracks/structural-sufficiency/code/phase1a/run_phase1a.py --model {S|X|G} --n {small|2352} --seed {0|1|2} --device cuda --out-dir tracks/structural-sufficiency/runs/phase1a"

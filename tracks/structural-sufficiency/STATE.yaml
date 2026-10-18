@@ -1,86 +1,114 @@
 # SSRC track state — navigation pointer, not a result dump.
 # Durable scientific statements: notes/research_core.md
+# Corrections: notes/phase0_corrigendum.md (overrides conflicting Phase 0 text)
 # Literature boundary: notes/prior_work_boundary.md
 # Phase 0 evidence: results/phase0/REPORT.md + results/phase0/analysis/*.json
-phase: phase0
-current_round: ssrc-phase0-v1
-status: PHASE0_COMPLETE_REFRAME_NEEDED
-updated: 2026-10-18
+# Phase 1a: notes/phase1a_protocol.md + results/phase1a/
+
+phase: phase1a
+current_round: ssrc-phase1a-lipo-v1
+status: PHASE1A_PRE_GPU_FROZEN
+updated: 2026-10-19
 main_line: true
 supersedes_main_line: structure-contribution
 superseded_track_status: paused-non-main-line-history-preserved
 
-decision:
-  original_formulation: >-
-    REFRAME_NEEDED. "When is message passing necessary given E_r?" is already
-    directly studied by Eijkelboom et al. 2023 and strongly countered by
-    no-MP SOTA results (GRIT/CSA/MoSE/SPSE/GPM). A direct static-vs-MPNN pilot
-    would confound information access with estimation/learnability.
-  reframed_formulation: >-
-    CONDITIONAL_GO. Test whether exact structural sufficiency (E_r) translates
-    into statistical sufficiency on small molecular data, and whether iterative
-    relational computation helps by information supplementation or by
-    learnability/sample efficiency. Requires the 2x2+oracle design in
-    results/phase0/REPORT.md §7.
-  stop_condition: >-
-    If the user rejects the reframe, stop the original formulation. If the pilot
-    finds S_patch(E_r) matches D(G) at all n, or S(G) fully explains D(G), stop
-    the relational-computation claim.
+phase0_5_corrections:
+  authoritative_file: tracks/structural-sufficiency/notes/phase0_corrigendum.md
+  key_corrections:
+    - "Three layers separated: (A) finite-sample identity identifiability, (B) task information sufficiency, (C) finite-sample learnability."
+    - "E_2 LOO group-mean is one memorizing estimator; its failure does not prove shared-patch models fail."
+    - "Scaffold LOO (uses same-scaffold training labels) is not scaffold-disjoint generalization."
+    - "Risk decomposition sign corrected: R(h_dyn)-R(h_stat) = -I + excess_dyn - excess_stat, with I=R*(E_r)-R*(G)>=0. The old +I form is void."
+    - "Pilot direction fixed: Adv(n)=MAE_static(n)-MAE_dynamic(n); positive means dynamic better; small-sample advantage is Adv(small)-Adv(large)>0."
+    - "Old D(E_r)-S_patch>=0.03, negative-interaction, and static-MAE>dynamic stop rules are void."
+    - "Eijkelboom Table 2 is train/test; use test MAE (ZINC full 0.192-0.263 vs no-MP 0.527-0.614)."
+    - "ESA+ identified: Buterez et al. 2025, Nat Commun, DOI 10.1038/s41467-025-60252-z; ZINC-12k ESA+ 0.052+-0.001; no all-S unmasked-only ablation."
+    - "Shen & Dong 2026 (DOI 10.1145/3816434) is layer-wise statistical sufficiency, not E_r graph sufficiency; not a duplicate."
+    - "Old S(G) all-pairs-distance oracle downgraded: distance histogram is not provably lossless and a trained S(G) is not a Bayes oracle. Not run in Phase 1a."
+
+phase1a:
+  protocol_id: ssrc-phase1a-lipo-v1
+  protocol: tracks/structural-sufficiency/notes/phase1a_protocol.md
+  status: FROZEN_PRE_GPU
+  question: >-
+    With exactly the same E_2 rooted-patch multiset, does cross-patch learned
+    interaction (X) beat local shared encoding + pooling (S), and is the
+    advantage larger at small n?
+  data:
+    official_train_rows: 3360
+    internal_split: {fit: 2352, monitor: 504, reserved: 504}
+    small_n: 253
+    split_file: tracks/structural-sufficiency/results/phase1a/split_phase1a.json
+    split_sha256: 9fa96d49efd94cd2ff381922f83a07f963d832064c75469657b4ce5f68c332b6
+    row_sha256:
+      fit: c474e38cdecf10071965527409901403ec8b670b96fe4a3c42452531dd0210e9
+      monitor: fe81cc7904a6da9378f5bf5ae7452ac71629adad83a2a98b917f87299a85f39f
+      reserved: bc28c5d37c2fe2fbe39c01d5bf2ab9c56630eee2d0a4454a108d150ab2f42d86
+      small: 81a3000c9b5116911e1c8dfb2505ce4a7a0b34022784bed13d8b82af897e0df3
+    labels:
+      official_valid_test: NOT_READ
+      internal_reserved: NOT_READ_IN_PHASE1A
+      phase0_disclosure: "Phase 0 LOO used all 3360 train labels, so Reserved is not historically fully blind."
+  models:
+    S: "shared patch-local 2-layer GINE + per-token residual FFN + mean pooling + head; no cross-patch interaction"
+    X: "same E_2/local encoder/head + 2-layer global self-attention over patch tokens; no positional encoding"
+    G: "full-graph 2-layer GINE reference; different information access"
+  capacity:
+    parameters: {S: 59011, X: 59075, G: 53379}
+    s_over_x: 0.9989
+    forward_flops_fixed_64: {S: 622336384, X: 877730176, G: 170472000}
+    flop_note: "X/S ~1.41x; PyG scatter may be uncounted; real compute difference must be reported"
+  cpu_gates:
+    status: 8/8 PASS
+    file: tracks/structural-sufficiency/results/phase1a/cpu_gates.json
+    collision_max_abs_diff: 6.0e-8
+    permutation_max_abs_diff: 6.0e-8
+  run_matrix: 3 models x 2 n x 3 seeds = 18 trajectories
+  gpu_budget_limit_hours: 4.0
+  gpu_host: res (A100, process backend)
+  endpoints:
+    primary: "Adv_set(n)=MAE_S(n)-MAE_X(n); positive = X better"
+    interaction: "Adv_set(253)-Adv_set(2352); positive = small-n X advantage"
+    auxiliary: ["MAE_S-MAE_G", "MAE_X-MAE_G"]
+    uncertainty: "scaffold-cluster bootstrap over Monitor groups; 3 seeds; no equivalence claim"
+  decision_labels:
+    - PROMISING_SAME_INFORMATION_INTERACTION
+    - UNRESOLVED_INFORMATION_VS_INDUCTIVE_BIAS
+    - NO_CLEAR_INTERACTION_VALUE_IN_THIS_PILOT
+    - IMPLEMENTATION_OR_OPTIMIZATION_FAILURE
 
 phase0_evidence:
+  report: tracks/structural-sufficiency/results/phase0/REPORT.md
+  corrigendum_link_at_top: true
   cpu_toy:
-    report: tracks/structural-sufficiency/results/phase0/REPORT.md
-    json: tracks/structural-sufficiency/results/phase0/analysis/phase0_results.json
     tests: 17 passed
     key_facts:
       - E_0/E_1/E_2 collide for d=6 vs d=9 on cycle, caterpillar, grid.
       - E_3 separates them; a patch contains both marks iff d <= 2r.
       - positive control label [d<=4] is perfect at r=2 on all three families.
       - one-shot full-graph distance oracle separates d6/d9 (iteration not necessary).
-      - dynamic full-graph propagation detects d6 at depth 3, d9 at depth 5.
   real_data:
-    feasibility_json: tracks/structural-sufficiency/results/phase0/analysis/lipo_feasibility_audit.json
-    train_only_json: tracks/structural-sufficiency/results/phase0/analysis/train_only_er_information_audit.json
-    key_facts:
-      - Lipophilicity split 3360/420/420; 2408 scaffold groups; cross-split leakage 0.
-      - label-free objects_train.pt matches RDKit source rows; no label attribute.
-      - candidate internal split 2352/504/504; scaffold-group overlap 0; NOT frozen.
-      - exact E_r cost ~3-4 s for 3360 molecules at r=2/3.
-      - E_2/E_3 are near-unique (94.5% singleton) and LOO MAE 0.927 vs global 0.979.
-      - Murcko scaffold LOO MAE 0.730; coarse grouping is much more statistically efficient.
-      - increasing r 2->3 gives no LOO improvement.
-  note_json_is_local: >-
-    analysis/*.json are local evidence and are git-ignored per repo convention;
-    regenerate with the commands in results/phase0/REPORT.md §9.1.
+    split: 3360/420/420; 2408 scaffold groups; cross-split leakage 0.
+    candidate_internal_split: 2352/504/504; now frozen as Phase 1a split.
+    exact_E_r_cost: ~3-4 s for 3360 molecules at r=2/3.
+    LOO: E_2/E_3 near-unique (94.5% singleton), LOO MAE 0.927 vs global 0.979; Murcko scaffold 0.730.
+    interpretation: "statistically sparse exact fingerprint; not a proof of structural sufficiency/insufficiency."
   official_labels:
     valid_read: false
     test_read: false
     label_vault_opened: false
-    note: >-
-      The old track consumed official valid/test. This round used only train
-      rows and train labels for a train-only LOO diagnostic; no official
-      valid/test label or metric was opened.
-
-pilot_preregistration:
-  status: DRAFT_CONDITIONAL_NOT_AUTHORIZED
-  protocol_id: ssrc-lipo-pilot-v1
-  location: tracks/structural-sufficiency/results/phase0/REPORT.md#7
-  primary_endpoint: >-
-    Paired MAE contrast D(G) - S_patch(E_r) at n=250, and the interaction
-    [Delta(250) - Delta(2352)] across 5 seeds, on the frozen internal locked split.
-  arms:
-    - S_bag(E_r): exact patch-key bag + non-iterative readout (fingerprint diagnostic).
-    - S_patch(E_r): shared GNN per patch + pooling; no cross-patch iteration.
-    - D(E_r): L-layer self-attention over patch tokens; same information as S_patch.
-    - D(G): L-layer MPNN on the full graph.
-    - S(G): static readout over a lossless/sufficient structural summary (oracle).
-  resources: 1x A100-40GB, <=12 GPU-hours, 5 seeds, 4 training sizes.
-  no_go_without: frozen split + config + endpoint + user authorization.
 
 open_questions:
-  - ESA+ could not be uniquely identified; need exact title/authors/venue.
-  - Accept or reject the reframe from "MP necessity" to "sufficiency vs learnability".
-  - Is the internal locked 504-row split adequately powered for a 0.05 MAE effect?
-  - Does a fair static patch encoder already capture the scaffold-level signal?
-  - Are Lipophilicity labels sensitive to >2r global relations? Current LOO diagnostic
-    only shows that exact E_r groups are statistically sparse.
+  - Does X beat S at n=253 and/or n=2352 under exactly matched E_2 input?
+  - Is any advantage stable across 3 seeds and larger at n=253 (sample-efficiency) or only at n=2352?
+  - Does G's application reference dominate, and is the G-S/G-X gap explainable without a new information-access experiment?
+  - Next round (only if PROMISING): independent split or second task, not a new architecture.
+  - If S≈X and G better: add fixed one-hop/edge-incidence information with matched non-iterative/iterative controls.
+
+next_action: >-
+  Commit the frozen Phase 0.5 corrigendum + Phase 1a protocol/code/split/config
+  and CPU-gate evidence. Then run the 18 trajectories on res via rr with a
+  4 GPU-hour cap. Do not read official valid/test or internal Reserved. After
+  the run, write results/phase1a/REPORT.md and update this STATE with the
+  observed Adv/interaction and the pre-registered decision label.

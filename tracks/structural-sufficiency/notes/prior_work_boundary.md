@@ -1,9 +1,16 @@
 # 先验工作边界 — SSRC Phase 0 文献审计
 
 审计日期: 2026-10-18  
+**纠错/增补: 2026-10-19（见 [`phase0_corrigendum.md`](./phase0_corrigendum.md) §4）**  
 审计人: Agent（本地 PDF/HTML 精读 + OpenAlex/arXiv/Crossref/Semantic Scholar 检索）  
 范围: 用户指定的 Eijkelboom 2023、Wang ICML 2025 NGPM/GPM、CSA、GRIT、ESA+、
 Edge Transformer/EGT、MoSE、SPSE；另加 GSN 作为“子结构计数 + MP”上下文。
+
+> **CORRIGENDUM:** 本文件 §0 的“ESA+ 未能唯一识别”、§1 的 Eijkelboom
+> train/test 口径、§2 的 0.249 vs 0.212 数字，已被
+> [`phase0_corrigendum.md`](./phase0_corrigendum.md) §4 纠正。ESA+ 已识别为
+> Buterez et al. 2025, *Nature Communications*, DOI 10.1038/s41467-025-60252-z。
+> 旧正文保留以保持审计历史；引用数字以纠错文件为准。
 
 > 结论先行：**“强结构编码可以减少/替代消息传递”本身不是新贡献。**  
 > Eijkelboom et al. 2023 已直接研究；GRIT、CSA、EGT、MoSE、SPSE、GPM
@@ -28,7 +35,7 @@ Edge Transformer/EGT、MoSE、SPSE；另加 GSN 作为“子结构计数 + MP”
 | EGT 代码 | `https://github.com/shamim-hussain/egt`（HTTP 200） |
 | MoSE（同态计数）代码 | `https://github.com/linusbao/MoSE`（HTTP 200） |
 | SPSE 代码 | 论文所称 GraphPKU 仓库 404；仅找到 `https://github.com/LouisBearing/Graph-SPSE-Encoding` 的最小路径计数实现。 |
-| ESA+ | **未能唯一识别**。OpenAlex/arXiv/S2 检索 “ESA+ graph / ESA plus structural encoding” 未命中一个明确的图学习论文；不排除是用户口径中的别名/未发表工作。本文不伪造引用；若用户给出准确标题/作者，需补审。 |
+| ESA+ | **已识别（2026-10-19）**：Buterez, Janet, Oglic, Liò, “An end-to-end attention-based approach for learning on graphs”, *Nature Communications* 16 (2025), DOI `10.1038/s41467-025-60252-z`。ESA 把图视为边集合，交错 masked self-attention（MAB，mask 只允许共享节点的边对交互）与 vanilla self-attention（SAB，全局）；ZINC-12k ESA+ = 0.052±0.001（Table 6，使用 RWSE + ring 特征）。Table 5 只消融层数/层序，**没有 all-S（无 mask）匹配深度/参数控制行**，因此没有把 connectivity 交互与无 mask 全局交互分开。 |
 | MoSE 名称冲突 | 至少有三篇不同 “MoSE”：① 同态计数结构编码（arXiv 2410.18676，ICML 2025，本文审计对象）；② 多模态知识图谱补全 MoSE（EMNLP 2022）；③ 子图专家 MoSE（arXiv 2509.09337，2025）。本文只审计①。 |
 
 检索限制：OpenAlex/arXiv/S2 对 CSA/SPSE 的会议版本与 “ESA+” 有漏检；
@@ -55,9 +62,12 @@ Semantic Scholar API 在审计时返回 429；因此“未找到”只表示**�
 ## 2. 已被完全覆盖的主张（不能声称新颖）
 
 1. **“强结构编码可以减少消息传递的必要性。”**  
-   Eijkelboom et al. 2023 的标题就是这个问题；Peptides-struct 上 no-MP
-   RW-Tensor 0.249 vs full 0.212（差距很小），参数控制表也存在。  
-   → SSRC 不能把这句话当作贡献。
+   Eijkelboom et al. 2023 的标题就是这个问题；Peptides-struct 上
+   RW-Tensor 的 **test** MAE：GCN full 0.252 vs no-MP 0.268，
+   GIN full 0.257 vs no-MP 0.266，SAGE full 0.253 vs no-MP 0.267
+   （差距约 0.01–0.016；不是旧文引用的 train 0.249 vs 0.212）。
+   参数控制表也存在。  
+   → SSRC 不能把这句话当作贡献；引用必须用 test 列。
 
 2. **“no-MP 模型可以在 ZINC 上竞争/SOTA。”**  
    GRIT 0.059±0.002；CSA-rings 0.056±0.002；MoSE+GRIT 0.056±0.001；
@@ -209,8 +219,10 @@ self-attention（本身就是关系读出）。它们不是“无序 bag-of-patc
 
 ## 7. 待用户澄清
 
-1. **ESA+ 的准确标题/作者/venue**：当前检索无法唯一识别；若它是某篇
-   具体论文，需补审后再判断是否已被覆盖。
+1. **ESA+ 已识别**：Buterez et al. 2025, *Nature Communications*,
+   DOI `10.1038/s41467-025-60252-z`；其 ZINC-12k ESA+ 0.052±0.001 与
+   masked/global 交错结构已在纠错文件 §4.1 审计。剩余问题不是“它是哪篇”，
+   而是它没有做同信息 \(E_2\) 的 S/X 对照。
 2. 是否接受把主问题从“MP 是否必要”**重述**为“精确结构充分性 vs
    统计可学习性”；若不接受，Phase 0 的证据更支持 `STOP_THIS_FORMULATION`
    而不是继续 pilot。
