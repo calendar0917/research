@@ -570,7 +570,7 @@ uv run python tracks/structural-sufficiency/results/phase0/code/train_only_er_in
 
 ### 9.3 环境
 
-- Python 3.12?（以 `uv` 为准）；torch 2.5.1+cu124；numpy 2.1.3；
+- Python 3.12.14（`uv run`）；torch 2.5.1+cu124；numpy 2.1.3；
   networkx 3.4.2；rdkit 2026.09.1；pynauty 2.8.8.1；pandas。
 - `FlopCounterMode` 可用（`resources_and_reuse.flop_counter_available=True`）。
 - 本轮未使用 GPU；scope 字段记录 `cpu_only=True, training=False,
