@@ -204,17 +204,17 @@ def cmd_audit(args: argparse.Namespace) -> int:
         pred, secs = C.predict(model, valid_objs, device)
         prov = C.historical_prediction(f"valid_P3{seed}")
         array_sha = C.sha256_array(pred)
-        if array_sha != prov["array_sha256_float32"]:
-            raise SystemExit(
-                f"regenerated P3 seed {seed} valid array does not match the historical hash: "
-                f"{array_sha} != {prov['array_sha256_float32']}"
-            )
         hist_path = REPO / prov["historical_path"]
         max_abs = None
         if hist_path.exists():
             with np.load(hist_path) as z:
                 hist = np.asarray(z["pred"], dtype=np.float64)
             max_abs = float(np.abs(pred - hist).max())
+        if array_sha != prov["array_sha256_float32"]:
+            raise SystemExit(
+                f"regenerated P3 seed {seed} valid array does not match the historical hash: "
+                f"{array_sha} != {prov['array_sha256_float32']} (max|d|={max_abs})"
+            )
         p3_pred_path = C.OUT / f"p3_valid_pred_s{seed}.npz"
         p3_freeze_path = C.OUT / f"p3_valid_freeze_s{seed}.json"
         if p3_freeze_path.exists():
