@@ -1,0 +1,151 @@
+# SSRC Phase 2b frozen configuration — standard ZINC-12k validation of F/M.
+# Protocol: tracks/structural-sufficiency/results/phase2b/PROTOCOL.md
+# Frozen before any Phase 2b GPU second and before any new official-valid score.
+protocol_id: ssrc-phase2b-zinc-v1
+status: FROZEN_PRE_GPU
+
+data:
+  train_rows: 10000
+  valid_rows: 1000
+  test_rows: 1000
+  internal_monitor_is_heldout: false
+  cycle_penalty_proxy: "max(len(c) for c in nx.cycle_basis(G)) > 6 (order-sensitive proxy; not an input)"
+
+recipe:
+  name: R3
+  epochs: 360
+  batch_size: 128
+  steps_per_epoch: 79
+  updates: 28440
+  lr: 1.0e-3
+  lr_min: 1.0e-5
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  loss: raw-y L1
+  soup_last: 5
+  shuffle_offset: 101
+  early_stopping: false
+  valid_based_selection: false
+
+arms:
+  F:
+    kind: node_ffn
+    new_parameters: 49984
+    total_parameters: 463489
+  M:
+    kind: local_mp
+    new_parameters: 50752
+    total_parameters: 464257
+  P3:
+    new_parameters: 0
+    total_parameters: 413505
+
+frozen_inputs:
+  objects_train10k:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt
+    sha256: 14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d
+  objects_valid:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt
+    sha256: 61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c
+  prep_train10k:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json
+    sha256: d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a
+  encoded_train:
+    path: tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt
+  pretrain_encoder_s0:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt
+    sha256: 006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97
+  pretrain_encoder_s1:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt
+    sha256: ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a
+  soup_R3_seed0:
+    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed0.pt
+    sha256: a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782
+  soup_R3_seed1:
+    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed1.pt
+    sha256: b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9
+  valid_pred_P30:
+    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R30.npz
+    sha256: f493bcc2e1b156bbe8074944469943cdd9e2dc114e45dc72a151868e9d29ec89
+  valid_pred_P31:
+    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R31.npz
+    sha256: 730b922c7313f8913d16f0022fa9eeba8d5344241e6b01429d8ed59130ab726d
+  valid_y:
+    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/valid_y_read_once.npy
+    sha256: dacae6ff2c288fa25b5b30ccf73e7b261d380c377ed0caf8fa4ef656651ff808
+  test_pred_P30:
+    path: tracks/structure-contribution/results/bjoc_r3_frozen_terminal_test_v1/predictions/test_P30.npz
+    sha256: dd1dc3c47203bc86b13564776f8dd590c750ff6499a9a1c46b07d0052d0a75dd
+  test_pred_P31:
+    path: tracks/structure-contribution/results/bjoc_r3_frozen_terminal_test_v1/predictions/test_P31.npz
+    sha256: b8699768feca42e499de60dd260cfe314e628bec0186b400b70bd8698b25004f
+  test_y:
+    path: tracks/structure-contribution/results/bjoc_r3_frozen_terminal_test_v1/test_y_read_once.npy
+    sha256: 265fe662233b65393f84aec2ba4dbcad797c4c73471823ee02c615a3304355ff
+
+audit_expectations:
+  p3_parameters: 413505
+  p3_soup_sha256:
+    "0": a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782
+    "1": b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9
+  init_full_sha256:
+    "0": d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691
+    "1": c79e6b02521c224e79790382438ca72c08f9e22e691f66fb5ab950dea4b49c0b
+  init_group_state_sha256:
+    "0": d9ffbd15356659ed06af4b43077bb7f27403ad0afc3e7ac00c4d34fc98c7415f
+    "1": 98d11fe93b03368e8ea5f66b17c1ccf16d850ee13a43f56f49ddc93dd08a993c
+  init_encoder_sha256:
+    "0": 91af980a414ac945ea35b31c114d4e44b636419b62320321a902179112889d12
+    "1": 83d8b086bf1f9ee6c145336a3ea67e710bcf42658151061c293c2a3380ddd303
+  encoder_used_sha256:
+    "0": 7165eb90ceaaec8402d973f82c3b60099dd67ffb7e57365585466478d143096f
+    "1": 54a232edfc280537fd3dbae3ae6e02f6c8e68e3bfa5c467ab9a54d7a0663c917
+  batch_order_sha256:
+    "0": 3c964a71acc1ca817567cac916a7a59a12b40f750dbceee0848f614a2c71428f
+    "1": 8710751abd8c33739cac5506756fe6ba6abb919aed3235f86619b13fcf2700b9
+  historical_valid_mae:
+    "0": 0.07910149778419873
+    "1": 0.08058639967715135
+  historical_valid_mae_seed_mean: 0.07984394873067505
+  historical_test_mae:
+    "0": 0.0693043516818434
+    "1": 0.07033976497594267
+  historical_test_mae_seed_mean: 0.06982205832889304
+  test_structure_fingerprint:
+    processed_pt_sha256: bd7a1ceb5b4ec126160bc095fb2bf28c0019a736c5575afa3ed11fb844a3aced
+    structure_sha256: 75668e7838f6efcde85e789b7064b1ce9fb99e6561c40ec63a6cf790ad5010ce
+  code_hashes:
+    structural_relation_composer_v1: 1c83a97ece60a151c6fa0c1ad5d2022b470ede9356b23d8d7b1e6b62daa71f4f
+    structural_relation_objects_v1: 8f4ba44dc3c047d674a1a6832f7ed8265eaa2457b15e820b3973a4cbd3a0861c
+    bjoc_masked_pretraining_v1: f27dbfe36ac5a9a0a1915320dba7c955115ccfa36e6b4755f2d2d62d8efb1489
+    phase2a_models: f74c9691cc6835af814386f3ff1035e64fa161a3cc1d42237c6a7faf27cd62de
+
+promotion_rule:
+  practical_gain_mean_mae: 0.003
+  both_seeds_positive: true
+  robust_gain_after_drop_top1_favourable: 0.002
+  robust_gain_after_drop_top10_p3_error: 0.002
+  complement_gain_must_be_positive: true
+  mp_separation_mean_mae: 0.002
+  mp_both_seeds_positive: true
+  mp_complement_positive: true
+  max_finalists: 1
+
+test_rule:
+  seed_mean_gain_min: 0.003
+  both_seeds_positive: true
+  bootstrap_ci95_lower_must_exceed: 0.0
+  one_shot: true
+  no_test_driven_followup: true
+
+statistics:
+  bootstrap_resamples: 5000
+  bootstrap_seed: 20261024
+  tail_threshold: -3.0
+  top_k_removed: [1, 5, 10]
+  extreme_valid_row: 172
+
+budget:
+  gpu_hours_cap: 2.5
+  planned_formal_runs: 4
+  smoke_epochs_max: 2
