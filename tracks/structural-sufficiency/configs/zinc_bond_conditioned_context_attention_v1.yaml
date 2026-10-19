@@ -1,0 +1,222 @@
+# SSRC side round — zinc bond-conditioned context attention v1 (frozen config).
+# Protocol: tracks/structural-sufficiency/results/zinc_bond_conditioned_context_attention_v1/PROTOCOL.md
+# Frozen before any GPU second of this round and before any new official-valid score.
+# This is NOT Phase 2c; the closed Phase 2b round and its files are untouched.
+protocol_id: zinc-bond-conditioned-context-attention-v1
+round: zinc_bond_conditioned_context_attention_v1
+status: FROZEN_PRE_GPU
+kind: attention_feasibility_and_mechanism_screen
+
+data:
+  source: "official PyG ZINC subset=True"
+  train_rows: 10000
+  valid_rows: 1000
+  official_test_rows_accessed: 0
+  internal_monitor_is_heldout: false
+  cycle_penalty_proxy: "max(len(c) for c in nx.cycle_basis(G)) > 6 (order-sensitive proxy; not an input)"
+
+recipe:
+  name: R3
+  epochs: 360
+  batch_size: 128
+  steps_per_epoch: 79
+  updates: 28440
+  lr: 1.0e-3
+  lr_min: 1.0e-5
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  loss: raw-y L1
+  soup_last: 5
+  shuffle_offset: 101
+  early_stopping: false
+  valid_based_selection: false
+  fp32: true
+  amp: false
+  torch_compile: false
+
+architecture:
+  base: "frozen BJOC-Null (P3), 413505 parameters"
+  dim: 96
+  attn_dim: 32
+  temperature: "sqrt(32)"
+  heads: 1
+  q_bias: false
+  k_bias: false
+  attention_dropout: 0.0
+  input_norm: "LayerNorm(96, eps=1e-5, elementwise_affine=False)"
+  new_parameters: 6144
+  total_parameters: 419649
+  relative_parameter_increase: 0.014858
+  context_mapping:
+    P3: "W_e = n_e * mean_j(w_j), V_e = n_e * mean_j(w_j^2) (frozen Null grouping)"
+    C: "A_ej = softmax_j(q_e.k_j/sqrt(32)); W_e = n_e*sum_j A_ej w_j; V_e = n_e*sum_j A_ej w_j^2"
+    G: "same A as C; p_j = sum_e n_e*A_ej / sum_e n_e; W_e = n_e*sum_j p_j w_j; V_e = n_e*sum_j p_j w_j^2"
+    F: "W/V unchanged (Null); composer b slot only: b + U SiLU(T LN(b))"
+  initialisation:
+    base: "bp.build_bjoc_null(seed) then seed-matched full-10k masked-SSL encoder"
+    common_tensors: "copied tensor-by-tensor from the same base"
+    C_G_Q: "zero"
+    C_G_K: "uniform(-1/sqrt(96), +1/sqrt(96)) from torch.Generator(seed+9119)"
+    F_T: "same matrix as C/G K"
+    F_U: "zero"
+    extra_reader_channel: false
+    extra_depth: false
+    gate: false
+    positional_or_distance_or_ownership_bias: false
+
+arms:
+  P3:
+    kind: frozen_null_reference
+    new_parameters: 0
+    total_parameters: 413505
+    seeds: [0, 1]
+    reused_not_retrained: true
+  F:
+    kind: composer_input_ffn
+    new_parameters: 6144
+    total_parameters: 419649
+    seeds: [0, 1]
+  G:
+    kind: global_marginal_context
+    new_parameters: 6144
+    total_parameters: 419649
+    seeds: [0, 1]
+  C:
+    kind: bond_conditional_context
+    new_parameters: 6144
+    total_parameters: 419649
+    seeds: [0, 1]
+
+run_matrix:
+  schedule:
+    - {gpu: res-gpu0, order: [F0, G0, C0]}
+    - {gpu: res-gpu1, order: [C1, G1, F1]}
+  note: "one training process per GPU; seeds reversed across GPUs to decorrelate arm order from load drift"
+
+frozen_inputs:
+  objects_train10k:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt
+    sha256: 14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d
+  objects_valid:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt
+    sha256: 61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c
+  prep_train10k:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json
+    sha256: d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a
+  encoded_train:
+    path: tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt
+    sha256: 10d764955ef1b040a317105be1dd3fbb2e81292b03b79e7d078cce08e18e5f1d
+    train_y_sha256_float64: 924bc5e62c0ff093bae6ff4d34e54fcc36781df23e7b60e7521bde573d25a83a
+    train_y_sha256_float32: f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e
+  pretrain_encoder_s0:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt
+    sha256: 006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97
+  pretrain_encoder_s1:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt
+    sha256: ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a
+  soup_R3_seed0:
+    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed0.pt
+    sha256: a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782
+  soup_R3_seed1:
+    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed1.pt
+    sha256: b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9
+
+label_provenance:
+  valid_y:
+    historical_path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/valid_y_read_once.npy
+    historical_file_sha256: dacae6ff2c288fa25b5b30ccf73e7b261d380c377ed0caf8fa4ef656651ff808
+    array_sha256_float32: 72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f
+    source: "official PyG ZINC subset=True split=val, rows 0..999"
+    read_policy: "single read at the score stage, after all six predictions and the mechanism diagnostics are frozen"
+  test:
+    accessed: false
+    note: "this round never loads official-test structures, labels or predictions"
+
+historical_prediction_provenance:
+  valid_P30:
+    historical_path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R30.npz
+    historical_file_sha256: f493bcc2e1b156bbe8074944469943cdd9e2dc114e45dc72a151868e9d29ec89
+    array_sha256_float32: 0fff2981f2c956ba442b78e7263b8d30bbc9f75b063fb8f3fce96f78f8d0d7a0
+  valid_P31:
+    historical_path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R31.npz
+    historical_file_sha256: 730b922c7313f8913d16f0022fa9eeba8d5344241e6b01429d8ed59130ab726d
+    array_sha256_float32: 30ac789ce45034f856ff53c65697113c9c36e39652b7c0ec5c57ffd948ed1ef3
+
+audit_expectations:
+  p3_parameters: 413505
+  p3_soup_sha256:
+    "0": a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782
+    "1": b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9
+  init_full_sha256:
+    "0": d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691
+    "1": c79e6b02521c224e79790382438ca72c08f9e22e691f66fb5ab950dea4b49c0b
+  init_group_state_sha256:
+    "0": d9ffbd15356659ed06af4b43077bb7f27403ad0afc3e7ac00c4d34fc98c7415f
+    "1": 98d11fe93b03368e8ea5f66b17c1ccf16d850ee13a43f56f49ddc93dd08a993c
+  init_encoder_sha256:
+    "0": 91af980a414ac945ea35b31c114d4e44b636419b62320321a902179112889d12
+    "1": 83d8b086bf1f9ee6c145336a3ea67e710bcf42658151061c293c2a3380ddd303
+  encoder_used_sha256:
+    "0": 7165eb90ceaaec8402d973f82c3b60099dd67ffb7e57365585466478d143096f
+    "1": 54a232edfc280537fd3dbae3ae6e02f6c8e68e3bfa5c467ab9a54d7a0663c917
+  batch_order_sha256:
+    "0": 3c964a71acc1ca817567cac916a7a59a12b40f750dbceee0848f614a2c71428f
+    "1": 8710751abd8c33739cac5506756fe6ba6abb919aed3235f86619b13fcf2700b9
+  historical_valid_mae:
+    "0": 0.07910149778419873
+    "1": 0.08058639967715135
+  historical_valid_mae_seed_mean: 0.07984394873067505
+  p3_execution_regime:
+    host: res
+    node: a100-2
+    gpu_name: NVIDIA A100-SXM4-40GB
+    driver: "550.163.01"
+    torch: 2.5.1+cu124
+    torch_cuda: "12.4"
+    python: "3.12.14"
+    recorded_in: tracks/structural-sufficiency/results/phase2b/train_F_s0.json and train_M_s1.json
+  code_hashes:
+    structural_relation_composer_v1: 1c83a97ece60a151c6fa0c1ad5d2022b470ede9356b23d8d7b1e6b62daa71f4f
+    structural_relation_objects_v1: 8f4ba44dc3c047d674a1a6832f7ed8265eaa2457b15e820b3973a4cbd3a0861c
+    bjoc_masked_pretraining_v1: f27dbfe36ac5a9a0a1915320dba7c955115ccfa36e6b4755f2d2d62d8efb1489
+    phase2a_models: f74c9691cc6835af814386f3ff1035e64fa161a3cc1d42237c6a7faf27cd62de
+
+thresholds:
+  performance_mean_gain: 0.004
+  conditioning_mean_gain: 0.002
+  both_seeds_positive: true
+  paired_ci_lower_gt_zero: true
+  robust_ordinary_and_drop_p3_worst10: true
+  note: >
+    round-internal decision thresholds only (not universal constants). 1e-5-sized
+    threshold crossings are reported with margins and are not called robust.
+
+mechanism:
+  inert_D_max: 0.02
+  inert_entropy_min: 0.99
+  inert_prediction_change_max: 0.0005
+  statistics:
+    - "D = sum_e n_e ||A_e - p||_1 / sum_e n_e, per molecule then molecule-weighted"
+    - "attention entropy / log(max(J,2))"
+    - "max attention weight"
+    - "across-bond dispersion of W_e/n_e and V_e/n_e"
+    - "C->G same-weight moment conservation and prediction change"
+    - "forced-uniform forward for C and G"
+  note: "label-free; response magnitude is not a performance, chemistry or faithfulness claim"
+
+statistics:
+  bootstrap_resamples: 5000
+  bootstrap_seed: 20261019
+  unit: molecule
+  seed_averaging: "per-seed MAE first, then mean of the two seed MAEs; no prediction ensemble"
+  tail_threshold: -3.0
+  top_k_removed: [1, 10]
+  extreme_valid_row: 172
+
+budget:
+  gpu_hours_cap: 4.0
+  accounting: "sum of occupancy on both GPUs, including smoke, failed attempts and reruns"
+  planned_formal_runs: 6
+  smoke_epochs: 2
+  margin_factor: 1.20
+  stop_rule: "if projected formal time x 1.20 exceeds the cap, do not start the matrix"
