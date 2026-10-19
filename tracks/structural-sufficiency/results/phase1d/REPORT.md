@@ -32,7 +32,7 @@ Phase A used only frozen Phase 1b/1c Monitor predictions and the frozen Fit/Moni
 | `R1_marginal_size` seed 0 | 0.3047 | — | endpoint-correspondence ablation |
 | `S_cap_size` seed 0 | 0.2895 | — | parameter-matched no-edge control |
 
-The three Phase 1c contrasts are positive at seed 0: `d_pair = +0.0682`, `d_capacity = +0.0529`, `d_gap = +0.0713` (positive means the first, relation-bearing model is better).
+The three Phase 1c contrasts are positive at seed 0: `d_pair = +0.0682`, `d_capacity = +0.0529`, `d_gap = +0.0713` (positive means `R1_size` is better than the respective control).
 
 ### 1.2 The gains are concentrated in a small, label-coupled tail
 
@@ -67,7 +67,7 @@ r_{uv} = \psi(h_u,e_{uv}) + \psi(h_v,e_{uv}),
 
 with the same E2 patch trunk, root adjacency, node features, size-aware readout, edge mean/sum aggregate, loss, schedule and data as `R1_size`. Each undirected bond contributes one edge readout; direction is handled by the symmetric sum. CPU gates verify node-permutation invariance, edge-direction invariance, local-multiset-preserving rewiring invariance, shared-module use, no joint endpoint input, and parameter/FLOP matching.
 
-| | `R1_size` | `R_incidence` | Difference |
+| | `R1_size` | `R_incidence` | Difference (incidence − R1) |
 |---|---:|---:|---:|
 | Parameters | 115,977 | 115,952 | −25 (−0.02%) |
 | Forward FLOPs (batch 64) | 646,843,008 | 645,911,200 | −0.14% |
