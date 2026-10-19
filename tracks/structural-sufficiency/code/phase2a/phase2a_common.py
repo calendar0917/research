@@ -424,12 +424,18 @@ def decide(
     flops_ratio_f: float,
     flops_ratio_m: float,
     optimization_ok: bool,
+    baseline_mae: float = P3E_MAE,
+    baseline_rmse: float = P3E_RMSE,
 ) -> dict[str, Any]:
-    """Mechanical application of the frozen Phase 2a rules (protocol §7)."""
+    """Mechanical application of the frozen Phase 2a rules (protocol §7).
+
+    ``baseline_*`` defaults to the frozen seed-0 P3E numbers; the seed-1 scorer
+    passes the matched seed-1 P3E arm instead (protocol §7 "matched baseline").
+    """
     gain_mp = mae_f - mae_m  # positive: M better than F
-    gain_f = P3E_MAE - mae_f  # positive: F better than P3E
-    gain_p3e = P3E_MAE - mae_m  # positive: M better than P3E
-    rmse_delta = rmse_m - P3E_RMSE
+    gain_f = baseline_mae - mae_f  # positive: F better than the baseline
+    gain_p3e = baseline_mae - mae_m  # positive: M better than the baseline
+    rmse_delta = rmse_m - baseline_rmse
     reasons: list[str] = []
 
     if not optimization_ok:
@@ -475,6 +481,8 @@ def decide(
         "gain_p3e_mae_p3e_minus_mae_m": float(gain_p3e),
         "gain_f_mae_p3e_minus_mae_f": float(gain_f),
         "rmse_m_minus_p3e": float(rmse_delta),
+        "baseline_mae": float(baseline_mae),
+        "baseline_rmse": float(baseline_rmse),
         "complement_gain_m_vs_p3e": float(complement_gain),
         "flops_ratio_f": float(flops_ratio_f),
         "flops_ratio_m": float(flops_ratio_m),

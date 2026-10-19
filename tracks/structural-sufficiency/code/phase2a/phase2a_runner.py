@@ -48,7 +48,7 @@ import structural_relation_composer_v1 as src  # noqa: E402
 import structural_relation_objects_v1 as sro  # noqa: E402
 
 OUT = C.RESULTS_2A
-ARM_KINDS = {"F": M.KIND_NODE_FFN, "M": M.KIND_LOCAL_MP}
+ARM_KINDS = {"P3E": M.KIND_NONE, "F": M.KIND_NODE_FFN, "M": M.KIND_LOCAL_MP}
 ALLOWED_BATCH_KEYS = {
     "n_graphs",
     "atom_feat",
