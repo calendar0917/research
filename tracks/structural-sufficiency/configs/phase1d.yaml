@@ -1,0 +1,137 @@
+protocol_id: ssrc-phase1d-zinc-v1
+date: 2026-10-19
+status: FROZEN_PRE_GPU
+upstream:
+  report: tracks/structural-sufficiency/results/phase1c/REPORT.md
+  protocol: tracks/structural-sufficiency/notes/phase1c_protocol.md
+  corrigendum: tracks/structural-sufficiency/notes/phase1b_corrigendum.md
+  config: tracks/structural-sufficiency/configs/phase1c.yaml
+code: tracks/structural-sufficiency/code/phase1d
+
+data:
+  source: PyG ZINC(root=data/ZINC, subset=True, split=train)
+  target: PyG logP_SA_cycle_normalized (no extra standardization)
+  split_file: tracks/structural-sufficiency/results/phase1b/split_zinc_phase1b.json
+  split_sha256: fbca5fd5ac9c82c457bf4d78781fbe9936dd7068082377ff8cc2bf2309d72b49
+  labels_file: tracks/structural-sufficiency/results/phase1b/zinc_labels_fit_monitor.json
+  labels_sha256: 631dae5fe93f543599c5cdfe92057fa8ee0fcb3e3faaf4e51aceed1e8312ab78
+  cache_file: tracks/structural-sufficiency/results/phase1b/cache/zinc_phase1b.pt
+  cache_sha256: 76c1749277f1c4019f8b94b5a3a9bc7b9f83abb8b11b7feed60449f47a9ed84c
+  size_features: tracks/structural-sufficiency/results/phase1c/zinc_size_features.pt
+  counts: {fit: 8000, monitor: 1000, reserved_not_scored: 1000}
+  official_valid_test: NOT_READ
+  internal_reserved: NOT_SCORED
+
+phase_a:
+  status: COMPLETE_CPU
+  features: tracks/structural-sufficiency/results/phase1d/structural_features.npz
+  features_manifest: tracks/structural-sufficiency/results/phase1d/structural_features_manifest.json
+  analysis: tracks/structural-sufficiency/results/phase1d/analysis_phase1d_cpu.json
+  feature_scope: structure_only_no_labels
+  grouping: fixed Fit-structure bins; no post-hoc Monitor bins
+  decision_role: descriptive_interpretation_only
+
+models:
+  R1_size:
+    params: 115977
+    flops_forward_batch64: 646843008
+    config: phase1c_frozen
+  R_incidence:
+    params: 115952
+    relation: "psi(h_u,e_uv)+psi(h_v,e_uv) on one copy per physical bond"
+    relation_width: 251
+    flops_forward_batch64: 645911200
+    same_trunk_readout_head_as: R1_size
+  R1_size_cap:
+    params: 453129
+    params_vs_gref: +3.09%
+    hidden: 128
+    ffn_hidden: 256
+    rel_hidden: 256
+    edge_readout_hidden: 128
+    flops_forward_batch64: 2491880704
+  R_incidence_cap:
+    params: 436841
+    params_vs_gref: -0.62%
+    hidden: 136
+    ffn_hidden: 272
+    rel_hidden: 272
+    incidence_rel_hidden: 272
+    edge_readout_hidden: 136
+    flops_forward_batch64: 2340955216
+  G_ref_frozen:
+    params: 439559
+    flops_forward_batch64: 1185134336
+    monitor_mae: 0.165290
+
+training:
+  loss: L1
+  optimizer: AdamW
+  lr: 0.001
+  weight_decay: 0.00001
+  schedule: cosine
+  t_max: 300
+  eta_min: 0.00001
+  batch_size: 64
+  epochs: 300
+  early_stop: monitor_mae
+  patience: 30
+  min_delta: 0.0001
+  grad_clip: 5.0
+  dropout: 0.1
+  seed: 0
+  data_order: default_rng([seed, epoch])
+  model_selection: best Monitor MAE
+
+endpoints:
+  B:
+    primary: "Gain_joint = MAE(R_incidence) - MAE(R1_size); positive => R1_size better"
+    bands: {negligible_below: 0.01, meaningful_at_least: 0.02}
+    uncertainty: paired molecule bootstrap, 5000 reps, 95% percentile CI
+  C:
+    primary: "Gain_capacity = MAE(base) - MAE(capacity); positive => capacity helps"
+    gap: "Gap_capacity = MAE(capacity) - MAE(G_ref); positive => capacity still worse"
+    convergence: early_stop_before_budget_edge
+  subgroup:
+    name: large_cycles_gt6_ge1
+    role: secondary_descriptive_not_primary_decision
+    note: target includes -cycles (>6 atoms); label-mechanism-coupled
+
+decisions:
+  B:
+    pairwise_promising: "Gain_joint >= 0.02 and CI95 lower > 0 and RMSE sign agrees"
+    incidence_sufficient: "|Gain_joint| < 0.02 unless weak-band CI-lower>0 -> INSUFFICIENT_EVIDENCE"
+    no_second_seed: true
+  C:
+    candidate_rule: "R1_size if PAIRWISE_INTERACTION_PROMISING, else R_incidence"
+    capacity_promising: "Gain_capacity >= 0.02, CI95 lower > 0, RMSE agrees, converged"
+    representation_gap: "|Gain_capacity| < 0.01 or CI crosses zero, converged"
+    optimization_unresolved: "best epoch at budget edge / no early stop"
+    efficiency_obstacle: "FLOPs or step time > ~2x G_ref"
+    no_width_grid: true
+    no_second_seed: true
+
+budget_gpu_hours:
+  cap: 2.0
+  p0_smoke: 0.03
+  phase_b: 0.30
+  phase_c: 0.80
+  reserve: 0.20
+
+prohibitions:
+  - no global token or attention
+  - no radius/depth/iteration grid
+  - no post-Monitor LR/dropout/width/schedule changes
+  - no official valid/test or internal Reserved read
+  - no retraining frozen anchors
+  - no extra seed or capacity configuration this round
+  - no claim that R_incidence is a proposed new method
+
+artifacts:
+  protocol: tracks/structural-sufficiency/notes/phase1d_protocol.md
+  config: tracks/structural-sufficiency/configs/phase1d.yaml
+  cpu_gates: tracks/structural-sufficiency/results/phase1d/cpu_gates_phase1d.json
+  analysis_cpu: tracks/structural-sufficiency/results/phase1d/analysis_phase1d_cpu.json
+  run_manifest: tracks/structural-sufficiency/results/phase1d/run_manifest.tsv
+  report: tracks/structural-sufficiency/results/phase1d/REPORT.md
+  runs: tracks/structural-sufficiency/runs/phase1d/

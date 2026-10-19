@@ -1,0 +1,337 @@
+{
+  "anchors": {
+    "anchor_mae": {
+      "G_ref_seed0": 0.1652899962964002,
+      "M2_seed0": 0.25222011569864117,
+      "R1_seed0": 0.2601613742324989,
+      "S0_seed0": 0.31730279173864984
+    }
+  },
+  "capacity_and_flops": {
+    "capacity_target": 439559,
+    "flops": {
+      "R1_size": 646843008,
+      "R1_size_cap": 2491880704,
+      "R_incidence": 645911200,
+      "R_incidence_cap": 2340955216
+    },
+    "params": {
+      "R1_size": 115977,
+      "R1_size_cap": 453129,
+      "R_incidence": 115952,
+      "R_incidence_cap": 436841
+    },
+    "step_time_ms": {
+      "R1_size": 17.341078506433405,
+      "R1_size_cap": 44.188345498696435,
+      "R_incidence": 18.55863749369746,
+      "R_incidence_cap": 41.22167800233001
+    }
+  },
+  "checks": [
+    {
+      "check": "zinc_split_and_labels_frozen",
+      "labels_sha256": "631dae5fe93f543599c5cdfe92057fa8ee0fcb3e3faaf4e51aceed1e8312ab78",
+      "pass": true,
+      "split_sha256": "fbca5fd5ac9c82c457bf4d78781fbe9936dd7068082377ff8cc2bf2309d72b49"
+    },
+    {
+      "allowed_rows": 9000,
+      "check": "label_vault_fit_monitor_only",
+      "fit_rows": 8000,
+      "labels_retained": 9000,
+      "monitor_rows": 1000,
+      "official_valid_test_labels_retained": 0,
+      "pass": true,
+      "reserved_labels_retained": 0,
+      "reserved_rows": 1000,
+      "source_kind": "json",
+      "source_sha256": "631dae5fe93f543599c5cdfe92057fa8ee0fcb3e3faaf4e51aceed1e8312ab78"
+    },
+    {
+      "check": "zinc_cache_sha256_frozen",
+      "pass": true,
+      "sha256": "76c1749277f1c4019f8b94b5a3a9bc7b9f83abb8b11b7feed60449f47a9ed84c"
+    },
+    {
+      "check": "base_parameter_match",
+      "params": {
+        "R1_size": 115977,
+        "R1_size_cap": 453129,
+        "R_incidence": 115952,
+        "R_incidence_cap": 436841
+      },
+      "pass": true,
+      "relative_delta": -0.00021555998172051354
+    },
+    {
+      "check": "capacity_arms_within_5pct_of_gref",
+      "gref": 439559,
+      "params": {
+        "R1_size_cap": 453129,
+        "R_incidence_cap": 436841
+      },
+      "pass": true
+    },
+    {
+      "check": "forward_flops_measured",
+      "flops_batch64": {
+        "R1_size": 646843008,
+        "R1_size_cap": 2491880704,
+        "R_incidence": 645911200,
+        "R_incidence_cap": 2340955216
+      },
+      "pass": true
+    },
+    {
+      "check": "incidence_flops_close_to_r1_size",
+      "flops": {
+        "R1_size": 646843008,
+        "R1_size_cap": 2491880704,
+        "R_incidence": 645911200,
+        "R_incidence_cap": 2340955216
+      },
+      "pass": true,
+      "ratio": 0.998559452620689
+    },
+    {
+      "check": "incidence_and_r1_size_use_identical_batch_keys",
+      "keys": [
+        "mol_index",
+        "mol_size_feat",
+        "n_molecules",
+        "n_patches",
+        "patch_batch",
+        "patch_edge_attr",
+        "patch_edge_index",
+        "patch_node_feat",
+        "patch_to_mol",
+        "root_batch",
+        "root_edge_attr",
+        "root_edge_index",
+        "y"
+      ],
+      "pass": true
+    },
+    {
+      "check": "shared_module_classes_and_shapes",
+      "classes": {
+        "edge_readout": [
+          "EdgeReadout",
+          "EdgeReadout"
+        ],
+        "head": [
+          "RegressionHead",
+          "RegressionHead"
+        ],
+        "readout": [
+          "SizeAwareNodeReadout",
+          "SizeAwareNodeReadout"
+        ],
+        "trunk": [
+          "SharedTrunk",
+          "SharedTrunk"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "check": "node_renumbering_invariance",
+      "incidence_absdiff": 1.4901161193847656e-08,
+      "pass": true,
+      "r1_size_absdiff": 1.4901161193847656e-08
+    },
+    {
+      "check": "edge_direction_swap_invariance",
+      "incidence_absdiff": 0.0,
+      "pass": true,
+      "r1_size_absdiff": 1.4901161193847656e-08
+    },
+    {
+      "check": "rewiring_preserves_node_attributes_and_incident_bond_multisets",
+      "pass": true,
+      "signature_0": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ]
+      ],
+      "signature_1": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ]
+      ]
+    },
+    {
+      "check": "incidence_edge_aggregate_invariant_under_valid_rewiring",
+      "max_abs_diffs_by_seed": [
+        1.1920928955078125e-07,
+        1.1920928955078125e-07,
+        1.1920928955078125e-07
+      ],
+      "pass": true
+    },
+    {
+      "check": "r1_size_edge_aggregate_changes_under_rewiring",
+      "min_abs_diff_by_seed": [
+        0.6961138844490051,
+        0.6464031338691711,
+        0.6656851768493652
+      ],
+      "pass": true
+    },
+    {
+      "check": "incidence_relation_has_no_joint_endpoint_input",
+      "expected": 68,
+      "pass": true,
+      "relation_in_features": 68
+    },
+    {
+      "check": "incidence_forward_backward_gradients_live",
+      "edge_readout": [
+        0.0772063359618187,
+        0.07025690376758575
+      ],
+      "head": [
+        0.12446540594100952,
+        0.28984516859054565
+      ],
+      "pass": true,
+      "readout": [
+        0.11161786317825317,
+        0.061850570142269135
+      ],
+      "rel": [
+        0.029349109157919884,
+        0.06828318536281586
+      ],
+      "trunk": [
+        0.10697396099567413,
+        0.017596134915947914
+      ]
+    },
+    {
+      "check": "incidence_both_endpoint_slots_are_live",
+      "dst_absdiff": 0.7159895896911621,
+      "pass": true,
+      "src_absdiff": 0.7201337814331055
+    },
+    {
+      "check": "structure_feature_table_is_frozen_structure_only",
+      "feature_sha256": "dadcbb3928fdcc70b50adb824cc96123a4eacbbe11f4f94bfc716c41efe6792b",
+      "n_features": 39,
+      "n_rows": 10000,
+      "pass": true
+    },
+    {
+      "anchor_mae": {
+        "G_ref_seed0": 0.1652899962964002,
+        "M2_seed0": 0.25222011569864117,
+        "R1_seed0": 0.2601613742324989,
+        "S0_seed0": 0.31730279173864984
+      },
+      "check": "phase1b_anchors_unchanged",
+      "expected": {
+        "G_ref_seed0": 0.16529,
+        "M2_seed0": 0.25222,
+        "R1_seed0": 0.260161,
+        "S0_seed0": 0.317303
+      },
+      "pass": true
+    }
+  ],
+  "expected": {
+    "anchors": {
+      "G_ref_seed0": 0.16529,
+      "M2_seed0": 0.25222,
+      "R1_seed0": 0.260161,
+      "S0_seed0": 0.317303
+    },
+    "cache_sha256": "76c1749277f1c4019f8b94b5a3a9bc7b9f83abb8b11b7feed60449f47a9ed84c",
+    "gref_params": 439559,
+    "labels_sha256": "631dae5fe93f543599c5cdfe92057fa8ee0fcb3e3faaf4e51aceed1e8312ab78",
+    "params": {
+      "R1_size": 115977,
+      "R1_size_cap": 453129,
+      "R_incidence": 115952,
+      "R_incidence_cap": 436841
+    },
+    "row_sha256": {
+      "fit": "8351cbee52e06e504a7113a4649afbfcd840321e057c554811b4aec910d786d0",
+      "monitor": "2e4801c644acece7431d892ecf8fe6588335c079a5a300da0cd8f8fe7133b790",
+      "reserved": "cf1e8c6c662add9a6c38e34df49c5bae7d0ede8e35a92693f481a82d3c21477d"
+    },
+    "split_sha256": "fbca5fd5ac9c82c457bf4d78781fbe9936dd7068082377ff8cc2bf2309d72b49"
+  },
+  "features": {
+    "feature_sha256": "dadcbb3928fdcc70b50adb824cc96123a4eacbbe11f4f94bfc716c41efe6792b",
+    "n_features": 39,
+    "n_rows": 10000
+  },
+  "gradients": {
+    "grad_state": {
+      "edge_readout": [
+        0.0772063359618187,
+        0.07025690376758575
+      ],
+      "head": [
+        0.12446540594100952,
+        0.28984516859054565
+      ],
+      "readout": [
+        0.11161786317825317,
+        0.061850570142269135
+      ],
+      "rel": [
+        0.029349109157919884,
+        0.06828318536281586
+      ],
+      "trunk": [
+        0.10697396099567413,
+        0.017596134915947914
+      ]
+    }
+  },
+  "invariance": {
+    "rewiring_incidence_diffs": [
+      1.1920928955078125e-07,
+      1.1920928955078125e-07,
+      1.1920928955078125e-07
+    ],
+    "rewiring_r1_size_diffs": [
+      0.6961138844490051,
+      0.6464031338691711,
+      0.6656851768493652
+    ]
+  },
+  "n_checks": 19,
+  "n_passed": 19,
+  "protocol_id": "ssrc-phase1d-cpu-gates",
+  "scope": {
+    "internal_reserved_labels_read": false,
+    "labels_used": "Fit/Monitor only",
+    "official_valid_test_labels_read": false
+  },
+  "wall_seconds": 1.6512301149923587
+}
