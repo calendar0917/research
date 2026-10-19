@@ -237,6 +237,8 @@ budget:
   planned_formal_runs: 6
   smoke_epochs: 2
   smoke_rows: 1024
+  projection_warmup_updates: 2
+  projection_estimator: "mean per-update time after dropping the first 2 updates per arm, then 2 seeds x 28440 updates; 1.20 margin plus smoke wall and 300 s reserve"
   margin_factor: 1.20
   overhead_reserve_seconds: 300
   stop_rule: "if projected formal time x 1.20 + smoke + reserve exceeds the cap, do not start the formal matrix"

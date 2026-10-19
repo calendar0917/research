@@ -196,6 +196,16 @@ architecture selection. The formal matrix starts only if
 `1.20 * projected_formal + smoke_wall + 300 s <= 4.0 A100-hours`. If the projection does not fit,
 the round stops and reports the implementation and cost projection.
 
+Timing-estimator amendment (before any formal training; architecture, recipe and
+compute unchanged): the first smoke run used the raw mean over all 16 updates and
+projected 4.72 GPU-h (`smoke_this_round_v1_mean_failed.json`). The first update of
+each arm includes CUDA/library warm-up and is not representative of a 28,440-update
+run. The frozen projection therefore uses the mean over updates 3..16 of each arm
+(drop the first two per arm), with the same 1.20 margin, smoke wall and 300 s
+reserve. This amendment changes only the timing estimator, not the model, data,
+epochs, batch size, optimiser, scoring rule or cap. Both smoke records and the
+amendment note are kept.
+
 ### 6.1 P3 reuse
 
 The P3 reference is reused, not retrained, only under Branch A: the execution regime must match

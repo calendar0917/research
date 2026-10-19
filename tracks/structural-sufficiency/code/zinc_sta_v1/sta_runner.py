@@ -886,6 +886,7 @@ def cmd_smoke(args: argparse.Namespace) -> int:
     cfg = C.load_config()
     cap_seconds = float(cfg["budget"]["gpu_hours_cap"]) * 3600.0
     records: dict[str, Any] = {}
+    _train_loop_step_times: dict[str, list[float]] = {}
     smoke_wall = 0.0
     for arm in C.ARMS:
         log(f"[smoke] {arm} 2 epochs x {n_rows} rows")
@@ -901,6 +902,7 @@ def cmd_smoke(args: argparse.Namespace) -> int:
             save_soup=False,
         )
         payload.pop("soup_state", None)
+        _train_loop_step_times[arm] = [float(x) for x in payload["step_seconds_all"]]
         smoke_wall += float(payload["wall_seconds"])
         records[arm] = {
             "wall_seconds": payload["wall_seconds"],
@@ -909,8 +911,14 @@ def cmd_smoke(args: argparse.Namespace) -> int:
             "soup_fit_mae": payload["soup_fit_mae"],
             "training_health": payload["training_health"],
         }
-    mean_step = {arm: float(records[arm]["step_seconds"]["mean"]) for arm in C.ARMS}
-    projected_formal = 2.0 * sum(mean_step.values()) * float(C.UPDATES)
+    warmup = int(cfg["budget"].get("projection_warmup_updates", 2))
+    raw_mean_step = {arm: float(records[arm]["step_seconds"]["mean"]) for arm in C.ARMS}
+    steady_step = {}
+    for arm in C.ARMS:
+        times = [float(x) for x in _train_loop_step_times[arm]]
+        steady = times[warmup:] if len(times) > warmup + 2 else times
+        steady_step[arm] = float(np.mean(steady))
+    projected_formal = 2.0 * sum(steady_step.values()) * float(C.UPDATES)
     reserve = smoke_wall + 300.0
     projected_total = 1.20 * projected_formal + reserve
     payload = {
@@ -921,7 +929,12 @@ def cmd_smoke(args: argparse.Namespace) -> int:
         "rows": n_rows,
         "epochs": 2,
         "per_arm": records,
-        "mean_step_seconds": mean_step,
+        "mean_step_seconds_raw": raw_mean_step,
+        "steady_step_seconds": steady_step,
+        "projection_estimator": (
+            f"mean per-update time after dropping the first {warmup} updates per arm "
+            "(CUDA/library warm-up); same 1.20 margin and 300 s reserve"
+        ),
         "formal_runs": 6,
         "projected_formal_seconds": projected_formal,
         "projected_formal_gpu_hours": projected_formal / 3600.0,
@@ -935,8 +948,9 @@ def cmd_smoke(args: argparse.Namespace) -> int:
         "pass": bool(projected_total <= cap_seconds),
         "note": (
             "Smoke weights are temporary and never scored. No valid label is read. "
-            "Projection uses the mean measured per-update time for each arm on 1,024 "
-            "train rows, two seeds per arm, plus smoke wall time and a 300 s overhead "
+            "The raw mean includes the first CUDA step and is reported for audit; the "
+            "pre-registered projection uses the steady-state mean after two warm-up "
+            "updates. Two seeds per arm, plus smoke wall time and a 300 s overhead "
             "reserve; 1.20 is the pre-registered failure margin."
         ),
     }
@@ -1168,6 +1182,7 @@ def _train_loop(
         "lr_curve": curve,
         "wall_seconds": wall,
         "molecules_seen": int(total_mol),
+        "step_seconds_all": [float(x) for x in step_seconds] if smoke_epochs is not None else None,
         "device": str(device),
         "cuda_device_name": None
         if getattr(device, "type", "cpu") == "cpu"

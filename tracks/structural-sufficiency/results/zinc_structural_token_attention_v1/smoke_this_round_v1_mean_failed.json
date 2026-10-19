@@ -1,0 +1,105 @@
+{
+  "protocol_id": "zinc-structural-token-attention-v1",
+  "created_utc": "2026-10-19T14:49:23Z",
+  "device": "cuda",
+  "env": {
+    "device": "cuda",
+    "hostname": "a100-2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "python": "3.12.14",
+    "git_commit": "b486c8a7b9a6403c17af26ba72f17b7ead52d5bd",
+    "utc": "2026-10-19T14:49:23Z",
+    "gpu_name": "NVIDIA A100-SXM4-40GB",
+    "gpu_count": 1,
+    "driver": "550.163.01"
+  },
+  "rows": 1024,
+  "epochs": 2,
+  "per_arm": {
+    "S": {
+      "wall_seconds": 1.2942245409358293,
+      "step_seconds": {
+        "mean": 0.08038716154260328,
+        "median": 0.033215430565178394,
+        "p90": 0.12416791351279244,
+        "n": 16
+      },
+      "updates": 16,
+      "soup_fit_mae": 0.8769839215443653,
+      "training_health": {
+        "finite_loss": true,
+        "finite_gradients": true,
+        "gradient_expectation": {
+          "type_embedding_nonzero_first_step": true,
+          "reader_nonzero_first_step": true,
+          "token_ffn_nonzero_first_step": true,
+          "mix_nonzero_first_step": true,
+          "mix_nonzero_second_step": true
+        }
+      }
+    },
+    "T": {
+      "wall_seconds": 0.7481788350269198,
+      "step_seconds": {
+        "mean": 0.046140402570017613,
+        "median": 0.043985608557704836,
+        "p90": 0.0492493289639242,
+        "n": 16
+      },
+      "updates": 16,
+      "soup_fit_mae": 0.9724588110205445,
+      "training_health": {
+        "finite_loss": true,
+        "finite_gradients": true,
+        "gradient_expectation": {
+          "type_embedding_nonzero_first_step": true,
+          "reader_nonzero_first_step": true,
+          "token_ffn_nonzero_first_step": true,
+          "mix_nonzero_first_step": true,
+          "mix_nonzero_second_step": true
+        }
+      }
+    },
+    "R": {
+      "wall_seconds": 1.8985988959902897,
+      "step_seconds": {
+        "mean": 0.11802791433001403,
+        "median": 0.1168427305528894,
+        "p90": 0.13694885198492557,
+        "n": 16
+      },
+      "updates": 16,
+      "soup_fit_mae": 0.9725632703501219,
+      "training_health": {
+        "finite_loss": true,
+        "finite_gradients": true,
+        "gradient_expectation": {
+          "type_embedding_nonzero_first_step": true,
+          "reader_nonzero_first_step": true,
+          "token_ffn_nonzero_first_step": true,
+          "mix_nonzero_first_step": true,
+          "mix_nonzero_second_step": true,
+          "r_bias_grad_nonzero_step1_or_2": true
+        }
+      }
+    }
+  },
+  "mean_step_seconds": {
+    "S": 0.08038716154260328,
+    "T": 0.046140402570017613,
+    "R": 0.11802791433001403
+  },
+  "formal_runs": 6,
+  "projected_formal_seconds": 13910.315613817074,
+  "projected_formal_gpu_hours": 3.863976559393632,
+  "smoke_wall_seconds": 3.941002271953039,
+  "overhead_reserve_seconds": 303.94100227195304,
+  "margin_factor": 1.2,
+  "projected_total_seconds": 16996.319738852442,
+  "projected_total_gpu_hours": 4.721199927459011,
+  "cap_seconds": 14400.0,
+  "cap_gpu_hours": 4.0,
+  "pass": false,
+  "note": "Smoke weights are temporary and never scored. No valid label is read. Projection uses the mean measured per-update time for each arm on 1,024 train rows, two seeds per arm, plus smoke wall time and a 300 s overhead reserve; 1.20 is the pre-registered failure margin."
+}
