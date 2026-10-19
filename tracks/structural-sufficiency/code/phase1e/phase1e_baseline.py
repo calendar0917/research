@@ -52,8 +52,17 @@ SPLIT_TAG = "ssrc-phase1e"
 SEED = 0
 ARM = "P3E"
 
-ENCODED_TRAIN = REPO / "tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt"
+#: Committed label vault (Fit + Monitor only; Reserved and official test absent).
+#: Verified to be bit-identical to `encoded_train.pt` on all 8,000 Fit rows, so the
+#: untracked 503 MB cache is not needed for a reproducible run.
 LABELS_FIT_MONITOR = C.RESULTS_1B / "zinc_labels_fit_monitor.json"
+
+
+def _vault_labels() -> dict[int, float]:
+    vault = C.read_json(LABELS_FIT_MONITOR)
+    if vault["scope"]["reserved_labels_present"] or vault["scope"]["official_valid_test_labels_present"]:
+        raise SystemExit("label vault is not Fit/Monitor-only")
+    return {int(k): float(v) for k, v in vault["labels"].items()}
 
 OBJ_FIT = OUT / "objects_fit.pt"
 OBJ_MONITOR = OUT / "objects_monitor.pt"
@@ -171,7 +180,8 @@ def cmd_train(args: argparse.Namespace) -> int:
     norm = C.read_json(PREP)
     if not norm.get("fit_only"):
         raise SystemExit("standardiser is not marked fit-only")
-    y_fit = bp.load_y_rows(ENCODED_TRAIN, fit)
+    labels = _vault_labels()
+    y_fit = np.asarray([labels[int(r)] for r in fit], dtype=np.float64)
     ssl_state = torch.load(SSL_PT, map_location="cpu", weights_only=False)
     ssl_recorded = C.read_json(OUT / "pretrain_s0.json")["encoder_final_sha256"]
     payload = bp.train_supervised(
@@ -190,6 +200,9 @@ def cmd_train(args: argparse.Namespace) -> int:
     )
     if payload["encoder_used_sha256"] != ssl_recorded:
         raise SystemExit("encoder used does not match the recorded pretraining state")
+    params = int(payload["parameter_audit"]["actual_parameters"])
+    if not payload["parameter_audit"]["parameter_exact"] or params != bp.EXPECTED_PARAMETERS:
+        raise SystemExit(f"parameter contract broken: {params} != {bp.EXPECTED_PARAMETERS}")
     soup = PREFIX.with_name(PREFIX.name + "_soup.pt")
     state = {k: v.detach().cpu().clone() for k, v in payload["soup_state"].items()}
     torch.save(state, soup)
@@ -201,8 +214,8 @@ def cmd_train(args: argparse.Namespace) -> int:
     record["labels_used"] = "SSRC Fit rows raw y only"
     C.write_json(PREFIX.with_suffix(".json"), record)
     print(
-        f"[train] params {record.get('parameter_audit', {}).get('total', 'n/a')} "
-        f"soup fit {payload['soup_fit_mae']:.5f} wall {payload['wall_seconds']:.0f}s"
+        f"[train] params {params} soup fit {payload['soup_fit_mae']:.5f} "
+        f"wall {payload['wall_seconds']:.0f}s"
     )
     return 0
 
@@ -254,8 +267,7 @@ def cmd_score(args: argparse.Namespace) -> int:
         raise SystemExit("prediction file changed after the freeze")
 
     # --- the single Monitor label read -------------------------------------
-    vault = C.read_json(LABELS_FIT_MONITOR)
-    labels = {int(k): float(v) for k, v in vault["labels"].items()}
+    labels = _vault_labels()
     y = np.asarray([labels[int(r)] for r in monitor], dtype=np.float64)
     with np.load(PRED) as z:
         pred = np.asarray(z["pred"], dtype=np.float64)
