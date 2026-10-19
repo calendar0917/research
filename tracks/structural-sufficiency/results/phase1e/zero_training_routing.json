@@ -1,0 +1,264 @@
+{
+  "protocol_id": "ssrc-phase1e-zinc-v1",
+  "stage": "A3_zero_training_routing",
+  "status": "POST_HOC_DIAGNOSTIC_ON_A_REUSED_MONITOR",
+  "not_a_new_model_result": true,
+  "rule": "if RDKit large ring (large_cycles_gt6 >= 1) -> R1_size_cap, else R_incidence",
+  "expected_value_phase1d": 0.1922,
+  "routed_rdkit": {
+    "name": "rdkit_route",
+    "monitor_mae": 0.19219004981755278,
+    "monitor_rmse": 0.4958952419457828,
+    "groups": {
+      "all": {
+        "n": 1000,
+        "mae": 0.19219004981755278,
+        "rmse": 0.4958952419457828,
+        "median_ae": 0.09687923640012741,
+        "p90_ae": 0.3308439016342163,
+        "mean_signed_residual": 0.07012610559933818,
+        "abs_error_sum": 192.1900498175528
+      },
+      "label_penalised": {
+        "n": 43,
+        "mae": 1.3910426968751952,
+        "rmse": 2.1562038226995726,
+        "median_ae": 0.5440716743469238,
+        "p90_ae": 3.3843951344490053,
+        "mean_signed_residual": 1.298336360343667,
+        "abs_error_sum": 59.81483596563339
+      },
+      "label_complement": {
+        "n": 957,
+        "mae": 0.13832310747327,
+        "rmse": 0.21923170016630714,
+        "median_ae": 0.0934099555015564,
+        "p90_ae": 0.3026825308799744,
+        "mean_signed_residual": 0.014940064895047555,
+        "abs_error_sum": 132.3752138519194
+      },
+      "rdkit_large": {
+        "n": 40,
+        "mae": 1.3007642835378648,
+        "rmse": 1.8879169442147181,
+        "median_ae": 0.5578978657722473,
+        "p90_ae": 3.382625275850296,
+        "mean_signed_residual": 1.2115061730146408,
+        "abs_error_sum": 52.03057134151459
+      },
+      "penalty_only_rdkit_missed": {
+        "n": 3,
+        "mae": 2.5947548747062683,
+        "rmse": 4.372147689100523,
+        "median_ae": 0.2080240249633789,
+        "p90_ae": 6.09754204750061,
+        "mean_signed_residual": 2.456072191397349,
+        "abs_error_sum": 7.784264624118805
+      }
+    },
+    "route_sizes": {
+      "to_R1_size_cap": 40,
+      "to_R_incidence": 960
+    }
+  },
+  "routed_label_oracle": {
+    "name": "label_penalty_oracle_route",
+    "monitor_mae": 0.19348105827509426,
+    "monitor_rmse": 0.5003172311273072,
+    "groups": {
+      "all": {
+        "n": 1000,
+        "mae": 0.19348105827509426,
+        "rmse": 0.5003172311273072,
+        "median_ae": 0.09713774919509888,
+        "p90_ae": 0.3315389990806581,
+        "mean_signed_residual": 0.0692568853276316,
+        "abs_error_sum": 193.48105827509426
+      },
+      "label_penalised": {
+        "n": 43,
+        "mae": 1.4210661493761594,
+        "rmse": 2.1798308156799027,
+        "median_ae": 0.5717240571975708,
+        "p90_ae": 3.3843951344490053,
+        "mean_signed_residual": 1.2781219354202582,
+        "abs_error_sum": 61.10584442317486
+      },
+      "label_complement": {
+        "n": 957,
+        "mae": 0.13832310747327,
+        "rmse": 0.21923170016630714,
+        "median_ae": 0.0934099555015564,
+        "p90_ae": 0.3026825308799744,
+        "mean_signed_residual": 0.014940064895047555,
+        "abs_error_sum": 132.3752138519194
+      },
+      "rdkit_large": {
+        "n": 40,
+        "mae": 1.3007642835378648,
+        "rmse": 1.8879169442147181,
+        "median_ae": 0.5578978657722473,
+        "p90_ae": 3.382625275850296,
+        "mean_signed_residual": 1.2115061730146408,
+        "abs_error_sum": 52.03057134151459
+      },
+      "penalty_only_rdkit_missed": {
+        "n": 3,
+        "mae": 3.0250910272200904,
+        "rmse": 4.536969143394812,
+        "median_ae": 1.0203337669372559,
+        "p90_ae": 6.433774507045746,
+        "mean_signed_residual": 2.166332100828489,
+        "abs_error_sum": 9.07527308166027
+      }
+    },
+    "route_sizes": {
+      "to_R1_size_cap": 43,
+      "to_R_incidence": 957
+    }
+  },
+  "single_models": {
+    "G_ref": 0.1652899962964002,
+    "R1_size_cap": 0.19347499595000409,
+    "R_incidence": 0.27966162930964494
+  },
+  "comparisons": [
+    {
+      "name": "routed - G_ref",
+      "delta": {
+        "mean": 0.026900053521152587,
+        "ci95": [
+          0.007326275300397538,
+          0.04771865135096012
+        ],
+        "n": 1000
+      },
+      "delta_penalised": {
+        "mean": 0.2608960191177767,
+        "ci95": [
+          -0.14042254115433195,
+          0.6798434937329483
+        ],
+        "n": 43
+      },
+      "delta_complement": {
+        "mean": 0.01638612821221336,
+        "ci95": [
+          0.005005755254735074,
+          0.026736970480238043
+        ],
+        "n": 957
+      }
+    },
+    {
+      "name": "routed - R1_size_cap",
+      "delta": {
+        "mean": -0.001284946132451296,
+        "ci95": [
+          -0.015638521152175962,
+          0.011088123518973588
+        ],
+        "n": 1000
+      },
+      "delta_penalised": {
+        "mean": -0.03002345250096432,
+        "ci95": [
+          -0.0755636969278025,
+          0.0
+        ],
+        "n": 43
+      },
+      "delta_complement": {
+        "mean": 6.3347179625599864e-06,
+        "ci95": [
+          -0.014424364211557426,
+          0.0129854038383037
+        ],
+        "n": 957
+      }
+    },
+    {
+      "name": "routed - R_incidence",
+      "delta": {
+        "mean": -0.08747157949209214,
+        "ci95": [
+          -0.12133218572065234,
+          -0.05604481286555529
+        ],
+        "n": 1000
+      },
+      "delta_penalised": {
+        "mean": -2.0342227788858636,
+        "ci95": [
+          -2.51296750059308,
+          -1.5717939421881084
+        ],
+        "n": 43
+      },
+      "delta_complement": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n": 957
+      }
+    },
+    {
+      "name": "label_oracle_route - G_ref",
+      "delta": {
+        "mean": 0.028191061978694053,
+        "ci95": [
+          0.008437984918616713,
+          0.04893507592458044
+        ],
+        "n": 1000
+      },
+      "delta_penalised": {
+        "mean": 0.29091947161874104,
+        "ci95": [
+          -0.10959813698779704,
+          0.7009932517312294
+        ],
+        "n": 43
+      },
+      "delta_complement": {
+        "mean": 0.01638612821221336,
+        "ci95": [
+          0.005005755254735074,
+          0.026736970480238043
+        ],
+        "n": 957
+      }
+    }
+  ],
+  "routing_comparison_detail": {
+    "delta_vs_Gref_penalised": {
+      "mean": 0.2608960191177767,
+      "ci95": [
+        -0.14042254115433195,
+        0.6798434937329483
+      ],
+      "n": 43
+    },
+    "delta_vs_Gref_complement": {
+      "mean": 0.01638612821221336,
+      "ci95": [
+        0.005005755254735074,
+        0.026736970480238043
+      ],
+      "n": 957
+    }
+  },
+  "compute": {
+    "forward_flops_R_incidence": 645911200.0,
+    "forward_flops_R1_size_cap": 2491880704.0,
+    "forward_flops_G_ref": 1185100000.0,
+    "fraction_routed_to_cap": 0.04,
+    "flops_per_molecule_lower_bound": 719749980.16,
+    "flops_ratio_vs_G_ref_lower_bound": 0.6073326977976542,
+    "flops_ratio_single_R1_size_cap_vs_G_ref": 2.1026754737996796,
+    "note": "per-molecule weighted average is a theoretical lower bound. A real batched implementation must run homogeneous batches, so the achievable cost is closer to the max of the two sub-model costs for each populated group; the router itself is a ring-size count and is negligible."
+  },
+  "interpretation_guard": "The routing rule was derived from the same Monitor that produced the component models. Its MAE must not be quoted as a new method result, and it must not be upgraded to a proposal unless it closes the G_ref gap."
+}

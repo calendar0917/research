@@ -1,0 +1,907 @@
+{
+  "protocol_id": "ssrc-phase1e-zinc-v1",
+  "stage": "A1_label_mechanism",
+  "scope": {
+    "monitor_rows": 1000,
+    "official_train_rows": 10000,
+    "reserved_labels_read": 0,
+    "official_valid_test_read": 0
+  },
+  "formula": {
+    "source": "Kusner et al. 2017 GVAE generate_latent_features_and_targets.py",
+    "source_sha256": "9ff67492171b77105523408959b10e6b07be473d0284c74373799799106e4ec0",
+    "cycle_statistic": "nx.cycle_basis(nx.Graph(rdmops.GetAdjacencyMatrix(mol)))",
+    "cycle_excess": "max(0, max_cycle_len - 6)",
+    "atom_order": "RDKit canonical SMILES order of the label generator's release",
+    "not_the_benchmark_definition": "PyG's docstring says 'number of cycles with >6 atoms'; that is NOT what the generator computes",
+    "constants": {
+      "logP_mean": 2.4570953396190123,
+      "logP_std": 1.4498737504491803,
+      "SA_mean": -3.053662860929663,
+      "SA_std": 0.8315096218718826,
+      "cycle_mean": -0.04856968732876976,
+      "cycle_std": 0.2859726330705808
+    },
+    "fitted_cycle_scale": {
+      "sigma_cycle": 0.28837478485107415,
+      "mu_cycle": -0.04815906136035919
+    },
+    "input_hashes": {
+      "zinc_smi": "f900b46bb42b77aab37cd827d1ea474e2a037ecab2bd7def2b6027492216d36a",
+      "fpscores": "10dcef9340c873e7b987924461b0af5365eb8dd96be607203debe8ddf80c1e73",
+      "sascorer": "abc9575e0ec7b5faf7dc106dff775a38f05d895185840f577b66d31039a95824",
+      "smiles_table": "04a590355fb7bba71e35e52bed60c974999b92af9e96e4ee99bed4afe42dcaff",
+      "split": "fbca5fd5ac9c82c457bf4d78781fbe9936dd7068082377ff8cc2bf2309d72b49",
+      "features": "dadcbb3928fdcc70b50adb824cc96123a4eacbbe11f4f94bfc716c41efe6792b"
+    }
+  },
+  "reconstruction": {
+    "ksvd_cross_check": {
+      "available": true,
+      "n_agree_with_recovered_excess": 10000,
+      "n_rows": 10000,
+      "n_penalty_rows_ksvd": 372,
+      "n_penalty_rows_recovered": 372,
+      "max_abs_excess_gap": 0
+    },
+    "excess_agreement_10k": {
+      "label_excess_vs_canonical_order": 9983,
+      "label_excess_vs_stored_pyg_order": 9980,
+      "label_excess_vs_rdkit_sssr_order_independent": 9966,
+      "n_rows": 10000
+    },
+    "canonical_smiles_atom_count_mismatch_rows": [],
+    "n_canonical_smiles_atom_count_mismatch": 0,
+    "phase1d_large_cycles_gt6_vs_recomputed_sssr_agree_rows": 1000,
+    "phase1d_large_cycles_gt6_vs_recomputed_sssr_n": 1000,
+    "snap_error_p95_y_units": 0.019439000968635788,
+    "snap_error_max_y_units": 0.37308835805838303,
+    "n_penalty_rows_10k": 372,
+    "n_rdkit_large_rows_10k": 339
+  },
+  "monitor_confusion": {
+    "label_penalty_x_rdkit_large_ring": {
+      "labeled_and_rdkit_large": 40,
+      "labeled_not_rdkit_large": 3,
+      "rdkit_large_not_labeled": 0,
+      "neither": 957
+    },
+    "counts": {
+      "n_label_penalty": 43,
+      "n_rdkit_large": 40,
+      "n_union": 43
+    },
+    "rdkit_large_group_purity": 1.0,
+    "rdkit_large_group_recall_of_penalty": 0.9302325581395349,
+    "missing_rows": [
+      1238,
+      1077,
+      2052
+    ]
+  },
+  "train10k_confusion": {
+    "label_penalty_x_rdkit_large_ring": {
+      "labeled_and_rdkit_large": 339,
+      "labeled_not_rdkit_large": 33,
+      "rdkit_large_not_labeled": 0,
+      "neither": 9628
+    },
+    "counts": {
+      "n_label_penalty": 372,
+      "n_rdkit_large": 339
+    },
+    "rdkit_large_group_purity": 1.0,
+    "rdkit_large_group_recall_of_penalty": 0.9112903225806451
+  },
+  "monitor_ring_statistic_agreement": {
+    "label_vs_canonical_order_rows": 998,
+    "label_vs_stored_pyg_order_rows": 998,
+    "label_vs_rdkit_sssr_rows": 997,
+    "n": 1000
+  },
+  "permutation_stability": {
+    "reps": 30,
+    "seed": 20261020,
+    "n_candidates_10k": 372,
+    "n_unstable_10k": 26,
+    "unstable_rows_10k": [
+      85,
+      111,
+      189,
+      207,
+      421,
+      593,
+      755,
+      1424,
+      1760,
+      2052,
+      2148,
+      2232,
+      2334,
+      2347,
+      4235,
+      5050,
+      5541,
+      6713,
+      7346,
+      7507,
+      7708,
+      7750,
+      7880,
+      8137,
+      9607,
+      9864
+    ],
+    "n_penalty_monitor": 43,
+    "n_unstable_penalty_monitor": 4,
+    "unstable_penalty_monitor_rows": [
+      9864,
+      2052,
+      4235,
+      2334
+    ],
+    "interpretation": "the cycle basis is not a permutation-invariant graph function; the label used one particular atom ordering, and a model sees only the unordered graph"
+  },
+  "monitor_groups": [
+    {
+      "name": "rdkit_large_ring_only",
+      "n": 0,
+      "mean_label_excess": 0.0,
+      "mean_cycle_component": 0.0,
+      "mean_abs_cycle_component": 0.0,
+      "mean_abs_y_without_cycle": 0.0,
+      "recon_abs_error_mean": 0.0,
+      "recon_abs_error_p95": 0.0,
+      "recon_abs_error_max": 0.0
+    },
+    {
+      "name": "label_penalty_only",
+      "n": 3,
+      "mean_label_excess": 2.0,
+      "mean_cycle_component": -6.768417494087193,
+      "mean_abs_cycle_component": 6.768417494087193,
+      "mean_abs_y_without_cycle": 0.9084291910425737,
+      "recon_abs_error_mean": 0.004051274365453372,
+      "recon_abs_error_p95": 0.007625576521011956,
+      "recon_abs_error_max": 0.008039769473582948
+    },
+    {
+      "name": "both",
+      "n": 40,
+      "mean_label_excess": 1.075,
+      "mean_cycle_component": -3.5607861456053924,
+      "mean_abs_cycle_component": 3.5607861456053924,
+      "mean_abs_y_without_cycle": 1.8113748985987925,
+      "recon_abs_error_mean": 0.009682248824741826,
+      "recon_abs_error_p95": 0.027954295266727658,
+      "recon_abs_error_max": 0.031439335006502145
+    },
+    {
+      "name": "neither",
+      "n": 957,
+      "mean_label_excess": 0.0,
+      "mean_cycle_component": 0.16700163776534777,
+      "mean_abs_cycle_component": 0.16700163776534777,
+      "mean_abs_y_without_cycle": 1.3566790082853886,
+      "recon_abs_error_mean": 0.007658105592148717,
+      "recon_abs_error_p95": 0.02004554626819065,
+      "recon_abs_error_max": 0.039539469336834464
+    },
+    {
+      "name": "label_penalty_union",
+      "n": 43,
+      "mean_label_excess": 1.1395348837209303,
+      "mean_cycle_component": -3.7845743792204023,
+      "mean_abs_cycle_component": 3.7845743792204023,
+      "mean_abs_y_without_cycle": 1.7483786864437076,
+      "recon_abs_error_mean": 0.009289390141535655,
+      "recon_abs_error_p95": 0.027691593029269865,
+      "recon_abs_error_max": 0.031439335006502145
+    },
+    {
+      "name": "complement_of_label_penalty",
+      "n": 957,
+      "mean_label_excess": 0.0,
+      "mean_cycle_component": 0.16700163776534777,
+      "mean_abs_cycle_component": 0.16700163776534777,
+      "mean_abs_y_without_cycle": 1.3566790082853886,
+      "recon_abs_error_mean": 0.007658105592148717,
+      "recon_abs_error_p95": 0.02004554626819065,
+      "recon_abs_error_max": 0.039539469336834464
+    }
+  ],
+  "monitor_penalised_molecules": [
+    {
+      "row": 3206,
+      "y": -1.649721384048462,
+      "y_without_cycle": 1.650986544112461,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 1.2979250581434819e-05,
+      "snap_error": 3.742888593949445e-06
+    },
+    {
+      "row": 7011,
+      "y": -4.530755996704102,
+      "y_without_cycle": -1.2300480685431787,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.012288991481264557,
+      "snap_error": -0.0035438352744463497
+    },
+    {
+      "row": 3075,
+      "y": -2.9121904373168945,
+      "y_without_cycle": 0.3885174908440283,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.0008881994241988912,
+      "snap_error": -0.0002561343178582032
+    },
+    {
+      "row": 2865,
+      "y": -6.405911922454834,
+      "y_without_cycle": -3.105203994293911,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.012517796293042071,
+      "snap_error": -0.0036098168128155805
+    },
+    {
+      "row": 539,
+      "y": -5.31016731262207,
+      "y_without_cycle": 1.4582501814651234,
+      "cycle_component": -6.768417494087194,
+      "label_excess": 2,
+      "canonical_order_excess": 2,
+      "stored_pyg_order_excess": 2,
+      "rdkit_sssr_excess": 2,
+      "permutation_excess_values": [
+        2
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.002848050980746234,
+      "snap_error": -0.000821306088817586
+    },
+    {
+      "row": 1238,
+      "y": -5.441515922546387,
+      "y_without_cycle": 1.326901571540807,
+      "cycle_component": -6.768417494087194,
+      "label_excess": 2,
+      "canonical_order_excess": 2,
+      "stored_pyg_order_excess": 2,
+      "rdkit_sssr_excess": 0,
+      "permutation_excess_values": [
+        2
+      ],
+      "rdkit_large_ring": false,
+      "recon_abs_error": 0.008039769473582948,
+      "snap_error": 0.002318466792196716
+    },
+    {
+      "row": 9864,
+      "y": -7.609377384185791,
+      "y_without_cycle": -4.308669456024868,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 2,
+      "stored_pyg_order_excess": 2,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1,
+        2
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.010995050747513786,
+      "snap_error": -0.00317069539374093
+    },
+    {
+      "row": 1563,
+      "y": -2.216123342514038,
+      "y_without_cycle": 1.0845845856468848,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.005902645709014535,
+      "snap_error": 0.0017021741863891826
+    },
+    {
+      "row": 1532,
+      "y": -4.387690544128418,
+      "y_without_cycle": -1.0869826159674951,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.007325221400218316,
+      "snap_error": -0.002112409145274441
+    },
+    {
+      "row": 9427,
+      "y": -7.649190902709961,
+      "y_without_cycle": -4.348482974549038,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.02817214624846969,
+      "snap_error": -0.008124136613195443
+    },
+    {
+      "row": 389,
+      "y": -1.3462451696395874,
+      "y_without_cycle": 1.9544627585213354,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.001662612128782894,
+      "snap_error": -0.0004794554149285535
+    },
+    {
+      "row": 6367,
+      "y": -2.9163408279418945,
+      "y_without_cycle": 0.3843671002190283,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.008390675187500272,
+      "snap_error": 0.002419659151950637
+    },
+    {
+      "row": 3650,
+      "y": -3.074181318283081,
+      "y_without_cycle": 0.2265266098778418,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.002596068760880107,
+      "snap_error": -0.0007486407703773956
+    },
+    {
+      "row": 1077,
+      "y": -6.531976699829102,
+      "y_without_cycle": 0.23644079425809217,
+      "cycle_component": -6.768417494087194,
+      "label_excess": 2,
+      "canonical_order_excess": 2,
+      "stored_pyg_order_excess": 2,
+      "rdkit_sssr_excess": 0,
+      "permutation_excess_values": [
+        2
+      ],
+      "rdkit_large_ring": false,
+      "recon_abs_error": 0.0038978399478730346,
+      "snap_error": 0.0011240387563518084
+    },
+    {
+      "row": 8858,
+      "y": -4.641843795776367,
+      "y_without_cycle": -1.3411358676154443,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.0019592180482448703,
+      "snap_error": 0.0005649890831389559
+    },
+    {
+      "row": 763,
+      "y": -6.4180521965026855,
+      "y_without_cycle": -3.1173442683417627,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.011551481093495283,
+      "snap_error": -0.003331155875047953
+    },
+    {
+      "row": 9224,
+      "y": -5.1130757331848145,
+      "y_without_cycle": -1.8123678050238916,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.015195911684214825,
+      "snap_error": -0.004382117762551374
+    },
+    {
+      "row": 6582,
+      "y": -5.436773777008057,
+      "y_without_cycle": -2.136065848847134,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.001138600224879032,
+      "snap_error": -0.0003283435948808755
+    },
+    {
+      "row": 4566,
+      "y": -7.429610252380371,
+      "y_without_cycle": -4.128902324219448,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.014990190080136185,
+      "snap_error": -0.004322792839235978
+    },
+    {
+      "row": 2052,
+      "y": -7.930362701416016,
+      "y_without_cycle": -1.161945207328822,
+      "cycle_component": -6.768417494087194,
+      "label_excess": 2,
+      "canonical_order_excess": 2,
+      "stored_pyg_order_excess": 2,
+      "rdkit_sssr_excess": 0,
+      "permutation_excess_values": [
+        0,
+        2
+      ],
+      "rdkit_large_ring": false,
+      "recon_abs_error": 0.00021621367490413208,
+      "snap_error": 6.235057198233918e-05
+    },
+    {
+      "row": 4235,
+      "y": -6.7503275871276855,
+      "y_without_cycle": -3.4496196589667627,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 2,
+      "stored_pyg_order_excess": 2,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1,
+        2
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.004138618570239897,
+      "snap_error": -0.0011934732397735903
+    },
+    {
+      "row": 2334,
+      "y": -3.8155388832092285,
+      "y_without_cycle": -0.5148309550483057,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1,
+        7
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.009145595290808271,
+      "snap_error": -0.0026373590743218323
+    },
+    {
+      "row": 617,
+      "y": -5.429657459259033,
+      "y_without_cycle": 1.3387600348281605,
+      "cycle_component": -6.768417494087194,
+      "label_excess": 2,
+      "canonical_order_excess": 2,
+      "stored_pyg_order_excess": 2,
+      "rdkit_sssr_excess": 2,
+      "permutation_excess_values": [
+        2
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.009345452053113806,
+      "snap_error": -0.002694992725152723
+    },
+    {
+      "row": 8314,
+      "y": -2.7071707248687744,
+      "y_without_cycle": 0.5935372032921484,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.0046617602344817275,
+      "snap_error": -0.0013443341046459611
+    },
+    {
+      "row": 6864,
+      "y": -6.509881973266602,
+      "y_without_cycle": -3.2091740451056787,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.01581855556925006,
+      "snap_error": -0.0045616725589372464
+    },
+    {
+      "row": 5402,
+      "y": -5.250415325164795,
+      "y_without_cycle": -1.949707397003872,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.023257150559431367,
+      "snap_error": -0.006706775788825059
+    },
+    {
+      "row": 5176,
+      "y": -1.5305055379867554,
+      "y_without_cycle": 1.7702023901741675,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.00043613954513282185,
+      "snap_error": 0.00012577164749272285
+    },
+    {
+      "row": 2769,
+      "y": -4.687108516693115,
+      "y_without_cycle": -1.3864005885321924,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.00791732004316262,
+      "snap_error": -0.0022831554640441176
+    },
+    {
+      "row": 4882,
+      "y": -3.97163724899292,
+      "y_without_cycle": -0.6709293208319971,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.014776907407992286,
+      "snap_error": -0.004261287494544019
+    },
+    {
+      "row": 678,
+      "y": -1.834017276763916,
+      "y_without_cycle": 1.4666906513970068,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 1.9143751050397228e-05,
+      "snap_error": 5.5205750904008255e-06
+    },
+    {
+      "row": 6909,
+      "y": -4.949256420135498,
+      "y_without_cycle": -1.6485484919745752,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.025430465462448613,
+      "snap_error": -0.00733350500639629
+    },
+    {
+      "row": 2355,
+      "y": -2.7932546138763428,
+      "y_without_cycle": 0.5074533142845801,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.0017631538423432346,
+      "snap_error": 0.000508449109945075
+    },
+    {
+      "row": 9274,
+      "y": -2.5289323329925537,
+      "y_without_cycle": 0.7717755951683691,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.005975879210681852,
+      "snap_error": -0.001723292881676386
+    },
+    {
+      "row": 2931,
+      "y": -6.387484073638916,
+      "y_without_cycle": -3.086776145477993,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.01132367454856384,
+      "snap_error": -0.0032654622116656817
+    },
+    {
+      "row": 7716,
+      "y": -9.120933532714844,
+      "y_without_cycle": -2.35251603862765,
+      "cycle_component": -6.768417494087194,
+      "label_excess": 2,
+      "canonical_order_excess": 2,
+      "stored_pyg_order_excess": 2,
+      "rdkit_sssr_excess": 2,
+      "permutation_excess_values": [
+        2
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.023141502354429855,
+      "snap_error": -0.006673425762589336
+    },
+    {
+      "row": 1880,
+      "y": -2.2379376888275146,
+      "y_without_cycle": 1.0627702393334082,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.005698335643091302,
+      "snap_error": -0.0016432563150856616
+    },
+    {
+      "row": 3703,
+      "y": -5.926616668701172,
+      "y_without_cycle": -2.625908740540249,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.011241797785726143,
+      "snap_error": -0.0032418510177980586
+    },
+    {
+      "row": 7170,
+      "y": -2.701904058456421,
+      "y_without_cycle": 0.598803869704502,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.013357803248739664,
+      "snap_error": -0.0038520536379382797
+    },
+    {
+      "row": 1171,
+      "y": -1.1352882385253906,
+      "y_without_cycle": 2.165419689635532,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.0003527326831741131,
+      "snap_error": 0.00010171921162027697
+    },
+    {
+      "row": 4077,
+      "y": -3.804295063018799,
+      "y_without_cycle": -0.503587134857876,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 6.849311340166467e-05,
+      "snap_error": 1.9751686840985272e-05
+    },
+    {
+      "row": 8984,
+      "y": -1.2480189800262451,
+      "y_without_cycle": 2.0526889481346777,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.0016014688971410338,
+      "snap_error": 0.0004618232486587326
+    },
+    {
+      "row": 5585,
+      "y": -6.246461868286133,
+      "y_without_cycle": -2.94575394012521,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.027942829425583342,
+      "snap_error": -0.00805800742373286
+    },
+    {
+      "row": 4034,
+      "y": -5.320950984954834,
+      "y_without_cycle": -2.020243056793911,
+      "cycle_component": -3.300707928160923,
+      "label_excess": 1,
+      "canonical_order_excess": 1,
+      "stored_pyg_order_excess": 1,
+      "rdkit_sssr_excess": 1,
+      "permutation_excess_values": [
+        1
+      ],
+      "rdkit_large_ring": true,
+      "recon_abs_error": 0.031439335006502145,
+      "snap_error": -0.0090663114683609
+    }
+  ]
+}

@@ -1,0 +1,289 @@
+{
+  "protocol_id": "ssrc-phase1e-zinc-v1",
+  "stage": "A4_decision",
+  "rules_source": "notes/phase1e_protocol.md \u00a72\u2013\u00a74",
+  "thresholds": {
+    "max_unpenalised_share": 0.05,
+    "negligible_band": 0.02,
+    "zinc_meaningful_band": 0.02,
+    "min_penalised_error_share": 0.25,
+    "max_unstable_fraction": 0.05,
+    "max_recon_error_gt_1_fraction": 0.05,
+    "min_proxy_miss_fraction": 0.05
+  },
+  "inputs": [
+    "label_audit.json",
+    "error_attribution.json",
+    "zero_training_routing.json",
+    "reference_audit.json",
+    "(absent)"
+  ],
+  "artifact_dominates": {
+    "label": "BENCHMARK_CYCLE_ARTIFACT_DOMINATES",
+    "fired": true,
+    "conditions": {
+      "rdkit_large_group_purity_le_0.05_unpenalised": {
+        "n_rdkit_large": 40,
+        "n_large_not_penalised": 0,
+        "value": 0.0,
+        "pass": true
+      },
+      "complement_gap_cap_vs_Gref_lt_0.02": {
+        "value": 0.01637979349425081,
+        "pass": true
+      },
+      "penalised_error_share_ge_0.25": {
+        "value": 0.5450044161384113,
+        "pass": true
+      }
+    }
+  },
+  "beyond_cycle": {
+    "label": "NOT_SUPPORTED",
+    "fired": false,
+    "evidence": [
+      {
+        "model": "S0_seed0",
+        "group": "label_complement",
+        "delta_vs_Gref": 0.050777842065410896,
+        "ci95": [
+          0.038193795029324545,
+          0.06314538723887446
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "S0_seed0",
+        "group": "label_penalised",
+        "delta_vs_Gref": 2.4050790833872417,
+        "ci95": [
+          1.9309786170721055,
+          2.8549018812387477
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R1_seed0",
+        "group": "label_complement",
+        "delta_vs_Gref": 0.050229948504011426,
+        "ci95": [
+          0.0364325942389269,
+          0.06380670393402066
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R1_seed0",
+        "group": "label_penalised",
+        "delta_vs_Gref": 1.0884027259944136,
+        "ci95": [
+          0.660627243869808,
+          1.5089168312520784
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "S_cap_size_seed0",
+        "group": "label_complement",
+        "delta_vs_Gref": 0.01569180903068764,
+        "ci95": [
+          0.004991840068839661,
+          0.0253738725531891
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "S_cap_size_seed0",
+        "group": "label_penalised",
+        "delta_vs_Gref": 2.5388355525427087,
+        "ci95": [
+          2.0798673898154916,
+          2.9725526528736186
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R1_size_seed0",
+        "group": "label_complement",
+        "delta_vs_Gref": 0.04389389168691034,
+        "ci95": [
+          0.026079942297570935,
+          0.06290859558019597
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R1_size_seed0",
+        "group": "label_penalised",
+        "delta_vs_Gref": 0.6809048015017842,
+        "ci95": [
+          0.18531911979581034,
+          1.1801863575744074
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R1_size_seed1",
+        "group": "label_complement",
+        "delta_vs_Gref": 0.031297124840042774,
+        "ci95": [
+          0.018485586701947304,
+          0.04370028826180853
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R1_size_seed1",
+        "group": "label_penalised",
+        "delta_vs_Gref": 1.9952966433971426,
+        "ci95": [
+          1.4927745487930817,
+          2.500322556885522
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R1_marginal_size_seed0",
+        "group": "label_complement",
+        "delta_vs_Gref": 0.03265137777322185,
+        "ci95": [
+          0.020770505457691258,
+          0.043763606037089134
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R1_marginal_size_seed0",
+        "group": "label_penalised",
+        "delta_vs_Gref": 2.5161107251810475,
+        "ci95": [
+          2.0563610172462328,
+          2.949740429231247
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "M_keep_edge_seed0",
+        "group": "label_complement",
+        "delta_vs_Gref": 0.03126109147720747,
+        "ci95": [
+          0.016953319904032916,
+          0.04606020481656804
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "M_keep_edge_seed0",
+        "group": "label_penalised",
+        "delta_vs_Gref": 0.9720793200093646,
+        "ci95": [
+          0.52621211052634,
+          1.4234914640094651
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R_incidence_seed0",
+        "group": "label_complement",
+        "delta_vs_Gref": 0.01638612821221336,
+        "ci95": [
+          0.005005755254735074,
+          0.026736970480238043
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R_incidence_seed0",
+        "group": "label_penalised",
+        "delta_vs_Gref": 2.2951187980036405,
+        "ci95": [
+          1.7870115570550742,
+          2.79304552165748
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R1_size_cap_seed0",
+        "group": "label_complement",
+        "delta_vs_Gref": 0.0163797934942508,
+        "ci95": [
+          0.0032883775065523594,
+          0.03029262815802109
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      },
+      {
+        "model": "R1_size_cap_seed0",
+        "group": "label_penalised",
+        "delta_vs_Gref": 0.29091947161874104,
+        "ci95": [
+          -0.10959813698779704,
+          0.7009932517312294
+        ],
+        "candidate_better_by_0.02_with_ci_below_zero": false
+      }
+    ],
+    "note": "R1_size_cap does have a positive point estimate on the penalised group but its CI crosses zero; the frozen rule therefore does not fire. This is recorded, not upgraded."
+  },
+  "unresolved_label_mechanism": {
+    "label": "UNRESOLVED_LABEL_MECHANISM",
+    "fired": true,
+    "conditions": {
+      "permutation_unstable_fraction_ge_0.05": {
+        "n_unstable": 4,
+        "n_penalised": 43,
+        "value": 0.09302325581395349,
+        "pass": true,
+        "rows": [
+          9864,
+          2052,
+          4235,
+          2334
+        ]
+      },
+      "reconstruction_error_gt_1_fraction_ge_0.05": {
+        "value": 0.0,
+        "pass": false
+      },
+      "proxy_miss_fraction_and_error_share_ge_0.05": {
+        "missed_fraction": 0.06976744186046512,
+        "missed_error_share": 0.0484876897710356,
+        "pass": false
+      }
+    }
+  },
+  "stage_b3": {
+    "label": "NOT_EVALUATED",
+    "reason": "no strictly isolated strong baseline on the SSRC split"
+  },
+  "routing_diagnostic": {
+    "routed_mae": 0.19219004981755278,
+    "gap_vs_G_ref": 0.026900049817552785,
+    "delta_vs_G_ref_bootstrap": {
+      "mean": 0.026900053521152587,
+      "ci95": [
+        0.007326275300397538,
+        0.04771865135096012
+      ],
+      "n": 1000
+    },
+    "upgraded_to_method": false,
+    "why_not": "it remains 0.027 MAE worse than G_ref on the same reused Monitor"
+  },
+  "direction": {
+    "choice": "A",
+    "reason": "the large-ring mechanism is dominated by the artificial cycle penalty and no candidate beats G_ref beyond the negligible band once it is accounted for",
+    "carry_forward_constraints": [
+      "report the order-dependent cycle basis as a benchmark defect, not as a modelling failure; any future ZINC claim must exclude the penalised subset or report it separately"
+    ],
+    "A_triggered": true,
+    "B_triggered": false,
+    "C_triggered": false
+  },
+  "non_claims": [
+    "post-hoc audit of a Monitor already used by Phase 1b/1c/1d; not a confirmation set",
+    "no official ZINC valid/test and no internal Reserved label was read",
+    "the negative direction does not extend to SSRC as a whole",
+    "the cycle penalty was never used as a model input and no label compensation was applied"
+  ]
+}
