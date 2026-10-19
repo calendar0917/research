@@ -115,7 +115,7 @@ def cmd_replay(args: argparse.Namespace) -> int:
     norm = C.read_json(C.BASELINE_DIR / "prep_fit.json")
     if not norm.get("fit_only"):
         raise SystemExit("standardiser is not marked Fit-only")
-    base, model, info = M.build_local_model(M.KIND_NONE, seed=0, norm=norm, device="cpu")
+    base, model, info = M.build_local_model(M.KIND_NONE, seed=0, norm=norm, device=args.device)
     if not info["trunk_matches_base_init"]:
         raise SystemExit("extended trunk does not match the frozen P3E scratch init")
     p3e_run = C.read_json(C.P3E_RUN)
@@ -128,14 +128,17 @@ def cmd_replay(args: argparse.Namespace) -> int:
 
     ssl_state, ssl_meta = C.load_ssl_state()
     enc = C.verify_encoder_state(model, ssl_state)
-    soup = torch.load(C.P3E_SOUP, map_location="cpu", weights_only=False)
+    soup = torch.load(C.P3E_SOUP, map_location=args.device, weights_only=False)
     model.load_state_dict(soup, strict=True)
 
     mon_objs, mon_src = _objects(split.monitor, which="monitor")
-    pred = bp.predict_model(model, mon_objs, "cpu")
+    pred = bp.predict_model(model, mon_objs, args.device)
     frozen = C.load_p3e_predictions()
     max_abs = float(np.abs(pred - frozen.pred).max())
-    if max_abs > 1e-6:
+    # The frozen prediction was produced on the same GPU model but scatter-add
+    # order is not bit-reproducible; a float32 replay is expected to agree to
+    # well below 1e-5, not bitwise.
+    if max_abs > 1e-5:
         raise SystemExit(f"P3E replay disagrees with the frozen predictions: {max_abs}")
 
     labels = C.load_vault()
@@ -153,6 +156,11 @@ def cmd_replay(args: argparse.Namespace) -> int:
         "replayed_prediction_array_sha256": C.sha256_array(pred),
         "frozen_prediction_array_sha256": C.sha256_array(frozen.pred),
         "max_abs_prediction_diff": max_abs,
+        "replay_tolerance": 1e-5,
+        "replay_tolerance_note": (
+            "GPU scatter-add order is not bit-reproducible; the frozen array is the "
+            "reference and agreement is float32-level"
+        ),
         "replayed_monitor_mae": mae,
         "frozen_monitor_mae": C.P3E_MAE,
         "monitor_rmse": float(np.sqrt(((pred - y) ** 2).mean())),
@@ -161,11 +169,12 @@ def cmd_replay(args: argparse.Namespace) -> int:
         "monitor_labels_read_for_replay_only": True,
         "reserved_labels_read": 0,
         "official_valid_test_loaded": False,
-        "device": "cpu",
+        "device": str(args.device),
+        "cuda_device_name": torch.cuda.get_device_name(0) if torch.device(args.device).type == "cuda" else "cpu",
         "torch": torch.__version__,
     }
     C.write_json(out, payload)
-    log(f"[replay] P3E reproduced bitwise: max|d|={max_abs:.3e} MAE={mae:.9f}")
+    log(f"[replay] P3E reproduced: max|d|={max_abs:.3e} MAE={mae:.9f} device={args.device}")
     return 0
 
 
