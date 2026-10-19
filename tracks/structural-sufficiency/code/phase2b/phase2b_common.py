@@ -52,10 +52,8 @@ OBJECTS_VALID = F10K / "objects_valid.pt"
 PREP_TRAIN = F10K / "prep_train10k.json"
 SSL_TEMPLATE = "pretrain_encoder_s{seed}.pt"
 SPLIT_P3 = "soup_R3_seed{seed}.pt"
-VALID_PRED_P3 = RECIPE / "predictions" / "valid_R3{seed}.npz"
-TEST_PRED_P3 = TERMINAL / "predictions" / "test_P3{seed}.npz"
-VALID_Y = RECIPE / "valid_y_read_once.npy"
-TEST_Y = TERMINAL / "test_y_read_once.npy"
+VALID_Y_HISTORICAL = RECIPE / "valid_y_read_once.npy"
+TEST_Y_HISTORICAL = TERMINAL / "test_y_read_once.npy"
 ENCODED_TRAIN = REPO / "tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt"
 
 N_TRAIN = 10000
@@ -174,24 +172,48 @@ def load_train_y() -> np.ndarray:
     return _TRAIN_Y
 
 
-def load_valid_y() -> np.ndarray:
-    cfg = load_config()
-    spec = cfg["frozen_inputs"]["valid_y"]
-    verify_file("valid_y", REPO / spec["path"], spec["sha256"])
-    y = np.load(REPO / spec["path"]).astype(np.float64)
-    if y.shape != (N_VALID,):
-        raise SystemExit(f"unexpected valid y shape {y.shape}")
+_Y_CACHE: dict[str, np.ndarray] = {}
+
+
+def _official_y(split: str, n: int, key: str) -> np.ndarray:
+    """Derive the official split labels and verify the historical array hash.
+
+    The historical ``*_y_read_once.npy`` files are gitignored and absent on the
+    compute checkout; the labels are re-derived from the same official PyG split
+    and must hash exactly to the frozen historical array.
+    """
+    if key in _Y_CACHE:
+        return _Y_CACHE[key]
+    from torch_geometric.datasets import ZINC
+
+    import cscl_features as cf
+
+    ds = ZINC(root=str(cf.ZINC_ROOT), subset=True, split=split)
+    if len(ds) != n:
+        raise SystemExit(f"official {split} split has {len(ds)} rows, expected {n}")
+    y = np.asarray([float(ds[i].y.reshape(-1)[0]) for i in range(n)], dtype=np.float64)
+    expected = load_config()["label_provenance"][f"{key}_y"]["array_sha256_float32"]
+    got = sha256_array(y)
+    if got != expected:
+        raise SystemExit(f"derived {split} labels do not match the historical array hash: {got} != {expected}")
+    _Y_CACHE[key] = y
     return y
+
+
+def load_valid_y() -> np.ndarray:
+    return _official_y("val", N_VALID, "valid")
 
 
 def load_test_y() -> np.ndarray:
+    return _official_y("test", N_TEST, "test")
+
+
+def historical_prediction(which: str) -> dict[str, Any]:
+    """Frozen provenance record for a historical P3 prediction array."""
     cfg = load_config()
-    spec = cfg["frozen_inputs"]["test_y"]
-    verify_file("test_y", REPO / spec["path"], spec["sha256"])
-    y = np.load(REPO / spec["path"]).astype(np.float64)
-    if y.shape != (N_TEST,):
-        raise SystemExit(f"unexpected test y shape {y.shape}")
-    return y
+    if which not in cfg["historical_prediction_provenance"]:
+        raise SystemExit(f"unknown historical prediction {which!r}")
+    return dict(cfg["historical_prediction_provenance"][which])
 
 
 # ---------------------------------------------------------------------------
@@ -209,32 +231,6 @@ def p3_soup_path(seed: int) -> Path:
 
 def p3_soup_sha(seed: int) -> str:
     return sha256_file(p3_soup_path(seed))
-
-
-def p3_valid_pred(seed: int) -> tuple[np.ndarray, dict[str, Any]]:
-    cfg = load_config()
-    spec = cfg["frozen_inputs"][f"valid_pred_P3{seed}"]
-    rec = verify_file(f"valid_pred_P3{seed}", REPO / spec["path"], spec["sha256"])
-    with np.load(REPO / spec["path"]) as z:
-        pred = np.asarray(z["pred"], dtype=np.float64)
-        rows = np.asarray(z["row"], dtype=np.int64)
-    if pred.shape != (N_VALID,) or not np.array_equal(rows, np.arange(N_VALID)):
-        raise SystemExit(f"unexpected valid prediction layout for P3 seed {seed}")
-    rec["array_sha256"] = sha256_array(pred)
-    return pred, rec
-
-
-def p3_test_pred(seed: int) -> tuple[np.ndarray, dict[str, Any]]:
-    cfg = load_config()
-    spec = cfg["frozen_inputs"][f"test_pred_P3{seed}"]
-    rec = verify_file(f"test_pred_P3{seed}", REPO / spec["path"], spec["sha256"])
-    with np.load(REPO / spec["path"]) as z:
-        pred = np.asarray(z["pred"], dtype=np.float64)
-        rows = np.asarray(z["row"], dtype=np.int64)
-    if pred.shape != (N_TEST,) or not np.array_equal(rows, np.arange(N_TEST)):
-        raise SystemExit(f"unexpected test prediction layout for P3 seed {seed}")
-    rec["array_sha256"] = sha256_array(pred)
-    return pred, rec
 
 
 # ---------------------------------------------------------------------------

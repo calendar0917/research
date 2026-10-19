@@ -57,6 +57,13 @@ def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
+def _stored(path: Path) -> str:
+    try:
+        return str(path.relative_to(REPO))
+    except ValueError:
+        return str(path)
+
+
 def _train_path(arm: str, seed: int) -> Path:
     return C.OUT / f"train_{arm}_s{seed}.json"
 
@@ -195,8 +202,51 @@ def cmd_audit(args: argparse.Namespace) -> int:
         params = int(sum(p.numel() for p in model.parameters()))
         forbidden = M.src.forbidden_module_scan(model)
         pred, secs = C.predict(model, valid_objs, device)
-        hist, hist_rec = C.p3_valid_pred(seed)
-        max_abs = float(np.abs(pred - hist).max())
+        prov = C.historical_prediction(f"valid_P3{seed}")
+        array_sha = C.sha256_array(pred)
+        if array_sha != prov["array_sha256_float32"]:
+            raise SystemExit(
+                f"regenerated P3 seed {seed} valid array does not match the historical hash: "
+                f"{array_sha} != {prov['array_sha256_float32']}"
+            )
+        hist_path = REPO / prov["historical_path"]
+        max_abs = None
+        if hist_path.exists():
+            with np.load(hist_path) as z:
+                hist = np.asarray(z["pred"], dtype=np.float64)
+            max_abs = float(np.abs(pred - hist).max())
+        p3_pred_path = C.OUT / f"p3_valid_pred_s{seed}.npz"
+        p3_freeze_path = C.OUT / f"p3_valid_freeze_s{seed}.json"
+        if p3_freeze_path.exists():
+            fr = C.read_json(p3_freeze_path)
+            if (
+                fr["prediction_array_sha256"] != array_sha
+                or C.sha256_file(p3_pred_path) != fr["prediction_sha256"]
+            ):
+                raise SystemExit("regenerated P3 valid prediction changed after its freeze")
+        else:
+            np.savez_compressed(
+                p3_pred_path, row=np.arange(C.N_VALID, dtype=np.int64), pred=pred.astype(np.float32)
+            )
+            C.write_once_json(
+                p3_freeze_path,
+                {
+                    "protocol_id": C.PROTOCOL_ID,
+                    "stage": "p3_valid_regenerated_from_frozen_soup",
+                    "arm": "P3",
+                    "seed": seed,
+                    "prediction_file": _stored(p3_pred_path),
+                    "prediction_sha256": C.sha256_file(p3_pred_path),
+                    "prediction_array_sha256": array_sha,
+                    "soup": info["soup"],
+                    "historical_path": prov["historical_path"],
+                    "historical_file_sha256": prov["historical_file_sha256"],
+                    "historical_array_sha256": prov["array_sha256_float32"],
+                    "bit_identical_to_historical_array": True,
+                    "labels_read": False,
+                    "created_utc": _now(),
+                },
+            )
         rec = C.p3_run(seed)
         batch_ok = rec["batch_order"]["full_hash"] == cfg["audit_expectations"]["batch_order_sha256"][str(seed)]
         p3[str(seed)] = {
@@ -224,10 +274,13 @@ def cmd_audit(args: argparse.Namespace) -> int:
                 "batch_order_matches": batch_ok,
             },
             "valid_replay": {
-                "max_abs_pred_diff_vs_frozen_npz": max_abs,
-                "prediction_file_sha256": hist_rec["sha256"],
-                "prediction_array_sha256": hist_rec["array_sha256"],
+                "array_sha256_matches_history": True,
+                "prediction_array_sha256": array_sha,
+                "historical_array_sha256": prov["array_sha256_float32"],
+                "historical_file_sha256": prov["historical_file_sha256"],
+                "max_abs_pred_diff_vs_historical_npz": max_abs,
                 "recorded_mae_from_confirmation_metrics": float(recorded_valid[f"seed{seed}"]),
+                "regenerated_prediction_file": _stored(p3_pred_path),
                 "seconds": secs,
                 "labels_read": False,
             },
@@ -244,8 +297,11 @@ def cmd_audit(args: argparse.Namespace) -> int:
             all(p3[str(s)]["init"]["matches_this_round_rebuild"].values()) for s in C.SEEDS
         ),
         "all_batch_orders_match": all(p3[str(s)]["recipe"]["batch_order_matches"] for s in C.SEEDS),
-        "valid_replay_within_5e-5": all(
-            p3[str(s)]["valid_replay"]["max_abs_pred_diff_vs_frozen_npz"] <= 5e-5 for s in C.SEEDS
+        "p3_valid_arrays_bit_identical_to_history": all(
+            p3[str(s)]["valid_replay"]["array_sha256_matches_history"] for s in C.SEEDS
+        ),
+        "p3_valid_replay_checked_against_local_npz": all(
+            p3[str(s)]["valid_replay"]["max_abs_pred_diff_vs_historical_npz"] in (None, 0.0) for s in C.SEEDS
         ),
         "historical_valid_mae_recorded": all(
             abs(
@@ -265,12 +321,14 @@ def cmd_audit(args: argparse.Namespace) -> int:
     # --- historical test predictions: hashes and recorded metrics only -------
     test_hashes = {}
     for seed in C.SEEDS:
-        pred, rec = C.p3_test_pred(seed)
+        prov = C.historical_prediction(f"test_P3{seed}")
         test_hashes[str(seed)] = {
-            "path": rec["path"],
-            "sha256": rec["sha256"],
-            "array_sha256": rec["array_sha256"],
-            "n": int(pred.size),
+            "historical_path": prov["historical_path"],
+            "historical_file_sha256": prov["historical_file_sha256"],
+            "array_sha256": prov["array_sha256_float32"],
+            "n": C.N_TEST,
+            "historical_file_present_on_compute_checkout": (REPO / prov["historical_path"]).exists(),
+            "array_regenerated_and_verified_at_test_predict_stage": True,
         }
     metrics = C.read_json(C.TERMINAL / "official_test_metrics.json")
     key_mae = {name: rec.get("mae") for name, rec in metrics.get("per_model", {}).items() if name in ("P30", "P31")}
@@ -906,7 +964,7 @@ def cmd_train(args: argparse.Namespace) -> int:
 
     torch.save(soup, _soup_path(arm, seed))
     record = dict(payload)
-    record["soup_path"] = str(_soup_path(arm, seed).relative_to(REPO))
+    record["soup_path"] = _stored(_soup_path(arm, seed))
     record["soup_sha256"] = C.sha256_file(_soup_path(arm, seed))
     record["train_objects_sha256"] = C.sha256_file(C.OBJECTS_TRAIN)
     record["train_rows"] = {"n": C.N_TRAIN, "sha256": C.sha256_array(np.arange(C.N_TRAIN), "int64")}
@@ -955,7 +1013,7 @@ def cmd_predict_valid(args: argparse.Namespace) -> int:
         "stage": "valid_predict_freeze",
         "arm": arm,
         "seed": seed,
-        "prediction_file": str(_valid_pred_path(arm, seed).relative_to(REPO)),
+        "prediction_file": _stored(_valid_pred_path(arm, seed)),
         "prediction_sha256": C.sha256_file(_valid_pred_path(arm, seed)),
         "prediction_array_sha256": C.sha256_array(pred),
         "soup": soup,
@@ -981,7 +1039,20 @@ def cmd_predict_valid(args: argparse.Namespace) -> int:
 def _frozen_valid_predictions() -> dict[str, dict[int, np.ndarray]]:
     preds: dict[str, dict[int, np.ndarray]] = {"P3": {}, "F": {}, "M": {}}
     for seed in C.SEEDS:
-        preds["P3"][seed], _ = C.p3_valid_pred(seed)
+        freeze = C.OUT / f"p3_valid_freeze_s{seed}.json"
+        if not freeze.exists():
+            raise SystemExit(f"missing regenerated P3 valid freeze {freeze}; run the audit first")
+        rec = C.read_json(freeze)
+        path = REPO / rec["prediction_file"]
+        if C.sha256_file(path) != rec["prediction_sha256"]:
+            raise SystemExit("regenerated P3 valid prediction changed after freeze")
+        with np.load(path) as z:
+            pred = np.asarray(z["pred"], dtype=np.float64)
+        if C.sha256_array(pred) != rec["prediction_array_sha256"]:
+            raise SystemExit("regenerated P3 valid prediction array hash mismatch")
+        if pred.shape != (C.N_VALID,):
+            raise SystemExit(f"unexpected P3 valid prediction shape {pred.shape}")
+        preds["P3"][seed] = pred
         for arm in C.CANDIDATES:
             freeze = _valid_freeze_path(arm, seed)
             if not freeze.exists():
@@ -1074,7 +1145,7 @@ def cmd_score_valid(args: argparse.Namespace) -> int:
             for seed, pred in by_seed.items():
                 entries[f"{key}{seed}"] = {
                     "array_sha256": C.sha256_array(pred),
-                    "source": "historical_frozen" if key == "P3" else "phase2b_frozen",
+                    "source": "historical_frozen_regenerated_from_soup" if key == "P3" else "phase2b_frozen",
                 }
         C.write_once_json(
             combined,
@@ -1107,8 +1178,10 @@ def cmd_score_valid(args: argparse.Namespace) -> int:
             "protocol_id": C.PROTOCOL_ID,
             "valid_labels_read": True,
             "read_count": read_count,
-            "y_file": str(C.VALID_Y.relative_to(REPO)),
-            "y_sha256": C.sha256_array(y, "float64"),
+            "y_source": "official PyG ZINC subset=True split=val; historical array hash verified",
+            "historical_y_path": cfg["label_provenance"]["valid_y"]["historical_path"],
+            "y_sha256_float32": C.sha256_array(y),
+            "y_sha256_float64": C.sha256_array(y, "float64"),
             "prediction_freeze_sha256": C.sha256_file(combined),
             "read_utc": _now(),
             "reread": read_count > 1,
@@ -1133,8 +1206,10 @@ def cmd_score_valid(args: argparse.Namespace) -> int:
         "n": C.N_VALID,
         "primary_metric": "raw-y MAE, seed-mean of two single-model seeds",
         "labels": {
-            "file": str(C.VALID_Y.relative_to(REPO)),
-            "sha256": C.sha256_array(y, "float64"),
+            "source": "official PyG ZINC subset=True split=val; historical array hash verified",
+            "historical_y_path": cfg["label_provenance"]["valid_y"]["historical_path"],
+            "array_sha256_float32": C.sha256_array(y),
+            "array_sha256_float64": C.sha256_array(y, "float64"),
             "read_count_this_round": read_count,
         },
         "models": C.metric_block(preds, y),
@@ -1279,7 +1354,7 @@ def _test_fingerprint(ds: Any) -> dict[str, Any]:
     processed = REPO / "data/ZINC/subset/processed/test.pt"
     return {
         "n_molecules": C.N_TEST,
-        "processed_pt": str(processed.relative_to(REPO)),
+        "processed_pt": _stored(processed),
         "processed_pt_sha256": C.sha256_file(processed),
         "structure_sha256": digest.hexdigest(),
     }
@@ -1324,6 +1399,47 @@ def cmd_test_predict(args: argparse.Namespace) -> int:
         sro.build_mol_objects(int(i), ds[i].x.numpy(), ds[i].edge_index.numpy(), ds[i].edge_attr.numpy())
         for i in range(C.N_TEST)
     ]
+    # Regenerate the historical P3 test predictions from the frozen soups (test
+    # structures only, no labels) and require bit-identical historical arrays.
+    # This stage is only reachable after promotion.
+    p3_entries: dict[str, dict[str, Any]] = {}
+    for seed in C.SEEDS:
+        freeze_path = C.OUT / f"test_p3_freeze_s{seed}.json"
+        if freeze_path.exists():
+            raise SystemExit("P3 test predictions already frozen; refusing to rewrite")
+        model_p3, info_p3 = C.build_p3(seed, "cpu")
+        p3_pred, p3_seconds = C.predict(model_p3, objs, "cpu")
+        prov = C.historical_prediction(f"test_P3{seed}")
+        array_sha = C.sha256_array(p3_pred)
+        if array_sha != prov["array_sha256_float32"]:
+            raise SystemExit(
+                f"regenerated P3 seed {seed} test array does not match the historical hash: "
+                f"{array_sha} != {prov['array_sha256_float32']}"
+            )
+        pred_path = C.OUT / f"test_p3_pred_s{seed}.npz"
+        np.savez_compressed(pred_path, row=np.arange(C.N_TEST, dtype=np.int64), pred=p3_pred.astype(np.float32))
+        payload = {
+            "protocol_id": C.PROTOCOL_ID,
+            "stage": "test_p3_regenerated_from_frozen_soup",
+            "arm": "P3",
+            "seed": seed,
+            "prediction_file": _stored(pred_path),
+            "prediction_sha256": C.sha256_file(pred_path),
+            "prediction_array_sha256": array_sha,
+            "soup": info_p3["soup"],
+            "historical_file_sha256": prov["historical_file_sha256"],
+            "historical_array_sha256": prov["array_sha256_float32"],
+            "bit_identical_to_historical_array": True,
+            "n": C.N_TEST,
+            "labels_read": False,
+            "official_test_labels_read": False,
+            "inference_seconds": p3_seconds,
+            "created_utc": _now(),
+        }
+        C.write_once_json(freeze_path, payload)
+        p3_entries[str(seed)] = payload
+        log(f"[test-predict P3 s{seed}] sha {payload['prediction_sha256'][:12]} {p3_seconds:.3f}s")
+
     device = _device(args.device)
     entries = {}
     for seed in C.SEEDS:
@@ -1338,7 +1454,7 @@ def cmd_test_predict(args: argparse.Namespace) -> int:
             "stage": "test_predict_freeze",
             "arm": finalist,
             "seed": seed,
-            "prediction_file": str(_test_pred_path(finalist, seed).relative_to(REPO)),
+            "prediction_file": _stored(_test_pred_path(finalist, seed)),
             "prediction_sha256": C.sha256_file(_test_pred_path(finalist, seed)),
             "prediction_array_sha256": C.sha256_array(pred),
             "soup": soup,
@@ -1358,10 +1474,12 @@ def cmd_test_predict(args: argparse.Namespace) -> int:
         out,
         {
             "protocol_id": C.PROTOCOL_ID,
-            "stage": "test_structure_audit_before_finalist_forward",
+            "stage": "test_structure_audit_and_frozen_predictions_before_label_read",
             "fingerprint": fp,
             "checks": checks,
             "finalist": finalist,
+            "p3_prediction_sha256": {s: p3_entries[s]["prediction_sha256"] for s in p3_entries},
+            "finalist_prediction_sha256": entries,
             "valid_decision_sha256": C.sha256_file(C.OUT / "valid_decision.json"),
             "labels_read": False,
             "created_utc": _now(),
@@ -1379,7 +1497,17 @@ def cmd_score_test(args: argparse.Namespace) -> int:
     cfg = C.load_config()
     preds: dict[str, dict[int, np.ndarray]] = {"P3": {}, finalist: {}}
     for seed in C.SEEDS:
-        preds["P3"][seed], _ = C.p3_test_pred(seed)
+        p3_freeze = C.read_json(C.OUT / f"test_p3_freeze_s{seed}.json")
+        p3_path = REPO / p3_freeze["prediction_file"]
+        if C.sha256_file(p3_path) != p3_freeze["prediction_sha256"]:
+            raise SystemExit("regenerated P3 test prediction changed after freeze")
+        with np.load(p3_path) as z:
+            p3_pred = np.asarray(z["pred"], dtype=np.float64)
+        if C.sha256_array(p3_pred) != p3_freeze["prediction_array_sha256"]:
+            raise SystemExit("regenerated P3 test prediction array hash mismatch")
+        if p3_pred.shape != (C.N_TEST,):
+            raise SystemExit(f"unexpected P3 test prediction shape {p3_pred.shape}")
+        preds["P3"][seed] = p3_pred
         freeze = C.read_json(_test_freeze_path(finalist, seed))
         path = REPO / freeze["prediction_file"]
         if C.sha256_file(path) != freeze["prediction_sha256"]:
@@ -1401,7 +1529,7 @@ def cmd_score_test(args: argparse.Namespace) -> int:
                 "entries": {
                     f"{k}{s}": {
                         "array_sha256": C.sha256_array(preds[k][s]),
-                        "source": "historical_frozen" if k == "P3" else "phase2b_frozen",
+                        "source": "historical_frozen_regenerated_from_soup" if k == "P3" else "phase2b_frozen",
                     }
                     for k in preds
                     for s in C.SEEDS
@@ -1423,8 +1551,10 @@ def cmd_score_test(args: argparse.Namespace) -> int:
             "protocol_id": C.PROTOCOL_ID,
             "official_test_labels_read": True,
             "read_count": read_count,
-            "y_file": str(C.TEST_Y.relative_to(REPO)),
-            "y_sha256": C.sha256_array(y, "float64"),
+            "y_source": "official PyG ZINC subset=True split=test; historical array hash verified",
+            "historical_y_path": cfg["label_provenance"]["test_y"]["historical_path"],
+            "y_sha256_float32": C.sha256_array(y),
+            "y_sha256_float64": C.sha256_array(y, "float64"),
             "prediction_freeze_sha256": C.sha256_file(combined),
             "read_utc": _now(),
             "reread": read_count > 1,
@@ -1461,8 +1591,10 @@ def cmd_score_test(args: argparse.Namespace) -> int:
         "finalist": finalist,
         "primary_metric": "raw-y MAE on official ZINC-12k test 1000, seed-mean of two single models",
         "labels": {
-            "file": str(C.TEST_Y.relative_to(REPO)),
-            "sha256": C.sha256_array(y, "float64"),
+            "source": "official PyG ZINC subset=True split=test; historical array hash verified",
+            "historical_y_path": cfg["label_provenance"]["test_y"]["historical_path"],
+            "array_sha256_float32": C.sha256_array(y),
+            "array_sha256_float64": C.sha256_array(y, "float64"),
             "read_count_this_round": read_count,
             "historically_exposed": True,
         },
@@ -1592,6 +1724,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     C.OUT = Path(args.out)
+    C.OUT.mkdir(parents=True, exist_ok=True)
     return {
         "audit": cmd_audit,
         "gates": cmd_gates,

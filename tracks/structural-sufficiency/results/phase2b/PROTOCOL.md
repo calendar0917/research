@@ -121,11 +121,14 @@ retrained**. Before training F/M, the audit must verify, read-only:
    `pretrain_encoder_s1.pt` (`ff8d6474…`) reproduce the recorded post-SSL encoder
    hashes when loaded into the rebuilt trunk.
 5. Replaying the two P3 soups on the 1,000 official-valid structures reproduces the
-   frozen `valid_R30.npz` / `valid_R31.npz` predictions (max |Δ| ≤ 5e-5) and the
-   historical valid MAE 0.079101 / 0.080586 (|Δ| ≤ 1e-6).
+   historical valid MAE 0.079101 / 0.080586 (|Δ| ≤ 1e-6) and, where the historical
+   `.npz` is present, max |Δ| ≤ 5e-5; the regenerated arrays must match the frozen
+   historical **array** hashes `0fff2981…` / `30ac789c…` bit-for-bit.
 6. Historical official-test prediction files `test_P30.npz` (`dd1dc3c4…`) and
-   `test_P31.npz` (`b8699768…`) match their freeze record, and their frozen test
-   MAE is 0.069304 / 0.070340 (seed-mean 0.069822).
+   `test_P31.npz` (`b8699768…`) match their freeze record; their frozen array
+   hashes are `4a217c2b…` / `4a339b09…` and their frozen test MAE is 0.069304 /
+   0.070340 (seed-mean 0.069822). The arrays are regenerated from the frozen soups
+   at the post-promotion test stage and must match those array hashes exactly.
 7. The model / object / masked-pretraining source files are byte-identical to the
    hashes recorded when P3 was evaluated (terminal-test `code_hashes`).
 8. The official-test structure fingerprint (`processed_pt` hash `bd7a1ceb…`,
@@ -139,6 +142,21 @@ the frozen checkpoints cannot be reused; it is not planned and is charged to the
 
 Disclosure: **P3's valid and test numbers and predictions are already-exposed
 historical evidence.** They are not a new blind test and cannot be presented as one.
+
+**Implementation note (added before the first GPU job, 2026-10-19).** The historical
+`valid_*.npz`, `test_*.npz`, `valid_y_read_once.npy` and `test_y_read_once.npy`
+files are gitignored and are absent from the compute checkout. The checkpoints,
+object files and SSL encoders are present. Therefore the audit **regenerates** the
+P3 valid predictions on CPU from the frozen, hash-verified soups and requires exact
+equality with array-level SHA-256 hashes computed from the historical files
+(`frozen_inputs`-adjacent `historical_prediction_provenance` and
+`label_provenance` in `configs/phase2b.yaml`). At the post-promotion test stage the
+same regeneration is applied to the test structures **before any test label read**,
+and the finalist predictions are then frozen. Valid/test labels are re-derived from
+the official PyG split at score time and must hash to the historical label arrays.
+This is a portability fix with no change to splits, models, recipe, metrics,
+promotion rule or test rule; it preserves exact numerical reuse rather than
+approximate replay.
 
 ---
 
@@ -190,8 +208,10 @@ Arms are trained **before** any official-valid label is read in this round.
 
 ## 7. Official-valid evaluation (development split)
 
-All six prediction files (P3 seed 0/1 historical, F seed 0/1, M seed 0/1) are frozen
-and hashed **before** the valid label read. Primary metric: **raw-y MAE** on the
+All six prediction files (P3 seed 0/1 regenerated from the frozen historical soups,
+F seed 0/1, M seed 0/1) are frozen and hashed **before** the valid label read; the
+P3 arrays must equal the historical array hashes, and each F/M file carries its
+soup and environment record. Primary metric: **raw-y MAE** on the
 1,000 official-valid molecules. Secondary: RMSE, median/p90/p95/p99 absolute error,
 per-seed values, the two-seed mean, same-seed paired differences, molecule-level
 paired bootstrap CI (5,000 resamples, unit = molecule, seed-averaged error vector),

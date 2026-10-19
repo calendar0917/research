@@ -64,24 +64,41 @@ frozen_inputs:
   soup_R3_seed1:
     path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed1.pt
     sha256: b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9
-  valid_pred_P30:
-    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R30.npz
-    sha256: f493bcc2e1b156bbe8074944469943cdd9e2dc114e45dc72a151868e9d29ec89
-  valid_pred_P31:
-    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R31.npz
-    sha256: 730b922c7313f8913d16f0022fa9eeba8d5344241e6b01429d8ed59130ab726d
+
+# The historical prediction/label files are gitignored and absent on the compute
+# checkout.  The P3 arrays are regenerated from the frozen hash-verified soups on
+# CPU and must match the array hashes below (computed from the historical files);
+# valid/test labels are re-derived from the official PyG split and hash-checked
+# against the historical array hashes.  See PROTOCOL.md "implementation note".
+label_provenance:
   valid_y:
-    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/valid_y_read_once.npy
-    sha256: dacae6ff2c288fa25b5b30ccf73e7b261d380c377ed0caf8fa4ef656651ff808
-  test_pred_P30:
-    path: tracks/structure-contribution/results/bjoc_r3_frozen_terminal_test_v1/predictions/test_P30.npz
-    sha256: dd1dc3c47203bc86b13564776f8dd590c750ff6499a9a1c46b07d0052d0a75dd
-  test_pred_P31:
-    path: tracks/structure-contribution/results/bjoc_r3_frozen_terminal_test_v1/predictions/test_P31.npz
-    sha256: b8699768feca42e499de60dd260cfe314e628bec0186b400b70bd8698b25004f
+    historical_path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/valid_y_read_once.npy
+    historical_file_sha256: dacae6ff2c288fa25b5b30ccf73e7b261d380c377ed0caf8fa4ef656651ff808
+    array_sha256_float32: 72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f
+    source: "official PyG ZINC subset=True split=val, rows 0..999"
   test_y:
-    path: tracks/structure-contribution/results/bjoc_r3_frozen_terminal_test_v1/test_y_read_once.npy
-    sha256: 265fe662233b65393f84aec2ba4dbcad797c4c73471823ee02c615a3304355ff
+    historical_path: tracks/structure-contribution/results/bjoc_r3_frozen_terminal_test_v1/test_y_read_once.npy
+    historical_file_sha256: 265fe662233b65393f84aec2ba4dbcad797c4c73471823ee02c615a3304355ff
+    array_sha256_float32: 66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768
+    source: "official PyG ZINC subset=True split=test, rows 0..999"
+
+historical_prediction_provenance:
+  valid_P30:
+    historical_path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R30.npz
+    historical_file_sha256: f493bcc2e1b156bbe8074944469943cdd9e2dc114e45dc72a151868e9d29ec89
+    array_sha256_float32: 0fff2981f2c956ba442b78e7263b8d30bbc9f75b063fb8f3fce96f78f8d0d7a0
+  valid_P31:
+    historical_path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R31.npz
+    historical_file_sha256: 730b922c7313f8913d16f0022fa9eeba8d5344241e6b01429d8ed59130ab726d
+    array_sha256_float32: 30ac789ce45034f856ff53c65697113c9c36e39652b7c0ec5c57ffd948ed1ef3
+  test_P30:
+    historical_path: tracks/structure-contribution/results/bjoc_r3_frozen_terminal_test_v1/predictions/test_P30.npz
+    historical_file_sha256: dd1dc3c47203bc86b13564776f8dd590c750ff6499a9a1c46b07d0052d0a75dd
+    array_sha256_float32: 4a217c2b633828bed0ecfe72c8a2a58387b715f8d106fcede872fdfb30b2e1d4
+  test_P31:
+    historical_path: tracks/structure-contribution/results/bjoc_r3_frozen_terminal_test_v1/predictions/test_P31.npz
+    historical_file_sha256: b8699768feca42e499de60dd260cfe314e628bec0186b400b70bd8698b25004f
+    array_sha256_float32: 4a339b090e7f1a9289529abd111667112b275f2825d1aad78b34005704ad47b5
 
 audit_expectations:
   p3_parameters: 413505
