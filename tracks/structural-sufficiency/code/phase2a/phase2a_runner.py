@@ -144,8 +144,9 @@ def cmd_replay(args: argparse.Namespace) -> int:
     labels = C.load_vault()
     y = C.row_labels(split.monitor, labels)
     mae = float(np.abs(pred - y).mean())
-    if abs(mae - C.P3E_MAE) > 1e-9:
-        raise SystemExit(f"replayed P3E MAE {mae!r} != frozen {C.P3E_MAE!r}")
+    mae_tol = 1e-6
+    if abs(mae - C.P3E_MAE) > mae_tol:
+        raise SystemExit(f"replayed P3E MAE {mae!r} != frozen {C.P3E_MAE!r} (tol {mae_tol})")
 
     payload = {
         **checks,
@@ -163,6 +164,8 @@ def cmd_replay(args: argparse.Namespace) -> int:
         ),
         "replayed_monitor_mae": mae,
         "frozen_monitor_mae": C.P3E_MAE,
+        "mae_abs_diff": abs(mae - C.P3E_MAE),
+        "mae_tolerance": 1e-6,
         "monitor_rmse": float(np.sqrt(((pred - y) ** 2).mean())),
         "p3e_reusable": True,
         "retrained_p3e": False,

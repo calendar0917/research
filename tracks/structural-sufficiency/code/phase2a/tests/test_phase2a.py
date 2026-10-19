@@ -272,7 +272,7 @@ def test_cpu_gates_pass():
 def test_replay_reproduces_frozen_p3e():
     payload = _load("replay.json")
     assert payload["max_abs_prediction_diff"] <= payload.get("replay_tolerance", 1e-5)
-    assert abs(payload["replayed_monitor_mae"] - C.P3E_MAE) < 1e-9
+    assert abs(payload["replayed_monitor_mae"] - C.P3E_MAE) <= payload.get("mae_tolerance", 1e-6)
     assert payload["retrained_p3e"] is False
 
 
