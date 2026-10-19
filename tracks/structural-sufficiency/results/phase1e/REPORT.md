@@ -21,8 +21,8 @@ The large-ring "structural" effect that Phase 1c/1d chased is, on ZINC,
 `−max(0, longest_cycle_in_a_NetworkX_Paton_basis − 6)` computed in one particular
 RDKit-canonical atom order, and it is **not permutation-invariant**. On the
 Monitor, the 40 RDKit-large-ring molecules and the 43 label-penalised molecules
-coincide (purity 1.0, recall 0.93), the penalised 4% carry 29–53% of every
-model's absolute error, and the cycle term alone is **68% of the label magnitude**
+coincide (purity 1.0, recall 0.93), the penalised 4% carry 29–55% of every
+SSRC arm's absolute error, and the cycle term alone is **68% of the label magnitude**
 on that group. Once the penalty is accounted for, **no SSRC arm beats the plain
 `G_ref` baseline anywhere** — not on the 96% complement, not on the large-ring
 tail. The Phase 1d "large-ring rescue" was a win of `R1_size` over a *worse
@@ -100,7 +100,7 @@ label magnitude.
 
 ## 2. Q2 — Do the performance gaps relate to the artificial label term?
 
-**Yes: the label-penalised 4% of the Monitor carries 29–53% of every SSRC arm's
+**Yes: the label-penalised 4% of the Monitor carries 29–55% of every SSRC arm's
 absolute error, and no arm is better than `G_ref` in any group.**
 
 Monitor MAE by group (`error_attribution.json`; 957 complement / 43 penalised):
@@ -273,7 +273,7 @@ Applying the frozen rules of `notes/phase1e_protocol.md` §2 mechanically
 |---|---|---:|---|
 | RDKit-large group left unpenalised | ≤ 5% | 0/40 = 0.0% | ✅ |
 | complement gap `R1_size_cap − G_ref` | < 0.02 | **0.0164** | ✅ (narrow) |
-| penalised share of absolute error | ≥ 25% | **31.6%** (`R1_size_cap`), 29.4% (`G_ref`) | ✅ |
+| penalised share of absolute error (max over arms; rule needs ≥1 arm) | ≥ 25% | **54.5%** (`S_cap_size`); `R1_size_cap` 31.6%, `G_ref` 29.4% | ✅ |
 
 ### `STRUCTURAL_SIGNAL_BEYOND_CYCLE_REMAINS` — **NOT FIRED**
 
@@ -394,7 +394,7 @@ picks up a different file.
   read as **relative to a worse sibling arm**. No SSRC arm is better than
   `G_ref` on the large-ring tail. The Phase 1d non-claim "the large-ring subgroup
   is partly label-mechanism-coupled because the target includes −cycles" is now
-  quantified: purity 1.0, 29–53% of error share, 68% of label magnitude,
+  quantified: purity 1.0, 29–55% of error share, 68% of label magnitude,
   9.3% permutation-unstable.
 - **Any aggregate ZINC `logP_SA_cycle` number in this track is protocol-mixed**
   with a hidden ring-size task. Historical numbers (e.g. `R1` 0.260161,
