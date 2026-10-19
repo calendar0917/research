@@ -53,6 +53,9 @@ that at the dataset-construction entry point:
   `train` or `train,val`; `test` raises before any dataset object is created.
 - `preformat_ZINC()` passes the explicit split list into `join_dataset_splits`;
   there is no official test loader and no test graph in the joined dataset.
+- The bundle's loader helper refuses to call `create_loader()` unless an
+  explicit `reference.splits` request is present, so the upstream-compatible
+  three-split fallback is unreachable through the bundle entry points.
 - Timing mode uses `reference.splits=train`: no valid loader is constructed
   either.  The no-grad 1000-row pass is on **train rows** and computes no score.
 - `grit/train/custom_train.py` no longer accesses `perf[2]`; its train-only
@@ -78,13 +81,31 @@ The patch touches only:
    loss/MAE paths, only classification metric registration.
 
 Model layers, RRWP, loss (`L1`), optimizer (AdamW), and the 2000-epoch
-cosine/warmup scheduler are upstream code and unchanged.  The config is
-unchanged; the 2000-epoch schedule is kept even in timing mode, which stops
-early rather than shrinking the schedule.
+cosine/warmup scheduler are upstream code and unchanged.  The config file is
+unchanged; the runner only disables TensorBoard/wandb/mlflow and test scoring.
+The 2000-epoch schedule is kept even in timing mode, which stops early rather
+than shrinking the schedule.
 
 Two small compatibility shims replace missing `torch_scatter`/`torch_sparse`
 extensions by equivalent PyG 2.6.1 operations.  RRWP is checked against an
 independent dense computation (`max_abs = 0.0` on the checked graph).
+
+## Measured result (short)
+
+The A100 timing run is in `timing.json` and `COST_REPORT.md`.  One warmup plus
+three timed epochs gave a train-only mean of **35.40 s/epoch** (repeat run
+35.08 s; range over all timed epochs 35.01--35.61 s), 313 optimizer steps per
+epoch, peak allocated **741.5 MB** / reserved **922.0 MB**.  The formal
+2,000-epoch projection with valid eval is **20.1--20.6 A100-hours per seed**;
+two seeds are **40.2--41.2 A100-hours total** and **20.1--20.6 h wall** when run
+in parallel on two A100s.  The two timing runs used **0.0883 A100-hours** total
+(cap 0.15).  No valid/test score was computed.
+
+The measured A100 epoch is not faster than the paper's 29.4 s/epoch V100
+number; this is consistent with a small-graph, step-overhead-bound workload
+(no SM-utilization trace was captured), and the reproducible stack uses PyG
+2.6.1 shims rather than the paper's compiled extensions.  It is a
+valid cost measurement for this reference, not a paper-speed reproduction.
 
 ## Reproduce the functional checks (CPU)
 
@@ -122,7 +143,7 @@ rr run res zinc-grit-ref-timing \
 
 ```bash
 rr run res zinc-grit-ref-formal \
-  --gpus 1 --pool res-gpu0 --time 12:00:00 \
+  --gpus 1 --pool res-gpu0 --time 24:00:00 \
   --result tracks/structural-sufficiency/zinc_grit_reference_preparation_v1/runs/formal-seed41 \
   -- python tracks/structural-sufficiency/zinc_grit_reference_preparation_v1/run_reference.py \
        --mode train --confirm-long-run --device cuda:0 --seed 41 \
@@ -133,6 +154,11 @@ rr run res zinc-grit-ref-formal \
 
 Formal mode constructs train+valid (never test), evaluates valid every epoch,
 and keeps the best-valid checkpoint.  It does not read the official test split.
+
+For two seeds in parallel, launch the same command twice with `--seed 41` /
+`--seed 42`, `--run-name formal-seed41` / `formal-seed42`, and
+`--pool res-gpu0` / `res-gpu1`.  The jobs are independent; GPU-hours add even
+though wall time overlaps.
 
 ## Two different evaluations
 

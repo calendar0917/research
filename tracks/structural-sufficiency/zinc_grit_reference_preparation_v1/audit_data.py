@@ -132,7 +132,8 @@ def main(argv=None) -> int:
         },
         "split_evidence": {
             "train_rows": len(ds),
-            "valid_label_rows_from_cached_npy": int(np.load(valid_labels).shape[0])
+            "valid_label_rows_from_cached_npy": int(
+                np.load(valid_labels, mmap_mode="r").shape[0])
             if valid_labels.exists() else None,
             "valid_values_read_for_audit": False,
             "official_test_rows": None,

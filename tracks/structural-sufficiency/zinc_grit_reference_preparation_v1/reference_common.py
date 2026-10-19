@@ -272,6 +272,10 @@ def make_loaders():
     from torch_geometric.graphgym.loader import create_loader
     from torch_geometric.graphgym.config import cfg
 
+    if cfg.get("reference", None) is None:
+        raise RuntimeError(
+            "reference.splits must be set before loaders are created; "
+            "the official test split is disabled")
     if not getattr(gg_loader, "_grit_reference_split_fix", False):
         original = gg_loader.set_dataset_info
 

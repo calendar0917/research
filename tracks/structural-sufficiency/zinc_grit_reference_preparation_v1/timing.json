@@ -1,0 +1,579 @@
+{
+  "schema": "zinc_grit_reference_timing_v1",
+  "status": "ok",
+  "mode": "timing",
+  "seed": 41,
+  "upstream": {
+    "url": "https://github.com/LiamMa/GRIT",
+    "commit": "6c988ea600a606fbb49a2246c64a2d37396b3ab5",
+    "official_config": "configs/GRIT/zinc-GRIT-RRWP.yaml",
+    "official_config_sha256": "e60b425badb9ff29de9bb8a973bfa73b9d9d4d97cf6d2ae6cc1a8be77edc00bf",
+    "patch": "patches/0001-reference-no-test-compat.patch",
+    "patch_sha256": "dae522601463ae2c56783b3a0174c64f09f9efb0e1f3af388d52150ef9e5a283"
+  },
+  "environment": {
+    "hostname": "a100-2",
+    "python": "3.12.14",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "nvidia_driver": "550.163.01",
+    "torch_geometric": "2.6.1",
+    "cuda_visible_devices": "0",
+    "research_git_commit": "0889f45fffa1cc00ca71b70f89781cf1872c989f",
+    "research_git_tracked_dirty": false,
+    "research_git_untracked_count": 9,
+    "research_git_untracked_sample": [
+      "tracks/structure-contribution/results/bond_relation_attribution_v1/gpu_budget_ledger.json.lock",
+      "tracks/structure-contribution/results/bond_relation_attribution_v1/holdout_read.lock.premerge-04081f8",
+      "tracks/structure-contribution/results/bond_relation_attribution_v1/prediction_manifest_E.json.lock",
+      "tracks/structure-contribution/results/p3_bond_relation_bridge_v1/gpu_budget_ledger.json.lock",
+      "tracks/structure-contribution/results/p3_bond_relation_bridge_v1/holdout_read.lock.rr-untracked-backup"
+    ],
+    "upstream_commit": "6c988ea600a606fbb49a2246c64a2d37396b3ab5",
+    "official_config_sha256": "e60b425badb9ff29de9bb8a973bfa73b9d9d4d97cf6d2ae6cc1a8be77edc00bf",
+    "patch_sha256": "dae522601463ae2c56783b3a0174c64f09f9efb0e1f3af388d52150ef9e5a283",
+    "compat_torch_scatter_sha256": "05564008b875622047af0d7e1817d8935aa738ea3062b7bd3a325b59a23c5d43",
+    "compat_torch_sparse_sha256": "b69d4edbbc46ef1471bedf46a7bbbce3ed9eaee9b58414513d57c26147b10dea"
+  },
+  "config": {
+    "path": "/home/hxy/cy/research/tracks/structural-sufficiency/zinc_grit_reference_preparation_v1/configs/zinc-GRIT-RRWP.yaml",
+    "sha256": "e60b425badb9ff29de9bb8a973bfa73b9d9d4d97cf6d2ae6cc1a8be77edc00bf",
+    "frozen_values": {
+      "layers": 10,
+      "n_heads": 8,
+      "dim_hidden": 64,
+      "attn_dropout": 0.2,
+      "update_e": true,
+      "deg_scaler": true,
+      "full_attn": true,
+      "edge_enhance": true,
+      "O_e": true,
+      "norm_e": true,
+      "rrwp_ksteps": 21,
+      "rrwp_add_identity": true,
+      "batch_size": 32,
+      "max_epoch": 2000,
+      "num_warmup_epochs": 50,
+      "scheduler": "cosine_with_warmup",
+      "min_lr": 1e-06,
+      "optimizer": "adamW",
+      "base_lr": 0.001,
+      "weight_decay": 1e-05,
+      "loss": "l1",
+      "pooling": "add",
+      "test_enabled": false
+    }
+  },
+  "data": {
+    "source": "official PyG ZINC subset=True",
+    "split_loaded": "train",
+    "official_test_constructed": false,
+    "official_valid_constructed": false,
+    "train_stats": {
+      "graphs": 10000,
+      "atom_types": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "bond_types": [
+        1,
+        2,
+        3
+      ],
+      "num_nodes_min": 9,
+      "num_nodes_max": 37,
+      "num_nodes_mean": 23.1664,
+      "label_mean": 0.015297334436047822,
+      "label_std_population": 2.0108199121156365,
+      "label_std_sample": 2.0109204606524456,
+      "label_min": -42.036563873291016,
+      "label_max": 3.8048393726348877
+    }
+  },
+  "model": {
+    "params_total": 473473,
+    "params_expected_paper_zinc": 473473,
+    "params_difference": 0
+  },
+  "job": {
+    "start_unix": 1792415843.9957829,
+    "end_unix": 1792415994.9267194,
+    "wall_s": 150.9309361029882,
+    "setup_s": 8.602105256984942,
+    "data_build_s": 5.8438204530393705,
+    "model_build_s": 0.3100636110175401,
+    "train_start_unix": 1792415852.59789,
+    "train_end_unix": 1792415993.753709,
+    "gpu_occupancy_hours_process_wall": 0.04192526002860783,
+    "gpu_compute_hours_epochs_plus_eval": 0.03953372308499335,
+    "cuda_visible_devices": "0"
+  },
+  "functional_probe": {
+    "params": {
+      "actual": 473473,
+      "paper_zinc": 473473,
+      "difference": 0,
+      "pass": true
+    },
+    "rrwp": {
+      "pass": true,
+      "tolerance": 1e-06,
+      "node_abs_shape": [
+        29,
+        21
+      ],
+      "pair_index_shape": [
+        2,
+        841
+      ],
+      "pair_value_shape": [
+        841,
+        21
+      ],
+      "pair_vs_dense_max_abs": 0.0,
+      "node_abs_vs_dense_max_abs": 0.0,
+      "ksteps": 21
+    },
+    "participation": {
+      "pass": true,
+      "pair_zero_max_abs_delta": 0.021998465061187744,
+      "node_abs_zero_max_abs_delta": 0.23069924116134644,
+      "note": "zeroing the RRWP pair/node input must change the prediction"
+    },
+    "forward_backward": {
+      "pass": true,
+      "loss": 0.8835889101028442,
+      "pred_finite": true,
+      "grad_tensors": 236,
+      "grad_tensors_finite": 236,
+      "grad_tensors_nonzero": 236
+    },
+    "renumbering": {
+      "pass": true,
+      "tolerance": 5e-06,
+      "graphs": 5,
+      "max_abs_error": 5.364418029785156e-07,
+      "per_graph_abs_error": [
+        0.0,
+        5.364418029785156e-07,
+        2.682209014892578e-07,
+        1.7881393432617188e-07,
+        1.1920928955078125e-07
+      ]
+    },
+    "all_pass": true,
+    "seconds": 0.6371144970180467
+  },
+  "loop_timing": {
+    "process_start_unix": 1792415843.9941022,
+    "loop_start_unix": 1792415852.5979083,
+    "loop_end_unix": 1792415993.7522106,
+    "loop_wall_s": 141.1543093760265,
+    "epochs_run": 4,
+    "warmup_epochs": 1,
+    "timed_epochs": 3,
+    "stop_reason": "stop_after_epoch",
+    "records": [
+      {
+        "epoch": 0,
+        "train_loop_s": 34.927950493991375,
+        "train_write_s": 0.015771154081448913,
+        "eval_s": 0.0,
+        "scheduler_s": 6.001500878483057e-05,
+        "epoch_total_s": 34.94385527202394,
+        "lr": 2e-05,
+        "train_graphs": 10000,
+        "optimizer_steps": 313,
+        "batch_size": 32,
+        "last_batch_size": 16,
+        "peak_allocated_mb": 684.384765625,
+        "peak_reserved_mb": 892.0
+      },
+      {
+        "epoch": 1,
+        "train_loop_s": 35.59335399407428,
+        "train_write_s": 0.012044170987792313,
+        "eval_s": 0.0,
+        "scheduler_s": 4.285795148462057e-05,
+        "epoch_total_s": 35.60550318704918,
+        "lr": 4e-05,
+        "train_graphs": 10000,
+        "optimizer_steps": 313,
+        "batch_size": 32,
+        "last_batch_size": 16,
+        "peak_allocated_mb": 741.537109375,
+        "peak_reserved_mb": 922.0
+      },
+      {
+        "epoch": 2,
+        "train_loop_s": 35.578357562888414,
+        "train_write_s": 0.01219027501065284,
+        "eval_s": 0.0,
+        "scheduler_s": 2.806901466101408e-05,
+        "epoch_total_s": 35.59064600302372,
+        "lr": 6e-05,
+        "train_graphs": 10000,
+        "optimizer_steps": 313,
+        "batch_size": 32,
+        "last_batch_size": 16,
+        "peak_allocated_mb": 677.88671875,
+        "peak_reserved_mb": 922.0
+      },
+      {
+        "epoch": 3,
+        "train_loop_s": 34.99383122799918,
+        "train_write_s": 0.017641289974562824,
+        "eval_s": 0.0,
+        "scheduler_s": 4.227203316986561e-05,
+        "epoch_total_s": 35.01158238190692,
+        "lr": 8e-05,
+        "train_graphs": 10000,
+        "optimizer_steps": 313,
+        "batch_size": 32,
+        "last_batch_size": 16,
+        "peak_allocated_mb": 698.11181640625,
+        "peak_reserved_mb": 922.0
+      }
+    ],
+    "timed_epoch_mean_s": 35.40257719065994,
+    "timed_epoch_min_s": 35.01158238190692,
+    "timed_epoch_max_s": 35.60550318704918
+  },
+  "eval_proxy_1000_train": {
+    "purpose": "timing proxy for one 1000-row eval pass; NOT official valid",
+    "split": "first 1000 rows of official ZINC train",
+    "graphs": 1000,
+    "batches": 32,
+    "batch_size": 32,
+    "seconds": 1.1698162619723007,
+    "graphs_per_s": 854.8350989017781,
+    "pred_finite": true,
+    "pred_sum_checksum": 283.6786735393107,
+    "score_computed": false,
+    "labels_used_for_score": false,
+    "peak_allocated_mb": 75.130859375,
+    "peak_reserved_mb": 922.0
+  },
+  "notes": [
+    "No official ZINC test split was constructed or read.",
+    "No official-valid score is computed in timing mode.",
+    "The 1000-row eval is a timing proxy on train rows, not validation.",
+    "The scheduler is the official 2000-epoch cosine/warmup schedule; timing mode stops early instead of shrinking max_epoch.",
+    "Paper 0.059 +/- 0.002 is an official test MAE and is not a local target."
+  ],
+  "provenance": {
+    "primary_run_id": "zinc-grit-ref-timing-v2-20261019-211711-39097194",
+    "primary_git_commit": "0889f45fffa1cc00ca71b70f89781cf1872c989f",
+    "primary_rr_git_dirty": false,
+    "primary_rr_meta": {
+      "schema": "rr/run-meta/v1",
+      "experiment": "zinc-grit-ref-timing-v2",
+      "run_id": "zinc-grit-ref-timing-v2-20261019-211711-39097194",
+      "host": "res",
+      "backend": "process",
+      "pool": "res-gpu0",
+      "torch_backend": "cu124",
+      "git_commit": "0889f45fffa1cc00ca71b70f89781cf1872c989f",
+      "git_branch": "main",
+      "git_dirty": false,
+      "git_diff_hash": "e3b0c44298fc1c14",
+      "command": "python tracks/structural-sufficiency/zinc_grit_reference_preparation_v1/run_reference.py --mode timing --device cuda:0 --seed 41 --out-dir tracks/structural-sufficiency/zinc_grit_reference_preparation_v1/runs --run-name a100-timing --timing-out tracks/structural-sufficiency/zinc_grit_reference_preparation_v1/runs/a100-timing/timing_summary.json --overwrite",
+      "requested": {
+        "gpus": 1,
+        "cpus": 4,
+        "mem": "32G",
+        "time": "00:10:00",
+        "partition": null,
+        "eligible_nodes": []
+      },
+      "result_paths": [
+        "tracks/structural-sufficiency/zinc_grit_reference_preparation_v1/runs/a100-timing"
+      ],
+      "created_at": "2026-10-19T21:17:11+08:00",
+      "state": "completed",
+      "slurm_job_id": null,
+      "runtime": {
+        "hostname": "a100-2",
+        "node": "a100-2",
+        "driver_version": "550.163.01",
+        "gpus": {
+          "count": 2,
+          "names": [
+            "NVIDIA A100-SXM4-40GB",
+            "NVIDIA A100-SXM4-40GB"
+          ]
+        },
+        "gpu_count": 2,
+        "python_version": "3.12.14",
+        "python_executable": "/home/hxy/cy/research/.venv/bin/python",
+        "slurm_job_id": null,
+        "slurm_job_nodelist": null,
+        "slurm_partition": null,
+        "slurm_cpus": null,
+        "slurm_gpus": "0",
+        "cuda_visible_devices": "0",
+        "started_at": "2026-10-19T21:17:17+08:00",
+        "torch_version": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_available": true,
+        "cuda_device_count": 1,
+        "completed_at": "2026-10-19T21:19:56+08:00",
+        "exit_code": 0
+      }
+    },
+    "repeat_run_id": "zinc-grit-ref-timing-20261019-211031-c351fef8",
+    "repeat_rr_git_dirty": false,
+    "repeat_rr_meta": {
+      "schema": "rr/run-meta/v1",
+      "experiment": "zinc-grit-ref-timing",
+      "run_id": "zinc-grit-ref-timing-20261019-211031-c351fef8",
+      "host": "res",
+      "backend": "process",
+      "pool": "res-gpu0",
+      "torch_backend": "cu124",
+      "git_commit": "aa7e751c85c5de1be22334727c9c60e4efe547df",
+      "git_branch": "main",
+      "git_dirty": false,
+      "git_diff_hash": "e3b0c44298fc1c14",
+      "command": "python tracks/structural-sufficiency/zinc_grit_reference_preparation_v1/run_reference.py --mode timing --device cuda:0 --seed 41 --out-dir tracks/structural-sufficiency/zinc_grit_reference_preparation_v1/runs --run-name a100-timing --timing-out tracks/structural-sufficiency/zinc_grit_reference_preparation_v1/runs/a100-timing/timing_summary.json --overwrite",
+      "requested": {
+        "gpus": 1,
+        "cpus": 4,
+        "mem": "32G",
+        "time": "00:10:00",
+        "partition": null,
+        "eligible_nodes": []
+      },
+      "result_paths": [
+        "tracks/structural-sufficiency/zinc_grit_reference_preparation_v1/runs/a100-timing"
+      ],
+      "created_at": "2026-10-19T21:10:31+08:00",
+      "state": "completed",
+      "slurm_job_id": null,
+      "runtime": {
+        "hostname": "a100-2",
+        "node": "a100-2",
+        "driver_version": "550.163.01",
+        "gpus": {
+          "count": 2,
+          "names": [
+            "NVIDIA A100-SXM4-40GB",
+            "NVIDIA A100-SXM4-40GB"
+          ]
+        },
+        "gpu_count": 2,
+        "python_version": "3.12.14",
+        "python_executable": "/home/hxy/cy/research/.venv/bin/python",
+        "slurm_job_id": null,
+        "slurm_job_nodelist": null,
+        "slurm_partition": null,
+        "slurm_cpus": null,
+        "slurm_gpus": "0",
+        "cuda_visible_devices": "0",
+        "started_at": "2026-10-19T21:10:38+08:00",
+        "torch_version": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_available": true,
+        "cuda_device_count": 1,
+        "completed_at": "2026-10-19T21:13:17+08:00",
+        "exit_code": 0
+      }
+    },
+    "repeat_reason": "first successful run repeated after separating tracked dirt from unrelated untracked experiment lock files",
+    "note": "Both runs exited 0; the primary block is the repeated run v2."
+  },
+  "repeat_runs": [
+    {
+      "run_id": "zinc-grit-ref-timing-20261019-211031-c351fef8",
+      "git_commit": "aa7e751c85c5de1be22334727c9c60e4efe547df",
+      "timed_epoch_mean_s": 35.077512103986614,
+      "timed_epoch_min_s": 35.02693909499794,
+      "timed_epoch_max_s": 35.135206041974016,
+      "epochs": [
+        {
+          "epoch": 0,
+          "train_loop_s": 35.156633449019864,
+          "train_write_s": 0.03238503693137318,
+          "eval_s": 0.0,
+          "scheduler_s": 6.980204489082098e-05,
+          "epoch_total_s": 35.18919953308068,
+          "lr": 2e-05,
+          "train_graphs": 10000,
+          "optimizer_steps": 313,
+          "batch_size": 32,
+          "last_batch_size": 16,
+          "peak_allocated_mb": 684.384765625,
+          "peak_reserved_mb": 892.0
+        },
+        {
+          "epoch": 1,
+          "train_loop_s": 35.0576338020619,
+          "train_write_s": 0.012641277979128063,
+          "eval_s": 0.0,
+          "scheduler_s": 3.650202415883541e-05,
+          "epoch_total_s": 35.07039117498789,
+          "lr": 4e-05,
+          "train_graphs": 10000,
+          "optimizer_steps": 313,
+          "batch_size": 32,
+          "last_batch_size": 16,
+          "peak_allocated_mb": 741.537109375,
+          "peak_reserved_mb": 922.0
+        },
+        {
+          "epoch": 2,
+          "train_loop_s": 35.01397300499957,
+          "train_write_s": 0.012876568012870848,
+          "eval_s": 0.0,
+          "scheduler_s": 3.555591683834791e-05,
+          "epoch_total_s": 35.02693909499794,
+          "lr": 6e-05,
+          "train_graphs": 10000,
+          "optimizer_steps": 313,
+          "batch_size": 32,
+          "last_batch_size": 16,
+          "peak_allocated_mb": 677.88671875,
+          "peak_reserved_mb": 922.0
+        },
+        {
+          "epoch": 3,
+          "train_loop_s": 35.122901006951,
+          "train_write_s": 0.012206841027364135,
+          "eval_s": 0.0,
+          "scheduler_s": 3.341201227158308e-05,
+          "epoch_total_s": 35.135206041974016,
+          "lr": 8e-05,
+          "train_graphs": 10000,
+          "optimizer_steps": 313,
+          "batch_size": 32,
+          "last_batch_size": 16,
+          "peak_allocated_mb": 698.11181640625,
+          "peak_reserved_mb": 922.0
+        }
+      ],
+      "eval_proxy_seconds": 1.1248128719162196,
+      "rr_wall_s": 159.0
+    },
+    {
+      "run_id": "zinc-grit-ref-timing-v2-20261019-211711-39097194",
+      "git_commit": "0889f45fffa1cc00ca71b70f89781cf1872c989f",
+      "timed_epoch_mean_s": 35.40257719065994,
+      "timed_epoch_min_s": 35.01158238190692,
+      "timed_epoch_max_s": 35.60550318704918,
+      "epochs": [
+        {
+          "epoch": 0,
+          "train_loop_s": 34.927950493991375,
+          "train_write_s": 0.015771154081448913,
+          "eval_s": 0.0,
+          "scheduler_s": 6.001500878483057e-05,
+          "epoch_total_s": 34.94385527202394,
+          "lr": 2e-05,
+          "train_graphs": 10000,
+          "optimizer_steps": 313,
+          "batch_size": 32,
+          "last_batch_size": 16,
+          "peak_allocated_mb": 684.384765625,
+          "peak_reserved_mb": 892.0
+        },
+        {
+          "epoch": 1,
+          "train_loop_s": 35.59335399407428,
+          "train_write_s": 0.012044170987792313,
+          "eval_s": 0.0,
+          "scheduler_s": 4.285795148462057e-05,
+          "epoch_total_s": 35.60550318704918,
+          "lr": 4e-05,
+          "train_graphs": 10000,
+          "optimizer_steps": 313,
+          "batch_size": 32,
+          "last_batch_size": 16,
+          "peak_allocated_mb": 741.537109375,
+          "peak_reserved_mb": 922.0
+        },
+        {
+          "epoch": 2,
+          "train_loop_s": 35.578357562888414,
+          "train_write_s": 0.01219027501065284,
+          "eval_s": 0.0,
+          "scheduler_s": 2.806901466101408e-05,
+          "epoch_total_s": 35.59064600302372,
+          "lr": 6e-05,
+          "train_graphs": 10000,
+          "optimizer_steps": 313,
+          "batch_size": 32,
+          "last_batch_size": 16,
+          "peak_allocated_mb": 677.88671875,
+          "peak_reserved_mb": 922.0
+        },
+        {
+          "epoch": 3,
+          "train_loop_s": 34.99383122799918,
+          "train_write_s": 0.017641289974562824,
+          "eval_s": 0.0,
+          "scheduler_s": 4.227203316986561e-05,
+          "epoch_total_s": 35.01158238190692,
+          "lr": 8e-05,
+          "train_graphs": 10000,
+          "optimizer_steps": 313,
+          "batch_size": 32,
+          "last_batch_size": 16,
+          "peak_allocated_mb": 698.11181640625,
+          "peak_reserved_mb": 922.0
+        }
+      ],
+      "eval_proxy_seconds": 1.1698162619723007,
+      "rr_wall_s": 159.0
+    }
+  ],
+  "gpu_budget_ledger": {
+    "cap_a100_hours": 0.15,
+    "accounting": "one GPU per run; rr meta started_at -> completed_at (includes shell/entry setup)",
+    "primary_occupancy_hours": 0.04416666666666667,
+    "primary_wall_s": 159.0,
+    "repeat_occupancy_hours": 0.04416666666666667,
+    "repeat_wall_s": 159.0,
+    "total_occupancy_hours": 0.08833333333333333,
+    "remaining_hours": 0.06166666666666666,
+    "runs": 2,
+    "failed_runs": 0
+  },
+  "failure_notes": [
+    "No training/GPU failure. The first run was repeated only to correct the dirty-tree metadata field; both runs completed with exit 0.",
+    "The remote checkout had unrelated untracked lock files from frozen experiments; tracked tree was clean (rr meta git_dirty=false)."
+  ],
+  "unresolved": [
+    "Official valid/test scores were not measured; timing mode uses train only.",
+    "The 1000-row eval proxy is train data, not official valid.",
+    "The 2000-epoch run has not been started; projections include uncertainty.",
+    "Small-graph A100 utilization is low; the measured epoch time is data/launch-bound, not a GPU compute roofline."
+  ],
+  "post_timing_changes": [
+    "After this timing run, reference_common.make_loaders() gained a guard that requires an explicit reference.splits before create_loader(); the measured run already set reference.splits=train, so the measured path is unchanged."
+  ]
+}
