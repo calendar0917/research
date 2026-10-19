@@ -6,7 +6,7 @@ Baseline: frozen Phase 1e BJOC-P3E, Monitor MAE **0.091071**.
 **Round verdict: `CAPACITY_ONLY_INCREMENT`.**
 A small extra per-atom stage after `AtomEncoder` buys **≈0.0055 MAE** (6.1 % relative)
 over P3E. Rerouting that stage through **real bond messages adds nothing measurable**:
-`Gain_MP` is +0.003764 at seed 0 and −0.000055 at seed 1, i.e. the two seeds disagree on
+`Gain_MP` is +0.003764 at seed 0 and -0.000055 at seed 1, i.e. the two seeds disagree on
 sign and the effect is smaller than the control arm's between-seed spread.
 The interaction hypothesis is **not supported**; the capacity hypothesis is.
 
@@ -15,7 +15,7 @@ The interaction hypothesis is **not supported**; the capacity hypothesis is.
 ## 1. Question, and what was already excluded before spending GPU
 
 Given a mature static encoder (P3E: atom → bond → junction → group-composer + reader,
-413 505 parameters, Fit-only masked-SSL init, MAE 0.091071), does a small amount of
+413505 parameters, Fit-only masked-SSL init, MAE 0.091071), does a small amount of
 **atom-state propagation on real physical edges** beat a **parameter-matched
 non-interactive per-atom computation**?
 
@@ -36,11 +36,11 @@ ownership / Null-Organized routing, input-statistics and SSL searches all act on
 
 ## 2. Design, and the one thing that makes the comparison meaningful
 
-Parameter match (new modules only): F adds 49 984, M adds 50 752 — **1.54 % apart**,
-inside the 5 % band. Total parameters 463 489 vs 464 257 (1.0017×).
+Parameter match (new modules only): F adds 49984, M adds 50752 — **1.54 % apart**,
+inside the 5 % band. Total parameters 463489 vs 464257 (1.0017×).
 Forward GEMM FLOPs on a fixed 128-graph batch: 2.301 G (F) and 2.309 G (M) vs 2.007 G
 (P3E) → **1.146× and 1.151×**, i.e. the two arms are within 0.4 % of each other in both
-capacity and compute. That is what makes `MAE(F) − MAE(M)` an estimate of the
+capacity and compute. That is what makes `MAE(F) - MAE(M)` an estimate of the
 *interaction* term rather than of capacity.
 
 Shared and frozen: BJOC trunk, global descriptors, Fit-only SSL encoder, training recipe,
@@ -82,26 +82,26 @@ disk **before** any Monitor label was read; no early stopping and no model selec
 
 | arm | new params | total params | FLOPs vs P3E | MAE s0 | MAE s1 | **MAE mean** | RMSE s0 | RMSE s1 |
 |---|---|---|---|---|---|---|---|---|
-| P3E (frozen / matched) | 0 | 413 505 | 1.000× | 0.091 071 | 0.090 703 | **0.090 887** | 0.270 310 | 0.273 834 |
-| F `NodeFFN-2` | +49 984 | 463 489 | 1.146× | 0.089 160 | 0.085 239 | **0.087 199** | 0.271 445 | 0.266 278 |
-| M `LocalMP-2` | +50 752 | 464 257 | 1.151× | 0.085 396 | 0.085 294 | **0.085 345** | 0.275 518 | 0.271 745 |
+| P3E (frozen / matched) | 0 | 413505 | 1.000× | 0.091071 | 0.090703 | **0.090887** | 0.270310 | 0.273834 |
+| F `NodeFFN-2` | +49984 | 463489 | 1.146× | 0.089160 | 0.085239 | **0.087199** | 0.271445 | 0.266278 |
+| M `LocalMP-2` | +50752 | 464257 | 1.151× | 0.085396 | 0.085294 | **0.085345** | 0.275518 | 0.271745 |
 
 Per-seed gains (positive = first arm better):
 
 | contrast | seed 0 | seed 1 | mean |
 |---|---|---|---|
-| `Gain_P3E` = MAE(P3E) − MAE(M) | **+0.005675** | **+0.005409** | **+0.005542** |
-| MAE(P3E) − MAE(F) | +0.001911 | +0.005465 | +0.003688 |
-| **`Gain_MP` = MAE(F) − MAE(M)** | **+0.003764** | **−0.000055** | **+0.001854** |
-| RMSE(M) − RMSE(P3E) | +0.005208 | −0.002090 | +0.001559 |
+| `Gain_P3E` = MAE(P3E) - MAE(M) | **+0.005675** | **+0.005409** | **+0.005542** |
+| MAE(P3E) - MAE(F) | +0.001911 | +0.005465 | +0.003688 |
+| **`Gain_MP` = MAE(F) - MAE(M)** | **+0.003764** | **-0.000055** | **+0.001854** |
+| RMSE(M) - RMSE(P3E) | +0.005208 | -0.002090 | +0.001559 |
 
 Between-seed spread of the same arm: **P3E 0.000368, M 0.000102, F 0.003921**.
 
 Molecule-level paired bootstrap (discovery only, not training-seed uncertainty):
-seed 0 `M−P3E` = −0.005675 CI [−0.009520, −0.001767]; seed 1 `M−P3E` = −0.005409
-CI [−0.010366, −0.000796]; seed 1 `F−P3E` = −0.005465 CI [−0.010689, −0.000391];
-seed 0 `M−F` = −0.003764 CI [−0.007803, +0.000264]; seed 1 `M−F` = +0.000055
-CI [−0.004420, +0.004413].
+seed 0 `M-P3E` = -0.005675 CI [-0.009520, -0.001767]; seed 1 `M-P3E` = -0.005409
+CI [-0.010366, -0.000796]; seed 1 `F-P3E` = -0.005465 CI [-0.010689, -0.000391];
+seed 0 `M-F` = -0.003764 CI [-0.007803, +0.000264]; seed 1 `M-F` = +0.000055
+CI [-0.004420, +0.004413].
 
 **The 0.0055 gain is the stable finding; the 0.0038 M-vs-F gap is not.** The seed-0 gap
 came almost entirely from F's seed-0 run being 0.0039 worse than its own seed-1 run, while
@@ -121,7 +121,7 @@ second seed exists to catch.
 
 The gain is **not** a penalty-group artefact: both arms improve the 957 complement, and the
 penalty group is flat for all three models. Per-seed `M_vs_F` on the complement is
-−0.004673 (s0, CI excludes 0) and **+0.000830 (s1)** — the subgroup advantage also fails to
+-0.004673 (s0, CI excludes 0) and **+0.000830 (s1)** — the subgroup advantage also fails to
 replicate. M is consistently the best of the three on the 40 RDKit-large molecules, but
 that group's seed noise (F moves 0.221→0.234) is larger than the between-arm gap.
 
@@ -149,14 +149,14 @@ by 0.000208. Post-hoc (descriptive, no training, no threshold change —
 
 | diagnostic | value |
 |---|---|
-| MSE difference `M − P3E`, seed 0 | +0.002843, bootstrap CI **[−0.003706, +0.013303]** |
-| RMSE difference CI, seed 0 | [−0.012974, +0.015464] |
-| worst squared-error contributor | Monitor index 341 / official-train row **2052**, `y = −7.93` |
+| MSE difference `M - P3E`, seed 0 | +0.002843, bootstrap CI **[-0.003706, +0.013303]** |
+| RMSE difference CI, seed 0 | [-0.012974, +0.015464] |
+| worst squared-error contributor | Monitor index 341 / official-train row **2052**, `y = -7.93` |
 | its share of the total MSE difference | **1.59×** — one molecule flips the sign |
 | is it permutation-unstable? | **yes** (Phase 1e audit: its cycle penalty changes under atom permutation) |
 | RMSE on the 996 graph-function rows | P3E 0.147848 vs M 0.142046 (**M better**) |
 
-Seed 1 settled the question: `ΔRMSE = −0.002090` (M better), and again a **single** molecule
+Seed 1 settled the question: `ΔRMSE = -0.002090` (M better), and again a **single** molecule
 accounts for ~2× of the total squared-error difference, this time in M's favour.
 
 At n = 1000 with `max|y| ≈ 8`, RMSE is a one-molecule statistic. An absolute RMSE threshold
@@ -183,9 +183,9 @@ conclusion, because seed 0 alone suggests M > F.
 | seed 1, frozen rules with **matched** P3E baseline | `decision_seed1_phase2a.json` | `CAPACITY_ONLY_INCREMENT` |
 | round verdict | `round_verdict_phase2a.json` | **`CAPACITY_ONLY_INCREMENT`** |
 
-Seed-1 mechanical values behind that status: `Gain_MP = −0.000055 < 0.002`,
-`Gain_P3E = +0.005409 ≥ 0.004`, `MAE(P3E) − MAE(F) = +0.005465 ≥ 0.004`,
-`complement_gain = +0.005181`, `optimization_ok = true`, `ΔRMSE = −0.002090`.
+Seed-1 mechanical values behind that status: `Gain_MP = -0.000055 < 0.002`,
+`Gain_P3E = +0.005409 ≥ 0.004`, `MAE(P3E) - MAE(F) = +0.005465 ≥ 0.004`,
+`complement_gain = +0.005181`, `optimization_ok = true`, `ΔRMSE = -0.002090`.
 
 Why not `STRONG_BACKBONE_MP_INCREMENT`: it requires M to be separated from the
 capacity-matched control in **both** seeds. It is separated in neither the sign test
@@ -200,7 +200,7 @@ not ≥1.5×. `buy_seed1 = false` at both seeds; no third seed was bought.
   Post-hoc and seed-1 scoring are re-reads of the same frozen arrays; no model, threshold,
   or selection decision changed between reads.
 - Reserved labels read **0**. Official valid/test **never loaded**.
-- Phase 1e loaded all 10 000 official-train labels, so the internal Reserved split is
+- Phase 1e loaded all 10000 official-train labels, so the internal Reserved split is
   **historically exposed** and is not claimed pristine. This round only ever used Fit (8000)
   and Monitor (1000).
 - No early stopping, no soup selection on Monitor, no per-arm tuning. Soup rule, epoch
@@ -237,7 +237,7 @@ scoring. Full manifest with artifact hashes: `results/phase2a/run_manifest.tsv`.
 **Q1. Does atom-level local iteration add predictive value over P3E?**
 Yes for the *stage*, no for the *edges*. Any small extra per-atom stage helps by ≈0.0055 MAE
 (replicated: +0.005675 / +0.005409). Using the graph instead of not using it does not help:
-`Gain_MP` = +0.0038 / −0.0001.
+`Gain_MP` = +0.0038 / -0.0001.
 
 **Q2. Is the increment mechanism or capacity?**
 Capacity. At matched new parameters (1.5 % apart) and matched FLOPs (0.4 % apart), the
@@ -251,7 +251,7 @@ coming from the label artefact that dominated Phase 1b–1e.
 
 **Q4. Is the error tail worse?**
 Not established either way, and the metric cannot establish it here. Seed 0 `ΔRMSE` was
-+0.0052 (one permutation-unstable molecule), seed 1 −0.0021 (one molecule the other way).
++0.0052 (one permutation-unstable molecule), seed 1 -0.0021 (one molecule the other way).
 M improves median (0.0458 vs 0.0516), p90 (0.1655 vs 0.1823) and p99 (0.6074 vs 0.6904) at
 seed 0, and is worse at p95 (0.2599 vs 0.2449). Mixed, dominated by single molecules.
 
@@ -264,7 +264,7 @@ more simply (wider/one more per-atom block) than by adding a propagation module.
 Healthy and *matched* optimisation: identical recipe, epoch budget, batch order, soup rule;
 soup-fit MAEs 0.0011 / 0.0010 / 0.0013 / 0.0008; final gradients on every new parameter
 nonzero (`local.blocks.0` 0.21–0.85, `bond_proj` 0.026–0.054); no NaN, no divergence;
-grad-clip events 9.6k–12.1k out of 22 680 steps for every arm including the baseline. The
+grad-clip events 9.6k–12.1k out of 22680 steps for every arm including the baseline. The
 one optimisation anomaly found is **F's seed-0 trajectory** (0.0039 above its own seed-1
 run), which is a control-arm variance problem, not a mechanism result.
 
