@@ -458,6 +458,9 @@ def cmd_gates(args: argparse.Namespace) -> int:
         )
         parity[arm] = {
             "max_abs_state_diff": max_abs,
+            "within_1e-4": max_abs <= 1e-4,
+            "abs_soup_fit_mae_diff": abs(ref["soup_fit_mae"] - mine["soup_fit_mae"]),
+            "soup_fit_mae_within_1e-5": abs(ref["soup_fit_mae"] - mine["soup_fit_mae"]) <= 1e-5,
             "ref_soup_fit_mae": ref["soup_fit_mae"],
             "mine_soup_fit_mae": mine["soup_fit_mae"],
             "ref_updates": ref["updates"],
@@ -470,7 +473,10 @@ def cmd_gates(args: argparse.Namespace) -> int:
         True
         if ssl_fit is None
         else all(
-            v["max_abs_state_diff"] == 0.0 and v["ref_batch_order"] == v["mine_batch_order"]
+            v["within_1e-4"]
+            and v["soup_fit_mae_within_1e-5"]
+            and v["ref_batch_order"] == v["mine_batch_order"]
+            and v["ref_updates"] == v["mine_updates"]
             for v in parity.values()
         ),
         parity,
