@@ -5,9 +5,9 @@
 # Phase 0 evidence: results/phase0/REPORT.md + results/phase0/analysis/*.json
 # Phase 1a: notes/phase1a_protocol.md + results/phase1a/
 
-phase: phase1b
-current_round: ssrc-phase1b-v1
-status: PHASE1B_COMPLETE
+phase: phase1c
+current_round: ssrc-phase1c-zinc-v1
+status: PHASE1C_COMPLETE
 updated: 2026-10-19
 main_line: true
 supersedes_main_line: structure-contribution
@@ -278,6 +278,109 @@ phase1b:
     capacity-matched S0 closes the relation gap or the global pathway closes
     the ZINC gap without the relation, switch to PERFORMANCE_GAP_DOMINATES.
 
+phase1c:
+  protocol_id: ssrc-phase1c-zinc-v1
+  protocol: tracks/structural-sufficiency/notes/phase1c_protocol.md
+  protocol_sha256: 545e58037386fde248a84b9ad104cbb7dab8ccd0f961a0392fdb933a14547ca5
+  corrigendum: tracks/structural-sufficiency/notes/phase1b_corrigendum.md
+  corrigendum_sha256: 4947d8cb4f34beffef164a3dac40edc8f41d981b32f4fdb00b773239648ad13d
+  config: tracks/structural-sufficiency/configs/phase1c.yaml
+  config_sha256: 60c50f369983d97a7dec9c90f9f35d5c2497f5a40fdd8a07fce38c046bddeb82
+  status: COMPLETE
+  report: tracks/structural-sufficiency/results/phase1c/REPORT.md
+  freeze_commit: f57aec8
+  run_commit: f57aec8
+  host: res (2xA100-SXM4-40GB, process backend)
+  decision: CORRESPONDENCE_SURVIVES_CAPACITY
+  secondary_labels:
+    - ABSOLUTE_GAP_PERSISTS
+    - MATCHED_COMPUTE_ARM_OPTIMIZATION_CONFOUNDED
+    - NO_UPDATE_GAIN_WITH_DIRECT_EDGE_READOUT
+  route_status: CONDITIONALLY_SUPPORTED_NOT_CONFIRMED_AS_SUFFICIENT
+  question: >-
+    With E2 patches, matched parameter capacity, the same size-aware readout,
+    and the same true bond-type multiset, does endpoint correspondence add
+    predictive value; how much of the gap is readout/capacity; and does one
+    extra update help when the direct edge readout is preserved?
+  models:
+    S_cap_size: "S0 E2 patch encoder, no root edges, node sum+mean+size readout, graph FFN, 115883 params"
+    R1_size: "true-endpoint phi(h_u,h_v,e_uv) + same size-aware readout + edge mean/sum, 115977 params"
+    R1_marginal_size: "R1_size modules/params/FLOPs/readout; true bond-type multiset and edge count; both endpoints = molecule global mean; endpoint-correspondence ablation, not chemistry"
+    M_keep_edge: "R1_size direct edge readout + one residual node update; follow-up diagnostic only, 132681 params"
+  capacity:
+    params: {S_cap_size: 115883, R1_size: 115977, R1_marginal_size: 115977, M_keep_edge: 132681}
+    forward_flops_batch64: {S_cap_size: 441539200, R1_size: 646843008, R1_marginal_size: 646843008, M_keep_edge: 694913664}
+    note: "S_cap_size is parameter-matched (0.999x) but not FLOP-matched (0.683x R1_size); the marginal pair is parameter- and FLOP-identical."
+  results:
+    seed0:
+      S_cap_size: 0.289477
+      R1_size: 0.236575
+      R1_marginal_size: 0.304730
+    seed1:
+      R1_size: 0.281039
+      R1_marginal_size: 0.311893
+    two_seed:
+      R1_size_mean: 0.258807
+      R1_marginal_mean: 0.308312
+      gain_pair_mean: 0.049504
+    anchors_phase1b:
+      S0: 0.317303
+      R1: 0.260161
+      G_ref: 0.165290
+    m_keep_edge:
+      M_keep_edge: 0.237006
+      R1_size_long: 0.296133
+      same_recipe_delta_R1size_minus_Mkeep: -0.000431
+      pre_registered_delta_R1long_minus_Mkeep: 0.059126
+      note: "R1_long early-stopped at 83/114 with train MAE 0.2489; the pre-registered longer-cosine comparison is optimization-confounded. Same-recipe M_keep is neutral/slightly worse."
+  endpoints:
+    gain_pair: "MAE(R1_marginal_size)-MAE(R1_size); positive = R1_size better"
+    gain_over_capacity: "MAE(S_cap_size)-MAE(R1_size); positive = R1_size better"
+    gain_update_matched: "MAE(R1_size_long)-MAE(M_keep_edge); positive = M_keep better; confounded"
+    gap: "MAE(candidate)-MAE(G_ref); positive = candidate worse"
+    uncertainty: "paired bootstrap over Monitor molecules, 5000 reps, 95% percentile CI; two seeds for the pair, one seed for S_cap and M_keep"
+  primary_gains:
+    gain_pair_seed0: {delta: 0.068155, ci95: [0.0350, 0.1036], rmse_delta: 0.2235}
+    gain_pair_seed1: {delta: 0.030854, ci95: [0.0135, 0.0501], rmse_delta: 0.0590}
+    gain_over_capacity_seed0: {delta: 0.052902, ci95: [0.0196, 0.0890], rmse_delta: 0.2264}
+    gap_R1size_minus_Gref_seed0: {delta: 0.071286, ci95: [0.0420, 0.1012], rmse_delta: 0.1587}
+    gap_R1size_seed1: 0.115749
+  data_isolation:
+    fit_rows: 8000
+    monitor_rows: 1000
+    reserved_not_scored: 1000
+    labels_retained: 9000
+    reserved_labels_retained: 0
+    official_valid_test_labels_retained: 0
+    run_validation: tracks/structural-sufficiency/results/phase1c/run_validation.json
+    run_validation_sha256: cceaa9caa115bcdaec1a3415c61e5f3e73478361323976388836a61b3deeaa30
+  cpu_gates:
+    status: 17/17 PASS
+    file: tracks/structural-sufficiency/results/phase1c/cpu_gates_phase1c.json
+    sha256: aa91573e138f8910b92f96d31235ccb67a571320fd8edf2b0a0a14272ff75c4a
+    tests: 18 passed (11 phase1c + 7 phase1b)
+  budget:
+    gpu_hours_run_level: 0.9806
+    gpu_hours_job_occupancy: 1.0025
+    cap_hours: 2.0
+    by_phase: {smoke: 0.0005, A: 0.4737, B: 0.2251, C: 0.2813}
+    failed_jobs_gpu_hours: 0.0
+  artifacts:
+    analysis: tracks/structural-sufficiency/results/phase1c/analysis_phase1c.json
+    analysis_sha256: 3d2dc898c27f46e61f4187165fd337945858bae08dad6c0f2d475d0535bc9683
+    run_manifest: tracks/structural-sufficiency/results/phase1c/run_manifest.tsv
+    run_manifest_sha256: f0c95dc747112b770a1bbdcdcfbe59fadf62b209c8cacba59913ef0eb2f156a1
+    cpu_diagnostic: tracks/structural-sufficiency/results/phase1c/readout_diagnostics.json
+    code: tracks/structural-sufficiency/code/phase1c/
+    runs: tracks/structural-sufficiency/runs/phase1c/
+  non_claims:
+    - "S_cap_size is parameter-matched, not FLOP-matched; Gain_over_capacity is not a pure compute control."
+    - "R1_marginal_size is an endpoint-correspondence ablation, not a chemical causal experiment."
+    - "One update null does not prove depth/receptive field is irrelevant in general."
+    - "The pre-registered R1_size_long matched-compute comparison is optimization-confounded; do not read its label as update evidence."
+    - "Single-seed S_cap and two-seed pair are screening only; no official ZINC test, SOTA, or cross-task claim."
+    - "The remaining gap is a base-model/representation hypothesis, not an identified atom-level or depth mechanism."
+
 open_questions:
   - Does X beat S at n=253 and/or n=2352 under exactly matched E_2 input?
   - Is any advantage stable across 3 seeds and larger at n=253 (sample-efficiency) or only at n=2352?
@@ -286,8 +389,11 @@ open_questions:
   - If S≈X and G better: add fixed one-hop/edge-incidence information with matched non-iterative/iterative controls.
 
 next_action: >-
-  Phase 1b is complete; decision PURSUE_RELATIONAL_SUFFICIENCY. The next round
-  keeps the one-shot relation and adds a static global/depth pathway to close
-  the ZINC gap, with capacity-matched S0 / broken-adjacency R1 / matched-
-  capacity G_ref controls. Do not add iterative MP rounds (B2 control), do not
-  tune attention, and do not read official valid/test or internal Reserved.
+  Phase 1c is complete. Endpoint correspondence survives parameter, readout, and
+  edge-type-marginal controls (Gain_pair two-seed mean +0.0495; Gain_over_capacity
+  +0.0529), but the best R1_size seed is still +0.0713 MAE worse than G_ref.
+  Do not add global tokens, deeper trunks, new encodings, or another update
+  round. The single next step is a CPU-only residual audit of the R1_size-G_ref
+  gap against patch-observable variables; if no variable explains >=0.02 MAE,
+  stop SSRC and report the absolute-gap negative. If one does, pre-register one
+  compute-matched diagnostic and stop at <0.02 MAE or a CI crossing zero.

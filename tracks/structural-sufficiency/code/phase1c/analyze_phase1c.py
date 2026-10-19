@@ -59,10 +59,13 @@ def run_table(path: Path) -> dict[str, Any]:
         "train_seconds": d.get("train_seconds"),
         "peak_gpu_mb": d.get("peak_gpu_memory_mb_allocated"),
         "best_epoch": int(d["best_epoch"]),
+        "epochs_planned": int(d.get("config", {}).get("epochs", -1)),
         "epochs_run": len(d.get("curves", [])),
         "train_mae": float(d["best_metrics"]["train"]["mae"]),
         "monitor_mae": mae(pred, labels),
         "monitor_rmse": rmse(pred, labels),
+        "median_abs_error": float(np.median(np.abs(pred - labels))),
+        "p90_abs_error": float(np.quantile(np.abs(pred - labels), 0.90)),
         "train_monitor_gap": float(d["best_metrics"]["monitor"]["mae"] - d["best_metrics"]["train"]["mae"]),
         "monitor_mol_index": [int(x) for x in d["monitor_mol_index"]],
         "monitor_y": labels.tolist(),
@@ -85,6 +88,11 @@ def compare(a: Mapping[str, Any], b: Mapping[str, Any], n_boot: int) -> dict[str
     boot["rmse_agrees"] = bool(np.sign(boot["delta"]) == np.sign(rmse_delta))
     boot["mae_a"] = float(np.mean(np.abs(pa - ya)))
     boot["mae_b"] = float(np.mean(np.abs(pb - yb)))
+    boot["win_rate_b_better"] = float(np.mean(np.abs(pb - yb) < np.abs(pa - ya)))
+    boot["median_abs_error_a"] = float(np.median(np.abs(pa - ya)))
+    boot["median_abs_error_b"] = float(np.median(np.abs(pb - yb)))
+    boot["p90_abs_error_a"] = float(np.quantile(np.abs(pa - ya), 0.90))
+    boot["p90_abs_error_b"] = float(np.quantile(np.abs(pb - yb), 0.90))
     return boot
 
 
@@ -233,10 +241,55 @@ def main() -> int:
     if mk.exists() and r1l.exists():
         mkd = run_table(mk)
         r1d = run_table(r1l)
+        r1base = run_table(runs / "zinc" / "R1_size_seed0.json")
+        upd = compare(r1d, mkd, args.n_boot)
+        same_recipe = compare(r1base, mkd, args.n_boot)
+        if upd["delta"] >= BANDS["meaningful"] and upd["ci95"][0] > 0 and upd["rmse_agrees"]:
+            pre_label = "UPDATE_HELPS_WITH_DIRECT_EDGE_READOUT"
+        elif upd["delta"] < BANDS["negligible"]:
+            pre_label = "NO_UPDATE_GAIN_WITH_DIRECT_EDGE_READOUT"
+        else:
+            pre_label = "INSUFFICIENT_EVIDENCE"
+        # The longer cosine schedule is a different optimization problem, not a pure
+        # compute match.  If it failed to fit, the pre-registered contrast is confounded.
+        schedule_confounded = (
+            r1d["train_mae"] - r1base["train_mae"] > 0.03
+            or r1d["best_epoch"] < 0.6 * r1d["epochs_run"]
+        )
+        if schedule_confounded:
+            upd_label = "MATCHED_COMPUTE_ARM_OPTIMIZATION_CONFOUNDED"
+        elif same_recipe["delta"] > BANDS["meaningful"]:
+            upd_label = "UPDATE_HURTS_SAME_RECIPE"
+        elif same_recipe["delta"] < -BANDS["meaningful"] and same_recipe["ci95"][1] < 0:
+            upd_label = "UPDATE_HINT_BUT_COMPUTE_PARAM_CONFOUNDED"
+        elif abs(same_recipe["delta"]) < BANDS["meaningful"]:
+            upd_label = "NO_UPDATE_GAIN_WITH_DIRECT_EDGE_READOUT"
+        else:
+            upd_label = "INSUFFICIENT_EVIDENCE"
         keep_edge = {
             "M_keep_edge": {k: v for k, v in mkd.items() if k not in {"monitor_y", "monitor_pred", "monitor_mol_index"}},
             "R1_size_long": {k: v for k, v in r1d.items() if k not in {"monitor_y", "monitor_pred", "monitor_mol_index"}},
-            "gain_update_keep_edge_matched": compare(r1d, mkd, args.n_boot),
+            "gain_update_keep_edge_matched": upd,
+            "same_recipe_gain_r1size_minus_mkeep": same_recipe,
+            "pre_registered_label": pre_label,
+            "schedule_confounded": schedule_confounded,
+            "r1_long_train_mae_delta_vs_r1size": r1d["train_mae"] - r1base["train_mae"],
+            "decision": upd_label,
+            "compute": {
+                "r1_size_long_planned_epochs": r1d["epochs_planned"],
+                "m_keep_edge_planned_epochs": mkd["epochs_planned"],
+                "r1_size_long_epochs_run": r1d["epochs_run"],
+                "m_keep_edge_epochs_run": mkd["epochs_run"],
+                "r1_size_long_gpu_seconds": r1d["gpu_seconds"],
+                "m_keep_edge_gpu_seconds": mkd["gpu_seconds"],
+                "r1_size_long_flops_per_epoch": r1d["flops_forward"],
+                "m_keep_edge_flops_per_epoch": mkd["flops_forward"],
+                "flop_ratio_per_epoch": (mkd["flops_forward"] / r1d["flops_forward"]) if r1d["flops_forward"] else None,
+                "actual_flop_ratio": (
+                    (mkd["flops_forward"] * mkd["epochs_run"])
+                    / (r1d["flops_forward"] * r1d["epochs_run"])
+                ) if r1d["flops_forward"] and r1d["epochs_run"] else None,
+            },
         }
     else:
         keep_edge = {"status": "not_run", "reason": "follow-up gate not triggered or not yet purchased"}
