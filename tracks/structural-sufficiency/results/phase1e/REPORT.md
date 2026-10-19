@@ -125,6 +125,13 @@ the RDKit-large group that Phase 1d reported as an `R1_size` win:
 | `R1_size` s0 | +0.0439 [+0.0261,+0.0629] | +0.6809 [+0.1853,+1.1802] | +0.7219 [+0.1891,+1.2471] |
 | `R_incidence` | +0.0164 [+0.0050,+0.0267] | +2.2951 [+1.7870,+2.7930] | +2.4730 [+1.9903,+2.9383] |
 
+> Group definitions differ slightly from Phase 1d and this matters when reading
+> numbers side by side. Here `complement` = 957 molecules with **no label
+> penalty** (Phase 1d used the 960 molecules with **no RDKit large ring**), and
+> the tail column is the 40-molecule RDKit group. `R1_size_cap` is therefore
+> 0.1383 on the 957-row label complement but 0.1473 on Phase 1d's 960-row RDKit
+> complement; both are correct measurements of different row sets.
+
 Read this against the Phase 1d statement "`R1_size` is much better on the 40-molecule
 large-ring subgroup (+1.751 MAE)": that +1.751 is `R1_size − R_incidence`. **Against
 `G_ref`, `R1_size` is 0.72 MAE worse on exactly those 40 molecules**, and so is every
