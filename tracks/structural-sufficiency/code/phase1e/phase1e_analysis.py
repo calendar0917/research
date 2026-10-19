@@ -44,6 +44,23 @@ def _pct_contrib(ae: np.ndarray, mask: np.ndarray) -> float:
     return float(ae[np.asarray(mask, dtype=bool)].sum() / total) if total > 0 else 0.0
 
 
+def _load_strong_baseline(mon: C.MonitorTable) -> dict[str, Any] | None:
+    """Stage B2 arm, if it ran: frozen predictions + the freeze record's hashes."""
+    npz = C.RESULTS_1E / "baseline" / "monitor_pred_s0.npz"
+    freeze = C.RESULTS_1E / "baseline" / "monitor_prediction_freeze.json"
+    score = C.RESULTS_1E / "strong_baseline.json"
+    if not (npz.exists() and freeze.exists() and score.exists()):
+        return None
+    rec = C.read_json(freeze)
+    if C.sha256_file(npz) != rec["prediction_sha256"]:
+        raise SystemExit("strong-baseline prediction file no longer matches its freeze record")
+    with np.load(npz) as z:
+        pred = np.asarray(z["pred"], dtype=np.float64)
+    if pred.shape != mon.y.shape:
+        raise SystemExit("strong-baseline prediction length mismatch")
+    return {"key": "P3E_seed0", "pred": pred, "freeze": rec, "score": C.read_json(score)}
+
+
 def _topk_stats(ae: np.ndarray, delta: np.ndarray) -> dict[str, Any]:
     """Tail concentration of a signed per-molecule difference (positive = worse)."""
     order = np.argsort(-np.abs(delta), kind="stable")
@@ -92,9 +109,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     }
 
     models = list(C.RUN_FILES)
+    strong = _load_strong_baseline(mon)
+    preds: dict[str, np.ndarray] = dict(mon.pred)
+    if strong is not None:
+        preds[strong["key"]] = strong["pred"]
+        models.append(strong["key"])
     errors: dict[str, Any] = {}
     for key in models:
-        pred = mon.pred[key]
+        pred = preds[key]
         resid = pred - y
         ae = np.abs(resid)
         per_group: dict[str, Any] = {}
@@ -114,8 +136,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 st["cycle_offset_capture"] = None
             per_group[gname] = st
         errors[key] = {
-            "params": C.PARAMS.get(key),
+            "params": C.PARAMS.get(key, 413505 if key == "P3E_seed0" else None),
             "forward_flops": C.FORWARD_FLOPS.get(key),
+            "information_regime": (
+                "STAGE_B2_STRONG_BASELINE (full graph + junction objects + structure-only "
+                "global descriptors incl. ring-size fractions; Fit-only masked SSL)"
+                if key == "P3E_seed0"
+                else "SSRC_E2_PATCH_OR_GRAPH_ARM"
+            ),
             "groups": per_group,
             "tail": _topk_stats(ae, resid),
         }
@@ -126,13 +154,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     for key in models:
         if key == "G_ref_seed0":
             continue
-        delta = np.abs(mon.pred[key] - y) - np.abs(ref - y)
+        delta = np.abs(preds[key] - y) - np.abs(ref - y)
         row: dict[str, Any] = {"definition": "mean |e_candidate| - |e_Gref|; positive = candidate worse"}
         for gname, mask in groups.items():
             vals = delta[np.asarray(mask, dtype=bool)]
             row[gname] = C.paired_bootstrap_mean(vals, n_boot=N_BOOT, seed=BOOT_SEED)
             row[gname]["win_rate_candidate_better"] = float(np.mean(vals < 0)) if vals.size else None
-        row["tail"] = _topk_stats(np.abs(mon.pred[key] - y), delta)
+        row["tail"] = _topk_stats(np.abs(preds[key] - y), delta)
         comparisons[key] = row
 
     # A2 summary of the label side.
@@ -172,6 +200,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             "y - cycle_component. It is a descriptive attribution, not a model "
             "score and not a permitted input or post-hoc correction."
         ),
+        "stage_b2_arm": None if strong is None else {
+            "key": strong["key"],
+            "monitor_mae": strong["score"]["monitor_mae"],
+            "prediction_sha256": strong["freeze"]["prediction_sha256"],
+            "soup_sha256": strong["freeze"]["soup_sha256"],
+            "information_note": (
+                "this arm sees structure-only global descriptors that include ring-size "
+                "fractions (ring_size7_frac, ring_size8plus_frac) and cyclomatic rank, "
+                "which the SSRC arms do not receive; its ring-tail advantage is therefore "
+                "partly an information-access difference, not an architecture effect"
+            ),
+        },
         "label_audit_crosscheck": {
             "monitor_confusion": audit["monitor_confusion"],
             "permutation_stability": {

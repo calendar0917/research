@@ -30,6 +30,7 @@
     "G_ref_seed0": {
       "params": 439559,
       "forward_flops": 1185100000.0,
+      "information_regime": "SSRC_E2_PATCH_OR_GRAPH_ARM",
       "groups": {
         "all": {
           "n": 1000,
@@ -108,6 +109,7 @@
     "S0_seed0": {
       "params": 56963,
       "forward_flops": 441539200.0,
+      "information_regime": "SSRC_E2_PATCH_OR_GRAPH_ARM",
       "groups": {
         "all": {
           "n": 1000,
@@ -186,6 +188,7 @@
     "R1_seed0": {
       "params": 94659,
       "forward_flops": 877730176.0,
+      "information_regime": "SSRC_E2_PATCH_OR_GRAPH_ARM",
       "groups": {
         "all": {
           "n": 1000,
@@ -264,6 +267,7 @@
     "S_cap_size_seed0": {
       "params": 115883,
       "forward_flops": 441539200.0,
+      "information_regime": "SSRC_E2_PATCH_OR_GRAPH_ARM",
       "groups": {
         "all": {
           "n": 1000,
@@ -342,6 +346,7 @@
     "R1_size_seed0": {
       "params": 115977,
       "forward_flops": 646843008.0,
+      "information_regime": "SSRC_E2_PATCH_OR_GRAPH_ARM",
       "groups": {
         "all": {
           "n": 1000,
@@ -420,6 +425,7 @@
     "R1_size_seed1": {
       "params": 115977,
       "forward_flops": 646843008.0,
+      "information_regime": "SSRC_E2_PATCH_OR_GRAPH_ARM",
       "groups": {
         "all": {
           "n": 1000,
@@ -498,6 +504,7 @@
     "R1_marginal_size_seed0": {
       "params": 115977,
       "forward_flops": 646843008.0,
+      "information_regime": "SSRC_E2_PATCH_OR_GRAPH_ARM",
       "groups": {
         "all": {
           "n": 1000,
@@ -576,6 +583,7 @@
     "M_keep_edge_seed0": {
       "params": 132681,
       "forward_flops": 694913664.0,
+      "information_regime": "SSRC_E2_PATCH_OR_GRAPH_ARM",
       "groups": {
         "all": {
           "n": 1000,
@@ -654,6 +662,7 @@
     "R_incidence_seed0": {
       "params": 115952,
       "forward_flops": 645911200.0,
+      "information_regime": "SSRC_E2_PATCH_OR_GRAPH_ARM",
       "groups": {
         "all": {
           "n": 1000,
@@ -732,6 +741,7 @@
     "R1_size_cap_seed0": {
       "params": 453129,
       "forward_flops": 2491880704.0,
+      "information_regime": "SSRC_E2_PATCH_OR_GRAPH_ARM",
       "groups": {
         "all": {
           "n": 1000,
@@ -805,6 +815,85 @@
         "top5pct_share": 0.5074201955806724,
         "mean_drop_top5pct": 0.055020106372325434,
         "abs_error_share_top1pct": 0.20050296931745126
+      }
+    },
+    "P3E_seed0": {
+      "params": 413505,
+      "forward_flops": null,
+      "information_regime": "STAGE_B2_STRONG_BASELINE (full graph + junction objects + structure-only global descriptors incl. ring-size fractions; Fit-only masked SSL)",
+      "groups": {
+        "all": {
+          "n": 1000,
+          "mae": 0.09107104176818394,
+          "rmse": 0.2703102664227065,
+          "median_ae": 0.0516403429210186,
+          "p90_ae": 0.18229184448719027,
+          "mean_signed_residual": 0.01934585665189661,
+          "abs_error_sum": 91.07104176818393,
+          "abs_error_contribution": 0.09107104176818394,
+          "share_of_total_abs_error": 1.0,
+          "mae_vs_cycle_free_target": 0.32916487628772184,
+          "cycle_offset_capture": -5.634083614154337
+        },
+        "label_penalised": {
+          "n": 43,
+          "mae": 0.39738326433093046,
+          "rmse": 1.1469883440781068,
+          "median_ae": 0.15459823608398438,
+          "p90_ae": 0.6650790214538576,
+          "mean_signed_residual": 0.2727410363596539,
+          "abs_error_sum": 17.08748036623001,
+          "abs_error_contribution": 0.01708748036623001,
+          "share_of_total_abs_error": 0.18762803229730482,
+          "mae_vs_cycle_free_target": 3.5300328718529816,
+          "cycle_offset_capture": 0.9279334981874933
+        },
+        "label_complement": {
+          "n": 957,
+          "mae": 0.07730779665825906,
+          "rmse": 0.13129689445824,
+          "median_ae": 0.04929935932159424,
+          "p90_ae": 0.17027957439422606,
+          "mean_signed_residual": 0.007960284313930505,
+          "abs_error_sum": 73.98356140195392,
+          "abs_error_contribution": 0.07398356140195392,
+          "share_of_total_abs_error": 0.8123719677026952,
+          "mae_vs_cycle_free_target": 0.1853432213145702,
+          "cycle_offset_capture": 1.047665905678814
+        },
+        "rdkit_large": {
+          "n": 40,
+          "mae": 0.22980105876922607,
+          "rmse": 0.3497939877799461,
+          "median_ae": 0.14721262454986572,
+          "p90_ae": 0.6252358913421632,
+          "mean_signed_residual": 0.1276084303855896,
+          "abs_error_sum": 9.192042350769043,
+          "abs_error_contribution": 0.009192042350769043,
+          "share_of_total_abs_error": 0.10093265842030066,
+          "mae_vs_cycle_free_target": 3.433177715219803,
+          "cycle_offset_capture": 0.9641628491104192
+        },
+        "penalty_only_rdkit_missed": {
+          "n": 3,
+          "mae": 2.6318126718203225,
+          "rmse": 4.150333476035981,
+          "median_ae": 0.6359553337097168,
+          "p90_ae": 5.854956960678101,
+          "mean_signed_residual": 2.207842449347178,
+          "abs_error_sum": 7.895438015460968,
+          "abs_error_contribution": 0.007895438015460967,
+          "share_of_total_abs_error": 0.08669537387700416,
+          "mae_vs_cycle_free_target": 4.821434960295351,
+          "cycle_offset_capture": 0.673802265998526
+        }
+      },
+      "tail": {
+        "top1pct_share": 0.49584523300549616,
+        "mean_drop_top1pct": 0.009851824093581827,
+        "top5pct_share": 0.8364648792120726,
+        "mean_drop_top5pct": 0.0033302389519093067,
+        "abs_error_share_top1pct": 0.1758280709192985
       }
     }
   },
@@ -1303,9 +1392,71 @@
         "mean_drop_top5pct": 0.009216776468153847,
         "abs_error_share_top1pct": 0.20050296931745126
       }
+    },
+    "P3E_seed0": {
+      "definition": "mean |e_candidate| - |e_Gref|; positive = candidate worse",
+      "all": {
+        "mean": -0.07421895452821627,
+        "ci95": [
+          -0.09519342896466841,
+          -0.05504100998630749
+        ],
+        "n": 1000,
+        "win_rate_candidate_better": 0.66
+      },
+      "label_penalised": {
+        "mean": -0.732763413426488,
+        "ci95": [
+          -1.1214159257450076,
+          -0.38100301687454086
+        ],
+        "n": 43,
+        "win_rate_candidate_better": 0.7441860465116279
+      },
+      "label_complement": {
+        "mean": -0.044629182602797586,
+        "ci95": [
+          -0.05573327131789565,
+          -0.0346119953899804
+        ],
+        "n": 957,
+        "win_rate_candidate_better": 0.6562173458725182
+      },
+      "rdkit_large": {
+        "mean": -0.7847433682531119,
+        "ci95": [
+          -1.1984457115922122,
+          -0.4140678670909256
+        ],
+        "n": 40,
+        "win_rate_candidate_better": 0.75
+      },
+      "penalty_only_rdkit_missed": {
+        "mean": -0.039697349071502686,
+        "ci95": [
+          -0.324887752532959,
+          0.3919829726219177
+        ],
+        "n": 3,
+        "win_rate_candidate_better": 0.6666666666666666
+      },
+      "tail": {
+        "top1pct_share": 0.404724894450383,
+        "mean_drop_top1pct": -0.044626965647036526,
+        "top5pct_share": 0.5886227886834279,
+        "mean_drop_top5pct": -0.03213893320068325,
+        "abs_error_share_top1pct": 0.1758280709192985
+      }
     }
   },
   "counterfactual_note": "mae_vs_cycle_free_target is the same frozen prediction compared with y - cycle_component. It is a descriptive attribution, not a model score and not a permitted input or post-hoc correction.",
+  "stage_b2_arm": {
+    "key": "P3E_seed0",
+    "monitor_mae": 0.09107104176818394,
+    "prediction_sha256": "fc698ccc82dba024f73baa4604e27443bc25d74c452ccd38b8685f2a6aa4d1b1",
+    "soup_sha256": "94ba0f5f14d87169610af8f3abdbc577ca30b0685e322ac4af896fb52eb530fd",
+    "information_note": "this arm sees structure-only global descriptors that include ring-size fractions (ring_size7_frac, ring_size8plus_frac) and cyclomatic rank, which the SSRC arms do not receive; its ring-tail advantage is therefore partly an information-access difference, not an architecture effect"
+  },
   "label_audit_crosscheck": {
     "monitor_confusion": {
       "label_penalty_x_rdkit_large_ring": {

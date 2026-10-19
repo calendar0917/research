@@ -295,6 +295,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),
     }
 
+    # Stage B2 result, when it exists, joins the *internal* table only.
+    strong_path = C.RESULTS_1E / "strong_baseline.json"
+    if strong_path.exists():
+        strong = C.read_json(strong_path)
+        internal["rows"]["P3E_strong_baseline_seed0"] = strong["monitor_mae"]
+        internal["stage_b2_arm"] = {
+            "recipe": strong["recipe"],
+            "params": strong["params"],
+            "seed": strong["seed"],
+            "prediction_sha256": strong["prediction_sha256"],
+            "information_regime": (
+                "full graph + junction objects + structure-only global descriptors "
+                "(incl. ring-size fractions); Fit-only masked SSL"
+            ),
+            "not_like_for_like_with_ssrc_arms": True,
+        }
+
     payload = {
         "protocol_id": "ssrc-phase1e-zinc-v1",
         "stage": "B1_reference_audit",
@@ -325,7 +342,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "subtracted from, ratioed with, or ranked against a number from another."
         ),
         "b2_budget": b2_budget,
-        "b2_status": "PENDING_DECISION",
+        "b2_status": "EXECUTED" if strong_path.exists() else "NOT_EVALUATED",
     }
     C.write_json(OUT, payload)
     print(f"[B1] checkpoints audited: {len(checkpoint_audit)}; usable: {len(any_usable)}")

@@ -99,7 +99,8 @@
         "R_incidence_seed0": 0.279662,
         "S_cap_size_seed0": 0.289477,
         "R1_marginal_size_seed0": 0.30473,
-        "M_keep_edge_seed0": 0.237006
+        "M_keep_edge_seed0": 0.237006,
+        "P3E_strong_baseline_seed0": 0.09107104176818394
       },
       "route_conditioned_post_hoc": {
         "rdkit_large_ring_to_R1_size_cap": 0.19219
@@ -107,7 +108,15 @@
       "comparable_with": [
         "itself",
         "the Stage B2 strong baseline, if it runs on this exact split"
-      ]
+      ],
+      "stage_b2_arm": {
+        "recipe": "BJOC-Null (masked atom/bond SSL, Fit-only) + R3 360-epoch cosine + last-5 soup",
+        "params": 413505,
+        "seed": 0,
+        "prediction_sha256": "fc698ccc82dba024f73baa4604e27443bc25d74c452ccd38b8685f2a6aa4d1b1",
+        "information_regime": "full graph + junction objects + structure-only global descriptors (incl. ring-size fractions); Fit-only masked SSL",
+        "not_like_for_like_with_ssrc_arms": true
+      }
     },
     "bjoc_internal_split_b": {
       "protocol": "BJOC internal split-B: same 10k official train, different grouped salt, Fit 8000 / Monitor 1000 / Locked 1000, Fit-only SSL",
@@ -237,5 +246,5 @@
     ],
     "why_execute": "no existing checkpoint can be scored on the SSRC Monitor without label contamination, and the internal G_ref is a 6-layer local GINE that is ~0.05-0.07 MAE weaker than a published strong model on the official protocol; without a matched strong baseline the 'gap to competitiveness' question cannot be answered inside one protocol"
   },
-  "b2_status": "PENDING_DECISION"
+  "b2_status": "EXECUTED"
 }

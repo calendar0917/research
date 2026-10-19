@@ -5,9 +5,9 @@
 # Phase 0 evidence: results/phase0/REPORT.md + results/phase0/analysis/*.json
 # Phase 1a: notes/phase1a_protocol.md + results/phase1a/
 
-phase: phase1d
-current_round: ssrc-phase1d-zinc-v1
-status: PHASE1D_COMPLETE
+phase: phase1e
+current_round: ssrc-phase1e-zinc-v1
+status: PHASE1E_COMPLETE
 updated: 2026-10-19
 main_line: true
 supersedes_main_line: structure-contribution
@@ -573,3 +573,128 @@ next_action: >-
   degrading the complement. Only if that audit shows a pre-specified >=0.02
   MAE opportunity should one ring-aware local representation diagnostic be
   pre-registered in a later round; no GPU work follows from Phase 1d alone.
+
+phase1e:
+  protocol_id: ssrc-phase1e-zinc-v1
+  protocol: tracks/structural-sufficiency/notes/phase1e_protocol.md
+  protocol_sha256: bfa8d9f38bfe3a266b32ceda1fb1b58f4d8c44a4f7619646457a94496b6cd186
+  status: COMPLETE
+  report: tracks/structural-sufficiency/results/phase1e/REPORT.md
+  code_commit: c84d5de
+  frozen_training_commit: 6e26ca9
+  host: res (1xA100-SXM4-40GB, process backend, pool res-gpu0)
+  decision: BENCHMARK_CYCLE_ARTIFACT_DOMINATES
+  secondary_labels:
+    - UNRESOLVED_LABEL_MECHANISM
+    - R1_IS_NOT_COMPETITIVE
+  route: Direction A
+  question: >-
+    Is the Phase 1c/1d large-ring effect a real structural mechanism, or the
+    ZINC benchmark target's artificial cycle penalty; and how far is the SSRC
+    arm family from a competitive baseline under one protocol?
+  evidence:
+    a1_label_mechanism:
+      formula: "-max(0, max(len(c) for c in nx.cycle_basis(graph)) - 6), normalized with dataset-pool stats"
+      statistic: "NetworkX Paton fundamental basis in the generator's RDKit canonical SMILES atom order"
+      permutation_invariant: false
+      pyg_docstring_agrees: false
+      monitor_confusion: {both: 40, label_only: 3, rdkit_large_only: 0, neither: 957}
+      rdkit_large_purity: 1.0
+      penalty_recall: 0.9302
+      reconstruction: {sigma_cycle: 0.288375, mu_cycle: -0.048159, agree_with_ksvd_snapped: "10000/10000", snap_error_p95_y: 0.019439}
+      permutation_instability: {reps: 30, penalised_10k_unstable: 26, penalised_monitor_unstable: 4, monitor_rows: [9864, 2052, 4235, 2334]}
+      monitor_penalty_levels: {0: 957, 1: 37, 2: 6}
+      cycle_share_of_label_magnitude_penalised: 0.684
+    a2_error_attribution:
+      penalised_share_of_abs_error:
+        G_ref: 0.294
+        R1_size_cap: 0.316
+        R_incidence: 0.527
+      best_arm_per_group:
+        all: {G_ref: 0.165290}
+        label_complement: {G_ref: 0.121939}
+        label_penalised: {G_ref: 1.130103}
+        rdkit_large: {G_ref: 1.014544}
+      every_ssrc_arm_worse_than_Gref_in_every_group: true
+      cycle_offset_capture_penalised: {G_ref: 0.790, R1_size_cap: 0.662}
+    a3_zero_training_routing:
+      rule: "RDKit large ring -> R1_size_cap (40), else R_incidence (960)"
+      routed_monitor_mae: 0.192190
+      routed_minus_Gref: {delta: 0.026900, ci95: [0.0073, 0.0477]}
+      routed_minus_R1_size_cap: {delta: -0.001300, ci95: [-0.0156, 0.0111]}
+      flops_ratio_vs_Gref_lower_bound: 0.6073
+      status: POST_HOC_DIAGNOSTIC_ON_A_REUSED_MONITOR
+    b1_reference_audit:
+      checkpoints_audited: 5
+      usable_for_internal_monitor: 0
+      monitor_overlap: {bjoc_p3_full10k: 1.0, bjoc_p0_full10k: 1.0, bjoc_splitB: 0.793, bjoc_splitA_masked: 0.817, bjoc_bottleneck: 0.804}
+      protocol_tables_never_merged: true
+    b2_strong_baseline:
+      recipe: "BJOC-Null + Fit-only masked atom/bond SSL + R3 360-epoch cosine + last-5 soup, 413505 params"
+      isolation: "objects/standardiser/SSL/supervised all Fit-8000 only; Monitor predictions hashed before the single label read; no early stopping; no model selection"
+      monitor_mae: 0.091071
+      gap_vs_best_ssrc: {delta: -0.074219, ci95: [-0.096456, -0.054468]}
+      by_group:
+        label_complement: {mae: 0.077308, delta_vs_Gref: -0.044629}
+        label_penalised: {mae: 0.397383, delta_vs_Gref: -0.732763}
+        rdkit_large: {mae: 0.229801, delta_vs_Gref: -0.784743}
+      information_regime_caveat: "sees structure-only global descriptors incl. ring-size fractions and cyclomatic rank; competitiveness statement, not a controlled architecture comparison"
+      gpu_hours: 0.607
+    a4_decision:
+      artifact_dominates: true
+      conditions:
+        unpenalised_share: {value: 0.0, pass: true}
+        complement_gap_cap_vs_Gref: {value: 0.016379, pass: true}
+        penalised_error_share: {value: 0.316, pass: true}
+      beyond_cycle: false
+      unresolved_label_mechanism: true
+      rule_thresholds: {max_unpenalised_share: 0.05, negligible_band: 0.02, min_penalised_error_share: 0.25, max_unstable_fraction: 0.05}
+  phase_c:
+    status: DESIGN_ONLY_NOT_TRAINED
+    design: tracks/structural-sufficiency/results/phase1e/phase_c_design.md
+    task: lipophilicity
+    split: tracks/structural-sufficiency/results/phase1a/split_phase1a.json
+    split_sha256: 9fa96d49efd94cd2ff381922f83a07f963d832064c75469657b4ce5f68c332b6
+    labels: tracks/structural-sufficiency/results/phase1a/labels_fit_monitor.json
+    labels_sha256: 0260a3909eec30900df646bc760e65360315f4a1398c7092c7c72d04a4e404f7
+    internal_split: {fit: 2352, monitor: 504, reserved: 504}
+    tier1: {arms: [G_ref, S0, R1, D8], seeds: 5, epochs: 200, budget_gpu_hours: 1.3}
+    tier2: {arms: [RO_pool, RO_rel], seeds: 5, base: "frozen BJOC trunk pretrained on lipo Fit structures only", budget_gpu_hours: 0.3}
+  cpu_gates:
+    tests: 16 passed (tracks/structural-sufficiency/code/phase1e/tests)
+    gates_note: "no separate CPU gate file; deterministic CPU stages + tests + frozen-threshold enforcement in code"
+  budget:
+    gpu_hours_run_level: 0.607
+    gpu_hours_cap: 2.0
+    jobs: 1 (ssrc-p1e-zinc-baseline-s0)
+    failed_jobs_gpu_hours: 0.0
+  artifacts:
+    label_audit: tracks/structural-sufficiency/results/phase1e/label_audit.json
+    error_attribution: tracks/structural-sufficiency/results/phase1e/error_attribution.json
+    zero_training_routing: tracks/structural-sufficiency/results/phase1e/zero_training_routing.json
+    reference_audit: tracks/structural-sufficiency/results/phase1e/reference_audit.json
+    strong_baseline: tracks/structural-sufficiency/results/phase1e/strong_baseline.json
+    decision: tracks/structural-sufficiency/results/phase1e/decision.json
+    run_manifest: tracks/structural-sufficiency/results/phase1e/run_manifest.tsv
+    code: tracks/structural-sufficiency/code/phase1e/
+    baseline_run_dir: tracks/structural-sufficiency/results/phase1e/baseline/
+  data_isolation:
+    reserved_labels_read: 0
+    official_valid_test_read: 0
+    monitor_label_reads: 1
+    post_hoc_on_reused_monitor: true
+  non_claims:
+    - "post-hoc audit of a Monitor already used by Phases 1b/1c/1d; not a confirmation set"
+    - "artifact dominance is a statement about the ZINC logP_SA_cycle target and this arm family, not about SSRC as a direction"
+    - "the conditional routing number is a diagnostic on frozen predictions, not a method; its FLOPs figure is a lower bound"
+    - "the B2 baseline is not a controlled architecture comparison (different information access and pretraining)"
+    - "UNRESOLVED_LABEL_MECHANISM rests on one criterion with n=4 molecules; a defect flag, not a mechanism proof"
+    - "no cycle penalty was ever used as a model input and no label compensation was applied"
+  next_action: >-
+    Stop any further R1/SSRC architecture optimisation on ZINC (the axis is a
+    benchmark artefact and the family is 0.074 MAE behind an isolated baseline).
+    The next scientific step is Phase C: preregister the two-tier lipophilicity
+    design, run tier 1 (4 arms x 5 seeds, ~1.3 GPU-h) and, if H3 does not
+    already resolve, tier 2 (frozen competitive trunk, RO_pool vs RO_rel,
+    ~0.3 GPU-h). Any future ZINC number must report the penalised subset
+    separately and must never be aggregated with clean property results.

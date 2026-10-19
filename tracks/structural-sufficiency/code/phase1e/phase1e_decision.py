@@ -26,6 +26,7 @@ import phase1e_common as C  # noqa: E402
 
 OUT = C.RESULTS_1E / "decision.json"
 STRONG = C.RESULTS_1E / "strong_baseline.json"
+B2_KEY = "P3E_seed0"
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -60,10 +61,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     r1c = pen_share >= C.MIN_PENALISED_ERROR_SHARE
     artifact_dominates = bool(r1a and r1b and r1c)
 
+    # ---- arm membership ----------------------------------------------------
+    # A4 asks a question *inside* the SSRC arm family (same patch pipeline, same
+    # information).  The Stage-B2 strong baseline is a different information
+    # regime and answers the B3 question instead; it is never mixed into A4.
+    ssrc_models = [m for m in err["models"] if m != B2_KEY]
+
     # ---- rule 2: STRUCTURAL_SIGNAL_BEYOND_CYCLE_REMAINS --------------------
     beyond_cycle_evidence: list[dict[str, Any]] = []
     beyond_cycle = False
     for model_key, cmp in err["comparisons_vs_G_ref"].items():
+        if model_key == B2_KEY:
+            continue
         for group_key in ("label_complement", "label_penalised"):
             c = cmp[group_key]
             better = c["mean"] <= -C.ZINC_MEANINGFUL_BAND and c["ci95"][1] < 0
@@ -106,17 +115,42 @@ def main(argv: Sequence[str] | None = None) -> int:
         }
         r1_not_competitive = None
     else:
-        best_r1 = min(v for k, v in ref["protocol_tables"]["internal_ssrc_monitor"]["rows"].items())
-        gap = strong["monitor_mae"] - best_r1
+        best_key = min(ssrc_models, key=lambda k: err["models"][k]["groups"]["all"]["mae"])
+        best_mae = err["models"][best_key]["groups"]["all"]["mae"]
+        b2_groups = err["models"][B2_KEY]["groups"]
+        b2_vs_gref = err["comparisons_vs_G_ref"][B2_KEY]
+        gap = strong["monitor_mae"] - best_mae
         lo, hi = strong["bootstrap_gap_vs_best_r1_ci95"]
         r1_not_competitive = bool(gap <= -C.ZINC_MEANINGFUL_BAND and hi < 0)
         b3 = {
             "label": "R1_IS_NOT_COMPETITIVE" if r1_not_competitive else "R1_STILL_IN_CONTENTION",
             "strong_baseline_monitor_mae": strong["monitor_mae"],
-            "best_r1_monitor_mae": best_r1,
-            "gap_strong_minus_best_r1": gap,
+            "best_ssrc_arm": {"key": best_key, "monitor_mae": best_mae},
+            "gap_strong_minus_best_ssrc": gap,
             "bootstrap_gap_ci95": [lo, hi],
-            "rule": "gap <= -0.02 and 95% bootstrap CI wholly below 0",
+            "rule": "gap <= -0.02 with a 95% paired-bootstrap CI wholly below 0",
+            "information_regime_warning": (
+                "the strong baseline receives structure-only global descriptors that the "
+                "SSRC arms do not (ring-size fractions, cyclomatic rank, junction counts); "
+                "this is a competitiveness statement, not a controlled architecture comparison"
+            ),
+            "strong_baseline_by_group": {
+                g: {
+                    "mae": b2_groups[g]["mae"],
+                    "n": b2_groups[g]["n"],
+                    "delta_vs_G_ref": b2_vs_gref[g]["mean"],
+                    "ci95": b2_vs_gref[g]["ci95"],
+                }
+                for g in ("label_complement", "label_penalised", "rdkit_large")
+            },
+            "cycle_offset_capture_on_penalised": b2_groups["label_penalised"][
+                "cycle_offset_capture"
+            ],
+            "interpretation": (
+                "the strong baseline also wins on the 957-molecule complement, where the "
+                "ring-size descriptors are nearly constant, so the gap is not explained by "
+                "the ring tail alone"
+            ),
         }
 
     # ---- route (protocol §4) ----------------------------------------------
@@ -124,8 +158,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     if artifact_dominates and not beyond_cycle:
         direction = "A"
         reason = (
-            "the large-ring mechanism is dominated by the artificial cycle penalty and no "
-            "candidate beats G_ref beyond the negligible band once it is accounted for"
+            "the large-ring mechanism is dominated by the artificial cycle penalty, no SSRC "
+            "arm beats G_ref beyond the negligible band once the penalty is accounted for, "
+            "and the family is not competitive with an isolated strong baseline"
+            if r1_not_competitive
+            else "the large-ring mechanism is dominated by the artificial cycle penalty and no "
+            "SSRC arm beats G_ref beyond the negligible band once it is accounted for"
         )
     elif r1_not_competitive and beyond_cycle:
         direction = "B"

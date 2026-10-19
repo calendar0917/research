@@ -16,7 +16,7 @@
     "error_attribution.json",
     "zero_training_routing.json",
     "reference_audit.json",
-    "(absent)"
+    "strong_baseline.json"
   ],
   "artifact_dominates": {
     "label": "BENCHMARK_CYCLE_ARTIFACT_DOMINATES",
@@ -253,8 +253,50 @@
     }
   },
   "stage_b3": {
-    "label": "NOT_EVALUATED",
-    "reason": "no strictly isolated strong baseline on the SSRC split"
+    "label": "R1_IS_NOT_COMPETITIVE",
+    "strong_baseline_monitor_mae": 0.09107104176818394,
+    "best_ssrc_arm": {
+      "key": "G_ref_seed0",
+      "monitor_mae": 0.1652899962964002
+    },
+    "gap_strong_minus_best_ssrc": -0.07421895452821627,
+    "bootstrap_gap_ci95": [
+      -0.096456123533973,
+      -0.05446789892824601
+    ],
+    "rule": "gap <= -0.02 with a 95% paired-bootstrap CI wholly below 0",
+    "information_regime_warning": "the strong baseline receives structure-only global descriptors that the SSRC arms do not (ring-size fractions, cyclomatic rank, junction counts); this is a competitiveness statement, not a controlled architecture comparison",
+    "strong_baseline_by_group": {
+      "label_complement": {
+        "mae": 0.07730779665825906,
+        "n": 957,
+        "delta_vs_G_ref": -0.044629182602797586,
+        "ci95": [
+          -0.05573327131789565,
+          -0.0346119953899804
+        ]
+      },
+      "label_penalised": {
+        "mae": 0.39738326433093046,
+        "n": 43,
+        "delta_vs_G_ref": -0.732763413426488,
+        "ci95": [
+          -1.1214159257450076,
+          -0.38100301687454086
+        ]
+      },
+      "rdkit_large": {
+        "mae": 0.22980105876922607,
+        "n": 40,
+        "delta_vs_G_ref": -0.7847433682531119,
+        "ci95": [
+          -1.1984457115922122,
+          -0.4140678670909256
+        ]
+      }
+    },
+    "cycle_offset_capture_on_penalised": 0.9279334981874933,
+    "interpretation": "the strong baseline also wins on the 957-molecule complement, where the ring-size descriptors are nearly constant, so the gap is not explained by the ring tail alone"
   },
   "routing_diagnostic": {
     "routed_mae": 0.19219004981755278,
@@ -272,12 +314,13 @@
   },
   "direction": {
     "choice": "A",
-    "reason": "the large-ring mechanism is dominated by the artificial cycle penalty and no candidate beats G_ref beyond the negligible band once it is accounted for",
+    "reason": "the large-ring mechanism is dominated by the artificial cycle penalty, no SSRC arm beats G_ref beyond the negligible band once the penalty is accounted for, and the family is not competitive with an isolated strong baseline",
     "carry_forward_constraints": [
+      "the Phase C non-ZINC task must be run on a competitive backbone, not on G_ref or R1",
       "report the order-dependent cycle basis as a benchmark defect, not as a modelling failure; any future ZINC claim must exclude the penalised subset or report it separately"
     ],
     "A_triggered": true,
-    "B_triggered": false,
+    "B_triggered": true,
     "C_triggered": false
   },
   "non_claims": [
