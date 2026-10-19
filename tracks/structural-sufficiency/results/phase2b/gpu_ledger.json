@@ -1,0 +1,120 @@
+{
+  "protocol_id": "ssrc-phase2b-zinc-v1",
+  "stage": "gpu_ledger",
+  "created_utc": "2026-10-19T08:25:00Z",
+  "host": "res",
+  "gpu_type": "NVIDIA A100-SXM4-40GB",
+  "cap_gpu_hours": 2.5,
+  "accounting": "job wall-clock occupancy x 1 GPU per job; includes startup, valid/test prediction writes and logging; CPU-only prep/score jobs are listed separately and consume 0 GPU-hours",
+  "gpu_jobs": [
+    {
+      "experiment": "ssrc-p2b-smoke",
+      "run_id": "ssrc-p2b-smoke-20261019-153605-b021e939",
+      "pool": "res-gpu0",
+      "cuda_visible_devices": "0",
+      "started_at": "2026-10-19T15:36:13+08:00",
+      "completed_at": "2026-10-19T15:36:27+08:00",
+      "wall_seconds": 14.0,
+      "gpu_hours": 0.003889,
+      "purpose": "2-epoch smoke of F and M on a 1,024-row prefix; never scored",
+      "exit_code": 0
+    },
+    {
+      "experiment": "ssrc-p2b-train-F",
+      "run_id": "ssrc-p2b-train-F-20261019-153904-d62c0f96",
+      "pool": "res-gpu0",
+      "cuda_visible_devices": "0",
+      "started_at": "2026-10-19T15:39:11+08:00",
+      "completed_at": "2026-10-19T16:04:08+08:00",
+      "wall_seconds": 1497.0,
+      "gpu_hours": 0.415833,
+      "purpose": "formal R3 F seed 0 + valid freeze; formal R3 F seed 1 + valid freeze",
+      "formal_train_seconds": 1478.227,
+      "exit_code": 0
+    },
+    {
+      "experiment": "ssrc-p2b-train-M",
+      "run_id": "ssrc-p2b-train-M-20261019-153929-82658d9e",
+      "pool": "res-gpu1",
+      "cuda_visible_devices": "1",
+      "started_at": "2026-10-19T15:39:37+08:00",
+      "completed_at": "2026-10-19T16:11:06+08:00",
+      "wall_seconds": 1889.0,
+      "gpu_hours": 0.524722,
+      "purpose": "formal R3 M seed 0 + valid freeze; formal R3 M seed 1 + valid freeze",
+      "formal_train_seconds": 1867.953,
+      "exit_code": 0
+    },
+    {
+      "experiment": "ssrc-p2b-testpredict",
+      "run_id": "ssrc-p2b-testpredict-20261019-161823-b0d1a119",
+      "pool": "res-gpu0",
+      "cuda_visible_devices": "0",
+      "started_at": "2026-10-19T16:18:28+08:00",
+      "completed_at": "2026-10-19T16:18:37+08:00",
+      "wall_seconds": 9.0,
+      "gpu_hours": 0.0025,
+      "purpose": "post-promotion one-shot test forward for finalist M seeds 0/1; P3 test arrays copied byte-exactly on CPU",
+      "exit_code": 0
+    }
+  ],
+  "gpu_totals": {
+    "wall_seconds": 3409.0,
+    "gpu_hours": 0.946944,
+    "formal_train_gpu_seconds": 3346.18,
+    "formal_train_gpu_hours": 0.929494,
+    "fraction_of_cap": 0.378778,
+    "remaining_gpu_hours": 1.553056,
+    "failed_gpu_jobs": 0,
+    "failed_gpu_hours": 0.0
+  },
+  "cpu_only_jobs": [
+    {
+      "experiment": "ssrc-p2b-prep",
+      "run_id": "ssrc-p2b-prep-20261019-151052-7bfc3005",
+      "outcome": "failed before any scoring: historical valid npz absent on the compute checkout",
+      "gpu_hours": 0.0
+    },
+    {
+      "experiment": "ssrc-p2b-prep2",
+      "run_id": "ssrc-p2b-prep2-20261019-152208-3a4fd566",
+      "outcome": "failed: regenerated P3 valid array not bit-identical across CPU/BLAS (1.9e-6); resolved by staging the frozen arrays directly",
+      "gpu_hours": 0.0
+    },
+    {
+      "experiment": "ssrc-p2b-diag",
+      "run_id": "ssrc-p2b-diag-20261019-152455-ad63bd40",
+      "outcome": "diagnostic replay; max |delta| = 1.907e-6",
+      "gpu_hours": 0.0
+    },
+    {
+      "experiment": "ssrc-p2b-prep3",
+      "run_id": "ssrc-p2b-prep3-20261019-152924-1a55d321",
+      "outcome": "audit/flops passed; G4 bitwise loop parity rejected 1.4e-6 CPU/BLAS noise",
+      "gpu_hours": 0.0
+    },
+    {
+      "experiment": "ssrc-p2b-prep4",
+      "run_id": "ssrc-p2b-prep4-20261019-153340-79016de5",
+      "outcome": "audit + gates + flops all pass; the pre-GPU artifact of record",
+      "gpu_hours": 0.0
+    },
+    {
+      "experiment": "ssrc-p2b-valid",
+      "run_id": "ssrc-p2b-valid-20261019-161553-d7be4980",
+      "outcome": "single official-valid label read; M promoted, F not",
+      "gpu_hours": 0.0
+    },
+    {
+      "experiment": "ssrc-p2b-testscore",
+      "run_id": "ssrc-p2b-testscore-20261019-162034-e5615435",
+      "outcome": "single one-shot official-test label read; not confirmed",
+      "gpu_hours": 0.0
+    }
+  ],
+  "notes": [
+    "No GPU job failed. The failed prep attempts were CPU-only and are listed for completeness.",
+    "The 2.5 h cap covers smoke, failures and formal runs; total occupancy is 0.947 h (37.9%).",
+    "Formal training-only occupancy is 0.929 h; the remainder is smoke (14 s), test forward (9 s), job startup and valid prediction writes."
+  ]
+}

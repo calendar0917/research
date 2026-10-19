@@ -3,7 +3,7 @@
 | 项 | 内容 |
 |----|------|
 | slug | `structural-sufficiency` |
-| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a–1d 完成；Phase 1e 完成 → 路线判定 `Direction A`（ZINC 大环收益是标签 `-cycles` 人工项造成的基准伪影；SSRC 臂族在同 split 上不具竞争力；下一步 = 真实性质任务 Phase C，设计已冻结、未训练）；**Phase 2a 完成 → `CAPACITY_ONLY_INCREMENT`（P3E 之上的小模块带来 +0.0055 MAE，来自容量而非边上的传播）** |
+| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a–1d 完成；Phase 1e 完成 → 路线判定 `Direction A`（ZINC 大环收益是标签 `-cycles` 人工项造成的基准伪影；SSRC 臂族在同 split 上不具竞争力；下一步 = 真实性质任务 Phase C，设计已冻结、未训练）；**Phase 2a 完成 → `CAPACITY_ONLY_INCREMENT`（P3E 之上的小模块带来 +0.0055 MAE，来自容量而非边上的传播）；Phase 2b 完成 → `NO_PRACTICAL_ADVANTAGE`（标准 ZINC-12k：M valid +0.003056，one-shot test +0.001273 未确认；F valid null；M 不作为下一性能基座）** |
 | 创建 | 2026-10-18 |
 | 主线位置 | **SSRC（新主线）**：显式结构充分性 → 关系计算；旧 `structure-contribution` 标记 **paused / 非主线**，全部历史保留，不覆盖、不改写 |
 | Phase 0 结论 | **REFRAME_NEEDED**：原表述“MP 是否必要”已被文献覆盖且实验易混淆；重述为“精确 \(E_r\) 的信息充分性 vs 有限样本可学习性”，条件性 GO 到受控 pilot |
@@ -16,6 +16,7 @@
 | Phase 1d 判定（**Phase 1e 已下调口径，见下一行**） | **`PAIRWISE_INTERACTION_PROMISING`（限定 `LARGE_RING_TAIL_SPECIFIC`）+ `CAPACITY_SCALING_PROMISING` + `REPRESENTATION_OR_INDUCTIVE_BIAS_GAP`**：R_incidence 0.2797 vs R1_size 0.2366（Gain_joint +0.0431，CI +0.0121…+0.0763），但 96% 无大环分子上 incidence 反而好 −0.0281；4% 大环上 R1 好 +1.751。R1_size_cap 0.1935（Gain_cap +0.0431，CI +0.0192…+0.0688），整体 G_ref gap +0.0282；96% 上 gap 仅 +0.0174，4% 尾部 +0.286。FLOPs 2.10× G_ref，记 `EFFICIENCY_OBSTACLE` |
 | Phase 1e 判定 | **`BENCHMARK_CYCLE_ARTIFACT_DOMINATES`（主）+ `UNRESOLVED_LABEL_MECHANISM`（次，cycle basis 顺序依赖）+ `R1_IS_NOT_COMPETITIVE`** → **路线 `Direction A`**：标签是 `-max(0, NetworkX Paton basis 最长环 − 6)`（非置换不变，非 PyG 文档口径）；Monitor 40 个 RDKit 大环 ≡ 43 个标签受罚分子（purity 1.0、recall 0.93），受罚 4% 占各臂绝对误差 29–53%，cycle 项占该组标签量级 68%；**任何 SSRC 臂在任一子组都不优于 G_ref**（R1_size 在大环 40 上比 G_ref 差 +0.72，Phase 1d 的 +1.751 只是对更差 sibling 的相对值）；零训练条件路由 0.1922（仍比 G_ref 差 +0.0269）；严格隔离的单 GPU 强基线 0.0911 vs G_ref 0.1653（Δ −0.0742，CI −0.0965…−0.0545，补集上也 −0.0446）。0.607 GPU-h |
 | Phase 2a 判定 | **`CAPACITY_ONLY_INCREMENT`**：在冻结 P3E 之后插入小模块（新参数 +12%、前向 FLOPs 1.15×），两 seed 均稳定改善 P3E **+0.005542 MAE**（0.0911 → 0.0853）；但把该模块换成真实物理边上的 2 轮 GINE **没有额外收益**：`Gain_MP` = +0.003764（seed 0）/ −0.000055（seed 1），符号跨 seed 冲突且小于对照臂的 seed 间波动（0.0039）。⇒ 进益来自新增逐原子容量，不是边上的交互。0.933 GPU-h（8 runs，预算 23.3%） |
+| Phase 2b 判定 | **`NO_PRACTICAL_ADVANTAGE`**：标准 ZINC-12k（official train 10k / valid 1k / test 1k，seed-matched full-10k SSL，R3）。valid：P3 0.079844 / F 0.079616 / M 0.076788；M **+0.003056**（两 seed 正，drop-top-1 +0.002683，drop-top-10 P3-error +0.002004，complement +0.002992；CI95 −1.8e-5…+0.00623，仍跨零）；F +0.000228（seed 1 负）。`Gain_MP` +0.002828，但 seed 0 仅 +0.000033，分离由 seed 1 驱动。one-shot test：M 0.068549 vs P3 0.069822，**+0.001273**，CI95 −0.002258…+0.004725，band 与 CI 均 fail；F 未上 test（唯一 finalist 规则）。0.947 GPU-h（37.9% 预算），无 GPU 失败。 |
 | Phase 2a 协议缺陷（需长期携带） | 预注册的 **绝对 RMSE 门禁（Δ≤+0.005）在 n=1000、max\|y\|≈8 的 Monitor 上是单分子统计量**：seed 0 Δ=+0.005208（差 0.000208），其中单个置换不稳定标签分子（official-train row 2052）贡献 MSE 差的 1.59×；seed 1 Δ=−0.002090，同一位形反向。**阈值未事后修改**；seed 0 产物保留 `INSUFFICIENT_EVIDENCE`，miss 与诊断写入 `seed1_purchase_record.md` 后才买 seed 1 |
 | Phase 1e 基准缺陷（需长期携带） | 任何 ZINC `logP_SA_cycle` 聚合数字都混入了一个隐藏的环大小任务；历史数字（如 R1 0.260161、G_ref 0.165290）仍是对该 target 的有效测量，但**不得当作干净的性质预测结果**；未来 ZINC 声明必须单列或排除受罚子集 |
 
@@ -98,6 +99,10 @@
 | Phase 2a GPU | **完成**：8/8 run exit 0；0.933 GPU-h（占用 0.933 h），≤4 h；prep/smoke/score 合计 31 s，训练循环 0.908 h |
 | Phase 2a 结果 | 两 seed 均值 MAE：P3E 0.090887 / F 0.087199 / M 0.085345；Gain_P3E +0.005675 / +0.005409；Gain_MP +0.003764 / −0.000055；957 补集 0.0770 / 0.0731 / 0.0712；43 受罚组 0.4007 / 0.4002 / 0.3998 |
 | Phase 2a 判定 | **`CAPACITY_ONLY_INCREMENT`**：容量进益真实可复现，交互进益为零；seed 0 单独看会误判 M>F（F 的 seed-0 轨迹比自身 seed-1 差 0.0039） |
+| Phase 2b 协议/代码 | 完成：`PROTOCOL.md`/`configs/phase2b.yaml` 预注册；P3 复用 audit 10/10、CPU gates 10/10（G4 容差 1e-4 处理远端 float 噪声）、FLOPs 1.147×/1.151×、16 tests；train 记录全部 init/encoder/batch-order 精确匹配 |
+| Phase 2b GPU | **完成**：smoke + F s0/s1 + M s0/s1 + one-shot test forward；4/4 formal exit 0；0.947 GPU-h（训练循环 0.929 h），≤2.5 h；无 GPU 失败 |
+| Phase 2b 结果 | valid P3 0.079844 / F 0.079616 / M 0.076788；test P3 0.069822 / M 0.068549；M gain valid +0.003056、test +0.001273（CI 跨零）；F valid +0.000228（不 promote）；M 唯一 finalist |
+| Phase 2b 判定 | **`NO_PRACTICAL_ADVANTAGE`**：valid 仅阈值边缘通过，one-shot test 未确认；M 的 +12.3% 参数 / +15.1% FLOPs / +38% 训练墙不换来确定收益；M/F 冻结保留为 borderline/negative 证据 |
 | 交付 | Phase 0 REPORT + 纠错文件 + Phase 1a 协议/REPORT + Phase 1b 协议/决策日志/REPORT/run manifest + Phase 1c 协议/纠错/REPORT/run manifest/analysis + Phase 1d 协议/REPORT/CPU audit/run manifest/analysis + STATE/TRACK |
 
 ## 入口
@@ -127,6 +132,14 @@
 | `results/phase1c/readout_diagnostics.json` | CPU 读出/尺寸/环诊断 |
 | `runs/phase1c/` | 逐 run JSON（Monitor 预测；git-ignored） |
 | `code/phase1c/` | 模型、训练 runner、分析、gates、tests |
+| `results/phase2b/PROTOCOL.md` | Phase 2b 预注册协议（standard ZINC-12k、P3 复用、F/M 四跑、valid promotion、one-shot test） |
+| `results/phase2b/REPORT.md` | Phase 2b 完整报告（P3 复用 audit、valid/test 主表、7 问、成本、GPU 账本、最终 verdict） |
+| `results/phase2b/p3_reuse_audit.json` / `cpu_gates_phase2b.json` / `flops_phase2b.json` | P3 复用 audit 10/10、CPU gates 10/10、FLOP 审计 |
+| `results/phase2b/valid_decision.json` / `valid_metrics.json` / `valid_prediction_freeze.json` | valid 单次读标签、promotion 判定（M）、冻结预测 hash |
+| `results/phase2b/test_decision.json` / `test_metrics.json` / `test_prediction_freeze.json` | one-shot test 判定（未确认）与冻结预测 hash |
+| `results/phase2b/train_*.json` / `valid_freeze_*.json` / `soup_*.pt` | 四跑训练记录、valid 预测 freeze、soup（hash 已入报告） |
+| `results/phase2b/gpu_ledger.json` / `run_manifest.tsv` | GPU 账本（0.947 h）与 rr run_id/commit/hash 清单 |
+| `code/phase2b/` | 复用 audit、gates、R3 runner、valid/test 评分、16 tests |
 | `notes/phase2a_protocol.md` | Phase 2a 冻结协议（臂定义、参数匹配、10 项 CPU gate、判定带、seed-1 购买规则、no-go 清单） |
 | `results/phase2a/REPORT.md` | Phase 2a 完整报告（主表、子群、尾部诊断、8 问、决策链、GPU 账本、复现命令） |
 | `results/phase2a/seed1_purchase_record.md` | seed-1 购买记录（六条件核对、RMSE 门禁 miss 与其构成、披露的事后判断、停止规则），写于任何 seed-1 训练之前 |
@@ -175,7 +188,9 @@
 
 ## 下一步
 
-00. **Phase 2a 已改写下一步（最新）**：ZINC 上“在强编码器后追加局部传播”这一线**停止**。
+00. **Phase 2b 已改写下一步（最新）**：标准 ZINC-12k 上 M 的 valid +0.003056 未在 one-shot test 重现（+0.001273，CI 跨零），F 为 null；**M 不作为下一性能基座，P3 保持基座**。M/F 冻结保留为 borderline/negative 证据。若重启该线，唯一允许的科学问题是：**3–5 seed + 参数匹配 trunk/readout 对照**，检验 M 的 valid gain 与 M−F separation 是否可复现，还是 seed-1 波动；必须新预注册，不自动开 Phase 2c。
+
+00b. **Phase 2a（历史）已改写下一步**：ZINC 上“在强编码器后追加局部传播”这一线**停止**。
    - 事实：+12% 参数的小模块在冻结 P3E 之后稳定带来 +0.0055 MAE（0.0911→0.0853，两 seed 一致）；但把该模块换成真实边上的 2 轮 GINE 没有额外收益（`Gain_MP` +0.0038 / −0.0001，符号跨 seed 冲突）。Phase 1b 的“迭代≈计算量”与本轮“邻接≈无邻接”是同一结论的两种形式。
    - 因此**不**再试宽度/深度/gate 初始化/更多 seed/新 SSL 目标/cycle 路由/ensemble。
    - 若仍要检验交互价值，必须是**新一轮预注册**，且满足：目标依赖 P3E 感受野可证不足的图统计量（先做零训练诊断）；每臂 ≥2 seed；尾部用鲁棒判据；否则不动 GPU。

@@ -5,11 +5,17 @@
 # Phase 0 evidence: results/phase0/REPORT.md + results/phase0/analysis/*.json
 # Phase 1a: notes/phase1a_protocol.md + results/phase1a/
 
-phase: phase2a
-current_round: ssrc-phase2a-zinc-v1
-status: PHASE2A_COMPLETE
+phase: phase2b
+current_round: ssrc-phase2b-zinc-v1
+status: PHASE2B_COMPLETE
 updated: 2026-10-19
 main_line: true
+latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
+latest_verdict: NO_PRACTICAL_ADVANTAGE
+latest_next_action: >-
+  3-5 seeds plus a parameter-matched trunk/readout control to test whether the M
+  valid gain and the M-F separation reproduce or were a seed-1 fluctuation.  New
+  pre-registration only; do not start Phase 2c.
 supersedes_main_line: structure-contribution
 superseded_track_status: paused-non-main-line-history-preserved
 
@@ -788,3 +794,82 @@ phase2a:
     - "two seeds is replication of the supervised trajectory only; the SSL encoder was fixed, so the spread is a lower bound"
     - "the cycle-penalty subgroup and the 4 permutation-unstable rows are descriptive groups, never model inputs or selection criteria"
     - "no third seed, no width/depth/gating/SSL variant was tried after the verdict"
+
+phase2b:
+  protocol_id: ssrc-phase2b-zinc-v1
+  protocol: tracks/structural-sufficiency/results/phase2b/PROTOCOL.md
+  config: tracks/structural-sufficiency/configs/phase2b.yaml
+  status: COMPLETE
+  report: tracks/structural-sufficiency/results/phase2b/REPORT.md
+  verdict: NO_PRACTICAL_ADVANTAGE
+  question: >-
+    Does the Phase 2a F/M improvement survive the standard ZINC-12k protocol
+    (official train 10000, official valid 1000 as development split), with the
+    historical full-10k masked-SSL encoders and the frozen R3 recipe, against the
+    historical frozen P3/R3 checkpoints measured on the same splits?
+  scope:
+    new_formal_runs: 4
+    arms: [F, M]
+    seeds: [0, 1]
+    reused_not_retrained: [P3 soup s0, P3 soup s1, full-10k SSL encoder s0, full-10k SSL encoder s1]
+    public_models_retrained: 0
+    zinc_full_used: false
+    external_data_used: false
+  validation:
+    p3_reuse_audit: PASS
+    p3_valid_replay_max_abs_diff_on_compute_cpu: 2.861e-06
+    p3_valid_mae_reproduced: {s0: 0.07910149778419873, s1: 0.08058639967715135}
+    p3_test_mae_reproduced: {s0: 0.0693043516818434, s1: 0.07033976497594267}
+    cpu_gates: 10/10 PASS
+    g4_loop_parity_tolerance: "max state delta <= 1e-4 (observed 1.445e-6 F, 6.482e-7 M); batch order and updates exact"
+    test_structure_fingerprint_match: true
+    flops_ratio_vs_p3: {F: 1.1468, M: 1.1511}
+  official_valid:
+    p3: {s0: 0.07910149778419873, s1: 0.08058639967715135, mean: 0.07984394873067505}
+    F: {s0: 0.07636690219963202, s1: 0.08286510884104063, mean: 0.07961600552033632}
+    M: {s0: 0.0763334629405872, s1: 0.07724172868853202, mean: 0.0767875958145596}
+    gain_F: {s0: 0.002734595584566707, s1: -0.002278709163889281, mean: 0.000227943210338713}
+    gain_M: {s0: 0.0027680348436115304, s1: 0.003344670988619333, mean: 0.003056352916115432}
+    gain_M_ci95: [-1.8394672285648948e-05, 0.006229711513730579]
+    gain_mp: {s0: 3.343925904482348e-05, s1: 0.005623380152508614, mean: 0.002828409705776719}
+    finalist: M
+    promotion_authorized: true
+    decision_sha256: ea8e68d8a6ff3ee05c1397d58d31b006757da33497f92dfa209186718bfe909b
+  official_test_one_shot:
+    p3: {s0: 0.0693043516818434, s1: 0.07033976497594267, mean: 0.06982205832889304}
+    M: {s0: 0.06863555725477635, s1: 0.06846232673339546, mean: 0.0685489419940859}
+    gain: {s0: 0.0006687944270670487, s1: 0.0018774382425472136, mean: 0.0012731163348071312}
+    ci95: [-0.0022575707077397964, 0.0047254639787832255]
+    confirmed: false
+    decision_sha256: ffb1febebf7cd50928dc51b0afb00b4829730046aede1732b965c0d336acdabb
+    historically_exposed: true
+    first_blind_test: false
+    followup_after_read: none
+  budget:
+    cap_gpu_hours: 2.5
+    used_gpu_hours: 0.946944
+    formal_train_gpu_hours: 0.929494
+    fraction_of_cap: 0.378778
+    failed_gpu_jobs: 0
+    ledger: tracks/structural-sufficiency/results/phase2b/gpu_ledger.json
+  interpretation: >-
+    M passes the frozen valid promotion rule at the edge of the 0.003 band
+    (+0.003056; drop-top-10 margin 0.000004; CI still includes zero).  On the
+    one-shot official test the gain shrinks to +0.001273 with CI
+    [-0.002258, +0.004725], below the band and not significant, so the round
+    verdict is NO_PRACTICAL_ADVANTAGE.  F is null on valid (+0.000228, seed 1
+    negative).  The valid mechanism label MP_INCREMENT_SUPPORTED is technically
+    satisfied but seed-0 M-F is only +0.000033; the separation is seed-1-driven.
+    M is not the next performance base; P3 remains the base.  Keep F/M as frozen
+    borderline/negative evidence.
+  next_action: >-
+    Do not start Phase 2c.  If the line is revisited, the single scientific
+    question is whether the M valid gain and the M-F separation reproduce with
+    3-5 seeds and a parameter-matched trunk/readout control, or were a seed-1
+    fluctuation.  New pre-registration required.
+  non_claims:
+    - "0.068549 is a 2-seed official ZINC-12k test mean, not a 10-run SOTA result; it is inside GraphGPS's +/-0.004 spread and behind GRIT/CSA/ESA+"
+    - "the official test is historically exposed; this was a one-shot re-read, not a first blind test"
+    - "F has no official-test number because only the single finalist was tested"
+    - "the valid M gain is threshold-marginal and the M-F separation is seed-1-driven"
+    - "no test-driven follow-up, third seed, width/depth/gating/SSL/recipe change was made"

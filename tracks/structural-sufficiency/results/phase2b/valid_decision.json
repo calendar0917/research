@@ -1,0 +1,115 @@
+{
+  "protocol_id": "ssrc-phase2b-zinc-v1",
+  "stage": "valid_decision",
+  "created_utc": "2026-10-19T08:16:05Z",
+  "rule": {
+    "practical_gain_mean_mae": 0.003,
+    "both_seeds_positive": true,
+    "robust_gain_after_drop_top1_favourable": 0.002,
+    "robust_gain_after_drop_top10_p3_error": 0.002,
+    "complement_gain_must_be_positive": true,
+    "mp_separation_mean_mae": 0.002,
+    "mp_both_seeds_positive": true,
+    "mp_complement_positive": true,
+    "max_finalists": 1
+  },
+  "candidates": {
+    "F": {
+      "candidate": "F",
+      "mae_seed_mean": 0.07961600552033632,
+      "p3_mae_seed_mean": 0.07984394873067505,
+      "per_seed_gain": {
+        "0": 0.002734595584566707,
+        "1": -0.002278709163889281
+      },
+      "mean_gain": 0.000227943210338713,
+      "bootstrap": {
+        "mean_diff": 0.00022794321033870802,
+        "ci95_low": -0.004849682846946234,
+        "ci95_high": 0.0054190744183855695,
+        "better_fraction": 0.486,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261024,
+        "per_molecule_unit": true
+      },
+      "drop_top1_favourable_gain": -0.0011802886415657973,
+      "drop_top10_p3_error_gain": -0.0009773841951479852,
+      "penalty_complement_gain": 0.0008843927802996231,
+      "checks": {
+        "mean_gain_ge_0.003": false,
+        "both_seeds_positive": false,
+        "drop_top1_favourable_ge_0.002": false,
+        "drop_top10_p3_error_ge_0.002": false,
+        "penalty_complement_gain_positive": true
+      },
+      "qualifies": false
+    },
+    "M": {
+      "candidate": "M",
+      "mae_seed_mean": 0.0767875958145596,
+      "p3_mae_seed_mean": 0.07984394873067505,
+      "per_seed_gain": {
+        "0": 0.0027680348436115304,
+        "1": 0.003344670988619333
+      },
+      "mean_gain": 0.003056352916115432,
+      "bootstrap": {
+        "mean_diff": 0.003056352916115429,
+        "ci95_low": -1.8394672285648948e-05,
+        "ci95_high": 0.006229711513730579,
+        "better_fraction": 0.521,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261024,
+        "per_molecule_unit": true
+      },
+      "drop_top1_favourable_gain": 0.002683207924951808,
+      "drop_top10_p3_error_gain": 0.0020042234701880563,
+      "penalty_complement_gain": 0.0029919698971001955,
+      "checks": {
+        "mean_gain_ge_0.003": true,
+        "both_seeds_positive": true,
+        "drop_top1_favourable_ge_0.002": true,
+        "drop_top10_p3_error_ge_0.002": true,
+        "penalty_complement_gain_positive": true
+      },
+      "qualifies": true
+    }
+  },
+  "gain_mp": {
+    "definition": "MAE(F) - MAE(M); positive = M better",
+    "per_seed_gain": {
+      "0": 3.343925904482348e-05,
+      "1": 0.005623380152508614
+    },
+    "bootstrap": {
+      "mean_diff": 0.0028284097057767214,
+      "ci95_low": -0.0022035289325984192,
+      "ci95_high": 0.007517047356197144,
+      "better_fraction": 0.544,
+      "n_resamples": 5000,
+      "bootstrap_seed": 20261024,
+      "per_molecule_unit": true
+    },
+    "penalty_complement_gain": 0.0021075771168005725,
+    "mean_gain": 0.002828409705776719,
+    "checks": {
+      "mean_gain_ge_0.002": true,
+      "both_seeds_positive": true,
+      "penalty_complement_positive": true
+    },
+    "separated": true
+  },
+  "finalist": "M",
+  "selection_reason": "only M qualified",
+  "promotion_authorized": true,
+  "performance_verdicts": [
+    "VALID_GAIN_REPLICATED_ON_OFFICIAL_VALID"
+  ],
+  "mechanism_verdicts": [
+    "MP_INCREMENT_SUPPORTED"
+  ],
+  "mechanism_note": "M separated from F on official valid",
+  "no_test_if_not_promoted": false,
+  "valid_labels_read_count": 1,
+  "git_commit": "29c4c2cb653b6a0bf7393c1dcef0bdb635e704a6"
+}

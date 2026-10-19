@@ -1,0 +1,160 @@
+{
+  "protocol_id": "ssrc-phase2b-zinc-v1",
+  "stage": "test_score",
+  "created_utc": "2026-10-19T08:20:48Z",
+  "n": 1000,
+  "finalist": "M",
+  "primary_metric": "raw-y MAE on official ZINC-12k test 1000, seed-mean of two single models",
+  "labels": {
+    "source": "official PyG ZINC subset=True split=test; historical array hash verified",
+    "historical_y_path": "tracks/structure-contribution/results/bjoc_r3_frozen_terminal_test_v1/test_y_read_once.npy",
+    "array_sha256_float32": "66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768",
+    "array_sha256_float64": "3afb4be3e3634fec4178dec810dd0f71ef7a1519fa24cef4cb11206b809e2d0e",
+    "read_count_this_round": 1,
+    "historically_exposed": true
+  },
+  "models": {
+    "per_seed": {
+      "P3": {
+        "0": {
+          "n": 1000,
+          "mae": 0.0693043516818434,
+          "rmse": 0.14602759200111937,
+          "median_ae": 0.0361495316028595,
+          "p90_ae": 0.13755555152893068,
+          "p95_ae": 0.210144619643688,
+          "p99_ae": 0.5812512493133541,
+          "max_ae": 1.7693228721618652,
+          "mean_squared_error": 0.02132405762564538
+        },
+        "1": {
+          "n": 1000,
+          "mae": 0.07033976497594267,
+          "rmse": 0.13778300818652092,
+          "median_ae": 0.04173684120178223,
+          "p90_ae": 0.14983856976032256,
+          "p95_ae": 0.1976288497447967,
+          "p99_ae": 0.5290756839513775,
+          "max_ae": 1.3795721530914307,
+          "mean_squared_error": 0.01898415734492689
+        }
+      },
+      "M": {
+        "0": {
+          "n": 1000,
+          "mae": 0.06863555725477635,
+          "rmse": 0.1339277432595123,
+          "median_ae": 0.03911358118057251,
+          "p90_ae": 0.1443768024444581,
+          "p95_ae": 0.2020571887493133,
+          "p99_ae": 0.5952168774604795,
+          "max_ae": 1.725670337677002,
+          "mean_squared_error": 0.017936640414585838
+        },
+        "1": {
+          "n": 1000,
+          "mae": 0.06846232673339546,
+          "rmse": 0.14572371970080034,
+          "median_ae": 0.03750485181808472,
+          "p90_ae": 0.1382450580596924,
+          "p95_ae": 0.2090999558568,
+          "p99_ae": 0.6474692475795746,
+          "max_ae": 2.621307849884033,
+          "mean_squared_error": 0.021235402483437422
+        }
+      }
+    },
+    "seed_mean_mae": {
+      "P3": 0.06982205832889304,
+      "M": 0.0685489419940859
+    }
+  },
+  "p3_replay_check": {
+    "per_seed_mae": {
+      "0": 0.0693043516818434,
+      "1": 0.07033976497594267
+    },
+    "recorded_historical_mae": {
+      "0": 0.0693043516818434,
+      "1": 0.07033976497594267
+    },
+    "abs_diff": {
+      "0": 0.0,
+      "1": 0.0
+    },
+    "within_1e-5": true
+  },
+  "subgroups": {
+    "all": {
+      "n": 1000,
+      "P3": {
+        "mae_seed0": 0.0693043516818434,
+        "mae_seed1": 0.07033976497594267,
+        "mae_seed_mean": 0.06982205832889304
+      },
+      "M": {
+        "mae_seed0": 0.06863555725477635,
+        "mae_seed1": 0.06846232673339546,
+        "mae_seed_mean": 0.0685489419940859
+      }
+    },
+    "ordinary_y_gt_minus3": {
+      "n": 923,
+      "P3": {
+        "mae_seed0": 0.0628598311034113,
+        "mae_seed1": 0.065740604854652,
+        "mae_seed_mean": 0.06430021797903165
+      },
+      "M": {
+        "mae_seed0": 0.06395151202777806,
+        "mae_seed1": 0.0620190169589588,
+        "mae_seed_mean": 0.06298526449336843
+      }
+    },
+    "tail_y_le_minus3": {
+      "n": 77,
+      "P3": {
+        "mae_seed0": 0.1465549035505815,
+        "mae_seed1": 0.1254699570792062,
+        "mae_seed_mean": 0.13601243031489385
+      },
+      "M": {
+        "mae_seed0": 0.12478326822256113,
+        "mae_seed1": 0.14569836467891545,
+        "mae_seed_mean": 0.1352408164507383
+      }
+    }
+  },
+  "paired_vs_p3": {
+    "per_seed_gain": {
+      "0": 0.0006687944270670487,
+      "1": 0.0018774382425472136
+    },
+    "mean_gain": 0.0012731163348071312,
+    "bootstrap": {
+      "mean_diff": 0.0012731163348071277,
+      "ci95_low": -0.0022575707077397964,
+      "ci95_high": 0.0047254639787832255,
+      "better_fraction": 0.506,
+      "n_resamples": 5000,
+      "bootstrap_seed": 20261024,
+      "per_molecule_unit": true
+    },
+    "different_molecules_improved_fraction": 0.506
+  },
+  "mse_tail": {
+    "bootstrap": {
+      "mean_diff": 0.0005680860362745044,
+      "ci95_low": -0.006787971918948608,
+      "ci95_high": 0.00666403897671551,
+      "better_fraction": 0.506,
+      "n_resamples": 5000,
+      "bootstrap_seed": 20261024,
+      "per_molecule_unit": true
+    },
+    "top_abs_contributor_row": 402,
+    "top_abs_contributor_share": 0.20826449618230405
+  },
+  "test_is_first_blind_test": false,
+  "test_read_used_for_selection": false
+}
