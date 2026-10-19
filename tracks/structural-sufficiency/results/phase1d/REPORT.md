@@ -34,6 +34,16 @@ Phase A used only frozen Phase 1b/1c Monitor predictions and the frozen Fit/Moni
 
 The three Phase 1c contrasts are positive at seed 0: `d_pair = +0.0682`, `d_capacity = +0.0529`, `d_gap = +0.0713` (positive means `R1_size` is better than the respective control).
 
+Per-molecule diagnostics at seed 0 (positive delta = `R1_size` better; win rate = fraction of molecules where `R1_size` has lower absolute error):
+
+| Contrast | Mean Δ | Median Δ | p90 Δ | `R1_size` win rate | Top 1% share of mean | Mean after dropping top 1% |
+|---|---:|---:|---:|---:|---:|---:|
+| `d_pair` | +0.0682 | +0.0073 | +0.2077 | 53.1% | 42.6% | +0.0395 |
+| `d_capacity` | +0.0529 | −0.0015 | +0.1516 | 49.2% | 68.4% | +0.0169 |
+| `d_gap` (R1−G_ref) | +0.0713 | +0.0176 | +0.2003 | 57.1% | 18.3% | +0.0588 |
+
+The median `d_capacity` is slightly negative even though the mean is positive: the capacity gain is a tail/upper-quantile effect, not a broad per-molecule shift. `d_pair` is positive at the median but its top 1% still carries 42.6% of the mean.
+
 ### 1.2 The gains are concentrated in a small, label-coupled tail
 
 The structure-only binary split (`large_cycles_gt6 >= 1`, equivalently `max_ring_size >= 7`) contains **40/1,000 molecules (4%)**. It was fixed before Phase 1d GPU work and is used as a secondary readout, not as a model-selection variable.
