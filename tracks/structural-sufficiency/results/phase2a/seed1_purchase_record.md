@@ -87,3 +87,31 @@ objective, any cycle-penalty routing, any ensemble.
 - If the seeds conflict in direction, the round is `UNRESOLVED` and no further
   seed is bought.
 - No re-tuning follows either outcome.
+
+---
+
+## 6. Appended after the seed-1 score (append-only; nothing above was rewritten)
+
+Observed seed-1 values: `Gain_P3E = +0.005409`, `Gain_MP = -0.000055`,
+`ΔRMSE = -0.002090`, `complement_gain = +0.005181`, `MAE(P3E) - MAE(F) = +0.005465`.
+
+§5 above is ambiguous for exactly this case, and the ambiguity is recorded rather than
+resolved silently:
+
+- the §5 parenthetical ("or `CAPACITY_ONLY_INCREMENT` if the M-vs-F separation dies at seed
+  1") describes this outcome;
+- but the §5 premise ("the two seeds agree in sign and magnitude on … `Gain_MP`") is false,
+  and the next bullet ("if the seeds conflict in direction, the round is `UNRESOLVED`")
+  could be read to cover it.
+
+Resolution: the **frozen rule table in `phase2a_common.decide` governs**, not the prose
+summary written in §5. `decide()` fired mechanically at seed 1 with no judgment:
+`gain_mp < 0.002` and both arms `>= 0.004` over the matched baseline → `CAPACITY_ONLY_INCREMENT`.
+That is also the substantively correct label: the seeds do not conflict about *whether* the
+extra stage helps (they agree, +0.0057 / +0.0054); they conflict only about whether
+*adjacency access* matters, and a sign flip there is a determinate answer ("no measurable
+interaction"), not an inability to resolve. `UNRESOLVED` in this protocol is reserved for
+"cannot tell", which would misdescribe a replicated capacity effect.
+
+`Gain_MP` will therefore never be reported as a positive effect from this round, and no
+further seed is bought (per §5, which is unambiguous on that point).

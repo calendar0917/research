@@ -187,6 +187,15 @@ Seed-1 mechanical values behind that status: `Gain_MP = -0.000055 < 0.002`,
 `Gain_P3E = +0.005409 ≥ 0.004`, `MAE(P3E) - MAE(F) = +0.005465 ≥ 0.004`,
 `complement_gain = +0.005181`, `optimization_ok = true`, `ΔRMSE = -0.002090`.
 
+One wording ambiguity is disclosed rather than smoothed over: `seed1_purchase_record.md` §5
+summarised the stopping rule in prose and, read literally, its "signs conflict → `UNRESOLVED`"
+bullet could be taken to cover this outcome. The **frozen rule table** (`decide()`) governs:
+it fired `CAPACITY_ONLY_INCREMENT` mechanically, with no judgment, and it is the
+substantively correct label, because `UNRESOLVED` means "cannot tell" while the seeds agree
+that the extra stage helps (+0.0057 / +0.0054) and disagree only about adjacency access —
+which is a determinate "no measurable interaction". The appended §6 of the purchase record
+records this.
+
 Why not `STRONG_BACKBONE_MP_INCREMENT`: it requires M to be separated from the
 capacity-matched control in **both** seeds. It is separated in neither the sign test
 (seed 1 has F marginally ahead) nor the magnitude test (two-seed mean 0.0019 < 0.002 band).
