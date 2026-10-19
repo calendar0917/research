@@ -155,10 +155,12 @@ rr run res zinc-grit-ref-formal \
 Formal mode constructs train+valid (never test), evaluates valid every epoch,
 and keeps the best-valid checkpoint.  It does not read the official test split.
 
-For two seeds in parallel, launch the same command twice with `--seed 41` /
-`--seed 42`, `--run-name formal-seed41` / `formal-seed42`, and
-`--pool res-gpu0` / `res-gpu1`.  The jobs are independent; GPU-hours add even
-though wall time overlaps.
+For two seeds in parallel, deploy both pools once
+(`rr deploy res --pool res-gpu0` and `rr deploy res --pool res-gpu1`), then
+launch the same command twice with `--seed 41` / `--seed 42`,
+`--run-name formal-seed41` / `formal-seed42`, and `--pool res-gpu0` /
+`res-gpu1`.  The jobs are independent; GPU-hours add even though wall time
+overlaps.
 
 ## Two different evaluations
 
