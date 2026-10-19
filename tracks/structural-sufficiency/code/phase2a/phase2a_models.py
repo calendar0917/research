@@ -283,10 +283,7 @@ def build_local_model(
         "local_rounds": rounds,
         "base_scratch_init_full_sha256": src.state_dict_hash(base),
         "base_scratch_init_encoder_sha256": bp.encoder_group_hash(base),
-        "base_scratch_init_group_state_sha256": bp.state_group_sha256(
-            {**{f"group_composer:{k}": v for k, v in base.group_composer.state_dict().items()},
-             **{f"reader:{k}": v for k, v in base.reader.state_dict().items()}}
-        ),
+        "base_scratch_init_group_state_sha256": group_state_sha256(base),
         "extended_trunk_state_sha256": trunk_state_sha256(model),
         "extended_trunk_param_sha256": trunk_param_sha256(model),
         "trunk_matches_base_init": trunk_param_sha256(model) == src.state_dict_hash(base),
@@ -294,6 +291,13 @@ def build_local_model(
         "local_block_init_sha256": local_block_state_sha256(model.local),
     }
     return base, model, info
+
+
+def group_state_sha256(model: src.BJOC) -> str:
+    """Composer+reader hash, identical by construction to ``mp.group_state_hash``."""
+    import bjoc_masked_pretraining_v1 as mp
+
+    return mp.group_state_hash(model)
 
 
 def trunk_state_sha256(model: src.BJOC) -> str:

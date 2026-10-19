@@ -617,10 +617,7 @@ def train_arm(
 
     enc_init = bp.encoder_group_hash(model)
     trunk_init = M.trunk_param_sha256(model)
-    group_init = bp.state_group_sha256(
-        {**{f"group_composer:{k}": v for k, v in model.group_composer.state_dict().items()},
-         **{f"reader:{k}": v for k, v in model.reader.state_dict().items()}}
-    )
+    group_init = M.group_state_sha256(model)
     local_init = M.local_state_sha256(model.local)
     local_block_init = M.local_block_state_sha256(model.local)
     C.verify_encoder_state(model, ssl_state)

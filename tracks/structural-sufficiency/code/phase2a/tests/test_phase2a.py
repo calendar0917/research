@@ -71,6 +71,14 @@ def test_trunk_init_is_bit_identical_to_p3e():
         assert M.trunk_param_sha256(model) == ref
 
 
+def test_group_state_hash_matches_frozen_convention():
+    import bjoc_masked_pretraining_v1 as mp
+
+    base, _, info = M.build_local_model(M.KIND_LOCAL_MP, seed=0, norm=NORM)
+    assert M.group_state_sha256(base) == mp.group_state_hash(base)
+    assert info["base_scratch_init_group_state_sha256"] == mp.group_state_hash(base)
+
+
 def test_local_init_is_deterministic_and_shared():
     _, a, _ = M.build_local_model(M.KIND_NODE_FFN, seed=0, norm=NORM)
     _, b, _ = M.build_local_model(M.KIND_NODE_FFN, seed=0, norm=NORM)
