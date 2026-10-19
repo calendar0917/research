@@ -8,6 +8,7 @@ label, read a reserved row, or relax a frozen decision rule.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -222,3 +223,21 @@ def test_decision_emits_exactly_one_direction() -> None:
     assert dec["direction"]["choice"] in {"A", "B", "C", "D"}
     flags = [dec["direction"][k] for k in ("A_triggered", "B_triggered", "C_triggered")]
     assert all(isinstance(f, bool) for f in flags)
+
+
+# ---------------------------------------------------------------------------
+# manifest drift guard
+# ---------------------------------------------------------------------------
+
+
+def test_run_manifest_hashes_match_the_artefacts_on_disk() -> None:
+    manifest = RESULTS / "run_manifest.tsv"
+    if not manifest.exists():
+        pytest.skip("run manifest not generated yet")
+    rows = [ln.split("\t") for ln in manifest.read_text().strip().splitlines()[1:]]
+    assert rows, "empty manifest"
+    for stage, relpath, sha, commit, backend, _cmd in rows:
+        path = REPO / relpath
+        assert path.exists(), f"{stage}: missing {relpath}"
+        got = hashlib.sha256(path.read_bytes()).hexdigest()
+        assert got == sha, f"{stage}: {relpath} drifted from the manifest"
