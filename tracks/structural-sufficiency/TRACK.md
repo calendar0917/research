@@ -3,7 +3,7 @@
 | 项 | 内容 |
 |----|------|
 | slug | `structural-sufficiency` |
-| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a–1d 完成；Phase 1e 完成 → 路线判定 `Direction A`（ZINC 大环收益是标签 `-cycles` 人工项造成的基准伪影；SSRC 臂族在同 split 上不具竞争力；下一步 = 真实性质任务 Phase C，设计已冻结、未训练）** |
+| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a–1d 完成；Phase 1e 完成 → 路线判定 `Direction A`（ZINC 大环收益是标签 `-cycles` 人工项造成的基准伪影；SSRC 臂族在同 split 上不具竞争力；下一步 = 真实性质任务 Phase C，设计已冻结、未训练）；**Phase 2a 完成 → `CAPACITY_ONLY_INCREMENT`（P3E 之上的小模块带来 +0.0055 MAE，来自容量而非边上的传播）** |
 | 创建 | 2026-10-18 |
 | 主线位置 | **SSRC（新主线）**：显式结构充分性 → 关系计算；旧 `structure-contribution` 标记 **paused / 非主线**，全部历史保留，不覆盖、不改写 |
 | Phase 0 结论 | **REFRAME_NEEDED**：原表述“MP 是否必要”已被文献覆盖且实验易混淆；重述为“精确 \(E_r\) 的信息充分性 vs 有限样本可学习性”，条件性 GO 到受控 pilot |
@@ -15,6 +15,8 @@
 | Phase 1c 判定 | **`CORRESPONDENCE_SURVIVES_CAPACITY` + `ABSOLUTE_GAP_PERSISTS`**：Gain_pair +0.0682/+0.0309（两 seed 均值 +0.0495）；Gain_over_capacity +0.0529；R1_size 最好 seed 0.2366 vs G_ref 0.1653（gap +0.0713）；M_keep_edge 0.2370 vs R1_size 0.2366（同配方中性；预注册匹配计算被优化混淆） |
 | Phase 1d 判定（**Phase 1e 已下调口径，见下一行**） | **`PAIRWISE_INTERACTION_PROMISING`（限定 `LARGE_RING_TAIL_SPECIFIC`）+ `CAPACITY_SCALING_PROMISING` + `REPRESENTATION_OR_INDUCTIVE_BIAS_GAP`**：R_incidence 0.2797 vs R1_size 0.2366（Gain_joint +0.0431，CI +0.0121…+0.0763），但 96% 无大环分子上 incidence 反而好 −0.0281；4% 大环上 R1 好 +1.751。R1_size_cap 0.1935（Gain_cap +0.0431，CI +0.0192…+0.0688），整体 G_ref gap +0.0282；96% 上 gap 仅 +0.0174，4% 尾部 +0.286。FLOPs 2.10× G_ref，记 `EFFICIENCY_OBSTACLE` |
 | Phase 1e 判定 | **`BENCHMARK_CYCLE_ARTIFACT_DOMINATES`（主）+ `UNRESOLVED_LABEL_MECHANISM`（次，cycle basis 顺序依赖）+ `R1_IS_NOT_COMPETITIVE`** → **路线 `Direction A`**：标签是 `-max(0, NetworkX Paton basis 最长环 − 6)`（非置换不变，非 PyG 文档口径）；Monitor 40 个 RDKit 大环 ≡ 43 个标签受罚分子（purity 1.0、recall 0.93），受罚 4% 占各臂绝对误差 29–53%，cycle 项占该组标签量级 68%；**任何 SSRC 臂在任一子组都不优于 G_ref**（R1_size 在大环 40 上比 G_ref 差 +0.72，Phase 1d 的 +1.751 只是对更差 sibling 的相对值）；零训练条件路由 0.1922（仍比 G_ref 差 +0.0269）；严格隔离的单 GPU 强基线 0.0911 vs G_ref 0.1653（Δ −0.0742，CI −0.0965…−0.0545，补集上也 −0.0446）。0.607 GPU-h |
+| Phase 2a 判定 | **`CAPACITY_ONLY_INCREMENT`**：在冻结 P3E 之后插入小模块（新参数 +12%、前向 FLOPs 1.15×），两 seed 均稳定改善 P3E **+0.005542 MAE**（0.0911 → 0.0853）；但把该模块换成真实物理边上的 2 轮 GINE **没有额外收益**：`Gain_MP` = +0.003764（seed 0）/ −0.000055（seed 1），符号跨 seed 冲突且小于对照臂的 seed 间波动（0.0039）。⇒ 进益来自新增逐原子容量，不是边上的交互。0.933 GPU-h（8 runs，预算 23.3%） |
+| Phase 2a 协议缺陷（需长期携带） | 预注册的 **绝对 RMSE 门禁（Δ≤+0.005）在 n=1000、max\|y\|≈8 的 Monitor 上是单分子统计量**：seed 0 Δ=+0.005208（差 0.000208），其中单个置换不稳定标签分子（official-train row 2052）贡献 MSE 差的 1.59×；seed 1 Δ=−0.002090，同一位形反向。**阈值未事后修改**；seed 0 产物保留 `INSUFFICIENT_EVIDENCE`，miss 与诊断写入 `seed1_purchase_record.md` 后才买 seed 1 |
 | Phase 1e 基准缺陷（需长期携带） | 任何 ZINC `logP_SA_cycle` 聚合数字都混入了一个隐藏的环大小任务；历史数字（如 R1 0.260161、G_ref 0.165290）仍是对该 target 的有效测量，但**不得当作干净的性质预测结果**；未来 ZINC 声明必须单列或排除受罚子集 |
 
 ## 问题（一句话）
@@ -92,6 +94,10 @@
 | Phase 1d 协议/代码 | 完成：R_incidence / R1_size_cap / R_incidence_cap（后者未跑）；ZINC 8k/1k/1k；19/19 CPU gates；25 tests；data isolation PASS；Phase A 10k 结构特征表 |
 | Phase 1d GPU | **完成**：3/3 run JSON exit 0（1 smoke + 2 full）；0.4642 GPU-h run-level（0.4706 h 占用），≤2 h；B 0.1706 h、C 0.2935 h |
 | Phase 1d 结果 | R_incidence 0.2797；B Gain_joint +0.0431（CI +0.0121…+0.0763），但 96% 互补组 −0.0281、4% 大环 +1.751；R1_size_cap 0.1935，Gain_cap +0.0431（CI +0.0192…+0.0688），G_ref gap +0.0282；96% gap +0.0174、4% tail gap +0.286；FLOPs 2.10× |
+| Phase 2a 协议/代码 | 完成：`LocalConfig`/`NodeFFN2`/`LocalMP2`、有向边映射、参数与 FLOP 审计、9/9 gate 条目（覆盖 10 项预注册检查）、20 tests、冻结预测写入 |
+| Phase 2a GPU | **完成**：8/8 run exit 0；0.933 GPU-h（占用 0.933 h），≤4 h；prep/smoke/score 合计 31 s，训练循环 0.908 h |
+| Phase 2a 结果 | 两 seed 均值 MAE：P3E 0.090887 / F 0.087199 / M 0.085345；Gain_P3E +0.005675 / +0.005409；Gain_MP +0.003764 / −0.000055；957 补集 0.0770 / 0.0731 / 0.0712；43 受罚组 0.4007 / 0.4002 / 0.3998 |
+| Phase 2a 判定 | **`CAPACITY_ONLY_INCREMENT`**：容量进益真实可复现，交互进益为零；seed 0 单独看会误判 M>F（F 的 seed-0 轨迹比自身 seed-1 差 0.0039） |
 | 交付 | Phase 0 REPORT + 纠错文件 + Phase 1a 协议/REPORT + Phase 1b 协议/决策日志/REPORT/run manifest + Phase 1c 协议/纠错/REPORT/run manifest/analysis + Phase 1d 协议/REPORT/CPU audit/run manifest/analysis + STATE/TRACK |
 
 ## 入口
@@ -121,6 +127,15 @@
 | `results/phase1c/readout_diagnostics.json` | CPU 读出/尺寸/环诊断 |
 | `runs/phase1c/` | 逐 run JSON（Monitor 预测；git-ignored） |
 | `code/phase1c/` | 模型、训练 runner、分析、gates、tests |
+| `notes/phase2a_protocol.md` | Phase 2a 冻结协议（臂定义、参数匹配、10 项 CPU gate、判定带、seed-1 购买规则、no-go 清单） |
+| `results/phase2a/REPORT.md` | Phase 2a 完整报告（主表、子群、尾部诊断、8 问、决策链、GPU 账本、复现命令） |
+| `results/phase2a/seed1_purchase_record.md` | seed-1 购买记录（六条件核对、RMSE 门禁 miss 与其构成、披露的事后判断、停止规则），写于任何 seed-1 训练之前 |
+| `results/phase2a/analysis_phase2a.json` / `analysis_seed1_phase2a.json` | 逐 seed 主分析（指标、分组、配对对比、bootstrap） |
+| `results/phase2a/decision_phase2a.json` / `decision_seed1_phase2a.json` / `round_verdict_phase2a.json` | 机械判定产物：seed 0 `INSUFFICIENT_EVIDENCE`（冻结规则原样保留）/ seed 1 与轮次 `CAPACITY_ONLY_INCREMENT` |
+| `results/phase2a/posthoc_phase2a.json` | 尾部事后诊断（MSE 差 CI、单分子贡献份额、图函数补集 RMSE） |
+| `results/phase2a/run_manifest.tsv` | Phase 2a 8 条 run 的 rr run_id / commit / GPU 秒 / artifact sha256 |
+| `results/phase2a/cpu_gates_phase2a.json` / `flops_phase2a.json` / `replay.json` | CPU gates、FLOP 审计、P3E 复现（max|d| 9.537e-07） |
+| `code/phase2a/` | 模型、runner、seed-1 评分、事后诊断、tests |
 | `notes/phase1e_protocol.md` | Phase 1e 冻结协议（A1–A4 / B1–B3 / C / 路线表、阈值、post-hoc 纪律声明） |
 | `results/phase1e/REPORT.md` | Phase 1e 完整报告（6 问回答、基准缺陷、路线、非声明） |
 | `results/phase1e/label_audit.json` | A1 标签机制（混淆矩阵、重建、置换稳定性） |
@@ -155,8 +170,16 @@
 - 用官方 test 数字做路线选择；用 valid 数字反复调参后仍称“预注册”。
 - 把 toy 的 \(E_2\) 碰撞外推为“真实分子上 MP 必要/不必要”。
 - 把一次 pilot 的 null 结果包装成“机制不存在”的普遍结论。
+- 把 Phase 2a 的 +0.0055 写成“局部传播/消息传递机制”的进益：它是 +12% 参数换来的容量进益，GINE 版与 FFN 版无可分辨差异。
+- 在 n=1000、max|y|≈8 的 Monitor 上再用**绝对 RMSE 阈值**做稳定性门禁（单个分子即可翻转符号）；改用配对 MSE 差 CI 或图函数补集。
 
 ## 下一步
+
+00. **Phase 2a 已改写下一步（最新）**：ZINC 上“在强编码器后追加局部传播”这一线**停止**。
+   - 事实：+12% 参数的小模块在冻结 P3E 之后稳定带来 +0.0055 MAE（0.0911→0.0853，两 seed 一致）；但把该模块换成真实边上的 2 轮 GINE 没有额外收益（`Gain_MP` +0.0038 / −0.0001，符号跨 seed 冲突）。Phase 1b 的“迭代≈计算量”与本轮“邻接≈无邻接”是同一结论的两种形式。
+   - 因此**不**再试宽度/深度/gate 初始化/更多 seed/新 SSL 目标/cycle 路由/ensemble。
+   - 若仍要检验交互价值，必须是**新一轮预注册**，且满足：目标依赖 P3E 感受野可证不足的图统计量（先做零训练诊断）；每臂 ≥2 seed；尾部用鲁棒判据；否则不动 GPU。
+   - Phase C（Lipophilicity）设计仍冻结未训练，优先级高于任何 ZINC 追加实验；但若做 Phase C，必须先把其 RMSE/尾部判据改成配对 MSE 差形式。
 
 0. **Phase 1e 已改写下一步**：ZINC 大环线的收益被证明主要是标签 `-cycles` 人工项；SSRC 臂族在同 split 上与隔离强基线差 0.074 MAE。因此：
    - **停止** SSRC/R1 架构线在 ZINC 上的任何继续优化（宽度/seed/深度/global-token/迭代臂/ring-aware token 全部停止，理由已升级为基准缺陷 + 竞争力不足，而非"审计无 headroom"）。

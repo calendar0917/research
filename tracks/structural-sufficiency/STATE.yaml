@@ -5,9 +5,9 @@
 # Phase 0 evidence: results/phase0/REPORT.md + results/phase0/analysis/*.json
 # Phase 1a: notes/phase1a_protocol.md + results/phase1a/
 
-phase: phase1e
-current_round: ssrc-phase1e-zinc-v1
-status: PHASE1E_COMPLETE
+phase: phase2a
+current_round: ssrc-phase2a-zinc-v1
+status: PHASE2A_COMPLETE
 updated: 2026-10-19
 main_line: true
 supersedes_main_line: structure-contribution
@@ -699,3 +699,92 @@ phase1e:
     already resolve, tier 2 (frozen competitive trunk, RO_pool vs RO_rel,
     ~0.3 GPU-h). Any future ZINC number must report the penalised subset
     separately and must never be aggregated with clean property results.
+
+phase2a:
+  protocol_id: ssrc-phase2a-zinc-v1
+  protocol: tracks/structural-sufficiency/notes/phase2a_protocol.md
+  status: COMPLETE
+  report: tracks/structural-sufficiency/results/phase2a/REPORT.md
+  decision: CAPACITY_ONLY_INCREMENT
+  seed0_frozen_rule_status: INSUFFICIENT_EVIDENCE
+  question: >-
+    Given the mature frozen P3E encoder, does a small amount of atom-state
+    propagation on real physical edges beat a parameter-matched non-interactive
+    per-atom computation on ZINC-12k?
+  arms:
+    P3E: {kind: none, params: 413505, role: "frozen seed-0 baseline + matched seed-1 baseline"}
+    F: {kind: node_ffn, params: 463489, new_params: 49984, adjacent_access: false, role: capacity control}
+    M: {kind: local_mp, params: 464257, new_params: 50752, rounds: 2, edges: "forward+reverse physical bonds", role: candidate}
+  param_match: {new_params_delta_fraction: 0.0154, total_ratio: [1.121, 1.122], band: 0.05}
+  results:
+    monitor_n: 1000
+    mae: {P3E: [0.091071, 0.090703], F: [0.089160, 0.085239], M: [0.085396, 0.085294]}
+    mae_mean: {P3E: 0.090887, F: 0.087199, M: 0.085345}
+    rmse: {P3E: [0.270310, 0.273834], F: [0.271445, 0.266278], M: [0.275518, 0.271745]}
+    gain_p3e: [0.005675, 0.005409]
+    gain_mp: [0.003764, -0.000055]
+    between_seed_spread_mae: {P3E: 0.000368, M: 0.000102, F: 0.003921}
+    two_seed_group_mae:
+      label_complement_957: {P3E: 0.0770, F: 0.0731, M: 0.0712}
+      label_penalised_43: {P3E: 0.4007, F: 0.4002, M: 0.3998}
+      rdkit_large_40: {P3E: 0.2318, F: 0.2278, M: 0.2232}
+    flops_ratio_vs_p3e: {F: 1.146, M: 1.151}
+    step_time_ratio_vs_p3e: {F: 1.22, M: 1.26}
+  interpretation: >-
+    Any small extra per-atom stage buys about 0.0055 MAE over P3E (replicated to
+    within 0.0003 across seeds). Routing that stage through real bond messages
+    adds no measurable gain: Gain_MP changes sign between seeds and is smaller
+    than the control arm's between-seed spread. The gain is capacity, not
+    interaction. The seed-0 "M beats F" reading did not replicate; seed 0 sampled
+    a bad F trajectory (+0.0039 vs its own seed-1 run).
+  protocol_defect:
+    rule: "absolute RMSE guard, delta <= +0.005 (protocol 7)"
+    seed0: +0.005208 (missed by 0.000208)
+    seed1: -0.002090
+    cause: >-
+      one molecule (official-train row 2052, y=-7.93, permutation-unstable label)
+      accounts for 1.59x of the seed-0 squared-error difference; RMSE at n=1000 is
+      a one-molecule statistic and flipped sign between seeds
+    resolution: >-
+      threshold NOT changed post hoc; seed-0 decision_phase2a.json keeps
+      INSUFFICIENT_EVIDENCE; the miss and its diagnosis were written into
+      results/phase2a/seed1_purchase_record.md before any seed-1 training
+    future: replace with a paired MSE-difference CI or evaluate on the
+      label-is-a-graph-function complement
+  gates:
+    pre_gpu: 9/9 entries PASS (10 pre-registered checks; G3/G4 share one entry)
+    local_tests: 20 passed
+    replay_max_abs_deviation: 9.537e-07
+    init_parity:
+      trunk_param_sha256: {seed0: d06d5e16..., seed1: c79e6b02...}
+      encoder_group_sha256: 37282569... (SSL fixed at s0 for both seeds and all arms)
+      local_block_sha256: {seed0: ea98437c..., seed1: 8f82a3a4...}
+    branch_probes:
+      F_adjacency_roll_change: 0.0
+      M_adjacency_roll_change: [1.3184, 1.5557]
+      M_local_shift_relative: [0.5833, 0.6062]
+  budget:
+    cap_gpu_hours: 4.0
+    used_gpu_hours: 0.933
+    runs: 8
+    fraction_of_cap: 0.233
+  data_isolation:
+    monitor_label_reads: 1
+    post_hoc_and_replication_rescoring: "re-reads of frozen predictions only"
+    reserved_labels_read: 0
+    official_valid_test_read: 0
+    historical_exposure: >-
+      Phase 1e loaded all 10000 official-train labels, so the internal Reserved
+      split is historically exposed; this round used Fit 8000 + Monitor 1000 only
+  next_action: >-
+    Stop the "more propagation on top of P3E" line. The interaction term is zero
+    at matched capacity in two seeds, and Phase 1b already found iteration ~
+    compute rather than mechanism. Any future test of interaction value must be a
+    new pre-registration in a regime where P3E's receptive field is provably
+    insufficient, with >=2 seeds per arm and a tail-robust guard.
+  non_claims:
+    - "0.0853 is an internal 8000/1000 Fit-only-SSL protocol number, not an official ZINC-12k test result and not SOTA"
+    - "P3E + a GINE round is not a novel architectural claim; GINE is Xu et al. 2019 and P3E is this repo's encoder"
+    - "two seeds is replication of the supervised trajectory only; the SSL encoder was fixed, so the spread is a lower bound"
+    - "the cycle-penalty subgroup and the 4 permutation-unstable rows are descriptive groups, never model inputs or selection criteria"
+    - "no third seed, no width/depth/gating/SSL variant was tried after the verdict"

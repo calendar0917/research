@@ -1,0 +1,71 @@
+{
+  "protocol_id": "ssrc-phase2a-zinc-v1",
+  "status": "CAPACITY_ONLY_INCREMENT",
+  "reasons": [
+    "F and M both beat P3E but are not separated: gain is capacity/training structure"
+  ],
+  "gain_mp_mae_f_minus_mae_m": -5.5352832656355155e-05,
+  "gain_p3e_mae_p3e_minus_mae_m": 0.005409321913495663,
+  "gain_f_mae_p3e_minus_mae_f": 0.005464674746152018,
+  "rmse_m_minus_p3e": -0.002089674261385066,
+  "baseline_mae": 0.09070343790366314,
+  "baseline_rmse": 0.2738344978386708,
+  "complement_gain_m_vs_p3e": 0.005180670933305528,
+  "flops_ratio_f": 1.1464208192102314,
+  "flops_ratio_m": 1.1507272351001694,
+  "optimization_ok": true,
+  "thresholds": {
+    "practical_band": 0.004,
+    "mp_separation_band": 0.002,
+    "rmse_tolerance": 0.005,
+    "complement_band": 0.002
+  },
+  "buy_seed1": false,
+  "single_seed_bootstrap_note": "molecule bootstrap is discovery-only; it is not training-seed uncertainty",
+  "optimization_details": {
+    "P3E": {
+      "ok": true,
+      "last5_train_mae": [
+        0.0013631125073879956,
+        0.001319195860531181,
+        0.001303472314029932,
+        0.0012592869875952602,
+        0.0013259619753807784
+      ],
+      "soup_fit_mae": 0.0009410879772185581,
+      "final_new_param_grad_norms": {}
+    },
+    "F": {
+      "ok": true,
+      "last5_train_mae": [
+        0.0018002557214349508,
+        0.0017461207015439868,
+        0.00181960906740278,
+        0.0017582046687602997,
+        0.0017624661205336452
+      ],
+      "soup_fit_mae": 0.001297919500299031,
+      "final_new_param_grad_norms": {
+        "local.blocks.0": 0.8490168313874474,
+        "local.blocks.1": 0.5893037538468009
+      }
+    },
+    "M": {
+      "ok": true,
+      "last5_train_mae": [
+        0.0012637477489188314,
+        0.0012770796176046133,
+        0.0012022349573671818,
+        0.0012205082708969712,
+        0.0012134784441441297
+      ],
+      "soup_fit_mae": 0.0008464308739930857,
+      "final_new_param_grad_norms": {
+        "local.blocks.0": 0.45588765206679593,
+        "local.blocks.1": 0.3890184116804961,
+        "local.bond_proj": 0.053575217478987046
+      }
+    }
+  },
+  "baseline_arm": "P3E_s1 (matched seed-1 baseline, same fixed SSL encoder)"
+}

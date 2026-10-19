@@ -1,0 +1,202 @@
+{
+  "protocol_id": "ssrc-phase2a-zinc-v1",
+  "stage": "cpu_gates",
+  "status": "PASS",
+  "n_gates": 9,
+  "n_passed": 9,
+  "gates": {
+    "G1_mapping": {
+      "ok": true,
+      "molecules": [
+        {
+          "molecule": "ring6",
+          "ok": true
+        },
+        {
+          "molecule": "chain7",
+          "ok": true
+        },
+        {
+          "molecule": "fused",
+          "ok": true
+        }
+      ],
+      "directed_edges_are_forward_plus_reverse": true
+    },
+    "G2_invariance": {
+      "ok": true,
+      "relabelling_max_abs": {
+        "ring6": {
+          "none": 0.0,
+          "node_ffn": 0.0,
+          "local_mp": 0.0
+        },
+        "chain7": {
+          "none": 5.587935447692871e-09,
+          "node_ffn": 7.450580596923828e-09,
+          "local_mp": 2.2351741790771484e-08
+        },
+        "fused": {
+          "none": 7.450580596923828e-09,
+          "node_ffn": 1.4901161193847656e-08,
+          "local_mp": 2.9802322387695312e-08
+        }
+      },
+      "edge_direction_swap_max_abs": 0.0,
+      "batch_reorder_max_abs": {
+        "none": 3.725290298461914e-09,
+        "node_ffn": 7.450580596923828e-09,
+        "local_mp": 0.0
+      }
+    },
+    "G3_G4_branch_sensitivity": {
+      "ok": true,
+      "node_ffn_max_abs_change_under_adjacency_mutation": {
+        "bond_index_roll": 0.0,
+        "bond_feat_roll": 0.0
+      },
+      "local_mp_message_max_abs_change": {
+        "endpoint_roll": 0.8404872417449951,
+        "bond_feature_roll": 1.6826409101486206,
+        "neighbour_state_permutation": 0.3442155122756958
+      },
+      "local_mp_message_mean_abs_change": {
+        "endpoint_roll": 0.02940913289785385,
+        "bond_feature_roll": 0.08790329843759537,
+        "neighbour_state_permutation": 0.04149140417575836
+      },
+      "local_mp_output_max_abs_change": {
+        "bond_index_roll": 0.6294739246368408,
+        "bond_feat_roll": 0.6814582347869873,
+        "neighbour_state_permutation": 0.49094128608703613
+      },
+      "message_scale_max_abs": 3.1894593238830566,
+      "neighbour_input_grad_max_abs": 4.543696403503418,
+      "note": "endpoint roll keeps raw features and the edge multiset but breaks the bond->endpoint correspondence; neighbour_state_permutation keeps the graph and changes only which atom state sits at each node"
+    },
+    "G5_not_a_copy": {
+      "ok": true,
+      "shifts": {
+        "node_ffn": {
+          "relative_shift": 3.014345815339271,
+          "cosine": 0.3680986762046814,
+          "abs_shift": 13.89017391204834
+        },
+        "local_mp": {
+          "relative_shift": 2.610748402996042,
+          "cosine": 0.31885287165641785,
+          "abs_shift": 12.030387878417969
+        }
+      }
+    },
+    "G6_gradients": {
+      "ok": true,
+      "per_arm": {
+        "node_ffn": {
+          "new_params": 12,
+          "new_min_abs_grad_sum": 0.04068108648061752,
+          "new_zero_params": [],
+          "trunk_min_abs_grad_sum": 0.011394832283258438,
+          "all_new_nonzero": true
+        },
+        "local_mp": {
+          "new_params": 14,
+          "new_min_abs_grad_sum": 0.0571780800819397,
+          "new_zero_params": [],
+          "trunk_min_abs_grad_sum": 0.013769567012786865,
+          "all_new_nonzero": true
+        }
+      }
+    },
+    "G7_init_parity": {
+      "ok": true,
+      "per_kind": {
+        "none": {
+          "trunk_param_sha256": "d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691",
+          "local_block_sha256": "none",
+          "params": 413505
+        },
+        "node_ffn": {
+          "trunk_param_sha256": "d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691",
+          "local_block_sha256": "ea98437c3574fece5dd714b7988b3aac84c72ee7ae20828d3ee14d94e9370828",
+          "params": 463489
+        },
+        "local_mp": {
+          "trunk_param_sha256": "d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691",
+          "local_block_sha256": "ea98437c3574fece5dd714b7988b3aac84c72ee7ae20828d3ee14d94e9370828",
+          "params": 464257
+        }
+      },
+      "parameter_delta": 768,
+      "parameter_delta_frac_of_local": 0.015364916773367477
+    },
+    "G8_no_label_input": {
+      "ok": true,
+      "banned_tokens_found": [],
+      "batch_keys": [
+        "atom_batch",
+        "atom_feat",
+        "bond_batch",
+        "bond_feat",
+        "bond_index",
+        "global_feat",
+        "junc_batch",
+        "junc_bond",
+        "junc_feat",
+        "junc_index",
+        "n_graphs"
+      ],
+      "forward_reads_only_batch": true
+    },
+    "G9_reader_layout": {
+      "ok": true,
+      "base_forward_recompute_max_abs": 0.0,
+      "reader_in_dim": 321,
+      "expected_reader_in_dim": 321
+    },
+    "G10_execution": {
+      "ok": true,
+      "molecules": [
+        "ring6",
+        "chain7",
+        "fused"
+      ],
+      "per_kind": {
+        "none": {
+          "pred_finite": true,
+          "grad_finite": true,
+          "pred": [
+            0.05207040160894394,
+            0.025188950821757317,
+            0.05352756753563881
+          ]
+        },
+        "node_ffn": {
+          "pred_finite": true,
+          "grad_finite": true,
+          "pred": [
+            0.07645212858915329,
+            0.02820599265396595,
+            0.10911005735397339
+          ]
+        },
+        "local_mp": {
+          "pred_finite": true,
+          "grad_finite": true,
+          "pred": [
+            0.08087198436260223,
+            0.05105046182870865,
+            0.10826003551483154
+          ]
+        }
+      }
+    }
+  },
+  "synthetic_molecules": [
+    "ring6",
+    "chain7",
+    "fused"
+  ],
+  "torch": "2.5.1+cu124",
+  "python": "3.12.14"
+}

@@ -1,0 +1,141 @@
+{
+  "protocol_id": "ssrc-phase2a-zinc-v1",
+  "stage": "posthoc_tail_diagnostics",
+  "scope": "descriptive only; frozen predictions, no training, no selection, no threshold change",
+  "monitor_labels_read": "re-read of the already-scored Monitor (second read, no new data)",
+  "reserved_labels_read": 0,
+  "official_valid_test_loaded": false,
+  "boot": {
+    "n": 5000,
+    "seed": 20261024,
+    "unit": "molecule"
+  },
+  "validity": {
+    "corr_pred_F_M": 0.9992366930612837,
+    "corr_pred_M_P3E": 0.9993131403884183,
+    "p3e_mae_recomputed": 0.09107104176818394,
+    "p3e_mae_frozen": 0.09107104176818394,
+    "p3e_mae_abs_diff": 0.0,
+    "label_alignment_ok": true
+  },
+  "contrasts": {
+    "M_vs_P3E": {
+      "definition": "mean(|e_a|) and rmse with a > 0 meaning a is worse",
+      "mae_delta": -0.005675368621945384,
+      "rmse_delta": {
+        "mean": 0.005207985353232636,
+        "ci95": [
+          -0.012973576478550524,
+          0.01546395165361276
+        ],
+        "mse_mean_diff": 0.0028426669281552248,
+        "mse_ci95": [
+          -0.00370570428874788,
+          0.013303261519062871
+        ],
+        "n": 1000
+      },
+      "rmse_delta_drop_worst_sq_contributor": -0.0057584208855176455,
+      "worst_sq_contributor": {
+        "monitor_index": 341,
+        "official_train_row": 2052,
+        "y": -7.930362701416016,
+        "pred_a": -0.46237877011299133,
+        "pred_b": -0.7706553339958191,
+        "abs_error_a": 7.467983931303024,
+        "abs_error_b": 7.1597073674201965,
+        "mse_contribution_share_of_total_diff": 1.5863182444787987,
+        "in_label_penalised": true,
+        "in_permutation_sensitive": true
+      },
+      "n_molecules_a_better_abs": 532,
+      "n_molecules_a_worse_abs": 468
+    },
+    "M_vs_F": {
+      "definition": "mean(|e_a|) and rmse with a > 0 meaning a is worse",
+      "mae_delta": -0.0037641233266331175,
+      "rmse_delta": {
+        "mean": 0.004073052255107679,
+        "ci95": [
+          -0.01063108331823028,
+          0.01123392907734705
+        ],
+        "mse_mean_diff": 0.0022278107187657836,
+        "mse_ci95": [
+          -0.0030953590343025033,
+          0.009677100016236392
+        ],
+        "n": 1000
+      },
+      "rmse_delta_drop_worst_sq_contributor": -0.0026006071057301516,
+      "worst_sq_contributor": {
+        "monitor_index": 341,
+        "official_train_row": 2052,
+        "y": -7.930362701416016,
+        "pred_a": -0.46237877011299133,
+        "pred_b": -0.6641076803207397,
+        "abs_error_a": 7.467983931303024,
+        "abs_error_b": 7.266255021095276,
+        "mse_contribution_share_of_total_diff": 1.3341896336034076,
+        "in_label_penalised": true,
+        "in_permutation_sensitive": true
+      },
+      "n_molecules_a_better_abs": 535,
+      "n_molecules_a_worse_abs": 465
+    },
+    "F_vs_P3E": {
+      "definition": "mean(|e_a|) and rmse with a > 0 meaning a is worse",
+      "mae_delta": -0.0019112452953122666,
+      "rmse_delta": {
+        "mean": 0.0011349330981249572,
+        "ci95": [
+          -0.011333256072207988,
+          0.007351293855746337
+        ],
+        "mse_mean_diff": 0.0006148562093894408,
+        "mse_ci95": [
+          -0.003313719634163118,
+          0.005230700639208768
+        ],
+        "n": 1000
+      },
+      "rmse_delta_drop_worst_sq_contributor": -0.003157813779787494,
+      "worst_sq_contributor": {
+        "monitor_index": 341,
+        "official_train_row": 2052,
+        "y": -7.930362701416016,
+        "pred_a": -0.6641076803207397,
+        "pred_b": -0.7706553339958191,
+        "abs_error_a": 7.266255021095276,
+        "abs_error_b": 7.1597073674201965,
+        "mse_contribution_share_of_total_diff": 2.499856748665808,
+        "in_label_penalised": true,
+        "in_permutation_sensitive": true
+      },
+      "n_molecules_a_better_abs": 480,
+      "n_molecules_a_worse_abs": 520
+    }
+  },
+  "permutation_unstable": {
+    "n": 4,
+    "rows": [
+      9864,
+      2052,
+      4235,
+      2334
+    ],
+    "mae": {
+      "P3E": 1.861072912812233,
+      "F": 1.8900160491466522,
+      "M": 1.9547308012843132
+    },
+    "rmse_on_stable_complement": {
+      "P3E": 0.14784760211408254,
+      "F": 0.14469717179335828,
+      "M": 0.14204611633638575
+    },
+    "rmse_delta_M_minus_P3E_on_stable": -0.005801485777696791,
+    "note": "the Phase 1e audit shows these rows change their cycle-penalty level under atom permutation, so part of their target is not a function of the unordered graph"
+  },
+  "decision_note": "the pre-registered RMSE guard is unchanged; this file only explains why it missed its absolute tolerance"
+}
