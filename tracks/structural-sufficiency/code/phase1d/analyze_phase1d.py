@@ -191,6 +191,8 @@ def main() -> int:
             "flops_forward": r["flops_forward"],
             "step_time_ms_median": r["step_time_ms_median"],
             "gpu_seconds": r["gpu_seconds"],
+            "peak_gpu_memory_mb_allocated": r.get("peak_gpu_memory_mb_allocated"),
+            "peak_gpu_memory_mb_reserved": r.get("peak_gpu_memory_mb_reserved"),
             "best_epoch": r["best_epoch"],
             "epochs_run": r["epochs_run"],
             "epochs_planned": r["epochs_planned"],
@@ -203,7 +205,10 @@ def main() -> int:
     }
 
     # Phase B
-    incidence_name = next((n for n in runs if n.startswith("R_incidence_seed0") and "cap" not in n), None)
+    incidence_names = [n for n in runs if n.startswith("R_incidence_seed0") and "cap" not in n]
+    if len(incidence_names) > 1:
+        raise SystemExit(f"ambiguous incidence runs: {incidence_names}")
+    incidence_name = incidence_names[0] if incidence_names else None
     b: dict[str, Any] = {"present": incidence_name is not None}
     if incidence_name:
         comp = comparison_stats(runs[incidence_name], runs["R1_size_seed0"], args.n_boot)
@@ -235,7 +240,10 @@ def main() -> int:
 
     # Phase C
     c: dict[str, Any] = {"present": False}
-    cap_name = next((n for n in runs if n.endswith("_cap_seed0") or "_cap_seed0" in n), None)
+    cap_names = [n for n in runs if n.endswith("_cap_seed0")]
+    if len(cap_names) > 1:
+        raise SystemExit(f"ambiguous capacity runs: {cap_names}")
+    cap_name = cap_names[0] if cap_names else None
     if cap_name:
         if cap_name.startswith("R1_size_cap"):
             base_name = "R1_size_seed0"
@@ -290,6 +298,13 @@ def main() -> int:
                     "step_time_ratio_vs_gref": step_ratio,
                     "gpu_seconds": cap["gpu_seconds"],
                     "gpu_seconds_ratio_vs_gref": gpu_ratio,
+                    "peak_gpu_memory_mb_allocated": cap.get("peak_gpu_memory_mb_allocated"),
+                    "peak_gpu_memory_mb_reserved": cap.get("peak_gpu_memory_mb_reserved"),
+                    "peak_memory_ratio_vs_gref": (
+                        cap.get("peak_gpu_memory_mb_allocated") / gref.get("peak_gpu_memory_mb_allocated")
+                        if cap.get("peak_gpu_memory_mb_allocated") and gref.get("peak_gpu_memory_mb_allocated")
+                        else None
+                    ),
                 },
                 "large_ring_subgroup": _subgroup(
                     {base_name: model_abs[base_name], cap_name: model_abs[cap_name], "G_ref_seed0": model_abs["G_ref_seed0"]},

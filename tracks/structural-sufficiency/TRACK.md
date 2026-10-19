@@ -3,7 +3,7 @@
 | 项 | 内容 |
 |----|------|
 | slug | `structural-sufficiency` |
-| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a 完成；Phase 1b 完成；Phase 1c 完成（关系对应通过容量/读出/边缘边际控制；绝对 G_ref 差距仍存；下一步是 CPU 残差审计）** |
+| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a 完成；Phase 1b 完成；Phase 1c 完成；Phase 1d 完成（incidence 控制在 96% 普通分子上足够/略好；joint pairing 与 capacity 收益集中在 4% 大环尾部；整体 G_ref gap 仍存；下一步仅 CPU 大环可预测性审计）** |
 | 创建 | 2026-10-18 |
 | 主线位置 | **SSRC（新主线）**：显式结构充分性 → 关系计算；旧 `structure-contribution` 标记 **paused / 非主线**，全部历史保留，不覆盖、不改写 |
 | Phase 0 结论 | **REFRAME_NEEDED**：原表述“MP 是否必要”已被文献覆盖且实验易混淆；重述为“精确 \(E_r\) 的信息充分性 vs 有限样本可学习性”，条件性 GO 到受控 pilot |
@@ -13,6 +13,7 @@
 | Phase 1b | **COMPLETE**：5 臂 × 2 任务 seed 0；B1 broken-adjacency 控制；B2 matched-compute 控制；ZINC seed 1 复现。总 1.60 GPU-h |
 | Phase 1b 判定 | **`PURSUE_RELATIONAL_SUFFICIENCY`**：S0→R1 ZINC +0.0571/+0.0992；broken-R1 更差 +0.0706；M1_long ≈ M2（Δ=−0.0027，CI 跨零）⇒ 迭代增益是计算量不是机制 |
 | Phase 1c 判定 | **`CORRESPONDENCE_SURVIVES_CAPACITY` + `ABSOLUTE_GAP_PERSISTS`**：Gain_pair +0.0682/+0.0309（两 seed 均值 +0.0495）；Gain_over_capacity +0.0529；R1_size 最好 seed 0.2366 vs G_ref 0.1653（gap +0.0713）；M_keep_edge 0.2370 vs R1_size 0.2366（同配方中性；预注册匹配计算被优化混淆） |
+| Phase 1d 判定 | **`PAIRWISE_INTERACTION_PROMISING`（限定 `LARGE_RING_TAIL_SPECIFIC`）+ `CAPACITY_SCALING_PROMISING` + `REPRESENTATION_OR_INDUCTIVE_BIAS_GAP`**：R_incidence 0.2797 vs R1_size 0.2366（Gain_joint +0.0431，CI +0.0121…+0.0763），但 96% 无大环分子上 incidence 反而好 −0.0281；4% 大环上 R1 好 +1.751。R1_size_cap 0.1935（Gain_cap +0.0431，CI +0.0192…+0.0688），整体 G_ref gap +0.0282；96% 上 gap 仅 +0.0174，4% 尾部 +0.286。FLOPs 2.10× G_ref，记 `EFFICIENCY_OBSTACLE` |
 
 ## 问题（一句话）
 
@@ -86,7 +87,10 @@
 | Phase 1c 协议/代码 | 完成：S_cap_size / R1_size / R1_marginal_size / M_keep_edge；ZINC 8k/1k/1k；17/17 CPU gates；18 tests；data isolation PASS |
 | Phase 1c GPU | **完成**：10/10 run JSON exit 0；0.981 GPU-h run-level（1.003 h 占用），≤2 h；Phase A 0.474 h、B 0.225 h、C 0.281 h |
 | Phase 1c 结果 | Gain_pair +0.0682/+0.0309（均值 +0.0495）；Gain_over_capacity +0.0529；R1_size 最好 seed 0.2366，G_ref gap +0.0713；M_keep 0.2370 vs R1_size 0.2366（同配方中性，匹配计算对照被优化混淆） |
-| 交付 | Phase 0 REPORT + 纠错文件 + Phase 1a 协议/REPORT + Phase 1b 协议/决策日志/REPORT/run manifest + Phase 1c 协议/纠错/REPORT/run manifest/analysis + STATE/TRACK |
+| Phase 1d 协议/代码 | 完成：R_incidence / R1_size_cap / R_incidence_cap（后者未跑）；ZINC 8k/1k/1k；19/19 CPU gates；25 tests；data isolation PASS；Phase A 10k 结构特征表 |
+| Phase 1d GPU | **完成**：3/3 run JSON exit 0（1 smoke + 2 full）；0.4642 GPU-h run-level（0.4706 h 占用），≤2 h；B 0.1706 h、C 0.2935 h |
+| Phase 1d 结果 | R_incidence 0.2797；B Gain_joint +0.0431（CI +0.0121…+0.0763），但 96% 互补组 −0.0281、4% 大环 +1.751；R1_size_cap 0.1935，Gain_cap +0.0431（CI +0.0192…+0.0688），G_ref gap +0.0282；96% gap +0.0174、4% tail gap +0.286；FLOPs 2.10× |
+| 交付 | Phase 0 REPORT + 纠错文件 + Phase 1a 协议/REPORT + Phase 1b 协议/决策日志/REPORT/run manifest + Phase 1c 协议/纠错/REPORT/run manifest/analysis + Phase 1d 协议/REPORT/CPU audit/run manifest/analysis + STATE/TRACK |
 
 ## 入口
 
@@ -115,6 +119,17 @@
 | `results/phase1c/readout_diagnostics.json` | CPU 读出/尺寸/环诊断 |
 | `runs/phase1c/` | 逐 run JSON（Monitor 预测；git-ignored） |
 | `code/phase1c/` | 模型、训练 runner、分析、gates、tests |
+| `notes/phase1d_protocol.md` | Phase 1d 冻结协议、Phase A 事实、B/C 判定规则、预算 |
+| `configs/phase1d.yaml` | Phase 1d 冻结配置/hash/端点/预算 |
+| `results/phase1d/REPORT.md` | Phase 1d 完整报告（A/B/C、尾部分解、限制、下一步） |
+| `results/phase1d/analysis_phase1d_cpu.json` | Phase A 逐分子描述性审计 |
+| `results/phase1d/structural_features.npz` | 10k 结构-only 特征表 |
+| `results/phase1d/analysis_phase1d.json` | Phase B/C 主分析（配对 bootstrap、subgroup、cost） |
+| `results/phase1d/run_manifest.tsv` | Phase 1d 3 条 run 的 rr run_id/GPU 秒/output hash |
+| `results/phase1d/run_validation.json` | 数据隔离/provenance 校验（PASS） |
+| `results/phase1d/cpu_gates_phase1d.json` | Phase 1d 19/19 CPU gates |
+| `runs/phase1d/` | 逐 run JSON（Monitor 预测；git-ignored） |
+| `code/phase1d/` | 模型、训练 runner、分析、gates、tests |
 | `runs/phase1a/` | 逐 run JSON（含 Monitor 预测，git-ignored） |
 | `code/phase1a/` | S/X/G、数据、训练、CPU gates、runner、tests |
 | `results/phase0/code/ssrc_toy.py` | 精确 \(E_r\)、pynauty/exhaustive/networkx 交叉验证、oracle |
@@ -131,10 +146,9 @@
 
 ## 下一步
 
-1. **不再加机制模块**：不加 global attention token、更深残差主干、新结构编码/距离通道、SSL，也不再加一轮 update。Phase 1c 的关系对应收益通过容量/读出/边缘边际控制，但绝对 G_ref 差距仍为 +0.0713 MAE（最好 seed）；同配方 M_keep_edge 0.2370 vs R1_size 0.2366，没有 update 收益。
-2. **唯一允许的下一步**：CPU-only 残差审计。用冻结的 R1_size/G_ref 逐分子预测，把 `|err_R1|−|err_Gref|` 按 patch 可观测变量（n_atoms/n_bonds、环数、degree、bond-type counts、root/first-shell degree、patch size、重复 coarse key 数、patch-key entropy）分解；对比 S_cap / marginal，判断剩余差距是否集中在 patch token 信息不足的分子。
+1. **不再跑 GPU 宽度/seed/深度/global-token/迭代臂**。Phase 1d 已显示：additive incidence 在 96% 普通分子上足够或略好；joint pairing 与 capacity 的增益集中在 4% 大环尾部；R1_size_cap 整体仍比 G_ref 差 +0.0282 MAE，且 FLOPs 为 2.10×。继续加宽或加 seed 不回答剩余问题。
+2. **唯一允许的下一步**：CPU-only 大环可预测性审计。用冻结的 R1_size / R1_size_cap / G_ref 逐分子预测与 Phase 1d 结构-only 特征，检查 40 个大环分子是否存在 patch 可观测 headroom、误差是否由 cycle-size/ring-fusion 特征驱动，以及 ring-aware local token 是否可能在不破坏 96% 互补组的前提下有帮助。该审计不训练模型、不选模型。
 3. 判定/停止：
-   - 若**没有** patch 可观测变量解释 **≥0.02 MAE**，或残差呈均匀/噪声状：**停止 SSRC 路线**，报告 absolute-gap negative；不追加模块。
-   - 若某个变量解释 ≥0.02 MAE：只预注册**一个** compute-matched 诊断，只改该变量；增益 <0.02 MAE 或 CI 跨零即停止；不做机制 sweep。
-   - `S_cap_size` seed 1 只是低优先级稳健性检查，不属于预注册 seed gate；在残差审计之前不跑。
-4. **不**读官方 valid/test 或内部 Reserved 做选择；**不**把单次 null 写成“消息传递/深度普遍无用”；**不**把 `R1_marginal_size` 写成化学因果实验。
+   - 若审计没有预注册的 **≥0.02 MAE** 机会：**停止 SSRC 架构线**，把 Phase 1d 写成 tail-specific mechanism + absolute-gap negative 的最终报告；不追加模块。
+   - 若审计显示 ≥0.02 MAE 机会：只允许在**下一轮**预注册**一个** ring-aware local representation 诊断；不得做宽度/深度/半径/seed grid；若互补组退化，或尾部增益 <0.02 / CI 跨零，立即停止。
+4. **不**读官方 valid/test 或内部 Reserved 做选择；**不**把单次 null 写成“消息传递/深度普遍无用”；**不**把 `R_incidence` 写成提出的新方法，也不把大环尾部收益外推为一般化学结论。

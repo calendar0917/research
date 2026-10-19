@@ -1,0 +1,121 @@
+{
+  "current_file_hashes": {
+    "phase1d_config_sha256": "1bc4e43020c118a201db6486290d14bae537d0f8106442e5b2f1c1c3c689e0ea",
+    "phase1d_cpu_gates_sha256": "06e0da938b7aa08070dc1379abce1ecd81f395f350ac0876e12d6f0938045873",
+    "phase1d_protocol_sha256": "764ab5481db298c70b16d5b398fe513400c7b8944eb0513024fa26c09bc7a42f"
+  },
+  "errors": [],
+  "monitor_order_identical": true,
+  "n_runs": 2,
+  "rows": [
+    {
+      "best_epoch": 258,
+      "epochs_planned": 300,
+      "epochs_run": 289,
+      "file": "tracks/structural-sufficiency/runs/phase1d/zinc/R1_size_cap_seed0.json",
+      "flops_forward": 2491880704,
+      "gpu_seconds": 1056.4660802159924,
+      "info_keys": [
+        "mol_index",
+        "mol_size_feat",
+        "n_molecules",
+        "n_patches",
+        "patch_batch",
+        "patch_edge_attr",
+        "patch_edge_index",
+        "patch_node_feat",
+        "patch_to_mol",
+        "root_batch",
+        "root_edge_attr",
+        "root_edge_index",
+        "y"
+      ],
+      "model": "R1_size_cap",
+      "monitor_mae": 0.19347499595000409,
+      "monitor_rmse": 0.5215424543848012,
+      "params": 453129,
+      "scope": {
+        "capacity_target_params": 439559,
+        "internal_reserved_labels_read": false,
+        "labels_used": "Fit/Monitor only",
+        "model_config": {
+          "dropout": 0.1,
+          "edge_readout_hidden": 128,
+          "ffn_hidden": 256,
+          "g_ffn_hidden": 128,
+          "g_hidden": 128,
+          "g_layers": 6,
+          "graph_ffn_blocks": 2,
+          "graph_ffn_hidden": 384,
+          "hidden": 128,
+          "incidence_rel_hidden": 251,
+          "local_layers": 2,
+          "m_rounds": 1,
+          "rel_hidden": 256,
+          "size_dim": 3,
+          "token_ffn_blocks": 2
+        },
+        "model_selection": "best Monitor MAE; monitor used for early stopping",
+        "official_valid_test_labels_read": false,
+        "phase": "C_capacity_scaling",
+        "reserved_labels_retained": 0
+      },
+      "seed": 0
+    },
+    {
+      "best_epoch": 165,
+      "epochs_planned": 300,
+      "epochs_run": 196,
+      "file": "tracks/structural-sufficiency/runs/phase1d/zinc/R_incidence_seed0.json",
+      "flops_forward": 645911200,
+      "gpu_seconds": 614.0053531390149,
+      "info_keys": [
+        "mol_index",
+        "mol_size_feat",
+        "n_molecules",
+        "n_patches",
+        "patch_batch",
+        "patch_edge_attr",
+        "patch_edge_index",
+        "patch_node_feat",
+        "patch_to_mol",
+        "root_batch",
+        "root_edge_attr",
+        "root_edge_index",
+        "y"
+      ],
+      "model": "R_incidence",
+      "monitor_mae": 0.27966162930964494,
+      "monitor_rmse": 0.8012254472295376,
+      "params": 115952,
+      "scope": {
+        "capacity_target_params": null,
+        "internal_reserved_labels_read": false,
+        "labels_used": "Fit/Monitor only",
+        "model_config": {
+          "dropout": 0.1,
+          "edge_readout_hidden": 64,
+          "ffn_hidden": 128,
+          "g_ffn_hidden": 128,
+          "g_hidden": 128,
+          "g_layers": 6,
+          "graph_ffn_blocks": 2,
+          "graph_ffn_hidden": 177,
+          "hidden": 64,
+          "incidence_rel_hidden": 251,
+          "local_layers": 2,
+          "m_rounds": 1,
+          "rel_hidden": 128,
+          "size_dim": 3,
+          "token_ffn_blocks": 2
+        },
+        "model_selection": "best Monitor MAE; monitor used for early stopping",
+        "official_valid_test_labels_read": false,
+        "phase": "B_incidence_control",
+        "reserved_labels_retained": 0
+      },
+      "seed": 0
+    }
+  ],
+  "status": "PASS"
+}

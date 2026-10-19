@@ -5,9 +5,9 @@
 # Phase 0 evidence: results/phase0/REPORT.md + results/phase0/analysis/*.json
 # Phase 1a: notes/phase1a_protocol.md + results/phase1a/
 
-phase: phase1c
-current_round: ssrc-phase1c-zinc-v1
-status: PHASE1C_COMPLETE
+phase: phase1d
+current_round: ssrc-phase1d-zinc-v1
+status: PHASE1D_COMPLETE
 updated: 2026-10-19
 main_line: true
 supersedes_main_line: structure-contribution
@@ -381,6 +381,179 @@ phase1c:
     - "Single-seed S_cap and two-seed pair are screening only; no official ZINC test, SOTA, or cross-task claim."
     - "The remaining gap is a base-model/representation hypothesis, not an identified atom-level or depth mechanism."
 
+phase1d:
+  protocol_id: ssrc-phase1d-zinc-v1
+  protocol: tracks/structural-sufficiency/notes/phase1d_protocol.md
+  protocol_sha256: 764ab5481db298c70b16d5b398fe513400c7b8944eb0513024fa26c09bc7a42f
+  config: tracks/structural-sufficiency/configs/phase1d.yaml
+  config_sha256: 1bc4e43020c118a201db6486290d14bae537d0f8106442e5b2f1c1c3c689e0ea
+  status: COMPLETE
+  report: tracks/structural-sufficiency/results/phase1d/REPORT.md
+  freeze_commit: 6e26ca9
+  run_commit: 6e26ca9
+  host: res (2xA100-SXM4-40GB, process backend)
+  decision: PAIRWISE_INTERACTION_PROMISING
+  decision_qualifier: LARGE_RING_TAIL_SPECIFIC
+  secondary_labels:
+    - CAPACITY_SCALING_PROMISING
+    - REPRESENTATION_OR_INDUCTIVE_BIAS_GAP
+    - EFFICIENCY_OBSTACLE
+  route_status: TAIL_SPECIFIC_PAIRWISE_AND_CAPACITY_RESCUE_NOT_GENERAL_NECESSITY
+  question: >-
+    Are the Phase 1c relation/capacity gains explained by additive
+    node-incidence statistics, and does one bounded hidden-width increase of
+    the best-supported candidate close the gap to G_ref?
+  models:
+    R_incidence: "shared additive psi(h_u,e_uv)+psi(h_v,e_uv) on true physical bonds; same E2 trunk/root adjacency/features/size readout/edge aggregate as R1_size; 115952 params, 645911200 FLOPs"
+    R1_size_cap: "R1_size hidden 128, ffn/rel 256, edge-readout 128; 453129 params, 2491880704 FLOPs"
+    R_incidence_cap: "pre-registered alternative, hidden 136, 436841 params; not run because B selected R1_size"
+  phase_a_descriptive:
+    monitor_mae: {G_ref: 0.165290, R1_size_s0: 0.236575, R1_size_s1: 0.281039, R1_marginal_s0: 0.304730, S_cap_size_s0: 0.289477}
+    gains_seed0: {d_pair: 0.068155, d_capacity: 0.052902, d_gap: 0.071286}
+    large_ring_split: "large_cycles_gt6 >= 1 / max_ring_size >= 7; n=40 (4%)"
+    large_ring_complement:
+      n: 960
+      d_pair_mean: -0.010700
+      d_pair_ci95: [-0.030434, 0.006660]
+      d_capacity_mean: -0.027986
+      d_capacity_ci95: [-0.046756, -0.012051]
+      d_gap_mean: 0.044178
+      d_gap_ci95: [0.027336, 0.064227]
+    large_ring_positive:
+      n: 40
+      model_mae: {G_ref: 1.014544, R1_size_s0: 1.736403, R1_size_s1: 3.129258, R1_marginal_s0: 3.697079, S_cap_size_s0: 3.730612}
+      d_pair_mean: 1.960676
+      d_pair_ci95: [1.503464, 2.394234]
+      d_capacity_mean: 1.994209
+      d_capacity_ci95: [1.546699, 2.466913]
+    tail_contributions:
+      d_pair_top1pct_share: 0.426
+      d_pair_top5pct_share: 0.836
+      d_pair_drop_top5pct: 0.011790
+      d_capacity_top5pct_share: 1.067
+      d_capacity_drop_top5pct: -0.003713
+      d_gap_top5pct_share: 0.761
+      d_gap_drop_top5pct: 0.017917
+    seed_consistency:
+      d_pair_spearman_s0_s1: 0.337
+      d_pair_sign_agreement: 0.606
+      d_pair_top_decile_jaccard: 0.198
+      same_model_R1_size_s0_minus_s1: -0.044464
+      same_model_ci95: [-0.075308, -0.015542]
+    structural_correlations: "max |Spearman| ~0.09; no continuous variable explains >=0.02 MAE; descriptive only, no model selection"
+  phase_b:
+    run: R_incidence seed 0
+    monitor_mae: 0.279662
+    monitor_rmse: 0.801225
+    gain_joint: 0.043086
+    gain_joint_ci95: [0.012140, 0.076327]
+    rmse_agrees: true
+    win_rate_R1_size_better: 0.478
+    win_rate_incidence_better: 0.522
+    large_ring_complement:
+      n: 960
+      R1_size_mae: 0.174083
+      incidence_mae: 0.145999
+      delta_R1_minus_incidence: -0.028083
+      ci95: [-0.046012, -0.011711]
+    large_ring_positive:
+      n: 40
+      R1_size_mae: 1.736403
+      incidence_mae: 3.487554
+      delta_R1_minus_incidence: 1.751151
+      ci95: [1.303284, 2.201309]
+    tail_sensitivity:
+      top1pct_share: 0.812
+      delta_drop_top1pct: 0.008190
+      delta_drop_top5pct: -0.003573
+    optimization:
+      incidence_train_mae: 0.239929
+      R1_size_train_mae: 0.151007
+      incidence_best_epoch: 165
+      incidence_epochs_run: 196
+    interpretation: "additive incidence is sufficient or slightly better on 96% of molecules; the joint endpoint advantage is a large-ring rescue, not a general chemistry requirement"
+  phase_c:
+    run: R1_size_cap seed 0
+    monitor_mae: 0.193475
+    monitor_rmse: 0.521542
+    gain_capacity: 0.043100
+    gain_capacity_ci95: [0.019238, 0.068828]
+    gap_to_gref: 0.028185
+    gap_to_gref_ci95: [0.007136, 0.050941]
+    converged: true
+    best_epoch: 258
+    epochs_run: 289
+    epochs_planned: 300
+    train_mae: 0.105438
+    cost:
+      params: 453129
+      params_ratio_vs_gref: 1.0309
+      flops_forward: 2491880704
+      flops_ratio_vs_gref: 2.1026
+      step_ms: 22.224
+      step_ms_ratio_vs_gref: 0.7410
+      peak_gpu_memory_mb_allocated: 130.717
+      peak_memory_ratio_vs_gref: 1.6015
+      gpu_seconds: 1056.466
+      gpu_seconds_ratio_vs_gref: 1.0048
+    large_ring_complement:
+      n: 960
+      R1_size_cap_mae: 0.147338
+      G_ref_mae: 0.129904
+      capacity_gain: 0.026745
+      capacity_gain_ci95: [0.011698, 0.044319]
+      gap_to_gref: 0.017434
+    large_ring_positive:
+      n: 40
+      R1_size_cap_mae: 1.300764
+      G_ref_mae: 1.014544
+      capacity_gain: 0.435638
+      capacity_gain_ci95: [0.008973, 0.885020]
+      gap_to_gref: 0.286220
+    interpretation: "capacity closes most of the ordinary-molecule gap (0.0174) but leaves a 0.286 large-ring gap; the overall 0.0282 gap is tail-concentrated"
+  data_isolation:
+    fit_rows: 8000
+    monitor_rows: 1000
+    reserved_not_scored: 1000
+    labels_retained: 9000
+    reserved_labels_retained: 0
+    official_valid_test_labels_retained: 0
+    run_validation: tracks/structural-sufficiency/results/phase1d/run_validation.json
+    run_validation_status: PASS
+    run_validation_sha256: 2fc72bebf151bb3df6ae002ffc77c935d7ac33801a5a6d440a071533c98f0581
+    smoke_separate: "ssrc-p1d-smoke-zinc is in runs/phase1d_smoke_gpu and is not used for decisions"
+  cpu_gates:
+    status: 19/19 PASS
+    file: tracks/structural-sufficiency/results/phase1d/cpu_gates_phase1d.json
+    sha256: 06e0da938b7aa08070dc1379abce1ecd81f395f350ac0876e12d6f0938045873
+    tests: 25 passed (7 phase1d + 11 phase1c + 7 phase1b)
+    features_sha256: dadcbb3928fdcc70b50adb824cc96123a4eacbbe11f4f94bfc716c41efe6792b
+  budget:
+    gpu_hours_run_level: 0.4642
+    gpu_hours_job_occupancy: 0.4706
+    cap_hours: 2.0
+    by_phase: {smoke: 0.0002, B: 0.1706, C: 0.2935}
+    failed_jobs_gpu_hours: 0.0
+  artifacts:
+    analysis_cpu: tracks/structural-sufficiency/results/phase1d/analysis_phase1d_cpu.json
+    analysis_cpu_sha256: c3c167e5d1a833cefffdef820881cad6d7b079ff1b865ac633fe4820d2408cf1
+    analysis_gpu: tracks/structural-sufficiency/results/phase1d/analysis_phase1d.json
+    analysis_gpu_sha256: 056ccc3bd4a88e6e17567d5270d48dfbb427a982acf17940113a7dcff9f4a6ce
+    run_manifest: tracks/structural-sufficiency/results/phase1d/run_manifest.tsv
+    run_manifest_sha256: 3db027f966555283a2bd965c407c3e683929fe5cc439aae840fc8c629e744399
+    features: tracks/structural-sufficiency/results/phase1d/structural_features.npz
+    features_sha256: dadcbb3928fdcc70b50adb824cc96123a4eacbbe11f4f94bfc716c41efe6792b
+    code: tracks/structural-sufficiency/code/phase1d/
+    runs: tracks/structural-sufficiency/runs/phase1d/
+  non_claims:
+    - "R_incidence is a diagnostic control, not a proposed method."
+    - "The pairwise advantage is large-ring-tail-specific; do not generalize it to all chemistry."
+    - "The large-ring subgroup is partly label-mechanism-coupled because the target includes -cycles."
+    - "Single-seed arms and molecule bootstrap CIs are not training-seed replication or formal significance."
+    - "Capacity means hidden width only at one fixed configuration; FLOPs and memory are not matched to G_ref."
+    - "G_ref is a 6-layer local GINE, not global attention and not a paper reproduction."
+    - "No official ZINC test, internal Reserved, SOTA, or cross-task claim."
+
 open_questions:
   - Does X beat S at n=253 and/or n=2352 under exactly matched E_2 input?
   - Is any advantage stable across 3 seeds and larger at n=253 (sample-efficiency) or only at n=2352?
@@ -389,11 +562,14 @@ open_questions:
   - If S≈X and G better: add fixed one-hop/edge-incidence information with matched non-iterative/iterative controls.
 
 next_action: >-
-  Phase 1c is complete. Endpoint correspondence survives parameter, readout, and
-  edge-type-marginal controls (Gain_pair two-seed mean +0.0495; Gain_over_capacity
-  +0.0529), but the best R1_size seed is still +0.0713 MAE worse than G_ref.
-  Do not add global tokens, deeper trunks, new encodings, or another update
-  round. The single next step is a CPU-only residual audit of the R1_size-G_ref
-  gap against patch-observable variables; if no variable explains >=0.02 MAE,
-  stop SSRC and report the absolute-gap negative. If one does, pre-register one
-  compute-matched diagnostic and stop at <0.02 MAE or a CI crossing zero.
+  Phase 1d is complete. Do not run another width, seed, depth, global-token,
+  or iterative-update arm. The additive incidence control is sufficient or
+  slightly better on the 96% ordinary-molecule complement; the joint pairing
+  and capacity gains are concentrated in the 40-molecule large-ring tail, and
+  neither closes the tail gap to G_ref. The single next step is a CPU-only
+  large-ring predictability audit on frozen predictions and structure-only
+  features: determine whether the 40-molecule tail has patch-observable
+  headroom and whether a ring-aware local token could plausibly help without
+  degrading the complement. Only if that audit shows a pre-specified >=0.02
+  MAE opportunity should one ring-aware local representation diagnostic be
+  pre-registered in a later round; no GPU work follows from Phase 1d alone.
