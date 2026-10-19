@@ -1,0 +1,440 @@
+{
+  "protocol_id": "zinc-structural-token-attention-v1",
+  "created_utc": "2026-10-19T14:44:38Z",
+  "n_gates": 12,
+  "n_pass": 12,
+  "gates": [
+    {
+      "name": "G1_parameters_and_no_old_reader",
+      "pass": true,
+      "detail": {
+        "S": {
+          "audit": {
+            "groups": {
+              "atom_encoder": 26336,
+              "bond_encoder": 62816,
+              "junction_encoder": 112896,
+              "group_composer": 62976,
+              "reader": 68257,
+              "type_embedding": 288,
+              "blocks": 149568,
+              "struct_bias": 0,
+              "mix": 74496,
+              "token_ffn": 74304
+            },
+            "actual_parameters": 483137,
+            "expected_parameters": 483137,
+            "p3_nonreader_parameters": 265024,
+            "p3_reader_removed_parameters": 148481,
+            "shared_groups_match_p3": true,
+            "old_reader_present": false,
+            "parameter_exact": true,
+            "reader_in_dim": 612,
+            "z_p3_dim": 321
+          },
+          "module_audit": {
+            "n_modules": 41,
+            "classes": [
+              "ExtraFFN",
+              "LayerNorm",
+              "Linear",
+              "ModuleList",
+              "NewReader",
+              "ResidualFFN",
+              "STAObjectModel",
+              "TokenBlock",
+              "_MLP"
+            ],
+            "extra_modules": [
+              ":STAObjectModel",
+              "blocks.0:TokenBlock",
+              "blocks.0.mix:ExtraFFN",
+              "blocks.0.ffn:ResidualFFN",
+              "blocks.1:TokenBlock",
+              "blocks.1.mix:ExtraFFN",
+              "blocks.1.ffn:ResidualFFN",
+              "reader:NewReader"
+            ],
+            "offending": [],
+            "unexpected_classes": [],
+            "pass": true
+          }
+        },
+        "T": {
+          "audit": {
+            "groups": {
+              "atom_encoder": 26336,
+              "bond_encoder": 62816,
+              "junction_encoder": 112896,
+              "group_composer": 62976,
+              "reader": 68257,
+              "type_embedding": 288,
+              "blocks": 149568,
+              "struct_bias": 0,
+              "mix": 74496,
+              "token_ffn": 74304
+            },
+            "actual_parameters": 483137,
+            "expected_parameters": 483137,
+            "p3_nonreader_parameters": 265024,
+            "p3_reader_removed_parameters": 148481,
+            "shared_groups_match_p3": true,
+            "old_reader_present": false,
+            "parameter_exact": true,
+            "reader_in_dim": 612,
+            "z_p3_dim": 321
+          },
+          "module_audit": {
+            "n_modules": 45,
+            "classes": [
+              "AttnMix",
+              "LayerNorm",
+              "Linear",
+              "ModuleList",
+              "NewReader",
+              "ResidualFFN",
+              "STAObjectModel",
+              "TokenBlock",
+              "_MLP"
+            ],
+            "extra_modules": [
+              ":STAObjectModel",
+              "blocks.0:TokenBlock",
+              "blocks.0.mix:AttnMix",
+              "blocks.0.ffn:ResidualFFN",
+              "blocks.1:TokenBlock",
+              "blocks.1.mix:AttnMix",
+              "blocks.1.ffn:ResidualFFN",
+              "reader:NewReader"
+            ],
+            "offending": [],
+            "unexpected_classes": [],
+            "pass": true
+          }
+        },
+        "R": {
+          "audit": {
+            "groups": {
+              "atom_encoder": 26336,
+              "bond_encoder": 62816,
+              "junction_encoder": 112896,
+              "group_composer": 62976,
+              "reader": 68257,
+              "type_embedding": 288,
+              "blocks": 149720,
+              "struct_bias": 152,
+              "mix": 74648,
+              "token_ffn": 74304
+            },
+            "actual_parameters": 483289,
+            "expected_parameters": 483289,
+            "p3_nonreader_parameters": 265024,
+            "p3_reader_removed_parameters": 148481,
+            "shared_groups_match_p3": true,
+            "old_reader_present": false,
+            "parameter_exact": true,
+            "reader_in_dim": 612,
+            "z_p3_dim": 321
+          },
+          "module_audit": {
+            "n_modules": 47,
+            "classes": [
+              "AttnMix",
+              "LayerNorm",
+              "Linear",
+              "ModuleList",
+              "NewReader",
+              "ResidualFFN",
+              "STAObjectModel",
+              "StructuralBias",
+              "TokenBlock",
+              "_MLP"
+            ],
+            "extra_modules": [
+              ":STAObjectModel",
+              "blocks.0:TokenBlock",
+              "blocks.0.mix:AttnMix",
+              "blocks.0.mix.struct_bias:StructuralBias",
+              "blocks.0.ffn:ResidualFFN",
+              "blocks.1:TokenBlock",
+              "blocks.1.mix:AttnMix",
+              "blocks.1.mix.struct_bias:StructuralBias",
+              "blocks.1.ffn:ResidualFFN",
+              "reader:NewReader"
+            ],
+            "offending": [],
+            "unexpected_classes": [],
+            "pass": true
+          }
+        }
+      }
+    },
+    {
+      "name": "G2_zP3_bypass_matches_original_reader_input",
+      "pass": true,
+      "detail": {
+        "shape": [
+          4,
+          321
+        ],
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "name": "G3_T_R_zero_bias_step0_identity",
+      "pass": true,
+      "detail": {
+        "prediction_max_abs_diff": 0.0,
+        "mha_state_equal": true,
+        "common_state_equal": true,
+        "bias_zero": true
+      }
+    },
+    {
+      "name": "G4_relation_bins_hand_checked_path",
+      "pass": true,
+      "detail": {
+        "A0-A3": {
+          "expected": [
+            3,
+            0
+          ],
+          "got": [
+            3,
+            0
+          ]
+        },
+        "B0-B2": {
+          "expected": [
+            1,
+            0
+          ],
+          "got": [
+            1,
+            0
+          ]
+        },
+        "B0-B1": {
+          "expected": [
+            0,
+            1
+          ],
+          "got": [
+            0,
+            1
+          ]
+        },
+        "J0-J1": {
+          "expected": [
+            0,
+            2
+          ],
+          "got": [
+            0,
+            2
+          ]
+        },
+        "A3-J0": {
+          "expected": [
+            1,
+            0
+          ],
+          "got": [
+            1,
+            0
+          ]
+        },
+        "A0-J1": {
+          "expected": [
+            1,
+            0
+          ],
+          "got": [
+            1,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "name": "G5_disconnected_distance_bin",
+      "pass": true,
+      "detail": {
+        "dist_bin_A0_B1": 5,
+        "expected": 5
+      }
+    },
+    {
+      "name": "G6_object_invariances_float32",
+      "pass": true,
+      "detail": {
+        "baseline": 0.19963125884532928,
+        "max_abs_diff": {
+          "atom_renumber": 2.384185791015625e-07,
+          "bond_endpoint_swap": 0.0,
+          "junction_endpoint_swap": 0.0
+        },
+        "tolerance": 2e-05
+      }
+    },
+    {
+      "name": "G7_token_permutation_with_relation_sync",
+      "pass": true,
+      "detail": {
+        "max_abs_type_sum_diff": 7.152557373046875e-07,
+        "tolerance": 2e-05
+      }
+    },
+    {
+      "name": "G8_batch_composition_padding_cross_molecule",
+      "pass": true,
+      "detail": {
+        "single_vs_mixed_max_abs_diff": 3.725290298461914e-08,
+        "cross_molecule_max_abs_diff": 0.0,
+        "tolerance": 2e-05
+      }
+    },
+    {
+      "name": "G9_empty_bond_junction_boundary",
+      "pass": true,
+      "detail": {
+        "one_atom_no_bond": {
+          "prediction": 0.022480875253677368,
+          "finite": true,
+          "sum_J_max_abs": 0.0,
+          "n_tokens": 1
+        },
+        "two_atoms_one_bond_no_junction": {
+          "prediction": 0.06987378746271133,
+          "finite": true,
+          "sum_J_max_abs": 0.0,
+          "n_tokens": 3
+        }
+      }
+    },
+    {
+      "name": "G10_two_update_gradients_new_branch",
+      "pass": true,
+      "detail": {
+        "probes": {
+          "1": {
+            "loss": 0.6611031293869019,
+            "groups": {
+              "type_embedding": 0.04872719107710662,
+              "atom_encoder": 0.20135925851551603,
+              "bond_encoder": 0.17546700404401785,
+              "junction_encoder": 0.25159658428923404,
+              "group_composer": 0.26491065608443226,
+              "ln": 0.028167294393583085,
+              "mix": 0.28898329398143474,
+              "r_struct_bias": 0.010543785913742224,
+              "token_ffn": 0.29445303324224076,
+              "reader": 1.8557238290997846
+            },
+            "r_bias": {
+              "layer0": {
+                "type_bias": {
+                  "abs_sum": 0.0344972163438797,
+                  "max_abs": 0.0032347748056054115
+                },
+                "dist_bias": {
+                  "abs_sum": 0.0072903940454125404,
+                  "max_abs": 0.0012452761875465512
+                },
+                "overlap_bias": {
+                  "abs_sum": 0.005453930236399174,
+                  "max_abs": 0.0010743665043264627
+                }
+              },
+              "layer1": {
+                "type_bias": {
+                  "abs_sum": 0.027324669063091278,
+                  "max_abs": 0.003368172561749816
+                },
+                "dist_bias": {
+                  "abs_sum": 0.0076763322576880455,
+                  "max_abs": 0.0012163115898147225
+                },
+                "overlap_bias": {
+                  "abs_sum": 0.007118090521544218,
+                  "max_abs": 0.000998334027826786
+                }
+              }
+            }
+          },
+          "2": {
+            "loss": 0.5714435577392578,
+            "groups": {
+              "type_embedding": 0.03787623038630423,
+              "atom_encoder": 0.41903332583823405,
+              "bond_encoder": 0.234410157398004,
+              "junction_encoder": 0.4388107988158391,
+              "group_composer": 0.40796507066474763,
+              "ln": 0.023243401289974364,
+              "mix": 0.2710713691803683,
+              "r_struct_bias": 0.0074283787246878724,
+              "token_ffn": 0.26656912719438525,
+              "reader": 3.0878296853412497
+            },
+            "r_bias": {
+              "layer0": {
+                "type_bias": {
+                  "abs_sum": 0.022420858964323997,
+                  "max_abs": 0.0025724531151354313
+                },
+                "dist_bias": {
+                  "abs_sum": 0.005796622484922409,
+                  "max_abs": 0.0011915700742974877
+                },
+                "overlap_bias": {
+                  "abs_sum": 0.009772125631570816,
+                  "max_abs": 0.0011866162531077862
+                }
+              },
+              "layer1": {
+                "type_bias": {
+                  "abs_sum": 0.015015138313174248,
+                  "max_abs": 0.0014747341629117727
+                },
+                "dist_bias": {
+                  "abs_sum": 0.004827818367630243,
+                  "max_abs": 0.0012075407430529594
+                },
+                "overlap_bias": {
+                  "abs_sum": 0.00589242298156023,
+                  "max_abs": 0.0010051121935248375
+                }
+              }
+            }
+          }
+        },
+        "note": "loss uses synthetic y only; no valid labels"
+      }
+    },
+    {
+      "name": "G11_batch_order_matches_R3",
+      "pass": true,
+      "detail": {
+        "0": "3c964a71acc1ca817567cac916a7a59a12b40f750dbceee0848f614a2c71428f",
+        "1": "8710751abd8c33739cac5506756fe6ba6abb919aed3235f86619b13fcf2700b9"
+      }
+    },
+    {
+      "name": "G12_frozen_P3_soups_present",
+      "pass": true,
+      "detail": {
+        "0": {
+          "path": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed0.pt",
+          "sha256": "a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782",
+          "expected": "a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782"
+        },
+        "1": {
+          "path": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed1.pt",
+          "sha256": "b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9",
+          "expected": "b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9"
+        }
+      }
+    }
+  ],
+  "all_pass": true
+}

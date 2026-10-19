@@ -1,0 +1,250 @@
+# SSRC side round — zinc structural-token attention v1 (frozen config).
+# Protocol: tracks/structural-sufficiency/results/zinc_structural_token_attention_v1/PROTOCOL.md
+# Frozen before any GPU second of this round and before any new official-valid score.
+# This is NOT Phase 2c and does not modify Phase 2b or the C/G round.
+protocol_id: zinc-structural-token-attention-v1
+round: zinc_structural_token_attention_v1
+status: FROZEN_PRE_GPU
+kind: object_token_attention_feasibility_screen
+
+data:
+  source: "official PyG ZINC subset=True"
+  train_rows: 10000
+  valid_rows: 1000
+  official_test_rows_accessed: 0
+  internal_monitor_is_heldout: false
+  supervised_labels: "official train 10000 raw y only"
+  ssl_structures: "the same official train 10000 only; frozen seed-matched full-10k masked-SSL encoders"
+  no_new_unlabelled_molecules: true
+
+recipe:
+  name: R3
+  epochs: 360
+  batch_size: 128
+  steps_per_epoch: 79
+  updates: 28440
+  lr: 1.0e-3
+  lr_min: 1.0e-5
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  loss: raw-y L1
+  soup_last: 5
+  shuffle_offset: 101
+  early_stopping: false
+  valid_based_selection: false
+  fp32: true
+  amp: false
+  torch_compile: false
+
+architecture:
+  base: "frozen BJOC-Null atom/bond/junction encoders, Null grouping and group_composer"
+  removed_reader: "P3 321->256->256->1 reader, 148481 parameters; deleted, not retained"
+  p3_nonreader_parameters: 265024
+  p3_total_parameters: 413505
+  token_dim: 96
+  token_order: "all atoms, then all physical bonds, then all junctions, per molecule"
+  type_embedding: "3 x 96 = 288 parameters, shared across arms per seed"
+  type_embedding_init: "uniform(-1/sqrt(96), +1/sqrt(96)) from a dedicated generator"
+  blocks: 2
+  block_parameters: 74784
+  block_form: "U = H + MIX(LN1(H)); Hnext = U + FFN(LN2(U))"
+  layernorm: "affine=True, eps=1e-5, no final LayerNorm"
+  ffn: "96 -> 192 -> 96, SiLU, both layers biased, dropout 0"
+  dropout: 0.0
+  attention_dropout: 0.0
+  heads: 4
+  head_dim: 24
+  scale: "1/sqrt(24)"
+  projections: "separate Q/K/V/output Linear(96,96,bias=True); standard 4-head MHA"
+  s_mix: "gamma * FFN_extra(x); FFN_extra 96->192->96+SiLU; gamma 96-d, init 1; 37248 params"
+  t_mix: "standard 4-head MHA; 37248 params"
+  r_mix: "T plus Btype[type_i,type_j,h] + Bdist[dist_bin,h] + Boverlap[overlap,h]"
+  relation_bias_init: "all tables zero"
+  relation_parameters: 152
+  relation_bins:
+    distance: "{0,1,2,3,>=4,disconnected}"
+    overlap: "{0,1,2,3}"
+    type_pairs: 9
+  token_supports:
+    atom: "{i}"
+    bond: "{u,v}"
+    junction: "{i,j,k}"
+  distance_definition: "minimum shortest path in the original undirected atom graph between the two support sets"
+  overlap_definition: "support-set intersection size"
+  pooling: "type-wise sum over valid token rows; no softmax or mean pooling; absent type = zero vector"
+  reader: "612 -> 96 -> 96 -> 1, SiLU, no dropout / BN; 68257 parameters"
+  z_p3: "[sum c_e (96), sum a_i (96), sum a_i^2 (96), g33 (33)] = 321"
+  final_reader_input: "z_P3(321) + sum_A(96) + sum_B(96) + sum_J(96) + log1p(N_A)+log1p(N_B)+log1p(N_J) = 612"
+  expected_parameters: {S: 483137, T: 483137, R: 483289}
+  parameter_increase_vs_p3: "S/T +16.84%; R +16.87%"
+
+initialisation:
+  base: "bp.build_bjoc_null(seed) -> seed-matched full-10k masked-SSL encoder, exactly the R3 supervised start"
+  not_used: "completed P3 soup is never used as an initialiser"
+  shared_modules: "atom_encoder, bond_encoder, junction_encoder, group_composer copied tensor-by-tensor from the same base"
+  independent_modules: "type embedding, blocks, reader initialised from dedicated per-module generators; global RNG restored"
+  common_init: "type embedding, reader, LNs, residual FFNs and all P3 modules are bit-identical across S/T/R per seed"
+  t_r_common: "T and R MHA projections are bit-identical per seed; R bias tables are exactly zero"
+  training: "all P3 modules and all new modules participate in optimisation; no source tensor is frozen during training"
+
+arms:
+  S:
+    kind: capacity_readout_control
+    new_parameters: 218113
+    total_parameters: 483137
+    seeds: [0, 1]
+  T:
+    kind: ordinary_object_attention
+    new_parameters: 218113
+    total_parameters: 483137
+    seeds: [0, 1]
+  R:
+    kind: structural_relation_attention
+    new_parameters: 218265
+    total_parameters: 483289
+    seeds: [0, 1]
+
+run_matrix:
+  schedule:
+    - {gpu: res-gpu0, seed: 0, order: [S, T, R]}
+    - {gpu: res-gpu1, seed: 1, order: [R, T, S]}
+  note: "one training process per GPU; seeds fixed per GPU; arm order reversed across GPUs"
+
+frozen_inputs:
+  objects_train10k:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt
+    sha256: 14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d
+  objects_valid:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt
+    sha256: 61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c
+  prep_train10k:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json
+    sha256: d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a
+  encoded_train:
+    path: tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt
+    sha256: 10d764955ef1b040a317105be1dd3fbb2e81292b03b79e7d078cce08e18e5f1d
+    train_y_sha256_float64: 924bc5e62c0ff093bae6ff4d34e54fcc36781df23e7b60e7521bde573d25a83a
+    train_y_sha256_float32: f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e
+  pretrain_encoder_s0:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt
+    sha256: 006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97
+  pretrain_encoder_s1:
+    path: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt
+    sha256: ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a
+  soup_R3_seed0:
+    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed0.pt
+    sha256: a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782
+  soup_R3_seed1:
+    path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed1.pt
+    sha256: b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9
+
+label_provenance:
+  valid_y:
+    historical_path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/valid_y_read_once.npy
+    historical_file_sha256: dacae6ff2c288fa25b5b30ccf73e7b261d380c377ed0caf8fa4ef656651ff808
+    array_sha256_float32: 72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f
+    source: "official PyG ZINC subset=True split=val, rows 0..999"
+    read_policy: "single read at the score stage, after all six predictions and the mechanism record are frozen"
+  official_test:
+    accessed: false
+    note: "this round never loads official-test structures, labels or predictions"
+
+historical_prediction_provenance:
+  valid_P30:
+    historical_path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R30.npz
+    historical_file_sha256: f493bcc2e1b156bbe8074944469943cdd9e2dc114e45dc72a151868e9d29ec89
+    array_sha256_float32: 0fff2981f2c956ba442b78e7263b8d30bbc9f75b063fb8f3fce96f78f8d0d7a0
+  valid_P31:
+    historical_path: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R31.npz
+    historical_file_sha256: 730b922c7313f8913d16f0022fa9eeba8d5344241e6b01429d8ed59130ab726d
+    array_sha256_float32: 30ac789ce45034f856ff53c65697113c9c36e39652b7c0ec5c57ffd948ed1ef3
+
+audit_expectations:
+  p3_parameters: 413505
+  p3_soup_sha256:
+    "0": a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782
+    "1": b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9
+  init_full_sha256:
+    "0": d06d5e168138b76b9ab2e96400de3c0f5a10ad2f7e9d55658ab9642730d45691
+    "1": c79e6b02521c224e79790382438ca72c08f9e22e691f66fb5ab950dea4b49c0b
+  init_group_state_sha256:
+    "0": d9ffbd15356659ed06af4b43077bb7f27403ad0afc3e7ac00c4d34fc98c7415f
+    "1": 98d11fe93b03368e8ea5f66b17c1ccf16d850ee13a43f56f49ddc93dd08a993c
+  init_encoder_sha256:
+    "0": 91af980a414ac945ea35b31c114d4e44b636419b62320321a902179112889d12
+    "1": 83d8b086bf1f9ee6c145336a3ea67e710bcf42658151061c293c2a3380ddd303
+  encoder_used_sha256:
+    "0": 7165eb90ceaaec8402d973f82c3b60099dd67ffb7e57365585466478d143096f
+    "1": 54a232edfc280537fd3dbae3ae6e02f6c8e68e3bfa5c467ab9a54d7a0663c917
+  batch_order_sha256:
+    "0": 3c964a71acc1ca817567cac916a7a59a12b40f750dbceee0848f614a2c71428f
+    "1": 8710751abd8c33739cac5506756fe6ba6abb919aed3235f86619b13fcf2700b9
+  historical_valid_mae:
+    "0": 0.07910149778419873
+    "1": 0.08058639967715135
+  historical_valid_mae_seed_mean: 0.07984394873067505
+  p3_execution_regime:
+    host: res
+    node: a100-2
+    gpu_name: NVIDIA A100-SXM4-40GB
+    driver: "550.163.01"
+    torch: 2.5.1+cu124
+    torch_cuda: "12.4"
+    python: "3.12.14"
+  code_hashes:
+    structural_relation_composer_v1: tracks/structure-contribution/code/structural_relation_composer_v1.py
+    structural_relation_objects_v1: tracks/structure-contribution/code/structural_relation_objects_v1.py
+    bjoc_masked_pretraining_v1: tracks/structure-contribution/code/bjoc_masked_pretraining_v1.py
+    bjoc_perfmech_long_v1: tracks/structure-contribution/code/bjoc_perfmech_long_v1.py
+    phase2a_models: tracks/structural-sufficiency/code/phase2a/phase2a_models.py
+  code_hashes_expected:
+    structural_relation_composer_v1: 1c83a97ece60a151c6fa0c1ad5d2022b470ede9356b23d8d7b1e6b62daa71f4f
+    structural_relation_objects_v1: 8f4ba44dc3c047d674a1a6832f7ed8265eaa2457b15e820b3973a4cbd3a0861c
+    bjoc_masked_pretraining_v1: f27dbfe36ac5a9a0a1915320dba7c955115ccfa36e6b4755f2d2d62d8efb1489
+    bjoc_perfmech_long_v1: cb9796cb45f6fe048f2fd63e96798937cdbd802b28dbad34b2aafdbef0cbafe8
+    phase2a_models: f74c9691cc6835af814386f3ff1035e64fa161a3cc1d42237c6a7faf27cd62de
+
+statistics:
+  bootstrap_resamples: 5000
+  bootstrap_seed: 20261019
+  unit: molecule
+  two_seed_synchronised_resampling: true
+  seed_averaging: "per-seed MAE first, then mean of the two seed MAEs; no prediction ensemble"
+  tail_threshold: -3.0
+  top_k_removed: 10
+  extreme_valid_row: 172
+  robustness_sets: ["ordinary (y > -3)", "drop P3 worst 10", "without row 172"]
+
+thresholds:
+  practical_mean_gain: 0.003
+  both_seeds_positive: true
+  ordinary_and_drop_p3_worst10_positive: true
+  paired_ci_lower_gt_zero: true
+  note: >
+    0.003 is this round's decision line under its budget, not a universal
+    scientific constant. A non-significant contrast is reported as
+    "no detected gain", never as equivalence.
+
+decision_rules:
+  R_candidate: "R passes the practical line vs P3 and is consistently positive over both S and T (both seeds positive, paired CI low > 0)"
+  T_candidate: "T passes the practical line vs P3 and is consistently positive over S, while R is not consistently better than T"
+  S_dominates: "S passes the practical line vs P3 while T and R show no consistent extra advantage over S"
+  close: "no arm reaches the practical line vs P3; do not add layers, heads, relation buckets or seeds to rescue"
+
+budget:
+  gpu_hours_cap: 4.0
+  accounting: "sum of occupancy on both GPUs, including smoke, failed attempts, predictions and reruns"
+  planned_formal_runs: 6
+  smoke_epochs: 2
+  smoke_rows: 1024
+  margin_factor: 1.20
+  overhead_reserve_seconds: 300
+  stop_rule: "if projected formal time x 1.20 + smoke + reserve exceeds the cap, do not start the formal matrix"
+
+claims:
+  exploratory: true
+  blind_test: false
+  official_test_claimed: false
+  novelty_claimed: false
+  prior_art: "SAT / TokenGT / GPM / ESA / GRIT and related object-token or structural-attention work; structure tokens + attention is not itself a contribution"
+  allowed_interpretation: "exploratory screen under a frozen P3 substrate and an exposed development split"
