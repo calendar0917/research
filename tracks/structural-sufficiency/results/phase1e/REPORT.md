@@ -3,7 +3,7 @@
 - Track: `tracks/structural-sufficiency`
 - Protocol: `ssrc-phase1e-zinc-v1` (`notes/phase1e_protocol.md`, sha256 `bfa8d9f3…`, status `FROZEN_PRE_GPU`)
 - Frozen Phase 1d training commit: `6e26ca9` (`0f2112e` = Phase 1d per-molecule table)
-- Code commit for this round: `c84d5de`; artefact manifest: `results/phase1e/run_manifest.tsv`
+- Code commit for this round: `9a96ad0` (baseline runner introduced at `c84d5de`); artefact manifest: `results/phase1e/run_manifest.tsv`
 - Compute: CPU-only for A1–A4 and B1; **one** conditional GPU job for B2 (`ssrc-p1e-zinc-baseline-s0`), occupancy **0.607 A100 GPU-h** on `res`/a100-2 against a 2.0 h cap.
 - Status: **COMPLETE**. Direction: **A**.
 

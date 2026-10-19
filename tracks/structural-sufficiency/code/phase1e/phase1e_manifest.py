@@ -26,7 +26,7 @@ OUT = C.RESULTS_1E / "run_manifest.tsv"
 
 _COMMON = "PYTHONPATH=. .venv/bin/python"
 _ROWS = [
-    ("phase1e_common.py", "code", f"{_COMMON} -c 'import phase1e_common'", ""),
+
     ("label_audit.json", "A1", f"{_COMMON} code/phase1e/phase1e_label_audit.py", "CPU"),
     ("error_attribution.json", "A2", f"{_COMMON} code/phase1e/phase1e_analysis.py", "CPU"),
     ("zero_training_routing.json", "A3", f"{_COMMON} code/phase1e/phase1e_analysis.py", "CPU"),
