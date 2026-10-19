@@ -1,0 +1,499 @@
+diff --git a/grit/loader/master_loader.py b/grit/loader/master_loader.py
+index 527198a..f0a5ac4 100644
+--- a/grit/loader/master_loader.py
++++ b/grit/loader/master_loader.py
+@@ -634,6 +634,33 @@ def preformat_TUDataset(dataset_dir, name):
+     return dataset
+ 
+ 
++def _reference_requested_splits():
++    """Return the explicitly enabled ZINC splits.
++
++    The official loader always constructs train/val/test.  This reference
++    preparation must never construct the official test split, so the allowed
++    set is hard-limited to train and (optionally) val.  With no `reference`
++    config section the historical three-split behaviour is preserved for
++    upstream compatibility.
++    """
++    ref = cfg.get('reference', None)
++    if ref is None:
++        return ('train', 'val', 'test')
++    spec = ref.get('splits', 'train,val,test')
++    if isinstance(spec, str):
++        splits = tuple(x.strip() for x in spec.split(',') if x.strip())
++    else:
++        splits = tuple(spec)
++    if 'test' in splits:
++        raise ValueError(
++            "The official test split is disabled for this reference bundle; "
++            "remove 'test' from reference.splits")
++    if splits not in (('train',), ('train', 'val')):
++        raise ValueError(
++            f"reference.splits must be 'train' or 'train,val', got {splits!r}")
++    return splits
++
++
+ def preformat_ZINC(dataset_dir, name):
+     """Load and preformat ZINC datasets.
+ 
+@@ -646,10 +673,14 @@ def preformat_ZINC(dataset_dir, name):
+     """
+     if name not in ['subset', 'full']:
+         raise ValueError(f"Unexpected subset choice for ZINC dataset: {name}")
++    splits = _reference_requested_splits()
++    datasets = [ZINC(root=dataset_dir, subset=(name == 'subset'), split=split)
++                for split in splits]
++    ref = cfg.get('reference', None)
++    max_train_graphs = int(ref.get('max_train_graphs', 0)) if ref is not None else 0
+     dataset = join_dataset_splits(
+-        [ZINC(root=dataset_dir, subset=(name == 'subset'), split=split)
+-         for split in ['train', 'val', 'test']]
+-    )
++        datasets, split_names=splits,
++        max_train_graphs=max_train_graphs)
+     return dataset
+ 
+ def preformat_Counting(dataset_dir, name):
+@@ -717,28 +748,42 @@ def preformat_COCOSuperpixels(dataset_dir, name, slic_compactness):
+     return dataset
+ 
+ 
+-def join_dataset_splits(datasets):
+-    """Join train, val, test datasets into one dataset object.
++def join_dataset_splits(datasets, split_names=None, max_train_graphs=0):
++    """Join one or more PyG split datasets into one dataset object.
+ 
+     Args:
+-        datasets: list of 3 PyG datasets to merge
++        datasets: list of PyG datasets to merge, in split order
++        split_names: names matching `datasets`; defaults to train/val/test
++        max_train_graphs: optional local-smoke cap on the first split only
+ 
+     Returns:
+-        joint dataset with `split_idxs` property storing the split indices
++        joint dataset with `split_idxs` and `split_names` properties
+     """
+-    assert len(datasets) == 3, "Expecting train, val, test datasets"
+-
+-    n1, n2, n3 = len(datasets[0]), len(datasets[1]), len(datasets[2])
+-    data_list = [datasets[0].get(i) for i in range(n1)] + \
+-                [datasets[1].get(i) for i in range(n2)] + \
+-                [datasets[2].get(i) for i in range(n3)]
++    if split_names is None:
++        split_names = ('train', 'val', 'test')[:len(datasets)]
++    split_names = tuple(split_names)
++    assert len(datasets) == len(split_names), \
++        "split_names must match the number of datasets"
++    assert split_names in (('train',), ('train', 'val'),
++                           ('train', 'val', 'test')), split_names
++
++    lengths = [len(ds) for ds in datasets]
++    if max_train_graphs and split_names[0] == 'train':
++        lengths[0] = min(lengths[0], max_train_graphs)
++
++    data_list = []
++    for ds, n in zip(datasets, lengths):
++        data_list.extend(ds.get(i) for i in range(n))
+ 
+     datasets[0]._indices = None
+     datasets[0]._data_list = data_list
+     datasets[0].data, datasets[0].slices = datasets[0].collate(data_list)
+-    split_idxs = [list(range(n1)),
+-                  list(range(n1, n1 + n2)),
+-                  list(range(n1 + n2, n1 + n2 + n3))]
++    split_idxs = []
++    offset = 0
++    for n in lengths:
++        split_idxs.append(list(range(offset, offset + n)))
++        offset += n
+     datasets[0].split_idxs = split_idxs
++    datasets[0].split_names = list(split_names)
+ 
+     return datasets[0]
+diff --git a/grit/loader/split_generator.py b/grit/loader/split_generator.py
+index a06aee4..0a70191 100644
+--- a/grit/loader/split_generator.py
++++ b/grit/loader/split_generator.py
+@@ -43,9 +43,11 @@ def setup_standard_split(dataset):
+     """
+     split_index = cfg.dataset.split_index
+     task_level = cfg.dataset.task
++    enabled = tuple(getattr(dataset, 'split_names', ('train', 'val', 'test')))
+ 
+     if task_level == 'node':
+-        for split_name in 'train_mask', 'val_mask', 'test_mask':
++        for split in enabled:
++            split_name = f'{split}_mask'
+             mask = getattr(dataset.data, split_name, None)
+             # Check if the train/val/test split mask is available
+             if mask is None:
+@@ -64,7 +66,8 @@ def setup_standard_split(dataset):
+                     raise IndexError(f"This dataset has single standard split")
+ 
+     elif task_level == 'graph':
+-        for split_name in 'train_graph_index', 'val_graph_index', 'test_graph_index':
++        for split in enabled:
++            split_name = f'{split}_graph_index'
+             if not hasattr(dataset.data, split_name):
+                 raise ValueError(f"Missing '{split_name}' for standard split")
+         if split_index != 0:
+@@ -147,16 +150,18 @@ def set_dataset_splits(dataset, splits):
+                 )
+ 
+     task_level = cfg.dataset.task
++    enabled = tuple(getattr(dataset, 'split_names', ('train', 'val', 'test')))
++    if len(splits) != len(enabled):
++        raise ValueError(
++            f"Expected {len(enabled)} splits {enabled}, got {len(splits)}")
+     if task_level == 'node':
+-        split_names = ['train_mask', 'val_mask', 'test_mask']
++        split_names = [f'{split}_mask' for split in enabled]
+         for split_name, split_index in zip(split_names, splits):
+             mask = index2mask(split_index, size=dataset.data.y.shape[0])
+             set_dataset_attr(dataset, split_name, mask, len(mask))
+ 
+     elif task_level == 'graph':
+-        split_names = [
+-            'train_graph_index', 'val_graph_index', 'test_graph_index'
+-        ]
++        split_names = [f'{split}_graph_index' for split in enabled]
+         for split_name, split_index in zip(split_names, splits):
+             set_dataset_attr(dataset, split_name, split_index, len(split_index))
+ 
+diff --git a/grit/logger.py b/grit/logger.py
+index 80cac5a..7fbb2bd 100644
+--- a/grit/logger.py
++++ b/grit/logger.py
+@@ -12,10 +12,16 @@ from torch_geometric.graphgym import get_current_gpu_usage
+ from torch_geometric.graphgym.config import cfg
+ from torch_geometric.graphgym.logger import infer_task, Logger
+ from torch_geometric.graphgym.utils.io import dict_to_json, dict_to_tb
+-from torchmetrics.functional import auroc
++try:  # torchmetrics is only used by classification metrics; regression runs do not need it
++    from torchmetrics.functional import auroc
++except ImportError:  # pragma: no cover - exercised by the minimal reference env
++    auroc = None
+ 
+ import grit.metrics_ogb as metrics_ogb
+-from grit.metric_wrapper import MetricWrapper
++try:  # only used by multilabel classification metrics
++    from grit.metric_wrapper import MetricWrapper
++except ImportError:  # pragma: no cover - minimal reference env
++    MetricWrapper = None
+ 
+ 
+ def accuracy_SBM(targets, pred_int):
+@@ -68,6 +74,8 @@ class CustomLogger(Logger):
+ 
+         if true.shape[0] < 1e7:  # AUROC computation for very large datasets is too slow.
+             # TorchMetrics AUROC on GPU if available.
++            if auroc is None:
++                raise ImportError("torchmetrics is required for classification metrics")
+             auroc_score = auroc(pred_score.to(torch.device(cfg.device)),
+                                 true.to(torch.device(cfg.device)),
+                                 pos_label=1)
+@@ -109,6 +117,8 @@ class CustomLogger(Logger):
+         if true.shape[0] < 1e7:
+             # AUROC computation for very large datasets runs out of memory.
+             # TorchMetrics AUROC on GPU is much faster than sklearn for large ds
++            if auroc is None:
++                raise ImportError("torchmetrics is required for classification metrics")
+             res['auc'] = reformat(auroc(pred_score.to(torch.device(cfg.device)),
+                                         true.to(torch.device(cfg.device)).squeeze(),
+                                         num_classes=pred_score.shape[1],
+@@ -124,6 +134,8 @@ class CustomLogger(Logger):
+         return res
+ 
+     def classification_multilabel(self):
++        if MetricWrapper is None:
++            raise ImportError("torchmetrics is required for multilabel metrics")
+         true, pred_score = torch.cat(self._true), torch.cat(self._pred)
+         reformat = lambda x: round(float(x), cfg.round)
+ 
+diff --git a/grit/train/custom_train.py b/grit/train/custom_train.py
+index 75c8cc8..8e303dd 100644
+--- a/grit/train/custom_train.py
++++ b/grit/train/custom_train.py
+@@ -1,4 +1,6 @@
++import json
+ import logging
++import os
+ import time
+ from os.path import join
+ 
+@@ -15,6 +17,8 @@ from grit.utils import cfg_to_dict, flatten_dict, make_wandb_name, mlflow_log_cf
+ import warnings
+ from collections import defaultdict
+ 
++PROCESS_START = time.time()
++
+ 
+ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation):
+     model.train()
+@@ -95,6 +99,12 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
+     """
+     # loggers[0].tb_writer.add_graph(model.model)
+ 
++    ref = cfg.get('reference', None)
++
++    def ref_get(key, default):
++        if ref is None:
++            return default
++        return ref.get(key, default)
+ 
+     start_epoch = 0
+     if cfg.train.auto_resume:
+@@ -108,7 +118,7 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
+     if cfg.wandb.use:
+         try:
+             import wandb
+-        except:
++        except Exception:
+             raise ImportError('WandB is not installed.')
+         if cfg.wandb.name == '':
+             wandb_name = make_wandb_name(cfg)
+@@ -121,7 +131,7 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
+     if cfg.mlflow.use:
+         try:
+             import mlflow
+-        except:
++        except Exception:
+             raise ImportError('MLflow is not installed.')
+         if cfg.mlflow.name == '':
+             MLFLOW_NAME = make_wandb_name(cfg)
+@@ -135,21 +145,50 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
+         mlflow.start_run(run_name=MLFLOW_NAME)
+         mlflow.pytorch.log_model(model, "model")
+         mlflow_log_cfgdict(cfg_to_dict(cfg), mlflow_func=mlflow)
+-        if cfg.get('cfg_file', None) is not None: mlflow.log_artifact(cfg.cfg_file) # log the whole config-file
+-
+-
++        if cfg.get('cfg_file', None) is not None:
++            mlflow.log_artifact(cfg.cfg_file)
+ 
+     num_splits = len(loggers)
+     split_names = ['val', 'test']
+     full_epoch_times = []
+     perf = [[] for _ in range(num_splits)]
+ 
++    timing_enabled = bool(ref_get('timing', False))
++    stop_after_epoch = int(ref_get('stop_after_epoch', 0) or 0)
++    max_wall_seconds = float(ref_get('max_wall_seconds', 0) or 0)
++    timing_records = []
++    loop_start_unix = time.time()
++    loop_start_perf = time.perf_counter()
++    stop_reason = 'completed_max_epoch'
++    best_epoch = 0
++
++    def cuda_sync():
++        if torch.cuda.is_available():
++            torch.cuda.synchronize()
++
++    def peak_memory():
++        if not torch.cuda.is_available():
++            return {}
++        return {
++            'peak_allocated_mb': torch.cuda.max_memory_allocated() / 2 ** 20,
++            'peak_reserved_mb': torch.cuda.max_memory_reserved() / 2 ** 20,
++        }
++
+     for cur_epoch in range(start_epoch, cfg.optim.max_epoch):
+         # with torch.autograd.detect_anomaly():
+-        start_time = time.perf_counter()
++        epoch_start = time.perf_counter()
++        if torch.cuda.is_available():
++            torch.cuda.reset_peak_memory_stats()
++        cuda_sync()
++        train_start = time.perf_counter()
+         train_epoch(loggers[0], loaders[0], model, optimizer, scheduler,
+                     cfg.optim.batch_accumulation)
++        cuda_sync()
++        train_loop_s = time.perf_counter() - train_start
++
++        write_start = time.perf_counter()
+         perf[0].append(loggers[0].write_epoch(cur_epoch))
++        train_write_s = time.perf_counter() - write_start
+ 
+         # debug = True
+         # if debug:
+@@ -158,15 +197,19 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
+         #         if "running" in k:
+         #             tb_writer.add_text(k, str(v), global_step=cur_epoch)
+ 
++        eval_s = 0.0
+         if is_eval_epoch(cur_epoch):
+             for i in range(1, num_splits):
+                 try:
++                    eval_start = time.perf_counter()
+                     eval_epoch(loggers[i], loaders[i], model,
+                                split=split_names[i - 1])
++                    cuda_sync()
++                    eval_s += time.perf_counter() - eval_start
+                     perf[i].append(loggers[i].write_epoch(cur_epoch))
+                 except Exception as e:
+                     print(e)
+-                    perf[i].append(perf[i][-1])
++                    perf[i].append(perf[i][-1] if perf[i] else perf[0][-1])
+                     # reset the running_mean and running_var for batchnorm is extreme results occurs
+                     warnings.warn(f"NaN occurs on the {split_names[i - 1]}_loss, reset the running-mean and running-var for BN")
+                     for k, v in model.named_buffers():
+@@ -176,31 +219,39 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
+                             v.data = torch.ones_like(v.data) * 1e3
+         else:
+             for i in range(1, num_splits):
+-                perf[i].append(perf[i][-1])
++                perf[i].append(perf[i][-1] if perf[i] else perf[0][-1])
+ 
+-        val_perf = perf[1]
++        val_perf = perf[1] if num_splits > 1 else None
++        sched_start = time.perf_counter()
+         if cfg.optim.scheduler == 'reduce_on_plateau' or "timm" in cfg.optim.scheduler:
++            if val_perf is None:
++                raise RuntimeError(
++                    'reduce_on_plateau/timm schedulers require a validation loader')
+             scheduler.step(val_perf[-1]['loss'])
+         else:
+             scheduler.step()
+-        full_epoch_times.append(time.perf_counter() - start_time)
++        scheduler_s = time.perf_counter() - sched_start
++
+         # Checkpoint with regular frequency (if enabled).
+         if cfg.train.enable_ckpt and not cfg.train.ckpt_best \
+                 and is_ckpt_epoch(cur_epoch):
+             save_ckpt(model, optimizer, scheduler, cur_epoch)
+ 
++        full_epoch_times.append(time.perf_counter() - epoch_start)
++
+         if cfg.wandb.use:
+             run.log(flatten_dict(perf), step=cur_epoch)
+ 
+         if cfg.mlflow.use:
+             mlflow.log_metrics(flatten_dict(perf), step=cur_epoch)
+ 
+-        # Log current best stats on eval epoch.
+-        if is_eval_epoch(cur_epoch):
++        # Log current best stats on eval epoch.  The official test split is
++        # never constructed or evaluated, so only train/val are available.
++        if is_eval_epoch(cur_epoch) and val_perf is not None:
+             best_epoch = np.array([vp['loss'] for vp in val_perf]).argmin()
+             best_epoch_loss = best_epoch
+ 
+-            best_train = best_val = best_test = ""
++            best_train = best_val = ""
+             if cfg.metric_best != 'auto':
+                 # Select again based on val perf of `cfg.metric_best`.
+                 m = cfg.metric_best
+@@ -214,7 +265,6 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
+                 #         mv_metric = np.array([np.mean(mv_metric[max(i-mv_len, 0):i+1]) for i in range(len(mv_metric))])
+                 #     best_epoch = getattr(mv_metric, cfg.metric_agg)()
+ 
+-
+                 if cfg.best_by_loss:
+                     best_epoch = best_epoch_loss
+ 
+@@ -223,11 +273,10 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
+                 else:
+                     best_train = f"train_{m}: {0:.4f}"
+                 best_val = f"val_{m}: {perf[1][best_epoch][m]:.4f}"
+-                best_test = f"test_{m}: {perf[2][best_epoch][m]:.4f}"
+ 
+                 if cfg.wandb.use or cfg.mlflow.use:
+                     bstats = {"best/epoch": best_epoch}
+-                    for i, s in enumerate(['train', 'val', 'test']):
++                    for i, s in enumerate(['train', 'val']):
+                         bstats[f"best/{s}_loss"] = perf[i][best_epoch]['loss']
+                         if m in perf[i][best_epoch]:
+                             bstats[f"best/{s}_{m}"] = perf[i][best_epoch][m]
+@@ -250,7 +299,6 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
+                         mlflow.log_metric("full_epoch_time_avg", np.mean(full_epoch_times))
+                         mlflow.log_metric("full_epoch_time_sum", np.sum(full_epoch_times))
+ 
+-
+             # Checkpoint the best epoch params (if enabled).
+             if cfg.train.enable_ckpt and cfg.train.ckpt_best and \
+                     best_epoch == cur_epoch:
+@@ -265,26 +313,81 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
+                 f"(avg {np.mean(full_epoch_times):.1f}s) | "
+                 f"Best so far: epoch {best_epoch}\t"
+                 f"train_loss: {perf[0][best_epoch]['loss']:.4f} {best_train}\t"
+-                f"val_loss: {perf[1][best_epoch]['loss']:.4f} {best_val}\t" 
+-                f"test_loss: {perf[2][best_epoch]['loss']:.4f} {best_test}\n"
++                f"val_loss: {perf[1][best_epoch]['loss']:.4f} {best_val}\n"
+                 f"-----------------------------------------------------------"
+             )
++        elif is_eval_epoch(cur_epoch):
++            logging.info(
++                f"> Epoch {cur_epoch}: took {time.perf_counter() - epoch_start:.1f}s | "
++                f"train_loss: {perf[0][-1]['loss']:.4f} | no validation loader"
++            )
++
++        if timing_enabled:
++            rec = {
++                'epoch': int(cur_epoch),
++                'train_loop_s': train_loop_s,
++                'train_write_s': train_write_s,
++                'eval_s': eval_s,
++                'scheduler_s': scheduler_s,
++                'epoch_total_s': full_epoch_times[-1],
++                'lr': float(scheduler.get_last_lr()[0]),
++                'train_graphs': int(len(loaders[0].dataset)),
++                'optimizer_steps': int(len(loaders[0])),
++                'batch_size': int(cfg.train.batch_size),
++                'last_batch_size': int(len(loaders[0].dataset) % cfg.train.batch_size
++                                       or cfg.train.batch_size),
++            }
++            rec.update(peak_memory())
++            timing_records.append(rec)
++
++        if stop_after_epoch and (cur_epoch + 1) >= stop_after_epoch:
++            stop_reason = 'stop_after_epoch'
++            break
++        elapsed = time.perf_counter() - loop_start_perf
++        if max_wall_seconds > 0:
++            last = full_epoch_times[-1] if full_epoch_times else 0.0
++            if elapsed >= max_wall_seconds or (elapsed + last) > max_wall_seconds:
++                stop_reason = 'budget_guard_next_epoch'
++                break
+ 
+         if cfg.optim.get('early_stop_by_lr', False):
+             lr = scheduler.get_last_lr()[0]
+             if lr <= cfg.optim.min_lr:
++                stop_reason = 'early_stop_by_lr'
+                 break
+         elif cfg.optim.get("early_stop_by_perf", False):
+             if (cur_epoch - best_epoch) > cfg.optim.patience:
++                stop_reason = 'early_stop_by_perf'
+                 break
+ 
++    if timing_enabled:
++        loop_end_unix = time.time()
++        timed = [r for r in timing_records if r['epoch'] > 0]
++        payload = {
++            'process_start_unix': PROCESS_START,
++            'loop_start_unix': loop_start_unix,
++            'loop_end_unix': loop_end_unix,
++            'loop_wall_s': time.perf_counter() - loop_start_perf,
++            'epochs_run': len(timing_records),
++            'warmup_epochs': 1 if timing_records else 0,
++            'timed_epochs': len(timed),
++            'stop_reason': stop_reason,
++            'records': timing_records,
++        }
++        if timed:
++            payload['timed_epoch_mean_s'] = float(np.mean([r['epoch_total_s'] for r in timed]))
++            payload['timed_epoch_min_s'] = float(np.min([r['epoch_total_s'] for r in timed]))
++            payload['timed_epoch_max_s'] = float(np.max([r['epoch_total_s'] for r in timed]))
++        os.makedirs(cfg.run_dir, exist_ok=True)
++        with open(os.path.join(cfg.run_dir, 'timing.json'), 'w') as f:
++            json.dump(payload, f, indent=2)
++
+     if cfg.train.enable_ckpt and cfg.train.ckpt_best and cfg.mlflow.use:
+         mlflow.log_artifact(get_ckpt_path(get_ckpt_epoch(best_epoch)))
+ 
+     logging.info(f"Avg time per epoch: {np.mean(full_epoch_times):.2f}s")
+     logging.info(f"Total train loop time: {np.sum(full_epoch_times) / 3600:.2f}h")
+ 
+-
+     for logger in loggers:
+         logger.close()
+     if cfg.train.ckpt_clean:

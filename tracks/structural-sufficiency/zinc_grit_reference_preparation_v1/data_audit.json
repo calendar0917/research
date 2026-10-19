@@ -1,0 +1,71 @@
+{
+  "schema": "zinc_grit_reference_data_audit_v1",
+  "source": "official PyG ZINC subset=True, split=train",
+  "root": "/home/calendar/code/research/data/ZINC",
+  "test_read": false,
+  "valid_dataset_constructed": false,
+  "train": {
+    "graphs": 10000,
+    "atom_types": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "bond_types": [
+      1,
+      2,
+      3
+    ],
+    "num_nodes_min": 9,
+    "num_nodes_max": 37,
+    "num_nodes_mean": 23.1664,
+    "label_mean": 0.015297334436047822,
+    "label_std_population": 2.0108199121156365,
+    "label_std_sample": 2.0109204606524456,
+    "label_min": -42.036563873291016,
+    "label_max": 3.8048393726348877
+  },
+  "split_evidence": {
+    "train_rows": 10000,
+    "valid_label_rows_from_cached_npy": 1000,
+    "valid_values_read_for_audit": false,
+    "official_test_rows": null,
+    "official_test_note": "not constructed or read in this preparation"
+  },
+  "research_cache_comparison": {
+    "objects_path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt",
+    "encoded_path": "tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt",
+    "graphs_compared": 10000,
+    "structure_match": 10000,
+    "label_match": 10000,
+    "atom_mismatch_graphs": [],
+    "bond_mismatch_graphs": [],
+    "label_mismatch_graphs": [],
+    "object_n_atoms_mismatch_graphs": [],
+    "max_abs_label_diff": 0.0,
+    "pass": true
+  },
+  "notes": [
+    "Atom type is the 0-based index in PyG x[:,0]; the research cache uses the first 21 columns of atom_feat as its one-hot.",
+    "Bond types are compared after undirected deduplication (u < v).",
+    "No official valid or test graph is fed to a model here."
+  ]
+}
