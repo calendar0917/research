@@ -1,0 +1,729 @@
+{
+  "protocol_id": "zinc-bond-conditioned-context-attention-v1",
+  "posthoc_id": "posthoc-frozen-mode-error-v1",
+  "stage": "posthoc_frozen_mode_error",
+  "status": "POST_HOC_EXPLORATORY",
+  "created_utc": "2026-10-19T12:09:16Z",
+  "git_commit": "4e1ae8451a4a1e00a68a38e9e845dfa574e24694",
+  "question": "Under the same frozen trained weights, does restoring the uniform (P3-Null-equivalent) context mapping reduce raw-y MAE, and does it recover P3?",
+  "scope": {
+    "new_training": false,
+    "inference_run": false,
+    "gpu_used": false,
+    "official_test_loaded": false,
+    "hyperparameter_search": false,
+    "endpoints_fixed": true,
+    "seed_count": 2,
+    "n_valid": 1000,
+    "metric": "raw-y MAE",
+    "seed_aggregation": "per-seed MAE first, then arithmetic mean of the two seed MAEs; no prediction ensembling",
+    "bootstrap": {
+      "n_resamples": 5000,
+      "bootstrap_seed": 20261019,
+      "unit": "molecule",
+      "shared_resample_index_across_seeds": true,
+      "note": "d_i = mean_s (|e_ref,s,i| - |e_cand,s,i|), then molecule-level bootstrap; the same molecule index is therefore used for both seeds"
+    },
+    "posthoc_note": "Proposed after the original official-valid scores were seen. Not an independent confirmation and not a blind test."
+  },
+  "labels": {
+    "path": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/valid_y_read_once.npy",
+    "file_sha256": "dacae6ff2c288fa25b5b30ccf73e7b261d380c377ed0caf8fa4ef656651ff808",
+    "array_sha256_float32": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f",
+    "array_sha256_float64": "8f6ee636fd23ee977984e49cdc18f352a61bcf24a4987ae11402a402c41d4b45",
+    "matches_valid_metrics": true,
+    "matches_valid_read_lock": true,
+    "historical_read_count": 1,
+    "historical_reread": false,
+    "posthoc_access_to_existing_labels": true,
+    "note": "The frozen read_count=1 record is unchanged. This post-hoc analysis additionally read the same cached valid labels; the track must not be described as having only one valid-label use."
+  },
+  "endpoints": {
+    "A": {
+      "short": "P3*Null",
+      "description": "P3-frozen weights + P3 Null context (reference)",
+      "weights": "P3",
+      "mode": "Null",
+      "source": "historical frozen P3 valid prediction",
+      "mae": {
+        "0": 0.07910149778419873,
+        "1": 0.08058639967715135,
+        "seed_mean": 0.07984394873067505
+      },
+      "source_arrays": {
+        "0": "P3_s0",
+        "1": "P3_s1"
+      }
+    },
+    "B": {
+      "short": "Cw*C",
+      "description": "C-trained weights + C mode (original formal C)",
+      "weights": "C",
+      "mode": "C",
+      "source": "official frozen valid prediction (mechanism C-mode cross-check)",
+      "mae": {
+        "0": 0.08747698889294406,
+        "1": 0.08711518406489631,
+        "seed_mean": 0.08729608647892018
+      },
+      "source_arrays": {
+        "0": "official_C_s0",
+        "1": "official_C_s1"
+      }
+    },
+    "C": {
+      "short": "Cw*G",
+      "description": "C-trained weights + G mode (same-weight marginalisation)",
+      "weights": "C",
+      "mode": "G",
+      "source": "frozen mechanism prediction",
+      "mae": {
+        "0": 0.08750492284813663,
+        "1": 0.08830817046010633,
+        "seed_mean": 0.08790654665412148
+      },
+      "source_arrays": {
+        "0": "mech_C_s0_G",
+        "1": "mech_C_s1_G"
+      }
+    },
+    "D": {
+      "short": "Cw*U",
+      "description": "C-trained weights + uniform mode (same-weight Null mapping)",
+      "weights": "C",
+      "mode": "uniform",
+      "source": "frozen mechanism prediction",
+      "mae": {
+        "0": 0.13558154579246184,
+        "1": 0.12350672767678043,
+        "seed_mean": 0.12954413673462115
+      },
+      "source_arrays": {
+        "0": "mech_C_s0_uniform",
+        "1": "mech_C_s1_uniform"
+      }
+    },
+    "E": {
+      "short": "Gw*G",
+      "description": "G-trained weights + G mode (original formal G)",
+      "weights": "G",
+      "mode": "G",
+      "source": "official frozen valid prediction (mechanism G-mode cross-check)",
+      "mae": {
+        "0": 0.08518237390642752,
+        "1": 0.08658986142737558,
+        "seed_mean": 0.08588611766690155
+      },
+      "source_arrays": {
+        "0": "official_G_s0",
+        "1": "official_G_s1"
+      }
+    },
+    "F": {
+      "short": "Gw*U",
+      "description": "G-trained weights + uniform mode (same-weight Null mapping)",
+      "weights": "G",
+      "mode": "uniform",
+      "source": "frozen mechanism prediction",
+      "mae": {
+        "0": 0.13618717090779683,
+        "1": 0.12423851068591465,
+        "seed_mean": 0.13021284079685574
+      },
+      "source_arrays": {
+        "0": "mech_G_s0_uniform",
+        "1": "mech_G_s1_uniform"
+      }
+    }
+  },
+  "comparisons": {
+    "D_vs_B": {
+      "candidate_endpoint": "D",
+      "reference_endpoint": "B",
+      "candidate": "C-trained weights + uniform mode (same-weight Null mapping)",
+      "reference": "C-trained weights + C mode (original formal C)",
+      "definition": "gain = MAE(B) - MAE(D); positive = D better",
+      "per_seed_gain": {
+        "0": -0.048104556899517786,
+        "1": -0.036391543611884125
+      },
+      "mean_gain": -0.042248050255700956,
+      "bootstrap_mae_delta": {
+        "mean_diff": -0.04224805025570095,
+        "ci95_low": -0.06445442683836446,
+        "ci95_high": -0.029009097223356366,
+        "better_fraction": 0.267,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true
+      },
+      "n": 1000
+    },
+    "D_vs_A": {
+      "candidate_endpoint": "D",
+      "reference_endpoint": "A",
+      "candidate": "C-trained weights + uniform mode (same-weight Null mapping)",
+      "reference": "P3-frozen weights + P3 Null context (reference)",
+      "definition": "gain = MAE(A) - MAE(D); positive = D better",
+      "per_seed_gain": {
+        "0": -0.05648004800826312,
+        "1": -0.04292032799962908
+      },
+      "mean_gain": -0.0497001880039461,
+      "bootstrap_mae_delta": {
+        "mean_diff": -0.04970018800394609,
+        "ci95_low": -0.07656273829978891,
+        "ci95_high": -0.03381936106486246,
+        "better_fraction": 0.251,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true
+      },
+      "n": 1000
+    },
+    "F_vs_E": {
+      "candidate_endpoint": "F",
+      "reference_endpoint": "E",
+      "candidate": "G-trained weights + uniform mode (same-weight Null mapping)",
+      "reference": "G-trained weights + G mode (original formal G)",
+      "definition": "gain = MAE(E) - MAE(F); positive = F better",
+      "per_seed_gain": {
+        "0": -0.05100479700136931,
+        "1": -0.03764864925853907
+      },
+      "mean_gain": -0.04432672312995419,
+      "bootstrap_mae_delta": {
+        "mean_diff": -0.04432672312995419,
+        "ci95_low": -0.06625792687655194,
+        "ci95_high": -0.030631317240814696,
+        "better_fraction": 0.284,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true
+      },
+      "n": 1000
+    },
+    "F_vs_A": {
+      "candidate_endpoint": "F",
+      "reference_endpoint": "A",
+      "candidate": "G-trained weights + uniform mode (same-weight Null mapping)",
+      "reference": "P3-frozen weights + P3 Null context (reference)",
+      "definition": "gain = MAE(A) - MAE(F); positive = F better",
+      "per_seed_gain": {
+        "0": -0.05708567312359811,
+        "1": -0.0436521110087633
+      },
+      "mean_gain": -0.050368892066180705,
+      "bootstrap_mae_delta": {
+        "mean_diff": -0.050368892066180705,
+        "ci95_low": -0.07733749897844391,
+        "ci95_high": -0.03444758475350682,
+        "better_fraction": 0.284,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true
+      },
+      "n": 1000
+    },
+    "C_vs_B": {
+      "candidate_endpoint": "C",
+      "reference_endpoint": "B",
+      "candidate": "C-trained weights + G mode (same-weight marginalisation)",
+      "reference": "C-trained weights + C mode (original formal C)",
+      "definition": "gain = MAE(B) - MAE(C); positive = C better",
+      "per_seed_gain": {
+        "0": -2.793395519257169e-05,
+        "1": -0.0011929863952100245
+      },
+      "mean_gain": -0.0006104601752012981,
+      "bootstrap_mae_delta": {
+        "mean_diff": -0.0006104601752012968,
+        "ci95_low": -0.0010822901343461124,
+        "ci95_high": -0.00013908466421999054,
+        "better_fraction": 0.442,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true
+      },
+      "n": 1000
+    },
+    "C_vs_A": {
+      "candidate_endpoint": "C",
+      "reference_endpoint": "A",
+      "candidate": "C-trained weights + G mode (same-weight marginalisation)",
+      "reference": "P3-frozen weights + P3 Null context (reference)",
+      "definition": "gain = MAE(A) - MAE(C); positive = C better",
+      "per_seed_gain": {
+        "0": -0.008403425063937903,
+        "1": -0.007721770782954981
+      },
+      "mean_gain": -0.008062597923446442,
+      "bootstrap_mae_delta": {
+        "mean_diff": -0.008062597923446447,
+        "ci95_low": -0.014315552153473254,
+        "ci95_high": -0.00303506894697203,
+        "better_fraction": 0.433,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true
+      },
+      "n": 1000
+    }
+  },
+  "robustness": {
+    "all": {
+      "n": 1000,
+      "rows_sha256": "702746827e553786bb026ac120cb58745fef3d3f554c33891809001cc37639f0",
+      "definition": "all 1,000 valid molecules",
+      "mae": {
+        "A": {
+          "0": 0.07910149778419873,
+          "1": 0.08058639967715135,
+          "seed_mean": 0.07984394873067505
+        },
+        "B": {
+          "0": 0.08747698889294406,
+          "1": 0.08711518406489631,
+          "seed_mean": 0.08729608647892018
+        },
+        "C": {
+          "0": 0.08750492284813663,
+          "1": 0.08830817046010633,
+          "seed_mean": 0.08790654665412148
+        },
+        "D": {
+          "0": 0.13558154579246184,
+          "1": 0.12350672767678043,
+          "seed_mean": 0.12954413673462115
+        },
+        "E": {
+          "0": 0.08518237390642752,
+          "1": 0.08658986142737558,
+          "seed_mean": 0.08588611766690155
+        },
+        "F": {
+          "0": 0.13618717090779683,
+          "1": 0.12423851068591465,
+          "seed_mean": 0.13021284079685574
+        }
+      },
+      "gains": {
+        "D_vs_B": {
+          "per_seed_gain": {
+            "0": -0.048104556899517786,
+            "1": -0.036391543611884125
+          },
+          "mean_gain": -0.042248050255700956
+        },
+        "D_vs_A": {
+          "per_seed_gain": {
+            "0": -0.05648004800826312,
+            "1": -0.04292032799962908
+          },
+          "mean_gain": -0.0497001880039461
+        },
+        "F_vs_E": {
+          "per_seed_gain": {
+            "0": -0.05100479700136931,
+            "1": -0.03764864925853907
+          },
+          "mean_gain": -0.04432672312995419
+        },
+        "F_vs_A": {
+          "per_seed_gain": {
+            "0": -0.05708567312359811,
+            "1": -0.0436521110087633
+          },
+          "mean_gain": -0.050368892066180705
+        },
+        "C_vs_B": {
+          "per_seed_gain": {
+            "0": -2.793395519257169e-05,
+            "1": -0.0011929863952100245
+          },
+          "mean_gain": -0.0006104601752012981
+        },
+        "C_vs_A": {
+          "per_seed_gain": {
+            "0": -0.008403425063937903,
+            "1": -0.007721770782954981
+          },
+          "mean_gain": -0.008062597923446442
+        }
+      }
+    },
+    "ordinary_y_gt_minus3": {
+      "n": 935,
+      "rows_sha256": "5c8724b913215f489148b3f988bf53956d610d3937e91cd5fdec8b356b0e047a",
+      "definition": "y > -3 (original definition)",
+      "mae": {
+        "A": {
+          "0": 0.06815294902267452,
+          "1": 0.06802663000164813,
+          "seed_mean": 0.06808978951216133
+        },
+        "B": {
+          "0": 0.07488593963929825,
+          "1": 0.06996890567436087,
+          "seed_mean": 0.07242742265682955
+        },
+        "C": {
+          "0": 0.07488678379406416,
+          "1": 0.07134400245174517,
+          "seed_mean": 0.07311539312290466
+        },
+        "D": {
+          "0": 0.10848171872723061,
+          "1": 0.09814981927760294,
+          "seed_mean": 0.10331576900241678
+        },
+        "E": {
+          "0": 0.0710650695467313,
+          "1": 0.07060063309702315,
+          "seed_mean": 0.07083285132187722
+        },
+        "F": {
+          "0": 0.10952642249226081,
+          "1": 0.09832951584575637,
+          "seed_mean": 0.1039279691690086
+        }
+      },
+      "gains": {
+        "D_vs_B": {
+          "per_seed_gain": {
+            "0": -0.03359577908793236,
+            "1": -0.02818091360324207
+          },
+          "mean_gain": -0.030888346345587216
+        },
+        "D_vs_A": {
+          "per_seed_gain": {
+            "0": -0.040328769704556094,
+            "1": -0.03012318927595481
+          },
+          "mean_gain": -0.03522597949025545
+        },
+        "F_vs_E": {
+          "per_seed_gain": {
+            "0": -0.03846135294552952,
+            "1": -0.027728882748733225
+          },
+          "mean_gain": -0.03309511784713137
+        },
+        "F_vs_A": {
+          "per_seed_gain": {
+            "0": -0.041373473469586294,
+            "1": -0.030302885844108243
+          },
+          "mean_gain": -0.03583817965684727
+        },
+        "C_vs_B": {
+          "per_seed_gain": {
+            "0": -8.441547659082671e-07,
+            "1": -0.001375096777384302
+          },
+          "mean_gain": -0.0006879704660751051
+        },
+        "C_vs_A": {
+          "per_seed_gain": {
+            "0": -0.006733834771389641,
+            "1": -0.003317372450097042
+          },
+          "mean_gain": -0.005025603610743341
+        }
+      }
+    },
+    "drop_p3_worst10_original_mask": {
+      "n": 990,
+      "rows_sha256": "9d28e332250811ab248a99f963d5bb3e75b452fa45f33b02a14ead887c438474",
+      "definition": "drop the 10 rows with the largest mean P3 absolute error; mask fixed from the original P3 prediction and y",
+      "mae": {
+        "A": {
+          "0": 0.06533667823726622,
+          "1": 0.06653386787458493,
+          "seed_mean": 0.06593527305592557
+        },
+        "B": {
+          "0": 0.07268362396362595,
+          "1": 0.06852944159516923,
+          "seed_mean": 0.07060653277939759
+        },
+        "C": {
+          "0": 0.07274099650476457,
+          "1": 0.06987654639007006,
+          "seed_mean": 0.07130877144741732
+        },
+        "D": {
+          "0": 0.10847235617005604,
+          "1": 0.0965374378430436,
+          "seed_mean": 0.10250489700654983
+        },
+        "E": {
+          "0": 0.06935334880218955,
+          "1": 0.06957489554341083,
+          "seed_mean": 0.06946412217280018
+        },
+        "F": {
+          "0": 0.10908692547612861,
+          "1": 0.09712490532259137,
+          "seed_mean": 0.10310591539935998
+        }
+      },
+      "gains": {
+        "D_vs_B": {
+          "per_seed_gain": {
+            "0": -0.0357887322064301,
+            "1": -0.028007996247874367
+          },
+          "mean_gain": -0.03189836422715223
+        },
+        "D_vs_A": {
+          "per_seed_gain": {
+            "0": -0.04313567793278983,
+            "1": -0.030003569968458668
+          },
+          "mean_gain": -0.03656962395062425
+        },
+        "F_vs_E": {
+          "per_seed_gain": {
+            "0": -0.039733576673939064,
+            "1": -0.02755000977918054
+          },
+          "mean_gain": -0.0336417932265598
+        },
+        "F_vs_A": {
+          "per_seed_gain": {
+            "0": -0.043750247238862394,
+            "1": -0.03059103744800644
+          },
+          "mean_gain": -0.03717064234343442
+        },
+        "C_vs_B": {
+          "per_seed_gain": {
+            "0": -5.7372541138620003e-05,
+            "1": -0.0013471047949008275
+          },
+          "mean_gain": -0.0007022386680197237
+        },
+        "C_vs_A": {
+          "per_seed_gain": {
+            "0": -0.00740431826749835,
+            "1": -0.0033426785154851285
+          },
+          "mean_gain": -0.005373498391491739
+        }
+      }
+    },
+    "without_row_172": {
+      "n": 999,
+      "rows_sha256": "c334d89f7ea2274bf92090b601f08e0c715e9249db990e48254b537498f50dc9",
+      "definition": "drop the original extreme row 172",
+      "mae": {
+        "A": {
+          "0": 0.07319749381622295,
+          "1": 0.07617997848986974,
+          "seed_mean": 0.07468873615304635
+        },
+        "B": {
+          "0": 0.0809956571651605,
+          "1": 0.07869628360778144,
+          "seed_mean": 0.07984597038647097
+        },
+        "C": {
+          "0": 0.08104025826478765,
+          "1": 0.07994319406799269,
+          "seed_mean": 0.08049172616639017
+        },
+        "D": {
+          "0": 0.11829882432832275,
+          "1": 0.10661640275148321,
+          "seed_mean": 0.11245761353990298
+        },
+        "E": {
+          "0": 0.0774503884504566,
+          "1": 0.0793233968221836,
+          "seed_mean": 0.0783868926363201
+        },
+        "F": {
+          "0": 0.11968851559328146,
+          "1": 0.10690302422191636,
+          "seed_mean": 0.1132957699075989
+        }
+      },
+      "gains": {
+        "D_vs_B": {
+          "per_seed_gain": {
+            "0": -0.03730316716316226,
+            "1": -0.027920119143701766
+          },
+          "mean_gain": -0.03261164315343201
+        },
+        "D_vs_A": {
+          "per_seed_gain": {
+            "0": -0.0451013305120998,
+            "1": -0.03043642426161347
+          },
+          "mean_gain": -0.037768877386856636
+        },
+        "F_vs_E": {
+          "per_seed_gain": {
+            "0": -0.04223812714282486,
+            "1": -0.027579627399732756
+          },
+          "mean_gain": -0.03490887727127881
+        },
+        "F_vs_A": {
+          "per_seed_gain": {
+            "0": -0.04649102177705851,
+            "1": -0.030723045732046622
+          },
+          "mean_gain": -0.038607033754552565
+        },
+        "C_vs_B": {
+          "per_seed_gain": {
+            "0": -4.460109962715897e-05,
+            "1": -0.001246910460211248
+          },
+          "mean_gain": -0.0006457557799192035
+        },
+        "C_vs_A": {
+          "per_seed_gain": {
+            "0": -0.007842764448564701,
+            "1": -0.0037632155781229526
+          },
+          "mean_gain": -0.005802990013343827
+        }
+      }
+    }
+  },
+  "checks": {
+    "all_arrays_present": true,
+    "all_file_hashes_match": true,
+    "all_array_hashes_match": true,
+    "all_rows_are_original_order_0_999": true,
+    "all_predictions_finite": true,
+    "label_hashes_match_valid_metrics_and_read_lock": true,
+    "p3_prediction_matches_original_score_record": true,
+    "p3_mae_matches_original_score_record": {
+      "0": {
+        "got": 0.07910149778419873,
+        "valid_metrics_per_seed_mae": 0.07910149778419873,
+        "recorded_historical_mae": 0.07910149778419873,
+        "p3_reuse_audit_recorded_mae": 0.07910149778419873,
+        "abs_diff": 0.0
+      },
+      "1": {
+        "got": 0.08058639967715135,
+        "valid_metrics_per_seed_mae": 0.08058639967715135,
+        "recorded_historical_mae": 0.08058639967715135,
+        "p3_reuse_audit_recorded_mae": 0.08058639967715135,
+        "abs_diff": 0.0
+      }
+    },
+    "c_mode_reproduces_official_valid": {
+      "0": {
+        "max_abs_diff": 1.9073486328125e-06,
+        "within_1e-5": true,
+        "mechanism_record_primary_max_abs_diff": 1.9073486328125e-06,
+        "mechanism_record_within_1e-5": true
+      },
+      "1": {
+        "max_abs_diff": 2.86102294921875e-06,
+        "within_1e-5": true,
+        "mechanism_record_primary_max_abs_diff": 2.86102294921875e-06,
+        "mechanism_record_within_1e-5": true
+      }
+    },
+    "g_mode_reproduces_official_valid": {
+      "0": {
+        "max_abs_diff": 2.86102294921875e-06,
+        "within_1e-5": true,
+        "mechanism_record_primary_max_abs_diff": 2.86102294921875e-06,
+        "mechanism_record_within_1e-5": true
+      },
+      "1": {
+        "max_abs_diff": 3.814697265625e-06,
+        "within_1e-5": true,
+        "mechanism_record_primary_max_abs_diff": 3.814697265625e-06,
+        "mechanism_record_within_1e-5": true
+      }
+    },
+    "original_contrasts_reproduced": {
+      "max_abs_diff_vs_valid_metrics": 0.0,
+      "tolerance": 1e-12,
+      "all_six_contrasts": true
+    },
+    "original_model_mae_reproduced": {
+      "max_abs_diff_vs_valid_metrics": 0.0,
+      "tolerance": 1e-12
+    },
+    "masks": {
+      "all": {
+        "n": 1000,
+        "rows_sha256": "702746827e553786bb026ac120cb58745fef3d3f554c33891809001cc37639f0",
+        "matches_valid_metrics": true
+      },
+      "ordinary_y_gt_minus3": {
+        "n": 935,
+        "rows_sha256": "5c8724b913215f489148b3f988bf53956d610d3937e91cd5fdec8b356b0e047a",
+        "matches_valid_metrics": true
+      },
+      "without_extreme_valid172": {
+        "n": 999,
+        "rows_sha256": "c334d89f7ea2274bf92090b601f08e0c715e9249db990e48254b537498f50dc9",
+        "matches_valid_metrics": true
+      },
+      "drop_p3_worst10_original_mask": {
+        "n": 990,
+        "rows_sha256": "9d28e332250811ab248a99f963d5bb3e75b452fa45f33b02a14ead887c438474",
+        "rows": [
+          172,
+          917,
+          753,
+          659,
+          260,
+          403,
+          447,
+          224,
+          31,
+          267
+        ],
+        "selection": "original error_rank(P3, y)[:10]; fixed before this analysis",
+        "matches_valid_metrics": null
+      }
+    },
+    "drop_p3_worst10_gain_reproduced": {
+      "contrasts": {
+        "C_minus_P3": -0.004671259723472023,
+        "G_minus_P3": -0.0035288491168746143,
+        "F_minus_P3": -0.000904185917567123
+      },
+      "matches_valid_metrics": true
+    },
+    "valid_read_lock_untouched": true,
+    "valid_read_lock_read_count": 1,
+    "official_test_loaded": false,
+    "gpu_used": false,
+    "training_or_inference_run": false,
+    "posthoc_labels_access_recorded": true
+  },
+  "interpretation": {
+    "uniform_vs_own_mode": {
+      "D_vs_B_mean_gain": -0.042248050255700956,
+      "F_vs_E_mean_gain": -0.04432672312995419,
+      "reading": "Restoring uniform is much worse than the model's own mode on both seeds; this is not an MAE improvement."
+    },
+    "uniform_vs_P3": {
+      "D_vs_A_mean_gain": -0.0497001880039461,
+      "F_vs_A_mean_gain": -0.050368892066180705,
+      "reading": "Uniform does not recover P3; it is substantially worse. Inference-time restoration is not a rescue path."
+    },
+    "coadaptation": "The large same-weight degradation supports co-adaptation between the attention context and the rest of the trained network. It does not show that the learned reweighting is beneficial, and it means the original valid gap should not be read as a clean causal effect of the reweighting operation alone.",
+    "posthoc_caveat": "Same-weight mode switching can be off the training distribution. This is an intervention diagnostic, not a chemistry claim and not an estimate of training-randomness uncertainty."
+  },
+  "recommendation": {
+    "continue_attention_branch": false,
+    "reason": "No same-weight mode restores P3, and uniform is much worse than both the original modes and P3. The original negative result is strengthened, not rescued.",
+    "next_step": "Do not start new training from this analysis. If the track later tests a zero-initialised gated correction, treat it as a separate pre-registered hypothesis with a fresh confirmation endpoint; this post-hoc result does not justify it."
+  }
+}
