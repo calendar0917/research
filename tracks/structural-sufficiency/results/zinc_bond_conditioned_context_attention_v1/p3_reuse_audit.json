@@ -1,0 +1,389 @@
+{
+  "protocol_id": "zinc-bond-conditioned-context-attention-v1",
+  "stage": "audit",
+  "created_utc": "2026-10-19T09:53:11Z",
+  "frozen_inputs": {
+    "objects_train10k": {
+      "name": "objects_train10k",
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt",
+      "sha256": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d"
+    },
+    "objects_valid": {
+      "name": "objects_valid",
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt",
+      "sha256": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c"
+    },
+    "prep_train10k": {
+      "name": "prep_train10k",
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json",
+      "sha256": "d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a"
+    },
+    "encoded_train": {
+      "name": "encoded_train",
+      "path": "tracks/ksvd/results/zinc_static_dictionary_pair/cache/encoded_train.pt",
+      "sha256": "10d764955ef1b040a317105be1dd3fbb2e81292b03b79e7d078cce08e18e5f1d"
+    },
+    "pretrain_encoder_s0": {
+      "name": "pretrain_encoder_s0",
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+    },
+    "pretrain_encoder_s1": {
+      "name": "pretrain_encoder_s1",
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+      "sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a"
+    },
+    "soup_R3_seed0": {
+      "name": "soup_R3_seed0",
+      "path": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed0.pt",
+      "sha256": "a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782"
+    },
+    "soup_R3_seed1": {
+      "name": "soup_R3_seed1",
+      "path": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed1.pt",
+      "sha256": "b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9"
+    }
+  },
+  "code_hashes": {
+    "current": {
+      "structural_relation_composer_v1": "1c83a97ece60a151c6fa0c1ad5d2022b470ede9356b23d8d7b1e6b62daa71f4f",
+      "structural_relation_objects_v1": "8f4ba44dc3c047d674a1a6832f7ed8265eaa2457b15e820b3973a4cbd3a0861c",
+      "bjoc_masked_pretraining_v1": "f27dbfe36ac5a9a0a1915320dba7c955115ccfa36e6b4755f2d2d62d8efb1489",
+      "phase2a_models": "f74c9691cc6835af814386f3ff1035e64fa161a3cc1d42237c6a7faf27cd62de"
+    },
+    "expected_when_p3_was_evaluated": {
+      "structural_relation_composer_v1": "1c83a97ece60a151c6fa0c1ad5d2022b470ede9356b23d8d7b1e6b62daa71f4f",
+      "structural_relation_objects_v1": "8f4ba44dc3c047d674a1a6832f7ed8265eaa2457b15e820b3973a4cbd3a0861c",
+      "bjoc_masked_pretraining_v1": "f27dbfe36ac5a9a0a1915320dba7c955115ccfa36e6b4755f2d2d62d8efb1489",
+      "phase2a_models": "f74c9691cc6835af814386f3ff1035e64fa161a3cc1d42237c6a7faf27cd62de"
+    },
+    "all_match": true,
+    "bjoc_perfmech_long_v1_current": "cb9796cb45f6fe048f2fd63e96798937cdbd802b28dbad34b2aafdbef0cbafe8"
+  },
+  "round_code": {
+    "bcca_models.py": "b1c6eb8d53250350bd1b560a42f857ff29c9efa6007209d9d8994321166d9dc5",
+    "bcca_common.py": "066552d3cd0637b78ff404dedf4646c40fb3a1281a4f3924ff6021cb5c60e0ab",
+    "bcca_runner.py": "0dc0b2bb745adc3a577b8b7e750089d4d6efeb0c686d0b2eafa83f0a67419658",
+    "config": "5b89e8c0be3ef1fc472eb5770a6fb854358b4c4967845cdbe0783193af16efa9",
+    "protocol": "ed7b858018c801d59db3bd5d65350f22c05945441b54827f7cfdeae425b9a142"
+  },
+  "data": {
+    "n_train_objects": 10000,
+    "n_valid_objects": 1000,
+    "train_y_sha256_float64": "924bc5e62c0ff093bae6ff4d34e54fcc36781df23e7b60e7521bde573d25a83a",
+    "standardiser": {
+      "fit_only": true,
+      "n_fit": 10000
+    },
+    "label_free": true
+  },
+  "per_seed": {
+    "0": {
+      "P3": {
+        "parameters": 413505,
+        "checks": {
+          "trunk_matches_base_init": true,
+          "scratch_full_matches_r3": true,
+          "scratch_group_matches_r3": true,
+          "scratch_encoder_matches_r3": true,
+          "encoder_used_matches_r3": true,
+          "encoder_file_matches_record": true,
+          "shared_rng_untouched": true
+        },
+        "shared_state_sha256": "676d3072184e3a48b266b523be0e7a0f16ae7d70744add317a9336403472588c",
+        "extra_init": {
+          "variant": "P3",
+          "extra_state_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "module_audit_pass": true
+      },
+      "C": {
+        "parameters": 419649,
+        "checks": {
+          "trunk_matches_base_init": true,
+          "scratch_full_matches_r3": true,
+          "scratch_group_matches_r3": true,
+          "scratch_encoder_matches_r3": true,
+          "encoder_used_matches_r3": true,
+          "encoder_file_matches_record": true,
+          "shared_rng_untouched": true
+        },
+        "shared_state_sha256": "676d3072184e3a48b266b523be0e7a0f16ae7d70744add317a9336403472588c",
+        "extra_init": {
+          "variant": "C",
+          "q_weight_abs_sum": 0.0,
+          "k_weight_sha256": "612ae17be09ab48b6708a712e4cbbb1433263f0473a9f2ff8976b457d0c33ec5",
+          "q_parameters": 3072,
+          "k_parameters": 3072,
+          "extra_state_sha256": "2f6caa2bbb1b42f12877f4d71be12dddc77eaf0230feaf51fa829547cc952386"
+        },
+        "module_audit_pass": true
+      },
+      "G": {
+        "parameters": 419649,
+        "checks": {
+          "trunk_matches_base_init": true,
+          "scratch_full_matches_r3": true,
+          "scratch_group_matches_r3": true,
+          "scratch_encoder_matches_r3": true,
+          "encoder_used_matches_r3": true,
+          "encoder_file_matches_record": true,
+          "shared_rng_untouched": true
+        },
+        "shared_state_sha256": "676d3072184e3a48b266b523be0e7a0f16ae7d70744add317a9336403472588c",
+        "extra_init": {
+          "variant": "G",
+          "q_weight_abs_sum": 0.0,
+          "k_weight_sha256": "612ae17be09ab48b6708a712e4cbbb1433263f0473a9f2ff8976b457d0c33ec5",
+          "q_parameters": 3072,
+          "k_parameters": 3072,
+          "extra_state_sha256": "2f6caa2bbb1b42f12877f4d71be12dddc77eaf0230feaf51fa829547cc952386"
+        },
+        "module_audit_pass": true
+      },
+      "F": {
+        "parameters": 419649,
+        "checks": {
+          "trunk_matches_base_init": true,
+          "scratch_full_matches_r3": true,
+          "scratch_group_matches_r3": true,
+          "scratch_encoder_matches_r3": true,
+          "encoder_used_matches_r3": true,
+          "encoder_file_matches_record": true,
+          "shared_rng_untouched": true
+        },
+        "shared_state_sha256": "676d3072184e3a48b266b523be0e7a0f16ae7d70744add317a9336403472588c",
+        "extra_init": {
+          "variant": "F",
+          "u_weight_abs_sum": 0.0,
+          "t_weight_sha256": "612ae17be09ab48b6708a712e4cbbb1433263f0473a9f2ff8976b457d0c33ec5",
+          "t_parameters": 3072,
+          "u_parameters": 3072,
+          "extra_state_sha256": "b30b7c2bfeee4e59bc91e4526f36a524c1ab81fea51322c7ff5f005187ae3d2a"
+        },
+        "module_audit_pass": true
+      },
+      "C_G_state_bitwise_equal": true,
+      "K_C_equals_K_G": true,
+      "T_F_equals_K_C": true,
+      "Q_C_zero": 0.0,
+      "Q_G_zero": 0.0,
+      "U_F_zero": 0.0,
+      "C_G_shared_equal": true,
+      "batch_order_sha256": "3c964a71acc1ca817567cac916a7a59a12b40f750dbceee0848f614a2c71428f",
+      "batch_order_matches_r3": true
+    },
+    "1": {
+      "P3": {
+        "parameters": 413505,
+        "checks": {
+          "trunk_matches_base_init": true,
+          "scratch_full_matches_r3": true,
+          "scratch_group_matches_r3": true,
+          "scratch_encoder_matches_r3": true,
+          "encoder_used_matches_r3": true,
+          "encoder_file_matches_record": true,
+          "shared_rng_untouched": true
+        },
+        "shared_state_sha256": "0fd4e09f806a0b8258c5c265368125ff4a09e16b888ea3fe92ca071eb5339f0c",
+        "extra_init": {
+          "variant": "P3",
+          "extra_state_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "module_audit_pass": true
+      },
+      "C": {
+        "parameters": 419649,
+        "checks": {
+          "trunk_matches_base_init": true,
+          "scratch_full_matches_r3": true,
+          "scratch_group_matches_r3": true,
+          "scratch_encoder_matches_r3": true,
+          "encoder_used_matches_r3": true,
+          "encoder_file_matches_record": true,
+          "shared_rng_untouched": true
+        },
+        "shared_state_sha256": "0fd4e09f806a0b8258c5c265368125ff4a09e16b888ea3fe92ca071eb5339f0c",
+        "extra_init": {
+          "variant": "C",
+          "q_weight_abs_sum": 0.0,
+          "k_weight_sha256": "c0ec7c67e6c25de695c790915d170ae4aa8f18379c3b041a51362ef8a9ab1ca4",
+          "q_parameters": 3072,
+          "k_parameters": 3072,
+          "extra_state_sha256": "4c5625647e72d250e6c538386093d89cceda67ca818d0f3911cf54d128db5550"
+        },
+        "module_audit_pass": true
+      },
+      "G": {
+        "parameters": 419649,
+        "checks": {
+          "trunk_matches_base_init": true,
+          "scratch_full_matches_r3": true,
+          "scratch_group_matches_r3": true,
+          "scratch_encoder_matches_r3": true,
+          "encoder_used_matches_r3": true,
+          "encoder_file_matches_record": true,
+          "shared_rng_untouched": true
+        },
+        "shared_state_sha256": "0fd4e09f806a0b8258c5c265368125ff4a09e16b888ea3fe92ca071eb5339f0c",
+        "extra_init": {
+          "variant": "G",
+          "q_weight_abs_sum": 0.0,
+          "k_weight_sha256": "c0ec7c67e6c25de695c790915d170ae4aa8f18379c3b041a51362ef8a9ab1ca4",
+          "q_parameters": 3072,
+          "k_parameters": 3072,
+          "extra_state_sha256": "4c5625647e72d250e6c538386093d89cceda67ca818d0f3911cf54d128db5550"
+        },
+        "module_audit_pass": true
+      },
+      "F": {
+        "parameters": 419649,
+        "checks": {
+          "trunk_matches_base_init": true,
+          "scratch_full_matches_r3": true,
+          "scratch_group_matches_r3": true,
+          "scratch_encoder_matches_r3": true,
+          "encoder_used_matches_r3": true,
+          "encoder_file_matches_record": true,
+          "shared_rng_untouched": true
+        },
+        "shared_state_sha256": "0fd4e09f806a0b8258c5c265368125ff4a09e16b888ea3fe92ca071eb5339f0c",
+        "extra_init": {
+          "variant": "F",
+          "u_weight_abs_sum": 0.0,
+          "t_weight_sha256": "c0ec7c67e6c25de695c790915d170ae4aa8f18379c3b041a51362ef8a9ab1ca4",
+          "t_parameters": 3072,
+          "u_parameters": 3072,
+          "extra_state_sha256": "61b64fb63f31617b489065092ac33cd089f45b4fbab0c9fa75e5c95cf562798f"
+        },
+        "module_audit_pass": true
+      },
+      "C_G_state_bitwise_equal": true,
+      "K_C_equals_K_G": true,
+      "T_F_equals_K_C": true,
+      "Q_C_zero": 0.0,
+      "Q_G_zero": 0.0,
+      "U_F_zero": 0.0,
+      "C_G_shared_equal": true,
+      "batch_order_sha256": "8710751abd8c33739cac5506756fe6ba6abb919aed3235f86619b13fcf2700b9",
+      "batch_order_matches_r3": true
+    }
+  },
+  "regime": {
+    "observed": {
+      "device": "cuda",
+      "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+      "cuda_available": true,
+      "torch_cuda": "12.4",
+      "torch": "2.5.1+cu124",
+      "python": "3.12.14",
+      "git_commit": "a6b51bbb2207053a24e277c02afd4036adbf8b07",
+      "utc": "2026-10-19T09:53:22Z"
+    },
+    "frozen_p3_regime": {
+      "host": "res",
+      "node": "a100-2",
+      "gpu_name": "NVIDIA A100-SXM4-40GB",
+      "driver": "550.163.01",
+      "torch": "2.5.1+cu124",
+      "torch_cuda": "12.4",
+      "python": "3.12.14",
+      "recorded_in": "tracks/structural-sufficiency/results/phase2b/train_F_s0.json and train_M_s1.json"
+    },
+    "checks": {
+      "torch": true,
+      "python": true,
+      "torch_cuda": true,
+      "gpu_name": true
+    },
+    "regime_matches": true,
+    "p3_baseline_required": false,
+    "note": "a regime mismatch would require two same-round P3 baselines trained before the single official-valid label read (PROTOCOL \u00a76 provenance branch)"
+  },
+  "p3": {
+    "0": {
+      "soup": {
+        "path": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed0.pt",
+        "sha256": "a021d36e3c07039cf191895f8037d09bf2e734101863dccf8993a69de737f782",
+        "keys": 24
+      },
+      "parameters": 413505,
+      "parameter_exact_413505": true,
+      "module_audit_pass": true,
+      "init_checks": {
+        "trunk_matches_base_init": true,
+        "scratch_full_matches_r3": true,
+        "scratch_group_matches_r3": true,
+        "scratch_encoder_matches_r3": true,
+        "encoder_used_matches_r3": true,
+        "encoder_file_matches_record": true,
+        "shared_rng_untouched": true
+      },
+      "recorded_historical_valid_mae": 0.07910149778419873,
+      "replay_seconds": 0.2198875149479136,
+      "labels_read": false,
+      "official_test_loaded": false,
+      "branch": "frozen_array_present",
+      "frozen_array_sha256": "0fff2981f2c956ba442b78e7263b8d30bbc9f75b063fb8f3fce96f78f8d0d7a0",
+      "frozen_file_sha256": "f493bcc2e1b156bbe8074944469943cdd9e2dc114e45dc72a151868e9d29ec89",
+      "replay_max_abs_diff_vs_frozen": 1.9073486328125e-06,
+      "replay_within_5e-5": true
+    },
+    "1": {
+      "soup": {
+        "path": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/soup_R3_seed1.pt",
+        "sha256": "b622824a8eb08043777391d7ed617da2639658b413dd83a05c57f81df53d03d9",
+        "keys": 24
+      },
+      "parameters": 413505,
+      "parameter_exact_413505": true,
+      "module_audit_pass": true,
+      "init_checks": {
+        "trunk_matches_base_init": true,
+        "scratch_full_matches_r3": true,
+        "scratch_group_matches_r3": true,
+        "scratch_encoder_matches_r3": true,
+        "encoder_used_matches_r3": true,
+        "encoder_file_matches_record": true,
+        "shared_rng_untouched": true
+      },
+      "recorded_historical_valid_mae": 0.08058639967715135,
+      "replay_seconds": 0.05019576591439545,
+      "labels_read": false,
+      "official_test_loaded": false,
+      "branch": "frozen_array_present",
+      "frozen_array_sha256": "30ac789ce45034f856ff53c65697113c9c36e39652b7c0ec5c57ffd948ed1ef3",
+      "frozen_file_sha256": "730b922c7313f8913d16f0022fa9eeba8d5344241e6b01429d8ed59130ab726d",
+      "replay_max_abs_diff_vs_frozen": 5.7220458984375e-06,
+      "replay_within_5e-5": true
+    }
+  },
+  "conditions": {
+    "frozen_inputs_verified": true,
+    "frozen_source_matches_p3_revision": true,
+    "all_p3_soups_match": true,
+    "all_init_checks_pass": true,
+    "all_batch_orders_match": true,
+    "all_parameter_counts_exact": true,
+    "all_module_audits_pass": true,
+    "C_G_init_bitwise_equal": true,
+    "K_shared_C_G_F": true,
+    "zero_init_as_designed": true,
+    "p3_valid_replay_within_5e-5": true,
+    "official_test_not_loaded": true
+  },
+  "all_pass": true,
+  "official_valid_labels_read": false,
+  "official_test_loaded": false,
+  "environment": {
+    "device": "cuda",
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "cuda_available": true,
+    "torch_cuda": "12.4",
+    "torch": "2.5.1+cu124",
+    "python": "3.12.14",
+    "git_commit": "a6b51bbb2207053a24e277c02afd4036adbf8b07",
+    "utc": "2026-10-19T09:53:22Z"
+  },
+  "git_commit": "a6b51bbb2207053a24e277c02afd4036adbf8b07"
+}

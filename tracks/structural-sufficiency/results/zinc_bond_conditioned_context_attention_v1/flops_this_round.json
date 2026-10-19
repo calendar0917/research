@@ -1,0 +1,83 @@
+{
+  "protocol_id": "zinc-bond-conditioned-context-attention-v1",
+  "stage": "flops",
+  "n_graphs": 128,
+  "note": "GEMM counter sees only matmuls; pair gather/mul ops are counted analytically. cpu_forward_seconds is an unoptimised CPU wall clock and is not a GPU cost estimate; the GPU projection comes from the smoke stage.",
+  "P3": {
+    "gemm_flops": 1995115584,
+    "gemm_by_module": {
+      "atom_encoder": 155575296,
+      "bond_encoder": 400759360,
+      "junction_encoder": 999116800,
+      "group_composer": 401784320,
+      "reader": 37879808
+    },
+    "uses_attention": false,
+    "attention_ops": null,
+    "cpu_forward_seconds": 0.008975759131966956,
+    "parameters": 413505
+  },
+  "F": {
+    "gemm_flops": 2034474048,
+    "gemm_by_module": {
+      "atom_encoder": 155575296,
+      "bond_encoder": 400759360,
+      "junction_encoder": 999116800,
+      "group_composer": 401784320,
+      "reader": 37879808,
+      "ffn": 39358464
+    },
+    "uses_attention": false,
+    "attention_ops": null,
+    "cpu_forward_seconds": 0.008475853146852128,
+    "parameters": 419649,
+    "gemm_ratio_vs_p3": 1.0197274104395948,
+    "cpu_forward_ratio_vs_p3": 0.9443048796469565
+  },
+  "G": {
+    "gemm_flops": 2042043456,
+    "gemm_by_module": {
+      "atom_encoder": 155575296,
+      "bond_encoder": 400759360,
+      "junction_encoder": 999116800,
+      "group_composer": 401784320,
+      "reader": 37879808,
+      "attn": 46927872
+    },
+    "uses_attention": true,
+    "attention_ops": {
+      "pairs": 115642,
+      "score_macs": 3700544,
+      "weighted_first_moment_macs": 11101632,
+      "weighted_second_moment_macs": 11101632,
+      "marginal_reduction_adds": 115642
+    },
+    "cpu_forward_seconds": 0.013375410993051316,
+    "parameters": 419649,
+    "gemm_ratio_vs_p3": 1.0235213801026577,
+    "cpu_forward_ratio_vs_p3": 1.490170446465648
+  },
+  "C": {
+    "gemm_flops": 2042043456,
+    "gemm_by_module": {
+      "atom_encoder": 155575296,
+      "bond_encoder": 400759360,
+      "junction_encoder": 999116800,
+      "group_composer": 401784320,
+      "reader": 37879808,
+      "attn": 46927872
+    },
+    "uses_attention": true,
+    "attention_ops": {
+      "pairs": 115642,
+      "score_macs": 3700544,
+      "weighted_first_moment_macs": 11101632,
+      "weighted_second_moment_macs": 11101632,
+      "marginal_reduction_adds": 115642
+    },
+    "cpu_forward_seconds": 0.051552034997647364,
+    "parameters": 419649,
+    "gemm_ratio_vs_p3": 1.0235213801026577,
+    "cpu_forward_ratio_vs_p3": 5.743473531285615
+  }
+}
