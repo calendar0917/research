@@ -133,7 +133,14 @@ def collect_env() -> dict[str, Any]:
         "torch_geometric": torch_geometric.__version__,
         "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
         "research_git_commit": _git_value(["rev-parse", "HEAD"]),
-        "research_git_dirty": bool(_git_value(["status", "--porcelain"])),
+        "research_git_tracked_dirty": bool(_git_value(
+            ["status", "--porcelain", "--untracked-files=no"])),
+        "research_git_untracked_count": len(
+            (_git_value(["ls-files", "--others", "--exclude-standard"]) or ""
+             ).splitlines()),
+        "research_git_untracked_sample": (
+            _git_value(["ls-files", "--others", "--exclude-standard"]) or ""
+        ).splitlines()[:5],
         "upstream_commit": UPSTREAM_COMMIT,
         "official_config_sha256": sha256_file(DEFAULT_CONFIG),
         "patch_sha256": sha256_file(PATCH),
