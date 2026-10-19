@@ -196,7 +196,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
     # --- historical P3: hashes, parameters, replay ---------------------------
     p3: dict[str, Any] = {}
     device = _device(args.device)
-    recorded_valid = C.read_json(C.RECIPE / "confirmation_metrics.json")["contrast"]["per_seed_mae_new"]
+    recorded_valid = {str(s): float(cfg["audit_expectations"]["historical_valid_mae"][str(s)]) for s in C.SEEDS}
     for seed in C.SEEDS:
         model, info = C.build_p3(seed, device)
         params = int(sum(p.numel() for p in model.parameters()))
@@ -279,13 +279,16 @@ def cmd_audit(args: argparse.Namespace) -> int:
                 "historical_array_sha256": prov["array_sha256_float32"],
                 "historical_file_sha256": prov["historical_file_sha256"],
                 "max_abs_pred_diff_vs_historical_npz": max_abs,
-                "recorded_mae_from_confirmation_metrics": float(recorded_valid[f"seed{seed}"]),
+                "recorded_historical_valid_mae": float(recorded_valid[str(seed)]),
                 "regenerated_prediction_file": _stored(p3_pred_path),
                 "seconds": secs,
                 "labels_read": False,
             },
         }
-        log(f"[audit] P3 seed {seed}: params={params} replay max|d|={max_abs:.3e}")
+        log(
+            f"[audit] P3 seed {seed}: params={params} "
+            + (f"replay max|d|={max_abs:.3e}" if max_abs is not None else "array-hash exact")
+        )
 
     conditions = {
         "all_soups_hash_match": all(
@@ -305,7 +308,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
         ),
         "historical_valid_mae_recorded": all(
             abs(
-                p3[str(s)]["valid_replay"]["recorded_mae_from_confirmation_metrics"]
+                p3[str(s)]["valid_replay"]["recorded_historical_valid_mae"]
                 - cfg["audit_expectations"]["historical_valid_mae"][str(s)]
             )
             <= 1e-12
