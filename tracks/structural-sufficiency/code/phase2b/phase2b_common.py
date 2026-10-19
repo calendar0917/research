@@ -221,6 +221,42 @@ def historical_prediction(which: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def p3_valid_pred(seed: int) -> tuple[np.ndarray, dict[str, Any]]:
+    """Load the frozen historical P3 valid prediction and verify both hashes."""
+    prov = historical_prediction(f"valid_P3{seed}")
+    path = REPO / prov["historical_path"]
+    verify_file(f"valid_pred_P3{seed}", path, prov["historical_file_sha256"])
+    with np.load(path) as z:
+        pred = np.asarray(z["pred"], dtype=np.float64)
+    if pred.shape != (N_VALID,):
+        raise SystemExit(f"unexpected P3 valid prediction shape {pred.shape}")
+    if sha256_array(pred) != prov["array_sha256_float32"]:
+        raise SystemExit("historical P3 valid prediction array hash mismatch")
+    return pred, {
+        "path": prov["historical_path"],
+        "sha256": prov["historical_file_sha256"],
+        "array_sha256": prov["array_sha256_float32"],
+    }
+
+
+def p3_test_pred(seed: int) -> tuple[np.ndarray, dict[str, Any]]:
+    """Load the frozen historical P3 test prediction; labels are never touched."""
+    prov = historical_prediction(f"test_P3{seed}")
+    path = REPO / prov["historical_path"]
+    verify_file(f"test_pred_P3{seed}", path, prov["historical_file_sha256"])
+    with np.load(path) as z:
+        pred = np.asarray(z["pred"], dtype=np.float64)
+    if pred.shape != (N_TEST,):
+        raise SystemExit(f"unexpected P3 test prediction shape {pred.shape}")
+    if sha256_array(pred) != prov["array_sha256_float32"]:
+        raise SystemExit("historical P3 test prediction array hash mismatch")
+    return pred, {
+        "path": prov["historical_path"],
+        "sha256": prov["historical_file_sha256"],
+        "array_sha256": prov["array_sha256_float32"],
+    }
+
+
 def p3_run(seed: int) -> dict[str, Any]:
     return read_json(RECIPE / f"train_R3_seed{seed}.json")
 
