@@ -1,0 +1,535 @@
+{
+  "protocol_id": "zinc-structural-token-attention-v1",
+  "created_utc": "2026-10-19T16:53:37Z",
+  "split": "official PyG ZINC subset=True val (development, exposed; not a blind test)",
+  "n": 1000,
+  "official_test_loaded": false,
+  "p3_reference": {
+    "provenance": {
+      "0": {
+        "path": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R30.npz",
+        "file_sha256": "f493bcc2e1b156bbe8074944469943cdd9e2dc114e45dc72a151868e9d29ec89",
+        "array_sha256_float32": "0fff2981f2c956ba442b78e7263b8d30bbc9f75b063fb8f3fce96f78f8d0d7a0"
+      },
+      "1": {
+        "path": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R31.npz",
+        "file_sha256": "730b922c7313f8913d16f0022fa9eeba8d5344241e6b01429d8ed59130ab726d",
+        "array_sha256_float32": "30ac789ce45034f856ff53c65697113c9c36e39652b7c0ec5c57ffd948ed1ef3"
+      }
+    },
+    "per_seed": {
+      "0": {
+        "n": 1000,
+        "mae": 0.07910149778419873,
+        "rmse": 0.24076712824131874,
+        "median_ae": 0.03908336162567139,
+        "p90_ae": 0.1583378553390503,
+        "p95_ae": 0.24988384544849376,
+        "p99_ae": 0.504081467539072,
+        "max_ae": 5.977201461791992,
+        "mean_squared_error": 0.057968810041571624
+      },
+      "1": {
+        "n": 1000,
+        "mae": 0.08058639967715135,
+        "rmse": 0.21423052991016778,
+        "median_ae": 0.04146714508533478,
+        "p90_ae": 0.15989744663238525,
+        "p95_ae": 0.2504642871674148,
+        "p99_ae": 0.5608278238773328,
+        "max_ae": 4.482601165771484,
+        "mean_squared_error": 0.045894719945591286
+      }
+    },
+    "seed_mean_mae": 0.07984394873067505,
+    "expected_per_seed": {
+      "0": 0.07910149778419873,
+      "1": 0.08058639967715135
+    },
+    "replay_checks": {
+      "0": {
+        "max_abs_replay_minus_historical": 1.9073486328125e-06,
+        "replay_file_sha256": "14b814e7fd7d79d04c06a1b4f18b5fd46fe450cbd5d9295ef6271bd810501523"
+      },
+      "1": {
+        "max_abs_replay_minus_historical": 2.86102294921875e-06,
+        "replay_file_sha256": "bd14d6ab425c9ac601cf587cf8a6cecc40cf01b522ad5f98bc3bac4a31791526"
+      }
+    }
+  },
+  "arms": {
+    "S": {
+      "per_seed": {
+        "0": {
+          "n": 1000,
+          "mae": 0.0864992321729078,
+          "rmse": 0.3386115293626835,
+          "median_ae": 0.03892970085144043,
+          "p90_ae": 0.16312509775161746,
+          "p95_ae": 0.2600203990936279,
+          "p99_ae": 0.6028662831056855,
+          "max_ae": 9.319677352905273,
+          "mean_squared_error": 0.11465776781733547
+        },
+        "1": {
+          "n": 1000,
+          "mae": 0.08284775257197907,
+          "rmse": 0.2900252434644198,
+          "median_ae": 0.043115437030792236,
+          "p90_ae": 0.16619243621826177,
+          "p95_ae": 0.2532452464103696,
+          "p99_ae": 0.5375664007663725,
+          "max_ae": 8.040271759033203,
+          "mean_squared_error": 0.08411464184659599
+        }
+      },
+      "seed_mean_mae": 0.08467349237244343,
+      "seed_mean_rmse": 0.3143183864135517
+    },
+    "T": {
+      "per_seed": {
+        "0": {
+          "n": 1000,
+          "mae": 0.08974953549628845,
+          "rmse": 0.25490919510388793,
+          "median_ae": 0.046745121479034424,
+          "p90_ae": 0.17526646852493286,
+          "p95_ae": 0.2829187691211695,
+          "p99_ae": 0.5566960048675528,
+          "max_ae": 4.8810907900333405,
+          "mean_squared_error": 0.06497869774851199
+        },
+        "1": {
+          "n": 1000,
+          "mae": 0.0891696725562797,
+          "rmse": 0.2825178557601111,
+          "median_ae": 0.04541049897670746,
+          "p90_ae": 0.1795233845710755,
+          "p95_ae": 0.267547220736742,
+          "p99_ae": 0.5357128459215165,
+          "max_ae": 7.379626274108887,
+          "mean_squared_error": 0.07981633882329096
+        }
+      },
+      "seed_mean_mae": 0.08945960402628407,
+      "seed_mean_rmse": 0.26871352543199956
+    },
+    "R": {
+      "per_seed": {
+        "0": {
+          "n": 1000,
+          "mae": 0.09087394787388621,
+          "rmse": 0.2750930354932147,
+          "median_ae": 0.04636022448539734,
+          "p90_ae": 0.17024012207984934,
+          "p95_ae": 0.2985163516364991,
+          "p99_ae": 0.6589283233880994,
+          "max_ae": 6.089851379394531,
+          "mean_squared_error": 0.07567617817687107
+        },
+        "1": {
+          "n": 1000,
+          "mae": 0.09559911661088699,
+          "rmse": 0.3969797242489414,
+          "median_ae": 0.04672043025493622,
+          "p90_ae": 0.17904562950134284,
+          "p95_ae": 0.2679969839751718,
+          "p99_ae": 0.5180954401195044,
+          "max_ae": 11.08757495880127,
+          "mean_squared_error": 0.15759290146476554
+        }
+      },
+      "seed_mean_mae": 0.0932365322423866,
+      "seed_mean_rmse": 0.33603637987107804
+    }
+  },
+  "contrasts": {
+    "S_vs_P3": {
+      "candidate": "S",
+      "reference": "P3",
+      "gain": {
+        "seed0": -0.007397734388709068,
+        "seed1": -0.00226135289482772,
+        "mean": -0.004829543641768394
+      },
+      "paired_bootstrap": {
+        "mean_diff": -0.004829543641768396,
+        "ci95_low": -0.013840030225005465,
+        "ci95_high": 0.002221570085885469,
+        "better_fraction": 0.504,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true,
+        "two_seed_synchronised": true
+      },
+      "robustness": {
+        "ordinary_gt_-3": -0.0011468382990535567,
+        "drop_p3_worst10": -0.003652228353864918,
+        "without_row172": -0.0013808512508317276,
+        "tail_le_-3": -0.05780384357158954
+      },
+      "p3_worst10_rows": [
+        172,
+        917,
+        753,
+        659,
+        260,
+        403,
+        447,
+        224,
+        31,
+        267
+      ]
+    },
+    "T_vs_P3": {
+      "candidate": "T",
+      "reference": "P3",
+      "gain": {
+        "seed0": -0.01064803771208972,
+        "seed1": -0.008583272879128342,
+        "mean": -0.009615655295609031
+      },
+      "paired_bootstrap": {
+        "mean_diff": -0.009615655295609031,
+        "ci95_low": -0.01581683490362484,
+        "ci95_high": -0.004120473316172142,
+        "better_fraction": 0.432,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true,
+        "two_seed_synchronised": true
+      },
+      "robustness": {
+        "ordinary_gt_-3": -0.008561279549061714,
+        "drop_p3_worst10": -0.010891740656319085,
+        "without_row172": -0.009242422341821703,
+        "tail_le_-3": -0.024782444880558894
+      },
+      "p3_worst10_rows": [
+        172,
+        917,
+        753,
+        659,
+        260,
+        403,
+        447,
+        224,
+        31,
+        267
+      ]
+    },
+    "R_vs_P3": {
+      "candidate": "R",
+      "reference": "P3",
+      "gain": {
+        "seed0": -0.011772450089687483,
+        "seed1": -0.01501271693373564,
+        "mean": -0.013392583511711562
+      },
+      "paired_bootstrap": {
+        "mean_diff": -0.013392583511711563,
+        "ci95_low": -0.02247128598301497,
+        "ci95_high": -0.006382188933214647,
+        "better_fraction": 0.421,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true,
+        "two_seed_synchronised": true
+      },
+      "robustness": {
+        "ordinary_gt_-3": -0.008628256332047064,
+        "drop_p3_worst10": -0.009550254889752132,
+        "without_row172": -0.010043815471867269,
+        "tail_le_-3": -0.08192559755765474
+      },
+      "p3_worst10_rows": [
+        172,
+        917,
+        753,
+        659,
+        260,
+        403,
+        447,
+        224,
+        31,
+        267
+      ]
+    },
+    "T_vs_S": {
+      "candidate": "T",
+      "reference": "S",
+      "gain": {
+        "seed0": -0.0032503033233806516,
+        "seed1": -0.006321919984300622,
+        "mean": -0.004786111653840637
+      },
+      "paired_bootstrap": {
+        "mean_diff": -0.004786111653840635,
+        "ci95_low": -0.013096720303432084,
+        "ci95_high": 0.004171861418595645,
+        "better_fraction": 0.435,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true,
+        "two_seed_synchronised": true
+      },
+      "robustness": {
+        "ordinary_gt_-3": -0.007414441250008157,
+        "drop_p3_worst10": -0.007239512302454166,
+        "without_row172": -0.007861571090989974,
+        "tail_le_-3": 0.03302139869103065
+      },
+      "p3_worst10_rows": [
+        172,
+        917,
+        753,
+        659,
+        260,
+        403,
+        447,
+        224,
+        31,
+        267
+      ]
+    },
+    "R_vs_S": {
+      "candidate": "R",
+      "reference": "S",
+      "gain": {
+        "seed0": -0.0043747157009784154,
+        "seed1": -0.01275136403890792,
+        "mean": -0.008563039869943168
+      },
+      "paired_bootstrap": {
+        "mean_diff": -0.008563039869943168,
+        "ci95_low": -0.014524010299130167,
+        "ci95_high": -0.0034937635786511274,
+        "better_fraction": 0.439,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true,
+        "two_seed_synchronised": true
+      },
+      "robustness": {
+        "ordinary_gt_-3": -0.007481418032993507,
+        "drop_p3_worst10": -0.005898026535887215,
+        "without_row172": -0.008662964221035541,
+        "tail_le_-3": -0.024121753986065204
+      },
+      "p3_worst10_rows": [
+        172,
+        917,
+        753,
+        659,
+        260,
+        403,
+        447,
+        224,
+        31,
+        267
+      ]
+    },
+    "R_vs_T": {
+      "candidate": "R",
+      "reference": "T",
+      "gain": {
+        "seed0": -0.0011244123775977638,
+        "seed1": -0.006429444054607297,
+        "mean": -0.0037769282161025305
+      },
+      "paired_bootstrap": {
+        "mean_diff": -0.003776928216102533,
+        "ci95_low": -0.012779448028907063,
+        "ci95_high": 0.003760544195998226,
+        "better_fraction": 0.507,
+        "n_resamples": 5000,
+        "bootstrap_seed": 20261019,
+        "per_molecule_unit": true,
+        "two_seed_synchronised": true
+      },
+      "robustness": {
+        "ordinary_gt_-3": -6.697678298535035e-05,
+        "drop_p3_worst10": 0.001341485766566951,
+        "without_row172": -0.0008013931300455669,
+        "tail_le_-3": -0.057143152677095854
+      },
+      "p3_worst10_rows": [
+        172,
+        917,
+        753,
+        659,
+        260,
+        403,
+        447,
+        224,
+        31,
+        267
+      ]
+    }
+  },
+  "p3_worst10_rows": [
+    172,
+    917,
+    753,
+    659,
+    260,
+    403,
+    447,
+    224,
+    31,
+    267
+  ],
+  "extreme_valid_row": 172,
+  "subgroups": {
+    "ordinary_gt_-3": {
+      "n": 935,
+      "S": {
+        "mae_seed0": 0.06899984902870358,
+        "mae_seed1": 0.06947340659372618,
+        "mae_seed_mean": 0.06923662781121488
+      },
+      "T": {
+        "mae_seed0": 0.07950557839557439,
+        "mae_seed1": 0.07379655972687169,
+        "mae_seed_mean": 0.07665106906122304
+      },
+      "R": {
+        "mae_seed0": 0.07635255346023652,
+        "mae_seed1": 0.07708353822818026,
+        "mae_seed_mean": 0.07671804584420838
+      },
+      "P3": {
+        "mae_seed0": 0.06815294902267452,
+        "mae_seed1": 0.06802663000164813,
+        "mae_seed_mean": 0.06808978951216133
+      }
+    },
+    "tail_le_-3": {
+      "n": 65,
+      "S": {
+        "mae_seed0": 0.33822112817030686,
+        "mae_seed1": 0.2752325754899245,
+        "mae_seed_mean": 0.3067268518301157
+      },
+      "T": {
+        "mae_seed0": 0.23710491840655987,
+        "mae_seed1": 0.3103059878716102,
+        "mae_seed_mean": 0.273705453139085
+      },
+      "R": {
+        "mae_seed0": 0.29975862136253945,
+        "mae_seed1": 0.36193859026982234,
+        "mae_seed_mean": 0.3308486058161809
+      },
+      "P3": {
+        "mae_seed0": 0.23659216073843148,
+        "mae_seed1": 0.2612538557786208,
+        "mae_seed_mean": 0.24892300825852615
+      }
+    },
+    "drop_p3_worst10": {
+      "n": 990,
+      "S": {
+        "mae_seed0": 0.06968819833909763,
+        "mae_seed1": 0.06948680448048335,
+        "mae_seed_mean": 0.06958750140979049
+      },
+      "T": {
+        "mae_seed0": 0.07811817048450302,
+        "mae_seed1": 0.0755358569399863,
+        "mae_seed_mean": 0.07682701371224465
+      },
+      "R": {
+        "mae_seed0": 0.07555877493354586,
+        "mae_seed1": 0.07541228095780955,
+        "mae_seed_mean": 0.0754855279456777
+      },
+      "P3": {
+        "mae_seed0": 0.06533667823726622,
+        "mae_seed1": 0.06653386787458493,
+        "mae_seed_mean": 0.06593527305592557
+      }
+    },
+    "without_row172": {
+      "n": 999,
+      "S": {
+        "mae_seed0": 0.07725681163163416,
+        "mae_seed1": 0.07488236317612199,
+        "mae_seed_mean": 0.07606958740387806
+      },
+      "T": {
+        "mae_seed0": 0.08599039878936492,
+        "mae_seed1": 0.08187191820037118,
+        "mae_seed_mean": 0.08393115849486804
+      },
+      "R": {
+        "mae_seed0": 0.08486896545995162,
+        "mae_seed1": 0.0845961377898756,
+        "mae_seed_mean": 0.08473255162491361
+      },
+      "P3": {
+        "mae_seed0": 0.07319749381622295,
+        "mae_seed1": 0.07617997848986974,
+        "mae_seed_mean": 0.07468873615304635
+      }
+    },
+    "cycle_penalty_proxy": {
+      "n": 36,
+      "S": {
+        "mae_seed0": 0.23991068618165123,
+        "mae_seed1": 0.17027350101206037,
+        "mae_seed_mean": 0.20509209359685582
+      },
+      "T": {
+        "mae_seed0": 0.23310344335105684,
+        "mae_seed1": 0.22587788353363672,
+        "mae_seed_mean": 0.22949066344234678
+      },
+      "R": {
+        "mae_seed0": 0.2580484917594327,
+        "mae_seed1": 0.25512949211729896,
+        "mae_seed_mean": 0.2565889919383658
+      },
+      "P3": {
+        "mae_seed0": 0.2013169394599067,
+        "mae_seed1": 0.25833867117762566,
+        "mae_seed_mean": 0.22982780531876618
+      }
+    },
+    "no_cycle_penalty_proxy": {
+      "n": 964,
+      "S": {
+        "mae_seed0": 0.0807701737244485,
+        "mae_seed1": 0.07958289059703827,
+        "mae_seed_mean": 0.08017653216074339
+      },
+      "T": {
+        "mae_seed0": 0.08439607005772863,
+        "mae_seed1": 0.08406438666915847,
+        "mae_seed_mean": 0.08423022836344354
+      },
+      "R": {
+        "mae_seed0": 0.08463091511467492,
+        "mae_seed1": 0.08964155072060605,
+        "mae_seed_mean": 0.08713623291764049
+      },
+      "P3": {
+        "mae_seed0": 0.07453743564693162,
+        "mae_seed1": 0.07394834804435356,
+        "mae_seed_mean": 0.07424289184564259
+      }
+    }
+  },
+  "cycle_proxy": {
+    "definition": "max(len(c) for c in networkx.cycle_basis(G)) > 6; order-sensitive, reporting only",
+    "n_penalised": 36,
+    "max_longest_cycle": 11
+  },
+  "bootstrap": {
+    "resamples": 5000,
+    "seed": 20261019,
+    "unit": "molecule; two seeds resampled synchronously",
+    "note": "CI describes sample fluctuation for these two training instances only; it does not cover all training randomness."
+  },
+  "note": "Positive gain = reference error minus candidate error; lower MAE is better."
+}

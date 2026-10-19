@@ -1,0 +1,49 @@
+{
+  "protocol_id": "zinc-structural-token-attention-v1",
+  "created_utc": "2026-10-19T23:05:00Z",
+  "stage": "pre_formal_timing_estimator_amendment",
+  "reason": "first smoke raw mean includes one-off CUDA/library warm-up in the first update of each arm; it projected 4.72 GPU-h and failed the cap. The formal matrix had not started.",
+  "unchanged": [
+    "architecture",
+    "arms",
+    "data",
+    "epochs=360",
+    "batch=128",
+    "optimiser",
+    "lr schedule",
+    "loss",
+    "scoring rule",
+    "4.0 GPU-h cap",
+    "1.20 margin",
+    "300 s reserve"
+  ],
+  "change": "projection uses mean per-update time after dropping the first 2 updates per arm; both old and new smoke records are kept",
+  "original_smoke": {
+    "path": "tracks/structural-sufficiency/results/zinc_structural_token_attention_v1/smoke_this_round_v1_mean_failed.json",
+    "file_sha256": "d623f906e5a1f1bfab70ba0cfc3991aa031d61e2fc1a509a5a30cdfeae2ee248",
+    "mean_step_seconds": {
+      "S": 0.08038716154260328,
+      "T": 0.046140402570017613,
+      "R": 0.11802791433001403
+    },
+    "projected_total_gpu_hours": 4.721199927459011,
+    "pass": false
+  },
+  "new_smoke": {
+    "path": "tracks/structural-sufficiency/results/zinc_structural_token_attention_v1/smoke_this_round.json",
+    "file_sha256": "42c7828703bfdc5cf86deba51c89d3823b93882ddd6e243bf43ddfdea6e9a1ec",
+    "mean_step_seconds_raw": {
+      "S": 0.07556251624191646,
+      "T": 0.049704236233083066,
+      "R": 0.11849563742725877
+    },
+    "steady_step_seconds": {
+      "S": 0.03866004899776142,
+      "T": 0.04701624697606478,
+      "R": 0.11586544327604185
+    },
+    "projected_total_gpu_hours": 3.905657548079464,
+    "pass": true
+  },
+  "decision": "proceed to the six formal runs; actual cumulative GPU time is tracked against the 4.0 h cap and the round stops if the cap is at risk"
+}

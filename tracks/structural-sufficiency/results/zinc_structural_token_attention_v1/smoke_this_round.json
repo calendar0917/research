@@ -1,0 +1,111 @@
+{
+  "protocol_id": "zinc-structural-token-attention-v1",
+  "created_utc": "2026-10-19T14:55:49Z",
+  "device": "cuda",
+  "env": {
+    "device": "cuda",
+    "hostname": "a100-2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "python": "3.12.14",
+    "git_commit": "abcdb870ef11741c5408f65bd32ff193d75a275a",
+    "utc": "2026-10-19T14:55:49Z",
+    "gpu_name": "NVIDIA A100-SXM4-40GB",
+    "gpu_count": 1,
+    "driver": "550.163.01"
+  },
+  "rows": 1024,
+  "epochs": 2,
+  "per_arm": {
+    "S": {
+      "wall_seconds": 1.2194375940598547,
+      "step_seconds": {
+        "mean": 0.07556251624191646,
+        "median": 0.03989393496885896,
+        "p90": 0.04374623898183927,
+        "n": 16
+      },
+      "updates": 16,
+      "soup_fit_mae": 0.8769827826353662,
+      "training_health": {
+        "finite_loss": true,
+        "finite_gradients": true,
+        "gradient_expectation": {
+          "type_embedding_nonzero_first_step": true,
+          "reader_nonzero_first_step": true,
+          "token_ffn_nonzero_first_step": true,
+          "mix_nonzero_first_step": true,
+          "mix_nonzero_second_step": true
+        }
+      }
+    },
+    "T": {
+      "wall_seconds": 0.8065503209363669,
+      "step_seconds": {
+        "mean": 0.049704236233083066,
+        "median": 0.0439959954819642,
+        "p90": 0.06852016103221104,
+        "n": 16
+      },
+      "updates": 16,
+      "soup_fit_mae": 0.9724588127135689,
+      "training_health": {
+        "finite_loss": true,
+        "finite_gradients": true,
+        "gradient_expectation": {
+          "type_embedding_nonzero_first_step": true,
+          "reader_nonzero_first_step": true,
+          "token_ffn_nonzero_first_step": true,
+          "mix_nonzero_first_step": true,
+          "mix_nonzero_second_step": true
+        }
+      }
+    },
+    "R": {
+      "wall_seconds": 1.908230932080187,
+      "step_seconds": {
+        "mean": 0.11849563742725877,
+        "median": 0.11626758595230058,
+        "p90": 0.13410821853904054,
+        "n": 16
+      },
+      "updates": 16,
+      "soup_fit_mae": 0.9725632768149239,
+      "training_health": {
+        "finite_loss": true,
+        "finite_gradients": true,
+        "gradient_expectation": {
+          "type_embedding_nonzero_first_step": true,
+          "reader_nonzero_first_step": true,
+          "token_ffn_nonzero_first_step": true,
+          "mix_nonzero_first_step": true,
+          "mix_nonzero_second_step": true,
+          "r_bias_grad_nonzero_step1_or_2": true
+        }
+      }
+    }
+  },
+  "mean_step_seconds_raw": {
+    "S": 0.07556251624191646,
+    "T": 0.049704236233083066,
+    "R": 0.11849563742725877
+  },
+  "steady_step_seconds": {
+    "S": 0.03866004899776142,
+    "T": 0.04701624697606478,
+    "R": 0.11586544327604185
+  },
+  "projection_estimator": "mean per-update time after dropping the first 2 updates per arm (CUDA/library warm-up); same 1.20 margin and 300 s reserve",
+  "formal_runs": 6,
+  "projected_formal_seconds": 11463.694128532496,
+  "projected_formal_gpu_hours": 3.1843594801479154,
+  "smoke_wall_seconds": 3.9342188470764086,
+  "overhead_reserve_seconds": 303.9342188470764,
+  "margin_factor": 1.2,
+  "projected_total_seconds": 14060.367173086071,
+  "projected_total_gpu_hours": 3.905657548079464,
+  "cap_seconds": 14400.0,
+  "cap_gpu_hours": 4.0,
+  "pass": true,
+  "note": "Smoke weights are temporary and never scored. No valid label is read. The raw mean includes the first CUDA step and is reported for audit; the pre-registered projection uses the steady-state mean after two warm-up updates. Two seeds per arm, plus smoke wall time and a 300 s overhead reserve; 1.20 is the pre-registered failure margin."
+}

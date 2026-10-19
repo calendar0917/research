@@ -1,0 +1,118 @@
+{
+  "protocol_id": "zinc-structural-token-attention-v1",
+  "created_utc": "2026-10-20T00:50:00Z",
+  "stage": "pre_score_gpu_ledger",
+  "accounting": "sum of wall-clock occupancy on res-gpu0 + res-gpu1; two GPUs ran concurrently, so total GPU-hours is the sum, not the wall span",
+  "entries": [
+    {
+      "name": "audit-v1",
+      "experiment": "sta-audit",
+      "started_at": "2026-10-19T22:47:55+08:00",
+      "completed_at": "2026-10-19T22:48:02+08:00",
+      "gpu_seconds": 7.0,
+      "gpu_hours": 0.0019444444444444444,
+      "note": "P3 reuse audit, first official audit; superseded by audit-v2 after the timing-code commit"
+    },
+    {
+      "name": "smoke-v1",
+      "experiment": "sta-smoke",
+      "started_at": "2026-10-19T22:49:05+08:00",
+      "completed_at": "2026-10-19T22:49:25+08:00",
+      "gpu_seconds": 20.0,
+      "gpu_hours": 0.005555555555555556,
+      "note": "first smoke; raw-mean projection failed at 4.72 GPU-h"
+    },
+    {
+      "name": "housekeeping",
+      "experiment": "sta-housekeeping",
+      "started_at": "2026-10-19T22:53:52+08:00",
+      "completed_at": "2026-10-19T22:53:55+08:00",
+      "gpu_seconds": 3.0,
+      "gpu_hours": 0.0008333333333333334,
+      "note": "renamed the first audit/smoke records before the v2 smoke"
+    },
+    {
+      "name": "audit-v2",
+      "experiment": "sta-audit-2",
+      "started_at": "2026-10-19T22:54:40+08:00",
+      "completed_at": "2026-10-19T22:54:46+08:00",
+      "gpu_seconds": 6.0,
+      "gpu_hours": 0.0016666666666666668,
+      "note": "official P3 reuse audit, branch A_REUSE_FROZEN_P3"
+    },
+    {
+      "name": "smoke-v2",
+      "experiment": "sta-smoke-2",
+      "started_at": "2026-10-19T22:55:30+08:00",
+      "completed_at": "2026-10-19T22:55:50+08:00",
+      "gpu_seconds": 20.0,
+      "gpu_hours": 0.005555555555555556,
+      "note": "second smoke; steady-state projection 3.906 GPU-h, pass"
+    },
+    {
+      "name": "formal-gpu0",
+      "experiment": "sta-v1-gpu0",
+      "started_at": "2026-10-19T22:57:26+08:00",
+      "completed_at": "2026-10-20T00:35:25+08:00",
+      "gpu_seconds": 5879.0,
+      "gpu_hours": 1.6330555555555555,
+      "note": "seed 0: S,T,R"
+    },
+    {
+      "name": "formal-gpu1",
+      "experiment": "sta-v1-gpu1",
+      "started_at": "2026-10-19T22:57:42+08:00",
+      "completed_at": "2026-10-20T00:42:43+08:00",
+      "gpu_seconds": 6301.0,
+      "gpu_hours": 1.7502777777777778,
+      "note": "seed 1: R,T,S"
+    },
+    {
+      "name": "predict",
+      "experiment": "sta-v1-predict",
+      "started_at": "2026-10-20T00:45:05+08:00",
+      "completed_at": "2026-10-20T00:45:14+08:00",
+      "gpu_seconds": 9.0,
+      "gpu_hours": 0.0025,
+      "note": "six label-free valid predictions"
+    },
+    {
+      "name": "mechanism",
+      "experiment": "sta-v1-mech",
+      "started_at": "2026-10-20T00:46:25+08:00",
+      "completed_at": "2026-10-20T00:46:31+08:00",
+      "gpu_seconds": 6.0,
+      "gpu_hours": 0.0016666666666666668,
+      "note": "label-free mechanism record"
+    },
+    {
+      "name": "freeze",
+      "experiment": "sta-v1-freeze",
+      "started_at": "2026-10-20T00:47:47+08:00",
+      "completed_at": "2026-10-20T00:47:51+08:00",
+      "gpu_seconds": 4.0,
+      "gpu_hours": 0.0011111111111111111,
+      "note": "pre-score freeze"
+    }
+  ],
+  "total_gpu_seconds": 12255.0,
+  "total_gpu_hours": 3.404166666666667,
+  "cap_gpu_hours": 4.0,
+  "within_cap": true,
+  "remaining_gpu_hours": 0.5958333333333332,
+  "formal_job_seconds": 12180.0,
+  "formal_train_loop_seconds_from_records": 12114.42175089824,
+  "formal_train_loop_by_run": {
+    "S_s0": 1172.002315805992,
+    "S_s1": 1338.9213602161035,
+    "T_s0": 1266.0970665030181,
+    "T_s1": 1388.2645841310732,
+    "R_s0": 3410.540772940032,
+    "R_s1": 3538.595651302021
+  },
+  "seed_total_seconds": {
+    "0": 5848.640155249042,
+    "1": 6265.781595649198
+  },
+  "note": "Includes the failed first smoke and both audits; no hidden GPU time. Prediction/mechanism/freeze are short GPU jobs. The 4.0 h cap is not exceeded."
+}
