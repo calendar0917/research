@@ -93,7 +93,7 @@ Measured, not inferred:
 
 | contrast | value |
 |---|---:|
-| P3: B − A | **+0.014629** (B clearly worse) |
+| P3: B − A | **+0.014630** (B clearly worse) |
 | T: A − B | **−0.003305** (A better, below the pre-declared 0.005 "clear" bar) |
 | gap under A: P3 − T | **−0.008965** (P3 better) |
 | gap under B: T − P3 | **−0.002359** (T slightly better) |
@@ -105,10 +105,10 @@ A, P3 is 0.009 better than T.
 
 **Interpreted (not more than the data supports).** The v1 statement "T is
 0.0123 behind P3" was measured across two different recipes and therefore mixes
-a recipe effect with an architecture effect; under a common recipe the honest
-numbers are +0.0090 (P3 ahead, recipe A) and −0.0024 (T ahead, recipe B). Recipe
-B is not a neutral control: it clearly degrades P3, the architecture it was not
-tuned for. This compares recipes as wholes; it does **not** separate optimizer,
+a recipe effect with an architecture effect. Lower is better, so the honest
+common-recipe statements are: under recipe A, P3 is 0.0090 lower than T; under
+recipe B, T is 0.0024 lower than P3. Recipe B is not a neutral control: it
+clearly degrades P3, the architecture it was not tuned for. This compares recipes as wholes; it does **not** separate optimizer,
 epochs and warm-up, and it does not identify the new trunks' recipe (that was
 fixed separately, §4).
 
@@ -145,26 +145,33 @@ update; no association tensor; no P3 prediction shortcut.
 
 Trunk recipe (variant C, fixed before the first M/S run, identical for both
 architectures and both training modes): Adam, batch 128, **360 epochs**,
-500-step warm-up, per-step cosine 1e-3 -> 1e-5, wd 1e-5, clip 5. The horizon was
-not compressed; the latest best epoch is 324/360 and every run's final valid is
-within 0.002 of its best, so no run was cut off at the boundary.
+500-step warm-up, per-step cosine 1e-3 -> 1e-5, wd 1e-5, clip 5. A 2-epoch
+timing job measured 2.99 s/epoch (M), 3.35 (S) and 3.59 (M joint before the
+formal run), so the declared horizon was ~0.25-0.36 A100-h per supervised run;
+the formal runs came in at 2.45-3.80 s/epoch. The horizon was not compressed;
+the latest best epoch is 324/360 and every run's final valid is within 0.002 of
+its best, so no run was cut off at the boundary.
 
 | run | params | best-valid | best ep | train@best (eval) | Δ vs P3 s0 | s/epoch | GPU-h |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| M supervised s0 | 435,681 | 0.087468 | 281 | 0.010860 | +0.008363 | 2.52 | 0.252 |
-| M joint s0 | 448,385 | 0.087086 | 308 | 0.007591 | +0.007981 | 3.30 | 0.331 |
-| S supervised s0 | 468,161 | 0.087267 | 302 | 0.008844 | +0.008162 | 3.80 | 0.381 |
-| S joint s0 | 480,865 | 0.091514 | 324 | 0.005574 | +0.012409 | 4.63 | 0.464 |
-| M supervised s1 | 435,681 | **0.081999** | 231 | 0.020363 | +0.002893 | 2.45 | 0.246 |
-| S supervised s1 | 468,161 | 0.089212 | 312 | 0.006726 | +0.010106 | 3.54 | 0.355 |
+| M supervised s0 | 435,681 | 0.087468 | 281 | 0.010860 | +0.0084 | 2.52 | 0.252 |
+| M joint s0 | 448,385 | 0.087086 | 308 | 0.007591 | +0.0080 | 3.30 | 0.331 |
+| S supervised s0 | 468,161 | 0.087267 | 302 | 0.008844 | +0.0082 | 3.80 | 0.381 |
+| S joint s0 | 480,865 | 0.091514 | 324 | 0.005574 | +0.0124 | 4.63 | 0.464 |
+| M supervised s1 | 435,681 | **0.081999** | 231 | 0.020363 | +0.0029 | 2.45 | 0.246 |
+| S supervised s1 | 468,161 | 0.089212 | 312 | 0.006726 | +0.0101 | 3.54 | 0.355 |
+
+Δ is best-valid minus the P3 seed-0 best-valid, quoted to 1e-4 because the seed
+spread of these families is 2-5e-3; exact values are in
+`analysis/main_table.json`.
 
 Seed comparison (best-valid, same split):
 
 | family | seed 0 | seed 1 | seed mean | spread | Δ mean vs P3 mean |
 |---|---:|---:|---:|---:|---:|
 | P3 | 0.079105 | 0.076668 | **0.077886** | 0.002437 | — |
-| M supervised | 0.087468 | 0.081999 | **0.084734** | 0.005469 | +0.006847 |
-| S supervised | 0.087267 | 0.089212 | **0.088239** | 0.001945 | +0.010353 |
+| M supervised | 0.087468 | 0.081999 | **0.084734** | 0.005469 | +0.0068 |
+| S supervised | 0.087267 | 0.089212 | **0.088239** | 0.001945 | +0.0104 |
 | T (rank 16, recipe A) | 0.088070 | not run | — | — | — |
 
 Auxiliary-task diagnostics (`analysis/aux_*.json`, `runs/*/aux_curve.json`):
@@ -279,8 +286,8 @@ rr logs zad2-M-sup-s0 ; rr pull zad2-M-sup-s0
 
 **Interpreted**
 
-- The v1 cross-family ranking was recipe-confounded. Under one common recipe the
-  P3−T gap is 0.0090 (P3 ahead); under T's recipe it is −0.0024 (T ahead). The
+- The v1 cross-family ranking was recipe-confounded. Under recipe A, P3 is
+  0.0090 *lower* (better) than T; under recipe B, T is 0.0024 lower than P3. The
   v1 "T is 0.0123 behind" number should not be read as an architecture gap.
 - Rebuilding the composition trunk as typed objects with a global context gets
   back into T's range without association tensors, but the remaining ~0.007
