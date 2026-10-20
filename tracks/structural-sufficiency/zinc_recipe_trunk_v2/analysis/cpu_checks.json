@@ -1,0 +1,284 @@
+{
+  "closes": {
+    "walks": {
+      "0": "propane 0-1-2 : three distinct atoms, same element, no return",
+      "1": "ethane 0-1-0 : one genuine return to the start atom"
+    },
+    "old_closes_type_identity": [
+      [
+        false,
+        true,
+        true
+      ],
+      [
+        false,
+        true,
+        true
+      ]
+    ],
+    "corrected_closes_return_to_start": [
+      [
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        true
+      ]
+    ],
+    "old_expression": "closes = (wa == wa[:, :1]) & (pos > 0) & valid",
+    "corrected_expression": "closes = (wanon == 0) & (pos > 0) & valid",
+    "old_wrong_on_walk0": true,
+    "corrected_right": true,
+    "note": "The two walks differ only in whether the third token revisits the start atom.  The old flag fired on same-type first visits; the corrected flag marks only the genuine return.  Old P0/P1 runs are kept unchanged and are not renamed or re-reported as the same model."
+  },
+  "path_readout": {
+    "molecules": 8,
+    "splits": {
+      "P0": {
+        "checkpoint": "tracks/structural-sufficiency/zinc_arch_discovery_v1/runs/corr_P0_s0/best.pt",
+        "epoch": 203,
+        "best_valid": 0.33277822982048383,
+        "valid": {
+          "pred32": [
+            1.163537859916687,
+            2.441115617752075,
+            2.056407928466797,
+            1.7044973373413086,
+            1.2056503295898438,
+            -0.04804077744483948,
+            0.707164466381073,
+            -2.0825047492980957
+          ],
+          "pred128": [
+            0.9828405976295471,
+            2.527186155319214,
+            2.0191869735717773,
+            1.7706434726715088,
+            1.0971347093582153,
+            -0.05508771166205406,
+            0.860921323299408,
+            -1.918327808380127
+          ],
+          "label": [
+            0.6299157738685608,
+            2.465756416320801,
+            1.3505492210388184,
+            1.4167381525039673,
+            0.9932060837745667,
+            -0.009363463148474693,
+            0.5231891870498657,
+            -1.8525220155715942
+          ],
+          "mae32_on_these_rows": 0.27712005376815796,
+          "mae128_on_these_rows": 0.24876107275485992,
+          "mean_abs_pred_shift_32_to_128": 0.10045390576124191,
+          "max_abs_pred_shift_32_to_128": 0.1806972622871399
+        },
+        "valid_repeat2_max_abs_diff": 2.384185791015625e-07,
+        "train": {
+          "pred32": [
+            1.161461353302002,
+            -2.0835046768188477,
+            1.8647518157958984,
+            -1.2273600101470947,
+            -0.1643226146697998,
+            0.2921859622001648,
+            -1.3470439910888672,
+            -0.5297208428382874
+          ],
+          "pred128": [
+            1.066471815109253,
+            -2.1026158332824707,
+            1.8434958457946777,
+            -1.4567917585372925,
+            -0.09939049184322357,
+            0.559223473072052,
+            -1.3852465152740479,
+            -0.5665025115013123
+          ],
+          "label": [
+            0.8350355625152588,
+            -2.193549156188965,
+            1.8422303199768066,
+            -0.7115330100059509,
+            0.24634701013565063,
+            0.5229709148406982,
+            -1.7172499895095825,
+            -0.4237147867679596
+          ],
+          "mae32_on_these_rows": 0.26156067848205566,
+          "mae128_on_these_rows": 0.24070937931537628,
+          "mean_abs_pred_shift_32_to_128": 0.09646777808666229,
+          "max_abs_pred_shift_32_to_128": 0.2670375108718872
+        },
+        "train_repeat2_max_abs_diff": 2.384185791015625e-07
+      },
+      "P1": {
+        "checkpoint": "tracks/structural-sufficiency/zinc_arch_discovery_v1/runs/corr_P1_s0/best.pt",
+        "epoch": 312,
+        "best_valid": 0.3218998607294052,
+        "valid": {
+          "pred32": [
+            0.8011457920074463,
+            2.3339061737060547,
+            1.945617437362671,
+            1.5983073711395264,
+            1.0590542554855347,
+            -0.3299078345298767,
+            0.7938435673713684,
+            -1.6689082384109497
+          ],
+          "pred128": [
+            0.8174651265144348,
+            2.380429744720459,
+            1.9692254066467285,
+            1.7124063968658447,
+            0.7934540510177612,
+            -0.3069676160812378,
+            0.8713793158531189,
+            -1.7147284746170044
+          ],
+          "label": [
+            0.6299157738685608,
+            2.465756416320801,
+            1.3505492210388184,
+            1.4167381525039673,
+            0.9932060837745667,
+            -0.009363463148474693,
+            0.5231891870498657,
+            -1.8525220155715942
+          ],
+          "mae32_on_these_rows": 0.24004727602005005,
+          "mae128_on_these_rows": 0.27132001519203186,
+          "mean_abs_pred_shift_32_to_128": 0.07655578851699829,
+          "max_abs_pred_shift_32_to_128": 0.26560020446777344
+        },
+        "valid_repeat2_max_abs_diff": 4.76837158203125e-07,
+        "train": {
+          "pred32": [
+            0.9858410954475403,
+            -2.118102550506592,
+            1.9084995985031128,
+            -1.0562207698822021,
+            0.2864258885383606,
+            0.6007527112960815,
+            -1.5976780652999878,
+            -0.4189164936542511
+          ],
+          "pred128": [
+            0.9184892773628235,
+            -2.19281005859375,
+            1.8954418897628784,
+            -0.7615054845809937,
+            0.31895503401756287,
+            0.4312807619571686,
+            -1.680052638053894,
+            -0.3737356662750244
+          ],
+          "label": [
+            0.8350355625152588,
+            -2.193549156188965,
+            1.8422303199768066,
+            -0.7115330100059509,
+            0.24634701013565063,
+            0.5229709148406982,
+            -1.7172499895095825,
+            -0.4237147867679596
+          ],
+          "mae32_on_these_rows": 0.10993000864982605,
+          "mae128_on_these_rows": 0.05485643818974495,
+          "mean_abs_pred_shift_32_to_128": 0.09742359817028046,
+          "max_abs_pred_shift_32_to_128": 0.2947152853012085
+        },
+        "train_repeat2_max_abs_diff": 3.5762786865234375e-07
+      }
+    },
+    "repeat_invariance": {}
+  },
+  "p3n_equivalence": {
+    "checkpoint": "tracks/structural-sufficiency/zinc_perf_protocol_v1/runs/p3_s0/best.pt",
+    "epoch": 272,
+    "molecules": 16,
+    "max_abs_prediction_diff_bjoc_vs_p3n": 0.0,
+    "parameter_count_p3n": 413505,
+    "parameter_count_bjoc": 413505,
+    "parameter_count_equal": true,
+    "note": "Same frozen checkpoint, same molecules, original batcher vs the v1 cached batch layout.  Difference is float32 reassociation only."
+  },
+  "trunks": {
+    "M": {
+      "parameters": 435681,
+      "within_cap": true,
+      "n_parameter_tensors": 29,
+      "grad_tensors": 29,
+      "all_grad_finite": true,
+      "nonzero_grad_tensors": 29,
+      "ssl_init": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "forward_finite": true,
+      "pred_shape": [
+        8
+      ],
+      "cross_graph_isolation_max_abs_diff_other_molecules": 0.0,
+      "cross_graph_perturbation_self_diff": 18.773405075073242,
+      "batch_vs_single_max_abs_diff": 2.384185791015625e-07
+    },
+    "S": {
+      "parameters": 468161,
+      "within_cap": true,
+      "n_parameter_tensors": 46,
+      "grad_tensors": 46,
+      "all_grad_finite": true,
+      "nonzero_grad_tensors": 46,
+      "ssl_init": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "forward_finite": true,
+      "pred_shape": [
+        8
+      ],
+      "cross_graph_isolation_max_abs_diff_other_molecules": 0.0,
+      "cross_graph_perturbation_self_diff": 4.848548889160156,
+      "batch_vs_single_max_abs_diff": 1.3113021850585938e-06
+    },
+    "Maux": {
+      "parameters": 448385,
+      "within_cap": true,
+      "n_parameter_tensors": 33,
+      "grad_tensors": 29,
+      "all_grad_finite": true,
+      "nonzero_grad_tensors": 29,
+      "ssl_init": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "forward_finite": true,
+      "pred_shape": [
+        8
+      ]
+    },
+    "Saux": {
+      "parameters": 480865,
+      "within_cap": true,
+      "n_parameter_tensors": 50,
+      "grad_tensors": 46,
+      "all_grad_finite": true,
+      "nonzero_grad_tensors": 46,
+      "ssl_init": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "forward_finite": true,
+      "pred_shape": [
+        8
+      ]
+    }
+  },
+  "masked_view": {
+    "molecule": 3,
+    "masked_tensors_unchanged_when_hidden_truth_changes": {
+      "atom_feat": true,
+      "bond_feat": true,
+      "junc_feat": true,
+      "global_feat": true,
+      "target_changed": true
+    },
+    "pass": true,
+    "masked_cache_present": false,
+    "note": "The masked object is rebuilt from the masked raw graph, so the masked branch cannot read the hidden type from any feature field."
+  }
+}

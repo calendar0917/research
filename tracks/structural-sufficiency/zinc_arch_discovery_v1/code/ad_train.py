@@ -46,6 +46,20 @@ RECIPES: dict[str, dict[str, Any]] = {
               batch_size=128, valid_batch_size=256),
 }
 
+#: Named recipe variants used by the later recipe x architecture cross
+#: (zinc_recipe_trunk_v2).  Adding them here keeps one trainer implementation;
+#: the candidate recipes above stay byte-identical.
+#:   A = the mature P3/R3 recipe: Adam, 360 epochs, no warm-up, per-step cosine
+#:   B = the actual v1 T recipe: AdamW, 600 epochs, 500-step warm-up
+RECIPE_VARIANTS: dict[str, dict[str, Any]] = {
+    "A": dict(optimizer="adam", lr=1.0e-3, min_lr=1.0e-5, weight_decay=1.0e-5,
+              warmup_steps=0, epochs=360, dropout=0.0, grad_clip=5.0,
+              batch_size=128, valid_batch_size=256),
+    "B": dict(optimizer="adamw", lr=1.0e-3, min_lr=1.0e-5, weight_decay=1.0e-5,
+              warmup_steps=500, epochs=600, dropout=0.0, grad_clip=5.0,
+              batch_size=128, valid_batch_size=256),
+}
+
 
 def run_dir(candidate: str, seed: int, tag: str | None = None) -> Path:
     prefix = f"{tag}_" if tag else ""
@@ -137,7 +151,7 @@ def collate(cache: Mapping[str, Any], rows: Sequence[int], candidate: str, *,
             batch.update({"Nmax": Nmax, "mask": mask, "dist_pad": dist_pad, "twohop": twohop})
         return batch
 
-    if candidate == "T":
+    if candidate in ("T", "P3N", "M", "S", "Maux", "Saux"):
         junc_ptr = np.asarray(cache["junc_ptr"])
         junc_idx, junc_batch, _, junc_counts = _ranges(junc_ptr, rows)
         # Batch-local offsets, not dataset-global offsets: the encoders index
@@ -289,8 +303,24 @@ def _param_audit(model: torch.nn.Module, optimizer: torch.optim.Optimizer) -> di
 def train(candidate: str, seed: int, device, *, epochs: int | None = None,
           tag: str | None = None, force: bool = False,
           weight_decay: float | None = None, lr: float | None = None,
-          dropout: float | None = None) -> dict:
-    recipe = dict(RECIPES[candidate])
+          dropout: float | None = None,
+          recipe_variant: str | None = None,
+          model_builder=None, out_dir: Path | None = None,
+          aux: dict | None = None) -> dict:
+    """Train one candidate/seed.
+
+    ``recipe_variant`` selects a named override (see ``RECIPE_VARIANTS``);
+    ``model_builder`` replaces ``M.build_model`` (new architecture families);
+    ``out_dir`` redirects the run directory; ``aux`` adds a per-step auxiliary
+    loss term supplied by the caller (masked structural reconstruction).
+    """
+    recipe = dict(RECIPES[candidate]) if candidate in RECIPES else {}
+    if recipe_variant is not None:
+        if recipe_variant not in RECIPE_VARIANTS:
+            raise ValueError(f"unknown recipe variant {recipe_variant!r}")
+        recipe.update(RECIPE_VARIANTS[recipe_variant])
+    if not recipe:
+        raise ValueError(f"candidate {candidate!r} needs a declared recipe variant")
     if weight_decay is not None:
         recipe["weight_decay"] = float(weight_decay)
     if lr is not None:
@@ -298,7 +328,8 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
     if dropout is not None:
         recipe["dropout"] = float(dropout)
     n_epochs = int(recipe["epochs"] if epochs is None else epochs)
-    out = run_dir(candidate, seed, tag)
+    builder = M.build_model if model_builder is None else model_builder
+    out = run_dir(candidate, seed, tag) if out_dir is None else Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     if (out / "train.json").exists() and not force:
         C.log(f"[{candidate} s{seed}] already complete; use --force to rerun")
@@ -312,7 +343,8 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
     rows_train = np.arange(len(y_train), dtype=np.int64)
     rows_valid = np.arange(len(y_valid), dtype=np.int64)
 
-    model, model_info = M.build_model(candidate, norm, seed, device)
+    model, model_info = builder(candidate, norm, seed, device)
+    aux_meter: dict[str, list[float]] = {}
     params = C.parameter_count(model)
     if params > 500_000:
         raise RuntimeError(f"{candidate}: {params} > 500k")
@@ -351,6 +383,12 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
             target = torch.as_tensor(y_train[rows], dtype=torch.float32, device=device)
             pred = model(batch)
             loss = F.l1_loss(pred.view(-1), target.view(-1))
+            if aux is not None:
+                aux_total, aux_parts = aux["loss"](model, rows, device, epoch)
+                loss = loss + float(aux["weight"]) * aux_total
+                for k, v in aux_parts.items():
+                    aux_meter.setdefault(k, []).append(float(v.detach()))
+                aux_meter.setdefault("loss", []).append(float(aux_total.detach()))
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             if epoch == 1 and start == 0:
@@ -381,14 +419,15 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
             batch_size=int(recipe["valid_batch_size"]),
         )
         sec = time.perf_counter() - t_ep
-        curve.append({
+        entry = {
             "epoch": int(epoch),
             "online_train_mae": float(online),
             "valid_mae": float(valid_mae),
             "lr": float(last_lr),
             "seconds": float(sec),
             "steps": int(steps_per_epoch),
-        })
+        }
+        curve.append(entry)
         if valid_mae < best["valid_mae"]:
             best = {"valid_mae": float(valid_mae), "epoch": int(epoch)}
             best_state = C.cpu_state(model)
@@ -420,7 +459,7 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
 
     # Fixed-object evaluation of the selected best checkpoint.
     eval_batch = 64 if candidate in ("P0", "P1") else 256
-    best_model, _ = M.build_model(candidate, norm, seed, device)
+    best_model, _ = builder(candidate, norm, seed, device)
     C.load_state(best_model, best_state, device)
     best_pred_valid, best_valid = evaluate(
         best_model, valid_cache, rows_valid, candidate=candidate, device=device,
@@ -459,6 +498,12 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
             "valid_cache_meta": valid_cache["meta"],
         },
         "model_info": model_info,
+        "recipe_variant": recipe_variant,
+        "auxiliary": None if aux is None else {
+            "weight": float(aux["weight"]),
+            "provenance": aux.get("provenance", {}),
+            "epoch_mean": {k: float(np.mean(v)) for k, v in aux_meter.items()},
+        },
         "parameter_count": int(params),
         "parameter_audit": audit,
         "recipe": {

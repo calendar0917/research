@@ -347,6 +347,30 @@ class TensorAssociationModel(nn.Module):
         return self.reader(reader_in).view(-1)
 
 
+def path_token_scalars(wa: torch.Tensor, wanon: torch.Tensor, L: torch.Tensor) -> torch.Tensor:
+    """Per-token walk scalars ``[pos_norm, is_new, is_repeat, closes, is_last, len_norm]``.
+
+    ``closes`` marks **return-to-start**: an anonymous pattern entry of 0 at a
+    position > 0 means the walk is back at the atom it started from.  The
+    pre-correction v1 code used ``wa == wa[:, :1]`` (same *atom type* as the
+    start), which also fires on first visits to a different atom that shares
+    the start type; that was a naming/semantic bug, not a feature choice.
+    """
+    W, T = wa.shape
+    pos = torch.arange(T, device=wa.device).view(1, T)
+    valid = pos <= L.view(W, 1)
+    is_new = (wanon == pos) & valid
+    is_repeat = (wanon < pos) & valid
+    closes = (wanon == 0) & (pos > 0) & valid
+    is_last = pos == L.view(W, 1)
+    pos_norm = pos.float() / L.view(W, 1).clamp(min=1).float()
+    len_norm = (L.view(W, 1).float() / float(D.MAX_WALK)).expand(-1, T)
+    return torch.stack(
+        [pos_norm, is_new.float(), is_repeat.float(), closes.float(), is_last.float(), len_norm],
+        dim=-1,
+    )
+
+
 class PathModel(nn.Module):
     """P0 / P1: sampled walk patterns with GRU and optional pattern attention."""
 
@@ -382,18 +406,8 @@ class PathModel(nn.Module):
         wanon = batch["walk_anon"].long()
         L = batch["walk_len"].long()
         W, T = wa.shape
-        pos = torch.arange(T, device=wa.device).view(1, T)
-        valid = pos <= L.view(W, 1)
-        is_new = (wanon == pos) & valid
-        is_repeat = (wanon < pos) & valid
-        closes = (wa == wa[:, :1]) & (pos > 0) & valid
-        is_last = pos == L.view(W, 1)
-        pos_norm = pos.float() / L.view(W, 1).clamp(min=1).float()
-        len_norm = (L.view(W, 1).float() / float(D.MAX_WALK)).expand(-1, T)
-        scalars = torch.stack(
-            [pos_norm, is_new.float(), is_repeat.float(), closes.float(), is_last.float(), len_norm],
-            dim=-1,
-        )
+        valid = torch.arange(T, device=wa.device).view(1, T) <= L.view(W, 1)
+        scalars = path_token_scalars(wa, wanon, L)
         tok = torch.cat(
             [self.atom_emb(wa), self.bond_emb(wb), self.anon_emb(wanon), scalars], dim=-1
         )
