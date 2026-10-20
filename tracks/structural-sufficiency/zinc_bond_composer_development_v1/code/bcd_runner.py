@@ -1080,9 +1080,10 @@ def cmd_analyze(args: argparse.Namespace) -> int:
     }
     # Ledger from the actual run records; evaluation is inside the training wall.
     formal_s = sum(_wall_record(recs[k])[0] for k in M.KINDS)
-    smoke_path = C.PROJECT / "smoke.json"
-    smoke = C.read_json(smoke_path) if smoke_path.exists() else {}
-    smoke_s = float(smoke.get("checks", {}).get("smoke_total_seconds", 0.0))
+    smoke_paths = [C.PROJECT / "smoke.json", C.PROJECT / "smoke_probe_5ep.json"]
+    smoke_records = [C.read_json(p) for p in smoke_paths if p.exists()]
+    smoke = smoke_records[-1] if smoke_records else {}
+    smoke_s = sum(float(rec.get("checks", {}).get("smoke_total_seconds", 0.0)) for rec in smoke_records)
     total_s = formal_s + smoke_s
     payload["gpu_ledger"] = {
         "protocol_id": C.PROTOCOL_ID,
@@ -1102,6 +1103,19 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         "formal_runs_seconds": {k: _wall_record(recs[k])[0] for k in M.KINDS},
         "formal_total_seconds": formal_s,
         "smoke_total_seconds": smoke_s,
+        "smoke_attempts": [
+            {
+                "path": C.relative(p),
+                "epochs": rec.get("epochs"),
+                "rows": rec.get("n_prefix_rows"),
+                "status": rec.get("status"),
+                "seconds": rec.get("checks", {}).get("smoke_total_seconds", 0.0),
+                "projected_with_margin_and_reserve_seconds": rec.get("checks", {}).get(
+                    "projected_with_margin_and_reserve"
+                ),
+            }
+            for p, rec in zip([p for p in smoke_paths if p.exists()], smoke_records)
+        ],
         "smoke_status": smoke.get("status"),
         "total_gpu_seconds": total_s,
         "total_gpu_hours": total_s / 3600.0,
