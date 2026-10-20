@@ -1,0 +1,162 @@
+# BCD — zinc bond-composer development v1 (frozen configuration).
+# Protocol: tracks/structural-sufficiency/zinc_bond_composer_development_v1/PROTOCOL.md
+# Internal development round on the already exposed SSRC Fit-8000 / Monitor-1000 split.
+# Not a blind test, not a formal S/T/R selection, not Phase 2c, not GRIT.
+protocol_id: zinc-bond-composer-development-v1
+round: zinc_bond_composer_development_v1
+status: FROZEN_PRE_GPU
+kind: small_budget_architecture_development
+
+data:
+  source: "official PyG ZINC subset=True train; SSRC phase1b split"
+  split_file: tracks/structural-sufficiency/results/phase1b/split_zinc_phase1b.json
+  split_file_sha256: fbca5fd5ac9c82c457bf4d78781fbe9936dd7068082377ff8cc2bf2309d72b49
+  fit_rows: 8000
+  monitor_rows: 1000
+  fit_rows_sha256_int64: 7f66a23e038c3ad4879540f23d1e5a6cd6b8a789bbee8950a7b2c1d8b345ab15
+  monitor_rows_sha256_int64: dc6cc4e9cb9d3cebac038b487f7e699e6c0aa52e5075e45825975b034509304f
+  reserved_rows: 1000
+  reserved_labels_read: false
+  reserved_structures_read: false
+  official_valid_loaded: false
+  official_test_loaded: false
+  official_test_rows_accessed: 0
+  monitor_is_development_set: true
+  monitor_reused: true
+  no_extra_unlabelled_data: true
+
+frozen_inputs:
+  objects_fit:
+    path: tracks/structural-sufficiency/results/phase1e/baseline/objects_fit.pt
+    sha256: bfbf96532029f8b5020e416bbf0f9fc7bdb257f5377265fc05b9c7c0f02d766c
+  objects_monitor:
+    path: tracks/structural-sufficiency/results/phase1e/baseline/objects_monitor.pt
+    sha256: 7a71850655ea606da51ee7bf27edb3c09340b25d701dee586b15a30b55652f0a
+  standardiser:
+    path: tracks/structural-sufficiency/results/phase1e/baseline/prep_fit.json
+    sha256: b00addec172a0e71f8556760ae2896360e8770dcf1fe25e86226da18b531d04b
+    fit_only: true
+    n_fit: 8000
+  ssl_encoder_seed0:
+    path: tracks/structural-sufficiency/results/phase1e/baseline/pretrain_s0.pt
+    sha256: 0d045e6090062ac6e919c79c82c2cbc9a223c7974122c91d5b68a244d265bc0c
+    description: "seed-0 masked-SSL encoder trained on the same 8000 Fit rows only"
+  canonical_post_ssl:
+    encoder_sha256: 37282569525d1e69a6172c23f8f2e357ba7f35892af6116ce980628c54c4d4d6
+    group_state_sha256: d9ffbd15356659ed06af4b43077bb7f27403ad0afc3e7ac00c4d34fc98c7415f
+    note: "constructed by bp.build_bjoc_null(0) + mp.load_encoder_state; not a soup"
+  forbidden_initialiser: "any completed P3 soup, including phase1e train_P3E_s0_soup.pt"
+
+models:
+  B0:
+    name: original_P3
+    total_parameters: 413505
+    reader: "321 -> 256 -> 256 -> 1, original parameters retained"
+    branch: none
+  B1:
+    name: P3_plus_per_bond_FFN_branch
+    total_parameters: 441825
+    branch_parameters: 28320
+    mix: "gamma * FFN_extra; FFN_extra 48 -> 96 -> 48 with bias and SiLU; gamma 48-d init 1; 9408 parameters"
+  B2:
+    name: P3_plus_per_bond_key_attention_branch
+    total_parameters: 441825
+    branch_parameters: 28320
+    mix: "standard 4-head Q/K/V/output self-attention, head dim 12, all valid physical-bond keys of the same molecule visible; dropout 0; 9408 parameters"
+
+branch:
+  input: "c_e from the shared group_composer, 96-d"
+  input_projection: "Linear(96 -> 48), bias, 4656 parameters"
+  h0: "Linear(96 -> 48)(c_e)"
+  block: "U = H + MIX(LN1(H)); H1 = U + FFN(LN2(U))"
+  layernorm: "LayerNorm(48, affine=True, eps=1e-5), no final LN"
+  ffn: "48 -> 96 -> 48, both layers biased, SiLU, dropout 0; 9360 parameters"
+  block_parameters: 18960
+  output_projection: "Linear(48 -> 96), weight and bias zero-initialised; 4704 parameters"
+  residual: "c'_e = c_e + Linear_out(48 -> 96)(H1_e)"
+  aggregation: "the original sum(c_e) is replaced by sum(c'_e); reader input remains 321-d"
+  no_relation_bias: true
+  no_distance_bucket: true
+  no_atom_or_junction_tokens: true
+  no_extra_reader: true
+  c_e_caveat: "c_e contains the full-graph Null context; it is not a strictly local or causally interpretable per-bond contribution"
+
+initialisation:
+  trunk: "canonical P3 post-Fit-only-masked-SSL, pre-supervised state for seed 0; all P3 modules trainable"
+  shared: "B0/B1/B2 original P3 parameters are bit-identical at step 0"
+  branch_common: "B1/B2 input projection, LN1, LN2, second FFN and output projection are bit-identical"
+  branch_rng: "dedicated generators; global RNG restored"
+  output_zero: "zero only guarantees a common P3 start, not final performance or a novelty claim"
+  soup_warm_start: false
+
+recipe:
+  name: R3
+  epochs: 360
+  batch_size: 128
+  steps_per_epoch: 63
+  updates: 22680
+  lr: 1.0e-3
+  schedule: "per-step cosine to 1.0e-5"
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  loss: raw-y L1
+  soup_last: 5
+  shuffle_offset: 101
+  batch_order_sha256: d142e307339b2869f4ad2d3ff8472e28249f1dd1ff887a4ae55f5b837d61c81f
+  early_stopping: false
+  valid_based_selection: false
+  fp32: true
+  amp: false
+  torch_compile: false
+
+development_curve:
+  eval_every_epochs: 20
+  also_evaluate_epoch_1: true
+  fit_rows_evaluated: 8000
+  monitor_rows_evaluated: 1000
+  eval_batch_size: 256
+  eval_rng: none
+  training_batch_sequence_changed: false
+  note: "Monitor is repeatedly used for development curves and metrics; it is not a blind or independent confirmation set"
+
+decision:
+  primary_table: "fixed last-5 soup raw-y MAE on Fit-8000 and Monitor-1000"
+  contrasts:
+    - "B0 - B1"
+    - "B0 - B2"
+    - "B1 - B2"
+  robustness_only:
+    - "ordinary Monitor y > -3"
+    - "drop the 10 Monitor rows with the largest B0 soup error (fixed by B0)"
+  worth_followup_line:
+    b2_vs_b0_monitor_mean_gain_min: 0.003
+    b2_beats_b1: true
+    ordinary_positive: true
+    drop_b0_worst10_positive: true
+  note: "single-seed development line, not confirmation and not a universal constant"
+  best_monitor_epoch: "reported as a development observation only, never as the primary result"
+
+budget:
+  gpu_hours_cap: 0.75
+  accounting: "sum of A100 wall-clock occupancy on both GPUs, including smoke, three formal runs, curves, evaluation, failures and retries"
+  planned_formal_runs: 3
+  seed: 0
+  smoke_epochs: 2
+  smoke_rows: 1024
+  projection_warmup_updates: 2
+  projection_estimator: "mean per-update time over smoke updates 3..16; 20 % margin + smoke wall + 300 s reserve"
+  margin_factor: 1.20
+  overhead_reserve_seconds: 300
+  stop_rule: "if the projected matrix does not fit with at least 10 % margin, deliver implementation and cost projection only; do not shorten epochs or add budget"
+  no_seed1: true
+  no_full_10k_refit: true
+  no_model_addition_from_remaining_budget: true
+
+claims:
+  exploratory: true
+  blind_test: false
+  independent_confirmation: false
+  official_valid_test_claimed: false
+  novelty_claimed: false
+  related_prior_result: "the old p3_bond_relation_bridge_v1 retained P3 and added a one-hop bond-pair MLP residual with no gain; this round changes the interface and uses a shared composer, global content attention and a nonlinear block, so it is related but not identical"
+  allowed_interpretation: "does retaining the full P3 reader while interacting only on one shared per-bond composer representation show a useful development signal?"
