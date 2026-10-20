@@ -1,0 +1,47 @@
+# ZSRT screen — frozen before the formal seed-0 screen.
+# Backbone: GRIT-style RRWP relation input + full attention (borrowed, disclosed).
+base:
+  layers: 8
+  n_heads: 8
+  dim_hidden: 64
+  ksteps: 21
+  dropout: 0.0
+  attn_dropout: 0.1
+  batch_size: 128
+  max_epochs: 360
+  warmup_epochs: 20
+  base_lr: 0.001
+  min_lr: 0.000001
+  weight_decay: 0.00001
+  clip_grad_norm: 1.0
+  optimizer: adamW
+  loss: l1
+  graph_pooling: add
+  rrwp: true
+  full_attn: true
+  update_e: true
+  edge_enhance: true
+  O_e: true
+  norm_e: true
+  deg_scaler: true
+  batch_norm: true
+  layer_norm: false
+  patience: 0
+
+variants:
+  A_main:
+    base_lr: 0.001
+    weight_decay: 0.00001
+    rrwp: true
+  B_lr_low:
+    base_lr: 0.0003
+    weight_decay: 0.00001
+    rrwp: true
+  C_wd_high:
+    base_lr: 0.001
+    weight_decay: 0.0001
+    rrwp: true
+  D_no_rrwp:
+    base_lr: 0.001
+    weight_decay: 0.00001
+    rrwp: false

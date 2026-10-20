@@ -1,0 +1,89 @@
+# Frozen before formal GPU runs. New protocol for zinc-perf-protocol-v1.
+protocol_id: zinc-perf-protocol-v1
+track: structural-sufficiency
+namespace: tracks/structural-sufficiency/zinc_perf_protocol_v1
+status: FROZEN_BEFORE_FORMAL_TRAJECTORY
+
+data:
+  source: official PyG ZINC subset=True
+  root: data/ZINC
+  split_sizes: {train: 10000, valid: 1000, test: 1000}
+  target: raw_y
+  metric: mae
+  forbidden:
+    - ZINC-Full
+    - external molecules
+    - extra property labels
+    - target decomposition / logP / SA formula inputs
+    - internal 8k/1k split numbers in the primary table
+
+selection:
+  primary: best_valid_single_checkpoint
+  rule: >-
+    for each seed independently, choose the epoch-end checkpoint with the lowest
+    official-valid raw-y MAE; exact ties keep the earlier epoch. The selector
+    never constructs or reads test.
+  secondary_diagnostic: last5_soup (P3 reference only)
+  test_policy: one_shot_after_freeze
+  test_history: historically_exposed_not_blind
+  report: per-seed MAE and mean +/- sample std; no prediction ensemble
+
+validation:
+  cadence: every_epoch
+  mode: model_eval_no_grad
+  rng_isolation: torch.random.fork_rng (CPU + current CUDA device)
+  bn_updates: none
+  train_metric_online: within-epoch pre-update running mean (online_train_mae)
+  train_metric_snapshot: >-
+    eval-mode MAE on the fixed first 2000 official train rows, every 20 epochs
+  train_metric_full: eval-mode full-10k MAE at best and final checkpoints
+
+p3_reference:
+  model: BJOC-Null + train-only masked SSL + R3
+  parameters: 413505
+  seeds: [0, 1]
+  epochs: 360
+  batch_size: 128
+  optimizer: Adam
+  lr: 0.001
+  lr_min: 0.00001
+  schedule: cosine_per_step_over_28440_updates
+  weight_decay: 0.00001
+  grad_clip: 5.0
+  shuffle_offset: 101
+  continue_rule:
+    require_best_epoch_ge: 320
+    require_valid_gain_epochs_320_to_360_ge: 0.001
+    max_extra_epochs: 360
+    fixed_lr: 0.00001
+    scheduler: disabled
+    patience: 60
+    label: 360_plus_low_lr_continuation
+  allowed_comparisons: [best_valid_single, epoch360_final, last5_soup]
+  forbidden: [width/depth sweep, SSL objective sweep, optimizer sweep, many LRs]
+
+zsrt:
+  screen_seed: 0
+  screen_variants: [A_main, B_lr_low, C_wd_high, D_no_rrwp]
+  final_seeds: [0, 1, 2]
+  max_epochs: 360
+  selection_rule: >-
+    choose by the complete seed-0 valid curve and best-valid MAE. Differences
+    below 0.0005 are ties and resolve in favour of A_main. Test, tail subgroups
+    and train loss are not selection criteria. If the chosen config is still
+    improving at the cap, record budget-limited rather than architecture failure.
+  small_signal_threshold: 0.003
+  stop_if_all_worse_than_p3_by: 0.005
+
+budget:
+  total_a100_hours: 8.0
+  reference_cap: 1.5
+  new_model_target: 5.5
+  reserve: 0.5
+
+test_read:
+  frozen_by: analysis/protocol_freeze.json
+  require_checkpoint_sha256: true
+  require_code_sha256: true
+  one_read_only: true
+  disclose_history: true
