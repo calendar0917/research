@@ -3,7 +3,7 @@
 | field | value |
 |---|---|
 | protocol | `zinc-perf-protocol-v1` (new performance protocol) |
-| round status | **closed at the development conclusion; no test read** |
+| round status | **closed at the development conclusion; no terminal test scoring** |
 | data | official PyG ZINC `subset=True`, 10,000 / 1,000 / 1,000 |
 | metric | raw-`y` MAE, lower is better |
 | primary selector | per-seed single **best-valid** checkpoint (ties → earlier epoch) |
@@ -39,7 +39,8 @@ sample efficiency of the full-attention composition at 28,440 updates, not a
 broken RRWP. The valid tail of C is flat after epoch 315 while train MAE keeps
 falling, so this is not a “still improving at the cap” budget truncation.
 Per the stop rule, no ZSRT seeds 1/2 were purchased, no freeze was written, and
-the test was **not** opened.
+the terminal test was **not** scored (the audit-only test-scale read is
+disclosed in §8).
 
 ## 1. What the new protocol changed
 
