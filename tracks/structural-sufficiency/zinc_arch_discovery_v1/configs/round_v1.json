@@ -1,0 +1,177 @@
+{
+  "protocol": "zinc-arch-discovery-v1",
+  "data": {
+    "dataset": "PyG ZINC official subset",
+    "train": 10000,
+    "valid": 1000,
+    "target": "raw y",
+    "metric": "MAE",
+    "test": "not read"
+  },
+  "shared": {
+    "atom_feat_dim": 108,
+    "bond_feat_dim": 7,
+    "junction_feat_dim": 32,
+    "global_dim": 33,
+    "root_joint_categories": 693,
+    "root_shell_dims": [
+      3,
+      21
+    ],
+    "root_scalars": 11,
+    "twohop_categories": 189,
+    "walk_bank": 128,
+    "walk_lengths": [
+      2,
+      4,
+      6,
+      8
+    ],
+    "walk_per_length": 32,
+    "train_walk_sample_per_length": 8,
+    "valid_walks": "all 128",
+    "param_cap": 500000,
+    "vq": false,
+    "local_message_passing": false
+  },
+  "candidates": {
+    "R0": {
+      "params": 307809,
+      "ssl": false,
+      "features": "rooted radius 1/2/3 joint atom-pair x bond-type counts, shells, root scalars",
+      "readout": "sum/mean/second/count + composition + global33",
+      "recipe": {
+        "optimizer": "adam",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "batch_size": 128,
+        "valid_batch_size": 256
+      }
+    },
+    "R1": {
+      "params": 458961,
+      "ssl": false,
+      "features": "R0 atoms + shortest-path and sparse two-hop relation biases",
+      "readout": "R0 readout after 2 pre-LN global attention layers",
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.0008,
+        "min_lr": 1e-05,
+        "weight_decay": 0.0001,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "batch_size": 128,
+        "valid_batch_size": 256
+      }
+    },
+    "T": {
+      "params": 462081,
+      "ssl": true,
+      "ssl_source": "P3 pretrain_encoder_s0.pt (fine-tuned)",
+      "features": "rank-16 static incidence outer products C_AB and C_BJ, first-order sums/means, counts",
+      "readout": "residual MLP + composition + global33",
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "batch_size": 128,
+        "valid_batch_size": 256
+      }
+    },
+    "P0": {
+      "params": 367361,
+      "params_corrected": 281121,
+      "ssl": false,
+      "features": "128 reversal-canonical walks, length 2/4/6/8, atom/bond/anonymous revisit pattern",
+      "readout": "GRU + length-grouped mean/second/count + composition + global33 (corrected readout is count-normalized)",
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "batch_size": 128,
+        "valid_batch_size": 16
+      }
+    },
+    "P1": {
+      "params": 442145,
+      "params_corrected": 355905,
+      "ssl": false,
+      "features": "P0 walks + one global pattern-attention layer",
+      "readout": "P0 readout after attention (corrected readout is count-normalized)",
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.0008,
+        "min_lr": 1e-05,
+        "weight_decay": 0.0001,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "batch_size": 128,
+        "valid_batch_size": 8
+      }
+    },
+    "B": {
+      "params": 338805,
+      "ssl": false,
+      "features": "biconnected blocks, bridges, isolated atoms, block atom/bond joint stats, articulation/cycle stats, block-cut relation",
+      "readout": "block attention + mask-aware pooling + composition + global33",
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 0.0001,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "batch_size": 128,
+        "valid_batch_size": 256
+      }
+    }
+  },
+  "followups": {
+    "P0_corrected": {
+      "candidate": "P0",
+      "params": 281121,
+      "change": "removed raw sampled path sum and raw sampled count from reader",
+      "recipe": {
+        "epochs": 600,
+        "weight_decay": 1e-05
+      }
+    },
+    "P1_corrected": {
+      "candidate": "P1",
+      "params": 355905,
+      "change": "removed raw sampled path sum and raw sampled count from reader",
+      "recipe": {
+        "epochs": 600,
+        "weight_decay": 0.0001
+      }
+    },
+    "T_wd_1e-4": {
+      "candidate": "T",
+      "params": 462081,
+      "change": "weight_decay 1e-5 -> 1e-4",
+      "recipe": {
+        "epochs": 600,
+        "weight_decay": 0.0001
+      }
+    }
+  },
+  "reference": {
+    "p3_s0": {
+      "best_valid": 0.07910549778419873,
+      "best_epoch": 272,
+      "params": 413505,
+      "gpu_hours": 0.201,
+      "ssl": "frozen train-only masked SSL",
+      "rerun": false
+    }
+  }
+}
