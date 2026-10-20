@@ -28,8 +28,8 @@ ANALYSIS2 = EXP2 / "analysis"
 
 RUNS = {
     "P3 x A": C.REPO / "tracks/structural-sufficiency/zinc_perf_protocol_v1/runs/p3_s0",
-    "P3 x B": R2.run_dir("P3N", 0, "xB"),
-    "T x A": R2.run_dir("T", 0, "xA"),
+    "P3 x B": R2.RUNS2 / "P3N_s0",  # Phase I cells were launched without --tag
+    "T x A": R2.RUNS2 / "T_s0",
     "T x B": C.REPO / "tracks/structural-sufficiency/zinc_arch_discovery_v1/runs/T_s0",
     "M supervised": R2.run_dir("M", 0, "m"),
     "M joint": R2.run_dir("Maux", 0, "m"),
@@ -54,10 +54,10 @@ def load(name: str, path: Path) -> dict | None:
     entry = {
         "name": name,
         "path": str(path.relative_to(C.REPO)),
-        "candidate": info["candidate"],
+        "candidate": info.get("candidate", info.get("model", "P3")),
         "seed": info["seed"],
         "recipe_variant": info.get("recipe_variant"),
-        "recipe": {k: info["recipe"][k] for k in
+        "recipe": {k: info["recipe"].get(k) for k in
                    ("optimizer", "lr", "min_lr", "weight_decay", "warmup_steps",
                     "epochs", "batch_size", "steps_per_epoch", "updates")},
         "parameters": info["parameter_count"],
