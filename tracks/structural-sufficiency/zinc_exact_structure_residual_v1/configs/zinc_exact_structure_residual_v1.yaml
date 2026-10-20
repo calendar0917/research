@@ -1,0 +1,131 @@
+# Frozen-before-GPU protocol for zinc-exact-structure-residual-v1.
+# Read by code/esr_runner.py; any change after `freeze` invalidates the run.
+
+protocol_id: zinc-exact-structure-residual-v1
+track: structural-sufficiency
+kind: bounded architecture development (P3 + exact rooted-patch type residual)
+official_test: never_loaded
+development_set: official_valid_exposed_reused
+total_gpu_hours_cap: 8.0
+phase1_gpu_hours_cap: 4.0
+
+data:
+  root_results: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1
+  objects_train: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt
+  objects_valid: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt
+  prep_train: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json
+  ssl_encoder_seed0: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt
+  ssl_encoder_seed1: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt
+  n_train: 10000
+  n_valid: 1000
+  hashes:
+    objects_train10k: 14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d
+    objects_valid: 61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c
+    prep_train10k: d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a
+    ssl_encoder_seed0: 006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97
+    ssl_encoder_seed1: ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a
+  frozen_p3_r3_valid_mae:
+    "0": 0.07910149778419873
+    "1": 0.08058639967715135
+  frozen_p3_r3_valid_predictions:
+    "0": tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R30.npz
+    "1": tracks/structure-contribution/results/bjoc_recipe_tuning_v1/predictions/valid_R31.npz
+
+vocab:
+  tokenizer: typed_tokenizer_v2_corrected
+  radius_deep: 2
+  radius_parent: 1
+  r0_correction: fixed_zero
+  support_unit: distinct_training_molecules
+  ancestor_closure: true
+  truncation_order: [support_desc, key_bytes]
+  max_total_parameters: 500000
+  keep_all_if_budget_allows: true
+
+residual:
+  rank: 4
+  atom_out: 96
+  depth:
+    "1": 1
+    "2": 2
+  init:
+    beta: zero
+    P: orthonormal_columns_sign_fixed
+  insertion: atom embedding a_v (before bond/junction/composer/reader)
+  reader_unchanged: true
+
+prior:
+  etas: [0.1, 1.0]
+  lambda: eta * sy * K / (2 * N)
+  R_E: mean_t ||a[t]||^2 / (depth(t) * Sh2)
+  R_H: mean_t ||a[t] - a[parent(t)]||^2 / Sh2
+  sh2: mean squared norm of SSL-initialised train atom embeddings
+  sy: train label mean absolute deviation from the train median
+  full_vocab_every_step: true
+  residual_weight_decay: 0.0
+
+recipe:
+  loss: raw_y_L1_batch_molecule_mean
+  batch_size: 128
+  epochs: 360
+  optimizer: Adam
+  lr: 0.001
+  lr_min: 0.00001
+  schedule: cosine_per_step
+  weight_decay: 0.00001
+  residual_weight_decay: 0.0
+  grad_clip: 5.0
+  soup_last: 5
+  shuffle_offset: 101
+  precision: fp32
+
+runs:
+  phase1:
+    seeds: [0, 1]
+    gpu0_seed: 0
+    gpu1_seed: 1
+    configs: [B, E@0.1, E@1.0, H@0.1, H@1.0]
+  phase2:
+    seeds: [2, 3]
+    configs_after_gate: [B, E_star, H_star]
+    ssl_seeds_to_train: [2, 3]
+  seed_sources:
+    "0": frozen_ssl_s0
+    "1": frozen_ssl_s1
+    "2": train_same_recipe
+    "3": train_same_recipe
+
+decision:
+  family_vs_B:
+    both_seeds_improve: true
+    mean_valid_mae_gain_min: 0.003
+    ordinary_region_not_reversed: true
+    drop_reference_worst_k: 10
+    drop_slice_not_reversed: true
+  ordinary_threshold: -3.0
+  select_eta_by: seed_mean_valid_mae
+  phase2_requires: any_family_triggers
+  no_eta_search_beyond_two_declared_levels: true
+
+groups:
+  low_support_threshold: 10
+  fallback_high_threshold: 0.25
+  low_support_majority_fraction: 0.5
+  large_ring_min_size: 6
+  size_terciles_from: train
+
+valid_labels:
+  policy: reuse_single_existing_read
+  source: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/valid_y_read_once.npy
+  source_lock: tracks/structure-contribution/results/bjoc_recipe_tuning_v1/valid_read.lock
+  sha256: 8f6ee636fd23ee977984e49cdc18f352a61bcf24a4987ae11402a402c41d4b45
+
+seed_policy:
+  model_seeds: [0, 1, 2, 3]
+  ssl_same_seed: true
+  recipe_identical_across_arms: true
+
+budget:
+  projection_margin: 1.2
+  projection_reserve_seconds: 300
+  record_cpu_preprocessing_separately: true

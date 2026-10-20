@@ -873,3 +873,23 @@ phase2b:
     - "F has no official-test number because only the single finalist was tested"
     - "the valid M gain is threshold-marginal and the M-F separation is seed-1-driven"
     - "no test-driven follow-up, third seed, width/depth/gating/SSL/recipe change was made"
+
+side_round_zinc_exact_structure_residual_v1:
+  status: RUNNING
+  protocol: zinc-exact-structure-residual-v1
+  protocol_file: tracks/structural-sufficiency/zinc_exact_structure_residual_v1/PROTOCOL.md
+  config: tracks/structural-sufficiency/zinc_exact_structure_residual_v1/configs/zinc_exact_structure_residual_v1.yaml
+  question: >-
+    On the mature P3 system (BJOC-Null + train-only masked SSL + R3), does an
+    exact r1/r2 rooted attributed induced-patch type residual improve
+    generalisation, and does a real r2->r1 parent-sharing prior beat an
+    independent per-type residual at matched capacity?
+  baseline: frozen P3, 413,505 params
+  new_parameters: 63,304 (K=15,730 types, rank 4, atom_out 96); total 476,809 <= 500,000
+  data: official ZINC subset train 10k / valid 1k; official test never loaded
+  valid_discipline: reuse the single existing valid-label read (sha256 8f6ee636...); no new read
+  phase1_matrix: B, E@0.1, E@1.0, H@0.1, H@1.0 x seeds 0,1 (5 runs per GPU, seeds parallel)
+  decision_line: both seeds improve and seed-mean valid MAE gain >= 0.003 and ordinary/drop-B-worst-10 not reversed
+  budget: 8 A100-hours total; phase-1 target <= 4 h
+  supersedes_existing_work: false
+  relation_to_closed_rounds: independent side round; does not reopen S/T/R or Phase 2b
