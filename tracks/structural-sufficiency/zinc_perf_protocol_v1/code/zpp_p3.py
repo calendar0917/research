@@ -44,8 +44,9 @@ CONT_LR = 1.0e-5
 CONT_PATIENCE = 60
 
 
-def run_dir(seed: int) -> Path:
-    return C.RUNS / f"p3_s{int(seed)}"
+def run_dir(seed: int, tag: str | None = None) -> Path:
+    prefix = f"{tag}_" if tag else "p3_"
+    return C.RUNS / f"{prefix}s{int(seed)}"
 
 
 def _to_device(batch: dict, device) -> dict:
@@ -146,17 +147,20 @@ def _curve_entry(epoch, online, lr, seconds, snapshot, valid_mae):
     }
 
 
-def train(seed: int, device, *, force: bool = False) -> dict:
-    out = run_dir(seed)
+def train(seed: int, device, *, force: bool = False, epochs: int | None = None,
+          tag: str | None = None) -> dict:
+    out = run_dir(seed, tag)
     out.mkdir(parents=True, exist_ok=True)
     if (out / "train.json").exists() and not force:
         C.log(f"[p3 s{seed}] already complete; use --force to rerun")
         return C.read_json(out / "train.json")
 
+    n_epochs = EPOCHS if epochs is None else int(epochs)
     prep, objs_train, objs_valid, y_train, y_valid, verify = load_inputs()
     model = build_model(seed, prep, device)
     optimizer = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=TOTAL_UPDATES, eta_min=LR_MIN)
+    total_updates = STEPS_PER_EPOCH * n_epochs
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=total_updates, eta_min=LR_MIN)
     gen = torch.Generator().manual_seed(int(seed) + SHUFFLE_OFFSET)
 
     states: deque = deque(maxlen=SOUP_LAST)
@@ -167,7 +171,7 @@ def train(seed: int, device, *, force: bool = False) -> dict:
     snap_rows = list(range(min(SNAPSHOT_ROWS, len(objs_train))))
     started = time.perf_counter()
 
-    for epoch in range(1, EPOCHS + 1):
+    for epoch in range(1, n_epochs + 1):
         model.train()
         order = torch.randperm(len(objs_train), generator=gen)
         order_hasher.update(np.ascontiguousarray(order.numpy(), dtype=np.int64).tobytes())
@@ -197,7 +201,7 @@ def train(seed: int, device, *, force: bool = False) -> dict:
 
         valid_pred, valid_mae = eval_objects(model, objs_valid, y_valid, device)
         snapshot = None
-        if epoch % SNAPSHOT_EVERY == 0 or epoch == 1 or epoch == EPOCHS:
+        if epoch % SNAPSHOT_EVERY == 0 or epoch == 1 or epoch == n_epochs:
             _, snapshot = eval_objects(model, objs_train[:SNAPSHOT_ROWS], y_train[:SNAPSHOT_ROWS], device)
         curve.append(_curve_entry(epoch, online, lr_last, time.perf_counter() - t_ep, snapshot, valid_mae))
 
@@ -213,14 +217,13 @@ def train(seed: int, device, *, force: bool = False) -> dict:
         )
 
     wall = time.perf_counter() - started
-    final_state = curve[-1]
     torch.save(
         {
             "model": _cpu_state(model),
             "optimizer": optimizer.state_dict(),
             "scheduler": scheduler.state_dict(),
             "gen_state": gen.get_state(),
-            "epoch": EPOCHS,
+            "epoch": n_epochs,
             "best": best,
             "curve": curve,
         },
@@ -243,7 +246,7 @@ def train(seed: int, device, *, force: bool = False) -> dict:
 
     fp_valid, fv = eval_objects(model, objs_valid, y_valid, device)
     fp_train, ft = eval_objects(model, objs_train, y_train, device)
-    fixed["final"] = {"valid_mae": fv, "train_mae_eval_mode": ft, "epoch": EPOCHS}
+    fixed["final"] = {"valid_mae": fv, "train_mae_eval_mode": ft, "epoch": n_epochs}
 
     _load_state(model, soup, device)
     sp_valid, sv = eval_objects(model, objs_valid, y_valid, device)
@@ -270,10 +273,10 @@ def train(seed: int, device, *, force: bool = False) -> dict:
             "valid_labels_alignment": "exact to the frozen historical arrays",
         },
         "recipe": {
-            "epochs": EPOCHS,
+            "epochs": n_epochs,
             "batch_size": BATCH_SIZE,
             "steps_per_epoch": STEPS_PER_EPOCH,
-            "updates": TOTAL_UPDATES,
+            "updates": total_updates,
             "optimizer": "Adam",
             "lr": LR,
             "lr_min": LR_MIN,
@@ -289,7 +292,8 @@ def train(seed: int, device, *, force: bool = False) -> dict:
         "curve": curve,
         "batch_order_sha256": order_hasher.hexdigest(),
         "wall_seconds": float(wall),
-        "gpu_hours": None if device == "cpu" else float(wall) / 3600.0,
+        "gpu_hours": None if str(device).startswith("cpu") else float(wall) / 3600.0,
+        "smoke_override": bool(epochs is not None),
         "device": str(device),
         "notes": [
             "online_train_mae is a within-epoch pre-update running mean",
@@ -435,10 +439,12 @@ def main(argv=None) -> int:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--device", default="cuda:0")
     p.add_argument("--force", action="store_true")
+    p.add_argument("--epochs", type=int, default=None)
+    p.add_argument("--tag", default=None)
     args = p.parse_args(argv)
     device = torch.device(args.device)
     if args.command == "train":
-        train(args.seed, device, force=args.force)
+        train(args.seed, device, force=args.force, epochs=args.epochs, tag=args.tag)
     elif args.command == "continue":
         continue_train(args.seed, device, force=args.force)
     elif args.command == "guard":

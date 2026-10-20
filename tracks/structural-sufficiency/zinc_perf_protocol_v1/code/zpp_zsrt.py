@@ -103,8 +103,9 @@ def build_model(variant: dict, seed: int, device: str):
     return model, cfg, n_params
 
 
-def run_dir(variant: dict, seed: int) -> Path:
-    return C.RUNS / f"zsrt_{variant['name']}_s{int(seed)}"
+def run_dir(variant: dict, seed: int, tag: str | None = None) -> Path:
+    prefix = f"{tag}_" if tag else f"zsrt_{variant['name']}_"
+    return C.RUNS / f"{prefix}s{int(seed)}"
 
 
 def _state_hash(model) -> str:
@@ -178,12 +179,16 @@ def write_curve_csv(path: Path, curve) -> None:
 
 
 def train(variant_name: str, seed: int, device: str, *, force: bool = False,
-          max_epochs: int | None = None) -> dict:
+          max_epochs: int | None = None, tag: str | None = None,
+          batch_size: int | None = None) -> dict:
     variant = load_variant(variant_name)
     if max_epochs is not None:
         variant["max_epochs"] = int(max_epochs)
         variant["smoke_override"] = True
-    out = run_dir(variant, seed)
+    if batch_size is not None:
+        variant["batch_size"] = int(batch_size)
+        variant["smoke_override"] = True
+    out = run_dir(variant, seed, tag)
     out.mkdir(parents=True, exist_ok=True)
     if (out / "train.json").exists() and not force:
         C.log(f"[zsrt {variant_name} s{seed}] already complete")
@@ -386,12 +391,15 @@ def main(argv=None) -> int:
     p.add_argument("--force", action="store_true")
     p.add_argument("--which", default="best", choices=["best", "final", "soup"])
     p.add_argument("--split", default="valid", choices=["valid"])
+    p.add_argument("--tag", default=None)
+    p.add_argument("--batch-size", type=int, default=None)
     args = p.parse_args(argv)
     if args.command == "train":
-        train(args.config, args.seed, args.device, force=args.force, max_epochs=args.max_epochs)
+        train(args.config, args.seed, args.device, force=args.force,
+              max_epochs=args.max_epochs, tag=args.tag, batch_size=args.batch_size)
         return 0
     variant = load_variant(args.config)
-    out = run_dir(variant, args.seed)
+    out = run_dir(variant, args.seed, args.tag)
     info = C.read_json(out / "train.json")
     device = args.device
     data = D.build_data(args.split, ksteps=variant["ksteps"], rrwp=variant["rrwp"])

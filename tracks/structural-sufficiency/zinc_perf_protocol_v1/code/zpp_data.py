@@ -217,10 +217,11 @@ def main(argv=None) -> int:
     p.add_argument("--split", default="train,valid")
     p.add_argument("--ksteps", type=int, default=21)
     p.add_argument("--rrwp", action="store_true", default=True)
+    p.add_argument("--no-write", action="store_true")
     args = p.parse_args(argv)
     if args.command == "audit":
         t0 = time.perf_counter()
-        out = audit_data()
+        out = audit_data(write=not args.no_write)
         C.log(f"data audit ok in {time.perf_counter()-t0:.1f}s: "
               f"train {out['splits']['train']['n']}, valid {out['splits']['valid']['n']}, "
               f"test {out['splits']['test']['n']}")
