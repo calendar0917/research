@@ -349,8 +349,8 @@ rr logs zad2-M-sup-s0 ; rr pull zad2-M-sup-s0
   historical P3 initial state.
 - New trunks: M 0.087468/0.081999 (mean 0.084734), S 0.087267/0.089212 (mean
   0.088239), all <= 500k parameters, all fine-tuned from the frozen SSL
-  encoders. None beats P3 (0.079105/0.076668 under A, 0.076224 under B, mean
-  0.077886 over the two recipe-A seeds).
+  encoders. None beats P3 (P3: seed 0/1 = 0.079105/0.076668 under A, seed 0 =
+  0.076224 under B; two-seed mean 0.077886).
 - Post-hoc recipe check (seed 0): recipe B is worse for M by 0.0073 and
   indistinguishable for S (−0.0003). The trunks' recipe is not a handicap, and
   P3's recipe preference does not transfer to them.
