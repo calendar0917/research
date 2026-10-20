@@ -375,12 +375,14 @@ def build_model(candidate: str, norm: Mapping[str, object], seed: int, device):
     else:
         raise ValueError(f"unknown v2 candidate {candidate!r}")
     model = model.to(device)
-    if candidate != "P3N":
-        path = C.P3_SSL_S0 if int(seed) == 0 else C.P3_SSL_S1
-        if path.exists():
-            info["ssl"] = _load_encoders(model, path, device)
-        else:
-            info["ssl"] = {"source": None, "note": "frozen SSL encoder unavailable; random init"}
+    # P3N must start from exactly the same seed-matched train-only SSL encoder
+    # state as the historical P3 run it is being compared against; otherwise the
+    # recipe cross would be confounded with the initialisation.
+    path = C.P3_SSL_S0 if int(seed) == 0 else C.P3_SSL_S1
+    if path.exists():
+        info["ssl"] = _load_encoders(model, path, device)
+    else:
+        info["ssl"] = {"source": None, "note": "frozen SSL encoder unavailable; random init"}
     n_params = C.parameter_count(model)
     if n_params > 500_000:
         raise RuntimeError(f"{candidate}: {n_params} parameters exceeds the 500k cap")

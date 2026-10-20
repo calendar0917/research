@@ -208,6 +208,51 @@ def check_p3_equivalence() -> dict:
     }
 
 
+def check_p3n_initial_state() -> dict:
+    """P3N must initialise bitwise identically to the historical P3 builder.
+
+    Historical P3-A: ``M.build_arm("B", seed=0, prep, ...)`` then
+    ``M.load_encoder(model, 0, pretrain_encoder_s0.pt)``.  P3N-B (this round)
+    must start from the same state; only the recipe may differ.
+    """
+    _perf = _V1.parents[1] / "zinc_perf_protocol_v1" / "code"
+    if str(_perf) not in sys.path:
+        sys.path.insert(0, str(_perf))
+    import zpp_p3  # noqa: F401
+    import esr_models as E
+
+    prep = C.read_json(C.P3_PREP)
+    bjoc = E.build_arm("B", 0, prep, None, 0.0, torch.device("cpu"))
+    E.load_encoder(bjoc, 0, C.P3_SSL_S0, torch.device("cpu"))
+    ref = bjoc.state_dict()
+
+    p3n, info = A2.build_model("P3N", _norm(), 0, "cpu")
+    mine = p3n.state_dict()
+    remap = {}
+    for key, value in mine.items():
+        if key.startswith("encoders."):
+            remap[key[len("encoders."):]] = value
+        else:
+            remap[key] = value
+    diffs = {}
+    for key, value in ref.items():
+        if key not in remap:
+            diffs[key] = "missing"
+            continue
+        delta = (remap[key].float() - value.float()).abs().max().item()
+        if delta > 0.0:
+            diffs[key] = delta
+    return {
+        "reference": "BJOC(seed 0) + load_encoder(pretrain_encoder_s0.pt)",
+        "compared_tensors": int(len(ref)),
+        "n_differing": int(len(diffs)),
+        "max_abs_diff": float(max([v for v in diffs.values() if not isinstance(v, str)], default=0.0)),
+        "differing_keys": sorted(diffs)[:10],
+        "bitwise_identical": bool(not diffs),
+        "ssl_loaded": bool((info.get("ssl") or {}).get("source")),
+    }
+
+
 # ---------------------------------------------------------------------------
 # 4. new trunks: params, forward/backward, gradients, cross-graph isolation
 # ---------------------------------------------------------------------------
@@ -307,6 +352,7 @@ def main() -> int:
         "closes": check_closes(),
         "path_readout": check_path_readout(),
         "p3n_equivalence": check_p3_equivalence(),
+        "p3n_initial_state": check_p3n_initial_state(),
         "trunks": check_trunks(),
         "masked_view": check_masked_view(),
     }
@@ -319,6 +365,7 @@ def main() -> int:
             print(tag, "valid mean|32-128| =", round(e["valid"]["mean_abs_pred_shift_32_to_128"], 5),
                   "repeat2 max diff =", e["valid_repeat2_max_abs_diff"])
     print("p3n vs bjoc max diff:", out["p3n_equivalence"]["max_abs_prediction_diff_bjoc_vs_p3n"])
+    print("p3n initial state identical to P3-A init:", out["p3n_initial_state"]["bitwise_identical"])
     for cand, e in out["trunks"].items():
         print(cand, e["parameters"], "params; isolation",
               e.get("cross_graph_isolation_max_abs_diff_other_molecules"))

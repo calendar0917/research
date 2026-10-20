@@ -208,6 +208,15 @@
     "parameter_count_equal": true,
     "note": "Same frozen checkpoint, same molecules, original batcher vs the v1 cached batch layout.  Difference is float32 reassociation only."
   },
+  "p3n_initial_state": {
+    "reference": "BJOC(seed 0) + load_encoder(pretrain_encoder_s0.pt)",
+    "compared_tensors": 24,
+    "n_differing": 0,
+    "max_abs_diff": 0.0,
+    "differing_keys": [],
+    "bitwise_identical": true,
+    "ssl_loaded": true
+  },
   "trunks": {
     "M": {
       "parameters": 435681,
@@ -278,7 +287,7 @@
       "target_changed": true
     },
     "pass": true,
-    "masked_cache_present": false,
+    "masked_cache_present": true,
     "note": "The masked object is rebuilt from the masked raw graph, so the masked branch cannot read the hidden type from any feature field."
   }
 }

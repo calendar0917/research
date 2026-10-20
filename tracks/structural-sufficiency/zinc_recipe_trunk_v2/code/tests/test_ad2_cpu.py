@@ -44,10 +44,12 @@ def test_closes_marks_return_to_start_not_same_type():
     assert closes[1].tolist() == [False, False, True]  # one genuine return
 
 
-def test_p3n_matches_bjoc_parameter_count():
+def test_p3n_matches_bjoc_parameter_count_and_loads_ssl():
     model, info = A2.build_model("P3N", _norm(), 0, "cpu")
     assert C.parameter_count(model) == 413505
     assert info["parameters"] == 413505
+    # the recipe cross must start from the same seed-matched SSL encoder state
+    assert info["ssl"] is not None and info["ssl"]["source"].endswith("pretrain_encoder_s0.pt")
 
 
 def test_new_trunks_parameter_cap_and_forward(valid_batch):
