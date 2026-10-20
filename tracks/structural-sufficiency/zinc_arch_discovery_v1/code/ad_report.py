@@ -139,6 +139,14 @@ def decision(table: dict) -> dict:
     p3 = table["p3_reference"]
     below_p3 = [r["model"] for r in rows if r["best_valid_mae"] < p3["best_valid_mae"]]
     below_target = [r["model"] for r in rows if r["best_valid_mae"] <= 0.075]
+    terminal = None
+    test_path = C.ANALYSIS / "test_terminal.json"
+    if test_path.exists():
+        terminal = C.read_json(test_path)
+    p3_test = None
+    p3_test_path = C.ANALYSIS / "p3_test_direct.json"
+    if p3_test_path.exists():
+        p3_test = C.read_json(p3_test_path)
     out = {
         "protocol": C.ROUND_ID,
         "observed": {
@@ -162,7 +170,18 @@ def decision(table: dict) -> dict:
         },
         "hypotheses": [],
         "next_choice": None,
-        "test": "not read; no test prediction or MAE computed",
+        "terminal_test": None if terminal is None else {
+            "split": terminal.get("split"),
+            "T_best": (terminal.get("models") or {}).get("T_best", {}).get("test_mae"),
+            "T_final": (terminal.get("models") or {}).get("T_final", {}).get("test_mae"),
+            "historical_p3_test_mae_seed0_seed1": terminal.get("historical_p3_test_mae_seed0_seed1"),
+            "p3_direct": None if p3_test is None else {
+                "seed0": p3_test.get("seed0"),
+                "seed1": p3_test.get("seed1"),
+            },
+            "note": "Read once after all selections; descriptive only, not used for selection or tuning.",
+        },
+        "test": "read once after checkpoint selection for a terminal generalization check; no model/recipe/epoch/checkpoint changed from test feedback",
     }
     if best is None:
         out["hypotheses"] = ["No candidate run is present locally; nothing to compare."]

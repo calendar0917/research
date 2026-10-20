@@ -1,23 +1,32 @@
 # ZINC architecture-discovery v1 — round report
 
 **Status:** closed. Six seed-0 candidates plus three pre-declared follow-ups were
-trained and evaluated on the official ZINC valid split. **No test prediction or
-test MAE was computed.** The round did not find a model that beats the historical
-P3 seed-0 reference on the same valid split.
+trained and evaluated on the official ZINC valid split. After every checkpoint
+and selection was frozen, one terminal test pass was added at the user's request
+for a generalization check; test was not used to choose a model, recipe, epoch,
+or checkpoint. The round did not find a model that beats the historical P3
+seed-0 reference on the same valid split, and T remains above a direct P3 test
+evaluation as well.
 
 ## 1. Protocol and boundary
 
 - Data: official PyG ZINC subset, train 10,000 / valid 1,000; raw-y MAE; full
   valid evaluated every epoch; best checkpoint selected by strict `<` (earlier
   epoch wins a tie).
-- Test labels/predictions were not read. The round has no test table.
+- Valid drove all development, comparison, and checkpoint selection. Test was
+  read once at the very end, after the models were frozen, for a descriptive
+  generalization check. It did not influence any model, recipe, epoch, or
+  checkpoint choice. Original P0/P1 were not scored because their sampled-count
+  readout is invalid and their old reader shape is not loadable by the corrected
+  model.
 - Every reported model is ≤ 500,000 learnable parameters; no VQ, no codebook, no
   EMA cache, no local recursive message passing, no target-derived features.
 - Static neighborhood/path/block features were precomputed from the raw
   atom/bond graph. No multi-round neighbor hidden-state updates are used.
 - Only T loads the existing train-only P3 masked-SSL encoders; they are
   fine-tuned in the supervised phase, not frozen. R0/R1/P0/P1/B use random
-  initialization. P3 is the historical frozen-SSL reference and was not rerun.
+  initialization. P3 is the historical frozen-SSL reference; its training was not
+  rerun, but its frozen checkpoints were used for the terminal test evaluation.
 - Training code: `code/` at commit `91b81bb` (plus the report/plot files in the
   final report commit). The full six-candidate design record, including feature
   definitions and pre-declared corrections, is in `DESIGN.md`.
@@ -39,7 +48,7 @@ respectively.
 
 | model | best-valid | best epoch | train@best | params | steps | GPU-h | status | SSL | Δ vs P3 s0 |
 |---|---:|---:|---:|---:|---:|---:|---|---|---:|
-| P3 s0 | 0.079105 | 272 | 0.011261 | 413,505 | 28,440 | 0.201 | historical reference, not rerun | frozen train-only masked SSL | — |
+| P3 s0 | 0.079105 | 272 | 0.011261 | 413,505 | 28,440 | 0.201 | historical reference; training not rerun | frozen train-only masked SSL | — |
 | R0 | 0.140010 | 329 | 0.033097 | 307,809 | 47,400 | 0.203 | completed | none | +0.060905 |
 | R1 | 0.134158 | 324 | 0.023706 | 458,961 | 47,400 | 0.901 | completed | none | +0.055052 |
 | T | **0.091375** | 426 | 0.009922 | 462,081 | 47,400 | 0.355 | completed | P3 seed0 SSL, fine-tuned | +0.012270 |
@@ -137,6 +146,40 @@ Null-composer readout under this recipe. The T weight-decay correction did not
 help, so the next diagnostic should distinguish information loss in the rank-16
 tensor from optimization/readout mismatch, rather than adding another module.
 
+## 5b. Terminal test check (post-selection, descriptive only)
+
+The official PyG ZINC test split (1,000 molecules) was read once after all
+checkpoints were frozen. The selected checkpoint remains the best-valid one; the
+test numbers below are not used for selection or tuning.
+
+| model | test MAE | best-valid | test − valid | selected epoch |
+|---|---:|---:|---:|---:|
+| R0 | 0.124662 | 0.140010 | −0.015348 | 329 |
+| R1 | 0.107650 | 0.134158 | −0.026508 | 324 |
+| **T (best)** | **0.075628** | 0.091375 | −0.015747 | 426 |
+| T (final) | 0.075034 | 0.092166 | −0.017132 | 600 |
+| B | 0.139701 | 0.165418 | −0.025717 | 423 |
+| P0 corrected | 0.308763 | 0.332778 | −0.024015 | 203 |
+| P1 corrected | 0.298371 | 0.321900 | −0.023529 | 312 |
+| T wd=1e-4 | 0.077145 | 0.092437 | −0.015292 | 432 |
+| P3 s0 (direct) | 0.069471 | 0.079105 | −0.009634 | 272 |
+| P3 s1 (direct) | 0.070664 | 0.076668 | −0.006004 | 267 |
+| P3 historical s0 / s1 | 0.069304 / 0.070340 | 0.079105 / 0.076668 | −0.009801 / −0.006328 | earlier phase2b |
+
+Every tested model scores lower on test than on valid, so the test split is
+easier for these representations; absolute valid and test numbers should not be
+mixed. P3 was also evaluated directly on the same test objects and labels:
+seed 0 = 0.069471, seed 1 = 0.070664, close to the earlier phase2b values
+(0.069304/0.070340). T’s test gap is +0.006157 versus P3 seed 0 (or +0.004964
+versus P3 seed 1), smaller than its valid gap (+0.012270) but still positive.
+The T final checkpoint is 0.000594 better than T best on test (+0.005563 versus
+P3 seed 0), but the pre-declared selection rule is best-valid, so T best remains
+the selected model; this small difference is not used to switch checkpoints.
+
+This terminal check strengthens T as the model worth keeping, but does not change
+the round decision: T is still behind P3, and no new family or follow-up is
+started from test feedback.
+
 ## 6. Other structure summaries
 
 - **R0 (rooted multi-scale statistics):** per-atom radius-1/2/3 rooted counts,
@@ -174,6 +217,10 @@ tensor from optimization/readout mismatch, rather than adding another module.
 - The P0/P1 sampled-count leak is confirmed by the 32-vs-128 walk evaluation.
   Correcting it improves P0/P1 substantially but leaves them far from P3.
 - The single pre-declared T weight-decay correction does not improve best-valid.
+- Terminal test: T best 0.075628 (final 0.075034); direct P3 test is
+  0.069471/0.070664 (historical 0.069304/0.070340 is close). T remains behind P3
+  on test, though the gap is smaller than on valid. All tested models have lower
+  test than valid MAE.
 - All parameter/gradient audits passed: every parameter tensor was in the
   optimizer, all gradients were finite and nonzero on the first batch, and all
   models are under 500k parameters.
@@ -249,6 +296,9 @@ uv run python ad_train.py train --candidate P1 --seed 0 --tag corr --device cuda
 uv run python ad_report.py --print
 uv run python ad_plot.py
 uv run python ad_plot_followups.py
+# terminal only, after all checkpoints are frozen; never use for tuning
+uv run python ad_data.py prep --splits test
+uv run python ad_test.py
 ```
 
 The remote runs used the committed revision on `res`:
@@ -263,4 +313,6 @@ rr run res zad-T-s0 --pool res-gpu0 --gpus 1 --time 2:00:00 \
 
 The same pattern was used for the other candidates, with `--tag corr` and
 `--weight-decay 1e-4` for the two follow-ups. Results were pulled with `rr pull`
-and analyzed locally. Test was never evaluated.
+and analyzed locally. The only test read was the terminal post-selection pass
+described in §5b; it produced descriptive MAE/predictions and no selection. The
+test evaluation ran on local CPU and added no A100 time.

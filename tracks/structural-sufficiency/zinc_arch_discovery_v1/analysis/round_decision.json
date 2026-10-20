@@ -46,5 +46,27 @@
     "The P0/P1 raw sampled-walk sum/count leak was real: correcting it moved the same-seed best-valid from 0.625814/0.729133 to 0.332778/0.321900. The corrected path models still underfit (train@best 0.179/0.096) and remain far from P3, so the leak was not the only limitation."
   ],
   "next_choice": "Stop this round and report no strong model. The most worth keeping new model is T (0.091375, 462,081 params, 0.356 GPU-h). The next purchase, if any, should be a targeted diagnosis of why T's rank-16 association readout loses to P3's Null-composer readout (information loss vs. optimization), or a stronger path pattern vocabulary/readout; do not start a seventh family or a full GRIT reproduction on this evidence.",
-  "test": "not read; no test prediction or MAE computed"
+  "terminal_test": {
+    "split": "official PyG ZINC test (1000 molecules)",
+    "T_best": 0.07562769329547882,
+    "T_final": 0.0750341443438083,
+    "historical_p3_test_mae_seed0_seed1": [
+      0.069304,
+      0.07034
+    ],
+    "p3_direct": {
+      "seed0": {
+        "test_mae": 0.06947094441670924,
+        "valid_mae": 0.0791046605258598,
+        "best_epoch": 272
+      },
+      "seed1": {
+        "test_mae": 0.07066441067680716,
+        "valid_mae": 0.07666767607902875,
+        "best_epoch": 267
+      }
+    },
+    "note": "Read once after all selections; descriptive only, not used for selection or tuning."
+  },
+  "test": "read once after checkpoint selection for a terminal generalization check; no model/recipe/epoch/checkpoint changed from test feedback"
 }

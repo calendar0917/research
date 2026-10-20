@@ -3,7 +3,8 @@
 All features are deterministic, label-free functions of the raw atom/bond graph
 (or of the already-frozen P3 object cache, which itself is a label-free one-shot
 function of that graph).  Labels are read from the official PyG ZINC subset only
-for train and valid.  The official test split is never constructed here.
+for train/valid by default.  The test split can be built only for a terminal
+post-selection score; no model or recipe is selected from it.
 
 Cached representations
 ----------------------
@@ -87,9 +88,14 @@ def load_p3_objects(split: str):
     _ensure_objects_modules()
     import structural_relation_objects_v1 as sro
 
-    path = C.P3_OBJECTS_TRAIN if split == "train" else C.P3_OBJECTS_VALID
+    if split == "train":
+        path = C.P3_OBJECTS_TRAIN
+    elif split == "valid":
+        path = C.P3_OBJECTS_VALID
+    else:
+        path = None
     n_expected = split_size(split)
-    if path.exists():
+    if path is not None and path.exists():
         objs = torch.load(path, map_location="cpu", weights_only=False)
         if len(objs) != n_expected:
             raise RuntimeError(f"{path}: expected {n_expected}, got {len(objs)}")
@@ -456,7 +462,9 @@ def build_split_v2(split: str) -> dict:
     twohop_u, twohop_v, twohop_cat, twohop_cnt = [], [], [], []
     walk_atom, walk_bond, walk_anon, walk_idx, walk_order = [], [], [], [], []
     blocks_list = []
-    walk_rng = np.random.default_rng(20261021 + (0 if split == "train" else 1))
+    walk_rng = np.random.default_rng(
+        20261021 + {"train": 0, "valid": 1, "test": 2}[split]
+    )
 
     for i, obj in enumerate(objs):
         n = int(obj.n_atoms)

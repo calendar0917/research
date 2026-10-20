@@ -1,0 +1,99 @@
+{
+  "protocol": "zinc-arch-discovery-v1",
+  "split": "official PyG ZINC test (1000 molecules)",
+  "n": 1000,
+  "selection_rule": "frozen before test: best-valid checkpoint; test is descriptive only",
+  "historical_p3_test_mae_seed0_seed1": [
+    0.069304,
+    0.07034
+  ],
+  "p3_direct": {
+    "method": "P3.build_model(seed, P3_PREP) + runs/p3_s{seed}/best.pt; official PyG test objects built with the same structural_relation_objects_v1 builder and official labels; local CPU",
+    "seed0": {
+      "test_mae": 0.06947094441670924,
+      "valid_mae": 0.0791046605258598,
+      "best_epoch": 272
+    },
+    "seed1": {
+      "test_mae": 0.07066441067680716,
+      "valid_mae": 0.07666767607902875,
+      "best_epoch": 267
+    },
+    "historical_phase2b": {
+      "seed0": 0.069304,
+      "seed1": 0.07034
+    },
+    "note": "Direct rerun was a terminal evaluation of frozen checkpoints; no training and no selection. Historical numbers are close, confirming the test alignment."
+  },
+  "historical_p3_note": "Earlier phase2b values; the frozen P3 checkpoints were also evaluated directly for this test (p3_direct).",
+  "excluded": {
+    "P0_original": "sampled-count readout invalid; old reader shape is not loadable by the corrected model",
+    "P1_original": "sampled-count readout invalid; old reader shape is not loadable by the corrected model"
+  },
+  "models": {
+    "R0": {
+      "test_mae": 0.12466177494218574,
+      "mean_pred": 0.027684077620506287,
+      "sd_pred": 1.9953173398971558,
+      "checkpoint_epoch": 329,
+      "checkpoint_valid_mae": 0.14001032229460544,
+      "candidate": "R0"
+    },
+    "R1": {
+      "test_mae": 0.10765040947007946,
+      "mean_pred": 0.015503253787755966,
+      "sd_pred": 2.0145280361175537,
+      "checkpoint_epoch": 324,
+      "checkpoint_valid_mae": 0.1341576367720845,
+      "candidate": "R1"
+    },
+    "T_best": {
+      "test_mae": 0.07562769329547882,
+      "mean_pred": 0.021879535168409348,
+      "sd_pred": 2.002633571624756,
+      "checkpoint_epoch": 426,
+      "checkpoint_valid_mae": 0.09137539563694735,
+      "candidate": "T"
+    },
+    "T_final": {
+      "test_mae": 0.0750341443438083,
+      "mean_pred": 0.018016796559095383,
+      "sd_pred": 1.9993075132369995,
+      "checkpoint_epoch": 600,
+      "checkpoint_valid_mae": null,
+      "candidate": "T"
+    },
+    "B": {
+      "test_mae": 0.13970064553339034,
+      "mean_pred": 0.018986869603395462,
+      "sd_pred": 1.9819501638412476,
+      "checkpoint_epoch": 423,
+      "checkpoint_valid_mae": 0.16541844542504985,
+      "candidate": "B"
+    },
+    "P0c": {
+      "test_mae": 0.3087629817835987,
+      "mean_pred": 0.012701638974249363,
+      "sd_pred": 1.9714148044586182,
+      "checkpoint_epoch": 203,
+      "checkpoint_valid_mae": 0.33277822982048383,
+      "candidate": "P0"
+    },
+    "P1c": {
+      "test_mae": 0.29837140132859347,
+      "mean_pred": 0.0011724604992195964,
+      "sd_pred": 1.9699103832244873,
+      "checkpoint_epoch": 312,
+      "checkpoint_valid_mae": 0.3218998607294052,
+      "candidate": "P1"
+    },
+    "Twd": {
+      "test_mae": 0.07714525539334863,
+      "mean_pred": 0.01981426030397415,
+      "sd_pred": 2.010200262069702,
+      "checkpoint_epoch": 432,
+      "checkpoint_valid_mae": 0.09243718778149923,
+      "candidate": "T"
+    }
+  }
+}

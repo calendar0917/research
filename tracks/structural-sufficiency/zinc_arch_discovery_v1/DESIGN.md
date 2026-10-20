@@ -164,3 +164,17 @@ open a seventh family or a full GRIT reproduction.
 
 `<= 0.075` best-valid is a development target, not a universal significance
 threshold. A single-seed win is not a stable improvement claim.
+
+## 6. Post-round terminal test addendum (outside the pre-registered round)
+
+After the six candidates and the two pre-declared follow-ups were complete and
+the round report was closed, the user requested a test generalization check.
+The test split was then constructed and read **once**, after all checkpoints and
+selection rules were frozen. No model, recipe, epoch, or checkpoint was changed
+from test feedback. The original round boundary ("no test during development")
+was therefore preserved; the late read is reported as a terminal descriptive
+evaluation in `REPORT.md` §5b and `analysis/test_terminal.json`. P3's frozen
+checkpoints were evaluated directly on the same test objects and labels
+(`analysis/p3_test_direct.json`), not retrained. Original P0/P1 were excluded
+from test scoring because their sampled-count readout is invalid and their old
+reader shape is not loadable by the corrected model.
