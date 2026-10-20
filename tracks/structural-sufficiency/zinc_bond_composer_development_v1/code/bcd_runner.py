@@ -698,12 +698,15 @@ def train_loop(
 
 
 def cmd_smoke(args: argparse.Namespace) -> int:
-    out = C.PROJECT / "smoke.json"
+    out = Path(args.out) if args.out else (C.PROJECT / "smoke.json")
     if out.exists():
         raise SystemExit("smoke record exists; refusing to rewrite")
     split, norm, _, fit_objs, _, mon_objs, _, ssl_state, _, labels = _load_all(True)
     y_fit = C.row_labels(split.fit, labels)
-    n_prefix = 1024
+    n_prefix = int(args.smoke_rows)
+    smoke_epochs = int(args.smoke_epochs)
+    if not (1 <= smoke_epochs <= 5):
+        raise SystemExit("smoke epochs must be in [1, 5]")
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
         raise SystemExit("cuda requested but unavailable")
@@ -718,7 +721,7 @@ def cmd_smoke(args: argparse.Namespace) -> int:
             norm=norm,
             ssl_state=ssl_state,
             device=device,
-            epochs=2,
+            epochs=smoke_epochs,
             eval_every=None,
             mon_objs=None,
             y_mon=None,
@@ -797,9 +800,9 @@ def cmd_smoke(args: argparse.Namespace) -> int:
         "cuda_device_name": torch.cuda.get_device_name(0) if device.type == "cuda" else "cpu",
         "torch": torch.__version__,
         "n_prefix_rows": n_prefix,
-        "epochs": 2,
-        "updates_per_kind": 16,
-        "steady_estimator": "mean over updates 3..16 (drops first two warm-up updates)",
+        "epochs": smoke_epochs,
+        "updates_per_kind": int(payload["updates"]),
+        "steady_estimator": f"mean over updates 3..{int(payload['updates'])} (drops first two warm-up updates)",
         "per_kind": rows,
         "projection": projected,
         "checks": checks,
@@ -1137,6 +1140,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--kind", default="B0", choices=list(M.KINDS))
     ap.add_argument("--seed", type=int, default=C.SEED)
     ap.add_argument("--device", default="cuda")
+    ap.add_argument("--smoke-epochs", type=int, default=2)
+    ap.add_argument("--smoke-rows", type=int, default=1024)
+    ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
     os.environ.setdefault("PYTHONHASHSEED", "0")
     return {
