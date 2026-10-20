@@ -819,10 +819,9 @@ def cmd_freeze(args: argparse.Namespace) -> int:
     cfg = load_config()
     prep = read_json(PREP_JSON)
     valid_cfg = cfg["valid_labels"]
-    y_path = REPO / valid_cfg["source"]
     lock = read_json(REPO / valid_cfg["source_lock"])
-    y = np.load(y_path)
-    y_sha = f10k.array_sha256(y)
+    _, y_meta = valid_labels()
+    y_sha = y_meta["sha256"]
     require(y_sha == valid_cfg["sha256"] == lock["y_sha256"], "valid-label provenance hash mismatch")
     payload = {
         "protocol": PROTOCOL_ID,
@@ -1232,10 +1231,25 @@ def cmd_freeze_predictions(args: argparse.Namespace) -> int:
 
 
 def valid_labels() -> tuple[np.ndarray, dict[str, Any]]:
+    """The single existing official-valid label read, hash-gated.
+
+    The original ``valid_y_read_once.npy`` is git-ignored and is not present in
+    every checkout.  If it is absent the array is re-materialised from the
+    official valid split and must match the committed lock hash exactly; this is
+    a byte-identical reconstruction of an already-recorded read, not a new read.
+    """
     cfg = load_config()["valid_labels"]
     path = REPO / cfg["source"]
     lock = read_json(REPO / cfg["source_lock"])
-    y = np.load(path)
+    reconstructed = False
+    if path.exists():
+        y = np.load(path)
+    else:
+        ds = f10k.load_valid_dataset()
+        y = np.asarray([float(ds[i].y.reshape(-1)[0]) for i in range(N_VALID)], dtype=np.float64)
+        reconstructed = True
+        ANALYSIS.mkdir(parents=True, exist_ok=True)
+        np.save(ANALYSIS / "valid_y_reconstructed.npy", y)
     sha = f10k.array_sha256(y)
     require(sha == cfg["sha256"] == lock["y_sha256"], "valid label hash mismatch")
     return y.astype(np.float64), {
@@ -1243,7 +1257,12 @@ def valid_labels() -> tuple[np.ndarray, dict[str, Any]]:
         "sha256": sha,
         "read_utc": lock["read_utc"],
         "read_commit": lock["git_commit"],
-        "policy": "reuse of the single existing read; this round performs no new label read",
+        "policy": "reuse of the single existing read; this round performs no new scientific label read",
+        "reconstructed_from_official_raw_valid": reconstructed,
+        "reconstruction_rule": (
+            "only if the ignored npy copy is absent; the reconstructed array must equal the "
+            "committed lock sha256 (byte-identical), otherwise the stage stops"
+        ),
     }
 
 
