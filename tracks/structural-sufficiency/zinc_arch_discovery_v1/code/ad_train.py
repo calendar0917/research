@@ -140,14 +140,16 @@ def collate(cache: Mapping[str, Any], rows: Sequence[int], candidate: str, *,
     if candidate == "T":
         junc_ptr = np.asarray(cache["junc_ptr"])
         junc_idx, junc_batch, _, junc_counts = _ranges(junc_ptr, rows)
-        atom_base = atom_ptr[rows].astype(np.int64)
-        bond_base = bond_ptr[rows].astype(np.int64)
+        # Batch-local offsets, not dataset-global offsets: the encoders index
+        # the concatenated batch tensors.
+        atom_off = np.concatenate([[0], np.cumsum(atom_counts)[:-1]]).astype(np.int64)
+        bond_off = np.concatenate([[0], np.cumsum(bond_counts)[:-1]]).astype(np.int64)
         bi = np.asarray(cache["bond_index"])[bond_idx].astype(np.int64)
-        bi = bi + atom_base[bond_batch].reshape(-1, 1)
+        bi = bi + atom_off[bond_batch].reshape(-1, 1)
         ji = np.asarray(cache["junc_index"])[junc_idx].astype(np.int64)
-        ji = ji + atom_base[junc_batch].reshape(-1, 1)
+        ji = ji + atom_off[junc_batch].reshape(-1, 1)
         jb = np.asarray(cache["junc_bond"])[junc_idx].astype(np.int64)
-        jb = jb + bond_base[junc_batch].reshape(-1, 1)
+        jb = jb + bond_off[junc_batch].reshape(-1, 1)
         return {
             "n_graphs": B,
             "atom_feat": torch.from_numpy(np.asarray(cache["atom_feat"])[atom_idx].astype(np.float32)),

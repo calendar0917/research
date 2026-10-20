@@ -160,6 +160,20 @@ def test_attention_cross_graph_isolation(candidate, tiny_cache):
     assert np.allclose(together, np.asarray(separate), atol=2e-5, rtol=1e-5)
 
 
+@pytest.mark.parametrize("candidate", M.CANDIDATES)
+def test_shuffled_noncontiguous_rows(candidate, tiny_cache):
+    model, _ = M.build_model(candidate, _norm(), 0, "cpu")
+    cols = T._walk_cols(torch.Generator().manual_seed(0)) if candidate in ("P0", "P1") else None
+    batch = T.collate(tiny_cache, [2, 0, 1], candidate, valid=False, walk_cols=cols)
+    if candidate == "T":
+        assert int(batch["bond_index"].max()) < int(batch["atom_feat"].shape[0])
+        assert int(batch["junc_index"].max()) < int(batch["atom_feat"].shape[0])
+        assert int(batch["junc_bond"].max()) < int(batch["bond_feat"].shape[0])
+    pred = model(batch)
+    assert pred.shape == (3,)
+    assert torch.isfinite(pred).all()
+
+
 def test_rooted_relabelling_invariance():
     # Relabel atom indices by a permutation; rooted features mapped back must
     # be unchanged (same graph, same root).
