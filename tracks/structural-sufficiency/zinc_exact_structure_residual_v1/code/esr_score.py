@@ -115,7 +115,7 @@ def score(phase: int) -> dict[str, Any]:
 
     b_errs = [R._err(preds[f"valid_B_s{s}"], y) for s in seeds]
     b_mean_err = np.mean(np.stack(b_errs, 0), axis=0)
-    worst = np.argsort(-b_mean_err)[: int(cfg["decision"]["drop_reference_worst_k"])]
+    worst = np.argsort(-b_mean_err)[: int(cfg["decision"]["family_vs_B"]["drop_reference_worst_k"])]
     keep = np.ones(R.N_VALID, dtype=bool)
     keep[worst] = False
     rows_ordinary = np.where(y > float(cfg["decision"]["ordinary_threshold"]))[0]
