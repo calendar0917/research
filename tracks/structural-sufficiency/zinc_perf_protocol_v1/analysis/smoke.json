@@ -8,10 +8,13 @@
   "p3_smoke": {
     "run": "zpp-p3-smoke-20261020-135815-4f9f0306",
     "epoch_seconds_first": 2.44,
-    "formal_epoch_seconds_observed": [1.9, 2.3],
-    "projected_360_epoch_hours": 0.20,
-    "formal_two_seed_gpu_hours_actual": 0.411,
-    "note": "all 360 epochs plus per-epoch valid; end-of-run fixed-object evaluation excluded from the run wall"
+    "formal_epoch_seconds_observed": [
+      1.9,
+      2.3
+    ],
+    "projected_360_epoch_hours": 0.2,
+    "formal_two_seed_gpu_hours_actual": 0.4144,
+    "note": "corrected R3 update count: 79 steps/epoch, 28,440 updates; end-of-run fixed-object evaluation excluded from the run wall"
   },
   "zsrt_smoke_batch128": {
     "run": "zpp-zsrt-smoke128-20261020-135815-6bb65d68",
@@ -31,13 +34,21 @@
     "p3": "360 epochs, seeds 0 and 1, no continuation (rule evaluated after training)",
     "zsrt": "keep batch 128 / 360 epochs / 28,440 updates; 8 layers, k=21, 380,161 params",
     "budget_projection_gpu_hours": {
-      "p3_actual": 0.411,
+      "p3_actual": 0.4144,
       "zsrt_screen_4": 3.88,
       "zsrt_confirm_2": 1.94,
-      "terminal_scoring_allowance": 0.10,
+      "terminal_scoring_allowance": 0.1,
       "total": 6.33,
       "cap": 8.0,
       "reserve": 1.67
+    },
+    "actual_gpu_hours": {
+      "p3_two_seeds": 0.4144,
+      "zsrt_screen_4": 3.7179,
+      "smokes": 0.0052,
+      "total_measured": 4.1375,
+      "cap": 8.0,
+      "unused": 3.8625
     }
   },
   "timestamp": "2026-10-20T14:20:00+08:00"

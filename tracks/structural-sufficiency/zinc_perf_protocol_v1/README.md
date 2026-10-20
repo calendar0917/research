@@ -10,9 +10,19 @@ after the audit at `592d766`.
 * `configs/` — frozen protocol and ZSRT screen.
 * `code/` — P3 calibration, ZSRT training/eval, freeze, terminal scoring,
   table builder, light CPU tests.
-* `analysis/` — data audit, continuation decision, freeze, test scores,
-  main table (small, tracked).
+* `analysis/` — data audit, continuation decision, round decision, main
+  table and curves (small, tracked); freeze/test scores only if a future round
+  opens them.
 * `cache/`, `runs/`, `predictions/*.npz` — generated, git-ignored.
+
+## Round status
+
+Closed at the development conclusion on 2026-10-20. P3 calibration completed
+(two seeds, best-valid mean 0.077886); the four-config ZSRT screen completed
+(best: `C_wd_high`, seed-0 best-valid 0.103363 vs P3 seed-0 0.079105). The
+pre-declared stop rule was met, so no ZSRT seeds 1/2, no freeze, and no
+terminal test read was purchased. See `REPORT.md` and
+`analysis/round_decision.json`.
 
 ## Commands
 
@@ -48,17 +58,18 @@ ZSRT screen (seed 0) and confirmation seeds:
 ```bash
 rr run res zpp-zsrt-A-s0 --pool res-gpu0 --gpus 1 --time 2:00:00 \
   --result .../runs -- python .../zpp_zsrt.py --device cuda:0 train --config A_main --seed 0
-# B/C/D analogously; then seeds 1/2 for the selected config
+# B/C/D analogously; add seeds 1/2 only if the pre-declared stop rule did not fire
 ```
 
-Freeze and terminal test (single read):
+Freeze and terminal test (single read) are intentionally **not** part of this
+closed round. The entry points remain for a future, separately authorised round:
 
 ```bash
-python .../zpp_freeze.py freeze --config A_main --seeds 0,1,2
+python .../zpp_freeze.py freeze --config C_wd_high --seeds 0
 python .../zpp_freeze.py verify
 rr run res zpp-score --pool res-gpu0 --gpus 1 --time 1:00:00 \
   --result .../analysis -- python .../zpp_score.py --device cuda:0 score
-python .../zpp_report.py --variants A_main
+python .../zpp_report.py --variants A_main,B_lr_low,C_wd_high,D_no_rrwp
 ```
 
 Every training log is `runs/.../train.json` + `curve.csv`; the primary number

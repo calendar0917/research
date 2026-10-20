@@ -1,0 +1,26 @@
+{
+  "protocol": "zinc-perf-protocol-v1",
+  "decision": "STOP_AT_DEVELOPMENT_CONCLUSION",
+  "rule": "every ZSRT screen config is worse than P3 by more than 0.005 best-valid MAE with no improving tail",
+  "p3_best_valid_by_seed": {
+    "0": 0.0791046605258598,
+    "1": 0.07666767607902875
+  },
+  "p3_best_valid_mean": 0.07788616830244428,
+  "zsrt_screen_seed0": {
+    "A_main": {"best_valid_mae": 0.11203703786531696, "best_epoch": 292, "delta_vs_p3_s0": 0.03293237733945721},
+    "B_lr_low": {"best_valid_mae": 0.14843893850495807, "best_epoch": 359, "delta_vs_p3_s0": 0.06933427797909832},
+    "C_wd_high": {"best_valid_mae": 0.10336259012395749, "best_epoch": 315, "delta_vs_p3_s0": 0.02425792959809772},
+    "D_no_rrwp": {"best_valid_mae": 0.18516490254743256, "best_epoch": 344, "delta_vs_p3_s0": 0.10606024202157281}
+  },
+  "selected_config": "C_wd_high",
+  "selected_seed0_best_valid": 0.10336259012395749,
+  "delta_selected_minus_p3_seed0": 0.02425792959809772,
+  "seeds_confirmed": [0],
+  "confirmation_seeds_not_purchased": [1, 2],
+  "freeze_written": false,
+  "test_read": false,
+  "reason": "C_wd_high is the best ZSRT config but is 0.0243 worse than P3 seed 0, >5x the pre-declared 0.005 stop band; its valid tail is flat (best at epoch 315). No seed 1/2 and no test read.",
+  "gpu_hours_measured": 4.1375,
+  "gpu_hours_cap": 8.0
+}

@@ -5,7 +5,7 @@
 | protocol id | `zinc-perf-protocol-v1` |
 | track | `structural-sufficiency` (new, independent round directory) |
 | namespace | `tracks/structural-sufficiency/zinc_perf_protocol_v1/` |
-| status | `FROZEN_BEFORE_FORMAL_TRAJECTORY` |
+| status | `FROZEN_BEFORE_FORMAL_TRAJECTORY` → `CLOSED_DEVELOPMENT_CONCLUSION_NO_TEST` (2026-10-20) |
 | data | official PyG ZINC `subset=True`: train 10,000 / valid 1,000 / test 1,000 |
 | metric | raw-`y` MAE (lower is better); no target transform |
 | primary selector | per-seed single **best-valid** checkpoint |
@@ -159,3 +159,22 @@ winner between P3 and ZSRT.
 * No automatic follow-up architecture ("another residual/lookup/attention
   block") is authorised by this document. The next decision is stated in the
   report and requires a new pre-registration.
+
+## Erratum / closure (2026-10-20)
+
+* The §5 sentence "Test labels are read only in the terminal scoring step" is
+  too strong. The pre-training data audit required by §1 read the official
+  test split once to record its size and label scale/hash. It produced only
+  aggregate audit statistics; it computed no test prediction, test MAE, or
+  model comparison. `zpp_score.py` was **not** run, no `test_read.lock` exists,
+  and the test split was never used in a loss, selector, or hyper-parameter
+  decision.
+* The first P3 calibration used `floor(10000/128)=78` steps/epoch, so the
+  cosine reached `eta_min` 360 updates early despite running 79 batches per
+  epoch. It was corrected to `ceil()=79` / 28,440 updates and both seeds were
+  rerun; the first-pass runs are retained locally under `runs/_archive/` (git-ignored) and are not
+  reported as protocol results.
+* The round closed at the development conclusion. `C_wd_high` (0.103363
+  best-valid) is worse than P3 seed 0 (0.079105) by 0.0243, outside the
+  0.005 stop band and with a flat valid tail. No ZSRT seeds 1/2 were purchased,
+  no freeze was written, and the terminal test was not opened.
