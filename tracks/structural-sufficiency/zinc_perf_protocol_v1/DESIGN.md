@@ -72,7 +72,7 @@ the global relational geometry from step 0.
 | composition | one-shot `sum_b c_b`, `sum_i a_i`, `sum_i a_i^2` | global token attention | reweighted Null moments | global full attention + edge-state updates + degree scaler |
 | P3 reader input | 321-D mixed reader vector | kept P3 substrate | kept P3 substrate | **not used** |
 | iteration | none | attention layers on P3 tokens | none | attention layers, not local MP |
-| parameters | 413,505 | 483k | 419,649 | ~379k (A/B/C), ~376k (D control) |
+| parameters | 413,505 | 483k | 419,649 | 380,161 (A/B/C), 377,473 (D control) |
 
 STA and BCCA kept the frozen P3 object encoder and added attention/reweighting
 on top of it; ESR added an exact-type lookup into the atom embedding. ZSRT
@@ -107,7 +107,7 @@ novelty.
 * **Small-graph inefficiency.** Full attention over 9–37 nodes is cheap but
   launch/BN/edge-state overhead can dominate; measured epoch time decides the
   affordable variant.
-* **Overfitting.** 10k molecules, ~379k parameters, dropout 0 and only weight
+* **Overfitting.** 10k molecules, ~380k parameters, dropout 0 and only weight
   decay 1e-5. Best-valid selection plus the LR/WD screen is the mitigation;
   no extra regulariser sweep is opened.
 * **RRWP cost/benefit.** RRWP may add little over typed attention at this
@@ -119,15 +119,18 @@ novelty.
 
 ## 5. Parameter and compute budget
 
-| variant | layers | RRWP | params | 360-epoch projection |
+| variant | layers | RRWP | params | measured 360-epoch cost |
 |---|---:|---|---:|---|
-| A_main | 8 | k=21 | 378,753 | measured by smoke before formal screen |
-| B_lr_low | 8 | k=21 | 378,753 | same |
-| C_wd_high | 8 | k=21 | 378,753 | same |
-| D_no_rrwp | 8 | off | 375,937 | same |
+| A_main | 8 | k=21 | 380,161 | 0.954 A100-h (9.5 s/epoch) |
+| B_lr_low | 8 | k=21 | 380,161 | 0.933 A100-h (9.3 s/epoch) |
+| C_wd_high | 8 | k=21 | 380,161 | 1.007 A100-h (10.1 s/epoch) |
+| D_no_rrwp | 8 | off | 377,473 | 0.825 A100-h (8.3 s/epoch) |
 
-The projection is replaced by the measured smoke epoch time before the formal
-screen. Budget guard: screen 4 configs × seed 0, then 2 additional seeds for
+The original CPU-smoke counts (378,753 / 375,937) were from a GRIT
+configuration without the final edge-state/degree-scaler settings; the
+train-time counts above are authoritative and are asserted in
+`code/tests/test_zpp_core.py`. The projection was replaced by the measured
+smoke epoch time before the formal screen (see `analysis/smoke.json`). Budget guard: screen 4 configs × seed 0, then 2 additional seeds for
 the selected config, total new-model GPU time target ≤ 5.5 A100-h; P3
 calibration ≤ 0.5 h; reserve ≥ 0.5 h of the 8.0 h cap.
 

@@ -76,3 +76,12 @@ def test_zsrt_variant_param_counts():
         variant = Z.load_variant(name)
         _, _, n = Z.build_model(variant, 0, "cpu")
         assert n == expected, (name, n, expected)
+
+
+def test_p3_recipe_update_count_matches_frozen_r3():
+    # R3 uses ceil(10000 / 128) = 79 updates per epoch, 28,440 total; the
+    # earlier floor() version finished the cosine 360 updates early.
+    import zpp_p3 as P
+
+    assert P.STEPS_PER_EPOCH == 79
+    assert P.TOTAL_UPDATES == 28440
