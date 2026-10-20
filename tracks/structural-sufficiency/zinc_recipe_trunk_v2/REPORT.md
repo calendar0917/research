@@ -4,7 +4,7 @@
 split: (i) the 2x2 architecture x recipe cross, initialisation-matched, shows an
 interaction but no recipe that reverses the ranking — P3 is better than T under
 both recipes; (ii) two rebuilt composition trunks (global moment context,
-learned context slots) come within ~0.005-0.011 of P3 but **none beats P3**, and
+learned context slots) come within ~0.005-0.013 of P3 but **none beats P3**, and
 the 0.075 development target is not reached. The official test split was **not
 read at all** in this round.
 
@@ -12,7 +12,10 @@ Reference throughout: P3 seed 0 best-valid = **0.079105** (seed 1 = 0.076668),
 same valid split, historical run reused without retraining or rebilling. The
 curve value is 0.07910466; the 8.4e-7 difference from the 0.0791054978 stored in
 `ad_common` is a float32 regression-log artefact and changes no delta at 6
-decimals, so the P3 row below shows Δ = 0.000000.
+decimals, so the P3 row below shows Δ = 0.000000. The pre-declared reference
+stays P3 x recipe A, seed 0 throughout; the best P3 cell measured in this round
+is P3 x recipe B, seed 0 = **0.076224** (new, §3), which is quoted separately
+wherever it changes a comparison.
 
 ## 1. Boundary
 
@@ -227,6 +230,8 @@ below is not a recipe artefact in M's favour. The "follow P3's best recipe"
 rule is architecture-specific and should not be applied across architectures
 without a per-architecture check.
 
+### 4.2 Summary across candidates
+
 **Observed.** The best new-model cell is M supervised seed 1 (0.081999), 0.0029
 behind P3 seed 0 and 0.0053 behind P3 seed 1. No trunk beats P3 at either seed
 and none reaches 0.075. M's seed spread (0.0055) is larger than P3's (0.0024),
@@ -274,7 +279,8 @@ on GPU-host CPU (72 s, not billed as A100 time).
   cost. `analysis/round_decision.json` — the pre-declared read-outs computed
   from the runs, plus the budget ledger.
 - `analysis/cpu_checks.json` — `closes` semantics, P0/P1 32-vs-128 table,
-  P3N/BJOC equivalence, parameter/gradient/isolation checks, masked-leak check.
+  P3N/BJOC equivalence, P3N/P3 **initial-state identity** (24/24 tensors),
+  parameter/gradient/isolation checks, masked-leak check.
 - `analysis/aux_smoke.json`, `runs/*/aux_curve.json` — auxiliary-branch smoke
   test and per-epoch CE trajectories.
 - `runs/<tag>_<candidate>_s<seed>/` — `best.pt`, `final.pt`, `train.json`,
