@@ -199,7 +199,7 @@ def main(argv=None) -> int:
     p.add_argument("--candidates", default="M,S")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--device", default="cuda:0")
-    p.add_argument("--recipe", default=None, choices=[None, "A", "B"])
+    p.add_argument("--recipe", default=None, choices=[None, "A", "B", "C"])
     p.add_argument("--aux", action="store_true")
     p.add_argument("--visits", type=int, default=4)
     p.add_argument("--tag", default=None)
