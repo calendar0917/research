@@ -1,9 +1,15 @@
 # zinc_bond_composer_development_v1
 
-Small-budget internal development round: retain the complete original P3 reader,
-place a nonlinear per-bond branch only on the shared composer output `c_e`, and
-ask whether B2 (4-head key attention) shows a useful single-seed development
-signal over B0 (P3) and B1 (FFN capacity control).
+Small-budget internal development round: retain the complete original P3
+reader, place a nonlinear per-bond branch only on the shared composer output
+`c_e`, and ask whether B2 (4-head key attention) shows a useful single-seed
+development signal over B0 (P3) and B1 (FFN capacity control).
+
+**Status:** completed. **Decision:** `B2_DIRECTIONAL_BUT_BELOW_DEV_LINE`.
+B2 is directionally better than B0 and B1, but the B2-vs-B0 Monitor gain is
+0.001775, below the pre-agreed 0.003 line. Stop this candidate. See
+`REPORT.md` for the full result and `TIMING_AMENDMENT.md` for the disclosed
+timing-smoke deviation.
 
 This is **not** a blind test, a confirmation, an official-valid/test evaluation,
 a novelty claim, or a reopening of the closed S/T/R screen. The Monitor-1000
@@ -13,6 +19,8 @@ split is reused for development curves and metrics.
 
 ```
 PROTOCOL.md                 frozen protocol (pre-GPU)
+TIMING_AMENDMENT.md         disclosed 2-epoch -> 5-epoch timing-smoke amendment
+REPORT.md                   short result report
 configs/                    frozen architecture / recipe / budget
 code/
   bcd_common.py             frozen split, hashes, object/SSL loading
@@ -20,15 +28,20 @@ code/
   bcd_runner.py             prep -> gates -> smoke -> train -> analyze
   tests/test_bcd.py         lightweight CPU tests
 cache/                      local git-ignored copies of frozen inputs
-runs/                       B0_s0 / B1_s0 / B2_s0 records and soups
+runs/B0_s0, B1_s0, B2_s0   train.json, curve.csv, soup.pt, monitor_pred.npz
 curves/                     per-model development CSV
 analysis/                   soup metrics and development decision
-prep.json / cpu_checks.json / smoke.json / gpu_ledger.json / run_manifest.tsv
-REPORT.md                   short result report
+prep.json / cpu_checks.json
+smoke.json                  2-epoch smoke (STOP_BUDGET)
+smoke_probe_5ep.json        5-epoch timing probe (PASS)
+gpu_ledger.json             process-wall GPU ledger
+run_manifest.tsv            per-run hashes and metrics
+wall_clock_correction.json  B0/B1 wall-field correction
+runner_wall_check.json      conservative rr scheduler-wall audit
 ```
 
-`cache/`, `runs/*/soup.pt` and `runs/*/monitor_pred.npz` are local artefacts and
-are git-ignored; their SHA-256 values are recorded in the JSON manifests.
+`cache/` is git-ignored. Run soups and Monitor predictions are retained with
+their SHA-256 values in `run_manifest.tsv`.
 
 ## Commands
 
@@ -38,7 +51,8 @@ UV="uv run python tracks/structural-sufficiency/zinc_bond_composer_development_v
 
 $UV prep
 $UV gates
-$UV smoke --device cuda
+$UV smoke --device cuda --smoke-epochs 5 --out \
+  tracks/structural-sufficiency/zinc_bond_composer_development_v1/smoke_probe_5ep.json
 
 $UV train --kind B0 --device cuda
 $UV train --kind B1 --device cuda
@@ -46,10 +60,10 @@ $UV train --kind B2 --device cuda
 $UV analyze
 ```
 
-Formal runs use the committed revision through `rr` on `res-gpu0` / `res-gpu1`.
-The local cache is only for CPU development and tests; the remote `res` checkout
-already retains the phase1e frozen objects and SSL encoder at their recorded
-hashes.
+Formal runs used the committed revision through `rr` on `res-gpu0` /
+`res-gpu1`. The local cache is only for CPU development and tests; the remote
+`res` checkout retains the phase1e frozen objects and SSL encoder at their
+recorded hashes.
 
 ## Frozen inputs
 
@@ -69,5 +83,6 @@ The completed P3 soup is never loaded as an initialiser.
 
 The prior `p3_bond_relation_bridge_v1` already found no gain from retaining P3
 plus a one-hop bond-pair MLP residual. This round changes the interface and the
-branch but is a related exploration, not a new main line. A positive result
-would justify designing a proper ablation, not declaring a novel architecture.
+branch but is a related exploration, not a new main line. The result is a
+negative single-seed development decision, not a universal claim about
+attention or bond-composer architectures.

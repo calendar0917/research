@@ -1,0 +1,113 @@
+{
+  "protocol_id": "zinc-bond-composer-development-v1",
+  "stage": "decision",
+  "decision_label": "B2_DIRECTIONAL_BUT_BELOW_DEV_LINE",
+  "decision_text": "B2 is directionally better than B0 and better than B1, but its B2-vs-B0 Monitor gain is below the pre-agreed 0.003 development line. This is not a practical signal, not confirmation, and not a reason to add seeds or modules inside this round; stop this candidate.",
+  "practical_line": {
+    "b2_monitor_gain_ge_0.003": false,
+    "b2_beats_b1": true,
+    "b2_ordinary_positive": true,
+    "b2_drop_B0_worst10_positive": true,
+    "worth_followup": false
+  },
+  "contrasts": {
+    "B0_vs_B1": {
+      "definition": "MAE(left) - MAE(right); positive means right is better",
+      "left": "B0",
+      "right": "B1",
+      "left_mae": 0.08850611723377369,
+      "right_mae": 0.08925274506560527,
+      "gain": -0.0007466278318315756,
+      "ordinary_gain": -0.0006823261453078183,
+      "drop_B0_worst10_gain": -0.001016840769561253
+    },
+    "B0_vs_B2": {
+      "definition": "MAE(left) - MAE(right); positive means right is better",
+      "left": "B0",
+      "right": "B2",
+      "left_mae": 0.08850611723377369,
+      "right_mae": 0.08673108883178793,
+      "gain": 0.001775028401985762,
+      "ordinary_gain": 0.0024423218699484717,
+      "drop_B0_worst10_gain": 0.0013861159126114242
+    },
+    "B1_vs_B2": {
+      "definition": "MAE(left) - MAE(right); positive means right is better",
+      "left": "B1",
+      "right": "B2",
+      "left_mae": 0.08925274506560527,
+      "right_mae": 0.08673108883178793,
+      "gain": 0.0025216562338173376,
+      "ordinary_gain": 0.00312464801525629,
+      "drop_B0_worst10_gain": 0.002402956682172677
+    }
+  },
+  "main_table": {
+    "B0": {
+      "soup_fit_mae": 0.0010931738854997094,
+      "soup_monitor_mae": 0.08850611723377369,
+      "soup_monitor_rmse": 0.2702828942158652,
+      "best_monitor_epoch": 300,
+      "best_monitor_mae": 0.08841060991561972,
+      "params": 413505,
+      "wall_seconds": 584.437004,
+      "wall_seconds_source": "utc_timestamps_correction",
+      "wall_seconds_raw": -1791535522.6157982,
+      "step_seconds": {
+        "mean": 0.024856690452465947,
+        "median": 0.024611667031422257,
+        "p90": 0.02543378105619922,
+        "n": 22680
+      },
+      "batch_order_sha256": "d142e307339b2869f4ad2d3ff8472e28249f1dd1ff887a4ae55f5b837d61c81f",
+      "batch_order_matches_frozen_p3": true,
+      "soup_sha256": "e4eb69aad835d275fb481dda4ccc9b7a13798f16b09df5870caf7b1bb152e4b4",
+      "monitor_pred_sha256": "e658d9c8ffbe98e024f57e944417de7a32039e6cfbf0860733797ef5aa0b6d85"
+    },
+    "B1": {
+      "soup_fit_mae": 0.0014452309492480708,
+      "soup_monitor_mae": 0.08925274506560527,
+      "soup_monitor_rmse": 0.2692941430417039,
+      "best_monitor_epoch": 320,
+      "best_monitor_mae": 0.08906005656695924,
+      "params": 441825,
+      "wall_seconds": 825.490881,
+      "wall_seconds_source": "utc_timestamps_correction",
+      "wall_seconds_raw": -1791535281.5619285,
+      "step_seconds": {
+        "mean": 0.03480813949795134,
+        "median": 0.03427222749451175,
+        "p90": 0.039695112407207495,
+        "n": 22680
+      },
+      "batch_order_sha256": "d142e307339b2869f4ad2d3ff8472e28249f1dd1ff887a4ae55f5b837d61c81f",
+      "batch_order_matches_frozen_p3": true,
+      "soup_sha256": "595eb4b02b7029358eba0018d47e60fd6e7e68f46db633465032529e697a2a81",
+      "monitor_pred_sha256": "d126e2a0425b3e521d8502aca07d6b5e741b0a1f460e6b28afb5f5ccb9b50218"
+    },
+    "B2": {
+      "soup_fit_mae": 0.001205381472609588,
+      "soup_monitor_mae": 0.08673108883178793,
+      "soup_monitor_rmse": 0.26692963510413764,
+      "best_monitor_epoch": 300,
+      "best_monitor_mae": 0.08655608018464409,
+      "params": 441825,
+      "wall_seconds": 720.3172865710221,
+      "wall_seconds_source": "perf_counter",
+      "wall_seconds_raw": 720.3172865710221,
+      "step_seconds": {
+        "mean": 0.03081076897943464,
+        "median": 0.03043920750496909,
+        "p90": 0.03204081708099693,
+        "n": 22680
+      },
+      "batch_order_sha256": "d142e307339b2869f4ad2d3ff8472e28249f1dd1ff887a4ae55f5b837d61c81f",
+      "batch_order_matches_frozen_p3": true,
+      "soup_sha256": "42b5d23f29ebc144149e285ceed4ad226701cc91976b0881220b21008c7edd5a",
+      "monitor_pred_sha256": "f4b41a2867cb2770bb82bf9687228c2b9e8c788755b400a311683b975ce5369d"
+    }
+  },
+  "single_seed_development_only": true,
+  "not_a_confirmation": true,
+  "no_official_valid_test": true
+}

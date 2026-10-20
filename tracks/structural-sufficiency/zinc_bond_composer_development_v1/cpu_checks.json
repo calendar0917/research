@@ -1,0 +1,341 @@
+{
+  "protocol_id": "zinc-bond-composer-development-v1",
+  "stage": "gates",
+  "created_utc": "2026-10-20T00:18:34.265961+00:00",
+  "status": "PASS",
+  "n_gates": 7,
+  "n_passed": 7,
+  "gates": {
+    "G1_parameters_and_common_state": {
+      "ok": true,
+      "parameter_audits": {
+        "B0": {
+          "kind": "B0",
+          "p3_parameters": 413505,
+          "branch_parameters": 0,
+          "expected_p3": 413505,
+          "expected_total": 413505,
+          "expected_branch": 0,
+          "total": 413505,
+          "groups": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "junction_encoder": 112896,
+            "group_composer": 62976,
+            "reader": 148481
+          },
+          "branch_groups": {},
+          "parameter_exact": true,
+          "reader_shape": [
+            [
+              256,
+              321
+            ],
+            [
+              256
+            ]
+          ],
+          "reader_first_weight": [
+            256,
+            321
+          ]
+        },
+        "B1": {
+          "kind": "B1",
+          "p3_parameters": 413505,
+          "branch_parameters": 28320,
+          "expected_p3": 413505,
+          "expected_total": 441825,
+          "expected_branch": 28320,
+          "total": 441825,
+          "groups": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "junction_encoder": 112896,
+            "group_composer": 62976,
+            "reader": 148481,
+            "branch": 28320
+          },
+          "branch_groups": {
+            "gamma": 48,
+            "input_proj": 4656,
+            "ln1": 96,
+            "mix_b1": 9360,
+            "ln2": 96,
+            "ffn": 9360,
+            "output_proj": 4704
+          },
+          "parameter_exact": true,
+          "reader_shape": [
+            [
+              256,
+              321
+            ],
+            [
+              256
+            ]
+          ],
+          "reader_first_weight": [
+            256,
+            321
+          ]
+        },
+        "B2": {
+          "kind": "B2",
+          "p3_parameters": 413505,
+          "branch_parameters": 28320,
+          "expected_p3": 413505,
+          "expected_total": 441825,
+          "expected_branch": 28320,
+          "total": 441825,
+          "groups": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "junction_encoder": 112896,
+            "group_composer": 62976,
+            "reader": 148481,
+            "branch": 28320
+          },
+          "branch_groups": {
+            "input_proj": 4656,
+            "ln1": 96,
+            "mix_b2": 9408,
+            "ln2": 96,
+            "ffn": 9360,
+            "output_proj": 4704
+          },
+          "parameter_exact": true,
+          "reader_shape": [
+            [
+              256,
+              321
+            ],
+            [
+              256
+            ]
+          ],
+          "reader_first_weight": [
+            256,
+            321
+          ]
+        }
+      },
+      "trunk_param_sha256": {
+        "B0": "fe1b6dfba7913f482684fbe9471fc35b127806c53808e23d067258009d9fbc31",
+        "B1": "fe1b6dfba7913f482684fbe9471fc35b127806c53808e23d067258009d9fbc31",
+        "B2": "fe1b6dfba7913f482684fbe9471fc35b127806c53808e23d067258009d9fbc31"
+      },
+      "branch_common_param_sha256": {
+        "B0": "none",
+        "B1": "81cffcc8ac5b3fc2ef6b2c29c3e82eb9d0d349e31c4949601ab4c7a4f9870c14",
+        "B2": "81cffcc8ac5b3fc2ef6b2c29c3e82eb9d0d349e31c4949601ab4c7a4f9870c14"
+      },
+      "branch_inventory": {
+        "input_projection": 4656,
+        "ln1": 96,
+        "mix_b1": 9408,
+        "mix_b2": 9408,
+        "ln2": 96,
+        "ffn": 9360,
+        "block": 18960,
+        "output_projection": 4704,
+        "total": 28320
+      }
+    },
+    "G2_zero_branch_equals_P3": {
+      "ok": true,
+      "prediction_max_abs": {
+        "B1_vs_B0_pred_max_abs": 0.0,
+        "B2_vs_B0_pred_max_abs": 0.0
+      },
+      "reader_input_max_abs": {
+        "B1_vs_B0_reader_max_abs": 0.0,
+        "B2_vs_B0_reader_max_abs": 0.0
+      },
+      "reader_in_dim": 321,
+      "expected_reader_in_dim": 321
+    },
+    "G3_renumber_bond_order_batch": {
+      "ok": true,
+      "atom_relabel_max_abs": {
+        "ring6": {
+          "B0": 4.76837158203125e-07,
+          "B1": 4.76837158203125e-07,
+          "B2": 4.76837158203125e-07
+        },
+        "chain7": {
+          "B0": 1.4901161193847656e-08,
+          "B1": 1.4901161193847656e-08,
+          "B2": 1.4901161193847656e-08
+        },
+        "fused": {
+          "B0": 1.1444091796875e-05,
+          "B1": 1.1444091796875e-05,
+          "B2": 1.1444091796875e-05
+        },
+        "single_atom": {
+          "B0": 0.0,
+          "B1": 0.0,
+          "B2": 0.0
+        }
+      },
+      "bond_order_permutation_max_abs": {
+        "ring6": {
+          "B0": 5.245208740234375e-06,
+          "B1": 5.245208740234375e-06,
+          "B2": 5.245208740234375e-06
+        },
+        "chain7": {
+          "B0": 1.4901161193847656e-08,
+          "B1": 1.4901161193847656e-08,
+          "B2": 1.4901161193847656e-08
+        },
+        "fused": {
+          "B0": 9.5367431640625e-06,
+          "B1": 9.5367431640625e-06,
+          "B2": 9.5367431640625e-06
+        }
+      },
+      "batch_composition_max_abs": {
+        "B0": 0.0,
+        "B1": 0.0,
+        "B2": 0.0
+      },
+      "tolerances": {
+        "renumber": 0.0001,
+        "bond_order": 0.0001,
+        "batch": 0.0001
+      }
+    },
+    "G4_empty_bond_boundary": {
+      "ok": true,
+      "per_model": {
+        "B0": {
+          "empty_batch_pred": [
+            0.06191113218665123,
+            0.06191112846136093
+          ],
+          "empty_batch_finite": true,
+          "mixed_batch_finite": true,
+          "empty_reader_finite": true
+        },
+        "B1": {
+          "empty_batch_pred": [
+            0.06191113218665123,
+            0.06191112846136093
+          ],
+          "empty_batch_finite": true,
+          "mixed_batch_finite": true,
+          "empty_reader_finite": true
+        },
+        "B2": {
+          "empty_batch_pred": [
+            0.06191113218665123,
+            0.06191112846136093
+          ],
+          "empty_batch_finite": true,
+          "mixed_batch_finite": true,
+          "empty_reader_finite": true
+        }
+      }
+    },
+    "G5_two_step_gradients": {
+      "ok": true,
+      "per_model": {
+        "B1": {
+          "first_step": {
+            "atom_encoder": 1.594445464851176,
+            "bond_encoder": 0.5287197528015436,
+            "branch.ffn": 0.0,
+            "branch.gamma": 0.0,
+            "branch.input_proj": 0.0,
+            "branch.ln1": 0.0,
+            "branch.ln2": 0.0,
+            "branch.mix_b1": 0.0,
+            "branch.output_proj": 1.0294806589585836,
+            "group_composer": 6.097805573958459,
+            "junction_encoder": 1.5391650209615635,
+            "reader": 9.68872168258464
+          },
+          "second_step": {
+            "atom_encoder": 5.45706159273312,
+            "bond_encoder": 1.8670224032973404,
+            "branch.ffn": 0.05385521359922592,
+            "branch.gamma": 0.0042246342757521135,
+            "branch.input_proj": 0.0909916526664982,
+            "branch.ln1": 0.0054302892221804785,
+            "branch.ln2": 0.004973801060874269,
+            "branch.mix_b1": 0.08067825924215122,
+            "branch.output_proj": 2.1967873692840176,
+            "group_composer": 10.208593018385004,
+            "junction_encoder": 2.717894055605778,
+            "reader": 22.17739259625727
+          },
+          "all_finite_first": true,
+          "all_finite_second": true,
+          "first_step_output_proj_nonzero": true,
+          "first_step_input_proj_zero_expected": true,
+          "second_step_input_proj_nonzero": true,
+          "second_step_all_branch_nonzero": true,
+          "ok": true
+        },
+        "B2": {
+          "first_step": {
+            "atom_encoder": 1.594445464851176,
+            "bond_encoder": 0.5287197528015436,
+            "branch.ffn": 0.0,
+            "branch.input_proj": 0.0,
+            "branch.ln1": 0.0,
+            "branch.ln2": 0.0,
+            "branch.mix_b2": 0.0,
+            "branch.output_proj": 1.2061515985387292,
+            "group_composer": 6.097805573958459,
+            "junction_encoder": 1.5391650209615635,
+            "reader": 9.68872168258464
+          },
+          "second_step": {
+            "atom_encoder": 5.452961632322694,
+            "bond_encoder": 1.863224714449125,
+            "branch.ffn": 0.05378709148835174,
+            "branch.input_proj": 0.105761228438744,
+            "branch.ln1": 0.008185218376857427,
+            "branch.ln2": 0.004186343702446656,
+            "branch.mix_b2": 0.08225949202606964,
+            "branch.output_proj": 2.473945655121023,
+            "group_composer": 10.22474630021862,
+            "junction_encoder": 2.7140396615178166,
+            "reader": 22.283345342910838
+          },
+          "all_finite_first": true,
+          "all_finite_second": true,
+          "first_step_output_proj_nonzero": true,
+          "first_step_input_proj_zero_expected": true,
+          "second_step_input_proj_nonzero": true,
+          "second_step_all_branch_nonzero": true,
+          "ok": true
+        }
+      },
+      "note": "The zero output projection blocks branch-internal gradients on update 1; update 2 must have non-zero branch gradients."
+    },
+    "G6_label_and_reader_discipline": {
+      "ok": true,
+      "banned_tokens_in_model_source": [],
+      "monitor_label_use_audit": "train_loop uses y_fit only for the L1 loss; y_mon is passed only to the evaluation helper",
+      "reader_input_dim": 321,
+      "reader_structure": "321 -> 256 -> 256 -> 1, retained for every model",
+      "monitor_labels_used_for_curves": true,
+      "monitor_labels_used_in_loss": false,
+      "reserved_labels_read": false,
+      "official_valid_test_loaded": false
+    },
+    "G7_batch_order": {
+      "ok": true,
+      "sha256": "d142e307339b2869f4ad2d3ff8472e28249f1dd1ff887a4ae55f5b837d61c81f",
+      "frozen_p3_sha256": "d142e307339b2869f4ad2d3ff8472e28249f1dd1ff887a4ae55f5b837d61c81f",
+      "note": "Same 8,000 Fit rows in the same order, same batch size and epoch count; evaluation uses no RNG."
+    }
+  },
+  "torch": "2.5.1+cu124",
+  "python": "3.12.14",
+  "device": "cpu"
+}

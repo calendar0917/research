@@ -1,0 +1,83 @@
+{
+  "protocol_id": "zinc-bond-composer-development-v1",
+  "stage": "smoke",
+  "created_utc": "2026-10-20T00:21:58.890828+00:00",
+  "device": "cuda",
+  "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+  "torch": "2.5.1+cu124",
+  "n_prefix_rows": 1024,
+  "epochs": 5,
+  "updates_per_kind": 40,
+  "steady_estimator": "mean over updates 3..40 (drops first two warm-up updates)",
+  "per_kind": [
+    {
+      "kind": "B0",
+      "smoke_wall_seconds": 3.0049066219944507,
+      "updates": 40,
+      "step_seconds_mean_all": 0.04101686177018564,
+      "step_seconds_steady_excluding_first_2": 0.024230473126456337,
+      "fit_eval_seconds_8000": 0.6293326369486749,
+      "monitor_eval_seconds_1000": 0.08077816700097173,
+      "smoke_eval_seconds": 0.7101108039496467,
+      "params": 413505,
+      "pred_finite": true
+    },
+    {
+      "kind": "B1",
+      "smoke_wall_seconds": 1.3531342910137028,
+      "updates": 40,
+      "step_seconds_mean_all": 0.03260375415266026,
+      "step_seconds_steady_excluding_first_2": 0.03060989450099633,
+      "fit_eval_seconds_8000": 0.6676050060195848,
+      "monitor_eval_seconds_1000": 0.08428328996524215,
+      "smoke_eval_seconds": 0.751888295984827,
+      "params": 441825,
+      "pred_finite": true
+    },
+    {
+      "kind": "B2",
+      "smoke_wall_seconds": 1.2837119039613754,
+      "updates": 40,
+      "step_seconds_mean_all": 0.0309062813030323,
+      "step_seconds_steady_excluding_first_2": 0.03081534200311197,
+      "fit_eval_seconds_8000": 0.675116108963266,
+      "monitor_eval_seconds_1000": 0.08539288397878408,
+      "smoke_eval_seconds": 0.7605089929420501,
+      "params": 441825,
+      "pred_finite": true
+    }
+  ],
+  "projection": [
+    {
+      "kind": "B0",
+      "projected_training_seconds": 549.5471305080297,
+      "projected_evaluation_seconds": 14.202216078992933,
+      "projected_run_seconds": 563.7493465870226
+    },
+    {
+      "kind": "B1",
+      "projected_training_seconds": 694.2324072825968,
+      "projected_evaluation_seconds": 15.03776591969654,
+      "projected_run_seconds": 709.2701732022933
+    },
+    {
+      "kind": "B2",
+      "projected_training_seconds": 698.8919566305796,
+      "projected_evaluation_seconds": 15.210179858841002,
+      "projected_run_seconds": 714.1021364894206
+    }
+  ],
+  "checks": {
+    "cap_seconds": 2700.0,
+    "smoke_total_seconds": 7.8642609098460525,
+    "projected_formal_seconds": 1987.1216562787365,
+    "margin": 1.2,
+    "reserve_seconds": 300.0,
+    "projected_with_margin_and_reserve": 2693.983100626299,
+    "fits_cap": true,
+    "remaining_after_projection_seconds": 6.016899373701108
+  },
+  "status": "PASS",
+  "monitor_labels_used": false,
+  "monitor_labels_read_for_development_curve": false
+}

@@ -1,0 +1,68 @@
+{
+  "protocol_id": "zinc-bond-composer-development-v1",
+  "accounting": "sum of wall-clock GPU occupancy; B0/B1/B2 are separate single-GPU processes",
+  "formal_runs": {
+    "B0": {
+      "wall_seconds": 584.437004,
+      "wall_seconds_source": "utc_timestamps_correction",
+      "wall_seconds_raw": -1791535522.6157982,
+      "started_utc": "2026-10-20T00:23:04.296165+00:00",
+      "finished_utc": "2026-10-20T00:32:48.733169+00:00",
+      "device": "cuda",
+      "cuda_device_name": "NVIDIA A100-SXM4-40GB"
+    },
+    "B1": {
+      "wall_seconds": 825.490881,
+      "wall_seconds_source": "utc_timestamps_correction",
+      "wall_seconds_raw": -1791535281.5619285,
+      "started_utc": "2026-10-20T00:23:04.696749+00:00",
+      "finished_utc": "2026-10-20T00:36:50.187630+00:00",
+      "device": "cuda",
+      "cuda_device_name": "NVIDIA A100-SXM4-40GB"
+    },
+    "B2": {
+      "wall_seconds": 720.3172865710221,
+      "wall_seconds_source": "perf_counter",
+      "wall_seconds_raw": 720.3172865710221,
+      "started_utc": "2026-10-20T00:34:54.259728+00:00",
+      "finished_utc": "2026-10-20T00:46:54.577020+00:00",
+      "device": "cuda",
+      "cuda_device_name": "NVIDIA A100-SXM4-40GB"
+    }
+  },
+  "formal_runs_seconds": {
+    "B0": 584.437004,
+    "B1": 825.490881,
+    "B2": 720.3172865710221
+  },
+  "formal_total_seconds": 2130.245171571022,
+  "smoke_total_seconds": 13.909342980827205,
+  "smoke_attempts": [
+    {
+      "path": "tracks/structural-sufficiency/zinc_bond_composer_development_v1/smoke.json",
+      "epochs": 2,
+      "rows": 1024,
+      "status": "STOP_BUDGET",
+      "seconds": 6.045082070981152,
+      "projected_with_margin_and_reserve_seconds": 2724.0748804574364
+    },
+    {
+      "path": "tracks/structural-sufficiency/zinc_bond_composer_development_v1/smoke_probe_5ep.json",
+      "epochs": 5,
+      "rows": 1024,
+      "status": "PASS",
+      "seconds": 7.8642609098460525,
+      "projected_with_margin_and_reserve_seconds": 2693.983100626299
+    }
+  ],
+  "smoke_status": "PASS",
+  "smoke_status_initial": "STOP_BUDGET",
+  "smoke_status_executed": "PASS",
+  "smoke_gate_note": "The initial 2-epoch short smoke projected 0.757h and returned STOP_BUDGET. A 5-epoch timing probe on the same 1,024-row prefix and same three models projected 0.748h and PASSed; both attempts are listed above. The formal total is reported separately and is below the 0.75h cap.",
+  "total_gpu_seconds": 2144.1545145518494,
+  "total_gpu_hours": 0.5955984762644027,
+  "cap_gpu_hours": 0.75,
+  "within_cap": true,
+  "remaining_gpu_hours": 0.15440152373559735,
+  "note": "Evaluation every 20 epochs and final soup evaluation are included in each run wall; no hidden retries."
+}
