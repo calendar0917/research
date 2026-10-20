@@ -213,3 +213,29 @@ from P3's no-warm-up recipe, applied equally to M and S.
   new vocabulary, or an eighth family to fill the budget.
 - Observed / interpreted / next-choice stay separate in the report. A T test
   gap cannot be used to declare the new trunks a success.
+
+## 6. Amendment log (append-only; deviations are dated and justified)
+
+- **A1 (after the first P3 x B launch).** The P3 x B cell was first launched
+  through a builder that did not load the seed-0 SSL encoders, so it compared an
+  SSL-initialised P3 x A against a scratch-initialised P3 x B. Detected by
+  auditing `model_info.ssl` in `runs/P3N_s0/train.json`. Correction:
+  `ad2_models.build_model` now loads the seed-matched encoder for `P3N` as well,
+  and a CPU check asserts that the initial state is bitwise identical to the
+  historical P3 builder (`ad2_cpu_checks.check_p3n_initial_state`, 24/24 tensors
+  equal). The corrected cell is `runs/xBssl_P3N_s0` (0.301 h). The defective run
+  is kept, labelled "P3 scratch x B", and billed (0.343 h); it is excluded from
+  the 2x2 but reported as an SSL-initialisation replicate at 600 epochs
+  (+0.017510).
+- **A2 (after the corrected P3 x B cell).** The corrected cell shows that
+  recipe B *improves* P3 (0.076224 vs 0.079105). Phase II's trunk recipe had
+  already been fixed to C on the defective input, and the pre-declared rule
+  ("Adam unless P3 x B beats P3 x A by >= 0.002") is now met, i.e. the rule
+  would have chosen AdamW. To avoid leaving the four declared candidates
+  compared to P3 under an arbitrary recipe, two **post-hoc** seed-0 cells (M and
+  S under recipe B, 1.005 h total) were run to test whether the rule transfers
+  across architectures. Result: it does not (M +0.0073 worse under B, S −0.0003
+  noise), so recipe C was the better or equal choice for both trunks. Declared
+  as post-hoc and reported as such. No other post-hoc GPU purchase was made; the
+  remaining 1.756 h were not spent.
+- **A3.** Budget ledger updated to the realised costs (3.894 h of 5.65).

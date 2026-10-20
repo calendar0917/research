@@ -27,7 +27,8 @@ ANALYSIS2 = EXP2 / "analysis"
 
 RUNS = {
     "P3 x A": C.REPO / "tracks/structural-sufficiency/zinc_perf_protocol_v1/runs/p3_s0",
-    "P3 x B": R2.RUNS2 / "P3N_s0",  # Phase I cells were launched without --tag
+    "P3 x B": R2.RUNS2 / "xBssl_P3N_s0",
+    "P3 scratch x B": R2.RUNS2 / "P3N_s0",  # defective first launch, kept as a replicate
     "T x A": R2.RUNS2 / "T_s0",
     "T x B": C.REPO / "tracks/structural-sufficiency/zinc_arch_discovery_v1/runs/T_s0",
     "M supervised": R2.run_dir("M", 0, "m"),
@@ -36,6 +37,8 @@ RUNS = {
     "S joint": R2.run_dir("Saux", 0, "s"),
     "M supervised s1": R2.run_dir("M", 1, "m"),
     "S supervised s1": R2.run_dir("S", 1, "s"),
+    "M supervised (B)": R2.run_dir("M", 0, "mB"),
+    "S supervised (B)": R2.run_dir("S", 0, "sB"),
     "M joint s1": R2.run_dir("Maux", 1, "m"),
     "S joint s1": R2.run_dir("Saux", 1, "s"),
 }
@@ -45,6 +48,7 @@ RUNS = {
 #: differs by 8.4e-7 because the per-epoch MAE is logged from float32.  All
 #: deltas below are unchanged at 6 decimals.
 REFERENCE = 0.0791046605258598
+P3_BEST = 0.076224  # P3 x recipe B, seed 0: best valid cell measured this round
 
 
 def load(name: str, path: Path) -> dict | None:
@@ -104,9 +108,10 @@ def main_table(rows: dict) -> str:
         "| run | recipe | optim | epochs | params | best-valid | best ep | train@best(eval) | Δ vs P3 s0 | s/epoch | GPU-h |",
         "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
-    order = ["P3 x A", "P3 x B", "T x A", "T x B",
+    order = ["P3 x A", "P3 x B", "P3 scratch x B", "T x A", "T x B",
              "M supervised", "M joint", "S supervised", "S joint",
-             "M supervised s1", "S supervised s1", "M joint s1", "S joint s1"]
+             "M supervised (B)", "S supervised (B)",
+             "M supervised s1", "S supervised s1"]
     for name in order:
         r = rows.get(name)
         if r is None:
@@ -177,7 +182,8 @@ def plot(rows: dict) -> None:
                           ("T x A", "tab:red", "-"), ("T x B", "tab:red", "--")]),
         ("new trunks", [("M supervised", "tab:blue", "-"), ("M joint", "tab:blue", "--"),
                         ("S supervised", "tab:purple", "-"), ("S joint", "tab:purple", "--"),
-                        ("P3 x A", "tab:green", ":")]),
+                        ("M supervised (B)", "tab:blue", ":"), ("S supervised (B)", "tab:purple", ":"),
+                        ("P3 x B", "tab:green", ":")]),
         ("seed-1 confirmations", [("M supervised", "tab:blue", ":"),
                                   ("M supervised s1", "tab:blue", "-"),
                                   ("S supervised", "tab:purple", ":"),
@@ -196,8 +202,9 @@ def plot(rows: dict) -> None:
             ax.plot(ep, va, style, color=color, lw=1.4, label=f"{name} ({r['best_valid']:.4f})")
             ax.plot([r["best_epoch"]], [r["best_valid"]], "o", color=color, ms=4)
             plotted = True
-        ax.axhline(REFERENCE, color="0.5", lw=0.8, ls="-.")
-        ax.axhline(0.075, color="0.7", lw=0.8, ls=":")
+        ax.axhline(REFERENCE, color="0.5", lw=0.9, ls="-.", label=f"P3 ref (A,s0) {REFERENCE:.4f}")
+        ax.axhline(P3_BEST, color="0.35", lw=0.9, ls="--", label=f"P3 best cell (B,s0) {P3_BEST:.4f}")
+        ax.axhline(0.075, color="0.7", lw=0.8, ls=":", label="0.075 target")
         ax.set_title(title, fontsize=9)
         ax.set_xlabel("epoch")
         ax.set_ylabel("official valid MAE")
@@ -237,36 +244,70 @@ def decision(rows: dict) -> dict:
         "reference_p3_seed0_valid": REFERENCE,
         "phase_i": {
             "p3_A": g("P3 x A"), "p3_B": g("P3 x B"),
+            "p3_scratch_B_not_a_cell": g("P3 scratch x B") if "P3 scratch x B" in rows else None,
             "t_A": g("T x A"), "t_B": g("T x B"),
             "p3_B_minus_p3_A": g("P3 x B") - g("P3 x A"),
             "t_A_minus_t_B": g("T x A") - g("T x B"),
             "gap_p3_minus_t_under_A": g("P3 x A") - g("T x A"),
-            "gap_t_minus_p3_under_B": g("T x B") - g("P3 x B"),
-            "rule_t_A_improves_clearly_ge_0.005": bool(g("T x B") - g("T x A") >= 0.005),
-            "rule_p3_B_degrades_clearly_ge_0.005": bool(g("P3 x B") - g("P3 x A") >= 0.005),
+            "gap_p3_minus_t_under_B": g("P3 x B") - g("T x B"),
+            "p3_prefers_B_by": g("P3 x A") - g("P3 x B"),
+            "t_prefers_A_by": g("T x B") - g("T x A"),
+            "initialisation_effect_at_600_epochs_p3": g("P3 scratch x B") - g("P3 x B")
+            if "P3 scratch x B" in rows else None,
         },
         "phase_ii_seed0": {
-            "M_sup": g("M supervised"), "M_joint": g("M joint"),
-            "S_sup": g("S supervised"), "S_joint": g("S joint"),
+            "M_sup_C": g("M supervised"), "M_joint_C": g("M joint"),
+            "S_sup_C": g("S supervised"), "S_joint_C": g("S joint"),
             "joint_minus_supervised_M": g("M joint") - g("M supervised"),
             "joint_minus_supervised_S": g("S joint") - g("S supervised"),
+            "M_sup_B_post_hoc": g("M supervised (B)") if "M supervised (B)" in rows else None,
+            "S_sup_B_post_hoc": g("S supervised (B)") if "S supervised (B)" in rows else None,
+            "M_B_minus_M_C_post_hoc": g("M supervised (B)") - g("M supervised")
+            if "M supervised (B)" in rows else None,
+            "S_B_minus_S_C_post_hoc": g("S supervised (B)") - g("S supervised")
+            if "S supervised (B)" in rows else None,
         },
         "phase_ii_seed1": {
             "M_s1": g("M supervised s1") if "M supervised s1" in rows else None,
             "S_s1": g("S supervised s1") if "S supervised s1" in rows else None,
         },
         "verdict": {
-            "new_trunk_beats_p3": bool(min(
-                g("M supervised"), g("M supervised s1") if "M supervised s1" in rows else 1.0,
-                g("S supervised"), g("S supervised s1") if "S supervised s1" in rows else 1.0,
-                g("M joint"), g("S joint")) < REFERENCE),
+            "new_trunk_beats_p3_seed0_reference": bool(min(
+                [v for v in (
+                    g("M supervised"), g("S supervised"), g("M joint"), g("S joint"),
+                    g("M supervised s1") if "M supervised s1" in rows else None,
+                    g("S supervised s1") if "S supervised s1" in rows else None,
+                    g("M supervised (B)") if "M supervised (B)" in rows else None,
+                    g("S supervised (B)") if "S supervised (B)" in rows else None,
+                ) if v is not None]) < REFERENCE),
+            "new_trunk_beats_p3_best_cell": bool(min(
+                [v for v in (
+                    g("M supervised"), g("S supervised"), g("M joint"), g("S joint"),
+                    g("M supervised s1") if "M supervised s1" in rows else None,
+                    g("S supervised s1") if "S supervised s1" in rows else None,
+                    g("M supervised (B)") if "M supervised (B)" in rows else None,
+                    g("S supervised (B)") if "S supervised (B)" in rows else None,
+                ) if v is not None]) < g("P3 x B")),
             "closest_new_model": "M supervised seed 1",
             "closest_new_valid": min(
-                g("M supervised"), g("M supervised s1") if "M supervised s1" in rows else 1.0,
-                g("S supervised"), g("S supervised s1") if "S supervised s1" in rows else 1.0,
-                g("M joint"), g("S joint")),
-            "development_target_0.075_reached": False,
+                [v for v in (
+                    g("M supervised"), g("S supervised"), g("M joint"), g("S joint"),
+                    g("M supervised s1") if "M supervised s1" in rows else None,
+                    g("S supervised s1") if "S supervised s1" in rows else None,
+                    g("M supervised (B)") if "M supervised (B)" in rows else None,
+                    g("S supervised (B)") if "S supervised (B)" in rows else None,
+                ) if v is not None]),
+            "development_target_0.075_reached": bool(min(
+                [v for v in (
+                    g("M supervised"), g("S supervised"), g("M joint"), g("S joint"),
+                    g("M supervised s1") if "M supervised s1" in rows else None,
+                    g("S supervised s1") if "S supervised s1" in rows else None,
+                    g("M supervised (B)") if "M supervised (B)" in rows else None,
+                    g("S supervised (B)") if "S supervised (B)" in rows else None,
+                ) if v is not None]) <= 0.075),
             "stop": True,
+            "stop_reason": "round questions answered; no remaining purchase can change "
+            "the ranking at the pre-declared effect sizes within 1.76 h",
         },
         "budget": {
             "cap_a100_hours_this_task": 5.65,

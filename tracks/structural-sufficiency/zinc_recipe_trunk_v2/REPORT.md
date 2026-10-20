@@ -1,11 +1,12 @@
 # zinc-recipe-trunk-v2 — round report
 
 **Status:** closed. Two declared questions were answered on the official valid
-split: (i) the v1 architecture comparison was confounded with the training
-recipe, and the confounding is now measured; (ii) two rebuilt composition
-trunks (global moment context, learned context slots) come within ~0.003-0.010
-of P3 but **none beats P3**, and the 0.075 development target is not reached.
-The official test split was **not read at all** in this round.
+split: (i) the 2x2 architecture x recipe cross, initialisation-matched, shows an
+interaction but no recipe that reverses the ranking — P3 is better than T under
+both recipes; (ii) two rebuilt composition trunks (global moment context,
+learned context slots) come within ~0.005-0.011 of P3 but **none beats P3**, and
+the 0.075 development target is not reached. The official test split was **not
+read at all** in this round.
 
 Reference throughout: P3 seed 0 best-valid = **0.079105** (seed 1 = 0.076668),
 same valid split, historical run reused without retraining or rebilling. The
@@ -78,44 +79,64 @@ and scoring 16 valid molecules gives **max |difference| = 0.0**, both
 
 | | recipe A (Adam, 360 ep, no warm-up) | recipe B (AdamW, 600 ep, 500-step warm-up) |
 |---|---|---|
-| **P3** | 0.079105 @272 *(existing, not rerun)* | **0.093734 @464** *(new, 0.343 h)* |
+| **P3** | 0.079105 @272 *(existing, not rerun)* | **0.076224 @377** *(new, 0.301 h)* |
 | **T (rank 16)** | **0.088070 @289** *(new, 0.206 h)* | 0.091375 @426 *(existing, not rerun)* |
 
-Both new cells: seed 0, seed-0 train-only SSL initialisation, same cache /
-shuffle seed / collate / selector / valid evaluation. Only the named recipe dict
-differs. Recipe A = Adam, batch 128, 360 epochs, no warm-up, per-step cosine
-1e-3 -> 1e-5, wd 1e-5, clip 5. Recipe B = AdamW, batch 128, 600 epochs,
-500-step warm-up, per-step cosine 1e-3 -> 1e-5, wd 1e-5, clip 5. Declared
-deviation: the v1 trainer applies the step-`k` learning rate to update `k`,
-whereas `zpp_p3` used `k-1` (one step out of 28,440).
+All four cells: seed 0, seed-0 train-only SSL encoders loaded and fine-tuned,
+same cache / shuffle seed / collate / selector / valid evaluation. Only the
+named recipe dict differs. Recipe A = Adam, batch 128, 360 epochs, no warm-up,
+per-step cosine 1e-3 -> 1e-5, wd 1e-5, clip 5. Recipe B = AdamW, batch 128,
+600 epochs, 500-step warm-up, per-step cosine 1e-3 -> 1e-5, wd 1e-5, clip 5.
+Declared deviation: the v1 trainer applies the step-`k` learning rate to update
+`k`, whereas `zpp_p3` used `k-1` (one step out of 28,440).
 
-Measured, not inferred:
+**Defect found and corrected in this cell (disclosed).** The first P3 x B
+attempt (`runs/P3N_s0`, 0.343 h) was launched through a builder that did not
+load the seed-0 SSL encoders, so it was initialisation-mismatched against P3 x A
+and is *not* a recipe comparison. It is retained as a labelled replicate
+("P3 scratch x B", 0.093734 @464) and is billed, but it is excluded from the
+2x2. The corrected cell (`runs/xBssl_P3N_s0`) loads the same encoder state as
+the historical P3 run: the initial parameter state of the corrected builder and
+of the historical P3 builder are **bitwise identical** (all 24 tensors,
+`analysis/cpu_checks.json: p3n_initial_state`). Side fact from the pair: at 600
+epochs the SSL initialisation is worth **+0.017510** valid on this graph, the
+same sign and size as the 240-epoch v1 measurement (+0.0157).
+
+Measured, not inferred (lower is better):
 
 | contrast | value |
 |---|---:|
-| P3: B − A | **+0.014630** (B clearly worse) |
-| T: A − B | **−0.003305** (A better, below the pre-declared 0.005 "clear" bar) |
-| gap under A: P3 − T | **−0.008965** (P3 better) |
-| gap under B: T − P3 | **−0.002359** (T slightly better) |
+| P3: B − A | **−0.002881** (B slightly better; ~1.2x P3's seed spread 0.0024) |
+| T: A − B | **−0.003305** (A better; below the pre-declared 0.005 "clear" bar) |
+| P3 − T under recipe A | **−0.008965** (P3 better) |
+| P3 − T under recipe B | **−0.015151** (P3 better) |
 
-**Observed.** P3 loses ~0.015 valid under T's v1 recipe; T loses ~0.003 under
-P3's recipe. Neither architecture was trained at its best cell under the other's
-recipe: under recipe B, T is nominally 0.002 *better* than P3, and under recipe
-A, P3 is 0.009 better than T.
+**Observed.** P3 is better than T under *both* recipes, by 0.0090 under A and
+0.0152 under B. Each architecture does best in its own recipe: P3 improves by
+0.0029 under B, T by 0.0033 under A. P3 x B (0.076224) is the best valid value
+measured in this round.
 
-**Interpreted (not more than the data supports).** The v1 statement "T is
-0.0123 behind P3" was measured across two different recipes and therefore mixes
-a recipe effect with an architecture effect. Lower is better, so the honest
-common-recipe statements are: under recipe A, P3 is 0.0090 lower than T; under
-recipe B, T is 0.0024 lower than P3. Recipe B is not a neutral control: it
-clearly degrades P3, the architecture it was not tuned for. This compares recipes as wholes; it does **not** separate optimizer,
-epochs and warm-up, and it does not identify the new trunks' recipe (that was
-fixed separately, §4).
+**Interpreted (not more than the data supports).** The 2x2 shows an
+architecture x recipe interaction of roughly 0.006 (sum of the two 0.003
+preferences) and no recipe that reverses the P3/T order. The v1 headline "T is
+0.0123 behind P3" was measured across two different recipes, but the two
+common-recipe gaps (0.0090 and 0.0152) bracket that number, so the v1 *ranking
+and rough magnitude* were not materially confounded; an earlier draft of this
+report claimed the opposite on the basis of the defective P3 x B cell, and that
+claim is withdrawn. This compares recipes as wholes; it does not separate
+optimizer, epoch budget and warm-up.
 
-**Consequences applied.** The pre-declared rule "T improves clearly if >= 0.005"
-was not met (0.0033), so Phase II was not reduced and no T seed-1 was bought;
-Phase II's optimizer rule ("Adam unless P3-B beats P3-A by >= 0.002") selected
-Adam, because P3-B is worse, not better.
+**Consequences applied.** (i) The rule "T improves clearly if >= 0.005" was not
+met (0.0033), so Phase II was not reduced and no T seed-1 was bought. (ii) The
+rule "recipe is a factor if P3 x B degrades by >= 0.005" was not met — B
+*improves* P3 by 0.0029 — so by the pre-declared rule the recipe is not a major
+factor at that effect size. (iii) The Phase II optimizer rule ("Adam unless
+P3 x B beats P3 x A by >= 0.002") is met by the corrected cell (−0.002881), so
+the rule as written points to AdamW; the four Phase II candidates had already
+been run under recipe C (Adam, 360 ep, 500-step warm-up) on the defective input.
+Rather than leave that unresolved, two post-hoc seed-0 cells (M and S under
+recipe B) were bought to test whether the rule transfers to the trunks; see
+§4.1.
 
 ## 4. Phase II — four seed-0 trunk candidates (+ two seed-1 confirmations)
 
@@ -184,12 +205,38 @@ Auxiliary-task diagnostics (`analysis/aux_*.json`, `runs/*/aux_curve.json`):
   representation; the joint training also reaches lower train@best (S joint
   0.0056 vs S supervised 0.0088) while valid gets worse.
 
+### 4.1 Post-hoc recipe check for the trunks (seed 0, disclosed)
+
+Recipe C was chosen on the defective Phase I input (§3). After the corrected
+P3 x B cell reversed that input, two extra seed-0 cells were bought for M and S
+under recipe B. This is **post-hoc**: it was decided after seeing the corrected
+Phase I number, it is not part of the four declared candidates, and it is the
+only post-hoc GPU purchase in this round.
+
+| cell | recipe C (Adam, 360) | recipe B (AdamW, 600) | B − C |
+|---|---:|---:|---:|
+| M supervised s0 | 0.087468 @281 | 0.094758 @416 | **+0.007290** (B clearly worse) |
+| S supervised s0 | 0.087267 @302 | 0.086980 @377 | −0.000287 (noise) |
+
+**Observed.** P3's recipe preference does not transfer to the trunks: M is
+0.0073 worse under recipe B, S is unchanged to within 3e-4. Cost 1.005 h.
+
+**Interpreted.** The four declared candidates were not handicapped by recipe C.
+If anything M's declared cell is its best-known cell, so the M−P3 gap reported
+below is not a recipe artefact in M's favour. The "follow P3's best recipe"
+rule is architecture-specific and should not be applied across architectures
+without a per-architecture check.
+
 **Observed.** The best new-model cell is M supervised seed 1 (0.081999), 0.0029
 behind P3 seed 0 and 0.0053 behind P3 seed 1. No trunk beats P3 at either seed
 and none reaches 0.075. M's seed spread (0.0055) is larger than P3's (0.0024),
 so the 2-seed M−P3 mean gap (+0.0068) is suggestive but not resolved; S is
 consistent across seeds and clearly behind (+0.0104). The masked auxiliary task
-is not a reliable regulariser here: neutral for M, harmful for S.
+is not a reliable regulariser here: neutral for M, harmful for S. At each
+family's best-known cell (seed 0) the gaps are larger than against the
+pre-declared reference: P3 0.076224 (recipe B) vs M 0.087468 (recipe C)
+= +0.0112 and vs S 0.086980 (recipe B) = +0.0108. P3 x B seed 1 was not run, so
+that comparison rests on one seed per family.
 
 **Interpreted.** Both trunks are far better than every non-T v1 family
 (0.134-0.165) and land in T's range with fewer parameters, which supports the
@@ -205,20 +252,23 @@ term or the 1-object-type (bond-centric) readout is what P3 still has.
 ![curves](analysis/curves.png)
 
 Measured official-valid curves, logged by the trainer (no smoothing or
-reconstruction). Markers are the selected best-valid epoch. The horizontal
-dash-dot line is the P3 seed-0 reference (0.079105); the dotted line is the
-0.075 development target. Panel 1: the 2x2 recipe cross. Panel 2: the four
-seed-0 trunks against P3. Panel 3: seed-0 vs seed-1 for the two supervised
-trunks.
+reconstruction). Markers are the selected best-valid epoch. Horizontal lines:
+dash-dot = the pre-declared P3 seed-0 reference (0.079105, recipe A); dashed =
+P3's best cell in this round (0.076224, recipe B); dotted = the 0.075
+development target. Panel 1: the 2x2 recipe cross, including the scratch-init
+P3 x B replicate that is excluded from the 2x2. Panel 2: the four seed-0 trunks
+against P3, with the post-hoc recipe-B cells dotted. Panel 3: seed-0 vs seed-1
+for the two supervised trunks.
 
 ## 6. Costs, artifacts, reproduction
 
 Billed to this task (A100-hours, both GPUs summed; the reused P3-A and T-B cells
-were billed in earlier rounds and are not rebilled): **2.588 h of the 5.65 h
-cap**, leaving 3.062 h. Breakdown: P3xB 0.343, TxA 0.206, M sup s0 0.252,
-M joint 0.331, S sup s0 0.381, S joint 0.464, M sup s1 0.246, S sup s1 0.355,
-timing jobs and failed launches 0.011. The masked-view prep ran on GPU-host CPU
-(72 s, not billed as A100 time).
+were billed in earlier rounds and are not rebilled): **3.894 h of the 5.65 h
+cap**, leaving 1.756 h. Breakdown: P3xB scratch (defective, retained) 0.343,
+TxA 0.206, M sup s0 0.252, M joint 0.331, S sup s0 0.381, S joint 0.464,
+M sup s1 0.246, S sup s1 0.355, P3xB corrected 0.301, M sup B 0.408,
+S sup B 0.597, timing jobs and failed launches 0.011. The masked-view prep ran
+on GPU-host CPU (72 s, not billed as A100 time).
 
 - `analysis/main_table.json|md` — every run with recipe, parameters, curve,
   cost. `analysis/round_decision.json` — the pre-declared read-outs computed
@@ -229,8 +279,10 @@ timing jobs and failed launches 0.011. The masked-view prep ran on GPU-host CPU
   test and per-epoch CE trajectories.
 - `runs/<tag>_<candidate>_s<seed>/` — `best.pt`, `final.pt`, `train.json`,
   `curve.csv`, `predictions/valid_best.npz` (git-ignored; local copies are the
-  ones analysed). Phase I cells live in `runs/T_s0` and `runs/P3N_s0` (launched
-  without a name prefix); Phase II uses the `m_`/`s_` prefixes.
+  ones analysed). Phase I cells live in `runs/T_s0` (recipe A) and
+  `runs/xBssl_P3N_s0` (corrected recipe B, SSL-init); `runs/P3N_s0` is the
+  defective first launch kept as the scratch-init replicate. Phase II uses the
+  `m_`/`s_` prefixes and `mB_`/`sB_` for the post-hoc recipe-B cells.
 
 ```bash
 # CPU-only facts (fast): correctness + P0/P1 readout + parameter/gradient audits
@@ -241,9 +293,10 @@ uv run pytest -q tests/test_ad2_cpu.py
 # masked views for the joint runs (CPU, ~80 s on the GPU host)
 uv run python ad2_masked.py prep --visits 4
 
-# Phase I: the two missing cells (one per GPU)
+# Phase I: the T x A cell and the corrected P3 x B cell (one per GPU)
 uv run python ad2_runner.py train --candidate T   --seed 0 --recipe A --device cuda:0
-uv run python ad2_runner.py train --candidate P3N --seed 0 --recipe B --device cuda:0
+uv run python ad2_runner.py train --candidate P3N --seed 0 --recipe B --tag xBssl --device cuda:0
+# (without --tag the same command reproduces the defective scratch-init cell)
 
 # Phase II (recipe C is fixed in ad_train.RECIPE_VARIANTS)
 uv run python ad2_runner.py train --candidate M    --seed 0 --recipe C --tag m --device cuda:0
@@ -253,6 +306,11 @@ uv run python ad2_runner.py train --candidate Saux --seed 0 --recipe C --tag s -
 uv run python ad2_runner.py train --candidate M    --seed 1 --recipe C --tag m --device cuda:0
 uv run python ad2_runner.py train --candidate S    --seed 1 --recipe C --tag s --device cuda:0
 
+# corrected Phase I cell and the two disclosed post-hoc recipe-B cells
+uv run python ad2_runner.py train --candidate P3N --seed 0 --recipe B --tag xBssl --device cuda:0
+uv run python ad2_runner.py train --candidate M   --seed 0 --recipe B --tag mB --device cuda:0
+uv run python ad2_runner.py train --candidate S   --seed 0 --recipe B --tag sB --device cuda:0
+
 uv run python ad2_report.py --print --plot
 ```
 
@@ -260,9 +318,10 @@ Remote form (each run is a committed revision on `res`, one process per GPU):
 
 ```bash
 rr deploy res
-rr run res zad2-xB-P3N-s0 --pool res-gpu1 --gpus 1 --time 1:00:00 \
+rr run res zad2-xB-P3N-ssl-s0 --pool res-gpu0 --gpus 1 --time 1:00:00 \
+  --result tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/xBssl_P3N_s0 \
   -- python tracks/structural-sufficiency/zinc_recipe_trunk_v2/code/ad2_runner.py \
-     train --candidate P3N --seed 0 --recipe B --device cuda:0
+     train --candidate P3N --seed 0 --recipe B --tag xBssl --device cuda:0
 rr run res zad2-M-sup-s0 --pool res-gpu0 --gpus 1 --time 1:00:00 \
   --result tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/m_M_s0 \
   -- python tracks/structural-sufficiency/zinc_recipe_trunk_v2/code/ad2_runner.py \
@@ -274,11 +333,21 @@ rr logs zad2-M-sup-s0 ; rr pull zad2-M-sup-s0
 
 **Observed**
 
-- Recipe cross: P3 0.079105 (A) / 0.093734 (B); T 0.088070 (A) / 0.091375 (B).
-  Recipe B costs P3 +0.0146 and recipe A costs T +0.0033.
+- Recipe cross (initialisation-matched): P3 0.079105 (A) / **0.076224** (B);
+  T 0.088070 (A) / 0.091375 (B). P3 is better than T under *both* recipes, by
+  0.0090 (A) and 0.0152 (B). Each architecture prefers its own recipe (P3 by
+  0.0029 towards B, T by 0.0033 towards A).
+- The first P3 x B launch was initialisation-mismatched (no SSL load, 0.093734);
+  it is disclosed, kept as a scratch-init replicate, and excluded from the 2x2.
+  The corrected P3 x B cell starts from a state **bitwise identical** to the
+  historical P3 initial state.
 - New trunks: M 0.087468/0.081999 (mean 0.084734), S 0.087267/0.089212 (mean
   0.088239), all <= 500k parameters, all fine-tuned from the frozen SSL
-  encoders. None beats P3 (0.079105/0.076668, mean 0.077886).
+  encoders. None beats P3 (0.079105/0.076668 under A, 0.076224 under B, mean
+  0.077886 over the two recipe-A seeds).
+- Post-hoc recipe check (seed 0): recipe B is worse for M by 0.0073 and
+  indistinguishable for S (−0.0003). The trunks' recipe is not a handicap, and
+  P3's recipe preference does not transfer to them.
 - The masked structural auxiliary task is neutral for M (−0.0004) and harmful
   for S (+0.0042) at the single declared lambda = 0.05.
 - No test split was read; no model, recipe or checkpoint was selected on
@@ -286,28 +355,33 @@ rr logs zad2-M-sup-s0 ; rr pull zad2-M-sup-s0
 
 **Interpreted**
 
-- The v1 cross-family ranking was recipe-confounded. Under recipe A, P3 is
-  0.0090 *lower* (better) than T; under recipe B, T is 0.0024 lower than P3. The
-  v1 "T is 0.0123 behind" number should not be read as an architecture gap.
+- The v1 ranking P3 > T survives a common-recipe comparison, and the v1
+  magnitude (0.0123) sits between the two common-recipe gaps (0.0090, 0.0152).
+  An earlier draft of this report, written from the defective P3 x B cell,
+  claimed the opposite; that claim is withdrawn.
 - Rebuilding the composition trunk as typed objects with a global context gets
-  back into T's range without association tensors, but the remaining ~0.007
-  (mean, two seeds) or 0.003 (best seed) gap to P3 is not closed. The most
-  plausible structural difference left is P3's local incidence composition
-  (junctions owned by the bond they touch) versus the whole-graph context used
-  here; that is a hypothesis, not a measured mechanism.
-- With only two SSL seeds, M's gap to P3 is not separable from seed noise.
+  back into T's range without association tensors, but the gap to P3 is not
+  closed: +0.0108 to +0.0112 at each family's best-known cell (seed 0).
+- The most plausible structural difference left is P3's local incidence
+  composition (junctions owned by the bond they touch) versus the whole-graph
+  context used here; that is a hypothesis, not a measured mechanism. The
+  bond-centric readout is a second uncontrolled difference.
+- With only two SSL seeds, M's gap to P3 is not separable from seed noise
+  (M spread 0.0055 vs P3 0.0024).
 
 **Next choice (proposed, not started)**
 
-- Primary continuation reason and cost: resolve the M−P3 question with more
-  seeds. No seed-2/3 SSL encoder exists (`pretrain_encoder_s{0,1}.pt` only), so
-  each extra seed costs one train-only masked-SSL pretraining (~0.5 A100-h at
-  the published 7,560 updates) plus one 360-epoch M run (~0.25 A100-h), i.e.
-  ~0.75-0.8 h per seed. The 3.06 h left would buy 3-4 such seeds.
-- Secondary: one pre-declared architecture variant that gives M/S the local
-  incidence context P3 has (still one-shot, no recursion), to test the
-  hypothesis above. Not started; it is a new architecture family and should be
-  pre-registered separately.
-- Not proposed: a rank sweep of T, more λ values for the masked auxiliary task
-  (the fixed-mask memorisation makes it a weak regulariser), new
+- Primary: resolve the M−P3 question with more seeds. No seed-2/3 SSL encoder
+  exists (`pretrain_encoder_s{0,1}.pt` only), so each extra seed costs one
+  train-only masked-SSL pretraining (~0.5 A100-h at the published 7,560
+  updates) plus one 360-epoch M run (~0.25 A100-h), i.e. ~0.75-0.8 h per seed.
+  1.756 h remain: enough for two seeds, not for a decisive 4-seed mean. If the
+  question has to be decided cheaply, prefer 2 seeds of **P3 x B** (0.60 h) to
+  put the new best P3 cell on the same two-seed footing as the trunks, then M.
+- Secondary: one pre-declared variant that gives M/S the local incidence context
+  P3 has (still one-shot, no recursion), to test the hypothesis above. Not
+  started; it is a new architecture family and should be pre-registered
+  separately.
+- Not proposed: a rank sweep of T, more lambda values for the masked auxiliary
+  task (fixed-mask memorisation makes it a weak regulariser), new
   vocabularies/VQ, or filling the remaining budget for its own sake.
