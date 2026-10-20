@@ -174,6 +174,28 @@ def test_shuffled_noncontiguous_rows(candidate, tiny_cache):
     assert torch.isfinite(pred).all()
 
 
+@pytest.mark.parametrize("candidate", ["P0", "P1"])
+def test_path_readout_sample_count_invariant(candidate, tiny_cache):
+    """Duplicating every sampled walk must not change the readout.
+
+    The training bank uses 32 walks and the fixed valid bank 128.  Raw sums or
+    raw sampled counts in the reader would make the same molecule score very
+    differently; the count-normalized readout must be invariant.
+    """
+    model, _ = M.build_model(candidate, _norm(), 0, "cpu")
+    model.eval()
+    cols = T._walk_cols(torch.Generator().manual_seed(0))
+    batch = T.collate(tiny_cache, [0, 1], candidate, valid=False, walk_cols=cols)
+    W = int(batch["walk_atom"].shape[0])
+    h = torch.randn(W, model.width)
+    y1 = model.readout_paths(h, batch)
+    batch2 = dict(batch)
+    for key in ("walk_atom", "walk_bond", "walk_anon", "walk_len", "walk_group", "walk_graph"):
+        batch2[key] = torch.cat([batch[key], batch[key]], dim=0)
+    y2 = model.readout_paths(torch.cat([h, h], dim=0), batch2)
+    assert torch.allclose(y1, y2, atol=1e-6)
+
+
 def test_rooted_relabelling_invariance():
     # Relabel atom indices by a permutation; rooted features mapped back must
     # be unchanged (same graph, same root).

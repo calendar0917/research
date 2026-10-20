@@ -366,7 +366,12 @@ class PathModel(nn.Module):
             [GlobalAttention(width, heads=heads, ff_mult=2, dropout=dropout)]
             if use_attention else []
         )
-        readout_in = 4 * 3 * width + 1 + N_ATOM_TYPES + N_BOND_TYPES + 2 + D.GLOBAL_DIM
+        # Count-invariant path readout: the training bank samples 32 walks and
+        # the fixed valid bank uses 128, so raw sums and raw sampled counts are
+        # split indicators, not molecular features.  Keep per-length means and
+        # second moments (both divided by the actual sampled count), plus the
+        # full-molecule composition/size and global33 channels.
+        readout_in = 2 * len(D.WALK_LENGTHS) * width + N_ATOM_TYPES + N_BOND_TYPES + 2 + D.GLOBAL_DIM
         self.reader = MLP(readout_in, 224, 1, n_hidden=2, dropout=dropout)
         self.register_buffer("global_mean", torch.as_tensor(norm["global_mean"], dtype=torch.float32))
         self.register_buffer("global_scale", torch.as_tensor(norm["global_scale"], dtype=torch.float32))
@@ -415,16 +420,13 @@ class PathModel(nn.Module):
                 cnt = torch.bincount(gg, minlength=B).clamp(min=1).to(h.dtype)
                 s = h.new_zeros((B, self.width)).index_add_(0, gg, hh)
                 sq = h.new_zeros((B, self.width)).index_add_(0, gg, hh * hh)
-                parts.extend([s, s / cnt.view(B, 1), sq / cnt.view(B, 1)])
+                parts.extend([s / cnt.view(B, 1), sq / cnt.view(B, 1)])
             else:
                 z = h.new_zeros((B, self.width))
-                parts.extend([z, z, z])
-        count = h.new_zeros((B, 1)).index_add_(
-            0, graph, torch.ones_like(graph, dtype=h.dtype).unsqueeze(1)
-        )
+                parts.extend([z, z])
         g = _global_std(batch["global"], self.global_mean, self.global_scale)
         reader_in = torch.cat(
-            parts + [torch.log1p(count), batch["atom_count"], batch["bond_count"],
+            parts + [batch["atom_count"], batch["bond_count"],
                      torch.log1p(batch["n_atoms"].float()).unsqueeze(1),
                      torch.log1p(batch["n_bonds"].float()).unsqueeze(1), g],
             dim=1,

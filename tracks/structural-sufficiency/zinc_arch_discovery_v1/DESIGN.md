@@ -101,6 +101,28 @@ reset or compressed mid-run. `steps/epoch = ceil(10000/128)
 for all candidates; P0/P1 use the full 128-walk bank at valid time and the
 cost is included in the measured epoch time.
 
+## 3b. Pre-declared follow-up correction: P0/P1 sampled-count leak
+
+The original P0/P1 run exposed a readout-scale mismatch, not a representation
+failure.  P0 s0 reached best-valid 0.625814 at epoch 70 (train@best 0.608447),
+and P1 s0 reached 0.729133 at epoch 223 (train@best 0.697384).  On the same 128
+valid molecules, the P1 best checkpoint scored MAE 0.3382 when given the
+32-walk training sample and 0.6911 when given the 128-walk fixed valid bank;
+on 128 train molecules it scored 0.1908 (32 walks) vs 0.6941 (128 walks).  The
+reader consumed a raw path sum and `log1p(number of sampled walks)`.  Those are
+split indicators under the declared 32-train / 128-valid sampling, not molecular
+features.  The model learned the train-side scale and failed when the valid bank
+supplied four times as many walks.
+
+Correction (only this readout change; representation, bank, attention, recipe
+and 600-epoch schedule unchanged): remove the raw sum and raw sampled count from
+the reader; keep per-length mean and second moment, both divided by the actual
+sampled count, plus the full-molecule atom/bond composition, molecule size, and
+global33.  Corrected parameter counts are P0 281,121 and P1 355,905.  The two
+corrected seed-0 runs are the pre-declared follow-up; the original P0/P1 runs
+remain in the result table and are not deleted.  This is a disclosed bug fix and
+its compute is billed below.
+
 ## 4. Checks before formal runs
 
 * Data labels/splits aligned to official PyG; frozen P3 object cache verified
