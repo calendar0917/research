@@ -875,7 +875,7 @@ phase2b:
     - "no test-driven follow-up, third seed, width/depth/gating/SSL/recipe change was made"
 
 side_round_zinc_exact_structure_residual_v1:
-  status: RUNNING
+  status: COMPLETE_NEGATIVE
   protocol: zinc-exact-structure-residual-v1
   protocol_file: tracks/structural-sufficiency/zinc_exact_structure_residual_v1/PROTOCOL.md
   config: tracks/structural-sufficiency/zinc_exact_structure_residual_v1/configs/zinc_exact_structure_residual_v1.yaml
@@ -893,3 +893,27 @@ side_round_zinc_exact_structure_residual_v1:
   budget: 8 A100-hours total; phase-1 target <= 4 h
   supersedes_existing_work: false
   relation_to_closed_rounds: independent side round; does not reopen S/T/R or Phase 2b
+  report: tracks/structural-sufficiency/zinc_exact_structure_residual_v1/REPORT.md
+  amendment: tracks/structural-sufficiency/zinc_exact_structure_residual_v1/AMENDMENT.md
+  run_commit: 8df7986868c09e72391a32424e0acc546b2bbe07
+  score_commit: ce7d64a762085f0a475c8fdf48c1a0cec880955f
+  decision: NO_TRIGGER_BOTH_RESIDUAL_ARMS_HARMFUL
+  result:
+    valid_mae_seed_mean: {B: 0.079724, E_eta0.1: 0.110745, E_eta1: 0.099071, H_eta0.1: 0.106391, H_eta1: 0.094526}
+    delta_vs_B: {E_eta0.1: 0.031020, E_eta1: 0.019347, H_eta0.1: 0.026666, H_eta1: 0.014802}
+    H_minus_E: {eta0.1: -0.004354, eta1: -0.004545}
+    train_soup_mae_seed_mean: {B: 0.001793, E_eta0.1: 0.002628, E_eta1: 0.002804, H_eta0.1: 0.002608, H_eta1: 0.002759}
+  mechanism: >-
+    The branch is active and becomes the main predictor: zeroing the trained beta
+    at inference raises valid MAE from 0.090-0.102 to 0.465-0.518 and train MAE
+    from 0.0031 to 0.44-0.47; the reader shifts weight mass toward a_sum/a_sq.
+    Stronger shrinkage (eta 1.0) is consistently less harmful than eta 0.1, and
+    the parent-sharing prior consistently reduces the damage relative to E, but
+    neither reaches B. E's r1 rows are exactly zero because no train atom falls
+    back to r1 (r2 train coverage 100%), so only the H prior trains them.
+  gpu_hours: 2.208
+  next_action: >-
+    Stop. Do not run phase 2 and do not search eta/rank/radius/modules. If this
+    direction is revisited, it needs a new pre-registration and a different
+    mechanism (e.g. a residual that cannot become the main predictor), not a
+    stronger version of the same prior.

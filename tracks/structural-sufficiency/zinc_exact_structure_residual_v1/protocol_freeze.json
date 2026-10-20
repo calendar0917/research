@@ -1,0 +1,127 @@
+{
+  "protocol": "zinc-exact-structure-residual-v1",
+  "created_utc": "2026-10-20T02:42:45.429527+00:00",
+  "git_commit": "8df7986868c09e72391a32424e0acc546b2bbe07",
+  "config_sha256": "e4ab200af31ac12b56d1a288c1b6ef197b8fcc0f0fdac69f55a6ad538bf84404",
+  "code_hashes": {
+    "runner": "5778a0378d99c6e0d32b66ea0e1a8681260684cfbed2434185c96a2e20f4cf6e",
+    "data": "59e9de507d693b8dc10647c9943c3eac9d63bf38466b8a9d6a990d3667ac7c23",
+    "models": "95d5dd3c45163be0c30c255c4e48c45fa3d8e0dbdf8c41fb825585a90b1418a9",
+    "config": "e4ab200af31ac12b56d1a288c1b6ef197b8fcc0f0fdac69f55a6ad538bf84404",
+    "tokenizer": "88766038314110c4b9019756d156c849eb92c2c25eafc441a1686a294bf6514b",
+    "objects_module": "8f4ba44dc3c047d674a1a6832f7ed8265eaa2457b15e820b3973a4cbd3a0861c",
+    "composer_module": "1c83a97ece60a151c6fa0c1ad5d2022b470ede9356b23d8d7b1e6b62daa71f4f",
+    "masked_module": "f27dbfe36ac5a9a0a1915320dba7c955115ccfa36e6b4755f2d2d62d8efb1489",
+    "base_driver": "40ec29443bec5f83e20b1dab2dcbdc5290191360c78944408f67f81626c3a90e",
+    "graph_module": "d9e09985543be437c4a9d8509b6c4ba1b359e8d89e03546b186cc08a7a13dee4"
+  },
+  "inputs": {
+    "objects_train10k": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt",
+      "expected": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d",
+      "actual": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d",
+      "ok": true
+    },
+    "objects_valid": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt",
+      "expected": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c",
+      "actual": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c",
+      "ok": true
+    },
+    "prep_train10k": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json",
+      "expected": "d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a",
+      "actual": "d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a",
+      "ok": true
+    },
+    "ssl_encoder_seed0": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "expected": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "actual": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "ok": true
+    },
+    "ssl_encoder_seed1": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+      "expected": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a",
+      "actual": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a",
+      "ok": true
+    },
+    "all_ok": true
+  },
+  "prep_sha256": "982d4469032ec3909f65e7a96833418a196badd9b9fa09ff7e2e0b1189aa6634",
+  "vocab_sha256": "fc64ac36abc945b0508ff3ff865c21aa854e99a04c090ef3c35f9d2e83abc980",
+  "types_sha256": "6f3893ae2b7d4f598e54a2cc74cdf0bd1ed1bc0e3e0156cd788f86bc4f2c8406",
+  "gates_sha256": "3c0a2ffe54d77c70dc34019eea34c967b33b658f60737ce64cea952abd146701",
+  "smoke_sha256": "d6758caed68f69d688fc555993fae20aeb974640bad51c99c9555b4cfdeac0e7",
+  "registered_run_matrix": {
+    "phase1": {
+      "seeds": [
+        0,
+        1
+      ],
+      "gpu0_seed": 0,
+      "gpu1_seed": 1,
+      "configs": [
+        "B",
+        "E@0.1",
+        "E@1.0",
+        "H@0.1",
+        "H@1.0"
+      ]
+    },
+    "phase2": {
+      "seeds": [
+        2,
+        3
+      ],
+      "configs_after_gate": [
+        "B",
+        "E_star",
+        "H_star"
+      ],
+      "ssl_seeds_to_train": [
+        2,
+        3
+      ]
+    },
+    "decision_rule": {
+      "family_vs_B": {
+        "both_seeds_improve": true,
+        "mean_valid_mae_gain_min": 0.003,
+        "ordinary_region_not_reversed": true,
+        "drop_reference_worst_k": 10,
+        "drop_slice_not_reversed": true
+      },
+      "ordinary_threshold": -3.0,
+      "select_eta_by": "seed_mean_valid_mae",
+      "phase2_requires": "any_family_triggers",
+      "no_eta_search_beyond_two_declared_levels": true
+    },
+    "etas": [
+      0.1,
+      1.0
+    ]
+  },
+  "valid_labels": {
+    "policy": "reuse_single_existing_read",
+    "source": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/valid_y_read_once.npy",
+    "source_lock": "tracks/structure-contribution/results/bjoc_recipe_tuning_v1/valid_read.lock",
+    "sha256": "8f6ee636fd23ee977984e49cdc18f352a61bcf24a4987ae11402a402c41d4b45",
+    "read_utc": "2026-10-13T04:33:00Z",
+    "read_commit": "4f91d204d600fbc274cd3e4d5528c6cdce873e4c",
+    "read_by_previous_round": true,
+    "this_round_reads_labels": false
+  },
+  "sy": {
+    "sy": 1.4721893097127787,
+    "median": 0.44100287556648254,
+    "n": 10000,
+    "definition": "mean absolute deviation of train labels from the train median"
+  },
+  "frozen_before_any_formal_trajectory": true,
+  "labels_read": {
+    "official_valid": false,
+    "official_test": false
+  },
+  "official_test_loaded": false
+}

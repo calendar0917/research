@@ -1,0 +1,112 @@
+{
+  "protocol": "zinc-exact-structure-residual-v1",
+  "git_commit": "8df7986868c09e72391a32424e0acc546b2bbe07",
+  "created_utc": "2026-10-20T02:39:42.768163+00:00",
+  "all_pass": true,
+  "gates": [
+    {
+      "name": "G1_parameter_budget",
+      "ok": true,
+      "K": 15730,
+      "total_parameters": 476809,
+      "cap": 500000,
+      "r1": 512,
+      "r2": 15218
+    },
+    {
+      "name": "G2_ancestor_and_fallback",
+      "ok": true,
+      "closure_ok": true,
+      "direct_parent_checks": 191,
+      "direct_parent_ok": true,
+      "deepest_retained_rule_ok": true,
+      "r2_oov_atoms_first200": 0
+    },
+    {
+      "name": "G3_zero_residual_equivalence",
+      "ok": true,
+      "max_abs_B_minus_E": 0.0,
+      "max_abs_B_minus_H": 0.0,
+      "residual_init_equal": true,
+      "shared_modules_equal": true,
+      "parameter_audit_E": {
+        "total_parameters": 476809,
+        "p3_parameters": 413505,
+        "residual_parameters": 63304,
+        "within_cap": true
+      },
+      "parameter_audit_H": {
+        "total_parameters": 476809,
+        "p3_parameters": 413505,
+        "residual_parameters": 63304,
+        "within_cap": true
+      }
+    },
+    {
+      "name": "G4_two_step_gradients",
+      "ok": true,
+      "prior_at_init": 0.0,
+      "grad_beta_step1": 0.03504813835024834,
+      "grad_P_step1": 0.0,
+      "grad_beta_step2": 0.13728515803813934,
+      "grad_P_step2": 0.0014701834879815578
+    },
+    {
+      "name": "G5_permutation_invariance",
+      "ok": true,
+      "patch_keys_follow_permutation": true,
+      "types_follow_permutation": true,
+      "prediction_abs_diff": 5.960464477539063e-08
+    },
+    {
+      "name": "G6_data_boundary",
+      "ok": true,
+      "all_vocab_keys_are_train_types": true,
+      "support_unit_is_distinct_train_molecules": true,
+      "n_recomputed_train_types": 15730,
+      "n_vocab_types": 15730,
+      "valid_label_read_before_freeze": false,
+      "official_test_loaded": false
+    },
+    {
+      "name": "G7_batch_order_matches_R3",
+      "ok": true,
+      "hashes": {
+        "0": "3c964a71acc1ca817567cac916a7a59a12b40f750dbceee0848f614a2c71428f",
+        "1": "8710751abd8c33739cac5506756fe6ba6abb919aed3235f86619b13fcf2700b9"
+      },
+      "expected": {
+        "0": "3c964a71acc1ca817567cac916a7a59a12b40f750dbceee0848f614a2c71428f",
+        "1": "8710751abd8c33739cac5506756fe6ba6abb919aed3235f86619b13fcf2700b9"
+      }
+    },
+    {
+      "name": "G8_optimizer_weight_decay",
+      "ok": true,
+      "param_groups": 2,
+      "weight_decays": [
+        0.0,
+        1e-05
+      ]
+    },
+    {
+      "name": "G9_module_scope",
+      "ok": true,
+      "residual_parameters": 63304
+    },
+    {
+      "name": "G10_vocab_retention",
+      "ok": true,
+      "kept": 15730,
+      "dropped": 0,
+      "max_types_under_cap": 21527,
+      "truncation_order": "(-support, key); ancestor cost charged with the child"
+    }
+  ],
+  "labels_read": {
+    "train_subset": true,
+    "official_valid": false,
+    "official_test": false
+  },
+  "official_test_loaded": false
+}

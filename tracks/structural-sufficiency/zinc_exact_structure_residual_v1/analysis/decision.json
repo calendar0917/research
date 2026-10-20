@@ -1,0 +1,190 @@
+{
+  "protocol": "zinc-exact-structure-residual-v1",
+  "phase": 1,
+  "git_commit": "ce7d64a762085f0a475c8fdf48c1a0cec880955f",
+  "thresholds": {
+    "family_vs_B": {
+      "both_seeds_improve": true,
+      "mean_valid_mae_gain_min": 0.003,
+      "ordinary_region_not_reversed": true,
+      "drop_reference_worst_k": 10,
+      "drop_slice_not_reversed": true
+    },
+    "ordinary_threshold": -3.0,
+    "select_eta_by": "seed_mean_valid_mae",
+    "phase2_requires": "any_family_triggers",
+    "no_eta_search_beyond_two_declared_levels": true
+  },
+  "seeds": [
+    0,
+    1
+  ],
+  "run_keys": [
+    "B",
+    "E_eta0.1",
+    "E_eta1",
+    "H_eta0.1",
+    "H_eta1"
+  ],
+  "B_seed_mean_valid_mae": 0.07972431361902273,
+  "families": {
+    "E": {
+      "0.1": {
+        "declared_config": "E@0.1",
+        "run_key": "E_eta0.1",
+        "mae_seed_mean": 0.1107447890471667,
+        "per_seed_mae": {
+          "0": 0.11430729605728993,
+          "1": 0.10718228203704348
+        },
+        "seed_mean_gain_vs_B": -0.03102047542814397,
+        "per_seed_delta_vs_B": {
+          "0": 0.03271809614554512,
+          "1": 0.029322854710742835
+        },
+        "ordinary_delta": 0.025242210242879842,
+        "drop_B_worst_k_delta": 0.026180242680805745,
+        "bootstrap_all": {
+          "mean": 0.03102047542814398,
+          "ci_lo": 0.022165321117671555,
+          "ci_hi": 0.042790484071992964,
+          "frac_better": 0.414,
+          "n_resamples": 5000,
+          "seed": 0,
+          "unit": "molecule"
+        },
+        "checks": {
+          "both_seeds_improve": false,
+          "seed_mean_gain_ge_threshold": false,
+          "ordinary_not_reversed": false,
+          "drop_B_worst_k_not_reversed": false
+        },
+        "trigger": false
+      },
+      "1.0": {
+        "declared_config": "E@1.0",
+        "run_key": "E_eta1",
+        "mae_seed_mean": 0.09907095193117857,
+        "per_seed_mae": {
+          "0": 0.10183735124120721,
+          "1": 0.09630455262114992
+        },
+        "seed_mean_gain_vs_B": -0.019346638312155842,
+        "per_seed_delta_vs_B": {
+          "0": 0.020248151329462408,
+          "1": 0.018445125294849277
+        },
+        "ordinary_delta": 0.015407794034220577,
+        "drop_B_worst_k_delta": 0.01564236264070261,
+        "bootstrap_all": {
+          "mean": 0.019346638312155846,
+          "ci_lo": 0.011905307188302686,
+          "ci_hi": 0.028790844852013095,
+          "frac_better": 0.441,
+          "n_resamples": 5000,
+          "seed": 0,
+          "unit": "molecule"
+        },
+        "checks": {
+          "both_seeds_improve": false,
+          "seed_mean_gain_ge_threshold": false,
+          "ordinary_not_reversed": false,
+          "drop_B_worst_k_not_reversed": false
+        },
+        "trigger": false
+      }
+    },
+    "H": {
+      "0.1": {
+        "declared_config": "H@0.1",
+        "run_key": "H_eta0.1",
+        "mae_seed_mean": 0.10639056594396243,
+        "per_seed_mae": {
+          "0": 0.1103749017911614,
+          "1": 0.10240623009676346
+        },
+        "seed_mean_gain_vs_B": -0.0266662523249397,
+        "per_seed_delta_vs_B": {
+          "0": 0.028785701879416592,
+          "1": 0.02454680277046281
+        },
+        "ordinary_delta": 0.022022820358353862,
+        "drop_B_worst_k_delta": 0.02203974089446487,
+        "bootstrap_all": {
+          "mean": 0.026666252324939705,
+          "ci_lo": 0.01851716732708155,
+          "ci_hi": 0.037318648066697636,
+          "frac_better": 0.423,
+          "n_resamples": 5000,
+          "seed": 0,
+          "unit": "molecule"
+        },
+        "checks": {
+          "both_seeds_improve": false,
+          "seed_mean_gain_ge_threshold": false,
+          "ordinary_not_reversed": false,
+          "drop_B_worst_k_not_reversed": false
+        },
+        "trigger": false
+      },
+      "1.0": {
+        "declared_config": "H@1.0",
+        "run_key": "H_eta1",
+        "mae_seed_mean": 0.09452640223229536,
+        "per_seed_mae": {
+          "0": 0.09948971352080116,
+          "1": 0.08956309094378957
+        },
+        "seed_mean_gain_vs_B": -0.014802088613272632,
+        "per_seed_delta_vs_B": {
+          "0": 0.017900513609056354,
+          "1": 0.011703663617488924
+        },
+        "ordinary_delta": 0.01138492445996838,
+        "drop_B_worst_k_delta": 0.011274957875697638,
+        "bootstrap_all": {
+          "mean": 0.014802088613272644,
+          "ci_lo": 0.007573623265209608,
+          "ci_hi": 0.02389071011012128,
+          "frac_better": 0.467,
+          "n_resamples": 5000,
+          "seed": 0,
+          "unit": "molecule"
+        },
+        "checks": {
+          "both_seeds_improve": false,
+          "seed_mean_gain_ge_threshold": false,
+          "ordinary_not_reversed": false,
+          "drop_B_worst_k_not_reversed": false
+        },
+        "trigger": false
+      }
+    }
+  },
+  "triggers": {
+    "E": {
+      "triggered": false,
+      "frozen_eta": null
+    },
+    "H": {
+      "triggered": false,
+      "frozen_eta": null
+    }
+  },
+  "any_trigger": false,
+  "families_triggered": [],
+  "phase2_plan": {
+    "authorized": false,
+    "purchase_B": true,
+    "purchase_configs": [],
+    "seeds": [
+      2,
+      3
+    ],
+    "ssl_seeds": [
+      2,
+      3
+    ],
+    "note": "only families passing the pre-registered multi-seed rule are purchased; no eta search beyond the two declared levels"
+  }
+}

@@ -6,8 +6,11 @@ residual** to the atom embedding and ask whether it improves generalisation,
 and whether a **real r2→r1 parent-sharing prior** beats an independent per-type
 prior at matched capacity.
 
-**Status:** in progress. See `PROTOCOL.md` for the frozen plan. `REPORT.md` is
-written after the authorised runs.
+**Status: CLOSED — negative, phase 2 not triggered.** See `REPORT.md` for the
+result and `AMENDMENT.md` for post-freeze issues. In short: B 0.07972, E@1.0
+0.09907, H@1.0 0.09453 (seed-mean valid MAE); H consistently beats E by ~0.0045
+but both lose to B by 0.015–0.031, and the branch captures the prediction rather
+than acting as a small correction.
 
 Official test is never loaded. Official valid is the exposed development set and
 its labels are the single existing read from the recipe-tuning round, reused
@@ -23,6 +26,8 @@ code/
   esr_models.py              P3 + per-type low-rank residual, E/H priors
   esr_runner.py              prep -> gates -> smoke -> freeze -> train -> predict
                              -> score -> analyze; ssl / chain / phase2 helpers
+  esr_score.py               post-freeze score / analyze over frozen artifacts
+  esr_diag.py                post-hoc diagnostics (alignment, zero probe, sweep)
   tests/test_esr.py          lightweight CPU tests (no data, no GPU)
 cache/                       git-ignored prep artifacts (vocab, types, scalars)
 runs/<run>_s<seed>/          train.json, soup.pt, curve.csv
@@ -52,6 +57,7 @@ rr run res esr-prep   --pool res-local --gpus 0 --time 0:20:00 \
   --result tracks/structural-sufficiency/zinc_exact_structure_residual_v1/cache \
   -- python tracks/structural-sufficiency/zinc_exact_structure_residual_v1/code/esr_runner.py --device cpu prep
 # ... gates, smoke on res-gpu0, freeze ...
+# scoring (post-freeze): python .../esr_score.py score --phase 1 && analyze
 rr run res esr-p1-gpu0 --pool res-gpu0 --gpus 1 --time 2:00:00 \
   --result tracks/structural-sufficiency/zinc_exact_structure_residual_v1/runs \
   -- python .../esr_runner.py --device cuda chain --seed 0 --configs B,E_eta0.1,E_eta1,H_eta0.1,H_eta1

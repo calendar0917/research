@@ -1,0 +1,184 @@
+{
+  "protocol": "zinc-exact-structure-residual-v1",
+  "created_utc": "2026-10-20T02:37:36.348521+00:00",
+  "git_commit": "8df7986868c09e72391a32424e0acc546b2bbe07",
+  "atom_out": 96,
+  "base_p3_parameters": 413505,
+  "parameter_cap": 500000,
+  "vocab": {
+    "n_types": 15730,
+    "n_r1": 512,
+    "n_r2": 15218,
+    "dropped_r2": 0,
+    "n_types_available": 15730,
+    "n_train_molecules": 10000,
+    "fixed_residual_parameters": 384,
+    "params_per_type": 4,
+    "total_inference_parameters": 476809,
+    "max_types_under_cap": 21527,
+    "support_histogram": {
+      "r1": {
+        "1": 118,
+        "2-4": 92,
+        "5-9": 47,
+        "10-49": 102,
+        "50-199": 52,
+        ">=200": 101
+      },
+      "r2": {
+        "1": 6784,
+        "2-4": 4139,
+        "5-9": 1762,
+        "10-49": 1890,
+        "50-199": 491,
+        ">=200": 152
+      }
+    },
+    "support_quantiles_r2": {
+      "q0": 1.0,
+      "q25": 1.0,
+      "q50": 2.0,
+      "q75": 5.0,
+      "q90": 18.0,
+      "q95": 41.0,
+      "q99": 199.0,
+      "q100": 5296.0
+    },
+    "support_quantiles_r1": {
+      "q0": 1.0,
+      "q25": 2.0,
+      "q50": 9.0,
+      "q75": 98.0,
+      "q90": 550.9000000000003,
+      "q95": 1450.8999999999996,
+      "q99": 5127.469999999999,
+      "q100": 8808.0
+    },
+    "tokenizer": "typed_tokenizer_v2_corrected",
+    "radii": {
+      "deep": 2,
+      "parent": 1
+    },
+    "r0_correction": "fixed_zero"
+  },
+  "vocab_sha256": "fc64ac36abc945b0508ff3ff865c21aa854e99a04c090ef3c35f9d2e83abc980",
+  "types_sha256": "6f3893ae2b7d4f598e54a2cc74cdf0bd1ed1bc0e3e0156cd788f86bc4f2c8406",
+  "types": {
+    "train": {
+      "n_molecules": 10000,
+      "t_star_sha256": "e64f0a3311eb0838e00a5fbe1900b3b6e2e74c6ed6c652bb7542f225c2d7161d",
+      "n_atoms": 231664
+    },
+    "valid": {
+      "n_molecules": 1000,
+      "t_star_sha256": "b9bbbd61db2756af5c6d63aacf625e4507db5f4c1f66b5696b146c0150798554",
+      "n_atoms": 23083
+    }
+  },
+  "sy": {
+    "sy": 1.4721893097127787,
+    "median": 0.44100287556648254,
+    "n": 10000,
+    "definition": "mean absolute deviation of train labels from the train median"
+  },
+  "sh2": {
+    "0": {
+      "sh2": 16.3863873774525,
+      "n_atoms": 231664,
+      "definition": "mean squared norm of SSL-initialised train atom embeddings",
+      "seed": 0,
+      "encoder_path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "encoder_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "frozen_before_training": true
+    },
+    "1": {
+      "sh2": 17.768766908917655,
+      "n_atoms": 231664,
+      "definition": "mean squared norm of SSL-initialised train atom embeddings",
+      "seed": 1,
+      "encoder_path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+      "encoder_sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a",
+      "frozen_before_training": true
+    }
+  },
+  "train_size_terciles": [
+    21.0,
+    25.0
+  ],
+  "group_thresholds": {
+    "low_support_threshold": 10,
+    "fallback_high_threshold": 0.25,
+    "low_support_majority_fraction": 0.5,
+    "ordinary_threshold": -3.0,
+    "large_ring_min_size": 6,
+    "size_terciles_from_train": [
+      21.0,
+      25.0
+    ]
+  },
+  "assignment_diagnostics": {
+    "train": {
+      "n_molecules": 10000,
+      "n_atoms": 231664,
+      "r2_retained_fraction": 1.0,
+      "r2_oov_fraction": 0.0,
+      "zero_correction_fraction": 0.0,
+      "low_support_fraction": 0.12974825609503418,
+      "distinct_types_used": 15218,
+      "vocab_types": 15730
+    },
+    "valid": {
+      "n_molecules": 1000,
+      "n_atoms": 23083,
+      "r2_retained_fraction": 0.9701078715938136,
+      "r2_oov_fraction": 0.02919897760256466,
+      "zero_correction_fraction": 0.0006931508036217129,
+      "low_support_fraction": 0.10873803231815622,
+      "distinct_types_used": 4243,
+      "vocab_types": 15730
+    }
+  },
+  "labels_read": {
+    "train": true,
+    "official_valid": false,
+    "official_test": false
+  },
+  "official_test_loaded": false,
+  "timing_seconds": {
+    "patch_keys_both_splits": 24.263768509961665,
+    "total_prep": 34.9828585900832
+  },
+  "frozen_inputs": {
+    "objects_train10k": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt",
+      "expected": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d",
+      "actual": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d",
+      "ok": true
+    },
+    "objects_valid": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt",
+      "expected": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c",
+      "actual": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c",
+      "ok": true
+    },
+    "prep_train10k": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/prep_train10k.json",
+      "expected": "d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a",
+      "actual": "d0fb86a349ebdd37af069cdaa4ee71ba5045a2b67365cb28b2dd734c594b1e2a",
+      "ok": true
+    },
+    "ssl_encoder_seed0": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "expected": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "actual": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "ok": true
+    },
+    "ssl_encoder_seed1": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+      "expected": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a",
+      "actual": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a",
+      "ok": true
+    },
+    "all_ok": true
+  }
+}
