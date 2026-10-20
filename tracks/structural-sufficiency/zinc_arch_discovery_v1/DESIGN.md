@@ -1,0 +1,128 @@
+# DESIGN — zinc-arch-discovery-v1
+
+**Status:** implementation + timing; formal seed-0 runs follow the measured
+schedule. This is an architecture-discovery round, not a GRIT reproduction and
+not a mechanism claim. It replaces the old long-run GRIT-baseline plan for this
+task. No official test prediction/MAE is computed.
+
+## 0. Fixed boundary
+
+* Data: official `torch_geometric.datasets.ZINC(root=data/ZINC, subset=True)`,
+  train 10,000 / valid 1,000. Raw-`y` L1. Labels only from train/valid.
+* Primary selector: per-seed single **best-valid** epoch-end checkpoint; ties
+  keep the earlier epoch. Valid is evaluated every epoch and used for
+  development. Test is the terminal split and is **not** read in this round.
+* Parameter cap: <= 500,000 trainable parameters, including any SSL encoder.
+  Every model records its actual count and optimizer coverage.
+* No local recursive message passing. Allowed: MLPs, GRU over sampled paths,
+  static relation tensors, global self-attention. Static graph statistics are
+  precomputed from the raw atom/bond graph; no hidden-state neighbour updates
+  are used to create them.
+* Existing label-free P3 features (`atom_feat`, `bond_feat`, `junc_feat`,
+  `global33`) are reused where useful. Every new statistic is a deterministic
+  function of the input graph, never of `y`, SA/logP components, or target-
+  derived labels. The new cache is independent from the P3 cache and is built
+  with an atomic single-writer prep job; training jobs only read it.
+* No VQ. P0/P1 use a fixed sampled walk bank; they claim only relabelling-
+  distribution equivariance, not exact invariance under one finite sample.
+* No new SSL pretraining. T loads the existing train-only masked-SSL P3
+  encoders (seed-matched) and then trains them jointly with the new readout.
+
+## 1. Six candidates
+
+| id | representation | encoder / composition | readout | params (actual) | SSL |
+|---|---|---|---:|---:|---|
+| **R0** | rooted balls r=1/2/3 per atom: root P3 atom descriptor, exact distance-shell atom-type counts, cumulative ball joint counts over unordered endpoint-type pair x bond type (231x3=693), 11 degree/ring/branch scalars | shared 2-layer MLP (96), concat+residual scale fusion | sum, mean, second moment, count, atom/bond composition, global33; residual MLP | 307,809 | none |
+| **R1** | same R0 atom tokens and cache | 2 pre-LN global attention layers, d=96, 4 heads, FFN x2; bias = shortest-path bucket + sparse two-hop `(middle atom, two bond types)` 189-way relation | same count-aware readout | 458,961 | none |
+| **T** | frozen P3 atom/bond/junction objects and static incidence | shared P3 encoders; low-rank rank-16 atom-bond and bond-junction association tensors `sum (Ua) outer (Vb)` / `sum (Pb) outer (Qw)`; no Null grouping, no composer, no softmax reallocation | first-order sums/means per object type, incidence counts, association tensors, global33 | 462,081 | P3 masked SSL (seed 0/1), jointly trained |
+| **P0** | fixed bank of 128 sampled walks/molecule (32 each length 2/4/6/8), atom types, bond types, anonymous first-visit pattern; reversal-canonical; train samples 8 per length (32 total), valid uses all 128 | shared atom/bond/anon embeddings + 1-layer GRU (96) over semantic+anonymous tokens; padding is packed out | length-grouped sum/mean/second moment, pattern count, full atom/bond composition, global33 | 367,361 | none |
+| **P1** | same P0 bank and local GRU | P0 + one pre-LN global pattern-attention layer (d=96, 4 heads, FFN x2), no VQ | same readout | 442,145 | none |
+| **B** | graph-invariant biconnected blocks + bridges + isolated atoms; per block joint atom/bond counts, size/cyclomatic/ring/articulation statistics | shared block MLP (96) + one pre-LN block attention layer with block-cut-tree distance and block-overlap bias; no recursion on the block-cut tree | sum/mean/second moment of blocks, block count, full-molecule atom/bond composition once, global33 | 338,805 | none |
+
+All six are distinct computation graphs. R0 is a static readout over richer
+rooted statistics, R1 adds shallow global composition, T redoes the object
+association statistics, P0/P1 are path-pattern models, and B is a ring/block
+view. None is a renamed local MP layer.
+
+## 2. Feature definitions (fixed before training)
+
+* **Root joint counts**: for each root `v` and radius `r`, count every
+  undirected physical bond whose two endpoints are within distance `r`.
+  Category = unordered endpoint atom-type pair (21x22/2 = 231) x bond type
+  (single/double/triple = 3). This is a true joint histogram; it is not two
+  concatenated marginals. Counts are raw integers (not log1p). Distance-shell
+  atom-type counts are exact shell counts; for radius `r`, shells > r are
+  zeroed. The 11 scalars use log1p for sizes/counts and fractions elsewhere;
+  scalar standardization is fit on train only.
+* **Two-hop relation** (R1): `C[u,v,a,b1,b2] = sum_w 1(atom(w)=a)
+  1(bond(u,w)=b1) 1(bond(w,v)=b2)`, 21x3x3=189 categories, stored sparsely
+  per molecule and added to the attention bias after a per-head linear map.
+  Shortest-path distance is bucketed 0..8. No dense all-pairs histogram is
+  stored.
+* **T associations**: `C_AB = sum_(v,e incidence) (U a_v) outer (V b_e)` and
+  `C_BJ = sum_(e,j incidence) (P b_e) outer (Q w_j)`, rank 16. Both are divided
+  by their incidence count (mean outer product); the counts are kept explicitly
+  as `log1p` channels. No softmax over objects.
+* **Walks**: a walk may revisit atoms (including immediate backtracking); it is
+  not restricted to simple paths. Lengths are 2/4/6/8 edges. Each sampled walk
+  and its reverse are compared lexicographically and the canonical orientation
+  is stored; this gives exact reversal symmetry. The anonymous pattern maps
+  each atom occurrence to its first-visit position. The bank seed and valid
+  rule are fixed (`20261021 + split_offset`). Train selection is 8 per length,
+  valid uses all 32 per length.
+* **Blocks**: `nx.biconnected_components` plus bridges (2-atom blocks) and
+  isolated atoms. Block-cut tree nodes are blocks + articulation atoms;
+  distance buckets and overlap counts are computed statically. Ring statistics
+  reuse P3's label-free ring/min-ring flags. Articulation atoms are not
+  double-counted in the molecule-level composition readout.
+* **Global composition**: full atom-type counts (21) and bond-type counts (3)
+  are read once per molecule. `global33` is standardized with the frozen
+  train-only P3 prep mean/scale when present; otherwise it is fit on our train
+  cache.
+
+## 3. Recipes
+
+| id | optimizer | LR -> min | WD | warmup | batch | planned epochs | valid batch | target |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| R0 | Adam | 1e-3 -> 1e-5 | 1e-5 | 500 | 128 | 360 | 256 | ~1 GPU-h |
+| R1 | AdamW | 8e-4 -> 1e-5 | 1e-4 | 500 | 128 | 300 | 256 | ~1 GPU-h |
+| T | AdamW | 1e-3 -> 1e-5 | 1e-5 | 500 | 128 | 360 | 256 | ~1 GPU-h |
+| P0 | AdamW | 1e-3 -> 1e-5 | 1e-5 | 500 | 128 | 300 | 16 | ~1 GPU-h |
+| P1 | AdamW | 8e-4 -> 1e-5 | 1e-4 | 500 | 128 | 240 | 8 | ~1 GPU-h |
+| B | AdamW | 1e-3 -> 1e-5 | 1e-4 | 500 | 128 | 300 | 256 | ~1 GPU-h |
+
+The per-step cosine horizon is fixed at the start of each formal run. The
+timing job (2 epochs per candidate) may lower a planned epoch count before the
+formal run; it never resets the cosine mid-run. `steps/epoch = ceil(10000/128)
+= 79`, so the last batch is retained (16 rows). Valid is full 1,000 every epoch
+for all candidates; P0/P1 use the full 128-walk bank at valid time and the
+cost is included in the measured epoch time.
+
+## 4. Checks before formal runs
+
+* Data labels/splits aligned to official PyG; frozen P3 object cache verified
+  by count/atom/bond/label SHA; cache audit checks joint mass, block joint
+  mass, walk lengths and reversal canonicalization.
+* Each candidate: forward on a real batch, finite scalar, nonzero gradient for
+  every parameter tensor, parameter count <= 500k, optimizer covers all
+  parameters.
+* R1/B: cross-graph attention isolation by block-diagonal mask; padding does
+  not enter readout.
+* P0/P1: packed GRU removes padding; valid uses the fixed bank; train selection
+  is per-length stratified.
+* Static-statistic relabelling invariance is checked on synthetic graphs.
+* No test split construction in any formal path.
+
+## 5. Budget and stop
+
+Cap: 10 A100-hours total (both GPUs summed), with six seed-0 candidates at
+~1 h each and up to ~2 h for one or two evidence-driven follow-ups. Two GPUs
+only reduce wall-clock; GPU-hours add. This round does not need to spend the
+full cap. The first-round stopping rule is: run all six seed-0 candidates for
+their measured schedule unless a numerical error or the hard cap stops one;
+then use at most two follow-up purchases (seed 1 of a clear leader, a
+budget-boundary continuation, or one pre-declared recipe correction). Do not
+open a seventh family or a full GRIT reproduction.
+
+`<= 0.075` best-valid is a development target, not a universal significance
+threshold. A single-seed win is not a stable improvement claim.
