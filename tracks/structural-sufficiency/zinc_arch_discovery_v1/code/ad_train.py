@@ -287,8 +287,16 @@ def _param_audit(model: torch.nn.Module, optimizer: torch.optim.Optimizer) -> di
 
 
 def train(candidate: str, seed: int, device, *, epochs: int | None = None,
-          tag: str | None = None, force: bool = False) -> dict:
+          tag: str | None = None, force: bool = False,
+          weight_decay: float | None = None, lr: float | None = None,
+          dropout: float | None = None) -> dict:
     recipe = dict(RECIPES[candidate])
+    if weight_decay is not None:
+        recipe["weight_decay"] = float(weight_decay)
+    if lr is not None:
+        recipe["lr"] = float(lr)
+    if dropout is not None:
+        recipe["dropout"] = float(dropout)
     n_epochs = int(recipe["epochs"] if epochs is None else epochs)
     out = run_dir(candidate, seed, tag)
     out.mkdir(parents=True, exist_ok=True)
@@ -520,12 +528,19 @@ def main(argv=None) -> int:
     p.add_argument("--epochs", type=int, default=None)
     p.add_argument("--tag", default=None)
     p.add_argument("--force", action="store_true")
+    p.add_argument("--weight-decay", type=float, default=None,
+                   help="one-off recipe override, recorded in train.json")
+    p.add_argument("--lr", type=float, default=None,
+                   help="one-off recipe override, recorded in train.json")
+    p.add_argument("--dropout", type=float, default=None,
+                   help="one-off recipe override, recorded in train.json")
     args = p.parse_args(argv)
     device = torch.device(args.device)
     if args.command == "timing":
         timing([x for x in args.candidates.split(",") if x], args.seed, device, epochs=args.epochs or 2)
     else:
-        train(args.candidate, args.seed, device, epochs=args.epochs, tag=args.tag, force=args.force)
+        train(args.candidate, args.seed, device, epochs=args.epochs, tag=args.tag, force=args.force,
+              weight_decay=args.weight_decay, lr=args.lr, dropout=args.dropout)
     return 0
 
 

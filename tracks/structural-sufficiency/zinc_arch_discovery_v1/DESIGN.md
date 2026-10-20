@@ -123,6 +123,19 @@ corrected seed-0 runs are the pre-declared follow-up; the original P0/P1 runs
 remain in the result table and are not deleted.  This is a disclosed bug fix and
 its compute is billed below.
 
+## 3c. Pre-declared follow-up correction: T weight decay
+
+T is the best new candidate (0.091375 at epoch 426), but it fits the training
+objects more tightly than P3 while generalizing worse: T train@best 0.009922,
+final online train 0.000535, versus P3 s0 train@best 0.011261 and best-valid
+0.079105.  This is a plausible regularization mismatch, not evidence that the
+association representation is exhausted.  One pre-declared correction: raise T
+weight decay from 1e-5 to 1e-4 (10x), keep the rank-16 tensor, P3 SSL encoders,
+readout, optimizer, LR schedule and 600-epoch horizon fixed, seed 0.  No LR/WD
+grid and no seed-1 repeat in this round.  If this single correction does not
+improve best-valid, stop and report T as the best new candidate but still below
+the P3 reference; do not add another module or family.
+
 ## 4. Checks before formal runs
 
 * Data labels/splits aligned to official PyG; frozen P3 object cache verified
