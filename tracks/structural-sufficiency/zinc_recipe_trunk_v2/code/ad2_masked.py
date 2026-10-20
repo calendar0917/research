@@ -90,7 +90,10 @@ def prep(visits: int = 4, force: bool = False) -> dict:
     global_feat_v = np.zeros((visits, n_mol, g_dim), dtype=np.float32)
     mask_atom_ptr = np.zeros((visits, n_mol + 1), dtype=np.int64)
     mask_bond_ptr = np.zeros((visits, n_mol + 1), dtype=np.int64)
-    atom_id_l, atom_tgt_l, bond_id_l, bond_tgt_l = [], [], [], []
+    atom_id_l: list[list[np.ndarray]] = []
+    atom_tgt_l: list[list[np.ndarray]] = []
+    bond_id_l: list[list[np.ndarray]] = []
+    bond_tgt_l: list[list[np.ndarray]] = []
 
     # Alignment check: an unmasked rebuild must reproduce the frozen cache.
     for i in (0, 7, 123):
@@ -105,6 +108,7 @@ def prep(visits: int = 4, force: bool = False) -> dict:
             raise RuntimeError(f"raw rebuild does not match the cache at row {i}")
 
     for v in range(visits):
+        visit_atom_ids, visit_atom_tgt, visit_bond_ids, visit_bond_tgt = [], [], [], []
         for i in range(n_mol):
             d = ds[i]
             sample = mp.build_masked_sample(
@@ -120,10 +124,14 @@ def prep(visits: int = 4, force: bool = False) -> dict:
             global_feat_v[v, i] = sample.masked.global_feat
             mask_atom_ptr[v, i + 1] = mask_atom_ptr[v, i] + sample.atom_ids.size
             mask_bond_ptr[v, i + 1] = mask_bond_ptr[v, i] + sample.bond_ids.size
-            atom_id_l.append(sample.atom_ids.astype(np.int32) + a0)
-            atom_tgt_l.append(sample.atom_types.astype(np.int64))
-            bond_id_l.append(sample.bond_ids.astype(np.int32) + b0)
-            bond_tgt_l.append(sample.bond_types.astype(np.int64))
+            visit_atom_ids.append(sample.atom_ids.astype(np.int32) + a0)
+            visit_atom_tgt.append(sample.atom_types.astype(np.int64))
+            visit_bond_ids.append(sample.bond_ids.astype(np.int32) + b0)
+            visit_bond_tgt.append(sample.bond_types.astype(np.int64))
+        atom_id_l.append(visit_atom_ids)
+        atom_tgt_l.append(visit_atom_tgt)
+        bond_id_l.append(visit_bond_ids)
+        bond_tgt_l.append(visit_bond_tgt)
         C.log(f"[masked] visit {v + 1}/{visits} {time.perf_counter() - t0:.1f}s")
 
     payload = {
@@ -134,11 +142,13 @@ def prep(visits: int = 4, force: bool = False) -> dict:
         "junc_feat_v": junc_feat_v,
         "global_feat_v": global_feat_v,
         "mask_atom_ptr": mask_atom_ptr,
-        "mask_atom_ids": np.concatenate(atom_id_l).astype(np.int32),
-        "mask_atom_target": np.concatenate(atom_tgt_l).astype(np.int64),
+        # Per-visit ragged lists: ``mask_atom_ptr[v]`` indexes
+        # ``mask_atom_ids[v]`` (offsets restart at zero for every visit).
+        "mask_atom_ids": [np.concatenate(x).astype(np.int32) for x in atom_id_l],
+        "mask_atom_target": [np.concatenate(x).astype(np.int64) for x in atom_tgt_l],
         "mask_bond_ptr": mask_bond_ptr,
-        "mask_bond_ids": np.concatenate(bond_id_l).astype(np.int32),
-        "mask_bond_target": np.concatenate(bond_tgt_l).astype(np.int64),
+        "mask_bond_ids": [np.concatenate(x).astype(np.int32) for x in bond_id_l],
+        "mask_bond_target": [np.concatenate(x).astype(np.int64) for x in bond_tgt_l],
         "meta": {
             "source_objects": source,
             "construction": "bjoc_masked_pretraining_v1.build_masked_sample",

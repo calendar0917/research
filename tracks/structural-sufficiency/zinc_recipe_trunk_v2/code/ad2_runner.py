@@ -88,18 +88,31 @@ def make_aux(visits: int, weight: float = AUX_WEIGHT) -> tuple[dict, dict]:
         b_off = np.concatenate([[0], np.cumsum(b_cnt)[:-1]])
         a_ptr = np.asarray(masked["mask_atom_ptr"])[v]
         b_ptr = np.asarray(masked["mask_bond_ptr"])[v]
+        a_ids_v = np.asarray(masked["mask_atom_ids"][v])
+        a_tgt_v = np.asarray(masked["mask_atom_target"][v])
+        b_ids_v = np.asarray(masked["mask_bond_ids"][v])
+        b_tgt_v = np.asarray(masked["mask_bond_target"][v])
         a_ids, a_tgt, b_ids, b_tgt = [], [], [], []
         for k, row in enumerate(rows):
             s, e = int(a_ptr[row]), int(a_ptr[row + 1])
-            a_ids.append(np.asarray(masked["mask_atom_ids"])[s:e] + a_off[k])
-            a_tgt.append(np.asarray(masked["mask_atom_target"])[s:e])
+            a_ids.append(a_ids_v[s:e] + a_off[k])
+            a_tgt.append(a_tgt_v[s:e])
             s, e = int(b_ptr[row]), int(b_ptr[row + 1])
-            b_ids.append(np.asarray(masked["mask_bond_ids"])[s:e] + b_off[k])
-            b_tgt.append(np.asarray(masked["mask_bond_target"])[s:e])
+            b_ids.append(b_ids_v[s:e] + b_off[k])
+            b_tgt.append(b_tgt_v[s:e])
         atom_ids = torch.as_tensor(np.concatenate(a_ids), dtype=torch.long, device=device)
         atom_tgt = torch.as_tensor(np.concatenate(a_tgt), dtype=torch.long, device=device)
         bond_ids = torch.as_tensor(np.concatenate(b_ids), dtype=torch.long, device=device)
         bond_tgt = torch.as_tensor(np.concatenate(b_tgt), dtype=torch.long, device=device)
+        n_atoms = int(batch["atom_feat"].shape[0])
+        n_bonds = int(batch["bond_feat"].shape[0])
+        if int(atom_ids.max()) >= n_atoms or int(bond_ids.max()) >= n_bonds:
+            raise RuntimeError(
+                f"auxiliary index out of range: atoms {int(atom_ids.max())}/{n_atoms}, "
+                f"bonds {int(bond_ids.max())}/{n_bonds}"
+            )
+        if int(atom_tgt.max()) >= A2.ATOM_CE_CLASSES or int(bond_tgt.max()) >= A2.BOND_CE_CLASSES:
+            raise RuntimeError("auxiliary target out of range")
 
         total, parts = model.aux_loss(batch, atom_ids, atom_tgt, bond_ids, bond_tgt)
         for k, t in parts.items():
