@@ -27,22 +27,22 @@ import ad_models as M
 # actual horizon and never resets the cosine during training.
 RECIPES: dict[str, dict[str, Any]] = {
     "R0": dict(optimizer="adam", lr=1.0e-3, min_lr=1.0e-5, weight_decay=1.0e-5,
-               warmup_steps=500, epochs=360, dropout=0.0, grad_clip=5.0,
+               warmup_steps=500, epochs=600, dropout=0.0, grad_clip=5.0,
                batch_size=128, valid_batch_size=256),
     "R1": dict(optimizer="adamw", lr=8.0e-4, min_lr=1.0e-5, weight_decay=1.0e-4,
-               warmup_steps=500, epochs=300, dropout=0.0, grad_clip=5.0,
+               warmup_steps=500, epochs=600, dropout=0.0, grad_clip=5.0,
                batch_size=128, valid_batch_size=256),
     "T": dict(optimizer="adamw", lr=1.0e-3, min_lr=1.0e-5, weight_decay=1.0e-5,
-              warmup_steps=500, epochs=360, dropout=0.0, grad_clip=5.0,
+              warmup_steps=500, epochs=600, dropout=0.0, grad_clip=5.0,
               batch_size=128, valid_batch_size=256),
     "P0": dict(optimizer="adamw", lr=1.0e-3, min_lr=1.0e-5, weight_decay=1.0e-5,
-               warmup_steps=500, epochs=300, dropout=0.0, grad_clip=5.0,
+               warmup_steps=500, epochs=600, dropout=0.0, grad_clip=5.0,
                batch_size=128, valid_batch_size=16),
     "P1": dict(optimizer="adamw", lr=8.0e-4, min_lr=1.0e-5, weight_decay=1.0e-4,
-               warmup_steps=500, epochs=240, dropout=0.0, grad_clip=5.0,
+               warmup_steps=500, epochs=600, dropout=0.0, grad_clip=5.0,
                batch_size=128, valid_batch_size=8),
     "B": dict(optimizer="adamw", lr=1.0e-3, min_lr=1.0e-5, weight_decay=1.0e-4,
-              warmup_steps=500, epochs=300, dropout=0.0, grad_clip=5.0,
+              warmup_steps=500, epochs=600, dropout=0.0, grad_clip=5.0,
               batch_size=128, valid_batch_size=256),
 }
 

@@ -84,16 +84,19 @@ view. None is a renamed local MP layer.
 
 | id | optimizer | LR -> min | WD | warmup | batch | planned epochs | valid batch | target |
 |---|---|---|---:|---:|---:|---:|---:|---:|
-| R0 | Adam | 1e-3 -> 1e-5 | 1e-5 | 500 | 128 | 360 | 256 | ~1 GPU-h |
-| R1 | AdamW | 8e-4 -> 1e-5 | 1e-4 | 500 | 128 | 300 | 256 | ~1 GPU-h |
-| T | AdamW | 1e-3 -> 1e-5 | 1e-5 | 500 | 128 | 360 | 256 | ~1 GPU-h |
-| P0 | AdamW | 1e-3 -> 1e-5 | 1e-5 | 500 | 128 | 300 | 16 | ~1 GPU-h |
-| P1 | AdamW | 8e-4 -> 1e-5 | 1e-4 | 500 | 128 | 240 | 8 | ~1 GPU-h |
-| B | AdamW | 1e-3 -> 1e-5 | 1e-4 | 500 | 128 | 300 | 256 | ~1 GPU-h |
+| R0 | Adam | 1e-3 -> 1e-5 | 1e-5 | 500 | 128 | 600 | 256 | ~0.27 GPU-h |
+| R1 | AdamW | 8e-4 -> 1e-5 | 1e-4 | 500 | 128 | 600 | 256 | ~0.91 GPU-h |
+| T | AdamW | 1e-3 -> 1e-5 | 1e-5 | 500 | 128 | 600 | 256 | ~0.36 GPU-h |
+| P0 | AdamW | 1e-3 -> 1e-5 | 1e-5 | 500 | 128 | 600 | 16 | ~0.45 GPU-h |
+| P1 | AdamW | 8e-4 -> 1e-5 | 1e-4 | 500 | 128 | 600 | 8 | ~0.57 GPU-h |
+| B | AdamW | 1e-3 -> 1e-5 | 1e-4 | 500 | 128 | 600 | 256 | ~0.41 GPU-h |
 
 The per-step cosine horizon is fixed at the start of each formal run. The
-timing job (2 epochs per candidate) may lower a planned epoch count before the
-formal run; it never resets the cosine mid-run. `steps/epoch = ceil(10000/128)
+2-epoch timing job measured 1.65 s/epoch (R0), 5.46 s/epoch (R1), 2.18 s/epoch
+(T), 2.69 s/epoch (P0), 3.44 s/epoch (P1), and 2.48 s/epoch (B) including full
+valid; the pre-declared 600-epoch schedule is ~0.27/0.91/0.36/0.45/0.57/0.41
+GPU-h respectively, i.e. about 0.3-0.9 GPU-h per candidate. The horizon is not
+reset or compressed mid-run. `steps/epoch = ceil(10000/128)
 = 79`, so the last batch is retained (16 rows). Valid is full 1,000 every epoch
 for all candidates; P0/P1 use the full 128-walk bank at valid time and the
 cost is included in the measured epoch time.
