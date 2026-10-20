@@ -57,6 +57,10 @@ def _to_device(batch: Mapping[str, Any], device) -> dict[str, Any]:
     for k, v in batch.items():
         if torch.is_tensor(v):
             out[k] = v.to(device, non_blocking=True)
+        elif isinstance(v, tuple):
+            out[k] = tuple(x.to(device, non_blocking=True) if torch.is_tensor(x) else x for x in v)
+        elif isinstance(v, list):
+            out[k] = [x.to(device, non_blocking=True) if torch.is_tensor(x) else x for x in v]
         else:
             out[k] = v
     return out
