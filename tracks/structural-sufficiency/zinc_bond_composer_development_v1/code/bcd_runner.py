@@ -1022,6 +1022,14 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             "The architecture cannot be declared better; the training/selection recipe needs "
             "to be resolved first."
         )
+    elif b2_vs_b0["gain"] > 0.0 and b2_vs_b1["gain"] > 0.0:
+        label = "B2_DIRECTIONAL_BUT_BELOW_DEV_LINE"
+        text = (
+            "B2 is directionally better than B0 and better than B1, but its B2-vs-B0 "
+            "Monitor gain is below the pre-agreed 0.003 development line. This is not a "
+            "practical signal, not confirmation, and not a reason to add seeds or modules "
+            "inside this round; stop this candidate."
+        )
     elif contrasts["B0_vs_B1"]["gain"] > 0.0 and b2_vs_b1["gain"] <= 0.0:
         label = "B1_CAPACITY_EFFECT_NO_ATTENTION_SIGNAL"
         text = "The FFN capacity control is better than B0 but B2 adds no further gain; do not attribute a gain to attention."
