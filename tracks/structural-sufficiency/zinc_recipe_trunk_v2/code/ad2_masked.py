@@ -124,9 +124,10 @@ def prep(visits: int = 4, force: bool = False) -> dict:
             global_feat_v[v, i] = sample.masked.global_feat
             mask_atom_ptr[v, i + 1] = mask_atom_ptr[v, i] + sample.atom_ids.size
             mask_bond_ptr[v, i + 1] = mask_bond_ptr[v, i] + sample.bond_ids.size
-            visit_atom_ids.append(sample.atom_ids.astype(np.int32) + a0)
+            # within-molecule ids; the runner adds the batch-local offset
+            visit_atom_ids.append(sample.atom_ids.astype(np.int32))
             visit_atom_tgt.append(sample.atom_types.astype(np.int64))
-            visit_bond_ids.append(sample.bond_ids.astype(np.int32) + b0)
+            visit_bond_ids.append(sample.bond_ids.astype(np.int32))
             visit_bond_tgt.append(sample.bond_types.astype(np.int64))
         atom_id_l.append(visit_atom_ids)
         atom_tgt_l.append(visit_atom_tgt)
