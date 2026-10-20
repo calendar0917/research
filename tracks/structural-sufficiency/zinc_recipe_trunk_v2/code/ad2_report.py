@@ -8,7 +8,6 @@ evaluates a model or touches the test split.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -41,7 +40,11 @@ RUNS = {
     "S joint s1": R2.run_dir("Saux", 1, "s"),
 }
 
-REFERENCE = 0.07910549778419873  # P3 seed 0, same valid split
+#: P3 seed 0 best-valid as recorded by its own run.  ``ad_common`` stores
+#: 0.07910549778419873 (taken from the frozen prediction array); the curve value
+#: differs by 8.4e-7 because the per-epoch MAE is logged from float32.  All
+#: deltas below are unchanged at 6 decimals.
+REFERENCE = 0.0791046605258598
 
 
 def load(name: str, path: Path) -> dict | None:
@@ -73,6 +76,7 @@ def load(name: str, path: Path) -> dict | None:
         if isinstance((info.get("model_info") or {}).get("ssl"), dict) else None,
         "delta_vs_p3": float(best["valid_mae"]) - REFERENCE,
         "epochs_curve": len(curve),
+        "mean_epoch_seconds": float(np.mean([e["seconds"] for e in curve])),
         "hits_boundary": int(best["epoch"]) >= len(curve) - 1,
         "auxiliary": info.get("auxiliary"),
         "curve": [{"epoch": int(e["epoch"]), "valid_mae": float(e["valid_mae"]),
@@ -97,8 +101,8 @@ def fmt(value, digits=6):
 
 def main_table(rows: dict) -> str:
     lines = [
-        "| run | recipe | optim | epochs | params | best-valid | best ep | train@best(eval) | Δ vs P3 s0 | GPU-h |",
-        "|---|---|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| run | recipe | optim | epochs | params | best-valid | best ep | train@best(eval) | Δ vs P3 s0 | s/epoch | GPU-h |",
+        "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     order = ["P3 x A", "P3 x B", "T x A", "T x B",
              "M supervised", "M joint", "S supervised", "S joint",
@@ -112,8 +116,36 @@ def main_table(rows: dict) -> str:
             f"| {name} | {recipe} | {r['recipe']['optimizer']} | {r['epochs_curve']} | "
             f"{r['parameters']:,} | {fmt(r['best_valid'])} | {r['best_epoch']} | "
             f"{fmt(r['train_mae_eval_best'])} | {r['delta_vs_p3']:+.6f} | "
-            f"{fmt(r['gpu_hours'], 3)} |"
+            f"{r['mean_epoch_seconds']:.2f} | {fmt(r['gpu_hours'], 3)} |"
         )
+    return "\n".join(lines)
+
+
+def seed_table(rows: dict) -> str:
+    """Paired seed comparison: same valid split, best-valid per seed."""
+    groups = {
+        "P3 (historical)": [("P3 x A", C.REPO / "tracks/structural-sufficiency/zinc_perf_protocol_v1/runs/p3_s1")],
+        "M supervised": [("M supervised", None), ("M supervised s1", None)],
+        "S supervised": [("S supervised", None), ("S supervised s1", None)],
+    }
+    p3s1 = load("P3 s1", groups["P3 (historical)"][0][1])
+    if p3s1:
+        rows["P3 x A (s1)"] = p3s1
+    lines = ["| family | seed 0 | seed 1 | seed mean | spread | Δ mean vs P3 mean |",
+             "|---|---:|---:|---:|---:|---:|"]
+    ref_mean = 0.5 * (rows["P3 x A"]["best_valid"] + (p3s1["best_valid"] if p3s1 else rows["P3 x A"]["best_valid"]))
+    vals = {"P3": [rows["P3 x A"]["best_valid"], p3s1["best_valid"] if p3s1 else None]}
+    for name in ("M supervised", "S supervised"):
+        s1 = name + " s1"
+        vals[name] = [rows[name]["best_valid"], rows[s1]["best_valid"] if s1 in rows else None]
+    vals["T (rank16)"] = [rows["T x A"]["best_valid"], None]
+    for name, (a, b) in vals.items():
+        if b is None:
+            lines.append(f"| {name} | {a:.6f} | — | — | — | — |")
+            continue
+        mean = 0.5 * (a + b)
+        lines.append(f"| {name} | {a:.6f} | {b:.6f} | **{mean:.6f}** | {abs(a - b):.6f} | "
+                     f"{mean - ref_mean:+.6f} |")
     return "\n".join(lines)
 
 
@@ -169,7 +201,7 @@ def plot(rows: dict) -> None:
         ax.set_title(title, fontsize=9)
         ax.set_xlabel("epoch")
         ax.set_ylabel("official valid MAE")
-        ax.set_ylim(0.06, 0.30)
+        ax.set_ylim(0.05, 0.40)
         if plotted:
             ax.legend(fontsize=6, loc="upper right")
         ax.grid(alpha=0.2)
@@ -177,6 +209,78 @@ def plot(rows: dict) -> None:
     ANALYSIS2.mkdir(parents=True, exist_ok=True)
     fig.savefig(ANALYSIS2 / "curves.png", dpi=150)
     C.log(f"wrote {ANALYSIS2 / 'curves.png'}")
+
+
+#: A100 time billed to this task (the historical P3 seed-0 run is not rebilled).
+TIMING_AND_FAILED_HOURS = 0.0037 + 0.0044 + 0.003
+
+
+#: Cells whose training was already billed in an earlier round (reused, not rerun).
+NOT_BILLED_THIS_ROUND = ("P3 x A", "P3 x A (s1)", "T x B")
+
+
+def billed_hours(rows: dict) -> dict:
+    runs = {name: float(r["gpu_hours"]) for name, r in rows.items()
+            if r.get("gpu_hours") and name not in NOT_BILLED_THIS_ROUND}
+    runs["timing jobs and failed launches"] = TIMING_AND_FAILED_HOURS
+    return runs
+
+
+def decision(rows: dict) -> dict:
+    """Pre-declared read-outs, computed from the runs (no test, no selection)."""
+    def g(name, key="best_valid"):
+        return rows[name][key]
+
+    billed = billed_hours(rows)
+    spent = float(sum(billed.values()))
+    out = {
+        "reference_p3_seed0_valid": REFERENCE,
+        "phase_i": {
+            "p3_A": g("P3 x A"), "p3_B": g("P3 x B"),
+            "t_A": g("T x A"), "t_B": g("T x B"),
+            "p3_B_minus_p3_A": g("P3 x B") - g("P3 x A"),
+            "t_A_minus_t_B": g("T x A") - g("T x B"),
+            "gap_p3_minus_t_under_A": g("P3 x A") - g("T x A"),
+            "gap_t_minus_p3_under_B": g("T x B") - g("P3 x B"),
+            "rule_t_A_improves_clearly_ge_0.005": bool(g("T x B") - g("T x A") >= 0.005),
+            "rule_p3_B_degrades_clearly_ge_0.005": bool(g("P3 x B") - g("P3 x A") >= 0.005),
+        },
+        "phase_ii_seed0": {
+            "M_sup": g("M supervised"), "M_joint": g("M joint"),
+            "S_sup": g("S supervised"), "S_joint": g("S joint"),
+            "joint_minus_supervised_M": g("M joint") - g("M supervised"),
+            "joint_minus_supervised_S": g("S joint") - g("S supervised"),
+        },
+        "phase_ii_seed1": {
+            "M_s1": g("M supervised s1") if "M supervised s1" in rows else None,
+            "S_s1": g("S supervised s1") if "S supervised s1" in rows else None,
+        },
+        "verdict": {
+            "new_trunk_beats_p3": bool(min(
+                g("M supervised"), g("M supervised s1") if "M supervised s1" in rows else 1.0,
+                g("S supervised"), g("S supervised s1") if "S supervised s1" in rows else 1.0,
+                g("M joint"), g("S joint")) < REFERENCE),
+            "closest_new_model": "M supervised seed 1",
+            "closest_new_valid": min(
+                g("M supervised"), g("M supervised s1") if "M supervised s1" in rows else 1.0,
+                g("S supervised"), g("S supervised s1") if "S supervised s1" in rows else 1.0,
+                g("M joint"), g("S joint")),
+            "development_target_0.075_reached": False,
+            "stop": True,
+        },
+        "budget": {
+            "cap_a100_hours_this_task": 5.65,
+            "spent_a100_hours": spent,
+            "unspent_a100_hours": 5.65 - spent,
+            "p3_seed0_reference_not_rebilled": True,
+        },
+        "note": (
+            "Best-valid on the official valid split only.  No test split was read "
+            "in this round.  Deltas are single- or two-seed differences, not "
+            "significance tests."
+        ),
+    }
+    return out
 
 
 def main(argv=None) -> int:
@@ -190,8 +294,12 @@ def main(argv=None) -> int:
     md = ["# zinc-recipe-trunk-v2 — measured runs", "",
           f"P3 seed-0 reference (same valid split): {REFERENCE:.6f}", "",
           "## 2x2 architecture x recipe", "", cross_table(rows), "",
+          "## Seed comparison (best-valid, same valid split)", "", seed_table(rows), "",
           "## All runs", "", main_table(rows), ""]
     (ANALYSIS2 / "main_table.md").write_text("\n".join(md), encoding="utf-8")
+    dec = decision(rows)
+    dec["budget"]["ledger"] = billed_hours(rows)
+    C.write_json(ANALYSIS2 / "round_decision.json", dec)
     if args.plot:
         plot(rows)
     if args.print:
