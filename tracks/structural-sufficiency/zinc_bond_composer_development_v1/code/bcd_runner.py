@@ -519,7 +519,7 @@ def train_loop(
     molecules_seen = 0
     first_step_grads = None
     final_step_grads = None
-    started_wall = time.time()
+    started_wall = time.perf_counter()
     started_utc = utcnow()
     for epoch in range(1, int(epochs) + 1):
         model.train()
