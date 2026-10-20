@@ -156,7 +156,7 @@ def prep(visits: int = 4, force: bool = False) -> dict:
     }
     CACHE2.mkdir(parents=True, exist_ok=True)
     C.atomic_torch_save(payload, out)
-    C.write_json(EXP2 / "analysis" / "masked_cache.json", payload["meta"])
+    C.write_json(CACHE2 / "masked_cache.json", payload["meta"])
     C.log(payload["meta"])
     return payload["meta"]
 

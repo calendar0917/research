@@ -133,9 +133,10 @@ def train(candidate: str, seed: int, device, *, recipe: str | None = None,
     spec = None
     if aux:
         spec, sink = make_aux(visits)
+    builder = A2.build_model if candidate in A2.CANDIDATES_V2 else T1.M.build_model
     info = T1.train(
         candidate, seed, device, epochs=epochs, tag=tag, force=force,
-        recipe_variant=recipe, model_builder=A2.build_model, out_dir=out,
+        recipe_variant=recipe, model_builder=builder, out_dir=out,
         aux=spec,
     )
     if aux:
