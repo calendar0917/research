@@ -223,7 +223,8 @@ pre-declared follow-up corrections; no further family or seed was started.
 
 ## 9. Artifacts and reproduction
 
-- Source and configs: `code/`; candidate definitions and declarations:
+- Source and configs: `code/`; machine-readable candidate/recipe config:
+  `configs/round_v1.json`; candidate definitions and declarations:
   `DESIGN.md`; aggregate table: `analysis/main_table.json` /
   `analysis/main_table.md`; decision: `analysis/round_decision.json`;
   checkpoint hashes: `analysis/checkpoint_manifest.json`.
