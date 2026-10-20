@@ -240,7 +240,32 @@ def decision(rows: dict) -> dict:
 
     billed = billed_hours(rows)
     spent = float(sum(billed.values()))
-    out = {
+    test_path = ANALYSIS2 / "test_terminal.json"
+    test_block = None
+    if test_path.exists():
+        tr = C.read_json(test_path)["runs"]
+        test_block = {
+            "read": "post-selection, after the round decision; descriptive only",
+            "runs": {k: v["test_mae"] for k, v in tr.items()},
+            "cells": {
+                name: {
+                    "test_mae": tr[key]["test_mae"],
+                    "best_valid": tr[key]["best_valid"],
+                    "test_minus_valid": tr[key]["test_mae"] - tr[key]["best_valid"],
+                }
+                for name, key in (
+                    ("P3_A_s0", "P3_A_s0"), ("P3_A_s1", "P3_A_s1"), ("P3_B_s0", "P3_B_s0"),
+                    ("T_A_s0", "T_A_s0"), ("T_B_s0", "T_B_s0"),
+                    ("M_sup_s0", "M_sup_s0"), ("M_sup_s1", "M_sup_s1"),
+                    ("S_sup_s0", "S_sup_s0"), ("S_sup_s1", "S_sup_s1"),
+                ) if key in tr
+            },
+            "best_single_test": min(
+                ((v["test_mae"], k) for k, v in tr.items() if not k.startswith("P3_scratch")),
+            ),
+            "changes_the_ranking": False,
+        }
+    _out = {
         "reference_p3_seed0_valid": REFERENCE,
         "phase_i": {
             "p3_A": g("P3 x A"), "p3_B": g("P3 x B"),
@@ -316,12 +341,16 @@ def decision(rows: dict) -> dict:
             "p3_seed0_reference_not_rebilled": True,
         },
         "note": (
-            "Best-valid on the official valid split only.  No test split was read "
-            "in this round.  Deltas are single- or two-seed differences, not "
+            "Best-valid on the official valid split only; nothing was selected on "
+            "test. The 1,000-molecule test split was read once after the decision "
+            "was written (section 5b), descriptively; it did not change any "
+            "selection. Deltas are single- or two-seed differences, not "
             "significance tests."
         ),
     }
-    return out
+    if test_block is not None:
+        _out["test_terminal_after_decision"] = test_block
+    return _out
 
 
 def main(argv=None) -> int:

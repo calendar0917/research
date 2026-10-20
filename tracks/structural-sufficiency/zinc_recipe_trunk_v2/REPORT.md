@@ -5,8 +5,11 @@ split: (i) the 2x2 architecture x recipe cross, initialisation-matched, shows an
 interaction but no recipe that reverses the ranking — P3 is better than T under
 both recipes; (ii) two rebuilt composition trunks (global moment context,
 learned context slots) come within ~0.005-0.013 of P3 but **none beats P3**, and
-the 0.075 development target is not reached. The official test split was **not
-read at all** in this round.
+the 0.075 development target is not reached. Test was not read for any selection;
+one descriptive terminal pass was added after the decision, at the user's
+request (§5b): it does not establish a new-trunk win (M seed 0 is nominally
+0.00026 ahead of P3, but the paired interval spans zero; M seed 1 and both S
+seeds are behind).
 
 Reference throughout: P3 seed 0 best-valid = **0.079105** (seed 1 = 0.076668),
 same valid split, historical run reused without retraining or rebilling. The
@@ -21,8 +24,8 @@ wherever it changes a comparison.
 
 - Data and selection: official PyG ZINC subset, train 10,000 / valid 1,000,
   raw-`y` L1, full valid every epoch, best checkpoint by strict `<` (earlier
-  epoch on a tie). Test is never constructed in this round; no reported number
-  below comes from test.
+  epoch on a tie). Test was not constructed for any selection step; it is read
+  once, after the decision, in the descriptive terminal check of §5b.
 - Parameter cap: every model <= 500,000 trainable parameters including SSL
   encoders and auxiliary heads. All audited counts are in the tables.
 - No local recursive message passing, no new raw-structure vocabulary, no VQ,
@@ -265,6 +268,66 @@ P3 x B replicate that is excluded from the 2x2. Panel 2: the four seed-0 trunks
 against P3, with the post-hoc recipe-B cells dotted. Panel 3: seed-0 vs seed-1
 for the two supervised trunks.
 
+## 5b. Terminal test check (post-selection, descriptive only)
+
+**Read after the round decision was written**, at the user's request. The
+official PyG ZINC test split (1,000 molecules) was read once; every checkpoint
+was already frozen and selected on official valid. Nothing was selected,
+switched, tuned or re-run from this read, and it does not change the decision
+in §7. The harness reproduces the two published P3 numbers exactly
+(0.069471 / 0.070664, `zinc_arch_discovery_v1/analysis/p3_test_direct.json`)
+and v1's T x B number (0.075628), so the test objects and labels are aligned.
+
+| model | test MAE | best-valid | test − valid | epoch | params |
+|---|---:|---:|---:|---:|---:|
+| P3 x A s0 | 0.069471 | 0.079105 | −0.009634 | 272 | 413,505 |
+| P3 x A s1 | 0.070664 | 0.076668 | −0.006003 | 267 | 413,505 |
+| P3 x B s0 | 0.069865 | 0.076224 | −0.006359 | 377 | 413,505 |
+| P3 scratch x B s0 | 0.082244 | 0.093734 | −0.011491 | 464 | 413,505 |
+| T x A s0 | 0.075981 | 0.088070 | −0.012089 | 289 | 462,081 |
+| T x B s0 | 0.075628 | 0.091375 | −0.015748 | 426 | 462,081 |
+| **M sup s0** | **0.069211** | 0.087468 | −0.018257 | 281 | 435,681 |
+| M sup s1 | 0.075073 | 0.081999 | −0.006925 | 231 | 435,681 |
+| M joint s0 | 0.073327 | 0.087086 | −0.013759 | 308 | 448,385 |
+| S sup s0 | 0.076926 | 0.087267 | −0.010341 | 302 | 468,161 |
+| S sup s1 | 0.080009 | 0.089212 | −0.009203 | 312 | 468,161 |
+| S joint s0 | 0.078344 | 0.091514 | −0.013170 | 324 | 480,865 |
+| M sup B s0 | 0.075138 | 0.094758 | −0.019620 | 416 | 435,681 |
+| S sup B s0 | 0.074296 | 0.086980 | −0.012685 | 377 | 468,161 |
+
+Paired bootstrap over the 1,000 test molecules (10,000 resamples, molecules
+resampled with replacement; descriptive interval, not a significance claim):
+
+| contrast | mean Δ(test) | 95% interval |
+|---|---:|---|
+| M sup s0 − P3 x A s0 | **−0.000260** | [−0.005941, +0.005083] |
+| M sup s1 − P3 x A s1 | +0.004409 | [−0.000789, +0.009299] |
+| S sup s0 − P3 x A s0 | +0.007455 | [+0.002028, +0.013335] |
+| S sup s1 − P3 x A s1 | +0.009344 | [+0.002473, +0.016840] |
+| M sup s0 − P3 x B s0 | −0.000654 | [−0.007063, +0.005296] |
+| P3 x B − P3 x A | +0.000394 | [−0.003462, +0.004317] |
+| T x A − T x B | +0.000354 | [−0.003797, +0.004371] |
+| M sup B s0 − M sup s0 | +0.005927 | [+0.000813, +0.012236] |
+| S sup B s0 − S sup s0 | −0.002630 | [−0.006133, +0.000942] |
+
+**Observed.** Every model scores lower on test than on valid, but the gap is
+family-dependent: −0.006 to −0.010 for P3, −0.012 to −0.016 for T, −0.007 to
+−0.020 for M/S. M sup s0 has the lowest single test MAE in the round
+(0.069211, 0.000260 below P3 x A s0), yet the paired interval spans zero and
+its own seed-1 score is 0.075073; the two-seed test means are P3 0.070068 and
+M 0.072142. S is 0.0075-0.0093 behind P3 with intervals excluding zero. On test
+neither recipe contrast survives (P3 B−A +0.0004, T A−B +0.0004, both spanning
+zero), while M still prefers recipe C (+0.0059).
+
+**Interpreted.** The test read does not reproduce the valid ranking at the
+single-cell level: one M seed lands nominally ahead of P3 while the other is
+0.0044 behind, so the honest test statement is a tie for M s0 and a loss
+elsewhere — not a test win for the new trunk. The valid→test offset differs by
+family by up to ~0.01, which is larger than every architecture difference
+measured in this round; that is a property of the splits, not evidence for any
+model. The masked auxiliary task is harmful on test for both trunks (+0.0041
+for M, +0.0014 for S), matching the valid-side conclusion.
+
 ## 6. Costs, artifacts, reproduction
 
 Billed to this task (A100-hours, both GPUs summed; the reused P3-A and T-B cells
@@ -273,7 +336,8 @@ cap**, leaving 1.756 h. Breakdown: P3xB scratch (defective, retained) 0.343,
 TxA 0.206, M sup s0 0.252, M joint 0.331, S sup s0 0.381, S joint 0.464,
 M sup s1 0.246, S sup s1 0.355, P3xB corrected 0.301, M sup B 0.408,
 S sup B 0.597, timing jobs and failed launches 0.011. The masked-view prep ran
-on GPU-host CPU (72 s, not billed as A100 time).
+on GPU-host CPU (72 s, not billed as A100 time); the terminal test read ran on
+local CPU (~3 s for 14 checkpoints) and is likewise not billed.
 
 - `analysis/main_table.json|md` — every run with recipe, parameters, curve,
   cost. `analysis/round_decision.json` — the pre-declared read-outs computed
@@ -283,6 +347,9 @@ on GPU-host CPU (72 s, not billed as A100 time).
   parameter/gradient/isolation checks, masked-leak check.
 - `analysis/aux_smoke.json`, `runs/*/aux_curve.json` — auxiliary-branch smoke
   test and per-epoch CE trajectories.
+- `analysis/test_terminal.json`, `analysis/test_preds/*.npz`,
+  `analysis/test_paired_bootstrap.json` — the 1,000-molecule terminal test read
+  (§5b): per-model test MAE, per-molecule predictions, paired bootstrap.
 - `runs/<tag>_<candidate>_s<seed>/` — `best.pt`, `final.pt`, `train.json`,
   `curve.csv`, `predictions/valid_best.npz` (git-ignored; local copies are the
   ones analysed). Phase I cells live in `runs/T_s0` (recipe A) and
@@ -318,6 +385,9 @@ uv run python ad2_runner.py train --candidate M   --seed 0 --recipe B --tag mB -
 uv run python ad2_runner.py train --candidate S   --seed 0 --recipe B --tag sB --device cuda:0
 
 uv run python ad2_report.py --print --plot
+
+# terminal test read (post-selection, descriptive; CPU, ~3 s for 14 checkpoints)
+uv run python ad2_test.py
 ```
 
 Remote form (each run is a committed revision on `res`, one process per GPU):
@@ -356,8 +426,14 @@ rr logs zad2-M-sup-s0 ; rr pull zad2-M-sup-s0
   P3's recipe preference does not transfer to them.
 - The masked structural auxiliary task is neutral for M (−0.0004) and harmful
   for S (+0.0042) at the single declared lambda = 0.05.
-- No test split was read; no model, recipe or checkpoint was selected on
-  anything but official valid.
+- Terminal test read (post-decision, §5b): P3 0.069471/0.070664 (A, s0/s1) and
+  0.069865 (B, s0); T 0.075981/0.075628; M 0.069211/0.075073; S
+  0.076926/0.080009. M s0 has the lowest single test MAE (0.000260 below
+  P3 x A s0), but its paired interval spans zero and its seed-1 score is 0.0044
+  behind P3 s1. Test−valid gaps differ by family by up to 0.012 (−0.006 for P3,
+  −0.018 for M s0).
+- No model, recipe or checkpoint was selected on anything but official valid;
+  the test read changed nothing.
 
 **Interpreted**
 
@@ -373,7 +449,13 @@ rr logs zad2-M-sup-s0 ; rr pull zad2-M-sup-s0
   context used here; that is a hypothesis, not a measured mechanism. The
   bond-centric readout is a second uncontrolled difference.
 - With only two SSL seeds, M's gap to P3 is not separable from seed noise
-  (M spread 0.0055 vs P3 0.0024).
+  (M spread 0.0055 vs P3 0.0024). On test the seed-0 ordering nominally flips
+  (M 0.069211 vs P3 0.069471) while seed 1 does not (0.075073 vs 0.070664), so
+  the test read is a tie at best for M and a loss for S — not a test win for
+  the new trunk, and not a reason to revise the valid-based decision.
+- The family-dependent test−valid offset (up to ~0.012) is larger than every
+  architecture difference measured here, so neither split's ranking is a proxy
+  for the other at this effect size.
 
 **Next choice (proposed, not started)**
 

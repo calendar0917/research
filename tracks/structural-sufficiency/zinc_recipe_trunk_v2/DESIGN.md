@@ -239,3 +239,11 @@ from P3's no-warm-up recipe, applied equally to M and S.
   as post-hoc and reported as such. No other post-hoc GPU purchase was made; the
   remaining 1.756 h were not spent.
 - **A3.** Budget ledger updated to the realised costs (3.894 h of 5.65).
+- **A4 (terminal test read).** At the user's request, and only after every
+  checkpoint had been frozen and the round decision written, the official PyG
+  ZINC test split (1,000 molecules) was read once with
+  `code/ad2_test.py` (CPU, ~3 s, no GPU time). Strictly descriptive: no model,
+  recipe, epoch or checkpoint was selected or changed from it, and the §7
+  decision stands. The harness reproduces the published P3 test numbers
+  (0.069471/0.070664) and v1's T x B (0.075628) exactly, which validates the
+  test objects and labels. Reported in §5b with paired bootstrap intervals.
