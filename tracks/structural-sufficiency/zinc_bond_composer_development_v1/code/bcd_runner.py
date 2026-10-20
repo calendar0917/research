@@ -918,6 +918,28 @@ def _mae(pred: np.ndarray, y: np.ndarray) -> float:
     return float(np.abs(pred - y).mean())
 
 
+def _wall_record(rec: Mapping[str, Any]) -> tuple[float, str, float]:
+    """Return (wall, source, raw).  Fixes the mixed-clock field in B0/B1.
+
+    The first two formal runs used ``time.perf_counter() - time.time()`` for the
+    wall field, producing a negative number.  The UTC start/finish timestamps in
+    the same records are correct and are the authoritative process wall.  The
+    training itself, parameters and predictions are unaffected.
+    """
+    raw = float(rec.get("wall_seconds", float("nan")))
+    try:
+        start = datetime.fromisoformat(rec["started_utc"])
+        finish = datetime.fromisoformat(rec["finished_utc"])
+        ts = (finish - start).total_seconds()
+    except Exception:
+        ts = float("nan")
+    if raw > 0 and (not math.isfinite(ts) or abs(raw - ts) <= 5.0):
+        return raw, "perf_counter", raw
+    if math.isfinite(ts) and ts > 0:
+        return ts, "utc_timestamps_correction", raw
+    return raw, "unavailable", raw
+
+
 def cmd_analyze(args: argparse.Namespace) -> int:
     out = C.ANALYSIS / "metrics.json"
     decision_path = C.ANALYSIS / "decision.json"
@@ -932,6 +954,7 @@ def cmd_analyze(args: argparse.Namespace) -> int:
     metrics = {}
     for k in M.KINDS:
         rec, pred = runs[k]
+        wall, wall_source, wall_raw = _wall_record(rec)
         metrics[k] = {
             "soup_fit_mae": rec["soup_fit_mae"],
             "soup_monitor_mae": _mae(pred, y),
@@ -939,7 +962,9 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             "best_monitor_epoch": rec["best_monitor_epoch"],
             "best_monitor_mae": rec["best_monitor_mae"],
             "params": rec["parameter_audit"]["total"],
-            "wall_seconds": rec["wall_seconds"],
+            "wall_seconds": wall,
+            "wall_seconds_source": wall_source,
+            "wall_seconds_raw": wall_raw,
             "step_seconds": rec["step_seconds"],
             "batch_order_sha256": rec["batch_order"]["sha256"],
             "batch_order_matches_frozen_p3": rec["batch_order"]["matches_frozen_p3"],
@@ -1054,7 +1079,7 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         "gpu_ledger": {},
     }
     # Ledger from the actual run records; evaluation is inside the training wall.
-    formal_s = sum(recs[k]["wall_seconds"] for k in M.KINDS)
+    formal_s = sum(_wall_record(recs[k])[0] for k in M.KINDS)
     smoke_path = C.PROJECT / "smoke.json"
     smoke = C.read_json(smoke_path) if smoke_path.exists() else {}
     smoke_s = float(smoke.get("checks", {}).get("smoke_total_seconds", 0.0))
@@ -1064,7 +1089,9 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         "accounting": "sum of wall-clock GPU occupancy; B0/B1/B2 are separate single-GPU processes",
         "formal_runs": {
             k: {
-                "wall_seconds": recs[k]["wall_seconds"],
+                "wall_seconds": _wall_record(recs[k])[0],
+                "wall_seconds_source": _wall_record(recs[k])[1],
+                "wall_seconds_raw": _wall_record(recs[k])[2],
                 "started_utc": recs[k]["started_utc"],
                 "finished_utc": recs[k]["finished_utc"],
                 "device": recs[k]["device"],
@@ -1072,7 +1099,7 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             }
             for k in M.KINDS
         },
-        "formal_runs_seconds": {k: recs[k]["wall_seconds"] for k in M.KINDS},
+        "formal_runs_seconds": {k: _wall_record(recs[k])[0] for k in M.KINDS},
         "formal_total_seconds": formal_s,
         "smoke_total_seconds": smoke_s,
         "smoke_status": smoke.get("status"),
@@ -1085,6 +1112,26 @@ def cmd_analyze(args: argparse.Namespace) -> int:
     }
     C.write_json(out, payload)
     C.write_json(C.PROJECT / "gpu_ledger.json", payload["gpu_ledger"])
+    corrections = {
+        k: {
+            "raw_wall_seconds": _wall_record(recs[k])[2],
+            "corrected_wall_seconds": _wall_record(recs[k])[0],
+            "source": _wall_record(recs[k])[1],
+        }
+        for k in M.KINDS
+        if _wall_record(recs[k])[1] != "perf_counter"
+    }
+    if corrections:
+        C.write_json(
+            C.PROJECT / "wall_clock_correction.json",
+            {
+                "protocol_id": C.PROTOCOL_ID,
+                "issue": "B0/B1 used time.perf_counter() - time.time() for the wall field, producing a negative number.",
+                "correction": "Use the correct started_utc/finished_utc timestamps in the same records as the authoritative process wall.",
+                "training_or_predictions_affected": False,
+                "corrections": corrections,
+            },
+        )
     C.write_json(
         decision_path,
         {
@@ -1111,7 +1158,7 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             r = recs[k]
             fh.write(
                 f"{k}\t{r['seed']}\t{r['parameter_audit']['total']}\t{r['updates']}\t"
-                f"{r['soup_fit_mae']:.9f}\t{r['soup_monitor_mae']:.9f}\t{r['wall_seconds']:.3f}\t"
+                f"{r['soup_fit_mae']:.9f}\t{r['soup_monitor_mae']:.9f}\t{_wall_record(r)[0]:.3f}\t"
                 f"{r['soup_sha256']}\t{r['monitor_pred_sha256']}\t{r['batch_order']['sha256']}\t"
                 f"{r['git_commit']}\t{r['device']}:{r['cuda_device_name']}\n"
             )
