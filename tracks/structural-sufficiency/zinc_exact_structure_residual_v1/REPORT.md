@@ -214,6 +214,63 @@ valid (p90 28.5% / 22.6%), and the reader moves weight mass from `z`/`g` toward
 `a_sum`/`a_sq`. This is consistent with the branch becoming a primary input
 rather than a correction.
 
+### 5.5 Training curves and the last-5 soup
+
+All ten curves are smooth and monotone at the 20-epoch logging grid: no
+divergence, no non-finite step, no late uptick. The shape is the frozen R3
+shape — fast initial drop, long plateau, terminal descent as the per-step
+cosine reaches `1e-5`. The in-round B endpoint (train MAE 0.00214 / 0.00208)
+matches the frozen R3 endpoint (0.00209 / 0.00201). Per-epoch values are *not*
+bit-identical to the frozen run (e.g. epoch 60: 0.0834 vs 0.1026 for seed 0);
+CUDA scatter reductions are non-deterministic and the high-LR phase is chaotic,
+so trajectories diverge in the middle and re-converge at the endpoint. This is
+why the primary contrasts use the in-round B and not the historical checkpoint.
+
+The residual arms fit faster early (epoch 20: 0.109–0.134 vs B 0.140–0.166) and
+are overtaken between epoch 280 and 320; from then on B has the lower train
+loss. That crossover is the curve-level signature of the mechanism in
+§5.2–5.4: the branch is an easier early optimisation path, and the final
+solution is slightly worse even on train.
+
+Gradient clipping is frequent but inherited: 12,641–16,018 of 28,440 updates
+(44–56%) exceed the clip norm 5, vs 13,012 / 13,978 in the frozen R3 runs. The
+maximum raw gradient norm (31.29 for seed 0, 36.47 for seed 1) occurs at step 1
+and is identical across arms, because `beta = 0` there.
+
+Soup rule, per seed:
+
+| config | train MAE ep 340 | ep 360 | soup | soup vs ep 360 |
+|---|---|---|---|---|
+| B | 0.00276 / 0.00273 | 0.00214 / 0.00208 | 0.00187 / 0.00171 | −12.4% / −17.7% |
+| E@0.1 | 0.00354 / 0.00328 | 0.00302 / 0.00268 | 0.00279 / 0.00246 | −7.5% / −8.1% |
+| E@1.0 | 0.00373 / 0.00350 | 0.00326 / 0.00284 | 0.00301 / 0.00260 | −7.8% / −8.6% |
+| H@0.1 | 0.00353 / 0.00322 | 0.00296 / 0.00277 | 0.00268 / 0.00254 | −9.5% / −8.5% |
+| H@1.0 | 0.00376 / 0.00330 | 0.00322 / 0.00288 | 0.00295 / 0.00257 | −8.3% / −10.8% |
+
+Is the last-5 rule reasonable here?
+
+* It is the frozen P3/R3 rule, applied identically to B and to E/H, and chosen
+  before the runs. It cannot bias the family contrast, and replacing it after
+  seeing valid would be post-hoc selection.
+* The last five epochs sit at `lr = 1.00–1.03e-5` (1% of peak) and the branch is
+  at equilibrium: over epochs 320→360 the mean correction norm moves by −0.5%
+  (E@0.1), −0.8% (E@1.0) and −0.8% (H@1.0), and the maximum norm is constant to
+  three decimals. The five averaged branch states are therefore very close; the
+  soup is not averaging over a growing or oscillating lookup table.
+* The soup fit is better than the epoch-360 train MAE in every run, and the
+  B gain (12–18%) matches the frozen R3 gain (14.8% / 15.3%). So the rule behaves
+  the same way it did for the baseline.
+* Caveat: the per-epoch `train_mae` is a within-epoch running average of
+  pre-update predictions, so `soup < ep360` is not a clean estimate of "soup
+  beats the final iterate". The five individual states were not retained, only
+  their mean, so soup-vs-final cannot be audited from the frozen artifacts. What
+  is established is that the endpoint is still improving (B drops 22% in the
+  last 20 epochs; E/H 15–19%), so the soup is a pre-declared snapshot of a
+  non-converged run, not a claim of a converged optimum.
+* For a future round, retain the last-k checkpoints (or at least the final
+  iterate) so the soup choice can be audited; changing the window now would
+  break comparability with the frozen baseline.
+
 ## 6. Pre-declared slices
 
 Valid MAE by molecule group (seed mean; `n` is molecules):
