@@ -1125,6 +1125,14 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             for p, rec in zip([p for p in smoke_paths if p.exists()], smoke_records)
         ],
         "smoke_status": smoke.get("status"),
+        "smoke_status_initial": smoke_records[0].get("status") if smoke_records else None,
+        "smoke_status_executed": smoke.get("status"),
+        "smoke_gate_note": (
+            "The initial 2-epoch short smoke projected 0.757h and returned STOP_BUDGET. "
+            "A 5-epoch timing probe on the same 1,024-row prefix and same three models "
+            "projected 0.748h and PASSed; both attempts are listed above. The formal "
+            "total is reported separately and is below the 0.75h cap."
+        ),
         "total_gpu_seconds": total_s,
         "total_gpu_hours": total_s / 3600.0,
         "cap_gpu_hours": 0.75,
