@@ -58,6 +58,11 @@ RECIPE_VARIANTS: dict[str, dict[str, Any]] = {
     "B": dict(optimizer="adamw", lr=1.0e-3, min_lr=1.0e-5, weight_decay=1.0e-5,
               warmup_steps=500, epochs=600, dropout=0.0, grad_clip=5.0,
               batch_size=128, valid_batch_size=256),
+    #: C = the declared Phase-II trunk recipe: A's optimizer and horizon plus the
+    #: declared 500-step warm-up for the randomly initialised composition modules.
+    "C": dict(optimizer="adam", lr=1.0e-3, min_lr=1.0e-5, weight_decay=1.0e-5,
+              warmup_steps=500, epochs=360, dropout=0.0, grad_clip=5.0,
+              batch_size=128, valid_batch_size=256),
 }
 
 

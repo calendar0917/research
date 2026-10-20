@@ -175,6 +175,18 @@ mid-run. The warm-up is added because the composition/readout modules are
 randomly initialised (and S contains attention); this is stated as a deviation
 from P3's no-warm-up recipe, applied equally to M and S.
 
+### 3b. Pre-launch amendments (made before the first M/S trajectory)
+
+- The trunk recipe is declared as the named variant **C** in
+  `ad_train.RECIPE_VARIANTS`: Adam (Phase I kept P3's recipe, so the declared
+  optimizer rule selects Adam), batch 128, 360 epochs, 500-step warm-up,
+  per-step cosine 1e-3 -> 1e-5, weight decay 1e-5, clip 5. C = A's
+  optimizer/horizon plus the declared warm-up; both M and S and both training
+  variants use it unchanged.
+- Phase I result that triggered this choice: P3 under B (0.093734) is worse than
+  P3 under A (0.079105), so the rule "Adam unless P3-B beats P3-A by >= 0.002"
+  selects Adam.
+
 ## 4. Checks before formal runs
 
 - CPU: parameter counts, real forward/backward, every parameter tensor receives
