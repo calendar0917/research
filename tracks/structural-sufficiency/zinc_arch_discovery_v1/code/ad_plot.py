@@ -28,7 +28,7 @@ def load_curve(path: Path):
         "params": d["parameter_count"],
         "wall": d.get("wall_seconds"),
         "gpu_h": d.get("gpu_hours"),
-        "name": d["candidate"],
+        "name": d.get("candidate", d.get("model", "P3")),
     }
 
 

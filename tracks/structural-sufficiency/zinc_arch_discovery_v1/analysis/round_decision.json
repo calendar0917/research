@@ -1,0 +1,50 @@
+{
+  "protocol": "zinc-arch-discovery-v1",
+  "observed": {
+    "p3_s0_best_valid": 0.07910549778419873,
+    "candidate_best": {
+      "model": "T",
+      "candidate": "T",
+      "best_valid_mae": 0.09137539563694735,
+      "best_epoch": 426,
+      "delta_vs_p3_s0": 0.012269897852748624,
+      "train_mae_eval_mode_at_best": 0.009922250148374587
+    },
+    "candidates_below_p3": [],
+    "candidates_below_0_075": [],
+    "followups": [
+      {
+        "model": "P0 corrected",
+        "best_valid_mae": 0.33277822982048383,
+        "best_epoch": 203,
+        "delta_vs_p3_s0": 0.2536727320362851
+      },
+      {
+        "model": "P1 corrected",
+        "best_valid_mae": 0.3218998607294052,
+        "best_epoch": 312,
+        "delta_vs_p3_s0": 0.24279436294520645
+      },
+      {
+        "model": "T wd=1e-4",
+        "best_valid_mae": 0.09243718778149923,
+        "best_epoch": 432,
+        "delta_vs_p3_s0": 0.0133316899973005
+      }
+    ],
+    "ledger": {
+      "training_gpu_hours": 4.317493784922505,
+      "timing_and_failed_smoke_gpu_hours": 0.03,
+      "total_this_round_gpu_hours": 4.347493784922505,
+      "cap_gpu_hours": 10.0,
+      "p3_reference_gpu_hours_not_rerun": 0.201
+    }
+  },
+  "hypotheses": [
+    "The round did not find a representation+readout that beats the P3 seed-0 best-valid reference. This is a round-level negative result, not evidence that the broad global-attention, path, block, or association families are invalid.",
+    "T is the best new candidate, but its train@best is lower than P3's while its best-valid is worse, so its gap is not explained by underfitting. The single pre-declared 10x weight-decay correction did not improve it.",
+    "The P0/P1 raw sampled-walk sum/count leak was real: correcting it moved the same-seed best-valid from 0.625814/0.729133 to 0.332778/0.321900. The corrected path models still underfit (train@best 0.179/0.096) and remain far from P3, so the leak was not the only limitation."
+  ],
+  "next_choice": "Stop this round and report no strong model. The most worth keeping new model is T (0.091375, 462,081 params, 0.356 GPU-h). The next purchase, if any, should be a targeted diagnosis of why T's rank-16 association readout loses to P3's Null-composer readout (information loss vs. optimization), or a stronger path pattern vocabulary/readout; do not start a seventh family or a full GRIT reproduction on this evidence.",
+  "test": "not read; no test prediction or MAE computed"
+}
