@@ -1,0 +1,44 @@
+{
+  "protocol": "zinc-perf-protocol-v1",
+  "purpose": "measured smoke before the formal ZSRT screen; no valid-based selection",
+  "host": "res (a100-2), driver 550.163.01, torch 2.5.1+cu124",
+  "commits": {
+    "smoke_runs": "f24dd56dae0329f306b53f76d6c581099323058a"
+  },
+  "p3_smoke": {
+    "run": "zpp-p3-smoke-20261020-135815-4f9f0306",
+    "epoch_seconds_first": 2.44,
+    "formal_epoch_seconds_observed": [1.9, 2.3],
+    "projected_360_epoch_hours": 0.20,
+    "formal_two_seed_gpu_hours_actual": 0.411,
+    "note": "all 360 epochs plus per-epoch valid; end-of-run fixed-object evaluation excluded from the run wall"
+  },
+  "zsrt_smoke_batch128": {
+    "run": "zpp-zsrt-smoke128-20261020-135815-6bb65d68",
+    "params": 380161,
+    "epoch_seconds_first_including_valid_and_snapshot": 9.71,
+    "projected_360_epoch_hours": 0.971,
+    "projected_screen_4_configs_hours": 3.88,
+    "projected_confirm_2_seeds_hours": 1.94
+  },
+  "zsrt_smoke_batch256": {
+    "run": "zpp-zsrt-smoke256-20261020-140010-990946c8",
+    "params": 380161,
+    "epoch_seconds_first_including_valid_and_snapshot": 6.57,
+    "note": "faster, but only 14,400 updates at 360 epochs versus P3's 28,440; not used for the formal screen to keep a matched update opportunity"
+  },
+  "decision": {
+    "p3": "360 epochs, seeds 0 and 1, no continuation (rule evaluated after training)",
+    "zsrt": "keep batch 128 / 360 epochs / 28,440 updates; 8 layers, k=21, 380,161 params",
+    "budget_projection_gpu_hours": {
+      "p3_actual": 0.411,
+      "zsrt_screen_4": 3.88,
+      "zsrt_confirm_2": 1.94,
+      "terminal_scoring_allowance": 0.10,
+      "total": 6.33,
+      "cap": 8.0,
+      "reserve": 1.67
+    }
+  },
+  "timestamp": "2026-10-20T14:20:00+08:00"
+}
