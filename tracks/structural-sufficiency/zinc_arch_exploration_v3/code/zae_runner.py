@@ -130,13 +130,16 @@ def train(arm: str, seed: int, device, *, epochs=None, tag=None, force=False,
           init_from: str | None = None) -> dict:
     if arm == "A_SSL":
         base_arm = "A"
-        init = ZS.load_pretrained(Path(init_from), device="cpu") if init_from else None
-        if init is None:
+        init_path = Path(init_from) if init_from else None
+        if init_path is None:
             raise SystemExit("A_SSL needs --init-from runs/ASSL_pretrain_s0/pretrain.pt")
+        if not init_path.is_absolute():
+            init_path = C.REPO / init_path
+        init = ZS.load_pretrained(init_path, device="cpu")
         extra = {
             "ssl_pretrain": {
-                "path": str(Path(init_from).relative_to(C.REPO)),
-                "sha256": C.sha256_file(init_from),
+                "path": str(init_path.relative_to(C.REPO)),
+                "sha256": C.sha256_file(init_path),
             }
         }
     else:
@@ -159,7 +162,7 @@ def train(arm: str, seed: int, device, *, epochs=None, tag=None, force=False,
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("command", choices=["prep", "timing", "train", "ssl"])
-    p.add_argument("--arm", default="A", choices=["A", "B", "A_SSL"])
+    p.add_argument("--arm", default="A", choices=["A", "B", "A_SSL", "A_attn"])
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--device", default="cuda:0")
     p.add_argument("--epochs", type=int, default=None)
