@@ -1,0 +1,102 @@
+{
+  "round": "zinc-arch-exploration-v3",
+  "protocol_id": "zinc-arch-exploration-v3",
+  "frozen_at": "2026-10-21T18:52:47+0800",
+  "git_commit": "cc7a926e68d8ea318318994b6ba456c7ea19e8a4",
+  "models": [
+    {
+      "model": "A_s0",
+      "arm": "A",
+      "status": "completed",
+      "best_epoch": 632,
+      "epochs_run": 1200,
+      "updates_run": 188400,
+      "valid_mae": 0.08218920138204704,
+      "checkpoint": "tracks/structural-sufficiency/zinc_arch_exploration_v3/runs/A_s0/best.pt",
+      "checkpoint_sha256": "8930353b761c028cba0fd2f45544080f673222f3c88f7b7609e1b5a872caeb16",
+      "parameter_count": 488601,
+      "recipe": {
+        "epochs": 1200,
+        "batch_size": 64,
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 0.0001,
+        "updates": 188400
+      },
+      "ssl_pretrain": null,
+      "selection": "best official-valid MAE, strict <, earlier epoch wins a tie"
+    },
+    {
+      "model": "B_s0",
+      "arm": "B",
+      "status": "CANCELLED_BY_BUDGET",
+      "best_epoch": 332,
+      "epochs_run": 817,
+      "updates_run": 128269,
+      "valid_mae": 0.10172,
+      "checkpoint": "tracks/structural-sufficiency/zinc_arch_exploration_v3/runs/B_s0/best.pt",
+      "checkpoint_sha256": "3a5d6df2b91a46159daacef7b5c156a77f6a13cf5d0fdd5752b7ecc82718bc0a",
+      "parameter_count": null,
+      "recipe": {
+        "epochs_declared": 1200,
+        "batch_size": 64,
+        "updates_run": 128269
+      },
+      "ssl_pretrain": null,
+      "selection": "best official-valid MAE, strict <, earlier epoch wins a tie"
+    },
+    {
+      "model": "A_SSL_s0",
+      "arm": "A_SSL",
+      "status": "completed",
+      "best_epoch": 439,
+      "epochs_run": 900,
+      "updates_run": 141300,
+      "valid_mae": 0.0798761457047076,
+      "checkpoint": "tracks/structural-sufficiency/zinc_arch_exploration_v3/runs/A_SSL_s0/best.pt",
+      "checkpoint_sha256": "eb6022ad535818cf01b029d6b55e9f0a41be34d9f09c8de166418e33afcb1252",
+      "parameter_count": 488601,
+      "recipe": {
+        "epochs": 900,
+        "batch_size": 64,
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 0.0001,
+        "updates": 141300
+      },
+      "ssl_pretrain": {
+        "path": "tracks/structural-sufficiency/zinc_arch_exploration_v3/runs/ASSL_pretrain_s0/pretrain.pt",
+        "sha256": "5b36c6ecc0d7d3c5fed09d46f93143994ed4be7a08f4a80152c79460b8c80003"
+      },
+      "selection": "best official-valid MAE, strict <, earlier epoch wins a tie"
+    },
+    {
+      "model": "A_attn_s0",
+      "arm": "A_attn",
+      "status": "completed",
+      "best_epoch": 519,
+      "epochs_run": 900,
+      "updates_run": 141300,
+      "valid_mae": 0.0826374321076437,
+      "checkpoint": "tracks/structural-sufficiency/zinc_arch_exploration_v3/runs/A_attn_s0/best.pt",
+      "checkpoint_sha256": "903eedc306b371011b927c4a54c6ae2d5a2489614a75c15310e944c3f0c9d2b1",
+      "parameter_count": 488889,
+      "recipe": {
+        "epochs": 900,
+        "batch_size": 64,
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 0.0001,
+        "updates": 141300
+      },
+      "ssl_pretrain": null,
+      "selection": "best official-valid MAE, strict <, earlier epoch wins a tie"
+    }
+  ],
+  "references_reused_not_retrained": {
+    "P3B_s0": "zinc_recipe_trunk_v2/runs/xBssl_P3N_s0 (best-valid 0.076223751 @ 377)",
+    "L_s0": "zinc_dual_channel_composer_v1/runs/L_s0 (best-valid 0.078537150 @ 489)",
+    "C_s0": "zinc_dual_channel_composer_v1/runs/C_s0 (best-valid 0.082367432 @ 482)"
+  },
+  "test_read_policy": "reporting only: no checkpoint, epoch, recipe, subgroup or vote is changed after this read; the official test split has been read in earlier rounds and is not a blind test"
+}

@@ -160,10 +160,10 @@ def main() -> int:
             "epochs_declared": int(info["recipe"].get("epochs", 0)),
             "batch_size": int(info["recipe"].get("batch_size", 0)),
             "ssl": (
-                "P3 masked SSL encoders (frozen upstream) + native A-SSL pretrain"
+                "P3 masked SSL encoders + native A-SSL pretrain"
                 if name == "A_SSL_s0"
                 else "P3 masked SSL encoders"
-                if name in ("P3B_s0", "L_s0", "C_s0", "A_s0", "B_s0")
+                if name in ("P3B_s0", "L_s0", "C_s0", "A_s0", "B_s0", "A_attn_s0")
                 else "none"
             ),
             "status": "CANCELLED_BY_BUDGET" if partial else "completed",

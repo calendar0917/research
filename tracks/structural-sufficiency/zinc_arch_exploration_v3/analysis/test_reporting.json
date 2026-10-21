@@ -1,0 +1,459 @@
+{
+  "round": "zinc-arch-exploration-v3",
+  "protocol_id": "zinc-arch-exploration-v3",
+  "frozen": {
+    "round": "zinc-arch-exploration-v3",
+    "protocol_id": "zinc-arch-exploration-v3",
+    "frozen_at": "2026-10-21T18:52:47+0800",
+    "git_commit": "cc7a926e68d8ea318318994b6ba456c7ea19e8a4",
+    "models": [
+      {
+        "model": "A_s0",
+        "arm": "A",
+        "status": "completed",
+        "best_epoch": 632,
+        "epochs_run": 1200,
+        "updates_run": 188400,
+        "valid_mae": 0.08218920138204704,
+        "checkpoint": "tracks/structural-sufficiency/zinc_arch_exploration_v3/runs/A_s0/best.pt",
+        "checkpoint_sha256": "8930353b761c028cba0fd2f45544080f673222f3c88f7b7609e1b5a872caeb16",
+        "parameter_count": 488601,
+        "recipe": {
+          "epochs": 1200,
+          "batch_size": 64,
+          "lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 0.0001,
+          "updates": 188400
+        },
+        "ssl_pretrain": null,
+        "selection": "best official-valid MAE, strict <, earlier epoch wins a tie"
+      },
+      {
+        "model": "B_s0",
+        "arm": "B",
+        "status": "CANCELLED_BY_BUDGET",
+        "best_epoch": 332,
+        "epochs_run": 817,
+        "updates_run": 128269,
+        "valid_mae": 0.10172,
+        "checkpoint": "tracks/structural-sufficiency/zinc_arch_exploration_v3/runs/B_s0/best.pt",
+        "checkpoint_sha256": "3a5d6df2b91a46159daacef7b5c156a77f6a13cf5d0fdd5752b7ecc82718bc0a",
+        "parameter_count": null,
+        "recipe": {
+          "epochs_declared": 1200,
+          "batch_size": 64,
+          "updates_run": 128269
+        },
+        "ssl_pretrain": null,
+        "selection": "best official-valid MAE, strict <, earlier epoch wins a tie"
+      },
+      {
+        "model": "A_SSL_s0",
+        "arm": "A_SSL",
+        "status": "completed",
+        "best_epoch": 439,
+        "epochs_run": 900,
+        "updates_run": 141300,
+        "valid_mae": 0.0798761457047076,
+        "checkpoint": "tracks/structural-sufficiency/zinc_arch_exploration_v3/runs/A_SSL_s0/best.pt",
+        "checkpoint_sha256": "eb6022ad535818cf01b029d6b55e9f0a41be34d9f09c8de166418e33afcb1252",
+        "parameter_count": 488601,
+        "recipe": {
+          "epochs": 900,
+          "batch_size": 64,
+          "lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 0.0001,
+          "updates": 141300
+        },
+        "ssl_pretrain": {
+          "path": "tracks/structural-sufficiency/zinc_arch_exploration_v3/runs/ASSL_pretrain_s0/pretrain.pt",
+          "sha256": "5b36c6ecc0d7d3c5fed09d46f93143994ed4be7a08f4a80152c79460b8c80003"
+        },
+        "selection": "best official-valid MAE, strict <, earlier epoch wins a tie"
+      },
+      {
+        "model": "A_attn_s0",
+        "arm": "A_attn",
+        "status": "completed",
+        "best_epoch": 519,
+        "epochs_run": 900,
+        "updates_run": 141300,
+        "valid_mae": 0.0826374321076437,
+        "checkpoint": "tracks/structural-sufficiency/zinc_arch_exploration_v3/runs/A_attn_s0/best.pt",
+        "checkpoint_sha256": "903eedc306b371011b927c4a54c6ae2d5a2489614a75c15310e944c3f0c9d2b1",
+        "parameter_count": 488889,
+        "recipe": {
+          "epochs": 900,
+          "batch_size": 64,
+          "lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 0.0001,
+          "updates": 141300
+        },
+        "ssl_pretrain": null,
+        "selection": "best official-valid MAE, strict <, earlier epoch wins a tie"
+      }
+    ],
+    "references_reused_not_retrained": {
+      "P3B_s0": "zinc_recipe_trunk_v2/runs/xBssl_P3N_s0 (best-valid 0.076223751 @ 377)",
+      "L_s0": "zinc_dual_channel_composer_v1/runs/L_s0 (best-valid 0.078537150 @ 489)",
+      "C_s0": "zinc_dual_channel_composer_v1/runs/C_s0 (best-valid 0.082367432 @ 482)"
+    },
+    "test_read_policy": "reporting only: no checkpoint, epoch, recipe, subgroup or vote is changed after this read; the official test split has been read in earlier rounds and is not a blind test"
+  },
+  "models": {
+    "A_s0": {
+      "mae": 0.08052894785162061,
+      "rmse": 0.15750030273096238,
+      "median_ae": 0.043326208367943764,
+      "p90_ae": 0.155668643116951,
+      "p95_ae": 0.25286318063735935,
+      "max_ae": 1.3932058922946453,
+      "mean_signed": 0.008936637587845325,
+      "top100_share": 0.47155166221839967,
+      "valid_mae": 0.08218920138204704,
+      "best_epoch": 632,
+      "status": "completed",
+      "parameter_count": 488601,
+      "checkpoint_sha256": "8930353b761c028cba0fd2f45544080f673222f3c88f7b7609e1b5a872caeb16",
+      "mae_recomputed": 0.08052894785162061
+    },
+    "B_s0": {
+      "mae": 0.089705463597551,
+      "rmse": 0.17725494050167684,
+      "median_ae": 0.05048784613609314,
+      "p90_ae": 0.18496274948120117,
+      "p95_ae": 0.281515287607908,
+      "max_ae": 2.1862587928771973,
+      "mean_signed": 0.019454345351085065,
+      "top100_share": 0.4500640928284266,
+      "valid_mae": 0.10172,
+      "best_epoch": 332,
+      "status": "CANCELLED_BY_BUDGET",
+      "parameter_count": null,
+      "checkpoint_sha256": "3a5d6df2b91a46159daacef7b5c156a77f6a13cf5d0fdd5752b7ecc82718bc0a",
+      "mae_recomputed": 0.089705463597551
+    },
+    "A_SSL_s0": {
+      "mae": 0.08475344753079116,
+      "rmse": 0.2174365682592961,
+      "median_ae": 0.04461672902107239,
+      "p90_ae": 0.16162574291229248,
+      "p95_ae": 0.25124151706695547,
+      "max_ae": 4.467101454734802,
+      "mean_signed": 0.005444060478359461,
+      "top100_share": 0.48784367439906356,
+      "valid_mae": 0.0798761457047076,
+      "best_epoch": 439,
+      "status": "completed",
+      "parameter_count": 488601,
+      "checkpoint_sha256": "eb6022ad535818cf01b029d6b55e9f0a41be34d9f09c8de166418e33afcb1252",
+      "mae_recomputed": 0.08475344753079116
+    },
+    "A_attn_s0": {
+      "mae": 0.07993041162099689,
+      "rmse": 0.15171965398107232,
+      "median_ae": 0.04161226749420166,
+      "p90_ae": 0.17614875435829166,
+      "p95_ae": 0.27948830127716046,
+      "max_ae": 1.4189673773944378,
+      "mean_signed": 0.013840728836134077,
+      "top100_share": 0.4616983520468361,
+      "valid_mae": 0.0826374321076437,
+      "best_epoch": 519,
+      "status": "completed",
+      "parameter_count": 488889,
+      "checkpoint_sha256": "903eedc306b371011b927c4a54c6ae2d5a2489614a75c15310e944c3f0c9d2b1",
+      "mae_recomputed": 0.07993041162099689
+    },
+    "P3B_s0": {
+      "mae": 0.06986484075244516,
+      "rmse": 0.14796093772015328,
+      "median_ae": 0.03596138954162598,
+      "p90_ae": 0.1509054154157639,
+      "p95_ae": 0.2237172737717628,
+      "max_ae": 1.9200434684753418,
+      "mean_signed": 0.0020875272490084172,
+      "top100_share": 0.47281240238120614,
+      "source": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/analysis/test_preds/P3B_s0_test.npz"
+    },
+    "L_s0": {
+      "mae": 0.06626655481941998,
+      "rmse": 0.16132248939643376,
+      "median_ae": 0.0357394814491272,
+      "p90_ae": 0.13401133418083191,
+      "p95_ae": 0.19486449956893917,
+      "max_ae": 3.088657855987549,
+      "mean_signed": 0.005970597505569458,
+      "top100_share": 0.47305943541023254,
+      "source": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/analysis/test_preds/L_s0_test.npz"
+    },
+    "C_s0": {
+      "mae": 0.07001481960061938,
+      "rmse": 0.15742775688015262,
+      "median_ae": 0.03735920786857605,
+      "p90_ae": 0.1410053610801697,
+      "p95_ae": 0.2220202565193176,
+      "max_ae": 2.19534969329834,
+      "mean_signed": 0.0030926531199365853,
+      "top100_share": 0.4781476729285451,
+      "source": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/analysis/test_preds/C_s0_test.npz"
+    }
+  },
+  "contrasts": {
+    "A_s0 - P3B_s0": {
+      "mean_delta_mae": 0.010664107099175453,
+      "ci95": [
+        0.004361678504664452,
+        0.0169681227193214
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_s0 - L_s0": {
+      "mean_delta_mae": 0.014262393032200634,
+      "ci95": [
+        0.007193039452750236,
+        0.020862226613191884
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_s0 - B_s0": {
+      "mean_delta_mae": -0.009176515745930374,
+      "ci95": [
+        -0.01544521671317052,
+        -0.0030462358655873726
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_s0 - A_SSL_s0": {
+      "mean_delta_mae": -0.004224499679170549,
+      "ci95": [
+        -0.015681783274374902,
+        0.003993220646772529
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_s0 - A_attn_s0": {
+      "mean_delta_mae": 0.000598536230623722,
+      "ci95": [
+        -0.003788480446860194,
+        0.005203918180288746
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "B_s0 - P3B_s0": {
+      "mean_delta_mae": 0.019840622845105828,
+      "ci95": [
+        0.012114679508842529,
+        0.02789995184529106
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "B_s0 - L_s0": {
+      "mean_delta_mae": 0.02343890877813101,
+      "ci95": [
+        0.014534709960455076,
+        0.031982159350859
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "B_s0 - A_s0": {
+      "mean_delta_mae": 0.009176515745930374,
+      "ci95": [
+        0.0030462358655873687,
+        0.015445216713170517
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "B_s0 - A_SSL_s0": {
+      "mean_delta_mae": 0.004952016066759825,
+      "ci95": [
+        -0.00618896829416044,
+        0.012968220150237901
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "B_s0 - A_attn_s0": {
+      "mean_delta_mae": 0.009775051976554096,
+      "ci95": [
+        0.0037201636504381897,
+        0.01616768939848989
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_SSL_s0 - P3B_s0": {
+      "mean_delta_mae": 0.014888606778346003,
+      "ci95": [
+        0.005715287629584781,
+        0.0261557539443951
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_SSL_s0 - L_s0": {
+      "mean_delta_mae": 0.018486892711371182,
+      "ci95": [
+        0.007952001494169237,
+        0.030787846294045445
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_SSL_s0 - A_s0": {
+      "mean_delta_mae": 0.004224499679170549,
+      "ci95": [
+        -0.0039932206467725335,
+        0.015681783274374896
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_SSL_s0 - B_s0": {
+      "mean_delta_mae": -0.004952016066759825,
+      "ci95": [
+        -0.012968220150237903,
+        0.006188968294160437
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_SSL_s0 - A_attn_s0": {
+      "mean_delta_mae": 0.004823035909794271,
+      "ci95": [
+        -0.0032398469608044254,
+        0.015590883765462785
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_attn_s0 - P3B_s0": {
+      "mean_delta_mae": 0.010065570868551732,
+      "ci95": [
+        0.003156163621461019,
+        0.016484393685963
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_attn_s0 - L_s0": {
+      "mean_delta_mae": 0.013663856801576913,
+      "ci95": [
+        0.005307848243042827,
+        0.020560443645901975
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_attn_s0 - A_s0": {
+      "mean_delta_mae": -0.000598536230623722,
+      "ci95": [
+        -0.005203918180288747,
+        0.0037884804468601937
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_attn_s0 - B_s0": {
+      "mean_delta_mae": -0.009775051976554096,
+      "ci95": [
+        -0.016167689398489893,
+        -0.003720163650438192
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    },
+    "A_attn_s0 - A_SSL_s0": {
+      "mean_delta_mae": -0.004823035909794271,
+      "ci95": [
+        -0.015590883765462787,
+        0.003239846960804424
+      ],
+      "n": 1000,
+      "note": "delta = AE(first) - AE(second); negative means first is better"
+    }
+  },
+  "subgroups": {
+    "signature_unseen": {
+      "n": 244,
+      "A_s0": 0.14605140418279916,
+      "B_s0": 0.14840311653049448,
+      "A_SSL_s0": 0.14855452578659856,
+      "A_attn_s0": 0.1474854649124728,
+      "P3B_s0": 0.12294652417767793,
+      "L_s0": 0.12921528834811427,
+      "C_s0": 0.1297622289619271
+    },
+    "signature_covered": {
+      "n": 756,
+      "A_s0": 0.05938148840081696,
+      "B_s0": 0.07076071847104541,
+      "A_SSL_s0": 0.06416156513076866,
+      "A_attn_s0": 0.05812692881263694,
+      "P3B_s0": 0.05273265721308432,
+      "L_s0": 0.04594976780751336,
+      "C_s0": 0.05073126419829254
+    },
+    "ordinary_y_gt_-3": {
+      "n": 923,
+      "A_s0": 0.0717373728855056,
+      "B_s0": 0.07902800992639777,
+      "A_SSL_s0": 0.07510534112714029,
+      "A_attn_s0": 0.07246014386928062,
+      "P3B_s0": 0.06323461853601402,
+      "L_s0": 0.06039191556656542,
+      "C_s0": 0.06440912292945326
+    },
+    "tail_y_le_-3": {
+      "n": 77,
+      "A_s0": 0.18591367114673962,
+      "B_s0": 0.21769623942189403,
+      "A_SSL_s0": 0.20040542429143732,
+      "A_attn_s0": 0.16947660817728413,
+      "P3B_s0": 0.14934140056758732,
+      "L_s0": 0.13668593183740393,
+      "C_s0": 0.13721037839914296
+    },
+    "rings_ge4": {
+      "n": 208,
+      "A_s0": 0.10398580408834207,
+      "B_s0": 0.11187526769040582,
+      "A_SSL_s0": 0.12803238212095144,
+      "A_attn_s0": 0.0957066664705053,
+      "P3B_s0": 0.09720613788634253,
+      "L_s0": 0.09021446163443705,
+      "C_s0": 0.09746106674608129
+    },
+    "rings_ge4_and_unseen": {
+      "n": 51,
+      "A_s0": 0.19216136309299983,
+      "B_s0": 0.18633591584569098,
+      "A_SSL_s0": 0.2652158852958796,
+      "A_attn_s0": 0.18789058065443648,
+      "P3B_s0": 0.20051964872754088,
+      "L_s0": 0.22211144744035075,
+      "C_s0": 0.21428738848543635
+    },
+    "P3B_test_worst100": {
+      "n": 100,
+      "A_s0": 0.2919861962692812,
+      "B_s0": 0.3117664073361084,
+      "A_SSL_s0": 0.35154827672522515,
+      "A_attn_s0": 0.28075907949823886,
+      "P3B_s0": 0.3303296319814399,
+      "L_s0": 0.270850152480416,
+      "C_s0": 0.3111006111325696
+    }
+  }
+}

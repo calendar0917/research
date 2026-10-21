@@ -4,6 +4,9 @@
 **Track:** `tracks/structural-sufficiency/`
 **Status:** declared before the first formal seed-0 run; timing/prep numbers are
 filled in from measured runs (timing is engineering input, not a stop rule).
+**Results:** see `REPORT.md` (all four arms finished, one follow-up used, one
+frozen test read; `analysis/` holds the tables, curves, freeze file and test
+reporting).
 **Data:** official PyG ZINC `subset=True`, train 10,000 / valid 1,000 / test 1,000,
 raw-`y` MAE. Valid drives every development decision; test is evaluated once at
 the end on the frozen best-valid checkpoints of this round (exposed benchmark,

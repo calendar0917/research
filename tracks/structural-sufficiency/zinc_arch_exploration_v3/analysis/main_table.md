@@ -5,3 +5,5 @@
 | C_s0 | 494,193 | 0.082367432 | 482 | 0.004906 | 0.082965206 | 47,400 | P3 masked SSL encoders | completed | 0.3999 |
 | A_s0 | 488,601 | 0.082189201 | 632 | 0.011543 | 0.083806124 | 188,400 | P3 masked SSL encoders | completed | 2.7151 |
 | B_s0 | 448,623 | 0.101720000 | 332 | nan | n/a (truncated) | 128,269 | P3 masked SSL encoders | CANCELLED_BY_BUDGET | 2.3005 |
+| A_SSL_s0 | 488,601 | 0.079876146 | 439 | 0.017018 | 0.084783518 | 141,300 | P3 masked SSL encoders + native A-SSL pretrain | completed | 1.8394 |
+| A_attn_s0 | 488,889 | 0.082637432 | 519 | 0.012976 | 0.085459559 | 141,300 | P3 masked SSL encoders | completed | 2.0216 |

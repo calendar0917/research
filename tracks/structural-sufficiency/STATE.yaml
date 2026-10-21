@@ -917,3 +917,53 @@ side_round_zinc_exact_structure_residual_v1:
     direction is revisited, it needs a new pre-registration and a different
     mechanism (e.g. a residual that cannot become the main predictor), not a
     stronger version of the same prior.
+
+round_zinc_arch_exploration_v3:
+  status: COMPLETE_NEGATIVE
+  protocol: zinc-arch-exploration-v3
+  protocol_file: tracks/structural-sufficiency/zinc_arch_exploration_v3/DESIGN.md
+  question: >-
+    Can a static, explicitly-structured trunk with no recursive local
+    message passing reach raw-y test MAE in [0.050, 0.060) on official ZINC
+    subset under 500k parameters?
+  new_mechanisms:
+    A: full-graph pair composition X_ij (label-free pair objects) + one association contraction U_ij = sum_k phi(X_ik) psi(X_kj) chi(a_k) + per-pair nonlinear + count-aware diagonal/off-diagonal reader
+    B: heat-kernel/typed static operator library with pair traces tr(D_u K_t D_v K_s) and 84 declared three-point traces
+    A_SSL: native fresh-mask masked atom/bond reconstruction of the new composition trunk (176 temporary heads excluded, 0.37 GPU-h)
+    A_attn: follow-up - content-based pooling of the off-diagonal pair blocks (+288 params)
+  seed0_best_valid:
+    A_s0: 0.082189201 (ep 632, 1,200 ep, 188,400 updates, 488,601 params, 2.72 GPU-h)
+    B_s0: 0.101720000 (ep 332, CANCELLED_BY_BUDGET at ep 817, 448,623 params, 2.30 GPU-h)
+    A_SSL_s0: 0.079876146 (ep 439, 900 ep, 141,300 updates, 2.78 GPU-h incl. 0.37 pretrain)
+    A_attn_s0: 0.082637432 (ep 519, 900 ep, 141,300 updates, 488,889 params, 2.02 GPU-h)
+  test_mae_seed0:
+    P3B_s0: 0.069864841
+    L_s0: 0.066266555
+    C_s0: 0.070014820
+    A_s0: 0.080528948
+    B_s0: 0.089705464
+    A_SSL_s0: 0.084753448
+    A_attn_s0: 0.079930412
+  paired_test_contrasts: "every new arm significantly worse than P3B and L (bootstrap CI excludes 0); differences among new arms not significant"
+  key_observations:
+    - "valid ranking is not test ranking: A_SSL had the best valid (0.079876) and the worst new-arm test (0.084753); its best-valid epoch was a 0.008 noise dip that test reverted to its own local level"
+    - "reused references enjoy a +0.006..+0.012 valid->test bonus, new trunks +0.002 or less, so a new trunk needs ~0.01 valid advantage merely to tie on test"
+    - "the pooled-pair trunk keeps a real tail advantage on test (P3B worst-100 0.3303 -> A_attn 0.2808; rings>=4 & unseen 0.2005 -> 0.1879) while losing 0.0101 on the mean"
+    - "top-100 molecules carry ~47% of total absolute error for every model; bulk-only improvements cannot reach 0.05x"
+    - "content-based pooling is not the bottleneck (+0.0004 valid, +0.0006 test); multi-point spectral invariants are not a usable readout (0.0897 test)"
+    - "native SSL on the new trunk moves valid (-0.0023) but not test (+0.0042 vs A)"
+  descriptive_not_a_candidate: "unfitted equal-weight average of frozen A and P3B valid predictions = 0.072465 valid (P3B alone 0.076224); no test blend was read"
+  zero_five_x_evidence: NONE
+  next_action: >-
+    Do not buy another pair/spectral variant. The only lead supported on valid and
+    test is complementarity (bulk from the P3 local trunk, tail from the pooled
+    pair contraction; error correlation 0.745). If the line continues, the next
+    pre-registered round must be a combination experiment with its decision line
+    fixed before the run (valid mean < 0.0725 and valid worst-100 < 0.29 => buy),
+    and it should first run the two-hour prediction-average sanity check. Otherwise
+    close the performance line at the measurement contribution.
+  non_claims:
+    - "0.079930 is a seed-0 test MAE of an already-exposed split, not a blind confirmation and not a SOTA claim"
+    - "no seed 1/2 confirmation was run for A, B, A_SSL or A_attn"
+    - "B is reported as truncated at 817/1,200 epochs, not as a converged arm"
+    - "the 0.072465 blend number is valid-only, descriptive, and was not scored on test"
