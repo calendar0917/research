@@ -1,0 +1,132 @@
+{
+  "protocol": "zinc-directed-bond-transformer-v1-test-reporting",
+  "freeze": {
+    "protocol": "zinc-directed-bond-transformer-v1-test-reporting",
+    "checkpoint": "tracks/structural-sufficiency/zinc_directed_bond_transformer_v1/runs/dbt_s0/best.pt",
+    "checkpoint_sha256": "5810aaf7b7efa9855e52ccfe920338924d50ffce1d6b9dae8573a09d8933e000",
+    "best_valid_epoch": 949,
+    "best_valid_mae": 0.0777684002322494,
+    "valid_mae_recomputed": 0.07776839767670025,
+    "parameter_count": 452523,
+    "recipe": {
+      "optimizer": "adamw",
+      "lr": 0.0003,
+      "min_lr": 3e-06,
+      "weight_decay": 0.0001,
+      "warmup_updates": 1000,
+      "epochs": 1500,
+      "batch_size": 64,
+      "valid_batch_size": 256,
+      "eval_train_batch_size": 256,
+      "dropout": 0.05,
+      "grad_clip": 5.0,
+      "loss": "raw-y L1",
+      "seed": 0,
+      "steps_per_epoch": 157,
+      "updates": 235500,
+      "actual_global_steps": 235500,
+      "valid_every_epoch": true,
+      "selection": "argmin(valid_mae), strict <, ties keep the earlier epoch"
+    },
+    "git_commit": "971f7f5db93d5a5c99f3aa9912e7d582823a08a2",
+    "selection": "argmin(valid_mae) over all 1,500 epochs, strict <",
+    "test_loaded_before_this_file": false,
+    "frozen_at": "2026-10-22T02:28:12+0800"
+  },
+  "valid_object_cache_vs_ad_valid": {
+    "ad_valid_present": true,
+    "fields_identical": {
+      "atom_feat": true,
+      "bond_feat": true,
+      "bond_index": true,
+      "junc_feat": true,
+      "junc_index": true,
+      "junc_bond": true,
+      "global_feat": true,
+      "labels": true
+    },
+    "ad_valid_sha256": "d8a9ab09cd8ff0d88a1ff5eea74f95785f6ef11ce4aa73d9f3461f790bd56a22"
+  },
+  "valid": {
+    "mae": 0.07776839767670025,
+    "rmse": 0.2994322653934628,
+    "median_ae": 0.036679744720458984,
+    "p90_ae": 0.14086081087589267,
+    "p95_ae": 0.20253755450248634,
+    "max_ae": 7.126239776611328,
+    "mean_signed": -0.00202178355777869,
+    "n": 1000
+  },
+  "test": {
+    "mae": 0.06940149435307831,
+    "rmse": 0.15339586976570457,
+    "median_ae": 0.03602290153503418,
+    "p90_ae": 0.1420248031616211,
+    "p95_ae": 0.22349692918360226,
+    "max_ae": 2.2107386589050293,
+    "mean_signed": -0.005412039551883936,
+    "n": 1000
+  },
+  "test_label_sha256": "66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768",
+  "object_cache": {
+    "valid": {
+      "path": "tracks/structural-sufficiency/zinc_directed_bond_transformer_v1/cache/dbt-objects-v1_valid.pt",
+      "sha256": "5e29c22d8753f6e3044a8f2ca0e32d47ba942849257a2aa83efe4d3e94d6a1cf",
+      "meta": {
+        "object_version": "dbt-objects-v1",
+        "split": "valid",
+        "n_molecules": 1000,
+        "object_source": {
+          "source": "frozen_p3_object_cache",
+          "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt",
+          "sha256": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c"
+        },
+        "labels_sha256": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f",
+        "seconds": 1.0978711498901248,
+        "created": "2026-10-22T02:28:11+0800"
+      }
+    },
+    "test": {
+      "path": "tracks/structural-sufficiency/zinc_directed_bond_transformer_v1/cache/dbt-objects-v1_test.pt",
+      "sha256": "111864a6b24f4f29a81414b0ca47120d8ed20a6eda8cbf28f4952a5ff972f2c4",
+      "meta": {
+        "object_version": "dbt-objects-v1",
+        "split": "test",
+        "n_molecules": 1000,
+        "object_source": {
+          "source": "rebuilt_from_official_pyg",
+          "path": null,
+          "sha256": null
+        },
+        "labels_sha256": "66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768",
+        "seconds": 1.5442252019420266,
+        "created": "2026-10-22T02:28:14+0800"
+      }
+    }
+  },
+  "test_cache_label_sha256": "66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768",
+  "test_relation_cache": {
+    "meta": {
+      "path_version": "dbt-path-v1-L12",
+      "L_MAX": 12,
+      "path_semantics": "exact number of simple paths with exactly l edges (1<=l<=L_MAX)",
+      "dist_semantics": "0..12 exact; 13=connected longer; 14=unreachable",
+      "max_path_count": 9,
+      "n_atoms_total": 23117,
+      "n_bonds_total": 24860,
+      "n_dir_total": 49720,
+      "n_junc_total": 34595,
+      "src_incidence": 69190,
+      "dst_incidence": 69190,
+      "object_source": {
+        "source": "rebuilt_from_official_pyg",
+        "path": null,
+        "sha256": null
+      },
+      "seconds": 3.913668046006933,
+      "created": "2026-10-22T02:24:52+0800"
+    },
+    "sha256": "235de3e5311fe2959c5c70bc1441a41d587c02f5e54cd74071495c3ee336c04b"
+  },
+  "note": "the official ZINC test split is already spent in this repository; these numbers are descriptive reporting of one frozen checkpoint, not a pristine blind evaluation"
+}

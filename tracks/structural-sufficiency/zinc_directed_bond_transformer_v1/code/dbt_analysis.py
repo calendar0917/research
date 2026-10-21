@@ -89,6 +89,94 @@ def plot(curve: list[Mapping[str, Any]], out: Path) -> None:
     plt.close(fig)
 
 
+#: frozen official-test predictions of the two primary references (the same
+#: 1,000 rows); used only for a descriptive paired bootstrap.
+REF_PREDS = {
+    "P3B_s0": _SSUF / "zinc_dual_channel_composer_v1/analysis/test_preds/P3B_s0_test.npz",
+    "L_s0": _SSUF / "zinc_dual_channel_composer_v1/analysis/test_preds/L_s0_test.npz",
+}
+REF_VALID = {
+    "P3B_s0": _SSUF / "zinc_recipe_trunk_v2/runs/xBssl_P3N_s0/predictions/valid_best.npz",
+    "L_s0": _SSUF / "zinc_dual_channel_composer_v1/runs/L_s0/predictions/valid_best.npz",
+}
+
+
+def paired_test_contrasts(run: Path) -> dict[str, Any]:
+    path = run / "predictions" / "test_best.npz"
+    if not path.exists():
+        return {"available": False}
+    mine = np.load(path)
+    pred = np.asarray(mine["pred"], np.float64)
+    y = np.asarray(mine["y"], np.float64)
+    out: dict[str, Any] = {"available": True, "n": int(len(y)), "rows": {}}
+    for name, ref_path in REF_PREDS.items():
+        if not ref_path.exists():
+            continue
+        ref = np.load(ref_path)
+        if not np.array_equal(np.asarray(ref["row"]), np.asarray(mine["row"])):
+            out["rows"][name] = {"error": "row mismatch"}
+            continue
+        rp = np.asarray(ref["pred"], np.float64)
+        ry = np.asarray(ref["y"], np.float64)
+        ae_mine, ae_ref = np.abs(pred - y), np.abs(rp - ry)
+        delta = ae_mine - ae_ref
+        rng = np.random.default_rng(20261022)
+        idx = rng.integers(0, len(y), size=(10000, len(y)))
+        boot = delta[idx].mean(1)
+        out["rows"][name] = {
+            "mae_mine": float(ae_mine.mean()),
+            "mae_ref": float(ae_ref.mean()),
+            "mean_delta": float(delta.mean()),
+            "ci95": [float(np.quantile(boot, 0.025)), float(np.quantile(boot, 0.975))],
+            "my_better_fraction": float((delta < 0).mean()),
+            "resamples": 10000,
+            "seed": 20261022,
+        }
+    return out
+
+
+def paired_valid_contrasts(run: Path) -> dict[str, Any]:
+    path = run / "predictions" / "valid_best.npz"
+    if not path.exists():
+        return {"available": False}
+    import dbt_data as BD
+
+    mine = np.load(path)
+    y = np.asarray(BD.load_object_cache("valid")["labels"], np.float64)
+    pred = np.asarray(mine["pred"], np.float64)
+    ae = np.abs(pred - y)
+    worst = int(ae.argmax())
+    out: dict[str, Any] = {
+        "available": True, "n": int(len(y)),
+        "mae": float(ae.mean()),
+        "worst_ae": float(ae[worst]), "worst_row": worst,
+        "worst_share_of_mae": float(ae[worst] / ae.sum()),
+        "mae_excluding_worst": float(np.delete(ae, worst).mean()),
+        "n_ae_gt_1": int((ae > 1).sum()),
+        "rows": {},
+    }
+    for name, ref_path in REF_VALID.items():
+        if not ref_path.exists():
+            continue
+        ref = np.load(ref_path)
+        rp = np.asarray(ref["pred"], np.float64)
+        ae_ref = np.abs(rp - y)
+        delta = ae - ae_ref
+        rng = np.random.default_rng(20261022)
+        idx = rng.integers(0, len(y), size=(10000, len(y)))
+        boot = delta[idx].mean(1)
+        out["rows"][name] = {
+            "mae_ref": float(ae_ref.mean()),
+            "mean_delta": float(delta.mean()),
+            "ci95": [float(np.quantile(boot, 0.025)), float(np.quantile(boot, 0.975))],
+            "my_better_fraction": float((delta < 0).mean()),
+            "ref_ae_at_worst_row": float(ae_ref[worst]),
+            "mean_delta_excluding_worst": float(np.delete(delta, worst).mean()),
+            "resamples": 10000, "seed": 20261022,
+        }
+    return out
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--run", default=str(_EXP / "runs" / "dbt_s0"))
@@ -143,6 +231,10 @@ def main(argv=None) -> int:
         "epochs_run": int(ep[-1]),
         "mean_epoch_seconds": float(np.mean([c["seconds"] for c in curve])),
     }
+    contrasts = paired_test_contrasts(run)
+    valid_contrasts = paired_valid_contrasts(run)
+    C.write_json(ANALYSIS / "test_contrasts.json", contrasts)
+    C.write_json(ANALYSIS / "valid_contrasts.json", valid_contrasts)
     C.write_json(ANALYSIS / "observations.json", observations)
     C.write_json(ANALYSIS / "main_table.json", {"rows": rows, "observations": observations})
 
@@ -174,6 +266,45 @@ def main(argv=None) -> int:
         f"mean epoch {observations['mean_epoch_seconds']:.2f}s.",
         "",
     ]
+    if test is not None:
+        lines += [
+            f"Test − valid for DBT: {test['test']['mae'] - test['valid']['mae']:+.6f} "
+            f"(test RMSE {test['test']['rmse']:.4f}, median AE {test['test']['median_ae']:.4f}, "
+            f"p95 AE {test['test']['p95_ae']:.4f}).",
+            "",
+        ]
+    if valid_contrasts.get("available"):
+        lines += [
+            f"Valid worst molecule: row {valid_contrasts['worst_row']} with AE "
+            f"{valid_contrasts['worst_ae']:.4f} = "
+            f"{100*valid_contrasts['worst_share_of_mae']:.1f} % of the valid MAE "
+            f"(valid MAE without it {valid_contrasts['mae_excluding_worst']:.9f}; "
+            f"{valid_contrasts['n_ae_gt_1']} molecules have AE > 1).",
+            "",
+        ]
+        if valid_contrasts["rows"]:
+            lines += ["Descriptive paired valid bootstrap (same resamples):", "",
+                      "| ref | MAE ref | mean Δ | 95 % CI | DBT better on | ref AE at worst row | mean Δ without worst |",
+                      "|---|---:|---:|---|---:|---:|---:|"]
+            for name, r in valid_contrasts["rows"].items():
+                lines.append(
+                    f"| {name} | {r['mae_ref']:.9f} | {r['mean_delta']:+.6f} | "
+                    f"[{r['ci95'][0]:+.6f}, {r['ci95'][1]:+.6f}] | "
+                    f"{r['my_better_fraction']*100:.1f} % | {r['ref_ae_at_worst_row']:.4f} | "
+                    f"{r['mean_delta_excluding_worst']:+.6f} |")
+            lines += ["", "Descriptive only; the worst molecule is not used for selection or as a headline.", ""]
+    if contrasts.get("available"):
+        lines += ["Descriptive paired test bootstrap (10,000 resamples, Δ = AE(DBT) − AE(ref)):", "",
+                  "| ref | MAE ref | MAE DBT | mean Δ | 95 % CI | DBT better on |",
+                  "|---|---:|---:|---:|---|---:|"]
+        for name, r in contrasts["rows"].items():
+            if "error" in r:
+                continue
+            lines.append(
+                f"| {name} | {r['mae_ref']:.9f} | {r['mae_mine']:.9f} | {r['mean_delta']:+.6f} | "
+                f"[{r['ci95'][0]:+.6f}, {r['ci95'][1]:+.6f}] | {r['my_better_fraction']*100:.1f} % |"
+            )
+        lines += ["", "Single seed; the intervals are descriptive, not confirmatory.", ""]
     (ANALYSIS / "main_table.md").write_text("\n".join(lines), encoding="utf-8")
     C.log("\n".join(lines))
     return 0

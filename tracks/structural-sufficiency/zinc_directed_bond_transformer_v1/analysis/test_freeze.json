@@ -1,0 +1,33 @@
+{
+  "protocol": "zinc-directed-bond-transformer-v1-test-reporting",
+  "checkpoint": "tracks/structural-sufficiency/zinc_directed_bond_transformer_v1/runs/dbt_s0/best.pt",
+  "checkpoint_sha256": "5810aaf7b7efa9855e52ccfe920338924d50ffce1d6b9dae8573a09d8933e000",
+  "best_valid_epoch": 949,
+  "best_valid_mae": 0.0777684002322494,
+  "valid_mae_recomputed": 0.07776839767670025,
+  "parameter_count": 452523,
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.0003,
+    "min_lr": 3e-06,
+    "weight_decay": 0.0001,
+    "warmup_updates": 1000,
+    "epochs": 1500,
+    "batch_size": 64,
+    "valid_batch_size": 256,
+    "eval_train_batch_size": 256,
+    "dropout": 0.05,
+    "grad_clip": 5.0,
+    "loss": "raw-y L1",
+    "seed": 0,
+    "steps_per_epoch": 157,
+    "updates": 235500,
+    "actual_global_steps": 235500,
+    "valid_every_epoch": true,
+    "selection": "argmin(valid_mae), strict <, ties keep the earlier epoch"
+  },
+  "git_commit": "971f7f5db93d5a5c99f3aa9912e7d582823a08a2",
+  "selection": "argmin(valid_mae) over all 1,500 epochs, strict <",
+  "test_loaded_before_this_file": false,
+  "frozen_at": "2026-10-22T02:28:12+0800"
+}
