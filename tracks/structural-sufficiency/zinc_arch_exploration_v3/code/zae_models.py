@@ -250,7 +250,8 @@ class PairComposition(nn.Module):
 # ---------------------------------------------------------------------------
 
 
-def build_kernels(adj_dense: torch.Tensor, adj_typed: torch.Tensor, node_mask: torch.Tensor):
+def build_kernels(adj_dense: torch.Tensor, adj_typed: torch.Tensor, node_mask: torch.Tensor,
+                  cached: torch.Tensor | None = None):
     """Static operator library for one batch (no grad; deterministic).
 
     Heat kernels are full matrix functions of the symmetric normalized
@@ -262,6 +263,10 @@ def build_kernels(adj_dense: torch.Tensor, adj_typed: torch.Tensor, node_mask: t
     B, D, _ = adj_dense.shape
     mask = node_mask.to(adj_dense.dtype)
     eye = torch.eye(D, device=adj_dense.device, dtype=adj_dense.dtype).unsqueeze(0)
+    if cached is not None:
+        with torch.no_grad():
+            pair = mask.unsqueeze(2) * mask.unsqueeze(1)
+            return [cached[..., i] * pair for i in range(cached.shape[-1])]
     with torch.no_grad():
         deg = adj_dense.sum(-1).clamp(min=1.0)
         dinv = deg.rsqrt() * mask
@@ -324,7 +329,8 @@ class SpectralJoint(nn.Module):
         s = self.endpoint(a, w, batch)
         B, D = int(batch["n_graphs"]), int(batch["Nmax"])
         R = self.n_chan
-        ops = build_kernels(batch["adj_dense"], batch["adj_typed"], batch["node_mask"])
+        ops = build_kernels(batch["adj_dense"], batch["adj_typed"], batch["node_mask"],
+                            batch.get("kern_dense"))
         K = len(ops)
         uv = torch.tanh(self.ch_u(s))
         vv = torch.tanh(self.ch_v(s))

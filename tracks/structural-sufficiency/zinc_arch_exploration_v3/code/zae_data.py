@@ -50,7 +50,7 @@ for _p in (str(_HERE), str(_V1), str(_REPO / "tracks/structure-contribution/code
 import ad_common as C  # noqa: E402
 import ad_data as D  # noqa: E402
 
-PAIR_FEATURE_VERSION = "zae-v3-pair-struct-v1"
+PAIR_FEATURE_VERSION = "zae-v3-pair-struct-v2-kernels"
 PAIR_CACHE = _EXP / "cache"
 
 N_ATOM_TYPES = D.N_ATOM_TYPES          # 21 raw ZINC atom classes
@@ -135,6 +135,40 @@ def build_pair_mol(n_atoms: int, bond_index: np.ndarray, bond_type: np.ndarray) 
     }
 
 
+HEAT_SCALES = (0.5, 1.0, 2.0)
+TYPED_OPS = (1, 2, 3)
+
+
+def build_kernel_mol(n_atoms: int, bond_index: np.ndarray, bond_type: np.ndarray) -> np.ndarray:
+    """Static operator library for one molecule: [n*n, 3 + 3] float32.
+
+    Columns 0..2 are ``exp(-t L)`` for the symmetric normalized Laplacian at the
+    declared scales; columns 3..5 are the symmetric normalized typed adjacencies
+    for raw bond types 1..3.  A full eigendecomposition is used, so the heat
+    kernels are complete matrix functions (no eigenvector selection).
+    """
+    n = int(n_atoms)
+    adj = np.zeros((n, n), dtype=np.float64)
+    typed = np.zeros((n, n, len(TYPED_OPS)), dtype=np.float64)
+    for (u, v), bt in zip(bond_index, bond_type):
+        u, v, bt = int(u), int(v), int(bt)
+        adj[u, v] = adj[v, u] = 1.0
+        if bt in TYPED_OPS:
+            typed[u, v, TYPED_OPS.index(bt)] = 1.0
+            typed[v, u, TYPED_OPS.index(bt)] = 1.0
+    deg = adj.sum(1)
+    dinv = np.where(deg > 0, 1.0 / np.sqrt(np.maximum(deg, 1.0)), 0.0)
+    ahat = adj * dinv[:, None] * dinv[None, :]
+    lap = np.eye(n) - ahat
+    lam, q = np.linalg.eigh(lap)
+    ops = []
+    for t in HEAT_SCALES:
+        ops.append((q * np.exp(-t * lam)[None, :]) @ q.T)
+    for k in range(len(TYPED_OPS)):
+        ops.append(typed[..., k] * dinv[:, None] * dinv[None, :])
+    return np.stack([o.astype(np.float32).reshape(-1) for o in ops], axis=1)
+
+
 def build_pair_split(split: str) -> dict:
     """Build the whole-split flat pair cache."""
     t0 = time.perf_counter()
@@ -143,6 +177,7 @@ def build_pair_split(split: str) -> dict:
     pair_ptr = np.zeros(n_mol + 1, dtype=np.int64)
     keys = ("dist", "common", "ring", "block", "bond")
     chunks: dict[str, list[np.ndarray]] = {k: [] for k in keys}
+    kern_chunks: list[np.ndarray] = []
     n_atoms = np.zeros(n_mol, dtype=np.int16)
     for i, obj in enumerate(objs):
         n = int(obj.n_atoms)
@@ -151,6 +186,8 @@ def build_pair_split(split: str) -> dict:
                              np.asarray(obj.bond_type, dtype=np.int64))
         for k in keys:
             chunks[k].append(mol[k])
+        kern_chunks.append(build_kernel_mol(n, np.asarray(obj.bond_index, dtype=np.int64),
+                                            np.asarray(obj.bond_type, dtype=np.int64)))
         pair_ptr[i + 1] = pair_ptr[i] + n * n
         if (i + 1) % 2000 == 0:
             C.log(f"[zae prep {split}] {i + 1}/{n_mol} {time.perf_counter() - t0:.1f}s")
@@ -164,11 +201,13 @@ def build_pair_split(split: str) -> dict:
         "ring": np.concatenate(chunks["ring"]),
         "block": np.concatenate(chunks["block"]),
         "bond": np.concatenate(chunks["bond"]),
+        "kern": np.concatenate(kern_chunks, axis=0).astype(np.float32),
         "meta": {
             "feature_version": PAIR_FEATURE_VERSION,
             "object_source": obj_source,
             "dist_buckets": int(DIST_BUCKETS),
             "common_cap": int(COMMON_CAP),
+            "kernels": ["heat0.5", "heat1", "heat2", "type1", "type2", "type3"],
             "label_blind": True,
             "prep_seconds": float(time.perf_counter() - t0),
             "created": C.utcnow(),
@@ -274,6 +313,11 @@ def collate_pair(cache: Mapping[str, Any], pair_cache: Mapping[str, Any],
         adj_typed[bond_batch[typed_ok], src[typed_ok], dst[typed_ok], bt[typed_ok] - 1] = 1.0
         adj_typed[bond_batch[typed_ok], dst[typed_ok], src[typed_ok], bt[typed_ok] - 1] = 1.0
     adj_dense = adj_typed.sum(-1)
+    kern_dense = np.zeros((B, Nmax, Nmax, 6), dtype=np.float32)
+    if "kern" in pair_cache and not pair_cache.get("masked_table", False):
+        kern_src = np.asarray(pair_cache["kern"])
+        for gi, (s_, n_) in enumerate(zip(p_starts, atom_counts)):
+            kern_dense[gi, :n_, :n_, :] = kern_src[s_:s_ + n_ * n_].reshape(n_, n_, 6)
 
     node_mask = np.arange(Nmax).reshape(1, Nmax) < atom_counts.reshape(B, 1)
 
@@ -315,6 +359,7 @@ def collate_pair(cache: Mapping[str, Any], pair_cache: Mapping[str, Any],
         "atom_slot": torch.from_numpy(atom_batch.astype(np.int64) * Nmax + atom_local),
         "adj_dense": torch.from_numpy(adj_dense),
         "adj_typed": torch.from_numpy(adj_typed),
+        "kern_dense": torch.from_numpy(kern_dense),
         "bond_dense_ij": torch.from_numpy(
             bond_batch.astype(np.int64) * (Nmax * Nmax) + src * Nmax + dst
         ),

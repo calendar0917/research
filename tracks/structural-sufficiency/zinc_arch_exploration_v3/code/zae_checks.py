@@ -165,7 +165,10 @@ def check_kernels(valid_cache, pair_valid) -> dict:
     b = ZD.collate_pair(valid_cache, pair_valid, rows)
     ops = ZM.build_kernels(b["adj_dense"], b["adj_typed"], b["node_mask"])
     mask = b["node_mask"].float()
-    out = {"n_ops": len(ops), "names": list(ZM.KERNEL_NAMES), "per_op": {}}
+    cached = ZM.build_kernels(b["adj_dense"], b["adj_typed"], b["node_mask"], b.get("kern_dense"))
+    cache_diff = max(float((x - y).abs().max()) for x, y in zip(ops, cached))
+    out = {"n_ops": len(ops), "names": list(ZM.KERNEL_NAMES), "per_op": {},
+           "max_abs_diff_on_the_fly_vs_cached": cache_diff}
     for name, k in zip(ZM.KERNEL_NAMES, ops):
         pad_leak = float((k * (1.0 - mask.unsqueeze(2) * mask.unsqueeze(1))).abs().max())
         sym = float((k - k.transpose(1, 2)).abs().max())
