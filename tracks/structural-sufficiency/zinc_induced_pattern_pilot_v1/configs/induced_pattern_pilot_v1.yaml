@@ -1,0 +1,92 @@
+protocol_id: zinc-induced-pattern-pilot-v1
+status: preregistered
+base_commit: "46db232"
+track: tracks/structural-sufficiency/zinc_induced_pattern_pilot_v1
+
+data:
+  dataset: official PyG ZINC subset
+  train: 10000
+  valid: 1000
+  test: never_read
+  target: raw_y
+  loss: L1
+  normalization: train_only
+  path_cache:
+    train: cache/path_train.pt
+    valid: cache/path_valid.pt
+    test: absent
+
+objects:
+  lengths_edges: [2, 3, 4, 5]
+  nodes_per_path: [3, 4, 5, 6]
+  enumeration: all oriented simple paths from each root, no sampling, no truncation
+  root_position: 0
+  atom_category: raw 21-way atom type
+  pair_type: {0: no_edge, 1: single, 2: double, 3: triple}
+  masks: explicit node and pair masks; padding distinct from no-edge
+  pattern_id: content-addressed, byte-sorted, no learned id embedding
+
+model:
+  J: full typed induced adjacency
+  Q: non-consecutive pair types set to no-edge
+  shared_phi:
+    atom_embedding: 12
+    position_embedding: 4
+    pair_embedding: 6
+    pair_position_embedding: 4
+    phi_hidden: 80
+    phi_out: 32
+    input_dim: 268
+  root_statistics: [weighted_mean_phi, weighted_mean_phi2, log1p_count, existence_mask]
+  lengths: 4
+  projection: 264 -> 128 -> 96
+  projection_last_layer_init: zero
+  p3_subtotal_params: 413505
+  path_branch_params: 70776
+  total_params: 484281
+  parameter_cap: 500000
+  ssl_encoder: tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt
+  ssl_sha256: 006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97
+
+recipe:
+  name: B
+  optimizer: adamw
+  batch_size: 128
+  steps_per_epoch: 79
+  epochs: 600
+  warmup_steps: 500
+  scheduler: per_step_cosine
+  lr: 0.001
+  min_lr: 0.00001
+  weight_decay: 0.00001
+  grad_clip: 5.0
+  valid_batch_size: 256
+  valid_every_epoch: true
+  selector: strict_best_valid_earlier_epoch_on_tie
+
+reference:
+  model: P3 x recipe B seed 0
+  run: tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/xBssl_P3N_s0
+  best_valid: 0.07622375113883754
+  best_epoch: 377
+  initialization: seed-0 train-only masked SSL
+
+budget:
+  cap_a100_hours: 1.7558
+  includes: [timing, smoke, formal_training]
+  gpu_hours_accounting: sum_over_both_gpus
+  timing_target_hours: 0.04
+  branches:
+    a: two_600ep_runs_plus_15pct_margin_fit
+    b: one_600ep_run_plus_15pct_margin_fits
+    c: even_one_run_does_not_fit_stop_after_timing
+  decision: decided_after_timing_recorded_in_analysis/budget_ledger.json
+
+stop_rules:
+  decision_split: valid_only
+  test_access: forbidden
+  clear_single_seed_gain_scale: 0.003_to_0.005
+  no_grid_search: true
+  no_auxiliary: true
+  no_ssl_retraining: true
+  no_horizon_compression: true

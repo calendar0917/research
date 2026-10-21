@@ -268,13 +268,14 @@ def collate(cache: Mapping[str, Any], rows: Sequence[int], candidate: str, *,
 
 @torch.no_grad()
 def evaluate(model: torch.nn.Module, cache: Mapping[str, Any], rows: np.ndarray, *, candidate: str,
-             device, batch_size: int) -> tuple[np.ndarray, float]:
+             device, batch_size: int, collate_fn=None) -> tuple[np.ndarray, float]:
     model.eval()
+    collate_ = collate if collate_fn is None else collate_fn
     out = []
     with C.isolated_rng():
         for start in range(0, len(rows), int(batch_size)):
             chunk = rows[start:start + int(batch_size)]
-            batch = _to_device(collate(cache, chunk, candidate, valid=True), device)
+            batch = _to_device(collate_(cache, chunk, candidate, valid=True), device)
             pred = model(batch)
             out.append(pred.detach().float().cpu().numpy().reshape(-1))
     pred = np.concatenate(out, 0) if out else np.zeros(0, dtype=np.float32)
@@ -311,7 +312,7 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
           dropout: float | None = None,
           recipe_variant: str | None = None,
           model_builder=None, out_dir: Path | None = None,
-          aux: dict | None = None) -> dict:
+          aux: dict | None = None, collate_fn=None) -> dict:
     """Train one candidate/seed.
 
     ``recipe_variant`` selects a named override (see ``RECIPE_VARIANTS``);
@@ -334,6 +335,7 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
         recipe["dropout"] = float(dropout)
     n_epochs = int(recipe["epochs"] if epochs is None else epochs)
     builder = M.build_model if model_builder is None else model_builder
+    collate_ = collate if collate_fn is None else collate_fn
     out = run_dir(candidate, seed, tag) if out_dir is None else Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     if (out / "train.json").exists() and not force:
@@ -384,7 +386,7 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
         t_ep = time.perf_counter()
         for start in range(0, len(order), batch_size):
             rows = order[start:start + batch_size]
-            batch = _to_device(collate(train_cache, rows, candidate, valid=False, walk_cols=walk_cols), device)
+            batch = _to_device(collate_(train_cache, rows, candidate, valid=False, walk_cols=walk_cols), device)
             target = torch.as_tensor(y_train[rows], dtype=torch.float32, device=device)
             pred = model(batch)
             loss = F.l1_loss(pred.view(-1), target.view(-1))
@@ -421,7 +423,7 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
         online = total_err / max(n_mol, 1)
         _, valid_mae = evaluate(
             model, valid_cache, rows_valid, candidate=candidate, device=device,
-            batch_size=int(recipe["valid_batch_size"]),
+            batch_size=int(recipe["valid_batch_size"]), collate_fn=collate_fn,
         )
         sec = time.perf_counter() - t_ep
         entry = {
@@ -468,19 +470,19 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
     C.load_state(best_model, best_state, device)
     best_pred_valid, best_valid = evaluate(
         best_model, valid_cache, rows_valid, candidate=candidate, device=device,
-        batch_size=int(recipe["valid_batch_size"]),
+        batch_size=int(recipe["valid_batch_size"]), collate_fn=collate_fn,
     )
     _, best_train = evaluate(
         best_model, train_cache, rows_train, candidate=candidate, device=device,
-        batch_size=eval_batch,
+        batch_size=eval_batch, collate_fn=collate_fn,
     )
     _, final_valid = evaluate(
         model, valid_cache, rows_valid, candidate=candidate, device=device,
-        batch_size=int(recipe["valid_batch_size"]),
+        batch_size=int(recipe["valid_batch_size"]), collate_fn=collate_fn,
     )
     _, final_train = evaluate(
         model, train_cache, rows_train, candidate=candidate, device=device,
-        batch_size=eval_batch,
+        batch_size=eval_batch, collate_fn=collate_fn,
     )
     pred_dir = out / "predictions"
     pred_dir.mkdir(exist_ok=True)

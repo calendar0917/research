@@ -1,0 +1,210 @@
+{
+  "checks": {
+    "reference_audit": {
+      "pass": true,
+      "detail": {
+        "checkpoint_epoch": 377,
+        "replay_valid_mae": 0.07622373779857299,
+        "stored_valid_mae": 0.07622375113883754,
+        "abs_diff": 1.3340264559680293e-08,
+        "ssl_source": "/home/hxy/cy/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+        "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+        "recipe": {
+          "optimizer": "adamw",
+          "lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 1e-05,
+          "warmup_steps": 500,
+          "epochs": 600,
+          "batch_size": 128,
+          "steps_per_epoch": 79,
+          "grad_clip": 5.0
+        },
+        "train_label_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+        "valid_label_sha256": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f"
+      }
+    },
+    "p3_null_grouping_semantics": {
+      "pass": true,
+      "detail": {
+        "n_bonds": 209,
+        "max_abs_W_minus_n_b_times_graph_mean": 0.0,
+        "max_abs_W_minus_local_junction_sum": 9.760375022888184,
+        "interpretation": "P3 NULL is n_b * graph-wide mean(w), not the sum of junctions touching the bond"
+      }
+    },
+    "parameter_and_optimizer_audit": {
+      "pass": true,
+      "detail": {
+        "J": {
+          "encoders.atom_encoder": 26336,
+          "encoders.bond_encoder": 62816,
+          "encoders.junction_encoder": 112896,
+          "group_composer": 62976,
+          "reader": 148481,
+          "path_branch": 70776,
+          "total": 484281
+        },
+        "Q": {
+          "encoders.atom_encoder": 26336,
+          "encoders.bond_encoder": 62816,
+          "encoders.junction_encoder": 112896,
+          "group_composer": 62976,
+          "reader": 148481,
+          "path_branch": 70776,
+          "total": 484281
+        },
+        "cap": 500000,
+        "headroom": 15719
+      }
+    },
+    "initial_state_and_ssl": {
+      "pass": true,
+      "detail": {
+        "p3_tensors_compared": 24,
+        "p3_max_abs_diff": 0.0,
+        "ssl_tensors_compared": 12,
+        "ssl_max_abs_diff": 0.0,
+        "train_eval_switch_ok": true
+      }
+    },
+    "zero_increment_equivalence": {
+      "pass": true,
+      "detail": {
+        "max_abs_J_minus_P3": 0.0,
+        "max_abs_Q_minus_P3": 0.0,
+        "finite": true
+      }
+    },
+    "enumeration_multiplicity": {
+      "pass": true,
+      "detail": {
+        "totals_by_length": {
+          "2": 8,
+          "3": 8,
+          "4": 0,
+          "5": 0
+        },
+        "unique_length2_patterns": 1,
+        "root0_multiplicity": 2,
+        "pattern_pair_values": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "six_ring_vs_chain": {
+      "pass": true,
+      "detail": {
+        "ring_length5_occurrences": 12,
+        "chain_length5_occurrences": 2,
+        "ring_extra_pair_0_5": 1,
+        "chain_extra_pair_0_5": 0,
+        "q_keys_equal": true
+      }
+    },
+    "renumbering_equivariance": {
+      "pass": true,
+      "detail": {
+        "abs_pred_diff": 5.960464477539062e-07,
+        "finite": true,
+        "n_atoms": 35
+      }
+    },
+    "batch_isolation": {
+      "pass": true,
+      "detail": {
+        "d_root_max_abs_diff": 3.725290298461914e-09,
+        "pred_max_abs_diff": 2.682209014892578e-07
+      }
+    },
+    "compression_expansion": {
+      "pass": true,
+      "detail": {
+        "max_abs_diff": 1.4901161193847656e-08,
+        "original_entries": 586,
+        "expanded_entries": 1172
+      }
+    },
+    "gradient_flow": {
+      "pass": true,
+      "detail": {
+        "records": [
+          {
+            "step": 1,
+            "loss": 1.425294280052185,
+            "grad_phi": 0.0,
+            "grad_proj": 0.05794651061296463
+          },
+          {
+            "step": 2,
+            "loss": 2.5302491188049316,
+            "grad_phi": 0.003366610035300255,
+            "grad_proj": 0.12361489981412888
+          },
+          {
+            "step": 3,
+            "loss": 0.8596032857894897,
+            "grad_phi": 0.0003635290777310729,
+            "grad_proj": 0.021216677501797676
+          },
+          {
+            "step": 4,
+            "loss": 1.3261176347732544,
+            "grad_phi": 0.0006892360397614539,
+            "grad_proj": 0.039735183119773865
+          },
+          {
+            "step": 5,
+            "loss": 0.9044719934463501,
+            "grad_phi": 0.001064683892764151,
+            "grad_proj": 0.030319156125187874
+          },
+          {
+            "step": 6,
+            "loss": 0.6424880027770996,
+            "grad_phi": 0.0007271606009453535,
+            "grad_proj": 0.015095447190105915
+          }
+        ],
+        "opened_after_step": 2
+      }
+    },
+    "no_path_root": {
+      "pass": true,
+      "detail": {
+        "shape": [
+          1,
+          96
+        ],
+        "all_zero": true,
+        "finite": true
+      }
+    },
+    "cache_integrity": {
+      "pass": true,
+      "detail": {
+        "splits": [
+          "train",
+          "valid"
+        ],
+        "test_cache_exists": false,
+        "train_patterns_J": 36263,
+        "valid_patterns_J": 15759
+      }
+    }
+  }
+}
