@@ -2,9 +2,9 @@
 
 **Track:** `tracks/structural-sufficiency/zinc_dual_channel_composer_v1/`
 **代码/配置起点 commit:** `504edbb7b4b5`（实验轮开始前的冻结版本）
-**状态:** 完成 L/C seed 0 各 600 epochs；valid-only 分析完成；official test 未读取。
+**状态:** 完成 L/C seed 0 各 600 epochs；valid-only 分析完成；valid 决策冻结后，按用户明确授权完成 reporting-only test read（见 `TEST_PREREG.md` / `TEST_REPORT.md`）。
 **数据:** official PyG ZINC subset=True，train 10,000 / valid 1,000，raw-y MAE。
-valid 是反复使用过的开发集，不是新盲测。
+valid 是反复使用过的开发集；test 是已经 spent 的 reporting-only 重读，不是 pristine blind test。
 
 ---
 
@@ -18,16 +18,22 @@ valid 是反复使用过的开发集，不是新盲测。
 信号值得记录，但**不足以继续购买 seed 1 或扫 width/reader/grouping**；该具体
 配置按预注册规则停止。
 
-**official test 全程未读取。** 用户在正式跑完后曾说“看一下 test”，但本 track
-的冻结协议和仓库 guardrail 明确禁止读取 official test labels/cache/predictions；
-test 已经 spent、不再 pristine。因此没有打开 test，也没有用 test 做任何选择。
-若要做 reporting-only terminal evaluation，需要新的 preregistration 和明确授权。
+**official test 在 valid 决策冻结前未读取；冻结后用户明确授权（“我授权了，做吧”），
+按 `TEST_PREREG.md` 完成了 reporting-only test read。** Test 已经 spent、不再 pristine；
+这些数值只报告，不改变 valid 决策 C、不触发 seed1、不用于任何模型/epoch 选择。
+详见 `TEST_REPORT.md`；执行中的 harness 修正见 `TEST_AMENDMENT.md`。
+
+**Test reporting-only 速览：** P3B 0.069865、L 0.066267、C 0.070015；L−P3B
+**−0.003598**、C−P3B +0.000150、L−C **−0.003748**。表面上 L 在 test 上跨过
+0.003，但这是 post-hoc/spent-test/single-seed，所有 CI 仍跨 0；而且 test 的
+signature-unseen 组 L 反而比 P3B 差 +0.006269。不能据此改写 valid 决策。
 
 ---
 
 ## 1. 边界与完整性
 
 - 只训练 L/C seed 0；没有 seed 1、没有第三臂、没有重训历史 baseline。
+- Official test 在 valid 决策冻结前未读取；冻结后按 `TEST_PREREG.md` 做 reporting-only read。test 已 spent，不是 blind；`TEST_AMENDMENT.md` 记录 harness debugging。
 - P3B 参照为 `zinc_recipe_trunk_v2/runs/xBssl_P3N_s0`，best-valid
   **0.0762237511 @ epoch 377**，413,505 参数；只读取其 valid 预测和 train.json。
 - L/C 从同一 seed-0 train-only masked SSL encoder（sha256 `006fabc1...`）和
@@ -66,7 +72,7 @@ cap 500,000，headroom **5,807**。reader 前 321 列复制 P3、后 192 列零�
 - reader 新列 step 1 有梯度；local composer step 1 梯度为 0（零列导致，预期），
   step 2 非零且有限；
 - checkpoint save/load 一致；trainer optimizer 覆盖全部 494,193 参数；
-- 无 official test 路径。
+- CPU gate 不读取 official test；test 只由单独的 reporting-only 脚本处理。
 
 ## 3. 计时与预算
 
@@ -220,20 +226,22 @@ unseen 组只占 251 行，不能抵消 covered 组的 +0.003217 和 tail 的 +0
   在所有配置下无用。
 - 没有做 width/reader/grouping 扫描；不能从这一个配置推断“再宽一点/再深一点”
   会不会更好，也不应在本轮后自动去扫。
-- 没有 test 结果；所有结论只针对 exposed valid-1000。
+- Test reporting-only 结果在 `TEST_REPORT.md`；它不改变“单 seed、spent test、不能确认”的边界，也不能把 valid 结论替换成 test 结论。
 
 ## 8. Decision 与下一轮
 
 **Decision: C — L 赢 C 但未赢 P3B，无新性能水平，结束该配置。**
 
+- 该决定是 valid-only 决策；test reporting-only 数值（即使 L 在 test 上 −0.003598）
+  不能用于改写它，不能触发 seed1。
 - 不买 seed 1；不跑 width/reader/grouping 网格；不重开 M/S/T/J/Q/ESR/bond
   composer；不把本轮结果包装成“泛化问题已解决”。
 - 如果未来要确认 `L−C` 这个 ownership pilot（不是当前建议），至少需要
   **P3B seed1 + L seed1 + C seed1** 三条同 recipe 轨迹；按本轮实际 occupancy
   粗估约 `0.30 + 0.35 + 0.40 = 1.05h`，另加 timing/启动余量。不能只报
   “加一个 L seed1 约 0.33h”就称跨 seed 受控确认。
-- 若要做 official test 的 reporting-only 终点评估，必须先有新 preregistration
-  和明确授权；本轮没有做，也不应用 test 来重新选择模型。
+- 若要做 official test 的 **confirmatory** evaluation，必须另立新 preregistration
+  和新的确认设计；本轮已按授权做 reporting-only，不应用 test 重新选择模型。
 
 ## 9. 复现与文件
 
@@ -257,10 +265,16 @@ rr run res dcc-C-s0 --pool res-gpu1 --gpus 1 --time 1:30:00 \
   train --arm C --seed 0 --recipe B --device cuda:0
 ```
 
-分析：
+valid 分析：
 
 ```bash
 uv run python tracks/structural-sufficiency/zinc_dual_channel_composer_v1/code/dcc_analysis.py
+```
+
+test reporting-only（按 `TEST_PREREG.md`；不是选择步骤）：
+
+```bash
+uv run python tracks/structural-sufficiency/zinc_dual_channel_composer_v1/code/dcc_test_reporting.py
 ```
 
 产物：
@@ -271,6 +285,9 @@ uv run python tracks/structural-sufficiency/zinc_dual_channel_composer_v1/code/d
   `per_molecule_dual.csv`、`model_metrics.json`、`decision.json`、
   `timing.json`、`budget_ledger.json`、`artifact_hashes.json`、
   `checkpoint_verification.json`、`curves.png`。
+- Test reporting-only：`TEST_PREREG.md`、`TEST_AMENDMENT.md`、`TEST_REPORT.md`、
+  `analysis/test_reporting.json`、`analysis/test_main_table.md`、
+  `analysis/test_per_molecule.csv`、`analysis/test_preds/`（npz 大 artifact 本地保留，hash 入库）。
 
 **Artifact hashes（sha256，完整值见 `analysis/artifact_hashes.json`）：**
 
@@ -281,6 +298,11 @@ uv run python tracks/structural-sufficiency/zinc_dual_channel_composer_v1/code/d
 
 L/C 初始 state hash（两臂相同）：
 `f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33`。
+
+Test prediction hashes（完整值见 `analysis/test_reporting.json`）：P3B
+`a03a503c8e95a7692b2febfe5711fee0fcd9554b3a8909607451582539c0c47f`；L
+`f744c11846079449536f422bd87208c2e6d136429e8244079c0da9482f65cb74`；C
+`6a1f93ca3885235d1866b06cb7034ee2f14dd6e4ac62f6e9f82871d6646bcc9e`。
 
 审计 erratum 见
 `tracks/structural-sufficiency/zinc_generalization_audit_v1/ERRATUM.md`。

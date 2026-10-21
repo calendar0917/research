@@ -150,6 +150,17 @@ Checkpoint hashes:
 | L_s0 | `fab04ec0d5fd56f338379d7dcb223e31208338a8a89a335a25a6f0c4f5226cd5` |
 | C_s0 | `0a828c494f75138653ceb5677199f7b17e77943b5251bfd4b901406fe6739067` |
 
+Test prediction hashes:
+
+| model | `test_preds/*.npz` sha256 |
+|---|---|
+| P3B_s0 | `a03a503c8e95a7692b2febfe5711fee0fcd9554b3a8909607451582539c0c47f` |
+| L_s0 | `f744c11846079449536f422bd87208c2e6d136429e8244079c0da9482f65cb74` |
+| C_s0 | `6a1f93ca3885235d1866b06cb7034ee2f14dd6e4ac62f6e9f82871d6646bcc9e` |
+
+`analysis/test_per_molecule.csv` sha256:
+`252c5f10a660af7429370ad919a5244d87e2799968fad9647b7654e05e9c91d7`.
+
 Test cache: `tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_test.pt`,
 sha256 `981e2b9a2588b300024947edac4a5053d054199051ca19e016d350ef3ece0dc1`.
 Label hash: `66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768`.

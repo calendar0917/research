@@ -314,6 +314,10 @@ def main() -> int:
             "path": str(PREREG.relative_to(_REPO)),
             "sha256": C.sha256_file(PREREG),
         },
+        "amendment": {
+            "path": "TEST_AMENDMENT.md",
+            "sha256": C.sha256_file(EXP / "TEST_AMENDMENT.md"),
+        },
         "prior_valid_decision": "C_OWNERSHIP_ONLY_NO_PERFORMANCE",
         "prior_valid_commit": "e76cc7d",
         "test_is_spent_not_pristine": True,
