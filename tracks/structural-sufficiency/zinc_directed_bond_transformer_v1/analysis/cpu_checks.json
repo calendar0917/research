@@ -1,0 +1,173 @@
+{
+  "checkpoint": null,
+  "device": "cpu",
+  "parameters": 452523,
+  "path_counts": {
+    "pass": true,
+    "cases": {
+      "path5": {
+        "match_nx": true,
+        "symmetric": true,
+        "diagonal_zero": true,
+        "max_count": 1
+      },
+      "cycle6": {
+        "match_nx": true,
+        "symmetric": true,
+        "diagonal_zero": true,
+        "max_count": 2
+      },
+      "k4": {
+        "match_nx": true,
+        "symmetric": true,
+        "diagonal_zero": true,
+        "max_count": 2
+      },
+      "fused2": {
+        "match_nx": true,
+        "symmetric": true,
+        "diagonal_zero": true,
+        "max_count": 4
+      }
+    },
+    "k4_hand": {
+      "S1": 1,
+      "S2": 2,
+      "S3": 2,
+      "S4": 0
+    },
+    "path5_hand": {
+      "S1_01": 1,
+      "S4_04": 1,
+      "S2_02": 1,
+      "S5_any": 0
+    },
+    "relabel_equivariant": true,
+    "definition": "exact simple paths with exactly l edges, l=1..12"
+  },
+  "invariance": {
+    "pass": true,
+    "row0": {
+      "reverse_edge_input": 0.0,
+      "atom_relabel": 1.4901161193847656e-08,
+      "n_atoms": 35
+    },
+    "row3": {
+      "reverse_edge_input": 0.0,
+      "atom_relabel": 1.1175870895385742e-08,
+      "n_atoms": 27
+    },
+    "batch_composition": {
+      "max_abs_alone_vs_batch": 2.2351741790771484e-08,
+      "max_abs_batch_vs_reordered": 2.60770320892334e-08
+    }
+  },
+  "directed_objects": {
+    "pass": true,
+    "row0": {
+      "two_per_bond": true,
+      "reverse_paired": true,
+      "junction_roles_bruteforce": true,
+      "src_count_is_deg_minus_1": true
+    },
+    "row2": {
+      "two_per_bond": true,
+      "reverse_paired": true,
+      "junction_roles_bruteforce": true,
+      "src_count_is_deg_minus_1": true
+    },
+    "row4": {
+      "two_per_bond": true,
+      "reverse_paired": true,
+      "junction_roles_bruteforce": true,
+      "src_count_is_deg_minus_1": true
+    }
+  },
+  "padding_isolation": {
+    "pass": true,
+    "max_abs_alone_vs_mixed": 1.862645149230957e-08,
+    "rows": [
+      3,
+      11,
+      24,
+      31
+    ]
+  },
+  "relation_value_path": {
+    "pass": true,
+    "context_spread_across_tokens_with_identical_h": 0.005814163014292717,
+    "mean_abs_change_when_relation_zeroed": 0.029906725510954857,
+    "mean_abs_change_when_relation_shuffled_across_f": 0.007653794717043638,
+    "grad_sums": {
+      "rel_b": 0.02327987179160118,
+      "rel_g": 0.833899974822998,
+      "rel_u": 1.7870492935180664,
+      "relation_mlp": 1.1692466735839844
+    },
+    "grads_finite": true,
+    "note": "proves the relation is in the read content, not only in the logits"
+  },
+  "ssl_and_optimizer": {
+    "pass": true,
+    "ssl_checkpoint": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "ssl_pretraining": {
+      "protocol": "cscl-bjoc-full10k-pretraining-transfer-v1",
+      "arm": "SSL",
+      "mask": {
+        "atom_ratio": 0.15,
+        "bond_ratio": 0.15,
+        "atom_token": 27,
+        "bond_token": 0
+      },
+      "updates": 7560
+    },
+    "encoder_tensors": {
+      "atom_encoder": {
+        "tensors": 4,
+        "max_abs_diff_vs_ssl_ckpt": 0.0
+      },
+      "bond_encoder": {
+        "tensors": 4,
+        "max_abs_diff_vs_ssl_ckpt": 0.0
+      },
+      "junction_encoder": {
+        "tensors": 4,
+        "max_abs_diff_vs_ssl_ckpt": 0.0
+      }
+    },
+    "parameters": 452523,
+    "optimizer_parameters": 452523,
+    "all_params_require_grad": true,
+    "encoder_weight_change_after_one_step": 0.00010073184967041016,
+    "model_info_parameter_count": 452523
+  },
+  "readout": {
+    "pass": true,
+    "pooled_block_recompute_max_abs_err": 0.0,
+    "s1_recompute_max_abs_err": 0.0,
+    "s1_varies_across_molecules": true,
+    "scaling_is_linear_in_h": 0.0,
+    "second_moment_scaling_is_quadratic": 0.0,
+    "no_edge_prediction": 0.1989811509847641,
+    "no_edge_finite": true,
+    "n_dir_ref": 49.85580062866211,
+    "n_atom_ref": 23.166400909423828,
+    "note": "no per-molecule LayerNorm on any pooled block"
+  },
+  "data_and_schedule": {
+    "pass": true,
+    "n_train": 10000,
+    "n_valid": 1000,
+    "train_label_max_abs_diff_vs_pyg_200": 0.0,
+    "steps_per_epoch": 157,
+    "last_batch_rows": 16,
+    "each_row_exactly_once": true,
+    "total_updates": 235500,
+    "lr_at_step_1": 3e-07,
+    "lr_at_warmup_end": 0.0003,
+    "lr_at_last_step": 3e-06,
+    "lr_monotone_after_warmup": true
+  },
+  "all_pass": true
+}

@@ -68,6 +68,9 @@ def main(argv=None) -> int:
     p.add_argument("--run", default=str(RUN))
     p.add_argument("--device", default="cuda:0")
     p.add_argument("--batch-size", type=int, default=256)
+    p.add_argument("--freeze-out", default=str(ANALYSIS / "test_freeze.json"))
+    p.add_argument("--no-test", action="store_true",
+                   help="write the freeze and stop before any test label is read")
     args = p.parse_args(argv)
     device = torch.device(args.device)
     run = Path(args.run)
@@ -92,7 +95,7 @@ def main(argv=None) -> int:
 
     freeze = {
         "protocol": "zinc-directed-bond-transformer-v1-test-reporting",
-        "checkpoint": str(Path(args.best).relative_to(_EXP.parents[1])),
+        "checkpoint": str(Path(args.best).resolve().relative_to(C.REPO)),
         "checkpoint_sha256": C.sha256_file(args.best),
         "best_valid_epoch": int(state["epoch"]),
         "best_valid_mae": float(state["valid_mae"]),
@@ -104,9 +107,12 @@ def main(argv=None) -> int:
         "test_loaded_before_this_file": False,
         "frozen_at": C.utcnow(),
     }
-    C.write_json(ANALYSIS / "test_freeze.json", freeze)
+    C.write_json(Path(args.freeze_out), freeze)
     C.log(f"[freeze] {freeze['checkpoint']} epoch {freeze['best_valid_epoch']} "
           f"valid {valid_mae:.9f} sha256 {freeze['checkpoint_sha256'][:12]}")
+    if args.no_test:
+        C.log("[freeze] --no-test: stopping before any test label is read")
+        return 0
 
     # -- only now is the test split built / read ------------------------------
     path = BD.cache_path("test")
