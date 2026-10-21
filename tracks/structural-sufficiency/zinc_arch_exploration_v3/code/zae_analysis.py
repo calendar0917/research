@@ -313,7 +313,7 @@ def main() -> int:
         import matplotlib.pyplot as plt
 
         fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-        for arm in ("A_s0", "B_s0", "A_SSL_s0"):
+        for arm in ("A_s0", "B_s0", "A_SSL_s0", "A_attn_s0"):
             run = RUNS / arm
             if not (run / "curve.csv").exists():
                 continue
