@@ -36,6 +36,7 @@ import ad_data as D  # noqa: E402
 import ad_train as T1  # noqa: E402
 import ad2_models as A2  # noqa: E402
 import audit_common as AC  # noqa: E402
+import audit_coverage as ACov  # noqa: E402
 import dcc_models as M  # noqa: E402
 import dcc_runner as R  # noqa: E402
 
@@ -203,9 +204,9 @@ def main() -> int:
         st = AC.graph_stats(test, int(i))
         graph_rows.append(st)
     train = D.load_cache("train")
-    train_sigs, _ = AC.radius_signatures(train)
-    _, test_sigs = AC.radius_signatures(test)
-    sig2 = AC.signature_coverage(train_sigs, test_sigs, test)
+    train_sigs, _ = ACov.radius_signatures(train)
+    _, test_sigs = ACov.radius_signatures(test)
+    sig2 = ACov.signature_coverage(train_sigs, test_sigs, test)
     r2_unseen = np.asarray(sig2["unseen_atom_fraction"], dtype=np.float64)
     if len(r2_unseen) != len(rows):
         raise RuntimeError("signature coverage length mismatch")
