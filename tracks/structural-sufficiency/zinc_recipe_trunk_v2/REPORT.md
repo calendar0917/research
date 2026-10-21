@@ -249,11 +249,16 @@ that comparison rests on one seed per family.
 **Interpreted.** Both trunks are far better than every non-T v1 family
 (0.134-0.165) and land in T's range with fewer parameters, which supports the
 "per-object composition over typed objects" direction. They still do not beat
-P3, whose composer differs in one respect that the new trunks deliberately do
-not have: it composes each bond from its **local incidence** (the junctions that
-actually touch that bond) before pooling, whereas M/S give each object only a
-**whole-graph** context. This round cannot tell whether that local-ownership
-term or the 1-object-type (bond-centric) readout is what P3 still has.
+P3. An earlier version of this paragraph attributed P3's remaining difference
+to **local incidence** ("the junctions that actually touch that bond"). A code
+check against `structural_relation_composer_v1.BJOC.group_to_bonds(NULL)` shows
+that is wrong: P3's Null grouping computes graph-wide `mean(w)` and `mean(w^2)`
+over all junctions and passes `n_b * mean(w)` and `n_b * mean(w^2)` to each
+bond, where `n_b` is the number of junctions touching that bond. **Only the
+count `n_b` is local; the junction content is graph-global, not a local
+grouping.** The distinction from M/S is therefore the count-modulated global
+junction moments plus the bond-centric composer/readout, not local ownership.
+This correction changes no number or decision in this report.
 
 ## 5. True curves
 
@@ -444,10 +449,13 @@ rr logs zad2-M-sup-s0 ; rr pull zad2-M-sup-s0
 - Rebuilding the composition trunk as typed objects with a global context gets
   back into T's range without association tensors, but the gap to P3 is not
   closed: +0.0108 to +0.0112 at each family's best-known cell (seed 0).
-- The most plausible structural difference left is P3's local incidence
-  composition (junctions owned by the bond they touch) versus the whole-graph
-  context used here; that is a hypothesis, not a measured mechanism. The
-  bond-centric readout is a second uncontrolled difference.
+- The remaining structural difference is not "local incidence composition
+  (junctions owned by the bond they touch)". P3's Null composer uses graph-wide
+  junction means multiplied by each bond's local junction count `n_b`; only
+  `n_b` is local. The difference from M/S is count-modulated global junction
+  moments plus the bond-centric composer/readout. That is a hypothesis, not a
+  measured mechanism; the bond-centric readout is a second uncontrolled
+  difference.
 - With only two SSL seeds, M's gap to P3 is not separable from seed noise
   (M spread 0.0055 vs P3 0.0024). On test the seed-0 ordering nominally flips
   (M 0.069211 vs P3 0.069471) while seed 1 does not (0.075073 vs 0.070664), so
@@ -466,8 +474,9 @@ rr logs zad2-M-sup-s0 ; rr pull zad2-M-sup-s0
   1.756 h remain: enough for two seeds, not for a decisive 4-seed mean. If the
   question has to be decided cheaply, prefer 2 seeds of **P3 x B** (0.60 h) to
   put the new best P3 cell on the same two-seed footing as the trunks, then M.
-- Secondary: one pre-declared variant that gives M/S the local incidence context
-  P3 has (still one-shot, no recursion), to test the hypothesis above. Not
+- Secondary: one pre-declared variant that gives M/S the actual P3 Null
+  statistic (count-modulated graph-wide junction moments, not local junction
+  content; still one-shot, no recursion), to test the hypothesis above. Not
   started; it is a new architecture family and should be pre-registered
   separately.
 - Not proposed: a rank sweep of T, more lambda values for the masked auxiliary
