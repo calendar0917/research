@@ -24,7 +24,8 @@ import torch.nn as nn
 
 _HERE = Path(__file__).resolve().parent
 _V1 = _HERE.parents[1] / "zinc_arch_discovery_v1" / "code"
-for _p in (str(_HERE), str(_V1)):
+_V2 = _HERE.parents[1] / "zinc_recipe_trunk_v2" / "code"
+for _p in (str(_HERE), str(_V1), str(_V2)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
