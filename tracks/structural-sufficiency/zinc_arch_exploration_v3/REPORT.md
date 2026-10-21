@@ -54,6 +54,9 @@ they are "new trunk on the same feature family", not new features.
 | **A_SSL_s0** | 488,601 | 0.079876146 | 439 | 0.017018 | 0.084783518 | 141,300 | P3 masked SSL encoders + native A-SSL pretrain | completed | 1.84 |
 | **A_attn_s0** | 488,889 | 0.082637432 | 519 | 0.012976 | 0.085459559 | 141,300 | P3 masked SSL encoders | completed | 2.02 |
 
+Curves (train, valid, learning rate) for all four arms:
+`analysis/curves.png`; the valid panel is zoomed to the competitive region.
+
 Horizon-robust check (best valid inside the learning-rate band
 `lr ∈ (1e-4, 3e-4]`, i.e. the band in which every reference model sets its best,
 so a longer declared horizon cannot flatter a run):

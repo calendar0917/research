@@ -323,7 +323,9 @@ def main() -> int:
             axes[1].plot(ep, [float(e["valid_mae"]) for e in curve], label=arm)
             axes[2].plot(ep, [float(e["lr"]) for e in curve], label=arm)
         axes[0].set_title("online train MAE")
-        axes[1].set_title("valid MAE")
+        axes[0].set_yscale("log")
+        axes[1].set_title("valid MAE (zoomed; first epochs clipped)")
+        axes[1].set_ylim(0.062, 0.20)
         axes[1].axhline(float(infos["P3B_s0"]["fixed_objects"]["best"]["valid_mae"]),
                         color="k", ls="--", lw=1, label="P3B best valid")
         axes[1].axhline(float(infos["L_s0"]["fixed_objects"]["best"]["valid_mae"]),
