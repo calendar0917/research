@@ -190,6 +190,9 @@ pooling is not the bottleneck), the pooling hypothesis is **rejected**. On test
 it is 0.079930, marginally the best of the four new arms (+0.0006 better than A,
 not significant).
 
+Total cost of A_SSL: 1.84 GPU-h supervised + 0.37 GPU-h pretraining = 2.21 GPU-h
+(the table's GPU-h column counts the supervised phase only).
+
 So: native SSL on the new trunk moves valid by −0.0023 and *hurts* test by
 +0.0042; a learned pooling of the pair set changes nothing. Neither readout
 variant closes the gap to the local-message-passing baseline.
