@@ -279,6 +279,8 @@ V_b = n_b * mean_G(w^2)
 
 ### 4.3 唯一主干预：P3 dual-channel local/global composer
 
+> 后续实验 track：`tracks/structural-sufficiency/zinc_dual_channel_composer_v1/`。实际结果和预算以该 track 的 `REPORT.md` 为准；本审计报告只保留预注册设计，不把计划写成结果。
+
 **假设：** 如果 P3 的误差主要来自 Null 分组丢失局部 junction 身份，那么保留 P3 全局通路、并联一个 organized 局部通路，并让 reader 同时看到局部一阶/二阶矩，应该在**不损害普通分子**的前提下降低 rare-environment 分子的误差。
 
 **结构（`code/proto_dual_channel.py` 已做 CPU 尺寸/初值检查）：**

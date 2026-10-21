@@ -261,7 +261,9 @@ def main() -> int:
                 "fixed_P3B_worst100_abs_mae_delta_vs_P3B": worst_delta,
             })
 
-    def strength(delta):
+    def strength(delta, ownership=False):
+        if ownership and delta <= -0.002:
+            return "ownership_signal_ge_0.002_descriptive"
         if delta <= -0.003:
             return "performance_signal_ge_0.003"
         if delta < 0.0:
@@ -276,10 +278,17 @@ def main() -> int:
         "official_test_loaded": False,
         "valid_is_exposed_development_split": True,
         "single_seed": 0,
+        "budget_note": "See analysis/budget_ledger.json. Actual job occupancy was 0.7703 A100-hours (timing 0.0189 + formal 0.7514); the pre-run conservative projection would have stopped, and the user then explicitly instructed to ignore the GPU budget and run for results.",
+        "test_access": {
+            "official_test_loaded": False,
+            "test_requested_by_user_after_run": True,
+            "test_read": False,
+            "reason": "The frozen protocol and repository guardrail forbid reading official test labels/cache/predictions in this round; test is spent and not pristine. A reporting-only terminal evaluation would require a new preregistration and explicit authorization and was not performed.",
+        },
         "main_contrasts": {
             "L_minus_P3B": {"mean_delta_mae": d_l_p3b, "ci95": contrasts["L_s0_minus_P3B_s0"]["ci95"], "signal": strength(d_l_p3b)},
             "C_minus_P3B": {"mean_delta_mae": d_c_p3b, "ci95": contrasts["C_s0_minus_P3B_s0"]["ci95"], "signal": strength(d_c_p3b)},
-            "L_minus_C": {"mean_delta_mae": d_l_c, "ci95": contrasts["L_s0_minus_C_s0"]["ci95"], "signal": strength(d_l_c)},
+            "L_minus_C": {"mean_delta_mae": d_l_c, "ci95": contrasts["L_s0_minus_C_s0"]["ci95"], "signal": strength(d_l_c, ownership=True)},
         },
         "performance_signal": {
             "L_vs_P3B": bool(perf_l),
@@ -306,7 +315,7 @@ def main() -> int:
             "A null/negative result does not imply unseen environments cannot generalize or that all local composition is useless.",
             "Do not route by subgroup or select epochs by subgroup.",
         ],
-        "next_round_cost_if_confirming": "See REPORT.md; P3B seed1 + selected arm seed1, plus L/C seed1 if ownership is also to be confirmed.",
+        "next_round_cost_if_confirming": "Not recommended for this negative-performance result. If ownership alone were to be confirmed, P3B seed1 + L seed1 + C seed1 are all required; using this round's occupancy about 0.30 + 0.35 + 0.40 = 1.05 A100-hours plus timing/margin.",
     }
     C.write_json(ANALYSIS / "decision.json", decision)
 
