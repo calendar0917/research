@@ -1,0 +1,229 @@
+# NEXT STEP — 唯一主干预：P3 Dual-Channel Local/Global Composer
+
+你是下一轮执行 agent。先读：
+- `tracks/structural-sufficiency/zinc_generalization_audit_v1/REPORT.md`
+- `tracks/structural-sufficiency/zinc_generalization_audit_v1/analysis/decision.json`
+- `tracks/structural-sufficiency/zinc_generalization_audit_v1/analysis/dual_channel_prototype.json`
+- `tracks/structural-sufficiency/zinc_generalization_audit_v1/code/proto_dual_channel.py`
+
+本轮只做一个预注册实验：**P3 + 并联 organized 局部 composer，同参数 Null-local 对照**。不要改方向、不要加第三个臂、不要扫参、不要买 seed 1。
+
+---
+
+## 0. 硬约束（先读再动手）
+
+1. 起点：本审计 track 的 commit（`git log -1 --format=%H` 应为该 commit；工作区必须 clean）。保留用户新工作；不 reset、不覆盖旧 artifact、不改冻结数字。
+2. **official test 全程禁止读取**：不加载 `test.pt`、不构造 `path_test.pt`、不读 test labels/cache/predictions。只用 official train + official valid-1000；valid 是已暴露 development split，不是新盲测。
+3. GPU 硬 cap：`tracks/structural-sufficiency/zinc_induced_pattern_pilot_v1/analysis/budget_ledger.json` 的 `remaining_after = 0.8594111111111111` A100-hours。两卡时间相加，timing/smoke/验证全部计入。不得超支、不得抢占其他任务。
+4. 单 seed（seed 0）两臂；**不买 seed 1**，不做 width/reader/grouping/路径长度网格，不重开 M/S/T/J/Q/ESR/bond composer。
+5. 模型参数 ≤500,000；**禁止递归局部 message passing / GNN / hidden-state 迭代**。局部 composer 只做一次 per-bond 前向。
+6. 不改 P3 的 atom/bond/junction 原始特征，不引入新标签、外部数据、目标公式、辅助监督。
+7. 所有代码/配置先 commit，再 `rr run`（rr 要求 clean worktree）；remote 结果 pull 后本地分析。
+
+---
+
+## 1. 新建 track
+
+```text
+tracks/structural-sufficiency/zinc_dual_channel_composer_v1/
+  PROTOCOL.md
+  code/
+    dcc_models.py
+    dcc_runner.py
+    dcc_cpu_checks.py
+  configs/
+    zinc_dual_channel_composer_v1.yaml
+  runs/
+  analysis/
+  REPORT.md
+```
+
+从本审计 `code/proto_dual_channel.py` 复制并整理 `DualChannel`，从
+`zinc_recipe_trunk_v2/code/ad2_runner.py` / `ad2_models.py` 复用：
+- P3NullModel 的 encoders / group_composer / reader 结构；
+- recipe B（AdamW, batch 128, 600 epochs, 500-step warmup, per-step cosine 1e-3→1e-5, wd 1e-5, clip 5, raw-y L1）；
+- seed-0 train-only masked-SSL encoder（`006fabc1...`）；
+- 同一 batch order / collate / best-valid selector；
+- 不加载 P3B `best.pt` 作为初始化。
+
+两臂必须从**同一 P3N 初始状态**开始：
+- base 参数逐 tensor 相同；
+- local branch 参数初始化相同；
+- 只有 local composer 的 grouping 不同（L=organized，C=Null）。
+- 建议在 builder 里先建 P3N，保存其 state；再建 DualChannel 并把 P3N state 灌入 base，local branch 用固定 seed 初始化；两臂复制同一份 local branch 初始 state。
+
+---
+
+## 2. 模型定义（精确）
+
+Base（完全保留 P3）：
+
+```text
+a, b, w = P3 encoders(batch)
+Wg, Vg, n_b = P3 Null grouping(w)
+c_glob = P3 group_composer([b, Wg, Vg, log1p(n_b), bond_feat])
+```
+
+Local channel：
+
+```text
+# L arm
+Wl_b = sum_{j touches b} w_j
+Vl_b = sum_{j touches b} w_j^2
+
+# C arm (matched control)
+Wl_b = n_b * graph_mean(w)
+Vl_b = n_b * graph_mean(w^2)
+
+c_loc = LocalComposer([b, Wl, Vl, log1p(n_b), bond_feat])
+```
+
+`LocalComposer = MLP(296 -> 80 -> 96)`（SiLU；dropout 0；无递归）。
+Reader：
+
+```text
+reader_in = [sum_b c_glob, sum_v a, sum_v a^2, g,
+             sum_b c_loc, sum_b c_loc^2]
+reader = MLP(513 -> 256 -> 256 -> 1)
+```
+
+初始化：
+- 先按 P3N 初始化 reader（321→256→256→1）；
+- 新 reader 第一层扩到 513：前 321 列 copy P3N 权重，后 192 列 **zero**；bias 不变；后两层 copy；
+- local composer 标准初始化；
+- 这样初始 forward 与 P3N 的最大绝对差应 ≤1e-6（float32 累加顺序；prototype 实测 ≤1e-7）。
+- L/C 两臂参数完全一致：**494,193**（P3 413,505 + local composer 31,536 + reader delta 49,152），cap headroom 5,807。
+
+不要给 local branch 加零初始化输出门控；zero reader columns 已经是初始屏蔽，且能让 local composer 在第 2 步起获得梯度。不要改 P3 的 Null 通路。
+
+---
+
+## 3. CPU gate（正式 GPU 前必须全过）
+
+写 `code/dcc_cpu_checks.py`，至少检查：
+
+1. 参数：L/C 都是 494,193；两者 state_dict key 集合相同、shape 相同。
+2. 初始化：base 参数逐 tensor 相同；local branch 参数逐 tensor 相同；L/C 只有 grouping 逻辑不同。
+3. 初始 forward：L 和 C 对同一 batch 的输出与 P3N 的 max abs diff ≤1e-6；L 与 C 初始输出相同（因为 reader 新列为零）。
+4. organized grouping 恒等式：每条 junction 恰好进入两个 bond 的 W/V；`sum_b Wl_b == 2 * sum_j w_j`；`sum_b Vl_b == 2 * sum_j w_j^2`；空 junction / 单 bond / 环分子边界有限。
+5. Null control：`Wl_b == n_b * graph_mean(w)` 逐 bond 验证（max abs diff 0.0）。
+6. 重编号不变性：整图随机重编号后，分子级预测差 ≤1e-6；batch 加入别的分子后目标分子预测差 ≤1e-6。
+7. 梯度：step 1 reader 新列有梯度、local composer 梯度为 0（零列导致，记录即可）；step 2 local composer 梯度非零且有限；无 NaN。
+8. 禁用模块扫描：无 GNN/MessagePassing/Transformer/GRU/LSTM/RNN/递归调用；无 test 文件路径。
+
+任何 gate 失败：停止，不改模型继续。
+
+---
+
+## 4. Timing / smoke（计入预算）
+
+两臂各 2 epochs，1,024 rows，完整 valid eval，A100：
+
+```bash
+rr run dcc-timing-L --pool res-gpu0 --gpus 1 --time 0:30:00 -- \
+  python tracks/structural-sufficiency/zinc_dual_channel_composer_v1/code/dcc_runner.py \
+  timing --arm L --epochs 2 --device cuda:0
+
+rr run dcc-timing-C --pool res-gpu1 --gpus 1 --time 0:30:00 -- \
+  python tracks/structural-sufficiency/zinc_dual_channel_composer_v1/code/dcc_runner.py \
+  timing --arm C --epochs 2 --device cuda:0
+```
+
+投影规则（写进 `analysis/timing.json`）：
+
+```text
+projected_hours = 2 * (2-epoch seconds / 2 * 600 / 3600) * 1.15 + 300/3600
+```
+
+要求 `projected_hours <= 0.80` 且单臂投影 ≤0.36h。超过则**停止，不跑正式**；把 STOP_BUDGET 写进 REPORT。不要压缩 600 epochs、不要减 valid eval、不要跳过 smoke。
+
+---
+
+## 5. 正式两臂（seed 0，并行）
+
+先 commit 所有代码/配置/CPU gate 结果，再：
+
+```bash
+rr run dcc-L-s0 --pool res-gpu0 --gpus 1 --time 1:30:00 -- \
+  python tracks/structural-sufficiency/zinc_dual_channel_composer_v1/code/dcc_runner.py \
+  train --arm L --seed 0 --recipe B --device cuda:0
+
+rr run dcc-C-s0 --pool res-gpu1 --gpus 1 --time 1:30:00 -- \
+  python tracks/structural-sufficiency/zinc_dual_channel_composer_v1/code/dcc_runner.py \
+  train --arm C --seed 0 --recipe B --device cuda:0
+```
+
+要求：
+- 600 epochs、79 steps/epoch（10k/128）；
+- 同 seed / 同 batch order / 同 SSL / 同 selector；
+- 每 epoch 完整 valid；best checkpoint 按严格 `<`，平局取更早 epoch；
+- 落盘 `best.pt`、`curve.csv`、`train.json`、`predictions/valid_best.npz`、`artifacts.json`；
+- 记录实际 GPU occupancy（UTC start/finish），两卡相加进 ledger；
+- 不读 test。
+
+预算保护：正式两臂合计目标 0.66h；加 timing 目标 0.69h，保守 0.80h，硬 cap 0.8594h。若任一臂实际超过 0.40h，立即停止第二臂并记录，不要超 cap。
+
+---
+
+## 6. 分析（valid-1000，只读一次）
+
+用本审计 `analysis/per_molecule.csv` 的 row_id/结构列（同一 valid 顺序），生成：
+
+- `analysis/model_metrics.json`：L/C/P3B 的 MAE、median、p90、p95、max、top-k share；
+- `analysis/paired_contrasts.json`：L−P3B、C−P3B、L−C 的 paired bootstrap（10,000 resamples，固定 row ID；报告 mean Δ 和 95% CI）；
+- `analysis/per_molecule_dual.csv`：row_id、y、P3B/L/C pred、signed/abs errors、n_atoms、n_rings、cycle_rank、radius2_unseen_atom_fraction、path_unseen_mass；
+- `analysis/subgroups.json`：ordinary `y>-3`、`y<=-3`、radius-2 unseen、path unseen、`n_rings>=4` 的 MAE 对比；
+- `analysis/decision.json`。
+
+预注册 gate（必须同时满足）：
+
+1. **主 gate A：** `L − P3B_s0 <= -0.003`（L 至少好 0.003 MAE）。
+2. **主 gate B：** `L − C <= -0.002`（真实 ownership 至少好 0.002）。
+3. **安全性：** ordinary `y>-3` 的 `L − P3B` 不得 > +0.002；top-100 绝对误差份额不得比 P3B 增加 >0.02。
+4. 描述性报告 radius-2 unseen / path unseen / ring≥4 的方向；不要用它们替代主 gate。
+5. 单 seed：不买 seed 1；不做任何 gate 失败后的 width/reader/grouping 搜索。
+
+判定：
+- 通过：`DUAL_CHANNEL_LOCAL_OWNERSHIP_GAIN`；写 REPORT，建议下一轮 seed 1（另申请预算，不在本轮）。
+- 失败：`DUAL_CHANNEL_NO_GAIN`；关闭本方向。不要用“再宽一点/再深一点/再换 grouping”救。
+- 如果 L 好但 C 也好：`CAPACITY_ONLY`，不是 ownership 证据，关闭。
+- 如果只有 tail 好、ordinary 变差：按安全性 gate 失败处理。
+
+---
+
+## 7. 预算与账本
+
+- 本轮只允许两臂 seed 0；不得买 seed 1。
+- 每次 run 的 `gpu_hours` 用实际 occupancy（两卡相加）；timing/smoke/所有 eval 计入。
+- 更新 `analysis/budget_ledger.json`：
+  - `remaining_before = 0.8594111111111111`
+  - `spent_this_round = timing + L + C`
+  - `remaining_after = 0.8594111111111111 - spent_this_round`
+  - 若 `remaining_after < 0` 或 projection 超 0.80h：STOP，不跑正式。
+- 不把“计划省下的 0.15h”花在额外 seed/网格。
+
+---
+
+## 8. 交付
+
+1. `PROTOCOL.md`（预注册：模型、对照、gate、预算、stop rule）。
+2. `code/`（可重跑：prep/gates/train/analyze）。
+3. `analysis/`（CPU gates、timing、metrics、paired、subgroups、decision、per-molecule、budget ledger）。
+4. `REPORT.md`（中文，Observed / Interpretation / Decision；明确 valid 是暴露 split、test 未读、单 seed 局限）。
+5. 更新本 track 的 `REPORT.md` 链接到新 track（不要改旧数字）。
+6. commit；最终回答用中文，给出：
+   - 实际 GPU-hours 与剩余；
+   - L/C/P3B 的 MAE 与 gate 结果；
+   - commit hash；
+   - 一条可复现命令（`uv run python ...` 或 `rr run ...`）。
+
+---
+
+## 9. 失败时的最小记录
+
+如果 CPU gate / timing / 正式 run 失败，仍然写：
+- `analysis/decision.json`：`status="STOPPED"`、`reason`、`spent_gpu_hours`；
+- `REPORT.md`：Observed（做到哪一步）、Interpretation（为什么停）、Decision（不再买什么）；
+- 不删除失败 artifact；不重试超过 1 次；不绕过预算。
+
+禁止事项再强调：不读 official test；不重选历史 checkpoint；不改冻结数字；不覆盖原始 artifact；不把等权 ensemble 当主模型；不引入额外监督/外部数据/目标公式；不做递归局部 MP。

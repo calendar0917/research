@@ -1,0 +1,79 @@
+{
+  "track": "zinc-generalization-audit-v1",
+  "base_commit": "d53e64a",
+  "status": "audit_complete_no_gpu_used",
+  "official_test_loaded": false,
+  "official_valid_loaded": true,
+  "valid_is_exposed_development_split": true,
+  "evidence": {
+    "n_fixed_checkpoints": 7,
+    "n_valid_molecules": 1000,
+    "input_fidelity_pass": true,
+    "p3b_mae": 0.07622375367576023,
+    "p3b_median_ae": 0.039234697818756104,
+    "p3b_top10_abs_error_share": 0.15452375033019194,
+    "p3b_top100_abs_error_share": 0.4710342410951891,
+    "p3b_top25pct_rows_abs_error_share": 0.6943574720143151,
+    "p3_seed_consensus_mae": 0.07221132136130473,
+    "p3_seed_var_mse_share_algebraic": 0.07715371100561945,
+    "seven_model_avg_mae_diagnostic_only": 0.070913,
+    "path_unseen_mean_occurrence_mass": 0.0040312811548782095,
+    "path_unseen_any_molecule_share": 0.121,
+    "path_unseen_molecules_abs_error_share": 0.275,
+    "radius2_unseen_mean_atom_fraction": 0.02460932830599746,
+    "radius2_unseen_any_molecule_share": 0.251,
+    "radius2_unseen_molecules_abs_error_share": 0.498,
+    "radius2_unseen_mae": 0.15134017292291402,
+    "radius2_covered_mae": 0.05105120746985523,
+    "rings_ge4_molecule_share": 0.213,
+    "rings_ge4_abs_error_share": 0.316,
+    "rings_ge4_and_radius2_unseen_n": 47,
+    "rings_ge4_and_radius2_unseen_mae": 0.3141,
+    "y_le_minus3_molecule_share": 0.065,
+    "y_le_minus3_abs_error_share": 0.162
+  },
+  "hypotheses": {
+    "H1_seed_disentanglement": {
+      "verdict": "SECONDARY_NOT_MAIN",
+      "reason": "P3 seed averaging gains 0.00446 over the best member, but the algebraic seed-variance share is only 7.7% of consensus MSE; error rankings are shared across families (signed-error correlation 0.86-0.93). Seed noise changes the level a little, not the hard-core membership."
+    },
+    "H2_label_structure_coverage": {
+      "verdict": "REJECTED_AS_MAIN_CAUSE",
+      "reason": "J's exact full typed path content covers 99.6% of valid path occurrences and still does not beat P3; the label-size curve cannot plausibly reverse that. Radius-2 signatures are 97.2% covered by unique type; the residual signal is rare support/composition, not a global shortage of labels."
+    },
+    "H3_readout_interface_dilution": {
+      "verdict": "PRIMARY_SUPPORTED",
+      "reason": "P3 Null grouping feeds every bond n_b * graph-mean junction moments, so local junction identity is discarded. Error is concentrated in molecules with unseen radius-2 environments (25% of rows, 50% of absolute error) and ring-rich local environments, while adding path content at the atom input (J) or full global trunks (M/S) does not fix it."
+    },
+    "H4_target_tail": {
+      "verdict": "SECONDARY",
+      "reason": "y<=-3 is 6.5% of rows but 16.2% of absolute error; the radius-2 effect survives within y>-3 (0.134 vs 0.048), so the tail contributes but does not explain the hard core."
+    }
+  },
+  "platform_answer": "The 0.076 plateau is a shared, heavy-tailed hard-core problem: the worst 25% of molecules carry 69% of absolute error, 25% of molecules with unseen radius-2 local environments carry 50%, and all seven fixed checkpoints fail the same molecules. It is not primarily seed disagreement and not a shortage of path labels.",
+  "next_intervention": {
+    "name": "P3 dual-channel local/global composer (organized local channel + matched Null-local control)",
+    "params": 494193,
+    "param_cap": 500000,
+    "no_recursive_local_mp": true,
+    "base": "P3 Null (413,505 params), recipe B, seed-0 train-only masked SSL",
+    "change": "Add a parallel local composer on organized W_b=sum_{j touches b} w_j and V_b=sum w_j^2, then append sum(c_loc) and sum(c_loc^2) to the P3 reader; keep the original Null global path. New reader columns start at zero, so the initial output equals P3 within 1e-6.",
+    "control": "Identical parameter count and initialization, but the local composer receives the Null grouping instead of organized ownership. The L-C contrast isolates local ownership from extra capacity.",
+    "primary_gate": "L must beat historical P3B seed 0 by at least 0.003 MAE and beat the matched control C by at least 0.002 MAE; ordinary y>-3 must not degrade by more than 0.002.",
+    "stop_rule": "Single seed only. If the gate fails, close the track; no seed 1, no width/radius/grouping grid, no follow-up feature sweep."
+  },
+  "label_curve": {
+    "purchased": false,
+    "reason": "The 3k/6k P3B curve would cost about 0.30 GPU-h and cannot distinguish the current alternatives cleanly: exact path content is already 99.6% covered and J does not help the rare subgroup. The decision is already between readout ownership and stopping, not between 10k and more labels.",
+    "reconsider_if": "A future audit finds that J improves the rare-environment subgroup but the overall loss is diluted by unrelated molecules; then a 3k/6k label curve would be informative."
+  },
+  "budget": {
+    "audit_gpu_hours": 0.0,
+    "ledger_remaining_before_audit": 0.8594111111111111,
+    "ledger_remaining_after_audit": 0.8594111111111111,
+    "next_round_planned_gpu_hours_stage1": 0.69,
+    "next_round_conservative_with_margin": 0.80,
+    "next_round_hard_cap": 0.8594111111111111,
+    "note": "Two arms x seed 0 in parallel, 600 epochs, recipe B, plus 2-epoch timing/smoke. No seed 1 is affordable inside the hard cap."
+  }
+}
