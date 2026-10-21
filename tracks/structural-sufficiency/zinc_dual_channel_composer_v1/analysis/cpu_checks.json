@@ -1,0 +1,200 @@
+{
+  "protocol_id": "zinc-dual-channel-composer-v1",
+  "all_pass": true,
+  "official_test_loaded": false,
+  "checks": {
+    "p3_reference_state_hash_matches_builder": {
+      "pass": true,
+      "detail": {
+        "expected": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+        "actual": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30"
+      }
+    },
+    "p3_base_weights_exact_minus_reader": {
+      "pass": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    "p3_reader_first_321_columns_exact": {
+      "pass": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    "p3_reader_new_columns_zero": {
+      "pass": true,
+      "detail": {
+        "max_abs": 0.0
+      }
+    },
+    "parameter_count_494193": {
+      "pass": true,
+      "detail": {
+        "L": 494193,
+        "C": 494193,
+        "expected": 494193,
+        "headroom": 5807
+      }
+    },
+    "same_keys_shapes_and_initial_state": {
+      "pass": true,
+      "detail": {
+        "state_dict_equal": true,
+        "max_abs_diff": 0.0,
+        "initial_state_sha256": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33"
+      }
+    },
+    "parameters_breakdown": {
+      "pass": true,
+      "detail": {
+        "p3_base_total": 413505,
+        "encoders": 202048,
+        "group_composer": 62976,
+        "local_composer": 31536,
+        "reader": 197633
+      }
+    },
+    "initial_forward_L_vs_P3_le_1e-6": {
+      "pass": true,
+      "detail": {
+        "max_abs_diff": 4.172325134277344e-07
+      }
+    },
+    "initial_forward_C_vs_P3_le_1e-6": {
+      "pass": true,
+      "detail": {
+        "max_abs_diff": 4.172325134277344e-07
+      }
+    },
+    "initial_forward_L_equals_C": {
+      "pass": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    "organized_each_junction_enters_two_bonds": {
+      "pass": true,
+      "detail": {
+        "n_junctions": 2291,
+        "sum_bond_incidence": 4582,
+        "distinct_endpoint_pairs": true
+      }
+    },
+    "organized_scatter_matches_dense": {
+      "pass": true,
+      "detail": {
+        "W_max_abs_diff": 1.9073486328125e-06,
+        "V_max_abs_diff": 1.52587890625e-05
+      }
+    },
+    "organized_sum_identity": {
+      "pass": true,
+      "detail": {
+        "sum_W_vs_2sum_w_max_abs": 0.0009765625,
+        "sum_V_vs_2sum_w2_max_abs": 0.00146484375
+      }
+    },
+    "null_control_exact": {
+      "pass": true,
+      "detail": {
+        "W_equal": true,
+        "V_equal": true,
+        "n_equal": true
+      }
+    },
+    "empty_junction_finite_zero": {
+      "pass": true,
+      "detail": {
+        "organized_max": 0.0,
+        "null_max": 0.0
+      }
+    },
+    "single_junction_finite_and_equals_null": {
+      "pass": true,
+      "detail": {
+        "max_W_diff": 0.0,
+        "max_V_diff": 0.0
+      }
+    },
+    "batch_composition_invariance": {
+      "pass": true,
+      "detail": {
+        "single": -0.6647930145263672,
+        "in_pair": -0.6647927761077881,
+        "abs_diff": 2.384185791015625e-07
+      }
+    },
+    "relabeling_invariance": {
+      "pass": true,
+      "detail": {
+        "single": -0.6647930145263672,
+        "relabeled": -0.6647929549217224,
+        "abs_diff": 5.960464477539063e-08
+      }
+    },
+    "reader_new_columns_grad_step1": {
+      "pass": true,
+      "detail": {
+        "nonzero_elements": 49152,
+        "finite": true,
+        "grad_norm": 8.78211784362793
+      }
+    },
+    "local_composer_zero_grad_step1_expected": {
+      "pass": true,
+      "detail": {
+        "nonzero_elements": 0,
+        "grad_norm": 0.0
+      }
+    },
+    "local_composer_nonzero_finite_grad_step2": {
+      "pass": true,
+      "detail": {
+        "nonzero_elements": 31456,
+        "grad_norm": 6.588169574737549,
+        "finite": true
+      }
+    },
+    "checkpoint_save_load_consistent": {
+      "pass": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    "trainer_optimizer_covers_all_parameters": {
+      "pass": true,
+      "detail": {
+        "parameters": 494193,
+        "optimizer_parameters": 494193,
+        "parameters_in_optimizer": true,
+        "parameter_tensors": 26,
+        "requires_grad_tensors": 26,
+        "all_parameters_require_grad": true
+      }
+    },
+    "arm_switch_changes_first_update": {
+      "pass": true,
+      "detail": {
+        "state_hashes_differ": true,
+        "reader_max_abs_diff": 0.0019999993965029716,
+        "L_organized": true,
+        "C_organized": false
+      }
+    },
+    "builder_arm_metadata_and_same_init_hash": {
+      "pass": true,
+      "detail": {
+        "L_hash": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33",
+        "C_hash": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33",
+        "shared_hash": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33"
+      }
+    },
+    "no_official_test_paths": {
+      "pass": true,
+      "detail": {
+        "forbidden_hits": []
+      }
+    }
+  }
+}

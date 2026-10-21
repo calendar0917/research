@@ -1,0 +1,104 @@
+protocol_id: zinc-dual-channel-composer-v1
+track: structural-sufficiency/zinc_dual_channel_composer_v1
+date_frozen: 2026-10-21
+base_commit: 074c13a5937c988c8bb03734fa6fb7b9c0b11f44
+question: >
+  Does a parallel organized local composer, added to the frozen P3 Null global
+  path with a matched Null-local control, improve raw-y valid MAE on official
+  PyG ZINC subset, and is any gain attributable to local ownership?
+
+data:
+  dataset: official PyG ZINC subset=True
+  train: 10000
+  valid: 1000
+  metric: raw-y MAE
+  valid_role: exposed development split, not a fresh blind test
+  official_test: NEVER_READ
+
+base:
+  model: P3NullModel computation graph
+  parameters: 413505
+  reference_run: tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/xBssl_P3N_s0
+  reference_best_valid: 0.07622375113883754
+  reference_best_epoch: 377
+  reference_final_valid: 0.07817880773538491
+  init: same seed-0 train-only masked SSL encoder (sha256 006fabc1...)
+
+model:
+  local_composer: MLP(296 -> 80 -> 96), SiLU, dropout 0
+  reader: MLP(513 -> 256 -> 256 -> 1), SiLU, dropout 0
+  reader_input: [sum_b c_glob, sum_v a_v, sum_v a_v^2, standardized_global33, sum_b c_loc, sum_b c_loc^2]
+  parameters_expected: 494193
+  parameter_cap: 500000
+  recursive_local_message_passing: false
+  arms:
+    L:
+      local_grouping: organized
+      Wl: sum_{j touches b} w_j
+      Vl: sum_{j touches b} w_j^2
+    C:
+      local_grouping: null
+      Wl: n_b * graph_mean(w)
+      Vl: n_b * graph_mean(w^2)
+  initialization:
+    p3_reference: built first with seed 0, exact P3N builder
+    shared_dual_state: built once and deep-copied to both arms
+    local_composer: standard init after P3 construction
+    reader_first_layer: first 321 columns copied from P3; last 192 columns zero; bias and later layers copied
+
+training:
+  shared_recipe: B
+  optimizer: AdamW
+  batch_size: 128
+  epochs: 600
+  steps_per_epoch: 79
+  updates: 47400
+  warmup_steps: 500
+  lr: 1.0e-3
+  min_lr: 1.0e-5
+  schedule: per-update cosine with warmup
+  weight_decay: 1.0e-5
+  grad_clip: 5.0
+  loss: raw-y L1
+  dropout: 0.0
+  valid_every_epoch: true
+  selection: strict < on valid MAE, ties keep earlier epoch
+  save: best.pt and final.pt
+  fine_tune: all parameters, no frozen encoder, no output gate
+  seed: 0
+  batch_order: seed+101, same for both arms
+
+budget:
+  hard_cap_a100_hours: 0.8594111111111111
+  soft_target_a100_hours: 0.80
+  accounting: two-GPU occupancy summed, not wall-clock halved
+  timing: 2-3 full 10k epochs per arm with full valid eval; no 1024-row projection
+  stop_if: timing + 600-epoch projections + one-time overhead + 15% training margin > latest ledger balance
+  no_seed1: true
+  no_third_arm: true
+
+gates:
+  performance_signal: L or C vs P3B <= -0.003
+  weak_signal: positive improvement smaller than 0.003
+  ownership_signal: L - C <= -0.002
+  safety:
+    ordinary_y_gt_minus3_delta_vs_P3B: <= +0.002
+    fixed_p3b_worst100_absolute_mae: must not worsen
+    top100_error_share: descriptive only, not a gate
+  descriptive_groups:
+    - signature-unseen 251 vs covered 749
+    - ordinary y>-3 vs y<=-3
+    - rings>=4
+    - rings>=4 and signature-unseen
+    - fixed P3B worst-100 set
+
+analysis:
+  paired_bootstrap: 10000 resamples, same row resamples for all contrasts
+  interval_role: descriptive fixed-checkpoint interval on exposed valid, not cross-seed confirmation
+  no_subgroup_epoch_selection: true
+
+deliverables:
+  protocol: PROTOCOL.md
+  report: REPORT.md
+  runs: runs/
+  analysis: analysis/
