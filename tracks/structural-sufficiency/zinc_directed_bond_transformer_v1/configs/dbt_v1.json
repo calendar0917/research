@@ -1,0 +1,59 @@
+{
+  "round": "zinc-directed-bond-transformer-v1",
+  "protocol": "single-model directed-bond Transformer, seed 0",
+  "data": {
+    "source": "official PyG ZINC subset=True",
+    "train": 10000,
+    "valid": 1000,
+    "test": 1000,
+    "target": "raw y",
+    "metric": "MAE"
+  },
+  "model": {
+    "local_encoders": "P3 atom/bond/junction, 202048 params",
+    "encoder_init": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "encoder_init_sha256_prefix": "006fabc1",
+    "encoder_init_kind": "seed-0 train-only masked-SSL (15% atom / 15% bond, 7560 updates)",
+    "width": 64,
+    "layers": 4,
+    "heads": 4,
+    "head_dim": 16,
+    "ff_mult": 2,
+    "pre_ln": true,
+    "relation": {
+      "path_counts": "exact simple paths, l=1..12, uint8, symmetric, zero diagonal",
+      "distance": "0..12 exact, 13 connected-longer, 14 unreachable",
+      "endpoint_blocks": ["src-src", "src-dst", "dst-src", "dst-dst"],
+      "raw_dim": 65,
+      "pre_encoder": "65 -> 32 -> 24 shared",
+      "per_layer_maps": ["B: 24->heads", "G: 24->width", "U: 24->width"]
+    },
+    "static_injection": "4 -> 64 shared (log source degree, log target degree, log atoms, log bonds)",
+    "readout": "0.5*sum h_e, 0.5*sum h_e^2, sum a_v, sum a_v^2, global33, counts -> 357 -> 128 -> 128 -> 1",
+    "total_parameters": 452523,
+    "parameter_cap": 500000
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 3e-4,
+    "min_lr": 3e-6,
+    "weight_decay": 1e-4,
+    "warmup_updates": 1000,
+    "epochs": 1500,
+    "batch_size": 64,
+    "steps_per_epoch": 157,
+    "total_updates": 235500,
+    "loss": "raw-y L1",
+    "grad_clip": 5.0,
+    "dropout": 0.05,
+    "valid_every_epoch": true,
+    "selection": "strict < on valid MAE, ties keep the earlier epoch"
+  },
+  "scope": {
+    "seeds": [0],
+    "grids": [],
+    "ensembles": false,
+    "teachers": false,
+    "local_message_passing": false
+  }
+}
