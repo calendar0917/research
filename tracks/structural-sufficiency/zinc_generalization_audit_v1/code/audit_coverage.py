@@ -15,7 +15,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
-from scipy.stats import spearmanr
+from scipy.stats import rankdata, spearmanr
 
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE))
@@ -199,16 +199,34 @@ def signature_coverage(train_sigs, valid_sigs, cache: dict) -> dict:
     }
 
 
-def partial_spearman(x, y, control) -> float:
-    rx = np.argsort(np.argsort(x)).astype(float)
-    ry = np.argsort(np.argsort(y)).astype(float)
-    rc = np.argsort(np.argsort(control)).astype(float)
-    # residualise ranks linearly on control rank
-    bx = np.polyfit(rc, rx, 1)
-    by = np.polyfit(rc, ry, 1)
-    ex = rx - np.polyval(bx, rc)
-    ey = ry - np.polyval(by, rc)
+def partial_spearman(x, y, controls) -> float:
+    """Spearman partial correlation with average ranks and least-squares residuals.
+
+    Ties are assigned the average rank (``rankdata(method="average")``), never
+    split by a double ``argsort``.  Both rank vectors are residualised on an
+    intercept plus the average-ranked control matrix with ``lstsq``; the
+    reported value is the Pearson correlation of those residuals.
+    """
+    rx = rankdata(x, method="average").astype(float)
+    ry = rankdata(y, method="average").astype(float)
+    if controls is None:
+        controls = []
+    elif not isinstance(controls, (list, tuple)):
+        controls = [controls]
+    design = np.column_stack(
+        [np.ones(len(rx), dtype=float)]
+        + [rankdata(c, method="average").astype(float) for c in controls]
+    )
+    ex = rx - design @ np.linalg.lstsq(design, rx, rcond=None)[0]
+    ey = ry - design @ np.linalg.lstsq(design, ry, rcond=None)[0]
     return float(np.corrcoef(ex, ey)[0, 1])
+
+
+def spearman_average(x, y) -> float:
+    """Spearman correlation via average ranks (explicit tie handling)."""
+    rx = rankdata(x, method="average").astype(float)
+    ry = rankdata(y, method="average").astype(float)
+    return float(np.corrcoef(rx, ry)[0, 1])
 
 
 def group_summary(values, groups, ae_by_model) -> list:
@@ -280,29 +298,58 @@ def main() -> int:
     for key in coverage_keys:
         row = {"mean": float(cov[key].mean()), "median": float(np.median(cov[key])), "p90": float(np.percentile(cov[key], 90)), "max": float(cov[key].max())}
         for k in names:
-            row[f"spearman_ae_{k}"] = float(spearmanr(cov[key], ae[k]).statistic)
+            row[f"spearman_ae_{k}"] = spearman_average(cov[key], ae[k])
             row[f"partial_spearman_ae_{k}_n_atoms"] = partial_spearman(cov[key], ae[k], nat)
-        row["spearman_delta_j_minus_p3b"] = float(spearmanr(cov[key], ae["J_s0"] - ae["P3B_s0"]).statistic)
+            row[f"partial_spearman_ae_{k}_n_atoms_cycle_rank"] = partial_spearman(cov[key], ae[k], [nat, cr])
+        row["spearman_delta_j_minus_p3b"] = spearman_average(cov[key], ae["J_s0"] - ae["P3B_s0"])
         row["partial_spearman_delta_j_minus_p3b_n_atoms"] = partial_spearman(cov[key], ae["J_s0"] - ae["P3B_s0"], nat)
-        row["spearman_delta_q_minus_p3b"] = float(spearmanr(cov[key], ae["Q_s0"] - ae["P3B_s0"]).statistic)
+        row["partial_spearman_delta_j_minus_p3b_n_atoms_cycle_rank"] = partial_spearman(cov[key], ae["J_s0"] - ae["P3B_s0"], [nat, cr])
+        row["spearman_delta_q_minus_p3b"] = spearman_average(cov[key], ae["Q_s0"] - ae["P3B_s0"])
         relations[key] = row
 
     relations["radius1"] = {
         "mean_unseen_atom_fraction": float(sig1["unseen_atom_fraction"].mean()),
         "mean_low4_atom_fraction": float(sig1["low4_atom_fraction"].mean()),
-        "spearman_ae_P3B": float(spearmanr(sig1["unseen_atom_fraction"], ae["P3B_s0"]).statistic),
+        "spearman_ae_P3B": spearman_average(sig1["unseen_atom_fraction"], ae["P3B_s0"]),
         "partial_spearman_ae_P3B_n_atoms": partial_spearman(sig1["unseen_atom_fraction"], ae["P3B_s0"], nat),
+        "partial_spearman_ae_P3B_n_atoms_cycle_rank": partial_spearman(sig1["unseen_atom_fraction"], ae["P3B_s0"], [nat, cr]),
         "n_train_signatures": sig1["n_train_signatures"],
     }
     relations["radius2"] = {
         "mean_unseen_atom_fraction": float(sig2["unseen_atom_fraction"].mean()),
         "mean_low4_atom_fraction": float(sig2["low4_atom_fraction"].mean()),
         "mean_unseen_unique_signature_fraction": float(sig2["unseen_unique_signature_fraction"].mean()),
-        "spearman_ae_P3B": float(spearmanr(sig2["unseen_atom_fraction"], ae["P3B_s0"]).statistic),
+        "spearman_ae_P3B": spearman_average(sig2["unseen_atom_fraction"], ae["P3B_s0"]),
         "partial_spearman_ae_P3B_n_atoms": partial_spearman(sig2["unseen_atom_fraction"], ae["P3B_s0"], nat),
-        "spearman_delta_j_minus_p3b": float(spearmanr(sig2["unseen_atom_fraction"], ae["J_s0"] - ae["P3B_s0"]).statistic),
+        "partial_spearman_ae_P3B_n_atoms_cycle_rank": partial_spearman(sig2["unseen_atom_fraction"], ae["P3B_s0"], [nat, cr]),
+        "spearman_delta_j_minus_p3b": spearman_average(sig2["unseen_atom_fraction"], ae["J_s0"] - ae["P3B_s0"]),
         "n_train_signatures": sig2["n_train_signatures"],
     }
+
+    # Row-order invariance of the corrected rank statistics.  Rank-based
+    # quantities should be identical after a fixed row permutation.
+    perm = np.random.default_rng(20261021).permutation(len(y))
+    row_order = {}
+    for label, xx, yy in [
+        ("radius2_unseen_vs_AE_P3B", sig2["unseen_atom_fraction"], ae["P3B_s0"]),
+        ("path_unseen_vs_AE_P3B", cov["all_f0_mass"], ae["P3B_s0"]),
+    ]:
+        base = {
+            "spearman": spearman_average(xx, yy),
+            "partial_n_atoms": partial_spearman(xx, yy, nat),
+            "partial_n_atoms_cycle_rank": partial_spearman(xx, yy, [nat, cr]),
+        }
+        shuffled = {
+            "spearman": spearman_average(xx[perm], yy[perm]),
+            "partial_n_atoms": partial_spearman(xx[perm], yy[perm], nat[perm]),
+            "partial_n_atoms_cycle_rank": partial_spearman(xx[perm], yy[perm], [nat[perm], cr[perm]]),
+        }
+        row_order[label] = {
+            "base": base,
+            "shuffled": shuffled,
+            "max_abs_diff": float(max(abs(base[k] - shuffled[k]) for k in base)),
+            "pass": bool(max(abs(base[k] - shuffled[k]) for k in base) <= 1e-12),
+        }
 
     # Group means by fixed size/cycle/coverage bins.
     groups = {
@@ -454,6 +501,7 @@ def main() -> int:
         "within_size_associations": within_size,
         "counterexamples": counter,
         "coverage_bin_edges": [0.0, 1e-12, 0.01, 0.05],
+        "row_order_invariance": row_order,
         "coverage_bin_labels": ["zero", "(0,1%]", "(1%,5%]", ">5%"],
         "size_bin_thresholds_from_train": [float(x) for x in size_q],
         "cycle_bin_definition": "0: rank 0-1; 1: 2; 2: 3; 3: 4; 4: rank>=5 (train distribution fixed)",
@@ -461,10 +509,23 @@ def main() -> int:
             "Occurrence mass weights every actual path occurrence; unique-pattern ratio is reported separately.",
             "Unseen means zero independent train molecules contained the exact J pattern; it does not mean the content cannot be encoded by the shared phi.",
             "Radius-1/2 signatures are exact nested tuples from raw atom/bond categories; no learned embedding or y.",
+            "Radius-2 signature means two nested neighbourhood rounds (centre type + incident bond type + neighbour one-ring signature), not an exact radius-2 induced subgraph and not a complete record of ring closure or node coincidence.",
+            "Partial Spearman uses scipy rankdata(method='average') and lstsq residualisation on an intercept plus average-ranked controls; ties are never split by double argsort.",
             "Coverage bins use train leave-one-out masses only; no valid labels are used to define thresholds.",
         ],
     }
     C.write_json(ANALYSIS / "coverage_summary.json", summary)
+    C.write_json(ANALYSIS / "erratum_checks.json", {
+        "protocol_id": "zinc-generalization-audit-v1",
+        "row_order_invariance": row_order,
+        "radius2_partial_spearman": {
+            "spearman": relations["radius2"]["spearman_ae_P3B"],
+            "partial_n_atoms": relations["radius2"]["partial_spearman_ae_P3B_n_atoms"],
+            "partial_n_atoms_cycle_rank": relations["radius2"]["partial_spearman_ae_P3B_n_atoms_cycle_rank"],
+        },
+        "method": "scipy.stats.rankdata(method='average'); lstsq residuals on [1, rank(n_atoms), rank(cycle_rank)]; Pearson on residuals",
+        "official_test_loaded": False,
+    })
     C.write_json(
         ANALYSIS / "signature_summary.json",
         {

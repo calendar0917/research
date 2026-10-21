@@ -1,6 +1,8 @@
 # 短中间判断（审计完成时）
 
-## 最可能解释 1：局部 junction 身份被 Null 分组稀释（H3）
+> 2026-10-21 erratum：H2/H3 的最终措辞以 `REPORT.md`、`ERRATUM.md` 和 `analysis/decision.json` 为准；本文件保留为过程记录。H3 是待检验接口假设，不是已确认主因；H2 未被拒绝。
+
+## 待检验接口假设 1：局部 junction 身份被 Null 分组稀释（H3）
 - 支持：P3 的 Null 分组对每条键只给 `n_b × graph_mean(w)`，局部 junction 内容被全图均值替代；radius-2 未见环境覆盖 25.1% 分子却承担 49.8% 绝对误差；ring≥4 且 radius-2 未见环境的 47 个分子 MAE 0.314。
 - 反对：J 已经注入完整 typed path 内容却更差；旧 organized 单臂在 official valid 上也不稳定；M/S 全干替换更差。说明“加局部内容”本身不等于“保住全局 P3 的归纳偏置”。
 - 什么会改变判断：如果 dual-channel 的 organized 臂不优于同参数 Null-local 对照，则局部 ownership 不是可用的 MAE 杠杆，应停止结构接口路线。
