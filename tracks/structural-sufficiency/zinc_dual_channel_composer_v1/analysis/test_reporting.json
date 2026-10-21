@@ -1,0 +1,278 @@
+{
+  "protocol_id": "zinc-dual-channel-composer-v1-test-reporting",
+  "status": "REPORTING_ONLY",
+  "authorization": "User explicitly authorized on 2026-10-21 after valid-only decision was frozen: '\u6211\u6388\u6743\u4e86\uff0c\u505a\u5427'.",
+  "prereg": {
+    "path": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/TEST_PREREG.md",
+    "sha256": "ad22fbd874af138516cbe33c8d04037a73ce29f6a43d71361cc284937fcdf4c4"
+  },
+  "prior_valid_decision": "C_OWNERSHIP_ONLY_NO_PERFORMANCE",
+  "prior_valid_commit": "e76cc7d",
+  "test_is_spent_not_pristine": true,
+  "official_test_loaded": true,
+  "test_read_count": 3,
+  "selection_rule": "No selection: three checkpoints were frozen at their valid-best epoch before this read; test cannot change any model, epoch, recipe, or decision.",
+  "test_used_for_selection": false,
+  "data": {
+    "split": "official PyG ZINC subset=True test",
+    "n": 1000,
+    "raw_y_mae": true,
+    "cache_path": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_test.pt",
+    "cache_sha256": "981e2b9a2588b300024947edac4a5053d054199051ca19e016d350ef3ece0dc1",
+    "labels_sha256": "66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768"
+  },
+  "models": {
+    "P3B_s0": {
+      "checkpoint": "tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/xBssl_P3N_s0/best.pt",
+      "checkpoint_sha256": "4c379c93214c003a6c58fd4add4a64ecb4fe23603233738fab18f3885abdc34f",
+      "checkpoint_epoch": 377,
+      "checkpoint_valid_mae": 0.07622375113883754,
+      "parameters": 413505,
+      "test_mae_recomputed": 0.06986484075244516,
+      "prediction_sha256": "15e1ca06de1899f33540e484fd455dca8bfe53515bc6413a7c61e6b8aac58fac",
+      "candidate": "P3N",
+      "organized_local": null
+    },
+    "L_s0": {
+      "checkpoint": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/runs/L_s0/best.pt",
+      "checkpoint_sha256": "fab04ec0d5fd56f338379d7dcb223e31208338a8a89a335a25a6f0c4f5226cd5",
+      "checkpoint_epoch": 489,
+      "checkpoint_valid_mae": 0.07853714964160463,
+      "parameters": 494193,
+      "test_mae_recomputed": 0.06626655481941998,
+      "prediction_sha256": "612e414d5bd25e7c97fe8e18a5babf56802b6af73f48ca77681fc844b11a6cfa",
+      "candidate": "DCC_L",
+      "organized_local": true
+    },
+    "C_s0": {
+      "checkpoint": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/runs/C_s0/best.pt",
+      "checkpoint_sha256": "0a828c494f75138653ceb5677199f7b17e77943b5251bfd4b901406fe6739067",
+      "checkpoint_epoch": 482,
+      "checkpoint_valid_mae": 0.08236743245268008,
+      "parameters": 494193,
+      "test_mae_recomputed": 0.07001481960061938,
+      "prediction_sha256": "61b03189e08587f02d2501e9575e5e86aee3682505a2f9f2bd8f3e4733298056",
+      "candidate": "DCC_C",
+      "organized_local": false
+    }
+  },
+  "metrics": {
+    "P3B_s0": {
+      "n": 1000,
+      "mae": 0.06986484075244516,
+      "rmse": 0.14796093772015328,
+      "median_ae": 0.03596138954162598,
+      "p90_ae": 0.1509054154157639,
+      "p95_ae": 0.2237172737717628,
+      "max_ae": 1.9200434684753418,
+      "mean_signed_error": 0.0020875272490084172,
+      "positive_error_fraction": 0.501,
+      "top1_abs_error_share": 0.027482256422493072,
+      "top10_abs_error_share": 0.1512759429165363,
+      "top50_abs_error_share": 0.34175901055051466,
+      "top100_abs_error_share": 0.47281240238120614
+    },
+    "L_s0": {
+      "n": 1000,
+      "mae": 0.06626655481941998,
+      "rmse": 0.16132248939643376,
+      "median_ae": 0.0357394814491272,
+      "p90_ae": 0.13401133418083191,
+      "p95_ae": 0.19486449956893917,
+      "max_ae": 3.088657855987549,
+      "mean_signed_error": 0.005970597505569458,
+      "positive_error_fraction": 0.511,
+      "top1_abs_error_share": 0.04660960365910544,
+      "top10_abs_error_share": 0.17056704399877506,
+      "top50_abs_error_share": 0.35172446808502444,
+      "top100_abs_error_share": 0.47305943541023254
+    },
+    "C_s0": {
+      "n": 1000,
+      "mae": 0.07001481960061938,
+      "rmse": 0.15742775688015262,
+      "median_ae": 0.03735920786857605,
+      "p90_ae": 0.1410053610801697,
+      "p95_ae": 0.2220202565193176,
+      "max_ae": 2.19534969329834,
+      "mean_signed_error": 0.0030926531199365853,
+      "positive_error_fraction": 0.497,
+      "top1_abs_error_share": 0.031355500247249354,
+      "top10_abs_error_share": 0.15834310210793465,
+      "top50_abs_error_share": 0.35445804775425716,
+      "top100_abs_error_share": 0.4781476729285451
+    }
+  },
+  "main_table": [
+    {
+      "model": "P3B_s0",
+      "parameters": 413505,
+      "best_valid": 0.07622375113883754,
+      "best_epoch": 377,
+      "test_mae": 0.06986484075244516,
+      "test_rmse": 0.14796093772015328,
+      "test_median_ae": 0.03596138954162598,
+      "test_p90_ae": 0.1509054154157639,
+      "test_p95_ae": 0.2237172737717628,
+      "test_max_ae": 1.9200434684753418,
+      "test_mean_signed_error": 0.0020875272490084172,
+      "test_top100_abs_error_share": 0.47281240238120614,
+      "test_minus_valid_mae": -0.006358910386392386
+    },
+    {
+      "model": "L_s0",
+      "parameters": 494193,
+      "best_valid": 0.07853714964160463,
+      "best_epoch": 489,
+      "test_mae": 0.06626655481941998,
+      "test_rmse": 0.16132248939643376,
+      "test_median_ae": 0.0357394814491272,
+      "test_p90_ae": 0.13401133418083191,
+      "test_p95_ae": 0.19486449956893917,
+      "test_max_ae": 3.088657855987549,
+      "test_mean_signed_error": 0.005970597505569458,
+      "test_top100_abs_error_share": 0.47305943541023254,
+      "test_minus_valid_mae": -0.01227059482218465
+    },
+    {
+      "model": "C_s0",
+      "parameters": 494193,
+      "best_valid": 0.08236743245268008,
+      "best_epoch": 482,
+      "test_mae": 0.07001481960061938,
+      "test_rmse": 0.15742775688015262,
+      "test_median_ae": 0.03735920786857605,
+      "test_p90_ae": 0.1410053610801697,
+      "test_p95_ae": 0.2220202565193176,
+      "test_max_ae": 2.19534969329834,
+      "test_mean_signed_error": 0.0030926531199365853,
+      "test_top100_abs_error_share": 0.4781476729285451,
+      "test_minus_valid_mae": -0.012352612852060699
+    }
+  ],
+  "paired_contrasts": {
+    "resamples": 10000,
+    "rng_seed": 20261021,
+    "same_row_resamples_for_all_contrasts": true,
+    "delta_definition": "abs_error(first) - abs_error(second); negative means the first model is better",
+    "interval_role": "descriptive fixed-checkpoint interval on the spent official-test 1000; not cross-seed confirmation",
+    "contrasts": {
+      "L_s0_minus_P3B_s0": {
+        "mean_delta_mae": -0.003598285933025181,
+        "ci95": [
+          -0.008186920658755115,
+          0.0012041054388042523
+        ]
+      },
+      "C_s0_minus_P3B_s0": {
+        "mean_delta_mae": 0.00014997884817421437,
+        "ci95": [
+          -0.003588805060600862,
+          0.004147106839762999
+        ]
+      },
+      "L_s0_minus_C_s0": {
+        "mean_delta_mae": -0.003748264781199396,
+        "ci95": [
+          -0.007478468643990346,
+          0.00019790295362472396
+        ]
+      }
+    }
+  },
+  "subgroups": {
+    "groups": {
+      "signature_unseen": {
+        "n": 244,
+        "mae_P3B_s0": 0.12294652417767793,
+        "mae_L_s0": 0.12921528834811427,
+        "mae_C_s0": 0.1297622289619271,
+        "delta_L_minus_P3B": 0.006268764170436341,
+        "delta_C_minus_P3B": 0.006815704784249184,
+        "delta_L_minus_C": -0.0005469406138128433
+      },
+      "signature_covered": {
+        "n": 756,
+        "mae_P3B_s0": 0.05273265721308432,
+        "mae_L_s0": 0.04594976780751336,
+        "mae_C_s0": 0.05073126419829254,
+        "delta_L_minus_P3B": -0.006782889405570963,
+        "delta_C_minus_P3B": -0.0020013930147917813,
+        "delta_L_minus_C": -0.004781496390779182
+      },
+      "ordinary_y_gt_minus3": {
+        "n": 923,
+        "mae_P3B_s0": 0.06323461853601402,
+        "mae_L_s0": 0.06039191556656542,
+        "mae_C_s0": 0.06440912292945326,
+        "delta_L_minus_P3B": -0.0028427029694486025,
+        "delta_C_minus_P3B": 0.0011745043934392515,
+        "delta_L_minus_C": -0.004017207362887854
+      },
+      "tail_y_le_minus3": {
+        "n": 77,
+        "mae_P3B_s0": 0.14934140056758732,
+        "mae_L_s0": 0.13668593183740393,
+        "mae_C_s0": 0.13721037839914296,
+        "delta_L_minus_P3B": -0.01265546873018339,
+        "delta_C_minus_P3B": -0.012131022168444349,
+        "delta_L_minus_C": -0.0005244465617390422
+      },
+      "rings_ge4": {
+        "n": 208,
+        "mae_P3B_s0": 0.09720613788634253,
+        "mae_L_s0": 0.09021446163443705,
+        "mae_C_s0": 0.09746106674608129,
+        "delta_L_minus_P3B": -0.006991676251905469,
+        "delta_C_minus_P3B": 0.00025492885973877634,
+        "delta_L_minus_C": -0.007246605111644245
+      },
+      "rings_ge4_and_signature_unseen": {
+        "n": 51,
+        "mae_P3B_s0": 0.20051964872754088,
+        "mae_L_s0": 0.22211144744035075,
+        "mae_C_s0": 0.21428738848543635,
+        "delta_L_minus_P3B": 0.02159179871280988,
+        "delta_C_minus_P3B": 0.01376773975789547,
+        "delta_L_minus_C": 0.007824058954914411
+      },
+      "P3B_test_worst100": {
+        "n": 100,
+        "mae_P3B_s0": 0.3303296319814399,
+        "mae_L_s0": 0.270850152480416,
+        "mae_C_s0": 0.3111006111325696,
+        "delta_L_minus_P3B": -0.05947947950102389,
+        "delta_C_minus_P3B": -0.01922902084887028,
+        "delta_L_minus_C": -0.04025045865215361
+      },
+      "unseen_minus_covered_delta_of_deltas": {
+        "L_minus_P3B": 0.013051653576007304,
+        "C_minus_P3B": 0.008817097799040965,
+        "L_minus_C": 0.004234555776966339,
+        "definition": "mean paired delta inside unseen minus mean paired delta inside covered; negative means the first model's advantage is larger in the unseen group"
+      }
+    },
+    "note": "Fixed semantic definitions; P3B_test_worst100 is defined by a fixed rule from P3B test AE and is descriptive only, not a gate or selector."
+  },
+  "artifact_hashes": {
+    "test_predictions": {
+      "P3B_s0": "a03a503c8e95a7692b2febfe5711fee0fcd9554b3a8909607451582539c0c47f",
+      "L_s0": "f744c11846079449536f422bd87208c2e6d136429e8244079c0da9482f65cb74",
+      "C_s0": "6a1f93ca3885235d1866b06cb7034ee2f14dd6e4ac62f6e9f82871d6646bcc9e"
+    },
+    "test_per_molecule_csv": "252c5f10a660af7429370ad919a5244d87e2799968fad9647b7654e05e9c91d7",
+    "test_prereg": "ad22fbd874af138516cbe33c8d04037a73ce29f6a43d71361cc284937fcdf4c4"
+  },
+  "checkpoint_hashes": {
+    "P3B_s0": "4c379c93214c003a6c58fd4add4a64ecb4fe23603233738fab18f3885abdc34f",
+    "L_s0": "fab04ec0d5fd56f338379d7dcb223e31208338a8a89a335a25a6f0c4f5226cd5",
+    "C_s0": "0a828c494f75138653ceb5677199f7b17e77943b5251bfd4b901406fe6739067"
+  },
+  "notes": [
+    "The official test split is already spent; this is a reporting-only re-read, not a pristine blind test.",
+    "No test number was used to select or change a model, epoch, recipe, subgroup, or follow-up run.",
+    "All three checkpoints are the same valid-best checkpoints analyzed in REPORT.md."
+  ],
+  "test_read_count_meaning": "Three harness invocations after TEST_PREREG: one aborted before writing outputs, one completed but used the wrong radius stream for subgroup diagnostics, and one final authoritative pass. All three produced identical overall test MAEs; no model or decision changed.",
+  "harness_note": "The first two scoring invocations were diagnostic harness failures (missing import; radius-1/radius-2 mismatch). The final pass is authoritative. Because the same three overall MAEs were printed before the final pass, this reporting read is not literally blind after the first invocation; treat all test numbers as descriptive."
+}

@@ -1,15 +1,21 @@
 {
   "protocol_id": "zinc-dual-channel-composer-v1",
   "status": "C_OWNERSHIP_ONLY_NO_PERFORMANCE",
-  "official_test_loaded": false,
+  "official_test_loaded": true,
   "valid_is_exposed_development_split": true,
   "single_seed": 0,
   "budget_note": "See analysis/budget_ledger.json. Actual job occupancy was 0.7703 A100-hours (timing 0.0189 + formal 0.7514); the pre-run conservative projection would have stopped, and the user then explicitly instructed to ignore the GPU budget and run for results.",
   "test_access": {
-    "official_test_loaded": false,
+    "official_test_loaded": true,
     "test_requested_by_user_after_run": true,
-    "test_read": false,
-    "reason": "The frozen protocol and repository guardrail forbid reading official test labels/cache/predictions in this round; test is spent and not pristine. A reporting-only terminal evaluation would require a new preregistration and explicit authorization and was not performed."
+    "authorized_after_valid_decision": true,
+    "test_read": true,
+    "test_read_count": 3,
+    "prereg": "TEST_PREREG.md",
+    "amendment": "TEST_AMENDMENT.md",
+    "report": "TEST_REPORT.md",
+    "test_used_for_selection": false,
+    "reason": "The user explicitly authorized a reporting-only test read after the valid-only decision was frozen. The test split is spent and not pristine; test numbers are descriptive and did not change any model, epoch, recipe, or decision."
   },
   "main_contrasts": {
     "L_minus_P3B": {
@@ -78,5 +84,6 @@
     "A null/negative result does not imply unseen environments cannot generalize or that all local composition is useless.",
     "Do not route by subgroup or select epochs by subgroup."
   ],
-  "next_round_cost_if_confirming": "Not recommended for this negative-performance result. If ownership alone were to be confirmed, P3B seed1 + L seed1 + C seed1 are all required; using this round's occupancy about 0.30 + 0.35 + 0.40 = 1.05 A100-hours plus timing/margin."
+  "next_round_cost_if_confirming": "Not recommended for this negative-performance result. If ownership alone were to be confirmed, P3B seed1 + L seed1 + C seed1 are all required; using this round's occupancy about 0.30 + 0.35 + 0.40 = 1.05 A100-hours plus timing/margin.",
+  "official_test_loaded_before_valid_decision": false
 }

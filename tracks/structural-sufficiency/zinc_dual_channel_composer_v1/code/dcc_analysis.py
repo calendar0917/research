@@ -188,7 +188,7 @@ def main() -> int:
             "gpu_hours": gpu_hours,
             "gpu_hours_source": gpu_source,
         })
-    C.write_json(ANALYSIS / "main_table.json", {"rows": main_rows, "valid_role": "exposed development split; official test not read"})
+    C.write_json(ANALYSIS / "main_table.json", {"rows": main_rows, "valid_role": "exposed development split; official test only reporting-only after the valid decision was frozen"})
 
     # Paired bootstrap with one fixed set of row resamples for all contrasts.
     rng = np.random.default_rng(20261021)
@@ -275,15 +275,22 @@ def main() -> int:
     decision = {
         "protocol_id": "zinc-dual-channel-composer-v1",
         "status": status,
-        "official_test_loaded": False,
+        "official_test_loaded": True,
+        "official_test_loaded_before_valid_decision": False,
         "valid_is_exposed_development_split": True,
         "single_seed": 0,
         "budget_note": "See analysis/budget_ledger.json. Actual job occupancy was 0.7703 A100-hours (timing 0.0189 + formal 0.7514); the pre-run conservative projection would have stopped, and the user then explicitly instructed to ignore the GPU budget and run for results.",
         "test_access": {
-            "official_test_loaded": False,
+            "official_test_loaded": True,
             "test_requested_by_user_after_run": True,
-            "test_read": False,
-            "reason": "The frozen protocol and repository guardrail forbid reading official test labels/cache/predictions in this round; test is spent and not pristine. A reporting-only terminal evaluation would require a new preregistration and explicit authorization and was not performed.",
+            "authorized_after_valid_decision": True,
+            "test_read": True,
+            "test_read_count": 3,
+            "prereg": "TEST_PREREG.md",
+            "amendment": "TEST_AMENDMENT.md",
+            "report": "TEST_REPORT.md",
+            "test_used_for_selection": False,
+            "reason": "The user explicitly authorized a reporting-only test read after the valid-only decision was frozen. The test split is spent and not pristine; test numbers are descriptive and did not change any model, epoch, recipe, or decision.",
         },
         "main_contrasts": {
             "L_minus_P3B": {"mean_delta_mae": d_l_p3b, "ci95": contrasts["L_s0_minus_P3B_s0"]["ci95"], "signal": strength(d_l_p3b)},
