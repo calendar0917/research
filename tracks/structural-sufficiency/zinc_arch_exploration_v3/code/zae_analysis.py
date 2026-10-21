@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import numpy as np
+import torch
 
 _HERE = Path(__file__).resolve().parent
 _EXP = _HERE.parent
@@ -33,6 +34,8 @@ for _p in (str(_HERE), str(_V1)):
         sys.path.insert(0, _p)
 
 import ad_common as C  # noqa: E402
+import ad_data as D  # noqa: E402
+import zae_models as ZM  # noqa: E402
 import zae_train as ZT  # noqa: E402
 
 ANALYSIS = _EXP / "analysis"
@@ -41,7 +44,7 @@ DCC = _SUF / "zinc_dual_channel_composer_v1"
 AUDIT = _SUF / "zinc_generalization_audit_v1"
 P3B_RUN = _SUF / "zinc_recipe_trunk_v2" / "runs" / "xBssl_P3N_s0"
 
-ARMS = ("A_s0", "B_s0", "A_SSL_s0")
+ARMS = ("A_s0", "B_s0", "A_SSL_s0", "A_attn_s0")
 REFS = ("P3B_s0", "L_s0", "C_s0")
 BOOT = 10_000
 BOOT_SEED = 20261022
@@ -103,30 +106,58 @@ def main() -> int:
         preds[f"{arm}_s0"] = load_npz_pred(run / "predictions" / "valid_best.npz", n_valid)
         infos[f"{arm}_s0"] = C.read_json(run / "train.json")
     missing = []
+    truncated = []
     for arm in ARMS:
         run = RUNS / arm
-        if not (run / "train.json").exists():
+        if (run / "train.json").exists():
+            infos[arm] = C.read_json(run / "train.json")
+            arr = load_npz_pred(run / "predictions" / "valid_best.npz", n_valid)
+            stored = float(infos[arm]["fixed_objects"]["best"]["valid_mae"])
+            if abs(float(np.abs(arr - y).mean()) - stored) > 1e-6:
+                raise RuntimeError(f"{arm}: stored best valid does not match its predictions")
+            preds[arm] = arr
+        elif (run / "train_partial.json").exists():
+            # budget-stopped run: curve and best checkpoint recovered from the log
+            info = C.read_json(run / "train_partial.json")
+            info["fixed_objects"] = {"best": {"valid_mae": info["best_valid"]["valid_mae"],
+                                              "epoch": info["best_valid"]["epoch"],
+                                              "train_mae_eval_mode": float("nan")},
+                                     "final": None}
+            info["best_valid"] = {"valid_mae": info["best_valid"]["valid_mae"],
+                                  "epoch": info["best_valid"]["epoch"]}
+            info["recipe"] = {"epochs": info["epochs_declared"], "epochs_run": info["epochs_run"],
+                              "batch_size": info["batch_size"], "updates": info["updates"],
+                              "updates_declared": info["epochs_declared"] * info["declared_steps_per_epoch"]}
+            info["wall_seconds"] = info["wall_seconds_logged"]
+            info["gpu_hours"] = info["gpu_hours_logged"]
+            model, _ = ZM.build_model(info["candidate"], D.load_norm(), 0, torch.device("cpu"),
+                                      ssl=False)
+            info["parameter_count"] = C.parameter_count(model)
+            del model
+            infos[arm] = info
+            truncated.append(arm)
+            missing.append(arm)  # no per-molecule valid predictions were saved
+        else:
             missing.append(arm)
-            continue
-        infos[arm] = C.read_json(run / "train.json")
-        arr = load_npz_pred(run / "predictions" / "valid_best.npz", n_valid)
-        stored = float(infos[arm]["fixed_objects"]["best"]["valid_mae"])
-        if abs(float(np.abs(arr - y).mean()) - stored) > 1e-6:
-            raise RuntimeError(f"{arm}: stored best valid does not match its predictions")
-        preds[arm] = arr
 
     table = []
     for name, info in infos.items():
+        partial = info.get("status") == "CANCELLED_BY_BUDGET"
         rec = {
             "model": name,
-            "params": int(info["parameter_count"]),
+            "params": int(info.get("parameter_count") or 0),
             "valid_mae_best": float(info["fixed_objects"]["best"]["valid_mae"]),
             "best_epoch": int(info["best_valid"]["epoch"]),
             "train_mae_eval_at_best": float(info["fixed_objects"]["best"]["train_mae_eval_mode"]),
-            "valid_mae_final": float(info["fixed_objects"]["final"]["valid_mae"]),
-            "train_mae_eval_at_final": float(info["fixed_objects"]["final"]["train_mae_eval_mode"]),
+            "valid_mae_final": (float("nan") if partial
+                                else float(info["fixed_objects"]["final"]["valid_mae"])),
+            "train_mae_eval_at_final": (float("nan") if partial
+                                        else float(info["fixed_objects"]["final"]["train_mae_eval_mode"])),
             "updates": int(info["recipe"].get("updates", 0)),
-            "epochs": int(info["recipe"].get("epochs", 0)),
+            "updates_declared": (int(info["recipe"]["updates_declared"]) if partial
+                                 else int(info["recipe"].get("updates", 0))),
+            "epochs": int(info["recipe"].get("epochs_run", info["recipe"].get("epochs", 0))),
+            "epochs_declared": int(info["recipe"].get("epochs", 0)),
             "batch_size": int(info["recipe"].get("batch_size", 0)),
             "ssl": (
                 "P3 masked SSL encoders (frozen upstream) + native A-SSL pretrain"
@@ -135,9 +166,10 @@ def main() -> int:
                 if name in ("P3B_s0", "L_s0", "C_s0", "A_s0", "B_s0")
                 else "none"
             ),
-            "status": "completed",
+            "status": "CANCELLED_BY_BUDGET" if partial else "completed",
             "wall_seconds": float(info.get("wall_seconds", float("nan"))),
             "gpu_hours_run_level": info.get("gpu_hours"),
+            "cancel_reason": info.get("cancel_reason") if partial else None,
             "official_test_loaded": bool(info.get("data", {}).get("official_test_loaded", False)),
         }
         if name == "A_SSL_s0":
@@ -162,6 +194,32 @@ def main() -> int:
                     base_pred[first], base_pred[second], y, seed=BOOT_SEED
                 )
     C.write_json(ANALYSIS / "paired_contrasts.json", contrasts)
+
+    # horizon-robust comparison: best valid inside a fixed learning-rate band
+    band = {}
+    curves = {
+        "A_s0": RUNS / "A_s0" / "curve.csv",
+        "B_s0": RUNS / "B_s0" / "curve.csv",
+        "A_SSL_s0": RUNS / "A_SSL_s0" / "curve.csv",
+        "A_attn_s0": RUNS / "A_attn_s0" / "curve.csv",
+        "P3B_s0": P3B_RUN / "curve.csv",
+        "L_s0": DCC / "runs" / "L_s0" / "curve.csv",
+        "C_s0": DCC / "runs" / "C_s0" / "curve.csv",
+    }
+    for name, path in curves.items():
+        if not path.exists():
+            continue
+        rows_c = list(csv.DictReader(open(path, encoding="utf-8")))
+        sel = [(int(r["epoch"]), float(r["valid_mae"])) for r in rows_c
+               if 1e-4 < float(r["lr"]) <= 3e-4]
+        if not sel:
+            continue
+        best = min(sel, key=lambda t: t[1])
+        band[name] = {"band": "(1e-4, 3e-4]", "n_epochs_in_band": len(sel),
+                      "best_valid_in_band": best[1], "epoch": best[0],
+                      "best_valid_overall": min(float(r["valid_mae"]) for r in rows_c),
+                      "epochs_logged": len(rows_c)}
+    C.write_json(ANALYSIS / "lr_band.json", band)
 
     # fixed subgroups from the frozen audit table
     rows_audit = list(csv.DictReader(open(AUDIT / "analysis" / "per_molecule.csv", encoding="utf-8")))
@@ -252,9 +310,10 @@ def main() -> int:
         "|---|---:|---:|---:|---:|---:|---:|---|---|---:|---:|",
     ]
     for r in table:
+        final = "n/a (truncated)" if r["status"] != "completed" else f"{r['valid_mae_final']:.9f}"
         lines.append(
             f"| {r['model']} | {r['params']:,} | {r['valid_mae_best']:.9f} | {r['best_epoch']} | "
-            f"{r['train_mae_eval_at_best']:.6f} | {r['valid_mae_final']:.9f} | {r['updates']:,} | "
+            f"{r['train_mae_eval_at_best']:.6f} | {final} | {r['updates']:,} | "
             f"{r['ssl']} | {r['status']} | {r['gpu_hours_run_level']:.4f} |"
         )
     (ANALYSIS / "main_table.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

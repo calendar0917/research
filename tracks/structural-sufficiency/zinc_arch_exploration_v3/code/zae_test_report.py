@@ -46,7 +46,7 @@ ANALYSIS = _EXP / "analysis"
 RUNS = _EXP / "runs"
 DCC = _SUF / "zinc_dual_channel_composer_v1"
 FREEZE = ANALYSIS / "test_freeze.json"
-ARMS = ("A_s0", "B_s0", "A_SSL_s0")
+ARMS = ("A_s0", "B_s0", "A_SSL_s0", "A_attn_s0")
 REFS = ("P3B_s0", "L_s0", "C_s0")
 BOOT = 10_000
 BOOT_SEED = 20261022
@@ -59,19 +59,38 @@ def freeze() -> dict:
     rows = []
     for arm in ARMS:
         run = RUNS / arm
-        if not (run / "train.json").exists():
+        full = (run / "train.json").exists()
+        if full:
+            info = C.read_json(run / "train.json")
+            status = "completed"
+            recipe = {k: info["recipe"][k] for k in
+                      ("epochs", "batch_size", "lr", "min_lr", "weight_decay", "updates")}
+            epochs_run = int(info["recipe"]["epochs"])
+            updates = int(info["recipe"]["updates"])
+        elif (run / "train_partial.json").exists():
+            info = C.read_json(run / "train_partial.json")
+            status = "CANCELLED_BY_BUDGET"
+            recipe = {"epochs_declared": info["epochs_declared"], "batch_size": info["batch_size"],
+                      "updates_run": info["updates"]}
+            epochs_run = int(info["epochs_run"])
+            updates = int(info["updates"])
+        else:
             raise SystemExit(f"{arm}: run incomplete; freeze only after all formal runs are done")
-        info = C.read_json(run / "train.json")
+        best_valid = (info["fixed_objects"]["best"]["valid_mae"] if full
+                      else info["best_valid"]["valid_mae"])
+        best_epoch = (info["best_valid"]["epoch"] if full else info["best_valid"]["epoch"])
         rows.append({
             "model": arm,
             "arm": arm.replace("_s0", ""),
-            "best_epoch": int(info["best_valid"]["epoch"]),
-            "valid_mae": float(info["fixed_objects"]["best"]["valid_mae"]),
+            "status": status,
+            "best_epoch": int(best_epoch),
+            "epochs_run": epochs_run,
+            "updates_run": updates,
+            "valid_mae": float(best_valid),
             "checkpoint": str((run / "best.pt").relative_to(C.REPO)),
             "checkpoint_sha256": C.sha256_file(run / "best.pt"),
-            "parameter_count": int(info["parameter_count"]),
-            "recipe": {k: info["recipe"][k] for k in
-                       ("epochs", "batch_size", "lr", "min_lr", "weight_decay", "updates")},
+            "parameter_count": (int(info["parameter_count"]) if full else None),
+            "recipe": recipe,
             "ssl_pretrain": info.get("extra", {}).get("ssl_pretrain"),
             "selection": "best official-valid MAE, strict <, earlier epoch wins a tie",
         })
@@ -133,7 +152,8 @@ def report() -> int:
             **ZA.metrics(preds[arm], y),
             "valid_mae": row["valid_mae"],
             "best_epoch": row["best_epoch"],
-            "parameter_count": row["parameter_count"],
+            "status": row.get("status"),
+            "parameter_count": row.get("parameter_count"),
             "checkpoint_sha256": row["checkpoint_sha256"],
             "mae_recomputed": float(mae),
         }
@@ -179,7 +199,9 @@ def report() -> int:
              "|---|---:|---:|---:|---:|---:|---:|---:|"]
     for k in ("P3B_s0", "L_s0", "C_s0") + ARMS:
         m = result["models"][k]
-        lines.append(f"| {k} | {m.get('parameter_count', '')} | {m.get('valid_mae', float('nan')):.9f} | "
+        params = m.get("parameter_count")
+        params = f"{params:,}" if isinstance(params, int) else ""
+        lines.append(f"| {k} | {params} | {m.get('valid_mae', float('nan')):.9f} | "
                      f"{m.get('best_epoch', '')} | {m['mae']:.9f} | {m['rmse']:.6f} | "
                      f"{m['median_ae']:.6f} | {m['p95_ae']:.6f} |")
     (ANALYSIS / "test_main_table.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
