@@ -50,7 +50,7 @@ def _mol_from_raw(x, ei, ea, idx=0) -> tuple[Any, dict]:
 
 def check_params(norm) -> dict:
     out = {}
-    for arm in ("A", "B"):
+    for arm in ("A", "B", "A_attn"):
         model, info = ZM.build_model(arm, norm, 0, torch.device("cpu"))
         out[arm] = {
             "parameters": info["parameter_count"],
@@ -561,6 +561,39 @@ def overfit_probe(norm, train_cache, pair_train, *, steps: int = 80, batch: int 
     return out
 
 
+def check_attn_pool(norm, valid_cache, pair_valid) -> dict:
+    """A_attn must be exactly A when its queries are zero, and stay permutation invariant."""
+    rows = np.arange(5)
+    b = ZD.collate_pair(valid_cache, pair_valid, rows)
+    b_rev = ZD.collate_pair(valid_cache, pair_valid, rows[::-1])
+    torch.manual_seed(11)
+    mean_model, _ = ZM.build_model("A", norm, 0, torch.device("cpu"), ssl=False)
+    attn_model, info = ZM.build_model("A_attn", norm, 0, torch.device("cpu"), ssl=False)
+    attn_model.load_state_dict(mean_model.state_dict(), strict=False)
+    with torch.no_grad():
+        zero_diff = float((mean_model(b) - attn_model(b)).abs().max())
+        attn_model.attn_q.normal_(0, 3.0)
+        live_diff = float((mean_model(b) - attn_model(b)).abs().max())
+        y_rev = attn_model(b_rev)
+    y = attn_model(b)
+    y.sum().backward()
+    grad = float(attn_model.attn_q.grad.abs().max()) if attn_model.attn_q.grad is not None else 0.0
+    out = {
+        "parameters": info["parameter_count"],
+        "queries_are_zero_at_init": bool((ZM.build_model("A_attn", norm, 0, torch.device("cpu"),
+                                                       ssl=False)[0].attn_q == 0).all()),
+        "max_abs_diff_vs_mean_pool_with_zero_queries": zero_diff,
+        "max_abs_diff_with_scaled_queries": live_diff,
+        "permutation_max_abs_diff": float((y - y_rev.flip(0)).abs().max()),
+        "query_grad_abs_max": grad,
+        "branch_alive": bool(live_diff > 1e-5 and grad > 0),
+        "permutation_ok": bool(float((y - y_rev.flip(0)).abs().max()) < 1e-5),
+        "zero_query_ok": bool(zero_diff < 1e-4),
+    }
+    assert out["branch_alive"] and out["permutation_ok"] and out["zero_query_ok"], out
+    return out
+
+
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     torch.set_grad_enabled(True)
@@ -578,6 +611,7 @@ def main() -> int:
     payload["a_contraction"] = check_U_adds_information(norm, valid_cache, pair_valid)
     payload["b_triple_block"] = check_triple_non_degenerate(norm, valid_cache, pair_valid)
     payload["ssl_mask"] = check_ssl_mask()
+    payload["attn_pool"] = check_attn_pool(norm, valid_cache, pair_valid)
     payload["collate"] = check_collate_determinism(valid_cache, pair_valid)
     payload["grad_flow"] = check_grad_flow(norm, valid_cache, pair_valid)
     payload["a_source_paths"] = check_source_gradient_paths(norm, valid_cache, pair_valid)

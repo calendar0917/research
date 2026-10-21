@@ -130,10 +130,13 @@ class PairComposition(nn.Module):
 
     def __init__(self, norm: Mapping[str, Any], *, d_pair: int = 64, n_chan: int = 32,
                  pair_rank: int = 48, h_hidden: int = 96, reader_hidden: int = 192,
-                 dropout: float = 0.0):
+                 dropout: float = 0.0, pool: str = "mean"):
         super().__init__()
         self.d_pair = int(d_pair)
         self.n_chan = int(n_chan)
+        self.pool = str(pool)
+        if self.pool not in ("mean", "attn"):
+            raise ValueError(f"unknown pool {pool!r}")
         self.encoders = P3Encoders(dropout=dropout)
         self.endpoint = EndpointState(dropout=dropout)
         self.pair_proj = nn.Linear(WIDTH, pair_rank)
@@ -155,6 +158,9 @@ class PairComposition(nn.Module):
         # (measured ~3 vs ~0.02), and without this the small blocks would only
         # see a tiny first-layer signal.  Counts and global33 stay raw.
         self.block_norms = nn.ModuleList([nn.LayerNorm(WIDTH) for _ in range(7)])
+        # content-based pooling: three learned queries score the off-diagonal
+        # pairs of a graph (learned sum, learned mean, learned second moment).
+        self.attn_q = nn.Parameter(torch.zeros(3, WIDTH)) if self.pool == "attn" else None
         self.reader = MLP(reader_in, reader_hidden, 1, n_hidden=2, dropout=dropout)
         self.register_buffer("global_mean", torch.as_tensor(norm["global_mean"], dtype=torch.float32))
         self.register_buffer("global_scale", torch.as_tensor(norm["global_scale"], dtype=torch.float32))
@@ -219,11 +225,15 @@ class PairComposition(nn.Module):
         diag = batch["pair_self"]
         cnt_off = batch["n_atoms"] * (batch["n_atoms"] - 1.0)
         h_off = h * off.unsqueeze(1)
-        sum_off = h.new_zeros((B, WIDTH)).index_add_(0, graph, h_off)
-        sq_off = h.new_zeros((B, WIDTH)).index_add_(0, graph, h_off * h_off)
+        if self.pool == "attn":
+            att = self._attn_pool(h_off, graph, off, B, cnt_off)
+            sum_off, att_mean, sq_off = att
+        else:
+            sum_off = h.new_zeros((B, WIDTH)).index_add_(0, graph, h_off)
+            sq_off = h.new_zeros((B, WIDTH)).index_add_(0, graph, h_off * h_off)
         diag_sum = h.new_zeros((B, WIDTH)).index_add_(0, graph, h * diag.unsqueeze(1))
         n_pairs_off = cnt_off.clamp(min=1.0)
-        mean_off = sum_off / n_pairs_off.unsqueeze(1)
+        mean_off = att_mean if self.pool == "attn" else sum_off / n_pairs_off.unsqueeze(1)
         sq_mean = sq_off / n_pairs_off.unsqueeze(1)
         sum_scaled = sum_off / n_pairs_off.sqrt().unsqueeze(1)
         diag_mean = diag_sum / batch["n_atoms"].clamp(min=1.0).unsqueeze(1)
@@ -243,6 +253,26 @@ class PairComposition(nn.Module):
         blocks = [sum_scaled, mean_off, sq_mean, diag_mean, mean_a, mean_b, mean_w]
         z = torch.cat([ln(x) for ln, x in zip(self.block_norms, blocks)] + [counts, gstd], dim=1)
         return self.reader(z).view(-1)
+
+    def _attn_pool(self, h_off, graph, off, B, cnt_off):
+        """Segment softmax over each graph's off-diagonal pairs, three queries."""
+        scores = (h_off @ self.attn_q.t()) / (WIDTH ** 0.5)
+        scores = scores.masked_fill(off.unsqueeze(1) < 0.5, -1e9)
+        amax = h_off.new_full((B, 3), -1e9)
+        amax.index_reduce_(0, graph, scores.detach(), "amax", include_self=True)
+        e = torch.exp(scores - amax[graph])
+        e = e * off.unsqueeze(1)
+        denom = e.new_zeros((B, 3)).index_add_(0, graph, e).clamp(min=1e-9)
+        wts = e / denom[graph]
+        s_off = h_off.new_zeros((B, WIDTH)).index_add_(0, graph, wts[:, 0:1] * h_off)
+        a_mean = h_off.new_zeros((B, WIDTH)).index_add_(0, graph, wts[:, 1:2] * h_off)
+        # weighted *sum* of squares: the readout divides by the same pair count,
+        # so this keeps the "second moment" semantics of the plain path
+        a_sq = h_off.new_zeros((B, WIDTH)).index_add_(0, graph, wts[:, 2:3] * h_off * h_off)
+        n_pairs_off = cnt_off.clamp(min=1.0)
+        # with uniform weights s_off is the pair mean, so multiply back by
+        # sqrt(n_pairs) to keep the "count-scaled sum" semantics of block 0
+        return s_off * n_pairs_off.sqrt().unsqueeze(1), a_mean, a_sq * n_pairs_off.unsqueeze(1)
 
 
 # ---------------------------------------------------------------------------
@@ -395,6 +425,26 @@ class SpectralJoint(nn.Module):
         z = torch.cat([inv, counts, gstd], dim=1)
         return self.reader(z).view(-1)
 
+    def _attn_pool(self, h_off, graph, off, B, cnt_off):
+        """Segment softmax over each graph's off-diagonal pairs, three queries."""
+        scores = (h_off @ self.attn_q.t()) / (WIDTH ** 0.5)
+        scores = scores.masked_fill(off.unsqueeze(1) < 0.5, -1e9)
+        amax = h_off.new_full((B, 3), -1e9)
+        amax.index_reduce_(0, graph, scores.detach(), "amax", include_self=True)
+        e = torch.exp(scores - amax[graph])
+        e = e * off.unsqueeze(1)
+        denom = e.new_zeros((B, 3)).index_add_(0, graph, e).clamp(min=1e-9)
+        wts = e / denom[graph]
+        s_off = h_off.new_zeros((B, WIDTH)).index_add_(0, graph, wts[:, 0:1] * h_off)
+        a_mean = h_off.new_zeros((B, WIDTH)).index_add_(0, graph, wts[:, 1:2] * h_off)
+        # weighted *sum* of squares: the readout divides by the same pair count,
+        # so this keeps the "second moment" semantics of the plain path
+        a_sq = h_off.new_zeros((B, WIDTH)).index_add_(0, graph, wts[:, 2:3] * h_off * h_off)
+        n_pairs_off = cnt_off.clamp(min=1.0)
+        # with uniform weights s_off is the pair mean, so multiply back by
+        # sqrt(n_pairs) to keep the "count-scaled sum" semantics of block 0
+        return s_off * n_pairs_off.sqrt().unsqueeze(1), a_mean, a_sq * n_pairs_off.unsqueeze(1)
+
 
 # ---------------------------------------------------------------------------
 # builders
@@ -420,6 +470,8 @@ def build_model(arm: str, norm: Mapping[str, Any], seed: int, device, *, ssl: bo
     torch.manual_seed(int(seed))
     if arm == "A" or arm == "A_SSL":
         model = PairComposition(norm, dropout=dropout, **kwargs)
+    elif arm == "A_attn":
+        model = PairComposition(norm, dropout=dropout, pool="attn", **kwargs)
     elif arm == "B":
         model = SpectralJoint(norm, dropout=dropout, **kwargs)
     else:
