@@ -166,7 +166,7 @@ Parameters **448,623**.
 | weight decay | 1e-4 |
 | grad clip | 5.0 |
 | dropout | 0.0 |
-| schedule | 1,200 epochs × 157 steps = **188,400 updates** (≈ 4× the old 47,400) |
+| schedule | arm A and arm B: 1,200 epochs × 157 steps = 188,400 updates. `A_SSL` and `A_attn`: **900 epochs × 157 steps = 141,300 updates** (declared at launch, see §7 budget decision) |
 | valid | full 1,000 every epoch; best-valid by strict `<`, ties → earlier epoch |
 | eval | best and final both re-scored on full 10k train + 1k valid in eval mode |
 | SSL (A-SSL only) | 120 epochs × 149 steps = 17,880 updates, AdamW 1e-3 → 1e-5, warmup 300, batch 64, CE(atom)+CE(bond) |
@@ -179,6 +179,7 @@ Measured timing (A100-SXM4-40GB, full 10k train + full valid per epoch):
 | A | 7.76 | 1,200 | 3.0 |
 | B | 9.73 | 1,200 | 3.7 |
 | A-SSL pretrain | 11.0 (incl. fresh-mask rebuild) | 120 | 0.4 |
+| A_SSL / A_attn supervised | 7.4 | 900 | 1.9 each |
 
 Measured with 4 full epochs (`runs/timing_A_s0`, `runs/timing_B_s0`, 3 epochs for
 SSL) on `res` GPU 0/1; the steady value is the mean of epochs 2..N including a
@@ -188,9 +189,11 @@ time and verified against the on-the-fly path (max abs diff 6e-7), giving the
 9.73 s/epoch above. Projected wall for the three formal trajectories ≈ 6 h with
 A and B in parallel on the two GPUs.
 
-(The 1,200-epoch horizon is fixed at the start of each run and is not reset or
-compressed later. GPU time has no hard cap in this round; timing is engineering
-information for scheduling, not a stop rule.)
+(Each run's horizon is fixed at its own start and is never reset or compressed
+mid-run. GPU time has no hard cap in this round; timing is engineering
+information for scheduling, not a stop rule — but the horizon for a run that has
+not started yet may be chosen from completed-run evidence, which is what
+happened for the last two trajectories: see the budget decision in §7.)
 
 ## 6. Checks performed before formal runs (`analysis/cpu_checks.json`)
 
@@ -228,9 +231,33 @@ GPUs; A-SSL next; each on its own GPU).
 
 After the first pass, at most **one** substantive follow-up is allowed, and only
 with a written three-sentence justification (why, what, decision criterion).
-Planned candidates for that slot (only if the curves justify it): finish a
-candidate that is still improving at the horizon; fix an optimisation mismatch
-with curve evidence. No LR/WD/rank/depth grids.
+That slot was used for **`A_attn`** (content-based pooling of the pair set);
+the declaration is `analysis/followup_A_attn.md`, written before the run started
+and based on seed-0 valid only. No LR/WD/rank/depth grids.
+
+### Budget decision taken after arm A and arm B finished (or were stopped)
+
+Evidence (`runs/A_s0/curve.csv`, `runs/B_s0/curve.csv`):
+
+| run | best valid | best epoch | epochs declared | share of the horizon spent after the best | action |
+|---|---:|---:|---:|---:|---|
+| A | 0.082189 | 632 | 1,200 | 47 % | completed (horizon was already declared) |
+| B | 0.101720 | 332 | 1,200 | 72 % | **cancelled at epoch 817** of 1,200 |
+
+B was stopped because its best valid was set at epoch 332 and did not move for
+485 further epochs even after entering the learning-rate band
+(`lr` 2.4e-4) where P3B, L and A all set their bests, while it remained 0.0255
+behind P3B — no remaining epoch could change its rank. The run is recorded as
+`status: CANCELLED_BY_BUDGET` with `epochs_run: 817` (recovered from the epoch
+log by `code/zae_recover.py`, which refuses to proceed unless `best.pt` matches
+the best epoch line); its `best.pt` and curve are kept, nothing is deleted.
+
+Because A's last 568 epochs bought 0.0016 valid at 47 % of the compute, the two
+trajectories that had not started yet were **declared** at 900 epochs
+(141,300 updates) instead of 1,200: that keeps the whole productive
+`lr` 3e-4 → 1e-5 band inside the horizon, and every A-versus-`A_attn`
+comparison is additionally reported in a matched learning-rate band
+(`lr` ∈ (1e-4, 3e-4]) so the horizon difference cannot create a difference.
 
 Test: after all best-valid checkpoints of this round are frozen (model choice,
 epoch, recipe, no further tuning), evaluate exactly those checkpoints on the
