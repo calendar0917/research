@@ -146,7 +146,7 @@ def train(arm: str, seed: int, device, *, epochs=None, tag=None, force=False,
     out = ZT.run_dir(arm, seed, tag)
     info = ZT.train_supervised(
         arm, seed, device, builder=make_builder(base_arm), model_info={}, out_dir=out,
-        epochs=epochs, tag=tag, force=force, init_state=init, extra_info=extra,
+        epochs=epochs, force=force, init_state=init, extra_info=extra,
     )
     art = write_artifacts(out, info)
     C.log(f"[{arm}] seed={seed} best={info['best_valid']['valid_mae']:.9f}@"
