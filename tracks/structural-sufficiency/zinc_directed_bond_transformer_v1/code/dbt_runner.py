@@ -107,6 +107,9 @@ def main(argv=None) -> int:
     s = sub.add_parser("test")
     s.add_argument("--device", default="cuda:0")
     s.add_argument("--best", default=str(_EXP / "runs" / "dbt_s0" / "best.pt"))
+    s.add_argument("--run", default=str(_EXP / "runs" / "dbt_s0"))
+    s.add_argument("--freeze-out", default=None)
+    s.add_argument("--no-test", action="store_true")
     args = p.parse_args(argv)
 
     if args.cmd == "prep":
@@ -126,7 +129,12 @@ def main(argv=None) -> int:
     if args.cmd == "analysis":
         return BA.main(["--run", args.run])
     if args.cmd == "test":
-        return BX.main(["--device", str(device), "--best", args.best])
+        extra = ["--device", str(device), "--best", args.best, "--run", args.run]
+        if args.freeze_out:
+            extra += ["--freeze-out", args.freeze_out]
+        if args.no_test:
+            extra += ["--no-test"]
+        return BX.main(extra)
     raise SystemExit(f"unknown command {args.cmd}")
 
 
