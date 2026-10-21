@@ -204,7 +204,7 @@ def main() -> int:
         st = AC.graph_stats(test, int(i))
         graph_rows.append(st)
     train = D.load_cache("train")
-    train_sigs, _ = ACov.radius_signatures(train)
+    _, train_sigs = ACov.radius_signatures(train)
     _, test_sigs = ACov.radius_signatures(test)
     sig2 = ACov.signature_coverage(train_sigs, test_sigs, test)
     r2_unseen = np.asarray(sig2["unseen_atom_fraction"], dtype=np.float64)
