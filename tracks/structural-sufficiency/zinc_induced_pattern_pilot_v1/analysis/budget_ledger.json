@@ -1,0 +1,33 @@
+{
+  "protocol_id": "zinc-induced-pattern-pilot-v1",
+  "cap_a100_hours": 1.7558,
+  "as_of": "2026-10-21T08:20:00+08:00",
+  "gpu_hours_accounting": "job occupancy summed over both GPUs; two parallel jobs are summed, not halved",
+  "spent": {
+    "timing_failed_launch": 0.001388888888888889,
+    "timing_J_Q_2ep_job_occupancy": 0.007222222222222222,
+    "timing_J_Q_2ep_run_level": 0.002942410080577247,
+    "prep_cpu_not_billed": 0.0
+  },
+  "spent_total_conservative": 0.008611111111111111,
+  "remaining_before_formal": 1.747188888888889,
+  "timing_measurement": {
+    "J_seconds_per_epoch": 2.7578842840739526,
+    "Q_seconds_per_epoch": 2.497582489042543,
+    "J_projected_600ep_gpu_hours": 0.4596473806789921,
+    "Q_projected_600ep_gpu_hours": 0.41626374817375716,
+    "formal_sum_gpu_hours": 0.8759111288527492,
+    "formal_sum_with_15pct_margin": 1.0072977981806615
+  },
+  "branch_rule": "a = 2x600ep + timing + 15% margin <= cap; b = 1x600ep + margin fits; c = even one does not fit",
+  "branch": "a",
+  "branch_reason": "2 full runs 0.8759 h + 15% = 1.0073 h; plus timing 0.0086 h = 1.0159 h <= 1.7558 h",
+  "authorized_formal_runs": [
+    "J seed 0",
+    "Q seed 0"
+  ],
+  "projected_finish_hours": 1.0159089092917726,
+  "projected_remaining_after": 0.7398910907082275,
+  "formal_started": false,
+  "note": "decision recorded before launching the 600-epoch runs; no horizon compression or cosine reset"
+}
