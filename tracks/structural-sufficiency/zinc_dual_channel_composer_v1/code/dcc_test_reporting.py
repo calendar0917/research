@@ -318,7 +318,9 @@ def main() -> int:
         "prior_valid_commit": "e76cc7d",
         "test_is_spent_not_pristine": True,
         "official_test_loaded": True,
-        "test_read_count": 1,
+        "test_read_count": 3,
+        "test_read_count_meaning": "Three harness invocations after TEST_PREREG: one aborted before writing outputs, one completed but used the wrong radius stream for subgroup diagnostics, and one final authoritative pass. All three produced identical overall test MAEs; no model or decision changed.",
+        "harness_note": "The first two scoring invocations were diagnostic harness failures (missing import; radius-1/radius-2 mismatch). The final pass is authoritative. Because the same three overall MAEs were printed before the final pass, this reporting read is not literally blind after the first invocation; treat all test numbers as descriptive.",
         "selection_rule": "No selection: three checkpoints were frozen at their valid-best epoch before this read; test cannot change any model, epoch, recipe, or decision.",
         "test_used_for_selection": False,
         "data": {
