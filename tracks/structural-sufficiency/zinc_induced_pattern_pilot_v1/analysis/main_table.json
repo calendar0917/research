@@ -1,0 +1,147 @@
+{
+  "protocol_id": "zinc-induced-pattern-pilot-v1",
+  "decision_split": "official valid 1000, labels reused from the established split",
+  "test_loaded": false,
+  "models": [
+    {
+      "model": "P3 x A s0",
+      "parameters": 413505,
+      "best_valid": 0.0791046605258598,
+      "best_epoch": 272,
+      "train_at_best_eval": 0.011260926227609162,
+      "final_valid": 0.08094669620686909,
+      "final_train_eval": 0.0022696226579253563,
+      "gpu_hours_run_level": 0.2007776576888864,
+      "wall_seconds": 722.799567679991,
+      "best_sha256": "45618ea3f85ce951eeb32885c4b6e34dc5ef66c5fd7dc4c11c7b71a7cfede37e",
+      "final_sha256": "03584b5a83b49bf0a1c2e2f1ec74505052f88091a69b37152dd1044c64729483",
+      "recipe_variant": null
+    },
+    {
+      "model": "P3 x A s1",
+      "parameters": 413505,
+      "best_valid": 0.07666767607902875,
+      "best_epoch": 267,
+      "train_at_best_eval": 0.01194908235539915,
+      "final_valid": 0.07798368726944319,
+      "final_train_eval": 0.0021109936643159016,
+      "gpu_hours_run_level": 0.2136499889511227,
+      "wall_seconds": 769.1399602240417,
+      "best_sha256": "7e99af6e70cd5a0d99e49c01b3d413dbae02b713bedf7e016306f378a005d740",
+      "final_sha256": "6ac1c5df0fca2bdbd9b90e3c1d57643f9d25f222ed8079bb31f1dfe087bd5c87",
+      "recipe_variant": null
+    },
+    {
+      "model": "P3 x B s0",
+      "parameters": 413505,
+      "best_valid": 0.07622375113883754,
+      "best_epoch": 377,
+      "train_at_best_eval": 0.014679793968901504,
+      "final_valid": 0.07817880773538491,
+      "final_train_eval": 0.0008204064587131142,
+      "gpu_hours_run_level": 0.30138304815388334,
+      "wall_seconds": 1084.97897335398,
+      "best_sha256": "4c379c93214c003a6c58fd4add4a64ecb4fe23603233738fab18f3885abdc34f",
+      "final_sha256": "c9c08eb80e4ef5eb0fb75c3603602b7fce05f051a12f409835e812ce15fa7f27",
+      "recipe_variant": "B"
+    },
+    {
+      "model": "J s0",
+      "parameters": 484281,
+      "best_valid": 0.07977334395417711,
+      "best_epoch": 335,
+      "train_at_best_eval": 0.018212434870854485,
+      "final_valid": 0.08103343510249397,
+      "final_train_eval": 0.0005787429866497405,
+      "gpu_hours_run_level": 0.4132617622333217,
+      "wall_seconds": 1487.742344039958,
+      "best_sha256": "4b911f374c3d47757ec6230b73120d2ce5bf6bc89d798eb40f8db6462117bca4",
+      "final_sha256": "c5567cf2e718ae60b79e284ebee59fef431bc66a4c7ece5c814b625966a50a43",
+      "recipe_variant": "B"
+    },
+    {
+      "model": "Q s0",
+      "parameters": 484281,
+      "best_valid": 0.08846381501847646,
+      "best_epoch": 293,
+      "train_at_best_eval": 0.037233315329253676,
+      "final_valid": 0.09869250967534027,
+      "final_train_eval": 0.0007065339245833456,
+      "gpu_hours_run_level": 0.4685532885094613,
+      "wall_seconds": 1686.7918386340607,
+      "best_sha256": "f53fcbfa4245728c1a74f02210201c11390dea948d4fcf8805fcc03f42b71271",
+      "final_sha256": "347aa6c840ed5df88c86461e33e09b6a4191721d31c26ce43205b5dfbf40a4ca",
+      "recipe_variant": "B"
+    }
+  ],
+  "contrasts": [
+    {
+      "contrast": "J s0 - P3 x B s0",
+      "mean_delta_MAE": 0.0035495875030755997,
+      "ci95": [
+        0.00012747803106904037,
+        0.007066956677939742
+      ],
+      "note": "negative means the first model has lower valid MAE"
+    },
+    {
+      "contrast": "Q s0 - P3 x B s0",
+      "mean_delta_MAE": 0.01224006761983037,
+      "ci95": [
+        0.00862596245855093,
+        0.015971026229485867
+      ],
+      "note": "negative means the first model has lower valid MAE"
+    },
+    {
+      "contrast": "J s0 - Q s0",
+      "mean_delta_MAE": -0.00869048011675477,
+      "ci95": [
+        -0.012140311098657548,
+        -0.0052566231704317045
+      ],
+      "note": "negative means the first model has lower valid MAE"
+    },
+    {
+      "contrast": "J s0 - P3 x A s0",
+      "mean_delta_MAE": 0.0006686862222850322,
+      "ci95": [
+        -0.004706582898274064,
+        0.005707104978151616
+      ],
+      "note": "negative means the first model has lower valid MAE"
+    },
+    {
+      "contrast": "Q s0 - P3 x A s0",
+      "mean_delta_MAE": 0.009359166339039802,
+      "ci95": [
+        0.004237407285999507,
+        0.014223515832796692
+      ],
+      "note": "negative means the first model has lower valid MAE"
+    },
+    {
+      "contrast": "J s0 - P3 x A s1",
+      "mean_delta_MAE": 0.0031056655319407584,
+      "ci95": [
+        -0.001425295832636766,
+        0.00767950504492037
+      ],
+      "note": "negative means the first model has lower valid MAE"
+    },
+    {
+      "contrast": "Q s0 - P3 x A s1",
+      "mean_delta_MAE": 0.011796145648695529,
+      "ci95": [
+        0.00731467179225292,
+        0.01634201182555407
+      ],
+      "note": "negative means the first model has lower valid MAE"
+    }
+  ],
+  "notes": [
+    "P3 x A s0/s1 are historical background; the primary reference is P3 x B s0 0.076224.",
+    "All deltas are paired molecule-wise on the same 1000 valid rows.",
+    "The valid split has been read in earlier rounds; this is not a fresh blind evaluation."
+  ]
+}
