@@ -176,9 +176,17 @@ Measured timing (A100-SXM4-40GB, full 10k train + full valid per epoch):
 
 | arm | s/epoch (steady) | planned epochs | projected GPU-h (with 15 % + startup) |
 |---|---:|---:|---:|
-| A | TBD (timing run) | 1,200 | TBD |
-| B | TBD (timing run) | 1,200 | TBD |
-| A-SSL pretrain | TBD (timing run) | 120 | TBD |
+| A | 7.76 | 1,200 | 3.0 |
+| B | 9.73 | 1,200 | 3.7 |
+| A-SSL pretrain | 11.0 (incl. fresh-mask rebuild) | 120 | 0.4 |
+
+Measured with 4 full epochs (`runs/timing_A_s0`, `runs/timing_B_s0`, 3 epochs for
+SSL) on `res` GPU 0/1; the steady value is the mean of epochs 2..N including a
+full 1,000-molecule valid pass. The first B measurement (16.8 s/epoch) used a
+per-step eigendecomposition; the operator library is now precomputed at prep
+time and verified against the on-the-fly path (max abs diff 6e-7), giving the
+9.73 s/epoch above. Projected wall for the three formal trajectories ≈ 6 h with
+A and B in parallel on the two GPUs.
 
 (The 1,200-epoch horizon is fixed at the start of each run and is not reset or
 compressed later. GPU time has no hard cap in this round; timing is engineering
