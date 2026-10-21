@@ -256,6 +256,41 @@ def main() -> int:
     }
     C.write_json(ANALYSIS / "subgroups.json", subgroup)
 
+    # descriptive observations used by the report (no decisions taken here)
+    obs: dict[str, Any] = {"pairs": {}, "size_bins": {}, "bias": {}}
+    names_all = [k for k in ("P3B_s0", "L_s0", "C_s0", "A_s0", "B_s0", "A_SSL_s0", "A_attn_s0")
+                 if k in preds]
+    for a in ("A_s0", "B_s0", "A_SSL_s0", "A_attn_s0"):
+        if a not in preds:
+            continue
+        for b in ("P3B_s0", "L_s0"):
+            ea, eb = preds[a] - y, preds[b] - y
+            delta = np.abs(ea) - np.abs(eb)
+            obs["pairs"][f"{a}_vs_{b}"] = {
+                "corr_signed_error": float(np.corrcoef(ea, eb)[0, 1]),
+                "corr_abs_error": float(np.corrcoef(np.abs(ea), np.abs(eb))[0, 1]),
+                "win_rate_first_better": float((delta < 0).mean()),
+                "mean_delta_when_better": float(delta[delta < 0].mean()) if (delta < 0).any() else 0.0,
+                "mean_delta_when_worse": float(delta[delta > 0].mean()) if (delta > 0).any() else 0.0,
+            }
+    n_atoms = np.asarray([int(r["n_atoms"]) for r in rows_audit])
+    edges = np.quantile(n_atoms, [0.25, 0.5, 0.75])
+    bin_id = np.digitize(n_atoms, edges)
+    for q in range(4):
+        m = bin_id == q
+        if not m.any():
+            continue
+        obs["size_bins"][f"q{q+1}_n_atoms_{int(n_atoms[m].min())}_{int(n_atoms[m].max())}"] = {
+            k: float(np.abs(preds[k] - y)[m].mean()) for k in names_all}
+    for k in names_all:
+        obs["bias"][k] = {
+            "mean_signed_error_all": float((preds[k] - y).mean()),
+            "mean_signed_error_tail": float((preds[k] - y)[tail].mean()),
+            "mean_signed_error_ordinary": float((preds[k] - y)[~tail].mean()),
+            "pred_std": float(preds[k].std()),
+        }
+    C.write_json(ANALYSIS / "observations.json", obs)
+
     # per-molecule table for later inspection
     per_path = ANALYSIS / "per_molecule.csv"
     with open(per_path, "w", newline="", encoding="utf-8") as fh:
