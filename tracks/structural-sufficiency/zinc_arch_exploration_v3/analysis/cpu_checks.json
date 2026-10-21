@@ -1,0 +1,319 @@
+{
+  "round": "zinc-arch-exploration-v3",
+  "official_test_loaded": false,
+  "params": {
+    "A": {
+      "parameters": 488601,
+      "under_cap": true,
+      "headroom": 11399,
+      "initial_state_sha256": "0f111ec727605b24a18b51ec151e32d4990417f05c2f51ea1506b916c22b1455"
+    },
+    "B": {
+      "parameters": 448623,
+      "under_cap": true,
+      "headroom": 51377,
+      "initial_state_sha256": "e7a3790bc2bfe5e337b0ea1a88598d31f724a5514c518d28a1a02bc959613f8d",
+      "invariant_dim": 654,
+      "triple_terms": 84,
+      "kernel_pairs": 21
+    },
+    "A_SSL_heads": 6176
+  },
+  "diag_conventions": {
+    "self_mask_matches_index_equality": true,
+    "diagonal_count_equals_n_atoms": true,
+    "offdiag_count_equals_n(n-1)": true,
+    "dense_index_unique_per_pair": true,
+    "pair_adj_matches_bond_table": true,
+    "pair_bond_in_range": true
+  },
+  "permutation_invariance": {
+    "A": {
+      "n_molecules": 3,
+      "max_abs_prediction_diff": 2.9802322387695312e-08,
+      "prediction_diff_each": [
+        7.450580596923828e-09,
+        2.9802322387695312e-08,
+        2.9802322387695312e-08
+      ],
+      "max_abs_sorted_U_diff": 7.450580596923828e-08
+    },
+    "B": {
+      "n_molecules": 3,
+      "max_abs_prediction_diff": 2.2351741790771484e-08,
+      "prediction_diff_each": [
+        2.2351741790771484e-08,
+        7.450580596923828e-09,
+        1.862645149230957e-09
+      ]
+    }
+  },
+  "batch_isolation": {
+    "A": {
+      "max_abs_alone_vs_batch": 1.4901161193847656e-08,
+      "max_abs_alone_vs_padded_batch": 2.2351741790771484e-08
+    },
+    "B": {
+      "max_abs_alone_vs_batch": 1.4901161193847656e-08,
+      "max_abs_alone_vs_padded_batch": 7.450580596923828e-09
+    }
+  },
+  "kernels": {
+    "n_ops": 6,
+    "names": [
+      "heat0.5",
+      "heat1",
+      "heat2",
+      "type1",
+      "type2",
+      "type3"
+    ],
+    "per_op": {
+      "heat0.5": {
+        "finite": true,
+        "max_abs": 0.666520357131958,
+        "max_pad_leak": 0.0,
+        "max_symmetry_error": 4.470348358154297e-08,
+        "fro_norm_mean": 3.2905936241149902
+      },
+      "heat1": {
+        "finite": true,
+        "max_abs": 0.5210687518119812,
+        "max_pad_leak": 0.0,
+        "max_symmetry_error": 5.960464477539063e-08,
+        "fro_norm_mean": 2.60744571685791
+      },
+      "heat2": {
+        "finite": true,
+        "max_abs": 0.41081270575523376,
+        "max_pad_leak": 0.0,
+        "max_symmetry_error": 2.9802322387695312e-08,
+        "fro_norm_mean": 2.055692195892334
+      },
+      "type1": {
+        "finite": true,
+        "max_abs": 0.7071067690849304,
+        "max_pad_leak": 0.0,
+        "max_symmetry_error": 0.0,
+        "fro_norm_mean": 2.67531681060791
+      },
+      "type2": {
+        "finite": true,
+        "max_abs": 0.5773502588272095,
+        "max_pad_leak": 0.0,
+        "max_symmetry_error": 0.0,
+        "fro_norm_mean": 1.779017686843872
+      },
+      "type3": {
+        "finite": true,
+        "max_abs": 0.0,
+        "max_pad_leak": 0.0,
+        "max_symmetry_error": 0.0,
+        "fro_norm_mean": 0.0
+      }
+    },
+    "heat_eigenvalue_range": [
+      0.0,
+      1.0000001192092896
+    ]
+  },
+  "a_contraction": {
+    "U_mean_std_across_pairs": 0.016521409153938293,
+    "linear_R2_of_U_from_X": 0.2861340045928955,
+    "residual_energy_fraction": 0.7138659954071045,
+    "U_change_when_unrelated_atom_content_changes": 0.03461110219359398,
+    "U_relative_change_unrelated_atom": 0.01382458209991455,
+    "U_change_for_pair_with_perturbed_left_index": 0.0015781894326210022,
+    "U_change_for_unrelated_pair_row": 0.0
+  },
+  "b_triple_block": {
+    "n_molecules": 512,
+    "triple_dim": 504,
+    "triple_std_mean": 0.00013940929784439504,
+    "R2_all_triples_from_pair_plus_first_order": 0.9122191667556763,
+    "residual_energy_fraction_all_triples": 0.08778083324432373,
+    "per_group": {
+      "HHH": {
+        "dim": 162,
+        "R2_from_pair_plus_first_order": 0.9252066016197205,
+        "residual_energy_fraction": 0.07479339838027954,
+        "mean_abs": 0.0002621857274789363
+      },
+      "THH": {
+        "dim": 162,
+        "R2_from_pair_plus_first_order": 0.9175677299499512,
+        "residual_energy_fraction": 0.08243227005004883,
+        "mean_abs": 9.63970524026081e-05
+      },
+      "TTH": {
+        "dim": 162,
+        "R2_from_pair_plus_first_order": 0.8895477056503296,
+        "residual_energy_fraction": 0.11045229434967041,
+        "mean_abs": 5.293855429044925e-05
+      },
+      "TTT": {
+        "dim": 18,
+        "R2_from_pair_plus_first_order": 0.8932491540908813,
+        "residual_energy_fraction": 0.10675084590911865,
+        "mean_abs": 2.318653287147754e-06
+      }
+    },
+    "pair_dim": 126,
+    "first_order_dim": 24,
+    "triple_change_when_bond_type_flipped": 0.00032777676824480295,
+    "triple_repeat_deterministic": 0.0
+  },
+  "ssl_mask": {
+    "per_molecule": [
+      {
+        "mol": 0,
+        "masked_atoms": 4,
+        "masked_bonds": 5,
+        "masked_atom_ids": [
+          7,
+          14,
+          17,
+          22
+        ],
+        "masked_bond_ids": [
+          0,
+          5,
+          20,
+          24,
+          29
+        ],
+        "inputs_identical_under_alternative_hidden_types": 0.0,
+        "masked_inputs_differ_from_unmasked_atom": 1.0,
+        "masked_inputs_differ_from_unmasked_bond": 1.0,
+        "neighbour_histogram_drops_hidden_type_by_exactly_one": true,
+        "neighbour_histogram_deltas": [
+          1.0,
+          1.0
+        ],
+        "typed_edges_masked_vs_unmasked": [
+          54.0,
+          64.0
+        ]
+      },
+      {
+        "mol": 1,
+        "masked_atoms": 4,
+        "masked_bonds": 4,
+        "masked_atom_ids": [
+          12,
+          14,
+          21,
+          24
+        ],
+        "masked_bond_ids": [
+          1,
+          23,
+          25,
+          27
+        ],
+        "inputs_identical_under_alternative_hidden_types": 0.0,
+        "masked_inputs_differ_from_unmasked_atom": 2.0,
+        "masked_inputs_differ_from_unmasked_bond": 1.0,
+        "neighbour_histogram_drops_hidden_type_by_exactly_one": true,
+        "neighbour_histogram_deltas": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "typed_edges_masked_vs_unmasked": [
+          48.0,
+          56.0
+        ]
+      },
+      {
+        "mol": 2,
+        "masked_atoms": 2,
+        "masked_bonds": 3,
+        "masked_atom_ids": [
+          1,
+          14
+        ],
+        "masked_bond_ids": [
+          3,
+          6,
+          10
+        ],
+        "inputs_identical_under_alternative_hidden_types": 0.0,
+        "masked_inputs_differ_from_unmasked_atom": 2.0,
+        "masked_inputs_differ_from_unmasked_bond": 1.0,
+        "neighbour_histogram_drops_hidden_type_by_exactly_one": true,
+        "neighbour_histogram_deltas": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "typed_edges_masked_vs_unmasked": [
+          28.0,
+          34.0
+        ]
+      }
+    ]
+  },
+  "collate": {
+    "collate_deterministic": true,
+    "pair_cache_sizes_match_n_squared": true
+  },
+  "grad_flow": {
+    "A": {
+      "loss_finite": true,
+      "n_params": 61,
+      "params_with_zero_grad": [],
+      "all_finite": true
+    },
+    "B": {
+      "loss_finite": true,
+      "n_params": 36,
+      "params_with_zero_grad": [],
+      "all_finite": true
+    }
+  },
+  "a_source_paths": {
+    "phi.weight": 0.23603153228759766,
+    "psi.weight": 0.2189910113811493,
+    "chi.weight": 0.20200085639953613,
+    "h_mlp.lins.0.weight": 34.947261810302734,
+    "x_mlp.lins.0.weight": 82.73124694824219,
+    "endpoint.mlp.lins.0.weight": 42.06864547729492,
+    "reader.lins.0.weight": 457.941650390625,
+    "encoders.atom_encoder.lins.0.weight": 10.137990951538086,
+    "all_nonzero": true
+  },
+  "recipe": {
+    "batch_size": 64,
+    "steps_per_epoch": 157,
+    "planned_epochs": 1200,
+    "planned_updates": 188400,
+    "last_partial_batch_rows": 16,
+    "warmup_steps_declared": 1000,
+    "warmup_effective": 1000,
+    "ssl": {
+      "epochs": 120,
+      "batch_size": 64,
+      "lr": 0.001,
+      "warmup_steps": 300
+    }
+  },
+  "overfit_probe": {
+    "A": {
+      "rows": 32,
+      "steps": 80,
+      "first_loss": 1.0560685396194458,
+      "last_loss": 0.07378804683685303,
+      "min_loss": 0.03427501395344734,
+      "seconds": 1.6831801979860757
+    },
+    "B": {
+      "rows": 32,
+      "steps": 80,
+      "first_loss": 1.0555051565170288,
+      "last_loss": 0.049548160284757614,
+      "min_loss": 0.039434269070625305,
+      "seconds": 1.220050973992329
+    }
+  }
+}
