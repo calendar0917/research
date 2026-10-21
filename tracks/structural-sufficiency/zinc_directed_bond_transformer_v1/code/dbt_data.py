@@ -456,6 +456,85 @@ def fit_graph_scales(rel: Mapping[str, Any]) -> dict[str, float]:
     }
 
 
+# ---------------------------------------------------------------------------
+# compact P3 object cache (only the fields the encoders and the T collate use)
+# ---------------------------------------------------------------------------
+
+OBJECT_VERSION = "dbt-objects-v1"
+OBJECT_FIELDS = (
+    "atom_ptr", "atom_feat", "atom_type", "bond_ptr", "bond_feat", "bond_type",
+    "bond_index", "junc_ptr", "junc_feat", "junc_index", "junc_bond",
+    "global_feat", "labels", "n_atoms_graph", "n_bonds_graph",
+)
+
+
+def object_cache_path(split: str) -> Path:
+    return CACHE / f"{OBJECT_VERSION}_{split}.pt"
+
+
+def build_object_cache(split: str) -> dict[str, Any]:
+    """Compact copy of the frozen P3 object tables for one split.
+
+    The train/valid tables are byte-identical to the ``ad_*`` caches of the
+    earlier rounds (they are built from the same frozen ``MolObjects``); the
+    test tables have to be rebuilt from official PyG because no frozen test
+    object cache exists on the compute host.  Only the fields used by the
+    encoders / ``T`` collate / label vector are kept.
+    """
+    t0 = time.perf_counter()
+    objs, src = D.load_p3_objects(split)
+    labels = D.official_labels(split)
+    if len(labels) != len(objs):
+        raise RuntimeError(f"{split}: labels {len(labels)} vs objects {len(objs)}")
+    n_mol = len(objs)
+    atom_ptr = np.zeros(n_mol + 1, dtype=np.int32)
+    bond_ptr = np.zeros(n_mol + 1, dtype=np.int32)
+    junc_ptr = np.zeros(n_mol + 1, dtype=np.int32)
+    for i, o in enumerate(objs):
+        atom_ptr[i + 1] = atom_ptr[i] + int(o.n_atoms)
+        bond_ptr[i + 1] = bond_ptr[i] + int(o.bond_index.shape[0])
+        junc_ptr[i + 1] = junc_ptr[i] + int(o.junc_index.shape[0])
+    data = {
+        "split": split,
+        "n_molecules": int(n_mol),
+        "labels": np.asarray(labels, dtype=np.float32),
+        "atom_ptr": atom_ptr,
+        "atom_feat": np.concatenate([np.asarray(o.atom_feat, np.float32) for o in objs]),
+        "atom_type": np.concatenate(
+            [np.asarray(o.atom_feat)[:, :21].argmax(1).astype(np.int64) for o in objs]),
+        "bond_ptr": bond_ptr,
+        "bond_feat": np.concatenate([np.asarray(o.bond_feat, np.float32) for o in objs]),
+        "bond_type": np.concatenate([np.asarray(o.bond_type, np.int64) for o in objs]),
+        "bond_index": np.concatenate([np.asarray(o.bond_index, np.int16) for o in objs]),
+        "junc_ptr": junc_ptr,
+        "junc_feat": np.concatenate([np.asarray(o.junc_feat, np.float32) for o in objs]),
+        "junc_index": np.concatenate([np.asarray(o.junc_index, np.int16) for o in objs]),
+        "junc_bond": np.concatenate([np.asarray(o.junc_bond, np.int16) for o in objs]),
+        "global_feat": np.stack([np.asarray(o.global_feat, np.float32) for o in objs]),
+        "n_atoms_graph": np.diff(atom_ptr).astype(np.int16),
+        "n_bonds_graph": np.diff(bond_ptr).astype(np.int16),
+        "meta": {
+            "object_version": OBJECT_VERSION,
+            "split": split,
+            "n_molecules": int(n_mol),
+            "object_source": src,
+            "labels_sha256": C.sha256_array(np.asarray(labels, np.float64)),
+            "seconds": float(time.perf_counter() - t0),
+            "created": C.utcnow(),
+        },
+    }
+    return data
+
+
+def load_object_cache(split: str, *, rebuild: bool = False) -> dict:
+    path = object_cache_path(split)
+    if path.exists() and not rebuild:
+        return torch.load(path, map_location="cpu", weights_only=False)
+    data = build_object_cache(split)
+    C.atomic_torch_save(data, path)
+    return data
+
+
 def main(argv=None) -> int:
     import argparse
 

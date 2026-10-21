@@ -41,6 +41,23 @@ ANALYSIS = _EXP / "analysis"
 RUN = _EXP / "runs" / "dbt_s0"
 
 
+def _ad_compat(compact) -> dict:
+    """Compare the compact object cache with the earlier round's ``ad_valid.pt``."""
+    import ad_data as D
+
+    path = D.cache_path("valid")
+    if not path.exists():
+        return {"ad_valid_present": False}
+    ad = D.load_cache("valid")
+    fields = ("atom_feat", "bond_feat", "bond_index", "junc_feat", "junc_index",
+              "junc_bond", "global_feat", "labels")
+    same = {k: bool(np.array_equal(np.asarray(ad[k]), np.asarray(compact[k]))) for k in fields}
+    if not all(same.values()):
+        raise RuntimeError(f"compact object cache differs from ad_valid.pt: {same}")
+    return {"ad_valid_present": True, "fields_identical": same,
+            "ad_valid_sha256": C.sha256_file(path)}
+
+
 def score(model, cache, rel, rows, device, batch_size=256) -> np.ndarray:
     pred, _ = BT.evaluate(model, cache, rel, np.asarray(rows), device=device,
                           batch_size=batch_size)
@@ -83,8 +100,11 @@ def main(argv=None) -> int:
         raise RuntimeError("checkpoint epoch does not match the recorded best-valid epoch")
     C.load_state(model, state["state_dict"], device)
 
-    valid_cache = D.load_cache("valid")
+    valid_cache = BD.load_object_cache("valid")
     valid_rel = BD.load_relation_split("valid")
+    # guard: the compact object cache must be byte-identical to the ad_* cache
+    # of the earlier rounds on every field this model reads
+    ad_valid = _ad_compat(valid_cache)
     rows_valid = np.arange(len(valid_cache["labels"]), dtype=np.int64)
     pred_valid = score(model, valid_cache, valid_rel, rows_valid, device, args.batch_size)
     valid_mae = C.mae(pred_valid, np.asarray(valid_cache["labels"], np.float64))
@@ -121,7 +141,7 @@ def main(argv=None) -> int:
     else:
         test_rel = BD.build_relation_split("test")
         BD.save_relation_split(test_rel)
-    test_cache = D.load_cache("test")
+    test_cache = BD.load_object_cache("test")
     if len(test_cache["labels"]) != 1000:
         raise RuntimeError(f"unexpected test size {len(test_cache['labels'])}")
     labels_pyg = D.official_labels("test")
@@ -137,9 +157,16 @@ def main(argv=None) -> int:
     report = {
         "protocol": freeze["protocol"],
         "freeze": freeze,
+        "valid_object_cache_vs_ad_valid": ad_valid,
         "valid": valid_metrics,
         "test": test_metrics,
         "test_label_sha256": C.sha256_array(np.asarray(labels_pyg, np.float64)),
+        "object_cache": {
+            split: {"path": str(BD.object_cache_path(split).relative_to(C.REPO)),
+                    "sha256": C.sha256_file(BD.object_cache_path(split)),
+                    "meta": BD.load_object_cache(split)["meta"]}
+            for split in ("valid", "test")
+        },
         "test_cache_label_sha256": C.sha256_array(
             np.asarray(test_cache["labels"], np.float64)),
         "test_relation_cache": {"meta": test_rel["meta"],

@@ -215,7 +215,7 @@ def check_invariance(report: dict, model, rng) -> None:
         }
         ok &= abs(p0 - p_rev) < 1e-5 and abs(p0 - pp) < 1e-5
     # row-order / batch-composition invariance on four real molecules
-    cache = D.load_cache("valid")
+    cache = BD.load_object_cache("valid")
     rel = BD.load_relation_split("valid")
     rows = np.asarray([1, 5, 9, 12, 17])
     alone = np.concatenate([_predict(model, cache, rel, [r]) for r in rows])
@@ -300,7 +300,7 @@ def check_directed(report: dict) -> None:
 
 def check_padding(report: dict, model) -> None:
     """A graph's prediction must not depend on other graphs in the batch."""
-    cache = D.load_cache("valid")
+    cache = BD.load_object_cache("valid")
     rel = BD.load_relation_split("valid")
     rows = np.asarray([3, 11, 24, 31])
     alone = np.concatenate([_predict(model, cache, rel, [r]) for r in rows])
@@ -319,7 +319,7 @@ def check_padding(report: dict, model) -> None:
 
 
 def check_relation_value(report: dict, model) -> None:
-    cache = D.load_cache("valid")
+    cache = BD.load_object_cache("valid")
     rel = BD.load_relation_split("valid")
     batch = BD.collate(cache, rel, np.asarray([0, 3]))
     model.eval()
@@ -390,7 +390,7 @@ def check_ssl(report: dict, model, model_info, rng) -> None:
     requires = all(p.requires_grad for p in model.parameters())
     ok &= n_opt == n_par and requires
     # one real step must move an encoder weight
-    cache = D.load_cache("train")
+    cache = BD.load_object_cache("train")
     rel = BD.load_relation_split("train")
     before = model.encoders.atom_encoder.lins[0].weight.detach().clone()
     model.train()
@@ -441,7 +441,7 @@ def check_readout(report: dict, model) -> None:
             return orig(z)
 
     model.reader = Cap()
-    cache = D.load_cache("valid")
+    cache = BD.load_object_cache("valid")
     rel = BD.load_relation_split("valid")
     batch = BD.collate(cache, rel, np.asarray([0, 3, 7]))
     model.eval()
@@ -492,8 +492,8 @@ def check_readout(report: dict, model) -> None:
 
 
 def check_data(report: dict) -> None:
-    train = D.load_cache("train")
-    valid = D.load_cache("valid")
+    train = BD.load_object_cache("train")
+    valid = BD.load_object_cache("valid")
     labels_pyg = D.official_labels("train")
     cache_labels = np.asarray(train["labels"], dtype=np.float64)
     max_label_diff = float(np.abs(labels_pyg[:200] - cache_labels[:200]).max())

@@ -148,8 +148,8 @@ def train(seed: int, device, *, epochs: int | None = None, tag: str | None = Non
         C.log(f"[dbt s{seed}] already complete in {out}; use --force to rerun")
         return C.read_json(out / "train.json")
 
-    train_cache = D.load_cache("train")
-    valid_cache = D.load_cache("valid")
+    train_cache = BD.load_object_cache("train")
+    valid_cache = BD.load_object_cache("valid")
     train_rel = BD.load_relation_split("train")
     valid_rel = BD.load_relation_split("valid")
     y_train = np.asarray(train_cache["labels"], dtype=np.float64)
