@@ -1,0 +1,165 @@
+{
+  "fork": {
+    "state_epoch": 50,
+    "state_sha256": "e52bc4046874063bf3ae6277ae11269c72df7a81137c99c32f28847d2daa6e26",
+    "model_state_sha256": "2218b9b2c512b4fa7cbd0785f594f785766a69595c3b3d01697e16638b8e8840"
+  },
+  "alpha_reference_lr": 0.0009868406706946109,
+  "alpha_reference_step": 3950,
+  "grid": [
+    0.1,
+    1.0,
+    10.0,
+    100.0
+  ],
+  "results": [
+    {
+      "kappa": 0.1,
+      "alpha": 9.868406706946109e-05,
+      "n_episodes": 64,
+      "frac_source_not_worse": 1.0,
+      "mean_source_delta": -0.005906601203605533,
+      "median_query_shift": 0.005417775362730026,
+      "mean_query_shift": 0.005381695838877931,
+      "p10_query_shift": 0.004986962676048279,
+      "p90_query_shift": 0.005700361728668213,
+      "mean_param_step_norm": 0.0004934203352604527,
+      "per_partition": {
+        "R": {
+          "frac_source_not_worse": 1.0,
+          "median_query_shift": 0.0054494403302669525
+        },
+        "S": {
+          "frac_source_not_worse": 1.0,
+          "median_query_shift": 0.005413994193077087
+        }
+      },
+      "source_stable": true,
+      "shift_in_window": true
+    },
+    {
+      "kappa": 1.0,
+      "alpha": 0.0009868406706946109,
+      "n_episodes": 64,
+      "frac_source_not_worse": 1.0,
+      "mean_source_delta": -0.05470081407111138,
+      "median_query_shift": 0.053983017802238464,
+      "mean_query_shift": 0.05369696195703,
+      "p10_query_shift": 0.049784731864929196,
+      "p90_query_shift": 0.05686322450637817,
+      "mean_param_step_norm": 0.004934203432640061,
+      "per_partition": {
+        "R": {
+          "frac_source_not_worse": 1.0,
+          "median_query_shift": 0.054581284523010254
+        },
+        "S": {
+          "frac_source_not_worse": 1.0,
+          "median_query_shift": 0.05381014943122864
+        }
+      },
+      "source_stable": true,
+      "shift_in_window": false
+    },
+    {
+      "kappa": 10.0,
+      "alpha": 0.009868406706946109,
+      "n_episodes": 64,
+      "frac_source_not_worse": 0.0,
+      "mean_source_delta": 0.27760886726900935,
+      "median_query_shift": 0.5336710214614868,
+      "mean_query_shift": 0.5344870258122683,
+      "p10_query_shift": 0.49576182961463927,
+      "p90_query_shift": 0.5769630134105682,
+      "mean_param_step_norm": 0.049342033453285694,
+      "per_partition": {
+        "R": {
+          "frac_source_not_worse": 0.0,
+          "median_query_shift": 0.5404013395309448
+        },
+        "S": {
+          "frac_source_not_worse": 0.0,
+          "median_query_shift": 0.5309830904006958
+        }
+      },
+      "source_stable": false,
+      "shift_in_window": false
+    },
+    {
+      "kappa": 100.0,
+      "alpha": 0.09868406706946109,
+      "n_episodes": 64,
+      "frac_source_not_worse": 0.0,
+      "mean_source_delta": 6.78878477960825,
+      "median_query_shift": 6.877954483032227,
+      "mean_query_shift": 6.928904183208942,
+      "p10_query_shift": 5.60359148979187,
+      "p90_query_shift": 8.139777183532715,
+      "mean_param_step_norm": 0.4934203289449215,
+      "per_partition": {
+        "R": {
+          "frac_source_not_worse": 0.0,
+          "median_query_shift": 6.887488842010498
+        },
+        "S": {
+          "frac_source_not_worse": 0.0,
+          "median_query_shift": 6.8590052127838135
+        }
+      },
+      "source_stable": false,
+      "shift_in_window": false
+    }
+  ],
+  "chosen_kappa": 0.1,
+  "chosen": {
+    "kappa": 0.1,
+    "alpha": 9.868406706946109e-05,
+    "n_episodes": 64,
+    "frac_source_not_worse": 1.0,
+    "mean_source_delta": -0.005906601203605533,
+    "median_query_shift": 0.005417775362730026,
+    "mean_query_shift": 0.005381695838877931,
+    "p10_query_shift": 0.004986962676048279,
+    "p90_query_shift": 0.005700361728668213,
+    "mean_param_step_norm": 0.0004934203352604527,
+    "per_partition": {
+      "R": {
+        "frac_source_not_worse": 1.0,
+        "median_query_shift": 0.0054494403302669525
+      },
+      "S": {
+        "frac_source_not_worse": 1.0,
+        "median_query_shift": 0.005413994193077087
+      }
+    },
+    "source_stable": true,
+    "shift_in_window": true
+  },
+  "decision": "SELECTED",
+  "bisections_used": 0,
+  "rules": {
+    "source_stable": ">= 75% of episodes have source L1 not increasing",
+    "shift_window": "median per-molecule mean |f(theta')-f(theta)| in [0.005, 0.05] raw-y",
+    "selection": "closest median displacement to 0.02; ties -> smaller kappa",
+    "pooling": "32 train-only batches x both frozen partitions (R and S)"
+  },
+  "data": {
+    "split": "official train only",
+    "valid_or_test_read": false
+  },
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1",
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "git_commit": "d5665b9258853deb2add21dd4185c717f1e8c881",
+    "git_dirty_tracked": false,
+    "round_id": "zinc-arch-discovery-v1",
+    "timestamp": "2026-10-23T01:03:34+0800"
+  }
+}

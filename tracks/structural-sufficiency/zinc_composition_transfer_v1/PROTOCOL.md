@@ -224,3 +224,36 @@ No claim of a new method is made from the mere application of MLDG to P3.
 ## 10. Amendments
 
 Append-only. Any deviation is dated, justified, and does not rewrite the above.
+
+### A1. 2026-10-23 01:05 — kappa outcome and a pre-declared conditional escalation
+
+Calibration on the seed-0 epoch-50 fork (32 train-only batches × {R, S} = 64
+episodes per kappa, `ramp = 1`, α at the epoch-50 learning rate 9.868e-4):
+
+| kappa | α | source not worse | median per-molecule |Δf| | mean param step | admissible |
+|---|---:|---:|---:|---:|---|
+| **0.1** | 9.87e-5 | 1.000 | **0.00542** | 4.9e-4 | **yes** |
+| 1 | 9.87e-4 | 1.000 | 0.0540 | 4.9e-3 | no (above window) |
+| 10 | 9.87e-3 | 0.000 | 0.534 | 4.9e-2 | no |
+| 100 | 9.87e-2 | 0.000 | 6.88 | 0.49 | no |
+
+The mechanical §4 rule selects **kappa = 0.1** (the only admissible grid point; no
+bisection is taken because the grid does not jump across the window). This is
+recorded and is the primary value for every arm and both seeds. It sits at the
+weak edge of the declared displacement window (0.0054 against the 0.005 floor),
+and α falls with the learning rate after epoch 50, so the intervention is weakest
+exactly where it must act.
+
+Declared **before any meta-arm result exists** (no `R`/`S` job has started; only
+`E` runs are in flight): a conditional escalation, not a re-tune.
+
+* `kappa_mid = 0.4` — the log-midpoint of the bracketing pair (0.1, 1), where the
+  0.02 target displacement lies.
+* Trigger: after the primary seed-0 arms finish, **both** `R_s0` and `S_s0` satisfy
+  |W20 − W20(E_s0)| < 0.002 **and** |best-valid − best-valid(E_s0)| < 0.002, i.e.
+  the weak intervention produced no measurable movement.
+* Runs: `R_s0` and `S_s0` again from the same epoch-50 fork, 600 epochs, reported
+  as **secondary** (`R-s0-k0.4`, `S-s0-k0.4`); the primary table is unchanged.
+* A seed-1 confirmation at `kappa_mid` runs only if ≥ 1.0 GPU·h of the 8.0 cap
+  remains after all primary and support runs.
+* Worst-case cost 2 × 0.92 h = 1.84 h, keeping the round at ≈ 7.6 GPU·h.
