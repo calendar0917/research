@@ -212,7 +212,7 @@ def group_plan(table, length: int) -> dict:
         return plans[key]
     lengths = table_lengths(table)
     sel = (lengths == int(length)).nonzero(as_tuple=False).reshape(-1)
-    assign = assignments(int(length))
+    assign = assignments(int(length)).to(table.atom_ids.device)
     atom = table.atom_ids[sel]
     pair = table.pair_ids[sel]
     edge = pair > 0
