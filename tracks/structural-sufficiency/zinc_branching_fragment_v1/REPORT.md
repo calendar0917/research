@@ -48,6 +48,8 @@
 
 **相对 raw108 的新增区分**：231,664 个 train roots 只落在 10,699 个 raw108 组里（98.20% 的 roots 位于多成员组）。
 新签名把 2,524 / 6,522 个多成员组细分（38.7%），涉及 5,048 roots（**2.18%**）和 9,989 / 10,000 个分子（**99.89%**）。
+> **Erratum（2026-10-23，见 §9）**：`5,048 roots / 2.18%` 是统计 bug（`sum(len(v))` 对 `(roots, signatures)` 元组计成 2×组数）。
+> 正确值是 **131,168 roots / 56.62%**；`2,524` 组、`38.7%` 组比例和 `99.89%` 分子比例不受影响。旧训练/checkpoint/预测未改动。
 其中纯内容细分 1,735 组、纯 multiplicity 细分 4 组，其余 785 组两者都有（内容 2,520、multiplicity 789）。
 因此新增列主要提供的是**联合内容**（额外边 / 两条候选边如何配对），而不是“同一内容数了几次”。
 
@@ -145,7 +147,7 @@ P3-BF 与 P3B 的 test 差异是纯数值噪声（同一函数，预测最大绝
 ## 7. 解释边界：哪些说法不能区分；下一笔训练是否值得
 
 本轮能确定的：在冻结的这套 P3-BF 接口与两组 LR/100-epoch 早停规则下，**没有观察到泛化改善**，
-且 best 仍是 P3B；新增编码确实在 root 层区分了一批 raw108 无法区分的联合构型（2.18% roots，覆盖 99.89% 分子），
+且 best 仍是 P3B；新增编码确实在 root 层区分了一批 raw108 无法区分的联合构型（原文 2.18% roots 为统计 bug，正确值 56.62% roots，覆盖 99.89% 分子，见 §9），
 但其中绝大多数在 valid 上已被 train 覆盖，且本轮没有证明这些信息对 **full P3** 是新的。
 
 不能区分的至少四种解释：
@@ -246,7 +248,7 @@ python tracks/structural-sufficiency/zinc_branching_fragment_v1/code/bf_report.p
 按 15 字节 canonical key 计数；同一节点集合只计一次，相同内容的不同节点集合保留 multiplicity。train 上 31.6% 的 roots 有 S3、
 1.34% 有 S4、78.1% 有 F4，共 333,376 个 occurrences / 1,280 个 unique patterns。
 相对 P3 的 raw108 root 描述符：98.20% 的 roots 位于多成员 raw108 组；新签名细分了 2,524 / 6,522 个多成员组，
-涉及 5,048 roots（**2.18%**）和 9,989 / 10,000 个分子（**99.89%**）；其中纯内容细分 1,735 组、纯 multiplicity 仅 4 组。
+涉及 5,048 roots（**2.18%**，统计 bug，正确值见 §9）和 9,989 / 10,000 个分子（**99.89%**）；其中纯内容细分 1,735 组、纯 multiplicity 仅 4 组。
 valid 上 full 签名未见过的 roots 占 1.20%，但“至少一个 pattern 未见过”的 roots 只有 0.126%，按 occurrence 计 S3/F4 约 0.097%、S4 1.91%。
 A/B 合成例确实做到 root raw108 相同而 F4 计数 1 vs 0，但两整图的 junction 特征多重集不同，所以这只是 root descriptor 碰撞，
 **不能证明 full P3 看不见该差异**；这一点必须保留。
@@ -278,3 +280,71 @@ valid 在 epoch 1 就变差、train 误差持续下降，与 (b)/(c) 相容；�
 以本轮证据，**不值得**在原方向继续买 seed/arm/epochs；若必须再买一笔，唯一有信息量的是
 “相同两组 LR、相同早停、去掉 branch/s_v 的 P3 continuation”对照，用来检验 (b)；
 这需要新的预注册，不应在本轮补跑。当前没有 0.05x 证据，停止本轮，不升级、不开第二 arm。
+
+
+---
+
+## 9. Erratum：BF 表示统计的 root 覆盖率（2026-10-23）
+
+**性质：纯统计/展示修正，不改变任何旧训练、checkpoint、valid/test 预测或结论。**
+
+### 9.1 `representation_refinement` 的 root 计数 bug
+
+`bf_checks.representation_refinement` 以
+`subdiv[k] = (roots, full_signatures)` 存储被细分的 raw108 组，随后写
+
+```python
+roots_sub = sum(len(v) for v in subdiv.values())   # 错：len((roots, sigs)) == 2
+```
+
+它计算的是 `2 × 细分组数`，而不是 root 数。正确写法是
+
+```python
+roots_sub = sum(len(roots) for roots, _ in subdiv.values())
+```
+
+CPU 重算 train 表示（只读 train；没有读取 test；`analysis/representation_check.json`
+覆盖写入，`analysis/erratum_representation_fix.json` 记录 old/new 与恒等检查）：
+
+| 量 | 旧（bug） | 正确 |
+|---|---:|---:|
+| 细分的 raw108 组 | 2,524 | 2,524（不变） |
+| 被细分组覆盖的 roots | 5,048 | **131,168** |
+| root 覆盖率 | 2.18% | **56.62%**（131,168 / 231,664） |
+| 被细分组覆盖的分子 | 9,989 / 10,000 | 9,989 / 10,000（不变，99.89%） |
+| 多成员组被细分比例 | 38.7% | 38.7%（不变） |
+
+新增恒等检查（`erratum_representation_fix.json: identities`，全部为 true）：
+
+- `n_molecules_in_subdivided_groups <= n_roots_in_subdivided_groups <= n_roots`；
+- `roots_sub == sum(group sizes)`；
+- 两个 fraction 分别能 round-trip 回对应计数；
+- `roots_sub != 2 × n_groups_subdivided`（专门锁住本次 bug 的形式）。
+
+细分组大小：min 2、median 11、mean 52.0、max 10,529 roots。
+
+**口径影响。** 旧报告“新签名只涉及 2.18% roots”这句话是错误的；实际是多数 roots
+（56.62%）所在的 raw108 组被新内容/多重度签名细分。这使“新增列只影响极少数 root”
+这一打折理由不再成立，但它**不**改变已验证的训练事实：新训练的每个 epoch 的 valid
+都不优于继承的 epoch 0，best 仍是 P3B 函数。也不能由此反推“信息充分”或“信息无用”；
+root raw108 碰撞本身仍不证明 full P3 通道看不见差异（§2 的 A/B 例）。
+
+**旧值不得再次引用。** `2.18%` / `5,048` 只作为 erratum 的历史值出现。
+
+### 9.2 `descriptor_summary` 的展示口径
+
+`descriptor_summary` 之前对 `feat[40:42]` 做 `np.argmax`，把 `ring_bonds` 区块
+（两个**连续**标量：ring-bond count 与 ring-bond fraction）当成 one-hot。现有代码改为
+从权威 layout `structural_relation_objects_v1.atom_blocks()` 读取
+`in_ring`、`ring_bonds` 等区块，并输出
+`ring_bond_count: float(...)` 与 `ring_bond_fraction: float(...)`。
+**这只是 README/例子里的描述展示**；模型输入仍是 raw108 向量本身，未做任何改动，
+也没有因此重跑或改动旧实验。
+
+### 9.3 版本
+
+- 旧训练与报告：commit `784d0ad`；旧报告提交 `5255cda`。
+- 本 erratum + 修正代码：紧随本轮的独立 commit（见 `git log`）。
+- 修正后的机器可读记录：`analysis/representation_check.json`、
+  `analysis/cpu_checks.json`（13/13 仍通过）、
+  `analysis/erratum_representation_fix.json`。

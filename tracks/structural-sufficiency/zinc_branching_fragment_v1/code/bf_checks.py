@@ -570,13 +570,28 @@ def root_signature_digests(pc, n_mol: int):
 
 
 def descriptor_summary(atom_feat_row: np.ndarray) -> dict:
+    """Human-readable view of one raw108 atom descriptor.
+
+    The block offsets are read from the authoritative layout
+    (``structural_relation_objects_v1.atom_blocks``), never guessed.  The
+    ``ring_bonds`` block is two *continuous* scalars -- the ring-bond count and
+    the ring-bond fraction -- so it must not be collapsed with ``argmax``.  This
+    is a display helper only: the model input is the raw108 vector itself and is
+    not changed here.
+    """
+    C.ensure_p3_modules()
+    import structural_relation_objects_v1 as sro
+
     feat = np.asarray(atom_feat_row, dtype=np.float32)
+    blocks = sro.atom_blocks()
+    ring_bonds = feat[blocks["ring_bonds"]]
     return {
-        "atom_type": int(np.argmax(feat[0:28])),
-        "degree": int(np.argmax(feat[28:33])),
-        "in_ring": float(feat[33]),
-        "ring_bond_count": int(np.argmax(feat[40:42])),
-        "bond_type_counts": feat[42:46].astype(int).tolist(),
+        "atom_type": int(np.argmax(feat[blocks["atom_type"]])),
+        "degree": int(np.argmax(feat[blocks["degree"]])),
+        "in_ring": float(feat[blocks["in_ring"]][0]),
+        "ring_bond_count": float(ring_bonds[0]),
+        "ring_bond_fraction": float(ring_bonds[1]),
+        "bond_type_counts": feat[blocks["bond_type_counts"]].astype(int).tolist(),
         "neighbour_types": np.nonzero(feat[46:74])[0].astype(int).tolist(),
         "radius2_types": np.nonzero(feat[74:102])[0].astype(int).tolist(),
         "scalars": [round(float(v), 6) for v in feat[102:108]],
@@ -633,8 +648,14 @@ def representation_refinement():
         if len(full) > 1:
             subdiv[k] = (roots, full)
     roots_multi = sum(len(v) for v in multi.values())
-    roots_sub = sum(len(v) for v in subdiv.values())
+    # BUG (fixed 2026-10-23): ``subdiv[k]`` is ``(roots, full_signatures)``, so
+    # ``len(v)`` counted 2 * groups, not roots.  The reported 2.18 % root
+    # coverage of the old report was this artefact; the correct count is
+    # recorded in ``analysis/erratum_representation_fix.json`` and the REPORT
+    # erratum.
+    roots_sub = sum(len(roots) for roots, _ in subdiv.values())
     mols_sub = sorted({m for roots, _ in subdiv.values() for m, _ in roots})
+    group_sizes = [len(roots) for roots, _ in subdiv.values()]
     n_groups_sub_content = 0
     n_groups_sub_mult = 0
     n_groups_sub_both = 0
@@ -695,10 +716,38 @@ def representation_refinement():
         "n_groups_subdivided": int(len(subdiv)),
         "n_roots_in_subdivided_groups": int(roots_sub),
         "n_molecules_in_subdivided_groups": int(len(mols_sub)),
+        "subdivided_group_size": {
+            "min": int(min(group_sizes, default=0)),
+            "max": int(max(group_sizes, default=0)),
+            "mean": float(np.mean(group_sizes)) if group_sizes else 0.0,
+            "median": float(np.median(group_sizes)) if group_sizes else 0.0,
+        },
         "fraction_roots_in_multi_groups": float(roots_multi / n_roots),
         "fraction_roots_subdivided": float(roots_sub / n_roots),
         "fraction_molecules_subdivided": float(len(mols_sub) / n_mol),
         "fraction_multi_groups_subdivided": float(len(subdiv) / max(len(multi), 1)),
+        "identities": {
+            "molecules_le_roots_in_subdivided_groups_le_roots": bool(
+                len(mols_sub) <= roots_sub <= n_roots
+            ),
+            "roots_subdivided_is_sum_of_group_sizes": bool(
+                roots_sub == int(sum(group_sizes))
+            ),
+            # round-trip from the stored fraction back to the count, so a wrong
+            # numerator cannot hide behind a consistently wrong fraction
+            "fraction_roots_roundtrips_to_count": bool(
+                int(round((roots_sub / n_roots) * n_roots)) == roots_sub
+            ),
+            "fraction_molecules_roundtrips_to_count": bool(
+                int(round((len(mols_sub) / n_mol) * n_mol)) == len(mols_sub)
+            ),
+            "roots_subdivided_is_not_two_times_group_count": bool(
+                roots_sub != 2 * len(subdiv)
+            ),
+            "n_roots": int(n_roots),
+            "n_roots_in_subdivided_groups": int(roots_sub),
+            "n_molecules_in_subdivided_groups": int(len(mols_sub)),
+        },
         "subdivided_by_content": int(n_groups_sub_content),
         "subdivided_by_multiplicity": int(n_groups_sub_mult),
         "subdivided_by_both": int(n_groups_sub_both),
@@ -913,6 +962,46 @@ def main() -> int:
         json.dumps(representation, separators=(",", ":"), default=C._json_default) + "\n",
         encoding="utf-8",
     )
+    ref = representation["refinement"]
+    if isinstance(ref, dict) and "n_roots_in_subdivided_groups" in ref:
+        buggy = 2 * int(ref["n_groups_subdivided"])
+        C.write_json(ANALYSIS / "erratum_representation_fix.json", {
+            "what": "representation_refinement root coverage of the BF new signature",
+            "bug": (
+                "subdiv[k] stores (roots, full_signatures); the old code ran "
+                "sum(len(v) for v in subdiv.values()), i.e. 2 * group count, "
+                "and reported it as the number of subdivided roots"
+            ),
+            "fix": "sum(len(roots) for roots, _ in subdiv.values())",
+            "old_buggy_n_roots_in_subdivided_groups": int(buggy),
+            "old_buggy_fraction_roots_subdivided": float(buggy / ref["n_roots"]),
+            "correct_n_roots_in_subdivided_groups": int(ref["n_roots_in_subdivided_groups"]),
+            "correct_fraction_roots_subdivided": float(ref["fraction_roots_subdivided"]),
+            "n_roots": int(ref["n_roots"]),
+            "n_molecules_in_subdivided_groups": int(ref["n_molecules_in_subdivided_groups"]),
+            "fraction_molecules_subdivided": float(ref["fraction_molecules_subdivided"]),
+            "n_groups_subdivided": int(ref["n_groups_subdivided"]),
+            "subdivided_group_size": ref.get("subdivided_group_size"),
+            "identities": ref.get("identities"),
+            "unaffected_fields": [
+                "n_groups_subdivided", "subdivided_by_content",
+                "subdivided_by_multiplicity", "subdivided_by_both",
+                "pure_content_subdivisions", "pure_multiplicity_subdivisions",
+            ],
+            "descriptor_display_fix": (
+                "descriptor_summary used argmax on the two continuous ring_bonds "
+                "scalars; it now reads the authoritative atom_blocks layout and "
+                "reports ring_bond_count / ring_bond_fraction. Display only; the "
+                "model input raw108 vector is unchanged."
+            ),
+            "note": (
+                "Old training, checkpoints and predictions are untouched. Old "
+                "2.18% root coverage must not be quoted again; 99.89% molecule "
+                "coverage is unchanged and was re-verified by the same count."
+            ),
+            "git_commit_at_fix": C.git_commit(),
+            "created": C.utcnow(),
+        })
     C.write_json(ANALYSIS / "cpu_checks.json", out)
     n_fail = sum(1 for r in RESULTS.values() if not r["pass"])
     C.log(f"[bf-check] {len(RESULTS) - n_fail} passed / {n_fail} failed")

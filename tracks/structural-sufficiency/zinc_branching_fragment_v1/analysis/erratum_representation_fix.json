@@ -1,0 +1,41 @@
+{
+  "what": "representation_refinement root coverage of the BF new signature",
+  "bug": "subdiv[k] stores (roots, full_signatures); the old code ran sum(len(v) for v in subdiv.values()), i.e. 2 * group count, and reported it as the number of subdivided roots",
+  "fix": "sum(len(roots) for roots, _ in subdiv.values())",
+  "old_buggy_n_roots_in_subdivided_groups": 5048,
+  "old_buggy_fraction_roots_subdivided": 0.02179017887975689,
+  "correct_n_roots_in_subdivided_groups": 131168,
+  "correct_fraction_roots_subdivided": 0.5661993231576766,
+  "n_roots": 231664,
+  "n_molecules_in_subdivided_groups": 9989,
+  "fraction_molecules_subdivided": 0.9989,
+  "n_groups_subdivided": 2524,
+  "subdivided_group_size": {
+    "min": 2,
+    "max": 10529,
+    "mean": 51.968304278922346,
+    "median": 11.0
+  },
+  "identities": {
+    "molecules_le_roots_in_subdivided_groups_le_roots": true,
+    "roots_subdivided_is_sum_of_group_sizes": true,
+    "fraction_roots_roundtrips_to_count": true,
+    "fraction_molecules_roundtrips_to_count": true,
+    "roots_subdivided_is_not_two_times_group_count": true,
+    "n_roots": 231664,
+    "n_roots_in_subdivided_groups": 131168,
+    "n_molecules_in_subdivided_groups": 9989
+  },
+  "unaffected_fields": [
+    "n_groups_subdivided",
+    "subdivided_by_content",
+    "subdivided_by_multiplicity",
+    "subdivided_by_both",
+    "pure_content_subdivisions",
+    "pure_multiplicity_subdivisions"
+  ],
+  "descriptor_display_fix": "descriptor_summary used argmax on the two continuous ring_bonds scalars; it now reads the authoritative atom_blocks layout and reports ring_bond_count / ring_bond_fraction. Display only; the model input raw108 vector is unchanged.",
+  "note": "Old training, checkpoints and predictions are untouched. Old 2.18% root coverage must not be quoted again; 99.89% molecule coverage is unchanged and was re-verified by the same count.",
+  "git_commit_at_fix": "5255cda26385b811ce78955d50179684de18096c",
+  "created": "2026-10-22T11:05:16+0800"
+}
