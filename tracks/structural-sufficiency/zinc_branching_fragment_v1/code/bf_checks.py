@@ -647,7 +647,7 @@ def representation_refinement():
 
     def examples_for(keys, limit=3):
         out = []
-        for k in keys:
+        for k in keys[:limit]:
             roots = subdiv[k][0]
             by_sig = defaultdict(list)
             for r in roots:
@@ -660,8 +660,6 @@ def representation_refinement():
                 "variants": [
                     {
                         "roots": [{"molecule": int(m), "root": int(r)} for m, r in sorted(rs)],
-                        "descriptors": [descriptor_summary(np.asarray(objs[m].atom_feat)[r])
-                                        for m, r in sorted(rs)[:2]],
                         "content": {f"{m}:{r}": variants.get((m, r), [])
                                     for m, r in sorted(rs)[:3]},
                     }
@@ -674,7 +672,7 @@ def representation_refinement():
         [k for k in subdiv if 2 <= len(subdiv[k][0]) <= 4],
         key=lambda k: len(subdiv[k][0]),
     )
-    examples = examples_for(candidates, limit=6)
+    examples = examples_for(candidates, limit=4)
     pure_content = [
         k for k in subdiv
         if len({digests[r][1] for r in subdiv[k][0]}) > 1
@@ -707,8 +705,8 @@ def representation_refinement():
         "pure_content_subdivisions": int(len(pure_content)),
         "pure_multiplicity_subdivisions": int(len(pure_mult)),
         "examples": examples,
-        "examples_content_split": examples_for(pure_content[:3]),
-        "examples_multiplicity_split": examples_for(pure_mult[:3]),
+        "examples_content_split": examples_for(pure_content, limit=2),
+        "examples_multiplicity_split": examples_for(pure_mult, limit=2),
     }
 
 
@@ -871,7 +869,6 @@ def main() -> int:
     for split in ("train", "valid"):
         if not B.cache_path(split).exists():
             B.save_split(split)
-    out = {"checks": RESULTS}
     # run in a fixed order
     for fn in (
         check_reference, check_parameters, check_zero_columns, check_hand,
@@ -884,6 +881,16 @@ def main() -> int:
         C.log(f"[bf-check] {name}: {'pass' if RESULTS[name]['pass'] else 'FAIL'}")
         if not RESULTS[name]["pass"]:
             C.log(RESULTS[name].get("traceback", RESULTS[name].get("error", "")))
+    heavy = {"raw108_group_refinement"}
+    out = {"checks": {}}
+    for name, value in RESULTS.items():
+        if name in heavy and value.get("pass"):
+            detail = dict(value["detail"])
+            for key in ("examples", "examples_content_split", "examples_multiplicity_split"):
+                detail.pop(key, None)
+            out["checks"][name] = {"pass": True, "detail": detail}
+        else:
+            out["checks"][name] = value
     cache_stats = {}
     for split in ("train", "valid"):
         pc = B.load_cache(split)
@@ -902,7 +909,10 @@ def main() -> int:
         "train_valid_content": RESULTS["train_valid_new_content"]["detail"]
         if RESULTS["train_valid_new_content"]["pass"] else RESULTS["train_valid_new_content"],
     }
-    C.write_json(ANALYSIS / "representation_check.json", representation)
+    (ANALYSIS / "representation_check.json").write_text(
+        json.dumps(representation, separators=(",", ":"), default=C._json_default) + "\n",
+        encoding="utf-8",
+    )
     C.write_json(ANALYSIS / "cpu_checks.json", out)
     n_fail = sum(1 for r in RESULTS.values() if not r["pass"])
     C.log(f"[bf-check] {len(RESULTS) - n_fail} passed / {n_fail} failed")
