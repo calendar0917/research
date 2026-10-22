@@ -649,13 +649,116 @@ def _support_md(s: dict) -> str:
     return "\n".join(rows) + "\n"
 
 
+def test_split() -> dict:
+    """Post-selection terminal test read (amendment A3).  Descriptive only."""
+    terminal = C.read_json(OUT / "test_terminal.json")
+    ref = _SSUF / "zinc_restricted_adaptation_v1" / "analysis" / "reference_preds_test.csv"
+    with open(ref, newline="", encoding="utf-8") as fh:
+        ref_rows = list(csv.DictReader(fh))
+    names = {(0, 1): "seen_ordinary", (0, 0): "seen_tail",
+             (1, 1): "unseen_ordinary", (1, 0): "unseen_tail"}
+    y = np.asarray([float(r["y_raw"]) for r in ref_rows], dtype=np.float64)
+    buckets = {}
+    for i, r in enumerate(ref_rows):
+        key = names[(int(r["signature_unseen"]), int(r["ordinary_y_gt_minus3"]))]
+        buckets.setdefault(key, []).append(i)
+    groups = {k: np.asarray(v, dtype=np.int64) for k, v in buckets.items()}
+    out = {"source": str(ref), "source_sha256": C.sha256_file(ref), "n": int(len(y)),
+           "group_sizes": {k: int(len(v)) for k, v in groups.items()},
+           "test_read": terminal["test_read"], "runs": {}, "comparisons": {}}
+
+    preds = {}
+    for name, rec in terminal["runs"].items():
+        f = OUT / f"test_{name}.npz"
+        if not f.exists():
+            continue
+        pred = np.asarray(np.load(f)["pred"], dtype=np.float64)
+        preds[name] = pred
+        ae = np.abs(pred - y)
+        out["runs"][name] = {
+            "run": rec["run"], "which": rec["which"], "arm": rec["arm"],
+            "seed": rec["seed"], "kappa": rec["kappa"], "epoch": rec["epoch"],
+            "test_mae": rec["test_mae"], "valid_mae": rec["valid_mae"],
+            "test_minus_valid": rec["test_minus_valid"],
+            "median_ae": float(np.median(ae)), "max_ae": float(ae.max()),
+            "max_ae_row": int(np.argmax(ae)),
+            "trimmed_top1pct_mae": float(np.sort(ae)[: len(ae) - max(1, len(ae) // 100)].mean()),
+            "groups": {k: float(ae[v].mean()) for k, v in groups.items()},
+            "checkpoint_sha256": rec["checkpoint_sha256"],
+        }
+
+    def contrast(tag, a_key, b_key):
+        a, b = preds.get(a_key), preds.get(b_key)
+        if a is None or b is None:
+            return
+        out["comparisons"][tag] = paired_bootstrap(np.abs(a - y), np.abs(b - y))
+
+    for seed in (0, 1):
+        for arm in ("R", "S"):
+            for extra in ("", "_k04"):
+                if extra and arm == "S" and seed == 1:
+                    continue  # S@0.4 seed 1 was not run
+                label = f"{arm}{extra}_s{seed}"
+                for which in ("best", "final"):
+                    contrast(f"{label}_{which}_minus_E_s{seed}_{which}",
+                             f"{label}_{which}", f"E_s{seed}_{which}")
+    for seed in (0, 1):
+        for which in ("best_monitor", "final"):
+            contrast(f"support_plus_minus_s{seed}_{which}",
+                     f"sup_plus_s{seed}_{which}", f"sup_minus_s{seed}_{which}")
+    C.write_json(OUT / "test_summary.json", out)
+    (OUT / "test_report.md").write_text(_test_md(out), encoding="utf-8")
+    return out
+
+
+def _test_md(s: dict) -> str:
+    head = [
+        "# Terminal test read (post-selection, descriptive; amendment A3)", "",
+        f"* {s['test_read']}",
+        f"* split: official PyG ZINC test, {s['n']} molecules",
+        f"* frozen four-group split source: `{s['source']}` "
+        f"(sha256 {s['source_sha256'][:16]}…)",
+        f"* group sizes: {s['group_sizes']}", "",
+        "| checkpoint | arm | seed | kappa | epoch | test MAE | valid | test−valid | "
+        "median |AE| | trimmed |AE| | seen_ord | unseen_ord | seen_tail | unseen_tail |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    rows = list(head)
+    for name in sorted(s["runs"], key=lambda k: s["runs"][k]["test_mae"]):
+        r = s["runs"][name]
+        g = r["groups"]
+        valid = "—" if r["valid_mae"] is None else f"{r['valid_mae']:.6f}"
+        off = "—" if r["test_minus_valid"] is None else f"{r['test_minus_valid']:+.6f}"
+        rows.append(
+            f"| {name} | {r['arm']} | {r['seed']} | {r['kappa']} | {r['epoch']} | "
+            f"{r['test_mae']:.6f} | {valid} | {off} | {r['median_ae']:.4f} | "
+            f"{r['trimmed_top1pct_mae']:.5f} | {g['seen_ordinary']:.5f} | "
+            f"{g['unseen_ordinary']:.5f} | {g['seen_tail']:.5f} | {g['unseen_tail']:.5f} |")
+    rows += ["", "## Paired contrasts over the 1000 test molecules (descriptive)", "",
+             "| contrast | mean Δ(test) [95% CI] | median Δ | molecules better | sign p |",
+             "|---|---:|---:|---:|---:|"]
+    for k, c in s["comparisons"].items():
+        rows.append(f"| {k} | {c['delta_mean']:+.5f} "
+                    f"[{c['ci95'][0]:+.5f}, {c['ci95'][1]:+.5f}] | {c['delta_median']:+.4f} | "
+                    f"{c['frac_molecules_a_better']:.3f} | {c['sign_test_p']:.3f} |")
+    rows += ["", "Positive Δ = the first arm is worse. The test split was read once, after "
+             "every checkpoint was frozen; nothing here changes the valid-side decision."]
+    return "\n".join(rows) + "\n"
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("what", choices=["core", "support", "all"], nargs="?", default="all")
+    p.add_argument("what", choices=["core", "support", "test", "all"], nargs="?", default="all")
     args = p.parse_args(argv)
     if args.what in ("core", "all"):
         s = core()
         C.log({"runs": sorted(s["runs"]), "comparisons": sorted(s["comparisons"])})
+    if args.what in ("test", "all"):
+        try:
+            t = test_split()
+            C.log(sorted(t["comparisons"]))
+        except FileNotFoundError as exc:
+            C.log(f"test analysis skipped: {exc}")
     if args.what in ("support", "all"):
         try:
             out = support()
