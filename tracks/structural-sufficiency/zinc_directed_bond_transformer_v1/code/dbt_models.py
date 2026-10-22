@@ -313,6 +313,16 @@ class DirectedBondTransformer(nn.Module):
 
     def build_tokens(self, batch: Mapping[str, torch.Tensor]):
         a, b, w = self.encoders(batch)                       # [A,96] [E,96] [J,96]
+        return self.build_tokens_from_local(batch, a, b, w)
+
+    def build_tokens_from_local(self, batch: Mapping[str, torch.Tensor],
+                                a: torch.Tensor, b: torch.Tensor, w: torch.Tensor):
+        """Build directed-bond tokens from already-computed local states.
+
+        ``a``/``b``/``w`` are the *final* outputs of the local encoder stack.
+        They may come from the live encoders or from the frozen-feature cache;
+        downstream code cannot tell the difference.
+        """
         di = batch["dir_index"]
         n_dir = int(di.shape[0])
         src, dst = di[:, 0], di[:, 1]
@@ -366,7 +376,10 @@ class DirectedBondTransformer(nn.Module):
     # -- forward -------------------------------------------------------------
     def encode(self, batch: Mapping[str, torch.Tensor]):
         """Run the shared encoders and the full-graph trunk; return tokens + h."""
-        tok = self.build_tokens(batch)
+        return self.encode_from_tokens(batch, self.build_tokens(batch))
+
+    def encode_from_tokens(self, batch: Mapping[str, torch.Tensor], tok):
+        """Run the full-graph trunk over already-built tokens."""
         a, dense, key_mask = tok["a"], tok["dense"], tok["key_mask"]
         B = int(batch["n_graphs"])
         Dm = int(batch["Dmax"])
@@ -433,6 +446,13 @@ class DirectedBondTransformer(nn.Module):
 
     def forward(self, batch: Mapping[str, torch.Tensor]) -> torch.Tensor:
         tok, h, _ = self.encode(batch)
+        return self.reader(self.pool(tok, h, batch)).view(-1)
+
+    def forward_from_local(self, batch: Mapping[str, torch.Tensor],
+                           a: torch.Tensor, b: torch.Tensor, w: torch.Tensor) -> torch.Tensor:
+        """Forward the DBT downstream from given local-stack outputs."""
+        tok = self.build_tokens_from_local(batch, a, b, w)
+        tok, h, _ = self.encode_from_tokens(batch, tok)
         return self.reader(self.pool(tok, h, batch)).view(-1)
 
 

@@ -1,0 +1,46 @@
+{
+  "purpose": "frozen old per-molecule predictions reused for descriptive contrasts",
+  "official_test_historically_exposed": true,
+  "new_model_selection_used": false,
+  "sources": {
+    "valid": {
+      "P3B": "tracks/structural-sufficiency/zinc_generalization_audit_v1/analysis/per_molecule.csv",
+      "L": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/analysis/per_molecule_dual.csv",
+      "DBT": "tracks/structural-sufficiency/zinc_directed_bond_transformer_v1/runs/dbt_s0/predictions/valid_best.npz"
+    },
+    "test": {
+      "groups_and_P3B_L": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/analysis/test_per_molecule.csv",
+      "DBT": "tracks/structural-sufficiency/zinc_directed_bond_transformer_v1/runs/dbt_s0/predictions/test_best.npz",
+      "P3B_npz": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/analysis/test_preds/P3B_s0_test.npz",
+      "L_npz": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/analysis/test_preds/L_s0_test.npz"
+    }
+  },
+  "valid": {
+    "rows": 1000,
+    "mae": {
+      "P3B_s0": 0.07622375389701798,
+      "L_s0": 0.07853715219267021,
+      "DBT_s0": 0.07776840162758793
+    },
+    "expected": {
+      "P3B_s0": 0.07622375367576023,
+      "L_s0": 0.078537152,
+      "DBT_s0": 0.077768402
+    }
+  },
+  "test": {
+    "rows": 1000,
+    "mae": {
+      "P3B_s0": 0.0698648406449365,
+      "L_s0": 0.06626655487264999,
+      "DBT_s0": 0.0694014943583316
+    },
+    "expected": {
+      "P3B_s0": 0.069864841,
+      "L_s0": 0.066266555,
+      "DBT_s0": 0.069401494
+    }
+  },
+  "row_alignment": "row ids are exactly 0..999 and every y column agrees",
+  "group_definition": "signature_unseen = any atom with a radius-2 content key absent from train; tail = y <= -3; labels are analysis-only"
+}

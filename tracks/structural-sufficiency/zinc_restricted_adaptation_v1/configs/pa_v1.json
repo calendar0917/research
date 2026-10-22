@@ -1,0 +1,66 @@
+{
+  "round": "zinc-restricted-adaptation-v1",
+  "protocol": "DBT-PA seed 0, frozen local SSL stack + rank-8 post-encoder adapters",
+  "data": {
+    "source": "official PyG ZINC subset=True",
+    "train": 10000,
+    "valid": 1000,
+    "test": 1000,
+    "target": "raw y",
+    "metric": "MAE"
+  },
+  "model": {
+    "base": "P3 atom/bond/junction encoders from DBT",
+    "encoder_init": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "encoder_init_kind": "seed-0 train-only masked-SSL; not the supervised DBT best.pt",
+    "encoder_frozen": true,
+    "adapter": "x + U SiLU(D x), independent for a/b/w",
+    "adapter_dim": 96,
+    "adapter_rank": 8,
+    "adapter_D_init": "PyTorch Linear default",
+    "adapter_U_init": "weight and bias exactly zero",
+    "width": 64,
+    "layers": 4,
+    "heads": 4,
+    "reader": "unchanged DBT reader",
+    "token_set": "unchanged directed physical bonds",
+    "relation": "unchanged DBT exact simple-path/distance relation",
+    "expected_total_parameters": 457443,
+    "parameter_cap": 500000
+  },
+  "cache": {
+    "version": "dbt-pa-feat-v1",
+    "stores": "a0/b0/w0 only, float32, per graph",
+    "key_fields": ["feature_version", "ssl_sha256", "encoder_sha256", "structure_sha256"],
+    "labels_stored": false,
+    "test_built_after_best_valid_freeze": true
+  },
+  "recipe": {
+    "seed": 0,
+    "optimizer": "adamw",
+    "lr": 3e-4,
+    "min_lr": 3e-6,
+    "weight_decay": 1e-4,
+    "warmup_updates": 1000,
+    "batch_size": 64,
+    "steps_per_epoch": 157,
+    "valid_batch_size": 256,
+    "eval_train_batch_size": 256,
+    "dropout": 0.05,
+    "grad_clip": 5.0,
+    "loss": "raw-y L1",
+    "max_epochs_cap": 600,
+    "valid_every_epoch": true,
+    "selection": "strict < on valid MAE, ties keep the earlier epoch",
+    "tail_oversampling": false
+  },
+  "scope": {
+    "seeds": [0],
+    "grids": [],
+    "ensembles": false,
+    "teachers": false,
+    "output_decomposition": false,
+    "pooling_change": false,
+    "ssl_task_change": false
+  }
+}

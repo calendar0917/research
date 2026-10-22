@@ -1,0 +1,166 @@
+{
+  "device": "cpu",
+  "model_info": {
+    "ssl_source": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "ssl_tensor_match": {
+      "atom_encoder": true,
+      "bond_encoder": true,
+      "junction_encoder": true
+    },
+    "parameters_total_inference": 457443,
+    "parameters_trainable": 255395,
+    "parameters_frozen": 202048,
+    "module_breakdown": {
+      "encoders": 202048,
+      "proj_src": 3104,
+      "proj_dst": 3104,
+      "proj_bond": 3104,
+      "proj_jsrc": 3104,
+      "proj_jdst": 3104,
+      "init_mlp": 21856,
+      "init_norm": 128,
+      "static_proj": 320,
+      "relation": 3098,
+      "layers": 147088,
+      "reader": 62465,
+      "adapter_a": 1640,
+      "adapter_b": 1640,
+      "adapter_w": 1640
+    }
+  },
+  "parameter_audit": {
+    "parameters_total_inference": 457443,
+    "parameters_trainable": 255395,
+    "parameters_frozen": 202048,
+    "parameter_tensors_total": 127,
+    "parameter_tensors_trainable": 115,
+    "parameter_tensors_frozen": 12,
+    "optimizer_parameters": 255395,
+    "optimizer_covers_exactly_trainable": true,
+    "frozen_in_optimizer": false,
+    "under_500k_all_inference_weights": true,
+    "module_breakdown": {
+      "encoders": 202048,
+      "proj_src": 3104,
+      "proj_dst": 3104,
+      "proj_bond": 3104,
+      "proj_jsrc": 3104,
+      "proj_jdst": 3104,
+      "init_mlp": 21856,
+      "init_norm": 128,
+      "static_proj": 320,
+      "relation": 3098,
+      "layers": 147088,
+      "reader": 62465,
+      "adapter_a": 1640,
+      "adapter_b": 1640,
+      "adapter_w": 1640
+    },
+    "trainable_breakdown": {
+      "encoders": 0,
+      "proj_src": 3104,
+      "proj_dst": 3104,
+      "proj_bond": 3104,
+      "proj_jsrc": 3104,
+      "proj_jdst": 3104,
+      "init_mlp": 21856,
+      "init_norm": 128,
+      "static_proj": 320,
+      "relation": 3098,
+      "layers": 147088,
+      "reader": 62465,
+      "adapter_a": 1640,
+      "adapter_b": 1640,
+      "adapter_w": 1640
+    }
+  },
+  "parameter_check": {
+    "expected_total": 457443,
+    "actual_total": 457443,
+    "matches_estimate": true,
+    "under_cap": true,
+    "frozen_is_202048": true,
+    "trainable_is_255395": true,
+    "frozen_stack_requires_grad": false
+  },
+  "init_parity_with_original_dbt_seed0": {
+    "common_non_encoder_keys": 107,
+    "missing_keys": [],
+    "max_abs_diff": 0.0,
+    "equal": true
+  },
+  "zero_adapter_equivalence": {
+    "max_abs_diff_vs_no_adapter": 0.0,
+    "equal_atol_1e_6": true
+  },
+  "cached_gather_alignment": {
+    "max_abs_diff": 0.0,
+    "equal_atol_1e_6": true,
+    "rows": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "frozen_base_after_three_steps": {
+    "encoder_sha_before": "742a87f4eb64b83661bdd1339022cb2a5475951fea84d5bc9b2f2a5920bbe4b5",
+    "encoder_sha_after": "742a87f4eb64b83661bdd1339022cb2a5475951fea84d5bc9b2f2a5920bbe4b5",
+    "unchanged": true,
+    "encoder_stack_training_flag": false
+  },
+  "adapters_and_trunk_update": {
+    "adapter_sha_before": "003f7d257981450ebbf921d94eceb1bf04e1c4f1273ab552c55235414c3f2f9b",
+    "adapter_sha_after": "6bc00a40f287a499880b0c1df70d55fdc34b5657debbed5bff98a88424194c64",
+    "adapter_updated": true,
+    "trunk_sha_before": "082a69150c7f38c3d8b028c82b68f596bd7c4eefab8bb026c753e593727640ad",
+    "trunk_sha_after": "f2238001bbe03c5a7aa48cc65f740c54175342cfb551a9128720a0cc9b27e35c",
+    "trunk_updated": true
+  },
+  "adapter_D_gradient": {
+    "records": [
+      {
+        "step": 1,
+        "loss": 1.1906845569610596,
+        "adapter_D_grad_abs_sum": 0.0,
+        "adapter_U_grad_abs_sum": 0.11265574395656586,
+        "trunk_proj_src_grad_abs_sum": 1.550406813621521,
+        "any_frozen_encoder_grad": false
+      },
+      {
+        "step": 2,
+        "loss": 1.1352952718734741,
+        "adapter_D_grad_abs_sum": 0.0027876088861376047,
+        "adapter_U_grad_abs_sum": 0.08667190372943878,
+        "trunk_proj_src_grad_abs_sum": 1.1572343111038208,
+        "any_frozen_encoder_grad": false
+      },
+      {
+        "step": 3,
+        "loss": 1.0901521444320679,
+        "adapter_D_grad_abs_sum": 0.004957203287631273,
+        "adapter_U_grad_abs_sum": 0.09003902971744537,
+        "trunk_proj_src_grad_abs_sum": 1.106014370918274,
+        "any_frozen_encoder_grad": false
+      }
+    ],
+    "D_zero_on_first_step": true,
+    "D_nonzero_by_step_3": true,
+    "U_nonzero_on_first_step": true,
+    "no_encoder_gradients": true
+  },
+  "schedule": {
+    "steps_per_epoch": 157,
+    "steps_per_epoch_is_157": true,
+    "lr_step_1": 3e-07,
+    "lr_step_1000": 0.0003,
+    "lr_step_235500": 3e-06,
+    "warmup_monotone": true
+  },
+  "all_pass": true
+}
