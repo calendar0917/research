@@ -421,6 +421,8 @@ def freeze_predictions(run_dirs: list[Path], out_path: Path) -> dict:
         "q_target": np.asarray(sup["q_target"], dtype=np.int64),
         "q_background": np.asarray(sup["q_background"], dtype=np.int64),
     }
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     out = {"checkpoints": [], "groups": {k: len(v) for k, v in groups.items()},
            "manifest_sha256": manifest["npz_sha256"]}
     for run_dir in run_dirs:
