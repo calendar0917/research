@@ -89,6 +89,13 @@ def old_groups() -> dict:
             "source": str(path)}
 
 
+def export_preds(name: str, which: str = "final") -> np.ndarray | None:
+    path = OUT / f"export_{name}_{which}.npz"
+    if not path.exists():
+        return None
+    return np.asarray(np.load(path)["pred"], dtype=np.float64)
+
+
 def group_table(pred: np.ndarray, g: dict) -> dict:
     y = g["y"]
     ae = np.abs(pred - y)
@@ -186,6 +193,17 @@ def verify_contract(runs: dict) -> dict:
     return checks
 
 
+def _final_epoch_contrast(arm: str, seed: int, ref: str, g: dict) -> dict:
+    """Unselected epoch-600 per-molecule contrast against the reference arm."""
+    a = export_preds(f"{arm}_s{seed}", "final")
+    b = export_preds(f"{ref}_s{seed}", "final")
+    if a is None or b is None:
+        return {}
+    ae_a = np.abs(a - g["y"])
+    ae_b = np.abs(b - g["y"])
+    return {"final_epoch_molecule": paired_bootstrap(ae_a, ae_b)}
+
+
 def budget_ledger(runs: dict, extra: dict | None = None) -> dict:
     rows = []
     for name, r in runs.items():
@@ -237,6 +255,19 @@ def core(extra_ledger: dict | None = None) -> dict:
               if e.get("train_mae_eval_mode") is not None]
         summary["runs"][name]["eval_train_last100_median"] = (
             float(np.median(tr[-100:])) if tr else None)
+        for which in ("best", "final"):
+            pr = export_preds(name, which)
+            if pr is None:
+                continue
+            ae = np.abs(pr - g["y"])
+            summary["runs"][name].setdefault("molecules", {})[which] = {
+                "mae": float(ae.mean()), "median_ae": float(np.median(ae)),
+                "ae_row172": float(ae[172]),
+                "mae_excluding_row172": float(np.delete(ae, 172).mean()),
+                "trimmed_top1pct_mae": float(
+                    np.sort(ae)[: len(ae) - max(1, len(ae) // 100)].mean()),
+                "groups": {k: float(ae[idx].mean()) for k, idx in g["groups"].items()},
+            }
 
     for seed in (0, 1):
         base = runs.get(f"E_s{seed}")
@@ -250,7 +281,7 @@ def core(extra_ledger: dict | None = None) -> dict:
             cm_r = curve_metrics(r["curve"])
             ae_b = np.abs(base["_pred"] - g["y"])
             ae_r = np.abs(r["_pred"] - g["y"])
-            summary["comparisons"][f"{arm}_minus_E_s{seed}"] = {
+            c = {
                 "best_valid_delta": r["best_valid"]["valid_mae"] - base["best_valid"]["valid_mae"],
                 "W20_delta": cm_r["W20"] - cm_b["W20"],
                 "T100_delta": cm_r["T100"] - cm_b["T100"],
@@ -262,12 +293,14 @@ def core(extra_ledger: dict | None = None) -> dict:
                     for name, idx in g["groups"].items()
                 },
             }
+            c.update(_final_epoch_contrast(arm, seed, "E", g))
+            summary["comparisons"][f"{arm}_minus_E_s{seed}"] = c
         r, s = runs.get(f"R_s{seed}"), runs.get(f"S_s{seed}")
         if r is not None and s is not None:
             cm_r, cm_s = curve_metrics(r["curve"]), curve_metrics(s["curve"])
             ae_r = np.abs(r["_pred"] - g["y"])
             ae_s = np.abs(s["_pred"] - g["y"])
-            summary["comparisons"][f"S_minus_R_s{seed}"] = {
+            c = {
                 "best_valid_delta": s["best_valid"]["valid_mae"] - r["best_valid"]["valid_mae"],
                 "W20_delta": cm_s["W20"] - cm_r["W20"],
                 "T100_delta": cm_s["T100"] - cm_r["T100"],
@@ -277,6 +310,8 @@ def core(extra_ledger: dict | None = None) -> dict:
                 "groups": {name: float(ae_s[idx].mean() - ae_r[idx].mean())
                            for name, idx in g["groups"].items()},
             }
+            c.update(_final_epoch_contrast("S", seed, "R", g))
+            summary["comparisons"][f"S_minus_R_s{seed}"] = c
     # seed means
     def seed_mean(arm, key):
         vals = [summary["runs"][f"{arm}_s{s}"][key] for s in (0, 1)
