@@ -104,6 +104,12 @@ Track `structural-sufficiency`；本轮代码 `tracks/structural-sufficiency/zin
 每类关系一张 `(n_cat × 4 heads)` 表，五项相加为每对 token 的加性 logit bias；四层共享
 （212 参数）。不构造 DBT 式 `[B,H,T,T,head_dim]` relation value。
 
+实现备注（正式训练之前定稿，数学等价）：五项关系表不用整数 advanced indexing 读取，
+而写成 `sum_r onehot(cat_r) @ table_r`（按 pair 维分块，one-hot 无梯度）。两者取值完全相同，
+但前者的 backward 会把数百万重复索引 scatter 进 25/9/11/5/3 行、在 atomics 上串行
+（一次 step 实测 1.32 s / 1.34 s CUDA 时间），后者把表梯度变成一次快速 reduction。
+`ot_checks` 里保留与显式查表的逐值对比。
+
 主干：4 × pre-LN block，width 96、heads 4、FFN 192、SiLU、dropout 0.05；
 `LN→QKV→full-graph attention(+bias)→out→residual`，`LN→FFN→residual`；带 bias 线性层，
 每 block 两次 LN，无额外 final LN。attention 只屏蔽 padding 与不同分子；真实 token 对

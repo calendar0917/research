@@ -1,0 +1,321 @@
+{
+  "arm": "A",
+  "candidate": "A_joint_BF",
+  "freeze": {
+    "protocol": "zinc-structural-object-tokens-v1/A_joint_BF",
+    "arm": "A",
+    "candidate": "A_joint_BF",
+    "seed": 0,
+    "git_commit": "06b7fe54e49a17e1d891be812cea8233d14c159a",
+    "best_sha256": "237db6cbad65fdda25804ce6c51083b05e3007a25e5190841604789531ab8e7d",
+    "best_epoch": 375,
+    "best_valid_mae": 0.07673136408993741,
+    "best_valid_mae_stored": 0.07673135878139874,
+    "best_is_epoch0": false,
+    "init": {
+      "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "loaded": [
+        "atom_encoder",
+        "bond_encoder",
+        "junction_encoder"
+      ],
+      "note": "atom/bond/junction encoders only; composer and reader keep the seed-0 init"
+    },
+    "plan_epochs": 600,
+    "epochs_run": 600,
+    "total_updates": 47400,
+    "actual_global_steps": 47400,
+    "params": 447505,
+    "recipe": {
+      "epochs": 600,
+      "planned_epochs": 600,
+      "steps_per_epoch": 79,
+      "updates": 47400,
+      "actual_global_steps": 47400,
+      "warmup_updates": 500,
+      "peak_lr": 0.001,
+      "min_lr": 1e-05,
+      "weight_decay": 1e-05,
+      "grad_clip": 5.0,
+      "batch_size": 128,
+      "loss": "raw-y L1",
+      "valid_every_epoch": true,
+      "early_stop": null,
+      "dropout": "0.0"
+    },
+    "model_info": {
+      "candidate": "A_joint_BF",
+      "seed": 0,
+      "parameters": 447505,
+      "parameters_breakdown": {
+        "encoders.atom_encoder": 26336,
+        "encoders.bond_encoder": 62816,
+        "encoders.junction_encoder": 112896,
+        "group_composer": 62976,
+        "reader": 148481,
+        "w_s": 25344,
+        "branch": 8656,
+        "total": 447505
+      },
+      "ssl_encoders": {
+        "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+        "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+        "loaded": [
+          "atom_encoder",
+          "bond_encoder",
+          "junction_encoder"
+        ],
+        "note": "atom/bond/junction encoders only; composer and reader keep the seed-0 init"
+      },
+      "init_order": [
+        "torch.manual_seed(seed)",
+        "P3Encoders + group_composer + reader (historical order)",
+        "load train-only SSL atom/bond/junction encoders",
+        "append w_s (zeros) + BF branch"
+      ],
+      "w_s_zero": true,
+      "all_require_grad": true
+    },
+    "caches": {
+      "train": "287a26a966bbf369a0e367263a5405cc65031e7e6dc2f3857a66a2039ac922fe",
+      "valid": "8de445d17910926bd03820a9d9b2340d656ba71e1e529a69253e2df805266ec0"
+    },
+    "data": {
+      "train_label_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+      "valid_label_sha256": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f"
+    },
+    "test_policy": "one descriptive read after this freeze; no test-driven change",
+    "frozen_at": "2026-10-22T11:45:27+0800"
+  },
+  "best_sha256": "237db6cbad65fdda25804ce6c51083b05e3007a25e5190841604789531ab8e7d",
+  "best_epoch": 375,
+  "best_valid_mae": 0.07673135878139874,
+  "test": {
+    "mae": 0.07006746093463152,
+    "n": 1000,
+    "test_label_sha256": "66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768"
+  },
+  "test_prediction_path": "tracks/structural-sufficiency/zinc_structural_object_tokens_v1/runs/A_joint_BF_s0/predictions/test_best.npz",
+  "test_prediction_sha256": "62c37bbb52637f7f8297c670a4526b2256a6d8ffb701f71d4afd6ef86c46b51d",
+  "caches": {
+    "ad_test": {
+      "path": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_test.pt",
+      "sha256": "f7b9341ad2e58c5c5d81e44d966f028f91ba7cfa6649297f2ede8f0a536065d3",
+      "size_bytes": 85601708
+    },
+    "structure": {
+      "path": "tracks/structural-sufficiency/zinc_branching_fragment_v1/cache/bf_test.pt",
+      "sha256": "0b7bc11bb7747507e024532e746d8bd83377868f124a19310408e202469a5506",
+      "meta": {
+        "split": "test",
+        "families": [
+          "S3",
+          "S4",
+          "F4"
+        ],
+        "object_source": {
+          "source": "rebuilt_from_official_pyg",
+          "path": null,
+          "sha256": null
+        },
+        "n_molecules": 1000,
+        "n_atoms": 23117,
+        "n_entries": 31299,
+        "n_unique_patterns": 616,
+        "unique_patterns_by_family": {
+          "S3": 167,
+          "S4": 33,
+          "F4": 416
+        },
+        "occurrences_by_family": {
+          "S3": 8336,
+          "S4": 344,
+          "F4": 25008
+        },
+        "nonempty_roots_by_family": {
+          "S3": 7304,
+          "S4": 344,
+          "F4": 18057
+        },
+        "empty_root_fraction_by_family": {
+          "S3": 0.6840420469784141,
+          "S4": 0.985119176363715,
+          "F4": 0.2188865337197733
+        },
+        "max_objects_per_root_by_family": {
+          "S3": 4,
+          "S4": 1,
+          "F4": 7
+        },
+        "max_objects_per_graph_by_family": {
+          "S3": 22,
+          "S4": 3,
+          "F4": 66
+        },
+        "max_entries_per_molecule": 69,
+        "definition": "exhaustive rooted branching fragments S3 (root+3 neighbours), S4 (root+4 neighbours), F4 (root-u-{w1,w2}); complete typed induced adjacency; root at canonical position 0",
+        "multiplicity_definition": "distinct actual node sets with equal content key are counted; one (root, family, node set) exactly once",
+        "canonicalisation": "lexicographic-min over permutations of the non-root nodes",
+        "labels_used": false,
+        "test_used": true,
+        "created": "2026-10-22T10:14:58+0800",
+        "prep_seconds": 0.6309596509672701
+      }
+    }
+  },
+  "groups": [
+    {
+      "group": "covered_ordinary",
+      "n": 705,
+      "mae": {
+        "A_joint_BF": 0.04827581266932206,
+        "P3B_s0": 0.047252012596221284,
+        "L_s0": 0.04374402893580142,
+        "DBT_s0": 0.048997656123534045
+      },
+      "delta_vs_P3B_s0": 0.0010238000731007738,
+      "delta_vs_L_s0": 0.004531783733520638,
+      "delta_vs_DBT_s0": -0.0007218434542119873
+    },
+    {
+      "group": "covered_tail",
+      "n": 51,
+      "mae": {
+        "A_joint_BF": 0.08978343026687922,
+        "P3B_s0": 0.12849450588235303,
+        "L_s0": 0.07644086294117647,
+        "DBT_s0": 0.08673262593697344
+      },
+      "delta_vs_P3B_s0": -0.03871107561547381,
+      "delta_vs_L_s0": 0.013342567325702756,
+      "delta_vs_DBT_s0": 0.0030508043299057874
+    },
+    {
+      "group": "unseen_ordinary",
+      "n": 218,
+      "mae": {
+        "A_joint_BF": 0.11951872986153618,
+        "P3B_s0": 0.11492148580091972,
+        "L_s0": 0.11423026464637615,
+        "DBT_s0": 0.11892868999602643
+      },
+      "delta_vs_P3B_s0": 0.004597244060616457,
+      "delta_vs_L_s0": 0.005288465215160035,
+      "delta_vs_DBT_s0": 0.0005900398655097477
+    },
+    {
+      "group": "unseen_tail",
+      "n": 26,
+      "mae": {
+        "A_joint_BF": 0.2076528799809148,
+        "P3B_s0": 0.19023338692307706,
+        "L_s0": 0.2548589526923076,
+        "DBT_s0": 0.17339724805079532
+      },
+      "delta_vs_P3B_s0": 0.017419493057837743,
+      "delta_vs_L_s0": -0.04720607271139282,
+      "delta_vs_DBT_s0": 0.03425563193011949
+    }
+  ],
+  "overall": {
+    "by_group": [
+      {
+        "group": "covered_ordinary",
+        "n": 705,
+        "mae": {
+          "A_joint_BF": 0.04827581266932206,
+          "P3B_s0": 0.047252012596221284,
+          "L_s0": 0.04374402893580142,
+          "DBT_s0": 0.048997656123534045
+        },
+        "delta_vs_P3B_s0": 0.0010238000731007738,
+        "delta_vs_L_s0": 0.004531783733520638,
+        "delta_vs_DBT_s0": -0.0007218434542119873
+      },
+      {
+        "group": "covered_tail",
+        "n": 51,
+        "mae": {
+          "A_joint_BF": 0.08978343026687922,
+          "P3B_s0": 0.12849450588235303,
+          "L_s0": 0.07644086294117647,
+          "DBT_s0": 0.08673262593697344
+        },
+        "delta_vs_P3B_s0": -0.03871107561547381,
+        "delta_vs_L_s0": 0.013342567325702756,
+        "delta_vs_DBT_s0": 0.0030508043299057874
+      },
+      {
+        "group": "unseen_ordinary",
+        "n": 218,
+        "mae": {
+          "A_joint_BF": 0.11951872986153618,
+          "P3B_s0": 0.11492148580091972,
+          "L_s0": 0.11423026464637615,
+          "DBT_s0": 0.11892868999602643
+        },
+        "delta_vs_P3B_s0": 0.004597244060616457,
+        "delta_vs_L_s0": 0.005288465215160035,
+        "delta_vs_DBT_s0": 0.0005900398655097477
+      },
+      {
+        "group": "unseen_tail",
+        "n": 26,
+        "mae": {
+          "A_joint_BF": 0.2076528799809148,
+          "P3B_s0": 0.19023338692307706,
+          "L_s0": 0.2548589526923076,
+          "DBT_s0": 0.17339724805079532
+        },
+        "delta_vs_P3B_s0": 0.017419493057837743,
+        "delta_vs_L_s0": -0.04720607271139282,
+        "delta_vs_DBT_s0": 0.03425563193011949
+      }
+    ],
+    "contrasts": {
+      "P3B_s0": {
+        "mean_delta_ae": 0.00020262021986506084,
+        "ci95": [
+          -0.0032452577136169673,
+          0.003533644007481501
+        ],
+        "fraction_candidate_better": 0.467,
+        "reps": 10000,
+        "seed": 20261023,
+        "delta_definition": "AE(candidate) - AE(reference); negative = candidate better"
+      },
+      "L_s0": {
+        "mean_delta_ae": 0.0038009059921515712,
+        "ci95": [
+          -0.00026117244501454827,
+          0.007611056161404101
+        ],
+        "fraction_candidate_better": 0.441,
+        "reps": 10000,
+        "seed": 20261023,
+        "delta_definition": "AE(candidate) - AE(reference); negative = candidate better"
+      },
+      "DBT_s0": {
+        "mean_delta_ae": 0.000665966506469981,
+        "ci95": [
+          -0.004813846532377737,
+          0.005689537930373977
+        ],
+        "fraction_candidate_better": 0.475,
+        "reps": 10000,
+        "seed": 20261023,
+        "delta_definition": "AE(candidate) - AE(reference); negative = candidate better"
+      }
+    },
+    "overall_mae": {
+      "A_joint_BF": 0.07006746086480158,
+      "P3B_s0": 0.0698648406449365,
+      "L_s0": 0.06626655487264999,
+      "DBT_s0": 0.0694014943583316
+    },
+    "groups_analysis_only": true
+  },
+  "historically_exposed_test": true,
+  "test_used_for_selection": false
+}

@@ -1,0 +1,69 @@
+{
+  "protocol": "zinc-structural-object-tokens-v1/A_joint_BF",
+  "candidate": "A_joint_BF",
+  "seed": 0,
+  "steady_epoch_seconds": 2.2874707692923644,
+  "used_seconds_before_plan": 14.124022984877229,
+  "epochs": 600,
+  "steps_per_epoch": 79,
+  "total_updates": 47400,
+  "projected_train_seconds": 1372.4824615754187,
+  "time_guard_seconds": 3600.0,
+  "feasible": true,
+  "peak_lr": 0.001,
+  "min_lr": 1e-05,
+  "weight_decay": 1e-05,
+  "warmup_updates": 500,
+  "early_stop": null,
+  "note": "full declared 600-epoch cosine; no patience, no horizon change",
+  "created": "2026-10-22T11:23:50+0800",
+  "gate": {
+    "checks_passed": 11,
+    "checks_failed": 0
+  },
+  "structure_caches": {
+    "train": {
+      "path": "tracks/structural-sufficiency/zinc_branching_fragment_v1/cache/bf_train.pt",
+      "sha256": "287a26a966bbf369a0e367263a5405cc65031e7e6dc2f3857a66a2039ac922fe"
+    },
+    "valid": {
+      "path": "tracks/structural-sufficiency/zinc_branching_fragment_v1/cache/bf_valid.pt",
+      "sha256": "8de445d17910926bd03820a9d9b2340d656ba71e1e529a69253e2df805266ec0"
+    }
+  },
+  "group_mean": null,
+  "model_info": {
+    "candidate": "A_joint_BF",
+    "seed": 0,
+    "parameters": 447505,
+    "parameters_breakdown": {
+      "encoders.atom_encoder": 26336,
+      "encoders.bond_encoder": 62816,
+      "encoders.junction_encoder": 112896,
+      "group_composer": 62976,
+      "reader": 148481,
+      "w_s": 25344,
+      "branch": 8656,
+      "total": 447505
+    },
+    "ssl_encoders": {
+      "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "loaded": [
+        "atom_encoder",
+        "bond_encoder",
+        "junction_encoder"
+      ],
+      "note": "atom/bond/junction encoders only; composer and reader keep the seed-0 init"
+    },
+    "init_order": [
+      "torch.manual_seed(seed)",
+      "P3Encoders + group_composer + reader (historical order)",
+      "load train-only SSL atom/bond/junction encoders",
+      "append w_s (zeros) + BF branch"
+    ],
+    "w_s_zero": true,
+    "all_require_grad": true
+  },
+  "init_state_hash": "196502b3d52ace437da13b308ff37c45e57f6fa9c09f92afc7a7c28849039a2a"
+}

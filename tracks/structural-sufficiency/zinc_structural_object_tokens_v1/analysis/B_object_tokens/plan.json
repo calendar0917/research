@@ -1,0 +1,155 @@
+{
+  "protocol": "zinc-structural-object-tokens-v1/B_object_tokens",
+  "candidate": "B_object_tokens",
+  "seed": 0,
+  "budget_seconds": 2400.0,
+  "reserve_seconds": 120.0,
+  "used_seconds_before_plan": 21.986276350915432,
+  "steady_epoch_seconds": 3.9462704103595265,
+  "speed_margin": 1.15,
+  "raw_epoch_estimate": 497.55591743612433,
+  "epochs": 490,
+  "steps_per_epoch": 79,
+  "total_updates": 38710,
+  "min_learning_epochs": 300,
+  "feasible": true,
+  "peak_lr": 0.001,
+  "min_lr": 1e-05,
+  "weight_decay": 0.0001,
+  "warmup_updates": 500,
+  "early_stop": null,
+  "note": "E_B fixed by measured epoch time only; no valid-based choice",
+  "created": "2026-10-22T11:43:30+0800",
+  "gate": {
+    "checks_passed": 11,
+    "checks_failed": 0
+  },
+  "structure_caches": {
+    "train": {
+      "path": "tracks/structural-sufficiency/zinc_structural_object_tokens_v1/cache/ot_train.pt",
+      "sha256": "643726f0e0970d58153967cad9fe55031ba3b6c5612e951657f7aa6a531c7959",
+      "meta": {
+        "split": "train",
+        "object_source": {
+          "source": "frozen_p3_object_cache",
+          "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt",
+          "sha256": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d"
+        },
+        "n_molecules": 10000,
+        "n_atoms": 231664,
+        "n_tokens": 592848,
+        "n_branch_tokens": 333376,
+        "n_cycle_tokens": 27808,
+        "branch_by_family": {
+          "S3": 82568,
+          "S4": 3104,
+          "F4": 247704
+        },
+        "branch_unique_contents": 1280,
+        "cycle_by_length": {
+          "3": 629,
+          "4": 166,
+          "5": 8519,
+          "6": 18052,
+          "7": 346,
+          "8": 96
+        },
+        "cycle_unique_contents": 611,
+        "max_tokens_per_molecule": 164,
+        "max_atoms_per_molecule": 37,
+        "mean_atoms_per_molecule": 23.1664,
+        "mean_branch_tokens_per_molecule": 33.3376,
+        "mean_cycle_tokens_per_molecule": 2.7808,
+        "definition": "A: every atom; S3/S4/F4: BF rooted branching objects kept per actual node set; C: every chordless simple cycle of length 3..8",
+        "cycle_definition": "chordless = no extra edge between non-adjacent cycle nodes; canonical content = lexicographic-min over 2L rotations/directions with the bond array rotated/reversed together",
+        "multiplicity": "same canonical content on different actual node sets stays a separate token; (root, family, node set) exists once",
+        "canonicalisation": "BF canonical_key for branches; 2L min for cycles",
+        "labels_used": false,
+        "test_used": false,
+        "created": "2026-10-22T11:24:16+0800",
+        "prep_seconds": 26.859715224942192
+      }
+    },
+    "valid": {
+      "path": "tracks/structural-sufficiency/zinc_structural_object_tokens_v1/cache/ot_valid.pt",
+      "sha256": "68d682cb1b442194cec98a445bf42b35c6227af3218e3ce3c0b996a6341581cc",
+      "meta": {
+        "split": "valid",
+        "object_source": {
+          "source": "frozen_p3_object_cache",
+          "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt",
+          "sha256": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c"
+        },
+        "n_molecules": 1000,
+        "n_atoms": 23083,
+        "n_tokens": 59083,
+        "n_branch_tokens": 33214,
+        "n_cycle_tokens": 2786,
+        "branch_by_family": {
+          "S3": 8225,
+          "S4": 314,
+          "F4": 24675
+        },
+        "branch_unique_contents": 644,
+        "cycle_by_length": {
+          "3": 82,
+          "4": 9,
+          "5": 867,
+          "6": 1786,
+          "7": 30,
+          "8": 12
+        },
+        "cycle_unique_contents": 250,
+        "max_tokens_per_molecule": 137,
+        "max_atoms_per_molecule": 36,
+        "mean_atoms_per_molecule": 23.083,
+        "mean_branch_tokens_per_molecule": 33.214,
+        "mean_cycle_tokens_per_molecule": 2.786,
+        "definition": "A: every atom; S3/S4/F4: BF rooted branching objects kept per actual node set; C: every chordless simple cycle of length 3..8",
+        "cycle_definition": "chordless = no extra edge between non-adjacent cycle nodes; canonical content = lexicographic-min over 2L rotations/directions with the bond array rotated/reversed together",
+        "multiplicity": "same canonical content on different actual node sets stays a separate token; (root, family, node set) exists once",
+        "canonicalisation": "BF canonical_key for branches; 2L min for cycles",
+        "labels_used": false,
+        "test_used": false,
+        "created": "2026-10-22T11:24:18+0800",
+        "prep_seconds": 1.5162410109769553
+      }
+    }
+  },
+  "group_mean": {
+    "atom": 23.1664,
+    "branch": 33.3376,
+    "cycle": 2.7808
+  },
+  "model_info": {
+    "candidate": "B_object_tokens",
+    "seed": 0,
+    "parameters": 470469,
+    "parameters_breakdown": {
+      "atom_encoder": 26336,
+      "shared_raw_embeddings": 240,
+      "branch_content_encoder": 8416,
+      "ring_content_encoder": 9696,
+      "token_projections": 62400,
+      "type_embedding": 480,
+      "transformer_blocks": 299136,
+      "relation_tables": 212,
+      "reader": 63553,
+      "total": 470469
+    },
+    "parameter_cap": 500000,
+    "ssl_atom_encoder": {
+      "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "loaded_keys": [
+        "lins.0.bias",
+        "lins.0.weight",
+        "lins.1.bias",
+        "lins.1.weight"
+      ],
+      "note": "atom encoder only; P3 bond/junction/composer/reader are not inherited"
+    },
+    "all_require_grad": true
+  },
+  "init_state_hash": "1322be4dae0562c962455c099b6e183e824d3628a9c2b818b77477512647178c"
+}

@@ -1,0 +1,27 @@
+{
+  "arm": "A_joint_BF",
+  "process_started_commit": "1657b2c",
+  "checkout_at_train_json_write": "06b7fe5",
+  "why": "the A job was launched right after the first deployment (1657b2c); while it ran, the checkout advanced for the B profiling/fix commits. `train.json` records git_commit() at write time (06b7fe5), so this note pins the revision A actually executed.",
+  "files_changed_during_run": [
+    "tracks/structural-sufficiency/zinc_structural_object_tokens_v1/analysis/cpu_checks.json",
+    "tracks/structural-sufficiency/zinc_structural_object_tokens_v1/code/ot_checks.py",
+    "tracks/structural-sufficiency/zinc_structural_object_tokens_v1/code/ot_models.py",
+    "tracks/structural-sufficiency/zinc_structural_object_tokens_v1/code/ot_timing.py"
+  ],
+  "modules_imported_by_arm_A": [
+    "ot_runner.py",
+    "ot_joint.py",
+    "bf_models.py",
+    "bf_data.py",
+    "ad_common.py",
+    "ad_data.py",
+    "ad_train.py",
+    "ad_models.py",
+    "ot_data.py"
+  ],
+  "files_changed_that_arm_A_imports": [],
+  "conclusion": "none of the changed files is imported by arm A (the changed files are ot_models.py, ot_checks.py, ot_timing.py and DESIGN.md); A executed the 1657b2c code, which is identical to 06b7fe5 for every module A loads.",
+  "arm_B_started_commit": "06b7fe5",
+  "created": "2026-10-22T12:19:15+0800"
+}

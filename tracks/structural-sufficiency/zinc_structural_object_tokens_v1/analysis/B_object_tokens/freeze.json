@@ -1,0 +1,85 @@
+{
+  "protocol": "zinc-structural-object-tokens-v1/B_object_tokens",
+  "arm": "B",
+  "candidate": "B_object_tokens",
+  "seed": 0,
+  "git_commit": "06b7fe54e49a17e1d891be812cea8233d14c159a",
+  "best_sha256": "325e2b45ca6baf34625b23960508512ebb199708eb88057a1b065b0574bc9ace",
+  "best_epoch": 230,
+  "best_valid_mae": 0.135830102807784,
+  "best_valid_mae_stored": 0.135830102807784,
+  "best_is_epoch0": false,
+  "init": {
+    "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "loaded_keys": [
+      "lins.0.bias",
+      "lins.0.weight",
+      "lins.1.bias",
+      "lins.1.weight"
+    ],
+    "note": "atom encoder only; P3 bond/junction/composer/reader are not inherited"
+  },
+  "plan_epochs": 490,
+  "epochs_run": 490,
+  "total_updates": 38710,
+  "actual_global_steps": 38710,
+  "params": 470469,
+  "recipe": {
+    "epochs": 490,
+    "planned_epochs": 490,
+    "steps_per_epoch": 79,
+    "updates": 38710,
+    "actual_global_steps": 38710,
+    "warmup_updates": 500,
+    "peak_lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 0.0001,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "loss": "raw-y L1",
+    "valid_every_epoch": true,
+    "early_stop": null,
+    "dropout": "encoders/content MLPs 0.0; transformer/reader 0.05"
+  },
+  "model_info": {
+    "candidate": "B_object_tokens",
+    "seed": 0,
+    "parameters": 470469,
+    "parameters_breakdown": {
+      "atom_encoder": 26336,
+      "shared_raw_embeddings": 240,
+      "branch_content_encoder": 8416,
+      "ring_content_encoder": 9696,
+      "token_projections": 62400,
+      "type_embedding": 480,
+      "transformer_blocks": 299136,
+      "relation_tables": 212,
+      "reader": 63553,
+      "total": 470469
+    },
+    "parameter_cap": 500000,
+    "ssl_atom_encoder": {
+      "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "loaded_keys": [
+        "lins.0.bias",
+        "lins.0.weight",
+        "lins.1.bias",
+        "lins.1.weight"
+      ],
+      "note": "atom encoder only; P3 bond/junction/composer/reader are not inherited"
+    },
+    "all_require_grad": true
+  },
+  "caches": {
+    "train": "643726f0e0970d58153967cad9fe55031ba3b6c5612e951657f7aa6a531c7959",
+    "valid": "68d682cb1b442194cec98a445bf42b35c6227af3218e3ce3c0b996a6341581cc"
+  },
+  "data": {
+    "train_label_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+    "valid_label_sha256": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f"
+  },
+  "test_policy": "one descriptive read after this freeze; no test-driven change",
+  "frozen_at": "2026-10-22T12:14:14+0800"
+}
