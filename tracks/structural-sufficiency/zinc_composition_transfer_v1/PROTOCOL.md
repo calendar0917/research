@@ -257,3 +257,35 @@ Declared **before any meta-arm result exists** (no `R`/`S` job has started; only
 * A seed-1 confirmation at `kappa_mid` runs only if ≥ 1.0 GPU·h of the 8.0 cap
   remains after all primary and support runs.
 * Worst-case cost 2 × 0.92 h = 1.84 h, keeping the round at ≈ 7.6 GPU·h.
+
+### A2. 2026-10-23 05:40 — deviations actually taken
+
+1. **Train-MAE diagnostic bug, cancelled and restarted.** The first two `E` runs
+   (launched 00:51, commit `8edad51`) computed the running train MAE as
+   `mean(|pred| − y)` instead of `mean(|pred − y|)`. Found from the first epoch
+   logs at epoch ~130, before any valid result was interpreted. Both jobs were
+   cancelled (0.155 GPU·h, recorded) and restarted at the fixed revision. No
+   reported number uses the buggy metric; `online_train_mae` in every curve is the
+   corrected quantity.
+2. **Deploy during in-flight runs.** Three runs had a deploy land while they were
+   running, so their recorded `git_commit` is the revision at *write* time rather
+   than the one they started on (the `rr` job table records the latter). `code/
+   zct_train.py` — the only module that affects training — is byte-identical
+   across all commits used; verified with `git diff` between the deployed
+   revisions. No code change was made to the trainer after the first formal run
+   started, other than the MAE fix above.
+3. **A1 escalation executed in both seeds.** The declared condition (≥ 1.0 GPU·h
+   remaining after the primary and support runs) was met with 1.096 h remaining,
+   so `R_s0_k04`, `S_s0_k04` and the seed-1 confirmation `R_s1_k04` ran. They are
+   reported as secondary and do not replace the primary table. Remaining headroom
+   after them: 0.333 h, below the cost of any further arm, so nothing else was
+   started.
+4. **A check's note was corrected, not re-measured.** The `real_meta` check note
+   originally claimed an a.e. zero inner Hessian for the L1 objective. That is
+   wrong for the parameter Hessian (the network curvature enters scaled by the
+   residual sign). The recorded number was relabelled as a pipeline sanity
+   measurement on the untrained build; the trained-regime strength is measured by
+   `probe_epochs.json`, and no conclusion rests on the relabelled number.
+5. **`kappa = 0.1` at the floor of the window was kept.** Changing the selection
+   rule after seeing the calibration would have been post-hoc tuning. The
+   pre-declared A1 escalation was used instead.
