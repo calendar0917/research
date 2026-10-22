@@ -1,0 +1,84 @@
+{
+  "n_key1": 489,
+  "n_key2": 12583,
+  "slices": {
+    "train": {
+      "atom_start": 0,
+      "atom_end": 231664,
+      "mol_start": 0,
+      "mol_end": 10000,
+      "n_molecules": 10000
+    },
+    "valid": {
+      "atom_start": 231664,
+      "atom_end": 254747,
+      "mol_start": 10000,
+      "mol_end": 11000,
+      "n_molecules": 1000
+    }
+  },
+  "n_atom_occurrences_train": 231664,
+  "n_atom_occurrences_valid": 23083,
+  "k1_is_function_of_k2": true,
+  "keys_npz": "/home/hxy/cy/research/tracks/structural-sufficiency/zinc_composition_transfer_v1/cache/keys.npz",
+  "keys_npz_sha256": "5c5e21721e9c397cd379697bfdcbfd7b0feb128e180ae03ae7bd611408b80d9e",
+  "builder": "audit_coverage.radius_signatures recursion depth 1/2, joint interning",
+  "source_cache_meta": {
+    "train": {
+      "feature_version": "ad-v1-root-r1-t-p-b",
+      "split": "train",
+      "n_molecules": 10000,
+      "object_source": {
+        "source": "frozen_p3_object_cache",
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt",
+        "sha256": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d"
+      },
+      "labels_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+      "walk_bank": 128,
+      "walk_lengths": [
+        2,
+        4,
+        6,
+        8
+      ],
+      "walk_per_length": 32,
+      "joint_categories": 693,
+      "two_hop_categories": 189,
+      "root_scalars": 11,
+      "block_scalars": 11,
+      "prep_seconds": 77.8780467909528,
+      "created": "2026-10-20T19:35:36+0800"
+    },
+    "valid": {
+      "feature_version": "ad-v1-root-r1-t-p-b",
+      "split": "valid",
+      "n_molecules": 1000,
+      "object_source": {
+        "source": "frozen_p3_object_cache",
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt",
+        "sha256": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c"
+      },
+      "labels_sha256": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f",
+      "walk_bank": 128,
+      "walk_lengths": [
+        2,
+        4,
+        6,
+        8
+      ],
+      "walk_per_length": 32,
+      "joint_categories": 693,
+      "two_hop_categories": 189,
+      "root_scalars": 11,
+      "block_scalars": 11,
+      "prep_seconds": 7.072877169935964,
+      "created": "2026-10-20T19:35:47+0800"
+    }
+  },
+  "old_group_reproduction": {
+    "reference": "zinc_restricted_adaptation_v1/analysis/reference_preds_valid.csv",
+    "max_abs_diff_r2_unseen_atom_frac": 4.761904759398305e-10,
+    "n_valid": 1000,
+    "note": "unseen = k2 absent from the train molecule key set, as in the old audit"
+  }
+}
