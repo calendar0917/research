@@ -103,6 +103,11 @@ def group_table(pred: np.ndarray, g: dict) -> dict:
     out["all"] = {"n": int(len(ae)), "mae": float(ae.mean()), "sum_ae": total}
     out["drop_row172"] = {"n": int(len(ae) - 1),
                           "mae": float(np.delete(ae, 172).mean())}
+    out["median_ae"] = {"all": float(np.median(ae)),
+                        **{name: float(np.median(ae[idx])) for name, idx in g["groups"].items()}}
+    top = order[: max(1, len(ae) // 100)]
+    keep = np.setdiff1d(np.arange(len(ae)), top)
+    out["trimmed_top1pct"] = {"n": int(len(keep)), "mae": float(ae[keep].mean())}
     out["top10_molecules"] = [{"row": int(i), "y": float(y[i]), "ae": float(ae[i]),
                                "group": _group_name(i, g)} for i in top10]
     out["top1pct_share_of_ae"] = float(ae[order[: max(1, len(ae) // 100)]].sum() / max(total, 1e-12))
@@ -119,6 +124,15 @@ def _group_name(row: int, g: dict) -> str:
     return "unknown"
 
 
+def _sign_test_p(k: int, n: int) -> float:
+    """Exact two-sided binomial sign test on k successes out of n (p=0.5)."""
+    if n == 0:
+        return 1.0
+    from math import comb
+    tail = sum(comb(n, i) for i in range(0, min(k, n - k) + 1)) / float(2 ** n)
+    return float(min(1.0, 2.0 * tail))
+
+
 def paired_bootstrap(ae_a: np.ndarray, ae_b: np.ndarray, reps: int = 5000,
                      seed: int = 12345) -> dict:
     rng = np.random.default_rng(seed)
@@ -126,9 +140,15 @@ def paired_bootstrap(ae_a: np.ndarray, ae_b: np.ndarray, reps: int = 5000,
     n = len(d)
     idx = rng.integers(0, n, size=(reps, n))
     means = d[idx].mean(1)
-    return {"delta_mean": float(d.mean()), "ci95": [float(np.percentile(means, 2.5)),
-                                                    float(np.percentile(means, 97.5))],
+    better = int((d < 0).sum())
+    d172 = np.delete(d, 172) if n > 172 else d
+    return {"delta_mean": float(d.mean()),
+            "ci95": [float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))],
+            "delta_median": float(np.median(d)),
             "frac_molecules_a_worse": float((d > 0).mean()),
+            "frac_molecules_a_better": float((d < 0).mean()),
+            "sign_test_p": _sign_test_p(better, n),
+            "delta_mean_excluding_row172": float(d172.mean()),
             "note": "paired over the 1000 valid molecules; descriptive only"}
 
 
