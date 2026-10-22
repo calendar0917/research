@@ -1,0 +1,81 @@
+{
+  "p3b_replay": {
+    "status": "PASS",
+    "checkpoint": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/xBssl_P3N_s0/best.pt",
+    "checkpoint_sha256": "4c379c93214c003a6c58fd4add4a64ecb4fe23603233738fab18f3885abdc34f",
+    "stored_epoch": 377,
+    "stored_valid_mae": 0.07622375113883754,
+    "parameters": 413505,
+    "ssl_source": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "replay_max_abs_diff_32_rows": 9.5367431640625e-07,
+    "replay_mae_32_rows": 0.10475774126825854
+  },
+  "init_parity": {
+    "seed0": {
+      "state_hashes": {
+        "E": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+        "R": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+        "S": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30"
+      },
+      "identical": true,
+      "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "ssl_is_seed0": true
+    },
+    "seed1": {
+      "state_hashes": {
+        "E": "750be5617519904b9cacf3df6168f29a50cf47cb2e8417ff620a8d477d0e3694",
+        "R": "750be5617519904b9cacf3df6168f29a50cf47cb2e8417ff620a8d477d0e3694",
+        "S": "750be5617519904b9cacf3df6168f29a50cf47cb2e8417ff620a8d477d0e3694"
+      },
+      "identical": true,
+      "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "ssl_is_seed0": true
+    },
+    "seed0_vs_seed1": {
+      "encoder_blocks_identical": true,
+      "non_encoder_blocks_identical": false,
+      "non_encoder_differ": true
+    },
+    "status": "PASS"
+  },
+  "alpha_zero": {
+    "status": "PASS",
+    "loss_abs_diff_alpha0_vs_erm": 0.0,
+    "grad_max_abs_diff": 2.384185791015625e-07,
+    "grad_rel_max_abs_diff": 3.3104786713804355e-08,
+    "batch_split_pred_max_abs_diff": 4.172325134277344e-07,
+    "note": "equal halves; the weighted J then equals the whole-batch mean L1"
+  },
+  "toy_meta_gradient": {
+    "status": "PASS",
+    "max_abs_diff_vs_finite_difference": 0.0005555674433708191,
+    "detach_variant_max_abs_diff_vs_finite_difference": 0.8966609239578247,
+    "fd_scale": 0.6592273712158203,
+    "alpha": 0.7,
+    "note": "smooth MSE inner loss on purpose: the real L1 inner loss has an a.e. zero Hessian"
+  },
+  "real_meta": {
+    "status": "PASS",
+    "meta_grads_all_finite": true,
+    "meta_grad_norm": 7.395506381988525,
+    "virtual_step_left_params_buffers_unchanged": true,
+    "virtual_step_left_optimizer_state_unchanged": true,
+    "j_with_source_labels_shifted": 0.43880414962768555,
+    "j_with_query_labels_shifted": -0.19361793994903564,
+    "j_value": 1.6301558017730713,
+    "inner_grad_norm": 27.342586517333984,
+    "clip_scalar": 0.1828649342060089,
+    "max_abs_diff_meta_vs_query_at_theta": 1.6477994918823242,
+    "note": "for an L1 inner loss the inner Hessian vanishes almost everywhere, so the exact meta gradient differs from 'query at theta' only through the clip scalar and the shifted evaluation point; both are present in this number"
+  },
+  "keys_and_masks": {
+    "k1_is_function_of_k2": true,
+    "n_key1": 489,
+    "n_key2": 12583,
+    "old_group_reproduction_max_abs_diff": 0.9230769230769231,
+    "partition_masks": [],
+    "status": "PASS"
+  },
+  "overall": "PASS"
+}

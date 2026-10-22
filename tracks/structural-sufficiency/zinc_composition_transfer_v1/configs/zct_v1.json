@@ -1,0 +1,94 @@
+{
+  "round": "zinc-composition-transfer-v1",
+  "protocol": "tracks/structural-sufficiency/zinc_composition_transfer_v1/PROTOCOL.md",
+  "platform": {
+    "model": "zinc_recipe_trunk_v2/ad2_models.P3NullModel",
+    "parameters": 413505,
+    "ssl_encoder": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "ssl_encoder_sha256_expected": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "ssl_rule": "one shared seed-0 SSL encoder for every arm and both supervised seeds",
+    "data_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_{train,valid}.pt",
+    "official_test_loaded_during_development": false
+  },
+  "recipe": {
+    "name": "B",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "betas": [0.9, 0.999],
+    "eps": 1e-08,
+    "batch_size": 128,
+    "epochs": 600,
+    "steps_per_epoch": 79,
+    "updates": 47400,
+    "warmup_steps": 500,
+    "grad_clip": 5.0,
+    "dropout": 0.0,
+    "precision": "fp32",
+    "schedule": "ad_common.cosine_with_warmup_lr(step, total, 500, 1e-3, 1e-5)",
+    "selector": "best valid, strict <, earlier epoch on tie"
+  },
+  "prefix": {"epochs": 50, "fork": "written by the E job at end of epoch 50"},
+  "meta_objective": {
+    "alpha": "kappa * lr_t * ramp_t",
+    "ramp": {"start_epoch": 51, "end_epoch": 100, "before": 0.0, "after": 1.0},
+    "inner_clip": 5.0,
+    "inner_eps": 1e-08,
+    "inner_loss": "mean raw-y L1 over source half",
+    "outer_loss": "|A|/|B| * L_A(theta) + |Q|/|B| * L_Q(theta')",
+    "gradient": "exact double backward, no detach"
+  },
+  "partition": {
+    "key_builder": "audit_coverage.radius_signatures recursion depth 1 (k1) and 2 (k2)",
+    "eligible_batch_support": [2, 16],
+    "proposal_budget_per_batch": 256,
+    "proposal_budget_pre_fix": 64,
+    "r1_unseen_tolerance": 0.01,
+    "smd_floor": 0.25,
+    "n_calibration_batches": 256,
+    "strength_gate": {"delta_d_sym_min": 0.02, "delta_d_elig_min": 0.10}
+  },
+  "kappa_calibration": {
+    "axes": "seed-0 epoch-50 prefix, 32 fixed train-only batches x {R,S}",
+    "grid": [0.1, 1.0, 10.0, 100.0],
+    "max_bisections": 3,
+    "source_stable_fraction_min": 0.75,
+    "displacement_window": [0.005, 0.05],
+    "displacement_target": 0.02,
+    "frozen_one_value_for_all_arms_and_seeds": true
+  },
+  "support_intervention": {
+    "key_support_range": [4, 25],
+    "parent_support_min": 50,
+    "H_range": [800, 1500],
+    "min_target_keys": 40,
+    "Q_target_range": [300, 500],
+    "D_plus_range": [400, 1000],
+    "Q_total": 1000,
+    "M": 1000,
+    "min_fit": 6000,
+    "epochs": 600,
+    "batch_size": 128,
+    "selector": "internal M MAE only",
+    "primary_checkpoint": "best-M",
+    "secondary_checkpoint": "epoch 600"
+  },
+  "runs_planned": {
+    "core": ["E_s0", "R_s0", "S_s0", "E_s1", "R_s1", "S_s1"],
+    "support": ["Eplus_s0", "Eminus_s0", "Eplus_s1", "Eminus_s1"],
+    "conditional": [
+      "third supervised seed for the candidate and its key control",
+      "S_minus on F_minus (seed 0/1) if the official valid shows no gain but the structural intervention is effective",
+      "kappa/10 repair for R and S together if common severe underfitting"
+    ]
+  },
+  "budget_gpu_hours": {
+    "cap": 8.0,
+    "preparation": 0.4,
+    "seed0_three_arms": 2.2,
+    "seed1_three_arms": 2.2,
+    "support_two_arms_two_seeds": 1.4,
+    "reserve": 1.8
+  }
+}
