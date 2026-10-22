@@ -1,0 +1,57 @@
+{
+  "stages": {
+    "A_s0": {
+      "B_executed": false,
+      "B_reason": "stage A failed, so stage B/C were not launched (DESIGN.md \u00a77)",
+      "available": true,
+      "checks": {
+        "absolute": {
+          "T": 0.07704540812963387,
+          "pass": false,
+          "required": "T <= 0.075"
+        },
+        "margin": {
+          "D": 0.08125194833794376,
+          "T": 0.07704540812963387,
+          "pass": true,
+          "required": "T <= D - 0.003"
+        },
+        "tail100_median": {
+          "available": true,
+          "baseline": 0.08264509877184173,
+          "candidate": 0.0788000472559943,
+          "delta": -0.0038450515158474363,
+          "metric": "tail100_median",
+          "pass": true,
+          "required": "T < D (tail-100 median)",
+          "supports_candidate": true
+        },
+        "window_median": {
+          "available": true,
+          "baseline": 0.08261014082463225,
+          "candidate": 0.07864591038221261,
+          "delta": -0.003964230442419642,
+          "metric": "best20_window_median",
+          "pass": true,
+          "required": "T < D (20-epoch sliding median)",
+          "supports_candidate": true
+        }
+      },
+      "pass": false,
+      "would_satisfy_B_direction": true
+    },
+    "A_s1": {
+      "available": false
+    },
+    "C": {
+      "available": false,
+      "reason": "N runs not executed (stage B not repeated)"
+    }
+  },
+  "thresholds": {
+    "abs_gate": 0.075,
+    "margin": 0.003,
+    "tail": 100,
+    "window": 20
+  }
+}
