@@ -220,8 +220,12 @@ def budget_ledger(runs: dict, extra: dict | None = None) -> dict:
     return out
 
 
+PRIMARY = [f"{a}_s{s}" for s in (0, 1) for a in ("E", "R", "S")]
+SECONDARY = [f"{a}_s{s}_k04" for s in (0, 1) for a in ("R", "S")]
+
+
 def core(extra_ledger: dict | None = None) -> dict:
-    names = [f"{a}_s{s}" for s in (0, 1) for a in ("E", "R", "S")]
+    names = PRIMARY + SECONDARY
     runs = {n: load_run(n) for n in names if (RUNS / n / "train.json").exists()}
     g = old_groups()
     summary = {"round": "zinc-composition-transfer-v1", "runs": {}, "comparisons": {}}
@@ -312,6 +316,39 @@ def core(extra_ledger: dict | None = None) -> dict:
             }
             c.update(_final_epoch_contrast("S", seed, "R", g))
             summary["comparisons"][f"S_minus_R_s{seed}"] = c
+    # secondary (mid-window kappa) contrasts against the same seed's E and the
+    # same arm at kappa=0.1
+    for seed in (0, 1):
+        base = runs.get(f"E_s{seed}")
+        for arm in ("R", "S"):
+            r = runs.get(f"{arm}_s{seed}_k04")
+            ref = runs.get(f"{arm}_s{seed}")
+            if r is None:
+                continue
+            cm_r = curve_metrics(r["curve"])
+            ae_r = np.abs(r["_pred"] - g["y"])
+            entry = {"kappa": r["kappa"]}
+            if base is not None:
+                cm_b = curve_metrics(base["curve"])
+                ae_b = np.abs(base["_pred"] - g["y"])
+                entry["vs_E"] = {
+                    "best_valid_delta": r["best_valid"]["valid_mae"] - base["best_valid"]["valid_mae"],
+                    "W20_delta": cm_r["W20"] - cm_b["W20"],
+                    "T100_delta": cm_r["T100"] - cm_b["T100"],
+                    "molecule": paired_bootstrap(ae_r, ae_b),
+                }
+            if ref is not None:
+                cm_1 = curve_metrics(ref["curve"])
+                ae_1 = np.abs(ref["_pred"] - g["y"])
+                entry["vs_kappa_0p1"] = {
+                    "best_valid_delta": r["best_valid"]["valid_mae"] - ref["best_valid"]["valid_mae"],
+                    "W20_delta": cm_r["W20"] - cm_1["W20"],
+                    "T100_delta": cm_r["T100"] - cm_1["T100"],
+                    "molecule": paired_bootstrap(ae_r, ae_1),
+                }
+            entry["final_epoch_molecule"] = _final_epoch_contrast(f"{arm}_s{seed}_k04", seed, "E", g)
+            summary["comparisons"][f"{arm}_k04_s{seed}"] = entry
+
     # seed means
     def seed_mean(arm, key):
         vals = [summary["runs"][f"{arm}_s{s}"][key] for s in (0, 1)
@@ -361,10 +398,27 @@ def _main_table_md(s: dict) -> str:
              "| contrast | best valid | W20 | T100 | final valid | molecule ΔAE [95% CI] |",
              "|---|---:|---:|---:|---:|---|"]
     for k, c in s["comparisons"].items():
+        if "molecule" not in c:
+            continue
         rows.append(f"| {k} | {c['best_valid_delta']:+.6f} | {c['W20_delta']:+.6f} | "
                     f"{c['T100_delta']:+.6f} | {c.get('final_valid_delta', float('nan')):+.6f} | "
                     f"{c['molecule']['delta_mean']:+.5f} "
                     f"[{c['molecule']['ci95'][0]:+.5f}, {c['molecule']['ci95'][1]:+.5f}] |")
+    sec = {k: v for k, v in s["comparisons"].items() if "molecule" not in v}
+    if sec:
+        rows += ["", "## Secondary: mid-window kappa (0.4), seed 0 only (pre-declared A1)", "",
+                 "| contrast | vs | best valid | W20 | T100 | molecule ΔAE [95% CI] | median ΔAE "
+                 "| molecules better | sign p |", "|---|---|---:|---:|---:|---|---:|---:|---:|"]
+        for k, v in sec.items():
+            for ref_name, ref in v.items():
+                if not isinstance(ref, dict) or "W20_delta" not in ref:
+                    continue
+                m = ref["molecule"]
+                rows.append(f"| {k} | {ref_name} | {ref['best_valid_delta']:+.6f} | "
+                            f"{ref['W20_delta']:+.6f} | {ref['T100_delta']:+.6f} | "
+                            f"{m['delta_mean']:+.5f} [{m['ci95'][0]:+.5f}, {m['ci95'][1]:+.5f}] | "
+                            f"{m['delta_median']:+.4f} | {m['frac_molecules_a_better']:.3f} | "
+                            f"{m['sign_test_p']:.3f} |")
     rows += ["", "## Contract checks", ""]
     for seed, v in s["verification"].items():
         rows.append(f"* **{seed}**: init identical = {v['init_hashes_identical']}, recipe identical = "
