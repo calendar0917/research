@@ -467,7 +467,8 @@ def main(argv=None) -> int:
         train_fit(args.fit, args.seed, torch.device(args.device), out, epochs=args.epochs)
     else:
         dirs = [Path(x) for x in args.runs.split(",") if x]
-        freeze_predictions(dirs, ANALYSIS / "support_predictions.json")
+        (ANALYSIS / "support_predictions.json").parent.mkdir(parents=True, exist_ok=True)
+        freeze_predictions(dirs, CACHE / "artifacts" / "support_predictions.json")
     return 0
 
 

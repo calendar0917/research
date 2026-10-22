@@ -36,6 +36,7 @@ import ad_common as C  # noqa: E402
 RUNS = _TASK / "runs"
 ANALYSIS = _TASK / "analysis"
 CACHE = _TASK / "cache"
+OUT = CACHE / "artifacts"
 WINDOW = 20
 
 
@@ -272,9 +273,10 @@ def core(extra_ledger: dict | None = None) -> dict:
         "groups": "frozen old four-group valid split (710/225/39/26), reproduced from "
                   "zinc_restricted_adaptation_v1/analysis/reference_preds_valid.csv",
     }
-    C.write_json(ANALYSIS / "summary.json", summary)
-    (ANALYSIS / "main_table.md").write_text(_main_table_md(summary), encoding="utf-8")
-    (ANALYSIS / "groups.md").write_text(_groups_md(summary), encoding="utf-8")
+    OUT.mkdir(parents=True, exist_ok=True)
+    C.write_json(OUT / "summary.json", summary)
+    (OUT / "main_table.md").write_text(_main_table_md(summary), encoding="utf-8")
+    (OUT / "groups.md").write_text(_groups_md(summary), encoding="utf-8")
     return summary
 
 
@@ -367,8 +369,8 @@ def support() -> dict:
                 continue
             info = C.read_json(d / "train.json")
             runs[f"{fit}_s{seed}"] = info
-    frozen = C.read_json(ANALYSIS / "support_predictions.json") if \
-        (ANALYSIS / "support_predictions.json").exists() else None
+    frozen = C.read_json(OUT / "support_predictions.json") if \
+        (OUT / "support_predictions.json").exists() else None
     q_t = sets["q_target"]
     q_b = sets["q_background"]
     out = {"manifest_sizes": manifest["sizes"], "n_target_keys": manifest["n_target_keys"],
@@ -405,7 +407,7 @@ def support() -> dict:
         }
     # load per-molecule predictions written by zct_support.freeze_predictions
     def preds(fit, seed, which):
-        p = ANALYSIS / f"support_predictions_{fit}_s{seed}_{which}.npz"
+        p = OUT / f"support_predictions_{fit}_s{seed}_{which}.npz"
         if not p.exists():
             return None
         return dict(np.load(p))
@@ -476,8 +478,8 @@ def support() -> dict:
                     out["comparisons"][f"plus_minus_{which}_s{seed}"].setdefault("strata", {})[
                         label] = {"n_query_molecules": len(ii),
                                   "delta": float(d_t[ii].mean())}
-    C.write_json(ANALYSIS / "support_summary.json", out)
-    (ANALYSIS / "support.md").write_text(_support_md(out), encoding="utf-8")
+    C.write_json(OUT / "support_summary.json", out)
+    (OUT / "support.md").write_text(_support_md(out), encoding="utf-8")
     return out
 
 

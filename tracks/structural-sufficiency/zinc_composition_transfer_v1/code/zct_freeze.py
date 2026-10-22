@@ -24,6 +24,7 @@ import ad_common as C  # noqa: E402
 
 CACHE = _TASK / "cache"
 ANALYSIS = _TASK / "analysis"
+OUT = CACHE / "artifacts"
 
 FILES = [
     "keys.npz", "keys_meta.json", "partitions_s0.npz", "partitions_s1.npz",
@@ -36,6 +37,7 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--require-gate", action="store_true", default=True)
     args = p.parse_args(argv)
+    OUT.mkdir(parents=True, exist_ok=True)
     out = {"files": {}, "gate": None, "checks": {}}
     for name in FILES:
         path = CACHE / name
@@ -73,8 +75,8 @@ def main(argv=None) -> int:
         out["checks"][f"partitions_s{seed}_epoch_hashes"] = summ.get("epoch_order_sha256")
     # copy metadata into analysis/ (small, tracked)
     for name in ("keys_meta.json", "probe_episodes.json", "support_manifest.json"):
-        C.write_json(ANALYSIS / name, C.read_json(CACHE / name))
-    C.write_json(ANALYSIS / "prep_freeze.json", out)
+        C.write_json(OUT / name, C.read_json(CACHE / name))
+    C.write_json(OUT / "prep_freeze.json", out)
     C.log(json.dumps(out["checks"], indent=1)[:2000])
     if args.require_gate and not out["checks"]["gate_pass"]:
         raise SystemExit("structural intervention strength gate did not pass")
