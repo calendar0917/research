@@ -253,14 +253,34 @@ class ObjectTokenModel(nn.Module):
         return {"type": pair_idx, "overlap": overlap, "dist": dcat,
                 "bond": bcat, "root": rcat}
 
+    @staticmethod
+    def _table_sum(tables, cats, *, chunk: int = 1 << 19) -> torch.Tensor:
+        """``sum_r table_r[cat_r]`` via chunked (grad-free) one-hot matmuls.
+
+        Integer advanced indexing is mathematically the same, but its backward
+        scatters millions of duplicate indices into a handful of table rows and
+        serialises on atomics (measured: 1.32 s of 1.34 s of CUDA time per
+        step).  A one-hot matmul with a grad-free one-hot returns identical
+        values and its table gradient is a fast reduction.
+        """
+        out = None
+        for table, cat in zip(tables, cats):
+            flat = cat.reshape(-1)
+            n_cls = int(table.shape[0])
+            parts = []
+            for start in range(0, flat.numel(), chunk):
+                with torch.no_grad():
+                    oh = F.one_hot(flat[start:start + chunk], n_cls).to(table.dtype)
+                parts.append(oh @ table)
+            acc = parts[0] if len(parts) == 1 else torch.cat(parts, dim=0)
+            out = acc if out is None else out + acc
+        return out.view(*cat.shape, table.shape[1])
+
     def relation_bias(self, batch, B: int, T: int) -> torch.Tensor:
         cat = self.relation_categories(batch, B, T)
-        bias = (
-            self.rel_type[cat["type"]]
-            + self.rel_overlap[cat["overlap"]]
-            + self.rel_dist[cat["dist"]]
-            + self.rel_bond[cat["bond"]]
-            + self.rel_root[cat["root"]]
+        bias = self._table_sum(
+            [self.rel_type, self.rel_overlap, self.rel_dist, self.rel_bond, self.rel_root],
+            [cat["type"], cat["overlap"], cat["dist"], cat["bond"], cat["root"]],
         )
         bias = bias.permute(0, 3, 1, 2).contiguous()  # [B, H, T, T]
         valid_keys = batch["tok_valid"].view(B, T)

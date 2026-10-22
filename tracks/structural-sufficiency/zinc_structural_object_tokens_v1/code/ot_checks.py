@@ -773,8 +773,30 @@ def check_b_relations():
     atom = np.nonzero(types == O.TYPE_A)[0]
     d_cross = int(cat["dist"][0, int(atom[0]), int(cyc[0])])
     assert d_cross == 10, d_cross
+    # the additive bias must equal explicit table lookups (the shipped model
+    # uses a chunked one-hot matmul instead of advanced indexing) and must still
+    # receive gradients on every relation table
+    bias = model.relation_bias(batch, B, T)
+    want_bias = (model.rel_type[cat["type"]] + model.rel_overlap[cat["overlap"]]
+                 + model.rel_dist[cat["dist"]] + model.rel_bond[cat["bond"]]
+                 + model.rel_root[cat["root"]]).permute(0, 3, 1, 2)
+    keep = torch.as_tensor(valid.astype(bool))[None, None, None, :]
+    want_bias = want_bias.masked_fill(~keep, -1e9)
+    assert torch.allclose(bias, want_bias, atol=1e-6), (bias - want_bias).abs().max()
+    pad_cols = ~keep[0, 0, 0]
+    if int(pad_cols.sum()):
+        assert float(bias[..., pad_cols].max()) <= -1e8
+    model.zero_grad(set_to_none=True)
+    loss = sum(bias[:, h] * float(h + 1) for h in range(4)).sum()
+    loss.backward()
+    grads = {k: float(getattr(model, k).grad.abs().sum()) for k in
+             ("rel_type", "rel_overlap", "rel_dist", "rel_bond", "rel_root")}
+    assert all(v > 0 for v in grads.values()), grads
+    model.zero_grad(set_to_none=True)
     errs = {"checked_pairs": int(valid.sum() ** 2)}
     return {
+        "bias_equals_table_lookup": True,
+        "bias_grads": grads,
         "checked_pairs": errs["checked_pairs"],
         "tokens": int(valid.sum()),
         "bond_relations_exact": True,
