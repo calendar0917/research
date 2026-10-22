@@ -498,9 +498,21 @@ def support() -> dict:
                     continue
                 per_key.append((float(a_plus_t[ii].mean()), float(a_minus_t[ii].mean())))
             per_key = np.asarray(per_key, dtype=np.float64)
+            key_rows = []
+            for k in keys:
+                ms = kmer[str(int(k))]
+                pos = {int(m): i for i, m in enumerate(q_t.tolist())}
+                ii = [pos[m] for m in ms if m in pos]
+                if ii:
+                    key_rows.append({"key": int(k), "n_query": len(ii),
+                                     "support_train": int(manifest["key_support_train"][str(int(k))]),
+                                     "donors": int(manifest["key_donor_count"][str(int(k))]),
+                                     "plus": float(a_plus_t[ii].mean()),
+                                     "minus": float(a_minus_t[ii].mean())})
             dk = per_key[:, 0] - per_key[:, 1] if len(per_key) else np.zeros(0)
             kidx = rng.integers(0, len(dk), size=(5000, len(dk))) if len(dk) else None
             boot_k = dk[kidx].mean(1) if kidx is not None else np.zeros(1)
+            better_t = int((d_t < 0).sum())
             out["comparisons"][f"plus_minus_{which}_s{seed}"] = {
                 "q_target_mae_plus": float(a_plus_t.mean()),
                 "q_target_mae_minus": float(a_minus_t.mean()),
@@ -514,12 +526,30 @@ def support() -> dict:
                                       float(np.percentile(boot_b, 97.5))],
                 "difference_in_differences": float(d_t.mean() - d_b.mean()),
                 "q_target_frac_plus_better": float((d_t < 0).mean()),
+                "q_target_delta_median": float(np.median(d_t)),
+                "q_target_sign_test_p": _sign_test_p(better_t, len(d_t)),
+                "q_target_mae_plus_excl_worst1pct": float(
+                    np.sort(a_plus_t)[: int(len(a_plus_t) * 0.99)].mean()),
+                "q_target_mae_minus_excl_worst1pct": float(
+                    np.sort(a_minus_t)[: int(len(a_minus_t) * 0.99)].mean()),
+                "group_y_stats": {
+                    "q_target_y_std": float(np.std(y[q_t])),
+                    "q_target_y_absmean": float(np.abs(y[q_t]).mean()),
+                    "q_background_y_std": float(np.std(y[q_b])),
+                    "q_background_y_absmean": float(np.abs(y[q_b]).mean()),
+                },
                 "key_level_delta": float(dk.mean()) if len(dk) else None,
                 "key_level_ci95": [float(np.percentile(boot_k, 2.5)),
                                    float(np.percentile(boot_k, 97.5))] if len(dk) else None,
                 "n_keys": int(len(per_key)),
                 "effective_independent_groups": "target keys (shared across molecules); "
                                                 "bootstrap resamples keys, not molecules",
+                "keys_plus_better": int(sum(1 for r_ in key_rows if r_["plus"] < r_["minus"])),
+                "n_keys_compared": int(len(key_rows)),
+                "keys_sign_test_p": _sign_test_p(
+                    int(sum(1 for r_ in key_rows if r_["plus"] < r_["minus"])), len(key_rows)),
+                "worst_keys": sorted(key_rows, key=lambda r_: r_["plus"] - r_["minus"])[-5:],
+                "best_keys": sorted(key_rows, key=lambda r_: r_["plus"] - r_["minus"])[:5],
             }
             # strata by key training support
             for lo, hi, label in ((4, 7, "support_4_7"), (8, 15, "support_8_15"),
