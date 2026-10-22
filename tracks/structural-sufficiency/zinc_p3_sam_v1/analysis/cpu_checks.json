@@ -1,0 +1,169 @@
+{
+  "protocol": "zinc-p3-sam-v1",
+  "config_path": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_p3_sam_v1/configs/p3_sam_v1.json",
+  "config_sha256": "afe3244e8098ab2911c9f36a1933291158b2ea45f4f2c078d1a3d49ca571bf8f",
+  "git_commit": "cc5b48c6691e990793e5568e21d30d7ff7e7f0f4",
+  "n_pass": 10,
+  "n_fail": 0,
+  "checks": {
+    "init_harness_and_shared_state": {
+      "parameters": 413505,
+      "parameters_match_config": true,
+      "init_hash": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+      "init_hash_second_build": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+      "init_hash_matches_config": true,
+      "init_hash_equal_across_builds": true,
+      "parameter_parts": {
+        "encoders": 202048,
+        "group_composer_null": 62976,
+        "graph_reader": 148481
+      },
+      "parameter_parts_match": true,
+      "optimizer_parameters": 413505,
+      "optimizer_covers_all": true,
+      "adamw_defaults": {
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "weight_decay": 1e-05
+      },
+      "adamw_matches_config": true,
+      "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "ssl_sha256_matches_config": true,
+      "encoder_state_equals_ssl_file": true,
+      "batchnorm_modules": [],
+      "dropout_rates": [],
+      "no_batchnorm_no_dropout": true,
+      "norm_buffers_equal_across_builds": true,
+      "norm_source": "frozen_p3_prep_train10k",
+      "historical_checkpoint": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/xBssl_P3N_s0/best.pt",
+      "historical_recomputed_valid": 0.07622373779857299,
+      "historical_stored_valid": 0.07622375113883754,
+      "historical_abs_diff": 1.3340264559680293e-08,
+      "harness_reproduces_historical_valid": true,
+      "historical_forward_max_abs_diff": 0.0,
+      "forward_parity": true,
+      "pass": true
+    },
+    "schedule_counts_and_lr": {
+      "steps_per_epoch": 79,
+      "total_updates": 47400,
+      "steps_match_config": true,
+      "updates_match_config": true,
+      "lr_at_warmup_end": 0.001,
+      "lr_at_501": 0.0009999999988894728,
+      "lr_at_total": 1e-05,
+      "monotone_after_warmup": true,
+      "warmup_lr_at_1": 2e-06,
+      "pass": true
+    },
+    "rho0_sam_equals_adamw": {
+      "updates": 5,
+      "model_max_abs_diff": 0.0,
+      "optimizer_step_equal": true,
+      "optimizer_steps": 5,
+      "exp_avg_max_abs_diff": 0.0,
+      "exp_avg_sq_max_abs_diff": 0.0,
+      "lr_at_step5_control": 1e-05,
+      "lr_at_step5_sam": 1e-05,
+      "lr_trajectories_equal": true,
+      "tolerance": 1e-07,
+      "pass": true
+    },
+    "two_pass_handcomputed": {
+      "lr_step1": 2e-06,
+      "g1_norm_impl": 1.258045928778122,
+      "g1_norm_hand": 1.258045928778122,
+      "g2_norm_impl": 1.3622125319058687,
+      "g2_norm_hand": 1.3622125319058687,
+      "eps_norm_impl": 0.04999999754808676,
+      "eps_norm_hand": 0.04999999754808676,
+      "g1_norm_rel_diff": 0.0,
+      "g2_norm_rel_diff": 0.0,
+      "model_max_abs_diff_vs_hand": 0.0,
+      "adamw_step_counts": [
+        1
+      ],
+      "adamw_exp_avg_max_abs_diff_vs_hand": 0.0,
+      "adamw_exp_avg_sq_max_abs_diff_vs_hand": 0.0,
+      "perturb_exact": true,
+      "restore_exact": true,
+      "g2_vs_same_theta_max_rel_diff": 0.6591099500656128,
+      "pass": true
+    },
+    "epsilon_global_norm_first_pass_unclipped": {
+      "raw_g1_norm": 689.2725333525059,
+      "raw_g1_exceeds_clip": true,
+      "eps_global_norm": 0.050000001582175935,
+      "rho": 0.05,
+      "eps_rel_dev_from_rho": 3.1643518638713175e-08,
+      "params_restored_after_update": true,
+      "g2_norm": 683.1328635504574,
+      "g2_was_clipped": true,
+      "perturb_exact": true,
+      "pass": true
+    },
+    "first_pass_no_leak": {
+      "g2_equals_g2_at_perturbed_theta": true,
+      "g2_differs_from_g1_plus_g2": true,
+      "grads_cleared_before_second_pass": true,
+      "accumulated_g1_plus_g2_rejected": true,
+      "pass": true
+    },
+    "exception_restores_theta": {
+      "exception_raised": true,
+      "params_bit_identical_after_exception": true,
+      "grads_present": false,
+      "pass": true
+    },
+    "real_p3_double_forward_update": {
+      "loss_first_pass": 1.5750120878219604,
+      "loss_perturbed": 2.438185691833496,
+      "losses_finite": true,
+      "g1_norm_finite": true,
+      "g2_norm_finite": true,
+      "eps_norm": 0.05000000093453531,
+      "moved": {
+        "encoder": 2.0265579223632812e-06,
+        "composer": 2.000480890274048e-06,
+        "reader": 2.000480890274048e-06
+      },
+      "all_three_parts_updated": true,
+      "perturb_exact": true,
+      "restore_exact": true,
+      "params": 413505,
+      "pass": true
+    },
+    "order_rng_independent": {
+      "orders_before": [
+        "8eca27da1dfa689d7f85578d666bdcf6c882770819df3398648f00506e675e60",
+        "a2ea5d7d6d236b96c8f0b6cabcf7b6f0e966cdffd03cbc5546dd2e69854a2b2d",
+        "f5ce142560ca6128be552126f13392ead98a59cef8fa3e0eb23500ed1da965d3",
+        "c864ede22a29e91f5a2bc82bf533c088f189ec6d97d9c1b34e1f3b8ab5071875",
+        "26815d81946cd372aa70c42e8081ec49f58d7da6b2eb3919c1597dbaec14918e"
+      ],
+      "orders_after_79_extra_sam_updates": [
+        "9077f048ce482ddc6cf8c4d807a76099d2961305617ec8edc0be7cd9d93f2543",
+        "cf76e1612f37a6174821e7f751e6dc168d41502520195e369950c4e442902cff"
+      ],
+      "reference_continuation": [
+        "9077f048ce482ddc6cf8c4d807a76099d2961305617ec8edc0be7cd9d93f2543",
+        "cf76e1612f37a6174821e7f751e6dc168d41502520195e369950c4e442902cff"
+      ],
+      "epoch_orders_identical_between_arms": true,
+      "extra_forwards_do_not_disturb_shuffle": true,
+      "uses_dedicated_generator_seed": 101,
+      "pass": true
+    },
+    "best_selection_ties": {
+      "picked_epoch": 2,
+      "expected_epoch": 2,
+      "strict_lt_ties_keep_earlier": true,
+      "pass": true
+    }
+  },
+  "created": "2026-10-22T13:34:11+0800",
+  "note": "rho=0 equivalence and the hand-computed two-pass check are CPU implementation tests, not extra experimental arms"
+}

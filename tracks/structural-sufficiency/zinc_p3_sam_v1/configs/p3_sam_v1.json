@@ -1,0 +1,126 @@
+{
+  "track": "zinc_p3_sam_v1",
+  "protocol": "zinc-p3-sam-v1",
+  "created": "2026-10-22",
+  "question": "With P3 representation, capacity, initialisation and training schedule held fixed, does vanilla SAM training improve generalisation over the same-round AdamW control?",
+  "scope": {
+    "type": "training-method exploration, not an architecture contribution and not a sharpness causal diagnosis",
+    "arms": ["C:P3-Control (AdamW)", "S:P3-SAM (vanilla global L2 SAM, base optimizer AdamW)"],
+    "no_third_arm": true,
+    "no_ensemble_or_averaging": true,
+    "no_seed_1": true,
+    "no_rho_grid": true,
+    "official_test_status": "historically exposed benchmark; described, not a new blind test",
+    "test_used_for_selection": false
+  },
+  "data": {
+    "source": "official PyG ZINC subset=True",
+    "train": 10000,
+    "valid": 1000,
+    "test": 1000,
+    "loss": "raw-y L1",
+    "target_transform": "none (no clipping, reweighting or extra supervision)",
+    "normalization": "frozen P3 train-only global-33 mean/scale (analysis/norm.json of zinc_arch_discovery_v1)",
+    "pretraining": "frozen P3 train-only masked SSL encoders, no labels"
+  },
+  "model": {
+    "family": "P3N",
+    "module": "tracks/structural-sufficiency/zinc_recipe_trunk_v2/code/ad2_models.py",
+    "class": "P3NullModel",
+    "builder": "ad2_models.build_model('P3N', norm, seed=0) -> ad_models.P3Encoders + Null grouping + composer + reader",
+    "parameters_expected": 413505,
+    "parameter_parts_expected": {
+      "encoders": 202048,
+      "group_composer_null": 62976,
+      "graph_reader": 148481
+    },
+    "batchnorm": "none (checked)",
+    "dropout": 0.0,
+    "initial_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+    "ssl": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "load_keys": ["atom_encoder", "bond_encoder", "junction_encoder"],
+      "composer_reader_init": "fresh random init from torch.manual_seed(0), shared by both arms"
+    },
+    "forbidden_inits": [
+      "supervised P3B best.pt",
+      "L or DBT or A_joint_BF checkpoints"
+    ]
+  },
+  "optimizer": {
+    "name": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "betas": [0.9, 0.999],
+    "eps": 1e-08,
+    "grad_clip": 5.0,
+    "grad_clip_scope": "C: its update gradient; S: second-pass (perturbed) gradient only",
+    "schedule": "500 outer updates linear warmup, then per-step cosine over the fixed 47,400-update horizon"
+  },
+  "schedule": {
+    "seed": 0,
+    "shuffle_seed_offset": 101,
+    "batch_size": 128,
+    "drop_last": false,
+    "steps_per_epoch": 79,
+    "epochs": 600,
+    "outer_updates": 47400,
+    "warmup_updates": 500,
+    "valid_every_epoch": true,
+    "valid_batch_size": 256,
+    "eval_train_batch_size": 256,
+    "selection": "min valid MAE, strict <, ties keep the earlier epoch",
+    "early_stop": null,
+    "no_soup_ema_swa_averaging": true
+  },
+  "sam": {
+    "type": "vanilla global L2 SAM (non-adaptive, all optimised parameters incl. biases)",
+    "rho": 0.05,
+    "adaptive": false,
+    "rho_schedule": "constant over the whole horizon",
+    "epsilon": "rho * g1_p / (||g1||_2 + 1e-12), g1 raw and unclipped",
+    "first_pass_gradient_clipped": false,
+    "second_pass_same_batch": true,
+    "second_pass_no_augmentation": true,
+    "gradient_calculations": 94800,
+    "optimizer_steps": 47400,
+    "lr_schedule_advances_per_update": 1
+  },
+  "control": {
+    "gradient_calculations": 47400,
+    "optimizer_steps": 47400
+  },
+  "reference": {
+    "P3B_s0": {
+      "parameters": 413505,
+      "valid_mae": 0.076223754,
+      "test_mae": 0.069864841,
+      "run": "tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/xBssl_P3N_s0",
+      "best_sha256": "4c379c93214c003a6c58fd4add4a64ecb4fe23603233738fab18f3885abdc34f"
+    },
+    "L_s0": {"parameters": 494193, "valid_mae": 0.078537152, "test_mae": 0.066266555},
+    "DBT_s0": {"parameters": 452523, "valid_mae": 0.077768402, "test_mae": 0.069401494},
+    "A_joint_BF_s0": {"parameters": 447505, "valid_mae": 0.076731, "test_mae": 0.070067},
+    "note": "reference rows are reused, not retrained; the same-round C vs S contrast is the main table"
+  },
+  "groups": {
+    "definition_source": "tracks/structural-sufficiency/zinc_restricted_adaptation_v1/analysis/reference_preds_{valid,test}.csv",
+    "unseen": "existing audited content-key aligned radius-2 signature flag",
+    "ordinary": "y > -3",
+    "tail": "y <= -3",
+    "usage": "post-hoc description only; no new thresholds, no gating",
+    "row172_and_extremes_in_main_numbers": true
+  },
+  "time_plan": {
+    "timing_epochs": 4,
+    "timing_includes": "both forwards/backwards, full valid, logging",
+    "formal_reset": "rebuild from the same initial state_dict and reseed the row-order RNG",
+    "control_target_minutes": 20,
+    "sam_target_minutes": [35, 45],
+    "wall_target_minutes": [40, 55],
+    "per_arm_hard_stop_minutes": 60,
+    "gpu_hours_note": "SAM does two forward/backward per outer update; the comparison is at equal outer updates, not equal compute"
+  }
+}
