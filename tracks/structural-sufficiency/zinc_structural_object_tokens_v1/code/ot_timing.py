@@ -48,7 +48,7 @@ def main(argv=None) -> int:
     if args.threads:
         torch.set_num_threads(args.threads)
     device = torch.device(args.device)
-    cache = O.load_cache("train")
+    cache = D.load_cache("train")  # labels + raw atom/global features
     norm = D.load_norm()
     gm = R.group_means()
     model, info = R.build_arm_model("B", norm, device, group_mean=gm)
