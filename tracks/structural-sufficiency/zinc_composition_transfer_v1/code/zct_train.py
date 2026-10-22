@@ -173,11 +173,13 @@ class Trainer:
         self.start_epoch = 1
         self.curve: list[dict] = []
         self.best = {"valid_mae": float("inf"), "epoch": -1}
+        self.best_state = None
         self.diag_log: list[dict] = []
 
     # -- checkpoint helpers ------------------------------------------------
     def save_best(self, valid_mae: float, epoch: int) -> None:
         self.best = {"valid_mae": float(valid_mae), "epoch": int(epoch)}
+        self.best_state = C.cpu_state(self.model)
         C.atomic_torch_save(
             {"state_dict": C.cpu_state(self.model), "epoch": int(epoch),
              "valid_mae": float(valid_mae), "arm": self.arm, "seed": self.seed,
@@ -191,7 +193,8 @@ class Trainer:
              "optimizer": self.optimizer.state_dict(),
              "gen_state": self.gen.get_state(),
              "epoch": int(epoch), "global_step": int(self.global_step),
-             "best": dict(self.best), "curve": list(self.curve),
+             "best": dict(self.best), "best_state": self.best_state,
+             "curve": list(self.curve),
              "init_state_sha256": self.init_state_sha256,
              "model_info": self.model_info},
             self.out / "fork.pt",
@@ -210,6 +213,15 @@ class Trainer:
         self.start_epoch = int(fork["epoch"]) + 1
         self.curve = list(fork["curve"])
         self.best = dict(fork["best"])
+        self.best_state = fork.get("best_state")
+        if self.best_state is not None:
+            # the shared prefix may hold the best valid epoch of the whole curve;
+            # give every arm a materialised best.pt for that case
+            C.atomic_torch_save(
+                {"state_dict": self.best_state, "epoch": int(self.best["epoch"]),
+                 "valid_mae": float(self.best["valid_mae"]), "arm": self.arm,
+                 "seed": self.seed, "step": -1, "from_prefix": True},
+                self.out / "best.pt")
         if fork["init_state_sha256"] != self.init_state_sha256:
             raise RuntimeError("fork init hash does not match a fresh build of this seed")
         return fork
