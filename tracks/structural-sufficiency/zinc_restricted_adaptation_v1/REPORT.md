@@ -98,6 +98,11 @@ cosine horizon 固定为 `310×157 = 48,670`，未重置、未改 horizon。
 | terminal test | 10 | freeze + test cache + score |
 | round wall (GPU jobs) | **≈3,144** | 52.4 min, under 60 min |
 
+缓存并没有把训练变成高速：稳态 `8.49 s/epoch` 仅比原 DBT 的 `8.85 s/epoch`
+快约 4%。冻结后省掉的 encoder 前向/反向很小，下游 DBT、关系 gather 和
+valid 前向仍占主导；60 分钟预算因此只允许 `E=310`，不是靠提速把日程拉到
+500+。这是本轮的实际计算—表征权衡，不能把“训练更快”当作泛化结果。
+
 ## 4. 主结果
 
 Valid 是 official ZINC valid，raw-y MAE；test 是已经暴露的 official test。
