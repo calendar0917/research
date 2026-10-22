@@ -165,8 +165,7 @@ def main(argv: list[str] | None = None) -> int:
             preds[key] = p
         curves[key] = A.read_curve(A.RUNS / f"SF_{arm}_s{seed}" / "curve.csv")
 
-    rng = np.random.default_rng(A.BOOT_SEED)
-    contrasts = {label: A.contrast(preds.get(a), preds.get(b), rng)
+    contrasts = {label: A.contrast(preds.get(a), preds.get(b), A.pair_rng(label))
                  for label, a, b in CONTRASTS}
 
     ref = load_reference()
@@ -174,6 +173,36 @@ def main(argv: list[str] | None = None) -> int:
     cover = A.type_coverage() if preds else {}
     extremes = A.extreme_diagnostics(preds, ("T_s1", "N_s1")) if {"T_s1", "N_s1"} <= preds.keys() else {}
     extremes_t0 = A.extreme_diagnostics(preds, ("T_s0", "T_s1")) if {"T_s0", "T_s1"} <= preds.keys() else {}
+
+    bulk = {}
+    if preds:
+        y = next(iter(preds.values()))["y"]
+        mask = y > -3.0
+        ae = {k: np.abs(p["pred"] - p["y"]) for k, p in preds.items()}
+        bulk = {"mask": "y_raw > -3", "n": int(mask.sum()),
+                "mae": {k: float(v[mask].mean()) for k, v in ae.items()}}
+        for label, a, b in CONTRASTS:
+            if a in ae and b in ae:
+                boot = A.bootstrap_delta(ae[a][mask], ae[b][mask], A.pair_rng("bulk_" + label))
+                bulk.setdefault("delta_mae", {})[label] = float(
+                    ae[a][mask].mean() - ae[b][mask].mean())
+                bulk.setdefault("ci95", {})[label] = boot["ci95"]
+                bulk.setdefault("frac_improved", {})[label] = boot["frac_improved"]
+    direction = {}
+    if {"T_s1", "N_s1"} <= curves.keys():
+        t1 = curves["T_s1"]["valid_mae"]
+        n1 = curves["N_s1"]["valid_mae"]
+        direction["epochs_T1_lt_N1"] = int((t1 < n1).sum())
+        direction["epochs"] = int(len(t1))
+        direction["frac_T1_lt_N1_after_ep100"] = float((t1[100:] < n1[100:]).mean())
+    if {"T_s0", "D_s0"} <= curves.keys():
+        t0 = curves["T_s0"]["valid_mae"]
+        d0 = curves["D_s0"]["valid_mae"]
+        direction["frac_T0_lt_D0_after_ep100"] = float((t0[100:] < d0[100:]).mean())
+    if {"T_s0", "T_s1"} <= curves.keys():
+        t0 = curves["T_s0"]["valid_mae"]
+        t1 = curves["T_s1"]["valid_mae"]
+        direction["frac_T1_lt_T0_after_ep100"] = float((t1[100:] < t0[100:]).mean())
 
     verdict = pre_registered_verdict(runs)
     cond3 = contrasts.get("T1_minus_N1", {})
@@ -192,6 +221,8 @@ def main(argv: list[str] | None = None) -> int:
         "runs": runs,
         "contrasts_best_checkpoint": contrasts,
         "cells_radius2_x_ordinary": cells,
+        "bulk_ordinary_only": bulk,
+        "curve_direction_counts": direction,
         "type_coverage": {k: v for k, v in (cover or {}).items() if not isinstance(v, np.ndarray)},
         "q1_pre_registered": verdict,
         "q2_absolute_T_across_seeds": {
@@ -293,6 +324,23 @@ def main(argv: list[str] | None = None) -> int:
                      f"{ct['frac_improved']:.3f} | {ct['median_delta_ae']:+.6f} |")
 
     keep = [k for k in KEYS if k in preds] or KEYS
+    if bulk:
+        lines += ["", "## bulk: ordinary molecules only (" + bulk["mask"] + ", n="
+                  + str(bulk["n"]) + ")", "",
+                  "| arm | MAE |", "| --- | --- |"]
+        for k, v in bulk["mae"].items():
+            lines.append(f"| {k} | {v:.6f} |")
+        lines.append("")
+        lines.append("Δ and molecule-level CI: " + ", ".join(
+            f"{k} {v:+.6f} [{bulk['ci95'][k][0]:+.6f}, {bulk['ci95'][k][1]:+.6f}]"
+            for k, v in bulk.get("delta_mae", {}).items()))
+    if direction:
+        lines += ["", "## epoch-level direction", "",
+                  "- epochs where T1 < N1: "
+                  f"{direction['epochs_T1_lt_N1']}/{direction['epochs']}"
+                  f" (after ep100: {direction.get('frac_T1_lt_N1_after_ep100', float('nan')):.3f})",
+                  f"- after ep100: T0 < D0 {direction.get('frac_T0_lt_D0_after_ep100', float('nan')):.3f},"
+                  f" T1 < T0 {direction.get('frac_T1_lt_T0_after_ep100', float('nan')):.3f}"]
     if cells:
         n_total = cells["n_total"]
         lines += ["", "## groups: radius-2 x ordinary (all 1000 molecules)", "",

@@ -157,6 +157,13 @@ def run_metrics(arm: str, seed: int) -> dict | None:
 # ---------------------------------------------------------------------------
 
 
+def pair_rng(label: str) -> np.random.Generator:
+    """Deterministic bootstrap stream per contrast label (reproducible CIs)."""
+    import hashlib
+    digest = hashlib.sha256(label.encode("utf-8")).digest()[:8]
+    return np.random.default_rng([BOOT_SEED, int.from_bytes(digest, "little") % (2 ** 32)])
+
+
 def bootstrap_delta(ae_a: np.ndarray, ae_b: np.ndarray, rng: np.random.Generator) -> dict:
     """Paired bootstrap of ``MAE(a) - MAE(b)`` over molecules (not seeds)."""
     d = ae_a - ae_b
@@ -461,15 +468,12 @@ def main(argv: list[str] | None = None) -> int:
                 preds[key] = p
                 preds_final[key] = load_preds(arm, seed, "final") or p
 
-    rng = np.random.default_rng(BOOT_SEED)
     contrasts: dict[str, dict] = {}
     for seed in seeds:
-        contrasts[f"T_minus_D_s{seed}"] = contrast(preds.get(f"T_s{seed}"),
-                                                   preds.get(f"D_s{seed}"), rng)
-        contrasts[f"T_minus_N_s{seed}"] = contrast(preds.get(f"T_s{seed}"),
-                                                   preds.get(f"N_s{seed}"), rng)
-        contrasts[f"N_minus_D_s{seed}"] = contrast(preds.get(f"N_s{seed}"),
-                                                   preds.get(f"D_s{seed}"), rng)
+        for label, a, b in ((f"T_minus_D_s{seed}", f"T_s{seed}", f"D_s{seed}"),
+                            (f"T_minus_N_s{seed}", f"T_s{seed}", f"N_s{seed}"),
+                            (f"N_minus_D_s{seed}", f"N_s{seed}", f"D_s{seed}")):
+            contrasts[label] = contrast(preds.get(a), preds.get(b), pair_rng(label))
 
     cover = type_coverage() if preds else {}
     groups = group_metrics(preds, load_groups(), cover) if preds else {}

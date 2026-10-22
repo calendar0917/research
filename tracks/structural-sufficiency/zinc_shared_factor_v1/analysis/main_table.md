@@ -9,12 +9,9 @@
 
 | pair | dMAE | 95% CI (molecules) | frac improved | median dAE |
 | --- | --- | --- | --- | --- |
-| T_minus_D_s0 | -0.004207 | [-0.008219, -0.000284] | 0.526 | -0.002131 |
+| T_minus_D_s0 | -0.004207 | [-0.008363, -0.000295] | 0.526 | -0.002131 |
 | T_minus_N_s0 | n/a | n/a | n/a | n/a |
 | N_minus_D_s0 | n/a | n/a | n/a | n/a |
-| T_minus_D_s1 | n/a | n/a | n/a | n/a |
-| T_minus_N_s1 | n/a | n/a | n/a | n/a |
-| N_minus_D_s1 | n/a | n/a | n/a | n/a |
 
 ## groups (valid, radius-2 x ordinary)
 

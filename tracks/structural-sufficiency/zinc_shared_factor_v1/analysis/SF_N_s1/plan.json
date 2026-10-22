@@ -1,0 +1,59 @@
+{
+  "protocol": "zinc-shared-factor-v1",
+  "arm": "N",
+  "arm_name": "SF-IndependentCopies",
+  "seed": 1,
+  "steady_epoch_seconds": 4.56714934638391,
+  "used_seconds_before_plan": 22.99032308603637,
+  "epochs": 600,
+  "steps_per_epoch": 79,
+  "total_updates": 47400,
+  "projected_train_seconds": 3151.3330490048975,
+  "projected_total_seconds": 3271.3330490048975,
+  "hard_stop_seconds": 3600.0,
+  "feasible": true,
+  "epoch_reduction": "none by design: an infeasible plan stops the round instead of truncating the candidate",
+  "recipe": {
+    "optimizer": "adamw",
+    "peak_lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "warmup_updates": 500,
+    "grad_clip": 5.0,
+    "horizon": "per-step cosine over 47400 outer updates"
+  },
+  "early_stop": null,
+  "note": "no architecture / LR / channel / state / horizon selection from timing or valid",
+  "created": "2026-10-22T20:36:20+0800",
+  "gate": {
+    "cpu_checks_n_pass": 7,
+    "cpu_checks_n_fail": 0,
+    "cpu_checks_config_sha256": "d1f6b67fcd3339bedf0e278fbe09a5e2d57ac842d9b969465574a65123cdabc8",
+    "arm": "N",
+    "seed": 1,
+    "parameters": 451777,
+    "optimizer_covers_all": true,
+    "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "carrier_declared": "750be5617519904b9cacf3df6168f29a50cf47cb2e8417ff620a8d477d0e3694",
+    "carrier_declared_source": "tracks/structural-sufficiency/zinc_shared_factor_supplement_v1/configs/supplement_hashes.json",
+    "init_state_sha256": "db2792ca9d4b589996d98d4a5621a5e6c53c175ec223c5d2fa180bf26f48b939",
+    "public_state_sha256": "750be5617519904b9cacf3df6168f29a50cf47cb2e8417ff620a8d477d0e3694",
+    "content_state_sha256": "7b0231842a7f9305b80ca6b6fb314a34f070b9f1cba1787cef9e29377c8fb793",
+    "w_s_zero": true,
+    "paired_T_init": {
+      "path": "tracks/structural-sufficiency/zinc_shared_factor_v1/analysis/SF_T_s1/init.json",
+      "init_state_sha256": "db2792ca9d4b589996d98d4a5621a5e6c53c175ec223c5d2fa180bf26f48b939",
+      "content_state_sha256": "7b0231842a7f9305b80ca6b6fb314a34f070b9f1cba1787cef9e29377c8fb793",
+      "identical": true
+    },
+    "steps_per_epoch": 79,
+    "outer_updates": 47400,
+    "device": "cuda:0",
+    "cuda_visible_devices": "1 visible"
+  }
+}
