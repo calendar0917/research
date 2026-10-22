@@ -176,8 +176,9 @@ valid 的同一张表在 `analysis/groups.md`。子组 n 很小，只描述、�
 ## 8. BF 统计 erratum（上一轮，独立提交）
 
 `bf_checks.py` 的 `representation_refinement` 把 `{group: (roots, signatures)}` 的
-`len(v)` 当成 root 数（2×组数）。修正后：roots `5,048 → 131,168`，
-fraction `2.18% → 56.62%`；`2,524` 组、`99.89%` 有分子覆盖、`38.7%` 多组比例**不变**。
+`len(v)` 当成 root 数（= 2×组数），因此上一轮报告的分母是错的。修正后 root 覆盖率为
+**56.62%**（roots 131,168）；`2,524` 组、`99.89%` 有分子覆盖、`38.7%` 多组比例**不变**。
+旧值不再引用，完整对照与 identity 检查见 BF REPORT §9。
 `descriptor_summary` 的 `ring_bond_count` 改为按权威布局读取（不再是两个连续标量的
 argmax），模型输入未变。旧训练/checkpoint/prediction 未触碰；证据在
 `../zinc_branching_fragment_v1/analysis/erratum_representation_fix.json` 与 REPORT §9。
