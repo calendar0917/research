@@ -194,6 +194,50 @@ class AtomicState(nn.Module):
 # ---------------------------------------------------------------------------
 
 
+def group_plan(table, length: int) -> dict:
+    """Static (structure-only) index plan for one object length and pattern table.
+
+    Cached on the table object: it contains the pattern subset, the assignment
+    enumeration, the per-slot index vectors and the *static* edge bookkeeping.
+    Nothing learned is cached, and the plan never contains a model output, so
+    the content representation is still recomputed from the current weights on
+    every forward call.  Pattern tables are immutable after construction.
+    """
+    plans = getattr(table, "_sf_plan", None)
+    if plans is None:
+        plans = {}
+        table._sf_plan = plans
+    key = int(length)
+    if key in plans:
+        return plans[key]
+    lengths = table_lengths(table)
+    sel = (lengths == int(length)).nonzero(as_tuple=False).reshape(-1)
+    assign = assignments(int(length))
+    atom = table.atom_ids[sel]
+    pair = table.pair_ids[sel]
+    edge = pair > 0
+    root_slots = [(k, j) for k, (i, j) in enumerate(PAIR_INDEX) if i == 0 and j < int(length)]
+    nr_slots = [(k, i, j) for k, (i, j) in enumerate(PAIR_INDEX) if i >= 1 and j < int(length)]
+    valid = [k for k, (_i, j) in enumerate(PAIR_INDEX) if j < int(length)]
+    plan = {
+        "sel": sel,
+        "atom": atom,
+        "pair": pair,
+        "assign": assign,
+        "m": edge[:, valid].sum(dim=1).float() if valid else pair.new_zeros(len(sel)),
+        "n": torch.full((int(sel.numel()),), float(length)),
+        # a slot only needs a gather when at least one pattern actually uses it
+        "root_slots": [(k, assign[:, j - 1], bool(edge[:, k].any()))
+                       for k, j in root_slots],
+        "nr_slots": [(k, assign[:, i - 1] * R_STATE + assign[:, j - 1],
+                      bool(edge[:, k].any())) for k, i, j in nr_slots],
+        "root_mask": [(pair[:, k] > 0).to(torch.float32) for k, _j in root_slots],
+        "nr_mask": [(pair[:, k] > 0).to(torch.float32) for k, _i, _j in nr_slots],
+    }
+    plans[key] = plan
+    return plan
+
+
 class AtomicBranch(nn.Module):
     """Content branch for T (exact shared state) or N (independent copies).
 
@@ -201,6 +245,11 @@ class AtomicBranch(nn.Module):
     32-dim vector per *pattern* ``[P, 32]`` recomputed from the current weights
     on every forward call (autograd kept, nothing cached across steps).  T/N are
     intrinsically permutation invariant, so the "average" is the identity.
+
+    The whole contraction is carried in ``[C, PL, ...]`` layout so the channel
+    axis is leading and the assignment axis trailing; that keeps every temporary
+    contiguous and lets ``index_select`` replace expanded int64 gathers.  The
+    enumeration, the summed terms and therefore the value are unchanged.
     """
 
     def __init__(self, mode: str):
@@ -220,102 +269,85 @@ class AtomicBranch(nn.Module):
         LM._isolated_linear(self.l2, gen)
 
     # -- per-length contraction ----------------------------------------
-    def _group_content(self, table: LM.PatternTable, sel: torch.Tensor,
-                       length: int) -> torch.Tensor:
-        logq = self.state.q_log()                                  # [28,C,R]
+    def _group_content(self, table, sel: torch.Tensor, length: int) -> torch.Tensor:
+        plan = group_plan(table, length)
+        logq = self.state.q_log()                                   # [28,C,R]
         logk = self.state.log_k().reshape(K_BONDS, C_CH, R_STATE * R_STATE)
         dtype = logq.dtype
-        device = logq.device
         C, R = C_CH, R_STATE
-        PL = int(sel.numel())
-        atom = table.atom_ids[sel]                                 # [PL,5] long
-        pair = table.pair_ids[sel]                                 # [PL,10] long
-        assign = assignments(length).to(device)                    # [K,L-1]
+        atom = plan["atom"]
+        assign = plan["assign"].to(logq.device)
         K = int(assign.shape[0])
-        edge = pair > 0                                            # real typed edge
-        root_slots = [k for k, (i, _j) in enumerate(PAIR_INDEX) if i == 0 and _j < length]
-        nr_slots = [k for k, (i, j) in enumerate(PAIR_INDEX) if i >= 1 and j < length]
-        valid_slots = [k for k, (_i, j) in enumerate(PAIR_INDEX) if j < length]
-        lk_c = logk.permute(1, 0, 2)                               # [C,3,R*R]
-
-        def pair_pot(k):
-            """``log K_{b_k,c}(.,.)`` for slot ``k`` -> ``[PL,C,R,R]``."""
-            b = pair[:, k].clamp(min=1) - 1
-            return (lk_c[:, b, :].expand(C, PL, R * R)
-                    .reshape(C, PL, R, R).permute(1, 0, 2, 3))
+        PL = int(sel.numel())
+        logq_c = logq.permute(1, 0, 2)                              # [C,28,R]
+        lk_c = logk.permute(1, 0, 2)                                # [C,3,R*R]
 
         # ---- T: exact sum over the joint state of the non-root atoms ----
-        base = logq.new_zeros((PL, C, K))          # sum_i log q + sum_nonroot log K
-        q_sel = logq[atom[:, 1:length]]                            # [PL,L-1,C,R]
+        base = logq.new_zeros((C, PL, K))       # sum_i log q + sum_nonroot log K
         for t in range(length - 1):
-            base = base + q_sel[:, t][:, :, assign[:, t]]
-        for k in nr_slots:
-            i, j = PAIR_INDEX[k]
-            used = edge[:, k]
-            if not bool(used.any()):
+            q_t = logq_c[:, atom[:, t + 1], :]                      # [C,PL,R] slot 1+t
+            base = base + q_t.index_select(2, assign[:, t])
+        for (k, idx, used), mask in zip(plan["nr_slots"], plan["nr_mask"]):
+            if not used:
                 continue
-            b = pair[:, k].clamp(min=1) - 1
-            idx = assign[:, i - 1] * R + assign[:, j - 1]           # [K]
-            term = (lk_c[:, b, :].expand(C, PL, R * R)
-                    .gather(2, idx.view(1, 1, K).expand(C, PL, K)))
-            base = base + term.permute(1, 0, 2) * used.view(PL, 1, 1).to(dtype)
-        root = base.new_zeros((PL, C, R, K))       # sum_{root edges} log K(s, s_j)
-        for k in root_slots:
-            j = PAIR_INDEX[k][1]
-            used = edge[:, k]
-            if not bool(used.any()):
+            b = plan["pair"][:, k].clamp(min=1) - 1
+            term = lk_c[:, b, :].index_select(2, idx)               # [C,PL,K]
+            base = base + term * mask.view(1, PL, 1).to(dtype)
+        root = logq.new_zeros((C, PL, R, K))    # sum_{root edges} log K(s, s_j)
+        for (k, idx, used), mask in zip(plan["root_slots"], plan["root_mask"]):
+            if not used:
                 continue
-            # log K_{b,c}(s, s_j) for every root state s and assignment k
-            term = (pair_pot(k)
-                    .gather(3, assign[:, j - 1].view(1, 1, 1, K)
-                            .expand(PL, C, R, K)))                   # [PL,C,R,K]
-            root = root + term * used.view(PL, 1, 1, 1).to(dtype)
-        log_t = torch.logsumexp(base.unsqueeze(2) + root, dim=-1)   # [PL,C,R]
+            b = plan["pair"][:, k].clamp(min=1) - 1
+            pp = lk_c[:, b, :].reshape(C, PL, R, R)                 # log K_b(s,t)
+            term = pp.index_select(3, idx)                          # [C,PL,R,K]
+            root = root + term * mask.view(1, PL, 1, 1).to(dtype)
+        log_t = torch.logsumexp(base.unsqueeze(2) + root, dim=-1)   # [C,PL,R]
 
         # ---- N: one independent state copy per edge occurrence ----------
-        log_n = base.new_zeros((PL, C, R))
-        for k in root_slots:
-            j = PAIR_INDEX[k][1]
-            used = edge[:, k]
-            if not bool(used.any()):
+        log_n = logq.new_zeros((C, PL, R))
+        for (k, idx, used), mask in zip(plan["root_slots"], plan["root_mask"]):
+            if not used:
                 continue
-            lqj = logq[atom[:, j]]                                  # [PL,C,R]
-            term = torch.logsumexp(lqj.unsqueeze(-2) + pair_pot(k), dim=-1)  # [PL,C,R]
-            log_n = log_n + term * used.view(PL, 1, 1).to(dtype)
-        for k in nr_slots:
-            i, j = PAIR_INDEX[k]
-            used = edge[:, k]
-            if not bool(used.any()):
+            b = plan["pair"][:, k].clamp(min=1) - 1
+            pp = lk_c[:, b, :].reshape(C, PL, R, R)                 # [C,PL,R,R]
+            lqj = logq_c[:, atom[:, PAIR_INDEX[k][1]], :]           # [C,PL,R]
+            term = torch.logsumexp(lqj.unsqueeze(2) + pp, dim=-1)   # [C,PL,R]
+            log_n = log_n + term * mask.view(1, PL, 1).to(dtype)
+        for (k, idx, used), mask in zip(plan["nr_slots"], plan["nr_mask"]):
+            if not used:
                 continue
-            lqi, lqj = logq[atom[:, i]], logq[atom[:, j]]            # [PL,C,R]
-            term = torch.logsumexp(lqi.unsqueeze(-1) + lqj.unsqueeze(-2) + pair_pot(k),
-                                   dim=(-2, -1))                     # [PL,C]
-            log_n = log_n + term.unsqueeze(-1) * used.view(PL, 1, 1).to(dtype)
+            b = plan["pair"][:, k].clamp(min=1) - 1
+            pp = lk_c[:, b, :].reshape(C, PL, R, R)                 # [C,PL,R,R]
+            lqi = logq_c[:, atom[:, PAIR_INDEX[k][0]], :]           # [C,PL,R] (v)
+            lqj = logq_c[:, atom[:, PAIR_INDEX[k][1]], :]           # [C,PL,R] (v')
+            term = torch.logsumexp(lqi.unsqueeze(-1) + lqj.unsqueeze(-2) + pp,
+                                   dim=(-2, -1))                    # [C,PL]
+            log_n = log_n + term.unsqueeze(-1) * mask.view(1, PL, 1).to(dtype)
 
-        # only real edges of *this* object count: padded pair slots are ignored
-        m = edge[:, valid_slots].sum(dim=1).to(dtype)                # [PL]
-        denom = m.clamp(min=1.0).view(PL, 1, 1)
-        log_val = log_t if self.mode == "T" else log_n
-        q_root = torch.exp(logq[atom[:, 0]])                         # [PL,C,R]
+        # ---- the 133-dim content vector --------------------------------
+        m = plan["m"].to(device=logq.device, dtype=dtype)            # [PL]
+        denom = m.clamp(min=1.0).view(1, PL, 1)
+        log_val = log_t if self.mode == "T" else log_n              # [C,PL,R]
+        q_root = logq_c[:, atom[:, 0], :].exp()                     # [C,PL,R]
         fam = F.one_hot(table.family[sel], num_classes=N_FAMILIES).to(dtype)
-        lengths = table_lengths(table)
-        scal = torch.stack([lengths[sel].to(dtype) / float(MAX_NODES),
+        scal = torch.stack([plan["n"].to(device=logq.device, dtype=dtype) / float(MAX_NODES),
                             m / float(N_PAIRS)], dim=-1)
-        x = torch.cat([q_root.reshape(PL, C * R),
-                       (log_val / denom).reshape(PL, C * R),
+        x = torch.cat([q_root.permute(1, 0, 2).reshape(PL, C * R),
+                       (log_val / denom).permute(1, 0, 2).reshape(PL, C * R),
                        fam, scal], dim=-1)
         if x.shape[-1] != CONTENT_IN:
             raise RuntimeError(f"content width {x.shape[-1]} != {CONTENT_IN}")
         return x
 
     # -- pattern-level phi ---------------------------------------------
-    def content_input(self, table: LM.PatternTable) -> torch.Tensor:
+    def content_input(self, table) -> torch.Tensor:
         lengths = table_lengths(table)
         P = int(table.n_patterns)
         pieces = []
         for length in sorted({int(v) for v in lengths.tolist()}):
-            sel = (lengths == length).nonzero(as_tuple=False).reshape(-1)
-            pieces.append((sel, self._group_content(table, sel, length)))
+            plan = group_plan(table, length)
+            pieces.append((plan["sel"],
+                           self._group_content(table, plan["sel"], length)))
         if not pieces:
             raise RuntimeError("empty pattern table")
         out = torch.zeros(P, CONTENT_IN, dtype=pieces[0][1].dtype,
@@ -326,11 +358,10 @@ class AtomicBranch(nn.Module):
             raise RuntimeError("content block assembly lost patterns")
         return out
 
-    def permuted_phi(self, table: LM.PatternTable) -> torch.Tensor:
+    def permuted_phi(self, table) -> torch.Tensor:
         return self.l2(F.silu(self.l1(self.content_input(table))))
 
-    def forward(self, batch: Mapping[str, torch.Tensor],
-                table: LM.PatternTable) -> torch.Tensor:
+    def forward(self, batch: Mapping[str, torch.Tensor], table) -> torch.Tensor:
         # The occurrence aggregation is the audited LF implementation, reused
         # verbatim; only ``permuted_phi`` above differs.
         return LM.ContentBranch.forward(self, batch, table)  # type: ignore[arg-type]
