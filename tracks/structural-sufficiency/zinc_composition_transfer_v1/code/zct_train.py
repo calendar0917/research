@@ -251,7 +251,8 @@ class Trainer:
         for group in self.optimizer.param_groups:
             group["lr"] = rate
         self.optimizer.step()
-        return float(loss.detach()), float(pred.detach().abs().sub(target).mean())
+        mae = float((pred.detach().view(-1) - target.view(-1)).abs().mean())
+        return float(loss.detach()), mae
 
     # -- one meta step -----------------------------------------------------
     def meta_step(self, batch_s, target_s, batch_q, target_q, rate: float, epoch: int):
