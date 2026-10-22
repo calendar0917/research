@@ -1,0 +1,1376 @@
+{
+  "definitions": {
+    "arom": "all verified aromatic bonds replaced by one aromatic token (ordinary aromaticisation)",
+    "full_support": "every atom occurrence in the molecule has a key in the train vocabulary",
+    "orig": "committed Kekule representation; old radius-2 content keys",
+    "rep": "minimum key over the verified legal Kekule orbit of the same atom occurrence",
+    "union": "union of all keys over verified legal representations (joint statistics)",
+    "unseen_atom_fraction": "pooled unseen atom occurrences divided by all atom occurrences (and per-molecule mean separately)"
+  },
+  "examples": {
+    "context_split_examples": [
+      {
+        "images": [
+          {
+            "aromatic_key": "C(A:C(S:O,A:C,A:C),A:C(A:C,A:C))",
+            "occurrence": {
+              "atom": 3,
+              "atom_word": "C",
+              "dictionary_h": 0,
+              "inferred_h": true,
+              "local_bonds": [
+                {
+                  "aromatic": true,
+                  "order": 2,
+                  "other": 2,
+                  "other_word": "C"
+                },
+                {
+                  "aromatic": true,
+                  "order": 1,
+                  "other": 4,
+                  "other_word": "C"
+                }
+              ],
+              "row": 0,
+              "total_h": 1
+            }
+          },
+          {
+            "aromatic_key": "C(A:C(S:C,A:C,A:O),A:C(A:C,A:C))",
+            "occurrence": {
+              "atom": 9,
+              "atom_word": "C",
+              "dictionary_h": 0,
+              "inferred_h": true,
+              "local_bonds": [
+                {
+                  "aromatic": true,
+                  "order": 2,
+                  "other": 8,
+                  "other_word": "C"
+                },
+                {
+                  "aromatic": true,
+                  "order": 1,
+                  "other": 10,
+                  "other_word": "C"
+                }
+              ],
+              "row": 50,
+              "total_h": 1
+            }
+          }
+        ],
+        "original_key": "C(S:C(S:C,D:C),D:C(S:C,S:O,D:C))"
+      },
+      {
+        "images": [
+          {
+            "aromatic_key": "C(A:C(A:C,A:C),A:C(A:C,A:C,A:C))",
+            "occurrence": {
+              "atom": 4,
+              "atom_word": "C",
+              "dictionary_h": 0,
+              "inferred_h": true,
+              "local_bonds": [
+                {
+                  "aromatic": true,
+                  "order": 1,
+                  "other": 3,
+                  "other_word": "C"
+                },
+                {
+                  "aromatic": true,
+                  "order": 2,
+                  "other": 5,
+                  "other_word": "C"
+                }
+              ],
+              "row": 0,
+              "total_h": 1
+            }
+          },
+          {
+            "aromatic_key": "C(A:C(S:C,A:C,A:C),A:C(A:C,A:C))",
+            "occurrence": {
+              "atom": 4,
+              "atom_word": "C",
+              "dictionary_h": 0,
+              "inferred_h": true,
+              "local_bonds": [
+                {
+                  "aromatic": true,
+                  "order": 2,
+                  "other": 3,
+                  "other_word": "C"
+                },
+                {
+                  "aromatic": true,
+                  "order": 1,
+                  "other": 5,
+                  "other_word": "C"
+                }
+              ],
+              "row": 2,
+              "total_h": 1
+            }
+          }
+        ],
+        "original_key": "C(S:C(S:C,D:C),D:C(S:C,S:C,D:C))"
+      }
+    ],
+    "rescued_atoms_in_225": [
+      {
+        "atom": 3,
+        "atom_word": "C",
+        "local_bonds_original": [
+          {
+            "aromatic": true,
+            "order": 1,
+            "other": 2,
+            "other_word": "C"
+          },
+          {
+            "aromatic": true,
+            "order": 2,
+            "other": 4,
+            "other_word": "C"
+          },
+          {
+            "aromatic": false,
+            "order": 1,
+            "other": 25,
+            "other_word": "N"
+          }
+        ],
+        "n_reps": 4,
+        "original_key": "C(S:C(S:C,D:C),S:N(S:C,S:C H1),D:C(S:C,S:N,D:C))",
+        "rep_local_bonds": [
+          [
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 2
+            },
+            {
+              "aromatic": true,
+              "order": 2,
+              "other": 4
+            },
+            {
+              "aromatic": false,
+              "order": 1,
+              "other": 25
+            }
+          ],
+          [
+            {
+              "aromatic": true,
+              "order": 2,
+              "other": 2
+            },
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 4
+            },
+            {
+              "aromatic": false,
+              "order": 1,
+              "other": 25
+            }
+          ]
+        ],
+        "row": 40,
+        "status": "exhaustive",
+        "supported_rep_indices": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "atom": 4,
+        "atom_word": "C",
+        "local_bonds_original": [
+          {
+            "aromatic": true,
+            "order": 2,
+            "other": 3,
+            "other_word": "C"
+          },
+          {
+            "aromatic": true,
+            "order": 1,
+            "other": 5,
+            "other_word": "C"
+          },
+          {
+            "aromatic": false,
+            "order": 1,
+            "other": 8,
+            "other_word": "N"
+          }
+        ],
+        "n_reps": 4,
+        "original_key": "C(S:C(S:C,D:C),S:N(S:C,S:C,S:C H1),D:C(S:C,S:N,D:C))",
+        "rep_local_bonds": [
+          [
+            {
+              "aromatic": true,
+              "order": 2,
+              "other": 3
+            },
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 5
+            },
+            {
+              "aromatic": false,
+              "order": 1,
+              "other": 8
+            }
+          ],
+          [
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 3
+            },
+            {
+              "aromatic": true,
+              "order": 2,
+              "other": 5
+            },
+            {
+              "aromatic": false,
+              "order": 1,
+              "other": 8
+            }
+          ]
+        ],
+        "row": 40,
+        "status": "exhaustive",
+        "supported_rep_indices": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "atom": 9,
+        "atom_word": "C",
+        "local_bonds_original": [
+          {
+            "aromatic": false,
+            "order": 1,
+            "other": 6,
+            "other_word": "C H1"
+          },
+          {
+            "aromatic": true,
+            "order": 2,
+            "other": 10,
+            "other_word": "N"
+          },
+          {
+            "aromatic": true,
+            "order": 1,
+            "other": 18,
+            "other_word": "C"
+          }
+        ],
+        "n_reps": 3,
+        "original_key": "C(S:C(S:C,S:N,D:N),S:C H1(S:C,S:C,S:C),D:N(S:C,D:C))",
+        "rep_local_bonds": [
+          [
+            {
+              "aromatic": false,
+              "order": 1,
+              "other": 6
+            },
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 10
+            },
+            {
+              "aromatic": true,
+              "order": 2,
+              "other": 18
+            }
+          ]
+        ],
+        "row": 55,
+        "status": "exhaustive",
+        "supported_rep_indices": [
+          1
+        ]
+      },
+      {
+        "atom": 18,
+        "atom_word": "C",
+        "local_bonds_original": [
+          {
+            "aromatic": true,
+            "order": 1,
+            "other": 9,
+            "other_word": "C"
+          },
+          {
+            "aromatic": true,
+            "order": 2,
+            "other": 17,
+            "other_word": "N"
+          },
+          {
+            "aromatic": false,
+            "order": 1,
+            "other": 19,
+            "other_word": "N"
+          }
+        ],
+        "n_reps": 3,
+        "original_key": "C(S:C(S:C,S:C H1,D:N),S:N(S:C,S:C,S:C),D:N(S:C,D:C))",
+        "rep_local_bonds": [
+          [
+            {
+              "aromatic": true,
+              "order": 2,
+              "other": 9
+            },
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 17
+            },
+            {
+              "aromatic": false,
+              "order": 1,
+              "other": 19
+            }
+          ]
+        ],
+        "row": 55,
+        "status": "exhaustive",
+        "supported_rep_indices": [
+          1
+        ]
+      },
+      {
+        "atom": 8,
+        "atom_word": "C",
+        "local_bonds_original": [
+          {
+            "aromatic": true,
+            "order": 1,
+            "other": 7,
+            "other_word": "C"
+          },
+          {
+            "aromatic": false,
+            "order": 1,
+            "other": 9,
+            "other_word": "S"
+          },
+          {
+            "aromatic": true,
+            "order": 2,
+            "other": 21,
+            "other_word": "C"
+          }
+        ],
+        "n_reps": 4,
+        "original_key": "C(S:C(S:C,D:C),S:S(S:C,S:O,D:O,D:O),D:C(S:C,S:C,D:C))",
+        "rep_local_bonds": [
+          [
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 7
+            },
+            {
+              "aromatic": false,
+              "order": 1,
+              "other": 9
+            },
+            {
+              "aromatic": true,
+              "order": 2,
+              "other": 21
+            }
+          ],
+          [
+            {
+              "aromatic": true,
+              "order": 2,
+              "other": 7
+            },
+            {
+              "aromatic": false,
+              "order": 1,
+              "other": 9
+            },
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 21
+            }
+          ]
+        ],
+        "row": 69,
+        "status": "exhaustive",
+        "supported_rep_indices": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "atom": 21,
+        "atom_word": "C",
+        "local_bonds_original": [
+          {
+            "aromatic": true,
+            "order": 1,
+            "other": 6,
+            "other_word": "C"
+          },
+          {
+            "aromatic": true,
+            "order": 1,
+            "other": 9,
+            "other_word": "C"
+          },
+          {
+            "aromatic": true,
+            "order": 2,
+            "other": 20,
+            "other_word": "N"
+          }
+        ],
+        "n_reps": 4,
+        "original_key": "C(S:C(S:C,S:C,D:N),S:C(S:C,S:S,D:C),D:N(S:C,D:C))",
+        "rep_local_bonds": [
+          [
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 6
+            },
+            {
+              "aromatic": true,
+              "order": 2,
+              "other": 9
+            },
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 20
+            }
+          ],
+          [
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 6
+            },
+            {
+              "aromatic": true,
+              "order": 2,
+              "other": 9
+            },
+            {
+              "aromatic": true,
+              "order": 1,
+              "other": 20
+            }
+          ]
+        ],
+        "row": 134,
+        "status": "exhaustive",
+        "supported_rep_indices": [
+          1,
+          3
+        ]
+      }
+    ],
+    "unwitnessed_aromatic_merge_examples": [
+      {
+        "aromatic_key": "N(A:C(A:C,A:N,A:N),A:N(A:C,A:N))",
+        "n_distinct_total_h": 2,
+        "n_original_keys": 5,
+        "n_witness_components": 3,
+        "occurrences": [
+          {
+            "aromatic_key": "N(A:C(S:C,A:N,A:N),A:N(A:C,A:N))",
+            "atom": 3,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": true,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 2,
+                "other_word": "N"
+              },
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 4,
+                "other_word": "C"
+              }
+            ],
+            "original_key": "N(S:C(S:C,S:N,D:N),S:N(S:N,D:C))",
+            "row": 149,
+            "total_h": 1
+          },
+          {
+            "aromatic_key": "N(A:C(S:N,A:C,A:N),A:N(A:C,A:N))",
+            "atom": 21,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": true,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 14,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 20,
+                "other_word": "N"
+              }
+            ],
+            "original_key": "N(S:C(S:N,S:N,D:C),S:N(S:N,D:C))",
+            "row": 136,
+            "total_h": 1
+          },
+          {
+            "aromatic_key": "N(A:C(S:C,A:N,A:N),A:N(A:C,A:N))",
+            "atom": 8,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": false,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 7,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 9,
+                "other_word": "N"
+              }
+            ],
+            "original_key": "N(S:N(S:C,S:N),D:C(S:C,S:N,D:N))",
+            "row": 70,
+            "total_h": 0
+          },
+          {
+            "aromatic_key": "N(A:C(S:N,A:C,A:N),A:N(A:C,A:N))",
+            "atom": 16,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": false,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 10,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 17,
+                "other_word": "N"
+              }
+            ],
+            "original_key": "N(S:C(S:N,S:N,D:C),D:N(S:C,D:N))",
+            "row": 5,
+            "total_h": 0
+          },
+          {
+            "aromatic_key": "N(A:C(S:C,A:N,A:N),A:N(A:C,A:N))",
+            "atom": 14,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": false,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 13,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 15,
+                "other_word": "N"
+              }
+            ],
+            "original_key": "N(S:N(S:N,D:C),D:C(S:C,S:N,D:N))",
+            "row": 84,
+            "total_h": 0
+          }
+        ],
+        "total_h_values": [
+          0,
+          1
+        ]
+      },
+      {
+        "aromatic_key": "N(A:C(S:N,A:C,A:N),A:N(A:C,A:N))",
+        "n_distinct_total_h": 2,
+        "n_original_keys": 4,
+        "n_witness_components": 3,
+        "occurrences": [
+          {
+            "aromatic_key": "N(A:C(S:C,A:N,A:N),A:N(A:C,A:N))",
+            "atom": 8,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": false,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 7,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 9,
+                "other_word": "N"
+              }
+            ],
+            "original_key": "N(S:N(S:C,S:N),D:C(S:C,S:N,D:N))",
+            "row": 70,
+            "total_h": 0
+          },
+          {
+            "aromatic_key": "N(A:C(S:C,A:N,A:N),A:N(A:C,A:N))",
+            "atom": 14,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": false,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 13,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 15,
+                "other_word": "N"
+              }
+            ],
+            "original_key": "N(S:N(S:N,D:C),D:C(S:C,S:N,D:N))",
+            "row": 84,
+            "total_h": 0
+          },
+          {
+            "aromatic_key": "N(A:C(S:N,A:C,A:N),A:N(A:C,A:N))",
+            "atom": 16,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": false,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 10,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 17,
+                "other_word": "N"
+              }
+            ],
+            "original_key": "N(S:C(S:N,S:N,D:C),D:N(S:C,D:N))",
+            "row": 5,
+            "total_h": 0
+          },
+          {
+            "aromatic_key": "N(A:C(S:N,A:C,A:N),A:N(A:C,A:N))",
+            "atom": 21,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": true,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 14,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 20,
+                "other_word": "N"
+              }
+            ],
+            "original_key": "N(S:C(S:N,S:N,D:C),S:N(S:N,D:C))",
+            "row": 136,
+            "total_h": 1
+          }
+        ],
+        "total_h_values": [
+          0,
+          1
+        ]
+      },
+      {
+        "aromatic_key": "N(A:C(S:C,A:C,A:N),A:N(A:C,A:N))",
+        "n_distinct_total_h": 2,
+        "n_original_keys": 4,
+        "n_witness_components": 3,
+        "occurrences": [
+          {
+            "aromatic_key": "N(A:C(S:C,A:C,A:N),A:N(A:C,A:N))",
+            "atom": 12,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": false,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 6,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 13,
+                "other_word": "N"
+              }
+            ],
+            "original_key": "N(S:C(S:C,S:N,D:C),D:N(S:C,D:N))",
+            "row": 386,
+            "total_h": 0
+          },
+          {
+            "aromatic_key": "N(A:C(A:C,A:C,A:N),A:N(A:C,A:N))",
+            "atom": 11,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": false,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 10,
+                "other_word": "N"
+              },
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 12,
+                "other_word": "C"
+              }
+            ],
+            "original_key": "N(S:N(S:N,D:C),D:C(S:C,S:C,D:N))",
+            "row": 99,
+            "total_h": 0
+          },
+          {
+            "aromatic_key": "N(S:N(S:C,S:N),D:C(S:C,S:C,D:N))",
+            "atom": 9,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": false,
+            "local_bonds": [
+              {
+                "aromatic": false,
+                "order": 1,
+                "other": 8,
+                "other_word": "N"
+              },
+              {
+                "aromatic": false,
+                "order": 2,
+                "other": 10,
+                "other_word": "C"
+              }
+            ],
+            "original_key": "N(S:N(S:C,S:N),D:C(S:C,S:C,D:N))",
+            "row": 62,
+            "total_h": 0
+          },
+          {
+            "aromatic_key": "N(A:C(S:C,A:C,A:N),A:N(A:C,A:N))",
+            "atom": 19,
+            "atom_word": "N",
+            "dictionary_h": 0,
+            "inferred_h": true,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 14,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 20,
+                "other_word": "N"
+              }
+            ],
+            "original_key": "N(S:C(S:C,S:N,D:C),S:N(S:N,D:C))",
+            "row": 56,
+            "total_h": 1
+          }
+        ],
+        "total_h_values": [
+          0,
+          1
+        ]
+      }
+    ],
+    "witness_merge_examples": [
+      {
+        "canonical_key": "C(S:C(S:C,S:O,D:C),D:C(S:C,D:C))",
+        "occurrences": [
+          {
+            "atom": 3,
+            "atom_word": "C",
+            "dictionary_h": 0,
+            "inferred_h": true,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 2,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 4,
+                "other_word": "C"
+              }
+            ],
+            "row": 0,
+            "total_h": 1
+          },
+          {
+            "atom": 7,
+            "atom_word": "C",
+            "dictionary_h": 0,
+            "inferred_h": true,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 6,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 8,
+                "other_word": "C"
+              }
+            ],
+            "row": 0,
+            "total_h": 1
+          }
+        ],
+        "original_keys": [
+          "C(S:C(S:C,D:C),D:C(S:C,S:O,D:C))",
+          "C(S:C(S:C,S:O,D:C),D:C(S:C,D:C))"
+        ],
+        "witness_components": 1
+      },
+      {
+        "canonical_key": "C(S:C(S:C,S:C,D:C),D:C(S:C,D:C))",
+        "occurrences": [
+          {
+            "atom": 6,
+            "atom_word": "C",
+            "dictionary_h": 0,
+            "inferred_h": true,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 5,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 7,
+                "other_word": "C"
+              }
+            ],
+            "row": 0,
+            "total_h": 1
+          },
+          {
+            "atom": 4,
+            "atom_word": "C",
+            "dictionary_h": 0,
+            "inferred_h": true,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 3,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 5,
+                "other_word": "C"
+              }
+            ],
+            "row": 0,
+            "total_h": 1
+          }
+        ],
+        "original_keys": [
+          "C(S:C(S:C,S:C,D:C),D:C(S:C,D:C))",
+          "C(S:C(S:C,D:C),D:C(S:C,S:C,D:C))"
+        ],
+        "witness_components": 1
+      }
+    ]
+  },
+  "groups": {
+    "all": {
+      "n_aromatic_molecules": 934,
+      "n_atoms": 23083,
+      "n_lost_atoms_arom": 84,
+      "n_lost_atoms_rep": 8,
+      "n_molecules": 1000,
+      "n_no_alternative": 173,
+      "n_rescued_atoms_union": 29,
+      "n_truncated": 2,
+      "n_unsupported": 0,
+      "schemes": {
+        "arom": {
+          "fully_supported_fraction": 0.735,
+          "fully_supported_molecules": 735,
+          "unseen_atom_fraction_mean_per_molecule": 0.026710031486130013,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.024086990425854524,
+          "unseen_atoms": 556
+        },
+        "orig": {
+          "fully_supported_fraction": 0.749,
+          "fully_supported_molecules": 749,
+          "unseen_atom_fraction_mean_per_molecule": 0.02460932830599746,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.021920894164536672,
+          "unseen_atoms": 506
+        },
+        "rep": {
+          "fully_supported_fraction": 0.753,
+          "fully_supported_molecules": 753,
+          "unseen_atom_fraction_mean_per_molecule": 0.024039236063962233,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.021444352987046743,
+          "unseen_atoms": 495
+        },
+        "union": {
+          "fully_supported_fraction": 0.763,
+          "fully_supported_molecules": 763,
+          "unseen_atom_fraction_mean_per_molecule": 0.02330364859830898,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.020664558332972316,
+          "unseen_atoms": 477
+        }
+      }
+    },
+    "seen_ordinary": {
+      "n_aromatic_molecules": 686,
+      "n_atoms": 16818,
+      "n_lost_atoms_arom": 35,
+      "n_lost_atoms_rep": 5,
+      "n_molecules": 710,
+      "n_no_alternative": 91,
+      "n_rescued_atoms_union": 0,
+      "n_truncated": 2,
+      "n_unsupported": 0,
+      "schemes": {
+        "arom": {
+          "fully_supported_fraction": 0.9633802816901409,
+          "fully_supported_molecules": 684,
+          "unseen_atom_fraction_mean_per_molecule": 0.0019582616672412048,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.002081103579498157,
+          "unseen_atoms": 35
+        },
+        "orig": {
+          "fully_supported_fraction": 1.0,
+          "fully_supported_molecules": 710,
+          "unseen_atom_fraction_mean_per_molecule": 0.0,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.0,
+          "unseen_atoms": 0
+        },
+        "rep": {
+          "fully_supported_fraction": 0.9929577464788732,
+          "fully_supported_molecules": 705,
+          "unseen_atom_fraction_mean_per_molecule": 0.00027646942259618314,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.00029730051135687955,
+          "unseen_atoms": 5
+        },
+        "union": {
+          "fully_supported_fraction": 1.0,
+          "fully_supported_molecules": 710,
+          "unseen_atom_fraction_mean_per_molecule": 0.0,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.0,
+          "unseen_atoms": 0
+        }
+      }
+    },
+    "seen_tail": {
+      "n_aromatic_molecules": 31,
+      "n_atoms": 834,
+      "n_lost_atoms_arom": 0,
+      "n_lost_atoms_rep": 0,
+      "n_molecules": 39,
+      "n_no_alternative": 23,
+      "n_rescued_atoms_union": 0,
+      "n_truncated": 0,
+      "n_unsupported": 0,
+      "schemes": {
+        "arom": {
+          "fully_supported_fraction": 1.0,
+          "fully_supported_molecules": 39,
+          "unseen_atom_fraction_mean_per_molecule": 0.0,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.0,
+          "unseen_atoms": 0
+        },
+        "orig": {
+          "fully_supported_fraction": 1.0,
+          "fully_supported_molecules": 39,
+          "unseen_atom_fraction_mean_per_molecule": 0.0,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.0,
+          "unseen_atoms": 0
+        },
+        "rep": {
+          "fully_supported_fraction": 1.0,
+          "fully_supported_molecules": 39,
+          "unseen_atom_fraction_mean_per_molecule": 0.0,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.0,
+          "unseen_atoms": 0
+        },
+        "union": {
+          "fully_supported_fraction": 1.0,
+          "fully_supported_molecules": 39,
+          "unseen_atom_fraction_mean_per_molecule": 0.0,
+          "unseen_atom_fraction_median_per_molecule": 0.0,
+          "unseen_atom_fraction_pooled": 0.0,
+          "unseen_atoms": 0
+        }
+      }
+    },
+    "unseen_ordinary": {
+      "n_aromatic_molecules": 203,
+      "n_atoms": 4911,
+      "n_lost_atoms_arom": 44,
+      "n_lost_atoms_rep": 3,
+      "n_molecules": 225,
+      "n_no_alternative": 44,
+      "n_rescued_atoms_union": 29,
+      "n_truncated": 0,
+      "n_unsupported": 0,
+      "schemes": {
+        "arom": {
+          "fully_supported_fraction": 0.05333333333333334,
+          "fully_supported_molecules": 12,
+          "unseen_atom_fraction_mean_per_molecule": 0.09387268245393801,
+          "unseen_atom_fraction_median_per_molecule": 0.06666666666666667,
+          "unseen_atom_fraction_pooled": 0.09020566076155569,
+          "unseen_atoms": 443
+        },
+        "orig": {
+          "fully_supported_fraction": 0.0,
+          "fully_supported_molecules": 0,
+          "unseen_atom_fraction_mean_per_molecule": 0.09218304882628704,
+          "unseen_atom_fraction_median_per_molecule": 0.0625,
+          "unseen_atom_fraction_pooled": 0.08816941559763795,
+          "unseen_atoms": 433
+        },
+        "rep": {
+          "fully_supported_fraction": 0.04,
+          "fully_supported_molecules": 9,
+          "unseen_atom_fraction_mean_per_molecule": 0.08877689090593807,
+          "unseen_atom_fraction_median_per_molecule": 0.0625,
+          "unseen_atom_fraction_pooled": 0.08491142333536958,
+          "unseen_atoms": 417
+        },
+        "union": {
+          "fully_supported_fraction": 0.06222222222222222,
+          "fully_supported_molecules": 14,
+          "unseen_atom_fraction_mean_per_molecule": 0.08638002790322713,
+          "unseen_atom_fraction_median_per_molecule": 0.06060606060606061,
+          "unseen_atom_fraction_pooled": 0.08226430462227652,
+          "unseen_atoms": 404
+        }
+      }
+    },
+    "unseen_tail": {
+      "n_aromatic_molecules": 14,
+      "n_atoms": 520,
+      "n_lost_atoms_arom": 5,
+      "n_lost_atoms_rep": 0,
+      "n_molecules": 26,
+      "n_no_alternative": 15,
+      "n_rescued_atoms_union": 0,
+      "n_truncated": 0,
+      "n_unsupported": 0,
+      "schemes": {
+        "arom": {
+          "fully_supported_fraction": 0.0,
+          "fully_supported_molecules": 0,
+          "unseen_atom_fraction_mean_per_molecule": 0.16147354424048865,
+          "unseen_atom_fraction_median_per_molecule": 0.10818713450292397,
+          "unseen_atom_fraction_pooled": 0.15,
+          "unseen_atoms": 78
+        },
+        "orig": {
+          "fully_supported_fraction": 0.0,
+          "fully_supported_molecules": 0,
+          "unseen_atom_fraction_mean_per_molecule": 0.1487747046185721,
+          "unseen_atom_fraction_median_per_molecule": 0.10818713450292397,
+          "unseen_atom_fraction_pooled": 0.14038461538461539,
+          "unseen_atoms": 73
+        },
+        "rep": {
+          "fully_supported_fraction": 0.0,
+          "fully_supported_molecules": 0,
+          "unseen_atom_fraction_mean_per_molecule": 0.1487747046185721,
+          "unseen_atom_fraction_median_per_molecule": 0.10818713450292397,
+          "unseen_atom_fraction_pooled": 0.14038461538461539,
+          "unseen_atoms": 73
+        },
+        "union": {
+          "fully_supported_fraction": 0.0,
+          "fully_supported_molecules": 0,
+          "unseen_atom_fraction_mean_per_molecule": 0.1487747046185721,
+          "unseen_atom_fraction_median_per_molecule": 0.10818713450292397,
+          "unseen_atom_fraction_pooled": 0.14038461538461539,
+          "unseen_atoms": 73
+        }
+      }
+    }
+  },
+  "h_audit": {
+    "note": "The committed atom dictionary does not encode neutral N/O/S H. The audit enumerates with dictionary-only H; failures/candidates there show why the frozen inferred-H state is required. Those candidates are never used.",
+    "train": {
+      "counts": {
+        "explicit_h_h_changing_candidates": 2,
+        "explicit_h_no_solution": 42,
+        "explicit_h_original_missing": 2
+      },
+      "examples": [
+        {
+          "explicit_h_h_changing_candidates": 0,
+          "explicit_h_n_solutions_seen": 0,
+          "explicit_h_no_solution": 1,
+          "explicit_h_original_missing": 0,
+          "inferred_h_atoms": [
+            3
+          ],
+          "row": 149,
+          "status": "ok"
+        },
+        {
+          "explicit_h_h_changing_candidates": 0,
+          "explicit_h_n_solutions_seen": 0,
+          "explicit_h_no_solution": 1,
+          "explicit_h_original_missing": 0,
+          "inferred_h_atoms": [
+            16
+          ],
+          "row": 265,
+          "status": "ok"
+        },
+        {
+          "explicit_h_h_changing_candidates": 0,
+          "explicit_h_n_solutions_seen": 0,
+          "explicit_h_no_solution": 1,
+          "explicit_h_original_missing": 0,
+          "inferred_h_atoms": [
+            16
+          ],
+          "row": 408,
+          "status": "ok"
+        },
+        {
+          "explicit_h_h_changing_candidates": 0,
+          "explicit_h_n_solutions_seen": 0,
+          "explicit_h_no_solution": 1,
+          "explicit_h_original_missing": 0,
+          "inferred_h_atoms": [
+            21
+          ],
+          "row": 422,
+          "status": "ok"
+        },
+        {
+          "explicit_h_h_changing_candidates": 0,
+          "explicit_h_n_solutions_seen": 0,
+          "explicit_h_no_solution": 1,
+          "explicit_h_original_missing": 0,
+          "inferred_h_atoms": [
+            20
+          ],
+          "row": 531,
+          "status": "ok"
+        },
+        {
+          "explicit_h_h_changing_candidates": 0,
+          "explicit_h_n_solutions_seen": 0,
+          "explicit_h_no_solution": 1,
+          "explicit_h_original_missing": 0,
+          "inferred_h_atoms": [
+            3
+          ],
+          "row": 573,
+          "status": "ok"
+        }
+      ],
+      "n_molecules_with_inferred_h": 9156
+    },
+    "valid": {
+      "counts": {
+        "explicit_h_h_changing_candidates": 1,
+        "explicit_h_no_solution": 3,
+        "explicit_h_original_missing": 1
+      },
+      "examples": [
+        {
+          "explicit_h_h_changing_candidates": 0,
+          "explicit_h_n_solutions_seen": 0,
+          "explicit_h_no_solution": 1,
+          "explicit_h_original_missing": 0,
+          "inferred_h_atoms": [
+            19
+          ],
+          "row": 14,
+          "status": "ok"
+        },
+        {
+          "explicit_h_h_changing_candidates": 1,
+          "explicit_h_n_solutions_seen": 1,
+          "explicit_h_no_solution": 0,
+          "explicit_h_original_missing": 1,
+          "inferred_h_atoms": [
+            8,
+            11
+          ],
+          "row": 149,
+          "status": "ok"
+        },
+        {
+          "explicit_h_h_changing_candidates": 0,
+          "explicit_h_n_solutions_seen": 0,
+          "explicit_h_no_solution": 1,
+          "explicit_h_original_missing": 0,
+          "inferred_h_atoms": [
+            17
+          ],
+          "row": 795,
+          "status": "ok"
+        },
+        {
+          "explicit_h_h_changing_candidates": 0,
+          "explicit_h_n_solutions_seen": 0,
+          "explicit_h_no_solution": 1,
+          "explicit_h_original_missing": 0,
+          "inferred_h_atoms": [
+            11
+          ],
+          "row": 810,
+          "status": "ok"
+        }
+      ],
+      "n_molecules_with_inferred_h": 4
+    }
+  },
+  "official_test_loaded": false,
+  "old_group_check": {
+    "matches_reference": true,
+    "max_abs_diff_old_unseen_fraction": 4.761904759398305e-10,
+    "n_unseen": 251,
+    "n_unseen_ordinary": 225
+  },
+  "protocol": "zinc-kekule-equiv-v1",
+  "rdkit_version": "2026.09.1",
+  "representation_status": {
+    "train": {
+      "exhaustive": 8300,
+      "no_alternative": 1683,
+      "truncated": 17
+    },
+    "train_truncated": 17,
+    "train_unsupported": 0,
+    "valid": {
+      "exhaustive": 825,
+      "no_alternative": 173,
+      "truncated": 2
+    },
+    "valid_truncated": 2,
+    "valid_unsupported": 0
+  },
+  "split": "official PyG ZINC subset valid, n=1000; old groups fixed",
+  "vocabulary": {
+    "arom_classes_with_multiple_total_h": 55,
+    "arom_keys_not_original": 7500,
+    "arom_max_witness_components_in_a_merged_class": 3,
+    "arom_merge_classes": 929,
+    "arom_merged_classes_with_multiple_witness_components": 227,
+    "arom_merged_extra_keys": 1075,
+    "arom_unwitnessed_merged_extra_keys": 100,
+    "n_arom_types": 13195,
+    "n_multi_orbit_occurrences": 50865,
+    "n_occurrences": 231664,
+    "n_orig_types": 12108,
+    "n_rep_types": 11744,
+    "n_truncated_occurrences": 506,
+    "n_union_types": 13168,
+    "orig_keys_with_multiple_arom_images": 1458,
+    "orig_keys_with_multiple_rep_images": 316,
+    "rep_keys_not_original": 296,
+    "rep_max_witness_components_in_a_merged_class": 2,
+    "rep_merge_classes": 686,
+    "rep_merged_classes_with_multiple_witness_components": 1,
+    "rep_merged_extra_keys": 699,
+    "rep_unwitnessed_merged_extra_keys": 0,
+    "union_keys_not_original": 1060
+  }
+}
