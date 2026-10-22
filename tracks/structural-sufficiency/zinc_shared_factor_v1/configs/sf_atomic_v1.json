@@ -1,0 +1,219 @@
+{
+  "track": "structural-sufficiency",
+  "protocol": "zinc-shared-factor-v1",
+  "created": "2026-10-22",
+  "base_snapshot": "f446ba5a02e7ede882e249b4f8c5503eebb722e0",
+  "question": "With the same P3 carrier, the same P3 port, the same bf_data S3/S4/F4 objects, the same train-only SSL start, the same recipe and the same 47,400-update budget, does an explicit shared atomic latent state with an exact contraction on the fragment (T) generalise better on the full valid split than the existing dense content MLP (D)? If it does, is the gain attributable to the shared-variable connection structure (T vs N, where N has identical parameters/MLP/init but one independent state copy per edge occurrence)?",
+  "scope": {
+    "type": "mechanism probe on a local content function; not a new backbone, not a claim of new structural information, not a novelty claim",
+    "arms": {
+      "D": "zinc_local_factorization_v1 DensePhi + its complete training path (imported, byte-identical init and forward)",
+      "T": "exact contraction of a shared atomic state per real atom (this round's operator)",
+      "N": "identical parameters / input width / MLP / initial values as T, but one independent non-root state copy per edge occurrence"
+    },
+    "comparisons": {
+      "T_vs_D": "practical effect question (does the explicit latent state help at all?)",
+      "T_vs_N": "the mechanism question (is any gain due to the shared-variable connection structure?)",
+      "warning": "T and D differ in more than a single shared-variable constraint (content function, input width, parameterisation). Only T vs N isolates the sharing mechanism."
+    },
+    "not_claimed": [
+      "T vs D changes only one constraint",
+      "local distinction on toy fragments implies expressiveness, generalisation or novelty",
+      "two seeds estimate a population seed variance"
+    ],
+    "no_extra_arms": true,
+    "no_ensemble_soup_ema_swa": true,
+    "no_rank_channel_or_order_grid": true,
+    "no_new_pretraining": true,
+    "no_new_structure_family": true,
+    "official_test_status": "NOT READ in this round; no test selection, no test reporting",
+    "test_used_for_selection": false
+  },
+  "data": {
+    "source": "official PyG ZINC subset=True",
+    "train": 10000,
+    "valid": 1000,
+    "test": "not loaded",
+    "loss": "raw-y L1",
+    "target_transform": "none (no clipping, reweighting, removal of extreme molecules, extra supervision)",
+    "normalization": "frozen P3 train-only global-33 mean/scale (zinc_arch_discovery_v1/analysis/norm.json)",
+    "pretraining": "frozen train-only masked-SSL encoders only (no labels); no new pretraining"
+  },
+  "objects": {
+    "module": "tracks/structural-sufficiency/zinc_branching_fragment_v1/code/bf_data.py",
+    "families": {"S3": "root + 3 distinct neighbours (4 nodes)", "S4": "root + 4 distinct neighbours (5 nodes)", "F4": "v-u plus two distinct w in N(u)\\{v} (4 nodes)"},
+    "edge_set": "complete typed induced adjacency on the selected nodes, every real edge including extra chord edges; root fixed at slot 0",
+    "no_new_families": true,
+    "cache_content_sha256": {
+      "train": "ce643fdafba375f6c1689d942cc5c659e1e8224cab0893acf0d3e45857b80780",
+      "valid": "91e0e81b8977dc3127e674863683b08a382c934740632d8b8b5676ddc1266ed3"
+    },
+    "padding": "slots >= n are not part of the object: no state, no q factor, no K factor; values stored in padded slots must not change any output",
+    "no_edge": "pair type 0 contributes the multiplicative identity 1; there is no learnable 'no edge' potential",
+    "multiplicity": "one (root, family, actual node set) exactly once; equal content with different node sets keeps its count; empty family is the exact empty set",
+    "caching": "only structure/index tensors are cached; phi/T/N are recomputed with autograd on every forward"
+  },
+  "operator": {
+    "C_channels": 16,
+    "R_states": 4,
+    "fixed_this_round": true,
+    "parameters": {
+      "A": "[28, C, R] logits, q_c(s|a) = softmax_s A[a,c,s]",
+      "S": "[3, C, R*(R+1)/2] = [3,16,10] symmetric-pair logits, K_b,c(s,t) = exp(tanh(S_b,c(s,t))), diagonal included",
+      "shared": "one A and one S for all structure families and all occurrences; no whole-pattern embedding, no node-id embedding, no learned cached state"
+    },
+    "T_definition": "T_H,c(s) = sum over the joint state of all non-root atoms [ prod_{i != r} q_c(s_i|a_i) * prod_{(i,j) in E} K_bij,c(s_i,s_j) ], root state s retained; exact enumeration over R**(n-1) in {64, 256} assignments; not belief propagation",
+    "N_definition": "N_H,c(s) = prod over root-incident edges (r,j) [sum_t q_c(t|a_j) K_b,c(s,t)] * prod over edges (i,j), i,j != r [sum_{u,v} q_c(u|a_i) q_c(v|a_j) K_b,c(u,v)]; one independent non-root state copy per edge occurrence",
+    "content_input": {
+      "width": 133,
+      "layout": "q_c(s|a_root) flattened (64) | log(T or N)/max(m,1) flattened (64) | family one-hot (3) | n/5 (1) | m/10 (1)",
+      "m": "number of real edges in the typed induced adjacency",
+      "phi": "Linear(133,64) -> SiLU -> Linear(64,32), bias; no dropout / LayerNorm / skip / auxiliary loss",
+      "permutation_average": "T/N are invariant by construction and enumerate no permutations; D keeps the exact 6/24 root-preserving average"
+    },
+    "counts": {
+      "T_content_module": 12928,
+      "breakdown": {"A": 1792, "S": 480, "mlp_133_64": 8576, "mlp_64_32": 2080},
+      "note": "T/N have no content embedding table at all; 12,928 = 1,792 + 480 + 8,576 + 2,080"
+    }
+  },
+  "model": {
+    "carrier": "ad2_models.P3NullModel (encoders + Null grouping + group_composer + reader + global33)",
+    "carrier_parameters": 413505,
+    "carrier_initial_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+    "port": "s_v (198) -> Linear(198,128,bias=False) W_s, zero-initialised; a_v = Linear128->96(SiLU(Linear108->128(raw108_v) + W_s s_v))",
+    "port_parameters": 25344,
+    "aggregation": "per root and family: occurrence-weighted mean(phi) 32 + mean(phi^2) 32 + log1p(count) 1 + existence 1 = 66; three families = 198; empty family exactly zero; mean_sq on the (already invariant) phi; multiplicity / content-key / split-local id semantics unchanged",
+    "arms": {
+      "D": {
+        "content": "E_atom[28,8] + E_pair[4,4] + DensePhi Linear98->80->32 (SiLU, bias) + exact permutation average",
+        "content_parameters": 10752,
+        "parameters_expected": 449601,
+        "init_state_sha256": {"0": "466d94813f6343068525c3742d3a4a0b901739b4012dac5abb33753716de429e", "1": "b7bc91c44abc5ac6ceeb53b869bc4f04e2aa8dab83caa00f46ad5c56f28e7061"},
+        "content_state_sha256": {"0": "5c137f9faf2656483f156b52675fcb5648358ecaac9435e9bf0f64b77696a742", "1": "1067e35de49bfc15714e8545b5cc1f800cc0c6c88737b0c10e1c504bbed9686e"},
+        "note": "byte-identical to zinc_local_factorization_v1 arm D at seed 0 (same hash, same forward, same partial-epoch trajectory)"
+      },
+      "T": {
+        "content": "AtomicState A/S + exact contraction T + Linear133->64->32",
+        "content_parameters": 12928,
+        "parameters_expected": 451777,
+        "init_state_sha256": {"0": "703f754569aa6f3b8b2243aab123f6e2e580fc23ef4fc90dafe7224bd2cea35a", "1": "db2792ca9d4b589996d98d4a5621a5e6c53c175ec223c5d2fa180bf26f48b939"},
+        "content_state_sha256": {"0": "db6b8d8699d63eb9ab54d7258603775afe63f1755e5df0fa8fae45b0f23c183b", "1": "7b0231842a7f9305b80ca6b6fb314a34f070b9f1cba1787cef9e29377c8fb793"}
+      },
+      "N": {
+        "content": "identical modules/widths/initial values as T, factorised N instead of T",
+        "content_parameters": 12928,
+        "parameters_expected": 451777,
+        "init_state_sha256": {"0": "703f754569aa6f3b8b2243aab123f6e2e580fc23ef4fc90dafe7224bd2cea35a", "1": "db2792ca9d4b589996d98d4a5621a5e6c53c175ec223c5d2fa180bf26f48b939"},
+        "content_state_sha256": {"0": "db6b8d8699d63eb9ab54d7258603775afe63f1755e5df0fa8fae45b0f23c183b", "1": "7b0231842a7f9305b80ca6b6fb314a34f070b9f1cba1787cef9e29377c8fb793"},
+        "training": "trained independently from the same initial values and the same batch order as the paired T arm; never obtained by slicing a trained T"
+      }
+    },
+    "content_embedding_seed": {"D": "101 + 500*seed", "T/N": "404 + 500*seed"},
+    "phi_seed_D": "202 + 500*seed",
+    "init_order": [
+      "torch.manual_seed(seed) then the historical P3 core construction order",
+      "load only the fixed train-only SSL atom/bond/junction encoders (sha256 checked)",
+      "append w_s (exact zeros) and the arm content branch",
+      "content parameters overwritten from isolated torch.Generator streams (never the global / data-order RNG)"
+    ],
+    "parameter_cap": 500000,
+    "forbidden_inits": [
+      "any supervised best/final checkpoint of any previous round",
+      "any other trained checkpoint as a training start",
+      "re-seeding A/S per arm to mask an unfavourable init"
+    ]
+  },
+  "ssl": {
+    "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "load_keys": ["atom_encoder", "bond_encoder", "junction_encoder"],
+    "composer_reader_init": "fresh random init from torch.manual_seed(seed), not loaded from any checkpoint",
+    "shared_across_seeds": true,
+    "seed_1_note": "seed 1 reuses the same SSL encoder weights; this is NOT an independent SSL pretraining replicate"
+  },
+  "optimizer": {
+    "name": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "betas": [0.9, 0.999],
+    "eps": 1e-08,
+    "grad_clip": 5.0,
+    "parameter_groups": "one group, all parameters, nothing frozen",
+    "schedule": "500 outer updates linear warmup, then per-step cosine over the fixed 79*600 = 47,400 update horizon"
+  },
+  "schedule": {
+    "shuffle_seed_offset": 101,
+    "batch_size": 128,
+    "drop_last": false,
+    "steps_per_epoch": 79,
+    "epochs": 600,
+    "outer_updates": 47400,
+    "warmup_updates": 500,
+    "valid_every_epoch": true,
+    "valid_batch_size": 256,
+    "eval_train_batch_size": 256,
+    "selection": "min full-valid MAE, strict <, ties keep the earlier epoch; a single checkpoint per arm",
+    "early_stop": null,
+    "no_soup_ema_swa_averaging": true,
+    "no_epoch_reduction": "the horizon is fixed at 600 epochs; if a measured epoch time projects past the per-arm hard stop the arm is NOT shortened, the round stops and reports the cost (a shortened candidate would be incomparable to the full D arm)"
+  },
+  "time_plan": {
+    "timing_epochs": 4,
+    "timing_includes": "T/N contraction, backward, full valid, logging",
+    "per_arm_hard_stop_seconds": 3600,
+    "hard_budget_gpu_hours_total": 6,
+    "regime": "res (a100-2, process backend), res-gpu0 / res-gpu1 only, one job per GPU",
+    "stages": {
+      "A": "T seed0 + D seed0 in parallel (2 GPU-h ceiling)",
+      "B": "T seed1 + D seed1 in parallel, only if A passes",
+      "C": "N seed0 + N seed1 in parallel, only if B repeats the direction"
+    }
+  },
+  "stage_gates": {
+    "pre_registered": true,
+    "stage_A_all_required": [
+      "best_valid(T,s0) <= best_valid(D,s0) - 0.003",
+      "best_valid(T,s0) <= 0.075",
+      "best20_window_median(T,s0) < best20_window_median(D,s0) AND tail100_median(T,s0) < tail100_median(D,s0) (support from a 20-epoch sliding median, not one isolated minimum)"
+    ],
+    "stage_B_repeat_rule": "best_valid(T,s1) < best_valid(D,s1) AND best20_window_median(T,s1) < best20_window_median(D,s1). Both required. If either is not satisfied the direction did not repeat: stop, report the instability, do not run stage C and do not substitute the better seed.",
+    "stage_C": "N seed0 and N seed1 with the paired T init hash and the paired T batch-order hashes",
+    "no_threshold_changes_after_data": true,
+    "these_are_purchase_gates_not_significance_tests": true
+  },
+  "metrics": {
+    "primary": "full valid MAE with every molecule retained",
+    "per_arm_seed": ["best-valid MAE", "best epoch", "eval-mode train MAE at best", "final-valid MAE", "best 20-epoch sliding-median value and window end", "tail-100 median", "full valid curve", "parameters", "wall seconds", "GPU-hours", "peak GPU memory"],
+    "paired_contrasts": ["same-seed T-D", "same-seed T-N when N is run"],
+    "paired_bootstrap_note": "a bootstrap over molecules describes molecular sampling uncertainty only; it is not a cross-seed training-variability estimate",
+    "diagnostics": [
+      "radius-2 seen/unseen x ordinary/tail groups with n, MAE and contribution to overall MAE",
+      "for unseen content combinations: whether their atom categories and bond types already appeared in train",
+      "concentration of the delta on single extreme molecules (leave-one-out as a diagnostic only, never altering the main number)",
+      "T vs N representation difference and post-training collapse diagnostics (q entropy, K spread, phi spread)"
+    ],
+    "group_source": "tracks/structural-sufficiency/zinc_restricted_adaptation_v1/analysis/reference_preds_valid.csv (existing audited content-key aligned radius-2 flag; y > -3 = ordinary)"
+  },
+  "reference": {
+    "note": "descriptive context only; this round re-trains D in the same session and does not reuse any previous prediction as an arm",
+    "LF_Dense_s0_previous_round": {"parameters": 449601, "valid_mae": 0.078613, "valid_mae_epoch": 455, "train_mae_at_best": 0.00741, "final_valid_mae": 0.079964, "test_mae_not_used_here": 0.070579},
+    "P3B_s0": {"parameters": 413505, "valid_mae": 0.076223754},
+    "historical_same_config_valid_drift": 0.003
+  },
+  "checks": {
+    "gate_file": "analysis/cpu_checks.json",
+    "required": [
+      "vectorised T/N == independent float64 enumeration",
+      "root-preserving relabelling invariance and occurrence-order invariance",
+      "H1 vs H2 structural witness (T separates, N identical) under one pre-fixed non-degenerate parameter point",
+      "pure star T == N",
+      "root/non-root/bond-type paths, padding silence, isolated-node unit sum",
+      "optimiser coverage and q/K/phi gradients after the port opens (branch gradient 0 at W_s = 0 is expected)",
+      "D init/forward/partial-epoch identity with zinc_local_factorization_v1 arm D, T/N init identity, checkpoint reload, cache digests",
+      "parameter counts 449,601 / 451,777 / 451,777, 79*600 schedule, identical batch order per seed"
+    ],
+    "scope": "implementation consistency and the local distinction property only"
+  }
+}
