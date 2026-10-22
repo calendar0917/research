@@ -1,0 +1,67 @@
+{
+  "protocol": "zinc-structural-object-tokens-v1",
+  "date": "2026-10-23",
+  "base_commit": "5255cda",
+  "track": "structural-sufficiency",
+  "data": {
+    "dataset": "official PyG ZINC subset",
+    "train": 10000,
+    "valid": 1000,
+    "test": 1000,
+    "loss": "raw-y L1",
+    "selection": "full valid every epoch, strict <, ties keep earlier epoch"
+  },
+  "shared": {
+    "seed": 0,
+    "batch_size": 128,
+    "drop_last": false,
+    "steps_per_epoch": 79,
+    "warmup_updates": 500,
+    "peak_lr": 0.001,
+    "min_lr": 0.00001,
+    "grad_clip": 5.0,
+    "optimizer": "AdamW",
+    "schedule": "per-step linear warmup then cosine",
+    "early_stop": null,
+    "ssl_encoder": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+    }
+  },
+  "arm_A": {
+    "candidate": "A_joint_BF",
+    "parameters": 447505,
+    "init": "P3 core seed-0 order + train-only SSL atom/bond/junction encoders + BF modules (w_s zero)",
+    "weight_decay": 0.00001,
+    "lr_groups": 1,
+    "epochs": 600,
+    "updates": 47400,
+    "timing_epochs": 4,
+    "time_guard_seconds": 3600,
+    "reuse": "bf_data (S3/S4/F4, canonical key, collate), bf_models (graph, phi, w_s)",
+    "epoch0_candidate": true
+  },
+  "arm_B": {
+    "candidate": "B_object_tokens",
+    "parameters": 470469,
+    "weight_decay": 0.0001,
+    "init": "train-only SSL atom encoder only; everything else seed-0 random",
+    "width": 96,
+    "heads": 4,
+    "blocks": 4,
+    "ffn": 192,
+    "dropout": {"encoder_content": 0.0, "transformer_reader": 0.05},
+    "reader": [612, 96, 48, 1],
+    "token_types": ["A", "S3", "S4", "F4", "C"],
+    "cycle_lengths": [3, 4, 5, 6, 7, 8],
+    "max_epochs": 600,
+    "min_learning_epochs": 300,
+    "timing_epochs": 4,
+    "budget_seconds": 2400,
+    "reserve_seconds": 120,
+    "speed_margin": 1.15,
+    "epoch_formula": "E = min(600, floor((2400 - used - 120) / (1.15 * t_epoch))) // 10 * 10",
+    "reuse": "ad cache (raw108 atom feat + global33), P3 atom encoder structure/SSL weights"
+  },
+  "test_policy": "terminal, one descriptive read per arm after its own freeze; historically exposed split"
+}
