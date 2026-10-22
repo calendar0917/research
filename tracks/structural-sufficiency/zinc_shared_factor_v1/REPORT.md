@@ -55,10 +55,11 @@
 为进预算做了**不改变数学定义**的实现优化（提交 `b145428`、`606ec03`、`2e4c5db`）：
 按长度缓存的静态索引计划（只缓存结构/索引，不缓存任何学习表示）、通道前置布局、
 `index_select` 取代 expanded`gather`、只计算被请求的 mode、把 `Σ_t log q` 折叠成一次 matmul。
-等价性证据：优化前后 `cpu_checks.json` 的**检查数值除浮点末位外完全不变**，17 个单测与 7/7
-检查均通过，epoch 级 valid 曲线与优化前逐位一致（0.686550/0.714362 → 0.686550/0.714414，
-末位差异来自 matmul 求和顺序）。效果：T 从 5.84 s/epoch 降到 3.6 s/epoch
-（投影 4152 s → 2642 s，`plan.json` 记录 `feasible=True`），600 epochs 未被缩短。
+等价性证据：优化前后 `cpu_checks.json` 的**检查数值除浮点末位外完全不变**（17 个单测 + 7/7
+检查通过），2-epoch smoke 的 valid 曲线在第 1 个 epoch 完全相同（0.686550），第 2 个 epoch
+只在第 5 位有效数字之后不同（0.714362 → 0.714414），差异来自 matmul 取代逐项加法后的求和顺序。
+效果：T 从 5.84 s/epoch 降到 3.6 s/epoch（投影 4152 s → 2699 s，`plan.json` 记录
+`feasible=True`），600 epochs 未被缩短（实际训练 2208 s）。
 
 ## 3. 训练前检查（`analysis/cpu_checks.json`，7/7 PASS，绑定同一 config sha）
 
@@ -201,3 +202,5 @@ uv run python tracks/structural-sufficiency/zinc_shared_factor_v1/code/sf_analys
 checkpoint 与逐 epoch 曲线在远端 `runs/SF_{D,T}_s0/`（本地 `runs/` 被 `.gitignore` 排除，
 `freeze.json` 里记有 `best/final/last` 的 sha256，可用上面的命令重算：
 `best.pt` 重载后 D 0.081251953、T 0.077045402）。**未读 official test，也没有 test 预测。**
+远端 `res` 当前部署在本报告的提交上；远端 runner 生成的 `analysis/SF_*_s0/` 副本与仓库内版本
+相同，已被移到远端 `.remote-untracked-backup-20261022c/` 以免挡住下一次 `rr deploy`。
