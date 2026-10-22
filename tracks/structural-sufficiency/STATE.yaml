@@ -1181,3 +1181,68 @@ side_round_zinc_p3_sam_v1:
     Stop. No seed 1, rho grid, third arm, or third model. If this direction is reopened it needs a new
     pre-registration (scale-matched/adaptive rho or ASAM, 2-3 seeds) because the single-run drift this
     round measured is about 0.003, i.e. the same size as the effect a follow-up would need to resolve.
+
+# ---------------------------------------------------------------------------
+# zinc-composition-transfer-v1: look-ahead constraint (random vs structural
+# partition) + supervision-support intervention, two seeds, one frozen SSL
+# encoder. Appended section; the header above still points at phase2b.
+zinc_composition_transfer_v1:
+  protocol_id: zinc-composition-transfer-v1
+  protocol: tracks/structural-sufficiency/zinc_composition_transfer_v1/PROTOCOL.md
+  report: tracks/structural-sufficiency/zinc_composition_transfer_v1/REPORT.md
+  status: COMPLETE
+  question: >-
+    (i) Does an explicit cross-group update constraint (one-step look-ahead on a source/query
+    split) change generalisation, and does a structure-derived split beat a random one?
+    (ii) Does the supervised label support of rare local environments change error on
+    molecules carrying exactly those environments?
+  answer_short: >-
+    The look-ahead constraint helps a little (W20/T100 -0.0009..-0.0038) but a random split is as
+    good as the structural one, so it is a general training-constraint effect, not a structure
+    mechanism. Label support for rare local environments is a large lever (Q_target 0.116-0.124
+    -> 0.082, DiD -0.033/-0.043). The 0.05x test target was not reached and the official test
+    was NOT opened.
+  verdict: NO_TARGET_PROGRESS__TRAINING_CONSTRAINT_NOT_STRUCTURAL__SUPPORT_MATTERS
+  verdict_basis:
+    - "R-E W20: -0.00172 (s0), -0.00178 (s1); T100 -0.00172 / -0.00172; kappa=0.4 escalation -0.0038 (s0) but -0.0016 (s1), so no dose-response"
+    - "S-R W20: +0.00088 (s0), -0.00009 (s1): sign-inconsistent, no structural added value"
+    - "unseen+ordinary group (39% of valid MAE) unchanged in every arm: 0.132-0.142"
+    - "per-molecule: median delta AE ~0, sign test p 0.30-0.92 at epoch 600; gain concentrated in high-|y| tail"
+    - "support: Q_target 0.0823/0.0821 (plus) vs 0.1243/0.1159 (minus); key-level CI excludes 0; background unchanged"
+  checks:
+    file: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/cpu_checks.json
+    all_pass: true
+    count: 6
+    fast_unit_tests: 7
+    key: "alpha=0 == ERM (loss diff 0.0, grad 2.4e-7); toy finite-difference 5.6e-4 vs detached variant 0.90; init hashes identical per seed; batch-union hashes identical over 600 epochs; split-strength gate PASS (delta d_sym 0.078, delta d_elig 0.152)"
+  kappa:
+    calibration: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/kappa_calibration.json
+    primary: 0.1
+    secondary_A1: 0.4
+    note: "kappa=0.1 is the only admissible grid point and sits at the floor of the declared displacement window; the escalation to 0.4 was pre-declared before any meta arm started"
+  budget:
+    file: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/budget.json
+    gpu_hours_cap: 8.0
+    gpu_hours_used_job_wall: 7.667
+    gpu_hours_trainer_measured: 7.458
+    wall_clock_hours: 5.1
+    includes_failures: true
+  artifacts:
+    main_table: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/main_table.md
+    groups: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/groups.md
+    support: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/support.md
+    summary: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/summary.json
+    per_molecule: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/valid_per_molecule.csv
+    run_records: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/run_records.json
+    jobs: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/rr_jobs.json
+  non_claims:
+    - "no test number: the official test split was not opened, so nothing is known about test MAE"
+    - "one shared seed-0 SSL encoder; two supervised seeds only"
+    - "one structural partition construction (radius-1/2 content keys, 2-16 batch support, <=256 greedy swaps)"
+    - "the support result is within-key: donors and queries share radius-2 keys by construction"
+    - "1e-3 valid differences on this split are fragile; row 172 alone carries 7-10% of the MAE"
+  next_action: >-
+    If MLDG-style look-ahead is retried: constant (not lr-coupled) alpha, smooth inner loss,
+    kappa 0.3-0.5, 2-3 seeds, judged on W20/T100. For the 0.05x target the binding constraint is
+    the unseen+ordinary group, which no update constraint moved; that needs a coverage mechanism
+    and a separate pre-registered round.

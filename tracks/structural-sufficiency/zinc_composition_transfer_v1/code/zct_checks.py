@@ -267,7 +267,10 @@ def check_toy_meta_gradient() -> dict:
         "detach_variant_max_abs_diff_vs_finite_difference": det_err,
         "fd_scale": scale,
         "alpha": alpha,
-        "note": "smooth MSE inner loss on purpose: the real L1 inner loss has an a.e. zero Hessian",
+        "note": ("smooth MSE inner loss on purpose: it makes the finite-difference check "
+                 "discriminating; the real L1 objective is piecewise linear in the prediction, so "
+                 "a detached first-order variant is indistinguishable from the exact gradient on "
+                 "most samples and a smooth toy objective is the sharper test"),
     }
 
 
@@ -320,14 +323,19 @@ def check_real_meta() -> dict:
     j_s = float(ZT.meta_grads(model, params, bs, ts2, bq, tq, alpha)[1])
     tq2 = tq + 1.0
     j_q = float(ZT.meta_grads(model, params, bs, ts, bq, tq2, alpha)[1])
-    # L1 inner Hessian is a.e. zero: the exact meta gradient minus the
-    # "query at theta" gradient equals only the clip-scalar term
+    # How far the look-ahead gradient is from the no-look-ahead gradient on the
+    # same union (both halves at theta).  The L1 *loss* is piecewise linear in the
+    # prediction, but its second derivative w.r.t. parameters still carries the
+    # network curvature scaled by the residual sign, so this difference is not
+    # reducible to the clip scalar alone.
     pred_q0 = torch.func.functional_call(model, params, (bq,))
     lq0 = F.l1_loss(pred_q0.view(-1), tq.view(-1))
     j_naive = 0.5 * F.l1_loss(torch.func.functional_call(model, params, (bs,)).view(-1), ts.view(-1)) \
         + 0.5 * lq0
     g_naive = torch.autograd.grad(j_naive, list(params.values()))
     naive_diff = max(float((a - b).abs().max()) for a, b in zip(grads, g_naive))
+    naive_norm = float(torch.sqrt(sum((g * g).sum() for g in g_naive)))
+    delta_norm = float(torch.sqrt(sum(((a - b) ** 2).sum() for a, b in zip(grads, g_naive))))
     return {
         "status": "PASS" if (finite and unchanged and j_s != j0 and j_q != j0) else "FAIL",
         "meta_grads_all_finite": finite,
@@ -339,10 +347,13 @@ def check_real_meta() -> dict:
         "j_value": j0,
         "inner_grad_norm": float(gnorm),
         "clip_scalar": float(c),
-        "max_abs_diff_meta_vs_query_at_theta": naive_diff,
-        "note": ("for an L1 inner loss the inner Hessian vanishes almost everywhere, so the exact "
-                 "meta gradient differs from 'query at theta' only through the clip scalar and the "
-                 "shifted evaluation point; both are present in this number"),
+        "max_abs_diff_meta_vs_no_lookahead": naive_diff,
+        "no_lookahead_grad_norm": naive_norm,
+        "relative_perturbation_norm": delta_norm / max(naive_norm, 1e-12),
+        "note": ("pipeline sanity number on one real batch of the *untrained* build at the kappa=1 "
+                 "probe alpha; it mixes the clip scalar, the shifted evaluation point and the "
+                 "network curvature term. The trained-regime strength is measured separately by "
+                 "probe_epochs.json (gradient angle, displacement, parameter step)"),
     }
 
 

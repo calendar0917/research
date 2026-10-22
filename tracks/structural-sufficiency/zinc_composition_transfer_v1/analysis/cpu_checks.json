@@ -53,7 +53,7 @@
     "detach_variant_max_abs_diff_vs_finite_difference": 0.8966609239578247,
     "fd_scale": 0.6592273712158203,
     "alpha": 0.7,
-    "note": "smooth MSE inner loss on purpose: the real L1 inner loss has an a.e. zero Hessian"
+    "note": "smooth MSE inner loss on purpose: it makes the finite-difference check discriminating; the real L1 objective is piecewise linear in the prediction, so a detached first-order variant is indistinguishable from the exact gradient on most samples and a smooth toy objective is the sharper test"
   },
   "real_meta": {
     "status": "PASS",
@@ -66,15 +66,27 @@
     "j_value": 1.6301558017730713,
     "inner_grad_norm": 27.342586517333984,
     "clip_scalar": 0.1828649342060089,
-    "max_abs_diff_meta_vs_query_at_theta": 1.6477994918823242,
-    "note": "for an L1 inner loss the inner Hessian vanishes almost everywhere, so the exact meta gradient differs from 'query at theta' only through the clip scalar and the shifted evaluation point; both are present in this number"
+    "max_abs_diff_meta_vs_no_lookahead": 1.6477994918823242,
+    "no_lookahead_grad_norm": 16.759435653686523,
+    "relative_perturbation_norm": 0.8550419147147457,
+    "note": "pipeline sanity number on one real batch of the *untrained* build at the kappa=1 probe alpha; it mixes the clip scalar, the shifted evaluation point and the network curvature term. The trained-regime strength is measured separately by probe_epochs.json (gradient angle, displacement, parameter step)"
   },
   "keys_and_masks": {
     "k1_is_function_of_k2": true,
     "n_key1": 489,
     "n_key2": 12583,
-    "old_group_reproduction_max_abs_diff": 0.9230769230769231,
-    "partition_masks": [],
+    "old_group_reproduction_max_abs_diff": 4.761904759398305e-10,
+    "partition_masks": [
+      {
+        "file": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_composition_transfer_v1/cache/partitions_s0.npz",
+        "seed": 0,
+        "ok": true,
+        "delta_d_sym": 0.0790452070258496,
+        "delta_d_elig": 0.1538626586869256,
+        "mean_r1_R": 0.03177292580450802,
+        "mean_r1_S": 0.03694645104439987
+      }
+    ],
     "status": "PASS"
   },
   "overall": "PASS"
