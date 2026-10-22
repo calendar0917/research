@@ -224,7 +224,7 @@ seed 0). Same fork, same 600 epochs, same recipe; only κ changed.
 | `R`@0.4 − `E` (s0) | −0.003017 | −0.003835 | −0.003831 | −0.00302 [−0.00811, +0.00273] | −0.0023 | 53.5% | 0.029 |
 | `R`@0.4 − `R`@0.1 (s0) | −0.001677 | −0.002113 | −0.002112 | −0.00168 [−0.00394, +0.00081] | −0.0019 | 53.1% | 0.054 |
 | `S`@0.4 − `E` (s0) | −0.001186 | −0.001419 | −0.001422 | −0.00119 [−0.00672, +0.00506] | −0.0022 | 53.4% | 0.034 |
-| `S`@0.4 − `S`@0.1 (s0) | −0.000575 | −0.000559 | −0.000559 | −0.00113 [−0.00381, +0.00159] | −0.0001 | 50.5% | 0.78 |
+| `S`@0.4 − `S`@0.1 (s0) | −0.001130 | −0.000575 | −0.000559 | −0.00113 [−0.00381, +0.00159] | −0.0001 | 50.5% | 0.78 |
 | `R`@0.4 − `E` (s1) | −0.000442 | −0.001569 | −0.001566 | −0.00044 [−0.00311, +0.00234] | +0.0002 | 49.7% | 0.87 |
 | `R`@0.4 − `R`@0.1 (s1) | +0.001048 | +0.000214 | +0.000153 | +0.00105 [−0.00313, +0.00746] | −0.0021 | 53.1% | 0.054 |
 
@@ -233,7 +233,7 @@ Reading: the escalation fired in seed 0 and **did not reproduce in seed 1**. At
 −0.0016…−0.0018 it already had at κ = 0.1. The per-molecule distribution agrees:
 s0 shifts (median −0.0023, sign test p = 0.029), s1 does not (median +0.0002,
 p = 0.87). The structural arm barely moves between κ = 0.1 and κ = 0.4
-(+0.0006…+0.0014). So the larger seed-0 number is a seed-specific fluctuation, not
+(−0.0006 on W20, against −0.0021 for the random split). So the larger seed-0 number is a seed-specific fluctuation, not
 a dose-response, and the pre-declared 0.003 practical scale is not met
 reproducibly. The seed-1 confirmation is why this is stated as a non-result rather
 than as a gain.
