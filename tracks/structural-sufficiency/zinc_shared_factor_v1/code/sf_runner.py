@@ -50,6 +50,10 @@ import ad_data as D  # noqa: E402
 import sf_core as SC  # noqa: E402
 
 ARMS = {"D": "SF-Dense", "T": "SF-SharedState", "N": "SF-IndependentCopies"}
+# the frozen config declares the P3 carrier for seed 0 only (a scalar); later seeds were
+# not part of that pre-registration and take the value from the supplement file.
+SUPPLEMENT_HASHES = (SC.EXP.parent / "zinc_shared_factor_supplement_v1" / "configs"
+                     / "supplement_hashes.json")
 PER_ARM_HARD_STOP_SECONDS = 3600.0
 RESERVE_SECONDS = 120.0
 
@@ -65,6 +69,25 @@ def paths(arm: str, seed: int, tag: str = "") -> dict[str, Path]:
 # ---------------------------------------------------------------------------
 # gate
 # ---------------------------------------------------------------------------
+
+
+def declared_carrier_hash(cfg: dict, seed: int) -> tuple[str, str]:
+    """Declared P3-carrier hash for one seed, plus which artifact declared it.
+
+    ``configs/sf_atomic_v1.json`` pins the carrier as a single scalar, which is the
+    seed-0 value. That file is frozen, so seeds registered later (the supplement
+    study) declare their carrier hash in the supplement pre-registration file
+    instead. Both sources are hashes of the *initial* carrier, recorded before
+    training.
+    """
+    declared = cfg["model"]["carrier_initial_state_sha256"]
+    if isinstance(declared, dict):
+        return str(declared[str(seed)]), "config"
+    if int(seed) == 0:
+        return str(declared), "config"
+    doc = C.read_json(SUPPLEMENT_HASHES)
+    return str(doc["carrier_initial_state_sha256"][str(seed)]), str(
+        SUPPLEMENT_HASHES.relative_to(C.REPO))
 
 
 def gate(cfg: dict, norm: dict, arm: str, seed: int, device) -> dict:
@@ -89,8 +112,10 @@ def gate(cfg: dict, norm: dict, arm: str, seed: int, device) -> dict:
         raise RuntimeError(f"{arm}: init state hash {hashes['init_state_sha256']} != config")
     if hashes["content_state_sha256"] != str(expected["content_state_sha256"][str(seed)]):
         raise RuntimeError(f"{arm}: content state hash != config")
-    if hashes["public_state_sha256"] != cfg["model"]["carrier_initial_state_sha256"]:
-        raise RuntimeError(f"{arm}: public state hash != declared P3 carrier")
+    declared_carrier, carrier_source = declared_carrier_hash(cfg, seed)
+    if hashes["public_state_sha256"] != declared_carrier:
+        raise RuntimeError(f"{arm}: public state hash {hashes['public_state_sha256']} "
+                           f"!= declared P3 carrier {declared_carrier} ({carrier_source})")
     if not hashes["w_s_zero"]:
         raise RuntimeError(f"{arm}: W_s is not exactly zero")
     if info["ssl_encoders"]["sha256"] != cfg["ssl"]["sha256"]:
@@ -108,6 +133,7 @@ def gate(cfg: dict, norm: dict, arm: str, seed: int, device) -> dict:
         "cpu_checks_config_sha256": doc.get("config_sha256"),
         "arm": arm, "seed": int(seed), "parameters": int(info["parameters"]),
         "optimizer_covers_all": True, "ssl_sha256": info["ssl_encoders"]["sha256"],
+        "carrier_declared": declared_carrier, "carrier_declared_source": carrier_source,
         **hashes,
     }
 

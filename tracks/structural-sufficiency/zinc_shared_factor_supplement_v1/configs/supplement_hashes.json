@@ -1,0 +1,31 @@
+{
+  "_note": [
+    "Pre-registered per-seed P3-carrier hashes for zinc_shared_factor_supplement_v1.",
+    "The frozen config configs/sf_atomic_v1.json pins the carrier as a single scalar,",
+    "which is the seed-0 value; it was not changed (sha256 d1f6b67f...). Later seeds were",
+    "not part of that pre-registration, so sf_runner.gate reads the seed->carrier map here.",
+    "Values were computed from the frozen init procedure (same SSL checkpoint, same",
+    "LM.hash_tensors(public_state(model)) definition) and cross-checked against the",
+    "frozen per-seed init/content hashes in the config before any run: for seeds 0 and 1",
+    "and arms D/T/N the recomputed init and content hashes equal the config values.",
+    "They are declared BEFORE training and are not results."
+  ],
+  "protocol": "zinc-shared-factor-supplement-v1",
+  "created": "2026-10-22",
+  "frozen_config": {
+    "path": "tracks/structural-sufficiency/zinc_shared_factor_v1/configs/sf_atomic_v1.json",
+    "sha256": "d1f6b67fcd3339bedf0e278fbe09a5e2d57ac842d9b969465574a65123cdabc8"
+  },
+  "carrier_initial_state_sha256": {
+    "0": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+    "1": "750be5617519904b9cacf3df6168f29a50cf47cb2e8417ff620a8d477d0e3694"
+  },
+  "check": {
+    "definition": "LM.hash_tensors(LM.public_state(model)) == sf_core.init_hashes(model)['public_state_sha256']",
+    "identical_across_arms_within_seed": true,
+    "parameters_per_arm": {
+      "T": 451777,
+      "N": 451777
+    }
+  }
+}
