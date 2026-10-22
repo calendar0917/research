@@ -1,0 +1,149 @@
+{
+  "track": "zinc_local_factorization_v1",
+  "protocol": "zinc-local-factorization-v1",
+  "created": "2026-10-22",
+  "question": "With the P3 carrier, the rooted branching-fragment objects, the training data, the recipe and the horizon held fixed, does replacing the dense content MLP by a shared-factor low-order (rank 32, up to third order) combination of the same per-slot content improve finite-sample generalisation?",
+  "scope": {
+    "type": "local content-parameterisation comparison; not a new backbone, not a claim of new structural information",
+    "arms": ["D:DensePhi (content MLP 98-80-32)", "F:FactorizedPhi (shared A/B + role tables + z1/z2/z3 + 114-64-32)"],
+    "only_difference": "the local content function phi; carrier, objects, permutation average, aggregation, port, recipe, horizon and selection are shared",
+    "no_third_arm": true,
+    "no_ensemble_or_averaging": true,
+    "no_seed_1": true,
+    "no_rank_or_order_grid": true,
+    "no_extra_pretraining": true,
+    "official_test_status": "historically exposed benchmark; described once after the freeze, not a new blind test",
+    "test_used_for_selection": false
+  },
+  "data": {
+    "source": "official PyG ZINC subset=True",
+    "train": 10000,
+    "valid": 1000,
+    "test": 1000,
+    "loss": "raw-y L1",
+    "target_transform": "none (no clipping, reweighting or extra supervision)",
+    "normalization": "frozen P3 train-only global-33 mean/scale (analysis/norm.json of zinc_arch_discovery_v1)",
+    "pretraining": "frozen P3 train-only masked SSL encoders, no labels"
+  },
+  "objects": {
+    "module": "tracks/structural-sufficiency/zinc_branching_fragment_v1/code/bf_data.py",
+    "families": {"S3": "root + 3 distinct neighbours, 4 nodes", "S4": "root + 4 distinct neighbours, 5 nodes", "F4": "v-u plus two distinct w in N(u)\\{v}, 4 nodes"},
+    "content": "complete typed induced adjacency; atom category slots (5, vocab 28); 10 unordered pairs, 0 = no real edge, 1..3 = raw bond type; node_mask 5, pair_mask 10, family one-hot 3",
+    "root": "always slot 0; other real nodes may be permuted; padding after the real nodes",
+    "multiplicity": "one (root, family, actual node set) exactly once; equal content with different node sets keeps its count; families independent; empty family is the exact empty set",
+    "pattern_id": "static content-cache address only; never a learnable embedding; split-local, so cross-split work uses the content key",
+    "cache_content_sha256": {
+      "train": "ce643fdafba375f6c1689d942cc5c659e1e8224cab0893acf0d3e45857b80780",
+      "valid": "91e0e81b8977dc3127e674863683b08a382c934740632d8b8b5676ddc1266ed3"
+    },
+    "cache_note": "the .pt file sha256 in the previous round (287a26a9..., 8de445d1...) differs from a local rebuild by the embedded creation timestamp only; the payload digest above is byte-identical on both hosts",
+    "erratum": "root coverage is 56.62% (not 2.18%); high content coverage is not evidence of sufficient generalisation and is not re-audited here"
+  },
+  "permutation_average": {
+    "definition": "phi_bar(p) = mean over the (n-1)! root-preserving permutations of the real non-root slots of one shared phi, applied to atom and pair slots together",
+    "n_permutations": {"4_nodes": 6, "5_nodes": 24},
+    "weighting": "exact 1/K for the K real permutations, 0 on unused padding rows; a duplicate-row merge with exact weights must equal the full weighted average",
+    "status": "internal symmetry of one model, not an ensemble; each physical object still contributes one multiplicity unit and 6/24 permutations are not counted as objects",
+    "implementation": "static content-keyed index table, vectorised; phi is recomputed with autograd on every forward (no cached hidden states)"
+  },
+  "model": {
+    "carrier": "ad2_models.P3NullModel (encoders + Null grouping + group_composer + reader + global33)",
+    "carrier_parameters_expected": 413505,
+    "carrier_initial_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+    "port": "s_v (198) -> Linear(198,128,bias=False) W_s, zero-initialised; a_v = Linear128->96(SiLU(Linear108->128(raw108_v) + W_s s_v))",
+    "port_parameters": 25344,
+    "content_embeddings": {"E_atom": [28, 8], "E_pair": [4, 4], "parameters": 240},
+    "aggregation": "per root and family: occurrence-weighted mean(phi_bar) 32 + mean(phi_bar^2) 32 + log1p(true occurrence count) 1 + existence 1 = 66; three families = 198; mean_sq is taken after the permutation average; empty family is all zeros",
+    "arms": {
+      "D": {
+        "phi": "Linear 98->80 (bias) -> SiLU -> Linear 80->32 (bias); no dropout / LayerNorm / skip",
+        "phi_parameters": 10512,
+        "parameters_expected": 449601,
+        "initial_state_sha256": "466d94813f6343068525c3742d3a4a0b901739b4012dac5abb33753716de429e",
+        "phi_seed": 202
+      },
+      "F": {
+        "phi": "A: Linear 8->32 (bias) shared over atom slots; B: Linear 4->32 (bias) shared over pair slots; R_atom[5,32], R_pair[10,32] ~ Normal(0,0.1); f = mask*tanh(proj + role); channel-wise z1/z2/z3 over the m real fields; u = [z1,z2,z3,node_mask,pair_mask,family_onehot] (114); Linear 114->64 -> SiLU -> Linear 64->32; no dropout / LayerNorm / skip",
+        "phi_parameters": 10368,
+        "parameters_expected": 449457,
+        "initial_state_sha256": "b33982cda507aef21cfa8f0ca798668b3d3ed043d4d600ffe02101a953e62af8",
+        "phi_seed": 303,
+        "moments": {
+          "m": "sum(node_mask) + sum(pair_mask) over real fields (10 for 4-node, 15 for 5-node)",
+          "z1": "p1 / m",
+          "z2": "(p1^2 - p2) / (m(m-1)), zero if m < 2",
+          "z3": "(p1^3 - 3 p1 p2 + 2 p3) / (m(m-1)(m-2)), zero if m < 3",
+          "p1/p2/p3": "channel-wise sums of f, f^2, f^3 over the real fields (padding is exactly 0 and never in the denominator)"
+        },
+        "rank": 32,
+        "max_order": 3
+      }
+    },
+    "content_embedding_seed": 101,
+    "shared_embedding_initial_sha256": "1d454a3e05e8503c2a6d04e2fc175b365d085dba6ab2ebcad0a7bdc15e20d6d7",
+    "parameter_cap": 500000,
+    "forbidden_inits": [
+      "supervised P3B best.pt / final.pt",
+      "A_joint_BF or any other trained checkpoint as a training start",
+      "bf_models.build_model's supervised P3B loading path"
+    ],
+    "ssl": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "load_keys": ["atom_encoder", "bond_encoder", "junction_encoder"],
+      "composer_reader_init": "fresh random init from torch.manual_seed(0), shared by both arms"
+    }
+  },
+  "optimizer": {
+    "name": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "betas": [0.9, 0.999],
+    "eps": 1e-08,
+    "grad_clip": 5.0,
+    "parameter_groups": "one group, all parameters, nothing frozen",
+    "schedule": "500 outer updates linear warmup, then per-step cosine over the fixed 79*E-update horizon"
+  },
+  "schedule": {
+    "seed": 0,
+    "shuffle_seed_offset": 101,
+    "batch_size": 128,
+    "drop_last": false,
+    "steps_per_epoch": 79,
+    "epochs": 600,
+    "outer_updates": 47400,
+    "warmup_updates": 500,
+    "valid_every_epoch": true,
+    "valid_batch_size": 256,
+    "eval_train_batch_size": 256,
+    "selection": "min valid MAE, strict <, ties keep the earlier epoch",
+    "early_stop": null,
+    "no_soup_ema_swa_averaging": true,
+    "epoch_reduction_rule": "E=600 if 1.15*t_slow*600+120 <= 3600 s, otherwise E = min(600, 10*floor((3000/(1.15*t_slow))/10)); E<300 is a stop condition, not a licence for a longer job"
+  },
+  "time_plan": {
+    "timing_epochs": 4,
+    "timing_includes": "permutation average, both moment orders, backward, full valid, logging",
+    "formal_reset": "rebuild from the same seeds (public core, shared embeddings, arm phi), new optimiser, new row-order generator",
+    "target_minutes_per_arm": [30, 60],
+    "per_arm_hard_stop_minutes": 60,
+    "parallel": "D on res-gpu0, F on res-gpu1, one committed revision"
+  },
+  "reference": {
+    "P3B_s0": {"parameters": 413505, "valid_mae": 0.076223754, "test_mae": 0.069864841},
+    "L_s0": {"parameters": 494193, "valid_mae": 0.078537152, "test_mae": 0.066266555},
+    "DBT_s0": {"parameters": 452523, "valid_mae": 0.077768402, "test_mae": 0.069401494},
+    "A_joint_BF_s0": {"parameters": 447505, "valid_mae": 0.076731, "test_mae": 0.070067},
+    "P3_Control_s0_2026_10_22": {"parameters": 413505, "valid_mae": 0.079588262, "test_mae": 0.072688588},
+    "note": "reference rows are descriptive only, reused from saved predictions/runs, not retrained; only F-D is a same-round contrast"
+  },
+  "groups": {
+    "definition_source": "tracks/structural-sufficiency/zinc_restricted_adaptation_v1/analysis/reference_preds_{valid,test}.csv",
+    "unseen": "existing audited content-key aligned radius-2 signature flag",
+    "ordinary": "y > -3",
+    "tail": "y <= -3",
+    "usage": "post-hoc description only; no new thresholds, no gating",
+    "row172_and_extremes_in_main_numbers": true
+  }
+}
