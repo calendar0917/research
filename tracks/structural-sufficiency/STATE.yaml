@@ -1042,3 +1042,81 @@ round_zinc_restricted_adaptation_v1:
     - "official test is historically exposed; not a blind test"
     - "same-epoch DBT curve uses a different cosine; not a causal freeze estimate"
     - "no 0.05x evidence and no claim that preserving SSL representations is generally harmful"
+
+side_round_zinc_branching_fragment_v1:
+  status: COMPLETE_NEGATIVE
+  protocol: zinc-branching-fragment-v1
+  design: tracks/structural-sufficiency/zinc_branching_fragment_v1/DESIGN.md
+  report: tracks/structural-sufficiency/zinc_branching_fragment_v1/REPORT.md
+  question: >-
+    With the P3 body and recipe unchanged, does explicitly providing joint typed
+    information about short rooted branching fragments (S3/S4/F4) improve
+    single-model generalisation on official ZINC?
+  model:
+    candidate: P3-BF
+    parameters_total: 447505
+    parameters_inherited: 413505
+    parameters_new: 34000
+    init: "P3B best.pt sha256 4c379c93214c003a6c58fd4add4a64ecb4fe23603233738fab18f3885abdc34f, epoch 377"
+    injection: "SiLU(W_x raw108 + b + W_s s_v), W_s zero-init, s_v 198-dim per-root family stats"
+  representation:
+    families: [S3, S4, F4]
+    train_occurrences: 333376
+    unique_patterns: 1280
+    raw108_multi_root_fraction: 0.98197
+    subdivided_groups: 2524
+    subdivided_roots: 5048
+    fraction_roots_subdivided: 0.02179
+    fraction_molecules_subdivided: 0.9989
+    pure_content_subdivisions: 1735
+    pure_multiplicity_subdivisions: 4
+    valid_full_signature_unseen_fraction: 0.01196
+    valid_root_any_unseen_fraction: 0.00126
+    ab_collision_caveat: "root raw108 collision only; whole-graph junction multisets differ, so not proof that full P3 is blind"
+  run:
+    seed: 0
+    planned_epochs: 600
+    epochs_run: 100
+    planned_updates: 47400
+    updates_run: 7900
+    steady_epoch_seconds: 2.4191
+    formal_train_seconds: 217.4
+    gpu_job_wall_seconds: 232.2
+    gpu_hours: 0.0645
+    early_stop: "declared rule fired at epoch 100; 0.0005 cumulative improvement over epoch0 not reached; remaining 500 epochs not run"
+  results:
+    best_valid: 0.076223756
+    best_valid_stored: 0.076223753
+    best_epoch: 0
+    best_is_epoch0: true
+    eval_train_at_best: 0.014679794
+    final_valid: 0.078362564
+    final_eval_train: 0.005625982
+    test_mae: 0.069864822
+    p3b_function_max_abs_diff_test: 4.29e-06
+    test_delta_vs_p3b: {mean: -1.90e-08, ci95: [-4.19e-08, 3.05e-09]}
+    test_delta_vs_l: {mean: 3.598e-03, ci95: [-1.026e-03, 8.046e-03]}
+    test_delta_vs_dbt: {mean: 4.633e-04, ci95: [-4.362e-03, 5.308e-03]}
+  fixed_four_groups:
+    table: tracks/structural-sufficiency/zinc_branching_fragment_v1/analysis/groups.md
+    result: "identical to P3B within 1e-7 in every group on valid and test; row 172 kept"
+  checks:
+    file: tracks/structural-sufficiency/zinc_branching_fragment_v1/analysis/cpu_checks.json
+    all_pass: true
+    count: 13
+    zero_new_columns_parity_max_abs_diff: 0.0
+    parameters_in_optimizer: 447505
+  zero_five_x_evidence: NONE
+  next_action: >-
+    Stop. No seed 1, arm, epoch extension, LR sweep, or second candidate. If this
+    direction is revisited, the only informative purchase is a matched P3
+    continuation control (same two-group LR schedule, same early stop, no branch)
+    to separate optimisation damage from useless information; that requires a new
+    pre-registration. Also revisit the 100-epoch patience vs 600-epoch cosine
+    before another fine-tuning round.
+  non_claims:
+    - "best is epoch 0 (inherited P3B); new training produced no better checkpoint"
+    - "test is numerically identical to P3B, not new evidence"
+    - "early stop at 100/600 means the full schedule's recovery behaviour is unknown"
+    - "A/B example is a root-descriptor collision; it does not prove P3-blindness"
+    - "no matched P3 continuation control, so information-useless vs optimisation-damage is unresolved"

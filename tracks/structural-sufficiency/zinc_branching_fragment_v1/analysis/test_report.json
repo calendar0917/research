@@ -1,0 +1,333 @@
+{
+  "freeze": {
+    "protocol": "zinc-branching-fragment-v1",
+    "candidate": "P3-BF",
+    "seed": 0,
+    "git_commit": "784d0ada9d50ca6c9e8fe26be7e88afc82486d5f",
+    "best_sha256": "298246c65ecb3020271c0cc83883123f977b8ee0aa601ffd2568205d189c0b47",
+    "best_epoch": 0,
+    "best_valid_mae": 0.07622375595563789,
+    "best_valid_mae_stored": 0.07622375264385482,
+    "best_is_epoch0": true,
+    "epoch0_valid": 0.07622375071787973,
+    "init_checkpoint": {
+      "path": "tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/xBssl_P3N_s0/best.pt",
+      "sha256": "4c379c93214c003a6c58fd4add4a64ecb4fe23603233738fab18f3885abdc34f",
+      "epoch": 377,
+      "valid_mae": 0.07622375113883754
+    },
+    "plan_epochs": 600,
+    "epochs_run": 100,
+    "total_updates": 47400,
+    "actual_global_steps": 7900,
+    "stopped_early": true,
+    "params": 447505,
+    "recipe": {
+      "epochs": 100,
+      "planned_epochs": 600,
+      "steps_per_epoch": 79,
+      "updates": 47400,
+      "actual_global_steps": 7900,
+      "warmup_updates": 200,
+      "peak_lrs": {
+        "inherited_p3": 0.0001,
+        "new": 0.001
+      },
+      "min_lrs": {
+        "inherited_p3": 1e-06,
+        "new": 1e-05
+      },
+      "weight_decay": 1e-05,
+      "grad_clip": 5.0,
+      "dropout": 0.0,
+      "batch_size": 128,
+      "loss": "raw-y L1",
+      "valid_every_epoch": true,
+      "early_stop": {
+        "min_epochs": 100,
+        "improvement": 0.0005,
+        "patience": 100,
+        "triggered": true
+      }
+    },
+    "model_info": {
+      "source": "tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/xBssl_P3N_s0/best.pt",
+      "sha256": "4c379c93214c003a6c58fd4add4a64ecb4fe23603233738fab18f3885abdc34f",
+      "checkpoint_epoch": 377,
+      "checkpoint_valid_mae": 0.07622375113883754,
+      "missing_new_keys": [
+        "branch.atom_emb.weight",
+        "branch.pair_emb.weight",
+        "branch.phi.lins.0.bias",
+        "branch.phi.lins.0.weight",
+        "branch.phi.lins.1.bias",
+        "branch.phi.lins.1.weight",
+        "w_s.weight"
+      ],
+      "unexpected_keys": [],
+      "w_s_zero": true,
+      "seed": 0,
+      "parameters": 447505,
+      "parameters_breakdown": {
+        "encoders.atom_encoder": 26336,
+        "encoders.bond_encoder": 62816,
+        "encoders.junction_encoder": 112896,
+        "group_composer": 62976,
+        "reader": 148481,
+        "w_s": 25344,
+        "branch": 8656,
+        "total": 447505
+      },
+      "parameters_inherited": 413505,
+      "parameters_new": 34000,
+      "parameter_cap": 500000,
+      "all_require_grad": true
+    },
+    "caches": {
+      "train": "287a26a966bbf369a0e367263a5405cc65031e7e6dc2f3857a66a2039ac922fe",
+      "valid": "8de445d17910926bd03820a9d9b2340d656ba71e1e529a69253e2df805266ec0"
+    },
+    "data": {
+      "train_label_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+      "valid_label_sha256": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f"
+    },
+    "test_policy": "one descriptive read after this freeze; no test-driven change",
+    "frozen_at": "2026-10-22T10:14:45+0800"
+  },
+  "best_sha256": "298246c65ecb3020271c0cc83883123f977b8ee0aa601ffd2568205d189c0b47",
+  "best_epoch": 0,
+  "best_valid_mae": 0.07622375264385482,
+  "test": {
+    "mae": 0.06986482167523354,
+    "n": 1000,
+    "test_label_sha256": "66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768"
+  },
+  "test_prediction_path": "tracks/structural-sufficiency/zinc_branching_fragment_v1/runs/bf_s0/predictions/test_best.npz",
+  "test_prediction_sha256": "d2353ef109272a5bb99810104c3f09606fd9eafd223fabdda83922972c29a97b",
+  "caches": {
+    "ad_test": {
+      "path": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_test.pt",
+      "sha256": "f7b9341ad2e58c5c5d81e44d966f028f91ba7cfa6649297f2ede8f0a536065d3",
+      "size_bytes": 85601708
+    },
+    "bf_test": {
+      "path": "tracks/structural-sufficiency/zinc_branching_fragment_v1/cache/bf_test.pt",
+      "sha256": "0b7bc11bb7747507e024532e746d8bd83377868f124a19310408e202469a5506",
+      "size_bytes": 1041314,
+      "meta": {
+        "split": "test",
+        "families": [
+          "S3",
+          "S4",
+          "F4"
+        ],
+        "object_source": {
+          "source": "rebuilt_from_official_pyg",
+          "path": null,
+          "sha256": null
+        },
+        "n_molecules": 1000,
+        "n_atoms": 23117,
+        "n_entries": 31299,
+        "n_unique_patterns": 616,
+        "unique_patterns_by_family": {
+          "S3": 167,
+          "S4": 33,
+          "F4": 416
+        },
+        "occurrences_by_family": {
+          "S3": 8336,
+          "S4": 344,
+          "F4": 25008
+        },
+        "nonempty_roots_by_family": {
+          "S3": 7304,
+          "S4": 344,
+          "F4": 18057
+        },
+        "empty_root_fraction_by_family": {
+          "S3": 0.6840420469784141,
+          "S4": 0.985119176363715,
+          "F4": 0.2188865337197733
+        },
+        "max_objects_per_root_by_family": {
+          "S3": 4,
+          "S4": 1,
+          "F4": 7
+        },
+        "max_objects_per_graph_by_family": {
+          "S3": 22,
+          "S4": 3,
+          "F4": 66
+        },
+        "max_entries_per_molecule": 69,
+        "definition": "exhaustive rooted branching fragments S3 (root+3 neighbours), S4 (root+4 neighbours), F4 (root-u-{w1,w2}); complete typed induced adjacency; root at canonical position 0",
+        "multiplicity_definition": "distinct actual node sets with equal content key are counted; one (root, family, node set) exactly once",
+        "canonicalisation": "lexicographic-min over permutations of the non-root nodes",
+        "labels_used": false,
+        "test_used": true,
+        "created": "2026-10-22T10:14:58+0800",
+        "prep_seconds": 0.6309596509672701
+      }
+    }
+  },
+  "groups": [
+    {
+      "group": "covered_ordinary",
+      "n": 705,
+      "mae": {
+        "P3-BF": 0.04725201677764482,
+        "P3B_s0": 0.047252012596221284,
+        "L_s0": 0.04374402893580142,
+        "DBT_s0": 0.048997656123534045
+      },
+      "delta_vs_P3B_s0": 4.181423533811124e-09,
+      "delta_vs_L_s0": 0.0035079878418433977,
+      "delta_vs_DBT_s0": -0.0017456393458892272
+    },
+    {
+      "group": "covered_tail",
+      "n": 51,
+      "mae": {
+        "P3-BF": 0.12849409007216514,
+        "P3B_s0": 0.12849450588235303,
+        "L_s0": 0.07644086294117647,
+        "DBT_s0": 0.08673262593697344
+      },
+      "delta_vs_P3B_s0": -4.158101878926068e-07,
+      "delta_vs_L_s0": 0.05205322713098867,
+      "delta_vs_DBT_s0": 0.0417614641351917
+    },
+    {
+      "group": "unseen_ordinary",
+      "n": 218,
+      "mae": {
+        "P3-BF": 0.11492147043724553,
+        "P3B_s0": 0.11492148580091972,
+        "L_s0": 0.11423026464637615,
+        "DBT_s0": 0.11892868999602643
+      },
+      "delta_vs_P3B_s0": -1.536367419396889e-08,
+      "delta_vs_L_s0": 0.0006912057908693842,
+      "delta_vs_DBT_s0": -0.004007219558780903
+    },
+    {
+      "group": "unseen_tail",
+      "n": 26,
+      "mae": {
+        "P3-BF": 0.19023348737415033,
+        "P3B_s0": 0.19023338692307706,
+        "L_s0": 0.2548589526923076,
+        "DBT_s0": 0.17339724805079532
+      },
+      "delta_vs_P3B_s0": 1.0045107326495106e-07,
+      "delta_vs_L_s0": -0.0646254653181573,
+      "delta_vs_DBT_s0": 0.016836239323355012
+    }
+  ],
+  "overall": {
+    "by_group": [
+      {
+        "group": "covered_ordinary",
+        "n": 705,
+        "mae": {
+          "P3-BF": 0.04725201677764482,
+          "P3B_s0": 0.047252012596221284,
+          "L_s0": 0.04374402893580142,
+          "DBT_s0": 0.048997656123534045
+        },
+        "delta_vs_P3B_s0": 4.181423533811124e-09,
+        "delta_vs_L_s0": 0.0035079878418433977,
+        "delta_vs_DBT_s0": -0.0017456393458892272
+      },
+      {
+        "group": "covered_tail",
+        "n": 51,
+        "mae": {
+          "P3-BF": 0.12849409007216514,
+          "P3B_s0": 0.12849450588235303,
+          "L_s0": 0.07644086294117647,
+          "DBT_s0": 0.08673262593697344
+        },
+        "delta_vs_P3B_s0": -4.158101878926068e-07,
+        "delta_vs_L_s0": 0.05205322713098867,
+        "delta_vs_DBT_s0": 0.0417614641351917
+      },
+      {
+        "group": "unseen_ordinary",
+        "n": 218,
+        "mae": {
+          "P3-BF": 0.11492147043724553,
+          "P3B_s0": 0.11492148580091972,
+          "L_s0": 0.11423026464637615,
+          "DBT_s0": 0.11892868999602643
+        },
+        "delta_vs_P3B_s0": -1.536367419396889e-08,
+        "delta_vs_L_s0": 0.0006912057908693842,
+        "delta_vs_DBT_s0": -0.004007219558780903
+      },
+      {
+        "group": "unseen_tail",
+        "n": 26,
+        "mae": {
+          "P3-BF": 0.19023348737415033,
+          "P3B_s0": 0.19023338692307706,
+          "L_s0": 0.2548589526923076,
+          "DBT_s0": 0.17339724805079532
+        },
+        "delta_vs_P3B_s0": 1.0045107326495106e-07,
+        "delta_vs_L_s0": -0.0646254653181573,
+        "delta_vs_DBT_s0": 0.016836239323355012
+      }
+    ],
+    "contrasts": {
+      "P3B_s0": {
+        "mean_delta_ae": -1.899596906272498e-08,
+        "ci95": [
+          -4.193502888282987e-08,
+          3.051648272516011e-09
+        ],
+        "fraction_candidate_better": 0.521,
+        "reps": 10000,
+        "seed": 20261022,
+        "delta_definition": "AE(P3-BF) - AE(reference); negative = P3-BF better"
+      },
+      "L_s0": {
+        "mean_delta_ae": 0.0035982667763174484,
+        "ci95": [
+          -0.001025843887818854,
+          0.00804573384909976
+        ],
+        "fraction_candidate_better": 0.474,
+        "reps": 10000,
+        "seed": 20261022,
+        "delta_definition": "AE(P3-BF) - AE(reference); negative = P3-BF better"
+      },
+      "DBT_s0": {
+        "mean_delta_ae": 0.00046332729063585764,
+        "ci95": [
+          -0.004362143859039663,
+          0.0053079032815248435
+        ],
+        "fraction_candidate_better": 0.497,
+        "reps": 10000,
+        "seed": 20261022,
+        "delta_definition": "AE(P3-BF) - AE(reference); negative = P3-BF better"
+      }
+    },
+    "overall_mae": {
+      "P3-BF": 0.06986482164896744,
+      "P3B_s0": 0.0698648406449365,
+      "L_s0": 0.06626655487264999,
+      "DBT_s0": 0.0694014943583316
+    },
+    "row_172_kept": true,
+    "groups_analysis_only": true
+  },
+  "p3b_function_same_epoch0": {
+    "best_is_epoch0": true,
+    "max_abs_diff_vs_P3B_reference_test": 4.29482788089075e-06
+  },
+  "historically_exposed_test": true,
+  "test_used_for_selection": false
+}

@@ -1,0 +1,733 @@
+{
+  "checks": {
+    "reference_p3b": {
+      "pass": true,
+      "detail": {
+        "checkpoint": "tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/xBssl_P3N_s0/best.pt",
+        "sha256": "4c379c93214c003a6c58fd4add4a64ecb4fe23603233738fab18f3885abdc34f",
+        "epoch": 377,
+        "stored_valid_mae": 0.07622375113883754,
+        "replay_valid_mae": 0.0762237439005985,
+        "abs_diff": 7.238239049800477e-09,
+        "train_label_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+        "valid_label_sha256": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f"
+      }
+    },
+    "parameters_and_groups": {
+      "pass": true,
+      "detail": {
+        "parameters": 447505,
+        "breakdown": {
+          "encoders.atom_encoder": 26336,
+          "encoders.bond_encoder": 62816,
+          "encoders.junction_encoder": 112896,
+          "group_composer": 62976,
+          "reader": 148481,
+          "w_s": 25344,
+          "branch": 8656,
+          "total": 447505
+        },
+        "parameters_inherited": 413505,
+        "parameters_new": 34000,
+        "optimizer_parameters": 447505,
+        "param_groups": [
+          {
+            "name": "inherited_p3",
+            "tensors": 22,
+            "peak_lr": 0.0001,
+            "min_lr": 1e-06
+          },
+          {
+            "name": "new",
+            "tensors": 7,
+            "peak_lr": 0.001,
+            "min_lr": 1e-05
+          }
+        ],
+        "cap": 500000,
+        "headroom": 52495,
+        "w_s_zero": true,
+        "init": {
+          "source": "tracks/structural-sufficiency/zinc_recipe_trunk_v2/runs/xBssl_P3N_s0/best.pt",
+          "sha256": "4c379c93214c003a6c58fd4add4a64ecb4fe23603233738fab18f3885abdc34f",
+          "checkpoint_epoch": 377,
+          "checkpoint_valid_mae": 0.07622375113883754,
+          "missing_new_keys": [
+            "branch.atom_emb.weight",
+            "branch.pair_emb.weight",
+            "branch.phi.lins.0.bias",
+            "branch.phi.lins.0.weight",
+            "branch.phi.lins.1.bias",
+            "branch.phi.lins.1.weight",
+            "w_s.weight"
+          ],
+          "unexpected_keys": [],
+          "w_s_zero": true,
+          "seed": 0,
+          "parameters": 447505,
+          "parameters_breakdown": {
+            "encoders.atom_encoder": 26336,
+            "encoders.bond_encoder": 62816,
+            "encoders.junction_encoder": 112896,
+            "group_composer": 62976,
+            "reader": 148481,
+            "w_s": 25344,
+            "branch": 8656,
+            "total": 447505
+          },
+          "parameters_inherited": 413505,
+          "parameters_new": 34000,
+          "parameter_cap": 500000,
+          "all_require_grad": true
+        }
+      }
+    },
+    "zero_new_columns_parity": {
+      "pass": true,
+      "detail": {
+        "rows": 32,
+        "max_abs_diff_vs_p3": 0.0,
+        "s_shape": [
+          749,
+          198
+        ],
+        "s_finite": true,
+        "s_abs_max": 1.945910096168518,
+        "s_all_zero_roots": 100
+      }
+    },
+    "hand_graph_counts": {
+      "pass": true,
+      "detail": {
+        "graphs": {
+          "star3": {
+            "n_atoms": 4,
+            "totals": {
+              "S3": 1,
+              "S4": 0,
+              "F4": 3
+            },
+            "per_root": {
+              "0": {
+                "S3": 1,
+                "S4": 0,
+                "F4": 0
+              },
+              "1": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 1
+              },
+              "2": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 1
+              },
+              "3": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 1
+              }
+            }
+          },
+          "star4": {
+            "n_atoms": 5,
+            "totals": {
+              "S3": 4,
+              "S4": 1,
+              "F4": 12
+            },
+            "per_root": {
+              "0": {
+                "S3": 4,
+                "S4": 1,
+                "F4": 0
+              },
+              "1": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 3
+              },
+              "2": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 3
+              },
+              "3": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 3
+              },
+              "4": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 3
+              }
+            }
+          },
+          "fork": {
+            "n_atoms": 5,
+            "totals": {
+              "S3": 1,
+              "S4": 0,
+              "F4": 3
+            },
+            "per_root": {
+              "0": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 1
+              },
+              "1": {
+                "S3": 1,
+                "S4": 0,
+                "F4": 0
+              },
+              "2": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 0
+              },
+              "3": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 1
+              },
+              "4": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 1
+              }
+            }
+          },
+          "path": {
+            "n_atoms": 4,
+            "totals": {
+              "S3": 0,
+              "S4": 0,
+              "F4": 0
+            },
+            "per_root": {
+              "0": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 0
+              },
+              "1": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 0
+              },
+              "2": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 0
+              },
+              "3": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 0
+              }
+            }
+          },
+          "star3_closure": {
+            "n_atoms": 4,
+            "totals": {
+              "S3": 1,
+              "S4": 0,
+              "F4": 3
+            },
+            "per_root": {
+              "0": {
+                "S3": 1,
+                "S4": 0,
+                "F4": 0
+              },
+              "1": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 1
+              },
+              "2": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 1
+              },
+              "3": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 1
+              }
+            }
+          },
+          "k4": {
+            "n_atoms": 4,
+            "totals": {
+              "S3": 4,
+              "S4": 0,
+              "F4": 4
+            },
+            "per_root": {
+              "0": {
+                "S3": 1,
+                "S4": 0,
+                "F4": 1
+              },
+              "1": {
+                "S3": 1,
+                "S4": 0,
+                "F4": 1
+              },
+              "2": {
+                "S3": 1,
+                "S4": 0,
+                "F4": 1
+              },
+              "3": {
+                "S3": 1,
+                "S4": 0,
+                "F4": 1
+              }
+            }
+          },
+          "ring6": {
+            "n_atoms": 6,
+            "totals": {
+              "S3": 0,
+              "S4": 0,
+              "F4": 0
+            },
+            "per_root": {
+              "0": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 0
+              },
+              "1": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 0
+              },
+              "2": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 0
+              },
+              "3": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 0
+              },
+              "4": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 0
+              },
+              "5": {
+                "S3": 0,
+                "S4": 0,
+                "F4": 0
+              }
+            }
+          }
+        },
+        "extra_closure": {
+          "star3_vs_closure": {
+            "counts": [
+              1,
+              1
+            ],
+            "content_keys_differ": true,
+            "real_edges": [
+              3,
+              4
+            ]
+          }
+        },
+        "all_independent_counts_match": true
+      }
+    },
+    "atom_permutation_enumeration": {
+      "pass": true,
+      "detail": {
+        "n_atoms": 35,
+        "families_checked": [
+          "S3",
+          "S4",
+          "F4"
+        ],
+        "content_multisets_equal_after_permutation": true,
+        "object_totals": {
+          "S3": 18,
+          "S4": 2,
+          "F4": 54
+        }
+      }
+    },
+    "atom_permutation_prediction": {
+      "pass": true,
+      "detail": {
+        "prediction_max_abs_diff": 1.1920928955078125e-07,
+        "s_max_abs_diff": 1.6094379425048828,
+        "n_atoms": 35,
+        "branch_open": true
+      }
+    },
+    "batch_regrouping": {
+      "pass": true,
+      "detail": {
+        "s_max_abs_diff": 0.0,
+        "pred_max_abs_diff": 0.0
+      }
+    },
+    "multiplicity_and_empty": {
+      "pass": true,
+      "detail": {
+        "S3_patterns": 1,
+        "S3_multiplicity": 4,
+        "S4_patterns": 1,
+        "S4_multiplicity": 1,
+        "F4_empty_at_hub": true,
+        "path_all_roots_zero": true,
+        "compressed_vs_expanded_max_abs_diff": 0.0
+      }
+    },
+    "gradient_and_schedule": {
+      "pass": true,
+      "detail": {
+        "records": [
+          {
+            "step": 1,
+            "loss": 0.06489632278680801,
+            "grad_max": {
+              "w_s": 0.07833752781152725,
+              "phi": 0.0,
+              "atom_w_x": 0.21449437737464905,
+              "reader": 0.09111723303794861
+            }
+          },
+          {
+            "step": 2,
+            "loss": 0.03840482607483864,
+            "grad_max": {
+              "w_s": 0.28513506054878235,
+              "phi": 0.0033011857885867357,
+              "atom_w_x": 0.794754147529602,
+              "reader": 0.23735463619232178
+            }
+          },
+          {
+            "step": 3,
+            "loss": 0.056654028594493866,
+            "grad_max": {
+              "w_s": 0.5526695847511292,
+              "phi": 0.019015301018953323,
+              "atom_w_x": 1.4986848831176758,
+              "reader": 0.30636727809906006
+            }
+          },
+          {
+            "step": 4,
+            "loss": 0.04023542255163193,
+            "grad_max": {
+              "w_s": 0.07146052271127701,
+              "phi": 0.012328763492405415,
+              "atom_w_x": 0.3028886616230011,
+              "reader": 0.13663867115974426
+            }
+          }
+        ],
+        "phi_first_nonzero_step": 2,
+        "schedule_example_total_updates": 7900,
+        "schedule": {
+          "inherited_p3": {
+            "1": 5e-07,
+            "100": 5e-05,
+            "200": 0.0001,
+            "201": 9.999999588003533e-05,
+            "3950": 5.251903501004849e-05,
+            "7900": 1e-06
+          },
+          "new": {
+            "1": 5e-06,
+            "100": 0.0005,
+            "200": 0.001,
+            "201": 0.0009999999588003532,
+            "3950": 0.000525190350100485,
+            "7900": 1e-05
+          }
+        },
+        "all_watched_parameters_update": true
+      }
+    },
+    "cache_integrity": {
+      "pass": true,
+      "detail": {
+        "splits": {
+          "train": {
+            "patterns": 1280,
+            "entries": 312110,
+            "pattern_bad": 0,
+            "meta": {
+              "split": "train",
+              "families": [
+                "S3",
+                "S4",
+                "F4"
+              ],
+              "object_source": {
+                "source": "frozen_p3_object_cache",
+                "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt",
+                "sha256": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d"
+              },
+              "n_molecules": 10000,
+              "n_atoms": 231664,
+              "n_entries": 312110,
+              "n_unique_patterns": 1280,
+              "unique_patterns_by_family": {
+                "S3": 341,
+                "S4": 73,
+                "F4": 866
+              },
+              "occurrences_by_family": {
+                "S3": 82568,
+                "S4": 3104,
+                "F4": 247704
+              },
+              "nonempty_roots_by_family": {
+                "S3": 73256,
+                "S4": 3104,
+                "F4": 180884
+              },
+              "empty_root_fraction_by_family": {
+                "S3": 0.6837834104565232,
+                "S4": 0.9866012846191036,
+                "F4": 0.21919676773257823
+              },
+              "max_objects_per_root_by_family": {
+                "S3": 4,
+                "S4": 1,
+                "F4": 7
+              },
+              "max_objects_per_graph_by_family": {
+                "S3": 29,
+                "S4": 5,
+                "F4": 87
+              },
+              "max_entries_per_molecule": 89,
+              "definition": "exhaustive rooted branching fragments S3 (root+3 neighbours), S4 (root+4 neighbours), F4 (root-u-{w1,w2}); complete typed induced adjacency; root at canonical position 0",
+              "multiplicity_definition": "distinct actual node sets with equal content key are counted; one (root, family, node set) exactly once",
+              "canonicalisation": "lexicographic-min over permutations of the non-root nodes",
+              "labels_used": false,
+              "test_used": false,
+              "created": "2026-10-22T10:05:52+0800",
+              "prep_seconds": 6.239700232865289
+            }
+          },
+          "valid": {
+            "patterns": 644,
+            "entries": 31038,
+            "pattern_bad": 0,
+            "meta": {
+              "split": "valid",
+              "families": [
+                "S3",
+                "S4",
+                "F4"
+              ],
+              "object_source": {
+                "source": "frozen_p3_object_cache",
+                "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt",
+                "sha256": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c"
+              },
+              "n_molecules": 1000,
+              "n_atoms": 23083,
+              "n_entries": 31038,
+              "n_unique_patterns": 644,
+              "unique_patterns_by_family": {
+                "S3": 173,
+                "S4": 37,
+                "F4": 434
+              },
+              "occurrences_by_family": {
+                "S3": 8225,
+                "S4": 314,
+                "F4": 24675
+              },
+              "nonempty_roots_by_family": {
+                "S3": 7283,
+                "S4": 314,
+                "F4": 18119
+              },
+              "empty_root_fraction_by_family": {
+                "S3": 0.6844864185764415,
+                "S4": 0.9863969154789238,
+                "F4": 0.21505003682363644
+              },
+              "max_objects_per_root_by_family": {
+                "S3": 4,
+                "S4": 1,
+                "F4": 7
+              },
+              "max_objects_per_graph_by_family": {
+                "S3": 23,
+                "S4": 4,
+                "F4": 69
+              },
+              "max_entries_per_molecule": 72,
+              "definition": "exhaustive rooted branching fragments S3 (root+3 neighbours), S4 (root+4 neighbours), F4 (root-u-{w1,w2}); complete typed induced adjacency; root at canonical position 0",
+              "multiplicity_definition": "distinct actual node sets with equal content key are counted; one (root, family, node set) exactly once",
+              "canonicalisation": "lexicographic-min over permutations of the non-root nodes",
+              "labels_used": false,
+              "test_used": false,
+              "created": "2026-10-22T10:05:53+0800",
+              "prep_seconds": 0.611578183947131
+            }
+          }
+        },
+        "test_cache_exists_before_freeze": false
+      }
+    },
+    "raw108_group_refinement": {
+      "pass": true,
+      "detail": {
+        "split": "train",
+        "n_roots": 231664,
+        "n_raw108_groups": 10699,
+        "n_groups_singleton": 4177,
+        "n_groups_multi": 6522,
+        "n_roots_in_multi_groups": 227487,
+        "n_groups_subdivided": 2524,
+        "n_roots_in_subdivided_groups": 5048,
+        "n_molecules_in_subdivided_groups": 9989,
+        "fraction_roots_in_multi_groups": 0.9819695766282202,
+        "fraction_roots_subdivided": 0.02179017887975689,
+        "fraction_molecules_subdivided": 0.9989,
+        "fraction_multi_groups_subdivided": 0.38699785341919657,
+        "subdivided_by_content": 2520,
+        "subdivided_by_multiplicity": 789,
+        "subdivided_by_both": 785,
+        "pure_content_subdivisions": 1735,
+        "pure_multiplicity_subdivisions": 4
+      }
+    },
+    "ab_collision_example": {
+      "pass": true,
+      "detail": {
+        "root_raw108_equal": true,
+        "root_stats": {
+          "A": {
+            "degree": 2,
+            "neighbour_types": [
+              1,
+              1
+            ],
+            "two_hop_types": [
+              2,
+              3
+            ],
+            "two_hop_paths": 2
+          },
+          "B": {
+            "degree": 2,
+            "neighbour_types": [
+              1,
+              1
+            ],
+            "two_hop_types": [
+              2,
+              3
+            ],
+            "two_hop_paths": 2
+          }
+        },
+        "family_counts": {
+          "A": {
+            "S3": 0,
+            "S4": 0,
+            "F4": 1
+          },
+          "B": {
+            "S3": 0,
+            "S4": 0,
+            "F4": 0
+          }
+        },
+        "f4_pattern_A": [
+          {
+            "atoms": [
+              0,
+              1,
+              2,
+              3,
+              0
+            ],
+            "pairs": [
+              1,
+              0,
+              0,
+              0,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ],
+            "count": 1
+          }
+        ],
+        "whole_graph_bond_junction": {
+          "n_bonds": [
+            4,
+            4
+          ],
+          "n_junctions": [
+            4,
+            3
+          ],
+          "bond_feat_multiset_equal": true,
+          "junc_feat_multiset_equal": false
+        },
+        "interpretation": "root raw108 collides and F4 separates A/B, but the two whole graphs have different bond/junction objects; this is a root-descriptor collision, not a proof that the full P3 is blind to the difference"
+      }
+    },
+    "train_valid_new_content": {
+      "pass": true,
+      "detail": {
+        "per_family": {
+          "S3": {
+            "train_unique_patterns": 341,
+            "valid_unique_patterns": 173,
+            "valid_unseen_patterns": 6,
+            "valid_unseen_pattern_fraction": 0.03468208092485549,
+            "valid_occurrence_unseen_fraction": 0.0009726443768996961,
+            "valid_occurrences": 8225
+          },
+          "S4": {
+            "train_unique_patterns": 73,
+            "valid_unique_patterns": 37,
+            "valid_unseen_patterns": 6,
+            "valid_unseen_pattern_fraction": 0.16216216216216217,
+            "valid_occurrence_unseen_fraction": 0.01910828025477707,
+            "valid_occurrences": 314
+          },
+          "F4": {
+            "train_unique_patterns": 866,
+            "valid_unique_patterns": 434,
+            "valid_unseen_patterns": 15,
+            "valid_unseen_pattern_fraction": 0.03456221198156682,
+            "valid_occurrence_unseen_fraction": 0.0009726443768996961,
+            "valid_occurrences": 24675
+          }
+        },
+        "valid_roots_full_signature_unseen": 276,
+        "valid_roots_total": 23083,
+        "valid_root_full_signature_unseen_fraction": 0.011956851362474548,
+        "valid_roots_with_at_least_one_unseen_pattern": 29,
+        "valid_root_any_unseen_fraction": 0.0012563358315643546,
+        "note": "descriptive only; low new-content rate is not evidence of sufficiency"
+      }
+    }
+  }
+}
