@@ -1,0 +1,255 @@
+{
+  "protocol": "zinc-restricted-adaptation-v1-test-reporting",
+  "freeze": {
+    "protocol": "zinc-restricted-adaptation-v1-test-reporting",
+    "candidate": "DBT-PA",
+    "checkpoint": "tracks/structural-sufficiency/zinc_restricted_adaptation_v1/runs/pa_s0/best.pt",
+    "checkpoint_sha256": "7314b0928aa987f592986abcb06fafdddc39c07d15900f4c3de0be2247a90b1d",
+    "best_valid_epoch": 287,
+    "best_valid_mae": 0.14022412500897188,
+    "valid_mae_recomputed": 0.14022412824066122,
+    "parameter_count": 457443,
+    "trainable_parameters": 255395,
+    "frozen_parameters": 202048,
+    "encoder_sha256": "86a3c2a26c1b721acaa829b82202f2c69f25531995514c82ad8a8f947a1da759",
+    "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "ssl_source": "/home/hxy/cy/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "valid_feature_cache_sha256": "ab94d8acf92ff570b416f4581699d747b0bef50fd905d78a981d39a1ebdbc277",
+    "recipe": {
+      "optimizer": "adamw",
+      "lr": 0.0003,
+      "min_lr": 3e-06,
+      "weight_decay": 0.0001,
+      "warmup_updates": 1000,
+      "batch_size": 64,
+      "valid_batch_size": 256,
+      "eval_train_batch_size": 256,
+      "dropout": 0.05,
+      "grad_clip": 5.0,
+      "loss": "raw-y L1",
+      "seed": 0,
+      "adapter_rank": 8,
+      "max_epochs_cap": 600,
+      "epochs": 310,
+      "steps_per_epoch": 157,
+      "total_updates": 48670,
+      "actual_global_steps": 48670,
+      "valid_every_epoch": true,
+      "selection": "argmin(valid_mae), strict <, ties keep the earlier epoch",
+      "cosine_horizon": "E * 157 fixed before launch"
+    },
+    "git_commit": "3855dea1b693e79115e63ccfe0557b897ae5cc51",
+    "selection": "argmin(valid_mae) over 310 epochs, strict <",
+    "test_loaded_before_this_file": false,
+    "frozen_at": "2026-10-22T08:55:42+0800"
+  },
+  "valid": {
+    "mae": 0.14022412824066122,
+    "rmse": 0.68479351425635,
+    "median_ae": 0.07202416658401489,
+    "p90_ae": 0.2572753429412842,
+    "p95_ae": 0.38238897919654846,
+    "max_ae": 20.262344881892204,
+    "mean_signed": 0.04216775154409697,
+    "n": 1000
+  },
+  "test": {
+    "mae": 0.10765858475398273,
+    "rmse": 0.20140547351556934,
+    "median_ae": 0.06692822277545929,
+    "p90_ae": 0.2231102347373963,
+    "p95_ae": 0.28979051634669245,
+    "max_ae": 3.5415358543395996,
+    "mean_signed": 0.006753380157053471,
+    "n": 1000
+  },
+  "test_label_sha256": "66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768",
+  "valid/feature_cache": {
+    "path": "/home/hxy/cy/research/tracks/structural-sufficiency/zinc_restricted_adaptation_v1/cache/dbt-pa-feat-v1-006fabc11e-86a3c2a26c-d764aa738f_valid.pt",
+    "sha256": "ab94d8acf92ff570b416f4581699d747b0bef50fd905d78a981d39a1ebdbc277",
+    "identity": {
+      "feature_version": "dbt-pa-feat-v1",
+      "split": "valid",
+      "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "encoder_sha256": "86a3c2a26c1b721acaa829b82202f2c69f25531995514c82ad8a8f947a1da759",
+      "structure_sha256": "d764aa738fea4077853627c65abf01d6d3e3119772aa0f1d1d389be8b2a9f188"
+    }
+  },
+  "test/feature_cache": {
+    "path": "/home/hxy/cy/research/tracks/structural-sufficiency/zinc_restricted_adaptation_v1/cache/dbt-pa-feat-v1-006fabc11e-86a3c2a26c-4335f4c469_test.pt",
+    "sha256": "32ca126241f51f8e846125d2c7d65454b38eaf7d7b86e22cd124f5b6186f99c3",
+    "identity": {
+      "feature_version": "dbt-pa-feat-v1",
+      "split": "test",
+      "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "encoder_sha256": "86a3c2a26c1b721acaa829b82202f2c69f25531995514c82ad8a8f947a1da759",
+      "structure_sha256": "4335f4c4692aaf0f0eed2e6149d1a36ad69259f94741b6d491db7032dce2bd3e"
+    },
+    "verification": {
+      "a": {
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "allclose": true,
+        "shape": [
+          83,
+          96
+        ]
+      },
+      "b": {
+        "max_abs_diff": 7.152557373046875e-07,
+        "mean_abs_diff": 7.61791696390901e-08,
+        "allclose": true,
+        "shape": [
+          90,
+          96
+        ]
+      },
+      "w": {
+        "max_abs_diff": 1.1920928955078125e-06,
+        "mean_abs_diff": 1.3502662454811798e-07,
+        "allclose": true,
+        "shape": [
+          128,
+          96
+        ]
+      },
+      "split": "test",
+      "rows": [
+        0,
+        172,
+        500,
+        999
+      ],
+      "atol": 1e-05,
+      "feature_cache_sha256": "32ca126241f51f8e846125d2c7d65454b38eaf7d7b86e22cd124f5b6186f99c3",
+      "all_pass": true
+    }
+  },
+  "object_caches": {
+    "valid": {
+      "path": "tracks/structural-sufficiency/zinc_directed_bond_transformer_v1/cache/dbt-objects-v1_valid.pt",
+      "sha256": "5e29c22d8753f6e3044a8f2ca0e32d47ba942849257a2aa83efe4d3e94d6a1cf"
+    },
+    "test": {
+      "path": "tracks/structural-sufficiency/zinc_directed_bond_transformer_v1/cache/dbt-objects-v1_test.pt",
+      "sha256": "111864a6b24f4f29a81414b0ca47120d8ed20a6eda8cbf28f4952a5ff972f2c4"
+    }
+  },
+  "test_contrasts": {
+    "P3B_s0": {
+      "mean_delta_ae": 0.03779374408929937,
+      "ci95": [
+        0.030884914869187898,
+        0.04486398771227911
+      ],
+      "fraction_candidate_better": 0.302,
+      "reps": 10000,
+      "seed": 20261022,
+      "delta_definition": "AE(candidate) - AE(reference); negative = candidate better"
+    },
+    "L_s0": {
+      "mean_delta_ae": 0.041392029913616686,
+      "ci95": [
+        0.03515896809464488,
+        0.04768935902936975
+      ],
+      "fraction_candidate_better": 0.305,
+      "reps": 10000,
+      "seed": 20261022,
+      "delta_definition": "AE(candidate) - AE(reference); negative = candidate better"
+    },
+    "DBT_s0": {
+      "mean_delta_ae": 0.03825709040742367,
+      "ci95": [
+        0.031196681854699274,
+        0.04573486121629831
+      ],
+      "fraction_candidate_better": 0.321,
+      "reps": 10000,
+      "seed": 20261022,
+      "delta_definition": "AE(candidate) - AE(reference); negative = candidate better"
+    }
+  },
+  "valid_contrasts": {
+    "P3B_s0": {
+      "mean_delta_ae": 0.06400037432558592,
+      "ci95": [
+        0.03780032791889363,
+        0.10817150363661542
+      ],
+      "fraction_candidate_better": 0.313,
+      "reps": 10000,
+      "seed": 20261022,
+      "delta_definition": "AE(candidate) - AE(reference); negative = candidate better"
+    },
+    "L_s0": {
+      "mean_delta_ae": 0.06168697602993372,
+      "ci95": [
+        0.04058605107108799,
+        0.09639796847125089
+      ],
+      "fraction_candidate_better": 0.303,
+      "reps": 10000,
+      "seed": 20261022,
+      "delta_definition": "AE(candidate) - AE(reference); negative = candidate better"
+    },
+    "DBT_s0": {
+      "mean_delta_ae": 0.06245572659501599,
+      "ci95": [
+        0.038229862638512524,
+        0.09611655521244981
+      ],
+      "fraction_candidate_better": 0.309,
+      "reps": 10000,
+      "seed": 20261022,
+      "delta_definition": "AE(candidate) - AE(reference); negative = candidate better"
+    }
+  },
+  "reference_meta": {
+    "purpose": "frozen old per-molecule predictions reused for descriptive contrasts",
+    "official_test_historically_exposed": true,
+    "new_model_selection_used": false,
+    "sources": {
+      "valid": {
+        "P3B": "tracks/structural-sufficiency/zinc_generalization_audit_v1/analysis/per_molecule.csv",
+        "L": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/analysis/per_molecule_dual.csv",
+        "DBT": "tracks/structural-sufficiency/zinc_directed_bond_transformer_v1/runs/dbt_s0/predictions/valid_best.npz"
+      },
+      "test": {
+        "groups_and_P3B_L": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/analysis/test_per_molecule.csv",
+        "DBT": "tracks/structural-sufficiency/zinc_directed_bond_transformer_v1/runs/dbt_s0/predictions/test_best.npz",
+        "P3B_npz": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/analysis/test_preds/P3B_s0_test.npz",
+        "L_npz": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/analysis/test_preds/L_s0_test.npz"
+      }
+    },
+    "valid": {
+      "rows": 1000,
+      "mae": {
+        "P3B_s0": 0.07622375389701798,
+        "L_s0": 0.07853715219267021,
+        "DBT_s0": 0.07776840162758793
+      },
+      "expected": {
+        "P3B_s0": 0.07622375367576023,
+        "L_s0": 0.078537152,
+        "DBT_s0": 0.077768402
+      }
+    },
+    "test": {
+      "rows": 1000,
+      "mae": {
+        "P3B_s0": 0.0698648406449365,
+        "L_s0": 0.06626655487264999,
+        "DBT_s0": 0.0694014943583316
+      },
+      "expected": {
+        "P3B_s0": 0.069864841,
+        "L_s0": 0.066266555,
+        "DBT_s0": 0.069401494
+      }
+    },
+    "row_alignment": "row ids are exactly 0..999 and every y column agrees",
+    "group_definition": "signature_unseen = any atom with a radius-2 content key absent from train; tail = y <= -3; labels are analysis-only"
+  },
+  "note": "the official ZINC test split is already spent in this repository; these numbers are descriptive reporting of one frozen checkpoint, not a pristine blind evaluation"
+}

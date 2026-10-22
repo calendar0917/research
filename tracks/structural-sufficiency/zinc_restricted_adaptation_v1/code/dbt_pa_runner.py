@@ -6,6 +6,7 @@
     python .../dbt_pa_runner.py plan    --spent-seconds <s>
     python .../dbt_pa_runner.py train   --device cuda:0 --epochs E
     python .../dbt_pa_runner.py test    --device cuda:0
+    python .../dbt_pa_runner.py analysis
     python .../dbt_pa_runner.py groups
     python .../dbt_pa_runner.py references
 """
@@ -27,6 +28,7 @@ for _p in (str(_HERE), str(_V1), str(_DBT)):
 
 import torch  # noqa: E402
 
+import dbt_pa_analysis as PA  # noqa: E402
 import dbt_pa_checks as PCK  # noqa: E402
 import dbt_pa_groups as PG  # noqa: E402
 import dbt_pa_prep as PP  # noqa: E402
@@ -58,6 +60,7 @@ def main(argv=None) -> int:
     s.add_argument("--save-every", type=int, default=25)
     s = sub.add_parser("test")
     s.add_argument("--device", default="cuda:0")
+    s = sub.add_parser("analysis")
     s = sub.add_parser("groups")
     s.add_argument("--split", choices=["valid", "test", "both"], default="both")
     s = sub.add_parser("references")
@@ -86,6 +89,8 @@ def main(argv=None) -> int:
         return 0
     if args.cmd == "test":
         return PT.main(["--device", str(args.device)])
+    if args.cmd == "analysis":
+        return PA.main([])
     if args.cmd == "groups":
         return PG.main(["--split", args.split])
     if args.cmd == "references":

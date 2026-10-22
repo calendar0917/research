@@ -8,7 +8,7 @@
 phase: phase2b
 current_round: ssrc-phase2b-zinc-v1
 status: PHASE2B_COMPLETE
-updated: 2026-10-19
+updated: 2026-10-22
 main_line: true
 latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
@@ -967,3 +967,78 @@ round_zinc_arch_exploration_v3:
     - "no seed 1/2 confirmation was run for A, B, A_SSL or A_attn"
     - "B is reported as truncated at 817/1,200 epochs, not as a converged arm"
     - "the 0.072465 blend number is valid-only, descriptive, and was not scored on test"
+
+round_zinc_restricted_adaptation_v1:
+  status: COMPLETE_NEGATIVE
+  protocol: zinc-restricted-adaptation-v1
+  design: tracks/structural-sufficiency/zinc_restricted_adaptation_v1/DESIGN.md
+  report: tracks/structural-sufficiency/zinc_restricted_adaptation_v1/REPORT.md
+  question: >-
+    With the seed-0 train-only masked-SSL P3 atom/bond/junction stack frozen,
+    and only independent rank-8 post-encoder adapters plus the DBT downstream
+    trainable, does a single model generalise better under a 60-minute
+    single-GPU short schedule?
+  model:
+    candidate: DBT-PA
+    parameters_total: 457443
+    parameters_frozen: 202048
+    parameters_trainable: 255395
+    adapters: "a/b/w: x + U SiLU(D x), D 96->8, U 8->96 zero-init"
+    base: "pretrain_encoder_s0.pt sha256 006fabc11e..., not supervised DBT best.pt"
+  data: official ZINC subset train 10000 / valid 1000; raw-y MAE
+  run:
+    seed: 0
+    E: 310
+    total_updates: 48670
+    steady_epoch_seconds: 8.4867
+    formal_gpu_hours: 0.7257
+    round_wall_seconds: 3144
+    status: complete
+  results:
+    DBT-PA_s0:
+      best_valid: 0.140224125
+      best_epoch: 287
+      eval_train_at_best: 0.028934
+      final_valid: 0.141026
+      test_mae: 0.107658585
+    reused:
+      P3B_s0: {best_valid: 0.076223754, test_mae: 0.069864841}
+      L_s0: {best_valid: 0.078537152, test_mae: 0.066266555}
+      DBT_s0: {best_valid: 0.077768402, test_mae: 0.069401494}
+    valid_contrasts_pa_minus_ref_delta_ae:
+      P3B: {mean: 0.064000, ci95: [0.037800, 0.108172]}
+      L: {mean: 0.061687, ci95: [0.040586, 0.096398]}
+      DBT: {mean: 0.062456, ci95: [0.038230, 0.096117]}
+    test_contrasts_pa_minus_ref_delta_ae:
+      P3B: {mean: 0.037794, ci95: [0.030885, 0.044864]}
+      L: {mean: 0.041392, ci95: [0.035159, 0.047689]}
+      DBT: {mean: 0.038257, ci95: [0.031197, 0.045735]}
+    dbt_same_epoch_reference:
+      valid_at_epoch_310: 0.101307
+      best_valid_first_310: 0.085079
+      note: "different cosine; short-horizon progress reference only"
+  fixed_four_groups:
+    table: tracks/structural-sufficiency/zinc_restricted_adaptation_v1/analysis/groups.md
+    definition: "radius-2 content key unseen vs covered x ordinary y>-3 vs tail y<=-3"
+    result: "DBT-PA worse in every group on both valid and test; row 172 kept"
+  checks:
+    file: tracks/structural-sufficiency/zinc_restricted_adaptation_v1/analysis/cpu_checks.json
+    all_pass: true
+    parameter_cap: true
+    init_parity_with_original_dbt: true
+    zero_adapter_equivalence: true
+    frozen_hash_unchanged: true
+    adapter_D_gradient_delayed_by_one_step: true
+    feature_cache_verified: true
+  zero_five_x_evidence: NONE
+  next_action: >-
+    Stop. Do not buy seed 1, a rank grid, a second adapter design, an output
+    decomposition, or a longer run of the same recipe. The restricted candidate
+    is much worse at the same epoch and on test; if this direction is revisited,
+    a new pre-registration must first diagnose the underfitting/optimisation
+    bottleneck rather than simply extending the schedule.
+  non_claims:
+    - "single seed, single short schedule, single adapter rank"
+    - "official test is historically exposed; not a blind test"
+    - "same-epoch DBT curve uses a different cosine; not a causal freeze estimate"
+    - "no 0.05x evidence and no claim that preserving SSL representations is generally harmful"
