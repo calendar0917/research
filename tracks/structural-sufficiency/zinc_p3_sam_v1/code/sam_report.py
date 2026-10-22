@@ -214,6 +214,9 @@ def main() -> int:
                           "perturbed_train_mae": r["perturbed_train_mae"],
                           "lr": r["lr"], "seconds": r["seconds"]}
                          for r in train[arm]["curve"]] for arm in ("C", "S")},
+        "fraction_candidate_better_semantics": (
+            "molecule-level fraction whose AE is smaller (an unpaired sign count), "
+            "not the fraction of bootstrap resamples"),
         "official_test_exposed": True,
         "note": ("paired bootstrap resamples the 1,000 test molecules; it does not "
                  "represent across-seed training uncertainty"),
@@ -247,9 +250,8 @@ def main() -> int:
         f"{contrast['valid']['S_minus_C']['ci95'][1]:+.6f}]",
         f"- test S−C = {contrast['test']['mean_delta_S_minus_C']:+.6f}, "
         f"95% CI [{contrast['test']['S_minus_C']['ci95'][0]:+.6f}, "
-        f"{contrast['test']['S_minus_C']['ci95'][1]:+.6f}], "
-        f"fraction of resamples S better = "
-        f"{contrast['test']['S_minus_C']['fraction_candidate_better']:.3f}",
+        f"{contrast['test']['S_minus_C']['ci95'][1]:+.6f}]; molecule-level fraction with "
+        f"AE(S) < AE(C) = {contrast['test']['S_minus_C']['fraction_candidate_better']:.3f}",
         f"- valid C−P3B = {contrast['valid']['mean_delta_C_minus_P3B']:+.6f}; "
         f"test C−P3B = {contrast['test']['mean_delta_C_minus_P3B']:+.6f}",
         "",

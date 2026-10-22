@@ -1120,3 +1120,64 @@ side_round_zinc_branching_fragment_v1:
     - "early stop at 100/600 means the full schedule's recovery behaviour is unknown"
     - "A/B example is a root-descriptor collision; it does not prove P3-blindness"
     - "no matched P3 continuation control, so information-useless vs optimisation-damage is unresolved"
+
+side_round_zinc_p3_sam_v1:
+  protocol_id: zinc-p3-sam-v1
+  report: tracks/structural-sufficiency/zinc_p3_sam_v1/REPORT.md
+  protocol: tracks/structural-sufficiency/zinc_p3_sam_v1/DESIGN.md
+  config: tracks/structural-sufficiency/zinc_p3_sam_v1/configs/p3_sam_v1.json
+  run_commit: c6333a0db10097819d984dfd4f354406886caed7
+  host_regime: "res (a100-2, driver 550.163.01, torch 2.5.1+cu124); C=res-gpu0, S=res-gpu1, parallel"
+  question: "With P3 representation/capacity/init/schedule fixed, does vanilla SAM (fixed rho=0.05, AdamW base) improve generalisation over the same-round AdamW control?"
+  arms:
+    C: "P3-Control = P3NullModel 413,505 params + recipe-B AdamW, 600 ep / 47,400 updates"
+    S: "P3-SAM = identical model/init/data/order + vanilla global-L2 SAM rho=0.05, same 47,400 outer updates, 94,800 gradient calculations"
+  init:
+    state_sha256: 21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30
+    ssl_sha256: 006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97
+    row_order_hashes_identical_all_600_epochs: true
+  results:
+    C: {best_valid: 0.079588262, best_epoch: 431, eval_train_at_best: 0.010286, final_valid: 0.081668123,
+        test_mae: 0.072688588, test_rmse: 0.165587, test_p95_ae: 0.209016,
+        tail100_median: 0.081656, best_sha256: 1cb9cccbe79b3bc31b499d1090fab7e36b446740da381fd80053602d67acc9dd,
+        wall_s: 1169, gpu_h: 0.325}
+    S: {best_valid: 0.118310817, best_epoch: 299, eval_train_at_best: 0.041025, final_valid: 0.140518076,
+        test_mae: 0.100376384, test_rmse: 0.176018, test_p95_ae: 0.337065,
+        tail100_median: 0.140731, best_sha256: 6976c7bdc8ed26b1fb4d468c998c5aa9e68511e082a3d2ccffda97fc913bebaf,
+        wall_s: 2516, gpu_h: 0.699}
+    S_minus_C: {valid: 0.038723, valid_ci95: [0.023093, 0.062618],
+                test: 0.027688, test_ci95: [0.018752, 0.036656],
+                test_molecule_frac_S_AE_smaller: 0.339}
+    C_minus_historical_P3B: {valid: 0.003365, valid_ci95: [-0.001324, 0.009239],
+                             test: 0.002824, test_ci95: [-0.000612, 0.006298],
+                             cause: "same-config rerun drift from CUDA non-determinism (epoch-1 online train MAE differs by 9.3e-9), not a config/hash/step error"}
+  checks:
+    file: tracks/structural-sufficiency/zinc_p3_sam_v1/analysis/cpu_checks.json
+    all_pass: true
+    count: 10
+    fast_unit_tests: 12
+    key: "rho=0 SAM == AdamW (model+optimizer diff 0.0); hand-computed two-pass == implementation; eps norm 0.05 (rel dev 3e-8) with |g1|=689 unclipped; 26/26 perturb and 26/26 restore sampled exact; 47,400/47,400 updates, 47,400 vs 94,800 gradient calculations"
+  decision: CLOSE_FIXED_RHO_SAM_INTERVENTION
+  decision_basis: >-
+    Case C of the pre-registered scheme: SAM has worse normal fit (train@best 0.041 vs 0.010),
+    worse valid at every tail epoch, and worse test by +0.0277 (CI excludes 0), while control is
+    unchanged within run-to-run drift of historical P3B. Not evidence against all SAM/regularisation,
+    and not a sharpness causal claim.
+  non_claims:
+    - "single seed; the S-C contrast is one training pair"
+    - "equal outer updates, not equal compute: S used 2.15x the GPU time of C"
+    - "test was historically exposed; both reads are descriptive, not blind"
+    - "no rho grid / ASAM / seed 1; the negative result is limited to fixed rho=0.05 at this recipe and horizon"
+    - "the C-vs-historical-P3B offset cannot be attributed to SAM"
+  artifacts:
+    run_C: tracks/structural-sufficiency/zinc_p3_sam_v1/runs/C_control_s0
+    run_S: tracks/structural-sufficiency/zinc_p3_sam_v1/runs/S_sam_s0
+    analysis_C: tracks/structural-sufficiency/zinc_p3_sam_v1/analysis/P3_Control
+    analysis_S: tracks/structural-sufficiency/zinc_p3_sam_v1/analysis/P3_SAM
+    main_table: tracks/structural-sufficiency/zinc_p3_sam_v1/analysis/main_table.md
+    groups: tracks/structural-sufficiency/zinc_p3_sam_v1/analysis/groups.md
+    curves: tracks/structural-sufficiency/zinc_p3_sam_v1/analysis/curves.png
+  next_action: >-
+    Stop. No seed 1, rho grid, third arm, or third model. If this direction is reopened it needs a new
+    pre-registration (scale-matched/adaptive rho or ASAM, 2-3 seeds) because the single-run drift this
+    round measured is about 0.003, i.e. the same size as the effect a follow-up would need to resolve.

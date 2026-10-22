@@ -1,0 +1,105 @@
+{
+  "protocol": "zinc-p3-sam-v1",
+  "arm": "S",
+  "arms_name": "P3-SAM",
+  "candidate": "P3N",
+  "freeze": {
+    "protocol": "zinc-p3-sam-v1",
+    "arm": "S",
+    "arms_name": "P3-SAM",
+    "candidate": "P3N",
+    "seed": 0,
+    "git_commit": "c6333a0db10097819d984dfd4f354406886caed7",
+    "config_sha256": "afe3244e8098ab2911c9f36a1933291158b2ea45f4f2c078d1a3d49ca571bf8f",
+    "best_sha256": "6976c7bdc8ed26b1fb4d468c998c5aa9e68511e082a3d2ccffda97fc913bebaf",
+    "best_epoch": 299,
+    "best_valid_mae": 0.11831081745395204,
+    "best_valid_mae_stored": 0.11831081358710072,
+    "best_train_mae_eval_mode": 0.04102484378705267,
+    "final_sha256": "9015c4c0c673cd90eaf92a6c5f6c6849a1a7efaf800dfbc5980170a9ec80e132",
+    "final_epoch": 600,
+    "final_valid_mae": 0.14051807643746725,
+    "final_train_mae_eval_mode": 0.004735494872904382,
+    "last_sha256": "bd6ea8a93a49a38114e3537de9c455c5a2111f0b33a664547735c46d9dcb8b5b",
+    "init_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+    "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "params": 413505,
+    "epochs_run": 600,
+    "outer_updates": 47400,
+    "gradient_calculations": 94800,
+    "recipe": {
+      "optimizer": "adamw",
+      "lr": 0.001,
+      "min_lr": 1e-05,
+      "weight_decay": 1e-05,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "grad_clip": 5.0,
+      "warmup_updates": 500,
+      "batch_size": 128,
+      "drop_last": false,
+      "epochs": 600,
+      "steps_per_epoch": 79,
+      "updates": 47400,
+      "actual_global_steps": 47400,
+      "loss": "raw-y L1",
+      "valid_every_epoch": true,
+      "dropout": 0.0,
+      "early_stop": null
+    },
+    "sam": {
+      "type": "vanilla global L2 SAM (non-adaptive, all optimised parameters incl. biases)",
+      "rho": 0.05,
+      "adaptive": false,
+      "first_pass_clipped": false,
+      "second_pass_clip": 5.0,
+      "gradient_calculations": 94800,
+      "optimizer_steps": 47400
+    },
+    "data": {
+      "source": "official PyG ZINC subset=True train/valid",
+      "n_train": 10000,
+      "n_valid": 1000,
+      "train_label_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+      "valid_label_sha256": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f",
+      "official_test_loaded_before_freeze": false
+    },
+    "test_policy": "one descriptive read after this freeze; no test-driven change",
+    "frozen_at": "2026-10-22T14:22:04+0800"
+  },
+  "best_sha256": "6976c7bdc8ed26b1fb4d468c998c5aa9e68511e082a3d2ccffda97fc913bebaf",
+  "best_epoch": 299,
+  "best_valid_mae": 0.11831081358710072,
+  "test": {
+    "n": 1000,
+    "label_sha256": "66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768",
+    "mae": 0.10037638429459185,
+    "rmse": 0.17601770720606225,
+    "p95_ae": 0.33706535100936874,
+    "max_ae": 2.035403251647949,
+    "max_ae_row": 988
+  },
+  "test_prediction_path": "tracks/structural-sufficiency/zinc_p3_sam_v1/runs/S_sam_s0/predictions/test_best.npz",
+  "test_prediction_sha256": "2c6194e9a2a35df1624817f11e50b4e2ca4bddf6b881392b4cde557ea23f1f03",
+  "reference_alignment": {
+    "reference_preds": "tracks/structural-sufficiency/zinc_restricted_adaptation_v1/analysis/reference_preds_test.csv",
+    "reference_mae_recomputed": {
+      "P3B_s0": 0.0698648406449365,
+      "L_s0": 0.06626655487264999,
+      "DBT_s0": 0.0694014943583316
+    },
+    "labels_match_official": true,
+    "row_identity": "row == 0..999"
+  },
+  "caches": {
+    "path": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_test.pt",
+    "sha256": "f7b9341ad2e58c5c5d81e44d966f028f91ba7cfa6649297f2ede8f0a536065d3",
+    "size_bytes": 85601708
+  },
+  "historically_exposed_test": true,
+  "test_used_for_selection": false,
+  "test_read": "one descriptive pass after the freeze; nothing selected or changed"
+}
