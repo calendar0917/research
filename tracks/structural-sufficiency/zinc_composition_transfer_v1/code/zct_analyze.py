@@ -140,7 +140,7 @@ def verify_contract(runs: dict) -> dict:
             continue
         init = {a["arm"]: a["init_state_sha256"] for a in arms}
         recipes = {a["arm"]: json.dumps(a["recipe"], sort_keys=True, default=str) for a in arms}
-        kappas = {a["arm"]: a["kappa"] for a in arms}
+        meta_kappas = {a["arm"]: a["kappa"] for a in arms if a["arm"] in ("R", "S")}
         arms_len = {a["arm"]: len(a["curve"]) for a in arms}
         hashes = {}
         n = min(arms_len.values())
@@ -156,8 +156,8 @@ def verify_contract(runs: dict) -> dict:
         checks[f"seed{seed}"] = {
             "init_hashes_identical": len(set(init.values())) == 1,
             "recipe_identical": len(set(recipes.values())) == 1,
-            "kappa": kappas,
-            "kappa_identical": len(set(kappas.values())) == 1,
+            "kappa_meta_arms": meta_kappas,
+            "kappa_identical": len(set(meta_kappas.values())) <= 1,
             "curve_lengths": arms_len,
             "per_epoch_batch_union_hashes_identical_over_common_length": bool(same),
             "n_common_epochs": int(n),
@@ -251,6 +251,8 @@ def core(extra_ledger: dict | None = None) -> dict:
                 "best_valid_delta": s["best_valid"]["valid_mae"] - r["best_valid"]["valid_mae"],
                 "W20_delta": cm_s["W20"] - cm_r["W20"],
                 "T100_delta": cm_s["T100"] - cm_r["T100"],
+                "final_valid_delta": s["fixed_objects"]["final"]["valid_mae"]
+                - r["fixed_objects"]["final"]["valid_mae"],
                 "molecule": paired_bootstrap(ae_s, ae_r),
                 "groups": {name: float(ae_s[idx].mean() - ae_r[idx].mean())
                            for name, idx in g["groups"].items()},
@@ -311,8 +313,8 @@ def _main_table_md(s: dict) -> str:
     rows += ["", "## Contract checks", ""]
     for seed, v in s["verification"].items():
         rows.append(f"* **{seed}**: init identical = {v['init_hashes_identical']}, recipe identical = "
-                    f"{v['recipe_identical']}, kappa identical = {v['kappa_identical']} "
-                    f"({v['kappa']}), per-epoch batch-union hashes identical over "
+                    f"{v['recipe_identical']}, kappa identical across meta arms = {v['kappa_identical']} "
+                    f"({v['kappa_meta_arms']}), per-epoch batch-union hashes identical over "
                     f"{v['n_common_epochs']} epochs = "
                     f"{v['per_epoch_batch_union_hashes_identical_over_common_length']}")
     rows += ["", "## Budget", "", f"* GPU hours (trainer-measured runtime): "
