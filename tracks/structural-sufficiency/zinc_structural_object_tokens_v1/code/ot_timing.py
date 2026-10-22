@@ -86,7 +86,7 @@ def main(argv=None) -> int:
         stats["tokens"] += ntok
         stats["Tmax"] += float(batch["Tmax"])
         stats["atoms"] += float(batch["atom_feat"].shape[0])
-        stats["pairs"] += float(batch["branch_pat_atom"].shape[0])
+        stats["pairs"] += float(batch["br_pat_atom"].shape[0])
         stats["rings"] += float(batch["ring_pat_atom"].shape[0])
         print(f"[batch {bi}] Tmax={int(batch['Tmax'])} tokens={int(ntok)} "
               f"collate={1e3*(t1-t0):.1f}ms transfer={1e3*(t2-t1):.1f}ms "
