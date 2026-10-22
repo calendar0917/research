@@ -1,0 +1,64 @@
+{
+  "protocol": "zinc-local-factorization-v1",
+  "arm": "F",
+  "arm_name": "LF-Factorized",
+  "candidate": "LF-F",
+  "seed": 0,
+  "steady_epoch_seconds": 3.5659122676588595,
+  "used_seconds_before_plan": 19.9856596570462,
+  "nominal_epochs": 600,
+  "epochs": 600,
+  "steps_per_epoch": 79,
+  "total_updates": 47400,
+  "projected_train_seconds": 2460.479464684613,
+  "projected_total_seconds": 2580.479464684613,
+  "hard_stop_seconds": 3600.0,
+  "feasible": true,
+  "reduction_rule": "1.15*t_slow*600+120 <= 3600 -> keep 600 epochs",
+  "recipe": {
+    "optimizer": "adamw",
+    "peak_lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "warmup_updates": 500,
+    "grad_clip": 5.0,
+    "horizon": "per-step cosine over 47400 outer updates"
+  },
+  "early_stop": null,
+  "note": "no architecture / rank / LR / horizon selection from timing or valid; the only timing-based decision is the shared epoch count defined in the config",
+  "created": "2026-10-22T15:29:35+0800",
+  "gate": {
+    "cpu_checks_n_pass": 10,
+    "cpu_checks_n_fail": 0,
+    "cpu_checks_config_sha256": "44753f28d1182018c82acf516a6a0620300ae724a764796a0b33b44a0e16f8cd",
+    "arms": {
+      "D": {
+        "parameters": 449601,
+        "init_state_sha256": "466d94813f6343068525c3742d3a4a0b901739b4012dac5abb33753716de429e",
+        "public_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+        "shared_embedding_sha256": "1d454a3e05e8503c2a6d04e2fc175b365d085dba6ab2ebcad0a7bdc15e20d6d7",
+        "w_s_zero": true,
+        "optimizer_covers_all": true,
+        "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+      },
+      "F": {
+        "parameters": 449457,
+        "init_state_sha256": "b33982cda507aef21cfa8f0ca798668b3d3ed043d4d600ffe02101a953e62af8",
+        "public_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+        "shared_embedding_sha256": "1d454a3e05e8503c2a6d04e2fc175b365d085dba6ab2ebcad0a7bdc15e20d6d7",
+        "w_s_zero": true,
+        "optimizer_covers_all": true,
+        "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+      }
+    },
+    "steps_per_epoch": 79,
+    "outer_updates": 47400,
+    "device": "cuda:0",
+    "cuda_visible_devices": "1 visible"
+  }
+}

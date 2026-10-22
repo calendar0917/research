@@ -1,0 +1,602 @@
+{
+  "protocol": "zinc-local-factorization-v1",
+  "config_sha256": "44753f28d1182018c82acf516a6a0620300ae724a764796a0b33b44a0e16f8cd",
+  "cpu_checks": {
+    "n_pass": 10,
+    "n_fail": 0
+  },
+  "arms": {
+    "D": {
+      "name": "LF-Dense",
+      "candidate": "LF-D",
+      "params": 449601,
+      "init": {
+        "ssl": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+        "init_state_sha256": "466d94813f6343068525c3742d3a4a0b901739b4012dac5abb33753716de429e",
+        "public_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+        "w_s_zero": true
+      },
+      "epochs": 600,
+      "updates": 47400,
+      "best_valid": 0.07861325328418753,
+      "best_epoch": 455,
+      "eval_train_at_best": 0.007410269360605162,
+      "final_valid": 0.07996426071220776,
+      "final_train_eval": 0.000761196839180775,
+      "final_online_train_mae": 0.0007233482521027326,
+      "test": {
+        "n": 1000,
+        "mae": 0.07057879661209882,
+        "rmse": 0.14152392580731898,
+        "p95_ae": 0.20686578117310975,
+        "max_ae": 1.5723707973957062,
+        "max_ae_row": 342,
+        "label_sha256": "66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768"
+      },
+      "valid_tail_100": {
+        "n": 100,
+        "median": 0.07996737752662739,
+        "min": 0.07949633552128216,
+        "mean": 0.0799869293236523,
+        "best_epoch_in_tail": false
+      },
+      "intervention": {
+        "w_s_norm_first": 0.22985552608362547,
+        "w_s_norm_last": 6.412628085942292,
+        "phi_norm_last": 7.105108977626206,
+        "phi_epoch_delta_first": 0.14053514792910726,
+        "phi_epoch_delta_last": 0.006135491244554747,
+        "port_rms_first": 0.008524519118048319,
+        "port_rms_last": 0.061186485851194516,
+        "s_rms_last": 0.10029986755431006
+      },
+      "wall_seconds": 1495.0033313629683,
+      "gpu_hours": 0.4152787031563801,
+      "steps_per_epoch": 79,
+      "steady_epoch_seconds": 2.4092178742866963,
+      "best_sha256": "41f0abca14ee1163574ccf706b5cba4fd7b82d04bd250b17f7358b1b1ab5620f",
+      "freeze": {
+        "protocol": "zinc-local-factorization-v1",
+        "arm": "D",
+        "arm_name": "LF-Dense",
+        "candidate": "LF-D",
+        "seed": 0,
+        "git_commit": "70275b31e190f90b8ff3e45000fb41f268b4f0d9",
+        "config_sha256": "44753f28d1182018c82acf516a6a0620300ae724a764796a0b33b44a0e16f8cd",
+        "best_sha256": "41f0abca14ee1163574ccf706b5cba4fd7b82d04bd250b17f7358b1b1ab5620f",
+        "best_epoch": 455,
+        "best_valid_mae": 0.07861325533309718,
+        "best_valid_mae_stored": 0.07861325328418753,
+        "best_train_mae_eval_mode": 0.007410269360605162,
+        "final_sha256": "50016bd7c537b051cd091a0a3ebbd92f5e44238e433ad3801702182ecef703e1",
+        "final_epoch": 600,
+        "final_valid_mae": 0.07996426071220776,
+        "final_train_mae_eval_mode": 0.000761196839180775,
+        "last_sha256": "94e2bfe600cf2e00596b0bb521ae4a3efaf39fb85cf1e7eb8d4999d5d91d0f84",
+        "init_state_sha256": "466d94813f6343068525c3742d3a4a0b901739b4012dac5abb33753716de429e",
+        "public_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+        "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+        "params": 449601,
+        "epochs_run": 600,
+        "outer_updates": 47400,
+        "gradient_calculations": 47400,
+        "recipe": {
+          "optimizer": "adamw",
+          "lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "grad_clip": 5.0,
+          "warmup_updates": 500,
+          "batch_size": 128,
+          "drop_last": false,
+          "epochs": 600,
+          "steps_per_epoch": 79,
+          "updates": 47400,
+          "actual_global_steps": 47400,
+          "loss": "raw-y L1",
+          "valid_every_epoch": true,
+          "dropout": 0.0,
+          "early_stop": null,
+          "ema_soup_swa": false
+        },
+        "data": {
+          "source": "official PyG ZINC subset=True train/valid",
+          "n_train": 10000,
+          "n_valid": 1000,
+          "train_label_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+          "valid_label_sha256": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f",
+          "official_test_loaded_before_freeze": false
+        },
+        "test_policy": "one descriptive read after this freeze; no test-driven change",
+        "frozen_at": "2026-10-22T15:54:10+0800"
+      },
+      "plan": {
+        "protocol": "zinc-local-factorization-v1",
+        "arm": "D",
+        "arm_name": "LF-Dense",
+        "candidate": "LF-D",
+        "seed": 0,
+        "steady_epoch_seconds": 2.4092178742866963,
+        "used_seconds_before_plan": 15.264175215968862,
+        "nominal_epochs": 600,
+        "epochs": 600,
+        "steps_per_epoch": 79,
+        "total_updates": 47400,
+        "projected_train_seconds": 1662.3603332578202,
+        "projected_total_seconds": 1782.3603332578202,
+        "hard_stop_seconds": 3600.0,
+        "feasible": true,
+        "reduction_rule": "1.15*t_slow*600+120 <= 3600 -> keep 600 epochs",
+        "recipe": {
+          "optimizer": "adamw",
+          "peak_lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "warmup_updates": 500,
+          "grad_clip": 5.0,
+          "horizon": "per-step cosine over 47400 outer updates"
+        },
+        "early_stop": null,
+        "note": "no architecture / rank / LR / horizon selection from timing or valid; the only timing-based decision is the shared epoch count defined in the config",
+        "created": "2026-10-22T15:29:30+0800",
+        "gate": {
+          "cpu_checks_n_pass": 10,
+          "cpu_checks_n_fail": 0,
+          "cpu_checks_config_sha256": "44753f28d1182018c82acf516a6a0620300ae724a764796a0b33b44a0e16f8cd",
+          "arms": {
+            "D": {
+              "parameters": 449601,
+              "init_state_sha256": "466d94813f6343068525c3742d3a4a0b901739b4012dac5abb33753716de429e",
+              "public_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+              "shared_embedding_sha256": "1d454a3e05e8503c2a6d04e2fc175b365d085dba6ab2ebcad0a7bdc15e20d6d7",
+              "w_s_zero": true,
+              "optimizer_covers_all": true,
+              "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+            },
+            "F": {
+              "parameters": 449457,
+              "init_state_sha256": "b33982cda507aef21cfa8f0ca798668b3d3ed043d4d600ffe02101a953e62af8",
+              "public_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+              "shared_embedding_sha256": "1d454a3e05e8503c2a6d04e2fc175b365d085dba6ab2ebcad0a7bdc15e20d6d7",
+              "w_s_zero": true,
+              "optimizer_covers_all": true,
+              "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+            }
+          },
+          "steps_per_epoch": 79,
+          "outer_updates": 47400,
+          "device": "cuda:0",
+          "cuda_visible_devices": "1 visible"
+        }
+      },
+      "epoch0_valid_diagnostic": 1.6000440956960083
+    },
+    "F": {
+      "name": "LF-Factorized",
+      "candidate": "LF-F",
+      "params": 449457,
+      "init": {
+        "ssl": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+        "init_state_sha256": "b33982cda507aef21cfa8f0ca798668b3d3ed043d4d600ffe02101a953e62af8",
+        "public_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+        "w_s_zero": true
+      },
+      "epochs": 600,
+      "updates": 47400,
+      "best_valid": 0.07859319719386985,
+      "best_epoch": 329,
+      "eval_train_at_best": 0.023243696693261155,
+      "final_valid": 0.0797919767172425,
+      "final_train_eval": 0.0011974970730952918,
+      "final_online_train_mae": 0.0006716529790312052,
+      "test": {
+        "n": 1000,
+        "mae": 0.07221581584773958,
+        "rmse": 0.14174861541601014,
+        "p95_ae": 0.2131980299949643,
+        "max_ae": 1.4616608619689941,
+        "max_ae_row": 402,
+        "label_sha256": "66fd23ecdb1b59c76cee597efc81272e0d2744eeac80744f4159d436e5388768"
+      },
+      "valid_tail_100": {
+        "n": 100,
+        "median": 0.07982546651823214,
+        "min": 0.07920621065137676,
+        "mean": 0.07984442237536188,
+        "best_epoch_in_tail": false
+      },
+      "intervention": {
+        "w_s_norm_first": 0.22780485143093032,
+        "w_s_norm_last": 5.274718947435583,
+        "phi_norm_last": 7.20457801573868,
+        "phi_epoch_delta_first": 0.10335269356585894,
+        "phi_epoch_delta_last": 0.005565036021576299,
+        "port_rms_first": 0.006720510956760264,
+        "port_rms_last": 0.05875247893976656,
+        "s_rms_last": 0.100299467520353
+      },
+      "wall_seconds": 2090.4958737748675,
+      "gpu_hours": 0.5806932982707965,
+      "steps_per_epoch": 79,
+      "steady_epoch_seconds": 3.5659122676588595,
+      "best_sha256": "5f6492cb691d9c9cb37e4f5638d1dbc2aba0e3d934484270e82f11e9a8649f4f",
+      "freeze": {
+        "protocol": "zinc-local-factorization-v1",
+        "arm": "F",
+        "arm_name": "LF-Factorized",
+        "candidate": "LF-F",
+        "seed": 0,
+        "git_commit": "70275b31e190f90b8ff3e45000fb41f268b4f0d9",
+        "config_sha256": "44753f28d1182018c82acf516a6a0620300ae724a764796a0b33b44a0e16f8cd",
+        "best_sha256": "5f6492cb691d9c9cb37e4f5638d1dbc2aba0e3d934484270e82f11e9a8649f4f",
+        "best_epoch": 329,
+        "best_valid_mae": 0.07859319468674948,
+        "best_valid_mae_stored": 0.07859319719386985,
+        "best_train_mae_eval_mode": 0.023243696693261155,
+        "final_sha256": "919218d03f43c663d326c6af65fd5381993982e0f3525c3f5d2eb6203c0ba33e",
+        "final_epoch": 600,
+        "final_valid_mae": 0.0797919767172425,
+        "final_train_mae_eval_mode": 0.0011974970730952918,
+        "last_sha256": "5fdc333168e4b6ffd055878258e8ea3358f3efc42f84afb51e8031e55e610862",
+        "init_state_sha256": "b33982cda507aef21cfa8f0ca798668b3d3ed043d4d600ffe02101a953e62af8",
+        "public_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+        "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+        "params": 449457,
+        "epochs_run": 600,
+        "outer_updates": 47400,
+        "gradient_calculations": 47400,
+        "recipe": {
+          "optimizer": "adamw",
+          "lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "grad_clip": 5.0,
+          "warmup_updates": 500,
+          "batch_size": 128,
+          "drop_last": false,
+          "epochs": 600,
+          "steps_per_epoch": 79,
+          "updates": 47400,
+          "actual_global_steps": 47400,
+          "loss": "raw-y L1",
+          "valid_every_epoch": true,
+          "dropout": 0.0,
+          "early_stop": null,
+          "ema_soup_swa": false
+        },
+        "data": {
+          "source": "official PyG ZINC subset=True train/valid",
+          "n_train": 10000,
+          "n_valid": 1000,
+          "train_label_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+          "valid_label_sha256": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f",
+          "official_test_loaded_before_freeze": false
+        },
+        "test_policy": "one descriptive read after this freeze; no test-driven change",
+        "frozen_at": "2026-10-22T16:04:06+0800"
+      },
+      "plan": {
+        "protocol": "zinc-local-factorization-v1",
+        "arm": "F",
+        "arm_name": "LF-Factorized",
+        "candidate": "LF-F",
+        "seed": 0,
+        "steady_epoch_seconds": 3.5659122676588595,
+        "used_seconds_before_plan": 19.9856596570462,
+        "nominal_epochs": 600,
+        "epochs": 600,
+        "steps_per_epoch": 79,
+        "total_updates": 47400,
+        "projected_train_seconds": 2460.479464684613,
+        "projected_total_seconds": 2580.479464684613,
+        "hard_stop_seconds": 3600.0,
+        "feasible": true,
+        "reduction_rule": "1.15*t_slow*600+120 <= 3600 -> keep 600 epochs",
+        "recipe": {
+          "optimizer": "adamw",
+          "peak_lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "warmup_updates": 500,
+          "grad_clip": 5.0,
+          "horizon": "per-step cosine over 47400 outer updates"
+        },
+        "early_stop": null,
+        "note": "no architecture / rank / LR / horizon selection from timing or valid; the only timing-based decision is the shared epoch count defined in the config",
+        "created": "2026-10-22T15:29:35+0800",
+        "gate": {
+          "cpu_checks_n_pass": 10,
+          "cpu_checks_n_fail": 0,
+          "cpu_checks_config_sha256": "44753f28d1182018c82acf516a6a0620300ae724a764796a0b33b44a0e16f8cd",
+          "arms": {
+            "D": {
+              "parameters": 449601,
+              "init_state_sha256": "466d94813f6343068525c3742d3a4a0b901739b4012dac5abb33753716de429e",
+              "public_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+              "shared_embedding_sha256": "1d454a3e05e8503c2a6d04e2fc175b365d085dba6ab2ebcad0a7bdc15e20d6d7",
+              "w_s_zero": true,
+              "optimizer_covers_all": true,
+              "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+            },
+            "F": {
+              "parameters": 449457,
+              "init_state_sha256": "b33982cda507aef21cfa8f0ca798668b3d3ed043d4d600ffe02101a953e62af8",
+              "public_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+              "shared_embedding_sha256": "1d454a3e05e8503c2a6d04e2fc175b365d085dba6ab2ebcad0a7bdc15e20d6d7",
+              "w_s_zero": true,
+              "optimizer_covers_all": true,
+              "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+            }
+          },
+          "steps_per_epoch": 79,
+          "outer_updates": 47400,
+          "device": "cuda:0",
+          "cuda_visible_devices": "1 visible"
+        }
+      },
+      "epoch0_valid_diagnostic": 1.6000441014180542
+    }
+  },
+  "references": {
+    "P3B_s0": {
+      "params": 413505,
+      "best_valid": 0.076223754,
+      "test_mae": 0.069864841,
+      "status": "reused (not retrained this round)"
+    },
+    "L_s0": {
+      "params": 494193,
+      "best_valid": 0.078537152,
+      "test_mae": 0.066266555,
+      "status": "reused (not retrained this round)"
+    },
+    "DBT_s0": {
+      "params": 452523,
+      "best_valid": 0.077768402,
+      "test_mae": 0.069401494,
+      "status": "reused (not retrained this round)"
+    },
+    "A_joint_BF_s0": {
+      "params": 447505,
+      "best_valid": 0.07673135878139874,
+      "test_mae": 0.07006746093463152,
+      "status": "reused (not retrained this round)",
+      "best_epoch": 375,
+      "gpu_hours": 0.36396694513496997,
+      "wall_seconds": 1310.2810024858918,
+      "run": "tracks/structural-sufficiency/zinc_structural_object_tokens_v1/runs/A_joint_BF_s0",
+      "test_rmse": null,
+      "final_valid": 0.07821837540710112,
+      "best_sha256": "237db6cbad65fdda25804ce6c51083b05e3007a25e5190841604789531ab8e7d",
+      "eval_train_at_best": 0.01566614822194679
+    },
+    "P3_Control_s0_2026_10_22": {
+      "params": 413505,
+      "best_valid": 0.07958826591813704,
+      "test_mae": 0.072688588,
+      "status": "reused (not retrained this round)",
+      "best_epoch": 431,
+      "gpu_hours": 0.32473175118696723,
+      "wall_seconds": 1169.034304273082,
+      "run": "tracks/structural-sufficiency/zinc_p3_sam_v1/runs/C_control_s0",
+      "test_rmse": 0.16558724419861504,
+      "final_valid": 0.08166812283539912,
+      "best_sha256": "1cb9cccbe79b3bc31b499d1090fab7e36b446740da381fd80053602d67acc9dd"
+    },
+    "P3_SAM_s0_2026_10_22": {
+      "params": 413505,
+      "best_valid": 0.11831081358710072,
+      "best_epoch": 299,
+      "gpu_hours": 0.6989133040949754,
+      "wall_seconds": 2516.0878947419114,
+      "run": "tracks/structural-sufficiency/zinc_p3_sam_v1/runs/S_sam_s0",
+      "test_mae": 0.10037638429459185,
+      "test_rmse": 0.17601770720606225,
+      "final_valid": 0.14051807643746725,
+      "best_sha256": "6976c7bdc8ed26b1fb4d468c998c5aa9e68511e082a3d2ccffda97fc913bebaf"
+    }
+  },
+  "groups": {
+    "valid": {
+      "rows": [
+        {
+          "group": "covered_ordinary",
+          "n": 710,
+          "mae": {
+            "D": 0.0490779762873912,
+            "F": 0.05021226832029314,
+            "P3B_s0": 0.047467988749799996,
+            "L_s0": 0.04486361966019747,
+            "DBT_s0": 0.042996182291534374
+          },
+          "F_minus_D": 0.0011342920329019332
+        },
+        {
+          "group": "covered_tail",
+          "n": 39,
+          "mae": {
+            "D": 0.17514834666367746,
+            "F": 0.1468442035321827,
+            "P3B_s0": 0.11628432384615384,
+            "L_s0": 0.22548120564102567,
+            "DBT_s0": 0.2586360225646033
+          },
+          "F_minus_D": -0.028304143131494763
+        },
+        {
+          "group": "unseen_ordinary",
+          "n": 225,
+          "mae": {
+            "D": 0.1328435917482954,
+            "F": 0.13430782939947025,
+            "P3B_s0": 0.13393959695404442,
+            "L_s0": 0.13077343970635555,
+            "DBT_s0": 0.1413199846951731
+          },
+          "F_minus_D": 0.0014642376511748434
+        },
+        {
+          "group": "unseen_tail",
+          "n": 26,
+          "mae": {
+            "D": 0.27104993953791695,
+            "F": 0.26908840554497354,
+            "P3B_s0": 0.30192245923076927,
+            "L_s0": 0.32562274153846155,
+            "DBT_s0": 0.20605041400634766
+          },
+          "F_minus_D": -0.0019615339929434095
+        }
+      ],
+      "meta": {
+        "overall_mae": {
+          "D": 0.0786132552552835,
+          "F": 0.07859319460421338,
+          "P3B_s0": 0.07622375389701798,
+          "L_s0": 0.07853715219267021,
+          "DBT_s0": 0.07776840162758793
+        },
+        "row_172_kept": true,
+        "analysis_only": true
+      },
+      "reference_csv": "tracks/structural-sufficiency/zinc_restricted_adaptation_v1/analysis/reference_preds_valid.csv"
+    },
+    "test": {
+      "rows": [
+        {
+          "group": "covered_ordinary",
+          "n": 705,
+          "mae": {
+            "D": 0.05045525326759441,
+            "F": 0.052399950542954724,
+            "P3B_s0": 0.047252012596221284,
+            "L_s0": 0.04374402893580142,
+            "DBT_s0": 0.048997656123534045
+          },
+          "F_minus_D": 0.0019446972753603131
+        },
+        {
+          "group": "covered_tail",
+          "n": 51,
+          "mae": {
+            "D": 0.09529388199546669,
+            "F": 0.10569894528025914,
+            "P3B_s0": 0.12849450588235303,
+            "L_s0": 0.07644086294117647,
+            "DBT_s0": 0.08673262593697344
+          },
+          "F_minus_D": 0.010405063284792446
+        },
+        {
+          "group": "unseen_ordinary",
+          "n": 218,
+          "mae": {
+            "D": 0.11726750831015147,
+            "F": 0.11641472633380387,
+            "P3B_s0": 0.11492148580091972,
+            "L_s0": 0.11423026464637615,
+            "DBT_s0": 0.11892868999602643
+          },
+          "F_minus_D": -0.0008527819763475969
+        },
+        {
+          "group": "unseen_tail",
+          "n": 26,
+          "mae": {
+            "D": 0.17628993422363287,
+            "F": 0.17326131233921938,
+            "P3B_s0": 0.19023338692307706,
+            "L_s0": 0.2548589526923076,
+            "DBT_s0": 0.17339724805079532
+          },
+          "F_minus_D": -0.003028621884413496
+        }
+      ],
+      "meta": {
+        "overall_mae": {
+          "D": 0.07057879663685034,
+          "F": 0.07221581580366525,
+          "P3B_s0": 0.0698648406449365,
+          "L_s0": 0.06626655487264999,
+          "DBT_s0": 0.0694014943583316
+        },
+        "row_172_kept": true,
+        "analysis_only": true
+      },
+      "reference_csv": "tracks/structural-sufficiency/zinc_restricted_adaptation_v1/analysis/reference_preds_test.csv"
+    }
+  },
+  "curve_comparison": {
+    "shared_epochs": 600,
+    "F_better_epochs": 326,
+    "F_worse_epochs": 274,
+    "F_minus_D_valid_median": -0.00012370265740901248,
+    "F_minus_D_valid_mean": -0.0006226872934709524,
+    "F_minus_D_valid_tail100_median": -0.00015327196288854317,
+    "F_minus_D_valid_tail100_mean": -0.0001425069482903929,
+    "F_better_tail100_epochs": 78,
+    "F_minus_D_online_train_last": -5.169527307152745e-05,
+    "order_hashes_identical": true
+  },
+  "contrasts": {
+    "valid": {
+      "F_minus_D_mae": -2.0060651070116786e-05,
+      "paired_bootstrap_F_minus_D": {
+        "mean_delta_ae": -2.0060651070112456e-05,
+        "ci95": [
+          -0.004318694628375124,
+          0.0036802626959187893
+        ],
+        "fraction_a_better": 0.484,
+        "reps": 10000,
+        "seed": 20261022,
+        "delta_definition": "AE(first arm) - AE(second arm); negative = first arm better",
+        "scope": "molecular sampling uncertainty for this trained pair only; not a cross-seed repeatability estimate"
+      },
+      "max_abs_prediction_difference": 1.3346366882324219,
+      "correlation": 0.9994140778981461
+    },
+    "test": {
+      "F_minus_D_mae": 0.0016370191668149126,
+      "paired_bootstrap_F_minus_D": {
+        "mean_delta_ae": 0.001637019166814914,
+        "ci95": [
+          -0.0013433992341217768,
+          0.0046803601035350275
+        ],
+        "fraction_a_better": 0.48,
+        "reps": 10000,
+        "seed": 20261022,
+        "delta_definition": "AE(first arm) - AE(second arm); negative = first arm better",
+        "scope": "molecular sampling uncertainty for this trained pair only; not a cross-seed repeatability estimate"
+      },
+      "max_abs_prediction_difference": 0.5559563636779785,
+      "correlation": 0.9995904140792294
+    }
+  },
+  "preds_test_csv": "tracks/structural-sufficiency/zinc_local_factorization_v1/analysis/preds_test.csv",
+  "curve_plot": {
+    "plotted": true,
+    "path": "tracks/structural-sufficiency/zinc_local_factorization_v1/analysis/curves.png"
+  }
+}

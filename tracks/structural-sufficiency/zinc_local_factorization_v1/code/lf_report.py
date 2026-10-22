@@ -189,29 +189,74 @@ def main() -> int:
             "epoch0_valid_diagnostic": float(train["epoch0_valid_diagnostic"]),
         }
 
-    for name, path in (("P3B_s0", _SS / "zinc_recipe_trunk_v2" / "runs" / "xBssl_P3N_s0"),
-                       ("A_joint_BF_s0", _SS / "zinc_structural_object_tokens_v1" / "runs" / "A_joint_BF_s0"),
-                       ("P3_Control_s0", _SS / "zinc_p3_sam_v1" / "runs" / "C_control_s0"),
-                       ("P3_SAM_s0", _SS / "zinc_p3_sam_v1" / "runs" / "S_sam_s0")):
-        tj = path / "train.json"
+    # declared reference rows (reused, not retrained in this round)
+    for name, r in cfg["reference"].items():
+        if not isinstance(r, dict) or "parameters" not in r:
+            continue
+        out["references"][name] = {
+            "params": r.get("parameters"), "best_valid": r.get("valid_mae"),
+            "test_mae": r.get("test_mae"), "status": "reused (not retrained this round)",
+        }
+    # enrich with wall/GPU and extra fields from the saved run/analysis records
+    for name, run, ana in (
+            ("A_joint_BF_s0", _SS / "zinc_structural_object_tokens_v1" / "runs" / "A_joint_BF_s0",
+             _SS / "zinc_structural_object_tokens_v1" / "analysis" / "A_joint_BF"),
+            ("P3_Control_s0_2026_10_22", _SS / "zinc_p3_sam_v1" / "runs" / "C_control_s0",
+             _SS / "zinc_p3_sam_v1" / "analysis" / "P3_Control"),
+            ("P3_SAM_s0_2026_10_22", _SS / "zinc_p3_sam_v1" / "runs" / "S_sam_s0",
+             _SS / "zinc_p3_sam_v1" / "analysis" / "P3_SAM")):
+        rec = out["references"].setdefault(name, {})
+        tj = run / "train.json"
         if tj.exists():
             t = C.read_json(tj)
-            out["references"][name] = {
-                "params": t.get("parameter_count"),
-                "best_valid": t.get("best_valid", {}).get("valid_mae"),
-                "best_epoch": t.get("best_valid", {}).get("epoch"),
-                "gpu_hours": t.get("gpu_hours"), "wall_seconds": t.get("wall_seconds"),
-                "run": str(path.relative_to(C.REPO)),
-            }
-    if "A_joint_BF_s0" in out["references"]:
-        r = out["references"]["A_joint_BF_s0"]
-        rep = _SS / "zinc_structural_object_tokens_v1" / "analysis" / "summary.json"
-        if rep.exists():
-            s = C.read_json(rep)
-            a = s.get("arms", {}).get("A_joint_BF", {})
-            r["eval_train_at_best"] = a.get("train_eval_at_best")
-            r["final_valid"] = a.get("final_valid")
-            r["test_mae"] = a.get("test_mae")
+            rec.update({"params": t.get("parameter_count", rec.get("params")),
+                        "best_valid": t.get("best_valid", {}).get("valid_mae", rec.get("best_valid")),
+                        "best_epoch": t.get("best_valid", {}).get("epoch"),
+                        "gpu_hours": t.get("gpu_hours"),
+                        "wall_seconds": t.get("wall_seconds"),
+                        "run": str(run.relative_to(C.REPO))})
+        tr = ana / "test_report.json"
+        if tr.exists():
+            t = C.read_json(tr)
+            rec.setdefault("test_mae", t["test"]["mae"])
+            rec["test_rmse"] = t["test"].get("rmse")
+        fr = ana / "freeze.json"
+        if fr.exists():
+            f = C.read_json(fr)
+            rec.setdefault("final_valid", f.get("final_valid_mae"))
+            rec.setdefault("test_mae", None)
+            rec["best_sha256"] = f.get("best_sha256")
+    summary = _SS / "zinc_structural_object_tokens_v1" / "analysis" / "summary.json"
+    if summary.exists():
+        a = C.read_json(summary).get("arms", {}).get("A_joint_BF", {})
+        ref = out["references"].get("A_joint_BF_s0", {})
+        for key, src in (("eval_train_at_best", "train_eval_at_best"),
+                         ("final_valid", "final_valid"), ("test_mae", "test_mae")):
+            if a.get(src) is not None:
+                ref[key] = a[src]
+
+    # per-epoch curve comparison (same epochs, same order stream)
+    if {"D", "F"} <= set(curves):
+        dv = {r["epoch"]: r["valid_mae"] for r in curves["D"]}
+        fv = {r["epoch"]: r["valid_mae"] for r in curves["F"]}
+        shared = sorted(set(dv) & set(fv))
+        delta = np.asarray([fv[e] - dv[e] for e in shared])
+        tail_mask = np.asarray([e > shared[-1] - 100 for e in shared])
+        out["curve_comparison"] = {
+            "shared_epochs": len(shared),
+            "F_better_epochs": int((delta < 0).sum()),
+            "F_worse_epochs": int((delta > 0).sum()),
+            "F_minus_D_valid_median": float(np.median(delta)),
+            "F_minus_D_valid_mean": float(delta.mean()),
+            "F_minus_D_valid_tail100_median": float(np.median(delta[tail_mask])),
+            "F_minus_D_valid_tail100_mean": float(delta[tail_mask].mean()),
+            "F_better_tail100_epochs": int((delta[tail_mask] < 0).sum()),
+            "F_minus_D_online_train_last": float(
+                curves["F"][-1]["online_train_mae"] - curves["D"][-1]["online_train_mae"]),
+            "order_hashes_identical": all(
+                a["order_sha256"] == b["order_sha256"] for a, b in zip(curves["D"], curves["F"])),
+        }
+
     # contrasts (same-round only for F-D)
     contrasts = {}
     for split, preds in (("valid", preds_valid), ("test", preds_test)):
@@ -271,7 +316,7 @@ def main() -> int:
             f"{a['test']['max_ae']:.6f} (row {a['test']['max_ae_row']}) | "
             f"{a['gpu_hours']:.3f} | {a['wall_seconds']:.0f} |")
     for name, r in out["references"].items():
-        lines.append(f"| ref {name} | {r.get('params')} | - | - | {r.get('best_valid')} | "
+        lines.append(f"| ref {name} | {r.get('params')} | reused | - | {r.get('best_valid')} | "
                      f"{r.get('best_epoch')} | {r.get('eval_train_at_best')} | "
                      f"{r.get('final_valid')} | {r.get('test_mae')} | - | - | - | "
                      f"{r.get('gpu_hours')} | {r.get('wall_seconds')} |")
