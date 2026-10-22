@@ -19,12 +19,12 @@
 | rep merge classes | 686 |
 | rep merged extra original keys | 699 |
 | rep classes with >1 witness component | 1 |
-| rep unwitnessed merged extra keys | 0 |
+| rep unwitnessed singleton keys | 2 |
 | orig keys with >1 arom image (context split) | 1458 |
 | arom merge classes | 929 |
 | arom merged extra original keys | 1075 |
 | arom classes with >1 witness component | 227 |
-| arom unwitnessed merged extra keys | 100 |
+| arom unwitnessed singleton keys | 380 |
 
 ## Group support
 
@@ -51,9 +51,19 @@
 | unseen_tail | 26 | 520 | arom | 78 | 0.150000 | 0.161474 | 0/26 |
 | unseen_tail | 26 | 520 | union | 73 | 0.140385 | 0.148775 | 0/26 |
 
+## Rescued / lost atom occurrences
+
+| group | rescued rep | rescued arom | rescued union | lost rep | lost arom |
+|---|---:|---:|---:|---:|---:|
+| all | 19 | 34 | 29 | 8 | 84 |
+| seen_ordinary | 0 | 0 | 0 | 5 | 35 |
+| seen_tail | 0 | 0 | 0 | 0 | 0 |
+| unseen_ordinary | 19 | 34 | 29 | 3 | 44 |
+| unseen_tail | 0 | 0 | 0 | 0 | 5 |
+
 ## H-inference audit
 
-| split | molecules with inferred H | explicit-H-only no solution | original missing | H-changing candidates |
-|---|---:|---:|---:|---:|
-| valid | 4 | 3 | 1 | 1 |
-| train | 9156 | 42 | 2 | 2 |
+| split | inferred H | audited | explicit-H capacity outside {0,1} | no solution | original missing | H-changing candidates |
+|---|---:|---:|---:|---:|---:|---:|
+| valid | 911 | 911 | 907 | 3 | 1 | 1 |
+| train | 9156 | 9156 | 9112 | 42 | 2 | 2 |

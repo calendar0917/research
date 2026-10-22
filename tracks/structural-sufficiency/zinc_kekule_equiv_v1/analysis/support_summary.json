@@ -120,6 +120,75 @@
         "original_key": "C(S:C(S:C,D:C),D:C(S:C,S:C,D:C))"
       }
     ],
+    "representation_quotient_overmerge_examples": [
+      {
+        "canonical_key": "C(S:C(S:C,S:C,D:C),S:O(S:C),D:C(S:C,S:N,D:C))",
+        "n_original_keys": 2,
+        "n_witness_components": 2,
+        "occurrences": [
+          {
+            "aromatic_key": "C(S:O(S:C),A:C(S:C,A:C,A:C),A:C(S:C,A:C,A:N))",
+            "atom": 21,
+            "atom_word": "C",
+            "dictionary_h": 0,
+            "inferred_h": false,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 1,
+                "other_word": "C"
+              },
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 7,
+                "other_word": "C"
+              },
+              {
+                "aromatic": false,
+                "order": 1,
+                "other": 22,
+                "other_word": "O"
+              }
+            ],
+            "original_key": "C(S:C(S:C,S:C,D:N),S:O(S:C),D:C(S:C,S:C,D:C))",
+            "row": 9141,
+            "total_h": 0
+          },
+          {
+            "aromatic_key": "C(S:O(S:C),A:C(S:C,A:C,A:C),A:C(S:N,A:C,A:C))",
+            "atom": 5,
+            "atom_word": "C",
+            "dictionary_h": 0,
+            "inferred_h": false,
+            "local_bonds": [
+              {
+                "aromatic": true,
+                "order": 2,
+                "other": 3,
+                "other_word": "C"
+              },
+              {
+                "aromatic": false,
+                "order": 1,
+                "other": 6,
+                "other_word": "O"
+              },
+              {
+                "aromatic": true,
+                "order": 1,
+                "other": 7,
+                "other_word": "C"
+              }
+            ],
+            "original_key": "C(S:C(S:C,S:N,D:C),S:O(S:C),D:C(S:C,S:C,D:C))",
+            "row": 292,
+            "total_h": 0
+          }
+        ]
+      }
+    ],
     "rescued_atoms_in_225": [
       {
         "atom": 3,
@@ -969,6 +1038,8 @@
       "n_lost_atoms_rep": 8,
       "n_molecules": 1000,
       "n_no_alternative": 173,
+      "n_rescued_atoms_arom": 34,
+      "n_rescued_atoms_rep": 19,
       "n_rescued_atoms_union": 29,
       "n_truncated": 2,
       "n_unsupported": 0,
@@ -1014,6 +1085,8 @@
       "n_lost_atoms_rep": 5,
       "n_molecules": 710,
       "n_no_alternative": 91,
+      "n_rescued_atoms_arom": 0,
+      "n_rescued_atoms_rep": 0,
       "n_rescued_atoms_union": 0,
       "n_truncated": 2,
       "n_unsupported": 0,
@@ -1059,6 +1132,8 @@
       "n_lost_atoms_rep": 0,
       "n_molecules": 39,
       "n_no_alternative": 23,
+      "n_rescued_atoms_arom": 0,
+      "n_rescued_atoms_rep": 0,
       "n_rescued_atoms_union": 0,
       "n_truncated": 0,
       "n_unsupported": 0,
@@ -1104,6 +1179,8 @@
       "n_lost_atoms_rep": 3,
       "n_molecules": 225,
       "n_no_alternative": 44,
+      "n_rescued_atoms_arom": 34,
+      "n_rescued_atoms_rep": 19,
       "n_rescued_atoms_union": 29,
       "n_truncated": 0,
       "n_unsupported": 0,
@@ -1149,6 +1226,8 @@
       "n_lost_atoms_rep": 0,
       "n_molecules": 26,
       "n_no_alternative": 15,
+      "n_rescued_atoms_arom": 0,
+      "n_rescued_atoms_rep": 0,
       "n_rescued_atoms_union": 0,
       "n_truncated": 0,
       "n_unsupported": 0,
@@ -1189,14 +1268,30 @@
     }
   },
   "h_audit": {
-    "note": "The committed atom dictionary does not encode neutral N/O/S H. The audit enumerates with dictionary-only H; failures/candidates there show why the frozen inferred-H state is required. Those candidates are never used.",
+    "note": "The committed atom dictionary does not encode neutral N/O/S H. The audit enumerates with dictionary-only H.  ``status=ok`` means the explicit-H-only capacity model is even in {0,1}; there, failures/candidates show why frozen inferred H is required. ``capacity_outside_0_1`` is already an explicit-H-only representation failure.  No audited candidate is ever used.",
     "train": {
-      "counts": {
+      "counts_on_auditable_explicit_h_only": {
         "explicit_h_h_changing_candidates": 2,
         "explicit_h_no_solution": 42,
         "explicit_h_original_missing": 2
       },
       "examples": [
+        {
+          "row": 0,
+          "status": "capacity_outside_0_1"
+        },
+        {
+          "row": 1,
+          "status": "capacity_outside_0_1"
+        },
+        {
+          "row": 2,
+          "status": "capacity_outside_0_1"
+        },
+        {
+          "row": 3,
+          "status": "capacity_outside_0_1"
+        },
         {
           "explicit_h_h_changing_candidates": 0,
           "explicit_h_n_solutions_seen": 0,
@@ -1240,39 +1335,38 @@
           ],
           "row": 422,
           "status": "ok"
-        },
-        {
-          "explicit_h_h_changing_candidates": 0,
-          "explicit_h_n_solutions_seen": 0,
-          "explicit_h_no_solution": 1,
-          "explicit_h_original_missing": 0,
-          "inferred_h_atoms": [
-            20
-          ],
-          "row": 531,
-          "status": "ok"
-        },
-        {
-          "explicit_h_h_changing_candidates": 0,
-          "explicit_h_n_solutions_seen": 0,
-          "explicit_h_no_solution": 1,
-          "explicit_h_original_missing": 0,
-          "inferred_h_atoms": [
-            3
-          ],
-          "row": 573,
-          "status": "ok"
         }
       ],
-      "n_molecules_with_inferred_h": 9156
+      "n_audited": 9156,
+      "n_molecules_with_inferred_h": 9156,
+      "status_counts": {
+        "capacity_outside_0_1": 9112,
+        "ok": 44
+      }
     },
     "valid": {
-      "counts": {
+      "counts_on_auditable_explicit_h_only": {
         "explicit_h_h_changing_candidates": 1,
         "explicit_h_no_solution": 3,
         "explicit_h_original_missing": 1
       },
       "examples": [
+        {
+          "row": 0,
+          "status": "capacity_outside_0_1"
+        },
+        {
+          "row": 1,
+          "status": "capacity_outside_0_1"
+        },
+        {
+          "row": 2,
+          "status": "capacity_outside_0_1"
+        },
+        {
+          "row": 3,
+          "status": "capacity_outside_0_1"
+        },
         {
           "explicit_h_h_changing_candidates": 0,
           "explicit_h_n_solutions_seen": 0,
@@ -1319,7 +1413,12 @@
           "status": "ok"
         }
       ],
-      "n_molecules_with_inferred_h": 4
+      "n_audited": 911,
+      "n_molecules_with_inferred_h": 911,
+      "status_counts": {
+        "capacity_outside_0_1": 907,
+        "ok": 4
+      }
     }
   },
   "official_test_loaded": false,
@@ -1355,7 +1454,7 @@
     "arom_merge_classes": 929,
     "arom_merged_classes_with_multiple_witness_components": 227,
     "arom_merged_extra_keys": 1075,
-    "arom_unwitnessed_merged_extra_keys": 100,
+    "arom_unwitnessed_merged_singleton_keys": 380,
     "n_arom_types": 13195,
     "n_multi_orbit_occurrences": 50865,
     "n_occurrences": 231664,
@@ -1370,7 +1469,7 @@
     "rep_merge_classes": 686,
     "rep_merged_classes_with_multiple_witness_components": 1,
     "rep_merged_extra_keys": 699,
-    "rep_unwitnessed_merged_extra_keys": 0,
+    "rep_unwitnessed_merged_singleton_keys": 2,
     "union_keys_not_original": 1060
   }
 }

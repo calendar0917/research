@@ -261,11 +261,11 @@ def _merge_component_stats(classes: dict[Any, set], witness: dict[Any, set],
         comps = _components(v, witness)
         if len(comps) > 1:
             multi += 1
-            unwitnessed += len(v) - len(comps)
+        unwitnessed += sum(1 for comp in comps if len(comp) == 1)
         max_comp = max(max_comp, len(comps))
     return {
         f"{name}_merged_classes_with_multiple_witness_components": int(multi),
-        f"{name}_unwitnessed_merged_extra_keys": int(unwitnessed),
+        f"{name}_unwitnessed_merged_singleton_keys": int(unwitnessed),
         f"{name}_max_witness_components_in_a_merged_class": int(max_comp),
     }
 
@@ -304,6 +304,8 @@ def valid_support(valid_records: Sequence[dict], ds, V: dict[str, set]) -> tuple
             "full_rep": bool(sr.all()),
             "full_arom": bool(sa.all()),
             "full_union": bool(su.all()),
+            "rescued_rep": int(((~s0) & sr).sum()),
+            "rescued_arom": int(((~s0) & sa).sum()),
             "rescued_union": int(((~s0) & su).sum()),
             "lost_rep": int((s0 & ~sr).sum()),
             "lost_arom": int((s0 & ~sa).sum()),
@@ -341,6 +343,8 @@ def aggregate(per_mol: Sequence[dict], ref: dict) -> dict[str, Any]:
             "n_no_alternative": int(sum(1 for r in rows if r["status"] == "no_alternative")),
             "n_truncated": int(sum(1 for r in rows if r["truncated"])),
             "n_unsupported": int(sum(1 for r in rows if r["status"] == "unsupported")),
+            "n_rescued_atoms_rep": int(sum(r["rescued_rep"] for r in rows)),
+            "n_rescued_atoms_arom": int(sum(r["rescued_arom"] for r in rows)),
             "n_rescued_atoms_union": int(sum(r["rescued_union"] for r in rows)),
             "n_lost_atoms_rep": int(sum(r["lost_rep"] for r in rows)),
             "n_lost_atoms_arom": int(sum(r["lost_arom"] for r in rows)),
@@ -479,6 +483,29 @@ def build_examples(valid_records, ds, train_records, V, ctx, per_atom, ref,
         if len(witness_examples) >= 2:
             break
 
+    rep_overmerge = []
+    for cls, origs in ctx["min_orig"].items():
+        if len(origs) < 2:
+            continue
+        comps = _components(origs, ctx["witness"])
+        if len(comps) < 2:
+            continue
+        occs = []
+        for comp in comps[:4]:
+            for o in comp[:2]:
+                for row, atom, a in ctx["key_occurrences"].get(o, [])[:1]:
+                    occ = key_occurrence((row, atom))
+                    if occ:
+                        occ["original_key"] = _readable_key(o)
+                        occ["aromatic_key"] = _readable_key(a)
+                        occs.append(occ)
+        rep_overmerge.append({
+            "canonical_key": _readable_key(cls),
+            "n_original_keys": len(origs),
+            "n_witness_components": len(comps),
+            "occurrences": occs,
+        })
+
     overmerge_examples = []
     overmerge_candidates = []
     for cls, origs in ctx["arom_orig"].items():
@@ -529,6 +556,7 @@ def build_examples(valid_records, ds, train_records, V, ctx, per_atom, ref,
     return {
         "rescued_atoms_in_225": rescue,
         "witness_merge_examples": witness_examples,
+        "representation_quotient_overmerge_examples": rep_overmerge,
         "unwitnessed_aromatic_merge_examples": overmerge_examples,
         "context_split_examples": split_examples,
     }
@@ -540,10 +568,15 @@ def build_examples(valid_records, ds, train_records, V, ctx, per_atom, ref,
 
 
 def h_audit_summary(valid_records, valid_audits, train_records, train_audits) -> dict:
-    def merge(audits):
+    def merge(records, audits, n_inferred):
+        status = Counter(a.get("status", "unknown") for a in audits)
         c = Counter()
         examples = []
         for a in audits:
+            if a.get("status") != "ok":
+                if len(examples) < 4:
+                    examples.append(a)
+                continue
             if a.get("explicit_h_no_solution"):
                 c["explicit_h_no_solution"] += 1
             if a.get("explicit_h_original_missing"):
@@ -552,18 +585,25 @@ def h_audit_summary(valid_records, valid_audits, train_records, train_audits) ->
                 c["explicit_h_h_changing_candidates"] += 1
             if (a.get("explicit_h_no_solution") or a.get("explicit_h_original_missing")
                     or a.get("explicit_h_h_changing_candidates")):
-                if len(examples) < 6:
+                if len(examples) < 8:
                     examples.append(a)
-        return {"n_molecules_with_inferred_h": len(audits),
-                "counts": dict(c), "examples": examples}
+        return {"n_molecules_with_inferred_h": int(n_inferred),
+                "n_audited": len(audits),
+                "status_counts": dict(status),
+                "counts_on_auditable_explicit_h_only": dict(c),
+                "examples": examples}
 
+    n_valid = int(sum(1 for r in valid_records if r["n_inferred_h"] > 0))
+    n_train = int(sum(1 for r in train_records if r["n_inferred_h"] > 0))
     return {
-        "valid": merge(valid_audits),
-        "train": merge(train_audits),
+        "valid": merge(valid_records, valid_audits, n_valid),
+        "train": merge(train_records, train_audits, n_train),
         "note": ("The committed atom dictionary does not encode neutral N/O/S H. "
-                 "The audit enumerates with dictionary-only H; failures/candidates "
-                 "there show why the frozen inferred-H state is required. Those "
-                 "candidates are never used."),
+                 "The audit enumerates with dictionary-only H.  ``status=ok`` means "
+                 "the explicit-H-only capacity model is even in {0,1}; there, "
+                 "failures/candidates show why frozen inferred H is required. "
+                 "``capacity_outside_0_1`` is already an explicit-H-only "
+                 "representation failure.  No audited candidate is ever used."),
     }
 
 
@@ -605,8 +645,7 @@ def main(argv=None) -> int:
         ar_edges = sorted(rec["aromatic_edge_set"])
         orig_ar = tuple(int(rec["orig_orders"][rec["edges"].index(e)]) for e in ar_edges)
         aud = KC.explicit_h_only_audit(cats, edges, orig, ar_edges, orig_ar)
-        if aud.get("status") == "ok":
-            valid_audits.append({"row": rec["row"], **aud})
+        valid_audits.append({"row": rec["row"], **aud})
 
     V, vocab_ctx = build_vocab(train_records)
     per_mol, per_atom = valid_support(valid_records, valid_ds, V)
@@ -629,7 +668,7 @@ def main(argv=None) -> int:
               "unseen_orig", "unseen_rep", "unseen_arom", "unseen_union",
               "frac_unseen_orig", "frac_unseen_rep", "frac_unseen_arom", "frac_unseen_union",
               "full_orig", "full_rep", "full_arom", "full_union",
-              "rescued_union", "lost_rep", "lost_arom"]
+              "rescued_rep", "rescued_arom", "rescued_union", "lost_rep", "lost_arom"]
     with open(out_csv, "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=fields)
         w.writeheader()
@@ -705,12 +744,12 @@ def write_tables(summary: dict) -> None:
               f"| rep merge classes | {v['rep_merge_classes']} |",
               f"| rep merged extra original keys | {v['rep_merged_extra_keys']} |",
               f"| rep classes with >1 witness component | {v['rep_merged_classes_with_multiple_witness_components']} |",
-              f"| rep unwitnessed merged extra keys | {v['rep_unwitnessed_merged_extra_keys']} |",
+              f"| rep unwitnessed singleton keys | {v['rep_unwitnessed_merged_singleton_keys']} |",
               f"| orig keys with >1 arom image (context split) | {v['orig_keys_with_multiple_arom_images']} |",
               f"| arom merge classes | {v['arom_merge_classes']} |",
               f"| arom merged extra original keys | {v['arom_merged_extra_keys']} |",
               f"| arom classes with >1 witness component | {v['arom_merged_classes_with_multiple_witness_components']} |",
-              f"| arom unwitnessed merged extra keys | {v['arom_unwitnessed_merged_extra_keys']} |", ""]
+              f"| arom unwitnessed singleton keys | {v['arom_unwitnessed_merged_singleton_keys']} |", ""]
     lines += ["## Group support", "",
               "| group | n | atoms | scheme | unseen atoms | pooled unseen frac | mean per-mol frac | fully supported |",
               "|---|---:|---:|---|---:|---:|---:|---:|"]
@@ -721,14 +760,22 @@ def write_tables(summary: dict) -> None:
                 f"{d['unseen_atoms']} | {d['unseen_atom_fraction_pooled']:.6f} | "
                 f"{d['unseen_atom_fraction_mean_per_molecule']:.6f} | "
                 f"{d['fully_supported_molecules']}/{block['n_molecules']} |")
+    lines += ["", "## Rescued / lost atom occurrences", "",
+              "| group | rescued rep | rescued arom | rescued union | lost rep | lost arom |",
+              "|---|---:|---:|---:|---:|---:|"]
+    for gname, block in summary["groups"].items():
+        lines.append(f"| {gname} | {block['n_rescued_atoms_rep']} | "
+                     f"{block['n_rescued_atoms_arom']} | {block['n_rescued_atoms_union']} | "
+                     f"{block['n_lost_atoms_rep']} | {block['n_lost_atoms_arom']} |")
     lines += ["", "## H-inference audit", "",
-              "| split | molecules with inferred H | explicit-H-only no solution | original missing | H-changing candidates |",
-              "|---|---:|---:|---:|---:|"]
+              "| split | inferred H | audited | explicit-H capacity outside {0,1} | no solution | original missing | H-changing candidates |",
+              "|---|---:|---:|---:|---:|---:|---:|"]
     for split in ("valid", "train"):
         h = summary["h_audit"][split]
-        c = h["counts"]
-        lines.append(f"| {split} | {h['n_molecules_with_inferred_h']} | "
-                     f"{c.get('explicit_h_no_solution', 0)} | "
+        c = h["counts_on_auditable_explicit_h_only"]
+        outside = h["status_counts"].get("capacity_outside_0_1", 0)
+        lines.append(f"| {split} | {h['n_molecules_with_inferred_h']} | {h['n_audited']} | "
+                     f"{outside} | {c.get('explicit_h_no_solution', 0)} | "
                      f"{c.get('explicit_h_original_missing', 0)} | "
                      f"{c.get('explicit_h_h_changing_candidates', 0)} |")
     lines.append("")
