@@ -327,7 +327,7 @@ def _groups_md(s: dict) -> str:
     rows = ["# Fixed four-group valid errors (710 seen+ordinary / 225 unseen+ordinary / "
             "39 seen+tail / 26 unseen+tail)", "",
             "| run | all | seen_ordinary | unseen_ordinary | seen_tail | unseen_tail | "
-            "drop row172 | top-10 share | max single-molecule share |",
+            "drop row172 | max single-molecule share |",
             "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for name in sorted(s["runs"]):
         g = s["runs"][name]["groups_valid"]
@@ -335,9 +335,8 @@ def _groups_md(s: dict) -> str:
             f"| {name} | {g['all']['mae']:.5f} | {g['seen_ordinary']['mae']:.5f} | "
             f"{g['unseen_ordinary']['mae']:.5f} | {g['seen_tail']['mae']:.5f} | "
             f"{g['unseen_tail']['mae']:.5f} | {g['drop_row172']['mae']:.5f} | "
-            f"{g['top10_molecules'][0]['ae'] / g['all']['sum_ae'] * 100 if g['all']['sum_ae'] else 0:.2f}%* | "
             f"{g['single_molecule_max_share'] * 100:.2f}% (row {g['single_molecule_max_row']}) |")
-    rows += ["", "\\* column shows the largest single-molecule share of total absolute error.",
+    rows += ["", "The last column is the largest single-molecule share of total absolute error.",
              "",
              "Top-10 molecule contributions per run (row, group, y, |AE|):", ""]
     for name in sorted(s["runs"]):
