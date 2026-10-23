@@ -112,6 +112,10 @@
 | `zinc_rooted_moment_v1` GPU | **完成**：6/6 formal exit 0（`d1faaa2`，a100-2，driver 550.163.01，torch 2.5.1+cu124）；**2.546 GPU·h formal / 2.564 含失败**，上限 5.0；两个 A100 并行，墙面 2 h 28 min |
 | `zinc_rooted_moment_v1` 结果 | best-valid / T100：P 0.079472/0.081451（s0）、0.079627/0.080546（s1）；M 0.088184/0.089459、0.086726/0.087902；G 0.087109/0.090084、0.085643/0.086843。M−P T100 **+0.008008 / +0.007356**；G−P **+0.008634 / +0.006297**；M−G **−0.000626 / +0.001059**（符号翻转，mean +0.000216） |
 | `zinc_rooted_moment_v1` 判定 | **`NO_STABLE_GAIN_OVER_P`**：矩读出的额外通路本身约 −0.0077 MAE；C3 偏斜项在重新训练下无重复贡献（固定权重下仅 +0.0003…+0.0005）；ordinary/unseen/tail 全负，drop-row172 与 drop-top10 同向；official test **未读**（触发 false） |
+| `zinc_performance_search_v1` 协议 | 完成：`PLAN.md` + `DECISIONS.md`（D1–D7）+ `LEDGER.md`；预注册 A/B 两主体 × R0–R3 配方 + 一个针对性额外配置 R0L；C 主体按"先计时、单 run ≤2 h"约束执行 |
+| `zinc_performance_search_v1` 工程 | GRIT 10 层/64 宽/8 头（473,473 par，RRWP 1..20）稠密 padded 端口实现并验 parity（forward 1.7e-6、grad 9.6e-5、RRWP 2.4e-7）；实测 30.97/18.65/14.84 s/epoch（bs 32/64/128）→ ≥4 h/run，**超出 2 h 上限**，按预案回退 DBT；EMA 策略因拷贝方向 bug 整轮作废（已修，未重跑） |
+| `zinc_performance_search_v1` 结果 | 冻结 **B-R0**（DCC-L 494,193 par，R0）：valid 0.075990±0.002137（4 seeds），**test 0.067319±0.000709，range 0.066267–0.067785**；A-R0 基线 4 seeds valid 0.080761±0.003033、test 0.070879±0.001830（B 的 4 个 seed 在 test 上全部优于 A 的 4 个）；A-R1 valid 0.087570/test 0.075147；B-R1 0.079246/0.069022；A-R0L 0.079491/0.071844；C-DBT600 0.082479/0.071329 |
+| `zinc_performance_search_v1` 判定 | **`TARGET_NOT_MET_BEST_TEST_0.066267`**：单模型 test 0.060 未达到（best 0.066267，差 0.006267）；所有已试杠杆（lr/wd/horizon/第三主体/双通道）收益 ≤0.005；官方 test 于冻结短名单后一次性读取（14 条，valid 复核 14/14），之后无调参；总 8.39 GPU·h（含 0.97 失败/取消） |
 | 交付 | Phase 0 REPORT + 纠错文件 + Phase 1a 协议/REPORT + Phase 1b 协议/决策日志/REPORT/run manifest + Phase 1c 协议/纠错/REPORT/run manifest/analysis + Phase 1d 协议/REPORT/CPU audit/run manifest/analysis + STATE/TRACK |
 
 ## 入口
@@ -216,6 +220,13 @@
    - 因此**不**再试宽度/深度/gate 初始化/更多 seed/新 SSL 目标/cycle 路由/ensemble。
    - 若仍要检验交互价值，必须是**新一轮预注册**，且满足：目标依赖 P3E 感受野可证不足的图统计量（先做零训练诊断）；每臂 ≥2 seed；尾部用鲁棒判据；否则不动 GPU。
    - Phase C（Lipophilicity）设计仍冻结未训练，优先级高于任何 ZINC 追加实验；但若做 Phase C，必须先把其 RMSE/尾部判据改成配对 MSE 差形式。
+
+00. **`zinc_performance_search_v1` 改写下一步（最新，2026-10-23）**：在"≤500k 参数 / 单模型 / ~0.35 GPU·h per run"的格子里，
+    性能优先搜索**没有**把 ZINC test 推到 0.060（最好 B-R0 = 0.066267，4 seeds 0.0663–0.0678；A-R0 0.0709；C/DBT 0.0713）。
+    已试杠杆（R0/R1、1200-epoch 长日程、双通道 composer、第三主体）单点收益都 ≤0.005，而差距是 0.0063。
+    下一轮只允许两条路：(a) 给 GRIT/DBT 原生 horizon 的预算（GRIT 实测 ≥4 h/run 稠密、稀疏 ~9.5 s/epoch；DBT 全 horizon 3.7 GPU·h）；
+    (b) 换设定（更大模型 / 更多数据 / 不同 readout）。**不要**在同一格子里继续调 lr/wd/horizon。
+    附带结论：EMA 策略本轮作废（实现 bug，已修未验）；valid 名次不能替代 test 名次（seed 级反例在本轮报告 §4）。
 
 0. **Phase 1e 已改写下一步**：ZINC 大环线的收益被证明主要是标签 `-cycles` 人工项；SSRC 臂族在同 split 上与隔离强基线差 0.074 MAE。因此：
    - **停止** SSRC/R1 架构线在 ZINC 上的任何继续优化（宽度/seed/深度/global-token/迭代臂/ring-aware token 全部停止，理由已升级为基准缺陷 + 竞争力不足，而非"审计无 headroom"）。

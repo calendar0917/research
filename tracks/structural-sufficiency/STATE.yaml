@@ -12,9 +12,17 @@ updated: 2026-10-23
 main_line: true
 latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
-latest_side_round: zinc_rooted_moment_v1
-latest_side_round_verdict: NO_STABLE_GAIN_OVER_P_FROM_ROOTED_MOMENT_CONDITIONING
+latest_side_round: zinc_performance_search_v1
+latest_side_round_verdict: TARGET_NOT_MET_BEST_TEST_0.066267
 latest_side_round_next_action: >-
+  Either buy >=4-5 GPU-h per run and give GRIT/DBT their native horizon
+  (10-layer GRIT, 625k updates; DBT 1500 epochs), or change the setting
+  (larger model, more data, different readout).  Do not re-tune lr/wd/horizon
+  inside the same <=0.35 GPU-h box: every lever measured in this round moved
+  <=0.005 MAE while the gap to 0.060 is 0.0063.
+previous_side_round: zinc_rooted_moment_v1
+previous_side_round_verdict: NO_STABLE_GAIN_OVER_P_FROM_ROOTED_MOMENT_CONDITIONING
+previous_side_round_next_action: >-
   Do not tune the moment form (scales, eps, width, more seeds).  Exact rooted
   moments cost ~0.0077 MAE versus P and the C3 skew term is not reproducible
   under retraining, while M and G share the same extra readout path.  If the
@@ -22,7 +30,7 @@ latest_side_round_next_action: >-
   is bit-equal to P at step 0 (zero-initialised scalar gate from the moment
   readout into the existing P3 reader), two seeds, T100 primary, no test read
   without the frozen trigger.
-previous_side_round: zinc_native_relation_v1
+previous_previous_side_round: zinc_native_relation_v1
 previous_side_round_verdict: NO_REPEATABLE_GAIN_FROM_ONE_NATIVE_RELATION_ROUND
 latest_next_action: >-
   3-5 seeds plus a parameter-matched trunk/readout control to test whether the M
@@ -1585,3 +1593,64 @@ zinc_rooted_moment_v1:
     readout into the existing P3 reader), so that the readout-path cost is
     separated from the information the moments carry.  Two seeds minimum, T100
     primary, and no test read without the pre-registered trigger.
+
+zinc_performance_search_v1:
+  protocol_id: ssrc-zinc-performance-search-v1
+  plan: tracks/structural-sufficiency/zinc_performance_search_v1/PLAN.md
+  status: COMPLETE
+  verdict: TARGET_NOT_MET_BEST_TEST_0.066267
+  report: tracks/structural-sufficiency/zinc_performance_search_v1/REPORT.md
+  question: >-
+    Under one single <=500k-parameter deployment model, no fusion, no seed
+    averaging, can a performance-first sweep over bodies (P3Null, DCC-L, a
+    third explicit-relation body) and four declared recipes push the official
+    ZINC-10k test MAE below 0.060?
+  answer: >-
+    No.  The best single model is B-R0 (DCC-L, 494,193 params, R0) seed 0 at
+    test MAE 0.066267 (valid 0.078537, epoch 489).  Across 4 seeds the B-R0
+    family gives valid 0.075990 +- 0.002137 and test 0.067319 +- 0.000709
+    (range 0.066267-0.067785); the matched A-R0 baseline gives valid
+    0.080761 +- 0.003033 and test 0.070879 +- 0.001830, and all four B-R0
+    seeds beat all four A-R0 seeds on test.  The gap to the 0.060 target
+    (0.006267) is larger than any single lever tried in the round (<=0.005).
+  findings:
+    - "R1 (lr 5e-4 / wd 1e-4) is deterministically worse than R0 on body A (valid +0.0113, test +0.0053) and neutral on body B (+0.0007 valid, +0.0017 test)."
+    - "R0L (R0 values on a 1200-epoch cosine) does not help A: valid 0.079491 vs 0.079250, test 0.071844 vs 0.070879, final-epoch valid worse (overfits late)."
+    - "GRIT (10 layers / 64 wide / 8 heads / RRWP 1..20) was implemented and parity-verified (forward 1.7e-6, grad 9.6e-5) but measured at 30.97 s/epoch (bs32) / 18.65 (bs64) / 14.84 (bs128) dense and ~9.5 s/epoch sparse -> >=4 h per native run, over the 2 h/run ceiling; the declared fallback (native DBT, 600 epochs / 94.2k updates, 1.48 GPU-h) gave valid 0.082479 (sd 0.0074) / test 0.071329 (sd 0.0034)."
+    - "The EMA checkpoint policy is invalid this round: the EMA->model copy was reversed, so every EMA evaluation reported the untrained init (valid 1.60004).  Fixed and unit-checked after the fact, but never used for selection."
+    - "valid rank does not predict test rank at seed level (B-R0's worst-valid seed has the best test); the family ordering does transfer."
+    - "The unseen-atom group (251 molecules) has 2.5-3x the MAE of the seen group; no recipe changed that structure."
+  budget:
+    gpu_hours_cap: 16.0
+    gpu_hours_used_including_failures: 8.39
+    wasted_on_failures_and_cancel: 0.97
+    wall_clock_hours: 5.9
+    gpu_hours_by_family: {A-R0: 1.274, B-R0: 1.489, A-R0L: 1.334, C-DBT600: 3.025, A-R1: 0.313, B-R1: 0.416}
+  artifacts:
+    report: tracks/structural-sufficiency/zinc_performance_search_v1/REPORT.md
+    ledger: tracks/structural-sufficiency/zinc_performance_search_v1/LEDGER.md
+    decisions: tracks/structural-sufficiency/zinc_performance_search_v1/DECISIONS.md
+    main_table: tracks/structural-sufficiency/zinc_performance_search_v1/analysis/main_table.md
+    report_tables: tracks/structural-sufficiency/zinc_performance_search_v1/analysis/report_tables.md
+    test_table: tracks/structural-sufficiency/zinc_performance_search_v1/analysis/test_table.md
+    test_freeze: tracks/structural-sufficiency/zinc_performance_search_v1/analysis/test_freeze.json
+    shortlist: tracks/structural-sufficiency/zinc_performance_search_v1/analysis/frozen_shortlist.json
+    per_molecule_valid: tracks/structural-sufficiency/zinc_performance_search_v1/analysis/per_molecule_valid.csv
+    per_molecule_test: tracks/structural-sufficiency/zinc_performance_search_v1/analysis/test_pred_*.csv
+    dense_parity: tracks/structural-sufficiency/zinc_performance_search_v1/analysis/dense_parity.json
+    dense_timing: tracks/structural-sufficiency/zinc_performance_search_v1/analysis/dense_timing.json
+  official_test:
+    loaded: true
+    when: 2026-10-23T21:34Z
+    order: "frozen_shortlist.json committed -> valid re-checked 14/14 -> test_freeze.json (sha256) written -> test labels read once"
+    post_test_tuning: false
+  non_claims:
+    - "B is not proven to be a fundamentally better body: the 4-seed valid gap is 1.8x the pooled sd and the valid distributions overlap; only the test ordering is fully separated."
+    - "C/DBT is not proven worse: it ran a 600/1500-epoch truncated horizon here; the historical full-horizon DBT (3.69 GPU-h) scored test 0.069401."
+    - "row bootstrap CIs describe the 1,000-molecule sample, not training repeatability; repeatability is the seed range."
+    - "seeds >=2 reuse the seed-1 SSL encoder (only s0/s1 exist), so seed 2/3 understate fully independent-init variance."
+  next_action: >-
+    Either buy >=4-5 GPU-h per run and give GRIT/DBT their native horizon
+    (10-layer GRIT 625k updates; DBT 1500 epochs), or change the setting
+    (larger model, more data, different readout).  Do not re-tune lr/wd/horizon
+    inside the same <=0.35 GPU-h box: every lever measured here moved <=0.005.
