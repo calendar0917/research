@@ -652,7 +652,7 @@ def cmd_timing(args: argparse.Namespace) -> int:
         t2 = time.perf_counter()
         probe_path = Path(args.save_probe)
         if not probe_path.is_absolute():
-            probe_path = C.TRACK / probe_path
+            probe_path = C.REPO / probe_path
         torch.save({"state_dict": AC.cpu_state(model)}, probe_path)
         save_sec = time.perf_counter() - t2
         collate_t = p3_collate if arm == "P" else D.make_collate(entries_train)
@@ -725,7 +725,8 @@ def cmd_train(args: argparse.Namespace) -> int:
         arm, seed, device, recipe_variant="B", model_builder=builder,
         out_dir=out, collate_fn=collate, force=args.force,
     )
-    print(json.dumps({"best_valid": info["best_valid"], "final": info["final"],
+    print(json.dumps({"best_valid": info["best_valid"],
+                      "final": info["fixed_objects"]["final"],
                       "timing": info["timing"]}, indent=2))
 
     # extra predictions / provenance (does not modify the trainer's train.json)
@@ -742,7 +743,7 @@ def cmd_train(args: argparse.Namespace) -> int:
     best_mae = C.mae(best_z["pred"].astype(np.float64), y_valid)
     if abs(best_mae - float(info["best_valid"]["valid_mae"])) > 5e-6:
         raise SystemExit(f"best-valid replay mismatch: {best_mae} vs {info['best_valid']['valid_mae']}")
-    if abs(final_mae - float(info["final"]["valid_mae"])) > 5e-6:
+    if abs(final_mae - float(info["fixed_objects"]["final"]["valid_mae"])) > 5e-6:
         raise SystemExit(f"final-valid replay mismatch: {final_mae} vs {info['final']['valid_mae']}")
     win = C.window_metrics(info["curve"])
     init_model, init_info = M.build_arm(arm, norm, seed, "cpu")
@@ -812,7 +813,10 @@ def cmd_score(args: argparse.Namespace) -> int:
     out: dict[str, Any] = {
         "protocol_id": C.PROTOCOL_ID, "arm": arm, "seed": seed,
         "git_commit": info["git_commit"], "parameters": info["parameter_count"],
-        "recipe": info["recipe"], "best_valid": info["best_valid"], "final": info["final"],
+        "recipe": info["recipe"],
+        "best_valid": {**info["best_valid"],
+                       "train_mae_eval_mode": info["fixed_objects"]["best"]["train_mae_eval_mode"]},
+        "final": info["fixed_objects"]["final"],
         "windows": extra["windows"], "run_extra": extra,
         "runs": str(run.relative_to(C.REPO)) if run.is_relative_to(C.REPO) else str(run),
     }
