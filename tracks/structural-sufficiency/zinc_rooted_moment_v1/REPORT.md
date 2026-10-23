@@ -39,7 +39,7 @@ M−P（best-valid，seed 均值）：
 见 §7 的表。一句话：本轮的新意很窄——**精确、无标签、root 条件化**的端点特征分布二阶/三阶矩摘要，加上**同参数同输入的高斯闭合对照**；不新在“核/多项式注意力/多尺度预计算/rooted readout”这些组件上，也不新在“用矩做特征”这个想法上。
 
 **Q6 成本、可复现性与 official test 政策？**
-六个正式 run 合计 **2.546 GPU·h**；含 3 次失败探针与 2 次计时共 **2.564 GPU·h**（上限 5.0，预注册 formal+pre-formal ≤4.7）。墙面时间 20:01→22:29（约 2 h 28 min）。CPU 侧：全量缓存 **26–37 s**（14–24 workers，峰值 RSS 8.9–9.3 GB，train 6.74 GB / valid 0.67 GB），23 项 CPU gate 与 5 个单元测试全绿；缓存字节在“不同 worker 数 / 不同 `OMP_NUM_THREADS`”下**逐字节一致**（train `5e830939…`，valid `277f02cf…`），本地与 res 上哈希相同。official test **未打开**：预注册的 U/分组触发条件（两 seed 均改善、均值 ≥0.003、ordinary best+final 均改善、unseen+ordinary final 不恶化且均值 ≥0.005）三项全 false，因此本轮没有 test 数字，也不允许用它补救。
+六个正式 run 合计 **2.546 GPU·h**；含 1 次失败的 timing、2 次失败的 probe 与 2 次成功的预跑/探针，共 **2.564 GPU·h**（上限 5.0，预注册 formal+pre-formal ≤4.7）。墙面时间 20:01→22:29（约 2 h 28 min）。CPU 侧：全量缓存 **26–37 s**（14–24 workers，峰值 RSS 8.9–9.3 GB，train 6.74 GB / valid 0.67 GB），23 项 CPU gate 与 5 个单元测试全绿；缓存字节在“不同 worker 数 / 不同 `OMP_NUM_THREADS`”下**逐字节一致**（train `5e830939…`，valid `277f02cf…`），本地与 res 上哈希相同。official test **未打开**：预注册的 U/分组触发条件（两 seed 均改善、均值 ≥0.003、ordinary best+final 均改善、unseen+ordinary final 不恶化且均值 ≥0.005）三项全 false，因此本轮没有 test 数字，也不允许用它补救。
 
 ---
 
