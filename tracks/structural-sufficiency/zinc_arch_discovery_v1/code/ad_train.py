@@ -312,27 +312,49 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
           dropout: float | None = None,
           recipe_variant: str | None = None,
           model_builder=None, out_dir: Path | None = None,
-          aux: dict | None = None, collate_fn=None) -> dict:
+          aux: dict | None = None, collate_fn=None,
+          min_lr: float | None = None,
+          loss: str | None = None, smooth_l1_beta: float = 0.02,
+          ema: dict | None = None,
+          recipe_override: dict | None = None) -> dict:
     """Train one candidate/seed.
 
     ``recipe_variant`` selects a named override (see ``RECIPE_VARIANTS``);
     ``model_builder`` replaces ``M.build_model`` (new architecture families);
     ``out_dir`` redirects the run directory; ``aux`` adds a per-step auxiliary
     loss term supplied by the caller (masked structural reconstruction).
+
+    Additive options for zinc-performance-search-v1 (defaults reproduce the
+    historical behaviour exactly): ``min_lr`` overrides the cosine floor,
+    ``loss`` selects ``"l1"`` (default) or ``"smooth_l1"`` on raw-y units, and
+    ``ema`` enables a single-trajectory parameter EMA that is evaluated and
+    saved separately from the online weights (no averaging of predictions).
     """
     recipe = dict(RECIPES[candidate]) if candidate in RECIPES else {}
     if recipe_variant is not None:
         if recipe_variant not in RECIPE_VARIANTS:
             raise ValueError(f"unknown recipe variant {recipe_variant!r}")
         recipe.update(RECIPE_VARIANTS[recipe_variant])
-    if not recipe:
-        raise ValueError(f"candidate {candidate!r} needs a declared recipe variant")
     if weight_decay is not None:
         recipe["weight_decay"] = float(weight_decay)
     if lr is not None:
         recipe["lr"] = float(lr)
     if dropout is not None:
         recipe["dropout"] = float(dropout)
+    if recipe_override is not None:
+        recipe.update({k: v for k, v in dict(recipe_override).items()
+                       if k not in ("smooth_l1_beta",)})
+    if not recipe:
+        raise ValueError(f"candidate {candidate!r} needs a declared recipe or override")
+    if min_lr is not None:
+        recipe["min_lr"] = float(min_lr)
+    loss_name = str(loss or "l1")
+    if loss_name not in ("l1", "smooth_l1"):
+        raise ValueError(f"unknown loss {loss_name!r}")
+    if loss_name == "smooth_l1" and float(smooth_l1_beta) <= 0:
+        raise ValueError("smooth_l1_beta must be positive")
+    if ema is not None and "decay" not in ema:
+        raise ValueError("ema needs a declared decay")
     n_epochs = int(recipe["epochs"] if epochs is None else epochs)
     builder = M.build_model if model_builder is None else model_builder
     collate_ = collate if collate_fn is None else collate_fn
@@ -351,6 +373,8 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
     rows_valid = np.arange(len(y_valid), dtype=np.int64)
 
     model, model_info = builder(candidate, norm, seed, device)
+    if ema is not None and any(isinstance(m, torch.nn.modules.batchnorm._BatchNorm) for m in model.modules()):
+        raise ValueError("ema is not enabled for models with BatchNorm in this round")
     aux_meter: dict[str, list[float]] = {}
     params = C.parameter_count(model)
     if params > 500_000:
@@ -373,6 +397,15 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
     curve: list[dict] = []
     best = {"valid_mae": float("inf"), "epoch": -1}
     best_state = None
+    ema_state = None
+    ema_model = None
+    ema_best = {"valid_mae": float("inf"), "epoch": -1}
+    ema_best_state = None
+    ema_start_step = None
+    if ema is not None:
+        ema_decay = float(ema["decay"])
+        ema_start_step = int(math.ceil(float(ema.get("start_frac", 0.25)) * total_updates))
+        ema_start_step = max(1, min(ema_start_step, total_updates))
     gradient_audit: dict[str, Any] = {}
     started = time.perf_counter()
     last_lr = float(recipe["lr"])
@@ -389,7 +422,10 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
             batch = _to_device(collate_(train_cache, rows, candidate, valid=False, walk_cols=walk_cols), device)
             target = torch.as_tensor(y_train[rows], dtype=torch.float32, device=device)
             pred = model(batch)
-            loss = F.l1_loss(pred.view(-1), target.view(-1))
+            if loss_name == "smooth_l1":
+                loss = F.smooth_l1_loss(pred.view(-1), target.view(-1), beta=float(smooth_l1_beta))
+            else:
+                loss = F.l1_loss(pred.view(-1), target.view(-1))
             if aux is not None:
                 aux_total, aux_parts = aux["loss"](model, rows, device, epoch)
                 loss = loss + float(aux["weight"]) * aux_total
@@ -418,6 +454,13 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
             for group in optimizer.param_groups:
                 group["lr"] = last_lr
             optimizer.step()
+            if ema is not None:
+                if global_step == ema_start_step:
+                    ema_state = [p.detach().clone() for p in model.parameters()]
+                elif global_step > ema_start_step and ema_state is not None:
+                    with torch.no_grad():
+                        for slot, p in zip(ema_state, model.parameters()):
+                            slot.mul_(ema_decay).add_(p.detach(), alpha=1.0 - ema_decay)
             total_err += float((pred.detach().view(-1) - target).abs().sum())
             n_mol += len(rows)
         online = total_err / max(n_mol, 1)
@@ -426,10 +469,34 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
             batch_size=int(recipe["valid_batch_size"]), collate_fn=collate_fn,
         )
         sec = time.perf_counter() - t_ep
+        ema_valid = None
+        if ema_state is not None:
+            if ema_model is None:
+                ema_model, _ = builder(candidate, norm, seed, device)
+            with torch.no_grad():
+                for slot, p in zip(ema_model.parameters(), ema_state):
+                    p.copy_(slot)
+                for buf_name, buf in ema_model.named_buffers():
+                    src = dict(model.named_buffers()).get(buf_name)
+                    if src is not None:
+                        buf.copy_(src)
+            ema_pred_valid, ema_valid = evaluate(
+                ema_model, valid_cache, rows_valid, candidate=candidate, device=device,
+                batch_size=int(recipe["valid_batch_size"]), collate_fn=collate_fn,
+            )
+            if ema_valid < ema_best["valid_mae"]:
+                ema_best = {"valid_mae": float(ema_valid), "epoch": int(epoch)}
+                ema_best_state = C.cpu_state(ema_model)
+                C.atomic_torch_save(
+                    {"state_dict": ema_best_state, "epoch": int(epoch), "valid_mae": float(ema_valid),
+                     "candidate": candidate, "seed": int(seed), "policy": "ema"},
+                    out / "ema_best.pt",
+                )
         entry = {
             "epoch": int(epoch),
             "online_train_mae": float(online),
             "valid_mae": float(valid_mae),
+            "ema_valid_mae": None if ema_valid is None else float(ema_valid),
             "lr": float(last_lr),
             "seconds": float(sec),
             "steps": int(steps_per_epoch),
@@ -449,6 +516,16 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
         )
 
     wall = time.perf_counter() - started
+    if ema_state is not None:
+        ema_final_state = {k: v.detach().cpu().clone() for k, v in
+                           zip([n for n, _ in model.named_parameters()], ema_state)}
+        C.atomic_torch_save(
+            {"state_dict": ema_final_state, "epoch": n_epochs,
+             "best": ema_best, "policy": "ema"},
+            out / "ema_final.pt",
+        )
+    else:
+        ema_final_state = None
     C.atomic_torch_save(
         {
             "state_dict": C.cpu_state(model),
@@ -484,9 +561,37 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
         model, train_cache, rows_train, candidate=candidate, device=device,
         batch_size=eval_batch, collate_fn=collate_fn,
     )
+    ema_best_valid = ema_best_train = ema_final_valid = ema_final_train = None
+    ema_best_pred_valid = ema_final_pred_valid = None
+    if ema_best_state is not None:
+        ema_eval_model, _ = builder(candidate, norm, seed, device)
+        C.load_state(ema_eval_model, ema_best_state, device)
+        ema_best_pred_valid, ema_best_valid = evaluate(
+            ema_eval_model, valid_cache, rows_valid, candidate=candidate, device=device,
+            batch_size=int(recipe["valid_batch_size"]), collate_fn=collate_fn,
+        )
+        _, ema_best_train = evaluate(
+            ema_eval_model, train_cache, rows_train, candidate=candidate, device=device,
+            batch_size=eval_batch, collate_fn=collate_fn,
+        )
+    if ema_final_state is not None:
+        ema_eval_final, _ = builder(candidate, norm, seed, device)
+        C.load_state(ema_eval_final, ema_final_state, device)
+        ema_final_pred_valid, ema_final_valid = evaluate(
+            ema_eval_final, valid_cache, rows_valid, candidate=candidate, device=device,
+            batch_size=int(recipe["valid_batch_size"]), collate_fn=collate_fn,
+        )
+        _, ema_final_train = evaluate(
+            ema_eval_final, train_cache, rows_train, candidate=candidate, device=device,
+            batch_size=eval_batch, collate_fn=collate_fn,
+        )
     pred_dir = out / "predictions"
     pred_dir.mkdir(exist_ok=True)
     np.savez(pred_dir / "valid_best.npz", row=rows_valid, pred=best_pred_valid)
+    if ema_best_state is not None:
+        np.savez(pred_dir / "valid_best_ema.npz", row=rows_valid, pred=ema_best_pred_valid)
+    if ema_final_pred_valid is not None:
+        np.savez(pred_dir / "valid_final_ema.npz", row=rows_valid, pred=ema_final_pred_valid)
 
     info = {
         "round": C.ROUND_ID,
@@ -520,16 +625,31 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
             "updates": int(total_updates),
             "warmup_steps": int(warmup),
             "actual_global_steps": int(global_step),
-            "loss": "raw-y L1",
+            "loss": ("raw-y L1" if loss_name == "l1"
+                     else f"raw-y SmoothL1(beta={float(smooth_l1_beta)})"),
             "valid_every_epoch": True,
+        },
+        "ema": None if ema is None else {
+            "decay": float(ema_decay),
+            "start_frac": float(ema.get("start_frac", 0.25)),
+            "start_step": int(ema_start_step),
+            "updates_after_start": int(max(0, global_step - ema_start_step)),
+            "selection": "argmin(ema_valid_mae); ties keep the earlier epoch",
         },
         "gradient_audit": gradient_audit,
         "best_valid": best,
+        "best_valid_ema": None if ema_best_state is None else ema_best,
         "fixed_objects": {
             "best": {"valid_mae": float(best_valid), "train_mae_eval_mode": float(best_train),
                      "epoch": int(best["epoch"])},
             "final": {"valid_mae": float(final_valid), "train_mae_eval_mode": float(final_train),
                       "epoch": int(n_epochs)},
+            "best_ema": None if ema_best_state is None else {
+                "valid_mae": float(ema_best_valid), "train_mae_eval_mode": float(ema_best_train),
+                "epoch": int(ema_best["epoch"])},
+            "final_ema": None if ema_final_state is None else {
+                "valid_mae": float(ema_final_valid), "train_mae_eval_mode": float(ema_final_train),
+                "epoch": int(n_epochs)},
         },
         "curve": curve,
         "wall_seconds": float(wall),
