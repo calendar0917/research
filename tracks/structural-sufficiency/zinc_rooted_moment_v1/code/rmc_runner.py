@@ -1640,7 +1640,7 @@ def cmd_probe(args: argparse.Namespace) -> int:
                 "c3_over_linear_norm_per_scale": [float(ratio[:, s].mean()) for s in range(C.N_SCALE)],
                 "logZ_mean_per_scale": [
                     float(torch.log(a_hs[:, s] * a_hs[:, s]
-                                    + torch.einsum("np,hp->nh", c2[:, s, 0, :], qq[:, 0:2])
+                                    + torch.einsum("np,nhp->nh", c2[:, s, 0, :], qq[:, 0:2])
                                     + C.EPS).mean())
                     for s in range(C.N_SCALE)
                 ],
