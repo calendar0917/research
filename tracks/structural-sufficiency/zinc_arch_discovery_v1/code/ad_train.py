@@ -474,8 +474,8 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
             if ema_model is None:
                 ema_model, _ = builder(candidate, norm, seed, device)
             with torch.no_grad():
-                for slot, p in zip(ema_model.parameters(), ema_state):
-                    p.copy_(slot)
+                for module_param, ema_slot in zip(ema_model.parameters(), ema_state):
+                    module_param.copy_(ema_slot)
                 for buf_name, buf in ema_model.named_buffers():
                     src = dict(model.named_buffers()).get(buf_name)
                     if src is not None:
