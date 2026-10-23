@@ -157,7 +157,7 @@ def main() -> int:
     ap.add_argument("--seed", type=int, required=True)
     ap.add_argument("--device", default="cuda:0")
     ap.add_argument("--out", default=None)
-    ap.add_argument("--manifest", default=str(Z.CACHE / "split_manifest.json"))
+    ap.add_argument("--manifest", default=str(Z.ANALYSIS / "split_manifest.json"))
     ap.add_argument("--epochs", type=int, default=EPOCHS)
     ap.add_argument("--no-predict", action="store_true")
     args = ap.parse_args()

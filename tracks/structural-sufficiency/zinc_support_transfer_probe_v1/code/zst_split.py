@@ -316,7 +316,10 @@ def main() -> int:
     # the per-molecule role assignment
     import hashlib
 
-    compact = {k: v for k, v in manifest.items() if k not in ("roles",)}
+    compact = {k: v for k, v in manifest.items()}
+    compact["families"] = {
+        name: {k: v for k, v in f.items() if k != "molecules"} | {"n_molecules": len(f["molecules"])}
+        for name, f in manifest["families"].items()}
     compact["role_sizes"] = {k: int(len(v)) for k, v in roles.items()}
     compact["role_sha256"] = {
         k: hashlib.sha256(np.ascontiguousarray(v, dtype=np.int64).tobytes()).hexdigest()

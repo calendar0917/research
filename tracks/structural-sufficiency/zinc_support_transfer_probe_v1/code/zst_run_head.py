@@ -118,7 +118,7 @@ def stride_stats(f: H.Features, base, y) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", default="0,1")
-    ap.add_argument("--manifest", default=str(Z.CACHE / "split_manifest.json"))
+    ap.add_argument("--manifest", default=str(Z.ANALYSIS / "split_manifest.json"))
     ap.add_argument("--steps", type=int, default=H.STEPS)
     ap.add_argument("--shuffle-control", action="store_true")
     args = ap.parse_args()
