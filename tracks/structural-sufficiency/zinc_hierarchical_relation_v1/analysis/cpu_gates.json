@@ -1,0 +1,150 @@
+{
+  "parameters": {
+    "A": 438585,
+    "B": 445578,
+    "max_allowed": 500000,
+    "A_ok": true,
+    "B_ok": true
+  },
+  "raw_input_fidelity": {
+    "atom_feat_max_abs_diff": 0.0,
+    "bond_index_equal": true,
+    "bond_type_equal": true,
+    "junc_feat_max_abs_diff": 0.0,
+    "pass": true
+  },
+  "edge_direction_invariance": {
+    "A_max_abs_pred_diff": 0.0,
+    "B_max_abs_pred_diff": 0.0,
+    "pass": true
+  },
+  "renumbering_invariance": {
+    "A_max_abs_pred_diff": 4.76837158203125e-07,
+    "B_max_abs_pred_diff": 4.76837158203125e-07,
+    "pass": true
+  },
+  "batch_vs_single": {
+    "A_max_abs_diff": 9.5367431640625e-07,
+    "B_max_abs_diff": 1.0728836059570312e-06,
+    "pass": true
+  },
+  "boundary_cases": {
+    "cases": {
+      "single_atom": {
+        "n_atoms": 1,
+        "n_bonds": 0,
+        "n_junc": 0,
+        "n_pairs": 0,
+        "finite": true,
+        "pred": -0.011431559920310974
+      },
+      "two_isolated_atoms": {
+        "n_atoms": 2,
+        "n_bonds": 0,
+        "n_junc": 0,
+        "n_pairs": 0,
+        "finite": true,
+        "pred": -0.022199466824531555
+      },
+      "ethane": {
+        "n_atoms": 2,
+        "n_bonds": 1,
+        "n_junc": 0,
+        "n_pairs": 0,
+        "finite": true,
+        "pred": -1.658460259437561
+      },
+      "cyclohexane": {
+        "n_atoms": 6,
+        "n_bonds": 6,
+        "n_junc": 6,
+        "n_pairs": 66,
+        "finite": true,
+        "pred": -1.6490554809570312
+      },
+      "two_ethane_components": {
+        "n_atoms": 4,
+        "n_bonds": 2,
+        "n_junc": 0,
+        "n_pairs": 0,
+        "finite": true,
+        "pred": -1.6589343547821045,
+        "cross_component_pairs_jj": 0
+      }
+    },
+    "pass": true
+  },
+  "train_valid_isolation": {
+    "prep_fit_split": "train only",
+    "labels_read_during_prep": false,
+    "official_test_loaded": false,
+    "support_uses_train_counter": true,
+    "valid_unseen_support_fraction": 0.10754413902759552,
+    "batch_has_no_row_or_mol_id_feature": true,
+    "valid_bond_keys_checked": 515,
+    "valid_keys_unseen_in_train": 49,
+    "valid_keys_total": 515,
+    "pass": true
+  },
+  "shared_initialisation": {
+    "A_hash": "ac9b8ed2e47baca7ff4e29558619cb6607e916e2f742ecfdacbc245bf18520ba",
+    "B_hash": "ac9b8ed2e47baca7ff4e29558619cb6607e916e2f742ecfdacbc245bf18520ba",
+    "pass": true
+  },
+  "gradient_coverage": {
+    "A": {
+      "n_parameters": 39,
+      "zero_grad": [],
+      "min_positive_norm": 0.010417438112199306
+    },
+    "B": {
+      "n_parameters": 48,
+      "zero_grad": [],
+      "min_positive_norm": 0.003986116964370012
+    },
+    "pass": true
+  },
+  "sensitivity": {
+    "A_support_zero_max_abs_delta": 0.04802656173706055,
+    "A_patch_edge_type_zero_max_abs_delta": 0.02221965789794922,
+    "A_junction_feat_zero_max_abs_delta": 0.06836557388305664,
+    "B_real_vs_null_relation_max_abs_delta": 0.019724607467651367,
+    "pass": true
+  },
+  "no_hidden_ids": {
+    "embeddings": [
+      {
+        "name": "role",
+        "num_embeddings": 3,
+        "dim": 8
+      },
+      {
+        "name": "interaction.rel_emb",
+        "num_embeddings": 33,
+        "dim": 16
+      }
+    ],
+    "max_embedding_vocab": 33,
+    "role_vocab": 3,
+    "relation_vocab": 33,
+    "pass": true
+  },
+  "cpu_profile": {
+    "A": {
+      "seconds_per_batch_128_cpu": 0.05777653058369955
+    },
+    "B": {
+      "seconds_per_batch_128_cpu": 0.10748481750488281
+    },
+    "pass": true
+  },
+  "batch_order": {
+    "hashes": [
+      "8eca27da1dfa689d7f85578d666bdcf6c882770819df3398648f00506e675e60",
+      "a2ea5d7d6d236b96c8f0b6cabcf7b6f0e966cdffd03cbc5546dd2e69854a2b2d",
+      "f5ce142560ca6128be552126f13392ead98a59cef8fa3e0eb23500ed1da965d3"
+    ],
+    "pass": true
+  },
+  "all_pass": true
+}

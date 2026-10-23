@@ -1,0 +1,74 @@
+{
+  "protocol_id": "ssrc-zinc-hierarchical-relation-v1",
+  "created_utc": "2026-10-25",
+  "data": {
+    "dataset": "PyG ZINC subset=True",
+    "train": 10000,
+    "valid": 1000,
+    "official_test": "never_loaded",
+    "patch_radius": 2,
+    "valid_groups_source": "tracks/structural-sufficiency/zinc_generalization_audit_v1/analysis/per_molecule.csv",
+    "support_key": "radius-2 nested-WL bond-centred scalar count; 4 scalars, no embedding, no per-key table",
+    "support_key_fit": "train only"
+  },
+  "ssl": {
+    "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "keys": [
+      "atom_encoder",
+      "bond_encoder",
+      "junction_encoder"
+    ],
+    "note": "train-only masked-SSL seed 0; frozen checkpoint reused as initialisation, then fine-tuned"
+  },
+  "model": {
+    "d": 96,
+    "role_dim": 8,
+    "refine_hidden": 128,
+    "refine_repeats": 2,
+    "patch_node_hidden": 32,
+    "patch_edge_hidden": 16,
+    "patch_mlp_hidden": 96,
+    "reader_hidden": 96,
+    "reader_layers": 2,
+    "interaction_rank": 16,
+    "dropout": 0.0
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "epochs": 600,
+    "batch_size": 128,
+    "valid_batch_size": 256,
+    "grad_clip": 5.0,
+    "loss": "raw-y L1",
+    "seed": 0,
+    "shuffle_seed": 101,
+    "valid_every_epoch": true,
+    "selection": "argmin(valid_mae), strict <, ties keep the earlier epoch"
+  },
+  "budget": {
+    "max_gpu_hours_per_run": 2.0,
+    "max_gpu_hours_total": 4.0,
+    "smoke_included": true
+  },
+  "gate": {
+    "best_valid_mae_max": 0.073,
+    "drop_top10_min_gain": 0.002,
+    "train_mae_at_best_max": 0.026,
+    "drop_top_k": 10,
+    "tail_threshold": -3.0,
+    "ring_count_min": 4,
+    "reference": "P3B_s0 frozen valid predictions, MAE 0.07622375367576023"
+  },
+  "overfit_gate": {
+    "n_molecules": 48,
+    "steps": 400,
+    "batch_size": 16,
+    "lr": 0.001,
+    "final_train_mae_max": 0.25
+  }
+}
