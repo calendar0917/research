@@ -25,7 +25,8 @@ import torch
 _HERE = Path(__file__).resolve().parent
 _SS = _HERE.parents[1]
 _DBT = _SS / "zinc_directed_bond_transformer_v1" / "code"
-for _p in (str(_HERE), str(_DBT)):
+_V1 = _SS / "zinc_arch_discovery_v1" / "code"
+for _p in (str(_HERE), str(_DBT), str(_V1)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
