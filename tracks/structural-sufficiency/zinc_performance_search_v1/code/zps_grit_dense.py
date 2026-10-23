@@ -648,23 +648,37 @@ def parity(device="cuda:0", batch_rows=None, seed=0) -> dict:
     pd.backward()
     grads = {}
     max_grad_diff = 0.0
+    sq_num = sq_den = 0.0
     for k, p in ref.named_parameters():
         q = dict(dense.named_parameters())[k]
-        gd = float((p.grad - q.grad).abs().max()) if p.grad is not None else float("nan")
-        gs = float(p.grad.abs().max()) if p.grad is not None else float("nan")
+        if p.grad is None or q.grad is None:
+            grads[k] = {"max_abs_diff": None, "ref_max_abs_grad": None,
+                        "note": "unused in this forward (last-layer edge path)"}
+            continue
+        gd = float((p.grad - q.grad).abs().max())
+        gs = float(p.grad.abs().max())
         grads[k] = {"max_abs_diff": gd, "ref_max_abs_grad": gs}
-        if gs and math.isfinite(gd):
-            max_grad_diff = max(max_grad_diff, gd)
+        sq_num += float(((p.grad - q.grad) ** 2).sum())
+        sq_den += float((p.grad ** 2).sum())
+        max_grad_diff = max(max_grad_diff, gd)
     result = {
         "rows": rows, "n_graphs": len(rows),
         "param_count_dense": param_count(dense),
         "param_count_ref": sum(p.numel() for p in ref.parameters()),
         "forward_max_abs_diff": diff,
         "grad_max_abs_diff": max_grad_diff,
+        "grad_relative_norm_error": math.sqrt(sq_num) / max(math.sqrt(sq_den), 1e-30),
         "per_param_grad": grads,
         "dropout": "off", "bn_mode": "eval",
     }
-    # BN running-stat parity in train mode (dropout still respected; both 0 here)
+    # BN running-stat parity in train mode, with every dropout disabled so the
+    # two executions consume no RNG and are comparable term by term.
+    for m in ref.modules():
+        if isinstance(m, nn.Dropout):
+            m.p = 0.0
+    for m in dense.modules():
+        if isinstance(m, nn.Dropout):
+            m.p = 0.0
     ref.train(True)
     dense.train(True)
     with torch.no_grad():
