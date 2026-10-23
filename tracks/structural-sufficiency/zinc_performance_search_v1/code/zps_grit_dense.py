@@ -102,10 +102,15 @@ def prepare(split: str, *, ksteps: int = 21, cache_dir: Path = CACHE) -> list[di
         pe, deg = _rrwp_from_edge_index(d.edge_index.long(), n, ksteps)
         if cached is not None:
             src = cached[i]
-            max_diff = max(max_diff, float((pe - src.rrwp.double()).abs().max()))
+            up = torch.zeros_like(pe)
+            up[src.rrwp_index[1].long(), src.rrwp_index[0].long()] = src.rrwp_val.double()
+            max_diff = max(max_diff, float((pe - up).abs().max()))
             de = float((deg - src.deg.double()).abs().max())
             if de > 0:
                 raise RuntimeError(f"{split}[{i}] degree mismatch {de}")
+            abs_ref = src.rrwp.double()
+            abs_mine = pe.diagonal(dim1=0, dim2=1).T
+            max_diff = max(max_diff, float((abs_mine - abs_ref).abs().max()))
         bond = torch.zeros((n, n), dtype=torch.long)
         ei = d.edge_index.long()
         bond[ei[0], ei[1]] = d.edge_attr.long().view(-1).clamp(0, 3)
