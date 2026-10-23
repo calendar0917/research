@@ -257,6 +257,7 @@ def cmd_train(args: argparse.Namespace) -> int:
     step = 0
 
     if device.type == "cuda":
+        torch.cuda.init()
         torch.cuda.reset_peak_memory_stats(device)
 
     for epoch in range(1, epochs + 1):
@@ -534,6 +535,7 @@ def cmd_profile(args: argparse.Namespace) -> int:
     ssl_path = load_ssl_path()
     out: dict[str, Any] = {"device": str(device), "n_molecules": len(entries)}
     if device.type == "cuda":
+        torch.cuda.init()
         torch.cuda.reset_peak_memory_stats(device)
     for arm in ("A", "B"):
         model, info = M.build_model(arm=arm, ssl_path=ssl_path, seed=int(cfg["recipe"]["seed"]), cfg=cfg["model"], device=device)
@@ -599,6 +601,7 @@ def cmd_smoke(args: argparse.Namespace) -> int:
     out: dict[str, Any] = {"protocol_id": C.PROTOCOL_ID, "limit_train": len(train_entries),
                            "limit_valid": len(val_entries), "device": str(device)}
     if device.type == "cuda":
+        torch.cuda.init()
         torch.cuda.reset_peak_memory_stats(device)
     for arm in args.arms:
         model, info = M.build_model(arm=arm, ssl_path=ssl_path, seed=int(cfg["recipe"]["seed"]), cfg=cfg["model"], device=device)
