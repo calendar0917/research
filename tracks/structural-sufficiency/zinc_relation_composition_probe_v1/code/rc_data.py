@@ -24,6 +24,7 @@ train/valid are built; official test is never constructed in this round.
 
 from __future__ import annotations
 
+import os
 import sys
 import time
 from pathlib import Path
@@ -113,6 +114,29 @@ def bond_relation_direct(edge_index: np.ndarray, n: int, ksteps: int = KSTEPS) -
     return out
 
 
+def _atomic_save_unique(obj: Any, path: Path) -> None:
+    """torch.save + os.replace with a pid-unique temp name.
+
+    Two parallel runs may build the same missing cache at the same time; a
+    shared temp path could interleave, so each process uses its own.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + f".tmp{os.getpid()}")
+    torch.save(obj, tmp)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    os.replace(tmp, path)
+    leftovers = list(path.parent.glob(path.name + ".tmp*"))
+    for extra in leftovers:
+        if extra.name != path.name:
+            try:
+                if extra.name.endswith(str(os.getpid())):
+                    continue
+                extra.unlink()
+            except OSError:
+                pass
+
+
 # ---------------------------------------------------------------------------
 # cache
 # ---------------------------------------------------------------------------
@@ -138,7 +162,7 @@ def build_split(split: str, *, force: bool = False) -> dict:
     if path.exists() and not force:
         return torch.load(path, map_location="cpu", weights_only=False)
     payload = build_from_cache(D.load_cache(split), split)
-    C.atomic_torch_save(payload, cache_path(split))
+    _atomic_save_unique(payload, cache_path(split))
     C.log(f"[rc_R {split}] built {n_mol if False else payload['stats']['n_molecules']} molecules, "
           f"{cache_path(split).stat().st_size / 1e6:.1f} MB")
     return payload
@@ -198,7 +222,10 @@ def build_from_cache(ad: Mapping[str, Any], label: str) -> dict:
 def load_split(split: str) -> dict:
     path = cache_path(split)
     if not path.exists():
-        raise FileNotFoundError(f"missing relation cache {path}; run rc_runner.py prep")
+        # the cache is git-ignored and therefore absent in a fresh remote
+        # checkout; build it here (a few seconds, label-free, deterministic)
+        C.log(f"[rc_R {split}] cache missing, building at {path}")
+        return build_split(split)
     return torch.load(path, map_location="cpu", weights_only=False)
 
 
