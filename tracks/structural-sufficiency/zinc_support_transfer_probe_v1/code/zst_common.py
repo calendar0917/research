@@ -81,6 +81,26 @@ def key_support(rows, mol2, n_key2: int) -> np.ndarray:
     return sup
 
 
+def k1_support(rows, mol1, n_key1: int) -> np.ndarray:
+    """Number of molecules in ``rows`` that contain each radius-1 key.
+
+    Radius-1 and radius-2 keys live in two **independent id spaces** (the key
+    builder allocates them separately), so the k1 count has to be built in the
+    k1 space itself.  Summing the children's k2 counts would double count (one
+    molecule can hold several k2 children of the same k1) and -- worse -- would
+    make the number depend on the arbitrary numbering of the k2 space.
+
+    Fix A3 (2026-10-23): the first version of this round wrote
+    ``n1 = sup2[atom_k1[s:e]]``, i.e. it looked a radius-1 id up in the radius-2
+    support table.  See ``analysis/cpu_checks.json`` for the renumbering
+    demonstration.
+    """
+    sup = np.zeros(int(n_key1), dtype=np.int32)
+    for m in np.asarray(rows, dtype=np.int64).tolist():
+        sup[mol1[m]] += 1
+    return sup
+
+
 def atom_tables(keys: dict, n_key2: int):
     """Flat per-atom (train atoms first): k2 id, k1 id and k1-parent of k2."""
     atom_k2 = np.asarray(keys["atom_key2"], dtype=np.int64)
@@ -90,24 +110,37 @@ def atom_tables(keys: dict, n_key2: int):
     return atom_k1, atom_k2, parent
 
 
-def per_atom_support(rows, mol2, keys: dict, n_key2: int):
-    """Support count of each atom's k1 and k2 inside one supervised fit."""
+def per_atom_support(rows, mol1, mol2, keys: dict, n_key1: int, n_key2: int) -> dict:
+    """Per-atom k1 and k2 support inside one supervised fit (fixed, A3).
+
+    Each key space is counted in its own space; the returned ``atom_n1`` /
+    ``atom_n2`` are flat per-atom arrays indexed exactly like ``cache["atom_feat"]``
+    (train atoms first, then valid atoms for the global key tables).
+    """
+    sup1 = k1_support(rows, mol1, n_key1)
     sup2 = key_support(rows, mol2, n_key2)
     atom_k1, atom_k2, _ = atom_tables(keys, n_key2)
-    return sup2, sup2[atom_k1], sup2[atom_k2]
+    return {"sup1": sup1, "sup2": sup2,
+            "atom_n1": sup1[atom_k1].astype(np.float64),
+            "atom_n2": sup2[atom_k2].astype(np.float64)}
 
 
-def molecule_support_view(rows, mol2, keys: dict, n_key2: int) -> dict:
+def molecule_support_view(rows, mol1, mol2, keys: dict, n_key1: int, n_key2: int) -> dict:
     """Everything a corrector needs to know about one base fit's support."""
-    sup2, atom_n1, atom_n2 = per_atom_support(rows, mol2, keys, n_key2)
-    return {"rows": np.asarray(rows, dtype=np.int64), "key_support": sup2,
-            "atom_n1": atom_n1, "atom_n2": atom_n2}
+    sv = per_atom_support(rows, mol1, mol2, keys, n_key1, n_key2)
+    return {"rows": np.asarray(rows, dtype=np.int64),
+            "sup1": sv["sup1"], "sup2": sv["sup2"],
+            "atom_n1": sv["atom_n1"], "atom_n2": sv["atom_n2"]}
 
 
-def support_hash(sup2: np.ndarray) -> str:
+def support_hash(sup1: np.ndarray, sup2: np.ndarray) -> str:
+    """Provenance hash covering *both* support tables (A3: k1 is now used too)."""
     import hashlib
 
-    return hashlib.sha256(np.ascontiguousarray(sup2).tobytes()).hexdigest()
+    h = hashlib.sha256()
+    for a in (sup1, sup2):
+        h.update(np.ascontiguousarray(np.asarray(a, dtype=np.int64)).tobytes())
+    return h.hexdigest()
 
 
 # ---------------------------------------------------------------------------

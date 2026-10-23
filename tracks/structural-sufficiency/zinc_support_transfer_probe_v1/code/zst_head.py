@@ -109,8 +109,10 @@ def param_counts():
 class Features:
     """Per-molecule coarse context + padded unseen-atom block for one base fit."""
 
-    def __init__(self, cache, rows, f_base, sup2, atom_k1, atom_k2, atom_ptr):
+    def __init__(self, cache, rows, f_base, atom_n1, atom_n2, atom_ptr):
         n = len(rows)
+        atom_n1 = np.asarray(atom_n1, dtype=np.float64)
+        atom_n2 = np.asarray(atom_n2, dtype=np.float64)
         n_n1 = np.zeros(n)
         n_n2 = np.zeros(n)
         frac = np.zeros(n)
@@ -122,9 +124,10 @@ class Features:
         atom_feat_all = np.asarray(cache["atom_feat"])
         for i, m in enumerate(np.asarray(rows, dtype=np.int64).tolist()):
             s, e = int(atom_ptr[m]), int(atom_ptr[m + 1])
-            k2 = atom_k2[s:e]
-            n2 = sup2[k2].astype(np.float64)
-            n1 = sup2[atom_k1[s:e]].astype(np.float64)
+            # A3: n1 comes from the radius-1 support table (its own id space),
+            # n2 from the radius-2 one. The pre-fix code did sup2[atom_k1[s:e]].
+            n2 = atom_n2[s:e]
+            n1 = atom_n1[s:e]
             u = n2 == 0
             n_n1[i], n_n2[i] = n1.sum(), n2.sum()
             frac[i] = u.mean()
@@ -508,7 +511,7 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
 # ---------------------------------------------------------------------------
 
 
-def run_base_seed(seed: int, man: dict, cache, atom_k1, atom_k2, atom_ptr) -> dict:
+def run_base_seed(seed: int, man: dict, cache, keys: dict, atom_ptr) -> dict:
     roles = {k: np.asarray(v, dtype=np.int64) for k, v in man["roles"].items()}
     pf = Z.PREDS / f"base_F_s{seed}.npz"
     z = np.load(pf)
@@ -516,14 +519,23 @@ def run_base_seed(seed: int, man: dict, cache, atom_k1, atom_k2, atom_ptr) -> di
     pred_all = np.asarray(z["pred"], dtype=np.float64)
     y_all = np.asarray(z["y"], dtype=np.float64)
     fit_rows = np.asarray(z["fit_rows"])
-    sup2 = np.asarray(z["key_support_fit"]).astype(np.float64)
+    stored_sup2 = np.asarray(z["key_support_fit"])
     base_ckpt = str(np.asarray(z["base_ckpt_sha256"]).item())
     idx = {int(r): i for i, r in enumerate(rows_all.tolist())}
+
+    # Rebuild both support tables from the frozen F rows (no retraining) and
+    # check the k2 table against the one the base run stored: an exact match
+    # proves the reconstruction uses the same fit set and key ordering.
+    mol1, mol2 = Z.molecule_key_sets(keys)
+    sv = Z.per_atom_support(fit_rows, mol1, mol2, keys,
+                            int(keys["n_key1"]), int(keys["n_key2"]))
+    if not np.array_equal(sv["sup2"], stored_sup2):
+        raise RuntimeError(f"k2 support rebuild disagrees with base_F_s{seed} prediction file")
 
     def raw(role_rows):
         rr = np.asarray(role_rows, dtype=np.int64)
         sel = np.asarray([idx[int(r)] for r in rr])
-        return Features(cache, rr, pred_all[sel], sup2, atom_k1, atom_k2, atom_ptr), \
+        return Features(cache, rr, pred_all[sel], sv["atom_n1"], sv["atom_n2"], atom_ptr), \
             pred_all[sel], y_all[sel]
 
     fit_raw, b_fit, y_fit = raw(roles["C_fit"])
@@ -534,7 +546,7 @@ def run_base_seed(seed: int, man: dict, cache, atom_k1, atom_k2, atom_ptr) -> di
         "seed": int(seed),
         "base_ckpt_sha256": base_ckpt,
         "fit_rows": fit_rows,
-        "support_hash": Z.support_hash(sup2),
+        "support_hash": Z.support_hash(sv["sup1"], sv["sup2"]),
         "f_cfit": std.transform(fit_raw), "b_cfit": b_fit, "y_cfit": y_fit,
         "f_cdev": std.transform(dev_raw), "b_cdev": b_dev, "y_cdev": y_dev,
         "f_q": {k: std.transform(v[0]) for k, v in q_raw.items()},

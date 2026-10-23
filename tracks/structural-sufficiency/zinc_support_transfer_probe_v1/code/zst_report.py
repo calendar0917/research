@@ -39,6 +39,7 @@ def cell(rec, qname, kind, tag):
         "trimmed_delta_mean": float(np.mean([m["trimmed_delta"] for m in ms])),
         "corr_with_residual": float(np.mean([m["corr_signed_with_residual"] for m in ms])),
         "selected_step": [e["steps_used"] for e in entries],
+        "dev_mae_raw": [e.get("dev_mae") for e in entries],
         "dev_mae_trim5": [e.get("dev_mae_trim5") for e in entries],
         "fit_mae_cfit_gated": [e["fit_mae_cfit_gated"] for e in entries],
     }
@@ -50,7 +51,7 @@ def summarise(records: dict, stage: str) -> dict:
         s = {"n_fit": rec.get("n_fit"), "base_ckpt_sha256": rec.get("base_ckpt_sha256"),
              "support_hash": rec.get("support_hash"),
              "c_fit": rec.get("c_fit") or rec.get("c_fit"),
-             "c_dev": rec.get("c_dev"),
+             "c_dev": dict(rec.get("c_dev") or {}, base_mae_trim5=rec.get("c_dev", {}).get("base_mae_trim5")),
              "residual_gated": rec.get("c_fit_residual_gated"),
              "wd_selection": rec.get("wd_selection"), "cells": {},
              "baselines": rec.get("baselines", {})}
@@ -140,14 +141,17 @@ def md(summary, old=None) -> str:
             L.append(f"| {seed_s} | {q} | {fmt_ci(ge['ci_by_init'])} | {fmt_ci(se['ci_by_init'])} | "
                      f"{fmt_ci(se['key_ci_by_init'])} | {se['n_key_clusters'] or '-'} |")
     L.append("\n## Head fitting and selection\n")
-    L.append("| seed | head | wd | C_fit gated MAE | C_dev base (5% trimmed) | C_dev head (5% trimmed, min) | selected step |")
-    L.append("|---|---|---|---:|---:|---:|---:|")
+    L.append("Raw (`dev_mae`) and pre-registered (`dev_mae_trim5`) curves are both shown: "
+             "every arm selects step 0 under **both**, so the null is not a trim5 artefact.")
+    L.append("| seed | head | wd | C_fit gated MAE | C_dev base raw | C_dev best raw (post-hoc) | C_dev base trim5 | C_dev best trim5 | selected step |")
+    L.append("|---|---|---|---:|---:|---:|---:|---:|---:|")
     for seed_s, s in summary["seeds"].items():
         for kind in ("G", "S"):
             c = s["cells"]["Q_A"][kind]
             dv = s["c_dev"]
             L.append(f"| {seed_s} | {kind} | {s['wd_selection'][kind]['selected_wd']} | "
                      f"{np.mean(c['fit_mae_cfit_gated']):.4f} | {dv['base_mae']:.4f} | "
+                     f"{np.mean(c['dev_mae_raw']):.4f} | {dv['base_mae_trim5']:.4f} | "
                      f"{np.mean(c['dev_mae_trim5']):.4f} | {c['selected_step']} |")
     L.append("\n## Coarse baselines (no local structure at all)\n")
     L.append("| seed | package | constant (mean) Δ | constant (median) Δ | linear in f_base Δ |")
@@ -159,6 +163,25 @@ def md(summary, old=None) -> str:
                 continue
             L.append(f"| {seed_s} | {q} | {b['constant_mean']['delta']:+.4f} | "
                      f"{b['constant_median']['delta']:+.4f} | {b['linear_f_base']['delta']:+.4f} |")
+    dg = (summary.get("diagnostics") or {}).get("within_key") or {}
+    if dg:
+        L.append("\n## Within-key diagnostic (molecule-disjoint 80/20 inside every C key family)\n")
+        L.append("Held-out molecules share the exact radius-2 keys with their training molecules.")
+        L.append("The **selected** column is the pre-registered rule (trim5). The post-hoc raw")
+        L.append("minimum is shown for completeness and is **not** a selection rule.\n")
+        L.append("| seed | head | base hold MAE | selected step | selected Δ | raw best step (post-hoc) | raw best Δ (post-hoc) |")
+        L.append("|---|---|---:|---:|---:|---:|---:|")
+        for seed_s, v in dg.items():
+            for kind in ("G", "S"):
+                x = v[kind]
+                L.append(f"| {seed_s} | {kind} | {v['base_mae_hold']:.4f} | {x['best_step']} | "
+                         f"{x['hold_delta']:+.4f} | {x['raw_best_step']} | "
+                         f"{x['raw_best_delta_vs_base']:+.4f} |")
+        L.append("\nOracle per-package constant (only bounds whole-package translations):\n")
+        L.append("| cell | base MAE | best constant | gain |")
+        L.append("|---|---:|---:|---:|")
+        for k, v in (summary["diagnostics"].get("oracle_constant") or {}).items():
+            L.append(f"| {k} | {v['base_mae']:.4f} | {v['best_constant']:+.4f} | {v['gain']:.6f} |")
     if old:
         L.append("\n## Old supervision-support package (exploration, `sup_minus` epoch-600 base)\n")
         L.append("| seed | package | n | base MAE | base MAE gated | S selected Δ | G endpoint Δ | S endpoint Δ |")

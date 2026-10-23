@@ -107,6 +107,65 @@ def s_path_check() -> dict:
                        and float(np.max(np.abs(h_full - h_zero))) > 1e-6)}
 
 
+def support_feature_checks(man: dict, cache, keys: dict, atom_ptr) -> dict:
+    """A3 checks for the k1/k2 support features.
+
+    (a) every per-atom count must equal a brute-force count over the fit
+        molecules (pure-python set membership, no numpy key tables);
+    (b) independently renumbering *both* key spaces must not move any feature
+        byte (this is the property the pre-fix expression violated);
+    (c) the pre-fix expression ``sup2[atom_k1]`` is shown to move under the same
+        renumbering, which is what made the bug visible.
+    """
+    fit_rows = np.asarray(man["roles"]["F"], dtype=np.int64)
+    n_key1, n_key2 = int(keys["n_key1"]), int(keys["n_key2"])
+    mol1, mol2 = Z.molecule_key_sets(keys)
+    sv = Z.per_atom_support(fit_rows, mol1, mol2, keys, n_key1, n_key2)
+    atom_k1, atom_k2, _ = Z.atom_tables(keys, n_key2)
+
+    unique = all(len(set(mol1[int(m)].tolist())) == len(mol1[int(m)]) for m in fit_rows[:500])
+
+    fit_sets1 = [set(mol1[int(m)].tolist()) for m in fit_rows]
+    fit_sets2 = [set(mol2[int(m)].tolist()) for m in fit_rows]
+    probe = np.asarray(man["roles"]["C_fit"], dtype=np.int64)[:12]
+    count_diff = 0.0
+    for m in probe.tolist():
+        s, e = int(atom_ptr[m]), int(atom_ptr[m + 1])
+        for a in range(s, e):
+            c1 = sum(int(atom_k1[a]) in S for S in fit_sets1)
+            c2 = sum(int(atom_k2[a]) in S for S in fit_sets2)
+            count_diff = max(count_diff, abs(c1 - sv["atom_n1"][a]), abs(c2 - sv["atom_n2"][a]))
+
+    rng = np.random.default_rng(11)
+    p1 = rng.permutation(n_key1).astype(np.int64)
+    p2 = rng.permutation(n_key2).astype(np.int64)
+    kp = dict(keys)
+    for name, perm in (("atom_key1", p1), ("atom_key2", p2),
+                       ("mol_k1", p1), ("mol_k2", p2)):
+        arr = np.asarray(keys[name], dtype=np.int64)
+        kp[name] = perm[arr].astype(np.asarray(keys[name]).dtype)
+    mol1p, mol2p = Z.molecule_key_sets(kp)
+    svp = Z.per_atom_support(fit_rows, mol1p, mol2p, kp, n_key1, n_key2)
+    atom_k1p, _, _ = Z.atom_tables(kp, n_key2)
+
+    rows = np.concatenate([np.asarray(man["roles"][r], dtype=np.int64)[:48]
+                           for r in ("C_fit", "C_dev", "Q_A")])
+    zero = np.zeros(len(rows))
+    fa = H.Features(cache, rows, zero, sv["atom_n1"], sv["atom_n2"], atom_ptr)
+    fb = H.Features(cache, rows, zero, svp["atom_n1"], svp["atom_n2"], atom_ptr)
+    invariance = max(float(np.max(np.abs(fa.ctx - fb.ctx))),
+                     float(np.max(np.abs(fa.aux - fb.aux))),
+                     float(np.max(np.abs(fa.atoms - fb.atoms))),
+                     float(np.max(np.abs(fa.mask - fb.mask))))
+    buggy = float(np.max(np.abs(sv["sup2"][atom_k1] - svp["sup2"][atom_k1p])))
+    return {"fit_molecules_k1_unique": bool(unique),
+            "per_atom_count_max_abs_diff": float(count_diff),
+            "renumber_invariance_max_abs_diff": invariance,
+            "pre_fix_expression_max_abs_diff_under_renumbering": buggy,
+            "n_probe_molecules": int(len(rows)),
+            "ok": bool(unique and count_diff == 0.0 and invariance == 0.0 and buggy > 0.0)}
+
+
 def compact(rec: dict) -> dict:
     """Drop the per-molecule arrays (they are delivered as a CSV)."""
     out = json.loads(json.dumps(rec))
@@ -122,8 +181,11 @@ def compact(rec: dict) -> dict:
 
 def stride_stats(f: H.Features, base, y) -> dict:
     g = f.gate > 0
+    ae = np.sort(np.abs(base - y))
+    trim_n = max(1, int(round(0.95 * len(ae))))
     return {"n": int(len(y)), "n_gated": int(g.sum()),
             "base_mae": float(np.abs(base - y).mean()),
+            "base_mae_trim5": float(ae[:trim_n].mean()),
             "base_mae_gated": float(np.abs(base[g] - y[g]).mean()) if g.any() else None,
             "unseen_atom_fraction_mean": float((f.mask.sum(1) / np.maximum(
                 np.exp(f.aux[:, 1]) - 1.0, 1.0)).mean())}
@@ -144,7 +206,6 @@ def main() -> int:
     cache = D.load_cache("train")
     keys = Z.load_keys()
     mol1, mol2 = Z.molecule_key_sets(keys)
-    atom_k1, atom_k2, parent = Z.atom_tables(keys, int(keys["n_key2"]))
     atom_ptr = np.asarray(cache["atom_ptr"], dtype=np.int64)
 
     pc = H.param_counts()
@@ -158,6 +219,7 @@ def main() -> int:
         "sign": sign_check(),
         "s_path": s_path_check(),
         "support_gates_pass": bool(man["gates"]["all_pass"]),
+        "support_features": support_feature_checks(man, cache, keys, atom_ptr),
     }
     sets = {k: set(roles[k].tolist()) for k in roles}
     checks["query_rows_outside_fit_and_dev"] = bool(
@@ -169,6 +231,7 @@ def main() -> int:
                               and checks["query_rows_outside_fit_and_dev"]
                               and checks["cdev_outside_fit"]
                               and checks["sign"]["ok"] and checks["s_path"]["ok"]
+                              and checks["support_features"]["ok"]
                               and all(v == 0.0 for v in checks["zero_init_replay_max_abs_correction"].values()))
     Z.write_json(Z.ANALYSIS / "cpu_checks.json", checks)
     print("[checks]", json.dumps(checks, indent=1)[:1500], flush=True)
@@ -178,7 +241,7 @@ def main() -> int:
     RUNS_HEADS.mkdir(parents=True, exist_ok=True)
     all_records = {}
     for seed in [int(s) for s in args.seeds.split(",")]:
-        data = H.run_base_seed(seed, man, cache, atom_k1, atom_k2, atom_ptr)
+        data = H.run_base_seed(seed, man, cache, keys, atom_ptr)
         rec, trained = H.build_and_train(seed, data, tkeys_q, mol2, steps=args.steps)
         rec.update({
             "seed": seed,

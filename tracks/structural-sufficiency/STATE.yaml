@@ -13,7 +13,7 @@ main_line: true
 latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
 latest_side_round: zinc_support_transfer_probe_v1
-latest_side_round_verdict: NO_TRANSFERABLE_CORRECTION__RESIDUAL_IS_LABEL_NOISE_AT_THIS_RESOLUTION
+latest_side_round_verdict: NO_TRANSFERABLE_CORRECTION_FOR_THIS_HEAD_FAMILY
 latest_next_action: >-
   3-5 seeds plus a parameter-matched trunk/readout control to test whether the M
   valid gain and the M-F separation reproduce or were a seed-1 fluctuation.  New
@@ -1276,55 +1276,77 @@ zinc_support_transfer_probe_v1:
   protocol_id: zinc-support-transfer-probe-v1
   protocol: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/PROTOCOL.md
   report: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/REPORT.md
-  status: COMPLETE
+  status: COMPLETE_WITH_CORRECTION
   question: >-
     With a base model that has zero supervised support for the target structures' radius-2
     key types, can a shared additive correction rule learned on other structures' genuine
     out-of-sample errors transfer to those structures, and does local structure add anything
     over coarse statistics?
   answer_short: >-
-    No, and the null is quantified. On a fresh honest holdout inside official train 10k
-    (F 7467 / C_fit 1156 / C_dev 306 / Q_A 361 / Q_B 310 / Q_bg 400, all isolation gates pass),
-    all 24 heads (G, S) x (2 wd) x (3 inits) x (2 base seeds) select step 0 on the C_dev rule,
-    i.e. the selection rule chooses "no correction"; the selected arms are bit-identical to B.
-    Applied anyway, the fitted heads are significantly harmful (+0.04..+0.12 on Q_A/Q_B).
-    Mechanism: the residual is not predictable even WITHIN a key family (molecule-disjoint 80/20
-    inside each key: hold-out delta 0.0000, endpoint +0.02), and the oracle best per-package
-    constant gains at most 0.0011 MAE, i.e. below the 0.003 needed for 0.05x.
-  verdict: NO_TRANSFERABLE_CORRECTION__RESIDUAL_IS_LABEL_NOISE_AT_THIS_RESOLUTION
+    Not for this family. On a fresh honest holdout inside official train 10k (F 7467 /
+    C_fit 1156 / C_dev 306 / Q_A 361 / Q_B 310 / Q_bg 400, all isolation gates pass), all
+    24 heads (G, S) x (2 wd) x (3 inits) x (2 base seeds) select step 0 on the C_dev rule
+    AND on the untrimmed C_dev curve, i.e. the selection rule chooses "no correction"; the
+    selected arms are bit-identical to B. Applied at the endpoint they are significantly
+    harmful (+0.036..+0.122 on Q_A/Q_B). Two corrections were made after the first write-up:
+    (A3) the k1 support feature looked a radius-1 id up in the radius-2 table; fixed and all
+    24 cheap heads retrained from the frozen bases (0 GPU) with the same recipe -- the
+    selection outcome did not change; (A4/A5) the mechanistic claims of the first version
+    ("conditional mean ~ 0", "unpredictable even within a key family", "ceiling 0.0011 for
+    any learnable correction") are retracted as unsupported.
+  verdict: NO_TRANSFERABLE_CORRECTION_FOR_THIS_HEAD_FAMILY
+  superseded_verdict: NO_TRANSFERABLE_CORRECTION__RESIDUAL_IS_LABEL_NOISE_AT_THIS_RESOLUTION
   decision_branch: D
+  verdict_scope: "additive, m_F-gated heads on (coarse ctx | 108-d atom block + n1,n2 support), L1 loss, C_dev(trim5) selection; does NOT bound other corrector families"
+  correction_pass:
+    amendments: [A3, A4, A5]
+    protocol: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/PROTOCOL.md
+    gpu_hours: 0.0
+    cpu_wall_seconds: 260
+    new_runs_or_seeds: none
+    a3_bug: "n1 = sup2[atom_k1] (radius-1 id used to index the radius-2 support table) in zst_head.Features and zst_common.per_atom_support"
+    a3_checks:
+      per_atom_vs_bruteforce_count_max_abs_diff: 0.0
+      renumbering_invariance_max_abs_diff: 0.0
+      pre_fix_expression_change_under_renumbering: 4022.0
+      ctx_columns_affected: [27, 28]
+      n1_median_change_on_cfit_atoms: "277 -> 3630"
+    a4_fix: "report both raw and trim5 curves; a post-hoc raw dip (seed 0 S, step 50, -0.0102) is recorded but is not a selection rule and does not reproduce on seed 1"
+    a5_fix: "L1 targets a conditional median; oracle constants bound only whole-package translation; identity-selected deltas are tautological; endpoint intervals bound only endpoint predictions"
+    effect_on_verdict: none
   verdict_basis:
     - "selected arm = identity on every package and every seed: G-B = S-B = 0.0000 exactly"
-    - "head fits C_fit (L1 0.120 -> 0.027 S / 0.055 G) while C_dev trim5 worsens monotonically 0.092 -> 0.165/0.144"
-    - "endpoint (unselected) harm: Q_A +0.039/+0.043 (G/S), Q_B +0.057/+0.124, Q_bg +0.007/+0.014; 95% mol and key-cluster CIs exclude 0 on the harmful side"
-    - "S is worse than G (S-G +0.004..+0.080): extra local structure only adds overfitting channels"
-    - "coarse baselines: median constant |d|<=0.0011, mean constant +0.002..+0.008, linear in f_base +0.002..+0.016"
-    - "within-key held-out molecules (same radius-2 keys as training molecules) also select step 0, delta 0.0000"
-    - "oracle per-package constant ceiling 0.00003..0.00105, vs 0.003 needed"
-    - "old sup_minus package reproduces the same sign independently (all step 0; endpoint +0.06..+0.10 on Q_old)"
+    - "head fits C_fit (L1 0.120 -> 0.027 S / 0.054 G) while C_dev worsens monotonically from step 0 under BOTH raw (0.1140 -> 0.166/0.180) and trim5 (0.0919 -> 0.147/0.158)"
+    - "endpoint (unselected) harm: Q_A +0.041/+0.036 (G/S) s0 and +0.049/+0.042 s1, Q_B +0.071/+0.122 and +0.051/+0.111, Q_bg +0.012/+0.013 and +0.017/+0.015; gated Q_bg 0.1961->0.2375/0.2433 and 0.2029->0.2629/0.2558"
+    - "S vs G has NO consistent sign after the fix (Q_A -0.005/-0.007 in favour of S, Q_B +0.051/+0.060 against S); the earlier 'S is always worse' claim is retracted"
+    - "coarse baselines: median constant |d|<=0.0011, mean constant +0.002..+0.008, linear in f_base +0.001..+0.016"
+    - "old sup_minus package reproduces the same sign independently (12/12 step 0 under raw and trim5; endpoint +0.07..+0.12 on Q_old)"
   checks:
     file: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/cpu_checks.json
     all_pass: true
-    count: 6
-    fast_unit_tests: 7
-    key: "total params G 424066 / S 423986 <= 500000; zero-init replay max |h| = 0.0; sign check exact; S-path gradient finite and atom-block-sensitive (0.0486); isolation gates all true; identity on ungated molecules max |diff| = 0.0"
+    count: 7
+    fast_unit_tests: 9
+    key: "total params G 424066 / S 423986 <= 500000; zero-init replay max |h| = 0.0; sign check exact; S-path gradient finite and atom-block-sensitive; isolation gates all true; identity on ungated molecules max |diff| = 0.0; k1/k2 support: brute-force count 0.0, renumbering invariance 0.0, pre-fix expression moves by 4022"
   split:
     file: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/split_manifest.json
     roles: {F: 7467, C_fit: 1156, C_dev: 306, Q_A: 361, Q_B: 310, Q_bg: 400}
-    gates: "roles disjoint and cover 10k; target keys zero support in F; D keys zero in F+C_fit; A/B keys zero in F+C_fit+C_dev; A/B parent overlap 0; every family's key co-occurrence graph is singleton components"
+    gates: "roles disjoint and cover 10k; target keys zero support in F; D keys zero in F+C_fit; A/B keys zero in F+C_fit+C_dev; A/B parent overlap 0; every family's key co-occurrence graph is singleton components; the split always used its own correct k1 counts, so A3 did not touch it"
   budget:
     file: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/budget.json
     gpu_hours_cap: 3.0
     gpu_hours_used: 0.51
     gpu_hours_base_training_measured: 0.4884
-    wall_clock_hours: 0.7
+    gpu_hours_correction_pass: 0.0
+    wall_clock_hours: 0.8
     includes_failures: true
-    note: "two launches died in <1 min on a git-ignored manifest; all head fitting/selection/evaluation was CPU"
+    note: "two launches died in <1 min on a git-ignored manifest; head fitting/selection/evaluation and the whole correction pass were CPU"
   artifacts:
     summary: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/summary.json
     main_table: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/main_table.md
     per_molecule: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/per_molecule.csv
     diagnostics: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/diagnostics.json
+    feature_fix: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/feature_fix.json
+    cpu_checks: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/cpu_checks.json
     head_records: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/head_records.json
     head_checkpoints: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/head_checkpoints.json
     base_models: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/base_models.json
@@ -1334,16 +1356,20 @@ zinc_support_transfer_probe_v1:
     jobs: tracks/structural-sufficiency/zinc_support_transfer_probe_v1/analysis/rr_jobs.json
   valid_test_read: none
   not_run_deliberately:
-    - "section 5 full-10k valid application: gate (stable internal gain) not met; applying a head its own selection split rejected would only measure harm"
-    - "structural-alignment shuffle control: only meaningful if S clearly beats G; the measured direction is S significantly worse than G"
+    - "section 5 full-10k valid application: gate (stable internal gain) not met; the harness had a latent atom_offset/valid-slice defect that is now fixed but still unexecuted"
+    - "structural-alignment shuffle control: only meaningful if S clearly beats G; the post-fix signs are mixed"
   non_claims:
     - "only the additive form f_base + m_F*h was tested; multiplicative/piecewise/quantile forms are not refuted"
+    - "L1 is optimised by a conditional median; nothing here shows median(y - f_base | X) = 0"
+    - "the oracle per-package constant bounds whole-package translations only (<=0.0011), not conditional/group correction rules"
     - "Q_A is a poor MAE carrier: 3 molecules (one with y=-42.0) carry 50% of its absolute error; trimmed Q_A MAE is 0.109/0.104"
-    - "C_fit has only 988 gated molecules for a 10.5k-parameter head; head capacity may be mis-sized (but the within-key diagnostic uses the same capacity and is also null)"
+    - "C_fit has only 988 gated molecules for a 10.5k-parameter head; head capacity may be mis-sized"
     - "old-package numbers are exploratory: M was used for checkpoint selection in the previous round and Q_old labels were read then"
-    - "two base seeds share an SSL checkpoint directory but not weights; SSL pretraining variance is not sampled"
+    - "A3/A4/A5 are post-hoc: they change no selection rule, query set or budget, but the first write-up (commit ccd6110) stays in history and must be cited together with the corrected report"
   next_action: >-
-    Stop additive residual correction on raw-y for this target. The next admissible step is
-    molecule-level: build out-of-fold residuals on F, and test whether a structure-only signal can
-    identify a subgroup whose L1 residual MEDIAN deviates from 0 and reproduces on the query
-    packages. If it cannot, the 0.05x bottleneck is coverage/representation, not post-hoc correction.
+    Close the post-processing line: residual correction on top of the frozen P3 base has now
+    failed twice (zinc_composition_transfer_v1 and here, the second time with fixed features),
+    and the remaining headroom for whole-package shifts (0.0011) is below the 0.003 a 0.05x
+    step needs. If GPU is spent again it should go to end-to-end representation learning on F
+    (a representation that can express unseen key types directly), judged on the official 10k
+    protocol, not to more residual mining.

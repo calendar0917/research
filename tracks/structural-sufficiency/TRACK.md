@@ -105,8 +105,9 @@
 | Phase 2b 判定 | **`NO_PRACTICAL_ADVANTAGE`**：valid 仅阈值边缘通过，one-shot test 未确认；M 的 +12.3% 参数 / +15.1% FLOPs / +38% 训练墙不换来确定收益；M/F 冻结保留为 borderline/negative 证据 |
 | Phase 2c-sup（`zinc_support_transfer_probe_v1`）协议/代码 | 完成：`PROTOCOL.md` 冻结（commit `b0e287f`）+ 两处修订 A1（标准化尺度下限/头 lr/选择时机）、A2（C_dev trim5 选择统计量，均在见到新数值前写入）；新 honest holdout（F 7467 / C_fit 1156 / C_dev 306 / Q_A 361 / Q_B 310 / Q_bg 400），六条隔离门禁全过；7 tests；B/G/S 三臂、末层零初始化、总参数 424066/423986 ≤ 500000 |
 | Phase 2c-sup GPU | **完成**：2/2 formal exit 0（`b652cd73e89f` 提交，a100-2，driver 550.163.01，torch 2.5.1+cu124）；**0.488 GPU·h**（s0 0.2194 / s1 0.2689），另两次启动因远端缺 git-ignored manifest 在 <1 min 内失败；3.0 h 预算的 17% |
-| Phase 2c-sup 结果 | 24/24 个头（G/S × 2 wd × 3 init × 2 base seed）在 C_dev 上**全部选中 step 0**（=不纠错），选中臂与 B 逐分子完全相同（Δ=0.0000）；头确实在拟合（C_fit L1 0.120→0.027/0.055）但 C_dev trim5 单调恶化 0.092→0.165/0.144；强行用到 1500 步则 Q_A +0.039/+0.043、Q_B +0.057/+0.124、Q_bg +0.007/+0.014（CI 在有害侧排除 0）；**S 比 G 更差**；within-key 留出同样 Δ=0.0000；oracle 组级常数上限 0.0011 < 目标所需 0.003 |
-| Phase 2c-sup 判定 | **`NO_TRANSFERABLE_CORRECTION__RESIDUAL_IS_LABEL_NOISE_AT_THIS_RESOLUTION`（分支 D）**：不是"跨结构类型迁移失败"，而是给定特征下基座符号残差的条件均值≈0（同一键族内部也不可预测）；粗统计量常数/线性基线同样无利可图。§5 全 10k valid 门禁未开、official valid/test 未读、shuffle 控制未做（S 明确劣于 G 时无解释力） |
+| Phase 2c-sup 结果（修正后） | 24/24 个头（G/S × 2 wd × 3 init × 2 base seed）在 C_dev 上**全部选中 step 0**（=不纠错），**未裁剪 MAE 同样在 step 0 最小**（所以不是 trim5 造成的）；选中臂与 B 逐分子相同（Δ=0.0000）；头确实在拟合（C_fit L1 0.120→0.027/0.054）但 C_dev 未裁剪 0.114→0.166/0.180、trim5 0.092→0.147/0.158；强行用到 1500 步则 Q_A +0.041/+0.036（s0）、Q_B +0.071/+0.122、Q_bg +0.012/+0.013（CI 在有害侧排除 0）；**S vs G 无一致符号**（Q_A 上 S 略好、Q_B 上更差）；oracle 整包平移上限 0.0011 < 目标所需 0.003；旧包 12/12 同向 |
+| Phase 2c-sup 更正 A3/A4/A5（0 GPU） | **A3**：`n1 = sup2[atom_k1]` 把半径 1 的 ID 拿去查半径 2 的支持表（`zst_head.Features` 与 `zst_common.per_atom_support`），G/S 都受影响；修正为按分子计数 k1，新增"重编号不变"（修正后 0.0 / 修正前 4022）与"逐分子暴力计数"（0.0）两条检查；**复用原两个基座、原划分、原冻结预测重训全部 24 个头（CPU）**，选择结论不变。**A4**：初版"同键族内部也不可预测"与已保存曲线不符（seed 0 的 S 未裁剪在 step 50 为 0.0878 < 基座 0.0966），撤回，改为"选择器 4/4 选 0；未裁剪仅在 1/4 格下探且不跨 seed 复现"。**A5**：撤回"条件均值≈0"与"所有可学习纠错上限 0.0011"，改为限定陈述（L1 对应条件中位数；oracle 常数只约束整包平移；零头配对差是同义反复） |
+| Phase 2c-sup 判定（限定） | **`NO_TRANSFERABLE_CORRECTION_FOR_THIS_HEAD_FAMILY`（分支 D，限定）**：在"加性 + m_F 门控 + 这组特征 + L1 + C_dev(trim5)"这一族里没有跨结构收益；未裁剪曲线同向；旧包与另一 seed 同向。**该判定不外推到其它纠错族**。§5 全 10k valid 门禁未开、official valid/test 未读、shuffle 控制未做（S/G 符号混合时无解释力）。初版 `NO_TRANSFERABLE_CORRECTION__RESIDUAL_IS_LABEL_NOISE_AT_THIS_RESOLUTION` 保留在历史（commit `ccd6110`）中 |
 | 交付 | Phase 0 REPORT + 纠错文件 + Phase 1a 协议/REPORT + Phase 1b 协议/决策日志/REPORT/run manifest + Phase 1c 协议/纠错/REPORT/run manifest/analysis + Phase 1d 协议/REPORT/CPU audit/run manifest/analysis + STATE/TRACK |
 
 ## 入口
@@ -192,11 +193,11 @@
 
 ## 下一步
 
-00a. **`zinc_support_transfer_probe_v1` 已改写下一步（最新，2026-10-23）**：raw-y 上的**加性纠错头**这条线**停止**。
-   - 事实：新 honest holdout 上 24/24 个头选择"不纠错"；强行应用反而在三个包上一致变差；S（局部结构）比 G（粗统计）更差；同一键族内部留出同样为 0；事后最优组级常数上限 0.0011，低于 0.05× 所需的 0.003。
-   - 因此**不**再试：不同头容量/更多 init/更多 seed/更多 wd/"更细的原子特征"/per-k2 表/把纠错头接在别的 checkpoint 上。
-   - **唯一允许**的下一步是分子级而非组级：在 F 上做交叉拟合得到 out-of-fold 残差，检验是否存在**只用结构就能算出**的分子级信号，能挑出被系统性高估/低估的子群，要求子群内 **L1 残差中位数**（不是均值）显著偏离 0 且在 query 包上复现。若不存在，0.05× 的瓶颈在覆盖/表示，不在后处理。
-   - 会改变判定的证据：在**完全不含 query 标签**的固定规则下，query MAE 改善 ≥0.003、键簇 bootstrap 区间不含 0、并在第二个基座 seed 上复现。
+00a. **`zinc_support_transfer_probe_v1`（含 A3/A4/A5 更正）已改写下一步（最新，2026-10-23）**：raw-y 上的**加性纠错头/残差后处理**这条线**关闭**。
+   - 事实（修正后）：24/24 个头在 C_dev 上选"不纠错"，未裁剪曲线同样在 step 0 最小；强行应用在三个包上一致变差（+0.012…+0.122）；S 与 G 无一致优劣；旧包 12/12 同向；oracle 整包平移上限 0.0011 < 0.003。k1 特征 bug 修好后结论不变。
+   - 因此**不**再试：不同头容量/更多 init/更多 seed/更多 wd/更细的原子特征/per-k2 表/把纠错头接到别的 checkpoint/换成分组或交叉拟合的残差挖掘。两次在同一位置失败，剩余空间（整包平移 0.0011）低于目标所需 0.003。
+   - **下一次 GPU 投入的方向**：端到端重新学习结构表示（能直接表达"未见键类型"的表示），在与 official 10k 一致的协议上评估；而不是继续从冻结 P3 的残差里找突破。
+   - 会改变判定的证据：在**完全不含 query 标签**的固定规则下，query MAE 改善 ≥0.003、键簇 bootstrap 区间不含 0、并在第二个基座 seed 上复现。这需要新表示，不需要新头。
 
 00. **Phase 2b 已改写下一步（历史）**：标准 ZINC-12k 上 M 的 valid +0.003056 未在 one-shot test 重现（+0.001273，CI 跨零），F 为 null；**M 不作为下一性能基座，P3 保持基座**。M/F 冻结保留为 borderline/negative 证据。若重启该线，唯一允许的科学问题是：**3–5 seed + 参数匹配 trunk/readout 对照**，检验 M 的 valid gain 与 M−F separation 是否可复现，还是 seed-1 波动；必须新预注册，不自动开 Phase 2c。
 

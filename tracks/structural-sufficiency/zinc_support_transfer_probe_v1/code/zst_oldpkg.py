@@ -110,11 +110,12 @@ def main() -> int:
 
     cache = D.load_cache("train")
     keys = Z.load_keys()
-    _, mol2 = Z.molecule_key_sets(keys)
-    atom_k1, atom_k2, _ = Z.atom_tables(keys, int(keys["n_key2"]))
+    mol1, mol2 = Z.molecule_key_sets(keys)
     atom_ptr = np.asarray(cache["atom_ptr"], dtype=np.int64)
     y = np.asarray(cache["labels"], dtype=np.float64)
-    sup2 = Z.key_support(fit_rows, mol2, int(keys["n_key2"])).astype(np.float64)
+    sv = Z.per_atom_support(fit_rows, mol1, mol2, keys,
+                            int(keys["n_key1"]), int(keys["n_key2"]))
+    sup2, sup1 = sv["sup2"], sv["sup1"]
 
     union = np.unique(np.concatenate([roles[k] for k in roles]))
     preds = {}
@@ -128,7 +129,7 @@ def main() -> int:
     idx = {int(r): i for i, r in enumerate(union.tolist())}
 
     out = {"fit_rows": "F_minus 7549", "n_fit": int(len(fit_rows)),
-           "support_hash": Z.support_hash(sup2),
+           "support_hash": Z.support_hash(sup1, sup2),
            "components": {"n": cs["n_components"],
                           "sizes": sorted((len(v) for v in cs["components"]), reverse=True)},
            "sizes": {k: int(len(v)) for k, v in roles.items()},
@@ -142,7 +143,8 @@ def main() -> int:
         def build(r):
             rr = np.asarray(r, dtype=np.int64)
             sel = np.asarray([idx[int(x)] for x in rr])
-            return H.Features(cache, rr, preds[seed][sel], sup2, atom_k1, atom_k2, atom_ptr), \
+            return H.Features(cache, rr, preds[seed][sel], sv["atom_n1"], sv["atom_n2"],
+                              atom_ptr), \
                 preds[seed][sel], y[rr]
 
         fit_raw, b_fit, y_fit = build(roles["C_fit"])
@@ -157,8 +159,8 @@ def main() -> int:
         tkeys = {"Q_old": np.asarray(z["target_keys"], dtype=np.int64), "Q_B": None}
         rec, trained = H.build_and_train(seed, data, tkeys, mol2, steps=args.steps)
         rec.update({"seed": seed, "base_ckpt_sha256": MINUS_SHA[seed],
-                    "support_hash": Z.support_hash(sup2),
-                    "c_fit": {"n": int(len(y_fit)),
+            "support_hash": Z.support_hash(sup1, sup2),
+            "c_fit": {"n": int(len(y_fit)),
                               "n_gated": int((data["f_cfit"].gate > 0).sum()),
                               "base_mae": float(np.abs(b_fit - y_fit).mean())},
                     "c_dev": {"n": int(len(y_dev)),

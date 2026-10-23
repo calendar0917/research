@@ -67,10 +67,13 @@ def main() -> int:
     keys = Z.load_keys()
     meta = json.load(open(ZCT / "cache/keys_meta.json", encoding="utf-8"))
     atom_start_valid = int(meta["slices"]["valid"]["atom_start"])
-    atom_k1, atom_k2, _ = Z.atom_tables(keys, int(keys["n_key2"]))
     train_cache = D.load_cache("train")
     mol1, mol2 = Z.molecule_key_sets(keys)
-    sup10k = Z.key_support(np.arange(Z.N_TRAIN), mol2, int(keys["n_key2"])).astype(np.float64)
+    # A3: both support tables, each counted in its own key space, over the rows
+    # the base actually fitted (the whole official train 10k).
+    sv10k = Z.per_atom_support(np.arange(Z.N_TRAIN), mol1, mol2, keys,
+                               int(keys["n_key1"]), int(keys["n_key2"]))
+    sup10k = sv10k["sup2"]
     names, ref_y = four_groups()
     if not np.allclose(ref_y, y_valid, atol=1e-5):
         raise RuntimeError("valid labels disagree with the frozen reference CSV")
@@ -78,7 +81,7 @@ def main() -> int:
     heads = json.load(open(args.heads, encoding="utf-8"))
     per_rows = []
     out = {"valid_label_sha256": valid_y_sha, "n_valid": int(len(y_valid)),
-           "support_hash_10k": Z.support_hash(sup10k), "seeds": {}}
+           "support_hash_10k": Z.support_hash(sv10k["sup1"], sup10k), "seeds": {}}
     per_rows = []
     for seed in [int(s) for s in args.seeds.split(",")]:
         rec = heads[str(seed)]
@@ -89,9 +92,11 @@ def main() -> int:
         train_rec = json.load(open(ckpt.parent / "train.json", encoding="utf-8"))
         model, _ = Z.load_base_model(ckpt, seed, torch.device("cpu"))
         base = Z.predict_rows(model, valid, rows_valid, torch.device("cpu"))
-        feats = H.Features(valid, rows_valid, base, sup10k, atom_k1, atom_k2,
-                           np.asarray(valid["atom_ptr"], dtype=np.int64),
-                           atom_offset=atom_start_valid)
+        # the global atom tables list train atoms first, so slice the valid part
+        sl = slice(atom_start_valid, atom_start_valid + len(valid["atom_feat"]))
+        feats = H.Features(valid, rows_valid, base,
+                           sv10k["atom_n1"][sl], sv10k["atom_n2"][sl],
+                           np.asarray(valid["atom_ptr"], dtype=np.int64))
         entry = {
             "seed": seed, "base_ckpt": str(ckpt), "base_ckpt_sha256": sha,
             "base_fit": "official train 10,000 (supervised)", "n_fit": 10000,

@@ -229,3 +229,45 @@ split only — the correction never enters it, and the query packages are untouc
 The untrimmed `C_dev` MAE is reported next to it everywhere. This was fixed before
 any new-holdout `C_dev` number existed, and it is the only change to §3's
 selection rule.
+
+## A3 — k1 support must be counted in the k1 key space (post-hoc correction, 2026-10-23)
+
+Radius-1 and radius-2 keys are allocated in two **independent** id spaces. The first
+version of `zst_head.Features` wrote `n1 = sup2[atom_k1[s:e]]`, i.e. it looked a
+radius-1 id up in the radius-2 support table, and `zst_common.per_atom_support`
+did the same. Consequences: the "parent support" channel of S (and the
+`min_n1`/`mean_n1` context columns of G) was an arbitrary lookup that changed
+under any renumbering of the k2 space (measured: up to 4022 on the same data).
+
+The fix counts, for each k1, the number of distinct fit molecules that contain it
+(`zst_common.k1_support`) and indexes that table with `atom_k1`. It is *not* the
+sum of the children's k2 counts, which would double count and depend on the
+numbering. Two checks gate the re-run: (i) independently renumbering both key
+spaces moves no feature byte; (ii) per-atom counts equal a brute-force
+per-molecule count. Both are in `analysis/cpu_checks.json` and in
+`tests/test_zst.py`.
+
+Scope of this amendment: it changes **head inputs only**. The base models, the
+role split, the selection rule, the query packages and the query labels are
+untouched (the split always used its own correct k1 counts, and target-key
+support is a k2 count). All 24 heads were retrained from the frozen base
+predictions on CPU; no GPU was used and no new seed, model or hyper-parameter
+was added.
+
+## A4 — reporting rule for the curves (post-hoc correction, 2026-10-23)
+
+The pre-registered selector stays `dev_mae_trim5` (A2). The untrimmed C_dev and
+within-key curves are reported in full next to it, and the report must state both.
+Any untrimmed minimum is a **post-hoc descriptive** number: it is not a selection
+rule, it does not license picking a checkpoint, and a single such dip in one
+(base seed, head) cell cannot be written up as evidence of predictability.
+
+## A5 — scope of the negative claim (post-hoc correction, 2026-10-23)
+
+The corrector is rejected as specified, not in general. L1 is optimised by a
+conditional *median*, so (a) a non-zero mean residual is not exploitable by a
+constant shift and (b) nothing here establishes `median(y - f_base | X) = 0`.
+The oracle per-package constant bounds only *whole-package translations*
+(<= 0.0011). The zero delta of a selected identity head is a tautology, and the
+endpoint intervals bound only those endpoint predictions. No statement about
+"all learnable correction rules" is supported.

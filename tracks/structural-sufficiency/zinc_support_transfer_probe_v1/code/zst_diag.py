@@ -35,11 +35,10 @@ def main() -> int:
     cache = D.load_cache("train")
     keys = Z.load_keys()
     _, mol2 = Z.molecule_key_sets(keys)
-    atom_k1, atom_k2, _ = Z.atom_tables(keys, int(keys["n_key2"]))
     atom_ptr = np.asarray(cache["atom_ptr"], dtype=np.int64)
     out = {"within_key": {}, "oracle_constant": {}, "feature_correlation": {}}
     for seed in (0, 1):
-        data = H.run_base_seed(seed, man, cache, atom_k1, atom_k2, atom_ptr)
+        data = H.run_base_seed(seed, man, cache, keys, atom_ptr)
         fit = data["f_cfit"]
         gated = fit.gate > 0
         # within-key molecule split: for every C-family key, every 5th molecule
@@ -63,7 +62,8 @@ def main() -> int:
             parts[tag].y = data["y_cfit"][m]
             parts[tag].b = data["b_cfit"][m]
         res = {"n_train": int(tr.sum()), "n_hold": int(hold.sum()),
-               "base_mae_hold": float(np.abs(parts["hold"].b - parts["hold"].y).mean())}
+               "base_mae_hold": float(np.abs(parts["hold"].b - parts["hold"].y).mean()),
+               "selection_rule": "dev_mae_trim5 (pre-registered A2)"}
         for kind in ("G", "S"):
             model, curve, best, final_state, _s = H.train_head(
                 kind, parts["train"], parts["train"].y - parts["train"].b, parts["train"].b,
@@ -74,12 +74,23 @@ def main() -> int:
             mend.load_state_dict(final_state)
             corr_end = parts["hold"].b + H.predict_head(mend, parts["hold"])
             m_end = H.metrics(parts["hold"].y, parts["hold"].b, corr_end)
+            # Raw (untrimmed) held-out MAE: reported for completeness only. The
+            # pre-registered selector is dev_mae_trim5, and reading a raw minimum
+            # post hoc is NOT a selection rule (it would also need its own
+            # held-out confirmation). We record it so the report cannot claim
+            # "no signal anywhere" when the raw curve actually dips.
+            raw_best = min(curve, key=lambda c: c["dev_mae"])
             res[kind] = {"best_step": best, "hold_delta": m["delta"],
                          "hold_mae": m["mae_corrected"],
                          "hold_delta_endpoint": m_end["delta"],
                          "endpoint_train_fit": curve[-1]["fit_l1"],
                          "train_fit_at_best": [c for c in curve if c["step"] == best][0]["fit_l1"],
-                         "hold_curve": [(c["step"], round(c["dev_mae"], 4)) for c in curve]}
+                         "raw_best_step": int(raw_best["step"]),
+                         "raw_best_mae": float(raw_best["dev_mae"]),
+                         "raw_best_delta_vs_base": float(raw_best["dev_mae"] - res["base_mae_hold"]),
+                         "raw_best_note": "post-hoc descriptive; NOT a selection rule",
+                         "hold_curve": [(c["step"], round(c["dev_mae"], 4)) for c in curve],
+                         "hold_trim5_curve": [(c["step"], round(c["dev_mae_trim5"], 4)) for c in curve]}
             print(f"[within-key s{seed} {kind}] hold delta {m['delta']:+.4f} "
                   f"best {best} base {res['base_mae_hold']:.4f}", flush=True)
         out["within_key"][str(seed)] = res
