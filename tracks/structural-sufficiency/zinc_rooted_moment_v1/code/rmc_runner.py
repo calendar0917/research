@@ -1006,7 +1006,11 @@ def cmd_timing(args: argparse.Namespace) -> int:
     out: dict[str, Any] = {"protocol_id": C.PROTOCOL_ID, "device": str(device),
                            "note": "wall clock only; no valid score is computed, read or stored"}
     if device.type == "cuda":
-        torch.cuda.reset_peak_memory_stats(device)
+        torch.cuda.init()
+        torch.cuda.set_device(device)
+        torch.cuda.reset_peak_memory_stats()
+        out["device_name"] = torch.cuda.get_device_name(device)
+        out["device_count"] = int(torch.cuda.device_count())
     for arm in args.arms:
         t_build0 = time.perf_counter()
         model, info = M.build_arm(arm, norm_arr, 0, device)
@@ -1062,7 +1066,7 @@ def cmd_timing(args: argparse.Namespace) -> int:
             "parameters_deployment": info["parameters_deployment"],
             "cache_load_in_first_epoch_seconds": first_load,
             "peak_cuda_memory_mb": (
-                float(torch.cuda.max_memory_allocated(device) / 1024**2) if device.type == "cuda" else None
+                float(torch.cuda.max_memory_allocated() / 1024**2) if device.type == "cuda" else None
             ),
         }
         del model, collate
