@@ -607,12 +607,13 @@ def cmd_timing(args: argparse.Namespace) -> int:
         torch.cuda.init()
         torch.cuda.reset_peak_memory_stats(device)
     y_train, y_valid = load_ys()
-    batch_size = int(cfg["recipe"]["batch_size"])
-    valid_batch = int(cfg["recipe"]["valid_batch_size"])
+    batch_size = int(cfg["data"]["batch_size"])
+    valid_batch = int(cfg["data"]["valid_batch_size"])
     steps = int(args.steps)
     out: dict[str, Any] = {
         "protocol_id": C.PROTOCOL_ID, "device": str(device),
-        "steps_per_epoch": 79, "batch_size": batch_size, "valid_batch_size": valid_batch,
+        "steps_per_epoch": int(cfg["data"]["steps_per_epoch"]),
+        "batch_size": batch_size, "valid_batch_size": valid_batch,
         "steps_measured": steps, "budget_gpu_hours": float(cfg["budget"]["gpu_hours_total"]),
     }
     for arm in C.ARMS:
@@ -731,7 +732,7 @@ def cmd_train(args: argparse.Namespace) -> int:
     final_model, final_info = M.build_arm(arm, norm, seed, device)
     M.load_checkpoint(final_model, out / "final.pt", device)
     final_pred = eval_pred(final_model, cache_valid, np.arange(C.N_VALID), device,
-                           int(cfg["recipe"]["valid_batch_size"]),
+                           int(cfg["data"]["valid_batch_size"]),
                            p3_collate if arm == "P" else D.make_collate(entries_valid))
     (out / "predictions").mkdir(exist_ok=True)
     np.savez(out / "predictions/valid_final.npz", row=np.arange(C.N_VALID, dtype=np.int64),
