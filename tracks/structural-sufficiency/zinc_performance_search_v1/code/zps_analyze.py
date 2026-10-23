@@ -96,16 +96,18 @@ def collect() -> list[dict]:
             continue
         recs.append(_record(arm, recipe, policy, seed, meta["run"], meta["source"],
                             meta.get("source_round"), reused=True))
-    runs = sorted(RUNS.iterdir()) if RUNS.exists() else []
-    for d in runs:
-        if not d.is_dir() or not (d / "train.json").exists():
-            continue
-        parsed = parse_name(d.name)
-        if parsed is None:
-            continue
-        arm, recipe, policy, seed = parsed
-        recs.append(_record(arm, recipe, policy, seed, d, f"runs/{d.name}", None,
-                            reused=False))
+    for tj in sorted(RUNS.rglob("train.json")) if RUNS.exists() else []:
+        d = tj.parent
+        info = json.loads(tj.read_text())
+        if str(info.get("variant", "")).startswith("DBT"):
+            arm, recipe, policy, seed = "C", "DBT600", "online", int(info.get("seed", 0))
+        else:
+            parsed = parse_name(d.name)
+            if parsed is None:
+                continue
+            arm, recipe, policy, seed = parsed
+        recs.append(_record(arm, recipe, policy, seed, d,
+                            "runs/" + str(d.relative_to(RUNS)), None, reused=False))
     return recs
 
 
@@ -141,7 +143,9 @@ def _record(arm, recipe, policy, seed, run: Path, source, source_round, reused) 
         "source": source,
         "source_round": source_round,
         "reused": bool(reused),
-        "params": int(info["parameter_count"]),
+        "params": int(info.get("parameter_count")
+                      or info.get("declared_total_parameters")
+                      or (info.get("model_info") or {}).get("parameters")),
         "epochs": int(info["recipe"].get("epochs", len(curve))),
         "updates": int(info["recipe"].get("updates", len(curve) * info["recipe"].get("steps_per_epoch", 0))),
         "best_valid": None if best is None else float(best["valid_mae"]),
