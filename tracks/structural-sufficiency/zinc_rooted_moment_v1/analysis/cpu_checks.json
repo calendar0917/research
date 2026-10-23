@@ -1,0 +1,279 @@
+{
+  "protocol_id": "ssrc-zinc-rooted-moment-v1",
+  "git_commit": "0255e324de97a9f102f76c02a8a0d6f7ddaad597",
+  "config_sha256": "d1e3e7ac3d28b278787f648488e3c60bf793f751f508773979493e73f455a2c2",
+  "normalisation_sha256": "4e7244ec0f6a874259e7bbfc79fae29bb13b912463b65059f106d99cfaca6b42",
+  "limit": null,
+  "all_pass": true,
+  "n_gates": 23,
+  "gates": {
+    "witness": {
+      "pass": true,
+      "data": {
+        "eps": 0.05,
+        "q": 1.0,
+        "distributions": {
+          "A": {
+            "u": [
+              -0.5,
+              0.5
+            ],
+            "p": [
+              0.5,
+              0.5
+            ],
+            "mean": 0.0,
+            "variance": 0.25,
+            "third_central_moment": 0.0,
+            "F_moment_with_C3": 0.3846153846153846,
+            "F_gaussian_closure": 0.3846153846153846,
+            "F_direct_sum": 0.38461538461538464
+          },
+          "B": {
+            "u": [
+              -0.3535533905932738,
+              0.7071067811865476
+            ],
+            "p": [
+              0.6666666666666666,
+              0.3333333333333333
+            ],
+            "mean": 0.0,
+            "variance": 0.25,
+            "third_central_moment": 0.08838834764831846,
+            "F_moment_with_C3": 0.45260642126793726,
+            "F_gaussian_closure": 0.3846153846153846,
+            "F_direct_sum": 0.45260642126793726
+          }
+        }
+      }
+    },
+    "identity_readout_vs_direct_sum": {
+      "pass": true,
+      "data": {
+        "small": {
+          "max_abs_F": 1.5543122344752192e-15,
+          "max_abs_Z": 2.1316282072803006e-14
+        },
+        "wide": {
+          "max_abs_F": 9.992007221626409e-16,
+          "max_abs_Z": 1.4210854715202004e-14
+        }
+      },
+      "tol": 1e-10
+    },
+    "identity_q_zero": {
+      "pass": true,
+      "max_abs_F_minus_mu": 0.0,
+      "max_abs_Z_minus_1peps": 0.0
+    },
+    "point_mass": {
+      "pass": true,
+      "max_abs_F_minus_u": 0.0
+    },
+    "single_atom_all_scales": {
+      "pass": true,
+      "note": "every scale collapses to the root itself; Z identical across scales"
+    },
+    "packed_vs_full": {
+      "pass": true,
+      "max_abs_F": 2.220446049250313e-16,
+      "max_abs_Z": 0.0
+    },
+    "c2_psd": {
+      "pass": true,
+      "min_eigenvalue": 0.0033684041194442563
+    },
+    "k0_exact_zero": {
+      "pass": true,
+      "max_abs_c2": 0.0,
+      "max_abs_c3": 0.0,
+      "max_abs_mu_minus_u": 0.0
+    },
+    "walk_powers_bruteforce": {
+      "pass": true,
+      "max_abs_diff": 0.0
+    },
+    "z_floor_large_q": {
+      "pass": true,
+      "min_Z": 3806.734515612694,
+      "eps": 0.05,
+      "direct_vs_moment_Z_at_large_q": 9.094947017729282e-13,
+      "note": "Z >= eps uses a^2 >= 0 and C2 PSD; no clamp is applied anywhere"
+    },
+    "query_gradient": {
+      "pass": true,
+      "max_abs_grad_diff": 8.881784197001252e-16
+    },
+    "parameter_counts": {
+      "pass": true,
+      "P": 413505,
+      "M": 415250,
+      "G": 415250,
+      "U_with_full_C3": 415250,
+      "memory_encoder": 26336,
+      "deployment_M": 441586,
+      "breakdown_M": {
+        "encoders": 202048,
+        "e_mlp": 49632,
+        "q_proj": 4656,
+        "h_mlp": 146368,
+        "t_mlp": 12545,
+        "total": 415250
+      },
+      "cap": 500000
+    },
+    "paired_init": {
+      "pass": true,
+      "encoders_sha_P": "c493c651b546127f09b12db8a06762938da8ec7d5e349cb67322eb521c4fc9e3",
+      "encoders_sha_M": "c493c651b546127f09b12db8a06762938da8ec7d5e349cb67322eb521c4fc9e3",
+      "encoders_sha_G": "c493c651b546127f09b12db8a06762938da8ec7d5e349cb67322eb521c4fc9e3",
+      "state_sha_M": "4939993b3129b4b4273f71cd43b563c5c7c7fbbdfd993a9d8b56b51f8cae6fca",
+      "state_sha_G": "4939993b3129b4b4273f71cd43b563c5c7c7fbbdfd993a9d8b56b51f8cae6fca",
+      "flags": {
+        "M_use_c3": true,
+        "G_use_c3": false,
+        "M_global": false,
+        "G_global": false,
+        "U_global": true
+      }
+    },
+    "m_vs_g_flag": {
+      "pass": true,
+      "max_abs_M_forced_C3_zero_minus_G": 0.0,
+      "max_abs_M_minus_G_at_init": 2.523884177207947e-07,
+      "max_abs_U_minus_M_at_init": 0.003454502671957016
+    },
+    "encoder_replay": {
+      "pass": true,
+      "a": 0.0,
+      "b": 0.0,
+      "w": 0.0
+    },
+    "empty_membership_zero": {
+      "pass": true,
+      "n_atoms_without_root_junction": 37,
+      "n_isolated_atoms": 0,
+      "max_abs_mean_w_where_empty": 0.0,
+      "max_abs_mean_b_where_empty": 0.0,
+      "n_molecules_without_any_junction_in_split": 0
+    },
+    "memory_encoder_cache": {
+      "pass": true,
+      "max_abs_diff": 5.52827155581026e-09,
+      "float32_storage_tol": 2e-06,
+      "parameters": 26336,
+      "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+    },
+    "q_zero_real_cache": {
+      "pass": true,
+      "max_abs_F_minus_mu_view0": 0.0,
+      "max_abs_F_minus_mu_view1": 0.0,
+      "max_abs_logZ_minus_log1peps": 4.470348358154297e-08
+    },
+    "cache_c2_psd_and_z_floor": {
+      "pass": true,
+      "min_eigenvalue_float64": -1.029667860139751e-10,
+      "min_Z_with_model_query": 1.008371114730835,
+      "eps": 0.05,
+      "query_norm_max": 0.992056131362915
+    },
+    "batch_vs_single": {
+      "pass": true,
+      "max_abs_batch_minus_single": 4.656612873077393e-10,
+      "max_abs_reversed_batch_order": 0.0,
+      "note": "same molecules, different padding/peer composition -> same prediction"
+    },
+    "renumbering_and_bond_direction": {
+      "pass": true,
+      "bond_direction_c3_max": 0.0,
+      "renumbering_mu_max": 6.938893903907228e-18,
+      "renumbering_c2_max": 4.87890977618477e-19,
+      "renumbering_c3_max": 2.879912020664621e-20,
+      "molecule": 0
+    },
+    "gradients": {
+      "pass": true,
+      "groups": {
+        "encoders": {
+          "tensors": 12,
+          "nonzero": 12,
+          "finite": true,
+          "grad_norm": 0.0018850455721654156
+        },
+        "e_mlp": {
+          "tensors": 4,
+          "nonzero": 4,
+          "finite": true,
+          "grad_norm": 0.005433682948144648
+        },
+        "q_proj": {
+          "tensors": 2,
+          "nonzero": 2,
+          "finite": true,
+          "grad_norm": 0.00042511740372634633
+        },
+        "h_mlp": {
+          "tensors": 4,
+          "nonzero": 4,
+          "finite": true,
+          "grad_norm": 0.15337933476472473
+        },
+        "t_mlp": {
+          "tensors": 4,
+          "nonzero": 4,
+          "finite": true,
+          "grad_norm": 0.07722877038891802
+        },
+        "graph_bias": {
+          "tensors": 1,
+          "nonzero": 0,
+          "finite": true,
+          "grad_norm": 0.0,
+          "nonzero_sum_loss": 1,
+          "grad_under_sum_loss": 8.0
+        }
+      },
+      "loss_finite": true,
+      "optimizer_parameters": 415250,
+      "model_parameters": 415250,
+      "optimizer_covers_model": true,
+      "memory_encoder_in_model": false
+    },
+    "frozen_statistics": {
+      "pass": true,
+      "data": {
+        "norm_sha256": "4e7244ec0f6a874259e7bbfc79fae29bb13b912463b65059f106d99cfaca6b42",
+        "train_moments_sha256": "aff52ec9410ba1eaad4b239a1a26f08e52f53c3c6f581de81e8dd1de2411495b",
+        "valid_moments_sha256": "3aea24553a812fc978397b94355cda0b41f087dcbbf9ba579620a95a34bd6f1f",
+        "train_static_sha256": "fff1e92525c1cafd980c77cba2c7fe3ca127425be03a24b83e0f7b295baeca05",
+        "valid_static_sha256": "9f5da902fa481fcbbd640084070e89153de50690edcef11f94cc7d64a5ad6547",
+        "train_mean_n_atoms_recomputed": 23.1664,
+        "train_mean_n_atoms_norm": 23.1664,
+        "mu_scale_min": 0.019999999552965164,
+        "logm_scale_min": 0.0010000000474974513,
+        "deg_scale": 0.23929727764347747,
+        "scales": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          8,
+          12
+        ],
+        "views": [
+          0,
+          1
+        ],
+        "eps": 0.05,
+        "R_sha256": "5fdaf967001a609850af82ce33c4f22df699e4331f0c2695eb7ff0896b82f4e6",
+        "R_coefficients": 4896
+      }
+    }
+  },
+  "wall_seconds": 5.477213621139526,
+  "gate_semantics": "implementation / invariance / gradient truth; NOT evidence of performance",
+  "official_test_loaded": false
+}

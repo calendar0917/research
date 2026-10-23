@@ -89,11 +89,14 @@ three-node motif or a triangle/ring counter: it is the third central moment of
 the same endpoint-feature distribution, i.e. its skew. Nothing in this round may
 be described as a shortest path, a resonance or a substructure count.
 
-Cache (per molecule, per scale, per view): `mu` (12), `C2` (78 packed
+Cache (**per root atom**, per scale, per view): `mu` (12), `C2` (78 packed
 upper-triangle including diagonal), `C3` (364 packed: 78 diagonal `a<=b<=c`
 plus 286 mixed `a<b<c` permutations, with the exact multiplicity folded in),
-`log m` (1). Total 8,856 float32 per molecule. Built on CPU in **float64**,
-stored as **float32**; float64 sums are kept only for validation.
+`log m` (1) → 455 float32 per (atom, scale, view), 7,280 float32 (29.1 kB) per
+atom. Measured on the full split (14 worker processes, CPU): train 231,664 atoms
+= 6.74 GB, valid 23,083 atoms = 0.67 GB, build 14.1 s / 1.9 s, wall 37.4 s,
+peak RSS 9.2 GB, stored as **float32** after **float64** construction and
+validation (float64 sums are kept only for the checks).
 
 One-dimensional witness used in the checks (fixed prior `(0.5, 0.5)`, `q = 1`):
 A: `0.3846153846`, B (with C3): `0.4526064213`, Gaussian closure of B:
