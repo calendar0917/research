@@ -1,0 +1,142 @@
+{
+  "protocol_id": "ssrc-zinc-hierarchical-relation-v1",
+  "arm": "A",
+  "run_dir": "tracks/structural-sufficiency/zinc_hierarchical_relation_v1/runs/HR_A_s0",
+  "git_commit": "d10c3f89fdd12143af4cede6912c79344111872b",
+  "config_sha256": "9bafebd6719e93ecd3b290b72628d2c6a183c27139cbe7c39036cc8dc77c36b6",
+  "parameters": 438585,
+  "best_valid": {
+    "valid_mae": 0.08528932509658625,
+    "epoch": 434,
+    "online_train_mae": 0.008361249504983424,
+    "train_mae_eval_mode": 0.011128075984399766,
+    "checkpoint_sha256": "c0ad8cba7ca7d2fcc1b8c751b48fb3dcd8126a3a0650a20738102c544fca6f27"
+  },
+  "final_valid": {
+    "valid_mae": 0.08737283496366581,
+    "epoch": 600,
+    "train_mae_eval_mode": 0.0007176581650972366,
+    "checkpoint_sha256": "b58121de97e9e7050b75a9f702c575a61b625e26d9daf9c9cdb8e4e7ce637584"
+  },
+  "timing": {
+    "wall_seconds": 3649.8360714912415,
+    "gpu_hours": 1.0138433531920115,
+    "epoch_seconds_mean": 6.06933816631635,
+    "epoch_seconds_median": 6.072309851646423,
+    "peak_cuda_memory_gb": 0.237243904
+  },
+  "metrics": {
+    "n": 1000,
+    "mae": 0.08528932533847283,
+    "rmse": 0.41065947508714057,
+    "median_ae": 0.03578478233306892,
+    "p90_ae": 0.1577692149417419,
+    "p95_ae": 0.26969812419186473,
+    "p99_ae": 0.5807738335373281,
+    "max_ae": 12.07458117565918
+  },
+  "reference": {
+    "name": "P3B_s0",
+    "mae": 0.07622375379363135,
+    "prediction_sha256": "8dc5ba2005f9a76bbb995f75dba6760ab471fc0eb57155797bad6d3087aca33a",
+    "train_mae_at_best": 0.014679793968901504
+  },
+  "paired_bootstrap": {
+    "n": 1000,
+    "n_boot": 10000,
+    "seed": 20261025,
+    "mean_delta": 0.009065571544841475,
+    "ci95": [
+      -0.005339973874111536,
+      0.03249102681103674
+    ],
+    "prob_first_better": 0.2629,
+    "better_fraction": 0.538
+  },
+  "drop_top10": {
+    "k": 10,
+    "fixed_rows": [
+      917,
+      753,
+      172,
+      659,
+      260,
+      678,
+      31,
+      224,
+      447,
+      229
+    ],
+    "gain_all": -0.009065571544841486,
+    "gain_drop_topk": -0.0006769807559227209,
+    "mae_all": 0.08528932533847283,
+    "mae_drop_topk": 0.06577331761395476
+  },
+  "groups": {
+    "all": {
+      "n": 1000,
+      "candidate_mae": 0.08528932533847283,
+      "reference_mae": 0.07622375379363135,
+      "delta_reference_minus_candidate": -0.009065571544841486
+    },
+    "radius2_unseen": {
+      "n": 251,
+      "candidate_mae": 0.15875123896911658,
+      "reference_mae": 0.1513402120465322,
+      "delta_reference_minus_candidate": -0.007411026922584385
+    },
+    "radius2_covered": {
+      "n": 749,
+      "candidate_mae": 0.060671247472930005,
+      "reference_mae": 0.05105121571422131,
+      "delta_reference_minus_candidate": -0.009620031758708694
+    },
+    "ordinary": {
+      "n": 935,
+      "candidate_mae": 0.06731283096504799,
+      "reference_mae": 0.06827666442799459,
+      "delta_reference_minus_candidate": 0.000963833462946595
+    },
+    "tail": {
+      "n": 65,
+      "candidate_mae": 0.3438742828638916,
+      "reference_mae": 0.19053957774548338,
+      "delta_reference_minus_candidate": -0.15333470511840822
+    },
+    "ring_rich": {
+      "n": 213,
+      "candidate_mae": 0.10269417968725572,
+      "reference_mae": 0.11303519645977438,
+      "delta_reference_minus_candidate": 0.010341016772518655
+    },
+    "ring_rich_and_unseen": {
+      "n": 47,
+      "candidate_mae": 0.29404604220813324,
+      "reference_mae": 0.31412496016813657,
+      "delta_reference_minus_candidate": 0.02007891796000333
+    },
+    "p3b_worst100": {
+      "n": 100,
+      "candidate_mae": 0.3911096180962953,
+      "reference_mae": 0.35903997986826885,
+      "delta_reference_minus_candidate": -0.03206963822802644
+    }
+  },
+  "gate": {
+    "checks": {
+      "best_valid_mae_le_0.073": false,
+      "drop_top10_gain_ge_0.002": false,
+      "train_mae_at_best_le_0.026": true
+    },
+    "eligible": false,
+    "config": {
+      "best_valid_mae_max": 0.073,
+      "drop_top10_min_gain": 0.002,
+      "train_mae_at_best_max": 0.026,
+      "drop_top_k": 10,
+      "tail_threshold": -3.0,
+      "ring_count_min": 4
+    }
+  },
+  "official_test_loaded": false
+}
