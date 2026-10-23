@@ -305,6 +305,36 @@ def main(argv=None) -> int:
             f"{f(r['w20'])} | {f(r['final_valid'])} | {f(r['train_mae_at_best'])} | "
             f"{f(r.get('mae_drop_row172'))} | {f(r.get('mae_drop_top10'))} | "
             f"{f(r['gpu_hours'], '{:.3f}')} | {r['source']} |")
+    # per-config seed summary (this is the discovery ranking unit)
+    fam = {}
+    for r in rows:
+        if r["policy"] != "online":
+            continue
+        key = f"{r['arm']}-{r['recipe']}"
+        fam.setdefault(key, []).append(r)
+    lines += ["", "## Config summary over seeds (online branch)", "",
+              "| config | seeds | best-valid mean | sd | range | W20 mean | mean ep | mean gpu-h |",
+              "|---|---:|---:|---:|---:|---:|---:|---:|"]
+    summary = {}
+    for key, rs in sorted(fam.items()):
+        vals = [r["best_valid"] for r in rs]
+        w20s = [r["w20"] for r in rs if r["w20"] is not None]
+        eps = [r["best_epoch"] for r in rs]
+        gpus = [r["gpu_hours"] for r in rs if r["gpu_hours"]]
+        sd = float(np.std(vals, ddof=1)) if len(vals) > 1 else None
+        summary[key] = {"n": len(vals), "mean": float(np.mean(vals)), "sd": sd,
+                        "range": [float(min(vals)), float(max(vals))],
+                        "seeds": [r["seed"] for r in rs],
+                        "w20_mean": float(np.mean(w20s)) if w20s else None,
+                        "mean_epoch": float(np.mean(eps)),
+                        "gpu_hours": float(np.sum(gpus)) if gpus else None}
+        lines.append(
+            f"| {key} | {len(vals)} ({','.join(str(r['seed']) for r in rs)}) | "
+            f"{np.mean(vals):.6f} | {'-' if sd is None else f'{sd:.6f}'} | "
+            f"[{min(vals):.6f}, {max(vals):.6f}] | "
+            f"{'-' if not w20s else f'{np.mean(w20s):.6f}'} | {np.mean(eps):.0f} | "
+            f"{'-' if not gpus else f'{np.sum(gpus):.3f}'} |")
+    (ANALYSIS / "config_summary.json").write_text(json.dumps(summary, indent=1))
     (ANALYSIS / "main_table.md").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
     if missing:
