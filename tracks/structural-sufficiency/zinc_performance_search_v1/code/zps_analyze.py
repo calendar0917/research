@@ -106,6 +106,10 @@ def collect() -> list[dict]:
             if parsed is None:
                 continue
             arm, recipe, policy, seed = parsed
+            if policy == "ema":
+                # this round's EMA branch is invalid (copy-direction bug); the
+                # run itself is a legitimate online run and is kept as such
+                policy = "online"
         recs.append(_record(arm, recipe, policy, seed, d,
                             "runs/" + str(d.relative_to(RUNS)), None, reused=False))
     return recs
@@ -155,6 +159,8 @@ def _record(arm, recipe, policy, seed, run: Path, source, source_round, reused) 
         "train_mae_at_best": info["fixed_objects"]["best"]["train_mae_eval_mode"],
         "train_mae_at_final": info["fixed_objects"]["final"]["train_mae_eval_mode"],
         "gpu_hours": info.get("gpu_hours"),
+        "ema_note": ("invalid" if info.get("best_valid_ema")
+                     and float(info["best_valid_ema"]["valid_mae"]) > 0.5 else None),
         "init": info.get("model_info", {}).get("initial_state_sha256"),
         "ssl": (info.get("model_info", {}) or {}).get("ssl"),
         "loss": info["recipe"].get("loss"),

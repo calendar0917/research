@@ -132,17 +132,18 @@ def main(argv=None) -> int:
         return 0
 
     # -- 2) the one terminal test read --------------------------------------
-    groups = None
-    if AUDIT.exists():
-        import csv
-        with AUDIT.open() as fh:
-            groups = list(csv.DictReader(fh))
     table = []
     per_mol = {}
+    per_mol_valid = {}
     for e in reproduced:
         model, kind = build(e, device)
         state = torch.load(C.REPO / e["checkpoint"], map_location="cpu", weights_only=False)
         C.load_state(model, state["state_dict"], device)
+        # valid per-molecule (for the frozen groups + paired diagnostics)
+        pv, yv = predict(model, kind, e["arm"], "valid", device, args.batch_size)
+        np.savez(ANALYSIS / f"valid_pred_{e['name']}_s{e['seed']}.npz", row=np.arange(len(yv)), pred=pv)
+        per_mol_valid[e["name"]] = {"pred": pv, "y": yv}
+        # the one terminal test read
         pred, y = predict(model, kind, e["arm"], "test", device, args.batch_size)
         d = describe(pred, y)
         d.update({"name": e["name"], "arm": e["arm"], "recipe": e["recipe"],
@@ -154,34 +155,28 @@ def main(argv=None) -> int:
         d["mae_drop_top10"] = float(np.sort(ae)[10:].mean())
         table.append(d)
         per_mol[e["name"]] = {"pred": pred, "y": y}
+        _per_molecule_csv(e, pred, y)
         C.log(f"[test] {e['name']} s{e['seed']} test MAE {d['mae']:.6f} "
               f"(valid {d['valid_mae']:.6f})")
 
-    rows = []
-    if groups:
-        import csv
-        keys = [k for k in groups[0] if k not in ("row", "y_raw")]
-        for e in reproduced:
-            pm = per_mol[e["name"]]
-            ae = np.abs(pm["pred"] - pm["y"])
-            rec = {"name": e["name"], "seed": int(e["seed"])}
-            for k in keys:
-                vals = np.array([g[k] for g in groups])
-                try:
-                    vals = vals.astype(float)
-                except ValueError:
-                    continue
-                m = vals > 0
-                if m.sum() == 0:
-                    continue
-                rec[k] = float(ae[m].mean())
-            rows.append(rec)
     out = {"freeze": str(Path(args.freeze_out)), "test": table,
-           "test_by_group": rows, "bootstrap": _bootstrap(per_mol)}
+           "bootstrap": _bootstrap(per_mol)}
     C.write_json(ANALYSIS / "test_table.json", out)
-    _markdown(table, rows, out["bootstrap"])
+    _markdown(table, [], out["bootstrap"])
     C.log(f"[test] wrote {ANALYSIS / 'test_table.json'} and test_table.md")
     return 0
+
+
+def _per_molecule_csv(entry, pred, y) -> None:
+    import csv
+    path = ANALYSIS / f"test_pred_{entry['name']}_s{entry['seed']}.csv"
+    ae = np.abs(pred - y)
+    with path.open("w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["row", "y_raw", "pred", "signed_error", "abs_error"])
+        for i in range(len(y)):
+            w.writerow([i, f"{y[i]:.9f}", f"{pred[i]:.9f}",
+                        f"{pred[i] - y[i]:.9f}", f"{ae[i]:.9f}"])
 
 
 def _bootstrap(per_mol) -> list:
