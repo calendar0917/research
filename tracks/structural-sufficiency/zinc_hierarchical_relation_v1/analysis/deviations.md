@@ -15,3 +15,8 @@
   peak; GPU profile (128-molecule batch) gave A 0.032 s / B 0.037 s on gpu0.
   Two failed smoke attempts plus prep/smoke/profile consumed well under
   0.1 A100-h; the 4-hour round budget is intact.
+- 2026-10-23 (post-run, analysis only): `score` stored a relative `run_dir`
+  when invoked with `--run ../runs/...`, so `compare` resolved it outside the
+  repo and failed. `cmd_score` now resolves the run directory and `cmp_compare`
+  resolves both paths robustly. No training, prediction, metric or gate value
+  changed; scores are recomputed from the same frozen `valid_best.npz`.

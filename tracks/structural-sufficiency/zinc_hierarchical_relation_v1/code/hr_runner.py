@@ -417,7 +417,7 @@ def cmd_train(args: argparse.Namespace) -> int:
 
 
 def cmd_score(args: argparse.Namespace) -> int:
-    run_dir = Path(args.run)
+    run_dir = Path(args.run).expanduser().resolve()
     train_info = C.read_json(run_dir / "train.json")
     z = np.load(run_dir / "predictions/valid_best.npz", allow_pickle=False)
     pred = z["pred"].astype(np.float64)
@@ -509,8 +509,13 @@ def cmd_compare(args: argparse.Namespace) -> int:
     out = {"protocol_id": C.PROTOCOL_ID, "scores": data}
     if len(data) == 2:
         a, b = data
-        pa = np.load(Path(C.REPO) / a["run_dir"] / "predictions/valid_best.npz", allow_pickle=False)["pred"].astype(np.float64)
-        pb = np.load(Path(C.REPO) / b["run_dir"] / "predictions/valid_best.npz", allow_pickle=False)["pred"].astype(np.float64)
+        def _run_pred(rec):
+            p = Path(rec["run_dir"])
+            if not p.is_absolute():
+                p = C.REPO / p
+            return np.load(p / "predictions/valid_best.npz", allow_pickle=False)["pred"].astype(np.float64)
+        pa = _run_pred(a)
+        pb = _run_pred(b)
         groups = C.load_valid_groups()
         y = groups["y"]
         out["A_minus_B"] = C.paired_bootstrap(np.abs(pa - y), np.abs(pb - y))
