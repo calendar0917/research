@@ -164,7 +164,9 @@ def measure(arm: str = "D", seed: int = 0, device="cuda:0", *,
                 model(batch)
         t_valid = time.perf_counter() - t6
         t7 = time.perf_counter()
-        torch.save({"state_dict": C.cpu_state(model)}, out := (RUNS / f"_measure_{arm}_s{seed}" / "tmp.pt"))
+        mdir = RUNS / f"_measure_{arm}_s{seed}"
+        mdir.mkdir(parents=True, exist_ok=True)
+        torch.save({"state_dict": C.cpu_state(model)}, mdir / "tmp.pt")
         t_save = time.perf_counter() - t7
         rec = {
             "epoch": epoch,
