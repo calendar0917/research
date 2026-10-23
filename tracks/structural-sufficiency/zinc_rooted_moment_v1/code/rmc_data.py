@@ -71,14 +71,24 @@ def memory_encoder_parameters() -> int:
 
 
 def atom_ssl_features(atom_feat: np.ndarray, enc_module, *, batch: int = 8192) -> np.ndarray:
-    """Run the frozen atom encoder over every atom row (eval mode, no grad)."""
+    """Run the frozen atom encoder over every atom row (eval mode, no grad).
+
+    Single-threaded on purpose: CPU torch reductions are thread-count dependent
+    in the last bit, and the cached endpoint features (hence the moment cache)
+    must be bit-reproducible for a fixed torch/numpy build.
+    """
     import torch
 
+    prev = torch.get_num_threads()
+    torch.set_num_threads(1)
     out = []
-    x = torch.from_numpy(np.ascontiguousarray(atom_feat, dtype=np.float32))
-    with torch.no_grad():
-        for start in range(0, x.shape[0], int(batch)):
-            out.append(enc_module(x[start : start + int(batch)]).numpy())
+    try:
+        x = torch.from_numpy(np.ascontiguousarray(atom_feat, dtype=np.float32))
+        with torch.no_grad():
+            for start in range(0, x.shape[0], int(batch)):
+                out.append(enc_module(x[start : start + int(batch)]).numpy())
+    finally:
+        torch.set_num_threads(prev)
     return np.concatenate(out, 0)
 
 
@@ -116,7 +126,9 @@ def view_features(ds: np.ndarray, R: np.ndarray) -> np.ndarray:
     R = np.asarray(R, dtype=np.float64)
     if R.ndim == 2:
         R = R[None]
-    proj = np.stack([ds @ R[v] for v in range(R.shape[0])], axis=1)  # (N, V, 12)
+    # einsum, not ``@``: keep the fixed views reproducible across BLAS thread counts
+    proj = np.stack([np.einsum("nd,dr->nr", ds, R[v], optimize=False)
+                     for v in range(R.shape[0])], axis=1)  # (N, V, 12)
     return np.ascontiguousarray(np.tanh(proj) / math.sqrt(C.R_PROJ))
 
 

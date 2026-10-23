@@ -179,13 +179,15 @@ def moments_from_walk(u: np.ndarray, W: np.ndarray) -> tuple[np.ndarray, np.ndar
         raise ValueError("non-positive walk mass (I + A)^k should guarantee positivity")
     P = W / mass[:, None]
 
-    mu = P @ u
+    # einsum (not ``@``) so the reduction order does not depend on the BLAS
+    # thread count: the cache hash must be reproducible across machines.
+    mu = np.einsum("ns,sd->nd", P, u, optimize=False)
     U2 = (u[:, :, None] * u[:, None, :]).reshape(n, DIM * DIM)
-    M2 = (P @ U2).reshape(n, DIM, DIM)
+    M2 = np.einsum("ns,sd->nd", P, U2, optimize=False).reshape(n, DIM, DIM)
     c2_full = M2 - mu[:, :, None] * mu[:, None, :]
 
     U3 = outer3_packed(u)
-    M3 = P @ U3
+    M3 = np.einsum("ns,sd->nd", P, U3, optimize=False)
 
     pi, pj, _ = pair_arrays()
     ti, tj, tk = triple_arrays()

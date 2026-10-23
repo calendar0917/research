@@ -98,6 +98,14 @@ atom. Measured on the full split (14 worker processes, CPU): train 231,664 atoms
 peak RSS 9.2 GB, stored as **float32** after **float64** construction and
 validation (float64 sums are kept only for the checks).
 
+Reproducibility of those bytes: every reduction in this stage is either
+`np.einsum(optimize=False)` (fixed pairwise order, no BLAS threading) or runs
+under `torch.set_num_threads(1)` (the frozen memory encoder), so the cache hash
+is invariant to worker count, chunk size and `OMP_NUM_THREADS` on a fixed
+torch/numpy build. Two builds with 2 workers/1 BLAS thread and 8 workers/default
+threads produce byte-identical files (verified); the hash recorded in each
+`run_extra.json` therefore identifies the exact cache a run consumed.
+
 One-dimensional witness used in the checks (fixed prior `(0.5, 0.5)`, `q = 1`):
 A: `0.3846153846`, B (with C3): `0.4526064213`, Gaussian closure of B:
 `0.3846153846`, third central moment of B: `0.08838834765`. The direct sum
