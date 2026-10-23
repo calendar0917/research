@@ -1,0 +1,65 @@
+{
+  "round": "zinc-support-transfer-probe-v1",
+  "protocol": "tracks/structural-sufficiency/zinc_support_transfer_probe_v1/PROTOCOL.md",
+  "platform": {
+    "model": "zinc_recipe_trunk_v2/ad2_models.P3NullModel",
+    "parameters": 413505,
+    "ssl_encoder": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "ssl_encoder_sha256_expected": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "ssl_rule": "one shared seed-0 masked atom/bond SSL encoder (label free) for both supervised seeds",
+    "data_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_{train,valid}.pt",
+    "official_valid_loaded_phase1": false,
+    "official_test_loaded_phase1": false
+  },
+  "keys": {
+    "builder": "zinc_composition_transfer_v1/code/zct_keys.py (radius-1/2 content keys, unchanged)",
+    "candidate_k2_molecule_support": [4, 25],
+    "candidate_parent_k1_support_min": 50,
+    "split_rng_seed": 20261121
+  },
+  "roles": {
+    "A": {"target_keys": 35, "target_molecules": 300, "cap": 380},
+    "B": {"target_keys": 35, "target_molecules": 300, "cap": 380, "parent_disjoint_from_A_first": true},
+    "C": {"target_keys": 110, "target_molecules": 900, "cap": 1000},
+    "D": {"target_keys": 40, "target_molecules": 300, "cap": 360},
+    "c_fit_background": 250,
+    "q_bg": 400
+  },
+  "base_recipe": {
+    "name": "B",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "betas": [0.9, 0.999],
+    "eps": 1e-08,
+    "batch_size": 128,
+    "epochs": 600,
+    "warmup_steps": 500,
+    "grad_clip": 5.0,
+    "dropout": 0.0,
+    "precision": "fp32",
+    "schedule": "ad_common.cosine_with_warmup_lr(step, steps_per_epoch*600, 500, 1e-3, 1e-5)",
+    "checkpoint": "epoch 600 endpoint, no valid/C/Q based selection",
+    "seeds": [0, 1]
+  },
+  "head": {
+    "gate": "m_F = 1[exists atom with k2 support 0 in the base fit]",
+    "loss": "raw-y L1 on f_base + m_F * h",
+    "target": "r = y - f_base (out-of-sample)",
+    "G_width": 160,
+    "S_psi": [32, 16],
+    "S_readout_width": 64,
+    "optimizer": "adam",
+    "lr": 0.002,
+    "min_lr": 0.0001,
+    "steps": 1500,
+    "schedule": "per-step cosine 2e-3 -> 1e-4",
+    "grad_clip": 1.0,
+    "wd_grid": [0.0, 0.001],
+    "inits": [0, 1, 2],
+    "selection": "C_dev corrected MAE (step tracked every 50 steps; wd by mean over inits)",
+    "standardisation": "C_fit only; near-constant columns keep scale 1 (no 1/eps amplification)"
+  },
+  "budget": {"gpu_jobs_planned": 2, "gpu_hours_estimate": 0.7, "hard_cap": null}
+}
