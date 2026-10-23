@@ -89,8 +89,8 @@ graph (`x`, `edge_index`, `edge_attr`):
    flag and a clipped count. The key is stored only as four scalars; there is
    **no** learnable embedding for any full radius-2 key, no per-key lookup
    table, and no per-molecule or split-local id. On the first 200 valid
-   molecules 13.6 % of patches have an unseen train key (13.8 % on all 1000),
-   so the support feature actually varies on the hard part of the split.
+   molecules 8.4 % of patches have an unseen train key (9.0 % on all 1000), so
+   the support feature actually varies on the hard part of the split.
 
 Forbidden and absent: true logP/SA, target cycle penalty, any quantity derived
 from `y`, official test statistics, split-local pattern ids, molecule row ids,
@@ -189,10 +189,12 @@ parameter-matched mechanism control under a new pre-registration.
   keys that contain more than one **induced** patch signature (synthetic C6
   vs 2 x C3: identical 2-round WL colours, different induced triangle/path
   signatures), so the patch level is not a nested-WL restatement; support
-  unseen fraction 13.8 % on valid; mean 59.3 tokens and 903 related pairs per
-  molecule.
+  unseen fraction 8.4 % (200 molecules) / 9.0 % (all 1000) on valid; mean 59.3
+  tokens and 903 related pairs per molecule.
 - `analysis/overfit_cpu.json`: 48 molecules, 400 steps, final eval-mode train
-  MAE 0.132 (A) / 0.230 (B) vs constant baseline 1.005, so both arms can fit.
+  MAE 0.214 (A) / 0.067 (B) vs constant baseline 1.005, so both arms can fit
+  (CPU thread-level reduction order makes this short diagnostic run vary by a
+  few hundredths; the gate threshold 0.25 is not used for promotion).
 
 ## 9. Honest expectation
 
