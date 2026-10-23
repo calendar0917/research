@@ -154,7 +154,10 @@ def cmd_prep(args: argparse.Namespace) -> int:
             "n_relation_pairs": int(sum(len(e["r_u"]) for e in train_entries)),
         },
     }
-    C.write_json(C.ANALYSIS_DIR / "prep.json", payload)
+    manifest_path = Path(args.manifest) if args.manifest else C.ANALYSIS_DIR / "prep.json"
+    if not manifest_path.is_absolute():
+        manifest_path = C.REPO / manifest_path
+    C.write_json(manifest_path, payload)
     print(json.dumps({k: payload[k] for k in ("prep_seconds", "train_counts")}, indent=2))
     return 0
 
@@ -654,6 +657,8 @@ def build_parser() -> argparse.ArgumentParser:
     q = sub.add_parser("prep")
     q.add_argument("--limit-train", type=int, default=None)
     q.add_argument("--limit-valid", type=int, default=None)
+    q.add_argument("--manifest", default=None,
+                   help="manifest path (default analysis/prep.json; use cache/prep.json to keep the remote tree clean)")
     q.set_defaults(func=cmd_prep)
 
     q = sub.add_parser("train")
