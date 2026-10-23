@@ -66,3 +66,19 @@ No new raw-structure vocabulary, no target formula, no row-specific gate, no
 test-time ensemble / seed-average prediction / checkpoint soup in this round,
 no external labels, no recursive local hidden-state MP. Historical runs are
 never overwritten.
+
+## Outcome (appended at close, 2026-10-23 21:40 UTC)
+
+- Discovery closed at **21:29 UTC** (5.4 h in), 4 min later than the planned
+  20:00–20:30 because arm C's cost measurements and two seed-1/2 runs were
+  still in flight. Confirmation seeds and the terminal test still finished
+  2.5 h before the hard deadline.
+- Winner by seed0/1 mean: **B-R0**; confirmation seeds 2/3 plus the matched
+  A-R0 baseline were completed as declared.
+- Arm C: GRIT was built and parity-verified but measured at 30.97 s/epoch
+  (batch 32) / 18.65 (batch 64) / 14.84 (batch 128) dense and ~9.5 s/epoch
+  sparse, i.e. ≥4 h for the native horizon, so the declared DBT fallback ran
+  instead (600 epochs, 94,200 updates, 1.48 GPU·h).
+- EMA was dropped after the copy-direction bug was found (see DECISIONS D4).
+- Final cost 8.39 GPU·h including 0.97 wasted on failures/cancel; no run
+  exceeded 1.55 GPU·h and no GPU was left occupied.
