@@ -23,6 +23,7 @@ import json
 import math
 import os
 import resource
+import shutil
 import sys
 import tempfile
 import time
@@ -1330,6 +1331,14 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             "wall_seconds": d["run_extra"].get("wall_seconds"),
             "wall_hours": d["recipe"]["epochs"] and None,
         }
+    # archive the per-epoch curves next to the tables (runs/ is gitignored)
+    curves_dir = C.ANALYSIS_DIR / "curves"
+    curves_dir.mkdir(parents=True, exist_ok=True)
+    for (arm, seed), d in scores.items():
+        src = C.REPO / d["runs"] / "curve.csv"
+        if src.exists():
+            shutil.copyfile(src, curves_dir / f"{arm}_s{seed}.csv")
+
     # wall time per run from train.json
     for (arm, seed), d in scores.items():
         run = C.REPO / d["runs"]
