@@ -1,0 +1,116 @@
+{
+  "protocol_id": "ssrc-zinc-native-relation-v1",
+  "round": "zinc-native-relation-v1",
+  "track": "structural-sufficiency",
+  "status": "frozen_before_formal_gpu",
+  "data": {
+    "dataset": "PyG ZINC subset=True",
+    "train": 10000,
+    "valid": 1000,
+    "official_test": "terminal_only",
+    "target": "raw y",
+    "loss": "L1",
+    "batch_size": 128,
+    "steps_per_epoch": 79,
+    "keep_last_partial_batch": true,
+    "valid_every_epoch": true,
+    "valid_batch_size": 256,
+    "input": "frozen P3 atom/bond/junction objects + structure-only relation arrays between existing junction/bond tokens",
+    "global33_standardisation": "original P3 train-only fit (ad_data norm.json), same for P/R/N",
+    "new_fitted_statistics": "none (relation construction has no fitted parameters)",
+    "test_loaded_before_terminal": false
+  },
+  "ssl": {
+    "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "keys": ["atom_encoder", "bond_encoder", "junction_encoder"],
+    "same_checkpoint_for_supervised_seed_0_and_1": true,
+    "note": "train-only masked atom/bond reconstruction; no labels; shared source means the seed spread covers supervised training only"
+  },
+  "model": {
+    "P": "frozen P3NullModel, instantiated verbatim",
+    "R": "P3 encoders -> one relation update on junction+bond tokens -> original P3 Null composer/reader",
+    "N": "same as R with cached within-molecule within-role-stratum relation-label permutation",
+    "d": 96,
+    "rank": 16,
+    "rel_types": 33,
+    "roles": 2,
+    "relation_branch_norm": "LayerNorm(h0 + role_embedding) only",
+    "h1": "h0 + Wo * message",
+    "post_h1_layernorm": false,
+    "relation_rounds": 1,
+    "zero_init_gate": false,
+    "wo_init_std": 0.001,
+    "candidate_pairs": "clipped anchor distance <= 3 OR shared biconnected ring block, both directions, self loops rel 0",
+    "junction_anchor": "junction centre atom",
+    "bond_anchor": "bond endpoints (unordered pair)",
+    "parameter_cap": 500000
+  },
+  "null": {
+    "scope": "within molecule, within JJ/JB/BB role stratum",
+    "object": "non-self candidate relation labels",
+    "bidirectional": "same permuted label on both directions",
+    "self_loops": 0,
+    "rng_seed": 20261107,
+    "cached_once": true,
+    "per_epoch_resampling": false,
+    "reads_y_or_predictions": false,
+    "forced_nonidentity_if_identity_and_group_size_ge_2": true
+  },
+  "recipe": {
+    "source": "zinc_arch_discovery_v1.ad_train RECIPE_VARIANTS['B'], unchanged trainer",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 0.00001,
+    "weight_decay": 0.00001,
+    "betas": [0.9, 0.999],
+    "eps": 1e-8,
+    "warmup_steps": 500,
+    "schedule": "per-step cosine after linear warm-up",
+    "grad_clip": 5.0,
+    "dropout": 0.0,
+    "fp32": true,
+    "epochs": 600,
+    "updates": 47400,
+    "shuffle_generator_seed": "supervised_seed + 101",
+    "selection": "argmin(valid_mae), strict <, ties keep earlier epoch",
+    "final_checkpoint": "epoch 600, secondary only",
+    "soup_or_checkpoint_average": false,
+    "seed_prediction_average": false
+  },
+  "initialisation": {
+    "common": "P3NullModel encoders/composer/reader constructed under torch.manual_seed(seed); shared by P/R/N",
+    "p3_ssl_overrides": "loaded after construction; atom/bond/junction encoders fine-tuned",
+    "relation_module": "independent generator seed 80261107 + supervised seed; identical for R and N",
+    "supervised_prefix": "none (SSL-only encoders + fresh composer/reader/optimizer)"
+  },
+  "decision": {
+    "h1_min_mean_gain": 0.001,
+    "h1_unseen_group_min_gain": 0.005,
+    "sustained_reverse_max": 0.001,
+    "h2_min_mean_gain": 0.001,
+    "test_target_mae": 0.06,
+    "effect_size_reference": {
+      "overall_mean_gain_worth_recheck": [0.002, 0.003],
+      "unseen_ordinary_gain_worth_recheck": 0.01,
+      "note": "reference scale only, not a noise floor or significance threshold"
+    },
+    "test_trigger": "H1 overall supported in both completed supervised seeds and W20/T100 not clearly reversed; test is read once, best-valid is the main table",
+    "no_post_hoc_threshold_change": true
+  },
+  "budget": {
+    "gpu_hours_total": 5.0,
+    "wall_hours_target": 5.0,
+    "measure_before_formal": true,
+    "safety_margin_fraction": 0.15,
+    "include_smoke_profile_failures_and_wait": true,
+    "default_runs": ["P_s0", "R_s0", "N_s0", "P_s1", "R_s1", "N_s1"]
+  },
+  "test_policy": "terminal",
+  "non_goals": [
+    "no new dataset, backbone family, SSL objective, width/depth grid or post-processing",
+    "no row172 removal or row-specific output",
+    "no claim that LayerNorm caused the old HR failure",
+    "no claim that preserving SSL plus one attention is itself a novel contribution"
+  ]
+}

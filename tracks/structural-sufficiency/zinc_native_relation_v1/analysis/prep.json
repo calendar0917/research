@@ -1,0 +1,142 @@
+{
+  "protocol_id": "ssrc-zinc-native-relation-v1",
+  "created_utc": "2026-10-23T07:37:07Z",
+  "git_commit": "8f0052062262286e084534660372088111811d91",
+  "config_sha256": "a8bbf9c6e2767b654fb20c43e960e237c7c9af5ee5ec56cac0cd0cc417005633",
+  "ssl": {
+    "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+    "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+  },
+  "data": {
+    "source": "frozen P3 ad_data cache + official PyG ZINC subset labels for train/valid only",
+    "p3_cache": {
+      "train": {
+        "path": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+        "sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3"
+      },
+      "valid": {
+        "path": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_valid.pt",
+        "sha256": "6e45fea66c4c87c7de1cd9c32cd495525c7ea5099b1c35f54fd3ab68fc8b1e97"
+      }
+    },
+    "relation_token_layout": "junctions first, then original bonds; one bond token per P3 bond",
+    "pair_rule": "clipped anchor distance <= 3 OR shared biconnected ring block; both directions + self loops",
+    "relation_formula": "1 + 8*min(d,3) + 4*same_ring_block + min(A^2,3); self = 0",
+    "null_rule": "within molecule and JJ/JB/BB role stratum, fixed permutation of non-self relation labels; self stays 0",
+    "null_seed": 20261107,
+    "null_uses_labels_or_predictions": false,
+    "test_split_loaded": false,
+    "labels_read_during_prep": false
+  },
+  "splits": {
+    "train": {
+      "n": 10000,
+      "cache": "tracks/structural-sufficiency/zinc_native_relation_v1/cache/nr_train.pt",
+      "sha256": "f22059ea09523ce26fa73888646fab9037110b856fe5d305cf31e96f07e4cb48",
+      "n_atoms": 231664,
+      "n_bonds": 249279,
+      "n_junctions": 346358,
+      "n_tokens": 595637,
+      "n_non_self_pairs": 9040772,
+      "null_stats": {
+        "n_molecules": 10000,
+        "n_non_self_pairs": 9040772,
+        "n_changed_pairs": 7599660,
+        "changed_fraction": 0.8405985683523487,
+        "n_role_groups": 30000,
+        "n_permutable_groups": 30000,
+        "n_singleton_groups": 0,
+        "n_homogeneous_groups": 0,
+        "homogeneous_pair_fraction": 0.0,
+        "n_forced_nonidentity": 0,
+        "entropy_mean_per_group": 1.921083602815695,
+        "entropy_mean_pairs_weighted": 1.934102976362954,
+        "by_role_pair": {
+          "JJ": {
+            "n_pairs": 2874390,
+            "n_changed": 2385910,
+            "changed_fraction": 0.8300578557537426,
+            "n_molecule_groups_permutable": 10000,
+            "n_molecule_groups_homogeneous": 0
+          },
+          "JB": {
+            "n_pairs": 4572521,
+            "n_changed": 3876393,
+            "changed_fraction": 0.8477583809893929,
+            "n_molecule_groups_permutable": 10000,
+            "n_molecule_groups_homogeneous": 0
+          },
+          "BB": {
+            "n_pairs": 1593861,
+            "n_changed": 1337357,
+            "changed_fraction": 0.8390675221992382,
+            "n_molecule_groups_permutable": 10000,
+            "n_molecule_groups_homogeneous": 0
+          }
+        }
+      }
+    },
+    "valid": {
+      "n": 1000,
+      "cache": "tracks/structural-sufficiency/zinc_native_relation_v1/cache/nr_valid.pt",
+      "sha256": "b5e457a880c396ea687bccfb6add5cf636bae0e13495fe142fbdfb05ca046219",
+      "n_atoms": 23083,
+      "n_bonds": 24846,
+      "n_junctions": 34520,
+      "n_tokens": 59366,
+      "n_non_self_pairs": 897166,
+      "null_stats": {
+        "n_molecules": 1000,
+        "n_non_self_pairs": 897166,
+        "n_changed_pairs": 754323,
+        "changed_fraction": 0.8407842027005036,
+        "n_role_groups": 3000,
+        "n_permutable_groups": 3000,
+        "n_singleton_groups": 0,
+        "n_homogeneous_groups": 0,
+        "homogeneous_pair_fraction": 0.0,
+        "n_forced_nonidentity": 0,
+        "entropy_mean_per_group": 1.9256249578591773,
+        "entropy_mean_pairs_weighted": 1.9347411276727597,
+        "by_role_pair": {
+          "JJ": {
+            "n_pairs": 285005,
+            "n_changed": 236477,
+            "changed_fraction": 0.8297293029946843,
+            "n_molecule_groups_permutable": 1000,
+            "n_molecule_groups_homogeneous": 0
+          },
+          "JB": {
+            "n_pairs": 453899,
+            "n_changed": 385069,
+            "changed_fraction": 0.8483583352243561,
+            "n_molecule_groups_permutable": 1000,
+            "n_molecule_groups_homogeneous": 0
+          },
+          "BB": {
+            "n_pairs": 158262,
+            "n_changed": 132777,
+            "changed_fraction": 0.8389695568108579,
+            "n_molecule_groups_permutable": 1000,
+            "n_molecule_groups_homogeneous": 0
+          }
+        }
+      }
+    }
+  },
+  "relation_fingerprints": {
+    "train": {
+      "pair_u_sha256": "e91b899c7124aa6461f4221e3313d8e1a041c1b7b353ef1a7a15db94eec2e021",
+      "pair_v_sha256": "f3779aed0dd486c2468b03f4465a9bc989d94b724096867520effea409e49e9b",
+      "real_rel_sha256": "3d2065f5b0fcdeeb2c946f89dd9cee1ef360d277ed963e976ea60ad2c396919f",
+      "null_rel_sha256": "52a0bbaa10bec2be46b10a974199007dd73eb4fb879949b8bc9411c4991ca790"
+    },
+    "valid": {
+      "pair_u_sha256": "07bbc3c90bc5259caed6c6b567da3ebfa0c88b80d04eef79a672b1c72a51ab6d",
+      "pair_v_sha256": "7026d8a85b86a6bb58b04bae16e30d0b9111dbd12ca2317a1b32f838977aa44a",
+      "real_rel_sha256": "f203b87c77f518a89d76957c6060d17f6d8d1f89100cbff7ce950e8d62b5b716",
+      "null_rel_sha256": "c838082a61da8e2e21bf9e013827b48bccef28650418d6d9cc3cf56a1e25fbd5"
+    }
+  },
+  "prep_seconds": 36.7820508480072
+}
