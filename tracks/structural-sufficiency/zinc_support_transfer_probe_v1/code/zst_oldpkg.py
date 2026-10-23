@@ -180,8 +180,17 @@ def main() -> int:
             sd = np.mean([e["q"][qname]["delta"] for e in rec["arms"]["S"]])
             print(f"[oldpkg s{seed} {qname}] base={b['mae']:.4f} "
                   f"gated={b['n_gated']} G={gd:+.4f} S={sd:+.4f}", flush=True)
-    Z.write_json(Z.ANALYSIS / "oldpkg_records.json", out)
-    with open(Z.ANALYSIS / "oldpkg_cells.csv", "w", newline="", encoding="utf-8") as fh:
+    (Z.RUNS / "records").mkdir(parents=True, exist_ok=True)
+    # NB: analysis/oldpkg_records.json + oldpkg_cells.csv are the earlier,
+    # pre-A2 exploration artifacts and are left untouched (history is not
+    # overwritten); this round writes the *_v2 pair next to them.
+    Z.write_json(Z.RUNS / "records" / "oldpkg_records_full.json", out)
+    import zst_run_head as R
+    Z.write_json(Z.ANALYSIS / "oldpkg_records_v2.json",
+                 {"seeds": {k: R.compact(v) if "arms" in v else v for k, v in out["seeds"].items()},
+                  "components": out.get("components"),
+                  "historical_exposure": out.get("historical_exposure")})
+    with open(Z.ANALYSIS / "oldpkg_cells_v2.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["seed", "package", "head", "init", "delta", "base_mae", "corrected_mae",
                     "mean_abs_correction"])

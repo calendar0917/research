@@ -8,6 +8,7 @@ records to ``analysis/``.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 from pathlib import Path
@@ -106,6 +107,19 @@ def s_path_check() -> dict:
                        and float(np.max(np.abs(h_full - h_zero))) > 1e-6)}
 
 
+def compact(rec: dict) -> dict:
+    """Drop the per-molecule arrays (they are delivered as a CSV)."""
+    out = json.loads(json.dumps(rec))
+    for kind in ("G", "S"):
+        for e in out.get("arms", {}).get(kind, []):
+            for tag in ("q", "q_endpoint"):
+                for qname, m in e.get(tag, {}).items():
+                    m.pop("per_molecule", None)
+    for qname, b in out.get("base_metrics", {}).items():
+        b.pop("per_molecule", None)
+    return out
+
+
 def stride_stats(f: H.Features, base, y) -> dict:
     g = f.gate > 0
     return {"n": int(len(y)), "n_gated": int(g.sum()),
@@ -196,10 +210,41 @@ def main() -> int:
                             "support_hash": data["support_hash"]}, p)
                 entry["checkpoint"] = str(p)
                 entry["checkpoint_sha256"] = C.sha256_file(p)
-        all_records[str(seed)] = rec
-        Z.write_json(Z.ANALYSIS / f"head_records_s{seed}.json", rec)
+                pe = RUNS_HEADS / f"{tag}_endpoint.pt"
+                torch.save({"kind": kind, "seed": seed, "wd": float(wd),
+                            "init": int(entry["init"]), "steps_used": int(entry["curve"][-1]["step"]),
+                            "state_dict": trained[f"{kind}_wd{wd}_i{entry['init']}"]["endpoint_state_dict"],
+                            "standardiser": {k: v.tolist() for k, v in data["standardiser"].items()},
+                            "base_ckpt_sha256": data["base_ckpt_sha256"],
+                            "support_hash": data["support_hash"]}, pe)
+                entry["endpoint_checkpoint"] = str(pe)
+                entry["endpoint_checkpoint_sha256"] = C.sha256_file(pe)
+        # C_fit / C_dev rows: the head is *fitted* on C_fit and *selected* on C_dev,
+        # so these roles have no honest post-selection head output; only the base
+        # prediction is delivered (plus the support statistics).
+        with open(Z.ANALYSIS / f"base_rows_s{seed}.csv", "w", newline="", encoding="utf-8") as fh:
+            w = csv.writer(fh)
+            w.writerow(["molecule_id", "stage", "role", "target_family", "seed", "y", "base_pred",
+                        "G_pred_selected", "S_pred_selected", "G_pred_endpoint", "S_pred_endpoint",
+                        "n_unseen", "unseen_frac", "min_n1", "mean_n1", "min_n2", "mean_n2",
+                        "gated", "base_ckpt_sha256", "support_hash", "n_head_inits"])
+            for role, f, b, y in (("C_fit", data["f_cfit"], data["b_cfit"], data["y_cfit"]),
+                                  ("C_dev", data["f_cdev"], data["b_cdev"], data["y_cdev"])):
+                ss = f.support_stats
+                for i, mid in enumerate(f.rows):
+                    w.writerow([int(mid), "new_holdout", role, "CD", seed, f"{y[i]:.6f}", f"{b[i]:.6f}",
+                                "", "", "", "", int(ss["n_unseen"][i]), f"{ss['unseen_frac'][i]:.6f}",
+                                f"{ss['min_n1'][i]:.4f}", f"{ss['mean_n1'][i]:.4f}",
+                                f"{ss['min_n2'][i]:.4f}", f"{ss['mean_n2'][i]:.4f}",
+                                int(f.gate[i] > 0), rec["base_ckpt_sha256"], rec["support_hash"], 3])
 
-    Z.write_json(Z.ANALYSIS / "head_records.json", all_records)
+        all_records[str(seed)] = rec
+        Z.write_json(Z.RUNS / "records" / f"head_records_full_s{seed}.json", rec)
+        Z.write_json(Z.ANALYSIS / f"head_records_s{seed}.json", compact(rec))
+
+    (Z.RUNS / "records").mkdir(parents=True, exist_ok=True)
+    Z.write_json(Z.RUNS / "records" / "head_records_full.json", all_records)
+    Z.write_json(Z.ANALYSIS / "head_records.json", {k: compact(v) for k, v in all_records.items()})
     return 0
 
 

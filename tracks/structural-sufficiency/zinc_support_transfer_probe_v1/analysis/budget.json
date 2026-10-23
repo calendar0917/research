@@ -1,0 +1,28 @@
+{
+ "round": "zinc_support_transfer_probe_v1",
+ "budget_gpu_hours": 3.0,
+ "spent": {
+  "base_training_measured": 0.4884,
+  "base_training_failed": [
+   0.02
+  ],
+  "head_training_cpu": 0.0,
+  "evaluation_full10k_valid": 0.0,
+  "official_test": 0.0
+ },
+ "spent_gpu_hours_total": 0.51,
+ "fraction_of_budget": 0.17,
+ "per_expensive_step": {
+  "one_base_model_600_epochs": 0.2194,
+  "one_base_model_seed_1": 0.2689,
+  "one_head_G_or_S_1500_steps_x_3_inits_CPU_seconds": 3.1,
+  "full_new_holdout_head_sweep_all_24_heads_CPU_seconds": 74,
+  "full10k_valid_application_CPU_seconds": 0
+ },
+ "wall_clock_hours": 0.7,
+ "notes": [
+  "no GPU failures during formal training; 2 wasted launches (<1 min) on a missing git-ignored manifest",
+  "all head fitting/selection/evaluation ran on CPU (2 x 8 cores locally)",
+  "official valid/test were not read this round; the \u00a75 gate was not opened"
+ ]
+}

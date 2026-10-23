@@ -109,8 +109,7 @@ def param_counts():
 class Features:
     """Per-molecule coarse context + padded unseen-atom block for one base fit."""
 
-    def __init__(self, cache, rows, f_base, sup2, atom_k1, atom_k2, atom_ptr,
-                 atom_offset: int = 0):
+    def __init__(self, cache, rows, f_base, sup2, atom_k1, atom_k2, atom_ptr):
         n = len(rows)
         n_n1 = np.zeros(n)
         n_n2 = np.zeros(n)
@@ -122,8 +121,7 @@ class Features:
         atom_blocks = []
         atom_feat_all = np.asarray(cache["atom_feat"])
         for i, m in enumerate(np.asarray(rows, dtype=np.int64).tolist()):
-            s0, e0 = int(atom_ptr[m]), int(atom_ptr[m + 1])
-            s, e = s0 + int(atom_offset), e0 + int(atom_offset)
+            s, e = int(atom_ptr[m]), int(atom_ptr[m + 1])
             k2 = atom_k2[s:e]
             n2 = sup2[k2].astype(np.float64)
             n1 = sup2[atom_k1[s:e]].astype(np.float64)
@@ -135,7 +133,7 @@ class Features:
                 min_n1[i], mean_n1[i] = l1.min(), l1.mean()
                 min_n2[i], mean_n2[i] = l2.min(), l2.mean()
                 atom_blocks.append(
-                    np.concatenate([atom_feat_all[s0:e0][u].astype(np.float64),
+                    np.concatenate([atom_feat_all[s:e][u].astype(np.float64),
                                     l1.reshape(-1, 1), l2.reshape(-1, 1)], axis=1))
             else:
                 atom_blocks.append(np.zeros((0, Z.ATOM_IN_DIM)))
@@ -147,10 +145,9 @@ class Features:
         self.aux = np.stack([np.log1p(n_unseen), np.log1p(coarse["n_atoms"][self.rows])], axis=1)
         self.gate = (n_unseen > 0).astype(np.float64)
         self.n_unseen = n_unseen
-        self.support_stats = {
-            "n_unseen": n_unseen, "unseen_frac": frac,
-            "min_n1": min_n1, "mean_n1": mean_n1,
-            "min_n2": min_n2, "mean_n2": mean_n2}
+        self.support_stats = {"n_unseen": n_unseen, "unseen_frac": frac,
+                              "min_n1": min_n1, "mean_n1": mean_n1,
+                              "min_n2": min_n2, "mean_n2": mean_n2}
         umax = max(1, int(n_unseen.max()) if n else 1)
         atoms = np.zeros((n, umax, Z.ATOM_IN_DIM))
         mask = np.zeros((n, umax))
@@ -238,8 +235,8 @@ def train_head(kind: str, fit: Features, r: np.ndarray, base: np.ndarray,
     dev_keep = None
     if dev is not None:
         # selection metric: C_dev MAE after dropping the 5% of C_dev molecules
-        # with the largest *base* absolute error (a function of base and y only,
-        # never of the correction). Pre-registered as amendment A2.
+        # with the largest *base* absolute error. The drop rule is a function of
+        # (f_base, y) on the selection split only; the correction never enters it.
         ae = np.abs(dev_base - dev_y)
         k = max(1, int(round(0.05 * len(ae))))
         dev_keep = np.ones(len(ae), dtype=bool)
@@ -263,7 +260,7 @@ def train_head(kind: str, fit: Features, r: np.ndarray, base: np.ndarray,
                     entry["dev_mae"] = dev_mae
                     entry["dev_mae_trim5"] = dev_trim
                     if dev_trim < best["dev_mae"]:
-                        best = {"dev_mae": dev_trim, "step": step, "dev_mae_full": dev_mae,
+                        best = {"dev_mae": dev_trim, "step": step,
                                 "state": {k: v.detach().clone() for k, v in model.state_dict().items()}}
                 curve.append(entry)
         if step == steps:
@@ -271,9 +268,13 @@ def train_head(kind: str, fit: Features, r: np.ndarray, base: np.ndarray,
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP)
         opt.step()
+    final_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
     if best["state"] is not None:
         model.load_state_dict(best["state"])
-    return model, curve, (best["step"] if dev is not None else steps)
+        sel_state = best["state"]
+    else:
+        sel_state = final_state
+    return model, curve, (best["step"] if dev is not None else steps), final_state, sel_state
 
 
 @torch.no_grad()
@@ -375,7 +376,7 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
         for wd in WD_GRID:
             for init in INITS:
                 key = f"{kind}_wd{wd}_i{init}"
-                model, curve, best_step = train_head(
+                model, curve, best_step, final_state, sel_state = train_head(
                     kind, fit, r, data["b_cfit"], wd, init,
                     dev=dev, dev_base=data["b_cdev"], dev_y=data["y_cdev"], steps=steps)
                 cdev = data["b_cdev"] + predict_head(model, dev)
@@ -388,7 +389,8 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
                         :max(1, int(round(0.95 * len(cdev))))].mean()),
                     "fit_mae": float(np.abs(cfit[keep] - data["y_cfit"][keep]).mean()),
                     "curve": curve,
-                    "state_dict": {k: v.clone() for k, v in model.state_dict().items()},
+                    "state_dict": sel_state,
+                    "endpoint_state_dict": final_state,
                 }
                 if verbose:
                     print(f"[s{seed} {key}] step={best_step} C_dev={trained[key]['dev_mae']:.6f} "
@@ -406,12 +408,16 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
             entry = {"init": init, "wd": float(wd), "steps_used": t["best_step"],
                      "dev_mae": t["dev_mae"], "dev_mae_trim5": t["dev_mae_trim5"],
                      "fit_mae_cfit_gated": t["fit_mae"],
-                     "curve": t["curve"], "q": {}}
+                     "curve": t["curve"], "q": {}, "q_endpoint": {}}
+            model_end = HeadS() if kind == "S" else HeadG()
+            model_end.load_state_dict(t["endpoint_state_dict"])
             for qname in data["f_q"]:
                 fq = data["f_q"][qname]
                 base, yy = data["b_q"][qname], data["y_q"][qname]
                 corr = base + predict_head(t["model"], fq)
+                corr_end = base + predict_head(model_end, fq)
                 m = metrics(yy, base, corr)
+                m_end = metrics(yy, base, corr_end)
                 gmask = fq.gate > 0
                 if qname in ("Q_bg", "M"):
                     m["identity_max_abs_diff_unsupported"] = float(
@@ -426,6 +432,7 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
                                          "gated": gmask.astype(int).tolist(),
                                          "support": {k: np.asarray(v).tolist()
                                                      for k, v in fq.support_stats.items()}}
+                    m["boot"] = boot(yy, base, corr)
                 elif tkeys.get(qname) is not None:
                     cl = key_cluster_ids(fq.rows, tkeys[qname], mol2)
                     m["boot"] = boot(yy, base, corr, clusters=cl)
@@ -435,6 +442,22 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
                                          "cluster": cl.tolist(),
                                          "support": {k: np.asarray(v).tolist()
                                                      for k, v in fq.support_stats.items()}}
+                cl_end = (key_cluster_ids(fq.rows, tkeys[qname], mol2)
+                          if tkeys.get(qname) is not None else None)
+                m_end["boot"] = boot(yy, base, corr_end, clusters=cl_end)
+                if qname in ("Q_bg", "M"):
+                    for mm, cc in ((m, corr), (m_end, corr_end)):
+                        mm["n_gated"] = int(gmask.sum())
+                        mm["base_mae_gated_subset"] = float(np.abs(base[gmask] - yy[gmask]).mean())
+                        mm["mae_gated_subset"] = float(np.abs(cc[gmask] - yy[gmask]).mean())
+                        mm["delta_gated_subset"] = float(
+                            (np.abs(cc[gmask] - yy[gmask]) - np.abs(base[gmask] - yy[gmask])).mean())
+                        mm["identity_max_abs_diff_unsupported"] = float(
+                            np.max(np.abs(cc[~gmask] - base[~gmask])) if (~gmask).any() else 0.0)
+                m_end["per_molecule"] = {"row": fq.rows.tolist(), "y": yy.tolist(),
+                                         "base": base.tolist(), "corrected": corr_end.tolist(),
+                                         "gated": gmask.astype(int).tolist()}
+                entry["q_endpoint"][qname] = m_end
                 entry["q"][qname] = m
             entries.append(entry)
         rec["arms"][kind] = entries
@@ -455,6 +478,27 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
                              "support": {k: np.asarray(v).tolist()
                                          for k, v in fq.support_stats.items()}},
         }
+    # coarse baselines that use no local structure at all: a constant and a
+    # 2-parameter linear function of f_base, both fitted on C_fit gated rows.
+    rr = data["y_cfit"][keep] - data["b_cfit"][keep]
+    A = np.stack([np.ones(int(keep.sum())), data["b_cfit"][keep]], axis=1)
+    coef, *_ = np.linalg.lstsq(A, rr, rcond=None)
+    rec["baselines"] = {"constant_mean": float(rr.mean()),
+                        "constant_median": float(np.median(rr)),
+                        "linear_coef": [float(c) for c in coef], "q": {}}
+    for qname in data["f_q"]:
+        fq = data["f_q"][qname]
+        base, yy = data["b_q"][qname], data["y_q"][qname]
+        gm = fq.gate > 0
+        row = {}
+        for name, h in (("constant_mean", np.full(len(base), rr.mean())),
+                        ("constant_median", np.full(len(base), np.median(rr))),
+                        ("linear_f_base", coef[0] + coef[1] * base)):
+            h = np.where(gm, h, 0.0)
+            m = metrics(yy, base, base + h)
+            row[name] = {"delta": m["delta"], "mae_corrected": m["mae_corrected"],
+                         "boot": boot(yy, base, base + h)}
+        rec["baselines"]["q"][qname] = row
     rec["shuffled_atoms"] = bool(shuffle_atoms)
     return rec, trained
 

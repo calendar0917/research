@@ -103,6 +103,10 @@
 | Phase 2b GPU | **完成**：smoke + F s0/s1 + M s0/s1 + one-shot test forward；4/4 formal exit 0；0.947 GPU-h（训练循环 0.929 h），≤2.5 h；无 GPU 失败 |
 | Phase 2b 结果 | valid P3 0.079844 / F 0.079616 / M 0.076788；test P3 0.069822 / M 0.068549；M gain valid +0.003056、test +0.001273（CI 跨零）；F valid +0.000228（不 promote）；M 唯一 finalist |
 | Phase 2b 判定 | **`NO_PRACTICAL_ADVANTAGE`**：valid 仅阈值边缘通过，one-shot test 未确认；M 的 +12.3% 参数 / +15.1% FLOPs / +38% 训练墙不换来确定收益；M/F 冻结保留为 borderline/negative 证据 |
+| Phase 2c-sup（`zinc_support_transfer_probe_v1`）协议/代码 | 完成：`PROTOCOL.md` 冻结（commit `b0e287f`）+ 两处修订 A1（标准化尺度下限/头 lr/选择时机）、A2（C_dev trim5 选择统计量，均在见到新数值前写入）；新 honest holdout（F 7467 / C_fit 1156 / C_dev 306 / Q_A 361 / Q_B 310 / Q_bg 400），六条隔离门禁全过；7 tests；B/G/S 三臂、末层零初始化、总参数 424066/423986 ≤ 500000 |
+| Phase 2c-sup GPU | **完成**：2/2 formal exit 0（`b652cd73e89f` 提交，a100-2，driver 550.163.01，torch 2.5.1+cu124）；**0.488 GPU·h**（s0 0.2194 / s1 0.2689），另两次启动因远端缺 git-ignored manifest 在 <1 min 内失败；3.0 h 预算的 17% |
+| Phase 2c-sup 结果 | 24/24 个头（G/S × 2 wd × 3 init × 2 base seed）在 C_dev 上**全部选中 step 0**（=不纠错），选中臂与 B 逐分子完全相同（Δ=0.0000）；头确实在拟合（C_fit L1 0.120→0.027/0.055）但 C_dev trim5 单调恶化 0.092→0.165/0.144；强行用到 1500 步则 Q_A +0.039/+0.043、Q_B +0.057/+0.124、Q_bg +0.007/+0.014（CI 在有害侧排除 0）；**S 比 G 更差**；within-key 留出同样 Δ=0.0000；oracle 组级常数上限 0.0011 < 目标所需 0.003 |
+| Phase 2c-sup 判定 | **`NO_TRANSFERABLE_CORRECTION__RESIDUAL_IS_LABEL_NOISE_AT_THIS_RESOLUTION`（分支 D）**：不是"跨结构类型迁移失败"，而是给定特征下基座符号残差的条件均值≈0（同一键族内部也不可预测）；粗统计量常数/线性基线同样无利可图。§5 全 10k valid 门禁未开、official valid/test 未读、shuffle 控制未做（S 明确劣于 G 时无解释力） |
 | 交付 | Phase 0 REPORT + 纠错文件 + Phase 1a 协议/REPORT + Phase 1b 协议/决策日志/REPORT/run manifest + Phase 1c 协议/纠错/REPORT/run manifest/analysis + Phase 1d 协议/REPORT/CPU audit/run manifest/analysis + STATE/TRACK |
 
 ## 入口
@@ -188,7 +192,13 @@
 
 ## 下一步
 
-00. **Phase 2b 已改写下一步（最新）**：标准 ZINC-12k 上 M 的 valid +0.003056 未在 one-shot test 重现（+0.001273，CI 跨零），F 为 null；**M 不作为下一性能基座，P3 保持基座**。M/F 冻结保留为 borderline/negative 证据。若重启该线，唯一允许的科学问题是：**3–5 seed + 参数匹配 trunk/readout 对照**，检验 M 的 valid gain 与 M−F separation 是否可复现，还是 seed-1 波动；必须新预注册，不自动开 Phase 2c。
+00a. **`zinc_support_transfer_probe_v1` 已改写下一步（最新，2026-10-23）**：raw-y 上的**加性纠错头**这条线**停止**。
+   - 事实：新 honest holdout 上 24/24 个头选择"不纠错"；强行应用反而在三个包上一致变差；S（局部结构）比 G（粗统计）更差；同一键族内部留出同样为 0；事后最优组级常数上限 0.0011，低于 0.05× 所需的 0.003。
+   - 因此**不**再试：不同头容量/更多 init/更多 seed/更多 wd/"更细的原子特征"/per-k2 表/把纠错头接在别的 checkpoint 上。
+   - **唯一允许**的下一步是分子级而非组级：在 F 上做交叉拟合得到 out-of-fold 残差，检验是否存在**只用结构就能算出**的分子级信号，能挑出被系统性高估/低估的子群，要求子群内 **L1 残差中位数**（不是均值）显著偏离 0 且在 query 包上复现。若不存在，0.05× 的瓶颈在覆盖/表示，不在后处理。
+   - 会改变判定的证据：在**完全不含 query 标签**的固定规则下，query MAE 改善 ≥0.003、键簇 bootstrap 区间不含 0、并在第二个基座 seed 上复现。
+
+00. **Phase 2b 已改写下一步（历史）**：标准 ZINC-12k 上 M 的 valid +0.003056 未在 one-shot test 重现（+0.001273，CI 跨零），F 为 null；**M 不作为下一性能基座，P3 保持基座**。M/F 冻结保留为 borderline/negative 证据。若重启该线，唯一允许的科学问题是：**3–5 seed + 参数匹配 trunk/readout 对照**，检验 M 的 valid gain 与 M−F separation 是否可复现，还是 seed-1 波动；必须新预注册，不自动开 Phase 2c。
 
 00b. **Phase 2a（历史）已改写下一步**：ZINC 上“在强编码器后追加局部传播”这一线**停止**。
    - 事实：+12% 参数的小模块在冻结 P3E 之后稳定带来 +0.0055 MAE（0.0911→0.0853，两 seed 一致）；但把该模块换成真实边上的 2 轮 GINE 没有额外收益（`Gain_MP` +0.0038 / −0.0001，符号跨 seed 冲突）。Phase 1b 的“迭代≈计算量”与本轮“邻接≈无邻接”是同一结论的两种形式。

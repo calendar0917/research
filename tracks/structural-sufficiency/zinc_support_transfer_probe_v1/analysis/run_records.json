@@ -1,0 +1,114 @@
+{
+ "round": "zinc_support_transfer_probe_v1",
+ "formal_runs": [
+  {
+   "step": "base_F_s0",
+   "experiment": "zst-base-s0",
+   "run_id": "zst-base-s0-20261023-090053-2ddb431d",
+   "host": "res",
+   "pool": "res-gpu0",
+   "backend": "process",
+   "node": "a100-2",
+   "driver_version": "550.163.01",
+   "torch_version": "2.5.1+cu124",
+   "cuda_visible_devices": "0",
+   "regime": {
+    "driver": "550.163.01",
+    "torch": "2.5.1+cu124",
+    "node": "a100-2",
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpus_used": 1
+   },
+   "commit": "b652cd73e89f",
+   "state": "completed",
+   "epochs": 600,
+   "updates": 35400,
+   "n_fit": 7467,
+   "parameters": 413505,
+   "ssl_encoder_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+   "init_state_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+   "checkpoint_sha256": "9e4f708aa2c2810cdb6db7ac76928ac222a135e7a90260d50ccf70a722dc4409",
+   "wall_seconds": 789.810583720915,
+   "gpu_hours": 0.2193918288113653,
+   "in_sample_train_mae": 0.0006279460475188873,
+   "predictions": "predictions/base_F_s0.npz"
+  },
+  {
+   "step": "base_F_s1",
+   "experiment": "zst-base-s1",
+   "run_id": "zst-base-s1-20261023-090107-e233bf42",
+   "host": "res",
+   "pool": "res-gpu1",
+   "backend": "process",
+   "node": "a100-2",
+   "driver_version": "550.163.01",
+   "torch_version": "2.5.1+cu124",
+   "cuda_visible_devices": "1",
+   "regime": {
+    "driver": "550.163.01",
+    "torch": "2.5.1+cu124",
+    "node": "a100-2",
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpus_used": 1
+   },
+   "commit": "b652cd73e89f",
+   "state": "completed",
+   "epochs": 600,
+   "updates": 35400,
+   "n_fit": 7467,
+   "parameters": 413505,
+   "ssl_encoder_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+   "init_state_sha256": "750be5617519904b9cacf3df6168f29a50cf47cb2e8417ff620a8d477d0e3694",
+   "checkpoint_sha256": "ae568459cf5ce89a1d3a68ef5b868175ba9ffe925a99af69b5377828c02f98ef",
+   "wall_seconds": 967.9753992571495,
+   "gpu_hours": 0.2688820553492082,
+   "in_sample_train_mae": 0.0004835288997277946,
+   "predictions": "predictions/base_F_s1.npz"
+  }
+ ],
+ "failed_or_probe_runs": [
+  {
+   "experiment": "zst-base-s1",
+   "run_id": "zst-base-s1-20261023-085737-cfb6abe3",
+   "state": "failed",
+   "exit_code": 1,
+   "reason": "cache/split_manifest.json missing on host (git-ignored); died in <1 min",
+   "started_at": "2026-10-23T08:57:40+08:00"
+  },
+  {
+   "experiment": "zst-base-s0",
+   "run_id": "zst-base-s0-20261023-085724-b7f14c75",
+   "state": "failed",
+   "exit_code": 1,
+   "reason": "cache/split_manifest.json missing on host (git-ignored); died in <1 min",
+   "started_at": "2026-10-23T08:57:27+08:00"
+  }
+ ],
+ "cpu_steps": [
+  {
+   "step": "zst_split",
+   "wall_seconds": "~60",
+   "gpu_hours": 0.0
+  },
+  {
+   "step": "zst_run_head (24 heads x 1500 steps, CPU)",
+   "wall_seconds": "74",
+   "gpu_hours": 0.0
+  },
+  {
+   "step": "zst_oldpkg (2 seeds, CPU)",
+   "wall_seconds": "34",
+   "gpu_hours": 0.0
+  },
+  {
+   "step": "zst_diag + zst_report (CPU)",
+   "wall_seconds": "~50",
+   "gpu_hours": 0.0
+  }
+ ],
+ "totals": {
+  "gpu_hours_measured": 0.4883,
+  "gpu_hours_including_failures": 0.51,
+  "note": "failures estimated from rr job timestamps (<1 min each on 1 GPU)"
+ }
+}
