@@ -109,7 +109,8 @@ def param_counts():
 class Features:
     """Per-molecule coarse context + padded unseen-atom block for one base fit."""
 
-    def __init__(self, cache, rows, f_base, sup2, atom_k1, atom_k2, atom_ptr):
+    def __init__(self, cache, rows, f_base, sup2, atom_k1, atom_k2, atom_ptr,
+                 atom_offset: int = 0):
         n = len(rows)
         n_n1 = np.zeros(n)
         n_n2 = np.zeros(n)
@@ -121,7 +122,8 @@ class Features:
         atom_blocks = []
         atom_feat_all = np.asarray(cache["atom_feat"])
         for i, m in enumerate(np.asarray(rows, dtype=np.int64).tolist()):
-            s, e = int(atom_ptr[m]), int(atom_ptr[m + 1])
+            s0, e0 = int(atom_ptr[m]), int(atom_ptr[m + 1])
+            s, e = s0 + int(atom_offset), e0 + int(atom_offset)
             k2 = atom_k2[s:e]
             n2 = sup2[k2].astype(np.float64)
             n1 = sup2[atom_k1[s:e]].astype(np.float64)
@@ -133,7 +135,7 @@ class Features:
                 min_n1[i], mean_n1[i] = l1.min(), l1.mean()
                 min_n2[i], mean_n2[i] = l2.min(), l2.mean()
                 atom_blocks.append(
-                    np.concatenate([atom_feat_all[s:e][u].astype(np.float64),
+                    np.concatenate([atom_feat_all[s0:e0][u].astype(np.float64),
                                     l1.reshape(-1, 1), l2.reshape(-1, 1)], axis=1))
             else:
                 atom_blocks.append(np.zeros((0, Z.ATOM_IN_DIM)))
@@ -145,6 +147,10 @@ class Features:
         self.aux = np.stack([np.log1p(n_unseen), np.log1p(coarse["n_atoms"][self.rows])], axis=1)
         self.gate = (n_unseen > 0).astype(np.float64)
         self.n_unseen = n_unseen
+        self.support_stats = {
+            "n_unseen": n_unseen, "unseen_frac": frac,
+            "min_n1": min_n1, "mean_n1": mean_n1,
+            "min_n2": min_n2, "mean_n2": mean_n2}
         umax = max(1, int(n_unseen.max()) if n else 1)
         atoms = np.zeros((n, umax, Z.ATOM_IN_DIM))
         mask = np.zeros((n, umax))
@@ -193,6 +199,7 @@ class Standardiser:
         o.gate = src.gate
         o.n_unseen = src.n_unseen
         o.mask = src.mask
+        o.support_stats = src.support_stats
         o.ctx = (src.ctx - self.ctx_mu) / self.ctx_sd
         o.aux = (src.aux - self.aux_mu) / self.aux_sd
         o.atoms = (src.atoms - self.at_mu) / self.at_sd
@@ -228,6 +235,15 @@ def train_head(kind: str, fit: Features, r: np.ndarray, base: np.ndarray,
     b = torch.as_tensor(base, dtype=torch.float32)
     curve = []
     best = {"dev_mae": float("inf"), "step": -1, "state": None}
+    dev_keep = None
+    if dev is not None:
+        # selection metric: C_dev MAE after dropping the 5% of C_dev molecules
+        # with the largest *base* absolute error (a function of base and y only,
+        # never of the correction). Pre-registered as amendment A2.
+        ae = np.abs(dev_base - dev_y)
+        k = max(1, int(round(0.05 * len(ae))))
+        dev_keep = np.ones(len(ae), dtype=bool)
+        dev_keep[np.argsort(-ae)[:k]] = False
     for step in range(steps + 1):
         lr = _lr(step, steps)
         for g in opt.param_groups:
@@ -243,9 +259,11 @@ def train_head(kind: str, fit: Features, r: np.ndarray, base: np.ndarray,
                     hd = forward_head(model, dev)
                     dev_pred = dev_base + dev.gate * hd.numpy().astype(np.float64)
                     dev_mae = float(np.abs(dev_pred - dev_y).mean())
+                    dev_trim = float(np.abs(dev_pred - dev_y)[dev_keep].mean())
                     entry["dev_mae"] = dev_mae
-                    if dev_mae < best["dev_mae"]:
-                        best = {"dev_mae": dev_mae, "step": step,
+                    entry["dev_mae_trim5"] = dev_trim
+                    if dev_trim < best["dev_mae"]:
+                        best = {"dev_mae": dev_trim, "step": step, "dev_mae_full": dev_mae,
                                 "state": {k: v.detach().clone() for k, v in model.state_dict().items()}}
                 curve.append(entry)
         if step == steps:
@@ -366,6 +384,8 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
                     "model": model, "kind": kind, "wd": float(wd), "init": int(init),
                     "best_step": int(best_step),
                     "dev_mae": float(np.abs(cdev - data["y_cdev"]).mean()),
+                    "dev_mae_trim5": float(np.sort(np.abs(cdev - data["y_cdev"]))[
+                        :max(1, int(round(0.95 * len(cdev))))].mean()),
                     "fit_mae": float(np.abs(cfit[keep] - data["y_cfit"][keep]).mean()),
                     "curve": curve,
                     "state_dict": {k: v.clone() for k, v in model.state_dict().items()},
@@ -374,7 +394,7 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
                     print(f"[s{seed} {key}] step={best_step} C_dev={trained[key]['dev_mae']:.6f} "
                           f"C_fit={trained[key]['fit_mae']:.6f}", flush=True)
     for kind in ("G", "S"):
-        stats = {wd: float(np.mean([trained[f"{kind}_wd{wd}_i{i}"]["dev_mae"] for i in INITS]))
+        stats = {wd: float(np.mean([trained[f"{kind}_wd{wd}_i{i}"]["dev_mae_trim5"] for i in INITS]))
                  for wd in WD_GRID}
         rec["wd_selection"][kind] = {"cdev_mean_by_wd": {str(k): v for k, v in stats.items()},
                                      "selected_wd": min(stats, key=stats.get)}
@@ -384,15 +404,16 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
         for init in INITS:
             t = trained[f"{kind}_wd{wd}_i{init}"]
             entry = {"init": init, "wd": float(wd), "steps_used": t["best_step"],
-                     "dev_mae": t["dev_mae"], "fit_mae_cfit_gated": t["fit_mae"],
+                     "dev_mae": t["dev_mae"], "dev_mae_trim5": t["dev_mae_trim5"],
+                     "fit_mae_cfit_gated": t["fit_mae"],
                      "curve": t["curve"], "q": {}}
-            for qname in ("Q_A", "Q_B", "Q_bg"):
+            for qname in data["f_q"]:
                 fq = data["f_q"][qname]
                 base, yy = data["b_q"][qname], data["y_q"][qname]
                 corr = base + predict_head(t["model"], fq)
                 m = metrics(yy, base, corr)
                 gmask = fq.gate > 0
-                if qname == "Q_bg":
+                if qname in ("Q_bg", "M"):
                     m["identity_max_abs_diff_unsupported"] = float(
                         np.max(np.abs(corr[~gmask] - base[~gmask])) if (~gmask).any() else 0.0)
                     m["n_gated"] = int(gmask.sum())
@@ -402,19 +423,23 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
                         (np.abs(corr[gmask] - yy[gmask]) - np.abs(base[gmask] - yy[gmask])).mean())
                     m["per_molecule"] = {"row": fq.rows.tolist(), "y": yy.tolist(),
                                          "base": base.tolist(), "corrected": corr.tolist(),
-                                         "gated": gmask.astype(int).tolist()}
-                else:
+                                         "gated": gmask.astype(int).tolist(),
+                                         "support": {k: np.asarray(v).tolist()
+                                                     for k, v in fq.support_stats.items()}}
+                elif tkeys.get(qname) is not None:
                     cl = key_cluster_ids(fq.rows, tkeys[qname], mol2)
                     m["boot"] = boot(yy, base, corr, clusters=cl)
                     m["per_molecule"] = {"row": fq.rows.tolist(),
                                          "y": yy.tolist(), "base": base.tolist(),
                                          "corrected": corr.tolist(),
-                                         "cluster": cl.tolist()}
+                                         "cluster": cl.tolist(),
+                                         "support": {k: np.asarray(v).tolist()
+                                                     for k, v in fq.support_stats.items()}}
                 entry["q"][qname] = m
             entries.append(entry)
         rec["arms"][kind] = entries
     rec["base_metrics"] = {}
-    for qname in ("Q_A", "Q_B", "Q_bg"):
+    for qname in data["f_q"]:
         base, yy = data["b_q"][qname], data["y_q"][qname]
         fq = data["f_q"][qname]
         gmask = fq.gate > 0
@@ -426,7 +451,9 @@ def build_and_train(seed: int, data: dict, tkeys: dict, mol2, steps: int = STEPS
             "mean_abs_residual": float(np.abs(yy - base).mean()),
             "boot_mae": boot(yy, base, base)["molecule_ci"],
             "per_molecule": {"row": fq.rows.tolist(), "y": yy.tolist(),
-                             "base": base.tolist()},
+                             "base": base.tolist(),
+                             "support": {k: np.asarray(v).tolist()
+                                         for k, v in fq.support_stats.items()}},
         }
     rec["shuffled_atoms"] = bool(shuffle_atoms)
     return rec, trained

@@ -212,3 +212,20 @@ and the cost is booked.
 Recorded in this file and in `REPORT.md` §deviations. The split gates are
 verified before the base training; a dataset-construction failure is fixed
 before any result is reported, never papered over.
+
+## A2 — selection statistic (written before the new-holdout C_dev was computed)
+
+While preparing the old-package exploration (a CPU smoke run on `sup_minus_s0`
+predictions that were already public in the previous round's report), `C_dev`
+turned out to be a single-molecule-dominated statistic: in that package 5 of 110
+molecules with `y ≈ −7…−9.6` and `|error| ≈ 7` carry **80%** of the `C_dev` MAE
+(0.402 with them, 0.066 median without). These are the same permutation-unstable
+label rows the repository documented in Phase 2a.
+
+Therefore the **checkpoint/regularisation selection statistic is `C_dev` MAE
+after dropping the 5% of `C_dev` molecules with the largest *base* absolute error**
+(`dev_mae_trim5`). The drop rule is a function of (`f_base`, `y`) on the selection
+split only — the correction never enters it, and the query packages are untouched.
+The untrimmed `C_dev` MAE is reported next to it everywhere. This was fixed before
+any new-holdout `C_dev` number existed, and it is the only change to §3's
+selection rule.
