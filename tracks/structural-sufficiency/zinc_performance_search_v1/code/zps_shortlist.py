@@ -56,7 +56,7 @@ def main(argv=None) -> int:
     spec = C.read_json(Path(args.spec))
     entries = []
     for name, arm, recipe, seed, run_dir in spec["entries"]:
-        e = entry(name, arm, recipe, int(seed), C.REPO / run_dir)
+        e = entry(f"{name}-s{int(seed)}", arm, recipe, int(seed), C.REPO / run_dir)
         C.log(f"[shortlist] {name} s{seed} epoch {e['epoch']} valid {e['valid_mae']:.6f}")
         entries.append(e)
     out = {"selection": spec["selection"], "frozen_at": C.utcnow(),

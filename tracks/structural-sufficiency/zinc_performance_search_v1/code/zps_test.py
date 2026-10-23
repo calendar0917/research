@@ -28,7 +28,9 @@ _SS = _HERE.parents[1]
 _V1 = _SS / "zinc_arch_discovery_v1" / "code"
 _GRIT = _SS / "zinc_performance_search_v1" / "code"
 _DBT = _SS / "zinc_directed_bond_transformer_v1" / "code"
-for _p in (str(_HERE), str(_V1), str(_GRIT), str(_DBT)):
+_AD2 = _SS / "zinc_recipe_trunk_v2" / "code"
+_DCC = _SS / "zinc_dual_channel_composer_v1" / "code"
+for _p in (str(_HERE), str(_V1), str(_GRIT), str(_DBT), str(_AD2), str(_DCC)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
@@ -41,13 +43,18 @@ ANALYSIS = EXP / "analysis"
 AUDIT = _SS / "zinc_generalization_audit_v1" / "analysis" / "per_molecule.csv"
 
 CAND = {"A": "P3N", "B": "DCC_L"}
+COLLATE = {"A": "P3N", "B": "P3N"}   # both bodies use the P3N batch layout
 
 
 def build(entry: dict, device):
     arm, seed = entry["arm"], int(entry["seed"])
-    if arm in CAND:
+    if arm == "A":
         import ad2_models as A2
-        model, _ = A2.build_model(CAND[arm], D.load_norm(), seed, device)
+        model, _ = A2.build_model("P3N", D.load_norm(), seed, device)
+        return model, "ad"
+    if arm == "B":
+        import dcc_runner as DR
+        model, _ = DR.make_builder("L")("DCC_L", D.load_norm(), seed, device)
         return model, "ad"
     if arm == "C":
         import dbt_data as BD
@@ -63,7 +70,7 @@ def predict(model, kind, arm, split: str, device, batch_size: int = 256):
     if kind == "ad":
         cache = D.load_cache(split)
         rows = np.arange(len(cache["labels"]), dtype=np.int64)
-        pred, mae = T.evaluate(model, cache, rows, candidate=CAND[arm], device=device,
+        pred, mae = T.evaluate(model, cache, rows, candidate=COLLATE[arm], device=device,
                               batch_size=batch_size)
         return pred, np.asarray(cache["labels"], np.float64)
     import dbt_data as BD
