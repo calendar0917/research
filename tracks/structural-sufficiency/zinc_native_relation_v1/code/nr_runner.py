@@ -717,17 +717,18 @@ def cmd_train(args: argparse.Namespace) -> int:
     entries_train = load_rel("train")
     entries_valid = load_rel("valid")
     y_train, y_valid = load_ys()
-    out = C.RUNS_DIR / f"{arm}_s{seed}"
+    prefix = "" if args.tag is None else f"{args.tag}_"
+    out = C.RUNS_DIR / f"{prefix}{arm}_s{seed}"
     out.mkdir(parents=True, exist_ok=True)
     builder = lambda candidate, norm_, seed_, device_: M.build_arm(arm, norm_, seed_, device_)
     collate = p3_collate if arm == "P" else D.make_collate(entries_train)
     info = AT.train(
         arm, seed, device, recipe_variant="B", model_builder=builder,
-        out_dir=out, collate_fn=collate, force=args.force,
+        out_dir=out, collate_fn=collate, force=args.force, epochs=args.epochs,
     )
     print(json.dumps({"best_valid": info["best_valid"],
                       "final": info["fixed_objects"]["final"],
-                      "timing": info["timing"]}, indent=2))
+                      "wall_seconds": info["wall_seconds"]}, indent=2))
 
     # extra predictions / provenance (does not modify the trainer's train.json)
     final_model, final_info = M.build_arm(arm, norm, seed, device)
@@ -744,7 +745,7 @@ def cmd_train(args: argparse.Namespace) -> int:
     if abs(best_mae - float(info["best_valid"]["valid_mae"])) > 5e-6:
         raise SystemExit(f"best-valid replay mismatch: {best_mae} vs {info['best_valid']['valid_mae']}")
     if abs(final_mae - float(info["fixed_objects"]["final"]["valid_mae"])) > 5e-6:
-        raise SystemExit(f"final-valid replay mismatch: {final_mae} vs {info['final']['valid_mae']}")
+        raise SystemExit(f"final-valid replay mismatch: {final_mae} vs {info['fixed_objects']['final']['valid_mae']}")
     win = C.window_metrics(info["curve"])
     init_model, init_info = M.build_arm(arm, norm, seed, "cpu")
     extra = {
@@ -1359,6 +1360,10 @@ def build_parser() -> argparse.ArgumentParser:
     q.add_argument("--seed", type=int, choices=C.SEEDS, required=True)
     q.add_argument("--device", default="cuda:0")
     q.add_argument("--force", action="store_true")
+    q.add_argument("--epochs", type=int, default=None,
+                   help="smoke override only; formal runs must omit this")
+    q.add_argument("--tag", default=None,
+                   help="optional run-directory prefix; formal runs must omit this")
     q.set_defaults(func=cmd_train)
 
     q = sub.add_parser("score")
