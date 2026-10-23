@@ -83,6 +83,7 @@ def train(seed: int, device, *, epochs: int = EPOCHS, batch_size: int = BATCH,
     info = BT.train(seed, device, epochs=int(epochs), tag="dbtc", force=force,
                     recipe_override={"batch_size": int(batch_size)})
     info["round"] = ROUND_ID
+    info["variant"] = "DBT-native-short-horizon"
     info["search_declaration"] = declaration
     C.write_json(out / "train.json", info)
     print(f"[dbtc s{seed}] best={info['best_valid']['valid_mae']:.6f}"

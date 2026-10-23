@@ -99,7 +99,8 @@ def collect() -> list[dict]:
     for tj in sorted(RUNS.rglob("train.json")) if RUNS.exists() else []:
         d = tj.parent
         info = json.loads(tj.read_text())
-        if str(info.get("variant", "")).startswith("DBT"):
+        if (str(info.get("variant", "")).startswith("DBT")
+                or info.get("candidate") == "DBT"):
             arm, recipe, policy, seed = "C", "DBT600", "online", int(info.get("seed", 0))
         else:
             parsed = parse_name(d.name)
