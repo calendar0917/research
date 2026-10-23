@@ -131,6 +131,7 @@ def main(argv=None) -> int:
                      "pool_kind": "cpu" if gpus == 0 else "gpu", "state": r["state"],
                      "wall_hours": round(hours, 4), "gpus": gpus,
                      "gpu_hours": round(hours * gpus, 4), "commit": r["commit"],
+                     "started_at": r["started_at"], "completed_at": r["completed_at"],
                      "exit_code": r.get("exit_code")})
     trainer_total = sum(v["gpu_hours"] or 0.0 for v in records["runs"].values()) + \
         sum(v["gpu_hours"] or 0.0 for v in records["support_runs"].values())
@@ -139,8 +140,8 @@ def main(argv=None) -> int:
         "gpu_hours_job_wall": round(total, 4),
         "gpu_hours_trainer_measured": round(trainer_total, 4),
         "remaining_gpu_hours": round(args.cap - total, 4),
-        "wall_clock_start": "2026-10-23T00:25:27+08:00",
-        "wall_clock_end": rows[-1]["run_id"][-8:] if rows else None,
+        "wall_clock_start": min((r["started_at"] for r in rows), default=None),
+        "wall_clock_end": max((r["completed_at"] for r in rows), default=None),
         "note": ("job wall includes process start-up and every failed/cancelled run; "
                  "two jobs shared one GPU for ~8 minutes, so the wall sum is a mild "
                  "over-estimate of exclusive device time"),

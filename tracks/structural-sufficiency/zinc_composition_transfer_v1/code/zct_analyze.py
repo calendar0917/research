@@ -698,7 +698,7 @@ def test_split() -> dict:
             for extra in ("", "_k04"):
                 if extra and arm == "S" and seed == 1:
                     continue  # S@0.4 seed 1 was not run
-                label = f"{arm}{extra}_s{seed}"
+                label = f"{arm}_s{seed}{extra}"
                 for which in ("best", "final"):
                     contrast(f"{label}_{which}_minus_E_s{seed}_{which}",
                              f"{label}_{which}", f"E_s{seed}_{which}")
@@ -706,6 +706,14 @@ def test_split() -> dict:
         for which in ("best_monitor", "final"):
             contrast(f"support_plus_minus_s{seed}_{which}",
                      f"sup_plus_s{seed}_{which}", f"sup_minus_s{seed}_{which}")
+    names_sorted = sorted(preds)
+    with open(OUT / "test_per_molecule.csv", "w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(["row", "y", "group"] + names_sorted)
+        group_of = {int(i): k for k, v in groups.items() for i in v}
+        for i in range(len(y)):
+            w.writerow([i, f"{y[i]:.6f}", group_of.get(i, "")] +
+                       [f"{preds[n][i]:.6f}" for n in names_sorted])
     C.write_json(OUT / "test_summary.json", out)
     (OUT / "test_report.md").write_text(_test_md(out), encoding="utf-8")
     return out

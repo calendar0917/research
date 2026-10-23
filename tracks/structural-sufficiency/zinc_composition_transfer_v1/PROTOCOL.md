@@ -289,3 +289,29 @@ Declared **before any meta-arm result exists** (no `R`/`S` job has started; only
 5. **`kappa = 0.1` at the floor of the window was kept.** Changing the selection
    rule after seeing the calibration would have been post-hoc tuning. The
    pre-declared A1 escalation was used instead.
+
+### A3. 2026-10-23 07:58 — terminal test read after the decision (user-requested)
+
+§8 said the official test is read only if a configuration shows repeatable valid
+progress at the 0.003 practical scale. It did not, so the test was **not** opened
+while the round was being decided; §9 of `REPORT.md` was written and committed on
+valid numbers alone.
+
+After that, the user asked for the test split to be read anyway. The read was done
+under the following self-imposed constraints, which keep it from becoming a
+selection event:
+
+1. **After the decision.** Every checkpoint, hash and decision in `REPORT.md` §0–§9
+   existed before the read; nothing was selected, switched, tuned or re-run from it.
+2. **One pass.** `code/zct_test.py` loaded the official test cache once and
+   evaluated all 26 frozen checkpoints (9 core runs × {`best`, `final`} + 4 support
+   fits × {`best_monitor`, `final`}). No second read, no subset search, no
+   checkpoint re-selection, no step-count change.
+3. **CPU only, 0 GPU·h.** 11 s wall on `res`; the 7.667 GPU·h of §10 are unchanged.
+4. **Reported as a separate, descriptive section** (`REPORT.md` §9b), with the
+   frozen four-group test split and paired contrasts over the 1,000 molecules, and
+   with the read's own limits stated (checkpoint-choice noise 0.0063, cross-run
+   drift 0.0085 — both larger than the arm contrasts).
+5. **Pre-declared interpretation.** The read can falsify the round's conclusions
+   but cannot order the arms; if it had contradicted §9, the contradiction would be
+   reported as a contradiction, not repaired by re-running an arm.

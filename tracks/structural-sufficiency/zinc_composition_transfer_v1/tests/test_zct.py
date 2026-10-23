@@ -97,3 +97,29 @@ def test_alpha_zero_virtual_step_is_identity():
         # alpha = 0 leaves the parameters bitwise unchanged
         assert torch.equal(shifted["weight"], lin.weight)
         assert torch.equal(shifted["bias"], lin.bias)
+
+
+def test_test_report_markdown_is_well_formed():
+    """The one-pass test read's report must stay a table of frozen checkpoints."""
+    import zct_analyze as AN
+
+    run = {"run": "R_s0_k04", "which": "best", "arm": "R", "seed": 0, "kappa": 0.4,
+           "epoch": 486, "test_mae": 0.0704, "valid_mae": 0.0785,
+           "test_minus_valid": -0.0081, "median_ae": 0.0364,
+           "trimmed_top1pct_mae": 0.0605,
+           "groups": {"seen_ordinary": 0.0469, "unseen_ordinary": 0.1174,
+                      "seen_tail": 0.1177, "unseen_tail": 0.2195}}
+    summary = {"test_read": "one pass, post-selection", "n": 1000, "source": "x.csv",
+               "source_sha256": "0" * 64,
+               "group_sizes": {"seen_ordinary": 705, "unseen_ordinary": 218,
+                               "seen_tail": 51, "unseen_tail": 26},
+               "runs": {"R_s0_k04_best": run},
+               "comparisons": {"R_s0_k04_best_minus_E_s0_best": {
+                   "delta_mean": -0.008, "ci95": [-0.012, -0.004], "delta_median": -0.005,
+                   "frac_molecules_a_better": 0.565, "sign_test_p": 0.0002}}}
+    md = AN._test_md(summary)
+    assert "R_s0_k04_best" in md and "0.070400" in md and "-0.008100" in md
+    assert "0.11740" in md and "705" in md
+    assert "post-selection" in md
+    # no accidental float formatting of None values
+    assert "None" not in md

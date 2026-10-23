@@ -7,7 +7,10 @@ Machine-readable results: `analysis/summary.json`, `analysis/main_table.md`,
 `analysis/kappa_calibration.json`, `analysis/split_strength.json`,
 `analysis/prep_freeze.json`, `analysis/cpu_checks.json`,
 `analysis/valid_per_molecule.csv`, `analysis/run_records.json`,
-`analysis/budget.json`, `analysis/rr_jobs.json`.
+`analysis/budget.json`, `analysis/rr_jobs.json`, `analysis/test_terminal.json`,
+`analysis/test_summary.json`, `analysis/test_report.md`,
+`analysis/test_per_molecule.csv`.
+Amendment A3 (the post-decision test read) is reported separately in §9b.
 
 Observation, interpretation and action are separated: sections 3–7 are
 observations (each with its measurement definitions), section 8 is interpretation,
@@ -17,9 +20,12 @@ Section 0 states the boundary of what was and was not tested.
 ## 0. Boundary
 
 * **Target, unchanged:** official ZINC subset raw-`y` **test** MAE in
-  `[0.050, 0.060)`. That target was **not** reached, and the official test split
-  was **not opened** this round (section 9 explains why under the pre-registered
-  rule). No test number appears anywhere in this report.
+  `[0.050, 0.060)`. That target was **not** reached. Under the pre-registered rule
+  the test split was not opened while the round was being decided (§9); it was then
+  read **once**, at the user's request, *after* every checkpoint was frozen and
+  every decision written, and that read is reported as a descriptive addendum in
+  **§9b** (amendment A3). It changes nothing: the best single checkpoint of the
+  round is **0.06832** test MAE, 14% above the 0.060 bar.
 * The round asks two narrow questions on one fixed platform:
   1. does an explicit cross-group update constraint (one-step look-ahead on a
      source/query split, random `R` vs structure-derived `S`) change
@@ -315,8 +321,8 @@ The plus fit is slightly **worse** on the target-free monitor `M` in both seeds
    has labels for, but it cannot invent one from structure alone.
 7. **Nothing here reaches the target.** Every arm sits at 0.076–0.083 valid, i.e.
    25–38% above the 0.060 bar. The interventions move valid by 1e-3 while the gap is
-   2e-2 — a factor of twenty — and the target is a *test* number that this round did
-   not measure.
+   2e-2 — a factor of twenty. The post-decision test read in §9b shows the same gap
+   on test (best 0.0683), so this is not a valid-split artefact.
 
 ## 9. Terminal test decision
 
@@ -327,9 +333,101 @@ average over `E`, but that average is built from 0.0038 (s0) and 0.0016 (s1), i.
 the scale is crossed in one seed only; `R`@0.1, the pre-registered primary, is
 −0.00175 in both seeds, below the threshold. The absolute levels (W20 0.0794–0.0796,
 T100 0.0794–0.0796) are far from the 0.075 exploration gate and from the 0.060 bar,
-and no configuration comes within 0.015 of it. Under the pre-registered rule the test is **not opened**, and no
-test prediction, subset selection or step-count tuning is performed. Reported
+and no configuration comes within 0.015 of it. Under the pre-registered rule the test was therefore **not opened during the decision**, and nothing in sections 0–9 depends on a test number; the one-pass read that happened afterwards, at the user's request, is section 9b. No test prediction was used for subset selection or step-count tuning. Reported
 valid numbers are per-seed single checkpoints; no averaging over seeds.
+
+## 9b. Terminal test read — post-selection, descriptive (amendment A3)
+
+**What this is.** After §0–§9 were written, the user asked for the test split to be
+opened anyway. It was read **once**, by `code/zct_test.py`, on the *frozen*
+checkpoints of every run of the round (26 checkpoints: `best` + epoch-600 `final`
+for the nine core runs, `best_monitor` + `final` for the four support fits), on
+`res` CPU (11 s wall, 0 A100 time, not billed). Nothing was selected, switched,
+tuned or re-run from the read; no decision in this report depends on it. The
+harness checks itself by recomputing the published recipe-B seed-0 test cell from
+the frozen reference CSV (0.069865, matching `zinc_recipe_trunk_v2` §5b exactly),
+and the frozen four-group split (705 / 218 / 51 / 26) comes from
+`zinc_restricted_adaptation_v1/analysis/reference_preds_test.csv`
+(sha256 `761d03f8…`). Every number below can be recomputed from
+`analysis/test_per_molecule.csv` (row, `y_raw`, group, and the 26 prediction columns).
+
+**Two-seed means on test (1,000 molecules), by checkpoint choice:**
+
+| arm | valid-selected `best` | epoch-600 `final` |
+|---|---:|---:|
+| `E` (ERM) | 0.074362 | 0.070786 |
+| `R` κ=0.1 | 0.073421 | 0.070954 |
+| `S` κ=0.1 | 0.073470 | 0.070250 |
+| `R` κ=0.4 (A1, 2 seeds) | 0.069938 | 0.069455 |
+| `S` κ=0.4 (A1, seed 0 only) | 0.073876 | 0.072239 |
+| support `plus` (2 seeds, `M`-selected) | 0.084234 | 0.084645 |
+| support `minus` (2 seeds, `M`-selected) | 0.085837 | 0.085221 |
+
+**Single best test number of the round: 0.068316** (`R`@0.4 s1, epoch 600), then
+0.068320 (`S` s1 final) and 0.068913 (`E` s1 final). The target `[0.050, 0.060)` is
+not close: the best cell is 14% above the 0.060 bar, the same 25–38%→14% picture as
+on valid, and every one of the 26 checkpoints scores between 0.0683 and 0.0872.
+
+**Paired contrasts on the 1,000 test molecules** (Δ = first arm worse; 95% interval
+and sign test are descriptive):
+
+| contrast | mean Δ(test) [95% CI] | sign p |
+|---|---:|---:|
+| `R` s0 best − `E` s0 best | −0.00282 [−0.00683, +0.00122] | 0.17 |
+| `R` s0 final − `E` s0 final | +0.00022 [−0.00186, +0.00238] | 0.47 |
+| `S` s0 best − `E` s0 best | −0.00608 [−0.00969, −0.00267] | 0.009 |
+| `S` s0 final − `E` s0 final | −0.00048 [−0.00267, +0.00156] | 0.51 |
+| `S` s1 best − `E` s1 best | **+0.00430** [+0.00084, +0.00866] | 0.005 |
+| `S` s1 final − `E` s1 final | −0.00059 [−0.00250, +0.00118] | 0.24 |
+| `R`@0.4 s0 best − `E` s0 best | −0.00803 [−0.01213, −0.00401] | 0.0002 |
+| `R`@0.4 s0 final − `E` s0 final | −0.00206 [−0.00449, +0.00027] | 0.012 |
+| `R`@0.4 s1 final − `E` s1 final | −0.00060 [−0.00253, +0.00136] | 0.12 |
+| support `plus` − `minus` s0 (`M`-selected) | −0.00129 [−0.00695, +0.00340] | 0.64 |
+| support `plus` − `minus` s1 (`M`-selected) | −0.00192 [−0.00952, +0.00403] | 0.92 |
+
+**Observed.**
+
+1. **The valid-side ranking does not survive — but neither does it invert
+   cleanly.** The same contrast changes sign with the checkpoint choice:
+   `S` s0 is −0.0061 on `best` and −0.0005 on `final`; `S` s1 is **+0.0043** on
+   `best` and −0.0006 on `final`. Every core-arm contrast at fixed checkpoint
+   choice is ≤ 0.0013 in absolute size, i.e. the same order as on valid, and none
+   of them is reproducible across seeds *and* checkpoint choices.
+2. **Checkpoint choice, not the arm, dominates test.** Within one run the
+   valid-selected `best` checkpoint and the epoch-600 checkpoint differ on test by
+   up to **0.0063** (`S` s1: 0.0746 vs 0.0683), and the epoch-600 checkpoint is on
+   average 0.0030 *better* on test than the valid-selected one (0.0708 vs 0.0738
+   averaged over all arms). Selecting on 1,000 valid molecules transfers to test
+   with an error of the same size as the whole intervention space of this round.
+3. **Test is easier than valid for every arm** — the offset is −0.0051 (`S`) to
+   −0.0060 (`E`) on `best`, matching the family-dependent offset seen in
+   `zinc_recipe_trunk_v2`; it is a property of the splits, not of the models.
+4. **Platform drift bounds any single-cell reading.** `E` s0 is the same code, same
+   recipe, same seed, same data as the historical `P3 × B s0` cell: their epoch-1
+   valid MAE differs by 2.7e-8 and then amplifies chaotically (4e-7 → 5e-5 → 0.25
+   by epoch 4), settling 0.005 apart in valid and **0.0085 apart on test**
+   (0.078391 here vs 0.069865 historical). A 1e-3 arm difference measured between
+   two independently initialised runs of this platform is therefore not
+   interpretable; only contrasts on a shared base (the epoch-50 fork, as used in
+   §3–§6) are.
+5. **The support effect is local and does not transfer to test.** `plus` − `minus`
+   is −0.0013 / −0.0019 on test (intervals span 0), against −0.036 on the Q_target
+   molecules those donors actually support (§7). The intervention places
+   supervision where the keys are; it does not lift an unselected population, and
+   both support fits are ~0.013 worse than the core arms on test because they train
+   on 7,549 instead of 10,000 molecules.
+6. **The unseen groups dominate test too**: on the frozen test groups
+   (seen_ordinary 705, unseen_ordinary 218, seen_tail 51, unseen_tail 26) the
+   epoch-600 cells read 0.046–0.048 / 0.117–0.126 / 0.099–0.101 / 0.201–0.245,
+   the same shape as valid, with no arm moving the unseen columns beyond ±0.004.
+
+**Interpreted.** The test read confirms the round's decision rather than revising
+it: no arm reaches the target, the R/S contrasts are within checkpoint-selection
+noise, and the only large, reproducible effect (label support) is local by
+construction. It also quantifies the ceiling on what this platform can resolve
+(0.006 checkpoint noise, 0.0085 cross-run drift), which is why the valid-side
+conclusion was stated as "no reproducible ≥0.003 gain" rather than as an ordering
+of arms.
 
 ## 10. Costs, provenance, reproduction
 
@@ -347,6 +445,7 @@ GPU time is measured two ways; both are recorded (`analysis/budget.json`).
 | **total by job wall** | **7.667 of 8.000** |
 | total by trainer-measured runtime | 7.458 |
 | CPU: preparation (keys, 2 × 600-epoch partitions, support package) | 0.50 h wall, 0 GPU |
+| CPU: terminal test read (§9b, 26 checkpoints, CPU only) | 11 s wall, 0 GPU |
 | wall clock, whole round | ≈ 5.1 h |
 
 The 0.155 h of cancelled runs is included; two jobs shared one GPU for ~8 minutes,
@@ -431,6 +530,7 @@ rr run res zct-analyze-sup2 --pool res-local --cpus 2 --time 0:20:00 -- \
 * `code/zct_support.py` — §7 support package, fits, checkpoint freezing.
 * `code/zct_checks.py` — the six pre-training checks.
 * `code/zct_profile.py` — measured per-epoch cost before freezing the schedule.
+* `code/zct_test.py` — one-pass post-selection test read (§9b, amendment A3).
 * `code/zct_analyze.py`, `code/zct_export.py`, `code/zct_records.py` — analysis,
   per-molecule export, record assembly.
 * `tests/test_zct.py` — 7 fast tests (ramp, schedule, partitions, masks, SMD,
@@ -439,7 +539,9 @@ rr run res zct-analyze-sup2 --pool res-local --cpus 2 --time 0:20:00 -- \
   `support_predictions.json` (the eight frozen support checkpoint hashes and their
   `M`/`Q` MAEs), `group_frozen.json` (the 710/225/39/26 split and its source hash),
   `budget.json` (per-job GPU hours), `profiling.json` (measured per-epoch cost) and
-  `rr_jobs.json` (the trimmed `rr` job table).
+  `rr_jobs.json` (the trimmed `rr` job table), `test_terminal.json` /
+  `test_summary.json` / `test_report.md` / `test_per_molecule.csv` (the §9b test read:
+  per-checkpoint MAE, the 1,000 × 26 prediction matrix, paired contrasts).
 
 ## 13. Limitations
 
@@ -460,8 +562,12 @@ rr run res zct-analyze-sup2 --pool res-local --cpus 2 --time 0:20:00 -- \
   differences.
 * The valid split contains one molecule (row 172) that carries 7–10% of the MAE
   and can flip sign-level conclusions; all tables are reported with and without it.
-* No test number exists for this round. Nothing here says whether the 0.05x target
-  is reachable; it says these two interventions do not reach it.
+* The test read (§9b) is **post-selection**: it was made after every checkpoint and
+  every decision was frozen, so it can falsify but not select. It is also blunt —
+  checkpoint choice moves a run by up to 0.0063 on test and cross-run drift is 0.0085,
+  both larger than any arm contrast (≤ 0.0013) — so the test read cannot order the
+  arms, only bound them. Nothing here says whether the 0.05x target is reachable; it
+  says these two interventions do not reach it, on valid or on test.
 
 ## 14. 中文小结与回答（A–F）
 
@@ -469,12 +575,16 @@ rr run res zct-analyze-sup2 --pool res-local --cpus 2 --time 0:20:00 -- \
 两个 seed 同向小改善（seed0 在 κ=0.4 出现过 0.0038，但 seed1 未复现），而且
 **随机分组和结构分组效果一样**，所以这是"通用训练约束"效应，不是"结构机制"；但"局部环境标签支撑"是一个大杠杆：把 451 个携带目标环境的
 训练分子放回去，目标查询分子的误差从 0.116/0.124 降到 0.082，而匹配背景分子
-不动。官方 test 未打开，0.05x 目标未达成。
+不动。官方 test 在决策写完之后、按你的要求读了一次（§9b，只读一次、描述性）：
+最好单点 **test 0.06832**，0.05x 目标同样未达成。
 
 **A. 是否达到 0.05x（test MAE ∈ [0.050, 0.060)）？**
-没有。最好配置（`R`@κ=0.4）valid W20/T100 ≈ 0.0794–0.0796（两个 seed），
-全部 arm 都在 0.076–0.083。按预注册规则（valid 无重复性进展时不读 test），**官方 test 完全
-未载入**，本轮不产生任何 test 数字；给不出"未达成"之外的 test 结论。
+没有。valid 上最好配置（`R`@κ=0.4）W20/T100 ≈ 0.0794–0.0796（两个 seed），
+全部 arm 都在 0.076–0.083。按预注册规则（valid 无重复性进展）本轮**决策时不读 test**；
+决策写完后按你的要求补读一次（§9b，26 个冻结 checkpoint，CPU，0 GPU·h，只读一次、
+不参与任何选择）：最好单点 test MAE **0.06832**（`R`@0.4 s1 final），两 seed 均值
+最好的 arm 是 `R`@0.4 的 0.06946；全部 26 个 checkpoint 落在 0.0683–0.0872。离
+0.060 的门槛还差 14%，和 valid 上 0.076–0.083 的结论一致。
 
 **B. E→R、R→S 各自改变了什么？**
 * `E`→`R`（随机半批 look-ahead）：W20 −0.00172（seed0）/ −0.00178（seed1），
@@ -517,9 +627,16 @@ plus 0.0823 vs minus 0.1243（s0）、0.0821 vs 0.1159（s1）；DiD 相对 `Q_b
    8 GPU·h 内不可能同时做机制 + 覆盖，需要拆成两轮。
 4. 数据集口径：本轮 valid 上单分子（row 172）可占 7–10% MAE，后续轮应在协议里
    预先声明"排除/不排除"该分子的报告口径，避免 1e-3 级别结论翻转。
+5. test 读法：本轮 §9b 证明两件事，后续协议应直接写进去 ——(a) 在 test 上
+   "best-valid checkpoint" 与 "epoch-600 checkpoint" 的顺序不可信（单 run 内可差
+   0.0063，平均 epoch-600 反而好 0.0030），所以 test 表必须同时报两种 checkpoint；
+   (b) 同一 recipe/seed/代码在不同进程里会因浮点非结合性发散（epoch1 差 2.7e-8 →
+   epoch4 差 0.25），valid 落点差 0.005、test 差 0.0085，因此 **单点 vs 单点的
+   1e-3 比较没有意义**，只能做同 base（同 fork）的配对比较。
 
 **F. 实际 GPU·h 与墙钟**
 按 job 墙钟（含失败/取消）**7.667 GPU·h**（上限 8.0），按 trainer 自测 **7.458
 GPU·h**；其中预实验 0.013、被取消的两次 E 0.155、核心 E 0.687、R/S 四臂 3.400、
-support 0.994、κ 校准 0.005、κ=0.4 三臂 2.413。CPU 准备 0.50 h（0 GPU·h）。
-整轮墙钟约 5.1 h（00:25 → 05:30，含等待、两次重启与一次 smoke 修复）。
+support 0.994、κ 校准 0.005、κ=0.4 三臂 2.413。CPU 准备 0.50 h（0 GPU·h），
+§9b 的 test 读 11 s（0 GPU·h，不占预算）。整轮墙钟约 5.2 h
+（00:25 → 07:58，含等待、两次重启、一次 smoke 修复和最后的 test 读）。

@@ -1200,8 +1200,9 @@ zinc_composition_transfer_v1:
     The look-ahead constraint helps a little (W20/T100 -0.0009..-0.0038) but a random split is as
     good as the structural one, so it is a general training-constraint effect, not a structure
     mechanism. Label support for rare local environments is a large lever (Q_target 0.116-0.124
-    -> 0.082, DiD -0.033/-0.043). The 0.05x test target was not reached and the official test
-    was NOT opened.
+    -> 0.082, DiD -0.033/-0.043). The 0.05x test target was not reached. The official test was
+    NOT opened during the decision; it was read once afterwards at the user's request (A3, §9b),
+    best single checkpoint 0.06832, which confirms rather than changes the verdict.
   verdict: NO_TARGET_PROGRESS__TRAINING_CONSTRAINT_NOT_STRUCTURAL__SUPPORT_MATTERS
   verdict_basis:
     - "R-E W20: -0.00172 (s0), -0.00178 (s1); T100 -0.00172 / -0.00172; kappa=0.4 escalation -0.0038 (s0) but -0.0016 (s1), so no dose-response"
@@ -1225,7 +1226,8 @@ zinc_composition_transfer_v1:
     gpu_hours_cap: 8.0
     gpu_hours_used_job_wall: 7.667
     gpu_hours_trainer_measured: 7.458
-    wall_clock_hours: 5.1
+    wall_clock_hours: 5.2
+    test_read_gpu_hours: 0.0
     includes_failures: true
   artifacts:
     main_table: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/main_table.md
@@ -1235,8 +1237,25 @@ zinc_composition_transfer_v1:
     per_molecule: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/valid_per_molecule.csv
     run_records: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/run_records.json
     jobs: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/rr_jobs.json
+  test_read:
+    file: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/test_terminal.json
+    summary: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/test_summary.json
+    report: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/test_report.md
+    predictions: tracks/structural-sufficiency/zinc_composition_transfer_v1/analysis/test_preds/
+    amendment: A3
+    when: "one pass after every checkpoint and decision was frozen, at the user's request; 11 s CPU, 0 GPU·h"
+    checkpoints: 26
+    best_single_test_mae: 0.068316
+    best_two_seed_arm_mean: 0.069455
+    range_all_checkpoints: [0.068316, 0.087211]
+    test_minus_valid_offset: "−0.0051 (S) to −0.0060 (E) on best-valid checkpoints"
+    arm_contrasts: "all core contrasts <= 0.0013 and sign-inconsistent across checkpoint choice; S−R +0.00005 (best) / −0.00070 (final)"
+    checkpoint_choice_noise: 0.0063
+    cross_run_drift_test: 0.0085
+    support_on_test: "plus − minus −0.0013/−0.0019 (CI spans 0), vs −0.036 on the supported Q_target molecules"
+    changed_decision: false
   non_claims:
-    - "no test number: the official test split was not opened, so nothing is known about test MAE"
+    - "the test read is post-selection: it can falsify but not select; checkpoint choice (0.0063) and cross-run drift (0.0085) both exceed every arm contrast (<=0.0013), so it cannot order the arms"
     - "one shared seed-0 SSL encoder; two supervised seeds only"
     - "one structural partition construction (radius-1/2 content keys, 2-16 batch support, <=256 greedy swaps)"
     - "the support result is within-key: donors and queries share radius-2 keys by construction"
