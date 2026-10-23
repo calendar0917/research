@@ -324,6 +324,7 @@ rr run res zps-dbtc-s0 --pool res-gpu1 --gpus 1 --time 3:00:00 \
 | `analysis/report_tables.md` | 本报告所有表格的机器生成版 |
 | `analysis/test_table.{md,json}` / `analysis/test_freeze.json` | 终端 test 结果与冻结记录（含 sha256） |
 | `analysis/test_pred_*.csv` / `analysis/per_molecule_valid.csv` | 逐分子 valid/test 预测与误差 |
+| `analysis/curves_valid.csv` / `analysis/curves_valid.md` | 14 条训练曲线的逐 epoch 数据与每 50 epoch 采样表（`code/zps_curves.py` 生成） |
 | `analysis/dense_parity.json` / `analysis/dense_timing.json` | GRIT 端口 parity 与成本证据 |
 | `runs/<run>/` | 每个 run 的 train.json、curve.csv、predictions、search.json（checkpoint 在远端） |
 
