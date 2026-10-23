@@ -1618,8 +1618,8 @@ def cmd_probe(args: argparse.Namespace) -> int:
             F0, Z0 = RM.readout_batched(mu[:, :, 0, :], c2[:, :, 0, :], c3[:, :, 0, :], q0, use_c3=True)
             F1, _ = RM.readout_batched(mu[:, :, 1, :], c2[:, :, 1, :], c3[:, :, 1, :], q0, use_c3=True)
             rec["q_zero"] = {
-                "max_abs_F_minus_mu": float(max((F0[:, :, 0, 0] - mu[:, :, 0, :]).abs().max(),
-                                                (F1[:, :, 0, 0] - mu[:, :, 1, :]).abs().max())),
+                "max_abs_F_minus_mu": float(max((F0[:, :, 0, :] - mu[:, :, 0, :]).abs().max(),
+                                                (F1[:, :, 0, :] - mu[:, :, 1, :]).abs().max())),
                 "max_abs_logZ_minus_log1peps": float((torch.log(Z0) - math.log(1 + C.EPS)).abs().max()),
             }
             # C3 term vs 2 a C2 q
