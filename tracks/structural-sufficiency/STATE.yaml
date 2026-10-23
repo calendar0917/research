@@ -12,8 +12,14 @@ updated: 2026-10-23
 main_line: true
 latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
-latest_side_round: zinc_support_transfer_probe_v1
-latest_side_round_verdict: NO_TRANSFERABLE_CORRECTION_FOR_THIS_HEAD_FAMILY
+latest_side_round: zinc_native_relation_v1
+latest_side_round_verdict: NO_REPEATABLE_GAIN_FROM_ONE_NATIVE_RELATION_ROUND
+latest_side_round_next_action: >-
+  Do not tune the same shared rank-16 branch.  If the relation line is reopened,
+  first test a relation injection that is exactly P at step 0 (zero-init or
+  parameter-free conditioning of the existing P3 composer/reader) and ask
+  whether the P3 optimisation trajectory can be preserved; the current round
+  shows the branch itself costs ~0.006 MAE even with permuted labels.
 latest_next_action: >-
   3-5 seeds plus a parameter-matched trunk/readout control to test whether the M
   valid gain and the M-F separation reproduce or were a seed-1 fluctuation.  New
@@ -1373,3 +1379,111 @@ zinc_support_transfer_probe_v1:
     step needs. If GPU is spent again it should go to end-to-end representation learning on F
     (a representation that can express unseen key types directly), judged on the official 10k
     protocol, not to more residual mining.
+
+zinc_native_relation_v1:
+  protocol: tracks/structural-sufficiency/zinc_native_relation_v1/PROTOCOL.md
+  status: COMPLETE
+  verdict: NO_REPEATABLE_GAIN_FROM_ONE_NATIVE_RELATION_ROUND
+  report: tracks/structural-sufficiency/zinc_native_relation_v1/REPORT.md
+  freeze_commit: 85b849734587
+  formal_commit: da86150a9e337928671069a827294dd482160ebb
+  formal_code_note: "code identical to the freeze commit; da86150 only changes the tracked pre-GPU manifest"
+  question: >-
+    With the P3 computation graph and the original vector-magnitude channel
+    preserved, does one real structure-relation round stably improve the 225
+    unseen-local valid molecules and overall raw-y MAE?
+  arms:
+    P: "ad2_models.P3NullModel verbatim, 413505 parameters"
+    R: "P3 encoders -> h0=concat(w0,b0), one shared rank-16 relation round, h1=h0+Wo*message, original composer/reader; 420690 parameters"
+    N: "identical to R; relation labels permuted within molecule x role stratum, fixed seed, cached once, no y/prediction access"
+  data:
+    train: 10000
+    valid: 1000
+    official_test: NOT_READ
+    valid_groups: {seen_ordinary: 710, unseen_ordinary: 225, seen_tail: 39, unseen_tail: 26}
+    row172_y: -20.340498
+    ssl_sha256: 006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97
+    relation_cache_train_sha256: f22059ea09523ce26fa73888646fab9037110b856fe5d305cf31e96f07e4cb48
+    relation_cache_valid_sha256: b5e457a880c396ea687bccfb6add5cf636bae0e13495fe142fbdfb05ca046219
+  recipe: "B: AdamW lr 1e-3 -> 1e-5, warmup 500, wd 1e-5, clip 5, FP32, dropout 0, 600 epochs, batch 128, 79 steps/epoch, 47400 updates"
+  checks:
+    file: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/cpu_checks.json
+    all_pass: true
+    parameters: {P: 413505, R: 420690, N: 420690, new_per_relation_arm: 7185, cap: 500000}
+    native_encoder_replay_max_abs_diff: 0.0
+    bypass_replay_max_abs_diff: 0.0
+    renumbering_max_abs_diff: {P: 0.0, R: 1.1920928955078125e-7, N: 2.384185791015625e-7}
+    bond_direction_max_abs_diff: 0.0
+    batch_vs_single_R_max_abs_diff: 3.5762786865234375e-7
+    relation_isolation_self_loops_softmax: PASS
+    null_transport_renumbering: PASS
+    relation_gradients: "10/10 nonzero finite; real-vs-null grad max abs diff 1.07e-4"
+    hr_relation_replay: "300/300 molecules exact (10000 train + 1000 valid)"
+  results_best_valid:
+    P_s0: {mae: 0.07861140669131418, epoch: 502, W20: 0.07904636691318592, T100: 0.07907874057063599}
+    R_s0: {mae: 0.0849911506063654, epoch: 395, W20: 0.0858052655774518, T100: 0.0858331634029164}
+    N_s0: {mae: 0.08479224860289833, epoch: 392, W20: 0.08579431622283301, T100: 0.08587867008330068}
+    P_s1: {mae: 0.07642816153069726, epoch: 375, W20: 0.07831656665628543, T100: 0.07838711688941111}
+    R_s1: {mae: 0.07770589086407563, epoch: 294, W20: 0.0798936905580922, T100: 0.07992525676445802}
+    N_s1: {mae: 0.08177334532880923, epoch: 485, W20: 0.08289638000162086, T100: 0.08292736536817392}
+  decisions:
+    H1_overall_supported: false
+    H1_unseen_ordinary_supported: false
+    H2_supported: false
+    R_minus_P_seed_gains: [-0.0063797439150512225, -0.0012777293333783718]
+    R_minus_P_mean_gain: -0.003828736624214797
+    R_minus_N_seed_gains: [-0.00019890200346707465, 0.004067454464733597]
+    R_minus_N_mean_gain: 0.0019342762306332612
+    R_minus_P_unseen_ordinary_seed_gains: [-0.00603913057355196, -0.00205424113558364]
+    R_minus_P_W20_seed_gains: [-0.006758898664265878, -0.0015771239018067679]
+    R_minus_P_T100_seed_gains: [-0.006754422832280407, -0.0015381398750469177]
+    R_minus_N_W20_seed_gains: [-1.0949354618788876e-05, 0.003002689443528661]
+    R_minus_N_T100_seed_gains: [4.550668038427741e-05, 0.0030021086037159]
+    test_trigger: false
+    automatic_verdict: UNSTABLE_OR_MIXED
+    verdict_note: "the automatic string reflects the mixed R-N sign; R-P is negative on both seeds"
+  row172:
+    retained_in_all_headlines: true
+    seed0: {R_minus_P_gain: -0.006379746431144917, gain_drop_row172: -0.004162681466737636, row172_ae_R: 5.843717604492188, row172_ae_P: 3.6224899586181643, tail_gain: -0.04981876123075987, tail_drop_row172_gain: -0.015890497408208887}
+    seed1: {R_minus_P_gain: -0.001277726132087112, gain_drop_row172: -0.0034413752557559407, row172_ae_R: 1.0320205982666018, row172_ae_P: 3.1922283466796877, tail_gain: 0.003949076680795555, tail_drop_row172_gain: -0.029742465065021484}
+    reading: "row172 does not create the negative; on seed1 an unusually good row172 prediction masks a larger loss on the other 999 molecules"
+  probe:
+    file: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/probe_summary.json
+    branch_to_main_ratio: [0.2678, 0.2654, 0.2676, 0.2917]
+    real_minus_null_mae: {R_s0: -0.0006596152364218705, R_s1: -0.0005005467883599096, N_s0: 7.921195740447085e-05, N_s1: 0.00023095451221424868}
+    reading: "the branch is active and reads real labels (R real < R null), but the real-label fit does not beat N's permuted-label fit consistently"
+  budget:
+    file: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/gpu_ledger.json
+    gpu_hours_cap: 5.0
+    gpu_hours_used_including_failures: 2.8322222222222218
+    formal_gpu_hours: 2.813333333333333
+    pre_formal_gpu_hours: 0.01888888888888889
+    wall_clock_hours: 2.08
+    failures: "two timing launches failed in 11 s and 15 s (config key, save path); both are charged"
+  artifacts:
+    frozen_manifest: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/frozen_manifest.json
+    summary: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/summary.json
+    run_manifest: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/run_manifest.json
+    main_table: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/main_table.md
+    groups: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/groups.md
+    decision: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/decision.md
+    stage1_decision: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/stage1_decision.md
+    probe_summary: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/probe_summary.json
+    scores: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/scores/
+    per_molecule: tracks/structural-sufficiency/zinc_native_relation_v1/analysis/per_molecule/
+  official_test:
+    loaded: false
+    trigger: false
+    reason: "H1 overall not supported on both seeds"
+    terminal_read: NOT_RUN
+  non_claims:
+    - "only one shared rank-16 relation round with 33 relation types was tested"
+    - "two supervised seeds only; the paired bootstrap is molecule-level, not training-seed variance"
+    - "N controls relation-label correspondence, not pair-set value and not the necessity of message passing"
+    - "post-training bypass is not a no-branch control because the common weights co-adapt"
+    - "valid numbers are not official-test numbers"
+  next_action: >-
+    Do not tune this branch form.  The next relation experiment, if any, should
+    make the model exactly P at step 0 (zero-init or parameter-free conditioning
+    of the existing P3 composer/reader) and test whether relation information can
+    be added without perturbing the P3 optimisation trajectory.
