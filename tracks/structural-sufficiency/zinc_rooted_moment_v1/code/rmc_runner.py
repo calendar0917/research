@@ -857,6 +857,10 @@ def cmd_checks(args: argparse.Namespace) -> int:
         finally:
             C.CACHE_DIR = old
     else:
+        if not (C.norm_path().exists() and C.moments_path("train").exists()
+                and C.moments_path("valid").exists()):
+            print("[checks] full cache missing -> building it (CPU, float64)")
+            cmd_prep(argparse.Namespace(limit=None, workers=int(args.workers), chunk=128))
         gates.update(_checks_data(8, int(args.workers)))
     all_pass = bool(all(bool(v.get("pass")) for v in gates.values()))
     payload = {
