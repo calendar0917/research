@@ -12,14 +12,18 @@ updated: 2026-10-23
 main_line: true
 latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
-latest_side_round: zinc_native_relation_v1
-latest_side_round_verdict: NO_REPEATABLE_GAIN_FROM_ONE_NATIVE_RELATION_ROUND
+latest_side_round: zinc_rooted_moment_v1
+latest_side_round_verdict: NO_STABLE_GAIN_OVER_P_FROM_ROOTED_MOMENT_CONDITIONING
 latest_side_round_next_action: >-
-  Do not tune the same shared rank-16 branch.  If the relation line is reopened,
-  first test a relation injection that is exactly P at step 0 (zero-init or
-  parameter-free conditioning of the existing P3 composer/reader) and ask
-  whether the P3 optimisation trajectory can be preserved; the current round
-  shows the branch itself costs ~0.006 MAE even with permuted labels.
+  Do not tune the moment form (scales, eps, width, more seeds).  Exact rooted
+  moments cost ~0.0077 MAE versus P and the C3 skew term is not reproducible
+  under retraining, while M and G share the same extra readout path.  If the
+  line is reopened, the single allowed step is a parameter-matched injection that
+  is bit-equal to P at step 0 (zero-initialised scalar gate from the moment
+  readout into the existing P3 reader), two seeds, T100 primary, no test read
+  without the frozen trigger.
+previous_side_round: zinc_native_relation_v1
+previous_side_round_verdict: NO_REPEATABLE_GAIN_FROM_ONE_NATIVE_RELATION_ROUND
 latest_next_action: >-
   3-5 seeds plus a parameter-matched trunk/readout control to test whether the M
   valid gain and the M-F separation reproduce or were a seed-1 fluctuation.  New
@@ -1487,3 +1491,97 @@ zinc_native_relation_v1:
     make the model exactly P at step 0 (zero-init or parameter-free conditioning
     of the existing P3 composer/reader) and test whether relation information can
     be added without perturbing the P3 optimisation trajectory.
+
+zinc_rooted_moment_v1:
+  protocol_id: ssrc-zinc-rooted-moment-v1
+  protocol: tracks/structural-sufficiency/zinc_rooted_moment_v1/PROTOCOL.md
+  status: COMPLETE
+  verdict: NO_STABLE_GAIN_OVER_P
+  report: tracks/structural-sufficiency/zinc_rooted_moment_v1/REPORT.md
+  freeze_commit: 0255e32
+  formal_commit: d1faaa2f192e5bf974e554b014eaa819afa2a132
+  question: >-
+    Replacing local neighbourhood statistics by an exact, label-free,
+    root-conditioned summary of the empirical endpoint-feature distribution
+    (mean, packed C2, packed C3, log walk mass over 8 scales, positive
+    quadratic kernel kappa(q,u) = (1+q^T u)^2 + 0.05 read out by the root's own
+    query), does it beat (a) the same-round P3NullModel and (b) a
+    parameter/input/init-identical Gaussian closure with C3 = 0?
+  arms:
+    P: "ad2_models.P3NullModel verbatim, 413505 parameters, init state hash equal to nr_v1 P"
+    M: "P3 encoders -> e_i -> 4 queries x 2 views x 8 scales -> F=mu+(2aC2q+C3[q,q])/Z, 415250 online parameters"
+    G: "identical to M with use_c3=False; M with C3 forced to zero is bit-identical to G"
+    U: "molecule-uniform measure control, NOT RUN (trigger false)"
+  implementation:
+    identity: "F = mu + (2aC2q + C3[q,q])/Z equals the direct kernel-weighted sum; max err 1.6e-15 (gate 1e-10)"
+    witness: {A: 0.3846153846, B_with_C3: 0.4526064213, B_gaussian: 0.3846153846, B_third_central_moment: 0.08838834765}
+    cache: {per_root_atom_float32: 7280, train_bytes: 6738642432, valid_bytes: 671438304, train_moments_sha256: 5e8309392e7e7ece, valid_moments_sha256: 277f02cf858afb54}
+    deterministic_cache: "byte-identical across worker counts / OMP_NUM_THREADS (einsum, single-threaded frozen encoder); local == res"
+    endpoints: "d_j = [raw atom 108 || frozen SSL atom 96] = 204-d; 2 fixed views r=12, seeds 7301/7302, tanh/sqrt(12); memory encoder 26336 parameters, never in the optimizer"
+    parameters: {P: 413505, M: 415250, G: 415250, deployment: 441586, cap: 500000}
+  results:
+    table: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/main_table.md
+    best_valid: {P_s0: 0.079472, P_s1: 0.079627, M_s0: 0.088184, M_s1: 0.086726, G_s0: 0.087109, G_s1: 0.085643}
+    T100: {P_s0: 0.081451, P_s1: 0.080546, M_s0: 0.089459, M_s1: 0.087902, G_s0: 0.090084, G_s1: 0.086843}
+    final_valid: {P_s0: 0.081388, P_s1: 0.080566, M_s0: 0.089441, M_s1: 0.087955, G_s0: 0.090089, G_s1: 0.086855}
+    delta_M_minus_P:
+      T100: {seed0: +0.008008, seed1: +0.007356, mean: +0.007682}
+      best: {seed0: +0.008712, seed1: +0.007099, mean: +0.007906, ci95: [0.002307, 0.013378]}
+      final: {seed0: +0.008052, seed1: +0.007388}
+      groups_seed_mean_best: {ordinary_935: +0.006858, unseen_ordinary: +0.017314, tail_65: +0.022981, drop_row172: +0.006729, drop_top10: +0.007800}
+    delta_G_minus_P:
+      T100: {seed0: +0.008634, seed1: +0.006297, mean: +0.007465}
+      best_mean: +0.006826
+      ci95_best_mean: [0.001515, 0.011973]
+    delta_M_minus_G:
+      T100: {seed0: -0.000626, seed1: +0.001059, mean: +0.000216}
+      best: {seed0: +0.001075, seed1: +0.001083, mean: +0.001079, ci95: [-0.001729, 0.003901]}
+      reading: "no reproducible skew effect: T100 sign flips, best CI spans zero"
+    subgroups: "no group improves on both seeds; ring_rich_213 seed mean is an artifact of opposite signs (+0.002244 / -0.004592)"
+    row172: {M_s0_ae: 5.8844, M_s1_ae: 6.5336, P_s0_ae: 4.2731, P_s1_ae: 5.7780, note: "drop_row172 M-P gain stays +0.006729 (best), +0.005910 (final)"}
+  probe:
+    file: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/probe_summary.json
+    q_norm_mean: [3.412, 3.381, 3.377, 3.399]
+    c3_over_linear_norm_median: [0.020, 0.022, 0.020, 0.022]
+    logZ_mean_per_scale_range: [0.006, 0.039]
+    q0_identity: "max|F-mu| = 0.0, max|logZ - log(1.05)| = 4.47e-08 on the real cache"
+    c3_off_fixed_weights: {M_s0_delta_mae: +0.000285, M_s1_delta_mae: +0.000492, pred_change_mean: [0.002813, 0.003493]}
+    reading: "queries are active and C3 contributes a small positive amount at fixed weights, but retraining with C3 does not beat the Gaussian closure"
+  budget:
+    file: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/gpu_ledger.json
+    gpu_hours_cap: 5.0
+    gpu_hours_used_including_failures: 2.5636
+    formal_gpu_hours: 2.5461
+    pre_formal_gpu_hours: 0.0175
+    wall_clock_hours: 2.46
+    cpu_prep: "full cache 26-37 s at 14-24 workers, peak RSS 8.9-9.3 GB; 23 CPU gates + 5 unit tests pass"
+  artifacts:
+    summary: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/summary.json
+    main_table: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/main_table.md
+    decision: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/decision.md
+    cpu_checks: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/cpu_checks.json
+    prep: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/prep.json
+    probe_summary: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/probe_summary.json
+    gpu_ledger: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/gpu_ledger.json
+    curves: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/curves/
+    scores: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/scores/
+    per_molecule: tracks/structural-sufficiency/zinc_rooted_moment_v1/analysis/per_molecule/
+  official_test:
+    loaded: false
+    trigger: false
+    reason: "U/group trigger false: c1 (both seeds and mean gain >= 0.003), c2 (ordinary best+final) and c3 (unseen+ordinary final) all false"
+    terminal_read: NOT_RUN
+  non_claims:
+    - "M and G share the same extra readout path, so M-P and G-P cannot separate the cost of that path from the value of the moments"
+    - "C3 is not proven useless: it helps a little at fixed weights (+0.0003..+0.0005) but does not reproduce across retraining"
+    - "two supervised seeds only; the paired bootstrap is molecule-level, not training-seed variance"
+    - "C3 is a third central moment of the endpoint-feature distribution, not a motif/ring/substructure count and not a shortest-path statistic"
+    - "the polynomial kernel, multi-scale propagation and rooted query readout are prior literature, not contributions of this round"
+    - "valid numbers are not official-test numbers; no test number exists this round"
+  next_action: >-
+    Do not tune the moment form (scales, eps, width, more seeds).  The single
+    next step, if this line is reopened, is a parameter-matched injection that is
+    bit-equal to P at step 0 (e.g. a zero-initialised scalar gate on the moment
+    readout into the existing P3 reader), so that the readout-path cost is
+    separated from the information the moments carry.  Two seeds minimum, T100
+    primary, and no test read without the pre-registered trigger.

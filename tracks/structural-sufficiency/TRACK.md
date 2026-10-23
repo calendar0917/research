@@ -3,7 +3,7 @@
 | 项 | 内容 |
 |----|------|
 | slug | `structural-sufficiency` |
-| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a–1d 完成；Phase 1e 完成 → 路线判定 `Direction A`（ZINC 大环收益是标签 `-cycles` 人工项造成的基准伪影；SSRC 臂族在同 split 上不具竞争力；下一步 = 真实性质任务 Phase C，设计已冻结、未训练）；**Phase 2a 完成 → `CAPACITY_ONLY_INCREMENT`（P3E 之上的小模块带来 +0.0055 MAE，来自容量而非边上的传播）；Phase 2b 完成 → `NO_PRACTICAL_ADVANTAGE`（标准 ZINC-12k：M valid +0.003056，one-shot test +0.001273 未确认；F valid null；M 不作为下一性能基座）** |
+| 状态 | **active（主线）；Phase 0.5 纠错完成；Phase 1a–1d 完成；Phase 1e 完成 → 路线判定 `Direction A`（ZINC 大环收益是标签 `-cycles` 人工项造成的基准伪影；SSRC 臂族在同 split 上不具竞争力；下一步 = 真实性质任务 Phase C，设计已冻结、未训练）；**Phase 2a 完成 → `CAPACITY_ONLY_INCREMENT`（P3E 之上的小模块带来 +0.0055 MAE，来自容量而非边上的传播）；Phase 2b 完成 → `NO_PRACTICAL_ADVANTAGE`（标准 ZINC-12k：M valid +0.003056，one-shot test +0.001273 未确认；F valid null；M 不作为下一性能基座）；`zinc_rooted_moment_v1` 完成 → `NO_STABLE_GAIN_OVER_P`（精确 rooted 矩条件化，C3 无可重复贡献）** |
 | 创建 | 2026-10-18 |
 | 主线位置 | **SSRC（新主线）**：显式结构充分性 → 关系计算；旧 `structure-contribution` 标记 **paused / 非主线**，全部历史保留，不覆盖、不改写 |
 | Phase 0 结论 | **REFRAME_NEEDED**：原表述“MP 是否必要”已被文献覆盖且实验易混淆；重述为“精确 \(E_r\) 的信息充分性 vs 有限样本可学习性”，条件性 GO 到受控 pilot |
@@ -108,6 +108,10 @@
 | Phase 2c-sup 结果（修正后） | 24/24 个头（G/S × 2 wd × 3 init × 2 base seed）在 C_dev 上**全部选中 step 0**（=不纠错），**保留完整曲线的 12 个臂未裁剪 MAE 同样在 step 0 最小**（所以不是 trim5 造成的；另 12 个 wd=1e-3 臂只存了 trim5 水平）；选中臂与 B 逐分子相同（Δ=0.0000）；头确实在拟合（C_fit L1 0.120→0.027/0.054）但 C_dev 未裁剪 0.114→0.166/0.180、trim5 0.092→0.147/0.158；强行用到 1500 步则 Q_A +0.041/+0.036（s0）、Q_B +0.071/+0.122、Q_bg +0.012/+0.013（CI 在有害侧排除 0）；**S vs G 无一致符号**（Q_A 上 S 略好、Q_B 上更差）；oracle 整包平移上限 0.0011 < 目标所需 0.003；旧包 12/12 同向 |
 | Phase 2c-sup 更正 A3/A4/A5（0 GPU） | **A3**：`n1 = sup2[atom_k1]` 把半径 1 的 ID 拿去查半径 2 的支持表（`zst_head.Features` 与 `zst_common.per_atom_support`），G/S 都受影响；修正为按分子计数 k1，新增"重编号不变"（修正后 0.0 / 修正前 4022）与"逐分子暴力计数"（0.0）两条检查；**复用原两个基座、原划分、原冻结预测重训全部 24 个头（CPU）**，选择结论不变。**A4**：初版"同键族内部也不可预测"与已保存曲线不符（seed 0 的 S 未裁剪在 step 50 为 0.0878 < 基座 0.0966），撤回，改为"选择器 4/4 选 0；未裁剪仅在 1/4 格下探且不跨 seed 复现"。**A5**：撤回"条件均值≈0"与"所有可学习纠错上限 0.0011"，改为限定陈述（L1 对应条件中位数；oracle 常数只约束整包平移；零头配对差是同义反复） |
 | Phase 2c-sup 判定（限定） | **`NO_TRANSFERABLE_CORRECTION_FOR_THIS_HEAD_FAMILY`（分支 D，限定）**：在"加性 + m_F 门控 + 这组特征 + L1 + C_dev(trim5)"这一族里没有跨结构收益；未裁剪曲线同向；旧包与另一 seed 同向。**该判定不外推到其它纠错族**。§5 全 10k valid 门禁未开、official valid/test 未读、shuffle 控制未做（S/G 符号混合时无解释力）。初版 `NO_TRANSFERABLE_CORRECTION__RESIDUAL_IS_LABEL_NOISE_AT_THIS_RESOLUTION` 保留在历史（commit `ccd6110`）中 |
+| `zinc_rooted_moment_v1` 协议/代码 | 完成：`PROTOCOL.md` + `configs/rmc_v1.json` 冻结（`0255e32`）；精确 rooted 矩恒等式 `F=μ+(2aC2q+C3[q,q])/Z`；23 项 CPU gate + 5 个单测；缓存逐字节可复现（本地 = res，跨 worker 数/线程数） |
+| `zinc_rooted_moment_v1` GPU | **完成**：6/6 formal exit 0（`d1faaa2`，a100-2，driver 550.163.01，torch 2.5.1+cu124）；**2.546 GPU·h formal / 2.564 含失败**，上限 5.0；两个 A100 并行，墙面 2 h 28 min |
+| `zinc_rooted_moment_v1` 结果 | best-valid / T100：P 0.079472/0.081451（s0）、0.079627/0.080546（s1）；M 0.088184/0.089459、0.086726/0.087902；G 0.087109/0.090084、0.085643/0.086843。M−P T100 **+0.008008 / +0.007356**；G−P **+0.008634 / +0.006297**；M−G **−0.000626 / +0.001059**（符号翻转，mean +0.000216） |
+| `zinc_rooted_moment_v1` 判定 | **`NO_STABLE_GAIN_OVER_P`**：矩读出的额外通路本身约 −0.0077 MAE；C3 偏斜项在重新训练下无重复贡献（固定权重下仅 +0.0003…+0.0005）；ordinary/unseen/tail 全负，drop-row172 与 drop-top10 同向；official test **未读**（触发 false） |
 | 交付 | Phase 0 REPORT + 纠错文件 + Phase 1a 协议/REPORT + Phase 1b 协议/决策日志/REPORT/run manifest + Phase 1c 协议/纠错/REPORT/run manifest/analysis + Phase 1d 协议/REPORT/CPU audit/run manifest/analysis + STATE/TRACK |
 
 ## 入口
@@ -193,7 +197,13 @@
 
 ## 下一步
 
-00a. **`zinc_support_transfer_probe_v1`（含 A3/A4/A5 更正）已改写下一步（最新，2026-10-23）**：raw-y 上的**加性纠错头/残差后处理**这条线**关闭**。
+00. **`zinc_rooted_moment_v1` 改写下一步（最新，2026-10-23）**：**精确 rooted 矩条件化**这条线在本预算/本读出形式下关闭。
+   - 事实：M−P T100 = +0.008008 / +0.007356（两 seed），G−P = +0.008634 / +0.006297；M−G 符号翻转（−0.000626 / +0.001059）；ordinary、unseen+ordinary、tail 全负；drop-row172/drop-top10 同向；C3 在固定权重下仅 +0.0003…+0.0005，重新训练无可重复收益。
+   - 因此**不**再试：尺度集、ε、读出宽度/深度、更多 seed、更多视图、把 C3 换成更高阶矩或换基函数。
+   - **唯一允许的下一步**（若重开）：做一个与 P **参数匹配且 step 0 逐位等价**的注入（例如把矩读出经**零初始化标量门**接入现有 P3 reader），先证明“不付通路代价”再谈矩的信息价值；两 seed、T100 主端点、未达冻结触发不读 test。
+   - 会改写判定的证据：零初始化门版本下 M−P 两 seed T100 同向改善且均值 ≥0.003，且 M−G 至少不反向。
+
+00a. **`zinc_support_transfer_probe_v1`（含 A3/A4/A5 更正）已改写下一步（历史，2026-10-23）**：raw-y 上的**加性纠错头/残差后处理**这条线**关闭**。
    - 事实（修正后）：24/24 个头在 C_dev 上选"不纠错"，未裁剪曲线同样在 step 0 最小；强行应用在三个包上一致变差（+0.012…+0.122）；S 与 G 无一致优劣；旧包 12/12 同向；oracle 整包平移上限 0.0011 < 0.003。k1 特征 bug 修好后结论不变。
    - 因此**不**再试：不同头容量/更多 init/更多 seed/更多 wd/更细的原子特征/per-k2 表/把纠错头接到别的 checkpoint/换成分组或交叉拟合的残差挖掘。两次在同一位置失败，剩余空间（整包平移 0.0011）低于目标所需 0.003。
    - **下一次 GPU 投入的方向**：端到端重新学习结构表示（能直接表达"未见键类型"的表示），在与 official 10k 一致的协议上评估；而不是继续从冻结 P3 的残差里找突破。

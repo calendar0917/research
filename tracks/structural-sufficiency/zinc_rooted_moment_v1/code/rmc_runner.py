@@ -1478,6 +1478,7 @@ def cmd_analyze(args: argparse.Namespace) -> int:
     else:
         decision["verdict"] = "INCOMPLETE"
 
+    prep = C.read_json(C.ANALYSIS_DIR / "prep.json")
     summary = {
         "protocol_id": C.PROTOCOL_ID,
         "git_commit": C.git_commit(),
@@ -1485,7 +1486,42 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         "contrasts": contrasts,
         "decision": decision,
         "bootstrap_note": "molecule-level paired bootstrap only; it does not estimate training-seed variance (2 seeds)",
+        "parameters": {
+            "P": 413505, "M": 415250, "G": 415250, "U": 415250,
+            "frozen_memory_atom_encoder": 26336, "deployment": 441586, "cap": 500000,
+        },
+        "groups": {k: int(np.asarray(v, dtype=bool).sum()) for k, v in groups.items()},
+        "reference": {
+            "p3b_valid_mae": float(groups_all["p3b_valid_mae"]),
+            "nr_v1_P_seed_best_range": [0.076428, 0.078611],
+            "note": "nr_v1 same-architecture P, different round; only a noise-scale reference",
+        },
+        "cache": {
+            "train_moments_sha256": prep["train"]["moments_sha256"],
+            "valid_moments_sha256": prep["valid"]["moments_sha256"],
+            "train_static_sha256": prep["train"]["static_sha256"],
+            "train_moments_bytes": prep["train"]["bytes"],
+            "valid_moments_bytes": prep["valid"]["bytes"],
+            "norm_sha256": C.sha256_file(C.norm_path()),
+        },
+        "runs": {
+            f"{arm}_s{seed}": {
+                "git_commit": scores[(arm, seed)]["git_commit"],
+                "recipe": scores[(arm, seed)]["recipe"],
+                "moment_cache": scores[(arm, seed)]["run_extra"]["moment_cache"],
+                "init_state_sha256": scores[(arm, seed)]["run_extra"]["init_state_sha256"],
+                "best_state_sha256": scores[(arm, seed)]["run_extra"]["best_checkpoint_state_sha256"],
+                "final_state_sha256": scores[(arm, seed)]["run_extra"]["final_checkpoint_state_sha256"],
+                "best_valid_replay_mae": scores[(arm, seed)]["run_extra"]["best_valid_replay_mae"],
+                "final_valid_replay_mae": scores[(arm, seed)]["run_extra"]["final_valid_replay_mae"],
+                "data_order": scores[(arm, seed)]["run_extra"]["data_order"],
+                "use_c3": scores[(arm, seed)]["run_extra"]["use_c3"],
+                "wall_seconds": main[arm][str(seed)]["wall_seconds"],
+            }
+            for (arm, seed) in sorted(scores)
+        },
         "official_test_loaded": False,
+        "official_test_policy": "terminal only; not read because the frozen U/group trigger did not fire",
     }
     C.write_json(C.ANALYSIS_DIR / "summary.json", summary)
     _write_tables(main, contrasts, decision, groups_all)

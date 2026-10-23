@@ -1,6 +1,6 @@
 {
   "protocol_id": "ssrc-zinc-rooted-moment-v1",
-  "git_commit": "93268270e127ff5a5a19134f4b530bb0145d211b",
+  "git_commit": "6575bc3d3eddb5eba69cb21ad0d94f87293bddee",
   "main": {
     "G": {
       "0": {
@@ -1781,5 +1781,282 @@
     }
   },
   "bootstrap_note": "molecule-level paired bootstrap only; it does not estimate training-seed variance (2 seeds)",
-  "official_test_loaded": false
+  "parameters": {
+    "P": 413505,
+    "M": 415250,
+    "G": 415250,
+    "U": 415250,
+    "frozen_memory_atom_encoder": 26336,
+    "deployment": 441586,
+    "cap": 500000
+  },
+  "groups": {
+    "seen_ordinary": 710,
+    "unseen_ordinary": 225,
+    "seen_tail": 39,
+    "unseen_tail": 26,
+    "all": 1000,
+    "ordinary_935": 935,
+    "tail_65": 65,
+    "unseen_251": 251,
+    "seen_749": 749,
+    "ring_rich_213": 213,
+    "ring_rich_unseen_47": 47,
+    "drop_row172": 999,
+    "tail_drop_row172": 64
+  },
+  "reference": {
+    "p3b_valid_mae": 0.07622375389701798,
+    "nr_v1_P_seed_best_range": [
+      0.076428,
+      0.078611
+    ],
+    "note": "nr_v1 same-architecture P, different round; only a noise-scale reference"
+  },
+  "cache": {
+    "train_moments_sha256": "5e8309392e7e7ece2c7dc5f99dd4e24d64c9ea3b0d671963290c3f6184fbe4ab",
+    "valid_moments_sha256": "277f02cf858afb543be629057295596bf43a39c57634f03d7ad6d6e18c474717",
+    "train_static_sha256": "fff1e92525c1cafd980c77cba2c7fe3ca127425be03a24b83e0f7b295baeca05",
+    "train_moments_bytes": 6738642432,
+    "valid_moments_bytes": 671438304,
+    "norm_sha256": "4e7244ec0f6a874259e7bbfc79fae29bb13b912463b65059f106d99cfaca6b42"
+  },
+  "runs": {
+    "G_s0": {
+      "git_commit": "93268270e127ff5a5a19134f4b530bb0145d211b",
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "dropout": 0.0,
+        "grad_clip": 5.0,
+        "batch_size": 128,
+        "valid_batch_size": 256,
+        "steps_per_epoch": 79,
+        "updates": 47400,
+        "actual_global_steps": 47400,
+        "loss": "raw-y L1",
+        "valid_every_epoch": true
+      },
+      "moment_cache": {
+        "train_sha256": "5e8309392e7e7ece2c7dc5f99dd4e24d64c9ea3b0d671963290c3f6184fbe4ab",
+        "valid_sha256": "277f02cf858afb543be629057295596bf43a39c57634f03d7ad6d6e18c474717"
+      },
+      "init_state_sha256": "4939993b3129b4b4273f71cd43b563c5c7c7fbbdfd993a9d8b56b51f8cae6fca",
+      "best_state_sha256": "3e8ebfbb0b2b68b7958b4b0f4109a68510fca05cb5718902dfe876d327e4d256",
+      "final_state_sha256": "2d8bfacb3cd5c3ec76f1f1ee8dc3caa2b01348f1059ee2534a51ec5afc3cf225",
+      "best_valid_replay_mae": 0.08710884692514083,
+      "final_valid_replay_mae": 0.09008862271526595,
+      "data_order": {
+        "generator_seed": 101,
+        "epochs": 600,
+        "rows": 10000,
+        "stream_sha256": "e77930aeae281a09a3f928b94ac9844187affe4fb1bbafbbbef3c26db868ed6d",
+        "first_epoch_sha256": "8eca27da1dfa689d7f85578d666bdcf6c882770819df3398648f00506e675e60",
+        "last_epoch_sha256": "db5b8e713fed7b188a73ee01ad8d9166582329d1d0760436538051818a864c54"
+      },
+      "use_c3": false,
+      "wall_seconds": 1494.3589633631054
+    },
+    "G_s1": {
+      "git_commit": "d1faaa2f192e5bf974e554b014eaa819afa2a132",
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "dropout": 0.0,
+        "grad_clip": 5.0,
+        "batch_size": 128,
+        "valid_batch_size": 256,
+        "steps_per_epoch": 79,
+        "updates": 47400,
+        "actual_global_steps": 47400,
+        "loss": "raw-y L1",
+        "valid_every_epoch": true
+      },
+      "moment_cache": {
+        "train_sha256": "5e8309392e7e7ece2c7dc5f99dd4e24d64c9ea3b0d671963290c3f6184fbe4ab",
+        "valid_sha256": "277f02cf858afb543be629057295596bf43a39c57634f03d7ad6d6e18c474717"
+      },
+      "init_state_sha256": "0c79af573b3d0898c553bab84cfe877fef35888747e13bd7815a80ef1627325f",
+      "best_state_sha256": "528cbbba6ca4b0cdb1d680cbcbfed45cdabf3e1a0506166afa41b50c5db2bb6b",
+      "final_state_sha256": "0362124f37272411938558ca06faef47e5cd4acbb0f25dd4c91b67fb3330e987",
+      "best_valid_replay_mae": 0.08564318334328709,
+      "final_valid_replay_mae": 0.08685478140524355,
+      "data_order": {
+        "generator_seed": 102,
+        "epochs": 600,
+        "rows": 10000,
+        "stream_sha256": "f0d1be64b74355c85adc040bb733a6915bbb0ca326414bab5a5729b920b0454c",
+        "first_epoch_sha256": "3f6dc33f45684e809e2a2bebf4f30524cf508c239ef0a740b79873d41fb18329",
+        "last_epoch_sha256": "04195ecb82e396e3b9edf5a349693d4cfe0f9b8fdaadb922ca088cecfb93f101"
+      },
+      "use_c3": false,
+      "wall_seconds": 1703.3429170451127
+    },
+    "M_s0": {
+      "git_commit": "d1faaa2f192e5bf974e554b014eaa819afa2a132",
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "dropout": 0.0,
+        "grad_clip": 5.0,
+        "batch_size": 128,
+        "valid_batch_size": 256,
+        "steps_per_epoch": 79,
+        "updates": 47400,
+        "actual_global_steps": 47400,
+        "loss": "raw-y L1",
+        "valid_every_epoch": true
+      },
+      "moment_cache": {
+        "train_sha256": "5e8309392e7e7ece2c7dc5f99dd4e24d64c9ea3b0d671963290c3f6184fbe4ab",
+        "valid_sha256": "277f02cf858afb543be629057295596bf43a39c57634f03d7ad6d6e18c474717"
+      },
+      "init_state_sha256": "4939993b3129b4b4273f71cd43b563c5c7c7fbbdfd993a9d8b56b51f8cae6fca",
+      "best_state_sha256": "38497c0bc4240e9ae20038d59f16ee2d4f88e73ecab85a549a8ba19cd3abaa45",
+      "final_state_sha256": "3f6719b90717bfbf068acee27092328e011acd1d9f086f4617ab739a8e99feb3",
+      "best_valid_replay_mae": 0.0881841667740955,
+      "final_valid_replay_mae": 0.08944070647278568,
+      "data_order": {
+        "generator_seed": 101,
+        "epochs": 600,
+        "rows": 10000,
+        "stream_sha256": "e77930aeae281a09a3f928b94ac9844187affe4fb1bbafbbbef3c26db868ed6d",
+        "first_epoch_sha256": "8eca27da1dfa689d7f85578d666bdcf6c882770819df3398648f00506e675e60",
+        "last_epoch_sha256": "db5b8e713fed7b188a73ee01ad8d9166582329d1d0760436538051818a864c54"
+      },
+      "use_c3": true,
+      "wall_seconds": 1641.9393252150621
+    },
+    "M_s1": {
+      "git_commit": "93268270e127ff5a5a19134f4b530bb0145d211b",
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "dropout": 0.0,
+        "grad_clip": 5.0,
+        "batch_size": 128,
+        "valid_batch_size": 256,
+        "steps_per_epoch": 79,
+        "updates": 47400,
+        "actual_global_steps": 47400,
+        "loss": "raw-y L1",
+        "valid_every_epoch": true
+      },
+      "moment_cache": {
+        "train_sha256": "5e8309392e7e7ece2c7dc5f99dd4e24d64c9ea3b0d671963290c3f6184fbe4ab",
+        "valid_sha256": "277f02cf858afb543be629057295596bf43a39c57634f03d7ad6d6e18c474717"
+      },
+      "init_state_sha256": "0c79af573b3d0898c553bab84cfe877fef35888747e13bd7815a80ef1627325f",
+      "best_state_sha256": "1ccd2ac19cf2413df3009106ac74da3f38786c25ccb26387ce465851f1ef9264",
+      "final_state_sha256": "b4e1d65453ee09ed04904b57c1e572e49e0efd3d7427d1c0d15ceb6fe935dc22",
+      "best_valid_replay_mae": 0.08672617357078707,
+      "final_valid_replay_mae": 0.08795459300506628,
+      "data_order": {
+        "generator_seed": 102,
+        "epochs": 600,
+        "rows": 10000,
+        "stream_sha256": "f0d1be64b74355c85adc040bb733a6915bbb0ca326414bab5a5729b920b0454c",
+        "first_epoch_sha256": "3f6dc33f45684e809e2a2bebf4f30524cf508c239ef0a740b79873d41fb18329",
+        "last_epoch_sha256": "04195ecb82e396e3b9edf5a349693d4cfe0f9b8fdaadb922ca088cecfb93f101"
+      },
+      "use_c3": true,
+      "wall_seconds": 1790.550418368075
+    },
+    "P_s0": {
+      "git_commit": "233377e68fa32595c0d7f41a9bc3402fe712b8f7",
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "dropout": 0.0,
+        "grad_clip": 5.0,
+        "batch_size": 128,
+        "valid_batch_size": 256,
+        "steps_per_epoch": 79,
+        "updates": 47400,
+        "actual_global_steps": 47400,
+        "loss": "raw-y L1",
+        "valid_every_epoch": true
+      },
+      "moment_cache": {
+        "train_sha256": "5e8309392e7e7ece2c7dc5f99dd4e24d64c9ea3b0d671963290c3f6184fbe4ab",
+        "valid_sha256": "277f02cf858afb543be629057295596bf43a39c57634f03d7ad6d6e18c474717"
+      },
+      "init_state_sha256": "c58e756747f05144890780b68d72ffd9d374acf1a97cb99f53b7e5255845aeb0",
+      "best_state_sha256": "4997c7c49318adfeac5454ae07c85a9916b8cb02eb29ffd7d6c886f4daaad7e4",
+      "final_state_sha256": "c3b883b18f8ab811b42285fda7dc24066c0112376cf57d31c917afa1935ce1e7",
+      "best_valid_replay_mae": 0.07947175173828146,
+      "final_valid_replay_mae": 0.08138836701208493,
+      "data_order": {
+        "generator_seed": 101,
+        "epochs": 600,
+        "rows": 10000,
+        "stream_sha256": "e77930aeae281a09a3f928b94ac9844187affe4fb1bbafbbbef3c26db868ed6d",
+        "first_epoch_sha256": "8eca27da1dfa689d7f85578d666bdcf6c882770819df3398648f00506e675e60",
+        "last_epoch_sha256": "db5b8e713fed7b188a73ee01ad8d9166582329d1d0760436538051818a864c54"
+      },
+      "use_c3": false,
+      "wall_seconds": 1126.271461747121
+    },
+    "P_s1": {
+      "git_commit": "d1faaa2f192e5bf974e554b014eaa819afa2a132",
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "epochs": 600,
+        "dropout": 0.0,
+        "grad_clip": 5.0,
+        "batch_size": 128,
+        "valid_batch_size": 256,
+        "steps_per_epoch": 79,
+        "updates": 47400,
+        "actual_global_steps": 47400,
+        "loss": "raw-y L1",
+        "valid_every_epoch": true
+      },
+      "moment_cache": {
+        "train_sha256": "5e8309392e7e7ece2c7dc5f99dd4e24d64c9ea3b0d671963290c3f6184fbe4ab",
+        "valid_sha256": "277f02cf858afb543be629057295596bf43a39c57634f03d7ad6d6e18c474717"
+      },
+      "init_state_sha256": "cd06844404cfa660db72e5db029a050513d057b7e9319f9a38da62397b7e4073",
+      "best_state_sha256": "be6c290779e8679ccaa9bc9bfbdd35353beeae891476589e376d43589a56f6f5",
+      "final_state_sha256": "8f38da952403d116e42663d3b5bb759cbd14d91de9a294826268b5dfabc3622a",
+      "best_valid_replay_mae": 0.07962745249463478,
+      "final_valid_replay_mae": 0.08056647888763109,
+      "data_order": {
+        "generator_seed": 102,
+        "epochs": 600,
+        "rows": 10000,
+        "stream_sha256": "f0d1be64b74355c85adc040bb733a6915bbb0ca326414bab5a5729b920b0454c",
+        "first_epoch_sha256": "3f6dc33f45684e809e2a2bebf4f30524cf508c239ef0a740b79873d41fb18329",
+        "last_epoch_sha256": "04195ecb82e396e3b9edf5a349693d4cfe0f9b8fdaadb922ca088cecfb93f101"
+      },
+      "use_c3": false,
+      "wall_seconds": 1275.1931950428989
+    }
+  },
+  "official_test_loaded": false,
+  "official_test_policy": "terminal only; not read because the frozen U/group trigger did not fire"
 }
