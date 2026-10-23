@@ -141,8 +141,10 @@ def md(summary, old=None) -> str:
             L.append(f"| {seed_s} | {q} | {fmt_ci(ge['ci_by_init'])} | {fmt_ci(se['ci_by_init'])} | "
                      f"{fmt_ci(se['key_ci_by_init'])} | {se['n_key_clusters'] or '-'} |")
     L.append("\n## Head fitting and selection\n")
-    L.append("Raw (`dev_mae`) and pre-registered (`dev_mae_trim5`) curves are both shown: "
-             "every arm selects step 0 under **both**, so the null is not a trim5 artefact.")
+    L.append("Raw (`dev_mae`) and pre-registered (`dev_mae_trim5`) curves are both shown. Every "
+             "listed arm (the C_dev-selected wd) has its minimum at step 0 under **both**, so the "
+             "null is not a trim5 artefact. The other wd only kept its trim5 level (also equal to "
+             "the base), not its raw curve.")
     L.append("| seed | head | wd | C_fit gated MAE | C_dev base raw | C_dev best raw (post-hoc) | C_dev base trim5 | C_dev best trim5 | selected step |")
     L.append("|---|---|---|---:|---:|---:|---:|---:|---:|")
     for seed_s, s in summary["seeds"].items():

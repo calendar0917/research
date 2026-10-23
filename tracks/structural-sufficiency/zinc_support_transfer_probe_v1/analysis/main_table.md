@@ -28,7 +28,7 @@ no-selection read at 1,500 steps (the fitted head actually applied).
 
 ## Head fitting and selection
 
-Raw (`dev_mae`) and pre-registered (`dev_mae_trim5`) curves are both shown: every arm selects step 0 under **both**, so the null is not a trim5 artefact.
+Raw (`dev_mae`) and pre-registered (`dev_mae_trim5`) curves are both shown. Every listed arm (the C_dev-selected wd) has its minimum at step 0 under **both**, so the null is not a trim5 artefact. The other wd only kept its trim5 level (also equal to the base), not its raw curve.
 | seed | head | wd | C_fit gated MAE | C_dev base raw | C_dev best raw (post-hoc) | C_dev base trim5 | C_dev best trim5 | selected step |
 |---|---|---|---:|---:|---:|---:|---:|---:|
 | 0 | G | 0.0 | 0.1202 | 0.1140 | 0.1140 | 0.0919 | 0.0919 | [0, 0, 0] |
