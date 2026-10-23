@@ -105,7 +105,7 @@ h_i = MLP(556→224→96) ; t_i = MLP(96→128→1)
 
 ## 3. 冻结与检查
 
-23 项 CPU gate（脚本 `checks`，真实缓存 + 合成数据；`analysis/cpu_checks.json`）全部通过：见证值、恒等式（`max|F| 1.6e-15`，`max|Z| 2.1e-14`，门槛 1e-10）、`q=0`、点质量、单原子全尺度、packed vs full、`C2` PSD（最小特征值 −1.0e-10 为 float32 舍入）、`k=0` 精确零、`W_k` vs 暴力枚举（精确相等）、大 q 的 `Z ≥ ε`（真实缓存 `min Z = 1.008`，无 clamp）、`dF/dq` vs 直接求和 autograd（8.9e-16）、参数量（P 413,505 / M=G=415,250 / 部署 441,586）、P/M/G 配对初态、M 强制 C3=0 与 G 输出**逐位相等**（0.0）、encoder replay（0.0）、空邻接（`deg=0`、`njunc=0` 的 `mean_b/mean_w` 精确为 0）、memory encoder 缓存（5.5e-9 < 2e-6）、真实缓存 `q=0`、batch vs 单分子（4.7e-10）、反向 batch（0.0）、重编号/键方向不变性（≤6.9e-18）、梯度（27 个张量全部有限非零，optimizer 恰好覆盖 415,250）、冻结统计哈希。另有 5 个单元测试（`code/tests/test_rmc_math.py`，1 s 内）覆盖见证值、恒等式与梯度、packed/full、`W_k`、置换/单原子。
+23 项 CPU gate（脚本 `checks`，真实缓存 + 合成数据；`analysis/cpu_checks.json`）全部通过：见证值、恒等式（`max|F| 1.6e-15`，`max|Z| 2.1e-14`，门槛 1e-10）、`q=0`、点质量、单原子全尺度、packed vs full、`C2` PSD（最小特征值 −1.0e-10 为 float32 舍入）、`k=0` 精确零、`W_k` vs 暴力枚举（精确相等）、大 q 的 `Z ≥ ε`（真实缓存 `min Z = 1.008`，无 clamp）、`dF/dq` vs 直接求和 autograd（8.9e-16）、参数量（P 413,505 / M=G=415,250 / 部署 441,586）、P/M/G 配对初态、M 强制 C3=0 与 G 输出**逐位相等**（0.0）、encoder replay（0.0）、空邻接（`deg=0`、`njunc=0` 的 `mean_b/mean_w` 精确为 0）、memory encoder 缓存（5.5e-9 < 2e-6）、真实缓存 `q=0`、batch vs 单分子（4.7e-10）、反向 batch（0.0）、重编号/键方向不变性（≤6.9e-18）、梯度（27 个参数张量的梯度全部有限；除 `graph_bias` 在对称 L1 符号下可能抵消外各组非零，`graph_bias` 在 sum-loss 下梯度非零；optimizer 恰好覆盖 415,250）、冻结统计哈希。另有 5 个单元测试（`code/tests/test_rmc_math.py`，1 s 内）覆盖见证值、恒等式与梯度、packed/full、`W_k`、置换/单原子。
 
 ## 4. 结果
 
