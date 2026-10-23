@@ -1249,13 +1249,13 @@ zinc_composition_transfer_v1:
     best_two_seed_arm_mean: 0.069455
     range_all_checkpoints: [0.068316, 0.087211]
     test_minus_valid_offset: "−0.0051 (S) to −0.0060 (E) on best-valid checkpoints"
-    arm_contrasts: "all core contrasts <= 0.0013 and sign-inconsistent across checkpoint choice; S−R +0.00005 (best) / −0.00070 (final)"
+    arm_contrasts: "sign-inconsistent across checkpoint choice: best−best spread −0.0080..+0.0043 (S: s0 −0.0061, s1 +0.0043); final−final all in [−0.0021, +0.0002] with every 95% CI including 0; S−R +0.00005 (best) / −0.00070 (final)"
     checkpoint_choice_noise: 0.0063
     cross_run_drift_test: 0.0085
     support_on_test: "plus − minus −0.0013/−0.0019 (CI spans 0), vs −0.036 on the supported Q_target molecules"
     changed_decision: false
   non_claims:
-    - "the test read is post-selection: it can falsify but not select; checkpoint choice (0.0063) and cross-run drift (0.0085) both exceed every arm contrast (<=0.0013), so it cannot order the arms"
+    - "the test read is post-selection: it can falsify but not select; checkpoint choice (0.0063) and cross-run drift (0.0085) are both larger than the final−final arm contrasts (<=0.0021), so it cannot order the arms"
     - "one shared seed-0 SSL encoder; two supervised seeds only"
     - "one structural partition construction (radius-1/2 content keys, 2-16 batch support, <=256 greedy swaps)"
     - "the support result is within-key: donors and queries share radius-2 keys by construction"

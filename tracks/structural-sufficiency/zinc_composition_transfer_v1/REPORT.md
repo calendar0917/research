@@ -365,8 +365,8 @@ and the frozen four-group split (705 / 218 / 51 / 26) comes from
 
 **Single best test number of the round: 0.068316** (`R`@0.4 s1, epoch 600), then
 0.068320 (`S` s1 final) and 0.068913 (`E` s1 final). The target `[0.050, 0.060)` is
-not close: the best cell is 14% above the 0.060 bar, the same 25–38%→14% picture as
-on valid, and every one of the 26 checkpoints scores between 0.0683 and 0.0872.
+not close: the best cell is 14% above the 0.060 bar (the valid cells were 27–38%
+above it), and every one of the 26 checkpoints scores between 0.0683 and 0.0872.
 
 **Paired contrasts on the 1,000 test molecules** (Δ = first arm worse; 95% interval
 and sign test are descriptive):
@@ -388,11 +388,13 @@ and sign test are descriptive):
 **Observed.**
 
 1. **The valid-side ranking does not survive — but neither does it invert
-   cleanly.** The same contrast changes sign with the checkpoint choice:
-   `S` s0 is −0.0061 on `best` and −0.0005 on `final`; `S` s1 is **+0.0043** on
-   `best` and −0.0006 on `final`. Every core-arm contrast at fixed checkpoint
-   choice is ≤ 0.0013 in absolute size, i.e. the same order as on valid, and none
-   of them is reproducible across seeds *and* checkpoint choices.
+   cleanly.** The same contrast changes sign with the checkpoint choice: `S`−`E` s0
+   is −0.0061 on `best` and −0.0005 on `final`; `S`−`E` s1 is **+0.0043** on `best`
+   and −0.0006 on `final`. `best`−`best` contrasts spread from −0.0080 to +0.0043
+   and change sign between seeds (`S`: s0 −0.0061, s1 +0.0043); `final`−`final`
+   contrasts all lie in [−0.0021, +0.0002] and **every 95% interval includes
+   zero**. The one contrast that looks like a gain (`R`@0.4 s0, −0.0021 on `final`,
+   p = 0.012) is the same seed that produced the unreproduced valid gain of §6.
 2. **Checkpoint choice, not the arm, dominates test.** Within one run the
    valid-selected `best` checkpoint and the epoch-600 checkpoint differ on test by
    up to **0.0063** (`S` s1: 0.0746 vs 0.0683), and the epoch-600 checkpoint is on
@@ -565,7 +567,8 @@ rr run res zct-analyze-sup2 --pool res-local --cpus 2 --time 0:20:00 -- \
 * The test read (§9b) is **post-selection**: it was made after every checkpoint and
   every decision was frozen, so it can falsify but not select. It is also blunt —
   checkpoint choice moves a run by up to 0.0063 on test and cross-run drift is 0.0085,
-  both larger than any arm contrast (≤ 0.0013) — so the test read cannot order the
+  both at least as large as the largest `final`−`final` arm contrast (0.0021) and
+  larger than the `best`−`best` spread's median — so the test read cannot order the
   arms, only bound them. Nothing here says whether the 0.05x target is reachable; it
   says these two interventions do not reach it, on valid or on test.
 
