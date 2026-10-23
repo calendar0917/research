@@ -857,6 +857,10 @@ def cmd_checks(args: argparse.Namespace) -> int:
         finally:
             C.CACHE_DIR = old
     else:
+        if args.rebuild:
+            for path in (C.norm_path(), C.moments_path("train"), C.moments_path("valid"),
+                         C.static_path("train"), C.static_path("valid")):
+                Path(path).unlink(missing_ok=True)
         if not (C.norm_path().exists() and C.moments_path("train").exists()
                 and C.moments_path("valid").exists()):
             print("[checks] full cache missing -> building it (CPU, float64)")
@@ -1725,6 +1729,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("checks")
     s.add_argument("--limit", type=int, default=None)
+    s.add_argument("--rebuild", action="store_true")
     s.add_argument("--workers", type=int, default=4)
     s.set_defaults(func=cmd_checks)
 
