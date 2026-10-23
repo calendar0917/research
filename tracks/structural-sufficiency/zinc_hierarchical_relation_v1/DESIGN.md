@@ -192,7 +192,7 @@ parameter-matched mechanism control under a new pre-registration.
   unseen fraction 8.4 % (200 molecules) / 9.0 % (all 1000) on valid; mean 59.3
   tokens and 903 related pairs per molecule.
 - `analysis/overfit_cpu.json`: 48 molecules, 400 steps, final eval-mode train
-  MAE 0.214 (A) / 0.067 (B) vs constant baseline 1.005, so both arms can fit
+  MAE 0.177 (A) / 0.093 (B) vs constant baseline 1.005, so both arms can fit
   (CPU thread-level reduction order makes this short diagnostic run vary by a
   few hundredths; the gate threshold 0.25 is not used for promotion).
 

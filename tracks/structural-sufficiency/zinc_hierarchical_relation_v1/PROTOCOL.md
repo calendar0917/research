@@ -138,7 +138,7 @@ signature (C6 vs 2 x C3 synthetic witness: same 2-round WL colours, different
 induced signatures); valid support unseen fraction 8.4 % (200 molecules) /
 9.0 % (all 1000); mean 59.3 tokens and 903 related pairs per molecule.
 `analysis/overfit_cpu.json`: 48 molecules, 400 steps, final eval-mode train MAE
-0.214 (A) / 0.067 (B) vs constant baseline 1.005; this short CPU diagnostic is
+0.177 (A) / 0.093 (B) vs constant baseline 1.005; this short CPU diagnostic is
 thread-order sensitive by a few hundredths and is not a promotion criterion.
 
 ## 8. Frozen references
