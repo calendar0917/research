@@ -10,3 +10,8 @@
   Added an explicit `torch.cuda.init()` before the reset in train/profile/smoke
   (three call sites). No model, data, recipe, gate or budget changed; the two
   failed smoke attempts cost ~20 s wall each and are charged to the budget.
+- 2026-10-23 (pre-formal): after the CUDA init fix, GPU smoke (1024 train
+  molecules, 30 steps, both arms) completed at ~0.054 s/step and 0.23/0.31 GB
+  peak; GPU profile (128-molecule batch) gave A 0.032 s / B 0.037 s on gpu0.
+  Two failed smoke attempts plus prep/smoke/profile consumed well under
+  0.1 A100-h; the 4-hour round budget is intact.
