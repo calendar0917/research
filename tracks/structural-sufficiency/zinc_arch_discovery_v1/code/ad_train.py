@@ -517,8 +517,12 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
 
     wall = time.perf_counter() - started
     if ema_state is not None:
-        ema_final_state = {k: v.detach().cpu().clone() for k, v in
-                           zip([n for n, _ in model.named_parameters()], ema_state)}
+        ema_by_name = {n: v for (n, _), v in zip(model.named_parameters(), ema_state)}
+        ema_final_state = {
+            k: (ema_by_name[k].detach().cpu().clone() if k in ema_by_name
+                else v.detach().cpu().clone())
+            for k, v in model.state_dict().items()
+        }
         C.atomic_torch_save(
             {"state_dict": ema_final_state, "epoch": n_epochs,
              "best": ema_best, "policy": "ema"},
