@@ -1,15 +1,15 @@
 {
   "protocol_id": "ssrc-zinc-native-relation-v1",
-  "frozen_at_utc": "2026-10-23T07:53:05Z",
-  "source_code_commit": "28608c582666",
+  "frozen_at_utc": "2026-10-23T08:02:08Z",
+  "source_code_commit": "85b849734587",
   "note": "formal run commit/environment are recorded in each train.json; this manifest binds protocol/config/code/caches/timing before the first formal run",
   "protocol_sha256": "d3346d0d1255cbf8799cc59fe0283e912234c646d9ae6288d8073d0ce3cb4e5f",
   "config_sha256": "a8bbf9c6e2767b654fb20c43e960e237c7c9af5ee5ec56cac0cd0cc417005633",
   "code_sha256": {
     "code/nr_common.py": "c43c201db2470e47fa2285a30c510c965bad962e2a2a48584b5b1643fe6b65f8",
-    "code/nr_data.py": "6c3df0370790ecb0dac1d133dcf14968f90fb4d738128e13e4a81a86f4c336f9",
+    "code/nr_data.py": "6d255f4ec8b50dcaad857225bbd0a1f823b733533d28d85603f172bd1109188e",
     "code/nr_models.py": "8be5ad5f3964982bc9229c29d428b159c223a8e4509d4c417960f0a122957071",
-    "code/nr_runner.py": "d55558ed1230e881d211a796ab6afec81b79928f47d123d9e38e2153cca186ff"
+    "code/nr_runner.py": "da604fb02544333bc95a9c65f6e9e2ef02563b73b2f4c1afb7ab2bcc1747e686"
   },
   "test_sha256": {
     "code/tests/test_nr_core.py": "e10e9daada9025ede5b667561405925bcc112e208891e9c7eb996ab8a68333f5"
@@ -168,52 +168,60 @@
   "cpu_checks_sha256": "cbe812fe94cd808c68ce1ef6d67b068f0a2a99fa4557ed55b2cdbbcd41da464c",
   "hr_relation_replay_sha256": "33762eeaa5113b9ecb22e809ada65debee4041fb77312133151971d06e8ce15d",
   "timing": {
-    "measured": {
+    "measured_at_commit": "85b849734587",
+    "measured_host": "res (a100-2, driver 550.163.01, torch 2.5.1+cu124)",
+    "steps_measured_per_arm": 30,
+    "per_arm": {
       "P": {
-        "seconds_per_step": 0.023177594567338627,
-        "epoch_steps_79_seconds": 1.8310299708197515,
-        "full_valid_seconds": 0.04336769203655422,
-        "save_seconds": 0.016984720015898347,
-        "full_train_eval_seconds": 0.29744158894754946,
-        "projected_run_gpu_hours": 0.31258633833992966,
-        "projected_run_with_15pct_margin_gpu_hours": 0.3594742890909191,
+        "seconds_per_step": 0.024191540332200626,
+        "epoch_steps_79_seconds": 1.9111316862438494,
+        "full_valid_seconds": 0.04221115121617913,
+        "save_seconds": 0.00969081581570208,
+        "full_train_eval_seconds": 0.2558340069372207,
+        "projected_run_gpu_hours": 0.325716378686872,
+        "projected_run_with_15pct_margin_gpu_hours": 0.37457383548990275,
         "peak_cuda_memory_gb": 0.108222464
       },
       "R": {
-        "seconds_per_step": 0.03650748673050354,
-        "epoch_steps_79_seconds": 2.8840914517097795,
-        "full_valid_seconds": 0.16564550902694464,
-        "save_seconds": 0.010996581986546516,
-        "full_train_eval_seconds": 1.2727760099805892,
-        "projected_run_gpu_hours": 0.5090487130930543,
-        "projected_run_with_15pct_margin_gpu_hours": 0.5854060200570126,
+        "seconds_per_step": 0.031222643105623622,
+        "epoch_steps_79_seconds": 2.466588805344266,
+        "full_valid_seconds": 0.1116594118066132,
+        "save_seconds": 0.01731919893063605,
+        "full_train_eval_seconds": 0.9177460961509496,
+        "projected_run_gpu_hours": 0.43025853341458264,
+        "projected_run_with_15pct_margin_gpu_hours": 0.49479731342676997,
         "peak_cuda_memory_gb": 0.209214976
       },
       "N": {
-        "seconds_per_step": 0.03906991380111625,
-        "epoch_steps_79_seconds": 3.0865231902881836,
-        "full_valid_seconds": 0.15977686899714172,
-        "save_seconds": 0.0433665809687227,
-        "full_train_eval_seconds": 1.5435520359314978,
-        "projected_run_gpu_hours": 0.5419760137983314,
-        "projected_run_with_15pct_margin_gpu_hours": 0.623272415868081,
-        "peak_cuda_memory_gb": 0.209434624
+        "seconds_per_step": 0.03105039130120228,
+        "epoch_steps_79_seconds": 2.45298091279498,
+        "full_valid_seconds": 0.10106750414706767,
+        "save_seconds": 0.02696238993667066,
+        "full_train_eval_seconds": 0.9175997159909457,
+        "projected_run_gpu_hours": 0.4262275671892308,
+        "projected_run_with_15pct_margin_gpu_hours": 0.4901617022676154,
+        "peak_cuda_memory_gb": 0.209214976
       }
     },
     "projection": {
+      "per_arm_margin_gpu_hours": {
+        "P": 0.37457383548990275,
+        "R": 0.49479731342676997,
+        "N": 0.4901617022676154
+      },
+      "six_runs_margin_gpu_hours": 2.7190657023685763,
+      "four_runs_margin_gpu_hours": 1.7387422978333453,
+      "fits_5h_with_6_runs": true,
+      "smoke_and_analysis_reserve_gpu_hours": 0.2
+    },
+    "earlier_timing_run_at_28608c5": {
       "per_arm_margin_gpu_hours": {
         "P": 0.3594742890909191,
         "R": 0.5854060200570126,
         "N": 0.623272415868081
       },
-      "six_runs_margin_gpu_hours": 3.1363054500320255,
-      "four_runs_margin_gpu_hours": 1.8897606182958633,
-      "fits_5h_with_6_runs": true,
-      "smoke_and_analysis_reserve_gpu_hours": 0.2
-    },
-    "measured_at_commit": "28608c582666",
-    "measured_host": "res (a100-2, driver 550.163.01, torch 2.5.1+cu124)",
-    "steps_measured_per_arm": 30
+      "six_runs_margin_gpu_hours": 3.1363054500320255
+    }
   },
   "schedule": {
     "wave1": [
@@ -228,20 +236,62 @@
     ],
     "mandatory_completion": "seed0 P/R/N",
     "default_completion": "all six runs",
-    "projected_formal_gpu_hours_with_margin": 3.1363054500320255,
-    "projected_total_including_pre_gpu_and_reserve_gpu_hours": 3.349405450032026,
+    "projected_formal_gpu_hours_with_margin": 2.7190657023685763,
+    "projected_total_including_pre_gpu_and_reserve_gpu_hours": 2.937954591257465,
     "budget_cap_gpu_hours": 5.0,
     "fits_with_margin": true
   },
-  "pre_gpu_gpu_ledger": {
-    "timing_completed_seconds": 21,
+  "pre_formal_gpu_ledger": {
+    "timing_completed_seconds": [
+      21,
+      21
+    ],
     "timing_failed_seconds": [
       11,
       15
     ],
-    "total_gpu_hours": 0.0131,
+    "total_gpu_hours": 0.01888888888888889,
     "prep_cpu_seconds_local": 36.7820508480072,
-    "prep_cpu_seconds_remote": 68.44
+    "prep_cpu_seconds_remote": 68.44,
+    "jobs": [
+      {
+        "name": "nr-prep",
+        "run_id": "nr-prep-20261023-154127-87c58275",
+        "pool": "res-local",
+        "state": "completed",
+        "gpu_hours": 0.0
+      },
+      {
+        "name": "nr-timing",
+        "run_id": "nr-timing-20261023-154329-1e0df3bb",
+        "pool": "res-gpu0",
+        "state": "failed",
+        "gpu_hours": 0.0030555555555555557,
+        "cause": "config key"
+      },
+      {
+        "name": "nr-timing",
+        "run_id": "nr-timing-20261023-154612-0b6e2ab2",
+        "pool": "res-gpu0",
+        "state": "failed",
+        "gpu_hours": 0.004166666666666667,
+        "cause": "save path"
+      },
+      {
+        "name": "nr-timing",
+        "run_id": "nr-timing-20261023-154815-168a15b9",
+        "pool": "res-gpu0",
+        "state": "completed",
+        "gpu_hours": 0.005833333333333334
+      },
+      {
+        "name": "nr-timing2",
+        "run_id": "nr-timing2-20261023-160019-8aeed9f8",
+        "pool": "res-gpu0",
+        "state": "completed",
+        "gpu_hours": 0.005833333333333334
+      }
+    ]
   },
   "test_policy": "terminal",
   "decision_rule": {
