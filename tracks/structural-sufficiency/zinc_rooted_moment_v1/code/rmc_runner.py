@@ -1279,11 +1279,16 @@ def _contrast(name: str, ae_first: Mapping[int, np.ndarray], ae_second: Mapping[
     if len(ae_first) > 1 and len(ae_second) > 1:
         f = _seed_mean(ae_first)
         sec = _seed_mean(ae_second)
+        gm: dict[str, float] = {}
+        for gname, mask in groups.items():
+            mask = np.asarray(mask, dtype=bool)
+            if mask.sum() == 0:
+                continue
+            gm[gname] = float((f[mask] - sec[mask]).mean())
         out["seed_mean"] = {
             "delta_mae": float((f - sec).mean()),
             "bootstrap_seed_mean_molecule": C.paired_bootstrap(f, sec),
-            "groups": {g: float((f[g] - sec[g]).mean()) for g, g in groups.items()
-                       if np.asarray(groups[g], dtype=bool).sum() > 0},
+            "groups": gm,
         }
     return out
 
@@ -1365,6 +1370,9 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             contrasts[f"{a}-{b}:{which}"] = c
 
     # ---- frozen decision --------------------------------------------
+    def have(arm: str, seed: int) -> bool:
+        return arm in main and str(seed) in main[arm]
+
     def t100(arm: str, seed: int) -> float:
         return float(main[arm][str(seed)]["T100"])
 
@@ -1372,7 +1380,8 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         return t100(b, seed) - t100(a, seed)  # positive = a better
 
     def both_seeds_positive(a: str, b: str) -> bool:
-        return all(t100_gain(a, b, s) > 0 for s in seeds if (a, s) in scores and (b, s) in scores)
+        common = [s for s in seeds if have(a, s) and have(b, s)]
+        return bool(common) and all(t100_gain(a, b, s) > 0 for s in common)
 
     def group_delta(a: str, b: str, which: str, key: str) -> dict[str, float]:
         outd = {}
@@ -1386,12 +1395,13 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         return outd
 
     decision: dict[str, Any] = {"arms": arms, "seeds": seeds, "endpoint": "T100 (epochs 501..600)"}
-    if all(a in arms for a in ("P", "M", "G")) and len(seeds) >= 2:
+    complete = [s for s in seeds if all(have(a, s) for a in ("P", "M", "G"))]
+    if all(a in arms for a in ("P", "M", "G")) and len(complete) >= 2:
         sP_M = both_seeds_positive("M", "P")
         sP_G = both_seeds_positive("G", "P")
-        sMG = all(t100_gain("M", "G", s) > 0 for s in seeds)
-        mean_gain_M = float(np.mean([t100_gain("M", "P", s) for s in seeds]))
-        mean_gain_G = float(np.mean([t100_gain("G", "P", s) for s in seeds]))
+        sMG = all(t100_gain("M", "G", s) > 0 for s in complete)
+        mean_gain_M = float(np.mean([t100_gain("M", "P", s) for s in complete]))
+        mean_gain_G = float(np.mean([t100_gain("G", "P", s) for s in complete]))
         ord_best_M = group_delta("M", "P", "best", "ordinary_935")
         ord_final_M = group_delta("M", "P", "final", "ordinary_935")
         un_final_M = group_delta("M", "P", "final", "unseen_ordinary")
@@ -1410,7 +1420,7 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             "unseen_ordinary_final_M_minus_P": un_final_M,
         })
         h1 = bool(sP_M and mean_gain_M >= 0.003)
-        h2 = bool(sMG and float(np.mean([t100_gain("M", "G", s) for s in seeds])) >= 0.0)
+        h2 = bool(sMG and float(np.mean([t100_gain("M", "G", s) for s in complete])) >= 0.0)
         pos_ord = all(v < 0 for v in ord_final_M.values()) and all(v < 0 for v in ord_best_M.values())
         pos_un = all(v < 0 for v in un_final_M.values())
         decision.update({
@@ -1437,8 +1447,8 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         # ---- U trigger (pre-declared purchase rule) ------------------
         cand = None
         if "G" in arms and "M" in arms:
-            meanM = float(np.mean([t100("M", s) for s in seeds]))
-            meanG = float(np.mean([t100("G", s) for s in seeds]))
+            meanM = float(np.mean([t100("M", s) for s in complete]))
+            meanG = float(np.mean([t100("G", s) for s in complete]))
             cand = "M" if meanM <= meanG else "G"  # prospective method = better mean T100
         elif "M" in arms:
             cand = "M"
@@ -1446,7 +1456,7 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             cand = "G"
         trigger = {}
         if cand is not None:
-            mean_gain = float(np.mean([t100_gain(cand, "P", s) for s in seeds]))
+            mean_gain = float(np.mean([t100_gain(cand, "P", s) for s in complete]))
             ord_b = group_delta(cand, "P", "best", "ordinary_935")
             ord_f = group_delta(cand, "P", "final", "ordinary_935")
             un_f = group_delta(cand, "P", "final", "unseen_ordinary")
