@@ -17,8 +17,12 @@ original split, raw-y MAE, single model, <=500k parameters.
 | 2 | `zps-B_R1_ema_s0` (attempt 1, `ed4b279`) | B DCC-L | R1 + EMA | 0 | 600 / 47,400 | 494,193 | — | — | ~1560 (est) | 0.44 | **FAILED** same bug |
 | 3 | `zps-A_R1_ema_s0` (`5ffc2ac`) | A P3Null | R1 + EMA | 0 | 600 / 47,400 | 413,505 | **0.0875697** @433 | 0.0886532 | 1128 | 0.313 | complete; **EMA branch invalid** (constant 1.60004) -> online only |
 | 4 | `zps-B_R1_ema_s0` (`5ffc2ac`) | B DCC-L | R1 + EMA | 0 | 600 / 47,400 | 494,193 | **0.0792465** @437 | 0.0806209 | 1498 | 0.416 | complete; EMA branch invalid -> online only |
-| 5 | `zps-A_R0_s1` | A P3Null | R0 | 1 | 600 / 47,400 | 413,505 | see §5 | | | | seed-1 discovery |
-| 6 | `zps-dbtc-s0` | C-sub DBT | native, 600 ep | 0 | 600 / 94,200 | 452,523 | see §5 | | | | C substitute |
+| 5 | `zps-A_R0_s1` | A P3Null | R0 | 1 | 600 / 47,400 | 413,505 | 0.0822762 @470 | 0.0830813 | 1296 | 0.360 | complete |
+| 6 | `zps-B_R0_s1` | B DCC-L | R0 | 1 | 600 / 47,400 | 494,193 | 0.0738369 @424 | 0.0751832 | 1447 | 0.402 | complete |
+| 7 | `zps-dbtc-s0` | C-sub DBT | native, 600 ep | 0 | 600 / 94,200 | 452,523 | 0.0772600 @449 | 0.0791624 | 5313 | 1.476 | complete |
+| 8 | `zps-A_R0L_s0` | A P3Null | R0L (1200 ep) | 0 | 1200 / 94,800 | 413,505 | 0.0766988 @557 | 0.0823147 | 2579 | 0.717 | complete |
+| 9 | `zps-dbtc-s1` (attempt 1) | C-sub DBT | native, 600 ep | 1 | 600 / 94,200 | 452,523 | — | — | ~330 | 0.09 | **CANCELLED** after 5 min: wrapper wrote `search.json`/`train.json` into the seed-0 run directory |
+| 10 | `zps-dbtc-s1` (relaunch) | C-sub DBT | native, 600 ep | 1 | 600 / 94,200 | 452,523 | see §5 | | | | running |
 
 Reused, verified, not re-run (identical code path, same data caches, same SSL
 encoder sha256 `006fabc1...`; verified in this round by re-reading their
@@ -67,3 +71,10 @@ encoder sha256 `006fabc1...`; verified in this round by re-reading their
    ceiling. Fallback body used instead: native DBT at 600 epochs / 94,200
    updates (declared in `runs/dbtc_/dbt_s0/search.json`).
 3. DBT horizon shortened from 1500 to 600 epochs; batch stays native 64.
+4. **Provenance repair.** The first `zps-dbtc-s1` launch used a wrapper whose
+   declaration path was hard-coded to the seed-0 directory; it overwrote
+   `runs/dbtc_/dbt_s0/search.json` before being cancelled. That file was
+   restored byte-for-byte from the copy pulled at 18:51 UTC (seed 0,
+   `declared_at_utc` 2026-10-23T17:21:05Z) and the seed-0 `train.json` /
+   `curve.csv` were verified unchanged (sha256 identical on host and local).
+   The wrapper now writes `dbt_s{seed}`; the relaunch is seed 1.
