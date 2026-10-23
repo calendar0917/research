@@ -46,7 +46,7 @@ def train(seed: int, device, *, epochs: int = EPOCHS, batch_size: int = BATCH,
           reason: str | None = None, force: bool = False) -> dict:
     RUNS.mkdir(parents=True, exist_ok=True)
     BT.RUNS = RUNS
-    out = RUNS / "dbtc_" / "dbt_s0"
+    out = RUNS / "dbtc_" / f"dbt_s{int(seed)}"
     out.mkdir(parents=True, exist_ok=True)
     recipe = dict(BT.RECIPE)
     recipe["batch_size"] = int(batch_size)
