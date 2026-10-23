@@ -60,6 +60,11 @@ RECIPES: dict[str, dict] = {
     "R2": dict(optimizer="adamw", lr=1.0e-3, min_lr=1.0e-5, weight_decay=1.0e-3,
                warmup_steps=500, epochs=600, dropout=0.05, grad_clip=5.0,
                batch_size=128, valid_batch_size=256, loss="l1"),
+    # R0L: R0 values with a 1200-epoch full cosine (94,800 updates).  Declared
+    # as the round's one targeted extra config (horizon lever on the leader).
+    "R0L": dict(optimizer="adamw", lr=1.0e-3, min_lr=1.0e-5, weight_decay=1.0e-5,
+                warmup_steps=500, epochs=1200, dropout=0.0, grad_clip=5.0,
+                batch_size=128, valid_batch_size=256, loss="l1"),
     "R3": dict(optimizer="adamw", lr=5.0e-4, min_lr=5.0e-6, weight_decay=1.0e-4,
                warmup_steps=500, epochs=600, dropout=0.0, grad_clip=5.0,
                batch_size=128, valid_batch_size=256, loss="smooth_l1",
