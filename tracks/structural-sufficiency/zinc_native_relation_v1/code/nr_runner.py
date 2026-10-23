@@ -618,7 +618,7 @@ def cmd_timing(args: argparse.Namespace) -> int:
     }
     for arm in C.ARMS:
         model, info = M.build_arm(arm, norm, 0, device)
-        collate = p3_collate if arm == "P" else D.make_collate(entries_train)
+        collate = p3_collate if arm == "P" else D.make_split_collate(entries_train, entries_valid)
         opt = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-5)
         gen = torch.Generator().manual_seed(101)
         model.train()
@@ -721,7 +721,7 @@ def cmd_train(args: argparse.Namespace) -> int:
     out = C.RUNS_DIR / f"{prefix}{arm}_s{seed}"
     out.mkdir(parents=True, exist_ok=True)
     builder = lambda candidate, norm_, seed_, device_: M.build_arm(arm, norm_, seed_, device_)
-    collate = p3_collate if arm == "P" else D.make_collate(entries_train)
+    collate = p3_collate if arm == "P" else D.make_split_collate(entries_train, entries_valid)
     info = AT.train(
         arm, seed, device, recipe_variant="B", model_builder=builder,
         out_dir=out, collate_fn=collate, force=args.force, epochs=args.epochs,
@@ -735,7 +735,7 @@ def cmd_train(args: argparse.Namespace) -> int:
     M.load_checkpoint(final_model, out / "final.pt", device)
     final_pred = eval_pred(final_model, cache_valid, np.arange(C.N_VALID), device,
                            int(cfg["data"]["valid_batch_size"]),
-                           p3_collate if arm == "P" else D.make_collate(entries_valid))
+                           p3_collate if arm == "P" else D.make_collate(entries_valid, split="valid"))
     (out / "predictions").mkdir(exist_ok=True)
     np.savez(out / "predictions/valid_final.npz", row=np.arange(C.N_VALID, dtype=np.int64),
              pred=final_pred.astype(np.float32))
@@ -809,7 +809,9 @@ def cmd_score(args: argparse.Namespace) -> int:
     extra = C.read_json(run / "run_extra.json")
     groups = C.load_valid_groups()
     y = groups["y"]
-    assert np.allclose(y, np.asarray(AD.load_cache("valid")["labels"], dtype=np.float64), rtol=0.0, atol=0.0)
+    # CSV y_raw is printed to 9 decimals; P3's float32 labels differ by <4e-8.
+    assert np.allclose(y, np.asarray(AD.load_cache("valid")["labels"], dtype=np.float64),
+                       rtol=0.0, atol=1e-6)
     arm, seed = str(info["candidate"]), int(info["seed"])
     out: dict[str, Any] = {
         "protocol_id": C.PROTOCOL_ID, "arm": arm, "seed": seed,
@@ -833,7 +835,7 @@ def cmd_score(args: argparse.Namespace) -> int:
         out[which + "_p3b_comparison"] = {
             "gain": float(groups["p3b_ae"].mean() - ae.mean()),
             "drop_top10": C.topk_removed_gain(ae, groups["p3b_ae"], fixed_rows=groups["top10_p3b"]),
-            "bootstrap": C.paired_bootstrap(ae, groups["p3b_ae"]),
+            "bootstrap": _gain_bootstrap(ae, groups["p3b_ae"]),
             "row172_ae": float(ae[172]),
             "mae_drop_row172": float(np.delete(ae, 172).mean()),
         }
@@ -860,8 +862,19 @@ def _gain(ae_a: np.ndarray, ae_b: np.ndarray) -> float:
     return float(np.asarray(ae_b).mean() - np.asarray(ae_a).mean())
 
 
-def _contrast(ae_a, ae_b, groups, name_a, name_b) -> dict[str, Any]:
+def _gain_bootstrap(ae_a, ae_b) -> dict[str, Any]:
+    """Bootstrap in gain convention: positive = first arm better."""
     boot = C.paired_bootstrap(ae_a, ae_b)
+    boot["mean_delta"] = -float(boot["mean_delta"])
+    boot["median_delta"] = -float(boot["median_delta"])
+    lo, hi = boot["ci95"]
+    boot["ci95"] = [-float(hi), -float(lo)]
+    boot["sign_convention"] = "positive = first arm better"
+    return boot
+
+
+def _contrast(ae_a, ae_b, groups, name_a, name_b) -> dict[str, Any]:
+    boot = _gain_bootstrap(ae_a, ae_b)
     d = C.delta_stats(ae_a, ae_b, groups["groups"])
     return {
         "first": name_a, "second": name_b, "positive_means_first_better": True,
@@ -1133,7 +1146,7 @@ def _write_tables(summary: Mapping[str, Any], groups: Mapping[str, Any]) -> None
                   "test_trigger", "verdict"):
             d.append(f"* **{k}**: {summary['decisions'].get(k)}")
         d += ["", "## Row-172 / tail dominance of R−P", ""]
-        for s, v in summary["decisions"]["row172_dominance"].items():
+        for s, v in summary["decisions"].get("row172_dominance", {}).items():
             d.append(f"* seed {s}: gain {v['gain']:+.6f}, drop-row172 {v['gain_drop_row172']:+.6f}, "
                      f"row172 AE R/P {v['row172_ae_R']:.4f}/{v['row172_ae_P']:.4f}, "
                      f"tail gain {v['tail_gain']:+.6f}, ordinary gain {v['ordinary_gain']:+.6f}, "

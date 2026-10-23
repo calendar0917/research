@@ -401,15 +401,43 @@ def collate_relations(
     }
 
 
-def make_collate(entries: Sequence[Mapping[str, Any]]):
-    """Return a collate function with the exact P3 batch plus relation arrays."""
+def _relation_batch(entries, cache, rows, candidate, valid: bool, walk_cols):
+    if candidate not in ("P3N", "P", "R", "N"):
+        raise ValueError(f"relation collate expects a P3-family candidate, got {candidate!r}")
+    batch = AT.collate(cache, rows, "P3N", valid=valid)
+    batch.update(collate_relations(entries, cache, rows))
+    return batch
+
+
+def make_collate(entries: Sequence[Mapping[str, Any]], *, split: str | None = None):
+    """Return a collate function with the exact P3 batch plus relation arrays.
+
+    ``split`` is optional for one-split callers and asserted when given.
+    Training must use :func:`make_split_collate` so the trainer's one collate
+    callback can serve both the train and valid caches.
+    """
 
     def collate_with_relations(cache, rows, candidate, *, valid: bool = False, walk_cols=None):
-        if candidate != "P3N":
-            raise ValueError(f"relation collate expects P3N, got {candidate!r}")
-        batch = AT.collate(cache, rows, "P3N", valid=valid)
-        batch.update(collate_relations(entries, cache, rows))
-        return batch
+        if split is not None and str(cache["meta"].get("split")) != split:
+            raise ValueError(f"collate bound to {split!r}, got {cache['meta'].get('split')!r}")
+        return _relation_batch(entries, cache, rows, candidate, valid, walk_cols)
+
+    return collate_with_relations
+
+
+def make_split_collate(entries_train: Sequence[Mapping[str, Any]],
+                       entries_valid: Sequence[Mapping[str, Any]]):
+    """Collate that dispatches on cache meta split; used by the shared trainer."""
+
+    def collate_with_relations(cache, rows, candidate, *, valid: bool = False, walk_cols=None):
+        split = str(cache["meta"].get("split"))
+        if split == "train":
+            entries = entries_train
+        elif split == "valid":
+            entries = entries_valid
+        else:
+            raise ValueError(f"unexpected split {split!r} in relation collate")
+        return _relation_batch(entries, cache, rows, candidate, valid, walk_cols)
 
     return collate_with_relations
 
