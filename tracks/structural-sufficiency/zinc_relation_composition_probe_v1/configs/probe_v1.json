@@ -1,0 +1,82 @@
+{
+  "round": "zinc-relation-composition-probe-v1",
+  "protocol_id": "ssrc-zinc-relation-composition-probe-v1",
+  "status": "declared",
+  "base_commit": "3f3cf0a62486be789e325e0c72ce412885170074",
+  "arms": {
+    "D": "relation write conditioned on the current bond-token state: e^{l+1}=BN_e(e^l+O_e xi)",
+    "S": "relation write from the fixed structure only: e^{l+1}=BN_e(e^l+O_e xi_static)"
+  },
+  "only_difference": "the input of the relation write (xi vs xi_static); identical parameters, token layers, reader, loss, recipe",
+  "architecture": {
+    "d_hidden": 48,
+    "heads": 4,
+    "layers": 4,
+    "ffn_width": 96,
+    "relation_ksteps": 21,
+    "attention_dropout": 0.2,
+    "other_dropout": 0.0,
+    "clamp": 5.0,
+    "signed_sqrt_eps": 1e-06,
+    "bn_scope": "real tokens / real pairs only, no padding"
+  },
+  "parameter_budget": {
+    "measured_total": 470321,
+    "cap": 500000,
+    "design_estimate_brief": 470513,
+    "difference_explained": "-192 = 4*d, one extra d-wide per-layer vector in the brief's arithmetic",
+    "fallback_d40_total": 434897
+  },
+  "relation": {
+    "definition": "R_bc[k] = (M P^k M^T)_bc, M endpoint 1/sqrt(2), P = diag(deg)^-1 A, k=0..20",
+    "source": "raw unweighted molecular graph from the frozen P3/ad cache; label-free",
+    "cache": "tracks/structural-sufficiency/zinc_relation_composition_probe_v1/cache (git-ignored, rebuildable)"
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "epochs": 600,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "valid_batch_size": 256,
+    "loss": "l1",
+    "updates": 47400,
+    "selection": "strict best-valid (ties -> earlier), final also saved, full valid every epoch"
+  },
+  "initialization": {
+    "ssl": {
+      "seed0": "pretrain_encoder_s0.pt",
+      "seed1": "pretrain_encoder_s1.pt"
+    },
+    "shared_b_composers": "dcc_models.build_initial_state(norm, seed)",
+    "new_module_rng_seed_offset": 90731,
+    "d_s_identity": "identical keys, shapes and tensors; only the arm flag differs"
+  },
+  "budget": {
+    "wall_clock_hard_hours": 3.0,
+    "gpu_hours_hard": 6.0,
+    "gpus": 2,
+    "gpu_hours_per_run_projected": null,
+    "note": "filled by analysis/timing.json before any formal run"
+  },
+  "test_policy": "terminal; official test is neither loaded nor scored in this round",
+  "deliverables": [
+    "PLAN.md",
+    "code/rc_data.py",
+    "code/rc_models.py",
+    "code/rc_build.py",
+    "code/rc_runner.py",
+    "code/rc_checks.py",
+    "code/rc_analyze.py",
+    "analysis/checks.json",
+    "analysis/timing.json",
+    "analysis/summary.json",
+    "analysis/curves.csv",
+    "analysis/per_molecule_valid.csv",
+    "analysis/intervention.json",
+    "analysis/gpu_ledger.json"
+  ]
+}
