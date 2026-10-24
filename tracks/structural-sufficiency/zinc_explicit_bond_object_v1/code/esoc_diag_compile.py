@@ -2,7 +2,9 @@ import sys, numpy as np, torch, json
 sys.path.insert(0,'.')
 import esoc_data as D, esoc_models as M, esoc_train as T
 dev='cuda:0'
-scales=T.read_json('../../tracks/structural-sufficiency/zinc_explicit_bond_object_v1/analysis/scales.json')
+from pathlib import Path
+ANALYSIS = Path(__file__).resolve().parent.parent / 'analysis'
+scales=T.read_json(ANALYSIS/'scales.json')
 tr=D.SplitTensors(D.load_cache('train'), dev)
 order=T.batch_order(0,1,tr.n,32)
 batches=[order[i*32:(i+1)*32] for i in range(10)]
