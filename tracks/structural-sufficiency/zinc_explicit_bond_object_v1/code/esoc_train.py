@@ -141,8 +141,11 @@ def train(arm: str, seed: int, epochs: int, device: str, *, mode: str,
         net = torch.compile(model, mode=str(cfg.get("compile_mode", "default")),
                             dynamic=False)
 
-    train_data = D.SplitTensors(D.load_cache("train"), device)
-    valid_data = D.SplitTensors(D.load_cache("valid"), device)
+    # hardperm trains on permuted *objects* with the REAL input path; the valid
+    # split is permuted with the same deterministic rule (no labels involved).
+    variant = "hardperm" if arm == "hardperm" else None
+    train_data = D.SplitTensors(D.load_cache("train", variant), device)
+    valid_data = D.SplitTensors(D.load_cache("valid", variant), device)
     if subset:
         rng = np.random.default_rng([int(seed), 777])
         subset_rows = np.sort(rng.permutation(train_data.n)[:subset])
@@ -294,7 +297,7 @@ def train(arm: str, seed: int, epochs: int, device: str, *, mode: str,
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description="ESOC-v1 runner")
     p.add_argument("--mode", default="full", choices=["full", "profile", "overfit"])
-    p.add_argument("--arm", default="real", choices=["real", "null"])
+    p.add_argument("--arm", default="real", choices=["real", "null", "hardperm"])
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--epochs", type=int, default=None)
     p.add_argument("--device", default="cuda:0")

@@ -269,7 +269,9 @@ class LocalEncoder(nn.Module):
         tri = torch.ones(L, L, dtype=torch.bool, device=z.device).triu(1)
         pmask = nm.unsqueeze(3) & nm.unsqueeze(2) & tri    # [B,E,L,L]
         onehot = F.one_hot(loc_et, num_classes=N_EDGE).to(feat.dtype)   # [B,E,L,L,4]
-        if arm == "real":
+        if arm in ("real", "hardperm"):
+            # hardperm feeds exactly the REAL one-hot input; only the *objects*
+            # differ (labels reassigned among pairs by esoc_hardperm.py).
             edge = onehot
         elif arm == "null":
             cnt = pmask.sum(dim=(2, 3)).clamp(min=1).to(feat.dtype)     # [B,E]
@@ -324,7 +326,7 @@ class ESOC(nn.Module):
                  heads: int = N_HEADS, attn_dropout: float = ATTN_DROPOUT,
                  drop_path: float = DROP_PATH, max_atoms: int = 36):
         super().__init__()
-        if arm not in ("real", "null"):
+        if arm not in ("real", "null", "hardperm"):
             raise ValueError(arm)
         self.arm = arm
         self.drop_path = float(drop_path)

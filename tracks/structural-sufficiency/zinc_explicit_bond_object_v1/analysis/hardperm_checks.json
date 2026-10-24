@@ -1,0 +1,128 @@
+{
+  "split": "valid",
+  "variant": "hardperm",
+  "input_change": {
+    "objects": 24846,
+    "objects_changed": 17034,
+    "fraction_objects_changed": 0.6855831924655881,
+    "pair_slots_moved": 40250,
+    "fraction_pair_slots_moved": 0.13882038883504688,
+    "class_histogram_preserved_all_objects": true,
+    "edge_count_preserved_all_objects": true,
+    "skeleton_preserved_all_objects": true,
+    "untouched_fields_identical": {
+      "loc_type": true,
+      "loc_role": true,
+      "loc_mask": true,
+      "loc_nnodes": true,
+      "loc_nedges": true,
+      "atom_type": true,
+      "bond_index": true,
+      "bond_type": true,
+      "atom_count": true,
+      "global33": true,
+      "labels": true,
+      "pad_index": true
+    },
+    "all_untouched_fields_identical": true
+  },
+  "null_input_identical": {
+    "null_input_max_abs_diff": 0.0,
+    "null_input_bitwise_equal": true
+  },
+  "label_leakage": {
+    "transform_reads_labels": false,
+    "labels_permutation_leaves_objects_identical": true,
+    "valid_variant_independent": true,
+    "meta_declares_no_labels": true,
+    "official_test_loaded": false,
+    "valid_meta_variant": "hardperm"
+  },
+  "arms_identical": {
+    "state_keys_identical": true,
+    "init_max_abs_diff": 0.0,
+    "params_real": 498845,
+    "params_hardperm": 498845,
+    "params_identical": true,
+    "hardperm_uses_one_hot_input": true,
+    "arm_shares_real_code_path": true
+  },
+  "data_order": {
+    "order_reproducible": true,
+    "order_depends_on_arm": false,
+    "n_train": 10000,
+    "batch_size": 32
+  },
+  "nonsense": {
+    "atom_slots": 118486,
+    "atom_slots_bond_order_sum_moved": 47627,
+    "fraction_atom_slots_bond_order_moved": 0.4019631011258714,
+    "atom_slots_bond_order_gt4_before": 400,
+    "atom_slots_bond_order_gt4_after": 3290,
+    "note": "reassigning labels at fixed degrees cannot preserve per-atom bond-order sums, so some permuted objects are chemically impossible. This is inherent to any correspondence-breaking control; it is measured here and must be weighed when interpreting HARD_PERM, which probes whether correspondence carries signal, not whether a permuted graph is a valid molecule."
+  },
+  "change_sufficiency": {
+    "objects": 24846,
+    "objects_changed": 17034,
+    "fraction_objects_changed": 0.6855831924655881,
+    "objects_identity_all_same_label": 7573,
+    "objects_identity_mixed_label_symmetric": 239,
+    "fraction_objects_identity_from_degeneracy": 0.3047975529260243,
+    "pair_slots_moved_mean_per_object": 1.6199790710778394,
+    "pair_slots_moved_total": 40250,
+    "sufficient_change": true,
+    "threshold_note": "require >=30% of objects to move, and <10% to be identity for non-degeneracy reasons; identity objects whose bonds all share one label are uninformative by construction, not a transform failure"
+  },
+  "invariance": {
+    "molecules_checked": 300,
+    "renumbering_invariant": 300,
+    "renumbering_fraction": 1.0,
+    "root_swap_invariant": 300,
+    "root_swap_fraction": 1.0
+  },
+  "transform_stats": {
+    "objects": 24846,
+    "objects_changed": 17034,
+    "objects_identity": 7812,
+    "objects_identity_fewer_than_2_edges": 0,
+    "real_bonds_total": 94035,
+    "pair_slots_total": 230700,
+    "bond_label_slots_changed": 40250,
+    "pair_slots_changed": 40250,
+    "atom_slots_with_moved_bond_order_sum": 47627,
+    "atom_slots_total": 118486,
+    "fraction_objects_changed": 0.6855831924655881,
+    "fraction_bond_labels_changed": 0.4280321157016005,
+    "fraction_atom_slots_bond_order_moved": 0.4019631011258714
+  },
+  "gates": {
+    "input_really_changes": true,
+    "class_histogram_preserved": true,
+    "edge_count_preserved": true,
+    "skeleton_preserved": true,
+    "only_loc_et_changed": true,
+    "null_input_bitwise_identical": true,
+    "no_label_leakage": true,
+    "arms_identical": true,
+    "data_order_reproducible": true,
+    "renumbering_invariant": true,
+    "root_swap_invariant": true,
+    "sufficient_change": true
+  },
+  "all_pass": true,
+  "n_pass": 12,
+  "n_gates": 12,
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1",
+    "cuda_available": false,
+    "cuda_device_count": 0,
+    "gpu_names": [],
+    "git_commit": "058a60a69692f32ba396760c81d8519737a83635",
+    "git_dirty_tracked": true,
+    "round_id": "zinc-arch-discovery-v1",
+    "timestamp": "2026-10-24T17:07:01+0800"
+  }
+}

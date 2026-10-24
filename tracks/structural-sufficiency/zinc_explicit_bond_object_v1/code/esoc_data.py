@@ -73,7 +73,9 @@ def read_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
-def cache_path(split: str) -> Path:
+def cache_path(split: str, variant: str | None = None) -> Path:
+    if variant:
+        return CACHE / f"esoc_{split}_{variant}.pt"
     return CACHE / f"esoc_{split}_v1.pt"
 
 
@@ -262,15 +264,15 @@ def build_split(split: str) -> dict:
     return data
 
 
-def save_cache(data: dict, split: str) -> Path:
+def save_cache(data: dict, split: str, variant: str | None = None) -> Path:
     CACHE.mkdir(parents=True, exist_ok=True)
-    path = cache_path(split)
+    path = cache_path(split, variant)
     C.atomic_torch_save(dict(data), path)
     return path
 
 
-def load_cache(split: str) -> dict:
-    path = cache_path(split)
+def load_cache(split: str, variant: str | None = None) -> dict:
+    path = cache_path(split, variant)
     if not path.exists():
         raise FileNotFoundError(
             f"missing ESOC cache {path}; run `python esoc_data.py build --split {split}`"
