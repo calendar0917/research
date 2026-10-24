@@ -13,16 +13,12 @@ runs = {}
 for arm in ("real", "null"):
     p = R / f"{arm}_s0_best.pt"
     ck = torch.load(p, map_location="cpu", weights_only=False)
-    runs[f"{arm}_s0"] = {"arm": arm, "seed": int(ck["seed"]), "dir": str(R), "ckpt": str(p),
+    runs[f"{arm}_s0"] = {"arm": arm, "seed": int(ck["seed"]), "dir": str(R / f"{arm}_s0"), "ckpt": str(p),
                          "pred_best": None, "y_best": None}
 # monkeypatch the loader path used by structure_sensitivity
 _orig = torch.load
 def patched(path, *a, **k):
-    if str(path).endswith("/best.pt"):
-        for arm in ("real", "null"):
-            if f"/{arm}_s0/" in str(path):
-                return _orig(str(R / f"{arm}_s0_best.pt"), *a, **k)
-    return _orig(path, *a, **k)
+    return _orig(str(path), *a, **k)
 torch.load = patched
 scales = C.read_json(_HERE.parent / "analysis" / "scales.json")
 out = A.structure_sensitivity(runs, scales, n_rows=64, n_perm=2)
