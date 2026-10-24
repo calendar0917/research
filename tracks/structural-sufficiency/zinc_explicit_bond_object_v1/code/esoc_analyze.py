@@ -61,6 +61,20 @@ def load_run(arm: str, seed: int) -> dict:
     return out
 
 
+def read_curve(path: Path) -> list[dict]:
+    """train.json deliberately omits the full curve; it lives in curve.csv."""
+    with open(path, newline="", encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
+    out = []
+    for r in rows:
+        out.append({"epoch": int(float(r["epoch"])),
+                    "step": int(float(r["step"])),
+                    "lr": float(r["lr"]),
+                    "train_mae_online": float(r["train_mae_online"]),
+                    "valid_mae": float(r["valid_mae"])})
+    return out
+
+
 def curve_metrics(curve: list[dict]) -> dict:
     valid = np.asarray([e["valid_mae"] for e in curve], dtype=np.float64)
     epochs = [int(e["epoch"]) for e in curve]
@@ -161,6 +175,12 @@ def frozen_masks(rows: list[dict], y: np.ndarray) -> dict:
 def group_row(mask: np.ndarray, y: np.ndarray, pred: dict[str, np.ndarray]) -> dict:
     ae = {k: np.abs(v[mask] - y[mask]) for k, v in pred.items()}
     out = {"n": int(mask.sum()), "mae": {k: float(v.mean()) for k, v in ae.items()}}
+    # Report the contrast in the substantive direction (REAL - NULL), not in
+    # whatever order ``sorted`` happens to produce.
+    if "real_s0" in pred and "null_s0" in pred:
+        d = ae["real_s0"] - ae["null_s0"]
+        out["delta_real_minus_null"] = float(d.mean())
+        out["fraction_rows_real_better"] = float(np.mean(d < 0))
     names = sorted(pred)
     for i, a in enumerate(names):
         for b in names[i + 1:]:
@@ -305,14 +325,14 @@ def main() -> int:
     rows_main = []
     for k in names:
         info = runs[k]["info"]
-        cm = curve_metrics(info["curve"])
+        cm = curve_metrics(read_curve(Path(runs[k]["dir"]) / "curve.csv"))
         audit = info["param_audit"]
         rows_main.append({
             "run": k,
             "arm": runs[k]["arm"],
             "seed": runs[k]["seed"],
-            "parameters": int(audit["total"]),
-            "parameters_within_cap": bool(audit["total"] <= 500000),
+            "parameters": int(audit["param_total"]),
+            "parameters_within_cap": bool(audit["param_total"] <= 500000),
             "best_valid": float(info["checkpoints"]["best"]["valid_mae"]),
             "best_epoch": int(info["checkpoints"]["best"]["epoch"]),
             "final_valid": float(info["checkpoints"]["final"]["valid_mae"]),
@@ -395,8 +415,8 @@ def main() -> int:
     masks = frozen_masks(audit_rows, y)
     groups = {name: group_row(m, y, pred) for name, m in masks.items()}
     groups["unseen_minus_covered_delta_of_deltas"] = {
-        "real_minus_null": (groups["signature_unseen_251"]["delta_real_s0_minus_null_s0"]
-                            - groups["signature_covered_749"]["delta_real_s0_minus_null_s0"]),
+        "real_minus_null": (groups["signature_unseen_251"]["delta_real_minus_null"]
+                            - groups["signature_covered_749"]["delta_real_minus_null"]),
         "definition": ("mean paired delta inside unseen minus mean paired delta inside covered; "
                        "negative means REAL's advantage is larger on unseen signatures"),
     }

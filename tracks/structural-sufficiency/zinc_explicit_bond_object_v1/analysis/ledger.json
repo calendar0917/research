@@ -1,0 +1,36 @@
+{
+  "gpu_hours_cap": 48.0,
+  "gpu_hours_used_total": 5.065,
+  "gpu_hours_used_formal": 2.065,
+  "gpu_hours_used_discarded": 2.649,
+  "gpu_hours_used_profiling_gates": 0.351,
+  "runs": {
+    "null_s0": {
+      "wall_hours": 1.0320691713147487,
+      "epochs": 600,
+      "compile_mode": "reduce-overhead",
+      "params": 498845
+    },
+    "real_s0": {
+      "wall_hours": 1.0328455438133743,
+      "epochs": 600,
+      "compile_mode": "reduce-overhead",
+      "params": 498845
+    }
+  },
+  "discarded_runs": [
+    {
+      "name": "esoc-{real,null}-s0b",
+      "reason": "compile_mode=default (19 s/epoch, 13.3 h projected); superseded by reduce-overhead",
+      "hours_each": 0.628
+    },
+    {
+      "name": "esoc-{real,null}-s0c",
+      "reason": "2500-epoch schedule; stopped at ~ep300 by the epoch->updates protocol amendment",
+      "hours_each": 0.697
+    }
+  ],
+  "amendment_note": "the 2500->600 epoch amendment was made before any verdict and is recorded in configs/esoc_v1.json",
+  "per_run_soft_cap_hours": 20.0,
+  "cost_verdict": "affordable: 5.07 of 48 GPU-hours used, 10.5% of the cap"
+}
