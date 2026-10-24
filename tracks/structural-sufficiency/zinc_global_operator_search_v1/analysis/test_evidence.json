@@ -1,0 +1,78 @@
+{
+  "note": "consolidated evidence copy so that the remote compute checkout never holds a tracked-but-untracked-duplicate of the same path (merge conflict); the raw files analysis/test_freeze.json / test_report.json are kept locally and are regenerable.",
+  "freeze": {
+    "protocol": "zinc-global-operator-search-v1",
+    "frozen_at": "2026-10-25T03:07:24+0800",
+    "git_commit": "d44149544db1fae97431e32d36a2e15b7c813449",
+    "official_test_loaded_before_this_file": false,
+    "valid_tolerance": 1e-06,
+    "selection_rule": "lowest valid MAE (best checkpoint of one declared 600-epoch cosine run)",
+    "entries": [
+      {
+        "run": "A_s1",
+        "route": "A",
+        "seed": 1,
+        "epoch": 472,
+        "recorded_valid": 0.07457704862946411,
+        "checkpoint": "tracks/structural-sufficiency/zinc_global_operator_search_v1/runs/A_s1/best.pt",
+        "parameter_count": 460017,
+        "recipe": "B",
+        "train_json_sha256": "ecf5f3eafdc8dede31f9c28ccced8e964429b7ab9845345eefbccaabfd4c3f04",
+        "valid_recomputed": 0.07457705115427962,
+        "valid_abs_diff": 2.5248155094415026e-09,
+        "checkpoint_sha256": "db908284bd599bc59623231d078e16811bd6ecb171f1b162709e0e4f56845745",
+        "parameter_count_recomputed": 460017,
+        "epoch_in_checkpoint": 472
+      },
+      {
+        "run": "A_s0",
+        "route": "A",
+        "seed": 0,
+        "epoch": 402,
+        "recorded_valid": 0.07591949744423619,
+        "checkpoint": "tracks/structural-sufficiency/zinc_global_operator_search_v1/runs/A_s0/best.pt",
+        "parameter_count": 460017,
+        "recipe": "B",
+        "train_json_sha256": "b32e018219a07a07b4630f92801ca3010fa1cc2158589e7ece8018c48606722d",
+        "valid_recomputed": 0.07591949249332539,
+        "valid_abs_diff": 4.950910806322817e-09,
+        "checkpoint_sha256": "053ba3efc53cf6de97221a4974e849dbb72179eed719a9d4f7fb56b378d1598b",
+        "parameter_count_recomputed": 460017,
+        "epoch_in_checkpoint": 402
+      }
+    ]
+  },
+  "test_report": {
+    "protocol": "zinc-global-operator-search-v1",
+    "read_at": "2026-10-25T03:10:03+0800",
+    "git_commit": "859828ca2255098908ea9d2abba27f3fc58ee180",
+    "n_test": 1000,
+    "freeze_file": "tracks/structural-sufficiency/zinc_global_operator_search_v1/analysis/test_freeze.json",
+    "models": [
+      {
+        "run": "A_s1",
+        "route": "A",
+        "seed": 1,
+        "epoch": 472,
+        "valid_recorded": 0.07457704862946411,
+        "valid_recomputed": 0.07457705115427962,
+        "test_mae": 0.06796257251035422,
+        "test_rmse": 0.15253573658558162,
+        "test_p90_abs_err": 0.14380336999893192,
+        "test_median_abs_err": 0.0355604887008667
+      },
+      {
+        "run": "A_s0",
+        "route": "A",
+        "seed": 0,
+        "epoch": 402,
+        "valid_recorded": 0.07591949744423619,
+        "valid_recomputed": 0.07591949249332539,
+        "test_mae": 0.0676226568846032,
+        "test_rmse": 0.16032721153009152,
+        "test_p90_abs_err": 0.1285959005355835,
+        "test_median_abs_err": 0.037170156836509705
+      }
+    ]
+  }
+}
