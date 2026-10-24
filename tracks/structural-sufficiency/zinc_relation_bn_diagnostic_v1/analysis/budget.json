@@ -1,0 +1,24 @@
+{
+ "round": "zinc-relation-bn-diagnostic-v1",
+ "wall_clock": {
+  "started_utc_estimate": "2026-10-23T01:58Z",
+  "finished_utc": "2026-10-23T02:32Z",
+  "hours": 0.57,
+  "cap_hours": 1.0,
+  "note": "includes reading, two local false starts (a CPU smoke run that was killed because the layer-by-layer calibration needs ~14 full-train passes regardless of subset size), deploy and the GPU jobs"
+ },
+ "gpu": {
+  "jobs": [
+   {"experiment": "bn-D", "pool": "res-gpu0", "state": "completed", "exit_code": 0, "seconds": 97.5},
+   {"experiment": "bn-S", "pool": "res-gpu1", "state": "completed", "exit_code": 0, "seconds": 70.5}
+  ],
+  "gpu_hours": 0.047,
+  "cap_gpu_hours": 0.5,
+  "note": "two A100-40GB, one arm per card, no distributed training"
+ },
+ "not_done": [
+  "T on the full train split (only the 2048-molecule diagnostic subset; B already matched the online level, so the full-split T carries no extra information)",
+  "no C for other epochs/checkpoints, no seed sweep, no method sweep (by design)",
+  "no re-run of the previous round's D->S fixed-weight intervention under calibrated statistics (explicitly out of scope)"
+ ]
+}
