@@ -429,6 +429,32 @@ if __name__ == "__main__":
     raise SystemExit(main())
 
 
+def pairing_permutation(loc_et: np.ndarray, loc_mask: np.ndarray, rng) -> np.ndarray:
+    """Marginal-preserving permutation of the pair-edge labels inside one object.
+
+    The multiset of typed pair labels of the object is preserved exactly (so the
+    object-level class-frequency vector, and hence the NULL arm, is unchanged);
+    only the *correspondence* between the label and the atom pair moves.  Used by
+    the frozen structure-sensitivity diagnostic.
+    """
+    out = np.array(loc_et, copy=True)
+    n = int(loc_mask.sum())
+    if n < 3:
+        return out
+    idx = np.flatnonzero(loc_mask)[:n]
+    iu = np.triu_indices(n, k=1)
+    pos = [(idx[a], idx[b]) for a, b in zip(*iu)]
+    vals = np.asarray([out[a, b] for a, b in pos], dtype=out.dtype)
+    perm = rng.permutation(len(vals))
+    # reject the identity permutation: we want a genuinely different pairing
+    if len(vals) > 1 and np.array_equal(perm, np.arange(len(vals))):
+        perm = np.roll(perm, 1)
+    for (a, b), v in zip(pos, vals[perm]):
+        out[a, b] = v
+        out[b, a] = v
+    return out
+
+
 def batch_from_specs(specs: list[dict], device="cpu") -> dict:
     """Pack raw molecule specs into the model's batch dict (checks / synthetics).
 
