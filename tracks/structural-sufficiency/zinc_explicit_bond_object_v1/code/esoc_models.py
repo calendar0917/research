@@ -337,6 +337,7 @@ class ESOC(nn.Module):
         self.readout = nn.Sequential(
             nn.Linear(d_read, READOUT_HIDDEN), nn.SiLU(), nn.Linear(READOUT_HIDDEN, 1)
         )
+        self._max_atoms = int(max_atoms)          # python int: no graph break in forward
         self.register_buffer("max_atoms", torch.tensor(int(max_atoms), dtype=torch.long))
         self.register_buffer("ref_bonds", torch.tensor(float(ref_bonds)))
         self.register_buffer("ref_atoms", torch.tensor(float(ref_atoms)))
@@ -362,7 +363,7 @@ class ESOC(nn.Module):
         h = self.local(batch["loc_type"], batch["loc_role"], batch["loc_et"],
                        batch["loc_mask"], batch["loc_nnodes"], batch["loc_nedges"],
                        bond_mask, self.arm)
-        r = rrwp(batch["bonds"], bond_mask, batch["n_atoms"], n_max=int(self.max_atoms))
+        r = rrwp(batch["bonds"], bond_mask, batch["n_atoms"], n_max=self._max_atoms)
         bias = self.pe(r).permute(0, 3, 1, 2)               # [B,H,E,E]
         counts = self._counts(batch)
         g = self.gdesc((counts - self.count_mean) / self.count_scale)

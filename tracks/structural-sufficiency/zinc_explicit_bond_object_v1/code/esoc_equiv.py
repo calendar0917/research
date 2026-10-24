@@ -42,9 +42,15 @@ ANALYSIS = _HERE.parent / "analysis"
 STEPS = 30
 
 
+def _base(model):
+    """Unwrap torch.compile so state dicts keep their plain parameter names."""
+    return getattr(model, "_orig_mod", model)
+
+
 def _trajectory(net, train_data, valid_data, seed: int, arm: str, steps: int,
-                batches: list[np.ndarray], valid_rows: np.ndarray) -> dict:
-    opt = T.make_optimizer(net, 2e-3, 1e-5)
+                batches: list[np.ndarray], valid_rows: np.ndarray, base=None) -> dict:
+    base = base if base is not None else _base(net)
+    opt = T.make_optimizer(base, 2e-3, 1e-5)
     losses = []
     for i, rows in enumerate(batches[:steps]):
         b = train_data.batch(rows)
@@ -56,11 +62,11 @@ def _trajectory(net, train_data, valid_data, seed: int, arm: str, steps: int,
         loss = (p - b["y"]).abs().mean()
         opt.zero_grad(set_to_none=True)
         loss.backward()
-        gn = float(torch.nn.utils.clip_grad_norm_(net.parameters(), 5.0))
+        gn = float(torch.nn.utils.clip_grad_norm_(base.parameters(), 5.0))
         opt.step()
         losses.append((float(loss), gn))
     grads = {}
-    for name, prm in net.named_parameters():
+    for name, prm in base.named_parameters():
         if prm.grad is not None:
             grads[name] = prm.grad.detach().clone()
     opt.zero_grad(set_to_none=True)
@@ -69,7 +75,7 @@ def _trajectory(net, train_data, valid_data, seed: int, arm: str, steps: int,
         vp = net(valid_data.batch(valid_rows)).double().cpu().numpy()
     net.train()
     return {"losses": losses, "grads": grads, "valid_pred": vp,
-            "state": {k: v.detach().clone() for k, v in net.state_dict().items()}}
+            "state": {k: v.detach().clone() for k, v in base.state_dict().items()}}
 
 
 def main(argv=None) -> int:
@@ -101,9 +107,9 @@ def main(argv=None) -> int:
     # --- 2) compiled candidate from the identical initial state
     cand = M.build_model(0, args.arm, scales).to(args.device)
     assert C.state_hash(cand) == ref_hash0, "initial state differs"
-    c = _trajectory(torch.compile(cand, mode="reduce-overhead", dynamic=False),
-                    train_data, valid_data, 0, args.arm, args.steps,
-                    batches, valid_rows)
+    compiled = torch.compile(cand, mode="reduce-overhead", dynamic=False)
+    c = _trajectory(compiled, train_data, valid_data, 0, args.arm, args.steps,
+                    batches, valid_rows, base=cand)
 
     out["loss_max_abs_diff"] = float(max(abs(a[0] - b[0]) for a, b in zip(r["losses"], c["losses"])))
     out["loss_rel_max"] = float(max(abs(a[0] - b[0]) / max(a[0], 1e-12)
@@ -111,9 +117,11 @@ def main(argv=None) -> int:
     out["grad_norm_max_abs_diff"] = float(max(abs(a[1] - b[1])
                                               for a, b in zip(r["losses"], c["losses"])))
     out["valid_pred_max_abs_diff"] = float(np.abs(r["valid_pred"] - c["valid_pred"]).max())
+    shared = sorted(set(r["state"]) & set(c["state"]))
+    out["state_keys_compared"] = len(shared)
     out["final_param_max_abs_diff"] = float(max(
         float((r["state"][k] - c["state"][k]).abs().max())
-        for k in r["state"] if r["state"][k].is_floating_point()))
+        for k in shared if r["state"][k].is_floating_point()) or 0.0)
     out["n_params_compared"] = len(r["grads"])
     rel = []
     for name in r["grads"]:
