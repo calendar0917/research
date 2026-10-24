@@ -175,12 +175,16 @@ def frozen_masks(rows: list[dict], y: np.ndarray) -> dict:
 def group_row(mask: np.ndarray, y: np.ndarray, pred: dict[str, np.ndarray]) -> dict:
     ae = {k: np.abs(v[mask] - y[mask]) for k, v in pred.items()}
     out = {"n": int(mask.sum()), "mae": {k: float(v.mean()) for k, v in ae.items()}}
-    # Report the contrast in the substantive direction (REAL - NULL), not in
-    # whatever order ``sorted`` happens to produce.
-    if "real_s0" in pred and "null_s0" in pred:
-        d = ae["real_s0"] - ae["null_s0"]
-        out["delta_real_minus_null"] = float(d.mean())
-        out["fraction_rows_real_better"] = float(np.mean(d < 0))
+    # Report the contrasts in the substantive direction, not in whatever order
+    # ``sorted`` happens to produce.
+    for a, b in (("real_s0", "null_s0"), ("real_s0", "hardperm_s0"),
+                 ("hardperm_s0", "null_s0")):
+        if a in ae and b in ae:
+            d = ae[a] - ae[b]
+            out[f"delta_{a}_minus_{b}"] = float(d.mean())
+            out[f"fraction_rows_{a}_better_than_{b}"] = float(np.mean(d < 0))
+    if "real_s0" in ae and "null_s0" in ae:
+        out["fraction_rows_real_better"] = float(np.mean(ae["real_s0"] - ae["null_s0"] < 0))
     names = sorted(pred)
     for i, a in enumerate(names):
         for b in names[i + 1:]:
@@ -304,10 +308,11 @@ def structure_sensitivity(runs: dict, scales: dict, n_rows: int = 256,
 
 # --------------------------------------------------------------------- driver
 def main() -> int:
-    runs = {f"{a}_s{s}": load_run(a, s) for a in ("real", "null") for s in (0,)
-            if (RUNS / f"{a}_s{s}" / "train.json").exists()}
+    arms = [a for a in ("real", "null", "hardperm")
+            if (RUNS / f"{a}_s0" / "train.json").exists()]
+    runs = {f"{a}_s0": load_run(a, 0) for a in arms}
     if len(runs) < 2:
-        raise SystemExit(f"need both seed-0 arms, found {sorted(runs)}")
+        raise SystemExit(f"need at least two seed-0 arms, found {sorted(runs)}")
     names = sorted(runs)
     y = runs[names[0]]["y_best"]
     for k in names:
@@ -398,7 +403,10 @@ def main() -> int:
     rng = np.random.default_rng(BOOT_SEED)
     idx = rng.integers(0, len(y), size=(RESAMPLES, len(y)))
     contrasts = {}
-    for a, b in (("real_s0", "null_s0"),):
+    pairs = [("real_s0", "null_s0"), ("real_s0", "hardperm_s0"), ("hardperm_s0", "null_s0")]
+    for a, b in pairs:
+        if a not in ae or b not in ae:
+            continue
         delta = ae[a] - ae[b]
         contrasts[f"{a}_minus_{b}"] = bootstrap_delta(delta, idx)
         contrasts[f"{a}_minus_{b}"]["delta_definition"] = (
@@ -414,12 +422,17 @@ def main() -> int:
     # ---- frozen groups
     masks = frozen_masks(audit_rows, y)
     groups = {name: group_row(m, y, pred) for name, m in masks.items()}
-    groups["unseen_minus_covered_delta_of_deltas"] = {
-        "real_minus_null": (groups["signature_unseen_251"]["delta_real_minus_null"]
-                            - groups["signature_covered_749"]["delta_real_minus_null"]),
-        "definition": ("mean paired delta inside unseen minus mean paired delta inside covered; "
-                       "negative means REAL's advantage is larger on unseen signatures"),
-    }
+    dod = {}
+    for a, b in (("real_s0", "null_s0"), ("real_s0", "hardperm_s0"),
+                 ("hardperm_s0", "null_s0")):
+        ku, kc = "signature_unseen_251", "signature_covered_749"
+        key = f"delta_{a}_minus_{b}"
+        if key in groups[ku] and key in groups[kc]:
+            dod[f"{a}_minus_{b}"] = groups[ku][key] - groups[kc][key]
+    dod["definition"] = ("mean paired delta inside unseen minus mean paired delta inside "
+                         "covered; negative means the first model's advantage is larger on "
+                         "unseen signatures")
+    groups["unseen_minus_covered_delta_of_deltas"] = dod
     C.write_json(ANALYSIS / "groups.json", {
         "groups": groups,
         "masks_frozen_before_results": True,

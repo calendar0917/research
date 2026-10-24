@@ -1,0 +1,71 @@
+{
+  "contrasts": {
+    "real_minus_hardperm": {
+      "all_rows": {
+        "mean": -0.012305362039223498,
+        "ci95": [
+          -0.017855250844822226,
+          -0.0068119262183178935
+        ]
+      },
+      "excl_row172": {
+        "mean": -0.013248825664888388,
+        "ci95": [
+          -0.018465586376727787,
+          -0.007961811005107015
+        ]
+      },
+      "median_all_rows": -0.006429195350000005,
+      "fraction_rows_improved_all": 0.566,
+      "fraction_rows_improved_excl": 0.5665665665665666
+    },
+    "real_minus_null": {
+      "all_rows": {
+        "mean": -0.028155815319931898,
+        "ci95": [
+          -0.03448424228752811,
+          -0.021968272194715942
+        ]
+      },
+      "excl_row172": {
+        "mean": -0.0281104499699018,
+        "ci95": [
+          -0.03441068209843397,
+          -0.021675696587906676
+        ]
+      },
+      "median_all_rows": -0.015508800750000006,
+      "fraction_rows_improved_all": 0.605,
+      "fraction_rows_improved_excl": 0.6046046046046046
+    },
+    "hardperm_minus_null": {
+      "all_rows": {
+        "mean": -0.0158504532807084,
+        "ci95": [
+          -0.022164255196151214,
+          -0.009753118546850976
+        ]
+      },
+      "excl_row172": {
+        "mean": -0.014861624305013416,
+        "ci95": [
+          -0.020773989969897908,
+          -0.008874822356661633
+        ]
+      },
+      "median_all_rows": -0.009206593149999996,
+      "fraction_rows_improved_all": 0.572,
+      "fraction_rows_improved_excl": 0.5715715715715716
+    }
+  },
+  "note": "row172 excluded as a robustness check; it is a single extreme outlier (AE ~20) for all three arms",
+  "decomposition_of_real_gain_over_null": {
+    "total_real_minus_null": -0.028155815319931915,
+    "attributable_to_correspondence_real_minus_hardperm": -0.0123053620392235,
+    "attributable_to_onehot_input_distribution_hardperm_minus_null": -0.015850453280708415,
+    "fraction_from_correspondence": 0.43704513257381516,
+    "fraction_from_input_distribution": 0.5629548674261848,
+    "check_additive": true,
+    "definition": "REAL - NULL decomposes exactly into (REAL - HARD_PERM) + (HARD_PERM - NULL): HARD_PERM keeps the one-hot inputs and the class histogram but destroys the correspondence, so the first term is the correspondence effect and the second is the one-hot-vs-continuous-frequency input-distribution effect."
+  }
+}
