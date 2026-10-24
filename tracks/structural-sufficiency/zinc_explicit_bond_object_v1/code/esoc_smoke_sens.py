@@ -13,8 +13,19 @@ runs = {}
 for arm in ("real", "null"):
     p = R / f"{arm}_s0_best.pt"
     ck = torch.load(p, map_location="cpu", weights_only=False)
+    import numpy as np, esoc_data as D
+    from pathlib import Path as _P
+    vd = D.SplitTensors(D.load_cache("valid"), "cpu")
+    yy = vd.labels.double().cpu().numpy()
+    net = __import__("esoc_models").build_model(int(ck["seed"]), arm, C.read_json(_HERE.parent/"analysis"/"scales.json"))
+    net.load_state_dict(ck["state"]); net.eval()
+    pr = []
+    import torch as _t
+    with _t.no_grad():
+        for st in range(0, vd.n, 500):
+            pr.append(net(vd.batch(np.arange(st, min(st+500, vd.n)))).double().cpu().numpy())
     runs[f"{arm}_s0"] = {"arm": arm, "seed": int(ck["seed"]), "dir": str(R / f"{arm}_s0"), "ckpt": str(p),
-                         "pred_best": None, "y_best": None}
+                         "pred_best": np.concatenate(pr), "y_best": yy}
 # monkeypatch the loader path used by structure_sensitivity
 _orig = torch.load
 def patched(path, *a, **k):
