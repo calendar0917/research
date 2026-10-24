@@ -176,7 +176,7 @@ def timing(route: str, seed: int, device, *, epochs: int = 3, recipe: str = RECI
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("command", choices=["train", "timing", "prep"])
-    p.add_argument("--route", default="A", choices=["C0", "A", "K", "Asm", "Ksm"])
+    p.add_argument("--route", default="A", choices=["C0", "A", "K", "Asm", "Ksm", "N0"])
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--device", default="cuda:0")
     p.add_argument("--recipe", default=RECIPE, choices=["A", "B", "C"])

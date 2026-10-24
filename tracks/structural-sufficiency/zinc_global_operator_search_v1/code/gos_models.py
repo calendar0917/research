@@ -184,9 +184,9 @@ class Backbone(nn.Module):
     def __init__(self, norm: Mapping[str, Any], route: str, *, dropout: float = 0.0,
                  mean_n_bonds: float = 1.0):
         super().__init__()
-        if route not in ("C0", "A", "K", "Asm", "Ksm"):
+        if route not in ("C0", "A", "K", "Asm", "Ksm", "N0"):
             raise ValueError(f"unknown route {route!r}")
-        self.base_route = "A" if route == "Asm" else ("K" if route == "Ksm" else route)
+        self.base_route = "A" if route in ("Asm", "N0") else ("K" if route == "Ksm" else route)
         self.route = route
         self.encoders = M1.P3Encoders(dropout=dropout)
         self.group_composer = M1.MLP(WIDTH + 2 * WIDTH + 1 + D.BOND_FEAT_DIM, 160, WIDTH, 1, dropout)
@@ -194,6 +194,12 @@ class Backbone(nn.Module):
         self.mean_n_bonds = float(mean_n_bonds)
         if route == "C0":
             self.reader = M1.MLP(Z0_DIM, READER_HIDDEN, 1, n_hidden=2, dropout=dropout)
+        elif route == "N0":
+            # control: bond-object *content* reaches the reader, but no global
+            # mixture over bond objects and no relation encoder exist.
+            self.bond_tok = nn.Linear(2 * WIDTH, TOKEN_DIM)
+            self.layers = nn.ModuleList()
+            self.reader = M1.MLP(READER_IN_CORE, READER_HIDDEN, 1, n_hidden=2, dropout=dropout)
         else:
             self.bond_tok = nn.Linear(2 * WIDTH, TOKEN_DIM)
             self.rel_enc = nn.Sequential(
@@ -268,8 +274,8 @@ class Backbone(nn.Module):
         h = h0.new_zeros((B, bb, TOKEN_DIM))
         if E:
             h[bond_batch, batch["bond_local"]] = h0
-        rel = self.rel_enc(batch["rel_feat"])
-        if bb:
+        rel = self.rel_enc(batch["rel_feat"]) if self.route != "N0" else None
+        if bb and self.route != "N0":
             for layer in self.layers:
                 if self.base_route == "A":
                     h = layer(h, rel, mask)
@@ -311,7 +317,7 @@ def build_model(route: str, norm: Mapping[str, Any], seed: int, device,
             "local_composer": _param_count(model.local_composer),
             "core": _param_count(model.layers) if route != "C0" else 0,
             "bond_token": _param_count(model.bond_tok) if route != "C0" else 0,
-            "rel_encoder": _param_count(model.rel_enc) if route != "C0" else 0,
+            "rel_encoder": _param_count(model.rel_enc) if route not in ("C0", "N0") else 0,
             "reader": _param_count(model.reader),
         },
     }
