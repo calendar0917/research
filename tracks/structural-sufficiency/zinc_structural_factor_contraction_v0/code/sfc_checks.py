@@ -453,6 +453,13 @@ def check_saturation() -> dict:
 
 
 def main() -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", default=str(ANALYSIS / "t1_correctness.json"),
+                    help="output JSON (default keeps the historical file name)")
+    args = ap.parse_args()
+    out_path = Path(args.out)
     t0 = time.perf_counter()
     checks = {
         "exact": check_exact(),
@@ -482,10 +489,10 @@ def main() -> int:
         "seconds": time.perf_counter() - t0,
     }
     ANALYSIS.mkdir(parents=True, exist_ok=True)
-    out = ANALYSIS / "t1_correctness.json"
-    out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({k: v["pass"] for k, v in checks.items()}, indent=2))
-    print(f"{n_pass}/{len(checks)} checks pass -> {out}")
+    print(f"{n_pass}/{len(checks)} checks pass -> {out_path}")
     return 0 if payload["all_pass"] else 1
 
 

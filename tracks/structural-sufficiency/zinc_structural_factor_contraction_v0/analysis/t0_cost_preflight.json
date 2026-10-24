@@ -1,0 +1,54 @@
+{
+  "protocol": "sfc-v0-cpu-audit",
+  "stage": "T0-cost-preflight-corrected",
+  "device": "cpu",
+  "torch": "2.5.1+cu124",
+  "numpy": "2.1.3",
+  "python": "3.12.14",
+  "cpu_count": 16,
+  "torch_threads": 4,
+  "dtype": "float64",
+  "per_task": {
+    "reach": {
+      "assembly_seconds_for_144_graphs": 0.39344629598781466,
+      "assembly_ms_per_graph": 2.732265944359824,
+      "train_feature": {
+        "batch_graphs": 96,
+        "seconds_per_batch": 0.25862856750027274,
+        "ms_per_graph": 2.6940475781278415
+      },
+      "eval_feature": {
+        "batch_graphs": 96,
+        "seconds_per_batch": 0.18469993069884366,
+        "ms_per_graph": 1.9239576114462882
+      }
+    },
+    "junction": {
+      "assembly_seconds_for_144_graphs": 0.417065141024068,
+      "assembly_ms_per_graph": 2.8962857015560277,
+      "train_feature": {
+        "batch_graphs": 96,
+        "seconds_per_batch": 0.22795492990117056,
+        "ms_per_graph": 2.37453051980386
+      },
+      "eval_feature": {
+        "batch_graphs": 96,
+        "seconds_per_batch": 0.17726772220048587,
+        "ms_per_graph": 1.846538772921728
+      }
+    }
+  },
+  "projection": {
+    "training_feature_seconds_S_and_SP": 1038.0447944564125,
+    "other_feature_seconds_eval_assembly_diagnostic": 308.0407090008521,
+    "projected_feature_seconds_total": 1346.0855034572646,
+    "assumed_counts": {
+      "train_graph_forwards_with_backward": 204800,
+      "eval_graph_forwards": 36000,
+      "assembly_graph_forwards": 9000,
+      "fit_diagnostic_graph_forwards_with_backward": 24000
+    },
+    "note": "readout / collate / optimiser overhead is excluded; the measured full-run wall clock is recorded in t3_synth_corrected.json"
+  },
+  "seconds": 11.018438300001435
+}

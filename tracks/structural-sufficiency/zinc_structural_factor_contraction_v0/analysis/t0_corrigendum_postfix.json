@@ -1,0 +1,291 @@
+{
+  "protocol": "sfc-v0-cpu-audit",
+  "stage": "T0-corrigendum-checks",
+  "code_dir": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_structural_factor_contraction_v0/code",
+  "module_sha256": {
+    "sfc_core.py": "91eb9cdad89a8c04e3909ce72dbe00529b98504ced9ef20bdcc0b52e9e00e994",
+    "sfc_synth.py": "a6ccb51fffaa4e7d01dedca0ee3039d8f7f3a0db87b1ba4fd2f64e4ad26d27e7"
+  },
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "numpy": "2.1.3",
+    "device": "cpu",
+    "threads": 4,
+    "dtype": "float64"
+  },
+  "tolerances": {
+    "fd_eps": 1e-06,
+    "value": 1e-10,
+    "grad_abs": 1e-07,
+    "grad_rel": 0.0001,
+    "forest_grad": 1e-09,
+    "forest_fd": 1e-07
+  },
+  "checks": {
+    "feature_consistency": {
+      "train_vs_eval_max_abs_diff": 0.0,
+      "train_vs_cache_max_abs_diff": 0.0,
+      "cache_vs_eval_max_abs_diff": 0.0,
+      "T_refusal": {
+        "ring4": {
+          "refused_T": true,
+          "error": "RuntimeError: SFC cycle interaction T requires the exact marginals (with_marginals=True).  This output was produced with with_marginals=False, so T was not computed; refusing to return a substitute su",
+          "H_available": true
+        },
+        "tree6": {
+          "refused_T": true,
+          "error": "RuntimeError: SFC cycle interaction T requires the exact marginals (with_marginals=True).  This output was produced with with_marginals=False, so T was not computed; refusing to return a substitute su",
+          "H_available": true
+        }
+      },
+      "no_grad_marginals": {
+        "ring4": {
+          "node_max_abs_err": 4.440892098500626e-16,
+          "edge_max_abs_err": 2.220446049250313e-16,
+          "T_finite": true,
+          "error": null,
+          "pass": true
+        },
+        "ring5": {
+          "node_max_abs_err": 6.661338147750939e-16,
+          "edge_max_abs_err": 4.440892098500626e-16,
+          "T_finite": true,
+          "error": null,
+          "pass": true
+        }
+      },
+      "pass": true,
+      "interpretation": "training and evaluation must use the same [H, T] numbers; T must never be silently replaced by logZ"
+    },
+    "gradients": {
+      "H": {
+        "A": {
+          "max_abs_err": 2.853647318445951e-10,
+          "max_rel_err": 5.0770360632521345e-09,
+          "global_rel_err": 6.330385378127678e-10,
+          "max_abs_grad": 0.45078571808687684,
+          "n_entries": 6,
+          "pass": true
+        },
+        "S": {
+          "max_abs_err": 7.032371907023105e-11,
+          "max_rel_err": 1.5430859367823098e-09,
+          "global_rel_err": 1.4924336875489542e-10,
+          "max_abs_grad": 0.4712016329899704,
+          "n_entries": 12,
+          "pass": true
+        },
+        "pass": true,
+        "value": -0.8095011852963016
+      },
+      "T": {
+        "A": {
+          "max_abs_err": 5.368404887295952e-10,
+          "max_rel_err": 6.407424757621915e-07,
+          "global_rel_err": 6.407417116203366e-07,
+          "max_abs_grad": 0.0008378422677868258,
+          "n_entries": 6,
+          "pass": true
+        },
+        "S": {
+          "max_abs_err": 6.388302075917632e-10,
+          "max_rel_err": 1.5295274963271624e-06,
+          "global_rel_err": 2.6711354805008063e-07,
+          "max_abs_grad": 0.002391605413709641,
+          "n_entries": 12,
+          "pass": true
+        },
+        "pass": true,
+        "value": 0.0009372984555264807
+      },
+      "downstream_BCE": {
+        "A": {
+          "max_abs_err": 3.356945832422298e-10,
+          "max_rel_err": 5.673081135562595e-08,
+          "global_rel_err": 1.7968692058867714e-09,
+          "max_abs_grad": 0.1868219356992995,
+          "n_entries": 6,
+          "pass": true
+        },
+        "S": {
+          "max_abs_err": 4.5809947502029047e-10,
+          "max_rel_err": 1.6215727069492426e-08,
+          "global_rel_err": 2.331802648173183e-09,
+          "max_abs_grad": 0.19645722393324405,
+          "n_entries": 12,
+          "pass": true
+        },
+        "pass": true,
+        "value": 0.8937925131757385
+      },
+      "T_C8_ring4": {
+        "A": {
+          "max_abs_err": 1.0125663793547623e-08,
+          "max_rel_err": 0.021456928333333333,
+          "global_rel_err": 2.767759884656075e-06,
+          "max_abs_grad": 0.003658432889963592,
+          "n_entries": 48,
+          "pass": true
+        },
+        "S": {
+          "max_abs_err": 4.728825299220307e-09,
+          "max_rel_err": 0.06735432065889985,
+          "global_rel_err": 1.7454281546051648e-07,
+          "max_abs_grad": 0.02709263791089711,
+          "n_entries": 96,
+          "pass": true
+        },
+        "pass": true,
+        "value": 0.004566520643293048
+      },
+      "all_pass": true,
+      "pass": true,
+      "note": "H is the control (correct before and after); T and the downstream loss are the corrigendum targets."
+    },
+    "forest_zero_gradient": {
+      "per_graph": {
+        "isolated_node": {
+          "abs_T": 0.0,
+          "max_abs_grad_autograd": 2.7755575615628914e-17,
+          "max_abs_grad_fd": 0.0,
+          "pass": true
+        },
+        "single_edge_tree": {
+          "abs_T": 4.440892098500626e-16,
+          "max_abs_grad_autograd": 2.220446049250313e-16,
+          "max_abs_grad_fd": 6.661338147750939e-10,
+          "pass": true
+        },
+        "path_6": {
+          "abs_T": 2.220446049250313e-16,
+          "max_abs_grad_autograd": 4.440892098500626e-16,
+          "max_abs_grad_fd": 1.1102230246251565e-09,
+          "pass": true
+        },
+        "random_tree_9": {
+          "abs_T": 8.881784197001252e-16,
+          "max_abs_grad_autograd": 2.7755575615628914e-15,
+          "max_abs_grad_fd": 3.9968028886505635e-09,
+          "pass": true
+        },
+        "forest_2_components": {
+          "abs_T": 1.7763568394002505e-15,
+          "max_abs_grad_autograd": 2.55351295663786e-15,
+          "max_abs_grad_fd": 3.552713678800501e-09,
+          "pass": true
+        }
+      },
+      "pass": true,
+      "note": "T is identically zero on every forest, so the gradient must vanish too; checking only the value misses Bug B."
+    },
+    "cycle_nondegenerate": {
+      "per_graph": {
+        "ring_4": {
+          "cyclic_number": 1,
+          "T_value": 0.00035298522904003704,
+          "A": {
+            "max_abs_err": 8.90629906630247e-10,
+            "max_rel_err": 8.852380117139261e-06,
+            "global_rel_err": 1.4165279402546264e-06,
+            "max_abs_grad": 0.0006287415033057187,
+            "n_entries": 6,
+            "pass": true
+          },
+          "S": {
+            "max_abs_err": 6.794902724792558e-10,
+            "max_rel_err": 4.474945177425426e-06,
+            "global_rel_err": 6.929102363429774e-07,
+            "max_abs_grad": 0.00098063246412039,
+            "n_entries": 12,
+            "pass": true
+          },
+          "pass": true
+        },
+        "ring_5": {
+          "cyclic_number": 1,
+          "T_value": 4.0195061501435703e-07,
+          "A": {
+            "max_abs_err": 2.763708595310277e-09,
+            "max_rel_err": 0.034573991666666665,
+            "global_rel_err": 0.010218913793103449,
+            "max_abs_grad": 2.7045032879868813e-07,
+            "n_entries": 6,
+            "pass": true
+          },
+          "S": {
+            "max_abs_err": 4.146996514568177e-09,
+            "max_rel_err": 0.07985801265671061,
+            "global_rel_err": 0.0002763191590134042,
+            "max_abs_grad": 1.5007994846882866e-05,
+            "n_entries": 12,
+            "pass": true
+          },
+          "pass": true
+        },
+        "square_pendant": {
+          "cyclic_number": 1,
+          "T_value": 0.0038618395068290567,
+          "A": {
+            "max_abs_err": 3.2738961541767253e-09,
+            "max_rel_err": 9.346481452603633e-06,
+            "global_rel_err": 1.0466225003943207e-06,
+            "max_abs_grad": 0.003128058256862687,
+            "n_entries": 6,
+            "pass": true
+          },
+          "S": {
+            "max_abs_err": 3.073157520128156e-09,
+            "max_rel_err": 1.5108497593238952e-06,
+            "global_rel_err": 4.345112416436711e-07,
+            "max_abs_grad": 0.0070726766665529794,
+            "n_entries": 12,
+            "pass": true
+          },
+          "pass": true
+        }
+      },
+      "pass": true,
+      "note": "the cycle residual must be non-degenerate and correctly differentiable"
+    },
+    "srand_frozen_factors": {
+      "task": "reach",
+      "n_graphs": 24,
+      "cache_vs_train": {
+        "max_abs_diff": 0.0,
+        "bit_identical": true
+      },
+      "cache_vs_eval": {
+        "max_abs_diff": 0.0,
+        "bit_identical": true
+      },
+      "train_vs_eval": {
+        "max_abs_diff": 0.0,
+        "bit_identical": true
+      },
+      "cache_vs_plan_params": {
+        "max_abs_diff": 0.0,
+        "bit_identical": true
+      },
+      "buffer_matches_plan": {
+        "A": true,
+        "S": true
+      },
+      "pass": true
+    },
+    "shared_plan_immutability": {
+      "plan_fingerprint_before": "7ab31f5a6be4aa9118dc9a0de5555e1359470983ac5adf6567d0ed561bfacb49",
+      "plan_fingerprint_after": "7ab31f5a6be4aa9118dc9a0de5555e1359470983ac5adf6567d0ed561bfacb49",
+      "fingerprint_stable": true,
+      "diagnostic_reports_mutation": false,
+      "hidden_width_stable": true,
+      "init_params_bit_identical": true,
+      "features_bit_identical": true,
+      "pass": true
+    }
+  },
+  "n_pass": 6,
+  "n_total": 6,
+  "all_pass": true,
+  "seconds": 1.5714284240093548
+}

@@ -282,9 +282,18 @@ def stress_high_treewidth() -> dict:
 
 
 def main() -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", default=str(ANALYSIS / "t2_cost.json"),
+                    help="output JSON (default keeps the historical file name)")
+    ap.add_argument("--limit", type=int, default=None,
+                    help="optional per-graph cap for a smoke run; full 10k is the protocol")
+    args = ap.parse_args()
+    out_path = Path(args.out)
     torch.set_num_threads(1)
     t_all = time.perf_counter()
-    graphs, meta = load_train_structures()
+    graphs, meta = load_train_structures(limit=args.limit)
     struct = structural_costs(graphs)
 
     timings = {}
@@ -322,8 +331,8 @@ def main() -> int:
         "seconds_total": time.perf_counter() - t_all,
     }
     ANALYSIS.mkdir(parents=True, exist_ok=True)
-    out = ANALYSIS / "t2_cost.json"
-    out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
     w = struct["width_best"]
     print(f"graphs={n} width_best median={w['median']:.0f} p99={w['p99']:.0f} max={w['max']:.0f}")
@@ -331,7 +340,8 @@ def main() -> int:
         fb = timings[f"C{C}_forward_backward"]["ms"]
         print(f"C={C:2d} fwd+bwd median={fb['median']:.2f} ms  p99={fb['p99']:.2f}  "
               f"max={fb['max']:.2f}  total={fb['total']/1e3:.1f} s")
-    print(f"-> {out}  ({payload['seconds_total']:.1f}s, rss {payload['rss_peak_mb']:.0f} MB)")
+    print(f"-> {out_path}  ({payload['seconds_total']:.1f}s, "
+          f"rss {payload['rss_peak_mb']:.0f} MB)")
     return 0
 
 

@@ -48,10 +48,21 @@ Bethe is exact on any forest, so ``T == 0`` on trees (with or without a node
 field) and is generally non-zero only when the graph closes a cycle.  ``T`` is a
 pure entropy/multi-information quantity: it measures how much of ``logZ`` the
 tree-structured (Bethe) decomposition fails to explain.
+
+``T`` and ``-F_B`` **require the exact marginals**.  They are obtained as
+``d logZ / d log(phi)`` and ``d logZ / d log(K)`` by autograd; there is no other
+way to get them in this module.  Consequently ``sfc_forward(...,
+with_marginals=False)`` computes only ``logZ`` and ``H`` and returns an output
+whose ``.T`` / ``.minus_FB`` properties **raise** instead of silently returning a
+wrong number (``logZ`` was previously substituted for ``T``).  Evaluation code
+that runs under ``torch.no_grad`` still gets exact marginals: the forward pass
+re-enables autograd locally for the gradient-of-logZ step and detaches the
+returned values.
 """
 
 from __future__ import annotations
 
+import contextlib
 import math
 from dataclasses import dataclass, field
 from typing import Iterable, Sequence
@@ -448,11 +459,32 @@ def marginals_dense(graph: TypedGraph, A: torch.Tensor, S: torch.Tensor
 class SFCOutput:
     logZ: torch.Tensor            # [C]
     H: torch.Tensor               # [C]  centred interaction
-    T: torch.Tensor               # [C]  cycle (Bethe residual) interaction
-    minus_FB: torch.Tensor        # [C]  -F_B at the exact marginals
-    node_p: torch.Tensor          # [C, n, 2] exact marginals
-    edge_p: torch.Tensor          # [C, m, 2, 2] exact marginals
+    T_value: torch.Tensor | None  # [C]  cycle (Bethe residual) interaction
+    minus_FB_value: torch.Tensor | None  # [C]  -F_B at the exact marginals
+    node_p: torch.Tensor | None   # [C, n, 2] exact marginals
+    edge_p: torch.Tensor | None   # [C, m, 2, 2] exact marginals
     stats: dict = field(default_factory=dict)
+
+    @property
+    def T(self) -> torch.Tensor:
+        """Cycle interaction.  Raises if the exact marginals were not computed."""
+        if self.T_value is None:
+            raise RuntimeError(
+                "SFC cycle interaction T requires the exact marginals "
+                "(with_marginals=True).  This output was produced with "
+                "with_marginals=False, so T was not computed; refusing to return "
+                "a substitute such as logZ.  "
+                "Use sfc_forward(..., with_marginals=True) or sfc_descriptors().")
+        return self.T_value
+
+    @property
+    def minus_FB(self) -> torch.Tensor:
+        """``-F_B`` at the exact marginals; raises if they were not computed."""
+        if self.minus_FB_value is None:
+            raise RuntimeError(
+                "-F_B requires the exact marginals (with_marginals=True); "
+                "refusing to return a substitute value.")
+        return self.minus_FB_value
 
 
 def sfc_forward(graph: TypedGraph, A: torch.Tensor, S: torch.Tensor, *,
@@ -460,7 +492,16 @@ def sfc_forward(graph: TypedGraph, A: torch.Tensor, S: torch.Tensor, *,
                 plan: ElimPlan | None = None,
                 with_marginals: bool = True,
                 track_memory: bool = False) -> SFCOutput:
-    """Exact ``logZ``, exact marginals, and the ``H`` / ``T`` descriptors."""
+    """Exact ``logZ``, exact marginals, and the ``H`` / ``T`` descriptors.
+
+    ``with_marginals=False`` is a fast path that computes only ``logZ`` and ``H``.
+    ``T`` is *not* defined without the exact marginals, so accessing ``.T`` (or
+    ``.minus_FB``) on such an output raises instead of returning ``logZ``.
+
+    Marginals are ``d logZ / d log(phi)``.  When the caller is inside
+    ``torch.no_grad`` (evaluation), autograd is re-enabled locally for exactly
+    that differentiation and every returned tensor is detached before return.
+    """
     graph.check()
     edges = graph.edges()
     if plan is None:
@@ -470,49 +511,73 @@ def sfc_forward(graph: TypedGraph, A: torch.Tensor, S: torch.Tensor, *,
     scopes = plan_scopes(plan, edges)
 
     atom = torch.as_tensor(graph.atom, dtype=torch.long)
-    log_q_full = log_node_factors(A, atom)
-    log_K_full = log_edge_factors(S)
     bond = torch.as_tensor([b for (_u, _v, b) in edges], dtype=torch.long)
-    log_K_full = log_K_full.index_select(0, bond)     # [m, C, 2, 2] per-edge slots
 
-    need_grad = bool(A.requires_grad or S.requires_grad)
-    if with_marginals and not need_grad:
-        # marginals need a differentiable path; when the caller only wants values
-        # we run on private copies that require grad, and the result is detached
-        log_q = log_q_full.detach().clone().requires_grad_(True)
-        log_K = log_K_full.detach().clone().requires_grad_(True)
-    else:
-        log_q, log_K = log_q_full, log_K_full
+    grad_enabled = torch.is_grad_enabled()
+    # ``attach``: the outputs may be differentiated w.r.t. the caller's A/S.
+    # ``need_diff``: a differentiable logZ is needed for marginals (and therefore T).
+    attach = bool(grad_enabled and (A.requires_grad or S.requires_grad))
+    need_diff = bool(with_marginals or attach)
 
-    logZ, run_stats = run_plan(plan, log_q, log_K, edges, scopes,
-                               track_memory=track_memory)
-    C = log_q.shape[0]
+    ctx = (torch.enable_grad() if (need_diff and not grad_enabled)
+           else contextlib.nullcontext())
+    with ctx:
+        log_q_full = log_node_factors(A, atom)
+        log_K_full = log_edge_factors(S).index_select(0, bond)   # [m, C, 2, 2]
+        if need_diff:
+            log_q = (log_q_full if log_q_full.requires_grad
+                     else log_q_full.detach().requires_grad_(True))
+            log_K = (log_K_full if log_K_full.requires_grad
+                     else log_K_full.detach().requires_grad_(True))
+        else:
+            log_q, log_K = log_q_full, log_K_full
 
-    # independent-atom baseline: logZ of the graph with every edge removed
-    node_logZ = torch.logsumexp(log_q, dim=2)                    # [C, n]
-    H = logZ - node_logZ.sum(1)
+        logZ, run_stats = run_plan(plan, log_q, log_K, edges, scopes,
+                                   track_memory=track_memory)
+        C = log_q.shape[0]
 
-    if with_marginals:
-        # d logZ / d(log phi) and d logZ / d(log K) are exactly the marginals; the
-        # zero-weight touch keeps unused factors (isolated node, edgeless graph)
-        # inside the autograd graph
-        zero = 0.0 * (log_q.sum() + (log_K.sum() if log_K.numel() else 0.0))
-        g_node, g_edge = torch.autograd.grad(
-            (logZ + zero).sum(), [log_q, log_K],
-            create_graph=torch.is_grad_enabled(), allow_unused=True)
-        if g_node is None:
-            g_node = torch.zeros_like(log_q)
-        if g_edge is None:
-            g_edge = torch.zeros_like(log_K)
-        node_p = g_node.contiguous()                              # [C, n, 2]
-        edge_p = (g_edge.permute(1, 0, 2, 3).contiguous() if len(edges)
-                  else torch.zeros(C, 0, 2, 2, dtype=log_q.dtype))
-    else:
-        node_p = torch.zeros(C, graph.n, 2, dtype=log_q.dtype)
-        edge_p = torch.zeros(C, len(edges), 2, 2, dtype=log_q.dtype)
+        # independent-atom baseline: logZ of the graph with every edge removed
+        node_logZ = torch.logsumexp(log_q, dim=2)                # [C, n]
+        H = logZ - node_logZ.sum(1)
 
-    minus_FB = _minus_bethe_free_energy(log_q, log_K, node_p, edge_p, graph.degree())
-    T = logZ - minus_FB
+        if with_marginals:
+            # d logZ / d(log phi) and d logZ / d(log K) are exactly the marginals;
+            # the zero-weight touch keeps unused factors (isolated node, edgeless
+            # graph) inside the autograd graph.  create_graph=attach keeps the
+            # second-order path alive: T depends on theta both explicitly and
+            # through the marginals, so dT/dtheta needs d(marginals)/dtheta.
+            zero = 0.0 * (log_q.sum() + (log_K.sum() if log_K.numel() else 0.0))
+            g_node, g_edge = torch.autograd.grad(
+                (logZ + zero).sum(), [log_q, log_K],
+                create_graph=attach, allow_unused=True)
+            if g_node is None:
+                g_node = torch.zeros_like(log_q)
+            if g_edge is None:
+                g_edge = torch.zeros_like(log_K)
+            node_p = g_node.contiguous()                              # [C, n, 2]
+            edge_p = (g_edge.permute(1, 0, 2, 3).contiguous() if len(edges)
+                      else torch.zeros(C, 0, 2, 2, dtype=log_q.dtype))
+            minus_FB = _minus_bethe_free_energy(log_q, log_K, node_p, edge_p,
+                                                graph.degree())
+            T = logZ - minus_FB
+        else:
+            node_p = None
+            edge_p = None
+            minus_FB = None
+            T = None
+
+    if not attach:
+        # values only: never leak a graph built from private copies under no_grad
+        logZ = logZ.detach()
+        H = H.detach()
+        if T is not None:
+            T = T.detach()
+        if minus_FB is not None:
+            minus_FB = minus_FB.detach()
+        if node_p is not None:
+            node_p = node_p.detach()
+        if edge_p is not None:
+            edge_p = edge_p.detach()
 
     stats = {
         **plan.cost(int(C)),
@@ -520,8 +585,10 @@ def sfc_forward(graph: TypedGraph, A: torch.Tensor, S: torch.Tensor, *,
         "n": graph.n,
         "m": len(edges),
         "cyclomatic": graph.cyclomatic(),
+        "marginals_computed": bool(with_marginals),
+        "T_computed": bool(with_marginals),
     }
-    return SFCOutput(logZ=logZ, H=H, T=T, minus_FB=minus_FB,
+    return SFCOutput(logZ=logZ, H=H, T_value=T, minus_FB_value=minus_FB,
                      node_p=node_p, edge_p=edge_p, stats=stats)
 
 
@@ -537,18 +604,35 @@ def _minus_bethe_free_energy(log_q: torch.Tensor, log_K: torch.Tensor,
     tiny = torch.finfo(node_p.dtype).tiny
     log_bv = torch.log(node_p.clamp_min(tiny))                  # [C, n, 2]
     log_be = torch.log(edge_p.clamp_min(tiny))                  # [C, m, 2, 2]
-    out = (node_p * log_q.detach()).sum(dim=(1, 2))
-    out = out + (edge_p * log_K.detach().permute(1, 0, 2, 3)).sum(dim=(1, 2, 3))
+    # NOTE: no ``.detach()`` here.  ``_minus_bethe_free_energy`` is evaluated at
+    # the *exact* marginals b*(theta), so F_B depends on theta both explicitly
+    # (through log phi / log K) and implicitly (through b*).  Detaching the
+    # explicit potentials silently drops the first term and makes dT/dtheta
+    # inconsistent with the value of T (including a non-zero forest gradient).
+    out = (node_p * log_q).sum(dim=(1, 2))
+    out = out + (edge_p * log_K.permute(1, 0, 2, 3)).sum(dim=(1, 2, 3))
     d = torch.as_tensor(degree, dtype=node_p.dtype)
     out = out + ((d - 1.0)[None, :] * (node_p * log_bv).sum(dim=2)).sum(1)
     out = out - (edge_p * log_be).sum(dim=(1, 2, 3))
     return out
 
 
-def sfc_descriptor(graph: TypedGraph, A: torch.Tensor, S: torch.Tensor) -> torch.Tensor:
-    """``[H_c, T_c]`` concatenated, shape ``[2 * C]``."""
-    out = sfc_forward(graph, A, S)
+def sfc_descriptor(graph: TypedGraph, A: torch.Tensor, S: torch.Tensor,
+                   *, plan: ElimPlan | None = None) -> torch.Tensor:
+    """``[H_c, T_c]`` concatenated, shape ``[2 * C]``.
+
+    Always uses the exact marginals: ``T`` has no definition without them.
+    """
+    out = sfc_forward(graph, A, S, plan=plan, with_marginals=True)
     return torch.cat([out.H, out.T])
+
+
+def sfc_interaction(graph: TypedGraph, A: torch.Tensor, S: torch.Tensor,
+                    *, plan: ElimPlan | None = None
+                    ) -> tuple[torch.Tensor, torch.Tensor]:
+    """Fast path ``(logZ, H)`` that never touches the marginals (and never ``T``)."""
+    out = sfc_forward(graph, A, S, plan=plan, with_marginals=False)
+    return out.logZ, out.H
 
 
 # ---------------------------------------------------------------------------

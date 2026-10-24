@@ -61,6 +61,8 @@ Run:
 
 from __future__ import annotations
 
+import argparse
+import hashlib
 import json
 import sys
 import time
@@ -470,7 +472,14 @@ def composition_features(g: SC.TypedGraph) -> np.ndarray:
 
 def sfc_features(g: SC.TypedGraph, A: torch.Tensor, S: torch.Tensor,
                  plan=None) -> np.ndarray:
-    out = SC.sfc_forward(g, A, S, plan=plan, with_marginals=False)
+    """``[H_c, T_c]`` from the exact marginals, float32.
+
+    Always computes the marginals.  ``T`` has no definition in this module
+    without them, and the previous fast path (``with_marginals=False``) silently
+    returned ``logZ`` in its place.  Safe under ``torch.no_grad``: ``sfc_core``
+    re-enables autograd locally for the marginal step and detaches the result.
+    """
+    out = SC.sfc_forward(g, A, S, plan=plan, with_marginals=True)
     v = torch.cat([out.H, out.T]).detach().numpy().astype(np.float32)
     return v
 
@@ -602,11 +611,21 @@ class Arm(nn.Module):
         if self.use_sfc:
             self.K = int(sfc_plan["K"])
             if self.sfc_trainable:
-                self.A = nn.Parameter(torch.as_tensor(sfc_plan["A"], dtype=torch.float32))
-                self.S = nn.Parameter(torch.as_tensor(sfc_plan["S"], dtype=torch.float32))
+                # ``.clone()`` matters: ``torch.as_tensor`` on a float64 tensor
+                # returns the *same object*, so an in-place ``requires_grad_`` or an
+                # optimiser step would silently overwrite the shared plan.
+                self.A = nn.Parameter(
+                    torch.as_tensor(sfc_plan["A"], dtype=torch.float32).clone())
+                self.S = nn.Parameter(
+                    torch.as_tensor(sfc_plan["S"], dtype=torch.float32).clone())
             else:
-                self.register_buffer("A", torch.as_tensor(sfc_plan["A"], dtype=torch.float32))
-                self.register_buffer("S", torch.as_tensor(sfc_plan["S"], dtype=torch.float32))
+                # keep the frozen factors in the same float64 dtype used to build
+                # the cached features, so the cache is exactly reproducible from
+                # the arm's own buffers (float32 copy would silently differ)
+                self.register_buffer(
+                    "A", torch.as_tensor(sfc_plan["A"], dtype=torch.float64).clone())
+                self.register_buffer(
+                    "S", torch.as_tensor(sfc_plan["S"], dtype=torch.float64).clone())
             dims.append(2 * self.K)
         self.readout = Readout(sum(dims), hidden)
 
@@ -668,6 +687,15 @@ def make_sfc_plan(seed: int, K: int = K_CHANNELS) -> dict:
     return {"K": K, "A": A, "S": S}
 
 
+def plan_fingerprint(plan: dict) -> str:
+    """Byte fingerprint of the frozen factors (detects in-place mutation)."""
+    h = hashlib.sha256()
+    for key in ("A", "S"):
+        t = plan[key].detach().to(torch.float64).contiguous()
+        h.update(np.asarray(t.numpy()).tobytes())
+    return h.hexdigest()
+
+
 def fit_hidden(name, comp_dim, sfc_plan, seed, target=TARGET_PARAMS):
     """Pick the readout width so every arm lands within +-5 % of the target."""
     best = None
@@ -685,7 +713,18 @@ def fit_hidden(name, comp_dim, sfc_plan, seed, target=TARGET_PARAMS):
 # ---------------------------------------------------------------------------
 
 
-_PLAN_CACHE: dict[int, SC.ElimPlan] = {}
+_PLAN_CACHE: dict[tuple, SC.ElimPlan] = {}
+
+
+def _plan_key(g) -> tuple:
+    """Topology key for the elimination-plan cache.
+
+    The pre-fix cache was keyed by ``id(g)``; CPython reuses object ids, so a
+    freed graph's plan could be applied to a different graph (crash or wrong
+    values).  The plan depends only on ``n`` and the (undirected) edge list, so
+    keying on exactly that is both safe and reusable.
+    """
+    return (g.n, tuple((u, v) for u, v, _b in g.edges()))
 
 
 def _plan_for(g) -> SC.ElimPlan:
@@ -694,7 +733,7 @@ def _plan_for(g) -> SC.ElimPlan:
     Rebuilding it per step was the dominant cost (13 ms/graph); caching it is a
     pure engineering fix with no change to the mathematics.
     """
-    key = id(g)
+    key = _plan_key(g)
     p = _PLAN_CACHE.get(key)
     if p is None:
         edges = g.edges()
@@ -704,16 +743,32 @@ def _plan_for(g) -> SC.ElimPlan:
 
 
 def _sfc_batch(graphs, A64, S64, need_grad: bool):
-    """Exact SFC features for a batch; differentiable only when ``need_grad``."""
+    """Exact SFC features for a batch.
+
+    Training and evaluation use *exactly the same* feature definition: ``H`` and
+    ``T`` from the exact marginals.  ``need_grad`` only decides whether the
+    returned float32 features keep an autograd path to ``A64`` / ``S64``; it does
+    not change the numbers (verified item-by-item in
+    :func:`audit_sfc_feature_consistency`).
+    """
     feats = []
-    for g in graphs:
-        out = SC.sfc_forward(g, A64, S64, plan=_plan_for(g), with_marginals=need_grad)
-        feats.append(torch.cat([out.H, out.T]).to(torch.float32))
+    with torch.set_grad_enabled(bool(need_grad)):
+        for g in graphs:
+            out = SC.sfc_forward(g, A64, S64, plan=_plan_for(g),
+                                 with_marginals=True)
+            feats.append(torch.cat([out.H, out.T]).to(torch.float32))
     return torch.stack(feats)
 
 
 def run_arm(task: str, name: str, split: dict, seed: int, device="cpu",
-            steps: int = 400, batch: int = 64, lr: float = 3e-3) -> dict:
+            steps: int = 400, batch: int = 64, lr: float = 3e-3,
+            return_model: bool = False) -> dict:
+    """Train one arm under the frozen protocol.
+
+    ``return_model`` is for post-hoc diagnostics only: it returns the trained
+    module alongside the metrics so an evaluation-time ablation can be run at the
+    final parameter point.  It does not change training in any way.
+    """
     torch.manual_seed(seed)
     comp_dim = int(split["comp_train"].shape[1])
     hidden, npar, sfc_plan = fit_hidden(name, comp_dim, split["sfc_plan"], seed)
@@ -730,6 +785,9 @@ def run_arm(task: str, name: str, split: dict, seed: int, device="cpu",
 
     t0 = time.perf_counter()
     sfc_seconds = 0.0
+    # full training curve: BCE on the sampled batch, its accuracy, and the norm
+    # of the SFC factor gradients (0.0 / None would show a dead T path)
+    curve: list[dict] = []
     model.train()
     for _step in range(steps):
         idx = rng.integers(0, n_train, size=batch)
@@ -749,18 +807,44 @@ def run_arm(task: str, name: str, split: dict, seed: int, device="cpu",
         loss = nn.functional.binary_cross_entropy_with_logits(pred, y_tr[idx])
         opt.zero_grad(set_to_none=True)
         loss.backward()
+        if need_grad:
+            sfc_gn = float(torch.sqrt(sum(
+                (p.grad.detach() ** 2).sum() for p in (model.A, model.S)
+                if p.grad is not None)))
+        else:
+            sfc_gn = None
         nn.utils.clip_grad_norm_(model.parameters(), 5.0)
         opt.step()
         sched.step()
+        with torch.no_grad():
+            batch_acc = float(((pred.detach() > 0) == (y_tr[idx] > 0.5))
+                              .to(torch.float32).mean())
+        curve.append({"step": _step, "train_bce_batch": float(loss.detach()),
+                      "train_acc_batch": batch_acc, "sfc_grad_norm": sfc_gn})
     train_s = time.perf_counter() - t0
 
     model.eval()
     res = {"arm": name, "seed": seed, "hidden": hidden, "n_params": npar,
            "train_seconds": train_s, "sfc_seconds": sfc_seconds,
            "sfc_trainable": bool(model.sfc_trainable) if model.use_sfc else False,
-           "steps": steps, "batch": batch, "lr": lr}
+           "steps": steps, "batch": batch, "lr": lr,
+           "curve": curve}
+    t_eval = time.perf_counter()
     for part in ("train", "unseen"):
         res[part] = evaluate(model, split, part, need_grad)
+    res["eval_seconds"] = time.perf_counter() - t_eval
+    res["curve_summary"] = {
+        "first_bce": curve[0]["train_bce_batch"],
+        "last_bce": curve[-1]["train_bce_batch"],
+        "min_bce": min(c["train_bce_batch"] for c in curve),
+        "last10_mean_bce": float(np.mean([c["train_bce_batch"]
+                                          for c in curve[-10:]])),
+        "last10_mean_acc": float(np.mean([c["train_acc_batch"]
+                                          for c in curve[-10:]])),
+        "last_sfc_grad_norm": curve[-1]["sfc_grad_norm"],
+    }
+    if return_model:
+        res["model"] = model
     return res
 
 
@@ -777,11 +861,10 @@ def evaluate(model, split, part, need_grad: bool, batch=256) -> dict:
         gs = split[f"graphs_{part}"][sl]
         pjs = split[f"pj_{part}"][sl]
         if model.use_sfc and model.sfc_trainable:
-            A64 = model.A.detach().to(torch.float64)
-            S64 = model.S.detach().to(torch.float64)
-            sfc = torch.stack([torch.cat([o.H, o.T]).to(torch.float32) for o in
-                               (SC.sfc_forward(g, A64, S64, plan=_plan_for(g),
-                                               with_marginals=False) for g in gs)])
+            # same feature path as training (exact marginals, hence a real T),
+            # just without the autograd path to the parameters
+            sfc = _sfc_batch(gs, model.A.detach().to(torch.float64),
+                             model.S.detach().to(torch.float64), need_grad=False)
         else:
             sfc = sfc_fixed[sl]
         c, _s, pjb = collate(gs, comp[sl], None, pjs)
@@ -805,11 +888,12 @@ def assemble(task: str, n_seen: int = 3000, n_unseen: int = 1500,
     gs_tr, y_tr, k_tr = build_dataset(task, spec.seen, n_seen, seed=seed + 1)
     gs_te, y_te, k_te = build_dataset(task, spec.unseen, n_unseen, seed=seed + 2)
 
-    gen = torch.Generator().manual_seed(4242)
-    A = (torch.randn(N_ATOM_CATEGORIES, K_CHANNELS, 2, generator=gen,
-                     dtype=torch.float64) * 1.5)
-    S = (torch.randn(N_BOND_SLOTS, K_CHANNELS, 3, generator=gen,
-                     dtype=torch.float64) * 1.5)
+    # Single source of truth for the frozen-random factors: the Srand arm's
+    # buffers and the cached features must be built from *the same* tensors.
+    # (The pre-fix code computed the cache from a second RNG with seed 4242,
+    # while the arm's buffers came from ``make_sfc_plan(seed=0)``.)
+    sfc_plan = make_sfc_plan(seed=0)
+    A, S = sfc_plan["A"], sfc_plan["S"]
 
     def pack(graphs):
         comp = np.stack([composition_features(g) for g in graphs])
@@ -826,8 +910,46 @@ def assemble(task: str, n_seen: int = 3000, n_unseen: int = 1500,
         "pj_train": pj_tr, "pj_unseen": pj_te,
         "y_train": y_tr, "y_unseen": y_te,
         "keys_train": k_tr, "keys_unseen": k_te,
-        "sfc_plan": make_sfc_plan(seed=0),
+        "sfc_plan": sfc_plan,
+        "sfc_plan_fingerprint": plan_fingerprint(sfc_plan),
     }
+
+
+def audit_sfc_feature_consistency(split: dict, part: str = "train",
+                                  n: int = 64) -> dict:
+    """Item-by-item equality: cached / train-path / eval-path / plan factors.
+
+    The frozen-random arm (``Srand``) consumes ``split["sfc_{part}"]`` while its
+    buffers carry ``split["sfc_plan"]``.  If either side is built from different
+    parameters, or if the train path and the eval path use different feature
+    definitions, this returns ``pass=False``.
+    """
+    graphs = split[f"graphs_{part}"][:n]
+    plan = split["sfc_plan"]
+    A = torch.as_tensor(plan["A"], dtype=torch.float64)
+    S = torch.as_tensor(plan["S"], dtype=torch.float64)
+    cache = torch.as_tensor(split[f"sfc_{part}"][:n])
+    train_feat = _sfc_batch(graphs, A.clone().requires_grad_(True),
+                            S.clone().requires_grad_(True), True).detach()
+    eval_feat = _sfc_batch(graphs, A, S, False)
+    plan_feat = torch.stack([torch.as_tensor(sfc_features(g, A, S))
+                             for g in graphs])
+
+    def diff(x, y):
+        d = (x.detach() - y.detach()).abs()
+        return {"max_abs_diff": float(d.max()) if d.numel() else 0.0,
+                "bit_identical": bool(torch.equal(x.detach(), y.detach()))}
+
+    out = {
+        "part": part, "n_graphs": int(len(graphs)),
+        "cache_vs_train": diff(cache, train_feat),
+        "cache_vs_eval": diff(cache, eval_feat),
+        "train_vs_eval": diff(train_feat, eval_feat),
+        "cache_vs_plan_features": diff(cache, plan_feat),
+    }
+    out["pass"] = bool(all(v["bit_identical"] for k, v in out.items()
+                            if isinstance(v, dict) and "bit_identical" in v))
+    return out
 
 
 def dataset_diagnostics(task: str, split: dict) -> dict:
@@ -924,15 +1046,20 @@ def sfc_fit_diagnostic(task: str, split: dict, steps: int = 60,
     gs = split["graphs_train"][:n_graphs]
     y = _t.as_tensor(split["y_train"][:n_graphs].astype(np.float64))
     plan = split["sfc_plan"]
-    A = _t.as_tensor(plan["A"], dtype=_t.float64).requires_grad_(True)
-    S = _t.as_tensor(plan["S"], dtype=_t.float64).requires_grad_(True)
+    # ``.clone()`` is required, not cosmetic: ``as_tensor`` on a float64 tensor
+    # aliases it, and the in-place ``requires_grad_`` / Adam steps below would then
+    # overwrite the frozen factors shared with every other arm (the Srand cache in
+    # particular).  Pre-fix this silently mutated ``split["sfc_plan"]``.
+    A = _t.as_tensor(plan["A"], dtype=_t.float64).clone().requires_grad_(True)
+    S = _t.as_tensor(plan["S"], dtype=_t.float64).clone().requires_grad_(True)
+    fingerprint_before = plan_fingerprint(plan)
     opt = _t.optim.Adam([A, S], lr=0.05)
     trace = []
     t0 = time.perf_counter()
     for step in range(steps):
         F = _t.stack([_t.cat([o.H, o.T]) for o in
                       (SC.sfc_forward(g, A, S, plan=_plan_for(g),
-                                      with_marginals=False) for g in gs)])
+                                      with_marginals=True) for g in gs)])
         w = _t.linalg.lstsq(F.detach(), y).solution
         loss = _t.nn.functional.binary_cross_entropy_with_logits(F @ w, y)
         opt.zero_grad()
@@ -944,6 +1071,8 @@ def sfc_fit_diagnostic(task: str, split: dict, steps: int = 60,
                           "train_acc_linear_probe": acc})
     return {"n_graphs": n_graphs, "steps": steps,
             "seconds": time.perf_counter() - t0, "trace": trace,
+            "plan_fingerprint": fingerprint_before,
+            "plan_mutated": plan_fingerprint(plan) != fingerprint_before,
             "note": ("linear readout solved in closed form each step; only the "
                      "SFC factor parameters are optimised")}
 
@@ -954,12 +1083,24 @@ def sfc_fit_diagnostic(task: str, split: dict, steps: int = 60,
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", default=str(ANALYSIS / "t3_synth_corrected.json"),
+                    help="corrected result file (the pre-fix t3_synth.json is never overwritten)")
+    args = ap.parse_args()
+    out_path = Path(args.out)
+
     torch.set_num_threads(4)
     t_all = time.perf_counter()
     arms = ("C", "P", "S", "Srand", "SP")
+    hashes = {f: hashlib.sha256((_HERE / f).read_bytes()).hexdigest()
+              for f in ("sfc_core.py", "sfc_synth.py")}
     payload = {
         "protocol": "sfc-v0-cpu-audit",
         "stage": "T3-synthetic-sample-efficiency",
+        "corrigendum": ("bug-fix replay: Bug A (evaluation T was logZ) and "
+                        "Bug B (detached potentials in the T gradient) fixed; "
+                        "features are computed from exact marginals on every path"),
+        "module_sha256": hashes,
         "K_channels": K_CHANNELS,
         "target_params": TARGET_PARAMS,
         "steps": 400, "batch": 64, "lr": 3e-3, "seeds": list(SEEDS),
@@ -968,14 +1109,30 @@ def main() -> int:
         "datasets": {},
         "certificates": {},
         "fit_diagnostics": {},
+        "feature_consistency": {},
     }
     for task in ("reach", "junction"):
+        t_split = time.perf_counter()
         split = assemble(task, seed=0)
+        payload.setdefault("assembly_seconds", {})[task] = time.perf_counter() - t_split
+        audit = audit_sfc_feature_consistency(split, "train")
+        payload["feature_consistency"][task] = audit
+        if not audit["pass"]:
+            raise SystemExit(f"SFC feature inconsistency in {task}: {audit}")
+        print(f"{task:9s} feature consistency: cached/train/eval bit-identical="
+              f"{audit['pass']} (n={audit['n_graphs']})")
         diag = dataset_diagnostics(task, split)
         payload["datasets"][task] = diag
         payload["certificates"][task] = non_sfc_certificate(task)
         payload["fit_diagnostics"][task] = sfc_fit_diagnostic(task, split)
         fd = payload["fit_diagnostics"][task]
+        if fd.get("plan_mutated"):
+            raise SystemExit(f"{task}: fit diagnostic mutated the frozen factors")
+        # the diagnostic used to alias and overwrite split["sfc_plan"] in place;
+        # re-audit after it ran so the Srand cache is proven still reproducible
+        audit_post = audit_sfc_feature_consistency(split, "train")
+        if not audit_post["pass"]:
+            raise SystemExit(f"SFC feature inconsistency after diagnostic in {task}")
         print(f"{task:9s} SFC-fit diagnostic: train-acc "
               f"{fd['trace'][0]['train_acc_linear_probe']:.3f} -> "
               f"{fd['trace'][-1]['train_acc_linear_probe']:.3f} "
@@ -987,7 +1144,16 @@ def main() -> int:
                 print(f"{task:9s} {name:2s} seed{seed} "
                       f"train={res['train']['accuracy']:.3f} "
                       f"unseen={res['unseen']['accuracy']:.3f} "
-                      f"({res['train_seconds']:.0f}s, {res['n_params']}p)")
+                      f"bce_train={res['train']['bce']:.4f} "
+                      f"curve {res['curve_summary']['first_bce']:.3f}->"
+                      f"{res['curve_summary']['last10_mean_bce']:.3f} "
+                      f"({res['train_seconds']:.0f}s+{res['eval_seconds']:.0f}s, "
+                      f"{res['n_params']}p)")
+        # final audit: nothing in the whole task block may have moved the factors
+        audit_end = audit_sfc_feature_consistency(split, "train")
+        payload["feature_consistency"][f"{task}_after_all_arms"] = audit_end
+        if not audit_end["pass"]:
+            raise SystemExit(f"SFC feature inconsistency after all arms in {task}")
 
     # summary: per task/arm mean over seeds, and the S-vs-P contrast
     summary = {}
@@ -1001,9 +1167,20 @@ def main() -> int:
                 "unseen_acc_per_seed": [r["unseen"]["accuracy"] for r in rr],
                 "train_acc_mean": float(np.mean([r["train"]["accuracy"] for r in rr])),
                 "train_acc_per_seed": [r["train"]["accuracy"] for r in rr],
+                "train_bce_mean": float(np.mean([r["train"]["bce"] for r in rr])),
+                "train_bce_per_seed": [r["train"]["bce"] for r in rr],
                 "unseen_bce_mean": float(np.mean([r["unseen"]["bce"] for r in rr])),
+                "unseen_bce_per_seed": [r["unseen"]["bce"] for r in rr],
                 "n_params": rr[0]["n_params"],
                 "seconds_mean": float(np.mean([r["train_seconds"] for r in rr])),
+                "eval_seconds_mean": float(np.mean([r["eval_seconds"] for r in rr])),
+                "curve_first_bce_per_seed": [r["curve_summary"]["first_bce"] for r in rr],
+                "curve_last10_bce_per_seed": [r["curve_summary"]["last10_mean_bce"]
+                                               for r in rr],
+                "curve_last10_acc_per_seed": [r["curve_summary"]["last10_mean_acc"]
+                                               for r in rr],
+                "last_sfc_grad_norm_per_seed": [r["curve_summary"]["last_sfc_grad_norm"]
+                                                for r in rr],
             }
         per["_seed_spread_P"] = float(np.ptp(per["P"]["unseen_acc_per_seed"]))
         per["_seed_spread_S"] = float(np.ptp(per["S"]["unseen_acc_per_seed"]))
@@ -1013,7 +1190,7 @@ def main() -> int:
         per["_SP_minus_P"] = per["SP"]["unseen_acc_mean"] - per["P"]["unseen_acc_mean"]
         per["_S_minus_C"] = per["S"]["unseen_acc_mean"] - per["C"]["unseen_acc_mean"]
         per["_seed_spread_max"] = max(per["_seed_spread_P"], per["_seed_spread_S"],
-                                      per["_seed_spread_SP"])
+                                       per["_seed_spread_SP"])
         per["_sfc_beats_P_both_seeds"] = bool(
             all(s_ > p_ for s_, p_ in zip(per["S"]["unseen_acc_per_seed"],
                                           per["P"]["unseen_acc_per_seed"])))
@@ -1021,12 +1198,22 @@ def main() -> int:
             per["_S_minus_P"] > per["_seed_spread_max"])
         summary[task] = per
     payload["arms"] = summary
+    tasks = ("reach", "junction")
+    payload["verdict"] = (
+        "PROMISING_FOR_ZINC_PILOT"
+        if all(summary[t]["_sfc_beats_P_both_seeds"]
+               and summary[t]["_sfc_beats_P_by_more_than_seed_spread"] for t in tasks)
+        else "COMPUTABLE_BUT_NO_SAMPLE_EFFICIENCY_EVIDENCE")
+    payload["verdict_rule"] = (
+        "PROMISING_FOR_ZINC_PILOT requires S to beat P on unseen combinations in "
+        "both seeds AND the mean S-P margin to exceed the maximum seed spread, "
+        "on BOTH pre-registered tasks; no ZINC run is launched by this verdict.")
     payload["seconds_total"] = time.perf_counter() - t_all
 
-    ANALYSIS.mkdir(parents=True, exist_ok=True)
-    out = ANALYSIS / "t3_synth.json"
-    out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    print(f"-> {out} ({payload['seconds_total']:.0f}s)")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    print(f"verdict: {payload['verdict']}")
+    print(f"-> {out_path} ({payload['seconds_total']:.0f}s)")
     return 0
 
 
