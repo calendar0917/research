@@ -138,7 +138,7 @@ def _permute_pair_edges(loc_et: torch.Tensor, loc_mask: torch.Tensor, seed: int 
     rng = np.random.default_rng(seed)
     et = loc_et.clone()
     B, E, L, _ = et.shape
-    tri = torch.triu(torch.ones(L, L, dtype=torch.bool), diagonal=1)
+    tri = torch.triu(torch.ones(L, L, dtype=torch.bool, device=loc_et.device), diagonal=1)
     for b in range(B):
         for e in range(E):
             nm = loc_mask[b, e]
