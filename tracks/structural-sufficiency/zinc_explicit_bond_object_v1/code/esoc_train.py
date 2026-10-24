@@ -4,7 +4,7 @@ Three modes, all on the same code path:
 
 * ``profile``  a few complete epochs on the full train split -> timing.json
 * ``overfit``  a fixed subset of train molecules -> small-sample sanity gate
-* ``full``     the declared 2500-epoch schedule
+* ``full``     the declared schedule from ``configs/esoc_v1.json`` (600 epochs)
 
 Only official PyG ZINC train (10,000) and valid (1,000) are used.  The official
 test split is never constructed.  The checkpoint is selected on valid with a
@@ -204,15 +204,29 @@ def train(arm: str, seed: int, epochs: int, device: str, *, mode: str,
         curve.append({"epoch": epoch, "step": step, "lr": lr if step else lr_at(0),
                       "train_mae_online": train_mae, "valid_mae": valid_mae})
         epoch_times.append(time.perf_counter() - te)
+        # Live curve: rewritten every epoch so the run can be watched and analysed
+        # while it is still in flight (``rr logs`` only shows what we print).
+        C.write_curve_csv(out_dir / "curve.csv", curve)
+        # One log line per epoch: silence between checkpoints made a healthy run
+        # indistinguishable from a hung one.
+        improved = "*" if best["epoch"] == epoch else " "
+        C.log(f"[esoc {arm} s{seed}] ep {epoch}/{epochs} "
+              f"train {train_mae:.5f} valid {valid_mae:.5f} "
+              f"best {best['valid_mae']:.5f}@{best['epoch']}{improved} "
+              f"lr {lr:.2e} {(time.perf_counter() - t0) / 3600:.3f}h")
         if epoch % 100 == 0 or epoch == epochs:
             C.atomic_torch_save({"state": C.cpu_state(model), "epoch": epoch,
                                  "optimizer": opt.state_dict(), "step": step,
                                  "arm": arm, "seed": int(seed)},
                                 out_dir / "last.pt")
-            C.log(f"[esoc {arm} s{seed}] ep {epoch}/{epochs} "
-                  f"train {train_mae:.5f} valid {valid_mae:.5f} "
-                  f"best {best['valid_mae']:.5f}@{best['epoch']} "
-                  f"{(time.perf_counter() - t0) / 3600:.2f}h")
+            C.write_json(out_dir / "live.json", {
+                "arm": arm, "seed": int(seed), "epoch": epoch, "epochs": int(epochs),
+                "step": step, "train_mae_online": float(train_mae),
+                "valid_mae": float(valid_mae),
+                "best_valid": float(best["valid_mae"]), "best_epoch": int(best["epoch"]),
+                "lr": float(lr), "elapsed_hours": float((time.perf_counter() - t0) / 3600),
+                "epochs_per_hour": float(epoch / max((time.perf_counter() - t0) / 3600, 1e-9)),
+            })
         if (time.perf_counter() - t0) / 3600.0 > max_hours:
             aborted = f"max_hours {max_hours} exceeded at epoch {epoch}"
             C.log(f"[esoc {arm} s{seed}] ABORT: {aborted}")

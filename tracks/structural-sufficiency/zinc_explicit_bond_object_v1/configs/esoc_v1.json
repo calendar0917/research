@@ -14,12 +14,12 @@
     "metric": "MAE"
   },
   "recipe": {
-    "epochs": 2500,
+    "epochs": 600,
     "batch_size": 32,
     "lr": 0.002,
     "lr_min": 2e-05,
     "weight_decay": 1e-05,
-    "warmup_epochs": 50,
+    "warmup_epochs": 12,
     "grad_clip": 5.0,
     "loss": "l1_raw_y",
     "n_layers": 12,
@@ -30,7 +30,17 @@
     "selection": "strict < on valid MAE; ties keep the earlier epoch",
     "init": "from scratch (no SSL encoder, no supervised P3/DCC checkpoint)",
     "compile": true,
-    "compile_mode": "reduce-overhead"
+    "compile_mode": "reduce-overhead",
+    "amendment": {
+      "date": "2026-10-24",
+      "field": "epochs 2500 -> 600, warmup_epochs 50 -> 12",
+      "reason": "The frozen 2500-epoch schedule was 780,000 updates, i.e. 16.7x the 46,800 updates of the DCC-L reference recipe (600 epochs x 78 updates at batch 128). Budget alignment must be in updates, not epochs. 600 x 312 = 187,200 updates keeps 4x the reference optimisation budget while making the absolute valid number comparable: at the old schedule the cosine LR was still ~1.9e-3 at epoch 300, so no mid-run number could be compared with a converged DCC-L run. Warmup is held at the same 2% of training (12/600 epochs = 3,744 updates vs 50/2500 = 15,600) so the warmup fraction is unchanged. Nothing else in the recipe, model, data or gates changes.",
+      "amended_before_any_verdict": true,
+      "prior_runs_discarded": [
+        "esoc-real-s0b / esoc-null-s0b (compile_mode=default, 12.8h projected)",
+        "esoc-real-s0c / esoc-null-s0c (reduce-overhead, 2500-epoch schedule, stopped at ~ep300)"
+      ]
+    }
   },
   "model": {
     "d_model": 64,

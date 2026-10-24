@@ -146,8 +146,8 @@ preserved (gates: `S1` linear / `S2` quadratic under a 3× token amplitude).
 |---|---|
 | optimiser | AdamW, `betas=(0.9,0.95)`, `eps=1e-8`, weight decay `1e-5` |
 | batch | 32 molecules, `drop_last=True` → **312 updates/epoch** |
-| LR | peak `2e-3`, 50-epoch linear warm-up (15,600 updates), per-update cosine to `2e-5` |
-| horizon | **2,500 epochs = 780,000 updates**, never truncated mid-run |
+| LR | peak `2e-3`, 12-epoch linear warm-up (3,744 updates), per-update cosine to `2e-5` |
+| horizon | **600 epochs = 187,200 updates**, never truncated mid-run |
 | loss | raw-`y` L1 |
 | clip | global grad norm 5.0 |
 | dropout | attention 0.2; graph-level stochastic depth 0.1; nothing else |
@@ -158,6 +158,25 @@ preserved (gates: `S1` linear / `S2` quadratic under a 3× token amplitude).
 
 Because token set, local encoding, PE and parameter allocation differ, this is
 **not** a fair reproduction of the paper's 0.0566 and no such comparison is made.
+
+### Protocol amendment: 2,500 → 600 epochs (2026-10-24, before any verdict)
+
+The originally frozen 2,500-epoch horizon is **780,000 updates**, which is
+**16.7× the 46,800 updates** of the DCC-L reference recipe (600 epochs × 78
+updates at batch 128) — the budget was aligned in epochs instead of updates. It
+also made every absolute number incomparable to that reference: with a
+2,500-epoch cosine, the LR is still ≈`1.9e-3` at epoch 300, whereas the DCC-L run
+is already at ≈`5e-4` by then, so a mid-run ESOC valid MAE measures "has not
+annealed yet", not "is a worse model".
+
+Amendment: **600 epochs (187,200 updates, 4× the reference budget), warm-up 12
+epochs (3,744 updates)**. The warm-up fraction is held at 2 % of training
+(12/600 = 50/2500), and nothing else changes — not the model, the data, the
+loss, the gates, the metrics or the decision rule. Runs launched under the old
+schedule were stopped and are listed in `configs/esoc_v1.json`; they produced no
+verdict and their numbers are not reported as results.
+
+Measured cost after the amendment: 1.7e-3 GPU-h/epoch → **≈1.03 GPU-h per run**.
 
 ---
 
@@ -279,8 +298,8 @@ descriptively. With the regularisers frozen the 10-step drift is 1.2e-7 in loss
 and 2.4e-7 in parameters, i.e. the compiled path is numerically the same model.
 
 Measured effect (`analysis/timing.json`): 28.98 s/epoch eager → **6.29 s/epoch**
-compiled (312 updates/epoch), i.e. **4.37 GPU-h** for the declared 2500 epochs
-instead of 20.1 h. Peak memory 2.18 GB of 40 GB.
+compiled (312 updates/epoch), i.e. **≈1.03 GPU-h** for the amended 600 epochs
+(4.37 h had the 2,500-epoch horizon been kept). Peak memory 2.18 GB of 40 GB.
 
 ---
 
