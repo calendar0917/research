@@ -42,10 +42,17 @@ ZPS = _SS / "zinc_performance_search_v1"
 GENERALIZATION = _SS / "zinc_generalization_audit_v1" / "analysis" / "per_molecule.csv"
 B_REFERENCE = {
     "name": "B-R0-s0 (historical)",
-    "valid_mae": 0.07853715193271637,
+    "valid_mae": 0.07853714964160463,
     "best_epoch": 489,
-    "w20": 0.079082,
-    "final": 0.079076417,
+    "w20": 0.07908245333650848,
+    "final": 0.07907641669729491,
+    "train_mae_at_best": 0.005509941598307341,
+    "groups": {
+        "all_1000": 0.0785371522932536, "seen_749": 0.05426827371593307,
+        "unseen_251": 0.15095703298812643, "ordinary_935": 0.06553710583988859,
+        "tail_65": 0.26553782050704255, "unseen_ordinary_225": 0.13077343996946705,
+        "seen_ordinary_710": 0.04486361967206444, "unseen_tail_26": 0.32562274180344797,
+    },
     "params": 494193,
     "predictions": ZPS / "analysis" / "valid_pred_B-R0-s0_s0.npz",
     "source": "zinc_dual_channel_composer_v1/runs/L_s0 (via zinc_performance_search_v1)",
@@ -185,6 +192,73 @@ def intervention(arm: str = "D", seed: int = 0, batch_size: int = 128) -> dict:
 
 
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# markdown tables (repo convention: analysis/report_tables.md)
+# ---------------------------------------------------------------------------
+def _md(summary, records, aerr, groups, y) -> str:
+    f = lambda v, n=6: ("n/a" if v is None else f"{v:.{n}f}")
+    L = []
+    L.append("### 训练结果（valid only，官方 test 未加载）\n")
+    L.append("| arm | seed | params | epochs | best-valid | ep | W20 | T100 | final | train@best(eval) | gpu-h |")
+    L.append("|---|---|---|---|---|---|---|---|---|---|---|")
+    for arm, r in records.items():
+        L.append(f"| {arm} | {r['seed']} | {r['parameters']} | {r['epochs']} | {f(r['best_valid'])} | "
+                 f"{r['best_epoch']} | {f(r['w20'])} | {f(r['t100'])} | {f(r['final_valid'])} | "
+                 f"{f(r['train_mae_at_best_eval_mode'])} | {f(r['gpu_hours'], 3)} |")
+    b = summary["b_reference"]
+    L.append(f"| B-R0 (历史) | 0 | {b['params']} | 600 | {f(b['valid_mae'])} | {b['best_epoch']} | "
+             f"{f(b['w20'])} | n/a | {f(b['final'])} | n/a | n/a |")
+    if summary.get("d_minus_s"):
+        d = summary["d_minus_s"]
+        L.append("")
+        L.append("### D − S（同 seed 0，逐指标）\n")
+        L.append("| 指标 | D − S |")
+        L.append("|---|---|")
+        for k, v in d.items():
+            L.append(f"| {k} | {v:+.6f} |")
+    L.append("")
+    L.append("### 与 B-R0 的差（负 = 更好）\n")
+    L.append("| arm | best-valid − B | W20 − B | final − B |")
+    L.append("|---|---|---|---|")
+    for arm, v in summary["vs_b_reference"].items():
+        L.append(f"| {arm} | {v['best_valid_minus_B']:+.6f} | {v['w20_minus_B']:+.6f} | "
+                 f"{v['final_minus_B']:+.6f} |")
+    L.append("")
+    L.append("### 配对 bootstrap（valid 行重采样，固定 checkpoint，描述性）\n")
+    L.append("| 对比 | ΔMAE | 95% CI | 前者更好的行占比 |")
+    L.append("|---|---|---|---|")
+    for k, v in summary["contrasts_bootstrap"].items():
+        L.append(f"| {k} | {v['mean_delta_mae']:+.6f} | [{v['ci95_low']:+.6f}, {v['ci95_high']:+.6f}] | "
+                 f"{v['share_a_better']:.3f} |")
+    L.append("")
+    L.append("### 稳健性（valid）\n")
+    L.append("| arm | MAE | 去 row172 | 去自身 top10 |")
+    L.append("|---|---|---|---|")
+    for arm, r in records.items():
+        L.append(f"| {arm} | {f(r['valid_mae_recomputed'])} | {f(r['mae_drop_row172'])} | {f(r['mae_drop_top10'])} |")
+    L.append("")
+    L.append("### 冻结分组（n / MAE）\n")
+    gnames = list(groups)
+    L.append("| arm | " + " | ".join(gnames) + " |")
+    L.append("|" + "---|" * (len(gnames) + 1))
+    for arm, r in records.items():
+        L.append(f"| {arm} | " + " | ".join(
+            f"{r['groups'][g]['mae']:.4f}" if r['groups'][g]['n'] else "n/a" for g in gnames) + " |")
+    L.append(f"| n | " + " | ".join(str(int(m.sum())) for m in groups.values()) + " |")
+    iv = summary.get("intervention")
+    if iv and "error" not in iv:
+        L.append("")
+        L.append("### 固定权重干预（训练后的 D，规则换成 S，完整重前向）\n")
+        L.append("| 量 | 值 |")
+        L.append("|---|---|")
+        for k, v in iv.items():
+            if k == "note":
+                continue
+            L.append(f"| {k} | {v if not isinstance(v, float) else f'{v:.6g}'} |")
+    return "\n".join(L) + "\n"
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--bootstrap", type=int, default=10000)
@@ -299,6 +373,7 @@ def main(argv=None) -> int:
             preds[k] = records[arm]["pred"] if arm in records else b_pred
         for i in range(len(y)):
             w.writerow([i, y[i]] + [preds[k][i] for k in keys] + [aerr[k][i] for k in keys])
+    (ANALYSIS / "report_tables.md").write_text(_md(summary, records, aerr, groups, y))
     print(json.dumps({k: v for k, v in summary.items() if k != "runs"}, indent=2, default=str)[:4000])
     return 0
 
