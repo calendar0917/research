@@ -1,8 +1,8 @@
 {
-  "device": "cpu",
+  "device": "cuda:0",
   "all_pass": true,
-  "n_suites": 11,
-  "n_pass": 11,
+  "n_suites": 12,
+  "n_pass": 12,
   "suites": {
     "role_vocab": {
       "role_cap": 3,
@@ -11,10 +11,10 @@
       "pass": true
     },
     "invariance": {
-      "atom_renumbering_max_delta": 3.5762786865234375e-07,
+      "atom_renumbering_max_delta": 0.0,
       "bond_direction_flip_max_delta": 0.0,
-      "batch_vs_single_max_delta": 1.7881393432617188e-07,
-      "batch_reorder_max_delta": 2.980232238769531e-07,
+      "batch_vs_single_max_delta": 4.76837158203125e-07,
+      "batch_reorder_max_delta": 0.0,
       "pass": true
     },
     "local_exactness": {
@@ -59,7 +59,7 @@
             2.0,
             2.0
           ],
-          "s1_norm": 0.9809798002243042,
+          "s1_norm": 0.980979859828949,
           "s2_norm": 2.4924237728118896,
           "pass": true
         },
@@ -77,7 +77,7 @@
             3.0
           ],
           "s1_norm": 1.4761103391647339,
-          "s2_norm": 3.7762327194213867,
+          "s2_norm": 3.7762322425842285,
           "pass": true
         },
         "K4": {
@@ -99,7 +99,7 @@
             6.0,
             6.0
           ],
-          "s1_norm": 3.095871686935425,
+          "s1_norm": 3.0958712100982666,
           "s2_norm": 8.21173095703125,
           "pass": true
         },
@@ -122,8 +122,8 @@
             3.0,
             3.0
           ],
-          "s1_norm": 3.0588762760162354,
-          "s2_norm": 8.225447654724121,
+          "s1_norm": 3.0588765144348145,
+          "s2_norm": 8.225448608398438,
           "pass": true
         }
       },
@@ -148,20 +148,20 @@
     "correspondence": {
       "class_marginals_identical": true,
       "real": {
-        "token_change_under_pair_permutation": 0.06184589862823486,
-        "token_change_under_single_pair_flip": 0.025010377168655396,
+        "token_change_under_pair_permutation": 0.06184577941894531,
+        "token_change_under_single_pair_flip": 0.02501019835472107,
         "permuted_pair_fraction": 0.16025641560554504,
-        "phi_p_grad_abs_sum": 1054.19677734375,
-        "phi_n_grad_abs_sum": 116.9820327758789,
-        "readout_grad_abs_sum": 1871.4884033203125
+        "phi_p_grad_abs_sum": 1064.275146484375,
+        "phi_n_grad_abs_sum": 117.47734069824219,
+        "readout_grad_abs_sum": 1876.1943359375
       },
       "null": {
         "token_change_under_pair_permutation": 0.0,
-        "token_change_under_single_pair_flip": 0.023495584726333618,
+        "token_change_under_single_pair_flip": 0.023494720458984375,
         "permuted_pair_fraction": 0.16025641560554504,
-        "phi_p_grad_abs_sum": 1058.2760009765625,
-        "phi_n_grad_abs_sum": 117.5063247680664,
-        "readout_grad_abs_sum": 1865.7911376953125
+        "phi_p_grad_abs_sum": 1068.0850830078125,
+        "phi_n_grad_abs_sum": 117.96992492675781,
+        "readout_grad_abs_sum": 1870.4296875
       },
       "null_is_invariant_to_correspondence": true,
       "real_reads_correspondence": true,
@@ -170,7 +170,7 @@
     },
     "witness": {
       "real": {
-        "token_delta_a_vs_b": 0.013969972729682922,
+        "token_delta_a_vs_b": 0.013969942927360535,
         "edge_class_count": 10.0,
         "same_marginal": true
       },
@@ -184,12 +184,12 @@
       "pass": true
     },
     "numerics": {
-      "sl2_max_abs_diff": 2.220446049250313e-16,
+      "sl2_max_abs_diff": 4.440892098500626e-16,
       "sl2_rows_compared": 256,
-      "adaramsnorm_max_abs_diff": 4.440892098500626e-16,
-      "adaramsnorm_identity_at_init_max_abs_diff": 2.220446049250313e-16,
-      "rrwp_vs_float64_enumeration_max_abs_diff": 9.317694185662084e-08,
-      "rrwp_vs_relation_probe_max_abs_diff": 9.317694185662084e-08,
+      "adaramsnorm_max_abs_diff": 8.881784197001252e-16,
+      "adaramsnorm_identity_at_init_max_abs_diff": 4.440892098500626e-16,
+      "rrwp_vs_float64_enumeration_max_abs_diff": 8.574078808054608e-08,
+      "rrwp_vs_relation_probe_max_abs_diff": 8.574078808054608e-08,
       "relation_probe_module": "tracks/structural-sufficiency/zinc_relation_composition_probe_v1/code/rc_data.py",
       "r0_diagonal_min": 0.9999999403953552,
       "r0_diagonal_max": 0.9999999403953552,
@@ -201,13 +201,13 @@
       "pass": true
     },
     "masking": {
-      "extra_padding_max_delta": 0.0,
-      "molecule1_delta": 0.00812685489654541,
+      "extra_padding_max_delta": 2.980232238769531e-07,
+      "molecule1_delta": 0.008127033710479736,
       "other_molecules_max_delta": 0.0,
       "train_forward_finite": true,
       "eval_forward_finite": true,
-      "s1_linear_ratio_err": 5.364418029785156e-06,
-      "s2_quadratic_ratio_err": 2.980232238769531e-07,
+      "s1_linear_ratio_err": 1.7285346984863281e-06,
+      "s2_quadratic_ratio_err": 2.384185791015625e-07,
       "pass": true
     },
     "budget": {
@@ -244,6 +244,23 @@
       },
       "trainer_only_uses_train_and_valid": true,
       "pass": true
+    },
+    "overfit_small_sample": {
+      "molecules": 64,
+      "epochs": 200,
+      "note": "eval_mode_train_at_best is measured on the 64-molecule training subset, not on the full train split",
+      "steps_per_epoch": 2,
+      "online_train_first": 1.553385615348816,
+      "online_train_last": 0.16168119758367538,
+      "eval_mode_train_at_best": 0.1967845857143402,
+      "full_train_eval_mode_at_best": 0.8521266937255859,
+      "valid_at_best": 0.8209039459228515,
+      "wall_seconds": 74.45274580083787,
+      "thresholds": {
+        "eval_mode_train_at_best < 0.30": true,
+        "online_train_last < 0.5 * online_train_first": true
+      },
+      "pass": true
     }
   },
   "environment": {
@@ -251,13 +268,15 @@
     "torch": "2.5.1+cu124",
     "torch_cuda": "12.4",
     "torch_geometric": "2.6.1",
-    "cuda_available": false,
-    "cuda_device_count": 0,
-    "gpu_names": [],
-    "git_commit": "e8362cb8905480322ac8980ec3f0eed50cf35524",
-    "git_dirty_tracked": true,
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "git_commit": "bd851416118dd91907835294f379214c04a3c600",
+    "git_dirty_tracked": false,
     "round_id": "zinc-arch-discovery-v1",
-    "timestamp": "2026-10-24T11:39:59+0800"
+    "timestamp": "2026-10-24T11:48:32+0800"
   },
-  "created": "2026-10-24T11:39:59+0800"
+  "created": "2026-10-24T11:48:32+0800"
 }
