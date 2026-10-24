@@ -1,0 +1,58 @@
+{
+  "protocol": "esoc-zinc-explicit-bond-object-v1",
+  "track": "structural-sufficiency",
+  "question": "Does keeping the real pair-edge correspondence of the key-centred induced local graph change performance and generalisation under an identical interaction body?",
+  "data": {
+    "dataset": "torch_geometric.datasets.ZINC(subset=True)",
+    "root": "data/ZINC",
+    "split": {"train": 10000, "valid": 1000},
+    "official_test_loaded": false,
+    "target": "raw y",
+    "metric": "MAE"
+  },
+  "recipe": {
+    "epochs": 2500,
+    "batch_size": 32,
+    "lr": 0.002,
+    "lr_min": 0.00002,
+    "weight_decay": 0.00001,
+    "warmup_epochs": 50,
+    "grad_clip": 5.0,
+    "loss": "l1_raw_y",
+    "n_layers": 12,
+    "attn_dropout": 0.2,
+    "drop_path": 0.1,
+    "optimizer": "AdamW(betas=(0.9,0.95), eps=1e-8)",
+    "eval_valid_every_epoch": true,
+    "selection": "strict < on valid MAE; ties keep the earlier epoch",
+    "init": "from scratch (no SSL encoder, no supervised P3/DCC checkpoint)"
+  },
+  "model": {
+    "d_model": 64,
+    "n_heads": 8,
+    "ffn_multiplier": 2,
+    "norm": "AdaRMSNorm (RMS + DiT-style adaptive scale/shift, no BatchNorm)",
+    "attention": "simplified L2 (q.k - 0.5||k||^2)/sqrt(d_head) + static bias",
+    "pe": "shared static RRWP stem (k=0..20, sin/cos frequencies), never updated per layer",
+    "urpe": "not implemented (paper alignment could not be verified offline)",
+    "token_set": "one token per undirected physical bond",
+    "local_object": "full typed induced graph on {u,v} U N(u) U N(v), roles (dist(i,u), dist(i,v)), root directions averaged",
+    "null_arm": "every pair i<j receives the object-level 4-class frequency vector instead of its own edge class",
+    "readout": "sum h_b / ref_bonds, sum h_b^2 / ref_bonds, sum AtomEmb / ref_atoms, 4 count scalars, frozen global33",
+    "param_cap": 500000
+  },
+  "budget": {
+    "gpu_hours_total_cap": 48,
+    "per_run_hours_soft_cap": 20,
+    "depth_rule": "12 blocks; if the parameter audit exceeds 500k, reduce to 10, then 8, decided only by the audit"
+  },
+  "seed1_trigger": {
+    "real_best_valid_at_most": 0.075,
+    "or": {
+      "real_best_valid_at_most": 0.079,
+      "real_minus_null_at_least": 0.004,
+      "w20_and_t100_same_direction": true,
+      "no_catastrophic_tail": true
+    }
+  }
+}

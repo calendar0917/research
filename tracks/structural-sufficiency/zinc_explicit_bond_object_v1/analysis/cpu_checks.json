@@ -1,0 +1,263 @@
+{
+  "device": "cpu",
+  "all_pass": true,
+  "n_suites": 11,
+  "n_pass": 11,
+  "suites": {
+    "role_vocab": {
+      "role_cap": 3,
+      "model_role_base": 4,
+      "consistent": true,
+      "pass": true
+    },
+    "invariance": {
+      "atom_renumbering_max_delta": 3.5762786865234375e-07,
+      "bond_direction_flip_max_delta": 0.0,
+      "batch_vs_single_max_delta": 1.7881393432617188e-07,
+      "batch_reorder_max_delta": 2.980232238769531e-07,
+      "pass": true
+    },
+    "local_exactness": {
+      "molecules": 40,
+      "bond_objects_compared": 986,
+      "pair_entries_compared": 9268,
+      "mismatches": 0,
+      "pass": true
+    },
+    "synthetic": {
+      "cases": {
+        "empty_atom": {
+          "pred_finite": true,
+          "n_tokens": 0,
+          "loc_nnodes": [],
+          "loc_nedges": [],
+          "s1_norm": 0.0,
+          "s2_norm": 0.0,
+          "pass": true
+        },
+        "single_bond": {
+          "pred_finite": true,
+          "n_tokens": 1,
+          "loc_nnodes": [
+            2.0
+          ],
+          "loc_nedges": [
+            1.0
+          ],
+          "s1_norm": 0.5241975784301758,
+          "s2_norm": 1.5247275829315186,
+          "pass": true
+        },
+        "propane_tree": {
+          "pred_finite": true,
+          "n_tokens": 2,
+          "loc_nnodes": [
+            3.0,
+            3.0
+          ],
+          "loc_nedges": [
+            2.0,
+            2.0
+          ],
+          "s1_norm": 0.9809798002243042,
+          "s2_norm": 2.4924237728118896,
+          "pass": true
+        },
+        "cyclopropane": {
+          "pred_finite": true,
+          "n_tokens": 3,
+          "loc_nnodes": [
+            3.0,
+            3.0,
+            3.0
+          ],
+          "loc_nedges": [
+            3.0,
+            3.0,
+            3.0
+          ],
+          "s1_norm": 1.4761103391647339,
+          "s2_norm": 3.7762327194213867,
+          "pass": true
+        },
+        "K4": {
+          "pred_finite": true,
+          "n_tokens": 6,
+          "loc_nnodes": [
+            4.0,
+            4.0,
+            4.0,
+            4.0,
+            4.0,
+            4.0
+          ],
+          "loc_nedges": [
+            6.0,
+            6.0,
+            6.0,
+            6.0,
+            6.0,
+            6.0
+          ],
+          "s1_norm": 3.095871686935425,
+          "s2_norm": 8.21173095703125,
+          "pass": true
+        },
+        "benzene": {
+          "pred_finite": true,
+          "n_tokens": 6,
+          "loc_nnodes": [
+            4.0,
+            4.0,
+            4.0,
+            4.0,
+            4.0,
+            4.0
+          ],
+          "loc_nedges": [
+            3.0,
+            3.0,
+            3.0,
+            3.0,
+            3.0,
+            3.0
+          ],
+          "s1_norm": 3.0588762760162354,
+          "s2_norm": 8.225447654724121,
+          "pass": true
+        }
+      },
+      "pass": true
+    },
+    "real_null": {
+      "params_real": 498845,
+      "params_null": 498845,
+      "state_keys_identical": true,
+      "state_tensor_max_abs_diff": 0.0,
+      "optimizer_defaults_identical": true,
+      "optimizer_param_groups_identical": true,
+      "data_order_identical": true,
+      "lr_at_0_15600_779999": [
+        1.282051282051282e-07,
+        0.002,
+        2.0000000008361125e-05
+      ],
+      "lr_monotone_after_warmup": true,
+      "pass": true
+    },
+    "correspondence": {
+      "class_marginals_identical": true,
+      "real": {
+        "token_change_under_pair_permutation": 0.06184589862823486,
+        "token_change_under_single_pair_flip": 0.025010377168655396,
+        "permuted_pair_fraction": 0.16025641560554504,
+        "phi_p_grad_abs_sum": 1054.19677734375,
+        "phi_n_grad_abs_sum": 116.9820327758789,
+        "readout_grad_abs_sum": 1871.4884033203125
+      },
+      "null": {
+        "token_change_under_pair_permutation": 0.0,
+        "token_change_under_single_pair_flip": 0.023495584726333618,
+        "permuted_pair_fraction": 0.16025641560554504,
+        "phi_p_grad_abs_sum": 1058.2760009765625,
+        "phi_n_grad_abs_sum": 117.5063247680664,
+        "readout_grad_abs_sum": 1865.7911376953125
+      },
+      "null_is_invariant_to_correspondence": true,
+      "real_reads_correspondence": true,
+      "gradients_nonzero": true,
+      "pass": true
+    },
+    "witness": {
+      "real": {
+        "token_delta_a_vs_b": 0.013969972729682922,
+        "edge_class_count": 10.0,
+        "same_marginal": true
+      },
+      "null": {
+        "token_delta_a_vs_b": 0.0,
+        "edge_class_count": 10.0,
+        "same_marginal": true
+      },
+      "real_distinguishes": true,
+      "null_cannot": true,
+      "pass": true
+    },
+    "numerics": {
+      "sl2_max_abs_diff": 2.220446049250313e-16,
+      "sl2_rows_compared": 256,
+      "adaramsnorm_max_abs_diff": 4.440892098500626e-16,
+      "adaramsnorm_identity_at_init_max_abs_diff": 2.220446049250313e-16,
+      "rrwp_vs_float64_enumeration_max_abs_diff": 9.317694185662084e-08,
+      "rrwp_vs_relation_probe_max_abs_diff": 9.317694185662084e-08,
+      "relation_probe_module": "tracks/structural-sufficiency/zinc_relation_composition_probe_v1/code/rc_data.py",
+      "r0_diagonal_min": 0.9999999403953552,
+      "r0_diagonal_max": 0.9999999403953552,
+      "r0_shared_endpoint_values": [
+        0.5
+      ],
+      "r0_disjoint_max": 0.0,
+      "rrwp_zero_on_padding": true,
+      "pass": true
+    },
+    "masking": {
+      "extra_padding_max_delta": 0.0,
+      "molecule1_delta": 0.00812685489654541,
+      "other_molecules_max_delta": 0.0,
+      "train_forward_finite": true,
+      "eval_forward_finite": true,
+      "s1_linear_ratio_err": 5.364418029785156e-06,
+      "s2_quadratic_ratio_err": 2.980232238769531e-07,
+      "pass": true
+    },
+    "budget": {
+      "param_total": 498845,
+      "param_trainable": 498845,
+      "under_cap": true,
+      "per_module": {
+        "local": 49280,
+        "pe": 9992,
+        "blocks": 413952,
+        "gdesc": 148,
+        "readout": 25473
+      },
+      "n_blocks": 12,
+      "per_block": 34496,
+      "optimizer_covers_all_trainable": true,
+      "n_optimizer_tensors": 220,
+      "n_trainable_tensors": 220,
+      "no_batchnorm": true,
+      "pass": true
+    },
+    "provenance": {
+      "test_split_refused": true,
+      "static_objects_are_label_free": true,
+      "cache_meta_flags": {
+        "train": {
+          "labels_read_by_builder": false,
+          "official_test_loaded": false
+        },
+        "valid": {
+          "labels_read_by_builder": false,
+          "official_test_loaded": false
+        }
+      },
+      "trainer_only_uses_train_and_valid": true,
+      "pass": true
+    }
+  },
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1",
+    "cuda_available": false,
+    "cuda_device_count": 0,
+    "gpu_names": [],
+    "git_commit": "0a12315f39bde3d4a754578f632908a2a930362c",
+    "git_dirty_tracked": true,
+    "round_id": "zinc-arch-discovery-v1",
+    "timestamp": "2026-10-24T11:33:21+0800"
+  },
+  "created": "2026-10-24T11:33:21+0800"
+}

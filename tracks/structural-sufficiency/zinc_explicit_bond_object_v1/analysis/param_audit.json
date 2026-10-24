@@ -1,0 +1,61 @@
+{
+  "rule": "12 blocks by default; if the audit exceeds 500k, reduce to 10, then 8; decided only by the audit",
+  "variants": {
+    "12_blocks": {
+      "param_total": 498845,
+      "param_trainable": 498845,
+      "under_500k": true,
+      "per_module": {
+        "local": 49280,
+        "pe": 9992,
+        "blocks": 413952,
+        "gdesc": 148,
+        "readout": 25473
+      },
+      "per_block": 34496,
+      "n_blocks": 12,
+      "d_model": 64,
+      "n_heads": 8,
+      "ffn_width": 128
+    },
+    "10_blocks": {
+      "param_total": 429853,
+      "param_trainable": 429853,
+      "under_500k": true,
+      "per_module": {
+        "local": 49280,
+        "pe": 9992,
+        "blocks": 344960,
+        "gdesc": 148,
+        "readout": 25473
+      },
+      "per_block": 34496,
+      "n_blocks": 10,
+      "d_model": 64,
+      "n_heads": 8,
+      "ffn_width": 128
+    },
+    "8_blocks": {
+      "param_total": 360861,
+      "param_trainable": 360861,
+      "under_500k": true,
+      "per_module": {
+        "local": 49280,
+        "pe": 9992,
+        "blocks": 275968,
+        "gdesc": 148,
+        "readout": 25473
+      },
+      "per_block": 34496,
+      "n_blocks": 8,
+      "d_model": 64,
+      "n_heads": 8,
+      "ffn_width": 128
+    }
+  },
+  "chosen_n_layers": 12,
+  "chosen_params": 498845,
+  "under_cap": true,
+  "real_null_identical_by_construction": true,
+  "note": "both arms instantiate the same modules; `arm` only selects the pair-edge input at forward time"
+}
