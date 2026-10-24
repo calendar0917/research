@@ -1,0 +1,124 @@
+{
+ "parameters": 331521,
+ "ssl": {
+  "source": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+  "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+  "encoders_loaded": [
+   "atom_encoder",
+   "bond_encoder"
+  ]
+ },
+ "budget_ok": true,
+ "param_breakdown": {
+  "atom_encoder.lins.0.weight": 13824,
+  "atom_encoder.lins.0.bias": 128,
+  "atom_encoder.lins.1.weight": 12288,
+  "atom_encoder.lins.1.bias": 96,
+  "bond_encoder.lins.0.weight": 47200,
+  "bond_encoder.lins.0.bias": 160,
+  "bond_encoder.lins.1.weight": 15360,
+  "bond_encoder.lins.1.bias": 96,
+  "hist_proj.weight": 2048,
+  "hist_proj.bias": 32,
+  "branch.0.weight": 40960,
+  "branch.0.bias": 128,
+  "branch.2.weight": 4096,
+  "branch.2.bias": 32,
+  "rel_emb.weight": 2048,
+  "root.weight": 17024,
+  "root.bias": 128,
+  "reader.lins.0.weight": 109568,
+  "reader.lins.0.bias": 256,
+  "reader.lins.1.weight": 65536,
+  "reader.lins.1.bias": 256,
+  "reader.lins.2.weight": 256,
+  "reader.lins.2.bias": 1
+ },
+ "forward": {
+  "n_branches": 1582,
+  "n_pairs": 1100,
+  "finite": true,
+  "pred_head": [
+   0.04676535725593567,
+   0.0415998212993145,
+   0.03960901498794556,
+   0.06401185691356659,
+   0.04771258309483528
+  ],
+  "y_head": [
+   0.8350355625152588,
+   1.8422303199768066,
+   -0.7115330100059509,
+   0.24634701013565063,
+   -1.7172499895095825
+  ]
+ },
+ "inputs": {
+  "atom_feat": "raw108 atom features (label-blind)",
+  "bond_feat": "raw7 bond features (label-blind)",
+  "hist": "typed incidence histogram of the neighbour after deleting the back bond: 3 bond types x 21 atom types + remaining degree",
+  "src,dst,bond_slot": "centre / neighbour / bond of each directed branch",
+  "pair_rel": "extra bond type + shared-neighbour count + ring separation of two branches of one root (structure only)",
+  "global": "frozen global-33 generic topology channel",
+  "n_atoms,n_branches": "counts"
+ },
+ "input_legality": {
+  "no_radius2_key": true,
+  "no_labels": true,
+  "no_supervised_checkpoint_loaded": true,
+  "note": "only pretrain_encoder_s0.pt keys atom_encoder/bond_encoder are loaded"
+ },
+ "batch_invariance": 1.4901161193847656e-08,
+ "renumber_and_bondorder_invariance": 2.60770320892334e-08,
+ "mini_prep_check": {
+  "branches": 750,
+  "pairs": 517,
+  "same_branches": true,
+  "rel_hist_equal": true
+ },
+ "gradients": {
+  "missing": [],
+  "zero": [],
+  "key": {
+   "branch.0.weight": 0.0023070990573614836,
+   "branch.2.weight": 0.0031444865744560957,
+   "hist_proj.weight": 0.00040621927473694086,
+   "rel_emb.weight": 5.378385685617104e-05,
+   "root.weight": 0.043004728853702545,
+   "reader.lins.0.weight": 0.03117942251265049
+  }
+ },
+ "three_body_channel": {
+  "pred_delta_max": 8.106231689453125e-06,
+  "grad_root_nonzero_without_e3": true,
+  "grad_branch_nonzero_without_e3": true
+ },
+ "checkpoint_roundtrip_max_diff": 0.0,
+ "toy1": {
+  "triple_a": [
+   3.154701,
+   1.42265,
+   1.42265
+  ],
+  "triple_b": [
+   1.0,
+   2.0,
+   3.0
+  ],
+  "p1_equal": true,
+  "e2_equal": true,
+  "e2_matches_explicit": true,
+  "e3_differs": true,
+  "e3_matches_explicit": true,
+  "e3_a": 6.384900179459751,
+  "e3_b": 6.0
+ },
+ "toy2": {
+  "one_two_body_response_a": 3.582353353500366,
+  "one_two_body_response_b": 3.582353353500366,
+  "one_two_body_identical": true,
+  "rbo_response_a": 2.9724280834198,
+  "rbo_response_b": 3.0052316188812256,
+  "rbo_differs": true
+ }
+}
