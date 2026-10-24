@@ -1703,12 +1703,12 @@ zinc_relation_composition_probe_v1:
     - "Relation = bond-lifted RRWP R_bc[k] = (M P^k M^T)_bc, M endpoint 1/sqrt(2), P = diag(deg)^-1 A, k=0..20, label-free, precomputed on train/valid only; verified against four-endpoint enumeration to 2.9e-8 with flip/relabel invariance at 1e-16."
     - "7/7 engineering suites pass (relation, identity, replay, mechanism, masking, numerical, checkpoint); 470,321 parameters <= 500k; the D and S state dicts are bit-identical at step 0; the old 513-wide B reader is absent."
   budget:
-    wall_clock_hours: 3.1
+    wall_clock_hours: 3.6
     gpu_hours_cap: 6.0
     gpu_hours_used: 2.24
     gpu_hours_training_only: 2.2225
     cost_rule_applied: "4 runs did not fit (measured 6.68 s/epoch -> 1.113 GPU-h per 600-epoch run); pre-declared rung 3 = seed 0's D/S pair only"
-    cost_note: "the 3 h wall cap was exceeded by ~5 min; the extra wall went to a remote deploy blocker (untracked-file collisions in the remote checkout) and two runner fixes, not to extra GPU work"
+    cost_note: "the 3 h wall cap was exceeded by ~30-40 min; the extra wall went to the long implementation phase, a remote deploy blocker (untracked-file collisions in the remote checkout, cleared in three CPU-only passes) and two runner fixes.  GPU work stayed inside the cap and no extra run was added to compensate."
   single_seed: true
   official_test:
     loaded: false
