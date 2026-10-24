@@ -34,3 +34,19 @@ strict best-valid 选点）。除 A-reg 一行外全部同配方。
 ## 关键单调性检查（写在同一 epoch 上，不用“候选 ep100 vs 参考最终”）
 
 见 `analysis/main_table.md` 的 matched-epochs 表。
+
+## 终端 test 冻结规则（在 test 读取前写定，2026-10-25T18:10Z）
+
+冻结家族 = **route A + 配方 B**，seed 0/1（预注册主配置），checkpoint = 各自 best-valid。
+`Areg_s0`（同架构、R2 配方：wd 1e-3 + dropout 0.05，唯一一次有诊断依据的修正：
+A 的 online train MAE 在 best epoch 已降到 0.013、训练末期 0.0005，valid 在 ep400 后进入平台）
+的处置规则：
+
+- 若 `Areg_s0` valid **≤ 0.0735**（比 A_s0 好 ≥0.0024，即超过本家族 seed 差 0.0013 的 ~2 倍且
+  超过参考家族 seed sd），则作为同家族第三 checkpoint 一起冻结（但仍只有 1 个 seed，
+  只能称"配方方向的单 seed 迹象"）。
+- 否则 `Areg_s0` 只作 valid 诊断，不读 test，家族仍是 A_s0 + A_s1。
+
+`N0`（同载体 + 键内容进 reader、无全局混合）是机制对照，**不是**候选，不进 test。
+C0/K/Asm 同样不读 test。冻结文件 `analysis/test_freeze.json` 在第一次读 test 前写入，
+之后不允许改 seed / 改 checkpoint / 改配方。
