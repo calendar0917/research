@@ -285,10 +285,17 @@ def main(argv=None) -> int:
     p.add_argument("--epochs", type=int, default=None)
     p.add_argument("--device", default="cuda:0")
     p.add_argument("--max-hours", type=float, default=20.0)
+    p.add_argument("--compile", dest="compile", action="store_true", default=None)
+    p.add_argument("--no-compile", dest="compile", action="store_false")
+    p.add_argument("--compile-mode", default=None)
     p.add_argument("--molecules", type=int, default=48)
     args = p.parse_args(argv)
 
     cfg = load_config()
+    if args.compile is not None:
+        cfg["recipe"]["compile"] = bool(args.compile)
+    if args.compile_mode is not None:
+        cfg["recipe"]["compile_mode"] = str(args.compile_mode)
     if args.mode == "profile":
         epochs = args.epochs or 3
         res = train(args.arm, args.seed, epochs, args.device, mode="profile",
@@ -297,7 +304,9 @@ def main(argv=None) -> int:
         epoch_s = res["epoch_seconds_median"]
         full = int(cfg["recipe"]["epochs"])
         (ANALYSIS / "raw").mkdir(parents=True, exist_ok=True)
-        C.write_json(ANALYSIS / "raw" / "timing.json", {
+        C.write_json(ANALYSIS / "raw" / f"timing_{'compiled' if cfg['recipe'].get('compile') else 'eager'}.json", {
+            "compile": bool(cfg["recipe"].get("compile")),
+            "compile_mode": cfg["recipe"].get("compile_mode"),
             "arm": args.arm,
             "seed": args.seed,
             "epochs_measured": epochs,
