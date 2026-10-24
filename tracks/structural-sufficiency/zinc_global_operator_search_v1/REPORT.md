@@ -1,5 +1,9 @@
 # GOS-v1：把「键对象 + 全图结构关系」放进一次全局混合，能提高 ZINC raw-y MAE 吗？
 
+> **ERRATUM（2026-10-25）：** route A 的 `MixA` 有关键广播错误 —— `ken.unsqueeze(-1)` 让 key-energy
+> 项落在 query 轴并被行 softmax 抵消，历史 A 实际训练的是 dot 打分 + 关系内容门。
+> 本文件的成绩数字全部保留，被撤回的只是机制解释。见 `ERRATUM.md`（含 L2G / GN 两个补救臂）。
+
 **Protocol:** `zinc-global-operator-search-v1`
 **代码:** `code/gos_{data,models,runner,checks,analyze,freeze,test}.py`；冻结规则见 `PLAN.md` 与 `LEDGER.md`
 **硬件/执行域:** `res` 单机 2×A100-40GB（`res-gpu0` / `res-gpu1`），torch 2.5.1+cu124，PyG 2.6.1

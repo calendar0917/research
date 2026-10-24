@@ -92,3 +92,48 @@ C0/K/Asm 同样不读 test。冻结文件 `analysis/test_freeze.json` 在第一�
   即超过 A 家族内部 seed 差 0.0013）并且两个 seed 都好于 A 的同 seed 值时，才冻结 A160 家族并做
   **第二次、reporting-only** 的 test 读取；否则不读 test，报告保留 A 家族结果。
 - 这是本轮最后一次新增配置；此后无论结果如何都不再加模型。
+
+## ERRATUM 与两个补救臂（预注册，在启动之前写定）
+
+起因：`MixA` 的 `ken.unsqueeze(-1)` 把 key-energy 项广播到 **query** 轴，行 softmax 精确抵消。
+route A 实际训练的是 `softmax(q·k/√d+β(r))` + `g=1+tanh(γ(r))` 门控 + AdaRMSNorm。
+详见 `ERRATUM.md`；核实 gate 见 `analysis/errata_checks.json`（17/17 通过，含 fp64 语义、
+冻结 checkpoint 的 legacy vs dot 比较、梯度抽查、初态 sha 与历史逐位一致）。
+
+不重跑、不改写任何历史 run / checkpoint / REPORT 数字。
+
+### 两个臂（各一条轨迹，seed 0，route A，配方 B，reader 128，dropout 0）
+
+| 臂 | tag | 算术 | 唯一变化 |
+|---|---|---|---|
+| L2G | `l2g_A_s0` | `score=(q·k − ½‖k‖²)/√d + β(r)`（`unsqueeze(-2)`），`m=Σ a·g·v` | 打分项（真 L2） |
+| GN | `gn_A_s0` | 原 dot 打分，`w=a·g`，`m=Σ (w/Σw)·v` | 门控权重归一化 |
+
+- 数据：official train 内 9,000 行训练（`HOLDOUT_SEED=20261025`，与 `ho_A_s0` 同一划分，
+  sha `39295fd7…` 已核对），official valid 1,000 行选点，内部 1,000 行**只在 checkpoint 选定后评估一次**。
+- 初态：`build_model(route='A', seed=0)` 重建（ssl-only + 随机 composer/core/reader），
+  init sha = `4b8c59f8…36ffd9` = `ho_A_s0` 的初态（已逐位核实）。因此与 `ho_A_s0` 的差别只有开关，
+  与 `A_s0` 的差别只有开关 + 训练行数（历史参照用 `ho_A_s0`，不用 `A_s0`）。
+- 历史参照：`ho_A_s0` official valid **0.081299**（ep364），内部留出 **0.114666**。
+- 内部留出已被查看过一次（上一轮），**不再称新鲜盲测**；SSL 预训练可能见过其无标签结构。
+
+### 停止规则（写在此处，事后不改）
+
+1. NaN / 语义错误（训练与评估走的不是同一个 forward、holdout 行错位、gate 归一化导致 NaN）→ 停下修错，
+   不得解释为算法失败。
+2. 同进度比较（ep100/200/300/400/500/600 对 `ho_A_s0` 的同 epoch valid）：若在 **ep300 与 ep400 两个窗口**
+   都比 `ho_A_s0` 差 **≥0.004**，且 ep400 的差没有比 ep300 收窄（收窄 <0.0005）→ 停止该臂，标明截断。
+3. 否则跑满 600 epoch；若预算（合计 2.0 A100·h）在跑满前耗尽 → 按已完成部分报告，不超支。
+
+### 预算
+
+合计上限 **2.0 A100·h**（两卡相加，含故障与评估）。按历史 `ho_A_s0` 的 0.752 GPU·h/600ep 估算，
+两臂 ≈1.5 GPU·h，余量 ~0.5 用于可能的提前停止/重跑错误。
+GPU0 = L2G，GPU1 = GN（`res-gpu0` / `res-gpu1` 池，一张 A100 各一个）。
+
+### 结果解释的边界（先写清）
+
+- 单 seed、单配置；不因 CI 跨零称等价，不因训练结束后关门变差称“训练收益”。
+- 相对差值全部用同一 9,000 行划分的 `ho_A_s0` 作参照，并给 official valid 与 internal holdout 两个口径。
+- 分组只作描述：按**旧 A 的固定逐分子 AE** 在 holdout 上分三档（低/中/高），看新臂的差是否集中在高误差档；
+  全量 MAE 一律保留，不剔除样本、不据此选 checkpoint。

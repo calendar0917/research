@@ -6,6 +6,14 @@ C0 : local carrier only.  z0 (513-d amplitude/count statistics) -> reader.
 A  : amplitude-sensitive global content interaction (softmax over bond objects)
      score_bc = (q_b.k_c - 0.5||k_c||^2)/sqrt(d_head) + beta(r_bc)
      m_b      = sum_c a_bc * (1 + tanh(gamma(r_bc))) * v_c
+     NOTE: this is the *intended* operator.  The historical A checkpoints were
+     trained with a query-side broadcast of the key-energy term, which the row
+     softmax cancels exactly, so those runs implemented plain dot-product
+     attention plus the relation-conditioned content gate (see ERRATUM.md).
+     ``MixA.mode`` now selects the arithmetic explicitly and adds no parameters:
+     ``legacy`` (verbatim historical expression), ``dot`` (reference operator
+     that legacy equals), ``l2`` (key-energy term broadcast on the key axis),
+     ``gn`` (dot scoring with the gated weights renormalised over keys).
 K  : signed, non-competing global structural kernel
      m_b      = sum_c tanh(K(r_bc)) * V(N(h_c)) / mean_train_n_bonds
 
@@ -96,14 +104,36 @@ class FFN(nn.Module):
         return h + F.dropout(self.fc2(x), p=self.dropout, training=self.training)
 
 
+MIX_MODES = ("legacy", "dot", "l2", "gn")
+
+
 class MixA(nn.Module):
-    """Amplitude-sensitive global content interaction over bond objects."""
+    """Global content interaction over bond objects (relation bias + content gate).
+
+    ``variant`` selects the parameter set (``full`` has the content gate, ``plain``
+    does not).  ``mode`` selects only the *arithmetic* inside ``forward``; it adds,
+    removes and reorders nothing, so all modes share one parameter tensor set:
+
+    ``legacy``  the pre-erratum expression, verbatim:
+                ``(q.k - 0.5||k||^2).unsqueeze(-1)/sqrt(d)``; the subtracted term is
+                indexed by the *query*, so it is a per-row constant and the row
+                softmax cancels it.  This is the operator the historical A runs
+                actually trained; kept bit-for-bit for the frozen checkpoints.
+    ``dot``     the reference operator that ``legacy`` is mathematically equal to:
+                ``q.k/sqrt(d)`` with no key-energy term at all.
+    ``l2``      the intended key-energy operator: the half-key-energy term is
+                broadcast along the *key* axis (``unsqueeze(-2)``).
+    ``gn``      ``dot`` scoring with the gated weights renormalised over keys.
+    """
 
     def __init__(self, d: int = TOKEN_DIM, heads: int = HEADS, rel: int = REL_REL_DIM,
-                 variant: str = "full", dropout: float = 0.0):
+                 variant: str = "full", dropout: float = 0.0, mode: str = "legacy"):
         super().__init__()
         if variant not in ("full", "plain"):
             raise ValueError(f"unknown MixA variant {variant!r}")
+        if mode not in MIX_MODES:
+            raise ValueError(f"unknown MixA mode {mode!r}")
+        self.mode = mode
         self.variant = variant
         self.d, self.heads = int(d), int(heads)
         self.hd = self.d // self.heads
@@ -117,27 +147,58 @@ class MixA(nn.Module):
         self.dropout = float(dropout)
         self.ffn = FFN(d, dropout=dropout)
 
-    def forward(self, h, rel, mask):
-        B, N, _ = h.shape
-        x = self.norm(h) * mask.unsqueeze(-1).to(h.dtype)
-        qkv = self.qkv(x).view(B, N, 3, self.heads, self.hd).permute(2, 0, 3, 1, 4)
-        q, k, v = qkv[0], qkv[1], qkv[2]                     # [B,H,N,hd]
-        # amplitude-sensitive logit: subtract half the key energy
-        score = torch.einsum("bhid,bhjd->bhij", q, k)
-        if self.variant == "full":
-            ken = 0.5 * k.pow(2).sum(-1)                      # [B,H,N]
-            score = (score - ken.unsqueeze(-1)) / math.sqrt(self.hd)
-        else:
-            score = score / math.sqrt(self.hd)
+    def _attend(self, q, k, v, rel, mask):
+        """The mixing arithmetic itself (queries/keys/values already projected).
+
+        This is the only place reading ``mode``; ``mix`` below and every check go
+        through it, so the checks exercise the production operator rather than a
+        restatement of it.
+        """
+        score = torch.einsum("bhid,bhjd->bhij", q, k)       # [B,H,query,key]
+        sqrt_d = math.sqrt(self.hd)
+        if self.mode == "legacy":
+            # historical expression, kept verbatim: ken is [B,H,key] and
+            # unsqueeze(-1) makes it a per-query constant, i.e. a no-op.
+            ken = 0.5 * k.pow(2).sum(-1)                     # [B,H,N] over keys
+            score = (score - ken.unsqueeze(-1)) / sqrt_d
+        elif self.mode == "l2":
+            ken = 0.5 * k.pow(2).sum(-1)                     # [B,H,N] over keys
+            score = (score - ken.unsqueeze(-2)) / sqrt_d     # broadcast on the key axis
+        else:                                                # dot / gn
+            score = score / sqrt_d
         score = score + self.beta(rel).permute(0, 3, 1, 2)
         valid = mask[:, None, None, :]
         score = score.masked_fill(~valid, -1e30)
         attn = torch.softmax(score, dim=-1)
+        gate = None
         if self.variant == "full":
             gate = 1.0 + torch.tanh(self.gamma(rel)).permute(0, 3, 1, 2)
-            ctx = torch.einsum("bhij,bhij,bhjd->bhid", attn, gate, v)
+            if self.mode == "gn":
+                w = attn * gate
+                mass = w.sum(dim=-1, keepdim=True)
+                ctx = torch.einsum("bhij,bhjd->bhid", w / mass, v)
+            else:
+                mass = (attn * gate).sum(dim=-1, keepdim=True)
+                ctx = torch.einsum("bhij,bhij,bhjd->bhid", attn, gate, v)
         else:
+            mass = attn.sum(dim=-1, keepdim=True)
             ctx = torch.einsum("bhij,bhjd->bhid", attn, v)
+        return {"attn": attn, "gate": gate, "mass": mass, "ctx": ctx, "logits": score}
+
+    def mix(self, h, rel, mask):
+        """Project, then apply the mixing operator.  No train/eval branch lives in
+        here, so training and evaluation share one forward."""
+        B, N, _ = h.shape
+        x = self.norm(h) * mask.unsqueeze(-1).to(h.dtype)
+        qkv = self.qkv(x).view(B, N, 3, self.heads, self.hd).permute(2, 0, 3, 1, 4)
+        q, k, v = qkv[0], qkv[1], qkv[2]                     # [B,H,N,hd]
+        out = self._attend(q, k, v, rel, mask)
+        out.update({"q": q, "k": k, "v": v})
+        return out
+
+    def forward(self, h, rel, mask):
+        B, N, _ = h.shape
+        ctx = self.mix(h, rel, mask)["ctx"]
         ctx = ctx.permute(0, 2, 1, 3).reshape(B, N, self.d)
         h = h + F.dropout(self.out(ctx), p=self.dropout, training=self.training)
         h = self.ffn(h)
@@ -182,10 +243,14 @@ class Backbone(nn.Module):
     """P3 encoders + DCC global/local composers + bond-object global core."""
 
     def __init__(self, norm: Mapping[str, Any], route: str, *, dropout: float = 0.0,
-                 mean_n_bonds: float = 1.0, reader_hidden: int = READER_HIDDEN):
+                 mean_n_bonds: float = 1.0, reader_hidden: int = READER_HIDDEN,
+                 mix_mode: str = "legacy"):
         super().__init__()
         if route not in ("C0", "A", "K", "Asm", "Ksm", "N0"):
             raise ValueError(f"unknown route {route!r}")
+        if mix_mode not in MIX_MODES:
+            raise ValueError(f"unknown mix mode {mix_mode!r}")
+        self.mix_mode = mix_mode
         self.base_route = "A" if route in ("Asm", "N0") else ("K" if route == "Ksm" else route)
         self.route = route
         self.encoders = M1.P3Encoders(dropout=dropout)
@@ -207,7 +272,8 @@ class Backbone(nn.Module):
             )
             if self.base_route == "A":
                 variant = "full" if route == "A" else "plain"
-                self.layers = nn.ModuleList([MixA(variant=variant, dropout=dropout)
+                self.layers = nn.ModuleList([MixA(variant=variant, dropout=dropout,
+                                                  mode=mix_mode)
                                              for _ in range(LAYERS)])
             else:
                 variant = "signed" if route == "K" else "softmax"
@@ -296,10 +362,11 @@ def _param_count(module: nn.Module) -> int:
 
 def build_model(route: str, norm: Mapping[str, Any], seed: int, device,
                 *, mean_n_bonds: float, dropout: float = 0.0,
-                reader_hidden: int = READER_HIDDEN) -> tuple[Backbone, dict]:
+                reader_hidden: int = READER_HIDDEN,
+                mix_mode: str = "legacy") -> tuple[Backbone, dict]:
     torch.manual_seed(int(seed))
     model = Backbone(norm, route, dropout=float(dropout), mean_n_bonds=mean_n_bonds,
-                     reader_hidden=int(reader_hidden))
+                     reader_hidden=int(reader_hidden), mix_mode=str(mix_mode))
     ssl_path = C.P3_SSL_S0 if int(seed) == 0 else C.P3_SSL_S1
     ssl_info = A2._load_encoders(model, ssl_path, torch.device("cpu"))
     n = _param_count(model)
@@ -307,6 +374,7 @@ def build_model(route: str, norm: Mapping[str, Any], seed: int, device,
         raise RuntimeError(f"{route}: {n} parameters exceeds the 500k cap")
     info = {
         "route": route,
+        "mix_mode": str(model.mix_mode),
         "seed": int(seed),
         "parameters": n,
         "ssl": ssl_info,

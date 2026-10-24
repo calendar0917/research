@@ -64,16 +64,27 @@ def prepare() -> tuple[dict, dict, dict, float]:
     return rel_train, rel_valid, scale, mean_nb
 
 
+def build_arm_model(route: str, seed: int, device, *, mix: str = "legacy",
+                    mean_n_bonds: float, dropout: float = 0.0,
+                    reader_hidden: int = GM.READER_HIDDEN, norm=None):
+    """Single constructor for every model instance of an arm, so the trainer, the
+    best-checkpoint re-evaluation and the holdout pass cannot disagree about the
+    operator."""
+    return GM.build_model(route, D.load_norm() if norm is None else norm, int(seed), device,
+                          mean_n_bonds=float(mean_n_bonds), dropout=float(dropout),
+                          reader_hidden=int(reader_hidden), mix_mode=str(mix))
+
+
 def make_builder(route: str, mean_n_bonds: float, dropout: float = 0.0,
-                 reader_hidden: int = GM.READER_HIDDEN):
+                 reader_hidden: int = GM.READER_HIDDEN, mix: str = "legacy"):
     def builder(candidate, norm, seed, device):
-        return GM.build_model(route, norm, seed, device, mean_n_bonds=mean_n_bonds,
-                              dropout=dropout, reader_hidden=reader_hidden)
+        return build_arm_model(route, seed, device, mix=mix, mean_n_bonds=mean_n_bonds,
+                               dropout=dropout, reader_hidden=reader_hidden, norm=norm)
 
     return builder
 
 
-def write_artifacts(out: Path, info: dict) -> dict:
+def write_artifacts(out: Path, info: dict, *, mix: str = "legacy") -> dict:
     best = out / "best.pt"
     final = out / "final.pt"
     pred = out / "predictions" / "valid_best.npz"
@@ -81,6 +92,7 @@ def write_artifacts(out: Path, info: dict) -> dict:
         "run_dir": str(out.relative_to(C.REPO)),
         "candidate": info.get("candidate"),
         "route": info.get("model_info", {}).get("route"),
+        "mix_mode": mix,
         "seed": info.get("seed"),
         "recipe_variant": info.get("recipe_variant"),
         "parameter_count": info.get("parameter_count"),
@@ -119,7 +131,8 @@ def train(route: str, seed: int, device, *, recipe: str = RECIPE,
           lr: float | None = None, weight_decay: float | None = None,
           dropout: float | None = None,
           holdout: int | None = None,
-          reader_hidden: int | None = None) -> dict:
+          reader_hidden: int | None = None,
+          mix: str = "legacy") -> dict:
     rel_train, rel_valid, scale, mean_nb = prepare()
     collate = GD.make_collate(rel_train, rel_valid, scale)
     keep = None
@@ -134,8 +147,9 @@ def train(route: str, seed: int, device, *, recipe: str = RECIPE,
             "train_rows": int(len(keep)), "source": "official train split only",
         })
     out = run_dir(route, seed, tag)
+    label = f"GOS_{route}" if mix == "legacy" else f"GOS_{route}[{mix}]"
     info = T1.train(
-        f"GOS_{route}",
+        label,
         seed,
         device,
         epochs=epochs,
@@ -146,18 +160,19 @@ def train(route: str, seed: int, device, *, recipe: str = RECIPE,
         dropout=dropout,
         recipe_variant=recipe,
         model_builder=make_builder(route, mean_nb, float(dropout or 0.0),
-                                   int(reader_hidden or GM.READER_HIDDEN)),
+                                   int(reader_hidden or GM.READER_HIDDEN), mix),
         out_dir=out,
         collate_fn=collate,
         train_rows=keep,
     )
-    art = write_artifacts(out, info)
+    art = write_artifacts(out, info, mix=mix)
     if holdout:
         norm = D.load_norm()
         ck = torch.load(out / "best.pt", map_location="cpu", weights_only=False)
-        model, _ = GM.build_model(route, norm, int(seed), device, mean_n_bonds=mean_nb,
-                                  dropout=float(dropout or 0.0),
-                                  reader_hidden=int(reader_hidden or GM.READER_HIDDEN))
+        model, _ = build_arm_model(route, int(seed), device, mix=mix, mean_n_bonds=mean_nb,
+                                   dropout=float(dropout or 0.0),
+                                   reader_hidden=int(reader_hidden or GM.READER_HIDDEN),
+                                   norm=norm)
         model.load_state_dict(ck["state_dict"])
         model.eval()
         train_cache = D.load_cache("train")
@@ -172,8 +187,10 @@ def train(route: str, seed: int, device, *, recipe: str = RECIPE,
         np.savez(out / "predictions" / "holdout.npz", row=hold, pred=p_hold)
         rec = {
             "protocol": "zinc-global-operator-search-v1",
-            "kind": "train-internal holdout (fresh 1000 molecules never used for any decision)",
-            "route": route, "seed": int(seed), "holdout_size": int(len(hold)),
+            "kind": "train-internal holdout (1000 molecules; not fresh any more)",
+            "route": route,
+            "mix_mode": mix,
+            "seed": int(seed), "holdout_size": int(len(hold)),
             "holdout_seed": HOLDOUT_SEED,
             "holdout_sha256": C.sha256_array(hold),
             "epoch": int(ck.get("epoch", -1)),
@@ -184,12 +201,12 @@ def train(route: str, seed: int, device, *, recipe: str = RECIPE,
             "checkpoint": str((out / "best.pt").relative_to(C.REPO)),
             "checkpoint_sha256": _sha(out / "best.pt"),
         }
-        C.write_json(ANALYSIS / f"holdout_{route}_s{int(seed)}.json", rec)
-        C.log(f"[holdout-{route}] seed={seed} holdout={mae_hold:.6f} valid={mae_valid:.6f} "
+        C.write_json(ANALYSIS / f"holdout_{route}{'' if mix == 'legacy' else '_' + mix}_s{int(seed)}.json", rec)
+        C.log(f"[holdout-{route}:{mix}] seed={seed} holdout={mae_hold:.6f} valid={mae_valid:.6f} "
               f"kept={mae_keep:.6f} ep={rec['epoch']}")
     bo = info["fixed_objects"]["best"]
     C.log(
-        f"[gos-{route}] seed={seed} best={info['best_valid']['valid_mae']:.9f}"
+        f"[gos-{route}:{mix}] seed={seed} best={info['best_valid']['valid_mae']:.9f}"
         f"@{info['best_valid']['epoch']} final={info['fixed_objects']['final']['valid_mae']:.9f} "
         f"params={info['parameter_count']} wall={info['wall_seconds']:.1f}s "
         f"init={info['model_info']['initial_state_sha256'][:16]} sha={art['sha256']['best_pt']}"
@@ -252,6 +269,8 @@ def main(argv=None) -> int:
                    help="reader width (default 128; 160 is the widest under the 500k cap)")
     p.add_argument("--holdout", type=int, default=None,
                    help="train on 10000-N rows and score the held-out N (fresh sample)")
+    p.add_argument("--mix", default="legacy", choices=list(GM.MIX_MODES),
+                   help="mixing arithmetic; adds no parameters (see ERRATUM.md)")
     p.add_argument("--force", action="store_true")
     args = p.parse_args(argv)
     if args.command == "prep":
@@ -266,7 +285,7 @@ def main(argv=None) -> int:
         train(args.route, args.seed, device, recipe=args.recipe, epochs=args.epochs,
               tag=args.tag, force=args.force, lr=args.lr,
               weight_decay=args.weight_decay, dropout=args.dropout,
-              holdout=args.holdout, reader_hidden=args.reader_hidden)
+              holdout=args.holdout, reader_hidden=args.reader_hidden, mix=args.mix)
     return 0
 
 
