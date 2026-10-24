@@ -396,6 +396,33 @@ class RelationCompositionProbe(nn.Module):
             layer.arm = arm
 
 
+def composer_pad(model: "RelationCompositionProbe", batch) -> tuple[torch.Tensor, torch.Tensor]:
+    """B's two composer outputs, scattered into the padded [B, Emax, 96] layout."""
+    a, b, w = model.encoders(batch)
+    Wg, Vg, n_b = model.group_to_bonds(w, batch)
+    c_g = model.group_composer(torch.cat([b, Wg, Vg, torch.log1p(n_b).unsqueeze(1), batch["bond_feat"]], 1))
+    Wl, Vl, _ = model.local_grouping(w, batch)
+    c_l = model.local_composer(torch.cat([b, Wl, Vl, torch.log1p(n_b).unsqueeze(1), batch["bond_feat"]], 1))
+    n_graphs, n_max = int(batch["n_graphs"]), int(batch["rel_R"].shape[1])
+    cg = c_g.new_zeros((n_graphs, n_max, c_g.shape[1]))
+    cl = c_l.new_zeros((n_graphs, n_max, c_l.shape[1]))
+    cg[batch["bond_batch"], batch["bond_local"]] = c_g
+    cl[batch["bond_batch"], batch["bond_local"]] = c_l
+    return cg, cl
+
+
+def layer0_inputs(model: "RelationCompositionProbe", batch, c_g, c_l):
+    """``(h0, e0, pair_mask)`` for the first layer."""
+    rel = batch["rel_R"]
+    mask = batch["bond_mask"]
+    pm = mask[:, :, None] & mask[:, None, :]
+    r_diag = torch.diagonal(rel, dim1=1, dim2=2).transpose(1, 2)
+    h = F.silu(model.core.w_h(torch.cat([c_g, c_l], dim=-1))) + model.core.w_abs(r_diag)
+    h = h * mask.unsqueeze(-1)
+    e = model.core.w_rel(rel) * pm.unsqueeze(-1)
+    return h, e, pm
+
+
 def _load_shared_from_b(model: RelationCompositionProbe, dual: nn.Module) -> dict:
     """Copy B's encoders + both composers, tensor by tensor."""
     src = {}

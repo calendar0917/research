@@ -167,6 +167,29 @@ fixed in advance:
 3. otherwise seed 0's D/S pair only (single-seed boundary stated explicitly);
 4. otherwise `COST_NOT_TESTED` — a budget stop, not a mechanism result.
 
+## 5b. Cost rule applied (recorded before the pair finished)
+
+Measured with `rc_runner.py measure` on the full 10k/1k splits, one A100-40GB,
+d=48 (470,321 params), batch 128, 79 steps/epoch, epochs 2 and 3:
+**6.68 s/epoch** (train 6.44 s = collate 0.79 + transfer 0.28 + forward 1.78 +
+backward 3.59; valid 0.24 s), i.e. **4008 s = 1.113 GPU·h per 600-epoch run**
+(`analysis/timing_D_s0.json`).
+
+Applying the rule above: 4 complete runs = 2 sequential pairs on 2 GPUs =
+2 × 1.113 h ≈ 2.23 h of *training* wall, which does not fit the remaining
+budget of this round (the 3 h cap includes the implementation, the environment
+and the remote-hygiene work already spent). 4 runs therefore do not fit, and
+rung 2 (d=40) would still not fit — the binding term is the wall clock already
+consumed, not the per-run cost (d=40 saves ≈ 13 % ≈ 9 min per pair).
+**Rung 3 of the pre-declared rule is applied: seed 0's D/S pair only**
+(`rc-D-s0`, `rc-S-s0`, launched in parallel on res-gpu0 / res-gpu1 at the same
+committed revision). This is a declared single-seed boundary: no cross-seed
+claim is made anywhere in the report, and the d=48 configuration is kept
+(no mid-round architecture change was needed).
+
+Budget after the fact: training 2 × 1.113 = 2.23 GPU·h; the timing/measure job
+(including the label-free R-cache build) 0.11 GPU·h → ≈ 2.34 GPU·h of 6.
+
 ## 6. Decisions after the probe (report answers each)
 
 * was the relation genuinely generated, transported and read by the output?
