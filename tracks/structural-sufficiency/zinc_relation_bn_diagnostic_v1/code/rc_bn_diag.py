@@ -324,7 +324,7 @@ def verify_calibration(model, order, calib, collator, train_cache, rows, device,
         stored_mean = bn.running_mean.to(torch.float64)
         stored_var = bn.running_var.to(torch.float64)
         d_mean = float((mean - stored_mean).abs().max())
-        scale = float(torch.sqrt(stored_var.clamp_min(bn.eps)))
+        scale = torch.sqrt(stored_var.clamp_min(bn.eps))
         d_norm = float(((mean - stored_mean).abs() / scale).max())
         rel_var = float(((var - stored_var).abs() / stored_var.clamp_min(bn.eps)).max())
         worst_mean = max(worst_mean, d_norm)
