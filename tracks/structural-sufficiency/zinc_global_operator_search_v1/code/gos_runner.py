@@ -64,10 +64,11 @@ def prepare() -> tuple[dict, dict, dict, float]:
     return rel_train, rel_valid, scale, mean_nb
 
 
-def make_builder(route: str, mean_n_bonds: float, dropout: float = 0.0):
+def make_builder(route: str, mean_n_bonds: float, dropout: float = 0.0,
+                 reader_hidden: int = GM.READER_HIDDEN):
     def builder(candidate, norm, seed, device):
         return GM.build_model(route, norm, seed, device, mean_n_bonds=mean_n_bonds,
-                              dropout=dropout)
+                              dropout=dropout, reader_hidden=reader_hidden)
 
     return builder
 
@@ -117,7 +118,8 @@ def train(route: str, seed: int, device, *, recipe: str = RECIPE,
           epochs: int | None = None, tag: str | None = None, force: bool = False,
           lr: float | None = None, weight_decay: float | None = None,
           dropout: float | None = None,
-          holdout: int | None = None) -> dict:
+          holdout: int | None = None,
+          reader_hidden: int | None = None) -> dict:
     rel_train, rel_valid, scale, mean_nb = prepare()
     collate = GD.make_collate(rel_train, rel_valid, scale)
     keep = None
@@ -143,7 +145,8 @@ def train(route: str, seed: int, device, *, recipe: str = RECIPE,
         weight_decay=weight_decay,
         dropout=dropout,
         recipe_variant=recipe,
-        model_builder=make_builder(route, mean_nb, float(dropout or 0.0)),
+        model_builder=make_builder(route, mean_nb, float(dropout or 0.0),
+                                   int(reader_hidden or GM.READER_HIDDEN)),
         out_dir=out,
         collate_fn=collate,
         train_rows=keep,
@@ -153,7 +156,8 @@ def train(route: str, seed: int, device, *, recipe: str = RECIPE,
         norm = D.load_norm()
         ck = torch.load(out / "best.pt", map_location="cpu", weights_only=False)
         model, _ = GM.build_model(route, norm, int(seed), device, mean_n_bonds=mean_nb,
-                                  dropout=float(dropout or 0.0))
+                                  dropout=float(dropout or 0.0),
+                                  reader_hidden=int(reader_hidden or GM.READER_HIDDEN))
         model.load_state_dict(ck["state_dict"])
         model.eval()
         train_cache = D.load_cache("train")
@@ -244,6 +248,8 @@ def main(argv=None) -> int:
     p.add_argument("--lr", type=float, default=None)
     p.add_argument("--weight-decay", type=float, default=None)
     p.add_argument("--dropout", type=float, default=None)
+    p.add_argument("--reader-hidden", type=int, default=None,
+                   help="reader width (default 128; 160 is the widest under the 500k cap)")
     p.add_argument("--holdout", type=int, default=None,
                    help="train on 10000-N rows and score the held-out N (fresh sample)")
     p.add_argument("--force", action="store_true")
@@ -260,7 +266,7 @@ def main(argv=None) -> int:
         train(args.route, args.seed, device, recipe=args.recipe, epochs=args.epochs,
               tag=args.tag, force=args.force, lr=args.lr,
               weight_decay=args.weight_decay, dropout=args.dropout,
-              holdout=args.holdout)
+              holdout=args.holdout, reader_hidden=args.reader_hidden)
     return 0
 
 

@@ -182,7 +182,7 @@ class Backbone(nn.Module):
     """P3 encoders + DCC global/local composers + bond-object global core."""
 
     def __init__(self, norm: Mapping[str, Any], route: str, *, dropout: float = 0.0,
-                 mean_n_bonds: float = 1.0):
+                 mean_n_bonds: float = 1.0, reader_hidden: int = READER_HIDDEN):
         super().__init__()
         if route not in ("C0", "A", "K", "Asm", "Ksm", "N0"):
             raise ValueError(f"unknown route {route!r}")
@@ -193,13 +193,13 @@ class Backbone(nn.Module):
         self.local_composer = M1.MLP(WIDTH + 2 * WIDTH + 1 + D.BOND_FEAT_DIM, 80, WIDTH, 1, dropout)
         self.mean_n_bonds = float(mean_n_bonds)
         if route == "C0":
-            self.reader = M1.MLP(Z0_DIM, READER_HIDDEN, 1, n_hidden=2, dropout=dropout)
+            self.reader = M1.MLP(Z0_DIM, int(reader_hidden), 1, n_hidden=2, dropout=dropout)
         elif route == "N0":
             # control: bond-object *content* reaches the reader, but no global
             # mixture over bond objects and no relation encoder exist.
             self.bond_tok = nn.Linear(2 * WIDTH, TOKEN_DIM)
             self.layers = nn.ModuleList()
-            self.reader = M1.MLP(READER_IN_CORE, READER_HIDDEN, 1, n_hidden=2, dropout=dropout)
+            self.reader = M1.MLP(READER_IN_CORE, int(reader_hidden), 1, n_hidden=2, dropout=dropout)
         else:
             self.bond_tok = nn.Linear(2 * WIDTH, TOKEN_DIM)
             self.rel_enc = nn.Sequential(
@@ -213,7 +213,7 @@ class Backbone(nn.Module):
                 variant = "signed" if route == "K" else "softmax"
                 self.layers = nn.ModuleList([MixK(variant=variant, dropout=dropout)
                                              for _ in range(LAYERS)])
-            self.reader = M1.MLP(READER_IN_CORE, READER_HIDDEN, 1, n_hidden=2, dropout=dropout)
+            self.reader = M1.MLP(READER_IN_CORE, int(reader_hidden), 1, n_hidden=2, dropout=dropout)
         self.register_buffer("global_mean", torch.as_tensor(norm["global_mean"], dtype=torch.float32))
         self.register_buffer("global_scale", torch.as_tensor(norm["global_scale"], dtype=torch.float32))
 
@@ -295,9 +295,11 @@ def _param_count(module: nn.Module) -> int:
 
 
 def build_model(route: str, norm: Mapping[str, Any], seed: int, device,
-                *, mean_n_bonds: float, dropout: float = 0.0) -> tuple[Backbone, dict]:
+                *, mean_n_bonds: float, dropout: float = 0.0,
+                reader_hidden: int = READER_HIDDEN) -> tuple[Backbone, dict]:
     torch.manual_seed(int(seed))
-    model = Backbone(norm, route, dropout=float(dropout), mean_n_bonds=mean_n_bonds)
+    model = Backbone(norm, route, dropout=float(dropout), mean_n_bonds=mean_n_bonds,
+                     reader_hidden=int(reader_hidden))
     ssl_path = C.P3_SSL_S0 if int(seed) == 0 else C.P3_SSL_S1
     ssl_info = A2._load_encoders(model, ssl_path, torch.device("cpu"))
     n = _param_count(model)
@@ -311,6 +313,7 @@ def build_model(route: str, norm: Mapping[str, Any], seed: int, device,
         "initial_state_sha256": C.state_hash(model),
         "mean_train_n_bonds": float(mean_n_bonds),
         "dropout": float(dropout),
+        "reader_hidden": int(reader_hidden),
         "parameters_breakdown": {
             "encoders": _param_count(model.encoders),
             "group_composer": _param_count(model.group_composer),
