@@ -48,8 +48,21 @@ def _base(model):
 
 
 def _trajectory(net, train_data, valid_data, seed: int, arm: str, steps: int,
-                batches: list[np.ndarray], valid_rows: np.ndarray, base=None) -> dict:
+                batches: list[np.ndarray], valid_rows: np.ndarray, base=None,
+                deterministic: bool = True) -> dict:
+    """Roll ``steps`` real optimisation steps and record everything comparable.
+
+    ``deterministic=True`` disables the two stochastic regularisers (attention
+    dropout, graph-level drop path) so the comparison isolates the *mathematics*:
+    under cudagraphs the random stream is not the eager stream, and comparing
+    noise realisations would say nothing about the model.
+    """
     base = base if base is not None else _base(net)
+    if deterministic:
+        for m in base.modules():
+            if isinstance(m, torch.nn.Dropout):
+                m.p = 0.0
+        base.drop_path = 0.0
     opt = T.make_optimizer(base, 2e-3, 1e-5)
     losses = []
     for i, rows in enumerate(batches[:steps]):
@@ -57,7 +70,8 @@ def _trajectory(net, train_data, valid_data, seed: int, arm: str, steps: int,
         lr = T.schedule_fn(STEPS * 100, 5, 2e-3, 2e-5)(i)
         for g in opt.param_groups:
             g["lr"] = lr
-        torch.manual_seed(1000 + i)              # same dropout/drop-path stream
+        if not deterministic:
+            torch.manual_seed(1000 + i)
         p = net(b)
         loss = (p - b["y"]).abs().mean()
         opt.zero_grad(set_to_none=True)
@@ -144,9 +158,9 @@ def main(argv=None) -> int:
     out["rms_norm_fused_max_abs_diff"] = float(np.abs(fused - manual).max())
 
     # --- 5) determinism: two eager runs of the same seed agree exactly
-    ref2 = M.build_model(0, args.arm, scales).to(args.device)
-    assert C.state_hash(ref2) == ref_hash0, "construction is not seed-deterministic"
-    r2 = _trajectory(ref2, train_data, valid_data, 0, args.arm, args.steps,
+    fresh = M.build_model(0, args.arm, scales).to(args.device)
+    assert C.state_hash(fresh) == ref_hash0, "construction is not seed-deterministic"
+    r2 = _trajectory(fresh, train_data, valid_data, 0, args.arm, args.steps,
                      batches, valid_rows)
     out["eager_replay_loss_max_abs_diff"] = float(max(abs(a[0] - b[0])
                                                      for a, b in zip(r["losses"], r2["losses"])))
@@ -155,7 +169,8 @@ def main(argv=None) -> int:
 
     # --- 6) REAL and NULL must still start from the identical tensor set
     m_null = M.build_model(0, "null", scales).to("cpu")
-    ref2_cpu = {k: v.detach().cpu() for k, v in ref2.state_dict().items()}
+    fresh_real = M.build_model(0, "real", scales).to("cpu")
+    ref2_cpu = {k: v.detach().cpu() for k, v in fresh_real.state_dict().items()}
     keys_same = sorted(m_null.state_dict()) == sorted(ref2_cpu)
     diff = 0.0
     for k, v in m_null.state_dict().items():
@@ -164,6 +179,33 @@ def main(argv=None) -> int:
                    else float((v != w).any()))
     out["real_null_init_state_keys_identical"] = bool(keys_same)
     out["real_null_init_max_abs_diff"] = float(diff)
+
+    # --- 7) with dropout enabled: compiled training stays stochastic, and its
+    # loss distribution matches the eager one (the *realisation* differs because
+    # cudagraphs own the RNG stream).
+    stoch = {}
+    for tag, build in (("eager", lambda: M.build_model(0, args.arm, scales).to(args.device)),
+                       ("compiled", lambda: torch.compile(
+                           M.build_model(0, args.arm, scales).to(args.device),
+                           mode="reduce-overhead", dynamic=False))):
+        m = build()
+        base = _base(m)
+        opt = T.make_optimizer(base, 2e-3, 1e-5)
+        b = train_data.batch(batches[0])
+        vals = []
+        for r in range(6):
+            torch.manual_seed(7000 + r)
+            p = m(b)
+            loss = (p - b["y"]).abs().mean()
+            opt.zero_grad(set_to_none=True)
+            loss.backward()
+            opt.step()
+            vals.append(float(loss.detach()))
+        stoch[tag] = vals
+    out["stochastic_losses"] = stoch
+    out["stochastic_compiled_is_stochastic"] = len(set(stoch["compiled"])) > 1
+    out["stochastic_eager_is_stochastic"] = len(set(stoch["eager"])) > 1
+    out["stochastic_mean_abs_gap"] = float(abs(np.mean(stoch["eager"]) - np.mean(stoch["compiled"])))
 
     ok = (out["loss_max_abs_diff"] < 1e-5
           and out["valid_pred_max_abs_diff"] < 1e-4
@@ -174,7 +216,9 @@ def main(argv=None) -> int:
           and out["eager_replay_loss_max_abs_diff"] == 0.0
           and out["eager_replay_valid_pred_max_abs_diff"] == 0.0
           and out["real_null_init_state_keys_identical"]
-          and out["real_null_init_max_abs_diff"] == 0.0)
+          and out["real_null_init_max_abs_diff"] == 0.0
+          and out["stochastic_compiled_is_stochastic"]
+          and out["stochastic_eager_is_stochastic"])
     out["pass"] = bool(ok)
     out["environment"] = C.environment()
 
