@@ -75,16 +75,19 @@ def make_optimizer(model: torch.nn.Module, lr: float, wd: float) -> torch.optim.
                              betas=(0.9, 0.95), eps=1e-8)
 
 
-def _mae_eval(model, data: "D.SplitTensors", batch_size: int = 250) -> float:
+def _mae_eval(model, data: "D.SplitTensors", batch_size: int = 250,
+              rows: np.ndarray | None = None) -> float:
+    """Eval-mode MAE over the whole split or over an explicit row subset."""
     model.eval()
+    rows = np.arange(data.n) if rows is None else np.asarray(rows, dtype=np.int64)
     tot, cnt = 0.0, 0
     with torch.no_grad():
-        for start in range(0, data.n, batch_size):
-            rows = np.arange(start, min(start + batch_size, data.n))
-            b = data.batch(rows)
+        for start in range(0, len(rows), batch_size):
+            chunk = rows[start:start + batch_size]
+            b = data.batch(chunk)
             p = model(b)
             tot += float((p - b["y"]).abs().sum())
-            cnt += len(rows)
+            cnt += len(chunk)
     model.train()
     return tot / max(cnt, 1)
 
@@ -225,6 +228,9 @@ def train(arm: str, seed: int, epochs: int, device: str, *, mode: str,
             "train_mae_eval_mode": float(_mae_eval(model, train_data, batch_size=500)),
             "sha256": C.sha256_file(path),
         }
+        if subset:
+            info[tag]["train_subset_eval_mode"] = float(
+                _mae_eval(model, train_data, batch_size=500, rows=subset_rows))
         preds = _per_molecule(model, valid_data)
         np.savez(out_dir / "predictions" / f"valid_{tag}.npz",
                  pred=preds, row=np.arange(valid_data.n, dtype=np.int64),
