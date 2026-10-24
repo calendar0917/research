@@ -83,21 +83,24 @@ def _small_init(lin: nn.Linear, std: float = SMALL_INIT) -> nn.Linear:
 
 
 class FFN(nn.Module):
-    def __init__(self, d: int, mult: int = FF_MULT):
+    def __init__(self, d: int, mult: int = FF_MULT, dropout: float = 0.0):
         super().__init__()
         self.norm = AdaRMSNorm(d)
         self.fc1 = nn.Linear(d, mult * d)
         self.fc2 = nn.Linear(mult * d, d)
+        self.dropout = float(dropout)
 
     def forward(self, h: torch.Tensor) -> torch.Tensor:
-        return h + self.fc2(F.silu(self.fc1(self.norm(h))))
+        x = F.silu(self.fc1(self.norm(h)))
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        return h + F.dropout(self.fc2(x), p=self.dropout, training=self.training)
 
 
 class MixA(nn.Module):
     """Amplitude-sensitive global content interaction over bond objects."""
 
     def __init__(self, d: int = TOKEN_DIM, heads: int = HEADS, rel: int = REL_REL_DIM,
-                 variant: str = "full"):
+                 variant: str = "full", dropout: float = 0.0):
         super().__init__()
         if variant not in ("full", "plain"):
             raise ValueError(f"unknown MixA variant {variant!r}")
@@ -111,7 +114,8 @@ class MixA(nn.Module):
         # "plain" control: ordinary normalised attention + relation bias, no
         # amplitude-sensitive term and no relation-conditioned content gate.
         self.gamma = nn.Linear(rel, self.heads) if variant == "full" else None
-        self.ffn = FFN(d)
+        self.dropout = float(dropout)
+        self.ffn = FFN(d, dropout=dropout)
 
     def forward(self, h, rel, mask):
         B, N, _ = h.shape
@@ -135,7 +139,7 @@ class MixA(nn.Module):
         else:
             ctx = torch.einsum("bhij,bhjd->bhid", attn, v)
         ctx = ctx.permute(0, 2, 1, 3).reshape(B, N, self.d)
-        h = h + self.out(ctx)
+        h = h + F.dropout(self.out(ctx), p=self.dropout, training=self.training)
         h = self.ffn(h)
         return h * mask.unsqueeze(-1).to(h.dtype)
 
@@ -143,7 +147,8 @@ class MixA(nn.Module):
 class MixK(nn.Module):
     """Signed, non-competing global structural kernel over bond objects."""
 
-    def __init__(self, d: int = TOKEN_DIM, rel: int = REL_REL_DIM, variant: str = "signed"):
+    def __init__(self, d: int = TOKEN_DIM, rel: int = REL_REL_DIM, variant: str = "signed",
+                 dropout: float = 0.0):
         super().__init__()
         if variant not in ("signed", "softmax"):
             raise ValueError(f"unknown MixK variant {variant!r}")
@@ -152,7 +157,8 @@ class MixK(nn.Module):
         self.kernel = nn.Sequential(nn.Linear(rel, 32), nn.SiLU(), nn.Linear(32, d))
         # V_l is the residual write itself; its last layer is small-initialised.
         self.value = nn.Sequential(nn.Linear(d, d), nn.SiLU(), _small_init(nn.Linear(d, d)))
-        self.ffn = FFN(d)
+        self.dropout = float(dropout)
+        self.ffn = FFN(d, dropout=dropout)
 
     def forward(self, h, rel, mask, inv_nbonds: float):
         x = self.norm(h) * mask.unsqueeze(-1).to(h.dtype)
@@ -167,7 +173,7 @@ class MixK(nn.Module):
             scale = 1.0
         vv = self.value(x)
         ctx = torch.einsum("bijc,bjc->bic", kk, vv) * scale
-        h = h + ctx
+        h = h + F.dropout(ctx, p=self.dropout, training=self.training)
         h = self.ffn(h)
         return h * mask.unsqueeze(-1).to(h.dtype)
 
@@ -195,10 +201,12 @@ class Backbone(nn.Module):
             )
             if self.base_route == "A":
                 variant = "full" if route == "A" else "plain"
-                self.layers = nn.ModuleList([MixA(variant=variant) for _ in range(LAYERS)])
+                self.layers = nn.ModuleList([MixA(variant=variant, dropout=dropout)
+                                             for _ in range(LAYERS)])
             else:
                 variant = "signed" if route == "K" else "softmax"
-                self.layers = nn.ModuleList([MixK(variant=variant) for _ in range(LAYERS)])
+                self.layers = nn.ModuleList([MixK(variant=variant, dropout=dropout)
+                                             for _ in range(LAYERS)])
             self.reader = M1.MLP(READER_IN_CORE, READER_HIDDEN, 1, n_hidden=2, dropout=dropout)
         self.register_buffer("global_mean", torch.as_tensor(norm["global_mean"], dtype=torch.float32))
         self.register_buffer("global_scale", torch.as_tensor(norm["global_scale"], dtype=torch.float32))
@@ -281,9 +289,9 @@ def _param_count(module: nn.Module) -> int:
 
 
 def build_model(route: str, norm: Mapping[str, Any], seed: int, device,
-                *, mean_n_bonds: float) -> tuple[Backbone, dict]:
+                *, mean_n_bonds: float, dropout: float = 0.0) -> tuple[Backbone, dict]:
     torch.manual_seed(int(seed))
-    model = Backbone(norm, route, mean_n_bonds=mean_n_bonds)
+    model = Backbone(norm, route, dropout=float(dropout), mean_n_bonds=mean_n_bonds)
     ssl_path = C.P3_SSL_S0 if int(seed) == 0 else C.P3_SSL_S1
     ssl_info = A2._load_encoders(model, ssl_path, torch.device("cpu"))
     n = _param_count(model)
@@ -296,6 +304,7 @@ def build_model(route: str, norm: Mapping[str, Any], seed: int, device,
         "ssl": ssl_info,
         "initial_state_sha256": C.state_hash(model),
         "mean_train_n_bonds": float(mean_n_bonds),
+        "dropout": float(dropout),
         "parameters_breakdown": {
             "encoders": _param_count(model.encoders),
             "group_composer": _param_count(model.group_composer),

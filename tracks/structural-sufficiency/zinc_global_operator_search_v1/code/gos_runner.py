@@ -64,9 +64,10 @@ def prepare() -> tuple[dict, dict, dict, float]:
     return rel_train, rel_valid, scale, mean_nb
 
 
-def make_builder(route: str, mean_n_bonds: float):
+def make_builder(route: str, mean_n_bonds: float, dropout: float = 0.0):
     def builder(candidate, norm, seed, device):
-        return GM.build_model(route, norm, seed, device, mean_n_bonds=mean_n_bonds)
+        return GM.build_model(route, norm, seed, device, mean_n_bonds=mean_n_bonds,
+                              dropout=dropout)
 
     return builder
 
@@ -118,7 +119,7 @@ def train(route: str, seed: int, device, *, recipe: str = RECIPE,
         weight_decay=weight_decay,
         dropout=dropout,
         recipe_variant=recipe,
-        model_builder=make_builder(route, mean_nb),
+        model_builder=make_builder(route, mean_nb, float(dropout or 0.0)),
         out_dir=out,
         collate_fn=collate,
     )
