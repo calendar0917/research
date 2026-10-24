@@ -67,6 +67,17 @@ def load_prep(device):
     return d
 
 
+def ensure_prep(cache):
+    path = CACHE / "rbo_train.pt"
+    if path.exists():
+        return load_prep("cpu")
+    import rbo_prep as P
+    CACHE.mkdir(parents=True, exist_ok=True)
+    d = P.build(cache)
+    torch.save(d, path)
+    return load_prep("cpu")
+
+
 def evaluate(model, rows, cache, device, batch_size=256):
     return T1.evaluate(model, cache, np.asarray(rows), candidate="RBO", device=device,
                        batch_size=batch_size, collate_fn=collate_fn)
@@ -95,7 +106,7 @@ def main(argv=None) -> int:
 
     sup = dict(np.load(_SSUF / "zinc_composition_transfer_v1" / "cache" / "support_sets.npz"))
     cache = D.load_cache("train")
-    prep = load_prep(device)
+    prep = ensure_prep(cache)
     y = np.asarray(cache["labels"], dtype=np.float64)
     norm = D.load_norm()
     monitor = np.asarray(sup["monitor"], dtype=np.int64)
