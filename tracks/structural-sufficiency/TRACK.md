@@ -121,6 +121,10 @@
 | `zinc_relation_composition_probe_v1` 结果 | best-valid / W20 / T100 / final：D 0.084493 / 0.094786 / 0.100461 / 0.095439；S 0.081838 / 0.103041 / 0.110148 / 0.099211；B-R0（历史参照）0.078537 / 0.079082 / n/a / 0.079076。**D−S 符号在行间翻转**：best-valid +0.002655（偏 S），W20 −0.008255、T100 −0.009686、final −0.003772（偏 D）；配对 bootstrap CI 跨 0（[−0.0038, +0.0097]，D 更好的行占 0.492）；两支在稳定量上都比 B-R0 差（D +0.0157、S +0.0240） |
 | `zinc_relation_composition_probe_v1` 判定 | **`NO_STABLE_D_S_DIFFERENCE_AND_WORSE_THAN_B_AT_THIS_HORIZON`（建议停止这条线）**：单 seed 无法在任一方向分离 D/S，且新主体整体不如已确认的 B-R0。**但「机制未接上」被排除**：固定权重下只把 D 的关系写入换成 S，valid 0.084493→0.122155（**+0.0377**，mean \|Δpred\| 0.085；未训练对照只有 2.5e-4）；本地重前向复现报告 best-valid 差 4.06e-09。D 的 train@best 0.0236 远低于 S 的 0.0535 → 更像**主体在该日程/容量下不划算（拟合进 train、不转移到 valid）+ valid 曲线不稳定**，而非「关系没被使用」。official test **未加载未评分**，0.05× 目标未评估 |
 | `zinc_relation_composition_probe_v1` 更正/限制 | 单 seed（seed 0）边界；600 epochs 是声明探索日程而非 GRIT 原生配方；B-R0 为历史参照（非本轮重训、非同配方对照）；行 bootstrap 只描述 1000 分子样本、不代表训练噪声；墙面比 3 h 硬上限超出约 30–40 min（来自远端部署阻塞与两处 runner 修复，不是额外 GPU 工作） |
+| `zinc_relation_bn_diagnostic_v1` 协议/代码 | 完成：`PLAN.md` + 一个复用源模型的诊断脚本（无优化器/无 backward/不改参数）；只改派生副本的 BN `running_mean/var`；四种状态 O（原 eval）/B（batch 统计、不写 buffer）/T（B+原 attention dropout，门控）/C（train-only 逐层重估）；校准按真实 BN 调用顺序（11 个 BN）逐个做，FP64 Chan/Welford 流式合并、真实条目加权、`running_var=M2/(n−1)`；official test 未构造未加载，valid 只做最后评估 |
+| `zinc_relation_bn_diagnostic_v1` GPU | **完成**：`bn-D`(res-gpu0, 97.5 s) / `bn-S`(res-gpu1, 70.5 s) 均 exit 0；**0.047 GPU·h**（上限 0.5），墙面约 0.57 h（含一次被终止的 CPU smoke 误判） |
+| `zinc_relation_bn_diagnostic_v1` 结果 | **B 完全解释 train 侧差距**：train MAE D_best 0.023578→**0.007683**、D_final 0.033238→**0.007610**、S_best 0.053499→**0.009829**、S_final 0.108899→**0.007541**（在线 0.0082–0.0091，\|差\|≤0.0011）；T 与 B 同量级（0.0084–0.0101）⇒ dropout 不贡献。**C 不能恢复 train**（0.0318/0.0318/0.0749/0.0700），valid 变化符号混合（−0.0131/−0.0005/+0.0048/+0.0108），被旧 BN 选出的 best 反而变差。逐层看 11 个 BN 中 10 个的 running 统计与 train 全局矩已一致（方差比中位 0.991–1.001），只有 `layers.0.bn_h1` 明显陈旧（均值漂移 0.50/最大 1.70、方差比低至 0.45）⇒ 不是"统计量估错"，而是**逐 batch 归一化本身是学到的函数** |
+| `zinc_relation_bn_diagnostic_v1` 判定 | **`BN_BATCH_STATISTICS_EXPLAIN_THE_TRAIN_GAP__GLOBAL_RECALIBRATION_RECOVERS_NEITHER_TRAIN_NOR_VALID`（诊断结束，停止）**：train/eval 差距 100% 定位到 BN 统计来源，但**没有可修的推理统计损失**——重估全局矩既不恢复 train 也不一致改善 valid（最优 S_best 0.0818→0.0866 变差）。上一轮 D/S 判定不变（eval 口径 valid 数字未被污染，剩余差距是泛化差距）；上轮 D→S 固定权重干预的 +0.0377 可能含激活统计失配，按要求未重做。检查全过：O 重放差 ≤1.3e-08、参数 hash 一致、仅 BN running 变化、逐层自洽 6.3e-08、重分批 1.4e-06、源 checkpoint 未改 |
 | 交付 | Phase 0 REPORT + 纠错文件 + Phase 1a 协议/REPORT + Phase 1b 协议/决策日志/REPORT/run manifest + Phase 1c 协议/纠错/REPORT/run manifest/analysis + Phase 1d 协议/REPORT/CPU audit/run manifest/analysis + STATE/TRACK |
 
 ## 入口
@@ -226,7 +230,16 @@
    - 若仍要检验交互价值，必须是**新一轮预注册**，且满足：目标依赖 P3E 感受野可证不足的图统计量（先做零训练诊断）；每臂 ≥2 seed；尾部用鲁棒判据；否则不动 GPU。
    - Phase C（Lipophilicity）设计仍冻结未训练，优先级高于任何 ZINC 追加实验；但若做 Phase C，必须先把其 RMSE/尾部判据改成配对 MSE 差形式。
 
-000. **`zinc_relation_composition_probe_v1` 改写下一步（最新，2026-10-24）**：把**关系状态的写入规则**条件化到当前键 token 状态（D），
+000. **`zinc_relation_bn_diagnostic_v1` 改写下一步（最新，2026-10-24）**：BN 推理统计**不是**上一轮 valid 差距的原因。
+     train 侧的 eval-mode 误差 100% 由"BN 用 running 统计而非 batch 统计"决定（B 把四份 checkpoint 全部拉回在线水平，
+     |差|≤0.0011；T 说明 dropout 无贡献），但用 train-only **逐层**重估全局矩（C）既不恢复 train（0.032–0.075 vs 0.0075–0.0098），
+     也不一致改善 valid（−0.0131…+0.0108，best 反而变差）。逐层证据显示 10/11 个 BN 的 running 统计本就接近精确全局矩
+     （只有 `layers.0.bn_h1` 陈旧）⇒ 差距来自"逐 batch 归一化是学到的函数"，不是"统计量估歪"。
+     结论：**不存在可修的推理统计损失**；valid 差距是泛化问题，本轮没有给它新的杠杆。
+     下一步**停止**：不要为此加 seed、换归一化类型或加长日程；若将来重启，只能作为"训练时归一化是否需要改变"的新预注册问题，
+     并且必须重新训练（本轮是固定权重诊断，不能外推）。另：上轮 D→S 固定权重干预(+0.0377)可能含激活统计失配，未重做。
+
+00. **`zinc_relation_composition_probe_v1` 改写下一步（历史，2026-10-24）**：把**关系状态的写入规则**条件化到当前键 token 状态（D），
      在同一日程/同一参数量级下**没有**买到相对"只由固定结构写入"（S）的收益，也整体不如已确认的 B-R0。
      seed 0 单对上：best-valid 偏 S（+0.002655），W20/T100/final 偏 D（−0.0083/−0.0097/−0.0038），配对 bootstrap CI 跨 0；
      两支在稳定量上分别比 B-R0 差 +0.0157（D）/ +0.0240（S）。**"机制没接上"这个解释被排除**：固定权重下把 D 的写入换成 S，

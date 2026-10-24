@@ -12,6 +12,8 @@ updated: 2026-10-24
 main_line: true
 latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
+latest_diagnostic: zinc_relation_bn_diagnostic_v1
+latest_diagnostic_verdict: BN_BATCH_STATISTICS_EXPLAIN_THE_TRAIN_GAP__GLOBAL_RECALIBRATION_RECOVERS_NEITHER_TRAIN_NOR_VALID
 latest_side_round: zinc_relation_composition_probe_v1
 latest_side_round_verdict: NO_STABLE_D_S_DIFFERENCE_AND_WORSE_THAN_B_AT_THIS_HORIZON
 latest_side_round_next_action: >-
@@ -1739,3 +1741,70 @@ zinc_relation_composition_probe_v1:
     by design this round, and both arms' W20 sits 0.010-0.021 above their
     best-valid), then re-run the D/S contrast with the two arms' train@best in
     the same range; otherwise the D/S difference is buried in valid noise.
+
+zinc_relation_bn_diagnostic_v1:
+  protocol_id: ssrc-zinc-relation-bn-diagnostic-v1
+  plan: tracks/structural-sufficiency/zinc_relation_bn_diagnostic_v1/PLAN.md
+  status: COMPLETE
+  kind: diagnostic (no training, no parameter change, no architecture change)
+  verdict: BN_BATCH_STATISTICS_EXPLAIN_THE_TRAIN_GAP__GLOBAL_RECALIBRATION_RECOVERS_NEITHER_TRAIN_NOR_VALID
+  report: tracks/structural-sufficiency/zinc_relation_bn_diagnostic_v1/REPORT.md
+  question: >-
+    How much of the eval-mode error of the four frozen D/S checkpoints comes from
+    BatchNorm inference statistics not matching the fixed weights, and does
+    re-estimating train-only statistics recover the train and valid performance?
+  answer: >-
+    All of the train-side gap and none of the valid-side gap.  With frozen
+    weights, letting BN use the current batch statistics (state B, dropout off,
+    no buffer writes) restores the online train MAE for all four checkpoints
+    (D_best 0.023578->0.007683, D_final 0.033238->0.007610, S_best
+    0.053499->0.009829, S_final 0.108899->0.007541; online 0.0082-0.0091,
+    |diff| <= 0.0011), and adding the original attention dropout changes nothing
+    (T 0.0084-0.0101).  Re-estimating every BN's running statistics from train
+    alone, layer by layer in true forward order (state C), does NOT recover the
+    train level (0.0318-0.0749) and moves valid in both directions (-0.013069,
+    -0.000513, +0.004754, +0.010758), with the previously selected 'best'
+    checkpoints getting worse.
+  findings:
+    - "The cause is not a bad estimate but a batch-dependent function: 10 of the 11 BNs already carry running statistics within ~1% of the exact train-global moments (variance-ratio median 0.991-1.001); only layers.0.bn_h1 is visibly stale (mean shift 0.50 average / 1.70 max, variance ratio down to 0.45).  Exact global moments therefore barely change the forward function (C ~ O), while B changes the function itself."
+    - "Calibration ran in true forward order (11 BNs, no module reuse), one BN at a time with all earlier BNs already calibrated, FP64 Chan/Welford streaming with real entry counts (tokens 249,279; pairs 6,492,991, verified against the caches) and running_var = M2/(n-1)."
+    - "Self-consistency: re-measuring every BN's global moments on the finished C matches the written buffers to 9.9e-08 sigma and 6.3e-08 relative variance; parameters are bit-identical to O; the only state_dict differences are BN running_mean/running_var; C's eval prediction is invariant to re-batching to 1.4e-06; the source checkpoints are untouched."
+    - "Batch-context sensitivity of B is small: the same 2048 molecules under a second fixed permutation move MAE by 0.0005-0.0010 (mean |d pred| 0.0088-0.0096)."
+    - "C helps the 'final' checkpoints and hurts the 'best' checkpoints because 'best' was selected on eval-mode valid under the stale running statistics; no re-selection on valid was done or is allowed."
+  implication_for_previous_round: >-
+    The D/S verdict is unchanged: the eval-mode valid numbers used last round are
+    legitimate deployment numbers and are not systematically corrupted by wrong
+    BN statistics (recalibration moves valid by -0.013..+0.011 with mixed sign,
+    and the best checkpoint gets worse).  The remaining valid gap is a
+    generalisation gap, not a fixable inference-statistics loss.  The previous
+    fixed-weight D->S intervention (+0.0377) may partly reflect
+    activation-statistics mismatch and was deliberately not re-run here.
+  budget:
+    wall_clock_hours: 0.57
+    wall_clock_cap_hours: 1.0
+    gpu_hours: 0.047
+    gpu_hours_cap: 0.5
+    jobs: ["bn-D (res-gpu0, 97.5 s)", "bn-S (res-gpu1, 70.5 s)"]
+  not_tested:
+    - "T on the full train split (subset only; B already matched the online level)"
+    - "no other epochs, no seed sweep, no method sweep (by design)"
+    - "the previous round's D->S fixed-weight intervention was not re-run under calibrated statistics"
+  artifacts:
+    report: tracks/structural-sufficiency/zinc_relation_bn_diagnostic_v1/REPORT.md
+    manifest: tracks/structural-sufficiency/zinc_relation_bn_diagnostic_v1/analysis/manifest.json
+    checks: tracks/structural-sufficiency/zinc_relation_bn_diagnostic_v1/analysis/checks.json
+    summary: tracks/structural-sufficiency/zinc_relation_bn_diagnostic_v1/analysis/summary.json
+    bn_layers: tracks/structural-sufficiency/zinc_relation_bn_diagnostic_v1/analysis/bn_layers.json
+    main_table: tracks/structural-sufficiency/zinc_relation_bn_diagnostic_v1/analysis/main_table.md
+    predictions_train: tracks/structural-sufficiency/zinc_relation_bn_diagnostic_v1/analysis/predictions_train.csv
+    predictions_valid: tracks/structural-sufficiency/zinc_relation_bn_diagnostic_v1/analysis/predictions_valid.csv
+    budget: tracks/structural-sufficiency/zinc_relation_bn_diagnostic_v1/analysis/budget.json
+  official_test:
+    loaded: false
+    scored: false
+  next_action: >-
+    Stop.  There is no recoverable inference-statistics loss to chase: the source
+    of the train/eval gap is fully identified (per-batch normalisation is part of
+    the learned function) and global re-estimation is not a fix (the statistics
+    were already essentially correct).  Do not add seeds, change the normalisation
+    or extend the schedule on the strength of this diagnostic.
