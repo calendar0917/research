@@ -58,6 +58,7 @@ RAW = ANALYSIS / "raw"   # generated per-run artefacts (gitignored)
 CONFIG = EXP / "configs" / "esoc_v1.json"
 
 VERSION = "esoc-v1"
+EMAX = 41             # fixed bond-token slot count (train max; asserted >= valid)
 LMAX = 8              # max |P_b| over train+valid (asserted at build time)
 ROLE_CAP = 3          # distances 0..3 are separate ids, >3 collapsed
 N_ROLE = (ROLE_CAP + 1) ** 2
@@ -215,7 +216,9 @@ def build_split(split: str) -> dict:
             C.log(f"[esoc {split}] {i + 1}/{n_mol} {time.perf_counter() - t0:.1f}s")
 
     max_bonds = int(n_bonds_graph.max()) if n_mol else 0
-    pad_index = np.full((n_mol, max(1, max_bonds)), -1, dtype=np.int32)
+    if max_bonds > EMAX:
+        raise RuntimeError(f"{split}: {max_bonds} bonds exceeds the frozen slot width {EMAX}")
+    pad_index = np.full((n_mol, EMAX), -1, dtype=np.int32)
     for i in range(n_mol):
         b0, b1 = int(bond_ptr[i]), int(bond_ptr[i + 1])
         pad_index[i, : b1 - b0] = np.arange(b0, b1, dtype=np.int32)
@@ -235,6 +238,7 @@ def build_split(split: str) -> dict:
         "n_bonds_graph": n_bonds_graph,
         "pad_index": pad_index,
         "max_bonds": max_bonds,
+        "pad_width": int(EMAX),
         "max_local": int(LMAX),
         "role_cap": int(ROLE_CAP),
         **{k: np.concatenate(v, axis=0) for k, v in loc.items()},
@@ -292,6 +296,7 @@ def graph_scales(train: dict) -> dict:
         mean_local,
     ], axis=1)
     return {
+        "max_atoms": int(np.asarray(train["n_atoms_graph"], dtype=np.int64).max()),
         "ref_bonds": float(nb.mean()),
         "ref_atoms": float(na.mean()),
         "count_mean": counts.mean(axis=0).astype(np.float32).tolist(),

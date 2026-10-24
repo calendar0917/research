@@ -24,10 +24,12 @@ import esoc_train as T  # noqa: E402
 ANALYSIS = _HERE.parent / "analysis"
 
 
-def bench_steps(steps: int = 20, device: str = "cuda:0", arm: str = "real") -> dict:
+def bench_steps(steps: int = 20, device: str = "cuda:0", arm: str = "real",
+                compile_model: bool = False, mode: str = "default") -> dict:
     scales = T.read_json(ANALYSIS / "scales.json")
     cfg = T.load_config()["recipe"]
     model = M.build_model(0, arm, scales, n_layers=int(cfg["n_layers"])).to(device)
+    net = torch.compile(model, mode=mode, dynamic=False) if compile_model else model
     opt = T.make_optimizer(model, 2e-3, 1e-5)
     data = D.SplitTensors(D.load_cache("train"), device)
     rows = T.batch_order(0, 1, data.n, 32)
@@ -43,10 +45,10 @@ def bench_steps(steps: int = 20, device: str = "cuda:0", arm: str = "real") -> d
         marks[name] = marks.get(name, 0.0) + (now - prev)
         return now
 
-    # warm-up
+    # warm-up (compile happens here)
     for s in range(3):
         b = data.batch(rows[s * 32:(s + 1) * 32])
-        p = model(b)
+        p = net(b)
         loss = (p - b["y"]).abs().mean()
         opt.zero_grad(set_to_none=True)
         loss.backward()
@@ -58,6 +60,7 @@ def bench_steps(steps: int = 20, device: str = "cuda:0", arm: str = "real") -> d
         t = time.perf_counter()
         b = data.batch(rows[s * 32:(s + 1) * 32])
         t = tick("batch_gather", t)
+        model.train()
         h = model.local(b["loc_type"], b["loc_role"], b["loc_et"], b["loc_mask"],
                         b["loc_nnodes"], b["loc_nedges"], b["bond_mask"], arm)
         t = tick("local_encoder", t)
@@ -89,6 +92,8 @@ def bench_steps(steps: int = 20, device: str = "cuda:0", arm: str = "real") -> d
     return {
         "steps": steps,
         "arm": arm,
+        "compile": bool(compile_model),
+        "compile_mode": mode if compile_model else None,
         "wall_seconds": wall,
         "ms_per_step": wall / steps * 1000.0,
         "sections_ms_per_step": {k: v / steps * 1000.0 for k, v in marks.items()},
@@ -107,10 +112,13 @@ def main(argv=None) -> int:
     p.add_argument("--steps", type=int, default=20)
     p.add_argument("--device", default="cuda:0")
     p.add_argument("--arm", default="real")
+    p.add_argument("--compile", action="store_true")
+    p.add_argument("--compile-mode", default="default")
     args = p.parse_args(argv)
-    res = bench_steps(args.steps, args.device, args.arm)
+    res = bench_steps(args.steps, args.device, args.arm, args.compile, args.compile_mode)
     (ANALYSIS / "raw").mkdir(parents=True, exist_ok=True)
-    C.write_json(ANALYSIS / "raw" / "bench.json", res)
+    tag = "compiled" if args.compile else "eager"
+    C.write_json(ANALYSIS / "raw" / f"bench_{tag}.json", res)
     print(json.dumps(res, indent=2))
     return 0
 

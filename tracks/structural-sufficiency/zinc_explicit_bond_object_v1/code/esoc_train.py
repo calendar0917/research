@@ -134,6 +134,12 @@ def train(arm: str, seed: int, epochs: int, device: str, *, mode: str,
     audit = M.param_audit(model)
     if audit["param_total"] > 500_000:
         raise RuntimeError(f"parameter budget exceeded: {audit['param_total']}")
+    # Performance only: identical maths, fused kernels.  The state dict, the
+    # optimiser and every checkpoint use the uncompiled module.
+    net = model
+    if cfg.get("compile", False):
+        net = torch.compile(model, mode=str(cfg.get("compile_mode", "default")),
+                            dynamic=False)
 
     train_data = D.SplitTensors(D.load_cache("train"), device)
     valid_data = D.SplitTensors(D.load_cache("valid"), device)
@@ -173,7 +179,7 @@ def train(arm: str, seed: int, epochs: int, device: str, *, mode: str,
             lr = lr_at(step)
             for g in opt.param_groups:
                 g["lr"] = lr
-            p = model(b)
+            p = net(b)
             loss = (p - b["y"]).abs().mean()
             opt.zero_grad(set_to_none=True)
             loss.backward()
@@ -184,7 +190,7 @@ def train(arm: str, seed: int, epochs: int, device: str, *, mode: str,
             cnt += len(rows)
             step += 1
         train_mae = tot / max(cnt, 1)
-        valid_mae = _mae_eval(model, valid_data)
+        valid_mae = _mae_eval(net, valid_data)
         # overfit mode selects on the training subset (the gate is "can the model
         # fit at all"), full mode selects on valid with a strict <.
         select = valid_mae if mode != "overfit" else train_mae

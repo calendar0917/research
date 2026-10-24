@@ -60,7 +60,7 @@ RMS_EPS = 1e-6
 # static positional relation: lifted RRWP on physical bonds
 # ---------------------------------------------------------------------------
 def rrwp(bonds: torch.Tensor, bond_mask: torch.Tensor, n_atoms: torch.Tensor,
-         ksteps: int = KSTEPS) -> torch.Tensor:
+         ksteps: int = KSTEPS, n_max: int | None = None) -> torch.Tensor:
     """``R[b,c,k] = (M P^k M^T)[b,c]`` for every molecule in the batch.
 
     ``bonds``       [B, E, 2]  physical bonds (molecule-local atom ids, u<v)
@@ -71,7 +71,7 @@ def rrwp(bonds: torch.Tensor, bond_mask: torch.Tensor, n_atoms: torch.Tensor,
     """
     B, E, _ = bonds.shape
     dev = bonds.device
-    n = int(n_atoms.max().item())
+    n = int(n_max) if n_max else int(n_atoms.max().item())
     if n < 1:
         n = 1
     w = bond_mask.to(torch.float32)
@@ -150,11 +150,10 @@ class AdaRMSNorm(nn.Module):
         nn.init.zeros_(self.proj_b.weight)
 
     def forward(self, x: torch.Tensor, g: torch.Tensor) -> torch.Tensor:
-        rms = x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+        rms = F.rms_norm(x, (x.shape[-1],), None, self.eps)
         # g: [B, rank] -> per-graph modulation broadcast over the token axis
-        while g.dim() > 2:
-            g = g.squeeze(1)
-        g = g.unsqueeze(1)
+        if g.dim() == 2:
+            g = g.unsqueeze(1)
         return rms * (1.0 + self.scale + self.proj_s(g)) + self.shift + self.proj_b(g)
 
 
@@ -184,6 +183,8 @@ def sl2_context(q, k, v, bias, mask):
     ``ctx_i   = sum_j softmax_j(score)_ij v_j``
 
     q/k/v: [B, H, E, d_head]; bias: [B, H, E, E]; mask: [B, E] real tokens.
+    Returns ``(context, probabilities)``; the probability tensor is returned so
+    the caller can apply dropout before the value contraction.
     """
     scale = 1.0 / math.sqrt(q.shape[-1])
     logits = torch.matmul(q, k.transpose(-1, -2)) * scale
@@ -220,7 +221,7 @@ class Block(nn.Module):
         x = self.norm1(h, g)
         qkv = self.qkv(x).view(B, E, 3, H, dh).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]                      # [B,H,E,dh]
-        ctx, attn = sl2_context(q, k, v, bias, mask)
+        _, attn = sl2_context(q, k, v, bias, mask)
         attn = self.attn_drop(attn)
         ctx = torch.matmul(attn, v)                            # [B,H,E,dh]
         ctx = ctx.permute(0, 2, 1, 3).reshape(B, E, H * dh)
@@ -321,7 +322,7 @@ class ESOC(nn.Module):
                  ref_atoms: float = 23.1664, count_mean=None, count_scale=None,
                  n_layers: int = N_LAYERS, d_model: int = D_MODEL,
                  heads: int = N_HEADS, attn_dropout: float = ATTN_DROPOUT,
-                 drop_path: float = DROP_PATH):
+                 drop_path: float = DROP_PATH, max_atoms: int = 36):
         super().__init__()
         if arm not in ("real", "null"):
             raise ValueError(arm)
@@ -336,6 +337,7 @@ class ESOC(nn.Module):
         self.readout = nn.Sequential(
             nn.Linear(d_read, READOUT_HIDDEN), nn.SiLU(), nn.Linear(READOUT_HIDDEN, 1)
         )
+        self.register_buffer("max_atoms", torch.tensor(int(max_atoms), dtype=torch.long))
         self.register_buffer("ref_bonds", torch.tensor(float(ref_bonds)))
         self.register_buffer("ref_atoms", torch.tensor(float(ref_atoms)))
         self.register_buffer("count_mean", torch.tensor(count_mean, dtype=torch.float32))
@@ -360,7 +362,7 @@ class ESOC(nn.Module):
         h = self.local(batch["loc_type"], batch["loc_role"], batch["loc_et"],
                        batch["loc_mask"], batch["loc_nnodes"], batch["loc_nedges"],
                        bond_mask, self.arm)
-        r = rrwp(batch["bonds"], bond_mask, batch["n_atoms"])
+        r = rrwp(batch["bonds"], bond_mask, batch["n_atoms"], n_max=int(self.max_atoms))
         bias = self.pe(r).permute(0, 3, 1, 2)               # [B,H,E,E]
         counts = self._counts(batch)
         g = self.gdesc((counts - self.count_mean) / self.count_scale)
@@ -414,5 +416,6 @@ def build_model(seed: int, arm: str, scales: dict, n_layers: int = N_LAYERS) -> 
         count_mean=scales["count_mean"],
         count_scale=scales["count_scale"],
         n_layers=n_layers,
+        max_atoms=int(scales.get("max_atoms", 36)),
     )
     return model

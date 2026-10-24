@@ -5,7 +5,10 @@
   "data": {
     "dataset": "torch_geometric.datasets.ZINC(subset=True)",
     "root": "data/ZINC",
-    "split": {"train": 10000, "valid": 1000},
+    "split": {
+      "train": 10000,
+      "valid": 1000
+    },
     "official_test_loaded": false,
     "target": "raw y",
     "metric": "MAE"
@@ -14,8 +17,8 @@
     "epochs": 2500,
     "batch_size": 32,
     "lr": 0.002,
-    "lr_min": 0.00002,
-    "weight_decay": 0.00001,
+    "lr_min": 2e-05,
+    "weight_decay": 1e-05,
     "warmup_epochs": 50,
     "grad_clip": 5.0,
     "loss": "l1_raw_y",
@@ -25,7 +28,9 @@
     "optimizer": "AdamW(betas=(0.9,0.95), eps=1e-8)",
     "eval_valid_every_epoch": true,
     "selection": "strict < on valid MAE; ties keep the earlier epoch",
-    "init": "from scratch (no SSL encoder, no supervised P3/DCC checkpoint)"
+    "init": "from scratch (no SSL encoder, no supervised P3/DCC checkpoint)",
+    "compile": true,
+    "compile_mode": "default"
   },
   "model": {
     "d_model": 64,
