@@ -116,6 +116,11 @@
 | `zinc_performance_search_v1` 工程 | GRIT 10 层/64 宽/8 头（473,473 par，RRWP 1..20）稠密 padded 端口实现并验 parity（forward 1.7e-6、grad 9.6e-5、RRWP 2.4e-7）；实测 30.97/18.65/14.84 s/epoch（bs 32/64/128）→ ≥4 h/run，**超出 2 h 上限**，按预案回退 DBT；EMA 策略因拷贝方向 bug 整轮作废（已修，未重跑） |
 | `zinc_performance_search_v1` 结果 | 冻结 **B-R0**（DCC-L 494,193 par，R0）：valid 0.075990±0.002137（4 seeds），**test 0.067319±0.000709，range 0.066267–0.067785**；A-R0 基线 4 seeds valid 0.080761±0.003033、test 0.070879±0.001830（B 的 4 个 seed 在 test 上全部优于 A 的 4 个）；A-R1 valid 0.087570/test 0.075147；B-R1 0.079246/0.069022；A-R0L 0.079491/0.071844；C-DBT600 0.082479/0.071329 |
 | `zinc_performance_search_v1` 判定 | **`TARGET_NOT_MET_BEST_TEST_0.066267`**：单模型 test 0.060 未达到（best 0.066267，差 0.006267）；所有已试杠杆（lr/wd/horizon/第三主体/双通道）收益 ≤0.005；官方 test 于冻结短名单后一次性读取（14 条，valid 复核 14/14），之后无调参；总 8.39 GPU·h（含 0.97 失败/取消） |
+| `zinc_relation_composition_probe_v1` 协议/代码 | 完成：`PLAN.md` + `configs/probe_v1.json`；只比较**关系状态写入规则**（D：写入依赖当前键 token 状态；S：只依赖固定结构），两支参数/张量/初始化/配方逐位相同、都用真实 `xi` 做 token 更新；键上 lifted RRWP `R_bc[k]=(M P^k M^T)_bc`（无标签、train/valid 离线预算、可重建）；**7/7 工程套件 PASS**（关系对四端点枚举 2.9e-8、D/S 初始状态逐张量相同、旧 513 宽读出层不存在、机制/掩码/数值/checkpoint）；470,321 参数 ≤500k |
+| `zinc_relation_composition_probe_v1` GPU | **完成**：2/2 formal exit 0（`7464c0d30441`，a100-2，两张 A100 各一 run 并行）；实测 **6.68 s/epoch → 1.113 GPU·h / 600-epoch run**；按事前代价规则第 3 级**只跑 seed 0 的 D/S 对**（4 run 在预算内放不下）；训练 **2.223 GPU·h**（含计时/诊断共 2.240），墙面约 3.1 h |
+| `zinc_relation_composition_probe_v1` 结果 | best-valid / W20 / T100 / final：D 0.084493 / 0.094786 / 0.100461 / 0.095439；S 0.081838 / 0.103041 / 0.110148 / 0.099211；B-R0（历史参照）0.078537 / 0.079082 / n/a / 0.079076。**D−S 符号在行间翻转**：best-valid +0.002655（偏 S），W20 −0.008255、T100 −0.009686、final −0.003772（偏 D）；配对 bootstrap CI 跨 0（[−0.0038, +0.0097]，D 更好的行占 0.492）；两支在稳定量上都比 B-R0 差（D +0.0157、S +0.0240） |
+| `zinc_relation_composition_probe_v1` 判定 | **`NO_STABLE_D_S_DIFFERENCE_AND_WORSE_THAN_B_AT_THIS_HORIZON`（建议停止这条线）**：单 seed 无法在任一方向分离 D/S，且新主体整体不如已确认的 B-R0。**但「机制未接上」被排除**：固定权重下只把 D 的关系写入换成 S，valid 0.084493→0.122155（**+0.0377**，mean \|Δpred\| 0.085；未训练对照只有 2.5e-4）；本地重前向复现报告 best-valid 差 4.06e-09。D 的 train@best 0.0236 远低于 S 的 0.0535 → 更像**主体在该日程/容量下不划算（拟合进 train、不转移到 valid）+ valid 曲线不稳定**，而非「关系没被使用」。official test **未加载未评分**，0.05× 目标未评估 |
+| `zinc_relation_composition_probe_v1` 更正/限制 | 单 seed（seed 0）边界；600 epochs 是声明探索日程而非 GRIT 原生配方；B-R0 为历史参照（非本轮重训、非同配方对照）；行 bootstrap 只描述 1000 分子样本、不代表训练噪声；墙面比 3 h 硬上限超出约 5 min（来自远端部署阻塞与两处 runner 修复，不是额外 GPU 工作） |
 | 交付 | Phase 0 REPORT + 纠错文件 + Phase 1a 协议/REPORT + Phase 1b 协议/决策日志/REPORT/run manifest + Phase 1c 协议/纠错/REPORT/run manifest/analysis + Phase 1d 协议/REPORT/CPU audit/run manifest/analysis + STATE/TRACK |
 
 ## 入口
@@ -201,7 +206,7 @@
 
 ## 下一步
 
-00. **`zinc_rooted_moment_v1` 改写下一步（最新，2026-10-23）**：**精确 rooted 矩条件化**这条线在本预算/本读出形式下关闭。
+00. **`zinc_rooted_moment_v1` 改写下一步（历史，2026-10-23）**：**精确 rooted 矩条件化**这条线在本预算/本读出形式下关闭。
    - 事实：M−P T100 = +0.008008 / +0.007356（两 seed），G−P = +0.008634 / +0.006297；M−G 符号翻转（−0.000626 / +0.001059）；ordinary、unseen+ordinary、tail 全负；drop-row172/drop-top10 同向；C3 在固定权重下仅 +0.0003…+0.0005，重新训练无可重复收益。
    - 因此**不**再试：尺度集、ε、读出宽度/深度、更多 seed、更多视图、把 C3 换成更高阶矩或换基函数。
    - **唯一允许的下一步**（若重开）：做一个与 P **参数匹配且 step 0 逐位等价**的注入（例如把矩读出经**零初始化标量门**接入现有 P3 reader），先证明“不付通路代价”再谈矩的信息价值；两 seed、T100 主端点、未达冻结触发不读 test。
@@ -221,7 +226,18 @@
    - 若仍要检验交互价值，必须是**新一轮预注册**，且满足：目标依赖 P3E 感受野可证不足的图统计量（先做零训练诊断）；每臂 ≥2 seed；尾部用鲁棒判据；否则不动 GPU。
    - Phase C（Lipophilicity）设计仍冻结未训练，优先级高于任何 ZINC 追加实验；但若做 Phase C，必须先把其 RMSE/尾部判据改成配对 MSE 差形式。
 
-00. **`zinc_performance_search_v1` 改写下一步（最新，2026-10-23）**：在"≤500k 参数 / 单模型 / ~0.35 GPU·h per run"的格子里，
+000. **`zinc_relation_composition_probe_v1` 改写下一步（最新，2026-10-24）**：把**关系状态的写入规则**条件化到当前键 token 状态（D），
+     在同一日程/同一参数量级下**没有**买到相对"只由固定结构写入"（S）的收益，也整体不如已确认的 B-R0。
+     seed 0 单对上：best-valid 偏 S（+0.002655），W20/T100/final 偏 D（−0.0083/−0.0097/−0.0038），配对 bootstrap CI 跨 0；
+     两支在稳定量上分别比 B-R0 差 +0.0157（D）/ +0.0240（S）。**"机制没接上"这个解释被排除**：固定权重下把 D 的写入换成 S，
+     valid 从 0.084493 崩到 0.122155（+0.0377），说明关系状态确实被后续层读出；同时 D 的 train@best 0.0236 远低于 S 0.0535，
+     即 D 把容量拟合进了训练集却没有转移到 valid。
+     因此这一格子里**最可疑的不是主体而是日程/稳定性**：本轮按设计移除了 per-graph 归一化、core attention dropout 0.2，
+     两条 valid 曲线的 W20 都比各自 best-valid 高 0.010–0.021，best-valid 只是"幸运 epoch"。
+     下一步只允许：(a) 先建立**稳定**的 valid 曲线（恢复 per-graph 归一化或等效稳定化）再重做 D/S 对照，且要求两支 train@best 同量级；
+     (b) 若不做 (a)，则关闭该主体，不再加 seed、不再调 lr/wd/horizon。**不要**在抖动曲线上继续解读 D/S 的 0.003 级差异。
+
+00. **`zinc_performance_search_v1` 改写下一步（历史，2026-10-23）**：在"≤500k 参数 / 单模型 / ~0.35 GPU·h per run"的格子里，
     性能优先搜索**没有**把 ZINC test 推到 0.060（最好 B-R0 = 0.066267，4 seeds 0.0663–0.0678；A-R0 0.0709；C/DBT 0.0713）。
     已试杠杆（R0/R1、1200-epoch 长日程、双通道 composer、第三主体）单点收益都 ≤0.005，而差距是 0.0063。
     下一轮只允许两条路：(a) 给 GRIT/DBT 原生 horizon 的预算（GRIT 实测 ≥4 h/run 稠密、稀疏 ~9.5 s/epoch；DBT 全 horizon 3.7 GPU·h）；

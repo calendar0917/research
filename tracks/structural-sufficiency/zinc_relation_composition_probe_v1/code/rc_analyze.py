@@ -317,7 +317,7 @@ def main(argv=None) -> int:
     summary = {
         "round": RR.ROUND_ID,
         "official_test_loaded": False,
-        "runs": {k: {kk: vv for kk, vv in v.items() if kk != "curve"} for k, v in records.items()},
+        "runs": {k: {kk: vv for kk, vv in v.items() if kk not in ("curve", "pred")} for k, v in records.items()},
         "b_reference": {k: v for k, v in B_REFERENCE.items() if k != "predictions"},
         "d_minus_s": {
             "best_valid": records["D"]["best_valid"] - records["S"]["best_valid"],

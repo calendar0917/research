@@ -8,21 +8,36 @@
 phase: phase2b
 current_round: ssrc-phase2b-zinc-v1
 status: PHASE2B_COMPLETE
-updated: 2026-10-23
+updated: 2026-10-24
 main_line: true
 latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
-latest_side_round: zinc_performance_search_v1
-latest_side_round_verdict: TARGET_NOT_MET_BEST_TEST_0.066267
+latest_side_round: zinc_relation_composition_probe_v1
+latest_side_round_verdict: NO_STABLE_D_S_DIFFERENCE_AND_WORSE_THAN_B_AT_THIS_HORIZON
 latest_side_round_next_action: >-
+  Stop this body at this configuration.  One seed cannot separate D from S in
+  either direction (best-valid favours S by 0.0027, W20/T100/final favour D by
+  0.008-0.010, paired bootstrap CI spans zero [-0.0038, +0.0097]), and the whole
+  body is 0.016-0.024 worse than the confirmed B-R0 on the stable measures.  The
+  fixed-weight intervention does show the relation state is genuinely read
+  (+0.0377 when the h-conditioned write is swapped for the static one), so the
+  remaining explanations are under-training / an unstable valid curve (no
+  per-graph normalisation, attention dropout 0.2) and an unprofitable body, not
+  an unused core.  If reopened, the single allowed step is to re-establish a
+  stable valid curve (per-graph normalisation was removed by design this round)
+  and only then re-run the D/S contrast with matched train@best; do not add seeds
+  or re-tune hyper-parameters inside the same box.
+previous_side_round: zinc_performance_search_v1
+previous_side_round_verdict: TARGET_NOT_MET_BEST_TEST_0.066267
+previous_side_round_next_action: >-
   Either buy >=4-5 GPU-h per run and give GRIT/DBT their native horizon
   (10-layer GRIT, 625k updates; DBT 1500 epochs), or change the setting
   (larger model, more data, different readout).  Do not re-tune lr/wd/horizon
   inside the same <=0.35 GPU-h box: every lever measured in this round moved
   <=0.005 MAE while the gap to 0.060 is 0.0063.
-previous_side_round: zinc_rooted_moment_v1
-previous_side_round_verdict: NO_STABLE_GAIN_OVER_P_FROM_ROOTED_MOMENT_CONDITIONING
-previous_side_round_next_action: >-
+previous_previous_side_round: zinc_rooted_moment_v1
+previous_previous_side_round_verdict: NO_STABLE_GAIN_OVER_P_FROM_ROOTED_MOMENT_CONDITIONING
+previous_previous_side_round_next_action: >-
   Do not tune the moment form (scales, eps, width, more seeds).  Exact rooted
   moments cost ~0.0077 MAE versus P and the C3 skew term is not reproducible
   under retraining, while M and G share the same extra readout path.  If the
@@ -30,7 +45,7 @@ previous_side_round_next_action: >-
   is bit-equal to P at step 0 (zero-initialised scalar gate from the moment
   readout into the existing P3 reader), two seeds, T100 primary, no test read
   without the frozen trigger.
-previous_previous_side_round: zinc_native_relation_v1
+previous_previous_previous_side_round: zinc_native_relation_v1
 previous_side_round_verdict: NO_REPEATABLE_GAIN_FROM_ONE_NATIVE_RELATION_ROUND
 latest_next_action: >-
   3-5 seeds plus a parameter-matched trunk/readout control to test whether the M
@@ -1654,3 +1669,73 @@ zinc_performance_search_v1:
     (10-layer GRIT 625k updates; DBT 1500 epochs), or change the setting
     (larger model, more data, different readout).  Do not re-tune lr/wd/horizon
     inside the same <=0.35 GPU-h box: every lever measured here moved <=0.005.
+
+zinc_relation_composition_probe_v1:
+  protocol_id: ssrc-zinc-relation-composition-probe-v1
+  plan: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/PLAN.md
+  config: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/configs/probe_v1.json
+  status: COMPLETE
+  verdict: NO_STABLE_D_S_DIFFERENCE_AND_WORSE_THAN_B_AT_THIS_HORIZON
+  report: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/REPORT.md
+  question: >-
+    Under identical explicit structural input, local encoding, parameter scale
+    and recipe, does letting the relation state depend on the current bond-token
+    state (arm D) buy performance over a relation state written from fixed
+    structure only (arm S), and is this body worth continuing against the
+    confirmed B-R0 baseline (DCC-L, 494,193 params, 4-seed test 0.067319)?
+  answer: >-
+    No on both counts, at this horizon and on one seed.  D and S differ only in
+    the input of the relation write (h-conditioned xi vs a structure-only
+    xi_static), share every parameter/tensor/init and use the same real xi for
+    the token update.  At 470,321 params, 600 epochs, seed 0: D best-valid
+    0.084493 (ep 566) vs S 0.081838 (ep 557), i.e. best-valid favours S by
+    0.002655, while W20/T100/final favour D by 0.008255/0.009686/0.003772 - the
+    sign flips between summary statistics, the paired row bootstrap CI spans
+    zero ([-0.0038, +0.0097], 49.2% of rows prefer D) and the valid curve itself
+    is unstable (W20 is 0.010-0.021 above best-valid for both arms).  Both arms
+    are worse than the historical B-R0 on every stable measure (W20 +0.0157 D /
+    +0.0240 S; final +0.0164 D / +0.0201 S; best-valid +0.0060 D / +0.0033 S).
+  findings:
+    - "The mechanism is wired in: with the trained D checkpoint frozen and only the relation-write rule switched to the static form, valid MAE degrades 0.084493 -> 0.122155 (+0.037661, 45%) with mean |d pred| 0.0849 and a layer-0 relation-state change of 9.17 (max).  The untrained-model control gives a prediction change of only 2.5e-4."
+    - "The local CPU re-forward of the pulled best.pt reproduces the GPU-reported best-valid to 4.06e-09, so the comparison and the intervention use the exact selected checkpoint."
+    - "D fits the training set far better than S (train MAE in eval mode 0.0236 vs 0.0535 at best; 0.0332 vs 0.1089 at final), so the D/S difference at this horizon is partly a fit/capacity effect that does not transfer to valid."
+    - "Group direction is inconsistent (D better on seen_ordinary 0.0529 vs 0.0538; S better on tail_65 0.1844 vs 0.2206 and unseen_ordinary 0.1407 vs 0.1449); versus B-R0 the trade is visible but unfavourable overall (better tails, worse ordinary seen)."
+    - "Relation = bond-lifted RRWP R_bc[k] = (M P^k M^T)_bc, M endpoint 1/sqrt(2), P = diag(deg)^-1 A, k=0..20, label-free, precomputed on train/valid only; verified against four-endpoint enumeration to 2.9e-8 with flip/relabel invariance at 1e-16."
+    - "7/7 engineering suites pass (relation, identity, replay, mechanism, masking, numerical, checkpoint); 470,321 parameters <= 500k; the D and S state dicts are bit-identical at step 0; the old 513-wide B reader is absent."
+  budget:
+    wall_clock_hours: 3.1
+    gpu_hours_cap: 6.0
+    gpu_hours_used: 2.24
+    gpu_hours_training_only: 2.2225
+    cost_rule_applied: "4 runs did not fit (measured 6.68 s/epoch -> 1.113 GPU-h per 600-epoch run); pre-declared rung 3 = seed 0's D/S pair only"
+    cost_note: "the 3 h wall cap was exceeded by ~5 min; the extra wall went to a remote deploy blocker (untracked-file collisions in the remote checkout) and two runner fixes, not to extra GPU work"
+  single_seed: true
+  official_test:
+    loaded: false
+    scored: false
+    note: "the 0.05x target is not evaluated in this round"
+  artifacts:
+    report: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/REPORT.md
+    plan: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/PLAN.md
+    summary: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/analysis/summary.json
+    report_tables: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/analysis/report_tables.md
+    curves: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/analysis/curves.csv
+    per_molecule_valid: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/analysis/per_molecule_valid.csv
+    intervention: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/analysis/intervention.json
+    checks: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/analysis/checks.json
+    param_audit: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/analysis/param_audit.json
+    relation_cache: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/analysis/relation_cache.json
+    timing: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/analysis/timing_D_s0.json
+    gpu_ledger: tracks/structural-sufficiency/zinc_relation_composition_probe_v1/analysis/gpu_ledger.json
+    runs: "tracks/structural-sufficiency/zinc_relation_composition_probe_v1/runs/RC_{D,S}_s0 (best/final + train.json + predictions; git-ignored)"
+  non_claims:
+    - "One seed only: no cross-seed repeatability claim; the D/S contrast is bounded by seed 0."
+    - "600 epochs / 47,400 updates is a declared exploration horizon, not the native GRIT 2000-epoch recipe; 'no gain' is not 'the body cannot work'."
+    - "B-R0 is a historical reference from zinc_performance_search_v1 (not re-trained here); the comparison is same-split but not same-recipe-controlled."
+    - "Row bootstrap CIs describe the 1,000-molecule valid sample, not training noise."
+  next_action: >-
+    Stop.  Do not add seeds or re-tune inside this box.  If the line is reopened,
+    first re-establish a stable valid curve (per-graph normalisation was removed
+    by design this round, and both arms' W20 sits 0.010-0.021 above their
+    best-valid), then re-run the D/S contrast with the two arms' train@best in
+    the same range; otherwise the D/S difference is buried in valid noise.
