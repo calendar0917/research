@@ -155,10 +155,11 @@ def main(argv=None) -> int:
 
     # --- 6) REAL and NULL must still start from the identical tensor set
     m_null = M.build_model(0, "null", scales).to("cpu")
-    keys_same = sorted(m_null.state_dict()) == sorted(ref2.state_dict())
+    ref2_cpu = {k: v.detach().cpu() for k, v in ref2.state_dict().items()}
+    keys_same = sorted(m_null.state_dict()) == sorted(ref2_cpu)
     diff = 0.0
     for k, v in m_null.state_dict().items():
-        w = ref2.state_dict()[k]
+        w = ref2_cpu[k]
         diff = max(diff, float((v - w).abs().max()) if v.is_floating_point()
                    else float((v != w).any()))
     out["real_null_init_state_keys_identical"] = bool(keys_same)
