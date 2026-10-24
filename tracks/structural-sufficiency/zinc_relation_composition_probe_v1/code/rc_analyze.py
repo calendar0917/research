@@ -171,11 +171,16 @@ def intervention(arm: str = "D", seed: int = 0, batch_size: int = 128) -> dict:
         d_rel_mean = float((rel_diff["D"] - rel_diff["S"]).abs().mean())
     ae = {k: np.abs(preds[k] - y) for k in preds}
     delta = preds["S"] - preds["D"]
+    reported = float(C.read_json(out / "train.json")["best_valid"]["valid_mae"])
+    reported_final = float(C.read_json(out / "train.json")["fixed_objects"]["final"]["valid_mae"])
     return {
+        "reported_best_valid_checkpoint": reported,
+        "reproduction_absdiff_vs_reported": abs(ae["D"].mean() - reported),
         "trained_arm": arm,
         "seed": int(seed),
         "checkpoint": _rel(out / "best.pt"),
         "checkpoint_epoch": int(ckpt["epoch"]),
+        "reported_final_valid": reported_final,
         "valid_mae_with_D_rule": float(ae["D"].mean()),
         "valid_mae_with_S_rule_same_weights": float(ae["S"].mean()),
         "mae_difference_S_minus_D": float(ae["S"].mean() - ae["D"].mean()),
