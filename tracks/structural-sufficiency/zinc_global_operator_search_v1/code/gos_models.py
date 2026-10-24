@@ -96,15 +96,21 @@ class FFN(nn.Module):
 class MixA(nn.Module):
     """Amplitude-sensitive global content interaction over bond objects."""
 
-    def __init__(self, d: int = TOKEN_DIM, heads: int = HEADS, rel: int = REL_REL_DIM):
+    def __init__(self, d: int = TOKEN_DIM, heads: int = HEADS, rel: int = REL_REL_DIM,
+                 variant: str = "full"):
         super().__init__()
+        if variant not in ("full", "plain"):
+            raise ValueError(f"unknown MixA variant {variant!r}")
+        self.variant = variant
         self.d, self.heads = int(d), int(heads)
         self.hd = self.d // self.heads
         self.norm = AdaRMSNorm(d)
         self.qkv = nn.Linear(d, 3 * d)
         self.out = _small_init(nn.Linear(d, d))
         self.beta = nn.Linear(rel, self.heads)
-        self.gamma = nn.Linear(rel, self.heads)
+        # "plain" control: ordinary normalised attention + relation bias, no
+        # amplitude-sensitive term and no relation-conditioned content gate.
+        self.gamma = nn.Linear(rel, self.heads) if variant == "full" else None
         self.ffn = FFN(d)
 
     def forward(self, h, rel, mask):
@@ -113,15 +119,21 @@ class MixA(nn.Module):
         qkv = self.qkv(x).view(B, N, 3, self.heads, self.hd).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]                     # [B,H,N,hd]
         # amplitude-sensitive logit: subtract half the key energy
-        ken = 0.5 * k.pow(2).sum(-1)                          # [B,H,N]
         score = torch.einsum("bhid,bhjd->bhij", q, k)
-        score = (score - ken.unsqueeze(-1)) / math.sqrt(self.hd)
+        if self.variant == "full":
+            ken = 0.5 * k.pow(2).sum(-1)                      # [B,H,N]
+            score = (score - ken.unsqueeze(-1)) / math.sqrt(self.hd)
+        else:
+            score = score / math.sqrt(self.hd)
         score = score + self.beta(rel).permute(0, 3, 1, 2)
         valid = mask[:, None, None, :]
         score = score.masked_fill(~valid, -1e30)
         attn = torch.softmax(score, dim=-1)
-        gate = 1.0 + torch.tanh(self.gamma(rel)).permute(0, 3, 1, 2)
-        ctx = torch.einsum("bhij,bhij,bhjd->bhid", attn, gate, v)
+        if self.variant == "full":
+            gate = 1.0 + torch.tanh(self.gamma(rel)).permute(0, 3, 1, 2)
+            ctx = torch.einsum("bhij,bhij,bhjd->bhid", attn, gate, v)
+        else:
+            ctx = torch.einsum("bhij,bhjd->bhid", attn, v)
         ctx = ctx.permute(0, 2, 1, 3).reshape(B, N, self.d)
         h = h + self.out(ctx)
         h = self.ffn(h)
@@ -131,8 +143,11 @@ class MixA(nn.Module):
 class MixK(nn.Module):
     """Signed, non-competing global structural kernel over bond objects."""
 
-    def __init__(self, d: int = TOKEN_DIM, rel: int = REL_REL_DIM):
+    def __init__(self, d: int = TOKEN_DIM, rel: int = REL_REL_DIM, variant: str = "signed"):
         super().__init__()
+        if variant not in ("signed", "softmax"):
+            raise ValueError(f"unknown MixK variant {variant!r}")
+        self.variant = variant
         self.norm = AdaRMSNorm(d)
         self.kernel = nn.Sequential(nn.Linear(rel, 32), nn.SiLU(), nn.Linear(32, d))
         # V_l is the residual write itself; its last layer is small-initialised.
@@ -141,9 +156,17 @@ class MixK(nn.Module):
 
     def forward(self, h, rel, mask, inv_nbonds: float):
         x = self.norm(h) * mask.unsqueeze(-1).to(h.dtype)
-        kk = torch.tanh(self.kernel(rel)) * mask[:, None, :, None].to(rel.dtype)
+        raw = self.kernel(rel)
+        if self.variant == "signed":
+            kk = torch.tanh(raw) * mask[:, None, :, None].to(rel.dtype)
+            scale = float(inv_nbonds)
+        else:
+            # control: per-channel row softmax -> positive, competing weights
+            raw = raw.masked_fill(~mask[:, None, :, None], -1e30)
+            kk = torch.softmax(raw, dim=1)
+            scale = 1.0
         vv = self.value(x)
-        ctx = torch.einsum("bijc,bjc->bic", kk, vv) * float(inv_nbonds)
+        ctx = torch.einsum("bijc,bjc->bic", kk, vv) * scale
         h = h + ctx
         h = self.ffn(h)
         return h * mask.unsqueeze(-1).to(h.dtype)
@@ -155,8 +178,9 @@ class Backbone(nn.Module):
     def __init__(self, norm: Mapping[str, Any], route: str, *, dropout: float = 0.0,
                  mean_n_bonds: float = 1.0):
         super().__init__()
-        if route not in ("C0", "A", "K"):
+        if route not in ("C0", "A", "K", "Asm", "Ksm"):
             raise ValueError(f"unknown route {route!r}")
+        self.base_route = "A" if route == "Asm" else ("K" if route == "Ksm" else route)
         self.route = route
         self.encoders = M1.P3Encoders(dropout=dropout)
         self.group_composer = M1.MLP(WIDTH + 2 * WIDTH + 1 + D.BOND_FEAT_DIM, 160, WIDTH, 1, dropout)
@@ -169,8 +193,12 @@ class Backbone(nn.Module):
             self.rel_enc = nn.Sequential(
                 nn.Linear(GD.REL_DIM, REL_HIDDEN), nn.SiLU(), nn.Linear(REL_HIDDEN, REL_REL_DIM)
             )
-            cls = MixA if route == "A" else MixK
-            self.layers = nn.ModuleList([cls() for _ in range(LAYERS)])
+            if self.base_route == "A":
+                variant = "full" if route == "A" else "plain"
+                self.layers = nn.ModuleList([MixA(variant=variant) for _ in range(LAYERS)])
+            else:
+                variant = "signed" if route == "K" else "softmax"
+                self.layers = nn.ModuleList([MixK(variant=variant) for _ in range(LAYERS)])
             self.reader = M1.MLP(READER_IN_CORE, READER_HIDDEN, 1, n_hidden=2, dropout=dropout)
         self.register_buffer("global_mean", torch.as_tensor(norm["global_mean"], dtype=torch.float32))
         self.register_buffer("global_scale", torch.as_tensor(norm["global_scale"], dtype=torch.float32))
@@ -235,7 +263,7 @@ class Backbone(nn.Module):
         rel = self.rel_enc(batch["rel_feat"])
         if bb:
             for layer in self.layers:
-                if self.route == "A":
+                if self.base_route == "A":
                     h = layer(h, rel, mask)
                 else:
                     h = layer(h, rel, mask, 1.0 / self.mean_n_bonds)

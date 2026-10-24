@@ -77,16 +77,47 @@ def _mol_lift(S: np.ndarray, Dm: np.ndarray, u: np.ndarray, v: np.ndarray):
     return lift_sum, lift_dist, shared
 
 
+def _resolve_split(split: str) -> dict[str, Any]:
+    """Atom-pair tables + bond tables for a split (rebuilds if the DBT cache is absent)."""
+    src = {"path_source": None, "path_sha256": None, "objects_sha256": None}
+    if split in DBT_PATH and DBT_PATH[split].exists() and DBT_OBJ[split].exists():
+        path_d = torch.load(DBT_PATH[split], map_location="cpu", weights_only=False)
+        obj_d = torch.load(DBT_OBJ[split], map_location="cpu", weights_only=False)
+        src["path_source"] = str(DBT_PATH[split].relative_to(REPO))
+        src["path_sha256"] = C.sha256_file(DBT_PATH[split])
+        src["objects_sha256"] = C.sha256_file(DBT_OBJ[split])
+    else:
+        import dbt_data as DB  # only used when a split cache must be rebuilt
+
+        pth = DB.cache_path(split)
+        if pth.exists():
+            path_d = torch.load(pth, map_location="cpu", weights_only=False)
+        else:
+            path_d = DB.build_relation_split(split)
+            DB.save_relation_split(path_d)
+        md = D.load_cache(split)
+        obj_d = {"bond_ptr": md["bond_ptr"], "bond_index": md["bond_index"]}
+        src["path_source"] = f"rebuilt:{pth.relative_to(REPO)}"
+    n_mol = int(path_d["n_molecules"])
+    if len(np.asarray(path_d["pair_ptr"])) != n_mol + 1:
+        raise RuntimeError("pair pointer / molecule count mismatch")
+    return {
+        "pair_ptr": path_d["pair_ptr"], "path": path_d["path"], "dist": path_d["dist"],
+        "bond_ptr": np.asarray(obj_d["bond_ptr"]),
+        "bond_index": np.asarray(obj_d["bond_index"]).astype(np.int64),
+        "n_mol": n_mol, "src": src,
+    }
+
+
 def build_rel(split: str) -> dict[str, Any]:
     t0 = time.perf_counter()
-    path_d = torch.load(DBT_PATH[split], map_location="cpu", weights_only=False)
-    obj_d = torch.load(DBT_OBJ[split], map_location="cpu", weights_only=False)
-    pair_ptr = np.asarray(path_d["pair_ptr"])
-    path = np.asarray(path_d["path"])
-    dist = np.asarray(path_d["dist"])
-    bond_ptr = np.asarray(obj_d["bond_ptr"])
-    bond_index = np.asarray(obj_d["bond_index"]).astype(np.int64)
-    n_mol = int(path_d["n_molecules"])
+    r = _resolve_split(split)
+    pair_ptr = np.asarray(r["pair_ptr"])
+    path = np.asarray(r["path"])
+    dist = np.asarray(r["dist"])
+    bond_ptr = r["bond_ptr"]
+    bond_index = r["bond_index"]
+    n_mol = int(r["n_mol"])
 
     sums, dsts, shs = [], [], []
     nb = np.zeros(n_mol, dtype=np.int32)
@@ -127,9 +158,9 @@ def build_rel(split: str) -> dict[str, Any]:
         "meta": {
             "version": REL_VERSION,
             "l_max": L_MAX,
-            "path_source": str(DBT_PATH[split].relative_to(REPO)),
-            "path_sha256": C.sha256_file(DBT_PATH[split]),
-            "objects_sha256": C.sha256_file(DBT_OBJ[split]),
+            "path_source": r["src"]["path_source"],
+            "path_sha256": r["src"]["path_sha256"],
+            "objects_sha256": r["src"]["objects_sha256"],
             "definition": "lift_l(b,c) = (S_l(u,p)+S_l(u,q)+S_l(v,p)+S_l(v,q))/2",
             "build_seconds": None,
             "labels_used": False,
@@ -252,15 +283,28 @@ def _rel_tensors(rel: Mapping[str, Any], rows: Sequence[int],
 
 
 def make_collate(rel_train: Mapping[str, Any], rel_valid: Mapping[str, Any],
-                 scale: Mapping[str, Any]):
-    """P3N batch + bond-object relation tensors.  Split is chosen by label count."""
-    cache_rel = {int(rel_train["n_molecules"]): rel_train, int(rel_valid["n_molecules"]): rel_valid}
+                 scale: Mapping[str, Any], rel_test: Mapping[str, Any] | None = None):
+    """P3N batch + bond-object relation tensors.
+
+    The split is read from the ad cache ``meta.split`` (authoritative); the
+    label-count fallback exists only for older caches without the meta tag.
+    """
+    cache_rel = {"train": rel_train, "valid": rel_valid}
+    if rel_test is not None:
+        cache_rel["test"] = rel_test
+    by_count = {int(rel_train["n_molecules"]): rel_train, int(rel_valid["n_molecules"]): rel_valid}
+    if rel_test is not None:
+        by_count.setdefault(int(rel_test["n_molecules"]), rel_test)
 
     def collate(cache, rows, candidate, *, valid: bool = False, walk_cols=None):
-        n_mol = int(cache["labels"].shape[0])
-        if n_mol not in cache_rel:
-            raise KeyError(f"no relation cache for a split with {n_mol} molecules")
-        rel = cache_rel[n_mol]
+        split = str(cache.get("meta", {}).get("split", "")) if isinstance(cache.get("meta"), Mapping) else ""
+        if split in cache_rel:
+            rel = cache_rel[split]
+        else:
+            n_mol = int(cache["labels"].shape[0])
+            if n_mol not in by_count:
+                raise KeyError(f"no relation cache for split {split!r} with {n_mol} molecules")
+            rel = by_count[n_mol]
         batch = T1.collate(cache, rows, "P3N", valid=valid, walk_cols=walk_cols)
         batch.update(_rel_tensors(rel, rows, scale))
         bond_ptr = np.asarray(cache["bond_ptr"])
