@@ -5,8 +5,8 @@
 **硬件/执行域:** `res` 单机 2×A100-40GB（`res-gpu0` / `res-gpu1`），torch 2.5.1+cu124，PyG 2.6.1
 **数据:** 官方 PyG `ZINC-subset`，train 10,000 / valid 1,000，原始 split、原始 `y_raw`
 **指标:** 单模型 raw-y MAE；≤500k 部署参数；无预测集成 / seed 平均 / checkpoint soup；无原图或线图邻接上的递归隐状态消息传递
-**状态:** 完成。A 家族（route A，配方 B，seed 0/1）已在冻结后一次性读取 official test；K/Asm/N0/C0/reg 不读 test。
-**Git:** 训练代码 `19652e0`（A_s0/C0_s0）、`b245e88`（A_s1/C0_s1/K_s0）、`e07da30`（Asm_s0/reg_A_s0）、`d65d949`（N0_s0）；关系缓存/CPU gate `19652e0`；冻结 manifest `d441495`；test 读取代码 `859828c`。
+**状态:** 完成。A 家族（route A，配方 B，seed 0/1）在冻结后一次性读取 official test；K/Asm/N0/C0/reg_A 与两次补充 run（留出重训、A160）都不读 test。
+**Git:** 训练代码 `19652e0`（A_s0/C0_s0）、`b245e88`（A_s1/C0_s1/K_s0）、`e07da30`（Asm_s0/reg_A_s0）、`d65d949`（N0_s0）；冻结 manifest `d441495`；test 读取代码 `859828c`；留出检验与 A160 预注册 `3322616`；reader 宽度选项 `233826d`；最终报告 `09c461d`。
 
 ---
 
@@ -22,7 +22,7 @@
 | 哪种运算值得后续研究？ | **A 的混合运算本身**：`softmax((q·k − ½‖k‖²)/√d + β(r))` 配 `g = 1+tanh(γ(r))` 的内容门。同载体、同内容通路、同关系、同预算下，关掉它（Asm：普通 q·k/√d）、不给混合（N0）、改成有符号非竞争核（K）**全部回到 C0 水平（0.0805–0.0818）**；只有 A 到 0.0752。 |
 | 新意？ | 没有新算子。AdaRMSN 借 PPGT；`−½‖k‖²` 幅值修正、关系条件内容门、连续核混合、键对象全图 attention、lifted 路径关联分别有 PPFormer/PPGT、CKGConv、DBT、旧 PAGTN/SPSE 与旧有序路径实验等先例。本轮唯一新的东西是**这个具体组合在本任务可复现地优于其同载体对照**，且这个优势的 test 迁移**尚未建立**。 |
 
-一句话：**在本载体上，"键内容 + 幅值敏感门控全图混合"把 valid 从 0.0805 拉到 0.0752（可重复、跨 seed、跨检查点），但它在 official test 上并没有超过旧 DCC-L 家族（0.0678 vs 0.0673）。** 其余三种"全局结构混合"变体（普通 attention、有符号核、无混合）与不混合的载体同级，因此"加一个全局算子"本身没有收益，收益只属于这一种具体运算。
+一句话：**在本载体上，"键内容 + 幅值敏感门控全图混合"把 valid 从 0.0805 拉到 0.0752（2 seeds × 2 C0 seeds × 4 个检查窗口），并且这个增益在训练集内部留出的 1,000 新鲜分子上重训后复现（−0.0095，CI 不含 0，集中在尾部）；但它在 official test 上并没有超过旧 DCC-L 家族（0.0678 vs 0.0673）。** 其余三种"全局结构混合"变体（普通 attention、有符号核、无混合）与不混合的载体同级，因此"加一个全局算子"本身没有收益，收益只属于这一种具体运算。
 
 ---
 
@@ -114,8 +114,8 @@ raw-y L1、600 epoch = 47,400 updates、每 epoch 全量 valid、strict best-val
 | K_s0 | 0.081812 | 0.066403 | 0.303460 | 0.151325 | 0.073492 | 0.062733 |
 
 A 的优势在 ordinary 行上最大（−0.0029/−0.0042），去 row172 / 去最大 10 行后仍然存在（−0.0043/−0.0040 与 −0.0027/−0.0035），
-所以不是某一行或尾部主导。`r2` 分组（旧 nested signature seen/unseen）只作描述：A 在两个 seed 上
-方向不一致（unseen 上 s0 明显更好、s1 更差），**不能**当作"结构泛化"的证据。
+所以不是某一行或尾部主导。`r2` 分组（旧 nested signature seen/unseen，n=251）只作描述：两个 seed 的 unseen 都更好，
+但幅度差别很大（−0.0175 / −0.0059），因此**不能**当作"结构泛化"的机制证据。
 
 ---
 
@@ -270,7 +270,7 @@ valid→test 偏移也对不上（A −0.0074，DCC-L −0.0087），再次说�
 
 - 代码：`code/gos_data.py`（关系缓存 + collate）、`gos_models.py`（载体与 5 条路线）、`gos_runner.py`
   （训练/计时/留出）、`gos_checks.py`（CPU gates）、`gos_analyze.py`、`gos_freeze.py`、`gos_test.py`
-- CPU gates：`analysis/cpu_checks.json`（11 项全过：参数计数、lift=M S Mᵀ、batch/padding 不变性、
+- CPU gates：`analysis/cpu_checks.json`（16 项全过：参数计数、lift=M S Mᵀ、batch/padding 不变性、
   原子重命名+键重排不变性（1e-6）、零键/全 padding 无 NaN、float64 有限差分 1e-8、eval/train 确定性、缓存重建逐字节一致）
 - 曲线：每个 run 的 `runs/*/curve.csv` + 合并版 `analysis/curves_valid.csv`
 - checkpoint：`runs/A_s0/best.pt`、`runs/A_s1/best.pt`（冻结，sha256 见 `analysis/test_evidence.json`）
