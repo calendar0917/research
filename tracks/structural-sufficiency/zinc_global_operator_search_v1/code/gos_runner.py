@@ -101,12 +101,36 @@ def write_artifacts(out: Path, info: dict) -> dict:
     return art
 
 
+HOLDOUT_SEED = 20261025
+
+
+def holdout_split(n_holdout: int, n_train: int = 10000) -> tuple[np.ndarray, np.ndarray]:
+    """Deterministic train-internal holdout: a fresh 1,000-molecule sample that
+    no development decision in this round ever looked at."""
+    perm = np.random.default_rng(HOLDOUT_SEED).permutation(n_train)
+    hold = np.sort(perm[:n_holdout]).astype(np.int64)
+    keep = np.sort(perm[n_holdout:]).astype(np.int64)
+    return keep, hold
+
+
 def train(route: str, seed: int, device, *, recipe: str = RECIPE,
           epochs: int | None = None, tag: str | None = None, force: bool = False,
           lr: float | None = None, weight_decay: float | None = None,
-          dropout: float | None = None) -> dict:
+          dropout: float | None = None,
+          holdout: int | None = None) -> dict:
     rel_train, rel_valid, scale, mean_nb = prepare()
     collate = GD.make_collate(rel_train, rel_valid, scale)
+    keep = None
+    hold = None
+    if holdout:
+        keep, hold = holdout_split(int(holdout))
+        ANALYSIS.mkdir(parents=True, exist_ok=True)
+        C.write_json(ANALYSIS / f"holdout_split_{int(holdout)}.json", {
+            "seed": HOLDOUT_SEED, "n_holdout": int(holdout),
+            "holdout_rows_sha256": C.sha256_array(hold),
+            "holdout_first20": hold[:20].tolist(),
+            "train_rows": int(len(keep)), "source": "official train split only",
+        })
     out = run_dir(route, seed, tag)
     info = T1.train(
         f"GOS_{route}",
@@ -122,8 +146,43 @@ def train(route: str, seed: int, device, *, recipe: str = RECIPE,
         model_builder=make_builder(route, mean_nb, float(dropout or 0.0)),
         out_dir=out,
         collate_fn=collate,
+        train_rows=keep,
     )
     art = write_artifacts(out, info)
+    if holdout:
+        norm = D.load_norm()
+        ck = torch.load(out / "best.pt", map_location="cpu", weights_only=False)
+        model, _ = GM.build_model(route, norm, int(seed), device, mean_n_bonds=mean_nb,
+                                  dropout=float(dropout or 0.0))
+        model.load_state_dict(ck["state_dict"])
+        model.eval()
+        train_cache = D.load_cache("train")
+        valid_cache = D.load_cache("valid")
+        rows_valid = np.arange(int(valid_cache["labels"].shape[0]), dtype=np.int64)
+        p_hold, mae_hold = T1.evaluate(model, train_cache, hold, candidate="GOS",
+                                       device=device, batch_size=256, collate_fn=collate)
+        _p, mae_valid = T1.evaluate(model, valid_cache, rows_valid, candidate="GOS",
+                                    device=device, batch_size=256, collate_fn=collate)
+        p_keep, mae_keep = T1.evaluate(model, train_cache, keep, candidate="GOS",
+                                       device=device, batch_size=256, collate_fn=collate)
+        np.savez(out / "predictions" / "holdout.npz", row=hold, pred=p_hold)
+        rec = {
+            "protocol": "zinc-global-operator-search-v1",
+            "kind": "train-internal holdout (fresh 1000 molecules never used for any decision)",
+            "route": route, "seed": int(seed), "holdout_size": int(len(hold)),
+            "holdout_seed": HOLDOUT_SEED,
+            "holdout_sha256": C.sha256_array(hold),
+            "epoch": int(ck.get("epoch", -1)),
+            "valid_official_mae": float(mae_valid),
+            "holdout_mae": float(mae_hold),
+            "train_kept_mae": float(mae_keep),
+            "n_train_rows": int(len(keep)),
+            "checkpoint": str((out / "best.pt").relative_to(C.REPO)),
+            "checkpoint_sha256": _sha(out / "best.pt"),
+        }
+        C.write_json(ANALYSIS / f"holdout_{route}_s{int(seed)}.json", rec)
+        C.log(f"[holdout-{route}] seed={seed} holdout={mae_hold:.6f} valid={mae_valid:.6f} "
+              f"kept={mae_keep:.6f} ep={rec['epoch']}")
     bo = info["fixed_objects"]["best"]
     C.log(
         f"[gos-{route}] seed={seed} best={info['best_valid']['valid_mae']:.9f}"
@@ -185,6 +244,8 @@ def main(argv=None) -> int:
     p.add_argument("--lr", type=float, default=None)
     p.add_argument("--weight-decay", type=float, default=None)
     p.add_argument("--dropout", type=float, default=None)
+    p.add_argument("--holdout", type=int, default=None,
+                   help="train on 10000-N rows and score the held-out N (fresh sample)")
     p.add_argument("--force", action="store_true")
     args = p.parse_args(argv)
     if args.command == "prep":
@@ -198,7 +259,8 @@ def main(argv=None) -> int:
     else:
         train(args.route, args.seed, device, recipe=args.recipe, epochs=args.epochs,
               tag=args.tag, force=args.force, lr=args.lr,
-              weight_decay=args.weight_decay, dropout=args.dropout)
+              weight_decay=args.weight_decay, dropout=args.dropout,
+              holdout=args.holdout)
     return 0
 
 

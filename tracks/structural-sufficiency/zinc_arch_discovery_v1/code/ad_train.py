@@ -316,7 +316,8 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
           min_lr: float | None = None,
           loss: str | None = None, smooth_l1_beta: float = 0.02,
           ema: dict | None = None,
-          recipe_override: dict | None = None) -> dict:
+          recipe_override: dict | None = None,
+          train_rows: np.ndarray | None = None) -> dict:
     """Train one candidate/seed.
 
     ``recipe_variant`` selects a named override (see ``RECIPE_VARIANTS``);
@@ -369,7 +370,10 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
     valid_cache = D.load_cache("valid")
     y_train = np.asarray(train_cache["labels"], dtype=np.float64)
     y_valid = np.asarray(valid_cache["labels"], dtype=np.float64)
-    rows_train = np.arange(len(y_train), dtype=np.int64)
+    # Optional explicit training-row subset (default None reproduces the
+    # historical full-train behaviour byte for byte).
+    rows_train = (np.arange(len(y_train), dtype=np.int64) if train_rows is None
+                  else np.asarray(train_rows, dtype=np.int64))
     rows_valid = np.arange(len(y_valid), dtype=np.int64)
 
     model, model_info = builder(candidate, norm, seed, device)
@@ -418,7 +422,7 @@ def train(candidate: str, seed: int, device, *, epochs: int | None = None,
         total_err, n_mol = 0.0, 0
         t_ep = time.perf_counter()
         for start in range(0, len(order), batch_size):
-            rows = order[start:start + batch_size]
+            rows = rows_train[order[start:start + batch_size]]
             batch = _to_device(collate_(train_cache, rows, candidate, valid=False, walk_cols=walk_cols), device)
             target = torch.as_tensor(y_train[rows], dtype=torch.float32, device=device)
             pred = model(batch)
