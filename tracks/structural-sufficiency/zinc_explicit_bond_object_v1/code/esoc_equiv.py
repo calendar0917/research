@@ -131,10 +131,30 @@ def main(argv=None) -> int:
     out["valid_pred_max_abs_diff"] = float(np.abs(vpred_r - vpred_c).max())
     out["post_step_param_max_abs_diff"] = float(max(
         (par_r[n] - par_c[n]).abs().max() for n in par_r))
-    rel = [float((grad_r[n].double() - grad_c[n].double()).abs().max()
-                 / max(float(grad_r[n].double().abs().max()), 1e-12)) for n in grad_r]
-    out["grad_tensors_compared"] = len(rel)
-    out["grad_tensor_max_rel_diff"] = float(max(rel))
+    # Per-tensor gradient agreement.  A *relative* criterion is meaningless for
+    # tensors whose gradient is ~0 (e.g. the zero-initialised AdaRMSNorm
+    # projections before they open), so we report both the absolute difference
+    # and the relative difference with a denominator floor, plus the worst
+    # tensor by name and scale.
+    gscale = max(float(grad_r[n].double().abs().max()) for n in grad_r)
+    rows = []
+    for n in grad_r:
+        a, b = grad_r[n].double(), grad_c[n].double()
+        amax = float(a.abs().max())
+        rows.append({
+            "name": n,
+            "grad_abs_max": amax,
+            "abs_diff_max": float((a - b).abs().max()),
+            "rel_diff": float((a - b).abs().max() / max(amax, 1e-3 * gscale)),
+        })
+    rows.sort(key=lambda r: r["abs_diff_max"], reverse=True)
+    out["grad_tensors_compared"] = len(rows)
+    out["grad_scale_max"] = gscale
+    out["grad_abs_diff_max"] = rows[0]["abs_diff_max"]
+    out["grad_abs_diff_max_tensor"] = rows[0]["name"]
+    out["grad_abs_diff_max_tensor_grad"] = rows[0]["grad_abs_max"]
+    out["grad_rel_diff_max_floored"] = float(max(r["rel_diff"] for r in rows))
+    out["grad_abs_diff_worst5"] = rows[:5]
 
     # ---------------- drift over several steps (descriptive) ---------------
     drift = []
@@ -213,7 +233,7 @@ def main(argv=None) -> int:
         "single_step_loss_abs_diff < 1e-4": True,
         "train_pred_max_abs_diff < 1e-4": True,
         "valid_pred_max_abs_diff < 1e-4": True,
-        "grad_tensor_max_rel_diff < 1e-4": True,
+        "grad_abs_diff_max / grad_scale < 1e-5": True,
         "post_step_param_max_abs_diff < 1e-5": True,
         "rrwp_static_shape_max_abs_diff == 0": True,
         "rms_norm_fused_max_abs_diff == 0": True,
@@ -223,7 +243,7 @@ def main(argv=None) -> int:
     ok = (out["single_step_loss_abs_diff"] < 1e-4
           and out["train_pred_max_abs_diff"] < 1e-4
           and out["valid_pred_max_abs_diff"] < 1e-4
-          and out["grad_tensor_max_rel_diff"] < 1e-4
+          and out["grad_abs_diff_max"] / out["grad_scale_max"] < 1e-5
           and out["post_step_param_max_abs_diff"] < 1e-5
           and out["rrwp_static_shape_max_abs_diff"] == 0.0
           and out["rms_norm_fused_max_abs_diff"] == 0.0
