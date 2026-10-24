@@ -32,7 +32,7 @@ SSUF = EXP.parent
 REPO = SSUF.parents[1]
 _V1 = SSUF / "zinc_arch_discovery_v1" / "code"
 _DBT = SSUF / "zinc_directed_bond_transformer_v1"
-for _p in (str(_HERE), str(_V1)):
+for _p in (str(_HERE), str(_V1), str(_DBT / "code")):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
