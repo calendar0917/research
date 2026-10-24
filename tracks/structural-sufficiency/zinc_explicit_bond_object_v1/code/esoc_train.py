@@ -284,8 +284,8 @@ def main(argv=None) -> int:
                     out_dir=RUNS / f"profile_{args.arm}_s{args.seed}")
         epoch_s = res["epoch_seconds_median"]
         full = int(cfg["recipe"]["epochs"])
-        ANALYSIS.mkdir(parents=True, exist_ok=True)
-        C.write_json(ANALYSIS / "timing.json", {
+        (ANALYSIS / "raw").mkdir(parents=True, exist_ok=True)
+        C.write_json(ANALYSIS / "raw" / "timing.json", {
             "arm": args.arm,
             "seed": args.seed,
             "epochs_measured": epochs,

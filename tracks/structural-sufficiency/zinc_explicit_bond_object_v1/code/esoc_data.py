@@ -54,6 +54,7 @@ import ad_data as AD  # noqa: E402
 EXP = _HERE.parent
 CACHE = EXP / "cache"
 ANALYSIS = EXP / "analysis"
+RAW = ANALYSIS / "raw"   # generated per-run artefacts (gitignored)
 CONFIG = EXP / "configs" / "esoc_v1.json"
 
 VERSION = "esoc-v1"
@@ -412,7 +413,8 @@ def main(argv=None) -> int:
         if args.split == "train":
             ANALYSIS.mkdir(parents=True, exist_ok=True)
             C.write_json(ANALYSIS / "scales.json", graph_scales(data))
-        C.write_json(ANALYSIS / f"cache_{args.split}.json", info)
+        RAW.mkdir(parents=True, exist_ok=True)
+        C.write_json(RAW / f"cache_{args.split}.json", info)
     else:
         print(json.dumps(audit_cache(load_cache(args.split)), indent=2))
     return 0

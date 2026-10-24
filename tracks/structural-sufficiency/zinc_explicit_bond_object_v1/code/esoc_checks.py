@@ -783,7 +783,7 @@ def main(argv=None) -> int:
         payload["all_pass"] = all(v["pass"] for v in payload["suites"].values())
         payload["n_pass"] = sum(1 for v in payload["suites"].values() if v["pass"])
         payload["n_suites"] = len(payload["suites"])
-    out = Path(args.out) if args.out else (ANALYSIS / "cpu_checks.json")
+    out = Path(args.out) if args.out else (ANALYSIS / "raw" / "cpu_checks.json")
     out.parent.mkdir(parents=True, exist_ok=True)
     C.write_json(out, payload)
     print(json.dumps({k: v["pass"] for k, v in payload["suites"].items()}, indent=2))
