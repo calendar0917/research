@@ -236,6 +236,52 @@ A single performance-engineering change is allowed **only** if it does not alter
 the mathematics (caching static tensors, avoiding repeated scatter/indexing
 backward, better batching), and must be followed by an equivalence check.
 
+### Declared optimisation: static shapes + `torch.compile`
+
+Two changes were made before formal training and are recorded here as
+**performance-only**:
+
+1. **Static shapes.** The local-object pair dimension is a fixed slot width
+   `EMAX = 41` (the train maximum) instead of the per-batch maximum, and the
+   RRWP atom dimension is a fixed `max_atoms = 37` instead of the per-batch
+   maximum. Padding rows are masked out of every reduction (verified in gate
+   `masking`). This removes recompilation and lets CUDA graphs capture the
+   step.
+2. **`torch.compile(mode="reduce-overhead")`**, i.e. fused kernels plus CUDA
+   graphs. `dynamic=False`, `fullgraph` not forced.
+
+Equivalence evidence (`code/esoc_equiv.py`, `analysis/compile_equivalence.json`,
+run on `res` GPU0, torch 2.5.1+cu124):
+
+| check | result |
+|---|---|
+| initial state bit-identical between the two paths | yes (`state_hash` equal) |
+| single-step loss | 1.579736471 vs 1.579736590 → **1.19e-7** |
+| train / valid predictions, eval mode | 4.8e-7 / 6.0e-7 max abs |
+| 220 gradient tensors (abs diff / gradient scale 0.717) | **1.19e-7** (worst tensor `readout.2.weight`) |
+| post-step parameters | 2.16e-8 max abs |
+| 10-step drift, loss / params | 1.19e-7 / 2.43e-7 |
+| compiled training still stochastic with dropout on | yes (both paths produce spread) |
+| fixed bond-slot width vs per-batch width | **exactly 0** difference in RRWP |
+| fused `F.rms_norm` vs explicit formula (float64) | **exactly 0** |
+| construction seed-determinism | yes |
+| REAL/NULL initial state | identical keys, **0.0** difference |
+
+Note on the drift row: an earlier version of this check demanded an exact match
+after 30 *stochastic* steps and failed (loss gap up to 0.58). Two causes were
+separated: (i) CUDA graphs own the RNG stream, so dropout realisations differ
+between the paths — comparing them says nothing about the model, so the
+mathematical comparison runs with the two regularisers disabled and the
+stochastic path is checked separately; (ii) even with regularisers off, fp32
+reduction reassociation accumulates, so the check compares the *function* (one
+step, all gradients, post-step parameters) and reports multi-step drift
+descriptively. With the regularisers frozen the 10-step drift is 1.2e-7 in loss
+and 2.4e-7 in parameters, i.e. the compiled path is numerically the same model.
+
+Measured effect (`analysis/timing.json`): 28.98 s/epoch eager → **6.29 s/epoch**
+compiled (312 updates/epoch), i.e. **4.37 GPU-h** for the declared 2500 epochs
+instead of 20.1 h. Peak memory 2.18 GB of 40 GB.
+
 ---
 
 ## 8. Deliverable map

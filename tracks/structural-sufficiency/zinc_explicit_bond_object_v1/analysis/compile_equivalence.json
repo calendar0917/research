@@ -1,0 +1,173 @@
+{
+  "device": "cuda:0",
+  "arm": "real",
+  "torch": "2.5.1+cu124",
+  "compile_mode": "reduce-overhead",
+  "drift_steps": 10,
+  "single_step_loss_eager": 1.5797364711761475,
+  "single_step_loss_compiled": 1.579736590385437,
+  "single_step_loss_abs_diff": 1.1920928955078125e-07,
+  "single_step_grad_norm_abs_diff": 0.0,
+  "train_pred_max_abs_diff": 4.76837158203125e-07,
+  "valid_pred_max_abs_diff": 5.960464477539062e-07,
+  "post_step_param_max_abs_diff": 2.1579714015729223e-08,
+  "grad_tensors_compared": 220,
+  "grad_scale_max": 0.7171239256858826,
+  "grad_abs_diff_max": 1.1920928955078125e-07,
+  "grad_abs_diff_max_tensor": "readout.2.weight",
+  "grad_abs_diff_max_tensor_grad": 0.7171239256858826,
+  "grad_rel_diff_max_floored": 2.8457898172581296e-06,
+  "grad_abs_diff_worst5": [
+    {
+      "name": "readout.2.weight",
+      "grad_abs_max": 0.7171239256858826,
+      "abs_diff_max": 1.1920928955078125e-07,
+      "rel_diff": 1.662324812782746e-07
+    },
+    {
+      "name": "local.agg.2.weight",
+      "grad_abs_max": 0.31150954961776733,
+      "abs_diff_max": 5.960464477539063e-08,
+      "rel_diff": 1.9134130831150288e-07
+    },
+    {
+      "name": "readout.0.weight",
+      "grad_abs_max": 0.1758383959531784,
+      "abs_diff_max": 5.960464477539063e-08,
+      "rel_diff": 3.3897400196520175e-07
+    },
+    {
+      "name": "local.agg.0.weight",
+      "grad_abs_max": 0.2559642791748047,
+      "abs_diff_max": 4.470348358154297e-08,
+      "rel_diff": 1.746473520667069e-07
+    },
+    {
+      "name": "local.atom.weight",
+      "grad_abs_max": 0.024472029879689217,
+      "abs_diff_max": 4.0978193283081055e-08,
+      "rel_diff": 1.674490979479037e-06
+    }
+  ],
+  "drift": [
+    {
+      "step": 1,
+      "loss_eager": 1.5850205421447754,
+      "loss_compiled": 1.5850204229354858,
+      "loss_abs_diff": 1.1920928955078125e-07,
+      "param_max_abs_diff": 3.8207843999771285e-08
+    },
+    {
+      "step": 2,
+      "loss_eager": 1.1870609521865845,
+      "loss_compiled": 1.187060832977295,
+      "loss_abs_diff": 1.1920928955078125e-07,
+      "param_max_abs_diff": 6.36375929730093e-08
+    },
+    {
+      "step": 3,
+      "loss_eager": 1.1636474132537842,
+      "loss_compiled": 1.1636475324630737,
+      "loss_abs_diff": 1.1920928955078125e-07,
+      "param_max_abs_diff": 5.447117956691727e-08
+    },
+    {
+      "step": 4,
+      "loss_eager": 2.1746129989624023,
+      "loss_compiled": 2.1746129989624023,
+      "loss_abs_diff": 0.0,
+      "param_max_abs_diff": 8.498038539528352e-08
+    },
+    {
+      "step": 5,
+      "loss_eager": 1.58893883228302,
+      "loss_compiled": 1.5889387130737305,
+      "loss_abs_diff": 1.1920928955078125e-07,
+      "param_max_abs_diff": 1.2979177199667902e-07
+    },
+    {
+      "step": 6,
+      "loss_eager": 1.95998215675354,
+      "loss_compiled": 1.95998215675354,
+      "loss_abs_diff": 0.0,
+      "param_max_abs_diff": 1.710579198288542e-07
+    },
+    {
+      "step": 7,
+      "loss_eager": 1.4558658599853516,
+      "loss_compiled": 1.4558658599853516,
+      "loss_abs_diff": 0.0,
+      "param_max_abs_diff": 2.1219724999355094e-07
+    },
+    {
+      "step": 8,
+      "loss_eager": 1.5034890174865723,
+      "loss_compiled": 1.5034888982772827,
+      "loss_abs_diff": 1.1920928955078125e-07,
+      "param_max_abs_diff": 2.432601036161941e-07
+    },
+    {
+      "step": 9,
+      "loss_eager": 1.4945363998413086,
+      "loss_compiled": 1.4945363998413086,
+      "loss_abs_diff": 0.0,
+      "param_max_abs_diff": 2.3347635647041898e-07
+    }
+  ],
+  "drift_loss_max_abs_diff": 1.1920928955078125e-07,
+  "drift_param_max_abs_diff": 2.432601036161941e-07,
+  "drift_note": "compiled kernels reassociate fp32 reductions; the first steps of this model are chaotic (loss 1.5 -> 3.6 within 4 steps), so a multi-step trajectory is expected to decorrelate. The formal run uses a single code path.",
+  "stochastic_losses": {
+    "eager": [
+      1.6732780933380127,
+      1.6627979278564453,
+      5.835437774658203,
+      5.774883270263672,
+      1.7182148694992065,
+      1.730991005897522
+    ],
+    "compiled": [
+      1.7461570501327515,
+      1.9293023347854614,
+      4.670442581176758,
+      5.683476448059082,
+      1.9249334335327148,
+      1.689021348953247
+    ]
+  },
+  "stochastic_eager_is_stochastic": true,
+  "stochastic_compiled_is_stochastic": true,
+  "stochastic_mean_abs_gap": 0.12537829081217433,
+  "rrwp_static_shape_max_abs_diff": 0.0,
+  "rms_norm_fused_max_abs_diff": 0.0,
+  "construction_seed_deterministic": true,
+  "real_null_init_state_keys_identical": true,
+  "real_null_init_max_abs_diff": 0.0,
+  "thresholds": {
+    "single_step_loss_abs_diff < 1e-4": true,
+    "train_pred_max_abs_diff < 1e-4": true,
+    "valid_pred_max_abs_diff < 1e-4": true,
+    "grad_abs_diff_max / grad_scale < 1e-5": true,
+    "post_step_param_max_abs_diff < 1e-5": true,
+    "rrwp_static_shape_max_abs_diff == 0": true,
+    "rms_norm_fused_max_abs_diff == 0": true,
+    "real_null_init_max_abs_diff == 0": true,
+    "compiled_still_stochastic": true
+  },
+  "pass": true,
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1",
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "git_commit": "cb2a831c7a8385a33b9f663520d8598dc9e8f05f",
+    "git_dirty_tracked": false,
+    "round_id": "zinc-arch-discovery-v1",
+    "timestamp": "2026-10-24T12:57:46+0800"
+  }
+}
