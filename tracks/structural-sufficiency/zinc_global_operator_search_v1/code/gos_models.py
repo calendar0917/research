@@ -104,7 +104,7 @@ class FFN(nn.Module):
         return h + F.dropout(self.fc2(x), p=self.dropout, training=self.training)
 
 
-MIX_MODES = ("legacy", "dot", "l2", "gn")
+MIX_MODES = ("legacy", "dot", "l2", "gn", "gnlog")
 
 
 class MixA(nn.Module):
@@ -123,7 +123,16 @@ class MixA(nn.Module):
                 ``q.k/sqrt(d)`` with no key-energy term at all.
     ``l2``      the intended key-energy operator: the half-key-energy term is
                 broadcast along the *key* axis (``unsqueeze(-2)``).
-    ``gn``      ``dot`` scoring with the gated weights renormalised over keys.
+    ``gn``      ``dot`` scoring with the gated weights renormalised over keys,
+                ``w = a*g``, ``ctx = sum(w/sum(w)) v``.  Written as a division this
+                has a ``1/sum(w)`` amplification: when the learned gate suppresses
+                all keys the gradient blows up (it did, at epoch 284 of the first
+                GN run).
+    ``gnlog``   the same operator without the division:
+                ``softmax(score + log(1+tanh(gamma)))``, with
+                ``log(1+tanh(x)) = log 2 - softplus(-2x)``.  Algebraically
+                identical to ``gn`` and numerically stable; no extra parameter and
+                no temperature.
     """
 
     def __init__(self, d: int = TOKEN_DIM, heads: int = HEADS, rel: int = REL_REL_DIM,
@@ -172,11 +181,20 @@ class MixA(nn.Module):
         attn = torch.softmax(score, dim=-1)
         gate = None
         if self.variant == "full":
-            gate = 1.0 + torch.tanh(self.gamma(rel)).permute(0, 3, 1, 2)
+            raw = self.gamma(rel).permute(0, 3, 1, 2)
+            gate = 1.0 + torch.tanh(raw)
             if self.mode == "gn":
                 w = attn * gate
                 mass = w.sum(dim=-1, keepdim=True)
                 ctx = torch.einsum("bhij,bhjd->bhid", w / mass, v)
+            elif self.mode == "gnlog":
+                # softmax(score + log gate) == (a*g) / sum(a*g); log1p(tanh) is
+                # evaluated as log2 - softplus(-2x) so it never hits -inf.
+                log_gate = math.log(2.0) - F.softplus(-2.0 * raw)
+                w = torch.softmax(score + log_gate, dim=-1)
+                mass = None
+                attn = w
+                ctx = torch.einsum("bhij,bhjd->bhid", w, v)
             else:
                 mass = (attn * gate).sum(dim=-1, keepdim=True)
                 ctx = torch.einsum("bhij,bhij,bhjd->bhid", attn, gate, v)

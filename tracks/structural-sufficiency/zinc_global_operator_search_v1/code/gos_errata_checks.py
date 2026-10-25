@@ -150,9 +150,12 @@ def main() -> int:
     mask = torch.ones(B, N, dtype=torch.bool)
     mask[1, 4:] = False                       # padding on the second molecule
     out = {mode: mats[mode].mix(h, rel, mask) for mode in GM.MIX_MODES}
+    # ``gnlog`` returns the *gated* weights, so the score references below apply to
+    # the score-carrying modes only.
+    ATT_MODES = ("legacy", "dot", "l2", "gn")
 
     ref = {}
-    for mode in GM.MIX_MODES:
+    for mode in ATT_MODES:
         q, k, v = out[mode]["q"], out[mode]["k"], out[mode]["v"]
         bias = mats[mode].beta(rel).permute(0, 3, 1, 2)
         sq = math.sqrt(mats[mode].hd)
@@ -165,7 +168,7 @@ def main() -> int:
             "l2_attn": softmax64(l2_logit.masked_fill(~vmask, -1e30)),
         }
     e1 = {}
-    for mode in GM.MIX_MODES:
+    for mode in ATT_MODES:
         a = out[mode]["attn"]
         e1[mode] = {
             "vs_dot": float((a - ref[mode]["dot_attn"]).abs().max()),
@@ -231,6 +234,56 @@ def main() -> int:
          attn_legacy_vs_gn_max_abs=d_attn,
          relative_ctx_diff=d_ctx,
          mass_range=[float(mass_leg.min()), float(mass_leg.max())])
+    # E3b gnlog == gn in exact arithmetic (fp64, real operator) -----------
+    rel_ctx_gn = max(1e-30, float(out["gn"]["ctx"].abs().max()))
+    d_gn_log = float((out["gn"]["ctx"] - out["gnlog"]["ctx"]).abs().max()) / rel_ctx_gn
+    # effective (normalised, gated) key weights of gn vs the softmax of gnlog
+    eff_gn = out["gn"]["attn"] * out["gn"]["gate"] / out["gn"]["mass"]
+    d_attn_gn_log = float((eff_gn - out["gnlog"]["attn"]).abs().max())
+    gate("E3b_gnlog_equals_gn", d_gn_log < 1e-12 and d_attn_gn_log < 1e-12,
+         relative_ctx_diff=d_gn_log, effective_weight_max_abs_diff=d_attn_gn_log)
+
+    # E3c why gnlog exists: the division form is ill-conditioned when the gate
+    # suppresses every key (this is what killed the first GN run at epoch 284).
+    def _grad_probe(mode, bias):
+        m = GM.MixA(d=d, heads=heads, rel=rel_dim, mode=mode).double()
+        with torch.no_grad():
+            for p_ in m.parameters():
+                p_.copy_(torch.randn(p_.shape, generator=torch.Generator().manual_seed(3),
+                                     dtype=torch.float64) * 0.4)
+            m.norm.alpha.zero_(); m.norm.beta.fill_(1.0)
+            m.gamma.weight.zero_(); m.gamma.bias.fill_(bias)
+        hh = torch.randn(1, 6, d, generator=torch.Generator().manual_seed(4), dtype=torch.float64)
+        rr = torch.randn(1, 6, 6, rel_dim, generator=torch.Generator().manual_seed(5),
+                         dtype=torch.float64)
+        mm = torch.ones(1, 6, dtype=torch.bool)
+        yv = torch.randn(1, 6, d, generator=torch.Generator().manual_seed(6), dtype=torch.float64)
+        res_m = m.mix(hh, rr, mm)
+        loss = F.l1_loss(m(hh, rr, mm), yv)
+        loss.backward()
+        g = float(m.gamma.bias.grad.abs().max())
+        return {"max_abs_gamma_grad": g,
+                "ctx_finite": bool(torch.isfinite(res_m["ctx"]).all()),
+                "loss_finite": bool(torch.isfinite(loss))}
+
+    probes = {}
+    for bias in (-2.0, -25.0, -45.0):
+        probes[f"gamma_bias_{bias}"] = {mode: _grad_probe(mode, bias) for mode in ("gn", "gnlog")}
+    ok_stable = all(v["gnlog"]["ctx_finite"] and v["gnlog"]["loss_finite"]
+                    and math.isfinite(v["gnlog"]["max_abs_gamma_grad"])
+                    for v in probes.values())
+    def _bad(v):
+        return (not v["ctx_finite"]) or (not v["loss_finite"]) or \
+            (not math.isfinite(v["max_abs_gamma_grad"]))
+
+    gn_bad = any(_bad(v["gn"]) for v in probes.values())
+    gnlog_ok = all(not _bad(v["gnlog"]) for v in probes.values())
+    gate("E3c_gnlog_is_stable_where_gn_breaks",
+         gn_bad and gnlog_ok,
+         note=("same parameters/inputs; 'gn' is the definition as written "
+               "(w/sum(w)), 'gnlog' the log-domain rewrite"),
+         probes=probes)
+
     RES["E3_gate_mass_stats"] = {
         "min": float(mass_leg.min()), "max": float(mass_leg.max()),
         "std_over_queries": float(mass_leg.std()),
@@ -244,7 +297,7 @@ def main() -> int:
     mask4 = torch.tensor([[True, True, True, True, False]])
     y4 = torch.randn(1, 5, d, generator=gm, dtype=torch.float64)
     e4 = {}
-    for mode in ("legacy", "l2", "gn"):
+    for mode in ("legacy", "l2", "gn", "gnlog"):
         m = GM.MixA(d=d, heads=heads, rel=rel_dim, mode=mode).double()
         with torch.no_grad():
             for p in m.parameters():
@@ -315,7 +368,7 @@ def main() -> int:
     b = collate(train_cache, row64, "GOS", valid=True)
     preds = {}
     attn0 = {}
-    for mode in ("legacy", "dot", "l2", "gn"):
+    for mode in ("legacy", "dot", "l2", "gn", "gnlog"):
         m, _ = GR.build_arm_model("A", 0, torch.device("cpu"), mix=mode,
                                   mean_n_bonds=mean_nb, norm=norm)
         m.load_state_dict(ck["state_dict"])
@@ -340,6 +393,8 @@ def main() -> int:
     RES["E5_operator_swap_magnitude"] = {
         "legacy_vs_l2_pred_max_abs": float(np.abs(preds["legacy"] - preds["l2"]).max()),
         "legacy_vs_gn_pred_max_abs": float(np.abs(preds["legacy"] - preds["gn"]).max()),
+        "legacy_vs_gnlog_pred_max_abs": float(np.abs(preds["legacy"] - preds["gnlog"]).max()),
+        "gn_vs_gnlog_pred_max_abs": float(np.abs(preds["gn"] - preds["gnlog"]).max()),
         "note": "inference-time swap only, NOT a result; the trained arms are separate runs",
     }
     # legacy path reproduces the historical recorded valid predictions
@@ -394,7 +449,7 @@ def main() -> int:
          n_rows=int(len(row256)), per_layer=mass_stats)
 
     # E6 one forward for train and eval ----------------------------------
-    for mode in ("l2", "gn"):
+    for mode in ("l2", "gn", "gnlog"):
         m, _ = GR.build_arm_model("A", 3, torch.device("cpu"), mix=mode,
                                   mean_n_bonds=mean_nb, norm=norm)
         m.load_state_dict(ck["state_dict"])

@@ -4,7 +4,8 @@
     "legacy",
     "dot",
     "l2",
-    "gn"
+    "gn",
+    "gnlog"
   ],
   "E0_same_init_across_modes": {
     "ok": true,
@@ -12,7 +13,8 @@
       "legacy": 460017,
       "dot": 460017,
       "l2": 460017,
-      "gn": 460017
+      "gn": 460017,
+      "gnlog": 460017
     },
     "init_sha": "4b8c59f8eb54f6a0d2d63422fd92dfe9644466e8bbddcc4925316c0aa936ffd9",
     "historical_ho_A_s0_init_sha": "4b8c59f8eb54f6a0d2d63422fd92dfe9644466e8bbddcc4925316c0aa936ffd9",
@@ -101,6 +103,53 @@
       1.7967381670282265
     ]
   },
+  "E3b_gnlog_equals_gn": {
+    "ok": true,
+    "relative_ctx_diff": 1.3888115458157688e-16,
+    "effective_weight_max_abs_diff": 2.220446049250313e-16
+  },
+  "E3c_gnlog_is_stable_where_gn_breaks": {
+    "ok": true,
+    "note": "same parameters/inputs; 'gn' is the definition as written (w/sum(w)), 'gnlog' the log-domain rewrite",
+    "probes": {
+      "gamma_bias_-2.0": {
+        "gn": {
+          "max_abs_gamma_grad": 2.7755575615628914e-17,
+          "ctx_finite": true,
+          "loss_finite": true
+        },
+        "gnlog": {
+          "max_abs_gamma_grad": 4.85722573273506e-17,
+          "ctx_finite": true,
+          "loss_finite": true
+        }
+      },
+      "gamma_bias_-25.0": {
+        "gn": {
+          "max_abs_gamma_grad": NaN,
+          "ctx_finite": false,
+          "loss_finite": false
+        },
+        "gnlog": {
+          "max_abs_gamma_grad": 1.3877787807814457e-17,
+          "ctx_finite": true,
+          "loss_finite": true
+        }
+      },
+      "gamma_bias_-45.0": {
+        "gn": {
+          "max_abs_gamma_grad": NaN,
+          "ctx_finite": false,
+          "loss_finite": false
+        },
+        "gnlog": {
+          "max_abs_gamma_grad": 3.469446951953614e-17,
+          "ctx_finite": true,
+          "loss_finite": true
+        }
+      }
+    }
+  },
   "E3_gate_mass_stats": {
     "min": 0.2788067599321458,
     "max": 1.7967381670282265,
@@ -120,6 +169,11 @@
   "E4_module_gradient_gn": {
     "ok": true,
     "worst_rel_err": 6.944465093338207e-08,
+    "n_probes": 5
+  },
+  "E4_module_gradient_gnlog": {
+    "ok": true,
+    "worst_rel_err": 4.331295458407932e-08,
     "n_probes": 5
   },
   "E4_model_gradient_l2": {
@@ -297,6 +351,60 @@
         }
       ]
     },
+    "gnlog": {
+      "worst_rel_err": 4.331295458407932e-08,
+      "probes": [
+        {
+          "param": "gamma.weight",
+          "idx": [
+            0,
+            1
+          ],
+          "autograd": -0.02750111640793257,
+          "fd": -0.027501116384165414,
+          "rel_err": 8.642250939295957e-10
+        },
+        {
+          "param": "beta.weight",
+          "idx": [
+            1,
+            2
+          ],
+          "autograd": 0.006831626896748766,
+          "fd": 0.006831626819803205,
+          "rel_err": 1.126313866328093e-08
+        },
+        {
+          "param": "qkv.weight",
+          "idx": [
+            2,
+            3
+          ],
+          "autograd": 0.018171513991913,
+          "fd": 0.018171513849196685,
+          "rel_err": 7.853848310285895e-09
+        },
+        {
+          "param": "out.weight",
+          "idx": [
+            1,
+            0
+          ],
+          "autograd": -0.013616961588527925,
+          "fd": -0.013616961558327034,
+          "rel_err": 2.217887610483305e-09
+        },
+        {
+          "param": "norm.alpha",
+          "idx": [
+            0
+          ],
+          "autograd": -0.0013143756624450428,
+          "fd": -0.0013143757193745387,
+          "rel_err": 4.331295458407932e-08
+        }
+      ]
+    },
     "model_l2": {
       "autograd": -0.0016485961011449913,
       "fd": -0.0016485961484846712,
@@ -318,6 +426,8 @@
   "E5_operator_swap_magnitude": {
     "legacy_vs_l2_pred_max_abs": 0.045678138732910156,
     "legacy_vs_gn_pred_max_abs": 0.20320367813110352,
+    "legacy_vs_gnlog_pred_max_abs": 0.2032032012939453,
+    "gn_vs_gnlog_pred_max_abs": 9.426474571228027e-05,
     "note": "inference-time swap only, NOT a result; the trained arms are separate runs"
   },
   "E5_legacy_reproduces_recorded_valid": {
@@ -366,6 +476,11 @@
     "direct_vs_evaluate_max_abs": 0.0
   },
   "E6_single_forward_gn": {
+    "ok": true,
+    "train_vs_eval_max_abs": 0.0,
+    "direct_vs_evaluate_max_abs": 0.0
+  },
+  "E6_single_forward_gnlog": {
     "ok": true,
     "train_vs_eval_max_abs": 0.0,
     "direct_vs_evaluate_max_abs": 0.0
