@@ -1,0 +1,731 @@
+{
+  "protocol_id": "zinc-structural-conditional-moments-v1",
+  "phase": "B_data_feasibility",
+  "official_test_loaded": false,
+  "labels_used": false,
+  "frozen_config": {
+    "protocol_id": "zinc-structural-conditional-moments-v1",
+    "status": "frozen_before_gpu",
+    "frozen_at": "2026-10-25",
+    "bands": [
+      [
+        1,
+        2
+      ],
+      [
+        3,
+        8
+      ]
+    ],
+    "bands_note": "line-graph shortest path distance; self excluded; no cross-molecule pairs",
+    "rank": 8,
+    "scales": [
+      6.303114181298866,
+      14.815447751314792
+    ],
+    "scales_note": "mean n_t per bond over the Fit10k (official train 10k) raw graphs, per band; label-free; identical in both arms; no per-query n_t division",
+    "scales_source": "analysis/relation_stats_train.json",
+    "scm_seed_offset": 50731,
+    "recipe": {
+      "optimizer": "adamw",
+      "lr": 0.001,
+      "min_lr": 1e-05,
+      "weight_decay": 1e-05,
+      "warmup_steps": 500,
+      "epochs": 600,
+      "dropout": 0.0,
+      "grad_clip": 5.0,
+      "batch_size": 128,
+      "valid_batch_size": 256,
+      "selection": "argmin(valid_mae); ties keep the earlier epoch"
+    },
+    "arms": [
+      "S-only",
+      "S+A"
+    ],
+    "seed": 0,
+    "data": "official PyG ZINC subset=True train 10000 / valid 1000; raw-y L1",
+    "official_test": "never loaded this round",
+    "budget_a100_hours": 2.5,
+    "no_tuning": "bands, rank, scales, recipe and horizon are frozen; no distance-range or hyperparameter sweep is authorized"
+  },
+  "fit10k_structure": {
+    "n_molecules": 10000,
+    "n_bonds_total": 249279,
+    "bonds_per_molecule": {
+      "mean": 24.9279,
+      "median": 25.0,
+      "p05": 16.0,
+      "p95": 34.0,
+      "min": 8.0,
+      "max": 41.0
+    },
+    "n_t": {
+      "t1": {
+        "mean": 6.303114181298866,
+        "median": 6.0,
+        "p05": 4.0,
+        "p95": 9.0,
+        "min": 2.0,
+        "max": 16.0
+      },
+      "t2": {
+        "mean": 14.815447751314792,
+        "median": 14.0,
+        "p05": 9.0,
+        "p95": 23.0,
+        "min": 0.0,
+        "max": 35.0
+      }
+    },
+    "n_t_zero_fraction": {
+      "t1": 0.0,
+      "t2": 2.808098556236185e-05
+    },
+    "n_t_one_fraction": {
+      "t1": 0.0,
+      "t2": 9.627766478524064e-05
+    },
+    "n_t_ge2_fraction": {
+      "t1": 1.0,
+      "t2": 0.9998756413496523
+    },
+    "n_t_max": {
+      "t1": 16,
+      "t2": 35
+    },
+    "row_total_variation_from_uniform": {
+      "t1": {
+        "mean": 0.7492163515732516,
+        "median": 0.76,
+        "p05": 0.6000000000000001,
+        "p95": 0.8620689655172415,
+        "min": 0.09090909090909093,
+        "max": 0.9500000000000001
+      },
+      "t2": {
+        "mean": 0.4290610740867352,
+        "median": 0.4193548387096774,
+        "p05": 0.24999999999999997,
+        "p95": 0.6388888888888888,
+        "min": 0.11111111111111109,
+        "max": 0.9285714285714284
+      },
+      "definition": "0.5*||mu_t/n_t - 1/N_bonds||_1 per bond"
+    },
+    "coverage_fraction_of_other_bonds": {
+      "t1": {
+        "mean": 0.26174863865553305,
+        "median": 0.25,
+        "p05": 0.14285714285714285,
+        "p95": 0.42105263157894735,
+        "min": 0.05128205128205128,
+        "max": 1.0
+      },
+      "t2": {
+        "mean": 0.5948983781366655,
+        "median": 0.6086956521739131,
+        "p05": 0.375,
+        "p95": 0.782608695652174,
+        "min": 0.0,
+        "max": 0.9230769230769231
+      }
+    },
+    "n_t_correlation": 0.09753696020905486,
+    "band_support_intersection_fraction": 0.0,
+    "self_pairs_in_bands": 0,
+    "self_pairs_in_both_bands": 0,
+    "structural_invariants": {
+      "max_abs_self_distance": 0,
+      "max_band_count_minus_other_bonds": 0,
+      "bands_disjoint": true,
+      "no_cross_molecule_pairs": true
+    },
+    "line_graph_diameter": {
+      "mean": 11.7736,
+      "median": 12.0,
+      "p05": 8.0,
+      "p95": 16.0,
+      "min": 3.0,
+      "max": 21.0
+    },
+    "cache_sha256": "d798cd4802784c9df00c22de9eefb3d9f6b1b0ad83787992611376b1b57b006d"
+  },
+  "valid_structure": {
+    "n_molecules": 1000,
+    "n_bonds_total": 24846,
+    "bonds_per_molecule": {
+      "mean": 24.846,
+      "median": 25.0,
+      "p05": 16.0,
+      "p95": 34.0,
+      "min": 10.0,
+      "max": 40.0
+    },
+    "n_t": {
+      "t1": {
+        "mean": 6.2952587941721,
+        "median": 6.0,
+        "p05": 4.0,
+        "p95": 9.0,
+        "min": 2.0,
+        "max": 14.0
+      },
+      "t2": {
+        "mean": 14.687595588827175,
+        "median": 14.0,
+        "p05": 9.0,
+        "p95": 22.0,
+        "min": 1.0,
+        "max": 33.0
+      }
+    },
+    "n_t_zero_fraction": {
+      "t1": 0.0,
+      "t2": 0.0
+    },
+    "n_t_one_fraction": {
+      "t1": 0.0,
+      "t2": 4.024792723174756e-05
+    },
+    "n_t_ge2_fraction": {
+      "t1": 1.0,
+      "t2": 0.9999597520727682
+    },
+    "n_t_max": {
+      "t1": 14,
+      "t2": 33
+    },
+    "row_total_variation_from_uniform": {
+      "t1": {
+        "mean": 0.748388287682017,
+        "median": 0.7586206896551726,
+        "p05": 0.6000000000000001,
+        "p95": 0.8620689655172415,
+        "min": 0.2,
+        "max": 0.9487179487179485
+      },
+      "t2": {
+        "mean": 0.43216537828803814,
+        "median": 0.423076923076923,
+        "p05": 0.25,
+        "p95": 0.6399999999999999,
+        "min": 0.11538461538461535,
+        "max": 0.9000000000000001
+      },
+      "definition": "0.5*||mu_t/n_t - 1/N_bonds||_1 per bond"
+    },
+    "coverage_fraction_of_other_bonds": {
+      "t1": {
+        "mean": 0.2626592329600899,
+        "median": 0.25,
+        "p05": 0.14285714285714285,
+        "p95": 0.42105263157894735,
+        "min": 0.05263157894736842,
+        "max": 0.8888888888888888
+      },
+      "t2": {
+        "mean": 0.5917381374753041,
+        "median": 0.6,
+        "p05": 0.375,
+        "p95": 0.7777777777777778,
+        "min": 0.1111111111111111,
+        "max": 0.92
+      }
+    },
+    "n_t_correlation": 0.10493721584458786,
+    "band_support_intersection_fraction": 0.0,
+    "self_pairs_in_bands": 0,
+    "self_pairs_in_both_bands": 0,
+    "structural_invariants": {
+      "max_abs_self_distance": 0,
+      "max_band_count_minus_other_bonds": 0,
+      "bands_disjoint": true,
+      "no_cross_molecule_pairs": true
+    },
+    "line_graph_diameter": {
+      "mean": 11.858,
+      "median": 12.0,
+      "p05": 7.0,
+      "p95": 16.0,
+      "min": 5.0,
+      "max": 19.0
+    },
+    "cache_sha256": "f8e73a28887a5c53b1475230e25e6b1d0f9ad0bfc6d9b9b8df94480e82cdda7d"
+  },
+  "gates_pre_registered": {
+    "G1_far_band_not_empty": "fraction of Fit10k bonds with n_t2 >= 1 must be >= 0.90",
+    "G2_relation_not_uniform": "mean row total-variation from the uniform relation must be >= 0.05 for both bands",
+    "G3_bands_not_redundant": "|corr(n_t1, n_t2)| must be <= 0.80",
+    "G4_S_not_degenerate": "for both bands, RMS(S_t)/RMS(c_loc) >= 0.01 and the fraction of near-zero entries < 0.10",
+    "G5_A_not_degenerate": "for both bands, RMS(A_t)/RMS(c_loc) >= 0.01 and the fraction of near-zero entries < 0.10",
+    "G6_numeric_sanity": "all S/A finite; max |S|, |A| <= 1e3",
+    "G7_A_not_a_copy_of_S": "max_t |corr(S_t, A_t)| <= 0.98"
+  },
+  "structural_gates": {
+    "G1_far_band_not_empty": {
+      "value": 0.9999719190144376,
+      "threshold": 0.9,
+      "pass": true
+    },
+    "G2_relation_not_uniform": {
+      "value": [
+        0.7492163515732516,
+        0.4290610740867352
+      ],
+      "threshold": 0.05,
+      "pass": true
+    },
+    "G3_bands_not_redundant": {
+      "value": 0.09753696020905486,
+      "threshold": 0.8,
+      "pass": true
+    }
+  },
+  "representation_gates_reference": "dccl_s0_best_fit10k_first2000",
+  "representation_gates": {
+    "G4_S_not_degenerate": {
+      "value": {
+        "S1": {
+          "rms_relative_to_c_loc": 0.32468210962020916,
+          "frac_abs_lt_1e-8": 0.0
+        },
+        "S2": {
+          "rms_relative_to_c_loc": 0.16824779096885237,
+          "frac_abs_lt_1e-8": 0.0
+        },
+        "note": "rms ratio uses the elementwise c_loc rms, so 0.01 means 1% of a typical local-channel activation"
+      },
+      "threshold": 0.01,
+      "pass": true
+    },
+    "G5_A_not_degenerate": {
+      "value": {
+        "A1": {
+          "rms_relative_to_c_loc": 0.012601531652731552,
+          "frac_abs_lt_1e-8": 3.747227051981534e-05
+        },
+        "A2": {
+          "rms_relative_to_c_loc": 0.00876867080465555,
+          "frac_abs_lt_1e-8": 7.744269240761836e-05
+        }
+      },
+      "threshold": 0.01,
+      "pass": false
+    },
+    "G6_numeric_sanity": {
+      "value": {
+        "S1": {
+          "finite": true,
+          "max_abs": 1.3806122541427612
+        },
+        "S2": {
+          "finite": true,
+          "max_abs": 0.4869774878025055
+        },
+        "A1": {
+          "finite": true,
+          "max_abs": 0.3420352339744568
+        },
+        "A2": {
+          "finite": true,
+          "max_abs": 0.1914982944726944
+        }
+      },
+      "pass": true
+    },
+    "G7_A_not_a_copy_of_S": {
+      "value": {
+        "band1": -0.03310225609777264,
+        "band2": 0.06930152188644562
+      },
+      "threshold": 0.98,
+      "pass": true
+    }
+  },
+  "degeneracy_criteria": {
+    "D1_not_identically_zero": {
+      "pass": true,
+      "threshold": 0.001,
+      "value": {
+        "S1": 0.0,
+        "A1": 3.747227051981534e-05,
+        "S2": 0.0,
+        "A2": 7.744269240761836e-05
+      }
+    },
+    "D2_not_a_constant": {
+      "pass": true,
+      "bounds": [
+        0.01,
+        0.99
+      ],
+      "value": {
+        "S1": 0.50638726409275,
+        "A1": 0.25043162165781935,
+        "S2": 0.5525769372010846,
+        "A2": 0.22362295143533137
+      }
+    },
+    "D3_A_not_linearly_redundant_with_S": {
+      "pass": true,
+      "threshold": 0.95,
+      "value": 0.06943618804225393
+    },
+    "D4_numeric_sanity": {
+      "pass": true,
+      "value": {
+        "S1": 1.3806122541427612,
+        "A1": 0.3420352339744568,
+        "S2": 0.4869774878025055,
+        "A2": 0.1914982944726944
+      }
+    },
+    "D5_A_adds_rank": {
+      "pass": true,
+      "rule": "rank90(S+A) >= rank90(S)+2",
+      "value": [
+        5,
+        8
+      ]
+    },
+    "all_pass": true
+  },
+  "single_key_identity": {
+    "n_t_for_query0": 1,
+    "S1_query0_absmax": 0.048034876585006714,
+    "A1_query0_absmax": 0.0005881618126295507,
+    "claim": "with n_t=1 the local covariance is 0 but A = -n_t*cov_G is generally non-zero, so a single-key relation is not automatically a no-op",
+    "pass": true
+  },
+  "representations": {
+    "init_seed0_fit10k_first2000": {
+      "rms_c_loc": 0.8666089177131653,
+      "n_bonds": 50037,
+      "S1": {
+        "rms": 0.20892417430877686,
+        "rms_relative_to_c_loc": 0.24108241911483266,
+        "max_abs": 3.4095523357391357,
+        "frac_abs_lt_1e-8": 0.0,
+        "frac_abs_lt_1e-3_rms": 0.0015888242700401703,
+        "per_bond_norm_median": 0.35253581404685974,
+        "between_molecule_var_share": 0.6107785031642055,
+        "is_finite": true
+      },
+      "A1": {
+        "rms": 0.05038010701537132,
+        "rms_relative_to_c_loc": 0.058134766427647575,
+        "max_abs": 1.626827359199524,
+        "frac_abs_lt_1e-8": 4.996302735975378e-06,
+        "frac_abs_lt_1e-3_rms": 0.013667386134260648,
+        "per_bond_norm_median": 0.017628217115998268,
+        "between_molecule_var_share": 0.49649333955848735,
+        "is_finite": true
+      },
+      "S2": {
+        "rms": 0.10799292474985123,
+        "rms_relative_to_c_loc": 0.12461552442228074,
+        "max_abs": 1.3782658576965332,
+        "frac_abs_lt_1e-8": 0.0,
+        "frac_abs_lt_1e-3_rms": 0.0014689130043767612,
+        "per_bond_norm_median": 0.19453909993171692,
+        "between_molecule_var_share": 0.7550642555674586,
+        "is_finite": true
+      },
+      "A2": {
+        "rms": 0.0392569974064827,
+        "rms_relative_to_c_loc": 0.04529955393267276,
+        "max_abs": 1.2786678075790405,
+        "frac_abs_lt_1e-8": 2.498151367987689e-06,
+        "frac_abs_lt_1e-3_rms": 0.01735215940204249,
+        "per_bond_norm_median": 0.010386001318693161,
+        "between_molecule_var_share": 0.42442269723885195,
+        "is_finite": true
+      },
+      "cross_band_correlation": {
+        "S1_S2": -0.6892118914132777,
+        "A1_A2": -0.38202618351725554
+      },
+      "S_A_correlation": {
+        "band1": 0.21817532165516404,
+        "band2": 0.28562704197291994
+      },
+      "delta": {
+        "rms": 0.0,
+        "note": "zero by construction: Wout is zero-initialised in this measurement"
+      },
+      "degeneracy": {
+        "linear_r2_A_from_S": 0.3363611023047137,
+        "linear_r2_S_from_A": 0.2837570570523339,
+        "effective_rank_90pct_S_only": 7,
+        "effective_rank_90pct_S_plus_A": 11,
+        "effective_rank_99pct_S_only": 13,
+        "effective_rank_99pct_S_plus_A": 23,
+        "definition": "R2 of a least-squares linear map with intercept, fitted across all measured bonds; effective rank from SVD of column-standardised blocks at the stated cumulative-energy level"
+      }
+    },
+    "init_seed0_valid1000": {
+      "rms_c_loc": 0.8748406171798706,
+      "n_bonds": 24846,
+      "S1": {
+        "rms": 0.20575250685214996,
+        "rms_relative_to_c_loc": 0.23518856213536604,
+        "max_abs": 2.778848171234131,
+        "frac_abs_lt_1e-8": 0.0,
+        "frac_abs_lt_1e-3_rms": 0.0014690493439587862,
+        "per_bond_norm_median": 0.349584698677063,
+        "between_molecule_var_share": 0.6130207767845415,
+        "is_finite": true
+      },
+      "A1": {
+        "rms": 0.050601791590452194,
+        "rms_relative_to_c_loc": 0.05784115483066131,
+        "max_abs": 1.2939376831054688,
+        "frac_abs_lt_1e-8": 5.030990903968445e-06,
+        "frac_abs_lt_1e-3_rms": 0.012954801577718748,
+        "per_bond_norm_median": 0.01826321892440319,
+        "between_molecule_var_share": 0.5360435239040676,
+        "is_finite": true
+      },
+      "S2": {
+        "rms": 0.10566818714141846,
+        "rms_relative_to_c_loc": 0.12078564376908973,
+        "max_abs": 0.9992048740386963,
+        "frac_abs_lt_1e-8": 0.00014086774531111649,
+        "frac_abs_lt_1e-3_rms": 0.0017004749255413345,
+        "per_bond_norm_median": 0.19223135709762573,
+        "between_molecule_var_share": 0.7687521674180992,
+        "is_finite": true
+      },
+      "A2": {
+        "rms": 0.03759339079260826,
+        "rms_relative_to_c_loc": 0.04297170256428425,
+        "max_abs": 0.9067912101745605,
+        "frac_abs_lt_1e-8": 0.00021130161796667471,
+        "frac_abs_lt_1e-3_rms": 0.01673810673750302,
+        "per_bond_norm_median": 0.01076352410018444,
+        "between_molecule_var_share": 0.4820126940691368,
+        "is_finite": true
+      },
+      "cross_band_correlation": {
+        "S1_S2": -0.6466449236655559,
+        "A1_A2": -0.35232751752251484
+      },
+      "S_A_correlation": {
+        "band1": 0.24492267533350137,
+        "band2": 0.2706227874441308
+      },
+      "delta": {
+        "rms": 0.0,
+        "note": "zero by construction: Wout is zero-initialised in this measurement"
+      },
+      "degeneracy": {
+        "linear_r2_A_from_S": 0.36335958842543803,
+        "linear_r2_S_from_A": 0.2855487695286286,
+        "effective_rank_90pct_S_only": 7,
+        "effective_rank_90pct_S_plus_A": 11,
+        "effective_rank_99pct_S_only": 13,
+        "effective_rank_99pct_S_plus_A": 23,
+        "definition": "R2 of a least-squares linear map with intercept, fitted across all measured bonds; effective rank from SVD of column-standardised blocks at the stated cumulative-energy level"
+      }
+    },
+    "dccl_s0_best_fit10k_first2000": {
+      "rms_c_loc": 0.18475256860256195,
+      "n_bonds": 50037,
+      "S1": {
+        "rms": 0.05998585373163223,
+        "rms_relative_to_c_loc": 0.32468210962020916,
+        "max_abs": 1.3806122541427612,
+        "frac_abs_lt_1e-8": 0.0,
+        "frac_abs_lt_1e-3_rms": 0.0010017586985630632,
+        "per_bond_norm_median": 0.10543977469205856,
+        "between_molecule_var_share": 0.50638726409275,
+        "is_finite": true
+      },
+      "A1": {
+        "rms": 0.002328165341168642,
+        "rms_relative_to_c_loc": 0.012601531652731552,
+        "max_abs": 0.3420352339744568,
+        "frac_abs_lt_1e-8": 3.747227051981534e-05,
+        "frac_abs_lt_1e-3_rms": 0.008451246077902352,
+        "per_bond_norm_median": 0.0006855283863842487,
+        "between_molecule_var_share": 0.25043162165781935,
+        "is_finite": true
+      },
+      "S2": {
+        "rms": 0.0310842115432024,
+        "rms_relative_to_c_loc": 0.16824779096885237,
+        "max_abs": 0.4869774878025055,
+        "frac_abs_lt_1e-8": 0.0,
+        "frac_abs_lt_1e-3_rms": 0.0009842716389871495,
+        "per_bond_norm_median": 0.05763700604438782,
+        "between_molecule_var_share": 0.5525769372010846,
+        "is_finite": true
+      },
+      "A2": {
+        "rms": 0.0016200344543904066,
+        "rms_relative_to_c_loc": 0.00876867080465555,
+        "max_abs": 0.1914982944726944,
+        "frac_abs_lt_1e-8": 7.744269240761836e-05,
+        "frac_abs_lt_1e-3_rms": 0.010217439095069648,
+        "per_bond_norm_median": 0.0003896466223523021,
+        "between_molecule_var_share": 0.22362295143533137,
+        "is_finite": true
+      },
+      "cross_band_correlation": {
+        "S1_S2": -0.699934670869246,
+        "A1_A2": -0.6330982334707096
+      },
+      "S_A_correlation": {
+        "band1": -0.03310225609777264,
+        "band2": 0.06930152188644562
+      },
+      "delta": {
+        "rms": 0.0,
+        "note": "zero by construction: Wout is zero-initialised in this measurement"
+      },
+      "degeneracy": {
+        "linear_r2_A_from_S": 0.06943618804225393,
+        "linear_r2_S_from_A": 0.13112193429453112,
+        "effective_rank_90pct_S_only": 5,
+        "effective_rank_90pct_S_plus_A": 8,
+        "effective_rank_99pct_S_only": 12,
+        "effective_rank_99pct_S_plus_A": 20,
+        "definition": "R2 of a least-squares linear map with intercept, fitted across all measured bonds; effective rank from SVD of column-standardised blocks at the stated cumulative-energy level"
+      }
+    },
+    "dccl_s0_best_valid1000": {
+      "rms_c_loc": 0.18259531259536743,
+      "n_bonds": 24846,
+      "S1": {
+        "rms": 0.05746782571077347,
+        "rms_relative_to_c_loc": 0.31472782567054497,
+        "max_abs": 0.7633630037307739,
+        "frac_abs_lt_1e-8": 1.006198180793689e-05,
+        "frac_abs_lt_1e-3_rms": 0.0010766320534492473,
+        "per_bond_norm_median": 0.10566388070583344,
+        "between_molecule_var_share": 0.4725445407351405,
+        "is_finite": true
+      },
+      "A1": {
+        "rms": 0.0015077281277626753,
+        "rms_relative_to_c_loc": 0.008257211569849068,
+        "max_abs": 0.11281882226467133,
+        "frac_abs_lt_1e-8": 3.0185945423810673e-05,
+        "frac_abs_lt_1e-3_rms": 0.005071238831200193,
+        "per_bond_norm_median": 0.0006979587487876415,
+        "between_molecule_var_share": 0.2858226004850528,
+        "is_finite": true
+      },
+      "S2": {
+        "rms": 0.030513880774378777,
+        "rms_relative_to_c_loc": 0.16711207062580935,
+        "max_abs": 0.4052361845970154,
+        "frac_abs_lt_1e-8": 0.0002414875633904854,
+        "frac_abs_lt_1e-3_rms": 0.001388553489495291,
+        "per_bond_norm_median": 0.05749412626028061,
+        "between_molecule_var_share": 0.5578249793457415,
+        "is_finite": true
+      },
+      "A2": {
+        "rms": 0.001185889821499586,
+        "rms_relative_to_c_loc": 0.006494634526174978,
+        "max_abs": 0.10529451072216034,
+        "frac_abs_lt_1e-8": 0.0003219834178539805,
+        "frac_abs_lt_1e-3_rms": 0.007737664010303469,
+        "per_bond_norm_median": 0.0004005078226327896,
+        "between_molecule_var_share": 0.2355319794116728,
+        "is_finite": true
+      },
+      "cross_band_correlation": {
+        "S1_S2": -0.7775528542154146,
+        "A1_A2": -0.5342912058815256
+      },
+      "S_A_correlation": {
+        "band1": 0.07460823457126219,
+        "band2": 0.07065617092303082
+      },
+      "delta": {
+        "rms": 0.0,
+        "note": "zero by construction: Wout is zero-initialised in this measurement"
+      },
+      "degeneracy": {
+        "linear_r2_A_from_S": 0.033189125056274804,
+        "linear_r2_S_from_A": 0.11938852848595882,
+        "effective_rank_90pct_S_only": 5,
+        "effective_rank_90pct_S_plus_A": 8,
+        "effective_rank_99pct_S_only": 12,
+        "effective_rank_99pct_S_plus_A": 21,
+        "definition": "R2 of a least-squares linear map with intercept, fitted across all measured bonds; effective rank from SVD of column-standardised blocks at the stated cumulative-energy level"
+      }
+    }
+  },
+  "dcc_l_reference": {
+    "checkpoint": "tracks/structural-sufficiency/zinc_dual_channel_composer_v1/runs/L_s0/best.pt",
+    "epoch": 489,
+    "valid_mae": 0.07853714964160463,
+    "sha256": "fab04ec0d5fd56f338379d7dcb223e31208338a8a89a335a25a6f0c4f5226cd5"
+  },
+  "key_comparison": {
+    "init_seed0_fit10k_first2000": {
+      "S1_rel": 0.24108241911483266,
+      "A1_rel": 0.058134766427647575,
+      "S2_rel": 0.12461552442228074,
+      "A2_rel": 0.04529955393267276,
+      "A2_between_molecule_var_share": 0.42442269723885195,
+      "S1_S2_corr": -0.6892118914132777,
+      "A1_A2_corr": -0.38202618351725554,
+      "r2_A_from_S": 0.3363611023047137,
+      "rank90_S": 7,
+      "rank90_SA": 11
+    },
+    "init_seed0_valid1000": {
+      "S1_rel": 0.23518856213536604,
+      "A1_rel": 0.05784115483066131,
+      "S2_rel": 0.12078564376908973,
+      "A2_rel": 0.04297170256428425,
+      "A2_between_molecule_var_share": 0.4820126940691368,
+      "S1_S2_corr": -0.6466449236655559,
+      "A1_A2_corr": -0.35232751752251484,
+      "r2_A_from_S": 0.36335958842543803,
+      "rank90_S": 7,
+      "rank90_SA": 11
+    },
+    "dccl_s0_best_fit10k_first2000": {
+      "S1_rel": 0.32468210962020916,
+      "A1_rel": 0.012601531652731552,
+      "S2_rel": 0.16824779096885237,
+      "A2_rel": 0.00876867080465555,
+      "A2_between_molecule_var_share": 0.22362295143533137,
+      "S1_S2_corr": -0.699934670869246,
+      "A1_A2_corr": -0.6330982334707096,
+      "r2_A_from_S": 0.06943618804225393,
+      "rank90_S": 5,
+      "rank90_SA": 8
+    },
+    "dccl_s0_best_valid1000": {
+      "S1_rel": 0.31472782567054497,
+      "A1_rel": 0.008257211569849068,
+      "S2_rel": 0.16711207062580935,
+      "A2_rel": 0.006494634526174978,
+      "A2_between_molecule_var_share": 0.2355319794116728,
+      "S1_S2_corr": -0.7775528542154146,
+      "A1_A2_corr": -0.5342912058815256,
+      "r2_A_from_S": 0.033189125056274804,
+      "rank90_S": 5,
+      "rank90_SA": 8
+    }
+  },
+  "risk_notes": [
+    "A is much smaller after DCC-L training than at initialisation: the trained local bond representation is more homogeneous, so the local-vs-global score-v covariance difference shrinks. During SCM training c_loc co-adapts, so the trained-DCC-L representation is not the representation SCM will have.",
+    "S1 and S2 are negatively correlated (~-0.70) because the two bands partition the other bonds and both are centred on the same molecule mean; this is complementarity, not redundancy."
+  ],
+  "failed_gates": [
+    "G5_A_not_degenerate"
+  ],
+  "hard_failed_gates": [],
+  "decision": "PROCEED_TO_GPU_DISCLOSED_GATE_5_MISS",
+  "decision_disclosure": "G5 as originally written used an absolute magnitude line (1% of the elementwise c_loc rms) for A. Band 2 lands at 0.88% and therefore FAILS that line. The line is a magnitude heuristic, not a degeneracy test: A is a difference of second-order covariances and is expected to be smaller than the first-order band sum S. Five degeneracy criteria are reported separately (D1-D5); all pass, i.e. A is non-zero, non-constant, not linearly reconstructible from S, finite and adds rank. This disclosure is recorded before any GPU run; the G5 failure is kept in the record and is not rewritten as a pass. The S-only vs S+A contrast is precisely the experiment that decides whether a small A is a useless A.",
+  "decision_rule": "any gate failure -> STOP_BEFORE_GPU; gates are frozen in code before the numbers are produced and are not re-tuned",
+  "distance_range_sweep": "none; only the frozen ((1,2),(3,8)) is evaluated"
+}

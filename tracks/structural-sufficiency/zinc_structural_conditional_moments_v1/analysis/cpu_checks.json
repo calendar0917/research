@@ -1,0 +1,419 @@
+{
+  "protocol_id": "zinc-structural-conditional-moments-v1",
+  "phase": "A+C",
+  "official_test_loaded": false,
+  "data": "official train 10k / valid 1k caches; labels used only in the two-step gradient check and the trainer smoke",
+  "frozen_config": {
+    "protocol_id": "zinc-structural-conditional-moments-v1",
+    "status": "frozen_before_gpu",
+    "frozen_at": "2026-10-25",
+    "bands": [
+      [
+        1,
+        2
+      ],
+      [
+        3,
+        8
+      ]
+    ],
+    "bands_note": "line-graph shortest path distance; self excluded; no cross-molecule pairs",
+    "rank": 8,
+    "scales": [
+      6.303114181298866,
+      14.815447751314792
+    ],
+    "scales_note": "mean n_t per bond over the Fit10k (official train 10k) raw graphs, per band; label-free; identical in both arms; no per-query n_t division",
+    "scales_source": "analysis/relation_stats_train.json",
+    "scm_seed_offset": 50731,
+    "recipe": {
+      "optimizer": "adamw",
+      "lr": 0.001,
+      "min_lr": 1e-05,
+      "weight_decay": 1e-05,
+      "warmup_steps": 500,
+      "epochs": 600,
+      "dropout": 0.0,
+      "grad_clip": 5.0,
+      "batch_size": 128,
+      "valid_batch_size": 256,
+      "selection": "argmin(valid_mae); ties keep the earlier epoch"
+    },
+    "arms": [
+      "S-only",
+      "S+A"
+    ],
+    "seed": 0,
+    "data": "official PyG ZINC subset=True train 10000 / valid 1000; raw-y L1",
+    "official_test": "never loaded this round",
+    "budget_a100_hours": 2.5,
+    "no_tuning": "bands, rank, scales, recipe and horizon are frozen; no distance-range or hyperparameter sweep is authorized"
+  },
+  "relation_invariants": {
+    "max_abs_self_distance": 0,
+    "max_band_count_minus_other_bonds": 0,
+    "bands_disjoint": true,
+    "no_cross_molecule_pairs": true
+  },
+  "relation_stats_train": true,
+  "checks": {
+    "A1_backbone_init_matches_history": {
+      "pass": true,
+      "detail": {
+        "rebuilt_dcc_l_sha256": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33",
+        "scm_backbone_sha256": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33",
+        "expected": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33",
+        "p3_reference_sha256": "21963b431329532f7b2411845c06e00eece54d0ddbb64774a63719b791716a30",
+        "ssl_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+      }
+    },
+    "A2_old_parameters_and_buffers_bitwise_identical": {
+      "pass": true,
+      "detail": {
+        "keys_match": true,
+        "n_keys": 28,
+        "max_abs_diff": 0.0,
+        "includes_buffers": [
+          "global_mean",
+          "global_scale"
+        ]
+      }
+    },
+    "A3_new_module_isolated_rng": {
+      "pass": true,
+      "detail": {
+        "ambient_rng_unchanged_by_scm": true,
+        "different_scm_seed_gives_different_params": true,
+        "mechanism": "torch.random.fork_rng + manual_seed(seed + 50731)",
+        "scm_seed_for_seed0": 50731
+      }
+    },
+    "A4_shared_init_between_arms": {
+      "pass": true,
+      "detail": {
+        "n_tensors": 37,
+        "initial_state_sha256": "57c9dd2fe99835ddb2565fa225d51e26a131949e67d30b56162d2055612ee065",
+        "arms": [
+          "S-only",
+          "S+A"
+        ]
+      }
+    },
+    "A5_parameter_budget": {
+      "pass": true,
+      "detail": {
+        "deployment_parameters_named_parameters": 499689,
+        "new_parameters": 5496,
+        "new_tensor_shapes": {
+          "scm.k.bias": [
+            8
+          ],
+          "scm.k.weight": [
+            8,
+            96
+          ],
+          "scm.out.bias": [
+            96
+          ],
+          "scm.out.weight": [
+            96,
+            32
+          ],
+          "scm.q.bias": [
+            8
+          ],
+          "scm.q.weight": [
+            8,
+            96
+          ],
+          "scm.v.bias": [
+            8
+          ],
+          "scm.v.weight": [
+            8,
+            96
+          ]
+        },
+        "old_parameters": 494193,
+        "cap": 500000,
+        "headroom": 311,
+        "buffers": {
+          "dcc.global_mean": [
+            33
+          ],
+          "dcc.global_scale": [
+            33
+          ],
+          "scm.scale": [
+            2
+          ]
+        },
+        "all_require_grad": true,
+        "optimizer_would_cover": true
+      }
+    },
+    "A6_wout_zero_equals_dcc_l": {
+      "pass": true,
+      "detail": {
+        "batches": 4,
+        "max_abs_prediction_diff": 0.0,
+        "bitwise_equal_all_batches": true,
+        "input": "real train/valid graphs, labels unused"
+      }
+    },
+    "A7_correction_enters_both_original_sums": {
+      "pass": true,
+      "detail": {
+        "reader_input_dim": 513,
+        "zl_matches_sum_of_c_loc_prime": true,
+        "zl2_matches_sum_of_c_loc_prime_sq": true,
+        "zl_max_abs_change_vs_unmodelled": 1.2410430908203125,
+        "zl2_max_abs_change_vs_unmodelled": 30.39080810546875,
+        "output_change_vs_wout0": 0.0,
+        "output_change_vs_wout0_note": "zero here is expected: the inherited DCC-L reader columns for zl/zl2 are exactly 0 at step 0, so no change inside c_loc' can reach the output before those columns receive their first gradient; A8 measures the live state",
+        "layout": "[c_glob(96)|atom_sum(96)|atom_sq(96)|global33|sum c_loc'(96)|sum c_loc'^2(96)]"
+      }
+    },
+    "A9_two_step_gradient_flow": {
+      "pass": true,
+      "detail": {
+        "per_step": {
+          "1": {
+            "grad_norms": {
+              "scm.q.weight": 0.0,
+              "scm.q.bias": 0.0,
+              "scm.k.weight": 0.0,
+              "scm.k.bias": 0.0,
+              "scm.v.weight": 0.0,
+              "scm.v.bias": 0.0,
+              "scm.out.weight": 0.0,
+              "scm.out.bias": 0.0
+            },
+            "loss": 1.57501220703125,
+            "max_abs_delta": 0.0,
+            "reader_local_columns_norm": 0.0,
+            "output_change_if_S_ablated": null
+          },
+          "2": {
+            "grad_norms": {
+              "scm.q.weight": 0.0,
+              "scm.q.bias": 0.0,
+              "scm.k.weight": 0.0,
+              "scm.k.bias": 0.0,
+              "scm.v.weight": 0.0,
+              "scm.v.bias": 0.0,
+              "scm.out.weight": 0.03679763898253441,
+              "scm.out.bias": 0.31398001313209534
+            },
+            "loss": 4.239046573638916,
+            "max_abs_delta": 0.0,
+            "reader_local_columns_norm": 0.22170209884643555,
+            "output_change_if_S_ablated": null
+          },
+          "3": {
+            "grad_norms": {
+              "scm.q.weight": 2.201502866228111e-05,
+              "scm.q.bias": 3.3582891774130985e-06,
+              "scm.k.weight": 2.3882294044597074e-05,
+              "scm.k.bias": 8.093938390629773e-07,
+              "scm.v.weight": 7.838114106561989e-05,
+              "scm.v.bias": 4.911819215247526e-12,
+              "scm.out.weight": 0.0010630016913637519,
+              "scm.out.bias": 0.004896584898233414
+            },
+            "loss": 1.2083206176757812,
+            "max_abs_delta": 0.005300311837345362,
+            "reader_local_columns_norm": 0.31155744194984436,
+            "output_change_if_S_ablated": 5.233287811279297e-05
+          },
+          "4": {
+            "grad_norms": {
+              "scm.q.weight": 7.358418952208012e-05,
+              "scm.q.bias": 1.9697787138284184e-05,
+              "scm.k.weight": 6.618319457629696e-05,
+              "scm.k.bias": 1.069406721398991e-06,
+              "scm.v.weight": 0.0005663625197485089,
+              "scm.v.bias": 3.670364359664724e-11,
+              "scm.out.weight": 0.0036002432461827993,
+              "scm.out.bias": 0.09245849400758743
+            },
+            "loss": 1.4833662509918213,
+            "max_abs_delta": 0.006056214217096567,
+            "reader_local_columns_norm": 0.4035886824131012,
+            "output_change_if_S_ablated": 2.968311309814453e-05
+          }
+        },
+        "reading": "all SCM gradients are zero at step 1 (reader local columns are 0); Wout moves at step 2; Q/K/V move from step 3 and are finite",
+        "open_wout_variant": "with Wout manually opened before training, step-1 gradients are zero only because of the reader columns and Q/K/V receive non-zero finite gradients at step 2 (see A8)"
+      }
+    },
+    "A8_S_and_A_both_respond": {
+      "pass": true,
+      "detail": {
+        "max_abs_prediction_change_when_ablated_at_live_state": {
+          "S": 0.0018883347511291504,
+          "A": 0.015776395797729492,
+          "S1": 0.011969208717346191,
+          "S2": 0.00613325834274292,
+          "A1": 0.0016057491302490234,
+          "A2": 0.0017606616020202637
+        },
+        "state": "after 4 real Adam steps (reader local columns live), then Wout re-opened at N(0,0.1) for the ablation",
+        "wout_opened_before_training_two_step_grad_norms": {
+          "1": {
+            "scm.q.weight": 0.0,
+            "scm.q.bias": 0.0,
+            "scm.k.weight": 0.0,
+            "scm.k.bias": 0.0,
+            "scm.v.weight": 0.0,
+            "scm.v.bias": 0.0,
+            "scm.out.weight": 0.0,
+            "scm.out.bias": 0.0
+          },
+          "2": {
+            "scm.q.weight": 0.004625433124601841,
+            "scm.q.bias": 0.0001292899833060801,
+            "scm.k.weight": 0.004678808618336916,
+            "scm.k.bias": 0.0007068996201269329,
+            "scm.v.weight": 0.042958687990903854,
+            "scm.v.bias": 1.3529249942578758e-10,
+            "scm.out.weight": 0.0369081124663353,
+            "scm.out.bias": 0.31416353583335876
+          }
+        },
+        "all_blocks_respond": true
+      }
+    },
+    "A10_algebraic_identities": {
+      "pass": true,
+      "detail": {
+        "uniform_relation_max_abs": 4.728189839653396e-09,
+        "constant_score_A_max_abs": 3.693898312229216e-11,
+        "constant_score_S_max_abs": 0.048414427787065506,
+        "constant_v_max_abs": 5.910237299566745e-10,
+        "empty_relation_max_abs": 0.0
+      }
+    },
+    "A11_no_cross_molecule_leakage": {
+      "pass": true,
+      "detail": {
+        "other_graph_delta_change": 0.0,
+        "perturbed_graph_delta_change": 0.0005998651031404734
+      }
+    },
+    "A12_batched_vs_float64_reference": {
+      "pass": true,
+      "detail": {
+        "max_abs_error_by_block": {
+          "S1": 6.14521980191185e-07,
+          "A1": 6.04189014596912e-07,
+          "S2": 3.579781196472176e-07,
+          "A2": 1.8005615581850876e-07
+        },
+        "batch": "real train batch (128 molecules)",
+        "reference": "literal per-molecule float64 transcription of the spec"
+      }
+    },
+    "A13_permutation_and_batch_invariance": {
+      "pass": true,
+      "detail": {
+        "atom+bond+junction relabel_max_abs_prediction_diff": {
+          "seed1": 1.7881393432617188e-07,
+          "seed2": 3.5762786865234375e-07,
+          "seed3": 2.980232238769531e-07
+        },
+        "single_vs_batch_recomposition_diff": 2.384185791015625e-07,
+        "parity_with_historical_permutation_helper": {
+          "seed1": 0.0,
+          "seed2": 0.0,
+          "seed3": 0.0
+        },
+        "weight_state": "Wout opened N(0,0.05) so the check is not vacuous"
+      }
+    },
+    "A14_zero_bond_and_disconnected_boundaries": {
+      "pass": true,
+      "detail": {
+        "predictions": [
+          -0.00016059726476669312,
+          0.15247896313667297,
+          -0.0001605115830898285
+        ],
+        "all_finite": true,
+        "graph_rows": "8-cycle / empty graph (0 bonds) / disconnected 2x4-cycle",
+        "cross_component_band_pairs_inside_disconnected_graph": 0
+      }
+    },
+    "A15_checkpoint_roundtrip": {
+      "pass": true,
+      "detail": {
+        "max_abs_prediction_diff": 0.0,
+        "tensors": 37
+      }
+    },
+    "A16_real_trainer_smoke": {
+      "pass": true,
+      "detail": {
+        "S-only": {
+          "parameter_count": 499689,
+          "gradient_audit": {
+            "grad_tensors": 30,
+            "nonzero_grad_tensors": 22,
+            "all_grad_finite": true,
+            "loss_finite": true,
+            "first_batch_rows": 128
+          },
+          "best_valid_after_4_updates": 1.2854262606603444,
+          "steps_per_epoch": 4,
+          "recipe_updates": 4
+        },
+        "S+A": {
+          "parameter_count": 499689,
+          "gradient_audit": {
+            "grad_tensors": 34,
+            "nonzero_grad_tensors": 22,
+            "all_grad_finite": true,
+            "loss_finite": true,
+            "first_batch_rows": 128
+          },
+          "best_valid_after_4_updates": 1.2854281142530382,
+          "steps_per_epoch": 4,
+          "recipe_updates": 4
+        }
+      }
+    },
+    "A17_official_test_absent": {
+      "pass": true,
+      "detail": {
+        "hits": []
+      }
+    },
+    "C1_synthetic_32ring_counterexample": {
+      "pass": true,
+      "detail": {
+        "construction": "one 32-cycle (period-4 atom types) vs two disjoint 16-cycles with the same period-4 types; identical atom/bond/junction feature multisets, identical counts, identical global vector",
+        "dcc_l_prediction_gap": 0.0,
+        "scm_prediction_gap": 1.1652708053588867e-05,
+        "scm_delta_rms_32cycle": 0.003638581372797489,
+        "scm_delta_rms_2x16cycle": 0.0033743956591933966,
+        "scm_delta_max_abs_gap_at_same_positions": 0.00254267081618309,
+        "c_loc_multiset_max_abs_gap": 0.0,
+        "local_reader_columns": "set to the same fixed N(0,0.01) values in both models",
+        "band2_n_per_bond_32cycle": [
+          12.0
+        ],
+        "band2_n_per_bond_2x16cycle": [
+          11.0
+        ],
+        "S2_abs_max_32cycle": 0.01073092594742775,
+        "S2_abs_max_2x16cycle": 0.005839943885803223,
+        "claim": "the frozen DCC-L forward cannot separate these two inputs; the SCM module can, with non-zero weights, because the two-band relation differs",
+        "note": "non-chemical synthetic input; says nothing about ZINC MAE"
+      }
+    }
+  },
+  "n_checks": 18,
+  "n_passed": 18,
+  "failed": [],
+  "all_pass": true
+}

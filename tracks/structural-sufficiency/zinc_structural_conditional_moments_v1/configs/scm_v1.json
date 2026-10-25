@@ -1,0 +1,31 @@
+{
+  "protocol_id": "zinc-structural-conditional-moments-v1",
+  "status": "frozen_before_gpu",
+  "frozen_at": "2026-10-25",
+  "bands": [[1, 2], [3, 8]],
+  "bands_note": "line-graph shortest path distance; self excluded; no cross-molecule pairs",
+  "rank": 8,
+  "scales": [6.303114181298866, 14.815447751314792],
+  "scales_note": "mean n_t per bond over the Fit10k (official train 10k) raw graphs, per band; label-free; identical in both arms; no per-query n_t division",
+  "scales_source": "analysis/relation_stats_train.json",
+  "scm_seed_offset": 50731,
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "epochs": 600,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "valid_batch_size": 256,
+    "selection": "argmin(valid_mae); ties keep the earlier epoch"
+  },
+  "arms": ["S-only", "S+A"],
+  "seed": 0,
+  "data": "official PyG ZINC subset=True train 10000 / valid 1000; raw-y L1",
+  "official_test": "never loaded this round",
+  "budget_a100_hours": 2.5,
+  "no_tuning": "bands, rank, scales, recipe and horizon are frozen; no distance-range or hyperparameter sweep is authorized"
+}
