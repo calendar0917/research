@@ -37,12 +37,12 @@ h ← h + O(m) ; h ← h + FFN(AdaRMSNorm(h))   # AdaRMSNorm 保留
 
 ## 2. 用真实 forward 做的核实（`code/gos_errata_checks.py`，`analysis/errata_checks.json`）
 
-25 项 gate（含后来为 `gnlog` 补的等价/稳定性、以及两个新臂 checkpoint 的独立重算，全部通过；`analysis/errata_checks.json`）；
-全部走 `MixA.mix` / `MixA._attend` 这一条生产代码路径，不是公式副本。
+25 项 gate 全部通过（`analysis/errata_checks.json`，含后来为 `gnlog` 补的等价/稳定性两项、
+以及用训练时算术独立重算两个新 checkpoint 的 valid/留出）。全部走 `MixA.mix` / `MixA._attend` 这一条生产代码路径，不是公式副本。
 
 | gate | 内容 | 结果 |
 |---|---|---|
-| E0 | 四种算术模式参数张量/构造顺序相同；拷贝同一 canonical 初态 | 4 模式均 460,017 参数、82 个 state 张量；拷贝后最大差 **0.0**；init sha 全同 |
+| E0 | 五种算术模式（legacy/dot/l2/gn/gnlog）参数张量/构造顺序相同；拷贝同一 canonical 初态 | 5 模式均 460,017 参数、82 个 state 张量；拷贝后最大差 **0.0**；init sha 全同 |
 | E0 | 新臂初态是否就是历史 ho_A_s0 的初态 | **是**，`4b8c59f8…36ffd9` 逐位一致（无需重建历史环境） |
 | E1 | legacy attn vs 纯点积 attn（fp64） | 最大差 **2.2e-16** |
 | E1 | `l2` attn vs `softmax(-‖q−k‖²/(2√d)+bias)` | 最大差 **4.4e-16**；与 dot 差 **0.76**（不是同一算子） |
