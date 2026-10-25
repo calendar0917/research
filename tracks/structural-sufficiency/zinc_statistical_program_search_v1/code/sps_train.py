@@ -123,7 +123,7 @@ def score(candidate: str, run: Path, *, checkpoint: str = "best.pt",
     preds = []
     for start in range(0, len(rows), 256):
         chunk = rows[start:start + 256]
-        batch = T._to_device(collate(None, chunk, candidate, valid=True), device)
+        batch = T._to_device(collate(ad, chunk, candidate, valid=True), device)
         preds.append(model(batch).detach().float().cpu().numpy().reshape(-1))
     pred = np.concatenate(preds)
     y = np.asarray(ad["labels"], dtype=np.float64)

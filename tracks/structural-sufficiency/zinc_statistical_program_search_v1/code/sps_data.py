@@ -321,18 +321,32 @@ def f_collate(cache: Mapping[str, Any], rows: Sequence[int], candidate: str, *,
 _VIEW_MEMO: dict[str, dict] = {}
 
 
-def collate_factory(candidate: str, split: str):
-    """Return a collate closure with the static view/AD cache bound."""
-    ad = D.load_cache(split)
-    if candidate in ("QF", "QA"):
-        key = f"{split}:q"
-        if key not in _VIEW_MEMO:
-            _VIEW_MEMO[key] = load_q_view(split)
-        cache = {"ad": ad, "view": _VIEW_MEMO[key]}
-        return lambda c, rows, cand, valid=False, walk_cols=None: q_collate(
-            cache, rows, cand, valid=valid, walk_cols=walk_cols)
-    if candidate in ("FC", "FX"):
-        cache = {"ad": ad}
-        return lambda c, rows, cand, valid=False, walk_cols=None: f_collate(
-            cache, rows, cand, valid=valid, walk_cols=walk_cols)
-    raise ValueError(candidate)
+def _view_for(split: str) -> dict:
+    key = f"{split}:q"
+    if key not in _VIEW_MEMO:
+        _VIEW_MEMO[key] = load_q_view(split)
+    return _VIEW_MEMO[key]
+
+
+def collate_factory(candidate: str, split: str | None = None):
+    """Return ONE collate closure that dispatches on the cache it is given.
+
+    ``ad_train.train`` passes its own ``train_cache`` and ``valid_cache`` to the
+    same callable, so the closure must never bind a fixed split: the split is
+    taken from the cache mapping (``cache["split"]``).  Getting this wrong would
+    evaluate valid labels against train features, which is exactly the failure
+    mode the CPU checks guard against.
+    """
+    if candidate not in ("QF", "QA", "FC", "FX"):
+        raise ValueError(candidate)
+
+    def collate(c, rows, cand, valid=False, walk_cols=None):
+        s = str(c.get("split", split))
+        if s not in ("train", "valid"):
+            raise ValueError(f"refusing split {s!r}: official test is never read in this round")
+        if cand in ("QF", "QA"):
+            return q_collate({"ad": c, "view": _view_for(s)}, rows, cand,
+                             valid=valid, walk_cols=walk_cols)
+        return f_collate({"ad": c}, rows, cand, valid=valid, walk_cols=walk_cols)
+
+    return collate

@@ -493,9 +493,9 @@ def cache_and_collate_consistency():
     for cand, mk in (("QF", q_batch), ("FC", f_batch)):
         model, _ = M.build_model(cand, fit, 0, torch.device("cpu"), ssl_path=None)
         model.eval()
-        coll = SD.collate_factory(cand, "valid")
+        coll = SD.collate_factory(cand)  # dispatches on the cache's own split
         with torch.no_grad():
-            p_cache = model(coll(None, rows, cand, valid=True))
+            p_cache = model(coll(ad, rows, cand, valid=True))
             p_ref = model(mk([_one_ad(ad, int(r)) for r in rows]))
         out[cand] = {"cache_vs_reference_max_abs_diff": float((p_cache - p_ref).abs().max())}
     # counts are preserved exactly: atom groups sum to n, bond groups to m
@@ -511,7 +511,20 @@ def cache_and_collate_consistency():
         "min_group_count": float(cnt.min()),
     }
     # the collated batch carries no label-derived tensor
-    batch = SD.collate_factory("QF", "valid")(None, rows, "QF", valid=True)
+    batch = SD.collate_factory("QF")(ad, rows, "QF", valid=True)
+    # the trainer contract: ONE closure must be correct for *both* splits
+    tr_ad = D.load_cache("train")
+    tr_rows = np.array([0, 1, 2, 3], dtype=np.int64)
+    mq, _ = M.build_model("QF", fit, 0, torch.device("cpu"), ssl_path=None)
+    mq.eval()
+    one = SD.collate_factory("QF")
+    with torch.no_grad():
+        p_tr = mq(one(tr_ad, tr_rows, "QF", valid=True))
+        p_tr_ref = mq(q_batch([_one_ad(tr_ad, int(r)) for r in tr_rows]))
+        p_va = mq(one(ad, rows, "QF", valid=True))
+        p_va_ref = mq(q_batch([_one_ad(ad, int(r)) for r in rows]))
+    out["single_closure_train_split_max_abs_diff"] = float((p_tr - p_tr_ref).abs().max())
+    out["single_closure_valid_split_max_abs_diff"] = float((p_va - p_va_ref).abs().max())
     out["batch_keys"] = sorted(batch.keys())
     out["no_label_key"] = not any("label" in k or k == "y" for k in batch)
     RESULTS["cache_collate"] = out
@@ -548,6 +561,8 @@ def main() -> int:
         RESULTS["cache_collate"]["count_identity"]["atom_group_sum_equals_n"],
         RESULTS["cache_collate"]["count_identity"]["bond_group_sum_equals_m"],
         RESULTS["cache_collate"]["no_label_key"],
+        RESULTS["cache_collate"]["single_closure_train_split_max_abs_diff"] < 1e-9,
+        RESULTS["cache_collate"]["single_closure_valid_split_max_abs_diff"] < 1e-9,
     ]
     print("\nALL CHECKS PASS" if all(checks) else f"\nCHECKS FAILED: {checks}")
     return 0 if all(checks) else 1
