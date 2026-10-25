@@ -474,6 +474,43 @@ def main() -> int:
          holdout_sha=C.sha256_array(hold), recorded=recorded["holdout_rows_sha256"],
          n_keep=int(len(keep)), n_hold=int(len(hold)))
 
+    # E8 the two new arms: the recorded numbers come from the trained operator --
+    arm_specs = {"L2G": ("l2g_A_s0", "l2"), "GN": ("gn_A_s0", "gnlog")}
+    _, hold_rows = GR.holdout_split(1000)
+    e8 = {}
+    for label, (run, mix) in arm_specs.items():
+        art = C.read_json(GR.RUNS / run / "artifacts.json")
+        ck_arm = torch.load(GR.RUNS / run / "best.pt", map_location="cpu", weights_only=False)
+        rec = C.read_json(_EXP / "analysis" / f"holdout_A_{mix}_s0.json")
+        out = {}
+        for mode in {mix, "legacy"}:
+            m, _ = GR.build_arm_model("A", 0, torch.device("cpu"), mix=mode,
+                                      mean_n_bonds=mean_nb, norm=norm)
+            m.load_state_dict(ck_arm["state_dict"])
+            _, v_mae = T1.evaluate(m, valid_cache, rows_valid, candidate="GOS",
+                                   device=torch.device("cpu"), batch_size=256,
+                                   collate_fn=collate)
+            _, h_mae = T1.evaluate(m, train_cache, hold_rows, candidate="GOS",
+                                   device=torch.device("cpu"), batch_size=256,
+                                   collate_fn=collate)
+            out[mode] = {"valid": float(v_mae), "holdout": float(h_mae)}
+        e8[label] = {
+            "run": run, "trained_mix": mix, "epoch": int(ck_arm.get("epoch", -1)),
+            "recorded_valid": float(art["best_valid"]["valid_mae"]),
+            "recorded_holdout": float(rec["holdout_mae"]),
+            "recomputed": out,
+        }
+        ok = (abs(out[mix]["valid"] - float(art["best_valid"]["valid_mae"])) < 1e-6
+              and abs(out[mix]["holdout"] - float(rec["holdout_mae"])) < 1e-6)
+        gate(f"E8_recomputed_{label}", ok,
+             trained_mix_valid=out[mix]["valid"], recorded_valid=out[mix] and
+             float(art["best_valid"]["valid_mae"]),
+             trained_mix_holdout=out[mix]["holdout"],
+             recorded_holdout=float(rec["holdout_mae"]),
+             legacy_path_holdout=out["legacy"]["holdout"],
+             note="same checkpoint re-read with the trained arithmetic vs the legacy one")
+    RES["E8_arm_recompute"] = e8
+
     OUT.parent.mkdir(parents=True, exist_ok=True)
     C.write_json(OUT, RES)
     print("wrote", OUT)

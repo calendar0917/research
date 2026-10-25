@@ -97,7 +97,7 @@ C0/K/Asm 同样不读 test。冻结文件 `analysis/test_freeze.json` 在第一�
 
 起因：`MixA` 的 `ken.unsqueeze(-1)` 把 key-energy 项广播到 **query** 轴，行 softmax 精确抵消。
 route A 实际训练的是 `softmax(q·k/√d+β(r))` + `g=1+tanh(γ(r))` 门控 + AdaRMSNorm。
-详见 `ERRATUM.md`；核实 gate 见 `analysis/errata_checks.json`（23/23 通过，含 fp64 语义、`gnlog` 等价与稳定性、
+详见 `ERRATUM.md`；核实 gate 见 `analysis/errata_checks.json`（25/25 通过，含 fp64 语义、`gnlog` 等价与稳定性、两个新臂 checkpoint 的独立重算、
 冻结 checkpoint 的 legacy vs dot 比较、梯度抽查、初态 sha 与历史逐位一致）。
 
 不重跑、不改写任何历史 run / checkpoint / REPORT 数字。
@@ -167,7 +167,7 @@ GPU0 = L2G，GPU1 = GN（`res-gpu0` / `res-gpu1` 池，一张 A100 各一个）�
 GN **+0.005774** CI [+0.001534, +0.010244]。逐分子 A 更优比例 51.5% / 48.0%。
 固定基线分组（A 的 AE 三档）：L2G q2 **−0.010569**、A 最差 10% **−0.008751**、去掉最差 10 行 +0.001565；
 GN q2 −0.001140、A 最差 10% **+0.011761**、去掉最差 10 行 +0.005109。
-完整数字：`analysis/errata_results.json`；gate：`analysis/errata_checks.json`（23 项全过）。
+完整数字：`analysis/errata_results.json`；gate：`analysis/errata_checks.json`（25 项全过，含用训练时算术独立重算两个新 checkpoint 的 valid/留出）。
 
 **结论**：L2G 无留出复现的改善（valid 略好 −0.0015 持续窗口，留出反向 +0.0005，CI 跨零）→ 不买第二 seed；
 GN 在 valid 持平、留出退化 → 去掉门控总增益会在新分子上损失 0.0058，支持“可变总增益有价值”。

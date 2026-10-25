@@ -37,7 +37,7 @@ h ← h + O(m) ; h ← h + FFN(AdaRMSNorm(h))   # AdaRMSNorm 保留
 
 ## 2. 用真实 forward 做的核实（`code/gos_errata_checks.py`，`analysis/errata_checks.json`）
 
-23 项 gate（含后来为 `gnlog` 补的 3 项，全部通过；`analysis/errata_checks.json`）；
+25 项 gate（含后来为 `gnlog` 补的等价/稳定性、以及两个新臂 checkpoint 的独立重算，全部通过；`analysis/errata_checks.json`）；
 全部走 `MixA.mix` / `MixA._attend` 这一条生产代码路径，不是公式副本。
 
 | gate | 内容 | 结果 |
@@ -56,6 +56,7 @@ h ← h + O(m) ; h ← h + FFN(AdaRMSNorm(h))   # AdaRMSNorm 保留
 | E5 | legacy 重算历史 valid 预测 | 最大差 2.9e-6，MAE 0.08129934127 vs 记录 0.08129934083（差 4.5e-10）→ checkpoint 确实是 legacy 算子训出来的 |
 | E6 | 训练/评估同一 forward（新模式 l2 / gn / gnlog） | train/eval 输出差 **0.0**；直接 forward vs `ad_train.evaluate` 差 **0.0** |
 | E7 | 9000/1000 内部划分 | 与历史 `holdout_split_1000.json` 的 `39295fd7…` 相同 |
+| E8 | 用训练时的算术重读两个新 checkpoint，重算 valid/留出 | valid 差 ≤2e-8、留出差 ≤8e-9（CPU vs A100 噪声）；同一 checkpoint 换回 legacy 算术会变形（0.114650 / 0.120170，仅示意，不是成绩） |
 
 （E0/E1/E5 用的都是真实 `MixA`/`Backbone`，`E5` 的权重来自 `runs/ho_A_s0/best.pt`。
 E5 中把同一 checkpoint 的算术换成 `l2`/`gn` 只作**量级参考**（预测最大差 0.046 / 0.203），
@@ -153,7 +154,7 @@ E5 中把同一 checkpoint 的算术换成 `l2`/`gn` 只作**量级参考**（�
 **实际成本**：L2G 0.756 + GN（`gnlog`）0.846 + 失败的 GN 定义式 0.406 = **2.008 A100·h**，
 上限 2.0。超 0.008 GPU·h（0.4%），是最后约 1 分钟的余弦尾部：预算守卫算到按当时速率只能跑到
 ep596，停在那里会丢掉 `curve.csv`/`train.json` 和那一次一次性留出评估，因此选择跑完并在报告里
-明写超支，而不是悄悄停在 596 或改口径。CPU 上的 23 项 gate、拉取、分析不占 GPU。
+明写超支，而不是悄悄停在 596 或改口径。CPU 上的 25 项 gate、拉取、分析不占 GPU。
 
 ### 结论（限定在本配置、单监督 seed、9,000 行训练）
 
@@ -185,7 +186,7 @@ ep596，停在那里会丢掉 `curve.csv`/`train.json` 和那一次一次性留�
 ## 7. 复现
 
 - 代码：`code/gos_models.py`（`MixA._attend` 的 5 种 mode）、`code/gos_runner.py`（`--mix`）、
-  `code/gos_errata_checks.py`（23 项 gate → `analysis/errata_checks.json`）、
+  `code/gos_errata_checks.py`（25 项 gate → `analysis/errata_checks.json`）、
   `code/gos_errata_analyze.py`（→ `analysis/errata_results.json`）。
 - 命令：
   `python code/gos_runner.py train --route A --mix l2  --seed 0 --tag l2g --holdout 1000 --device cuda:0`
