@@ -8,15 +8,34 @@
 phase: phase2b
 current_round: ssrc-phase2b-zinc-v1
 status: PHASE2B_COMPLETE
-updated: 2026-10-24
+updated: 2026-10-26
 main_line: true
 latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
 latest_diagnostic: zinc_relation_bn_diagnostic_v1
 latest_diagnostic_verdict: BN_BATCH_STATISTICS_EXPLAIN_THE_TRAIN_GAP__GLOBAL_RECALIBRATION_RECOVERS_NEITHER_TRAIN_NOR_VALID
-latest_side_round: zinc_relation_composition_probe_v1
-latest_side_round_verdict: NO_STABLE_D_S_DIFFERENCE_AND_WORSE_THAN_B_AT_THIS_HORIZON
+latest_side_round: zinc_statistical_program_search_v1
+latest_side_round_verdict: NO_USEFUL_GAIN__BOTH_EXPLICIT_STATISTICS_BODIES_PLATEAU_0.023-0.032_BEHIND_DCC-L
 latest_side_round_next_action: >-
+  Close Q-fixed (0.110569, 248,361 params) and F-content (0.101948, 205,506
+  params) at official 10k: both fit train as hard as DCC-L (online 0.0043/0.0051
+  vs 0.0044 at ep 500) and still lose +0.032/+0.023 on valid, curves flat from
+  ep 300, matched-fit and paired per-molecule comparisons agree, seed spread is
+  12-17x smaller than the gap.  Do not buy alpha/fixed controls, seeds, or a
+  third body.  The one next purchase is the label-scale point for F-content on
+  frozen nested Fit4k (1 seed, 47,400 updates, ~0.95 A100-h, no test), with the
+  decision rule in NEXT_DECISION.md: <=0.135 = direction has a label-scarce
+  niche, >=0.150 = close the explicit-statistics direction at <=500k/10k.
+  Mechanism facts to carry (frozen-weight, forward only): rooted measures
+  collapse to a bag under sum pooling (root rebind mean |dpred| 0.0049, corr
+  0.99999, root-pool survival 0.43); F's learned weights are active but
+  non-beneficial (w->1 costs +0.0304, w->molecule mean +0.0103) and saturate at
+  both declared bounds [0.1,2.0] (the one untested single-cause fix).
+latest_side_round_report: tracks/structural-sufficiency/zinc_statistical_program_search_v1/REPORT.md
+latest_side_round_next_decision: tracks/structural-sufficiency/zinc_statistical_program_search_v1/NEXT_DECISION.md
+previous_side_round: zinc_relation_composition_probe_v1
+previous_side_round_verdict: NO_STABLE_D_S_DIFFERENCE_AND_WORSE_THAN_B_AT_THIS_HORIZON
+previous_side_round_next_action: >-
   Stop this body at this configuration.  One seed cannot separate D from S in
   either direction (best-valid favours S by 0.0027, W20/T100/final favour D by
   0.008-0.010, paired bootstrap CI spans zero [-0.0038, +0.0097]), and the whole
@@ -29,17 +48,17 @@ latest_side_round_next_action: >-
   stable valid curve (per-graph normalisation was removed by design this round)
   and only then re-run the D/S contrast with matched train@best; do not add seeds
   or re-tune hyper-parameters inside the same box.
-previous_side_round: zinc_performance_search_v1
-previous_side_round_verdict: TARGET_NOT_MET_BEST_TEST_0.066267
-previous_side_round_next_action: >-
+previous_previous_side_round: zinc_performance_search_v1
+previous_previous_side_round_verdict: TARGET_NOT_MET_BEST_TEST_0.066267
+previous_previous_side_round_next_action: >-
   Either buy >=4-5 GPU-h per run and give GRIT/DBT their native horizon
   (10-layer GRIT, 625k updates; DBT 1500 epochs), or change the setting
   (larger model, more data, different readout).  Do not re-tune lr/wd/horizon
   inside the same <=0.35 GPU-h box: every lever measured in this round moved
   <=0.005 MAE while the gap to 0.060 is 0.0063.
-previous_previous_side_round: zinc_rooted_moment_v1
-previous_previous_side_round_verdict: NO_STABLE_GAIN_OVER_P_FROM_ROOTED_MOMENT_CONDITIONING
-previous_previous_side_round_next_action: >-
+previous_previous_previous_side_round: zinc_rooted_moment_v1
+previous_previous_previous_side_round_verdict: NO_STABLE_GAIN_OVER_P_FROM_ROOTED_MOMENT_CONDITIONING
+previous_previous_previous_side_round_next_action: >-
   Do not tune the moment form (scales, eps, width, more seeds).  Exact rooted
   moments cost ~0.0077 MAE versus P and the C3 skew term is not reproducible
   under retraining, while M and G share the same extra readout path.  If the
@@ -47,8 +66,8 @@ previous_previous_side_round_next_action: >-
   is bit-equal to P at step 0 (zero-initialised scalar gate from the moment
   readout into the existing P3 reader), two seeds, T100 primary, no test read
   without the frozen trigger.
-previous_previous_previous_side_round: zinc_native_relation_v1
-previous_side_round_verdict: NO_REPEATABLE_GAIN_FROM_ONE_NATIVE_RELATION_ROUND
+previous_previous_previous_previous_side_round: zinc_native_relation_v1
+previous_previous_previous_previous_side_round_verdict: NO_REPEATABLE_GAIN_FROM_ONE_NATIVE_RELATION_ROUND
 latest_next_action: >-
   3-5 seeds plus a parameter-matched trunk/readout control to test whether the M
   valid gain and the M-F separation reproduce or were a seed-1 fluctuation.  New

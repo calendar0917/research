@@ -90,10 +90,58 @@ def summarize(run: Path) -> dict:
     }
 
 
+def paired(pred_path: Path, ref_csv: Path, out_dir: Path, name: str) -> dict:
+    """Paired per-molecule comparison against a frozen reference (negative = better)."""
+    import csv
+    z = np.load(pred_path)
+    rows = np.asarray(z["row"], dtype=np.int64)
+    pred = np.asarray(z["pred"], dtype=np.float64)
+    if "y" in z:
+        y = np.asarray(z["y"], dtype=np.float64)
+    else:
+        valid = __import__("torch").load(
+            str(Path(__file__).resolve().parents[2] / "zinc_arch_discovery_v1" / "cache" /
+                "ad_valid.pt"), map_location="cpu", weights_only=False)
+        y = np.asarray(valid["labels"], dtype=np.float64)[rows]
+    ref = {int(r["row"]): float(r["pred_DCC_L"]) for r in csv.DictReader(open(ref_csv))}
+    rp = np.array([ref[int(r)] for r in rows], dtype=np.float64)
+    rng = np.random.default_rng(20261026)
+    d = np.abs(pred - y) - np.abs(rp - y)
+    boot = np.array([d[rng.integers(0, len(d), len(d))].mean() for _ in range(2000)])
+    tail = y <= -3.0
+    out = {
+        "candidate": name,
+        "n": int(len(d)),
+        "candidate_mae": float(np.abs(pred - y).mean()),
+        "reference_mae": float(np.abs(rp - y).mean()),
+        "delta_mae": float(d.mean()),
+        "delta_ci95": [float(np.percentile(boot, 2.5)), float(np.percentile(boot, 97.5))],
+        "delta_median": float(np.median(d)),
+        "fraction_better": float((d < 0).mean()),
+        "ordinary_delta": float(d[~tail].mean()),
+        "ordinary_n": int((~tail).sum()),
+        "tail_delta": float(d[tail].mean()) if tail.any() else None,
+        "tail_n": int(tail.sum()),
+        "nonnegative_rows": int((d >= 0).sum()),
+    }
+    C.write_json(out_dir / f"paired_{name}.json", out)
+    with open(out_dir / f"paired_{name}.csv", "w", encoding="utf-8") as fh:
+        fh.write("row,y,pred,ref_pred,ae,ref_ae,delta_ae\n")
+        for i, r in enumerate(rows):
+            fh.write(f"{int(r)},{y[i]:.9f},{pred[i]:.9f},{rp[i]:.9f},"
+                     f"{abs(pred[i]-y[i]):.9f},{abs(rp[i]-y[i]):.9f},{d[i]:.9f}\n")
+    print(json.dumps(out, indent=2))
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", nargs="+", required=True)
     ap.add_argument("--out", default=str(SPS / "analysis"))
+    ap.add_argument("--paired", nargs="*", default=None,
+                    help="name=npz_path pairs for paired analysis")
+    ap.add_argument("--ref-csv", default=str(
+        _HERE.parents[1] / "zinc_p3_chromatic_bond_v0" / "analysis" / "per_molecule_valid.csv"))
     args = ap.parse_args(argv)
     rows = [summarize(Path(r)) for r in args.runs]
     out = Path(args.out)
@@ -112,6 +160,12 @@ def main(argv=None) -> int:
         )
     (out / "main_table.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
+    if args.paired:
+        res = {}
+        for item in args.paired:
+            name, path = item.split("=", 1)
+            res[name] = paired(Path(path), Path(args.ref_csv), out, name)
+        C.write_json(out / "paired_summary.json", res)
     return 0
 
 
