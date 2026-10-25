@@ -3,6 +3,10 @@
 > **ERRATUM（2026-10-25）：** route A 的 `MixA` 有关键广播错误 —— `ken.unsqueeze(-1)` 让 key-energy
 > 项落在 query 轴并被行 softmax 抵消，历史 A 实际训练的是 dot 打分 + 关系内容门。
 > 本文件的成绩数字全部保留，被撤回的只是机制解释。见 `ERRATUM.md`（含 L2G / GN 两个补救臂）。
+>
+> **机制收束（2026-10-26）：** A/DCC-L 配对分层、冻结 A 的 gate mass、以及一条 Constant-Mass
+> 对照（0.749 GPU·h）已完成；未读 test。结论：**STOP**（INCONCLUSIVE，无性能希望）。
+> 见 `MECHANISM_CLOSURE.md`。
 
 **Protocol:** `zinc-global-operator-search-v1`
 **代码:** `code/gos_{data,models,runner,checks,analyze,freeze,test}.py`；冻结规则见 `PLAN.md` 与 `LEDGER.md`
