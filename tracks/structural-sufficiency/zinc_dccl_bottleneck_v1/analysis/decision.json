@@ -1,0 +1,185 @@
+{
+  "round": "zinc-dccl-bottleneck-v1",
+  "official_test_read": false,
+  "phase_a": {
+    "mae_seed_mean_official_valid": 0.075990316172,
+    "unseen_n": 251,
+    "unseen_mae": 0.14143000730776886,
+    "seen_mae": 0.05406059324132172,
+    "unseen_ae_share": 0.46715073212618413,
+    "fully_supported_n": 383,
+    "fully_supported_mae": 0.036522788082245385,
+    "fully_supported_ae_share": 0.18407908454859417,
+    "under_supported_n": 617,
+    "under_supported_mae": 0.10048960832495946,
+    "under_supported_ae_share": 0.815920915451406,
+    "dose_response": [
+      {
+        "bin": "0",
+        "n": 749,
+        "mae": 0.05406059324132172,
+        "ae_share": 0.5328492678738158,
+        "signed": 0.0016869306945927966,
+        "bias_share_of_mse": 6.539611004453668e-05
+      },
+      {
+        "bin": "(0,5%]",
+        "n": 76,
+        "mae": 0.08709462274671048,
+        "ae_share": 0.08710572165231971,
+        "signed": 0.03364470445065789,
+        "bias_share_of_mse": 0.05610084898274672
+      },
+      {
+        "bin": "(5,10%]",
+        "n": 93,
+        "mae": 0.10202025675537629,
+        "ae_share": 0.12485648640775077,
+        "signed": 0.029846720583333333,
+        "bias_share_of_mse": 0.04401714798995213
+      },
+      {
+        "bin": ">10%",
+        "n": 82,
+        "mae": 0.23648605642987805,
+        "ae_share": 0.2551885240661137,
+        "signed": 0.002390118399390248,
+        "bias_share_of_mse": 2.8695456764085423e-05
+      }
+    ],
+    "confounder_partial_spearman": 0.4129996780085444,
+    "standardised_delta_unseen_minus_seen": 0.08348657258626895,
+    "per_seed_delta_unseen_minus_seen": [
+      0.0966887592817515,
+      0.08225362484547255,
+      0.08903202888537706,
+      0.08150324325318756
+    ],
+    "max_bias_share_of_mse_cell": 0.0,
+    "hard_core_top100": {
+      "definition": "top 100 valid molecules by seed-mean |error|",
+      "n": 100,
+      "ae_share": 0.4600622336913209,
+      "mae": 0.34960274597,
+      "sim_topk_hard": 0.6784540322760015,
+      "sim_topk_rest": 0.7273842922521443,
+      "nn_ystd_hard": 1.3475108871291324,
+      "nn_ystd_rest": 1.1533509540468716,
+      "knn_mae_hard": 2.3493493960003144,
+      "frac_unseen_r2": 0.71,
+      "frac_tail": 0.21,
+      "frac_high_support_low_disp": 0.09,
+      "frac_low_support": 0.54,
+      "mass_high_support_low_disp": {
+        "n": 153,
+        "ae_share": 0.08872462788533951,
+        "mae": 0.0440667485310457
+      },
+      "mass_low_support": {
+        "n": 333,
+        "ae_share": 0.4495683963983547,
+        "mae": 0.10259112487462456
+      }
+    },
+    "similarity_partial_simtopk": -0.31907079412705475,
+    "similarity_partial_nnystd": 0.12978885701427822,
+    "knn_reference_mae": 1.1986806810750763
+  },
+  "phase_b": {
+    "total_updates": 47400,
+    "arms": {
+      "fit4k": {
+        "locked": 0.12079490549908951,
+        "locked_final": 0.12174316247785463,
+        "monitor": 0.16252942905202508,
+        "official_valid": 0.13291279549518367,
+        "tail10_train": 0.0007032276709796862,
+        "gpu_hours": 0.685601859351413
+      },
+      "fit8k": {
+        "locked": 0.08349826294509693,
+        "locked_final": 0.08312116115679964,
+        "monitor": 0.1254612169386819,
+        "official_valid": 0.09267155544034905,
+        "tail10_train": 0.0008231871041934936,
+        "gpu_hours": 0.737586093857147
+      }
+    },
+    "delta_locked_seed0": -0.03771726517565549,
+    "delta_locked_seed1": -0.03687601993232967,
+    "ci_seed0": [
+      -0.04981247467813082,
+      -0.029324203789373858
+    ],
+    "ci_seed1": [
+      -0.04208120553046465,
+      -0.031654771332535886
+    ],
+    "relative_reduction_locked": 0.3087600623543987,
+    "tier_deltas": {
+      "seed0": {
+        "newly_supported": {
+          "n": 139,
+          "delta": -0.041231761116990076
+        },
+        "still_unseen": {
+          "n": 287,
+          "delta": -0.04161168629699469
+        },
+        "seen_at_4k": {
+          "n": 574,
+          "delta": -0.03491898329818186
+        }
+      },
+      "seed1": {
+        "newly_supported": {
+          "n": 139,
+          "delta": -0.058695213936215684
+        },
+        "still_unseen": {
+          "n": 287,
+          "delta": -0.03821149813692745
+        },
+        "seen_at_4k": {
+          "n": 574,
+          "delta": -0.030924538728044418
+        }
+      }
+    },
+    "frac_improved": {
+      "seed0": 0.667,
+      "seed1": 0.693
+    },
+    "budget_gpu_hours": 1.42318795320856
+  },
+  "label_quantity_extrapolation": {
+    "official_valid_by_fit_size": {
+      "4000": 0.13291279549518367,
+      "8000": 0.09267155544034905,
+      "10000_historical_bestvalid": 0.075990316172
+    },
+    "valid_needed_for_test_0.060_at_offset_-0.0087": 0.0687,
+    "projections": {
+      "alpha_from_4k_8k": {
+        "alpha": 0.5202815075044747,
+        "n_labels_for_valid_0.0687": 12139.145179648576,
+        "valid_at_12k": 0.06911331327196214
+      },
+      "alpha_from_8k_10k": {
+        "alpha": 0.8893632176877851,
+        "n_labels_for_valid_0.0687": 11200.835594402733,
+        "valid_at_12k": 0.06461559736825033
+      },
+      "alpha_mean": {
+        "alpha": 0.7048223625961298,
+        "n_labels_for_valid_0.0687": 11538.396701452008,
+        "valid_at_12k": 0.06682662660322498
+      }
+    }
+  },
+  "other_mechanisms_measured_historically": {
+    "seed_average_p3a_2seeds_valid_gain": 0.004456,
+    "best_structure_mechanism_gain": 0.0048,
+    "ema": "not measured (broken in zinc_performance_search_v1)"
+  }
+}
