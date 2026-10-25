@@ -64,15 +64,38 @@ def prepare() -> tuple[dict, dict, dict, float]:
     return rel_train, rel_valid, scale, mean_nb
 
 
+def _apply_cmass_init(model, info: dict, mix: str) -> None:
+    """Set the 12 constant-mass scales from the frozen train-only init file.
+
+    The common non-rho initialisation is untouched: rho is created with zeros
+    (no RNG consumption) and overwritten here.
+    """
+    if mix != "cmass":
+        return
+    path = ANALYSIS / "cmass_init.json"
+    if not path.exists():
+        raise FileNotFoundError(f"missing {path}; run code/gos_cmass.py init first")
+    init = C.read_json(path)
+    with torch.no_grad():
+        for li, layer in enumerate(model.layers):
+            if getattr(layer, "rho", None) is None:
+                raise RuntimeError("cmass model layer has no rho parameter")
+            layer.rho.copy_(torch.as_tensor(init["rho_init"][li], dtype=layer.rho.dtype))
+    info["cmass_init"] = init
+    info["cmass_rho_init"] = init["rho_init"]
+
+
 def build_arm_model(route: str, seed: int, device, *, mix: str = "legacy",
                     mean_n_bonds: float, dropout: float = 0.0,
                     reader_hidden: int = GM.READER_HIDDEN, norm=None):
     """Single constructor for every model instance of an arm, so the trainer, the
     best-checkpoint re-evaluation and the holdout pass cannot disagree about the
     operator."""
-    return GM.build_model(route, D.load_norm() if norm is None else norm, int(seed), device,
-                          mean_n_bonds=float(mean_n_bonds), dropout=float(dropout),
-                          reader_hidden=int(reader_hidden), mix_mode=str(mix))
+    model, info = GM.build_model(route, D.load_norm() if norm is None else norm, int(seed), device,
+                                 mean_n_bonds=float(mean_n_bonds), dropout=float(dropout),
+                                 reader_hidden=int(reader_hidden), mix_mode=str(mix))
+    _apply_cmass_init(model, info, str(mix))
+    return model, info
 
 
 def make_builder(route: str, mean_n_bonds: float, dropout: float = 0.0,
@@ -270,7 +293,7 @@ def main(argv=None) -> int:
     p.add_argument("--holdout", type=int, default=None,
                    help="train on 10000-N rows and score the held-out N (fresh sample)")
     p.add_argument("--mix", default="legacy", choices=list(GM.MIX_MODES),
-                   help="mixing arithmetic; adds no parameters (see ERRATUM.md)")
+                   help="mixing arithmetic; only cmass adds 12 parameters (see ERRATUM.md)")
     p.add_argument("--force", action="store_true")
     args = p.parse_args(argv)
     if args.command == "prep":

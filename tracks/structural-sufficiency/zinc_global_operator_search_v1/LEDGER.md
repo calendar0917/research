@@ -183,3 +183,54 @@ GN 在 valid 持平、留出退化 → 去掉门控总增益会在新分子上�
 停止“打分几何 / 权重归一化”这条线：不再为 L2G/GN 买第二 seed，不做组合臂，不做全 10k。
 唯一有跨分子证据支撑的后续（不在本轮预算内、未执行）：把门控质量 `mass_b=Σ_c a_bc g_bc` 作为每层
 一个显式标量通道送进 reader——本轮唯一在留出上可测的机制就是它。
+
+## 机制收束预注册（2026-10-26，在启动 Constant-Mass 之前写定）
+
+零 GPU 分析（`analysis/paired_A_vs_dccl.*`, `analysis/gate_mass.*`）只读 official valid 与冻结
+checkpoint，不读 test：
+
+- A 与 DCC-L 的 signed error 相关 0.79–0.96、absolute error 相关 0.80–0.96；去重后最差 10% 集合
+  重合约 46–54%（Jaccard 0.46–0.54）。按规模、环数、旧 r2 seen/unseen 分组，**没有一组**在
+  两个 A seed 上同向且 bootstrap 区间排除 0；A 与 DCC-L 的差别小于分子抽样噪声。
+- 冻结 A 的 gate mass 中位数 0.086（ho_A_s0）/0.003（A_s0），约 53–58% 的 mass 方差在
+  **同一分子的不同 query 之间**；去掉 layer/head 均值后，分子内 query 方差占剩余方差的约 72–74%。
+  分子均 mass 对 [log 键数, 环数, 环原子比例, 最长环, unseen] 的 R² 为 0.13–0.77（随 head 变），
+  但分子内 log-mass 对局部键特征（环键、端点度和、双键）的 R² 中位数仅 0.02。
+  因此“动态 mass 只是固定层/head 缩放或已有数量特征”这一解释不成立，值得做一次 Constant-Mass
+  对照；这不是性能收益证据。
+
+### 唯一新增臂
+
+`cmass_A_s0`：route A、seed 0、配方 B、reader 128、dropout 0，训练行 = 与 `ho_A_s0` 相同的
+official-train 9,000 行（`HOLDOUT_SEED=20261025`），official valid 选点，内部 1,000 行只在
+checkpoint 选定后评估一次。保留 Q/K/V、relation beta/gamma、AdaRMSNorm、三层核心和 reader；
+唯一变化是
+
+`m = softplus(rho[layer,head]) * Σ_key softmax(dot_score + log_gate) * v`,
+`log_gate = log(2) - softplus(-2*gamma)`。
+
+`rho` 共 12 个标量，参数 460,029（≤500k）。初值只由 9,000 行**无标签结构**在公共初始化上的
+平均 mass 决定（`analysis/cmass_init.json`），不使用 valid/holdout 标签。无除法。
+
+正确性门只做 5 项（同公共初始化、fp64 公式等价、padding/batch 不变、梯度有限、checkpoint 重载），
+见 `analysis/cmass_checks.json`；不重跑历史 25 项勘误检查。
+
+### 预算与停止
+
+- 硬上限 **1.0 A100·h**（单条轨迹、单 seed）。600 epoch；若实测速率使 600 epoch 会超过 1.0，
+  在 `floor(1.0*3600/每epoch秒数)` 处停止并用已保存的 best checkpoint 报告。不超支、不补跑。
+- `cmass` 与 `ho_A_s0` 用同一 valid 选点规则（strict best-valid）。留出已多轮使用，不称盲测。
+- 只比较 official valid 与内部留出；不读 test，不加第二 seed，不把 mass 拼进 reader。
+
+### 判定（先写死）
+
+记 `d_valid = cmass_valid − ho_A_valid`，`d_hold = cmass_holdout − ho_A_holdout`
+（正 = cmass 更差）。
+
+1. **接近**：`|d_valid| ≤ 0.0015` 且 `|d_hold| ≤ 0.0030` → 动态 mass 的必要性未获支持，
+   停止该机制线；GN 的退化更可能来自尺度处理。
+2. **明显落后**：`d_valid ≥ 0.0030` 且 `d_hold ≥ 0.0030`，且去掉 cmass 留出误差最大的 10 行后
+   `d_hold ≥ 0.0020` → 支持动态总增益在当前模型中有作用；仍不构成超过 DCC-L 的证据，不扩展训练。
+3. **有意义改善**：`d_valid ≤ −0.0030` 且 `d_hold ≤ −0.0030`，且留出配对 bootstrap 95% CI
+   上界 < 0 → 保留为更简洁候选，**另行建议**是否买第二 seed，本轮不执行。
+4. 其余（方向不一致、区间跨零、只有单侧变化）→ `INCONCLUSIVE`，资源停止，不补种子。

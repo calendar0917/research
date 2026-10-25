@@ -104,7 +104,7 @@ class FFN(nn.Module):
         return h + F.dropout(self.fc2(x), p=self.dropout, training=self.training)
 
 
-MIX_MODES = ("legacy", "dot", "l2", "gn", "gnlog")
+MIX_MODES = ("legacy", "dot", "l2", "gn", "gnlog", "cmass")
 
 
 class MixA(nn.Module):
@@ -133,6 +133,14 @@ class MixA(nn.Module):
                 ``log(1+tanh(x)) = log 2 - softplus(-2x)``.  Algebraically
                 identical to ``gn`` and numerically stable; no extra parameter and
                 no temperature.
+    ``cmass``   constant-mass control: the same log-domain normalised weights as
+                ``gnlog`` multiplied by one learned scalar per layer/head,
+                ``softplus(rho[l,h])`` (12 scalars in total).  It can learn a
+                global scale and relation re-weighting, but not a query-specific
+                total gain.  ``rho`` is initialised once from the train-only
+                structural mean mass of the common initialisation; it is a new
+                parameter only in this mode, so historical checkpoints load
+                unchanged.
     """
 
     def __init__(self, d: int = TOKEN_DIM, heads: int = HEADS, rel: int = REL_REL_DIM,
@@ -153,6 +161,10 @@ class MixA(nn.Module):
         # "plain" control: ordinary normalised attention + relation bias, no
         # amplitude-sensitive term and no relation-conditioned content gate.
         self.gamma = nn.Linear(rel, self.heads) if variant == "full" else None
+        # Constant-mass control only.  torch.zeros consumes no RNG, so adding
+        # this parameter does not shift the common initialisation of any other
+        # tensor.  The value is overwritten from analysis/cmass_init.json.
+        self.rho = nn.Parameter(torch.zeros(self.heads)) if mode == "cmass" else None
         self.dropout = float(dropout)
         self.ffn = FFN(d, dropout=dropout)
 
@@ -195,6 +207,16 @@ class MixA(nn.Module):
                 mass = None
                 attn = w
                 ctx = torch.einsum("bhij,bhjd->bhid", w, v)
+            elif self.mode == "cmass":
+                # Same numerically stable normalised weights as gnlog, then one
+                # learned scale per layer/head.  The scale is shared by all
+                # queries: no query-specific total mass.
+                log_gate = math.log(2.0) - F.softplus(-2.0 * raw)
+                w = torch.softmax(score + log_gate, dim=-1)
+                scale = F.softplus(self.rho).view(1, self.heads, 1, 1)
+                attn = w
+                mass = scale.expand_as(w[..., :1])
+                ctx = scale * torch.einsum("bhij,bhjd->bhid", w, v)
             else:
                 mass = (attn * gate).sum(dim=-1, keepdim=True)
                 ctx = torch.einsum("bhij,bhij,bhjd->bhid", attn, gate, v)
