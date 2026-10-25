@@ -1,0 +1,211 @@
+{
+  "protocol_id": "zinc-structural-conditional-moments-v1",
+  "stopped": true,
+  "rule_conditions_met": {
+    "R1": false,
+    "R2": false,
+    "R3": true,
+    "R4": true
+  },
+  "rule_conditions_note": "R4 also holds (S+A is worse than S-only by >0.001); the round-level label is R3 because neither arm beats DCC-L, which is the stop condition, and no rescue run is purchased.",
+  "resolution": {
+    "paired_ci95_half_width": {
+      "S-only_minus_DCC-L": 0.003517650675727054,
+      "S+A_minus_DCC-L": 0.007576896747341375,
+      "S+A_minus_S-only": 0.007474607604462653
+    },
+    "approx_min_detectable_effect_abs": 0.003517650675727054,
+    "promotion_threshold_abs": 0.003,
+    "threshold_within_resolution": true,
+    "note": "MDE is approximated by the paired CI half-width at n=1000; an effect smaller than this cannot be separated from molecule-level noise here."
+  },
+  "label": "RESULT_3_NEITHER_BEATS_DCC_L_STOP",
+  "reason": "Neither arm is directionally better than the frozen DCC-L on best-valid, W20 or the late window with a paired CI below 0.",
+  "single_seed": true,
+  "official_test_loaded": false,
+  "valid_is_exposed_development_split": true,
+  "thresholds": {
+    "material_delta_best_valid": -0.003,
+    "promotion_delta_vs_same_seed_dccl": -0.003,
+    "directional_rule": "delta_best_valid<0 AND delta_w20<0 AND delta_late_300_600<0 AND paired CI95 upper<0",
+    "frozen_before_gpu_run": true
+  },
+  "dcc_l_reference": {
+    "best_valid": 0.07853714964160463,
+    "best_epoch": 489,
+    "source": "frozen historical DCC-L seed 0 (not retrained)"
+  },
+  "arms": {
+    "S-only": {
+      "delta_best_valid": 0.0006396018639206886,
+      "ci95": [
+        -0.0029136687807738777,
+        0.004121632570680231
+      ],
+      "delta_w20": 0.0008338156223297311,
+      "delta_late_300_600": 0.000617849896107317,
+      "directionally_better": false,
+      "subgroups": {
+        "all": 0.0006396018639206886,
+        "ordinary_y_gt_-3": 0.0030002845560803135,
+        "tail_y_le_-3": -0.033317910707913914,
+        "r2_seen": 0.000467781837935123,
+        "r2_unseen": 0.0011523237741325955,
+        "fixed_dccl_worst10_removed": 0.0013074247523991748
+      }
+    },
+    "S+A": {
+      "delta_best_valid": 0.003284062374383211,
+      "ci95": [
+        -0.00304919388750568,
+        0.01210459960717707
+      ],
+      "delta_w20": 0.003972852727770815,
+      "delta_late_300_600": 0.004227863875319468,
+      "directionally_better": false,
+      "subgroups": {
+        "all": 0.003284062374383211,
+        "ordinary_y_gt_-3": 0.00015802484224824344,
+        "tail_y_le_-3": 0.048250909952016974,
+        "r2_seen": 0.005492041531567262,
+        "r2_unseen": -0.003304688178329354,
+        "fixed_dccl_worst10_removed": 0.00048626134115638156
+      }
+    }
+  },
+  "A_extra_gain": {
+    "delta_best_valid": 0.0026444605104625225,
+    "ci95": [
+      -0.003479301213752478,
+      0.011469913995172828
+    ],
+    "delta_w20": 0.0031390371054410837,
+    "delta_late_300_600": 0.003610013979212151,
+    "extra_gain_from_A": false,
+    "materially_worse_than_S_only": true
+  },
+  "subgroup_deltas": {
+    "all": {
+      "n": 1000,
+      "mae_DCC-L_s0": 0.0785371521859779,
+      "mae_S-only": 0.07917675404989859,
+      "mae_S+A": 0.08182121456036111,
+      "delta_S-only_minus_DCC-L": 0.0006396018639206886,
+      "delta_S+A_minus_DCC-L": 0.003284062374383211,
+      "delta_S+A_minus_S-only": 0.0026444605104625225
+    },
+    "ordinary_y_gt_-3": {
+      "n": 935,
+      "mae_DCC-L_s0": 0.06553710579547165,
+      "mae_S-only": 0.06853739035155196,
+      "mae_S+A": 0.0656951306377199,
+      "delta_S-only_minus_DCC-L": 0.0030002845560803135,
+      "delta_S+A_minus_DCC-L": 0.00015802484224824344,
+      "delta_S+A_minus_S-only": -0.00284225971383207
+    },
+    "tail_y_le_-3": {
+      "n": 65,
+      "mae_DCC-L_s0": 0.26553781949556793,
+      "mae_S-only": 0.232219908787654,
+      "mae_S+A": 0.3137887294475849,
+      "delta_S-only_minus_DCC-L": -0.033317910707913914,
+      "delta_S+A_minus_DCC-L": 0.048250909952016974,
+      "delta_S+A_minus_S-only": 0.08156882065993089
+    },
+    "r2_seen": {
+      "n": 749,
+      "mae_DCC-L_s0": 0.054268273582059684,
+      "mae_S-only": 0.0547360554199948,
+      "mae_S+A": 0.05976031511362694,
+      "delta_S-only_minus_DCC-L": 0.000467781837935123,
+      "delta_S+A_minus_DCC-L": 0.005492041531567262,
+      "delta_S+A_minus_S-only": 0.005024259693632138
+    },
+    "r2_unseen": {
+      "n": 251,
+      "mae_DCC-L_s0": 0.15095703296021992,
+      "mae_S-only": 0.15210935673435252,
+      "mae_S+A": 0.14765234478189057,
+      "delta_S-only_minus_DCC-L": 0.0011523237741325955,
+      "delta_S+A_minus_DCC-L": -0.003304688178329354,
+      "delta_S+A_minus_S-only": -0.004457011952461949
+    },
+    "fixed_dccl_worst10_removed": {
+      "n": 990,
+      "mae_DCC-L_s0": 0.0629818418523593,
+      "mae_S-only": 0.06428926660475848,
+      "mae_S+A": 0.06346810319351569,
+      "delta_S-only_minus_DCC-L": 0.0013074247523991748,
+      "delta_S+A_minus_DCC-L": 0.00048626134115638156,
+      "delta_S+A_minus_S-only": -0.0008211634112427933
+    }
+  },
+  "decomposition": {
+    "S-only": {
+      "arm": "S-only",
+      "checkpoint": "tracks/structural-sufficiency/zinc_structural_conditional_moments_v1/runs/s_only_s0/best.pt",
+      "epoch": 417,
+      "A_path_active_in_training": false,
+      "split_residual_max_abs": 8.940696716308594e-08,
+      "rms_c_loc": 0.1924678087234497,
+      "rms_delta_total": 0.04369159508496523,
+      "rms_delta_signal": 0.028891982976347208,
+      "rms_bias_component": 0.3169209361076355,
+      "rms_delta_S": 0.028891982976347208,
+      "rms_delta_A": 0.0,
+      "rms_ratio_delta_over_c_loc": 0.22700728695749928,
+      "share_of_signal_rms_from_S": 1.0,
+      "share_of_signal_rms_from_A": 0.0,
+      "share_of_signal_variance_from_A": 0.0,
+      "wout_block_norms": {
+        "S1": 1.7625077962875366,
+        "A1": 0.0,
+        "S2": 2.8749406337738037,
+        "A2": 0.0
+      },
+      "wout_bias_norm": 0.3169209361076355,
+      "A_blocks_exactly_zero_weights": true
+    },
+    "S+A": {
+      "arm": "S+A",
+      "checkpoint": "tracks/structural-sufficiency/zinc_structural_conditional_moments_v1/runs/s_plus_a_s0/best.pt",
+      "epoch": 402,
+      "A_path_active_in_training": true,
+      "split_residual_max_abs": 1.7881393432617188e-07,
+      "rms_c_loc": 0.19873485900461674,
+      "rms_delta_total": 0.04533701715990901,
+      "rms_delta_signal": 0.03549985168501735,
+      "rms_bias_component": 0.2731056213378906,
+      "rms_delta_S": 0.031664705369621515,
+      "rms_delta_A": 0.016251179040409625,
+      "rms_ratio_delta_over_c_loc": 0.22812815721904028,
+      "share_of_signal_rms_from_S": 0.8919672580768992,
+      "share_of_signal_rms_from_A": 0.45778160383888045,
+      "share_of_signal_variance_from_A": 0.20956399681329768,
+      "wout_block_norms": {
+        "S1": 1.7802807092666626,
+        "A1": 2.4077274799346924,
+        "S2": 2.308354616165161,
+        "A2": 2.943657398223877
+      },
+      "wout_bias_norm": 0.2731056213378906,
+      "A_blocks_exactly_zero_weights": false
+    }
+  },
+  "artifacts_sha256": {
+    "dccl_s0_valid_best.npz": "55e4126d3da925d0067d0d007e7eaee902b7bceea20f3cc102ed515e411f1a56",
+    "s-only_best.pt": "013afa95f16f4d0c917e4beb4c07f8841e52006773b9849094f61733347c8d92",
+    "s-only_curve.csv": "39d0e8c7b01c76363708f51ff094fa94f1cee408e1eb32b6258ede0dcebfa797",
+    "s-only_valid_best.npz": "91ff3cb6df8ad6b4a61574bb1e8fe2490101e04132fa6823fd3c60a17215aa9c",
+    "s-plus-a_best.pt": "4a0d0cf6f96fe7c36338ee23ecb23686c9b5c66f6844147aef994460974f3419",
+    "s-plus-a_curve.csv": "a823dfdd0e3b54526deb8878b11535c672ff3667fcf26a5ac0596319cab1d0d3",
+    "s-plus-a_valid_best.npz": "b292de913a4f2c25e56109cbde6f97e55b4c351875bf0b6c9b6a5f87e2689897"
+  },
+  "interpretation_constraints": [
+    "Single seed on an exposed valid split; no cross-seed confirmation.",
+    "Bootstrap intervals describe the fixed 1,000 development molecules and are not evidence of seed stability.",
+    "A gain does not prove the structural relation is its cause; a relation shuffle or seed-1 control would be required (not purchased this round).",
+    "No conclusion generalises to all structural-statistics-plus-attention designs; only to this frozen two-band centred-difference implementation.",
+    "Official test was never constructed or read this round."
+  ]
+}

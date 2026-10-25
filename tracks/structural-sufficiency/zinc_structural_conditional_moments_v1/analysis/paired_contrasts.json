@@ -1,0 +1,128 @@
+{
+  "contrasts": {
+    "S-only_minus_DCC-L": {
+      "mae_first": 0.07917675404989859,
+      "mae_second": 0.0785371521859779,
+      "delta_first_minus_second": 0.0006396018639206886,
+      "mean": 0.0006396018639206886,
+      "ci95": [
+        -0.0029136687807738777,
+        0.004121632570680231
+      ],
+      "frac_bootstrap_negative": 0.3511,
+      "median": 0.0015976354479789734,
+      "frac_molecules_improved": 0.466,
+      "n": 1000,
+      "note": "paired over the fixed 1,000 official-valid molecules; descriptive only, not cross-seed stability evidence",
+      "mae_second_reference": null
+    },
+    "S+A_minus_DCC-L": {
+      "mae_first": 0.08182121456036111,
+      "mae_second": 0.0785371521859779,
+      "delta_first_minus_second": 0.003284062374383211,
+      "mean": 0.003284062374383211,
+      "ci95": [
+        -0.00304919388750568,
+        0.01210459960717707
+      ],
+      "frac_bootstrap_negative": 0.2206,
+      "median": -0.0001583695411682129,
+      "frac_molecules_improved": 0.502,
+      "n": 1000,
+      "note": "paired over the fixed 1,000 official-valid molecules; descriptive only, not cross-seed stability evidence"
+    },
+    "S+A_minus_S-only": {
+      "mae_first": 0.08182121456036111,
+      "mae_second": 0.07917675404989859,
+      "delta_first_minus_second": 0.0026444605104625225,
+      "mean": 0.0026444605104625225,
+      "ci95": [
+        -0.003479301213752478,
+        0.011469913995172828
+      ],
+      "frac_bootstrap_negative": 0.2937,
+      "median": -0.0010865852236747742,
+      "frac_molecules_improved": 0.52,
+      "n": 1000,
+      "note": "paired over the fixed 1,000 official-valid molecules; descriptive only, not cross-seed stability evidence"
+    }
+  },
+  "subgroups": {
+    "all": {
+      "n": 1000,
+      "mae_DCC-L_s0": 0.0785371521859779,
+      "mae_S-only": 0.07917675404989859,
+      "mae_S+A": 0.08182121456036111,
+      "delta_S-only_minus_DCC-L": 0.0006396018639206886,
+      "delta_S+A_minus_DCC-L": 0.003284062374383211,
+      "delta_S+A_minus_S-only": 0.0026444605104625225
+    },
+    "ordinary_y_gt_-3": {
+      "n": 935,
+      "mae_DCC-L_s0": 0.06553710579547165,
+      "mae_S-only": 0.06853739035155196,
+      "mae_S+A": 0.0656951306377199,
+      "delta_S-only_minus_DCC-L": 0.0030002845560803135,
+      "delta_S+A_minus_DCC-L": 0.00015802484224824344,
+      "delta_S+A_minus_S-only": -0.00284225971383207
+    },
+    "tail_y_le_-3": {
+      "n": 65,
+      "mae_DCC-L_s0": 0.26553781949556793,
+      "mae_S-only": 0.232219908787654,
+      "mae_S+A": 0.3137887294475849,
+      "delta_S-only_minus_DCC-L": -0.033317910707913914,
+      "delta_S+A_minus_DCC-L": 0.048250909952016974,
+      "delta_S+A_minus_S-only": 0.08156882065993089
+    },
+    "r2_seen": {
+      "n": 749,
+      "mae_DCC-L_s0": 0.054268273582059684,
+      "mae_S-only": 0.0547360554199948,
+      "mae_S+A": 0.05976031511362694,
+      "delta_S-only_minus_DCC-L": 0.000467781837935123,
+      "delta_S+A_minus_DCC-L": 0.005492041531567262,
+      "delta_S+A_minus_S-only": 0.005024259693632138
+    },
+    "r2_unseen": {
+      "n": 251,
+      "mae_DCC-L_s0": 0.15095703296021992,
+      "mae_S-only": 0.15210935673435252,
+      "mae_S+A": 0.14765234478189057,
+      "delta_S-only_minus_DCC-L": 0.0011523237741325955,
+      "delta_S+A_minus_DCC-L": -0.003304688178329354,
+      "delta_S+A_minus_S-only": -0.004457011952461949
+    },
+    "fixed_dccl_worst10_removed": {
+      "n": 990,
+      "mae_DCC-L_s0": 0.0629818418523593,
+      "mae_S-only": 0.06428926660475848,
+      "mae_S+A": 0.06346810319351569,
+      "delta_S-only_minus_DCC-L": 0.0013074247523991748,
+      "delta_S+A_minus_DCC-L": 0.00048626134115638156,
+      "delta_S+A_minus_S-only": -0.0008211634112427933
+    }
+  },
+  "masks": {
+    "all": 1000,
+    "ordinary_y_gt_-3": 935,
+    "tail_y_le_-3": 65,
+    "r2_seen": 749,
+    "r2_unseen": 251,
+    "fixed_dccl_worst10_removed": 990
+  },
+  "contrast_definitions": {
+    "S-only_minus_DCC-L": [
+      "S-only",
+      "DCC-L_s0"
+    ],
+    "S+A_minus_DCC-L": [
+      "S+A",
+      "DCC-L_s0"
+    ],
+    "S+A_minus_S-only": [
+      "S+A",
+      "S-only"
+    ]
+  }
+}

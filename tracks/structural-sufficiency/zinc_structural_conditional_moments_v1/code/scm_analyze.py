@@ -113,34 +113,45 @@ def curve_stats(curve: list[dict]) -> dict:
 
 
 def decomposition(arm: str, store: dict, cache, device="cpu") -> dict:
-    """Correction magnitude and the S/A split at the best-valid checkpoint."""
+    """Correction magnitude and the exact S/A split at the best-valid checkpoint.
+
+    Wout is linear on concat(S1,A1,S2,A2) plus a bias, so the correction splits
+    exactly into four block products and a constant.  The split is measured from
+    the captured block tensors and cross-checked against the actual forward.
+    """
     norm = D.load_norm()
-    model, _ = M.build_initial_state(norm, 0, use_cov=(arm == "S+A"))
+    use_cov = arm == "S+A"
+    model, _ = M.build_initial_state(norm, 0, use_cov=use_cov)
     ckpt_path = S.RUNS / f"{ARMS[arm]}_s0" / "best.pt"
     ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     model.load_state_dict(ckpt["state_dict"])
     model.to(device).eval()
+    w = model.scm.out.weight.detach()
+    b = model.scm.out.bias.detach()
+    W = {"S1": w[:, 0:8], "A1": w[:, 8:16], "S2": w[:, 16:24], "A2": w[:, 24:32]}
     collate = R.make_split_collate({"valid": store}, T1.collate)
     rows = np.arange(int(cache["n_molecules"]))
-    acc = {k: [] for k in ("rms_c", "rms_delta", "rms_dS", "rms_dA")}
+    acc = {k: [] for k in ("rms_c", "rms_delta", "rms_dS", "rms_dA", "rms_signal")}
     per_mol, add_err = [], 0.0
     for start in range(0, len(rows), 128):
         chunk = rows[start:start + 128]
         batch = collate(cache, chunk, "P3N", valid=True)
         with torch.no_grad():
             _, cap = model.forward_with_capture(batch)
-            _, cap_s = model.forward_with_capture(batch, ablate="A")
-            _, cap_a = model.forward_with_capture(batch, ablate="S")
         c, d = cap["c_loc"], cap["delta"]
-        d_s, d_a = cap_s["delta"], cap_a["delta"]
-        add_err = max(add_err, float((d - (d_s + d_a)).abs().max()))
+        bb, bl = batch["bond_batch"], batch["bond_local"]
+        s1, a1 = cap["S1"][bb, bl], cap["A1"][bb, bl]
+        s2, a2 = cap["S2"][bb, bl], cap["A2"][bb, bl]
+        d_s = s1 @ W["S1"].T + s2 @ W["S2"].T
+        d_a = a1 @ W["A1"].T + a2 @ W["A2"].T
+        add_err = max(add_err, float((d - (d_s + d_a + b)).abs().max()))
         acc["rms_c"].append(float(c.pow(2).mean().sqrt()))
         acc["rms_delta"].append(float(d.pow(2).mean().sqrt()))
         acc["rms_dS"].append(float(d_s.pow(2).mean().sqrt()))
         acc["rms_dA"].append(float(d_a.pow(2).mean().sqrt()))
-        bb = batch["bond_batch"]
-        for b, row in enumerate(chunk):
-            sel = bb == b
+        acc["rms_signal"].append(float((d_s + d_a).pow(2).mean().sqrt()))
+        for bi, row in enumerate(chunk):
+            sel = bb == bi
             per_mol.append({
                 "row_id": int(row),
                 "rms_c_loc": float(c[sel].pow(2).mean().sqrt()),
@@ -148,26 +159,30 @@ def decomposition(arm: str, store: dict, cache, device="cpu") -> dict:
                 "rms_delta_S": float(d_s[sel].pow(2).mean().sqrt()),
                 "rms_delta_A": float(d_a[sel].pow(2).mean().sqrt()),
             })
-    w = model.scm.out.weight.detach()
-    blocks = {"S1": float(w[:, 0:8].norm()), "A1": float(w[:, 8:16].norm()),
-              "S2": float(w[:, 16:24].norm()), "A2": float(w[:, 24:32].norm())}
+    blocks = {k: float(v.norm()) for k, v in W.items()}
     rms_c = float(np.mean(acc["rms_c"]))
-    rms_d = float(np.mean(acc["rms_delta"]))
+    rms_sig = float(np.mean(acc["rms_signal"]))
+    rms_s = float(np.mean(acc["rms_dS"]))
+    rms_a = float(np.mean(acc["rms_dA"]))
     out = {
         "arm": arm,
         "checkpoint": str(ckpt_path.relative_to(S._REPO)),
         "epoch": ckpt.get("epoch"),
-        "additivity_max_abs_error": add_err,
+        "A_path_active_in_training": use_cov,
+        "split_residual_max_abs": add_err,
         "rms_c_loc": rms_c,
-        "rms_delta": rms_d,
-        "rms_delta_S": float(np.mean(acc["rms_dS"])),
-        "rms_delta_A": float(np.mean(acc["rms_dA"])),
-        "rms_ratio_delta_over_c_loc": rms_d / rms_c if rms_c else None,
-        "share_of_delta_rms_from_S": float(np.mean(acc["rms_dS"])) / rms_d if rms_d else None,
-        "share_of_delta_rms_from_A": float(np.mean(acc["rms_dA"])) / rms_d if rms_d else None,
+        "rms_delta_total": float(np.mean(acc["rms_delta"])),
+        "rms_delta_signal": rms_sig,
+        "rms_bias_component": float(b.norm()),
+        "rms_delta_S": rms_s,
+        "rms_delta_A": rms_a,
+        "rms_ratio_delta_over_c_loc": float(np.mean(acc["rms_delta"])) / rms_c,
+        "share_of_signal_rms_from_S": rms_s / rms_sig if rms_sig else None,
+        "share_of_signal_rms_from_A": rms_a / rms_sig if rms_sig else None,
+        "share_of_signal_variance_from_A": rms_a ** 2 / rms_sig ** 2 if rms_sig else None,
         "wout_block_norms": blocks,
-        "A_is_inert": bool(blocks["A1"] + blocks["A2"]
-                           < 0.05 * (blocks["S1"] + blocks["S2"])),
+        "wout_bias_norm": float(b.norm()),
+        "A_blocks_exactly_zero_weights": bool(blocks["A1"] == 0.0 and blocks["A2"] == 0.0),
     }
     return {"summary": out, "per_molecule": per_mol}
 
@@ -279,12 +294,17 @@ def main(argv=None) -> int:
             per_by_arm[a] = {r["row_id"]: r for r in dec["per_molecule"]}
         lines = pm_path.read_text().splitlines()
         header = lines[0].split(",")
-        add_cols = ["scm_rms_c_loc", "scm_rms_delta", "scm_rms_delta_S", "scm_rms_delta_A"]
+        add_cols = [f"{tag}_rms_{c}" for tag in ("sonly", "splusa")
+                    for c in ("c_loc", "delta", "delta_S", "delta_A")]
         out = [",".join(header + add_cols)]
         for line in lines[1:]:
-            r = per_by_arm["S+A"][int(line.split(",")[0])]
-            out.append(line + "," + ",".join(
-                f"{r[c]:.6g}" for c in ("rms_c_loc", "rms_delta", "rms_delta_S", "rms_delta_A")))
+            row_id = int(line.split(",")[0])
+            vals = []
+            for tag, arm_name in (("sonly", "S-only"), ("splusa", "S+A")):
+                r = per_by_arm[arm_name][row_id]
+                vals += [f"{r[c]:.6g}" for c in
+                         ("rms_c_loc", "rms_delta", "rms_delta_S", "rms_delta_A")]
+            out.append(line + "," + ",".join(vals))
         pm_path.write_text("\n".join(out) + "\n")
         S.write_json(S.ANALYSIS / "delta_decomposition.json", decomp)
 
@@ -376,8 +396,35 @@ def main(argv=None) -> int:
         label = "WEAK_OR_MIXED_EXPLORATORY_SIGNAL"
         reason = "Point estimates and the direction tests disagree; no promotion."
 
+    cond = {
+        "R1": bool(st["S-only"]["directionally_better"] and not a_extra["extra_gain_from_A"]),
+        "R2": bool(a_extra["extra_gain_from_A"] and st["S+A"]["directionally_better"]
+                   and st["S+A"]["delta_best_valid"] <= PROMOTION_DELTA),
+        "R3": bool(not st["S-only"]["directionally_better"]
+                   and not st["S+A"]["directionally_better"]),
+        "R4": bool(a_extra["delta_best_valid"] > 0.0),
+    }
+    half = {k: 0.5 * (v["ci95"][1] - v["ci95"][0]) for k, v in contrasts.items()}
+    resolution = {
+        "paired_ci95_half_width": half,
+        "approx_min_detectable_effect_abs": min(half["S-only_minus_DCC-L"],
+                                                 half["S+A_minus_DCC-L"]),
+        "promotion_threshold_abs": abs(PROMOTION_DELTA),
+        "threshold_within_resolution": bool(
+            abs(PROMOTION_DELTA) <= min(half["S-only_minus_DCC-L"],
+                                        half["S+A_minus_DCC-L"])),
+        "note": "MDE is approximated by the paired CI half-width at n=1000; an effect "
+                "smaller than this cannot be separated from molecule-level noise here.",
+    }
+
     decision = {
         "protocol_id": S.TRACK_ID,
+        "stopped": True,
+        "rule_conditions_met": cond,
+        "rule_conditions_note": "R4 also holds (S+A is worse than S-only by >0.001); the "
+                               "round-level label is R3 because neither arm beats DCC-L, "
+                               "which is the stop condition, and no rescue run is purchased.",
+        "resolution": resolution,
         "label": label,
         "reason": reason,
         "single_seed": True,
