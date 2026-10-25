@@ -1,0 +1,581 @@
+{
+  "round_id": "zinc-p3-chromatic-bond-v0",
+  "checks": [
+    {
+      "name": "deterministic_constructor",
+      "ok": true,
+      "detail": {
+        "first": "01a545e639bcd040cfe80225c3a4f6347063ed631373852d5673fd80106904a7",
+        "second": "01a545e639bcd040cfe80225c3a4f6347063ed631373852d5673fd80106904a7"
+      }
+    },
+    {
+      "name": "p3_ssl_source",
+      "ok": true,
+      "detail": {
+        "ssl": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+        "expected": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+      }
+    },
+    {
+      "name": "dcc_d0_state_matches_history",
+      "ok": true,
+      "detail": {
+        "actual": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33",
+        "expected": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33"
+      }
+    },
+    {
+      "name": "parameter_cap_and_exact_ledger",
+      "ok": true,
+      "detail": {
+        "parameters": 477017,
+        "expected": 477017,
+        "cap": 500000,
+        "breakdown": {
+          "encoders": 202048,
+          "group_composer": 62976,
+          "local_composer": 31536,
+          "token_fusion": 14064,
+          "layers": 116600,
+          "reader": 49793
+        },
+        "optimizer_covers_all": true
+      }
+    },
+    {
+      "name": "local_carrier_exactly_dcc_d0",
+      "ok": true,
+      "detail": {
+        "same_keys": true,
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "name": "global_norm_buffers_unchanged",
+      "ok": true,
+      "detail": {
+        "global_mean_max_diff": 0.0,
+        "global_scale_max_diff": 0.0
+      }
+    },
+    {
+      "name": "no_supervised_dcc_checkpoint_as_init",
+      "ok": true,
+      "detail": {
+        "supervised_dcc_state_sha256": "c947bb7217a5358685bee3be762c9dc0b4ac8a26dfe94b8aa15f9395d02a1642",
+        "chromatic_init_sha256": "01a545e639bcd040cfe80225c3a4f6347063ed631373852d5673fd80106904a7",
+        "source": "train-only masked SSL + D0 shared initial state"
+      }
+    },
+    {
+      "name": "local_carrier_forward_unchanged",
+      "ok": true,
+      "detail": {
+        "a": 0.0,
+        "b": 0.0,
+        "w": 0.0,
+        "c_glob": 0.0,
+        "c_loc": 0.0,
+        "n_b": 0.0
+      }
+    },
+    {
+      "name": "raw_target_no_normalisation",
+      "ok": true,
+      "detail": {
+        "train_label_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+        "valid_label_sha256": "72a9cfc31055ee0931ae9d094bcf605bd7853b6618bdbd62e02a87686959e88f",
+        "batch_has_labels": false,
+        "batch_has_target": false
+      }
+    },
+    {
+      "name": "global33_standardisation_matches_p3",
+      "ok": true,
+      "detail": {
+        "reader_in_features": 323,
+        "declared": 323
+      }
+    },
+    {
+      "name": "C_S_identical_initial_state",
+      "ok": true,
+      "detail": {
+        "max_state_diff": 0.0
+      }
+    },
+    {
+      "name": "C_S_identical_initial_forward",
+      "ok": true,
+      "detail": {
+        "max_pred_diff": 0.0
+      }
+    },
+    {
+      "name": "rel_channel_zero_init",
+      "ok": true,
+      "detail": {
+        "layers": 5
+      }
+    },
+    {
+      "name": "zero_mean_channel_bias_changes_C_not_S",
+      "ok": true,
+      "detail": {
+        "C_delta": 0.012763023376464844,
+        "S_delta": 1.9073486328125e-06
+      }
+    },
+    {
+      "name": "nonzero_mean_channel_bias_separates_C_S",
+      "ok": true,
+      "detail": {
+        "C_S_delta": 0.014178752899169922
+      }
+    },
+    {
+      "name": "all_parameters_receive_nonzero_finite_gradients_C",
+      "ok": true,
+      "detail": {
+        "bad": [],
+        "loss": 4.3470845222473145,
+        "n": 110
+      }
+    },
+    {
+      "name": "all_parameters_receive_nonzero_finite_gradients_S",
+      "ok": true,
+      "detail": {
+        "bad": [],
+        "loss": 4.3470845222473145,
+        "n": 110
+      }
+    },
+    {
+      "name": "ring_column_has_nonzero_gradient",
+      "ok": true,
+      "detail": {
+        "ring_grad_max": 0.0016569099389016628,
+        "rw_grad_max": 0.0024728768039494753
+      }
+    },
+    {
+      "name": "ring_switch_changes_real_model_output",
+      "ok": true,
+      "detail": {
+        "max_pred_delta": 0.03190469741821289,
+        "ring_pairs": 768
+      }
+    },
+    {
+      "name": "cross_molecule_batch_isolation",
+      "ok": true,
+      "detail": {
+        "d0": 1.9073486328125e-06,
+        "d1": 0.0
+      }
+    },
+    {
+      "name": "batch_order_permutation",
+      "ok": true,
+      "detail": {
+        "d0": 0.0,
+        "d1": 0.0
+      }
+    },
+    {
+      "name": "relation_equivariance_under_atom_bond_permutation",
+      "ok": true,
+      "detail": {
+        "max_rel_diff": 0.0
+      }
+    },
+    {
+      "name": "model_invariance_under_atom_bond_endpoint_permutation",
+      "ok": true,
+      "detail": {
+        "delta": 0.0,
+        "n_atoms": 35,
+        "n_bonds": 39,
+        "n_junc": 59
+      }
+    },
+    {
+      "name": "boundary_inputs_finite",
+      "ok": true,
+      "detail": {
+        "empty": {
+          "finite": true,
+          "value": 0.6033496260643005
+        },
+        "single": {
+          "finite": true,
+          "value": 0.5571560263633728
+        },
+        "acyclic_path4": {
+          "finite": true,
+          "value": 0.6731512546539307
+        },
+        "benzene": {
+          "finite": true,
+          "value": 1.2507319450378418
+        },
+        "naphthalene": {
+          "finite": true,
+          "value": 2.356825828552246
+        },
+        "spiro": {
+          "finite": true,
+          "value": 1.9715684652328491
+        }
+      }
+    },
+    {
+      "name": "chordless_ring_examples",
+      "ok": true,
+      "detail": {
+        "benzene_lengths": [
+          6
+        ],
+        "acyclic_lengths": [],
+        "spiro_lengths": [
+          4,
+          4
+        ],
+        "naphthalene_lengths": [
+          6,
+          6
+        ],
+        "k4_lengths": [
+          3,
+          3,
+          3,
+          3
+        ],
+        "c4_lengths": [
+          4
+        ],
+        "c5_lengths": [
+          5
+        ],
+        "triangle_lengths": [
+          3
+        ],
+        "k4_match": true,
+        "naphthalene_cross_zero": true
+      }
+    },
+    {
+      "name": "line_degree_equals_junction_incidence",
+      "ok": true,
+      "detail": {
+        "0": {
+          "junction_count": [
+            3,
+            5,
+            4,
+            5,
+            3,
+            3,
+            2,
+            3
+          ],
+          "edge_degree": [
+            3,
+            5,
+            4,
+            5,
+            3,
+            3,
+            2,
+            3
+          ]
+        },
+        "1": {
+          "junction_count": [
+            1,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            4
+          ],
+          "edge_degree": [
+            1,
+            2,
+            3,
+            3,
+            3,
+            2,
+            3,
+            4
+          ]
+        },
+        "2": {
+          "junction_count": [
+            2,
+            4,
+            4,
+            4,
+            3,
+            2,
+            2,
+            2
+          ],
+          "edge_degree": [
+            2,
+            4,
+            4,
+            4,
+            3,
+            2,
+            2,
+            2
+          ]
+        },
+        "10": {
+          "junction_count": [
+            2,
+            3,
+            4,
+            3,
+            4,
+            3,
+            4,
+            4
+          ],
+          "edge_degree": [
+            2,
+            3,
+            4,
+            3,
+            4,
+            3,
+            4,
+            4
+          ]
+        }
+      }
+    },
+    {
+      "name": "attention_finite_nonuniform_nonadjacent_and_channel_diverse",
+      "ok": true,
+      "detail": {
+        "0": {
+          "mean_entropy": 3.636533498764038,
+          "row_sum_max_error": 3.5762786865234375e-07,
+          "finite": 1.0,
+          "mean_log_keys": 3.6635615825653076,
+          "mean_max_weight": 0.04031287133693695,
+          "channel_dev_tv": 0.003363419556990266,
+          "rc_logit_std_raw": 0.007154445163905621,
+          "rc_logit_std_effective": 0.007154445163905621,
+          "nonadjacent_attention_mass": 0.8890637755393982,
+          "mean_scale": 1.04701828956604,
+          "n_pairs": 1521.0,
+          "rel_channel_weight_rms": 0.019471213221549988,
+          "S_channel_dev_tv": 3.552657190653008e-08,
+          "S_rc_logit_std_effective": 0.0
+        },
+        "1": {
+          "mean_entropy": 3.627127170562744,
+          "row_sum_max_error": 3.5762786865234375e-07,
+          "finite": 1.0,
+          "mean_log_keys": 3.6635615825653076,
+          "mean_max_weight": 0.0428188182413578,
+          "channel_dev_tv": 0.0033356710337102413,
+          "rc_logit_std_raw": 0.007406636606901884,
+          "rc_logit_std_effective": 0.007406636606901884,
+          "nonadjacent_attention_mass": 0.900755763053894,
+          "mean_scale": 1.04701828956604,
+          "n_pairs": 1521.0,
+          "rel_channel_weight_rms": 0.020610744133591652,
+          "S_channel_dev_tv": 3.496738187891424e-08,
+          "S_rc_logit_std_effective": 0.0
+        },
+        "2": {
+          "mean_entropy": 3.6291916370391846,
+          "row_sum_max_error": 2.980232238769531e-07,
+          "finite": 1.0,
+          "mean_log_keys": 3.6635615825653076,
+          "mean_max_weight": 0.04131055623292923,
+          "channel_dev_tv": 0.00287430128082633,
+          "rc_logit_std_raw": 0.006570919416844845,
+          "rc_logit_std_effective": 0.006570919416844845,
+          "nonadjacent_attention_mass": 0.8958582282066345,
+          "mean_scale": 1.04701828956604,
+          "n_pairs": 1521.0,
+          "rel_channel_weight_rms": 0.019544892013072968,
+          "S_channel_dev_tv": 3.5760397310014014e-08,
+          "S_rc_logit_std_effective": 0.0
+        },
+        "3": {
+          "mean_entropy": 3.631744861602783,
+          "row_sum_max_error": 3.5762786865234375e-07,
+          "finite": 1.0,
+          "mean_log_keys": 3.6635615825653076,
+          "mean_max_weight": 0.040218789130449295,
+          "channel_dev_tv": 0.0033022859133780003,
+          "rc_logit_std_raw": 0.006839767098426819,
+          "rc_logit_std_effective": 0.006839767098426819,
+          "nonadjacent_attention_mass": 0.8835069537162781,
+          "mean_scale": 1.04701828956604,
+          "n_pairs": 1521.0,
+          "rel_channel_weight_rms": 0.019391071051359177,
+          "S_channel_dev_tv": 3.628725409043909e-08,
+          "S_rc_logit_std_effective": 0.0
+        },
+        "4": {
+          "mean_entropy": 3.6275174617767334,
+          "row_sum_max_error": 3.5762786865234375e-07,
+          "finite": 1.0,
+          "mean_log_keys": 3.6635615825653076,
+          "mean_max_weight": 0.04240839555859566,
+          "channel_dev_tv": 0.0034361290745437145,
+          "rc_logit_std_raw": 0.008032872341573238,
+          "rc_logit_std_effective": 0.008032872341573238,
+          "nonadjacent_attention_mass": 0.8960908055305481,
+          "mean_scale": 1.04701828956604,
+          "n_pairs": 1521.0,
+          "rel_channel_weight_rms": 0.020401325076818466,
+          "S_channel_dev_tv": 3.524051095382674e-08,
+          "S_rc_logit_std_effective": 0.0
+        }
+      }
+    },
+    {
+      "name": "train_eval_identical_no_dropout_no_bn",
+      "ok": true,
+      "detail": {
+        "C": 0.0,
+        "S": 0.0
+      }
+    },
+    {
+      "name": "relation_cache_offsets_and_independent_sample",
+      "ok": true,
+      "detail": {
+        "meta_ok": true,
+        "sample_max_abs_diff": 0.0,
+        "train_total_pairs": 6492991,
+        "valid_total_pairs": 644472
+      }
+    },
+    {
+      "name": "ring_support_statistics_present",
+      "ok": true,
+      "detail": {
+        "train_ring_pair_fraction": 0.13639707801843556,
+        "valid_ring_pair_fraction": 0.13671656798123114,
+        "train_cycle_histogram": {
+          "3": 629,
+          "4": 166,
+          "5": 8519,
+          "6": 18052,
+          "7": 346,
+          "8": 96,
+          "9": 1,
+          "10": 1,
+          "11": 14,
+          "12": 4,
+          "13": 4,
+          "18": 1
+        }
+      }
+    },
+    {
+      "name": "test_split_refused",
+      "ok": true,
+      "detail": {
+        "official_test_loaded": false
+      }
+    },
+    {
+      "name": "no_official_test_load_recorded",
+      "ok": true,
+      "detail": {
+        "loaded": [
+          "/home/calendar/code/research/tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+          "/home/calendar/code/research/tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_valid.pt",
+          "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+          "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+          "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt"
+        ]
+      }
+    },
+    {
+      "name": "code_never_names_test_cache",
+      "ok": true,
+      "detail": {
+        "contains_ad_test_pt": false,
+        "files_scanned": [
+          "chr_analysis.py",
+          "chr_data.py",
+          "chr_models.py",
+          "chr_runner.py"
+        ]
+      }
+    },
+    {
+      "name": "provenance_hashes_recorded",
+      "ok": true,
+      "detail": {
+        "config_sha256": "fba5d7f174dda36d2b8323028b4f566a0bdddad9df1f40d237e5fea718d4a7ee",
+        "n_code_files": 5
+      }
+    }
+  ],
+  "all_pass": true,
+  "n_checks": 34,
+  "n_failed": 0,
+  "manifest": {
+    "round_id": "zinc-p3-chromatic-bond-v0",
+    "config_sha256": "fba5d7f174dda36d2b8323028b4f566a0bdddad9df1f40d237e5fea718d4a7ee",
+    "code_sha256": {
+      "chr_analysis.py": "df7e0ed4119b559ab94d48325ab50b04995955019b68edb7877901489c998d27",
+      "chr_cpu_checks.py": "4a0dc956f80111e52e08653114990074365266460bb72c0a6fc24eaa7c372609",
+      "chr_data.py": "454d365380501010225476b557d20f3d1819f9daf418e10d6c121c4911648054",
+      "chr_models.py": "9e6a9b6bcc3ae87a59923b4c25450cae02f46158541c8925da138724455737b1",
+      "chr_runner.py": "d8269dc1727da7404455206bc8395bfb5ba4c038c854d110bebe052dad971a7a"
+    },
+    "relation_cache": {
+      "train": {
+        "path": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_p3_chromatic_bond_v0/cache/chr_rel_train.npy",
+        "sha256": "473663ce557bca97a7047bf2195ae3c99f07bcf092358adcd45cbc498beafd2a"
+      },
+      "valid": {
+        "path": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_p3_chromatic_bond_v0/cache/chr_rel_valid.npy",
+        "sha256": "b9e09f21b13629bcd97177f3a8a04d7bcfb46f82c55809dea4dea3420d4afa69"
+      }
+    },
+    "ad_cache": {
+      "train": {
+        "path": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+        "sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3"
+      },
+      "valid": {
+        "path": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_valid.pt",
+        "sha256": "6e45fea66c4c87c7de1cd9c32cd495525c7ea5099b1c35f54fd3ab68fc8b1e97"
+      }
+    },
+    "ssl": {
+      "source": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+    },
+    "loaded_paths": [
+      "/home/calendar/code/research/tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+      "/home/calendar/code/research/tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_valid.pt",
+      "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt"
+    ],
+    "official_test_loaded": false,
+    "git_commit": "072eeaa5c106dc4ac710ebc9591855bd142d4d02",
+    "git_dirty_tracked": false,
+    "utc": "2026-10-25T22:09:13+0800"
+  },
+  "official_test_loaded": false
+}
