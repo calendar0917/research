@@ -1,0 +1,91 @@
+{
+  "round_id": "zinc-p3-chromatic-bond-v0",
+  "purpose": "post-hoc descriptive context; does not change analysis/decision.json",
+  "screen_calibration": {
+    "C": {
+      "best": 0.08106834826985142,
+      "best_epoch": 376,
+      "W20": 0.08285252841649345,
+      "W20_start": 532,
+      "tail100": 0.08291353846614948,
+      "max_jump_after_10": [
+        0.11008297179744114,
+        34
+      ],
+      "max_jump_after_50": [
+        0.09238237278535963,
+        57
+      ],
+      "max_jump_after_100": [
+        0.06643227313936222,
+        113
+      ],
+      "max_jump_after_200": [
+        0.0220426022168249,
+        203
+      ]
+    },
+    "S": {
+      "best": 0.07712927873519948,
+      "best_epoch": 335,
+      "W20": 0.07839931385865202,
+      "W20_start": 555,
+      "tail100": 0.07844185107195517,
+      "max_jump_after_10": [
+        0.09686021552805324,
+        24
+      ],
+      "max_jump_after_50": [
+        0.04222900076769291,
+        73
+      ],
+      "max_jump_after_100": [
+        0.03967407634481787,
+        136
+      ],
+      "max_jump_after_200": [
+        0.0335014651027741,
+        203
+      ]
+    },
+    "DCC_L": {
+      "best": 0.07853714964160463,
+      "best_epoch": 489,
+      "W20": 0.07908245333650848,
+      "W20_start": 558,
+      "tail100": 0.07911177938239417,
+      "max_jump_after_10": [
+        0.10583054134435949,
+        25
+      ],
+      "max_jump_after_50": [
+        0.0604442588033853,
+        80
+      ],
+      "max_jump_after_100": [
+        0.0598416868932545,
+        116
+      ],
+      "max_jump_after_200": [
+        0.023518281283788384,
+        225
+      ]
+    }
+  },
+  "dcc_l_historical_screen_fires": true,
+  "descriptive_if_screen_ignored": {
+    "rule_1_conditions": {
+      "gain_ge_0.003": false,
+      "C_W20_le_S_W20": false,
+      "C_best_le_0.073": false,
+      "C_W20_le_0.075": false,
+      "no_catastrophic_degradation": false
+    },
+    "rule_2_competitive_C": false,
+    "rule_2_competitive_S": true,
+    "would_be_category": "COMPETITIVE_COLOR_UNPROVEN",
+    "reason": "S is competitive (best<=0.078537, W20<=0.080); C is not; C is worse than S; rule 1 fails."
+  },
+  "note": "The frozen stability screen fired on early high-LR transient valid spikes in both arms (and would also fire on the historical DCC-L seed-0 curve). The formal decision therefore remains UNSTABLE_OR_UNDERFIT; the counterfactual category is descriptive only.",
+  "official_test_loaded": false
+}
