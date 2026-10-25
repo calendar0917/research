@@ -12,6 +12,7 @@ from __future__ import annotations
 import csv
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -32,6 +33,10 @@ RUNS = _EXP / "runs"
 ANALYSIS = _EXP / "analysis"
 ARMS = {"A": "ho_A_s0", "L2G": "l2g_A_s0", "GN": "gn_A_s0"}
 WINDOWS = (100, 200, 300, 400, 500, 600)
+#: the literal `w/sum(w)` GN run that stopped at epoch 284 with a non-finite
+#: gradient; its wall time is part of the round's budget.
+FAILED_GN_GPU_HOURS = (datetime(2026, 10, 25, 8, 18, 0) -
+                       datetime(2026, 10, 25, 7, 53, 39)).total_seconds() / 3600.0
 
 
 def curve(name: str) -> dict[int, dict]:
@@ -96,11 +101,24 @@ def main() -> int:
     for ep in WINDOWS:
         row = {label: (float(curves[label][ep]["valid"]) if ep in curves[label] else None)
                for label in ARMS}
-        row["delta_L2G_minus_A"] = (None if row["L2G"] is None or row["A"] is None
-                                    else row["L2G"] - row["A"])
-        row["delta_GN_minus_A"] = (None if row["GN"] is None or row["A"] is None
-                                   else row["GN"] - row["A"])
+        for label in ARMS:
+            if label != "A":
+                row[f"delta_{label}_minus_A"] = (
+                    None if row[label] is None or row["A"] is None else row[label] - row["A"])
         res["matched_epochs"][str(ep)] = row
+
+    # sustained windows: 10-epoch mean valid MAE ending at each window ----
+    res["sustained_windows"] = {}
+    for ep in WINDOWS:
+        row = {}
+        for label in ARMS:
+            vals = [curves[label][e]["valid"] for e in range(ep - 9, ep + 1)
+                    if e in curves[label]]
+            row[label] = float(np.mean(vals)) if len(vals) == 10 else None
+        for label in ARMS:
+            if label != "A" and row[label] is not None and row["A"] is not None:
+                row[f"delta_{label}_minus_A"] = row[label] - row["A"]
+        res["sustained_windows"][str(ep)] = row
 
     # holdout (evaluated once, after checkpoint selection) ----------------
     ae = {}
@@ -156,7 +174,10 @@ def main() -> int:
     # budget -------------------------------------------------------------
     res["budget"] = {
         "gpu_hours_arms": {label: res["arms"][label]["gpu_hours"] for label in ARMS},
-        "gpu_hours_L2G_plus_GN": res["arms"]["L2G"]["gpu_hours"] + res["arms"]["GN"]["gpu_hours"],
+        "gpu_hours_new_arms": sum(res["arms"][l]["gpu_hours"] for l in ARMS if l != "A"),
+        "gpu_hours_failed_gn_literal": FAILED_GN_GPU_HOURS,
+        "gpu_hours_total_spent": (sum(res["arms"][l]["gpu_hours"] for l in ARMS
+                                       if l != "A") + FAILED_GN_GPU_HOURS),
         "cap_gpu_hours": 2.0,
         "note": "process backend, one A100 per run; wall seconds recorded by the trainer",
     }
@@ -173,13 +194,25 @@ def main() -> int:
               f"final={a['final_valid']:.6f} train@best={a['train_mae_eval_mode']:.6f} "
               f"gpu_h={a['gpu_hours']:.3f}")
     print("\n== matched epochs (valid MAE) ==")
-    print(f"{'ep':>4s} {'A':>9s} {'L2G':>9s} {'dL2G':>9s} {'GN':>9s} {'dGN':>9s}")
+    labels = list(ARMS)
+    print(f"{'ep':>4s} " + " ".join(f"{l:>9s}" for l in labels)
+          + " " + " ".join(f"{'d' + l:>9s}" for l in labels if l != "A"))
     for ep in WINDOWS:
         r = res["matched_epochs"][str(ep)]
         def f(v):
-            return "      -- " if v is None else f"{v:9.6f}"
-        print(f"{ep:4d} {f(r['A'])} {f(r['L2G'])} {f(r['delta_L2G_minus_A'])} "
-              f"{f(r['GN'])} {f(r['delta_GN_minus_A'])}")
+            return "       --" if v is None else f"{v:9.6f}"
+        print(f"{ep:4d} " + " ".join(f(r[l]) for l in labels) + " "
+              + " ".join(f(r[f'delta_{l}_minus_A']) for l in labels if l != "A"))
+    print("\n== sustained 10-epoch mean valid MAE ending at the window ==")
+    print(f"{'ep':>4s} " + " ".join(f"{l:>9s}" for l in labels)
+          + " " + " ".join(f"{'d' + l:>9s}" for l in labels if l != "A"))
+    for ep in WINDOWS:
+        r = res["sustained_windows"][str(ep)]
+        def f(v):
+            return "       --" if v is None else f"{v:9.6f}"
+        print(f"{ep:4d} " + " ".join(f(r[l]) for l in labels) + " "
+              + " ".join(f(r[f'delta_{l}_minus_A']) for l in labels if l != "A"))
+
     print("\n== internal holdout (1,000 rows, one pass after selection) ==")
     for label in ARMS:
         h = res["holdout"][label]
@@ -189,13 +222,14 @@ def main() -> int:
                      f"{h['delta_ci95'][1]:+.6f}] win={h['win_rate_vs_A']:.3f}")
         print(f"{label:4s} mae={h['holdout_mae']:.6f} median={h['median_ae']:.6f}{extra}")
     print("\n== fixed baseline (A) AE groups ==")
-    for label in ("L2G", "GN"):
+    for label in [l for l in ARMS if l != "A"]:
         h = res["holdout"][label]
         t = h["delta_tertiles"]
         print(f"{label:4s} q0={t['q0']['delta']:+.6f} q1={t['q1']['delta']:+.6f} "
               f"q2={t['q2']['delta']:+.6f} top10%={h['delta_top10pct_by_A']:+.6f} "
               f"drop-top10={h['delta_drop_top10_by_A']:+.6f}")
-    print(f"\ngpu_h total = {res['budget']['gpu_hours_L2G_plus_GN']:.3f} / 2.0 cap")
+    print(f"\ngpu_h arms = {res['budget']['gpu_hours_new_arms']:.3f}  +failed gn "
+          f"{FAILED_GN_GPU_HOURS:.3f} = {res['budget']['gpu_hours_total_spent']:.3f} / 2.0 cap")
     print("wrote", ANALYSIS / "errata_results.json")
     return 0
 
