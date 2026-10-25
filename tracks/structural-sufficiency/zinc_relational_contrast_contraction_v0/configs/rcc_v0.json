@@ -1,0 +1,126 @@
+{
+ "protocol": "rcc-v0",
+ "title": "Relational contrast contraction v0: shared local chemistry + row-sum-matched null + direct graph-level second-order contraction",
+ "frozen_before_gpu": true,
+ "split": {
+  "name": "E",
+  "path": "tracks/structure-contribution/results/bond_relation_attribution_v1/split_E.json",
+  "sha256": "5f320cf9ffa611ebbc3d9b2f3ec46e274797a4844ce3f1fb6233312eba384044",
+  "fit": 7996,
+  "monitor": 1000,
+  "locked": 1000,
+  "role": {
+   "fit": "supervised training",
+   "monitor": "checkpoint selection (read every epoch)",
+   "locked": "final report only, after predictions are frozen"
+  }
+ },
+ "data": {
+  "cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+  "rows_surviving": 9996,
+  "row_map": "split_E index i -> official-train row rows_sorted[i]",
+  "official_valid_loaded": false,
+  "official_test_loaded": false
+ },
+ "ssl_encoder": {
+  "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+  "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+  "scope": "full official-train 10k rows, unlabelled masked atom+bond+junction SSL",
+  "fit8k_only": false,
+  "disclosure": "Not Fit8k-only.  The strict Fit8k SSL checkpoint (08e5f613...) used by the P3 / BondRW split-E runs is a remote artifact not present in this checkout; regenerating it costs ~0.45 A100-h.  All three arms of this round share this single in-repo checkpoint, so every contrast is unaffected; only the descriptive comparison against the historical Fit8k-SSL P3 reference is confounded by the init."
+ },
+ "kernel": {
+  "definition": "K_R = sym(P); P = (I + D^-1 A_L)/2 on the physical-bond line graph; zero-degree rows one-hot",
+  "self_loop": 0.5,
+  "null": "d = K_R @ 1; K_D = d d^T / sum(d); B = K_R - K_D; zero mass -> B = 0",
+  "bmax": 41,
+  "distance_or_scale_scan": false
+ },
+ "model": {
+  "width": 96,
+  "rank": 16,
+  "t_dim": 136,
+  "t_layout": "upper triangle (row-major, diagonal included) of the 16x16 matrix",
+  "composer_in": 488,
+  "composer_hidden": 128,
+  "reader_in": 558,
+  "reader_hidden": 256,
+  "reader_blocks": {
+   "sum_h": 96,
+   "sum_h2": 96,
+   "atom_sum": 96,
+   "atom_sq": 96,
+   "global33": 33,
+   "struct": 5,
+   "T": 136
+  },
+  "struct_features": [
+   "log1p(n_bonds)",
+   "log1p(n_atoms)",
+   "log1p(n_junctions)",
+   "log1p(||d||_2)",
+   "log1p(||K_R||_F)"
+  ],
+  "t_scale_policy": "one global scalar = RMS of T entries over the 7996 fit rows at the shared initial state; same buffer for both arms",
+  "attention": false,
+  "second_round_local_update": false,
+  "p3_equal_init": "replaced: fresh composer/z_proj/reader under a shared fork seed, with the three new reader blocks (sum_h2, struct, T) zero-initialised so both arms start at the same function and open from step 1",
+  "parameters": 487729,
+  "param_breakdown": {
+   "encoders": 202048,
+   "composer": 74976,
+   "z_proj": 1552,
+   "reader": 209153
+  },
+  "param_note": "reader 256 x2 identical to P3/DCC-L so the strong local readout is not the bottleneck; composer 488->128->96 keeps the total under 500k (160 wide would be 506,449). Total is 1.3% below the DCC-L reference (494,193)."
+ },
+ "train": {
+  "batch_size": 128,
+  "epochs": 752,
+  "steps_per_epoch": 63,
+  "updates": 47376,
+  "reference_updates": 47400,
+  "optimizer": "adamw",
+  "lr": 0.001,
+  "min_lr": 1e-05,
+  "weight_decay": 1e-05,
+  "warmup_steps": 500,
+  "grad_clip": 5.0,
+  "schedule": "per-step cosine with linear warmup",
+  "loss": "raw-y L1",
+  "selection": "strict < on monitor MAE, keep earliest",
+  "seed": 0,
+  "batch_order_rng": "torch.Generator().manual_seed(seed+101), torch.randperm(len(fit_rows)) per epoch",
+  "epochs_note": "epochs chosen so that steps_per_epoch*epochs ~= the 47400 updates of the historical DCC-L 10k run; 47376 vs 47400 = -0.05%"
+ },
+ "arms": {
+  "real": "T = Z^T (K_R - K_D) Z",
+  "null": "T = Z^T K_D Z (row sums and total mass exactly matched to K_R)",
+  "dccl": "reference: frozen DCC-L dual-channel model, organized_local=True, same init seed / SSL / recipe / rows"
+ },
+ "budget": {
+  "cap_a100_h": 2.0,
+  "measure": "sum of wall-clock seconds of every GPU occupancy, including probe, prediction and failures"
+ },
+ "gates": {
+  "param_cap": 500000,
+  "symmetry_tol": 1e-06,
+  "null_row_sum_tol": 1e-06,
+  "shift_invariance_tol": 1e-05,
+  "regular_witness_tol": 1e-10,
+  "float64_rel_tol": 1e-06,
+  "invariance_tol": 1e-05,
+  "t_distinct_min_rel": 0.05,
+  "t_top1_share_max": 0.9,
+  "t_redundancy_r2_max": 0.9,
+  "init_arm_identical_max_abs": 0.0
+ },
+ "stop_before_gpu_if": [
+  "any hard gate fails",
+  "parameter count > 500000",
+  "T indistinguishable from the degree null on real molecules (median ||T_R - T_D||_F / ||T_R||_F < 0.05)",
+  "T is rank-1 dominated on real molecules (median top eigenvalue share of T_R > 0.90)",
+  "T is reconstructible from the pre-existing reader blocks by a linear map with mean R^2 > 0.90",
+  "timing probe projects * 1.15 above the 2.0 A100-h cap"
+ ]
+}

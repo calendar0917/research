@@ -1,0 +1,83 @@
+{
+ "protocol": "rcc-v0",
+ "track": "tracks/structural-sufficiency/zinc_relational_contrast_contraction_v0",
+ "decision": "STOP_BEFORE_GPU_REDUNDANT_SECOND_ORDER_CHANNEL",
+ "stopped_before_gpu": true,
+ "gpu_purchased": false,
+ "gpu_a100_hours_spent": 0.0,
+ "budget_cap_a100_hours": 2.0,
+ "official_test_loaded": false,
+ "official_valid_loaded": false,
+ "labels_read": false,
+ "rule_applied": "configs/rcc_v0.json gates + stop_before_gpu_if, frozen before any number was produced; no threshold was changed after seeing data",
+ "gates": {"n_gates": 24, "n_pass": 22, "failed": [
+   "G11_T_not_reconstructible_from_local_moments",
+   "G11b_real_minus_null_redundant"
+ ]},
+ "stopping_condition_triggered": "T mainly repeats the local moments the reader already consumes: 99.4% of T (mean per entry, 99.8% Frobenius-weighted) is a linear function of the pre-existing reader blocks [sum h, sum h^2, atom moments, global33, structure stats], and 97.2% (99.1% Frobenius) of the ONLY quantity the relation kernel adds over the row-sum-matched null, T_real - T_null, is predictable the same way.  The pre-registered redundancy ceiling was 0.90.",
+ "redundancy": {
+  "target_T_real": {
+   "from_all_reader_blocks_except_T": {"mean_per_entry": 0.9939849378194435, "frobenius": 0.9983632460798987},
+   "from_z_plus_z2": {"mean_per_entry": 0.9931327229797302, "frobenius": 0.9981390992858009},
+   "from_z_only": {"mean_per_entry": 0.9732440922687168, "frobenius": 0.9855572965869943},
+   "from_z2_only": {"mean_per_entry": 0.990, "frobenius": 0.997},
+   "from_struct_only": {"mean_per_entry": 0.113, "frobenius": 0.114},
+   "mlp_test_mean_r2": 0.991753640304397,
+   "mlp_train_mean_r2": 0.9974895374456859,
+   "protocol": "4000 fit molecules train / 1000 disjoint fit molecules test, no labels"
+  },
+  "target_T_null": {
+   "from_all_reader_blocks_except_T": {"mean_per_entry": 0.9822184549534135, "frobenius": 0.9968097942662403}
+  },
+  "target_T_real_minus_T_null": {
+   "from_all_reader_blocks_except_T": {"mean_per_entry": 0.9717256802895357, "frobenius": 0.990642513642997},
+   "from_z_plus_z2": {"mean_per_entry": 0.9687721602487196, "frobenius": 0.9894015217606938},
+   "from_z_only": {"mean_per_entry": 0.8561378568232269, "frobenius": 0.9258300329459491}
+  }
+ },
+ "mechanism": {
+  "effective_dimension_of_shared_bond_content": {
+   "participation_ratio": 2.5706973685432817,
+   "top1_pc_share": 0.6100242984193821,
+   "top5_share": 0.8497539443029637,
+   "top10_share": 0.9135495830797218,
+   "n_bonds": 63921,
+   "measurement": "PCA of h at the shared initial state over the first 2560 fit molecules"
+  },
+  "bond_scatter_deviation_share": {"mean": 0.42992421715753154, "median": 0.42201022803783417},
+  "eigenvector_universality_abs_cos": {"k0_median": 0.6836, "k1_median": 0.4112, "k2_median": 0.3414},
+  "B_top_abs_eig_share_mean": 0.0919,
+  "T_real_vs_null_rel_fro": {"median": 2.5019565575012312, "p05": 0.8102373039290769},
+  "T_real_top1_abs_eig_share": {"median": 0.7026195451488727, "p95": 0.9232412527284624},
+  "trace_collapse_median_rel": 0.3633592076611406,
+  "reading": "The kernel itself is well spread (top |eigenvalue| share 0.09) and B is not a scalar multiple of the centring operator (36% relative difference), so the collapse is statistical, not algebraic.  The shared bond representation h is effectively 2.6-dimensional at the shared initial state (a single composer that also receives the molecule-constant junction moments), and a zero-row-sum bilinear functional of an almost one-dimensional deviation is nearly a linear function of the second moment that the reader already receives.  T therefore cannot be an independent information channel in this design."
+ },
+ "design_as_built": {
+  "shared_bond_composer": "one MLP 488->128->96 over [b, Wl, Vl, Wg, Vg, log1p n_b, bond_feat]",
+  "rank": 16,
+  "kernel": "K_R = sym(P), P = (I + D^-1 A_L)/2, zero-degree rows one-hot",
+  "contrast": "B = K_R - d d^T / sum(d); null arm uses K_D = d d^T / sum(d)",
+  "T": "triu(Z^T M Z), 136 entries",
+  "reader": "[sum h (96), sum h^2 (96), atom sum (96), atom sum^2 (96), global33, struct5, T (136)] = 558 -> 256 -> 256 -> 1",
+  "parameters": 487729,
+  "parameters_breakdown": {"encoders": 202048, "composer": 74976, "z_proj": 1552, "reader": 209153},
+  "dccl_reference_parameters": 494193,
+  "attention": false,
+  "recursive_message_passing": false
+ },
+ "questions_answered": {
+  "forward_difference_from_dccl": "DCC-L pools two separate composers (a Null-grouped one and an ownership-grouped one) into the reader and has no graph-level quadratic channel.  RCC has one composer whose input is the union of both groupings, pools its first and second moments, and adds T = Z^T (K_R - K_D) Z.  It is not a reparameterisation of DCC-L: no two-composer split, no separate local readout path, plus a 136-dim kernel-weighted quadratic block.",
+  "forward_difference_from_bondrw": "BondRW forms an explicit unordered bond-pair representation phi(b_e,b_f) and pools it with fixed weights K; it is O(n_b^2) in pair features and has no per-bond composer.  RCC never enumerates pairs and never learns a pair function: the pair weighting is the fixed symmetric operator B, and the pair content is the rank-16 factorisation Z^T B Z.  Its expressive class is strictly inside 'quadratic forms of a rank-16 projection'.",
+  "relation_contraction_better_than_row_sum_null": "NOT ANSWERED. The GPU contrast was not purchased because the pre-registered redundancy gate failed before it.  What is established is weaker and prior to any training: even the difference T_real - T_null is 97% linearly expressible from the blocks the reader already has, so a positive REAL-NULL gap in this design would not have been attributable to new relational information.",
+  "absolute_performance": "NOT MEASURED. No GPU run, no labels read.",
+  "fitting_capacity_of_the_local_representation": "Not measured, but the readout shape is identical to P3/DCC-L (256x2) and the bond channel is a strict superset of P3's (first and second moments of a composer that sees both the Null moments and the real ownership).  Parameter count 487,729 vs DCC-L 494,193.",
+  "further_sample_efficiency_or_seed_purchase": "NO. There is no evidence to buy seeds or a learning-curve round: the measured redundancy is a property of the design's information content, not of its optimisation."
+ },
+ "limitations": [
+  "The redundancy measurement is taken at the shared initial state, because the launch rule was frozen as label-free.  A trained composer could in principle become more bond-specific; testing that would require exactly the GPU run the rule forbids, so it stays a hypothesis, not evidence.",
+  "The conclusion is scoped to this frozen design: rank 16, one-step lazy-walk contrast on the physical-bond line graph, a single composer that also receives molecule-level junction moments, and a reader that already receives sum h and sum h^2.  It is not a claim that graph-level second-order pooling or modularity-style matrices are useless in general.",
+  "The SSL initialisation is the in-repo full-10k unlabelled checkpoint (006fabc1...), not the strict Fit8k checkpoint.  This is disclosed in the config and is moot for the decision, which never reached training.",
+  "The degree-null comparison isolates the kernel form, not 'correspondence identity' independently of sparsity and support; that confound (already documented in bond_relation_attribution_v1) was not addressable without the GPU arms."
+ ],
+ "next_round_hypothesis": "A graph-level quadratic channel of per-bond content only carries information beyond the per-bond moments if the content varies coherently along the relation graph, or if the operator is high-pass at the bond-pair level.  The measured participation ratio (2.6) and the near-perfect linear reconstruction say the current design does neither; any successor must first show, label-free, that its T is not reconstructible from the moments the reader already receives."
+}

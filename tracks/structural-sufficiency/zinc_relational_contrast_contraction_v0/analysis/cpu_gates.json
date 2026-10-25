@@ -1,0 +1,292 @@
+{
+ "all_pass": false,
+ "decision": "STOP_BEFORE_GPU",
+ "detail": {
+  "h_rms": 0.7800464034080505,
+  "initial_state_sha256": "230f44f8b2519dc816e262b7e4cf051b9e43c61b54f82cb6482c873d34105f4a",
+  "reader_block_abs_mean": {
+   "T": 0.17933650314807892,
+   "a_sq": 3.9133338928222656,
+   "a_sum": 2.880825996398926,
+   "global33": 0.6540620923042297,
+   "struct": 2.623450994491577,
+   "z": 9.700643539428711,
+   "z2": 15.216561317443848
+  },
+  "reader_block_rms": {
+   "T": 0.9492759704589844,
+   "a_sq": 4.689444541931152,
+   "a_sum": 3.661410331726074,
+   "global33": 0.893429696559906,
+   "struct": 2.7698259353637695,
+   "z": 13.89661979675293,
+   "z2": 55.36801528930664
+  },
+  "struct_stats_columns": {
+   "log1p(n_atoms)": {
+    "mean": 3.1667985916137695,
+    "std": 0.1940537840127945
+   },
+   "log1p(n_bonds)": {
+    "mean": 3.2333786487579346,
+    "std": 0.21378691494464874
+   },
+   "log1p(n_junctions)": {
+    "mean": 3.546459674835205,
+    "std": 0.23718947172164917
+   },
+   "log1p(||K_R||_F)": {
+    "mean": 1.3615795373916626,
+    "std": 0.08029809594154358
+   },
+   "log1p(||d||_2)": {
+    "mean": 1.7836694717407227,
+    "std": 0.092039093375206
+   }
+  },
+  "t_real_minus_null_redundancy": {
+   "all_reader_except_T": {
+    "frobenius": 0.990642513642997,
+    "mean_per_entry": 0.9717256802895357
+   },
+   "z_only": {
+    "frobenius": 0.9258300329459491,
+    "mean_per_entry": 0.8561378568232269
+   },
+   "z_plus_z2": {
+    "frobenius": 0.9894015217606938,
+    "mean_per_entry": 0.9687721602487196
+   }
+  },
+  "t_redundancy_by_block": {
+   "all_reader_except_T": {
+    "dims": 422,
+    "null_frobenius_r2": 0.9968097942662403,
+    "null_mean_r2": 0.9822184549534135,
+    "real_frobenius_r2": 0.9983632460798987,
+    "real_mean_r2": 0.9939849378194435
+   },
+   "z": {
+    "dims": 96,
+    "null_frobenius_r2": 0.9610775189851363,
+    "null_mean_r2": 0.93343672138321,
+    "real_frobenius_r2": 0.9855572965869943,
+    "real_mean_r2": 0.9732440922687168
+   },
+   "z+z2": {
+    "dims": 192,
+    "null_frobenius_r2": 0.996490995791216,
+    "null_mean_r2": 0.9811735054596177,
+    "real_frobenius_r2": 0.9981390992858009,
+    "real_mean_r2": 0.9931327229797302
+   },
+   "z+z2+struct": {
+    "dims": 197,
+    "null_frobenius_r2": 0.9965427468472261,
+    "null_mean_r2": 0.9812400059515276,
+    "real_frobenius_r2": 0.9981702603981246,
+    "real_mean_r2": 0.9932439295367663
+   }
+  },
+  "t_scale": 12.905967712402344,
+  "z_rms": 13.89661979675293
+ },
+ "failed": [
+  "G11_T_not_reconstructible_from_local_moments",
+  "G11b_real_minus_null_redundant"
+ ],
+ "gates": {
+  "G10a_T_distinct_from_degree_null": {
+   "median_rel_fro_diff": 2.5019565575012312,
+   "p05": 0.8102373039290769,
+   "pass": true,
+   "threshold": 0.05
+  },
+  "G10b_T_not_rank_one": {
+   "median_top1_abs_eig_share": 0.7026195451488727,
+   "note": "the degree-null arm has exactly 1.0 by construction",
+   "p95": 0.9232412527284624,
+   "pass": true,
+   "threshold": 0.9
+  },
+  "G11_T_not_reconstructible_from_local_moments": {
+   "linear_frobenius_r2": 0.9983632460798987,
+   "linear_mean_r2": 0.9939849378194435,
+   "linear_median_r2": 0.9962522947296257,
+   "mlp_test_mean_r2": 0.991753640304397,
+   "mlp_test_p95_r2": 0.9982881781486882,
+   "mlp_train_mean_r2": 0.9974895374456859,
+   "n_test": 1000,
+   "n_train": 4000,
+   "note": "high R^2 would prove redundancy; low R^2 is not proof of novelty (the reader is an MLP and T is quadratic in a learned projection)",
+   "pass": false,
+   "predictor_dim": 422,
+   "threshold": 0.9
+  },
+  "G11b_real_minus_null_redundant": {
+   "by_block": {
+    "all_reader_except_T": {
+     "frobenius": 0.990642513642997,
+     "mean_per_entry": 0.9717256802895357
+    },
+    "z_only": {
+     "frobenius": 0.9258300329459491,
+     "mean_per_entry": 0.8561378568232269
+    },
+    "z_plus_z2": {
+     "frobenius": 0.9894015217606938,
+     "mean_per_entry": 0.9687721602487196
+    }
+   },
+   "note": "the only quantity the relation kernel adds over the row-sum null is T_real - T_null; this asks whether the pre-existing reader blocks can already reproduce it",
+   "pass": false,
+   "threshold": 0.9
+  },
+  "G12_no_official_valid_or_test_path": {
+   "forbidden_paths": [],
+   "note": "behavioural audit: every torch.load call in this process is recorded and checked, in addition to a source scan of the runtime modules",
+   "pass": true,
+   "source_token_hits": [],
+   "torch_load_paths_during_gates": [
+    "/home/calendar/code/research/tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+    "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt"
+   ]
+  },
+  "G13_deterministic_init_and_forward": {
+   "max_abs_pred_diff": 0.0,
+   "pass": true,
+   "state_equal": true
+  },
+  "G14_reader_blocks_numerically_alive": {
+   "pass": true,
+   "rms": {
+    "T": 0.9492759704589844,
+    "a_sq": 4.689444541931152,
+    "a_sum": 3.661410331726074,
+    "global33": 0.893429696559906,
+    "struct": 2.7698259353637695,
+    "z": 13.89661979675293,
+    "z2": 55.36801528930664
+   }
+  },
+  "G1_parameters_under_cap": {
+   "breakdown": {
+    "composer": 74976,
+    "encoders": 202048,
+    "reader": 209153,
+    "total": 487729,
+    "z_proj": 1552
+   },
+   "cap": 500000,
+   "dccl_reference": 494193,
+   "pass": true,
+   "total": 487729
+  },
+  "G2_arm_init_identical": {
+   "max_abs_pred_diff": 0.0,
+   "pass": true,
+   "state_hashes_equal": true
+  },
+  "G3a_kernel_symmetric": {
+   "max_abs": 0.0,
+   "pass": true
+  },
+  "G3b_rowsum_identity_sum_d_eq_nbonds": {
+   "bank_vs_float64_max_abs": 9.934107481068821e-09,
+   "float32_bank_max_abs": 1.0658141036401503e-14,
+   "max_abs_float64": 1.0658141036401503e-14,
+   "pass": true
+  },
+  "G3c_contrast_null_row_sum": {
+   "max_abs_B_times_1": 7.28583859910259e-16,
+   "pass": true
+  },
+  "G3d_null_matches_row_sums": {
+   "max_abs": 6.661338147750939e-16,
+   "pass": true
+  },
+  "G3e_null_is_rank_one": {
+   "max_second_eig_over_first": 4.880686142198951e-16,
+   "pass": true
+  },
+  "G3f_kernel_non_negative": {
+   "min_entry": 0.0,
+   "pass": true
+  },
+  "G4a_torch_matches_float64_double_sum": {
+   "max_rel_err_float64_model": 4.737922078499712e-15,
+   "n_molecules": 128,
+   "note": "float64 model vs an independent explicit double-sum reference; the deployed float32 path cannot be compared at this tolerance",
+   "pass": true,
+   "tolerance": 1e-10
+  },
+  "G4b_null_equals_analytic_rank_one": {
+   "max_rel_err_float64_model": 2.7309047573811106e-15,
+   "pass": true,
+   "tolerance": 1e-10
+  },
+  "G5_shift_invariance": {
+   "max_rel_change": 4.029465969779267e-07,
+   "pass": true
+  },
+  "G6_regular_graph_witnesses": {
+   "C3_z(1,-1,0)": 0.5,
+   "C4_z(1,-1,0,0)": 0.5,
+   "K4_z(1,-1,0,0)": 0.6666666666666666,
+   "expected_C3": 0.5,
+   "expected_C4": 0.5,
+   "expected_K4": 0.6666667,
+   "note": "all three graphs are vertex-transitive and regular, so d is constant and K_R is not equal to K_D in general; T is not identically zero on regular graphs.",
+   "pass": true
+  },
+  "G7a_bond_permutation_equivariance": {
+   "contraction_max_rel": 3.3007261114112914e-16,
+   "full_model_pred_max_rel": 3.411059310565179e-07,
+   "kernel_rebuild_vs_permuted_max_abs": 0.0,
+   "note": "bond order permuted consistently in bond_feat / bond_index / junc_bond / k_pad; scatter order changes so the model-level figure is float32 summation noise, not a design tolerance",
+   "pass": true
+  },
+  "G7b_batch_composition_invariance": {
+   "max_abs": 3.2782554626464844e-07,
+   "pass": true
+  },
+  "G7c_no_cross_molecule_leak": {
+   "max_abs": 0.0,
+   "pass": true
+  },
+  "G8_boundaries": {
+   "all_finite": true,
+   "one_bond_T_max": 0.0,
+   "pass": true,
+   "two_component_finite": true,
+   "zero_bond_T_max": 0.0
+  },
+  "G9_gradient_liveness": {
+   "first_nonzero_step_by_module": {
+    "composer": 1,
+    "encoders": 1,
+    "reader": 1,
+    "z_proj": 2
+   },
+   "label_free_probe": true,
+   "n_params": 24,
+   "params_never_reached": [],
+   "pass": true
+  }
+ },
+ "meta": {
+  "config_sha256": "09cea39f309a030728bd7797d86990caab0c73e5c50d8102ed9f091abd99614d",
+  "git_commit": "645f6d7b33bb0ae3e373de0894489d0aaa00641e",
+  "git_dirty": false,
+  "labels_read": false,
+  "official_test_loaded": false,
+  "official_valid_loaded": false,
+  "protocol": "rcc-v0",
+  "rows": {
+   "fit": 7996,
+   "locked": 1000,
+   "monitor": 1000
+  },
+  "split": "E"
+ }
+}

@@ -1,0 +1,187 @@
+{
+ "after_removing_size_block": {
+  "null": {
+   "frobenius": 0.9573801494714558,
+   "mean_per_entry": 0.928260679992051
+  },
+  "predictor": "z_only",
+  "real": {
+   "frobenius": 0.9838105779774438,
+   "mean_per_entry": 0.9701733043072321
+  }
+ },
+ "bond_content_spectrum": {
+  "n_bonds": 63921,
+  "note": "PCA of the shared bond representation h at the shared initial state; a low participation ratio means bilinear functionals of h (which is what T is) are nearly determined by the first two moments of a handful of directions",
+  "participation_ratio": 2.5706973685432817,
+  "top10_share": 0.9135495830797218,
+  "top1_share": 0.6100242984193821,
+  "top20_share": 0.9582304986376511,
+  "top5_share": 0.8497539443029637
+ },
+ "bond_deviation_coherence": {
+  "mean": -0.11277993415281884,
+  "median": -0.143449698561042,
+  "n": 400,
+  "note": "normalised quadratic form u_c^T A_L u_c of a centred random per-bond vector over the line graph; 0 = incoherent deviations, 1 = as coherent as possible.  Incoherent deviations are exactly the regime in which a dense quadratic form collapses to a scalar times the second moment."
+ },
+ "bond_scatter_deviation_share": {
+  "mean": 0.42992421715753154,
+  "median": 0.42201022803783417,
+  "n_molecules": 1280,
+  "note": "sum_e |h_e - mean_e(h)|^2 / sum_e |h_e|^2 at the shared initial state; a quadratic form of the bond vectors can only see the deviation part, so this bounds how independent a graph-level second-order channel can be from the bond first moment",
+  "p05": 0.3269187182188034,
+  "p95": 0.5543400347232819
+ },
+ "config_sha256": "09cea39f309a030728bd7797d86990caab0c73e5c50d8102ed9f091abd99614d",
+ "eigenvector_universality": {
+  "eigvec_0": {
+   "mean_abs_cos": 0.6126696733634663,
+   "median_abs_cos": 0.683602487158113,
+   "n_pairs": 2000,
+   "p05": 0.08425755789082501
+  },
+  "eigvec_1": {
+   "mean_abs_cos": 0.4225842716953562,
+   "median_abs_cos": 0.4111676860482015,
+   "n_pairs": 2000,
+   "p05": 0.03744782008054671
+  },
+  "eigvec_2": {
+   "mean_abs_cos": 0.3563950076072332,
+   "median_abs_cos": 0.341426206879103,
+   "n_pairs": 2000,
+   "p05": 0.026044434512510335
+  }
+ },
+ "eigenvector_universality_note": "raw cosine of the same-index eigenvector of B across two molecules, truncated to the shorter bond list; high values mean the contrast operator acts along nearly molecule-independent directions, which makes T close to a fixed quadratic function of the bond sum",
+ "git_commit": "645f6d7b33bb0ae3e373de0894489d0aaa00641e",
+ "git_dirty": false,
+ "labels_read": false,
+ "linear_r2": {
+  "all_reader_except_T": {
+   "null": {
+    "frobenius": 0.9968097942662403,
+    "mean_per_entry": 0.9822184549534135
+   },
+   "real": {
+    "frobenius": 0.9983632460798987,
+    "mean_per_entry": 0.9939849378194435
+   }
+  },
+  "struct_only": {
+   "null": {
+    "frobenius": 0.1156637092752375,
+    "mean_per_entry": 0.09933070579941147
+   },
+   "real": {
+    "frobenius": 0.1138042119835937,
+    "mean_per_entry": 0.11283086723215051
+   }
+  },
+  "z2_only": {
+   "null": {
+    "frobenius": 0.9928398212867887,
+    "mean_per_entry": 0.9638334041515255
+   },
+   "real": {
+    "frobenius": 0.9972757275458257,
+    "mean_per_entry": 0.9901811085405093
+   }
+  },
+  "z_only": {
+   "null": {
+    "frobenius": 0.9610775189851363,
+    "mean_per_entry": 0.93343672138321
+   },
+   "real": {
+    "frobenius": 0.9855572965869943,
+    "mean_per_entry": 0.9732440922687168
+   }
+  },
+  "z_plus_z2": {
+   "null": {
+    "frobenius": 0.996490995791216,
+    "mean_per_entry": 0.9811735054596177
+   },
+   "real": {
+    "frobenius": 0.9981390992858009,
+    "mean_per_entry": 0.9931327229797302
+   }
+  }
+ },
+ "n_test": 1000,
+ "n_train": 4000,
+ "official_test_loaded": false,
+ "official_valid_loaded": false,
+ "protocol": "rcc-v0",
+ "real_minus_null_explained": {
+  "all_reader_except_T": {
+   "frobenius": 0.990642513642997,
+   "mean_per_entry": 0.9717256802895357
+  },
+  "z2_only": {
+   "frobenius": 0.9820657667846222,
+   "mean_per_entry": 0.9456631221789322
+  },
+  "z_only": {
+   "frobenius": 0.9258300329459491,
+   "mean_per_entry": 0.8561378568232269
+  },
+  "z_plus_z2": {
+   "frobenius": 0.9894015217606938,
+   "mean_per_entry": 0.9687721602487196
+  }
+ },
+ "trace_collapse": {
+  "mean": 0.3687973257662953,
+  "median_rel_fro_diff_T_true_vs_kappa_centring": 0.3633592076611406,
+  "n": 400,
+  "note": "T computed with the real B versus T computed with the best single-scalar multiple of the centring operator I - 11^T/n; a small number means the kernel's off-diagonal structure barely matters and the contraction is a trace/second-moment operator",
+  "p95": 0.43566473001287676
+ },
+ "zproj_redraw": {
+  "11": {
+   "null": {
+    "frobenius": 0.9947899758768985,
+    "mean_per_entry": 0.9527026086291793
+   },
+   "real": {
+    "frobenius": 0.9980745263658093,
+    "mean_per_entry": 0.9645559248522216
+   },
+   "real_from_z_only": {
+    "frobenius": 0.9826455718250823,
+    "mean_per_entry": 0.9028404819447013
+   }
+  },
+  "12": {
+   "null": {
+    "frobenius": 0.9910854930322361,
+    "mean_per_entry": 0.9441058078551073
+   },
+   "real": {
+    "frobenius": 0.9949602949305387,
+    "mean_per_entry": 0.9560126072004965
+   },
+   "real_from_z_only": {
+    "frobenius": 0.9756982725446641,
+    "mean_per_entry": 0.8882457916552182
+   }
+  },
+  "13": {
+   "null": {
+    "frobenius": 0.99488390093393,
+    "mean_per_entry": 0.9543030658670068
+   },
+   "real": {
+    "frobenius": 0.9955254394075274,
+    "mean_per_entry": 0.9272633125651887
+   },
+   "real_from_z_only": {
+    "frobenius": 0.9721834455783688,
+    "mean_per_entry": 0.7940445218748614
+   }
+  }
+ }
+}
