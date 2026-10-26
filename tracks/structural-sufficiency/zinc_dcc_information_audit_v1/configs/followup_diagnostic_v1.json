@@ -1,0 +1,174 @@
+{
+  "protocol": "zinc-dcc-information-audit-followup-v1",
+  "base_commit": "b3a6f8eb5288f1e3126125fa1694a9fd18b5cf39",
+  "status": "FROZEN_BEFORE_FOLLOWUP_RESULTS",
+  "scope": {
+    "data": "official ZINC train only",
+    "diagnostic_rows": "ProbeFit 1000 rows only",
+    "audit_eval_labels": "forbidden in this round; not read or re-scored",
+    "official_valid_test": "never loaded",
+    "no_new_architecture": true,
+    "no_new_statistic_family": true,
+    "no_gpu": true
+  },
+  "paths": {
+    "split": "configs/split_fit8k_probe_audit.json",
+    "j_raw": "analysis/j_raw.npy",
+    "b_dir": "analysis/b"
+  },
+  "j_raw": {
+    "near_constant_indices": [
+      4,
+      5,
+      7,
+      13,
+      15,
+      21,
+      23,
+      26,
+      28,
+      29,
+      31
+    ],
+    "valid_indices": [
+      0,
+      1,
+      2,
+      3,
+      6,
+      8,
+      9,
+      10,
+      11,
+      12,
+      14,
+      16,
+      17,
+      18,
+      19,
+      20,
+      22,
+      24,
+      25,
+      27,
+      30
+    ]
+  },
+  "j_latent_dims": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "ridge_diagnostics": {
+    "alphas_original": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0,
+      100.0
+    ],
+    "alphas_extended": [
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0,
+      100.0,
+      1000.0
+    ],
+    "folds": 5,
+    "primary_fold_seed": 20261026,
+    "stability_fold_seeds": [
+      20261026,
+      20261027,
+      20261028,
+      20261029,
+      20261030
+    ],
+    "boundary_alphas": [
+      0.0001,
+      100.0
+    ],
+    "rows_of_interest": [
+      2210,
+      3776
+    ]
+  },
+  "oof": {
+    "outer_folds": 5,
+    "outer_seed": 20261101,
+    "inner_folds": 5,
+    "inner_seed": 20261102,
+    "alphas": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "huber_epsilon": 1.35,
+    "huber_max_iter": 10000,
+    "huber_tol": 1e-06,
+    "clip_quantiles": [
+      0.01,
+      0.99
+    ],
+    "control_features": "z[:,288:321] (global33, existing representation only)",
+    "stat_blocks": [
+      "J_raw",
+      "J_latent"
+    ],
+    "bootstrap_n": 10000,
+    "bootstrap_seed": 20261103,
+    "tail_threshold": -3.0,
+    "ring_rich_threshold": 4,
+    "estimator": "QuantileRegressor",
+    "quantile": 0.5,
+    "solver": "highs",
+    "huber_sensitivity": {
+      "epsilon": 1.35,
+      "alphas": [
+        0.01,
+        0.1,
+        1.0
+      ],
+      "max_iter": 10000,
+      "tol": 1e-06
+    }
+  },
+  "null": {
+    "permutations": 5,
+    "seed": 20261104,
+    "method": "global row permutation of J_perp within ProbeFit; marginal distribution preserved"
+  },
+  "positive_control": {
+    "target_oracle_gains": [
+      0.003,
+      0.005
+    ],
+    "replicates": 3,
+    "noise_df": 3,
+    "noise_scale": 0.05,
+    "signal_seed": 20261105,
+    "beta_cap": 5.0,
+    "beta_bisection_steps": 60,
+    "signal_definition": "random unit direction in J_perp, orthogonalized to [1, global33], then beta * signal added to the empirical residual plus Student-t noise",
+    "oracle_gain_definition": "MAE(t + beta*s) - MAE(t), i.e. the MAE cost of the planted signal that the control cannot see",
+    "detection_rule": "estimated Gain_CJ_control > 0 and estimated Gain_CJ_raw > 0; report magnitude recovery versus oracle",
+    "signal_mode": "random linear combination of J_perp"
+  },
+  "decision": {
+    "underpowered_if_positive_control_detection_below": 0.8,
+    "meaningful_oof_gain": 0.003,
+    "required_seed_direction": "both seeds have positive Gain_CJ_control and Gain_CJ_raw",
+    "required_null_comparison": "observed gain exceeds the 95th percentile of the permutation null",
+    "no_reason_if": "positive control passes but no stable real gain versus raw and null",
+    "continue_if": "positive control passes and real gain is stable versus raw, control and null across both seeds"
+  }
+}
