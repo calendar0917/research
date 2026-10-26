@@ -200,23 +200,25 @@ def pretrain(seed: int, device, *, mode: str, force: bool = False) -> dict:
             res = SP.pretext_loss(model, heads, batch, at, bt)
 
             optimizer.zero_grad(set_to_none=True)
-            res["loss"].backward()
+            # per-head gradient attribution must be read *before* the joint
+            # backward frees the graph; autograd.grad does not accumulate
+            # into ``.grad``, so the optimisation step is unaffected.
+            entry = None
             if global_step in GRAD_STEPS or global_step == updates - 1:
                 entry = {"step": int(global_step), "epoch": int(epoch),
                          "loss": float(res["loss"]),
                          "ce_atom": float(res["ce_atom"]) if res["ce_atom"] is not None else None,
-                         "ce_bond": float(res["ce_bond"]) if res["ce_bond"] is not None else None,
-                         "total": SP.module_grad_norms(model, heads)}
-                if res["ce_atom"] is not None:
-                    ga = torch.autograd.grad(res["ce_atom"],
-                                             SP.pretrainable_parameters(model),
-                                             retain_graph=True, allow_unused=True)
-                    entry["grad_from_ce_atom"] = _module_norms(model, ga)
-                if res["ce_bond"] is not None:
-                    gb = torch.autograd.grad(res["ce_bond"],
-                                             SP.pretrainable_parameters(model),
-                                             retain_graph=True, allow_unused=True)
-                    entry["grad_from_ce_bond"] = _module_norms(model, gb)
+                         "ce_bond": float(res["ce_bond"]) if res["ce_bond"] is not None else None}
+                for head in ("atom", "bond"):
+                    if res[f"ce_{head}"] is None:
+                        continue
+                    g = torch.autograd.grad(res[f"ce_{head}"],
+                                            SP.pretrainable_parameters(model),
+                                            retain_graph=True, allow_unused=True)
+                    entry[f"grad_from_ce_{head}"] = _module_norms(model, g)
+            res["loss"].backward()
+            if entry is not None:
+                entry["total"] = SP.module_grad_norms(model, heads)
                 grad_log.append(entry)
             gn = torch.nn.utils.clip_grad_norm_(params, SC.PRETRAIN_CLIP)
             if not torch.isfinite(torch.as_tensor(float(gn))):

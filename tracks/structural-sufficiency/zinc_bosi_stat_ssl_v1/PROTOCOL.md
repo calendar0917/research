@@ -170,18 +170,25 @@ Monitor 严格最小选点。唯一差异是 `half_encoder/side/compose` 的初�
 
 ### 算力对照 C（只有两 seed 都过 Monitor 门槛才启动）
 
-从**历史 BOSI-B 同 seed 初始化**重新训练，**不用新 SSL**；额外监督计算量按 SSL 实测
-消耗**事前冻结**：
+C = **历史 BOSI-B（前几轮真正部署的那个 `best_monitor` checkpoint，逐文件 sha256 校验）
++ 冻结的额外监督预算**。不重新训练 BOSI-B，不引入任何新 SSL。
 
 ```
 N_s = round( 预训练(seed s) 的实测 wall seconds / 该 seed 监督训练的实测 seconds/update )
 ```
 
-前 47,400 updates 使用与 BOSI-B 完全相同的 schedule 与 batch 顺序（因此前 47,400 步
-与不加载 SSL 的历史轨迹一致），之后 N_s 步**继续同一 batch-order 流**、学习率固定为
-schedule 的终值 1e-5。报告新增更新次数、LR 规则与真实 GPU-hours。
-**不把"更多训练"当作天然公平**：C 的作用是把"预训练带来的初始化效应"与"等价算力带来
-的优化效应"分开。
+分母取同 seed `BOSI-SSL` 实测的 seconds/update（同 regime、同 recipe、同卡），分子取该
+seed 预训练作业的 wall seconds —— 两边都是真实 A100 秒。规则是机械的，在看到 Monitor
+或 Locked 之后不可调。
+
+`N_s` 步**继续同一条 batch-order 流**（`Generator(seed+101)` 推进到 B 的
+`best_monitor` 所在 epoch 之后；该 checkpoint 恰好落在 epoch 边界上，代码里有断言），
+学习率固定为冻结 schedule 的终值 `1e-5`（不重开 cosine —— 不引入新的 schedule 自由度）。
+checkpoint 选择规则不变：**Monitor 严格最小**，候选集 = {载入的历史状态} ∪ {每个 epoch 末}。
+
+这个对照是**保守的**：它从"B 已经挑好的点"继续花钱，因此只会对 C 更有利，
+不会人为压低 C。报告必须写明 `best_monitor` 的来源是 `historical` 还是 `extra`、新增更新
+次数、LR 规则与真实 GPU-hours。
 
 ## 6. 评分流程（顺序不可逆）
 
@@ -221,7 +228,8 @@ rings_ge4；另有去配对最差 10 个分子、RMSE、final checkpoint。
 
 `res`（a100-2，A100-SXM4-40GB，与历史 BOSI v0/v1 同一执行 regime），
 **上限 4.0 A100·h**，按 1 GPU / job × wall-clock 小时计，**失败作业计入**。
-预计：pilot ≈0.05 + 预训练 2×≈0.2 + 监督 2×≈0.45 + 对照 2×≈0.5 ≈ 2.4 h。
+预计：pilot ≈0.05 + 预训练 2×≈0.3 + 监督 2×≈0.5 + 对照 C 2×≈0.3 ≈ 2.2 h
+（C 的额外更新数由上式机械推出，因此其成本与预训练成本天然同量级）。
 若实测将超限 → 停止并记录，**不缩短正式更新次数**。
 
 ## 9. 禁止清单

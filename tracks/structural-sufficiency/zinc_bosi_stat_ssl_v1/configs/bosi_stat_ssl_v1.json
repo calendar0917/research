@@ -4,7 +4,6 @@
   "status": "frozen_before_gpu",
   "official_splits": "never_read",
   "question": "Does a strictly leak-free masked structural pretraining of only half_encoder / side / compose (the modules that produce BOSI-B's partner content, which was shown to be load-bearing) improve held-out raw-y MAE without new labels, new molecules or any architecture change?",
-
   "frozen_artifacts": {
     "data_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
     "data_cache_sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3",
@@ -21,18 +20,30 @@
       "0": "ceeb598f3a51761ae46cf761dfe7de3b4c08d74c2c5b7c1a3c823d75e53e9a58",
       "1": "c93ea85b10aa7c88e1bde9aee90be7d8857fab1418cf4cec5505dbd5dded39b4"
     },
-    "historical_bosi_b_monitor_mae": {"0": 0.1245047393636778, "1": 0.12240047505032271},
-    "historical_bosi_b_locked_mae": {"0": 0.082449, "1": 0.081491}
+    "historical_bosi_b_monitor_mae": {
+      "0": 0.1245047393636778,
+      "1": 0.12240047505032271
+    },
+    "historical_bosi_b_locked_mae": {
+      "0": 0.082449,
+      "1": 0.081491
+    }
   },
-
   "model": {
     "architecture": "frozen BOSI v0/B, arm B, 473,889 parameters, six modules",
     "implementation": "zinc_bosi_partner_content_v1/code/{bosi_common,bosi_data,bosi_models}.py imported, never copied or edited",
-    "pretrained_modules": ["half_encoder", "side", "compose"],
-    "frozen_modules_during_pretraining": ["atom_encoder", "bond_encoder", "reader"],
+    "pretrained_modules": [
+      "half_encoder",
+      "side",
+      "compose"
+    ],
+    "frozen_modules_during_pretraining": [
+      "atom_encoder",
+      "bond_encoder",
+      "reader"
+    ],
     "reader": "not used by the pretext path; keeps the historical per-seed initial state in the supervised run"
   },
-
   "mask": {
     "atom_ratio": 0.15,
     "bond_ratio": 0.15,
@@ -45,7 +56,6 @@
     "rebuild": "every type-dependent feature cell is recomputed from the masked raw graph: atom_feat 0:28, 42:46, 46:74, 74:102; bond_feat 0:4; global 19:23, 31, 32",
     "rebuild_equivalence": "verified bit-identical to structural_relation_objects_v1.build_mol_objects on the masked raw graph"
   },
-
   "pretext": {
     "task": "masked atom-type + masked physical-bond-type reconstruction",
     "heads": {
@@ -71,7 +81,6 @@
     "checkpoint_rule": "last-step state only; reconstruction accuracy never selects a checkpoint",
     "pretraining_data_boundary": "Fit8k raw structures only; no labels, no Monitor/Locked/official rows"
   },
-
   "pilot_gate": {
     "updates": 1890,
     "seed": 0,
@@ -84,28 +93,44 @@
     ],
     "if_not_all": "PRETEXT_NO_GO: stop, no supervised run, no further pretraining"
   },
-
   "supervised": {
     "arms": {
-      "S_s0": {"init": "historical BOSI-B seed 0 + pretrained half/side/compose", "updates": 47400},
-      "S_s1": {"init": "historical BOSI-B seed 1 + pretrained half/side/compose", "updates": 47400, "condition": "purchased only if the seed-0 Monitor gate fires"},
-      "C_s0": {"init": "historical BOSI-B seed 0, no SSL", "updates": "47400 + N_s0", "condition": "purchased only if both SSL seeds show a Monitor gain"},
-      "C_s1": {"init": "historical BOSI-B seed 1, no SSL", "updates": "47400 + N_s1", "condition": "as C_s0"}
+      "S_s0": {
+        "init": "historical BOSI-B seed 0 + pretrained half/side/compose",
+        "updates": 47400
+      },
+      "S_s1": {
+        "init": "historical BOSI-B seed 1 + pretrained half/side/compose",
+        "updates": 47400,
+        "condition": "purchased only if the seed-0 Monitor gate fires"
+      },
+      "C_s0": {
+        "init": "historical BOSI-B seed 0 best_monitor (hash-verified), no SSL",
+        "updates": "N_0 extra updates after the frozen 47,400-step schedule",
+        "condition": "purchased only if both SSL seeds show a Monitor gain"
+      },
+      "C_s1": {
+        "init": "historical BOSI-B seed 1 best_monitor (hash-verified), no SSL",
+        "updates": "N_1 extra updates after the frozen 47,400-step schedule",
+        "condition": "as C_s0"
+      }
     },
     "recipe": "the frozen BOSI v0 / partner-content recipe, unchanged: Fit8k, batch 128, AdamW 1e-3 -> 1e-5 per-step cosine, warm-up 500, wd 1e-5, clip 5, raw-y L1, batch order Generator(seed+101), strict-minimum Monitor checkpoint",
-    "c_extra_updates_rule": "N_s = round(pretraining wall seconds of seed s / measured supervised seconds per update of that seed); the extra updates continue the same batch-order stream at the terminal LR (1e-5). Added updates, LR rule and real GPU-hours are reported.",
-    "inference_identity": "the exported model is bit-identical in structure and parameter set to historical BOSI-B (473,889 parameters, six modules, no pretext head)"
+    "c_extra_updates_rule": "N_s = round(pretrain wall seconds of seed s / measured supervised seconds per update of the BOSI-SSL run of seed s), frozen in analysis/control_budget.json before C is trained. C continues the frozen batch-order stream after the epoch of B's best_monitor checkpoint at the terminal learning rate 1e-5; checkpoint selection stays strict-minimum Monitor over {loaded historical state} U {epoch ends}.",
+    "inference_identity": "the exported model is bit-identical in structure and parameter set to historical BOSI-B (473,889 parameters, six modules, no pretext head)",
+    "candidate_rule_c": "the loaded historical checkpoint is a candidate under the same strict-minimum Monitor rule, so the control is conservative: extra compute can never be charged against it"
   },
-
   "purchase_gates": {
     "seed1": "Monitor(SSL_s0) <= Monitor(B_s0) - 0.004  (i.e. <= 0.1205047393636778)",
     "compute_control": "both seeds have Monitor(SSL_s) < Monitor(B_s) and seed-mean Monitor(SSL) <= seed-mean Monitor(B) - 0.004"
   },
-
   "locked_decision": {
     "readout": "internal Locked, n=1000, one read after every checkpoint/prediction/hash is frozen",
     "primary": "Delta = MAE(BOSI-SSL) - MAE(BOSI-B), seed-mean, paired per molecule",
-    "bootstrap": {"n_resamples": 10000, "unit": "molecule"},
+    "bootstrap": {
+      "n_resamples": 10000,
+      "unit": "molecule"
+    },
     "SSL_PROMISING": [
       "both per-seed Delta < 0",
       "seed-mean Delta <= -0.005",
@@ -118,14 +143,12 @@
     "NO_GAIN": "the frozen two-seed conditions are not met, or only one seed exists",
     "INCONCLUSIVE": "seed directions disagree with a negative seed mean, or the compute control is missing"
   },
-
   "budget": {
     "gpu": "res (a100-2, A100-SXM4-40GB), same execution regime as the historical BOSI v0/v1 runs",
     "cap_a100_gpu_hours": 4.0,
     "counting": "1 GPU per job, wall-clock hours, failed jobs included",
     "stop_rule": "if the projected spend exceeds the cap, stop; never shorten the frozen update counts"
   },
-
   "bans": [
     "official valid / official test access in any form",
     "new molecules, external data, new label components, teacher predictions",
@@ -136,7 +159,6 @@
     "reading Locked before every candidate checkpoint and prediction is frozen and hashed",
     "post-hoc modification of the decision rule, the evaluation set or the budget"
   ],
-
   "decision_vocabulary": [
     "CPU_NO_GO",
     "PRETEXT_NO_GO",

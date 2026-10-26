@@ -92,6 +92,7 @@ def main(argv=None) -> int:
         "split_hashes": rows["hashes"],
         "reused": reused,
         "pilot_decision": None,
+        "control_budget": None,
         "pretrain": {},
         "runs": {},
         "pairing_checks": {},
@@ -112,6 +113,20 @@ def main(argv=None) -> int:
                 "bond": pilot["curve"][-1]["ce_bond"]},
             "state_sha256": pilot["state_sha256"],
         }
+
+    cb = SC.ANALYSIS / "control_budget.json"
+    if cb.exists():
+        frozen["control_budget"] = json.loads(cb.read_text())
+        for tag, entry in frozen["runs"].items():
+            if not entry["warm_start"]:
+                continue
+            seed = str(entry["seed"])
+            want = frozen["control_budget"]["seeds"].get(seed, {}).get("extra_updates")
+            if want is None:
+                raise SystemExit(f"no frozen control budget for seed {seed}")
+            if int(want) != int(entry["extra_updates"]):
+                raise SystemExit(f"{tag} ran {entry['extra_updates']} extra updates, "
+                                 f"budget froze {want}")
 
     for tag in args.pretrain:
         path = SC.RUNS / tag / "pretrain.json"
@@ -162,7 +177,9 @@ def main(argv=None) -> int:
         pairing["same_initial_state"] = (pairing["initial_state_sha256"]
                                         == pairing["historical_initial_state_sha256"])
         frozen["runs"][tag] = {
-            "arm": "B", "seed": seed, "init": info["init"],
+            "arm": tag.split("_")[0], "seed": seed, "init": info["init"],
+            "warm_start": bool(info.get("warm_start", False)),
+            "best_origin": info.get("best_origin"),
             "total_updates": info["total_updates"],
             "extra_updates": info["extra_updates"],
             "updates_run": info["updates_run"],
@@ -185,6 +202,19 @@ def main(argv=None) -> int:
         # the SSL arms must additionally expose the pretrained-init provenance
         if info["init"]["init"] == "ssl":
             frozen["runs"][tag]["ssl_init"] = info["init"]
+        # the compute control must start from the deployed historical checkpoint
+        if info.get("warm_start"):
+            hist_sha = frozen["reused"]["checkpoint"][f"B_s{seed}/best_monitor"]["sha256"]
+            if info["init"]["checkpoint_sha256"] != hist_sha:
+                raise SystemExit(f"{tag} did not warm start from the frozen B checkpoint")
+            frozen["runs"][tag]["control_start"] = {
+                "source": info["init"]["source"],
+                "checkpoint_sha256": info["init"]["checkpoint_sha256"],
+                "step": info["init"]["step"], "epoch": info["init"]["epoch"],
+                "monitor_mae": info["init"]["monitor_mae"],
+                "extra_updates": info["extra_updates"],
+                "lr_rule": info["lr_rule"],
+            }
 
     total = 0.0
     ledger = []
