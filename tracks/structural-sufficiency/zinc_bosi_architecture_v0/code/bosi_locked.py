@@ -54,7 +54,7 @@ def _verify(freeze: dict) -> None:
             raise SystemExit(f"freeze mismatch on {name}: {actual} != {expected}")
     for tag, run in freeze["runs"].items():
         for ckpt, entry in run["checkpoints"].items():
-            path = BC.ROUND / entry["file"]
+            path = BC.resolve_path(entry["file"])
             if BC.sha256_file(path) != entry["sha256"]:
                 raise SystemExit(f"freeze mismatch on {tag}/{ckpt}")
 
@@ -99,7 +99,7 @@ def main(argv=None) -> int:
         existing = json.loads(lock_path.read_text())
         for tag, entry in existing["predictions"].items():
             for ckpt, meta in entry.items():
-                path = BC.ROUND / meta["file"]
+                path = BC.resolve_path(meta["file"])
                 if BC.sha256_file(path) != meta["sha256"]:
                     raise SystemExit(f"locked prediction file changed: {path}")
         BC.log("[bosi-locked] existing artefacts verified, nothing recomputed")
@@ -135,7 +135,7 @@ def main(argv=None) -> int:
         for ckpt, meta in run["checkpoints"].items():
             model, _ = BM.build_model(norm, "R", seed, "cpu")
             model.arm = arm
-            blob = torch.load(BC.ROUND / meta["file"], map_location="cpu", weights_only=False)
+            blob = torch.load(BC.resolve_path(meta["file"]), map_location="cpu", weights_only=False)
             C.load_state(model, blob["state_dict"], "cpu")
             pred = BC.predict(model, cache, rel, locked, device="cpu",
                               batch_size=int(BC.RECIPE["eval_batch_size"]))
@@ -144,7 +144,7 @@ def main(argv=None) -> int:
             np.savez(path, row=locked, pred=arr, arm=arm, seed=seed,
                      checkpoint=ckpt, y=y.astype(np.float32))
             result["predictions"][tag][ckpt] = {
-                "file": str(path.relative_to(BC.ROUND)),
+                "file": BC.rel_or_abs(path),
                 "sha256": BC.sha256_file(path),
                 "locked_mae": BC.mae(arr, y),
                 "checkpoint_sha256": meta["sha256"],

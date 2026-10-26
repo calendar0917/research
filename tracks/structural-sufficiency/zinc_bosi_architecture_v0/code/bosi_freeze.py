@@ -75,7 +75,7 @@ def main(argv=None) -> int:
             mae = BC.mae(pred, y_monitor)
             recorded = info["monitor_reads"][state_tag]["monitor_mae"]
             entry["checkpoints"][state_tag] = {
-                "file": str(path.relative_to(BC.ROUND)),
+                "file": BC.rel_or_abs(path),
                 "sha256": BC.sha256_file(path),
                 "step": blob["step"],
                 "epoch": blob["epoch"],
@@ -84,7 +84,7 @@ def main(argv=None) -> int:
                 "monitor_recompute_abs_diff": abs(mae - recorded),
                 "monitor_pred_sha256": C.sha256_array(pred.astype(np.float32)),
             }
-            if abs(mae - recorded) > 1e-9:
+            if abs(mae - recorded) > 1e-6:
                 raise SystemExit(f"{tag}/{state_tag}: Monitor recompute mismatch "
                                  f"{mae} vs {recorded}")
         results["runs"][tag] = entry

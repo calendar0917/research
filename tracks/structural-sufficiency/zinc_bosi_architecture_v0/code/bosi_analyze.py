@@ -68,7 +68,7 @@ def main() -> int:
         if not np.array_equal(np.asarray(blob["locked_rows"]), lock_rows):
             raise SystemExit("DCC-L locked rows do not match the frozen split")
         dcc[seed] = {"pred": np.asarray(blob["locked_pred"], dtype=np.float64),
-                     "path": str(path.relative_to(BC.ROUND.parents[2])),
+                     "path": BC.rel_or_abs(path),
                      "sha256": BC.sha256_file(path)}
 
     # frozen structural grouping (Fit8k-only support)
@@ -108,7 +108,7 @@ def main() -> int:
         arm = freeze["runs"][tag]["arm"]
         seed = int(freeze["runs"][tag]["seed"])
         for ckpt, meta in per_ckpt.items():
-            p = _load_pred(BC.ROUND / meta["file"])
+            p = _load_pred(BC.resolve_path(meta["file"]))
             runs[(tag, ckpt)] = {"arm": arm, "seed": seed, "pred": p, "tag": tag,
                                  "locked_mae": _mae(p, y),
                                  "top10": float(np.sort(np.abs(p - y))[-1]),

@@ -68,6 +68,19 @@ RECIPE = dict(
 EXPECTED_PARAMETERS = 473_889
 
 
+def rel_or_abs(path: Path | str) -> str:
+    p = Path(path).resolve()
+    try:
+        return str(p.relative_to(ROUND.resolve()))
+    except ValueError:
+        return str(p)
+
+
+def resolve_path(text: str | Path) -> Path:
+    p = Path(text)
+    return p if p.is_absolute() else (ROUND / p)
+
+
 def sha256_file(path: Path | str) -> str:
     return C.sha256_file(path)
 
