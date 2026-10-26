@@ -389,6 +389,9 @@ reader 更大（197,633 vs A 148,513 / D 156,673），且其 dense reader 允许
   Monitor 两 seed 差 `0.00462`。**小于 0.003 的 Locked 差异不应被当作可靠
   材料性效应**；这正是预注册把 0.003 作为门槛的原因。
 - A vs D 是容量匹配的；A/D vs C 不是。A−C 的容量混淆无法在本轮消除。
+- A/D 的 reader 初始化流不同（`seed+20021` vs `seed+20022`），所以 A−D 还包含
+  reader 初始化噪声；2 个 seed 无法把 `0.00264` 与这部分方差干净分开。A/D 的
+  reader 参数数量也略有差异（A 148,513 vs D 156,673），总参数匹配但分布不同。
 - best-Monitor 选点本身有噪声：D_s0 的 final 在 Locked 上比 best 好 `0.0024`；
   主表按协议用 best，final 只作辅助。A 的 final 与 best 基本一致。
 - 分析阶段有工程重跑（见 1.5），但 8 个 Locked 前向各一次；没有根据 Locked
