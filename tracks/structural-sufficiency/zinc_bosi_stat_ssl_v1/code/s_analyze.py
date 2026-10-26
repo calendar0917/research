@@ -174,12 +174,14 @@ def _decide(freeze, summary, ssl_tags, c_tags, meta) -> dict:
     bond_vs_prior = d_ce.get("bond_vs_marginal")
     checks["pilot_atom_beats_prior"] = bool(atom_vs_prior is not None and atom_vs_prior >= 0.10)
     checks["pilot_bond_beats_prior"] = bool(bond_vs_prior is not None and bond_vs_prior >= 0.02)
+    # delta_ce stores "clean - intervened", so a helpful partner channel makes
+    # the shuffled delta *negative*: CE(shuffled) - CE(clean) >= 0.02 nats.
     checks["pilot_atom_uses_partner_stats"] = bool(
         d_ce.get("atom_shuffled_partner") is not None
-        and d_ce["atom_shuffled_partner"] >= 0.02)
+        and -d_ce["atom_shuffled_partner"] >= 0.02)
     checks["pilot_bond_uses_partner_stats"] = bool(
         d_ce.get("bond_shuffled_partner") is not None
-        and d_ce["bond_shuffled_partner"] >= 0.02)
+        and -d_ce["bond_shuffled_partner"] >= 0.02)
     if not all(v for k, v in checks.items() if k.startswith("pilot_")):
         return {"verdict": "PRETEXT_NO_GO",
                 "reason": ("the pilot pretext did not learn beyond the marginal prior or "
