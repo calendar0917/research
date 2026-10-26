@@ -1,0 +1,292 @@
+{
+  "protocol_id": "zinc-additive-reader-v1",
+  "checked_utc": "2026-10-26T14:29:27+0800",
+  "commits": {
+    "preregistration_and_seed0_training_code": "9be30bf9ca4faacb41607f4b91f51e99e4214eaf",
+    "pilot_and_seed1_training_code": "9a088883ed4a",
+    "freeze": "677ac820da0098217a25470908a4074d423b244f",
+    "analysis_results_first_commit": "6c018e76a2f454e88cf5253cdfac1c6a6e457b0f",
+    "top10_sign_fix_and_final_analysis": "732f91a08ba6d5e1201b58cb433dc7b053e69940",
+    "cpu_checks_rerun": "6c018e76a2f454e88cf5253cdfac1c6a6e457b0f"
+  },
+  "hashes": {
+    "config_sha256": "a436d9beef111214312d24750c53320fea63e3133d99e7323b2d28c66aeadd9b",
+    "protocol_md_sha256": "4f413b587e16788be5a1c288ae94a5114716b0ce5c9d5bba34386b9c131d8e0b",
+    "report_sha256": "1e9a1a2a2f0dbb842f724a75b0fc5d1514b76e6dc8259d084afacfd0be573a50",
+    "cpu_checks_sha256": "8effe6afc7fa4dd1fe65964ca26e0f6e2f0da65df4782174e51cffdc6565423d",
+    "freeze_sha256": "ecc3a7de6ac4dd85e679c5d09e5490b413bc3d791e272939dacafba4e6b2dda4",
+    "locked_read_sha256": "2c28471b10851510f5a50dd134b189d92058215a01750889bcbeef8526eae7bb",
+    "summary_sha256": "efa180f3e2fa77e598dbf2e81caaf3b059727e86edd58c4905e4101ef31a8880",
+    "decision_sha256": "28eb984679f1608a054c46282e8d2514fc7571b8cb6038b0bd6dbb286d844ac6",
+    "tables_sha256": "fa163043440d6c63c9e9eca6e6ff31a92f5a211827a50c3badc79c1132a3e209",
+    "training_ledger_sha256": "8140592d4d93b5b0a4eaf812d82acff8e5880b81c09b750a55cbd04ec596ecf5",
+    "a_component_quantiles_sha256": "31fa11f125f51e16b35335183952890c19a4587ef295651d5cfa8b237cc8a9ba"
+  },
+  "split": {
+    "hashes": {
+      "fit8k": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+      "monitor": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+      "locked": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d"
+    },
+    "fit8k": 8000,
+    "monitor": 1000,
+    "locked": 1000
+  },
+  "training": {
+    "all_updates_47400": true,
+    "all_epochs_753": true,
+    "one_norm_hash": [
+      "bbfb4ce733b7433cfe18fa922b8b990a37ba17aac103ddf5a51fe0110f4db207"
+    ],
+    "shared_init_identical_within_seed": {
+      "0": true,
+      "1": true
+    },
+    "all_A_params_453361": true,
+    "all_D_params_461521": true,
+    "no_locked_read_in_training": true,
+    "no_official_valid_loaded": true,
+    "no_official_test_loaded": true
+  },
+  "parameter_audit": {
+    "A": 453361,
+    "D": 461521,
+    "relative_difference": 0.017680668918640754,
+    "both_under_500k": true,
+    "DCCL_reference": 494193,
+    "note": "A/D are matched to 1.768% of each other; both have fewer reader parameters than DCC-L (A 148,513 = 32+148,481; D 156,673; DCC-L 197,633)."
+  },
+  "cpu_gate": {
+    "all_pass": true,
+    "n_groups_passed": 10,
+    "n_groups": 10,
+    "wall_seconds": 3.6411044597625732,
+    "git_commit": "6c018e76a2f454e88cf5253cdfac1c6a6e457b0f",
+    "config_sha256": "a436d9beef111214312d24750c53320fea63e3133d99e7323b2d28c66aeadd9b",
+    "note": "Re-run on the final training/check code at 6c018e7; 10/10 PASS. The original pre-training run was at HEAD 405fc7d with the then-untracked files that became 9be30bf."
+  },
+  "budget": {
+    "hard_cap_gpu_hours": 2.0,
+    "formal_gpu_hours": 1.529868727285648,
+    "smoke_gpu_hours": 0.007604031129610828,
+    "total_gpu_hours": 1.5374727584152588,
+    "within_cap": true,
+    "per_run": {
+      "A_s0": {
+        "gpu_hours": 0.3610368462589233,
+        "wall_seconds": 1299.732646532124,
+        "best_epoch": 560,
+        "monitor_mae": 0.1262451745280996
+      },
+      "D_s0": {
+        "gpu_hours": 0.4008366312556124,
+        "wall_seconds": 1443.0118725202046,
+        "best_epoch": 392,
+        "monitor_mae": 0.12547763296868653
+      },
+      "A_s1": {
+        "gpu_hours": 0.34807718257581455,
+        "wall_seconds": 1253.0778572729323,
+        "best_epoch": 608,
+        "monitor_mae": 0.1246961648920551
+      },
+      "D_s1": {
+        "gpu_hours": 0.4199180671952975,
+        "wall_seconds": 1511.705041903071,
+        "best_epoch": 495,
+        "monitor_mae": 0.12867643768619746
+      }
+    },
+    "smoke_runs": [
+      {
+        "tag": "A_s0_128",
+        "updates": 128,
+        "gpu_hours": 0.0011117310313663135,
+        "projected_gpu_hours_per_run": 0.49154850821593327,
+        "rr": {
+          "run_id": "ar-smoke-A-20261026-131349-1f66c209",
+          "pool": "res-gpu0",
+          "state": "completed",
+          "runtime": {
+            "hostname": "a100-2",
+            "node": "a100-2",
+            "driver_version": "550.163.01",
+            "gpus": {
+              "count": 2,
+              "names": [
+                "NVIDIA A100-SXM4-40GB",
+                "NVIDIA A100-SXM4-40GB"
+              ]
+            },
+            "gpu_count": 2,
+            "python_version": "3.12.14",
+            "python_executable": "/home/hxy/cy/research/.venv/bin/python",
+            "slurm_job_id": null,
+            "slurm_job_nodelist": null,
+            "slurm_partition": null,
+            "slurm_cpus": null,
+            "slurm_gpus": "0",
+            "cuda_visible_devices": "0",
+            "started_at": "2026-10-26T13:13:51+08:00",
+            "torch_version": "2.5.1+cu124",
+            "torch_cuda": "12.4",
+            "cuda_available": true,
+            "cuda_device_count": 1,
+            "completed_at": "2026-10-26T13:14:06+08:00",
+            "exit_code": 0
+          }
+        }
+      },
+      {
+        "tag": "A_s0_315",
+        "updates": 315,
+        "gpu_hours": 0.0025512250521892888,
+        "projected_gpu_hours_per_run": 0.4445157770194734,
+        "rr": {
+          "run_id": "ar-smoke-A5-20261026-131628-daf47ae7",
+          "pool": "res-gpu0",
+          "state": "completed",
+          "runtime": {
+            "hostname": "a100-2",
+            "node": "a100-2",
+            "driver_version": "550.163.01",
+            "gpus": {
+              "count": 2,
+              "names": [
+                "NVIDIA A100-SXM4-40GB",
+                "NVIDIA A100-SXM4-40GB"
+              ]
+            },
+            "gpu_count": 2,
+            "python_version": "3.12.14",
+            "python_executable": "/home/hxy/cy/research/.venv/bin/python",
+            "slurm_job_id": null,
+            "slurm_job_nodelist": null,
+            "slurm_partition": null,
+            "slurm_cpus": null,
+            "slurm_gpus": "0",
+            "cuda_visible_devices": "0",
+            "started_at": "2026-10-26T13:16:29+08:00",
+            "torch_version": "2.5.1+cu124",
+            "torch_cuda": "12.4",
+            "cuda_available": true,
+            "cuda_device_count": 1,
+            "completed_at": "2026-10-26T13:16:49+08:00",
+            "exit_code": 0
+          }
+        }
+      },
+      {
+        "tag": "D_s0_128",
+        "updates": 128,
+        "gpu_hours": 0.0013307260791124362,
+        "projected_gpu_hours_per_run": 0.5807994287007556,
+        "rr": {
+          "run_id": "ar-smoke-D-20261026-131349-ab3620f6",
+          "pool": "res-gpu1",
+          "state": "completed",
+          "runtime": {
+            "hostname": "a100-2",
+            "node": "a100-2",
+            "driver_version": "550.163.01",
+            "gpus": {
+              "count": 2,
+              "names": [
+                "NVIDIA A100-SXM4-40GB",
+                "NVIDIA A100-SXM4-40GB"
+              ]
+            },
+            "gpu_count": 2,
+            "python_version": "3.12.14",
+            "python_executable": "/home/hxy/cy/research/.venv/bin/python",
+            "slurm_job_id": null,
+            "slurm_job_nodelist": null,
+            "slurm_partition": null,
+            "slurm_cpus": null,
+            "slurm_gpus": "1",
+            "cuda_visible_devices": "1",
+            "started_at": "2026-10-26T13:13:51+08:00",
+            "torch_version": "2.5.1+cu124",
+            "torch_cuda": "12.4",
+            "cuda_available": true,
+            "cuda_device_count": 1,
+            "completed_at": "2026-10-26T13:14:08+08:00",
+            "exit_code": 0
+          }
+        }
+      },
+      {
+        "tag": "D_s0_315",
+        "updates": 315,
+        "gpu_hours": 0.0026103489669427895,
+        "projected_gpu_hours_per_run": 0.443315358664724,
+        "rr": {
+          "run_id": "ar-smoke-D5-20261026-131806-4d7ea9ac",
+          "pool": "res-gpu0",
+          "state": "completed",
+          "runtime": {
+            "hostname": "a100-2",
+            "node": "a100-2",
+            "driver_version": "550.163.01",
+            "gpus": {
+              "count": 2,
+              "names": [
+                "NVIDIA A100-SXM4-40GB",
+                "NVIDIA A100-SXM4-40GB"
+              ]
+            },
+            "gpu_count": 2,
+            "python_version": "3.12.14",
+            "python_executable": "/home/hxy/cy/research/.venv/bin/python",
+            "slurm_job_id": null,
+            "slurm_job_nodelist": null,
+            "slurm_partition": null,
+            "slurm_cpus": null,
+            "slurm_gpus": "0",
+            "cuda_visible_devices": "0",
+            "started_at": "2026-10-26T13:18:08+08:00",
+            "torch_version": "2.5.1+cu124",
+            "torch_cuda": "12.4",
+            "cuda_available": true,
+            "cuda_device_count": 1,
+            "completed_at": "2026-10-26T13:18:28+08:00",
+            "exit_code": 0
+          }
+        }
+      }
+    ]
+  },
+  "locked_read": {
+    "read_count": 1,
+    "read_utc": "2026-10-26T14:20:52+0800",
+    "device": "cpu",
+    "rows": 1000,
+    "rows_sha256": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d",
+    "prediction_files": 8,
+    "model_forward_count_per_checkpoint": 1,
+    "reused_existing": [
+      "A_s0_best_monitor"
+    ],
+    "partial_first_attempt": true,
+    "analysis_invocations_after_freeze": 5,
+    "attempt_note": "Invocation 1 computed A_s0 best_monitor.npz, then failed on a missing monitor_mae key in final.pt. Invocation 2 reused that file (no second forward), computed the other seven, wrote locked_read.json, then failed on a historical-MAE tolerance of 1e-9 (recompute differs by ~5e-9). Invocation 3 failed on a key-name alias bug. Invocation 4 produced the first complete summary/decision/tables. Invocation 5 fixed a top-10 sensitivity sign error in the decision inputs and regenerated the summary/decision/tables; the verdict remained INCONCLUSIVE. No checkpoint was ever forward-passed on Locked twice; no model, training recipe, threshold or decision rule changed after any Locked result was seen.",
+    "official_test_loaded": false,
+    "official_valid_loaded": false,
+    "historical_official_valid_loaded_descriptively": true
+  },
+  "no_official_test_or_valid": {
+    "official_test_constructed": false,
+    "official_test_loaded": false,
+    "official_valid_loaded": false,
+    "new_training_locked_read": false,
+    "locked_used_for_checkpoint_selection": false,
+    "locked_used_for_training": false
+  },
+  "protocol_deviations": [
+    "Before formal deployment, rr deploy failed because an unrelated audit track had untracked analysis files on the remote; those files were moved aside on the remote. No scientific code or data changed.",
+    "ar_analyze.py had post-freeze engineering fixes: reuse already-written Locked npz on resume; handle final.pt without monitor_mae; widen the historical-MAE consistency tolerance from 1e-9 to 1e-7 (observed 5e-9 float discrepancy); add canonical locked_ae_best aliases; fix a double-negation in the top-10 sensitivity decision input. These changed no predictions, metrics, thresholds or the verdict.",
+    "The first Locked invocation was partial (A_s0 best only) before crashing; the already-written array was reused, not recomputed. locked_read.json records this explicitly.",
+    "The summary/decision were regenerated after the top-10 sign fix; freeze.json and locked_read.json were not overwritten (freeze() is idempotent and verifies hashes)."
+  ],
+  "decision": "INCONCLUSIVE"
+}
