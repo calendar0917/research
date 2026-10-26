@@ -27,8 +27,8 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import bosi_common as BC  # noqa: E402  (puts ad_common's dir on sys.path)
 import ad_common as C  # noqa: E402
-import bosi_common as BC  # noqa: E402
 import bosi_data as BD  # noqa: E402
 import bosi_models as BM  # noqa: E402
 
