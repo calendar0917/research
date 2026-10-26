@@ -79,7 +79,13 @@
     "P3B_s0": {
       "valid_best": 0.076224,
       "params": 413505
-    }
+    },
+    "P3B_s0_recipe_B": {
+      "valid_best": 0.076224,
+      "params": 413505,
+      "source": "zinc_recipe_trunk_v2/analysis/main_table.json row 'P3 x B' (R0 recipe, 47400 updates, SSL init)"
+    },
+    "note": "P3B is the strongest single-seed body in the repo; it has NO local junction->bond routing and NO pair content. It is the strong reference for stage B."
   },
   "decision_rules": {
     "DEEPEN_A": "A1 - B_s0 <= -0.003 AND A1 - A0 <= -0.001",
@@ -127,9 +133,11 @@
   },
   "decision_rules_b": {
     "DEEPEN_B": "S1 - S0 <= -0.002 AND S1 - B_s0 <= -0.003",
-    "SYMMETRIC_ENOUGH": "|S1 - S0| < 0.001 AND S1 - B_s0 <= -0.003",
+    "ORDERING_NOT_NEEDED": "|S1 - S0| < 0.001 (whatever the level)",
     "STOP_B": "S1 - B_s0 >= +0.002 AND S1 - S0 >= -0.001",
-    "otherwise": "AMBIGUOUS -> at most one confirmation"
+    "strong_reference": "P3B_s0 = 0.076224 (historical, same protocol/recipe, not retrained)",
+    "otherwise": "AMBIGUOUS -> at most one confirmation",
+    "tail_guard": "report drop-row172 and drop-top-1-contributor for every contrast before any level claim"
   },
   "cpu_gates_b": {
     "file": "analysis/cpu_checks_b.json",
