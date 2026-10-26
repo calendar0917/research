@@ -1,0 +1,503 @@
+{
+  "round": "zinc-bosi-stat-ssl-v1",
+  "checked_utc": "2026-10-26T19:30:13+0800",
+  "relation_cache_content_sha256": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+  "data_cache_sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3",
+  "topology": {
+    "source": "cache/stat_ssl_topo_train.pt",
+    "reused": true,
+    "sha256": "f15c6731bb027e4cceba07c1cbde33f5356f189affa45bb66434e475f04bb9f4"
+  },
+  "split_hashes": {
+    "fit4k": "3f6b5d69097476b02f5c6fe0cc180e564180fb0da5a241bb5ba1c5b88e7b3ecd",
+    "fit8k": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+    "monitor": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+    "locked": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d"
+  },
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "gates": [
+    {
+      "gate": "G1_data_boundary_and_label_isolation",
+      "n_fit8k": 8000,
+      "n_monitor": 1000,
+      "n_locked": 1000,
+      "fit_monitor_overlap": 0,
+      "fit_locked_overlap": 0,
+      "monitor_locked_overlap": 0,
+      "fit_rows_sha256": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+      "pretraining_cache_keys": [
+        "atom_feat",
+        "atom_ptr",
+        "atom_type",
+        "bond_feat",
+        "bond_index",
+        "bond_ptr",
+        "bond_type",
+        "global_feat",
+        "n_molecules",
+        "split"
+      ],
+      "guarded_batch_rows_are_fit8k": true,
+      "losses_clean": [
+        4.722189903259277,
+        4.610124111175537
+      ],
+      "losses_poisoned_labels": [
+        4.722189903259277,
+        4.610124111175537
+      ],
+      "parameters_bit_identical_under_poisoning": true,
+      "labels_reaching_pretraining": false,
+      "forbidden_label_tokens_in_pretraining_modules": [],
+      "official_valid_loaded": false,
+      "official_test_loaded": false,
+      "pass": true
+    },
+    {
+      "gate": "G2_rebuild_matches_production_features",
+      "n_molecules_checked": 8000,
+      "max_abs_diff_atom_feat": 0.0,
+      "max_abs_diff_bond_feat": 0.0,
+      "max_abs_diff_global_feat": 0.0,
+      "molecules_with_any_mismatch": 0,
+      "n_upstream_build_mol_objects_crosscheck": 100,
+      "max_abs_diff_vs_build_mol_objects": 0.0,
+      "topology_sha256": "f15c6731bb027e4cceba07c1cbde33f5356f189affa45bb66434e475f04bb9f4",
+      "pass": true
+    },
+    {
+      "gate": "G3_masked_rebuild_equals_full_rebuild",
+      "n_masked_cases": 900,
+      "visits": [
+        1,
+        37,
+        120
+      ],
+      "n_molecules": 300,
+      "max_abs_diff_atom_feat": 0.0,
+      "max_abs_diff_bond_feat": 0.0,
+      "max_abs_diff_global_feat": 0.0,
+      "masked_batch_vs_reference_max_abs_diff": {
+        "2": {
+          "atom_feat": 0.0,
+          "bond_feat": 0.0,
+          "global": 0.0,
+          "bond_index": 0.0,
+          "half_atom": 0.0,
+          "half_bond": 0.0,
+          "half_of_bond": 0.0,
+          "partner_half": 0.0,
+          "partner_tgt": 0.0,
+          "partner_rel": 0.0,
+          "closure": 0.0,
+          "half_deg": 0.0,
+          "atom_batch": 0.0,
+          "bond_batch": 0.0,
+          "bond_type": 0.0
+        },
+        "51": {
+          "atom_feat": 0.0,
+          "bond_feat": 0.0,
+          "global": 0.0,
+          "bond_index": 0.0,
+          "half_atom": 0.0,
+          "half_bond": 0.0,
+          "half_of_bond": 0.0,
+          "partner_half": 0.0,
+          "partner_tgt": 0.0,
+          "partner_rel": 0.0,
+          "closure": 0.0,
+          "half_deg": 0.0,
+          "atom_batch": 0.0,
+          "bond_batch": 0.0,
+          "bond_type": 0.0
+        },
+        "119": {
+          "atom_feat": 0.0,
+          "bond_feat": 0.0,
+          "global": 0.0,
+          "bond_index": 0.0,
+          "half_atom": 0.0,
+          "half_bond": 0.0,
+          "half_of_bond": 0.0,
+          "partner_half": 0.0,
+          "partner_tgt": 0.0,
+          "partner_rel": 0.0,
+          "closure": 0.0,
+          "half_deg": 0.0,
+          "atom_batch": 0.0,
+          "bond_batch": 0.0,
+          "bond_type": 0.0
+        }
+      },
+      "pass": true
+    },
+    {
+      "gate": "G4_relation_closure_invariance",
+      "n_cases": 900,
+      "n_field_differences_under_type_masking": 0,
+      "n_cases_disagreeing_with_frozen_relation_cache": 0,
+      "fields_checked": [
+        "partner_rel",
+        "closure",
+        "half_deg",
+        "partner_ptr",
+        "partner_half",
+        "half_atom",
+        "half_bond",
+        "half_of_bond",
+        "block_of"
+      ],
+      "relation_cache_content_sha256": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+      "pass": true
+    },
+    {
+      "gate": "G5_mask_token_vocabulary",
+      "atom_mask_token": 27,
+      "bond_mask_token": 0,
+      "fit8k_atom_codes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "fit8k_bond_codes": [
+        1,
+        2,
+        3
+      ],
+      "atom_vocabulary": 28,
+      "bond_vocabulary": 4,
+      "atom_mask_token_in_fit8k": false,
+      "bond_mask_token_in_fit8k": false,
+      "full_cache_atom_mask_occurrences": 0,
+      "full_cache_bond_mask_occurrences": 0,
+      "fit8k_atom_type_counts": [
+        162535,
+        22067,
+        25255,
+        3078,
+        8360,
+        4077,
+        1682,
+        958,
+        1620,
+        492,
+        261,
+        674,
+        459,
+        79,
+        22,
+        36,
+        5,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "fit8k_bond_type_counts": [
+        0,
+        185060,
+        63548,
+        671
+      ],
+      "pass": true
+    },
+    {
+      "gate": "G6_hidden_truth_swap_invariance",
+      "n_swaps": 240,
+      "n_inputs_bit_identical": 240,
+      "n_targets_changed": 240,
+      "n_inputs_changed": 0,
+      "batch_level_max_abs_diff": {
+        "atom_feat": 0.0,
+        "bond_feat": 0.0,
+        "global": 0.0,
+        "bond_index": 0.0,
+        "half_atom": 0.0,
+        "half_bond": 0.0,
+        "half_of_bond": 0.0,
+        "partner_half": 0.0,
+        "partner_tgt": 0.0,
+        "partner_rel": 0.0,
+        "closure": 0.0,
+        "half_deg": 0.0
+      },
+      "batch_level_targets": {
+        "atom_targets_equal": false,
+        "bond_targets_equal": false
+      },
+      "pass": true
+    },
+    {
+      "gate": "G7_unmasked_positive_control",
+      "molecule_row": 3,
+      "changed_cells_atom_feat": 8,
+      "changed_cells_bond_feat": 0,
+      "changed_cells_global_feat": 1,
+      "visible_neighbour_of_masked_atom": 2,
+      "logit_max_abs_delta_atom_head": 0.014798473566770554,
+      "logit_max_abs_delta_bond_head": 0.0,
+      "c_max_abs_delta": 0.1289319097995758,
+      "pass": true
+    },
+    {
+      "gate": "G8_radius_and_neighbour_statistics_do_not_leak",
+      "n_masked_atoms_checked": 274,
+      "own_type_block_is_mask_token_only": 274,
+      "own_row_invariant_over_10_hidden_truths": 80,
+      "topology_only_cells_invariant_over_random_type_maps": 80,
+      "molecules_checked": 80,
+      "neighbour_sees_mask_token": "588/588",
+      "distance2_sees_mask_token": "698/698",
+      "radius2_stats_are_topology_only": true,
+      "pass": true
+    },
+    {
+      "gate": "G9_target_localisable_and_double_record_sync",
+      "n_atom_targets": 166,
+      "n_atom_targets_mapping_ok": 166,
+      "n_bond_targets": 180,
+      "n_bond_targets_mapping_ok": 180,
+      "n_masked_bonds": 180,
+      "n_masked_bonds_double_record_sync": 180,
+      "n_endpoint_histogram_cases": 360,
+      "n_endpoint_histogram_masked": 360,
+      "targets_present_in_batch_dict": [],
+      "pass": true
+    },
+    {
+      "gate": "G10_pretraining_gradients",
+      "frozen": {
+        "trainable_modules": [
+          "half_encoder",
+          "side",
+          "compose"
+        ],
+        "frozen_modules": [
+          "atom_encoder",
+          "bond_encoder",
+          "reader"
+        ]
+      },
+      "per_head": {
+        "atom": {
+          "ce": 3.3292696475982666,
+          "module_grad_norms": {
+            "atom_encoder": 0.0,
+            "bond_encoder": 0.0,
+            "half_encoder": 0.007335080805541611,
+            "side": 0.09114927425694323,
+            "compose": 0.32064355120916027,
+            "reader": 0.0
+          }
+        },
+        "bond": {
+          "ce": 1.4065409898757935,
+          "module_grad_norms": {
+            "atom_encoder": 0.0,
+            "bond_encoder": 0.0,
+            "half_encoder": 0.003546430182757344,
+            "side": 0.03959716939269792,
+            "compose": 0.16054415284294696,
+            "reader": 0.0
+          }
+        }
+      },
+      "loss_history_6_steps": [
+        4.73581075668335,
+        4.628107070922852,
+        4.500923156738281,
+        4.319966793060303,
+        4.040440559387207,
+        3.6110920906066895
+      ],
+      "reader_gradient_any": false,
+      "encoder_gradient_any": false,
+      "trainable_parameters_pretraining": 247872,
+      "all_finite": true,
+      "pass": true
+    },
+    {
+      "gate": "G11_inference_parity_and_export",
+      "parameters": 473889,
+      "expected_parameters": 473889,
+      "parameters_breakdown": {
+        "atom_encoder": 26336,
+        "bond_encoder": 62816,
+        "half_encoder": 42016,
+        "side": 91488,
+        "compose": 78176,
+        "reader": 173057,
+        "total": 473889
+      },
+      "expected_breakdown": {
+        "atom_encoder": 26336,
+        "bond_encoder": 62816,
+        "half_encoder": 42016,
+        "side": 91488,
+        "compose": 78176,
+        "reader": 173057
+      },
+      "state_dict_keys_identical_to_historical": true,
+      "has_head_attribute": false,
+      "initial_state_sha256": "ceeb598f3a51761ae46cf761dfe7de3b4c08d74c2c5b7c1a3c823d75e53e9a58",
+      "historical_initial_state_sha256": "ceeb598f3a51761ae46cf761dfe7de3b4c08d74c2c5b7c1a3c823d75e53e9a58",
+      "export_modules_changed": [
+        "compose",
+        "half_encoder",
+        "side"
+      ],
+      "state_changed_by_export": true,
+      "n_state_keys": 28,
+      "historical_parameters": 473889,
+      "pass": true
+    },
+    {
+      "gate": "G12_symmetry_and_batch_invariance",
+      "max_abs_differences": {
+        "relabel": 0.0,
+        "bond_reversal": 1.4901161193847656e-08,
+        "edge_order": 5.960464477539063e-08,
+        "batch_recomposition": 0.00018310546875,
+        "c_relabel": 0.0,
+        "M_relabel": 0.0,
+        "s_relabel": 0.0,
+        "x_relabel": 0.0
+      },
+      "graph_level_relative_differences": {
+        "relabel": 0.0,
+        "bond_reversal": 3.59962846397373e-11,
+        "edge_order": 1.439851385589492e-10,
+        "batch_recomposition": 4.423223456530919e-07
+      },
+      "graph_level_output_scale": 413.9638671875,
+      "pretext_state_abs_differences": {
+        "c_relabel": 0.0,
+        "M_relabel": 0.0,
+        "s_relabel": 0.0,
+        "x_relabel": 0.0
+      },
+      "tolerance_absolute": 1e-05,
+      "tolerance_relative": 1e-05,
+      "n_graphs": 6,
+      "pass": true
+    },
+    {
+      "gate": "G13_mask_stream_reproducible_and_independent",
+      "repeat_same_visit_identical": true,
+      "different_visit_differs": true,
+      "counts_by_size": {
+        "1": [
+          1,
+          1
+        ],
+        "2": [
+          1,
+          1
+        ],
+        "5": [
+          1,
+          1
+        ],
+        "10": [
+          2,
+          2
+        ],
+        "25": [
+          4,
+          4
+        ],
+        "40": [
+          6,
+          6
+        ]
+      },
+      "min_one_object_per_kind": true,
+      "shuffle_stream_unchanged_by_mask_draws": true,
+      "probe_visit_index": 1000000,
+      "train_visit_range": [
+        1,
+        120
+      ],
+      "pass": true
+    },
+    {
+      "gate": "G14_pretext_forward_is_model_forward",
+      "max_abs_diff": {
+        "a": 0.0,
+        "b": 0.0,
+        "x": 0.0,
+        "M": 0.0,
+        "n": 0.0,
+        "s": 0.0,
+        "c": 0.0
+      },
+      "atom_context_vs_halfedge_view": 5.960464477539063e-08,
+      "pass": true
+    },
+    {
+      "gate": "G15_no_graph_level_shortcut",
+      "max_abs_delta_when_global_poisoned": 0.0,
+      "max_abs_delta_without_global_key": 0.0,
+      "max_abs_delta_without_reader_module": 0.0,
+      "atom_head_input_dim": 96,
+      "bond_head_input_dim": 96,
+      "atom_head_classes": 28,
+      "bond_head_classes": 4,
+      "reader_used_in_pretext_source": false,
+      "global_used_in_pretext_source": false,
+      "pass": true
+    },
+    {
+      "gate": "G16_interface_and_budget",
+      "modules": {
+        "atom_encoder": 26336,
+        "bond_encoder": 62816,
+        "half_encoder": 42016,
+        "side": 91488,
+        "compose": 78176,
+        "reader": 173057
+      },
+      "heads_parameters": 36192,
+      "trainable_backbone_parameters": 211680,
+      "trainable_total_with_heads": 247872,
+      "parameters": 473889,
+      "cap": 500000,
+      "side_in": 617,
+      "reader_in": 417,
+      "arm": "B",
+      "expected_trainable": 211680,
+      "expected_heads": 36192,
+      "pass": true
+    }
+  ],
+  "n_pass": 16,
+  "n_gates": 16,
+  "decision": "CPU_GO"
+}

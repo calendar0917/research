@@ -1,0 +1,148 @@
+{
+  "protocol": "cscl-bosi-stat-ssl-v1",
+  "round": "zinc_bosi_stat_ssl_v1",
+  "status": "frozen_before_gpu",
+  "official_splits": "never_read",
+  "question": "Does a strictly leak-free masked structural pretraining of only half_encoder / side / compose (the modules that produce BOSI-B's partner content, which was shown to be load-bearing) improve held-out raw-y MAE without new labels, new molecules or any architecture change?",
+
+  "frozen_artifacts": {
+    "data_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+    "data_cache_sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3",
+    "relation_cache": "tracks/structural-sufficiency/zinc_bosi_architecture_v0/cache/bosi_rel_train.pt",
+    "relation_cache_content_sha256": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+    "split_file": "tracks/structure-contribution/results/bjoc_predictive_bottleneck_v1/split_a.json",
+    "fit8k_rows_sha256": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+    "monitor_rows_sha256": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+    "locked_rows_sha256": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d",
+    "ssl_encoder_checkpoints": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s{0,1}.pt",
+    "bosi_v0_freeze": "tracks/structural-sufficiency/zinc_bosi_architecture_v0/analysis/freeze.json",
+    "bosi_v0_locked_read": "tracks/structural-sufficiency/zinc_bosi_architecture_v0/analysis/locked_read.json",
+    "historical_initial_state_sha256": {
+      "0": "ceeb598f3a51761ae46cf761dfe7de3b4c08d74c2c5b7c1a3c823d75e53e9a58",
+      "1": "c93ea85b10aa7c88e1bde9aee90be7d8857fab1418cf4cec5505dbd5dded39b4"
+    },
+    "historical_bosi_b_monitor_mae": {"0": 0.1245047393636778, "1": 0.12240047505032271},
+    "historical_bosi_b_locked_mae": {"0": 0.082449, "1": 0.081491}
+  },
+
+  "model": {
+    "architecture": "frozen BOSI v0/B, arm B, 473,889 parameters, six modules",
+    "implementation": "zinc_bosi_partner_content_v1/code/{bosi_common,bosi_data,bosi_models}.py imported, never copied or edited",
+    "pretrained_modules": ["half_encoder", "side", "compose"],
+    "frozen_modules_during_pretraining": ["atom_encoder", "bond_encoder", "reader"],
+    "reader": "not used by the pretext path; keeps the historical per-seed initial state in the supervised run"
+  },
+
+  "mask": {
+    "atom_ratio": 0.15,
+    "bond_ratio": 0.15,
+    "atom_token": 27,
+    "bond_token": 0,
+    "selection": "max(1, round(ratio * n)) per molecule, without replacement",
+    "rng": "numpy.random.SeedSequence([seed, molecule_id, visit_index])",
+    "visit_index": "pretraining epoch counter, 1..120; probe batches use 1000000",
+    "topology": "types only: bond_index / edges are never deleted, so the T/Q/R/N relation cache, the biconnected blocks and the closure counts are exactly the frozen v0 objects",
+    "rebuild": "every type-dependent feature cell is recomputed from the masked raw graph: atom_feat 0:28, 42:46, 46:74, 74:102; bond_feat 0:4; global 19:23, 31, 32",
+    "rebuild_equivalence": "verified bit-identical to structural_relation_objects_v1.build_mol_objects on the masked raw graph"
+  },
+
+  "pretext": {
+    "task": "masked atom-type + masked physical-bond-type reconstruction",
+    "heads": {
+      "H_atom": "input = sum of c[e] over the physical bonds incident to the masked atom v; 96 -> 160 -> 28; target = v's raw atom type",
+      "H_bond": "input = c[e] of the masked physical bond e; 96 -> 160 -> 4; target = e's raw bond type"
+    },
+    "forbidden": [
+      "predicting an arbitrary unlocalised partner identity from the aggregated partner moments",
+      "global33 or any graph-level reader as a pretext head input",
+      "any head input other than the frozen BOSI bond state c[e]"
+    ],
+    "loss": "CE_atom(28-way) + CE_bond(4-way), weights 1.0/1.0",
+    "updates_full": 7560,
+    "updates_pilot": 1890,
+    "batch_size": 128,
+    "optimizer": "adam",
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "grad_clip": 5.0,
+    "precision": "fp32",
+    "shuffle_seed_offset": 202,
+    "head_seed_offset": 303,
+    "checkpoint_rule": "last-step state only; reconstruction accuracy never selects a checkpoint",
+    "pretraining_data_boundary": "Fit8k raw structures only; no labels, no Monitor/Locked/official rows"
+  },
+
+  "pilot_gate": {
+    "updates": 1890,
+    "seed": 0,
+    "probe": "fixed 1,024 Fit8k rows, mask visit_index 1000000, both heads",
+    "conditions_all_required": [
+      "atom probe CE <= marginal atom CE - 0.10 nats",
+      "bond probe CE <= marginal bond CE - 0.02 nats",
+      "atom probe CE(partner-shuffled) - CE(clean) >= 0.02 nats",
+      "bond probe CE(partner-shuffled) - CE(clean) >= 0.02 nats"
+    ],
+    "if_not_all": "PRETEXT_NO_GO: stop, no supervised run, no further pretraining"
+  },
+
+  "supervised": {
+    "arms": {
+      "S_s0": {"init": "historical BOSI-B seed 0 + pretrained half/side/compose", "updates": 47400},
+      "S_s1": {"init": "historical BOSI-B seed 1 + pretrained half/side/compose", "updates": 47400, "condition": "purchased only if the seed-0 Monitor gate fires"},
+      "C_s0": {"init": "historical BOSI-B seed 0, no SSL", "updates": "47400 + N_s0", "condition": "purchased only if both SSL seeds show a Monitor gain"},
+      "C_s1": {"init": "historical BOSI-B seed 1, no SSL", "updates": "47400 + N_s1", "condition": "as C_s0"}
+    },
+    "recipe": "the frozen BOSI v0 / partner-content recipe, unchanged: Fit8k, batch 128, AdamW 1e-3 -> 1e-5 per-step cosine, warm-up 500, wd 1e-5, clip 5, raw-y L1, batch order Generator(seed+101), strict-minimum Monitor checkpoint",
+    "c_extra_updates_rule": "N_s = round(pretraining wall seconds of seed s / measured supervised seconds per update of that seed); the extra updates continue the same batch-order stream at the terminal LR (1e-5). Added updates, LR rule and real GPU-hours are reported.",
+    "inference_identity": "the exported model is bit-identical in structure and parameter set to historical BOSI-B (473,889 parameters, six modules, no pretext head)"
+  },
+
+  "purchase_gates": {
+    "seed1": "Monitor(SSL_s0) <= Monitor(B_s0) - 0.004  (i.e. <= 0.1205047393636778)",
+    "compute_control": "both seeds have Monitor(SSL_s) < Monitor(B_s) and seed-mean Monitor(SSL) <= seed-mean Monitor(B) - 0.004"
+  },
+
+  "locked_decision": {
+    "readout": "internal Locked, n=1000, one read after every checkpoint/prediction/hash is frozen",
+    "primary": "Delta = MAE(BOSI-SSL) - MAE(BOSI-B), seed-mean, paired per molecule",
+    "bootstrap": {"n_resamples": 10000, "unit": "molecule"},
+    "SSL_PROMISING": [
+      "both per-seed Delta < 0",
+      "seed-mean Delta <= -0.005",
+      "ordinary (y > -3) Delta < 0 for both seeds",
+      "top-10-error-removed Delta < 0 for both seeds",
+      "any-unseen Delta <= 0 in seed-mean and <= +0.002 per seed",
+      "independent gain over the compute control: seed-mean MAE(SSL) - MAE(C) <= -0.003 and both per-seed < 0"
+    ],
+    "GAIN_FROM_EXTRA_COMPUTE_ONLY": "all SSL conditions except the compute-control one are met",
+    "NO_GAIN": "the frozen two-seed conditions are not met, or only one seed exists",
+    "INCONCLUSIVE": "seed directions disagree with a negative seed mean, or the compute control is missing"
+  },
+
+  "budget": {
+    "gpu": "res (a100-2, A100-SXM4-40GB), same execution regime as the historical BOSI v0/v1 runs",
+    "cap_a100_gpu_hours": 4.0,
+    "counting": "1 GPU per job, wall-clock hours, failed jobs included",
+    "stop_rule": "if the projected spend exceeds the cap, stop; never shorten the frozen update counts"
+  },
+
+  "bans": [
+    "official valid / official test access in any form",
+    "new molecules, external data, new label components, teacher predictions",
+    "attention, learned junction, recursive message passing, architecture search, new lookup tables",
+    "retraining BOSI-B / BOSI-R / BOSI-P / DCC-L",
+    "mask-ratio search, auxiliary heads, loss-weight search, extra seeds, extra epochs",
+    "checkpoint selection of the SSL state on reconstruction accuracy",
+    "reading Locked before every candidate checkpoint and prediction is frozen and hashed",
+    "post-hoc modification of the decision rule, the evaluation set or the budget"
+  ],
+
+  "decision_vocabulary": [
+    "CPU_NO_GO",
+    "PRETEXT_NO_GO",
+    "SSL_PROMISING",
+    "GAIN_FROM_EXTRA_COMPUTE_ONLY",
+    "NO_GAIN",
+    "INCONCLUSIVE"
+  ]
+}
