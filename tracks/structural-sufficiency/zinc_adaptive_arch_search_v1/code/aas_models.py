@@ -62,7 +62,7 @@ SIDE_IN = SIDE_IN_BASE + PAIR_DIM       # 649
 PAIR_HIDDEN_A3 = 128
 PAIR_DIM_A3 = 64
 SIDE_IN_A3 = 2 * WIDTH + RANK + PAIR_DIM_A3 + 4 + 1   # 293 (M and n both dropped)
-ARMS = ("B", "A1", "A0", "A2", "A3", "S1", "S0", "S2")
+ARMS = ("B", "A1", "A0", "A2", "A3", "A0M0", "S1", "S0", "S2")
 
 
 class BOSIQueryPair(BM.BOSI):
@@ -86,7 +86,7 @@ class BOSIQueryPair(BM.BOSI):
             self.side = BM.MLP(SIDE_IN_A3, 128, WIDTH, 1, dropout)
         else:
             self.pair_phi = BM.MLP(PAIR_IN, PAIR_HIDDEN, PAIR_DIM, 1, dropout)
-        if mode in ("A1", "A0", "A2"):
+        if mode in ("A1", "A0", "A2", "A0M0"):
             self._widen_side()
         # diagnostic-only switch used by the gates (never set during training):
         # replaces the target state by the partner-set mean in A1 as well.
@@ -136,13 +136,13 @@ class BOSIQueryPair(BM.BOSI):
             parts = [a[batch["half_atom"]], b[batch["half_bond"]], x,
                      batch["closure"], torch.log1p(half_deg)]
         else:
-            if self.mode == "A2":
+            if self.mode in ("A2", "A0M0"):
                 M = torch.zeros_like(M)
             parts = [a[batch["half_atom"]], b[batch["half_bond"]], x, M, n,
                      batch["closure"], torch.log1p(half_deg)]
         P = None
-        if self.mode in ("A1", "A0", "A2", "A3"):
-            null = (self.mode == "A0") or bool(self._null_override)
+        if self.mode in ("A1", "A0", "A2", "A3", "A0M0"):
+            null = self.mode in ("A0", "A0M0") or bool(self._null_override)
             P = self.pair_stats(batch, x, null=null)
             parts.append(P)
         if self.mode == "A3":

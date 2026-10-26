@@ -1,0 +1,37 @@
+{
+  "round": "zinc-adaptive-arch-search-v1",
+  "stage": "a3-moment-ablation",
+  "question": "In the partner-mean arm A0, is the BOSI moment bank (M, n) still load-bearing once the new nonlinear pair-interaction channel Phi is present?",
+  "arms": {
+    "A0": "BOSI-B + Phi(pair interaction features), partner-mean variant (no target state)",
+    "A0M0": "byte-identical to A0, moment block M zeroed at every forward; same capacity, same init"
+  },
+  "parameters": {
+    "A0": 488321,
+    "A0M0": 488321,
+    "cap": 500000
+  },
+  "initial_state": "A0 and A0M0 are bit-identical per seed",
+  "recipe": "R0 frozen (AdamW 1e-3 -> 1e-5 cosine, 500 warmup, wd 1e-5, dropout 0, clip 5, batch 128, raw-y L1, 47400 updates, strict min-valid best)",
+  "seeds": [
+    0,
+    1
+  ],
+  "decision_rules": {
+    "MOMENT_REDUNDANT": "mean over seeds of (A0M0 - A0) <= +0.001  -> the moment bank adds nothing given Phi (a 457k-class lean body is the better claim)",
+    "MOMENT_ESSENTIAL": "mean over seeds of (A0M0 - A0) >= +0.003 -> the two contents are additive; do not remove",
+    "AMBIGUOUS": "otherwise, or seeds disagree in sign with |mean| < 0.003"
+  },
+  "tail_guard": "report row-172 and drop-top-1-contributor for both seeds",
+  "references_frozen": {
+    "BOSI_B_s0": 0.082405,
+    "DCC_L_4seed_mean": 0.07599,
+    "P3Null_4seed_mean": 0.080761
+  },
+  "cpu_gates": {
+    "file": "analysis/cpu_checks_c.json",
+    "n_pass": 10,
+    "n_gates": 10
+  },
+  "official_test": "never loaded"
+}

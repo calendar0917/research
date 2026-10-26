@@ -203,6 +203,60 @@ def gate_c7_a3_short_train(norm) -> dict:
     return out
 
 
+def gate_c8_a0m0_identity(norm) -> dict:
+    """A0M0 is the moment ablation of the *partner-mean* arm A0."""
+    m0, i0 = build("A0", norm)
+    mm, im = build("A0M0", norm)
+    s0, sm = C.cpu_state(m0), C.cpu_state(mm)
+    same = set(s0) == set(sm) and all(torch.equal(s0[k], sm[k]) for k in s0)
+    cache = AC.load_cache("train")
+    rel = AC.load_rel("train")
+    batch = BD.collate(cache, rel, np.arange(256))
+    y0, ym = forward_y(m0, batch), forward_y(mm, batch)
+    out = {"parameters_A0": i0["parameters"], "parameters_A0M0": im["parameters"],
+           "state_bit_identical": bool(same),
+           "y_mean_abs_diff": float(np.abs(y0 - ym).mean())}
+    out["pass"] = bool(same and i0["parameters"] == im["parameters"]
+                       and out["y_mean_abs_diff"] > 1e-6)
+    return out
+
+
+def gate_c9_a0m0_moment_zeroed(norm) -> dict:
+    m, _ = build("A0M0", norm)
+    cache = AC.load_cache("train")
+    rel = AC.load_rel("train")
+    batch = BD.collate(cache, rel, np.arange(256))
+    with torch.no_grad():
+        y, st = m(batch, return_stats=True)
+    out = {"M_abs_max": float(st["M"].abs().max()),
+           "y_finite": bool(torch.isfinite(y).all())}
+    out["pass"] = bool(out["M_abs_max"] == 0.0 and out["y_finite"])
+    return out
+
+
+def gate_c10_a0m0_short_train(norm) -> dict:
+    cache = AC.load_cache("train")
+    rel = AC.load_rel("train")
+    y = np.asarray(cache["labels"], dtype=np.float64)
+    m, _ = build("A0M0", norm)
+    m.train()
+    opt = torch.optim.AdamW(m.parameters(), lr=1e-3)
+    gen = torch.Generator().manual_seed(17)
+    losses = []
+    for _ in range(40):
+        rows = torch.randperm(10_000, generator=gen).numpy()[:128]
+        loss = F.l1_loss(m(BD.collate(cache, rel, rows)).view(-1),
+                         torch.as_tensor(y[rows], dtype=torch.float32))
+        opt.zero_grad(set_to_none=True)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(m.parameters(), 5.0)
+        opt.step()
+        losses.append(float(loss))
+    out = {"first_loss": losses[0], "last_loss": losses[-1]}
+    out["pass"] = bool(np.isfinite(losses).all() and losses[-1] < losses[0] * 0.9)
+    return out
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--out", default=None)
@@ -214,7 +268,10 @@ def main(argv=None) -> int:
              ("C4_A3_params", gate_c4_a3_params),
              ("C5_A3_invariance", gate_c5_a3_invariance),
              ("C6_A3_gradients", gate_c6_a3_gradients),
-             ("C7_A3_short_train", gate_c7_a3_short_train)]
+             ("C7_A3_short_train", gate_c7_a3_short_train),
+             ("C8_A0M0_identity", gate_c8_a0m0_identity),
+             ("C9_A0M0_moment_zeroed", gate_c9_a0m0_moment_zeroed),
+             ("C10_A0M0_short_train", gate_c10_a0m0_short_train)]
     res = {}
     for name, fn in gates:
         try:
