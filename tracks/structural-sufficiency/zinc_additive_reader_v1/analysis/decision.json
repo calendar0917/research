@@ -1,0 +1,93 @@
+{
+  "verdict": "INCONCLUSIVE",
+  "reasons": [
+    "A_mean=0.084543 D_mean=0.087184 C_mean=0.083498",
+    "gain_A_vs_D=0.002641 gain_A_vs_C=-0.001045 gain_D_vs_C=-0.003686",
+    "per-seed A<D=True A<C=False; ordinary gains vs C/D=0.000038/0.002334; top10 gains vs C/D=-0.001880/-0.004582",
+    "group stability={'low_support': False, 'any_unseen': False}; any_collapse=False"
+  ],
+  "inputs": {
+    "seeds": [
+      0,
+      1
+    ],
+    "A_mean": 0.08454337815102189,
+    "D_mean": 0.08718431430542842,
+    "C_mean": 0.08349826294509693,
+    "gain_A_vs_D": 0.0026409361544065257,
+    "gain_A_vs_C": -0.0010451152059249569,
+    "gain_D_vs_C": -0.0036860513603314826,
+    "per_seed_A_better_D": true,
+    "per_seed_A_better_C": false,
+    "ordinary_gain_vs_C_mean": 3.754371195600209e-05,
+    "ordinary_gain_vs_D_mean": 0.0023336904598080244,
+    "top10_gain_vs_C_mean": -0.0018804066790963914,
+    "top10_gain_vs_D_mean": -0.004582092608560365,
+    "group_gains": {
+      "low_support": {
+        "gain_vs_C_per_seed": [
+          0.004643786166727254,
+          -0.00033993077954449363
+        ],
+        "gain_vs_D_per_seed": [
+          0.005461852530718889,
+          0.0032640291038816965
+        ],
+        "gain_vs_C_mean": 0.00215192769359138,
+        "gain_vs_D_mean": 0.004362940817300293,
+        "n": 401,
+        "stable": false
+      },
+      "any_unseen": {
+        "gain_vs_C_per_seed": [
+          -0.0064986070248100325,
+          -0.006380829440903568
+        ],
+        "gain_vs_D_per_seed": [
+          0.004401337264514554,
+          -0.003274444094777923
+        ],
+        "gain_vs_C_mean": -0.0064397182328568,
+        "gain_vs_D_mean": 0.0005634465848683157,
+        "n": 287,
+        "stable": false
+      }
+    },
+    "collapse": {
+      "0": {
+        "std_wS": 0.8511642829992241,
+        "std_psi": 1.1306592063682637,
+        "ratio_std_wS_over_psi": 0.7528035664550136,
+        "local_share_mean": 0.433403406081789,
+        "mae_zero_local": 0.6906131117776968,
+        "delta_zero_local": 0.6062196092931554,
+        "collapsed": false
+      },
+      "1": {
+        "std_wS": 0.7790764830877598,
+        "std_psi": 1.2247057986519065,
+        "ratio_std_wS_over_psi": 0.636133579138212,
+        "local_share_mean": 0.4489055006234008,
+        "mae_zero_local": 0.7821990977511741,
+        "delta_zero_local": 0.6975058439336718,
+        "collapsed": false
+      }
+    }
+  },
+  "rules": {
+    "noise_floor_reference": "historical DCC-L fit8k Monitor spread across 2 seeds = 0.0046207; same-math ZINC run-to-run drift documented in zinc_shared_factor_v1 = up to 0.0026 on valid. Two seeds cannot resolve < 0.003 reliably.",
+    "priority": [
+      "local_path_collapse / ADDITIVITY_NOT_SUPPORTED",
+      "PROMISING_READER_BIAS",
+      "ADDITIVITY_NOT_SUPPORTED (A clearly worse)",
+      "CAPACITY_ONLY",
+      "INCONCLUSIVE"
+    ],
+    "PROMISING_READER_BIAS": "both A seeds beat both D and historical DCC-L on Locked; A seed-mean Locked MAE is at least 0.003 lower than D seed-mean AND at least 0.003 lower than DCC-L seed-mean; ordinary-molecule (y > -3) seed-mean gain is >= 0.002 vs both D and DCC-L; the top-10-AE removal seed-mean gain keeps the same (positive) sign vs both; and at least one key group (low-support or any-unseen) has A-vs-D and A-vs-DCCL gains > 0 in both seeds with group seed-mean gain >= 0.003",
+    "ADDITIVITY_NOT_SUPPORTED": "the A local-contribution pathway is collapsed, or A seed-mean Locked MAE is at least 0.003 worse than D, or at least 0.003 worse than historical DCC-L (checked after PROMISING and before CAPACITY_ONLY)",
+    "CAPACITY_ONLY": "not PROMISING and not ADDITIVITY_NOT_SUPPORTED; both A and D seed-mean Locked MAE are at least 0.003 lower than DCC-L seed-mean; and A-vs-D is not reliable (|A-D| seed-mean < 0.003 or not all per-seed A-D differences are positive)",
+    "INCONCLUSIVE": "everything else (seed/tail dependent, or all effects < 0.003)",
+    "local_path_collapse": "for both A seeds, std(w^T S) < 0.05 * std(psi(G)) AND zeroing w^T S (predicting psi(G) alone) changes Locked MAE by < 0.001; any seed meeting this is reported",
+    "official_test_conversion": "only if A beats historical DCC-L on Locked by >= 0.005 robustly may the report discuss the distance to official-test 0.05x; no conversion of internal Locked gain into an official-test score is allowed"
+  }
+}
