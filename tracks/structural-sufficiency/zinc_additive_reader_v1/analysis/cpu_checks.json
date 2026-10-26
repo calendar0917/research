@@ -1,0 +1,315 @@
+{
+  "protocol_id": "zinc-additive-reader-v1",
+  "config_sha256": "a436d9beef111214312d24750c53320fea63e3133d99e7323b2d28c66aeadd9b",
+  "git_commit": "405fc7d331d23102b6b3f439b14f28e58ebcd5ad",
+  "split_hashes": {
+    "fit8k": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+    "monitor": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+    "locked": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d"
+  },
+  "norm_hash": "bbfb4ce733b7433cfe18fa922b8b990a37ba17aac103ddf5a51fe0110f4db207",
+  "checks": {
+    "0_frozen_split_and_roles": {
+      "pass": true,
+      "detail": {
+        "n_molecules_train_cache": 10000,
+        "row_counts": {
+          "fit8k": 8000,
+          "fit4k": 4000,
+          "monitor": 1000,
+          "locked": 1000
+        },
+        "sha256_rows": {
+          "fit8k": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+          "monitor": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+          "locked": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d"
+        },
+        "split_protocol": "cscl-predictive-bottleneck-diagnosis-v1",
+        "split_salt": "cscl-predictive-bottleneck-v1-A",
+        "partition_ok": true,
+        "fit4k_nested_in_fit8k": true,
+        "roles": {
+          "fit8k": "training + fit-only standardisation",
+          "monitor": "per-epoch evaluation and best-checkpoint selection only",
+          "locked": "single frozen read after all formal checkpoints and prediction hashes are frozen",
+          "official_valid": "not loaded, not evaluated",
+          "official_test": "not constructed, not loaded, not evaluated"
+        }
+      }
+    },
+    "1_historical_production_forward": {
+      "pass": true,
+      "detail": {
+        "checkpoint": "tracks/structural-sufficiency/zinc_dccl_bottleneck_v1/runs/fit8k_s0/best_monitor.pt",
+        "checkpoint_sha256": "6a145dc69e81aed9c1f41f572a6956f8a7351dacba9ddcaa2daf4e71930f5817",
+        "checkpoint_epoch": 437,
+        "checkpoint_step": 27531,
+        "component_max_abs_diff": {
+          "a": 0.0,
+          "c_glob": 0.0,
+          "c_loc": 0.0,
+          "z": 0.0,
+          "a_sum": 0.0,
+          "a_sq": 0.0,
+          "g": 0.0,
+          "G": 0.0
+        },
+        "production_component_max_abs_diff": 0.0,
+        "monitor_prediction_replay_max_abs_diff": 3.5762786865234375e-07,
+        "frozen_monitor_mae_recomputed": 0.1231508676847443,
+        "frozen_monitor_mae_reported": 0.12315087235253304,
+        "G_dim": 321,
+        "checkpoint_encoders_vs_ssl_init_max_abs_diff": 0.9644730091094971,
+        "note": "historical checkpoint is used for inference replay only; the new model trunk is initialised from SSL, not from this checkpoint"
+      }
+    },
+    "2_identical_G_and_S": {
+      "pass": true,
+      "detail": {
+        "S_equal_bitwise": true,
+        "G_equal_bitwise": true,
+        "G_dim": 321,
+        "G_part_dims": [
+          96,
+          96,
+          96,
+          33
+        ],
+        "G_part_sum": 321,
+        "G_rebuild_max_abs_diff": 0.0,
+        "global33_max_abs_diff_vs_manual": 0.0,
+        "global_feat_dim": 33,
+        "all_global_columns_used": true,
+        "c_loc_equal_bitwise": true,
+        "c_glob_equal_bitwise": true
+      }
+    },
+    "3_shared_initial_parameters": {
+      "pass": true,
+      "detail": {
+        "shared_tensor_count": 26,
+        "A_D_shared_identical": true,
+        "buffers_identical": true,
+        "seed0_vs_seed1_differing_shared_tensors": 24,
+        "ssl_encoder_exact_match": true,
+        "ssl_max_abs_diffs": {
+          "seed0_atom_encoder_maxdiff": 0.0,
+          "seed0_bond_encoder_maxdiff": 0.0,
+          "seed0_junction_encoder_maxdiff": 0.0,
+          "seed1_atom_encoder_maxdiff": 0.0,
+          "seed1_bond_encoder_maxdiff": 0.0,
+          "seed1_junction_encoder_maxdiff": 0.0
+        },
+        "initial_w_norm": 0.5632930994033813,
+        "initial_psi_norm": 13.084014892578125,
+        "initial_dense_reader_norm": 13.108240127563477,
+        "supervised_checkpoint_vs_init_max_abs_diff": 0.9644730091094971,
+        "A_reader_state_sha256": "19a4ab8e60fde5ccd26b6d5318e333f5ebef5980c880ea4322f5aa5686609c66",
+        "D_reader_state_sha256": "fbaa74fb0f11c699c8691f456c3c137812bffbc86e873174a18da9f60384f583",
+        "phi_state_sha256_seed0": "769d2fa0afa102d96be2222f8f51bf4e935a054e55deea7eddc5774a1fbd96ff",
+        "phi_state_sha256_seed1": "9fdbcf3ff2e03a6cbf28e85e843b177e165e29c43b33bdb0adf22518530b4f9b",
+        "init_streams": {
+          "historical_reference": 0,
+          "historical_local_composer": 90731,
+          "phi": 20011,
+          "A_w_psi": 20021,
+          "D_reader": 20022
+        }
+      }
+    },
+    "4_gradient_paths": {
+      "pass": true,
+      "detail": {
+        "A": {
+          "loss": 1.7228906154632568,
+          "all_parameters_require_grad": true,
+          "params_without_grad": [],
+          "nonfinite_grads": [],
+          "zero_grad_params": [],
+          "w_grad_norm": 6.130264759063721,
+          "phi_first_layer_grad_norm": 11.508955955505371,
+          "phi_last_layer_grad_norm": 8.887005805969238,
+          "psi_first_layer_grad_norm": 9.504645347595215,
+          "w_grad_nonzero": true,
+          "phi_grad_nonzero": true
+        },
+        "D": {
+          "loss": 1.6217083930969238,
+          "all_parameters_require_grad": true,
+          "params_without_grad": [],
+          "nonfinite_grads": [],
+          "zero_grad_params": []
+        },
+        "no_frozen_or_zero_gate": true
+      }
+    },
+    "5_equivariance_renumber_reverse_batching": {
+      "pass": true,
+      "detail": {
+        "A": {
+          "atom_relabel_max_abs_diff": 4.76837158203125e-07,
+          "bond_edge_reversal_max_abs_diff": 0.0,
+          "single_vs_batch_max_abs_diff": 5.960464477539062e-07,
+          "batch_order_max_abs_diff": 0.0
+        },
+        "D": {
+          "atom_relabel_max_abs_diff": 2.384185791015625e-07,
+          "bond_edge_reversal_max_abs_diff": 0.0,
+          "single_vs_batch_max_abs_diff": 4.76837158203125e-07,
+          "batch_order_max_abs_diff": 0.0
+        },
+        "tolerance": 2e-05
+      }
+    },
+    "6_no_cross_graph_mixing_and_degenerate_inputs": {
+      "pass": true,
+      "detail": {
+        "cross_graph": {
+          "A": 0.0,
+          "D": 0.0
+        },
+        "degenerate": {
+          "A": {
+            "empty_graph_pred": 0.21399681270122528,
+            "empty_finite": true,
+            "single_bond_pred": 0.04447299987077713,
+            "single_bond_finite": true,
+            "ring_row": 658,
+            "ring_rank": 1,
+            "ring_pred": 0.03984588384628296,
+            "ring_finite": true,
+            "fused_row": 2,
+            "fused_rank": 2,
+            "fused_pred": -0.26635628938674927,
+            "fused_finite": true
+          },
+          "D": {
+            "empty_graph_pred": 0.31758686900138855,
+            "empty_finite": true,
+            "single_bond_pred": 0.3030165433883667,
+            "single_bond_finite": true,
+            "ring_row": 658,
+            "ring_rank": 1,
+            "ring_pred": 0.35277602076530457,
+            "ring_finite": true,
+            "fused_row": 2,
+            "fused_rank": 2,
+            "fused_pred": 0.7814536690711975,
+            "fused_finite": true
+          }
+        },
+        "tolerance": 2e-05
+      }
+    },
+    "7_additive_separation": {
+      "pass": true,
+      "detail": {
+        "A": {
+          "delta_base": 0.06922554969787598,
+          "delta_other_h_noise_0.5": 0.06922543048858643,
+          "delta_other_h_noise_1.0": 0.06922483444213867,
+          "max_delta_spread_across_other_h": 7.152557373046875e-07,
+          "w_dot_delta": 0.0692254900932312,
+          "matches_w_dot_delta": true
+        },
+        "D": {
+          "delta_base": -0.0008983612060546875,
+          "delta_other_h_noise_0.5": 9.077787399291992e-05,
+          "delta_other_h_noise_1.0": -0.0018274784088134766,
+          "max_delta_spread_across_other_h": 0.0009891390800476074,
+          "w_dot_delta": NaN,
+          "matches_w_dot_delta": null
+        },
+        "interpretation": {
+          "A": "fixed G, one h_b shift changes y by exactly w^T delta, independent of all other h",
+          "D": "same shift interacts with the other h through the nonlinear dense reader"
+        }
+      }
+    },
+    "8_counts_sums_scales_initial_outputs": {
+      "pass": true,
+      "detail": {
+        "A": {
+          "sum_vs_loop_max_abs_diff": {
+            "z": 1.1444091796875e-05,
+            "a_sum": 1.9073486328125e-06,
+            "S": 1.9073486328125e-06,
+            "z_dup": 1.1444091796875e-05
+          },
+          "n_b_count_max_abs_diff": 0.0,
+          "h_per_bond_mean_norm": 0.7493936419487,
+          "S_per_graph_norm_mean": 14.382316589355469,
+          "S_per_graph_norm_max": 26.764345169067383,
+          "init_pred_mean": -0.3833495080471039,
+          "init_pred_std": 0.8830974698066711,
+          "init_pred_min": -3.121397018432617,
+          "init_pred_max": 5.048455238342285,
+          "init_finite": true,
+          "wS_mean": -1.2287205457687378,
+          "wS_std": 0.6728031039237976,
+          "psi_mean": 0.8453710079193115,
+          "psi_std": 0.5033782124519348
+        },
+        "D": {
+          "sum_vs_loop_max_abs_diff": {
+            "z": 1.1444091796875e-05,
+            "a_sum": 1.9073486328125e-06,
+            "S": 1.9073486328125e-06,
+            "z_dup": 1.1444091796875e-05
+          },
+          "n_b_count_max_abs_diff": 0.0,
+          "h_per_bond_mean_norm": 0.7493936419487,
+          "S_per_graph_norm_mean": 14.382316589355469,
+          "S_per_graph_norm_max": 26.764345169067383,
+          "init_pred_mean": 0.8867877721786499,
+          "init_pred_std": 0.43464991450309753,
+          "init_pred_min": 0.19873932003974915,
+          "init_pred_max": 3.4734344482421875,
+          "init_finite": true
+        }
+      }
+    },
+    "9_official_test_valid_label_isolation": {
+      "pass": true,
+      "detail": {
+        "static_forbidden_string_hits": {
+          "ar_train.py": [],
+          "ar_models.py": [],
+          "ar_common.py": [],
+          "ar_analyze.py": []
+        },
+        "static_ok": true,
+        "runtime_forbidden_paths": [],
+        "runtime_train_cache_paths": [
+          "/home/calendar/code/research/tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt"
+        ],
+        "runtime_unexpected_paths": [],
+        "runtime_audited_paths_count": 6,
+        "fit_rows_within_train_cache": true,
+        "monitor_rows_within_train_cache": true,
+        "locked_rows_within_train_cache": true,
+        "partition_disjoint": true,
+        "fit_monitor_locked_overlap": 0,
+        "norm_fit_only": true,
+        "norm_rows": 8000,
+        "official_test_loaded": false,
+        "official_valid_loaded": false,
+        "config_forbids_test_and_valid": true
+      }
+    }
+  },
+  "errors": [],
+  "all_pass": true,
+  "n_groups_passed": 10,
+  "n_groups": 10,
+  "wall_seconds": 3.0361688137054443,
+  "official_test_loaded": false,
+  "official_valid_loaded": false,
+  "locked_read": false,
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "device": "cpu"
+  }
+}

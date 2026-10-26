@@ -1,0 +1,184 @@
+{
+  "protocol_id": "zinc-additive-reader-v1",
+  "round": "zinc_additive_reader_v1",
+  "created_utc": "2026-10-26T13:10:00+0800",
+  "status": "frozen_before_formal_training",
+  "split": {
+    "source": "tracks/structure-contribution/results/bjoc_predictive_bottleneck_v1/split_a.json",
+    "fit": "fit8k",
+    "fit_rows": 8000,
+    "monitor_rows": 1000,
+    "locked_rows": 1000,
+    "fit4k_rows": 4000,
+    "expected_sha256_rows": {
+      "fit8k": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+      "monitor": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+      "locked": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d"
+    },
+    "role": {
+      "fit8k": "training + fit-only standardisation",
+      "monitor": "per-epoch evaluation and best-checkpoint selection only",
+      "locked": "single frozen read after all formal checkpoints and prediction hashes are frozen",
+      "official_valid": "not loaded, not evaluated",
+      "official_test": "not constructed, not loaded, not evaluated"
+    }
+  },
+  "data_cache": {
+    "train_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+    "valid_cache_allowed": false,
+    "test_cache_allowed": false,
+    "note": "Fit8k / Monitor / Locked all live inside the official-train cache rows; the cache labels are used only for the rows declared above."
+  },
+  "baseline_history": {
+    "model": "DCC-L (DualChannel L arm, P3 train-only masked-SSL initialisation)",
+    "parameters": 494193,
+    "runs_dir": "tracks/structural-sufficiency/zinc_dccl_bottleneck_v1/runs",
+    "checkpoint": "best_monitor.pt",
+    "predictions": "predictions_best_monitor.pt",
+    "no_retraining": true,
+    "fit8k_monitor_mae": {
+      "0": 0.12315087235253304,
+      "1": 0.12777156261634082
+    },
+    "fit8k_locked_mae": {
+      "0": 0.08357349264295771,
+      "1": 0.08342303324723616
+    }
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "valid_batch_size": 256,
+    "loss": "l1_raw_y",
+    "precision": "fp32",
+    "total_updates": 47400,
+    "steps_per_epoch": 63,
+    "epochs": 753,
+    "selection": "strict minimum Monitor MAE (strict <, ties keep earlier epoch)",
+    "batch_order_generator": "torch.Generator().manual_seed(seed + 101), torch.randperm(8000)",
+    "normalisation": "fit_only_norm over the 8000 Fit8k rows, identical arrays for A and D"
+  },
+  "model": {
+    "local_dim": 96,
+    "global_summary_dim": 321,
+    "global_summary_parts": [
+      "sum_b c_glob_b (96)",
+      "sum_v a_v (96)",
+      "sum_v a_v^2 (96)",
+      "standardised global33 (33)"
+    ],
+    "phi": {
+      "in": 96,
+      "hidden": 64,
+      "activation": "SiLU",
+      "out": 32
+    },
+    "shared_local_contribution": "h_b = phi(c_loc_b); S = sum_b h_b per molecule",
+    "additive_reader": {
+      "formula": "y = w^T S + psi(G)",
+      "w": "Linear(32, 1, bias=False)",
+      "psi": {
+        "in": 321,
+        "hidden": 256,
+        "hidden_layers": 2,
+        "activation": "SiLU"
+      },
+      "psi_forbidden_inputs": [
+        "S",
+        "sum_b c_loc_b",
+        "sum_b c_loc_b^2"
+      ],
+      "w_zero_init": false
+    },
+    "dense_reader": {
+      "formula": "y = R([S, G])",
+      "R": {
+        "in": 353,
+        "hidden": 256,
+        "hidden_layers": 2,
+        "activation": "SiLU"
+      }
+    },
+    "init_offsets": {
+      "historical_p3_reference": "seed (exact dcc_models.build_initial_state protocol)",
+      "historical_local_composer": "seed + 90731 (exact dcc_models.build_initial_state protocol)",
+      "phi": 20011,
+      "additive_reader_w_psi": 20021,
+      "dense_reader_R": 20022
+    },
+    "initialisation_source": "historical train-only masked-SSL encoders + historical random P3 group_composer / DCC local_composer; no supervised DCC-L checkpoint is loaded",
+    "expected_parameters": {
+      "encoders": 202048,
+      "group_composer": 62976,
+      "local_composer": 31536,
+      "phi": 8288,
+      "additive_w": 32,
+      "additive_psi": 148481,
+      "additive_total": 453361,
+      "dense_R": 156673,
+      "dense_total": 461521,
+      "relative_difference_percent": 1.768042
+    },
+    "parameter_match_rule": "|A_total - D_total| / max(A_total, D_total) <= 0.02 and both <= 500000"
+  },
+  "pilot": {
+    "runs": [
+      "A_s0",
+      "D_s0"
+    ],
+    "monitor_only": true,
+    "stop_rule": [
+      "if A_s0.Monitor > D_s0.Monitor + 0.005 AND A_s0.Monitor > DCCL_s0.Monitor + 0.010: stop",
+      "if A_s0.Monitor > DCCL_s0.Monitor + 0.010 AND D_s0.Monitor > DCCL_s0.Monitor + 0.010: stop"
+    ],
+    "otherwise": "train A_s1 and D_s1; no structural, recipe or threshold change after seeing seed 0"
+  },
+  "decision_rules": {
+    "noise_floor_reference": "historical DCC-L fit8k Monitor spread across 2 seeds = 0.0046207; same-math ZINC run-to-run drift documented in zinc_shared_factor_v1 = up to 0.0026 on valid. Two seeds cannot resolve < 0.003 reliably.",
+    "priority": [
+      "local_path_collapse / ADDITIVITY_NOT_SUPPORTED",
+      "PROMISING_READER_BIAS",
+      "ADDITIVITY_NOT_SUPPORTED (A clearly worse)",
+      "CAPACITY_ONLY",
+      "INCONCLUSIVE"
+    ],
+    "PROMISING_READER_BIAS": "both A seeds beat both D and historical DCC-L on Locked; A seed-mean Locked MAE is at least 0.003 lower than D seed-mean AND at least 0.003 lower than DCC-L seed-mean; ordinary-molecule (y > -3) seed-mean gain is >= 0.002 vs both D and DCC-L; the top-10-AE removal seed-mean gain keeps the same (positive) sign vs both; and at least one key group (low-support or any-unseen) has A-vs-D and A-vs-DCCL gains > 0 in both seeds with group seed-mean gain >= 0.003",
+    "ADDITIVITY_NOT_SUPPORTED": "the A local-contribution pathway is collapsed, or A seed-mean Locked MAE is at least 0.003 worse than D, or at least 0.003 worse than historical DCC-L (checked after PROMISING and before CAPACITY_ONLY)",
+    "CAPACITY_ONLY": "not PROMISING and not ADDITIVITY_NOT_SUPPORTED; both A and D seed-mean Locked MAE are at least 0.003 lower than DCC-L seed-mean; and A-vs-D is not reliable (|A-D| seed-mean < 0.003 or not all per-seed A-D differences are positive)",
+    "INCONCLUSIVE": "everything else (seed/tail dependent, or all effects < 0.003)",
+    "local_path_collapse": "for both A seeds, std(w^T S) < 0.05 * std(psi(G)) AND zeroing w^T S (predicting psi(G) alone) changes Locked MAE by < 0.001; any seed meeting this is reported",
+    "official_test_conversion": "only if A beats historical DCC-L on Locked by >= 0.005 robustly may the report discuss the distance to official-test 0.05x; no conversion of internal Locked gain into an official-test score is allowed"
+  },
+  "budget": {
+    "gpu_hours_hard_cap": 2.0,
+    "includes": "smoke, formal runs, failed jobs",
+    "rule": "if projected formal A100-hours exceed 2.0, stop; never shorten total_updates to fit the budget"
+  },
+  "analysis": {
+    "locked_groups": {
+      "all_supported": "every atom's radius-2 environment occurs in >= 5 Fit8k molecules",
+      "low_support": "no unseen atom, but at least one atom has Fit8k support 1-4",
+      "any_unseen": "at least one atom's radius-2 environment has 0 Fit8k molecules"
+    },
+    "support_source": "Fit8k only; exact typed radius-2 rooted signatures (same construction as zinc_dccl_bottleneck_v1)",
+    "tail_definition": "y <= -3 (extreme-tail); ordinary = y > -3",
+    "bootstrap": "paired over fixed Locked molecules, 10000 resamples, deterministic seed per comparison; descriptive only, not a substitute for seed replication",
+    "top10_sensitivity": "drop the 10 molecules with the largest max(AE_A, AE_B) for each pair",
+    "checkpoint_reporting": "best_monitor is primary; final is auxiliary only"
+  },
+  "forbidden": [
+    "retraining DCC-L",
+    "official test or official valid access",
+    "new random split",
+    "using Monitor or Locked labels for architecture / hyper-parameter / epoch / seed selection beyond the declared Monitor checkpoint rule",
+    "extra seeds beyond two per new model",
+    "per-bond IDs, per-pattern lookup, per-structure memory",
+    "new structural statistics, auxiliary supervision, attention, recursion, external data, teacher, ensemble, target-derived features"
+  ]
+}
