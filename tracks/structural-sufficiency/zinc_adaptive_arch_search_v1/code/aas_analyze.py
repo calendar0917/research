@@ -182,6 +182,14 @@ def main(argv=None) -> int:
             "delta_by_group": {g: float(delta[m].mean()) for g, m in masks.items()
                                if m.any()},
             "row172_delta": float(delta[172]),
+            "n_rows_improved_gt_0.01": int((delta < -0.01).sum()),
+            "n_rows_worse_gt_0.01": int((delta > 0.01).sum()),
+            "sum_improvement": float(np.maximum(-delta, 0).sum()),
+            "sum_degradation": float(np.maximum(delta, 0).sum()),
+            "top_contributor_row": int(np.argmax(np.abs(delta))),
+            "top_contributor_delta": float(delta[int(np.argmax(np.abs(delta)))]),
+            "delta_drop_top_contributor": float(np.delete(delta, int(np.argmax(np.abs(delta)))).mean()),
+            "delta_drop_row172": float(np.delete(delta, 172).mean()),
         }
 
     defaults = ["A1:A0", "A1:B_s0", "A0:B_s0", "A2:A1", "A3:A1", "A2:B_s0",
@@ -339,8 +347,9 @@ def _tables(payload: dict) -> None:
             f"| {b['p90_ae']:.6f} | {b['top10_share_of_abs_error']:.3f} |")
     lines += ["", "## Paired contrasts (negative = first arm better)", "",
               "| contrast | ckpt | ΔMAE | 95% CI | excludes 0 | first better | Δ drop-top10 "
-              "| ordinary | tail | all_sup | low_sup | unseen | rings≥4 | worst10 | drop172 |",
-              "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+              "| ordinary | tail | all_sup | low_sup | unseen | rings≥4 | worst10 | drop172 "
+              "| drop top-1 contributor |",
+              "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for name, c in payload["contrasts"].items():
         g = c["delta_by_group"]
         lines.append(
@@ -354,7 +363,8 @@ def _tables(payload: dict) -> None:
             f"| {g.get('radius2_any_unseen', float('nan')):+.6f} "
             f"| {g.get('rings_ge4', float('nan')):+.6f} "
             f"| {g.get('reference_worst10', float('nan')):+.6f} "
-            f"| {g.get('drop_row172', float('nan')):+.6f} |")
+            f"| {g.get('drop_row172', float('nan')):+.6f} "
+            f"| {c['delta_drop_top_contributor']:+.6f} (row {c['top_contributor_row']}) |")
     lines += ["", "## Group sizes", ""]
     for g, n in payload["groups"]["masks"].items():
         lines.append(f"* `{g}`: {n}")
