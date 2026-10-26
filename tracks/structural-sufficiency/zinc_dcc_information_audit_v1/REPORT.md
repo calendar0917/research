@@ -585,6 +585,11 @@ B4 was CPU-only. See `RUN_LEDGER.md` for run IDs and hashes.
 - **B4 first seed-0 attempt:** failed at the checkpoint hash check before any
   label read due to a repo-relative path; fixed and rerun. No erroneous result
   was used and no AuditEval label was read twice.
+- **Post-result reporting changes:** after B4, `make_decision.py` was extended
+  only to copy the A4 MLP sensitivity, the ProbeFit outlier diagnostic, and
+  diagnostic tags into `decision.json`; the five-class thresholds/branches were
+  unchanged. `b4_score.py` was changed only to resolve repo-relative
+  checkpoint/support paths. No result or label was re-read.
 - **A2.2 rebinding:** information control, not a chemically valid molecule and
   not a label counterfactual.
 - **Historical SSL:** full-10k SSL checkpoints were only A1–A4 background
