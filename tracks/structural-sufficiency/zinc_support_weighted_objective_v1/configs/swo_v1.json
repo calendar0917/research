@@ -1,0 +1,108 @@
+{
+ "round": "zinc-support-weighted-objective-v1",
+ "kind": "label-utilisation pilot on the frozen strongest body \u2014 NOT a new architecture and NOT an original mechanism",
+ "question": "With the DCC-L / B-R0 body, forward, parameter count and recipe frozen, does a conservative train-only radius-2 structural-support weighting of the raw-y L1 objective improve official-valid performance?",
+ "arms": {
+  "E": "uniform raw-y L1 (historical R0 objective, unchanged)",
+  "W": "same objective, per-training-molecule weight w_i from train-only radius-2 support (see weights_frozen)",
+  "E_anchor": "zinc_dual_channel_composer_v1/runs/L_s0 (best 0.078537 @ep489) \u2014 reused as the frozen E checkpoint because its initial-state hash, SSL source, environment and recipe match exactly; a fresh E run is also executed as a drift control"
+ },
+ "model": {
+  "candidate": "DCC_L",
+  "parameters": 494193,
+  "cap": 500000,
+  "source": "zinc_dual_channel_composer_v1/code/dcc_models.py (verbatim import)",
+  "architecture_changes": null,
+  "forward_changes": null
+ },
+ "recipe": {
+  "source": "zinc_performance_search_v1/code/zps_runner.py RECIPES['R0'] (read, not transcribed)",
+  "optimizer": "adamw",
+  "lr": 0.001,
+  "min_lr": 1e-05,
+  "weight_decay": 1e-05,
+  "warmup_steps": 500,
+  "epochs": 600,
+  "dropout": 0.0,
+  "grad_clip": 5.0,
+  "batch_size": 128,
+  "valid_batch_size": 256,
+  "updates": 47400,
+  "loss": "l1",
+  "optimizer_changes": null,
+  "schedule_changes": null
+ },
+ "weights_frozen": {
+  "function": "low4_i = frac of molecule i's atoms with 1<=c_h<=4 in the train-10k exact typed radius-2 signature vocabulary; z = clip((low4-mean)/std, -1, 1); w = 1 + 0.5*z; w /= mean(w)",
+  "inputs": [
+   "train 10k structure only"
+  ],
+  "forbidden_and_unused": [
+   "labels (train/valid/test)",
+   "valid or test molecules",
+   "model errors",
+   "row 172",
+   "batch composition"
+  ],
+  "sha256": "a932a05638a0aff912b50df07eb20b08f4cd4cbf6cea936823d63b263bbe62ae",
+  "n": 10000,
+  "vocab_size": 12108,
+  "low4_mean": 0.06396,
+  "low4_std": 0.08814,
+  "clip_fraction": 0.132,
+  "w_min": 0.68396,
+  "w_max": 1.61022,
+  "w_mean": 1.0,
+  "effective_sample_size": 8941.2,
+  "ess_fraction": 0.8941,
+  "frac_up_weighted": 0.3889,
+  "corr_w_n_atoms": -0.2498,
+  "hypothesis_sign": "rare-structure training molecules get MORE weight (declared before the run); a null or a loss also rules out the opposite reading because the two predict opposite signs"
+ },
+ "seeds": {
+  "pilot": [
+   0
+  ],
+  "confirmation": [
+   1
+  ],
+  "extension_if_and_only_if_stable": [
+   2,
+   3
+  ],
+  "note": "seeds >= 1 reuse pretrain_encoder_s1.pt exactly as zinc_performance_search_v1 did; this truncates initialisation diversity and must be stated whenever a multi-seed mean is quoted"
+ },
+ "decision_rules": {
+  "PRIMARY": "overall valid MAE over all 1000 rows, same seed, W vs E",
+  "PROCEED_TO_SEED1": "W - E <= -0.003 AND radius2_low_support improves AND ordinary (y>-3) does not regress by more than 0.002",
+  "CONFIRM_EXTENSION": "seed 0 and seed 1 agree in sign and the paired mean is <= -0.003",
+  "STOP_NO_EFFECT": "-0.003 < W - E < +0.0025, or the sign flips across seeds",
+  "STOP_NEGATIVE": "W - E >= +0.0025 on overall, or ordinary regresses by more than 0.002",
+  "NO_RESCUE": "after the first pair, the weight function (lambda, clip, band, normalisation) is NOT re-tuned and no hyper-parameter is scanned",
+  "ALWAYS_REPORT": [
+   "overall 1000",
+   "row 172 retained",
+   "ordinary",
+   "tail",
+   "radius2 tiers",
+   "rings>=4",
+   "worst-10 vs 990",
+   "W20",
+   "T100",
+   "train@best/final",
+   "paired bootstrap CI",
+   "drift E_fresh vs E_anchor"
+  ]
+ },
+ "budget": {
+  "gpu_soft_h": 14,
+  "gpu_hard_h": 16,
+  "wall_clock_stop_new_training": "T+6.5h",
+  "per_run_projection_gpu_h": 0.4
+ },
+ "isolation": {
+  "official_test": "never constructed, loaded, predicted or scored",
+  "historical_results": "read-only; the E anchor is reused, never modified",
+  "weight_design": "frozen before any GPU run; sha256 recorded here and re-checked by the runner and the gates"
+ }
+}

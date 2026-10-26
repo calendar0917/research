@@ -1,0 +1,152 @@
+{
+ "round": "zinc-support-weighted-objective-v1",
+ "written": "2026-10-27T07:53:07+0800",
+ "n_pass": 9,
+ "n_gates": 9,
+ "gates": {
+  "G1_recipe_identity": {
+   "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "epochs": 600,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "valid_batch_size": 256,
+    "loss": "l1"
+   },
+   "equal": true,
+   "pass": true
+  },
+  "G2_trainer_diff": {
+   "n_hunks": 3,
+   "undocumented_hunks": [],
+   "hunk_summary": [
+    {
+     "tag": "replace",
+     "ref_lines": [
+      319,
+      320
+     ],
+     "copy_lines": [
+      319,
+      321
+     ]
+    },
+    {
+     "tag": "insert",
+     "ref_lines": [
+      377,
+      377
+     ],
+     "copy_lines": [
+      378,
+      391
+     ]
+    },
+    {
+     "tag": "replace",
+     "ref_lines": [
+      428,
+      429
+     ],
+     "copy_lines": [
+      442,
+      448
+     ]
+    }
+   ],
+   "pass": true
+  },
+  "G3_E_equivalence": {
+   "reference_curve": [
+    [
+     1.2076566837010323,
+     1.751707708835602
+    ]
+   ],
+   "copy_curve": [
+    [
+     1.2076566837010323,
+     1.751707708835602
+    ]
+   ],
+   "reference_best": {
+    "valid_mae": 1.2076566837010323,
+    "epoch": 1
+   },
+   "copy_best": {
+    "valid_mae": 1.2076566837010323,
+    "epoch": 1
+   },
+   "curves_bit_identical": true,
+   "same_final_hash": true,
+   "pass": true
+  },
+  "G4_weighted_identity": {
+   "weighted_with_ones": 1.146440700212339,
+   "plain_l1": 1.146440700212339,
+   "exact_equal": true,
+   "pass": true
+  },
+  "G5_weights_frozen": {
+   "sha_match": true,
+   "deterministic": true,
+   "label_free": true,
+   "vocab_sensitive": true,
+   "mean": 0.9999999999999998,
+   "min": 0.6839578912608633,
+   "max": 1.6102189030313458,
+   "ess": 8941.171340812552,
+   "ess_recorded": 8941.171340812552,
+   "ess_fraction": 0.8941171340812553,
+   "clip_fraction": 0.132,
+   "frac_gt_1": 0.3889,
+   "half_vocab_low4_mean": 0.08710246848497513,
+   "full_vocab_low4_mean": 0.06396397397632989,
+   "pass": true
+  },
+  "G6_init_batch_alignment": {
+   "E_hash": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33",
+   "W_hash": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33",
+   "historical_anchor_hash": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33",
+   "ssl_hash_E": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+   "ssl_hash_W": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+   "batch_order_identical": true,
+   "batch_order_head": [
+    5231,
+    9365,
+    8907,
+    6060,
+    4811,
+    5472
+   ],
+   "pass": true
+  },
+  "G7_no_test_access": {
+   "hits": [],
+   "trainer_cache_loads": [
+    "train_cache = D.load_cache(\"train\")",
+    "valid_cache = D.load_cache(\"valid\")"
+   ],
+   "trainer_loads_only_train_valid": true,
+   "pass": true
+  },
+  "G8_capacity": {
+   "parameters": 494193,
+   "cap": 500000,
+   "historical_parameters": 494193,
+   "pass": true
+  },
+  "G9_gradient": {
+   "analytic_first": -0.004707705529810657,
+   "numeric_first": -0.004707705447692945,
+   "expected_first": -0.004707705529810657,
+   "pass": true
+  }
+ },
+ "official_test_loaded": false
+}
