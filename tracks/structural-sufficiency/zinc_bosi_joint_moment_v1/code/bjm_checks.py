@@ -328,6 +328,8 @@ def gate3_small_n(norm) -> dict:
     real["max_abs_diff_on_n_ge2"] = float(np.abs(real["JM"][~mask]
                                                  - real["CM"][~mask]).max())
     real["pass"] = d <= 1e-7
+    # drop the raw [H, 288] blocks: only the summary numbers are evidence
+    real = {k: v for k, v in real.items() if k not in ("JM", "CM")}
     out["synthetic"] = result
     out["real_valid_batch"] = real
     if not (result["synthetic_pass"] and real["pass"]):

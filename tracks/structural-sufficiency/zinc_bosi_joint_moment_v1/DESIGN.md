@@ -196,8 +196,8 @@ seed1 两条 ≈ 1.0 h，CM 两条 ≈ 1.0 h，加 smoke/计时 ≈ 0.1 h，总�
 
 ## 5. 交付
 
-`code/`（`bjm_common.py` / `bjm_models.py` / `bjm_data` 复用 `bosi_data` /
-`bjm_prep.py` / `bjm_checks.py` / `bjm_train.py` / `bjm_analyze.py`）、
+`code/`（`bjm_common.py`、`bjm_models.py`、`bjm_prep.py`（复用 `bosi_data.relation_arrays`）、
+`bjm_checks.py`、`bjm_train.py`、`bjm_freeze.py`、`bjm_analyze.py`、`bjm_probe.py`）、
 `configs/bjm_v1.json`、`PROTOCOL.md`、`analysis/cpu_checks.json`、
 `analysis/summary.json`、`REPORT.md`，以及 gitignore 的 `runs/`、`cache/` 下的
 checkpoint / 曲线 / manifest / hash。历史轮次的文档与结果不改写。

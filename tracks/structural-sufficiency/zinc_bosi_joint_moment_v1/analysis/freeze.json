@@ -1,0 +1,189 @@
+{
+  "round": "zinc-bosi-joint-moment-v1",
+  "written": "2026-10-26T23:12:34+0800",
+  "config": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/configs/bjm_v1.json",
+  "config_sha256": "f0f2c4c643afb707abea6b2fdd53cd730329074b5e586b2ea0045c779c85dc28",
+  "cpu_gates_sha256": "84b1355be41ea78d32cc39aa5a54b22b1b4b2291f559c36bd1e43ca5fa68f0da",
+  "official_valid_loaded": true,
+  "official_valid_role": "development evaluation and checkpoint selection",
+  "official_test_loaded": false,
+  "gpu_hours_total": 0.9216641625919794,
+  "runs": {
+    "B_s0": {
+      "run_dir": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/B_s0",
+      "arm": "B",
+      "seed": 0,
+      "parameters": 473889,
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "dropout": 0.0,
+        "grad_clip": 5.0,
+        "batch_size": 128,
+        "eval_batch_size": 256,
+        "loss": "l1_raw_y",
+        "precision": "fp32",
+        "epochs": 600,
+        "steps_per_epoch": 79,
+        "total_updates": 47400,
+        "selection": "strict minimum official-valid MAE, earlier epoch wins ties"
+      },
+      "total_updates": 47400,
+      "best": {
+        "valid_mae": 0.08240547278517624,
+        "epoch": 439,
+        "step": 34681
+      },
+      "W20": 0.08320282487751683,
+      "T100": 0.08324073242762825,
+      "gpu_hours": 0.3732859932578221,
+      "initial_state_sha256": "f894c18ab727e52fa99ae1d918c0016bfd14bf4e8a65905ff268a4799092a667",
+      "initial_common_state_sha256": "f894c18ab727e52fa99ae1d918c0016bfd14bf4e8a65905ff268a4799092a667",
+      "first_batch_rows_sha256": "ea88ffc8959b8a6b909a6d1bed63e2d323ac0c7a28bf1f835b1d54cb8f62b345",
+      "data": {
+        "train_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+        "train_cache_sha256": "e3a5e2399d152bfb03b99bff13e59fbf0755e673fcf37a8b4c56523ac6908b4c",
+        "valid_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_valid.pt",
+        "valid_cache_sha256": "d8a9ab09cd8ff0d88a1ff5eea74f95785f6ef11ce4aa73d9f3461f790bd56a22",
+        "relation_train_content_sha256": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+        "relation_valid_content_sha256": "6505e23bdcbbaf42b64aa38f11af06474f76081d0d363cddd25ea6427c7cebbb",
+        "norm_source": "frozen_p3_prep_train10k",
+        "norm_path": "tracks/structural-sufficiency/zinc_arch_discovery_v1/analysis/norm.json",
+        "norm_sha256": "f6e04fc0d3f7ed1fb405e061ac388558978e2d2356781fcc4cde2a26d59e25be",
+        "norm_valid_or_test_used": false,
+        "ssl": {
+          "source": "/home/hxy/cy/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+          "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+          "keys_loaded": [
+            "atom_encoder",
+            "bond_encoder"
+          ],
+          "junction_encoder_loaded": false
+        },
+        "official_valid_loaded": true,
+        "official_valid_role": "per-epoch evaluation + best-checkpoint selection only",
+        "official_test_loaded": false
+      },
+      "checkpoints": {
+        "best": {
+          "checkpoint": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/B_s0/best.pt",
+          "checkpoint_sha256": "5e756a61eed85657e706d59f3232c4c4ff679647d7af9f281539ca72b164b1ed",
+          "epoch": 439,
+          "valid_mae_train_json": 0.0824054759553983,
+          "valid_mae_recomputed_cpu": 0.08240546861285111,
+          "abs_diff": 7.342547181377057e-09,
+          "prediction_file": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/B_s0/valid_best.npz",
+          "prediction_sha256": "69b426f36895b8fd8c099248a2b0085073b611c2def6f19af9faa50007f8bb46",
+          "stored_pred_max_abs_diff_vs_recomputed": 3.814697265625e-06,
+          "train_mae_eval_mode": 0.00853645141493762,
+          "verified": true
+        },
+        "final": {
+          "checkpoint": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/B_s0/final.pt",
+          "checkpoint_sha256": "d2a8f3b3c99367f7b57cdd0ac11b6995c0eaf270e4bd0831e9575ece94d125a4",
+          "epoch": 600,
+          "valid_mae_train_json": 0.08324248759815236,
+          "valid_mae_recomputed_cpu": 0.08324250681319972,
+          "abs_diff": 1.921504735880042e-08,
+          "prediction_file": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/B_s0/valid_final.npz",
+          "prediction_sha256": "542ff0f8cd1d76cfde5a2bb0140f409dc00112fd0889a8db12ffdc9123a8a187",
+          "stored_pred_max_abs_diff_vs_recomputed": 3.814697265625e-06,
+          "train_mae_eval_mode": 0.0005927530952496454,
+          "verified": true
+        }
+      },
+      "official_test_loaded": false
+    },
+    "JM_s0": {
+      "run_dir": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/JM_s0",
+      "arm": "JM",
+      "seed": 0,
+      "parameters": 475425,
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "dropout": 0.0,
+        "grad_clip": 5.0,
+        "batch_size": 128,
+        "eval_batch_size": 256,
+        "loss": "l1_raw_y",
+        "precision": "fp32",
+        "epochs": 600,
+        "steps_per_epoch": 79,
+        "total_updates": 47400,
+        "selection": "strict minimum official-valid MAE, earlier epoch wins ties"
+      },
+      "total_updates": 47400,
+      "best": {
+        "valid_mae": 0.08408815147256246,
+        "epoch": 377,
+        "step": 29783
+      },
+      "W20": 0.08532707818871131,
+      "T100": 0.08542005960358073,
+      "gpu_hours": 0.5483781693341573,
+      "initial_state_sha256": "abb42f6b7c1de7d360c39efbb68e2f0543f2b078ba46ebdb841f2698b5e3c6dd",
+      "initial_common_state_sha256": "f894c18ab727e52fa99ae1d918c0016bfd14bf4e8a65905ff268a4799092a667",
+      "first_batch_rows_sha256": "ea88ffc8959b8a6b909a6d1bed63e2d323ac0c7a28bf1f835b1d54cb8f62b345",
+      "data": {
+        "train_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+        "train_cache_sha256": "e3a5e2399d152bfb03b99bff13e59fbf0755e673fcf37a8b4c56523ac6908b4c",
+        "valid_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_valid.pt",
+        "valid_cache_sha256": "d8a9ab09cd8ff0d88a1ff5eea74f95785f6ef11ce4aa73d9f3461f790bd56a22",
+        "relation_train_content_sha256": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+        "relation_valid_content_sha256": "6505e23bdcbbaf42b64aa38f11af06474f76081d0d363cddd25ea6427c7cebbb",
+        "norm_source": "frozen_p3_prep_train10k",
+        "norm_path": "tracks/structural-sufficiency/zinc_arch_discovery_v1/analysis/norm.json",
+        "norm_sha256": "f6e04fc0d3f7ed1fb405e061ac388558978e2d2356781fcc4cde2a26d59e25be",
+        "norm_valid_or_test_used": false,
+        "ssl": {
+          "source": "/home/hxy/cy/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+          "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+          "keys_loaded": [
+            "atom_encoder",
+            "bond_encoder"
+          ],
+          "junction_encoder_loaded": false
+        },
+        "official_valid_loaded": true,
+        "official_valid_role": "per-epoch evaluation + best-checkpoint selection only",
+        "official_test_loaded": false
+      },
+      "checkpoints": {
+        "best": {
+          "checkpoint": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/JM_s0/best.pt",
+          "checkpoint_sha256": "a781c1f11cbf0d7c6fe29668468dfcfde5c1019d69b56935619962960e512de1",
+          "epoch": 377,
+          "valid_mae_train_json": 0.08408815455710282,
+          "valid_mae_recomputed_cpu": 0.0840881517668604,
+          "abs_diff": 2.790242425998457e-09,
+          "prediction_file": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/JM_s0/valid_best.npz",
+          "prediction_sha256": "68161185dbf4f991c1010aa752d1cddf7c7da4a9e260f6c82b9ce98097514f41",
+          "stored_pred_max_abs_diff_vs_recomputed": 2.86102294921875e-06,
+          "train_mae_eval_mode": 0.01917411494551925,
+          "verified": true
+        },
+        "final": {
+          "checkpoint": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/JM_s0/final.pt",
+          "checkpoint_sha256": "30775cbf7d70acf4a8fedfcf8884f514ddcd0e805cf4852957fb289b8be644ec",
+          "epoch": 600,
+          "valid_mae_train_json": 0.08539353329216828,
+          "valid_mae_recomputed_cpu": 0.08539353151147952,
+          "abs_diff": 1.7806887631088841e-09,
+          "prediction_file": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/JM_s0/valid_final.npz",
+          "prediction_sha256": "80f373f9c7aed0b4b687eab93af2ca291039cb70cdaa122e6c063bc2e74b04d8",
+          "stored_pred_max_abs_diff_vs_recomputed": 1.9073486328125e-06,
+          "train_mae_eval_mode": 0.0004762939190957695,
+          "verified": true
+        }
+      },
+      "official_test_loaded": false
+    }
+  }
+}

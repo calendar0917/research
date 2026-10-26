@@ -4,7 +4,7 @@
   "frozen_utc": "2026-10-28T00:00:00+0800",
   "status": "frozen_before_gpu",
   "design_file": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/DESIGN.md",
-  "design_sha256": "69d648cd0d063487d67ff3417c1880849a4131a734ee3f662134b332b5c9b6e2",
+  "design_sha256": "c6937c3d6cd87a2fb7462c44b549761e46b112a19a76fb80f691b081ce3774d4",
   "protocol_sha256": "fcb4dc598c360d3992e36bd8d5292174754a72c3eda405c122ae527292832e15",
   "data": {
     "protocol": "official PyG ZINC subset=True, train 10000 / valid 1000, raw-y MAE",
@@ -25,7 +25,10 @@
       "root": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1",
       "seed0_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
       "seed1_sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a",
-      "keys_loaded": ["atom_encoder", "bond_encoder"],
+      "keys_loaded": [
+        "atom_encoder",
+        "bond_encoder"
+      ],
       "supervised_weights_loaded": false,
       "extra_ssl": false
     },
@@ -34,14 +37,44 @@
   },
   "architecture": {
     "shared_trunk": "BOSI v0 (bond object + atom anchor + one-shot statistics + no learned junction)",
-    "atom_encoder": [108, 128, 96],
-    "bond_encoder": [295, 160, 96],
-    "half_encoder": [295, 128, 32],
-    "side": [617, 128, 96],
-    "compose": [391, 160, 96],
-    "reader": [417, 256, 256, 1],
+    "atom_encoder": [
+      108,
+      128,
+      96
+    ],
+    "bond_encoder": [
+      295,
+      160,
+      96
+    ],
+    "half_encoder": [
+      295,
+      128,
+      32
+    ],
+    "side": [
+      617,
+      128,
+      96
+    ],
+    "compose": [
+      391,
+      160,
+      96
+    ],
+    "reader": [
+      417,
+      256,
+      256,
+      1
+    ],
     "activation": "silu",
-    "relation_groups": ["T", "Q", "R", "N"],
+    "relation_groups": [
+      "T",
+      "Q",
+      "R",
+      "N"
+    ],
     "relation_priority": "T>Q>R>N",
     "closure_dim": 4,
     "global_dim": 33,
@@ -50,7 +83,11 @@
     "joint_heads": 2,
     "joint_projection": "Linear(32,12,bias=False), PyTorch default Kaiming-uniform (a=sqrt(5)), drawn after the six shared MLPs in fixed order U1,V1,U2,V2",
     "layer_norm": "F.layer_norm(x, (32,)) no affine, eps=1e-5, biased variance",
-    "parameter_count_expected": {"B": 473889, "JM": 475425, "CM": 475425},
+    "parameter_count_expected": {
+      "B": 473889,
+      "JM": 475425,
+      "CM": 475425
+    },
     "parameter_cap": 500000,
     "learned_junction_token": false,
     "recursion": false,
@@ -67,7 +104,12 @@
     "identity": "J_j - C_j = sum_f (u_jf - ubar_j)(w_jf - wbar_j)^T",
     "jm_equals_cm_for_n_le_1": true,
     "n_ge_2_fraction_train10k": 0.4470332438753365,
-    "n_partner_fractions_train10k": {"0": 0.08249792401285307, "1": 0.47046883211181045, "2": 0.42212942125088754, "3": 0.024903822624448912}
+    "n_partner_fractions_train10k": {
+      "0": 0.08249792401285307,
+      "1": 0.47046883211181045,
+      "2": 0.42212942125088754,
+      "3": 0.024903822624448912
+    }
   },
   "recipe": {
     "optimizer": "adamw",
@@ -93,22 +135,38 @@
   },
   "gpu_plan": {
     "host": "res",
-    "pools": ["res-gpu0", "res-gpu1"],
-    "stage1": {"res-gpu0": "B_s0", "res-gpu1": "JM_s0", "same_commit": true},
-    "conditional_seed1": {"res-gpu0": "B_s1", "res-gpu1": "JM_s1"},
-    "conditional_mechanism_control": ["CM_s0", "CM_s1"],
+    "pools": [
+      "res-gpu0",
+      "res-gpu1"
+    ],
+    "stage1": {
+      "res-gpu0": "B_s0",
+      "res-gpu1": "JM_s0",
+      "same_commit": true
+    },
+    "conditional_seed1": {
+      "res-gpu0": "B_s1",
+      "res-gpu1": "JM_s1"
+    },
+    "conditional_mechanism_control": [
+      "CM_s0",
+      "CM_s1"
+    ],
     "budget_a100_hours": 5.0,
     "budget_includes": "smoke, timing, failed jobs, all conditional runs"
   },
   "decision_rules": {
     "buy_seed1_if": "JM_s0.best_valid <= 0.075  OR  ((JM_s0.best_valid - B_s0.best_valid) <= -0.003 AND JM_s0.best_valid <= 0.078)",
-    "guards": ["ordinary (y > -3) group shows no clear regression", "W20 shows no large regression in the opposite direction"],
+    "guards": [
+      "ordinary (y > -3) group shows no clear regression",
+      "W20 shows no large regression in the opposite direction"
+    ],
     "otherwise": "stop at seed0; no extra seeds, no hyper-parameter search, no rank/width/epoch changes",
     "mechanism_control_trigger": "only after a credible two-seed JM advantage over B; CM is a new job, never auto-started"
   },
   "historical_references": {
     "note": "same official protocol, historical values only; NOT retrained and NOT a matched control of this round",
-    "dccl_valid_4seed_mean": 0.075990,
+    "dccl_valid_4seed_mean": 0.07599,
     "dccl_valid_seed0": 0.078537,
     "p3b_valid_seed0": 0.076224,
     "dccl_source": "tracks/structural-sufficiency/zinc_performance_search_v1",
@@ -116,16 +174,31 @@
   },
   "analysis": {
     "metric": "raw-y MAE on official valid",
-    "groups": ["ordinary (y > -3)", "tail (y <= -3)", "radius-2 seen/lowsupport/unseen", "rings>=4 (cycle rank)"],
+    "groups": [
+      "ordinary (y > -3)",
+      "tail (y <= -3)",
+      "radius-2 seen/lowsupport/unseen",
+      "rings>=4 (cycle rank)"
+    ],
     "support_source": "official train 10k only; exact typed radius-2 rooted signatures",
     "top10_sensitivity": "drop the 10 molecules with the largest max(AE_A, AE_B) per pair",
     "bootstrap": "paired over fixed valid molecules, 10000 resamples, descriptive only",
-    "reporting": ["params", "GPU-hours", "best_valid", "best_epoch", "W20", "T100", "final_valid", "train@best", "train@final"],
+    "reporting": [
+      "params",
+      "GPU-hours",
+      "best_valid",
+      "best_epoch",
+      "W20",
+      "T100",
+      "final_valid",
+      "train@best",
+      "train@final"
+    ],
     "test_policy": "official test never constructed, loaded, predicted or scored in this round"
   },
   "cpu_gates": {
     "report": "analysis/cpu_checks.json",
-    "sha256": "5493de2a54bf6d79b9f065d36c4613f56da46d27cd4ae9e8dc11940a011c89ee",
+    "sha256": "84b1355be41ea78d32cc39aa5a54b22b1b4b2291f559c36bd1e43ca5fa68f0da",
     "gates_passed": 12,
     "gates_total": 12,
     "verdict": "CPU_GO"
