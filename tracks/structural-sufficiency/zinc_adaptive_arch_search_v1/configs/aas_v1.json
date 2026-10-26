@@ -1,0 +1,95 @@
+{
+  "protocol_id": "zinc-adaptive-arch-search-v1",
+  "round": "zinc_adaptive_arch_search_v1",
+  "status": "frozen_before_gpu",
+  "frozen_local": "2026-10-27T01:10+08:00",
+  "plan_sha256": "649f9481be68ee785e1c55230f932b162f76e26001394acb229f8dfd14c194bb",
+  "data": {
+    "protocol": "official PyG ZINC subset=True, train 10000 / valid 1000, raw-y MAE",
+    "train_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+    "train_cache_sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3",
+    "valid_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_valid.pt",
+    "valid_cache_sha256": "6e45fea66c4c87c7de1cd9c32cd495525c7ea5099b1c35f54fd3ab68fc8b1e97",
+    "norm": "tracks/structural-sufficiency/zinc_arch_discovery_v1/analysis/norm.json",
+    "norm_sha256": "f6e04fc0d3f7ed1fb405e061ac388558978e2d2356781fcc4cde2a26d59e25be",
+    "relation_train": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/cache/bjm_rel_train.pt",
+    "relation_valid": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/cache/bjm_rel_valid.pt",
+    "relation_train_content_sha256": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+    "relation_valid_content_sha256": "6505e23bdcbbaf42b64aa38f11af06474f76081d0d363cddd25ea6427c7cebbb",
+    "ssl_seed0_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+    "ssl_seed1_sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a",
+    "official_valid_role": "per-epoch evaluation + best-checkpoint selection only",
+    "official_test_loaded": false
+  },
+  "arms": {
+    "A1": "BOSI-B + sum_{f!=e} Phi([x[v,e], x[v,f], |x[v,e]-x[v,f]|, x[v,e]*x[v,f]]) appended to Side",
+    "A0": "identical, target state replaced by the partner-set mean (matched null)",
+    "pair_phi": [
+      128,
+      64,
+      32
+    ],
+    "side_input": [
+      617,
+      649
+    ],
+    "parameters": {
+      "A1": 488321,
+      "A0": 488321,
+      "BOSI_B": 473889,
+      "cap": 500000
+    },
+    "new_side_columns_init": "zero (step-0 forward == BOSI-B exactly)",
+    "no_recursion": true,
+    "attention": false,
+    "new_structural_features": false
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "loss": "l1_raw_y",
+    "precision": "fp32",
+    "epochs": 600,
+    "steps_per_epoch": 79,
+    "total_updates": 47400,
+    "selection": "strict minimum official-valid MAE"
+  },
+  "references_frozen": {
+    "B_s0": {
+      "valid_best": 0.08240547278517624,
+      "W20": 0.08320282487751683,
+      "T100": 0.08324073242762825,
+      "params": 473889,
+      "source": "zinc_bosi_joint_moment_v1/runs/B_s0/train.json"
+    },
+    "DCC_L_s0": {
+      "valid_best": 0.078537,
+      "params": 494193
+    },
+    "DCC_L_4seed_mean": {
+      "valid_best": 0.07599,
+      "params": 494193
+    },
+    "P3B_s0": {
+      "valid_best": 0.076224,
+      "params": 413505
+    }
+  },
+  "decision_rules": {
+    "DEEPEN_A": "A1 - B_s0 <= -0.003 AND A1 - A0 <= -0.001",
+    "NONLINEAR_ONLY": "A1 - B_s0 <= -0.003 AND |A1 - A0| < 0.001",
+    "STOP_A": "(A1 - B_s0 >= +0.005) OR (W20 and T100 both worse than B_s0 by >=0.003)",
+    "ambiguity_band": "otherwise at most one confirmation purchase"
+  },
+  "cpu_gates": {
+    "file": "analysis/cpu_checks.json",
+    "n_pass": 11,
+    "n_gates": 11
+  }
+}
