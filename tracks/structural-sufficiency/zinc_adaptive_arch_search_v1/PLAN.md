@@ -90,3 +90,33 @@ load-bearing（P−B = +0.01239）。本轮先保留该通道，隔离"前聚合
 `PLAN.md`（本文件）、`DECISIONS.md`（每轮 Decision Log）、`REPORT.md`（最终中文总结）、
 `configs/aas_v1.json`（冻结协议）、`code/`（模型/训练/门控/分析）、`analysis/`（机器可读
 指标、预测哈希、曲线、成本、诊断）、`runs/`（gitignored，含 checkpoint 与逐分子预测）。
+
+---
+
+## 执行附录（实际买了什么、为什么偏离预案）
+
+| # | run | 轴 | 目的 | 状态 |
+|---|---|---|---|---|
+| 1 | A1_s0 / A0_s0 | A | 预注册首轮（两卡并行） | 完成 |
+| 2 | A1_s1 / A0_s1 | A | cross-seed 方向一致性（预注册允许的那一次确认） | 完成 |
+| 3 | B_s1 | A 基线 | **偏离**：seed 1 缺少 BOSI-B 的匹配基线，任何 seed-1 对照都会错配 | 完成 |
+| 4 | S1_s0 / S2_s0 | B | 预注册主体 + **新增**的池化位置对照 S2（与 S1 同参数同初值，只换池化位置） | 完成 |
+| 5 | A0M0_s0 / A0M0_s1 | A 消融 | **新增**：A0 的 moment-bank 消融（同参数同初值，M≡0），回答"新通道是否取代了矩 bank" | 完成 |
+| — | S0_s0 | B | 取消：预注册规则只在水平有竞争力时才买"有序 vs 对称" | 未跑 |
+| — | A2 / A3 | A | 取消：A 族被证明无统计功效，加深没有基准 | 未跑 |
+| — | C | C | 不启动：S2 已否掉"图级组合缺失"的前提 | 未跑 |
+| — | seed 2/3 | — | 不可用：只有 `pretrain_encoder_s{0,1}.pt`（seed 2 直接 FileNotFoundError） | 阻塞 |
+
+**两次报废重跑（记账/健壮性，非科学失败）**：
+1. `aas-A0-s0` 首跑用 `--device cuda:1`（单卡分配）→ `invalid device ordinal`；以 `cuda:0` 重跑。
+2. `aas-S1-s0` / `aas-S2-s0` 首跑在**训练完成后**写 `train.json` 时因
+   `EXPECTED_PARAMETERS['S1']` 缺键崩溃（`c453854` 修复）；两者重跑，浪费 ≈0.4 GPU·h。
+   附带的副作用是一条有用的观测：同一命令、同一 commit 的 s1 两次运行
+   best 分别是 0.086889 / 0.090343（CUDA scatter 的 `index_add_` 非确定性），
+   与 §4 的功效论证互相印证。
+
+**预注册 vs 事后**：所有判定规则（A 的 D1–D3、B 的 DEEPEN_B/STOP_B、A0M0 的
+MOMENT_REDUNDANT/ESSENTIAL）都在对应 GPU 作业启动**之前**写进 `configs/*.json`；
+`aas_freeze.py` 会记录 config/PLAN 的 sha256，`aas_analyze.py` 在 config 与
+冻结记录不一致时拒绝分析。事后新增的只有：`paired_by_seed` 统计块、
+`drop-top-1-contributor` 列，以及 stage a3 的消融臂（在启动前冻结）。

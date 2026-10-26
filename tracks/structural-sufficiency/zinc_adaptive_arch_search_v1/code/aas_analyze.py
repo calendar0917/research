@@ -262,6 +262,63 @@ def main(argv=None) -> int:
             decision["A0_s0_best_valid"] = table["A0_s0"]["best"]["valid_mae"]
             decision["delta_A0_minus_B_best"] = contrasts["A0_minus_B|best"]["delta_mae"]
 
+    # ---- seed-aware reading of the same contrasts ---------------------------
+    # The pre-registered block above pairs the LAST trained A1 run against the
+    # frozen B_s0 reference, so once a second seed exists that verdict is a
+    # seed-mismatched comparison.  This block is what the decisions cite: it
+    # only uses same-seed pairs, and it states whether the effect survives the
+    # body's own seed-to-seed spread.
+    by_seed = {}
+    for seed in sorted({r["seed"] for r in runs.values()}):
+        have = {r["arm"]: tag for tag, r in runs.items() if r["seed"] == seed}
+        for name, (x, y_) in {"A1_minus_A0": ("A1", "A0"),
+                              "A1_minus_B": ("A1", "B"),
+                              "A0_minus_B": ("A0", "B"),
+                              "A0M0_minus_A0": ("A0M0", "A0")}.items():
+            if x not in have:
+                continue
+            if y_ == "B" and seed == 0 and "B" not in have:
+                btag = "B_s0"
+            else:
+                btag = have.get(y_)
+            if btag is None:
+                continue
+            d = aerr[(have[x], "best")] - aerr[(btag, "best")]
+            base = contrasts.get(f"{x}_minus_{'B' if y_ == 'B' else y_}|best")
+            ci = boot_ci(d, np.random.default_rng(20261027))
+            by_seed.setdefault(name, {})[str(seed)] = {
+                "delta_mae_best": float(d.mean()),
+                "ci95": [float(ci[0]), float(ci[1])],
+                "excludes_zero": bool(ci[0] > 0 or ci[1] < 0),
+                "delta_drop_row172": float(np.delete(d, 172).mean()),
+                "ordinary": float(d[masks["ordinary_y_gt_-3"]].mean()),
+                "rings_ge4": float(d[masks["rings_ge4"]].mean()),
+                "unseen": float(d[masks["radius2_any_unseen"]].mean()),
+                "tag_x": have[x], "tag_y": btag,
+            }
+        have.pop("A1", None); have.pop("A0", None)
+    decision["paired_by_seed"] = by_seed
+    spreads = {}
+    for arm in ("B", "A1", "A0", "S1", "S2", "A0M0"):
+        v = [r["best"]["valid_mae"] for r in runs.values() if r["arm"] == arm]
+        if len(v) > 1:
+            spreads[arm] = {"n": len(v), "values": [float(x) for x in v],
+                            "range": float(max(v) - min(v)),
+                            "mean": float(np.mean(v))}
+    decision["same_arm_seed_spread"] = spreads
+    verdicts = {}
+    for name, per_seed in by_seed.items():
+        signs = {np.sign(v["delta_mae_best"]) for v in per_seed.values()}
+        if len(per_seed) > 1 and len(signs) > 1:
+            verdicts[name] = "SIGN_FLIP_ACROSS_SEEDS"
+        elif all(not v["excludes_zero"] for v in per_seed.values()):
+            verdicts[name] = "NO_EFFECT_CI_INCLUDES_ZERO"
+        elif all(v["excludes_zero"] for v in per_seed.values()):
+            verdicts[name] = "CONSISTENT"
+        else:
+            verdicts[name] = "MIXED"
+    decision["contradiction_verdicts"] = verdicts
+
     # ---- per-molecule table -------------------------------------------------
     csv_path = AC.ANALYSIS / f"per_molecule_{args.stage}.csv"
     with open(csv_path, "w", newline="", encoding="utf-8") as fh:
