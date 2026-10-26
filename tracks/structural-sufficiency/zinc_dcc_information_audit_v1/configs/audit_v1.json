@@ -1,0 +1,121 @@
+{
+  "protocol_id": "zinc-dcc-information-audit-v1",
+  "frozen_at_utc": "2026-10-26T01:32:08Z",
+  "repo_head": "58e6837b91507aae3feb9ad9370ef75d1959b7ec",
+  "audit_plan_sha256": "ddc6978121bdb91588876a16b6e5f13eee95173cce6b6b9100de0e9ab0dd7f22",
+  "seed_sequence_base": 20261026,
+  "bond_types": {
+    "observed_vocabulary": [1, 2, 3],
+    "observed_counts_train": {"1": 185060, "2": 63548, "3": 671},
+    "n_physical_bonds_train": 249279,
+    "fourth_aromatic_slot_present_in_data": false,
+    "primary_n_types": 3,
+    "primary_unordered_pairs": [[1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3]],
+    "four_slot_diagnostic_only": true
+  },
+  "relations": {
+    "R1": {"name": "line_graph_distance_1", "definition": "shared atom"},
+    "R2": {"name": "line_graph_distance_2", "definition": "shortest path length 2 in line graph"},
+    "R3": {"name": "line_graph_distance_ge_3", "definition": "finite shortest path length >= 3 in line graph"},
+    "R4": {"name": "same_ring_biconnected_block", "definition": "both physical bonds in at least one biconnected block with >= 3 edges"}
+  },
+  "j_raw": {
+    "n_dims_primary": 32,
+    "per_relation_dims": 8,
+    "frequency_dims_per_relation": 6,
+    "extra_dims": ["log1p(pair_count)", "empty_mask"],
+    "normalization": "per relation, frequency = count / pair_count; empty relation => all zero, mask=1",
+    "n_dims_four_slot_diagnostic": 48,
+    "four_slot_diagnostic_used_in_models": false
+  },
+  "j_latent": {
+    "n_dims": 4,
+    "centering": "h_b = c_loc[b] - mean_b(c_loc) within molecule",
+    "definition": "T_r = mean_{(b,c) in R_r} dot(h_b,h_c)/96; empty => 0",
+    "source_representation": "the frozen backbone being audited (A3/A4: frozen full-10k checkpoint; B: the corresponding Fit8k backbone)"
+  },
+  "nulls": {
+    "j_raw_null": "permute bond_type within molecule, preserving histogram; SeedSequence([20261026, molecule_index])",
+    "j_latent_null": "permute c_loc rows within molecule, preserving multiset; SeedSequence([20261026, molecule_index])",
+    "disclosure": "bond-type reassignment may break chemical valence; it is an information control, not a legal molecule"
+  },
+  "a4_redundancy": {
+    "fit_rows": 8000,
+    "probe_rows": 1000,
+    "audit_rows": 1000,
+    "ridge_alpha_grid": [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0],
+    "ridge_cv_folds": 5,
+    "ridge_cv_metric": "mean_squared_error",
+    "low_variance_abs_threshold": 1e-06,
+    "low_variance_relative_to_block_median": 0.001,
+    "mlp": {
+      "hidden": 128,
+      "activation": "SiLU",
+      "optimizer": "AdamW",
+      "lr": 0.001,
+      "weight_decay": 0.0001,
+      "batch_size": 256,
+      "max_epochs": 300,
+      "patience": 20,
+      "internal_holdout_rows": 1000,
+      "selection": "min internal holdout MSE"
+    },
+    "gate_block_r2_stop": 0.98,
+    "gate_residual_variance_share_stop": 0.02,
+    "gate_seed_consistency_max_probe_audit_gap": 0.02
+  },
+  "b_phase": {
+    "n_fit": 8000,
+    "n_probe_fit": 1000,
+    "n_audit_eval": 1000,
+    "split_hash": "sha256(content_key)",
+    "content_key": "WL_hash_3_iterations + n_atoms + n_bonds; exact isomorphism check on collision",
+    "size_bins": [[0, 20], [21, 24], [25, 28], [29, 100000]],
+    "ring_system_bins": [[0, 0], [1, 3], [4, 100000]],
+    "allocation": "within stratum sort by sha256(content_key), 80/10/10 with largest remainder to exact totals",
+    "dccl": {
+      "parameters": 494193,
+      "optimizer": "AdamW",
+      "lr": 0.001,
+      "min_lr": 1e-05,
+      "weight_decay": 1e-05,
+      "batch_size": 128,
+      "loss": "raw-y L1",
+      "warmup_steps": 500,
+      "grad_clip": 5.0,
+      "dropout": 0.0,
+      "total_updates": 47400,
+      "checkpoint": "final update 47400; no valid/probe/audit selection"
+    },
+    "ssl": {
+      "preferred": "Fit8k-only masked SSL",
+      "allowed_fallback": "historical full-10k SSL, disclosed as transductive-unsupervised",
+      "shared_encoder_across_supervised_seeds": "allowed with disclosure"
+    },
+    "audit_head": {
+      "model": "Ridge",
+      "alpha_grid": [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0],
+      "cv_folds": 5,
+      "cv_metric": "mean_squared_error",
+      "robust_sensitivity": {"model": "HuberRegressor", "epsilon": 1.35, "alpha": 0.0001},
+      "target": "y - f_DCC(z)",
+      "arms": ["Z", "ZJ", "ZN"],
+      "ZN_J_hat": "ridge z->J fit on Fit8k, label-free, per backbone seed"
+    },
+    "bootstrap": {"n": 10000, "seed": 20261026, "unit": "molecule"},
+    "practical_gain_band_mae": 0.003
+  },
+  "support": {
+    "radius": 2,
+    "full_support_min_independent_fit_molecules": 5,
+    "low_support_range": [1, 4],
+    "unseen": 0
+  },
+  "budget": {
+    "soft_a100_hours": 4.0,
+    "hard_a100_hours": 6.0,
+    "planned_b_phase_a100_hours": 1.25
+  },
+  "official_valid_policy": "not used for selection, audit-head fitting, gates, or final main table",
+  "official_test_policy": "never constructed, loaded, indexed, or read"
+}

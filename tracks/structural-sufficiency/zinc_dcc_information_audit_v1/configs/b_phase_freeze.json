@@ -1,0 +1,115 @@
+{
+  "protocol_id": "zinc-dcc-information-audit-v1",
+  "phase": "B",
+  "frozen_at_utc": "2026-10-26T01:51:37Z",
+  "repo_head_before_b": "58e6837b91507aae3feb9ad9370ef75d1959b7ec",
+  "purpose": "conditional predictive-value audit after the A4 non-redundancy gate did not stop",
+  "a4_gate_outcome": {
+    "stop_before_new_gpu": false,
+    "j_raw_probe_block_r2_D0": 0.9410258706501655,
+    "j_raw_probe_block_r2_D1": 0.9322658123121664,
+    "j_latent_probe_block_r2_D0": -0.18964763891791203,
+    "j_latent_probe_block_r2_D1": 0.5805011221596278,
+    "note": "J_latent_D0 ProbeFit R2 is dominated by one extreme ProbeFit molecule; AuditEval R2 is 0.774. The gate is false in all cases (threshold 0.98)."
+  },
+  "ssl": {
+    "scope": "Fit8k rows only (row list frozen in configs/split_fit8k_probe_audit.json)",
+    "mechanism": "bjoc_masked_pretraining_v1: 15% atoms + 15% physical bonds, full masked-object rebuild, CE+CE 1/1",
+    "seeds": [0, 1],
+    "updates": 7560,
+    "batch_size": 128,
+    "optimizer": "Adam",
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "grad_clip": 5.0,
+    "checkpoint": "last update 7560 only",
+    "labels_read": false,
+    "official_valid_loaded": false,
+    "official_test_loaded": false,
+    "note": "Same budget as the historical full-10k masked SSL; restricting the row set makes the initialization strictly Fit8k-inductive."
+  },
+  "dccl_reference": {
+    "architecture": "native DualChannel organized_local=True (DCC-L/B-R0 forward)",
+    "parameters": 494193,
+    "seeds": [0, 1],
+    "fit_rows": "Fit8k",
+    "updates": 47400,
+    "batch_size": 128,
+    "epochs_entered": 753,
+    "last_epoch_partial": "24 batches after 752 complete epochs of 63 batches",
+    "optimizer": "AdamW",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_updates": 500,
+    "loss": "raw-y L1",
+    "grad_clip": 5.0,
+    "dropout": 0.0,
+    "checkpoint": "final update 47400 only",
+    "selection": "none; official valid, ProbeFit and AuditEval are never evaluated for selection",
+    "normalization": "global33 mean/scale from Fit8k rows only; root/block scalar fields are not consumed by the DCC-L P3N collate",
+    "ssl_pairing": "supervised seed 0 <- SSL seed 0; seed 1 <- SSL seed 1"
+  },
+  "audit_heads": {
+    "fit_rows": "ProbeFit (1000)",
+    "target": "y - f_DCC(z)",
+    "models": ["Z", "ZJ", "ZN"],
+    "ridge": {
+      "alpha_grid": [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0],
+      "cv_folds": 5,
+      "cv_shuffle_seed": 20261026,
+      "cv_metric": "mean_squared_error",
+      "standardization": "X and residual target means/scales from ProbeFit only"
+    },
+    "Z": "full z (513)",
+    "ZJ": "z + J_raw (32) + J_latent (4)",
+    "ZN": "z + J_hat_raw (32) + J_hat_latent (4), J_hat fitted on Fit8k only with the same ridge grid/CV",
+    "j_hat": {
+      "fit_rows": "Fit8k",
+      "features": "full z from the corresponding frozen backbone",
+      "targets": ["J_raw", "J_latent"],
+      "alpha_grid": [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0],
+      "cv_folds": 5,
+      "cv_shuffle_seed": 20261026,
+      "labels_read": false
+    },
+    "huber_sensitivity": {
+      "model": "HuberRegressor",
+      "epsilon": 1.35,
+      "alpha": 0.0001,
+      "max_iter": 300,
+      "fit": "same ProbeFit rows, standardized inputs/target; one fixed setting, no tuning"
+    },
+    "prediction_freeze": "AuditEval predictions and their SHA256 are written and hashed before any AuditEval label is indexed"
+  },
+  "endpoints": {
+    "primary": "Gain_J = MAE(Z) - MAE(ZJ)",
+    "secondary": "Gain_vs_N = MAE(ZN) - MAE(ZJ)",
+    "reported": ["MAE", "RMSE", "median_AE", "paired_bootstrap_95pct", "best10_worst_rows", "best10_removed_MAE", "both_seed_direction", "train_fit_vs_audit_gap", "prediction_and_residual_correlations"],
+    "practical_gain_band_mae": 0.003,
+    "bootstrap": {"n": 10000, "seed": 20261026, "unit": "AuditEval molecule", "paired": true, "interpretation": "fixed-model sample uncertainty only; not training-seed uncertainty"}
+  },
+  "support_strata": {
+    "definition": "radius-2 typed atom-environment hash (WL-style 2-iteration subtree hash over atom types and bond types)",
+    "fit_support_source": "Fit8k structures only",
+    "molecule_assignment": "unseen if any atom environment has 0 Fit8k molecules; else low_support if any has 1-4; else full_support",
+    "atom_counts": "number of independent Fit8k molecules containing each environment, not atom occurrences",
+    "frozen_before_audit_labels": true
+  },
+  "decision_rules": {
+    "A": "A4 nonredundant AND Gain_J > 0 on both supervised seeds AND Gain_vs_N > 0 on both seeds AND Gain_J >= 0.003 MAE AND paired 95% interval excludes 0 on both seeds AND best-10-worst-row removal does not reverse the sign",
+    "B": "A4 nonredundant but the label-gain criteria are not met",
+    "C": "A4 gate STOP (all candidate blocks R2 >= 0.98 and residual share <= 0.02)",
+    "D": "ZJ improves over Z but Z or ZN captures the same gain; no independent joint-statistic benefit",
+    "E": "seeds/intervals/strata/health insufficient for a stable classification",
+    "tags_allowed": ["BENCHMARK_TAIL_DOMINATED", "SINGLE_MOLECULE_DRIVEN", "PROBEFIT_OUTLIER_SENSITIVE"],
+    "tag_rule": "diagnostic tags never override the main class"
+  },
+  "budget": {
+    "soft_a100_hours": 4.0,
+    "hard_a100_hours": 6.0,
+    "planned_ssl_gpu_hours": 0.9,
+    "planned_dccl_gpu_hours": 0.9,
+    "planned_total_gpu_hours": 1.8
+  }
+}
