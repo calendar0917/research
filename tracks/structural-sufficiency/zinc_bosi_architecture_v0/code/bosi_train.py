@@ -217,18 +217,21 @@ def main(argv=None) -> int:
     p.add_argument("--arm", required=True, choices=list(BM.ARMS))
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--device", default="cuda:0")
-    p.add_argument("--total-updates", type=int, default=BC.RECIPE["total_updates"])
+    p.add_argument("--total-updates", type=int, default=None)
     p.add_argument("--force", action="store_true")
     p.add_argument("--smoke", action="store_true")
     args = p.parse_args(argv)
     device = torch.device(args.device)
     if args.smoke:
-        info = train(args.arm, args.seed, device, total_updates=63, smoke=True, force=True)
+        total = 63 if args.total_updates is None else int(args.total_updates)
+        info = train(args.arm, args.seed, device, total_updates=total, smoke=True,
+                     force=True)
         print(json.dumps({k: info[k] for k in ("arm", "total_updates", "epochs_run",
                                                "best_monitor", "monitor_reads",
                                                "grad_norms", "gpu_hours")}, indent=2))
         return 0
-    train(args.arm, args.seed, device, total_updates=args.total_updates, force=args.force)
+    total = BC.RECIPE["total_updates"] if args.total_updates is None else int(args.total_updates)
+    train(args.arm, args.seed, device, total_updates=total, force=args.force)
     return 0
 
 
