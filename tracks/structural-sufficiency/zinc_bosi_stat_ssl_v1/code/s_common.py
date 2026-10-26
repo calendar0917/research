@@ -164,6 +164,11 @@ def structural_cache(cache: Mapping[str, Any]) -> dict:
     return {k: cache[k] for k in keys}
 
 
+def labels(cache: Mapping[str, Any], rows) -> np.ndarray:
+    """Raw-y of ``rows`` (the only label access in any analysis script)."""
+    return BC.labels(cache, np.asarray(rows, dtype=np.int64))
+
+
 def split_rows() -> dict:
     return BC.split_rows()
 
@@ -183,8 +188,10 @@ def historical_b_run(seed: int) -> dict:
 
 
 def historical_b_checkpoint(seed: int, ckpt: str = "best_monitor") -> Path:
+    """v0 checkpoint path; its freeze stores paths relative to the v0 round."""
     entry = historical_b_run(seed)["checkpoints"][ckpt]
-    return BC.resolve_path(entry["file"])
+    p = Path(entry["file"])
+    return p if p.is_absolute() else (V0 / p)
 
 
 def historical_b_locked_pred(seed: int, ckpt: str = "best_monitor") -> Path:

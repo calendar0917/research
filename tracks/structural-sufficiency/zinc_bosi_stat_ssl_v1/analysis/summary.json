@@ -1,0 +1,221 @@
+{
+  "round": "zinc-bosi-stat-ssl-v1",
+  "analysis_utc": "2026-10-26T20:34:04+0800",
+  "n_locked": 1000,
+  "locked_rows_sha256": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d",
+  "n_boot": 10000,
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "runs": {
+    "B_s0/best_monitor": {
+      "kind": "reused",
+      "seed": 0,
+      "init": "historical",
+      "checkpoint": "best_monitor",
+      "locked_mae": 0.08244871468888595,
+      "rmse": 0.28367188382085134
+    },
+    "B_s0/final": {
+      "kind": "reused",
+      "seed": 0,
+      "init": "historical",
+      "checkpoint": "final",
+      "locked_mae": 0.08196866669273004,
+      "rmse": 0.28381909339574923
+    },
+    "B_s1/best_monitor": {
+      "kind": "reused",
+      "seed": 1,
+      "init": "historical",
+      "checkpoint": "best_monitor",
+      "locked_mae": 0.08149080788576976,
+      "rmse": 0.2759505571282989
+    },
+    "B_s1/final": {
+      "kind": "reused",
+      "seed": 1,
+      "init": "historical",
+      "checkpoint": "final",
+      "locked_mae": 0.08079493209021166,
+      "rmse": 0.2750099399064835
+    },
+    "S_s0/best_monitor": {
+      "kind": "trained",
+      "seed": 0,
+      "init": "ssl",
+      "checkpoint": "best_monitor",
+      "locked_mae": 0.08775556312175467,
+      "rmse": 0.27474638984466815
+    },
+    "S_s0/final": {
+      "kind": "trained",
+      "seed": 0,
+      "init": "ssl",
+      "checkpoint": "final",
+      "locked_mae": 0.08490965266199782,
+      "rmse": 0.2758169856534734
+    }
+  },
+  "contrasts": {
+    "S_s0 - B_s0": {
+      "label": "S_s0 - B_s0",
+      "seed": 0,
+      "delta": 0.0053068484328687195,
+      "ci95": [
+        0.0009962202325463295,
+        0.00945227449433878
+      ],
+      "fraction_first_better": 0.469,
+      "median_delta": 0.002338789403438568,
+      "rmse_a": 0.27474638984466815,
+      "rmse_b": 0.28367188382085134,
+      "top10_removed_delta": 0.005875160029590723,
+      "top10_removed_n": 990,
+      "groups": {
+        "all": {
+          "n": 1000,
+          "mae_a": 0.08775556312175467,
+          "mae_b": 0.08244871468888595,
+          "delta": 0.005306848432868716
+        },
+        "ordinary": {
+          "n": 932,
+          "mae_a": 0.07131608001250261,
+          "mae_b": 0.06582504896249207,
+          "delta": 0.005491031050010545
+        },
+        "tail": {
+          "n": 68,
+          "mae_a": 0.31307318456032696,
+          "mae_b": 0.31029072140946107,
+          "delta": 0.002782463150865888
+        },
+        "low_support": {
+          "n": 398,
+          "mae_a": 0.064396132568796,
+          "mae_b": 0.061110917725670504,
+          "delta": 0.0032852148431255015
+        },
+        "any_unseen": {
+          "n": 287,
+          "mae_a": 0.1678435190058336,
+          "mae_b": 0.15805263642727913,
+          "delta": 0.009790882578554483
+        },
+        "all_supported": {
+          "n": 315,
+          "mae_a": 0.04430099176095119,
+          "mae_b": 0.04052527866488884,
+          "delta": 0.0037757130960623456
+        },
+        "has_T_or_Q": {
+          "n": 75,
+          "mae_a": 0.08799091572562853,
+          "mae_b": 0.07558162515362103,
+          "delta": 0.0124092905720075
+        },
+        "alloc_defined_top_quartile": {
+          "n": 252,
+          "mae_a": 0.09757474567445498,
+          "mae_b": 0.09012941410765052,
+          "delta": 0.007445331566804464
+        },
+        "rings_ge4": {
+          "n": 212,
+          "mae_a": 0.1429367524743045,
+          "mae_b": 0.14050265640363027,
+          "delta": 0.002434096070674241
+        }
+      }
+    }
+  },
+  "interventions": {
+    "S_s0": {
+      "checkpoint": "best_monitor",
+      "zero_stats_locked_mae": 0.6301220770780929,
+      "zero_stats_mean_abs_delta": 0.6133723855018616,
+      "partner_shuffle_locked_mae": 0.6259042847179808,
+      "partner_shuffle_mean_abs_delta": 0.608732283115387,
+      "partner_shuffle_fraction_moved": 1.0
+    }
+  },
+  "pilot": {
+    "mode": "pilot",
+    "updates": 1890,
+    "wall_seconds": 75.68331211199984,
+    "gpu_hours": 0.02102314225333329,
+    "probe_delta_ce": {
+      "atom_zero_M": -0.40153394639492035,
+      "atom_shuffled_partner": -0.6518708914518356,
+      "bond_zero_M": -0.20463961735367775,
+      "bond_shuffled_partner": -0.5861725993454456,
+      "atom_vs_marginal": 0.8861842455462057,
+      "bond_vs_marginal": 0.5885468859729331
+    },
+    "per_head_final_ce": {
+      "atom": 0.22575227075266557,
+      "bond": 0.018122689970332777
+    },
+    "state_sha256": "110199620e619b94d475e993ce6330e14fd77fc9c69e77a2779baa1f8b79893e"
+  },
+  "gpu_ledger": {
+    "jobs": [
+      {
+        "job": "S_pre0_full",
+        "gpu_hours": 0.08499154189310502,
+        "wall_seconds": 305.9695508151781
+      },
+      {
+        "job": "S_pre1_full",
+        "gpu_hours": 0.09184805390670792,
+        "wall_seconds": 330.6529940641485
+      },
+      {
+        "job": "S_pre0_pilot",
+        "gpu_hours": 0.02102314225333329,
+        "wall_seconds": 75.68331211199984
+      },
+      {
+        "job": "S_s0",
+        "gpu_hours": 0.45136397797200417,
+        "wall_seconds": 1624.910320699215
+      }
+    ],
+    "total_a100_gpu_hours": 0.6492267160251504,
+    "cap_gpu_hours": 4.0,
+    "within_budget": true,
+    "counting_rule": "1 GPU per job, wall-clock hours per job, failed jobs included"
+  },
+  "decision": {
+    "verdict": "NO_GAIN",
+    "reason": "stopped at the pre-registered seed-0 Monitor gate; a single seed cannot satisfy the two-seed rule",
+    "checks": {
+      "pilot_atom_beats_prior": true,
+      "pilot_bond_beats_prior": true,
+      "pilot_atom_uses_partner_stats": true,
+      "pilot_bond_uses_partner_stats": true,
+      "ssl_seeds_run": [
+        0
+      ],
+      "monitor_deltas": {
+        "S_s0": 0.008184483449906119
+      },
+      "seed0_monitor_gate": false
+    },
+    "locked_deltas": {
+      "S_s0": 0.0053068484328687195
+    },
+    "frozen": true
+  },
+  "groups": {
+    "all": 1000,
+    "ordinary": 932,
+    "tail": 68,
+    "low_support": 398,
+    "any_unseen": 287,
+    "all_supported": 315,
+    "has_T_or_Q": 75,
+    "alloc_defined_top_quartile": 252,
+    "rings_ge4": 212
+  }
+}
