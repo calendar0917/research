@@ -1,0 +1,478 @@
+{
+  "protocol": "zinc-dcc-information-audit-v1",
+  "class": "B",
+  "class_name": "NONREDUNDANT_BUT_NOT_PREDICTIVE",
+  "no_justified_new_model": true,
+  "next_round": "estimation/data mechanisms; no new structured-composition model unless a calibrated, pre-registered replication shows a stable gain",
+  "tags": [
+    "AUDIT_HEAD_CALIBRATION_FAILURE",
+    "AUDIT_HEAD_OUTLIER_DOMINATED",
+    "HUBER_SENSITIVITY_SIGN_DISAGREES",
+    "PROBEFIT_OUTLIER_SENSITIVE",
+    "SINGLE_MOLECULE_DRIVEN",
+    "ZN_CONTROL_NEAR_GAIN"
+  ],
+  "rationale": {
+    "reason": "Gain_J is positive but a paired 95% interval includes 0; the gain is not stable across seeds/rows",
+    "gain_j": {
+      "0": 0.0036884766678180747,
+      "1": 0.003079183802462304
+    },
+    "boot_j": {
+      "0": {
+        "mean": 0.0036922724481267466,
+        "ci95": [
+          0.0013354755507864247,
+          0.005937085310211866
+        ],
+        "fraction_positive": 0.9992
+      },
+      "1": {
+        "mean": 0.0030061524198075986,
+        "ci95": [
+          -0.005151920839793866,
+          0.011035540618429004
+        ],
+        "fraction_positive": 0.7667
+      }
+    },
+    "extreme_without_top10": {
+      "0": 0.002212329602969109,
+      "1": -0.0016813980892332004
+    }
+  },
+  "a4_gate_stop": false,
+  "a4_gate_rows": [
+    {
+      "target": "J_raw",
+      "feature": "z",
+      "seed": "D0",
+      "block_r2_probe": 0.9410258706501655,
+      "residual_variance_share": 0.05897412934983448,
+      "residual_cov_pr": 5.771557077400436,
+      "residual_cov_top1": 0.28787274554897296
+    },
+    {
+      "target": "J_raw",
+      "feature": "z",
+      "seed": "D1",
+      "block_r2_probe": 0.9322658123121664,
+      "residual_variance_share": 0.06773418768783357,
+      "residual_cov_pr": 4.9324176633507335,
+      "residual_cov_top1": 0.35396500472502584
+    },
+    {
+      "target": "J_latent_D0",
+      "feature": "z",
+      "seed": "D0",
+      "block_r2_probe": -0.18964763891791203,
+      "residual_variance_share": 1.189647638917912,
+      "residual_cov_pr": 1.2605083164732351,
+      "residual_cov_top1": 0.8858642933703993
+    },
+    {
+      "target": "J_latent_D1",
+      "feature": "z",
+      "seed": "D1",
+      "block_r2_probe": 0.5805011221596278,
+      "residual_variance_share": 0.4194988778403722,
+      "residual_cov_pr": 1.9063151604982493,
+      "residual_cov_top1": 0.6716047175235432
+    }
+  ],
+  "a4_mlp_sensitivity": {
+    "J_raw:z_D0": {
+      "probe_r2_block": 0.9765405928402048
+    },
+    "J_raw:z_D1": {
+      "probe_r2_block": 0.9707933505822836
+    },
+    "J_raw_null:z_D0": {
+      "probe_r2_block": 0.7175209976763888
+    },
+    "J_raw_null:z_D1": {
+      "probe_r2_block": 0.7153715934223719
+    },
+    "J_latent_D0:z_D0": {
+      "probe_r2_block": 0.23857114712674976
+    },
+    "J_latent_null_D0:z_D0": {
+      "probe_r2_block": 0.14754997245266
+    },
+    "J_latent_D1:z_D1": {
+      "probe_r2_block": 0.7397607534857932
+    },
+    "J_latent_null_D1:z_D1": {
+      "probe_r2_block": -0.028319003030423673
+    }
+  },
+  "seed_metrics": {
+    "0": {
+      "gains": {
+        "Gain_J": 0.0036884766678180747,
+        "Gain_vs_N": 0.000430235914020749,
+        "Gain_Z_over_raw": -0.19201779103165273,
+        "Gain_J_over_raw": -0.18832931436383465,
+        "Gain_N_over_raw": -0.1887595502778554,
+        "Gain_huber_J": 0.0013317680992406683,
+        "Gain_huber_vs_N": -0.0009313814553750799
+      },
+      "paired_bootstrap": {
+        "n": 10000,
+        "seed": 20261026,
+        "unit": "AuditEval molecule",
+        "Gain_J": {
+          "mean": 0.0036922724481267466,
+          "ci95": [
+            0.0013354755507864247,
+            0.005937085310211866
+          ],
+          "fraction_positive": 0.9992
+        },
+        "Gain_vs_N": {
+          "mean": 0.00042918060580877216,
+          "ci95": [
+            -0.003501967153832815,
+            0.004416406446485704
+          ],
+          "fraction_positive": 0.5846
+        },
+        "Gain_Z_over_raw": {
+          "mean": -0.19203138124065264,
+          "ci95": [
+            -0.21255112921953367,
+            -0.17421926085781786
+          ],
+          "fraction_positive": 0.0
+        },
+        "Gain_J_over_raw": {
+          "mean": -0.18833910879252588,
+          "ci95": [
+            -0.20857015510015853,
+            -0.1703947883059753
+          ],
+          "fraction_positive": 0.0
+        }
+      },
+      "gain_worst_rows": {
+        "top_rows": [
+          6241,
+          4189,
+          8467,
+          9069,
+          7633,
+          4764,
+          3272,
+          7650,
+          9737,
+          4748
+        ],
+        "top_gains": [
+          0.20985827612285046,
+          0.17383374110237337,
+          0.17314279449569892,
+          0.16903041318555356,
+          0.16244111984162446,
+          0.14498842096661235,
+          0.1267310172718168,
+          0.12243993065778302,
+          0.11560790082191152,
+          0.10019674641251308
+        ],
+        "top10_gain_contribution": 0.0014982703608787376,
+        "gain_without_top10": 0.002212329602969109,
+        "gain_all": 0.0036884766678181523
+      },
+      "train_fit_vs_audit": {
+        "raw": {
+          "probe_mae": 0.11638726956979371,
+          "audit_mae": 0.07524484563502483,
+          "gap": -0.041142423934768885
+        },
+        "Z": {
+          "probe_mae": 0.21063885353797315,
+          "audit_mae": 0.26726263666667754,
+          "gap": 0.05662378312870439
+        },
+        "ZJ": {
+          "probe_mae": 0.2092889971101665,
+          "audit_mae": 0.26357415999885947,
+          "gap": 0.05428516288869298
+        },
+        "ZN": {
+          "probe_mae": 0.20719726944169337,
+          "audit_mae": 0.2640043959128802,
+          "gap": 0.05680712647118685
+        }
+      },
+      "arms": {
+        "raw": {
+          "mae": 0.07524484563502483,
+          "rmse": 0.16819031607209955,
+          "median_ae": 0.04175180569291115,
+          "prediction_sha256": "75083edc65c18fac908752570f11062b6cc936c0f6cf5e3495ae301a0c446230"
+        },
+        "Z": {
+          "mae": 0.26726263666667754,
+          "rmse": 0.44658284037435625,
+          "median_ae": 0.18819015063481143,
+          "prediction_sha256": "78fb8ba20958c7f7dc12a935fbc721043f3c830d0c805ad4496c23ea6b3a84c1"
+        },
+        "ZJ": {
+          "mae": 0.26357415999885947,
+          "rmse": 0.4437740319885763,
+          "median_ae": 0.18618954661723874,
+          "prediction_sha256": "0e1007a8094e1d3412c148a160eb129acba1773e398a9281349d3f74225539f9"
+        },
+        "ZN": {
+          "mae": 0.2640043959128802,
+          "rmse": 0.4352664863442145,
+          "median_ae": 0.1903802988776533,
+          "prediction_sha256": "8b8ffac2f5dbd097f6b2f9929d011581e23f72b6d8627e49f4d6ac61db01c476"
+        },
+        "huber_Z": {
+          "mae": 0.1142661762777491,
+          "rmse": 0.20162770918806086,
+          "median_ae": 0.07561715514398815,
+          "prediction_sha256": "816bae6347b45e204584b23b3c1e60a4570a27aafe6b76232d12139878ec1538"
+        },
+        "huber_ZJ": {
+          "mae": 0.11293440817850843,
+          "rmse": 0.20441884329728122,
+          "median_ae": 0.07464269726420436,
+          "prediction_sha256": "d8c22ce6f6c2082c3daf9ddfc8e9ed2874d5efe42c24db7311fea7b5dfd9d9b9"
+        },
+        "huber_ZN": {
+          "mae": 0.11200302672313335,
+          "rmse": 0.200167628611724,
+          "median_ae": 0.0750684256010574,
+          "prediction_sha256": "272d0cc159ca4be146cf8a842911b3c946bcca9f2f0e4a47f233364ddae8d326"
+        }
+      }
+    },
+    "1": {
+      "gains": {
+        "Gain_J": 0.003079183802462304,
+        "Gain_vs_N": 0.0035212938587663167,
+        "Gain_Z_over_raw": -0.24559467834013557,
+        "Gain_J_over_raw": -0.24251549453767327,
+        "Gain_N_over_raw": -0.24603678839643958,
+        "Gain_huber_J": -0.0051052776925175625,
+        "Gain_huber_vs_N": 0.0006134487266023225
+      },
+      "paired_bootstrap": {
+        "n": 10000,
+        "seed": 20261026,
+        "unit": "AuditEval molecule",
+        "Gain_J": {
+          "mean": 0.0030061524198075986,
+          "ci95": [
+            -0.005151920839793866,
+            0.011035540618429004
+          ],
+          "fraction_positive": 0.7667
+        },
+        "Gain_vs_N": {
+          "mean": 0.0034457297223459476,
+          "ci95": [
+            -0.004718810851991248,
+            0.011483719238084037
+          ],
+          "fraction_positive": 0.7961
+        },
+        "Gain_Z_over_raw": {
+          "mean": -0.2454758871478257,
+          "ci95": [
+            -0.26841176461201005,
+            -0.22461187275676706
+          ],
+          "fraction_positive": 0.0
+        },
+        "Gain_J_over_raw": {
+          "mean": -0.24246973472801805,
+          "ci95": [
+            -0.26500412674860996,
+            -0.22165005862617762
+          ],
+          "fraction_positive": 0.0
+        }
+      },
+      "gain_worst_rows": {
+        "top_rows": [
+          7346,
+          9672,
+          3786,
+          1941,
+          4131,
+          3440,
+          6465,
+          9955,
+          927,
+          4849
+        ],
+        "top_gains": [
+          1.0998389033030769,
+          0.6293368517799749,
+          0.4537480260868879,
+          0.4475133402708158,
+          0.42891047582730474,
+          0.3940833869962126,
+          0.33144312447312263,
+          0.3300290372898147,
+          0.31493028278079893,
+          0.31393448199511065
+        ],
+        "top10_gain_contribution": 0.00474376791080312,
+        "gain_without_top10": -0.0016813980892332004,
+        "gain_all": 0.0030791838024622504
+      },
+      "train_fit_vs_audit": {
+        "raw": {
+          "probe_mae": 0.12389746535778977,
+          "audit_mae": 0.07423107187752612,
+          "gap": -0.04966639348026365
+        },
+        "Z": {
+          "probe_mae": 0.13279406756288467,
+          "audit_mae": 0.3198257502176617,
+          "gap": 0.18703168265477702
+        },
+        "ZJ": {
+          "probe_mae": 0.12803586842590037,
+          "audit_mae": 0.3167465664151994,
+          "gap": 0.18871069798929901
+        },
+        "ZN": {
+          "probe_mae": 0.13266244657852297,
+          "audit_mae": 0.3202678602739657,
+          "gap": 0.18760541369544273
+        }
+      },
+      "arms": {
+        "raw": {
+          "mae": 0.07423107187752612,
+          "rmse": 0.19104460395177444,
+          "median_ae": 0.04100191593170166,
+          "prediction_sha256": "68d66d68d93777615537cbf4ef9fc2bffb58978a947cad2e35b767dddfe25aee"
+        },
+        "Z": {
+          "mae": 0.3198257502176617,
+          "rmse": 0.5216726070001287,
+          "median_ae": 0.22441909764403534,
+          "prediction_sha256": "9e85410239eabc499b46126fea20366c5e860bff27952140456ca1e3d7e6c7d0"
+        },
+        "ZJ": {
+          "mae": 0.3167465664151994,
+          "rmse": 0.5106314413167268,
+          "median_ae": 0.22659173312545955,
+          "prediction_sha256": "94f0e77626e7ff725dd6fd165e99405486eefa6548ec32f79759b7f9f3e69a92"
+        },
+        "ZN": {
+          "mae": 0.3202678602739657,
+          "rmse": 0.5221617678179955,
+          "median_ae": 0.2277413957655643,
+          "prediction_sha256": "926e0c608baf1d6bed182d574222c0dffab7205990680c1a56c46a7c22aa99fc"
+        },
+        "huber_Z": {
+          "mae": 0.12825948787991473,
+          "rmse": 0.22757819448860672,
+          "median_ae": 0.087229094805293,
+          "prediction_sha256": "5e51dd7fa455f7e236a871629b08ed2080881859111b2c8531a611aa99f1a303"
+        },
+        "huber_ZJ": {
+          "mae": 0.1333647655724323,
+          "rmse": 0.23146360773147626,
+          "median_ae": 0.0949280253305701,
+          "prediction_sha256": "4a4da5bfcc80f7d6a4784b66c9dddfa3aab514530e4b836bfbed02fccf882002"
+        },
+        "huber_ZN": {
+          "mae": 0.13397821429903461,
+          "rmse": 0.22945530285273788,
+          "median_ae": 0.0929485076404114,
+          "prediction_sha256": "b611e8a3d0cc222c17e91e14e9b691208573be4529cb4dd0ef59084ba1b32ff6"
+        }
+      }
+    }
+  },
+  "tail_error_share_max": 0.15852189847879564,
+  "probe_outlier_diagnostic": {
+    "note": "ProbeFit labels only; AuditEval labels are not read here. Diagnosis only, not a gate.",
+    "seeds": {
+      "0": {
+        "rows": [
+          2210,
+          3776,
+          2148,
+          539,
+          3872
+        ],
+        "y": [
+          -42.036563873291016,
+          -20.26055145263672,
+          -7.1691389083862305,
+          -5.31016731262207,
+          -0.49535953998565674
+        ],
+        "pred": [
+          -11.766261100769043,
+          -11.564751625061035,
+          -3.536229372024536,
+          -3.80619478225708,
+          -1.4271562099456787
+        ],
+        "residual": [
+          -30.270302772521973,
+          -8.695799827575684,
+          -3.6329095363616943,
+          -1.5039725303649902,
+          0.931796669960022
+        ],
+        "sse_share_top1": 0.8957218406053556,
+        "sse_share_top2": 0.9696412863717776,
+        "mae_share_top2": 0.33479694767416923,
+        "residual_std_all": 1.009953046535124,
+        "residual_std_without_top2": 0.17572445511039392,
+        "n_probe": 1000
+      },
+      "1": {
+        "rows": [
+          2210,
+          3776,
+          2148,
+          6769,
+          539
+        ],
+        "y": [
+          -42.036563873291016,
+          -20.26055145263672,
+          -7.1691389083862305,
+          -3.1148037910461426,
+          -5.31016731262207
+        ],
+        "pred": [
+          -12.056511878967285,
+          -8.903347969055176,
+          -3.8377833366394043,
+          -4.739254951477051,
+          -4.010495662689209
+        ],
+        "residual": [
+          -29.98005199432373,
+          -11.357203483581543,
+          -3.331355571746826,
+          1.6244511604309082,
+          -1.2996716499328613
+        ],
+        "sse_share_top1": 0.847943351766335,
+        "sse_share_top2": 0.9696305494772752,
+        "mae_share_top2": 0.33364084857209947,
+        "residual_std_all": 1.0278390665883839,
+        "residual_std_without_top2": 0.17868474966443793,
+        "n_probe": 1000
+      }
+    }
+  },
+  "interpretation": "Class A supports only next-round joint-structure work; it is not an information-theoretic insufficiency proof and not evidence of reaching the 0.05x target.",
+  "official_valid_used": false,
+  "official_test_used": false
+}

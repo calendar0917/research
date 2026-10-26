@@ -108,13 +108,19 @@ def main(argv=None) -> int:
         checks[f"pred_{name}"] = {"exists": path.exists(),
                                   "sha256": sha_file(path) if path.exists() else None,
                                   "expected": rec, "match": path.exists() and sha_file(path) == rec}
-    checks["checkpoint"] = {"path": fz["checkpoint"]["checkpoint"],
-                            "sha256": sha_file(fz["checkpoint"]["checkpoint"]),
+    ckpt_path = Path(fz["checkpoint"]["checkpoint"])
+    if not ckpt_path.exists():
+        ckpt_path = _REPO / ckpt_path
+    checks["checkpoint"] = {"path": str(ckpt_path),
+                            "sha256": sha_file(ckpt_path),
                             "expected": fz["checkpoint"]["checkpoint_sha256"],
-                            "match": sha_file(fz["checkpoint"]["checkpoint"]) == fz["checkpoint"]["checkpoint_sha256"]}
-    checks["support"] = {"sha256": sha_file(fz["support"]["path"]),
+                            "match": sha_file(ckpt_path) == fz["checkpoint"]["checkpoint_sha256"]}
+    support_path = Path(fz["support"]["path"])
+    if not support_path.exists():
+        support_path = _REPO / support_path
+    checks["support"] = {"sha256": sha_file(support_path),
                          "expected": fz["support"]["sha256"],
-                         "match": sha_file(fz["support"]["path"]) == fz["support"]["sha256"]}
+                         "match": sha_file(support_path) == fz["support"]["sha256"]}
     for name, rec in checks.items():
         if not rec["match"]:
             raise RuntimeError(f"freeze hash mismatch: {name}: {rec}")
