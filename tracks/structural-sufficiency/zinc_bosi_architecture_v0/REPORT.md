@@ -255,6 +255,8 @@ python code/bosi_locked.py
 python code/bosi_analyze.py                    # -> analysis/{tables.md,summary.json,decision.json}
 ```
 
+预测数组按仓库惯例不入库（`*.npz` 全局忽略），其 sha256 逐条记在 `locked_read.json`。
+
 产物：`analysis/cpu_checks.json`、`analysis/prep.json`、`analysis/freeze.json`、
 `analysis/locked_read.json`、`analysis/locked_preds/*.npz`、`analysis/summary.json`、
 `analysis/groups.json`、`analysis/decision.json`、`analysis/tables.md`。
