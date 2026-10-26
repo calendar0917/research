@@ -129,8 +129,10 @@ A0M0_s0 0.069945、A0M0_s1 0.063441、S1 0.069997、S2 0.079566。）
 每个正式模型都报告了：overall-1000、ordinary(y>−3)、tail(y≤−3)、radius2
 全支持/低支持/存在未见、rings≥4、fixed worst-10 与其补集、`drop-row172`、
 median AE、P90 AE、top-10 error share、W20、T100、train@best/final、参数量、
-GPU·h、checkpoint hash —— 见 `runs/_analysis/tables_{a2,b,a3}.md` 与
-`summary_*.json`（本报告只摘录必要的行，未删任何样本）。
+GPU·h、checkpoint hash —— 见 `analysis/tables_{a,a2,b,a3}.md` 与
+`analysis/summary_*.json`（`analysis/README.md` 记录生成命令；`runs/_analysis/`
+是同内容的运行目录副本，随 checkpoint 一起 gitignored）。本报告只摘录必要的行，
+未删任何样本。
 
 **读法**：同一族内的组间差异（例如 ordinary 的 0.0623–0.0670）与 seed 差异同量级；
 只有 S1/S2 在**每一个**分组上都整体右移，这才是"主体更弱"，而不是"运气更差"。
