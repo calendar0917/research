@@ -277,11 +277,32 @@ def one_shot_locked(runs: list[str], cache, rows: np.ndarray, freeze_info: dict)
         "official_test_loaded": False,
         "official_valid_loaded": False,
     }
+    payload["reused_existing"] = []
+    payload["computed_this_invocation"] = []
     for tag in runs:
         arm = tag.split("_")[0]
         seed = int(tag.split("_s")[1])
+        train = C.read_json(C.RUNS / tag / "train.json")
         for ck_tag in (BEST, FINAL):
-            ck_path = C.RUNS / tag / f"{ck_tag}.pt" if ck_tag != BEST else C.RUNS / tag / "best_monitor.pt"
+            ck_path = (C.RUNS / tag / "best_monitor.pt" if ck_tag == BEST
+                       else C.RUNS / tag / "final.pt")
+            f = diag_dir / f"{tag}_{ck_tag}.npz"
+            key = f"{tag}_{ck_tag}"
+            if f.exists():
+                z = np.load(f, allow_pickle=False)
+                missing = {"pred", "rows", "checkpoint"} - set(z.files)
+                if missing:
+                    raise RuntimeError(f"existing Locked file {f} is incomplete: {missing}")
+                if not np.array_equal(np.asarray(z["rows"]), rows):
+                    raise RuntimeError(f"existing Locked file {f} has different rows")
+                payload["reused_existing"].append(key)
+                payload["files"][key] = {
+                    "path": str(f.relative_to(C.REPO)),
+                    "sha256": _sha(f),
+                    "checkpoint_sha256": _sha(ck_path),
+                    "reused_existing": True,
+                }
+                continue
             ck = torch.load(ck_path, map_location="cpu", weights_only=False)
             model = M.build_arm(arm, norm, seed, device)[0]
             model.load_state_dict(ck["state_dict"])
@@ -291,13 +312,16 @@ def one_shot_locked(runs: list[str], cache, rows: np.ndarray, freeze_info: dict)
             out["checkpoint"] = ck_tag
             out["checkpoint_epoch"] = int(ck["epoch"])
             out["checkpoint_step"] = int(ck["step"])
-            out["checkpoint_monitor_mae"] = float(ck["monitor_mae"])
-            f = diag_dir / f"{tag}_{ck_tag}.npz"
+            out["checkpoint_monitor_mae"] = float(
+                ck["monitor_mae"] if "monitor_mae" in ck
+                else train["eval_reads"][ck_tag]["monitor_mae"])
             np.savez_compressed(f, **out)
-            payload["files"][f"{tag}_{ck_tag}"] = {
+            payload["computed_this_invocation"].append(key)
+            payload["files"][key] = {
                 "path": str(f.relative_to(C.REPO)),
                 "sha256": _sha(f),
                 "checkpoint_sha256": _sha(ck_path),
+                "reused_existing": False,
             }
     C.write_json(meta_path, payload)
     return payload
@@ -352,6 +376,10 @@ def model_entries(runs: list[str], cache, locked: np.ndarray, y_locked: np.ndarr
                 entry[f"wS_{ck_tag}"] = np.asarray(z["wS"], dtype=np.float64)
                 entry[f"psi_{ck_tag}"] = np.asarray(z["psi"], dtype=np.float64)
                 entry[f"S_norm_{ck_tag}"] = np.asarray(z["S_norm"], dtype=np.float64)
+        # Canonical aliases used by the comparison/decision code.
+        entry["locked_mae_best"] = entry["locked_mae_best_monitor"]
+        entry["locked_ae_best"] = entry["locked_ae_best_monitor"]
+        entry["locked_pred_best"] = entry["locked_pred_best_monitor"]
         entries[tag] = entry
     return entries
 
@@ -675,10 +703,13 @@ def main(argv=None) -> int:
                     "that round also read official valid descriptively, this round never does",
         }
         expected = float(cfg["baseline_history"]["fit8k_locked_mae"][str(seed)])
-        if abs(float(ae.mean()) - expected) > 1e-9:
+        # Recomputing from the stored per-molecule predictions can differ from
+        # the metric stored in train.json by a few ulps (~5e-9); 1e-7 is still
+        # far tighter than any scientific effect of interest.
+        if abs(float(ae.mean()) - expected) > 1e-7:
             raise RuntimeError(f"historical Locked MAE mismatch for seed {seed}")
         expected_monitor = float(cfg["baseline_history"]["fit8k_monitor_mae"][str(seed)])
-        if abs(float(mon_ae.mean()) - expected_monitor) > 1e-9:
+        if abs(float(mon_ae.mean()) - expected_monitor) > 1e-7:
             raise RuntimeError(f"historical Monitor MAE mismatch for seed {seed}")
     entries.update(hist_entries)
     # historical final is not part of the frozen reference table; use best for both
