@@ -17,6 +17,7 @@ Official valid and official test are never loaded by any module in this round.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -37,7 +38,9 @@ import ad_common as C  # noqa: E402
 
 ROUND_ID = "zinc-bosi-architecture-v0"
 ROUND = _ROUND
-ANALYSIS = _ROUND / "analysis"
+# Remote jobs write into a gitignored result directory so the compute checkout
+# never becomes dirty; the curated local copy still lives in analysis/.
+ANALYSIS = Path(os.environ.get("BOSI_ANALYSIS_DIR", str(_ROUND / "analysis")))
 CONFIGS = _ROUND / "configs"
 RUNS = _ROUND / "runs"
 RUNS_SMOKE = _ROUND / "runs_smoke"
