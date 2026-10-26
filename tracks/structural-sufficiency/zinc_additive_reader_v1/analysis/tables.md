@@ -96,5 +96,5 @@ Frozen checkpoints only. MAE is raw-y L1, lower is better; delta = candidate - r
 
 - A_mean=0.084543 D_mean=0.087184 C_mean=0.083498
 - gain_A_vs_D=0.002641 gain_A_vs_C=-0.001045 gain_D_vs_C=-0.003686
-- per-seed A<D=True A<C=False; ordinary gains vs C/D=0.000038/0.002334; top10 gains vs C/D=-0.001880/-0.004582
+- per-seed A<D=True A<C=False; ordinary gains vs C/D=0.000038/0.002334; top10 gains vs C/D=0.001880/0.004582
 - group stability={'low_support': False, 'any_unseen': False}; any_collapse=False
