@@ -471,8 +471,10 @@ def decide(entries: dict, runs: list[str], masks: dict, support: dict) -> dict:
         top10_gain_d.append(top10_sensitivity(d["locked_ae_best"], a["locked_ae_best"])["delta_mae_drop_top10"])
     ordinary_gain_c_mean = float(np.mean(ordinary_gain_c))
     ordinary_gain_d_mean = float(np.mean(ordinary_gain_d))
-    top10_gain_c_mean = float(-np.mean(top10_gain_c))  # convert delta(c-a) to gain(a vs c)
-    top10_gain_d_mean = float(-np.mean(top10_gain_d))
+    # top10_sensitivity(reference, candidate) already returns reference - candidate,
+    # i.e. a positive number when A is better; do not negate it again.
+    top10_gain_c_mean = float(np.mean(top10_gain_c))
+    top10_gain_d_mean = float(np.mean(top10_gain_d))
 
     group_gains = {}
     for gname in ("low_support", "any_unseen"):
