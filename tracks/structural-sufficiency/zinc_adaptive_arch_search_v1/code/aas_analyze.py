@@ -173,8 +173,9 @@ def main(argv=None) -> int:
         order = np.argsort(-np.maximum(ae_a, ae_b))[:10]
         keep = np.ones(len(delta), dtype=bool)
         keep[order] = False
-        contrasts[f"{name}|{ckpt}"] = {
-            "first": a, "second": b, "checkpoint": ckpt,
+        key = f"{name}|{ckpt}" if seed == 0 else f"{name}_s{seed}|{ckpt}"
+        contrasts[key] = {
+            "first": a, "second": b, "checkpoint": ckpt, "seed": int(seed),
             "delta_mae": float(delta.mean()), "ci95": [lo, hi],
             "ci_excludes_zero": bool(lo > 0 or hi < 0),
             "first_better_fraction": float(np.mean(delta < 0)),
@@ -306,6 +307,20 @@ def main(argv=None) -> int:
                             "range": float(max(v) - min(v)),
                             "mean": float(np.mean(v))}
     decision["same_arm_seed_spread"] = spreads
+    if "A0M0_minus_A0" in by_seed:
+        per = by_seed["A0M0_minus_A0"]
+        mean_d = float(np.mean([v["delta_mae_best"] for v in per.values()]))
+        decision["moment_ablation"] = {
+            "rules": {"MOMENT_REDUNDANT": "mean(A0M0 - A0) <= +0.001",
+                      "MOMENT_ESSENTIAL": "mean(A0M0 - A0) >= +0.003",
+                      "AMBIGUOUS": "otherwise"},
+            "per_seed": per, "mean_delta": mean_d,
+            "n_seeds": len(per), "n_seeds_worse": int(sum(
+                v["delta_mae_best"] > 0 for v in per.values())),
+            "verdict": ("MOMENT_REDUNDANT" if mean_d <= 0.001 else
+                        "MOMENT_ESSENTIAL" if mean_d >= 0.003 else "AMBIGUOUS"),
+        }
+        decision["verdict"] = decision["moment_ablation"]["verdict"]
     verdicts = {}
     for name, per_seed in by_seed.items():
         signs = {np.sign(v["delta_mae_best"]) for v in per_seed.values()}
@@ -318,6 +333,14 @@ def main(argv=None) -> int:
         else:
             verdicts[name] = "MIXED"
     decision["contradiction_verdicts"] = verdicts
+    flips = [k for k, v in verdicts.items() if v == "SIGN_FLIP_ACROSS_SEEDS"]
+    if flips:
+        decision["verdict_mechanical"] = decision.get("verdict")
+        decision["verdict"] = "STOP_A"
+        decision["verdict_seed_aware_override"] = (
+            "same-seed paired contrasts flip sign across seeds for "
+            + ", ".join(flips)
+            + "; the mechanical rule pairs the last seed against B_s0 and is seed-mismatched")
 
     # ---- per-molecule table -------------------------------------------------
     csv_path = AC.ANALYSIS / f"per_molecule_{args.stage}.csv"
