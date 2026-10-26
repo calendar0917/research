@@ -1,0 +1,246 @@
+{
+  "all_pass": true,
+  "gates": {
+    "G10_isolation_checkpoint": {
+      "checkpoint_roundtrip_diff": 0.0,
+      "labels_are_nan_diff": 0.0,
+      "pass": true,
+      "train_cache_rows": 10000,
+      "valid_cache_rows": 1000,
+      "valid_relation_file": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/cache/bjm_rel_valid.pt"
+    },
+    "G11_short_train": {
+      "finite": true,
+      "first_loss": 1.5358970165252686,
+      "last_loss": 0.6113130450248718,
+      "min_loss": 0.5040009617805481,
+      "pass": true,
+      "valid_mae_after_40_steps": 0.6428418354037567
+    },
+    "G1_parameters": {
+      "arms": {
+        "A0": {
+          "breakdown": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "compose": 78176,
+            "half_encoder": 42016,
+            "pair_phi": 10336,
+            "reader": 173057,
+            "side": 95584,
+            "total": 488321
+          },
+          "expected": 488321,
+          "optimizer_parameters": 488321,
+          "pair_phi": 10336,
+          "parameters": 488321
+        },
+        "A1": {
+          "breakdown": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "compose": 78176,
+            "half_encoder": 42016,
+            "pair_phi": 10336,
+            "reader": 173057,
+            "side": 95584,
+            "total": 488321
+          },
+          "expected": 488321,
+          "optimizer_parameters": 488321,
+          "pair_phi": 10336,
+          "parameters": 488321
+        }
+      },
+      "cap": 500000,
+      "pass": true
+    },
+    "G2_initial_state": {
+      "arms_bit_identical": true,
+      "common_tensors_checked": 27,
+      "common_vs_BOSI_B_max_abs_diff": 0.0,
+      "initial_state_sha256_A1": "3ffb8a59557dce2b0aa327cd89a19a407e4d9dae0721c39079e83c7b5ea2642d",
+      "new_side_columns_all_zero": true,
+      "pair_phi_first_layer_mean_abs": 0.04427303373813629,
+      "pass": true,
+      "side_prefix_vs_B_max_abs_diff": 0.0
+    },
+    "G3_step0_parity": {
+      "A0_vs_B_max_abs_diff": 0.0,
+      "A1_vs_A0_max_abs_diff": 0.0,
+      "A1_vs_B_max_abs_diff": 0.0,
+      "pass": true
+    },
+    "G4_branch_is_real": {
+      "P_A0_rms": 0.1071661040186882,
+      "P_A1_rms": 0.10830757021903992,
+      "P_A1_vs_A0_max_abs_diff": 0.12560436129570007,
+      "P_A1_vs_A0_mean_abs_diff": 0.007979962974786758,
+      "P_zero_fraction": 0.08252198492462312,
+      "partner_order_P_max_abs_diff": 2.9802322387695312e-08,
+      "pass": true,
+      "y_A1_vs_A0_max_abs_diff": 0.00011485815048217773,
+      "y_A1_vs_A0_mean_abs_diff": 2.3660904844291508e-05
+    },
+    "G5_target_semantics": {
+      "A0_changed_rows": 3,
+      "A0_changed_rows_outside_allowed": 0,
+      "A0_max_abs_change": 0.29983407258987427,
+      "A0_row_self_changed": false,
+      "A1_changed_rows": 4,
+      "A1_changed_rows_outside_allowed": 0,
+      "A1_max_abs_change": 0.7769531011581421,
+      "A1_row_self_changed": true,
+      "pass": true,
+      "perturbed_half_edge": 39
+    },
+    "G6_no_cross_molecule": {
+      "P_full_vs_per_molecule_max_abs_diff": 0.0,
+      "pass": true
+    },
+    "G7_empty_partner_sets": {
+      "P_max_on_empty": 0.0,
+      "P_max_on_nonempty": 0.45615488290786743,
+      "all_finite": true,
+      "n_empty_partner_sets": 1034,
+      "n_half_edges": 12618,
+      "pass": true
+    },
+    "G8_invariance": {
+      "A0": {
+        "atom_relabel_max_abs_diff": 8.940696716308594e-08,
+        "batch_order_max_abs_diff": 1.4901161193847656e-07,
+        "batch_recombination_max_abs_diff": 2.086162567138672e-07,
+        "bond_order_max_abs_diff": 1.341104507446289e-07,
+        "bond_reverse_max_abs_diff": 0.0,
+        "pass": true,
+        "tolerance": 1e-05
+      },
+      "A1": {
+        "atom_relabel_max_abs_diff": 1.6391277313232422e-07,
+        "batch_order_max_abs_diff": 1.4901161193847656e-07,
+        "batch_recombination_max_abs_diff": 2.086162567138672e-07,
+        "bond_order_max_abs_diff": 1.1920928955078125e-07,
+        "bond_reverse_max_abs_diff": 0.0,
+        "pass": true,
+        "tolerance": 1e-05
+      },
+      "pass": true
+    },
+    "G9_gradients": {
+      "arms": {
+        "A0": {
+          "loss_decreased": true,
+          "steps": [
+            {
+              "P_grad": 0.0,
+              "grad_norms": {
+                "atom_encoder": 1.0916398242115974,
+                "bond_encoder": 0.11966273374855518,
+                "compose": 0.6757232248783112,
+                "half_encoder": 0.0189352638553828,
+                "pair_phi": 0.0,
+                "reader": 5.120556026697159,
+                "side": 0.1727345222607255
+              },
+              "loss": 1.3374079465866089,
+              "nonfinite": [],
+              "side_new_cols_grad": 0.27907854318618774,
+              "step": 0
+            },
+            {
+              "P_grad": 0.02610604278743267,
+              "grad_norms": {
+                "atom_encoder": 5.309536397457123,
+                "bond_encoder": 0.3777281232178211,
+                "compose": 1.903222993016243,
+                "half_encoder": 0.0643069832585752,
+                "pair_phi": 0.004646529094316065,
+                "reader": 16.0051082521677,
+                "side": 0.6539968438446522
+              },
+              "loss": 1.5676827430725098,
+              "nonfinite": [],
+              "side_new_cols_grad": 1.1501996517181396,
+              "step": 1
+            },
+            {
+              "P_grad": 0.00043953279964625835,
+              "grad_norms": {
+                "atom_encoder": 0.6617112383246422,
+                "bond_encoder": 0.05938221840187907,
+                "compose": 0.27974911592900753,
+                "half_encoder": 0.007564626052044332,
+                "pair_phi": 4.556238991426653e-05,
+                "reader": 2.57532499730587,
+                "side": 0.06229845201596618
+              },
+              "loss": 1.0600388050079346,
+              "nonfinite": [],
+              "side_new_cols_grad": 0.09065072238445282,
+              "step": 2
+            }
+          ]
+        },
+        "A1": {
+          "loss_decreased": true,
+          "steps": [
+            {
+              "P_grad": 0.0,
+              "grad_norms": {
+                "atom_encoder": 1.0916398242115974,
+                "bond_encoder": 0.11966273374855518,
+                "compose": 0.6757232248783112,
+                "half_encoder": 0.0189352638553828,
+                "pair_phi": 0.0,
+                "reader": 5.120556026697159,
+                "side": 0.17273928318172693
+              },
+              "loss": 1.3374079465866089,
+              "nonfinite": [],
+              "side_new_cols_grad": 0.2795490026473999,
+              "step": 0
+            },
+            {
+              "P_grad": 0.032620999962091446,
+              "grad_norms": {
+                "atom_encoder": 5.309541165828705,
+                "bond_encoder": 0.3777294084429741,
+                "compose": 1.90322045981884,
+                "half_encoder": 0.06430626334622502,
+                "pair_phi": 0.004703298152890056,
+                "reader": 16.005098320543766,
+                "side": 0.6540116034448147
+              },
+              "loss": 1.5676805973052979,
+              "nonfinite": [],
+              "side_new_cols_grad": 1.1496353149414062,
+              "step": 1
+            },
+            {
+              "P_grad": 0.000488478341139853,
+              "grad_norms": {
+                "atom_encoder": 0.6617109626531601,
+                "bond_encoder": 0.059382256120443344,
+                "compose": 0.27974787540733814,
+                "half_encoder": 0.0075633322121575475,
+                "pair_phi": 4.409780740388669e-05,
+                "reader": 2.575326981022954,
+                "side": 0.06228937394917011
+              },
+              "loss": 1.060038447380066,
+              "nonfinite": [],
+              "side_new_cols_grad": 0.0903605967760086,
+              "step": 2
+            }
+          ]
+        }
+      },
+      "pass": true
+    }
+  },
+  "n_gates": 11,
+  "n_pass": 11,
+  "round": "zinc-adaptive-arch-search-v1",
+  "written": "2026-10-27T00:10:25+0800"
+}
