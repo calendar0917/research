@@ -25,6 +25,18 @@ exactly BOSI-B: ``P`` is arbitrary but multiplied by zero weights.  ``Phi``
 therefore receives no gradient at step 0 and a non-zero one from step 1 on —
 the CPU gates measure exactly that.
 
+Deepening modes (only built when bought, see DECISIONS.md D3/D4):
+
+* ``A2`` — **information ablation**: byte-identical to A1 (same parameters, same
+  initial state), but the 384-d partner-moment block handed to Side is replaced
+  by zeros.  It answers "is the fixed moment information still worth anything
+  once the pair branch exists?" with no capacity confound at all.
+* ``A3`` — **reallocation**: the moment block is removed from the body (Side
+  input 617 -> 293, the moment block and its relation counts both dropped)
+  and the freed capacity goes into the pair encoder
+  (``Phi`` 128 -> 128 -> 64, ``P`` is 64-d).  It answers whether a leaner body
+  without the moment bank matches or beats A1.
+
 ``mode="B"`` reproduces the frozen BOSI-B body with no extra parameters and is
 used only by the parity gate.
 """
@@ -47,7 +59,10 @@ PAIR_DIM = 32
 PAIR_IN = 4 * RANK                      # 128
 SIDE_IN_BASE = BM.SIDE_IN               # 617
 SIDE_IN = SIDE_IN_BASE + PAIR_DIM       # 649
-ARMS = ("B", "A1", "A0", "S1", "S0")
+PAIR_HIDDEN_A3 = 128
+PAIR_DIM_A3 = 64
+SIDE_IN_A3 = 2 * WIDTH + RANK + PAIR_DIM_A3 + 4 + 1   # 293 (M and n both dropped)
+ARMS = ("B", "A1", "A0", "A2", "A3", "S1", "S0")
 
 
 class BOSIQueryPair(BM.BOSI):
@@ -66,8 +81,12 @@ class BOSIQueryPair(BM.BOSI):
         # ``self.arm`` stays "B" so the inherited ``relation_stats`` keeps the
         # frozen BOSI-B moment block; ``self.mode`` selects the new branch.
         self.mode = mode
-        self.pair_phi = BM.MLP(PAIR_IN, PAIR_HIDDEN, PAIR_DIM, 1, dropout)
-        if mode in ("A1", "A0"):
+        if mode == "A3":
+            self.pair_phi = BM.MLP(PAIR_IN, PAIR_HIDDEN_A3, PAIR_DIM_A3, 1, dropout)
+            self.side = BM.MLP(SIDE_IN_A3, 128, WIDTH, 1, dropout)
+        else:
+            self.pair_phi = BM.MLP(PAIR_IN, PAIR_HIDDEN, PAIR_DIM, 1, dropout)
+        if mode in ("A1", "A0", "A2"):
             self._widen_side()
         # diagnostic-only switch used by the gates (never set during training):
         # replaces the target state by the partner-set mean in A1 as well.
@@ -103,7 +122,7 @@ class BOSIQueryPair(BM.BOSI):
             q = x[tgt]
         feat = torch.cat([q, p, (q - p).abs(), q * p], dim=1)
         w = self.pair_phi(feat)
-        P = x.new_zeros((H, PAIR_DIM))
+        P = x.new_zeros((H, int(w.shape[1])))
         P.index_add_(0, tgt, w)
         return P
 
@@ -113,13 +132,22 @@ class BOSIQueryPair(BM.BOSI):
         x = self.half_edges(batch, a, b)
         M, n = self.relation_stats(batch, x)
         half_deg = batch["half_deg"].view(-1, 1)
-        parts = [a[batch["half_atom"]], b[batch["half_bond"]], x, M, n,
-                 batch["closure"], torch.log1p(half_deg)]
+        if self.mode == "A3":
+            parts = [a[batch["half_atom"]], b[batch["half_bond"]], x,
+                     batch["closure"], torch.log1p(half_deg)]
+        else:
+            if self.mode == "A2":
+                M = torch.zeros_like(M)
+            parts = [a[batch["half_atom"]], b[batch["half_bond"]], x, M, n,
+                     batch["closure"], torch.log1p(half_deg)]
         P = None
-        if self.mode in ("A1", "A0"):
+        if self.mode in ("A1", "A0", "A2", "A3"):
             null = (self.mode == "A0") or bool(self._null_override)
             P = self.pair_stats(batch, x, null=null)
             parts.append(P)
+        if self.mode == "A3":
+            # A3 order: [a_v, b_e, x, closure, log1p deg, P]
+            parts = [parts[0], parts[1], parts[2], parts[3], parts[4], P]
         s = self.side(torch.cat(parts, dim=1))
         hb = batch["half_of_bond"]
         su, sv = s[hb[:, 0]], s[hb[:, 1]]

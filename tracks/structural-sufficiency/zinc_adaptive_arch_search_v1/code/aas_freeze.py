@@ -86,6 +86,8 @@ def main(argv=None) -> int:
     p.add_argument("--stage", required=True)
     p.add_argument("--tags", required=True)
     p.add_argument("--out", default=None)
+    p.add_argument("--config", default=None)
+    p.add_argument("--gates", default=None)
     args = p.parse_args(argv)
     tags = [t.strip() for t in args.tags.split(",") if t.strip()]
     runs = {}
@@ -97,8 +99,10 @@ def main(argv=None) -> int:
         "round": AC.ROUND_ID,
         "stage": args.stage,
         "written": AC.now(),
-        "config_sha256": AC.sha256_file(AC.CONFIG),
-        "cpu_gates_sha256": AC.sha256_file(AC.ANALYSIS / "cpu_checks.json"),
+        "config_path": AC.rel_or_abs(args.config or AC.CONFIG),
+        "config_sha256": AC.sha256_file(args.config or AC.CONFIG),
+        "cpu_gates_path": AC.rel_or_abs(args.gates or (AC.ANALYSIS / "cpu_checks.json")),
+        "cpu_gates_sha256": AC.sha256_file(args.gates or (AC.ANALYSIS / "cpu_checks.json")),
         "plan_sha256": AC.sha256_file(AC.ROUND / "PLAN.md"),
         "runs": runs,
         "reference": reference_record(),

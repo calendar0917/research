@@ -87,13 +87,16 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--stage", default="a")
     p.add_argument("--out", default=None)
+    p.add_argument("--config", default=None)
+    p.add_argument("--pairs", default=None)
     args = p.parse_args(argv)
 
     freeze_path = AC.ANALYSIS / f"freeze_{args.stage}.json"
     if not freeze_path.exists():
         raise SystemExit(f"missing {freeze_path}; run aas_freeze.py first")
     freeze = AC.read_json(freeze_path)
-    if AC.sha256_file(AC.CONFIG) != freeze["config_sha256"]:
+    cfg = Path(args.config) if args.config else AC.CONFIG
+    if AC.sha256_file(cfg) != freeze["config_sha256"]:
         raise SystemExit("config changed after the freeze; refusing to analyse")
     for tag, rec in freeze["runs"].items():
         if AC.sha256_file(AC.RUNS / tag / "train.json") != rec["train_json_sha256"]:
@@ -181,16 +184,26 @@ def main(argv=None) -> int:
             "row172_delta": float(delta[172]),
         }
 
-    for seed in sorted({r["seed"] for r in runs.values()}):
-        have = {r["arm"]: tag for tag, r in runs.items() if r["seed"] == seed}
-        if "A1" in have:
-            for b in ("A0", "B_s0"):
-                btag = have.get(b, b)
-                add(f"A1_minus_{b if b != 'B_s0' else 'B'}", have["A1"], btag, "best")
-                add(f"A1_minus_{b if b != 'B_s0' else 'B'}", have["A1"], btag, "final")
-        if "A0" in have:
-            add("A0_minus_B", have["A0"], "B_s0", "best")
-            add("A0_minus_B", have["A0"], "B_s0", "final")
+    defaults = ["A1:A0", "A1:B_s0", "A0:B_s0", "A2:A1", "A3:A1", "A2:B_s0",
+                "A3:B_s0", "S1:S0", "S1:B_s0", "S0:B_s0", "S1:A1", "A1:B_s0"]
+    pairs = defaults if not args.pairs else [x.strip() for x in args.pairs.split(",") if x.strip()]
+    for pair in pairs:
+        a_arm, b_arm = pair.split(":")
+        for seed in sorted({r["seed"] for r in runs.values()}):
+            have = {r["arm"]: tag for tag, r in runs.items() if r["seed"] == seed}
+            if a_arm not in have:
+                continue
+            if b_arm == "B_s0":
+                if seed != 0:
+                    continue
+                btag = "B_s0"
+            else:
+                btag = have.get(b_arm)
+                if btag is None:
+                    continue
+            bname = "B" if b_arm == "B_s0" else b_arm
+            add(f"{a_arm}_minus_{bname}", have[a_arm], btag, "best")
+            add(f"{a_arm}_minus_{bname}", have[a_arm], btag, "final")
 
     # ---- seed aggregation ---------------------------------------------------
     seed_means = {}
