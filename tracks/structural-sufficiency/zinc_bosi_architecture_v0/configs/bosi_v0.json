@@ -1,0 +1,167 @@
+{
+  "protocol_id": "zinc-bosi-architecture-v0",
+  "round": "zinc_bosi_architecture_v0",
+  "created_utc": "2026-10-26T15:34:47+08:00",
+  "status": "frozen_before_gpu",
+  "design_baseline": "calendar0917/research@5950260",
+  "design_file": "tracks/structural-sufficiency/zinc_bosi_architecture_v0/DESIGN.md",
+  "design_sha256": "315c22ec437320329e62d437fe71b4a4c8426363295a5f205a53a018747f02d5",
+  "data": {
+    "cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+    "cache_sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3",
+    "relation_cache": "tracks/structural-sufficiency/zinc_bosi_architecture_v0/cache/bosi_rel_train.pt",
+    "relation_cache_sha256": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+    "split_source": "tracks/structure-contribution/results/bjoc_predictive_bottleneck_v1/split_a.json",
+    "roles": {
+      "fit8k": 8000,
+      "monitor": 1000,
+      "locked": 1000
+    },
+    "official_valid_loaded": false,
+    "official_test_loaded": false,
+    "relation_cache_hash_kind": "sha256 over sorted (key,dtype,shape,bytes) content, machine independent",
+    "relation_cache_rebuild": "python tracks/structural-sufficiency/zinc_bosi_architecture_v0/code/bosi_prep.py (deterministic, ~7s)"
+  },
+  "architecture": {
+    "name": "BOSI-v0",
+    "widths": {
+      "atom": [
+        108,
+        128,
+        96
+      ],
+      "bond": [
+        295,
+        160,
+        96
+      ],
+      "half": [
+        295,
+        128,
+        32
+      ],
+      "side": [
+        617,
+        128,
+        96
+      ],
+      "compose": [
+        391,
+        160,
+        96
+      ],
+      "reader": [
+        417,
+        256,
+        256,
+        1
+      ]
+    },
+    "activation": "silu",
+    "moments": "chebyshev T1,T2,T3 per channel",
+    "relations": [
+      "T",
+      "Q",
+      "R",
+      "N"
+    ],
+    "relation_priority": "T>Q>R>N",
+    "closure_dim": 4,
+    "parameter_count_expected": 473889,
+    "parameter_cap": 500000,
+    "learned_junction_encoder": false,
+    "recursion": false,
+    "attention": false,
+    "initialisation": "atom/bond encoders from train-only masked-SSL checkpoint; every other module from a single shared seed stream"
+  },
+  "arms": {
+    "R": "true per-relation partition of partner moments",
+    "B": "same relation counts, same leave-one-out partner total, allocated proportionally to counts (protocol amendment A1)",
+    "Bfull_not_trained": "DESIGN literal n/deg * sum over all incident bonds; CPU diagnostic only"
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "eval_batch_size": 256,
+    "loss": "l1_raw_y",
+    "precision": "fp32",
+    "total_updates": 47400,
+    "steps_per_epoch": 63,
+    "epochs": 753,
+    "selection": "strict minimum Monitor MAE",
+    "batch_order_generator": "torch.Generator().manual_seed(seed + 101), torch.randperm(8000)",
+    "normalisation": "fit_only_norm over the 8000 Fit8k rows, identical arrays for R and B"
+  },
+  "baseline_history": {
+    "model": "DCC-L (DualChannel L arm, P3 train-only masked-SSL initialisation)",
+    "parameters": 494193,
+    "runs_dir": "tracks/structural-sufficiency/zinc_dccl_bottleneck_v1/runs",
+    "no_retraining": true,
+    "fit8k_monitor_mae": {
+      "0": 0.12315087235253304,
+      "1": 0.12777156261634082
+    },
+    "fit8k_locked_mae_best_monitor": {
+      "0": 0.08357349264295771,
+      "1": 0.08342303324723616
+    },
+    "fit8k_locked_mae_final": {
+      "0": 0.08254802366392687,
+      "1": 0.08369429864967241
+    }
+  },
+  "gpu_stage1": {
+    "runs": [
+      "R_s0",
+      "B_s0"
+    ],
+    "conditional_runs": [
+      "R_s1",
+      "B_s1"
+    ],
+    "buy_seed1_unless": "R_s0.Monitor > DCCL_s0.Monitor + 0.012 and R_s0.Monitor - B_s0.Monitor > -0.003",
+    "budget_a100_hours": 2.5,
+    "includes": "smoke, failed jobs, formal runs",
+    "no_update_shortening": true
+  },
+  "decision_rules": {
+    "PERFORMANCE_PROMISING": "R beats historical DCC-L on Locked in both seeds; seed-mean Locked gain >= 0.005; ordinary and any-unseen both non-negative; sign survives dropping the 10 worst paired molecules; not tail-dominated",
+    "STRUCTURE_MECHANISM_ONLY": "R beats B in both seeds with seed-mean gain >= 0.003 but does not beat DCC-L; no automatic attention follow-up",
+    "NO_GO": "R not better than B, or clearly worse than DCC-L, or the effect is unstable / tail-only",
+    "INCONCLUSIVE": "two seeds or the intervals cannot separate the key comparisons; no extra seeds, no split change"
+  },
+  "analysis": {
+    "locked_groups": [
+      "all_supported",
+      "low_support",
+      "any_unseen"
+    ],
+    "support_source": "Fit8k only; exact typed radius-2 rooted signatures",
+    "tail_definition": "y <= -3",
+    "top10_sensitivity": "drop the 10 molecules with the largest max(AE_A, AE_B) for each pair",
+    "bootstrap": "paired over fixed Locked molecules, 10000 resamples, descriptive only",
+    "checkpoint_reporting": "best_monitor primary; final auxiliary"
+  },
+  "forbidden": [
+    "retraining DCC-L",
+    "official test or official valid access",
+    "new random split",
+    "using Monitor or Locked labels for architecture / hyper-parameter / epoch / seed selection beyond the declared Monitor rule",
+    "extra seeds beyond two per model",
+    "learned junction encoder",
+    "recursive message passing",
+    "transformer / attention layers",
+    "new statistical lookup tables",
+    "external pretraining",
+    "new label components",
+    "teacher distillation",
+    "ensembles",
+    "widening the network, adding moment orders, or changing relation types to bypass a failure"
+  ]
+}

@@ -1,0 +1,350 @@
+{
+  "round": "zinc-bosi-architecture-v0",
+  "written": "2026-10-26T15:32:24+0800",
+  "device": "cpu",
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "gates": {
+    "G1": {
+      "gate": "G1_fit8k_degree_and_partner_bound",
+      "n_fit_rows": 8000,
+      "max_atom_degree": 4,
+      "degree_histogram_fit8k": {
+        "1": 32959,
+        "2": 188028,
+        "3": 168477,
+        "4": 10112
+      },
+      "max_partners_per_half_edge": 3,
+      "design_bound_num_partners_le_3": true,
+      "truncation_applied": false,
+      "n_atoms_fit8k": 199788,
+      "n_bonds_fit8k": 399576,
+      "pass": true
+    },
+    "G2": {
+      "gate": "G2_relations_mutually_exclusive_and_complete",
+      "n_half_edges": 399576,
+      "n_partner_rows": 555318,
+      "partner_counts_equal_deg_minus_1": true,
+      "n_violations": 0,
+      "duplicate_partner_in_same_half_edge": 0,
+      "group_counts_partition_all_partners": true,
+      "n_partners_per_half_edge_histogram": {
+        "0": 32959,
+        "1": 188028,
+        "2": 168477,
+        "3": 10112
+      },
+      "relation_histogram": {
+        "T": 2982,
+        "Q": 1040,
+        "R": 257878,
+        "N": 293418
+      },
+      "pass": true
+    },
+    "G3": {
+      "gate": "G3_structure_matches_original_graph_and_frozen_objects",
+      "n_rows": 400,
+      "n_bonds": 9970,
+      "junction_triangle_pairs": 84,
+      "relation_T_partner_rows_expected": 168,
+      "junction_common_neighbour_pairs": 20,
+      "relation_Q_partner_rows_expected": 40,
+      "triangle_rows_networkx": 28,
+      "triangle_rows_from_atom_feature": "checked per atom (see mismatch count)",
+      "triangle_atom_feature_mismatch_rows": 0,
+      "bond_ring_flag_mismatch_rows": 0,
+      "biconnected_partition_mismatch_rows": 0,
+      "max_common_neighbours_excluding_centre": 1,
+      "note": "block ids are arbitrary labels; the check compares the induced partition",
+      "pass": true,
+      "relation_T_partner_rows_observed": 168,
+      "relation_Q_partner_rows_observed": 40
+    },
+    "G4": {
+      "gate": "G4_third_moment_and_cross_channel_pairing",
+      "third_moment": {
+        "A": [
+          3.0,
+          0.0,
+          0.5,
+          0.0,
+          -2.0
+        ],
+        "B": [
+          3.0,
+          0.0,
+          0.5000000000000001,
+          0.5773502691896261,
+          -1.9999999999999996
+        ],
+        "same_n_p1_p2": true,
+        "sum_T3_A": 0.0,
+        "sum_T3_B": 0.5773502691896261,
+        "separated_by_third_moment": true
+      },
+      "cross_channel": {
+        "per_channel_moments_k1_k4": {
+          "P": [
+            [
+              1.0,
+              1.0
+            ],
+            [
+              1.0,
+              1.0
+            ],
+            [
+              1.0,
+              1.0
+            ],
+            [
+              1.0,
+              1.0
+            ]
+          ],
+          "Q": [
+            [
+              1.0,
+              1.0
+            ],
+            [
+              1.0,
+              1.0
+            ],
+            [
+              1.0,
+              1.0
+            ],
+            [
+              1.0,
+              1.0
+            ]
+          ]
+        },
+        "identical_per_channel_moments": true,
+        "sum_projection_squared_P": 4.0,
+        "sum_projection_squared_Q": 2.0,
+        "cross_channel_pairing_lost": true
+      },
+      "pass": true
+    },
+    "G5": {
+      "gate": "G5_independent_numpy_implementation",
+      "n_rows": 16,
+      "max_abs_M_difference": 2.79089737098559e-07,
+      "max_abs_count_difference": 0.0,
+      "tolerance": 1e-06,
+      "pass": true
+    },
+    "G6": {
+      "gate": "G6_symmetry_and_batch_invariance",
+      "max_abs_delta": {
+        "atom_relabel": 1.1920928955078125e-07,
+        "bond_direction_reverse": 0.0,
+        "edge_order_and_batch_order": 1.1920928955078125e-07,
+        "batch_recombination": 2.384185791015625e-07
+      },
+      "tolerance": 1e-05,
+      "predictions": [
+        0.3659135103225708,
+        0.5405897498130798,
+        0.28166037797927856,
+        0.49688875675201416,
+        0.2694581151008606,
+        0.3411753177642822,
+        0.06829199939966202,
+        0.17379702627658844
+      ],
+      "pass": true
+    },
+    "G7": {
+      "gate": "G7_R_and_B_identical_parameters_and_init",
+      "parameters_R": 473889,
+      "parameters_B": 473889,
+      "expected_parameters": 473889,
+      "cap": 500000,
+      "same_shape": true,
+      "same_initial_state_sha256": true,
+      "initial_state_sha256": "ceeb598f3a51761ae46cf761dfe7de3b4c08d74c2c5b7c1a3c823d75e53e9a58",
+      "breakdown": {
+        "atom_encoder": 26336,
+        "bond_encoder": 62816,
+        "half_encoder": 42016,
+        "side": 91488,
+        "compose": 78176,
+        "reader": 173057,
+        "total": 473889
+      },
+      "ssl": {
+        "source": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+        "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+        "keys_loaded": [
+          "atom_encoder",
+          "bond_encoder"
+        ],
+        "junction_encoder_loaded": false
+      },
+      "tensor_level_max_abs_diff": 0.0,
+      "pass": true
+    },
+    "G8": {
+      "gate": "G8_R_and_B_enter_their_own_forward",
+      "max_abs_y_R_minus_y_B": 0.00039458274841308594,
+      "mean_abs_y_R_minus_y_B": 8.311611600220203e-05,
+      "arms_produce_different_predictions": true,
+      "relation_permutation_moves_R": 0.0004152357578277588,
+      "relation_permutation_moves_B": 0.0,
+      "B_is_invariant_to_partner_relabels": true,
+      "pass": true
+    },
+    "G9": {
+      "gate": "G9_real_fit8k_relation_usage_and_R_vs_B_difference",
+      "compared_arm": "B",
+      "n_rows": 2048,
+      "n_half_edges": 102676,
+      "fraction_half_edges_with_nonzero_partners": 0.9182087342709104,
+      "fraction_half_edges_deg1": 0.08179126572908957,
+      "group_nonzero_fraction": {
+        "T": 0.007421403249055281,
+        "Q": 0.0028828548054073005,
+        "R": 0.598952043320737,
+        "N": 0.5039444466087498
+      },
+      "molecules_with_nonzero_group": {
+        "T": 123,
+        "Q": 36,
+        "R": 2037,
+        "N": 2048
+      },
+      "molecule_fraction_with_nonzero_group": {
+        "T": 0.06005859375,
+        "Q": 0.017578125,
+        "R": 0.99462890625,
+        "N": 1.0
+      },
+      "partner_row_share": {
+        "T": 0.0053359102457761765,
+        "Q": 0.002072741976007819,
+        "R": 0.4663529396057129,
+        "N": 0.5262383818626404
+      },
+      "n_nonempty_groups_histogram": {
+        "0": 8398,
+        "1": 74257,
+        "2": 20021
+      },
+      "fraction_with_two_or_more_coexisting_groups": 0.19499201371303906,
+      "R_vs_B_abs_norm_diff_mean": 0.21640956062024,
+      "R_vs_B_abs_norm_diff_median": 0.0,
+      "R_vs_B_relative_diff_mean": 0.028199448017437855,
+      "R_vs_B_relative_diff_median": 0.0,
+      "fraction_relative_diff_gt_1e-3_overall": 0.212361314410573,
+      "fraction_relative_diff_gt_1e-3_among_allocation_defined": 1.0,
+      "relative_diff_mean_among_allocation_defined": 0.13278994856340876,
+      "abs_norm_diff_mean_among_allocation_defined": 1.1098380723362353,
+      "M_R_norm_median": 5.85404547107335,
+      "note": "allocation is only defined when >=2 relation groups are non-empty; with one non-empty group R and the leave-one-out broadcast coincide exactly",
+      "pass": true,
+      "design_literal_Bfull_relative_diff_median": 0.10267253471087678,
+      "design_literal_Bfull_fraction_relative_diff_gt_1e-3": 0.9938267676446255,
+      "design_literal_Bfull_relative_diff_mean": 0.10730891766236973
+    },
+    "G10": {
+      "gate": "G10_gradients_reach_every_declared_module",
+      "modules": {
+        "atom_encoder": {
+          "n_tensors_with_grad": 4,
+          "n_tensors": 4,
+          "grad_norm": 1.8559954247120254
+        },
+        "bond_encoder": {
+          "n_tensors_with_grad": 4,
+          "n_tensors": 4,
+          "grad_norm": 0.17925138065144428
+        },
+        "half_encoder": {
+          "n_tensors_with_grad": 4,
+          "n_tensors": 4,
+          "grad_norm": 0.030361712460947224
+        },
+        "side": {
+          "n_tensors_with_grad": 4,
+          "n_tensors": 4,
+          "grad_norm": 0.35086247567327383
+        },
+        "compose": {
+          "n_tensors_with_grad": 4,
+          "n_tensors": 4,
+          "grad_norm": 1.1512954388653738
+        },
+        "reader": {
+          "n_tensors_with_grad": 6,
+          "n_tensors": 6,
+          "grad_norm": 9.295413075383653
+        }
+      },
+      "all_declared_modules_have_nonzero_grad": true,
+      "stats_block_zeroing_max_abs_dy": 0.005081593990325928,
+      "stats_block_is_read": true,
+      "pass": true
+    },
+    "G11": {
+      "gate": "G11_no_collapsed_branch_and_no_scale_explosion",
+      "x": {
+        "std": 0.1010674461722374,
+        "abs_mean": 0.08058510720729828,
+        "max_abs": 0.5658305287361145,
+        "fraction_exact_zero": 0.0
+      },
+      "M": {
+        "std": 0.39919060468673706,
+        "abs_mean": 0.14925295114517212,
+        "max_abs": 2.999999761581421,
+        "fraction_exact_zero": 0.7214588567839196
+      },
+      "s": {
+        "std": 0.09302893280982971,
+        "abs_mean": 0.07477962225675583,
+        "max_abs": 0.617045521736145,
+        "fraction_exact_zero": 0.0
+      },
+      "c": {
+        "std": 0.07701224088668823,
+        "abs_mean": 0.06183516979217529,
+        "max_abs": 0.5955020785331726,
+        "fraction_exact_zero": 0.0
+      },
+      "z": {
+        "std": 2.8215413093566895,
+        "abs_mean": 1.929672122001648,
+        "max_abs": 26.204103469848633,
+        "fraction_exact_zero": 0.002398081534772182
+      },
+      "group_nonzero_fraction": {
+        "T": 0.007066582795232534,
+        "Q": 0.0012562813935801387,
+        "R": 0.5967336893081665,
+        "N": 0.5091080665588379
+      },
+      "finite": true,
+      "pass": true
+    },
+    "G12": {
+      "gate": "G12_official_valid_and_test_untouched",
+      "loaded_caches": [
+        "ad_train.pt (official train 10k rows only)"
+      ],
+      "valid_cache_loaded": false,
+      "test_cache_loaded": false,
+      "source_files_referencing_official_splits": {},
+      "gate_evidence": "every module in this round imports only bosi_common.load_train_cache(); no valid/test loader exists",
+      "pass": true
+    }
+  },
+  "n_pass": 12,
+  "n_total": 12,
+  "verdict": "CPU_GO"
+}
