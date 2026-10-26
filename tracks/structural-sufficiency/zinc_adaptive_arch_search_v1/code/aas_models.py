@@ -36,6 +36,7 @@ from typing import Mapping
 import torch
 import torch.nn as nn
 
+import aas_common as _AC  # noqa: F401  (sys.path setup)
 import bosi_models as BM
 
 N_REL = BM.N_REL
@@ -46,7 +47,7 @@ PAIR_DIM = 32
 PAIR_IN = 4 * RANK                      # 128
 SIDE_IN_BASE = BM.SIDE_IN               # 617
 SIDE_IN = SIDE_IN_BASE + PAIR_DIM       # 649
-ARMS = ("B", "A1", "A0")
+ARMS = ("B", "A1", "A0", "S1", "S0")
 
 
 class BOSIQueryPair(BM.BOSI):
@@ -161,6 +162,8 @@ def common_state(state: Mapping[str, torch.Tensor]) -> dict:
     """The BOSI-B parameter set only (drops the pair encoder and the widened
     Side input matrix, whose shape differs from BOSI-B by construction)."""
     drop = {"side.lins.0.weight"}
+    if any(k.startswith("pair_q.") for k in state):     # SQBC body: nothing shared
+        return dict(state)
     return {k: v for k, v in state.items()
             if not k.startswith("pair_phi.") and k not in drop}
 
@@ -171,6 +174,9 @@ def build_model(norm: Mapping[str, object], arm: str, seed: int, device,
 
     if arm not in ARMS:
         raise ValueError(f"unknown arm {arm!r}")
+    if arm in ("S1", "S0"):                      # direction B body
+        import aas_sqbc
+        return aas_sqbc.build_model(norm, arm, seed, device, dropout=dropout)
     torch.manual_seed(int(seed))
     if arm == "B":
         model = BM.BOSI(norm, arm="B", dropout=dropout)
