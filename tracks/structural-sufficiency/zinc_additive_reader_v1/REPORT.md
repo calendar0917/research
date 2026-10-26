@@ -509,6 +509,13 @@ Locked 上搜索 reader 变体。若未来要继续，应该是一个新的、�
 | smoke A（128/315） | `ar-smoke-A-20261026-131349-1f66c209` / `ar-smoke-A5-20261026-131628-daf47ae7` |
 | smoke D（128/315） | `ar-smoke-D-20261026-131349-ab3620f6` / `ar-smoke-D5-20261026-131806-4d7ea9ac` |
 
+> **Rebase 说明（2026-10-26）：** 为合入远端 `4b47d3b`，本地 7 个 commit 被 rebase，
+> main 上的 SHA 已重写。上表保留训练/冻结时**真实执行**的 rebase 前 SHA
+> （`train.json` 也记录这些 SHA），并已推送 `ar-v1-*` tags 使其可解析。main 上的
+> 等价 SHA 为：`9be30bf→caa0653`、`9a08888→7338d31`、`677ac82→8c0a0be`、
+> `6c018e7→120a270`、`732f91a→57c3cf8`、`a783bd9→e9ce26a`、`d27358b→3fa90d9`。
+> 训练产物中的 commit 字段没有改写；这是真实执行 provenance，不是笔误。
+
 主机 `a100-2`，2×A100-SXM4-40GB，driver 550.163.01，torch 2.5.1+cu124，
 CUDA 12.4；远端 marker 在 `res` 上按 commit 部署。历史 DCC-L 文件未修改。
 
