@@ -105,8 +105,9 @@
     "note": "stage-A numbers only motivated the purchase; they are not reused as evidence for stage B"
   },
   "arms_b": {
-    "S1": "SQBC ordered/target-aware pair encoding at each shared centre",
-    "S0": "SQBC identical parameters/init, unordered (symmetric-invariant) pair encoding",
+    "S1": "SQBC ordered/target-aware pair encoding, LOCAL ownership pooling to the target bond",
+    "S0": "SQBC identical parameters/init, unordered (symmetric-invariant) pair encoding, local pooling",
+    "S2": "SQBC identical parameters/init to S1 (same pair content), pair content pooled at the GRAPH level (P3-Null form)",
     "pair_input": 229,
     "pair_phi": [
       229,
@@ -124,24 +125,29 @@
     "parameters": {
       "S1": 381505,
       "S0": 381505,
+      "S2": 381505,
       "cap": 500000
     },
-    "initial_state": "bit-identical between S1 and S0",
+    "initial_state": "S1 == S0 == S2 bit-identical",
     "no_recursion": true,
     "attention": false,
-    "relation_onehot": "frozen BOSI T/Q/R/N class, structural only"
+    "relation_onehot": "frozen BOSI T/Q/R/N class, structural only",
+    "contrast_design": {
+      "S1_vs_S0": "does the target bond need an asymmetric role inside the pair encoder?",
+      "S1_vs_S2": "with IDENTICAL pair content and IDENTICAL capacity, is the content pooled locally (ownership) or at the graph level?"
+    }
   },
   "decision_rules_b": {
-    "DEEPEN_B": "S1 - S0 <= -0.002 AND S1 - B_s0 <= -0.003",
+    "DEEPEN_B": "(S1 - S0 <= -0.002 AND S1 - B_s0 <= -0.003) OR (S1 - S2 <= -0.002 AND S1 - B_s0 <= -0.003)",
     "ORDERING_NOT_NEEDED": "|S1 - S0| < 0.001 (whatever the level)",
-    "STOP_B": "S1 - B_s0 >= +0.002 AND S1 - S0 >= -0.001",
-    "strong_reference": "P3B_s0 = 0.076224 (historical, same protocol/recipe, not retrained)",
-    "otherwise": "AMBIGUOUS -> at most one confirmation",
+    "POOLING_LOCATION_MATTERS": "|S1 - S2| >= 0.002, sign recorded",
+    "STOP_B": "S1 - B_s0 >= +0.002 AND both contrasts < 0.001 in magnitude",
+    "strong_reference": "P3B_s0 = 0.076224 (historical, same protocol/recipe, not retrained); DCC-L 4-seed mean 0.075990",
     "tail_guard": "report drop-row172 and drop-top-1-contributor for every contrast before any level claim"
   },
   "cpu_gates_b": {
     "file": "analysis/cpu_checks_b.json",
-    "n_pass": 10,
-    "n_gates": 10
+    "n_pass": 12,
+    "n_gates": 12
   }
 }

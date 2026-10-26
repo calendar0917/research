@@ -126,7 +126,7 @@ def gate_b5_invariance(norm) -> dict:
     rng = np.random.default_rng(11)
     out = {}
     ok = True
-    for arm in ("S1", "S0"):
+    for arm in ("S1", "S0", "S2"):
         m, _ = build(arm, norm)
         base = forward_y(m, BD.batch_from_specs(specs))
         relab = []
@@ -180,7 +180,7 @@ def gate_b6_gradients(norm) -> dict:
     y = np.asarray(cache["labels"], dtype=np.float64)[rows]
     target = torch.as_tensor(y, dtype=torch.float32)
     out = {"arms": {}, "pass": True}
-    for arm in ("S1", "S0"):
+    for arm in ("S1", "S0", "S2"):
         m, _ = build(arm, norm)
         m.train()
         pred = m(batch)
@@ -288,6 +288,53 @@ def gate_b10_scale(norm) -> dict:
     return out
 
 
+def gate_b11_s2_matched(norm) -> dict:
+    """S2 (global pooling of the identical pair content) is parameter-identical
+    to S1 and shares its initial state; only the pooling location differs."""
+    m1, i1 = build("S1", norm)
+    m2, i2 = build("S2", norm)
+    s1, s2 = C.cpu_state(m1), C.cpu_state(m2)
+    same = set(s1) == set(s2) and all(torch.equal(s1[k], s2[k]) for k in s1)
+    cache = AC.load_cache("train")
+    rel = AC.load_rel("train")
+    batch = BD.collate(cache, rel, np.arange(256))
+    y1, y2 = forward_y(m1, batch), forward_y(m2, batch)
+    out = {"parameters_S1": i1["parameters"], "parameters_S2": i2["parameters"],
+           "state_bit_identical": bool(same),
+           "y_S1_vs_S2_mean_abs_diff": float(np.abs(y1 - y2).mean()),
+           "y_S1_vs_S2_max_abs_diff": float(np.abs(y1 - y2).max())}
+    out["pass"] = bool(same and i1["parameters"] == i2["parameters"]
+                       and out["y_S1_vs_S2_mean_abs_diff"] > 1e-4)
+    return out
+
+
+def gate_b12_s2_short_train(norm) -> dict:
+    return gate_b7_short_train(norm, arm="S2") if False else _short_train(norm, "S2")
+
+
+def _short_train(norm, arm: str) -> dict:
+    cache = AC.load_cache("train")
+    rel = AC.load_rel("train")
+    y = np.asarray(cache["labels"], dtype=np.float64)
+    m, _ = build(arm, norm)
+    m.train()
+    opt = torch.optim.AdamW(m.parameters(), lr=1e-3)
+    gen = torch.Generator().manual_seed(101)
+    losses = []
+    for _ in range(40):
+        rows = torch.randperm(10_000, generator=gen).numpy()[:128]
+        loss = F.l1_loss(m(BD.collate(cache, rel, rows)).view(-1),
+                         torch.as_tensor(y[rows], dtype=torch.float32))
+        opt.zero_grad(set_to_none=True)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(m.parameters(), 5.0)
+        opt.step()
+        losses.append(float(loss))
+    out = {"first_loss": losses[0], "last_loss": losses[-1]}
+    out["pass"] = bool(np.isfinite(losses).all() and losses[-1] < losses[0] * 0.9)
+    return out
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--out", default=None)
@@ -298,7 +345,9 @@ def main(argv=None) -> int:
              ("B5_invariance", gate_b5_invariance), ("B6_gradients", gate_b6_gradients),
              ("B7_short_train", gate_b7_short_train), ("B8_isolation", gate_b8_isolation),
              ("B9_no_cross_molecule", gate_b9_no_cross_molecule),
-             ("B10_scale", gate_b10_scale)]
+             ("B10_scale", gate_b10_scale),
+             ("B11_S2_matched", gate_b11_s2_matched),
+             ("B12_S2_short_train", gate_b12_s2_short_train)]
     res = {}
     for name, fn in gates:
         try:

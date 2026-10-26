@@ -24,6 +24,18 @@ the unordered pair — a complete invariant of {u_e, w_f}.  The contrast therefo
 isolates exactly one question: does the target bond need an asymmetric role in
 the pair encoding?
 
+``S2`` is the **pooling-location** control, and it is parameter-identical to S1
+(and shares its initial state): the *same* ordered pair content ``w_ef`` is
+pooled at the graph level, P3-Null style,
+
+    W_g = mean_{pairs in G} w_ef,   V_g = mean_{pairs in G} w_ef^2
+
+and every bond receives ``[b_e, W_g, V_g, W_g*V_g, bond_feat, log1p(n_junc)]``
+— the same three 32-d slots S1 fills with ``[P_u+P_v, |P_u-P_v|, P_u*P_v]``.
+S1 vs S2 therefore isolates *where the identical pair content is pooled*
+(local ownership per bond vs a graph-level mean), i.e. the DCC-L-L vs
+P3-Null question at matched content, matched capacity and matched initial state.
+
 The pair content is used once; ``P`` is never fed back to neighbouring bonds.
 There is no junction encoder, no fixed moment bank, no graph-global relation
 channel and no attention.  ``_swap_roles`` exists only for the CPU gate that
@@ -49,7 +61,7 @@ READER_HIDDEN = 288
 PAIR_IN = 4 * RANK + WIDTH + N_REL + 1        # 229
 COMPOSE_IN = WIDTH + 3 * RANK + BM.BOND_FEAT + 1   # 200
 READER_IN = 4 * WIDTH + BM.GLOBAL_DIM        # 417
-ARMS = ("S1", "S0")
+ARMS = ("S1", "S0", "S2")
 
 
 class SQBC(nn.Module):
@@ -59,6 +71,7 @@ class SQBC(nn.Module):
         if mode not in ARMS:
             raise ValueError(f"unknown SQBC mode {mode!r}")
         self.mode = mode
+        self.pooling = "global" if mode == "S2" else "local"
         self.atom_encoder = BM.MLP(BM.N_ATOM_FEAT, 128, WIDTH, 1, dropout)
         self.bond_encoder = BM.MLP(3 * WIDTH + BM.BOND_FEAT, 160, WIDTH, 1, dropout)
         self.pair_q = nn.Linear(WIDTH, RANK, bias=False)
@@ -92,7 +105,7 @@ class SQBC(nn.Module):
             ut, wp = wp, ut
         cross = ut * wp
         diff = (ut - wp).abs()
-        if self.mode == "S1":
+        if self.mode in ("S1", "S2"):
             block = torch.cat([ut, wp, cross, diff], dim=1)
         else:
             s = ut + wp
@@ -117,13 +130,28 @@ class SQBC(nn.Module):
 
         hb = batch["half_of_bond"]
         half_deg = batch["half_deg"]
-        pu, pv = P[hb[:, 0]], P[hb[:, 1]]
         n_junc = (half_deg[hb[:, 0]] - 1.0 + half_deg[hb[:, 1]] - 1.0).clamp(min=0.0)
-        # ONLY symmetric combinations of the two endpoint pair-sums: the
-        # storage direction of a bond is arbitrary, so putting ``pu`` and ``pv``
-        # in separate slots would make the prediction depend on it.
+        if self.pooling == "local":
+            pu, pv = P[hb[:, 0]], P[hb[:, 1]]
+            # ONLY symmetric combinations of the two endpoint pair-sums: the
+            # storage direction of a bond is arbitrary, so putting ``pu`` and
+            # ``pv`` in separate slots would make the prediction depend on it.
+            s1_, s2_, s3_ = pu + pv, (pu - pv).abs(), pu * pv
+        else:
+            # graph-level pooling of the identical pair content (P3-Null form)
+            pg = batch["atom_batch"][batch["half_atom"][tgt]]   # graph of each pair
+            Bn0 = int(batch["n_graphs"])
+            cnt = a.new_zeros((Bn0, 1))
+            cnt.index_add_(0, pg, torch.ones((pg.numel(), 1), dtype=a.dtype,
+                                             device=a.device))
+            w1 = a.new_zeros((Bn0, RANK)).index_add_(0, pg, w_ef)
+            w2 = a.new_zeros((Bn0, RANK)).index_add_(0, pg, w_ef * w_ef)
+            w1 = w1 / cnt.clamp(min=1.0)
+            w2 = w2 / cnt.clamp(min=1.0)
+            bb0 = batch["bond_batch"]
+            s1_, s2_, s3_ = w1[bb0], w2[bb0], w1[bb0] * w2[bb0]
         c = self.compose(torch.cat(
-            [b, pu + pv, (pu - pv).abs(), pu * pv, batch["bond_feat"],
+            [b, s1_, s2_, s3_, batch["bond_feat"],
              torch.log1p(n_junc).unsqueeze(1)], dim=1))
         Bn = int(batch["n_graphs"])
         bb, ab = batch["bond_batch"], batch["atom_batch"]

@@ -62,7 +62,7 @@ SIDE_IN = SIDE_IN_BASE + PAIR_DIM       # 649
 PAIR_HIDDEN_A3 = 128
 PAIR_DIM_A3 = 64
 SIDE_IN_A3 = 2 * WIDTH + RANK + PAIR_DIM_A3 + 4 + 1   # 293 (M and n both dropped)
-ARMS = ("B", "A1", "A0", "A2", "A3", "S1", "S0")
+ARMS = ("B", "A1", "A0", "A2", "A3", "S1", "S0", "S2")
 
 
 class BOSIQueryPair(BM.BOSI):
@@ -202,7 +202,7 @@ def build_model(norm: Mapping[str, object], arm: str, seed: int, device,
 
     if arm not in ARMS:
         raise ValueError(f"unknown arm {arm!r}")
-    if arm in ("S1", "S0"):                      # direction B body
+    if arm in ("S1", "S0", "S2"):                      # direction B body
         import aas_sqbc
         return aas_sqbc.build_model(norm, arm, seed, device, dropout=dropout)
     torch.manual_seed(int(seed))
