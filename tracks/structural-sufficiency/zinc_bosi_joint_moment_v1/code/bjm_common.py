@@ -25,6 +25,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import sys
 import time
 from pathlib import Path
@@ -51,7 +52,10 @@ CONFIG = CONFIGS / "bjm_v1.json"
 RUNS = ROUND / "runs"
 RUNS_SMOKE = ROUND / "runs_smoke"
 CACHE = ROUND / "cache"
-ANALYSIS = ROUND / "analysis"
+# Remote jobs write their JSON into a gitignored directory so the compute
+# checkout never becomes dirty (a dirty remote tree blocks the next deploy).
+# The curated copy still lives in ``analysis/``.
+ANALYSIS = Path(os.environ.get("BJM_ANALYSIS_DIR", str(ROUND / "analysis")))
 
 DATA_ROOT = SUFF / "zinc_arch_discovery_v1"
 DATA_TRAIN = DATA_ROOT / "cache" / "ad_train.pt"

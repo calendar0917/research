@@ -6,6 +6,9 @@ T (triangle closure) > Q (extra common neighbour) > R (same biconnected block,
 
 Usage:
     python tracks/.../zinc_bosi_joint_moment_v1/code/bjm_prep.py [--splits train,valid]
+
+Remote runs must set ``BJM_ANALYSIS_DIR`` to a gitignored directory so the
+compute checkout stays clean.
 """
 
 from __future__ import annotations
