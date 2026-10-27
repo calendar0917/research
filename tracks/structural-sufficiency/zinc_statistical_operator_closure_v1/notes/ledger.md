@@ -51,3 +51,34 @@ initialisation, i.e. the optimizer suppressed the operator.
 
 | 4 | 02:12 | res-gpu0 | soc-screen-T-s0 | T | 0 | fit8k | launched | — | pending |
 | 5 | 02:12 | res-gpu1 | soc-screen-T-s1 | T | 1 | fit8k | launched | — | pending |
+
+### T screen result (completed)
+
+| seed | SOC T Monitor best | frozen L Monitor | Δ (SOC−L) | SOC valid | L valid |
+|---|---:|---:|---:|---:|---:|
+| 0 | 0.126867 (ep 599) | 0.123151 | +0.003716 | 0.092100 | 0.089873 |
+| 1 | 0.128599 (ep 583) | 0.127772 | +0.000827 | 0.090502 | 0.095470 |
+| mean | 0.127733 | 0.125461 | **+0.002271** | 0.091301 | 0.092672 |
+
+Paired bootstrap seed-mean: +0.002271, 95% CI [−0.000270, +0.005042].
+Gate **FAIL**. T A100·h 0.680 + 0.792 = 1.472.
+
+### Mechanism diagnostics (CPU, no GPU)
+
+* Final gates: R s0 [0.00565, 0.00715, 0.00611], R s1 [0.00517, 0.00682,
+  0.00485]; T s0 [0.00577, 0.00762, 0.00663], T s1 [0.00495, 0.00709, 0.00532].
+* Closure off / trained gate / best forced gate (Monitor):
+  R s0 0.125746 / 0.124062 / 0.123695 (g=0.02);
+  R s1 0.126693 / 0.126521 / 0.126521;
+  T s0 0.128021 / 0.126895 / 0.125831 (g=0.02);
+  T s1 0.128612 / 0.128603 / 0.128603.
+* R s0 train-2k vs forced gate: 0.010264 (g=1e-4), 0.008469 (g=0.006693,
+  minimum), 0.015423 (g=0.02), 0.055502 (g=0.1). The gate is at the
+  train-optimal amplitude, not a cold-start victim.
+* Total round: 2.9237 A100·h. Official test never loaded.
+
+### Closed jobs
+
+* `soc-screen-T-s0-20261028-020617-78f7cbab` completed, 0.6804 A100·h.
+* `soc-screen-T-s1-20261028-020630-586e2d96` completed, 0.7918 A100·h.
+* No CTRL, no full-10k, no test scoring: the screen gate failed.

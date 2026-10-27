@@ -8,7 +8,7 @@
 phase: phase2b
 current_round: ssrc-phase2b-zinc-v1
 status: PHASE2B_COMPLETE
-updated: 2026-10-27
+updated: 2026-10-28
 main_line: true
 latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
@@ -1971,3 +1971,24 @@ zinc_relation_bn_diagnostic_v1:
     the learned function) and global re-estimation is not a fix (the statistics
     were already essentially correct).  Do not add seeds, change the normalisation
     or extend the schedule on the strength of this diagnostic.
+latest_operator_round: zinc_statistical_operator_closure_v1
+latest_operator_round_verdict: STOP_NO_GAIN
+latest_operator_round_report: tracks/structural-sufficiency/zinc_statistical_operator_closure_v1/REPORT.md
+latest_operator_round_decision: tracks/structural-sufficiency/zinc_statistical_operator_closure_v1/DECISION.md
+latest_operator_round_protocol: tracks/structural-sufficiency/zinc_statistical_operator_closure_v1/PROTOCOL.md
+latest_operator_round_budget: 2.924 A100-h of 16 (screen 2.923 of 3.0); no CTRL, no full 10k, no test
+latest_operator_round_official_test: never loaded
+latest_operator_round_headline: >-
+  SOC-v1 tested a weight-tied K=3 moment-closure iteration over the explicit
+  bond/junction incidence graph, initialised numerically at DCC-L (512,888
+  params; +18,695).  Fit8k/Monitor 47,400-update screen, two seeds per readout:
+  R (final state) seed-mean 0.125259 vs frozen L 0.125461, delta -0.000203,
+  paired 95% CI [-0.002516,+0.002076]; T (trajectory mean) 0.127733, delta
+  +0.002271, CI [-0.000270,+0.005042].  Both fail the pre-registered 0.1215
+  gate; full-10k and official test were not purchased.  The learned gates stayed
+  at the 0.006693 init, and the train loss is minimised there; forcing the
+  trained closure open moves Monitor by at most ~0.0022 and still does not beat
+  DCC-L.  The closure's direction is real but an order of magnitude too weak
+  for the 0.060 target (needed -0.0094 test).  Next: label-count 10k->12k slope
+  (0.75 A100-h, new pre-registration) or a coverage-aware training objective;
+  do not tune K/gate/rank/readout further.
