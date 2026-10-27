@@ -1,0 +1,192 @@
+{
+  "protocol_id": "zbo-v2",
+  "round": "zinc-block-ownership-v2",
+  "frozen_utc": "2026-10-27T12:33:27+0800",
+  "frozen_before_commit": true,
+  "git_head_at_freeze": "3bd4806e0f84449656f347469b2104d40d50d1bc",
+  "question": "v1's R-N point estimate (+0.004884, seed 0) was not resolved. Is the gain from the true content of single-bond blocks (H1) or from the true ownership relation between multi-bond blocks (H2)? d_RS = MAE(S) - MAE(R), positive = H2 (multi-block ownership) better.",
+  "ancestors": {
+    "v1_round": "tracks/structural-sufficiency/zinc_block_ownership_v1",
+    "v1_config": {
+      "path": "tracks/structural-sufficiency/zinc_block_ownership_v1/configs/zbo_v1.json",
+      "sha256": "151deb021d12ad77d8997d5abf99c3a42012efd9bc73ca9e15f7fac35958c0bd",
+      "protocol_id": "zinc-block-ownership-v1",
+      "v1_frozen_utc": "2026-10-27T11:22:43+0800"
+    },
+    "v1_cpu_gates": {
+      "path": "tracks/structural-sufficiency/zinc_block_ownership_v1/analysis/cpu_checks.json",
+      "sha256": "177271fb541ab5f732ab1f8303435ee016cfe4e05a147d2130c32595bc27a9fb"
+    },
+    "v1_prep": {
+      "path": "tracks/structural-sufficiency/zinc_block_ownership_v1/analysis/prep.json",
+      "sha256": "b71344e24e78715393a45b13336d0deb9e6a48564d3c645c5429a8bd79e1b3d3"
+    },
+    "v1_runs": {
+      "R_s0": {
+        "best_valid": 0.07670714773511281,
+        "best_epoch": 387,
+        "W20": 0.07774830731650581,
+        "T100": 0.0778267646440654,
+        "final_valid": 0.07774089866032591,
+        "parameters": 497161,
+        "initial_state_sha256": "bd18518b396646f14426f92ccf251139d249440e0edc1317c384bab23ae5ca2c",
+        "checkpoint_sha256": {
+          "best.pt": "04065fe2aef668b7c8023eb5ad11cbb5a5f5ba71d60204a9fc1d2e66a975d9e6",
+          "final.pt": "5f38960d2b4f129b3c2c1b7a1ce0b7c159ae30eeefd825bb791b4d9486a41de5",
+          "valid_best.npz": "bb2997c9ead83d8ad6f81731df72a5b820638a0106d63e1a5faf3f634704fb45",
+          "valid_final.npz": "f6d9bee06a2b7e107b4a091292dfb9dabae2421138ac2b67830365b6b3f89c01"
+        },
+        "train_json_sha256": "b913adcfb1bd5020bab533a4403acdac7da1cfbea128fb11fdaa8a93e699667a",
+        "git_head": "2409811b0ac8694cc7755cb79768a3a047112e0c"
+      },
+      "N_s0": {
+        "best_valid": 0.08159154618991306,
+        "best_epoch": 359,
+        "W20": 0.08395271101215622,
+        "T100": 0.0841289908810868,
+        "final_valid": 0.08413443742779782,
+        "parameters": 497161,
+        "initial_state_sha256": "bd18518b396646f14426f92ccf251139d249440e0edc1317c384bab23ae5ca2c",
+        "checkpoint_sha256": {
+          "best.pt": "9581c42de7cee5f0672a4df035c710c805fe626f591200c59b20f8c67ff7762f",
+          "final.pt": "ca39f4b412397f591d77702ce285822c5959fd1da08152466aaf1580df0986cd",
+          "valid_best.npz": "cbff5bb6ad84dd6a560d2835fd27579ac53ded8b2d26fb3f63a3a949d1c8deb5",
+          "valid_final.npz": "c9977d3685983e6b05513f01186f2a4ff28f01ee5b487f03a8f821039ba23716"
+        },
+        "train_json_sha256": "def93d13756cb92e8b4c34be285dd57591ed03d2f56f1391696f574fce4ade83",
+        "git_head": "2409811b0ac8694cc7755cb79768a3a047112e0c"
+      }
+    },
+    "v1_verdict_unchanged": "UNRESOLVED_DUE_TO_VARIANCE",
+    "v1_results_rewritten": false
+  },
+  "reuse": {
+    "code": "tracks/structural-sufficiency/zinc_block_ownership_v1/code (byte-verified, unmodified)",
+    "block_partition": "unchanged (Tarjan biconnected components, bridges are singleton blocks)",
+    "model": "unchanged (BOSI-B + LayerNorm(196) + 196-64-32 phi + zero-init Linear(32->256))",
+    "recipe": "unchanged (v1 RECIPE: 600 epochs x 79 updates = 47,400; AdamW 1e-3->1e-5 cosine; warmup 500; wd 1e-5; clip 5; batch 128; raw-y L1)",
+    "caches": "v1 frozen relation/block caches, file sha256 verified at run time",
+    "runs_dir": "tracks/structural-sufficiency/zinc_block_ownership_v2/runs",
+    "analysis_dir": "tracks/structural-sufficiency/zinc_block_ownership_v2/analysis",
+    "s_arm_definition": "singleton blocks keep true content; multi-edge blocks share the conserved within-molecule multi mean"
+  },
+  "phase_a": {
+    "path": "tracks/structural-sufficiency/zinc_block_ownership_v2/analysis/phase_a.json",
+    "sha256": "4fc1f880a03c2532b8c8c47af00c1c633aa053a5b037f8c8c81623cb1b3905b9",
+    "evidence": {
+      "delta_RN_total": 0.004884398890018463,
+      "row172_delta": 2.0472,
+      "row172_share_of_net": 0.419,
+      "row172_n_multi": 1,
+      "row172_s_equals_r": true,
+      "top5_share_of_net": 0.827,
+      "top10_share_of_net": 1.054,
+      "n_multi_1": 110,
+      "n_multi_2": 476,
+      "n_multi_ge_3": 413,
+      "s_equals_r_fraction_n_multi_le_1": 1.0,
+      "s_equals_r_fraction_n_multi_ge_2": 0.0,
+      "probe_R_to_S_mean_abs_dpred": 0.0048,
+      "probe_R_to_N_mean_abs_dpred": 0.1006
+    }
+  },
+  "cpu_gates": {
+    "path": "tracks/structural-sufficiency/zinc_block_ownership_v2/analysis/cpu_checks.json",
+    "sha256": "e7ab54c413683dbd2e87334739db0b2dd14495cdbb3b30951df6807d925656f8",
+    "all_pass": true,
+    "failed_checks": []
+  },
+  "s_arm_authorized": true,
+  "run_plan": {
+    "phase_b": [
+      {
+        "tag": "S_s0",
+        "arm": "S",
+        "seed": 0,
+        "parameters": 497161,
+        "updates": 47400,
+        "ssl": "pretrain_encoder_s0.pt"
+      }
+    ],
+    "phase_c_iff_phase_b_proceed": [
+      {
+        "tag": "R_s1",
+        "arm": "R",
+        "seed": 1,
+        "ssl": "pretrain_encoder_s1.pt"
+      },
+      {
+        "tag": "N_s1",
+        "arm": "N",
+        "seed": 1,
+        "ssl": "pretrain_encoder_s1.pt"
+      },
+      {
+        "tag": "S_s1",
+        "arm": "S",
+        "seed": 1,
+        "ssl": "pretrain_encoder_s1.pt"
+      }
+    ],
+    "rule": "no width/depth/lr/wd/normalisation/block-type/readout change at any point; each seed uses its own SSL checkpoint; no supervised warm start"
+  },
+  "phase_b_decision": {
+    "primary": "d_RS = MAE(S)_best - MAE(R)_best over all 1000 official-valid rows",
+    "proceed_thresholds": {
+      "d_RS_min": 0.003,
+      "d_RS_W20_min": -0.002,
+      "d_RS_T100_min": -0.002,
+      "single_row_max_contribution_lt": 0.5,
+      "min_delta_after_single_row_removals_over": 0.5,
+      "requires_mechanism_active_S": true
+    },
+    "stop_labels": [
+      "SINGLETON_CONTENT_EXPLAINS_THE_GAIN",
+      "SINGLE_ROW_DRIVEN",
+      "MECHANISM_INACTIVE_S"
+    ],
+    "stop_wording": "the requested wording when the practical-scale bar is missed: 'multi-block ownership did not obtain evidence sufficient to buy a confirmation experiment' -- NOT 'multi-block ownership is proven useless'",
+    "reference_scale_note": "0.005 stays the important effect-size reference for R-N; v2's 0.003 for R-S is the smaller mechanism-only scale set by the task and does not re-label v1's 0.004884 as PASS"
+  },
+  "phase_c_decision": {
+    "stop_if_seed1_RN_lt_0_or_R_s1_best_gt": 0.082,
+    "confirm_if": "both seeds d_RS same sign and two-seed mean >= 0.003, not single-row driven, ordinary not reversed",
+    "labels": [
+      "MULTI_BLOCK_OWNERSHIP_CONFIRMED_TWO_SEEDS",
+      "MULTI_BLOCK_OWNERSHIP_PARTIAL",
+      "SINGLETON_CONTENT_ONLY_CONFIRMED",
+      "R_N_NOT_REPLICATED"
+    ]
+  },
+  "drift_reference": {
+    "same_init_execution_drift_band": [
+      0.0015,
+      0.0025
+    ],
+    "source": "zinc_adaptive_arch_search_v1/ERRATA.md E2(c)"
+  },
+  "budget": {
+    "soft_a100_hours": 3.0,
+    "hard_a100_hours": 4.0,
+    "planned": {
+      "phase_b": 0.5,
+      "phase_c": 1.55
+    }
+  },
+  "claim_limits": [
+    "official test never constructed, loaded, predicted or scored",
+    "single official valid split has been used adaptively across many rounds; even a two-seed v2 replication is a reason to continue mechanism work, not independent confirmation",
+    "fixed-weight content interventions show what the model reads, not causal generalization",
+    "R-N is not an equal-information contrast (N discards ownership); R-S is the ownership-only contrast"
+  ],
+  "forbidden": [
+    "official test access",
+    "hyper-parameter search",
+    "new network modules",
+    "distillation",
+    "ensemble or seed averaging",
+    "width/depth/lr/wd/normalisation change",
+    "block-type change",
+    "rescuing a failed gate with another seed"
+  ]
+}
