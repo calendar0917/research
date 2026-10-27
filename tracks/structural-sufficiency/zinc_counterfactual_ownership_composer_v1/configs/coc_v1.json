@@ -1,0 +1,216 @@
+{
+  "protocol_id": "ssrc-zinc-counterfactual-ownership-composer-v1",
+  "round": "zinc_counterfactual_ownership_composer_v1",
+  "frozen_utc": "2026-10-27",
+  "question": "With every existing DCC-L local structural input kept unchanged, does explicitly learning the nonlinear difference between true ownership and the molecule mean-field reference improve cross-molecule generalization under finite supervision?",
+  "official_test": {
+    "loaded": false,
+    "policy": "no code path in this round constructs, loads, predicts or scores ad_test.pt or ad_valid.pt; official valid/test are not used for any selection, metric or decision"
+  },
+  "data": {
+    "dataset": "PyG ZINC subset=True, official train 10000 / valid 1000 / test 1000",
+    "split_source": "tracks/structure-contribution/results/bjoc_predictive_bottleneck_v1/split_a.json",
+    "split_sha256": "53cd2cec29fb658bdbc789845df36b2194a8c8635140d61b4173ce064b48678e",
+    "split_protocol": "cscl-predictive-bottleneck-diagnosis-v1",
+    "split_salt": "cscl-predictive-bottleneck-v1-A",
+    "fit_rows": 8000,
+    "monitor_rows": 1000,
+    "locked_rows": 1000,
+    "fit_rows_sha256": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+    "monitor_rows_sha256": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+    "locked_rows_sha256": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d",
+    "train_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+    "train_cache_sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3",
+    "split_reuse_reason": "The frozen Fit8k/Monitor1k/Locked1k partition is the exact split on which the two frozen DCC-L Fit8k trajectories were trained, so the L arm has identical Fit rows, initialisation, batch order and 47400 updates at zero new GPU cost."
+  },
+  "frozen_l_reference": {
+    "source": "zinc_dccl_bottleneck_v1/runs/fit8k_s{seed}",
+    "checkpoints": ["best_monitor.pt", "final.pt"],
+    "train_json": "train.json",
+    "predictions": ["predictions_best_monitor.pt", "predictions_final.pt"],
+    "retrained": false,
+    "gpu_hours_this_round": 0.0,
+    "initial_state_sha256": {
+      "0": "da48d59d688a486029bf9892b3a82ca093752d55a72e094699e67310a9fb15b0",
+      "1": "4bb933a9f14b935a8e43a7d885ff9c57124b5320ab139cbf601f30f30dba5f57"
+    },
+    "ssl_sha256": {
+      "0": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "1": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a"
+    },
+    "best_monitor_mae": {"0": 0.12315087235253304, "1": 0.12777156261634082},
+    "final_monitor_mae": {"0": 0.12382684755977243, "1": 0.12851366565283387}
+  },
+  "model": {
+    "base": "zinc_dual_channel_composer_v1 DCC-L (organized_local=True)",
+    "forward_change": "c_loc = local_composer(x_real) - local_composer(x_null), with the same local_composer parameters for both calls; x_null = [b, Wg, Vg, log1p(n_b), bond_feat] and x_real = [b, Wl, Vl, log1p(n_b), bond_feat]",
+    "unchanged": [
+      "group_composer and c_glob",
+      "atom path a, sum a, sum a^2",
+      "global33",
+      "reader layout and 513-dimensional input",
+      "all widths, depths, activations, dropout=0",
+      "initialization RNG order and P3 state loading",
+      "training recipe and update budget"
+    ],
+    "new_parameters": 0,
+    "parameter_count_expected": 494193,
+    "parameter_cap": 500000,
+    "reader_layout": {
+      "total_dim": 513,
+      "slices": {
+        "sum_c_glob": [0, 96],
+        "sum_a": [96, 192],
+        "sum_a_sq": [192, 288],
+        "global33": [288, 321],
+        "sum_c_loc": [321, 417],
+        "sum_c_loc_sq": [417, 513]
+      }
+    },
+    "no_new": [
+      "trainable parameters",
+      "scaling coefficient",
+      "normalization layer",
+      "auxiliary loss",
+      "attention",
+      "support gate",
+      "new structural feature",
+      "detach on local_composer(x_null)"
+    ],
+    "shared_parameter_rule": "two calls to the same local_composer module; two independent networks are forbidden"
+  },
+  "initialization": {
+    "p3_seed_rule": "torch.manual_seed(seed) -> P3NullModel -> load seed-matched SSL encoder -> p3_state",
+    "dual_seed_rule": "torch.manual_seed(seed + 90731) -> COCDualChannel -> load_p3_state",
+    "reader_new_columns": "zero-initialized columns 321:513 of reader.lins.0.weight",
+    "expected_initial_state_sha256_equals_dccl": true
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 0.00001,
+    "weight_decay": 0.00001,
+    "warmup_steps": 500,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "valid_batch_size": 256,
+    "loss": "l1 on raw y",
+    "total_updates": 47400,
+    "steps_per_epoch": 63,
+    "epochs_run": 753,
+    "seeds": [0, 1],
+    "data_order": "torch.Generator().manual_seed(seed + 101); torch.randperm(8000) at the start of every epoch",
+    "checkpoint_selection": "strict minimum Monitor MAE every epoch; ties -> earlier epoch; best_monitor is primary, final is robustness",
+    "standardization": "fit_only_norm computed from the 8000 Fit8k rows only; identical function to zinc_dccl_bottleneck_v1"
+  },
+  "cpu_gates": {
+    "init_bitwise": true,
+    "initial_prediction_tol": 1e-06,
+    "forced_null_c_loc_tol": 0.0,
+    "correspondence_change_min": 1e-05,
+    "invariance_tol": 1e-06,
+    "gradient_finite": true,
+    "diagnostic_rows": 2000,
+    "diagnostic_rows_seed": 20261029,
+    "representation_degenerate": {
+      "median_bond_rms_c_loc_lt": 0.0001,
+      "nonzero_fraction_lt": 0.05,
+      "median_rms_ratio_to_c_abs_lt": 0.001
+    },
+    "post_training_mechanism_alive": {
+      "median_bond_rms_c_loc_ge": 0.0001,
+      "nonzero_fraction_ge": 0.5,
+      "median_rms_ratio_to_c_abs_ge": 0.01
+    },
+    "raw_y_l1": true,
+    "official_valid_or_test_access": false
+  },
+  "profile": {
+    "epochs": 3,
+    "updates": 189,
+    "projection_formula": "753 * mean_epoch_seconds * 1.15 + startup_seconds + final_eval_seconds + 30 s",
+    "stop_if_projected_single_run_a100_h_gt": 1.0,
+    "hard_round_cap_a100_h": 3.0
+  },
+  "monitor_gates": {
+    "primary_comparison": "delta = MAE(COC) - MAE(L), raw-y MAE, Monitor1k",
+    "checkpoints": ["best_monitor", "W20", "T100", "final"],
+    "both_seed_overall_negative": true,
+    "seed_mean_overall_delta_max": -0.005,
+    "nopen_any_unseen_both_seed_negative": true,
+    "nopen_any_unseen_seed_mean_delta_max": -0.008,
+    "nopen_overall_both_seed_negative": true,
+    "nopen_overall_seed_mean_delta_max": 0.0,
+    "w20_seed_mean_delta_max": 0.0,
+    "t100_seed_mean_delta_max": 0.0,
+    "w20_each_seed_delta_max": 0.0,
+    "t100_each_seed_delta_max": 0.0,
+    "train_fit_ratio_cap_vs_L": 2.0,
+    "monitor_tail100_vs_best_cap": 2.0
+  },
+  "locked_gates": {
+    "overall_seed_mean_delta_max": -0.006,
+    "overall_both_seed_same_negative": true,
+    "nopen_any_unseen_seed_mean_delta_max": -0.01,
+    "nopen_any_unseen_both_seed_same_negative": true,
+    "ordinary_seed_mean_delta_max": 0.001,
+    "ordinary_each_seed_delta_max": 0.002,
+    "drop_worst10_definition": "top-10 Locked rows by seed-mean frozen L best-monitor absolute error (L s0/s1 average), determined without COC predictions or the delta",
+    "drop_worst10_seed_mean_delta_max": -0.003,
+    "drop_worst10_each_seed_negative": true,
+    "drop_all_penalty_seed_mean_delta_max": -0.005,
+    "drop_all_penalty_each_seed_negative": true,
+    "drop_top1_penalty_seed_mean_delta_max": -0.005,
+    "t100_seed_mean_delta_max": 0.0,
+    "t100_each_seed_delta_max": 0.0,
+    "final_seed_mean_delta_max": 0.0,
+    "final_each_seed_delta_max": 0.0,
+    "prediction_change_fraction_min": 0.5,
+    "prediction_change_eps": 1e-06,
+    "post_training_representation_requires": "median_bond_rms_c_loc >= 1e-4, nonzero_fraction >= 0.5, median_rms_ratio_to_c_abs >= 0.01"
+  },
+  "bootstrap": {
+    "n_boot": 10000,
+    "seed": 20261029,
+    "unit": "molecule",
+    "paired": true,
+    "note": "bootstrap of per-molecule AE differences on the same rows; it does not substitute for independent training seeds"
+  },
+  "groups": {
+    "support_key": "exact typed radius-2 rooted signature (k2), same construction as the DCC-L bottleneck audit",
+    "count_unit": "document frequency over the 8000 Fit8k molecules; one molecule contributes at most 1 per signature",
+    "fit_self_exclusion": "not used for Monitor/Locked evaluation; the support table is built once from Fit8k, no held-out structure enters it",
+    "tier_unseen": "at least one atom with k2 df == 0",
+    "tier_low4": "no unseen atom and at least one atom with 1 <= df < 5",
+    "tier_full": "all atoms df >= 5",
+    "penalty": "label_excess > 0 from the frozen zema long-cycle audit; used only for evaluation grouping, never for training or selection",
+    "primary": "tier_unseen and not penalty",
+    "nopen_any_unseen": "same as primary",
+    "nopen": "not penalty",
+    "ordinary_seen": "tier != unseen and not penalty",
+    "ordinary_label": "y > -3",
+    "tail": "y <= -3"
+  },
+  "diagnostics": {
+    "difference_representation": [
+      "per-bond RMS of c_loc and c_abs",
+      "median/mean RMS ratio c_loc / c_abs",
+      "nonzero fraction at |c_loc| > 1e-8",
+      "within-molecule variance of c_loc across bonds",
+      "participation ratio of pooled within-molecule covariance",
+      "RMS ratio to c_real"
+    ],
+    "note": "these are diagnostics; a higher participation ratio is not evidence of better performance"
+  },
+  "no_rescue": [
+    "do not change the position of the subtraction or use a separate local composer for the null path",
+    "do not detach local_composer(x_null)",
+    "do not add parameters, scaling, normalization, attention, gates, losses or structural features",
+    "do not change lr, schedule, batch size, update count, warmup, weight decay, clip or dropout",
+    "do not add seeds beyond 0 and 1",
+    "do not read Locked before a Monitor PASS and freeze",
+    "do not read official valid or official test at any point",
+    "a negative or near-miss result is recorded and closes the specific hypothesis; it is not converted into another sweep"
+  ]
+}

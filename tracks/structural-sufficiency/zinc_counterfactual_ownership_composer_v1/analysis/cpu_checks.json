@@ -1,0 +1,610 @@
+{
+  "protocol_id": "ssrc-zinc-counterfactual-ownership-composer-v1",
+  "round": "zinc_counterfactual_ownership_composer_v1",
+  "git_commit": "2fc17571fffbe0da615158ccaadfe64ece9a9623",
+  "git_dirty_tracked": false,
+  "config_sha256": "1cb1a1b46e4df292589c5016bf3cb20e6473dcf42be3876ec9d351ba193d9847",
+  "protocol_sha256": "1867e9cd29d1bcb4a02a447fe7d71d0b16531c5524baa1c36dea9197a6ceed91",
+  "code_sha256": {
+    "coc_analyze.py": "96ee79ea65fe13770c9fb58dcea999f83cac07b47ac27aaf1ddbe6ed6fe43c62",
+    "coc_checks.py": "60b057511bbeae13c49843b97ce8c24df9e77f9f51874f797275966456a1b209",
+    "coc_common.py": "290e92ad833ff0b4b9e9ffbab01cf36117348c05825db25e4ec7965a95523ebf",
+    "coc_locked.py": "e2d063e70a0dcbe0355e5f437f167231943eb99d78ff93335753806b34d61cb0",
+    "coc_model.py": "6db1f5ae0ac545d2368b7d4b419a522285822d6af9222ea195fa1883e3c69d58",
+    "coc_train.py": "a03821e5205fecb7c764309b432ded9a764b5af7d13beb4d075c295f1656c5cc"
+  },
+  "all_pass": true,
+  "checks": {
+    "C1_init_bitwise": {
+      "pass": true,
+      "seeds": {
+        "0": {
+          "keys_equal": true,
+          "all_tensors_equal": true,
+          "max_abs_diff": 0.0,
+          "parameters_coc": 494193,
+          "parameters_dcc": 494193,
+          "initial_state_sha256_coc": "da48d59d688a486029bf9892b3a82ca093752d55a72e094699e67310a9fb15b0",
+          "initial_state_sha256_dcc": "da48d59d688a486029bf9892b3a82ca093752d55a72e094699e67310a9fb15b0",
+          "initial_state_matches_frozen": true,
+          "ssl_sha256_matches_frozen": true,
+          "p3_reference_state_sha256": "024d066d733ab5bfe575cf11b72a5d8a3a324770d236c74d7a8c21bbed886985"
+        },
+        "1": {
+          "keys_equal": true,
+          "all_tensors_equal": true,
+          "max_abs_diff": 0.0,
+          "parameters_coc": 494193,
+          "parameters_dcc": 494193,
+          "initial_state_sha256_coc": "4bb933a9f14b935a8e43a7d885ff9c57124b5320ab139cbf601f30f30dba5f57",
+          "initial_state_sha256_dcc": "4bb933a9f14b935a8e43a7d885ff9c57124b5320ab139cbf601f30f30dba5f57",
+          "initial_state_matches_frozen": true,
+          "ssl_sha256_matches_frozen": true,
+          "p3_reference_state_sha256": "fb761422e1a6846281997596a5899f8df2c0122c69373d8e902bd550c5944f8b"
+        }
+      }
+    },
+    "C2_initial_prediction": {
+      "pass": true,
+      "max_abs_prediction_diff": 0.0,
+      "tolerance": 1e-06,
+      "reader_local_cols_max_abs_coc": 0.0,
+      "reader_local_cols_max_abs_dcc": 0.0,
+      "n_rows": 8
+    },
+    "C3_forced_mean_field": {
+      "pass": true,
+      "c_loc_max_abs": 0.0,
+      "c_glob_max_diff": 0.0,
+      "z_glob_max_diff": 0.0,
+      "a_sum_max_diff": 0.0,
+      "a_sq_max_diff": 0.0,
+      "global33_max_diff": 0.0,
+      "zl_max_abs": 0.0,
+      "zl2_max_abs": 0.0
+    },
+    "C4_correspondence_sensitivity": {
+      "pass": true,
+      "threshold": 1e-05,
+      "found": {
+        "row": 0,
+        "n_junctions": 47,
+        "permutation": [
+          42,
+          15,
+          3,
+          19,
+          12,
+          8,
+          38,
+          11,
+          30,
+          22,
+          35,
+          28,
+          13,
+          6,
+          29,
+          21,
+          1,
+          16,
+          23,
+          17,
+          25,
+          20,
+          2,
+          45,
+          36,
+          24,
+          34,
+          46,
+          33,
+          31,
+          27,
+          10,
+          0,
+          7,
+          40,
+          43,
+          9,
+          14,
+          26,
+          18,
+          44,
+          41,
+          39,
+          5,
+          32,
+          37,
+          4
+        ],
+        "c_loc_max_abs_diff": 5.41294252872467,
+        "c_glob_invariance": 0.0,
+        "n_b_multiset_preserved": true,
+        "w_fixed": true,
+        "note": "w is held fixed and only the junction-to-bond row assignment changes; c_glob is unchanged because w and n_b are unchanged"
+      }
+    },
+    "C5_gradients": {
+      "pass": true,
+      "step1": {
+        "loss": 0.9969420433044434,
+        "local_composer_grad_norm": 0.0,
+        "reader_local_column_grad_norm": 53.24366760253906,
+        "reader_local_columns_nonzero_grad": 49152
+      },
+      "step2": {
+        "loss": 1.852393627166748,
+        "local_composer_grad_norm": 4.725035667419434,
+        "reader_local_column_grad_norm": 21.561967849731445,
+        "zl_grad": {
+          "nonzero": 31360,
+          "max_abs": 1145.897705078125,
+          "finite": true
+        },
+        "zl2_grad": {
+          "nonzero": 31360,
+          "max_abs": 28985.03515625,
+          "finite": true
+        },
+        "c_loc_grad": {
+          "nonzero": 31360,
+          "max_abs": 1145.897705078125,
+          "finite": true
+        },
+        "c_abs_grad": {
+          "nonzero": 31456,
+          "max_abs": 7825.05224609375,
+          "finite": true
+        },
+        "c_abs_grad_wrt_Wg_Vg": {
+          "nonzero": 153024,
+          "max_abs": 0.35594478249549866,
+          "finite": true
+        },
+        "c_abs_grad_wrt_w": {
+          "nonzero": 105504,
+          "max_abs": 7.1483964920043945,
+          "finite": true
+        },
+        "finite": true
+      },
+      "c_loc_source_lines": [
+        "    c_loc = local_composer(x_real) - local_composer(x_null)",
+        "        c_loc = self.local_composer(x_real) - self.local_composer(x_null)"
+      ],
+      "detach_absent": true
+    },
+    "C6_invariance": {
+      "pass": true,
+      "tolerance": 1e-06,
+      "rows": {
+        "12": {
+          "n_atoms": 17,
+          "n_bonds": 18,
+          "n_junctions": 24,
+          "pred_base": 2.782809019088745,
+          "variants": {
+            "atom_relabel": {
+              "pred": 2.782809019088745,
+              "abs_delta": 0.0
+            },
+            "bond_permutation": {
+              "pred": 2.782809019088745,
+              "abs_delta": 0.0
+            },
+            "endpoint_reversal": {
+              "pred": 2.782809019088745,
+              "abs_delta": 0.0
+            },
+            "junction_permutation": {
+              "pred": 2.782809019088745,
+              "abs_delta": 0.0
+            }
+          },
+          "batch_regrouping": {
+            "pred_row0": 2.782809019088745,
+            "pred_row1": 1.4068944454193115,
+            "abs_delta_row0": 0.0,
+            "abs_delta_row1_vs_alone": 1.1920928955078125e-07
+          },
+          "pass": true
+        },
+        "37": {
+          "n_atoms": 25,
+          "n_bonds": 26,
+          "n_junctions": 34,
+          "pred_base": 1.406894564628601,
+          "variants": {
+            "atom_relabel": {
+              "pred": 1.4068946838378906,
+              "abs_delta": 1.1920928955078125e-07
+            },
+            "bond_permutation": {
+              "pred": 1.4068944454193115,
+              "abs_delta": 1.1920928955078125e-07
+            },
+            "endpoint_reversal": {
+              "pred": 1.406894564628601,
+              "abs_delta": 0.0
+            },
+            "junction_permutation": {
+              "pred": 1.4068944454193115,
+              "abs_delta": 1.1920928955078125e-07
+            }
+          },
+          "batch_regrouping": {
+            "pred_row0": 1.406894564628601,
+            "pred_row1": 2.9885919094085693,
+            "abs_delta_row0": 0.0,
+            "abs_delta_row1_vs_alone": 2.384185791015625e-07
+          },
+          "pass": true
+        },
+        "31": {
+          "n_atoms": 33,
+          "n_bonds": 37,
+          "n_junctions": 55,
+          "pred_base": 2.9885916709899902,
+          "variants": {
+            "atom_relabel": {
+              "pred": 2.9885919094085693,
+              "abs_delta": 2.384185791015625e-07
+            },
+            "bond_permutation": {
+              "pred": 2.9885919094085693,
+              "abs_delta": 2.384185791015625e-07
+            },
+            "endpoint_reversal": {
+              "pred": 2.9885919094085693,
+              "abs_delta": 2.384185791015625e-07
+            },
+            "junction_permutation": {
+              "pred": 2.988590955734253,
+              "abs_delta": 7.152557373046875e-07
+            }
+          },
+          "batch_regrouping": {
+            "pred_row0": 2.9885921478271484,
+            "pred_row1": 2.782809019088745,
+            "abs_delta_row0": 4.76837158203125e-07,
+            "abs_delta_row1_vs_alone": 0.0
+          },
+          "pass": true
+        }
+      }
+    },
+    "C7_no_leak_and_empty": {
+      "pass": true,
+      "tolerance": 1e-06,
+      "leak_max_diffs": {
+        "pred_row0": 0.0,
+        "pred_row1": 1.1920928955078125e-07,
+        "c_loc_row0": 0.0,
+        "c_loc_row1": 0.0
+      },
+      "empty_bond_prediction": 0.2568102478981018,
+      "empty_bond_finite": true
+    },
+    "C8_representation_diagnostics": {
+      "pass": true,
+      "rows": 2000,
+      "rows_sha256": "c9437e6c3e2db033084f1c3ccab01c1b5c1df8dbf305e46db1cfc86a548e725a",
+      "rows_seed": 20261029,
+      "seeds": {
+        "0": {
+          "diagnostic": {
+            "n_bonds": 49895,
+            "n_molecules": 2000,
+            "dim": 96,
+            "median_bond_rms_c_loc": 0.3529752772011592,
+            "mean_bond_rms_c_loc": 0.49545121314518237,
+            "median_bond_rms_c_abs": 0.44726403894916966,
+            "mean_bond_rms_c_abs": 0.5061868212373792,
+            "median_bond_rms_c_real": 0.4579779264764846,
+            "mean_bond_rms_c_real": 0.6397461456915897,
+            "median_rms_ratio_to_c_abs": 0.7662611935701367,
+            "mean_rms_ratio_to_c_abs": 0.9625030528175252,
+            "median_rms_ratio_to_c_real": 0.7180002651828298,
+            "mean_rms_ratio_to_c_real": 0.9271132277153762,
+            "nonzero_fraction_1e-8": 1.0,
+            "nonzero_fraction_1e-6": 0.9999981210542138,
+            "max_abs_c_loc": 22.119874954223633,
+            "mean_square_amplitude_c_loc": 53.521793003903895,
+            "mean_square_amplitude_c_abs": 31.876063093787675,
+            "within_molecule_variance_mean": 0.5471701361316675,
+            "within_molecule_variance_median": 0.21957305125287768,
+            "n_molecules_with_ge2_bonds": 2000,
+            "participation_ratio_c_loc_pooled": 2.64780245281404,
+            "participation_ratio_c_loc_within": 2.6194744695823635,
+            "participation_ratio_c_abs_within": 1.8223553895834435,
+            "participation_ratio_c_real_within": 2.612209753761983,
+            "common_energy_fraction_c_loc": 0.018275325584105176
+          },
+          "gate": {
+            "pass": true,
+            "checks": {
+              "median_rms_ok": true,
+              "nonzero_fraction_ok": true,
+              "ratio_ok": true
+            },
+            "post_training": false
+          }
+        },
+        "1": {
+          "diagnostic": {
+            "n_bonds": 49895,
+            "n_molecules": 2000,
+            "dim": 96,
+            "median_bond_rms_c_loc": 0.2844929431579155,
+            "mean_bond_rms_c_loc": 0.4211355062543801,
+            "median_bond_rms_c_abs": 0.32958270193313544,
+            "mean_bond_rms_c_abs": 0.3899109754807975,
+            "median_bond_rms_c_real": 0.3385244110796459,
+            "mean_bond_rms_c_real": 0.5095484821011887,
+            "median_rms_ratio_to_c_abs": 0.8080092167304777,
+            "mean_rms_ratio_to_c_abs": 1.0728768737803787,
+            "median_rms_ratio_to_c_real": 0.7559172198945369,
+            "mean_rms_ratio_to_c_real": 0.9650399275402262,
+            "nonzero_fraction_1e-8": 1.0,
+            "nonzero_fraction_1e-6": 0.9999970771954437,
+            "max_abs_c_loc": 19.111461639404297,
+            "mean_square_amplitude_c_loc": 42.52844858298952,
+            "mean_square_amplitude_c_abs": 20.049101389611764,
+            "within_molecule_variance_mean": 0.43779193662156723,
+            "within_molecule_variance_median": 0.1509395199231481,
+            "n_molecules_with_ge2_bonds": 2000,
+            "participation_ratio_c_loc_pooled": 2.313622732197565,
+            "participation_ratio_c_loc_within": 2.2862738408362007,
+            "participation_ratio_c_abs_within": 2.0443412238371423,
+            "participation_ratio_c_real_within": 2.294283314346243,
+            "common_energy_fraction_c_loc": 0.018015253866662622
+          },
+          "gate": {
+            "pass": true,
+            "checks": {
+              "median_rms_ok": true,
+              "nonzero_fraction_ok": true,
+              "ratio_ok": true
+            },
+            "post_training": false
+          }
+        }
+      }
+    },
+    "C9_parameter_data_recipe_barrier": {
+      "pass": true,
+      "parameters_named": 494193,
+      "parameters_optimizer": 494193,
+      "parameter_count_expected": 494193,
+      "manual_raw_y_l1": 4.88633918762207,
+      "torch_raw_y_l1": 4.88633918762207,
+      "steps_per_epoch": 63,
+      "epochs_run": 753,
+      "total_updates": 47400,
+      "warmup_steps": 500,
+      "batch_size": 128,
+      "dropout": 0.0,
+      "split_counts": {
+        "fit": 8000,
+        "monitor": 1000,
+        "locked": 1000
+      },
+      "split_hashes": {
+        "fit": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+        "monitor": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+        "locked": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d"
+      },
+      "split_sha256": "53cd2cec29fb658bdbc789845df36b2194a8c8635140d61b4173ce064b48678e",
+      "first_batch_rows_sha256": "2d65c92a02383c3fd81ef3112f541274cc221a9481c413e58b8932cb9c3cbb23",
+      "first_batch_rows_first5": [
+        4044,
+        8379,
+        4399,
+        3944,
+        6339
+      ],
+      "dcb_train_generator_line": "torch.Generator().manual_seed(int(seed) + 101)",
+      "static_scan": {
+        "scanned": [
+          "coc_analyze.py",
+          "coc_checks.py",
+          "coc_common.py",
+          "coc_locked.py",
+          "coc_model.py",
+          "coc_train.py"
+        ],
+        "forbidden_hits": [],
+        "official_valid_loaded": false,
+        "official_test_loaded": false
+      },
+      "loaded_paths": {
+        "loaded": [
+          {
+            "path": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+            "kind": "torch.load",
+            "ok": true,
+            "keys": [
+              "atom_count_graph",
+              "atom_feat",
+              "atom_ptr",
+              "atom_type",
+              "block_artic_type",
+              "block_atom_idx",
+              "block_atom_ptr",
+              "block_atom_type",
+              "block_bond_idx",
+              "block_bond_ptr",
+              "block_bond_type",
+              "block_dist",
+              "block_joint",
+              "block_overlap",
+              "block_pair_ptr",
+              "block_ptr",
+              "block_scalar",
+              "bond_count_graph",
+              "bond_feat",
+              "bond_index",
+              "bond_ptr",
+              "bond_type",
+              "dist_flat",
+              "dist_ptr",
+              "global_feat",
+              "junc_bond",
+              "junc_feat",
+              "junc_index",
+              "junc_ptr",
+              "labels",
+              "meta",
+              "n_atoms_graph"
+            ],
+            "has_labels": true
+          },
+          {
+            "path": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+            "kind": "torch.load",
+            "ok": true,
+            "keys": [
+              "atom_encoder",
+              "bond_encoder",
+              "junction_encoder"
+            ],
+            "has_labels": false
+          },
+          {
+            "path": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+            "kind": "torch.load",
+            "ok": true,
+            "keys": [
+              "atom_encoder",
+              "bond_encoder",
+              "junction_encoder"
+            ],
+            "has_labels": false
+          },
+          {
+            "path": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+            "kind": "torch.load",
+            "ok": true,
+            "keys": [
+              "atom_encoder",
+              "bond_encoder",
+              "junction_encoder"
+            ],
+            "has_labels": false
+          },
+          {
+            "path": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+            "kind": "torch.load",
+            "ok": true,
+            "keys": [
+              "atom_encoder",
+              "bond_encoder",
+              "junction_encoder"
+            ],
+            "has_labels": false
+          }
+        ],
+        "official_valid_loaded": false,
+        "official_test_loaded": false
+      },
+      "forbidden_loaded": [],
+      "official_valid_loaded": false,
+      "official_test_loaded": false,
+      "locked_labels_read": false
+    }
+  },
+  "official_valid_loaded": false,
+  "official_test_loaded": false,
+  "locked_labels_read": false,
+  "loaded_paths": {
+    "loaded": [
+      {
+        "path": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+        "kind": "torch.load",
+        "ok": true,
+        "keys": [
+          "atom_count_graph",
+          "atom_feat",
+          "atom_ptr",
+          "atom_type",
+          "block_artic_type",
+          "block_atom_idx",
+          "block_atom_ptr",
+          "block_atom_type",
+          "block_bond_idx",
+          "block_bond_ptr",
+          "block_bond_type",
+          "block_dist",
+          "block_joint",
+          "block_overlap",
+          "block_pair_ptr",
+          "block_ptr",
+          "block_scalar",
+          "bond_count_graph",
+          "bond_feat",
+          "bond_index",
+          "bond_ptr",
+          "bond_type",
+          "dist_flat",
+          "dist_ptr",
+          "global_feat",
+          "junc_bond",
+          "junc_feat",
+          "junc_index",
+          "junc_ptr",
+          "labels",
+          "meta",
+          "n_atoms_graph"
+        ],
+        "has_labels": true
+      },
+      {
+        "path": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+        "kind": "torch.load",
+        "ok": true,
+        "keys": [
+          "atom_encoder",
+          "bond_encoder",
+          "junction_encoder"
+        ],
+        "has_labels": false
+      },
+      {
+        "path": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+        "kind": "torch.load",
+        "ok": true,
+        "keys": [
+          "atom_encoder",
+          "bond_encoder",
+          "junction_encoder"
+        ],
+        "has_labels": false
+      },
+      {
+        "path": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+        "kind": "torch.load",
+        "ok": true,
+        "keys": [
+          "atom_encoder",
+          "bond_encoder",
+          "junction_encoder"
+        ],
+        "has_labels": false
+      },
+      {
+        "path": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+        "kind": "torch.load",
+        "ok": true,
+        "keys": [
+          "atom_encoder",
+          "bond_encoder",
+          "junction_encoder"
+        ],
+        "has_labels": false
+      }
+    ],
+    "official_valid_loaded": false,
+    "official_test_loaded": false
+  }
+}
