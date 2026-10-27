@@ -72,25 +72,41 @@ def main(argv=None) -> int:
 
     weights = None
     wmeta = None
+    cfg = S.read_json(S.CONFIG)
+    frozen = cfg["weights_frozen"]
     if arm == "W":
-        built = swo_weights.build() if not (S.ANALYSIS / "weights_train10k.npz").exists() else None
-        npz = S.ANALYSIS / "weights_train10k.npz"
-        meta = S.read_json(npz.with_suffix(".json"))
-        w = np.asarray(np.load(npz)["w"], dtype=np.float64)
-        if S.sha256_array(w) != meta["weight_sha256"]:
-            raise SystemExit("frozen weight vector does not match its recorded sha256")
-        if not S.sha256_file(npz) == meta["npz_sha256"]:
-            raise SystemExit("weights npz changed after the freeze")
+        # Recompute the frozen function from TRAIN STRUCTURE on this machine and
+        # check it against the sha256 declared in configs/swo_v1.json before any
+        # training step. No weight file is shipped, so the function itself is
+        # what is frozen, not an artifact.
+        built = swo_weights.build()
+        w = built["weights"]
+        got = S.sha256_array(w)
+        if got != frozen["sha256"]:
+            raise SystemExit(f"weight function drifted: {got} != {frozen['sha256']}")
+        st = built["stats"]
+        checks = {
+            "n": st["n_train"] == frozen["n"],
+            "vocab": st["vocab_size"] == frozen["vocab_size"],
+            "ess": abs(st["effective_sample_size"] - frozen["effective_sample_size"]) < 1e-6,
+            "clip": abs(st["clip_fraction"] - frozen["clip_fraction"]) < 1e-9,
+            "min": abs(st["weights"]["min"] - frozen["w_min"]) < 1e-9,
+            "max": abs(st["weights"]["max"] - frozen["w_max"]) < 1e-9,
+            "mean": abs(st["weights"]["mean"] - 1.0) < 1e-12,
+            "label_free": st["labels_used"] is False,
+            "train_only": st["valid_or_test_used"] is False,
+        }
+        if not all(checks.values()):
+            raise SystemExit(f"frozen weight statistics mismatch: {checks}")
         weights = w
-        wmeta = {"weight_sha256": meta["weight_sha256"],
-                 "npz_sha256": meta["npz_sha256"],
-                 "npz": S.rel(npz),
-                 "effective_sample_size": meta["effective_sample_size"],
-                 "effective_sample_size_fraction": meta["effective_sample_size_fraction"],
-                 "weights_min": meta["weights"]["min"],
-                 "weights_max": meta["weights"]["max"],
-                 "clip_fraction": meta["clip_fraction"],
-                 "frozen_function": meta["frozen_function"]}
+        wmeta = {"weight_sha256": got, "recomputed_on_host": True,
+                 "effective_sample_size": st["effective_sample_size"],
+                 "effective_sample_size_fraction": st["effective_sample_size_fraction"],
+                 "weights_min": st["weights"]["min"], "weights_max": st["weights"]["max"],
+                 "clip_fraction": st["clip_fraction"],
+                 "frac_gt_1": st["weights"]["frac_gt_1"],
+                 "corr_weight_n_atoms": st["corr_weight_n_atoms"],
+                 "frozen_function": frozen["function"], "checks": checks}
 
     cand, builder, collate = S.dcc_candidate()
     device = torch.device(args.device)
