@@ -126,14 +126,25 @@ def main(argv=None) -> int:
                 "initial_state_sha256": d["model_info"]["initial_state_sha256"],
                 "plan": d.get("plan"),
             }
-    # Historical L predictions for the same Monitor rows.
+    # Historical L baselines: regenerate Monitor predictions from the checkpoint.
+    # Do NOT open the historical predictions_*.pt file: it also contains unused
+    # locked_pred/official_valid_pred arrays.  The checkpoint contains only
+    # Fit8k-trained weights.
+    norm = DT.fit_only_norm(cache, split["fit8k"])
     for seed in (0, 1):
-        cp = _SUFF / "zinc_dccl_bottleneck_v1" / "runs" / f"fit8k_s{seed}" / "predictions_best_monitor.pt"
-        if cp.exists():
-            pred = _load_pred(cp)
-            preds[f"L_s{seed}"] = pred
-            info[f"L_s{seed}"] = {"monitor_mae": _mae(pred, y),
-                                  "source": str(cp.relative_to(C.REPO))}
+        cp = _SUFF / "zinc_dccl_bottleneck_v1" / "runs" / f"fit8k_s{seed}" / "best_monitor.pt"
+        if not cp.exists():
+            continue
+        model = DCC.DualChannel(norm).to(device)
+        ck = torch.load(cp, map_location="cpu", weights_only=False)
+        C.load_state(model, ck["state_dict"], device)
+        pred, mae = T1.evaluate(model, cache, split["monitor"], candidate="DCC-L",
+                                device=device, batch_size=int(R.RECIPE["valid_batch_size"]),
+                                collate_fn=DR.collate_p3n)
+        preds[f"L_s{seed}"] = np.asarray(pred, dtype=np.float64)
+        info[f"L_s{seed}"] = {"monitor_mae": float(mae),
+                              "source": str(cp.relative_to(C.REPO)),
+                              "regenerated_from_checkpoint": True}
 
     out = {"protocol_id": R.ROUND_ID, "rows": "monitor",
            "group_counts": groups["counts"],
