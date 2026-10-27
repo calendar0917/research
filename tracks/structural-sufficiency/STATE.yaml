@@ -14,6 +14,27 @@ latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
 latest_diagnostic: zinc_relation_bn_diagnostic_v1
 latest_diagnostic_verdict: BN_BATCH_STATISTICS_EXPLAIN_THE_TRAIN_GAP__GLOBAL_RECALIBRATION_RECOVERS_NEITHER_TRAIN_NOR_VALID
+latest_audit: zinc_error_mechanism_audit_v1
+latest_audit_verdict: RING_FEATURE_SEARCH_STOPPED__UNSEEN_R2_ENVIRONMENT_IS_THE_MAIN_REMAINING_ERROR__NEXT_IS_LABEL_COUNT_SLOPE
+latest_audit_report: tracks/structural-sufficiency/zinc_error_mechanism_audit_v1/REPORT.md
+latest_audit_decision: tracks/structural-sufficiency/zinc_error_mechanism_audit_v1/DECISION.md
+latest_audit_scope: CPU-only; official test never loaded; no training; frozen DCC-L/BOSI/ZBO predictions + existing train-internal OOF only
+latest_audit_headline: >-
+  Hard ceiling for perfect repair of the 35 label-penalty rows: DCC-L 4-seed
+  mean MAE 0.069924 -> 0.056842 (delta 0.013082, 18.7% of AE).  Cycle-attributable
+  part is 0.009437; valid:0172 alone is 0.005094, so without it only 0.004343.
+  After excluding penalty, the 241 any-unseen radius-2 molecules are 25.0% of rows
+  but 50.2% of no-penalty AE (MAE 0.1184 vs 0.0391; 2.4-4.1x within every size
+  stratum; bias^2/MSE 0.001), so unseen-environment dispersion is the main
+  remaining error.  global33 already has the pooled ring-atom minimum-ring
+  histogram; exact longest/MCB are largely reconstructible from it (R2
+  0.943/0.892/0.999), and strict train-only OOF shows zero conditional information
+  on the 9,628 no-penalty rows (delta R2 +0.00006); the all-row gain is entirely
+  from the 372 penalty rows.  STOP ring-feature search.  The only justified next
+  GPU purchase is the already-recorded 10k->12k label-count slope point (0.75
+  A100-h, frozen DCC-L, decision rule in zinc_dccl_bottleneck_v1 section E), and
+  only under a new pre-registration that accepts the external-label protocol
+  change; otherwise stop.
 latest_side_round: zinc_block_ownership_v2
 latest_side_round_verdict: SINGLETON_CONTENT_EXPLAINS_THE_GAIN__MULTI_BLOCK_OWNERSHIP_SHORT_OF_EVIDENCE
 latest_side_round_next_action: >-
