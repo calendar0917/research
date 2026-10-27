@@ -145,8 +145,10 @@ def valid_groups() -> dict:
 def load_pred(run_dir: Path, ckpt: str = "best") -> np.ndarray | None:
     """Valid predictions of a run, from either the dcc or the ad layout."""
     d = Path(run_dir)
-    for name in (f"valid_{ckpt}.npz", f"predictions_{ckpt}.pt"):
-        p = d / name
+    cand = [d / f"valid_{ckpt}.npz", d / "predictions" / f"valid_{ckpt}.npz",
+            d / f"predictions_{ckpt}.pt", d / "predictions" / f"predictions_{ckpt}.pt",
+            d / "predictions" / f"{ckpt}.pt"]
+    for p in cand:
         if not p.exists():
             continue
         if p.suffix == ".npz":
