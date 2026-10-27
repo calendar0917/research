@@ -1,0 +1,155 @@
+{
+  "protocol_id": "ssrc-zinc-support-conditioned-backoff-v1",
+  "round": "zinc_support_conditioned_backoff_v1",
+  "frozen_utc": "2026-10-27",
+  "question": "Does support-conditioned shrinkage of the DCC-L local junction-to-bond statistic toward the existing graph-level mean-field statistic improve raw-y MAE on Fit-unseen radius-2 environments, and is any gain due to the support-to-bond correspondence rather than the support distribution?",
+  "official_test": {
+    "loaded": false,
+    "policy": "no code path in this round constructs or reads ad_test.pt; official test is not used for any selection, metric or decision"
+  },
+  "data": {
+    "dataset": "PyG ZINC subset=True, official train 10000 / valid 1000 / test 1000",
+    "split_source": "tracks/structure-contribution/results/bjoc_predictive_bottleneck_v1/split_a.json",
+    "split_sha256": "53cd2cec29fb658bdbc789845df36b2194a8c8635140d61b4173ce064b48678e",
+    "split_protocol": "cscl-predictive-bottleneck-diagnosis-v1",
+    "split_salt": "cscl-predictive-bottleneck-v1-A",
+    "fit_rows": 8000,
+    "monitor_rows": 1000,
+    "locked_rows": 1000,
+    "fit_rows_sha256": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+    "monitor_rows_sha256": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+    "locked_rows_sha256": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d",
+    "split_reuse_reason": "The split is an existing frozen, label-blind, canonical-SMILES grouped partition with exactly Fit8k/Monitor1k/Locked1k. It is also the split on which the two frozen DCC-L Fit8k trajectories used here were trained, so the L arm has the identical Fit set, initialisation, batch order and 47400 updates at zero additional GPU cost. Building a new split would break that exact matching and add a new structure-selection degree of freedom."
+  },
+  "support": {
+    "key": "exact typed radius-2 rooted signature (k2), using the same construction as the DCC-L bottleneck audit (dcb code dca_common.radius2_signature_sets; central atom type + sorted (bond type, radius-1 signature of neighbour))",
+    "count_unit": "document frequency over the model Fit molecules; one molecule contributes at most 1 to a signature count even if the signature occurs several times in it",
+    "fit_scope": "the model Fit set only; Monitor, Locked, official valid and official test structures are never added to the support table",
+    "train_self_exclusion": "leave-one-out: for a Fit molecule s = df - 1 (every signature of the molecule is present in df); for a non-Fit query s = df",
+    "bond_support": "s_b = min(s_u, s_v) over the two endpoint atoms of the bond",
+    "alpha": "alpha_b = s_b / (s_b + 4)",
+    "denominator": 4,
+    "labels_used": false,
+    "tuning": "none; the denominator, key, count unit and bond rule are frozen before any training"
+  },
+  "arms": {
+    "L": "alpha = 1; no bond_alpha key is passed, so the forward is the exact original DCC-L forward",
+    "S": "support alpha from the Fit set, leave-one-out on Fit rows",
+    "P": "the same per-molecule alpha values as S, permuted across the molecule's bonds by a fixed label-free salt; the per-molecule alpha multiset is exactly preserved"
+  },
+  "permutation": {
+    "salt": 20261028,
+    "scope": "within molecule only, independent of labels, model, batch and training order; a deterministic function of (salt, molecule row)",
+    "implementation": "numpy SeedSequence([salt, row]) -> permutation of the molecule's bond-alpha vector"
+  },
+  "model": {
+    "base": "zinc_dual_channel_composer_v1 DCC-L (organized_local=True), 494193 parameters",
+    "forward_change": "W_local -> alpha * W_local + (1 - alpha) * W_group_to_bonds; V_local -> alpha * V_local + (1 - alpha) * V_group_to_bonds, applied per bond immediately before the local composer",
+    "global_statistic": "the existing DCC-L group_to_bonds mean-field statistic (n_b * graph mean of junction w / w^2); it is not a new module, tensor or feature",
+    "new_parameters": 0,
+    "parameter_cap": 500000
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 0.00001,
+    "weight_decay": 0.00001,
+    "warmup_steps": 500,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "valid_batch_size": 256,
+    "loss": "l1 on raw y",
+    "total_updates": 47400,
+    "seeds": [0, 1],
+    "checkpoint_selection_phase1": "strict minimum of Monitor MAE every epoch; best-monitor is the primary checkpoint, final is a robustness readout",
+    "checkpoint_selection_phase2": "strict minimum of official valid MAE every epoch, matching the frozen DCC-L full-10k protocol"
+  },
+  "phase1": {
+    "fit": "fit8k",
+    "monitor": "bjoc monitor 1000",
+    "locked": "bjoc locked 1000",
+    "runs": ["S_fit8k_s0", "S_fit8k_s1", "P_fit8k_s0", "P_fit8k_s1"],
+    "l_source": "zinc_dccl_bottleneck_v1/runs/fit8k_s{seed}/best_monitor.pt and final.pt (frozen; same Fit8k, initialisation, batch order, recipe and 47400 updates; verified in Phase 0)",
+    "primary_group": "Locked rows with label_excess == 0 (no manual ring penalty; the frozen zema_audit penalty mask) and at least one atom whose k2 signature has Fit support 0 (any-unseen)",
+    "primary_n": 278,
+    "secondary_groups": {
+      "locked_raw_all": 1000,
+      "locked_natural_prevalence": "tier-weighted Locked MAE with fixed held-out tier weights unseen=604/2000, low4=760/2000, full=636/2000",
+      "unseen_all": 287,
+      "low4_nopen": 388,
+      "full_nopen": 303,
+      "ordinary_seen": 691,
+      "ordinary_label_y_gt_minus3": 932,
+      "tail_y_le_minus3": 68,
+      "penalty_all": 31
+    },
+    "gates": {
+      "primary_effect": 0.015,
+      "primary_rule": "seed-mean delta <= -0.015 AND both seed deltas < 0, separately for S-L and S-P",
+      "overall_effect": 0.003,
+      "overall_rule": "seed-mean natural-prevalence delta <= -0.003 AND both seed deltas < 0, separately for S-L and S-P",
+      "ordinary_loss_cap": 0.002,
+      "ordinary_rule": "max over seeds of ordinary_seen delta <= +0.002, separately for S-L and S-P",
+      "paired_ci": "10k molecule bootstrap of the seed-mean per-molecule AE difference; 95% CI upper < 0 for the primary and overall contrasts",
+      "seed_stability": "both seed deltas strictly negative and max(seed delta) - min(seed delta) <= 0.015",
+      "seed_stability_max_spread": 0.015,
+      "drop_top_k": "after removing the 1 and 10 Locked primary rows with the largest |seed-mean delta AE|, the remaining seed-mean primary delta stays <= -0.010 and keeps its sign",
+      "drop_top_k_min_effect": 0.010,
+      "key_cluster": "cluster the primary rows by the exact set of Fit-unseen k2 signatures; cluster bootstrap of the seed-mean delta keeps the sign and its 95% CI upper < 0 (274 clusters, 270 singletons, so this is nearly the molecule bootstrap)",
+      "safety_tail_loss_cap": 0.010,
+      "safety_ordinary_label_loss_cap": 0.005
+    },
+    "decision_rule": "PASS requires every gate for both S-L and S-P, including the safety caps. A primary mean delta in (-0.015, -0.010] with both seeds same-sign and CI < 0 is NEAR_MISS_STOP (no Phase 2, no rescue). A sign split across seeds is STOP_UNSTABLE. A significant placement effect (S-P pass) with no total effect (S-L fail), or the reverse, is STOP_MECHANISM_NOT_SUPPORTED. Any rescue by changing the alpha denominator, support key/count unit, layers, width or optimizer is forbidden."
+  },
+  "phase2": {
+    "trigger": "Phase 1 PASS only",
+    "fit": "full official train 10000",
+    "monitor_and_confirmation": "official valid 1000; official test never loaded",
+    "runs": ["S_full_s0", "S_full_s1"],
+    "l_source": {
+      "seed0": "zinc_dual_channel_composer_v1/runs/L_s0/best.pt (historical DCC-L B-R0 seed 0, 494193 params, best-valid)",
+      "seed1": "zinc_performance_search_v1/runs/B_R0_s1/best.pt (historical DCC-L B-R0 seed 1, 494193 params, best-valid)"
+    },
+    "primary_group": "official valid rows with label_excess == 0 and at least one atom whose k2 signature has full-train support 0",
+    "primary_n": 241,
+    "gates": {
+      "primary_effect": 0.010,
+      "primary_rule": "seed-mean delta <= -0.010 AND both seed deltas < 0",
+      "overall_effect": 0.003,
+      "overall_rule": "seed-mean official-valid tier-weighted delta <= -0.003 AND both seed deltas < 0",
+      "ordinary_loss_cap": 0.002,
+      "ordinary_rule": "max over seeds of official-valid ordinary_seen delta <= +0.002",
+      "safety_tail_loss_cap": 0.010,
+      "paired_ci": "10k molecule bootstrap of the seed-mean per-molecule AE difference; 95% CI upper < 0 for the primary and overall contrasts",
+      "note": "the official-valid primary has n=241, so the pre-registered Phase 2 threshold is 0.010 rather than the Phase 1 0.015; this is fixed here, before any Phase 2 result"
+    },
+    "bosil": "only if Phase 2 passes; a bond-only BOSI rewrite design is then written, not implemented in this round"
+  },
+  "budget": {
+    "soft_gpu_hours": 3.0,
+    "hard_gpu_hours": 4.0,
+    "phase0_gpu_hours": 0.0,
+    "phase1_planned_gpu_hours": 1.48,
+    "phase2_planned_gpu_hours": 0.74,
+    "scoring_and_smoke_gpu_hours": 0.08,
+    "note": "L arms are frozen checkpoints and cost 0 new GPU hours; if the frozen L checkpoints cannot be verified on the remote host, the contingency is a matched L retrain (2 x ~0.37 GPU-h), which is charged to the hard cap and reported"
+  },
+  "no_rescue": [
+    "do not change the alpha denominator 4",
+    "do not change the radius-2 key, document-frequency count unit or the min-of-endpoints bond rule",
+    "do not add layers, width, features, parameters, message passing or a second branch",
+    "do not change the optimizer, schedule, batch size or update count",
+    "do not add seeds beyond the two pre-registered ones",
+    "do not use official test for any purpose",
+    "do not read official valid during Phase 1",
+    "a negative or near-miss result is recorded and closes the mechanism; it is not converted into another sweep"
+  ],
+  "non_claims": [
+    "the mechanical route is a convex shrinkage of an existing statistic; it is not a new structural feature",
+    "the primary group is an enriched Locked subset (277/1000), not a natural-prevalence sample; the overall gate uses the fixed tier-weighted estimate",
+    "two seeds only; the paired bootstrap is molecule-level, not training-seed variance",
+    "the label-derived penalty mask is used only for evaluation grouping, never for training, support, alpha or checkpoint selection",
+    "official valid is a repeatedly used development set; Phase 2 is a development confirmation, not a pristine test"
+  ]
+}
