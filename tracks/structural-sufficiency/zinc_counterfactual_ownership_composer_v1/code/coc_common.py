@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
@@ -50,6 +51,7 @@ import scb_common as S  # noqa: E402
 AC.install_load_guard()
 
 EXPECTED_PARAMS = 494193
+_CODE_PATHS = ("code", "configs", "PROTOCOL.md", "DESIGN.md")
 READER_LAYOUT = {
     "sum_c_glob": (0, 96),
     "sum_a": (96, 192),
@@ -138,6 +140,18 @@ def split_rows() -> dict:
     assert not (set(monitor.tolist()) & set(locked.tolist()))
     assert len(set(fit.tolist()) | set(monitor.tolist()) | set(locked.tolist())) == 10000
     return payload
+
+
+def code_dirty() -> bool:
+    """Dirty state of the frozen scientific surface, not regenerated analysis files.
+
+    ``analysis/`` outputs are written by the scoring scripts themselves; their
+    content is protected by explicit sha256 fields in the freeze.
+    """
+    out = subprocess.check_output(
+        ["git", "-C", str(REPO), "status", "--porcelain", "--untracked-files=no", "--", *_CODE_PATHS],
+        text=True, stderr=subprocess.DEVNULL)
+    return bool(out.strip())
 
 
 def cache_tensor_sha256(cache: Mapping[str, Any]) -> str:
