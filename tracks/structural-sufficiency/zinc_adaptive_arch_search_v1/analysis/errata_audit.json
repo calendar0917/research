@@ -1,0 +1,355 @@
+{
+ "written": "2026-10-27T08:34:28+0800",
+ "round": "zinc_adaptive_arch_search_v1 errata",
+ "official_test_loaded": false,
+ "A_ssl_seed_protocol": {
+  "recorded_runs": [
+   {
+    "arm": "A",
+    "recipe": "R0",
+    "seed": 0,
+    "best_valid": 0.07622375113883754,
+    "ssl_file": "pretrain_encoder_s0.pt"
+   },
+   {
+    "arm": "B",
+    "recipe": "R0",
+    "seed": 0,
+    "best_valid": 0.07853714964160463,
+    "ssl_file": "pretrain_encoder_s0.pt"
+   },
+   {
+    "arm": "A",
+    "recipe": "R0L",
+    "seed": 0,
+    "best_valid": 0.07669875148584833,
+    "ssl_file": "pretrain_encoder_s0.pt"
+   },
+   {
+    "arm": "A",
+    "recipe": "R0L",
+    "seed": 1,
+    "best_valid": 0.08228281620336929,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   },
+   {
+    "arm": "A",
+    "recipe": "R0",
+    "seed": 1,
+    "best_valid": 0.08227623122831573,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   },
+   {
+    "arm": "A",
+    "recipe": "R0",
+    "seed": 2,
+    "best_valid": 0.08199822234554449,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   },
+   {
+    "arm": "A",
+    "recipe": "R0",
+    "seed": 3,
+    "best_valid": 0.08254595310980221,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   },
+   {
+    "arm": "A",
+    "recipe": "R1",
+    "seed": 0,
+    "best_valid": 0.0875697127431049,
+    "ssl_file": "pretrain_encoder_s0.pt"
+   },
+   {
+    "arm": "B",
+    "recipe": "R0",
+    "seed": 1,
+    "best_valid": 0.07383690453314921,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   },
+   {
+    "arm": "B",
+    "recipe": "R0",
+    "seed": 2,
+    "best_valid": 0.0746766255935072,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   },
+   {
+    "arm": "B",
+    "recipe": "R0",
+    "seed": 3,
+    "best_valid": 0.07691058525809785,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   },
+   {
+    "arm": "B",
+    "recipe": "R1",
+    "seed": 0,
+    "best_valid": 0.07924647400149842,
+    "ssl_file": "pretrain_encoder_s0.pt"
+   },
+   {
+    "arm": "C",
+    "recipe": "DBT600",
+    "seed": 0,
+    "best_valid": 0.07725995538657299,
+    "ssl_file": "pretrain_encoder_s0.pt"
+   },
+   {
+    "arm": "C",
+    "recipe": "DBT600",
+    "seed": 1,
+    "best_valid": 0.08769716223044088,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   }
+  ],
+  "runs_with_seed_ge_2": [
+   {
+    "arm": "A",
+    "recipe": "R0",
+    "seed": 2,
+    "best_valid": 0.08199822234554449,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   },
+   {
+    "arm": "A",
+    "recipe": "R0",
+    "seed": 3,
+    "best_valid": 0.08254595310980221,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   },
+   {
+    "arm": "B",
+    "recipe": "R0",
+    "seed": 2,
+    "best_valid": 0.0746766255935072,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   },
+   {
+    "arm": "B",
+    "recipe": "R0",
+    "seed": 3,
+    "best_valid": 0.07691058525809785,
+    "ssl_file": "pretrain_encoder_s1.pt"
+   }
+  ],
+  "s1_encoder_users": [
+   "A",
+   "B",
+   "C"
+  ],
+  "bosi_ssl_path_for_seeds": {
+   "bosi_common.ssl_path(2)": "pretrain_encoder_s2.pt",
+   "bosi_common.ssl_path(1)": "pretrain_encoder_s1.pt",
+   "bosi_common.ssl_path(0)": "pretrain_encoder_s0.pt"
+  },
+  "dcc_ad_convention_seed0_else_s1": {
+   "dcc_models": false,
+   "ad_models": false
+  },
+  "verdict": "seeds >= 2 WERE runnable and were actually run for both A (P3Null) and B (DCC-L) by reusing pretrain_encoder_s1.pt; the AAS v1 claim that 'only two SSL encoders exist, so two supervised seeds is the hard ceiling' is wrong. The BOSI path's seed-indexed ssl_path() is the only reason seed 2 failed inside that round."
+ },
+ "B_variance_decomposition": {
+  "population_runs_B_R0_and_A_R0": {
+   "A": {
+    "seed0_using_s0_encoder": 0.07622375113883754,
+    "seeds_ge1_using_s1_encoder": [
+     0.08227623122831573,
+     0.08199822234554449,
+     0.08254595310980221
+    ],
+    "encoder_effect_seed0_minus_s1mean": -0.00604971775571661,
+    "within_encoder_supervised_spread": 0.0005477307642577228,
+    "n_within": 3
+   },
+   "B": {
+    "seed0_using_s0_encoder": 0.07853714964160463,
+    "seeds_ge1_using_s1_encoder": [
+     0.07383690453314921,
+     0.0746766255935072,
+     0.07691058525809785
+    ],
+    "encoder_effect_seed0_minus_s1mean": 0.003395777846686543,
+    "within_encoder_supervised_spread": 0.003073680724948638,
+    "n_within": 3
+   }
+  },
+  "drift_rerun_of_frozen_E_anchor": {
+   "available": true,
+   "fresh_E_s0": 0.07704899302491686,
+   "historical_L_s0": 0.07853714964160463,
+   "delta": -0.0014881566166877747,
+   "init_hashes": {
+    "fresh": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33",
+    "historical": "f5c34c285c98b4d8a88361cb7dc1043b5abf07799f4f6121b25a59c904166e33"
+   },
+   "init_bit_identical": true,
+   "epochs": [
+    283,
+    489
+   ],
+   "note": "same seed, same SSL encoder, same initial state and recipe, different execution: the residual is GPU-side non-determinism"
+  },
+  "aas_v1_own_runs": {
+   "B_s1": {
+    "best_valid": 0.07694938890164485,
+    "init": "ae3ba14a2a3e"
+   },
+   "A0_s0": {
+    "best_valid": 0.07965605334291467,
+    "init": "3ffb8a59557d"
+   },
+   "A0_s1": {
+    "best_valid": 0.07936091785127064,
+    "init": "4c3850f2ed94"
+   },
+   "A1_s0": {
+    "best_valid": 0.07815577030921123,
+    "init": "3ffb8a59557d"
+   },
+   "A1_s1": {
+    "best_valid": 0.08237747210165253,
+    "init": "4c3850f2ed94"
+   },
+   "S1_s0": {
+    "best_valid": 0.09034264110022923,
+    "init": "cdb31b68df88"
+   },
+   "S2_s0": {
+    "best_valid": 0.10107358821673551,
+    "init": "cdb31b68df88"
+   }
+  },
+  "numeric_drift_same_code_duplicate": {
+   "pair": [
+    "S1_s0 (first run, killed by the train.json bookkeeping bug)",
+    "S1_s0 (rerun)"
+   ],
+   "values": [
+    0.08688874,
+    0.09034264110022923
+   ],
+   "delta": 0.003453901100229223
+  },
+  "fixed_valid_row_leverage": {
+   "B_s1": {
+    "row172_ae": 6.129011154174805,
+    "mean_ae": 0.07694939259340754,
+    "mean_ae_without_row172": 0.07089127271194468,
+    "top10_share": 0.20118959513633766
+   },
+   "A0_s0": {
+    "row172_ae": 5.312047004699707,
+    "mean_ae": 0.07965605038503418,
+    "mean_ae_without_row172": 0.0744184218021366,
+    "top10_share": 0.2063304324744536
+   },
+   "A0_s1": {
+    "row172_ae": 9.450665473937988,
+    "mean_ae": 0.07936091184051475,
+    "mean_ae_without_row172": 0.06998022659316992,
+    "top10_share": 0.2418113993398816
+   },
+   "A1_s0": {
+    "row172_ae": 5.02646541595459,
+    "mean_ae": 0.07815577678004047,
+    "mean_ae_without_row172": 0.07320251387796384,
+    "top10_share": 0.19449252536963407
+   },
+   "A1_s1": {
+    "row172_ae": 13.598145008087158,
+    "mean_ae": 0.08237746738170972,
+    "mean_ae_without_row172": 0.06884817054416673,
+    "top10_share": 0.2672019206257113
+   },
+   "S1_s0": {
+    "row172_ae": 11.14444637298584,
+    "mean_ae": 0.09034264301130315,
+    "mean_ae_without_row172": 0.07927747411242975,
+    "top10_share": 0.23977151164903357
+   },
+   "S2_s0": {
+    "row172_ae": 11.731247901916504,
+    "mean_ae": 0.10107359664334217,
+    "mean_ae_without_row172": 0.08943178052194761,
+    "top10_share": 0.2548850130328565
+   }
+  },
+  "reading": {
+   "encoder_identity": "for P3Null the s0-encoder seed-0 run is 0.0060 better than all three s1-encoder seeds; for DCC-L the s1-encoder seeds are 0.0034 better than the s0-encoder seed. The sign is body-dependent, so 'encoder effect' is an interaction, not an additive offset.",
+   "supervised_seed_within_one_encoder": "range over three s1-encoder seeds: P3Null 0.00055, DCC-L 0.00307.",
+   "numeric_drift": "one same-code duplicate pair (S1 seed 0) differs by the value below; that is the only direct estimate we have and it should be treated as an upper bound on pure numeric non-determinism, not a calibrated sd.",
+   "fixed_valid_leverage": "valid is a fixed 1000-row set: row 172 alone moves the mean by up to 0.0086 and the fixed worst-10 rows by up to 0.0076 between arms, so a paired 1000-row bootstrap CI reflects row heterogeneity (a property of the evaluation), not training-seed noise."
+  }
+ },
+ "C_bosi_moment_algebra": {
+  "N_REL": 4,
+  "chebyshev_dim": 96,
+  "M_shape": [
+   3214,
+   384
+  ],
+  "max_abs_diff_vectorized_vs_bruteforce": 0.0,
+  "max_abs_diff_M_vs_bf_sums_expected_nonzero": 0.595506489276886,
+  "class_ratio_max_dev": 0.0,
+  "pairwise_identity": {
+   "class0_vs_class1": {
+    "n_halves": 0,
+    "max_abs_dev": NaN
+   },
+   "class0_vs_class2": {
+    "n_halves": 0,
+    "max_abs_dev": NaN
+   },
+   "class0_vs_class3": {
+    "n_halves": 10,
+    "max_abs_dev": 0.0
+   },
+   "class1_vs_class2": {
+    "n_halves": 0,
+    "max_abs_dev": NaN
+   },
+   "class1_vs_class3": {
+    "n_halves": 2,
+    "max_abs_dev": 0.0
+   },
+   "class2_vs_class3": {
+    "n_halves": 574,
+    "max_abs_dev": 0.0
+   }
+  },
+  "n_halves_for_best_pair": 574,
+  "n_single_class_halves": 2367,
+  "recover_S_from_M_and_n_max_err": 2.384185791015625e-07,
+  "effective_numbers": {
+   "block_dims": 384,
+   "distinct_dims": 96,
+   "class_counts": 4
+  },
+  "n_partner_counts": [
+   30,
+   8,
+   1902,
+   1599
+  ],
+  "verdict_formula": "M[v, r] = (n_r[v] / max(n_partners[v], 1)) * S[v], S[v] = sum over ALL partners of chebyshev(x_partner)",
+  "pass": true
+ },
+ "D_sqbc_s1_s2_audit": {
+  "s1_statistic": "s1 = P_u + P_v, s2 = |P_u - P_v|, s3 = P_u * P_v, where P[v,e] = sum over the centre's OTHER incident bonds of Phi(pair)",
+  "s2_statistic": "s1 = mean_g(pair content), s2 = mean_g(pair content^2), s3 = s1 * s2, i.e. a per-graph constant broadcast to every bond",
+  "changes_beyond_pooling_position": [
+   "slot 2 changes KIND: S1 uses |P_u - P_v| (an endpoint contrast), S2 uses mean_g(w^2) (a dispersion statistic)",
+   "per-bond locality is destroyed: in S2 all three 32-d slots are constant within a molecule, so pair content can no longer modulate individual bonds",
+   "normalisation changes: S1 sums over (n_v - 1) partners and therefore encodes local multiplicity through magnitude; S2 averages over all pair rows in the graph (degree-free)",
+   "count information changes: S1's sum magnitude is a degree signal; S2 discards the number of pair rows entirely",
+   "effective conditioning changes: S2 reduces the composer's inputs to a global context vector plus bond features, i.e. it is closer to a P3Null-style global-context body than to a 'local vs global pooling' control"
+  ],
+  "therefore": "S1 - S2 = -0.0107 supports only: 'for this pair content, replacing the local per-bond statistic by a graph-level average costs 0.011'. It does not test direction C (global/block structure statistics), which would need graph-level statistics of junction/block OBJECTS with the local channels kept and capacity matched.",
+  "code_markers_found": {
+   "s2_branch": true,
+   "w1_mean": true,
+   "w2_meansq": true
+  }
+ }
+}

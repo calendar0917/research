@@ -1,5 +1,13 @@
 # ZINC 自适应架构搜索 v1（SSRC-ZINC）— 报告
 
+> **勘误（2026-10-27，不改动本文任何数值）**：`ERRATA.md` 更正了本报告的四条表述：
+> (E1) "只有两个 SSL seed ⇒ 最多两个监督 seed" 是错的（seed ≥ 2 通过复用 s1 编码器
+> 一直可跑，`zinc_performance_search_v1` 已跑过 s2/s3）；(E2) 0.006 "功效地板" 需拆成
+> 编码器身份 / 监督随机性 / CUDA 非确定性 / 固定 valid 行杠杆四个来源；
+> (E3) S2 不只改了池化位置，(S1−S2) 不能否证方向 C；(E4) BOSI-B 的 384 维矩块
+> 代数上等价于 96 维总矩 + 4 维计数的广播，A0M0 只支持"整条矩通道是载荷的"。
+> 本文的**成绩、分组指标与 checkpoint 一律保持原样**，仅解释以 `ERRATA.md` 为准。
+
 **Track:** `tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/`
 **协议:** official PyG ZINC `subset=True`，train 10,000 / valid 1,000，raw-y MAE。
 **配方:** R0 冻结（AdamW lr 1e-3→1e-5 cosine，warmup 500，wd 1e-5，dropout 0，
