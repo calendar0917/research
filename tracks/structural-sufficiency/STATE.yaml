@@ -14,37 +14,72 @@ latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
 latest_diagnostic: zinc_relation_bn_diagnostic_v1
 latest_diagnostic_verdict: BN_BATCH_STATISTICS_EXPLAIN_THE_TRAIN_GAP__GLOBAL_RECALIBRATION_RECOVERS_NEITHER_TRAIN_NOR_VALID
-latest_side_round: zinc_block_ownership_v1
-latest_side_round_verdict: UNRESOLVED_DUE_TO_VARIANCE__SEED0_R-N_GATE_MISSED_0.005_BY_0.000116
+latest_side_round: zinc_block_ownership_v2
+latest_side_round_verdict: SINGLETON_CONTENT_EXPLAINS_THE_GAIN__MULTI_BLOCK_OWNERSHIP_SHORT_OF_EVIDENCE
 latest_side_round_next_action: >-
+  One GPU purchase (S_seed0, 0.536 A100-h) against the frozen v1 R_s0/N_s0.
+  S = singleton blocks keep true content, multi-edge blocks share the conserved
+  within-molecule multi mean, so d_RS = MAE(S)-MAE(R) isolates multi-block
+  ownership given identical singleton content.  Result: d_RS = -0.000945
+  (S 0.075762 vs R 0.076707), W20/T100/final -0.00116/-0.00119/-0.00108, paired
+  CI [-0.005963,+0.003847], win rate 0.482; no group CI excludes 0; every drop
+  variant stays within [-0.0009,+0.0025]; top-1 row contributes 1.329x the net.
+  Frozen-weight probes: R->S mean|Dpred| 0.0048 / dMAE +0.00029, S->R 0.0036 /
+  +0.00038, but R->N 0.1006 / +0.0627 and S->N 0.1011 / +0.0595, i.e. the block
+  channel needs content to exist at all and is nearly blind to how it is
+  distributed among multi-edge blocks.  Data side: R->S moves only 19.6% of
+  blocks (multi L2 0.891, singleton 0.0, sum-conserving) while R->N moves 80.7%
+  of blocks (singleton L2 3.135).  Phase A also showed v1's R-N is thin: row172
+  alone is 41.9% of the net and top-5 rows are 82.7%, and row172 has n_multi=1,
+  i.e. S==R there, so the biggest v1 contributor is outside the ownership
+  mechanism's scope.  secondary non-gating DiD (n_multi>=2 minus n_multi<=1) is
+  +0.0104 but CI [-0.0134,+0.0398] on 889/111 rows.  STOP: no Phase C (no R_s1
+  / N_s1 / S_s1), no retune, no test, ~2.4 A100-h of the 3 h soft budget left
+  unspent.  Wording: multi-block ownership did not obtain evidence sufficient
+  to buy a confirmation experiment -- NOT proven useless (single seed, effect
+  inside the 0.0015-0.0025 execution-drift band).  v1 records untouched; its
+  0.004884 is still not a PASS.  Independent confirmation would need a
+  structure-combination holdout inside train plus two seeds whose CI clears the
+  drift band; that design is recorded, not started, and no new GPU search is
+  proposed.
+latest_side_round_report: tracks/structural-sufficiency/zinc_block_ownership_v2/REPORT.md
+latest_side_round_decisions: tracks/structural-sufficiency/zinc_block_ownership_v2/DECISION.md
+latest_side_round_plan: tracks/structural-sufficiency/zinc_block_ownership_v2/PLAN.md
+latest_side_round_budget: 0.54 this round of 3 soft GPU-h (1 formal run); official test never loaded
+previous_side_round: zinc_block_ownership_v1
+previous_side_round_verdict: UNRESOLVED_DUE_TO_VARIANCE__SEED0_R-N_GATE_MISSED_0.005_BY_0.000116
+previous_side_round_next_action: >-
   R (true biconnected-block ownership) vs N (global mean-field), matched 497,161
   params / init / data / 47,400 updates, seed 0 only: R best-valid 0.076707,
   N 0.081592, d_best +0.004884, short of the pre-registered 0.005 floor by
-  0.000116.  W20/T100/final are +0.006204/+0.006302/+0.006394; paired DeltaMAE
-  +0.004884 with 95% CI [-0.000306, +0.011554]; ordinary +0.002089 (CI spans 0),
-  low-support +0.010286 (CI positive), any_unseen -0.000252 (no gain); fixed
-  worst-10 removed +0.003676 (CI positive), single-row max contribution 0.419.
-  Mechanism active (block grad step 1 1.14e-4; R content-vs-N valid mean
-  |Dpred| 0.1016).  Pre-registered stop honoured: no seed 1, no S, no retune.
-  Label UNRESOLVED_DUE_TO_VARIANCE: labels 1-4 require two seeds; not
-  OWNERSHIP_NOT_USEFUL (point estimate positive and stable metrics positive) and
-  not PROMISING (S/seed1 absent, main gate failed).  Any reopening needs a new
-  pre-registration with >=2 independent seeds and R-N first; do not lower 0.005,
-  do not read test.  Next: no architecture change; if continuing, test the
-  low-support / larger-block signal with any_unseen and ordinary as the
-  pre-registered extrapolation groups.
-latest_side_round_report: tracks/structural-sufficiency/zinc_block_ownership_v1/REPORT.md
-latest_side_round_decisions: tracks/structural-sufficiency/zinc_block_ownership_v1/DECISION.md
-latest_side_round_budget: 1.08 this round of 14 soft GPU-h; 2 formal runs; official test never loaded
+  0.000116.  W20/T100/final +0.006204/+0.006302/+0.006394; paired CI
+  [-0.000306,+0.011554]; ordinary +0.002089 (CI spans 0), low-support +0.010286
+  (CI positive), any_unseen -0.000252 (no gain); fixed-worst-10 removed +0.003676.
+  Mechanism active.  Pre-registered stop honoured: no seed 1, no S, no retune.
+  SUPERSEDED IN PART by zinc_block_ownership_v2: the S arm was later bought under
+  a new pre-registration and showed R-S = -0.000945, and Phase A showed row172
+  (41.9% of this round's net) has n_multi=1, i.e. S==R there.  So this round's
+  R-N positive point estimate must now be attributed to the content R and S
+  share (singleton/bridge-bond content, 80.7% of blocks), not to multi-block
+  ownership.  Do not quote +0.004884 as ownership evidence.
+previous_side_round_report: tracks/structural-sufficiency/zinc_block_ownership_v1/REPORT.md
+previous_side_round_decisions: tracks/structural-sufficiency/zinc_block_ownership_v1/DECISION.md
+previous_side_round_budget: 1.08 this round of 14 soft GPU-h; 2 formal runs; official test never loaded
+side_round_history:
+  - {round: zinc_block_ownership_v2, verdict: SINGLETON_CONTENT_EXPLAINS_THE_GAIN, report: tracks/structural-sufficiency/zinc_block_ownership_v2/REPORT.md}
+  - {round: zinc_block_ownership_v1, verdict: UNRESOLVED_DUE_TO_VARIANCE, report: tracks/structural-sufficiency/zinc_block_ownership_v1/REPORT.md}
+  - {round: zinc_support_weighted_objective_v1, verdict: STOP_NEGATIVE__LABEL_REWEIGHTING_DOES_NOT_HELP_THE_LOW_SUPPORT_REGIME, report: tracks/structural-sufficiency/zinc_support_weighted_objective_v1/REPORT.md}
+  - {round: zinc_adaptive_arch_search_v1, verdict: NO_NEW_STRONGER_BODY__CONTENT_EXPLAINS_THE_GAP_COMPOSITION_DOES_NOT, report: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/REPORT.md}
+  - {round: zinc_statistical_program_search_v1, verdict: NO_USEFUL_GAIN, report: tracks/structural-sufficiency/zinc_statistical_program_search_v1/REPORT.md}
 previous_side_round_swo: zinc_support_weighted_objective_v1
 previous_side_round_swo_verdict: STOP_NEGATIVE__LABEL_REWEIGHTING_DOES_NOT_HELP_THE_LOW_SUPPORT_REGIME
 previous_side_round_swo_report: tracks/structural-sufficiency/zinc_support_weighted_objective_v1/REPORT.md
 previous_side_round_swo_decisions: tracks/structural-sufficiency/zinc_support_weighted_objective_v1/DECISIONS.md
 previous_side_round_swo_budget: 1.82 this round (6.5 cumulative) of 14 soft GPU-h
 
-previous_side_round: zinc_adaptive_arch_search_v1
-previous_side_round_verdict: NO_NEW_STRONGER_BODY__CONTENT_EXPLAINS_THE_GAP_COMPOSITION_DOES_NOT
-previous_side_round_next_action: >-
+previous_side_round_aas: zinc_adaptive_arch_search_v1
+previous_side_round_aas_verdict: NO_NEW_STRONGER_BODY__CONTENT_EXPLAINS_THE_GAP_COMPOSITION_DOES_NOT
+previous_side_round_aas_next_action: >-
   Direction A (target-conditioned pair gating on BOSI) STOP_A; direction B
   (independent lean pair-ownership body) STOP_B; no C.  Mechanism ordering:
   content 0.005-0.011 >> composition <=0.003 (unresolvable), moment bank
@@ -58,10 +93,10 @@ previous_side_round_next_action: >-
   (E4) BOSI-B's 384-dim moment block is algebraically (n_r/max(n,1))*S, i.e.
   96+4 numbers broadcast, so A0M0 only shows the whole channel is load-bearing,
   not that 384 slots are irreplaceable.
-previous_side_round_report: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/REPORT.md
-previous_side_round_decisions: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/DECISIONS.md
-previous_side_round_errata: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/ERRATA.md
-previous_side_round_budget: 4.65 of 14 soft GPU-h; 9 formal runs; official test never loaded
+previous_side_round_aas_report: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/REPORT.md
+previous_side_round_aas_decisions: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/DECISIONS.md
+previous_side_round_aas_errata: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/ERRATA.md
+previous_side_round_aas_budget: 4.65 of 14 soft GPU-h; 9 formal runs; official test never loaded
 previous_previous_side_round: zinc_statistical_program_search_v1
 previous_previous_side_round_verdict: NO_USEFUL_GAIN__BOTH_EXPLICIT_STATISTICS_BODIES_PLATEAU_0.023-0.032_BEHIND_DCC-L
 previous_previous_side_round_next_action: >-

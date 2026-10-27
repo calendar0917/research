@@ -31,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import zb2_common as Z  # noqa: E402
 
 BC = Z.BC
+ZB = Z.ZB
 V1RUNS = Z.V1ROUND / "runs"
 
 
@@ -266,8 +267,9 @@ def main(argv=None) -> int:
         cmp_rs = compare(runs[("R", 0)], runs[("S", 0)], ctx)
         payload["phase_b"] = {"R_vs_S_seed0": cmp_rs}
         payload["phase_b_mechanism"] = {
+            "block_input_distance": block_input_distance(ctx, runs[("R", 0)]),
             "S_model_content_probe": {
-                src: Z.probe_contents(runs[("S", 0)], ctx, "S", dst)
+                f"{src}->{dst}": Z.probe_contents(runs[("S", 0)], ctx, src, dst)
                 for src, dst in (("S", "R"), ("S", "N"))},
             "R_model_content_probe_R_to_S": payload_marker(ctx, runs),
         }
@@ -343,6 +345,50 @@ def main(argv=None) -> int:
         Z.log(f"[zb2 analyze] phase B label {payload['phase_b_label']} "
               f"proceed={payload['proceed_to_phase_c']}")
     return 0
+
+
+def block_input_distance(ctx: dict, run: dict) -> dict:
+    """How far apart are the *block inputs* under R, S and N?
+
+    The probe shows the trained channel barely reacts to R<->S.  This measures
+    the data side: the per-block change in ``u_B`` (mean content, 192 dims) that
+    each substitution actually induces, split by block size.  A small S-distance
+    on multi blocks explains the insensitivity without appealing to training.
+    """
+    import torch
+
+    cache, rel, blocks = ctx["vcache"], BC.load_rel("valid"), ctx["vblocks"]
+    rows = np.arange(len(ctx["y"]), dtype=np.int64)
+    acc = {k: {"single": [], "multi": []} for k in ("R-S", "R-N")}
+    with torch.no_grad():
+        for start in range(0, len(rows), 256):
+            chunk = rows[start:start + 256]
+            batch = ZB.collate(cache, rel, blocks, chunk)
+            _, st = run["_model"](batch, return_stats=True)
+            c = st["block_c"]
+            us = {}
+            for arm in ("R", "S", "N"):
+                f, sec = ZB.block_content(c, batch, arm)
+                us[arm] = ZB.block_input(f, sec, batch)[:, :2 * BC.WIDTH]
+            single = batch["block_n_edges"] == 1
+            for name, (a, b) in {"R-S": ("R", "S"), "R-N": ("R", "N")}.items():
+                d = (us[a] - us[b]).norm(dim=1)
+                acc[name]["single"].append(d[single].numpy())
+                acc[name]["multi"].append(d[~single].numpy())
+    out = {}
+    for name, parts in acc.items():
+        single = np.concatenate(parts["single"]) if parts["single"] else np.zeros(0)
+        multi = np.concatenate(parts["multi"]) if parts["multi"] else np.zeros(0)
+        out[name] = {
+            "n_single_blocks": int(single.size), "n_multi_blocks": int(multi.size),
+            "mean_l2_u_single": float(single.mean()),
+            "mean_l2_u_multi": float(multi.mean()),
+            "ratio_multi_over_single": float(multi.mean() / single.mean()),
+        }
+    out["note"] = ("u_B is the per-block mean content (2*96 dims) that the shared "
+                   "phi actually sees; a small multi-block R-S distance means the "
+                   "substitution barely moves the input space at all")
+    return out
 
 
 def payload_marker(ctx: dict, runs: dict) -> dict:
