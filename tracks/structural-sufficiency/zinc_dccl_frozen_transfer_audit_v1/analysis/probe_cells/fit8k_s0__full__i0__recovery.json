@@ -1,0 +1,152 @@
+{
+  "id": "fit8k_s0__full__i0__recovery",
+  "kind": "recovery",
+  "condition": "fit8k_s0",
+  "block": "full",
+  "head_init": 0,
+  "target": "trunk_pred",
+  "n_features_used": 513,
+  "n_probe_fit": 3000,
+  "n_probe_sel": 1000,
+  "reader_cfg": {
+    "arch": "Linear(513,64)-SiLU-Linear(64,1)",
+    "loss": "l1",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "lr_schedule": "constant",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "updates": 10000,
+    "grad_clip": 5.0,
+    "eval_every": 500,
+    "head_inits": [
+      0,
+      1
+    ],
+    "batch_order_seed_offset": 1729,
+    "selection": "min probe_sel L1 over steps 500..10000, ties keep earlier",
+    "standardization": "per-column mean/std over probe_fit rows of the same condition; scale=max(std,1e-6); same transform for probe_fit/probe_sel/monitor",
+    "torch_threads": 1,
+    "dtype": "float32"
+  },
+  "init_state_sha256": "2dfd17982db221ee5dde78c671d220af2b6480921b89b12e113e0525fbbfeff2",
+  "best": {
+    "probe_sel_l1": 0.06086975860595703,
+    "step": 3500
+  },
+  "final": {
+    "probe_sel_l1": 0.06311667442321778,
+    "step": 10000
+  },
+  "train_l1_at_best": 0.023244226455688476,
+  "train_l1_at_final": 0.018294906775156657,
+  "curve": [
+    {
+      "step": 500,
+      "probe_sel_l1": 0.07176320838928223,
+      "online_l1": 0.05390648543834686
+    },
+    {
+      "step": 1000,
+      "probe_sel_l1": 0.06659992027282714,
+      "online_l1": 0.03583306074142456
+    },
+    {
+      "step": 1500,
+      "probe_sel_l1": 0.06243708610534668,
+      "online_l1": 0.03304612636566162
+    },
+    {
+      "step": 2000,
+      "probe_sel_l1": 0.06249448013305664,
+      "online_l1": 0.025473153218626976
+    },
+    {
+      "step": 2500,
+      "probe_sel_l1": 0.06356448268890381,
+      "online_l1": 0.028837129473686218
+    },
+    {
+      "step": 3000,
+      "probe_sel_l1": 0.06415524673461914,
+      "online_l1": 0.030715854838490486
+    },
+    {
+      "step": 3500,
+      "probe_sel_l1": 0.06086975860595703,
+      "online_l1": 0.025120031088590622
+    },
+    {
+      "step": 4000,
+      "probe_sel_l1": 0.06398354148864746,
+      "online_l1": 0.02405763417482376
+    },
+    {
+      "step": 4500,
+      "probe_sel_l1": 0.06566859531402588,
+      "online_l1": 0.024900533258914948
+    },
+    {
+      "step": 5000,
+      "probe_sel_l1": 0.06399468421936035,
+      "online_l1": 0.02100481279194355
+    },
+    {
+      "step": 5500,
+      "probe_sel_l1": 0.06560283756256104,
+      "online_l1": 0.03040599450469017
+    },
+    {
+      "step": 6000,
+      "probe_sel_l1": 0.06292853260040283,
+      "online_l1": 0.017185967415571213
+    },
+    {
+      "step": 6500,
+      "probe_sel_l1": 0.06375670528411866,
+      "online_l1": 0.014774445444345474
+    },
+    {
+      "step": 7000,
+      "probe_sel_l1": 0.06425161933898926,
+      "online_l1": 0.01650192029774189
+    },
+    {
+      "step": 7500,
+      "probe_sel_l1": 0.06766859722137451,
+      "online_l1": 0.017942149192094803
+    },
+    {
+      "step": 8000,
+      "probe_sel_l1": 0.06460640621185303,
+      "online_l1": 0.021489335224032402
+    },
+    {
+      "step": 8500,
+      "probe_sel_l1": 0.06500380802154541,
+      "online_l1": 0.01861509494483471
+    },
+    {
+      "step": 9000,
+      "probe_sel_l1": 0.06326623725891113,
+      "online_l1": 0.013812863267958164
+    },
+    {
+      "step": 9500,
+      "probe_sel_l1": 0.06300911712646484,
+      "online_l1": 0.02158006653189659
+    },
+    {
+      "step": 10000,
+      "probe_sel_l1": 0.06311667442321778,
+      "online_l1": 0.0224494319409132
+    }
+  ],
+  "block_grad_leak_max_abs": null,
+  "best_state_sha256": "3f2a43178dd86f0ddc485ae57421d53ccacee6b8b73820b85e2d361f6c996c83",
+  "final_state_sha256": "bb00ebf289e4dcb81f1e792dfa540060b0edb336adcfdbe271847ebfe2304112",
+  "best_state_hash": "5f5d3ff37e3f91f047366403b1065a53fcaea629591469dd1e40fa426c14bd12",
+  "final_state_hash": "fb8d7cfdbb65e1d219843e7d2f9cb8f8325719bfd1392e99a5ba947a8906431c",
+  "wall_seconds": 6.674492230999931,
+  "torch_threads": 1
+}

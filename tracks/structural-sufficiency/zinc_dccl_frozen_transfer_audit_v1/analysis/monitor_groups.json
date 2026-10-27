@@ -1,0 +1,39 @@
+{
+  "definitions": {
+    "support_rule": "exact typed radius-2 rooted signature; support = number of fit molecules containing it; full=all>=5; low=no 0 but some 1-4; unseen=some 0",
+    "no_penalty_rule": "max(nx.cycle_basis) <= 6 (acyclic counts as 0)",
+    "extreme_tail_rule": "y <= -3",
+    "drop_fixed_top10_rule": "top-10 monitor rows by mean over trunk seeds of |y - raw_fit4k_pred| (final ckpt); fixed before probe scoring"
+  },
+  "n": {
+    "overall": 1000,
+    "ordinary_nopenalty": 964,
+    "penalised_ring_gt6": 36,
+    "any_unseen_fit4k": 423,
+    "any_unseen_fit8k": 301,
+    "low_support_fit4k": 405,
+    "low_support_fit8k": 359,
+    "full_support_fit4k": 155,
+    "full_support_fit8k": 324,
+    "newly_covered_4k_to_8k": 123,
+    "still_unseen_both": 317,
+    "extreme_tail": 74,
+    "non_tail": 926,
+    "drop_fixed_top10": 990
+  },
+  "drop_fixed_top10_rows": [
+    2210,
+    1760,
+    1051,
+    2595,
+    2688,
+    1147,
+    6769,
+    4565,
+    6770,
+    4072
+  ],
+  "fit8k_unique_environments": 11015,
+  "fit4k_unique_environments": 8169,
+  "n_penalised_ring_gt6": 36
+}

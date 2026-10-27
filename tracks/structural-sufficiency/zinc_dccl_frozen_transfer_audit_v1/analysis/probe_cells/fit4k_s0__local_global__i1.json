@@ -1,0 +1,152 @@
+{
+  "id": "fit4k_s0__local_global__i1",
+  "kind": "main",
+  "condition": "fit4k_s0",
+  "block": "local_global",
+  "head_init": 1,
+  "target": "y",
+  "n_features_used": 225,
+  "n_probe_fit": 3000,
+  "n_probe_sel": 1000,
+  "reader_cfg": {
+    "arch": "Linear(513,64)-SiLU-Linear(64,1)",
+    "loss": "l1",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "lr_schedule": "constant",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "updates": 10000,
+    "grad_clip": 5.0,
+    "eval_every": 500,
+    "head_inits": [
+      0,
+      1
+    ],
+    "batch_order_seed_offset": 1729,
+    "selection": "min probe_sel L1 over steps 500..10000, ties keep earlier",
+    "standardization": "per-column mean/std over probe_fit rows of the same condition; scale=max(std,1e-6); same transform for probe_fit/probe_sel/monitor",
+    "torch_threads": 1,
+    "dtype": "float32"
+  },
+  "init_state_sha256": "4177c2760c8e35fcc69861076d05c7a370d1e597c5dfebd54a143b2a6e17c9cd",
+  "best": {
+    "probe_sel_l1": 0.5013165841782465,
+    "step": 1000
+  },
+  "final": {
+    "probe_sel_l1": 0.5914196665948257,
+    "step": 10000
+  },
+  "train_l1_at_best": 0.3177135579501628,
+  "train_l1_at_final": 0.08261084033445998,
+  "curve": [
+    {
+      "step": 500,
+      "probe_sel_l1": 0.5165738157453016,
+      "online_l1": 0.3701986062405922
+    },
+    {
+      "step": 1000,
+      "probe_sel_l1": 0.5013165841782465,
+      "online_l1": 0.3284576405385451
+    },
+    {
+      "step": 1500,
+      "probe_sel_l1": 0.5100937812188641,
+      "online_l1": 0.2505594745161943
+    },
+    {
+      "step": 2000,
+      "probe_sel_l1": 0.5126214902857319,
+      "online_l1": 0.22825696313520893
+    },
+    {
+      "step": 2500,
+      "probe_sel_l1": 0.5148760149227455,
+      "online_l1": 0.20179147146700416
+    },
+    {
+      "step": 3000,
+      "probe_sel_l1": 0.5242192279594019,
+      "online_l1": 0.18629196552293642
+    },
+    {
+      "step": 3500,
+      "probe_sel_l1": 0.5280089381979779,
+      "online_l1": 0.15518353001971263
+    },
+    {
+      "step": 4000,
+      "probe_sel_l1": 0.5386541727529839,
+      "online_l1": 0.1814990319289791
+    },
+    {
+      "step": 4500,
+      "probe_sel_l1": 0.5483212317163124,
+      "online_l1": 0.1415752653410891
+    },
+    {
+      "step": 5000,
+      "probe_sel_l1": 0.5553984475871548,
+      "online_l1": 0.1442869509173761
+    },
+    {
+      "step": 5500,
+      "probe_sel_l1": 0.564248891425319,
+      "online_l1": 0.12239683087318554
+    },
+    {
+      "step": 6000,
+      "probe_sel_l1": 0.5650474943509325,
+      "online_l1": 0.10285178585244077
+    },
+    {
+      "step": 6500,
+      "probe_sel_l1": 0.5659127377634868,
+      "online_l1": 0.09632447984768078
+    },
+    {
+      "step": 7000,
+      "probe_sel_l1": 0.5721631606472656,
+      "online_l1": 0.12639418568687688
+    },
+    {
+      "step": 7500,
+      "probe_sel_l1": 0.5783537191739306,
+      "online_l1": 0.09676668774227437
+    },
+    {
+      "step": 8000,
+      "probe_sel_l1": 0.5778053259467706,
+      "online_l1": 0.18727806345850695
+    },
+    {
+      "step": 8500,
+      "probe_sel_l1": 0.5832088403804228,
+      "online_l1": 0.10919692743436826
+    },
+    {
+      "step": 9000,
+      "probe_sel_l1": 0.58923146816995,
+      "online_l1": 0.05555896723775992
+    },
+    {
+      "step": 9500,
+      "probe_sel_l1": 0.5850376226147637,
+      "online_l1": 0.07204878737320541
+    },
+    {
+      "step": 10000,
+      "probe_sel_l1": 0.5914196665948257,
+      "online_l1": 0.05848527542548254
+    }
+  ],
+  "block_grad_leak_max_abs": 0.0,
+  "best_state_sha256": "ffffcfca77c351c49d618a85b57c5f660c7090b548f7b43ff30778f7a9799109",
+  "final_state_sha256": "5288de032e6abb8727afda9875dcd69dd35d8225bd835657369bb7dd758b4e6b",
+  "best_state_hash": "8c8fadb1c55e7220819b847491d35a413e34fac1c17262b5e96ef7449ac15087",
+  "final_state_hash": "4a795e692b36ee2c084ba8c3f00e3f788a57c238fa8bfe03b0e29b0c79b01538",
+  "wall_seconds": 6.485574543999974,
+  "torch_threads": 1
+}

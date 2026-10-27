@@ -1,0 +1,152 @@
+{
+  "id": "fit8k_s0__full__i1",
+  "kind": "main",
+  "condition": "fit8k_s0",
+  "block": "full",
+  "head_init": 1,
+  "target": "y",
+  "n_features_used": 513,
+  "n_probe_fit": 3000,
+  "n_probe_sel": 1000,
+  "reader_cfg": {
+    "arch": "Linear(513,64)-SiLU-Linear(64,1)",
+    "loss": "l1",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "lr_schedule": "constant",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "updates": 10000,
+    "grad_clip": 5.0,
+    "eval_every": 500,
+    "head_inits": [
+      0,
+      1
+    ],
+    "batch_order_seed_offset": 1729,
+    "selection": "min probe_sel L1 over steps 500..10000, ties keep earlier",
+    "standardization": "per-column mean/std over probe_fit rows of the same condition; scale=max(std,1e-6); same transform for probe_fit/probe_sel/monitor",
+    "torch_threads": 1,
+    "dtype": "float32"
+  },
+  "init_state_sha256": "4177c2760c8e35fcc69861076d05c7a370d1e597c5dfebd54a143b2a6e17c9cd",
+  "best": {
+    "probe_sel_l1": 0.058557562940753996,
+    "step": 1500
+  },
+  "final": {
+    "probe_sel_l1": 0.06158266207529232,
+    "step": 10000
+  },
+  "train_l1_at_best": 0.03384156362411644,
+  "train_l1_at_final": 0.01440969548628588,
+  "curve": [
+    {
+      "step": 500,
+      "probe_sel_l1": 0.06629182277340442,
+      "online_l1": 0.04730275685506058
+    },
+    {
+      "step": 1000,
+      "probe_sel_l1": 0.061870627249591054,
+      "online_l1": 0.03681384816081845
+    },
+    {
+      "step": 1500,
+      "probe_sel_l1": 0.058557562940753996,
+      "online_l1": 0.03490573514136486
+    },
+    {
+      "step": 2000,
+      "probe_sel_l1": 0.05933589140605181,
+      "online_l1": 0.0274925387930125
+    },
+    {
+      "step": 2500,
+      "probe_sel_l1": 0.06250297578517347,
+      "online_l1": 0.02799606697226409
+    },
+    {
+      "step": 3000,
+      "probe_sel_l1": 0.06358478779811412,
+      "online_l1": 0.022722455939011916
+    },
+    {
+      "step": 3500,
+      "probe_sel_l1": 0.06301357822213322,
+      "online_l1": 0.025776372218388133
+    },
+    {
+      "step": 4000,
+      "probe_sel_l1": 0.06296304209996015,
+      "online_l1": 0.021900426578213228
+    },
+    {
+      "step": 4500,
+      "probe_sel_l1": 0.06363542595412582,
+      "online_l1": 0.023765179284964688
+    },
+    {
+      "step": 5000,
+      "probe_sel_l1": 0.06372180010657758,
+      "online_l1": 0.02101714358832396
+    },
+    {
+      "step": 5500,
+      "probe_sel_l1": 0.06529780060891062,
+      "online_l1": 0.026270699923770735
+    },
+    {
+      "step": 6000,
+      "probe_sel_l1": 0.06365928066615015,
+      "online_l1": 0.015557489224842616
+    },
+    {
+      "step": 6500,
+      "probe_sel_l1": 0.06619658991973847,
+      "online_l1": 0.0176488253637217
+    },
+    {
+      "step": 7000,
+      "probe_sel_l1": 0.063163604198955,
+      "online_l1": 0.0184201390020462
+    },
+    {
+      "step": 7500,
+      "probe_sel_l1": 0.06544827963411808,
+      "online_l1": 0.0271575729984761
+    },
+    {
+      "step": 8000,
+      "probe_sel_l1": 0.06365337116830051,
+      "online_l1": 0.020303692086599767
+    },
+    {
+      "step": 8500,
+      "probe_sel_l1": 0.06465882823616266,
+      "online_l1": 0.023262066948063875
+    },
+    {
+      "step": 9000,
+      "probe_sel_l1": 0.06349579284060747,
+      "online_l1": 0.01663444340894265
+    },
+    {
+      "step": 9500,
+      "probe_sel_l1": 0.06152802000939846,
+      "online_l1": 0.01468772584485123
+    },
+    {
+      "step": 10000,
+      "probe_sel_l1": 0.06158266207529232,
+      "online_l1": 0.01285811535854009
+    }
+  ],
+  "block_grad_leak_max_abs": null,
+  "best_state_sha256": "9225a630d740aeb4370b89a598bd0f7bbd130a4371179e685e24d4ad64ee3ae5",
+  "final_state_sha256": "647db9d8b4b5045dcb727726d258811a98789da450badd23a82081fcc058e2e1",
+  "best_state_hash": "e22e80e7e98bb0a339da9a1179d1962d6058c8934238b78c5365e9bee6df54bb",
+  "final_state_hash": "2e55370868cd16178841cf48fa34af07a7e66355f78f008958d177bc2815aeb4",
+  "wall_seconds": 6.318100962999779,
+  "torch_threads": 1
+}

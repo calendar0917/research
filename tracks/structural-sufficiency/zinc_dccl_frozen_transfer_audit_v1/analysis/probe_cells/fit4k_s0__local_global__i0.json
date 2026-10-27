@@ -1,0 +1,152 @@
+{
+  "id": "fit4k_s0__local_global__i0",
+  "kind": "main",
+  "condition": "fit4k_s0",
+  "block": "local_global",
+  "head_init": 0,
+  "target": "y",
+  "n_features_used": 225,
+  "n_probe_fit": 3000,
+  "n_probe_sel": 1000,
+  "reader_cfg": {
+    "arch": "Linear(513,64)-SiLU-Linear(64,1)",
+    "loss": "l1",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "lr_schedule": "constant",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "updates": 10000,
+    "grad_clip": 5.0,
+    "eval_every": 500,
+    "head_inits": [
+      0,
+      1
+    ],
+    "batch_order_seed_offset": 1729,
+    "selection": "min probe_sel L1 over steps 500..10000, ties keep earlier",
+    "standardization": "per-column mean/std over probe_fit rows of the same condition; scale=max(std,1e-6); same transform for probe_fit/probe_sel/monitor",
+    "torch_threads": 1,
+    "dtype": "float32"
+  },
+  "init_state_sha256": "2dfd17982db221ee5dde78c671d220af2b6480921b89b12e113e0525fbbfeff2",
+  "best": {
+    "probe_sel_l1": 0.49489852869976314,
+    "step": 1000
+  },
+  "final": {
+    "probe_sel_l1": 0.5625159551696852,
+    "step": 10000
+  },
+  "train_l1_at_best": 0.3273238471593359,
+  "train_l1_at_final": 0.08381044104670096,
+  "curve": [
+    {
+      "step": 500,
+      "probe_sel_l1": 0.510654316955246,
+      "online_l1": 0.4400766630715225
+    },
+    {
+      "step": 1000,
+      "probe_sel_l1": 0.49489852869976314,
+      "online_l1": 0.307681961246999
+    },
+    {
+      "step": 1500,
+      "probe_sel_l1": 0.4996678348602727,
+      "online_l1": 0.22425530866894405
+    },
+    {
+      "step": 2000,
+      "probe_sel_l1": 0.5155609466107562,
+      "online_l1": 0.26239394599497246
+    },
+    {
+      "step": 2500,
+      "probe_sel_l1": 0.5217477263743058,
+      "online_l1": 0.23890468034369405
+    },
+    {
+      "step": 3000,
+      "probe_sel_l1": 0.5266365360142663,
+      "online_l1": 0.1631248595991305
+    },
+    {
+      "step": 3500,
+      "probe_sel_l1": 0.5278369419025257,
+      "online_l1": 0.16147638541588094
+    },
+    {
+      "step": 4000,
+      "probe_sel_l1": 0.5301353310057894,
+      "online_l1": 0.1250537697924301
+    },
+    {
+      "step": 4500,
+      "probe_sel_l1": 0.5388838069746271,
+      "online_l1": 0.10384297132259235
+    },
+    {
+      "step": 5000,
+      "probe_sel_l1": 0.5386243730420247,
+      "online_l1": 0.12058627291116863
+    },
+    {
+      "step": 5500,
+      "probe_sel_l1": 0.5445896194512024,
+      "online_l1": 0.12434305949136615
+    },
+    {
+      "step": 6000,
+      "probe_sel_l1": 0.5475495614307001,
+      "online_l1": 0.10774946618559104
+    },
+    {
+      "step": 6500,
+      "probe_sel_l1": 0.5498470599101857,
+      "online_l1": 0.09115978721138163
+    },
+    {
+      "step": 7000,
+      "probe_sel_l1": 0.5550351283894852,
+      "online_l1": 0.08082537759037223
+    },
+    {
+      "step": 7500,
+      "probe_sel_l1": 0.5554197229603306,
+      "online_l1": 0.10083422958268784
+    },
+    {
+      "step": 8000,
+      "probe_sel_l1": 0.5543079132409766,
+      "online_l1": 0.07862553049926646
+    },
+    {
+      "step": 8500,
+      "probe_sel_l1": 0.5590107094021514,
+      "online_l1": 0.08433092187624425
+    },
+    {
+      "step": 9000,
+      "probe_sel_l1": 0.5602300707148388,
+      "online_l1": 0.06028790419389095
+    },
+    {
+      "step": 9500,
+      "probe_sel_l1": 0.5639746971735731,
+      "online_l1": 0.08098916934250155
+    },
+    {
+      "step": 10000,
+      "probe_sel_l1": 0.5625159551696852,
+      "online_l1": 0.06955830265360419
+    }
+  ],
+  "block_grad_leak_max_abs": 0.0,
+  "best_state_sha256": "7b742d5a3e8bf9fc25e23d54286fb3a93fd27b11892f357945fc7f0aea66e6b0",
+  "final_state_sha256": "7e866437945e6852e88971c1b407bdc34b40fc2f5a61dbb369726a0e8da3058c",
+  "best_state_hash": "6139fb7beddc3dd1885e2af0750c5efb8e7bb9ddf9b67c4b4b3b0e3aa4d1d47a",
+  "final_state_hash": "0c91f36d5e12e03bde8b96e453a1dacdddb91fa5976177431fd68a23a86e91c1",
+  "wall_seconds": 6.583222861999275,
+  "torch_threads": 1
+}

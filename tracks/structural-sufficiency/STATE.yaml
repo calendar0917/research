@@ -87,6 +87,37 @@ previous_side_round_report: tracks/structural-sufficiency/zinc_block_ownership_v
 previous_side_round_decisions: tracks/structural-sufficiency/zinc_block_ownership_v1/DECISION.md
 previous_side_round_budget: 1.08 this round of 14 soft GPU-h; 2 formal runs; official test never loaded
 
+latest_frozen_transfer_audit: zinc_dccl_frozen_transfer_audit_v1
+latest_frozen_transfer_audit_verdict: TRUNK_TRANSFER_SIGNAL
+latest_frozen_transfer_audit_report: tracks/structural-sufficiency/zinc_dccl_frozen_transfer_audit_v1/REPORT.md
+latest_frozen_transfer_audit_decision: tracks/structural-sufficiency/zinc_dccl_frozen_transfer_audit_v1/DECISION.md
+latest_frozen_transfer_audit_protocol: tracks/structural-sufficiency/zinc_dccl_frozen_transfer_audit_v1/PROTOCOL.md
+latest_frozen_transfer_audit_budget: 0 GPU; 217 s CPU (0.060 CPU-h); official valid/test and Locked1k never loaded
+latest_frozen_transfer_audit_headline: >-
+  Frozen-representation transfer test of the four zinc_dccl_bottleneck_v1 FINAL
+  checkpoints (Fit4k/Fit8k x seed 0/1), CPU only.  One fixed 33k reader
+  (Linear(513,64)-SiLU-Linear(64,1), 10,000 updates, raw-y L1, same 3,000
+  probe-fit labels, selection on the same 1,000 probe-selection rows) is trained
+  on each trunk's real forward z.  Delta_transfer = MAE(probe on z_4k) - MAE(probe
+  on z_8k) = +0.02970 (Monitor1k, 4 cells, paired bootstrap CI [+0.02257,
+  +0.03901]); 4/4 cells positive (+0.0243..+0.0353); head-init spread 0.0011;
+  final checkpoint +0.02557.  Raw 4k->8k gain on the same rows is +0.03868, so
+  ~76.8% is re-extractable by the fixed low-capacity head (seed0 63.8%, seed1
+  89.7%).  Not tail-driven (extreme tail 74 rows = 18.6% of the gain; non-tail
+  +0.0261), not penalty-driven (ordinary +0.0263), not coverage-filling
+  (newly-covered +0.0326 vs still-unseen +0.0345), drop-fixed-top10 +0.0260.
+  Capacity-matched block probes (225 columns each): local_global
+  (global33+sum c_loc+sum c_loc^2) +0.0360 with both trunk seeds positive;
+  atom_global +0.0026 with OPPOSITE trunk-seed signs; full 513 +0.0297.
+  Instrument controls pass: readout-recovery probe-selection L1 0.048-0.061,
+  permuted-label null 1.651 vs constant-median 1.539, repro cell bit-identical.
+  Verdict closes "the 4k->8k gain is mainly a readout/co-adaptation artifact" as
+  the main explanation; HCR is NOT authorized (the carrying block includes the
+  second moment sum c_loc^2, and the 64-wide head already extracts 77%, so the
+  purchasable remainder is the unattributed ~23%).  Retrieved next step (new
+  preregistration required): a reader-capacity ladder on the same frozen
+  representations, never HCR, never official test.
+
 latest_marginal_field_round: zinc_bond_anchored_marginal_field_v1
 latest_marginal_field_verdict: STOP_NO_SIGNAL
 latest_marginal_field_report: tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1/REPORT.md
@@ -94,6 +125,7 @@ latest_marginal_field_decision: tracks/structural-sufficiency/zinc_bond_anchored
 latest_marginal_field_audit_pointer: tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1/analysis/monitor_gates.json
 latest_marginal_field_budget: 2.073 A100-h this round of 12 A100-h; seed 0 only; no seed 1, no Locked1k value accessed, official test never constructed
 side_round_history:
+  - {round: zinc_dccl_frozen_transfer_audit_v1, verdict: TRUNK_TRANSFER_SIGNAL, report: tracks/structural-sufficiency/zinc_dccl_frozen_transfer_audit_v1/REPORT.md}
   - {round: zinc_bond_anchored_marginal_field_v1, verdict: STOP_NO_SIGNAL, report: tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1/REPORT.md}
   - {round: zinc_block_ownership_v2, verdict: SINGLETON_CONTENT_EXPLAINS_THE_GAIN, report: tracks/structural-sufficiency/zinc_block_ownership_v2/REPORT.md}
   - {round: zinc_block_ownership_v1, verdict: UNRESOLVED_DUE_TO_VARIANCE, report: tracks/structural-sufficiency/zinc_block_ownership_v1/REPORT.md}

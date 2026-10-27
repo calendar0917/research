@@ -1,0 +1,230 @@
+{
+  "round": "zinc-dccl-frozen-transfer-audit-v1",
+  "protocol_id": "zinc-dccl-frozen-transfer-audit-v1",
+  "freeze_utc": "2026-10-28T00:00:00Z",
+  "base_commit": "a9daf4d64f9945c9e1105b040f2b99f23a5fa81a",
+  "question": "How much of the DCC-L Fit4k->Fit8k generalization gain is re-extractable by an identical low-capacity reader from the already-trained 513-dim representation?",
+  "compute": {
+    "device": "cpu",
+    "gpu_authorized": false,
+    "new_dccl_training": false,
+    "new_labels": false
+  },
+  "data": {
+    "train_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+    "train_cache_sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3",
+    "split": "tracks/structure-contribution/results/bjoc_predictive_bottleneck_v1/split_a.json",
+    "split_sha256": "53cd2cec29fb658bdbc789845df36b2194a8c8635140d61b4173ce064b48678e",
+    "fit4k_subset": "tracks/structure-contribution/results/bjoc_predictive_bottleneck_v1/fit4k_subset.json",
+    "fit4k_subset_sha256": "a9c657a06ceb81de72fa1e6991369ab94b4f648f87e170fc173621d89160f060",
+    "forbidden": [
+      "ad_valid.pt",
+      "ad_test.pt",
+      "locked_rows"
+    ],
+    "row_hashes": {
+      "fit4k": "3f6b5d69097476b02f5c6fe0cc180e564180fb0da5a241bb5ba1c5b88e7b3ecd",
+      "fit8k": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+      "monitor": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+      "locked": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d"
+    }
+  },
+  "trunks": {
+    "root": "tracks/structural-sufficiency/zinc_dccl_bottleneck_v1/runs",
+    "checkpoint": "final.pt",
+    "selection": "final",
+    "candidates": [
+      {
+        "id": "fit4k_s0",
+        "fit": "fit4k",
+        "seed": 0,
+        "sha256": "2be27014ffa8070153cffe69002cbffa6db0e5dd148d9d2549f3f8450c67eeea"
+      },
+      {
+        "id": "fit4k_s1",
+        "fit": "fit4k",
+        "seed": 1,
+        "sha256": "e7df0e2f6b68eb7a57a20aa448c7c0c2f18b1d9cda1363adf4d6cc31f5c9cb21"
+      },
+      {
+        "id": "fit8k_s0",
+        "fit": "fit8k",
+        "seed": 0,
+        "sha256": "40baa5f6dced7bf1edbe37af52e89901f7e5c4e018b14713c001ce376391a340"
+      },
+      {
+        "id": "fit8k_s1",
+        "fit": "fit8k",
+        "seed": 1,
+        "sha256": "cb8aac08e922a0c7962a1c67a7e744664ef4830bf6025ae6b5daab8ba18fb36b"
+      }
+    ],
+    "parameters": 494193,
+    "updates": 47400,
+    "arm": "L",
+    "organized_local": true
+  },
+  "probe_split": {
+    "salt": "zinc-dccl-frozen-transfer-audit-v1-probe-split",
+    "rule": "structure fingerprint groups sorted by sha256(salt:fingerprint); maximal whole-group prefix with cumulative size <= 3000",
+    "n_probe_fit_target": 3000,
+    "n_probe_fit": 3000,
+    "n_probe_sel": 1000,
+    "probe_fit_sha256": "63f7c2a5643531935fc21b729b6a7bb3aef3618d296682d6bd37d545867c7bfb",
+    "probe_sel_sha256": "da081fa2b0541971f6cb3a58f0c0becc108c657ed391926f7e7da6a49df8f36a"
+  },
+  "representation": {
+    "dim": 513,
+    "export_rows": [
+      "probe_fit",
+      "probe_sel",
+      "monitor"
+    ],
+    "n_export_rows": 5000,
+    "blocks": {
+      "c_glob_sum": [
+        0,
+        96
+      ],
+      "atom_sum": [
+        96,
+        192
+      ],
+      "atom_sq": [
+        192,
+        288
+      ],
+      "global33": [
+        288,
+        321
+      ],
+      "c_loc_sum": [
+        321,
+        417
+      ],
+      "c_loc_sq": [
+        417,
+        513
+      ]
+    },
+    "probe_blocks": {
+      "atom_global": [
+        [
+          96,
+          192
+        ],
+        [
+          192,
+          288
+        ],
+        [
+          288,
+          321
+        ]
+      ],
+      "local_global": [
+        [
+          288,
+          321
+        ],
+        [
+          321,
+          417
+        ],
+        [
+          417,
+          513
+        ]
+      ],
+      "full": [
+        [
+          0,
+          513
+        ]
+      ]
+    }
+  },
+  "reader": {
+    "arch": "Linear(513,64)-SiLU-Linear(64,1)",
+    "loss": "l1",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "lr_schedule": "constant",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "updates": 10000,
+    "grad_clip": 5.0,
+    "eval_every": 500,
+    "head_inits": [
+      0,
+      1
+    ],
+    "batch_order_seed_offset": 1729,
+    "selection": "min probe_sel L1 over steps 500..10000, ties keep earlier",
+    "standardization": "per-column mean/std over probe_fit rows of the same condition; scale=max(std,1e-6); same transform for probe_fit/probe_sel/monitor",
+    "torch_threads": 1,
+    "dtype": "float32"
+  },
+  "controls": {
+    "readout_recovery": {
+      "head_inits": [
+        0
+      ],
+      "block": "full",
+      "conditions": [
+        "fit4k_s0",
+        "fit4k_s1",
+        "fit8k_s0",
+        "fit8k_s1"
+      ],
+      "target": "trunk_prediction_on_probe_fit",
+      "eval": "probe_sel_l1"
+    },
+    "label_permutation_null": {
+      "condition": "fit8k_s0",
+      "head_init": 0,
+      "block": "full",
+      "perm_seed": 20261028
+    }
+  },
+  "evaluation": {
+    "set": "monitor",
+    "n_rows": 1000,
+    "labels_read": "once after probe_freeze.json",
+    "bootstrap": {
+      "n_boot": 5000,
+      "seed": 20261028,
+      "ci": 95.0
+    }
+  },
+  "groups": {
+    "support_rule": "exact typed radius-2 rooted signature; support = number of fit molecules containing it; full=all>=5; low=no 0 but some 1-4; unseen=some 0",
+    "no_penalty_rule": "max(nx.cycle_basis) <= 6 (acyclic counts as 0)",
+    "extreme_tail_rule": "y <= -3",
+    "drop_fixed_top10_rule": "top-10 monitor rows by mean over trunk seeds of |y - raw_fit4k_pred| (final ckpt); fixed before probe scoring"
+  },
+  "gates": {
+    "U1_recovery_max_mae": 0.15,
+    "U2_train_fit_max_l1": 0.1,
+    "U3_init_instability_max_abs": 0.01,
+    "U4_repro_tol": 1e-06,
+    "T1_delta_min": 0.01,
+    "T3_non_tail_delta_min": 0.01,
+    "raw_gain_min_for_rocs": 0.025,
+    "rocs_delta_max": 0.005
+  },
+  "decision_labels": [
+    "TRUNK_TRANSFER_SIGNAL",
+    "READOUT_OR_COADAPTATION_SUSPECTED",
+    "PROBE_UNINFORMATIVE",
+    "UNRESOLVED",
+    "INVALID_RUN"
+  ],
+  "export": {
+    "E1_hook_vs_export_max_abs": 0.0,
+    "E2_tol": 1e-06,
+    "E3_tol": 1e-06,
+    "E4_rel_tol": 1e-07,
+    "note": "E4 is judged relative to max|z|; see AMENDMENT_01.md"
+  }
+}

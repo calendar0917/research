@@ -1,0 +1,152 @@
+{
+  "id": "fit8k_s1__atom_global__i0",
+  "kind": "main",
+  "condition": "fit8k_s1",
+  "block": "atom_global",
+  "head_init": 0,
+  "target": "y",
+  "n_features_used": 225,
+  "n_probe_fit": 3000,
+  "n_probe_sel": 1000,
+  "reader_cfg": {
+    "arch": "Linear(513,64)-SiLU-Linear(64,1)",
+    "loss": "l1",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "lr_schedule": "constant",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "updates": 10000,
+    "grad_clip": 5.0,
+    "eval_every": 500,
+    "head_inits": [
+      0,
+      1
+    ],
+    "batch_order_seed_offset": 1729,
+    "selection": "min probe_sel L1 over steps 500..10000, ties keep earlier",
+    "standardization": "per-column mean/std over probe_fit rows of the same condition; scale=max(std,1e-6); same transform for probe_fit/probe_sel/monitor",
+    "torch_threads": 1,
+    "dtype": "float32"
+  },
+  "init_state_sha256": "2dfd17982db221ee5dde78c671d220af2b6480921b89b12e113e0525fbbfeff2",
+  "best": {
+    "probe_sel_l1": 0.24970883933175356,
+    "step": 1500
+  },
+  "final": {
+    "probe_sel_l1": 0.28861682424414903,
+    "step": 10000
+  },
+  "train_l1_at_best": 0.17102543663429484,
+  "train_l1_at_final": 0.06661901002837112,
+  "curve": [
+    {
+      "step": 500,
+      "probe_sel_l1": 0.26571740749944,
+      "online_l1": 0.23378474425408058
+    },
+    {
+      "step": 1000,
+      "probe_sel_l1": 0.2580194363826886,
+      "online_l1": 0.14880246928078122
+    },
+    {
+      "step": 1500,
+      "probe_sel_l1": 0.24970883933175356,
+      "online_l1": 0.17095469003834296
+    },
+    {
+      "step": 2000,
+      "probe_sel_l1": 0.25392791141290216,
+      "online_l1": 0.15121750214211716
+    },
+    {
+      "step": 2500,
+      "probe_sel_l1": 0.257781314288266,
+      "online_l1": 0.11507922371674795
+    },
+    {
+      "step": 3000,
+      "probe_sel_l1": 0.2587927000010386,
+      "online_l1": 0.10635607889188188
+    },
+    {
+      "step": 3500,
+      "probe_sel_l1": 0.26912085035908967,
+      "online_l1": 0.09112399914010894
+    },
+    {
+      "step": 4000,
+      "probe_sel_l1": 0.2673596513206139,
+      "online_l1": 0.11209852818865329
+    },
+    {
+      "step": 4500,
+      "probe_sel_l1": 0.2675118611911312,
+      "online_l1": 0.08854210854042321
+    },
+    {
+      "step": 5000,
+      "probe_sel_l1": 0.27220377131644635,
+      "online_l1": 0.0856144730350934
+    },
+    {
+      "step": 5500,
+      "probe_sel_l1": 0.27418871911708265,
+      "online_l1": 0.0706348666572012
+    },
+    {
+      "step": 6000,
+      "probe_sel_l1": 0.27380837679002434,
+      "online_l1": 0.06963785864146692
+    },
+    {
+      "step": 6500,
+      "probe_sel_l1": 0.2796971956724301,
+      "online_l1": 0.06567532219150962
+    },
+    {
+      "step": 7000,
+      "probe_sel_l1": 0.28076698339078576,
+      "online_l1": 0.07758733305672649
+    },
+    {
+      "step": 7500,
+      "probe_sel_l1": 0.2799918759921566,
+      "online_l1": 0.06627447524806485
+    },
+    {
+      "step": 8000,
+      "probe_sel_l1": 0.2841123546520248,
+      "online_l1": 0.06467986307688989
+    },
+    {
+      "step": 8500,
+      "probe_sel_l1": 0.2857615546779707,
+      "online_l1": 0.054227472690399736
+    },
+    {
+      "step": 9000,
+      "probe_sel_l1": 0.28666975728143007,
+      "online_l1": 0.047765276328261407
+    },
+    {
+      "step": 9500,
+      "probe_sel_l1": 0.2881915942626074,
+      "online_l1": 0.052663072165159974
+    },
+    {
+      "step": 10000,
+      "probe_sel_l1": 0.28861682424414903,
+      "online_l1": 0.053897455174592324
+    }
+  ],
+  "block_grad_leak_max_abs": 0.0,
+  "best_state_sha256": "fc740fd48ca80ce2d62e966167f06b860bb5c2c976281d220d0ccd43cf4d221a",
+  "final_state_sha256": "45f621357b48eeb46d273ab6c75b10fc5a83a1988a1a8b59a607d92e6e5058a5",
+  "best_state_hash": "368d29d5b856d54455c260a1fe2d398daf513d13407a5c0dcc71187ac9839439",
+  "final_state_hash": "03947942d9ba2cfd2341a34dccd8466ee21f57c56d9fdb72e54a12bab034b55a",
+  "wall_seconds": 6.553357819999292,
+  "torch_threads": 1
+}

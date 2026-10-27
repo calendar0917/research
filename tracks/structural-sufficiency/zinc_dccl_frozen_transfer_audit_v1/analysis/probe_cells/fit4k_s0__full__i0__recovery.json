@@ -1,0 +1,152 @@
+{
+  "id": "fit4k_s0__full__i0__recovery",
+  "kind": "recovery",
+  "condition": "fit4k_s0",
+  "block": "full",
+  "head_init": 0,
+  "target": "trunk_pred",
+  "n_features_used": 513,
+  "n_probe_fit": 3000,
+  "n_probe_sel": 1000,
+  "reader_cfg": {
+    "arch": "Linear(513,64)-SiLU-Linear(64,1)",
+    "loss": "l1",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "lr_schedule": "constant",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "updates": 10000,
+    "grad_clip": 5.0,
+    "eval_every": 500,
+    "head_inits": [
+      0,
+      1
+    ],
+    "batch_order_seed_offset": 1729,
+    "selection": "min probe_sel L1 over steps 500..10000, ties keep earlier",
+    "standardization": "per-column mean/std over probe_fit rows of the same condition; scale=max(std,1e-6); same transform for probe_fit/probe_sel/monitor",
+    "torch_threads": 1,
+    "dtype": "float32"
+  },
+  "init_state_sha256": "2dfd17982db221ee5dde78c671d220af2b6480921b89b12e113e0525fbbfeff2",
+  "best": {
+    "probe_sel_l1": 0.05753596687316895,
+    "step": 3000
+  },
+  "final": {
+    "probe_sel_l1": 0.06004418754577637,
+    "step": 10000
+  },
+  "train_l1_at_best": 0.03208045792579651,
+  "train_l1_at_final": 0.029058139483133953,
+  "curve": [
+    {
+      "step": 500,
+      "probe_sel_l1": 0.06802256488800049,
+      "online_l1": 0.044673413038253784
+    },
+    {
+      "step": 1000,
+      "probe_sel_l1": 0.06604500865936279,
+      "online_l1": 0.03373243659734726
+    },
+    {
+      "step": 1500,
+      "probe_sel_l1": 0.061755908012390136,
+      "online_l1": 0.03063991293311119
+    },
+    {
+      "step": 2000,
+      "probe_sel_l1": 0.0598307580947876,
+      "online_l1": 0.026325557380914688
+    },
+    {
+      "step": 2500,
+      "probe_sel_l1": 0.06272543239593506,
+      "online_l1": 0.029820101335644722
+    },
+    {
+      "step": 3000,
+      "probe_sel_l1": 0.05753596687316895,
+      "online_l1": 0.01594211719930172
+    },
+    {
+      "step": 3500,
+      "probe_sel_l1": 0.060200093269348144,
+      "online_l1": 0.023442482575774193
+    },
+    {
+      "step": 4000,
+      "probe_sel_l1": 0.057862309455871584,
+      "online_l1": 0.02045407146215439
+    },
+    {
+      "step": 4500,
+      "probe_sel_l1": 0.057846978187561036,
+      "online_l1": 0.01642548106610775
+    },
+    {
+      "step": 5000,
+      "probe_sel_l1": 0.06104714202880859,
+      "online_l1": 0.018867680802941322
+    },
+    {
+      "step": 5500,
+      "probe_sel_l1": 0.06071686363220215,
+      "online_l1": 0.01630781590938568
+    },
+    {
+      "step": 6000,
+      "probe_sel_l1": 0.06079279613494873,
+      "online_l1": 0.012985089793801308
+    },
+    {
+      "step": 6500,
+      "probe_sel_l1": 0.058671669960021974,
+      "online_l1": 0.017706435173749924
+    },
+    {
+      "step": 7000,
+      "probe_sel_l1": 0.059664356231689454,
+      "online_l1": 0.015785545110702515
+    },
+    {
+      "step": 7500,
+      "probe_sel_l1": 0.06029669952392578,
+      "online_l1": 0.018265830352902412
+    },
+    {
+      "step": 8000,
+      "probe_sel_l1": 0.05914717388153076,
+      "online_l1": 0.01654699072241783
+    },
+    {
+      "step": 8500,
+      "probe_sel_l1": 0.058081542015075684,
+      "online_l1": 0.015023629181087017
+    },
+    {
+      "step": 9000,
+      "probe_sel_l1": 0.060345426559448245,
+      "online_l1": 0.017786739394068718
+    },
+    {
+      "step": 9500,
+      "probe_sel_l1": 0.058630966186523435,
+      "online_l1": 0.015005356632173061
+    },
+    {
+      "step": 10000,
+      "probe_sel_l1": 0.06004418754577637,
+      "online_l1": 0.018588820472359657
+    }
+  ],
+  "block_grad_leak_max_abs": null,
+  "best_state_sha256": "502816d87f10cd4aeb76c3e349f9697cd5622a3ea05e4db1580eae70eba6b090",
+  "final_state_sha256": "1dd88585bfba15ffdf192af5602cf9bf151a62455da46a38828076e844a8b355",
+  "best_state_hash": "c21599ad1245b73682f78cec2c23849773fb660645a2bffccd64dd4fd1c4e145",
+  "final_state_hash": "7f9da0805b634ee8b445022612e4d4fdccb205e750fd89cb3dc75b3cd6e1e5cd",
+  "wall_seconds": 6.723317111000142,
+  "torch_threads": 1
+}

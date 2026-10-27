@@ -1,0 +1,152 @@
+{
+  "id": "fit8k_s0__atom_global__i0",
+  "kind": "main",
+  "condition": "fit8k_s0",
+  "block": "atom_global",
+  "head_init": 0,
+  "target": "y",
+  "n_features_used": 225,
+  "n_probe_fit": 3000,
+  "n_probe_sel": 1000,
+  "reader_cfg": {
+    "arch": "Linear(513,64)-SiLU-Linear(64,1)",
+    "loss": "l1",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "lr_schedule": "constant",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "updates": 10000,
+    "grad_clip": 5.0,
+    "eval_every": 500,
+    "head_inits": [
+      0,
+      1
+    ],
+    "batch_order_seed_offset": 1729,
+    "selection": "min probe_sel L1 over steps 500..10000, ties keep earlier",
+    "standardization": "per-column mean/std over probe_fit rows of the same condition; scale=max(std,1e-6); same transform for probe_fit/probe_sel/monitor",
+    "torch_threads": 1,
+    "dtype": "float32"
+  },
+  "init_state_sha256": "2dfd17982db221ee5dde78c671d220af2b6480921b89b12e113e0525fbbfeff2",
+  "best": {
+    "probe_sel_l1": 0.25181339865271,
+    "step": 3000
+  },
+  "final": {
+    "probe_sel_l1": 0.2859735653670505,
+    "step": 10000
+  },
+  "train_l1_at_best": 0.12830128544283798,
+  "train_l1_at_final": 0.08564800397188325,
+  "curve": [
+    {
+      "step": 500,
+      "probe_sel_l1": 0.26654748256597666,
+      "online_l1": 0.24967081416980363
+    },
+    {
+      "step": 1000,
+      "probe_sel_l1": 0.2582086960719898,
+      "online_l1": 0.16473456591484137
+    },
+    {
+      "step": 1500,
+      "probe_sel_l1": 0.2574310034858063,
+      "online_l1": 0.14679165971756447
+    },
+    {
+      "step": 2000,
+      "probe_sel_l1": 0.2534900628225878,
+      "online_l1": 0.129186287821085
+    },
+    {
+      "step": 2500,
+      "probe_sel_l1": 0.2589445274369791,
+      "online_l1": 0.13356415608723182
+    },
+    {
+      "step": 3000,
+      "probe_sel_l1": 0.25181339865271,
+      "online_l1": 0.1170504864837442
+    },
+    {
+      "step": 3500,
+      "probe_sel_l1": 0.25751311438996344,
+      "online_l1": 0.0906150287919445
+    },
+    {
+      "step": 4000,
+      "probe_sel_l1": 0.2624213581951335,
+      "online_l1": 0.11488019727403298
+    },
+    {
+      "step": 4500,
+      "probe_sel_l1": 0.25858675937820225,
+      "online_l1": 0.08343429875094444
+    },
+    {
+      "step": 5000,
+      "probe_sel_l1": 0.26862189995963126,
+      "online_l1": 0.09571831353241578
+    },
+    {
+      "step": 5500,
+      "probe_sel_l1": 0.26426288690883665,
+      "online_l1": 0.06272322620498016
+    },
+    {
+      "step": 6000,
+      "probe_sel_l1": 0.26945405194628985,
+      "online_l1": 0.06633278920448252
+    },
+    {
+      "step": 6500,
+      "probe_sel_l1": 0.27006392208207397,
+      "online_l1": 0.06566390830948876
+    },
+    {
+      "step": 7000,
+      "probe_sel_l1": 0.27173098095227033,
+      "online_l1": 0.0880700448906282
+    },
+    {
+      "step": 7500,
+      "probe_sel_l1": 0.2736611304702237,
+      "online_l1": 0.06434525735676289
+    },
+    {
+      "step": 8000,
+      "probe_sel_l1": 0.27742090275604275,
+      "online_l1": 0.04917742995894514
+    },
+    {
+      "step": 8500,
+      "probe_sel_l1": 0.28006836112309247,
+      "online_l1": 0.06856875552330166
+    },
+    {
+      "step": 9000,
+      "probe_sel_l1": 0.27656395830679686,
+      "online_l1": 0.06516728862853986
+    },
+    {
+      "step": 9500,
+      "probe_sel_l1": 0.28008492397982626,
+      "online_l1": 0.05416495531244436
+    },
+    {
+      "step": 10000,
+      "probe_sel_l1": 0.2859735653670505,
+      "online_l1": 0.06266519900236744
+    }
+  ],
+  "block_grad_leak_max_abs": 0.0,
+  "best_state_sha256": "dd790da1b3b2954c6145e68e2db69d3db9bffc4e835153aedc55dd5fd28f992c",
+  "final_state_sha256": "acae434bb72be9888040a657f22c49fc74e98ee989aba718cd4ea03101adc281",
+  "best_state_hash": "4d91da9ddb7543196bbb3e90d1f644d9bd89f0f8baf707830925607c00d85a27",
+  "final_state_hash": "0aefbcc0c57d052e6d2c9949ed14cb07045e6d5b6c9fd80b79b3ca45bb4f78fa",
+  "wall_seconds": 6.546007375000045,
+  "torch_threads": 1
+}

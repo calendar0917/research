@@ -1,0 +1,152 @@
+{
+  "id": "fit8k_s1__full__i0",
+  "kind": "main",
+  "condition": "fit8k_s1",
+  "block": "full",
+  "head_init": 0,
+  "target": "y",
+  "n_features_used": 513,
+  "n_probe_fit": 3000,
+  "n_probe_sel": 1000,
+  "reader_cfg": {
+    "arch": "Linear(513,64)-SiLU-Linear(64,1)",
+    "loss": "l1",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "lr_schedule": "constant",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "updates": 10000,
+    "grad_clip": 5.0,
+    "eval_every": 500,
+    "head_inits": [
+      0,
+      1
+    ],
+    "batch_order_seed_offset": 1729,
+    "selection": "min probe_sel L1 over steps 500..10000, ties keep earlier",
+    "standardization": "per-column mean/std over probe_fit rows of the same condition; scale=max(std,1e-6); same transform for probe_fit/probe_sel/monitor",
+    "torch_threads": 1,
+    "dtype": "float32"
+  },
+  "init_state_sha256": "2dfd17982db221ee5dde78c671d220af2b6480921b89b12e113e0525fbbfeff2",
+  "best": {
+    "probe_sel_l1": 0.04773794030863792,
+    "step": 5000
+  },
+  "final": {
+    "probe_sel_l1": 0.04955479370895773,
+    "step": 10000
+  },
+  "train_l1_at_best": 0.015813132155123942,
+  "train_l1_at_final": 0.014283143936598209,
+  "curve": [
+    {
+      "step": 500,
+      "probe_sel_l1": 0.062169466578401625,
+      "online_l1": 0.04314718535169959
+    },
+    {
+      "step": 1000,
+      "probe_sel_l1": 0.051495728540234265,
+      "online_l1": 0.02743869116238784
+    },
+    {
+      "step": 1500,
+      "probe_sel_l1": 0.05129421484936029,
+      "online_l1": 0.026323339479858987
+    },
+    {
+      "step": 2000,
+      "probe_sel_l1": 0.0510100056277588,
+      "online_l1": 0.024969526908080297
+    },
+    {
+      "step": 2500,
+      "probe_sel_l1": 0.05070376113150269,
+      "online_l1": 0.028257563957595266
+    },
+    {
+      "step": 3000,
+      "probe_sel_l1": 0.04931238535884768,
+      "online_l1": 0.01632712355681828
+    },
+    {
+      "step": 3500,
+      "probe_sel_l1": 0.05150584502052516,
+      "online_l1": 0.02429245384701062
+    },
+    {
+      "step": 4000,
+      "probe_sel_l1": 0.048178828842006624,
+      "online_l1": 0.020096679567359388
+    },
+    {
+      "step": 4500,
+      "probe_sel_l1": 0.04974609599169344,
+      "online_l1": 0.02143438591156155
+    },
+    {
+      "step": 5000,
+      "probe_sel_l1": 0.04773794030863792,
+      "online_l1": 0.018726316367974505
+    },
+    {
+      "step": 5500,
+      "probe_sel_l1": 0.05228231274802238,
+      "online_l1": 0.01897179764637258
+    },
+    {
+      "step": 6000,
+      "probe_sel_l1": 0.050487321195192635,
+      "online_l1": 0.024051662401429245
+    },
+    {
+      "step": 6500,
+      "probe_sel_l1": 0.05022817343007773,
+      "online_l1": 0.014114788958522695
+    },
+    {
+      "step": 7000,
+      "probe_sel_l1": 0.050909686987288295,
+      "online_l1": 0.017488052981207147
+    },
+    {
+      "step": 7500,
+      "probe_sel_l1": 0.04923712908755988,
+      "online_l1": 0.01666028454201296
+    },
+    {
+      "step": 8000,
+      "probe_sel_l1": 0.05192409496475011,
+      "online_l1": 0.01335787252173759
+    },
+    {
+      "step": 8500,
+      "probe_sel_l1": 0.051184642813168466,
+      "online_l1": 0.017619428224861622
+    },
+    {
+      "step": 9000,
+      "probe_sel_l1": 0.04900969172362238,
+      "online_l1": 0.01563588300320719
+    },
+    {
+      "step": 9500,
+      "probe_sel_l1": 0.05057147982530296,
+      "online_l1": 0.01607871364831226
+    },
+    {
+      "step": 10000,
+      "probe_sel_l1": 0.04955479370895773,
+      "online_l1": 0.01368829177954467
+    }
+  ],
+  "block_grad_leak_max_abs": null,
+  "best_state_sha256": "bb576aa91a0f5910fa5b47cba588b44599369acae8e13cfd6dc7b5b75b4eeb9d",
+  "final_state_sha256": "772fad338ec10ff14a862dd2778532071adb7bb008cd4f05a6c67d0173ee6f55",
+  "best_state_hash": "b6698ae15def21a8ef628cf711c1f9df6a74e0bcbcd0713ea97c2f92636ac80b",
+  "final_state_hash": "e6284cf7f5f86be8835bdbce2b643d2914016b1c1e36941f8f2248a0eb4920e0",
+  "wall_seconds": 6.750292523000098,
+  "torch_threads": 1
+}

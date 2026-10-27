@@ -1,0 +1,152 @@
+{
+  "id": "fit4k_s1__atom_global__i1",
+  "kind": "main",
+  "condition": "fit4k_s1",
+  "block": "atom_global",
+  "head_init": 1,
+  "target": "y",
+  "n_features_used": 225,
+  "n_probe_fit": 3000,
+  "n_probe_sel": 1000,
+  "reader_cfg": {
+    "arch": "Linear(513,64)-SiLU-Linear(64,1)",
+    "loss": "l1",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "lr_schedule": "constant",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "updates": 10000,
+    "grad_clip": 5.0,
+    "eval_every": 500,
+    "head_inits": [
+      0,
+      1
+    ],
+    "batch_order_seed_offset": 1729,
+    "selection": "min probe_sel L1 over steps 500..10000, ties keep earlier",
+    "standardization": "per-column mean/std over probe_fit rows of the same condition; scale=max(std,1e-6); same transform for probe_fit/probe_sel/monitor",
+    "torch_threads": 1,
+    "dtype": "float32"
+  },
+  "init_state_sha256": "4177c2760c8e35fcc69861076d05c7a370d1e597c5dfebd54a143b2a6e17c9cd",
+  "best": {
+    "probe_sel_l1": 0.2620696014156565,
+    "step": 1000
+  },
+  "final": {
+    "probe_sel_l1": 0.28260317958984527,
+    "step": 10000
+  },
+  "train_l1_at_best": 0.20444511533611998,
+  "train_l1_at_final": 0.07497480915430545,
+  "curve": [
+    {
+      "step": 500,
+      "probe_sel_l1": 0.2703926385072991,
+      "online_l1": 0.20506928879694897
+    },
+    {
+      "step": 1000,
+      "probe_sel_l1": 0.2620696014156565,
+      "online_l1": 0.288063668533141
+    },
+    {
+      "step": 1500,
+      "probe_sel_l1": 0.26345561520475896,
+      "online_l1": 0.1830339019652456
+    },
+    {
+      "step": 2000,
+      "probe_sel_l1": 0.2621478891829029,
+      "online_l1": 0.14602602721424773
+    },
+    {
+      "step": 2500,
+      "probe_sel_l1": 0.26210919785965237,
+      "online_l1": 0.12597246856603306
+    },
+    {
+      "step": 3000,
+      "probe_sel_l1": 0.2625319454194978,
+      "online_l1": 0.12965913356414863
+    },
+    {
+      "step": 3500,
+      "probe_sel_l1": 0.26512047010753303,
+      "online_l1": 0.1605312159663299
+    },
+    {
+      "step": 4000,
+      "probe_sel_l1": 0.26576683193165807,
+      "online_l1": 0.09977490283563384
+    },
+    {
+      "step": 4500,
+      "probe_sel_l1": 0.26923745128978044,
+      "online_l1": 0.09222816034161951
+    },
+    {
+      "step": 5000,
+      "probe_sel_l1": 0.2715817849421874,
+      "online_l1": 0.09890168158563029
+    },
+    {
+      "step": 5500,
+      "probe_sel_l1": 0.27243996973801404,
+      "online_l1": 0.08803676191382692
+    },
+    {
+      "step": 6000,
+      "probe_sel_l1": 0.27336418921593575,
+      "online_l1": 0.06261487291859728
+    },
+    {
+      "step": 6500,
+      "probe_sel_l1": 0.2735989452758804,
+      "online_l1": 0.06681864993879572
+    },
+    {
+      "step": 7000,
+      "probe_sel_l1": 0.2762896334389225,
+      "online_l1": 0.07941639553064306
+    },
+    {
+      "step": 7500,
+      "probe_sel_l1": 0.2740649060988799,
+      "online_l1": 0.0644744343135244
+    },
+    {
+      "step": 8000,
+      "probe_sel_l1": 0.278011207559146,
+      "online_l1": 0.18885468434018549
+    },
+    {
+      "step": 8500,
+      "probe_sel_l1": 0.2781640074411407,
+      "online_l1": 0.0598510612840073
+    },
+    {
+      "step": 9000,
+      "probe_sel_l1": 0.27910162857268006,
+      "online_l1": 0.053171163657680154
+    },
+    {
+      "step": 9500,
+      "probe_sel_l1": 0.2829658535802737,
+      "online_l1": 0.08486387199445744
+    },
+    {
+      "step": 10000,
+      "probe_sel_l1": 0.28260317958984527,
+      "online_l1": 0.06331319332821295
+    }
+  ],
+  "block_grad_leak_max_abs": 0.0,
+  "best_state_sha256": "26def92dd0f29fb39e3c2efde26e5424bc3047b100096702068cada54c70a4e4",
+  "final_state_sha256": "5ee3152e02e6fcda9520c5c2219a0a400455ad6efbb2e4b02caeeec4521b554d",
+  "best_state_hash": "c627982dcb3571cf4ef6198e7fd622adeb8a9a3fcbdb3f6a40de7617691c6528",
+  "final_state_hash": "0473b69a2b840f5ddf3f7c6904d63624eadbb5f6c697f4a6a29eabad0926b574",
+  "wall_seconds": 6.701943199999732,
+  "torch_threads": 1
+}

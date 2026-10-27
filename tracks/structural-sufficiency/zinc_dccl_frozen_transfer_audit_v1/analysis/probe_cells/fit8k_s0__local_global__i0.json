@@ -1,0 +1,152 @@
+{
+  "id": "fit8k_s0__local_global__i0",
+  "kind": "main",
+  "condition": "fit8k_s0",
+  "block": "local_global",
+  "head_init": 0,
+  "target": "y",
+  "n_features_used": 225,
+  "n_probe_fit": 3000,
+  "n_probe_sel": 1000,
+  "reader_cfg": {
+    "arch": "Linear(513,64)-SiLU-Linear(64,1)",
+    "loss": "l1",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "lr_schedule": "constant",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "updates": 10000,
+    "grad_clip": 5.0,
+    "eval_every": 500,
+    "head_inits": [
+      0,
+      1
+    ],
+    "batch_order_seed_offset": 1729,
+    "selection": "min probe_sel L1 over steps 500..10000, ties keep earlier",
+    "standardization": "per-column mean/std over probe_fit rows of the same condition; scale=max(std,1e-6); same transform for probe_fit/probe_sel/monitor",
+    "torch_threads": 1,
+    "dtype": "float32"
+  },
+  "init_state_sha256": "2dfd17982db221ee5dde78c671d220af2b6480921b89b12e113e0525fbbfeff2",
+  "best": {
+    "probe_sel_l1": 0.49754831874836236,
+    "step": 1500
+  },
+  "final": {
+    "probe_sel_l1": 0.5281415339456871,
+    "step": 10000
+  },
+  "train_l1_at_best": 0.19564885580561045,
+  "train_l1_at_final": 0.0539608425416324,
+  "curve": [
+    {
+      "step": 500,
+      "probe_sel_l1": 0.5122860526731238,
+      "online_l1": 0.3939053085341584
+    },
+    {
+      "step": 1000,
+      "probe_sel_l1": 0.5049743664050474,
+      "online_l1": 0.2750379021454137
+    },
+    {
+      "step": 1500,
+      "probe_sel_l1": 0.49754831874836236,
+      "online_l1": 0.18836742335406598
+    },
+    {
+      "step": 2000,
+      "probe_sel_l1": 0.5010630551250651,
+      "online_l1": 0.15935993240373136
+    },
+    {
+      "step": 2500,
+      "probe_sel_l1": 0.5008823261046782,
+      "online_l1": 0.1474021080211969
+    },
+    {
+      "step": 3000,
+      "probe_sel_l1": 0.5030536531032994,
+      "online_l1": 0.08700408360787801
+    },
+    {
+      "step": 3500,
+      "probe_sel_l1": 0.5033032186077908,
+      "online_l1": 0.11567913451290224
+    },
+    {
+      "step": 4000,
+      "probe_sel_l1": 0.508451593820937,
+      "online_l1": 0.11189646477578208
+    },
+    {
+      "step": 4500,
+      "probe_sel_l1": 0.5129924560161307,
+      "online_l1": 0.09420452348422259
+    },
+    {
+      "step": 5000,
+      "probe_sel_l1": 0.5156948737325147,
+      "online_l1": 0.06690787739353254
+    },
+    {
+      "step": 5500,
+      "probe_sel_l1": 0.5179717787997797,
+      "online_l1": 0.08589503151597455
+    },
+    {
+      "step": 6000,
+      "probe_sel_l1": 0.5199262146623805,
+      "online_l1": 0.05350124842620322
+    },
+    {
+      "step": 6500,
+      "probe_sel_l1": 0.5215531224058941,
+      "online_l1": 0.07211086799316035
+    },
+    {
+      "step": 7000,
+      "probe_sel_l1": 0.5194252815814688,
+      "online_l1": 0.07193008517788257
+    },
+    {
+      "step": 7500,
+      "probe_sel_l1": 0.5217500097909942,
+      "online_l1": 0.062250696937553585
+    },
+    {
+      "step": 8000,
+      "probe_sel_l1": 0.5242484701396898,
+      "online_l1": 0.06879611636395566
+    },
+    {
+      "step": 8500,
+      "probe_sel_l1": 0.5238339843424037,
+      "online_l1": 0.05684995179763064
+    },
+    {
+      "step": 9000,
+      "probe_sel_l1": 0.5268123959610239,
+      "online_l1": 0.0491037023519831
+    },
+    {
+      "step": 9500,
+      "probe_sel_l1": 0.5251812014961615,
+      "online_l1": 0.0539769418319338
+    },
+    {
+      "step": 10000,
+      "probe_sel_l1": 0.5281415339456871,
+      "online_l1": 0.049858160127769224
+    }
+  ],
+  "block_grad_leak_max_abs": 0.0,
+  "best_state_sha256": "d09c022803ebc1c7726c4d898bcb70e6b319dea412740eda0163586500213523",
+  "final_state_sha256": "d943c77ec55d1f5adf471bec7a908b2deaf86872c5d210d0f95668e33a8a46e5",
+  "best_state_hash": "f88707d7d3026ed6dae8e10af4e66795b005b004e75f5bb1a3557f710b76bc57",
+  "final_state_hash": "fe35bc5bf7efc3ce54b1d21a0b86fc0481771aba655e666193e3dce22ec3dd6b",
+  "wall_seconds": 6.615737015999912,
+  "torch_threads": 1
+}
