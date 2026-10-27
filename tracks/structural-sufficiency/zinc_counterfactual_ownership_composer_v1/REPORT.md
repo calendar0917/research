@@ -10,7 +10,7 @@ improve cross-molecule generalisation.
 Round: `zinc_counterfactual_ownership_composer_v1`  
 Protocol: `ssrc-zinc-counterfactual-ownership-composer-v1`  
 Formal training revision: `331fab569441`  
-Monitor analysis revision: `3e89afd0dd42`  
+Monitor analysis revision: `86bec2fad3da`  
 Date: 2026-10-27
 
 ---
