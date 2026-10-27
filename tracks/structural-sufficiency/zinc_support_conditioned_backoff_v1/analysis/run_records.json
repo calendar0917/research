@@ -8,7 +8,8 @@
   "commits": {
     "protocol_and_arms": "5c3b85cc483cdeb72ce6d563a62553e7a2e0e0d0",
     "phase0_bound_and_deployed": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
-    "phase1_runs": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4"
+    "phase1_runs": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
+    "phase1_results_and_report": "68620241"
   },
   "execution_regime": {
     "host": "res",
@@ -17,7 +18,11 @@
     "gpu": "2 x NVIDIA A100-SXM4-40GB",
     "driver": "550.163.01",
     "torch": "2.5.1+cu124",
-    "pools": ["res-gpu0", "res-gpu1", "res-local"],
+    "pools": [
+      "res-gpu0",
+      "res-gpu1",
+      "res-local"
+    ],
     "note": "same host/node/driver/torch for all four Phase 1 runs; no cross-host comparison"
   },
   "phase0": {
@@ -49,7 +54,10 @@
     "monitor": "bjoc monitor 1000",
     "locked": "bjoc locked 1000",
     "total_updates": 47400,
-    "seeds": [0, 1],
+    "seeds": [
+      0,
+      1
+    ],
     "recipe": "adamw lr 1e-3 -> 1e-5 cosine, warmup 500, wd 1e-5, dropout 0, clip 5, batch 128, raw-y L1",
     "L_source": "frozen zinc_dccl_bottleneck_v1 fit8k_s0/s1 best_monitor checkpoints, same Fit/init/batch order/47400 updates; zero new GPU hours; prediction reproduction max |diff| 1.9e-6",
     "jobs": [
@@ -63,7 +71,11 @@
         "exit_code": 0,
         "commit": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
         "gpu_hours": 0.37338542741083075,
-        "best_monitor": {"monitor_mae": 0.12751167837996036, "epoch": 509, "step": 32067}
+        "best_monitor": {
+          "monitor_mae": 0.12751167837996036,
+          "epoch": 509,
+          "step": 32067
+        }
       },
       {
         "experiment": "scb-P-s0",
@@ -75,7 +87,11 @@
         "exit_code": 0,
         "commit": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
         "gpu_hours": 0.4117656446735944,
-        "best_monitor": {"monitor_mae": 0.12747481309901923, "epoch": 609, "step": 38367}
+        "best_monitor": {
+          "monitor_mae": 0.12747481309901923,
+          "epoch": 609,
+          "step": 38367
+        }
       },
       {
         "experiment": "scb-S-s1",
@@ -87,7 +103,11 @@
         "exit_code": 0,
         "commit": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
         "gpu_hours": 0.36055238728417965,
-        "best_monitor": {"monitor_mae": 0.1280657609300688, "epoch": 607, "step": 38241}
+        "best_monitor": {
+          "monitor_mae": 0.1280657609300688,
+          "epoch": 607,
+          "step": 38241
+        }
       },
       {
         "experiment": "scb-P-s1",
@@ -99,7 +119,11 @@
         "exit_code": 0,
         "commit": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
         "gpu_hours": 0.4108007739005714,
-        "best_monitor": {"monitor_mae": 0.1243109106393531, "epoch": 543, "step": 34209}
+        "best_monitor": {
+          "monitor_mae": 0.1243109106393531,
+          "epoch": 543,
+          "step": 34209
+        }
       }
     ],
     "smoke": {
@@ -108,10 +132,10 @@
       "gpu_hours": 0.001953580339710849,
       "note": "64-update GPU path smoke; separate runs_smoke; not part of the comparison"
     },
-    "gpu_hours_total": 1.5584578073363226,
+    "gpu_hours_total": 1.5584578073363227,
     "gpu_hours_soft_budget": 3.0,
     "gpu_hours_hard_cap": 4.0,
-    "gpu_hours_remaining": 1.4415421926636774,
+    "gpu_hours_remaining": 1.4415421926636773,
     "locked_read": {
       "command": "uv run python .../scb_score.py --device cpu",
       "attempts": [
