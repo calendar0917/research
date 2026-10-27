@@ -32,6 +32,12 @@ import coc_model as CM  # noqa: E402
 import ad_common as C  # noqa: E402
 
 SENTINEL = CC.ANALYSIS / "locked_read.json"
+_RUN_FILES = {
+    "train_json": "train.json",
+    "best_monitor": "best_monitor.pt",
+    "final": "final.pt",
+    "predictions_monitor": "predictions_monitor.pt",
+}
 
 
 def _ae(pred, y):
@@ -52,7 +58,7 @@ def _verify_freeze(freeze: dict, device) -> dict:
             for name, digest in freeze["code_sha256"].items()
         ),
         "run_sha256": all(
-            CC.sha256_file(CC.RUNS / f"COC_fit8k_s{seed}" / name) == digest
+            CC.sha256_file(CC.RUNS / f"COC_fit8k_s{seed}" / _RUN_FILES[name]) == digest
             for seed in (0, 1)
             for name, digest in freeze["run_sha256"][f"seed{seed}"].items()
         ),
