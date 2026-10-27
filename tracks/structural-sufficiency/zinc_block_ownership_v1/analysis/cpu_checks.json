@@ -1,0 +1,637 @@
+{
+  "C1_train": {
+    "split": "train",
+    "n_molecules": 10000,
+    "n_blocks_ours": 121808,
+    "n_blocks_old_cache": 121808,
+    "old_zero_edge_blocks": 0,
+    "mismatch_networkx": 0,
+    "mismatch_old_cache": 0,
+    "unassigned_or_missing_bonds": 0,
+    "duplicate_block_sets": 0,
+    "bad_rank": 0,
+    "bad_articulation_count": 0,
+    "examples": [],
+    "seconds": 2.635878667992074,
+    "pass": true
+  },
+  "C1_valid": {
+    "split": "valid",
+    "n_molecules": 1000,
+    "n_blocks_ours": 12155,
+    "n_blocks_old_cache": 12155,
+    "old_zero_edge_blocks": 0,
+    "mismatch_networkx": 0,
+    "mismatch_old_cache": 0,
+    "unassigned_or_missing_bonds": 0,
+    "duplicate_block_sets": 0,
+    "bad_rank": 0,
+    "bad_articulation_count": 0,
+    "examples": [],
+    "seconds": 0.2621580230188556,
+    "pass": true
+  },
+  "C2": {
+    "n_molecules": 8,
+    "reader_ext_randomised": true,
+    "atom_relabel_max_pred_diff": 1.043081283569336e-07,
+    "atom_relabel_max_znew_diff": 0.0,
+    "edge_reverse_max_pred_diff": 0.0,
+    "edge_reverse_max_znew_diff": 0.0,
+    "edge_order_max_pred_diff": 1.1920928955078125e-07,
+    "edge_order_max_znew_diff": 4.76837158203125e-07,
+    "batch_reorder_max_pred_diff": 0.0,
+    "parameters": 497161,
+    "pass": true
+  },
+  "C3": {
+    "n_rows": 128,
+    "n_blocks": 1577,
+    "arms": {
+      "R": {
+        "first_max_abs_diff_vs_true": 0.0,
+        "second_max_abs_diff_vs_true": 2.220446049250313e-16
+      },
+      "N": {
+        "first_max_abs_diff_vs_true": 1.7763568394002505e-15,
+        "second_max_abs_diff_vs_true": 2.7755575615628914e-16
+      },
+      "S": {
+        "first_max_abs_diff_vs_true": 8.881784197001252e-16,
+        "second_max_abs_diff_vs_true": 2.220446049250313e-16
+      }
+    },
+    "R_N_first_max_abs_diff": 0.9143516919797374,
+    "R_N_second_max_abs_diff": 0.33400513160495293,
+    "R_S_first_max_abs_diff": 0.7852448471156614,
+    "R_S_second_max_abs_diff": 0.21779082943790518,
+    "S_singleton_first_max_abs_diff": 0.0,
+    "S_singleton_second_max_abs_diff": 0.0,
+    "N_allocation_sum_max_dev": 4.440892098500626e-16,
+    "S_multi_allocation_sum_max_dev": 1.1102230246251565e-16,
+    "S_no_multi_graph_sum_max_abs": 0.0,
+    "n_graphs_with_multi": 127,
+    "n_graphs_without_multi": 1,
+    "pass": true
+  },
+  "C4": {
+    "block_sizes": [
+      1,
+      3,
+      3
+    ],
+    "bond_multiset_equal": true,
+    "R_max_abs_diff": 0.0980793833732605,
+    "R_h_norm": 3.1813151836395264,
+    "N_max_abs_diff": 1.7881393432617188e-07,
+    "N_h_norm": 4.3988423347473145,
+    "S_max_abs_diff": 2.384185791015625e-07,
+    "S_h_norm": 3.674931526184082,
+    "linear_pool_max_abs_diff": 2.384185791015625e-07,
+    "pass": true,
+    "interpretation": "Operator-level witness only: the same bond-state multiset and the same block sizes can carry different true ownership. A nonlinear shared phi separates R; N and S are numerically blind to the permutation (float32 reduction order only); a purely linear pooling is also blind. This is not a chemistry-label proof."
+  },
+  "C5": {
+    "block_stats": {
+      "n_molecules": 10000,
+      "n_blocks": 121808,
+      "n_singleton_blocks": 98286,
+      "n_multi_blocks": 23522,
+      "singleton_block_fraction": 0.8068928149218442,
+      "block_size_hist": {
+        "1": 98286,
+        "3": 620,
+        "4": 149,
+        "5": 5855,
+        "6": 13038,
+        "7": 188,
+        "8": 61,
+        "9": 160,
+        "10": 1868,
+        "11": 1128,
+        "12": 104,
+        "13": 8,
+        "14": 57,
+        "15": 194,
+        "16": 38,
+        "17": 17,
+        "18": 3,
+        "19": 10,
+        "20": 16,
+        "21": 5,
+        "23": 1,
+        "25": 1,
+        "28": 1
+      },
+      "mean_blocks_per_molecule": 12.1808,
+      "mean_multi_blocks_per_molecule": 2.3522,
+      "molecules_ge1_multi": 9945,
+      "molecules_ge2_multi": 8832,
+      "fraction_molecules_ge1_multi": 0.9945,
+      "fraction_molecules_ge2_multi": 0.8832,
+      "max_block_edges": 28
+    },
+    "fraction_molecules_ge2_multi": 0.8832,
+    "n_affected_blocks": 22409,
+    "n_affected_molecules_batches": 8832,
+    "rs_first_relative_diff": {
+      "n": 22409,
+      "mean": 0.3541518051033171,
+      "median": 0.35129143164714255,
+      "p90": 0.5067498789655468,
+      "fraction_gt_1pct": 0.9991967513052791
+    },
+    "rs_second_relative_diff": {
+      "n": 22409,
+      "mean": 0.40670799376353833,
+      "median": 0.4047309547156312,
+      "p90": 0.567598408420231,
+      "fraction_gt_1pct": 0.9992860011602481
+    },
+    "seconds": 1.7471971299964935,
+    "stop_gate_structural_pass": true,
+    "stop_gate_numeric_pass": true,
+    "pass": true
+  },
+  "C6": {
+    "core_files": [
+      "zbo_blocks.py",
+      "zbo_models.py",
+      "zbo_prep.py"
+    ],
+    "forbidden_token_hits": {
+      "zbo_blocks.py": [],
+      "zbo_models.py": [],
+      "zbo_prep.py": []
+    },
+    "old_block_feature_dims": {
+      "joint_histogram": 693,
+      "atom_type_histogram": 21,
+      "bond_type_histogram": 3,
+      "block_scalars": 11,
+      "attention": "1-layer GlobalAttention(block-cut-tree distance/overlap)"
+    },
+    "new_block_feature_dims": {
+      "learned_content_first": 96,
+      "learned_content_second": 96,
+      "block_scalars": 4,
+      "attention": null
+    },
+    "old_block_model_parameters": 338805,
+    "new_model_parameters": 497161,
+    "old_block_model_result": "best-valid 0.165418 (zinc_arch_discovery_v1)",
+    "pass": true,
+    "interpretation": "Only the deterministic biconnected partition is shared with the historical BlockModel; its type histograms, block-cut-tree distance/overlap and attention are not imported or called."
+  },
+  "C7": {
+    "parameters": 497161,
+    "parameters_breakdown": {
+      "atom_encoder": 26336,
+      "bond_encoder": 62816,
+      "half_encoder": 42016,
+      "side": 91488,
+      "compose": 78176,
+      "reader": 173057,
+      "block_norm": 392,
+      "block_mlp": 14688,
+      "reader_ext": 8192,
+      "old_total": 473889,
+      "new_total": 23272,
+      "total": 497161
+    },
+    "parameter_cap": 500000,
+    "pairwise_full_state_max_abs_diff": {
+      "R_N": 0.0,
+      "R_S": 0.0,
+      "N_S": 0.0
+    },
+    "common_vs_reference_bosi_b_state_max_abs_diff": 0.0,
+    "forward_vs_reference_bosi_b_max_abs_diff": 0.0,
+    "forward_bitwise_equal": true,
+    "repeat_build_state_max_abs_diff": 0.0,
+    "reader_ext_weight_zero_at_init": true,
+    "optimizer_parameter_count": 497161,
+    "optimizer_covers_all": true,
+    "arms": {
+      "R": {
+        "parameters": 497161,
+        "parameters_breakdown": {
+          "atom_encoder": 26336,
+          "bond_encoder": 62816,
+          "half_encoder": 42016,
+          "side": 91488,
+          "compose": 78176,
+          "reader": 173057,
+          "block_norm": 392,
+          "block_mlp": 14688,
+          "reader_ext": 8192,
+          "old_total": 473889,
+          "new_total": 23272,
+          "total": 497161
+        },
+        "initial_state_sha256": "bd18518b396646f14426f92ccf251139d249440e0edc1317c384bab23ae5ca2c",
+        "ssl": {
+          "source": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+          "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+          "keys_loaded": [
+            "atom_encoder",
+            "bond_encoder"
+          ],
+          "junction_encoder_loaded": false
+        }
+      },
+      "N": {
+        "parameters": 497161,
+        "parameters_breakdown": {
+          "atom_encoder": 26336,
+          "bond_encoder": 62816,
+          "half_encoder": 42016,
+          "side": 91488,
+          "compose": 78176,
+          "reader": 173057,
+          "block_norm": 392,
+          "block_mlp": 14688,
+          "reader_ext": 8192,
+          "old_total": 473889,
+          "new_total": 23272,
+          "total": 497161
+        },
+        "initial_state_sha256": "bd18518b396646f14426f92ccf251139d249440e0edc1317c384bab23ae5ca2c",
+        "ssl": {
+          "source": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+          "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+          "keys_loaded": [
+            "atom_encoder",
+            "bond_encoder"
+          ],
+          "junction_encoder_loaded": false
+        }
+      },
+      "S": {
+        "parameters": 497161,
+        "parameters_breakdown": {
+          "atom_encoder": 26336,
+          "bond_encoder": 62816,
+          "half_encoder": 42016,
+          "side": 91488,
+          "compose": 78176,
+          "reader": 173057,
+          "block_norm": 392,
+          "block_mlp": 14688,
+          "reader_ext": 8192,
+          "old_total": 473889,
+          "new_total": 23272,
+          "total": 497161
+        },
+        "initial_state_sha256": "bd18518b396646f14426f92ccf251139d249440e0edc1317c384bab23ae5ca2c",
+        "ssl": {
+          "source": "/home/calendar/code/research/tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+          "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+          "keys_loaded": [
+            "atom_encoder",
+            "bond_encoder"
+          ],
+          "junction_encoder_loaded": false
+        }
+      }
+    },
+    "pass": true
+  },
+  "C8": {
+    "rows": 64,
+    "grad_log": [
+      {
+        "step": 0,
+        "loss": 1.224583387374878,
+        "block_norm_grad": 0.0,
+        "block_mlp_grad": 0.0,
+        "reader_ext_grad": 0.33029261231422424
+      },
+      {
+        "step": 1,
+        "loss": 1.432050347328186,
+        "block_norm_grad": 0.021230090409517288,
+        "block_mlp_grad": 0.27147799730300903,
+        "reader_ext_grad": 1.5578197240829468
+      },
+      {
+        "step": 2,
+        "loss": 0.9619027376174927,
+        "block_norm_grad": 0.004931074101477861,
+        "block_mlp_grad": 0.06033797562122345,
+        "reader_ext_grad": 0.40800490975379944
+      },
+      {
+        "step": 3,
+        "loss": 1.1368931531906128,
+        "block_norm_grad": 0.018878988921642303,
+        "block_mlp_grad": 0.24486128985881805,
+        "reader_ext_grad": 0.8058944940567017
+      }
+    ],
+    "block_mlp_grad_step1": 0.27147799730300903,
+    "reader_ext_grad_step0": 0.33029261231422424,
+    "znew_std_after_4_steps": 1.5489991903305054,
+    "znew_absmax_after_4_steps": 4.396010875701904,
+    "phi_std_after_4_steps": 0.14065025746822357,
+    "reader_ext_weight_norm_after_4_steps": 0.15571656823158264,
+    "finite_activations": true,
+    "finite_parameters": true,
+    "pass": true
+  },
+  "C9": {
+    "block_hash_train": "460d9dff23892f742bb2788d39cf3376a2adfe99728f650d2197a24148d956ed",
+    "block_hash_train_with_nan_labels": "460d9dff23892f742bb2788d39cf3376a2adfe99728f650d2197a24148d956ed",
+    "block_hash_valid": "00bb2f5993e7fb10c28d2ea403d4046465ba69833d953b3a97289349fd67c41d",
+    "block_hash_valid_with_nan_labels": "00bb2f5993e7fb10c28d2ea403d4046465ba69833d953b3a97289349fd67c41d",
+    "prediction_max_abs_diff_with_nan_valid_labels": 0.0,
+    "test_cache_references_in_core": [],
+    "label_access_in_core": {
+      "zbo_blocks.py": false,
+      "zbo_models.py": false,
+      "zbo_prep.py": false
+    },
+    "pass": true
+  },
+  "C10": {
+    "relation_train_content_hash": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+    "relation_train_rebuild_hash": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+    "relation_valid_content_hash": "6505e23bdcbbaf42b64aa38f11af06474f76081d0d363cddd25ea6427c7cebbb",
+    "relation_valid_rebuild_hash": "6505e23bdcbbaf42b64aa38f11af06474f76081d0d363cddd25ea6427c7cebbb",
+    "block_train_content_hash": "460d9dff23892f742bb2788d39cf3376a2adfe99728f650d2197a24148d956ed",
+    "block_train_rebuild_hash": "460d9dff23892f742bb2788d39cf3376a2adfe99728f650d2197a24148d956ed",
+    "block_valid_content_hash": "00bb2f5993e7fb10c28d2ea403d4046465ba69833d953b3a97289349fd67c41d",
+    "block_valid_rebuild_hash": "00bb2f5993e7fb10c28d2ea403d4046465ba69833d953b3a97289349fd67c41d",
+    "known_relation_hashes": {
+      "train": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+      "valid": "6505e23bdcbbaf42b64aa38f11af06474f76081d0d363cddd25ea6427c7cebbb"
+    },
+    "seconds": 8.883766409009695,
+    "pass": true
+  },
+  "C11": {
+    "cases": {
+      "chain4": {
+        "got": {
+          "sizes": [
+            1,
+            1,
+            1
+          ],
+          "ranks": [
+            0,
+            0,
+            0
+          ],
+          "artic": [
+            1,
+            1,
+            2
+          ]
+        },
+        "want": {
+          "sizes": [
+            1,
+            1,
+            1
+          ],
+          "ranks": [
+            0,
+            0,
+            0
+          ],
+          "artic": [
+            1,
+            1,
+            2
+          ]
+        },
+        "pass": true
+      },
+      "triangle": {
+        "got": {
+          "sizes": [
+            3
+          ],
+          "ranks": [
+            1
+          ],
+          "artic": [
+            0
+          ]
+        },
+        "want": {
+          "sizes": [
+            3
+          ],
+          "ranks": [
+            1
+          ],
+          "artic": [
+            0
+          ]
+        },
+        "pass": true
+      },
+      "fused_triangles": {
+        "got": {
+          "sizes": [
+            5
+          ],
+          "ranks": [
+            2
+          ],
+          "artic": [
+            0
+          ]
+        },
+        "want": {
+          "sizes": [
+            5
+          ],
+          "ranks": [
+            2
+          ],
+          "artic": [
+            0
+          ]
+        },
+        "pass": true
+      },
+      "two_triangles_bridge": {
+        "got": {
+          "sizes": [
+            1,
+            3,
+            3
+          ],
+          "ranks": [
+            0,
+            1,
+            1
+          ],
+          "artic": [
+            1,
+            1,
+            2
+          ]
+        },
+        "want": {
+          "sizes": [
+            1,
+            3,
+            3
+          ],
+          "ranks": [
+            0,
+            1,
+            1
+          ],
+          "artic": [
+            1,
+            1,
+            2
+          ]
+        },
+        "pass": true
+      },
+      "square_chord": {
+        "got": {
+          "sizes": [
+            5
+          ],
+          "ranks": [
+            2
+          ],
+          "artic": [
+            0
+          ]
+        },
+        "want": {
+          "sizes": [
+            5
+          ],
+          "ranks": [
+            2
+          ],
+          "artic": [
+            0
+          ]
+        },
+        "pass": true
+      }
+    },
+    "pass": true
+  },
+  "C12": {
+    "prediction_max_abs_diff": 0.0,
+    "state_hash_equal": true,
+    "pass": true
+  },
+  "C13": {
+    "data_train_sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3",
+    "data_valid_sha256": "6e45fea66c4c87c7de1cd9c32cd495525c7ea5099b1c35f54fd3ab68fc8b1e97",
+    "norm_json_sha256": "f6e04fc0d3f7ed1fb405e061ac388558978e2d2356781fcc4cde2a26d59e25be",
+    "norm_mean_max_abs_diff": 1.934528350844289e-07,
+    "norm_scale_max_abs_diff": 2.7107674327453424e-08,
+    "norm_valid_or_test_used": false,
+    "split_train": "train",
+    "split_valid": "valid",
+    "n_train": 10000,
+    "n_valid": 1000,
+    "ssl": {
+      "0": {
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+        "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+        "keys": [
+          "atom_encoder",
+          "bond_encoder",
+          "junction_encoder"
+        ],
+        "has_side_or_compose_or_reader": false
+      },
+      "1": {
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+        "sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a",
+        "keys": [
+          "atom_encoder",
+          "bond_encoder",
+          "junction_encoder"
+        ],
+        "has_side_or_compose_or_reader": false
+      }
+    },
+    "official_test_loaded": false,
+    "pass": true
+  },
+  "C14": {
+    "anchor": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/B_s0/valid_best.npz",
+    "rows": [
+      24,
+      172,
+      221,
+      249,
+      260,
+      278,
+      659,
+      737,
+      753,
+      917
+    ],
+    "n_unique": 10,
+    "all_in_range": true,
+    "anchor_mae": 0.0824054759553983,
+    "anchor_top10_ae": [
+      0.5710592269897461,
+      9.41447925567627,
+      0.6012897491455078,
+      0.582977294921875,
+      0.9678975939750671,
+      0.6104239895939827,
+      1.2383771166205406,
+      0.5312150716781616,
+      2.1175665855407715,
+      2.6556701064109802
+    ],
+    "pass": true
+  },
+  "C15": {
+    "n_blocks_quantiles_train": [
+      10,
+      12,
+      14
+    ],
+    "n_multi_bins": "0,1,2,3+",
+    "valid_n_multi_counts": {
+      "4": 78,
+      "2": 476,
+      "3": 332,
+      "1": 110,
+      "5": 3,
+      "0": 1
+    },
+    "valid_n_blocks_bin_counts": {
+      "ge_15": 206,
+      "le_10": 267,
+      "13_14": 258,
+      "11_12": 269
+    },
+    "valid_block_size_combo_novel_counts": {
+      "0": 953,
+      "1": 47
+    },
+    "valid_block_sig_combo_novel_counts": {
+      "1": 370,
+      "0": 630
+    },
+    "train_size_vocab_size": 1199,
+    "train_sig_vocab_size": 5367,
+    "fraction_valid_size_combo_novel": 0.047,
+    "fraction_valid_sig_combo_novel": 0.37,
+    "pass": true,
+    "note": "Group definitions are structure-only. They are descriptive; no decision gate uses the novelty subgroup."
+  },
+  "all_pass": true,
+  "stop_reason": null,
+  "seconds_total": 22.184856812004
+}

@@ -1,0 +1,324 @@
+{
+  "protocol_id": "zinc-block-ownership-v1",
+  "frozen_utc": "2026-10-27T11:14:08+0800",
+  "frozen_before_commit": true,
+  "git_head_at_freeze": "1b87f195e94d123640a8d75434b8a8b201757b35",
+  "git_dirty_at_freeze": true,
+  "design": "tracks/structural-sufficiency/zinc_block_ownership_v1/DESIGN.md",
+  "protocol": "tracks/structural-sufficiency/zinc_block_ownership_v1/PROTOCOL.md",
+  "code_sha256": {
+    "zbo_blocks.py": "6c0ba9052568a9f616389a8ad2c8fc9837caf7f1764d3fd241c6b693777e0f0e",
+    "zbo_checks.py": "a1f1a0aee4c27c7f9f30492e5c0f50c03d592d0ba9d7f2c052dcaa8db698ed32",
+    "zbo_common.py": "f054f6ff8a5edc7deb28bd92dfbc09515fb463b359069fcf297f021bf707b5c2",
+    "zbo_freeze.py": "55a9c68ff9eb3f19be69c0863479c7ff02b7b5a2a11bccee6f37360406113cae",
+    "zbo_models.py": "908df16dc9e35af86789bd989a31a878fbe9e06a5c0bbd0683ff6b95d5b4df92",
+    "zbo_prep.py": "8eb6b3e6fe61f5ace7e88bdf00db26a7878b7b1632c381c42f4217234fda50b4",
+    "zbo_train.py": "9cd43227358a00e68e0a6a71f7fc678b7394b09874679e40ad45f4669731ba8f"
+  },
+  "model": {
+    "base": "BOSI-B (arm B relation statistics, unchanged)",
+    "block_input_dim": 196,
+    "block_hidden": 64,
+    "block_out": 32,
+    "reader_old_in": 417,
+    "reader_new_in": 449,
+    "expected_parameters": 497161,
+    "parameter_cap": 500000,
+    "reader_ext_zero_init": true,
+    "implementation": "old reader first layer + zero-init Linear(32,256,bias=False); algebraically a 449-column first layer with zero new columns",
+    "block_content": {
+      "R": "true biconnected-block sums; bridge is a one-edge block",
+      "N": "global graph mean-field, allocated by n_edges(B)/E[G]",
+      "S": "true content on singleton blocks; multi blocks share the MULTI mean by edge count"
+    }
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "eval_batch_size": 256,
+    "loss": "l1_raw_y",
+    "precision": "fp32",
+    "epochs": 600,
+    "steps_per_epoch": 79,
+    "total_updates": 47400,
+    "selection": "strict minimum official-valid MAE, earlier epoch wins ties"
+  },
+  "data": {
+    "train": {
+      "split": "train",
+      "source_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+      "source_sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3",
+      "relation_cache": "tracks/structural-sufficiency/zinc_block_ownership_v1/cache/zbo_rel_train.pt",
+      "relation_file_sha256": "afa9ace02624db7e39bd730a77fb30f77f7831c59a00b600941b4e1776b38ba2",
+      "relation_content_sha256": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+      "relation_known_hash": "c698a2f30e0fe9f2fc51e79f37156e81da56f44b6a47843293dddb308ceda2b7",
+      "relation_hash_matches_known": true,
+      "block_cache": "tracks/structural-sufficiency/zinc_block_ownership_v1/cache/zbo_blocks_train.pt",
+      "block_file_sha256": "c9f13d5447c4567ec9902320cd3318e723b395c5be97457d2430b56d6e1af788",
+      "block_content_sha256": "460d9dff23892f742bb2788d39cf3376a2adfe99728f650d2197a24148d956ed",
+      "block_stats": {
+        "n_molecules": 10000,
+        "n_blocks": 121808,
+        "n_singleton_blocks": 98286,
+        "n_multi_blocks": 23522,
+        "singleton_block_fraction": 0.8068928149218442,
+        "block_size_hist": {
+          "1": 98286,
+          "3": 620,
+          "4": 149,
+          "5": 5855,
+          "6": 13038,
+          "7": 188,
+          "8": 61,
+          "9": 160,
+          "10": 1868,
+          "11": 1128,
+          "12": 104,
+          "13": 8,
+          "14": 57,
+          "15": 194,
+          "16": 38,
+          "17": 17,
+          "18": 3,
+          "19": 10,
+          "20": 16,
+          "21": 5,
+          "23": 1,
+          "25": 1,
+          "28": 1
+        },
+        "mean_blocks_per_molecule": 12.1808,
+        "mean_multi_blocks_per_molecule": 2.3522,
+        "molecules_ge1_multi": 9945,
+        "molecules_ge2_multi": 8832,
+        "fraction_molecules_ge1_multi": 0.9945,
+        "fraction_molecules_ge2_multi": 0.8832,
+        "max_block_edges": 28
+      },
+      "official_valid_loaded": false,
+      "official_test_loaded": false,
+      "labels_read": false,
+      "build_seconds": 9.614715191011783
+    },
+    "valid": {
+      "split": "valid",
+      "source_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_valid.pt",
+      "source_sha256": "6e45fea66c4c87c7de1cd9c32cd495525c7ea5099b1c35f54fd3ab68fc8b1e97",
+      "relation_cache": "tracks/structural-sufficiency/zinc_block_ownership_v1/cache/zbo_rel_valid.pt",
+      "relation_file_sha256": "1558dc714e1b483adeb34ecb23240b39783d7e2ebda1de1ec2f21d8e0b04cd8a",
+      "relation_content_sha256": "6505e23bdcbbaf42b64aa38f11af06474f76081d0d363cddd25ea6427c7cebbb",
+      "relation_known_hash": "6505e23bdcbbaf42b64aa38f11af06474f76081d0d363cddd25ea6427c7cebbb",
+      "relation_hash_matches_known": true,
+      "block_cache": "tracks/structural-sufficiency/zinc_block_ownership_v1/cache/zbo_blocks_valid.pt",
+      "block_file_sha256": "472dc0ce0ad934d0c0b20820f17de78bce347eaa11ee062dc4716e0baeaea374",
+      "block_content_sha256": "00bb2f5993e7fb10c28d2ea403d4046465ba69833d953b3a97289349fd67c41d",
+      "block_stats": {
+        "n_molecules": 1000,
+        "n_blocks": 12155,
+        "n_singleton_blocks": 9770,
+        "n_multi_blocks": 2385,
+        "singleton_block_fraction": 0.8037844508432743,
+        "block_size_hist": {
+          "1": 9770,
+          "3": 80,
+          "4": 7,
+          "5": 634,
+          "6": 1319,
+          "7": 19,
+          "8": 6,
+          "9": 6,
+          "10": 162,
+          "11": 104,
+          "12": 11,
+          "14": 4,
+          "15": 19,
+          "16": 5,
+          "17": 2,
+          "19": 3,
+          "20": 3,
+          "21": 1
+        },
+        "mean_blocks_per_molecule": 12.155,
+        "mean_multi_blocks_per_molecule": 2.385,
+        "molecules_ge1_multi": 999,
+        "molecules_ge2_multi": 889,
+        "fraction_molecules_ge1_multi": 0.999,
+        "fraction_molecules_ge2_multi": 0.889,
+        "max_block_edges": 21
+      },
+      "official_valid_loaded": true,
+      "official_test_loaded": false,
+      "labels_read": false,
+      "build_seconds": 0.9143406510120258
+    },
+    "norm": {
+      "path": "tracks/structural-sufficiency/zinc_arch_discovery_v1/analysis/norm.json",
+      "sha256": "f6e04fc0d3f7ed1fb405e061ac388558978e2d2356781fcc4cde2a26d59e25be",
+      "valid_or_test_used": false
+    },
+    "ssl": {
+      "0": {
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+        "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+      },
+      "1": {
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+        "sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a"
+      }
+    },
+    "official_test_loaded": false
+  },
+  "cpu_gates": {
+    "path": "tracks/structural-sufficiency/zinc_block_ownership_v1/analysis/cpu_checks.json",
+    "sha256": "177271fb541ab5f732ab1f8303435ee016cfe4e05a147d2130c32595bc27a9fb",
+    "all_pass": true,
+    "failed_checks": []
+  },
+  "phase0_observed": {
+    "fraction_molecules_ge2_multi": 0.8832,
+    "rs_first_relative_diff": {
+      "n": 22409,
+      "mean": 0.3541518051033171,
+      "median": 0.35129143164714255,
+      "p90": 0.5067498789655468,
+      "fraction_gt_1pct": 0.9991967513052791
+    },
+    "rs_second_relative_diff": {
+      "n": 22409,
+      "mean": 0.40670799376353833,
+      "median": 0.4047309547156312,
+      "p90": 0.567598408420231,
+      "fraction_gt_1pct": 0.9992860011602481
+    },
+    "n_blocks_train": 121808,
+    "n_blocks_valid": 12155,
+    "n_affected_blocks": 22409
+  },
+  "stop_gates": {
+    "min_fraction_molecules_ge2_multi": 0.2,
+    "min_rs_fraction_gt_1pct": 0.5,
+    "min_rs_mean_relative_diff": 0.01,
+    "gpu_authorized": true,
+    "reason_if_stopped": null
+  },
+  "fixed_worst10_rows": [
+    24,
+    172,
+    221,
+    249,
+    260,
+    278,
+    659,
+    737,
+    753,
+    917
+  ],
+  "fixed_worst10_rows_hash": "18dc2f000e41c22c8a06b54ef24a026655231eef06a85d31e4558d53215fc668",
+  "fixed_worst10_anchor": "tracks/structural-sufficiency/zinc_bosi_joint_moment_v1/runs/B_s0/valid_best.npz",
+  "fixed_worst10_anchor_mae": 0.0824054759553983,
+  "group_definitions": {
+    "n_blocks_quantiles_train": [
+      10,
+      12,
+      14
+    ],
+    "n_multi_bins": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "block_size_combo_novel": "valid molecule's sorted n_edges tuple absent from train",
+    "block_sig_combo_novel": "valid molecule's sorted (n_edges,n_atoms,rank,n_artic) tuple absent from train",
+    "support_tier": "radius-2 typed signature support: all_supported / low_support / any_unseen",
+    "ordinary_tail": "ordinary y > -3; tail y <= -3",
+    "rings_ge4": "molecule cycle rank >= 4",
+    "penalized_proxy": "max_ring_size >= 7"
+  },
+  "run_plan": {
+    "batch1": [
+      "R_s0",
+      "N_s0"
+    ],
+    "batch2_iff_seed0_pass": [
+      "R_s1",
+      "N_s1"
+    ],
+    "batch3_iff_both_seeds_positive": [
+      "S_s0",
+      "S_s1"
+    ],
+    "rule": "No width/depth/lr/wd/normalisation/block-type change after any result. Each seed uses its own SSL checkpoint; no supervised warm start."
+  },
+  "seed0_gate": {
+    "d_best_min": 0.005,
+    "R_best_max": 0.082,
+    "d_W20_min": -0.002,
+    "d_T100_min": -0.002,
+    "at_least_one_of_W20_T100_positive": true,
+    "ordinary_paired_dMAE_min": 0.0,
+    "fixed_worst10_removed_dMAE_strictly_positive": true,
+    "single_row_contribution_max_fraction_of_total": 0.5,
+    "mechanism_active": true
+  },
+  "two_seed_gate": {
+    "both_d_best_min": 0.005,
+    "same_direction": true
+  },
+  "outcome_labels": [
+    "OWNERSHIP_NOT_USEFUL",
+    "SINGLETON_NONLINEARITY_ONLY",
+    "STRUCTURAL_GAIN_BUT_NOT_COMPETITIVE",
+    "PROMISING_COMPOSITION_MECHANISM",
+    "UNRESOLVED_DUE_TO_VARIANCE",
+    "MECHANISM_INACTIVE"
+  ],
+  "decision_thresholds": {
+    "R_S_two_seed_mean_min": 0.003,
+    "R_seed_mean_competitive_max": 0.077,
+    "DCCL_seed_mean_valid": 0.07599,
+    "DCCL_one_shot_test": 0.067319,
+    "official_goal_test": 0.06
+  },
+  "claim_limits": [
+    "N loses ownership information: R-N is not a strict same-information contrast.",
+    "R better than N but not better than S does not support block-level compositional generalisation.",
+    "No recursive MP, learned junction token, attention, distillation, or test tuning.",
+    "Two seeds share the same two SSL checkpoints; they are not an independent SSL family.",
+    "PROMISING is a follow-up signal, not a confirmation or a competitive claim.",
+    "The official test split is never read in this round."
+  ],
+  "gpu_budget_hours": {
+    "soft": 4.0,
+    "hard": 6.0,
+    "estimated_formal": "3.0-3.5 for six trajectories plus smoke"
+  },
+  "analysis_products": [
+    "best-valid / W20 / T100 / final-valid / train@best / train@final",
+    "paired dMAE with bootstrap CI",
+    "ordinary / tail / radius-2 support groups",
+    "rings>=4, median/P90 AE",
+    "fixed worst-10 and drop-top-10",
+    "drop-row172",
+    "block-count / novelty groups",
+    "parameters, GPU time, initial-state hash, commit, checkpoint hash"
+  ],
+  "forbidden": [
+    "test split access",
+    "test-tuned hyperparameters",
+    "recursive message passing",
+    "learned junction token",
+    "attention",
+    "distillation",
+    "ensembling",
+    "multi-seed averaging at inference",
+    "block-type change after results"
+  ],
+  "freeze_note": "Frozen after analysis/cpu_checks.json passed, before the commit that contains this config. The formal run's train.json records the clean git HEAD at launch; this field may point at the parent commit."
+}
