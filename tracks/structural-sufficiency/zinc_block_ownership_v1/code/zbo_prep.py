@@ -5,7 +5,8 @@ Usage:
     python .../zbo_prep.py --split train
 
 Writes ``cache/zbo_rel_{split}.pt`` and ``cache/zbo_blocks_{split}.pt`` and
-``analysis/prep.json``.  Only structural fields of the frozen official caches
+``cache/prep.json``.  Pass ``--write-analysis`` only for the local frozen copy; remote
+prep must not modify tracked files.  Only structural fields of the frozen official caches
 are read; labels are never touched.
 """
 
@@ -70,6 +71,8 @@ def build_split(split: str) -> dict:
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--split", choices=["train", "valid", "both"], default="both")
+    p.add_argument("--write-analysis", action="store_true",
+                   help="also write the tracked analysis/prep.json (local only)")
     args = p.parse_args(argv)
     splits = ["train", "valid"] if args.split == "both" else [args.split]
     out = {}
@@ -83,7 +86,11 @@ def main(argv=None) -> int:
         if not rec["relation_hash_matches_known"]:
             raise RuntimeError(f"{split}: relation content hash drifted from the "
                                f"frozen BOSI/JM cache")
-    BC.write_json(BC.ANALYSIS / "prep.json", out)
+    BC.CACHE.mkdir(parents=True, exist_ok=True)
+    BC.write_json(BC.CACHE / "prep.json", out)
+    if args.write_analysis:
+        BC.ANALYSIS.mkdir(parents=True, exist_ok=True)
+        BC.write_json(BC.ANALYSIS / "prep.json", out)
     return 0
 
 

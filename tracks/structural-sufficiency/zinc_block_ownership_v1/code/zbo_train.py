@@ -79,7 +79,8 @@ def _git_state() -> tuple[str | None, bool | None]:
         head = subprocess.check_output(
             ["git", "-C", str(BC.REPO), "rev-parse", "HEAD"], text=True).strip()
         dirty = bool(subprocess.check_output(
-            ["git", "-C", str(BC.REPO), "status", "--porcelain"], text=True).strip())
+            ["git", "-C", str(BC.REPO), "status", "--porcelain",
+             "--untracked-files=no"], text=True).strip())
         return head, dirty
     except Exception:
         return None, None

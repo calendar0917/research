@@ -37,7 +37,8 @@ def main() -> int:
         head = subprocess.check_output(
             ["git", "-C", str(BC.REPO), "rev-parse", "HEAD"], text=True).strip()
         dirty = bool(subprocess.check_output(
-            ["git", "-C", str(BC.REPO), "status", "--porcelain"], text=True).strip())
+            ["git", "-C", str(BC.REPO), "status", "--porcelain",
+             "--untracked-files=no"], text=True).strip())
     except Exception:
         head, dirty = None, None
 
