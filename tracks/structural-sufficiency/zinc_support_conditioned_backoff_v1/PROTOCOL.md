@@ -1,9 +1,15 @@
+> **结果横幅（2026-10-27，不改变下方预注册规则）**
+> Phase 1 已完成：判定 **`STOP_UNSAFE`**。S−L primary `+0.003364`（两 seed 同为正），
+> natural overall `+0.002805`；S−P primary `+0.001502`（符号分裂），natural `−0.000227`。
+> ordinary/tail 安全门失败；primary/overall 也未达预注册方向。机制关闭，Phase 2 未解锁、
+> 未运行；official test 未读取。完整结果见 `REPORT.md` 与 `analysis/phase1_decision.json`。
+
 # SCSB v1 — 支持度条件的结构回退算子（预注册）
 
 轮次：`zinc_support_conditioned_backoff_v1`
 协议：`ssrc-zinc-support-conditioned-backoff-v1`
 冻结配置：`configs/scb_v1.json`（机器可读的唯一权威）
-状态：**Phase 0 CPU 门控已通过（13/13）；official test 未构造、未读取。**
+状态：**Phase 0 PASS（13/13）；Phase 1 判定 `STOP_UNSAFE`，机制关闭；Phase 2 未解锁；official test 未构造、未读取。**
 
 ---
 

@@ -21,9 +21,13 @@ preserving the per-molecule alpha distribution exactly.
   alpha=0/1 synthetic endpoints, gradients, alpha distribution, group counts,
   cache/checkpoint hashes, no-test scan, and a one-epoch training-loop match to
   the frozen DCB L curve (online/monitor/lr/step).
-- Phase 1: **not yet run** (S/P two seeds, 47,400 updates each; L is the frozen
-  DCB Fit8k checkpoint, zero new GPU hours).
-- Phase 2: locked until Phase 1 PASS.  Official test is never loaded.
+- Phase 1: **COMPLETE — STOP_UNSAFE; mechanism closed.**  S is worse than L on
+  the primary (`+0.003364`), natural overall (`+0.002805`), ordinary
+  (`+0.001938`) and tail (`+0.016564`); S−P is a wash/sign-split
+  (`+0.001502` primary, `−0.000227` natural).  1.5585 A100·h for S/P + smoke;
+  L is the frozen DCB Fit8k checkpoint (0 new GPU hours).
+- Phase 2: **not unlocked, not run.**  Official test is never loaded; Phase 1
+  did not read official valid.  See `REPORT.md`.
 
 ## Phase 0
 

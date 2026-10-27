@@ -45,6 +45,14 @@ def alpha_locked_for_arm(cache, support, locked_rows, arm: str) -> np.ndarray | 
     return alpha
 
 
+def ck_monitor(ck, train_json, tag):
+    if "monitor_mae" in ck:
+        return float(ck["monitor_mae"])
+    if tag == "final" and train_json.get("curve"):
+        return float(train_json["curve"][-1]["monitor_mae"])
+    return None
+
+
 def score_prediction(pred, group) -> dict:
     pred = np.asarray(pred, dtype=np.float64)
     y = group["y"]
@@ -98,7 +106,7 @@ def score_scb_run(arm: str, seed: int, cache, support, locked, fit_rows, device)
             "checkpoint_sha256": S.sha256_file(run / ck_name),
             "epoch": int(ck["epoch"]),
             "step": int(ck["step"]),
-            "monitor_mae": float(ck["monitor_mae"]),
+            "monitor_mae": ck_monitor(ck, train_json, tag),
             "alpha_fit_sha256": ck.get("alpha_sha256"),
             "alpha_fit_sha256_rebuilt": alpha_fit_sha,
             "alpha_locked_sha256": alpha_locked_sha,
@@ -154,7 +162,7 @@ def score_l_reference(seed: int, cache, support, locked, fit_rows, device) -> di
             "predictions_sha256": S.sha256_file(run / pred_name),
             "epoch": int(ck["epoch"]),
             "step": int(ck["step"]),
-            "monitor_mae": float(ck["monitor_mae"]),
+            "monitor_mae": ck_monitor(ck, train_json, tag),
             "alpha_fit_sha256": None,
             "alpha_locked_sha256": None,
             "train_mae_at_best": float(fit_mae),

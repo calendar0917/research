@@ -1,0 +1,162 @@
+{
+  "protocol": "ssrc-zinc-support-conditioned-backoff-v1",
+  "round": "zinc_support_conditioned_backoff_v1",
+  "status": "PHASE1_STOP_UNSAFE_MECHANISM_CLOSED",
+  "official_test_loaded": false,
+  "official_valid_loaded": false,
+  "phase2_unlocked": false,
+  "commits": {
+    "protocol_and_arms": "5c3b85cc483cdeb72ce6d563a62553e7a2e0e0d0",
+    "phase0_bound_and_deployed": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
+    "phase1_runs": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4"
+  },
+  "execution_regime": {
+    "host": "res",
+    "node": "a100-2",
+    "backend": "process",
+    "gpu": "2 x NVIDIA A100-SXM4-40GB",
+    "driver": "550.163.01",
+    "torch": "2.5.1+cu124",
+    "pools": ["res-gpu0", "res-gpu1", "res-local"],
+    "note": "same host/node/driver/torch for all four Phase 1 runs; no cross-host comparison"
+  },
+  "phase0": {
+    "device": "cpu",
+    "command": "uv run python tracks/structural-sufficiency/zinc_support_conditioned_backoff_v1/code/scb_checks.py",
+    "commit": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
+    "checks": 13,
+    "passed": 13,
+    "gpu_hours": 0.0,
+    "evidence": "tracks/structural-sufficiency/zinc_support_conditioned_backoff_v1/analysis/cpu_checks.json",
+    "highlights": {
+      "fit_only_support_table": true,
+      "leave_one_out_bruteforce_max_err": 0.0,
+      "permutation_invariance_molecules": 50,
+      "parameters": 494193,
+      "initial_state_sha256": "21dead3eef6778e5a17fa0d80208cbb36507ca92d7f018b774f2aec114dc766e",
+      "L_locked_mae_reproduced": 0.08357349908770993,
+      "L_saved_prediction_max_abs_diff": 1.9073486328125e-06,
+      "alpha1_vs_none_max_abs_diff": 0.0,
+      "train_loop_curve0_max_diff_online": 1.907348501362094e-09,
+      "train_loop_curve0_max_diff_monitor": 1.2081116440576523e-08,
+      "synthetic_alpha0_equals_group": true,
+      "synthetic_alpha1_equals_local": true,
+      "no_test_access": true
+    }
+  },
+  "phase1": {
+    "fit": "fit8k",
+    "monitor": "bjoc monitor 1000",
+    "locked": "bjoc locked 1000",
+    "total_updates": 47400,
+    "seeds": [0, 1],
+    "recipe": "adamw lr 1e-3 -> 1e-5 cosine, warmup 500, wd 1e-5, dropout 0, clip 5, batch 128, raw-y L1",
+    "L_source": "frozen zinc_dccl_bottleneck_v1 fit8k_s0/s1 best_monitor checkpoints, same Fit/init/batch order/47400 updates; zero new GPU hours; prediction reproduction max |diff| 1.9e-6",
+    "jobs": [
+      {
+        "experiment": "scb-S-s0",
+        "run_id": "scb-S-s0-20261027-153742-3327b9c3",
+        "pool": "res-gpu0",
+        "arm": "S",
+        "seed": 0,
+        "state": "completed",
+        "exit_code": 0,
+        "commit": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
+        "gpu_hours": 0.37338542741083075,
+        "best_monitor": {"monitor_mae": 0.12751167837996036, "epoch": 509, "step": 32067}
+      },
+      {
+        "experiment": "scb-P-s0",
+        "run_id": "scb-P-s0-20261027-153751-0c8e476a",
+        "pool": "res-gpu1",
+        "arm": "P",
+        "seed": 0,
+        "state": "completed",
+        "exit_code": 0,
+        "commit": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
+        "gpu_hours": 0.4117656446735944,
+        "best_monitor": {"monitor_mae": 0.12747481309901923, "epoch": 609, "step": 38367}
+      },
+      {
+        "experiment": "scb-S-s1",
+        "run_id": "scb-S-s1-20261027-160618-2b38e805",
+        "pool": "res-gpu0",
+        "arm": "S",
+        "seed": 1,
+        "state": "completed",
+        "exit_code": 0,
+        "commit": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
+        "gpu_hours": 0.36055238728417965,
+        "best_monitor": {"monitor_mae": 0.1280657609300688, "epoch": 607, "step": 38241}
+      },
+      {
+        "experiment": "scb-P-s1",
+        "run_id": "scb-P-s1-20261027-160625-3e21c3e2",
+        "pool": "res-gpu1",
+        "arm": "P",
+        "seed": 1,
+        "state": "completed",
+        "exit_code": 0,
+        "commit": "b9670777043b7ad5fd855ed16dc8c2cc3df2ccb4",
+        "gpu_hours": 0.4108007739005714,
+        "best_monitor": {"monitor_mae": 0.1243109106393531, "epoch": 543, "step": 34209}
+      }
+    ],
+    "smoke": {
+      "experiment": "scb-smoke-S-s0",
+      "run_id": "scb-smoke-S-s0-20261027-153609-e08ec7ef",
+      "gpu_hours": 0.001953580339710849,
+      "note": "64-update GPU path smoke; separate runs_smoke; not part of the comparison"
+    },
+    "gpu_hours_total": 1.5584578073363226,
+    "gpu_hours_soft_budget": 3.0,
+    "gpu_hours_hard_cap": 4.0,
+    "gpu_hours_remaining": 1.4415421926636774,
+    "locked_read": {
+      "command": "uv run python .../scb_score.py --device cpu",
+      "attempts": [
+        {
+          "status": "failed_before_output",
+          "utc": "2026-10-27T16:36:00+0800",
+          "error": "KeyError: monitor_mae on the DCB final checkpoint; no scores were written and the sentinel was not created",
+          "locked_labels_materialized_in_memory": true,
+          "metrics_written": false
+        },
+        {
+          "status": "success",
+          "utc": "2026-10-27T16:37:19+0800",
+          "sentinel": "analysis/locked_read.json",
+          "n_scores": 6
+        }
+      ],
+      "locked_rows_sha256": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d",
+      "scoring_code_note": "scb_score.py was patched after the training runs to fall back to train_json.curve[-1].monitor_mae when a final checkpoint lacks that metadata field. The pre-registered primary readout is best-monitor; its predictions and MAEs are unaffected. The patch and the results are committed together after the runs."
+    },
+    "analysis": {
+      "command": "uv run python .../scb_analyze.py",
+      "decision": "STOP_UNSAFE",
+      "reason": "ordinary/tail safety cap failed",
+      "primary_and_overall_direction": "S worse than L on primary (+0.003364) and natural overall (+0.002805); S-P is a wash/sign-split (+0.001502 primary, -0.000227 natural)",
+      "phase2_unlocked": false
+    }
+  },
+  "artifacts": {
+    "cpu_checks": "analysis/cpu_checks.json",
+    "scores": "analysis/phase1_scores.json",
+    "score_per_arm": "analysis/score_{L,S,P}_s{0,1}.json",
+    "decision": "analysis/phase1_decision.json",
+    "locked_sentinel": "analysis/locked_read.json",
+    "run_checkpoints": "runs/{L,S,P}_fit8k_s{0,1}/ (git-ignored, retained locally/remote)",
+    "per_row_predictions": "analysis/predictions/*.json + manifest.json (12 files, best_monitor and final)",
+    "support_alpha_manifest": "cache/alpha_manifest.json (git-ignored, regenerated by score)",
+    "report": "REPORT.md"
+  },
+  "policy": {
+    "official_test_loaded": false,
+    "official_valid_loaded": false,
+    "test_used_for_selection": false,
+    "locked_used_for_selection": false,
+    "no_rescue": true,
+    "phase2_run": false
+  }
+}
