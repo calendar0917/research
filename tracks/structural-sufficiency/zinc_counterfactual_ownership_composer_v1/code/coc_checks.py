@@ -516,6 +516,8 @@ def main(argv=None) -> int:
     gen = torch.Generator().manual_seed(0 + 101)
     order0 = torch.randperm(len(split["fit"]), generator=gen).numpy()
     first_rows = split["fit"][order0[:int(cfg["recipe"]["batch_size"])]]
+    cache_file_sha = CC.sha256_file(CC.REPO / cfg["data"]["train_cache"])
+    cache_tensor_sha = CC.cache_tensor_sha256(cache)
     checks["C9_parameter_data_recipe_barrier"] = {
         "pass": bool(
             param_count == int(cfg["model"]["parameter_count_expected"])
@@ -527,6 +529,8 @@ def main(argv=None) -> int:
             and int(cfg["recipe"]["warmup_steps"]) == 500
             and float(cfg["recipe"]["dropout"]) == 0.0
             and int(cfg["recipe"]["batch_size"]) == 128
+            and cache_file_sha in cfg["data"]["train_cache_sha256_accepted"]
+            and cache_tensor_sha == cfg["data"]["train_cache_tensor_sha256"]
             and not scan["forbidden_hits"]
             and not forbidden_loaded
         ),
@@ -545,6 +549,8 @@ def main(argv=None) -> int:
                          "locked": len(split["locked"])},
         "split_hashes": split["hashes"],
         "split_sha256": split["split_sha256"],
+        "train_cache_file_sha256": cache_file_sha,
+        "train_cache_tensor_sha256": cache_tensor_sha,
         "first_batch_rows_sha256": CC.sha256_array(first_rows),
         "first_batch_rows_first5": first_rows[:5].tolist(),
         "dcb_train_generator_line": "torch.Generator().manual_seed(int(seed) + 101)",

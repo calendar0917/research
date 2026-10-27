@@ -68,6 +68,12 @@ attention、支持度门控或新结构特征。
   - Locked1k：1,000 行，只在 Monitor 通过且结果冻结后一次性评分；
   - 三者互斥、并集为 official train 10,000。
 - **official valid 与 official test 在本轮任何阶段都不加载、不预测、不评分。**
+- 训练 cache：`zinc_arch_discovery_v1/cache/ad_train.pt`。本地与远端存在两个
+  torch 序列化字节哈希（`d85d9875…` / `e3a5e239…`），差异只在 `meta` 的
+  `prep_seconds`/`created`；对全部 47 个非 meta tensor 按 key/dtype/shape/bytes
+  计算的 canonical tensor sha256 为 `ce872e9b…`，两端一致。代码同时断言字节
+  哈希属于已冻结集合且 tensor 哈希精确匹配，避免把续跑机器的 zip 元数据差异
+  误判为数据变化。
 - 训练标准化只用 Fit8k 行（`fit_only_norm`，与 `zinc_dccl_bottleneck_v1` 的
   Fit8k 配方一致）；Monitor 标签只用于每 epoch 评估和选点；Locked 标签只在
   `coc_locked.py` 的一次性评分中读取。

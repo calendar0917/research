@@ -140,12 +140,35 @@ def split_rows() -> dict:
     return payload
 
 
+def cache_tensor_sha256(cache: Mapping[str, Any]) -> str:
+    """Hash tensor content only; torch zip metadata is not scientific content."""
+    h = hashlib.sha256()
+    for key in sorted(cache):
+        if key == "meta":
+            continue
+        value = cache[key]
+        if hasattr(value, "detach"):
+            value = value.detach().cpu().numpy()
+        if isinstance(value, np.ndarray):
+            h.update(key.encode())
+            h.update(str(value.dtype).encode())
+            h.update(str(tuple(value.shape)).encode())
+            h.update(np.ascontiguousarray(value).tobytes())
+        else:
+            h.update(key.encode())
+            h.update(repr(value).encode())
+    return h.hexdigest()
+
+
 def load_train_cache() -> dict:
     cache = AC.load_train_cache()
     cfg = load_cfg()["data"]
     path = REPO / cfg["train_cache"]
     got = sha256_file(path)
-    assert got == cfg["train_cache_sha256"], (got, cfg["train_cache_sha256"])
+    accepted = cfg["train_cache_sha256_accepted"]
+    assert got in accepted, (got, accepted)
+    tensor_sha = cache_tensor_sha256(cache)
+    assert tensor_sha == cfg["train_cache_tensor_sha256"], (tensor_sha, cfg["train_cache_tensor_sha256"])
     assert cache.get("split") == "train"
     assert int(cache["n_molecules"]) == 10000
     return cache
