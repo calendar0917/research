@@ -88,10 +88,12 @@ def main(argv=None) -> int:
         checks = {
             "n": st["n_train"] == frozen["n"],
             "vocab": st["vocab_size"] == frozen["vocab_size"],
-            "ess": abs(st["effective_sample_size"] - frozen["effective_sample_size"]) < 1e-6,
-            "clip": abs(st["clip_fraction"] - frozen["clip_fraction"]) < 1e-9,
-            "min": abs(st["weights"]["min"] - frozen["w_min"]) < 1e-9,
-            "max": abs(st["weights"]["max"] - frozen["w_max"]) < 1e-9,
+            # the config records hand-rounded summaries; the sha256 above is
+            # the exact freeze, these are sanity checks with a 1e-5 tolerance.
+            "ess": abs(st["effective_sample_size"] - frozen["effective_sample_size"]) < 1e-5,
+            "clip": abs(st["clip_fraction"] - frozen["clip_fraction"]) < 1e-5,
+            "min": abs(st["weights"]["min"] - frozen["w_min"]) < 1e-5,
+            "max": abs(st["weights"]["max"] - frozen["w_max"]) < 1e-5,
             "mean": abs(st["weights"]["mean"] - 1.0) < 1e-12,
             "label_free": st["labels_used"] is False,
             "train_only": st["valid_or_test_used"] is False,
