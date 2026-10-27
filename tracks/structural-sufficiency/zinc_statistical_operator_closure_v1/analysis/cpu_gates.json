@@ -1,0 +1,155 @@
+{
+  "G0_params": {
+    "ok": true,
+    "detail": {
+      "soc": 512888,
+      "ctrl": 513021,
+      "ratio": 1.000259315874031
+    }
+  },
+  "G1_init_equivalence": {
+    "ok": true,
+    "detail": {
+      "final": 0.0,
+      "mean": 0.0,
+      "ctrl": 2.384185791015625e-07,
+      "tol": "1e-8 / 1e-5"
+    }
+  },
+  "G2_gradients": {
+    "ok": true,
+    "detail": {
+      "loss": 0.28722670674324036,
+      "grads": {
+        "role": 0.0331764854490757,
+        "gate": 0.07758589833974838,
+        "norm.weight": 0.2332524210214615,
+        "norm.bias": 0.41426461935043335,
+        "proj.weight": 41.61420440673828,
+        "proj.bias": 0.1459616720676422,
+        "core.0.weight": 3.1844732761383057,
+        "core.0.bias": 0.44722607731819153,
+        "core.2.weight": 10.404827117919922,
+        "core.2.bias": 2.518209218978882
+      }
+    }
+  },
+  "G3_batch_invariance": {
+    "ok": true,
+    "detail": {
+      "max_abs": 2.9802322387695312e-08,
+      "n": 16
+    }
+  },
+  "G4_activation": {
+    "ok": true,
+    "detail": {
+      "pred_delta": 0.10996425151824951,
+      "bond_state_drift": 0.20999085903167725,
+      "K": 3
+    }
+  },
+  "G5_weight_tying": {
+    "ok": true,
+    "detail": {
+      "K1_params": 512888,
+      "K3_params": 512888,
+      "closure_modules": 7
+    }
+  },
+  "G6_overfit": {
+    "ok": true,
+    "detail": {
+      "first": 0.9885424375534058,
+      "last": 0.09087279438972473,
+      "seconds": 0.7211823809993803
+    }
+  },
+  "G7_open_gate_finite": {
+    "ok": true,
+    "detail": {
+      "max_abs": 0.5623656511306763
+    }
+  },
+  "G8_readouts_distinct": {
+    "ok": true,
+    "detail": {
+      "delta": 2.0141634941101074
+    }
+  },
+  "meta": {
+    "parameters": 512888,
+    "parameters_closure": 18695,
+    "K": 3,
+    "rank": 24,
+    "readout_final": 1,
+    "config": {
+      "round": "zinc-statistical-operator-closure-v1",
+      "architecture": "SOC: DCC-L backbone + weight-tied moment-closure iteration over bond/junction incidence",
+      "expected_params": {
+        "R": 512888,
+        "T": 512888,
+        "CTRL": 513021
+      },
+      "K": 3,
+      "rank": 24,
+      "hidden": 48,
+      "control_reader_hidden": 274,
+      "dropout": 0.0,
+      "readouts": {
+        "R": "final",
+        "T": "mean over t=0..K"
+      },
+      "recipe": {
+        "optimizer": "adamw",
+        "lr": 0.001,
+        "min_lr": 1e-05,
+        "weight_decay": 1e-05,
+        "warmup_steps": 500,
+        "dropout": 0.0,
+        "grad_clip": 5.0,
+        "batch_size": 128,
+        "loss": "l1",
+        "total_updates": 47400
+      },
+      "anchors": {
+        "fit8k_monitor": {
+          "seed0": 0.12315087952744216,
+          "seed1": 0.1277715681968257,
+          "mean": 0.12546122386213393
+        },
+        "official_valid_dccl_4seed_mean": 0.07599,
+        "official_test_dccl_4seed_mean": 0.0694
+      },
+      "screen_gate": {
+        "primary_seed_mean_monitor_max": 0.1215,
+        "primary_margin_vs_dccl_mean": 0.004,
+        "paired_max_monitor": 0.1254,
+        "note": "both seeds must be below the matched L checkpoint; seed mean must improve by >=0.004"
+      },
+      "full_gate": {
+        "seed_mean_official_valid_max": 0.072,
+        "both_seeds_official_valid_max": 0.075,
+        "note": ">=0.004 seed-mean improvement over the frozen DCC-L 4-seed mean 0.075990"
+      },
+      "test_gate": {
+        "target_test_mae": 0.06,
+        "read_once_only_after_full_gate": true
+      },
+      "budget_a100_h": {
+        "hard_cap": 16.0,
+        "planned_soft_cap": 6.0,
+        "screen_cap": 3.0,
+        "full_cap": 2.0
+      },
+      "data": {
+        "train_rows": "official train 10,000",
+        "screen_train": "BJOC fit8k (8,000)",
+        "screen_monitor": "BJOC monitor 1,000",
+        "full_selection": "official valid 1,000",
+        "test": "official test 1,000, terminal only"
+      }
+    },
+    "torch": "2.5.1+cu124"
+  }
+}
