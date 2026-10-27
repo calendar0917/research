@@ -89,3 +89,31 @@ before the full 10k confirmation. SOC-v1 is that operator.
 * `uv run research context` → phase `zinc-upstream-portfolio-v1-stop-no-purchased-candidate`.
 * `rr doctor res` → 10 ok / 0 fail, host `a100-2`, 2× A100-SXM4-40GB.
 * GPU spend this round at protocol freeze: **0 A100·h**.
+
+## External boundary (verified in `notes/prior_work_boundary.md`)
+
+The round did not re-audit external source code; it relies on the track's frozen
+catalog and flags the distinction explicitly:
+
+* **ESA/ESA+** (Buterez et al., *Nature Communications* 16, 2025, DOI
+  `10.1038/s41467-025-60252-z`): edge-set masked self-attention + global
+  self-attention; ZINC-12k 0.052±0.001 with RWSE + ring features. Table 5 does
+  not contain an all-S (no-mask) matched control. This is global attention, not
+  a local moment closure.
+* **GRIT** (ICML 2023, `LiamMa/GRIT`): RRWP positional encoding + node-token
+  global self-attention; ZINC ~0.059 at ~473k params. The official config was
+  verified byte-identical in
+  `zinc_grit_reference_preparation_v1/COST_REPORT.md`.
+* **CSA / CSA-rings** (`inria-thoth/csa`), **GPM/NGPM**
+  (`Zehong-Wang/GPM`), **MoSE**, **SPSE**: catalogued with code URLs and
+  paper-level protocol notes in `notes/prior_work_boundary.md`. Their structural
+  information is static (rings, edge colours, homomorphism/path counts, pattern
+  tokens) and their interaction is global attention; none is a repeated local
+  moment closure.
+* **Boundary claim used here**: SOC-v1 is *not* a variant of these. It uses no
+  attention, no positional-encoding table, no pattern/path tokens; it applies
+  one shared first/second-moment operator to the existing bond/junction
+  incidence graph. The comparison is therefore a new operator family, not a
+  re-run of a known static-relation model. The 0.060 target is at the level of
+  the known no-MP attention/positional-encoding frontier, which this round did
+  not attempt to replicate.
