@@ -92,7 +92,7 @@ def main(argv=None) -> int:
     device = torch.device(args.device)
     if device.type == "cuda":
         torch.cuda.empty_cache()
-        torch.cuda.reset_peak_memory_stats(device)
+        torch.cuda.reset_peak_memory_stats()
 
     t_total = time.perf_counter()
     info = R.train(
@@ -113,7 +113,7 @@ def main(argv=None) -> int:
     projected_total = 1.15 * projected_train + startup + final_eval + plan_seconds + 30.0
     peak_mb = None
     if device.type == "cuda":
-        peak_mb = float(torch.cuda.max_memory_allocated(device) / (1024 ** 2))
+        peak_mb = float(torch.cuda.max_memory_allocated() / (1024 ** 2))
     out = {
         "protocol_id": R.ROUND_ID,
         "arm": args.arm,
