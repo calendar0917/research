@@ -374,6 +374,7 @@ Artifacts under `tracks/structural-sufficiency/zinc_counterfactual_ownership_com
 | `analysis/monitor_predictions.npz` | frozen Monitor predictions (both seeds, both checkpoints) |
 | `analysis/monitor_decision.json` | gate decision |
 | `analysis/monitor_freeze.json` | hashes of config/protocol/code/checkpoints/predictions; `monitor_pass: false` |
+| `analysis/locked_refusal.txt` | `coc_locked.py` refusal (exit 2) after Monitor stop; no Locked read |
 | `analysis/research_verify.txt` | `uv run research verify` output |
 
 Frozen monitor predictions include `pred_coc_s{0,1}_{best_monitor,final}`,
