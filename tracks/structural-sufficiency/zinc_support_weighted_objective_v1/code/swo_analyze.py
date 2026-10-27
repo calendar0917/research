@@ -35,9 +35,12 @@ def _run_record(tag: str) -> dict:
     preds = {}
     for ckpt in ("best", "final"):
         preds[ckpt] = S.load_pred(d, ckpt)
+    import bjm_common as BC
+    cm = BC.curve_metrics(rec["curve"])
     return {"tag": tag, "dir": d, "best_epoch": int(best["epoch"]),
             "best_valid": float(best["valid_mae"]),
-            "W20": rec.get("W20"), "T100": rec.get("T100"),
+            "W20": cm["W20"], "T100": cm["T100"],
+            "W20_window_start_epoch": cm["W20_window_start_epoch"],
             "parameters": int(rec["parameter_count"]),
             "gpu_hours": rec.get("gpu_hours"),
             "train_at_best": (rec.get("fixed_objects") or {}).get("best", {}).get("train_mae_eval_mode"),
@@ -59,6 +62,7 @@ def _anchor() -> dict:
             "best_epoch": int(art["best_valid"]["epoch"]),
             "best_valid": float(art["best_valid"]["valid_mae"]),
             "W20": art.get("W20"), "T100": art.get("T100"),
+            "W20_window_start_epoch": None,
             "parameters": int(art["parameter_count"]), "gpu_hours": art.get("gpu_hours"),
             "train_at_best": (fixed.get("best") or {}).get("train_mae_eval_mode"),
             "train_at_final": (fixed.get("final") or {}).get("train_mae_eval_mode"),
@@ -102,6 +106,7 @@ def main(argv=None) -> int:
         entry = {"arm": rec["arm"], "seed": rec["seed"], "parameters": rec["parameters"],
                  "gpu_hours": rec["gpu_hours"], "best_epoch": rec["best_epoch"],
                  "W20": rec["W20"], "T100": rec["T100"],
+                 "W20_window_start_epoch": rec.get("W20_window_start_epoch"),
                  "weights": rec["weights"], "init": rec["init"]}
         for ckpt, pred in rec["pred"].items():
             if pred is None:
@@ -249,15 +254,17 @@ def main(argv=None) -> int:
     lines = ["# SWO v1 — official-valid tables", "",
              f"written {payload['written']} · n_valid=1000 · official test never loaded", "",
              "## Main table (raw-y MAE)", "",
-             "| arm | params | best@ep | overall | ordinary | tail | r2 all-sup | r2 low-sup | r2 unseen | rings>=4 | anchor worst-10 | complement 990 | drop172 | median | P90 | top10 share | train@best | GPU·h |",
-             "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+             "| arm | params | best@ep | W20 | T100 | overall | ordinary | tail | r2 all-sup | r2 low-sup | r2 unseen | rings>=4 | anchor worst-10 | complement 990 | drop172 | median | P90 | top10 share | train@best | GPU·h |",
+             "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for tag, t in table.items():
         b = t.get("best")
         if not b:
             continue
         gr = b["groups"]
         lines.append(
-            f"| {tag} | {t['parameters']} | {b['valid_mae']:.6f}@{t['best_epoch']} "
+            f"| {tag} | {t['parameters']} | {t['best_epoch']} "
+            f"| {(t['W20'] if t['W20'] is not None else float('nan')):.6f} "
+            f"| {(t['T100'] if t['T100'] is not None else float('nan')):.6f} "
             f"| {b['valid_mae']:.6f} | {gr['ordinary_y_gt_-3']:.6f} | {gr['tail_y_le_-3']:.6f} "
             f"| {gr['radius2_all_supported']:.6f} | {gr['radius2_low_support']:.6f} "
             f"| {gr['radius2_any_unseen']:.6f} | {gr['rings_ge4']:.6f} "
