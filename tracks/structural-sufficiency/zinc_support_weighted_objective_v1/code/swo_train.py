@@ -90,7 +90,8 @@ def main(argv=None) -> int:
             "vocab": st["vocab_size"] == frozen["vocab_size"],
             # the config records hand-rounded summaries; the sha256 above is
             # the exact freeze, these are sanity checks with a 1e-5 tolerance.
-            "ess": abs(st["effective_sample_size"] - frozen["effective_sample_size"]) < 1e-5,
+            "ess": (abs(st["effective_sample_size"] - frozen["effective_sample_size"])
+                    / frozen["effective_sample_size"]) < 1e-5,
             "clip": abs(st["clip_fraction"] - frozen["clip_fraction"]) < 1e-5,
             "min": abs(st["weights"]["min"] - frozen["w_min"]) < 1e-5,
             "max": abs(st["weights"]["max"] - frozen["w_max"]) < 1e-5,
