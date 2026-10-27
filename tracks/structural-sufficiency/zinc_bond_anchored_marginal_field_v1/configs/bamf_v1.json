@@ -1,0 +1,427 @@
+{
+  "protocol_id": "zinc-bond-anchored-marginal-field-v1",
+  "frozen_utc": "2026-10-27T18:11:19+0800",
+  "frozen_before_commit": true,
+  "git_head_at_freeze": "41dc2bbb2101c37b29c88959c55c241d81c75736",
+  "git_dirty_at_freeze": true,
+  "design": "tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1/DESIGN.md",
+  "protocol": "tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1/PROTOCOL.md",
+  "code_sha256": {
+    "bamf_freeze.py": "41a83832feac1e65cf2572619924698e5663fcf2a65c718bc1343ec872abb6e2",
+    "bamf_inference.py": "34024597b290451d931abe9d806d3497de1585722731bb09f21b1057ec39f2a7",
+    "bamf_models.py": "c1f95443815471abb3c20e81bbd8f928de6016fd0cc709d0a998fd2728850d57",
+    "bamf_phase0.py": "1daba80653c16d554cde50e31363f6323757b7d33c8acb233e29f342d64f43d4",
+    "bamf_runner.py": "54051f1e974703735bb17f5cb08da0b7b3df2251da2537b17c47ac7094feabe7",
+    "bamf_timing.py": "c06a67b509268d3c464818a8e4941dbc46dc18ca894d5985984abdf5f92d121f"
+  },
+  "hypothesis": "molecule-consistent latent-state inference converts long-range structural information into better molecular property prediction than independent per-bond inference, with DCC-L local content unchanged",
+  "scope": {
+    "track": "tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1",
+    "official_valid_loaded": false,
+    "official_test_loaded": false,
+    "locked_reads": 1,
+    "single_model": true,
+    "ensemble": false,
+    "distillation": false,
+    "pseudo_labels": false,
+    "grid_search": false
+  },
+  "data": {
+    "train_cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+    "train_cache_sha256": "d85d9875878a3cc0df27aeb8ad80e6cddf809e9d8265d77ef423a91bef4e19e3",
+    "split_file": "tracks/structure-contribution/results/bjoc_predictive_bottleneck_v1/split_a.json",
+    "split_file_sha256": "53cd2cec29fb658bdbc789845df36b2194a8c8635140d61b4173ce064b48678e",
+    "fit8k_rows": 8000,
+    "monitor_rows": 1000,
+    "locked_rows": 1000,
+    "hashes": {
+      "fit8k": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+      "monitor": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+      "locked": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d"
+    },
+    "norm": "fit-only DT.fit_only_norm(ad_train.pt, fit8k); bit-equal to DCC-L checkpoint buffers",
+    "ssl": {
+      "0": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "1": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt"
+    }
+  },
+  "operator": {
+    "channels": 4,
+    "states": 2,
+    "smax": 4,
+    "max_induced_width": 3,
+    "max_clique_size": 4,
+    "edge_feature_dim": 12,
+    "exact_arm": "junction-tree variable elimination, calibrated clique beliefs",
+    "independent_arm": "per-edge 2x2 softmax with the same log_phi/log_psi",
+    "features": [
+      "mu_u+mu_v-1",
+      "abs(mu_u-mu_v)",
+      "4*(mu_uv-mu_u*mu_v)"
+    ],
+    "no_recursive_learned_message_passing": true,
+    "exact_inference_label": "algorithmic global inference",
+    "potential_heads": {
+      "atom": "Linear(96,8) tanh",
+      "bond": "Linear(96,12) tanh symmetric 2x2"
+    },
+    "phase0_plan_sha256": "58deff19ce92f089569b92a127b520e8b5d3d175611e866c94c38b90014a2db3",
+    "phase0_width_counts": [
+      0,
+      55,
+      9906,
+      39
+    ],
+    "phase0_real_fit8k_rows": 1024,
+    "phase0_real_fit8k_bonds": 25718,
+    "phase0_G_minus_I_mean_abs": 0.0458819717168808,
+    "phase0_redundancy_mean_R2_G": 0.7911487174467392,
+    "phase0_redundancy_mean_R2_G_minus_I": 0.524996433128715
+  },
+  "model": {
+    "base": "DCC-L",
+    "implementation": "code/bamf_models.py",
+    "local_composer_old_in": 296,
+    "local_composer_new_in": 308,
+    "local_composer_hidden": 80,
+    "new_columns": 12,
+    "zero_init_new_columns": true,
+    "reader": "DCC-L unchanged (513 input)",
+    "expected_parameters": 497093,
+    "parameter_cap": 500000,
+    "parameters_breakdown": {
+      "dcc_total": 494193,
+      "atom_potential": 776,
+      "bond_potential": 1164,
+      "local_composer_extra": 960
+    },
+    "initial_state_sha256": {
+      "0": "fe4e98c31b1f02021a7f680a066fc80140d40289b0a0b30e6748d8795490c340",
+      "1": "7205d7511775a4de7e87c0aee98d81262e17cc16784fb1e8df04c595b298e7b0"
+    },
+    "dcc_initial_state_sha256": {
+      "0": "da48d59d688a486029bf9892b3a82ca093752d55a72e094699e67310a9fb15b0",
+      "1": "4bb933a9f14b935a8e43a7d885ff9c57124b5320ab139cbf601f30f30dba5f57"
+    },
+    "step0_vs_dcc_max_abs": {
+      "G": 4.76837158203125e-07,
+      "I": 4.76837158203125e-07
+    }
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "eval_batch_size": 256,
+    "loss": "l1_raw_y",
+    "precision": "fp32",
+    "steps_per_epoch": 63,
+    "epochs": 753,
+    "total_updates": 47400,
+    "selection": "strict minimum Monitor1k MAE; earlier epoch wins ties",
+    "batch_order": "torch.Generator().manual_seed(seed+101) -> randperm(8000) each epoch",
+    "potential_gradient_first_nonzero_0based_step": 2
+  },
+  "baselines": {
+    "L_s0": {
+      "checkpoint": "tracks/structural-sufficiency/zinc_dccl_bottleneck_v1/runs/fit8k_s0/best_monitor.pt",
+      "sha256": "6a145dc69e81aed9c1f41f572a6956f8a7351dacba9ddcaa2daf4e71930f5817",
+      "monitor_mae": 0.12315087952744216
+    },
+    "L_s1": {
+      "checkpoint": "tracks/structural-sufficiency/zinc_dccl_bottleneck_v1/runs/fit8k_s1/best_monitor.pt",
+      "sha256": "882fae17de42ef007b79750e6851e73dd414316a3c2efa15b2468892ce1ff35c",
+      "monitor_mae": 0.1277715681968257
+    }
+  },
+  "phase0": {
+    "status": "PASS",
+    "failures": [],
+    "wall_seconds": 7.7752371079986915,
+    "artifact": "tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1/analysis/phase0_cpu.json",
+    "tests": "tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1/tests/test_bamf_inference.py",
+    "topology": {
+      "n_graphs": 10000,
+      "n_cliques": 231664,
+      "n_atoms": 231664,
+      "n_bonds": 249279,
+      "max_clique_size": 4,
+      "max_width": 3,
+      "smax": 4,
+      "cliques_with_parent": 221664,
+      "roots": 10000,
+      "all_valid": true,
+      "width_counts": [
+        0,
+        55,
+        9906,
+        39
+      ],
+      "plan_sha256": "58deff19ce92f089569b92a127b520e8b5d3d175611e866c94c38b90014a2db3",
+      "build_seconds": null,
+      "note": "width recomputed by min-fill on all 10000 train graphs in this run"
+    },
+    "parameters": {
+      "G": 497093,
+      "I": 497093,
+      "breakdown": {
+        "dcc_total": 494193,
+        "atom_potential": 776,
+        "bond_potential": 1164,
+        "local_composer_extra": 960
+      },
+      "limit": 500000,
+      "parameter_audit": {
+        "named_sum": 497093,
+        "tensors": 30,
+        "all_require_grad": true
+      }
+    },
+    "initial_state": {
+      "G_sha256": "fe4e98c31b1f02021a7f680a066fc80140d40289b0a0b30e6748d8795490c340",
+      "I_sha256": "fe4e98c31b1f02021a7f680a066fc80140d40289b0a0b30e6748d8795490c340",
+      "identical": true,
+      "dcc_initial_state_sha256": "da48d59d688a486029bf9892b3a82ca093752d55a72e094699e67310a9fb15b0",
+      "dcc_parameters": 494193
+    },
+    "step0_replay": {
+      "max_abs_diff_G_vs_DCC": 4.76837158203125e-07,
+      "max_abs_diff_I_vs_DCC": 4.76837158203125e-07,
+      "tolerance": 1e-06,
+      "checkpoint_sha256": "6a145dc69e81aed9c1f41f572a6956f8a7351dacba9ddcaa2daf4e71930f5817",
+      "dcc_monitor_mae_checkpoint": 0.12315087235253304
+    },
+    "train_eval_identical": {
+      "max_abs_diff": 0.0,
+      "dropout": 0.0
+    },
+    "gradient_audit": {
+      "steps": [
+        {
+          "zero_based_step": 0,
+          "atom_potential_grad_max": 0.0,
+          "bond_potential_grad_max": 0.0,
+          "new_local_columns_grad_max": 0.0,
+          "loss": 1.4550130367279053
+        },
+        {
+          "zero_based_step": 1,
+          "atom_potential_grad_max": 0.0,
+          "bond_potential_grad_max": 0.0,
+          "new_local_columns_grad_max": 0.010958707891404629,
+          "loss": 4.964815616607666
+        },
+        {
+          "zero_based_step": 2,
+          "atom_potential_grad_max": 6.224908702279208e-06,
+          "bond_potential_grad_max": 3.301285323686898e-05,
+          "new_local_columns_grad_max": 0.0005645788623951375,
+          "loss": 1.563917875289917
+        },
+        {
+          "zero_based_step": 3,
+          "atom_potential_grad_max": 9.058702562469989e-05,
+          "bond_potential_grad_max": 0.00022641298710368574,
+          "new_local_columns_grad_max": 0.0035515131894499063,
+          "loss": 1.6316132545471191
+        },
+        {
+          "zero_based_step": 4,
+          "atom_potential_grad_max": 8.890675962902606e-05,
+          "bond_potential_grad_max": 0.00016744159802328795,
+          "new_local_columns_grad_max": 0.002105534542351961,
+          "loss": 1.666001796722412
+        }
+      ],
+      "first_step_with_nonzero_potential_grads": 2,
+      "note": "both the reader's new columns and the local composer's new columns are zero at init, so potentials first receive gradient on the third forward (0-based step 2)."
+    },
+    "six_node_chain": {
+      "edge_0_1_G_max_abs_change": 2.878618744292516e-05,
+      "edge_0_1_I_max_abs_change": 0.0,
+      "edge_4_5_G_max_abs_change": 0.5400110819454671,
+      "edge_4_5_I_max_abs_change": 0.536941579336819,
+      "note": "change is phi[5] only; edge (0,1) is five hops away"
+    },
+    "real_fit8k_operator": {
+      "rows": 1024,
+      "bonds": 25718,
+      "per_column_G_minus_I": [
+        {
+          "column": 0,
+          "mean_abs": 0.07246692478656769,
+          "p95_abs": 0.17667677998542786,
+          "max_abs": 0.40570974349975586,
+          "fraction_gt_1e_6": 1.0,
+          "fraction_gt_1e_3": 0.9921455789719262
+        },
+        {
+          "column": 1,
+          "mean_abs": 0.048177193850278854,
+          "p95_abs": 0.13540999591350555,
+          "max_abs": 0.324380099773407,
+          "fraction_gt_1e_6": 0.9954117738548877,
+          "fraction_gt_1e_3": 0.9776032350882651
+        },
+        {
+          "column": 2,
+          "mean_abs": 0.004532126244157553,
+          "p95_abs": 0.01668214425444603,
+          "max_abs": 0.15047752857208252,
+          "fraction_gt_1e_6": 0.9987557352826814,
+          "fraction_gt_1e_3": 0.6453456722917801
+        },
+        {
+          "column": 3,
+          "mean_abs": 0.07221756875514984,
+          "p95_abs": 0.17626497149467468,
+          "max_abs": 0.43888378143310547,
+          "fraction_gt_1e_6": 1.0,
+          "fraction_gt_1e_3": 0.9909790807994401
+        },
+        {
+          "column": 4,
+          "mean_abs": 0.05065614730119705,
+          "p95_abs": 0.1527155339717865,
+          "max_abs": 0.37887027859687805,
+          "fraction_gt_1e_6": 0.9954506571273039,
+          "fraction_gt_1e_3": 0.9782253674469243
+        },
+        {
+          "column": 5,
+          "mean_abs": 0.008297527208924294,
+          "p95_abs": 0.036126457154750824,
+          "max_abs": 0.21172328293323517,
+          "fraction_gt_1e_6": 0.9994167509137569,
+          "fraction_gt_1e_3": 0.6868341239598724
+        },
+        {
+          "column": 6,
+          "mean_abs": 0.06762770563364029,
+          "p95_abs": 0.162064328789711,
+          "max_abs": 0.4464203119277954,
+          "fraction_gt_1e_6": 1.0,
+          "fraction_gt_1e_3": 0.9915623298856832
+        },
+        {
+          "column": 7,
+          "mean_abs": 0.05055771768093109,
+          "p95_abs": 0.14062127470970154,
+          "max_abs": 0.45353102684020996,
+          "fraction_gt_1e_6": 0.9955673069445524,
+          "fraction_gt_1e_3": 0.9781087176296757
+        },
+        {
+          "column": 8,
+          "mean_abs": 0.00525698671117425,
+          "p95_abs": 0.019428685307502747,
+          "max_abs": 0.25120317935943604,
+          "fraction_gt_1e_6": 0.9989890349171786,
+          "fraction_gt_1e_3": 0.6698810171864064
+        },
+        {
+          "column": 9,
+          "mean_abs": 0.10065589100122452,
+          "p95_abs": 0.2713063061237335,
+          "max_abs": 0.5869830846786499,
+          "fraction_gt_1e_6": 1.0,
+          "fraction_gt_1e_3": 0.994906291313477
+        },
+        {
+          "column": 10,
+          "mean_abs": 0.056764714419841766,
+          "p95_abs": 0.1599617451429367,
+          "max_abs": 0.3422566056251526,
+          "fraction_gt_1e_6": 0.99548954039972,
+          "fraction_gt_1e_3": 0.9801306477953184
+        },
+        {
+          "column": 11,
+          "mean_abs": 0.013373153284192085,
+          "p95_abs": 0.05891214683651924,
+          "max_abs": 0.35874009132385254,
+          "fraction_gt_1e_6": 0.9995722840034217,
+          "fraction_gt_1e_3": 0.7929465743837001
+        }
+      ],
+      "all_feature_mean_abs": 0.0458819717168808,
+      "all_feature_max_abs": 0.5869830846786499,
+      "fraction_gt_1e_6": 0.9982210902869586,
+      "redundancy_ridge_R2": {
+        "predictors": "DCC local input [b, Wl, Vl, log1p(n_b), bond_feat] (296 dims)",
+        "G_features_test_R2": [
+          0.8548061473187888,
+          0.5003751858366889,
+          0.9802899311661026,
+          0.9230951898623359,
+          0.5300442132248595,
+          0.9624476560111294,
+          0.8883989418215987,
+          0.552392533950439,
+          0.9862175228862897,
+          0.8674196010272782,
+          0.4743266787645998,
+          0.9739710074907607
+        ],
+        "G_minus_I_test_R2": [
+          0.6817964197970663,
+          0.4441443431976304,
+          0.3777245255027625,
+          0.6933932259580478,
+          0.4068350464528928,
+          0.4894035207665275,
+          0.736660973058574,
+          0.3515639206001686,
+          0.4765209091075794,
+          0.6958948003812262,
+          0.3660736280616328,
+          0.5799458846604719
+        ],
+        "G_features_mean_R2": 0.7911487174467392,
+        "G_minus_I_mean_R2": 0.524996433128715,
+        "alpha": 1.0,
+        "split": "molecule-disjoint half/half of the evaluated rows"
+      }
+    }
+  },
+  "gpu_gate": {
+    "host": "res",
+    "pools": {
+      "G": "res-gpu0",
+      "I": "res-gpu1"
+    },
+    "timing_epochs": 3,
+    "timing_updates": 189,
+    "per_G_run_max_a100_hours": 2.5,
+    "total_round_max_a100_hours": 12.0,
+    "stop_codes": [
+      "STOP_COMPUTE",
+      "STOP_NO_SIGNAL",
+      "STOP_NO_SIGNAL (no rescue/tuning)"
+    ]
+  },
+  "phase1_gates": {
+    "seed0": {
+      "G_minus_I_max": -0.004,
+      "G_minus_L_max": 0.002,
+      "any_unseen_nopen_vs_L_suggested_min": 0.005
+    },
+    "seed1_only_if_seed0_pass": true,
+    "locked_after_freeze": true,
+    "final": {
+      "G_minus_I_mean_max": -0.005,
+      "G_minus_L_mean_max": -0.006,
+      "any_unseen_nopen_vs_L_min": 0.01,
+      "drop_top10_G_minus_L_min": 0.002
+    },
+    "special_verdicts": [
+      "GLOBAL_MECHANISM_BUT_NO_PERFORMANCE",
+      "FACTOR_FEATURE_GAIN_NOT_GLOBAL"
+    ]
+  }
+}
