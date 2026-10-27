@@ -12,7 +12,7 @@
     "bamf_models.py": "c1f95443815471abb3c20e81bbd8f928de6016fd0cc709d0a998fd2728850d57",
     "bamf_phase0.py": "1daba80653c16d554cde50e31363f6323757b7d33c8acb233e29f342d64f43d4",
     "bamf_runner.py": "54051f1e974703735bb17f5cb08da0b7b3df2251da2537b17c47ac7094feabe7",
-    "bamf_timing.py": "c06a67b509268d3c464818a8e4941dbc46dc18ca894d5985984abdf5f92d121f"
+    "bamf_timing.py": "7291f3969e8b5ec90a44c9433ef2980d078a97a56ac86761abcf4db5b2ec60ce"
   },
   "hypothesis": "molecule-consistent latent-state inference converts long-range structural information into better molecular property prediction than independent per-bond inference, with DCC-L local content unchanged",
   "scope": {
@@ -423,5 +423,23 @@
       "GLOBAL_MECHANISM_BUT_NO_PERFORMANCE",
       "FACTOR_FEATURE_GAIN_NOT_GLOBAL"
     ]
-  }
+  },
+  "analysis_code_sha256": {
+    "bamf_analyze.py": "d08215ffa876559a0ad97063c5979777624fdb772bd01c32363ce4d80d8dd58d",
+    "bamf_phase0.py": "1daba80653c16d554cde50e31363f6323757b7d33c8acb233e29f342d64f43d4",
+    "bamf_freeze.py": "41a83832feac1e65cf2572619924698e5663fcf2a65c718bc1343ec872abb6e2"
+  },
+  "phase1_run_commit": "a04eb5591ec42e0cde571c4999bb9b4044dff2bf",
+  "post_freeze_instrumentation_fixes": [
+    {
+      "commit": "bdde40b9fb09e2edc7355bfee7abf687050acfcc",
+      "file": "code/bamf_timing.py",
+      "note": "torch.cuda.reset_peak_memory_stats() must not be passed a torch.device; model/operator/recipe unchanged"
+    },
+    {
+      "commit": "a04eb5591ec42e0cde571c4999bb9b4044dff2bf",
+      "file": "code/bamf_timing.py",
+      "note": "I arm has plan=None; timing reader now handles it; model/operator/recipe unchanged"
+    }
+  ]
 }
