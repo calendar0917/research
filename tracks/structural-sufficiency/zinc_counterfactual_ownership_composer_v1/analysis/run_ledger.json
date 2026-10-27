@@ -1,0 +1,87 @@
+{
+  "protocol_id": "ssrc-zinc-counterfactual-ownership-composer-v1",
+  "host": "res",
+  "driver": "rr 0.2.1 (process backend; res-gpu0 / res-gpu1 pools; 2x A100-SXM4-40GB)",
+  "execution_regime": {
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "driver": "550.163.01",
+    "python": "3.12.14",
+    "uv": "0.12.13"
+  },
+  "jobs": [
+    {
+      "experiment": "coc-profile-s0",
+      "run_id": "coc-profile-s0-20261027-230519-dcacc65e",
+      "state": "failed",
+      "exit_code": 1,
+      "created_at": "2026-10-27T23:05:19+08:00",
+      "started_at": "2026-10-27T23:05:21+08:00",
+      "completed_at": "2026-10-27T23:05:29+08:00",
+      "pool": "res-gpu0",
+      "commit": "c81ba6c297c7",
+      "command": "uv run python tracks/structural-sufficiency/zinc_counterfactual_ownership_composer_v1/code/coc_train.py --seed 0 --profile --device cuda:0",
+      "failure": "AssertionError: local train-cache byte hash d85d... vs remote e3a5...; no tensor was trained. Fixed by canonical tensor hash gate and redeployed at 331fab5.",
+      "duration_seconds": 8.0,
+      "gpu_hours": 0.0022222222222222222
+    },
+    {
+      "experiment": "coc-profile-s0",
+      "run_id": "coc-profile-s0-20261027-231533-b738d234",
+      "state": "completed",
+      "exit_code": 0,
+      "created_at": "2026-10-27T23:15:33+08:00",
+      "started_at": "2026-10-27T23:15:35+08:00",
+      "completed_at": "2026-10-27T23:15:54+08:00",
+      "pool": "res-gpu0",
+      "commit": "331fab569441",
+      "command": "uv run python tracks/structural-sufficiency/zinc_counterfactual_ownership_composer_v1/code/coc_train.py --seed 0 --profile --device cuda:0",
+      "result": "analysis/profile_s0.json; projected 0.4801 GPU-h/formal run, pass < 1.0",
+      "duration_seconds": 19.0,
+      "gpu_hours": 0.005277777777777778
+    },
+    {
+      "experiment": "coc-fit8k-s0",
+      "run_id": "coc-fit8k-s0-20261027-231824-0b047585",
+      "state": "completed",
+      "exit_code": 0,
+      "created_at": "2026-10-27T23:18:24+08:00",
+      "started_at": "2026-10-27T23:18:27+08:00",
+      "completed_at": "2026-10-27T23:40:21+08:00",
+      "pool": "res-gpu0",
+      "commit": "331fab569441",
+      "command": "uv run python tracks/structural-sufficiency/zinc_counterfactual_ownership_composer_v1/code/coc_train.py --seed 0 --device cuda:0",
+      "result": "runs/COC_fit8k_s0; best Monitor 0.129170 vs L 0.123151; final 0.129659 vs L 0.123827; 47400 updates",
+      "duration_seconds": 1314.0,
+      "gpu_hours": 0.365
+    },
+    {
+      "experiment": "coc-fit8k-s1",
+      "run_id": "coc-fit8k-s1-20261027-231839-5002d63d",
+      "state": "completed",
+      "exit_code": 0,
+      "created_at": "2026-10-27T23:18:39+08:00",
+      "started_at": "2026-10-27T23:18:41+08:00",
+      "completed_at": "2026-10-27T23:43:36+08:00",
+      "pool": "res-gpu1",
+      "commit": "331fab569441",
+      "command": "uv run python tracks/structural-sufficiency/zinc_counterfactual_ownership_composer_v1/code/coc_train.py --seed 1 --device cuda:0",
+      "result": "runs/COC_fit8k_s1; best Monitor 0.136246 vs L 0.127772; final 0.137437 vs L 0.128514; 47400 updates",
+      "duration_seconds": 1495.0,
+      "gpu_hours": 0.4152777777777778
+    }
+  ],
+  "totals": {
+    "job_occupancy_gpu_hours": 0.7877777777777778,
+    "formal_runs_gpu_hours": 0.7802777777777778,
+    "failed_jobs_gpu_hours": 0.0022222222222222222,
+    "round_cap_gpu_hours": 3.0,
+    "cap_respected": true
+  },
+  "notes": [
+    "Historical frozen L checkpoints were reused read-only; no L retraining and no L GPU cost is included.",
+    "The failed profile ran for 8 s and stopped at the cache-hash assertion before any optimizer step; it is counted toward the round cap.",
+    "No official valid/test cache was loaded. Locked labels were not read; Monitor decision is STOP_NO_MATERIAL_GAIN, so coc_locked.py was not run.",
+    "Formal runs used the committed revision 331fab569441; analysis code was subsequently committed at 3e89afd0dd42 without changing training code or checkpoints."
+  ]
+}
