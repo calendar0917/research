@@ -64,6 +64,8 @@ def main(argv=None) -> int:
     rec: dict = {"protocol_id": cfg["protocol_id"], "seed_runs": {}, "curves": {}}
     preds: dict[str, np.ndarray] = {}
     aes: dict[str, np.ndarray] = {}
+    diag_rows = CC.select_diagnostic_rows(fit_rows)
+    post_rep: dict[str, dict] = {}
 
     for seed in (0, 1):
         run = _coc_run(seed)
@@ -73,8 +75,15 @@ def main(argv=None) -> int:
         l_info = CC.load_frozen_train_json(seed)
         if coc_info["initial_state_sha256"] != cfg["frozen_l_reference"]["initial_state_sha256"][str(seed)]:
             raise RuntimeError(f"COC seed {seed} init hash mismatch")
-        if coc_info["split_hashes"] != l_info["split_hashes"]:
-            raise RuntimeError(f"COC seed {seed} split hash mismatch vs L")
+        coc_hashes = dict(coc_info["split_hashes"])
+        l_hashes = dict(l_info["split_hashes"])
+        if "fit8k" in l_hashes and "fit" not in l_hashes:
+            l_hashes["fit"] = l_hashes["fit8k"]
+        for key in ("fit", "monitor", "locked"):
+            if coc_hashes.get(key) != l_hashes.get(key):
+                raise RuntimeError(f"COC seed {seed} split hash mismatch vs L: {key}")
+        if coc_info.get("split_sha256") != cfg["data"]["split_sha256"]:
+            raise RuntimeError(f"COC seed {seed} split sha mismatch")
         if int(coc_info["total_updates_completed"]) != 47400:
             raise RuntimeError(f"COC seed {seed} incomplete: {coc_info['total_updates_completed']}")
 
@@ -117,6 +126,15 @@ def main(argv=None) -> int:
             preds[f"l_s{seed}_{tag}"] = l_pred.astype(np.float64)
             aes[f"coc_s{seed}_{tag}"] = ae_coc
             aes[f"l_s{seed}_{tag}"] = ae_l
+            if tag == "best_monitor":
+                cap = CC.representation_capture(coc, cache, diag_rows, device=device)
+                post_rep[str(seed)] = {
+                    "rows": int(len(diag_rows)),
+                    "rows_sha256": CC.sha256_array(diag_rows),
+                    "diagnostics": CC.difference_diagnostics(cap),
+                }
+                post_rep[str(seed)]["gate"] = CC.representation_gate(
+                    post_rep[str(seed)]["diagnostics"], cfg, post_training=True)
             seed_rec["checkpoints"][tag] = {
                 "coc_checkpoint_sha256": CC.sha256_file(coc_ck_path),
                 "coc_epoch": int(coc_ck.get("epoch", -1)),
@@ -305,6 +323,8 @@ def main(argv=None) -> int:
         "monitor_groups": {k: int(v.sum()) for k, v in
                            ({"overall": np.ones(len(y), dtype=bool), **monitor["masks"]}).items()},
         "support_meta": support["meta"],
+        "post_training_difference_diagnostics_fit8k": post_rep,
+        "difference_diagnostics_note": "Fit8k diagnostic subset; never used for any decision, label, or checkpoint selection.",
     })
 
     # CSV group table (seed-level and seed-mean deltas).
