@@ -14,35 +14,34 @@ latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
 latest_diagnostic: zinc_relation_bn_diagnostic_v1
 latest_diagnostic_verdict: BN_BATCH_STATISTICS_EXPLAIN_THE_TRAIN_GAP__GLOBAL_RECALIBRATION_RECOVERS_NEITHER_TRAIN_NOR_VALID
-latest_side_round: zinc_support_weighted_objective_v1
-latest_side_round_verdict: STOP_NEGATIVE__LABEL_REWEIGHTING_DOES_NOT_HELP_THE_LOW_SUPPORT_REGIME
+latest_side_round: zinc_block_ownership_v1
+latest_side_round_verdict: UNRESOLVED_DUE_TO_VARIANCE__SEED0_R-N_GATE_MISSED_0.005_BY_0.000116
 latest_side_round_next_action: >-
-  One GPU pilot, no architecture change: DCC-L (B-R0, 494,193 params, frozen
-  epoch-0 init f5c34c28) with a frozen, train-structure-only per-molecule loss
-  weight (w = 1 + 0.5*clip(z(low4),-1,1), normalised to mean 1, ESS 89.4%,
-  weight sha256 a932a056; no y / no valid / no test / no model error / no
-  row172).  E (uniform) vs W (weighted), seeds 0 and 1 paired, 47,400 updates
-  each: E_s0 0.077049, W_s0 0.081539, E_s1 0.076193, W_s1 0.077656, so
-  W-E = +0.004490 / +0.001462, paired mean +0.002976, same sign both seeds;
-  W20/T100 agree (+0.0047/+0.0014 and +0.0047/+0.0016) so the verdict does not
-  depend on checkpoint selection.  The damage lands exactly where the weight
-  aimed: valid molecules in the rarest structural tertile get +0.0160/+0.0137
-  worse (dose-response, corr(dAE, low4) = +0.078/+0.054), the 935 ordinary rows
-  move +0.00006/-0.0035 (no effect), and W drives train@best down to
-  0.0160/0.0048.  Diagnosis: low-support rows are variance-limited, not
-  attention-starved, so up-weighting buys memorisation, not transfer; failure
-  class INDUCTIVE_BIAS.  Pre-registered NO_RESCUE honoured: no slope/clip/band/
-  normalisation change, no seeds 2-3, no hyper-parameter scan.  Side product:
-  the execution-drift floor measured with a bit-identical init and identical env
-  (torch 2.5.1+cu124) is -0.001488 (s0) / +0.002360 (s1) against the historical
-  checkpoints, concentrated in the tail rows.  Next: no more loss shaping; the
-  one high-value open hypothesis is a different structural computation paradigm,
-  and it needs a real design (matched global block-level statistics with the
-  local channels retained), not another DCC-L patch.
-latest_side_round_report: tracks/structural-sufficiency/zinc_support_weighted_objective_v1/REPORT.md
-latest_side_round_decisions: tracks/structural-sufficiency/zinc_support_weighted_objective_v1/DECISIONS.md
-latest_side_round_plan: tracks/structural-sufficiency/zinc_support_weighted_objective_v1/PLAN.md
-latest_side_round_budget: 1.82 this round (6.5 cumulative) of 14 soft GPU-h; 4 formal runs; official test never loaded
+  R (true biconnected-block ownership) vs N (global mean-field), matched 497,161
+  params / init / data / 47,400 updates, seed 0 only: R best-valid 0.076707,
+  N 0.081592, d_best +0.004884, short of the pre-registered 0.005 floor by
+  0.000116.  W20/T100/final are +0.006204/+0.006302/+0.006394; paired DeltaMAE
+  +0.004884 with 95% CI [-0.000306, +0.011554]; ordinary +0.002089 (CI spans 0),
+  low-support +0.010286 (CI positive), any_unseen -0.000252 (no gain); fixed
+  worst-10 removed +0.003676 (CI positive), single-row max contribution 0.419.
+  Mechanism active (block grad step 1 1.14e-4; R content-vs-N valid mean
+  |Dpred| 0.1016).  Pre-registered stop honoured: no seed 1, no S, no retune.
+  Label UNRESOLVED_DUE_TO_VARIANCE: labels 1-4 require two seeds; not
+  OWNERSHIP_NOT_USEFUL (point estimate positive and stable metrics positive) and
+  not PROMISING (S/seed1 absent, main gate failed).  Any reopening needs a new
+  pre-registration with >=2 independent seeds and R-N first; do not lower 0.005,
+  do not read test.  Next: no architecture change; if continuing, test the
+  low-support / larger-block signal with any_unseen and ordinary as the
+  pre-registered extrapolation groups.
+latest_side_round_report: tracks/structural-sufficiency/zinc_block_ownership_v1/REPORT.md
+latest_side_round_decisions: tracks/structural-sufficiency/zinc_block_ownership_v1/DECISION.md
+latest_side_round_budget: 1.08 this round of 14 soft GPU-h; 2 formal runs; official test never loaded
+previous_side_round_swo: zinc_support_weighted_objective_v1
+previous_side_round_swo_verdict: STOP_NEGATIVE__LABEL_REWEIGHTING_DOES_NOT_HELP_THE_LOW_SUPPORT_REGIME
+previous_side_round_swo_report: tracks/structural-sufficiency/zinc_support_weighted_objective_v1/REPORT.md
+previous_side_round_swo_decisions: tracks/structural-sufficiency/zinc_support_weighted_objective_v1/DECISIONS.md
+previous_side_round_swo_budget: 1.82 this round (6.5 cumulative) of 14 soft GPU-h
+
 previous_side_round: zinc_adaptive_arch_search_v1
 previous_side_round_verdict: NO_NEW_STRONGER_BODY__CONTENT_EXPLAINS_THE_GAP_COMPOSITION_DOES_NOT
 previous_side_round_next_action: >-

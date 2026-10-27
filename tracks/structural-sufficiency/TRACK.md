@@ -210,6 +210,13 @@
 
 ## 下一步
 
+00c. **`zinc_block_ownership_v1`（最新，2026-10-27）**：真实 biconnected 块归属（R）vs 全图均场（N）的 seed-0 主门**差 0.000116 未过**；按预注册停止，不买 seed 1、不跑 S。标签 **`UNRESOLVED_DUE_TO_VARIANCE`**，不是 `OWNERSHIP_NOT_USEFUL`（点估计为正、W20/T100/final 正向），也不是 `PROMISING`（S/seed1 未跑且主门失败）。
+   - 事实：497,161 参数、同 init（`bd18518b…`）、同首 batch、47,400 updates；R best-valid **0.076707**，N **0.081592**，d_best **+0.004884**（门槛 0.005）；W20/T100/final **+0.006204/+0.006302/+0.006394**；配对 ΔMAE **+0.004884**，95% CI **[−0.000306, +0.011554]**；机制激活（R block grad step 1 1.14e-4；R/N 内容替换 mean|Δpred| 0.1016）。
+   - 分组：ordinary +0.002089（CI 跨零）；low-support +0.010286（CI 正）；**any_unseen −0.000252（无优势）**；块数 13–14 / ≥15 正 CI；drop-fixed-worst-10 +0.003676，drop-top10 +0.004997，单行最大贡献 0.419。
+   - 因此**不**宣称“块归属在未见组合上泛化”，也**不**宣称“ownership 无用”。S 未跑，不能判定 `SINGLETON_NONLINEARITY_ONLY`。
+   - 下一步：本轮不救援、不改架构/超参；若重开，必须新预注册、≥2 个独立 seed、先 R−N，再条件性 S；不降低 0.005 门槛，不读 test。预算 1.08 A100·h。
+   - 产物：`zinc_block_ownership_v1/{REPORT.md,DECISION.md,analysis/cpu_checks.json,analysis/zbo_analysis.json,configs/zbo_v1.json}`；official test 从未读取。
+
 00. **`zinc_rooted_moment_v1` 改写下一步（历史，2026-10-23）**：**精确 rooted 矩条件化**这条线在本预算/本读出形式下关闭。
    - 事实：M−P T100 = +0.008008 / +0.007356（两 seed），G−P = +0.008634 / +0.006297；M−G 符号翻转（−0.000626 / +0.001059）；ordinary、unseen+ordinary、tail 全负；drop-row172/drop-top10 同向；C3 在固定权重下仅 +0.0003…+0.0005，重新训练无可重复收益。
    - 因此**不**再试：尺度集、ε、读出宽度/深度、更多 seed、更多视图、把 C3 换成更高阶矩或换基函数。
