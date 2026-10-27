@@ -14,33 +14,58 @@ latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
 latest_diagnostic: zinc_relation_bn_diagnostic_v1
 latest_diagnostic_verdict: BN_BATCH_STATISTICS_EXPLAIN_THE_TRAIN_GAP__GLOBAL_RECALIBRATION_RECOVERS_NEITHER_TRAIN_NOR_VALID
-latest_side_round: zinc_adaptive_arch_search_v1
-latest_side_round_verdict: NO_NEW_STRONGER_BODY__CONTENT_EXPLAINS_THE_GAP_COMPOSITION_DOES_NOT
+latest_side_round: zinc_support_weighted_objective_v1
+latest_side_round_verdict: STOP_NEGATIVE__LABEL_REWEIGHTING_DOES_NOT_HELP_THE_LOW_SUPPORT_REGIME
 latest_side_round_next_action: >-
-  Direction A (target-conditioned pair gating on BOSI) is STOP_A: all three
-  same-seed contrasts flip sign across seeds (A1-A0 -0.0015/+0.0030,
-  A1-B -0.0043/+0.0054, A0-B -0.0027/+0.0024, every CI spans zero).
-  Direction B (independent lean pair-ownership body, 381,505 params) is STOP_B:
-  S1 0.090343, +0.0079 worse than BOSI-B (CI [+0.0031,+0.0133], worse in every
-  group), while S1 - S2 (identical pair content, graph-level pooling instead of
-  local ownership) = -0.0107 (CI excludes 0).  No C.  Moment-bank ablation
-  (A0M0 vs A0, matched params/init) costs +0.0053 mean (+0.0086/+0.0019),
-  concentrated in unseen (+0.0187) and rings>=4 (+0.0165), and even train@best
-  degrades.  Mechanism ordering this round: content 0.005-0.011 >> composition
-  <=0.003 (unresolvable).  The measurement floor is now numbered: BOSI-B itself
-  spans 0.082405 (s0) / 0.076949 (s1), i.e. 0.00546, larger than the 0.003
-  "strong signal" threshold, and only pretrain_encoder_s{0,1}.pt exist, so 2
-  seeds is the hard ceiling.  The single allowed next purchase is therefore
-  POWER, not mechanism: pretrain SSL encoders for seeds 2-3 (~0.2 GPU-h each)
-  and bring BOSI-B and DCC-L(B-R0) to 4 paired seeds (~1.6 GPU-h) to test
-  whether the 0.0035 family gap is real.  Do not add pair modules, re-tune
-  width, buy more bodies, or make any claim below 0.005 on 2 seeds.
-latest_side_round_report: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/REPORT.md
-latest_side_round_decisions: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/DECISIONS.md
-latest_side_round_budget: 4.65 of 14 soft GPU-h; 9 formal runs; official test never loaded
-previous_side_round: zinc_statistical_program_search_v1
-previous_side_round_verdict: NO_USEFUL_GAIN__BOTH_EXPLICIT_STATISTICS_BODIES_PLATEAU_0.023-0.032_BEHIND_DCC-L
+  One GPU pilot, no architecture change: DCC-L (B-R0, 494,193 params, frozen
+  epoch-0 init f5c34c28) with a frozen, train-structure-only per-molecule loss
+  weight (w = 1 + 0.5*clip(z(low4),-1,1), normalised to mean 1, ESS 89.4%,
+  weight sha256 a932a056; no y / no valid / no test / no model error / no
+  row172).  E (uniform) vs W (weighted), seeds 0 and 1 paired, 47,400 updates
+  each: E_s0 0.077049, W_s0 0.081539, E_s1 0.076193, W_s1 0.077656, so
+  W-E = +0.004490 / +0.001462, paired mean +0.002976, same sign both seeds;
+  W20/T100 agree (+0.0047/+0.0014 and +0.0047/+0.0016) so the verdict does not
+  depend on checkpoint selection.  The damage lands exactly where the weight
+  aimed: valid molecules in the rarest structural tertile get +0.0160/+0.0137
+  worse (dose-response, corr(dAE, low4) = +0.078/+0.054), the 935 ordinary rows
+  move +0.00006/-0.0035 (no effect), and W drives train@best down to
+  0.0160/0.0048.  Diagnosis: low-support rows are variance-limited, not
+  attention-starved, so up-weighting buys memorisation, not transfer; failure
+  class INDUCTIVE_BIAS.  Pre-registered NO_RESCUE honoured: no slope/clip/band/
+  normalisation change, no seeds 2-3, no hyper-parameter scan.  Side product:
+  the execution-drift floor measured with a bit-identical init and identical env
+  (torch 2.5.1+cu124) is -0.001488 (s0) / +0.002360 (s1) against the historical
+  checkpoints, concentrated in the tail rows.  Next: no more loss shaping; the
+  one high-value open hypothesis is a different structural computation paradigm,
+  and it needs a real design (matched global block-level statistics with the
+  local channels retained), not another DCC-L patch.
+latest_side_round_report: tracks/structural-sufficiency/zinc_support_weighted_objective_v1/REPORT.md
+latest_side_round_decisions: tracks/structural-sufficiency/zinc_support_weighted_objective_v1/DECISIONS.md
+latest_side_round_plan: tracks/structural-sufficiency/zinc_support_weighted_objective_v1/PLAN.md
+latest_side_round_budget: 1.82 this round (6.5 cumulative) of 14 soft GPU-h; 4 formal runs; official test never loaded
+previous_side_round: zinc_adaptive_arch_search_v1
+previous_side_round_verdict: NO_NEW_STRONGER_BODY__CONTENT_EXPLAINS_THE_GAP_COMPOSITION_DOES_NOT
 previous_side_round_next_action: >-
+  Direction A (target-conditioned pair gating on BOSI) STOP_A; direction B
+  (independent lean pair-ownership body) STOP_B; no C.  Mechanism ordering:
+  content 0.005-0.011 >> composition <=0.003 (unresolvable), moment bank
+  essential as a whole (+0.0053, A0M0).  READ ERRATA.md BEFORE QUOTING THIS
+  ROUND: (E1) seeds >= 2 were always runnable (they reuse the s1 encoder; only
+  bosi_common.ssl_path(seed) hard-coded s{seed}), so the "two-seed ceiling" and
+  the "pretrain seed 2/3 encoders" plan are both withdrawn; (E2) the 0.006 power
+  floor is not one number - encoder identity 0.0034-0.0060 with body-dependent
+  sign, supervised spread 0.0006-0.0031, execution drift 0.0015-0.0025, plus
+  fixed-valid row leverage; (E3) S1-S2 = -0.0107 does not falsify direction C;
+  (E4) BOSI-B's 384-dim moment block is algebraically (n_r/max(n,1))*S, i.e.
+  96+4 numbers broadcast, so A0M0 only shows the whole channel is load-bearing,
+  not that 384 slots are irreplaceable.
+previous_side_round_report: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/REPORT.md
+previous_side_round_decisions: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/DECISIONS.md
+previous_side_round_errata: tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/ERRATA.md
+previous_side_round_budget: 4.65 of 14 soft GPU-h; 9 formal runs; official test never loaded
+previous_previous_side_round: zinc_statistical_program_search_v1
+previous_previous_side_round_verdict: NO_USEFUL_GAIN__BOTH_EXPLICIT_STATISTICS_BODIES_PLATEAU_0.023-0.032_BEHIND_DCC-L
+previous_previous_side_round_next_action: >-
   Close Q-fixed (0.110569, 248,361 params) and F-content (0.101948, 205,506
   params) at official 10k: both fit train as hard as DCC-L (online 0.0043/0.0051
   vs 0.0044 at ep 500) and still lose +0.032/+0.023 on valid, curves flat from
@@ -55,11 +80,11 @@ previous_side_round_next_action: >-
   0.99999, root-pool survival 0.43); F's learned weights are active but
   non-beneficial (w->1 costs +0.0304, w->molecule mean +0.0103) and saturate at
   both declared bounds [0.1,2.0] (the one untested single-cause fix).
-previous_side_round_report: tracks/structural-sufficiency/zinc_statistical_program_search_v1/REPORT.md
-previous_side_round_next_decision: tracks/structural-sufficiency/zinc_statistical_program_search_v1/NEXT_DECISION.md
-previous_previous_side_round: zinc_relation_composition_probe_v1
-previous_previous_side_round_verdict: NO_STABLE_D_S_DIFFERENCE_AND_WORSE_THAN_B_AT_THIS_HORIZON
-previous_previous_side_round_next_action: >-
+previous_previous_side_round_report: tracks/structural-sufficiency/zinc_statistical_program_search_v1/REPORT.md
+previous_previous_side_round_next_decision: tracks/structural-sufficiency/zinc_statistical_program_search_v1/NEXT_DECISION.md
+previous_previous_previous_side_round: zinc_relation_composition_probe_v1
+previous_previous_previous_side_round_verdict: NO_STABLE_D_S_DIFFERENCE_AND_WORSE_THAN_B_AT_THIS_HORIZON
+previous_previous_previous_side_round_next_action: >-
   Stop this body at this configuration.  One seed cannot separate D from S in
   either direction (best-valid favours S by 0.0027, W20/T100/final favour D by
   0.008-0.010, paired bootstrap CI spans zero [-0.0038, +0.0097]), and the whole
@@ -72,17 +97,17 @@ previous_previous_side_round_next_action: >-
   stable valid curve (per-graph normalisation was removed by design this round)
   and only then re-run the D/S contrast with matched train@best; do not add seeds
   or re-tune hyper-parameters inside the same box.
-previous_previous_previous_side_round: zinc_performance_search_v1
-previous_previous_previous_side_round_verdict: TARGET_NOT_MET_BEST_TEST_0.066267
-previous_previous_previous_side_round_next_action: >-
+previous_previous_previous_previous_side_round: zinc_performance_search_v1
+previous_previous_previous_previous_side_round_verdict: TARGET_NOT_MET_BEST_TEST_0.066267
+previous_previous_previous_previous_side_round_next_action: >-
   Either buy >=4-5 GPU-h per run and give GRIT/DBT their native horizon
   (10-layer GRIT, 625k updates; DBT 1500 epochs), or change the setting
   (larger model, more data, different readout).  Do not re-tune lr/wd/horizon
   inside the same <=0.35 GPU-h box: every lever measured in this round moved
   <=0.005 MAE while the gap to 0.060 is 0.0063.
-previous_previous_previous_previous_side_round: zinc_rooted_moment_v1
-previous_previous_previous_previous_side_round_verdict: NO_STABLE_GAIN_OVER_P_FROM_ROOTED_MOMENT_CONDITIONING
-previous_previous_previous_previous_side_round_next_action: >-
+previous_previous_previous_previous_previous_side_round: zinc_rooted_moment_v1
+previous_previous_previous_previous_previous_side_round_verdict: NO_STABLE_GAIN_OVER_P_FROM_ROOTED_MOMENT_CONDITIONING
+previous_previous_previous_previous_previous_side_round_next_action: >-
   Do not tune the moment form (scales, eps, width, more seeds).  Exact rooted
   moments cost ~0.0077 MAE versus P and the C3 skew term is not reproducible
   under retraining, while M and G share the same extra readout path.  If the
@@ -90,8 +115,8 @@ previous_previous_previous_previous_side_round_next_action: >-
   is bit-equal to P at step 0 (zero-initialised scalar gate from the moment
   readout into the existing P3 reader), two seeds, T100 primary, no test read
   without the frozen trigger.
-previous_previous_previous_previous_previous_side_round: zinc_native_relation_v1
-previous_previous_previous_previous_previous_side_round_verdict: NO_REPEATABLE_GAIN_FROM_ONE_NATIVE_RELATION_ROUND
+previous_previous_previous_previous_previous_previous_side_round: zinc_native_relation_v1
+previous_previous_previous_previous_previous_previous_side_round_verdict: NO_REPEATABLE_GAIN_FROM_ONE_NATIVE_RELATION_ROUND
 latest_next_action: >-
   3-5 seeds plus a parameter-matched trunk/readout control to test whether the M
   valid gain and the M-F separation reproduce or were a seed-1 fluctuation.  New
