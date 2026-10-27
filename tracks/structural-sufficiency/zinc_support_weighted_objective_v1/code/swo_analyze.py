@@ -141,6 +141,9 @@ def main(argv=None) -> int:
                 "excludes_zero": bool(lo > 0 or hi < 0),
                 "first_better_fraction": float(np.mean(d < 0)),
                 "delta_by_group": {k: float(d[m].mean()) for k, m in masks.items() if m.any()},
+                # how much of the overall delta each group contributes (sums to delta_mae)
+                "group_contributions": {k: float(d[m].mean() * m.mean())
+                                        for k, m in masks.items() if m.any()},
                 "delta_drop_top10": float(d[keep].mean()),
                 "delta_drop_row172": float(np.delete(d, 172).mean()),
                 "top1_row": top1, "top1_delta": float(d[top1]),
@@ -151,20 +154,32 @@ def main(argv=None) -> int:
 
     # mechanistic diagnostic: does W help the molecules it up-weighted?
     mech = {}
-    if ("W_s0", "best") in aerr and ("E_s0", "best") in aerr:
+    seeds_with_pair = [s_ for s_ in (0, 1, 2, 3)
+                       if (f"W_s{s_}", "best") in aerr and (f"E_s{s_}", "best") in aerr]
+    if seeds_with_pair:
         import ad_data as D, bjm_common as BC
         vc = D.load_cache("valid")
         sup = BC.radius2_support(BC.molecules_from_cache(D.load_cache("train")),
                                  BC.molecules_from_cache(vc))
         low4 = np.asarray(sup["low4_frac"], dtype=np.float64)
         unseen = np.asarray(sup["unseen_frac"], dtype=np.float64)
-        d = aerr[("W_s0", "best")] - aerr[("E_s0", "best")]
         q = np.quantile(low4, [1 / 3, 2 / 3])
-        for name, m in {"low4_tertile_1": low4 <= q[0], "low4_tertile_2": (low4 > q[0]) & (low4 <= q[1]),
-                        "low4_tertile_3": low4 > q[1],
-                        "unseen_frac_0": unseen == 0.0, "unseen_frac_gt_0": unseen > 0.0}.items():
-            mech[name] = {"n": int(m.sum()), "delta_mae": float(d[m].mean())}
-        mech["corr_deltaAE_low4"] = float(np.corrcoef(d, low4)[0, 1])
+        subsets = {"low4_tertile_1": low4 <= q[0],
+                   "low4_tertile_2": (low4 > q[0]) & (low4 <= q[1]),
+                   "low4_tertile_3": low4 > q[1],
+                   "unseen_frac_0": unseen == 0.0, "unseen_frac_gt_0": unseen > 0.0}
+        mech["n"] = {k: int(m.sum()) for k, m in subsets.items()}
+        mech["delta_mae"] = {}
+        mech["corr_deltaAE_low4"] = {}
+        for s_ in seeds_with_pair:
+            d = aerr[(f"W_s{s_}", "best")] - aerr[(f"E_s{s_}", "best")]
+            mech["delta_mae"][f"seed{s_}"] = {k: float(d[m].mean()) for k, m in subsets.items()}
+            mech["corr_deltaAE_low4"][f"seed{s_}"] = float(np.corrcoef(d, low4)[0, 1])
+        mech["corr_deltaAE_low4"]["seed_mean"] = float(
+            np.mean([mech["corr_deltaAE_low4"][f"seed{s_}"] for s_ in seeds_with_pair]))
+        mech["delta_mae"]["seed_mean"] = {
+            k: float(np.mean([mech["delta_mae"][f"seed{s_}"][k] for s_ in seeds_with_pair]))
+            for k in subsets}
     # valid-curve noise / selection noise
     curves = {}
     for tag, rec in runs.items():
@@ -175,7 +190,51 @@ def main(argv=None) -> int:
                        "min_minus_final": float(c.min() - c[-1]),
                        "n_epochs_below_final_minus_0.005": int((c < c[-1] - 0.005).sum())}
 
-    payload = {
+    # ---- pre-registered decision, evaluated mechanically -------------------
+    cfg = S.read_json(S.CONFIG)
+    # Numeric transcription of configs/swo_v1.json::decision_rules (prose, frozen
+    # before training): PROCEED  W-E <= -0.003 and low_support improves and
+    # ordinary regression <= +0.002 | STOP_NO_EFFECT  -0.003 < W-E < +0.0025 or
+    # sign flip | STOP_NEGATIVE  W-E >= +0.0025 or ordinary regression > +0.002.
+    rules = {"PROCEED_TO_SEED1": {"max_delta_mae": -0.003, "max_ordinary_regression": 0.002},
+             "STOP_NEGATIVE": {"min_delta_mae": 0.0025, "max_ordinary_regression": 0.002},
+             "STOP_NO_EFFECT": {"lower": -0.003, "upper": 0.0025},
+             "source_text": cfg["decision_rules"]}
+    per_seed = {}
+    for seed in (0, 1, 2, 3):
+        key = f"W_s{seed} − E_s{seed}|best"
+        if key in contrasts:
+            c = contrasts[key]
+            per_seed[seed] = {
+                "delta_mae": c["delta_mae"],
+                "delta_low_support": c["delta_by_group"]["radius2_low_support"],
+                "delta_ordinary": c["delta_by_group"]["ordinary_y_gt_-3"],
+            }
+    verdict = {"n_seeds": len(per_seed), "per_seed": per_seed, "decision": None}
+    if per_seed:
+        ds = np.array([v["delta_mae"] for v in per_seed.values()])
+        lows = np.array([v["delta_low_support"] for v in per_seed.values()])
+        ords = np.array([v["delta_ordinary"] for v in per_seed.values()])
+        verdict.update({"mean_delta_mae": float(ds.mean()),
+                        "mean_delta_low_support": float(lows.mean()),
+                        "mean_delta_ordinary": float(ords.mean()),
+                        "signs_agree": bool(np.all(ds < 0) or np.all(ds > 0))})
+        d = float(ds.mean())
+        if d <= rules["PROCEED_TO_SEED1"]["max_delta_mae"] and \
+                float(lows.mean()) < 0 and \
+                float(ords.mean()) <= rules["PROCEED_TO_SEED1"]["max_ordinary_regression"]:
+            decision = "PROCEED_TO_SEED1" if len(per_seed) == 1 else "CONFIRM_EXTENSION"
+        elif d >= rules["STOP_NEGATIVE"]["min_delta_mae"] or \
+                float(ords.mean()) > rules["STOP_NEGATIVE"]["max_ordinary_regression"]:
+            decision = "STOP_NEGATIVE"
+        elif rules["STOP_NO_EFFECT"]["lower"] < d < rules["STOP_NO_EFFECT"]["upper"] or \
+                not verdict["signs_agree"]:
+            decision = "STOP_NO_EFFECT"
+        else:
+            decision = "STOP_NO_EFFECT"
+        verdict["decision"] = decision
+        verdict["rule"] = rules.get(decision)
+    payload = {"verdict": verdict, 
         "round": S.ROUND_ID, "written": S.now(), "n_valid": int(len(y)),
         "metric": "raw-y MAE", "official_test_loaded": False,
         "main_table": table, "contrasts": contrasts, "mechanism_diagnostics": mech,
@@ -219,13 +278,24 @@ def main(argv=None) -> int:
             f"| {gr['radius2_low_support']:+.6f} | {gr['radius2_any_unseen']:+.6f} "
             f"| {gr['rings_ge4']:+.6f} | {gr['anchor_worst10']:+.6f} "
             f"| {c['delta_drop_row172']:+.6f} | {c['delta_drop_top1']:+.6f} (row {c['top1_row']}) |")
+    lines += ["", "## Where the overall delta comes from (group contribution = Δgroup × share)", "",
+              "| contrast | Δ overall | ordinary (935) | tail (65) | anchor worst-10 | worst-10 share of Δ |",
+              "|---|---:|---:|---:|---:|---:|"]
+    for name, c in contrasts.items():
+        gc = c["group_contributions"]
+        share = gc["anchor_worst10"] / c["delta_mae"] if c["delta_mae"] else float("nan")
+        lines.append(f"| {name} | {c['delta_mae']:+.6f} | {gc['ordinary_y_gt_-3']:+.6f} "
+                     f"| {gc['tail_y_le_-3']:+.6f} | {gc['anchor_worst10']:+.6f} | {share:.2f} |")
     if mech:
+        cols = list(mech["delta_mae"])
         lines += ["", "## Does W help the molecules it up-weighted? (diagnostic)", "",
-                  "| valid subset | n | ΔMAE (W − E, negative better) |", "|---|---:|---:|"]
-        for k, v in mech.items():
-            if isinstance(v, dict):
-                lines.append(f"| {k} | {v['n']} | {v['delta_mae']:+.6f} |")
-        lines.append(f"| corr(ΔAE, low4) | — | {mech['corr_deltaAE_low4']:+.4f} |")
+                  "| valid subset | n | " + " | ".join(f"ΔMAE {c}" for c in cols) + " |",
+                  "|---|---:|" + "---:|" * len(cols)]
+        for k, n_ in mech["n"].items():
+            lines.append(f"| {k} | {n_} | " +
+                         " | ".join(f"{mech['delta_mae'][c][k]:+.6f}" for c in cols) + " |")
+        lines.append("| corr(ΔAE, low4) | — | " +
+                     " | ".join(f"{mech['corr_deltaAE_low4'][c]:+.4f}" for c in cols) + " |")
     if curves:
         lines += ["", "## Valid-curve noise and checkpoint-selection leverage", "",
                   "| run | sd(last 100 ep) | min | @ep | final | min−final | epochs < final−0.005 |",
