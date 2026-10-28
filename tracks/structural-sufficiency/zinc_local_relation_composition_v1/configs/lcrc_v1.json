@@ -1,0 +1,136 @@
+{
+ "round": "zinc-local-relation-composition-v1",
+ "status": "frozen_before_gpu",
+ "created": "2026-10-28T17:10:31+0800",
+ "git_commit_at_freeze": "c52861d33fd9ae474d82b55754482ec0e4b23817",
+ "data": {
+  "source": "official PyG ZINC subset=True (train 10000 / valid 1000 / test 1000)",
+  "train_cache": {
+   "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_train.pt",
+   "sha256": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2"
+  },
+  "valid_cache": {
+   "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_valid.pt",
+   "sha256": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe"
+  },
+  "normalisation": {
+   "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/analysis/norm.json",
+   "source": "frozen_p3_prep_train10k",
+   "fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f"
+  },
+  "ssl_s0": {
+   "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+   "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+  },
+  "ssl_s1": {
+   "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+   "sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a"
+  },
+  "official_test_loaded": false
+ },
+ "model": {
+  "width": 64,
+  "stat_rank": 32,
+  "local_hidden": 192,
+  "atom_hidden": 128,
+  "atom_out": 96,
+  "bond_hidden": 160,
+  "bond_out": 96,
+  "rho_hidden": 64,
+  "rel_z": 32,
+  "rel_hidden": 128,
+  "rel_out": 24,
+  "rel_mlp_hidden": 48,
+  "rel_cat_dim": 8,
+  "n_rel_categories": 6,
+  "relation_categories": [
+   "d3_no_ring",
+   "d3_ring",
+   "d4_5_no_ring",
+   "d4_5_ring",
+   "d6plus_no_ring",
+   "d6plus_ring"
+  ],
+  "pair_min_distance": 3,
+  "ring_block_definition": "two atoms share a biconnected component with >=3 atoms (a cycle block)",
+  "ssl_loaded_modules": [
+   "atom_encoder",
+   "bond_encoder"
+  ],
+  "junction_path": "absent",
+  "params": {
+   "A": 237519,
+   "R": 269664,
+   "N": 269664
+  }
+ },
+ "recipe": {
+  "optimizer": "adamw",
+  "lr": 0.001,
+  "min_lr": 1e-05,
+  "weight_decay": 1e-05,
+  "warmup_steps": 500,
+  "epochs": 600,
+  "batch_size": 128,
+  "valid_batch_size": 256,
+  "dropout": 0.0,
+  "grad_clip": 5.0,
+  "loss": "raw_y_l1",
+  "checkpoint_selection": "strict argmin official-valid MAE, ties -> earlier epoch",
+  "data_order": "torch.randperm(10000, Generator(seed+101)) reshuffled per epoch",
+  "ema": false,
+  "soup": false,
+  "seed_averaging": false,
+  "expected_steps_per_epoch": 79,
+  "expected_total_updates": 47400
+ },
+ "reference": {
+  "dcc_l_valid_4seed_mean": 0.07599,
+  "dcc_l_valid_seed0": 0.078537,
+  "dcc_l_test_4seed_mean": 0.067319,
+  "note": "historical, not retrained this round; valid is an exposed development split"
+ },
+ "cpu_gate": {
+  "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/analysis/cpu_checks.json",
+  "all_pass": true,
+  "arms": [
+   "G1",
+   "G2",
+   "G3",
+   "G4",
+   "G5",
+   "G6",
+   "G7",
+   "G8"
+  ],
+  "redundancy_ridge_R2_common_categories_mean": 0.7023613740844977,
+  "redundancy_note": "linear probe from A pooled features at random init; not a hard gate, reported as a risk",
+  "h_participation_ratio_at_init": 1.1939299374670058
+ },
+ "stages": {
+  "stage1": [
+   "A_s0",
+   "R_s0"
+  ],
+  "stage1_stop": "both valid > 0.085 and (R_s0 - A_s0) > -0.004",
+  "stage1_continue": "R_s0 <= 0.085 or (R_s0 - A_s0) <= -0.004",
+  "stage2": [
+   "N_s0",
+   "R_s1"
+  ],
+  "stage3_gate": "R_s0 - N_s0 <= -0.001 and R_s1 <= 0.088",
+  "stage3": [
+   "N_s1",
+   "A_s1"
+  ],
+  "test_gate": "R beats N in both completed seeds with mean R-N <= -0.001 and R valid mean <= 0.079; or R clearly beats DCC-L",
+  "test_reads": 1
+ },
+ "budget": {
+  "target_gpu_hours": 6.0,
+  "hard_gpu_hours": 8.0,
+  "max_concurrent_gpus": 2,
+  "includes": "prep/smoke/timing/failed jobs"
+ },
+ "test_policy": "terminal, reporting-only; test already spent; never used for selection"
+}

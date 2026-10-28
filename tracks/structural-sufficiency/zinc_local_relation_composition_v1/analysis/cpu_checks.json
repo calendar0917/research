@@ -1,0 +1,328 @@
+{
+  "round": "zinc-local-relation-composition-v1",
+  "git_commit": "c52861d33fd9ae474d82b55754482ec0e4b23817",
+  "environment": {
+    "python": "3.12.15",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1",
+    "cuda_available": false,
+    "cuda_device_count": 0,
+    "gpu_names": [],
+    "git_commit": "c52861d33fd9ae474d82b55754482ec0e4b23817",
+    "git_dirty_tracked": false,
+    "round_id": "zinc-arch-discovery-v1",
+    "timestamp": "2026-10-28T17:12:51+0800"
+  },
+  "prep": {
+    "splits": [
+      "train",
+      "valid"
+    ],
+    "caches": {
+      "train": {
+        "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_train.pt",
+        "sha256": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
+        "reused": true,
+        "n_molecules": 10000
+      },
+      "valid": {
+        "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_valid.pt",
+        "sha256": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+        "reused": true,
+        "n_molecules": 1000
+      }
+    },
+    "official_test_loaded": false,
+    "norm": {
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/analysis/norm.json",
+      "source": "frozen_p3_prep_train10k",
+      "fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f"
+    }
+  },
+  "all_pass": true,
+  "checks": [
+    {
+      "id": "G1_parameters_modules_ssl_no_junction",
+      "pass": true,
+      "details": {
+        "parameters": {
+          "A": 237519,
+          "R": 269664,
+          "N": 269664
+        },
+        "breakdown": {
+          "A": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "local": 133645,
+            "f": 4225,
+            "rho": 10497,
+            "rel": 0,
+            "total": 237519
+          },
+          "R": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "local": 133645,
+            "f": 4225,
+            "rho": 10497,
+            "rel": 32145,
+            "total": 269664
+          },
+          "N": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "local": 133645,
+            "f": 4225,
+            "rho": 10497,
+            "rel": 32145,
+            "total": 269664
+          }
+        },
+        "initial_state_sha256": {
+          "A": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+          "R": "d0477f2e80e999216682bf106d540d252d818c993b45b96427d34b9dc9f8329d",
+          "N": "d0477f2e80e999216682bf106d540d252d818c993b45b96427d34b9dc9f8329d"
+        },
+        "ssl": {
+          "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+          "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+          "loaded_modules": [
+            "atom_encoder",
+            "bond_encoder"
+          ],
+          "junction_path_loaded": false,
+          "keys_available": [
+            "atom_encoder",
+            "bond_encoder",
+            "junction_encoder"
+          ]
+        },
+        "has_junction_module": false,
+        "state_keys_with_junction": [],
+        "r_vs_n_initial_max_abs": 0.0,
+        "r_vs_a_step0_max_abs": 0.0,
+        "n_vs_a_step0_max_abs": 0.0,
+        "forbidden_source_tokens_absent": true
+      }
+    },
+    {
+      "id": "G2_permutation_bond_direction_batching",
+      "pass": true,
+      "details": {
+        "A": {
+          "renumber_max_abs": 0.0,
+          "bond_reverse_max_abs": 2.384185791015625e-07,
+          "batch_split_max_abs": 1.1920928955078125e-07,
+          "batch_order_max_abs": 5.960464477539063e-08
+        },
+        "R": {
+          "renumber_max_abs": 0.0,
+          "bond_reverse_max_abs": 2.384185791015625e-07,
+          "batch_split_max_abs": 1.1920928955078125e-07,
+          "batch_order_max_abs": 5.960464477539063e-08
+        },
+        "N": {
+          "renumber_max_abs": 0.0,
+          "bond_reverse_max_abs": 2.384185791015625e-07,
+          "batch_split_max_abs": 1.1920928955078125e-07,
+          "batch_order_max_abs": 5.960464477539063e-08
+        }
+      }
+    },
+    {
+      "id": "G3_rooted_stats_pair_categories_boundary",
+      "pass": true,
+      "details": {
+        "n_molecules_checked": 200,
+        "nbr_mismatch": 0,
+        "path_mismatch": 0,
+        "pair_mismatch": 0,
+        "scalar_mismatch": 0,
+        "n_pairs_total": 41637,
+        "n_paths_total": 13870,
+        "path_joint_rank1_energy_mean": 0.9552142926491226,
+        "path_joint_rank1_energy_p90": 0.9937711303423719,
+        "path_joint_is_not_exactly_rank1": true,
+        "synthetic_joint_interaction_max_abs": 1.803755521774292,
+        "synthetic_marginal_sum_max_abs": 0.0,
+        "synthetic_full_path_sum_max_abs": 1.803755521774292,
+        "boundary": {
+          "one_atom": {
+            "n_atoms": 1,
+            "n_pairs": 0,
+            "n_paths": 0,
+            "pair_categories": [],
+            "pred_finite": true
+          },
+          "chain4": {
+            "n_atoms": 4,
+            "n_pairs": 1,
+            "n_paths": 4,
+            "pair_categories": [
+              0
+            ],
+            "pred_finite": true
+          },
+          "ring6": {
+            "n_atoms": 6,
+            "n_pairs": 3,
+            "n_paths": 12,
+            "pair_categories": [
+              1
+            ],
+            "pred_finite": true
+          },
+          "two_components": {
+            "n_atoms": 4,
+            "n_pairs": 4,
+            "n_paths": 0,
+            "pair_categories": [
+              4
+            ],
+            "pred_finite": true
+          }
+        },
+        "unreachable_maps_to_ge6": true
+      }
+    },
+    {
+      "id": "G4_r_n_identical_init_and_data_order",
+      "pass": true,
+      "details": {
+        "seed": 0,
+        "data_order_seed": 101,
+        "identical_over_600_epochs": true,
+        "first_batch_rows_sha256": "3cefbe2f0bc3e814439a29168583ccfa53e59cdd3535181326425562508fab82",
+        "first_batch_head": [
+          5231,
+          9365,
+          8907,
+          6060,
+          4811,
+          5472,
+          2211,
+          7999,
+          8703,
+          5199
+        ],
+        "r_n_state_hash": "d0477f2e80e999216682bf106d540d252d818c993b45b96427d34b9dc9f8329d"
+      }
+    },
+    {
+      "id": "G5_synthetic_correspondence",
+      "pass": true,
+      "details": {
+        "same_z_multiset": true,
+        "same_category_counts": true,
+        "counts": [
+          2.0,
+          2.0,
+          2.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "R_content_max_abs_difference": 0.34103313088417053,
+        "N_content_max_abs_difference": 0.0,
+        "R_delta_abs_difference": 0.00884978473186493,
+        "pair_order_invariant": true
+      }
+    },
+    {
+      "id": "G6_real_relation_coverage_and_redundancy",
+      "pass": true,
+      "details": {
+        "n_molecules": 512,
+        "pairs_per_molecule_mean": 207.453125,
+        "pairs_per_molecule_min": 45.0,
+        "pairs_per_molecule_max": 532.0,
+        "category_nonempty_fraction": [
+          1.0,
+          0.9453125,
+          1.0,
+          0.32421875,
+          1.0,
+          0.021484375
+        ],
+        "category_mean_count": [
+          26.306640625,
+          7.80859375,
+          57.1875,
+          2.220703125,
+          113.78125,
+          0.1484375
+        ],
+        "molecules_with_ge2_nonempty_categories": 1.0,
+        "molecules_with_content_difference_R_vs_N": 1.0,
+        "mean_R_vs_N_content_l2_over_nonempty": 0.4541318118572235,
+        "R_content_rms": 0.20436792075634003,
+        "ridge_R2_mean_all_dims": 0.08906935436203778,
+        "ridge_R2_mean_valid_dims": 0.08906935436203778,
+        "ridge_R2_per_category": [
+          0.6937406060681743,
+          0.3644955691410362,
+          0.7224332621925459,
+          0.2726000520008798,
+          0.6909102539927725,
+          -2.209763617223182
+        ],
+        "ridge_R2_common_categories_mean": 0.7023613740844977,
+        "ridge_R2_valid_dims_per_category": [
+          32,
+          32,
+          32,
+          32,
+          32,
+          32
+        ],
+        "ridge_R2_permutation_control_mean": -1.4440991765942133,
+        "h_participation_ratio_mean_at_init": 1.1939299374670058,
+        "X_dim": 291
+      }
+    },
+    {
+      "id": "G7_gradients_short_descent_checkpoint",
+      "pass": true,
+      "details": {
+        "A": {
+          "parameters": 237519,
+          "loss_first5": 9.657100701332093,
+          "loss_last5": 0.6940183520317078,
+          "descent": 8.963082349300384,
+          "head_grad_step0": null,
+          "phi_grad_step0": null,
+          "phi_grad_step1": null,
+          "checkpoint_reload_max_abs": 0.0
+        },
+        "R": {
+          "parameters": 269664,
+          "loss_first5": 9.666601395606994,
+          "loss_last5": 0.6952745914459229,
+          "descent": 8.971326804161071,
+          "head_grad_step0": 8.122509956359863,
+          "phi_grad_step0": 0.0,
+          "phi_grad_step1": 1.3548717498779297,
+          "checkpoint_reload_max_abs": 0.0
+        }
+      }
+    },
+    {
+      "id": "G8_official_test_isolation",
+      "pass": true,
+      "details": {
+        "prep_splits": [
+          "train",
+          "valid"
+        ],
+        "test_prep_refused": true,
+        "test_cache_exists": false,
+        "official_test_loaded": false,
+        "train_labels_loaded": true,
+        "labels_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e"
+      }
+    }
+  ],
+  "created": "2026-10-28T17:12:51+0800"
+}
