@@ -241,6 +241,12 @@ Real/Null 的差别**只有** `C_real` vs `C_null`：同一 `n_v`、同一 `B_v`
 | GPU 时间 | Real 0.490 h + Null 0.556 h = **1.046 h**；+ 远程 2-epoch smoke 0.002 h ≈ **1.048 GPU·h**（硬上限 3） |
 | official test | **未加载** |
 
+**provenance 语义**：`analysis/provenance.json` 与 `cpu_checks.json` 里的
+`git_commit=dc53fd7…`、`git_dirty_tracked=true` 是**生成时刻**的状态：代码停在
+`dc53fd7`（阶段一代码 + 报告），脏的只有本次重新生成的分析产物文件本身（时间戳/该字段）。
+所有数值在 `dc53fd7` 上重跑后逐位复现（Real 0.078976@368、Null 0.082897@522、
+补充表 content sha `747fe048…`/`b085c4ec…` 不变）。产物随后单独提交。
+
 **smoke 披露**：第一次 2-epoch smoke 忘记传 `--out`，写进了默认的 `runs/shReal_s0`（远程）；
 正式 Real_s0 用 `--force` 覆盖了它（同一 seed/arm，`epochs=600`）。同一 smoke 在本地 CPU 复现，
 valid 数字与远程 GPU **逐位相同**（0.433685 / 0.322342）——这也是本模型 CPU/GPU 确定性的一次实测。
