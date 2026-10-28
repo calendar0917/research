@@ -2,8 +2,8 @@
 
 **Round:** `zinc-local-relation-composition-v1`  
 **Track:** `tracks/structural-sufficiency/zinc_local_relation_composition_v1/`  
-**状态:** 完成（6/6 正式 run：A/R/N × seed 0/1；test 未读）  
-**一句话结论:** 不带 junction token 的 A 在 seed 0 名义上优于 DCC-L seed 0，但两个 seed 的均值没有超过 DCC-L 四 seed 均值；R 相对 N 的收益在两个 seed 上符号翻转；机制检查显示关系读头坍缩为近似常数偏置，真实结构对应没有被冻结模型使用。因此**没有读 test**，也没有 `<0.060` 的信号。
+**状态:** 完成（6/6 正式 run：A/R/N × seed 0/1；test 已由用户要求做一次 post-hoc 描述性读取：A_s0 = 0.066782；非 gate 通过）  
+**一句话结论:** 不带 junction token 的 A 在 seed 0 名义上优于 DCC-L seed 0，但两个 seed 的均值没有超过 DCC-L 四 seed 均值；R 相对 N 的收益在两个 seed 上符号翻转；机制检查显示关系读头坍缩为近似常数偏置，真实结构对应没有被冻结模型使用。预注册 gate 未通过；用户随后明确要求对最佳 valid 单模型 A_s0 读一次 test，得到 **0.066782**，落在 DCC-L s0 0.066267 与四 seed 均值 0.067319 之间，统计上与 DCC-L 不可区分。该读取是 post-hoc、非 confirmatory，不改变 stop 结论；本轮仍然没有 `<0.060` 的信号。
 
 ---
 
@@ -20,16 +20,18 @@
 | A 两 seed 均值 | 0.078543 |
 | R 两 seed 均值 | 0.079032 |
 | N 两 seed 均值 | 0.080075 |
-| 历史 DCC-L 四 seed 均值 | 0.075990（未在本轮重训） |
+| 历史 DCC-L valid 四 seed 均值 | 0.075990（未在本轮重训） |
+| 历史 DCC-L test | s0 = 0.066267；四 seed 均值 = 0.067319（未在本轮重训） |
 | R−N | seed0 **−0.003950**，seed1 **+0.001866**；符号翻转 |
-| test | **未读**；pre-registered gate 未通过 |
+| test | **A_s0 post-hoc = 0.066782**；pre-registered gate 未通过；仅描述性，非 confirmatory |
 | CPU gates | 8/8 PASS（`analysis/cpu_checks.json`） |
 
-**最重要的三个事实：**
+**最重要的四个事实：**
 
 1. **A 的局部主体是有效的，但优势不稳定。** A_s0 0.076582，优于 DCC-L seed0 0.078537（逐分子 paired Δ = −0.001956，CI 含 0）；A_s1 0.080504，明显差于 DCC-L seed1 0.073837。A 两 seed 均值 0.078543，比 DCC-L 四 seed 均值 0.075990 差 0.002553。不能声称“达到或超过 DCC-L”。
 2. **R 没有稳定优于 N。** seed0 R 比 N 好 0.003950，seed1 R 比 N 差 0.001866；均值 R−N = −0.001042，但两个 seed 方向相反。即使 seed0 的 R−N 增益，其 paired bootstrap 95% CI 也包含 0（[−0.009299, +0.000882]）。
 3. **关系通道在功能上是关闭的。** R 的 `Δ_rel` 在分子间的极差只有 ~2×10⁻⁵（两个 seed）；冻结权重把真实归属换成 mean-field 归属，valid MAE 变化 ≤1×10⁻⁸；把 `rel.head` 置零只改变常数偏置（R_s0 −1.4×10⁻⁵；R_s1 +5.95×10⁻³）。因此 R 与 N 的差异不是“真实结构对应”的证据，而是零初始化读头坍缩为常数偏置后的优化轨迹差异。
+4. **用户在 gate 失败后要求读了一次 test，A_s0 = 0.066782。** 它比 DCC-L s0 0.066267 差 +0.000515，比 DCC-L 四 seed 均值 0.067319 好 −0.000537；paired test bootstrap CI 跨 0（[−0.007302, +0.007178]）。这是单 seed、post-hoc、test 已暴露的描述性记录，不能作为“超过 DCC-L”的 confirmatory 证据，也没有改变 stop 决定。
 
 ---
 
@@ -38,7 +40,7 @@
 ### 2.1 数据与选择
 
 - 只使用官方 PyG ZINC `subset=True` 的 **train 10,000 / valid 1,000 / test 1,000**；没有创建新的 Fit/Monitor/Locked split。
-- 训练只用 train；标准化只用 train 拟合（`global33` 复用冻结 P3 train stats，9 个原子标量用 train mean/std）；valid 每 epoch 全量评估并严格按最小 valid MAE 选一个 checkpoint；test 未构造、未读取。
+- 训练只用 train；标准化只用 train 拟合（`global33` 复用冻结 P3 train stats，9 个原子标量用 train mean/std）；valid 每 epoch 全量评估并严格按最小 valid MAE 选一个 checkpoint；训练/验证阶段未构造 test，所有 6 个 run 冻结后才按用户明确要求做了一次 post-hoc test 读取（见 2.5）。
 - 没有使用 EMA、soup、seed averaging、ensemble、蒸馏、辅助标签、目标分项监督。
 - 没有使用 RDKit logP/SA、目标环惩罚公式值、历史模型预测/残差作为输入。
 - 输入只含原始图的 label-free 拓扑统计、已有 `global33`，以及已有 train-only masked-SSL 的 `atom_encoder` / `bond_encoder` 权重（正常微调）。
@@ -78,13 +80,15 @@ AdamW；peak LR 1e-3 → min 1e-5；500-step warmup 后 per-step cosine；weight
 
 正式训练合计 **2.9501 GPU·h**；prep/timing 为 CPU 或数秒级 GPU，合计仍 <3.0 GPU·h。未超过 6 GPU·h 目标，更未接近 8 GPU·h 硬上限。
 
-### 2.5 test 隔离
+### 2.5 test 访问记录
 
-- 6 个 `train.json` 均记录 `official_test_loaded: false`。
-- `cache/` 只有 `lc_train.pt`、`lc_valid.pt`；没有 test cache。
-- `analysis/test_freeze.json` 不存在；`lc_test_reporting.py` **没有被执行**。
-- 本轮没有 test 数字，也没有任何 test-driven 的模型/seed/epoch 选择。
-- 历史 test 4-seed 均值 0.067319 只作为背景 anchor，不是本轮测量；且 test 在历史上已暴露，即使未来读取也不是新盲测。
+- 预注册 gate 在**任何** test 访问之前评估：`analysis/seed_summary.json` 记录 `pass=false`、`decision=do_not_read_test`。
+- 用户随后明确要求“读一下 test”；对 **A_s0**（最佳 valid 单模型，0.076582）执行一次 `lc_test_reporting.py --run lcrcA_s0 --allow-any-arm`。
+- 脚本先写 `analysis/test_freeze.json`（选择、checkpoint sha256、config sha256、重算 valid MAE），再构建 label-free test feature cache，最后只读一次 test labels；`test_report.json` 记录 `read_count: 1`。
+- `test_freeze.json` 明确记录 `protocol_compliant=false`、`user_override_post_hoc=true`；这不是 gate 通过，也不是 confirmatory test。读取发生在所有模型/seed/epoch 冻结之后，没有用 test 做任何选择。
+- test cache 现在存在（`cache/lc_test.pt`，label-free features）；逐分子预测在 `analysis/test_per_molecule_lcrcA_s0.csv`，NPZ 在 `predictions/test_lcrcA_s0.npz`（本地 gitignored）。
+- 历史 test 已暴露，不是新盲测；6 个训练 run 的 `train.json` 仍记录 `official_test_loaded: false`（训练期间确实没有读）。
+- 本次执行使用的是加了两处修正的 `lc_test_reporting.py`（`--allow-any-arm`、`L.D.official_labels`）；`test_freeze.json` 的 `git_commit=36972d7` 是读取前冻结的仓库状态，checkpoint/config sha256 已在该文件中冻结，脚本最终版本见本报告 commit。
 
 ---
 
@@ -215,6 +219,36 @@ CPU G6（512 个 train 分子）：
 4. **类别不平衡。** cat5 只有 2.1% 分子非空，cat3 32.4%，cat1 94.5%；稀有类别得不到足够梯度，共享 MLP 倾向忽略它们。
 5. **seed 噪声 / 优化轨迹。** R 和 N 只差一个 content 聚合方式，但 zero-init 分支会改变 shared trunk 的早期梯度；在 600 epoch、强 cosine 退火下，这种微小差异可以放大成 0.004 的 valid 差异。seed0 的 R>N 与 seed1 的 R<N 正是这种不稳定性的表现。
 
+
+### 5.4 Post-hoc test 读取（用户要求；非协议 gate）
+
+**选择：** A_s0，best valid = 0.076582，checkpoint sha256 `06340bcd9e45af03e887e706031b6ea14c719cac2b68ba716ce3d686bb21fdad`。预注册 gate 失败（R−N 方向翻转；R mean 0.079032 > 0.079），所以这次读取在 `test_freeze.json` 中记录为 `protocol_compliant=false`、`user_override_post_hoc=true`。
+
+| 指标 | A_s0 | DCC-L s0 | DCC-L s1 | DCC-L s2 | DCC-L s3 | DCC-L 4-seed mean |
+|---|---:|---:|---:|---:|---:|---:|
+| test MAE | **0.066782** | 0.066267 | 0.067688 | 0.067538 | 0.067785 | 0.067319 |
+| test RMSE | 0.139026 | — | — | — | — | — |
+| p90 AE | 0.137302 | — | — | — | — | — |
+| max AE | 2.008445 | — | — | — | — | — |
+| ordinary (`y>-3`) | 0.063410 (n=923) | 0.060392 | 0.062325 | 0.061729 | 0.063093 | — |
+| tail (`y≤-3`) | 0.107208 (n=77) | 0.136686 | 0.131978 | 0.137169 | 0.124026 | — |
+
+**Paired test bootstrap（10k，逐分子；机器可读表见 `analysis/test_compare.{md,json}`）：**
+
+| 对比 | Δ MAE (A_s0 − DCC-L) | 95% CI | A better rate |
+|---|---:|---|---:|
+| vs DCC-L s0 | +0.000516 | [−0.007302, +0.007178] | 0.502 |
+| vs DCC-L s1 | −0.000906 | [−0.007180, +0.005060] | 0.513 |
+| vs DCC-L s2 | −0.000756 | [−0.006870, +0.005134] | 0.500 |
+| vs DCC-L s3 | −0.001002 | [−0.006396, +0.004330] | 0.503 |
+
+**读法：**
+
+- A_s0 的 test MAE **落在 DCC-L 四个 seed 的范围内**：比 s0 差 +0.000515，比 s1/s2/s3 好 0.0008–0.0010；所有 paired CI 都跨 0。单 seed、post-hoc，**不能声称超过 DCC-L**。
+- 与 valid 的分组模式相反：test 上 A_s0 **ordinary 更差**（0.063410 vs DCC-L 0.0604–0.0631），**tail 更好**（0.107208 vs DCC-L 0.1240–0.1367）。test 只有 77 个 tail，且 test 的极端误差远小于 valid（max AE 2.008 vs valid row172 6.575）；valid 的 row172 病态点在 test 中不存在。因此 test 的“tail 更好”不能直接外推到 valid 的 tail 问题。
+- test 数字与 valid 数字不可直接比较：A_s0 valid 0.076582、test 0.066782；DCC-L 也是 valid 0.078537、test 0.066267。test 整体更容易，且历史 test 已暴露。
+- **决策不变：STOP。** 这次读取是用户要求的描述性检查，不是 gate 通过，也不能用来改模型/seed/epoch；R 机制仍然为空，A 仍然只有 seed0 的 test 证据。
+
 ---
 
 ## 6. 五个问题
@@ -228,6 +262,7 @@ CPU G6（512 个 train 分子）：
 - A 两 seed 均值 **0.078543**，比 DCC-L 四 seed 均值 0.075990 差 **0.002553**。
 - A 的 ordinary MAE 0.0629–0.0635，和 DCC-L 同档；差距集中在 tail/row172。
 - A 的局部贡献占预测尺度 71–78%（`local_share_median`），h 的 participation ratio 4.75–4.99，没有表示坍缩；A 的 `Σf` 和 `ρ` 都在工作。
+- 用户要求下的 post-hoc test：A_s0 = 0.066782，落在 DCC-L s0 0.066267 与 4-seed mean 0.067319 之间，所有 paired CI 跨 0；单 seed、非 gate，仍不能作为稳定竞争优势。
 
 **可能解释：**
 
@@ -237,8 +272,8 @@ CPU G6（512 个 train 分子）：
 
 **下一步决定：**
 
-- **不读 test**；不以 A_s0 单点声称“达到/超过 DCC-L”。
-- 如果未来要继续 A 这条线，只值得做 **3–4 seed 的重复确认**（同一配方、同一条停止规则），并预注册 tail/row172 分层报告；在均值稳定 ≤0.079 或明确优于 DCC-L 之前，不读 test。
+- 本轮 test 已在用户要求下做了一次 post-hoc 读取；**不再重复读 test**，也不以 A_s0 单点声称“达到/超过 DCC-L”。
+- 如果未来要继续 A 这条线，只值得做 **3–4 seed 的重复确认**（同一配方、同一条停止规则），并预注册 tail/row172 分层报告；在均值稳定 ≤0.079 或明确优于 DCC-L 之前，不把 test 当作 confirmatory。
 - 本轮不再为 A 启动补丁实验。
 
 ### Q2. R 是否优于 N？真实结构对应是否带来稳定收益？
@@ -260,7 +295,7 @@ CPU G6（512 个 train 分子）：
 
 **下一步决定：**
 
-- **不读 test**；不把 R 作为“真实关系组合有效”的正结果。
+- **不再重复读 test**；不把 R 作为“真实关系组合有效”的正结果。
 - 本轮停止；不启动 N_s2 / R_s2 或任何 patch。
 
 ### Q3. 若 R 优于 N，是真实对应还是容量/冗余？若否，失败在哪里？
@@ -300,6 +335,7 @@ CPU G6（512 个 train 分子）：
 - 差距集中在 tail：A_s0 tail 0.2641、A_s1 tail 0.3335；DCC-L s1/s2 tail 0.2285/0.2162。
 - `<0.060` 的距离：best 0.076582 需要再降 **0.016582**（相对 21.7%）。即使把固定 worst-10 全部做到 0，整体也只有 **0.061892**（其余 990 个分子 MAE 0.062517），仍 >0.060；因此 `<0.060` 需要 ordinary 也显著改善，而不是只修几个极端点。
 - 没有观察到任何“接近 0.060”的曲线/分组信号：tail 仍在 0.26–0.33，row172 在 6.5–10.5，r2-unseen 在 0.145–0.153。
+- post-hoc test：A_s0 = 0.066782，比 DCC-L s0 0.066267 差 +0.000515，比 DCC-L 4-seed mean 0.067319 好 −0.000537；单 seed、CI 跨 0，不构成优势。test 的 tail 更容易（max AE 2.008，valid row172 6.575），不能据此说 `<0.060` 更近。
 
 **可能解释：**
 
@@ -309,7 +345,7 @@ CPU G6（512 个 train 分子）：
 
 **下一步决定：**
 
-- **不读 test**；不声称 `<0.060` 可期。
+- test 已在用户要求下读了一次；**不再重复读**；不声称 `<0.060` 可期。
 - 本轮停止。若未来追求 `<0.060`，应把它作为一个**新的、预注册的 tail/extreme 泛化问题**，而不是继续在 LCRC 上加关系模块。
 - 对 DCC-L 的“接近”只作为描述性 anchor；DCC-L 未在本轮重训，不能做严格同配方对照。
 
@@ -332,7 +368,7 @@ CPU G6（512 个 train 分子）：
 
 **下一步决定：**
 
-- **本轮停止，不启动更多补丁实验；不读 test。**
+- **本轮停止，不启动更多补丁实验；不再重复读 test。**
 - 保留 A 作为“无 junction 的强 ordinary 基线”的证据，但不把它升级为“超过 DCC-L”的结论；若继续，只做预注册的 3–4 seed A 复现。
 - 关系方向若未来重启，必须是新轮：预注册 distributional/attention relation summary、pair-level auxiliary supervision、tail-stratified 评估和 3+ seed；本轮不通过改 head/初始化/正则来“救”R。
 - 归档 `REPORT.md`、`analysis/`、`runs/` 和 `analysis/cpu_checks.json`；test 保持未读。
@@ -372,6 +408,10 @@ CPU G6（512 个 train 分子）：
 | `analysis/mechanism.json` | 尺度、head-zero、R/N mode swap、类别覆盖、h participation |
 | `analysis/relation_probe.json` | 后验 relation-content ridge / variance 诊断 |
 | `analysis/per_molecule_valid.csv` | 逐分子 valid 预测与 AE |
+| `analysis/test_freeze.json` | post-hoc test 前的选择/checkpoint/config 冻结记录（`protocol_compliant=false`） |
+| `analysis/test_report.json` | A_s0 post-hoc test 指标（read_count=1） |
+| `analysis/test_per_molecule_lcrcA_s0.csv` | A_s0 逐分子 test 预测与 AE |
+| `analysis/test_compare.{md,json}` | A_s0 与历史 DCC-L s0–s3 test 的逐分子 paired 比较（描述性） |
 | `analysis/summary.json` | 机器可读汇总 |
 | `analysis/norm.json` | train-only 标准化 |
 | `analysis/timing.json` | 计时 |
@@ -379,7 +419,7 @@ CPU G6（512 个 train 分子）：
 
 ### 7.3 最终声明
 
-- 本轮 **test 未读**；没有 test 数字，也没有 test-driven 调参。历史 test 4-seed 均值 0.067319 只是背景 anchor，不是本轮结果。
+- 预注册 gate 未通过；用户随后明确要求对 A_s0 做了一次 **post-hoc** test 读取：0.066782（`analysis/test_report.json`）。`test_freeze.json` 记录 `protocol_compliant=false`、`user_override_post_hoc=true`；该数字是描述性记录，不是 confirmatory，也没有用于任何模型/seed/epoch 选择。
 - 历史 DCC-L valid 四 seed 均值 0.075990 和 per-seed 值来自既有 `zinc_performance_search_v1`，**本轮没有重训 DCC-L**；所有与 DCC-L 的逐 seed 对比都是描述性的，不是同配方、同 seed 的严格对照。
 - 没有 ensemble、distillation、extra labels、EMA/soup/seed averaging；没有 RDKit 目标描述符；没有 junction token；没有加载监督 DCC-L 权重；没有迭代 hidden-state message passing。
-- 结论是**混合/偏负**：A 的局部主体在 ordinary 上是有竞争力的，但没有稳定超过 DCC-L；R 的“真实对应”输入存在且非退化，但读头没有使用它；本轮没有 `<0.060` 的信号，因此停止，不读 test。
+- 结论仍是**混合/偏负**：A 的局部主体在 ordinary 上是有竞争力的，但没有稳定超过 DCC-L；R 的“真实对应”输入存在且非退化，但读头没有使用它；post-hoc test 也没有给出稳定优势；本轮没有 `<0.060` 的信号，因此停止。

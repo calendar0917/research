@@ -392,7 +392,7 @@ def main(argv=None) -> int:
         "dccl_4seed_mean": DCCL_4SEED_VALID,
         "pass": bool(consistent and mean_rn <= -0.001 and (r_mean_le_0079 or beats_dccl)),
         "decision": "read_test" if (consistent and mean_rn <= -0.001 and (r_mean_le_0079 or beats_dccl)) else "do_not_read_test",
-        "note": "Test not read in this round. Gate is evaluated on completed valid runs only.",
+        "note": "Gate evaluated before any test access. A later user-requested post-hoc A_s0 read is recorded in test_freeze.json / test_report.json and does not change this gate.",
     }
     L.write_json(L.ANALYSIS / "seed_summary.json", {"arms": arm_rows, "seeds": seed_rows, "test_gate": gate})
     slines = ["# LCRC-v1 seed summary and test gate", "",

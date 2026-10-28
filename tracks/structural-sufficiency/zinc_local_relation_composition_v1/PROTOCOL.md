@@ -2,7 +2,7 @@
 
 **Round id:** `zinc-local-relation-composition-v1`
 **Track:** `tracks/structural-sufficiency/zinc_local_relation_composition_v1/`
-**状态:** 已完成（6/6 正式 run；test 未读；结果见 `REPORT.md`）
+**状态:** 已完成（6/6 正式 run；gate 失败后按用户要求对 A_s0 做了一次 post-hoc test 读取；结果见 `REPORT.md` §5.4）
 **数据:** official PyG ZINC `subset=True`，train 10,000 / valid 1,000 / test 1,000。
 **指标:** raw-y MAE（单模型）。
 **参数上限:** 500k 部署参数。A = 237,519；R = N = 269,664。
@@ -71,7 +71,7 @@ A/R/N 同一 seed 使用完全相同的初始化（共享参数逐 tensor 相同
 | G5 合成归属 | 相同 z 多重集、相同类别计数（2,2,2），不同归属：R 内容 max abs diff 0.341、Δ_rel diff 0.00885；N 内容 diff = 0.0；pair 顺序不变 |
 | G6 真实关系覆盖/冗余 | 512 train 分子：平均 207.5 合格对/分子（45–532）；类别非空率 [1.00, 0.945, 1.00, 0.324, 1.00, 0.021]；100% 分子有 ≥2 个非空类别；R vs N 内容 100% 不同（mean L2 0.454）；ridge 从 A 池化特征重建 R 内容，common categories (0,2,4) R²≈0.702，permutation control ≈−1.44 |
 | G7 梯度/短训/checkpoint | 30 步 CPU loss 下降；全部梯度有限；R 的 head 第一步有非零梯度，φ 第二步非零；checkpoint reload max abs = 0.0 |
-| G8 test 隔离 | prep 只接受 train/valid，test prep 被拒绝；test cache 不存在；所有 run 记录 `official_test_loaded=false` |
+| G8 test 隔离（gate 时） | prep 只接受 train/valid，test prep 被拒绝；test cache 不存在；所有 run 记录 `official_test_loaded=false`；post-hoc 读取见 §10 |
 
 冗余风险已量化：common categories 的 R 内容约 70% 可由 A 已有池化特征线性重建，约 30% 不可。初始化时 h 的 participation ratio 1.19，说明局部表示的维度偏低；这会在训练后重新测量，不把它当作已排除的风险。
 
@@ -95,7 +95,7 @@ A/R/N 同一 seed 使用完全相同的初始化（共享参数逐 tensor 相同
 - 分组：ordinary (`y>-3`)、tail (`y≤-3`，环惩罚相关)、row172、radius-2 unseen（251）、unseen ordinary（225）、ring-rich (`cycle_rank≥4`)、固定 DCC-L/P3B worst-10、去掉 row172、去掉 worst-10。
 - 机制：R/N 真实关系输入的类别计数/内容差、非空覆盖；冻结权重把 R/N 的 `rel.head` 置零后预测变化；A 的 `|Σf|` 与 `|ρ|` 尺度；best checkpoint 上 h 的 participation ratio。
 - test 只在以下条件同时满足时读一次：R 在两个 seed 上相对 N 有一致收益、mean `R−N ≤ −0.001`，且 R 的 valid mean ≤0.079（DCC-L 4-seed 均值 +0.003，属于“接近”），或新主体明确超过 DCC-L。只对预选的一个单模型 checkpoint 做一次终端评估。
-- test 在历史轮次已暴露；本轮 **未读 test**。若未来读取，结果只能是描述性性能记录，不是新盲测；不得据此改模型/seed/epoch。
+- test 在历史轮次已暴露。预注册阶段未读；gate 失败后，用户明确要求对 A_s0 做了一次 **post-hoc** 读取（`test_freeze.json`: `protocol_compliant=false`, `user_override_post_hoc=true`）。该结果只能是描述性性能记录，不是新盲测/confirmatory；不得据此改模型/seed/epoch。
 
 ## 8. 预算
 
@@ -115,3 +115,4 @@ A/R/N 同一 seed 使用完全相同的初始化（共享参数逐 tensor 相同
 - Stage 3 门禁在启动时按 seed0 数值满足（R_s0−N_s0 = −0.003950，R_s1 = 0.080474 ≤ 0.088），因此按协议跑了 `N_s1`、`A_s1`；两 seed 汇总后 R−N 符号翻转（seed1 +0.001866）。
 - test gate：`consistent R<N = false`，mean `R−N = −0.001042`，R valid mean `0.079032 > 0.079`，且未明显优于 DCC-L；**decision = do_not_read_test**。详见 `analysis/seed_summary.md` / `analysis/seed_summary.json`。
 - 正式训练合计 2.9501 GPU·h。
+- **Post-hoc test（用户要求，非 gate）：** A_s0 test MAE = 0.066782（RMSE 0.139026；ordinary 0.063410 / tail 0.107208）；DCC-L s0 0.066267，四 seed 均值 0.067319。单 seed、post-hoc、test 已暴露；不改变 STOP 决定。详见 `analysis/test_report.json` / `REPORT.md` §5.4。

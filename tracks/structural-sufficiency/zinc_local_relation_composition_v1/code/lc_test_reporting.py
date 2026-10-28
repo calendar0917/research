@@ -1,7 +1,9 @@
 """Terminal, reporting-only official-test evaluation for LCRC-v1.
 
-This is ONLY run after the valid-side decision is frozen and the pre-registered
-test gate in PROTOCOL.md is met.  It:
+By default this is ONLY run after the valid-side decision is frozen and the
+pre-registered test gate in PROTOCOL.md is met.  ``--allow-any-arm`` exists only
+for a documented, user-requested post-hoc descriptive read; it records that the
+gate was not met and that the read is not confirmatory.  It:
 
 1. writes ``analysis/test_freeze.json`` (selected run/checkpoint/config/code
    hashes, recomputed valid MAE) *before* touching test;
@@ -37,6 +39,10 @@ def main(argv=None) -> int:
     parser.add_argument("--run", required=True, help="e.g. lcrcR_s0")
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--force", action="store_true", help="only for a documented rerun")
+    parser.add_argument("--allow-any-arm", action="store_true",
+                        help="documented post-hoc read of a non-R checkpoint; not confirmatory")
+    parser.add_argument("--rationale", default="",
+                        help="why this checkpoint was selected for a post-hoc read")
     args = parser.parse_args(argv)
 
     freeze_path = L.ANALYSIS / "test_freeze.json"
@@ -47,8 +53,9 @@ def main(argv=None) -> int:
     info = L.read_json(run_dir / "train.json")
     arm = info["arm"]
     seed = int(info["seed"])
-    if arm != "R":
-        raise SystemExit("the pre-registered terminal candidate must be an R run")
+    if arm != "R" and not args.allow_any_arm:
+        raise SystemExit("the pre-registered terminal candidate must be an R run; "
+                         "use --allow-any-arm only for a documented post-hoc read")
 
     norm = D.load_norm()
     valid = D.load_cache("valid")
@@ -59,8 +66,17 @@ def main(argv=None) -> int:
     _, valid_mae = T.evaluate(model, valid, rows_valid, device=args.device, batch_size=256)
     if abs(valid_mae - float(info["best"]["valid_mae"])) > 1e-6:
         raise RuntimeError(f"valid replay mismatch {valid_mae} vs {info['best']['valid_mae']}")
+    gate = {}
+    gate_path = L.ANALYSIS / "seed_summary.json"
+    if gate_path.exists():
+        gate = L.read_json(gate_path).get("test_gate", {})
+    protocol_compliant = bool(arm == "R" and gate.get("pass", False))
     freeze = {
         "round": L.ROUND_ID,
+        "protocol_gate": gate,
+        "protocol_compliant": protocol_compliant,
+        "user_override_post_hoc": not protocol_compliant,
+        "selection_rationale": args.rationale,
         "selected_run": args.run,
         "arm": arm,
         "seed": seed,
@@ -93,11 +109,14 @@ def main(argv=None) -> int:
             preds.append(model(batch).detach().float().cpu().numpy().reshape(-1))
     pred = np.concatenate(preds, 0)
     # single terminal label read
-    labels = D.official_labels("test")
+    labels = L.D.official_labels("test")
     if len(labels) != len(pred):
         raise RuntimeError("test label/prediction length mismatch")
     ae = np.abs(pred.astype(np.float64) - labels.astype(np.float64))
     test_mae = float(ae.mean())
+    ordinary = labels > -3.0
+    tail = labels <= -3.0
+    order = np.argsort(ae)[::-1]
     report = {
         "round": L.ROUND_ID,
         "descriptive_only": True,
@@ -109,6 +128,12 @@ def main(argv=None) -> int:
         "test_rmse": float(np.sqrt(np.mean((pred - labels) ** 2))),
         "test_p90_ae": float(np.percentile(ae, 90)),
         "test_max_ae": float(ae.max()),
+        "test_mae_ordinary_y_gt_-3": float(ae[ordinary].mean()),
+        "test_n_ordinary_y_gt_-3": int(ordinary.sum()),
+        "test_mae_tail_y_le_-3": float(ae[tail].mean()),
+        "test_n_tail_y_le_-3": int(tail.sum()),
+        "test_top10_ae_rows": [int(i) for i in order[:10]],
+        "test_top10_ae_values": [float(ae[i]) for i in order[:10]],
         "historical_anchors_not_retrained": {
             "DCC_L_test_4seed_mean": HISTORICAL_DCC_L_TEST_4SEED,
             "DCC_L_s0_test": HISTORICAL_DCC_L_S0_TEST,
