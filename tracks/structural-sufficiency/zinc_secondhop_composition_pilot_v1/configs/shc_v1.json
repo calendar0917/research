@@ -1,0 +1,175 @@
+{
+ "round": "zinc-secondhop-composition-pilot-v1",
+ "status": "frozen_before_cpu_gates",
+ "created": "2026-10-28T20:10:00+0800",
+ "git_commit_at_freeze": null,
+ "question": "Can LCRC-A's remaining valid error be reduced by adding second-hop learned bond content and its TRUE pairing with the endpoint content?",
+ "upstream_audit": {
+  "report": "tracks/structural-sufficiency/zinc_path_binding_sufficiency_audit_v1/REPORT.md",
+  "decision": "tracks/structural-sufficiency/zinc_path_binding_sufficiency_audit_v1/DECISION.md",
+  "protocol_sha256": "224367ffdd8f4b9f055552ae7a50e3bf337fb4a694924087ac0c6de5e3ccfb6f"
+ },
+ "reuse": {
+  "track": "tracks/structural-sufficiency/zinc_local_relation_composition_v1",
+  "mode": "read_only",
+  "feature_version": "lcrc-v1-atom108-s1joint-s2typedpath",
+  "train_cache": {
+   "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_train.pt",
+   "sha256": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
+   "content_sha256": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b",
+   "n_molecules": 10000,
+   "n_atoms": 231664,
+   "n_paths": 692716
+  },
+  "valid_cache": {
+   "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_valid.pt",
+   "sha256": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+   "content_sha256": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9",
+   "n_molecules": 1000,
+   "n_atoms": 23083,
+   "n_paths": 69040
+  },
+  "norm": {
+   "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/analysis/norm.json",
+   "fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f"
+  },
+  "ssl_s0_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+  "ssl_s1_sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a",
+  "historical_runs": {
+   "lcrcA_s0": {
+    "train_json": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s0/train.json",
+    "checkpoint_sha256_prefix": "06340bcd9e45af03",
+    "predictions": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s0/predictions/valid_best.npz",
+    "best_valid_mae": 0.07658163924043765,
+    "best_epoch": 476,
+    "initial_state_sha256": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+    "parameters": 237519
+   },
+   "lcrcA_s1": {
+    "train_json": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s1/train.json",
+    "checkpoint_sha256_prefix": "7225fe11fce0a24d",
+    "predictions": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s1/predictions/valid_best.npz",
+    "best_valid_mae": 0.08050378037145128,
+    "best_epoch": 454,
+    "initial_state_sha256": "d9422859dc47bbe22496c7bb778f4ca69bd7afb49d704895db40bff7ec269a8e",
+    "parameters": 237519
+   }
+  }
+ },
+ "model": {
+  "base_x_dim": 529,
+  "second_hop_bond_dim": 96,
+  "second_hop_pair_dim": 32,
+  "extra_dim": 128,
+  "total_input_dim": 657,
+  "params_A": 237519,
+  "params_new": 262095,
+  "param_cap": 500000,
+  "definitions": {
+   "n_v": "count of ordered non-backtracking two-hop paths rooted at v (frozen cache path_ptr)",
+   "B_v": "(1/sqrt(n_v)) * sum_p b_e2(p)",
+   "U_p": "P_b @ b_e2(p)",
+   "V_p": "P_a @ a_u(p)",
+   "C_real": "(1/sqrt(n_v)) * sum_p (U_p .* V_p)",
+   "C_null": "sqrt(n_v) * mean_p(U_p) .* mean_p(V_p)",
+   "zero_case": "n_v = 0 -> B = C_real = C_null = 0",
+   "one_case": "n_v = 1 -> C_real == C_null == U_p .* V_p"
+  },
+  "projection": {
+   "seed": 20261105,
+   "P_b": "torch.randn(96,32, generator=Generator(20261105))/sqrt(96) drawn first",
+   "P_a": "next draw from the same generator",
+   "trainable": false,
+   "shared_across_arms_and_seeds": true,
+   "selected_by_valid": false
+  },
+  "new_column_init": "first Linear widened in place; new 128 input columns zero, bias unchanged; every other tensor bit-identical to the historical A init",
+  "second_hop_bond_encoder": "the shared bond_encoder applied to e2=(w,u); no new encoder",
+  "forbidden": [
+   "attention", "learned_junction_token", "per_wedge_token", "iterative_hidden_state_update",
+   "separate_relation_reader", "new_encoder", "extra_objective_term", "ema", "soup",
+   "seed_averaging", "ensemble", "width_or_depth_search", "projection_seed_search"
+  ]
+ },
+ "arms": ["Real", "Null"],
+ "data": {
+  "source": "official PyG ZINC subset=True",
+  "train": 10000,
+  "valid": 1000,
+  "test_accessed": false,
+  "split_change": "none"
+ },
+ "recipe": {
+  "optimizer": "adamw",
+  "lr": 0.001,
+  "min_lr": 1e-05,
+  "weight_decay": 1e-05,
+  "warmup_steps": 500,
+  "epochs": 600,
+  "batch_size": 128,
+  "valid_batch_size": 256,
+  "dropout": 0.0,
+  "grad_clip": 5.0,
+  "loss": "raw_y_l1",
+  "schedulers": "per-step cosine after linear warmup",
+  "checkpoint_selection": "strict argmin official-valid MAE, ties -> earlier epoch",
+  "data_order": "torch.randperm(10000, Generator(seed+101)) reshuffled per epoch",
+  "expected_steps_per_epoch": 79,
+  "expected_total_updates": 47400
+ },
+ "cpu_gates": {
+  "script": "tracks/structural-sufficiency/zinc_secondhop_composition_pilot_v1/code/sh_cpu_checks.py",
+  "gates": ["G1_paths", "G2_init_identity", "G3_real_null", "G4_invariance",
+            "G5_pairing_semantics", "G6_scale_coverage", "G7_eval_path", "G8_guards"],
+  "required": "all PASS before any GPU launch",
+  "invariance_tolerance": 1e-05,
+  "scale_ratio_band": [0.5, 2.0]
+ },
+ "groups": {
+  "ordinary": "y > -3",
+  "tail": "y <= -3",
+  "row172": 172,
+  "fixed_worst10_source": "tracks/structural-sufficiency/zinc_generalization_audit_v1/analysis/fixed_worst10.json",
+  "fixed_worst10_rows": [917, 753, 172, 659, 260, 678, 31, 224, 447, 229],
+  "r2_unseen_source": "tracks/structural-sufficiency/zinc_performance_search_v1/analysis/per_molecule_valid.csv",
+  "r2_unseen_definition": "molecule has >=1 atom whose radius-2 structural key has train support 0",
+  "seen_ordinary": "not r2_unseen and y > -3",
+  "ring_rich": "cycle_rank >= 4"
+ },
+ "stage1_purchase_gate": {
+  "c0_no_break": "max(MAE_full(Real), MAE_full(Null)) <= MAE_full(A_s0) + 0.005",
+  "variant_set": ["full", "drop_row172", "drop_fixed_worst10"],
+  "signal_A": "exists M in {Real,Null}, v in V: MAE_v(M) - MAE_v(A_s0) <= -0.003 and MAE_full(M) - MAE_full(A_s0) <= +0.002",
+  "signal_B": "exists v in V: MAE_v(Real) - MAE_v(Null) <= -0.003 and MAE_full(Real) - MAE_full(Null) <= +0.002",
+  "signal_C": "MAE_r2_unseen_ordinary(Real) - MAE(Null) <= -0.010 and MAE_seen_ordinary(Real) - MAE(Null) <= +0.002",
+  "buy_stage2": "C0 and (A or B or C)",
+  "note": "these are resource-purchase thresholds, not statistical significance"
+ },
+ "stage2": {
+  "runs": ["Real_s1", "Null_s1"],
+  "no_new_structure": true,
+  "no_tuning": true,
+  "no_third_stage": true
+ },
+ "reported_metrics": [
+  "valid_raw_y_mae_full", "Real_minus_Null", "Real_minus_A", "Null_minus_A",
+  "drop_row172", "drop_fixed_worst10", "ordinary", "tail", "r2_unseen",
+  "r2_unseen_ordinary", "seen_ordinary", "ring_rich", "best_epoch", "W20", "T100",
+  "eval_mode_train_mae", "c_switch_prediction_change", "new_column_weight_grad_scale",
+  "parameters", "init_state_sha256", "data_code_checkpoint_sha256", "gpu_hours"
+ ],
+ "decision_rules": {
+  "REAL_PAIRING_SUPPORTED_PILOT": "mean(Real-Null) <= -0.001, mean(Real-A) <= -0.001, both seeds same sign for Real-Null",
+  "SECOND_HOP_CONTENT_ONLY": "mean(Real-A) <= -0.001 and mean(Null-A) <= -0.001, but mean(Real-Null) > -0.001 or seed sign conflict",
+  "NO_PREDICTIVE_GAIN_THIS_CONFIG": "mean(Real-A) > -0.001 and mean(Null-A) > -0.001",
+  "INSUFFICIENT_EVIDENCE": "single-row share max_i|dAE_i|/|sum_i dAE_i| >= 0.5, or seed sign conflict",
+  "STAGE1_NO_SIGNAL": "stage-1 purchase gate not met"
+ },
+ "budget": {
+  "target_gpu_hours": 1.0,
+  "hard_gpu_hours": 3.0,
+  "max_concurrent_gpus": 2,
+  "includes": "prep/smoke/timing/failed jobs"
+ },
+ "test_policy": "terminal, reporting-only; official test NOT read in this round"
+}
