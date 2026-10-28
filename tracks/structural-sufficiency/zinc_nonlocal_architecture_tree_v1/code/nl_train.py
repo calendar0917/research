@@ -76,12 +76,17 @@ def _save(path: Path, model, *, info: dict, epoch: int, valid_mae: float, extra=
 
 def _head_state(model, info):
     mod = model.sce if model.sce is not None else model.gef
+    if mod is None:
+        return {}
     return {k: v.detach().cpu().clone() for k, v in mod.state_dict().items()}
 
 
 def _grad_stats(model, info):
     out = {}
     mod = model.sce if model.sce is not None else model.gef
+    if mod is None:
+        p = dict(model.trunk.named_parameters()).get("f.lins.0.weight")
+        return {"trunk_only": {"grad_norm": None if p is None or p.grad is None else float(p.grad.norm())}}
     for name, p in mod.named_parameters():
         g = p.grad
         out[name] = {
@@ -100,7 +105,7 @@ def _grad_stats(model, info):
 def train(head: str, mode: str, seed: int, device: str, *, epochs: int | None = None,
           tag: str | None = None, lam: float = 0.5, force: bool = False,
           out_dir: Path | None = None, resume: bool = False, timing: bool = False,
-          ckpt_every: int = 25) -> dict:
+          ckpt_every: int = 25, ssl_path: str | None = None) -> dict:
     N.require_cuda(device)
     name = run_name(head, mode, seed, tag)
     out = Path(out_dir) if out_dir is not None else N.RUNS / name
@@ -122,7 +127,8 @@ def train(head: str, mode: str, seed: int, device: str, *, epochs: int | None = 
     rows_train = np.arange(len(y_train), dtype=np.int64)
     rows_valid = np.arange(len(valid_cache["labels"]), dtype=np.int64)
 
-    model, info = NM.build_model(head, norm, seed, device, None, mode=mode, lam=lam)
+    model, info = NM.build_model(head, norm, seed, device, None, mode=mode, lam=lam,
+                                 ssl_path=ssl_path)
     recipe = dict(RECIPE)
     n_epochs = int(recipe["epochs"] if epochs is None else epochs)
     optimizer = torch.optim.AdamW(model.parameters(), lr=recipe["lr"],
@@ -333,7 +339,8 @@ def train(head: str, mode: str, seed: int, device: str, *, epochs: int | None = 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--head", choices=["sce", "gef"], required=True)
+    ap.add_argument("--head", choices=["sce", "gef", "base"], required=True)
+    ap.add_argument("--ssl", default=None)
     ap.add_argument("--mode", default="real")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--device", default="cuda")
@@ -347,7 +354,7 @@ def main():
     args = ap.parse_args()
     train(args.head, args.mode, args.seed, args.device, epochs=args.epochs, tag=args.tag,
           lam=args.lam, force=args.force, out_dir=Path(args.out) if args.out else None,
-          resume=args.resume, timing=args.timing)
+          resume=args.resume, timing=args.timing, ssl_path=args.ssl)
 
 
 if __name__ == "__main__":

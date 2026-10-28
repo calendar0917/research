@@ -216,7 +216,7 @@ class NLModel(nn.Module):
             self.sce = SCEHead(width, bond_dim, mode=mode)
         elif head == "gef":
             self.gef = GEFHead(width, bond_dim, lam=lam, mode=mode)
-        else:
+        elif head != "base":
             raise ValueError(head)
 
     # -- base readout, copied from LCRC.forward -----------------------------
@@ -243,8 +243,10 @@ class NLModel(nn.Module):
         aux = {"contrib": contrib, "rho": rho, "h": h, "baseline_y": y}
         if self.sce is not None:
             term, h_aux = self.sce(h, b, batch, batch["bridge"], n_graphs)
-        else:
+        elif self.gef is not None:
             term, h_aux = self.gef(h, b, batch, n_graphs)
+        else:
+            term, h_aux = torch.zeros(n_graphs, device=y.device, dtype=y.dtype), {}
         y = y + term
         aux["term"] = term
         aux.update(h_aux)
@@ -264,7 +266,8 @@ def _state_hash(state) -> str:
     return h_.hexdigest()
 
 
-def build_model(head: str, norm, seed: int, device, cfg=None, *, mode="real", lam=0.5):
+def build_model(head: str, norm, seed: int, device, cfg=None, *, mode="real", lam=0.5,
+                ssl_path=None):
     """Shared trunk first (seed, SSL), then head under seed+90731.
 
     The trunk construction is the same call sequence as ``lc_models.build_model('A')``
@@ -273,7 +276,8 @@ def build_model(head: str, norm, seed: int, device, cfg=None, *, mode="real", la
     torch.manual_seed(int(seed))
     c = dict(N.M.DEFAULT_CONFIG if cfg is None else {**N.M.DEFAULT_CONFIG, **dict(cfg)})
     model = NLModel(head, norm, c, mode=mode, lam=lam)
-    ssl = N.M.load_ssl_encoders(model.trunk, N.M.ssl_path(int(seed)))
+    ssl_source = N.M.ssl_path(int(seed)) if ssl_path is None else ssl_path
+    ssl = N.M.load_ssl_encoders(model.trunk, ssl_source)
     torch.manual_seed(int(seed) + 90731)
     # rebuild head parameters under the derived seed: modules were constructed
     # before the manual_seed call, so re-initialise them deterministically.
@@ -303,7 +307,8 @@ def build_model(head: str, norm, seed: int, device, cfg=None, *, mode="real", la
         "ssl": ssl,
         "parameters": _params(model),
         "parameters_trunk": _params(model.trunk),
-        "parameters_head": _params(model.sce or model.gef),
+        "parameters_head": 0 if (model.sce is None and model.gef is None)
+        else _params(model.sce or model.gef),
         "trunk_state_sha256": _state_hash(trunk_keys),
         "initial_state_sha256": N.L.C.state_hash(model),
         "has_iterative_message_passing": False,
