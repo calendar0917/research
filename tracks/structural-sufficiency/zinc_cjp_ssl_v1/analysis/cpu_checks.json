@@ -1,0 +1,377 @@
+{
+  "round": "zinc-conditional-joint-path-ssl-v1",
+  "git_commit": "19aa94b2e378640702c0247b220cf17141d0c764",
+  "all_pass": true,
+  "gates": {
+    "G0_supervised_trainer_lineage": {
+      "pass": true,
+      "detail": {
+        "cjp_sup_imports_frozen_trainer": true,
+        "cjp_sup_reimplements_training_loop": false,
+        "frozen_recipe_equal": true,
+        "frozen_lc_train_sha256": "dff85caeb7f6f8caa3ee8f87d803331987d9cb369c71cfa4857a8f5afbaaeb01",
+        "frozen_lc_models_sha256": "86aee86c1e5c038e4d7feb62bc124af1eedd6b05e248dc587ff5ba4fa069d622",
+        "frozen_lc_data_sha256": "978a484cd0bdb95b3d815f7f39e30f20e92ea418f8179eea757744b5ca13b7b8",
+        "supervised_recipe": {
+          "optimizer": "adamw",
+          "lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 1e-05,
+          "warmup_steps": 500,
+          "epochs": 600,
+          "batch_size": 128,
+          "valid_batch_size": 256,
+          "dropout": 0.0,
+          "grad_clip": 5.0,
+          "loss": "l1"
+        }
+      },
+      "seconds": 0.0003126460069324821
+    },
+    "G1_label_isolation": {
+      "pass": true,
+      "detail": {
+        "static_forbidden_token_hits": {
+          "cjp_data.py": [],
+          "cjp_models.py": [],
+          "cjp_pretrain.py": [],
+          "cjp_sup.py": []
+        },
+        "fields": {
+          "masked_batch_sha256": true,
+          "first_batch_query_sha256": true,
+          "local_state_sha256": true
+        },
+        "curve_equal": true,
+        "diagnostics_equal": true,
+        "poisoned_label_value": 1000000000.0
+      },
+      "seconds": 7.923132033989532
+    },
+    "G2_masking_off_equals_frozen_cache": {
+      "pass": true,
+      "detail": {
+        "n_molecules": 10000,
+        "comparison": {
+          "mismatch": {},
+          "max_abs_diff": {
+            "atom_feat": 0.0,
+            "atom_scalar": 0.0,
+            "bond_feat": 0.0,
+            "global": 0.0
+          },
+          "pass": true
+        },
+        "frozen_n_molecules": 10000
+      },
+      "seconds": 25.230273098000907
+    },
+    "G3_masked_rebuild_reference": {
+      "pass": true,
+      "detail": {
+        "n_cases": 300,
+        "seeds": 20261029,
+        "compose_matches_independent_reference": true,
+        "reference_mismatch_keys": {},
+        "differences_confined_to_dependency_map": true,
+        "masked_own_slots_hold_token": true,
+        "hidden_truth_absent_from_own_slot": true
+      },
+      "seconds": 0.8547002039995277
+    },
+    "G4_hidden_truth_swap": {
+      "pass": true,
+      "detail": {
+        "n_atom_trials": 210,
+        "n_atom_pass": 210,
+        "n_bond_trials": 210,
+        "n_bond_pass": 210,
+        "target_changed": 420,
+        "input_identical": 420,
+        "failures": []
+      },
+      "seconds": 1.4883502339944243
+    },
+    "G5_both_directed_masks": {
+      "pass": true,
+      "detail": {
+        "n_cases": 300,
+        "n_selected_paths": 898,
+        "failures": [],
+        "note": "edge_index is never modified and exactly 2 records per masked bond change"
+      },
+      "seconds": 0.2982571409957018
+    },
+    "G6_no_mask_token_as_type": {
+      "pass": true,
+      "detail": {
+        "n_cases": 300,
+        "failures": []
+      },
+      "seconds": 0.30927620599686634
+    },
+    "G7_no_mask_forward_equals_lcrc": {
+      "pass": true,
+      "detail": {
+        "n_rows": 64,
+        "tensors_bit_identical": {
+          "atom_feat": true,
+          "atom_type": true,
+          "atom_scalar": true,
+          "bond_feat": true,
+          "bond_type": true,
+          "bond_index": true,
+          "nbr_code": true,
+          "path_cat": true,
+          "path_end63": true,
+          "path_end": true,
+          "path_closure": true,
+          "pair_i": true,
+          "pair_j": true,
+          "pair_cat": true,
+          "global": true,
+          "nbr_atom": true,
+          "path_atom": true,
+          "atom_batch": true,
+          "atom_off": true,
+          "bond_batch": true
+        },
+        "all_tensors_identical": true,
+        "prediction_max_abs_diff": 0.0,
+        "parameters": 237519,
+        "ssl_loaded": [
+          "atom_encoder",
+          "bond_encoder"
+        ]
+      },
+      "seconds": 0.350694635999389
+    },
+    "G8_invariance": {
+      "pass": true,
+      "detail": {
+        "molecule": 6904,
+        "n_selected_paths": 3,
+        "renumber_h_equivariance_max_abs": 6.556510925292969e-07,
+        "renumber_logits_max_abs": 1.7881393432617188e-07,
+        "bond_reversal_tensors_identical": true,
+        "bond_reversal_h_max_abs": 0.0,
+        "bond_reversal_logits_max_abs": 0.0,
+        "batch_split_merge_h_max_abs": 0.0
+      },
+      "seconds": 0.015257122009643354
+    },
+    "G9_marg_factorisation_and_init": {
+      "pass": true,
+      "detail": {
+        "marg_probability_factorisation_max_abs": 2.9802322387695312e-08,
+        "marg_residual_of_marg_projection_max_abs": 4.76837158203125e-07,
+        "marg_residual_note": "algebraically zero; <=1e-6 is float32 rounding of the projection",
+        "counterexample_joint_table_2x2": [
+          [
+            2.0,
+            -2.0
+          ],
+          [
+            -2.0,
+            2.0
+          ]
+        ],
+        "counterexample_marg_projection_2x2": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0
+          ]
+        ],
+        "counterexample_marg_projection_max_abs": 0.0,
+        "counterexample_interaction_max_abs": 2.0,
+        "counterexample_total_variation": 0.16782666742801666,
+        "joint_can_represent_counterexample": true,
+        "joint_interaction_rms_random_logits": 1.6708040237426758,
+        "shared_initial_state": {
+          "MARG": {
+            "joint_init_sha256": "a3e8d8adf16e0df2bf67f016fc66346682939da343a198b39da8f9f0b64e9abb",
+            "local_sha256": "58160a29209475b7ec4a52f366c82fe3d077f915ecc0b43d089371ffc36fc1c1",
+            "head_sha256": "754eeb40b9a88c4aea348bf1b880ce5782b6f30027c48640c45ca02429f3e36e",
+            "encoder_sha256": {
+              "atom_encoder": "517b98739676f4022e7092a1b16bb82398e5ac6e0c0d699fb70f8a9fe64a2cc7",
+              "bond_encoder": "5936f0e7fe427f0764ef1eb1e55a3cc691dff4f8d0cfad9bbb8ee317e8a95743"
+            }
+          },
+          "JOINT": {
+            "joint_init_sha256": "a3e8d8adf16e0df2bf67f016fc66346682939da343a198b39da8f9f0b64e9abb",
+            "local_sha256": "58160a29209475b7ec4a52f366c82fe3d077f915ecc0b43d089371ffc36fc1c1",
+            "head_sha256": "754eeb40b9a88c4aea348bf1b880ce5782b6f30027c48640c45ca02429f3e36e",
+            "encoder_sha256": {
+              "atom_encoder": "517b98739676f4022e7092a1b16bb82398e5ac6e0c0d699fb70f8a9fe64a2cc7",
+              "bond_encoder": "5936f0e7fe427f0764ef1eb1e55a3cc691dff4f8d0cfad9bbb8ee317e8a95743"
+            }
+          }
+        },
+        "shared_initial_state_identical": true
+      },
+      "seconds": 0.008744475999264978
+    },
+    "G10_gradient_isolation": {
+      "pass": true,
+      "detail": {
+        "loss": 4.0660600662231445,
+        "encoders_no_grad": {
+          "atom_encoder": true,
+          "bond_encoder": true
+        },
+        "f_no_grad": true,
+        "rho_no_grad": true,
+        "local_tensors_with_grad": 15,
+        "local_tensors_nonzero_grad": 15,
+        "local_tensors_total": 15,
+        "head_tensors_with_grad": 4,
+        "head_tensors_nonzero_grad": 4,
+        "frozen_after_build": [
+          "atom_encoder",
+          "bond_encoder"
+        ]
+      },
+      "seconds": 2.3240781360073015
+    },
+    "G11_localcontent_gradients": {
+      "pass": true,
+      "detail": {
+        "tensors": {
+          "path_emb.weight": 0.02066427655518055,
+          "path_u.weight": 0.010949920862913132,
+          "path_v.weight": 0.010108215734362602,
+          "path_gate.weight": 0.00627006683498621,
+          "nbr_emb.weight": 0.027712645009160042,
+          "end_emb.weight": 0.03418424725532532,
+          "joint_proj.weight": 0.0961981862783432,
+          "close_emb.weight": 0.02400495857000351,
+          "mlp.lins.0.weight": 2.5452818870544434,
+          "mlp.lins.1.weight": 1.4801440238952637,
+          "norm.weight": 0.10286087542772293
+        },
+        "finite": true,
+        "nonzero": {
+          "path_emb.weight": true,
+          "path_u.weight": true,
+          "path_v.weight": true,
+          "path_gate.weight": true,
+          "nbr_emb.weight": true,
+          "end_emb.weight": true,
+          "joint_proj.weight": true,
+          "close_emb.weight": true,
+          "mlp.lins.0.weight": true,
+          "mlp.lins.1.weight": true,
+          "norm.weight": true
+        },
+        "reached_embedding_rows": {
+          "path_emb.weight": 20,
+          "path_u.weight": 20,
+          "path_v.weight": 19,
+          "path_gate.weight": 20
+        },
+        "note": "embedding rows not visited by this batch are expected to have zero rows; every parameter tensor above must have a non-zero finite gradient somewhere"
+      },
+      "seconds": 0.1467408769967733
+    },
+    "G12_export_and_deploy": {
+      "pass": true,
+      "detail": {
+        "reference_parameters": 237519,
+        "reference_state_hash": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+        "reload_max_abs_diff": 0.0,
+        "local_state_export": {
+          "path": "tracks/structural-sufficiency/zinc_cjp_ssl_v1/runs/gate_tmp/g1_clean/local_state.pt",
+          "exists": true,
+          "replay_vs_reference_max_abs": 0.0,
+          "replay_matches_reference": true,
+          "variants": {
+            "replay": {
+              "parameters": 237519,
+              "module_sha256": {
+                "atom_encoder": "517b98739676f4022e7092a1b16bb82398e5ac6e0c0d699fb70f8a9fe64a2cc7",
+                "bond_encoder": "5936f0e7fe427f0764ef1eb1e55a3cc691dff4f8d0cfad9bbb8ee317e8a95743",
+                "f": "15966b0c5791396e6132d08acbe7361fe3ba0be4bc4c56312dc13aebce255660",
+                "local": "58160a29209475b7ec4a52f366c82fe3d077f915ecc0b43d089371ffc36fc1c1",
+                "rho": "a1b9ff803792ff325261df8f08a3788e76821f741431b3d4ec17dfa3f6d61f24"
+              },
+              "ssl_loaded": true,
+              "local_replaced": false
+            },
+            "scratch": {
+              "parameters": 237519,
+              "module_sha256": {
+                "atom_encoder": "173e3d3b6f92a38699372f027a0450f8c117567240077061c07276dce0c6d218",
+                "bond_encoder": "cca938dce8c7b27a9d7453c0d32589e7d491743544012d083bf8032c19a1fccf",
+                "f": "15966b0c5791396e6132d08acbe7361fe3ba0be4bc4c56312dc13aebce255660",
+                "local": "58160a29209475b7ec4a52f366c82fe3d077f915ecc0b43d089371ffc36fc1c1",
+                "rho": "a1b9ff803792ff325261df8f08a3788e76821f741431b3d4ec17dfa3f6d61f24"
+              },
+              "ssl_loaded": false,
+              "local_replaced": false
+            },
+            "margssl": {
+              "parameters": 237519,
+              "module_sha256": {
+                "atom_encoder": "517b98739676f4022e7092a1b16bb82398e5ac6e0c0d699fb70f8a9fe64a2cc7",
+                "bond_encoder": "5936f0e7fe427f0764ef1eb1e55a3cc691dff4f8d0cfad9bbb8ee317e8a95743",
+                "f": "15966b0c5791396e6132d08acbe7361fe3ba0be4bc4c56312dc13aebce255660",
+                "local": "51df0486f8db9879b7e39f4b14ccc6a30d488fb98e9a79f09622a041652274ca",
+                "rho": "a1b9ff803792ff325261df8f08a3788e76821f741431b3d4ec17dfa3f6d61f24"
+              },
+              "ssl_loaded": true,
+              "local_replaced": true
+            },
+            "jointssl": {
+              "parameters": 237519,
+              "module_sha256": {
+                "atom_encoder": "517b98739676f4022e7092a1b16bb82398e5ac6e0c0d699fb70f8a9fe64a2cc7",
+                "bond_encoder": "5936f0e7fe427f0764ef1eb1e55a3cc691dff4f8d0cfad9bbb8ee317e8a95743",
+                "f": "15966b0c5791396e6132d08acbe7361fe3ba0be4bc4c56312dc13aebce255660",
+                "local": "f9043892e3626982cf39e9b0d9b318f8d8acb82b379d3f4f8285ce31127cb8cd",
+                "rho": "a1b9ff803792ff325261df8f08a3788e76821f741431b3d4ec17dfa3f6d61f24"
+              },
+              "ssl_loaded": true,
+              "local_replaced": true
+            }
+          },
+          "state_keys_equal_reference": true,
+          "pretext_head_absent_from_supervised_state": true,
+          "parameter_count": 237519,
+          "deploy_parameter_count_expected": 237519,
+          "module_sharing": {
+            "scratch": {
+              "atom_encoder": false,
+              "bond_encoder": false,
+              "f": true,
+              "local": true,
+              "rho": true
+            },
+            "margssl": {
+              "atom_encoder": true,
+              "bond_encoder": true,
+              "f": true,
+              "local": false,
+              "rho": true
+            },
+            "jointssl": {
+              "atom_encoder": true,
+              "bond_encoder": true,
+              "f": true,
+              "local": false,
+              "rho": true
+            },
+            "margssl_vs_jointssl_only_local_differs": true
+          }
+        }
+      },
+      "seconds": 0.3247554069967009
+    }
+  },
+  "created": "2026-10-29T07:52:53+0800",
+  "official_test_loaded": false,
+  "official_valid_loaded": false
+}

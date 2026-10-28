@@ -1,0 +1,190 @@
+{
+  "round": "zinc-conditional-joint-path-ssl-v1",
+  "status": "frozen_before_gpu",
+  "created": "2026-10-29T07:53:08+0800",
+  "git_commit_at_freeze": "19aa94b2e378640702c0247b220cf17141d0c764",
+  "task": "Conditional Joint-Path Self-Supervision for LCRC-A",
+  "reference": {
+    "track": "tracks/structural-sufficiency/zinc_local_relation_composition_v1",
+    "lc_models_sha256": "86aee86c1e5c038e4d7feb62bc124af1eedd6b05e248dc587ff5ba4fa069d622",
+    "lc_data_sha256": "978a484cd0bdb95b3d815f7f39e30f20e92ea418f8179eea757744b5ca13b7b8",
+    "lc_train_sha256": "dff85caeb7f6f8caa3ee8f87d803331987d9cb369c71cfa4857a8f5afbaaeb01",
+    "lc_common_sha256": "e2e014a7466fe0683eda6071797aaac1ce85b92cb8aac1760b57e4a3742fc4b5",
+    "lcrc_v1_config": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/configs/lcrc_v1.json",
+    "lcrc_v1_config_sha256": "a9df1534d01080d424dfddd84e3478d2c6556a941e5d0b1cf6851f287e9466e6",
+    "lca_s0_valid": 0.07658163605158916,
+    "lca_s1_valid": 0.08050378351932158,
+    "lca_seed_mean_valid": 0.07854271,
+    "lca_epochs": 600,
+    "lca_updates": 47400,
+    "lca_param_count": 237519,
+    "historical_lca_s0_test_mae_background_only": 0.066782,
+    "official_test_never_read_this_round": true
+  },
+  "data": {
+    "source": "official PyG ZINC subset=True raw train x/edge_index/edge_attr",
+    "labels_read_by_ssl": false,
+    "official_valid_loaded_by_ssl": false,
+    "official_test_loaded": false,
+    "n_train": 10000,
+    "fingerprint": "typed Weisfeiler-Lehman hash (5 rounds, 128-bit)",
+    "n_unique_fingerprints": 9997,
+    "n_duplicate_groups": 3,
+    "n_molecules_in_duplicate_groups": 6,
+    "fingerprint_sha256": "d08a6fc1bd3566a77e481a7beaae5c2fa6fe56ef2e2fd0bfb1c35460465743f7",
+    "fingerprint_order_sha256": "ca90733c43699291ac06b1ab8a0dd0b974a14dd2b81bed9617e87114dd1c812c",
+    "n_fit": 9500,
+    "n_diag": 500,
+    "fit_index_sha256": "82490f7944d5ef7c2b5ebd9a563f8fd1ec92aebc284e5bef7bd9bba32db8fbef",
+    "diag_index_sha256": "695323dafb81e763928aba2966e97e5f1c7698f6c80f6a2b16a02144ecbb402f",
+    "duplicate_groups_isomorphic": true,
+    "lcrc_train_cache_sha256": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
+    "lcrc_valid_cache_sha256": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+    "norm_source": "frozen_p3_prep_train10k",
+    "norm_fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f",
+    "ssl_checkpoints": {
+      "seed0": {
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+        "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+      },
+      "seed1": {
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+        "sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a"
+      }
+    }
+  },
+  "masking": {
+    "atom_mask_token": 27,
+    "bond_mask_token": 0,
+    "max_paths_per_molecule": 3,
+    "vertex_disjoint": true,
+    "mask_rng": "numpy SeedSequence([seed, molecule_id, visit_index, 20261029])",
+    "batch_rng": "numpy SeedSequence([seed, 20261030])",
+    "masked_atom": "u (path end)",
+    "masked_bond": "(w,u) both directed PyG records",
+    "visible": [
+      "type(v)",
+      "type(w)",
+      "bond(v,w)"
+    ],
+    "edges_deleted": false,
+    "topology_unchanged": true,
+    "target": "3*raw_atom_type(u) + (raw_bond_type(w,u)-1) in [0,62]",
+    "target_classes": 63
+  },
+  "masked_feature_construction": {
+    "order": [
+      "modify raw x/edge_attr",
+      "structural_relation_objects_v1.build_mol_objects on the masked raw graph",
+      "SSL-only masked LCRC builder (S1/S2 visibility filter)"
+    ],
+    "s1_rule": "include (neighbour type, bond type) only if both are visible",
+    "s2_rule": "include a typed 2-path only if type(w), type(u), bond1, bond2 are all visible",
+    "topology_scalars": "degree / distance / total path count / closure ratio use true topology",
+    "normalisation": "frozen train-only mean/std, never refitted"
+  },
+  "pretraining": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "batch_size_molecules": 128,
+    "grad_clip": 5.0,
+    "updates": 7560,
+    "dropout": 0.0,
+    "dtype": "fp32",
+    "path_loss": "per_molecule_mean_then_batch_mean_of_molecules_with_paths",
+    "head": [
+      192,
+      128,
+      63
+    ],
+    "trainable": [
+      "local",
+      "pretext_head"
+    ],
+    "frozen": [
+      "atom_encoder",
+      "bond_encoder"
+    ],
+    "excluded": [
+      "f",
+      "rho"
+    ],
+    "n_fit": 9500,
+    "n_diag": 500,
+    "head_init_seed_offset": 7717
+  },
+  "model": {
+    "body": "LCRC('A') unchanged",
+    "atom_encoder_out": 96,
+    "bond_encoder_out": 96,
+    "localcontent_out": 64,
+    "deployed_parameters": 237519,
+    "pretext_head": "Linear(192,128) -> SiLU -> Linear(128,63)",
+    "marg_projection": "L_marg[a,b] = mean_b L[a,b] + mean_a L[a,b] - mean_ab L[a,b]",
+    "frozen_in_pretraining": [
+      "atom_encoder",
+      "bond_encoder"
+    ],
+    "excluded_from_pretraining": [
+      "f",
+      "rho"
+    ]
+  },
+  "supervised": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "epochs": 600,
+    "batch_size": 128,
+    "valid_batch_size": 256,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "loss": "l1"
+  },
+  "arms": {
+    "A-REPLAY": {
+      "load_ssl": true,
+      "local_state": null
+    },
+    "SCRATCH": {
+      "load_ssl": false,
+      "local_state": null
+    },
+    "MARG-SSL": {
+      "load_ssl": true,
+      "local_state": "MARG"
+    },
+    "JOINT-SSL": {
+      "load_ssl": true,
+      "local_state": "JOINT"
+    }
+  },
+  "comparisons": [
+    "A-REPLAY - SCRATCH",
+    "MARG - A-REPLAY",
+    "JOINT - MARG",
+    "JOINT - A-REPLAY"
+  ],
+  "primary_metric": "official valid 1000 raw-y MAE",
+  "diagnostic_groups": [
+    "full",
+    "valid_minus_row172",
+    "minus_historical_lca_worst10",
+    "ordinary_y_gt_-3",
+    "tail_y_le_-3",
+    "r2_unseen_ordinary",
+    "seen_ordinary"
+  ],
+  "budget": {
+    "gpu_hard_limit_hours": 16.0,
+    "gpu_soft_limit_hours": 10.0,
+    "wall_clock_hard_limit_hours": 8.0,
+    "gpus": [
+      "res-gpu0",
+      "res-gpu1"
+    ]
+  }
+}
