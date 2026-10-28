@@ -124,7 +124,40 @@ latest_marginal_field_report: tracks/structural-sufficiency/zinc_bond_anchored_m
 latest_marginal_field_decision: tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1/DECISION.md
 latest_marginal_field_audit_pointer: tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1/analysis/monitor_gates.json
 latest_marginal_field_budget: 2.073 A100-h this round of 12 A100-h; seed 0 only; no seed 1, no Locked1k value accessed, official test never constructed
+latest_secondhop_pilot_round: zinc_secondhop_composition_pilot_v1
+latest_secondhop_pilot_verdict: STAGE1_GATE_NOT_MET__NO_PURCHASE_WORTHY_GAIN_ON_PRIMARY__PAIRING_SIGNAL_SMALL_AND_TAIL_CONCENTRATED
+latest_secondhop_pilot_report: tracks/structural-sufficiency/zinc_secondhop_composition_pilot_v1/REPORT.md
+latest_secondhop_pilot_decision: tracks/structural-sufficiency/zinc_secondhop_composition_pilot_v1/DECISION.md
+latest_secondhop_pilot_protocol: tracks/structural-sufficiency/zinc_secondhop_composition_pilot_v1/PROTOCOL.md
+latest_secondhop_pilot_budget: 1.048 A100-h this round (1.046 formal + 0.002 smoke) of 3 hard cap; 2 formal runs (Real/Null seed 0); no seed 1, no stage 2; official test never loaded
+latest_secondhop_pilot_headline: >-
+  Pre-registered second-hop composition injection (fixed P_b/P_a 96->32 from seed
+  20261105; LocalContent 529->657 with B_v 96 + C 32; zero-init new columns so
+  step 0 == frozen A).  CPU gates 8/8 pass (path crosscheck 0 mismatch on
+  692,716/69,040 paths; base init bit-identical 11c698ae/d9422859; Real==Null
+  full-state hash; invariance <=1.1e-6; historical A checkpoints replay to
+  1e-8).  Stage 1 seed 0: A 0.076582, Real 0.078976, Null 0.082897 -- neither
+  arm beats A (Real +0.00240, Null +0.00632), W20/T100 agree, so best-epoch
+  selection is not the cause.  Real-Null = -0.003921 (drop172 -0.002362,
+  dropW10 -0.002730, r2-unseen ordinary -0.003834, ordinary -0.001310) but CI
+  [-0.010734,+0.002133] spans 0, tail top-5 rows are 64% of the effect, and the
+  ordinary median delta is +0.00083.  Real-A drop172/dropW10 = -0.000121/-0.000099
+  (a tie once the known label-artifact row 172 is removed); row172 alone is
+  1.051x the net full-split regression (AE 6.575 -> 9.091).  On the 935 ordinary
+  rows Real-A = -0.001045 and it is broad but tiny (52.0% rows better, median
+  -0.00090, top-5 share 9.2%), below the 0.003 purchase floor and below the
+  historical A seed spread 0.00392.  Mechanism confirmed used: step-1
+  g_new/g_old 0.197, W_new/W_old 0.589, z_new/z_old 0.296, 128/128 new columns
+  non-zero, frozen-weight C-switch changes 100% of predictions (mean |dpred|
+  0.0371, MAE +0.013027).  Purchase gate: c0 no-break FAIL (Null 0.082897 >
+  0.081582), signal A FAIL, signal B PASS, signal C FAIL -> buy_stage2 = False,
+  honoured, no seed 1.  Reading: the S2 gap is real as a representation
+  difference but is NOT an MAE bottleneck in this configuration; content injection
+  is a net loss (Null) that true pairing only reduces by ~2/3.  Stop this
+  configuration; do not reopen DFPB; any learnable-projection follow-up needs a
+  new pre-registration.
 side_round_history:
+  - {round: zinc_secondhop_composition_pilot_v1, verdict: STAGE1_GATE_NOT_MET__NO_PURCHASE_WORTHY_GAIN_ON_PRIMARY, report: tracks/structural-sufficiency/zinc_secondhop_composition_pilot_v1/REPORT.md}
   - {round: zinc_dccl_frozen_transfer_audit_v1, verdict: TRUNK_TRANSFER_SIGNAL, report: tracks/structural-sufficiency/zinc_dccl_frozen_transfer_audit_v1/REPORT.md}
   - {round: zinc_bond_anchored_marginal_field_v1, verdict: STOP_NO_SIGNAL, report: tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1/REPORT.md}
   - {round: zinc_block_ownership_v2, verdict: SINGLETON_CONTENT_EXPLAINS_THE_GAIN, report: tracks/structural-sufficiency/zinc_block_ownership_v2/REPORT.md}

@@ -102,11 +102,46 @@ def torch_load_sha(path: Path) -> str | None:
     return S.L.C.sha256_file(path) if path.exists() else None
 
 
+def init_h_diagnostics(run: Mapping[str, Any]) -> dict:
+    """h participation ratio at the *initial* state (W_new == 0, so arm-agnostic)."""
+    try:
+        import sh_data as D
+        import sh_models as M
+        import sh_train as T
+    except Exception as exc:  # pragma: no cover
+        return {"error": repr(exc)}
+    if not S.D.cache_path("valid").exists():
+        return {"error": "valid cache missing"}
+    norm = S.D.load_norm()
+    model, info = M.build_model(run["arm"], norm, run["seed"], "cpu", dict(M.DEFAULT_CONFIG))
+    if info["initial_state_sha256"] != run["initial_state_sha256"]:
+        raise RuntimeError("initial state of the rebuilt model differs from the run")
+    cache = S.D.load_cache("valid")
+    sup = D.load_supplement("valid")
+    rows = np.arange(int(cache["n_molecules"]))
+    _, mae, aux = T.evaluate(model, cache, sup, rows, device="cpu", return_aux=True)
+    out = _h_stats(np.asarray(aux["mean_h"]))
+    out["init_valid_mae"] = float(mae)
+    out["initial_state_sha256"] = info["initial_state_sha256"]
+    return out
+
+
+def _h_stats(mean_h: np.ndarray) -> dict:
+    H = np.asarray(mean_h, dtype=np.float64)
+    Hc = H - H.mean(0, keepdims=True)
+    cov = Hc.T @ Hc / max(len(Hc) - 1, 1)
+    ev = np.clip(np.linalg.eigvalsh(cov), 0, None)
+    return {
+        "h_participation_ratio": float((ev.sum() ** 2) / max((ev ** 2).sum(), 1e-12)),
+        "h_top1_energy_fraction": float(ev[-1] / max(ev.sum(), 1e-12)),
+    }
+
+
 def load_run(name: str, anchor: Mapping[str, Any]) -> dict:
     run_dir = S.RUNS / name
     train_json = run_dir / "train.json"
     if not train_json.exists():
-        return {}
+        return None
     payload = S.L.read_json(train_json)
     npz = np.load(run_dir / "predictions" / "valid_best.npz")
     row = np.asarray(npz["row"], dtype=np.int64)
@@ -198,8 +233,34 @@ def contrast(first: Mapping[str, Any], second: Mapping[str, Any],
         m = mask[row]
         if m.any():
             out["delta_by_group"][name] = float(d[m].mean())
-    rng = np.random.default_rng(seed)
+    # contribution of the pre-defined row groups to the full-split delta
     n = len(d)
+    groups = anchor["masks"]
+    contrib = {}
+    for gname in ("ordinary", "tail", "row172", "fixed_worst10"):
+        gm = groups[gname][row]
+        contrib[gname] = float(d[gm].sum() / n)
+    out["delta_contribution_to_full"] = contrib
+    out["row_structure"] = {}
+    for gname in ("ordinary", "r2_unseen_ordinary", "seen_ordinary", "tail"):
+        gm = groups[gname][row]
+        if not gm.any():
+            continue
+        dd = d[gm]
+        order_g = np.argsort(-np.abs(dd))
+        top5 = float(np.abs(dd[order_g[:5]]).sum() / max(np.abs(dd).sum(), 1e-12))
+        out["row_structure"][gname] = {
+            "n": int(gm.sum()),
+            "mean_delta": float(dd.mean()),
+            "median_delta": float(np.median(dd)),
+            "frac_rows_improved": float(np.mean(dd < 0)),
+            "top5_abs_share": top5,
+        }
+    order = np.argsort(-np.abs(d))[:10]
+    out["top_rows"] = [
+        {"row": int(row[i]), "y": float(y[i]), "ae_first": float(ae1[i]),
+         "ae_second": float(ae2[i]), "delta_ae": float(d[i])} for i in order]
+    rng = np.random.default_rng(seed)
     boot = np.empty(BOOTSTRAP_N, dtype=np.float64)
     for i in range(BOOTSTRAP_N):
         take = rng.integers(0, n, n)
@@ -453,7 +514,8 @@ def main(argv=None) -> int:
     keyed = {}
     for name in names:
         run = load_run(name, anchor)
-        if run is None:
+        if not run:
+            S.L.log(f"[analysis] run {name} not found under {S.track_rel(S.RUNS)}")
             continue
         keyed[f"{run['arm']}_s{run['seed']}"] = run
     a_refs = {"0": load_a_reference(0), "1": load_a_reference(1)}
@@ -467,6 +529,9 @@ def main(argv=None) -> int:
                   "mae_recorded": v["mae_recorded_replay"]} for k, v in keyed.items()}
     if any(abs(v["delta_recomputed_vs_replay"]) > 1e-6 for v in sanity.values()):
         raise RuntimeError(f"prediction file does not reproduce the recorded MAE: {sanity}")
+
+    for key, run in keyed.items():
+        run["init_h"] = init_h_diagnostics(run)
 
     stage1 = evaluate_stage1(keyed, anchor)
     stage2 = evaluate_stage2(keyed, stage1, anchor) if args.stage >= 2 else {"ready": False}
@@ -487,6 +552,36 @@ def main(argv=None) -> int:
         "official_test_loaded": False,
     }
     S.L.write_json(S.ANALYSIS / "summary.json", payload)
+    provenance_gpu = {
+        "round": S.ROUND_ID,
+        "created": S.L.now(),
+        "git_commit": S.L.C.git_commit(),
+        "sign_convention": payload["sign_convention"],
+        "runs": {
+            k: {
+                "arm": v["arm"], "seed": v["seed"],
+                "git_commit": v["git_commit"],
+                "device_name": v.get("device_name"),
+                "environment": v.get("environment"),
+                "wall_seconds": v["wall_seconds"],
+                "gpu_hours_estimate": v["gpu_hours"],
+                "parameters": v["params"],
+                "initial_state_sha256": v["initial_state_sha256"],
+                "checkpoint_sha256": v["checkpoint_sha256"],
+                "projections": v["projections"],
+                "data": v["data"],
+                "best": {"valid_mae": v["mae_recorded_replay"],
+                         "valid_mae_epoch_loop": v["mae_recorded_epoch_loop"],
+                         "epoch": v["best_epoch"]},
+                "W20": v["W20"], "T100": v["T100"],
+                "best_train_mae_eval": v["best_train_mae_eval"],
+                "final_valid_mae": v["final_valid_mae"],
+            } for k, v in keyed.items()
+        },
+        "official_test_loaded": False,
+        "gpu_hours_total": float(sum(v["gpu_hours"] for v in keyed.values())),
+    }
+    S.L.write_json(S.ANALYSIS / "provenance_gpu.json", provenance_gpu)
     write_tables(payload, anchor)
     per_molecule_csv(keyed, anchor)
     if stage1.get("ready"):
