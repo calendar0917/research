@@ -377,6 +377,21 @@ def build_split(split: str, *, with_labels: bool = True, max_molecules: int | No
     return data
 
 
+def content_fingerprint(cache: Mapping[str, Any]) -> str:
+    """Stable hash of the array contents (ignores the creation timestamp)."""
+    import hashlib
+
+    h = hashlib.sha256()
+    for key in sorted(cache):
+        value = cache[key]
+        if isinstance(value, np.ndarray):
+            h.update(key.encode())
+            h.update(str(value.dtype).encode())
+            h.update(str(tuple(value.shape)).encode())
+            h.update(np.ascontiguousarray(value).tobytes())
+    return h.hexdigest()
+
+
 def cache_path(split: str):
     return L.CACHE / f"lc_{split}.pt"
 
@@ -449,6 +464,7 @@ def prep(splits: Sequence[str] = ("train", "valid"), *, force: bool = False) -> 
                 "sha256": L.C.sha256_file(path),
                 "reused": True,
                 "n_molecules": int(data["n_molecules"]),
+                "content_sha256": content_fingerprint(data),
             }
             continue
         data = build_split(split)
@@ -458,6 +474,7 @@ def prep(splits: Sequence[str] = ("train", "valid"), *, force: bool = False) -> 
             "sha256": sha,
             "reused": False,
             "n_molecules": int(data["n_molecules"]),
+            "content_sha256": content_fingerprint(data),
             "meta": data["meta"],
         }
     if "train" in [s for s, v in out["caches"].items()] or cache_path("train").exists():
@@ -565,5 +582,6 @@ def batch_meta(cache: Mapping[str, Any], rows: Sequence[int]) -> dict[str, np.nd
 __all__ = [
     "build_from_arrays", "build_molecule_from_object", "build_split", "cache_path",
     "save_cache", "load_cache", "fit_norm", "load_norm", "norm_fingerprint",
+    "content_fingerprint",
     "prep", "collate", "_all_pairs_dist", "_ring_block_membership", "_dist_bucket",
 ]

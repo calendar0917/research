@@ -675,6 +675,8 @@ def main() -> int:
             "official_test_loaded": False,
             "train_labels_loaded": bool(prep_meta["labels_loaded"]),
             "labels_sha256": prep_meta["labels_sha256"],
+            "train_content_sha256": D.content_fingerprint(train),
+            "valid_content_sha256": D.content_fingerprint(valid),
         }
 
     ck.run("G8_official_test_isolation", g8)
