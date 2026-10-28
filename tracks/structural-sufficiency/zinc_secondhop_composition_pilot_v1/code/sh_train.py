@@ -249,9 +249,19 @@ def train(arm: str, seed: int, device: str, *, epochs: int | None = None,
     out = Path(out_dir) if out_dir is not None else run_dir(arm, seed, tag)
     S.L.ensure_dir(out)
     train_json = out / "train.json"
+    recipe = dict(RECIPE)
+    n_epochs = int(recipe["epochs"] if epochs is None else epochs)
     if train_json.exists() and not force:
+        prev = S.L.read_json(train_json)
+        same = (int(prev.get("epochs", -1)) == n_epochs
+                and prev.get("arm") == arm and int(prev.get("seed", -1)) == int(seed))
+        if not same:
+            raise RuntimeError(
+                f"{train_json} holds a different run (arm={prev.get('arm')}, "
+                f"seed={prev.get('seed')}, epochs={prev.get('epochs')}); refusing to "
+                f"treat it as this run -- pass --force or choose another --out")
         S.L.log(f"[{arm} s{seed}] already complete: {train_json}")
-        return S.L.read_json(train_json)
+        return prev
 
     cfg_file = S.load_config()
     frozen_sup = S.read_json_or_none(S.ANALYSIS / "supplement.json") or {}
@@ -271,8 +281,6 @@ def train(arm: str, seed: int, device: str, *, epochs: int | None = None,
 
     cfg = dict(M.DEFAULT_CONFIG)
     model, model_info = M.build_model(arm, norm, seed, device, cfg)
-    recipe = dict(RECIPE)
-    n_epochs = int(recipe["epochs"] if epochs is None else epochs)
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=recipe["lr"], weight_decay=recipe["weight_decay"]
     )
