@@ -234,6 +234,9 @@ def main(argv=None) -> int:
     if not run_dirs:
         raise SystemExit("no completed LCRC runs found")
     anchor = _read_anchor()
+    dcc_seed_mae = {s: _mae(anchor["dcc_pred"][s], anchor["y"]) for s in anchor["dcc_pred"]}
+    if abs(dcc_seed_mae[0] - DCCL_S0_VALID) > 1e-5:
+        raise RuntimeError(f"DCC-L seed0 anchor mismatch: {dcc_seed_mae[0]}")
     masks, worst_rows = _fixed_masks(anchor)
     runs = [_load_run(p) for p in run_dirs]
     runs.sort(key=lambda r: (r["arm"], r["seed"]))
@@ -281,13 +284,15 @@ def main(argv=None) -> int:
             f"{m['final_valid']:.6f} | {m['train_eval_best']:.6f} | {m['wall_hours']:.3f} |"
         )
     lines.append("")
-    lines.append(f"Historical DCC-L anchor: valid 4-seed mean {DCCL_4SEED_VALID:.6f}, seed0 {DCCL_S0_VALID:.6f}.")
+    lines.append(f"Historical DCC-L anchor: valid 4-seed mean {DCCL_4SEED_VALID:.6f}; "
+                 + ", ".join(f"s{s}={dcc_seed_mae[s]:.6f}" for s in sorted(dcc_seed_mae)) + ".")
     (L.ANALYSIS / "main_table.md").write_text("\n".join(lines) + "\n")
 
     # ---------------- per-molecule + contrasts ----------------
     per = {"row": np.arange(len(runs[0]["y"])), "y": runs[0]["y"],
-           "r2_unseen_atom_frac": anchor["unseen"].astype(float), "n_rings": anchor["n_rings"],
-           "dcc_s0_ae": np.abs(anchor["dcc_pred"][0] - runs[0]["y"])}
+           "r2_unseen_atom_frac": anchor["unseen"].astype(float), "n_rings": anchor["n_rings"]}
+    for s in sorted(anchor["dcc_pred"]):
+        per[f"dcc_s{s}_ae"] = np.abs(anchor["dcc_pred"][s] - runs[0]["y"])
     for r in runs:
         per[f"pred_{r['run']}"] = r["pred_best"]
         per[f"ae_{r['run']}"] = r["ae_best"]
@@ -303,9 +308,11 @@ def main(argv=None) -> int:
                           "mae_first": ra["best_valid"], "mae_second": rb["best_valid"]})
                 contrast_rows.append(c)
     for r in runs:
-        c = _contrast(r["ae_best"], per["dcc_s0_ae"], worst_rows, r["y"])
-        c.update({"first": r["run"], "second": "DCC-L_s0_historical", "seed": r["seed"],
-                  "mae_first": r["best_valid"], "mae_second": DCCL_S0_VALID})
+        s = r["seed"]
+        dcc_ae = np.abs(anchor["dcc_pred"][s] - r["y"])
+        c = _contrast(r["ae_best"], dcc_ae, worst_rows, r["y"])
+        c.update({"first": r["run"], "second": f"DCC-L_s{s}_historical", "seed": s,
+                  "mae_first": r["best_valid"], "mae_second": dcc_seed_mae[s]})
         contrast_rows.append(c)
     L.write_json(L.ANALYSIS / "contrasts.json", {"rows": contrast_rows,
                                                 "bootstrap": {"n": 10000, "seed": 20261108,
@@ -329,15 +336,83 @@ def main(argv=None) -> int:
         group_rows[name] = {"n": int(mask.sum()), "mae": {}}
         for r in runs:
             group_rows[name]["mae"][r["run"]] = _mae(r["pred_best"], r["y"], mask)
-        group_rows[name]["mae"]["DCC-L_s0_historical"] = _mae(anchor["dcc_pred"][0], r["y"], mask)
+        for s in sorted(dcc_seed_mae):
+            group_rows[name]["mae"][f"DCC-L_s{s}_historical"] = _mae(anchor["dcc_pred"][s], anchor["y"], mask)
     L.write_json(L.ANALYSIS / "groups.json", group_rows)
+    dcc_cols = [f"DCC-L_s{s}" for s in sorted(dcc_seed_mae)]
     glines = ["# LCRC-v1 fixed-group valid MAE", "",
-              "| group | n | " + " | ".join(r["run"] for r in runs) + " | DCC-L s0 |",
-              "|---|---:|" + "---:|" * len(runs) + "---:|"]
+              "| group | n | " + " | ".join(r["run"] for r in runs) + " | " + " | ".join(dcc_cols) + " |",
+              "|---|---:|" + "---:|" * (len(runs) + len(dcc_cols))]
     for name, mask in masks.items():
         vals = " | ".join(f"{group_rows[name]['mae'][r['run']]:.6f}" for r in runs)
-        glines.append(f"| {name} | {int(mask.sum())} | {vals} | {group_rows[name]['mae']['DCC-L_s0_historical']:.6f} |")
+        dvals = " | ".join(f"{group_rows[name]['mae'][f'DCC-L_s{s}_historical']:.6f}" for s in sorted(dcc_seed_mae))
+        glines.append(f"| {name} | {int(mask.sum())} | {vals} | {dvals} |")
     (L.ANALYSIS / "groups.md").write_text("\n".join(glines) + "\n")
+
+    # ---------------- seed summary + pre-registered test gate ----------------
+    arms: dict[str, dict[int, dict]] = {}
+    for r in runs:
+        arms.setdefault(r["arm"], {})[r["seed"]] = r
+    arm_rows = []
+    for arm in sorted(arms):
+        seeds = sorted(arms[arm])
+        vals = [arms[arm][s]["best_valid"] for s in seeds]
+        arm_rows.append({"arm": arm, "seeds": seeds, "values": vals,
+                         "mean": float(np.mean(vals)), "std": float(np.std(vals, ddof=1)) if len(vals) > 1 else 0.0})
+    seeds_all = sorted({r["seed"] for r in runs})
+    seed_rows = []
+    for s in seeds_all:
+        row = {"seed": s, "dcc": dcc_seed_mae.get(s)}
+        for arm in ("A", "R", "N"):
+            row[arm] = arms.get(arm, {}).get(s, {}).get("best_valid")
+        row["R_minus_N"] = (row["R"] - row["N"]) if row["R"] is not None and row["N"] is not None else None
+        row["R_minus_A"] = (row["R"] - row["A"]) if row["R"] is not None and row["A"] is not None else None
+        row["N_minus_A"] = (row["N"] - row["A"]) if row["N"] is not None and row["A"] is not None else None
+        row["A_minus_dcc"] = (row["A"] - row["dcc"]) if row["A"] is not None and row["dcc"] is not None else None
+        row["R_minus_dcc"] = (row["R"] - row["dcc"]) if row["R"] is not None and row["dcc"] is not None else None
+        seed_rows.append(row)
+    r_vals = [v for v in [arms.get("R", {}).get(s, {}).get("best_valid") for s in seeds_all] if v is not None]
+    n_vals = [v for v in [arms.get("N", {}).get(s, {}).get("best_valid") for s in seeds_all] if v is not None]
+    rn = [arms["R"][s]["best_valid"] - arms["N"][s]["best_valid"]
+          for s in seeds_all if s in arms.get("R", {}) and s in arms.get("N", {})]
+    r_mean = float(np.mean(r_vals)) if r_vals else float("nan")
+    n_mean = float(np.mean(n_vals)) if n_vals else float("nan")
+    mean_rn = float(np.mean(rn)) if rn else float("nan")
+    consistent = bool(len(rn) >= 2 and all(d < 0 for d in rn))
+    r_mean_le_0079 = bool(np.isfinite(r_mean) and r_mean <= 0.079)
+    beats_dccl = bool(np.isfinite(r_mean) and r_mean < DCCL_4SEED_VALID)
+    gate = {
+        "r_minus_n_by_seed": rn,
+        "consistent_r_better_than_n": consistent,
+        "mean_r_minus_n": mean_rn,
+        "r_mean_valid": r_mean,
+        "n_mean_valid": n_mean,
+        "r_mean_le_0.079": r_mean_le_0079,
+        "r_mean_beats_dccl_4seed_mean": beats_dccl,
+        "dccl_4seed_mean": DCCL_4SEED_VALID,
+        "pass": bool(consistent and mean_rn <= -0.001 and (r_mean_le_0079 or beats_dccl)),
+        "decision": "read_test" if (consistent and mean_rn <= -0.001 and (r_mean_le_0079 or beats_dccl)) else "do_not_read_test",
+        "note": "Test not read in this round. Gate is evaluated on completed valid runs only.",
+    }
+    L.write_json(L.ANALYSIS / "seed_summary.json", {"arms": arm_rows, "seeds": seed_rows, "test_gate": gate})
+    slines = ["# LCRC-v1 seed summary and test gate", "",
+              "| arm | seeds | best valid per seed | mean |", "|---|---:|---|---:|"]
+    for row in arm_rows:
+        slines.append(f"| {row['arm']} | {','.join(map(str, row['seeds']))} | "
+                      + ", ".join(f"{v:.6f}" for v in row["values"]) + f" | {row['mean']:.6f} |")
+    slines += ["", "| seed | A | R | N | DCC-L | R-N | R-A | N-A | A-DCC-L | R-DCC-L |",
+               "|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+    for row in seed_rows:
+        def fmt(v):
+            return "" if v is None else f"{v:+.6f}" if abs(v) < 10 and v != row.get("dcc") and v != row.get("A") and v != row.get("R") and v != row.get("N") else f"{v:.6f}"
+        slines.append(f"| {row['seed']} | {row['A']:.6f} | {row['R']:.6f} | {row['N']:.6f} | "
+                      f"{row['dcc']:.6f} | {fmt(row['R_minus_N'])} | {fmt(row['R_minus_A'])} | "
+                      f"{fmt(row['N_minus_A'])} | {fmt(row['A_minus_dcc'])} | {fmt(row['R_minus_dcc'])} |")
+    slines += ["", f"Pre-registered test gate: consistent R<N on every seed = **{consistent}**; "
+               f"mean R-N = {mean_rn:+.6f} (<= -0.001 required); R valid mean = {r_mean:.6f} "
+               f"(<= 0.079 required, or clearly beat DCC-L {DCCL_4SEED_VALID:.6f}). "
+               f"Decision: **{gate['decision']}**."]
+    (L.ANALYSIS / "seed_summary.md").write_text("\n".join(slines) + "\n")
 
     # ---------------- mechanism ----------------
     mechanism = []

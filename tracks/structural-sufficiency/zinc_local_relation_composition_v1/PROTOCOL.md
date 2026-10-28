@@ -2,7 +2,7 @@
 
 **Round id:** `zinc-local-relation-composition-v1`
 **Track:** `tracks/structural-sufficiency/zinc_local_relation_composition_v1/`
-**状态:** 训练前冻结（CPU gate 8/8 PASS；GPU 未启动）
+**状态:** 已完成（6/6 正式 run；test 未读；结果见 `REPORT.md`）
 **数据:** official PyG ZINC `subset=True`，train 10,000 / valid 1,000 / test 1,000。
 **指标:** raw-y MAE（单模型）。
 **参数上限:** 500k 部署参数。A = 237,519；R = N = 269,664。
@@ -95,7 +95,7 @@ A/R/N 同一 seed 使用完全相同的初始化（共享参数逐 tensor 相同
 - 分组：ordinary (`y>-3`)、tail (`y≤-3`，环惩罚相关)、row172、radius-2 unseen（251）、unseen ordinary（225）、ring-rich (`cycle_rank≥4`)、固定 DCC-L/P3B worst-10、去掉 row172、去掉 worst-10。
 - 机制：R/N 真实关系输入的类别计数/内容差、非空覆盖；冻结权重把 R/N 的 `rel.head` 置零后预测变化；A 的 `|Σf|` 与 `|ρ|` 尺度；best checkpoint 上 h 的 participation ratio。
 - test 只在以下条件同时满足时读一次：R 在两个 seed 上相对 N 有一致收益、mean `R−N ≤ −0.001`，且 R 的 valid mean ≤0.079（DCC-L 4-seed 均值 +0.003，属于“接近”），或新主体明确超过 DCC-L。只对预选的一个单模型 checkpoint 做一次终端评估。
-- test 已 spent，本轮 test 结果只能是描述性性能记录，不是新盲测；不得据此改模型/seed/epoch。
+- test 在历史轮次已暴露；本轮 **未读 test**。若未来读取，结果只能是描述性性能记录，不是新盲测；不得据此改模型/seed/epoch。
 
 ## 8. 预算
 
@@ -107,3 +107,11 @@ A/R/N 同一 seed 使用完全相同的初始化（共享参数逐 tensor 相同
 - 不增加 junction token、per-wedge token、迭代 hidden-state MP、attention、EMA/soup。
 - 不根据 test 调参；不把 R>A 直接解释为关系机制成功。
 - 不在门禁失败后自动开启新一轮架构搜索。
+
+## 10. 执行结果（post-hoc record）
+
+- 正式 run：`A_s0 0.076582`、`A_s1 0.080504`、`R_s0 0.077591`、`R_s1 0.080474`、`N_s0 0.081541`、`N_s1 0.078608`。
+- 两 seed 均值：A 0.078543、R 0.079032、N 0.080075；DCC-L 四 seed 均值 0.075990（未重训）。
+- Stage 3 门禁在启动时按 seed0 数值满足（R_s0−N_s0 = −0.003950，R_s1 = 0.080474 ≤ 0.088），因此按协议跑了 `N_s1`、`A_s1`；两 seed 汇总后 R−N 符号翻转（seed1 +0.001866）。
+- test gate：`consistent R<N = false`，mean `R−N = −0.001042`，R valid mean `0.079032 > 0.079`，且未明显优于 DCC-L；**decision = do_not_read_test**。详见 `analysis/seed_summary.md` / `analysis/seed_summary.json`。
+- 正式训练合计 2.9501 GPU·h。
