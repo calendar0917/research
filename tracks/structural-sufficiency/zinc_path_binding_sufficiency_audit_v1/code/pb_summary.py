@@ -154,7 +154,8 @@ def main() -> int:
     }
     out["decision"] = {k: v for k, v in decision.items()
                        if k in ("criteria", "no_go_triggers", "graph_level", "verdict",
-                                "borderline_hits", "levels", "gpu_recommendation")}
+                                "verdict_if_P5_own_scale", "borderline_hits", "levels",
+                                "gpu_recommendation")}
     P.write_json(P.ANALYSIS / "summary.json", out)
     print(json.dumps({k: out[k] for k in ("decision",)}, indent=2)[:4000])
     return 0
