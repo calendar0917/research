@@ -1,0 +1,1032 @@
+{
+  "checks": {
+    "bridge_enumeration": {
+      "pass": true,
+      "molecules": 300,
+      "bridge_mismatch": 0,
+      "side_mismatch": 0
+    },
+    "init_identity_and_small_nonzero_head": {
+      "pass": true,
+      "hist_hash": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+      "expected": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+      "models": {
+        "sce-real": {
+          "params": 260336,
+          "head_params": 22817,
+          "trunk_hash": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+          "trunk_bit_equal": true,
+          "max_abs_dy_step0": 0.0087890625,
+          "term_std": 0.0015769315650686622,
+          "term_nonzero": true
+        },
+        "sce-marginal": {
+          "params": 260336,
+          "head_params": 22817,
+          "trunk_hash": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+          "trunk_bit_equal": true,
+          "max_abs_dy_step0": 0.008732438087463379,
+          "term_std": 0.0014991237549111247,
+          "term_nonzero": true
+        },
+        "gef-real": {
+          "params": 250524,
+          "head_params": 13005,
+          "trunk_hash": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+          "trunk_bit_equal": true,
+          "max_abs_dy_step0": 0.0006002187728881836,
+          "term_std": 0.0003566185769159347,
+          "term_nonzero": true
+        },
+        "gef-fixed": {
+          "params": 250524,
+          "head_params": 13005,
+          "trunk_hash": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+          "trunk_bit_equal": true,
+          "max_abs_dy_step0": 0.0005025863647460938,
+          "term_std": 0.0002887016162276268,
+          "term_nonzero": true
+        },
+        "gef-local": {
+          "params": 250524,
+          "head_params": 13005,
+          "trunk_hash": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+          "trunk_bit_equal": true,
+          "max_abs_dy_step0": 0.0009241104125976562,
+          "term_std": 0.000780424743425101,
+          "term_nonzero": true
+        }
+      }
+    },
+    "renumbering_and_bond_direction_invariance": {
+      "pass": true,
+      "diffs": {
+        "sce-real": {
+          "renumber": 2.384185791015625e-07,
+          "bond_flip": 1.1920928955078125e-07
+        },
+        "gef-real": {
+          "renumber": 1.1920928955078125e-07,
+          "bond_flip": 1.1920928955078125e-07
+        }
+      }
+    },
+    "batch_merge_split_invariance": {
+      "pass": true,
+      "diffs": {
+        "sce-real": {
+          "split_max": 1.1920928955078125e-07,
+          "half_max": 0.0
+        },
+        "gef-real": {
+          "split_max": 1.1920928955078125e-07,
+          "half_max": 0.0
+        }
+      }
+    },
+    "save_reload_bit_identical": {
+      "pass": true,
+      "diffs": {
+        "sce-real": {
+          "reload_max": 0.0,
+          "repeat_max": 0.0
+        },
+        "gef-real": {
+          "reload_max": 0.0,
+          "repeat_max": 0.0
+        }
+      }
+    },
+    "head_gradients_step1_3_nonzero_finite": {
+      "pass": true,
+      "steps": {
+        "sce-real": [
+          {
+            "loss": 1.106593370437622,
+            "params": {
+              "proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.01090299990028143
+              },
+              "proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0019786630291491747
+              },
+              "mlp.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.09661994129419327
+              },
+              "mlp.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.006715287454426289
+              },
+              "mlp.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 3.5316312313079834
+              },
+              "mlp.lins.1.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 1.709586262702942
+              }
+            },
+            "trunk_grad": 25.262968063354492,
+            "term_change": null
+          },
+          {
+            "loss": 20.562084197998047,
+            "params": {
+              "proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.03828169032931328
+              },
+              "proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.006145835388451815
+              },
+              "mlp.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.2970673441886902
+              },
+              "mlp.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.019183533266186714
+              },
+              "mlp.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 6.132900714874268
+              },
+              "mlp.lins.1.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 3.0239360332489014
+              }
+            },
+            "trunk_grad": 52.197662353515625,
+            "term_change": 0.07264860719442368
+          },
+          {
+            "loss": 14.232739448547363,
+            "params": {
+              "proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0296926312148571
+              },
+              "proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.00465802475810051
+              },
+              "mlp.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.248728409409523
+              },
+              "mlp.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.015939386561512947
+              },
+              "mlp.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 5.210709571838379
+              },
+              "mlp.lins.1.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 3.0239360332489014
+              }
+            },
+            "trunk_grad": 49.344322204589844,
+            "term_change": 0.03052964061498642
+          }
+        ],
+        "sce-marginal": [
+          {
+            "loss": 1.1065853834152222,
+            "params": {
+              "proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.011018786579370499
+              },
+              "proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0019299937412142754
+              },
+              "mlp.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0949292853474617
+              },
+              "mlp.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.006625776179134846
+              },
+              "mlp.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 3.5392496585845947
+              },
+              "mlp.lins.1.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 1.709586262702942
+              }
+            },
+            "trunk_grad": 25.262968063354492,
+            "term_change": null
+          },
+          {
+            "loss": 20.563575744628906,
+            "params": {
+              "proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.03978487476706505
+              },
+              "proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.006208618637174368
+              },
+              "mlp.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.29681289196014404
+              },
+              "mlp.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.01919613592326641
+              },
+              "mlp.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 6.135951519012451
+              },
+              "mlp.lins.1.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 3.0239360332489014
+              }
+            },
+            "trunk_grad": 52.197540283203125,
+            "term_change": 0.07113208621740341
+          },
+          {
+            "loss": 14.234079360961914,
+            "params": {
+              "proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.03084961511194706
+              },
+              "proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.004718674346804619
+              },
+              "mlp.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.2524927258491516
+              },
+              "mlp.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.01620008982717991
+              },
+              "mlp.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 5.256779193878174
+              },
+              "mlp.lins.1.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 3.0239360332489014
+              }
+            },
+            "trunk_grad": 49.342681884765625,
+            "term_change": 0.02982998639345169
+          }
+        ],
+        "gef-real": [
+          {
+            "loss": 1.1021649837493896,
+            "params": {
+              "z_proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0017908822046592832
+              },
+              "z_proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 1.45931655648468e-10
+              },
+              "w_mlp.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.00012172602146165445
+              },
+              "w_mlp.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 7.010148237895919e-06
+              },
+              "w_mlp.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 5.1265727961435914e-05
+              },
+              "w_mlp.lins.1.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 2.4147768272086978e-05
+              },
+              "g.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0028444495983421803
+              },
+              "g.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 6.680115620838478e-05
+              },
+              "g.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.09960971027612686
+              }
+            },
+            "trunk_grad": 25.262968063354492,
+            "term_change": null
+          },
+          {
+            "loss": 20.51467514038086,
+            "params": {
+              "z_proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.003922851290553808
+              },
+              "z_proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 1.798567406119389e-10
+              },
+              "w_mlp.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0008518624235875905
+              },
+              "w_mlp.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 5.9644622524501756e-05
+              },
+              "w_mlp.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.000285788846667856
+              },
+              "w_mlp.lins.1.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0002315920719411224
+              },
+              "g.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.004857094492763281
+              },
+              "g.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0001547676947666332
+              },
+              "g.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.1329917311668396
+              }
+            },
+            "trunk_grad": 52.21198272705078,
+            "term_change": 0.0018174147699028254
+          },
+          {
+            "loss": 14.207950592041016,
+            "params": {
+              "z_proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.004145006649196148
+              },
+              "z_proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 2.5929003388824867e-10
+              },
+              "w_mlp.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0002920818515121937
+              },
+              "w_mlp.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 1.591409272805322e-05
+              },
+              "w_mlp.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 9.308350126957521e-05
+              },
+              "w_mlp.lins.1.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 6.09770359005779e-05
+              },
+              "g.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0050208112224936485
+              },
+              "g.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.00012689499999396503
+              },
+              "g.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.1235431581735611
+              }
+            },
+            "trunk_grad": 49.370384216308594,
+            "term_change": 0.0011573198717087507
+          }
+        ],
+        "gef-fixed": [
+          {
+            "loss": 1.1021521091461182,
+            "params": {
+              "z_proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0015161078190430999
+              },
+              "z_proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 1.2201442634030002e-10
+              },
+              "w_mlp.lins.0.weight": {
+                "used": false
+              },
+              "w_mlp.lins.0.bias": {
+                "used": false
+              },
+              "w_mlp.lins.1.weight": {
+                "used": false
+              },
+              "w_mlp.lins.1.bias": {
+                "used": false
+              },
+              "g.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.002446607919409871
+              },
+              "g.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 5.303943180479109e-05
+              },
+              "g.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.08267620950937271
+              }
+            },
+            "trunk_grad": 25.262968063354492,
+            "term_change": null
+          },
+          {
+            "loss": 20.514066696166992,
+            "params": {
+              "z_proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0032671578228473663
+              },
+              "z_proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 1.5547954590466873e-10
+              },
+              "w_mlp.lins.0.weight": {
+                "used": false
+              },
+              "w_mlp.lins.0.bias": {
+                "used": false
+              },
+              "w_mlp.lins.1.weight": {
+                "used": false
+              },
+              "w_mlp.lins.1.bias": {
+                "used": false
+              },
+              "g.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.004104991909116507
+              },
+              "g.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.00012687021808233112
+              },
+              "g.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.10855782777070999
+              }
+            },
+            "trunk_grad": 52.212039947509766,
+            "term_change": 0.001653033308684826
+          },
+          {
+            "loss": 14.207435607910156,
+            "params": {
+              "z_proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0036002385895699263
+              },
+              "z_proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 9.968293551709806e-11
+              },
+              "w_mlp.lins.0.weight": {
+                "used": false
+              },
+              "w_mlp.lins.0.bias": {
+                "used": false
+              },
+              "w_mlp.lins.1.weight": {
+                "used": false
+              },
+              "w_mlp.lins.1.bias": {
+                "used": false
+              },
+              "g.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.004408951383084059
+              },
+              "g.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.00011251423711655661
+              },
+              "g.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.10580044984817505
+              }
+            },
+            "trunk_grad": 49.37016296386719,
+            "term_change": 0.0010343178873881698
+          }
+        ],
+        "gef-local": [
+          {
+            "loss": 1.1023942232131958,
+            "params": {
+              "z_proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0051504336297512054
+              },
+              "z_proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 3.065196152451932e-10
+              },
+              "w_mlp.lins.0.weight": {
+                "used": false
+              },
+              "w_mlp.lins.0.bias": {
+                "used": false
+              },
+              "w_mlp.lins.1.weight": {
+                "used": false
+              },
+              "w_mlp.lins.1.bias": {
+                "used": false
+              },
+              "g.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.007506989408284426
+              },
+              "g.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.00032863236265257
+              },
+              "g.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.4238531291484833
+              }
+            },
+            "trunk_grad": 25.262968063354492,
+            "term_change": null
+          },
+          {
+            "loss": 20.518306732177734,
+            "params": {
+              "z_proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.017813416197896004
+              },
+              "z_proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 1.0054240773271772e-09
+              },
+              "w_mlp.lins.0.weight": {
+                "used": false
+              },
+              "w_mlp.lins.0.bias": {
+                "used": false
+              },
+              "w_mlp.lins.1.weight": {
+                "used": false
+              },
+              "w_mlp.lins.1.bias": {
+                "used": false
+              },
+              "g.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.01527609396725893
+              },
+              "g.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0008397935889661312
+              },
+              "g.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.675782322883606
+              }
+            },
+            "trunk_grad": 52.21177673339844,
+            "term_change": 0.009600223042070866
+          },
+          {
+            "loss": 14.209748268127441,
+            "params": {
+              "z_proj.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.016111811622977257
+              },
+              "z_proj.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 7.255328560162866e-10
+              },
+              "w_mlp.lins.0.weight": {
+                "used": false
+              },
+              "w_mlp.lins.0.bias": {
+                "used": false
+              },
+              "w_mlp.lins.1.weight": {
+                "used": false
+              },
+              "w_mlp.lins.1.bias": {
+                "used": false
+              },
+              "g.lins.0.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.014172944240272045
+              },
+              "g.lins.0.bias": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.0007122423266991973
+              },
+              "g.lins.1.weight": {
+                "used": true,
+                "nonzero": true,
+                "finite": true,
+                "norm": 0.6017933487892151
+              }
+            },
+            "trunk_grad": 49.37205123901367,
+            "term_change": 0.004209448583424091
+          }
+        ]
+      }
+    },
+    "gef_math_bruteforce": {
+      "pass": true,
+      "K_max_err": 8.546237756368313e-08,
+      "c_max_err": 7.202227916836001e-08,
+      "inverse_residual": 1.9669532758115338e-07,
+      "K_offdiag_min": 0.33314985036849976,
+      "uniform_source_c_max": 4.76837158203125e-07,
+      "small_graphs": [
+        {
+          "n": 1,
+          "finite": true,
+          "max_abs": 0.0
+        },
+        {
+          "n": 2,
+          "finite": true,
+          "max_abs": 1.1920928955078125e-07
+        },
+        {
+          "n": 3,
+          "finite": true,
+          "max_abs": 0.18391144275665283
+        }
+      ]
+    },
+    "structural_witness_same_multiset": {
+      "pass": true,
+      "witness": {
+        "sce": [
+          {
+            "I_e": [
+              8.47713090479374e-06,
+              0.0021744640544056892,
+              0.004002265632152557
+            ],
+            "term": 0.0030926032923161983
+          },
+          {
+            "I_e": [
+              0.0010323879541829228,
+              0.002541162073612213,
+              0.0018689532298594713
+            ],
+            "term": 0.002721251454204321
+          }
+        ],
+        "gef": [
+          {
+            "c": [
+              [
+                0.03861278295516968,
+                0.04386037588119507,
+                0.028080672025680542,
+                0.04575356841087341,
+                0.019336316734552383,
+                0.00367186963558197,
+                -0.03865869343280792,
+                0.0037537217140197754,
+                -0.006718069314956665,
+                0.038236334919929504,
+                0.04165828227996826,
+                0.04802574962377548
+              ],
+              [
+                0.01534651592373848,
+                -0.017087101936340332,
+                0.02249586582183838,
+                0.00037769973278045654,
+                0.03844299912452698,
+                0.0011926591396331787,
+                0.006520435214042664,
+                -0.02755095064640045,
+                -0.004116397351026535,
+                0.03939589858055115,
+                -0.002402018755674362,
+                0.030871964991092682
+              ],
+              [
+                -0.011331597343087196,
+                0.0346793532371521,
+                -0.023634225130081177,
+                0.004192233085632324,
+                -0.04539097845554352,
+                0.0033387229777872562,
+                -0.01118563860654831,
+                0.034995585680007935,
+                0.004394121468067169,
+                -0.040000006556510925,
+                0.012445583008229733,
+                -0.026855135336518288
+              ],
+              [
+                0.014078691601753235,
+                0.0947919636964798,
+                -0.01373910903930664,
+                -0.0019669830799102783,
+                -0.040395259857177734,
+                0.03669402003288269,
+                0.001308150589466095,
+                0.03411416709423065,
+                0.004544362425804138,
+                -0.0022047758102416992,
+                0.04606443643569946,
+                0.02040475606918335
+              ]
+            ],
+            "term": -1.541140954941511e-05
+          },
+          {
+            "c": [
+              [
+                0.03385481238365173,
+                0.05274342745542526,
+                0.021541059017181396,
+                -0.002875030040740967,
+                0.023559194058179855,
+                0.03283919394016266,
+                0.012557774782180786,
+                -0.013183772563934326,
+                -0.0021559037268161774,
+                0.05671104043722153,
+                0.033837854862213135,
+                0.06253454834222794
+              ],
+              [
+                0.01632596179842949,
+                -0.017850160598754883,
+                0.023704618215560913,
+                0.004304409027099609,
+                0.03917120397090912,
+                -0.0009164391085505486,
+                0.002613440155982971,
+                -0.026921123266220093,
+                -0.004597879946231842,
+                0.03921904414892197,
+                -0.00159444659948349,
+                0.0308544784784317
+              ],
+              [
+                -0.01109391450881958,
+                0.035154521465301514,
+                -0.023405104875564575,
+                0.0007172822952270508,
+                -0.04397179186344147,
+                0.005626164376735687,
+                -0.007296256721019745,
+                0.033005908131599426,
+                0.004601873457431793,
+                -0.037362080067396164,
+                0.012006822973489761,
+                -0.024688858538866043
+              ],
+              [
+                0.01942749321460724,
+                0.08643247187137604,
+                -0.006708621978759766,
+                0.04688802361488342,
+                -0.04403811693191528,
+                0.007814690470695496,
+                -0.049968086183071136,
+                0.05075998604297638,
+                -0.0001020282506942749,
+                -0.019728943705558777,
+                0.054358065128326416,
+                0.0068808794021606445
+              ]
+            ],
+            "term": -3.3382209949195385e-05
+          }
+        ]
+      }
+    },
+    "zero_bridge_term_exact_zero": {
+      "pass": true,
+      "n_bridges": 0,
+      "term": 0.0
+    }
+  },
+  "official_test_loaded": false,
+  "all_pass": true,
+  "failed": [],
+  "created": "2026-10-29T00:15:53+0800"
+}

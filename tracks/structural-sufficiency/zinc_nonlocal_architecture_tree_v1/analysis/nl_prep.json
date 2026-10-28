@@ -1,0 +1,96 @@
+{
+  "official_test_loaded": false,
+  "bridge_prep": {
+    "official_test_loaded": false,
+    "splits": {
+      "train": {
+        "path": "tracks/structural-sufficiency/zinc_nonlocal_architecture_tree_v1/cache/bridge_train.pt",
+        "sha256": "b2c7e5075495c5502249dd124408d8c94373c5446bdf3f10e4d648381498516f",
+        "n_molecules": 10000,
+        "n_bridges_total": 98286,
+        "molecules_with_bridge": 9999,
+        "molecules_without_bridge": 1,
+        "max_bridges_per_molecule": 19,
+        "max_bridge_degree": 4,
+        "side_a_size_median": 15
+      },
+      "valid": {
+        "path": "tracks/structural-sufficiency/zinc_nonlocal_architecture_tree_v1/cache/bridge_valid.pt",
+        "sha256": "95cfb6b82b2885e5e465f508d4dfbaf86efe256d67d96eeec35cdad52911999c",
+        "n_molecules": 1000,
+        "n_bridges_total": 9770,
+        "molecules_with_bridge": 1000,
+        "molecules_without_bridge": 0,
+        "max_bridges_per_molecule": 18,
+        "max_bridge_degree": 4,
+        "side_a_size_median": 15
+      }
+    }
+  },
+  "coverage": {
+    "valid_molecules": 1000,
+    "with_bridge": 1000,
+    "without_bridge": 0,
+    "fraction_with_bridge": 1.0,
+    "median_bridges": 10.0,
+    "mean_bridges": 9.77,
+    "max_bridges": 18,
+    "r2_unseen_molecules": 251,
+    "r2_unseen_with_bridge": 251,
+    "r2_unseen_fraction_with_bridge": 1.0,
+    "seen_fraction_with_bridge": 1.0,
+    "r2_unseen_mean_bridges": 9.08366533864542,
+    "seen_mean_bridges": 10.0
+  },
+  "lambda": {
+    "official_test_loaded": false,
+    "labels_used": false,
+    "n_molecules": 1000,
+    "candidates": {
+      "0.05": {
+        "mean_graph_distance": 3.540952526237658,
+        "mean_p90_distance": 7.044517565376435,
+        "offdiag_mass_at_distance_ge3": 0.5772653316368607,
+        "condition_number_mean": 103.69612894498674,
+        "condition_number_max": 124.04948873335422
+      },
+      "0.1": {
+        "mean_graph_distance": 3.0173548193160658,
+        "mean_p90_distance": 5.785326955472261,
+        "offdiag_mass_at_distance_ge3": 0.49263408354641935,
+        "condition_number_mean": 52.34806447249319,
+        "condition_number_max": 62.52474436667691
+      },
+      "0.25": {
+        "mean_graph_distance": 2.394153470555634,
+        "mean_p90_distance": 4.35467058597908,
+        "offdiag_mass_at_distance_ge3": 0.3623067837074468,
+        "condition_number_mean": 21.53922578899729,
+        "condition_number_max": 25.609897746670764
+      },
+      "0.5": {
+        "mean_graph_distance": 2.0068121849155864,
+        "mean_p90_distance": 3.54915248854165,
+        "offdiag_mass_at_distance_ge3": 0.259352147591081,
+        "condition_number_mean": 11.269612894498643,
+        "condition_number_max": 13.304948873335414
+      },
+      "1.0": {
+        "mean_graph_distance": 1.6931679787098515,
+        "mean_p90_distance": 2.9396227309389387,
+        "offdiag_mass_at_distance_ge3": 0.16438296735459165,
+        "condition_number_mean": 6.134806447249321,
+        "condition_number_max": 7.152474436667694
+      },
+      "2.0": {
+        "mean_graph_distance": 1.4495103213398757,
+        "mean_p90_distance": 2.339122503544118,
+        "offdiag_mass_at_distance_ge3": 0.08909175231730314,
+        "condition_number_mean": 3.567403223624661,
+        "condition_number_max": 4.07623721833385
+      }
+    },
+    "chosen_lambda": 0.1,
+    "rule": "largest lambda whose label-free mean reach is >=3 graph steps, p90 reach >=4, cond<=1e4; no valid MAE used"
+  }
+}
