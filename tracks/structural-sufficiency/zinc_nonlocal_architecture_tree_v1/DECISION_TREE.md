@@ -1,7 +1,7 @@
 # DECISION TREE — non-local architecture tree v1
 
-Updated: 2026-10-29 02:05 (+08:00). GPU used so far: 1.30 GPU·h (0.03 timing + SCE 0.5947 + GEF 0.6738).
-Wall elapsed: ~2.2 h of the 7–8 h target.
+Updated: 2026-10-29 02:30 (+08:00). GPU used so far: 2.08 GPU·h (SCE 0.5947 + GEF 0.6738 + JSSP pretrain 0.4518 + JSSP downstream 0.3562 + timing 0.002).
+Wall elapsed: ~3.5 h of the 7–8 h target.
 
 ## Observation 1 (Phase 0, CPU)
 
@@ -62,9 +62,10 @@ carried by one tail row (drop-0172 still +0.0021). Both are **RED**.
 ## Observation 4 (mechanism reading)
 
 The identical +0.00578 plateau is a shared penalty of adding a late non-local scalar channel to the
-600-epoch LCRC-A recipe, not a single broken operator. Both terms stayed active and both runs fit
-train harder than A (best-epoch train MAE 0.0094 SCE / ~0.006 GEF; final ~0.001), so the failure is
-generalisation, not optimisation. Extra capacity around a sharp local optimum costs more than the
+600-epoch LCRC-A recipe, not a single broken operator. Both terms stayed active and both runs reach the same terminal train fit
+(final ≈0.001; A 0.00131), but at their best-valid checkpoints their train MAE is 0.0094/0.0094
+versus A's 0.00527: the selected solutions are not better-fitting, they generalise worse. The
+failure is not optimisation collapse. Extra capacity around a sharp local optimum costs more than the
 new information returns. No mechanism control is worth buying without a performance sign; SCE/GEF
 are closed and will not be tuned.
 
@@ -86,5 +87,34 @@ only if JSSP→A improves full MAE by ≥0.003 with a paired CI excluding 0 and 
 ordinary/unseen; a smaller but broad improvement buys at most one seed-1 confirmation; otherwise
 close H3 and stop with the negative result. No λ/width/ratio/epoch sweep.
 
-Budget: 1.30 GPU·h used; soft 14, hard 16; ~12.7 GPU·h remain. Planned Phase 3 cost ≤1.8 GPU·h
-(pretrain ~0.50 + downstream ~0.36, twice at most). No test access.
+## Observation 5 (Phase 3, JSSP -> A, seed 0)
+
+Pretraining matched the historical SSL exactly in initialisation (`91af980a…`), visible rows (10k),
+data order (seed+202), updates (7,560), batch, optimiser and checkpoint rule; only the mask changed.
+It used 14.2% atoms and 8.9% bonds (old: 15.0%/14.9%), 0.452 GPU·h. All CPU gates passed.
+
+Downstream A (600 epochs, 0.356 GPU·h) finished at best valid **0.083658 @452**, final 0.084057,
+T100 0.084023 — **+0.007077** vs A_s0, worse in every group (ordinary +0.001970, unseen-ordinary
++0.004565, seen-ordinary +0.001148, tail +0.080536, drop-0172 +0.005760). Paired CI95
+[+0.000403,+0.014810] excludes zero on the worse side; win rate 0.504. RED, no seed 1.
+
+The joint-span arm is therefore not a candidate. Caveat: JSSP also reduced bond-mask coverage from
+15% to 8.9% (a 2-bond span has 3 atoms : 2 bonds while the atom budget was held at ~15%); the result
+closes the frozen JSSP recipe, not a clean causal claim that "jointness alone" is harmful. No ratio
+control was bought because the arm showed no performance sign.
+
+## Final verdict (all three pre-registered hypotheses)
+
+| hypothesis | arm | valid best | Δ vs A | verdict |
+|---|---|---:|---:|---|
+| H1 SCE | separator energy, real sides | 0.082364 | +0.005782 | **RED** |
+| H2 GEF | one global equilibrium solve | 0.082361 | +0.005780 | **RED** |
+| H3 JSSP | joint 2-bond span pretraining | 0.083658 | +0.007077 | **RED** |
+
+No arm met GREEN or AMBER; no mechanism control, seed 1 or official-test read is purchased. The
+three unrelated interventions all land 0.0058–0.0071 above A_s0, and all reach the same terminal
+train fit (≈0.001; A 0.00131). SCE/GEF terms remain active and non-redundant after training (linear
+R² from existing pooled features 0.29 / 0.44; term std 0.061 / 0.107), so the failure is not an
+inactive or collapsed branch: the new variation does not generalise. **STOP**; see `REPORT.md` and `NEXT_DECISION.md`.
+
+Budget: 2.08 GPU·h used of soft 14 / hard 16; ~11.9 GPU·h unspent. Wall ~3.5 h. No test access.

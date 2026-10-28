@@ -1,0 +1,175 @@
+{
+  "round": "zinc-nonlocal-architecture-tree-v1",
+  "run": "timing_base-real_s0",
+  "head": "base",
+  "mode": "real",
+  "lambda": 0.5,
+  "seed": 0,
+  "status": "completed",
+  "timing_run": false,
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "epochs": 600,
+    "batch_size": 128,
+    "valid_batch_size": 256,
+    "grad_clip": 5.0,
+    "loss": "l1",
+    "checkpoint_selection": "strict argmin official-valid MAE; ties -> earlier epoch"
+  },
+  "model": {
+    "head": "base",
+    "mode": "real",
+    "lambda": 0.5,
+    "seed": 0,
+    "config": {
+      "width": 64,
+      "stat_rank": 32,
+      "local_hidden": 192,
+      "atom_hidden": 128,
+      "atom_out": 96,
+      "bond_hidden": 160,
+      "bond_out": 96,
+      "rho_hidden": 64,
+      "rel_z": 32,
+      "rel_hidden": 128,
+      "rel_out": 24,
+      "rel_mlp_hidden": 48,
+      "rel_cat_dim": 8,
+      "n_rel_categories": 6
+    },
+    "ssl": {
+      "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "loaded_modules": [
+        "atom_encoder",
+        "bond_encoder"
+      ],
+      "junction_path_loaded": false,
+      "keys_available": [
+        "atom_encoder",
+        "bond_encoder",
+        "junction_encoder"
+      ]
+    },
+    "parameters": 237519,
+    "parameters_trunk": 237519,
+    "parameters_head": 0,
+    "trunk_state_sha256": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+    "initial_state_sha256": "4eaa508dcda7958affcd51dbde4ca5a0f0f3e2667818c3219849c5274b8df81e",
+    "has_iterative_message_passing": false
+  },
+  "data": {
+    "source": "official PyG ZINC subset=True train/valid",
+    "n_train": 10000,
+    "n_valid": 1000,
+    "official_test_loaded": false,
+    "train_cache_sha256": "1aef7f2135dbf320ee0751a03eae357fe0d6d527b80f6204fab78b02a0450c4e",
+    "valid_cache_sha256": "514e8c723dbd3d88adea8cfe176c3b8c37c849a0812e31c53ae434e4554c4cf3",
+    "norm_fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f"
+  },
+  "parameters": 237519,
+  "best": {
+    "valid_mae": 0.3252845668559312,
+    "epoch": 2
+  },
+  "best_valid_mae_eval": 0.3252845725481748,
+  "final_valid_mae_eval": 0.325284566237533,
+  "best_train_mae_eval": 0.29982383311421146,
+  "final_train_mae_eval": 0.29982383543916513,
+  "W20": null,
+  "T100": 0.3991897317682742,
+  "curve": [
+    {
+      "epoch": 1,
+      "online_train_mae": 0.8093726771354676,
+      "valid_mae": 0.4730948966806172,
+      "lr": 0.0005410132480184673,
+      "seconds": 3.1869745671283454,
+      "steps": 79,
+      "probe": {
+        "term_mean": 0.0,
+        "term_std": 0.0,
+        "term_abs_mean": 0.0
+      }
+    },
+    {
+      "epoch": 2,
+      "online_train_mae": 0.35519671354293825,
+      "valid_mae": 0.3252845668559312,
+      "lr": 1e-05,
+      "seconds": 2.6919612830970436,
+      "steps": 79
+    }
+  ],
+  "step_logs": [
+    {
+      "step": 1,
+      "loss": 1.7833255529403687,
+      "grads": {
+        "trunk_only": {
+          "grad_norm": 22.595542907714844
+        }
+      }
+    },
+    {
+      "step": 2,
+      "loss": 2.3835084438323975,
+      "grads": {
+        "trunk_only": {
+          "grad_norm": 23.662799835205078
+        }
+      }
+    },
+    {
+      "step": 3,
+      "loss": 1.8267343044281006,
+      "grads": {
+        "trunk_only": {
+          "grad_norm": 31.597036361694336
+        }
+      }
+    },
+    {
+      "step": 4,
+      "loss": 2.5427112579345703,
+      "grads": {
+        "trunk_only": {
+          "grad_norm": 45.5351676940918
+        }
+      }
+    },
+    {
+      "step": 5,
+      "loss": 2.1025192737579346,
+      "grads": {
+        "trunk_only": {
+          "grad_norm": 42.78602981567383
+        }
+      }
+    }
+  ],
+  "wall_seconds": 5.918117786990479,
+  "gpu_hours": 0.0016439216074973552,
+  "git_head": "e94daa5c07f19cf99f7434b059d6e8dfb9111dbc",
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1",
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "git_commit": "e94daa5c07f19cf99f7434b059d6e8dfb9111dbc",
+    "git_dirty_tracked": false,
+    "round_id": "zinc-arch-discovery-v1",
+    "timestamp": "2026-10-29T01:26:06+0800"
+  },
+  "best_checkpoint_sha256": "1bbf7c09f52e7b6549b0b5128067484801bf7b12a781765bd086e8a7d92e481d",
+  "final_checkpoint_sha256": "c8173f8bb1109d25875e556e226a4ce00345d06fca8faa3e850ddf3ad063f3cb"
+}
