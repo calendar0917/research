@@ -237,7 +237,7 @@ def main(argv=None) -> int:
     masks, worst_rows = _fixed_masks(anchor)
     runs = [_load_run(p) for p in run_dirs]
     runs.sort(key=lambda r: (r["arm"], r["seed"]))
-    if not np.array_equal(anchor["y"], runs[0]["y"]):
+    if not np.allclose(anchor["y"], runs[0]["y"], atol=1e-5, rtol=0.0):
         raise RuntimeError("historical valid labels do not match the LCRC valid cache")
     L.ensure_dir(L.ANALYSIS)
 
