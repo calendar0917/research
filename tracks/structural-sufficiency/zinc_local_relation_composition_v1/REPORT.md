@@ -256,7 +256,7 @@ CPU G6（512 个 train 分子）：
 
 - R/N 的差异主要来自 zero-init 关系分支对 shared trunk 的早期扰动和常数偏置，而不是 content 的真实归属；因此对 seed 敏感、方向不稳定。
 - seed1 的 N 是六个新 run 中该 seed 最好的（0.078608），说明“mean-field + 常数校准”本身就能在某个 seed 上表现很好；R 没有稳定优势。
-- 两 seed 的 R−N 均值虽然数值上 ≤ −0.001，但“两个 seed 一致”不成立，不能作为机制证据。
+- 两 seed 的 R−N 均值虽然数值上 ≤ −0.001，但“两个 seed 一致”不成立，不能作为机制证据。即使把 R valid mean 0.079032 四舍五入为 0.079，`consistent R<N` 仍为 false；test 仍不读。
 
 **下一步决定：**
 
