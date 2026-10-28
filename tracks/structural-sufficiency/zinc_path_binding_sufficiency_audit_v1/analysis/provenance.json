@@ -1,0 +1,129 @@
+{
+  "round": "zinc-path-binding-sufficiency-audit-v1",
+  "feature_version": "pb-audit-v1-Treal-Tnull-D-type-control",
+  "device": "cpu",
+  "gpu_hours": 0.0,
+  "git": {
+    "commit": "71e51731b05ed330ff46d1784f12d3726d3e221e",
+    "short": "71e5173",
+    "branch": "main",
+    "dirty": false,
+    "tracked_dirty_files": []
+  },
+  "env": {
+    "python": "3.12.15",
+    "torch": "2.5.1+cu124",
+    "numpy": "2.1.3",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.44",
+    "machine": "x86_64",
+    "cpu_count": 16,
+    "torch_threads": 16,
+    "cuda_available": false,
+    "device": "cpu"
+  },
+  "protocol_sha256": "224367ffdd8f4b9f055552ae7a50e3bf337fb4a694924087ac0c6de5e3ccfb6f",
+  "data": {
+    "train": {
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_train.pt",
+      "sha256": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
+      "matches_frozen_config": true,
+      "content_sha256": "0582638114efe0360561f54687263a9892450f62e75b05437fe4794ab6c37062",
+      "n_molecules": 10000,
+      "n_atoms": 231664,
+      "n_bonds": 249279,
+      "n_paths": 692716,
+      "labels_object": "_Poison",
+      "meta_feature_version": "lcrc-v1-atom108-s1joint-s2typedpath",
+      "object_source": {
+        "source": "frozen_p3_object_cache",
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_train10k.pt",
+        "sha256": "14326a7ae6f9bb673a5c8b35c7d54171a4008f77edb702f0591d3d1f21338e8d"
+      }
+    },
+    "valid": {
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_valid.pt",
+      "sha256": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+      "matches_frozen_config": true,
+      "content_sha256": "ea3f85d7ce98a96e2a872d661372d74fa804574ee67bb5c8974d19063b3e0b43",
+      "n_molecules": 1000,
+      "n_atoms": 23083,
+      "n_bonds": 24846,
+      "n_paths": 69040,
+      "labels_object": "_Poison",
+      "meta_feature_version": "lcrc-v1-atom108-s1joint-s2typedpath",
+      "object_source": {
+        "source": "frozen_p3_object_cache",
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/objects_valid.pt",
+        "sha256": "61fca36a097f859b72a29e5f656405bff87a54ecf09f74b2727aa9663fdb853c"
+      }
+    }
+  },
+  "official_test_loaded": false,
+  "labels_used": false,
+  "normalisation": {
+    "fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f",
+    "source": "frozen_p3_prep_train10k"
+  },
+  "checkpoints": {
+    "lcrcA_s0": {
+      "name": "lcrcA_s0",
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s0/best.pt",
+      "sha256": "06340bcd9e45af03e887e706031b6ea14c719cac2b68ba716ce3d686bb21fdad",
+      "seed": 0,
+      "epoch": 476,
+      "valid_mae_frozen": 0.07658163924043765,
+      "parameters": 237519,
+      "config": {
+        "width": 64,
+        "stat_rank": 32,
+        "local_hidden": 192,
+        "atom_hidden": 128,
+        "atom_out": 96,
+        "bond_hidden": 160,
+        "bond_out": 96,
+        "rho_hidden": 64,
+        "rel_z": 32,
+        "rel_hidden": 128,
+        "rel_out": 24,
+        "rel_mlp_hidden": 48,
+        "rel_cat_dim": 8,
+        "n_rel_categories": 6
+      }
+    },
+    "lcrcA_s1": {
+      "name": "lcrcA_s1",
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s1/best.pt",
+      "sha256": "7225fe11fce0a24d98aa09fb92b6d721fa20481306b24e5c30c47cdfb8ebd212",
+      "seed": 1,
+      "epoch": 454,
+      "valid_mae_frozen": 0.08050378037145128,
+      "parameters": 237519,
+      "config": {
+        "width": 64,
+        "stat_rank": 32,
+        "local_hidden": 192,
+        "atom_hidden": 128,
+        "atom_out": 96,
+        "bond_hidden": 160,
+        "bond_out": 96,
+        "rho_hidden": 64,
+        "rel_z": 32,
+        "rel_hidden": 128,
+        "rel_out": 24,
+        "rel_mlp_hidden": 48,
+        "rel_cat_dim": 8,
+        "n_rel_categories": 6
+      }
+    }
+  },
+  "projections": {
+    "20261030": "e000831caaa6bb1a74441dbeeec1629a31a27809b5e4cedf9cb63b60f4764f35",
+    "20261031": "1b1c9c95dc2ba0feab24840293197bbc967d477f880994f4660960f3e12e51d0",
+    "20261032": "a70de76799fdb5d7105a98e56832ca7b0b5560a9f82f793333d0cd4077aefce6"
+  },
+  "projection_definition": "Normal(0, 1/d_in), numpy default_rng(seed), float64; Q/K over [a_v; b_e1] (192 -> 32), V over a_u (96 -> 32)",
+  "lrc_v1_config_reference": {
+    "train_content_sha256": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b",
+    "valid_content_sha256": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9"
+  }
+}

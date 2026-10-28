@@ -1,0 +1,63 @@
+{
+  "flat_factorized": {
+    "n_paths": 8000,
+    "flat_vs_factorized_max_abs": 3.552713678800501e-15,
+    "stats_vs_flat_max_abs": 2.3092638912203256e-14,
+    "flat_rms": 1.5929559209743385
+  },
+  "monte_carlo_independent_paths": {
+    "draws": 4000,
+    "per_n": {
+      "1": {
+        "mean_D_over_draws_max_abs_z": 0.0,
+        "rms_T_real": 5.688677836171763,
+        "rms_T_null": 5.688677836171763
+      },
+      "2": {
+        "mean_D_over_draws_max_abs_z": 0.039413386585178775,
+        "rms_T_real": 5.76524470095935,
+        "rms_T_null": 2.8659535011546584
+      },
+      "3": {
+        "mean_D_over_draws_max_abs_z": 0.03202412340186028,
+        "rms_T_real": 5.635156526015147,
+        "rms_T_null": 1.880385677374583
+      },
+      "5": {
+        "mean_D_over_draws_max_abs_z": 0.033534354030273154,
+        "rms_T_real": 5.675486462283735,
+        "rms_T_null": 1.1407384940221974
+      },
+      "8": {
+        "mean_D_over_draws_max_abs_z": 0.037883613080874394,
+        "rms_T_real": 5.6572702971271305,
+        "rms_T_null": 0.7080403782171824
+      },
+      "13": {
+        "mean_D_over_draws_max_abs_z": 0.04113617532630739,
+        "rms_T_real": 5.643924859761663,
+        "rms_T_null": 0.4340741144159413
+      }
+    }
+  },
+  "kernel_demo_within_cell_reassignment": {
+    "root_atom": 20089,
+    "n_paths": 6,
+    "cell_multiplicity": 6,
+    "cell": {
+      "cat189": 0,
+      "end63": 0,
+      "closure": 0
+    },
+    "content_agg_max_abs_diff_after_reassignment": 4.440892098500626e-16,
+    "T_max_abs_diff_after_reassignment": 7.756530420895169,
+    "T_rel_diff": 1.4448940194485531
+  },
+  "path_order_permutation_max_abs_diff": 7.105427357601002e-15,
+  "statements": {
+    "S1": "T_real is a statistic of the joint rooted path multiset (Q,K,Z are per-path functions of (a_v,b_e1,a_w,b_e2,a_u)); no information beyond the graph + frozen encoders is created.",
+    "S2": "sum_paths(q*k*z) ≡ sum_w q(v,w) ⊙ sum_u(k(w,u)*z(u)): flat and branch-first forms are the same function (float64 roundoff only).",
+    "S3": "content_agg is a rank-≤96 linear map of the (path-cat × endpoint-content) matrix, so within-cell re-pairings are invisible to X_v by construction; the demo realises one with T_max_abs_diff > 0.",
+    "S4": "X_v is therefore a non-injective compression of the path-content configuration. No claim is made that the same kernel is realised by two distinct ZINC molecules; realised irrecoverability is measured empirically."
+  }
+}
