@@ -8,7 +8,7 @@
 phase: phase2b
 current_round: ssrc-phase2b-zinc-v1
 status: PHASE2B_COMPLETE
-updated: 2026-10-28
+updated: 2026-10-29
 main_line: true
 latest_report: tracks/structural-sufficiency/results/phase2b/REPORT.md
 latest_verdict: NO_PRACTICAL_ADVANTAGE
@@ -2025,3 +2025,35 @@ latest_operator_round_headline: >-
   for the 0.060 target (needed -0.0094 test).  Next: label-count 10k->12k slope
   (0.75 A100-h, new pre-registration) or a coverage-aware training objective;
   do not tune K/gate/rank/readout further.
+
+latest_highorder_round: zinc_his_v0
+latest_highorder_round_verdict: RED
+latest_highorder_round_report: tracks/structural-sufficiency/zinc_his_v0/REPORT.md
+latest_highorder_round_decision: tracks/structural-sufficiency/zinc_his_v0/DECISION.md
+latest_highorder_round_protocol: tracks/structural-sufficiency/zinc_his_v0/PROTOCOL.md
+latest_highorder_round_budget: 0.843 A100-h of 2.0 (two parallel 600-epoch arms)
+latest_highorder_round_official_test: never loaded
+latest_highorder_round_headline: >-
+  HIS-v0 added one training-time penalty, lambda*mean(H_3^2) = 228.698*mean(H_3^2)
+  with lambda = 0.10*||g_L1||/||g_reg|| calibrated once before training, where H_3
+  is the pure third-order ANOVA residual of the 189-row path_emb read-out
+  (H = path_emb @ W_path^T, W_path = mlp.lins[0].weight[:, 320:352], slice proven
+  by forward-hook perturbation).  Paired same-seed same-recipe arms (REPLAY 0.074222
+  vs HIS 0.081594) give full-valid delta +0.007372 [+0.001172,+0.015076]; ordinary
+  +0.003096, r2-unseen-ordinary +0.006829, minus-row172 +0.005054, minus-worst10
+  +0.005337, W20 +0.007767; HIS wins on 474/1000 molecules; no slice improves.
+  The regulariser itself worked completely: ||H_3||/||H|| 0.6530 -> 0.00096, penalty
+  0.00892 -> 1.28e-9, and the <=2-order projection intervention that shifts REPLAY
+  predictions by 0.0819 shifts HIS by 2.6e-5.  In the unconstrained model the
+  third-order response is actively amplified during training (penalty 0.0089 ->
+  0.1441, H RMS 0.128 -> 0.581), so it carries real generalising signal rather than
+  memorised noise.  Partial bypass exists: the unpenalised path_u*path_v joint
+  channel keeps ||J_3||/||J|| = 0.65 and its ablation sensitivity rises 0.164 ->
+  0.297, while total category dependence falls 0.547 -> 0.367, so the optimiser
+  compensated but not losslessly.  Verdict RED; no seed 2, no lambda sweep, no
+  extra channel.  Lesson: the under-constrained object on this architecture is not
+  the third-order component of seen categories (33/189 codes carry 97.4% of path
+  tokens) but the 156 unseen codes and the 11,907 joint (path_cat, path_end63)
+  contexts of which only 159 are used -- i.e. support, not order.
+  Next: stop high-order-channel penalisation; if anything, test support-conditioned
+  shrinkage on unseen code/joint contexts under a new pre-registration.
