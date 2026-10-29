@@ -1,0 +1,130 @@
+{
+  "round": "zinc-compositional-research-tree-v1",
+  "created": "2026-10-30T01:20:25+0800",
+  "git_commit": "955b84418d872a60e41b41d6d14f1e175f3151ac",
+  "recipes": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "eval_batch_size": 256,
+    "loss": "l1_raw_y",
+    "total_updates": 47400
+  },
+  "parameter_cap": 500000,
+  "data_boundary": {
+    "official_test_loaded": false,
+    "official_valid_loaded": false,
+    "caches_used": [
+      "ad_train.pt (10k official-train)"
+    ],
+    "internal_split": "bjoc_predictive_bottleneck_v1/split_a.json",
+    "split_hashes": {
+      "fit8k": "1cf6a2ec73ff5dfc182d72a7d4cd0148d31f3ae2488ee9943132f1aa51d7455a",
+      "monitor": "d493dc7fc547e062ee16301bb42f350d5eb6d5d773215254c0d84098a410933b",
+      "locked": "9cbefd5e84cf7f4e8f7314280f35f636a0b18753a2f93a724b935e65a208cf6d"
+    },
+    "label_hashes": {
+      "cache": "tracks/structural-sufficiency/zinc_arch_discovery_v1/cache/ad_train.pt",
+      "full_labels_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+      "cache_meta_labels_sha256": "f0222d20f99c63e54c182a772824f34a570665e9d774eab5cf3407824435d30e",
+      "per_split": {
+        "fit8k": "b2fac17671cf633375f5bfe04dfe211cf0ff29e67d437e7c456f960cf36b1142",
+        "monitor": "ff63339a8b1d8d485de6e0f55b469c57455482e3e3823cfe8e44052da0767152",
+        "locked": "45567c6b5b4f223b59f3e2991520a66973cf2f323f2747c07cbb4e19003d71c4"
+      }
+    }
+  },
+  "historical_reference": {
+    "dcc_l_fit8k_monitor_mae": {
+      "0": 0.12315087235253304,
+      "1": 0.12777156261634082
+    },
+    "dcc_l_fit8k_monitor_mae_recomputed": {
+      "0": 0.1231508676847443,
+      "1": 0.1277715661926195
+    },
+    "dcc_l_fit8k_prediction_files": {
+      "0": {
+        "path": "tracks/structural-sufficiency/zinc_dccl_bottleneck_v1/runs/fit8k_s0/predictions_best_monitor.pt",
+        "sha256": "1b663d01744aa1598f908b13c94822756ae8e7050be37a6e877e12e0e1822dd8"
+      },
+      "1": {
+        "path": "tracks/structural-sufficiency/zinc_dccl_bottleneck_v1/runs/fit8k_s1/predictions_best_monitor.pt",
+        "sha256": "f9d868c36f1acc26239bed5831a0f44b656d592288f7a9d7ee5d400db664a2ae"
+      }
+    },
+    "note": "same split / same recipe / same regime (res A100-40GB) reference"
+  },
+  "fixed_worst10_monitor": {
+    "selection": "top-10 |error| of the frozen DCC-L fit8k seed-0 best-Monitor checkpoint, fixed before any run of this round",
+    "positions": [
+      238,
+      190,
+      105,
+      697,
+      405,
+      560,
+      278,
+      438,
+      698,
+      881
+    ],
+    "rows": [
+      2210,
+      1760,
+      1051,
+      6769,
+      4072,
+      5546,
+      2595,
+      4392,
+      6770,
+      8865
+    ],
+    "abs_errors": [
+      29.222415924072266,
+      16.623281002044678,
+      1.7081750631332397,
+      1.0740623474121094,
+      1.071708232164383,
+      0.8988072872161865,
+      0.8782711029052734,
+      0.8442373275756836,
+      0.8310999274253845,
+      0.7893829345703125
+    ],
+    "y": [
+      -42.036563873291016,
+      -21.907054901123047,
+      -3.3676319122314453,
+      -3.1148037910461426,
+      -1.3278871774673462,
+      -2.265014410018921,
+      -1.9602009057998657,
+      -5.138770580291748,
+      -1.1613322496414185,
+      -5.961065769195557
+    ]
+  },
+  "fixed_row172": {
+    "definition": "row at fixed position 172 of the frozen Monitor row list (identity by row number, never chosen by y)",
+    "position": 172,
+    "row": 1656,
+    "y": 1.9701679944992065
+  },
+  "monitor_slices": {
+    "n": 1000,
+    "n_ordinary": 926,
+    "n_tail": 74,
+    "n_any_unseen": 317,
+    "n_unseen_ordinary": 271,
+    "n_seen_ordinary": 655,
+    "fit8k_radius2_vocab_size": 11015,
+    "unseen_frac_mean": 0.030783446420551686
+  }
+}
