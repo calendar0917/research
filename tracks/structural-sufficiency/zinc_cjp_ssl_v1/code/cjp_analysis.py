@@ -392,6 +392,64 @@ def write_per_molecule(anchor, runs, path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# transfer / provenance checks
+# ---------------------------------------------------------------------------
+
+
+def transfer_checks(runs, pretext) -> dict[str, Any]:
+    out: dict[str, Any] = {"pretrain_to_supervised": {}, "cross_arm_module_sharing": {},
+                           "historical_ssl_checkpoint": {}}
+    for arm, prefix in PRETRAIN.items():
+        for seed in (0, 1):
+            r = runs.get((arm, seed))
+            p = pretext["runs"].get(f"{arm}_s{seed}")
+            if not r or not p:
+                continue
+            info = r["payload"].get("cjp", {}).get("model_info", {})
+            sup_local = info.get("module_sha256", {}).get("local")
+            out["pretrain_to_supervised"][f"{arm}_s{seed}"] = {
+                "pretrain_local_state_sha256": p["local_state"]["state_sha256"],
+                "supervised_local_module_sha256": sup_local,
+                "equal": bool(sup_local == p["local_state"]["state_sha256"]),
+                "pretrain_encoder_bit_identical": p["encoder_bit_identical"],
+            }
+    for seed in (0, 1):
+        present = {a: runs[(a, seed)]["payload"].get("cjp", {}).get("model_info", {})
+                   for a in ARMS if (a, seed) in runs}
+        if len(present) < 2:
+            continue
+        ref = present.get("A-REPLAY")
+        entry: dict[str, Any] = {}
+        for arm, info in present.items():
+            if arm == "A-REPLAY":
+                continue
+            entry[arm] = {
+                k: bool(info.get("module_sha256", {}).get(k) == ref.get("module_sha256", {}).get(k))
+                for k in ("atom_encoder", "bond_encoder", "f", "rho", "local")
+            } if ref else {}
+        if "MARG-SSL" in present and "JOINT-SSL" in present:
+            m = present["MARG-SSL"].get("module_sha256", {})
+            j = present["JOINT-SSL"].get("module_sha256", {})
+            entry["MARG_vs_JOINT"] = {
+                "only_local_differs": bool(m.get("local") != j.get("local")
+                                           and all(m.get(k) == j.get(k)
+                                                   for k in m if k != "local")),
+                "module_sha256": {"MARG": m, "JOINT": j},
+            }
+        out["cross_arm_module_sharing"][int(seed)] = entry
+    for seed in (0, 1):
+        try:
+            ssl = C.M.ssl_path(seed)
+            out["historical_ssl_checkpoint"][int(seed)] = {
+                "path": C.track_rel(ssl),
+                "sha256": C.sha256_file(ssl),
+            }
+        except Exception:  # pragma: no cover
+            pass
+    return out
+
+
+# ---------------------------------------------------------------------------
 # markdown summary (human-readable mirror of the JSON artifacts)
 # ---------------------------------------------------------------------------
 
@@ -482,6 +540,7 @@ def main(argv=None) -> int:
     pretext = load_pretrain()
     verdict = verdicts(pairs) if pairs["pairs"] else {}
     sup["verdicts"] = verdict
+    sup["transfer_checks"] = transfer_checks(runs, pretext)
     sup["coverage"]["n_runs"] = len(runs)
     sup["coverage"]["expected_runs"] = 8
     sup["all_runs_present"] = len(runs) == 8

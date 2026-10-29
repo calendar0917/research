@@ -1,0 +1,668 @@
+{
+  "primary_metric": "official valid 1000 raw-y MAE (lower is better)",
+  "official_test_loaded": false,
+  "rows": [
+    {
+      "arm": "A-REPLAY",
+      "seed": 0,
+      "run": "A_replay_s0",
+      "best_valid_mae": 0.07611644576354576,
+      "best_epoch": 419,
+      "W20": 0.07701973246684066,
+      "T100": 0.07704983466112753,
+      "final_valid_mae": 0.07706196629529587,
+      "train_mae_eval_at_best": 0.009361705748620443,
+      "train_mae_eval_at_final": 0.0014098247779300436,
+      "parameters": 237519,
+      "updates": 47400,
+      "epochs": 600,
+      "wall_seconds": 1225.9562750230543,
+      "gpu_hours": 0.3405434097286262,
+      "best_checkpoint_sha256": "036fbd9b32472ad3289c54ba7dee225f13409eb7c77e3f971ce36f547b1e275e",
+      "final_checkpoint_sha256": "d999269f58592e89c8e25a60b4e08faa38e13c4300f2f24180d1ec1479803516",
+      "init_state_sha256": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+      "group_mae": {
+        "full": 0.07611644576354576,
+        "minus_row172": 0.0701649680172075,
+        "minus_historical_lca_worst10": 0.06414068153764946,
+        "ordinary_y_gt_-3": 0.06449913817605891,
+        "tail_y_le_-3": 0.24322694721431792,
+        "r2_unseen_ordinary": 0.13426860869526044,
+        "r2_unseen": 0.1443547276305929,
+        "seen_ordinary": 0.04238909470166406,
+        "ring_rich_ge4_unseen": 0.22490471483139418,
+        "row172": 6.021642714355469
+      },
+      "cjp": {
+        "round": "zinc-conditional-joint-path-ssl-v1",
+        "mode": "replay",
+        "run_name": "A_replay_s0",
+        "seed": 0,
+        "device": "cuda:0",
+        "load_ssl": true,
+        "local_state_source": {
+          "replaced": false
+        },
+        "model_info": {
+          "arm": "A",
+          "seed": 0,
+          "config": {
+            "width": 64,
+            "stat_rank": 32,
+            "local_hidden": 192,
+            "atom_hidden": 128,
+            "atom_out": 96,
+            "bond_hidden": 160,
+            "bond_out": 96,
+            "rho_hidden": 64,
+            "rel_z": 32,
+            "rel_hidden": 128,
+            "rel_out": 24,
+            "rel_mlp_hidden": 48,
+            "rel_cat_dim": 8,
+            "n_rel_categories": 6
+          },
+          "ssl": {
+            "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+            "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+            "loaded_modules": [
+              "atom_encoder",
+              "bond_encoder"
+            ],
+            "junction_path_loaded": false,
+            "keys_available": [
+              "atom_encoder",
+              "bond_encoder",
+              "junction_encoder"
+            ],
+            "loaded": true
+          },
+          "local_state": {
+            "replaced": false,
+            "source": null,
+            "sha256": null,
+            "tensors": 0
+          },
+          "parameters": 237519,
+          "parameters_breakdown": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "local": 133645,
+            "f": 4225,
+            "rho": 10497
+          },
+          "module_sha256": {
+            "atom_encoder": "517b98739676f4022e7092a1b16bb82398e5ac6e0c0d699fb70f8a9fe64a2cc7",
+            "bond_encoder": "5936f0e7fe427f0764ef1eb1e55a3cc691dff4f8d0cfad9bbb8ee317e8a95743",
+            "f": "15966b0c5791396e6132d08acbe7361fe3ba0be4bc4c56312dc13aebce255660",
+            "local": "58160a29209475b7ec4a52f366c82fe3d077f915ecc0b43d089371ffc36fc1c1",
+            "rho": "a1b9ff803792ff325261df8f08a3788e76821f741431b3d4ec17dfa3f6d61f24"
+          },
+          "initial_state_sha256": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+          "has_junction_module": false,
+          "state_keys_with_junction": []
+        },
+        "deployed_parameters": 237519,
+        "supervised_recipe": {
+          "optimizer": "adamw",
+          "lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 1e-05,
+          "warmup_steps": 500,
+          "epochs": 600,
+          "batch_size": 128,
+          "valid_batch_size": 256,
+          "dropout": 0.0,
+          "grad_clip": 5.0,
+          "loss": "l1"
+        },
+        "trainer": "lc_train.train (frozen, imported unchanged)",
+        "trainer_sha256": "dff85caeb7f6f8caa3ee8f87d803331987d9cb369c71cfa4857a8f5afbaaeb01",
+        "checkpoint_excludes_pretext_head": true,
+        "official_test_loaded": false
+      },
+      "git_commit": "86a9eac2e5e74f3ca608b8111fb9b611494393a1"
+    },
+    {
+      "arm": "A-REPLAY",
+      "seed": 1,
+      "run": "A_replay_s1",
+      "best_valid_mae": 0.0823014162404547,
+      "best_epoch": 473,
+      "W20": 0.08245629031857243,
+      "T100": 0.08249611835827818,
+      "final_valid_mae": 0.08249497313325992,
+      "train_mae_eval_at_best": 0.004985098051349632,
+      "train_mae_eval_at_final": 0.0013604196692816913,
+      "parameters": 237519,
+      "updates": 47400,
+      "epochs": 600,
+      "wall_seconds": 1564.9862646791153,
+      "gpu_hours": 0.43471840685530977,
+      "best_checkpoint_sha256": "abe0bcbddd75115bfc18845583d60516fc30a8e5c81b0c74d6f71d5624fa6639",
+      "final_checkpoint_sha256": "d8b19ebbcce31b341f623b76d69660012b5a8c0859d0d57f5a16556f645e084c",
+      "init_state_sha256": "d9422859dc47bbe22496c7bb778f4ca69bd7afb49d704895db40bff7ec269a8e",
+      "group_mae": {
+        "full": 0.0823014162404547,
+        "minus_row172": 0.07055866425211892,
+        "minus_historical_lca_worst10": 0.06384189490137905,
+        "ordinary_y_gt_-3": 0.063507878487039,
+        "tail_y_le_-3": 0.3526392285395883,
+        "r2_unseen_ordinary": 0.1311252643523271,
+        "r2_unseen": 0.1498514377767564,
+        "seen_ordinary": 0.042079833670574454,
+        "ring_rich_ge4_unseen": 0.2893000006657774,
+        "row172": 11.81331065258789
+      },
+      "cjp": {
+        "round": "zinc-conditional-joint-path-ssl-v1",
+        "mode": "replay",
+        "run_name": "A_replay_s1",
+        "seed": 1,
+        "device": "cuda:0",
+        "load_ssl": true,
+        "local_state_source": {
+          "replaced": false
+        },
+        "model_info": {
+          "arm": "A",
+          "seed": 1,
+          "config": {
+            "width": 64,
+            "stat_rank": 32,
+            "local_hidden": 192,
+            "atom_hidden": 128,
+            "atom_out": 96,
+            "bond_hidden": 160,
+            "bond_out": 96,
+            "rho_hidden": 64,
+            "rel_z": 32,
+            "rel_hidden": 128,
+            "rel_out": 24,
+            "rel_mlp_hidden": 48,
+            "rel_cat_dim": 8,
+            "n_rel_categories": 6
+          },
+          "ssl": {
+            "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+            "sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a",
+            "loaded_modules": [
+              "atom_encoder",
+              "bond_encoder"
+            ],
+            "junction_path_loaded": false,
+            "keys_available": [
+              "atom_encoder",
+              "bond_encoder",
+              "junction_encoder"
+            ],
+            "loaded": true
+          },
+          "local_state": {
+            "replaced": false,
+            "source": null,
+            "sha256": null,
+            "tensors": 0
+          },
+          "parameters": 237519,
+          "parameters_breakdown": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "local": 133645,
+            "f": 4225,
+            "rho": 10497
+          },
+          "module_sha256": {
+            "atom_encoder": "33cdff6b5da26424da3101d66aef1f0790e163345667387922ea838cbe32e599",
+            "bond_encoder": "4c33884cea58204210577f11e6655454b0dd74190827f5cb68242a30f79ad1ba",
+            "f": "384c2f75d2af50127929c507b37a40c9e99489e966d4430ae9907d534e9b6fe5",
+            "local": "b2858c20c08dd3d9098e5d51c8ee5e90ed3b02bc286de1f711ca01726e4728d9",
+            "rho": "df652e9b4bcd3d8c0f7bda7319ab471d6037690b386cc17fa0e01d5b7a842c07"
+          },
+          "initial_state_sha256": "d9422859dc47bbe22496c7bb778f4ca69bd7afb49d704895db40bff7ec269a8e",
+          "has_junction_module": false,
+          "state_keys_with_junction": []
+        },
+        "deployed_parameters": 237519,
+        "supervised_recipe": {
+          "optimizer": "adamw",
+          "lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 1e-05,
+          "warmup_steps": 500,
+          "epochs": 600,
+          "batch_size": 128,
+          "valid_batch_size": 256,
+          "dropout": 0.0,
+          "grad_clip": 5.0,
+          "loss": "l1"
+        },
+        "trainer": "lc_train.train (frozen, imported unchanged)",
+        "trainer_sha256": "dff85caeb7f6f8caa3ee8f87d803331987d9cb369c71cfa4857a8f5afbaaeb01",
+        "checkpoint_excludes_pretext_head": true,
+        "official_test_loaded": false
+      },
+      "git_commit": "86a9eac2e5e74f3ca608b8111fb9b611494393a1"
+    },
+    {
+      "arm": "MARG-SSL",
+      "seed": 0,
+      "run": "A_margssl_s0",
+      "best_valid_mae": 0.0884190503960533,
+      "best_epoch": 442,
+      "W20": 0.08905964071204653,
+      "T100": 0.08909318748203804,
+      "final_valid_mae": 0.0890414557037293,
+      "train_mae_eval_at_best": 0.007307994340592996,
+      "train_mae_eval_at_final": 0.0014700411537312903,
+      "parameters": 237519,
+      "updates": 47400,
+      "epochs": 600,
+      "wall_seconds": 1233.6352174789645,
+      "gpu_hours": 0.34267644929971236,
+      "best_checkpoint_sha256": "8a2cb5658f2808aa3dc9a61255eeb8806e7c2d2e5107cfb0cd13bfe816e35cd8",
+      "final_checkpoint_sha256": "08161d8960ee09c8ac8589000b0e3e54ccbd62fb786328b34fc25fd7b8e38171",
+      "init_state_sha256": "18d15ce75d65378286e5341a35d8a9fc5f3b6a407521b339b8a1fa24319c1587",
+      "group_mae": {
+        "full": 0.0884190503960533,
+        "minus_row172": 0.07774988825232318,
+        "minus_historical_lca_worst10": 0.07126568053955339,
+        "ordinary_y_gt_-3": 0.0642152468894857,
+        "tail_y_le_-3": 0.4365814546828331,
+        "r2_unseen_ordinary": 0.13533901153707079,
+        "r2_unseen": 0.1771189961157513,
+        "seen_ordinary": 0.04167602569834958,
+        "ring_rich_ge4_unseen": 0.3190421250033146,
+        "row172": 10.746912031982422
+      },
+      "cjp": {
+        "round": "zinc-conditional-joint-path-ssl-v1",
+        "mode": "margssl",
+        "run_name": "A_margssl_s0",
+        "seed": 0,
+        "device": "cuda:0",
+        "load_ssl": true,
+        "local_state_source": {
+          "path": "tracks/structural-sufficiency/zinc_cjp_ssl_v1/runs/pretrain_marg_s0/local_state.pt",
+          "sha256_file": "13fbcf5c73e033d8b8cc05412a2b0401334764fcdde8e9cebdb6ddc9431b704f",
+          "arm": "MARG",
+          "seed": 0,
+          "updates": 7560,
+          "state_sha256": "fef44d0673d3c22fb25607ee1c0cde07118aaa0131fe845acb9351d397be8bd8"
+        },
+        "model_info": {
+          "arm": "A",
+          "seed": 0,
+          "config": {
+            "width": 64,
+            "stat_rank": 32,
+            "local_hidden": 192,
+            "atom_hidden": 128,
+            "atom_out": 96,
+            "bond_hidden": 160,
+            "bond_out": 96,
+            "rho_hidden": 64,
+            "rel_z": 32,
+            "rel_hidden": 128,
+            "rel_out": 24,
+            "rel_mlp_hidden": 48,
+            "rel_cat_dim": 8,
+            "n_rel_categories": 6
+          },
+          "ssl": {
+            "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+            "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+            "loaded_modules": [
+              "atom_encoder",
+              "bond_encoder"
+            ],
+            "junction_path_loaded": false,
+            "keys_available": [
+              "atom_encoder",
+              "bond_encoder",
+              "junction_encoder"
+            ],
+            "loaded": true
+          },
+          "local_state": {
+            "replaced": true,
+            "source": "cjp_ssl_pretrain_local_state",
+            "sha256": "fef44d0673d3c22fb25607ee1c0cde07118aaa0131fe845acb9351d397be8bd8",
+            "tensors": 15,
+            "keys": [
+              "close_emb.weight",
+              "end_emb.weight",
+              "joint_proj.bias",
+              "joint_proj.weight",
+              "mlp.lins.0.bias",
+              "mlp.lins.0.weight",
+              "mlp.lins.1.bias",
+              "mlp.lins.1.weight",
+              "nbr_emb.weight",
+              "norm.bias",
+              "norm.weight",
+              "path_emb.weight",
+              "path_gate.weight",
+              "path_u.weight",
+              "path_v.weight"
+            ]
+          },
+          "parameters": 237519,
+          "parameters_breakdown": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "local": 133645,
+            "f": 4225,
+            "rho": 10497
+          },
+          "module_sha256": {
+            "atom_encoder": "517b98739676f4022e7092a1b16bb82398e5ac6e0c0d699fb70f8a9fe64a2cc7",
+            "bond_encoder": "5936f0e7fe427f0764ef1eb1e55a3cc691dff4f8d0cfad9bbb8ee317e8a95743",
+            "f": "15966b0c5791396e6132d08acbe7361fe3ba0be4bc4c56312dc13aebce255660",
+            "local": "81790726fe9168a0271043147257f589284013989fac593096387f5392aa1308",
+            "rho": "a1b9ff803792ff325261df8f08a3788e76821f741431b3d4ec17dfa3f6d61f24"
+          },
+          "initial_state_sha256": "18d15ce75d65378286e5341a35d8a9fc5f3b6a407521b339b8a1fa24319c1587",
+          "has_junction_module": false,
+          "state_keys_with_junction": []
+        },
+        "deployed_parameters": 237519,
+        "supervised_recipe": {
+          "optimizer": "adamw",
+          "lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 1e-05,
+          "warmup_steps": 500,
+          "epochs": 600,
+          "batch_size": 128,
+          "valid_batch_size": 256,
+          "dropout": 0.0,
+          "grad_clip": 5.0,
+          "loss": "l1"
+        },
+        "trainer": "lc_train.train (frozen, imported unchanged)",
+        "trainer_sha256": "dff85caeb7f6f8caa3ee8f87d803331987d9cb369c71cfa4857a8f5afbaaeb01",
+        "checkpoint_excludes_pretext_head": true,
+        "official_test_loaded": false
+      },
+      "git_commit": "ab48d7c0ccc333c6d3841ac88fb869d5dce60b85"
+    },
+    {
+      "arm": "JOINT-SSL",
+      "seed": 0,
+      "run": "A_jointssl_s0",
+      "best_valid_mae": 0.08351438375685663,
+      "best_epoch": 505,
+      "W20": 0.08376345441950253,
+      "T100": 0.08380353765090695,
+      "final_valid_mae": 0.08379205170919886,
+      "train_mae_eval_at_best": 0.005170754334772937,
+      "train_mae_eval_at_final": 0.0015148839222150854,
+      "parameters": 237519,
+      "updates": 47400,
+      "epochs": 600,
+      "wall_seconds": 1595.513276081998,
+      "gpu_hours": 0.44319813224499943,
+      "best_checkpoint_sha256": "59f33be5bb12fe0b766707e034e17fb66558bfe74d3e1ed381f23b514c4b89b6",
+      "final_checkpoint_sha256": "1dfcbf9aa159673d02d278bbeccc744cb9d614aa0de60883ed756d556a3fcdb7",
+      "init_state_sha256": "2e9922a2aedb549da9d5fee2a69beb7c1fc318f490bb69ef156ee3b23368d5db",
+      "group_mae": {
+        "full": 0.08351438375685663,
+        "minus_row172": 0.07251733815360399,
+        "minus_historical_lca_worst10": 0.06523403850633065,
+        "ordinary_y_gt_-3": 0.06620868098481426,
+        "tail_y_le_-3": 0.3324502620931584,
+        "r2_unseen_ordinary": 0.14559902410437253,
+        "r2_unseen": 0.1617136875622507,
+        "seen_ordinary": 0.04104976943284159,
+        "ring_rich_ge4_unseen": 0.3349616718562044,
+        "row172": 11.06956294140625
+      },
+      "cjp": {
+        "round": "zinc-conditional-joint-path-ssl-v1",
+        "mode": "jointssl",
+        "run_name": "A_jointssl_s0",
+        "seed": 0,
+        "device": "cuda:0",
+        "load_ssl": true,
+        "local_state_source": {
+          "path": "tracks/structural-sufficiency/zinc_cjp_ssl_v1/runs/pretrain_joint_s0/local_state.pt",
+          "sha256_file": "57dfed91e7ef4ebf9d6a37ed1a0cbcdc9be34174afb6dcddc8d98e35ea222c26",
+          "arm": "JOINT",
+          "seed": 0,
+          "updates": 7560,
+          "state_sha256": "eb201994de03d6245975f4be5dbd235250b570392fbbe0da3091822bd4872e84"
+        },
+        "model_info": {
+          "arm": "A",
+          "seed": 0,
+          "config": {
+            "width": 64,
+            "stat_rank": 32,
+            "local_hidden": 192,
+            "atom_hidden": 128,
+            "atom_out": 96,
+            "bond_hidden": 160,
+            "bond_out": 96,
+            "rho_hidden": 64,
+            "rel_z": 32,
+            "rel_hidden": 128,
+            "rel_out": 24,
+            "rel_mlp_hidden": 48,
+            "rel_cat_dim": 8,
+            "n_rel_categories": 6
+          },
+          "ssl": {
+            "source": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+            "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+            "loaded_modules": [
+              "atom_encoder",
+              "bond_encoder"
+            ],
+            "junction_path_loaded": false,
+            "keys_available": [
+              "atom_encoder",
+              "bond_encoder",
+              "junction_encoder"
+            ],
+            "loaded": true
+          },
+          "local_state": {
+            "replaced": true,
+            "source": "cjp_ssl_pretrain_local_state",
+            "sha256": "eb201994de03d6245975f4be5dbd235250b570392fbbe0da3091822bd4872e84",
+            "tensors": 15,
+            "keys": [
+              "close_emb.weight",
+              "end_emb.weight",
+              "joint_proj.bias",
+              "joint_proj.weight",
+              "mlp.lins.0.bias",
+              "mlp.lins.0.weight",
+              "mlp.lins.1.bias",
+              "mlp.lins.1.weight",
+              "nbr_emb.weight",
+              "norm.bias",
+              "norm.weight",
+              "path_emb.weight",
+              "path_gate.weight",
+              "path_u.weight",
+              "path_v.weight"
+            ]
+          },
+          "parameters": 237519,
+          "parameters_breakdown": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "local": 133645,
+            "f": 4225,
+            "rho": 10497
+          },
+          "module_sha256": {
+            "atom_encoder": "517b98739676f4022e7092a1b16bb82398e5ac6e0c0d699fb70f8a9fe64a2cc7",
+            "bond_encoder": "5936f0e7fe427f0764ef1eb1e55a3cc691dff4f8d0cfad9bbb8ee317e8a95743",
+            "f": "15966b0c5791396e6132d08acbe7361fe3ba0be4bc4c56312dc13aebce255660",
+            "local": "3427a1232a36870896a7c494f30cdbc1c8e7ffc187ec5a0278d8266889f8e15f",
+            "rho": "a1b9ff803792ff325261df8f08a3788e76821f741431b3d4ec17dfa3f6d61f24"
+          },
+          "initial_state_sha256": "2e9922a2aedb549da9d5fee2a69beb7c1fc318f490bb69ef156ee3b23368d5db",
+          "has_junction_module": false,
+          "state_keys_with_junction": []
+        },
+        "deployed_parameters": 237519,
+        "supervised_recipe": {
+          "optimizer": "adamw",
+          "lr": 0.001,
+          "min_lr": 1e-05,
+          "weight_decay": 1e-05,
+          "warmup_steps": 500,
+          "epochs": 600,
+          "batch_size": 128,
+          "valid_batch_size": 256,
+          "dropout": 0.0,
+          "grad_clip": 5.0,
+          "loss": "l1"
+        },
+        "trainer": "lc_train.train (frozen, imported unchanged)",
+        "trainer_sha256": "dff85caeb7f6f8caa3ee8f87d803331987d9cb369c71cfa4857a8f5afbaaeb01",
+        "checkpoint_excludes_pretext_head": true,
+        "official_test_loaded": false
+      },
+      "git_commit": "ab48d7c0ccc333c6d3841ac88fb869d5dce60b85"
+    }
+  ],
+  "coverage": {
+    "A-REPLAY": {
+      "seeds": [
+        0,
+        1
+      ],
+      "mean_best_valid_mae": 0.07920893100200023
+    },
+    "MARG-SSL": {
+      "seeds": [
+        0
+      ],
+      "mean_best_valid_mae": 0.0884190503960533
+    },
+    "JOINT-SSL": {
+      "seeds": [
+        0
+      ],
+      "mean_best_valid_mae": 0.08351438375685663
+    },
+    "n_runs": 4,
+    "expected_runs": 8
+  },
+  "verdicts": {
+    "MARG-SSL": {
+      "vs_A_REPLAY": {
+        "seed0_delta": 0.01230260463250753,
+        "seed1_delta": null,
+        "seed_mean_delta": 0.01230260463250753,
+        "both_seeds_improve": false,
+        "seed_mean_gain_ge_0.003": false,
+        "ordinary_delta_seed_mean": -0.00028389128657321805,
+        "minus_row172_delta_seed_mean": 0.007584920235115694,
+        "r2_unseen_ordinary_delta_seed_mean": 0.0010704028418103437
+      }
+    },
+    "JOINT-SSL": {
+      "vs_A_REPLAY": {
+        "seed0_delta": 0.0073979379933108895,
+        "seed1_delta": null,
+        "seed_mean_delta": 0.0073979379933108895,
+        "both_seeds_improve": false,
+        "seed_mean_gain_ge_0.003": false,
+        "ordinary_delta_seed_mean": 0.0017095428087553534,
+        "minus_row172_delta_seed_mean": 0.0023523701363965055,
+        "r2_unseen_ordinary_delta_seed_mean": 0.011330415409112062
+      }
+    },
+    "JOINT_vs_MARG": {
+      "seed0_delta": -0.004904666639196642,
+      "seed1_delta": null,
+      "seed_mean_delta": -0.004904666639196642,
+      "same_direction": false,
+      "seed_mean_gain_ge_0.002": true,
+      "ordinary_delta_seed_mean": 0.001993434095328572,
+      "r2_unseen_ordinary_delta_seed_mean": 0.010260012567301718
+    },
+    "CONCLUSION_A_LOCAL_SSL_SUPPORTED": false,
+    "CONCLUSION_A_arms": [],
+    "CONCLUSION_B_JOINT_BINDING_SUPPORTED": false,
+    "CONCLUSION_C_MARG_ONLY_GAIN": false,
+    "CONCLUSION_D_NO_GAIN": true,
+    "JOINT_PRETEXT_LEARNED_NO_DOWNSTREAM_GAIN": false,
+    "thresholds": {
+      "A_seed_mean_gain": 0.003,
+      "B_seed_mean_gain": 0.002,
+      "unseen_not_worse_tolerance": 0.002,
+      "note": "diagnostic thresholds; full-VM paired numbers are always reported"
+    }
+  },
+  "transfer_checks": {
+    "pretrain_to_supervised": {
+      "MARG-SSL_s0": {
+        "pretrain_local_state_sha256": "81790726fe9168a0271043147257f589284013989fac593096387f5392aa1308",
+        "supervised_local_module_sha256": "81790726fe9168a0271043147257f589284013989fac593096387f5392aa1308",
+        "equal": true,
+        "pretrain_encoder_bit_identical": true
+      },
+      "JOINT-SSL_s0": {
+        "pretrain_local_state_sha256": "3427a1232a36870896a7c494f30cdbc1c8e7ffc187ec5a0278d8266889f8e15f",
+        "supervised_local_module_sha256": "3427a1232a36870896a7c494f30cdbc1c8e7ffc187ec5a0278d8266889f8e15f",
+        "equal": true,
+        "pretrain_encoder_bit_identical": true
+      }
+    },
+    "cross_arm_module_sharing": {
+      "0": {
+        "MARG-SSL": {
+          "atom_encoder": true,
+          "bond_encoder": true,
+          "f": true,
+          "rho": true,
+          "local": false
+        },
+        "JOINT-SSL": {
+          "atom_encoder": true,
+          "bond_encoder": true,
+          "f": true,
+          "rho": true,
+          "local": false
+        },
+        "MARG_vs_JOINT": {
+          "only_local_differs": true,
+          "module_sha256": {
+            "MARG": {
+              "atom_encoder": "517b98739676f4022e7092a1b16bb82398e5ac6e0c0d699fb70f8a9fe64a2cc7",
+              "bond_encoder": "5936f0e7fe427f0764ef1eb1e55a3cc691dff4f8d0cfad9bbb8ee317e8a95743",
+              "f": "15966b0c5791396e6132d08acbe7361fe3ba0be4bc4c56312dc13aebce255660",
+              "local": "81790726fe9168a0271043147257f589284013989fac593096387f5392aa1308",
+              "rho": "a1b9ff803792ff325261df8f08a3788e76821f741431b3d4ec17dfa3f6d61f24"
+            },
+            "JOINT": {
+              "atom_encoder": "517b98739676f4022e7092a1b16bb82398e5ac6e0c0d699fb70f8a9fe64a2cc7",
+              "bond_encoder": "5936f0e7fe427f0764ef1eb1e55a3cc691dff4f8d0cfad9bbb8ee317e8a95743",
+              "f": "15966b0c5791396e6132d08acbe7361fe3ba0be4bc4c56312dc13aebce255660",
+              "local": "3427a1232a36870896a7c494f30cdbc1c8e7ffc187ec5a0278d8266889f8e15f",
+              "rho": "a1b9ff803792ff325261df8f08a3788e76821f741431b3d4ec17dfa3f6d61f24"
+            }
+          }
+        }
+      }
+    },
+    "historical_ssl_checkpoint": {
+      "0": {
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+        "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+      },
+      "1": {
+        "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+        "sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a"
+      }
+    }
+  },
+  "all_runs_present": false
+}
