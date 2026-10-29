@@ -304,7 +304,17 @@ def _delta(pairs, first, second, seed=None, group="full") -> float | None:
     return None if c is None else c["group_mean_delta"][group]
 
 
-def verdicts(pairs) -> dict[str, Any]:
+def _pretext_diag_ce(pretext, arm: str, seed: int) -> Optional[float]:
+    p = (pretext or {}).get("runs", {}).get(f"{arm}_s{seed}")
+    if not p:
+        return None
+    try:
+        return float(p["diagnostics_after"]["diag"]["molecule_mean_ce"])
+    except Exception:  # pragma: no cover
+        return None
+
+
+def verdicts(pairs, pretext=None) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for arm in ("MARG-SSL", "JOINT-SSL"):
         d0 = _delta(pairs, arm, "A-REPLAY", 0)
@@ -362,8 +372,22 @@ def verdicts(pairs) -> dict[str, Any]:
     out["CONCLUSION_C_MARG_ONLY_GAIN"] = bool(
         "MARG-SSL" in local_supported and not out["CONCLUSION_B_JOINT_BINDING_SUPPORTED"])
     out["CONCLUSION_D_NO_GAIN"] = bool(not local_supported)
+    joint_ce = [_pretext_diag_ce(pretext, "JOINT-SSL", s) for s in (0, 1)]
+    marg_ce = [_pretext_diag_ce(pretext, "MARG-SSL", s) for s in (0, 1)]
+    joint_ce_mean = (None if any(v is None for v in joint_ce)
+                     else float(sum(joint_ce) / 2))
+    marg_ce_mean = (None if any(v is None for v in marg_ce)
+                    else float(sum(marg_ce) / 2))
+    out["JOINT_vs_MARG"].update({
+        "joint_pretext_ce_seed_mean": joint_ce_mean,
+        "marg_pretext_ce_seed_mean": marg_ce_mean,
+        "joint_pretext_ce_better": bool(joint_ce_mean is not None
+                                        and marg_ce_mean is not None
+                                        and joint_ce_mean < marg_ce_mean),
+    })
     out["JOINT_PRETEXT_LEARNED_NO_DOWNSTREAM_GAIN"] = bool(
-        joint["seed_mean_delta"] is not None and joint["seed_mean_delta"] >= -0.002)
+        joint["seed_mean_delta"] is not None and joint["seed_mean_delta"] >= -0.002
+        and out["JOINT_vs_MARG"]["joint_pretext_ce_better"])
     out["thresholds"] = {
         "A_seed_mean_gain": 0.003, "B_seed_mean_gain": 0.002,
         "unseen_not_worse_tolerance": 0.002,
@@ -538,7 +562,7 @@ def main(argv=None) -> int:
     sup = supervised_summary(anchor, masks, runs)
     pairs = paired_comparisons(runs, masks)
     pretext = load_pretrain()
-    verdict = verdicts(pairs) if pairs["pairs"] else {}
+    verdict = verdicts(pairs, pretext) if pairs["pairs"] else {}
     sup["verdicts"] = verdict
     sup["transfer_checks"] = transfer_checks(runs, pretext)
     sup["coverage"]["n_runs"] = len(runs)

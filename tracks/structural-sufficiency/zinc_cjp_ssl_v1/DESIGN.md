@@ -4,6 +4,8 @@
 **目录:** `tracks/structural-sufficiency/zinc_cjp_ssl_v1/`
 **状态:** 实现/门禁在 GPU 之前冻结（`configs/cjp_ssl_v1.json`）
 
+> 结果与判决见 `REPORT.md` 与 `NEXT_DECISION.md`。本文件保持冻结，未因结果修改。
+
 本文件忠实记录任务书冻结的科学方案与实现层决定；不重写研究目标，不追加
 teacher/student、contrastive loss、codebook、外部数据、额外图模块或注意力层。
 
