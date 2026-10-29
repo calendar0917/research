@@ -1,0 +1,21 @@
+{
+  "gate_as_registered": "cpu_checks.json -> formal.C4_l1_control_matches_frozen_path (600-epoch curve equality to 1e-5 vs runs/lcrcA_s0/curve.csv)",
+  "gate_as_executed": "FAILED: max valid diff 0.3585 (epoch 9), then a persistent ~0.0026 offset in the selected valid MAE",
+  "why_it_cannot_pass": "the frozen trainer cannot reproduce the 2026-10-28 600-epoch curve bit-exactly on this GPU: identical code, identical seed, identical data order, identical torch/CUDA build, same device. The residual is CUDA execution nondeterminism (atomic index-add ordering) amplified by the unstable first ~10 epochs.",
+  "control_experiment": "zpr_divergence.py: the frozen trainer replayed twice on the same GPU with identical code, seed, data order, init hash and torch/CUDA build",
+  "control_result": {
+    "frozen_replay_vs_replay_max_valid_diff": 0.42714053087879444,
+    "frozen_replay_vs_history_max_valid_diff": 0.39727437102154367,
+    "G0_vs_history_max_valid_diff": 0.35853669730306137
+  },
+  "corrected_criterion": {
+    "frozen_inputs_identical": true,
+    "first_batch_order_identical": true,
+    "frozen_trainer_is_bit_reproducible": false,
+    "control_diverges_no_more_than_frozen_replay": true
+  },
+  "corrected_c4_pass": true,
+  "reasoning": "the control arm is a valid L1 control if it diverges from the historical run no more than the frozen trainer diverges from itself; the pre-registered 1e-5 criterion was unachievable on this execution regime, not violated by the control arm",
+  "consequence_for_the_decision": "any |delta| below the replay band cannot be attributed to the loss change; this is recorded before the test read and does not change the verdict",
+  "created": "2026-10-29T19:53:49+0800"
+}

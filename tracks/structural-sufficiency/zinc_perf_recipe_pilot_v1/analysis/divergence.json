@@ -1,87 +1,134 @@
 {
   "round": "zinc-perf-recipe-pilot-v1",
   "purpose": "C4 equivalence control: frozen trainer vs itself vs the historical curve",
-  "device": "cpu",
+  "device": "cuda:0",
   "environment": {
-    "python": "3.12.15",
+    "python": "3.12.14",
     "torch": "2.5.1+cu124",
     "torch_cuda": "12.4",
     "torch_geometric": "2.6.1",
-    "cuda_available": false,
-    "cuda_device_count": 0,
-    "gpu_names": [],
-    "git_commit": "1f7ada75bb18f61ccfb54fcec9f89332b332d681",
-    "git_dirty_tracked": true,
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "git_commit": "22ccbb64bd44bb75addff72bf2efb81288e076aa",
+    "git_dirty_tracked": false,
     "round_id": "zinc-arch-discovery-v1",
-    "timestamp": "2026-10-29T19:19:01+0800"
+    "timestamp": "2026-10-29T19:46:29+0800"
   },
-  "git_commit": "1f7ada75bb18f61ccfb54fcec9f89332b332d681",
-  "epochs": 3,
+  "git_commit": "22ccbb64bd44bb75addff72bf2efb81288e076aa",
+  "epochs": 12,
   "historical_curve": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s0/curve.csv",
   "comparisons": {
     "frozen_a_vs_history": {
-      "max_valid_diff": 0.2551118515683338,
-      "max_valid_diff_epoch": 3,
-      "mean_valid_diff": 0.20934397998421142,
-      "median_valid_diff": 0.20919278195779772,
-      "max_online_diff": 0.21676647882461542,
+      "max_valid_diff": 0.39727437102154367,
+      "max_valid_diff_epoch": 4,
+      "mean_valid_diff": 0.11441291053865764,
+      "median_valid_diff": 0.09025224656471986,
+      "max_online_diff": 0.13368872017860411,
       "first_epoch_valid_diff_gt_1e-5": 1,
       "per_epoch_valid_diff": [
-        0.16372730642650274,
-        0.20919278195779772,
-        0.2551118515683338
+        0.11553759693074966,
+        0.09244511041510856,
+        0.17708482869341974,
+        0.39727437102154367,
+        0.05459613519080453,
+        0.08805938271433117,
+        0.04210635822080075,
+        0.04936735102522649,
+        0.06352029304299503,
+        0.12177965274080632,
+        0.10877728149294852,
+        0.06240656497515737
       ]
     },
     "frozen_b_vs_history": {
-      "max_valid_diff": 0.2551118515683338,
+      "max_valid_diff": 0.17708069982565944,
       "max_valid_diff_epoch": 3,
-      "mean_valid_diff": 0.20934397998421142,
-      "median_valid_diff": 0.20919278195779772,
-      "max_online_diff": 0.21676647882461542,
+      "mean_valid_diff": 0.09508707831961023,
+      "median_valid_diff": 0.0972257132139057,
+      "max_online_diff": 0.13247619550228118,
       "first_epoch_valid_diff_gt_1e-5": 1,
       "per_epoch_valid_diff": [
-        0.16372730642650274,
-        0.20919278195779772,
-        0.2551118515683338
+        0.11553648751322176,
+        0.09244505461025987,
+        0.17708069982565944,
+        0.029866159857250774,
+        0.10913476962130514,
+        0.1318608447982697,
+        0.08050324383564292,
+        0.06687651466845998,
+        0.06080824438855051,
+        0.11609125761315225,
+        0.10200637181755154,
+        0.0588352912859991
       ]
     },
     "frozen_a_vs_frozen_b": {
-      "max_valid_diff": 0.0,
-      "max_valid_diff_epoch": 1,
-      "mean_valid_diff": 0.0,
-      "median_valid_diff": 0.0,
-      "max_online_diff": 0.0,
-      "first_epoch_valid_diff_gt_1e-5": null,
+      "max_valid_diff": 0.42714053087879444,
+      "max_valid_diff_epoch": 4,
+      "mean_valid_diff": 0.05911057235580908,
+      "median_valid_diff": 0.006229652401525523,
+      "max_online_diff": 0.07583509907722474,
+      "first_epoch_valid_diff_gt_1e-5": 4,
       "per_epoch_valid_diff": [
-        0.0,
-        0.0,
-        0.0
+        1.1094175279002805e-06,
+        5.5804848686502595e-08,
+        4.128867760300192e-06,
+        0.42714053087879444,
+        0.16373090481210967,
+        0.043801462083938536,
+        0.03839688561484217,
+        0.01750916364323349,
+        0.002712048654444521,
+        0.005688395127654067,
+        0.00677090967539698,
+        0.003571273689158272
       ]
     },
     "frozen_a_vs_G0": {
-      "max_valid_diff": 0.25511270059179514,
-      "max_valid_diff_epoch": 3,
-      "mean_valid_diff": 0.2093442157777026,
-      "median_valid_diff": 0.2091927095530554,
-      "max_online_diff": 0.2167665537834167,
+      "max_valid_diff": 0.42205699034605637,
+      "max_valid_diff_epoch": 9,
+      "mean_valid_diff": 0.16748135005198614,
+      "median_valid_diff": 0.12256555335130542,
+      "max_online_diff": 0.29373188199996947,
       "first_epoch_valid_diff_gt_1e-5": 1,
       "per_epoch_valid_diff": [
-        0.16372723718825727,
-        0.2091927095530554,
-        0.25511270059179514
+        0.1155375276925042,
+        0.09244503801036624,
+        0.17708567771688105,
+        0.3972756560306298,
+        0.11887606392346789,
+        0.1225309412786737,
+        0.20566344658483285,
+        0.03459259988274427,
+        0.42205699034605637,
+        0.12260016542393715,
+        0.054096278881654136,
+        0.14701581485208587
       ]
     },
     "G0_vs_history": {
-      "max_valid_diff": 8.490234613134362e-07,
-      "max_valid_diff_epoch": 3,
-      "mean_valid_diff": 3.3022214969887404e-07,
-      "median_valid_diff": 7.240474231284821e-08,
-      "max_online_diff": 7.495880127716958e-08,
-      "first_epoch_valid_diff_gt_1e-5": null,
+      "max_valid_diff": 0.35853669730306137,
+      "max_valid_diff_epoch": 9,
+      "mean_valid_diff": 0.06464442207945588,
+      "median_valid_diff": 0.024623154853412377,
+      "max_online_diff": 0.20887945013046266,
+      "first_epoch_valid_diff_gt_1e-5": 5,
       "per_epoch_valid_diff": [
         6.923824547033774e-08,
         7.240474231284821e-08,
-        8.490234613134362e-07
+        8.490234613134362e-07,
+        1.2850090861382668e-06,
+        0.06427992873266336,
+        0.03447155856434253,
+        0.1635570883640321,
+        0.014774751142482223,
+        0.35853669730306137,
+        0.0008205126831308251,
+        0.05468100261129438,
+        0.0846092498769285
       ]
     }
   },
@@ -91,12 +138,12 @@
     "G0": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e"
   },
   "first_batch_rows_equal": true,
-  "frozen_replay_a_wall_seconds": 11.586717165000664,
-  "frozen_replay_b_wall_seconds": 10.898086051000064,
+  "frozen_replay_a_wall_seconds": 35.63921197806485,
+  "frozen_replay_b_wall_seconds": 37.299978722818196,
   "conclusion_rule": {
     "frozen_trainer_is_deterministic": "max(frozen_a vs frozen_b) < 1e-5 over the horizon",
     "divergence_is_hardware_nondeterminism": "the frozen trainer's own two replays diverge from each other and from history by the same magnitude as the L1 control arm",
     "same_basin": "late-epoch online-train MAE agrees to ~1e-4 while the valid curve keeps a persistent offset (chaotic amplification of a 1e-6 perturbation)"
   },
-  "created": "2026-10-29T19:19:01+0800"
+  "created": "2026-10-29T19:46:29+0800"
 }
