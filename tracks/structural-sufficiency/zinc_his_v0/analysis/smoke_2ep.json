@@ -1,0 +1,130 @@
+{
+  "round": "zinc-his-v0",
+  "created": "2026-10-29T13:19:30+0800",
+  "git_commit": "f9447d40edcac54514b90553c160445256ee8076",
+  "device": "cuda:0",
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1",
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "git_commit": "f9447d40edcac54514b90553c160445256ee8076",
+    "git_dirty_tracked": false,
+    "round_id": "zinc-arch-discovery-v1",
+    "timestamp": "2026-10-29T13:19:30+0800"
+  },
+  "epochs": 2,
+  "equivalence": {
+    "same_initial_state": true,
+    "same_first_batch_rows": true,
+    "same_warmup_steps": true,
+    "same_updates": true,
+    "frozen_vs_replay_state_dict_bitwise": false,
+    "frozen_vs_replay_max_abs_param_drift": 4.29004430770874e-05,
+    "replay_vs_his_max_abs_param_drift": 0.11859112977981567,
+    "replay_vs_his_state_dict_differ": true,
+    "same_parameters": true,
+    "frozen_vs_replay_max_abs_valid_gap": 1.2353658676023116e-06,
+    "frozen_vs_replay_max_abs_online_gap": 2.5362968447684153e-07,
+    "execution_tolerance": {
+      "loss": 1e-05,
+      "param": 0.001
+    },
+    "frozen_vs_replay_equal_within_tolerance": true,
+    "lr_trajectory_matches": true
+  },
+  "per_epoch": [
+    {
+      "epoch": 1,
+      "frozen_valid": 0.4730960060050129,
+      "replay_valid": 0.4730947706391453,
+      "his_valid": 0.46461271488195055,
+      "frozen_minus_replay_valid": 1.2353658676023116e-06,
+      "frozen_minus_replay_online": 1.399517060018951e-07,
+      "lr_frozen": 0.0005410132480184673,
+      "lr_replay": 0.0005410132480184673,
+      "lr_his": 0.0005410132480184673,
+      "h3_ratio_frozen": null,
+      "h3_ratio_replay": 0.6573542479466751,
+      "h3_ratio_his": 0.49882726887107276,
+      "penalty_his": 0.0009036383708007634,
+      "seconds_frozen": 2.8752193299587816,
+      "seconds_replay": 2.476824875921011,
+      "seconds_his": 2.6910000280477107
+    },
+    {
+      "epoch": 2,
+      "frozen_valid": 0.32528435549786083,
+      "replay_valid": 0.325283612555766,
+      "his_valid": 0.3291692863888456,
+      "frozen_minus_replay_valid": 7.429420948446008e-07,
+      "frozen_minus_replay_online": -2.5362968447684153e-07,
+      "lr_frozen": 1e-05,
+      "lr_replay": 1e-05,
+      "lr_his": 1e-05,
+      "h3_ratio_frozen": null,
+      "h3_ratio_replay": 0.6575297837133761,
+      "h3_ratio_his": 0.4595929900050644,
+      "penalty_his": 0.0005185098270885646,
+      "seconds_frozen": 2.38187859300524,
+      "seconds_replay": 2.4644190538674593,
+      "seconds_his": 2.71421248302795
+    }
+  ],
+  "regulariser": {
+    "lambda": 228.6982356901754,
+    "lambda_check": {
+      "recomputed_lambda": 228.6982356901754,
+      "rel_diff_vs_frozen": 0.0,
+      "tolerance": 0.0001,
+      "rel_diff_vs_calibration_file": 0.0,
+      "recomputed_g_l1": 24.734704971313477,
+      "recomputed_g_reg": 0.010815433226525784,
+      "first_batch_rows_match": true
+    },
+    "penalty_first_step": 0.008922379463911057,
+    "penalty_last_step": 0.0005187647184357047,
+    "penalty_min": 0.0005187647184357047,
+    "penalty_max": 0.008922379463911057,
+    "penalty_finite_and_positive": true,
+    "penalty_decreased": true,
+    "replay_has_no_penalty": true,
+    "gradient_audit_his": {
+      "grad_tensors": 31,
+      "nonzero_grad_tensors": 31,
+      "all_grad_finite": true,
+      "loss_finite": true,
+      "total_loss_finite": true,
+      "penalty": 0.008922379463911057,
+      "affected_grad_norm_after_backward": 24.845500946044922
+    },
+    "gradient_audit_replay": {
+      "grad_tensors": 31,
+      "nonzero_grad_tensors": 31,
+      "all_grad_finite": true,
+      "loss_finite": true,
+      "total_loss_finite": true,
+      "penalty": null,
+      "affected_grad_norm_after_backward": 24.734704971313477
+    }
+  },
+  "projection": {
+    "replay_steady_seconds_per_epoch": 2.4644190538674593,
+    "his_steady_seconds_per_epoch": 2.71421248302795,
+    "projected_gpu_hours_replay": 0.48901365199126295,
+    "projected_gpu_hours_his": 0.5368907259136904,
+    "projected_parallel_wall_hours": 0.5368907259136904,
+    "budget_hard_gpu_hours": 2.0,
+    "smoke_total_seconds": 25.09032187005505,
+    "projected_total_gpu_hours": 1.0259043779049533,
+    "within_budget": true
+  },
+  "official_test_loaded": false,
+  "smoke_pass": true,
+  "note": "2-epoch smoke on res (pool res-gpu1, A100-SXM4-40GB, driver 550.163.01). Frozen trainer vs new-runner REPLAY differ only by CUDA reduction-order nondeterminism (1.2e-6 valid MAE, 4.3e-5 parameter drift); the HIS arm differs from REPLAY by 0.119 in max parameter drift and drops the H_3 ratio from 0.657 to 0.460 in two epochs."
+}
