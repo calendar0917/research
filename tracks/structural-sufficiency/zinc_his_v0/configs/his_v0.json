@@ -1,6 +1,6 @@
 {
   "round": "zinc-his-v0",
-  "status": "frozen_before_gpu",
+  "status": "frozen_before_gpu_training",
   "created": "2026-10-30T00:00:00+0800",
   "git_commit_at_freeze": "",
   "task": "HIS-v0 — explicit-structure third-order interaction constraint, seed-0 exploratory screen",
@@ -33,7 +33,7 @@
     "rescaling_invariance": "penalty(E, W) = penalty(cE, W/c); checked in his_cpu_checks G4"
   },
   "his": {
-    "lambda": null,
+    "lambda": 228.6982356901754,
     "lambda_rule": "lambda = 0.10 * ||g_L1|| / ||g_reg|| over the affected parameters (path_emb.weight + the 32 W_path columns)",
     "lambda_calibration_file": "tracks/structural-sufficiency/zinc_his_v0/analysis/lambda_calibration.json",
     "lambda_guards": {
@@ -47,7 +47,19 @@
     "calibration_uses_valid_or_test": false,
     "calibration_optimizer_steps": 0,
     "frozen_for_entire_training": true,
-    "selection_by_valid_forbidden": true
+    "selection_by_valid_forbidden": true,
+    "lambda_freeze": {
+      "calibrated_on": "res (NVIDIA A100-SXM4-40GB, driver 550.163.01, torch 2.5.1+cu124), pool res-gpu0",
+      "calibration_git_commit": "05ba7a284e8cfabee274b640025f3c8be983d658",
+      "calibration_file_sha256": "57497504ba027fb69480d5c788b8ef3785ee5937e2f736fbd648a626f13952f3",
+      "g_l1_affected_norm": 24.734704971313477,
+      "g_reg_affected_norm": 0.010815433226525784,
+      "l1_loss_on_first_batch": 1.7833255529403687,
+      "penalty_at_init": 0.008922379463911057,
+      "h3_ratio_at_init": 0.6577273055271158,
+      "reproducibility": "3 identical repeats in-process (max rel dev 0.0); identical to the CPU preview to 7 significant digits",
+      "frozen_before_any_valid_or_training_result": true
+    }
   },
   "data": {
     "source": "official PyG ZINC subset=True train 10000 / valid 1000 (test never constructed)",
