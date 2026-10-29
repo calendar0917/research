@@ -1,0 +1,176 @@
+{
+  "round": "zinc-edit-conditioned-local-contribution-v1",
+  "status": "frozen_before_formal_gpu",
+  "created": "2026-10-29T22:10:00+0800",
+  "data": {
+    "source": "official PyG ZINC subset=True (train 10000 / valid 1000 / test 1000)",
+    "train_cache": {
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_train.pt",
+      "sha256": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2"
+    },
+    "valid_cache": {
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_valid.pt",
+      "sha256": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe"
+    },
+    "norm": {
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/analysis/norm.json",
+      "sha256": "f9cee436216935a967f1d759d69cd75f2aacc511bc86e67b7e6dd3378ff37d72"
+    },
+    "ssl_s0": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+    },
+    "ssl_s1": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s1.pt",
+      "sha256": "ff8d6474896c274407a1433658b95c79561fbc9a1deb1f9885bd862b4e8b7a1a"
+    },
+    "valid_anchor": {
+      "path": "tracks/structural-sufficiency/zinc_performance_search_v1/analysis/per_molecule_valid.csv",
+      "sha256": "aeae0b926f7ba746bfab27142c3d72d6643d8f6e636d5ad40ec1a238e3ade90f"
+    },
+    "fixed_worst10": {
+      "path": "tracks/structural-sufficiency/zinc_generalization_audit_v1/analysis/fixed_worst10.json",
+      "sha256": "4c6081109a18cd0fbb4e5dec1184ea150d40c7ff918f836e947e6a909cd04b92"
+    },
+    "official_test_loaded": false,
+    "valid_used_for_checkpoint_selection": true
+  },
+  "phase0": {
+    "pairs_path": "tracks/structural-sufficiency/zinc_edit_conditioned_local_contribution_v1/analysis/edit_pairs.json",
+    "pairs_sha256": "d9ddf89cb1edf577e56ec15c82f333d4d44baa0ace1a73e0fac6b824d870a476",
+    "gate_path": "tracks/structural-sufficiency/zinc_edit_conditioned_local_contribution_v1/analysis/phase0_gate.json",
+    "gate_sha256": "9c0199dcd56d04699cd5f8b50ce7d4638a00d2c4f4c8916129ce663438b00bc2",
+    "verdict": "PASS_COMPOSITION_SIGNAL_ONLY",
+    "n_pairs": 350,
+    "n_bodies": 317,
+    "n_edit_classes_ge3_bodies": 29,
+    "strict_full_substituent_classes_ge3_bodies": 0,
+    "primary_low_order_mae": 0.3469497860682591,
+    "primary_rel_improvement_vs_zero": 0.608356614697161,
+    "zero_baseline_mae": 0.8858818994223007,
+    "combined_class_mae": 0.3842841205466301,
+    "class_permutation_mean_mae": 0.37642996764649533,
+    "class_permutation_min_mae": 0.35889165230271913,
+    "class_permutation_p_one_sided": 0.8118811881188119,
+    "class_identity_supported": false
+  },
+  "phase2": {
+    "cpu_checks_path": "tracks/structural-sufficiency/zinc_edit_conditioned_local_contribution_v1/analysis/cpu_checks.json",
+    "cpu_checks_sha256": "34492c1a956f372240218f2ea4d3e3202b73e9330a392e97702d1e62facf6c06",
+    "all_pass": true,
+    "n_checks": 12,
+    "unit_tests": "10 passed",
+    "official_test_loaded": false
+  },
+  "matching": {
+    "min_body_atoms": 5,
+    "max_sub_atoms": 12,
+    "locality_condition": "|sub_i| + |sub_j| < min(|body_i|, |body_j|)",
+    "body_source": "larger side of a bridge",
+    "edit_class": "unordered pair of rooted radius-1 typed signatures",
+    "verify_body_isomorphism": true,
+    "reject_rdkit_failure": true,
+    "reject_identical_molecules": true,
+    "reject_isomorphic_substituents": true,
+    "pair_representative": "min region, then max min-body, then lexicographic body key"
+  },
+  "model": {
+    "backbone": "frozen LCRC-A (atom/bond SSL encoders, LocalContent, f, rho, global33)",
+    "backbone_params": 237519,
+    "base_input_dim": 337,
+    "base_center_dim": 21,
+    "base_r1_dim": 63,
+    "base_r2_path_dim": 189,
+    "base_r2_end_dim": 63,
+    "base_r2_close_dim": 1,
+    "base_hidden": 32,
+    "base_activation": "SiLU",
+    "base_last_layer": "zero-init weight and bias",
+    "base_params": 10849,
+    "total_params": 248368,
+    "param_cap": 500000,
+    "arms": {
+      "REAL": "f_base sees center + radius-1 typed adjacency only (84 dims); radius-2 dims identically zero",
+      "NULL": "f_base sees the full 337-dim representation including radius-2 typed path/end/closure counts"
+    },
+    "shared_modules": "atom_encoder, bond_encoder, local, f_context, rho, buffers",
+    "relation_head": "absent",
+    "junction_path": "absent",
+    "message_passing_layers": 0,
+    "ema": false,
+    "ensemble": false,
+    "teacher": false
+  },
+  "pair_loss": {
+    "formula": "L1(molecule prediction, molecule y) + 0.2 * L1(pred_i - pred_j, y_i - y_j)",
+    "coefficient": 0.2,
+    "pairs_per_step": 8,
+    "sampling": "torch.randint(0, n_pairs, (8,)) from Generator(seed+202), once per update",
+    "new_labels": false,
+    "independent_supervision": false,
+    "pair_batch_molecules": 16
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 0.00001,
+    "weight_decay": 0.00001,
+    "warmup_steps": 500,
+    "epochs": 600,
+    "batch_size": 128,
+    "valid_batch_size": 256,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "loss": "raw_y_l1_plus_pair_l1",
+    "checkpoint_selection": "strict argmin official-valid MAE, ties -> earlier epoch",
+    "data_order": "torch.randperm(10000, Generator(seed+101)) reshuffled per epoch",
+    "ema": false,
+    "soup": false,
+    "seed_averaging": false,
+    "expected_steps_per_epoch": 79,
+    "expected_total_updates": 47400
+  },
+  "valid_slices": {
+    "full": 1000,
+    "ordinary_y_gt_-3": 935,
+    "r2_unseen_ordinary": 225,
+    "seen_ordinary": 710,
+    "minus_row172": 999,
+    "minus_fixed_worst10": 990,
+    "tail_y_le_-3": 65,
+    "row172": 172
+  },
+  "seed0_gate": {
+    "real_full_valid_max": 0.075,
+    "real_minus_null_full_max": -0.003,
+    "real_minus_null_unseen_ordinary_max": -0.005,
+    "not_worse_tolerance": 0.001,
+    "not_worse_slices": ["ordinary", "minus_row172"],
+    "window_direction": "REAL W20 < NULL W20 and REAL T100 < NULL T100",
+    "base_path_active": "zeroing f_base at best REAL checkpoint changes valid MAE by >= 1e-4 and base contribution std > 0"
+  },
+  "seed1_gate": {
+    "enabled_only_if_seed0_all_pass": true,
+    "same_direction_slices": ["full", "r2_unseen_ordinary"],
+    "label_only_after_both_seeds": "COMPOSITION_TRANSFER_CANDIDATE"
+  },
+  "budget": {
+    "phase0_cpu_gpu_hours": 0.0,
+    "seed0_and_smoke_cap_gpu_hours": 2.0,
+    "seed1_cap_gpu_hours": 2.0,
+    "hard_cap_gpu_hours": 4.0,
+    "max_formal_trajectories": 4,
+    "max_concurrent_gpus": 2
+  },
+  "test_policy": "never construct, load, predict or score the official test split",
+  "decision_labels": [
+    "STOP_INSUFFICIENT_EDIT_SUPPORT",
+    "STOP_NO_TRANSFER_SIGNAL",
+    "PASS_COMPOSITION_SIGNAL_ONLY",
+    "PASS_TRANSFER_SIGNAL",
+    "STOP_CPU_GATE_FAILED",
+    "STOP_BUDGET",
+    "STOP_NO_COMPOSITION_GAIN",
+    "COMPOSITION_TRANSFER_CANDIDATE"
+  ]
+}

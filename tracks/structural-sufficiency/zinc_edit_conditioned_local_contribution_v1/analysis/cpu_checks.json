@@ -1,0 +1,191 @@
+{
+  "round": "zinc-edit-conditioned-local-contribution-v1",
+  "created": "2026-10-29T22:38:35+0800",
+  "git_commit": "deb8cc4272a8665d362aa5174bbcd77527e36ffd",
+  "environment": {
+    "python": "3.12.15",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1",
+    "cuda_available": false,
+    "cuda_device_count": 0,
+    "gpu_names": [],
+    "git_commit": "deb8cc4272a8665d362aa5174bbcd77527e36ffd",
+    "git_dirty_tracked": false,
+    "round_id": "zinc-arch-discovery-v1",
+    "timestamp": "2026-10-29T22:38:35+0800"
+  },
+  "all_pass": true,
+  "n_checks": 12,
+  "checks": {
+    "C1_independent_reference": {
+      "pass": true,
+      "n_molecules": 14,
+      "n_atoms": 332,
+      "max_abs_diff": 0.0,
+      "max_int_diff": 0,
+      "note": "naive loop over atom_type/bond_index/bond_type vs cache-derived base_features"
+    },
+    "C2_synthetic_radius1_invariance": {
+      "pass": true,
+      "radius1_block_identical": true,
+      "radius2_block_changed": true,
+      "real_radius2_input_zero": true,
+      "real_fbase_target_exactly_equal": true,
+      "null_fbase_target_differs": true,
+      "f_context_target_max_abs_diff": 0.12050972878932953,
+      "note": "atom 0 radius-1 environment fixed; a second-shell atom type and bond order change"
+    },
+    "C3_invariance": {
+      "pass": true,
+      "max_abs_atom_renumber": 4.76837158203125e-07,
+      "max_abs_bond_direction": 2.384185791015625e-07,
+      "max_abs_batch_split": 5.960464477539063e-08,
+      "max_abs_molecule_order": 0.0,
+      "tolerance": 1e-05
+    },
+    "C4_parameter_identity": {
+      "pass": true,
+      "parameters": 248368,
+      "breakdown": {
+        "atom_encoder": 26336,
+        "bond_encoder": 62816,
+        "local": 133645,
+        "f_context": 4225,
+        "rho": 10497,
+        "f_base": 10849,
+        "backbone": 237519,
+        "total": 248368
+      },
+      "cap": 500000,
+      "same_count": true,
+      "same_breakdown": true,
+      "within_cap": true,
+      "full_state_equal": true,
+      "state_hash_equal": true,
+      "base_last_layer_zero": true
+    },
+    "C5_initial_lcrc_equivalence": {
+      "pass": true,
+      "max_abs_real_vs_lcrcA": 0.0,
+      "max_abs_null_vs_lcrcA": 0.0,
+      "shared_backbone_tensors_equal": true,
+      "note": "f_base is exactly zero at step 0; this equality is intentional, not the trained model"
+    },
+    "C6_gradients_and_paths": {
+      "pass": true,
+      "arms": {
+        "REAL": {
+          "step1": {
+            "loss_mol": 1.6053695678710938,
+            "loss_pair": 0.6764082312583923,
+            "pair_target_std": 1.0494929552078247,
+            "base_last_grad_norm": 1.3297855854034424,
+            "base_first_grad_norm": 0.0,
+            "base_r2_col_grad_max_abs": 0.0,
+            "base_r1_col_grad_max_abs": 0.0,
+            "f_context_grad_norm": 21.843324661254883,
+            "rho_grad_norm": 0.9502238035202026,
+            "all_finite": true
+          },
+          "step2": {
+            "base_r1_col_grad_max_abs": 0.009361271746456623,
+            "base_r2_col_grad_max_abs": 0.0,
+            "base_last_grad_norm": 2.9746973514556885
+          },
+          "pair_only": {
+            "base_last_grad_norm": 0.6290050148963928,
+            "f_context_grad_norm": 11.050552368164062
+          },
+          "pass": true
+        },
+        "NULL": {
+          "step1": {
+            "loss_mol": 1.6053695678710938,
+            "loss_pair": 0.6764082312583923,
+            "pair_target_std": 1.0494929552078247,
+            "base_last_grad_norm": 1.5456089973449707,
+            "base_first_grad_norm": 0.0,
+            "base_r2_col_grad_max_abs": 0.0,
+            "base_r1_col_grad_max_abs": 0.0,
+            "f_context_grad_norm": 21.843324661254883,
+            "rho_grad_norm": 0.9502238035202026,
+            "all_finite": true
+          },
+          "step2": {
+            "base_r1_col_grad_max_abs": 0.009487401694059372,
+            "base_r2_col_grad_max_abs": 0.011544504202902317,
+            "base_last_grad_norm": 3.4902751445770264
+          },
+          "pair_only": {
+            "base_last_grad_norm": 0.8325825929641724,
+            "f_context_grad_norm": 11.050552368164062
+          },
+          "pass": true
+        }
+      },
+      "note": "step 1 audits the zero-init last layer; step 2 audits the first layer after the last layer is non-zero"
+    },
+    "C7_checkpoint_roundtrip": {
+      "pass": true,
+      "arms": {
+        "REAL": {
+          "max_abs_diff": 0.0
+        },
+        "NULL": {
+          "max_abs_diff": 0.0
+        }
+      },
+      "tolerance": 1e-06
+    },
+    "C8_split_isolation": {
+      "pass": true,
+      "pair_rows_in_train": true,
+      "no_self_pairs": true,
+      "code_refs_to_lc_test": [],
+      "valid_rows": 1000,
+      "pair_payload_labels_read": false,
+      "pair_payload_official_test_loaded": false,
+      "note": "the frozen LCRC track has a post-hoc lc_test.pt on disk; ECLC never references it"
+    },
+    "C9_pair_loss_algebra": {
+      "pass": true,
+      "additive_identity_abs_diff": 1.1920928955078125e-07,
+      "pair_loss_offset_diff": 0.0,
+      "molecule_loss_offset_delta": 3.6999998092651367,
+      "pair_vs_molecule_grad_cosine": -0.215591162443161,
+      "grad_norm_ratio": 0.5029931664466858,
+      "squared_pair_quadratic_identity": 0.0,
+      "note": "pair loss uses only y_i,y_j; it is invariant to a common offset and is not a substitute for molecule L1"
+    },
+    "C10_mechanism_difference": {
+      "pass": true,
+      "max_abs_fbase_diff": 0.3783910870552063,
+      "max_abs_fcontext_diff": 0.0,
+      "max_abs_full_pred_diff": 6.0256452560424805,
+      "fraction_atoms_with_radius2_content": 1.0
+    },
+    "C11_post_step_non_equivalence": {
+      "pass": true,
+      "arms": {
+        "REAL": {
+          "max_abs_vs_lcrcA": 25.271127700805664,
+          "max_abs_zero_base_ablation": 0.04535484313964844,
+          "pass": true
+        },
+        "NULL": {
+          "max_abs_vs_lcrcA": 25.274564743041992,
+          "max_abs_zero_base_ablation": 0.04879188537597656,
+          "pass": true
+        }
+      },
+      "note": "the zero-base equality holds only at initialisation; after one step f_base is active"
+    },
+    "C12_streams_identical": {
+      "pass": true,
+      "data_order_first_1000_sha": 2631760808,
+      "pair_stream_first_1000_sha": 3290709025,
+      "note": "the stream is a pure function of seed, not of arm"
+    }
+  }
+}
