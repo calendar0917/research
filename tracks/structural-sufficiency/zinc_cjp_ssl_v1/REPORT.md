@@ -39,7 +39,7 @@
 | MARG = CE on `flatten(L_marg)`；JOINT = CE on raw `flatten(L)`；同 head/优化器/算力 | 同一 `PretextHead`，仅 logits 变换不同 | G9（2×2 XOR 反例嵌入真实 21×3 空间 + 投影残差 ≤1e-6；MARG/JOINT 共享 init hash `a3e8d8ad…`） |
 | 损失 = 分子内选中路径平均 CE，再对有路径分子平均 | `cjp_models.per_molecule_loss` | 与任务书公式一致；空路径分子被排除（本次 0 个） |
 | AdamW 1e-3 常数、WD 1e-5、batch 128、clip 5、7,560 updates、dropout 0、FP32 | `PRETRAIN_RECIPE`，逐项断言 | 4 个预训练 run 均 7,560 updates；`recipe` 快照在 payload |
-| 导出最后一步 LocalContent | `local_state.pt` + `pretext_head_state.pt`，附 SHA | 4/4 导出；监督阶段 `module_sha256.local` == 预训练 `local_state.state_sha256`（见 §6 转移校验） |
+| 导出最后一步 LocalContent | `local_state.pt` + `pretext_head_state.pt`，附 SHA | 4/4 导出；监督阶段 `module_sha256.local` == 预训练 `local_state.state_sha256`（见 §11.4 转移校验） |
 | 四个监督 arm，仅 `local` 状态不同，其余初始化一致 | `cjp_sup.py` 临时 patch `lc_models.build_model`，其余直接调用冻结 `lc_train.train` | `cross_arm_module_sharing`：encoders/f/rho 在 replay/marg/joint 间完全相同；MARG vs JOINT 仅 `local` 不同；数据顺序在 4 arm 间逐 seed 完全一致（`first_batch_rows` 相等） |
 | 冻结 `lc_train.train` 配方（600 ep / 47,400 upd / batch128 / AdamW 1e-3→1e-5 / warmup500 / cosine / WD1e-5 / clip5 / 每 epoch full valid / best-MAE checkpoint） | 不复制、直接 import 冻结模块（G0 校验其 SHA） | 8/8 run `epochs=600, updates=47400`；lr 曲线与冻结实现一致；`git_commit` 记录在 payload |
 | 从不加载 official test | 无 test 路径 | `official_test_loaded: false`（全部 JSON） |
@@ -48,7 +48,7 @@
 
 ## 2. CPU 门禁（G0–G12 + lineage）
 
-`analysis/cpu_checks.json` → `all_pass: true`；`uv run pytest -q tracks/structural-sufficiency/zinc_cjp_ssl_v1/tests` → **13 passed**（46.9 s）。
+`analysis/cpu_checks.json` → `all_pass: true`；门禁 pytest **13 passed**（46.9 s）；含结果级校验的完整测试套件 **19 passed**。
 
 | gate | 内容 | 结果 |
 |---|---|---|
