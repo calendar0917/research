@@ -1,0 +1,293 @@
+{
+  "round": "zinc-perf-recipe-pilot-v1",
+  "label": "TEST_AS_DEV_DESCRIPTIVE",
+  "descriptive_only": true,
+  "test_is_spent": true,
+  "read_count": 1,
+  "official_test_loaded_before_freeze": false,
+  "read_policy": "one read, after checkpoint selection and the \u00a72.4 decision were frozen; no beta, EMA, epoch or architecture choice follows from it",
+  "git_commit": "fe5d60f5e9648cca3812e731627290aadf325f04",
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1",
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "git_commit": "fe5d60f5e9648cca3812e731627290aadf325f04",
+    "git_dirty_tracked": false,
+    "round_id": "zinc-arch-discovery-v1",
+    "timestamp": "2026-10-29T19:55:40+0800"
+  },
+  "n_test": 1000,
+  "test_cache": {
+    "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_test.pt",
+    "source": "built_from_official_pyg_test"
+  },
+  "label_source": "lc_data.official_labels('test') (terminal reader)",
+  "checkpoints": {
+    "G0_online": {
+      "path": "tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/runs/G0_s0/best.pt",
+      "sha256": "f75ad5e946d0c9cad95b3b6b9c6e3db23dd416eab84d2a5359ab3159ff969231",
+      "valid_mae_replay": 0.07923492552438983,
+      "valid_mae_recorded": 0.07923490979993948,
+      "abs_diff": 1.5724450352916364e-08,
+      "parameters": 237519
+    },
+    "G0_ema": {
+      "path": "tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/runs/G0_s0/ema_best.pt",
+      "sha256": "c3f7c15d3afba6054feaad02fc1e40d392121f43a0d43ca0148cddcbd52349a7",
+      "valid_mae_replay": 0.07966401365498314,
+      "valid_mae_recorded": 0.07966401746968041,
+      "abs_diff": 3.814697266402156e-09,
+      "parameters": 237519
+    },
+    "G1_online": {
+      "path": "tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/runs/G1_s0/best.pt",
+      "sha256": "347a65f13e8d509fd0ef29645189030e283ed6110edef339c5abe8980edfa576",
+      "valid_mae_replay": 0.08221474818704883,
+      "valid_mae_recorded": 0.08221474295674125,
+      "abs_diff": 5.230307575931903e-09,
+      "parameters": 237519
+    },
+    "G1_ema": {
+      "path": "tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/runs/G1_s0/ema_best.pt",
+      "sha256": "57f4f190ad0cc0dc25db85ddf610c6b56bf4815e0556df8ff5d10053efe98d01",
+      "valid_mae_replay": 0.08246559318626533,
+      "valid_mae_recorded": 0.08246559788758168,
+      "abs_diff": 4.70131635010862e-09,
+      "parameters": 237519
+    }
+  },
+  "grouping_rule_selfcheck": {
+    "n_valid": 1000,
+    "n_unseen_rule": 251,
+    "n_unseen_anchor": 251,
+    "agreement": 1.0,
+    "exact": true
+  },
+  "group_info": {
+    "n": 1000,
+    "n_ordinary": 923,
+    "n_tail": 77,
+    "n_r2_unseen": 244,
+    "n_r2_unseen_ordinary": 218,
+    "n_seen_ordinary": 705,
+    "mean_atoms": 23.117
+  },
+  "results": {
+    "G0_online": {
+      "test_mae": 0.06702971517201513,
+      "test_rmse": 0.13884274906827293,
+      "test_p90_ae": 0.13911904096603395,
+      "test_max_ae": 1.5302753448486328,
+      "pearson_r": 0.9976415756969819,
+      "groups": {
+        "full": 0.06702971517201513,
+        "ordinary": 0.06261458233269264,
+        "r2_unseen": 0.12629438960184267,
+        "r2_unseen_ordinary": 0.12193637866518298,
+        "seen_ordinary": 0.044271104885199176,
+        "tail": 0.1199539698563613
+      },
+      "worst10_rows": [
+        702,
+        298,
+        402,
+        159,
+        527,
+        510,
+        622,
+        648,
+        822,
+        342
+      ],
+      "worst10_ae": [
+        1.5302753448486328,
+        1.5205854177474976,
+        1.2448348999023438,
+        1.0556390397250652,
+        0.9337083101272583,
+        0.7985489368438721,
+        0.6676945686340332,
+        0.6553126573562622,
+        0.6418932676315308,
+        0.615472674369812
+      ]
+    },
+    "G0_ema": {
+      "test_mae": 0.06694026962574572,
+      "test_rmse": 0.13894473991010212,
+      "test_p90_ae": 0.13610798716545106,
+      "test_max_ae": 1.528667688369751,
+      "pearson_r": 0.9976361842064148,
+      "groups": {
+        "full": 0.06694026962574572,
+        "ordinary": 0.0625287925053634,
+        "r2_unseen": 0.125644449303003,
+        "r2_unseen_ordinary": 0.1212953503794729,
+        "seen_ordinary": 0.04435700581521324,
+        "tail": 0.11982070315967906
+      },
+      "worst10_rows": [
+        702,
+        298,
+        402,
+        159,
+        527,
+        510,
+        622,
+        648,
+        822,
+        342
+      ],
+      "worst10_ae": [
+        1.528667688369751,
+        1.5272955894470215,
+        1.2604351043701172,
+        1.0660597197711468,
+        0.9380620718002319,
+        0.7972763180732727,
+        0.6697731018066406,
+        0.6525509357452393,
+        0.6411889791488647,
+        0.6194554567337036
+      ]
+    },
+    "G1_online": {
+      "test_mae": 0.07304095804132521,
+      "test_rmse": 0.16098428240736773,
+      "test_p90_ae": 0.15087899565696725,
+      "test_max_ae": 2.508157253265381,
+      "pearson_r": 0.9968185746244291,
+      "groups": {
+        "full": 0.07304095804132521,
+        "ordinary": 0.06871931200982238,
+        "r2_unseen": 0.130643827560144,
+        "r2_unseen_ordinary": 0.12565132845064983,
+        "seen_ordinary": 0.05111480196145304,
+        "tail": 0.12484458514622279
+      },
+      "worst10_rows": [
+        702,
+        298,
+        402,
+        159,
+        527,
+        342,
+        796,
+        634,
+        822,
+        710
+      ],
+      "worst10_ae": [
+        2.508157253265381,
+        1.4433574676513672,
+        1.3137526512145996,
+        1.2544130198657513,
+        1.078891634941101,
+        0.9117247760295868,
+        0.8415501713752747,
+        0.7493383884429932,
+        0.7270957231521606,
+        0.7187569737434387
+      ]
+    },
+    "G1_ema": {
+      "test_mae": 0.0718993231114,
+      "test_rmse": 0.1621819232442744,
+      "test_p90_ae": 0.1466660976409912,
+      "test_max_ae": 2.549553394317627,
+      "pearson_r": 0.996773120358786,
+      "groups": {
+        "full": 0.0718993231114,
+        "ordinary": 0.06758218662024254,
+        "r2_unseen": 0.13178550245309034,
+        "r2_unseen_ordinary": 0.12696212941327842,
+        "seen_ordinary": 0.04922072913246692,
+        "tail": 0.12364889429761218
+      },
+      "worst10_rows": [
+        702,
+        298,
+        402,
+        159,
+        527,
+        342,
+        822,
+        634,
+        796,
+        710
+      ],
+      "worst10_ae": [
+        2.549553394317627,
+        1.3925083875656128,
+        1.3715705871582031,
+        1.314526092261076,
+        1.0783544778823853,
+        0.9422174692153931,
+        0.8111836910247803,
+        0.7977921962738037,
+        0.7888938784599304,
+        0.7424240708351135
+      ]
+    }
+  },
+  "historical_reproduction": {
+    "lcrcA_s0": {
+      "status": "reproduced",
+      "test_mae": 0.06678236953575706,
+      "published": 0.06678237025253475,
+      "abs_diff": 7.167776927552438e-10,
+      "matches_published": true
+    },
+    "dcc_l_s0": {
+      "status": "reproduced",
+      "test_mae": 0.06626655783879527,
+      "published": 0.066267,
+      "abs_diff": 4.421612047333934e-07,
+      "matches_published": true
+    }
+  },
+  "contrasts": {
+    "smooth_l1_vs_l1_online": {
+      "mae_a": 0.06702971517201513,
+      "mae_b": 0.07304095804132521,
+      "delta_b_minus_a": 0.006011242869310081,
+      "wins_b": 449,
+      "wins_a": 449
+    },
+    "smooth_l1_vs_l1_ema": {
+      "mae_a": 0.06694026962574572,
+      "mae_b": 0.0718993231114,
+      "delta_b_minus_a": 0.004959053485654294,
+      "wins_b": 465,
+      "wins_a": 465
+    },
+    "ema_vs_online_G0": {
+      "mae_a": 0.06702971517201513,
+      "mae_b": 0.06694026962574572,
+      "delta_b_minus_a": -8.944554626941681e-05,
+      "wins_b": 509,
+      "wins_a": 509
+    },
+    "ema_vs_online_G1": {
+      "mae_a": 0.07304095804132521,
+      "mae_b": 0.0718993231114,
+      "delta_b_minus_a": -0.0011416349299252033,
+      "wins_b": 528,
+      "wins_a": 528
+    },
+    "G0_online_vs_hist_lcrcA_s0": {
+      "mae_a": 0.06678236953575706,
+      "mae_b": 0.06702971517201513,
+      "delta_b_minus_a": 0.00024734563625808105,
+      "wins_b": 499,
+      "wins_a": 499
+    }
+  },
+  "created": "2026-10-29T19:55:40+0800"
+}

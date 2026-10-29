@@ -88,6 +88,22 @@ def paired_stats(arm_a: str, arm_b: str, name: str) -> dict:
     }
 
 
+def evaluate_rule(delta_full: float, delta_ordinary: float,
+                  delta_minus_row172: float) -> dict:
+    """PROTOCOL.md §2.4, unchanged: all three conditions must hold together."""
+    passes_full = bool(delta_full <= -FULL_GAIN_THRESHOLD)
+    passes_ord = bool(delta_ordinary < 0)
+    passes_m172 = bool(delta_minus_row172 < 0)
+    return {
+        "delta_full_le_minus_0.003": passes_full,
+        "delta_ordinary_lt_0": passes_ord,
+        "delta_minus_row172_lt_0": passes_m172,
+        "verdict": ("SEED0_CANDIDATE_SMOOTHL1"
+                    if (passes_full and passes_ord and passes_m172)
+                    else "NO_COMPELLING_RECIPE_GAIN"),
+    }
+
+
 def build(g0: dict, g1: dict, divergence: dict | None) -> dict:
     rows = {}
     for g in GROUPS:
@@ -115,10 +131,9 @@ def build(g0: dict, g1: dict, divergence: dict | None) -> dict:
         "delta_minus_row172": rows["minus_row172"]["delta_online_G1_minus_G0"],
         "full_gain_threshold": FULL_GAIN_THRESHOLD,
     }
-    passes_full = decision_inputs["delta_full"] <= -FULL_GAIN_THRESHOLD
-    passes_ord = decision_inputs["delta_ordinary"] < 0
-    passes_m172 = decision_inputs["delta_minus_row172"] < 0
-    candidate = bool(passes_full and passes_ord and passes_m172)
+    rule = evaluate_rule(decision_inputs["delta_full"],
+                         decision_inputs["delta_ordinary"],
+                         decision_inputs["delta_minus_row172"])
 
     return {
         "round": Z.ROUND_ID,
@@ -146,12 +161,8 @@ def build(g0: dict, g1: dict, divergence: dict | None) -> dict:
                    "delta_ema_minus_online": float(g1["ema_eval"]["valid"]) - float(g1["online_eval"]["valid"])},
         },
         "decision_inputs": decision_inputs,
-        "decision_rule_evaluated": {
-            "delta_full_le_minus_0.003": passes_full,
-            "delta_ordinary_lt_0": passes_ord,
-            "delta_minus_row172_lt_0": passes_m172,
-        },
-        "verdict": "SEED0_CANDIDATE_SMOOTHL1" if candidate else "NO_COMPELLING_RECIPE_GAIN",
+        "decision_rule_evaluated": rule,
+        "verdict": rule["verdict"],
         "verdict_semantics": (
             "a SEED0 candidate would still be a single-seed candidate that requires a "
             "separately registered confirmation round; it is never a claim that the recipe "
@@ -308,10 +319,43 @@ def _md(res: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def merge_test_read() -> int:
+    """Record the (already performed, single) test read in the tracked decision file.
+
+    Runs locally after ``rr pull``; the remote never edits a tracked file, because
+    that blocks the next ``rr deploy``.
+    """
+    read = Z.read_json(Z.ANALYSIS / "test_read.json")
+    if read.get("read_count") != 1:
+        raise SystemExit(f"unexpected read_count {read.get('read_count')!r}")
+    path = Z.ANALYSIS / "decision.json"
+    d = Z.read_json(path)
+    if d.get("official_test_read"):
+        Z.log("[merge-test-read] decision.json already records the test read")
+        return 0
+    d.update({
+        "official_test_read": True,
+        "test_read_label": "TEST_AS_DEV_DESCRIPTIVE",
+        "test_read_path": Z.track_rel(Z.ANALYSIS / "test_read.json"),
+        "test_read_checkpoints": {k: v["test_mae"] for k, v in read["results"].items()},
+        "test_read_historical_reproduction": {
+            k: v.get("matches_published") for k, v in read["historical_reproduction"].items()},
+        "test_read_git_commit": read["git_commit"],
+        "created": Z.now(),
+    })
+    Z.write_json(path, d)
+    Z.log("[merge-test-read] decision.json updated with the single descriptive test read")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="ZPR-v1 decision + main table")
     ap.add_argument("--divergence", default=str(Z.ANALYSIS / "divergence.json"))
+    ap.add_argument("--merge-test-read", action="store_true",
+                    help="fold the pulled single test read into analysis/decision.json")
     args = ap.parse_args(argv)
+    if args.merge_test_read:
+        return merge_test_read()
     g0, g1 = _load("G0"), _load("G1")
     div = None
     if Path(args.divergence).exists():

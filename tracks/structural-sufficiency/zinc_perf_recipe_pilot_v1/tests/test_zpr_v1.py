@@ -152,3 +152,44 @@ def test_frozen_constants_match_lcrc_preregistration() -> None:
     assert Z.FROZEN["params"] == cfg["model"]["params"]["A"]
     assert Z.FROZEN["total_updates"] == cfg["recipe"]["expected_total_updates"]
     assert Z.FROZEN["steps_per_epoch"] == cfg["recipe"]["expected_steps_per_epoch"]
+
+
+# --------------------------------------------------------------------------- #
+# §2.4 decision rule (the verdict must follow the registered rule, not a
+# narratively convenient variant of it)
+# --------------------------------------------------------------------------- #
+def _rule():
+    import zpr_compare
+
+    return zpr_compare.evaluate_rule
+
+
+def test_decision_rule_requires_all_three_conditions() -> None:
+    rule = _rule()
+    assert rule(-0.0031, -0.0001, -0.0001)["verdict"] == "SEED0_CANDIDATE_SMOOTHL1"
+
+
+def test_decision_rule_rejects_gain_below_threshold_even_if_others_hold() -> None:
+    rule = _rule()
+    out = rule(-0.0029, -0.01, -0.01)
+    assert out["delta_full_le_minus_0.003"] is False
+    assert out["verdict"] == "NO_COMPELLING_RECIPE_GAIN"
+
+
+def test_decision_rule_rejects_full_gain_with_worse_bulk_or_worst_row() -> None:
+    rule = _rule()
+    assert rule(-0.01, +0.0001, -0.01)["verdict"] == "NO_COMPELLING_RECIPE_GAIN"
+    assert rule(-0.01, -0.01, +0.0001)["verdict"] == "NO_COMPELLING_RECIPE_GAIN"
+
+
+def test_decision_rule_is_exactly_at_the_registered_boundary() -> None:
+    """Δfull == -0.003 is a pass (<=), Δord == 0 is not (< 0)."""
+    rule = _rule()
+    assert rule(-0.003, -1e-9, -1e-9)["delta_full_le_minus_0.003"] is True
+    assert rule(-0.003, 0.0, -1e-9)["delta_ordinary_lt_0"] is False
+
+
+def test_decision_rule_rejects_a_better_candidate_that_only_wins_on_tail() -> None:
+    """A tail-only gain with worse bulk is still NO_COMPELLING_RECIPE_GAIN."""
+    rule = _rule()
+    assert rule(+0.00298, +0.00407, +0.00537)["verdict"] == "NO_COMPELLING_RECIPE_GAIN"

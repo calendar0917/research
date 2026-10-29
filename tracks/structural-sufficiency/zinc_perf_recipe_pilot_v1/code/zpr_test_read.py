@@ -311,12 +311,15 @@ def main(argv=None) -> int:
             w.writerow([int(i), float(labels[i])] + [float(preds[k][i]) for k in preds]
                        + [abs(float(preds[k][i]) - float(labels[i])) for k in preds])
 
-    # the decision file now records that test has been read
+    # the read is recorded next to the test artifacts, *not* by mutating the
+    # tracked analysis/decision.json: a remote-side edit of a tracked file would
+    # block the next `rr deploy`.  `zpr_compare.py --merge-test-read` folds this
+    # record into analysis/decision.json locally, after the pull.
     decision["official_test_read"] = True
     decision["test_read_label"] = "TEST_AS_DEV_DESCRIPTIVE"
     decision["test_read_path"] = Z.track_rel(report_path)
     decision["created"] = Z.now()
-    Z.write_json(Z.ANALYSIS / "decision.json", decision)
+    Z.write_json(out / "decision_after_test.json", decision)
 
     Z.log("[test] " + ", ".join(f"{k}={v['test_mae']:.6f}" for k, v in results.items()))
     Z.log("[test] historical reproduction: "
