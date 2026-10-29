@@ -11,7 +11,7 @@
 
 按任务冻结设计实现两棵子树——**CMA（有向 3-bond 路径耦合：两侧弦型联合编码）** 与
 **SPC（割点—分支端口组合）**，每棵子树都与其**参数、形状、初始状态完全一致**的 NULL
-臂配对训练。CPU 门禁 12/12 通过后按 Stage 0→IV 执行：**SPC 在 Stage II 被否证**
+臂配对训练。CPU 门禁 17/17 组通过（§4 的 12 条规则）后按 Stage 0→IV 执行：**SPC 在 Stage II 被否证**
 （REAL−NULL = **+0.0013**，CI 跨 0；绝对误差 0.1451，比 DCC-L 差 0.0219）；**CMA 通过
 Stage I/III 全部晋级条件**，两个 seed 方向一致（seed0 **−0.0109**，seed1 **−0.0045**，
 full Monitor），在**从未碰过、也未参与选择的 Locked1k** 上复现（**−0.0070**，
@@ -37,7 +37,7 @@ losses, metrics, ensembles, distillation, lookup tables or extra seeds.
 
 | stage | what the frozen rules allowed | what was run | outcome |
 |---|---|---|---|
-| 0 | CPU gates; stop if coverage < 60 % | `shared/xs_gates.py` (12 gate groups) | **12/12 PASS**; SPC cut-vertex coverage **100.0 %** → proceed |
+| 0 | CPU gates; stop if coverage < 60 % | `shared/xs_gates.py` (the 12 §4 rules, 17 checks) | **17/17 PASS**; SPC cut-vertex coverage **100.0 %** → proceed |
 | I | CMA REAL/NULL, seed 0, Fit8k | 2 × 47,400 updates | REAL 0.124922 vs NULL 0.135866 → **promote** |
 | II | SPC REAL/NULL, seed 0, Fit8k | 2 × 47,400 updates | REAL 0.145107 vs NULL 0.143796 → **reject SPC** |
 | III | CMA seed 1 + frozen one-shot Locked read | 2 × 47,400 updates + 1 Locked read | seed1 REAL 0.132780 vs NULL 0.137275 (same sign) → **Stage IV authorised** |
@@ -83,7 +83,7 @@ seed, hash `87d54a23…`), all ≤ 500,000.
 
 ## 3. CPU gates (§4) — all pass before any GPU run
 
-`analysis/gates/cpu_gates.json` (17 groups, `all_pass = true`). Highlights:
+`analysis/gates/cpu_gates.json` (17 checks covering the 12 §4 rules, `all_pass = true`). Highlights:
 
 * **Invariance** (atom renumbering, bond flip, adjacency reorder, batch split):
   max |Δ| ≤ 3e-5, all four family × arm cells.
@@ -107,7 +107,9 @@ seed, hash `87d54a23…`), all ≤ 500,000.
 
 Frozen recipe for every run: AdamW, batch 128, warmup 500, cosine 1e-3 → 1e-5 per
 update, wd 1e-5, clip 5, raw-y L1, **47,400 updates**, full Monitor every epoch,
-strict-min checkpoint. Single model per run.
+strict-min checkpoint. Single model per run. The full per-epoch curves (Monitor
+MAE for all 753 epochs) are in `runs/*/train.json:curve`; the last-100, last-20
+and best-20-rolling statistics in the table are computed from them.
 
 | run | best Mon MAE | @ep | roll-20 median | last-100 median | last-20 median | ordinary (y>−3) | tail (y≤−3) | unseen-ordinary | seen-ordinary | −worst10 | GPU·h |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -134,9 +136,10 @@ Three facts that matter for the reading:
    (−0.0083 / −0.0048), on molecules whose radius-2 environment never occurs in
    Fit8k (−0.0069 / −0.0044), survives deleting the fixed worst-10 Monitor rows
    (−0.0082 / −0.0051), and survives deleting the single dominant row 1656
-   (−0.0110). The largest single-row improvement is 10 % of the net gap and the
-   top-5 rows are 29 % of it — for comparison the historical row-172-dominated
-   pattern in this track was ~42 % from one row.
+   (−0.0110). It is also spread rather than carried: REAL is better on 557 of 1000
+   Monitor molecules (worse on 443), the largest single improvement is 10.2 % of
+   the net gap, the top-5 rows sum to 28.8 % and the fixed worst-10 rows to 25.6 %
+   — a broad 56/44 per-molecule majority, not one row doing the work.
 2. **It is not an epoch-selection fluke.** REAL is better than NULL in **90.8 %**
    of the 753 training epochs, and the gap is stable in every 100-epoch block
    (−0.023, then −0.010, −0.011, −0.012, −0.011, −0.011, −0.011, −0.011).
@@ -174,8 +177,6 @@ trained on the full official train subset (10k) and selected on the official
 valid1k split (frozen slice definitions re-applied to valid rows; the two
 Monitor-only slices — fixed worst-10 and fixed row172 — are *not defined* on
 valid rows and are reported as N/A rather than silently transplanted).
-
-@@STAGE4@@
 
 | run | best valid1k MAE | @ep | roll-20 | final | ordinary | tail (65) | unseen-ord | GPU·h |
 |---|---|---|---|---|---|---|---|---|
@@ -226,8 +227,10 @@ confirms that this tree does not beat the established bottleneck baseline.
 | IV — train10k REAL/NULL × seed 0/1 | 4 | **1.5683** | 3.0 |
 | **total** | 10 formal + 3 smoke | **3.7829** | soft 14.0 / hard 16.0 |
 
-Wall clock on `res`: 3.78 h of GPU-occupied time (round wall clock ≈ 4 h of the
-8 h cap), max concurrency 2 GPUs, no queue waits. Unused budget (≈10.2 GPU·h of
+Wall clock: formal runs span 01:00→04:35 on `res` (3 h 35 min with at most 2
+GPUs busy, no queue waits); the whole round — protocol freeze to final analysis —
+is ≈ 5.5 h of the 8 h cap, and only 3.78 GPU·h of the 14 GPU·h soft cap were
+spent. Unused budget (≈10.2 GPU·h of
 the soft cap, ≈1.4 GPU·h of the Stage IV cap) was **not** reallocated: no extra
 seeds, architectures or reruns were bought with it. Every run's `train.json`
 carries `gpu_hours`, `git_commit`, checkpoint SHA-256 and the execution regime
@@ -260,24 +263,27 @@ averages the two views first, which sets `|z_L − z_R| ≡ 0` and removes the
 left/right correspondence. The consistent −0.005…−0.011 MAE gap therefore says:
 for ZINC, the predictive content of a local environment is not exhausted by its
 two marginal half-environments — the *joint* type of the pair, and how that pair
-is closed by chords, carries roughly 0.6–0.8 % of the label scale that the
-marginal summary cannot recover. That is the "composition, not accumulation"
-half of the round's hypothesis, and it survives a null that is perfectly matched
-in shape, parameter count, initialisation and optimiser.
+is closed by chords, is worth **8.0 % of the NULL arm's own Monitor error at seed
+0 and 3.3 % at seed 1** (16.6 % / 18.8 % of the NULL arm on the official valid
+split), which the marginal summary cannot recover. That is the "composition, not
+accumulation" half of the round's hypothesis, and it survives a null that is
+perfectly matched in shape, parameter count, initialisation and optimiser.
 
-**Why SPC fails, mechanically.** SPC's REAL/NULL contrast is ≈ 0 (+0.0013) and
-its absolute level is 0.145 — the worst of the four arms. The mechanism is
-structurally weak for this data: (i) branch ports already summarise their whole
-side branch, so the pair composition `Fpair` operates on two vectors that each
-already contain the lineage of the other side's neighbourhood summary through
-`g_base`'s aggregates; (ii) the event is a sum over cut-vertex terms, and 100 % of
-molecules have one, so every molecule gets a full set of local terms — the
-mechanism degenerates into another per-atom-ish correction rather than a global
-composition; (iii) the NULL arm's "compose on the port mean" is *not* a strong
-destroyer of information here, because in a 2-branch separator molecule the pair
-of ports is nearly the multiset of ports. The honest reading is that the
-cut-vertex/separator algebra is the wrong compression of ZINC structure, not that
-"composition is wrong".
+**Why SPC fails.** Three observed facts, then the reading we are willing to
+defend. Observed: (i) the REAL/NULL contrast is ≈ 0 (+0.0013 full, +0.0006
+ordinary, CIs span 0) — the port *coupling* adds nothing measurable; (ii) the
+mechanism fires on 100 % of molecules (9.2 cut vertices and 13.3 branch pairs per
+molecule on average), so this is not an under-coverage artefact; (iii) SPC is the
+weakest arm in absolute terms (0.1451 for REAL, 0.1438 for NULL) even though it
+shares the identical skeleton with CMA, whose NULL arm reaches 0.1359. Reading
+(interpretation, not measurement): `t_v` is a **sum of per-cut-vertex terms**, so
+the event enters the prediction as an additive local correction over a coarse
+summary (a 195-dim pooled description of an entire side branch), not as a global
+composition; and "compose on the port mean" is a weak null here, because for the
+common 2-branch separator the pair is nearly the multiset of ports, so REAL and
+NULL see close to the same information. The defensible conclusion is that the
+cut-vertex/separator algebra is the wrong compression of ZINC structure — not that
+"composition" is the wrong idea (the CMA contrast says the opposite).
 
 **What this does not show.** CMA does not beat DCC-L. On the same Monitor split
 CMA REAL is 0.1249 vs DCC-L 0.1232 (+0.0018), on Locked 0.0905 vs the historical
@@ -315,7 +321,7 @@ ordinary-molecule component**, not a uniform improvement.
 | `analysis/monitor_slices.npz`, `valid_slices.npz`, `valid_freeze.json` | frozen slice masks (Monitor1k, valid1k) |
 | `analysis/locked_freeze.json`, `locked_read.json`, `locked_contrast.json` | frozen checkpoints and the single Locked read |
 | `analysis/stage1_detail.json`, `analysis/stage4_detail.json` | CMA curve/row decomposition and the valid-split tail decomposition |
-| `analysis/gates/cpu_gates.json` | 12 gate groups, all pass |
+| `analysis/gates/cpu_gates.json` | 17 checks (12 §4 rules), all pass |
 
 Reproduction (from the repo root, host `res`):
 

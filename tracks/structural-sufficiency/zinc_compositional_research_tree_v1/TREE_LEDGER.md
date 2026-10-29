@@ -14,7 +14,7 @@ torch 2.5.1+cu124 (the same regime as the historical DCC-L / BOSI numbers).
 | ~00:45 | first end-to-end forward passes for both families |
 | ~01:05 | CPU gate suite `shared/xs_gates.py` written (12 task gates + SPC coverage stop) |
 | 01:1x | gate run 1: 4 groups failed → see fixes below |
-| 01:1x | gate run 2: all 17 groups pass (`analysis/gates/cpu_gates.json`) |
+| 01:1x | gate run 2: all 17 checks pass (`analysis/gates/cpu_gates.json`, `all_pass = true`) |
 | 01:18 | commit `7dd686b` — implementation + gates + frozen protocol + frozen baseline |
 | 01:24 | `rr deploy res` (7dd686b); first prep job failed: `--arm` required for `--prepare-only` |
 | 01:26 | commit `5a33e81`; redeploy; `ssrc-prep` exit 0 (18 s) — CMA/SPC structure caches for train10k + valid1k built on `res` |
@@ -50,7 +50,7 @@ torch 2.5.1+cu124 (the same regime as the historical DCC-L / BOSI numbers).
 8. `xs_train.py --arm` made optional for `--prepare-only` (no scientific
    change).
 
-### CPU gate summary (`analysis/gates/cpu_gates.json`, all_pass = true)
+### CPU gate summary (`analysis/gates/cpu_gates.json`, 17 checks, all_pass = true)
 
 * g1 invariance: max |Δ| ≤ 3e-5 for atom renumbering, bond direction reversal,
   adjacency/bond-order permutation, and batch split/merge, both families, both
