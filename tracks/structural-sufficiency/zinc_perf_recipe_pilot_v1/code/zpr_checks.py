@@ -387,15 +387,26 @@ def check_formal() -> dict:
     out: dict[str, Any] = {}
     runs = {arm: _read_run(arm) for arm in ("G0", "G1")}
 
-    # C2 — frozen inputs recorded by both runs
-    keys = ["train_cache_file_sha256", "train_cache_content_sha256",
-            "valid_cache_file_sha256", "valid_cache_content_sha256",
+    # C2 — frozen inputs recorded by both runs (content sha gates; container
+    # bytes of the same content differ per checkout, HIS-v0 finding)
+    keys = ["train_cache_content_sha256", "valid_cache_content_sha256",
             "norm_fingerprint", "feature_version"]
-    inputs = {arm: {k: r["data"][k] for k in keys} for arm, r in runs.items()}
+    file_keys = ["train_cache_file_sha256", "valid_cache_file_sha256"]
+    inputs = {arm: {k: r["data"][k] for k in keys + file_keys} for arm, r in runs.items()}
+    gating = {arm: {k: v for k, v in inputs[arm].items() if k in keys} for arm in inputs}
+    host_profile = [
+        name for name, prof in Z.FROZEN_CACHE_FILE_SHA256_BY_HOST.items()
+        if all(inputs["G0"][f"{split}_cache_file_sha256"] == sha
+               for split, sha in prof.items())
+    ]
     c2 = {
         "inputs": inputs,
-        "equal_across_arms": inputs["G0"] == inputs["G1"],
-        "equal_to_frozen": all(inputs["G0"][k] == Z.FROZEN[k] for k in keys),
+        "gating_inputs": gating,
+        "equal_across_arms": gating["G0"] == gating["G1"],
+        "equal_to_frozen": all(gating["G0"][k] == Z.FROZEN[k] for k in keys),
+        "cache_container_sha_matches_host_profile": host_profile,
+        "cache_container_sha_note": "torch.save container bytes differ per checkout; "
+                                    "the gating identity is the content sha256",
         "ssl_sha256": {arm: r["model_info"]["ssl"]["sha256"] for arm, r in runs.items()},
     }
     c2["ssl_equal_across_arms"] = len(set(c2["ssl_sha256"].values())) == 1

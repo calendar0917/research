@@ -181,15 +181,14 @@ def train(arm: str, seed: int, device: str, *, epochs: int | None = None,
         "feature_version": Z.FROZEN["feature_version"],
     }
     expect = {
-        "train_cache_file_sha256": Z.FROZEN["train_cache_file_sha256"],
         "train_cache_content_sha256": Z.FROZEN["train_cache_content_sha256"],
-        "valid_cache_file_sha256": Z.FROZEN["valid_cache_file_sha256"],
         "valid_cache_content_sha256": Z.FROZEN["valid_cache_content_sha256"],
         "norm_fingerprint": Z.FROZEN["norm_fingerprint"],
         "feature_version": Z.FROZEN["feature_version"],
     }
-    if input_audit != expect:
-        raise RuntimeError(f"frozen input mismatch: {input_audit} != {expect}")
+    gated = {k: input_audit[k] for k in expect}
+    if gated != expect:
+        raise RuntimeError(f"frozen input mismatch: {gated} != {expect}")
 
     y_train = np.asarray(train_cache["labels"], dtype=np.float64)
     rows_train = np.arange(len(y_train), dtype=np.int64)

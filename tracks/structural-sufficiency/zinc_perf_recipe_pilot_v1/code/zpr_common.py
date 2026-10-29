@@ -51,9 +51,7 @@ import lc_train as T  # noqa: E402,F401
 # ---------------------------------------------------------------------------
 
 FROZEN = {
-    "train_cache_file_sha256": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
     "train_cache_content_sha256": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b",
-    "valid_cache_file_sha256": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
     "valid_cache_content_sha256": "f28a0cceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9",
     "ssl_s0_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
     "norm_fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f",
@@ -66,6 +64,20 @@ FROZEN = {
     "total_updates": 47400,
     "steps_per_epoch": 79,
     "ema_start_step": 11850,
+}
+
+#: ``torch.save`` container bytes of the *same* cache content differ per
+#: checkout (established in the HIS-v0 round); they are recorded for provenance
+#: only and never gate anything.  The gating identity is the content sha256.
+FROZEN_CACHE_FILE_SHA256_BY_HOST = {
+    "local": {
+        "train": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
+        "valid": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+    },
+    "remote_res": {
+        "train": "1aef7f2135dbf320ee0751a03eae357fe0d6d527b80f6204fab78b02a0450c4e",
+        "valid": "514e8c723dbd3d88adea8cfe176c3b8c37c849a0812e31c53ae434e4554c4cf3",
+    },
 }
 
 #: Historical anchor (read-only; never retrained in this round).
@@ -214,7 +226,7 @@ def group_table(pred, y, masks: Mapping[str, np.ndarray]) -> dict[str, float]:
 __all__ = [
     "ROUND_ID", "CODE_DIR", "EXP_DIR", "REPO", "ANALYSIS", "RUNS", "CONFIGS",
     "LCRC_TRACK", "LCRC_A_S0_RUN", "LCRC_A_S0_CURVE",
-    "L", "D", "M", "T", "FROZEN", "HIST", "ROW172", "ANCHOR_CSV",
+    "L", "D", "M", "T", "FROZEN", "FROZEN_CACHE_FILE_SHA256_BY_HOST", "HIST", "ROW172", "ANCHOR_CSV",
     "EMA_DECAY", "EMA_START_FRAC", "SMOOTH_L1_BETA", "ARMS",
     "track_rel", "read_json", "write_json", "now", "ensure_dir", "sha256_file", "log",
     "read_anchor", "fixed_worst10_rows", "group_masks", "mae", "window_diagnostics",
