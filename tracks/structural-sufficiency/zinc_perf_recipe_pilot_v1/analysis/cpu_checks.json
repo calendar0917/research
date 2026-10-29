@@ -1,0 +1,232 @@
+{
+  "round": "zinc-perf-recipe-pilot-v1",
+  "C1_initial_state": {
+    "build_1": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+    "build_2": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+    "frozen_lcrc_a_s0": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+    "builds_equal": true,
+    "equals_frozen": true,
+    "params": 237519,
+    "params_ok": true,
+    "same_build_path_for_both_arms": true,
+    "note": "both arms call build_model('A', norm, 0, ...) with the frozen config; the loss switch happens only inside the training step",
+    "pass": true
+  },
+  "C5_smooth_l1_reference": {
+    "beta": 0.05,
+    "cases": [
+      {
+        "d": 0.0,
+        "torch_value": 0.0,
+        "reference_value": 0.0,
+        "value_abs_diff": 0.0,
+        "torch_grad": 0.0,
+        "reference_grad": 0.0,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": 1e-06,
+        "torch_value": 1e-11,
+        "reference_value": 1e-11,
+        "value_abs_diff": 0.0,
+        "torch_grad": 1.9999999999999998e-05,
+        "reference_grad": 1.9999999999999998e-05,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": 0.01,
+        "torch_value": 0.001,
+        "reference_value": 0.001,
+        "value_abs_diff": 0.0,
+        "torch_grad": 0.19999999999999998,
+        "reference_grad": 0.19999999999999998,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": 0.02,
+        "torch_value": 0.004,
+        "reference_value": 0.004,
+        "value_abs_diff": 0.0,
+        "torch_grad": 0.39999999999999997,
+        "reference_grad": 0.39999999999999997,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": 0.0499999,
+        "torch_value": 0.0249999000001,
+        "reference_value": 0.0249999000001,
+        "value_abs_diff": 0.0,
+        "torch_grad": 0.9999979999999999,
+        "reference_grad": 0.9999979999999999,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": 0.05,
+        "torch_value": 0.025,
+        "reference_value": 0.025,
+        "value_abs_diff": 0.0,
+        "torch_grad": 1.0,
+        "reference_grad": 1.0,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": 0.0500001,
+        "torch_value": 0.025000099999999997,
+        "reference_value": 0.025000099999999997,
+        "value_abs_diff": 0.0,
+        "torch_grad": 1.0,
+        "reference_grad": 1.0,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": 0.2,
+        "torch_value": 0.17500000000000002,
+        "reference_value": 0.17500000000000002,
+        "value_abs_diff": 0.0,
+        "torch_grad": 1.0,
+        "reference_grad": 1.0,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": 1.0,
+        "torch_value": 0.975,
+        "reference_value": 0.975,
+        "value_abs_diff": 0.0,
+        "torch_grad": 1.0,
+        "reference_grad": 1.0,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": 6.9,
+        "torch_value": 6.875,
+        "reference_value": 6.875,
+        "value_abs_diff": 0.0,
+        "torch_grad": 1.0,
+        "reference_grad": 1.0,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": -0.02,
+        "torch_value": 0.004,
+        "reference_value": 0.004,
+        "value_abs_diff": 0.0,
+        "torch_grad": -0.39999999999999997,
+        "reference_grad": -0.39999999999999997,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": -0.05,
+        "torch_value": 0.025,
+        "reference_value": 0.025,
+        "value_abs_diff": 0.0,
+        "torch_grad": -1.0,
+        "reference_grad": -1.0,
+        "grad_abs_diff": 0.0
+      },
+      {
+        "d": -1.3,
+        "torch_value": 1.2750000000000001,
+        "reference_value": 1.2750000000000001,
+        "value_abs_diff": 0.0,
+        "torch_grad": -1.0,
+        "reference_grad": -1.0,
+        "grad_abs_diff": 0.0
+      }
+    ],
+    "max_value_abs_diff": 0.0,
+    "max_grad_abs_diff": 0.0,
+    "batch_mean_value": 0.44000199999999995,
+    "batch_mean_reference": 0.44000200000000006,
+    "batch_mean_abs_diff": 1.1102230246251565e-16,
+    "trainer_helper_value": 0.44000199999999995,
+    "trainer_helper_abs_diff": 1.1102230246251565e-16,
+    "finite_difference_max_rel_error": 1.871544335240446e-09,
+    "continuity_at_beta": {
+      "left": 0.025,
+      "right": 0.025,
+      "abs_diff": 0.0
+    },
+    "pass": true
+  },
+  "C6_ema_formula": {
+    "decay": 0.999,
+    "start_frac": 0.25,
+    "start_step_formal_600ep": 11850,
+    "start_step_formal_expected": 11850,
+    "start_epoch_formal_600ep": 150,
+    "start_step_2ep_smoke": 40,
+    "synthetic_start_step": 8,
+    "synthetic_steps": 30,
+    "max_abs_diff_vs_float32_reference": 0.0,
+    "float32_tolerance": 1e-06,
+    "max_abs_diff_vs_float64_reference": 1.7537715579774016e-07,
+    "reference_note": "the float32 reference uses the same recurrence; residual differences are float32 rounding/FMA order (<= 1 ulp), the float64 number is only the accumulation drift diagnostic",
+    "init_equals_online": true,
+    "ema_differs_from_online_at_end": true,
+    "copy_into_module_equals_ema_state": true,
+    "state_dict_roundtrip_equals": true,
+    "direction_statement": "copy_ema_into writes ema_state INTO the module (module_param.copy_(ema_slot)); the historical zps bug was the reverse direction and would fail copy_into_module_equals_ema_state",
+    "pass": true
+  },
+  "C7_ema_passive": {
+    "torch_rng_state_unchanged": true,
+    "data_order_gen_state_unchanged": true,
+    "grads_unchanged": true,
+    "ema_slots_are_leaf_tensors_without_grad": true,
+    "ema_update_runs_under_no_grad": true,
+    "pass": true
+  },
+  "masks": {
+    "sizes": {
+      "full": 1000,
+      "ordinary": 935,
+      "r2_unseen": 251,
+      "r2_unseen_ordinary": 225,
+      "seen_ordinary": 710,
+      "minus_row172": 999,
+      "minus_fixed_worst10": 990,
+      "tail": 65,
+      "row172": 1,
+      "fixed_worst10": 10
+    },
+    "expected": {
+      "full": 1000,
+      "ordinary": 935,
+      "r2_unseen": 251,
+      "r2_unseen_ordinary": 225,
+      "seen_ordinary": 710,
+      "minus_row172": 999,
+      "minus_fixed_worst10": 990,
+      "tail": 65,
+      "row172": 1,
+      "fixed_worst10": 10
+    },
+    "matches_lcrc_groups_md": true,
+    "fixed_worst10_rows": [
+      31,
+      172,
+      224,
+      229,
+      260,
+      447,
+      659,
+      678,
+      753,
+      917
+    ],
+    "pass": true
+  },
+  "historical_checkpoint_replay": {
+    "checkpoint": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s0/best.pt",
+    "checkpoint_sha256": "06340bcd9e45af03e887e706031b6ea14c719cac2b68ba716ce3d686bb21fdad",
+    "checkpoint_sha_matches_frozen": true,
+    "valid_mae_recomputed": 0.076581646020466,
+    "valid_mae_frozen": 0.07658163924043765,
+    "abs_diff": 6.780028344310907e-09,
+    "saved_prediction_mae": 0.07658163605158916,
+    "eval_path": "lc_models.load_model_from_state + lc_train.evaluate (cpu)",
+    "pass": true
+  },
+  "cpu_all_pass": true,
+  "created": "2026-10-29T15:29:18+0800"
+}
