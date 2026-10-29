@@ -67,7 +67,34 @@ overstated it.
 
 ## D4 — Stage IV: full train10k with official valid1k selection
 
-@@STAGE4_DECISION@@
+Frozen §7 Stage-IV condition: two seeds agree in sign and no ordinary-molecule
+degradation. Both held at Stage III, so the four Stage-IV runs were bought
+(2 arms × 2 seeds), 1.5683 GPU·h of the 3.0 cap.
+
+| | seed 0 | seed 1 |
+|---|---|---|
+| REAL valid1k MAE | 0.08428 | 0.08488 |
+| NULL valid1k MAE | 0.10101 | 0.10459 |
+| full delta | **−0.01673** [−0.04417, −0.00056] | **−0.01970** [−0.03939, −0.00756] |
+| ordinary delta | −0.00177 [−0.00612, +0.00258] | −0.00961 [−0.01432, −0.00502] |
+| unseen-ordinary delta | −0.00070 | −0.01232 [−0.02445, −0.00026] |
+| tail rows (n = 65) share of net gap | 90 % | 54 % |
+| DCC-L same split, same protocol | 0.07854 | 0.07384 |
+
+**Decision:** the fit8k trend is confirmed on the official valid split — direction
+identical at both seeds, matched gap *larger* (−0.017 / −0.020 vs −0.011 /
+−0.0045 on Monitor), REAL seed-stable (0.0843 / 0.0849) while NULL is not
+(0.1010 / 0.1046). Two qualifications are recorded rather than smoothed away:
+
+1. On valid, the gap is carried mainly by tail molecules (90 % / 54 % of the net),
+   where REAL spends 0.237 MAE at both seeds and NULL spends 0.469 / 0.403. The
+   ordinary-molecule component is seed-dependent (−0.0018 n.s. / −0.0096
+   significant).
+2. CMA still loses to DCC-L in absolute terms on the same split and protocol
+   (+0.0057 / +0.0110). No absolute-level claim is made.
+
+Stage IV therefore ends the tree: the mechanism question is answered, the
+performance question is answered negatively.
 
 ## D5 — What was deliberately not done
 
@@ -98,5 +125,8 @@ overstated it.
    increment, and the worst absolute level of the four arms.
 3. **The tree's frontier** is therefore: "joint local typing matters, and the
    directed-path coupling is the right way to see it; separator algebra is not".
-   The remaining gap to DCC-L (+0.0018 Monitor, +0.0069 Locked) is not closed, so
+   Stage IV sharpens this to a *tail* claim: the joint-typing advantage is stable
+   and large for extreme negative-label molecules on every split, seed-dependent
+   and modest for ordinary molecules on truly unseen data. The remaining gap to
+   DCC-L (+0.0018 Monitor, +0.0069 Locked, +0.006…+0.011 valid) is not closed, so
    no claim of superiority is made.

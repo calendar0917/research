@@ -15,8 +15,12 @@
 （REAL−NULL = **+0.0013**，CI 跨 0；绝对误差 0.1451，比 DCC-L 差 0.0219）；**CMA 通过
 Stage I/III 全部晋级条件**，两个 seed 方向一致（seed0 **−0.0109**，seed1 **−0.0045**，
 full Monitor），在**从未碰过、也未参与选择的 Locked1k** 上复现（**−0.0070**，
-CI [−0.0118, −0.0024]，ordinary −0.0058）。但 CMA 的**绝对水平并未超过 DCC-L 参考**
-（Monitor 0.1249 vs 0.1232，+0.0018；Locked 0.0905 vs 历史 0.0836，+0.0069）。
+CI [−0.0118, −0.0024]，ordinary −0.0058）。Stage IV（官方 train10k 训练、官方
+valid1k 选择）两个 seed 再次复现同方向、且更大的匹配差（**−0.0167 / −0.0197**），
+但该差在 valid 上主要由 65 个 tail 分子承载（seed0 90%，seed1 54%）。
+CMA 的**绝对水平并未超过 DCC-L 参考**（Monitor 0.1249 vs 0.1232，+0.0018；
+Locked 0.0905 vs 历史 0.0836，+0.0069；official valid 0.0843/0.0849 vs
+0.0785/0.0738，+0.0057…+0.0110）。
 结论：**「ZINC 的结构贡献主要是局部联合类型（composition）而非边际特征累加」这半边
 假说得到匹配机制证据支持；「割点—分支端口」这一具体分解被否证；两者都还没有把绝对
 误差推到 DCC-L 之下。** 未读官方 test。
@@ -173,9 +177,61 @@ valid rows and are reported as N/A rather than silently transplanted).
 
 @@STAGE4@@
 
+| run | best valid1k MAE | @ep | roll-20 | final | ordinary | tail (65) | unseen-ord | GPU·h |
+|---|---|---|---|---|---|---|---|---|
+| `stage4-cma-real_s0` | **0.08428** | 368 | 0.08659 | 0.08656 | 0.07364 | 0.23734 | 0.13049 | 0.353 |
+| `stage4-cma-mean_s0` | 0.10101 | 392 | 0.10186 | 0.10187 | 0.07541 | 0.46928 | 0.13119 | 0.426 |
+| `stage4-cma-real_s1` | **0.08488** | 445 | 0.08650 | 0.08657 | 0.07425 | 0.23790 | 0.13055 | 0.361 |
+| `stage4-cma-mean_s1` | 0.10459 | 408 | 0.10692 | 0.10713 | 0.08385 | 0.40284 | 0.14287 | 0.429 |
+
+Matched REAL − NULL on valid1k (n = 1000, ordinary 935, tail 65):
+
+| seed | full | ordinary | unseen-ordinary | tail |
+|---|---|---|---|---|
+| 0 | **−0.01673** [−0.04417, −0.00056] | −0.00177 [−0.00612, +0.00258] | −0.00070 [−0.01340, +0.01169] | −0.23193 |
+| 1 | **−0.01970** [−0.03939, −0.00756] | **−0.00961** [−0.01432, −0.00502] | **−0.01232** [−0.02445, −0.00026] | −0.16494 |
+
+**Trend check (the only thing Stage IV is allowed to decide).** The direction
+reproduces on the official valid split at both seeds and with a *larger* matched
+gap than on Monitor (−0.017 / −0.020 vs −0.011 / −0.0045), and REAL's valid error
+is remarkably seed-stable (0.0843 / 0.0849) while NULL's is not (0.1010 /
+0.1046). The round's frozen `decision` rule (sign agreement + no ordinary
+degradation) passes.
+
+**But the composition of the gap changes, and this must be said plainly.** On
+valid1k the gap is carried mostly by the 65 tail rows: seed 0 gets 90 % of its net
+−0.0167 from tail rows (−0.232 per tail row) and only −0.0018 from ordinary rows
+(CI spans 0); seed 1 is broader (54 % tail, ordinary −0.0096 with CI excluding 0).
+On Monitor1k the same contrast was broad (−0.0083 ordinary, 7 % of rows in tail).
+So the honest statement is: *the joint-typing advantage is unambiguous and
+reproducible for extreme negative-label molecules, and it is real but
+seed-dependent (and on one of two valid seeds not individually significant) for
+ordinary molecules on truly unseen data.*
+
+**Absolute level.** With the same protocol (train10k, valid selection) the DCC-L
+reference reads 0.07854 / 0.07384 by seed (historical recomputation in
+`zinc_dccl_bottleneck_v1`, 4-seed mean 0.075990). CMA REAL is 0.08428 / 0.08488,
+i.e. **+0.0057…+0.0110 worse than DCC-L**, and the NULL arms are far worse
+(0.1010 / 0.1046). Stage IV therefore confirms the mechanism contrast and
+confirms that this tree does not beat the established bottleneck baseline.
+
 ## 7. Budget, execution regime, boundary
 
-@@BUDGET@@
+| stage | runs | GPU·h | stage cap |
+|---|---|---|---|
+| timing smokes (3 × 126–158 updates) | `stage1/2/4-timing-*` | 0.0064 | — |
+| I — CMA s0 REAL/NULL | 2 | **0.7965** | 4.0 |
+| II — SPC s0 REAL/NULL | 2 | **0.6216** | 4.0 |
+| III — CMA s1 REAL/NULL | 2 | **0.7902** | 3.0 |
+| IV — train10k REAL/NULL × seed 0/1 | 4 | **1.5683** | 3.0 |
+| **total** | 10 formal + 3 smoke | **3.7829** | soft 14.0 / hard 16.0 |
+
+Wall clock on `res`: 3.78 h of GPU-occupied time (round wall clock ≈ 4 h of the
+8 h cap), max concurrency 2 GPUs, no queue waits. Unused budget (≈10.2 GPU·h of
+the soft cap, ≈1.4 GPU·h of the Stage IV cap) was **not** reallocated: no extra
+seeds, architectures or reruns were bought with it. Every run's `train.json`
+carries `gpu_hours`, `git_commit`, checkpoint SHA-256 and the execution regime
+(driver/torch/node), so the numbers above are auditable per run.
 
 Execution regime for every run: host `res` (`a100-2`, 2 × A100-SXM4-40GB,
 driver 550.163.01, torch 2.5.1+cu124), process backend, one run per GPU, git
@@ -224,11 +280,24 @@ cut-vertex/separator algebra is the wrong compression of ZINC structure, not tha
 "composition is wrong".
 
 **What this does not show.** CMA does not beat DCC-L. On the same Monitor split
-CMA REAL is 0.1249 vs DCC-L 0.1232 (+0.0018) and on Locked 0.0905 vs the
-historical DCC-L 0.0836 (+0.0069). The mechanism buys a real, reproducible
-matched increment, but the round's absolute bar (≤ DCC-L + 0.010) is met only in
-the weak sense of "not much worse". The frozen rules therefore do not license any
-claim of a new state of the art, and none is made.
+CMA REAL is 0.1249 vs DCC-L 0.1232 (+0.0018), on Locked 0.0905 vs the historical
+DCC-L 0.0836 (+0.0069), and on the official valid split 0.0843/0.0849 vs
+0.0785/0.0738 (+0.0057…+0.0110). The mechanism buys a real, reproducible matched
+increment, but the round's absolute bar (≤ DCC-L + 0.010) is met only in the weak
+sense of "not much worse". The frozen rules therefore do not license any claim of
+a new state of the art, and none is made.
+
+**Where the advantage actually lives.** The one place where the two arms separate
+*mechanistically* rather than statistically is the extreme tail. On valid1k, REAL
+spends 0.237 MAE on the 65 tail rows at *both* seeds, while NULL spends 0.469 and
+0.403 — a 1.7–2.0× difference that no other slice shows, and the one slice where
+REAL is seed-stable and NULL is not. The CMA event term gives each bond a
+composition of its local path algebra; for a molecule whose label is far from the
+bulk, that local algebra is apparently what stops the model from regressing to the
+conditional mean. For ordinary molecules the same term acts like a small,
+seed-dependent regulariser (−0.002…−0.010). This is the honest, non-inflated
+shape of the result: **a tail-sharpening mechanism with a real but modest
+ordinary-molecule component**, not a uniform improvement.
 
 ## 9. Deliverables and reproduction
 
@@ -245,7 +314,7 @@ claim of a new state of the art, and none is made.
 | `analysis/frozen_baseline.json` | DCC-L reference recomputation, fixed worst-10, fixed row172 |
 | `analysis/monitor_slices.npz`, `valid_slices.npz`, `valid_freeze.json` | frozen slice masks (Monitor1k, valid1k) |
 | `analysis/locked_freeze.json`, `locked_read.json`, `locked_contrast.json` | frozen checkpoints and the single Locked read |
-| `analysis/stage1_detail.json` | CMA s0 curve/row decomposition (90.8 % epochs, top-row shares) |
+| `analysis/stage1_detail.json`, `analysis/stage4_detail.json` | CMA curve/row decomposition and the valid-split tail decomposition |
 | `analysis/gates/cpu_gates.json` | 12 gate groups, all pass |
 
 Reproduction (from the repo root, host `res`):

@@ -431,7 +431,11 @@ def decision() -> dict:
             "ordinary": d["ordinary"]["delta"] <= 0.0,
             "unseen_ordinary": d["unseen_ordinary"]["delta"] <= -0.004,
             "absolute": float(real["best_monitor_mae"]) <= dccl[0] + 0.010,
-            "smoothing": (float(real["rolling20_min_median"]) - float(real["best_monitor_mae"])) <= 0.0,
+            # "best-20-epoch rolling median agrees in direction": the smoothed
+            # level of REAL must be better than the smoothed level of NULL, so the
+            # matched effect is not an artefact of one lucky epoch.
+            "smoothing": (float(real["rolling20_min_median"])
+                          - float(by_run[c["mean_run"]]["rolling20_min_median"])) < 0.0,
         }
         out["families"][fam] = {
             "checks": checks,
