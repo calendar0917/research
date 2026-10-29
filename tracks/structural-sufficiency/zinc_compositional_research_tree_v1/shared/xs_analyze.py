@@ -153,6 +153,54 @@ def _slices() -> dict:
     return {k: z[k] for k in z.files}
 
 
+def _valid_slices() -> dict:
+    """Same frozen slice *definitions* applied to the official valid1k rows.
+
+    Built once, deterministically, from the frozen caches: support (radius-2
+    environment vocabulary) is measured against Fit8k, exactly as for Monitor.
+    The two Monitor-only slices (fixed worst-10, fixed row172) are not defined
+    here and are reported as N/A for valid-monitor runs.
+    """
+    path = C.ANALYSIS / "valid_slices.npz"
+    if path.exists():
+        z = np.load(path)
+        return {k: z[k] for k in z.files}
+    split = C.split_rows()
+    fit_rows, mon_rows = split["rows"]["fit8k"], split["rows"]["monitor"]
+    train_cache = C.load_cache("train")
+    valid_cache = C.load_cache("valid")
+    rows = np.arange(len(valid_cache["labels"]), dtype=np.int64)
+    y = np.asarray(valid_cache["labels"], dtype=np.float64)[rows]
+    tiers = MET.support_tiers(train_cache, fit_rows, valid_cache, rows)
+    # the internal Monitor rows are legitimate *support* for valid-row novelty:
+    # they are part of the official train subset, and no labels are used.
+    tiers_mon = MET.support_tiers(train_cache, np.union1d(fit_rows, mon_rows), valid_cache, rows)
+    C.write_json(C.ANALYSIS / "valid_freeze.json", {
+        "created": C.now(),
+        "n": int(len(rows)),
+        "label_sha256": C.sha256_array(y.astype(np.float32)),
+        "n_ordinary": int(tiers["ordinary"].sum()),
+        "n_tail": int(tiers["tail"].sum()),
+        "n_any_unseen": int(tiers["any_unseen"].sum()),
+        "n_unseen_ordinary": int(tiers["unseen_ordinary"].sum()),
+        "support_set": "fit8k",
+        "n_any_unseen_support_fit8k_plus_monitor": int(tiers_mon["any_unseen"].sum()),
+        "official_test_loaded": False,
+    })
+    np.savez(
+        path,
+        rows=rows, y=y,
+        ordinary=tiers["ordinary"], tail=tiers["tail"],
+        any_unseen=tiers["any_unseen"], unseen_ordinary=tiers["unseen_ordinary"],
+        seen_ordinary=tiers["seen_ordinary"], unseen_frac=tiers["unseen_frac"],
+    )
+    C.log(f"[freeze] valid1k n={len(rows)} ordinary={int(tiers['ordinary'].sum())} "
+          f"any_unseen={int(tiers['any_unseen'].sum())} "
+          f"unseen_ordinary={int(tiers['unseen_ordinary'].sum())}")
+    z = np.load(path)
+    return {k: z[k] for k in z.files}
+
+
 # ---------------------------------------------------------------------------
 # tables
 # ---------------------------------------------------------------------------
@@ -183,12 +231,9 @@ def _stage_of(run: str) -> str:
 
 
 def tables() -> dict:
-    sl = _slices()
-    y = sl["y"]
-    mon_rows = sl["rows"]
-    worst10 = sl["fixed_worst10_positions"]
-    row172 = int(sl["row172_position"][0])
-    tiers = {k: sl[k] for k in ("ordinary", "tail", "any_unseen", "unseen_ordinary", "seen_ordinary")}
+    sl0 = _slices()
+    packs = {"monitor": sl0, "valid": _valid_slices()}
+    tier_keys = ("ordinary", "tail", "any_unseen", "unseen_ordinary", "seen_ordinary")
 
     rows_main, rows_slice, contrasts = [], [], []
     # timing / smoke jobs are not ranked but their cost is part of the budget
@@ -207,6 +252,10 @@ def tables() -> dict:
                           weights_only=False)
         final = torch.load(C.RUNS / run / "predictions_final.pt", map_location="cpu",
                            weights_only=False)
+        sl = packs[info["monitor_split"]]
+        y = sl["y"]
+        tiers = {k: sl[k] for k in tier_keys}
+        mon_rows = sl["rows"]
         if not np.array_equal(np.asarray(best["rows"]), mon_rows):
             raise RuntimeError(f"{run}: monitor rows differ from the frozen list")
         pred_b = np.asarray(best["pred"], dtype=np.float64)
@@ -237,11 +286,17 @@ def tables() -> dict:
         # selection-relevant slices on the best-Monitor checkpoint
         for tag, pred in (("best", pred_b), ("final", pred_f)):
             base = MET.slice_table(pred, y, tiers=tiers)
-            drop = MET.slice_table(pred, y, tiers=tiers, drop_rows=worst10)
-            drop_r = MET.slice_table(pred, y, tiers=tiers, row_index=row172)
             named = dict(base)
-            named["minus_fixed_worst10"] = drop["full"]
-            named["minus_row172"] = drop_r["minus_row172"]
+            if info["monitor_split"] == "monitor":
+                worst10 = sl["fixed_worst10_positions"]
+                row172 = int(sl["row172_position"][0])
+                drop = MET.slice_table(pred, y, tiers=tiers, drop_rows=worst10)
+                drop_r = MET.slice_table(pred, y, tiers=tiers, row_index=row172)
+                named["minus_fixed_worst10"] = drop["full"]
+                named["minus_row172"] = drop_r["minus_row172"]
+            else:  # Monitor-only slices are not defined on valid rows
+                named["minus_fixed_worst10"] = None
+                named["minus_row172"] = None
             if tag == "best":
                 entry.update(named)
             for k, v in named.items():
@@ -270,6 +325,9 @@ def tables() -> dict:
                         map_location="cpu", weights_only=False)
         a = np.asarray(pb["pred"], dtype=np.float64)
         b = np.asarray(pm["pred"], dtype=np.float64)
+        sl = packs[monsplit]
+        y = sl["y"]
+        tiers = {k: sl[k] for k in tier_keys}
         masks = {
             "full": np.ones(len(y), bool),
             "ordinary": tiers["ordinary"],
@@ -277,10 +335,11 @@ def tables() -> dict:
             "seen_ordinary": tiers["seen_ordinary"],
             "tail": tiers["tail"],
         }
-        keep_w10 = np.ones(len(y), bool); keep_w10[worst10] = False
-        keep_172 = np.ones(len(y), bool); keep_172[row172] = False
-        masks["minus_fixed_worst10"] = keep_w10
-        masks["minus_row172"] = keep_172
+        if monsplit == "monitor":
+            keep_w10 = np.ones(len(y), bool); keep_w10[sl["fixed_worst10_positions"]] = False
+            keep_172 = np.ones(len(y), bool); keep_172[int(sl["row172_position"][0])] = False
+            masks["minus_fixed_worst10"] = keep_w10
+            masks["minus_row172"] = keep_172
         rec = {"family": family, "seed": int(seed), "fit": fit, "monitor_split": monsplit,
                "real_run": pair["REAL"]["run_dir"], "mean_run": pair["MEAN"]["run_dir"],
                "delta_real_minus_mean": {}}
