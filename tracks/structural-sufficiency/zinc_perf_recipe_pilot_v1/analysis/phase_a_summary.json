@@ -1,0 +1,274 @@
+{
+  "phase": "A1_structural_diagnosis",
+  "test_policy": "TEST_AS_DEV_DESCRIPTIVE (historical test-as-dev; not a new blind benchmark)",
+  "baselines": {
+    "all_claims_reproduced": true,
+    "numbers": {
+      "lcrc_a_s0_test": 0.06678236589080001,
+      "dcc_l_s0_test": 0.06626655830429999,
+      "dcc_l_s1_test": 0.06768789291530002,
+      "dcc_l_s2_test": 0.06753815602430001,
+      "dcc_l_s3_test": 0.0677847770933,
+      "dcc_l_4seed_mean_test": 0.0673193460843,
+      "blend_s0_test": 0.058831445897850006,
+      "blend_4seed_test": 0.0572996217596,
+      "lcrc_a_s0_valid": 0.07658163605158916,
+      "dcc_l_s0_valid": 0.07853714856499573,
+      "blend_s0_valid": 0.07093239221250405,
+      "blend_4seed_valid": 0.06753423380636377
+    }
+  },
+  "rows_requested": [
+    702,
+    298,
+    159,
+    510,
+    648,
+    796,
+    634,
+    822,
+    527,
+    622,
+    402
+  ],
+  "lcrc_top20": [
+    702,
+    298,
+    159,
+    510,
+    648,
+    796,
+    634,
+    822,
+    527,
+    622,
+    365,
+    342,
+    84,
+    961,
+    189,
+    715,
+    660,
+    336,
+    402,
+    479
+  ],
+  "dcc_top20": [
+    402,
+    159,
+    342,
+    702,
+    84,
+    298,
+    669,
+    790,
+    510,
+    365,
+    796,
+    648,
+    336,
+    954,
+    527,
+    61,
+    792,
+    414,
+    634,
+    660
+  ],
+  "shared_top20": [
+    84,
+    159,
+    298,
+    336,
+    342,
+    365,
+    402,
+    510,
+    527,
+    634,
+    648,
+    660,
+    702,
+    796
+  ],
+  "identity": {
+    "n_rows": 1000,
+    "n_identity_verified": 997,
+    "n_atom_order_identical_exact": 378,
+    "n_atom_order_recoverable": 661,
+    "n_unverified": 3,
+    "verified_rows_unverified": [
+      208,
+      680,
+      770
+    ]
+  },
+  "failure_rows_union_size": 26,
+  "explanations": {
+    "SHARED_FAILURE": 14,
+    "MODEL_COMPLEMENTARY": 12
+  },
+  "explanations_on_focus_rows": {
+    "SHARED_FAILURE": 14,
+    "MODEL_COMPLEMENTARY": 2
+  },
+  "explanation_details": {
+    "unseen_r2": 9,
+    "artificial_cycle_penalty": 3,
+    "dcc_only(ae_ratio=1.1x)": 1,
+    "lcrc_only(ae_ratio=3.1x)": 1,
+    "seen_supported_r2": 1,
+    "cycle_penalty_nonminimal_basis": 1,
+    "dcc_only(ae_ratio=1.6x)": 1,
+    "lcrc_only(ae_ratio=1.5x)": 1,
+    "lcrc_only(ae_ratio=1.8x)": 1,
+    "dcc_only(ae_ratio=2.4x)": 1,
+    "lcrc_only(ae_ratio=1.4x)": 1,
+    "dcc_only(ae_ratio=1.7x)": 1,
+    "dcc_only(ae_ratio=1.9x)": 1,
+    "lcrc_only(ae_ratio=4.1x)+opposite_signs": 1,
+    "dcc_only(ae_ratio=2.0x)": 1,
+    "lcrc_only(ae_ratio=2.1x)": 1
+  },
+  "shared_failure_rows": [
+    84,
+    159,
+    298,
+    336,
+    342,
+    365,
+    402,
+    510,
+    527,
+    634,
+    648,
+    660,
+    702,
+    796
+  ],
+  "lcrc_only_rows": [
+    822,
+    622,
+    961,
+    189,
+    715,
+    479
+  ],
+  "dcc_only_rows": [
+    669,
+    790,
+    954,
+    61,
+    792,
+    414
+  ],
+  "cycle_penalty_rows_in_test": 52,
+  "cycle_penalty_share_of_test_ae": {
+    "lcrc": 0.14803110773531142,
+    "dcc_s0": 0.14400589018338647
+  },
+  "r2_unseen_rows_in_test": 244,
+  "r2_unseen_share_of_test_ae": {
+    "lcrc": 0.4459476070613832,
+    "dcc_s0": 0.4757834192432194
+  },
+  "group_mae": {
+    "lcrc_all": 0.06678236589080001,
+    "dcc_s0_all": 0.06626655830429999,
+    "lcrc_cycle_penalty": 0.1901128384615385,
+    "dcc_s0_cycle_penalty": 0.18351489842307694,
+    "lcrc_no_penalty": 0.06001740326033756,
+    "dcc_s0_no_penalty": 0.05983521475348101,
+    "lcrc_r2_unseen": 0.12205506665122952,
+    "dcc_s0_r2_unseen": 0.12921528562090165
+  },
+  "blend": {
+    "mae_lcrc": 0.06678236589080001,
+    "mae_dcc": 0.06626655830429999,
+    "mae_blend_50_50": 0.058831445897850006,
+    "rows_improved": 594,
+    "rows_worsened": 406,
+    "top_blend_gain_rows": [
+      702,
+      84,
+      822,
+      298,
+      6,
+      992,
+      199,
+      189,
+      79,
+      794
+    ],
+    "top_blend_gain_values": [
+      0.45353556500000014,
+      0.43576295450000013,
+      0.39545597900000007,
+      0.3497164024999999,
+      0.241204768,
+      0.2343316695000004,
+      0.18266894050000015,
+      0.17289422300000012,
+      0.1675109720000001,
+      0.1675109720000001
+    ],
+    "share_of_total_gain_from_top10": 0.15839160959521603
+  },
+  "dcc_seed_variance": {
+    "mean_std": 0.03308395950247862,
+    "median_std": 0.024945740925523388,
+    "p90_std": 0.060883611724889986,
+    "max_std": 0.6305095902740221,
+    "max_std_row": 402,
+    "std_on_shared_failures": 0.16213696016733117,
+    "std_on_rest": 0.03125156395551317
+  },
+  "mechanism_checks": {
+    "shared_failure_supported_by_structure": {
+      "n_shared_top20": 14,
+      "n_shared_with_unseen_r2": 10,
+      "n_shared_with_cycle_penalty": 4,
+      "n_shared_with_neither": 1,
+      "shared_rows_with_neither": [
+        336
+      ],
+      "share_of_total_ae_unseen_r2": {
+        "lcrc": 0.4459476070613832,
+        "dcc_s0": 0.4757834192432194
+      },
+      "share_of_total_ae_cycle_penalty": {
+        "lcrc": 0.14803110773531142,
+        "dcc_s0": 0.14400589018338647
+      },
+      "note": "unseen-radius-2 support is the dominant shared structural factor; the artificial cycle penalty is a label-construction factor the models cannot see, not a structure the models failed to represent"
+    },
+    "model_complementarity_supported_by": {
+      "n_rows_in_exactly_one_top20": 12,
+      "mean_blend_gain_on_lcrc_only": 0.1631467305000001,
+      "mean_blend_gain_on_dcc_only": -0.10115519124999996,
+      "note": "complementarity is measured on the fixed 50/50 blend, not inferred from error signs alone"
+    },
+    "label_and_data_findings": {
+      "n_identity_unverified": 3,
+      "identity_unverified_rows": [
+        208,
+        680,
+        770
+      ],
+      "n_reconstruction_outliers": 2,
+      "reconstruction_outlier_rows": [
+        924,
+        976
+      ],
+      "n_cycle_penalty_rows": 52,
+      "n_cycle_penalty_basis_only": 6,
+      "note": "the artificial cycle penalty is real and verifiable (it moves the target by 3.28-6.72 z units), and for 6/52 test rows it is produced by a non-minimal cycle-basis element rather than a real >=7 ring"
+    }
+  },
+  "what_is_unknown": [
+    "the generator's own nx.cycle_basis ordering: RDKit atom ordering is recoverable only up to attributed isomorphism, so the exact basis that produced the label cannot be replayed for rows whose order differs (the penalty *value* is verified by label reconstruction, not by replaying the generator's vertex order)",
+    "aromaticity: the PyG ZINC subset stores Kekule bond orders only; ring aromaticity is re-perceived by RDKit and is not an input the models ever saw",
+    "any causal mechanism for a single molecule from one seed; row-level statements are descriptive"
+  ],
+  "created": "2026-10-29T18:56:50+0800"
+}

@@ -257,5 +257,217 @@
     "lcrc_config": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/configs/lcrc_v1.json",
     "notes": "the LCRC recipe in lc_train.RECIPE is imported read-only and is the single source of truth for the training hyper-parameters; this gate only verifies that this round's copies agree",
     "pass": true
-  }
+  },
+  "formal": {
+    "C2_frozen_inputs": {
+      "inputs": {
+        "G0": {
+          "train_cache_content_sha256": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b",
+          "valid_cache_content_sha256": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9",
+          "norm_fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f",
+          "feature_version": "lcrc-v1-atom108-s1joint-s2typedpath",
+          "train_cache_file_sha256": "1aef7f2135dbf320ee0751a03eae357fe0d6d527b80f6204fab78b02a0450c4e",
+          "valid_cache_file_sha256": "514e8c723dbd3d88adea8cfe176c3b8c37c849a0812e31c53ae434e4554c4cf3"
+        },
+        "G1": {
+          "train_cache_content_sha256": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b",
+          "valid_cache_content_sha256": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9",
+          "norm_fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f",
+          "feature_version": "lcrc-v1-atom108-s1joint-s2typedpath",
+          "train_cache_file_sha256": "1aef7f2135dbf320ee0751a03eae357fe0d6d527b80f6204fab78b02a0450c4e",
+          "valid_cache_file_sha256": "514e8c723dbd3d88adea8cfe176c3b8c37c849a0812e31c53ae434e4554c4cf3"
+        }
+      },
+      "gating_inputs": {
+        "G0": {
+          "train_cache_content_sha256": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b",
+          "valid_cache_content_sha256": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9",
+          "norm_fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f",
+          "feature_version": "lcrc-v1-atom108-s1joint-s2typedpath"
+        },
+        "G1": {
+          "train_cache_content_sha256": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b",
+          "valid_cache_content_sha256": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9",
+          "norm_fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f",
+          "feature_version": "lcrc-v1-atom108-s1joint-s2typedpath"
+        }
+      },
+      "equal_across_arms": true,
+      "equal_to_frozen": true,
+      "cache_container_sha_matches_host_profile": [
+        "remote_res"
+      ],
+      "cache_container_sha_note": "torch.save container bytes differ per checkout; the gating identity is the content sha256",
+      "ssl_sha256": {
+        "G0": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+        "G1": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97"
+      },
+      "ssl_equal_across_arms": true,
+      "ssl_equals_frozen": true,
+      "pass": true
+    },
+    "C1_C3_initial_state_and_data_order": {
+      "initial_state_sha256": {
+        "G0": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+        "G1": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e"
+      },
+      "first_batch_rows_equal": true,
+      "first_batch_rows_head": [
+        5231,
+        9365,
+        8907,
+        6060,
+        4811,
+        5472,
+        2211,
+        7999,
+        8703,
+        5199,
+        4907,
+        4187
+      ],
+      "data_order_seed": {
+        "G0": 101,
+        "G1": 101
+      },
+      "steps_per_epoch": {
+        "G0": 79,
+        "G1": 79
+      },
+      "total_updates": {
+        "G0": 47400,
+        "G1": 47400
+      },
+      "epochs": {
+        "G0": 600,
+        "G1": 600
+      },
+      "lr_sequences_equal": true,
+      "warmup_steps": {
+        "G0": 500,
+        "G1": 500
+      },
+      "first_batch_loss_reference": {
+        "G0": {
+          "loss_name": "l1",
+          "trainer_loss": 1.783325433731079,
+          "reference_loss": 1.783325433731079,
+          "abs_diff": 0.0,
+          "beta": null
+        },
+        "G1": {
+          "loss_name": "smooth_l1",
+          "trainer_loss": 1.7584102153778076,
+          "reference_loss": 1.7584102153778076,
+          "abs_diff": 0.0,
+          "beta": 0.05
+        }
+      },
+      "initial_equals_frozen": true,
+      "pass": true
+    },
+    "C4_l1_control_matches_frozen_path": {
+      "historical_curve": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s0/curve.csv",
+      "epochs_compared": 600,
+      "max_abs_valid_diff": 0.35853669730306137,
+      "max_abs_online_diff": 0.20887945013046266,
+      "worst_valid_epoch": 9,
+      "best_epoch": {
+        "G0": 508,
+        "G1": 310
+      },
+      "best_valid": {
+        "G0": 0.07923490979993948,
+        "G1": 0.08221474295674125
+      },
+      "historical_best": {
+        "epoch": 476,
+        "valid": 0.07658163924043765
+      },
+      "pass": false
+    },
+    "C7_ema_runtime": {
+      "G0": {
+        "start_step": 11850,
+        "init_step": 11850,
+        "init_epoch": 150,
+        "init_equals_online_params": true,
+        "rng_invariance": {
+          "step": 11851,
+          "torch_rng_state_unchanged": true,
+          "data_order_gen_state_unchanged": true,
+          "ema_update_under_no_grad": true
+        },
+        "ema_best": {
+          "valid_mae": 0.07966401746968041,
+          "epoch": 524
+        },
+        "first_ema_valid_epoch": 150
+      },
+      "G1": {
+        "start_step": 11850,
+        "init_step": 11850,
+        "init_epoch": 150,
+        "init_equals_online_params": true,
+        "rng_invariance": {
+          "step": 11851,
+          "torch_rng_state_unchanged": true,
+          "data_order_gen_state_unchanged": true,
+          "ema_update_under_no_grad": true
+        },
+        "ema_best": {
+          "valid_mae": 0.08246559788758168,
+          "epoch": 316
+        },
+        "first_ema_valid_epoch": 150
+      },
+      "pass": true
+    },
+    "C8_deployment_shape": {
+      "parameters": {
+        "G0": 237519,
+        "G1": 237519
+      },
+      "param_audit": {
+        "G0": {
+          "parameters": 237519,
+          "optimizer_parameters": 237519,
+          "parameters_in_optimizer": true,
+          "parameter_tensors": 31,
+          "requires_grad_tensors": 31,
+          "all_parameters_require_grad": true
+        },
+        "G1": {
+          "parameters": 237519,
+          "optimizer_parameters": 237519,
+          "parameters_in_optimizer": true,
+          "parameter_tensors": 31,
+          "requires_grad_tensors": 31,
+          "all_parameters_require_grad": true
+        }
+      },
+      "checkpoint_sha256": {
+        "G0": {
+          "best": "f75ad5e946d0c9cad95b3b6b9c6e3db23dd416eab84d2a5359ab3159ff969231",
+          "final": "2048030660ece8e082d87a06676be1e4f7a587f084e16a441d58152e71115636",
+          "ema_best": "c3f7c15d3afba6054feaad02fc1e40d392121f43a0d43ca0148cddcbd52349a7"
+        },
+        "G1": {
+          "best": "347a65f13e8d509fd0ef29645189030e283ed6110edef339c5abe8980edfa576",
+          "final": "97e3bcecc9638092c40af7bad577ca6e6bddb67d3cfe770a567bcd7db386c1af",
+          "ema_best": "57f4f190ad0cc0dc25db85ddf610c6b56bf4815e0556df8ff5d10053efe98d01"
+        }
+      },
+      "single_state_dict_per_checkpoint": true,
+      "ensemble_or_soup": false,
+      "test_loaded_during_training": {
+        "G0": false,
+        "G1": false
+      },
+      "pass": true
+    },
+    "all_pass": false
+  },
+  "formal_all_pass": false,
+  "verified": "2026-10-29T19:07:26+0800"
 }

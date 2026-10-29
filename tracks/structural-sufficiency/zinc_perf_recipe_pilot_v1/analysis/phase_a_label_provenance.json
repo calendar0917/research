@@ -1,0 +1,47 @@
+{
+  "decomposition": "y = z(logP) + z(-SA) + z(cycle), z over the 249,456-molecule GVAE property table; recomputed here from the verified RDKit molecule",
+  "threshold": 0.5,
+  "threshold_rationale": "the stored labels use the GVAE pipeline's own z constants, which differ slightly from the ones recomputed from the frozen property table; the residual therefore scales with |cycle| (median ~0.002 at cycle=0, ~0.11 at cycle=-1, 0.0619 at cycle=-2). 0.5 is far above that systematic class and far below the two genuine mismatches",
+  "abs_delta_by_label_excess": {
+    "0.0": {
+      "count": 948.0,
+      "median": 0.00127471786690325,
+      "mean": 0.005050786174337383,
+      "max": 3.441951753926328
+    },
+    "1.0": {
+      "count": 44.0,
+      "median": 0.03173643580558645,
+      "mean": 0.10863884052764004,
+      "max": 3.41157690132836
+    },
+    "2.0": {
+      "count": 8.0,
+      "median": 0.061805005102342145,
+      "mean": 0.06190016419452689,
+      "max": 0.0630866364429305
+    }
+  },
+  "n_outliers": 2,
+  "outlier_rows": [
+    {
+      "row": 924,
+      "y": -6.687763,
+      "abs_delta": 3.41157690132836,
+      "lcrc_ae": 0.07807999999999993,
+      "dcc_ae": 0.0914222950000001,
+      "label_n_candidates": 1
+    },
+    {
+      "row": 976,
+      "y": -3.3001366,
+      "abs_delta": 3.441951753926328,
+      "lcrc_ae": 0.09081219999999979,
+      "dcc_ae": 0.1112745150000003,
+      "label_n_candidates": 1
+    }
+  ],
+  "outlier_interpretation": "both outliers are low-error rows, so they do not drive any failure row; they are SMILES-sidecar identity mismatches (graph-isomorphic but different substitution) and are reported as data-side caveats, not as error causes",
+  "n_penalty_rows": 52,
+  "n_penalty_rows_with_consistent_reconstruction": 51
+}

@@ -1,0 +1,102 @@
+{
+  "round": "zinc-perf-recipe-pilot-v1",
+  "purpose": "C4 equivalence control: frozen trainer vs itself vs the historical curve",
+  "device": "cpu",
+  "environment": {
+    "python": "3.12.15",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1",
+    "cuda_available": false,
+    "cuda_device_count": 0,
+    "gpu_names": [],
+    "git_commit": "1f7ada75bb18f61ccfb54fcec9f89332b332d681",
+    "git_dirty_tracked": true,
+    "round_id": "zinc-arch-discovery-v1",
+    "timestamp": "2026-10-29T19:19:01+0800"
+  },
+  "git_commit": "1f7ada75bb18f61ccfb54fcec9f89332b332d681",
+  "epochs": 3,
+  "historical_curve": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s0/curve.csv",
+  "comparisons": {
+    "frozen_a_vs_history": {
+      "max_valid_diff": 0.2551118515683338,
+      "max_valid_diff_epoch": 3,
+      "mean_valid_diff": 0.20934397998421142,
+      "median_valid_diff": 0.20919278195779772,
+      "max_online_diff": 0.21676647882461542,
+      "first_epoch_valid_diff_gt_1e-5": 1,
+      "per_epoch_valid_diff": [
+        0.16372730642650274,
+        0.20919278195779772,
+        0.2551118515683338
+      ]
+    },
+    "frozen_b_vs_history": {
+      "max_valid_diff": 0.2551118515683338,
+      "max_valid_diff_epoch": 3,
+      "mean_valid_diff": 0.20934397998421142,
+      "median_valid_diff": 0.20919278195779772,
+      "max_online_diff": 0.21676647882461542,
+      "first_epoch_valid_diff_gt_1e-5": 1,
+      "per_epoch_valid_diff": [
+        0.16372730642650274,
+        0.20919278195779772,
+        0.2551118515683338
+      ]
+    },
+    "frozen_a_vs_frozen_b": {
+      "max_valid_diff": 0.0,
+      "max_valid_diff_epoch": 1,
+      "mean_valid_diff": 0.0,
+      "median_valid_diff": 0.0,
+      "max_online_diff": 0.0,
+      "first_epoch_valid_diff_gt_1e-5": null,
+      "per_epoch_valid_diff": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "frozen_a_vs_G0": {
+      "max_valid_diff": 0.25511270059179514,
+      "max_valid_diff_epoch": 3,
+      "mean_valid_diff": 0.2093442157777026,
+      "median_valid_diff": 0.2091927095530554,
+      "max_online_diff": 0.2167665537834167,
+      "first_epoch_valid_diff_gt_1e-5": 1,
+      "per_epoch_valid_diff": [
+        0.16372723718825727,
+        0.2091927095530554,
+        0.25511270059179514
+      ]
+    },
+    "G0_vs_history": {
+      "max_valid_diff": 8.490234613134362e-07,
+      "max_valid_diff_epoch": 3,
+      "mean_valid_diff": 3.3022214969887404e-07,
+      "median_valid_diff": 7.240474231284821e-08,
+      "max_online_diff": 7.495880127716958e-08,
+      "first_epoch_valid_diff_gt_1e-5": null,
+      "per_epoch_valid_diff": [
+        6.923824547033774e-08,
+        7.240474231284821e-08,
+        8.490234613134362e-07
+      ]
+    }
+  },
+  "frozen_replay_initial_state": {
+    "a": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+    "b": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+    "G0": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e"
+  },
+  "first_batch_rows_equal": true,
+  "frozen_replay_a_wall_seconds": 11.586717165000664,
+  "frozen_replay_b_wall_seconds": 10.898086051000064,
+  "conclusion_rule": {
+    "frozen_trainer_is_deterministic": "max(frozen_a vs frozen_b) < 1e-5 over the horizon",
+    "divergence_is_hardware_nondeterminism": "the frozen trainer's own two replays diverge from each other and from history by the same magnitude as the L1 control arm",
+    "same_basin": "late-epoch online-train MAE agrees to ~1e-4 while the valid curve keeps a persistent offset (chaotic amplification of a 1e-6 perturbation)"
+  },
+  "created": "2026-10-29T19:19:01+0800"
+}

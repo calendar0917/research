@@ -1,0 +1,158 @@
+{
+  "round": "zinc-perf-recipe-pilot-v1",
+  "device": "cuda:0",
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1",
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "git_commit": "1f7ada75bb18f61ccfb54fcec9f89332b332d681",
+    "git_dirty_tracked": false,
+    "round_id": "zinc-arch-discovery-v1",
+    "timestamp": "2026-10-29T15:45:54+0800"
+  },
+  "git_commit": "1f7ada75bb18f61ccfb54fcec9f89332b332d681",
+  "epochs": 2,
+  "epochs_comparison": [
+    {
+      "epoch": 1,
+      "frozen_valid": 0.4730962213938474,
+      "g0_valid": 0.473094329937303,
+      "g1_valid": 0.46655042694037546,
+      "abs_diff_valid_frozen_vs_g0": 1.8914565443894915e-06,
+      "abs_diff_online_frozen_vs_g0": 1.2726783760186322e-07,
+      "g0_ema_valid": 0.7251882299007266,
+      "g1_ema_valid": 0.6857233887193143,
+      "lr_frozen": 0.0005410132480184673,
+      "lr_g0": 0.0005410132480184673,
+      "lr_g1": 0.0005410132480184673
+    },
+    {
+      "epoch": 2,
+      "frozen_valid": 0.3252842924808501,
+      "g0_valid": 0.32528427005460253,
+      "g1_valid": 0.3289146314560785,
+      "abs_diff_valid_frozen_vs_g0": 2.24262475811976e-08,
+      "abs_diff_online_frozen_vs_g0": 4.296302791306772e-08,
+      "g0_ema_valid": 0.6819592028287589,
+      "g1_ema_valid": 0.6463436988023459,
+      "lr_frozen": 1e-05,
+      "lr_g0": 1e-05,
+      "lr_g1": 1e-05
+    }
+  ],
+  "param_drift": {
+    "frozen_vs_g0": 2.288818359375e-05,
+    "g0_vs_g1": 0.01636980101466179
+  },
+  "loss_reference": {
+    "G0": {
+      "loss_name": "l1",
+      "trainer_loss": 1.783325433731079,
+      "reference_loss": 1.783325433731079,
+      "abs_diff": 0.0,
+      "beta": null
+    },
+    "G1": {
+      "loss_name": "smooth_l1",
+      "trainer_loss": 1.7584102153778076,
+      "reference_loss": 1.7584102153778076,
+      "abs_diff": 0.0,
+      "beta": 0.05
+    }
+  },
+  "ema": {
+    "start_step_expected": 40,
+    "start_step": {
+      "G0": 40,
+      "G1": 40
+    },
+    "init_epoch": {
+      "G0": 1,
+      "G1": 1
+    },
+    "init_equals_online_params": {
+      "G0": true,
+      "G1": true
+    },
+    "rng_invariance": {
+      "G0": {
+        "step": 41,
+        "torch_rng_state_unchanged": true,
+        "data_order_gen_state_unchanged": true,
+        "ema_update_under_no_grad": true
+      },
+      "G1": {
+        "step": 41,
+        "torch_rng_state_unchanged": true,
+        "data_order_gen_state_unchanged": true,
+        "ema_update_under_no_grad": true
+      }
+    },
+    "first_ema_valid": {
+      "G0": 0.7251882299007266,
+      "G1": 0.6857233887193143
+    },
+    "first_online_valid": {
+      "G0": 0.473094329937303,
+      "G1": 0.46655042694037546
+    },
+    "ema_differs_from_online": {
+      "G0": true,
+      "G1": true
+    },
+    "ema_best": {
+      "G0": {
+        "valid_mae": 0.6819592028287589,
+        "epoch": 2
+      },
+      "G1": {
+        "valid_mae": 0.6463436988023459,
+        "epoch": 2
+      }
+    },
+    "ema_evaluated_from_epoch": {
+      "G0": 1,
+      "G1": 1
+    }
+  },
+  "cost": {
+    "steady_seconds_per_epoch": {
+      "G0": 3.0429719730746,
+      "G1": 2.497632793849334
+    },
+    "projected_two_arm_gpu_hours": 1.0357775406027214,
+    "hard_cap_gpu_hours": 1.5,
+    "smoke_wall_seconds": 27.323679379886016,
+    "smoke_gpu_hours": 0.007589910938857226,
+    "frozen_reference_wall_seconds": 9.364816230954602,
+    "within_cap": true,
+    "note": "both arms run concurrently on separate GPUs, so the wall clock is max(arm) not sum(arm); the sum is the conservative GPU-hour projection"
+  },
+  "gates": {
+    "same_initial_state": true,
+    "same_first_batch_rows": true,
+    "same_warmup_steps": true,
+    "same_total_updates": true,
+    "lr_sequences_equal": true,
+    "frozen_vs_g0_valid_within_tolerance": true,
+    "frozen_vs_g0_online_within_tolerance": true,
+    "frozen_vs_g0_param_drift_within_tolerance": true,
+    "g1_differs_from_g0": true,
+    "smooth_l1_loss_matches_reference": true,
+    "ema_start_step_correct": true,
+    "ema_init_equals_online": true,
+    "ema_evaluated_and_distinct": true,
+    "ema_rng_invariance": true,
+    "parameters_237519": true,
+    "cost_within_cap": true,
+    "official_test_never_loaded": true
+  },
+  "all_pass": true,
+  "created": "2026-10-29T15:45:54+0800"
+}

@@ -1,0 +1,148 @@
+{
+  "question": "the GVAE target uses `cycle = -max(0, max(nx.cycle_basis(G)) - 6)`; `nx.cycle_basis` returns a spanning-tree fundamental basis, which is not the minimum cycle basis, so its maximum element can exceed the largest real ring",
+  "n_rows_max_basis_ne_max_mcb": 9,
+  "rows_max_basis_ne_max_mcb": [
+    230,
+    402,
+    547,
+    670,
+    687,
+    728,
+    768,
+    924,
+    976
+  ],
+  "n_penalty_rows": 52,
+  "n_penalty_backed_by_ring_ge7": 46,
+  "n_penalty_basis_only": 6,
+  "penalty_basis_only_rows": [
+    {
+      "row": 230,
+      "label_excess": 2,
+      "basis_sizes": [
+        5,
+        6,
+        6,
+        6,
+        8
+      ],
+      "mcb_sizes": [
+        5,
+        6,
+        6,
+        6,
+        6
+      ],
+      "rdkit_max_ring_size": 6,
+      "longest_simple_cycle": 8,
+      "lcrc_ae": 0.007010700000000369,
+      "dcc_ae": 0.08117865699999971
+    },
+    {
+      "row": 402,
+      "label_excess": 2,
+      "basis_sizes": [
+        6,
+        6,
+        6,
+        8
+      ],
+      "mcb_sizes": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "rdkit_max_ring_size": 6,
+      "longest_simple_cycle": 8,
+      "lcrc_ae": 0.4275732000000003,
+      "dcc_ae": 3.088657877
+    },
+    {
+      "row": 547,
+      "label_excess": 2,
+      "basis_sizes": [
+        6,
+        6,
+        6,
+        8
+      ],
+      "mcb_sizes": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "rdkit_max_ring_size": 6,
+      "longest_simple_cycle": 8,
+      "lcrc_ae": 0.11683180000000082,
+      "dcc_ae": 0.029652099000000653
+    },
+    {
+      "row": 670,
+      "label_excess": 2,
+      "basis_sizes": [
+        6,
+        6,
+        6,
+        8
+      ],
+      "mcb_sizes": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "rdkit_max_ring_size": 6,
+      "longest_simple_cycle": 8,
+      "lcrc_ae": 0.12380100000000027,
+      "dcc_ae": 0.030142980999999125
+    },
+    {
+      "row": 687,
+      "label_excess": 2,
+      "basis_sizes": [
+        4,
+        5,
+        6,
+        6,
+        8
+      ],
+      "mcb_sizes": [
+        4,
+        5,
+        6,
+        6,
+        6
+      ],
+      "rdkit_max_ring_size": 6,
+      "longest_simple_cycle": 8,
+      "lcrc_ae": 0.14072999999999958,
+      "dcc_ae": 0.06817296899999903
+    },
+    {
+      "row": 728,
+      "label_excess": 2,
+      "basis_sizes": [
+        5,
+        6,
+        6,
+        6,
+        8
+      ],
+      "mcb_sizes": [
+        5,
+        6,
+        6,
+        6,
+        6
+      ],
+      "rdkit_max_ring_size": 6,
+      "longest_simple_cycle": 8,
+      "lcrc_ae": 0.001723000000000141,
+      "dcc_ae": 0.10505743000000045
+    }
+  ],
+  "interpretation": "for these rows the artificial penalty is a property of the chosen cycle basis (a long perimeter cycle), not of a >=7-membered ring; no model can recover it from ring sizes, and it is a label-construction artifact rather than a chemistry feature",
+  "note": "the exact generator vertex order is not recoverable for rows whose atom order differs from the predicted model-ordering, so the penalty VALUE is verified via label reconstruction, not by replaying the generator's draw"
+}
