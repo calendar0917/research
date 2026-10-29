@@ -2146,8 +2146,11 @@ zinc_perf_recipe_pilot_v1:
     key: "C0 frozen constants vs lcrc_v1.json; init hash and data order identical across arms; first-batch loss exact for both losses; SmoothL1 value+grad matched to hand reference; EMA recurrence/start step/passivity/RNG invariance; historical checkpoint replay 0.076581646 vs frozen (6.8e-9); 251/251 anchor agreement for the radius-2 grouping rule"
   budget:
     gpu_hours_cap: 1.5
-    gpu_hours_used: 0.884
-    breakdown: {G0: 0.368, G1: 0.459, smoke: 0.011, divergence: 0.020, test_read: 0.025}
+    gpu_hours_used_job_wall: 0.868
+    gpu_hours_trainer_measured_arms: 0.827
+    breakdown_job_wall: {G0: 0.371, G1: 0.462, smoke: 0.009, divergence: 0.022, test_read: 0.004}
+    ledger: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/LEDGER.md
+    includes_cpu_only_infra_jobs: 'two 8 s res-local deploy-hygiene jobs, 0 GPU-h'
   artifacts:
     phase_a_table: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/phase_a_table.md
     phase_a_summary: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/phase_a_summary.json

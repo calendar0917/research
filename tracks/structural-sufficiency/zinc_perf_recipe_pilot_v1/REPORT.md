@@ -3,7 +3,7 @@
 - Round：`zinc-perf-recipe-pilot-v1`
 - 决策提交：`fe5d60f`（决策冻结于 official test 读取之前）
 - 训练执行：`res` / A100-40GB / torch 2.5.1+cu124，commit `1f7ada7`（两臂）
-- 预算实耗：**0.884 A100·h**（G0 0.368 + G1 0.459 + smoke 0.011 + divergence 0.020 + test read 0.025），上限 1.5
+- 预算实耗：**0.868 A100·h**（job wall 累计：G0 0.371 + G1 0.462 + smoke 0.009 + divergence 0.022 + test read 0.004；两臂 trainer 自计 0.827），上限 1.5
 - 正式轨迹：两条，均 seed 0，600 epoch / 47,400 updates，`status = completed`
 
 本报告只回答被指定的 5 个问题。所有 valid 数字标 `VALID_AS_DEV_DESCRIPTIVE`（valid 参与了
