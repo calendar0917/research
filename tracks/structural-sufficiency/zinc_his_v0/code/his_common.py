@@ -86,6 +86,20 @@ A_S0_WORST10 = (172, 917, 753, 759, 224, 447, 678, 659, 267, 260)
 
 ANCHOR_CSV = REPO / "tracks/structural-sufficiency/zinc_performance_search_v1/analysis/per_molecule_valid.csv"
 
+#: ``torch.save`` container bytes of the *same* cache content as produced by the
+#: remote checkout (they are the values recorded in the historical LCRC
+#: ``train.json`` payloads).  Recorded for provenance only, never gating.
+FROZEN_CACHE_FILE_SHA256_BY_HOST = {
+    "remote_res": {
+        "train": "1aef7f2135dbf320ee0751a03eae357fe0d6d527b80f6204fab78b02a0450c4e",
+        "valid": "514e8c723dbd3d88adea8cfe176c3b8c37c849a0812e31c53ae434e4554c4cf3",
+    },
+    "local": {
+        "train": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
+        "valid": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+    },
+}
+
 
 def track_rel(path: Path | str) -> str:
     try:
@@ -123,14 +137,25 @@ def sha256_file(path: Path | str) -> str:
 # ---------------------------------------------------------------------------
 
 def verify_frozen_inputs(*, verbose: bool = True) -> dict:
-    """Recompute every frozen sha256 / fingerprint this round depends on."""
+    """Recompute every frozen sha256 / fingerprint this round depends on.
+
+    Gating rule for the feature caches: the **content fingerprint** is the
+    scientific invariant and is what gates.  The ``torch.save`` container file
+    sha256 differs between checkouts that re-saved identical tensors (zip
+    member ordering/timestamps); the historical LCRC runs used the remote
+    container bytes recorded in :data:`FROZEN_CACHE_FILE_SHA256_BY_HOST`,
+    which produced exactly the same content fingerprint.  The file sha256 is
+    still recorded so any real content change is caught by the content gate.
+    """
     checks = {}
 
-    def record(name: str, got: str, want: str) -> None:
-        checks[name] = {"got": got, "want": want, "ok": bool(got == want)}
+    def record(name: str, got: str, want: str, *, gate: bool = True) -> None:
+        checks[name] = {"got": got, "want": want, "ok": bool(got == want) if gate else None}
 
-    record("train_cache_file", sha256_file(D.cache_path("train")), FROZEN["train_cache_file_sha256"])
-    record("valid_cache_file", sha256_file(D.cache_path("valid")), FROZEN["valid_cache_file_sha256"])
+    record("train_cache_file", sha256_file(D.cache_path("train")),
+           FROZEN["train_cache_file_sha256"], gate=False)
+    record("valid_cache_file", sha256_file(D.cache_path("valid")),
+           FROZEN["valid_cache_file_sha256"], gate=False)
     train = D.load_cache("train")
     valid = D.load_cache("valid")
     record("train_cache_content", D.content_fingerprint(train), FROZEN["train_cache_content_sha256"])
@@ -146,12 +171,12 @@ def verify_frozen_inputs(*, verbose: bool = True) -> dict:
                          "ok": int(train["n_molecules"]) == FROZEN["n_train"]}
     checks["n_valid"] = {"got": int(valid["n_molecules"]), "want": FROZEN["n_valid"],
                          "ok": int(valid["n_molecules"]) == FROZEN["n_valid"]}
-    ok = all(v["ok"] for v in checks.values())
+    ok = all(v["ok"] is not False for v in checks.values())
     if verbose:
         for k, v in checks.items():
             log(f"[frozen] {k}: {'ok' if v['ok'] else 'MISMATCH'} ({v['got']})")
     if not ok:
-        bad = [k for k, v in checks.items() if not v["ok"]]
+        bad = [k for k, v in checks.items() if v["ok"] is False]
         raise RuntimeError(f"frozen input mismatch: {bad}")
     return checks
 
@@ -205,7 +230,8 @@ def valid_masks() -> dict:
 
 __all__ = [
     "ROUND_ID", "CODE_DIR", "EXP_DIR", "REPO", "ANALYSIS", "RUNS", "CONFIGS",
-    "LCRC_TRACK", "FROZEN", "HIST", "ROW172", "A_S0_WORST10", "ANCHOR_CSV",
+    "LCRC_TRACK", "FROZEN", "FROZEN_CACHE_FILE_SHA256_BY_HOST", "HIST", "ROW172",
+    "A_S0_WORST10", "ANCHOR_CSV",
     "L", "D", "M", "T", "LCRC_A_S0_BEST",
     "track_rel", "write_json", "read_json", "read_json_or_none", "now", "log", "sha256_file",
     "verify_frozen_inputs", "load_anchor", "valid_masks",

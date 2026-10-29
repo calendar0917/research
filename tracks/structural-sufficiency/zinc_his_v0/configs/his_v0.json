@@ -10,9 +10,16 @@
     "new_deployment_parameters": 0,
     "inference_unchanged": true,
     "object": "effective linear response of LocalContent.path_emb on the first LocalContent MLP layer",
-    "path_axis_shape": [21, 3, 3],
+    "path_axis_shape": [
+      21,
+      3,
+      3
+    ],
     "path_code_encoding": "9*middle_atom_type + 3*(bond1_type-1) + (bond2_type-1)",
-    "input_block_of_mlp_lins_0": [320, 352],
+    "input_block_of_mlp_lins_0": [
+      320,
+      352
+    ],
     "input_block_proof": "his_cpu_checks G2: a random perturbation of path_emb changes exactly input columns 320..351 and the layer-0 output delta equals dx[:,320:352] @ W[:,320:352].T",
     "anova": "balanced ANOVA over the three categorical axes; H_le2 = AB + AC + BC - (A + B + C) + mu ; H_3 = H - H_le2",
     "anova_formula_note": "The task brief prints H - A - B - C + AB + AC + BC - mu, which is not the residual (it does not annihilate first/second-order tensors and its marginals are non-zero). The implemented H_3 is the unique residual satisfying the four properties the same brief requires; the discrepancy is pinned by tests/test_his_v0.py::test_literal_brief_formula_is_not_the_residual.",
@@ -31,7 +38,7 @@
     "lambda_calibration_file": "tracks/structural-sufficiency/zinc_his_v0/analysis/lambda_calibration.json",
     "lambda_guards": {
       "finite": true,
-      "min": 1e-04,
+      "min": 0.0001,
       "max": 10000.0,
       "action_if_violated": "stop and report; do not switch calibration method"
     },
@@ -47,12 +54,16 @@
     "train_cache": {
       "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_train.pt",
       "sha256": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
-      "content_sha256": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b"
+      "content_sha256": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b",
+      "file_sha256_local": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
+      "file_sha256_remote_res": "1aef7f2135dbf320ee0751a03eae357fe0d6d527b80f6204fab78b02a0450c4e"
     },
     "valid_cache": {
       "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_valid.pt",
       "sha256": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
-      "content_sha256": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9"
+      "content_sha256": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9",
+      "file_sha256_local": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+      "file_sha256_remote_res": "514e8c723dbd3d88adea8cfe176c3b8c37c849a0812e31c53ae434e4554c4cf3"
     },
     "normalisation": {
       "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/analysis/norm.json",
@@ -62,10 +73,14 @@
     "ssl_s0": {
       "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
       "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
-      "loaded_modules": ["atom_encoder", "bond_encoder"]
+      "loaded_modules": [
+        "atom_encoder",
+        "bond_encoder"
+      ]
     },
     "feature_version": "lcrc-v1-atom108-s1joint-s2typedpath",
-    "official_test_loaded": false
+    "official_test_loaded": false,
+    "cache_identity_rule": "The content_sha256 is the gating invariant. The torch.save container file sha256 differs between checkouts that stored identical tensors (zip member ordering/timestamps); both copies exist and carry the same content fingerprint. File sha256 is recorded for provenance only."
   },
   "model": {
     "arm": "A",
@@ -135,8 +150,28 @@
     "row172",
     "a_s0_worst10_fixed"
   ],
-  "phase_c_extra": ["W20", "T100", "final_valid_mae", "best_train_mae_eval", "per-molecule paired delta", "bootstrap CI", "win fraction", "top contributors"],
-  "worst10_rows_frozen": [172, 917, 753, 759, 224, 447, 678, 659, 267, 260],
+  "phase_c_extra": [
+    "W20",
+    "T100",
+    "final_valid_mae",
+    "best_train_mae_eval",
+    "per-molecule paired delta",
+    "bootstrap CI",
+    "win fraction",
+    "top contributors"
+  ],
+  "worst10_rows_frozen": [
+    172,
+    917,
+    753,
+    759,
+    224,
+    447,
+    678,
+    659,
+    267,
+    260
+  ],
   "worst10_source": "tracks/structural-sufficiency/zinc_cjp_ssl_v1/configs/cjp_ssl_v1.json diagnostic_rows.historical_lca_s0_worst10 (frozen before that round's GPU results)",
   "verdict_rules": {
     "delta_sign": "delta = HIS - REPLAY on per-molecule absolute error; negative = HIS better",
@@ -160,7 +195,10 @@
     "hard_gpu_hours": 2.0,
     "max_concurrent_gpus": 2,
     "host": "res (2 x A100-SXM4-40GB, process backend)",
-    "pools": ["res-gpu0", "res-gpu1"],
+    "pools": [
+      "res-gpu0",
+      "res-gpu1"
+    ],
     "stop_if_projection_exceeds_hard_budget": true
   },
   "test_policy": "terminal; the official test split must not be constructed, loaded or scored in this round",

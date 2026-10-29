@@ -84,7 +84,15 @@ def _sha_of(paths) -> dict:
     return {HIS.track_rel(p): HIS.sha256_file(p) for p in paths}
 
 
-def main() -> int:
+def main(argv=None) -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser(description="HIS-v0 CPU gates")
+    ap.add_argument("--no-write", action="store_true",
+                    help="run the gates without touching analysis/cpu_checks.json "
+                         "(used on the remote checkout, which must stay clean)")
+    ap.add_argument("--out", default=None)
+    args = ap.parse_args(argv)
     HIS.ANALYSIS.mkdir(parents=True, exist_ok=True)
     ckpt = Checker()
 
@@ -419,9 +427,15 @@ def main() -> int:
         "official_test_loaded": False,
         "pytest": "tests/test_his_v0.py (21 pure-math tests, fresh-clone safe)",
     }
-    HIS.write_json(HIS.ANALYSIS / "cpu_checks.json", out)
+    if args.no_write:
+        print("\n[--no-write] analysis/cpu_checks.json not modified")
+    else:
+        path = Path(args.out) if args.out else HIS.ANALYSIS / "cpu_checks.json"
+        HIS.write_json(path, out)
+        print(f"\nCPU gates: {sum(1 for r in ckpt.results if r['pass'])}/{len(ckpt.results)} "
+              f"pass -> {HIS.track_rel(path)}")
     n_pass = sum(1 for r in ckpt.results if r["pass"])
-    print(f"\nCPU gates: {n_pass}/{len(ckpt.results)} pass -> {HIS.track_rel(HIS.ANALYSIS / 'cpu_checks.json')}")
+    print(f"CPU gates: {n_pass}/{len(ckpt.results)} pass")
     return 0 if ckpt.ok else 1
 
 
