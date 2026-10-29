@@ -159,9 +159,11 @@ def _slices() -> dict:
 
 
 def _runs() -> list[dict]:
+    """Formal runs only: directory name must start with ``stage`` (smoke/timing
+    runs are named ``stage*`` too but are marked ``smoke`` and skipped below)."""
     out = []
     for d in sorted(C.RUNS.iterdir()):
-        if not d.is_dir():
+        if not d.is_dir() or not d.name.startswith("stage"):
             continue
         path = d / "train.json"
         if not path.exists():
@@ -189,7 +191,14 @@ def tables() -> dict:
     tiers = {k: sl[k] for k in ("ordinary", "tail", "any_unseen", "unseen_ordinary", "seen_ordinary")}
 
     rows_main, rows_slice, contrasts = [], [], []
-    budget = {}
+    # timing / smoke jobs are not ranked but their cost is part of the budget
+    budget = {"timing_smoke": {"runs": [], "gpu_hours": 0.0, "wall_seconds": 0.0}}
+    for info in _runs():
+        if not info.get("smoke"):
+            continue
+        budget["timing_smoke"]["runs"].append(info["run_dir"])
+        budget["timing_smoke"]["gpu_hours"] += float(info["gpu_hours"])
+        budget["timing_smoke"]["wall_seconds"] += float(info["wall_seconds"])
     for info in _runs():
         run = info["run_dir"]
         if info.get("smoke"):
