@@ -10,8 +10,9 @@ control arm ``G0``.  If the frozen trainer cannot reproduce itself either, the
 600-epoch curve equality criterion is not achievable on this execution regime
 and the achievable equivalence criterion must be stated instead.
 
-Writes ``analysis/divergence.json``.  No new scientific arm is trained: this is
-a replay/equivalence control only, and it never touches valid selection or test.
+Writes ``runs/divergence/divergence.json`` (pulled to ``analysis/divergence.json``).
+No new scientific arm is trained: this is a replay/equivalence control only,
+and it never touches test.
 """
 
 from __future__ import annotations
@@ -122,7 +123,9 @@ def main(argv=None) -> int:
         },
         "created": Z.now(),
     }
-    Z.write_json(Z.ANALYSIS / "divergence.json", payload)
+    # written under the gitignored runs/ tree so a remote run never collides
+    # with the tracked analysis copy at deploy time
+    Z.write_json(out_dir / "divergence.json", payload)
     for k, v in summary.items():
         Z.log(f"[divergence] {k}: max_valid={v['max_valid_diff']:.3e} "
               f"(ep {v['max_valid_diff_epoch']}), first>1e-5 at ep "

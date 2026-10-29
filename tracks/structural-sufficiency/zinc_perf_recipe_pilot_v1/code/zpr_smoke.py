@@ -8,7 +8,7 @@ Runs, in one process on one GPU:
   2. ``G0`` (L1 + passive EMA, 2 epochs),
   3. ``G1`` (SmoothL1(beta=0.05) + passive EMA, 2 epochs),
 
-then writes ``analysis/smoke.json`` with
+then writes ``runs/smoke/smoke.json`` (pulled to ``analysis/smoke.json``) with
 
   * frozen-vs-G0 equivalence (per-epoch valid/online MAE, parameter drift),
   * G1 actually diverging from G0 (the loss switch is live),
@@ -17,7 +17,8 @@ then writes ``analysis/smoke.json`` with
     and *not* equal to either the initialisation or the online model,
   * a wall-clock projection of the two 600-epoch arms against the 1.5 A100-h cap.
 
-Nothing here writes to a Git-tracked path except ``analysis/smoke.json``.
+Nothing here writes to a Git-tracked path: the JSON goes under the
+Git-ignored ``runs/`` tree.
 """
 
 from __future__ import annotations
@@ -181,7 +182,9 @@ def main(argv=None) -> int:
         "all_pass": bool(all(gates.values())),
         "created": Z.now(),
     }
-    Z.write_json(Z.ANALYSIS / "smoke.json", payload)
+    # written under the gitignored runs/ tree so a remote run never collides
+    # with the tracked analysis copy at deploy time
+    Z.write_json(Z.RUNS / "smoke" / "smoke.json", payload)
     Z.log(f"[zpr smoke] gates={gates}")
     Z.log(f"[zpr smoke] projected two-arm cost {projected:.3f} A100-h")
     return 0 if payload["all_pass"] else 2
