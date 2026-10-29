@@ -1,0 +1,629 @@
+{
+  "round": "zinc-his-v0",
+  "phase": "A2/A3",
+  "created": "2026-10-29T12:46:44+0800",
+  "git_commit": "57806455fb3757182e65d526f9bff9fcbf88a76e",
+  "device": "cpu",
+  "official_test_loaded": false,
+  "valid_labels_read": false,
+  "frozen_inputs": {
+    "train_cache_file": {
+      "got": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
+      "want": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
+      "ok": true
+    },
+    "valid_cache_file": {
+      "got": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+      "want": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+      "ok": true
+    },
+    "train_cache_content": {
+      "got": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b",
+      "want": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b",
+      "ok": true
+    },
+    "valid_cache_content": {
+      "got": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9",
+      "want": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9",
+      "ok": true
+    },
+    "feature_version": {
+      "got": "lcrc-v1-atom108-s1joint-s2typedpath",
+      "want": "lcrc-v1-atom108-s1joint-s2typedpath",
+      "ok": true
+    },
+    "valid_feature_version": {
+      "got": "lcrc-v1-atom108-s1joint-s2typedpath",
+      "want": "lcrc-v1-atom108-s1joint-s2typedpath",
+      "ok": true
+    },
+    "ssl_s0": {
+      "got": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "want": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "ok": true
+    },
+    "norm_fingerprint": {
+      "got": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f",
+      "want": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f",
+      "ok": true
+    },
+    "lcrc_a_s0_best": {
+      "got": "06340bcd9e45af03e887e706031b6ea14c719cac2b68ba716ce3d686bb21fdad",
+      "want": "06340bcd9e45af03e887e706031b6ea14c719cac2b68ba716ce3d686bb21fdad",
+      "ok": true
+    },
+    "n_train": {
+      "got": 10000,
+      "want": 10000,
+      "ok": true
+    },
+    "n_valid": {
+      "got": 1000,
+      "want": 1000,
+      "ok": true
+    }
+  },
+  "third_order_energy_frozen_checkpoint": {
+    "h_fro": 111.61878204345703,
+    "h3_fro": 73.11640167236328,
+    "h3_ratio": 0.6550546452289414,
+    "h3_ratio_to_centered_h": 0.6580830215566102,
+    "h_rms": 0.5859435200691223,
+    "h3_rms": 0.38382503390312195,
+    "h_le2_fro": 84.33708953857422,
+    "marginal_norms_of_h3": {
+      "a": 1.372877818539564e-06,
+      "b": 3.1873881312094454e-07,
+      "c": 3.272003255005984e-07,
+      "ab": 3.271078639954794e-06,
+      "ac": 3.239530087739695e-06,
+      "bc": 7.852964927224093e-07,
+      "mu": 1.401107567744475e-07
+    },
+    "checkpoint": {
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s0/best.pt",
+      "sha256": "06340bcd9e45af03e887e706031b6ea14c719cac2b68ba716ce3d686bb21fdad",
+      "epoch": 476,
+      "valid_mae": 0.07658163924043765
+    },
+    "note": "H_3 is the pure three-way residual of the 21x3x3 path-code read-out. The ratio is over the raw H (including its grand-mean component), which is the quantity named in the pre-registered gate."
+  },
+  "intervention_path_emb_le2_projection": {
+    "n_molecules": 512,
+    "rows": "official-train rows 0..511 (fixed, deterministic)",
+    "labels_used": "official-train only",
+    "base_mae_train512": 0.0049626512754912255,
+    "projected_mae_train512": 0.08739752130895795,
+    "mean_abs_prediction_shift": 0.08768855035305023,
+    "median_abs_prediction_shift": 0.07380056381225586,
+    "p90_abs_prediction_shift": 0.17638172209262848,
+    "max_abs_prediction_shift": 0.3498971462249756,
+    "fraction_molecules_shift_gt_0.010": 0.966796875,
+    "prediction_std": 1.8474516868591309,
+    "reference_total_ablation": {
+      "what": "path_emb rows replaced by the global mean row (all code variation removed)",
+      "mean_abs_prediction_shift": 0.20399491488933563,
+      "mae_train512": 0.2037854823847738
+    },
+    "relation_to_mae": 17.66969820872018,
+    "embedding_table_relative_shift": 0.6553342938423157
+  },
+  "path_category_statistics_train": {
+    "n_categories": 189,
+    "n_categories_used_train": 33,
+    "n_categories_unused_train": 156,
+    "unused_fraction": 0.8253968253968254,
+    "df_quantiles_all": {
+      "p0": 0.0,
+      "p5": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "p90": 346.80000000000194,
+      "p100": 9998.0
+    },
+    "df_quantiles_used": {
+      "p0": 1.0,
+      "p5": 1.0,
+      "p25": 5.0,
+      "p50": 441.0,
+      "p75": 3362.0,
+      "p100": 9998.0
+    },
+    "used_codes": [
+      {
+        "code": 0,
+        "a_middle_type": 0,
+        "b_bond1": 1,
+        "c_bond2": 1,
+        "document_frequency": 9998,
+        "molecule_share": 0.9998,
+        "occurrences": 212952
+      },
+      {
+        "code": 1,
+        "a_middle_type": 0,
+        "b_bond1": 1,
+        "c_bond2": 2,
+        "document_frequency": 9848,
+        "molecule_share": 0.9848,
+        "occurrences": 151085
+      },
+      {
+        "code": 2,
+        "a_middle_type": 0,
+        "b_bond1": 1,
+        "c_bond2": 3,
+        "document_frequency": 633,
+        "molecule_share": 0.0633,
+        "occurrences": 705
+      },
+      {
+        "code": 3,
+        "a_middle_type": 0,
+        "b_bond1": 2,
+        "c_bond2": 1,
+        "document_frequency": 9848,
+        "molecule_share": 0.9848,
+        "occurrences": 151085
+      },
+      {
+        "code": 4,
+        "a_middle_type": 0,
+        "b_bond1": 2,
+        "c_bond2": 2,
+        "document_frequency": 1,
+        "molecule_share": 0.0001,
+        "occurrences": 2
+      },
+      {
+        "code": 6,
+        "a_middle_type": 0,
+        "b_bond1": 3,
+        "c_bond2": 1,
+        "document_frequency": 633,
+        "molecule_share": 0.0633,
+        "occurrences": 705
+      },
+      {
+        "code": 9,
+        "a_middle_type": 1,
+        "b_bond1": 1,
+        "c_bond2": 1,
+        "document_frequency": 5030,
+        "molecule_share": 0.503,
+        "occurrences": 13754
+      },
+      {
+        "code": 18,
+        "a_middle_type": 2,
+        "b_bond1": 1,
+        "c_bond2": 1,
+        "document_frequency": 8781,
+        "molecule_share": 0.8781,
+        "occurrences": 64582
+      },
+      {
+        "code": 19,
+        "a_middle_type": 2,
+        "b_bond1": 1,
+        "c_bond2": 2,
+        "document_frequency": 4911,
+        "molecule_share": 0.4911,
+        "occurrences": 7855
+      },
+      {
+        "code": 21,
+        "a_middle_type": 2,
+        "b_bond1": 2,
+        "c_bond2": 1,
+        "document_frequency": 4911,
+        "molecule_share": 0.4911,
+        "occurrences": 7855
+      },
+      {
+        "code": 36,
+        "a_middle_type": 4,
+        "b_bond1": 1,
+        "c_bond2": 1,
+        "document_frequency": 5608,
+        "molecule_share": 0.5608,
+        "occurrences": 50160
+      },
+      {
+        "code": 45,
+        "a_middle_type": 5,
+        "b_bond1": 1,
+        "c_bond2": 1,
+        "document_frequency": 3362,
+        "molecule_share": 0.3362,
+        "occurrences": 7782
+      },
+      {
+        "code": 46,
+        "a_middle_type": 5,
+        "b_bond1": 1,
+        "c_bond2": 2,
+        "document_frequency": 1186,
+        "molecule_share": 0.1186,
+        "occurrences": 4656
+      },
+      {
+        "code": 48,
+        "a_middle_type": 5,
+        "b_bond1": 2,
+        "c_bond2": 1,
+        "document_frequency": 1186,
+        "molecule_share": 0.1186,
+        "occurrences": 4656
+      },
+      {
+        "code": 49,
+        "a_middle_type": 5,
+        "b_bond1": 2,
+        "c_bond2": 2,
+        "document_frequency": 1084,
+        "molecule_share": 0.1084,
+        "occurrences": 2226
+      },
+      {
+        "code": 72,
+        "a_middle_type": 8,
+        "b_bond1": 1,
+        "c_bond2": 1,
+        "document_frequency": 1257,
+        "molecule_share": 0.1257,
+        "occurrences": 7680
+      },
+      {
+        "code": 73,
+        "a_middle_type": 8,
+        "b_bond1": 1,
+        "c_bond2": 2,
+        "document_frequency": 324,
+        "molecule_share": 0.0324,
+        "occurrences": 340
+      },
+      {
+        "code": 75,
+        "a_middle_type": 8,
+        "b_bond1": 2,
+        "c_bond2": 1,
+        "document_frequency": 324,
+        "molecule_share": 0.0324,
+        "occurrences": 340
+      },
+      {
+        "code": 99,
+        "a_middle_type": 11,
+        "b_bond1": 1,
+        "c_bond2": 1,
+        "document_frequency": 658,
+        "molecule_share": 0.0658,
+        "occurrences": 1330
+      },
+      {
+        "code": 108,
+        "a_middle_type": 12,
+        "b_bond1": 1,
+        "c_bond2": 1,
+        "document_frequency": 441,
+        "molecule_share": 0.0441,
+        "occurrences": 954
+      },
+      {
+        "code": 109,
+        "a_middle_type": 12,
+        "b_bond1": 1,
+        "c_bond2": 2,
+        "document_frequency": 438,
+        "molecule_share": 0.0438,
+        "occurrences": 894
+      },
+      {
+        "code": 110,
+        "a_middle_type": 12,
+        "b_bond1": 1,
+        "c_bond2": 3,
+        "document_frequency": 1,
+        "molecule_share": 0.0001,
+        "occurrences": 1
+      },
+      {
+        "code": 111,
+        "a_middle_type": 12,
+        "b_bond1": 2,
+        "c_bond2": 1,
+        "document_frequency": 438,
+        "molecule_share": 0.0438,
+        "occurrences": 894
+      },
+      {
+        "code": 112,
+        "a_middle_type": 12,
+        "b_bond1": 2,
+        "c_bond2": 2,
+        "document_frequency": 6,
+        "molecule_share": 0.0006,
+        "occurrences": 12
+      },
+      {
+        "code": 114,
+        "a_middle_type": 12,
+        "b_bond1": 3,
+        "c_bond2": 1,
+        "document_frequency": 1,
+        "molecule_share": 0.0001,
+        "occurrences": 1
+      },
+      {
+        "code": 117,
+        "a_middle_type": 13,
+        "b_bond1": 1,
+        "c_bond2": 1,
+        "document_frequency": 73,
+        "molecule_share": 0.0073,
+        "occurrences": 146
+      },
+      {
+        "code": 144,
+        "a_middle_type": 16,
+        "b_bond1": 1,
+        "c_bond2": 1,
+        "document_frequency": 5,
+        "molecule_share": 0.0005,
+        "occurrences": 30
+      },
+      {
+        "code": 145,
+        "a_middle_type": 16,
+        "b_bond1": 1,
+        "c_bond2": 2,
+        "document_frequency": 5,
+        "molecule_share": 0.0005,
+        "occurrences": 15
+      },
+      {
+        "code": 147,
+        "a_middle_type": 16,
+        "b_bond1": 2,
+        "c_bond2": 1,
+        "document_frequency": 5,
+        "molecule_share": 0.0005,
+        "occurrences": 15
+      },
+      {
+        "code": 172,
+        "a_middle_type": 19,
+        "b_bond1": 1,
+        "c_bond2": 2,
+        "document_frequency": 1,
+        "molecule_share": 0.0001,
+        "occurrences": 1
+      },
+      {
+        "code": 174,
+        "a_middle_type": 19,
+        "b_bond1": 2,
+        "c_bond2": 1,
+        "document_frequency": 1,
+        "molecule_share": 0.0001,
+        "occurrences": 1
+      },
+      {
+        "code": 181,
+        "a_middle_type": 20,
+        "b_bond1": 1,
+        "c_bond2": 2,
+        "document_frequency": 1,
+        "molecule_share": 0.0001,
+        "occurrences": 1
+      },
+      {
+        "code": 183,
+        "a_middle_type": 20,
+        "b_bond1": 2,
+        "c_bond2": 1,
+        "document_frequency": 1,
+        "molecule_share": 0.0001,
+        "occurrences": 1
+      }
+    ],
+    "low_frequency": {
+      "used_code_df_lt_10": 11,
+      "used_code_df_lt_100": 12,
+      "used_code_df_lt_1000": 20
+    },
+    "occurrence_concentration": {
+      "total_tokens_train": 692716,
+      "tokens_per_molecule": 69.2716,
+      "top10_occurrence_share": 0.974122151069125,
+      "distinct_codes_with_occurrences": 33,
+      "top10_codes": [
+        0,
+        1,
+        3,
+        9,
+        18,
+        19,
+        21,
+        36,
+        45,
+        72
+      ]
+    },
+    "n_path_tokens": 692716,
+    "mean_paths_per_molecule": 69.2716
+  },
+  "coverage_relation": {
+    "valid_molecules_all_path_codes_seen_in_train": 1000,
+    "valid_molecules_all_joint_contexts_seen_in_train": 997,
+    "r2_unseen_rows_reused_from_frozen_anchor": 251,
+    "r2_unseen_ordinary_rows": 225,
+    "among_r2_unseen_all_codes_seen": 251,
+    "among_r2_unseen_all_joint_seen": 248,
+    "among_r2_unseen_all_joint_seen_fraction": 0.9880478087649402,
+    "among_r2_seen_all_joint_seen_fraction": 1.0,
+    "median_min_code_df_r2_unseen": 3362.0,
+    "median_min_code_df_r2_seen": 3362.0,
+    "n_joint_contexts_used_train": 159,
+    "n_joint_contexts_total": 11907,
+    "joint_context_coverage_note": "'component seen' means the (middle type, bond1, bond2) token appears in train. 'joint seen' additionally requires the (token, end type, second bond) context to appear. Neither implies that the label rule over that context is learnable."
+  },
+  "lambda_cpu_preview": {
+    "device": "cpu",
+    "rows": [
+      5231,
+      9365,
+      8907,
+      6060,
+      4811,
+      5472,
+      2211,
+      7999,
+      8703,
+      5199,
+      4907,
+      4187,
+      3860,
+      5785,
+      9740,
+      8642,
+      3660,
+      4840,
+      2636,
+      8690,
+      9701,
+      5330,
+      9835,
+      5911,
+      1401,
+      2910,
+      9489,
+      7225,
+      2292,
+      3763,
+      4269,
+      5338,
+      5787,
+      9666,
+      4354,
+      1666,
+      2409,
+      5163,
+      2420,
+      2680,
+      9028,
+      965,
+      5013,
+      5091,
+      9792,
+      6030,
+      357,
+      2044,
+      2111,
+      7047,
+      3028,
+      488,
+      139,
+      7899,
+      8792,
+      7727,
+      7095,
+      7109,
+      7566,
+      6306,
+      8487,
+      6187,
+      8806,
+      1730,
+      1444,
+      1952,
+      373,
+      7253,
+      4391,
+      8076,
+      480,
+      5181,
+      1628,
+      1025,
+      942,
+      8909,
+      6932,
+      6152,
+      2209,
+      8106,
+      5809,
+      1198,
+      8732,
+      8973,
+      4140,
+      318,
+      8643,
+      2888,
+      595,
+      7654,
+      4020,
+      326,
+      8528,
+      926,
+      2936,
+      766,
+      5160,
+      4327,
+      5416,
+      1129,
+      8955,
+      8871,
+      6254,
+      1010,
+      6222,
+      555,
+      4772,
+      9846,
+      9605,
+      1876,
+      1846,
+      3656,
+      4938,
+      428,
+      1914,
+      3677,
+      2331,
+      7504,
+      6665,
+      3507,
+      3123,
+      1487,
+      1229,
+      1712,
+      8688,
+      6462,
+      540,
+      5446
+    ],
+    "rows_sha256": "3cefbe2f0bc3e814439a29168583ccfa53e59cdd3535181326425562508fab82",
+    "l1_loss": 1.7833256721496582,
+    "g_l1_affected_norm": 24.734704971313477,
+    "g_reg_affected_norm": 0.010815434157848358,
+    "affected_elements": 12192,
+    "lambda": 228.6982159968532,
+    "lambda_rule": "lambda = 0.10 * ||g_L1|| / ||g_reg|| on the affected parameters",
+    "note": "CPU preview only. The official calibration is recomputed on the training GPU with the same frozen first batch and frozen initial state, and is frozen in configs/his_v0.json before the 600-epoch runs."
+  },
+  "initial_state": {
+    "parameters": 237519,
+    "sha256": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e"
+  },
+  "gates": {
+    "math_and_gradient_correct": true,
+    "h3_ratio": 0.6550546452289414,
+    "h3_ratio_threshold": 0.1,
+    "h3_ratio_pass": true,
+    "mean_abs_prediction_shift": 0.08768855035305023,
+    "prediction_shift_threshold": 0.01,
+    "prediction_shift_pass": true
+  },
+  "decision": "PROCEED_TO_GPU_SMOKE",
+  "decision_note": "The thresholds only decide whether one exploratory training run is worth its GPU cost; they are not evidence for or against the value of third-order interactions in general."
+}

@@ -1,0 +1,175 @@
+{
+  "round": "zinc-his-v0",
+  "status": "frozen_before_gpu",
+  "created": "2026-10-30T00:00:00+0800",
+  "git_commit_at_freeze": "",
+  "task": "HIS-v0 — explicit-structure third-order interaction constraint, seed-0 exploratory screen",
+  "hypothesis": "The pure third-order interaction response of the explicit 2-hop path-code table is under-constrained at 10k molecule-level labels; a low-order-preferring statistical regulariser on that response may improve generalisation to unseen local compositions.",
+  "design": {
+    "deployment_parameters": 237519,
+    "new_deployment_parameters": 0,
+    "inference_unchanged": true,
+    "object": "effective linear response of LocalContent.path_emb on the first LocalContent MLP layer",
+    "path_axis_shape": [21, 3, 3],
+    "path_code_encoding": "9*middle_atom_type + 3*(bond1_type-1) + (bond2_type-1)",
+    "input_block_of_mlp_lins_0": [320, 352],
+    "input_block_proof": "his_cpu_checks G2: a random perturbation of path_emb changes exactly input columns 320..351 and the layer-0 output delta equals dx[:,320:352] @ W[:,320:352].T",
+    "anova": "balanced ANOVA over the three categorical axes; H_le2 = AB + AC + BC - (A + B + C) + mu ; H_3 = H - H_le2",
+    "anova_formula_note": "The task brief prints H - A - B - C + AB + AC + BC - mu, which is not the residual (it does not annihilate first/second-order tensors and its marginals are non-zero). The implemented H_3 is the unique residual satisfying the four properties the same brief requires; the discrepancy is pinned by tests/test_his_v0.py::test_literal_brief_formula_is_not_the_residual.",
+    "penalty": "mean(H_3**2) over all 189*192 elements",
+    "loss": "L1(pred, y) + lambda * mean(H_3**2)",
+    "not_penalised": [
+      "path_u/path_v low-rank joint product channel",
+      "end_emb / close_emb / path_gate",
+      "any parameter outside path_emb.weight and mlp.lins.0.weight[:, 320:352]"
+    ],
+    "rescaling_invariance": "penalty(E, W) = penalty(cE, W/c); checked in his_cpu_checks G4"
+  },
+  "his": {
+    "lambda": null,
+    "lambda_rule": "lambda = 0.10 * ||g_L1|| / ||g_reg|| over the affected parameters (path_emb.weight + the 32 W_path columns)",
+    "lambda_calibration_file": "tracks/structural-sufficiency/zinc_his_v0/analysis/lambda_calibration.json",
+    "lambda_guards": {
+      "finite": true,
+      "min": 1e-04,
+      "max": 10000.0,
+      "action_if_violated": "stop and report; do not switch calibration method"
+    },
+    "calibration_batch": "first 128 rows of seed-0 epoch-1 data order (torch.randperm(10000, Generator(101)))",
+    "calibration_state": "frozen initial LCRC-A seed-0 state 11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e",
+    "calibration_uses_valid_or_test": false,
+    "calibration_optimizer_steps": 0,
+    "frozen_for_entire_training": true,
+    "selection_by_valid_forbidden": true
+  },
+  "data": {
+    "source": "official PyG ZINC subset=True train 10000 / valid 1000 (test never constructed)",
+    "train_cache": {
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_train.pt",
+      "sha256": "8777494f7745ff5a9a8e3d2913cae8102ad84d267e54fb65235d7eff4c3a6cb2",
+      "content_sha256": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b"
+    },
+    "valid_cache": {
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/cache/lc_valid.pt",
+      "sha256": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+      "content_sha256": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9"
+    },
+    "normalisation": {
+      "path": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/analysis/norm.json",
+      "source": "frozen_p3_prep_train10k",
+      "fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f"
+    },
+    "ssl_s0": {
+      "path": "tracks/structure-contribution/results/bjoc_full10k_pretraining_transfer_v1/pretrain_encoder_s0.pt",
+      "sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
+      "loaded_modules": ["atom_encoder", "bond_encoder"]
+    },
+    "feature_version": "lcrc-v1-atom108-s1joint-s2typedpath",
+    "official_test_loaded": false
+  },
+  "model": {
+    "arm": "A",
+    "config": {
+      "width": 64,
+      "stat_rank": 32,
+      "local_hidden": 192,
+      "atom_hidden": 128,
+      "atom_out": 96,
+      "bond_hidden": 160,
+      "bond_out": 96,
+      "rho_hidden": 64,
+      "rel_z": 32,
+      "rel_hidden": 128,
+      "rel_out": 24,
+      "rel_mlp_hidden": 48,
+      "rel_cat_dim": 8,
+      "n_rel_categories": 6
+    },
+    "relation_head": "absent",
+    "initial_state_sha256": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e"
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 1e-05,
+    "warmup_steps": 500,
+    "epochs": 600,
+    "batch_size": 128,
+    "valid_batch_size": 256,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "loss": "raw_y_l1",
+    "checkpoint_selection": "strict argmin official-valid MAE, ties -> earlier epoch",
+    "data_order": "torch.randperm(10000, Generator(seed+101)) reshuffled per epoch",
+    "expected_steps_per_epoch": 79,
+    "expected_total_updates": 47400,
+    "ema": false,
+    "soup": false,
+    "seed_averaging": false,
+    "ensemble": false,
+    "distillation": false,
+    "extra_ssl": false
+  },
+  "arms": {
+    "REPLAY": "lambda = 0; the penalty term is not constructed at all (bit-identical loss graph to the frozen trainer)",
+    "HIS": "lambda = frozen calibrated value; loss = L1 + lambda * mean(H_3**2)"
+  },
+  "seed": 0,
+  "seed_1_forbidden": true,
+  "phase_a_thresholds": {
+    "h3_ratio_min": 0.1,
+    "mean_abs_prediction_shift_min": 0.01,
+    "diagnostic_rows": "official-train rows 0..511 (fixed)",
+    "frozen_checkpoint": "tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s0/best.pt",
+    "frozen_checkpoint_sha256": "06340bcd9e45af03e887e706031b6ea14c719cac2b68ba716ce3d686bb21fdad"
+  },
+  "phase_c_groups": [
+    "all",
+    "ordinary_y_gt_-3",
+    "r2_unseen_ordinary",
+    "seen_ordinary",
+    "tail_y_le_-3",
+    "all_minus_row172",
+    "all_minus_worst10",
+    "row172",
+    "a_s0_worst10_fixed"
+  ],
+  "phase_c_extra": ["W20", "T100", "final_valid_mae", "best_train_mae_eval", "per-molecule paired delta", "bootstrap CI", "win fraction", "top contributors"],
+  "worst10_rows_frozen": [172, 917, 753, 759, 224, 447, 678, 659, 267, 260],
+  "worst10_source": "tracks/structural-sufficiency/zinc_cjp_ssl_v1/configs/cjp_ssl_v1.json diagnostic_rows.historical_lca_s0_worst10 (frozen before that round's GPU results)",
+  "verdict_rules": {
+    "delta_sign": "delta = HIS - REPLAY on per-molecule absolute error; negative = HIS better",
+    "GREEN": [
+      "full MAE delta <= -0.005",
+      "ordinary delta <= -0.002",
+      "r2_unseen_ordinary delta <= -0.008",
+      "all_minus_row172 and all_minus_worst10 both still improve",
+      "W20 and T100 delta <= +0.002"
+    ],
+    "AMBER": [
+      "GREEN not met",
+      "r2_unseen_ordinary delta <= -0.008 and ordinary delta <= -0.002",
+      "full delta <= +0.002",
+      "not driven by a single extreme row"
+    ],
+    "RED": "neither of the above, or the regulariser is not measurably active in the trained model",
+    "CPU_STOP": "Phase A correctness failure or either Phase A materiality threshold not met"
+  },
+  "budget": {
+    "hard_gpu_hours": 2.0,
+    "max_concurrent_gpus": 2,
+    "host": "res (2 x A100-SXM4-40GB, process backend)",
+    "pools": ["res-gpu0", "res-gpu1"],
+    "stop_if_projection_exceeds_hard_budget": true
+  },
+  "test_policy": "terminal; the official test split must not be constructed, loaded or scored in this round",
+  "history_anchors": {
+    "lcrc_a_s0_valid": 0.076582,
+    "lcrc_a_s0_test_exposed": 0.066782,
+    "dcc_l_valid_4seed_mean": 0.07599,
+    "cjp_a_replay_s0_valid": 0.076116,
+    "cjp_a_replay_s1_valid": 0.082301,
+    "note": "historical only; the primary comparison is this round's synchronised REPLAY_s0 vs HIS_s0"
+  }
+}
