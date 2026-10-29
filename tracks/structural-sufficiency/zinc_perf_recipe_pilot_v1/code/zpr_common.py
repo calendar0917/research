@@ -52,7 +52,7 @@ import lc_train as T  # noqa: E402,F401
 
 FROZEN = {
     "train_cache_content_sha256": "ded004e8a0c03af31413b0f8d0e8223d80c6ba424a2cbd34db42e16c9b85459b",
-    "valid_cache_content_sha256": "f28a0cceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9",
+    "valid_cache_content_sha256": "f28a0ceed34444c39523e1d301a02350a67087c15b3de725850e45976212aef9",
     "ssl_s0_sha256": "006fabc11efede091420fc2126ef2ef1c46cb3948ab91648a96843c0352bfa97",
     "norm_fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f",
     "feature_version": "lcrc-v1-atom108-s1joint-s2typedpath",
@@ -95,6 +95,7 @@ HIST = {
 
 LCRC_A_S0_RUN = LCRC_TRACK / "runs/lcrcA_s0"
 LCRC_A_S0_CURVE = LCRC_A_S0_RUN / "curve.csv"
+LCRC_CONFIG = LCRC_TRACK / "configs/lcrc_v1.json"
 
 ROW172 = 172
 #: ``zinc_generalization_audit_v1`` fixed worst-10 (P3B_s0 top-10 AE, frozen
@@ -225,7 +226,7 @@ def group_table(pred, y, masks: Mapping[str, np.ndarray]) -> dict[str, float]:
 
 __all__ = [
     "ROUND_ID", "CODE_DIR", "EXP_DIR", "REPO", "ANALYSIS", "RUNS", "CONFIGS",
-    "LCRC_TRACK", "LCRC_A_S0_RUN", "LCRC_A_S0_CURVE",
+    "LCRC_TRACK", "LCRC_A_S0_RUN", "LCRC_A_S0_CURVE", "LCRC_CONFIG",
     "L", "D", "M", "T", "FROZEN", "FROZEN_CACHE_FILE_SHA256_BY_HOST", "HIST", "ROW172", "ANCHOR_CSV",
     "EMA_DECAY", "EMA_START_FRAC", "SMOOTH_L1_BETA", "ARMS",
     "track_rel", "read_json", "write_json", "now", "ensure_dir", "sha256_file", "log",

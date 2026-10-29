@@ -140,3 +140,15 @@ def test_window_diagnostics_matches_frozen_definition() -> None:
     expected_w20 = min(float(np.median(vals[i:i + 20])) for i in range(21))
     assert abs(out["W20"] - expected_w20) < 1e-12
     assert abs(out["T100"] - float(np.median(vals[-40:]))) < 1e-12
+
+
+def test_frozen_constants_match_lcrc_preregistration() -> None:
+    """Catch hand-transcription drift against the frozen LCRC-v1 config."""
+    cfg = Z.read_json(Z.LCRC_CONFIG)
+    assert Z.FROZEN["train_cache_content_sha256"] == cfg["data"]["train_cache"]["content_sha256"]
+    assert Z.FROZEN["valid_cache_content_sha256"] == cfg["data"]["valid_cache"]["content_sha256"]
+    assert Z.FROZEN["ssl_s0_sha256"] == cfg["data"]["ssl_s0"]["sha256"]
+    assert Z.FROZEN["norm_fingerprint"] == cfg["data"]["normalisation"]["fingerprint"]
+    assert Z.FROZEN["params"] == cfg["model"]["params"]["A"]
+    assert Z.FROZEN["total_updates"] == cfg["recipe"]["expected_total_updates"]
+    assert Z.FROZEN["steps_per_epoch"] == cfg["recipe"]["expected_steps_per_epoch"]

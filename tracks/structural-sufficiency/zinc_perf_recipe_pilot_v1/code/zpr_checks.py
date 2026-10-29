@@ -28,6 +28,62 @@ CHECKS_PATH = Z.ANALYSIS / "cpu_checks.json"
 
 
 # ---------------------------------------------------------------------------
+# C0 — every frozen constant equals the LCRC-v1 pre-registration
+# ---------------------------------------------------------------------------
+
+def check_frozen_constants() -> dict:
+    cfg = Z.read_json(Z.LCRC_CONFIG)
+    data, recipe, model = cfg["data"], cfg["recipe"], cfg["model"]
+    expect = {
+        "train_cache_file_sha256": data["train_cache"]["sha256"],
+        "train_cache_content_sha256": data["train_cache"]["content_sha256"],
+        "valid_cache_file_sha256": data["valid_cache"]["sha256"],
+        "valid_cache_content_sha256": data["valid_cache"]["content_sha256"],
+        "ssl_s0_sha256": data["ssl_s0"]["sha256"],
+        "norm_fingerprint": data["normalisation"]["fingerprint"],
+        "params": model["params"]["A"],
+        "total_updates": recipe["expected_total_updates"],
+        "steps_per_epoch": recipe["expected_steps_per_epoch"],
+    }
+    got = {
+        "train_cache_file_sha256": Z.FROZEN_CACHE_FILE_SHA256_BY_HOST["local"]["train"],
+        "train_cache_content_sha256": Z.FROZEN["train_cache_content_sha256"],
+        "valid_cache_file_sha256": Z.FROZEN_CACHE_FILE_SHA256_BY_HOST["local"]["valid"],
+        "valid_cache_content_sha256": Z.FROZEN["valid_cache_content_sha256"],
+        "ssl_s0_sha256": Z.FROZEN["ssl_s0_sha256"],
+        "norm_fingerprint": Z.FROZEN["norm_fingerprint"],
+        "params": Z.FROZEN["params"],
+        "total_updates": Z.FROZEN["total_updates"],
+        "steps_per_epoch": Z.FROZEN["steps_per_epoch"],
+    }
+    recipe_match = {
+        "lr": (int(recipe["lr"]), int(Z.T.RECIPE["lr"])),
+        "min_lr": (recipe["min_lr"], Z.T.RECIPE["min_lr"]),
+        "weight_decay": (recipe["weight_decay"], Z.T.RECIPE["weight_decay"]),
+        "warmup_steps": (recipe["warmup_steps"], Z.T.RECIPE["warmup_steps"]),
+        "epochs": (recipe["epochs"], Z.T.RECIPE["epochs"]),
+        "batch_size": (recipe["batch_size"], Z.T.RECIPE["batch_size"]),
+        "valid_batch_size": (recipe["valid_batch_size"], Z.T.RECIPE["valid_batch_size"]),
+        "dropout": (recipe["dropout"], Z.T.RECIPE["dropout"]),
+        "grad_clip": (recipe["grad_clip"], Z.T.RECIPE["grad_clip"]),
+    }
+    diffs = {k: {"frozen": got[k], "lcrc_config": expect[k]} for k in expect if got[k] != expect[k]}
+    recipe_diffs = {k: v for k, v in recipe_match.items() if v[0] != v[1]}
+    out = {
+        "frozen_values": got,
+        "lcrc_config_values": expect,
+        "mismatches": diffs,
+        "recipe_mismatches": recipe_diffs,
+        "lcrc_config": Z.track_rel(Z.LCRC_CONFIG),
+        "notes": "the LCRC recipe in lc_train.RECIPE is imported read-only and is the "
+                 "single source of truth for the training hyper-parameters; this gate "
+                 "only verifies that this round's copies agree",
+    }
+    out["pass"] = bool(not diffs and not recipe_diffs)
+    return out
+
+
+# ---------------------------------------------------------------------------
 # C5 — SmoothL1 reference (value + gradient) against a hand formula
 # ---------------------------------------------------------------------------
 
@@ -514,6 +570,7 @@ def main(argv=None) -> int:
     payload = Z.read_json(CHECKS_PATH) if CHECKS_PATH.exists() else {}
     if args.mode == "cpu":
         payload.setdefault("round", Z.ROUND_ID)
+        payload["C0_frozen_constants"] = check_frozen_constants()
         payload["C1_initial_state"] = check_initial_state()
         payload["C5_smooth_l1_reference"] = check_smooth_l1()
         payload["C6_ema_formula"] = check_ema_formula()
@@ -522,8 +579,8 @@ def main(argv=None) -> int:
         payload["historical_checkpoint_replay"] = check_historical_replay()
         payload["cpu_all_pass"] = all(
             payload[k]["pass"] for k in
-            ["C1_initial_state", "C5_smooth_l1_reference", "C6_ema_formula",
-             "C7_ema_passive", "masks", "historical_checkpoint_replay"])
+            ["C0_frozen_constants", "C1_initial_state", "C5_smooth_l1_reference",
+             "C6_ema_formula", "C7_ema_passive", "masks", "historical_checkpoint_replay"])
         payload["created"] = Z.now()
     else:
         formal = check_formal()
