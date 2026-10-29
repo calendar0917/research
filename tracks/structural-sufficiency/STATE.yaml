@@ -2057,3 +2057,120 @@ latest_highorder_round_headline: >-
   contexts of which only 159 are used -- i.e. support, not order.
   Next: stop high-order-channel penalisation; if anything, test support-conditioned
   shrinkage on unseen code/joint contexts under a new pre-registration.
+
+# ---------------------------------------------------------------------------
+# zinc-perf-recipe-pilot-v1 (ZPR-v1): zero-training failure diagnosis on the
+# official test split + one paired seed-0 recipe trial (L1 vs SmoothL1) with a
+# passive EMA read on the frozen LCRC-A body.
+# ---------------------------------------------------------------------------
+zinc_perf_recipe_pilot_v1:
+  protocol_id: zinc-perf-recipe-pilot-v1
+  protocol: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/PROTOCOL.md
+  report: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/REPORT.md
+  status: COMPLETE
+  kind: diagnostic + one paired seed-0 recipe trial (two arms, no new module, no architecture change)
+  verdict: NO_COMPELLING_RECIPE_GAIN
+  question: >-
+    (i) Do the official-test failure rows share a recoverable structural cause,
+    and are the candidate explanations (shared failure / model complementarity /
+    label-or-construction anomaly) actually supported?  (ii) Does SmoothL1 with
+    beta=0.05 beat L1 on the frozen LCRC-A recipe, and does a passive EMA add
+    anything?
+  answer_short: >-
+    (i) The dominant shared factor is train-side support, not a missing structure:
+    244/1000 test molecules carry at least one radius-2 typed environment unseen in
+    official train 10k and those rows carry 44.6% (LCRC-A) / 47.6% (DCC-L) of total
+    AE; 10 of the 14 shared top-20 failures have such atoms.  The second factor is
+    the generator's artificial ring penalty, which is a label-construction term
+    (3.28-6.72 z units) the models cannot see, and for 6/52 penalty rows it is a
+    non-minimal nx.cycle_basis artifact with no real >=7 ring (row 402, the worst
+    DCC row, is one).  No failure row is a corrupted label.  (ii) No: SmoothL1 is
+    worse by +0.00298 valid (+0.00601 descriptive test) and worse on every bulk
+    group; only the 77-molecule tail improves.  EMA gains nothing (sign flips
+    between valid and test).
+  decision_inputs_pre_test:
+    delta_full: 0.002979841293916152
+    delta_ordinary: 0.004069
+    delta_minus_row172: 0.005373
+    threshold_full_gain: -0.003
+    rule_evaluated: "all three of (full <= -0.003, ordinary < 0, minus_row172 < 0) FALSE"
+  arms:
+    G0: "L1 control, frozen LCRC-A recipe, 237519 params, 600 ep / 47400 updates, seed 0"
+    G1: "identical to G0 with smooth_l1_loss(pred, y, beta=0.05)"
+    EMA: "passive decay 0.999 from step 11850 (25%), inside each arm, never mixed across arms"
+  results_valid_as_dev:
+    G0_online: {best: 0.0792349, epoch: 508, W20: 0.0797341, T100: 0.0797584, train_at_best: 0.00341}
+    G1_online: {best: 0.0822147, epoch: 310, W20: 0.0844284, T100: 0.0844989, train_at_best: 0.01385}
+    G0_ema: {best: 0.0796640, epoch: 524}
+    G1_ema: {best: 0.0824656, epoch: 316}
+    paired_bootstrap_ci95_delta_full: [-0.005747, 0.009789]
+  results_test_descriptive:
+    label: TEST_AS_DEV_DESCRIPTIVE
+    read_count: 1
+    G0_online: 0.067030
+    G0_ema: 0.066940
+    G1_online: 0.073041
+    G1_ema: 0.071899
+    historical_reproduction: "frozen per-molecule CSVs replayed against the labels read here: LCRC 0.0667823695 vs 0.0667823703, DCC 0.0662665578 vs 0.066267"
+  phase_a_facts:
+    identity_verified: 997/1000 by graph isomorphism
+    failure_rows_union_top20: 26
+    shared_failure_rows: 14
+    explanation_buckets: {SHARED_FAILURE: 14, MODEL_COMPLEMENTARY: 12}
+    shared_with_unseen_r2: 10
+    shared_with_cycle_penalty: 4
+    shared_with_neither: [336]
+    cycle_penalty_rows_test: 52
+    cycle_penalty_basis_artifact_rows: [230, 402, 547, 670, 687, 728]
+    label_reconstruction_outliers: [924, 976]
+    identity_unverified_rows: [208, 680, 770]
+    ae_share_unseen_r2: {lcrc: 0.4459, dcc: 0.4758}
+    ae_share_cycle_penalty: {lcrc: 0.1480, dcc: 0.1440}
+  execution_regime:
+    host: res
+    pools: [res-gpu0, res-gpu1]
+    torch: 2.5.1+cu124
+    formal_commit: 1f7ada75bb18
+    replay_nondeterminism: >-
+      The frozen trainer replayed twice on the same GPU (identical init hash
+      11c698ae, identical first batch rows, same commit, same torch/CUDA) diverges
+      from itself by 0.427 valid MAE at epoch 4 and from the 2026-10-28 historical
+      curve by 0.397/0.177, i.e. more than the L1 control arm diverges from history
+      (0.359).  Bit-exact 600-epoch replay is not achievable in this regime; the
+      persistent offset at selection time is ~0.0027 and the same-recipe seed
+      spread is 0.0039, both the size of the effect tested.
+  checks:
+    file: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/cpu_checks.json
+    fast_unit_tests: 36
+    c4_resolution: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/c4_resolution.json
+    key: "C0 frozen constants vs lcrc_v1.json; init hash and data order identical across arms; first-batch loss exact for both losses; SmoothL1 value+grad matched to hand reference; EMA recurrence/start step/passivity/RNG invariance; historical checkpoint replay 0.076581646 vs frozen (6.8e-9); 251/251 anchor agreement for the radius-2 grouping rule"
+  budget:
+    gpu_hours_cap: 1.5
+    gpu_hours_used: 0.884
+    breakdown: {G0: 0.368, G1: 0.459, smoke: 0.011, divergence: 0.020, test_read: 0.025}
+  artifacts:
+    phase_a_table: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/phase_a_table.md
+    phase_a_summary: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/phase_a_summary.json
+    basis_artifact: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/phase_a_basis_artifact.json
+    label_provenance: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/phase_a_label_provenance.json
+    main_table: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/main_table.md
+    decision: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/decision.json
+    divergence: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/divergence.json
+    test_read: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/test_read.json
+    per_molecule_test: tracks/structural-sufficiency/zinc_perf_recipe_pilot_v1/analysis/test_per_molecule.csv
+  non_claims:
+    - "one seed, one paired arm contrast; no seed 1/2/3, no beta grid, no EMA decay/start sweep"
+    - "valid drove checkpoint selection for both arms, so every valid number is selection-contaminated"
+    - "the test read is post-selection and TEST_AS_DEV_DESCRIPTIVE; it can falsify but cannot select"
+    - "the observed 0.003-0.006 differences are the same size as this hardware's rerun band (0.0027) and seed spread (0.0039), so only the direction is reportable, not the magnitude"
+    - "the Phase A attribute table is descriptive; unseen-support and penalty co-occur with large errors but no causal intervention was run"
+    - "the cycle-basis artifact finding is verified for the 6 named rows only; the generator's own vertex order is not recoverable, so the penalty VALUE was verified by label reconstruction, not by replaying the generator's draw"
+  next_action: >-
+    Stop.  Do not add seeds, tune beta or EMA, or open a confirmation round: the
+    candidate failed all three pre-registered criteria in the wrong direction, and
+    the effect size is below what this execution regime can resolve.  Prerequisite
+    for any future loss-shape question is a deterministic training path (deterministic
+    scatter or fixed-block reduction); without it a confirmation round would measure
+    GPU scheduling, not the loss.  The support finding (unseen radius-2 environments
+    carry ~45% of test AE) is the object worth a *separately pre-registered* round,
+    not a recipe tweak.
