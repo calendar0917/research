@@ -34,7 +34,7 @@ import cjp_common as C
 L = C.L
 
 ANCHOR_CSV = C.REPO / "tracks/structural-sufficiency/zinc_performance_search_v1/analysis/per_molecule_valid.csv"
-WORST10_JSON = C.REPO / "tracks/structural-sufficiency/zinc_generalization_audit_v1/analysis/fixed_worst10.json"
+FROZEN_CONFIG = C.CONFIGS / "cjp_ssl_v1.json"
 ROW172 = 172
 
 PAIRS = (
@@ -79,9 +79,9 @@ def read_anchor() -> dict[str, Any]:
 
 
 def fixed_masks(anchor: Mapping[str, Any]) -> dict[str, np.ndarray]:
-    worst = json.loads(WORST10_JSON.read_text())
+    cfg = json.loads(FROZEN_CONFIG.read_text())
     worst_rows = np.zeros(len(anchor["y"]), dtype=bool)
-    for r in worst["row_ids"]:
+    for r in cfg["diagnostic_rows"]["historical_lca_s0_worst10"]:
         worst_rows[int(r)] = True
     y = anchor["y"]
     unseen = anchor["unseen"]
@@ -391,6 +391,78 @@ def write_per_molecule(anchor, runs, path: Path) -> None:
             w.writerow(row)
 
 
+# ---------------------------------------------------------------------------
+# markdown summary (human-readable mirror of the JSON artifacts)
+# ---------------------------------------------------------------------------
+
+
+def _fmt(x, nd=6):
+    return "" if x is None else f"{x:.{nd}f}"
+
+
+def write_markdown(sup, pairs, pretext, path: Path) -> None:
+    lines = ["# CJP-SSL v1 — valid-only summary", "",
+             "Primary metric: official valid 1,000 raw-y MAE (lower is better).",
+             "Official test was never loaded.", "", "## Supervised arms", "",
+             "| arm | seed | best MAE | best ep | W20 | T100 | final | params | "
+             "ordinary | tail | r2-unseen ord | -row172 | -A-worst10 | train@best |",
+             "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for r in sup["rows"]:
+        g = r["group_mae"]
+        lines.append(
+            f"| {r['arm']} | {r['seed']} | {_fmt(r['best_valid_mae'])} | {r['best_epoch']} | "
+            f"{_fmt(r['W20'])} | {_fmt(r['T100'])} | {_fmt(r['final_valid_mae'])} | "
+            f"{r['parameters']} | {_fmt(g['ordinary_y_gt_-3'])} | {_fmt(g['tail_y_le_-3'])} | "
+            f"{_fmt(g['r2_unseen_ordinary'])} | {_fmt(g['minus_row172'])} | "
+            f"{_fmt(g['minus_historical_lca_worst10'])} | {_fmt(r['train_mae_eval_at_best'])} |"
+        )
+    lines += ["", "## Paired contrasts (delta = first - second; negative = first better)", "",
+              "| contrast | seed | full delta | CI95 | ordinary | r2-unseen ord | -row172 | "
+              "first-better frac | median delta |", "|---|---|---|---|---|---|---|---|---|"]
+    for name, entry in pairs["pairs"].items():
+        for seed, c in entry["per_seed"].items():
+            lines.append(
+                f"| {name.replace('_minus_', ' - ')} | {seed} | {_fmt(c['mean_delta'])} | "
+                f"[{c['ci95'][0]:+.6f}, {c['ci95'][1]:+.6f}] | "
+                f"{_fmt(c['group_mean_delta']['ordinary_y_gt_-3'])} | "
+                f"{_fmt(c['group_mean_delta']['r2_unseen_ordinary'])} | "
+                f"{_fmt(c['group_mean_delta']['minus_row172'])} | "
+                f"{c['first_better_fraction']:.3f} | {_fmt(c['median_abs_error_delta'])} |"
+            )
+        sm = entry.get("seed_mean")
+        if sm:
+            lines.append(
+                f"| {name.replace('_minus_', ' - ')} | mean | {_fmt(sm['mean_delta'])} | "
+                f"[{sm['ci95'][0]:+.6f}, {sm['ci95'][1]:+.6f}] | "
+                f"{_fmt(sm['group_mean_delta']['ordinary_y_gt_-3'])} | "
+                f"{_fmt(sm['group_mean_delta']['r2_unseen_ordinary'])} | "
+                f"{_fmt(sm['group_mean_delta']['minus_row172'])} | | |"
+            )
+    lines += ["", "## Pretext diagnostics", "",
+              "| run | updates | diag CE before | diag CE after | class prior CE | "
+              "cond prior CE | joint interaction RMS | eff. rank before | eff. rank after | "
+              "atom mask frac | bond mask frac | paths/mol | swap delta | shuffle delta |",
+              "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for key, r in pretext["runs"].items():
+        b = r["diagnostics_before"]["diag"]
+        a = r["diagnostics_after"]["diag"]
+        cov = r["train"]["mask_coverage"]
+        it = r["train"]["interventions"]
+        lines.append(
+            f"| {key} | {r['updates_done']} | {_fmt(b['molecule_mean_ce'])} | "
+            f"{_fmt(a['molecule_mean_ce'])} | {_fmt(a.get('class_prior_ce'))} | "
+            f"{_fmt(a.get('conditional_prior_ce'))} | {_fmt(a['interaction_rms'])} | "
+            f"{_fmt(b['representation']['effective_rank'], 3)} | "
+            f"{_fmt(a['representation']['effective_rank'], 3)} | "
+            f"{cov['atom_mask_fraction']:.4f} | {cov['bond_mask_fraction']:.4f} | "
+            f"{cov['paths_per_molecule']:.3f} | {_fmt(it['swap_v_w_delta'])} | "
+            f"{_fmt(it['cross_molecule_shuffle_delta'])} |"
+        )
+    lines += ["", "## Same-samples check across arms", "",
+              "```json", json.dumps(pretext["same_samples_across_arms"], indent=1), "```", ""]
+    path.write_text("\n".join(lines) + "\n")
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="CJP-SSL valid-only analysis")
     args = parser.parse_args(argv)
@@ -418,6 +490,7 @@ def main(argv=None) -> int:
     C.write_json(C.ANALYSIS / "paired_comparisons.json", pairs)
     C.write_json(C.ANALYSIS / "pretext_summary.json", pretext)
     write_per_molecule(anchor, runs, C.ANALYSIS / "per_molecule_valid.csv")
+    write_markdown(sup, pairs, pretext, C.ANALYSIS / "summary.md")
     C.log(f"runs={len(runs)} pairs={list(pairs['pairs'])}")
     for arm in ARMS:
         cov = sup["coverage"].get(arm)

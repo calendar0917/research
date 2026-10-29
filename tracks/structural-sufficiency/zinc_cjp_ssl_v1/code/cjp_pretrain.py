@@ -336,6 +336,8 @@ def pretrain(
 
     curve: list[dict[str, Any]] = []
     masked_hash = hashlib.sha256()
+    per_batch_sha: list[str] = []
+    first_batches_ids: list[list[int]] = []
     first_batch_sha = None
     mask_totals = {"atoms": 0, "bonds": 0, "masked_atoms": 0, "masked_bonds": 0,
                    "paths": 0, "molecules": 0, "no_path": 0}
@@ -349,6 +351,7 @@ def pretrain(
     head.train()
     for update in range(n_updates):
         rows = batch_rng.permutation(len(fit))[:bs]
+        batch_sha = hashlib.sha256()
         mols, queries = [], []
         for pos in rows:
             rid = fit[int(pos)]
@@ -359,6 +362,7 @@ def pretrain(
             mols.append(v["mol"])
             queries.append(v["queries"])
             masked_hash.update(v["masked_sha"].encode())
+            batch_sha.update(v["masked_sha"].encode())
             mask_totals["atoms"] += int(v["stats"]["n_atoms"])
             mask_totals["bonds"] += int(v["stats"]["n_bonds"])
             mask_totals["masked_atoms"] += int(v["stats"]["atoms_masked"])
@@ -366,6 +370,10 @@ def pretrain(
             mask_totals["paths"] += int(v["stats"]["n_selected_paths"])
             mask_totals["molecules"] += 1
             mask_totals["no_path"] += int(v["stats"]["n_selected_paths"] == 0)
+        if len(per_batch_sha) < 64:
+            per_batch_sha.append(batch_sha.hexdigest())
+        if len(first_batches_ids) < 4:
+            first_batches_ids.append([int(fit[int(pos)]) for pos in rows])
         if first_batch_sha is None:
             h0 = hashlib.sha256()
             for q in queries:
@@ -478,6 +486,8 @@ def pretrain(
                 "n_diag_full": len(diag_all),
             },
             "masked_batch_sha256": masked_hash.hexdigest(),
+            "per_batch_masked_sha256_first64": per_batch_sha,
+            "first_batches_molecule_ids": first_batches_ids,
             "first_batch_query_sha256": first_batch_sha,
             "topology_prep_seconds": float(prep_seconds),
         },
