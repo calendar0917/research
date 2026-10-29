@@ -160,3 +160,13 @@ Stage IV authorised and run for both seeds.
 * Official **valid**: opened only in Stage IV (`--monitor valid`), after the
   Stage III decisions were written to `DECISION.md` D1–D3.
 * Locked1k: read exactly once, after the SHA-256 freeze of both checkpoints.
+
+### Independent audit (post-hoc, after all runs)
+
+Every formal run's headline number was re-derived from the saved prediction file
+and the frozen label cache, independently of `train.json`:
+`mean|pred − y|` over that run's monitor rows reproduces the reported
+`best_monitor.monitor_mae` to **≤ 8.9e-9** for all 10 runs (the residual is
+float32 storage of `pred`). The prediction row vectors are also checked against
+the frozen Monitor/valid row lists inside `xs_analyze.tables`, which raises on any
+mismatch. No discrepancy was found.
