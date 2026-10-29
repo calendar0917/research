@@ -346,7 +346,7 @@ def prepare(family: str) -> dict:
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--family", required=True, choices=list(FAMILIES))
-    p.add_argument("--arm", required=True, choices=["REAL", "MEAN"])
+    p.add_argument("--arm", default=None, choices=["REAL", "MEAN"])
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--fit", default="fit8k", choices=["fit8k", "train10k"])
     p.add_argument("--monitor", default="monitor", choices=["monitor", "valid"])
@@ -361,6 +361,8 @@ def main(argv=None) -> int:
     if args.prepare_only:
         print(json.dumps(prepare(args.family), indent=2))
         return 0
+    if args.arm is None:
+        p.error("--arm is required for training")
 
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
