@@ -368,7 +368,7 @@ def _write_markdown(payload: Mapping[str, Any], path: Path) -> None:
         lines += ["", f"Base ablation: MAE {_fmt(a['valid_mae_with_base'])} → "
                   f"{_fmt(a['valid_mae_zero_base'])} (|Δ|={a['abs_mae_change']:.3e}); "
                   f"per-molecule base std={a['base_per_molecule_std']:.6f}.", ""]
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines).rstrip() + "\n")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
