@@ -105,6 +105,121 @@ def _projection_shift(model, cache, rows) -> dict:
             "fraction_shift_gt_0.010": float((d > 0.010).mean())}
 
 
+def _joint_response_table(model, train_cache, rows) -> dict:
+    """Average effective cat-indexed response of the *unconstrained* joint channel.
+
+    ``path_joint(v) = joint_proj(path_u[cat] * path_v[end63])`` is read by the
+    first-layer weight columns [384, 416).  It is not linear in ``cat`` because it
+    multiplies by the end-type embedding, so we linearise it over the empirical
+    end-type distribution of the given molecules:
+
+        J[cat] = W_joint @ joint_proj( path_u[cat] * mean_{p: cat_p = cat} path_v[end_p] )
+
+    ``||J_3|| / ||J||`` is therefore the pure three-way share of the cat-indexed
+    structure this *unpenalised* channel exposes.  It is a proxy (the channel is
+    genuinely bilinear), reported to test whether the penalty was routed around.
+    """
+    local = model.local
+    sl_joint = slice(384, 416)          # end_emb ends at 384, path_joint is 32 wide
+    w_joint = local.mlp.lins[0].weight.detach()[:, sl_joint]
+    cat = np.asarray(train_cache["path_cat"]).astype(np.int64)
+    end = np.asarray(train_cache["path_end63"]).astype(np.int64)
+    atom_ptr = np.asarray(train_cache["atom_ptr"])
+    path_ptr = np.asarray(train_cache["path_ptr"])
+    keep = np.zeros(int(atom_ptr[-1]), dtype=bool)
+    for r in rows:
+        keep[atom_ptr[r]:atom_ptr[r + 1]] = True
+    sel = np.zeros(len(cat), dtype=bool)
+    for a in np.nonzero(keep)[0]:
+        sel[path_ptr[a]:path_ptr[a + 1]] = True
+    cat, end = cat[sel], end[sel]
+    with torch.no_grad():
+        u = local.path_u.weight.detach()
+        v = local.path_v.weight.detach()
+        jp = local.joint_proj
+        table = torch.zeros(189, v.shape[1], dtype=torch.float32)
+        used = 0
+        for c in range(189):
+            m = cat == c
+            if not bool(m.any()):
+                table[c] = u[c] * v.mean(0)
+                continue
+            vbar = v[torch.as_tensor(end[m], dtype=torch.long)].mean(0)
+            table[c] = u[c] * vbar
+            used += 1
+        joint4 = (jp(table) @ w_joint.T).reshape(21, 3, 3, -1)      # [21, 3, 3, 192]
+        j3 = A.third_order(joint4)
+        out = {
+            "joint_response_fro": A.fro(joint4),
+            "joint_third_order_fro": A.fro(j3),
+            "joint_third_order_ratio": A.fro(j3) / max(A.fro(joint4), 1e-30),
+            "joint_third_order_ratio_centered": A.fro(j3) / max(
+                A.fro(joint4 - joint4.mean(dim=(0, 1, 2), keepdim=True)), 1e-30),
+            "categories_with_paths_in_rows": int(used),
+            "path_u_fro": A.fro(u),
+            "path_gate_fro": A.fro(local.path_gate.weight.detach()),
+        }
+        g = local.path_gate.weight.detach().reshape(21, 3, 3, 1)
+        g3 = A.third_order(g)
+        out["path_gate_third_order_ratio"] = A.fro(g3) / max(A.fro(g), 1e-30)
+        out["path_u_third_order_ratio"] = A.fro(A.third_order(
+            u.reshape(21, 3, 3, -1))) / max(A.fro(u), 1e-30)
+    return out
+
+
+def _channel_ablation(model, train_cache, rows) -> dict:
+    """Prediction shift (512 fixed train molecules) under single-channel edits.
+
+    Diagnostic only -- nothing here is added to the training objective.
+    """
+    local = model.local
+    base, _ = T.evaluate(model, train_cache, rows, device="cpu")
+
+    def shift(fn) -> float:
+        with torch.no_grad():
+            fn()
+        pred, _ = T.evaluate(model, train_cache, rows, device="cpu")
+        return float(np.abs(pred - base).mean())
+
+    out: dict[str, float] = {}
+    emb = local.path_emb.weight.detach().clone()
+    u = local.path_u.weight.detach().clone()
+    gate = local.path_gate.weight.detach().clone()
+
+    def restore() -> None:
+        with torch.no_grad():
+            local.path_emb.weight.copy_(emb)
+            local.path_u.weight.copy_(u)
+            local.path_gate.weight.copy_(gate)
+
+    out["project_path_emb_le2"] = shift(
+        lambda: local.path_emb.weight.copy_(A.project_embedding(emb).reshape(emb.shape)))
+    restore()
+    out["project_path_u_le2"] = shift(
+        lambda: local.path_u.weight.copy_(A.project_embedding(u).reshape(u.shape)))
+    restore()
+    out["ablate_path_emb_rowmean"] = shift(
+        lambda: local.path_emb.weight.copy_(emb.mean(0, keepdim=True).expand_as(emb)))
+    restore()
+    out["ablate_path_u_rowmean"] = shift(
+        lambda: local.path_u.weight.copy_(u.mean(0, keepdim=True).expand_as(u)))
+    restore()
+    out["ablate_path_u_zero"] = shift(lambda: local.path_u.weight.zero_())
+    restore()
+    out["ablate_path_gate_mean"] = shift(
+        lambda: local.path_gate.weight.fill_(float(gate.mean())))
+    restore()
+    out["ablate_all_cat_indexed"] = shift(lambda: (
+        local.path_emb.weight.copy_(emb.mean(0, keepdim=True).expand_as(emb)),
+        local.path_u.weight.copy_(u.mean(0, keepdim=True).expand_as(u)),
+        local.path_gate.weight.fill_(float(gate.mean())),
+    ))
+    restore()
+    out["restored_prediction_max_abs_delta"] = float(
+        np.abs(T.evaluate(model, train_cache, rows, device="cpu")[0] - base).max())
+    return out
+
+
 def _h_stats(model) -> dict:
     with torch.no_grad():
         _, stats = A.his_penalty(model)
@@ -261,11 +376,22 @@ def main(argv=None) -> int:
         "gradient_audit_his": his["payload"].get("gradient_audit_first_batch"),
         "gradient_audit_replay": replay["payload"].get("gradient_audit_first_batch"),
     }
+    for tag, ckpt in (("replay", replay), ("his", his)):
+        mdl = _model_from(ckpt["best_path"], norm)
+        mech[tag]["joint_channel"] = _joint_response_table(mdl, train_cache, diag_rows)
+        mech[tag]["channel_ablation_train512"] = _channel_ablation(mdl, train_cache, diag_rows)
+
     mech["h3_ratio_reduction_best"] = (
         mech["replay"]["best_h_stats"]["h3_ratio"] - mech["his"]["best_h_stats"]["h3_ratio"])
     mech["projection_shift_ratio"] = (
         mech["his"]["best_projection_shift_train512"]["mean_abs_prediction_shift"]
         / max(mech["replay"]["best_projection_shift_train512"]["mean_abs_prediction_shift"], 1e-12))
+    mech["path_emb_third_order_share_of_total_cat_dependence"] = {
+        "replay": mech["replay"]["channel_ablation_train512"]["project_path_emb_le2"]
+        / max(mech["replay"]["channel_ablation_train512"]["ablate_all_cat_indexed"], 1e-12),
+        "his": mech["his"]["channel_ablation_train512"]["project_path_emb_le2"]
+        / max(mech["his"]["channel_ablation_train512"]["ablate_all_cat_indexed"], 1e-12),
+    }
     mech["regulariser_active"] = bool(
         mech["h3_ratio_reduction_best"] > 0.02
         and his["payload"].get("penalty_first_step") is not None

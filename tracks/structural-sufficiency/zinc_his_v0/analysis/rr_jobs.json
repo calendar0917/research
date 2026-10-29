@@ -1,0 +1,18 @@
+{
+  "round": "zinc-his-v0",
+  "host": "res",
+  "gpu": "2x NVIDIA A100-SXM4-40GB, driver 550.163.01, torch 2.5.1+cu124",
+  "jobs": [
+    {"id": "gate-cpu", "pool": "res-cpu", "backend": "process", "commit": "68895770", "note": "G1-G10 CPU gates on clean checkout, 10/10"},
+    {"id": "lambda-calib", "pool": "res-gpu0", "backend": "process", "commit": "05ba7a2", "note": "3 repeats, identical lambda, 0.0 relative deviation"},
+    {"id": "his-smoke", "pool": "res-gpu1", "backend": "process", "commit": "f9447d4", "note": "2-epoch equivalence + profile, projected 1.026 GPU-h"},
+    {"id": "his-replay-s0-20261029-132525-1807678e", "pool": "res-gpu0", "backend": "process",
+     "commit": "093c1e6f2623", "wall_seconds": 1267.7, "gpu_hours": 0.3522,
+     "note": "600-epoch REPLAY seed 0, finished 13:46:55"},
+    {"id": "his-his-s0-20261029-132622-071058ca", "pool": "res-gpu1", "backend": "process",
+     "commit": "093c1e6f2623", "wall_seconds": 1766.9, "gpu_hours": 0.4908,
+     "note": "600-epoch HIS seed 0, finished 13:56:13"}
+  ],
+  "total_gpu_hours_training_arms": 0.8430,
+  "note": "Both arms ran concurrently on separate physical GPUs; GPU0 was shared with an unrelated external job (~1 GiB, 21-25% util) during the whole round."
+}
