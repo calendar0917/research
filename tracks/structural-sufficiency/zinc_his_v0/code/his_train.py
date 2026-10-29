@@ -70,12 +70,17 @@ def frozen_lambda() -> float:
     return lam
 
 
-def calibrate(seed: int, device: str, *, write: bool = True) -> dict:
+def calibrate(seed: int, device: str, *, write: bool = True, repeats: int = 1) -> dict:
     """Gradient-norm matched lambda on the frozen first batch and initial model.
 
     No optimizer step, no valid/test access, RNG isolated.  ``lambda =
     0.10 * ||g_L1|| / ||g_reg||`` over the affected parameters only
     (``path_emb.weight`` and the 32 ``W_path`` columns of the first layer).
+
+    ``repeats > 1`` re-runs the identical computation in the same process and
+    reports the spread: CUDA ``index_add_`` reductions are not bit-deterministic,
+    so this measures how reproducible ``lambda`` is on the execution regime
+    before the value is frozen.
     """
     norm = D.load_norm()
     train = D.load_cache("train")
@@ -109,6 +114,28 @@ def calibrate(seed: int, device: str, *, write: bool = True) -> dict:
     n_l1 = float(g_l1.norm())
     n_reg = float(g_reg.norm())
     lam = 0.10 * n_l1 / n_reg if n_reg > 0 else float("inf")
+    spread = None
+    if repeats > 1:
+        vals = [float(lam)]
+        for _ in range(repeats - 1):
+            with L.C.isolated_rng():
+                model.zero_grad(set_to_none=True)
+                pred2 = model(batch)
+                l2 = F.l1_loss(pred2.view(-1), target.view(-1))
+                model.zero_grad(set_to_none=True)
+                l2.backward()
+                g1 = A.affected_grad_vector(model).clone()
+                model.zero_grad(set_to_none=True)
+                pen2, _ = A.his_penalty(model)
+                pen2.backward()
+                g2 = A.affected_grad_vector(model).clone()
+                model.zero_grad(set_to_none=True)
+                vals.append(0.10 * float(g1.norm()) / float(g2.norm()))
+        rel = [abs(v - lam) / max(abs(lam), 1e-30) for v in vals]
+        spread = {"lambda_values": vals, "repeats": int(repeats),
+                  "max_rel_deviation_from_first": float(max(rel))}
+        L.log(f"[calibrate] repeats={repeats} lambda={vals} "
+              f"max_rel_dev={spread['max_rel_deviation_from_first']:.3e}")
     out = {
         "round": HIS.ROUND_ID,
         "created": HIS.now(),
@@ -133,6 +160,7 @@ def calibrate(seed: int, device: str, *, write: bool = True) -> dict:
         "lambda": float(lam),
         "lambda_rule": "lambda = 0.10 * ||g_L1|| / ||g_reg|| over the affected parameters",
         "lambda_guards": load_config()["his"]["lambda_guards"] if CONFIG_PATH.exists() else None,
+        "lambda_repeat_spread": spread,
         "valid_or_test_used": False,
         "official_test_loaded": False,
     }
@@ -146,14 +174,16 @@ def _check_lambda_matches_calibration(device: str, lam: float, seed: int) -> dic
     """Recompute the calibration inside the training process and compare."""
     fresh = calibrate(seed, device, write=False)
     rel = abs(fresh["lambda"] - lam) / max(abs(lam), 1e-30)
+    tol = 1e-4      # guard only: lambda must be reproducible to 4 significant digits
     on_disk = HIS.read_json_or_none(LAMBDA_PATH)
     disk_rel = None
     if on_disk is not None:
         disk_rel = abs(float(on_disk["lambda"]) - lam) / max(abs(lam), 1e-30)
-    if rel > 1e-6:
+    if rel > tol:
         raise RuntimeError(f"lambda mismatch: frozen {lam!r} vs recomputed {fresh['lambda']!r} "
-                           f"(rel {rel:.3e})")
+                           f"(rel {rel:.3e} > tol {tol:g})")
     return {"recomputed_lambda": fresh["lambda"], "rel_diff_vs_frozen": rel,
+            "tolerance": tol,
             "rel_diff_vs_calibration_file": disk_rel,
             "recomputed_g_l1": fresh["g_l1_affected_norm"],
             "recomputed_g_reg": fresh["g_reg_affected_norm"],
@@ -421,6 +451,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     p_cal = sub.add_parser("calibrate")
     p_cal.add_argument("--seed", type=int, default=0)
     p_cal.add_argument("--device", default="cuda:0")
+    p_cal.add_argument("--repeats", type=int, default=1)
 
     p_tr = sub.add_parser("train")
     p_tr.add_argument("--arm", required=True, choices=list(ARMS))
@@ -432,7 +463,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     if args.cmd == "calibrate":
-        res = calibrate(args.seed, args.device)
+        res = calibrate(args.seed, args.device, repeats=int(args.repeats))
         L.log(f"lambda = {res['lambda']:.6e}")
         return 0
     res = train(args.arm, args.seed, args.device, epochs=args.epochs, tag=args.tag,
