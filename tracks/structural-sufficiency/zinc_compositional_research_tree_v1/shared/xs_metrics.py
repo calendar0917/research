@@ -157,6 +157,10 @@ def curve_stats(curve: Sequence[Mapping[str, Any]]) -> dict:
         out["tail100_median"] = float(np.median(vals[-100:]))
     else:
         out["tail100_median"] = None
+    if len(vals) >= 20:
+        out["tail20_median"] = float(np.median(vals[-20:]))
+    else:
+        out["tail20_median"] = None
     return out
 
 

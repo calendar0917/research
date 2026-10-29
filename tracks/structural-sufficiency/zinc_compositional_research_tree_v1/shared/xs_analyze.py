@@ -274,6 +274,7 @@ def tables() -> dict:
             "best_epoch": info["best_monitor"]["epoch"],
             "rolling20_min_median": stats["rolling20_min_median"],
             "tail100_median": stats["tail100_median"],
+            "tail20_median": stats["tail20_median"],
             "final_monitor_mae": info["final_monitor_mae"],
             "eval_train_mae_best": info["reads"]["best_monitor"]["eval_train_mae"],
             "eval_train_mae_final": info["reads"]["final"]["eval_train_mae"],
