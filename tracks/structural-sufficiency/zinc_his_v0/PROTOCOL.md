@@ -63,7 +63,7 @@
 | 相同 train-only normalization | fingerprint `8c3e8813…` |
 | 相同 first-batch rows / 每 epoch 数据顺序 / 更新次数 | `first_batch_rows` 相等；`47400` updates；`79` steps/epoch |
 | 相同 LR 轨迹 | 每条 curve 的 `lr` 序列逐 epoch 相等 |
-| REPLAY 与冻结 trainer 一致 | 2 epoch：epoch-1/2 full-valid MAE 与 online MAE 差 <1e-6（同 regime CPU 已预演为 0.0），`state_dict` 逐位相同 |
+| REPLAY 与冻结 trainer 一致 | 2 epoch：epoch-1/2 full-valid MAE 与 online MAE 差 <1e-5，参数漂移 <1e-3（执行容差，不是逐位相等；CPU 上已预演为逐位相等 0.0，CUDA 上 `index_add_` 归约非逐位确定，实测 4.4e-7/9.0e-7 与 4.3e-5 参数漂移） |
 | HIS 与 REPLAY 推理结构相同 | 同一 `build_model("A", …)`，参数数均 237,519 |
 | 正则训练中真实非零、无梯度断开、无 NaN/Inf | 每步 penalty 有限；`penalty_first_step > penalty_last_step` 或至少记录；受影响参数梯度非零 |
 | official test 未被触碰 | 所有 payload `official_test_loaded: false` |
