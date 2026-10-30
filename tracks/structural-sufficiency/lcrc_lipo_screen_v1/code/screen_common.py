@@ -179,6 +179,38 @@ track_rel = _prep_common.track_rel
 utcnow = _prep_common.utcnow
 git_commit = _prep_common.git_commit
 git_dirty = _prep_common.git_dirty
+
+
+def source_dirty() -> bool:
+    """True iff a tracked *source* file (code/tests/configs) is modified.
+
+    Generated analysis artifacts are deliberately excluded: the freeze step
+    rewrites them, and they are committed separately.  Formal runs still use
+    ``git_dirty()``, which requires the whole tracked worktree to be clean.
+    """
+    import subprocess
+
+    rel = track_rel(EXP_DIR)
+    try:
+        out = subprocess.check_output(
+            [
+                "git",
+                "-C",
+                str(REPO),
+                "status",
+                "--porcelain",
+                "--untracked-files=no",
+                "--",
+                f"{rel}/code",
+                f"{rel}/tests",
+                f"{rel}/configs",
+            ],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        return bool(out.strip())
+    except Exception:
+        return True
 peak_rss_mb = _prep_common.peak_rss_mb
 
 
@@ -515,7 +547,8 @@ def build_protocol_freeze(cfg: Mapping[str, Any]) -> dict[str, Any]:
         "round_id": ROUND_ID,
         "generated_utc": utcnow(),
         "git_commit": git_commit(),
-        "git_dirty_tracked": git_dirty(),
+        "git_dirty_tracked": source_dirty(),
+        "git_dirty_worktree": git_dirty(),
         "config_hash": config_hash(cfg),
         "config_path": track_rel(CONFIG_PATH),
         "code_hashes": code_file_hashes(),

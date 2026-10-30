@@ -454,7 +454,8 @@ def cmd_status(_args) -> int:
     status = {
         "protocol_id": C.PROTOCOL_ID,
         "git_commit": C.git_commit(),
-        "git_dirty_tracked": C.git_dirty(),
+        "git_dirty_tracked": C.source_dirty(),
+        "git_dirty_worktree": C.git_dirty(),
         "protocol_freeze": C.file_record(C.PROTOCOL_FREEZE),
         "cpu_gates_final_status": gates["final_status"] if gates else None,
         "gpu_authorization_file": C.file_record(GPU_AUTHORIZATION),
