@@ -1,8 +1,8 @@
 {
   "authorized": true,
   "protocol_id": "lcrc-lipo-screen-v1",
-  "protocol_freeze_sha256": "87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4",
-  "max_gpu_hours": 1.5,
+  "protocol_freeze_sha256": "7fffba423df449fae09688f29e1d4d33cdd5df2e51c4a15ae5986031470818b8",
+  "max_gpu_hours": 1.4861,
   "authorized_runs": [
     "A_s0",
     "A_s1",
@@ -14,9 +14,18 @@
     "C_s1",
     "C_s2"
   ],
-  "researcher_note": "Explicit researcher authorization for the frozen lcrc-lipo-screen-v1 formal GPU stage. Scope is limited to the nine neural runs A/B/C x seeds 0/1/2 plus their label-blind Monitor predictions, under the frozen PROTOCOL.md, config, code, recipe (360 epochs / 6840 updates), optimizer and decision rules. No protocol change, no tuning, no extra arms, no SSL, no extra data, no early stopping or seed/checkpoint selection, no Monitor-based selection. Hard budget 1.5 A100 GPU-hours including training and prediction overhead. Reserved and official valid/test labels remain inaccessible. Stop and report on any hash drift, data inconsistency, authorization failure, budget shortfall, run error or prediction-freeze failure.",
-  "authorized_at_utc": "2026-10-30T14:50:12Z",
-  "authorized_by": "researcher (explicit in-session execution order)",
+  "researcher_note": "Explicit researcher re-authorization for the lcrc-lipo-screen-v1 formal GPU stage under AMENDMENT-001-fit-batch-index. Scope is limited to the frozen protocol at freeze sha256 7fffba423df449fae09688f29e1d4d33cdd5df2e51c4a15ae5986031470818b8: the nine neural runs A/B/C x seeds 0/1/2 plus their label-blind Monitor predictions and the existing D_r0..D_r2, under the frozen PROTOCOL.md, config, code, recipe (360 epochs / 6840 updates per run), optimizer and decision rules. The stage cap is 1.4861 A100 GPU-hours because 0.0139 A100 GPU-hours were already consumed by the halted v1 stage; cumulative round usage must not exceed 1.5 A100 GPU-hours. No protocol change, no tuning, no extra arms, no SSL, no extra data, no early stopping, no seed/checkpoint selection, no Monitor-based selection. Reserved and official valid/test labels remain inaccessible. Stop and report on any hash drift, data inconsistency, authorization mismatch, budget shortfall, new run error or prediction-freeze failure.",
+  "authorized_at_utc": "2026-10-30T16:15:00Z",
+  "authorized_by": "researcher (explicit in-session re-authorization order; amendment-001-fit-batch-index)",
+  "amendment": {
+    "id": "amendment-001-fit-batch-index",
+    "record": "tracks/structural-sufficiency/lcrc_lipo_screen_v1/AMENDMENT-001-fit-batch-index.md",
+    "previous_freeze_sha256": "87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4",
+    "previous_authorization_sha256": "48cb9a28ff36ec6765bcbc05d72391f5018e123a1ae8cef11d89196e44a3f30f",
+    "previous_authorization_archived_as": "tracks/structural-sufficiency/lcrc_lipo_screen_v1/analysis/gpu_authorization_v1_superseded_pre_amendment.json",
+    "previous_gpu_stage_halt_sha256": "111275dcc2037f19526fcb2c041a3e2e2868955e66755c065d52301fad72b113",
+    "design_changed": false
+  },
   "scope": {
     "arms": ["A", "B", "C"],
     "seeds": [0, 1, 2],
@@ -30,10 +39,17 @@
       "official valid/test labels"
     ]
   },
+  "prior_gpu_usage": {
+    "gpu_hours_used_before_this_authorization": 0.0139,
+    "source": "tracks/structural-sufficiency/lcrc_lipo_screen_v1/analysis/gpu_stage_halt.json",
+    "detail": "halted v1 stage on res: lcrc-timing-a (17 s), lcrc-formal-A-s0 (16 s), lcrc-formal-A-s1 (17 s); three res-2 submissions cancelled before start at 0 GPU-s"
+  },
   "budget": {
-    "hard_cap_gpu_hours": 1.5,
+    "stage_cap_gpu_hours": 1.4861,
+    "hard_cap_gpu_hours": 1.4861,
+    "cumulative_round_cap_gpu_hours": 1.5,
     "estimate_gpu_hours": 0.734,
-    "estimate_source": "analysis/budget_estimate.json",
-    "covers": "nine neural trainings, GPU prediction passes and rerun reserve"
+    "estimate_source": "tracks/structural-sufficiency/lcrc_lipo_screen_v1/analysis/budget_estimate.json",
+    "covers": "nine neural trainings, GPU or CPU prediction passes, and rerun reserve"
   }
 }

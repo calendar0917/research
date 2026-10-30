@@ -1,0 +1,39 @@
+{
+  "authorized": true,
+  "protocol_id": "lcrc-lipo-screen-v1",
+  "protocol_freeze_sha256": "87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4",
+  "max_gpu_hours": 1.5,
+  "authorized_runs": [
+    "A_s0",
+    "A_s1",
+    "A_s2",
+    "B_s0",
+    "B_s1",
+    "B_s2",
+    "C_s0",
+    "C_s1",
+    "C_s2"
+  ],
+  "researcher_note": "Explicit researcher authorization for the frozen lcrc-lipo-screen-v1 formal GPU stage. Scope is limited to the nine neural runs A/B/C x seeds 0/1/2 plus their label-blind Monitor predictions, under the frozen PROTOCOL.md, config, code, recipe (360 epochs / 6840 updates), optimizer and decision rules. No protocol change, no tuning, no extra arms, no SSL, no extra data, no early stopping or seed/checkpoint selection, no Monitor-based selection. Hard budget 1.5 A100 GPU-hours including training and prediction overhead. Reserved and official valid/test labels remain inaccessible. Stop and report on any hash drift, data inconsistency, authorization failure, budget shortfall, run error or prediction-freeze failure.",
+  "authorized_at_utc": "2026-10-30T14:50:12Z",
+  "authorized_by": "researcher (explicit in-session execution order)",
+  "scope": {
+    "arms": ["A", "B", "C"],
+    "seeds": [0, 1, 2],
+    "phase": "formal GPU training + label-blind prediction, followed by one prediction freeze and one Monitor evaluation",
+    "excluded": [
+      "SSL",
+      "AQSOL or any other task",
+      "additional ablations or models",
+      "hyperparameter search",
+      "Reserved labels",
+      "official valid/test labels"
+    ]
+  },
+  "budget": {
+    "hard_cap_gpu_hours": 1.5,
+    "estimate_gpu_hours": 0.734,
+    "estimate_source": "analysis/budget_estimate.json",
+    "covers": "nine neural trainings, GPU prediction passes and rerun reserve"
+  }
+}
