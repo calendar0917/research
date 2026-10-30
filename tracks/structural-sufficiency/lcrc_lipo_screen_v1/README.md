@@ -2,16 +2,19 @@
 
 Second-round engineering package for the structural-sufficiency track: a controlled
 Lipophilicity screen of LCRC-A (A) vs an S2-off ablation (B) vs GINE+global42 (C) vs
-ECFP4+XGBoost (D). The v1 GPU stage halted on a Fit-index defect; the defect is fixed
-and CPU re-verified, and the package is **ready for re-authorization**, not running.
+ECFP4+XGBoost (D). The v1 GPU stage halted on a Fit-index defect; the defect was fixed,
+CPU re-verified, re-authorized and executed. The formal stage is complete.
 
-- **Round status:** `AMENDMENT_CPU_VERIFIED` / `READY_FOR_REAUTHORIZATION`
-- **GPU:** 0 h under the amended freeze; 0.0139 h used by the halted v1 stage
+- **Round status:** `FORMAL_GPU_COMPLETE_MONITOR_EVALUATED`
+- **Scientific result:** `CASE_1_S2_INCREMENT_SUPPORTED` (frozen rule; A RMSE 0.91002,
+  B 1.04912, C 0.92284, D 0.97439 on Monitor504)
+- **GPU:** 0.5400 h in the amended stage; 0.0139 h historical; 0.5539 h cumulative of
+  the 1.5 h round cap
 - **Amendment:** [`AMENDMENT-001-fit-batch-index.md`](AMENDMENT-001-fit-batch-index.md)
 - **Halt record (preserved):** [`analysis/gpu_stage_halt.json`](analysis/gpu_stage_halt.json)
 - **Protocol:** [`PROTOCOL.md`](PROTOCOL.md) (frozen design, unedited)
-- **Report:** [`REPORT.md`](REPORT.md) — no performance result
-- **Decision:** [`DECISION.md`](DECISION.md) — no scientific verdict
+- **Report:** [`REPORT.md`](REPORT.md) — full results, hashes and interpretation boundaries
+- **Decision:** [`DECISION.md`](DECISION.md) — `CASE_1_S2_INCREMENT_SUPPORTED`, with caveats
 
 ## What exists
 
@@ -31,9 +34,14 @@ and CPU re-verified, and the package is **ready for re-authorization**, not runn
 | `code/run_screen.py` | CLI for every stage |
 | `configs/lcrc_lipo_screen_v1.yaml` | frozen config (`FROZEN_PRE_GPU`) |
 | `tests/` | 59 pytest checks (incl. full-Fit alignment) |
-| `analysis/` | audit, parameter table, budget, freeze, gates, smoke, D predictions |
-| `analysis/gpu_authorization.json` | committed researcher authorization (9 runs, 1.5 h) |
-| `analysis/gpu_stage_halt.json` | failed formal run ledger, root cause, required amendment |
+| `analysis/` | audit, parameter table, budget, freeze, gates, smoke, GPU ledger, predictions, Monitor results |
+| `analysis/gpu_authorization.json` | active amendment-001 researcher authorization (9 runs, 1.4861 h) |
+| `analysis/gpu_authorization_v1_superseded_pre_amendment.json` | byte-identical v1 authorization (superseded, preserved) |
+| `analysis/gpu_authorization_history.json` | hashes/commits of both authorization records |
+| `analysis/gpu_ledger.json` | per-run GPU wall time, rr ids, train/soup hashes, totals |
+| `analysis/gpu_stage_halt.json` | v1 failed-run ledger, root cause, required amendment |
+| `analysis/predictions/MANIFEST.json` | frozen 12-key prediction registry + all hashes |
+| `analysis/monitor_{metrics,paired,diagnostics}.json` | the single frozen Monitor evaluation |
 | `AMENDMENT-001-fit-batch-index.md` | index fix, new gate G9, before/after semantics |
 
 `analysis/runs/` (training artifacts) is git-ignored. Everything else in `analysis/`
@@ -88,11 +96,12 @@ uv run --project /home/calendar/code/research --group lipo \
   python code/run_screen.py status
 ```
 
-Expected: `cpu-gates` ends at `READY_FOR_REAUTHORIZATION` (10/10 gates PASS), pytest
-reports `59 passed`, and `status` reports `READY_FOR_REAUTHORIZATION` with
-`gpu_authorization_matches_current_freeze = false`.
+Expected: `cpu-gates` ends at `READY_FOR_REAUTHORIZATION` (10/10 gates PASS; the gate
+label is the historical gate-set state), pytest reports `59 passed`, and `status`
+reports `state = AUTHORIZED_UNDER_CURRENT_FREEZE`, 12 prediction files and
+`monitor_evaluated = true` after the completed stage.
 
-## Formal stage (v1 halted; amendment CPU-verified)
+## Formal stage (v1 halted, then completed under amendment-001)
 
 The v1 GPU stage was authorized and run through `rr`. Both attempted runs (`A_s0`,
 `A_s1`) failed at the first optimizer batch:
@@ -106,15 +115,24 @@ cache positions (`0…2351`); every epoch-1 batch had out-of-range ids, and in-r
 paired the wrong label. All nine runs shared the loop; no `train.json`, soup, prediction
 or manifest was written and no Monitor label was opened.
 
-**Amendment-001** fixes the index semantics and adds the full-Fit alignment gate G9. The
-amended freeze (sha256 `7fffba42…`) is CPU-verified: 10/10 gates PASS, 59 tests pass, new
-smoke on the real path, and seeds 0/1/2 full-epoch coverage proven against an independent
-`global_row_id → label` map. The v1 authorization pins the old freeze and is refused.
+**Amendment-001** fixed the index semantics and added the full-Fit alignment gate G9.
+The amended freeze (sha256 `7fffba42…`) was CPU-verified (10/10 gates, 59 tests, full-Fit
+alignment for seeds 0/1/2), then re-authorized for 1.4861 A100 GPU-hours. The formal
+stage subsequently ran on `res` (2× A100-SXM4-40GB, driver 550.163.01, torch 2.5.1+cu124):
 
-```bash
-# still refused until a new authorization matches the amended freeze
-python code/run_screen.py train --arm A --seed 0 --device cuda
-```
+- `A_s0` passed the stage-1 gate (360 epochs / 6840 updates, all 360 epoch fingerprints
+  independently reproduced); the other eight runs then completed the frozen recipe.
+- 9/9 runs completed; 3240/3240 replayed epoch fingerprints matched; no non-finite
+  loss/gradient; last-5 soups saved and hash-verified; no Monitor/Reserved/official label
+  was read during training.
+- Nine label-blind neural predictions plus the existing `D_r0..D_r2` were frozen
+  (`MANIFEST.json` sha256 `ba8ad0be…`), then one Monitor evaluation was run.
+- Frozen result: `CASE_1_S2_INCREMENT_SUPPORTED` (A 0.91002, B 1.04912, C 0.92284,
+  D 0.97439 RMSE). Details and caveats: `REPORT.md`, `DECISION.md`.
+- GPU: 0.5400 h this stage, 0.5539 h cumulative including the 0.0139 h v1 halt.
+
+The v1 authorization (`48cb9a28…`) is preserved byte-identically and remains refused
+against the amended freeze; the active authorization is `a2183bdf…`.
 
 ## Frozen recipe (summary)
 
@@ -145,20 +163,31 @@ label is read. The decision output is `CASE_1/2/3` under the rules in `PROTOCOL.
 | `analysis/budget_estimate.json` | 0.734 GPU-h estimate vs 1.5 h hard cap |
 | `analysis/cpu_gates.json` | 10/10 gates PASS (G9 added by amendment-001) |
 | `analysis/smoke.json` | regenerated 3 CPU smoke curves on the fixed path (256 Fit × 12 epochs) |
-| `analysis/predictions/D_r0..2.{npz,json}` | label-blind baseline predictions, not scored |
-| `analysis/gpu_authorization.json` | researcher authorization (committed 2026-10-30) |
+| `analysis/predictions/D_r0..2.{npz,json}` | label-blind baseline predictions (hashes unchanged) |
+| `analysis/predictions/{A,B,C}_s{0,1,2}.{npz,json}` | nine label-blind neural predictions |
+| `analysis/predictions/MANIFEST.json` | frozen 12-key registry, row order and all hashes |
+| `analysis/monitor_{metrics,paired,diagnostics}.json` | the single post-freeze Monitor evaluation |
+| `analysis/gpu_ledger.json` | per-run GPU time, rr ids, train/soup hashes, budget totals |
+| `analysis/gpu_authorization.json` | active amendment-001 authorization (1.4861 h, nine runs) |
+| `analysis/gpu_authorization_v1_superseded_pre_amendment.json` | preserved v1 authorization bytes |
 | `analysis/gpu_stage_halt.json` | v1 run ledger, failure trace, root cause |
 | `analysis/smoke_invalidated_pre_amendment.json` | byte-identical old smoke, marked invalid |
 | `AMENDMENT-001-fit-batch-index.md` | index fix, new gate, before/after semantics, verification |
 
 ## Important boundaries
 
-- No Monitor, Reserved or official valid/test label has been read or scored. Only
-  `fit_labels.py` (Fit 2352) may read labels; `monitor_labels.py` stays locked while no
-  prediction manifest exists.
+- Monitor504 was read **exactly once**, after all 12 predictions were frozen. Reserved504
+  and official valid/test labels were never read or scored. The evaluation audit
+  constructed only the 504 Monitor labels (`unrequested_values_constructed=0`).
 - Monitor504 is a development set previously used by SSRC; it is not a fresh blind test.
+- A vs B is an S2-channel ablation with equal nominal but unequal effective capacity
+  (B: 176,514 effective parameters). The measured increment cannot be attributed solely
+  to S2 information.
+- A vs C and A vs D are `INCONCLUSIVE` on the primary RMSE rule (CIs cross zero);
+  `CASE_1` does not assert A beats either reference.
 - CPU gates and smoke runs are engineering checks, not evidence of predictive quality.
-  G5 uses a 256-row Fit prefix; the full-Fit index range is covered separately by G9,
-  which was added after the v1 halt.
+  G5 uses a 256-row Fit prefix; the full-Fit index range is covered separately by G9.
 - Do not edit code/config after the amended freeze without a new amendment,
   regenerating `analysis/protocol_freeze.json` and obtaining a new authorization.
+- The round is stopped: no SSL, AQSOL, extra ablation, Reserved/official evaluation or
+  further training is authorized.

@@ -1,12 +1,24 @@
 # PROTOCOL — LCRC-A Lipophilicity screen v1
 
+> **Post-execution status (2026-10-30):** This frozen protocol was executed under
+> `amendment-001-fit-batch-index` with freeze `7fffba42…` and authorization
+> `a2183bdf…` (stage cap 1.4861 A100 GPU-h). All nine formal runs completed, the 12
+> predictions were frozen, and one Monitor evaluation was performed:
+> `CASE_1_S2_INCREMENT_SUPPORTED`. See `REPORT.md` and `DECISION.md`. This block records
+> execution status only; the design in §§1–11 was not edited. Statements in §§9–11 that
+> describe the pre-execution state (no authorization, D predictions not scored, no
+> performance result) are historical freeze-time statements; the completed results are
+> in `REPORT.md` and `DECISION.md`.
+
 - **Protocol id:** `lcrc-lipo-screen-v1`
 - **Round:** `tracks/structural-sufficiency/lcrc_lipo_screen_v1/`
 - **Config:** `configs/lcrc_lipo_screen_v1.yaml` (sha256 see `analysis/protocol_freeze.json`)
 - **Config hash:** `b724a521438c31c356f36157ba7a52bbf408da327f47ac2243f3b09c146b6533`
 - **Protocol freeze record:** `analysis/protocol_freeze.json`, sha256 `87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4`
-- **Status at write time:** `FROZEN_PRE_GPU` / round status `READY_FOR_GPU_AUTHORIZATION`
-- **GPU authorization:** `NOT_AUTHORIZED`. No GPU process was started in this round. `analysis/gpu_authorization.json` does not exist.
+- **Status at freeze time:** `FROZEN_PRE_GPU` / round status `READY_FOR_GPU_AUTHORIZATION`
+- **GPU authorization at freeze time:** `NOT_AUTHORIZED`; `analysis/gpu_authorization.json`
+  did not exist at freeze time. The formal stage was later executed under the explicit
+  re-authorization pinned to this record (see `REPORT.md` §2).
 - **Implementation commit at freeze:** `c3202fee7d9a` (the freeze artifacts themselves are committed in the following freeze commit).
 
 This file is the pre-registered design. It is frozen before any formal model sees a
