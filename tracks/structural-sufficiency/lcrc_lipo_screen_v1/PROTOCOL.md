@@ -4,9 +4,10 @@
 - **Round:** `tracks/structural-sufficiency/lcrc_lipo_screen_v1/`
 - **Config:** `configs/lcrc_lipo_screen_v1.yaml` (sha256 see `analysis/protocol_freeze.json`)
 - **Config hash:** `b724a521438c31c356f36157ba7a52bbf408da327f47ac2243f3b09c146b6533`
-- **Protocol freeze record:** `analysis/protocol_freeze.json`, sha256 `b0b1bf08adc1e759be42bee1b28165230a66fd7e7d86f3aa2e601af56e68ed1c`
+- **Protocol freeze record:** `analysis/protocol_freeze.json`, sha256 `87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4`
 - **Status at write time:** `FROZEN_PRE_GPU` / round status `READY_FOR_GPU_AUTHORIZATION`
 - **GPU authorization:** `NOT_AUTHORIZED`. No GPU process was started in this round. `analysis/gpu_authorization.json` does not exist.
+- **Implementation commit at freeze:** `c3202fee7d9a` (the freeze artifacts themselves are committed in the following freeze commit).
 
 This file is the pre-registered design. It is frozen before any formal model sees a
 Monitor label. The config and every code/test file are hashed into
@@ -288,7 +289,7 @@ treated as chemical causal attribution.
 
 All gates are implemented in `code/screen_gates.py`; the evidence JSON is
 `analysis/cpu_gates.json` (sha256
-`23028cacbc7344681c1c65af0d02c3f12c019e9e17ec424bfdd6578031407cbb`), final status
+`aa29fb09c0135f2946e6b0e5c8dd6bef7ed30a156e303e779fb0a3e3d0b79185`), final status
 `READY_FOR_GPU_AUTHORIZATION`.
 
 | gate | check | result |
@@ -326,7 +327,7 @@ Anchor: one measured A100 run of the same recipe family
 Frozen caps: internal hard cap **1.5 A100 GPU-hours**, researcher-suggested external
 cap **4.0 A100 GPU-hours**. The estimate fits the internal cap. The 4-hour figure is a
 cap, not an authorization. Detail: `analysis/budget_estimate.json` (sha256
-`a9e6083e508bf8617f29b3092e42290a160aafa4726d6942798acd46fbe2ccae`).
+`d7148f13b85f341f0dcb389e4a7232afce136491bedd016d46870d48855d0536`).
 
 ---
 
@@ -335,7 +336,9 @@ cap, not an authorization. Detail: `analysis/budget_estimate.json` (sha256
 `analysis/protocol_freeze.json` records: config hash, hashes of all code/test files,
 frozen artifact hashes, recipe constants, decision constants, the 12-key prediction
 registry, Fit target statistics, `gpu_authorized=false`, `gpu_hours_used=0.0`, and the
-git commit at freeze time.
+implementation git commit at freeze time. `git_dirty_tracked` covers source files only
+(`code/`, `tests/`, `configs/`); `git_dirty_worktree` records the full tracked worktree.
+Formal runs require the full worktree to be clean, not just the source.
 
 To run formal training, the researcher must create
 `analysis/gpu_authorization.json` with at least:

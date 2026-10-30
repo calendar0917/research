@@ -6,9 +6,9 @@
   training, prediction or hyperparameter run has been executed.
 - **Monitor/Reserved/official labels:** not read, not scored.
 - **Protocol freeze:** `analysis/protocol_freeze.json`
-  (sha256 `b0b1bf08adc1e759be42bee1b28165230a66fd7e7d86f3aa2e601af56e68ed1c`)
+  (sha256 `87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4`)
 - **CPU gates:** 9/9 PASS, final status `READY_FOR_GPU_AUTHORIZATION`
-  (`analysis/cpu_gates.json`, sha256 `23028cac…7cbb`)
+  (`analysis/cpu_gates.json`, sha256 `aa29fb09…9185`)
 - **Tests:** 53 passed
 
 This report is deliberately a **pre-GPU engineering report**. It contains no
@@ -80,7 +80,7 @@ From `analysis/parameters.json`:
 
 ## 4. CPU smoke (not a scientific result)
 
-`analysis/smoke.json` (sha256 `d67839ce…`) records every smoke run:
+`analysis/smoke.json` (sha256 `fef92f3d…`) records every smoke run:
 
 | arm | run id | updates | train MSE first → last | ratio | wall |
 |---|---|---:|---:|---:|---:|
@@ -238,12 +238,12 @@ Expected: `READY_FOR_GPU_AUTHORIZATION`, 9/9 gates PASS, 53 tests pass. Formal
 
 | artifact | sha256 |
 |---|---|
-| `analysis/protocol_freeze.json` | `b0b1bf08adc1e759be42bee1b28165230a66fd7e7d86f3aa2e601af56e68ed1c` |
+| `analysis/protocol_freeze.json` | `87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4` |
 | `analysis/norm_target.json` | `50c5ad9da285b15233dc0f26704cfb5136ac4bbe5a97b4bf21734d8f1f9a0748` |
-| `analysis/cpu_gates.json` | `23028cacbc7344681c1c65af0d02c3f12c019e9e17ec424bfdd6578031407cbb` |
-| `analysis/parameters.json` | `e55d521adeb12a48ddc097c9bb9c9d5f8f9c076b1dd1fbf8b8e1e5468e37bf7c` |
-| `analysis/budget_estimate.json` | `a9e6083e508bf8617f29b3092e42290a160aafa4726d6942798acd46fbe2ccae` |
-| `analysis/smoke.json` | `d67839ceb87608a834f10c67c747fd21030b6aef391abe1292f92db4b80cdf70` |
+| `analysis/cpu_gates.json` | `aa29fb09c0135f2946e6b0e5c8dd6bef7ed30a156e303e779fb0a3e3d0b79185` |
+| `analysis/parameters.json` | `db1763d6dccfb123ce7cfced08126121ce8a550cd0741da90b8154c262df9388` |
+| `analysis/budget_estimate.json` | `d7148f13b85f341f0dcb389e4a7232afce136491bedd016d46870d48855d0536` |
+| `analysis/smoke.json` | `fef92f3d0badfbbc7af5aca8f8b22c8f7399aa88604d8cad86b9c4b5b420fd4a` |
 | `analysis/data_audit.json` | `f240a661bc6d5396d1df89ab922e3f37bc1c281d322d2b1a1e0221368c25eb79` |
 | `analysis/predictions/D_r0.npz` | `e2a18b9be03ed9e1da96614e9337abf2da577e14079d1a43958d295f736696b2` |
 | `analysis/predictions/D_r1.npz` | `d2b42ebcc4a024d7e0dafa12e2c7672eb2650797361ba19a4e1704dc2c9be6c1` |
