@@ -7,7 +7,9 @@
 - **Status:** `AMENDMENT_CPU_VERIFIED` / `READY_FOR_REAUTHORIZATION` (GPU not restarted)
 - **Previous freeze:** `analysis/protocol_freeze.json`
   sha256 `87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4`,
-  git commit `c3202fee7d9a` (freeze artifacts committed in `5a597b1`)
+  git commit `c3202fee7d9a` (freeze artifacts committed in `5a597b1`).
+  Its byte content remains retrievable with
+  `git show e09c627:tracks/structural-sufficiency/lcrc_lipo_screen_v1/analysis/protocol_freeze.json`
 - **Authorization under the previous freeze:** `analysis/gpu_authorization.json`
   sha256 `48cb9a28ff36ec6765bcbc05d72391f5018e123a1ae8cef11d89196e44a3f30f`
   (commit `4d8f136`), 9 runs, 1.5 A100 GPU-hours
