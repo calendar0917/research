@@ -126,6 +126,9 @@ No budget shortfall occurred; no job was launched beyond the authorization.
 - Prediction freeze `analysis/predictions/MANIFEST.json` `ba8ad0be…` + lock
   `f083600e…`; evaluation `analysis/monitor_metrics.json` `f9df66ab…`,
   `monitor_paired.json` `9c0e4631…`, `monitor_diagnostics.json` `41d6b860…`.
+- A post-evaluation run of the frozen pre-execution test suite rewrote `A_s0`; the
+  frozen bytes were restored from commit `46d0ab1` and all 12 predictions were
+  re-verified against the manifest. No metric or evaluation output changed.
 - GPU and per-run provenance: `analysis/gpu_ledger.json` `2eca7b14…` (per-run rr ids,
   wall seconds, train/soup hashes, batch-order hashes, fit diagnostics).
 

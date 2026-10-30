@@ -97,9 +97,13 @@ uv run --project /home/calendar/code/research --group lipo \
 ```
 
 Expected: `cpu-gates` ends at `READY_FOR_REAUTHORIZATION` (10/10 gates PASS; the gate
-label is the historical gate-set state), pytest reports `59 passed`, and `status`
-reports `state = AUTHORIZED_UNDER_CURRENT_FREEZE`, 12 prediction files and
-`monitor_evaluated = true` after the completed stage.
+label is the historical gate-set state), and `status` reports
+`state = AUTHORIZED_UNDER_CURRENT_FREEZE`, 12 prediction files and
+`monitor_evaluated = true` after the completed stage. The full pytest suite passed
+59/59 on the pre-execution snapshot; after the stage, four checks that assert the
+pre-execution state (no manifest, no training artifacts) fail by design and must not be
+re-run — see `REPORT.md` §3.4. Use the prediction-manifest verification for
+post-execution integrity.
 
 ## Formal stage (v1 halted, then completed under amendment-001)
 

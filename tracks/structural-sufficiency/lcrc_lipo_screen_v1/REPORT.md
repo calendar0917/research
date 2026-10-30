@@ -126,6 +126,28 @@ fingerprints `0a73407f…` (Fit) and `db48a9c2…` (Monitor), `labels_present=fa
 Reserved cache never loaded. The full-Fit alignment gate G9 is part of the passing
 G0–G9 record.
 
+### 3.4 Post-evaluation test-suite caveat (no effect on the frozen result)
+
+Before deployment the full suite passed **59/59** at commit `a871657`, including the
+six checks in `tests/test_fit_alignment.py`; that file also passes when run alone after
+the stage. Four checks in the frozen suite assert the *pre-execution* state
+(`MANIFEST` absent, no training artifacts), so they fail once the stage exists and must
+not be re-run after the freeze:
+
+- `test_evaluate_is_blocked_before_prediction_freeze`
+- `test_monitor_access_blocked_before_freeze`
+- `test_predict_nn_refuses_without_a_training_run`
+- `test_freeze_refuses_an_incomplete_registry`
+
+Running that suite once post-evaluation exercised `predict_nn("A", 0)`, which rewrote
+`analysis/predictions/A_s0.{npz,json}`. The frozen bytes were restored from commit
+`46d0ab1` (`git checkout --`), and all 12 files were re-verified against the manifest
+(`A_s0.npz` `3b40979b0686…`, sidecar `a1355f8d…`). The single Monitor evaluation and
+all reported metrics had already completed before this happened, so nothing in §6
+changed. The tests were **not** modified: they are part of the frozen code hashes. The
+correct post-execution integrity check is the manifest verification, not this
+pre-execution test suite.
+
 ## 4. GPU ledger
 
 GPU seconds are rr wall-clock seconds of GPU jobs, rounded up to whole seconds; they
