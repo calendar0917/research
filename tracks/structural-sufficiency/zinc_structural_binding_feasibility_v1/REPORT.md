@@ -171,7 +171,7 @@ Operationalization of the requested strict criterion:
 | Hard binding above chance | pass: 0.5919, CI low 0.5415 |
 | Hard binding beats frequency table | **fail:** +1.08 pp, CI [−5.11, +7.18] |
 | Hard binding beats linear pair-only | **fail:** +3.24 pp, CI [−0.54, +7.32] |
-| Hard binding beats context-frequency table | **fail:** −5.95 pp (simple table is better) |
+| Hard binding beats context-frequency table | **fail:** −5.95 pp point estimate (CI [0.00, +11.75]); simple table at least as good |
 | Both seeds above chance | pass: 0.5919 / 0.5838 |
 | Seed gap < 5 pp | pass overall: 0.81 pp (fold 2 gap 10.1 pp) |
 | Every fold above 0.5 | pass barely: min 0.5072 |
