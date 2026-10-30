@@ -20,7 +20,8 @@
 - **Reserved / official valid+test labels:** never read, never scored.
 - **Amendment record:** [`AMENDMENT-001-fit-batch-index.md`](AMENDMENT-001-fit-batch-index.md)
 - **CPU gates at re-authorization:** G0–G9 all PASS (`analysis/cpu_gates.json`
-  sha256 `98d8e27c…`); 59 pytest checks pass.
+  sha256 `98d8e27c…`); the frozen suite passed 59/59 on the pre-execution snapshot
+  (post-execution caveat in §3.4).
 
 This report supersedes the pre-execution "no performance result" version. The halted
 v1 record and the superseded v1 authorization remain preserved (§9).
@@ -128,11 +129,12 @@ G0–G9 record.
 
 ### 3.4 Post-evaluation test-suite caveat (no effect on the frozen result)
 
-Before deployment the full suite passed **59/59** at commit `a871657`, including the
-six checks in `tests/test_fit_alignment.py`; that file also passes when run alone after
-the stage. Four checks in the frozen suite assert the *pre-execution* state
-(`MANIFEST` absent, no training artifacts), so they fail once the stage exists and must
-not be re-run after the freeze:
+Before deployment the frozen suite passed **59/59** (run at commit `7842ffd`; the later
+pre-stage commits changed only analysis JSON/docs, and the run-time commit `a871657` has
+the same code/test bytes), including the six checks in `tests/test_fit_alignment.py`;
+that file also passes when run alone after the stage. Four checks in the frozen suite
+assert the *pre-execution* state (`MANIFEST` absent, no training artifacts), so they
+fail once the stage exists and must not be re-run after the freeze:
 
 - `test_evaluate_is_blocked_before_prediction_freeze`
 - `test_monitor_access_blocked_before_freeze`
