@@ -88,3 +88,89 @@ Fit8k radius-2 vocabulary. With the correct full-train10k vocabulary:
 * g15 Stage-C baseline: replaying the historical `lcrcA_s0/s1` checkpoints on
   official valid reproduces their saved predictions (≤ 3.9e-6) and MAEs
   (≤ 7e-9), so the Stage-C baseline is protocol-matched.
+
+## 2026-10-30 — formal Stage A execution and stop
+
+| time | event |
+|---|---|
+| 08:08 | `hc3-prep` on `res` completes; train/valid structure caches match the freeze manifest (`c1fe6321…`, `de4f43b8…`) |
+| 08:10–08:12 | 2-epoch Fit8k timing: H 3.04 s/epoch → 0.637 projected GPU·h; F 3.55 s/epoch → 0.743 projected GPU·h. B was not separately timed; see deviation below |
+| 08:13:28–08:54:58 | **H seed 0 Fit8k** completes 47,400 updates; best Monitor 0.120233 @ epoch 626; 0.691 GPU·h |
+| 08:13:41–08:57:33 | **F seed 0 Fit8k** completes 47,400 updates; best Monitor 0.119856 @ epoch 581; 0.730 GPU·h |
+| 08:59:55–09:29:11 | **B seed 0 Fit8k** completes 47,400 updates; best Monitor 0.121258 @ epoch 486; 0.487 GPU·h |
+| ~09:35 | results pulled; `code/hc_analysis.py` added (read-only analysis; no training/selection/protocol change) |
+| ~09:45 | Stage A gate evaluation: **STOP**; Stage B and Stage C not purchased |
+
+All three formal runs used commit `cccf380143a45af50ba8af54ad485db2b9a2d859`
+with `git_dirty = false`, exactly 47,400 updates, Fit8k training and Monitor
+selection. Checkpoint SHA-256 (best): B `5cfc7874…`, H `67edefe7…`,
+F `757ffd43…`.
+
+### Stage A result
+
+| arm | best Monitor | W20 | T100 | final | GPU·h |
+|---|---:|---:|---:|---:|---:|
+| B | 0.121258 | 0.121718 | 0.121746 | 0.121743 | 0.487 |
+| H | 0.120233 | 0.120483 | 0.120516 | 0.120517 | 0.691 |
+| F | 0.119856 | 0.120167 | 0.120194 | 0.120211 | 0.730 |
+
+Paired deltas (negative favors first arm), best checkpoint:
+
+* full: H−B −0.001025 [−0.005601,+0.003401]; H−F +0.000377
+  [−0.005164,+0.005500].
+* ordinary: H−B −0.001612 [−0.005997,+0.002276]; H−F −0.000831
+  [−0.006411,+0.003539].
+* unseen-ordinary (Fit8k vocabulary): H−B −0.004731
+  [−0.018378,+0.006854]; H−F −0.005104 [−0.022879,+0.008669].
+* tail: H−B +0.006322; H−F +0.015487.
+* Monitor \ fixed W10: H−B −0.003326; H−F −0.002285.
+
+**Pre-registered gates failed:** Δ(H−B) full (needed ≤ −0.004, observed
+−0.001025), Δ(H−F) full (needed ≤ −0.003, observed +0.000377), Δ(H−B)
+ordinary (needed ≤ −0.002, observed −0.001612), W20 H−B and H−F, T100 H−F and
+final H−F. The unseen-ordinary point gate passes, but removing molecule 374
+(Monitor position 39) changes it to −0.000385. That one row contributes
+−0.001178 to full H−B and −1.7841 to the row's H−F delta; excluding it, full
+H−B is +0.000154 and full H−F is +0.002163. This is a **post-hoc descriptive
+sensitivity, not a gate**; the pre-registered decision already fails without
+it.
+
+Fixed W10: B 5.120592, H 5.347371, F 5.083470. Net `AE(B)−AE(H)` = +1.0246;
+W10 sum = −2.2678; share = −2.213. The share gate passes only because H is
+worse on W10. `Δ(H−B)` on Monitor \ W10 = −0.003326 passes pointwise.
+
+### Stage A decision
+
+**STOP.** Per `PROTOCOL.md` §6, no seed 1, no Stage C, no width/LR/path/loss
+changes. Seed 1 was not launched; official valid/test were not used for Stage
+C. The negative result is reported in `REPORT.md` / `DECISION.md` as-is.
+
+### Budget and deviations
+
+* Stage A formal: 0.487 + 0.691 + 0.730 = 1.908 GPU·h; timing ~0.004; total
+  **1.911 GPU·h**. Caps: soft 6, hard 8; max two GPUs respected.
+* **Deviation:** B did not receive a separate 2-epoch timing run. The H/F
+  timings and the historical LCRC-A timings bound B; actual B cost 0.487 h is
+  below both H (0.691) and F (0.730). No purchase decision depended on the B
+  projection because B is required in every case, and Stage A stayed far below
+  the cap. Recorded here rather than silently omitted.
+* No training or scientific-definition change was made after the freeze. The
+  only post-run code addition is `code/hc_analysis.py`, which reads saved
+  predictions and caches; it is not imported by `hc_train.py` and cannot affect
+  the formal runs.
+
+### Follow-up rule
+
+If this question is revisited, it requires a **new pre-registered round** with a
+new mechanism or a substantially different evaluation; it must not reuse this
+round's Stage A to tune H toward F. This round is closed.
+
+### Provenance note on dates and manifest dirtiness
+
+The setup header in `PROTOCOL.md` / `configs/frozen_protocol.json` says
+`2026-11-07`; the actual git commits (`1fb3e76`, `cccf380`), run logs and this
+ledger are **2026-10-30**. The former is a setup-date typo. The frozen files
+were left byte-identical to preserve their hashes. Separately, the freeze
+manifest records `git_dirty=true` because gate outputs were still untracked when
+it was generated; its code/cache SHA-256 entries are explicit, and all formal
+run `train.json` files record `git_dirty=false` at `cccf380`.
