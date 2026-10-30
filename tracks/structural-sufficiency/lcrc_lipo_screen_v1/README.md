@@ -2,13 +2,14 @@
 
 Second-round engineering package for the structural-sufficiency track: a controlled
 Lipophilicity screen of LCRC-A (A) vs an S2-off ablation (B) vs GINE+global42 (C) vs
-ECFP4+XGBoost (D). This package is **frozen and CPU-validated but has not been run on
-GPU**.
+ECFP4+XGBoost (D). The v1 GPU stage halted on a Fit-index defect; the defect is fixed
+and CPU re-verified, and the package is **ready for re-authorization**, not running.
 
-- **Round status:** `HALTED_IMPLEMENTATION_DEFECT` (formal GPU stage attempted 2026-10-30)
-- **GPU:** authorized for 1.5 A100 GPU-hours; 0.0139 h used; 0/9 trainings completed
-- **Halt record:** [`analysis/gpu_stage_halt.json`](analysis/gpu_stage_halt.json)
-- **Protocol:** [`PROTOCOL.md`](PROTOCOL.md) (frozen, unedited after the freeze)
+- **Round status:** `AMENDMENT_CPU_VERIFIED` / `READY_FOR_REAUTHORIZATION`
+- **GPU:** 0 h under the amended freeze; 0.0139 h used by the halted v1 stage
+- **Amendment:** [`AMENDMENT-001-fit-batch-index.md`](AMENDMENT-001-fit-batch-index.md)
+- **Halt record (preserved):** [`analysis/gpu_stage_halt.json`](analysis/gpu_stage_halt.json)
+- **Protocol:** [`PROTOCOL.md`](PROTOCOL.md) (frozen design, unedited)
 - **Report:** [`REPORT.md`](REPORT.md) — no performance result
 - **Decision:** [`DECISION.md`](DECISION.md) — no scientific verdict
 
@@ -26,13 +27,14 @@ GPU**.
 | `code/screen_predict.py` | label-blind prediction + hashed prediction freeze |
 | `code/baseline_ecfp_xgb.py` | frozen ECFP4 + XGBoost baseline |
 | `code/evaluate.py` | frozen metrics, bootstrap, paired tests, decision rules |
-| `code/screen_gates.py` | CPU gates G0–G8 → `analysis/cpu_gates.json` |
+| `code/screen_gates.py` | CPU gates G0–G9 → `analysis/cpu_gates.json` |
 | `code/run_screen.py` | CLI for every stage |
 | `configs/lcrc_lipo_screen_v1.yaml` | frozen config (`FROZEN_PRE_GPU`) |
-| `tests/` | 53 pytest checks |
+| `tests/` | 59 pytest checks (incl. full-Fit alignment) |
 | `analysis/` | audit, parameter table, budget, freeze, gates, smoke, D predictions |
 | `analysis/gpu_authorization.json` | committed researcher authorization (9 runs, 1.5 h) |
 | `analysis/gpu_stage_halt.json` | failed formal run ledger, root cause, required amendment |
+| `AMENDMENT-001-fit-batch-index.md` | index fix, new gate G9, before/after semantics |
 
 `analysis/runs/` (training artifacts) is git-ignored. Everything else in `analysis/`
 is committed and hash-referenced.
@@ -86,32 +88,31 @@ uv run --project /home/calendar/code/research --group lipo \
   python code/run_screen.py status
 ```
 
-Expected: `cpu-gates` ends at `READY_FOR_GPU_AUTHORIZATION`, pytest reports
-`52 passed, 1 failed` (the pre-GPU-state test asserts the authorization file is absent
-and is superseded by the 2026-10-30 authorization; it was not edited), and `status`
-reports the halted stage.
+Expected: `cpu-gates` ends at `READY_FOR_REAUTHORIZATION` (10/10 gates PASS), pytest
+reports `59 passed`, and `status` reports `READY_FOR_REAUTHORIZATION` with
+`gpu_authorization_matches_current_freeze = false`.
 
-## Formal stage (attempted 2026-10-30; halted)
+## Formal stage (v1 halted; amendment CPU-verified)
 
-The researcher authorized the nine runs, and the package was deployed and run through
-`rr`. Both attempted runs (`A_s0`, `A_s1`) failed at the first optimizer batch:
+The v1 GPU stage was authorized and run through `rr`. Both attempted runs (`A_s0`,
+`A_s1`) failed at the first optimizer batch:
 
 ```
 ValueError: row index outside cache   # screen_training.py:165 -> lcrc_data.py:658
 ```
 
-`screen_training.py` passes global split row ids (`0…4199`) to a collator that indexes
-cache positions (`0…2351`); every epoch-1 batch contains out-of-range ids
-(1162/2352 slots, 19/19 batches), and in-range slots would pair the wrong label
-(1188/1190). All nine runs share the loop. No `train.json`, soup, prediction or
-manifest was written; Monitor labels were never opened.
+`screen_training.py` passed global split row ids (`0…4199`) to a collator that indexes
+cache positions (`0…2351`); every epoch-1 batch had out-of-range ids, and in-range slots
+paired the wrong label. All nine runs shared the loop; no `train.json`, soup, prediction
+or manifest was written and no Monitor label was opened.
 
-Frozen code was **not** patched. A continuation requires a recorded amendment, a
-full-Fit first-epoch alignment gate, a regenerated `analysis/protocol_freeze.json` and a
-new authorization. See `DECISION.md` and `analysis/gpu_stage_halt.json`.
+**Amendment-001** fixes the index semantics and adds the full-Fit alignment gate G9. The
+amended freeze (sha256 `7fffba42…`) is CPU-verified: 10/10 gates PASS, 59 tests pass, new
+smoke on the real path, and seeds 0/1/2 full-epoch coverage proven against an independent
+`global_row_id → label` map. The v1 authorization pins the old freeze and is refused.
 
 ```bash
-# still refused / still failing under the current frozen hashes
+# still refused until a new authorization matches the amended freeze
 python code/run_screen.py train --arm A --seed 0 --device cuda
 ```
 
@@ -142,11 +143,13 @@ label is read. The decision output is `CASE_1/2/3` under the rules in `PROTOCOL.
 | `analysis/norm_target.json` | Fit-only mean/scale |
 | `analysis/parameters.json` | A/B/C parameter and GINE width search tables |
 | `analysis/budget_estimate.json` | 0.734 GPU-h estimate vs 1.5 h hard cap |
-| `analysis/cpu_gates.json` | 9/9 gates PASS |
-| `analysis/smoke.json` | 3 CPU smoke curves (256 Fit × 12 epochs), no Monitor |
+| `analysis/cpu_gates.json` | 10/10 gates PASS (G9 added by amendment-001) |
+| `analysis/smoke.json` | regenerated 3 CPU smoke curves on the fixed path (256 Fit × 12 epochs) |
 | `analysis/predictions/D_r0..2.{npz,json}` | label-blind baseline predictions, not scored |
 | `analysis/gpu_authorization.json` | researcher authorization (committed 2026-10-30) |
-| `analysis/gpu_stage_halt.json` | run ledger, failure trace, root cause, required amendment |
+| `analysis/gpu_stage_halt.json` | v1 run ledger, failure trace, root cause |
+| `analysis/smoke_invalidated_pre_amendment.json` | byte-identical old smoke, marked invalid |
+| `AMENDMENT-001-fit-batch-index.md` | index fix, new gate, before/after semantics, verification |
 
 ## Important boundaries
 
@@ -155,7 +158,7 @@ label is read. The decision output is `CASE_1/2/3` under the rules in `PROTOCOL.
   prediction manifest exists.
 - Monitor504 is a development set previously used by SSRC; it is not a fresh blind test.
 - CPU gates and smoke runs are engineering checks, not evidence of predictive quality.
-  In particular, gate G5 used a 256-row Fit prefix and did not exercise the full-Fit
-  index range; that gap is disclosed in `REPORT.md` §2.3.
-- Do not edit code/config after the freeze without regenerating
-  `analysis/protocol_freeze.json` and obtaining a new authorization.
+  G5 uses a 256-row Fit prefix; the full-Fit index range is covered separately by G9,
+  which was added after the v1 halt.
+- Do not edit code/config after the amended freeze without a new amendment,
+  regenerating `analysis/protocol_freeze.json` and obtaining a new authorization.

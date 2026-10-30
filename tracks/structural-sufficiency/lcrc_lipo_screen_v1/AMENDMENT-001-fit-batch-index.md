@@ -4,7 +4,7 @@
 - **Round:** `tracks/structural-sufficiency/lcrc_lipo_screen_v1/`
 - **Date:** 2026-10-30
 - **Type:** implementation correction (code + gate), **not** a scientific redesign
-- **Status at write time:** CPU re-verification in progress; GPU not started
+- **Status:** `AMENDMENT_CPU_VERIFIED` / `READY_FOR_REAUTHORIZATION` (GPU not restarted)
 - **Previous freeze:** `analysis/protocol_freeze.json`
   sha256 `87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4`,
   git commit `c3202fee7d9a` (freeze artifacts committed in `5a597b1`)
@@ -237,5 +237,35 @@ the amendment metadata differ.
 
 ## Appendix — final verification (written after the freeze regeneration)
 
-_To be completed with the new freeze sha256, the final gate status, the pytest result and
-the artifact hashes. This appendix does not change any frozen constant._
+- **New freeze:** `analysis/protocol_freeze.json`
+  sha256 `7fffba423df449fae09688f29e1d4d33cdd5df2e51c4a15ae5986031470818b8`,
+  generated at commit `131937b` (recorded `git_dirty_worktree=true` only because the
+  generated analysis artifacts were rewritten by the freeze step; `git_dirty_tracked`
+  is false and the code hashes match `131937b`).
+- **Recorded design unchanged:** `recipe`, `decision_constants`, expected artifact hashes
+  and the 12-key prediction registry are identical to v1. `gpu_authorized=false` and
+  `gpu_hours_used_this_freeze=0.0`; `gpu_hours_used_before_amendment=0.0139`.
+- **CPU gates:** `analysis/cpu_gates.json`
+  sha256 `7e47ae2bc14f5b7ea03a3f4fd7a8d81ffe4aecc31df07d24d8cd4425cf420da3`;
+  G0–G9 all PASS; final `READY_FOR_REAUTHORIZATION`; ≈10 s. G4 records
+  `real_authorization_matches_current_freeze=false` (v1 authorization pins the old
+  freeze and is refused).
+- **pytest:** `59 passed in 3.4 s` (10 files), including `tests/test_fit_alignment.py`.
+- **Smoke:** `analysis/smoke.json`
+  sha256 `eb2869a952cefe07dbf850a04a937326c109e693c8a59e46d4520121c7e78756`;
+  A 151.104→0.932, B 113.537→0.825, C 423.958→0.827; all finite; 12/12 epochs aligned.
+- **Invalidated old smoke:** `analysis/smoke_invalidated_pre_amendment.json`
+  sha256 `fef92f3d0badfbbc7af5aca8f8b22c8f7399aa88604d8cad86b9c4b5b420fd4a`
+  (byte-identical to the v1 file).
+- **Other regenerated artifacts:** `analysis/parameters.json`
+  `cef8946700c4e9d4c3311147428349192ac6f8dfcae2eb54c353e03e5f87b646`;
+  `analysis/budget_estimate.json`
+  `b19037db9b2b141885ca8ddfb7405dc5ba751b4598f40797aa18389aba6a475f`;
+  `analysis/norm_target.json` unchanged
+  `50c5ad9da285b15233dc0f26704cfb5136ac4bbe5a97b4bf21734d8f1f9a0748`.
+- **Historical records untouched:** `analysis/gpu_authorization.json`
+  `48cb9a28…`, `analysis/gpu_stage_halt.json` `111275dc…`.
+- **GPU:** no job launched, no authorization created, no hash check bypassed. Total GPU
+  hours remain 0.0139 (v1 halt) of the 1.5 h cap.
+- **Remaining blocker:** a new researcher authorization pinned to `7fffba42…`.
+
