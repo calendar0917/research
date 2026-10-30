@@ -140,14 +140,40 @@ def test_smoke_mode_is_restricted():
         T.TrainConfig(arm="A", seed=0, device="cpu", smoke=True, fit_limit=256, epochs=400).validate()
 
 
-def test_cuda_training_requires_authorization():
+def test_cuda_training_requires_matching_authorization(tmp_path, monkeypatch):
+    import json
+
     import run_screen
 
-    assert not (C.ANALYSIS / "gpu_authorization.json").exists()
+    probe = tmp_path / "gpu_authorization.json"
+    monkeypatch.setattr(run_screen, "GPU_AUTHORIZATION", probe)
     with pytest.raises(PermissionError, match="GPU_AUTHORIZATION_MISSING"):
         run_screen.require_gpu_authorization()
     with pytest.raises(PermissionError, match="GPU_AUTHORIZATION_MISSING"):
         run_screen.require_gpu_authorization("A_s0")
+
+    base = {
+        "authorized": True,
+        "protocol_id": C.PROTOCOL_ID,
+        "protocol_freeze_sha256": C.sha256_file(C.PROTOCOL_FREEZE),
+        "max_gpu_hours": 1.5,
+        "authorized_runs": [f"{arm}_s{seed}" for arm in C.NN_ARMS for seed in C.SEEDS],
+        "researcher_note": "unit-test probe",
+    }
+    probe.write_text(json.dumps(base), encoding="utf-8")
+    assert run_screen.require_gpu_authorization("A_s0")["max_gpu_hours"] == 1.5
+
+    probe.write_text(json.dumps({**base, "protocol_freeze_sha256": "0" * 64}), encoding="utf-8")
+    with pytest.raises(PermissionError, match="does not match"):
+        run_screen.require_gpu_authorization("A_s0")
+
+    probe.write_text(json.dumps({**base, "max_gpu_hours": 2.0}), encoding="utf-8")
+    with pytest.raises(PermissionError, match="exceed"):
+        run_screen.require_gpu_authorization("A_s0")
+
+    probe.write_text(json.dumps({**base, "authorized_runs": ["A_s0"]}), encoding="utf-8")
+    with pytest.raises(PermissionError, match="not covered"):
+        run_screen.require_gpu_authorization("B_s1")
 
 
 def test_config_hash_is_pinned():

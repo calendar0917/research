@@ -118,10 +118,14 @@ def train_one(cfg: TrainConfig) -> dict[str, Any]:
 
     fit_rows = [int(r) for r in caches["fit"]["rows"]]
     if cfg.fit_limit is not None:
-        train_rows = fit_rows[: int(cfg.fit_limit)]
+        n = int(cfg.fit_limit)
     else:
-        train_rows = fit_rows
-    n = len(train_rows)
+        n = C.SPLIT_SIZES["fit"]
+    # Three index spaces (see screen_data): the training subset is a prefix of the
+    # frozen cache positions; global row ids are provenance/label keys only.
+    train_positions = D.fit_training_positions(n)
+    train_global_rows = [fit_rows[p] for p in train_positions]
+    fit_cache = caches["fit"]["cache"]
     steps_per_epoch = math.ceil(n / cfg.batch_size)
     total_updates = steps_per_epoch * cfg.epochs
 
@@ -144,13 +148,13 @@ def train_one(cfg: TrainConfig) -> dict[str, Any]:
 
     snapshots: list[dict[str, torch.Tensor]] = []
     curve: list[dict[str, Any]] = []
+    batch_alignment: list[dict[str, Any]] = []
     order_hash_actual = hashlib.sha256()
     grad_norm_max = 0.0
     clip_events = 0
     nonfinite_events = 0
     started = time.perf_counter()
 
-    train_row_index = {int(r): i for i, r in enumerate(fit_rows)}
     for epoch in range(1, cfg.epochs + 1):
         model.train()
         t_epoch = time.perf_counter()
@@ -158,13 +162,22 @@ def train_one(cfg: TrainConfig) -> dict[str, Any]:
         epoch_sq = 0.0
         seen = 0
         lr_last = None
+        epoch_plans: list[D.FitBatchPlan] = []
         for rows in D.shuffle_batches(n, cfg.batch_size, generator):
             order_hash_actual.update(np.ascontiguousarray(np.asarray(rows, dtype=np.int64)).tobytes())
-            # ``rows`` indexes the training subset, map back to cache rows.
-            cache_rows = [train_rows[int(i)] for i in rows]
-            batch = D.to_device(D.collate(caches["fit"]["cache"], cache_rows), device)
+            # ``rows`` are shuffle positions; the plan maps them to cache positions
+            # and keeps the dataset row ids only for identity/provenance checks.
+            plan = D.plan_fit_batch(
+                rows,
+                train_positions=train_positions,
+                cache=fit_cache,
+                fit_global_rows=fit_rows,
+            )
+            info = D.assemble_fit_batch(fit_cache, y_fit, plan)
+            epoch_plans.append(plan)
+            batch = D.to_device(info["batch"], device)
             y = torch.as_tensor(
-                (y_fit[[train_row_index[r] for r in cache_rows]] - target_norm["mean"]) / target_norm["scale"],
+                (info["y"] - target_norm["mean"]) / target_norm["scale"],
                 dtype=torch.float32,
                 device=device,
             )
@@ -196,6 +209,10 @@ def train_one(cfg: TrainConfig) -> dict[str, Any]:
                 "seconds": time.perf_counter() - t_epoch,
             }
         )
+        batch_alignment.append({
+            "epoch": epoch,
+            **D.fit_batch_fingerprints(epoch_plans, y_fit),
+        })
         snapshots.append({k: v.detach().cpu().clone() for k, v in model.state_dict().items()})
         if len(snapshots) > cfg.soup_last:
             snapshots.pop(0)
@@ -269,7 +286,9 @@ def train_one(cfg: TrainConfig) -> dict[str, Any]:
         "data": {
             "n_train_rows": n,
             "fit_limit": cfg.fit_limit,
-            "fit_rows_sha256": C.prep_common.row_sha256(train_rows),
+            "fit_rows_sha256": C.prep_common.row_sha256(train_global_rows),
+            "fit_cache_positions": [int(train_positions[0]), int(train_positions[-1])],
+            "index_semantics": "shuffle_pos -> cache_pos (0..n-1) -> global_row_id (identity/provenance only)",
             "fit_label_audit": fit["audit"],
             "target_normalisation": {
                 "mean": target_norm["mean"],
@@ -289,6 +308,11 @@ def train_one(cfg: TrainConfig) -> dict[str, Any]:
             "independent_recomputation": independent_order_hash,
             "matches": order_hash_actual.hexdigest() == independent_order_hash,
             "offset": C.TRAIN_SHUFFLE_OFFSET,
+        },
+        "batch_alignment": {
+            "checked_in_training_loop": True,
+            "scope": "every optimizer batch of every epoch of this run",
+            "per_epoch": batch_alignment,
         },
         "anomalies": {
             "grad_clip_events": clip_events,

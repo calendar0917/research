@@ -141,6 +141,13 @@ GINE_PARAMS_REFERENCE = 245_305  # verified at runtime; see analysis/parameters.
 NORM_TARGET = ANALYSIS / "norm_target.json"
 PROTOCOL_FREEZE = ANALYSIS / "protocol_freeze.json"
 
+#: Implementation amendment (post-freeze code correction, no design change).
+AMENDMENT_ID = "amendment-001-fit-batch-index"
+PREVIOUS_FREEZE_SHA256 = "87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4"
+PREVIOUS_FREEZE_GIT_COMMIT = "c3202fee7d9aa766b6d7ef4dd364f9b3de59733c"
+HALT_RECORD = ANALYSIS / "gpu_stage_halt.json"
+AMENDMENT_RECORD = EXP_DIR / "AMENDMENT-001-fit-batch-index.md"
+
 #: Metric / decision constants frozen *before* any GPU run (see PROTOCOL.md).
 MATERIALITY_RMSE = 0.03  # raw logD units
 BOOTSTRAP_RESAMPLES = 2000
@@ -593,6 +600,24 @@ def build_protocol_freeze(cfg: Mapping[str, Any]) -> dict[str, Any]:
             "materiality_rmse": MATERIALITY_RMSE,
             "bootstrap_resamples": BOOTSTRAP_RESAMPLES,
             "bootstrap_seed": BOOTSTRAP_SEED,
+        },
+        "amendment": {
+            "id": AMENDMENT_ID,
+            "reason_code": "TRAIN_FIT_INDEX_OUT_OF_RANGE",
+            "previous_protocol_freeze_sha256": PREVIOUS_FREEZE_SHA256,
+            "previous_freeze_git_commit": PREVIOUS_FREEZE_GIT_COMMIT,
+            "previous_gpu_stage_halt": file_record(HALT_RECORD),
+            # Path only: the record is a human-readable amendment whose final
+            # verification appendix is written after this freeze is generated.
+            "amendment_record": track_rel(AMENDMENT_RECORD),
+            "scientific_design_changed": False,
+            "frozen_recipe_changed": False,
+            "change_scope": "Fit batch index semantics + full-Fit alignment gate",
+            "new_gate": "G9 full_fit_batch_alignment",
+            "gpu_hours_used_before_amendment": (
+                float(read_json(HALT_RECORD)["budget"]["gpu_hours_used"]) if HALT_RECORD.exists() else 0.0
+            ),
+            "gpu_hours_used_this_freeze": 0.0,
         },
         "gpu_authorized": False,
         "gpu_hours_used": 0.0,

@@ -17,8 +17,9 @@ Stages
 
 GPU training is mechanically blocked: ``train --device cuda`` and any CUDA
 prediction require ``analysis/gpu_authorization.json`` with an explicit
-researcher authorization matching the frozen protocol hash.  That file does not
-exist in this round.
+researcher authorization matching the *current* protocol freeze sha256.  The
+authorization committed before the 2026-10-30 halt pins the pre-amendment
+freeze, so it cannot authorize runs under the amended freeze.
 """
 
 from __future__ import annotations
@@ -52,7 +53,7 @@ def require_gpu_authorization(requested: str | None = None) -> dict[str, Any]:
     if not GPU_AUTHORIZATION.exists():
         raise PermissionError(
             "GPU_AUTHORIZATION_MISSING: no analysis/gpu_authorization.json. "
-            "This round is READY_FOR_GPU_AUTHORIZATION only; GPU training must not start."
+            "The round is READY_FOR_REAUTHORIZATION; GPU training must not start."
         )
     auth = C.read_json(GPU_AUTHORIZATION)
     if auth.get("authorized") is not True:
@@ -80,6 +81,28 @@ def require_gpu_authorization(requested: str | None = None) -> dict[str, Any]:
     if not str(auth.get("researcher_note", "")).strip():
         raise PermissionError("GPU authorization has no researcher note")
     return auth
+
+
+def authorization_matches_current_freeze() -> bool:
+    """True iff an authorization file exists and pins the current freeze sha256."""
+    if not GPU_AUTHORIZATION.exists() or not C.PROTOCOL_FREEZE.exists():
+        return False
+    try:
+        auth = C.read_json(GPU_AUTHORIZATION)
+    except Exception:
+        return False
+    return auth.get("protocol_freeze_sha256") == C.sha256_file(C.PROTOCOL_FREEZE)
+
+
+def prior_gpu_hours() -> float:
+    """GPU hours already charged by the halted pre-amendment stage, if recorded."""
+    halt = C.ANALYSIS / "gpu_stage_halt.json"
+    if not halt.exists():
+        return 0.0
+    try:
+        return float(C.read_json(halt).get("budget", {}).get("gpu_hours_used", 0.0))
+    except Exception:
+        return 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -443,7 +466,7 @@ def evaluate_module():
 def cmd_cpu_gates(_args) -> int:
     payload = screen_gates.run_all()
     C.log(f"[cpu-gates] final_status={payload['final_status']}")
-    return 0 if payload["final_status"] == "READY_FOR_GPU_AUTHORIZATION" else 2
+    return 0 if payload["final_status"] in ("READY_FOR_REAUTHORIZATION", "READY_FOR_GPU_AUTHORIZATION") else 2
 
 
 def cmd_status(_args) -> int:
@@ -459,17 +482,22 @@ def cmd_status(_args) -> int:
         "protocol_freeze": C.file_record(C.PROTOCOL_FREEZE),
         "cpu_gates_final_status": gates["final_status"] if gates else None,
         "gpu_authorization_file": C.file_record(GPU_AUTHORIZATION),
-        "gpu_authorized": False,
+        "gpu_authorization_matches_current_freeze": authorization_matches_current_freeze(),
         "training_runs": runs,
         "prediction_files": preds,
         "prediction_manifest": C.file_record(C.PREDICTION_MANIFEST),
         "monitor_evaluated": (C.ANALYSIS / "monitor_metrics.json").exists(),
-        "gpu_hours_used": 0.0,
+        "gpu_hours_used_before_amendment": prior_gpu_hours(),
+        "gpu_hours_used_this_freeze": 0.0,
         "hard_cap_gpu_hours": cfg["budget"]["hard_cap_gpu_hours"],
         "state": (
-            "READY_FOR_GPU_AUTHORIZATION"
-            if gates and gates["final_status"] == "READY_FOR_GPU_AUTHORIZATION" and not GPU_AUTHORIZATION.exists()
-            else "NOT_READY"
+            "AUTHORIZED_UNDER_CURRENT_FREEZE"
+            if gates
+            and gates["final_status"] in ("READY_FOR_REAUTHORIZATION", "READY_FOR_GPU_AUTHORIZATION")
+            and authorization_matches_current_freeze()
+            else "READY_FOR_REAUTHORIZATION"
+            if gates and gates["final_status"] in ("READY_FOR_REAUTHORIZATION", "READY_FOR_GPU_AUTHORIZATION")
+            else "BLOCKED"
         ),
     }
     C.log(json.dumps(status, indent=2, default=str))

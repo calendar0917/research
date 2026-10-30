@@ -12,7 +12,10 @@ from __future__ import annotations
 
 import ast
 import copy
+import json
+import tempfile
 import traceback
+from pathlib import Path
 from typing import Any, Callable, Mapping
 
 import numpy as np
@@ -42,6 +45,14 @@ class GateFailure(AssertionError):
 def _require(condition: bool, message: str) -> None:
     if not condition:
         raise GateFailure(message)
+
+
+def _permission_error(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> bool:
+    try:
+        fn(*args, **kwargs)
+    except PermissionError:
+        return True
+    return False
 
 
 def _tensor_equal(a: Any, b: Any) -> bool:
@@ -506,18 +517,57 @@ def gate_training_numerics() -> dict[str, Any]:
     _require(blocked, "formal epochs override was accepted")
     import run_screen
 
-    gpu_blocked = False
-    try:
-        run_screen.require_gpu_authorization()
-    except PermissionError:
-        gpu_blocked = True
-    _require(gpu_blocked, "GPU training is not blocked without an authorization file")
+    # The authorization *mechanism* must be testable whether or not a real
+    # authorization file exists: point the entry point at temporary files.
+    original_auth_path = run_screen.GPU_AUTHORIZATION
+    real_auth_present = original_auth_path.exists()
+    real_auth_matches = False
+    if real_auth_present:
+        real_auth_matches = C.read_json(original_auth_path).get(
+            "protocol_freeze_sha256"
+        ) == C.sha256_file(C.PROTOCOL_FREEZE)
+    guard: dict[str, bool] = {}
+    with tempfile.TemporaryDirectory() as td:
+        probe_path = Path(td) / "gpu_authorization.json"
+        run_screen.GPU_AUTHORIZATION = probe_path
+
+        def probe(payload: Mapping[str, Any] | None, requested: str | None = None) -> bool:
+            if payload is None:
+                probe_path.unlink(missing_ok=True)
+            else:
+                probe_path.write_text(json.dumps(payload), encoding="utf-8")
+            return _permission_error(run_screen.require_gpu_authorization, requested)
+
+        base_payload = {
+            "authorized": True,
+            "protocol_id": C.PROTOCOL_ID,
+            "protocol_freeze_sha256": C.sha256_file(C.PROTOCOL_FREEZE),
+            "max_gpu_hours": 1.5,
+            "authorized_runs": [f"{arm}_s{seed}" for arm in C.NN_ARMS for seed in C.SEEDS],
+            "researcher_note": "gate probe only",
+        }
+        try:
+            guard["missing_rejected"] = probe(None)
+            guard["freeze_sha_mismatch_rejected"] = probe(
+                dict(base_payload, protocol_freeze_sha256="0" * 64)
+            )
+            guard["over_cap_rejected"] = probe(dict(base_payload, max_gpu_hours=2.0))
+            guard["unlisted_run_rejected"] = probe(
+                dict(base_payload, authorized_runs=["A_s0"]), "B_s1"
+            )
+            guard["missing_note_rejected"] = probe(dict(base_payload, researcher_note=""))
+            guard["valid_probe_accepted"] = not probe(base_payload, "A_s0")
+        finally:
+            run_screen.GPU_AUTHORIZATION = original_auth_path
+    _require(all(guard.values()), f"GPU authorization guard failed: {guard}")
     _require(C.load_config()["budget"]["hard_cap_gpu_hours"] <= 1.5, "GPU cap above the frozen hard cap")
     evidence["recipe_guard"] = {
         "formal_validation_passes": True,
         "epochs_override_rejected": blocked,
-        "gpu_authorization_required": gpu_blocked,
-        "gpu_authorized": False,
+        "authorization_guard": guard,
+        "real_authorization_file_present": real_auth_present,
+        "real_authorization_matches_current_freeze": real_auth_matches,
+        "gpu_used_in_gate": False,
     }
     return {"status": "PASS", "evidence": evidence}
 
@@ -541,6 +591,12 @@ def gate_smoke() -> dict[str, Any]:
         _require(ratio < 0.8, f"{arm}: smoke train MSE did not drop enough ({first} -> {last})")
         _require(payload["monitor_labels_read"] is False, f"{arm}: smoke touched Monitor labels")
         _require(payload["recipe"]["total_updates"] == 24, f"{arm}: smoke update count")
+        alignment = payload.get("batch_alignment") or {}
+        _require(alignment.get("checked_in_training_loop") is True, f"{arm}: no batch alignment record")
+        for record in alignment.get("per_epoch", []):
+            _require(record["all_positions_unique"], f"{arm}: duplicate cache position in an epoch")
+            _require(record["all_positions_in_range"], f"{arm}: cache position out of range")
+            _require(record["covers_all_subset_positions"], f"{arm}: epoch does not cover the training subset")
         summary[arm] = {
             "run_id": payload["run_id"],
             "fit_limit": 256,
@@ -555,6 +611,7 @@ def gate_smoke() -> dict[str, Any]:
             "soup_members": payload["recipe"]["soup_members"],
             "batch_order_matches": payload["batch_order"]["matches"],
             "batch_order_hash": payload["batch_order"]["actual_hash"],
+            "batch_alignment_last_epoch": payload["batch_alignment"]["per_epoch"][-1],
             "grad_norm_max": payload["anomalies"]["grad_norm_max"],
             "clip_events": payload["anomalies"]["grad_clip_events"],
             "nonfinite_events": payload["anomalies"].get("nonfinite_events"),
@@ -564,6 +621,17 @@ def gate_smoke() -> dict[str, Any]:
             "recipe": payload["recipe"],
             "curve": curve,
         }
+    invalidated = C.ANALYSIS / "smoke_invalidated_pre_amendment.json"
+    supersedes = {
+        "file": C.track_rel(invalidated),
+        "sha256": C.sha256_file(invalidated) if invalidated.exists() else None,
+        "status": "INVALIDATED_PRE_AMENDMENT",
+        "why_invalid": (
+            "pre-amendment smoke used the defective Fit assembly (global dataset row ids "
+            "were passed to the cache-position collator), so its loss curves are not valid "
+            "training evidence and are kept only as history"
+        ),
+    }
     C.write_json(C.ANALYSIS / "smoke.json", {
         "protocol_id": C.PROTOCOL_ID,
         "created_utc": C.utcnow(),
@@ -573,10 +641,148 @@ def gate_smoke() -> dict[str, Any]:
         "monitor_labels_read": False,
         "fit_limit": 256,
         "epochs": 12,
+        "amendment": "amendment-001-fit-batch-index",
+        "index_path": "shuffle_pos -> cache_pos -> global_row_id (targets indexed by cache_pos)",
+        "supersedes": supersedes,
         "note": "three independent smoke runs, one per neural arm; losses are Fit-only and cannot rank arms scientifically",
         "arms": summary,
     })
     return {"status": "PASS", "evidence": summary}
+
+
+# ---------------------------------------------------------------------------
+# G9 full-Fit batch alignment (added by amendment-001)
+# ---------------------------------------------------------------------------
+
+
+def gate_full_fit_alignment() -> dict[str, Any]:
+    """Prove the *real* 2352-row Fit epoch is index-correct for seeds 0/1/2.
+
+    Uses an independent ``global_row_id -> label`` map (the label artifact scanned
+    in a different request order) so the expected targets are not built with the
+    same index convention as the inputs.
+    """
+    caches = D.load_caches()
+    cache = caches["fit"]["cache"]
+    split_info = C.load_frozen_split()
+    fit_rows = [int(r) for r in split_info["split"]["fit"]]
+    cache_ids = [int(x) for x in cache["molecule_ids"]]
+    n_fit = C.SPLIT_SIZES["fit"]
+    _require(len(fit_rows) == n_fit == int(cache["n_molecules"]), "Fit cache size != 2352")
+    _require(cache_ids == fit_rows, "cache molecule order != frozen split order")
+    _require(max(fit_rows) > n_fit, "the Fit split does not contain global row ids above 2351")
+
+    access_guard.arm()
+    try:
+        fit = fit_labels.load_fit_labels()
+        permuted_keys = [str(r) for r in sorted(fit_rows, reverse=True)]
+        scan = fit_labels.scan_label_artifact(C.LIPO_LABELS, permuted_keys)
+    finally:
+        access_guard.disarm()
+    y_fit = np.asarray(fit["y"], dtype=np.float64)
+    label_by_global = {int(k): float(v) for k, v in scan["values"].items()}
+    _require(len(label_by_global) == n_fit, "independent label map size")
+    _require(set(label_by_global) == set(fit_rows), "independent label map keys != frozen Fit rows")
+    _require(
+        all(float(y_fit[p]) == label_by_global[fit_rows[p]] for p in range(n_fit)),
+        "y_fit order does not match the global_row_id label map",
+    )
+
+    evidence: dict[str, Any] = {
+        "scope": "real frozen Fit 2352 rows, full epoch of 19 batches, seeds 0/1/2",
+        "label_map_source": "label artifact scanned with reversed global-row-id key order",
+        "seeds": {},
+    }
+    for seed in C.SEEDS:
+        plans = D.fit_epoch_plans(seed, cache=cache, fit_global_rows=fit_rows)
+        _require(len(plans) == C.STEPS_PER_EPOCH == 19, f"seed {seed}: batch count != 19")
+        _require(len(plans[-1].cache_positions) == 48, f"seed {seed}: last batch is not 48 molecules")
+        positions: list[int] = []
+        global_ids: list[int] = []
+        for batch_index, plan in enumerate(plans):
+            _require(len(plan.cache_positions) == len(plan.shuffle_positions), f"seed {seed}: plan length")
+            _require(
+                list(plan.cache_positions) == list(plan.shuffle_positions),
+                f"seed {seed}: full-Fit position mapping is not the identity",
+            )
+            _require(len(plan.cache_positions) > 0, f"seed {seed}: empty batch")
+            _require(
+                len(plan.cache_positions) == C.BATCH_SIZE or batch_index == len(plans) - 1,
+                f"seed {seed}: non-final batch is not 128 molecules",
+            )
+            info = D.assemble_fit_batch(cache, y_fit, plan)
+            _require(
+                int(info["batch"]["n_graphs"]) == len(plan.cache_positions) == int(info["y"].shape[0]),
+                f"seed {seed}: input/target length mismatch in batch {batch_index}",
+            )
+            for p, g, target in zip(plan.cache_positions, plan.global_row_ids, info["y"]):
+                _require(0 <= p < n_fit, f"seed {seed}: cache position {p} outside 0..2351")
+                _require(g == fit_rows[p] == cache_ids[p], f"seed {seed}: global id mismatch at position {p}")
+                _require(
+                    float(target) == label_by_global[g],
+                    f"seed {seed}: target for molecule {g} is not that molecule's label",
+                )
+                _require(float(target) == float(y_fit[p]), f"seed {seed}: target is not y_fit[cache_pos]")
+            positions.extend(plan.cache_positions)
+            global_ids.extend(plan.global_row_ids)
+        _require(len(positions) == n_fit, f"seed {seed}: epoch covered {len(positions)} slots")
+        _require(sorted(positions) == list(range(n_fit)), f"seed {seed}: positions are not a permutation of 0..2351")
+        _require(len(global_ids) == n_fit and len(set(global_ids)) == n_fit, f"seed {seed}: duplicate global ids")
+        above = sum(1 for g in global_ids if g > n_fit - 1)
+        _require(above > 0, f"seed {seed}: no global row id above 2351 was covered")
+        fingerprint = D.fit_batch_fingerprints(plans, y_fit)
+        _require(fingerprint["all_positions_in_range"], f"seed {seed}: fingerprint range")
+        _require(fingerprint["all_positions_unique"], f"seed {seed}: fingerprint duplicates")
+        _require(fingerprint["covers_all_subset_positions"], f"seed {seed}: fingerprint coverage")
+        _require(
+            fingerprint["cache_positions_sha256"] == D.batch_order_hash(seed, n=n_fit, epochs=1),
+            f"seed {seed}: gate path does not reproduce the frozen batch-order function",
+        )
+        # Sensitivity: the pre-amendment mapping (global id used as cache position)
+        # must be demonstrably wrong on this exact data, or this gate proves nothing.
+        old_out_of_range = 0
+        old_label_mismatch = 0
+        for plan in plans:
+            for shuffle_pos, g in zip(plan.shuffle_positions, plan.global_row_ids):
+                if g >= n_fit:
+                    old_out_of_range += 1
+                elif float(y_fit[shuffle_pos]) != float(y_fit[g]):
+                    old_label_mismatch += 1
+        _require(old_out_of_range > 0, f"seed {seed}: gate cannot see the original out-of-range defect")
+        _require(old_label_mismatch > 0, f"seed {seed}: gate cannot see the original label mismatch")
+        evidence["seeds"][f"seed_{seed}"] = {
+            "batches": len(plans),
+            "last_batch_size": len(plans[-1].cache_positions),
+            "covered_positions": len(positions),
+            "global_row_ids_above_2351": above,
+            "cache_positions_sha256": fingerprint["cache_positions_sha256"],
+            "global_row_ids_sha256": fingerprint["global_row_ids_sha256"],
+            "targets_sha256": fingerprint["targets_sha256"],
+            "matches_batch_order_hash": True,
+            "pre_amendment_out_of_range_slots": old_out_of_range,
+            "pre_amendment_label_mismatch_slots": old_label_mismatch,
+        }
+
+    # The executed training path must use exactly this assembly.
+    cfg = T.TrainConfig(arm="A", seed=0, device="cpu", smoke=True, fit_limit=256, epochs=1)
+    payload = T.train_one(cfg)
+    record = payload["batch_alignment"]["per_epoch"][0]
+    smoke_plans = D.fit_epoch_plans(0, n_subset=256, cache=cache, fit_global_rows=fit_rows)
+    smoke_fp = D.fit_batch_fingerprints(smoke_plans, y_fit)
+    _require(record["cache_positions_sha256"] == smoke_fp["cache_positions_sha256"], "train path positions differ")
+    _require(record["global_row_ids_sha256"] == smoke_fp["global_row_ids_sha256"], "train path global ids differ")
+    _require(record["targets_sha256"] == smoke_fp["targets_sha256"], "train path targets differ")
+    _require(payload["batch_order"]["matches"], "train path batch order hash mismatch")
+    _require(payload["monitor_labels_read"] is False, "train path read Monitor labels")
+    evidence["executed_path"] = {
+        "run_id": payload["run_id"],
+        "fit_limit": 256,
+        "epochs": 1,
+        "record": record,
+        "recomputed": smoke_fp,
+        "train_path_matches_gate_path": True,
+    }
+    return {"status": "PASS", "evidence": evidence}
 
 
 # ---------------------------------------------------------------------------
@@ -746,6 +952,7 @@ GATES: list[tuple[str, str, Callable[[], dict[str, Any]]]] = [
     ("G6", "baseline_ecfp_xgb", gate_baseline),
     ("G7", "evaluation_order_and_metrics", gate_evaluation),
     ("G8", "runtime_access_control", gate_access_control),
+    ("G9", "full_fit_batch_alignment", gate_full_fit_alignment),
 ]
 
 
@@ -775,7 +982,7 @@ def run_all() -> dict[str, Any]:
                 "traceback": traceback.format_exc()[-4000:],
             }
         C.log(f"[gate {gate_id}] {results[gate_id]['status']} {name} ({results[gate_id]['seconds']:.2f}s)")
-    final = "READY_FOR_GPU_AUTHORIZATION" if all(r["status"] == "PASS" for r in results.values()) else "BLOCKED"
+    final = "READY_FOR_REAUTHORIZATION" if all(r["status"] == "PASS" for r in results.values()) else "BLOCKED"
     payload = {
         "protocol_id": C.PROTOCOL_ID,
         "created_utc": C.utcnow(),
@@ -783,6 +990,11 @@ def run_all() -> dict[str, Any]:
         "git_dirty_tracked": C.source_dirty(),
         "git_dirty_worktree": C.git_dirty(),
         "env": C.env_info(),
+        "amendment": {
+            "id": "amendment-001-fit-batch-index",
+            "previous_freeze_sha256": "87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4",
+            "new_gate": "G9 full_fit_batch_alignment",
+        },
         "gates": results,
         "final_status": final,
         "gpu_authorized": False,
@@ -793,7 +1005,8 @@ def run_all() -> dict[str, Any]:
         "total_seconds": time.perf_counter() - started,
         "limitations": [
             "CPU gates validate implementation and data discipline, not predictive performance.",
-            "No formal training run has been executed in this round.",
+            "No formal 360-epoch training run has been executed; the previous GPU attempt failed before batch 1 and is recorded in analysis/gpu_stage_halt.json.",
+            "G9 (added by amendment-001) runs one full 2352-row epoch of batch assembly for seeds 0/1/2, but does not train 360 epochs.",
             "GINE is a practical performance reference, not an information-matched control.",
             "Arm B has equal nominal but lower effective parameter count than arm A.",
         ],
