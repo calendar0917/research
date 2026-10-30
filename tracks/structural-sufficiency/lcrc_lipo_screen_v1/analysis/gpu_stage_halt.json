@@ -1,0 +1,128 @@
+{
+  "protocol_id": "lcrc-lipo-screen-v1",
+  "stage": "formal_gpu_training",
+  "status": "HALTED_IMPLEMENTATION_DEFECT",
+  "halt_reason_code": "TRAIN_FIT_INDEX_OUT_OF_RANGE",
+  "created_utc": "2026-10-30T15:23:39Z",
+  "git_commit": "4d8f13660000",
+  "git_dirty_tracked": false,
+  "git_dirty_worktree": false,
+  "authorization": {
+    "file": "tracks/structural-sufficiency/lcrc_lipo_screen_v1/analysis/gpu_authorization.json",
+    "sha256": "48cb9a28ff36ec6765bcbc05d72391f5018e123a1ae8cef11d89196e44a3f30f",
+    "protocol_freeze_sha256": "87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4",
+    "max_gpu_hours": 1.5,
+    "authorized_runs": ["A_s0", "A_s1", "A_s2", "B_s0", "B_s1", "B_s2", "C_s0", "C_s1", "C_s2"]
+  },
+  "pre_execution_checks": {
+    "local_frozen_artifact_hashes_match_freeze": true,
+    "local_code_config_hashes_match_freeze": true,
+    "local_caches_match_frozen_bytes_and_fingerprints": true,
+    "remote_res2_preflight": {
+      "run_id": "lcrc-preflight-20261030-225323-8d02828d",
+      "host": "res-2",
+      "pool": "res2-cpu",
+      "node": "c03",
+      "state": "completed",
+      "exit_code": 0,
+      "result": "PREFLIGHT_OK; freeze+authorization verified; caches rebuilt deterministically from the frozen raw artifact and matched fingerprints 0a73407f.../db48a9c2..."
+    },
+    "existing_formal_runs_found": false,
+    "note_on_predating_runs": "rr showed 2026-10-28 experiments named lcrc-A-s0 / lcrc-R-s0 / lcrc-N-s0 at commits 42c01a3c / d2d3743b / b9367655. They predate the freeze, used a different loop (600+ epochs, per-epoch valid best-checkpoint selection, log line 'best=...@epoch'), and are not runs of this frozen protocol. They were neither reused nor continued."
+  },
+  "execution_attempts": [
+    {
+      "experiment": "lcrc-timing-a",
+      "run_id": "lcrc-timing-a-20261030-231346-6dce3bb8",
+      "host": "res",
+      "pool": "res-gpu0",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "driver": "550.163.01",
+      "torch": "2.5.1+cu124",
+      "started": "2026-10-30T23:13:49+08:00",
+      "completed": "2026-10-30T23:14:06+08:00",
+      "exit_code": 0,
+      "purpose": "budget calibration only (13 optimizer steps, arm A, batch 128)",
+      "measured_seconds_per_update": 0.01485,
+      "extrapolated_run_seconds": 101.6
+    },
+    {
+      "experiment": "lcrc-formal-A-s0",
+      "run_id": "lcrc-formal-A-s0-20261030-231545-30e34cc8",
+      "host": "res",
+      "pool": "res-gpu0",
+      "started": "2026-10-30T23:15:49+08:00",
+      "completed": "2026-10-30T23:16:05+08:00",
+      "exit_code": 1,
+      "command": "python tracks/structural-sufficiency/lcrc_lipo_screen_v1/code/run_screen.py train --arm A --seed 0 --device cuda",
+      "exception": "ValueError: row index outside cache",
+      "traceback_origin": "screen_training.py:165 -> screen_data.py:133 -> lcrc_data.py:658"
+    },
+    {
+      "experiment": "lcrc-formal-A-s1",
+      "run_id": "lcrc-formal-A-s1-20261030-231557-3aa197e8",
+      "host": "res",
+      "pool": "res-gpu1",
+      "started": "2026-10-30T23:15:59+08:00",
+      "completed": "2026-10-30T23:16:16+08:00",
+      "exit_code": 1,
+      "command": "python tracks/structural-sufficiency/lcrc_lipo_screen_v1/code/run_screen.py train --arm A --seed 1 --device cuda",
+      "exception": "ValueError: row index outside cache",
+      "traceback_origin": "screen_training.py:165 -> screen_data.py:133 -> lcrc_data.py:658"
+    }
+  ],
+  "cancelled_before_start": [
+    {"experiment": "lcrc-A-s0", "run_id": "lcrc-A-s0-20261030-225522-05a8872d", "host": "res-2", "pool": "res2-cu124", "state": "cancelled", "gpu_seconds": 0, "reason": "pending on Resources/Priority for ~18 min; c05/c06 GPUs fully occupied by unrelated unlimited-time jobs; superseded by res execution"},
+    {"experiment": "lcrc-A-s1", "run_id": "lcrc-A-s1-20261030-225543-d1e82595", "host": "res-2", "pool": "res2-cu124", "state": "cancelled", "gpu_seconds": 0},
+    {"experiment": "lcrc-A-s2", "run_id": "lcrc-A-s2-20261030-225602-0f8cd843", "host": "res-2", "pool": "res2-cu124", "state": "cancelled", "gpu_seconds": 0}
+  ],
+  "root_cause": {
+    "summary": "screen_training.py passes global split row ids to a collation function that indexes cache positions 0..2351, so the formal Fit loop raises as soon as a batch contains a row id >= 2352, and would pair each input molecule with another molecule's label for in-range ids.",
+    "code_paths": {
+      "screen_training.py:153": "train_row_index = {global_row_id: fit_position}",
+      "screen_training.py:164": "cache_rows = [train_rows[int(i)] for i in rows]  # i is a position; train_rows holds global split row ids",
+      "screen_training.py:165": "D.collate(cache, cache_rows)  # collate validates 0 <= row < n_molecules=2352",
+      "screen_training.py:167": "y_fit[[train_row_index[r] for r in cache_rows]]  # label looked up by global id, while the input graph is cache position = global id"
+    },
+    "data_facts": {
+      "fit_split_rows": "2352 global row ids in [0, 4199], e.g. [0, 1, 3, 4, 7, ...]",
+      "cache_molecule_ids_equal_split_rows": true,
+      "cache_positions_where_molecule_id_equals_position": 2,
+      "first_epoch_first_batch_out_of_range_slots": "66/128 (max global id 4197)",
+      "first_epoch_out_of_range_slots": "1162/2352 over 19/19 batches",
+      "first_epoch_in_range_slots_with_mismatched_label": "1188/1190"
+    },
+    "why_the_cpu_gates_missed_it": "G5 smoke and the G4 numerics checks used fit_limit=256 or 128-row batches drawn from the first part of the Fit list, whose global ids are < 2352 (about 0..460). Those runs therefore never hit the range check, and the molecule/label misalignment does not raise. Nothing in the gate set asserted (input molecule id, label row id) pairing over the full 2352-row Fit set.",
+    "affected_runs": "all nine neural runs (A/B/C x s0/s1/s2) use the same loop and would fail identically at epoch 1; no arm-specific behaviour is involved"
+  },
+  "state_after_halt": {
+    "train_json_written": false,
+    "soup_written": false,
+    "neural_predictions_written": false,
+    "prediction_manifest_written": false,
+    "monitor_label_artifact_opened": false,
+    "monitor_metrics_written": false,
+    "reserved_labels_read": false,
+    "official_valid_test_read": false,
+    "frozen_code_config_modified": false,
+    "local_predictions_present": ["D_r0", "D_r1", "D_r2"]
+  },
+  "budget": {
+    "hard_cap_gpu_hours": 1.5,
+    "gpu_seconds_charged": 50,
+    "gpu_hours_used": 0.0139,
+    "accounting": {
+      "lcrc-timing-a": 17,
+      "lcrc-formal-A-s0": 16,
+      "lcrc-formal-A-s1": 17,
+      "res2_pending_cancelled": 0
+    },
+    "remaining_gpu_hours": 1.4861,
+    "note": "wall-clock seconds of GPU jobs, rounded up; the 50 s include process start and cache build, not only kernel time"
+  },
+  "required_next_step": {
+    "procedure": "Stop this round. Do not patch the frozen code in place. Any repair requires a recorded amendment: fix the Fit indexing, add a full-Fit alignment gate (all 2352 rows, 19 batches, assert every (molecule id, label row id) pair equals the split order and no out-of-range index), regenerate analysis/protocol_freeze.json, and obtain a new explicit GPU authorization.",
+    "proposed_minimal_fix_not_applied": "In screen_training.py, collate by cache position (rows) and derive the label index as train_row_index[train_rows[i]] (equivalently the fit position), instead of collating the global id.",
+    "why_not_applied_here": "Editing frozen code after the freeze changes code hashes, invalidates the freeze record and requires a new authorization. The execution order forbids changing frozen configuration to rescue the experiment, so the stage is halted and reported instead."
+  }
+}

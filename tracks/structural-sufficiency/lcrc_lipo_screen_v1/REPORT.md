@@ -1,253 +1,270 @@
-# REPORT — LCRC-A Lipophilicity screen v1 (pre-GPU)
+# REPORT — LCRC-A Lipophilicity screen v1
 
 - **Round:** `tracks/structural-sufficiency/lcrc_lipo_screen_v1/`
-- **Final status:** `READY_FOR_GPU_AUTHORIZATION`
-- **GPU:** not authorized, not used. `torch.cuda.is_available()` was `False`; no GPU
-  training, prediction or hyperparameter run has been executed.
-- **Monitor/Reserved/official labels:** not read, not scored.
+- **Final status:** `HALTED_IMPLEMENTATION_DEFECT` (formal GPU stage attempted, stopped
+  on the first optimizer-step batch)
+- **GPU:** authorized for 1.5 A100 GPU-hours and used for **0.014 GPU-hours** (50 s of
+  A100 wall time across three jobs). No training run completed. No Monitor prediction
+  was produced.
+- **Monitor/Reserved/official labels:** not read, not scored. No prediction manifest
+  exists, so `monitor_labels.py` / `evaluate.py` were never invoked.
 - **Protocol freeze:** `analysis/protocol_freeze.json`
-  (sha256 `87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4`)
-- **CPU gates:** 9/9 PASS, final status `READY_FOR_GPU_AUTHORIZATION`
-  (`analysis/cpu_gates.json`, sha256 `aa29fb09…9185`)
-- **Tests:** 53 passed
+  (sha256 `87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4`),
+  unchanged. No frozen code, config, test or artifact was edited.
+- **Halt evidence:** `analysis/gpu_stage_halt.json`
+- **CPU gates:** 9/9 PASS (`analysis/cpu_gates.json`) — **but** they do not cover the
+  full-Fit training batch path; see §2.3.
+- **Tests now:** 52 passed, 1 failed. The single failure is
+  `tests/test_training.py::test_cuda_training_requires_authorization`, which asserts the
+  *pre-GPU absence* of `analysis/gpu_authorization.json`; it is a state assertion that
+  the researcher's authorization supersedes. The test was **not** edited (that would
+  break the frozen code hashes).
 
-This report is deliberately a **pre-GPU engineering report**. It contains no
-Lipophilicity performance result because no formal A/B/C model has been trained and no
-Monitor label has been read. Questions that require Monitor predictions are marked
-`DEFERRED` with the exact frozen rule that will answer them.
-
----
-
-## 1. What was done
-
-1. Re-verified the first-round frozen assets: split, labels artifact, raw structures,
-   `lipo_v1` FeatureSpec, Fit-only normalisation, and the Fit/Monitor caches. All
-   hashes and row hashes match the first-round audit; caches contain no labels.
-2. Implemented the full second-round pipeline without modifying first-round assets:
-   selective Fit label loading, a Monitor entry point that is locked until a prediction
-   manifest exists, runtime file-access denial, LCRC-A / S2-off / GINE builders, the
-   frozen trainer, label-blind prediction writer, ECFP4+XGBoost baseline, prediction
-   freezer and the frozen evaluator.
-3. Wrote and ran 9 CPU gates and 53 pytest checks covering data isolation, model
-   equivalence/ablation behaviour, GINE adjacency, optimizer/soup determinism, the
-   baseline, the evaluation order and the runtime guard.
-4. Ran three independent CPU smoke trainings (A, B, C; 256 Fit molecules, 12 epochs,
-   24 updates each) to prove the loss actually decreases and no gradient path is dead.
-5. Froze the protocol, config, code and test hashes, the parameter table and the
-   budget estimate.
-6. Produced arm D's three label-blind Monitor predictions locally (RDKit is unavailable
-   on the GPU hosts). They are **not scored**; no prediction manifest exists.
-
-## 2. CPU gate results
-
-All evidence and timings are in `analysis/cpu_gates.json`.
-
-| gate | result | key evidence |
-|---|---|---|
-| G0 frozen artifacts | PASS | spec `7270f767…`, norm `9c54f31c…`, caches `0a73407f…` / `db48a9c2…`; no labels; reserved cache not loaded |
-| G1 label isolation | PASS | 2352 Fit values constructed, 504 Monitor skipped, 0 unrequested; row hash `2ccf20f5…`; Monitor blocked before freeze; no training module imports `monitor_labels` |
-| G2 LCRC/S2-off | PASS | A/B identical init hash per seed; B exactly zero at LocalMLP columns `[320:520)`; A output changes 4.358 under S2 perturbation, B changes 0.0; A S2 grads > 0, B S2 grads exactly 0 |
-| G3 GINE adjacency | PASS | 245,305 params; permutation invariance 5.96e-8; batch isolation 2.38e-7; rewiring Δ 0.0041; no-message-passing Δ 1.106; finite non-zero grads |
-| G4 training numerics | PASS | 19 steps/epoch, 6840 updates; batch hash `1aeefe0f…`; save/restore next step diff 0.0; soup = manual mean; overrides rejected; CUDA blocked |
-| G5 CPU smoke | PASS | A 146.13 → 1.118 MSE; B 95.05 → 1.133; C 412.65 → 1.225 (24 updates, 256 Fit rows); no Monitor access |
-| G6 ECFP4+XGB | PASS | 2856 canonical SMILES verified; XGBoost refit bitwise identical (max diff 0.0) |
-| G7 evaluation order | PASS | metric/CI/classification unit checks; `evaluate()` raises before the freeze; partial D predictions certified label-blind |
-| G8 access control | PASS | CSV, official split, reserved cache denied; label grant works exactly once |
-
-The CPU gates validate implementation and data discipline. They say nothing about
-predictive quality.
-
-## 3. Parameters and optimization steps
-
-From `analysis/parameters.json`:
-
-| arm | model | parameters | effective parameters | updates |
-|---|---|---:|---:|---:|
-| A | LCRC-A Full | 247,106 | 247,106 | 6840 |
-| B | LCRC-A S2-off | 247,106 | **176,514** (71.43%) | 6840 |
-| C | GINE + global42 | 245,305 | 245,305 | 6840 |
-| D | ECFP4 + XGBoost | 500 trees × 3 seeds | n/a | n/a |
-
-- GINE layers = 3; even-width search over 128…192 selected hidden 170 by
-  `min |N_gine − 247106|`; no performance was consulted. The table
-  (`hidden → parameters`) is in `analysis/parameters.json`.
-- B's 70,592 dead parameters consist of the S2 modules (51,392) and the first-LocalMLP
-  weight columns feeding the zeroed slice (19,200). A vs B is therefore an ablation of
-  the S2 input channel under unequal effective capacity, not an information-matched
-  control.
-- All three neural arms use the same seeds, data order offset, optimizer steps, loss and
-  soup rule.
-
-## 4. CPU smoke (not a scientific result)
-
-`analysis/smoke.json` (sha256 `fef92f3d…`) records every smoke run:
-
-| arm | run id | updates | train MSE first → last | ratio | wall |
-|---|---|---:|---:|---:|---:|
-| A | `smoke_A_s0_n256_e12` | 24 | 146.133 → 1.118 | 0.0077 | 0.73 s |
-| B | `smoke_B_s0_n256_e12` | 24 | 95.049 → 1.133 | 0.0119 | 0.74 s |
-| C | `smoke_C_s0_n256_e12` | 24 | 412.652 → 1.225 | 0.0030 | 0.75 s |
-
-All three curves are monotone in trend after the first few updates; 23–24 of 24 steps
-hit the gradient clip, which is expected for a randomly initialised sum-readout model
-at peak LR and is not a failure. `batch_order_matches=true`, `nonfinite_events=0`, and
-`soup` was produced for each run. These losses use Fit targets only and **cannot rank
-the arms**; no Monitor score was computed.
-
-## 5. Arm D predictions (label-blind, unscored)
-
-Three files `analysis/predictions/D_r{0,1,2}.npz` were produced locally:
-
-- 504 rows in the frozen Monitor order; 500 boosted trees; no hyperparameter search.
-- `monitor_labels_read=false` in every sidecar; no manifest/lock was written.
-- Prediction mean/std: `2.221/0.715`, `2.217/0.715`, `2.214/0.713` (raw logD scale).
-- Fingerprint hashes: Fit `376095a2…`, Monitor `2d7b045c…`; all 2856 canonical SMILES
-  were checked against the frozen row manifest.
-- They remain unscored. Scoring would require the A/B/C predictions and a completed
-  prediction freeze.
-
-## 6. Budget estimate
-
-`analysis/budget_estimate.json`: anchor 235.96 s / 9720 updates on an A100
-(0.02428 s/update); A/B ≈166 s per run, C ≈332 s (2× factor); nine neural runs
-≈0.553 GPU-h; +20% overhead and 0.07 h reserves → **0.734 GPU-h** estimated, versus a
-frozen internal hard cap of **1.5 h** and a researcher-suggested external cap of
-**4.0 h**. No GPU hours were used. The 4-hour figure is a cap, not an authorization.
+This report contains **no Lipophilicity performance result**. It records an attempted
+formal execution that failed on a code defect before any label was read. The scientific
+questions of the round remain unanswered.
 
 ---
 
-## 7. Answers to the seven required questions
+## 1. What was executed
 
-### Q1. Did LCRC-A actually learn the Lipophilicity supervised task?
+Order of operations actually performed on 2026-10-30 (UTC+8):
 
-**Status: DEFERRED.** No formal A/B/C training has run, and Monitor labels are sealed.
+1. Read `AGENT.md`, `PROTOCOL.md`, `DECISION.md`, `README.md`,
+   `analysis/protocol_freeze.json`; verified the frozen config/code/artifact hashes and
+   that no formal `analysis/runs/*/train.json` existed locally.
+2. Searched remote state with `rr jobs`. Predating exploratory runs from 2026-10-28
+   (`lcrc-A-s0`, `lcrc-R-s0`, `lcrc-N-s0`, commits `42c01a3c` / `d2d3743b` / `b9367655`)
+   exist but are **not** this protocol: they used 600+ epochs with per-epoch valid
+   best-checkpoint selection. Nothing was reused or continued.
+3. Created and committed `analysis/gpu_authorization.json` pinning the freeze sha256,
+   the nine runs and `max_gpu_hours=1.5`.
+4. Deployed the committed revision `4d8f13660000` with `rr deploy res-2` and
+   `rr deploy res`. No manual SSH launch was used.
+5. `rr` preflight on `res-2` (CPU pool) verified the freeze, the authorization, the
+   clean worktree, and rebuilt both structural caches from the frozen raw artifact with
+   matching fingerprints (`0a73407f…`, `db48a9c2…`).
+6. `res-2` GPU pool `res2-cu124` was saturated by unrelated unlimited-time jobs
+   (`c05`/`c06`; three submissions stayed `PENDING` on `Resources`/`Priority` for
+   ~18 min). They were cancelled **before starting** (0 GPU-seconds) and execution moved
+   to the healthy A100 host `res` (2× A100-SXM4-40GB, driver 550.163.01,
+   `torch 2.5.1+cu124`, `cuda_available=True`), still through `rr`.
+7. Budget calibration on `res-gpu0` (arm A, batch 128, 13 optimizer steps):
+   **0.01485 s/update** → 101.6 s extrapolated per 6840-update run. The frozen recipe
+   was estimated to fit comfortably inside 1.5 h.
+8. Two formal runs launched concurrently: `A_s0` on `res-gpu0`, `A_s1` on `res-gpu1`.
+   Both exited with code 1 after 16–17 s at the **first batch of epoch 1**.
 
-What is known: the training path optimizes (smoke loss falls 100× on 256 Fit
-molecules), gradients reach every live parameter, and the checkpoint/soup path is
-deterministic on CPU. That is an implementation check, not evidence of generalization.
+### Run ledger (all through `rr`)
 
-The frozen answer rule: A "learned" iff its mean Monitor RMSE is below the Fit-mean
-constant predictor **and** each of seeds 0/1/2 is below that constant. The constant
-baseline is computed inside `evaluate.py` from the Fit mean.
+| experiment | run id | host/pool | state | exit | seconds |
+|---|---|---|---|---|---:|
+| `lcrc-preflight` | `lcrc-preflight-20261030-225323-8d02828d` | res-2 / res2-cpu | completed | 0 | 42 |
+| `lcrc-timing-a` | `lcrc-timing-a-20261030-231346-6dce3bb8` | res / res-gpu0 | completed | 0 | 17 |
+| `lcrc-formal-A-s0` | `lcrc-formal-A-s0-20261030-231545-30e34cc8` | res / res-gpu0 | **failed** | 1 | 16 |
+| `lcrc-formal-A-s1` | `lcrc-formal-A-s1-20261030-231557-3aa197e8` | res / res-gpu1 | **failed** | 1 | 17 |
+| `lcrc-A-s0/s1/s2` | `…-20261030-2255…` | res-2 / res2-cu124 | cancelled pre-start | – | 0 |
 
-### Q2. Is the increment over S2-off stable?
-
-**Status: DEFERRED.** Nine neural predictions and the prediction freeze are required.
-
-The frozen answer rule: compute per-seed `ΔRMSE = RMSE(A) − RMSE(B)`, the paired
-molecule bootstrap CI of the seed-mean Δ, then classify
-`CLEAR_INCREMENT` / `SUGGESTIVE_NOT_MATERIAL` / `NO_CLEAR_INCREMENT` (PROTOCOL §6).
-B's lower effective parameter count is reported alongside; a difference cannot be
-attributed purely to S2 information.
-
-### Q3. How does it compare with GINE and ECFP4?
-
-**Status: DEFERRED.** No predictions to compare.
-
-The frozen rule compares A with C and with D on the paired molecule bootstrap
-(`A_MATERIALLY_BETTER` / `COMPETITIVE` / `A_MATERIALLY_WORSE` / `INCONCLUSIVE`),
-materiality 0.03. GINE is a practical reference, not an information-matched control;
-D is refit on Fit2352, never the previous BJOC train3360/valid420 numbers.
-
-### Q4. Is performance sensitive to seeds or a few molecules?
-
-**Status: DEFERRED**, but the measurement is defined. The evaluator reports all three
-per-seed RMSEs, their mean/spread/range, the seed-mean paired bootstrap CI, a
-within-seed vs between-molecule variance decomposition, top 1/2/5% error shares,
-RMSE after dropping the worst 2/5%, and sign-flip checks on the tail. Best-seed
-optimism is reported only as `best_seed_minus_mean_rmse`, never used for selection.
-
-### Q5. Do the local sum and `rho` both participate in prediction?
-
-**Status: IMPLEMENTATION VERIFIED; Monitor diagnostics DEFERRED.**
-
-- Arm A's forward returns `contrib = sum_v f(h_v)` and `rho(...)`; the prediction is
-  their sum. Prediction files for A include both terms and a
-  `contrib + rho − pred` identity check.
-- G2 confirms `f` and `rho` both receive non-zero gradients, and A's S2 parameters
-  receive non-zero gradients while B's receive exactly zero.
-- No A prediction exists yet, so the empirical `contrib`/`rho` scale and variation on
-  Monitor504 cannot be reported. Any such numbers will be descriptive, not causal.
-
-### Q6. What do these results support, and what do they not support?
-
-**Supported now (engineering):**
-
-- The frozen data isolation works: Fit labels align to rows, Monitor is unreachable
-  from the training path, and the Reserved/official paths are denied.
-- A and B share an identical initial state per seed; B's S2 block is exactly zero in
-  train and eval while A uses it; the rest of the network is bit-identical.
-- GINE messages along the real physical adjacency and is permutation-invariant to
-  numerical precision; ECFP4 rows align to the frozen manifest and XGBoost refits
-  deterministically.
-- The optimizer-step schedule, save/restore and last-5 soup are reproducible on CPU,
-  and the formal recipe cannot be silently overridden.
-- The budget estimate fits the frozen hard cap.
-
-**Not supported by this report:**
-
-- Any claim that LCRC-A, S2, GINE or ECFP4 is better or worse on Lipophilicity.
-- Any claim that Monitor will confirm the smoke loss descent.
-- Any claim that S2 is the "core contribution" or that `contrib`/`rho` are chemically
-  faithful.
-- Any claim that this round is a fresh blind test (Monitor was used historically).
-- Any inference from the CPU smoke loss values to model ranking.
-
-### Q7. Is it worth entering SSL, mechanism ablation or independent-data validation?
-
-**Status: NOT DECIDED.** A decision requires the frozen Monitor results. `DECISION.md`
-records the evidence gate and the interpretation matrix; it deliberately does not
-pre-commit to a next round. No next round has been started.
+GPU-hours charged: `50 s = 0.0139 h` of the 1.5 h cap (0.93%). Budget is not the
+binding constraint.
 
 ---
 
-## 8. Limitations and disclosures
+## 2. Failure
 
-1. **No formal result.** Nothing in this report estimates Lipophilicity performance.
-2. **Small evaluation set.** Monitor is 504 molecules; the molecule bootstrap describes
-   sample uncertainty, not training-seed uncertainty. Both are reported separately.
-3. **Three seeds only**, chosen before the run. Seed spread will be reported as-is.
-4. **Monitor is a development set.** SSRC used it in earlier rounds; it is not fresh or
-   fully blind. Reserved is not used at all, and official valid/test are never read.
-5. **B is not information-matched.** Same nominal parameters, 71.43% effective.
-6. **C is not information- or parameter-matched.** 245,305 vs 247,106 params; a
-   different encoder family by design.
-7. **GPU reproducibility.** LCRC-A uses `index_add_` atomic accumulation; same-seed GPU
-   runs are not assumed bitwise identical. This will be disclosed, not averaged away.
-8. **Pre-freeze implementation fixes** (S2 slice offset, GINE edge orientation, GINE
-   reference count, RDKit generator API) were made before the freeze and before any
-   Monitor value was read; see PROTOCOL §10. No protocol constant changed after freeze.
-9. **`contrib`/`rho` diagnostics are descriptive**, not causal/chemical attribution.
+### 2.1 Symptom
 
-## 9. Reproduction
-
-See `README.md`. The complete pre-GPU state is reproducible with:
-
-```bash
-python code/run_screen.py verify-data
-python code/run_screen.py freeze-protocol
-python code/run_screen.py cpu-gates
-python -m pytest tests -q
-python code/run_screen.py baseline-ecfp
+```
+File "…/lcrc_lipo_screen_v1/code/screen_training.py", line 165, in train_one
+    batch = D.to_device(D.collate(caches["fit"]["cache"], cache_rows), device)
+File "…/lcrc_cross_task_preparation_v1/code/lcrc_data.py", line 658, in collate
+    raise ValueError("row index outside cache")
+ValueError: row index outside cache
 ```
 
-Expected: `READY_FOR_GPU_AUTHORIZATION`, 9/9 gates PASS, 53 tests pass. Formal
-`train`/`predict-nn` CUDA commands are blocked until an authorization file exists.
+The same traceback occurred for seed 0 and seed 1, on two different GPUs, at the first
+optimizer step. No `train.json`, no `soup.pt`, no prediction and no manifest were
+written.
 
-## 10. Artifact index
+### 2.2 Root cause (deterministic, reproducible on CPU)
+
+`splits_phase1a["fit"]` holds **global molecule row ids** `[0, 1, 3, 4, 7, …, 4199]`,
+and the Fit cache stores its 2352 molecules in exactly that order. `collate()` indexes
+**cache positions** `0…2351`. The training loop mixes the two:
+
+- `screen_training.py:164` `cache_rows = [train_rows[int(i)] for i in rows]` turns the
+  shuffled **position** `i` into a **global id** `g`;
+- line 165 passes `g` to `collate` as if it were a cache position;
+- line 167 looks the label up by `g`, i.e. it pairs the graph at cache position `g`
+  with the label of global row `g`.
+
+Consequences on the frozen Fit split:
+
+| quantity | value |
+|---|---|
+| first batch (epoch 1) slots with global id ≥ 2352 | **66 / 128** (max id 4197) |
+| epoch-1 slots out of range | **1162 / 2352**, in **19/19** batches |
+| cache positions where molecule id equals position | **2 / 2352** |
+| in-range epoch-1 slots whose label belongs to a different molecule | **1188 / 1190** |
+
+So the formal loop cannot survive epoch 1: every batch contains at least one index that
+is out of range. Even if the range were larger, the (molecule, label) pairing would be
+wrong for essentially every row. All nine planned runs (A/B/C × s0/s1/s2) share this
+loop, so the defect is arm- and seed-independent.
+
+### 2.3 Why the CPU gates did not catch it
+
+G5 smoke trained on `fit_limit=256`, and the G4 numerics checks used 128-row batches
+taken from the beginning of the Fit list. Their global ids are all < 2352 (roughly
+0…460), so the range assertion never fired, and a mislabelled pair does not raise — the
+loss still falls. No gate asserted full-Fit `(molecule id, label row id)` pairing or
+exercised a batch containing a global id ≥ 2352. Gate G1 verified the *label file*
+alignment (`fit_labels` returns values in split order), which is correct; the defect is
+in the trainer's position/id translation.
+
+### 2.4 What was deliberately not done
+
+- The frozen code was **not** patched, even though the fix is small (collate by cache
+  position; derive the label index from the position). A patch changes code hashes,
+  invalidates `analysis/protocol_freeze.json`, and requires a new authorization.
+- No run was retried with altered data, seeds, epochs, batch size or loss.
+- No Monitor prediction, no prediction freeze, no `evaluate`, no label read.
+- No result was invented to fill the pre-registered tables.
+
+The minimal repair and the additional gate it needs are written down (not applied) in
+`analysis/gpu_stage_halt.json` → `required_next_step`.
+
+---
+
+## 3. What remains true from the pre-GPU package
+
+These were verified before the halt and are unaffected by it (they are implementation
+and data-discipline facts, not performance evidence):
+
+- Frozen assets: split `9fa96d49…`, labels `0260a390…`, raw `8416837e…`, row manifest
+  `2c638e48…`, spec `a65c67f9…`, norm `084c129c…`, caches `907509ae…`/`2abd1aef…`,
+  content fingerprints `0a73407f…`/`db48a9c2…`; all matched locally **and** after
+  deterministic rebuild on the remote checkout.
+- Fit-only target standardisation: mean `2.157857142857143`, scale `1.2241982660328445`,
+  Fit label-vector sha256 `2f71c3e2…`; Monitor/Reserved never used.
+- A/B share an identical init state per seed; B's S2 block is exactly zero at LocalMLP
+  input columns `[320:520)` in train and eval; A receives non-zero S2 gradients, B
+  exactly zero (G2).
+- GINE uses the real molecular adjacency with permutation invariance 5.96e-8 (G3);
+  ECFP4 rows align and XGBoost refits bitwise (G6); the runtime guard blocks the CSV,
+  official split and reserved cache (G8).
+- Arm D's three label-blind Monitor predictions exist and are still **unscored**.
+
+What is **not** established: that the trainer is correct on the full Fit set. The
+gates' `READY_FOR_GPU_AUTHORIZATION` verdict is therefore too strong; it should have
+required a full-Fit first-epoch batch-integration gate.
+
+---
+
+## 4. The seven required questions
+
+All seven are **NOT ANSWERED — GPU stage halted**, not "deferred pending budget":
+
+| # | question | status | evidence |
+|---|---|---|---|
+| 1 | Did scratch LCRC-A learn the task? | **no data** | 0/9 trainings completed |
+| 2 | Is the S2 increment over B stable? | **no data** | no A/B predictions |
+| 3 | Is A competitive with GINE and ECFP4? | **no data** | no A/B/C predictions; D unscored |
+| 4 | Seed / molecule sensitivity? | **no data** | no per-seed results |
+| 5 | Do `contrib` and `rho` both contribute? | **no data** (implementation only, G2) | no A prediction file |
+| 6 | Train-vs-Monitor gap? | **no data** | no Fit RMSE from a completed run, no Monitor score |
+| 7 | CASE_1 / CASE_2 / CASE_3? | **not assignable** | decision rule requires Monitor predictions |
+
+The required summary numbers (RMSE/MAE for A/B/C/D, per-seed values, bootstrap
+intervals, tail shares, `contrib`/`rho` scales, case label) **do not exist** and are not
+estimated here.
+
+---
+
+## 5. Budget accounting
+
+| item | GPU-seconds | note |
+|---|---:|---|
+| `lcrc-timing-a` | 17 | calibration only, 13 steps |
+| `lcrc-formal-A-s0` | 16 | failed at first batch |
+| `lcrc-formal-A-s1` | 17 | failed at first batch |
+| three `res-2` submissions | 0 | cancelled while pending |
+| **total** | **50 s = 0.0139 h** | cap 1.5 h, remaining ≈ 1.486 h |
+
+No GPU-hour overrun occurred. The frozen estimate (0.734 h) was plausible: measured
+0.01485 s/update implies ≈102 s per run and ≈0.34 h for nine runs plus predictions.
+
+---
+
+## 6. Deviations and limitations
+
+1. **This round has no scientific result.** The pre-registered questions are unanswered.
+2. **The halt is a code defect, not a data or budget problem.** Frozen data, splits and
+   labels were hash-verified; the GPU budget was sufficient.
+3. **Gates were incomplete for the formal path.** G5 used a 256-row prefix, so the
+   full-Fit index range and label pairing were never exercised. This is disclosed as a
+   gate-design failure, not as an excuse.
+4. **Execution host changed from `res-2` to `res`.** Planned runs on `res-2` never
+   started (cluster GPUs saturated by unrelated unlimited-time jobs) and were cancelled
+   at 0 GPU-seconds; the two attempted runs and the calibration ran on `res`
+   (A100-SXM4-40GB, driver 550.163.01, torch 2.5.1+cu124). Both are A100 regimes, but
+   the regime is recorded per run and no cross-regime comparison is made.
+5. **The authorization file remains in place** (`authorized=true`, 9 runs, 1.5 h). It
+   does not by itself make the round runnable: any rerun under the frozen hashes will
+   fail identically. It is kept as the authorization record.
+6. **One pre-GPU test now fails** (`test_cuda_training_requires_authorization`), by
+   design: it asserts the absence of the authorization file. It was not edited.
+7. **Predictions from 2026-10-28 exploratory runs are not used**, and the old recipe's
+   best-epoch/valid selection is not part of this protocol.
+8. **No early stopping, no seed selection, no threshold change** was applied — there was
+   nothing to select.
+
+---
+
+## 7. What a future amended round must contain
+
+Only a new, explicitly pre-registered amendment can continue this work:
+
+1. Fix the Fit batching: collate by cache position and index the label by the position
+   (or by `train_row_index[train_rows[i]]`), not by the global row id.
+2. Add a full-Fit first-epoch gate: 19 batches over all 2352 rows, asserting no
+   out-of-range index and that every `(molecule id, label row id)` pair equals the split
+   order; re-run the soup/order checks after the fix.
+3. Regenerate `analysis/protocol_freeze.json` (new hashes) and obtain a **new** explicit
+   GPU authorization; the current authorization should not be reused for changed code.
+4. Then run the nine frozen runs, the label-blind predictions, the prediction freeze and
+   exactly one evaluation, under the pre-registered decision rules.
+
+This report does not authorize any of that, and does not start SSL, AQSOL, extra
+ablations or test-set evaluation.
+
+---
+
+## 8. Evidence index
 
 | artifact | sha256 |
 |---|---|
 | `analysis/protocol_freeze.json` | `87ec475107121d7b48cf9ae1e2664bb27bba972c39a543ebf24ea7885dbed9f4` |
-| `analysis/norm_target.json` | `50c5ad9da285b15233dc0f26704cfb5136ac4bbe5a97b4bf21734d8f1f9a0748` |
+| `analysis/gpu_authorization.json` | `48cb9a28ff36ec6765bcbc05d72391f5018e123a1ae8cef11d89196e44a3f30f` |
 | `analysis/cpu_gates.json` | `aa29fb09c0135f2946e6b0e5c8dd6bef7ed30a156e303e779fb0a3e3d0b79185` |
+| `analysis/norm_target.json` | `50c5ad9da285b15233dc0f26704cfb5136ac4bbe5a97b4bf21734d8f1f9a0748` |
 | `analysis/parameters.json` | `db1763d6dccfb123ce7cfced08126121ce8a550cd0741da90b8154c262df9388` |
 | `analysis/budget_estimate.json` | `d7148f13b85f341f0dcb389e4a7232afce136491bedd016d46870d48855d0536` |
 | `analysis/smoke.json` | `fef92f3d0badfbbc7af5aca8f8b22c8f7399aa88604d8cad86b9c4b5b420fd4a` |
-| `analysis/data_audit.json` | `f240a661bc6d5396d1df89ab922e3f37bc1c281d322d2b1a1e0221368c25eb79` |
 | `analysis/predictions/D_r0.npz` | `e2a18b9be03ed9e1da96614e9337abf2da577e14079d1a43958d295f736696b2` |
 | `analysis/predictions/D_r1.npz` | `d2b42ebcc4a024d7e0dafa12e2c7672eb2650797361ba19a4e1704dc2c9be6c1` |
 | `analysis/predictions/D_r2.npz` | `af4831f7dada243cde31f098e23dcfda4edc02e4582929dbd36ced9e49f46b78` |
+| `analysis/gpu_stage_halt.json` | `111275dcc2037f19526fcb2c041a3e2e2868955e66755c065d52301fad72b113` |
 
-Hashes of every code and test file are recorded in `analysis/protocol_freeze.json`
-(22 entries: 12 code modules, 9 test files, config).
+`analysis/protocol_freeze.json` hashes of all 12 code modules, 9 test files and the
+config are unchanged; `PROTOCOL.md` was not edited after the freeze.
+
+### Remote run logs (reproducible with `rr logs <experiment>`)
+
+```bash
+rr logs lcrc-preflight
+rr logs lcrc-timing-a
+rr logs lcrc-formal-A-s0 --stderr
+rr logs lcrc-formal-A-s1 --stderr
+rr status lcrc-formal-A-s0
+```

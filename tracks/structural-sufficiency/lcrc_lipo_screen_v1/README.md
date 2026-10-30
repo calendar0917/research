@@ -5,11 +5,12 @@ Lipophilicity screen of LCRC-A (A) vs an S2-off ablation (B) vs GINE+global42 (C
 ECFP4+XGBoost (D). This package is **frozen and CPU-validated but has not been run on
 GPU**.
 
-- **Round status:** `READY_FOR_GPU_AUTHORIZATION`
-- **GPU authorization:** `NOT_AUTHORIZED` (no `analysis/gpu_authorization.json`)
-- **Protocol:** [`PROTOCOL.md`](PROTOCOL.md)
-- **Report:** [`REPORT.md`](REPORT.md)
-- **Decision:** [`DECISION.md`](DECISION.md)
+- **Round status:** `HALTED_IMPLEMENTATION_DEFECT` (formal GPU stage attempted 2026-10-30)
+- **GPU:** authorized for 1.5 A100 GPU-hours; 0.0139 h used; 0/9 trainings completed
+- **Halt record:** [`analysis/gpu_stage_halt.json`](analysis/gpu_stage_halt.json)
+- **Protocol:** [`PROTOCOL.md`](PROTOCOL.md) (frozen, unedited after the freeze)
+- **Report:** [`REPORT.md`](REPORT.md) — no performance result
+- **Decision:** [`DECISION.md`](DECISION.md) — no scientific verdict
 
 ## What exists
 
@@ -30,6 +31,8 @@ GPU**.
 | `configs/lcrc_lipo_screen_v1.yaml` | frozen config (`FROZEN_PRE_GPU`) |
 | `tests/` | 53 pytest checks |
 | `analysis/` | audit, parameter table, budget, freeze, gates, smoke, D predictions |
+| `analysis/gpu_authorization.json` | committed researcher authorization (9 runs, 1.5 h) |
+| `analysis/gpu_stage_halt.json` | failed formal run ledger, root cause, required amendment |
 
 `analysis/runs/` (training artifacts) is git-ignored. Everything else in `analysis/`
 is committed and hash-referenced.
@@ -45,8 +48,9 @@ uv run --group lipo python -c "import torch, torch_geometric, rdkit, xgboost; pr
 ```
 
 RDKit lives in the local-only `lipo` dependency group. The remote A100 hosts do not
-install it, so arm D must be run locally (CPU). `torch.cuda.is_available()` is `False`
-here; no GPU was used.
+install it, so arm D must be run locally (CPU). Locally `torch.cuda.is_available()` is
+`False`; the formal GPU stage ran remotely on `res` (2× A100-SXM4-40GB, driver
+550.163.01, torch 2.5.1+cu124) through `rr`, and used 0.0139 GPU-hours before halting.
 
 All commands are run from the round directory:
 
@@ -83,24 +87,33 @@ uv run --project /home/calendar/code/research --group lipo \
 ```
 
 Expected: `cpu-gates` ends at `READY_FOR_GPU_AUTHORIZATION`, pytest reports
-`53 passed`, and `status` reports `"state": "READY_FOR_GPU_AUTHORIZATION"`.
+`52 passed, 1 failed` (the pre-GPU-state test asserts the authorization file is absent
+and is superseded by the 2026-10-30 authorization; it was not edited), and `status`
+reports the halted stage.
 
-## Formal stage (blocked)
+## Formal stage (attempted 2026-10-30; halted)
 
-```bash
-# These commands only work after the researcher creates a valid
-# analysis/gpu_authorization.json and commits a clean worktree.
-python code/run_screen.py train --arm A --seed 0 --device cuda
-python code/run_screen.py predict-nn --arm A --seed 0 --device cuda
-...
-python code/run_screen.py freeze-predictions
-python code/run_screen.py evaluate
+The researcher authorized the nine runs, and the package was deployed and run through
+`rr`. Both attempted runs (`A_s0`, `A_s1`) failed at the first optimizer batch:
+
+```
+ValueError: row index outside cache   # screen_training.py:165 -> lcrc_data.py:658
 ```
 
-`train` refuses to run if any code/config hash has drifted, if the worktree is dirty,
-if the run is not listed in the authorization, or if `max_gpu_hours` exceeds the frozen
-hard cap. See `PROTOCOL.md` §9 for the authorization schema. Use the repository's
-`rr` remote runner for GPU execution; do not start a manual SSH session.
+`screen_training.py` passes global split row ids (`0…4199`) to a collator that indexes
+cache positions (`0…2351`); every epoch-1 batch contains out-of-range ids
+(1162/2352 slots, 19/19 batches), and in-range slots would pair the wrong label
+(1188/1190). All nine runs share the loop. No `train.json`, soup, prediction or
+manifest was written; Monitor labels were never opened.
+
+Frozen code was **not** patched. A continuation requires a recorded amendment, a
+full-Fit first-epoch alignment gate, a regenerated `analysis/protocol_freeze.json` and a
+new authorization. See `DECISION.md` and `analysis/gpu_stage_halt.json`.
+
+```bash
+# still refused / still failing under the current frozen hashes
+python code/run_screen.py train --arm A --seed 0 --device cuda
+```
 
 ## Frozen recipe (summary)
 
@@ -132,13 +145,17 @@ label is read. The decision output is `CASE_1/2/3` under the rules in `PROTOCOL.
 | `analysis/cpu_gates.json` | 9/9 gates PASS |
 | `analysis/smoke.json` | 3 CPU smoke curves (256 Fit × 12 epochs), no Monitor |
 | `analysis/predictions/D_r0..2.{npz,json}` | label-blind baseline predictions, not scored |
+| `analysis/gpu_authorization.json` | researcher authorization (committed 2026-10-30) |
+| `analysis/gpu_stage_halt.json` | run ledger, failure trace, root cause, required amendment |
 
 ## Important boundaries
 
-- No Monitor, Reserved or official valid/test label has been read or scored in this
-  package. Only `fit_labels.py` (Fit 2352) and, after a completed prediction freeze,
-  `monitor_labels.py` may read the label artifact.
+- No Monitor, Reserved or official valid/test label has been read or scored. Only
+  `fit_labels.py` (Fit 2352) may read labels; `monitor_labels.py` stays locked while no
+  prediction manifest exists.
 - Monitor504 is a development set previously used by SSRC; it is not a fresh blind test.
 - CPU gates and smoke runs are engineering checks, not evidence of predictive quality.
+  In particular, gate G5 used a 256-row Fit prefix and did not exercise the full-Fit
+  index range; that gap is disclosed in `REPORT.md` §2.3.
 - Do not edit code/config after the freeze without regenerating
-  `analysis/protocol_freeze.json`; formal runs will refuse stale hashes.
+  `analysis/protocol_freeze.json` and obtaining a new authorization.
