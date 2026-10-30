@@ -1,0 +1,712 @@
+{
+  "atom_feature_fields": [
+    {
+      "description": "P3/ZINC atom-type one-hot (28-slot source vocabulary; LCRC uses the first 21)",
+      "dim": 28,
+      "dtype": "float32",
+      "name": "atom_type",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "degree one-hot 0..4 with degree >= 4 collapsed to the last slot (legacy behaviour)",
+      "dim": 5,
+      "dtype": "float32",
+      "name": "degree",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "atom lies on a cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "in_ring",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "minimum ring size 3..8+ one-hot; all-zero for acyclic atoms (legacy behaviour)",
+      "dim": 6,
+      "dtype": "float32",
+      "name": "min_ring_size",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "ring-bond count and ring-bond fraction",
+      "dim": 2,
+      "dtype": "float32",
+      "name": "ring_bonds",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "incident bond-type counts over the 4 P3 bond slots",
+      "dim": 4,
+      "dtype": "float32",
+      "name": "bond_type_counts",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "radius-1 neighbour-type histogram",
+      "dim": 28,
+      "dtype": "float32",
+      "name": "neighbour_types",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "radius-2 atom-type histogram",
+      "dim": 28,
+      "dtype": "float32",
+      "name": "radius2_types",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "log1p(n_d2), log1p(2-paths), triangles, fused/spiro flag",
+      "dim": 4,
+      "dtype": "float32",
+      "name": "radius2_stats",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "terminal flag and small-ring/fused role flag",
+      "dim": 2,
+      "dtype": "float32",
+      "name": "roles",
+      "source": "P3 atom_feat block"
+    }
+  ],
+  "atom_feature_source": "frozen P3 MolObjects.atom_feat (108-d)",
+  "atom_scalar_fields": [
+    {
+      "description": "log1p(number of atoms at graph distance exactly 2)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_d2",
+      "source": "legacy graph statistic"
+    },
+    {
+      "description": "log1p(number of ordered non-backtracking 2-paths rooted at the atom)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_paths2",
+      "source": "legacy S2 count"
+    },
+    {
+      "description": "fraction of rooted 2-paths whose end atom is adjacent to the root",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "closure_ratio",
+      "source": "legacy S2 count"
+    },
+    {
+      "description": "degree / 4 (legacy scalar)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "degree_over_4",
+      "source": "legacy graph statistic"
+    },
+    {
+      "description": "P3 in_ring bit",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "in_ring",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "minimum ring size / 8 (0 if acyclic)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "min_ring_size_over_8",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "ring-bond count / 4",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_bond_count_over_4",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "P3 terminal role bit",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "terminal",
+      "source": "P3 atom_feat block"
+    },
+    {
+      "description": "ring-bond count >= 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "fused_or_spiro",
+      "source": "P3 atom_feat block"
+    }
+  ],
+  "atom_type_encoding": "atom_type = argmax(P3 atom_feat[:, :21]); 0-based",
+  "atom_type_metadata": [
+    {
+      "index": 0,
+      "is_unknown": false,
+      "name": "C",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 1,
+      "is_unknown": false,
+      "name": "O",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 2,
+      "is_unknown": false,
+      "name": "N",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 3,
+      "is_unknown": false,
+      "name": "F",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 4,
+      "is_unknown": false,
+      "name": "C_H1",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 5,
+      "is_unknown": false,
+      "name": "S",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 6,
+      "is_unknown": false,
+      "name": "Cl",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 7,
+      "is_unknown": false,
+      "name": "O_minus",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 8,
+      "is_unknown": false,
+      "name": "N_H1_plus",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 9,
+      "is_unknown": false,
+      "name": "Br",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 10,
+      "is_unknown": false,
+      "name": "N_H3_plus",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 11,
+      "is_unknown": false,
+      "name": "N_H2_plus",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 12,
+      "is_unknown": false,
+      "name": "N_plus",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 13,
+      "is_unknown": false,
+      "name": "N_minus",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 14,
+      "is_unknown": false,
+      "name": "S_minus",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 15,
+      "is_unknown": false,
+      "name": "I",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 16,
+      "is_unknown": false,
+      "name": "P",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 17,
+      "is_unknown": false,
+      "name": "O_H1_plus",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 18,
+      "is_unknown": false,
+      "name": "N_H1_minus",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 19,
+      "is_unknown": false,
+      "name": "O_plus",
+      "source": "ZINC atom_dict.pickle idx2word"
+    },
+    {
+      "index": 20,
+      "is_unknown": false,
+      "name": "S_plus",
+      "source": "ZINC atom_dict.pickle idx2word"
+    }
+  ],
+  "atom_type_names": [
+    "C",
+    "O",
+    "N",
+    "F",
+    "C_H1",
+    "S",
+    "Cl",
+    "O_minus",
+    "N_H1_plus",
+    "Br",
+    "N_H3_plus",
+    "N_H2_plus",
+    "N_plus",
+    "N_minus",
+    "S_minus",
+    "I",
+    "P",
+    "O_H1_plus",
+    "N_H1_minus",
+    "O_plus",
+    "S_plus"
+  ],
+  "atom_unk_index": null,
+  "atom_unknown_policy": "reject: categorical atom type outside 0..20 is an error",
+  "bond_feature_fields": [
+    {
+      "description": "P3 bond-type one-hot over slots 0..3; ZINC uses 1..3",
+      "dim": 4,
+      "dtype": "float32",
+      "name": "bond_type",
+      "source": "P3 bond_feat block"
+    },
+    {
+      "description": "bond lies on a cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "is_ring",
+      "source": "P3 bond_feat block"
+    },
+    {
+      "description": "exactly one endpoint is a ring atom",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "exactly_one_endpoint_in_ring",
+      "source": "P3 bond_feat block"
+    },
+    {
+      "description": "both endpoints are ring atoms",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "both_endpoints_in_ring",
+      "source": "P3 bond_feat block"
+    }
+  ],
+  "bond_feature_source": "frozen P3 MolObjects.bond_feat (7-d)",
+  "bond_type_encoding": "bond_type is the historical one-based P3 value 1..3",
+  "bond_type_metadata": [
+    {
+      "id": 1,
+      "name": "SINGLE",
+      "raw_index": 1,
+      "source": "ZINC bond_dict.pickle"
+    },
+    {
+      "id": 2,
+      "name": "DOUBLE",
+      "raw_index": 2,
+      "source": "ZINC bond_dict.pickle"
+    },
+    {
+      "id": 3,
+      "name": "TRIPLE",
+      "raw_index": 3,
+      "source": "ZINC bond_dict.pickle"
+    }
+  ],
+  "bond_type_names": [
+    "SINGLE",
+    "DOUBLE",
+    "TRIPLE"
+  ],
+  "bond_unk_id": null,
+  "bond_unknown_policy": "reject: bond type outside 1..3 is an error",
+  "description": "Frozen ZINC-LCRC-A interface.  Replays the historical P3 atom/bond/global tensors and the historical S1/S2 codes exactly; connected molecules only.",
+  "dimensions": {
+    "atom_feat_dim": 108,
+    "bond_feat_dim": 7,
+    "code_max": 2147483647,
+    "global_dim": 33,
+    "n_atom_types": 21,
+    "n_bond_types": 3,
+    "n_nbr_codes": 63,
+    "n_path_codes": 189,
+    "n_scalars": 9
+  },
+  "disconnected_policy": "reject: legacy global33 uses connected-graph formulas; all ZINC subset train/valid molecules are connected",
+  "feature_dtype": "float32",
+  "global_feature_fields": [
+    {
+      "description": "log1p(number of atoms)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_atoms",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "log1p(number of physical bonds)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_bonds",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "log1p(number of unordered neighbour pairs at a centre)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_junctions",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "n_bonds - n_atoms + 1 (ZINC subset molecules are connected)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "cyclomatic_rank",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of atoms on a cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_atom_fraction",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of bonds on a cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_bond_fraction",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "number of biconnected blocks with at least three edges",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "n_ring_systems",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "maximum finite shortest-path distance",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "diameter",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "mean finite unordered-pair shortest-path distance",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "mean_distance",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of ordered pairs at finite distance >= 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_dist_ge3",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "n_bonds / n_atoms",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bonds_per_atom",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "log1p(number of ring atoms)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_ring_atoms",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "maximum heavy-atom degree",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "max_degree",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of degree-1 atoms",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "terminal_atom_fraction",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "n_junctions / n_bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "junction_per_bond",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of junction centres on a cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_junction_centers_ring",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of junctions whose centre has degree 2",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_deg2_junctions",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of junctions whose centre has degree 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_deg3_junctions",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of junctions whose centre has degree >= 4",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_deg4_junctions",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of bonds with P3 bond type 0 (unused in ZINC)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bond_type0_frac",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of single bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bond_type1_frac",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of double bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bond_type2_frac",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of triple bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bond_type3_frac",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size3_frac",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size 4",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size4_frac",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size 5",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size5_frac",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size 6",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size6_frac",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size 7",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size7_frac",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size >= 8",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size8plus_frac",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "fraction of atoms with >= 3 ring bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "fused_ring_atom_fraction",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "historical duplicate of mean_distance",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "mean_pair_distance",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "number of distinct bond types present",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "distinct_bond_types",
+      "source": "P3 global_feat block"
+    },
+    {
+      "description": "number of distinct P3 atom types present",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "distinct_atom_types",
+      "source": "P3 global_feat block"
+    }
+  ],
+  "global_feature_source": "frozen P3 MolObjects.global_feat (33-d)",
+  "name": "legacy_zinc",
+  "nbr_code_formula": "atom_type[neighbour] * 3 + (bond_type - 1)",
+  "output_tensors": [
+    {
+      "description": "per-atom feature matrix",
+      "dtype": "float32",
+      "name": "atom_feat",
+      "shape": "[N, 108]"
+    },
+    {
+      "description": "categorical atom type id (0-based)",
+      "dtype": "int64",
+      "name": "atom_type",
+      "shape": "[N]"
+    },
+    {
+      "description": "per-atom scalar vector before Fit-only standardisation",
+      "dtype": "float32",
+      "name": "atom_scalar",
+      "shape": "[N, 9]"
+    },
+    {
+      "description": "per-physical-bond feature matrix",
+      "dtype": "float32",
+      "name": "bond_feat",
+      "shape": "[M, 7]"
+    },
+    {
+      "description": "categorical bond type id (1-based)",
+      "dtype": "int64",
+      "name": "bond_type",
+      "shape": "[M]"
+    },
+    {
+      "description": "physical bond endpoints, u < v, sorted",
+      "dtype": "int64",
+      "name": "bond_index",
+      "shape": "[M, 2]"
+    },
+    {
+      "description": "molecule atom offsets",
+      "dtype": "int64",
+      "name": "atom_ptr",
+      "shape": "[B + 1]"
+    },
+    {
+      "description": "molecule bond offsets",
+      "dtype": "int64",
+      "name": "bond_ptr",
+      "shape": "[B + 1]"
+    },
+    {
+      "description": "per-atom S1 code offsets",
+      "dtype": "int64",
+      "name": "nbr_ptr",
+      "shape": "[N_total + 1]"
+    },
+    {
+      "description": "joint (neighbour atom type, bond type) code",
+      "dtype": "int32",
+      "name": "nbr_code",
+      "shape": "[nnz_S1]"
+    },
+    {
+      "description": "per-root S2 record offsets",
+      "dtype": "int64",
+      "name": "path_ptr",
+      "shape": "[N_total + 1]"
+    },
+    {
+      "description": "joint (middle type, bond1, bond2) code",
+      "dtype": "int32",
+      "name": "path_cat",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "joint (end atom type, bond2) code",
+      "dtype": "int32",
+      "name": "path_end63",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "absolute end-atom index in the batch",
+      "dtype": "int64",
+      "name": "path_end",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "1 iff the end atom is adjacent to the root",
+      "dtype": "int8",
+      "name": "path_closure",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "graph-level structural statistics before Fit-only standardisation",
+      "dtype": "float32",
+      "name": "global",
+      "shape": "[B, 33]"
+    }
+  ],
+  "path_code_formula": "atom_type[middle] * 9 + (bond_type_1 - 1) * 3 + (bond_type_2 - 1)",
+  "path_end_code_formula": "atom_type[end] * 3 + (bond_type_2 - 1)",
+  "schema_version": "lcrc-feature-spec-v1",
+  "source_provenance": {
+    "round_id": "lcrc-cross-task-preparation-v1",
+    "source": "frozen LCRC-v1/P3 interface"
+  },
+  "spec_hash": "06710a5f003935a1fb3a1f27abf73265d370c03a984aa6ab839ae6220eecb5e0",
+  "structural_code_dtype": "int32",
+  "structural_index_dtype": "int64",
+  "supports_disconnected": false
+}
