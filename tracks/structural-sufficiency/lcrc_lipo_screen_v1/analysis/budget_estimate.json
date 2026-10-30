@@ -1,0 +1,67 @@
+{
+  "anchor": {
+    "device": "cuda",
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "model": "BJOC-Lipo-SSL (P) seed 0",
+    "n_train_rows": 3360,
+    "parameters": 419713,
+    "path": "tracks/structure-contribution/results/bjoc_cross_task_lipophilicity_v1/train_P_s0.json",
+    "seconds_per_update": 0.02427619114444388,
+    "updates": 9720,
+    "wall_seconds": 235.9645779239945,
+    "why_comparable": "same task, same 128-batch/360-epoch/per-step-cosine recipe family, A100"
+  },
+  "assumptions": [
+    "Per-update cost is anchored on one measured A100 BJOC run; no GPU timing was collected in this round.",
+    "Arm C is assumed to cost 2x arm A per update (3 GINE layers at hidden 170).",
+    "20% overhead covers restart/retry and evaluation I/O."
+  ],
+  "cpu_step_seconds_128": {
+    "A": 0.023001209997649614,
+    "B": 0.0205179066688288,
+    "C": 0.02405112566581617
+  },
+  "created_utc": "2026-10-30T14:28:38Z",
+  "estimated_total_gpu_hours": 0.7341965897119845,
+  "fits_within_hard_cap": true,
+  "gpu_authorized": false,
+  "gpu_hours_used_so_far": 0.0,
+  "hard_cap_gpu_hours": 1.5,
+  "overhead_fraction": 0.2,
+  "per_run_estimate": {
+    "A": {
+      "estimate_gpu_hours": 0.04612476317444337,
+      "estimate_seconds": 166.04914742799613,
+      "factor_vs_anchor": 1.0,
+      "runs": 3,
+      "updates": 6840
+    },
+    "B": {
+      "estimate_gpu_hours": 0.04612476317444337,
+      "estimate_seconds": 166.04914742799613,
+      "factor_vs_anchor": 1.0,
+      "runs": 3,
+      "updates": 6840
+    },
+    "C": {
+      "estimate_gpu_hours": 0.09224952634888674,
+      "estimate_seconds": 332.09829485599226,
+      "factor_vs_anchor": 2.0,
+      "runs": 3,
+      "updates": 6840
+    }
+  },
+  "per_run_timeout_seconds": 900,
+  "prediction_gpu_hours_reserved": 0.02,
+  "protocol_id": "lcrc-lipo-screen-v1",
+  "runs": {
+    "baseline": "1 x 3 XGBoost fits (local CPU, no GPU)",
+    "baseline_cpu_hours_estimate": 0.01,
+    "baseline_gpu_hours": 0.0,
+    "nn": "3 arms x 3 seeds = 9",
+    "nn_gpu_hours": 0.5534971580933205
+  },
+  "smoke_gpu_hours_reserved": 0.05,
+  "status": "ESTIMATE_ONLY_NOT_EXECUTED",
+  "suggested_external_cap_gpu_hours": 4.0
+}

@@ -1,0 +1,174 @@
+# Frozen configuration — LCRC-A Lipophilicity screen v1
+#
+# Status: FROZEN_PRE_GPU.  No GPU run has been authorised or executed with this
+# configuration.  Changing any value below invalidates
+# analysis/protocol_freeze.json and makes `run_screen.py train` refuse to run.
+#
+# Every constant here is mirrored and hard-checked in
+# code/screen_common.py::validate_config, so editing only this file cannot
+# silently change the science.
+
+protocol_id: lcrc-lipo-screen-v1
+round_id: lcrc-lipo-screen-v1
+status: FROZEN_PRE_GPU
+date_utc: "2026-10-30"
+
+data:
+  dataset: Lipophilicity
+  split_protocol: ssrc-phase1a-lipo-v1
+  raw_graph: tracks/structure-contribution/results/bjoc_cross_task_lipophilicity_v1/dataset/lipo_raw_v1.json.gz
+  raw_graph_sha256: 8416837ea3e56e3e5218865391c88913bb16948b48b7a61be1ee890ea4dda6dd
+  split: tracks/structural-sufficiency/results/phase1a/split_phase1a.json
+  split_sha256: 9fa96d49efd94cd2ff381922f83a07f963d832064c75469657b4ce5f68c332b6
+  labels: tracks/structural-sufficiency/results/phase1a/labels_fit_monitor.json
+  labels_sha256: 0260a3909eec30900df646bc760e65360315f4a1398c7092c7c72d04a4e404f7
+  # Fit + Monitor only; the artifact certifies reserved_labels_present=false
+  # and official_valid_test_labels_present=false.
+  fit_rows: 2352
+  monitor_rows: 504
+  reserved_rows: 504
+  reserved_usage: "labels never read; not scored; structures not used in this round"
+  official_valid_test_usage: "never read, never scored, structures not used"
+  patient_split_reselection: false
+
+training:
+  seeds: [0, 1, 2]
+  optimizer: AdamW
+  peak_lr: 1.0e-3
+  min_lr: 1.0e-5
+  scheduler: per_step_cosine
+  weight_decay: 1.0e-5
+  batch_size: 128
+  epochs: 360
+  grad_clip: 5.0
+  dropout: 0.0
+  loss: mse_on_fit_standardised_target
+  target_normalisation: fit_only
+  checkpoint: mean_of_last_5_epoch_end_state_dicts
+  soup_last: 5
+  monitor_during_training: false
+  checkpoint_selection_by_monitor: false
+  early_stopping: false
+  arm_specific_epochs: false
+  ssl: false
+  shuffle_offset: 917000
+  determinism_note: >-
+    CPU gates require bitwise reproducibility of the soup given epoch-end
+    snapshots.  GPU training is not assumed bitwise reproducible because the
+    frozen LCRC-A forward uses index_add_ atomic accumulation; the phase1a
+    round measured same-seed run-to-run Monitor MAE differences of order 0.01.
+    This is disclosed, not corrected after the fact.
+
+arms:
+  nn: [A, B, C]
+  baseline: [D]
+  A:
+    name: LCRC-A Full
+    model: lcrc_a_lipo_v1
+    s2_channel: full
+    atom_encoder: true
+    bond_encoder: true
+    s1_joint: true
+    s2_typed_paths: true
+    s2_endpoint_content: true
+    s2_closure: true
+    global42: true
+    rho: true
+    ssl_weights: false
+  B:
+    name: LCRC-A S2-off
+    model: lcrc_a_lipo_v1
+    s2_channel: off
+    s2_off_zeroes_localmlp_input: true
+    s2_off_train_and_eval: true
+    s1_joint: true
+    global42: true
+    rho: true
+    note: >-
+      Same tensors, same parameter count, same init as A.  The 200-dimensional
+      concatenated S2 block entering LocalMLP (path_agg 104 + content_agg 96)
+      is zeroed in train and eval.  Not an information-matched control.
+  C:
+    name: GINE + global42
+    model: gine_lipo_v1
+    atom_feature: lipo_v1.atom51
+    bond_feature: lipo_v1.bond13
+    adjacency: real_physical_bonds
+    lcrc_s1_s2: false
+    global42: true
+    rho: true
+  D:
+    name: ECFP4 + XGBoost
+    model: ecfp4_xgb
+    fingerprint: ecfp4_morgan_r2_2048
+    fit_on: fit2352
+    evaluate_on: monitor504
+
+models:
+  lcrc:
+    width: 64
+    stat_rank: 32
+    local_hidden: 192
+    atom_hidden: 128
+    atom_out: 96
+    bond_hidden: 160
+    bond_out: 96
+    rho_hidden: 64
+    expected_parameters: 247106
+  gine:
+    layers: 3
+    hidden: 170
+    rho_hidden: 64
+    inner_mlp: [linear, relu, linear]
+    train_eps: true
+    message_passing_bidirectional: true
+    expected_parameters: 245305
+    parameter_matching_rule: >-
+      layers=3 fixed; hidden is the even integer minimising
+      |N_gine(hidden) - N_lcrc(247106)| over 128..192.  The search table is
+      recorded in analysis/parameters.json; no performance was consulted.
+
+baseline:
+  fingerprint: ecfp4_morgan_r2_2048
+  refit_on: fit2352
+  score_on: monitor504
+  reuse_previous_bjoc_numbers: false
+  fp_radius: 2
+  fp_bits: 2048
+  fp_use_features: false
+  xgboost:
+    n_estimators: 500
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_lambda: 1.0
+    min_child_weight: 1
+    tree_method: hist
+    n_jobs: -1
+  random_states: [0, 1, 2]
+  primary_random_state: 0
+  hyperparameter_search: false
+  note: >-
+    Re-fit on Fit2352 only and scored on Monitor504 only.  The BJOC
+    train3360/valid420 numbers are NOT reused as this round's comparison.
+
+evaluation:
+  monitor_split: monitor
+  primary_metric: raw_rmse
+  secondary_metrics: [raw_mae, paired_mse, paired_mae]
+  bootstrap_resamples: 2000
+  bootstrap_seed: 0
+  materiality_rmse: 0.03
+  monitor_used_for_selection: false
+  reserved_labels_read: false
+  official_valid_test_read: false
+  report_best_seed_only: false
+  seed_and_molecule_uncertainty_separate: true
+
+budget:
+  hard_cap_gpu_hours: 1.5
+  suggested_external_cap_gpu_hours: 4.0
+  estimate_gpu_hours: 0.734
+  per_run_timeout_seconds: 900
+  estimate_status: ESTIMATE_ONLY_NOT_EXECUTED
