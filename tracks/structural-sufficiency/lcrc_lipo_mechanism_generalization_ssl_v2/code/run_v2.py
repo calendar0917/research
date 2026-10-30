@@ -268,7 +268,7 @@ def cmd_freeze_protocol(_args) -> int:
     freeze["data_audit"] = C.file_record(C.ANALYSIS / "data_audit_v2.json")
     freeze["norm_target_fit2352"] = C.file_record(C.NORM_TARGET_V2)
     freeze["gpu_ledger"] = C.file_record(C.ANALYSIS / "gpu_ledger_v2.json")
-    freeze["tests"] = {"pytest_suite": "46 passed", "v1_guard": "session fixture + G9 gate"}
+    freeze["tests"] = {"pytest_suite": "52 passed", "v1_guard": "session fixture + G9 gate"}
     freeze["cpu_baselines"] = {
         "file": C.file_record(C.ANALYSIS / "cpu_baselines_v2.json"),
         "selection": baseline["selection"],
@@ -338,7 +338,10 @@ def cmd_train(args) -> int:
     row = R.run_by_key(args.key)
     if row["kind"] != "train":
         raise SystemExit(f"{args.key} is not a supervised run")
-    recipe = R.resolve_recipe(args.key, _recipe_lock())
+    # Explicit Fold-0 recipe-screen runs do not need the recipe lock; only the
+    # SEL (selected) runs do.  This keeps the Fold-0 baseline launchable before
+    # analyze-cv has run.
+    recipe = R.resolve_recipe(args.key, _recipe_lock()) if row["recipe"] == "SEL" else row["recipe"]
     out_path = _run_dir(args.key) / "train.json"
     if out_path.exists():
         raise SystemExit(f"refusing to overwrite existing run {C.track_rel(out_path)}")
