@@ -1,0 +1,371 @@
+{
+  "round": "lcrc-hc3-v1",
+  "created": "2026-10-30T08:03:55+0800",
+  "checks": {
+    "g1_parameter_table": {
+      "counts": {
+        "pass": true,
+        "detail": {
+          "table": {
+            "B": {
+              "parameters": 237519,
+              "breakdown": {
+                "atom_encoder": 26336,
+                "bond_encoder": 62816,
+                "local": 133645,
+                "f": 4225,
+                "rho": 10497,
+                "base_total": 237519,
+                "total": 237519
+              }
+            },
+            "H": {
+              "parameters": 323391,
+              "breakdown": {
+                "atom_encoder": 26336,
+                "bond_encoder": 62816,
+                "local": 133645,
+                "f": 4225,
+                "rho": 10497,
+                "base_total": 237519,
+                "comp_proj": 4160,
+                "path_encoder": 81712,
+                "F2": 51216,
+                "F3": 30496,
+                "total": 323391
+              }
+            },
+            "F": {
+              "parameters": 323384,
+              "breakdown": {
+                "atom_encoder": 26336,
+                "bond_encoder": 62816,
+                "local": 133645,
+                "f": 4225,
+                "rho": 10497,
+                "base_total": 237519,
+                "comp_proj": 4160,
+                "path_encoder": 81705,
+                "Fflat": 81705,
+                "total": 323384
+              }
+            }
+          },
+          "expected": {
+            "B": 237519,
+            "H": 323391,
+            "F": 323384
+          }
+        }
+      },
+      "H_minus_F_7": {
+        "pass": true,
+        "detail": 7
+      },
+      "additions": {
+        "pass": true,
+        "detail": {
+          "H": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "local": 133645,
+            "f": 4225,
+            "rho": 10497,
+            "base_total": 237519,
+            "comp_proj": 4160,
+            "path_encoder": 81712,
+            "F2": 51216,
+            "F3": 30496,
+            "total": 323391
+          },
+          "F": {
+            "atom_encoder": 26336,
+            "bond_encoder": 62816,
+            "local": 133645,
+            "f": 4225,
+            "rho": 10497,
+            "base_total": 237519,
+            "comp_proj": 4160,
+            "path_encoder": 81705,
+            "Fflat": 81705,
+            "total": 323384
+          }
+        }
+      },
+      "cap": {
+        "pass": true,
+        "detail": 500000
+      }
+    },
+    "g2_initial_state": {
+      "tensorwise_vs_frozen": {
+        "pass": true,
+        "detail": {
+          "0": {
+            "H_base_matches_frozen_tensorwise": true,
+            "F_base_matches_frozen_tensorwise": true,
+            "B_hash_matches_historical": true,
+            "H_base_hash_equals_B": true,
+            "F_base_hash_equals_B": true,
+            "comp_proj_H_equals_F": true,
+            "comp_proj_zero": true,
+            "hist_hash": "11c698ae669dbee1bca93ccc13048163e725b29659d54fe6498fa6440a0cfb1e"
+          },
+          "1": {
+            "H_base_matches_frozen_tensorwise": true,
+            "F_base_matches_frozen_tensorwise": true,
+            "B_hash_matches_historical": true,
+            "H_base_hash_equals_B": true,
+            "F_base_hash_equals_B": true,
+            "comp_proj_H_equals_F": true,
+            "comp_proj_zero": true,
+            "hist_hash": "d9422859dc47bbe22496c7bb778f4ca69bd7afb49d704895db40bff7ec269a8e"
+          }
+        }
+      }
+    },
+    "g3_step0_forward": {
+      "strict_reproduction": {
+        "pass": true,
+        "detail": {
+          "0": {
+            "H_minus_B_maxabs": 0.0,
+            "F_minus_B_maxabs": 0.0,
+            "H_bitwise": true,
+            "F_bitwise": true
+          },
+          "1": {
+            "H_minus_B_maxabs": 0.0,
+            "F_minus_B_maxabs": 0.0,
+            "H_bitwise": true,
+            "F_bitwise": true
+          }
+        }
+      }
+    },
+    "g4_enumeration": {
+      "brute_force": {
+        "pass": true,
+        "detail": {
+          "n_graphs": 19,
+          "mismatches": []
+        }
+      }
+    },
+    "g5_cma_semantics": {
+      "sets_match": {
+        "pass": true,
+        "detail": {
+          "n_molecules": 60,
+          "mismatches": []
+        }
+      }
+    },
+    "g6_learned_not_fixed_secondhop": {
+      "contrast": {
+        "pass": true,
+        "detail": {
+          "old_fixed_projection": true,
+          "old_two_hop_names": true,
+          "new_trainable": true,
+          "four_distinct_atoms": true,
+          "three_bonds": true,
+          "H_path_params": 81712,
+          "F_path_params": 81705,
+          "q_perturbation_H": 0.2641517221927643,
+          "q_perturbation_F": 0.4704567790031433,
+          "q_dim": 64
+        }
+      }
+    },
+    "g7_shared_content": {
+      "atom_bond_and_paths": {
+        "pass": true,
+        "detail": {
+          "a_H_eq_F": true,
+          "b_H_eq_F": true,
+          "a_eq_B": true,
+          "b_eq_B": true,
+          "four_atoms_distinct": true,
+          "chord_range_0_3": true
+        }
+      }
+    },
+    "g8_gradient_path": {
+      "injection_then_encoder": {
+        "pass": true,
+        "detail": {
+          "H": {
+            "comp_grad_step0": 4.857463693841397,
+            "path_grad_step0": {
+              "path_encoder.F2": 0.0,
+              "path_encoder.F3": 0.0
+            },
+            "path_grad_step1": {
+              "path_encoder.F2": 0.12549738071713967,
+              "path_encoder.F3": 0.8946344595092272
+            },
+            "ok": true
+          },
+          "F": {
+            "comp_grad_step0": 4.241011145600702,
+            "path_grad_step0": {
+              "path_encoder.Fflat": 0.0
+            },
+            "path_grad_step1": {
+              "path_encoder.Fflat": 1.0523642533378652
+            },
+            "ok": true
+          }
+        }
+      }
+    },
+    "g9_invariance": {
+      "renumber/reverse/reorder/split": {
+        "pass": true,
+        "detail": {
+          "B": {
+            "batch_split_maxabs": 1.1920928955078125e-07,
+            "renumber_reverse_bondorder": {
+              "orig": 0.0,
+              "perm": 0.0,
+              "reversed": 0.0,
+              "bond_order": 0.0
+            },
+            "path_order_maxabs": 0.0
+          },
+          "H": {
+            "batch_split_maxabs": 1.1920928955078125e-07,
+            "renumber_reverse_bondorder": {
+              "orig": 0.0,
+              "perm": 2.384185791015625e-07,
+              "reversed": 0.0,
+              "bond_order": 0.0
+            },
+            "path_order_maxabs": 0.0
+          },
+          "F": {
+            "batch_split_maxabs": 1.1920928955078125e-07,
+            "renumber_reverse_bondorder": {
+              "orig": 0.0,
+              "perm": 4.76837158203125e-07,
+              "reversed": 0.0,
+              "bond_order": 0.0
+            },
+            "path_order_maxabs": 0.0
+          }
+        }
+      }
+    },
+    "g10_reversal_and_zero": {
+      "q_reverse_and_n_e_zero": {
+        "pass": true,
+        "detail": {
+          "H": {
+            "n_e_zero_rows_strict_zero": true,
+            "n_reverse_pairs": 682,
+            "max_forward_reverse_q_diff": 0.0
+          },
+          "F": {
+            "n_e_zero_rows_strict_zero": true,
+            "n_reverse_pairs": 682,
+            "max_forward_reverse_q_diff": 1.4901161193847656e-08
+          }
+        }
+      }
+    },
+    "g11_label_and_boundary": {
+      "no_label_leak_test_refused": {
+        "pass": true,
+        "detail": {
+          "prediction_unchanged": true,
+          "forbidden_keys": [],
+          "refused": {
+            "load_cache": true,
+            "cache_path": true,
+            "load_split": true
+          },
+          "n_keys": 36
+        }
+      }
+    },
+    "g12_recipe_and_checkpoint": {
+      "lr_optimizer_roundtrip_resume": {
+        "pass": true,
+        "detail": {
+          "lr": [
+            0.0,
+            2e-06,
+            0.0005,
+            0.000998,
+            0.001,
+            0.0009999999988894728,
+            0.0005132889961657797,
+            1e-05
+          ],
+          "warm_ok": true,
+          "end_ok": true,
+          "mono": true,
+          "audit_ok": true,
+          "roundtrip": true,
+          "resume_ok": true,
+          "resume_final_hash": "98d92af73dd1855b3a1447390009f443e40456584ba4c343949604fe8b8d084d",
+          "full_final_hash": "98d92af73dd1855b3a1447390009f443e40456584ba4c343949604fe8b8d084d"
+        }
+      }
+    },
+    "g13_data_and_norm": {
+      "fit_only_and_historical": {
+        "pass": true,
+        "detail": {
+          "fit8k_norm_differs_from_monitor": true,
+          "full_norm_fingerprint_matches_history": true,
+          "label_hash_matches_history": true,
+          "norm_fingerprint": "8c3e88137f18ca6841758b5779b57d7362d9dd57c2c29db2067f822cafd1c89f"
+        }
+      }
+    },
+    "g14_path_coverage": {
+      "n_e_distribution": {
+        "pass": true,
+        "detail": {
+          "n_bonds": 249279,
+          "n_e_zero": 41629,
+          "n_e_gt0": 207650,
+          "max_n_e": 9
+        }
+      }
+    },
+    "g15_stageC_baseline_replay": {
+      "historical_lcrcA_valid": {
+        "pass": true,
+        "detail": {
+          "0": {
+            "checkpoint": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s0/best.pt",
+            "checkpoint_sha256": "06340bcd9e45af03e887e706031b6ea14c719cac2b68ba716ce3d686bb21fdad",
+            "historical_best_valid_mae": 0.07658163924043765,
+            "replayed_valid_mae": 0.076581646020466,
+            "maxdiff_vs_saved_prediction": 3.814697265625e-06,
+            "cache_content_sha256": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+            "label_sha256": "8f6ee636fd23ee977984e49cdc18f352a61bcf24a4987ae11402a402c41d4b45"
+          },
+          "1": {
+            "checkpoint": "/home/calendar/code/research/tracks/structural-sufficiency/zinc_local_relation_composition_v1/runs/lcrcA_s1/best.pt",
+            "checkpoint_sha256": "7225fe11fce0a24d98aa09fb92b6d721fa20481306b24e5c30c47cdfb8ebd212",
+            "historical_best_valid_mae": 0.08050378037145128,
+            "replayed_valid_mae": 0.08050377571111313,
+            "maxdiff_vs_saved_prediction": 2.86102294921875e-06,
+            "cache_content_sha256": "aae2caa50d322a25ce75cbd8160e61a831b1488d43295e872db31d0bc7a6dbfe",
+            "label_sha256": "8f6ee636fd23ee977984e49cdc18f352a61bcf24a4987ae11402a402c41d4b45"
+          }
+        }
+      }
+    }
+  },
+  "all_pass": true,
+  "git_commit": "16f809db8f0825040e1afb47dfd354846c3a0ec9",
+  "environment": {
+    "python": "3.12.15",
+    "torch": "2.5.1+cu124"
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "round": "lcrc-hc3-v1",
+  "frozen_on": "2026-11-07",
+  "parameters": {
+    "B": 237519,
+    "H": 323391,
+    "F": 323384,
+    "H_minus_F": 7,
+    "cap": 500000
+  },
+  "model": {
+    "F2": {"dims": [484, 96, 48], "activation": "SiLU"},
+    "F3": {"dims": [252, 96, 64], "activation": "SiLU"},
+    "Fflat": {"dims": [684, 109, 64], "activation": "SiLU"},
+    "W_comp": {"dims": [64, 64], "init": "zero_weight_zero_bias"},
+    "aggregation": {
+      "m_e": "sum_oriented q_path / (2*sqrt(1+n_e))",
+      "r_v": "sum_{e incident v} m_e / sqrt(1+degree_v)",
+      "injection": "LocalContent.mlp output + W_comp(r_v), then LayerNorm"
+    }
+  },
+  "recipe": {
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "min_lr": 0.00001,
+    "weight_decay": 0.00001,
+    "warmup_steps": 500,
+    "dropout": 0.0,
+    "grad_clip": 5.0,
+    "batch_size": 128,
+    "eval_batch_size": 256,
+    "loss": "l1_raw_y",
+    "total_updates": 47400
+  },
+  "seeds": {"stage_a": 0, "stage_b": 1, "stage_c": [0, 1]},
+  "split": {
+    "source": "tracks/structure-contribution/results/bjoc_predictive_bottleneck_v1/split_a.json",
+    "fit8k_n": 8000,
+    "monitor_n": 1000,
+    "locked_n": 1000
+  },
+  "support": {
+    "stage_a_b": {"vocabulary": "Fit8k rows", "radius": 2},
+    "stage_c": {"vocabulary": "full official train10k", "radius": 2}
+  },
+  "stage_a_gates": {
+    "full_H_minus_B_max": -0.004,
+    "full_H_minus_F_max": -0.003,
+    "ordinary_H_minus_B_max": -0.002,
+    "unseen_ordinary_H_minus_B_max": -0.004,
+    "minus_fixed_worst10_H_minus_B_max": -0.002,
+    "worst10_net_AE_share_max": 0.5,
+    "W20_H_minus_B_max": -0.004,
+    "W20_H_minus_F_max": -0.003,
+    "T100_H_minus_B_max": 0.0,
+    "T100_H_minus_F_max": 0.0,
+    "final_H_minus_B_max": 0.0,
+    "final_H_minus_F_max": 0.0
+  },
+  "stage_b_requirements": {
+    "full_H_minus_B_max": 0.0,
+    "full_H_minus_F_max": 0.0,
+    "W20_H_minus_B_max": 0.0,
+    "W20_H_minus_F_max": 0.0,
+    "ordinary_H_minus_B_max": 0.001,
+    "unseen_ordinary_H_minus_B_max": 0.001
+  },
+  "stage_c_claim_rules": {
+    "breakthrough": "H beats LCRC-A full+ordinary with paired 95% CI upper < 0, beats DCC-L seed mean full+ordinary with CI upper < 0, and unseen-ordinary H minus LCRC-A <= +0.001",
+    "improvement_over_lcrc_only": "H beats LCRC-A full+ordinary but not DCC-L",
+    "inductive_bias_signal_only": "H beats F on full/ordinary but does not beat LCRC-A",
+    "no_advantage": "otherwise"
+  },
+  "budget": {"soft_a100_hours": 6.0, "hard_a100_hours": 8.0, "max_gpus": 2},
+  "data_boundary": {
+    "official_train10k": true,
+    "official_valid1k": true,
+    "official_test": false
+  }
+}
