@@ -82,6 +82,9 @@ def test_dropout_hook_is_executed(models, train_cache):
         audit = M.dropout_activity_audit(models[arm], train_cache, ROWS)
         assert audit["passed"], (arm, audit)
         assert audit["dropout_p"] == 0.10
+        assert audit["train_mode_masked_atoms"]
+        assert audit["eval_mode_is_identity"]
+        assert audit["head_calls_train"] == 2 and audit["head_calls_eval"] == 2
 
 
 def test_context_updates_hetero_atoms_only(models, train_cache):

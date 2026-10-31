@@ -546,8 +546,18 @@ def zero_out_equivalence_audit(base: nn.Module, context: LCRCContextual, cache: 
     }
 
 
-def rho_input_audit(model: LCRCContextual, cache: Mapping[str, Any], rows: Sequence[int]) -> dict[str, Any]:
-    """Capture the actual ``rho`` input and reconstruct it from ``h_original``."""
+def rho_input_audit(
+    model: LCRCContextual,
+    cache: Mapping[str, Any],
+    rows: Sequence[int],
+    atol: float = 1.0e-5,
+) -> dict[str, Any]:
+    """Capture the actual ``rho`` input and reconstruct it from ``h_original``.
+
+    ``atol`` only absorbs float32 summation-order noise from ``index_add`` on
+    CUDA (observed 4.8e-7); the contrast against the ``h_new`` reconstruction is
+    three orders of magnitude larger, so the test stays discriminating.
+    """
     model.eval()
     device = model_device(model)
     batch = to_device(lcrc_data.collate(cache, [int(r) for r in rows]), device)
@@ -584,15 +594,18 @@ def rho_input_audit(model: LCRCContextual, cache: Mapping[str, Any], rows: Seque
     # above is a discriminating test rather than a vacuous one.
     change_scale = float((h_new - h_original).abs().max())
     differs_if_h_new = float((mean_h - mean_h_new).abs().max())
+    diff_original = float((actual - expected).abs().max())
     return {
         "n_graphs": len(rows),
-        "rho_input_matches_h_original": bool(torch.equal(actual, expected)),
-        "max_abs_diff_vs_h_original_reconstruction": float((actual - expected).abs().max()),
+        "atol": float(atol),
+        "bitwise_equal_to_h_original_reconstruction": bool(torch.equal(actual, expected)),
+        "rho_input_matches_h_original": bool(diff_original <= atol),
+        "max_abs_diff_vs_h_original_reconstruction": diff_original,
         "max_abs_diff_vs_h_new_reconstruction": float((actual - torch.cat([g, mean_h_new, mean_h2_new, torch.log1p(count).unsqueeze(1)], dim=1)).abs().max()),
         "max_abs_h_new_minus_h_original": change_scale,
         "max_abs_mean_h_difference_if_h_new_used": differs_if_h_new,
         "discriminating": bool(change_scale > 0.0 and differs_if_h_new > 0.0),
-        "passed": bool(torch.equal(actual, expected) and change_scale > 0.0 and differs_if_h_new > 0.0),
+        "passed": bool(diff_original <= atol and change_scale > 0.0 and differs_if_h_new > 0.0),
     }
 
 
@@ -775,32 +788,74 @@ def gradient_probe(
 
 
 def dropout_activity_audit(model: nn.Module, cache: Mapping[str, Any], rows: Sequence[int], generator_seed: int = 0) -> dict[str, Any]:
-    """The hook must be active in train mode and the identity in eval mode."""
-    model.train()
+    """The dropout hook must mask in train mode and be the identity in eval mode.
+
+    The check inspects the dropout module's own input/output instead of comparing
+    two full forwards: repeated eval forwards can differ by float32 rounding
+    because the context aggregation uses a non-deterministic ``index_add`` on
+    CUDA, which is unrelated to dropout.
+    """
     device = model_device(model)
     batch = to_device(lcrc_data.collate(cache, [int(r) for r in rows]), device)
-    torch.manual_seed(int(generator_seed) + 12_345)
-    with torch.no_grad():
-        y_train_1 = model(batch).detach().float().cpu().numpy().reshape(-1)
-    torch.manual_seed(int(generator_seed) + 99_999)
-    with torch.no_grad():
-        y_train_2 = model(batch).detach().float().cpu().numpy().reshape(-1)
+    head = getattr(model, "_v2_dropout_head", None)
+    if head is None:
+        return {"hook_module_present": False, "passed": False}
+
+    def _run(mode: str) -> tuple[list[tuple[torch.Tensor, torch.Tensor]], np.ndarray, np.ndarray]:
+        pairs: list[tuple[torch.Tensor, torch.Tensor]] = []
+        handle = head.register_forward_hook(
+            lambda module, inputs, output: pairs.append((inputs[0].detach(), output.detach()))
+        )
+        try:
+            torch.manual_seed(int(generator_seed) + (12_345 if mode == "train" else 54_321))
+            with torch.no_grad():
+                y1 = model(batch).detach().float().cpu().numpy().reshape(-1)
+            torch.manual_seed(int(generator_seed) + (99_999 if mode == "train" else 87_654))
+            with torch.no_grad():
+                y2 = model(batch).detach().float().cpu().numpy().reshape(-1)
+        finally:
+            handle.remove()
+        return pairs, y1, y2
+
+    model.train()
+    head_training_during_train = bool(head.training)
+    train_pairs, y_train_1, y_train_2 = _run("train")
     model.eval()
-    with torch.no_grad():
-        y_eval_1 = model(batch).detach().float().cpu().numpy().reshape(-1)
-        y_eval_2 = model(batch).detach().float().cpu().numpy().reshape(-1)
-    hook = getattr(model, "_v2_dropout_head", None)
+    head_training_during_eval = bool(head.training)
+    eval_pairs, y_eval_1, y_eval_2 = _run("eval")
+
+    def _max_diff(pairs):
+        return max((float((a - b).abs().max()) for a, b in pairs), default=0.0)
+
+    train_identity = [bool(torch.equal(a, b)) for a, b in train_pairs] if train_pairs else [True]
+    eval_identity = [bool(torch.equal(a, b)) for a, b in eval_pairs] if eval_pairs else [True]
+    train_forward_diff = float(np.abs(y_train_1 - y_train_2).max())
+    eval_forward_diff = float(np.abs(y_eval_1 - y_eval_2).max())
+    passed = bool(
+        float(head.p) == C.TRAIN_RECIPE["dropout"]
+        and head_training_during_train
+        and not head_training_during_eval
+        and train_pairs
+        and not all(train_identity)
+        and train_forward_diff > 0.0
+        and eval_pairs
+        and all(eval_identity)
+    )
     return {
-        "dropout_p": float(hook.p) if hook is not None else None,
-        "hook_module_present": hook is not None,
-        "train_mode_forwards_differ": bool(np.abs(y_train_1 - y_train_2).max() > 0.0),
-        "eval_mode_forwards_identical": bool(np.abs(y_eval_1 - y_eval_2).max() == 0.0),
-        "passed": bool(
-            hook is not None
-            and float(hook.p) == C.TRAIN_RECIPE["dropout"]
-            and np.abs(y_train_1 - y_train_2).max() > 0.0
-            and np.abs(y_eval_1 - y_eval_2).max() == 0.0
-        ),
+        "dropout_p": float(head.p),
+        "hook_module_present": True,
+        "head_training_in_train_mode": head_training_during_train,
+        "head_training_in_eval_mode": head_training_during_eval,
+        "head_calls_train": len(train_pairs),
+        "head_calls_eval": len(eval_pairs),
+        "train_mode_masked_atoms": bool(not all(train_identity)),
+        "train_mode_max_abs_dropout_delta": _max_diff(train_pairs),
+        "train_mode_forward_max_abs_diff_different_masks": train_forward_diff,
+        "eval_mode_is_identity": bool(all(eval_identity)),
+        "eval_mode_max_abs_dropout_delta": _max_diff(eval_pairs),
+        "eval_mode_forward_max_abs_diff": eval_forward_diff,
+        "eval_forward_diff_note": "non-zero only from float32 reduction order, not dropout",
+        "passed": passed,
     }
 
 
