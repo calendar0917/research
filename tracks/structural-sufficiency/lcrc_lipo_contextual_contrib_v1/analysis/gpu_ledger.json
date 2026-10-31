@@ -1,6 +1,6 @@
 {
   "charging_rule": "full rr-measured process lifetime of every process that touched CUDA (CPU smoke not charged unless it ran on CUDA); parallel pools summed, not wall-clocked",
-  "created_utc": "2026-10-31T13:54:03Z",
+  "created_utc": "2026-10-31T14:04:44Z",
   "failures": [
     {
       "command": "python tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/code/run_x1.py smoke --device cuda --pool res-gpu0",
@@ -35,11 +35,92 @@
   ],
   "hard_cap_gpu_hours": 0.45,
   "host": "res",
-  "in_process_timings": [],
-  "n_runs": 3,
+  "in_process_timings": [
+    {
+      "arm": "base",
+      "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+      "device": "cuda",
+      "epochs_run": 360,
+      "grad_clip_events": 4985,
+      "hostname": "a100-2",
+      "optimizer_steps": 9720,
+      "process_wall_seconds": 313.7985458918847,
+      "run_key": "base_s0",
+      "train_json": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/runs/base_s0/train.json",
+      "train_wall_seconds": 311.9999756938778
+    },
+    {
+      "arm": "context",
+      "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+      "device": "cuda",
+      "epochs_run": 360,
+      "grad_clip_events": 4478,
+      "hostname": "a100-2",
+      "optimizer_steps": 9720,
+      "process_wall_seconds": 427.1642014279496,
+      "run_key": "context_s0",
+      "train_json": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/runs/context_s0/train.json",
+      "train_wall_seconds": 423.7810770459473
+    }
+  ],
+  "n_runs": 5,
   "protocol_id": "lcrc-lipo-contextual-contrib-v1",
-  "remaining_gpu_hours": 0.44222222222222224,
+  "remaining_gpu_hours": 0.23277777777777778,
   "runs": [
+    {
+      "command": "python tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/code/run_x1.py train --arm base --device cuda --pool res-gpu0",
+      "commit": "b7f520e5027d",
+      "completed_at": "2026-10-31T22:01:06+08:00",
+      "created_at": "2026-10-31T21:55:43+08:00",
+      "cuda_visible_devices": "0",
+      "dirty": false,
+      "driver_version": "550.163.01",
+      "exit_code": 0,
+      "experiment": "x1-base-s0",
+      "failure_reason": null,
+      "gpu_hours_charged": 0.08888888888888889,
+      "gpu_names": [
+        "NVIDIA A100-SXM4-40GB",
+        "NVIDIA A100-SXM4-40GB"
+      ],
+      "gpu_seconds": 320.0,
+      "host": "res",
+      "node": "a100-2",
+      "pool": "res-gpu0",
+      "run_id": "x1-base-s0-20261031-215543-8c9b4dfc",
+      "source_json": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/rr_status/x1-base-s0.json",
+      "started_at": "2026-10-31T21:55:46+08:00",
+      "state": "completed",
+      "torch_cuda": "12.4",
+      "torch_version": "2.5.1+cu124"
+    },
+    {
+      "command": "python tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/code/run_x1.py train --arm context --device cuda --pool res-gpu1",
+      "commit": "b7f520e5027d",
+      "completed_at": "2026-10-31T22:03:08+08:00",
+      "created_at": "2026-10-31T21:55:52+08:00",
+      "cuda_visible_devices": "1",
+      "dirty": false,
+      "driver_version": "550.163.01",
+      "exit_code": 0,
+      "experiment": "x1-context-s0",
+      "failure_reason": null,
+      "gpu_hours_charged": 0.12055555555555555,
+      "gpu_names": [
+        "NVIDIA A100-SXM4-40GB",
+        "NVIDIA A100-SXM4-40GB"
+      ],
+      "gpu_seconds": 434.0,
+      "host": "res",
+      "node": "a100-2",
+      "pool": "res-gpu1",
+      "run_id": "x1-context-s0-20261031-215552-542a06d8",
+      "source_json": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/rr_status/x1-context-s0.json",
+      "started_at": "2026-10-31T21:55:54+08:00",
+      "state": "completed",
+      "torch_cuda": "12.4",
+      "torch_version": "2.5.1+cu124"
+    },
     {
       "command": "python tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/code/run_x1.py smoke --device cuda --pool res-gpu0",
       "commit": "a3975ff011db",
@@ -122,7 +203,7 @@
       "torch_version": "2.5.1+cu124"
     }
   ],
-  "total_gpu_hours": 0.0077777777777777776,
-  "total_gpu_seconds": 28.0,
+  "total_gpu_hours": 0.21722222222222223,
+  "total_gpu_seconds": 782.0,
   "within_cap": true
 }
