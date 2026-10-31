@@ -85,7 +85,7 @@ R3 = peak LR 3e-4, weight decay 1e-3, dropout 0.10 at the final atom-level local
 
 A-R0 beats E-R0 on every fold: deltas (E−A) **+0.08334 / +0.03178 / +0.02018**, mean **+0.04510**. Fold-0 paired molecule bootstrap 95% CI [+0.03641, +0.13872]; folds 1/2 CIs include zero, so the effect is consistent in direction but not individually significant on the smaller folds. The 3-seed Fold-0 sensitivity gives A 0.80110 vs E 0.88799, delta **+0.08689** — same conclusion, not used for the primary verdict.
 
-Monitor: A 0.76865 vs E 1.00084, delta **+0.23219** (CI [+0.12336, +0.33331]). E's external degradation is much larger than its CV gap; E's much lower train RMSE and high generalization gap point to overfitting. H1 is supported by both internal CV and the external direction.
+Monitor: A 0.76865 vs E 1.00084, delta **+0.23219** (CI [+0.12336, +0.33331]). This Monitor contrast uses the final **A-R3** retrain (the selected recipe) against **E-R0**, so it is not the same contrast as the CV A-R0 vs E-R0 capacity test; the CV result is the pre-registered H1 test and the Monitor is directional only. Even so, E's external degradation is much larger than its CV gap; E's much lower train RMSE and high generalization gap point to overfitting. H1 is supported by internal CV and by the external direction, with the recipe difference disclosed.
 
 ### H2 — recipes
 
@@ -162,7 +162,7 @@ Failed duplicate jobs and the cancelled `res-2` Slurm pending job consumed no GP
 1. Two primary seeds, not three (AMENDMENT-001); Fold-0 R0 has a 3-seed sensitivity check, but folds 1/2 and the full retrain do not.
 2. E's capacity matching is an effective-parameter construction with a dead S2 slot and a fixed residual, not a literal 529-input LocalMLP. It is the pre-registered operationalization, but it is not the only possible capacity match.
 3. C-R0 was not run on folds 1/2, so H2's C arm is Fold-0-only; H2's robustness comes from A.
-4. The Monitor is a single 504-molecule external check, not an independent blind test. Its H1 magnitude (0.232) is much larger than CV (0.045); the direction agrees, but the magnitude should not be over-interpreted.
+4. The Monitor is a single 504-molecule external check, not an independent blind test. Its H1 contrast is A-R3 vs E-R0, whereas the CV H1 test is A-R0 vs E-R0; the Monitor magnitude (0.232) therefore includes the R3 recipe advantage and should not be read as a pure capacity effect. The direction agrees with CV, but the magnitude should not be over-interpreted.
 5. The first Monitor execution was invalid and is preserved only for audit. The valid evaluation is the one used; this is a disclosed deviation from the literal one-evaluation guard.
 6. Diagnostics are single-seed (seed 0) and use Fit dev folds; they are mechanism evidence, not a substitute for a new external test.
 
