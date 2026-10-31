@@ -25,6 +25,7 @@ import be_common as C
 import be_data as D
 import be_models as M
 
+import r42_data as R42D  # noqa: E402
 import r42_metrics as MET  # noqa: E402
 import r42_native_train as NT  # noqa: E402
 
@@ -82,8 +83,21 @@ def verify_all(device="cpu") -> dict[str, Any]:
         curve = _read_curve(curve_path)
         valid_curve = np.asarray([row["valid_rmse_raw"] for row in curve], dtype=np.float64)
         saved = np.load(entry["run_dir"] / "valid_predictions.npz")
-        pred = NT.denormalise(M.predict(model, views["valid_cache"], device), views["target_norm"])
-        metrics = MET.all_metrics(pred, y_valid)
+        saved_rows = np.asarray(saved["rows"], dtype=np.int64)
+        if saved_rows.size == rows_valid.size and np.array_equal(saved_rows, rows_valid):
+            eval_cache = views["valid_cache"]
+            y_eval = y_valid
+        else:
+            # smoke / dry-run artifact: re-evaluate exactly the saved rows
+            position = {int(row): i for i, row in enumerate(rows_valid.tolist())}
+            positions = [position[int(r)] for r in saved_rows.tolist()]
+            eval_cache = D.build_distance_buckets(
+                R42D.select_cache(views["valid_cache"], positions, split_label="verify_valid")
+            )
+            y_eval = np.asarray(saved["y_true"], dtype=np.float64)
+        recorded_norm = payload["data"]["target_norm"]
+        pred = NT.denormalise(M.predict(model, eval_cache, device), recorded_norm)
+        metrics = MET.all_metrics(pred, y_eval)
 
         ok = True
         ok &= _align_check(
@@ -124,14 +138,14 @@ def verify_all(device="cpu") -> dict[str, Any]:
         )
         ok &= _align_check(
             "valid_rows_aligned_to_split",
-            np.array_equal(np.asarray(saved["rows"], dtype=np.int64), rows_valid)
-            and np.array_equal(np.asarray(saved["y_true"], dtype=np.float64), y_valid),
-            {"n": int(saved["rows"].size)},
+            bool(np.array_equal(saved_rows, rows_valid[: saved_rows.size]))
+            and bool(np.array_equal(np.asarray(saved["y_true"], dtype=np.float64), y_eval)),
+            {"n": int(saved_rows.size), "full_valid420": int(saved_rows.size) == n_valid},
             checks,
         )
         ok &= _align_check(
             "valid_prediction_length",
-            int(pred.size) == n_valid and bool(np.isfinite(pred).all()),
+            int(pred.size) == int(y_eval.size) and bool(np.isfinite(pred).all()),
             {"n": int(pred.size)},
             checks,
         )
@@ -141,10 +155,11 @@ def verify_all(device="cpu") -> dict[str, Any]:
             {"curve_sha256": C.sha256_file(curve_path)},
             checks,
         )
+        expected_epochs = int(C.TRAIN_RECIPE["epochs"]) if payload.get("smoke") is not True else len(curve)
         ok &= _align_check(
-            "epochs_run_is_360",
-            len(curve) == int(C.TRAIN_RECIPE["epochs"]) and int(ckpt["epochs_run"]) == len(curve),
-            {"epochs_run": len(curve)},
+            "epochs_run_matches_recipe",
+            len(curve) == expected_epochs and int(ckpt["epochs_run"]) == len(curve),
+            {"epochs_run": len(curve), "expected": expected_epochs, "smoke": bool(payload.get("smoke"))},
             checks,
         )
         ok &= _align_check(
@@ -157,11 +172,17 @@ def verify_all(device="cpu") -> dict[str, Any]:
             {"soup_members": ckpt.get("soup_members")},
             checks,
         )
+        norm_ok = abs(float(recorded_norm["mean"]) - C.TARGET_MEAN) < 1e-15 and abs(
+            float(recorded_norm["scale"]) - C.TARGET_SCALE
+        ) < 1e-15
         ok &= _align_check(
             "target_norm_is_train3360_only",
-            abs(float(payload["data"]["target_norm"]["mean"]) - C.TARGET_MEAN) < 1e-15
-            and abs(float(payload["data"]["target_norm"]["scale"]) - C.TARGET_SCALE) < 1e-15,
-            {"mean": payload["data"]["target_norm"]["mean"], "scale": payload["data"]["target_norm"]["scale"]},
+            bool(norm_ok or payload.get("smoke") is True),
+            {
+                "mean": recorded_norm["mean"],
+                "scale": recorded_norm["scale"],
+                "smoke_override": bool(payload.get("smoke") is True),
+            },
             checks,
         )
         ok &= _align_check(
@@ -326,6 +347,7 @@ def build_manifest() -> dict[str, Any]:
             "curve_train_rmse_standardized_at_360": float(train_curve_std[-1]),
             "checkpoint_is_final_epoch_state": bool(payload["checkpoint"]["checkpoint_is_final_epoch_state"]),
             "parameters": int(payload["model_audit"]["parameters"]),
+            "smoke": bool(payload.get("smoke")),
             "git_commit": payload["git_commit"],
         }
     body = {
@@ -334,6 +356,7 @@ def build_manifest() -> dict[str, Any]:
         "status": "FROZEN_BEFORE_TEST_EVALUATION",
         "git_commit": C.git_commit(),
         "n_arms": len(arms),
+        "any_smoke_runs": bool(any(entry["smoke"] for entry in arms.values())),
         "checkpoint_rule": C.TRAIN_RECIPE["checkpoint"],
         "test_read_at_freeze_time": False,
         "arms": arms,
@@ -404,7 +427,9 @@ def evaluate_test(device="cpu") -> dict[str, Any]:
             raise ValueError(f"{arm}: Test420 prediction failure")
         valid_metrics = MET.all_metrics(pred_valid, y_valid)
         test_metrics = MET.all_metrics(pred_test, y_test)
-        if abs(float(valid_metrics["rmse"]) - float(frozen["best_valid_rmse"])) > TOL:
+        if frozen.get("smoke") is not True and abs(
+            float(valid_metrics["rmse"]) - float(frozen["best_valid_rmse"])
+        ) > TOL:
             raise RuntimeError(
                 f"{arm}: manifest Validation RMSE {frozen['best_valid_rmse']} != recomputed "
                 f"{valid_metrics['rmse']}"
@@ -418,7 +443,7 @@ def evaluate_test(device="cpu") -> dict[str, Any]:
             "checkpoint_sha256": frozen["checkpoint_sha256"],
             "best_epoch": int(frozen["best_epoch"]),
             "parameters": int(meta["parameters"]),
-            "train_rmse": float(ckpt.get("train_rmse", frozen["train_rmse"])),
+            "train_rmse": float(frozen["train_rmse"]),
             "valid": dict(valid_metrics),
             "test": dict(test_metrics),
             "valid_rows_sha256": C.rows_sha256_int64(rows_valid.tolist()),
@@ -452,6 +477,7 @@ def evaluate_test(device="cpu") -> dict[str, Any]:
         "test_access": "EXPOSED_TEST_EXPLORATORY",
         "test_used_for_selection": False,
         "checkpoint_rule": C.TRAIN_RECIPE["checkpoint"],
+        "any_smoke_runs": bool(body.get("any_smoke_runs")),
         "manifest_sha256": body["manifest_sha256"],
         "manifest_frozen_utc": body["created_utc"],
         "device": str(device),

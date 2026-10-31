@@ -155,6 +155,8 @@ def correction_usage(model, family: str, cache, device="cpu", batch_size: int = 
             _y, aux = model(batch, return_aux=True)
             atom_batch = batch["atom_batch"].detach().cpu()
             n_atoms_total += int(atom_batch.numel())
+            if "h_new" not in aux:
+                continue  # BASE has no correction
             change = (aux["h_new"] - aux["h_original"]).detach().float().cpu().norm(dim=1).numpy()
             change_l2.extend(change.tolist())
             for g in range(len(rows)):
@@ -419,9 +421,16 @@ def train_arm(
     # diagnostics on the restored best epoch checkpoint
     # ------------------------------------------------------------------
     diagnostics: dict[str, Any] = {}
-    diagnostics["rho_after_best_epoch"] = DCT.rho_input_audit(
-        model, valid_cache, list(range(min(8, n_valid)))
-    )
+    if family == "base":
+        diagnostics["rho_after_best_epoch"] = {
+            "skipped": True,
+            "reason": "BASE has no correction, so rho trivially reads the original h",
+            "passed": True,
+        }
+    else:
+        diagnostics["rho_after_best_epoch"] = DCT.rho_input_audit(
+            model, valid_cache, list(range(min(8, n_valid)))
+        )
     diagnostics["dropout"] = DCT.dropout_activity_audit(model, valid_cache, list(range(min(8, n_valid))))
     diagnostics["correction_usage_valid"] = correction_usage(model, family, valid_cache, device)
     diagnostics["correction_usage_train"] = correction_usage(model, family, train_cache, device)

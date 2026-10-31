@@ -31,6 +31,7 @@ if str(CODE_DIR) not in sys.path:
 
 import be_common as C
 import be_data as D
+import be_train as T
 
 
 def require_gates() -> dict[str, Any]:
@@ -361,9 +362,16 @@ def cmd_manifest(args: argparse.Namespace) -> dict[str, Any]:
     return payload
 
 
+def _smoke_guard(allow: bool, action: str) -> None:
+    smoke = [arm for arm in C.ARMS if C.load_train_json(arm).get("smoke") is True]
+    if smoke and not allow:
+        raise SystemExit(f"{action} refuses smoke runs: {smoke} (pass --allow-smoke for a dry run only)")
+
+
 def cmd_eval_test(args: argparse.Namespace) -> dict[str, Any]:
     import be_evaluate
 
+    _smoke_guard(bool(args.allow_smoke), "eval-test")
     payload = be_evaluate.evaluate_test(device=str(args.device))
     be_evaluate.write_metrics_csvs()
     C.log(f"[eval-test] wrote {C.track_rel(C.EVAL_TEST)} (EXPOSED_TEST_EXPLORATORY)")
@@ -371,9 +379,9 @@ def cmd_eval_test(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def cmd_analysis(args: argparse.Namespace) -> dict[str, Any]:
-    del args
     import be_analysis
 
+    _smoke_guard(bool(args.allow_smoke), "analysis")
     if not (C.EVAL_TEST / "metrics.json").exists():
         raise SystemExit("run `run_be.py eval-test` first")
     payload = be_analysis.analyze()
@@ -427,7 +435,6 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("gates")
     sub.add_parser("freeze")
     sub.add_parser("manifest")
-    sub.add_parser("analysis")
     sub.add_parser("ledger")
     sub.add_parser("status")
 
@@ -445,6 +452,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_eval = sub.add_parser("eval-test")
     p_eval.add_argument("--device", default="cpu", choices=["cpu", "cuda", "cuda:0"])
+    p_eval.add_argument("--allow-smoke", action="store_true")
+
+    p_analysis = sub.add_parser("analysis")
+    p_analysis.add_argument("--allow-smoke", action="store_true")
 
     p_verify = sub.add_parser("verify")
     p_verify.add_argument("--device", default="cpu", choices=["cpu", "cuda", "cuda:0"])

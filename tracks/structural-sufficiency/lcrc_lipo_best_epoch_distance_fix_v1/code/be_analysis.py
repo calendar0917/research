@@ -29,9 +29,18 @@ HISTORY_CURVES = {
 }
 
 
-def _read_curve(path: Path) -> list[dict[str, float]]:
+def _read_curve(path: Path) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
     with open(path, newline="", encoding="utf-8") as fh:
-        return [{k: float(v) for k, v in row.items()} for row in csv.DictReader(fh)]
+        for row in csv.DictReader(fh):
+            rec: dict[str, Any] = {}
+            for key, value in row.items():
+                if key == "is_best":
+                    rec[key] = str(value) in ("True", "true", "1")
+                else:
+                    rec[key] = float(value)
+            out.append(rec)
+    return out
 
 
 def _mean(values: Iterable[float]) -> float:
@@ -165,6 +174,7 @@ def _write_csv(path: Path, fieldnames: Sequence[str], rows: Sequence[Mapping[str
 
 def analyze() -> dict[str, Any]:
     history = history_curve_check()
+    n_smoke = sum(1 for arm in C.ARMS if C.load_train_json(arm).get("smoke") is True)
     rows = _rows()
     by_arm = {row["arm"]: row for row in rows}
 
@@ -469,6 +479,7 @@ def analyze() -> dict[str, Any]:
             ]
             for family in C.FAMILIES
         },
+        "n_smoke_runs": int(n_smoke),
         "references": {
             "pna_valid_rmse_historical": C.PNA_NATIVE_VALID_RMSE,
             "pna_test_rmse_historical": C.PNA_NATIVE_TEST_RMSE,
