@@ -1,0 +1,20 @@
+cache/
+analysis/runs/*
+!analysis/runs/F1_A_AtomChem4_R3_s0/
+__pycache__/
+.pytest_cache/
+
+# Frozen small artifacts in analysis/ are tracked:
+#   atomchem_audit_v4.json, fold_alignment_v4.json, atom_norm_v4.json,
+#   forward_equivalence_v4.json, broadcast_control_v4.json, denorm_check_v4.json,
+#   descriptive_v4.json, temp_training_v4.json, frozen_artifacts_v4.json,
+#   v3_immutable_manifest_v4.json, cpu_gates_v4.json, run_registry_v4.json,
+#   budget_v4.json, protocol_freeze_v4.json, gpu_authorization_v4.json,
+#   freeze_sha256_v4.txt, results/paired/decision/subgroup/table/summary_v4.
+
+# The frozen GPU input is a small, hash-pinned artifact; track it despite the root *.npz rule.
+!analysis/frozen_extras_v4.npz
+
+# The completed run artifacts are small, machine-readable results; track them.
+!analysis/runs/F1_A_AtomChem4_R3_s0/predictions.npz
+!analysis/runs/F1_A_AtomChem4_R3_s0/soup.pt
