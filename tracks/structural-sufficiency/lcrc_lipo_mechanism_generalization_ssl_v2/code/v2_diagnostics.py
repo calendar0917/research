@@ -24,8 +24,11 @@ def _load_model(key: str):
         raise PermissionError("diagnostic source run is not label-blind")
     spec = C.load_frozen_spec()
     norm = C.load_frozen_norm()
+    recipe_name = str(payload["recipe"])
+    if recipe_name not in C.RECIPES:
+        raise ValueError(f"unknown recipe in diagnostic source run: {recipe_name}")
     model, _meta = M.build_model(
-        payload["arm"], spec, norm, int(payload["seed"]), "cpu", dropout=float(payload["recipe"]["dropout"])
+        payload["arm"], spec, norm, int(payload["seed"]), "cpu", dropout=float(C.RECIPES[recipe_name]["dropout"])
     )
     state = torch.load(C.RUNS / key / "soup.pt", map_location="cpu", weights_only=False)
     model.load_state_dict(state, strict=True)
@@ -168,6 +171,16 @@ def _error_structure(fold: int, key: str, cache) -> dict[str, Any]:
     }
 
 
+def _run_key(arm: str, recipe: str, fold: int, seed: int) -> str:
+    direct = f"F{fold}_{arm}_{recipe}_s{seed}"
+    if (C.RUNS / direct / "train.json").exists():
+        return direct
+    alias = f"F{fold}_{arm}_sel_s{seed}"
+    if fold in (1, 2) and (C.RUNS / alias / "train.json").exists():
+        return alias
+    return direct
+
+
 def run_diagnostics(seed: int = 0) -> dict[str, Any]:
     recipe_lock = C.read_json(C.RECIPE_LOCK)
     a_recipe = recipe_lock["selection"]["A"]
@@ -188,8 +201,8 @@ def run_diagnostics(seed: int = 0) -> dict[str, Any]:
             y_fit=np.asarray(C.load_fit_labels()["y"], dtype=np.float64),
             folds=F.load_folds(),
         )
-        key_a = f"F{fold}_A_{a_recipe}_s{seed}" if a_recipe != "R0" else f"F{fold}_A_R0_s{seed}"
-        key_c = f"F{fold}_C_{c_recipe}_s{seed}" if c_recipe != "R0" else f"F{fold}_C_R0_s{seed}"
+        key_a = _run_key("A", a_recipe, fold, seed)
+        key_c = _run_key("C", c_recipe, fold, seed)
         key_e = f"F{fold}_E_R0_s{seed}"
         fold_out = {"fold": fold, "models": {}}
         for label, key in (("A", key_a), ("C", key_c), ("E", key_e)):

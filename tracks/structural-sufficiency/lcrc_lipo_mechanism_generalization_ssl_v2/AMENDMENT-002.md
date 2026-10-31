@@ -52,3 +52,11 @@ value and writes the string recipe name into the sidecar. No prediction file
 existed at the moment of the failure, so no frozen prediction was overwritten.
 The protocol is re-frozen once more for this prediction-code fix; the frozen
 manifest is created only after the fix.
+
+## Addendum 2 — diagnostics recipe lookup
+
+`v2_diagnostics` had the same two defects: it indexed the string `recipe` as
+a dict, and it looked up `F1/F2_A_R3_s*` / `F1/F2_C_R3_s*` instead of the
+registered `F1/F2_*_sel_s*` aliases. It now reads dropout via `C.RECIPES` and
+resolves the `SEL` alias on folds 1/2. Diagnostics are inference-only on Fit
+dev folds; no Monitor label is involved. The final freeze includes this fix.
