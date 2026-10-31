@@ -1,0 +1,405 @@
+{
+  "config_hash": "6f28c05b81e9d4ad01bf77699195de951152239fdc51cbfb2361f9b48ae96874",
+  "cpu_only": true,
+  "created_utc": "2026-10-31T11:04:31Z",
+  "gates": [
+    {
+      "description": "Fold 2 Train/Dev rows equal the frozen v2 fold, no overlap",
+      "detail": {
+        "dev_positions_sha256": "cd1558f6f0edbc21793a1c24a2171f58098ba84a15c7106024985fa0d0dd10ae",
+        "fold": 2,
+        "frozen_fold_row_sha256_int64": "335f44a56e3e1532cd5c2bd9324e2934b856802d94dc68d0a1a406fd7315904c",
+        "label_vector_sha256": "3b4b6f8ff55ffbe047447faed7520738c37383ff20ba866d3b6469811d559bf0",
+        "n_dev": 784,
+        "n_train": 1568,
+        "no_overlap": true,
+        "train_positions_sha256": "80d8c5e1361694431f7257029f0cae5622bfa7116ef66d4550ad340699d76546"
+      },
+      "name": "fold_identity",
+      "ok": true
+    },
+    {
+      "description": "Target standardisation reads Train labels only",
+      "detail": {
+        "dev_mean_differs": true,
+        "feature_norm_fit_split": "fold2_train",
+        "feature_norm_source": "fold2_train_structures",
+        "feature_norm_valid_or_test_used": false,
+        "mean": 2.1398086734693877,
+        "n": 1568,
+        "scale": 1.2569715646801907,
+        "scale_definition": "population_std_float64"
+      },
+      "name": "target_norm_train_only",
+      "ok": true
+    },
+    {
+      "description": "BASE matches the frozen LCRC initialisation tensor by tensor",
+      "detail": {
+        "matches_lcrc": true,
+        "matches_v2_build_a": true,
+        "n_tensors": 35,
+        "parameters": 247106,
+        "seed": 0,
+        "state_hash": "e2654c0b26f77ee7241642d5595390dfa2321a5d73da438af1ed7d7586c2e5d4"
+      },
+      "name": "base_init_matches_lcrc",
+      "ok": true
+    },
+    {
+      "description": "PROTO shares all non-f tensors with BASE",
+      "detail": {
+        "all_shared_bitwise_identical": true,
+        "base_only_keys": [
+          "f.lins.0.bias",
+          "f.lins.0.weight",
+          "f.lins.1.bias",
+          "f.lins.1.weight"
+        ],
+        "base_parameters": 247106,
+        "mismatched": [],
+        "model_only_keys": [
+          "f.bias",
+          "f.experts",
+          "f.prototypes"
+        ],
+        "n_shared_entries": 31,
+        "only_f_replaced": true,
+        "proto_parameters": 244945,
+        "prototype_parameters": 2064,
+        "shared_keys": [
+          "global_mean",
+          "global_scale",
+          "scalar_mean",
+          "scalar_scale",
+          "atom_encoder.lins.0.weight",
+          "atom_encoder.lins.0.bias",
+          "atom_encoder.lins.1.weight",
+          "atom_encoder.lins.1.bias",
+          "bond_encoder.lins.0.weight",
+          "bond_encoder.lins.0.bias",
+          "bond_encoder.lins.1.weight",
+          "bond_encoder.lins.1.bias",
+          "local.nbr_emb.weight",
+          "local.path_emb.weight",
+          "local.end_emb.weight",
+          "local.path_u.weight",
+          "local.path_v.weight",
+          "local.joint_proj.weight",
+          "local.joint_proj.bias",
+          "local.close_emb.weight",
+          "local.path_gate.weight",
+          "local.mlp.lins.0.weight",
+          "local.mlp.lins.0.bias",
+          "local.mlp.lins.1.weight",
+          "local.mlp.lins.1.bias",
+          "local.norm.weight",
+          "local.norm.bias",
+          "rho.lins.0.weight",
+          "rho.lins.0.bias",
+          "rho.lins.1.weight",
+          "rho.lins.1.bias"
+        ]
+      },
+      "name": "proto_shared_init",
+      "ok": true
+    },
+    {
+      "description": "PAIR_TRUE and PAIR_NULL have identical structure/init",
+      "detail": {
+        "identical_initialisation": true,
+        "last_layer_bias_all_zero": true,
+        "last_layer_weight_std": 0.0012134560383856297,
+        "n_tensors": 41,
+        "pair_head_parameters": 1601,
+        "pair_z_parameters": 1040,
+        "parameter_count": 249747
+      },
+      "name": "pair_identity",
+      "ok": true
+    },
+    {
+      "description": "PAIR_TRUE pairs are unique u<v at graph distance 3/4/5",
+      "detail": {
+        "splits": {
+          "dev": {
+            "coverage": {
+              "bins": [
+                {
+                  "coverage_fraction": 1.0,
+                  "distance": 3,
+                  "max_pairs_per_molecule": 77,
+                  "mean_pairs_over_covered_molecules": 42.79081632653061,
+                  "mean_pairs_per_molecule": 42.79081632653061,
+                  "n_molecules_with_pair": 784,
+                  "n_pairs": 33548
+                },
+                {
+                  "coverage_fraction": 1.0,
+                  "distance": 4,
+                  "max_pairs_per_molecule": 77,
+                  "mean_pairs_over_covered_molecules": 39.24744897959184,
+                  "mean_pairs_per_molecule": 39.24744897959184,
+                  "n_molecules_with_pair": 784,
+                  "n_pairs": 30770
+                },
+                {
+                  "coverage_fraction": 0.9987244897959183,
+                  "distance": 5,
+                  "max_pairs_per_molecule": 80,
+                  "mean_pairs_over_covered_molecules": 37.122605363984675,
+                  "mean_pairs_per_molecule": 37.07525510204081,
+                  "n_molecules_with_pair": 783,
+                  "n_pairs": 29067
+                }
+              ],
+              "coverage_fraction_any_distance": 1.0,
+              "max_pairs_per_molecule": 232,
+              "mean_pairs_per_molecule": 119.11352040816327,
+              "n_molecules": 784,
+              "n_molecules_with_any_pair": 784,
+              "n_pairs_total": 93385
+            },
+            "n_molecules_checked": 40,
+            "n_pairs": 93385,
+            "pairs_verified": 4906
+          },
+          "train": {
+            "coverage": {
+              "bins": [
+                {
+                  "coverage_fraction": 1.0,
+                  "distance": 3,
+                  "max_pairs_per_molecule": 87,
+                  "mean_pairs_over_covered_molecules": 41.482780612244895,
+                  "mean_pairs_per_molecule": 41.482780612244895,
+                  "n_molecules_with_pair": 1568,
+                  "n_pairs": 65045
+                },
+                {
+                  "coverage_fraction": 1.0,
+                  "distance": 4,
+                  "max_pairs_per_molecule": 87,
+                  "mean_pairs_over_covered_molecules": 38.04272959183673,
+                  "mean_pairs_per_molecule": 38.04272959183673,
+                  "n_molecules_with_pair": 1568,
+                  "n_pairs": 59651
+                },
+                {
+                  "coverage_fraction": 0.9955357142857143,
+                  "distance": 5,
+                  "max_pairs_per_molecule": 87,
+                  "mean_pairs_over_covered_molecules": 36.25176169122358,
+                  "mean_pairs_per_molecule": 36.089923469387756,
+                  "n_molecules_with_pair": 1561,
+                  "n_pairs": 56589
+                }
+              ],
+              "coverage_fraction_any_distance": 1.0,
+              "max_pairs_per_molecule": 261,
+              "mean_pairs_per_molecule": 115.61543367346938,
+              "n_molecules": 1568,
+              "n_molecules_with_any_pair": 1568,
+              "n_pairs_total": 181285
+            },
+            "n_molecules_checked": 40,
+            "n_pairs": 181285,
+            "pairs_verified": 4746
+          }
+        }
+      },
+      "name": "pair_legality",
+      "ok": true
+    },
+    {
+      "description": "PAIR_NULL keeps (u,v) and permutes only per-molecule bins",
+      "detail": {
+        "salt": "lipo-pair-null-v1",
+        "splits": {
+          "dev": {
+            "bin_counts_null": [
+              31172,
+              31166,
+              31047
+            ],
+            "bin_counts_true": [
+              33548,
+              30770,
+              29067
+            ],
+            "bin_is_per_molecule_permutation": true,
+            "n_distinct_permutations_used": 6,
+            "n_molecules_with_identity_permutation": 132,
+            "n_pairs": 93385,
+            "n_pairs_identical": true,
+            "pair_ptr_identical": true,
+            "pair_u_identical": true,
+            "pair_v_identical": true,
+            "per_molecule_bin_multiset_preserved": true
+          },
+          "train": {
+            "bin_counts_null": [
+              60588,
+              60306,
+              60391
+            ],
+            "bin_counts_true": [
+              65045,
+              59651,
+              56589
+            ],
+            "bin_is_per_molecule_permutation": true,
+            "n_distinct_permutations_used": 6,
+            "n_molecules_with_identity_permutation": 292,
+            "n_pairs": 181285,
+            "n_pairs_identical": true,
+            "pair_ptr_identical": true,
+            "pair_u_identical": true,
+            "pair_v_identical": true,
+            "per_molecule_bin_multiset_preserved": true
+          }
+        }
+      },
+      "name": "pair_null_content",
+      "ok": true
+    },
+    {
+      "description": "Atom relabelling leaves predictions unchanged",
+      "detail": {
+        "BASE_G0": {
+          "max_abs_diff": 9.5367431640625e-07
+        },
+        "PAIR_NULL": {
+          "max_abs_diff": 9.5367431640625e-07
+        },
+        "PAIR_TRUE": {
+          "max_abs_diff": 9.5367431640625e-07
+        },
+        "PROTO_K16_TOP4": {
+          "max_abs_diff": 3.5762786865234375e-07
+        },
+        "n_molecules": 6,
+        "null_permutation_table_index_independent": true,
+        "verdict": "all arms are permutation invariant within 1e-4"
+      },
+      "name": "permutation_invariance",
+      "ok": true
+    },
+    {
+      "description": "PROTO/PAIR parameters receive finite non-zero gradients",
+      "detail": {
+        "n_rows": 128,
+        "pair": {
+          "loss_step_1": 33.76709747314453,
+          "loss_step_2": 5.349212169647217,
+          "parameters_updated": true
+        },
+        "proto": {
+          "loss_step_1": 3.1101267337799072,
+          "loss_step_2": 38.71503448486328,
+          "parameters_updated": true
+        }
+      },
+      "name": "gradients",
+      "ok": true
+    },
+    {
+      "description": "Zeroed PAIR residual reproduces the BASE prediction",
+      "detail": {
+        "max_abs_diff_zeroed_vs_base": 0.0,
+        "max_abs_diff_zeroed_vs_pair": 0.01601099967956543,
+        "pair_residual_max_abs": 0.01601099967956543
+      },
+      "name": "zero_residual",
+      "ok": true
+    },
+    {
+      "description": "2 mini-batch forward/backward/optimizer steps per arm",
+      "detail": {
+        "BASE_G0": {
+          "dropout_p": 0.1,
+          "finite": true,
+          "losses": [
+            33.622528076171875,
+            5.528480529785156
+          ],
+          "parameters": 247106
+        },
+        "BASE_G1": {
+          "dropout_p": 0.1,
+          "finite": true,
+          "losses": [
+            33.622528076171875,
+            5.528480529785156
+          ],
+          "parameters": 247106
+        },
+        "PAIR_NULL": {
+          "dropout_p": 0.1,
+          "finite": true,
+          "losses": [
+            33.81577682495117,
+            5.902257919311523
+          ],
+          "parameters": 249747
+        },
+        "PAIR_TRUE": {
+          "dropout_p": 0.1,
+          "finite": true,
+          "losses": [
+            33.816246032714844,
+            5.902093410491943
+          ],
+          "parameters": 249747
+        },
+        "PROTO_K16_TOP4": {
+          "dropout_p": 0.1,
+          "finite": true,
+          "losses": [
+            3.3073208332061768,
+            15.623947143554688
+          ],
+          "parameters": 244945
+        }
+      },
+      "name": "smoke_steps",
+      "ok": true
+    },
+    {
+      "description": "Batch order / single-molecule batches agree",
+      "detail": {
+        "BASE_G0": {
+          "max_abs_diff_reordered": 0.0,
+          "max_abs_diff_single": 0.0
+        },
+        "BASE_G1": {
+          "max_abs_diff_reordered": 0.0,
+          "max_abs_diff_single": 0.0
+        },
+        "PAIR_NULL": {
+          "max_abs_diff_reordered": 0.0,
+          "max_abs_diff_single": 0.0
+        },
+        "PAIR_TRUE": {
+          "max_abs_diff_reordered": 0.0,
+          "max_abs_diff_single": 0.0
+        },
+        "PROTO_K16_TOP4": {
+          "max_abs_diff_reordered": 3.725290298461914e-08,
+          "max_abs_diff_single": 7.450580596923828e-08
+        }
+      },
+      "name": "batch_invariance",
+      "ok": true
+    }
+  ],
+  "git_commit": "e92b172a3b673615423a5cb6770867a34183af78",
+  "git_dirty_tracked": false,
+  "n_gates": 12,
+  "n_passed": 12,
+  "numpy": "2.1.3",
+  "ok": true,
+  "protocol_id": "lcrc-lipo-proto-interact-pilot-v1",
+  "python": "3.12.15",
+  "torch": "2.5.1+cu124"
+}

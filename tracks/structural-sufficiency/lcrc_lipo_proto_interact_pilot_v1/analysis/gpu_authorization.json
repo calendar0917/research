@@ -1,0 +1,32 @@
+{
+  "authorized": true,
+  "authorized_runs": [
+    "BASE_G0",
+    "BASE_G1",
+    "PROTO_K16_TOP4",
+    "PAIR_TRUE",
+    "PAIR_NULL"
+  ],
+  "budget_rule": "GPU-seconds are the rr-measured process lifetime per run; both pools are summed even when the two GPUs run in parallel.",
+  "created_utc": "2026-10-31T19:04:41+08:00",
+  "max_gpu_hours": 0.5,
+  "plan": {
+    "backend": "process",
+    "ddp": false,
+    "host": "res",
+    "res-gpu0": [
+      "BASE_G0",
+      "PROTO_K16_TOP4"
+    ],
+    "res-gpu1": [
+      "BASE_G1",
+      "PAIR_TRUE",
+      "PAIR_NULL"
+    ],
+    "sequential_within_gpu": true
+  },
+  "protocol_freeze_git_commit": "e92b172a3b673615423a5cb6770867a34183af78",
+  "protocol_freeze_sha256": "1faf254ed1ea62f0fbc08c3ea0c6e33797656f7d44a84add786bb64cb9f3e25b",
+  "protocol_id": "lcrc-lipo-proto-interact-pilot-v1",
+  "researcher_note": "Explicit researcher authorization for the fixed pilot plan: one seed (0), v2 frozen scaffold Fold 2 of Lipophilicity Fit2352, five runs (BASE_G0, BASE_G1, PROTO_K16_TOP4, PAIR_TRUE, PAIR_NULL), R3 recipe, hard GPU budget 0.5 A100 GPU-hours including the CUDA smoke and any retry of a failed item. No extra seeds, no hyperparameter search, no ensembling, no held-out (Monitor504/Reserved504/random42) labels."
+}
