@@ -1,0 +1,75 @@
+{
+  "code_hashes": {
+    "code/run_x1.py": "9d36f0c21eafe90cb73a1840017a7ed737a8bf8a64f9d78cc79f16a6997db2f2",
+    "code/x1_analysis.py": "512c8c4be9490ba22f68c6d5e65ecb2f64173e97199bebb8a8a3b0d8b5de00e2",
+    "code/x1_common.py": "fb9562b5f37ae19363976d0aa55ee9d6031e0a1df348488a80a7bdcac3bb67b9",
+    "code/x1_data.py": "19ab3245a7ba25513dde9a7a456c615218be8a6f18778d0d6dcc92b4db023c27",
+    "code/x1_gates.py": "b0b44032415adfa071990eef830019c5be73bda544ee9b1411167386f9e3f9ff",
+    "code/x1_ledger.py": "20c65a548cad27a4f86f32508225dfe60e611c34a6f3fb1f7f258ea306baa9fc",
+    "code/x1_models.py": "f37c962abef89b3251c650031249def1b72774c20ae9bca04158c78a5a4a4deb",
+    "code/x1_train.py": "595c02c140e41f4678fc81315b90c1f3ec0bf2a3c744e41422bba206a9b8a69f"
+  },
+  "config_file_sha256": "2fbd95b8169fba5b2da120eab6af2c93aa85d87b9e3d39f11e1c23b36a6b0d0b",
+  "config_hash": "d89800b854760f655854e33925f1f3d777f94ea3ae0491751ca2029b80ff52b1",
+  "cpu_gates_n_passed": 12,
+  "cpu_gates_sha256": "89e04697c4f51b9baa07d861d6598b356ad921ee9fe1cf91f4f169b9e69fa06d",
+  "created_utc": "2026-10-31T13:37:17Z",
+  "data_audit_sha256": "b0d383ce13ab9083907397bc6d78a6be796fffe16202c32171675bc0f9ca60f7",
+  "decision_rules": {
+    "gain_threshold": 0.02,
+    "mae_worsening_tolerance": 0.01,
+    "tail_rows": [
+      1630,
+      2924,
+      822,
+      1153,
+      3634
+    ],
+    "tail_rule": "KNOWN_TAIL_CONCENTRATED iff net SSE improvement > 0 and (share of net SSE improvement from the five tail rows >= 0.50 or gain after removing them <= 0)",
+    "tail_share_threshold": 0.5
+  },
+  "frozen_pools": {
+    "base": "res-gpu0",
+    "context": "res-gpu1"
+  },
+  "frozen_recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "checkpoint": "average_last_5_epoch_end_state_dicts",
+    "dropout": 0.1,
+    "dropout_position": "final_atom_level_local_h_before_readout",
+    "early_stopping": false,
+    "epochs": 360,
+    "gradient_clip": 5.0,
+    "loss": "mse_on_train3360_standardised_target",
+    "min_lr": 1e-05,
+    "model_family": "LCRC-A-R3 (lipo_v1, width 64)",
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "seed": 0,
+    "ssl": false,
+    "weight_decay": 0.001
+  },
+  "git_commit": "d60208c40a0b588a45338b67b26a97fc71a95835",
+  "git_dirty_tracked": false,
+  "gpu_hard_cap_hours": 0.45,
+  "labels_file_sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+  "protocol_id": "lcrc-lipo-contextual-contrib-v1",
+  "protocol_sha256": "3d0d08363cde8373a27a8841967d15238d2af2038546e4bb08eeea68321dde63",
+  "scope": "two arms, one seed (0), random42 Train3360/Validation420, Validation-only reporting",
+  "split_file_sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+  "status": "FROZEN_BEFORE_FORMAL_TRAINING",
+  "target_norm": {
+    "fit_on": "Train3360 only",
+    "mean": 2.2081011904761905,
+    "scale": 1.1906281212426577
+  },
+  "test_access": "forbidden",
+  "test_labels_read": false,
+  "test_predictions_read": false
+}
