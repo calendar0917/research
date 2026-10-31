@@ -12,6 +12,7 @@ ledger            rebuild analysis/gpu_ledger.json from run manifests
 implementation    freeze the implementation manifest (+ unit-test evidence)
 manifest          build the frozen pre-test manifest (+ prediction manifest)
 score             one-shot Test evaluation (refuses if already scored)
+secondary         post-lock descriptive analysis of the frozen Test predictions
 status            print the current round status
 """
 
@@ -336,6 +337,14 @@ def cmd_score(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_secondary(args: argparse.Namespace) -> int:
+    import r42_analysis
+
+    payload = r42_analysis.run()
+    C.log(f"[secondary] {len(payload['per_model'])} models, baseline RMSE {payload['constant_baseline_rmse']:.4f}")
+    return 0
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     import json
 
@@ -376,6 +385,7 @@ def build_parser() -> argparse.ArgumentParser:
     score = sub.add_parser("score")
     score.add_argument("--manifest-sha256", required=True)
     score.set_defaults(func=cmd_score)
+    sub.add_parser("secondary").set_defaults(func=cmd_secondary)
     sub.add_parser("status").set_defaults(func=cmd_status)
     return ap
 

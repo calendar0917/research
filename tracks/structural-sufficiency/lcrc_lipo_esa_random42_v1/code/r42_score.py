@@ -25,6 +25,61 @@ LOCK = C.ANALYSIS / "test_read.lock"
 METRICS = C.ANALYSIS / "metrics_test.json"
 
 
+def collect_validation_metrics() -> dict[str, Any]:
+    """Training/Validation metrics from the frozen run manifests (no Test access)."""
+    import r42_labels as L
+    import r42_manifest as M
+
+    labels = L.load_train_valid_labels()
+    split = C.read_json(C.SPLIT_FILE)
+    rows = np.asarray(split["rows"]["valid"], dtype=np.int64)
+    results = []
+    for model in M.MODEL_ORDER:
+        run_dir = C.RUNS / M.RUN_DIRS[model]
+        payload = C.read_json(run_dir / "train.json")
+        npz = np.load(run_dir / "valid_predictions.npz")
+        pred = np.asarray(npz["pred"], dtype=np.float64)
+        if pred.size != rows.size:
+            raise ValueError(f"{model}: validation prediction length mismatch")
+        recomputed = MET.all_metrics(pred, labels.y_valid)
+        reported = {k: float(payload["metrics"]["valid"][k]) for k in ("rmse", "mae", "r2")}
+        for key in ("rmse", "mae", "r2"):
+            if abs(recomputed[key] - reported[key]) > 1e-9:
+                raise PermissionError(f"{model}: reported validation {key} does not recompute")
+        results.append(
+            {
+                "model": model,
+                "seed": 0,
+                "n_valid": int(rows.size),
+                "valid_rows_sha256": C.rows_sha256_int64(rows.tolist()),
+                "prediction_sha256": C.sha256_file(run_dir / "valid_predictions.npz"),
+                "train_metrics": {k: float(v) for k, v in payload["metrics"]["train"].items() if k in ("rmse", "mae", "r2")},
+                "valid_metrics": recomputed,
+                "units": "raw_logD",
+                "checkpoint_rule": payload["training"]["checkpoint_rule"],
+                "epochs_run": payload["training"].get("epochs_run"),
+                "best_epoch": payload["training"].get("best_epoch"),
+                "wall_seconds": payload["training"].get("wall_seconds"),
+                "parameters_total": payload.get("model_audit", {}).get("parameters_total"),
+            }
+        )
+    baseline = float(np.sqrt(np.mean((labels.y_valid - labels.y_valid.mean()) ** 2)))
+    payload = {
+        "protocol_id": C.PROTOCOL_ID,
+        "created_utc": C.utcnow(),
+        "scope": "train_and_validation_only",
+        "test_labels_read": False,
+        "n_train": int(labels.y_train.size),
+        "n_valid": int(labels.y_valid.size),
+        "constant_baseline_valid_rmse": baseline,
+        "target_scaler": C.read_json(C.RUNS / "lcrc_a_r3_s0" / "train.json")["data"]["target_norm"],
+        "results": results,
+    }
+    C.write_json(C.ANALYSIS / "metrics_validation.json", payload)
+    C.log(f"[validation] metrics recorded for {[r['model'] for r in results]}")
+    return payload
+
+
 def score_test(*, expected_manifest_sha256: str) -> dict[str, Any]:
     import r42_labels as L
 

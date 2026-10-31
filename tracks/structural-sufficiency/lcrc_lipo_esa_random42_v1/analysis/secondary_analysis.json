@@ -1,0 +1,158 @@
+{
+  "affects_scored_metrics": false,
+  "closest_model_fraction": {
+    "ESA-native": 0.23095238095238096,
+    "LCRC-A-R3-scratch": 0.30714285714285716,
+    "PNA-native": 0.2714285714285714,
+    "XGB-P3": 0.19047619047619047
+  },
+  "constant_baseline_rmse": 1.2634580958533308,
+  "created_utc": "2026-10-31T08:12:52Z",
+  "error_by_molecule_size_tertile": {
+    "cuts_atoms": [
+      43.0,
+      56.0
+    ],
+    "per_model": {
+      "ESA-native": {
+        "mae_large": 0.3869260438953564,
+        "mae_medium": 0.4281358246565718,
+        "mae_small": 0.4589006621820496
+      },
+      "LCRC-A-R3-scratch": {
+        "mae_large": 0.3475062429075883,
+        "mae_medium": 0.40966139573922283,
+        "mae_small": 0.4112051581072054
+      },
+      "PNA-native": {
+        "mae_large": 0.38431899734970293,
+        "mae_medium": 0.37249531173571854,
+        "mae_small": 0.36625658357870605
+      },
+      "XGB-P3": {
+        "mae_large": 0.49154693645477293,
+        "mae_medium": 0.48088160991461737,
+        "mae_small": 0.4801594942443023
+      }
+    }
+  },
+  "n_bootstrap": 10000,
+  "n_test": 420,
+  "paired_deltas": [
+    {
+      "a": "PNA-native",
+      "b": "LCRC-A-R3-scratch",
+      "delta_ci95": [
+        -0.11383267098530495,
+        0.012948084135290304
+      ],
+      "delta_rmse": -0.05511050313985366,
+      "prob_a_worse": 0.0517
+    },
+    {
+      "a": "ESA-native",
+      "b": "LCRC-A-R3-scratch",
+      "delta_ci95": [
+        -0.039856587939496715,
+        0.07363509883276081
+      ],
+      "delta_rmse": 0.014901363878703111,
+      "prob_a_worse": 0.6987
+    },
+    {
+      "a": "PNA-native",
+      "b": "ESA-native",
+      "delta_ci95": [
+        -0.1128630749460653,
+        -0.0261234248795132
+      ],
+      "delta_rmse": -0.07001186701855677,
+      "prob_a_worse": 0.0005
+    },
+    {
+      "a": "ESA-native",
+      "b": "XGB-P3",
+      "delta_ci95": [
+        -0.12390800716119633,
+        0.007185362340189206
+      ],
+      "delta_rmse": -0.058079392409398745,
+      "prob_a_worse": 0.0403
+    },
+    {
+      "a": "LCRC-A-R3-scratch",
+      "b": "XGB-P3",
+      "delta_ci95": [
+        -0.15424397741815368,
+        0.004190797638399402
+      ],
+      "delta_rmse": -0.07298075628810186,
+      "prob_a_worse": 0.032
+    },
+    {
+      "a": "PNA-native",
+      "b": "XGB-P3",
+      "delta_ci95": [
+        -0.1928398382996571,
+        -0.07031880991321754
+      ],
+      "delta_rmse": -0.12809125942795552,
+      "prob_a_worse": 0.0
+    }
+  ],
+  "per_model": {
+    "ESA-native": {
+      "mae": 0.42693170054037,
+      "r2": 0.7753187363191781,
+      "rmse": 0.5988861526256153,
+      "rmse_ci95": [
+        0.5244293462302592,
+        0.684889549715191
+      ]
+    },
+    "LCRC-A-R3-scratch": {
+      "mae": 0.391717857676392,
+      "r2": 0.7863605826238314,
+      "rmse": 0.5839847887469122,
+      "rmse_ci95": [
+        0.49590330954456013,
+        0.6779934400054567
+      ]
+    },
+    "PNA-native": {
+      "mae": 0.37377129447390695,
+      "r2": 0.8247801846858247,
+      "rmse": 0.5288742856070585,
+      "rmse_ci95": [
+        0.4597630877756239,
+        0.6046644678783164
+      ]
+    },
+    "XGB-P3": {
+      "mae": 0.4837961964653361,
+      "r2": 0.7296268869673467,
+      "rmse": 0.656965545035014,
+      "rmse_ci95": [
+        0.5923522713734847,
+        0.7257640623665583
+      ]
+    }
+  },
+  "protocol_id": "lcrc-lipo-esa-random42-v1",
+  "relative_rmse_reduction_vs_baseline": {
+    "ESA-native": 0.5259944476265896,
+    "LCRC-A-R3-scratch": 0.5377885577182575,
+    "PNA-native": 0.5814073396317425,
+    "XGB-P3": 0.4800258534959134
+  },
+  "squared_error_correlation": {
+    "ESA-native|XGB-P3": 0.6200729243613143,
+    "LCRC-A-R3-scratch|ESA-native": 0.7911491092561409,
+    "LCRC-A-R3-scratch|PNA-native": 0.722133556615741,
+    "LCRC-A-R3-scratch|XGB-P3": 0.5393437906797062,
+    "PNA-native|ESA-native": 0.8397696389514674,
+    "PNA-native|XGB-P3": 0.6112694778021502
+  },
+  "status": "POST_LOCK_DESCRIPTIVE",
+  "test_labels_read": "again, after the one-shot scoring lock, for uncertainty quantification only"
+}
