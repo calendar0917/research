@@ -113,10 +113,33 @@ def _require_run(key: str) -> dict[str, Any]:
     return payload
 
 
+def _selection_map() -> dict[str, str]:
+    if C.RECIPE_LOCK.exists():
+        return dict(C.read_json(C.RECIPE_LOCK)["selection"])
+    return {"A": "R0", "C": "R0"}
+
+
+def _run_key_for_recipe(arm: str, recipe: str, fold: int, seed: int) -> str:
+    """Resolve a recipe to its actual run key.
+
+    Fold 0 screens every recipe explicitly (``F0_A_R1_s0``).  Folds 1/2 only
+    run the selected recipe under the ``SEL`` alias (``F1_A_sel_s0``).  The
+    alias is used only when the frozen recipe lock selects that recipe.
+    """
+    direct = f"F{fold}_{arm}_{recipe}_s{seed}"
+    if (C.RUNS / direct / "train.json").exists():
+        return direct
+    if fold in (1, 2) and _selection_map().get(arm) == recipe:
+        alias = f"F{fold}_{arm}_sel_s{seed}"
+        if (C.RUNS / alias / "train.json").exists():
+            return alias
+    return direct
+
+
 def _arm_recipe_mean(arm: str, recipe: str, fold: int, seeds: Iterable[int]) -> dict[str, Any] | None:
     rows = []
     for seed in seeds:
-        key = f"F{fold}_{arm}_{recipe}_s{seed}"
+        key = _run_key_for_recipe(arm, recipe, fold, int(seed))
         payload = _run(key)
         if payload is not None:
             rows.append(
@@ -286,7 +309,7 @@ def cv_analysis() -> dict[str, Any]:
         scratch_keys = []
         ssl_keys = []
         for seed in C.PRIMARY_SEEDS:
-            scratch_key = f"F{fold}_A_{a_recipe}_s{seed}" if a_recipe != "R0" else f"F{fold}_A_R0_s{seed}"
+            scratch_key = _run_key_for_recipe("A", a_recipe, fold, int(seed))
             ssl_key = f"F{fold}_A_SSL_sel_s{seed}"
             if (C.RUNS / scratch_key / "train.json").exists() and (C.RUNS / ssl_key / "train.json").exists():
                 scratch_keys.append((seed, scratch_key))
