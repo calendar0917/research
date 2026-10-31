@@ -16,17 +16,7 @@ analysis/runs/*/logs/
 __pycache__/
 *.pyc
 
-# Throwaway run scaffolding from gates/tests/manifests, and bulky CPU-smoke
-# weights: the numbers they produced live in analysis/cpu_gates.json and in the
-# per-run train.json/envelope.json, which stay tracked.
-analysis/runs/dbg_deg/
-analysis/runs/test_pna_build/
-analysis/runs/test_esa_build/
-analysis/runs/test_pna/
-analysis/runs/test_esa/
-analysis/runs/manifest_pna/
-analysis/runs/manifest_esa/
-analysis/runs/cpu_gate_pna/
-analysis/runs/cpu_gate_xgb/
-analysis/runs/cpu_gate_esa/
-analysis/runs/smoke_*/checkpoint.pt
+# Per-run outputs (train.json / envelope.json / weights) are produced on the
+# compute host, pulled back with `rr pull`, and summarised into the tracked
+# analysis/*.json files.  They are never edited by hand, so they are untracked.
+analysis/runs/
