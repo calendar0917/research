@@ -42,3 +42,13 @@ The protocol is re-frozen so its code hash covers this analysis helper.
 The GPU authorization was already consumed; it remains pinned to the
 pre-fix freeze and is not used to launch any further GPU job. The 3.5 h cap
 and the ledger continue to apply.
+
+## Addendum — prediction sidecar recipe lookup
+
+The first `predict-nn` attempt treated `train.json["recipe"]` (a string such
+as `"R3"`) as a recipe-config dict and failed before writing any prediction.
+`v2_predict.predict_nn` now looks up `C.RECIPES[recipe_name]` for the dropout
+value and writes the string recipe name into the sidecar. No prediction file
+existed at the moment of the failure, so no frozen prediction was overwritten.
+The protocol is re-frozen once more for this prediction-code fix; the frozen
+manifest is created only after the fix.

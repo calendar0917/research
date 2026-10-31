@@ -37,7 +37,10 @@ def predict_nn(key: str) -> dict[str, Any]:
         raise ValueError("training manifest key mismatch")
     if train.get("monitor_labels_read") is not False:
         raise PermissionError("training run is not certified Monitor-label-blind")
-    recipe = train["recipe"]
+    recipe_name = str(train["recipe"])
+    if recipe_name not in C.RECIPES:
+        raise ValueError(f"unknown recipe in training manifest: {recipe_name}")
+    recipe = C.RECIPES[recipe_name]
     spec = C.load_frozen_spec()
     norm = C.load_frozen_norm()
     model, _meta = M.build_model(row["arm"], spec, norm, int(row["seed"]), "cpu", dropout=float(recipe["dropout"]))
@@ -60,7 +63,7 @@ def predict_nn(key: str) -> dict[str, Any]:
         "protocol_id": C.PROTOCOL_ID,
         "key": key,
         "arm": row["arm"],
-        "recipe": train["recipe"],
+        "recipe": recipe_name,
         "seed": int(row["seed"]),
         "variant": train["variant"],
         "file": C.track_rel(npz_path),
