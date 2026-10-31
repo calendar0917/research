@@ -3,6 +3,7 @@
 Sub-commands
 ------------
 freeze-protocol   verify the CSV/split, write the frozen protocol + hashes
+prep              build the CPU-side LCRC cache on the compute host
 audit             Stage-1 data/protocol audit -> analysis/data_audit.json
 gates             Stage-2 CPU implementation gates -> analysis/cpu_gates.json
 smoke             tiny-batch CPU/GPU compatibility smoke for one model
@@ -91,6 +92,38 @@ def cmd_freeze(args: argparse.Namespace) -> int:
     }
     C.write_json(C.ANALYSIS / "protocol_freeze.json", protocol)
     C.log(f"[freeze] protocol frozen: {C.track_rel(C.ANALYSIS / 'protocol_freeze.json')} sha256={C.sha256_file(C.ANALYSIS / 'protocol_freeze.json')}")
+    return 0
+
+
+def cmd_prep(args: argparse.Namespace) -> int:
+    """Build the CPU-side caches on the compute host (no GPU time charged)."""
+    import time
+
+    import r42_data as D
+
+    started = time.time()
+    built = D.build_lcrc_cache()
+    summary = D.structure_summary()
+    payload = {
+        "protocol_id": C.PROTOCOL_ID,
+        "created_utc": C.utcnow(),
+        "hostname": __import__("socket").gethostname(),
+        "git_commit": C.git_commit(),
+        "lcrc_cache": {
+            "path": C.track_rel(built["path"]),
+            "file_sha256": built["file_sha256"],
+            "content_fingerprint": built["content_fingerprint"],
+            "rebuilt": bool(built["rebuilt"]),
+            "n_molecules": int(built["cache"]["n_molecules"]),
+            "labels_present": built["cache"]["meta"].get("labels_present"),
+        },
+        "structures": summary,
+        "structures_meta_sha256": C.sha256_file(C.STRUCTURES_META),
+        "seconds": float(time.time() - started),
+        "gpu_used": False,
+    }
+    C.write_json(C.ANALYSIS / "prep.json", payload)
+    C.log(f"[prep] lcrc cache {payload['lcrc_cache']['file_sha256']} rebuilt={built['rebuilt']} in {payload['seconds']:.1f}s")
     return 0
 
 
@@ -318,6 +351,7 @@ def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="command", required=True)
     sub.add_parser("freeze-protocol").set_defaults(func=cmd_freeze)
+    sub.add_parser("prep").set_defaults(func=cmd_prep)
     sub.add_parser("audit").set_defaults(func=cmd_audit)
     gates = sub.add_parser("gates")
     gates.add_argument("--skip-esa", action="store_true")
