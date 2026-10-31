@@ -1,0 +1,537 @@
+{
+  "anomalies": {
+    "grad_clip_events": 1,
+    "grad_norm_max": 1923.126953125,
+    "nonfinite_events": 0
+  },
+  "arm": "path_bind_s0",
+  "checkpoint_path": "tracks/structural-sufficiency/lcrc_lipo_composition_discovery_v1/analysis/smoke_cuda/path_bind_s0_smoke/checkpoint.pt",
+  "checkpoint_sha256": "b05dd4158acc39401c67dfd77390197ca5aeb1cf38f236409d8208ef09d3ed6e",
+  "config_hash": "b65c607a7c96611b335f233ab214f4360175740953c6c4df0d3b028312cebdea",
+  "cuda_device_count": 1,
+  "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+  "curve": [
+    {
+      "epoch": 1,
+      "grad_clip_events": 1,
+      "grad_norm_max": 1923.126953125,
+      "lr": 1e-05,
+      "seconds": 0.06086503993719816,
+      "steps": 1,
+      "train_loss_standardized": 31.57720947265625,
+      "train_mae_standardized": 5.201373100280762,
+      "train_rmse_standardized": 5.619360236953692,
+      "valid_mae_raw": 2.441410928609911,
+      "valid_r2_raw": -3.2562071137597473,
+      "valid_rmse_raw": 2.7941793714399297
+    }
+  ],
+  "data": {
+    "distance_bucket_meta": {
+      "definition": "D34 = 3<=dist<=4; D5 = dist>=5 finite; self and dist<=2 excluded; unreachable excluded",
+      "labels_present": false,
+      "n34_total": 9990,
+      "n5_total": 27420,
+      "n_atoms": 1676,
+      "n_d34_entries": 9990,
+      "n_d5_entries": 27420
+    },
+    "feature_spec_hash": "bee7cd5e9abfa81461145bc546875ee254b878da89a2e7fd8d855069a7281a5e",
+    "label_audit": {
+      "n_train": 3360,
+      "n_valid": 420,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+      "sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+      "test_labels_included": false,
+      "train_vector_sha256": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+      "valid_vector_sha256": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+    },
+    "label_scope": "train3360_and_valid420_only",
+    "labels_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+    "labels_file_sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+    "lcrc_cache_content_fingerprint": "23ec00be4fb7e3cf93967cd62911bd932159b1d7e0b43226b23cf7c6a3718e03",
+    "lcrc_cache_labels_present": false,
+    "lcrc_cache_path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/cache/lcrc_all4200.pt",
+    "lcrc_cache_sha256": "0ff7d0749a0f18b73a0d4905df52ff558d54ec8489cda290e9ae005c5f54364e",
+    "n_train": 64,
+    "n_valid": 32,
+    "split_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/split_esa_random42_v1.json",
+    "split_file_sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+    "target_norm": {
+      "label_vector_sha256": "cfe31496a6ef59abeb36b29d7546177aae683c1ba36ce4f61b8a4435e71f4524",
+      "mean": 2.4440625000000002,
+      "n": 64,
+      "scale": 1.1196745045296645,
+      "scale_definition": "population_std_float64 (sklearn StandardScaler convention)",
+      "source": "train3360_labels_only",
+      "valid_or_test_used": false
+    },
+    "test_labels_read": false,
+    "test_metrics_read": false,
+    "test_predictions_read": false,
+    "test_row_values_used": false,
+    "train_norm_fingerprint": "c36a7d7b4548d75cf3f2b4fb4406360fe484a40acbffa14f7b350dcdb5264dde",
+    "train_rows_sha256": "ca426b33eef2d9f273c48e9c47974489ecd67d3ba7105fde365eff0113322d91",
+    "valid_rows_sha256": "f6503979e0131741b172c481b4ca7e6ee7aac8858b59de3e9835963e91466383"
+  },
+  "device": "cuda",
+  "device_note": "rr sets CUDA_VISIBLE_DEVICES per pool; the pool GPU is cuda:0 in-process",
+  "diagnostics": {
+    "correction_usage_train": {
+      "bind_gap_norm_max": 0.0,
+      "bind_gap_norm_mean": 0.0,
+      "bind_gap_norm_p95": 0.0,
+      "bind_gap_note": "norm(mean(v*r) - mean(v)*mean(r)) per root with paths",
+      "change_l2_max": 0.0046610464341938496,
+      "change_l2_mean": 0.0036424264909981846,
+      "change_l2_p95": 0.004530238336883485,
+      "fraction_atoms_with_paths": 1.0,
+      "graph_max_change_max": 0.0046610464341938496,
+      "graph_max_change_mean": 0.00452594651869731,
+      "n_atoms": 1676,
+      "n_atoms_with_correction_path": 1676,
+      "n_atoms_with_paths": 1676,
+      "n_hetero_atoms": 0,
+      "n_molecules": 64,
+      "n_roots_with_multiple_path_types": 1079
+    },
+    "correction_usage_valid": {
+      "bind_gap_norm_max": 0.0,
+      "bind_gap_norm_mean": 0.0,
+      "bind_gap_norm_p95": 0.0,
+      "bind_gap_note": "norm(mean(v*r) - mean(v)*mean(r)) per root with paths",
+      "change_l2_max": 0.0046610464341938496,
+      "change_l2_mean": 0.003667876297052695,
+      "change_l2_p95": 0.004544172901660204,
+      "fraction_atoms_with_paths": 1.0,
+      "graph_max_change_max": 0.0046610464341938496,
+      "graph_max_change_mean": 0.004538423469057307,
+      "n_atoms": 805,
+      "n_atoms_with_correction_path": 805,
+      "n_atoms_with_paths": 805,
+      "n_hetero_atoms": 0,
+      "n_molecules": 32,
+      "n_roots_with_multiple_path_types": 533
+    },
+    "dropout": {
+      "dropout_p": 0.1,
+      "eval_mode_forward_max_abs_diff": 4.76837158203125e-07,
+      "eval_mode_is_identity": true,
+      "eval_mode_max_abs_dropout_delta": 0.0,
+      "head_calls_eval": 2,
+      "head_calls_train": 2,
+      "head_training_in_eval_mode": false,
+      "head_training_in_train_mode": true,
+      "hook_module_present": true,
+      "passed": true,
+      "train_mode_forward_max_abs_diff_different_masks": 0.683756947517395,
+      "train_mode_masked_atoms": true,
+      "train_mode_max_abs_dropout_delta": 3.6173415184020996
+    },
+    "gradient_probe": {
+      "all_finite": true,
+      "all_nonzero_at_final_step": true,
+      "all_updated": true,
+      "history": [
+        {
+          "grads": {
+            "pathbind.E_b1.weight": {
+              "finite": true,
+              "norm": 0.001675635576248169
+            },
+            "pathbind.E_b2.weight": {
+              "finite": true,
+              "norm": 0.0014474783092737198
+            },
+            "pathbind.E_closure.weight": {
+              "finite": true,
+              "norm": 0.0017379835480824113
+            },
+            "pathbind.E_mid.weight": {
+              "finite": true,
+              "norm": 0.0014848705613985658
+            },
+            "pathbind.W_end.bias": {
+              "finite": true,
+              "norm": 0.06579975038766861
+            },
+            "pathbind.W_end.weight": {
+              "finite": true,
+              "norm": 0.05355920270085335
+            },
+            "pathbind.W_out.bias": {
+              "finite": true,
+              "norm": 21.335914611816406
+            },
+            "pathbind.W_out.weight": {
+              "finite": true,
+              "norm": 2.3185880184173584
+            },
+            "pathbind.W_root.bias": {
+              "finite": true,
+              "norm": 0.008529786951839924
+            },
+            "pathbind.W_root.weight": {
+              "finite": true,
+              "norm": 0.05247972905635834
+            }
+          },
+          "loss": 3.9656155109405518,
+          "step": 1
+        },
+        {
+          "grads": {
+            "pathbind.E_b1.weight": {
+              "finite": true,
+              "norm": 0.001807746128179133
+            },
+            "pathbind.E_b2.weight": {
+              "finite": true,
+              "norm": 0.001642505289055407
+            },
+            "pathbind.E_closure.weight": {
+              "finite": true,
+              "norm": 0.0019340681610628963
+            },
+            "pathbind.E_mid.weight": {
+              "finite": true,
+              "norm": 0.0015572368865832686
+            },
+            "pathbind.W_end.bias": {
+              "finite": true,
+              "norm": 0.08217094093561172
+            },
+            "pathbind.W_end.weight": {
+              "finite": true,
+              "norm": 0.0652010589838028
+            },
+            "pathbind.W_out.bias": {
+              "finite": true,
+              "norm": 60.461639404296875
+            },
+            "pathbind.W_out.weight": {
+              "finite": true,
+              "norm": 5.710573673248291
+            },
+            "pathbind.W_root.bias": {
+              "finite": true,
+              "norm": 0.014739899896085262
+            },
+            "pathbind.W_root.weight": {
+              "finite": true,
+              "norm": 0.09327893704175949
+            }
+          },
+          "loss": 29.435623168945312,
+          "step": 2
+        }
+      ],
+      "parameter_max_abs_update": {
+        "pathbind.E_b1.weight": 0.0005999505519866943,
+        "pathbind.E_b2.weight": 0.0005994737148284912,
+        "pathbind.E_closure.weight": 0.000598907470703125,
+        "pathbind.E_mid.weight": 0.0005998164415359497,
+        "pathbind.W_end.bias": 0.0005987808108329773,
+        "pathbind.W_end.weight": 0.0006003677845001221,
+        "pathbind.W_out.bias": 0.0005962352734059095,
+        "pathbind.W_out.weight": 0.0006003821035847068,
+        "pathbind.W_root.bias": 0.0006000101566314697,
+        "pathbind.W_root.weight": 0.0006004008464515209
+      },
+      "passed": true,
+      "steps": 2,
+      "training_probe": {
+        "aggregate": {
+          "pathbind.E_b1.weight": {
+            "all_nonzero": true,
+            "max": 4.647696641768562e-06,
+            "mean": 4.647696641768562e-06,
+            "min": 4.647696641768562e-06,
+            "n_steps": 1
+          },
+          "pathbind.E_b2.weight": {
+            "all_nonzero": true,
+            "max": 4.21567619923735e-06,
+            "mean": 4.21567619923735e-06,
+            "min": 4.21567619923735e-06,
+            "n_steps": 1
+          },
+          "pathbind.E_closure.weight": {
+            "all_nonzero": true,
+            "max": 5.0101307351724245e-06,
+            "mean": 5.0101307351724245e-06,
+            "min": 5.0101307351724245e-06,
+            "n_steps": 1
+          },
+          "pathbind.E_mid.weight": {
+            "all_nonzero": true,
+            "max": 3.972078047809191e-06,
+            "mean": 3.972078047809191e-06,
+            "min": 3.972078047809191e-06,
+            "n_steps": 1
+          },
+          "pathbind.W_end.bias": {
+            "all_nonzero": true,
+            "max": 0.00020659150322899222,
+            "mean": 0.00020659150322899222,
+            "min": 0.00020659150322899222,
+            "n_steps": 1
+          },
+          "pathbind.W_end.weight": {
+            "all_nonzero": true,
+            "max": 0.0001664146693656221,
+            "mean": 0.0001664146693656221,
+            "min": 0.0001664146693656221,
+            "n_steps": 1
+          },
+          "pathbind.W_out.bias": {
+            "all_nonzero": true,
+            "max": 0.1637464165687561,
+            "mean": 0.1637464165687561,
+            "min": 0.1637464165687561,
+            "n_steps": 1
+          },
+          "pathbind.W_out.weight": {
+            "all_nonzero": true,
+            "max": 0.015992294996976852,
+            "mean": 0.015992294996976852,
+            "min": 0.015992294996976852,
+            "n_steps": 1
+          },
+          "pathbind.W_root.bias": {
+            "all_nonzero": true,
+            "max": 3.963567360187881e-05,
+            "mean": 3.963567360187881e-05,
+            "min": 3.963567360187881e-05,
+            "n_steps": 1
+          },
+          "pathbind.W_root.weight": {
+            "all_nonzero": true,
+            "max": 0.0002528427867218852,
+            "mean": 0.0002528427867218852,
+            "min": 0.0002528427867218852,
+            "n_steps": 1
+          }
+        },
+        "first_five_steps": [
+          {
+            "global_step": 1,
+            "grad_norm": {
+              "pathbind.E_b1.weight": 4.647696641768562e-06,
+              "pathbind.E_b2.weight": 4.21567619923735e-06,
+              "pathbind.E_closure.weight": 5.0101307351724245e-06,
+              "pathbind.E_mid.weight": 3.972078047809191e-06,
+              "pathbind.W_end.bias": 0.00020659150322899222,
+              "pathbind.W_end.weight": 0.0001664146693656221,
+              "pathbind.W_out.bias": 0.1637464165687561,
+              "pathbind.W_out.weight": 0.015992294996976852,
+              "pathbind.W_root.bias": 3.963567360187881e-05,
+              "pathbind.W_root.weight": 0.0002528427867218852
+            }
+          }
+        ]
+      }
+    },
+    "path_coverage_valid": {
+      "bind_gap_norm_mean": 0.0,
+      "bind_gap_norm_p95": 0.0,
+      "fraction_atoms_with_paths": 1.0,
+      "n_roots_with_multiple_path_types": 533
+    },
+    "rho_after_soup": {
+      "atol": 1e-05,
+      "discriminating_or_scalar_unchanged": true,
+      "max_abs_diff_vs_h_new_reconstruction": 0.0024785995483398438,
+      "max_abs_diff_vs_h_original_reconstruction": 4.76837158203125e-07,
+      "max_abs_h_new_minus_h_original": 0.0014125369489192963,
+      "n_graphs": 8,
+      "passed": true,
+      "rho_input_matches_h_original": true,
+      "rho_input_vs_h_new_reconstruction_differs": true
+    },
+    "trained_new_parameter_delta_from_init": {
+      "pathbind.E_b1.weight": 0.0002988278865814209,
+      "pathbind.E_b2.weight": 0.0002980232238769531,
+      "pathbind.E_closure.weight": 0.00029906630516052246,
+      "pathbind.E_mid.weight": 0.00029838085174560547,
+      "pathbind.W_end.bias": 0.00029997900128364563,
+      "pathbind.W_end.weight": 0.00029986025765538216,
+      "pathbind.W_out.bias": 0.000299999926937744,
+      "pathbind.W_out.weight": 0.00029999937396496534,
+      "pathbind.W_root.bias": 0.00029984861612319946,
+      "pathbind.W_root.weight": 0.00029995013028383255
+    },
+    "w_out_zero_ablation_valid": {
+      "mae": 2.4256567928529162,
+      "max_abs_prediction_change_vs_full": 0.023585672813464242,
+      "mean_abs_prediction_change_vs_full": 0.016437733139284802,
+      "note": "same trained model with the correction output projection zeroed in eval (its own base path)",
+      "r2": -3.211556216597936,
+      "rmse": 2.779484179905178,
+      "rmse_change_vs_full": -0.01469509637195543
+    }
+  },
+  "family": "path_bind",
+  "git_commit": "82bfdf8950ad46b645b3ff30cd3b3b691fbf62a4",
+  "git_dirty_tracked": false,
+  "gpu": {
+    "device_name": "NVIDIA A100-SXM4-40GB",
+    "peak_memory_allocated_bytes": 57299456
+  },
+  "hostname": "a100-2",
+  "label_scope": "train3360_and_valid420_only",
+  "metrics": {
+    "train": {
+      "checkpoint": "soup_last_5",
+      "mae": 2.247245954535402,
+      "r2": -4.488516790445781,
+      "rmse": 2.623126819609649,
+      "units": "raw_logD"
+    },
+    "train_loss_standardized_last_epoch": 31.57720947265625,
+    "train_mae_standardized_last_epoch": 5.201373100280762,
+    "valid": {
+      "checkpoint": "soup_last_5",
+      "mae": 2.4414108013909774,
+      "r2": -3.256206823848106,
+      "rmse": 2.7941792762771334,
+      "units": "raw_logD"
+    }
+  },
+  "model": "LCRC-A-PATH-BIND",
+  "model_audit": {
+    "definition": "bind_i=mean_p(v_p*r_p) for PATH-BIND; mean_p(v_p)*mean_p(r_p) for PATH-UNBOUND",
+    "dropout_hook_calls": 17,
+    "init_parity_with_context": null,
+    "init_state_hash": "811c4d248b59102c50cd89ef726db9e85e8576e9d22e3de7b093be2a0b582b3e",
+    "parameter_breakdown": {
+      "atom_encoder": 19040,
+      "bond_encoder": 63776,
+      "f": 4225,
+      "local": 148992,
+      "pathbind": 8192,
+      "rho": 11073,
+      "total": 255298
+    },
+    "parameters": 255298,
+    "parameters_base": 247106,
+    "parameters_new": 8192,
+    "shared_init": {
+      "all_shared_bitwise_identical": true,
+      "base_only_keys": [],
+      "mismatched": [],
+      "model_only_keys": [
+        "pathbind.E_b1.weight",
+        "pathbind.E_b2.weight",
+        "pathbind.E_closure.weight",
+        "pathbind.E_mid.weight",
+        "pathbind.W_end.bias",
+        "pathbind.W_end.weight",
+        "pathbind.W_out.bias",
+        "pathbind.W_out.weight",
+        "pathbind.W_root.bias",
+        "pathbind.W_root.weight"
+      ],
+      "n_shared_entries": 35,
+      "shared_keys": [
+        "global_mean",
+        "global_scale",
+        "scalar_mean",
+        "scalar_scale",
+        "atom_encoder.lins.0.weight",
+        "atom_encoder.lins.0.bias",
+        "atom_encoder.lins.1.weight",
+        "atom_encoder.lins.1.bias",
+        "bond_encoder.lins.0.weight",
+        "bond_encoder.lins.0.bias",
+        "bond_encoder.lins.1.weight",
+        "bond_encoder.lins.1.bias",
+        "local.nbr_emb.weight",
+        "local.path_emb.weight",
+        "local.end_emb.weight",
+        "local.path_u.weight",
+        "local.path_v.weight",
+        "local.joint_proj.weight",
+        "local.joint_proj.bias",
+        "local.close_emb.weight",
+        "local.path_gate.weight",
+        "local.mlp.lins.0.weight",
+        "local.mlp.lins.0.bias",
+        "local.mlp.lins.1.weight",
+        "local.mlp.lins.1.bias",
+        "local.norm.weight",
+        "local.norm.bias",
+        "f.lins.0.weight",
+        "f.lins.0.bias",
+        "f.lins.1.weight",
+        "f.lins.1.bias",
+        "rho.lins.0.weight",
+        "rho.lins.0.bias",
+        "rho.lins.1.weight",
+        "rho.lins.1.bias"
+      ]
+    },
+    "soup_state_hash": "e01d61ce42feb2f2b95de61a5846f936a97618e4b985090b70eece0baf62cd85"
+  },
+  "pool": "local",
+  "precision": "fp32",
+  "predictions": {
+    "curve_path": "tracks/structural-sufficiency/lcrc_lipo_composition_discovery_v1/analysis/smoke_cuda/path_bind_s0_smoke/curve.csv",
+    "curve_sha256": "cf51f82b610af12eab2cee3f5d289d2f10b0417be87756b2d2de8bc724f5db96",
+    "train_path": "tracks/structural-sufficiency/lcrc_lipo_composition_discovery_v1/analysis/smoke_cuda/path_bind_s0_smoke/train_predictions.npz",
+    "train_sha256": "8fa63516ec67dfe8d0a640da5744ed7dabe6500203b44d6da69d70990fbec297",
+    "valid_path": "tracks/structural-sufficiency/lcrc_lipo_composition_discovery_v1/analysis/smoke_cuda/path_bind_s0_smoke/valid_predictions.npz",
+    "valid_sha256": "9738df26479ffa42c9de2c056dd589fe4ae1b1fa92f00a096857780173a96886"
+  },
+  "protocol_id": "lcrc-lipo-composition-discovery-v1",
+  "python": "3.12.14",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_order_sha256": "4b9bd9293355304e367cc15d99f5b43770c0b9ea43a37bd854ba7bf37969ab3a",
+    "batch_size": 128,
+    "checkpoint_rule": "average_last_5_epoch_end_state_dicts",
+    "dropout": 0.1,
+    "dropout_position": "final atom-level local h (v2 DropoutAtLocal on model.local)",
+    "dropout_rng_reseeded_after_init": true,
+    "early_stopping": false,
+    "epochs_planned": 1,
+    "epochs_run": 1,
+    "gradient_clip": 5.0,
+    "loss": "mse_on_train3360_standardised_target",
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "optimizer_steps": 1,
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "seed": 0,
+    "shuffle_generator_seed": 917000,
+    "soup_last": 1,
+    "soup_members": [
+      1
+    ],
+    "split_seed": 42,
+    "steps_per_epoch": 1,
+    "validation_used_for_checkpoint_selection": false,
+    "weight_decay": 0.001
+  },
+  "run_key": "path_bind_s0",
+  "seed": 0,
+  "smoke": true,
+  "split_seed": 42,
+  "test_labels_read": false,
+  "test_metrics_read": false,
+  "test_predictions_read": false,
+  "timing": {
+    "inference_batch_size": 256,
+    "inference_device": "cuda",
+    "inference_seconds_per_valid420": 0.010504193293551603,
+    "process_wall_seconds": 6.558437047060579,
+    "train_wall_seconds": 0.06119533395394683
+  },
+  "torch": "2.5.1+cu124",
+  "torch_cuda": "12.4"
+}
