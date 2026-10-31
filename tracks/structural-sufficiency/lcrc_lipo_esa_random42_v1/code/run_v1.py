@@ -104,6 +104,7 @@ def cmd_prep(args: argparse.Namespace) -> int:
     started = time.time()
     built = D.build_lcrc_cache()
     summary = D.structure_summary()
+    raw = D.load_raw_graph_artifact()
     payload = {
         "protocol_id": C.PROTOCOL_ID,
         "created_utc": C.utcnow(),
@@ -118,6 +119,7 @@ def cmd_prep(args: argparse.Namespace) -> int:
             "labels_present": built["cache"]["meta"].get("labels_present"),
         },
         "structures": summary,
+        "raw_row_verification": raw["_verification"],
         "structures_meta_sha256": C.sha256_file(C.STRUCTURES_META),
         "seconds": float(time.time() - started),
         "gpu_used": False,

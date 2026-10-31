@@ -317,16 +317,36 @@ def load_raw_graph_artifact() -> dict[str, Any]:
     raw = prep_adapters.load_lipo_raw_artifact(C.RAW_GRAPH)
     if len(raw["rows"]) != C.N_MOLECULES:
         raise ValueError("raw graph artifact does not contain 4200 rows")
-    ids, smiles = read_smiles_only()
+    manifest = C.read_json(C.ROW_MANIFEST)
+    manifest_ids = [str(x) for x in manifest["compound_ids"]]
+    if len(manifest_ids) != C.N_MOLECULES:
+        raise ValueError("row manifest does not contain 4200 compound ids")
+    # Strictest check when the raw CSV is present (archival host); on the GPU
+    # host the CSV is intentionally absent, so row identity is pinned by the
+    # committed, hash-verified row manifest that was derived from it.
+    csv_present = C.CSV_PATH.exists()
+    ids, smiles = read_smiles_only() if csv_present else (None, None)
     for i, row in enumerate(raw["rows"]):
         if "exp" in row:
             raise PermissionError(f"raw row {i} contains a label field")
         if int(row["mol_index"]) != i:
             raise ValueError(f"raw row {i} has mol_index {row['mol_index']}")
-        if str(row["smiles"]) != smiles[i]:
-            raise ValueError(f"raw row {i} SMILES differs from the CSV")
-        if str(row["compound_id"]) != ids[i]:
-            raise ValueError(f"raw row {i} compound id differs from the CSV")
+        if str(row["compound_id"]) != manifest_ids[i]:
+            raise ValueError(f"raw row {i} compound id differs from the row manifest")
+        if csv_present:
+            if str(row["smiles"]) != smiles[i]:
+                raise ValueError(f"raw row {i} SMILES differs from the CSV")
+            if str(row["compound_id"]) != ids[i]:
+                raise ValueError(f"raw row {i} compound id differs from the CSV")
+        elif not str(row["smiles"]):
+            raise ValueError(f"raw row {i} has no SMILES")
+    raw["_verification"] = {
+        "csv_present": bool(csv_present),
+        "csv_sha256_verified": bool(csv_present),
+        "row_manifest_sha256": C.sha256_file(C.ROW_MANIFEST),
+        "raw_artifact_sha256": C.sha256_file(C.RAW_GRAPH),
+        "n_rows_checked": C.N_MOLECULES,
+    }
     return raw
 
 
