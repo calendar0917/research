@@ -1,0 +1,205 @@
+{
+  "context_usage": {
+    "gradient_probe": {
+      "aggregate": {
+        "context.W_atom.bias": {
+          "all_nonzero": true,
+          "max": 0.00015066922060213983,
+          "mean": 8.399303624173626e-05,
+          "min": 3.126794035779312e-05,
+          "n_steps": 4
+        },
+        "context.W_atom.weight": {
+          "all_nonzero": true,
+          "max": 0.0008741594501771033,
+          "mean": 0.000472743919090135,
+          "min": 0.0001743252360029146,
+          "n_steps": 4
+        },
+        "context.W_ch.bias": {
+          "all_nonzero": true,
+          "max": 7.223779539344832e-05,
+          "mean": 4.340106761446805e-05,
+          "min": 1.6990701624308713e-05,
+          "n_steps": 4
+        },
+        "context.W_ch.weight": {
+          "all_nonzero": true,
+          "max": 0.0005252567934803665,
+          "mean": 0.0002866430513677187,
+          "min": 0.0001030171406455338,
+          "n_steps": 4
+        },
+        "context.W_het.bias": {
+          "all_nonzero": true,
+          "max": 0.00012330820027273148,
+          "mean": 6.694782723570825e-05,
+          "min": 2.4639006369397976e-05,
+          "n_steps": 4
+        },
+        "context.W_het.weight": {
+          "all_nonzero": true,
+          "max": 0.0007365156779997051,
+          "mean": 0.0003813174698734656,
+          "min": 0.0001347498910035938,
+          "n_steps": 4
+        },
+        "context.W_out.bias": {
+          "all_nonzero": true,
+          "max": 0.08173739165067673,
+          "mean": 0.050904665142297745,
+          "min": 0.037850942462682724,
+          "n_steps": 4
+        },
+        "context.W_out.weight": {
+          "all_nonzero": true,
+          "max": 0.02636183239519596,
+          "mean": 0.016523290425539017,
+          "min": 0.011618559248745441,
+          "n_steps": 4
+        }
+      },
+      "all_new_tensors_received_nonzero_gradient": true,
+      "first_five_steps": [
+        {
+          "global_step": 1,
+          "grad_norm": {
+            "context.W_atom.bias": 3.126794035779312e-05,
+            "context.W_atom.weight": 0.0001743252360029146,
+            "context.W_ch.bias": 1.6990701624308713e-05,
+            "context.W_ch.weight": 0.0001030171406455338,
+            "context.W_het.bias": 2.4639006369397976e-05,
+            "context.W_het.weight": 0.0001347498910035938,
+            "context.W_out.bias": 0.037850942462682724,
+            "context.W_out.weight": 0.011618559248745441
+          }
+        },
+        {
+          "global_step": 2,
+          "grad_norm": {
+            "context.W_atom.bias": 8.148129563778639e-05,
+            "context.W_atom.weight": 0.0004463629156816751,
+            "context.W_ch.bias": 4.2633790144464e-05,
+            "context.W_ch.weight": 0.00026242350577376783,
+            "context.W_het.bias": 5.83758665015921e-05,
+            "context.W_het.weight": 0.00031861697789281607,
+            "context.W_out.bias": 0.04178367927670479,
+            "context.W_out.weight": 0.014085082337260246
+          }
+        },
+        {
+          "global_step": 3,
+          "grad_norm": {
+            "context.W_atom.bias": 7.255368836922571e-05,
+            "context.W_atom.weight": 0.0003961280744988471,
+            "context.W_ch.bias": 4.174198329565115e-05,
+            "context.W_ch.weight": 0.0002558747655712068,
+            "context.W_het.bias": 6.146823579911143e-05,
+            "context.W_het.weight": 0.00033538733259774745,
+            "context.W_out.bias": 0.04224664717912674,
+            "context.W_out.weight": 0.014027687720954418
+          }
+        },
+        {
+          "global_step": 4,
+          "grad_norm": {
+            "context.W_atom.bias": 0.00015066922060213983,
+            "context.W_atom.weight": 0.0008741594501771033,
+            "context.W_ch.bias": 7.223779539344832e-05,
+            "context.W_ch.weight": 0.0005252567934803665,
+            "context.W_het.bias": 0.00012330820027273148,
+            "context.W_het.weight": 0.0007365156779997051,
+            "context.W_out.bias": 0.08173739165067673,
+            "context.W_out.weight": 0.02636183239519596
+          }
+        }
+      ]
+    },
+    "train": {
+      "change_component_abs_mean_over_hetero_atoms": 0.0005884731654077768,
+      "change_l2_max_over_hetero_atoms": 0.010308634489774704,
+      "change_l2_mean_over_hetero_atoms": 0.00565275177359581,
+      "change_l2_per_molecule_max": 0.007630476728081703,
+      "change_l2_per_molecule_mean_of_means": 0.005704094370936646,
+      "change_l2_per_molecule_median": 0.005677787121385336,
+      "change_l2_per_molecule_p95": 0.006505246832966804,
+      "change_l2_sum_over_all_atoms_divided_by_n_atoms": 0.0013532149605453014,
+      "definition_change": "change_i = h_new_i - h_original_i is a 64-d vector; the reported magnitude is ||change_i||_2 per atom, averaged over atoms that receive the correction (hetero)",
+      "definition_change_component_abs": "per hetero atom mean_j |change_ij|, then averaged",
+      "definition_f_delta": "|f(h_new) - f(h_original)| per atom, then averaged",
+      "f_delta_abs_max_over_hetero_atoms": 0.0015506744384765625,
+      "f_delta_abs_mean_over_all_atoms": 0.00016276471433229744,
+      "f_delta_abs_mean_over_hetero_atoms": 0.0006799130351282656,
+      "f_delta_abs_sum_per_molecule_mean": 0.004464584984816611,
+      "f_delta_sum_per_molecule_mean": 0.004464584984816611,
+      "fraction_molecules_with_hetero": 0.99609375,
+      "graph_change_l2_max_max": 0.010308634489774704,
+      "n_atoms": 7022,
+      "n_atoms_with_nonzero_change": 1681,
+      "n_hetero_atoms": 1681,
+      "n_molecules": 256,
+      "n_molecules_with_hetero": 255
+    },
+    "trained_new_parameter_delta_from_init": {
+      "context.W_atom.bias": 0.0006555840373039246,
+      "context.W_atom.weight": 0.0006580054759979248,
+      "context.W_ch.bias": 0.0006478401483036578,
+      "context.W_ch.weight": 0.0006556622684001923,
+      "context.W_het.bias": 0.0006529092788696289,
+      "context.W_het.weight": 0.000658869743347168,
+      "context.W_out.bias": 0.0006564651848748326,
+      "context.W_out.weight": 0.0006602082285098732
+    },
+    "valid420": {
+      "change_component_abs_mean_over_hetero_atoms": 0.0005956611130386591,
+      "change_l2_max_over_hetero_atoms": 0.009875374846160412,
+      "change_l2_mean_over_hetero_atoms": 0.005714779254049063,
+      "change_l2_per_molecule_max": 0.007171574980020523,
+      "change_l2_per_molecule_mean_of_means": 0.005763664681580849,
+      "change_l2_per_molecule_median": 0.005662352778017521,
+      "change_l2_per_molecule_p95": 0.006780410255305468,
+      "change_l2_sum_over_all_atoms_divided_by_n_atoms": 0.0013319887220859528,
+      "definition_change": "change_i = h_new_i - h_original_i is a 64-d vector; the reported magnitude is ||change_i||_2 per atom, averaged over atoms that receive the correction (hetero)",
+      "definition_change_component_abs": "per hetero atom mean_j |change_ij|, then averaged",
+      "definition_f_delta": "|f(h_new) - f(h_original)| per atom, then averaged",
+      "f_delta_abs_max_over_hetero_atoms": 0.0014969408512115479,
+      "f_delta_abs_mean_over_all_atoms": 0.00015958072617650032,
+      "f_delta_abs_mean_over_hetero_atoms": 0.0006846668547950685,
+      "f_delta_abs_sum_per_molecule_mean": 0.0039047409663908184,
+      "f_delta_sum_per_molecule_mean": 0.0039047409663908184,
+      "fraction_molecules_with_hetero": 1.0,
+      "graph_change_l2_max_max": 0.009875374846160412,
+      "n_atoms": 1566,
+      "n_atoms_with_nonzero_change": 365,
+      "n_hetero_atoms": 365,
+      "n_molecules": 64,
+      "n_molecules_with_hetero": 64
+    },
+    "w_out_zero_ablation_valid": {
+      "mae": 1.3584838247439301,
+      "max_abs_prediction_change_vs_full_context": 0.008826988697435478,
+      "mean_abs_prediction_change_vs_full_context": 0.004498830549369646,
+      "note": "full CONTEXT vs the same trained CONTEXT with W_out zeroed in eval (its own base path)",
+      "r2": -0.4660359768173341,
+      "rmse": 1.6009567569793763,
+      "rmse_change_vs_full_context": -0.0023596994733745547
+    }
+  },
+  "dropout": {
+    "dropout_p": 0.1,
+    "eval_mode_forwards_identical": false,
+    "hook_module_present": true,
+    "passed": false,
+    "train_mode_forwards_differ": true
+  },
+  "rho_after_soup": {
+    "discriminating": true,
+    "max_abs_diff_vs_h_new_reconstruction": 0.0009794235229492188,
+    "max_abs_diff_vs_h_original_reconstruction": 4.76837158203125e-07,
+    "max_abs_h_new_minus_h_original": 0.001936197280883789,
+    "max_abs_mean_h_difference_if_h_new_used": 0.0003648996353149414,
+    "n_graphs": 8,
+    "passed": false,
+    "rho_input_matches_h_original": false
+  }
+}

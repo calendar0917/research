@@ -16,7 +16,7 @@
       "grad_clip_events": 2,
       "grad_norm_max": 2126.32861328125,
       "lr": 0.00015499999999999995,
-      "seconds": 0.0633348019910045,
+      "seconds": 0.06731741700787097,
       "steps": 2,
       "train_loss_standardized": 20.714659690856934,
       "train_mae_standardized": 3.879414439201355,
@@ -30,7 +30,7 @@
       "grad_clip_events": 2,
       "grad_norm_max": 611.1397094726562,
       "lr": 1e-05,
-      "seconds": 0.06984231201931834,
+      "seconds": 0.06855255301343277,
       "steps": 2,
       "train_loss_standardized": 2.819475293159485,
       "train_mae_standardized": 1.3315862715244293,
@@ -274,12 +274,23 @@
     },
     "dropout": {
       "dropout_p": 0.1,
-      "eval_mode_forwards_identical": true,
+      "eval_forward_diff_note": "non-zero only from float32 reduction order, not dropout",
+      "eval_mode_forward_max_abs_diff": 0.0,
+      "eval_mode_is_identity": true,
+      "eval_mode_max_abs_dropout_delta": 0.0,
+      "head_calls_eval": 2,
+      "head_calls_train": 2,
+      "head_training_in_eval_mode": false,
+      "head_training_in_train_mode": true,
       "hook_module_present": true,
       "passed": true,
-      "train_mode_forwards_differ": true
+      "train_mode_forward_max_abs_diff_different_masks": 0.8687046766281128,
+      "train_mode_masked_atoms": true,
+      "train_mode_max_abs_dropout_delta": 3.640794515609741
     },
     "rho_after_soup": {
+      "atol": 1e-05,
+      "bitwise_equal_to_h_original_reconstruction": true,
       "discriminating": true,
       "max_abs_diff_vs_h_new_reconstruction": 0.0009527206420898438,
       "max_abs_diff_vs_h_original_reconstruction": 0.0,
@@ -290,7 +301,7 @@
       "rho_input_matches_h_original": true
     }
   },
-  "git_commit": "ef0962265afac5a69966a547be44c571c2eeadd4",
+  "git_commit": "82d553a49675a60ea58ed02b78721b5d83349bbb",
   "git_dirty_tracked": true,
   "gpu": {
     "device_name": "cpu",
@@ -392,7 +403,7 @@
   "precision": "fp32",
   "predictions": {
     "curve_path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/smoke_cpu/context_smoke/curve.csv",
-    "curve_sha256": "70bf4a1061a7c67a0b79afa123dd04b5e37737347781c1ccc9d0a1121fa590c5",
+    "curve_sha256": "485cb9b531d1eadf76f26d9bcd8f51116280ea43ca4a2a02fc9ac5f9e012d8e4",
     "train_path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/smoke_cpu/context_smoke/train_predictions.npz",
     "train_sha256": "da343256f2f5f049d98b75347bdbf6217cf4cff0616bd5ede5067bf93769d9ad",
     "valid_path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/smoke_cpu/context_smoke/valid_predictions.npz",
@@ -439,9 +450,9 @@
   "timing": {
     "inference_batch_size": 256,
     "inference_device": "cpu",
-    "inference_seconds_per_valid420": 0.006705413659801707,
-    "process_wall_seconds": 1.1610221180017106,
-    "train_wall_seconds": 0.13333372998749837
+    "inference_seconds_per_valid420": 0.00727207466843538,
+    "process_wall_seconds": 1.1961178579949774,
+    "train_wall_seconds": 0.13603634500759654
   },
   "torch": "2.5.1+cu124",
   "torch_cuda": "12.4"
