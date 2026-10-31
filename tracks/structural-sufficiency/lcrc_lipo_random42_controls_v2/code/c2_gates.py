@@ -221,6 +221,8 @@ def run_cpu_gates(*, write: bool = True) -> dict[str, Any]:
             "s2off_typed_s2_invariance",
             bool(invariance["identical_restricted_batch"])
             and bool(invariance["identical_perturbed_s2"])
+            and bool(invariance["within_gpu_noise_restricted"])
+            and bool(invariance["within_gpu_noise_perturbed"])
             and float(invariance["max_abs_diff_perturbed"]) == 0.0
             and restricted_access,
             invariance=invariance,

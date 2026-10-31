@@ -64,10 +64,18 @@ def build_s2off(spec, norm: Mapping[str, Any], seed: int, device: torch.device |
 
 
 def s2off_invariance(model: nn.Module, batch: Mapping[str, Any]) -> dict[str, Any]:
-    """Prove that masked / perturbed typed-S2 inputs cannot change the output."""
+    """Prove that masked / perturbed typed-S2 inputs cannot change the output.
+
+    On CPU the repeated forward is bitwise deterministic and the equality flags
+    are exact.  On CUDA, ``index_add_`` uses atomics and repeated identical
+    forwards can differ by ~1e-7; the gate therefore also measures the
+    run-to-run noise from an identical repeat and requires the masked/perturbed
+    differences to stay inside that noise (with a 1e-6 floor).
+    """
     model.eval()
     with torch.no_grad():
         y0 = model(batch)
+        y_repeat = model(batch)
         y_restricted = model(V2M.restricted_batch(batch))
         perturbed = dict(batch)
         for key, hi in (
@@ -79,11 +87,24 @@ def s2off_invariance(model: nn.Module, batch: Mapping[str, Any]) -> dict[str, An
             if key in perturbed:
                 perturbed[key] = torch.randint_like(perturbed[key], 0, hi)
         y_perturbed = model(perturbed)
-    max_diff = float((y0 - y_perturbed).abs().max().item()) if y0.numel() else 0.0
+    def _max_diff(a, b) -> float:
+        return float((a - b).abs().max().item()) if a.numel() else 0.0
+
+    repeat_max = _max_diff(y0, y_repeat)
+    restricted_max = _max_diff(y0, y_restricted)
+    perturbed_max = _max_diff(y0, y_perturbed)
+    tolerance = max(1e-6, 4.0 * repeat_max)
     return {
         "identical_restricted_batch": bool(torch.equal(y0, y_restricted)),
         "identical_perturbed_s2": bool(torch.equal(y0, y_perturbed)),
-        "max_abs_diff_perturbed": max_diff,
+        "identical_repeated_forward": bool(torch.equal(y0, y_repeat)),
+        "repeat_max_abs_diff": repeat_max,
+        "restricted_max_abs_diff": restricted_max,
+        "perturbed_max_abs_diff": perturbed_max,
+        "max_abs_diff_perturbed": perturbed_max,
+        "noise_tolerance": tolerance,
+        "within_gpu_noise_restricted": bool(restricted_max <= tolerance),
+        "within_gpu_noise_perturbed": bool(perturbed_max <= tolerance),
         "typed_s2_access_raises": _restricted_access_raises(batch),
     }
 

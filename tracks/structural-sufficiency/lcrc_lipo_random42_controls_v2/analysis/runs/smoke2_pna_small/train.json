@@ -1,0 +1,243 @@
+{
+  "anomalies": {
+    "grad_clip_events": 2,
+    "grad_norm_max": 15.43034553527832
+  },
+  "checkpoint_path": "tracks/structural-sufficiency/lcrc_lipo_random42_controls_v2/analysis/runs/smoke_pna_small/checkpoint.pt",
+  "checkpoint_sha256": "70ae9a2fd5bab7b5cc67edc55f6cf0320dfd5b25b3f76b54ec35752db6430628",
+  "config": {
+    "aggregation": [
+      "mean",
+      "min",
+      "max",
+      "std"
+    ],
+    "batch_size": 128,
+    "checkpoint": "best_validation_loss",
+    "conv_type": "PNA",
+    "early_stopping_patience": 30,
+    "gnn_intermediate_dim": 45,
+    "gradient_clip": 0.5,
+    "loss": "standardized_mse",
+    "lr": 0.0001,
+    "lr_scheduler": "ReduceLROnPlateau",
+    "lr_scheduler_factor": 0.5,
+    "lr_scheduler_patience": 15,
+    "max_epochs": 360,
+    "model": "PNA-small",
+    "num_layers": 4,
+    "optimizer": "AdamW",
+    "output_node_dim": 45,
+    "precision": "bf16",
+    "scalers": [
+      "identity",
+      "amplification",
+      "attenuation"
+    ],
+    "seed": 0,
+    "towers": 5,
+    "weight_decay": 1e-10,
+    "width_selection_rule": "min |params-247106| over 20..100 step 5, CPU only, frozen before training",
+    "width_source": "tracks/structural-sufficiency/lcrc_lipo_random42_controls_v2/analysis/pna_width_search.json"
+  },
+  "config_hash": "636a73e1ccd8a7a3d742207a745b50a63b4ef0e83f5d62ea7d83b2a34c53c266",
+  "curve": [
+    {
+      "epoch": 1,
+      "lr": 0.0001,
+      "seconds": 0.5171108120121062,
+      "steps": 1,
+      "train_loss_standardized": 1.24204683303833,
+      "train_mae_standardized": 0.8995596170425415,
+      "val_loss_standardized": 1.9627069395081838,
+      "val_mae_raw": 1.2025588192326757,
+      "val_r2_raw": -0.34138430792254604,
+      "val_rmse_raw": 1.5686263864889205
+    },
+    {
+      "epoch": 2,
+      "lr": 0.0001,
+      "seconds": 0.10436899703927338,
+      "steps": 1,
+      "train_loss_standardized": 0.9877827167510986,
+      "train_mae_standardized": 0.7844560146331787,
+      "val_loss_standardized": 1.6996561443339893,
+      "val_mae_raw": 1.1406064560811235,
+      "val_r2_raw": -0.1616059589672032,
+      "val_rmse_raw": 1.4597292855773876
+    }
+  ],
+  "data": {
+    "edge_dim": 13,
+    "label_audit": {
+      "n_train": 3360,
+      "n_valid": 420,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+      "scope": "train_and_valid_only",
+      "sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+      "test_labels_included": false,
+      "vector_sha256": {
+        "train": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+        "valid": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+      }
+    },
+    "n_train": 64,
+    "n_valid": 32,
+    "num_features": 79,
+    "split_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/split_esa_random42_v1.json",
+    "split_file_sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+    "structures": {
+      "atom_feat_dim": 79,
+      "edge_feat_dim": 13,
+      "labels_included": false,
+      "max_edge_global": 438,
+      "max_node_global": 216,
+      "meta_sha256": "e3866a483f56d1cc8291122219cffd0949e167673e5bc1455f1cc697643e0a39",
+      "n_atoms": 203750,
+      "n_directed_edges": 428162,
+      "n_molecules": 4200,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/structures_esa_random42_v1.npz",
+      "sha256": "a098d27fa11c5d718d2f0a373636cfc9eeac9604ea5db8ae50a36d05fe035a2c"
+    },
+    "target_norm": {
+      "label_vector_sha256": "cfe31496a6ef59abeb36b29d7546177aae683c1ba36ce4f61b8a4435e71f4524",
+      "mean": 2.4440625000000002,
+      "n": 64,
+      "scale": 1.1196745045296645,
+      "scale_definition": "population_std_float64 (sklearn StandardScaler convention)",
+      "source": "train3360_labels_only",
+      "valid_or_test_used": false
+    },
+    "test_labels_read": false,
+    "test_structures_loaded": false,
+    "train_rows_sha256": "ca426b33eef2d9f273c48e9c47974489ecd67d3ba7105fde365eff0113322d91",
+    "valid_rows_sha256": "f6503979e0131741b172c481b4ca7e6ee7aac8858b59de3e9835963e91466383"
+  },
+  "env": {
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "cudnn": 90100,
+    "device": "cuda",
+    "git_commit": "09de36ee980ea92932ef84d59ed1b5f94df7dd0d",
+    "hostname": "a100-2",
+    "numpy": "2.1.3",
+    "optimizer": "torch.optim.AdamW",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "precision": "bf16",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "upstream_optimizer_requested": "bitsandbytes.optim.AdamW8bit"
+  },
+  "gpu": {
+    "device_name": "NVIDIA A100-SXM4-40GB",
+    "peak_memory_allocated_bytes": 298967040
+  },
+  "label": "PNA-small-smoke",
+  "label_scope": "train3360_and_valid420_only",
+  "metrics": {
+    "train": {
+      "checkpoint": "best_validation_loss",
+      "mae": 0.8801516609140589,
+      "r2": -0.024137252835737977,
+      "rmse": 1.1331068660542554,
+      "units": "raw_logD"
+    },
+    "train_loss_standardized_last_epoch": 0.9877827167510986,
+    "train_mae_standardized_last_epoch": 0.7844560146331787,
+    "valid": {
+      "checkpoint": "best_validation_loss",
+      "mae": 1.1401878765925835,
+      "r2": -0.16061231918728036,
+      "rmse": 1.4591048245086737,
+      "units": "raw_logD"
+    }
+  },
+  "model": "PNA-small",
+  "model_audit": {
+    "class": "gnn.graph_models.Estimator(conv_type=PNA)",
+    "extra": {
+      "histogram_sha256": "84115b9dc3076e16696417ecfeaa6c848a293b4df5ac7a5e251422990b8f5e20",
+      "length": 5000,
+      "loaded_by_model_verified": true,
+      "n_atoms": 3038,
+      "nonzero": [
+        [
+          1,
+          1477
+        ],
+        [
+          2,
+          184
+        ],
+        [
+          3,
+          967
+        ],
+        [
+          4,
+          410
+        ]
+      ],
+      "path": "tracks/structural-sufficiency/lcrc_lipo_random42_controls_v2/analysis/runs/smoke_pna_small/saved_PNA_degrees/degrees.pt",
+      "sha256": "9ceea88875831603cbcf0e831e9f136b021eb1d24f40dde17d639e5913f5826d",
+      "source": "train3360_graphs_only",
+      "total_degree": 6386,
+      "valid_or_test_used": false
+    },
+    "gradient_coverage_one_batch": {
+      "all_parameter_tensors_receive_grad": true,
+      "loss": 0.5132216215133667,
+      "parameter_tensors_total": 120,
+      "parameter_tensors_with_grad": 120,
+      "parameters_total": 256041,
+      "parameters_with_nonzero_grad_on_batch": 253295
+    },
+    "only_width_changed": true,
+    "parameters_effective": 256041,
+    "parameters_requires_grad": 256041,
+    "parameters_total": 256041,
+    "width": 45,
+    "width_search": {
+      "path": "tracks/structural-sufficiency/lcrc_lipo_random42_controls_v2/analysis/pna_width_search.json",
+      "relative_difference": 0.036158571625132536,
+      "selected_parameters_total": 256041,
+      "sha256": "404eb37bd4f46e7fe3e1f6e3442d94fb43e3a70fd1423dfc06914e635fd4f899",
+      "tightly_size_matched": true
+    }
+  },
+  "predictions": {
+    "train_path": "tracks/structural-sufficiency/lcrc_lipo_random42_controls_v2/analysis/runs/smoke_pna_small/train_predictions.npz",
+    "train_sha256": "569fa766c1e88a4651eea4ef78afca72fc14294dd2cfca752afe303c7199c1be",
+    "valid_path": "tracks/structural-sufficiency/lcrc_lipo_random42_controls_v2/analysis/runs/smoke_pna_small/valid_predictions.npz",
+    "valid_sha256": "25fd52ffee16b2d049e75604fb127fa730074c4d50d646ce0be150241a771d37"
+  },
+  "protocol_id": "lcrc-lipo-random42-controls-v2",
+  "seed": 0,
+  "test_labels_read": false,
+  "test_predictions_read": false,
+  "timing": {
+    "inference_batch_size": 128,
+    "inference_device": "cuda",
+    "inference_seconds_per_valid420": 0.021307887664685648,
+    "train_wall_seconds": 0.6407475150190294
+  },
+  "training": {
+    "batch_order_sha256": "3a3318ccb5dc951273c9bcebae86c5f0d5fce7966c92bb6a698865cd5bcccb55",
+    "batch_size": 128,
+    "best_epoch": 2,
+    "best_val_loss_standardized": 1.6996561443339893,
+    "checkpoint_rule": "best_validation_loss",
+    "early_stopping": true,
+    "early_stopping_patience": 30,
+    "epochs_planned": 2,
+    "epochs_run": 2,
+    "gradient_clip": 0.5,
+    "loss": "mse_on_smoke_standardised_target",
+    "optimizer_steps": 2,
+    "scheduler": "ReduceLROnPlateau(factor=0.5, patience=15)",
+    "steps_per_epoch": 1,
+    "stopped_early": false
+  }
+}

@@ -122,8 +122,8 @@ def train_s2off(
     gate_rows = list(range(min(8, n_train)))
     gate_batch = _move_lcrc_batch(lcrc_data.collate(train_cache, gate_rows), device)
     s2_gate_pre = CM.s2off_invariance(model, gate_batch)
-    if not s2_gate_pre["identical_restricted_batch"] or not s2_gate_pre["identical_perturbed_s2"]:
-        raise RuntimeError(f"S2-off output depends on typed-S2 inputs: {s2_gate_pre}")
+    if not s2_gate_pre["within_gpu_noise_restricted"] or not s2_gate_pre["within_gpu_noise_perturbed"]:
+        raise RuntimeError(f"S2-off output depends on typed-S2 inputs beyond run-to-run noise: {s2_gate_pre}")
     grad_gate = CM.s2off_gradient_gate(model, gate_batch)
     if not grad_gate["all_replacement_receive_nonzero_grad"]:
         raise RuntimeError(f"S2-off replacement branch has a parameter without gradient: {grad_gate}")
@@ -207,8 +207,8 @@ def train_s2off(
     model.eval()
 
     s2_gate_post = CM.s2off_invariance(model, _move_lcrc_batch(lcrc_data.collate(valid_cache, list(range(min(8, n_valid)))), device))
-    if not s2_gate_post["identical_restricted_batch"] or not s2_gate_post["identical_perturbed_s2"]:
-        raise RuntimeError(f"post-soup S2-off output depends on typed-S2 inputs: {s2_gate_post}")
+    if not s2_gate_post["within_gpu_noise_restricted"] or not s2_gate_post["within_gpu_noise_perturbed"]:
+        raise RuntimeError(f"post-soup S2-off output depends on typed-S2 inputs beyond run-to-run noise: {s2_gate_post}")
 
     train_pred = NT.denormalise(_predict_lcrc(model, train_cache, device), target_norm)
     train_metrics = MET.all_metrics(train_pred, y_train_all)
