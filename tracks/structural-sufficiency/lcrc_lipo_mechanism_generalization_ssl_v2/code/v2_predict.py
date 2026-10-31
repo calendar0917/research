@@ -52,9 +52,18 @@ def predict_nn(key: str) -> dict[str, Any]:
     expected_rows = monitor_rows()
     if rows != expected_rows:
         raise ValueError("Monitor cache order does not match the frozen split")
-    pred = D.predict_view(model, cache, device="cpu")
+    target_norm = C.read_json(C.NORM_TARGET_V2)
+    pred = D.denormalise(D.predict_view(model, cache, device="cpu"), target_norm)
     if pred.shape != (len(rows),) or not np.isfinite(pred).all():
         raise RuntimeError("invalid Monitor prediction vector")
+    # The Monitor labels are on the raw Lipophilicity scale.  A prediction
+    # vector centred near zero when the frozen target mean is ~2.16 is the
+    # signature of a forgotten denormalisation; fail closed rather than freeze it.
+    if abs(float(pred.mean()) - float(target_norm["mean"])) > 3.0 * float(target_norm["scale"]):
+        raise RuntimeError(
+            f"Monitor prediction mean {pred.mean():.4f} is implausibly far from the frozen target mean "
+            f"{target_norm['mean']:.4f}"
+        )
     out_dir = C.PREDICTIONS
     C.ensure_dir(out_dir)
     npz_path = out_dir / f"{key}.npz"
@@ -73,6 +82,8 @@ def predict_nn(key: str) -> dict[str, Any]:
         "n_predictions": int(pred.shape[0]),
         "prediction_mean": float(pred.mean()),
         "prediction_std": float(pred.std()),
+        "target_norm_mean": float(target_norm["mean"]),
+        "target_norm_scale": float(target_norm["scale"]),
         "train_manifest": C.track_rel(train_path),
         "train_manifest_sha256": C.sha256_file(train_path),
         "soup_file": C.track_rel(soup_path),
