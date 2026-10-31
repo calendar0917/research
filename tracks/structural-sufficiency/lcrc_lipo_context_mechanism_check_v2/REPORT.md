@@ -72,7 +72,10 @@ CONTEXT better; interval is the 95 % percentile paired-bootstrap interval from
 The seed-0 Test interval excludes zero, but the Validation interval does not.
 Molecule resampling describes within-model sampling variability only; it does
 not estimate training-seed variance. The second seed in §2 is the training-seed
-replicate.
+replicate. For completeness, the seed-0 MAE-change intervals are
+[−0.038881, −0.016113, +0.006734] (Validation) and
+[−0.039821, −0.019154, +0.001667] (Test); the mean-|Δpred| intervals are
+[0.186279, 0.203329, 0.221742] and [0.181563, 0.198396, 0.215910].
 
 ### 1.2 Test identity and labels
 
@@ -138,7 +141,10 @@ The seed-1 Validation gain and Test loss both have intervals containing zero.
 The sign reverses between splits: `+0.005858` on Validation, `−0.002741` on
 Test. The seed-to-seed change in the Test gain is `−0.034997`, larger in
 magnitude than seed 0's Test gain (`+0.032256`). With two seeds this is a
-descriptive sensitivity check, not a variance estimate.
+descriptive sensitivity check, not a variance estimate. The seed-1 MAE-change
+intervals are [−0.022813, +0.000684, +0.023358] (Validation) and
+[−0.020577, −0.000866, +0.020047] (Test); mean-|Δpred| intervals are
+[0.186337, 0.203025, 0.220530] and [0.164810, 0.180733, 0.197151].
 
 The seed-1 Validation gain is also concentrated in the five known tail rows:
 without them the remaining 415 molecules go from RMSE `0.543590` to `0.545203`
@@ -235,7 +241,10 @@ median also favour ROLEBLIND; there is no split on which CONTEXT is better in
 point estimate. In CONTEXT-minus-ROLEBLIND sign convention the intervals are
 `[−0.062389, −0.034563, −0.006146]` and
 `[−0.029403, −0.007752, +0.015334]`; a role-specific CONTEXT win would require
-these to be entirely positive, which they are not.
+these to be entirely positive, which they are not. The ROLEBLIND MAE-advantage
+intervals are [+0.003849, +0.025187, +0.046247] (Validation) and
+[−0.009328, +0.009097, +0.027415] (Test); mean-|Δpred| intervals are
+[0.158092, 0.173794, 0.190582] and [0.152080, 0.166638, 0.182251].
 
 ### 3.3 Answer to Proposition 2
 
