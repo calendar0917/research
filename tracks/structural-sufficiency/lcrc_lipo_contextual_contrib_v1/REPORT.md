@@ -99,7 +99,7 @@ pre-registered soup was used regardless; no epoch was selected on Validation.
 The five row IDs were fixed by `lcrc_lipo_random42_gap_audit_v1` before this
 round; no new tail search was performed.
 
-| row | y logD | BASE pred | CONTEXT pred | |err| BASE | |err| CONTEXT | Δ|err| | ΔSSE |
+| row | y logD | BASE pred | CONTEXT pred | |err| BASE | |err| CONTEXT | |err| improvement (+ = better) | SSE improvement (+ = better) |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | 1630 | 3.90 | 1.33601 | 1.35444 | 2.56399 | 2.54556 | +0.01843 | +0.09419 |
 | 2924 | 3.08 | 0.96212 | 0.86180 | 2.11788 | 2.21820 | −0.10031 | −0.43497 |
