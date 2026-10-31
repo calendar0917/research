@@ -35,4 +35,4 @@
 - E is an effective-parameter construction (dead S2 slot + fixed 70,535-parameter replacement), not a literal 529-wide LocalMLP.
 - C-R0 was not run on folds 1/2, so H2's C arm is Fold-0-only. H2's robustness comes from A.
 - The first Monitor execution was invalid due to a prediction denormalization bug; it is quarantined under `analysis/audit/monitor_invalid_normalization/` and not used. The valid evaluation is the only one used. This is disclosed in AMENDMENT-003.
-- Monitor H1 magnitude (+0.232) is much larger than CV (+0.045); direction agrees, magnitude should not be over-interpreted.
+- Monitor H1 magnitude (+0.232) is much larger than CV (+0.045); the Monitor contrast is A-R3 vs E-R0 while the CV test is A-R0 vs E-R0, so the magnitude includes the R3 recipe advantage. Direction agrees; magnitude should not be over-interpreted.
