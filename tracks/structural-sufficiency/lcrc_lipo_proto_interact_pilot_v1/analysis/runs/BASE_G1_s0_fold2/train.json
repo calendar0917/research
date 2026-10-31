@@ -1,0 +1,184 @@
+{
+  "anomalies": {
+    "grad_clip_events": 2727,
+    "grad_norm_max": 1914.33984375,
+    "nonfinite_events": 0
+  },
+  "arm": "BASE_G1",
+  "artifacts": {
+    "curve": {
+      "bytes": 18603,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/analysis/runs/BASE_G1_s0_fold2/curve.csv",
+      "sha256": "ca83a997a2a4314f8c650d01910f93bf385ebb19ce0d739d025cae9390c20fad"
+    },
+    "predictions_dev": {
+      "bytes": 450740,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/analysis/runs/BASE_G1_s0_fold2/predictions_dev.npz",
+      "sha256": "dfd7edd68a5f14720258ed3faa380ab035c2e760bd915096a6f6e7c7fe9784a5"
+    },
+    "predictions_dev_csv": {
+      "bytes": 60607,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/analysis/runs/BASE_G1_s0_fold2/predictions_dev.csv",
+      "sha256": "36f85a21c0b709ddd81af39529c9b0fb724193e70c298ae2fe5ec29a9f57839b"
+    },
+    "predictions_train": {
+      "bytes": 886644,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/analysis/runs/BASE_G1_s0_fold2/predictions_train.npz",
+      "sha256": "495071a13054e9a0a1d047e98436bbcfdc2a87f7a168e25c0768f21ba4ced68b"
+    },
+    "soup": {
+      "bytes": 997112,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/analysis/runs/BASE_G1_s0_fold2/soup.pt",
+      "sha256": "12126081a190c137d96eff95bdf93361e28b90f5a5f0b53441a63e7417c83e2a"
+    }
+  },
+  "authorization": {
+    "authorized_runs": [
+      "BASE_G0",
+      "BASE_G1",
+      "PROTO_K16_TOP4",
+      "PAIR_TRUE",
+      "PAIR_NULL"
+    ],
+    "max_gpu_hours": 0.5,
+    "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/analysis/gpu_authorization.json"
+  },
+  "config_hash": "6f28c05b81e9d4ad01bf77699195de951152239fdc51cbfb2361f9b48ae96874",
+  "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+  "cuda_peak_memory_bytes": 108353536,
+  "data_view": {
+    "dev_positions_sha256": "cd1558f6f0edbc21793a1c24a2171f58098ba84a15c7106024985fa0d0dd10ae",
+    "fold": 2,
+    "n_dev": 784,
+    "n_train": 1568,
+    "name": "fold2",
+    "target_norm_mean": 2.1398086734693877,
+    "target_norm_n": 1568,
+    "target_norm_scale": 1.2569715646801907,
+    "train_norm_fingerprint": "10d9fb7d337b4c6f387f36cb43ae4be07513bcd5e973bab6955c934179c9071b",
+    "train_norm_source": "fold2_train_structures",
+    "train_positions_sha256": "80d8c5e1361694431f7257029f0cae5622bfa7116ef66d4550ad340699d76546"
+  },
+  "device": "cuda",
+  "device_note": "rr sets CUDA_VISIBLE_DEVICES per pool; the pool GPU is cuda:0 in-process",
+  "diagnostics": {},
+  "fold": 2,
+  "gates_n_passed": 12,
+  "gates_sha256": "54c00aab2e4d496abeccae5406b9a359ccb9c441d187c35047b987765d12e4ed",
+  "git_commit": "ff16154d47b6d4b484314f768564f43ddb757645",
+  "git_dirty_tracked": false,
+  "key": "BASE_G1_s0_fold2",
+  "labels_scope": {
+    "fit2352_fold2_only": true,
+    "monitor_labels_read": false,
+    "official_valid_test_read": false,
+    "random42_splits_read": false,
+    "reserved_labels_read": false
+  },
+  "metrics": {
+    "dev_mae_raw": 0.5487403917422068,
+    "dev_n": 784,
+    "dev_r2": 0.6224941463441882,
+    "dev_rmse_raw": 0.7096625942324211,
+    "generalisation_gap": 0.431858740082254,
+    "metric_note": "RMSE/MAE in original logD units (denormalised with the fold Train target std)",
+    "train_mae_raw": 0.20629995902094558,
+    "train_n": 1568,
+    "train_r2": 0.9511543799347782,
+    "train_rmse_raw": 0.27780385415016706
+  },
+  "model": {
+    "arm": "BASE_G1",
+    "init_state_hash": "e2654c0b26f77ee7241642d5595390dfa2321a5d73da438af1ed7d7586c2e5d4",
+    "pair": null,
+    "parameters": 247106,
+    "parameters_breakdown": {
+      "atom_encoder": 19040,
+      "bond_encoder": 63776,
+      "f": 4225,
+      "local": 148992,
+      "rho": 11073,
+      "total": 247106
+    },
+    "prototypes": null,
+    "soup_state_hash": "28a51da5cfbaa89558c4608b3f9aa18f8de5ab7ed214811378026b487b033b11",
+    "spec": "lipo_v1",
+    "width": 64
+  },
+  "pair_precompute": null,
+  "pool": "res-gpu1",
+  "protocol_id": "lcrc-lipo-proto-interact-pilot-v1",
+  "python": "3.12.14",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "dev_checkpoint_selection": false,
+    "dropout": 0.1,
+    "dropout_hook_calls": 4691,
+    "dropout_position": "final atom-level local representation h (v2 DropoutAtLocal on model.local)",
+    "early_stopping": false,
+    "epochs": 360,
+    "external_data": false,
+    "extra_descriptors": false,
+    "grad_clip": 5.0,
+    "loss": "mse_on_fold_train_standardised_target",
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "pretraining": false,
+    "scheduler": "per_step_cosine",
+    "soup_last": 5,
+    "soup_member_state_hashes": [
+      {
+        "epoch": 356,
+        "state_hash": "8b5ad433598adc8271246619179538056799d065434eda4b7dd62c9afd73d3eb"
+      },
+      {
+        "epoch": 357,
+        "state_hash": "07299b441d8812d4a30274761efe71576b744e9555d434199d2b92518d13e43b"
+      },
+      {
+        "epoch": 358,
+        "state_hash": "cddabf3279d9827775a9d202f4bdf1c147a7edff2d7a9219cf64bc0d5dce0b1e"
+      },
+      {
+        "epoch": 359,
+        "state_hash": "03056398acd718f8b8ad51cb6e2319501b40cc6b213e3a2a96203f5275d77792"
+      },
+      {
+        "epoch": 360,
+        "state_hash": "a7e490dcd1103eb98e84f7c32c14ec022c06f95f36af279dd0caec15fd22002f"
+      }
+    ],
+    "soup_members": [
+      356,
+      357,
+      358,
+      359,
+      360
+    ],
+    "ssl": false,
+    "steps_per_epoch": 13,
+    "total_updates": 4680,
+    "weight_decay": 0.001
+  },
+  "seed": 0,
+  "smoke": false,
+  "timing": {
+    "cuda_step_seconds": 82.51360748521984,
+    "eval_seconds": 0.33763253898359835,
+    "pair_precompute_seconds": 4.2119063436985016e-07,
+    "process_wall_seconds": 173.84491674113087,
+    "train_loop_seconds": 164.3050508981105
+  },
+  "torch": "2.5.1+cu124"
+}

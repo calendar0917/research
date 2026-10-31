@@ -1,0 +1,156 @@
+{
+  "anomalies": {
+    "grad_clip_events": 26,
+    "grad_norm_max": 1914.33984375,
+    "nonfinite_events": 0
+  },
+  "arm": "BASE_G1",
+  "artifacts": {
+    "curve": {
+      "bytes": 170,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/analysis/smoke/BASE_G1_s0_fold2/curve.csv",
+      "sha256": "bbed6147d9260488055225ec91889a02987753502aea21b5a808b29e2f343778"
+    },
+    "predictions_dev": {
+      "bytes": 295156,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/analysis/smoke/BASE_G1_s0_fold2/predictions_dev.npz",
+      "sha256": "dd548b6b1989b219905910b26b3d747e1cc8fb79fe00e12b2c3d89469f0e3641"
+    },
+    "predictions_dev_csv": {
+      "bytes": 38940,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/analysis/smoke/BASE_G1_s0_fold2/predictions_dev.csv",
+      "sha256": "7b027d47527111af7b7959ef32c7f445b18226bc1d41a9a69fc709e2ff89422a"
+    },
+    "predictions_train": {
+      "bytes": 289012,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/analysis/smoke/BASE_G1_s0_fold2/predictions_train.npz",
+      "sha256": "c20dc349994fb900d464cfdc68711eca3811183396bb3cd6e1b56ba7398f59ab"
+    },
+    "soup": {
+      "bytes": 997112,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/analysis/smoke/BASE_G1_s0_fold2/soup.pt",
+      "sha256": "7b6ff4bc2bb32de4acfb2f15bee5e648b53acff7502a204c773602b088aa9a92"
+    }
+  },
+  "config_hash": "6f28c05b81e9d4ad01bf77699195de951152239fdc51cbfb2361f9b48ae96874",
+  "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+  "cuda_peak_memory_bytes": 104752128,
+  "data_view": {
+    "dev_positions_sha256": "cd1558f6f0edbc21793a1c24a2171f58098ba84a15c7106024985fa0d0dd10ae",
+    "fold": 2,
+    "n_dev": 784,
+    "n_train": 1568,
+    "name": "fold2",
+    "target_norm_mean": 2.1398086734693877,
+    "target_norm_n": 1568,
+    "target_norm_scale": 1.2569715646801907,
+    "train_norm_fingerprint": "10d9fb7d337b4c6f387f36cb43ae4be07513bcd5e973bab6955c934179c9071b",
+    "train_norm_source": "fold2_train_structures",
+    "train_positions_sha256": "80d8c5e1361694431f7257029f0cae5622bfa7116ef66d4550ad340699d76546"
+  },
+  "device": "cuda",
+  "device_note": "rr sets CUDA_VISIBLE_DEVICES per pool; the pool GPU is cuda:0 in-process",
+  "diagnostics": {},
+  "fold": 2,
+  "git_commit": "ff16154d47b6d4b484314f768564f43ddb757645",
+  "git_dirty_tracked": false,
+  "key": "BASE_G1_s0_fold2",
+  "labels_scope": {
+    "fit2352_fold2_only": true,
+    "monitor_labels_read": false,
+    "official_valid_test_read": false,
+    "random42_splits_read": false,
+    "reserved_labels_read": false
+  },
+  "metrics": {
+    "dev_mae_raw": 0.881293716805804,
+    "dev_n": 512,
+    "dev_r2": 0.03559496464417078,
+    "dev_rmse_raw": 1.1179499323734736,
+    "generalisation_gap": 0.014726804783057768,
+    "metric_note": "RMSE/MAE in original logD units (denormalised with the fold Train target std)",
+    "train_mae_raw": 0.8716222774726748,
+    "train_n": 512,
+    "train_r2": 0.2466834448563554,
+    "train_rmse_raw": 1.1032231275904159
+  },
+  "model": {
+    "arm": "BASE_G1",
+    "init_state_hash": "e2654c0b26f77ee7241642d5595390dfa2321a5d73da438af1ed7d7586c2e5d4",
+    "pair": null,
+    "parameters": 247106,
+    "parameters_breakdown": {
+      "atom_encoder": 19040,
+      "bond_encoder": 63776,
+      "f": 4225,
+      "local": 148992,
+      "rho": 11073,
+      "total": 247106
+    },
+    "prototypes": null,
+    "soup_state_hash": "4decf3947ad42b3e03885231ac34f25b757251c78fc09e0bad05ffb0a044dbb7",
+    "spec": "lipo_v1",
+    "width": 64
+  },
+  "pair_precompute": null,
+  "pool": "smoke",
+  "protocol_id": "lcrc-lipo-proto-interact-pilot-v1",
+  "python": "3.12.14",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "dev_checkpoint_selection": false,
+    "dropout": 0.1,
+    "dropout_hook_calls": 30,
+    "dropout_position": "final atom-level local representation h (v2 DropoutAtLocal on model.local)",
+    "early_stopping": false,
+    "epochs": 2,
+    "external_data": false,
+    "extra_descriptors": false,
+    "grad_clip": 5.0,
+    "loss": "mse_on_fold_train_standardised_target",
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "pretraining": false,
+    "scheduler": "per_step_cosine",
+    "soup_last": 2,
+    "soup_member_state_hashes": [
+      {
+        "epoch": 1,
+        "state_hash": "5c928936ea7a5a44dd8e1db136ab48c8a2912620d2acf76126af2a1f52832a12"
+      },
+      {
+        "epoch": 2,
+        "state_hash": "d33261463ddc85674d9f1fd3fc12124e80953c0136c8fcbd698b4559c779d27c"
+      }
+    ],
+    "soup_members": [
+      1,
+      2
+    ],
+    "ssl": false,
+    "steps_per_epoch": 13,
+    "total_updates": 26,
+    "weight_decay": 0.001
+  },
+  "seed": 0,
+  "smoke": true,
+  "timing": {
+    "cuda_step_seconds": 0.3113954574801028,
+    "eval_seconds": 0.08690022095106542,
+    "pair_precompute_seconds": 4.670582711696625e-07,
+    "process_wall_seconds": 18.578607070958242,
+    "train_loop_seconds": 0.6371783870272338
+  },
+  "torch": "2.5.1+cu124"
+}

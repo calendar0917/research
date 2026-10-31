@@ -5,3 +5,9 @@ cache/
 analysis/smoke/*/soup.pt
 # local pull staging (rr syncs run copies here before they are copied into analysis/)
 rr_pull_staging/
+# per-molecule prediction arrays are the primary evidence of this round (small,
+# hash-recorded in train.json), so they are force-tracked despite the root `*.npz` rule
+!analysis/runs/*/predictions_dev.npz
+!analysis/runs/*/predictions_train.npz
+!analysis/smoke/*/predictions_dev.npz
+!analysis/smoke/*/predictions_train.npz

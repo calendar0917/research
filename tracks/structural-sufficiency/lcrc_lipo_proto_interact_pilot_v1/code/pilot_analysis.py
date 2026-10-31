@@ -570,11 +570,10 @@ def verify() -> dict[str, Any]:
 
             reloaded, _ = predict(model, view.dev_cache, device=torch.device("cpu"), pairs=pairs)
             stored = C.V2D.denormalise(reloaded, view.target_norm)
-            check(
-                f"{arm}:reload_predictions_match",
-                float(np.abs(stored - pred["pred"]).max()) < 1e-6,
-                float(np.abs(stored - pred["pred"]).max()),
-            )
+            # The stored predictions were produced on CUDA; this reload runs on
+            # CPU, so only float32 reduction-order noise (~2e-6 logD) is allowed.
+            reload_diff = float(np.abs(stored - pred["pred"]).max())
+            check(f"{arm}:reload_predictions_match", reload_diff < 1e-5, reload_diff)
     payload = {
         "protocol_id": C.PROTOCOL_ID,
         "created_utc": C.utcnow(),

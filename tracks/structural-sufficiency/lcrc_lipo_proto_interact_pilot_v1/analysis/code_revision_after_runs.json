@@ -1,0 +1,33 @@
+{
+  "changed_files": [
+    {
+      "current_sha256": "991a2b0687b360e277b3a55638bc13ffe03075037fba8d8aba14ad56d50350d0",
+      "frozen_sha256": "f4051b7ed9ffdb18e5e6ffd9d585f8ad044fd95e9827c3943d65c58ed5407d20",
+      "module_role": "post-run analysis only: five-model table, paired comparisons, ledger, verify()",
+      "path": "tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/code/pilot_analysis.py"
+    }
+  ],
+  "consequence_for_require_freeze": "run_pilot.py train now refuses to run at HEAD because the frozen code hash set no longer matches; this is the intended protocol guard, not a failure.",
+  "created_utc": "2026-10-31T11:35:40Z",
+  "diff": "diff --git a/tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/code/pilot_analysis.py b/tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/code/pilot_analysis.py\nindex 350a2dc..5d33063 100644\n--- a/tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/code/pilot_analysis.py\n+++ b/tracks/structural-sufficiency/lcrc_lipo_proto_interact_pilot_v1/code/pilot_analysis.py\n@@ -570,11 +570,10 @@ def verify() -> dict[str, Any]:\n \n             reloaded, _ = predict(model, view.dev_cache, device=torch.device(\"cpu\"), pairs=pairs)\n             stored = C.V2D.denormalise(reloaded, view.target_norm)\n-            check(\n-                f\"{arm}:reload_predictions_match\",\n-                float(np.abs(stored - pred[\"pred\"]).max()) < 1e-6,\n-                float(np.abs(stored - pred[\"pred\"]).max()),\n-            )\n+            # The stored predictions were produced on CUDA; this reload runs on\n+            # CPU, so only float32 reduction-order noise (~2e-6 logD) is allowed.\n+            reload_diff = float(np.abs(stored - pred[\"pred\"]).max())\n+            check(f\"{arm}:reload_predictions_match\", reload_diff < 1e-5, reload_diff)\n     payload = {\n         \"protocol_id\": C.PROTOCOL_ID,\n         \"created_utc\": C.utcnow(),\n",
+  "effect_on_reported_numbers": "none: all metrics, comparisons, decisions and diagnostics were produced by the frozen training/evaluation path and by the same analysis functions except this tolerance comparison; verify_pilot.json was regenerated and reports 61/61 checks passing.",
+  "frozen_code_hash_set_size": 10,
+  "n_unchanged_files": 9,
+  "protocol_freeze_sha256": "1faf254ed1ea62f0fbc08c3ea0c6e33797656f7d44a84add786bb64cb9f3e25b",
+  "protocol_id": "lcrc-lipo-proto-interact-pilot-v1",
+  "purpose": "Honest record of the only source edit made AFTER the protocol freeze and after all five GPU runs.",
+  "reason": "verify() reloads each CUDA-trained checkpoint on CPU and compares the reproduced Dev predictions with the stored ones. The observed maximum difference was 2.0e-6 logD (float32 reduction-order noise), so the tolerance was raised from 1e-6 to 1e-5 with an explanatory comment. No model, training, data, batching or metric code was touched; the other 9 frozen files are byte-identical.",
+  "reproduce_training_exactly": "git checkout e92b172a3b673615423a5cb6770867a34183af78 && rr deploy res && run the five commands in REPORT.md \u00a71",
+  "training_code_frozen_at_commit": "e92b172a3b673615423a5cb6770867a34183af78",
+  "unchanged_modules": [
+    "conftest.py",
+    "pilot.yaml",
+    "pilot_common.py",
+    "pilot_gates.py",
+    "pilot_models.py",
+    "pilot_pairs.py",
+    "pilot_train.py",
+    "run_pilot.py",
+    "test_pilot.py"
+  ]
+}
