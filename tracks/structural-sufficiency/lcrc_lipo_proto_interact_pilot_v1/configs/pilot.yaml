@@ -1,0 +1,101 @@
+# LCRC Lipophilicity fast mechanism-exploration pilot, v1.
+#
+# Every value below is fixed by the task book and re-validated by
+# code/pilot_common.py:validate_config().  Changing any of them invalidates the
+# protocol freeze and the CPU gates, and the formal `train` command refuses to
+# run.
+protocol_id: lcrc-lipo-proto-interact-pilot-v1
+round_id: lcrc-lipo-proto-interact-pilot-v1
+task: shared local prototypes vs explicit mid-range atom-pair interactions on Lipophilicity
+
+# Training seed and scaffold fold (v2 frozen Fit2352 internal CV).
+seed: 0
+fold: 2
+
+data:
+  source_round: lcrc_lipo_mechanism_generalization_ssl_v2
+  fold_file: analysis/folds_v2.json            # read read-only from the v2 round
+  label_scope: fit2352_only
+  monitor_reserved_random42: forbidden
+  n_train: 1568
+  n_dev: 784
+  standardisation: fold_train_only            # features and target alike
+
+training:
+  optimizer: AdamW
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  peak_lr: 3.0e-4
+  min_lr: 1.0e-5
+  scheduler: per_step_cosine
+  weight_decay: 1.0e-3
+  batch_size: 128
+  epochs: 360
+  grad_clip: 5.0
+  dropout: 0.10
+  dropout_position: final_atom_local_h_before_readout   # v2 DropoutAtLocal on model.local
+  loss: mse_on_fold_standardised_target
+  soup_last: 5
+  early_stopping: false
+  dev_checkpoint_selection: false
+  shuffle_offset: 917000
+  ssl: false
+  pretraining: false
+  extra_descriptors: false
+  external_data: false
+
+model:
+  base: lcrc_lipo_v1_width64                # lcrc_cross_task_preparation_v1 lcrc_model.LCRC
+  width: 64
+  freeze: null
+
+proto:
+  name: PROTO_K16_TOP4
+  n_prototypes: 16
+  topk: 4
+  tau: 0.25
+  similarity: cosine_on_f_normalize
+  readout: "sum_k p_vk * (W_k . h_v + b_k)"
+  mlp_residual_bypass: false
+  aux_losses: none
+  sparsity_penalty: none
+  load_balance_loss: none
+  reconstruction_loss: none
+
+pair:
+  distances: [3, 4, 5]
+  pair_definition: unordered atom pairs u<v in the LCRC heavy-atom graph
+  distance_source: BFS over the frozen cache atom_ptr/bond_ptr/bond_index
+  z_dim: 16
+  hidden: 32
+  z_map: "tanh(Linear(64,16)(h_v))"
+  aggregation: mean_over_pairs
+  empty_bin_value: 0.0
+  head: ["Linear(48,32)", "SiLU", "Linear(32,1)"]
+  last_layer_init: "weight:normal(0,1e-3);bias:0"
+  other_init: pytorch_default
+  gate_or_scale: null
+  message_passing: false
+  null_salt: lipo-pair-null-v1
+  null_permutation_scope: per_molecule
+  null_permutation_count: 6
+
+decision:
+  primary_metric: dev_rmse_raw_logD
+  proto_strong_gain: 0.020
+  pair_strong_gain: 0.020
+  pair_vs_null_gain: 0.010
+
+budget:
+  gpu_hard_cap_hours: 0.5
+  host: res
+  backend: process
+  ddp: false
+
+runs:
+  - {key: BASE_G0,        pool: res-gpu0, device: cuda}
+  - {key: PROTO_K16_TOP4, pool: res-gpu0, device: cuda}
+  - {key: BASE_G1,        pool: res-gpu1, device: cuda}
+  - {key: PAIR_TRUE,      pool: res-gpu1, device: cuda}
+  - {key: PAIR_NULL,      pool: res-gpu1, device: cuda}
+arms: [BASE_G0, BASE_G1, PROTO_K16_TOP4, PAIR_TRUE, PAIR_NULL]
