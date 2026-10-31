@@ -30,16 +30,13 @@ def load_monitor_labels() -> dict[str, Any]:
         # second open and would correctly be denied by the one-shot guard.
         raw = guard.read_bytes_with_grant(C.v1c.LIPO_LABELS)
         labels_sha = C.v1_fit_labels._verify_label_bytes(raw)
-        scanned = C.v1_fit_labels._scan(
+        values, meta, audit = C.v1_fit_labels._scan(
             raw.decode("utf-8"),
             requested_label_keys=(str(r) for r in monitor_rows),
             path=C.v1c.LIPO_LABELS,
         )
     finally:
         guard.disarm()
-    values = scanned["values"]
-    meta = scanned["meta"]
-    audit = scanned["audit"]
     C.v1_fit_labels.check_artifact_metadata(meta, set(fit_rows) | set(monitor_rows))
     y = np.asarray([values[str(r)] for r in monitor_rows], dtype=np.float64)
     if y.shape != (C.SPLIT_SIZES["monitor"],) or not np.isfinite(y).all():

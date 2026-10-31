@@ -70,3 +70,12 @@ ungranted open. No Monitor value was constructed and no
 `read_bytes_with_grant` exactly once, verifies the frozen SHA-256 from those
 bytes, and scans the same in-memory text. The final freeze includes this fix;
 the Monitor evaluation remains a single evaluation.
+
+## Addendum 4 — unpack the single-pass scan
+
+`v1_fit_labels._scan` returns `(values, meta, audit)`, not a dict. The first
+corrected read constructed the 504 Monitor values and then failed on
+`scanned["values"]`; no Monitor metric or `monitor_metrics_v2.json` was
+written. The tuple is now unpacked. The final evaluation is the only
+evaluation that writes metrics. Failed attempts are disclosed in the label
+access audit trail; they did not produce or inspect Monitor errors.
