@@ -1,0 +1,98 @@
+{
+  "candidates": [
+    {
+      "family": "g2l_loo",
+      "gain_vs_roleblind_s0": -0.0029572603934929775,
+      "mae_change_vs_roleblind_s0": 0.003203197573444172,
+      "model": "g2l_loo_s0",
+      "performance_gate": false,
+      "valid_rmse": 0.5371892216521502
+    },
+    {
+      "family": "dist_blind",
+      "gain_vs_roleblind_s0": -0.012278809390644296,
+      "mae_change_vs_roleblind_s0": 0.012811111420600763,
+      "model": "dist_blind_s0",
+      "performance_gate": false,
+      "valid_rmse": 0.5465107706493015
+    },
+    {
+      "family": "g2l_all",
+      "gain_vs_roleblind_s0": -0.012616541087702937,
+      "mae_change_vs_roleblind_s0": 0.014788778847876716,
+      "model": "g2l_all_s0",
+      "performance_gate": false,
+      "valid_rmse": 0.5468485023463602
+    },
+    {
+      "family": "g2l_scalar",
+      "gain_vs_roleblind_s0": -0.016537714963533068,
+      "mae_change_vs_roleblind_s0": 0.012227186809209478,
+      "model": "g2l_scalar_s0",
+      "performance_gate": false,
+      "valid_rmse": 0.5507696762221903
+    },
+    {
+      "family": "path_unbound",
+      "gain_vs_roleblind_s0": -0.038324039548871314,
+      "mae_change_vs_roleblind_s0": 0.02906095580069601,
+      "model": "path_unbound_s0",
+      "performance_gate": false,
+      "valid_rmse": 0.5725560008075286
+    },
+    {
+      "family": "path_bind",
+      "gain_vs_roleblind_s0": -0.04022228288437546,
+      "mae_change_vs_roleblind_s0": 0.027201676612084558,
+      "model": "path_bind_s0",
+      "performance_gate": false,
+      "valid_rmse": 0.5744542441430327
+    },
+    {
+      "family": "g2l_local_cap",
+      "gain_vs_roleblind_s0": -0.04084771455161107,
+      "mae_change_vs_roleblind_s0": 0.029829670055195767,
+      "model": "g2l_local_cap_s0",
+      "performance_gate": false,
+      "valid_rmse": 0.5750796758102683
+    },
+    {
+      "family": "dist_true",
+      "gain_vs_roleblind_s0": -0.05716901902166038,
+      "mae_change_vs_roleblind_s0": 0.04428275908690532,
+      "model": "dist_true_s0",
+      "performance_gate": false,
+      "valid_rmse": 0.5914009802803176
+    }
+  ],
+  "created_utc": "2026-10-31T18:35:54Z",
+  "mechanism": [
+    {
+      "control_model": "path_unbound_s0",
+      "gain_true_vs_control": -0.0018982433355041461,
+      "gate": false,
+      "pair": "path_bind_vs_path_unbound",
+      "true_model": "path_bind_s0"
+    },
+    {
+      "control_model": "dist_blind_s0",
+      "gain_true_vs_control": -0.04489020963101609,
+      "gate": false,
+      "pair": "dist_true_vs_dist_blind",
+      "true_model": "dist_true_s0"
+    },
+    {
+      "control_model": "g2l_local_cap_s0",
+      "gain_true_vs_control": 0.04084771455161107,
+      "gate": true,
+      "pair": "roleblind_vs_g2l_local_cap",
+      "true_model": "roleblind_s0"
+    }
+  ],
+  "mechanism_gate": "true-vs-matched-control valid gain >= 0.008",
+  "note": "Exploratory resource gate, not a statistical significance test.",
+  "performance_gate": "valid gain vs ROLEBLIND_s0 >= 0.008 and MAE change <= 0.005",
+  "selected": [
+    "roleblind_s0"
+  ]
+}

@@ -249,7 +249,7 @@ def build_mechanism_table() -> list[dict[str, Any]]:
                     if pred_a is None or pred_b is None:
                         continue
                     y = pred_a["y_true"]
-                    boot = E.paired_bootstrap(pred_a["pred"], pred_b["pred"], y)
+                    boot = E.paired_bootstrap(pred_b["pred"], pred_a["pred"], y)
                     tail = _tail_rows_for_pair(pred_a["pred"], pred_b["pred"], y, pred_a["rows"])
                     rows.append(
                         {
@@ -273,7 +273,7 @@ def build_mechanism_table() -> list[dict[str, Any]]:
                             "tail_net_sse_true_minus_control": tail["tail_net_sse_other_minus_ref"],
                             "non_tail_rmse_true": tail["non_tail_rmse_ref"],
                             "non_tail_rmse_control": tail["non_tail_rmse_other"],
-                            "non_tail_gain_true_vs_control": tail["non_tail_rmse_gain_other"],
+                            "non_tail_gain_true_vs_control": float(-tail["non_tail_rmse_gain_other"]),
                         }
                     )
     _write_csv(
