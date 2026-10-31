@@ -67,7 +67,7 @@ preprocessing (variance filter, median imputation) is fitted on Train3360 only.
 **Structures.** Both graph models consume the same upstream Chemprop
 featurisation of the *same* 4,200 molecules with explicit hydrogens
 (`Chem.AddHs`): 79 atom features, 13 bond features, 203,750 atoms, 428,162
-directed edges, `max_node = 45`, `max_edge_global = 438`. The materialised
+directed edges, `max_node_global = 216`, `max_edge_global = 438`. The materialised
 artifact is `data/structures_esa_random42_v1.npz`
 (SHA256 `a098d27f...`), verified against re-derivation.
 
