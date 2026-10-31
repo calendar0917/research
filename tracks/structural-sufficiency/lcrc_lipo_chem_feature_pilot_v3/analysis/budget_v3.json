@@ -1,0 +1,100 @@
+{
+  "anchor": {
+    "A": {
+      "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+      "historical_charged_gpu_hours": 0.039579399294711444,
+      "key": "F1_A_sel_s0",
+      "measured_process_seconds": 134.4858374609612
+    },
+    "C": {
+      "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+      "historical_charged_gpu_hours": 0.031472078224178406,
+      "key": "F1_C_sel_s0",
+      "measured_process_seconds": 105.29948160704225
+    },
+    "assumption": "wider rho input is within run-to-run noise; no per-update cost multiplier",
+    "chemistry_parameter_delta": {
+      "A_Chem12": 768,
+      "A_Chem13": 832,
+      "C_Chem12": 768
+    },
+    "source": "v2 gpu_ledger_v2.json Fold-1 seed-0 R3 entries on res/res-gpu0",
+    "startup_allowance_seconds_per_run": 8.0
+  },
+  "created_utc": "2026-10-31T03:21:55Z",
+  "estimated_conditional_gpu_hours": 0.03461928604659625,
+  "estimated_total_gpu_hours_all_three": 0.12169396449496142,
+  "estimated_unconditional_gpu_hours": 0.08707467844836518,
+  "fits_within_hard_cap": true,
+  "hard_cap_gpu_hours": 0.3,
+  "historical_v1_v2_hours_reference_only": 3.0186,
+  "includes_conditional_third_run": true,
+  "margin_gpu_hours": 0.17830603550503857,
+  "n_runs": 3,
+  "overhead_fraction": 0.1,
+  "per_run": [
+    {
+      "anchor_key": "F1_A_sel_s0",
+      "anchor_measured_process_seconds": 134.4858374609612,
+      "arm": "A_Chem12",
+      "base_arm": "A",
+      "comparator": "F1_A_sel_s0",
+      "condition": null,
+      "conditional": false,
+      "estimated_gpu_hours": 0.039579399294711444,
+      "estimated_process_seconds": 142.4858374609612,
+      "feature_variant": "chem12",
+      "fold": 1,
+      "host": "res",
+      "key": "F1_A_Chem12_R3_s0",
+      "kind": "train",
+      "pool": "res-gpu0",
+      "recipe": "R3",
+      "seed": 0,
+      "variant": "scratch"
+    },
+    {
+      "anchor_key": "F1_A_sel_s0",
+      "anchor_measured_process_seconds": 134.4858374609612,
+      "arm": "A_Chem13",
+      "base_arm": "A",
+      "comparator": "F1_A_sel_s0",
+      "condition": null,
+      "conditional": false,
+      "estimated_gpu_hours": 0.039579399294711444,
+      "estimated_process_seconds": 142.4858374609612,
+      "feature_variant": "chem13",
+      "fold": 1,
+      "host": "res",
+      "key": "F1_A_Chem13_R3_s0",
+      "kind": "train",
+      "pool": "res-gpu0",
+      "recipe": "R3",
+      "seed": 0,
+      "variant": "scratch"
+    },
+    {
+      "anchor_key": "F1_C_sel_s0",
+      "anchor_measured_process_seconds": 105.29948160704225,
+      "arm": "C_Chem12",
+      "base_arm": "C",
+      "comparator": "F1_C_sel_s0",
+      "condition": "A_Chem12 vs historical A-R3: RMSE improvement >= 0.03, MAE improvement > 0, and the gain is not tail-dependent under the pre-registered top-2% rule",
+      "conditional": true,
+      "estimated_gpu_hours": 0.031472078224178406,
+      "estimated_process_seconds": 113.29948160704225,
+      "feature_variant": "chem12",
+      "fold": 1,
+      "host": "res",
+      "key": "F1_C_Chem12_R3_s0",
+      "kind": "train",
+      "pool": "res-gpu0",
+      "recipe": "R3",
+      "seed": 0,
+      "variant": "scratch"
+    }
+  ],
+  "protocol_id": "lcrc-lipo-chem-feature-pilot-v3",
+  "raw_estimated_gpu_hours": 0.11063087681360129,
+  "status": "ESTIMATE_ONLY_NOT_EXECUTED"
+}

@@ -1,0 +1,79 @@
+{
+  "comparisons": {},
+  "conditional_C": {
+    "gate": {
+      "met": false,
+      "reason": "A_Chem12 run missing"
+    },
+    "run_executed": false,
+    "run_key": "F1_C_Chem12_R3_s0"
+  },
+  "created_utc": "2026-10-31T03:23:19Z",
+  "decision": {
+    "materiality_rmse": 0.03,
+    "reason": "A_Chem12 and/or A_Chem13 GPU runs are missing",
+    "verdict": "PILOT_NOT_STARTED"
+  },
+  "historical": {
+    "A": {
+      "dev_mae": 0.546694119695902,
+      "dev_rmse": 0.7403427006133139,
+      "key": "F1_A_sel_s0",
+      "train_rmse": 0.2696302152948522
+    },
+    "C": {
+      "dev_mae": 0.5387064120516623,
+      "dev_rmse": 0.7264913055478032,
+      "key": "F1_C_sel_s0",
+      "train_rmse": 0.299891945560453
+    }
+  },
+  "materiality_rmse": 0.03,
+  "new_runs": {},
+  "protocol_id": "lcrc-lipo-chem-feature-pilot-v3",
+  "scope": {
+    "dev_n": 784,
+    "extra_folds": false,
+    "extra_seeds": false,
+    "fold": 1,
+    "full_fit_retrain": false,
+    "monitor_used": false,
+    "official_valid_test_used": false,
+    "recipe": "R3",
+    "reserved_used": false,
+    "seed": 0,
+    "split": "v2 Fit2352 internal scaffold fold 1",
+    "ssl": false
+  },
+  "status": "PARTIAL",
+  "table": [
+    {
+      "delta_note": "reference",
+      "delta_rmse_vs_same_arch_original": 0.0,
+      "dev_mae": 0.546694119695902,
+      "dev_rmse": 0.7403427006133139,
+      "fold": 1,
+      "model": "A-R3 (v2 historical)",
+      "seed": 0,
+      "train_rmse": 0.2696302152948522
+    },
+    {
+      "delta_note": "reference",
+      "delta_rmse_vs_same_arch_original": 0.0,
+      "dev_mae": 0.5387064120516623,
+      "dev_rmse": 0.7264913055478032,
+      "fold": 1,
+      "model": "C-R3 (v2 historical)",
+      "seed": 0,
+      "train_rmse": 0.299891945560453
+    }
+  ],
+  "tail_rule": {
+    "exclusion_source": {
+      "A": "F1_A_sel_s0",
+      "C": "F1_C_sel_s0"
+    },
+    "fraction": 0.02,
+    "min_retained_fraction": 0.5
+  }
+}

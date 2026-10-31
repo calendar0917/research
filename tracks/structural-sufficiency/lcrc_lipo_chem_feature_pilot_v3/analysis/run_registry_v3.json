@@ -1,0 +1,80 @@
+{
+  "allowed_extra_runs": 0,
+  "comparators": {
+    "A": "F1_A_sel_s0",
+    "C": "F1_C_sel_s0"
+  },
+  "conditional_rule": {
+    "arm": "C_Chem12",
+    "evaluated_against": "F1_C_sel_s0",
+    "must_not_be_tail_dependent": true,
+    "rmse_gain_min": 0.03,
+    "run_key": "F1_C_Chem12_R3_s0",
+    "tail_fraction": 0.02,
+    "tail_min_retained_fraction": 0.5
+  },
+  "forbidden": [
+    "new seeds",
+    "second fold",
+    "SSL",
+    "additional descriptor combinations",
+    "full-Fit retrain",
+    "Monitor evaluation"
+  ],
+  "n_conditional": 1,
+  "n_gpu_jobs": 3,
+  "n_runs": 3,
+  "n_unconditional": 2,
+  "protocol_id": "lcrc-lipo-chem-feature-pilot-v3",
+  "round_id": "lcrc-lipo-chem-feature-pilot-v3",
+  "runs": [
+    {
+      "arm": "A_Chem12",
+      "base_arm": "A",
+      "comparator": "F1_A_sel_s0",
+      "condition": null,
+      "conditional": false,
+      "feature_variant": "chem12",
+      "fold": 1,
+      "host": "res",
+      "key": "F1_A_Chem12_R3_s0",
+      "kind": "train",
+      "pool": "res-gpu0",
+      "recipe": "R3",
+      "seed": 0,
+      "variant": "scratch"
+    },
+    {
+      "arm": "A_Chem13",
+      "base_arm": "A",
+      "comparator": "F1_A_sel_s0",
+      "condition": null,
+      "conditional": false,
+      "feature_variant": "chem13",
+      "fold": 1,
+      "host": "res",
+      "key": "F1_A_Chem13_R3_s0",
+      "kind": "train",
+      "pool": "res-gpu0",
+      "recipe": "R3",
+      "seed": 0,
+      "variant": "scratch"
+    },
+    {
+      "arm": "C_Chem12",
+      "base_arm": "C",
+      "comparator": "F1_C_sel_s0",
+      "condition": "A_Chem12 vs historical A-R3: RMSE improvement >= 0.03, MAE improvement > 0, and the gain is not tail-dependent under the pre-registered top-2% rule",
+      "conditional": true,
+      "feature_variant": "chem12",
+      "fold": 1,
+      "host": "res",
+      "key": "F1_C_Chem12_R3_s0",
+      "kind": "train",
+      "pool": "res-gpu0",
+      "recipe": "R3",
+      "seed": 0,
+      "variant": "scratch"
+    }
+  ]
+}
