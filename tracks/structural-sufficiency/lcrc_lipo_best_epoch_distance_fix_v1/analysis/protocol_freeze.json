@@ -1,0 +1,120 @@
+{
+  "arms": [
+    "base_s0",
+    "base_s1",
+    "base_s2",
+    "roleblind_s0",
+    "roleblind_s1",
+    "roleblind_s2",
+    "g2l_loo_s0",
+    "g2l_loo_s1",
+    "g2l_loo_s2",
+    "g2l_all_s0",
+    "g2l_all_s1",
+    "g2l_all_s2",
+    "dist_true_fixed_s0",
+    "dist_true_fixed_s1",
+    "dist_true_fixed_s2",
+    "dist_blind_s0",
+    "dist_blind_s1",
+    "dist_blind_s2"
+  ],
+  "code_hashes": {
+    "code/be_analysis.py": "e7b97ca67ad30091c348cbc060eb966f3a837e8f68f67a92596a1ea33e103eff",
+    "code/be_common.py": "8316f60ad35648d2b4c041c26f284f02af71644a0ff814f88f9ca382727349c6",
+    "code/be_data.py": "906e1fcc4bc9a93cf9cdc692c6006b5b6b7235fce49516f0b49a0924282ab2c3",
+    "code/be_evaluate.py": "7a59ad0f346d00f5d0fc6a571b2f9e924a1e0d018b81ec7bdab32204f75767c9",
+    "code/be_gates.py": "0e43d0018307fa055b1a226279832d646731901df6b6b66774bddb14d7e0f025",
+    "code/be_ledger.py": "4d13d49d0b318237069d5493144afa678581872eab26c691d3b9f1edd1b8d894",
+    "code/be_models.py": "2baa7561232e19a7ee8f2f2bbac769d7de6e9f10567be75dca63e83d7623aad4",
+    "code/be_train.py": "2b44734d959686904f580a4a69cfb0b9970871892b178404dff1ce133cd7498e",
+    "code/run_be.py": "8e2ff2e5ab8d58f36d459ca14625318f4cc7e77d9f41c9a5f25fc4ae43276be1"
+  },
+  "config_file_sha256": "14adeeb64b46d64240dd09c4abf75e4835790ac08021e050cce5ed7d8a96641e",
+  "config_hash": "7dfea45e73fd1c3929ff81fac02641a6fb185800555605ea8edc2eda322310d6",
+  "cpu_gates_n_passed": 20,
+  "cpu_gates_sha256": "22ac1af5d59e4ed7701fa2c1871286bbafebe422cfe7a33c3c0aa14a301c1862",
+  "created_utc": "2026-10-31T22:48:36Z",
+  "data_audit_sha256": "6575d799d9febd0ca5ad1dfa8f3e3fb1ff2d90aab0fa47a5959c8040d408dc4e",
+  "frozen_recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "checkpoint": "single_best_validation420_rmse_epoch",
+    "dropout": 0.1,
+    "dropout_position": "final_atom_level_local_h_before_readout",
+    "early_stopping": false,
+    "epochs": 360,
+    "gradient_clip": 5.0,
+    "loss": "mse_on_train3360_standardised_target",
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "ssl": false,
+    "weight_decay": 0.001
+  },
+  "git_commit": "ac3a6e65ca604cd8d01827544c066a222f706831",
+  "git_dirty_tracked": false,
+  "gpu_hard_cap_hours": 14.0,
+  "labels_file_sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+  "models": [
+    "base",
+    "roleblind",
+    "g2l_loo",
+    "g2l_all",
+    "dist_true_fixed",
+    "dist_blind"
+  ],
+  "pairs": [
+    {
+      "candidate": "ROLEBLIND",
+      "label": "ROLEBLIND - BASE",
+      "reference": "BASE"
+    },
+    {
+      "candidate": "G2L-LOO",
+      "label": "G2L-LOO - ROLEBLIND",
+      "reference": "ROLEBLIND"
+    },
+    {
+      "candidate": "G2L-ALL",
+      "label": "G2L-ALL - ROLEBLIND",
+      "reference": "ROLEBLIND"
+    },
+    {
+      "candidate": "DIST-TRUE-FIXED",
+      "label": "DIST-TRUE-FIXED - DIST-BLIND",
+      "reference": "DIST-BLIND"
+    },
+    {
+      "candidate": "DIST-TRUE-FIXED",
+      "label": "DIST-TRUE-FIXED - ROLEBLIND",
+      "reference": "ROLEBLIND"
+    }
+  ],
+  "protocol_id": "lcrc-lipo-best-epoch-distance-fix-v1",
+  "protocol_sha256": "08ae26352fdf1f2dc4b3efb6a0683b0000f47333a0fa216e9712668115c6d686",
+  "scope": "six families x three seeds = 18 runs; best single Validation420 epoch checkpoint rule",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "split_file_sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+  "status": "FROZEN_BEFORE_FORMAL_TRAINING",
+  "target_norm": {
+    "fit_on": "Train3360 only",
+    "mean": 2.2081011904761905,
+    "scale": 1.1906281212426577
+  },
+  "test_access": "EXPOSED_TEST_EXPLORATORY",
+  "test_label_vector_sha256": "a0724b4c1ca6f7bb6b69b720ac2d020825685d9666544c7312e0f24d7e3a4021",
+  "test_labels_read": true,
+  "test_predictions_read": false,
+  "test_rows_sha256": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b",
+  "wall_cap_hours": 7.0
+}
