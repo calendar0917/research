@@ -61,8 +61,52 @@ def _entries() -> list[dict[str, Any]]:
     return rows
 
 
+# GPU processes that died before writing their own envelope (e.g. an import
+# error before model construction).  They are charged conservatively from the
+# launcher timestamps so the ledger never under-reports.
+MANUAL_CHARGES: list[dict[str, Any]] = [
+    {
+        "run_key": "smoke_esa_failed_attempt_1",
+        "why": "ESA GPU smoke aborted on a missing RDKit import before model construction",
+        "started_utc": "2026-10-31T15:08:53Z",
+        "finished_utc": "2026-10-31T15:08:58Z",
+        "gpu_seconds": 5.0,
+        "device": "cuda",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "status": "FAILED",
+        "error": "ModuleNotFoundError: No module named 'rdkit'",
+    }
+]
+
+
 def build_ledger() -> dict[str, Any]:
     entries = _entries()
+    entries.extend(
+        {
+            "run_key": row["run_key"],
+            "model": row["run_key"],
+            "status": row["status"],
+            "device": row["device"],
+            "cuda_device_name": row["cuda_device_name"],
+            "envelope": None,
+            "started_utc": row["started_utc"],
+            "finished_utc": row["finished_utc"],
+            "wall_seconds": float(row["gpu_seconds"]),
+            "gpu_seconds": float(row["gpu_seconds"]),
+            "gpu_hours_charged": float(row["gpu_seconds"]) / 3600.0,
+            "error": row["error"],
+            "hostname": None,
+            "git_commit": None,
+            "checkpoint_sha256": None,
+            "valid_rmse_raw": None,
+            "parameters_total": None,
+            "train_loop_seconds": None,
+            "inference_seconds_per_valid420": None,
+            "peak_memory_allocated_bytes": None,
+            "charged_from": "launcher timestamps (manual, conservative)",
+        }
+        for row in MANUAL_CHARGES
+    )
     gpu_seconds = sum(e["gpu_seconds"] for e in entries)
     cpu_hours = sum(e["wall_seconds"] for e in entries if e["gpu_seconds"] == 0.0) / 3600.0
     xgb_wall = None

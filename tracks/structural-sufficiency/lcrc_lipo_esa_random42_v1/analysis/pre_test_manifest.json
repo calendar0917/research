@@ -1,0 +1,298 @@
+{
+  "code_hashes": {
+    "code/r42_audit.py": "09378ba602beadb57428a45aaa5ab27fb05dcb6cae9e6ad62f73ab82de3008c2",
+    "code/r42_common.py": "6caa31951a8a22b333953ec377e0376a612a803661111c1fb8903d70345173be",
+    "code/r42_data.py": "cd08aec7134cf0c31a5e323c269e319164de59432416d8fcb91a399c671f2c3f",
+    "code/r42_gates.py": "c1c28735cac61a11acfb3ad6541a07c01aea453798e93018d311b4ef5c1f9325",
+    "code/r42_labels.py": "78bf0adf3a24a182a490c2fd1bff5f6eb13aaa393d5e2421e0899d6262bb1214",
+    "code/r42_lcrc_train.py": "0e9949264f2133137a770099f59605552b6c014751bacbf11be88cc3f3a7f8f5",
+    "code/r42_ledger.py": "648a1f41af62d4459029a1161e6f35d334d98ee236a11f28dd38956dca4f5ef1",
+    "code/r42_manifest.py": "b7857408a6d43f9208a25d697525d2fb6112981f8bd3822d25cbe63da49ba999",
+    "code/r42_metrics.py": "8535816d8bd8bbfd46f7a8571f0cb318e6e349709be42150c62a7eea207d7228",
+    "code/r42_native_train.py": "98f7583d704b06594f63978e5cea2367c0a79014d68bdbf2f0f7b983804b6d7f",
+    "code/r42_score.py": "f343036ed196497ee290c8aeed169fb18bdc16ab2d275de82db6ca5e3b705be4",
+    "code/r42_upstream.py": "b8a7e70a2fde8adc813f0a49482788c3b28daf4c2543bac8e96800e14f3e7e3a",
+    "code/r42_xgb.py": "aab09abb275db7aa854c21a8c74a08d281f336049bff82dd4dd2de9a7a29c069"
+  },
+  "config_canonical_sha256": "0bb3990f17ebe8be9ba8c43ef4f1efe3a33fe7aadc834272777f449c5d8e9c7f",
+  "config_sha256": "0d8d58eae2351294f09da21056b4d193e94cefccc8b79b94ec54ca247a2d8402",
+  "created_utc": "2026-10-31T08:10:18Z",
+  "gpu_hours_charged": 0.2960441017150879,
+  "label_artifact": {
+    "n_train": 3360,
+    "n_valid": 420,
+    "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+    "scope": "train_and_valid_only",
+    "sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+    "test_labels_included": false,
+    "vector_sha256": {
+      "train": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+      "valid": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+    }
+  },
+  "missing_models": [],
+  "models": [
+    {
+      "checkpoint_frozen": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/checkpoints/lcrc_a_r3_s0.pt",
+      "checkpoint_rule": "average_last_5_epoch_end_state_dicts",
+      "checkpoint_sha256": "eca1486102faed79ed4c233332644d8767dc76193adc16523fc115bb33a0e683",
+      "checkpoint_source": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/lcrc_a_r3_s0/checkpoint.pt",
+      "config_hash": "7cb32c2d12298763aa72974df1adc33169203d9cbccfcf18f701e504c2a64a4c",
+      "model": "LCRC-A-R3-scratch",
+      "parameters_total": 247106,
+      "run_dir": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/lcrc_a_r3_s0",
+      "seed": 0,
+      "train_json_sha256": "65a142c21523bd9650b5841b1856a24a42edf5c95cb30fd27ba698716177e058",
+      "train_metrics": {
+        "checkpoint": "soup_last_5",
+        "mae": 0.14095081058006814,
+        "r2": 0.9726662111647935,
+        "rmse": 0.19684575488240258,
+        "units": "raw_logD"
+      },
+      "validation": {
+        "checkpoint": "soup_last_5",
+        "mae": 0.4208143415034744,
+        "r2": 0.7704497521401419,
+        "rmse": 0.5890072081930064,
+        "units": "raw_logD"
+      }
+    },
+    {
+      "checkpoint_frozen": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/checkpoints/pna_native_s0.pt",
+      "checkpoint_rule": "best_validation_loss",
+      "checkpoint_sha256": "3eebd089a6db49f504bc7de769ce73cbafe55d575028523560577b74e139524b",
+      "checkpoint_source": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/pna_native_s0/checkpoint.pt",
+      "config_hash": "d817bfda98cd182a39a1e1b8da929c936e027e484218d084c104fd432cded135",
+      "model": "PNA-native",
+      "parameters_total": 7767349,
+      "run_dir": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/pna_native_s0",
+      "seed": 0,
+      "train_json_sha256": "d8515e0149faedc825270ad148bf801e595cf5d9261e8b172e5a8f6f472549e7",
+      "train_metrics": {
+        "checkpoint": "best_validation_loss",
+        "mae": 0.11724235451937481,
+        "r2": 0.9825627715862989,
+        "rmse": 0.15722256023542364,
+        "units": "raw_logD"
+      },
+      "validation": {
+        "checkpoint": "best_validation_loss",
+        "mae": 0.4007184723844865,
+        "r2": 0.7969000834286586,
+        "rmse": 0.5540342318996931,
+        "units": "raw_logD"
+      }
+    },
+    {
+      "checkpoint_frozen": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/checkpoints/esa_native_s0.pt",
+      "checkpoint_rule": "best_validation_loss",
+      "checkpoint_sha256": "12286d3e53226a2ac18e690e462131528ad7b5fa85f46b979ff19844a16b3016",
+      "checkpoint_source": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/esa_native_s0/checkpoint.pt",
+      "config_hash": "4ec4eb17a782e709a9312cfcc24c087d8bcc1f50fada8ba879d33441a75308ca",
+      "model": "ESA-native",
+      "parameters_total": 10351105,
+      "run_dir": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/esa_native_s0",
+      "seed": 0,
+      "train_json_sha256": "54432cdaa3ab609894ec9f6247aa024af0150c3f7c26ebaaf6f70e7db9efb58e",
+      "train_metrics": {
+        "checkpoint": "best_validation_loss",
+        "mae": 0.23346182081590658,
+        "r2": 0.9345739215157871,
+        "rmse": 0.30454507526405594,
+        "units": "raw_logD"
+      },
+      "validation": {
+        "checkpoint": "best_validation_loss",
+        "mae": 0.43716871461439605,
+        "r2": 0.7828198896505754,
+        "rmse": 0.5729170557139684,
+        "units": "raw_logD"
+      }
+    },
+    {
+      "checkpoint_frozen": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/checkpoints/xgb_p3_s0.json",
+      "checkpoint_rule": "single_fit_no_selection",
+      "checkpoint_sha256": "5bfc527a0cb2345cdfa8ce67af7a62fe5bd964217b44c2c86d9fbec85c6bc837",
+      "checkpoint_source": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/xgb_p3_s0/xgb_p3.json",
+      "config_hash": "89e518d1f6626182a8556c6b5c141c672ebb16c958588e05a6ed2b8fe6b6a5f1",
+      "model": "XGB-P3",
+      "parameters_total": null,
+      "run_dir": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/xgb_p3_s0",
+      "seed": 0,
+      "train_json_sha256": "b2f42e0ac484ec556e0a8acecf2d83bdd9faa8397de169916a6390405e4b1bc3",
+      "train_metrics": {
+        "mae": 0.2148937029260366,
+        "r2": 0.9418560981573824,
+        "rmse": 0.28709671422452926,
+        "units": "raw_logD"
+      },
+      "validation": {
+        "mae": 0.49073551148300365,
+        "r2": 0.7242266468228191,
+        "rmse": 0.6455916082360517,
+        "units": "raw_logD"
+      }
+    }
+  ],
+  "predictions": [
+    {
+      "model": "LCRC-A-R3-scratch",
+      "n": 420,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/predictions/lcrc_a_r3_s0_test420.npz",
+      "pred_max": 5.26768268944915,
+      "pred_mean": 2.0846160081713556,
+      "pred_min": -1.374471366101187,
+      "pred_std": 1.199886791090848,
+      "predictor_audit": {
+        "cache_content_fingerprint": "23ec00be4fb7e3cf93967cd62911bd932159b1d7e0b43226b23cf7c6a3718e03",
+        "cache_sha256": "450e749045216f32a7a388f0fc039adf6bc5729ef3e9319379ba78f0d9662bd8",
+        "device": "cpu",
+        "soup_members": [
+          356,
+          357,
+          358,
+          359,
+          360
+        ],
+        "soup_state_hash": "0033c39449c1563d09ff72b54f78c462c6c99d958a7f5276ceda548db6ffef55",
+        "target_norm": {
+          "label_vector_sha256": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+          "mean": 2.2081011904761905,
+          "n": 3360,
+          "scale": 1.1906281212426577,
+          "scale_definition": "population_std_float64 (sklearn StandardScaler convention)",
+          "source": "train3360_labels_only",
+          "valid_or_test_used": false
+        },
+        "train_norm_fingerprint": "4d6e5bf456ff9d2217eb11a2c4a29d3f7cbbcb95665bf56e62b93c3ae93d0e26"
+      },
+      "rows_sha256": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b",
+      "sha256": "20c10a2275889498d55b021ddfe6f059a932706208f2cd714b72c7479fab7dfb"
+    },
+    {
+      "model": "PNA-native",
+      "n": 420,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/predictions/pna_native_s0_test420.npz",
+      "pred_max": 4.3685897041426145,
+      "pred_mean": 2.124551539903133,
+      "pred_min": -1.5331770636158901,
+      "pred_std": 1.2019823593610783,
+      "predictor_audit": {
+        "checkpoint_best_epoch": 84,
+        "device": "cpu",
+        "extra": {
+          "histogram_sha256": "56bc94c1186a1a471b9af7885313ed914f51469f3e40fa99266a20c65721fc40",
+          "length": 5000,
+          "loaded_by_model_verified": true,
+          "n_atoms": 163402,
+          "nonzero": [
+            [
+              1,
+              79979
+            ],
+            [
+              2,
+              8853
+            ],
+            [
+              3,
+              52613
+            ],
+            [
+              4,
+              21957
+            ]
+          ],
+          "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/pna_native_s0/saved_PNA_degrees/degrees.pt",
+          "sha256": "e71e8d60ff360c3555820af952a213009f331bb874b0c3549b4e114a7974bc01",
+          "source": "train3360_graphs_only",
+          "total_degree": 343352,
+          "valid_or_test_used": false
+        },
+        "formal_precision": "bf16",
+        "target_norm": {
+          "label_vector_sha256": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+          "mean": 2.2081011904761905,
+          "n": 3360,
+          "scale": 1.1906281212426577,
+          "scale_definition": "population_std_float64 (sklearn StandardScaler convention)",
+          "source": "train3360_labels_only",
+          "valid_or_test_used": false
+        },
+        "test_inference_batch_size": 128,
+        "test_inference_precision": "fp32",
+        "val_loss_standardized": 0.21674248280730496
+      },
+      "rows_sha256": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b",
+      "sha256": "99bd4e8fb10b746ca9016db20a4cd4337e0a714894aa64479d93520f1370c1ef"
+    },
+    {
+      "model": "ESA-native",
+      "n": 420,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/predictions/esa_native_s0_test420.npz",
+      "pred_max": 4.304719434538981,
+      "pred_mean": 2.132536268367166,
+      "pred_min": -0.851673906380634,
+      "pred_std": 1.1329442041882962,
+      "predictor_audit": {
+        "checkpoint_best_epoch": 30,
+        "device": "cpu",
+        "extra": {
+          "attention_backend": "torch",
+          "num_max_items": 440,
+          "precision": "bf16",
+          "set_max_items": 438
+        },
+        "formal_precision": "bf16",
+        "target_norm": {
+          "label_vector_sha256": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+          "mean": 2.2081011904761905,
+          "n": 3360,
+          "scale": 1.1906281212426577,
+          "scale_definition": "population_std_float64 (sklearn StandardScaler convention)",
+          "source": "train3360_labels_only",
+          "valid_or_test_used": false
+        },
+        "test_inference_batch_size": 32,
+        "test_inference_precision": "fp32",
+        "val_loss_standardized": 0.23154277483637387
+      },
+      "rows_sha256": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b",
+      "sha256": "5081095da28dbef8820f0ce346cfac0029201c7610727b23743b4d2ebf5da313"
+    },
+    {
+      "model": "XGB-P3",
+      "n": 420,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/predictions/xgb_p3_s0_test420.npz",
+      "pred_max": 4.276298522949219,
+      "pred_mean": 2.1229322303884794,
+      "pred_min": -0.7622299790382385,
+      "pred_std": 1.013036198670061,
+      "predictor_audit": {
+        "device": "cpu",
+        "model_path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/xgb_p3_s0/xgb_p3.json",
+        "model_sha256": "5bfc527a0cb2345cdfa8ce67af7a62fe5bd964217b44c2c86d9fbec85c6bc837",
+        "n_features_used": 2254,
+        "preprocessor_fit_scope": "train3360_only"
+      },
+      "rows_sha256": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b",
+      "sha256": "8e45538dc968c0c44951963a5d43aa5d0fea260c8e1da3626274c75341df8fdd"
+    }
+  ],
+  "protocol_id": "lcrc-lipo-esa-random42-v1",
+  "purpose": "freeze every model, checkpoint and Test prediction before the single Test evaluation",
+  "rules": {
+    "checkpoint_reselection_after_test": false,
+    "metrics_reported_in": "raw_logD",
+    "retraining_after_test": false,
+    "single_evaluation": true
+  },
+  "split": {
+    "file_sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+    "n_test": 420,
+    "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/split_esa_random42_v1.json",
+    "test_rows_sha256": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b"
+  },
+  "test_scoring_allowed": true
+}
