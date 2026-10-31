@@ -1,0 +1,145 @@
+{
+  "PERFORMANCE_SIGNAL": "ABSENT",
+  "ROLE_SPECIFICITY_SIGNAL": "ABSENT",
+  "created_utc": "2026-10-31T15:39:12Z",
+  "independent_dimensions": true,
+  "no_model_change_after_decision": true,
+  "performance_detail": {
+    "PERFORMANCE_SIGNAL": "ABSENT",
+    "all_four_positive": false,
+    "gains": [
+      0.01182881477393316,
+      0.03225588364184595,
+      0.0058577181836534375,
+      -0.002740937070369931
+    ],
+    "interpretation_note": "Paired bootstrap intervals describe molecule-sampling variability inside one trained model; they do not estimate training-seed variance.  The seed-0 vs seed-1 difference is a second training draw and is reported separately.",
+    "n_cells": 4,
+    "n_positive_cells": 3,
+    "per_seed": [
+      {
+        "difference_valid_minus_test": -0.02042706886791279,
+        "seed": 0,
+        "sign_reversal_between_valid_and_test": false,
+        "test_gain": 0.03225588364184595,
+        "valid_gain": 0.01182881477393316
+      },
+      {
+        "difference_valid_minus_test": 0.008598655254023368,
+        "seed": 1,
+        "sign_reversal_between_valid_and_test": true,
+        "test_gain": -0.002740937070369931,
+        "valid_gain": 0.0058577181836534375
+      }
+    ],
+    "rule": "PERFORMANCE_SIGNAL=PRESENT iff all four BASE->CONTEXT RMSE gains (BASE RMSE - CONTEXT RMSE; positive = CONTEXT better) are > 0, i.e. seed 0 and seed 1 on both Validation420 and Test420.  Otherwise ABSENT. A sign disagreement between Validation and Test inside any seed is reported explicitly as a reversal.",
+    "seed_to_seed_gain_change": {
+      "test420": -0.03499682071221588,
+      "valid420": -0.005971096590279723
+    }
+  },
+  "protocol_id": "lcrc-lipo-context-mechanism-check-v2",
+  "role_specificity_detail": {
+    "both_context_gain_intervals_above_zero": false,
+    "cells": [
+      {
+        "bootstrap_gain_rmse_context_better_interval": [
+          -0.06238919323353259,
+          -0.03456303001285699,
+          -0.006145992168254063
+        ],
+        "bootstrap_observed_raw": {
+          "gain_rmse": 0.034355477393998024,
+          "mae_change": -0.024971629002814966,
+          "mae_other": 0.3866009576860683,
+          "mae_ref": 0.41157258668888325,
+          "max_abs_prediction_difference": 1.3979256102021425,
+          "mean_abs_prediction_difference": 0.17383758032555993,
+          "n_other_better_abs": 233,
+          "n_ref_better_abs": 187,
+          "n_tie_abs": 0,
+          "rmse_other": 0.5342319612586572,
+          "rmse_ref": 0.5685874386526553,
+          "sse_gain": 15.912912524592542,
+          "sse_other": 119.869591140714,
+          "sse_ref": 135.78250366530654
+        },
+        "bootstrap_raw_gain_rmse_roleblind_minus_context_interval": [
+          0.006145992168254063,
+          0.03456303001285699,
+          0.06238919323353259
+        ],
+        "context_mae": 0.41157258668888325,
+        "context_parameters": 255458,
+        "context_r2": 0.7860900094170905,
+        "context_rmse": 0.5685874386526553,
+        "context_sse": 135.78250366530654,
+        "gain_rmse_context_better": -0.034355477393998024,
+        "mae_gain_context_better": -0.024971629002814966,
+        "max_abs_prediction_difference": 1.3979256102021425,
+        "mean_abs_prediction_difference": 0.17383758032555993,
+        "n_context_better_abs": 187,
+        "n_roleblind_better_abs": 233,
+        "n_tie_abs": 0,
+        "roleblind_mae": 0.3866009576860683,
+        "roleblind_parameters": 255458,
+        "roleblind_r2": 0.8111590048796626,
+        "roleblind_rmse": 0.5342319612586572,
+        "roleblind_sse": 119.869591140714,
+        "split": "valid420",
+        "sse_gain_context_better": -15.912912524592542
+      },
+      {
+        "bootstrap_gain_rmse_context_better_interval": [
+          -0.02940304381818417,
+          -0.007752466290788934,
+          0.015333806879961788
+        ],
+        "bootstrap_observed_raw": {
+          "gain_rmse": 0.007396342849009252,
+          "mae_change": -0.009114365431724614,
+          "mae_other": 0.3757365384556491,
+          "mae_ref": 0.3848509038873737,
+          "max_abs_prediction_difference": 1.0590495465679421,
+          "mean_abs_prediction_difference": 0.16673295113267145,
+          "n_other_better_abs": 226,
+          "n_ref_better_abs": 194,
+          "n_tie_abs": 0,
+          "rmse_other": 0.5373350530663287,
+          "rmse_ref": 0.5447313959153379,
+          "sse_gain": 3.3614004656729293,
+          "sse_other": 121.26616288659359,
+          "sse_ref": 124.62756335226652
+        },
+        "bootstrap_raw_gain_rmse_roleblind_minus_context_interval": [
+          -0.015333806879961788,
+          0.007752466290788934,
+          0.02940304381818417
+        ],
+        "context_mae": 0.3848509038873737,
+        "context_parameters": 255458,
+        "context_r2": 0.8141155210266102,
+        "context_rmse": 0.5447313959153379,
+        "context_sse": 124.62756335226652,
+        "gain_rmse_context_better": -0.007396342849009252,
+        "mae_gain_context_better": -0.009114365431724614,
+        "max_abs_prediction_difference": 1.0590495465679421,
+        "mean_abs_prediction_difference": 0.16673295113267145,
+        "n_context_better_abs": 194,
+        "n_roleblind_better_abs": 226,
+        "n_tie_abs": 0,
+        "roleblind_mae": 0.3757365384556491,
+        "roleblind_parameters": 255458,
+        "roleblind_r2": 0.8191291163932821,
+        "roleblind_rmse": 0.5373350530663287,
+        "roleblind_sse": 121.26616288659359,
+        "split": "test420",
+        "sse_gain_context_better": -3.3614004656729293
+      }
+    ],
+    "context_better_on_both_splits": false,
+    "rule": "ROLE_SPECIFICITY_SIGNAL=PRESENT iff CONTEXT_s0 beats ROLEBLIND_s0 on both Validation420 and Test420 by RMSE (ROLEBLIND RMSE - CONTEXT RMSE; positive = CONTEXT better) AND both paired-bootstrap 95% percentile intervals of that RMSE gain exclude 0.  Otherwise ABSENT.  Descriptive, not a confirmatory hypothesis test."
+  },
+  "scope": "EXPOSED_TEST_EXPLORATORY",
+  "test_access": "EXPOSED_TEST_EXPLORATORY"
+}

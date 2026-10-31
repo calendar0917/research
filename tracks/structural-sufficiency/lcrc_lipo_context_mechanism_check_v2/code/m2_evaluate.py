@@ -426,7 +426,8 @@ def evaluate_frozen_s0() -> dict[str, Any]:
 
 def evaluate_all() -> dict[str, Any]:
     keys = ["base_s0", "context_s0", "base_s1", "context_s1", "roleblind_s0"]
-    missing = [key for key in keys if not (C.RUNS / C.ARM_SPECS[key]["run_key"] / "train.json").exists()]
+    registry = model_registry()
+    missing = [key for key in keys if key not in registry]
     if missing:
         raise FileNotFoundError(f"missing formal run artifacts for {missing}; run the formal training first")
     payload = evaluate_set(
