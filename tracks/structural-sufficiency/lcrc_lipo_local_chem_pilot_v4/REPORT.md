@@ -173,6 +173,7 @@ Execution regime: host `res`, pool `res-gpu0`, node `a100-2`, NVIDIA A100-SXM4-4
 | Item | Value |
 |---|---|
 | run key | `F1_A_AtomChem4_R3_s0` |
+| rr experiment / run id | `v4-A1b` / `v4-A1b-20261031-130300-2578c40b` |
 | git commit at launch | `0bc827f5335f6774668d94e17cf60f1d7d91eef6` |
 | wall seconds | 151.09 |
 | charged GPU hours | 0.044191 |
@@ -185,7 +186,7 @@ Execution regime: host `res`, pool `res-gpu0`, node `a100-2`, NVIDIA A100-SXM4-4
 
 Two operational notes, recorded for honesty:
 
-1. `rr run v4-A1` (~13:00) **failed after ~10 s with exit 1 and no training**: the GPU-authorization JSON existed locally but was not yet committed, so the remote checkout could not read it. It was committed, redeployed, and the run was relaunched as `v4-A1b`. No GPU-hours are charged for the aborted launch (no `train.json` was produced, hence nothing in the ledger).
+1. `rr run v4-A1` (`v4-A1-20261031-130031-4c23f3ce`, ~13:00) **failed after ~10 s with exit 1 and no training**: the GPU-authorization JSON existed locally but was not yet committed, so the remote checkout could not read it. It was committed, redeployed, and the run was relaunched as `v4-A1b`. No GPU-hours are charged for the aborted launch (no `train.json` was produced, hence nothing in the ledger).
 2. The remote `res` checkout arrived dirty with one modified derived file (`v3/analysis/gpu_ledger_v3.json`). Its content differed from the committed local copy only in `created_utc` (the local commit is a regeneration of the same ledger, both containing the same two charged entries and the same 0.07622470870083715 h total). Local Git is the source of truth, so the remote copy was restored to the committed revision before deploying. Nothing that was not already in Git was discarded.
 
 ---
