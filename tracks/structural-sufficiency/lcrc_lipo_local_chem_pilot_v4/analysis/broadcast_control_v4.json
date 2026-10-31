@@ -1,0 +1,60 @@
+{
+  "checks": {
+    "dev_constant": true,
+    "dev_contrast_nonzero": true,
+    "dev_mean": true,
+    "same_dropout_reference": true,
+    "same_init_state_hash": true,
+    "same_migration_audit": true,
+    "same_parameter_count": true,
+    "same_spec_hash": true,
+    "same_training_recipe": true,
+    "train_constant": true,
+    "train_contrast_nonzero": true,
+    "train_mean": true
+  },
+  "control": "P2 A_BroadcastChem4",
+  "created_utc": "2026-10-31T04:54:26Z",
+  "definition": {
+    "definition": "per-molecule arithmetic mean of the standardised AtomChem4 vector, broadcast to every atom",
+    "per_molecule_mean_of_broadcast_equals_broadcast": true,
+    "same_parameter_count": true,
+    "same_spec": true,
+    "same_training_recipe": true
+  },
+  "interpretation_guard": "the control tests whether the atom <-> feature correspondence matters; it is not a causal proof",
+  "parameters": {
+    "base": 247106,
+    "p1": 247618,
+    "p2": 247618
+  },
+  "protocol_id": "lcrc-lipo-local-chem-pilot-v4",
+  "same_arm_properties": {
+    "same_dropout_reference": true,
+    "same_init_state_hash": true,
+    "same_migration_audit": true,
+    "same_parameter_count": true,
+    "same_spec_hash": true,
+    "same_training_recipe": true
+  },
+  "splits": {
+    "dev": {
+      "broadcast_constant_within_molecule": true,
+      "broadcast_equals_per_molecule_mean": true,
+      "max_abs_p1_minus_p2": 4.16396427154541,
+      "molecules_with_nonconstant_true_features": 784,
+      "n_atoms": 21033,
+      "n_molecules": 784,
+      "p1_std_within_molecule_mean": 0.9427093863487244
+    },
+    "train": {
+      "broadcast_constant_within_molecule": true,
+      "broadcast_equals_per_molecule_mean": true,
+      "max_abs_p1_minus_p2": 4.153147220611572,
+      "molecules_with_nonconstant_true_features": 1568,
+      "n_atoms": 42198,
+      "n_molecules": 1568,
+      "p1_std_within_molecule_mean": 0.9720144271850586
+    }
+  }
+}

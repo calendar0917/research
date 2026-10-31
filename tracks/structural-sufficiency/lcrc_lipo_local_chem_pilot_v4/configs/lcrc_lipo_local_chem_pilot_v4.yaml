@@ -1,0 +1,111 @@
+protocol_id: lcrc-lipo-local-chem-pilot-v4
+round_id: lcrc-lipo-local-chem-pilot-v4
+
+fold: 1
+seed: 0
+recipe: R3
+
+training:
+  batch_size: 128
+  epochs: 360
+  soup_last: 5
+  grad_clip: 5.0
+  min_lr: 1.0e-5
+  shuffle_offset: 917000
+  optimizer: AdamW
+  scheduler: per_step_cosine
+  loss: mse_on_fold_standardised_target
+  checkpoint: mean_of_last_5_epoch_end_state_dicts
+  early_stopping: false
+  monitor_during_training: false
+  R0:
+    peak_lr: 1.0e-3
+    weight_decay: 1.0e-5
+    dropout: 0.0
+  R1:
+    peak_lr: 1.0e-3
+    weight_decay: 1.0e-3
+    dropout: 0.10
+  R2:
+    peak_lr: 1.0e-3
+    weight_decay: 1.0e-3
+    dropout: 0.20
+  R3:
+    peak_lr: 3.0e-4
+    weight_decay: 1.0e-3
+    dropout: 0.10
+
+atomchem:
+  names:
+    - crippen_logp_atom
+    - tpsa_atom
+    - is_hbd
+    - is_hba
+  atom_dim_base: 51
+  atom_dim_augmented: 55
+  atom_hidden: 128
+  expected_parameter_delta: 512
+  source: >-
+    RDKit Crippen atom contributions (with added-H contributions folded onto the
+    parent heavy atom), rdMolDescriptors._CalcTPSAContribs, and
+    BaseFeatures.fdef Donor/Acceptor single-atom features
+  rdkit_version_policy: greater-or-equal-2026.09.1 same-as-v3; version recorded in the audit
+  standardisation: fold1_train_only
+  zero_variance_policy: scale_1.0
+  atom_order: identity with the frozen raw-graph atom index; proved per molecule
+
+broadcast_control:
+  definition: per-molecule arithmetic mean of the standardised AtomChem4 vector, broadcast to all atoms
+  same_features: true
+  same_parameter_count: true
+  same_initialisation: true
+  same_recipe: true
+
+arms:
+  unconditional: [A_AtomChem4]
+  conditional: A_BroadcastChem4
+
+comparator:
+  key: F1_A_sel_s0
+  arm: A
+  recipe: R3
+  fold: 1
+  seed: 0
+  dev_rmse: 0.7403427006133139
+  dev_mae: 0.546694119695902
+
+decision:
+  materiality_rmse: 0.03
+  mae_must_not_worsen: true
+  tail_fraction: 0.02
+  tail_min_retained_fraction: 0.50
+  tail_source: F1_A_sel_s0
+  alignment_gap_material: 0.015
+  p2_gate: >-
+    run A_BroadcastChem4 only if delta_rmse(P1) >= 0.03, delta_mae(P1) >= 0 and the
+    P1 gain is not tail-dependent
+  verdict_rules:
+    LOCAL_CHEM_ALIGNMENT_PROMISING: >-
+      P1 gate passed and (P2 fails the 0.03 gate or delta_rmse(P1) - delta_rmse(P2) >= 0.015)
+    CHEMICAL_FEATURE_INFORMATION_PROMISING: >-
+      P1 gate passed and P2 also reaches 0.03 and the P1-P2 gap is below 0.015
+    NO_CLEAR_LOCAL_CHEM_GAIN: P1 delta_rmse < 0.03 (P2 is not run)
+    INCONCLUSIVE: P1 delta_rmse >= 0.03 but MAE worsens or the gain is tail-dependent
+  bootstrap_resamples: 2000
+  bootstrap_seed: 20261102
+
+budget:
+  gpu_hard_cap_hours: 0.20
+  includes: [A_AtomChem4, A_BroadcastChem4 conditional]
+  historical_v1_v2_v3_hours_reference_only: 3.094825
+
+evaluation:
+  primary_metric: raw_rmse_on_fold1_dev
+  secondary_metrics: [raw_mae]
+  monitor_used: false
+  reserved_labels_read: false
+  official_valid_test_read: false
+  extra_seeds: false
+  extra_folds: false
+  ssl: false
+  full_fit_retrain: false

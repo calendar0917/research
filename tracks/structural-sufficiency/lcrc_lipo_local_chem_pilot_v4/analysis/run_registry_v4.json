@@ -1,0 +1,70 @@
+{
+  "allowed_extra_runs": 0,
+  "comparator": "F1_A_sel_s0",
+  "conditional_rule": {
+    "arm": "A_BroadcastChem4",
+    "evaluated_against": "F1_A_sel_s0",
+    "mae_must_not_worsen": true,
+    "must_not_be_tail_dependent": true,
+    "rmse_gain_min": 0.03,
+    "run_key": "F1_A_BroadcastChem4_R3_s0",
+    "tail_fraction": 0.02,
+    "tail_min_retained_fraction": 0.5
+  },
+  "forbidden": [
+    "new seeds",
+    "second fold",
+    "SSL",
+    "additional atom features or feature combinations",
+    "architecture changes",
+    "full-Fit retrain",
+    "Monitor / Reserved evaluation",
+    "official valid/test labels"
+  ],
+  "n_conditional": 1,
+  "n_gpu_jobs": 2,
+  "n_runs": 2,
+  "n_unconditional": 1,
+  "protocol_id": "lcrc-lipo-local-chem-pilot-v4",
+  "round_id": "lcrc-lipo-local-chem-pilot-v4",
+  "runs": [
+    {
+      "arm": "A_AtomChem4",
+      "comparator": "F1_A_sel_s0",
+      "conditional": false,
+      "description": "P1: true per-atom AtomChem4 correspondence",
+      "feature_variant": "atomchem4",
+      "fold": 1,
+      "host": "res",
+      "key": "F1_A_AtomChem4_R3_s0",
+      "kind": "train",
+      "pool": "res-gpu0",
+      "recipe": "R3",
+      "seed": 0,
+      "variant": "scratch"
+    },
+    {
+      "arm": "A_BroadcastChem4",
+      "comparator": "F1_A_sel_s0",
+      "conditional": true,
+      "description": "P2: molecule-mean AtomChem4 broadcast to every atom (same features, no atom correspondence)",
+      "feature_variant": "broadcastchem4",
+      "fold": 1,
+      "host": "res",
+      "key": "F1_A_BroadcastChem4_R3_s0",
+      "kind": "train",
+      "pool": "res-gpu0",
+      "recipe": "R3",
+      "seed": 0,
+      "variant": "scratch"
+    }
+  ],
+  "verdict_rules": {
+    "CHEMICAL_FEATURE_INFORMATION_PROMISING": "P1 gate passed and P2 also reaches materiality and the P1-P2 gap is below alignment_gap_material",
+    "INCONCLUSIVE": "P1 delta_rmse >= materiality but MAE worsens or the gain is tail-dependent",
+    "LOCAL_CHEM_ALIGNMENT_PROMISING": "P1 gate passed and (P2 delta_rmse < materiality or P1 delta_rmse - P2 delta_rmse >= alignment_gap_material)",
+    "NO_CLEAR_LOCAL_CHEM_GAIN": "P1 delta_rmse < materiality (P2 is not run)",
+    "alignment_gap_material": 0.015,
+    "materiality_rmse": 0.03
+  }
+}

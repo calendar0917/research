@@ -1,0 +1,131 @@
+{
+  "alignment": {
+    "checked_per_molecule": [
+      "raw row smiles == cache smiles",
+      "cache atom type == raw atom_class",
+      "cache charge/hydrogen one-hot decoded == raw charge/H codes",
+      "RDKit element/aromatic/charge/H bucket == cache, index by index",
+      "RDKit physical bond set == raw physical bonds == cache physical bonds",
+      "sum of folded-H Crippen logP == Crippen.MolLogP",
+      "sum of atom TPSA contributions == Descriptors.TPSA",
+      "sum of folded-H Crippen MR == Crippen.MolMR (audit only)"
+    ],
+    "identity_mapping_proved_by_index": true,
+    "mapping_assumption": "none; every atom index is checked attribute by attribute",
+    "n_mismatches": 0,
+    "raw_adapter_source_sha256": "a0b10816a409973df446a624f55b28bec008edfff27aaa69c16a89631b2c4c9e",
+    "raw_artifact_sha256": "8416837ea3e56e3e5218865391c88913bb16948b48b7a61be1ee890ea4dda6dd",
+    "row_manifest_sha256": "2c638e4814cb6d21ccec9d8c8af357d28ce210fb2c20c3d09b9c19afd476073d"
+  },
+  "atom_order_chain": [
+    "frozen raw-graph artifact built by iterating RDKit atoms in GetIdx() order",
+    "lipo_v1 cache keeps raw atom index i",
+    "AtomChem4 computed on Chem.MolFromSmiles(cache smiles) in GetIdx() order"
+  ],
+  "atom_ptr_sha256": "1165d21c176443870ad676e376705763cc00cd5ec6ea2f332154553cc8413e76",
+  "cache_npz": "tracks/structural-sufficiency/lcrc_lipo_local_chem_pilot_v4/cache/atomchem4_fit.npz",
+  "cache_npz_sha256": "c9ed2190e79f39e7b40dae3de87d03c501237419f05f55e470348ab0727e5272",
+  "checks": {
+    "all_2352_molecules_aligned_index_by_index": true,
+    "crippen_sum_equals_mol_logp": true,
+    "donor_acceptor_features_single_atom": true,
+    "four_features_finite_and_present": true,
+    "identity_mapping_proved": true,
+    "tpsa_sum_equals_mol_tpsa": true
+  },
+  "created_utc": "2026-10-31T04:54:25Z",
+  "crippen": {
+    "all_equal": true,
+    "convention": "AddHs(mol); each added H contribution folded onto its unique parent heavy atom",
+    "max_abs_sum_minus_MolLogP": 8.881784197001252e-15,
+    "max_abs_sum_minus_MolMR": 5.968558980384842e-13,
+    "tolerance": 1e-08
+  },
+  "feature_matrix_sha256": "f447ef2d1e17440df450dfa573b37ab44795dd80b41c52e1a4be57a947588be9",
+  "features": [
+    "crippen_logp_atom",
+    "tpsa_atom",
+    "is_hbd",
+    "is_hba"
+  ],
+  "fit_rows_sha256": "4ecba42cc028f38f65b023764d7c35a8ef443e9228b5b175cfb287aaa077aefc",
+  "hbd_hba": {
+    "atoms_flagged_both": 1275,
+    "atoms_flagged_hba": 8853,
+    "atoms_flagged_hbd": 5255,
+    "families_present": [
+      "Donor",
+      "Acceptor",
+      "NegIonizable",
+      "PosIonizable",
+      "ZnBinder",
+      "Aromatic",
+      "Hydrophobe",
+      "LumpedHydrophobe"
+    ],
+    "fdef_path_is_rdkit_data_dir": true,
+    "fdef_sha256": "766f9790513f8f94c67ec6d1c8b6d5bede59b81f6da8c2081f57e49fb28d9784",
+    "multi_atom_donor_acceptor_features": 0,
+    "single_atom_only": true,
+    "source": "RDKit BaseFeatures.fdef chemical feature definitions",
+    "total_acceptor_feature_atoms": 8853,
+    "total_donor_feature_atoms": 5255
+  },
+  "labels_used": false,
+  "monitor_used": false,
+  "n_atoms": 63231,
+  "n_molecules": 2352,
+  "official_valid_test_used": false,
+  "protocol_id": "lcrc-lipo-local-chem-pilot-v4",
+  "raw_feature_names": [
+    "crippen_atom_logp_heavy_incl_folded_H",
+    "tpsa_atom_contribution",
+    "donor_atom_flag",
+    "acceptor_atom_flag"
+  ],
+  "raw_value_stats": {
+    "crippen_logp_atom": {
+      "max": 0.8857,
+      "mean": 0.12243295946608468,
+      "min": -1.119,
+      "n_nonzero": 62681,
+      "std": 0.30051831475680474
+    },
+    "is_hba": {
+      "max": 1.0,
+      "mean": 0.1400104379181098,
+      "min": 0.0,
+      "n_nonzero": 8853,
+      "std": 0.34699786050073694
+    },
+    "is_hbd": {
+      "max": 1.0,
+      "mean": 0.08310796919232655,
+      "min": 0.0,
+      "n_nonzero": 5255,
+      "std": 0.276045348899513
+    },
+    "tpsa_atom": {
+      "max": 26.02,
+      "mean": 2.9320999193433597,
+      "min": 0.0,
+      "n_nonzero": 14068,
+      "std": 6.108977509510997
+    }
+  },
+  "rdkit_version": "2026.09.1",
+  "reserved_used": false,
+  "scope": {
+    "labels_used_for_features": false,
+    "monitor_structures_used": false,
+    "official_valid_test_used": false,
+    "reserved_structures_used": false
+  },
+  "tpsa": {
+    "all_equal": true,
+    "api": "rdkit.Chem.rdMolDescriptors._CalcTPSAContribs",
+    "max_abs_sum_minus_TPSA": 5.684341886080802e-14,
+    "molecule_level": "rdkit.Chem.Descriptors.TPSA (includeSandP=False)",
+    "tolerance": 1e-08
+  }
+}
