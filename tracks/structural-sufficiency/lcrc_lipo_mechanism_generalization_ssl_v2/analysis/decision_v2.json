@@ -1,0 +1,61 @@
+{
+  "created_utc": "2026-10-31T02:29:01Z",
+  "headline": {
+    "H1": "PROMISING",
+    "H2": "PROMISING",
+    "H3": "NOT_PROMISING",
+    "H4": "CPU gap -0.0101 RMSE"
+  },
+  "monitor_is_independent_blind_test": false,
+  "protocol_id": "lcrc-lipo-mechanism-generalization-ssl-v2",
+  "reserved_official_sealed": true,
+  "verdicts": {
+    "H1": {
+      "all_folds_favor_A": true,
+      "monitor_delta_E_minus_A": 0.23219481401645126,
+      "primary_cv_mean_delta_E_minus_A": 0.04509644701863615,
+      "rule": "mean delta >= 0.03 and all 3 folds favor A",
+      "verdict": "PROMISING"
+    },
+    "H2": {
+      "arms": {
+        "A": {
+          "mean_delta": 0.07577923690358769,
+          "promising": true,
+          "selected": "R3"
+        },
+        "C": {
+          "mean_delta": 0.028361666369831173,
+          "promising": true,
+          "selected": "R3"
+        }
+      },
+      "rule": "a non-R0 recipe with mean delta >= 0.02 on Fold 0 and consistent available folds",
+      "verdict": "PROMISING"
+    },
+    "H3": {
+      "consistent_direction": false,
+      "monitor_delta_scratch_minus_ssl": -0.04897966524827957,
+      "pretext_status": "SSL_PRETEXT_LEARNED",
+      "primary_cv_mean_delta_scratch_minus_ssl": -0.03147065192439517,
+      "rule": "pretext gate pass, mean delta >= 0.02, consistent direction",
+      "verdict": "NOT_PROMISING"
+    },
+    "H4": {
+      "A_minus_CPU": -0.010129790935593408,
+      "A_rmse": 0.7686470141680765,
+      "CPU_rmse": 0.7787768051036699,
+      "bootstrap_A_minus_CPU": {
+        "ci95_high": 0.11794483503229305,
+        "ci95_low": -0.11158581452637191,
+        "mean": -0.014734291881553362,
+        "n_boot": 2000,
+        "n_molecules": 504,
+        "point": -0.010129790935593408,
+        "seed": 0
+      },
+      "note": "Positive gap means the CPU chemistry baseline is better; this is an honest descriptive comparison, not a significance gate.",
+      "verdict": "LCRC_BETTER_OR_EQUAL"
+    }
+  }
+}
