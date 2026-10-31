@@ -522,7 +522,7 @@ def _time_chunks(
 def run_inference_benchmark(*, batch_size: int = 128, warmup: int = 3, repeats: int = 10) -> dict[str, Any]:
     if not torch.cuda.is_available():
         raise RuntimeError("inference benchmark requires CUDA")
-    device = torch.device("cuda")
+    device = torch.device("cuda", int(torch.cuda.current_device()))
     torch.cuda.set_device(device)
     split, labels = CD.load_frozen_split_and_labels()
     rows_train = split["rows"]["train"]
