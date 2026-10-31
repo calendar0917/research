@@ -76,3 +76,17 @@ def test_planned_registry_is_unique_and_within_budget():
     budget = C.read_json(C.ANALYSIS / "budget_estimate_v2.json")
     assert budget["fits_within_hard_cap"] is True
     assert budget["estimated_total_gpu_hours"] <= 3.5
+
+
+def test_primary_seed_plan_uses_two_seeds_only():
+    import v2_registry as R
+
+    assert C.PRIMARY_SEEDS == (0, 1)
+    reg = R.planned_registry()
+    assert all(r["seed"] in C.PRIMARY_SEEDS for r in reg["runs"])
+    keys = {r["key"] for r in reg["runs"]}
+    assert "F0_SSLpre_s2" not in keys
+    assert "F0_A_SSL_sel_s2" not in keys
+    assert "full_A_scratch_s2" not in keys
+    assert "full_A_SSL_sel_s2" not in keys
+    assert "F1_A_R0_s2" not in keys

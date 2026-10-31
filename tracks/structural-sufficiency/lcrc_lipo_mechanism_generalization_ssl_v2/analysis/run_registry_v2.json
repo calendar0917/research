@@ -1,13 +1,13 @@
 {
   "conditional_rules": {
     "SEL": "Fold-0 recipe selected per arm by the frozen rule",
-    "SSL": "only if the Fold-0 three-seed pretext gate passes",
+    "SSL": "only if the two-seed Fold-0 pretext gate passes",
     "reuse": "an identical existing run is reused and not re-executed"
   },
-  "n_gpu_jobs": 67,
-  "n_runs": 67,
-  "n_ssl_pretrain": 10,
-  "n_train": 57,
+  "n_gpu_jobs": 56,
+  "n_runs": 56,
+  "n_ssl_pretrain": 8,
+  "n_train": 48,
   "protocol_id": "lcrc-lipo-mechanism-generalization-ssl-v2",
   "runs": [
     {
@@ -30,17 +30,6 @@
       "note": null,
       "recipe": "R0",
       "seed": 1,
-      "variant": "scratch"
-    },
-    {
-      "arm": "A",
-      "conditional": false,
-      "fold": 0,
-      "key": "F0_A_R0_s2",
-      "kind": "train",
-      "note": null,
-      "recipe": "R0",
-      "seed": 2,
       "variant": "scratch"
     },
     {
@@ -135,17 +124,6 @@
       "arm": "C",
       "conditional": false,
       "fold": 0,
-      "key": "F0_C_R0_s2",
-      "kind": "train",
-      "note": null,
-      "recipe": "R0",
-      "seed": 2,
-      "variant": "scratch"
-    },
-    {
-      "arm": "C",
-      "conditional": false,
-      "fold": 0,
       "key": "F0_C_R1_s0",
       "kind": "train",
       "note": null,
@@ -231,17 +209,6 @@
       "variant": "scratch"
     },
     {
-      "arm": "E",
-      "conditional": false,
-      "fold": 0,
-      "key": "F0_E_R0_s2",
-      "kind": "train",
-      "note": null,
-      "recipe": "R0",
-      "seed": 2,
-      "variant": "scratch"
-    },
-    {
       "arm": "A",
       "conditional": true,
       "fold": 0,
@@ -267,17 +234,6 @@
       "arm": "A",
       "conditional": true,
       "fold": 0,
-      "key": "F0_SSLpre_s2",
-      "kind": "ssl",
-      "note": null,
-      "recipe": "SSL",
-      "seed": 2,
-      "variant": "ssl_pretrain"
-    },
-    {
-      "arm": "A",
-      "conditional": true,
-      "fold": 0,
       "key": "F0_A_SSL_sel_s0",
       "kind": "train",
       "note": "requires SSL gate",
@@ -295,28 +251,6 @@
       "recipe": "SEL",
       "seed": 1,
       "variant": "ssl"
-    },
-    {
-      "arm": "A",
-      "conditional": true,
-      "fold": 0,
-      "key": "F0_A_SSL_sel_s2",
-      "kind": "train",
-      "note": "requires SSL gate",
-      "recipe": "SEL",
-      "seed": 2,
-      "variant": "ssl"
-    },
-    {
-      "arm": "A",
-      "conditional": true,
-      "fold": 0,
-      "key": "F0_A_sel_s2",
-      "kind": "train",
-      "note": "scratch seed 2 for the three-seed SSL comparison when SEL != R0",
-      "recipe": "SEL",
-      "seed": 2,
-      "variant": "scratch"
     },
     {
       "arm": "A",
@@ -690,61 +624,6 @@
       "note": "requires SSL gate",
       "recipe": "SEL",
       "seed": 1,
-      "variant": "ssl"
-    },
-    {
-      "arm": "A",
-      "conditional": false,
-      "fold": "full",
-      "key": "full_A_scratch_s2",
-      "kind": "train",
-      "note": null,
-      "recipe": "SEL",
-      "seed": 2,
-      "variant": "scratch"
-    },
-    {
-      "arm": "E",
-      "conditional": false,
-      "fold": "full",
-      "key": "full_E_R0_s2",
-      "kind": "train",
-      "note": null,
-      "recipe": "R0",
-      "seed": 2,
-      "variant": "scratch"
-    },
-    {
-      "arm": "C",
-      "conditional": false,
-      "fold": "full",
-      "key": "full_C_tuned_s2",
-      "kind": "train",
-      "note": null,
-      "recipe": "SEL",
-      "seed": 2,
-      "variant": "scratch"
-    },
-    {
-      "arm": "A",
-      "conditional": true,
-      "fold": "full",
-      "key": "full_SSLpre_s2",
-      "kind": "ssl",
-      "note": null,
-      "recipe": "SSL",
-      "seed": 2,
-      "variant": "ssl_pretrain"
-    },
-    {
-      "arm": "A",
-      "conditional": true,
-      "fold": "full",
-      "key": "full_A_SSL_sel_s2",
-      "kind": "train",
-      "note": "requires SSL gate",
-      "recipe": "SEL",
-      "seed": 2,
       "variant": "ssl"
     }
   ]

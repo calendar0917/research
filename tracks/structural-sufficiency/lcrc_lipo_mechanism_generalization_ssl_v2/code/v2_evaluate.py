@@ -182,15 +182,15 @@ def cv_analysis() -> dict[str, Any]:
         for arm in ("A", "E", "C"):
             recipes = ["R0"] if arm == "E" else list(C.RECIPE_ORDER)
             for recipe in recipes:
-                row = _arm_recipe_mean(arm, recipe, fold, C.SEEDS)
+                row = _arm_recipe_mean(arm, recipe, fold, C.PRIMARY_SEEDS)
                 if row is not None:
                     table.append(row)
 
     # H1: A vs E, R0, per fold, paired by seed.
     h1_folds = []
     for fold in C.FOLDS:
-        a = _arm_recipe_mean("A", "R0", fold, C.SEEDS)
-        e = _arm_recipe_mean("E", "R0", fold, C.SEEDS)
+        a = _arm_recipe_mean("A", "R0", fold, C.PRIMARY_SEEDS)
+        e = _arm_recipe_mean("E", "R0", fold, C.PRIMARY_SEEDS)
         if a is None or e is None:
             continue
         seeds = sorted({x["seed"] for x in a["seeds"]} & {x["seed"] for x in e["seeds"]})
@@ -236,8 +236,8 @@ def cv_analysis() -> dict[str, Any]:
         sel = selection.get(arm, "R0")
         fold_rows = []
         for fold in C.FOLDS:
-            r0 = _arm_recipe_mean(arm, "R0", fold, C.SEEDS)
-            sr = _arm_recipe_mean(arm, sel, fold, C.SEEDS)
+            r0 = _arm_recipe_mean(arm, "R0", fold, C.PRIMARY_SEEDS)
+            sr = _arm_recipe_mean(arm, sel, fold, C.PRIMARY_SEEDS)
             if r0 is None or sr is None:
                 continue
             seeds = sorted({x["seed"] for x in r0["seeds"]} & {x["seed"] for x in sr["seeds"]})
@@ -285,7 +285,7 @@ def cv_analysis() -> dict[str, Any]:
     for fold in C.FOLDS:
         scratch_keys = []
         ssl_keys = []
-        for seed in C.SEEDS:
+        for seed in C.PRIMARY_SEEDS:
             scratch_key = f"F{fold}_A_{a_recipe}_s{seed}" if a_recipe != "R0" else f"F{fold}_A_R0_s{seed}"
             ssl_key = f"F{fold}_A_SSL_sel_s{seed}"
             if (C.RUNS / scratch_key / "train.json").exists() and (C.RUNS / ssl_key / "train.json").exists():
@@ -335,8 +335,8 @@ def cv_analysis() -> dict[str, Any]:
     if a_recipe != "R0":
         rows = []
         for fold in C.FOLDS:
-            a = _arm_recipe_mean("A", a_recipe, fold, C.SEEDS)
-            e = _arm_recipe_mean("E", "R0", fold, C.SEEDS)
+            a = _arm_recipe_mean("A", a_recipe, fold, C.PRIMARY_SEEDS)
+            e = _arm_recipe_mean("E", "R0", fold, C.PRIMARY_SEEDS)
             if a is None or e is None:
                 continue
             seeds = sorted({x["seed"] for x in a["seeds"]} & {x["seed"] for x in e["seeds"]})

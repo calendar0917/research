@@ -98,6 +98,10 @@ V1_IMMUTABLE = {
 # ---------------------------------------------------------------------------
 
 SEEDS = (0, 1, 2)
+#: Researcher amendment 001: primary analyses and all remaining planned runs
+#: use seeds 0/1.  ``SEEDS`` stays (0,1,2) so already-completed pre-amendment
+#: seed-2 runs remain valid explicit artifacts, but they are not in the plan.
+PRIMARY_SEEDS = (0, 1)
 FOLDS = (0, 1, 2)
 ARMS = ("A", "E", "C")
 BASELINE_ARMS = ("P1", "P2", "P3")
@@ -326,6 +330,7 @@ def validate_config(cfg: Mapping[str, Any]) -> None:
     need(cfg.get("protocol_id"), PROTOCOL_ID, "protocol_id")
     need(cfg.get("round_id"), ROUND_ID, "round_id")
     need(tuple(int(x) for x in cfg["seeds"]), SEEDS, "seeds")
+    need(tuple(int(x) for x in cfg["primary_seeds"]), PRIMARY_SEEDS, "primary_seeds")
     need(tuple(int(x) for x in cfg["folds"]), FOLDS, "folds")
     need(int(cfg["training"]["batch_size"]), BATCH_SIZE, "training.batch_size")
     need(int(cfg["training"]["epochs"]), EPOCHS, "training.epochs")
@@ -460,6 +465,7 @@ def build_protocol_freeze(cfg: Mapping[str, Any]) -> dict[str, Any]:
         "v1_immutability": v1_report,
         "frozen_constants": {
             "seeds": list(SEEDS),
+            "primary_seeds": list(PRIMARY_SEEDS),
             "folds": list(FOLDS),
             "arms": list(ARMS),
             "recipes": {k: dict(v) for k, v in RECIPES.items()},

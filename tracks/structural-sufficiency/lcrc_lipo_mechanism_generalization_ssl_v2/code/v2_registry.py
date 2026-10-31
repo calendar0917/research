@@ -42,26 +42,26 @@ def _ssl(key, fold, seed, conditional=False):
 
 def fold0_runs() -> list[dict[str, Any]]:
     out = []
-    for seed in C.SEEDS:
+    for seed in C.PRIMARY_SEEDS:
         out.append(_train(f"F0_A_R0_s{seed}", "A", 0, "R0", seed))
     for seed in (0, 1):
         for recipe in ("R1", "R2", "R3"):
             out.append(_train(f"F0_A_{recipe}_s{seed}", "A", 0, recipe, seed))
-    for seed in C.SEEDS:
+    for seed in C.PRIMARY_SEEDS:
         out.append(_train(f"F0_C_R0_s{seed}", "C", 0, "R0", seed))
     for seed in (0, 1):
         for recipe in ("R1", "R2", "R3"):
             out.append(_train(f"F0_C_{recipe}_s{seed}", "C", 0, recipe, seed))
-    for seed in C.SEEDS:
+    for seed in C.PRIMARY_SEEDS:
         out.append(_train(f"F0_E_R0_s{seed}", "E", 0, "R0", seed))
     return out
 
 
 def fold0_ssl_runs() -> list[dict[str, Any]]:
     out = []
-    for seed in C.SEEDS:
+    for seed in C.PRIMARY_SEEDS:
         out.append(_ssl(f"F0_SSLpre_s{seed}", 0, seed, conditional=True))
-    for seed in C.SEEDS:
+    for seed in C.PRIMARY_SEEDS:
         out.append(
             _train(
                 f"F0_A_SSL_sel_s{seed}",
@@ -74,17 +74,6 @@ def fold0_ssl_runs() -> list[dict[str, Any]]:
                 note="requires SSL gate",
             )
         )
-    out.append(
-        _train(
-            "F0_A_sel_s2",
-            "A",
-            0,
-            "SEL",
-            2,
-            conditional=True,
-            note="scratch seed 2 for the three-seed SSL comparison when SEL != R0",
-        )
-    )
     return out
 
 
@@ -113,7 +102,7 @@ def fold_runs(fold: int) -> list[dict[str, Any]]:
 
 def full_runs() -> list[dict[str, Any]]:
     out = []
-    for seed in C.SEEDS:
+    for seed in C.PRIMARY_SEEDS:
         out.append(_train(f"full_A_scratch_s{seed}", "A", "full", "SEL", seed))
         out.append(_train(f"full_E_R0_s{seed}", "E", "full", "R0", seed))
         out.append(_train(f"full_C_tuned_s{seed}", "C", "full", "SEL", seed))
@@ -147,7 +136,7 @@ def planned_registry() -> dict[str, Any]:
         "n_gpu_jobs": len(runs),
         "conditional_rules": {
             "SEL": "Fold-0 recipe selected per arm by the frozen rule",
-            "SSL": "only if the Fold-0 three-seed pretext gate passes",
+            "SSL": "only if the two-seed Fold-0 pretext gate passes",
             "reuse": "an identical existing run is reused and not re-executed",
         },
     }
@@ -176,7 +165,7 @@ def planned_predictions(recipe_lock: Mapping[str, Any], ssl_gate: Mapping[str, A
     out = []
     a_recipe = recipe_lock["selection"]["A"]
     c_recipe = recipe_lock["selection"]["C"]
-    for seed in C.SEEDS:
+    for seed in C.PRIMARY_SEEDS:
         out.append({"key": f"full_A_scratch_s{seed}", "arm": "A", "recipe": a_recipe, "seed": seed, "variant": "scratch"})
         out.append({"key": f"full_E_R0_s{seed}", "arm": "E", "recipe": "R0", "seed": seed, "variant": "scratch"})
         out.append({"key": f"full_C_tuned_s{seed}", "arm": "C", "recipe": c_recipe, "seed": seed, "variant": "scratch"})

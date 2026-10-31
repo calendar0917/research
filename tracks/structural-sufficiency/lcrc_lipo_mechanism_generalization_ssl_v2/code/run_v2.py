@@ -268,7 +268,7 @@ def cmd_freeze_protocol(_args) -> int:
     freeze["data_audit"] = C.file_record(C.ANALYSIS / "data_audit_v2.json")
     freeze["norm_target_fit2352"] = C.file_record(C.NORM_TARGET_V2)
     freeze["gpu_ledger"] = C.file_record(C.ANALYSIS / "gpu_ledger_v2.json")
-    freeze["tests"] = {"pytest_suite": "52 passed", "v1_guard": "session fixture + G9 gate"}
+    freeze["tests"] = {"pytest_suite": "53 passed", "v1_guard": "session fixture + G9 gate"}
     freeze["cpu_baselines"] = {
         "file": C.file_record(C.ANALYSIS / "cpu_baselines_v2.json"),
         "selection": baseline["selection"],
@@ -518,7 +518,7 @@ def cmd_analyze_cv(_args) -> int:
 
 def cmd_ssl_gate(_args) -> int:
     rows = []
-    for seed in C.SEEDS:
+    for seed in C.PRIMARY_SEEDS:
         path = _run_dir(f"F0_SSLpre_s{seed}") / "ssl.json"
         if not path.exists():
             raise FileNotFoundError(f"missing Fold 0 SSL run {C.track_rel(path)}")
@@ -537,7 +537,7 @@ def cmd_ssl_gate(_args) -> int:
     payload = {
         "protocol_id": C.PROTOCOL_ID,
         "created_utc": C.utcnow(),
-        "rule": "all three Fold-0 SSL seeds must have heldout CE at least 0.05 nat below the marginal prior",
+        "rule": "both Fold-0 SSL seeds must have heldout CE at least 0.05 nat below the marginal prior",
         "gate_min_nat": C.SSL_GATE_MIN_NAT,
         "seeds": rows,
         "gate_pass": gate_pass,
