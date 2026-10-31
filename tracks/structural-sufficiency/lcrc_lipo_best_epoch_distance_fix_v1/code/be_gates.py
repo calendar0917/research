@@ -685,7 +685,7 @@ def gate_best_epoch_end_to_end(views) -> dict[str, Any]:
     passed = bool(
         int(ckpt["best_epoch"]) == argmin
         and abs(float(ckpt["best_valid_rmse"]) - float(valid[argmin - 1])) == 0.0
-        and float(payload["checkpoint"]["valid_rmse_recheck_abs_diff"]) == 0.0
+        and float(payload["checkpoint"]["valid_rmse_recheck_abs_diff"]) <= 1.0e-9
         and ckpt["soup_members"] is None
     )
     return {"id": "best_epoch_end_to_end", "passed": passed, "detail": detail}

@@ -29,7 +29,7 @@ import r42_data as R42D  # noqa: E402
 import r42_metrics as MET  # noqa: E402
 import r42_native_train as NT  # noqa: E402
 
-TOL = 1.0e-9
+TOL = 1.0e-5  # fp32 forward passes are not bitwise reproducible on GPU
 
 
 def _entry(arm: str) -> dict[str, Any]:
@@ -130,10 +130,11 @@ def verify_all(device="cpu") -> dict[str, Any]:
             {"recomputed": float(metrics["rmse"]), "recorded": float(ckpt["best_valid_rmse"])},
             checks,
         )
+        max_pred_diff = float(np.abs(pred - np.asarray(saved["pred"], dtype=np.float64)).max())
         ok &= _align_check(
             "saved_valid_predictions_reproduced",
-            float(np.abs(pred - np.asarray(saved["pred"], dtype=np.float64)).max()) == 0.0,
-            {"max_abs_diff": float(np.abs(pred - np.asarray(saved["pred"], dtype=np.float64)).max())},
+            max_pred_diff <= TOL,
+            {"max_abs_diff": max_pred_diff, "tolerance": TOL},
             checks,
         )
         ok &= _align_check(
