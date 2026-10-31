@@ -18,6 +18,7 @@ After this file exists the models may not change: the scorer only reads it.
 
 from __future__ import annotations
 
+import os
 from typing import Any, Callable
 
 import numpy as np
@@ -36,6 +37,18 @@ RUN_DIRS = {
     "ESA-native": "esa_native_s0",
     "XGB-P3": "xgb_p3_s0",
 }
+
+
+def predict_device() -> torch.device:
+    """Inference device for the frozen Test predictions (recorded in the manifest).
+
+    Cached by env var so a CPU-only host and a GPU host can both freeze identical
+    weights; only fp32 numerics are used either way.
+    """
+    forced = os.environ.get("R42_PREDICT_DEVICE", "").strip()
+    if forced:
+        return torch.device(forced)
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def _views_for_norm():
@@ -58,13 +71,15 @@ def _lcrc_predictor() -> Callable[[list[int]], np.ndarray]:
     model.load_state_dict(state["state_dict"], strict=True)
     model.eval()
     cache_all = built["cache"]
+    device = predict_device()
 
     def predict(rows: list[int]) -> np.ndarray:
         cache = D.select_cache(cache_all, rows, split_label="test420")
-        raw_std = LT._predict_lcrc(model, cache, torch.device("cpu"), batch_size=256)
+        raw_std = LT._predict_lcrc(model, cache, device, batch_size=256)
         return NT.denormalise(raw_std, target_norm)
 
     info = {
+        "device": str(device),
         "cache_sha256": built["file_sha256"],
         "cache_content_fingerprint": built["content_fingerprint"],
         "train_norm_fingerprint": views["train_norm_fingerprint"],
@@ -84,7 +99,7 @@ def _native_predictor(model: str) -> Callable[[list[int]], np.ndarray]:
     structures = D.structure_summary()
     kind = "pna" if model == "PNA-native" else "esa"
     model_cfg = cfg["models"][kind]
-    device = torch.device("cpu")
+    device = predict_device()
     if kind == "pna":
         net, extra = NT.build_pna(model_cfg, device, run_dir, D.load_structure_data([int(r) for r in D.load_split()["rows"]["train"]]), structures["atom_feat_dim"], structures["edge_feat_dim"])
         num_max_items = None
@@ -97,18 +112,24 @@ def _native_predictor(model: str) -> Callable[[list[int]], np.ndarray]:
     target_norm = payload["data"]["target_norm"]
     precision = str(model_cfg.get("precision", "bf16"))
 
+    # ESA materialises a dense [B, heads, E, E] mask, so inference uses a
+    # smaller batch on CPU/GPU than training does.
+    batch_size = min(int(model_cfg["batch_size"]), 32) if kind == "esa" else int(model_cfg["batch_size"])
+
     def predict(rows: list[int]) -> np.ndarray:
         data = D.load_structure_data(rows)
-        raw_std = NT._predict(net, data, kind=kind, device=device, batch_size=int(model_cfg["batch_size"]), precision="fp32", num_max_items=num_max_items)
+        raw_std = NT._predict(net, data, kind=kind, device=device, batch_size=batch_size, precision="fp32", num_max_items=num_max_items)
         return NT.denormalise(raw_std, target_norm)
 
     info = {
+        "device": str(device),
         "checkpoint_best_epoch": state.get("best_epoch"),
         "val_loss_standardized": state.get("val_loss_standardized"),
         "target_norm": target_norm,
         "extra": extra,
         "formal_precision": precision,
         "test_inference_precision": "fp32",
+        "test_inference_batch_size": batch_size,
     }
     return predict, info
 
@@ -123,6 +144,7 @@ def _xgb_predictor() -> Callable[[list[int]], np.ndarray]:
         return X.predict_rows(C.REPO / payload["model_path"], rows)
 
     info = {
+        "device": "cpu",
         "model_sha256": payload["model_sha256"],
         "model_path": payload["model_path"],
         "n_features_used": payload["features"]["n_features_used"],
