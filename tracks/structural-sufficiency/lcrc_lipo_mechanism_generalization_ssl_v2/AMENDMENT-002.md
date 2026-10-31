@@ -60,3 +60,13 @@ a dict, and it looked up `F1/F2_A_R3_s*` / `F1/F2_C_R3_s*` instead of the
 registered `F1/F2_*_sel_s*` aliases. It now reads dropout via `C.RECIPES` and
 resolves the `SEL` alias on folds 1/2. Diagnostics are inference-only on Fit
 dev folds; no Monitor label is involved. The final freeze includes this fix.
+
+## Addendum 3 — one-shot Monitor label read
+
+The first `evaluate` attempt called `sha256_file(labels_fit_monitor.json)`
+before `scan_label_artifact`; the v1 access guard correctly denied the
+ungranted open. No Monitor value was constructed and no
+`monitor_metrics_v2.json` was written. `v2_monitor_labels` now uses
+`read_bytes_with_grant` exactly once, verifies the frozen SHA-256 from those
+bytes, and scans the same in-memory text. The final freeze includes this fix;
+the Monitor evaluation remains a single evaluation.

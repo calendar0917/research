@@ -25,9 +25,15 @@ def load_monitor_labels() -> dict[str, Any]:
     guard = C.v1_access_guard
     guard.arm(gated=(C.v1c.LIPO_LABELS,))
     try:
-        labels_sha = C.sha256_file(C.v1c.LIPO_LABELS)
-        scanned = C.v1_fit_labels.scan_label_artifact(
-            C.v1c.LIPO_LABELS, requested_label_keys=(str(r) for r in monitor_rows)
+        # The gated artifact is opened exactly once.  Hash the same bytes in
+        # memory and scan those bytes; a separate sha256_file() would be a
+        # second open and would correctly be denied by the one-shot guard.
+        raw = guard.read_bytes_with_grant(C.v1c.LIPO_LABELS)
+        labels_sha = C.v1_fit_labels._verify_label_bytes(raw)
+        scanned = C.v1_fit_labels._scan(
+            raw.decode("utf-8"),
+            requested_label_keys=(str(r) for r in monitor_rows),
+            path=C.v1c.LIPO_LABELS,
         )
     finally:
         guard.disarm()
