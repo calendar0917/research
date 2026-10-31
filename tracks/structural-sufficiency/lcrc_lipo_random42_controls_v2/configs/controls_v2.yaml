@@ -1,0 +1,110 @@
+protocol_id: lcrc-lipo-random42-controls-v2
+round: LCRC-random42-v2 structural mechanism / parameter-efficiency minimal controls
+authorization:
+  new_models: 2
+  training_seed: 0
+  scope: validation_only
+  gpu_hard_cap_hours: 0.5
+  test_access: forbidden
+reuse:
+  v1_track: tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1
+  split_file_sha256: 1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4
+  split_index_sha256:
+    train: 0df18c72753974d502f8bede1cd2aa5c0ebdc1df450b8871fffdb1f67d2648ee
+    valid: 8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44
+    test: 4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b
+  labels_file_sha256: 1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca
+  structures_sha256: a098d27fa11c5d718d2f0a373636cfc9eeac9604ea5db8ae50a36d05fe035a2c
+  csv_sha256: aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd
+  target_mean: 2.2081011904761905
+  target_scale: 1.1906281212426577
+models:
+  s2off:
+    model: LCRC-S2off-capacity-matched
+    seed: 0
+    batch_size: 128
+    epochs: 360
+    optimizer: AdamW
+    peak_lr: 0.0003
+    min_lr: 1.0e-05
+    weight_decay: 0.001
+    scheduler: per_step_cosine
+    dropout_configured: 0.1
+    dropout_applied: 0.0
+    gradient_clip: 5.0
+    loss: standardized_mse
+    checkpoint: average_last_5_epoch_end_state_dicts
+    early_stopping: false
+    ssl: false
+    steps_per_epoch: 27
+    optimizer_steps: 9720
+  pna:
+    model: PNA-small
+    seed: 0
+    conv_type: PNA
+    num_layers: 4
+    batch_size: 128
+    optimizer: AdamW
+    lr: 0.0001
+    weight_decay: 1.0e-10
+    gradient_clip: 0.5
+    loss: standardized_mse
+    max_epochs: 360
+    early_stopping_patience: 30
+    lr_scheduler: ReduceLROnPlateau
+    lr_scheduler_factor: 0.5
+    lr_scheduler_patience: 15
+    checkpoint: best_validation_loss
+    precision: bf16
+    aggregation:
+    - mean
+    - min
+    - max
+    - std
+    scalers:
+    - identity
+    - amplification
+    - attenuation
+    towers: 5
+pna_width_rule:
+  candidates:
+  - 20
+  - 25
+  - 30
+  - 35
+  - 40
+  - 45
+  - 50
+  - 55
+  - 60
+  - 65
+  - 70
+  - 75
+  - 80
+  - 85
+  - 90
+  - 95
+  - 100
+  target_parameters: 247106
+  tolerance: 0.15
+  selection: min |parameters - 247106|; instantiate on CPU only; no labels or Validation
+    scores; freeze immediately
+  fallback_label: NOT_TIGHTLY_SIZE_MATCHED
+evaluation:
+  metrics:
+  - rmse
+  - mae
+  - r2
+  units: raw_logD
+  splits:
+  - train
+  - valid
+  bootstrap_resamples: 2000
+  bootstrap_seed: 0
+  inference_batch_size: 128
+  inference_warmup: 3
+  inference_repeats: 10
+budget:
+  gpu_hard_cap_hours: 0.5
+  charging: full wall time of every process that touched CUDA, including smoke and
+    benchmark
