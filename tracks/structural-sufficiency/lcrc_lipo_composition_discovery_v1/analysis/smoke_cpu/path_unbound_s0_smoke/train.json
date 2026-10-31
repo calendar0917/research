@@ -1,0 +1,537 @@
+{
+  "anomalies": {
+    "grad_clip_events": 1,
+    "grad_norm_max": 1913.9583740234375,
+    "nonfinite_events": 0
+  },
+  "arm": "path_unbound_s0",
+  "checkpoint_path": "tracks/structural-sufficiency/lcrc_lipo_composition_discovery_v1/analysis/smoke_cpu/path_unbound_s0_smoke/checkpoint.pt",
+  "checkpoint_sha256": "069eb93eb0e260552beb604aaf8e567bf436101dd5b43f887284665e0b8f7034",
+  "config_hash": "b65c607a7c96611b335f233ab214f4360175740953c6c4df0d3b028312cebdea",
+  "cuda_device_count": 0,
+  "cuda_device_name": "cpu",
+  "curve": [
+    {
+      "epoch": 1,
+      "grad_clip_events": 1,
+      "grad_norm_max": 1913.9583740234375,
+      "lr": 1e-05,
+      "seconds": 0.03013492497848347,
+      "steps": 1,
+      "train_loss_standardized": 31.159637451171875,
+      "train_mae_standardized": 5.197350025177002,
+      "train_rmse_standardized": 5.582081820537198,
+      "valid_mae_raw": 2.4464903301387926,
+      "valid_r2_raw": -3.2718305397202254,
+      "valid_rmse_raw": 2.7993030256126565
+    }
+  ],
+  "data": {
+    "distance_bucket_meta": {
+      "definition": "D34 = 3<=dist<=4; D5 = dist>=5 finite; self and dist<=2 excluded; unreachable excluded",
+      "labels_present": false,
+      "n34_total": 9990,
+      "n5_total": 27420,
+      "n_atoms": 1676,
+      "n_d34_entries": 9990,
+      "n_d5_entries": 27420
+    },
+    "feature_spec_hash": "bee7cd5e9abfa81461145bc546875ee254b878da89a2e7fd8d855069a7281a5e",
+    "label_audit": {
+      "n_train": 3360,
+      "n_valid": 420,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+      "sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+      "test_labels_included": false,
+      "train_vector_sha256": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+      "valid_vector_sha256": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+    },
+    "label_scope": "train3360_and_valid420_only",
+    "labels_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+    "labels_file_sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+    "lcrc_cache_content_fingerprint": "23ec00be4fb7e3cf93967cd62911bd932159b1d7e0b43226b23cf7c6a3718e03",
+    "lcrc_cache_labels_present": false,
+    "lcrc_cache_path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/cache/lcrc_all4200.pt",
+    "lcrc_cache_sha256": "450e749045216f32a7a388f0fc039adf6bc5729ef3e9319379ba78f0d9662bd8",
+    "n_train": 64,
+    "n_valid": 32,
+    "split_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/split_esa_random42_v1.json",
+    "split_file_sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+    "target_norm": {
+      "label_vector_sha256": "cfe31496a6ef59abeb36b29d7546177aae683c1ba36ce4f61b8a4435e71f4524",
+      "mean": 2.4440625000000002,
+      "n": 64,
+      "scale": 1.1196745045296645,
+      "scale_definition": "population_std_float64 (sklearn StandardScaler convention)",
+      "source": "train3360_labels_only",
+      "valid_or_test_used": false
+    },
+    "test_labels_read": false,
+    "test_metrics_read": false,
+    "test_predictions_read": false,
+    "test_row_values_used": false,
+    "train_norm_fingerprint": "c36a7d7b4548d75cf3f2b4fb4406360fe484a40acbffa14f7b350dcdb5264dde",
+    "train_rows_sha256": "ca426b33eef2d9f273c48e9c47974489ecd67d3ba7105fde365eff0113322d91",
+    "valid_rows_sha256": "f6503979e0131741b172c481b4ca7e6ee7aac8858b59de3e9835963e91466383"
+  },
+  "device": "cpu",
+  "device_note": "rr sets CUDA_VISIBLE_DEVICES per pool; the pool GPU is cuda:0 in-process",
+  "diagnostics": {
+    "correction_usage_train": {
+      "bind_gap_norm_max": 0.0,
+      "bind_gap_norm_mean": 0.0,
+      "bind_gap_norm_p95": 0.0,
+      "bind_gap_note": "norm(mean(v*r) - mean(v)*mean(r)) per root with paths",
+      "change_l2_max": 0.0046536182053387165,
+      "change_l2_mean": 0.0036422852132256033,
+      "change_l2_p95": 0.004536200314760208,
+      "fraction_atoms_with_paths": 1.0,
+      "graph_max_change_max": 0.0046536182053387165,
+      "graph_max_change_mean": 0.004522224800894037,
+      "n_atoms": 1676,
+      "n_atoms_with_correction_path": 1676,
+      "n_atoms_with_paths": 1676,
+      "n_hetero_atoms": 0,
+      "n_molecules": 64,
+      "n_roots_with_multiple_path_types": 1079
+    },
+    "correction_usage_valid": {
+      "bind_gap_norm_max": 0.0,
+      "bind_gap_norm_mean": 0.0,
+      "bind_gap_norm_p95": 0.0,
+      "bind_gap_note": "norm(mean(v*r) - mean(v)*mean(r)) per root with paths",
+      "change_l2_max": 0.0046536182053387165,
+      "change_l2_mean": 0.0036695130938745064,
+      "change_l2_p95": 0.004546147119253874,
+      "fraction_atoms_with_paths": 1.0,
+      "graph_max_change_max": 0.0046536182053387165,
+      "graph_max_change_mean": 0.004533258252195083,
+      "n_atoms": 805,
+      "n_atoms_with_correction_path": 805,
+      "n_atoms_with_paths": 805,
+      "n_hetero_atoms": 0,
+      "n_molecules": 32,
+      "n_roots_with_multiple_path_types": 533
+    },
+    "dropout": {
+      "dropout_p": 0.1,
+      "eval_mode_forward_max_abs_diff": 0.0,
+      "eval_mode_is_identity": true,
+      "eval_mode_max_abs_dropout_delta": 0.0,
+      "head_calls_eval": 2,
+      "head_calls_train": 2,
+      "head_training_in_eval_mode": false,
+      "head_training_in_train_mode": true,
+      "hook_module_present": true,
+      "passed": true,
+      "train_mode_forward_max_abs_diff_different_masks": 0.9064963459968567,
+      "train_mode_masked_atoms": true,
+      "train_mode_max_abs_dropout_delta": 3.70332932472229
+    },
+    "gradient_probe": {
+      "all_finite": true,
+      "all_nonzero_at_final_step": true,
+      "all_updated": true,
+      "history": [
+        {
+          "grads": {
+            "pathbind.E_b1.weight": {
+              "finite": true,
+              "norm": 0.001686570467427373
+            },
+            "pathbind.E_b2.weight": {
+              "finite": true,
+              "norm": 0.0014574355445802212
+            },
+            "pathbind.E_closure.weight": {
+              "finite": true,
+              "norm": 0.0017983797006309032
+            },
+            "pathbind.E_mid.weight": {
+              "finite": true,
+              "norm": 0.0014847182901576161
+            },
+            "pathbind.W_end.bias": {
+              "finite": true,
+              "norm": 0.06960958987474442
+            },
+            "pathbind.W_end.weight": {
+              "finite": true,
+              "norm": 0.055631231516599655
+            },
+            "pathbind.W_out.bias": {
+              "finite": true,
+              "norm": 22.8530216217041
+            },
+            "pathbind.W_out.weight": {
+              "finite": true,
+              "norm": 2.455885887145996
+            },
+            "pathbind.W_root.bias": {
+              "finite": true,
+              "norm": 0.009239701554179192
+            },
+            "pathbind.W_root.weight": {
+              "finite": true,
+              "norm": 0.05653411149978638
+            }
+          },
+          "loss": 4.4450249671936035,
+          "step": 1
+        },
+        {
+          "grads": {
+            "pathbind.E_b1.weight": {
+              "finite": true,
+              "norm": 0.001870951964519918
+            },
+            "pathbind.E_b2.weight": {
+              "finite": true,
+              "norm": 0.0017477147048339248
+            },
+            "pathbind.E_closure.weight": {
+              "finite": true,
+              "norm": 0.002081445651128888
+            },
+            "pathbind.E_mid.weight": {
+              "finite": true,
+              "norm": 0.0016804301412776113
+            },
+            "pathbind.W_end.bias": {
+              "finite": true,
+              "norm": 0.08533509075641632
+            },
+            "pathbind.W_end.weight": {
+              "finite": true,
+              "norm": 0.066783107817173
+            },
+            "pathbind.W_out.bias": {
+              "finite": true,
+              "norm": 61.494564056396484
+            },
+            "pathbind.W_out.weight": {
+              "finite": true,
+              "norm": 5.7535834312438965
+            },
+            "pathbind.W_root.bias": {
+              "finite": true,
+              "norm": 0.014890591613948345
+            },
+            "pathbind.W_root.weight": {
+              "finite": true,
+              "norm": 0.09353554248809814
+            }
+          },
+          "loss": 30.302547454833984,
+          "step": 2
+        }
+      ],
+      "parameter_max_abs_update": {
+        "pathbind.E_b1.weight": 0.0006002187728881836,
+        "pathbind.E_b2.weight": 0.0006000995635986328,
+        "pathbind.E_closure.weight": 0.0005970001220703125,
+        "pathbind.E_mid.weight": 0.0005998611450195312,
+        "pathbind.W_end.bias": 0.0005987882614135742,
+        "pathbind.W_end.weight": 0.0006003789603710175,
+        "pathbind.W_out.bias": 0.0005996683612465858,
+        "pathbind.W_out.weight": 0.0006003809394314885,
+        "pathbind.W_root.bias": 0.0005983933806419373,
+        "pathbind.W_root.weight": 0.0006004013121128082
+      },
+      "passed": true,
+      "steps": 2,
+      "training_probe": {
+        "aggregate": {
+          "pathbind.E_b1.weight": {
+            "all_nonzero": true,
+            "max": 4.655390057450859e-06,
+            "mean": 4.655390057450859e-06,
+            "min": 4.655390057450859e-06,
+            "n_steps": 1
+          },
+          "pathbind.E_b2.weight": {
+            "all_nonzero": true,
+            "max": 4.213698503008345e-06,
+            "mean": 4.213698503008345e-06,
+            "min": 4.213698503008345e-06,
+            "n_steps": 1
+          },
+          "pathbind.E_closure.weight": {
+            "all_nonzero": true,
+            "max": 5.080536993773421e-06,
+            "mean": 5.080536993773421e-06,
+            "min": 5.080536993773421e-06,
+            "n_steps": 1
+          },
+          "pathbind.E_mid.weight": {
+            "all_nonzero": true,
+            "max": 4.043261014885502e-06,
+            "mean": 4.043261014885502e-06,
+            "min": 4.043261014885502e-06,
+            "n_steps": 1
+          },
+          "pathbind.W_end.bias": {
+            "all_nonzero": true,
+            "max": 0.00020400680659804493,
+            "mean": 0.00020400680659804493,
+            "min": 0.00020400680659804493,
+            "n_steps": 1
+          },
+          "pathbind.W_end.weight": {
+            "all_nonzero": true,
+            "max": 0.0001628875470487401,
+            "mean": 0.0001628875470487401,
+            "min": 0.0001628875470487401,
+            "n_steps": 1
+          },
+          "pathbind.W_out.bias": {
+            "all_nonzero": true,
+            "max": 0.16394229233264923,
+            "mean": 0.16394229233264923,
+            "min": 0.16394229233264923,
+            "n_steps": 1
+          },
+          "pathbind.W_out.weight": {
+            "all_nonzero": true,
+            "max": 0.015891388058662415,
+            "mean": 0.015891388058662415,
+            "min": 0.015891388058662415,
+            "n_steps": 1
+          },
+          "pathbind.W_root.bias": {
+            "all_nonzero": true,
+            "max": 3.958753222832456e-05,
+            "mean": 3.958753222832456e-05,
+            "min": 3.958753222832456e-05,
+            "n_steps": 1
+          },
+          "pathbind.W_root.weight": {
+            "all_nonzero": true,
+            "max": 0.0002519698755349964,
+            "mean": 0.0002519698755349964,
+            "min": 0.0002519698755349964,
+            "n_steps": 1
+          }
+        },
+        "first_five_steps": [
+          {
+            "global_step": 1,
+            "grad_norm": {
+              "pathbind.E_b1.weight": 4.655390057450859e-06,
+              "pathbind.E_b2.weight": 4.213698503008345e-06,
+              "pathbind.E_closure.weight": 5.080536993773421e-06,
+              "pathbind.E_mid.weight": 4.043261014885502e-06,
+              "pathbind.W_end.bias": 0.00020400680659804493,
+              "pathbind.W_end.weight": 0.0001628875470487401,
+              "pathbind.W_out.bias": 0.16394229233264923,
+              "pathbind.W_out.weight": 0.015891388058662415,
+              "pathbind.W_root.bias": 3.958753222832456e-05,
+              "pathbind.W_root.weight": 0.0002519698755349964
+            }
+          }
+        ]
+      }
+    },
+    "path_coverage_valid": {
+      "bind_gap_norm_mean": 0.0,
+      "bind_gap_norm_p95": 0.0,
+      "fraction_atoms_with_paths": 1.0,
+      "n_roots_with_multiple_path_types": 533
+    },
+    "rho_after_soup": {
+      "atol": 1e-05,
+      "discriminating_or_scalar_unchanged": true,
+      "max_abs_diff_vs_h_new_reconstruction": 0.002468585968017578,
+      "max_abs_diff_vs_h_original_reconstruction": 0.0,
+      "max_abs_h_new_minus_h_original": 0.0014134496450424194,
+      "n_graphs": 8,
+      "passed": true,
+      "rho_input_matches_h_original": true,
+      "rho_input_vs_h_new_reconstruction_differs": true
+    },
+    "trained_new_parameter_delta_from_init": {
+      "pathbind.E_b1.weight": 0.0002988278865814209,
+      "pathbind.E_b2.weight": 0.0002981424331665039,
+      "pathbind.E_closure.weight": 0.00029909610748291016,
+      "pathbind.E_mid.weight": 0.00029850006103515625,
+      "pathbind.W_end.bias": 0.00029997900128364563,
+      "pathbind.W_end.weight": 0.00029985979199409485,
+      "pathbind.W_out.bias": 0.0002999999560415745,
+      "pathbind.W_out.weight": 0.00029999937396496534,
+      "pathbind.W_root.bias": 0.0002998523414134979,
+      "pathbind.W_root.weight": 0.00029994919896125793
+    },
+    "w_out_zero_ablation_valid": {
+      "mae": 2.430728137877871,
+      "max_abs_prediction_change_vs_full": 0.023649207200118205,
+      "mean_abs_prediction_change_vs_full": 0.01645051759930931,
+      "note": "same trained model with the correction output projection zeroed in eval (its own base path)",
+      "r2": -3.2270553463385196,
+      "rmse": 2.784593932892614,
+      "rmse_change_vs_full": -0.014709092720042616
+    }
+  },
+  "family": "path_unbound",
+  "git_commit": "8c2ba182ca7f373d2eab0eb68d79cafadb2e0e92",
+  "git_dirty_tracked": false,
+  "gpu": {
+    "device_name": "cpu",
+    "peak_memory_allocated_bytes": 0
+  },
+  "hostname": "main",
+  "label_scope": "train3360_and_valid420_only",
+  "metrics": {
+    "train": {
+      "checkpoint": "soup_last_5",
+      "mae": 2.2517687117069265,
+      "r2": -4.508257379209441,
+      "rmse": 2.6278398953007485,
+      "units": "raw_logD"
+    },
+    "train_loss_standardized_last_epoch": 31.159637451171875,
+    "train_mae_standardized_last_epoch": 5.197350025177002,
+    "valid": {
+      "checkpoint": "soup_last_5",
+      "mae": 2.4464903301387926,
+      "r2": -3.2718305397202254,
+      "rmse": 2.7993030256126565,
+      "units": "raw_logD"
+    }
+  },
+  "model": "LCRC-A-PATH-UNBOUND",
+  "model_audit": {
+    "definition": "bind_i=mean_p(v_p*r_p) for PATH-BIND; mean_p(v_p)*mean_p(r_p) for PATH-UNBOUND",
+    "dropout_hook_calls": 17,
+    "init_parity_with_context": null,
+    "init_state_hash": "811c4d248b59102c50cd89ef726db9e85e8576e9d22e3de7b093be2a0b582b3e",
+    "parameter_breakdown": {
+      "atom_encoder": 19040,
+      "bond_encoder": 63776,
+      "f": 4225,
+      "local": 148992,
+      "pathbind": 8192,
+      "rho": 11073,
+      "total": 255298
+    },
+    "parameters": 255298,
+    "parameters_base": 247106,
+    "parameters_new": 8192,
+    "shared_init": {
+      "all_shared_bitwise_identical": true,
+      "base_only_keys": [],
+      "mismatched": [],
+      "model_only_keys": [
+        "pathbind.E_b1.weight",
+        "pathbind.E_b2.weight",
+        "pathbind.E_closure.weight",
+        "pathbind.E_mid.weight",
+        "pathbind.W_end.bias",
+        "pathbind.W_end.weight",
+        "pathbind.W_out.bias",
+        "pathbind.W_out.weight",
+        "pathbind.W_root.bias",
+        "pathbind.W_root.weight"
+      ],
+      "n_shared_entries": 35,
+      "shared_keys": [
+        "global_mean",
+        "global_scale",
+        "scalar_mean",
+        "scalar_scale",
+        "atom_encoder.lins.0.weight",
+        "atom_encoder.lins.0.bias",
+        "atom_encoder.lins.1.weight",
+        "atom_encoder.lins.1.bias",
+        "bond_encoder.lins.0.weight",
+        "bond_encoder.lins.0.bias",
+        "bond_encoder.lins.1.weight",
+        "bond_encoder.lins.1.bias",
+        "local.nbr_emb.weight",
+        "local.path_emb.weight",
+        "local.end_emb.weight",
+        "local.path_u.weight",
+        "local.path_v.weight",
+        "local.joint_proj.weight",
+        "local.joint_proj.bias",
+        "local.close_emb.weight",
+        "local.path_gate.weight",
+        "local.mlp.lins.0.weight",
+        "local.mlp.lins.0.bias",
+        "local.mlp.lins.1.weight",
+        "local.mlp.lins.1.bias",
+        "local.norm.weight",
+        "local.norm.bias",
+        "f.lins.0.weight",
+        "f.lins.0.bias",
+        "f.lins.1.weight",
+        "f.lins.1.bias",
+        "rho.lins.0.weight",
+        "rho.lins.0.bias",
+        "rho.lins.1.weight",
+        "rho.lins.1.bias"
+      ]
+    },
+    "soup_state_hash": "c9923938fb7eab393c7da164a5ba5d1c6f294df70866b9e4346cbcb4026a074e"
+  },
+  "pool": "local",
+  "precision": "fp32",
+  "predictions": {
+    "curve_path": "tracks/structural-sufficiency/lcrc_lipo_composition_discovery_v1/analysis/smoke_cpu/path_unbound_s0_smoke/curve.csv",
+    "curve_sha256": "5231a59089e95878cbee8dcd3f03ea682c65f8a52f0307a2a04c63e27ed63561",
+    "train_path": "tracks/structural-sufficiency/lcrc_lipo_composition_discovery_v1/analysis/smoke_cpu/path_unbound_s0_smoke/train_predictions.npz",
+    "train_sha256": "7e69681ff479dec4cf1b471856f1fd55a86af20caa786a3b9bcc405baa891c3d",
+    "valid_path": "tracks/structural-sufficiency/lcrc_lipo_composition_discovery_v1/analysis/smoke_cpu/path_unbound_s0_smoke/valid_predictions.npz",
+    "valid_sha256": "57893dcf0664bc06ed742d40d991c9afec92646477aedea4628e98c1422be8d5"
+  },
+  "protocol_id": "lcrc-lipo-composition-discovery-v1",
+  "python": "3.12.15",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_order_sha256": "4b9bd9293355304e367cc15d99f5b43770c0b9ea43a37bd854ba7bf37969ab3a",
+    "batch_size": 128,
+    "checkpoint_rule": "average_last_5_epoch_end_state_dicts",
+    "dropout": 0.1,
+    "dropout_position": "final atom-level local h (v2 DropoutAtLocal on model.local)",
+    "dropout_rng_reseeded_after_init": true,
+    "early_stopping": false,
+    "epochs_planned": 1,
+    "epochs_run": 1,
+    "gradient_clip": 5.0,
+    "loss": "mse_on_train3360_standardised_target",
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "optimizer_steps": 1,
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "seed": 0,
+    "shuffle_generator_seed": 917000,
+    "soup_last": 1,
+    "soup_members": [
+      1
+    ],
+    "split_seed": 42,
+    "steps_per_epoch": 1,
+    "validation_used_for_checkpoint_selection": false,
+    "weight_decay": 0.001
+  },
+  "run_key": "path_unbound_s0",
+  "seed": 0,
+  "smoke": true,
+  "split_seed": 42,
+  "test_labels_read": false,
+  "test_metrics_read": false,
+  "test_predictions_read": false,
+  "timing": {
+    "inference_batch_size": 256,
+    "inference_device": "cpu",
+    "inference_seconds_per_valid420": 0.00590658700093627,
+    "process_wall_seconds": 3.1264485210122075,
+    "train_wall_seconds": 0.030204557988326997
+  },
+  "torch": "2.5.1+cu124",
+  "torch_cuda": "12.4"
+}

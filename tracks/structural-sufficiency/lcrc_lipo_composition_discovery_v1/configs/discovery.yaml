@@ -1,0 +1,69 @@
+# LCRC composition discovery v1 — frozen Stage-I screening protocol.
+protocol_id: lcrc-lipo-composition-discovery-v1
+round_id: lcrc-lipo-composition-discovery-v1
+split_seed: 42
+
+data:
+  source_round: lcrc_lipo_esa_random42_v1
+  split_file_sha256: 1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4
+  labels_file_sha256: 1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca
+  test_rows_sha256: 4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b
+  test_label_vector_sha256: a0724b4c1ca6f7bb6b69b720ac2d020825685d9666544c7312e0f24d7e3a4021
+  n_molecules: 4200
+  split_sizes: {train: 3360, valid: 420, test: 420}
+  test_access: EXPOSED_TEST_EXPLORATORY
+  target_scaler: frozen_train3360_standard_scaler_population_std
+  feature_normalisation: frozen_train3360_structures_only
+
+model:
+  width: 64
+  correction_dim: 32
+  atom_out: 96
+  hetero_elements: [N, O, S, P]
+  carbon_halogen_elements: [C, F, Cl, Br, I]
+  w_out_init_std: 1.0e-3
+  additional_message_passing: false
+  additional_attention: false
+  iterative_updates: false
+  separate_molecule_residual: false
+  context_mixing_across_molecules: false
+  rho_reads: original_h
+
+training:
+  optimizer: AdamW
+  adam_betas: [0.9, 0.999]
+  adam_eps: 1.0e-8
+  peak_lr: 3.0e-4
+  min_lr: 1.0e-5
+  scheduler: per_step_cosine
+  weight_decay: 1.0e-3
+  batch_size: 128
+  epochs: 360
+  gradient_clip: 5.0
+  dropout: 0.10
+  dropout_position: final_atom_level_local_h_before_readout
+  loss: mse_on_train3360_standardised_target
+  checkpoint: average_last_5_epoch_end_state_dicts
+  soup_last: 5
+  early_stopping: false
+  ssl: false
+  shuffle_offset: 917000
+  precision: fp32
+
+evaluation:
+  primary_split: valid420
+  test_scope: EXPOSED_TEST_EXPLORATORY
+  bootstrap:
+    n_resamples: 10000
+    seed: 20261101
+    ci_level: 0.95
+  tail_rows: [1630, 2924, 822, 1153, 3634]
+  stage2_rmse_gain_threshold: 0.008
+  stage2_mechanism_gain_threshold: 0.008
+
+budget:
+  host: res
+  gpu_hard_cap_hours: 14.0
+  pools:
+    stage1_gpu0: [path_bind_s0, path_unbound_s0, dist_true_s0, dist_blind_s0]
+    stage1_gpu1: [g2l_all_s0, g2l_loo_s0, g2l_local_cap_s0, g2l_scalar_s0]
