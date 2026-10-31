@@ -1,0 +1,246 @@
+{
+  "audit_seconds": 9.426751432009041,
+  "checks": {
+    "csv_identity": {
+      "compound_ids_sha256": "bf187dc6317cc0a019c7e67cbf1d320a4a30a21dc9fc3f49e895ef9104e745a0",
+      "expected": "aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd",
+      "header": [
+        "CMPD_CHEMBLID",
+        "exp",
+        "smiles"
+      ],
+      "n_rows": 4200,
+      "n_unique_compound_ids": 4200,
+      "ok": true,
+      "sha256": "aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd",
+      "smiles_sha256": "4ea3d409b3fcea1d5fd57e1859f7ff87862a16de493bb99d2ba204d38148f9d6"
+    },
+    "lcrc_cache_row_identity": {
+      "content_fingerprint": "23ec00be4fb7e3cf93967cd62911bd932159b1d7e0b43226b23cf7c6a3718e03",
+      "feature_spec_hash": "bee7cd5e9abfa81461145bc546875ee254b878da89a2e7fd8d855069a7281a5e",
+      "labels_present": false,
+      "molecule_ids_are_csv_rows": true,
+      "molecule_ids_sha256": "6c87e989fbd9b2a9c828dba8c2b832badb4d2ccc59674dbe42d4e80b4a9b8b69",
+      "n_atoms": 113568,
+      "n_bonds": 123899,
+      "n_molecules": 4200,
+      "n_s2_paths": 348994,
+      "ok": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/cache/lcrc_all4200.pt",
+      "rebuilt_from_raw": false,
+      "sha256": "450e749045216f32a7a388f0fc039adf6bc5729ef3e9319379ba78f0d9662bd8"
+    },
+    "multi_component_row_preserved": {
+      "assigned_split": "train",
+      "n_components": 4,
+      "ok": true,
+      "row": 1646,
+      "row_found_in_split": true,
+      "smiles": "O.O.O.CC(=O)O[C@@]12CO[C@@H]1C[C@H](O)[C@]3(C)[C@@H]2[C@H](OC(=O)c4ccccc4)[C@]5(O)C[C@H](OC(=O)[C@H](O)[C@@H](NC(=O)OC(C)(C)C)c6ccccc6)C(=C([C@@H](O)C3=O)C5(C)C)C"
+    },
+    "split_random42": {
+      "first_five": {
+        "test": [
+          967,
+          3557,
+          3492,
+          462,
+          2258
+        ],
+        "train": [
+          3942,
+          3415,
+          1426,
+          2365,
+          3462
+        ],
+        "valid": [
+          501,
+          1649,
+          3579,
+          2873,
+          106
+        ]
+      },
+      "method": "torch.utils.data.random_split(list(range(4200)), [3360, 420, 420], generator=torch.Generator().manual_seed(42))",
+      "ok": true,
+      "seed": 42,
+      "sha256": {
+        "test": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b",
+        "train": "0df18c72753974d502f8bede1cd2aa5c0ebdc1df450b8871fffdb1f67d2648ee",
+        "valid": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44"
+      },
+      "sizes": {
+        "test": 420,
+        "train": 3360,
+        "valid": 420
+      },
+      "test_file_sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4"
+    },
+    "structure_artifact": {
+      "atom_feat_dim": 79,
+      "edge_feat_dim": 13,
+      "max_edge_global": 438,
+      "max_node_global": 216,
+      "meta_path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/structures_esa_random42_v1_meta.json",
+      "meta_sha256": "e3866a483f56d1cc8291122219cffd0949e167673e5bc1455f1cc697643e0a39",
+      "n_atoms": 203750,
+      "n_directed_edges": 428162,
+      "n_molecules": 4200,
+      "ok": true,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/structures_esa_random42_v1.npz",
+      "sha256": "a098d27fa11c5d718d2f0a373636cfc9eeac9604ea5db8ae50a36d05fe035a2c"
+    },
+    "target_scaler_train_only": {
+      "fits_on": "train3360_only",
+      "label_artifact_sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+      "label_scope": "train_and_valid_only",
+      "mean": 2.2081011904761905,
+      "n": 3360,
+      "ok": true,
+      "scale": 1.1906281212426577,
+      "sklearn_mean": 2.2081011904761905,
+      "sklearn_scale": 1.1906281212426577,
+      "train_label_sha256": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+      "valid_label_sha256": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+    },
+    "test_labels_absent_from_training_artifacts": {
+      "accessor_raises_on_test": true,
+      "label_file_contains_test": false,
+      "label_file_keys": [
+        "columns",
+        "compound_ids_sha256",
+        "protocol_id",
+        "row_sha256_int64",
+        "rows",
+        "scope",
+        "smiles_sha256",
+        "source_csv_sha256",
+        "split_file_sha256",
+        "test_labels_included",
+        "values",
+        "vector_sha256"
+      ],
+      "ok": true
+    },
+    "upstream_loader_row_identity": {
+      "adjacency_symmetric_on_first_200": true,
+      "atom_feature_dim": 79,
+      "bond_feature_dim": 13,
+      "column_mapping": "upstream MoleculeNet adapter reads column index 2 as SMILES and column index 1 as the target",
+      "featurisation_filtered_molecules": 0,
+      "hydrogens_explicit": true,
+      "hydrogens_note": "upstream ChempropFeatures calls Chem.AddHs; LCRC uses heavy atoms only",
+      "max_atomic_number": 53,
+      "max_atoms": 216,
+      "max_directed_edges": 438,
+      "molecule_index_identity": true,
+      "n_atoms_total": 203750,
+      "n_directed_edges_total": 428162,
+      "n_molecules": 4200,
+      "ok": true
+    }
+  },
+  "config_sha256": "0d8d58eae2351294f09da21056b4d193e94cefccc8b79b94ec54ca247a2d8402",
+  "created_utc": "2026-10-31T06:57:44Z",
+  "env": {
+    "cuda_available": false,
+    "git_commit": "e1c4f44d990957c4c3da329f678cf2ef1827d873",
+    "git_dirty_tracked": false,
+    "numpy": "2.1.3",
+    "pid": 1133825,
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "round_id": "lcrc-lipo-esa-random42-v1",
+    "timestamp": "2026-10-31T06:57:53Z",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "gpu_used": false,
+  "n_checks": 8,
+  "protocol_id": "lcrc-lipo-esa-random42-v1",
+  "status": "PASS",
+  "upstream": {
+    "commit": "861a0b12d445ae80cc69b3948af623b4331321d4",
+    "repository": "https://github.com/davidbuterez/edge-set-attention",
+    "runtime_patches": [
+      {
+        "effect": "torch backend now matches the upstream xformers additive-bias semantics",
+        "file": "code/upstream/esa/masked_layers.py",
+        "function": "get_adj_mask_from_edge_index_edge",
+        "kind": "runtime_mask_semantics_fix",
+        "reason": "upstream torch backend returns the complement of the allowed set; SDPA bool masks mark True as participate, so the mask is inverted once"
+      },
+      {
+        "effect": "torch backend now matches the upstream xformers additive-bias semantics",
+        "file": "code/upstream/esa/masked_layers.py",
+        "function": "get_adj_mask_from_edge_index_node",
+        "kind": "runtime_mask_semantics_fix",
+        "reason": "upstream torch backend returns the complement of the allowed set; SDPA bool masks mark True as participate, so the mask is inverted once"
+      },
+      {
+        "effect": "identical GPU behaviour for cuda:0; enables the CPU implementation gate",
+        "file": "code/upstream/esa/masked_layers.py",
+        "function": "get_adj_mask_from_edge_index_edge/node",
+        "kind": "runtime_device_fix",
+        "reason": "upstream default device is 'cuda:0'; the wrapper derives it from edge_index"
+      },
+      {
+        "effect": "same values on cuda:0; no artificial CUDA requirement on the CPU gate",
+        "file": "code/upstream/esa/masked_layers.py",
+        "function": "get_first_unique_index/generate_consecutive_tensor",
+        "kind": "runtime_device_fix",
+        "reason": "upstream hard-codes torch.device('cuda:0') inside the mask helpers"
+      },
+      {
+        "effect": "CPU gate uses the math kernel; CUDA keeps the upstream efficient kernel",
+        "file": "code/upstream/esa/mha.py",
+        "function": "sdpa_kernel",
+        "kind": "runtime_cpu_kernel_fix",
+        "reason": "EFFICIENT_ATTENTION has no CPU kernel for a boolean mask"
+      }
+    ],
+    "runtime_stubs": {
+      "admin_torch": "OmegaResidual / calculate_init reproduced from admin-torch 0.1.0",
+      "bitsandbytes": "AdamW8bit placeholder (raising); torch.optim.AdamW is the formal optimiser",
+      "data_loading.posenc": "compute_posenc_stats raises; positional encoding is disabled",
+      "flash_attn": "swiglu(x, y) = F.silu(x) * y",
+      "pytorch_lightning": "LightningModule -> torch.nn.Module; no Trainer is used",
+      "utils.posenc_encoders": "placeholder encoders raise; positional encoding is disabled",
+      "utils.reporting": "metric helpers raise; only Lightning logging used them",
+      "xformers": "memory_efficient_attention raises; formal backend is the upstream torch SDPA path"
+    },
+    "vendored_files": {
+      "LICENSE": "64eaf16e6ebdf15447eb0d84ed0e8d47aa162e340f8e6186dfff0b0063a98a94",
+      "data_loading/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "data_loading/__pycache__/__init__.cpython-312.pyc": "aa2b6e9d09ce57cfc27f60b919194c10f7ac1f08fa14f8515629bd042a56bcdd",
+      "data_loading/__pycache__/chemprop_featurisation.cpython-312.pyc": "106212b84f812d7c6654e4789e685dc89c32755b4886fc23c2ed197733d16848",
+      "data_loading/__pycache__/transforms.cpython-312.pyc": "9066ec6fd6b82a301230877e98ef4bc3de5230e2dbad1927009d44a7b752753b",
+      "data_loading/chemprop_featurisation.py": "e245fa22dcd0f4195251b2ba20a4506d14aab60afe9bb45afb996db9d00b0354",
+      "data_loading/pyg_molecular_datasets/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "data_loading/pyg_molecular_datasets/molecule_net.py": "5771b9cb500c5f6a0516b117f336e846306c4785ee41540d397581beffcf2b98",
+      "data_loading/transforms.py": "6191d5a2d0ca481478fefb98e1787b4243fba947b83e6eec4e5bcb8e70bac43a",
+      "esa/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "esa/__pycache__/__init__.cpython-312.pyc": "cd891088d61923ba65bae8ee48dabae74a5c7f42dad4460f4a4849b568d60e9e",
+      "esa/__pycache__/masked_layers.cpython-312.pyc": "98fbbbbbb80e4a12183b6279ebdc91939ef1d8563250613abdfc322cdc663950",
+      "esa/__pycache__/mha.cpython-312.pyc": "aa1d534a8c596adf057471be54968f48b5efe3cd1c1c4e662ce725baa9ca7eb3",
+      "esa/__pycache__/mlp_utils.cpython-312.pyc": "fabf0ff4c4fb7c3e98f1a852102899b6fda2e4b3d67ba08af8a7b2fb6b7c0bed",
+      "esa/__pycache__/models.cpython-312.pyc": "0ddc29b41e8ed6d029d91e77aac968e097af225c7af1a0511aae8e8a2b2d9a2a",
+      "esa/config.py": "78cdb093a0db8a6ee909be7f1863937d0461f505061171d053139a5f776fb8f1",
+      "esa/masked_layers.py": "8c7fcfa2e6bc1686778b45009170dd280a112282bffdeb1ccb49ba80ba351d9c",
+      "esa/mha.py": "ad3527f1b49a490903f75fecfc1fc92f49bc4bb35150ee7e71db6251dc2a99b4",
+      "esa/mlp_utils.py": "f37428e6cbd3f77de3bbe94191ec291ecd80a1a4a571db517f127484aff62f88",
+      "esa/models.py": "8c9e5ba03378829498f489d4612f507b9fb8091976fd35ba9d1b1751813873b9",
+      "gnn/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gnn/__pycache__/__init__.cpython-312.pyc": "31f0c237e0b3392836a37d849a48b623f716e5abfb14e5a21d87d4fbc0448f9b",
+      "gnn/__pycache__/graph_models.cpython-312.pyc": "a191dd98e558d4f0747aec482b716ea3ff6af9d24e805f9e57d1ef9d409005a6",
+      "gnn/graph_models.py": "653c4b34943404854ea0e99f0321671b3ab641620745a70bfcd01caac0b5a68c",
+      "utils/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utils/__pycache__/__init__.cpython-312.pyc": "f2b500033cb7ce3d0eb8e7f623c3642bd350319c3f33c41840a06df3941911eb",
+      "utils/__pycache__/batch_renorm.cpython-312.pyc": "510f5f6c55cd211ed139ef324e919b9f218d99233fd7ac6d83dd6e844cb5cfae",
+      "utils/__pycache__/norm_layers.cpython-312.pyc": "c4923eb998e0f4848f3a7dc84cea5eaf7c08eab47acd34a2b96923fabcef1ed6",
+      "utils/batch_renorm.py": "922d0f444d4139783c158fe9a075fe0ba13971a72e2069de7a18bb66bec1fa9a",
+      "utils/norm_layers.py": "f37cd17d646fea002293a4f62493755330c85cc2b9fdbfae029fe89bc591b65f"
+    }
+  }
+}

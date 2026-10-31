@@ -1,0 +1,331 @@
+{
+  "checkpoint_rules": {
+    "esa": "best_validation_loss",
+    "lcrc": "average_last_5_epoch_end_state_dicts",
+    "pna": "best_validation_loss",
+    "test": "terminal_one_shot_after_pre_test_manifest"
+  },
+  "code_hashes": {
+    "code/r42_audit.py": "09378ba602beadb57428a45aaa5ab27fb05dcb6cae9e6ad62f73ab82de3008c2",
+    "code/r42_common.py": "6caa31951a8a22b333953ec377e0376a612a803661111c1fb8903d70345173be",
+    "code/r42_data.py": "a03ed734913b9b75730bd0fa0de7f905d021b28e3e2d81166c63918e2bc0b7aa",
+    "code/r42_gates.py": "13e08d5e7e2ed0bf6abc80ee1e5cf73d70c04d0fd3adb3d47118d37a62ab3806",
+    "code/r42_labels.py": "78bf0adf3a24a182a490c2fd1bff5f6eb13aaa393d5e2421e0899d6262bb1214",
+    "code/r42_lcrc_train.py": "0e9949264f2133137a770099f59605552b6c014751bacbf11be88cc3f3a7f8f5",
+    "code/r42_ledger.py": "9946c435b7902f79fbcf03ae6a29aa00ebffc1cfbb69400c0594fd18e89e9efd",
+    "code/r42_manifest.py": "cf10ea540762576563d6c2ac61cff7cde646219224ec5a6ff138a73a71d8714e",
+    "code/r42_metrics.py": "8535816d8bd8bbfd46f7a8571f0cb318e6e349709be42150c62a7eea207d7228",
+    "code/r42_native_train.py": "98f7583d704b06594f63978e5cea2367c0a79014d68bdbf2f0f7b983804b6d7f",
+    "code/r42_score.py": "f343036ed196497ee290c8aeed169fb18bdc16ab2d275de82db6ca5e3b705be4",
+    "code/r42_upstream.py": "9fc24cc6f0b4f92b6d13415e0fcff84ed4e493d69938a41e45ac25bcb0de01b9",
+    "code/r42_xgb.py": "aab09abb275db7aa854c21a8c74a08d281f336049bff82dd4dd2de9a7a29c069"
+  },
+  "config": {
+    "canonical_sha256": "0bb3990f17ebe8be9ba8c43ef4f1efe3a33fe7aadc834272777f449c5d8e9c7f",
+    "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/configs/benchmark_v1.yaml",
+    "sha256": "0d8d58eae2351294f09da21056b4d193e94cefccc8b79b94ec54ca247a2d8402"
+  },
+  "created_utc": "2026-10-31T06:59:11Z",
+  "env": {
+    "cuda_available": false,
+    "git_commit": "e1c4f44d990957c4c3da329f678cf2ef1827d873",
+    "git_dirty_tracked": false,
+    "numpy": "2.1.3",
+    "pid": 1134749,
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "round_id": "lcrc-lipo-esa-random42-v1",
+    "timestamp": "2026-10-31T06:59:11Z",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "feature_sources": {
+    "esa": "identical Chemprop features + EdgeSetAttention masked layers, torch attention backend",
+    "lcrc": "lipo_v1 atom/bond/path tensors from lcrc_data (Train3360-fitted normalisation only)",
+    "pna": "upstream Chemprop atom (79) / bond (13) features, explicit hydrogens",
+    "xgb": "RDKit descriptors only, preprocessor fitted on Train3360"
+  },
+  "gpu_budget": {
+    "gpu_hard_cap_hours": 6.0
+  },
+  "gpu_used": false,
+  "hyperparameter_search": false,
+  "model_implementations": [
+    "LCRC-A-R3-scratch",
+    "PNA-native",
+    "ESA-native",
+    "XGB-P3"
+  ],
+  "models": {
+    "ESA-native": {
+      "attention_backend": "torch",
+      "checkpoint_rule": "best Validation loss",
+      "early_stopping_patience": 30,
+      "implementation": "vendored upstream esa/models.py:FullGraphModel over masked_layers",
+      "num_max_items": 440,
+      "parameters_total": 10351105,
+      "recipe": {
+        "apply_attention_on": "edge",
+        "attention_backend": "torch",
+        "attn_residual_dropout": 0.0,
+        "batch_size": 128,
+        "checkpoint": "best_validation_loss",
+        "early_stopping_patience": 30,
+        "external_pretraining": false,
+        "gradient_clip": 0.5,
+        "graph_dim": 512,
+        "hidden_dims": [
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          256
+        ],
+        "layer_types": [
+          "S",
+          "S",
+          "M",
+          "M",
+          "M",
+          "S",
+          "P"
+        ],
+        "loss": "standardized_mse",
+        "lr": 0.0001,
+        "lr_scheduler": "ReduceLROnPlateau",
+        "lr_scheduler_factor": 0.5,
+        "lr_scheduler_patience": 15,
+        "mab_dropout": 0.0,
+        "max_epochs": 360,
+        "mlp_dropout": 0.0,
+        "mlp_hidden_size": 512,
+        "mlp_layers": 2,
+        "mlp_type": "gated_mlp",
+        "model": "ESA-native",
+        "norm_type": "LN",
+        "num_heads": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "optimizer": "AdamW",
+        "pma_dropout": 0.0,
+        "pma_residual_dropout": 0.0,
+        "pma_seeds": 32,
+        "positional_encoding": "none",
+        "pre_or_post": "post",
+        "precision": "bf16",
+        "sab_dropout": 0.0,
+        "seed": 0,
+        "use_mlp_ln": true,
+        "use_mlps": true,
+        "weight_decay": 1e-10
+      }
+    },
+    "LCRC-A-R3-scratch": {
+      "checkpoint_rule": "average of the last 5 epoch-end state_dicts",
+      "early_stopping": false,
+      "extra_modules": false,
+      "implementation": "frozen local LCRC (tracks/.../lcrc_model.py, lcrc_data.py) with the lipo_v1 graph spec",
+      "parameters_total": 247106,
+      "recipe": {
+        "batch_size": 128,
+        "checkpoint": "average_last_5_epoch_end_state_dicts",
+        "dropout": 0.1,
+        "early_stopping": false,
+        "epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "standardized_mse",
+        "min_lr": 1e-05,
+        "model": "LCRC-A-R3-scratch",
+        "optimizer": "AdamW",
+        "peak_lr": 0.0003,
+        "scheduler": "per_step_cosine",
+        "seed": 0,
+        "ssl": false,
+        "weight_decay": 0.001
+      },
+      "ssl": false
+    },
+    "PNA-native": {
+      "checkpoint_rule": "best Validation loss",
+      "degree_histogram": {
+        "histogram_sha256": "56bc94c1186a1a471b9af7885313ed914f51469f3e40fa99266a20c65721fc40",
+        "length": 5000,
+        "loaded_by_model_verified": true,
+        "n_atoms": 163402,
+        "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/manifest_pna/saved_PNA_degrees/degrees.pt",
+        "sha256": "e71e8d60ff360c3555820af952a213009f331bb874b0c3549b4e114a7974bc01",
+        "source": "train3360_graphs_only",
+        "total_degree": 343352,
+        "valid_or_test_used": false
+      },
+      "early_stopping_patience": 30,
+      "gnn_parameters_total": 7717940,
+      "implementation": "vendored upstream gnn/graph_models.py:PNA via Estimator",
+      "parameters_total": 7767349,
+      "recipe": {
+        "aggregation": [
+          "mean",
+          "min",
+          "max",
+          "std"
+        ],
+        "batch_size": 128,
+        "checkpoint": "best_validation_loss",
+        "conv_type": "PNA",
+        "early_stopping_patience": 30,
+        "gnn_intermediate_dim": 256,
+        "gradient_clip": 0.5,
+        "loss": "standardized_mse",
+        "lr": 0.0001,
+        "lr_scheduler": "ReduceLROnPlateau",
+        "lr_scheduler_factor": 0.5,
+        "lr_scheduler_patience": 15,
+        "max_epochs": 360,
+        "model": "PNA-native",
+        "num_layers": 4,
+        "optimizer": "AdamW",
+        "output_node_dim": 256,
+        "precision": "bf16",
+        "scalers": [
+          "identity",
+          "amplification",
+          "attenuation"
+        ],
+        "seed": 0,
+        "towers": 5,
+        "weight_decay": 1e-10
+      }
+    },
+    "XGB-P3": {
+      "checkpoint_rule": "single fit on Train3360",
+      "implementation": "xgboost 2.1.3 hist regressor on the frozen v2 P2 RDKit descriptor list",
+      "recipe": {
+        "colsample_bytree": 0.8,
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "model": "XGB-P3",
+        "n_estimators": 800,
+        "n_jobs": 4,
+        "random_state": 0,
+        "reg_lambda": 5.0,
+        "subsample": 0.8,
+        "tree_method": "hist"
+      }
+    }
+  },
+  "protocol_id": "lcrc-lipo-esa-random42-v1",
+  "seeds": {
+    "split": 42,
+    "train": [
+      0
+    ]
+  },
+  "status": "PASS",
+  "test_hashes": {
+    "tests/conftest.py": "2478f14e7382553ce4da2281d78539209363fe6f511468b4ab78497ebe810c45",
+    "tests/test_label_isolation.py": "ffd12a95d53f205d6918d4a254f69607c2234c1ff8cc15f7ee44996967286f35",
+    "tests/test_mask_and_training.py": "fe06563f33dd154b978ee72043a1ec32c02e9b3f8c2e4a38b74ca012ffe4f068",
+    "tests/test_metrics.py": "2ea72806892a9124bdc7c5b08b7d3c7a31cbe346e9e94f416215c72c6c32f445",
+    "tests/test_models.py": "d9df3db138fb5ab73a9db0c0a4d6062324713173946c708b5fd3d5214ca2c25b",
+    "tests/test_split_and_data.py": "f4c4c29173b824b4f981970116b4e63fa88564dfe85aea261d1aa29f89f66382",
+    "tests/test_target_scaler.py": "bebd64e85341b6fc93bfa31caa039d122e565e76e3245c64d4950810c818742b"
+  },
+  "tests": {
+    "command": "python -m pytest tests -q",
+    "passed": true,
+    "returncode": 0,
+    "summary": "41 passed, 2 warnings in 12.11s"
+  },
+  "upstream": {
+    "commit": "861a0b12d445ae80cc69b3948af623b4331321d4",
+    "repository": "https://github.com/davidbuterez/edge-set-attention",
+    "runtime_patches": [
+      {
+        "effect": "torch backend now matches the upstream xformers additive-bias semantics",
+        "file": "code/upstream/esa/masked_layers.py",
+        "function": "get_adj_mask_from_edge_index_edge",
+        "kind": "runtime_mask_semantics_fix",
+        "reason": "upstream torch backend returns the complement of the allowed set; SDPA bool masks mark True as participate, so the mask is inverted once"
+      },
+      {
+        "effect": "torch backend now matches the upstream xformers additive-bias semantics",
+        "file": "code/upstream/esa/masked_layers.py",
+        "function": "get_adj_mask_from_edge_index_node",
+        "kind": "runtime_mask_semantics_fix",
+        "reason": "upstream torch backend returns the complement of the allowed set; SDPA bool masks mark True as participate, so the mask is inverted once"
+      },
+      {
+        "effect": "identical GPU behaviour for cuda:0; enables the CPU implementation gate",
+        "file": "code/upstream/esa/masked_layers.py",
+        "function": "get_adj_mask_from_edge_index_edge/node",
+        "kind": "runtime_device_fix",
+        "reason": "upstream default device is 'cuda:0'; the wrapper derives it from edge_index"
+      },
+      {
+        "effect": "same values on cuda:0; no artificial CUDA requirement on the CPU gate",
+        "file": "code/upstream/esa/masked_layers.py",
+        "function": "get_first_unique_index/generate_consecutive_tensor",
+        "kind": "runtime_device_fix",
+        "reason": "upstream hard-codes torch.device('cuda:0') inside the mask helpers"
+      },
+      {
+        "effect": "CPU gate uses the math kernel; CUDA keeps the upstream efficient kernel",
+        "file": "code/upstream/esa/mha.py",
+        "function": "sdpa_kernel",
+        "kind": "runtime_cpu_kernel_fix",
+        "reason": "EFFICIENT_ATTENTION has no CPU kernel for a boolean mask"
+      }
+    ],
+    "runtime_stubs": {
+      "admin_torch": "OmegaResidual / calculate_init reproduced from admin-torch 0.1.0",
+      "bitsandbytes": "AdamW8bit placeholder (raising); torch.optim.AdamW is the formal optimiser",
+      "data_loading.posenc": "compute_posenc_stats raises; positional encoding is disabled",
+      "flash_attn": "swiglu(x, y) = F.silu(x) * y",
+      "pytorch_lightning": "LightningModule -> torch.nn.Module; no Trainer is used",
+      "utils.posenc_encoders": "placeholder encoders raise; positional encoding is disabled",
+      "utils.reporting": "metric helpers raise; only Lightning logging used them",
+      "xformers": "memory_efficient_attention raises; formal backend is the upstream torch SDPA path"
+    },
+    "vendored_files": {
+      "LICENSE": "64eaf16e6ebdf15447eb0d84ed0e8d47aa162e340f8e6186dfff0b0063a98a94",
+      "data_loading/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "data_loading/__pycache__/__init__.cpython-312.pyc": "aa2b6e9d09ce57cfc27f60b919194c10f7ac1f08fa14f8515629bd042a56bcdd",
+      "data_loading/__pycache__/chemprop_featurisation.cpython-312.pyc": "106212b84f812d7c6654e4789e685dc89c32755b4886fc23c2ed197733d16848",
+      "data_loading/__pycache__/transforms.cpython-312.pyc": "9066ec6fd6b82a301230877e98ef4bc3de5230e2dbad1927009d44a7b752753b",
+      "data_loading/chemprop_featurisation.py": "e245fa22dcd0f4195251b2ba20a4506d14aab60afe9bb45afb996db9d00b0354",
+      "data_loading/pyg_molecular_datasets/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "data_loading/pyg_molecular_datasets/molecule_net.py": "5771b9cb500c5f6a0516b117f336e846306c4785ee41540d397581beffcf2b98",
+      "data_loading/transforms.py": "6191d5a2d0ca481478fefb98e1787b4243fba947b83e6eec4e5bcb8e70bac43a",
+      "esa/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "esa/__pycache__/__init__.cpython-312.pyc": "cd891088d61923ba65bae8ee48dabae74a5c7f42dad4460f4a4849b568d60e9e",
+      "esa/__pycache__/masked_layers.cpython-312.pyc": "98fbbbbbb80e4a12183b6279ebdc91939ef1d8563250613abdfc322cdc663950",
+      "esa/__pycache__/mha.cpython-312.pyc": "aa1d534a8c596adf057471be54968f48b5efe3cd1c1c4e662ce725baa9ca7eb3",
+      "esa/__pycache__/mlp_utils.cpython-312.pyc": "fabf0ff4c4fb7c3e98f1a852102899b6fda2e4b3d67ba08af8a7b2fb6b7c0bed",
+      "esa/__pycache__/models.cpython-312.pyc": "0ddc29b41e8ed6d029d91e77aac968e097af225c7af1a0511aae8e8a2b2d9a2a",
+      "esa/config.py": "78cdb093a0db8a6ee909be7f1863937d0461f505061171d053139a5f776fb8f1",
+      "esa/masked_layers.py": "8c7fcfa2e6bc1686778b45009170dd280a112282bffdeb1ccb49ba80ba351d9c",
+      "esa/mha.py": "ad3527f1b49a490903f75fecfc1fc92f49bc4bb35150ee7e71db6251dc2a99b4",
+      "esa/mlp_utils.py": "f37428e6cbd3f77de3bbe94191ec291ecd80a1a4a571db517f127484aff62f88",
+      "esa/models.py": "8c9e5ba03378829498f489d4612f507b9fb8091976fd35ba9d1b1751813873b9",
+      "gnn/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gnn/__pycache__/__init__.cpython-312.pyc": "31f0c237e0b3392836a37d849a48b623f716e5abfb14e5a21d87d4fbc0448f9b",
+      "gnn/__pycache__/graph_models.cpython-312.pyc": "a191dd98e558d4f0747aec482b716ea3ff6af9d24e805f9e57d1ef9d409005a6",
+      "gnn/graph_models.py": "653c4b34943404854ea0e99f0321671b3ab641620745a70bfcd01caac0b5a68c",
+      "utils/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "utils/__pycache__/__init__.cpython-312.pyc": "f2b500033cb7ce3d0eb8e7f623c3642bd350319c3f33c41840a06df3941911eb",
+      "utils/__pycache__/batch_renorm.cpython-312.pyc": "510f5f6c55cd211ed139ef324e919b9f218d99233fd7ac6d83dd6e844cb5cfae",
+      "utils/__pycache__/norm_layers.cpython-312.pyc": "c4923eb998e0f4848f3a7dc84cea5eaf7c08eab47acd34a2b96923fabcef1ed6",
+      "utils/batch_renorm.py": "922d0f444d4139783c158fe9a075fe0ba13971a72e2069de7a18bb66bec1fa9a",
+      "utils/norm_layers.py": "f37cd17d646fea002293a4f62493755330c85cc2b9fdbfae029fe89bc591b65f"
+    }
+  }
+}

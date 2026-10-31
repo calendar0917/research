@@ -1,0 +1,149 @@
+# Frozen protocol configuration for lcrc-lipo-esa-random42-v1.
+# Every scientific constant here is hard-checked against code/r42_common.py.
+protocol_id: lcrc-lipo-esa-random42-v1
+round_id: lcrc-lipo-esa-random42-v1
+
+data:
+  name: MoleculeNet-Lipophilicity
+  csv: data/lipophilicity/Lipophilicity.csv
+  csv_sha256: aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd
+  n_molecules: 4200
+  columns: [CMPD_CHEMBLID, exp, smiles]
+  unit: logD
+
+split:
+  method: torch.utils.data.random_split
+  seed: 42
+  sizes: {train: 3360, valid: 420, test: 420}
+  sha256:
+    train: 0df18c72753974d502f8bede1cd2aa5c0ebdc1df450b8871fffdb1f67d2648ee
+    valid: 8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44
+    test: 4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b
+
+training:
+  seed: 0
+  target_scaler: train3360_only_standard_scaler
+  no_ssl: true
+  no_external_pretraining: true
+
+evaluation:
+  primary_metric: rmse
+  metrics: [rmse, mae, r2]
+  units: raw_logD
+  test_policy: terminal_one_shot
+  target_scaler: "sklearn.preprocessing.StandardScaler (train3360 only; population std)"
+
+upstream:
+  repository: https://github.com/davidbuterez/edge-set-attention
+  commit: 861a0b12d445ae80cc69b3948af623b4331321d4
+  files:
+    - esa/models.py
+    - esa/masked_layers.py
+    - esa/mha.py
+    - esa/mlp_utils.py
+    - gnn/graph_models.py
+    - data_loading/chemprop_featurisation.py
+    - data_loading/transforms.py
+    - data_loading/pyg_molecular_datasets/molecule_net.py
+    - utils/norm_layers.py
+    - utils/batch_renorm.py
+
+models:
+  lcrc:
+    model: LCRC-A-R3-scratch
+    seed: 0
+    batch_size: 128
+    epochs: 360
+    optimizer: AdamW
+    peak_lr: 0.0003
+    min_lr: 0.00001
+    weight_decay: 0.001
+    scheduler: per_step_cosine
+    dropout: 0.10
+    gradient_clip: 5.0
+    loss: standardized_mse
+    checkpoint: average_last_5_epoch_end_state_dicts
+    early_stopping: false
+    ssl: false
+  pna:
+    model: PNA-native
+    seed: 0
+    conv_type: PNA
+    num_layers: 4
+    output_node_dim: 256
+    gnn_intermediate_dim: 256
+    batch_size: 128
+    optimizer: AdamW
+    lr: 0.0001
+    weight_decay: 0.0000000001
+    gradient_clip: 0.5
+    loss: standardized_mse
+    max_epochs: 360
+    early_stopping_patience: 30
+    lr_scheduler: ReduceLROnPlateau
+    lr_scheduler_factor: 0.5
+    lr_scheduler_patience: 15
+    checkpoint: best_validation_loss
+    precision: bf16
+    aggregation: [mean, min, max, std]
+    scalers: [identity, amplification, attenuation]
+    towers: 5
+  esa:
+    model: ESA-native
+    seed: 0
+    apply_attention_on: edge
+    layer_types: [S, S, M, M, M, S, P]
+    hidden_dims: [256, 256, 256, 256, 256, 256, 256]
+    num_heads: [8, 8, 8, 8, 8, 8, 8]
+    graph_dim: 512
+    pma_seeds: 32
+    norm_type: LN
+    pre_or_post: post
+    use_mlps: true
+    mlp_type: gated_mlp
+    mlp_layers: 2
+    mlp_hidden_size: 512
+    sab_dropout: 0.0
+    mab_dropout: 0.0
+    pma_dropout: 0.0
+    mlp_dropout: 0.0
+    batch_size: 128
+    optimizer: AdamW
+    lr: 0.0001
+    weight_decay: 0.0000000001
+    gradient_clip: 0.5
+    loss: standardized_mse
+    max_epochs: 360
+    early_stopping_patience: 30
+    lr_scheduler: ReduceLROnPlateau
+    lr_scheduler_factor: 0.5
+    lr_scheduler_patience: 15
+    checkpoint: best_validation_loss
+    positional_encoding: none
+    external_pretraining: false
+    attention_backend: torch
+    precision: bf16
+    attn_residual_dropout: 0.0
+    pma_residual_dropout: 0.0
+    use_mlp_ln: true
+  xgb:
+    model: XGB-P3
+    n_estimators: 800
+    max_depth: 5
+    min_child_weight: 1
+    learning_rate: 0.03
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_lambda: 5.0
+    tree_method: hist
+    random_state: 0
+    n_jobs: 4
+
+budget:
+  gpu_hard_cap_hours: 6.0
+
+checkpoint_rules:
+  lcrc: average_last_5_epoch_end_state_dicts
+  pna: best_validation_loss
+  esa: best_validation_loss
+  test: terminal_one_shot_after_pre_test_manifest

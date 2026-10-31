@@ -1,0 +1,28 @@
+# Experiment-local rules (repo root ignores **/data/** and caches).
+# The frozen protocol artifacts ARE deliverables and must be versioned.
+!data/split_esa_random42_v1.json
+!data/labels_train_valid_v1.json
+!data/structures_esa_random42_v1.npz
+!data/structures_esa_random42_v1_meta.json
+!data/xgb_descriptor_names_v1.json
+
+# Rebuildable, large, and never needed to reproduce a number in REPORT.md.
+cache/
+analysis/runs/*/logs/
+__pycache__/
+*.pyc
+
+# Throwaway run scaffolding from gates/tests/manifests, and bulky CPU-smoke
+# weights: the numbers they produced live in analysis/cpu_gates.json and in the
+# per-run train.json/envelope.json, which stay tracked.
+analysis/runs/dbg_deg/
+analysis/runs/test_pna_build/
+analysis/runs/test_esa_build/
+analysis/runs/test_pna/
+analysis/runs/test_esa/
+analysis/runs/manifest_pna/
+analysis/runs/manifest_esa/
+analysis/runs/cpu_gate_pna/
+analysis/runs/cpu_gate_xgb/
+analysis/runs/cpu_gate_esa/
+analysis/runs/smoke_*/checkpoint.pt

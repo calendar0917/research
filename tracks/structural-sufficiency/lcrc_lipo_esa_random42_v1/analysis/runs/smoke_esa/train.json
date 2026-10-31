@@ -1,0 +1,205 @@
+{
+  "anomalies": {
+    "grad_clip_events": 1,
+    "grad_norm_max": 8.514984130859375
+  },
+  "checkpoint_path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/smoke_esa/checkpoint.pt",
+  "checkpoint_sha256": "a6e4ae75eff7cb9d18ef489be6a0f29a1c4dfc7f8cb8ceef48e16537f0c0e856",
+  "config": {
+    "apply_attention_on": "edge",
+    "attention_backend": "torch",
+    "attn_residual_dropout": 0.0,
+    "batch_size": 128,
+    "checkpoint": "best_validation_loss",
+    "early_stopping_patience": 30,
+    "external_pretraining": false,
+    "gradient_clip": 0.5,
+    "graph_dim": 512,
+    "hidden_dims": [
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256
+    ],
+    "layer_types": [
+      "S",
+      "S",
+      "M",
+      "M",
+      "M",
+      "S",
+      "P"
+    ],
+    "loss": "standardized_mse",
+    "lr": 0.0001,
+    "lr_scheduler": "ReduceLROnPlateau",
+    "lr_scheduler_factor": 0.5,
+    "lr_scheduler_patience": 15,
+    "mab_dropout": 0.0,
+    "max_epochs": 360,
+    "mlp_dropout": 0.0,
+    "mlp_hidden_size": 512,
+    "mlp_layers": 2,
+    "mlp_type": "gated_mlp",
+    "model": "ESA-native",
+    "norm_type": "LN",
+    "num_heads": [
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8
+    ],
+    "optimizer": "AdamW",
+    "pma_dropout": 0.0,
+    "pma_residual_dropout": 0.0,
+    "pma_seeds": 32,
+    "positional_encoding": "none",
+    "pre_or_post": "post",
+    "precision": "bf16",
+    "sab_dropout": 0.0,
+    "seed": 0,
+    "use_mlp_ln": true,
+    "use_mlps": true,
+    "weight_decay": 1e-10
+  },
+  "config_hash": "4ec4eb17a782e709a9312cfcc24c087d8bcc1f50fada8ba879d33441a75308ca",
+  "curve": [
+    {
+      "epoch": 1,
+      "lr": 0.0001,
+      "seconds": 3.1823166229878552,
+      "steps": 1,
+      "train_loss_standardized": 1.0200308561325073,
+      "train_mae_standardized": 0.8805116415023804,
+      "val_loss_standardized": 2.59588821217936,
+      "val_mae_raw": 1.4221059819405406,
+      "val_r2_raw": -0.7635971037198444,
+      "val_rmse_raw": 1.9183114869596525
+    }
+  ],
+  "data": {
+    "edge_dim": 13,
+    "label_audit": {
+      "n_train": 3360,
+      "n_valid": 420,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+      "scope": "train_and_valid_only",
+      "sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+      "test_labels_included": false,
+      "vector_sha256": {
+        "train": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+        "valid": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+      }
+    },
+    "n_train": 32,
+    "n_valid": 16,
+    "num_features": 79,
+    "split_file_sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+    "structures_sha256": "a098d27fa11c5d718d2f0a373636cfc9eeac9604ea5db8ae50a36d05fe035a2c",
+    "target_norm": {
+      "label_vector_sha256": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+      "mean": 2.2081011904761905,
+      "n": 3360,
+      "scale": 1.1906281212426577,
+      "scale_definition": "population_std_float64 (sklearn StandardScaler convention)",
+      "source": "train3360_labels_only",
+      "valid_or_test_used": false
+    },
+    "test_labels_read": false,
+    "train_rows_sha256": "49a4d244651261d610eccd9b48442230aaf65a15eb2738cd6da8c53c6dbcdb77",
+    "valid_rows_sha256": "cec443e3a24a279b0dcaa630695866d28a3c2ef1078805a5959db745747124f0"
+  },
+  "env": {
+    "attention_backend": "torch",
+    "cuda_available": false,
+    "cuda_device_count": 0,
+    "cuda_device_name": "cpu",
+    "device": "cpu",
+    "git_commit": "e1c4f44d990957c4c3da329f678cf2ef1827d873",
+    "git_dirty_tracked": false,
+    "numpy": "2.1.3",
+    "optimizer": "torch.optim.AdamW",
+    "pid": 1117580,
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "precision": "bf16",
+    "python": "3.12.15",
+    "round_id": "lcrc-lipo-esa-random42-v1",
+    "timestamp": "2026-10-31T06:34:23Z",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "upstream_optimizer_requested": "bitsandbytes.optim.AdamW8bit"
+  },
+  "gpu": {
+    "device_name": "cpu",
+    "peak_memory_allocated_bytes": 0
+  },
+  "label": "ESA-smoke",
+  "label_scope": "train3360_and_valid420_only",
+  "metrics": {
+    "train": {
+      "checkpoint": "best_validation_loss",
+      "mae": 1.0575432090747006,
+      "r2": -0.6353884205395153,
+      "rmse": 1.4811935236139564,
+      "units": "raw_logD"
+    },
+    "train_loss_standardized_last_epoch": 1.0200308561325073,
+    "train_mae_standardized_last_epoch": 0.8805116415023804,
+    "valid": {
+      "checkpoint": "best_validation_loss",
+      "mae": 1.4221059819405406,
+      "r2": -0.7635971037198444,
+      "rmse": 1.9183114869596525,
+      "units": "raw_logD"
+    }
+  },
+  "model": "esa",
+  "model_audit": {
+    "class": "esa.models.Estimator",
+    "extra": {
+      "attention_backend": "torch",
+      "num_max_items": 440,
+      "set_max_items": 438
+    },
+    "parameters_total": 10351105
+  },
+  "predictions": {
+    "train_path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/smoke_esa/train_predictions.npz",
+    "train_sha256": "7697fc877d91531bdc5bda1fd09858018737b790d2f34fb96844ac69c24c0698",
+    "valid_path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/smoke_esa/valid_predictions.npz",
+    "valid_sha256": "ebad05060ee7e3b3d831cdcd8063787d80bb63042a89731d936c9c3811795eb6"
+  },
+  "protocol_id": "lcrc-lipo-esa-random42-v1",
+  "seed": 0,
+  "test_labels_read": false,
+  "timing": {
+    "inference_batch_size": 128,
+    "inference_device": "cpu",
+    "inference_seconds_per_valid420": 0.4122109116675953,
+    "train_wall_seconds": 3.186546929005999
+  },
+  "training": {
+    "batch_order_sha256": "66f3263519893dc53b8570685421524b4d441be7e7b2bfafc90b2a58a8d3fb73",
+    "batch_size": 128,
+    "best_epoch": 1,
+    "best_val_loss_standardized": 2.59588821217936,
+    "checkpoint_rule": "best_validation_loss",
+    "early_stopping": true,
+    "early_stopping_patience": 30,
+    "epochs_planned": 1,
+    "epochs_run": 1,
+    "gradient_clip": 0.5,
+    "loss": "mse_on_train3360_standardised_target",
+    "optimizer_steps": 1,
+    "scheduler": "ReduceLROnPlateau(factor=0.5, patience=15)",
+    "steps_per_epoch": 1,
+    "stopped_early": false
+  },
+  "upstream_commit": "861a0b12d445ae80cc69b3948af623b4331321d4"
+}
