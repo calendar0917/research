@@ -7,7 +7,11 @@
 !data/xgb_descriptor_names_v1.json
 
 # Rebuildable, large, and never needed to reproduce a number in REPORT.md.
-cache/
+cache/*
+# ... except the label-free XGB feature matrix: the GPU host has no RDKit and
+# the frozen XGB Test predictions must be reproducible there.
+!cache/xgb_features_v1.npz
+!cache/xgb_features_v1.json
 analysis/runs/*/logs/
 __pycache__/
 *.pyc

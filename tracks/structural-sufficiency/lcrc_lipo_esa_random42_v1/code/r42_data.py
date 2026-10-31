@@ -146,6 +146,11 @@ def build_upstream_structures(smiles: Sequence[str]) -> list[Any]:
 
     mods = U.install()
     transforms = mods["transforms"]
+    if transforms is None:
+        raise RuntimeError(
+            "the upstream featurisation imports are unavailable on this host "
+            "(RDKit missing); use the committed data/structures_esa_random42_v1.npz"
+        )
     chain = [
         transforms.ChempropFeatures(one_hot=True, max_atomic_number=53),
         transforms.AddMaxEdge(),

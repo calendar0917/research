@@ -52,6 +52,10 @@ import r42_common as C
 _INSTALLED = False
 _MODULES: dict[str, Any] = {}
 PATCHES: list[dict[str, Any]] = []
+# Imports that are only needed to *derive* the feature artifacts.  The GPU host
+# consumes the committed, hash-verified structure artifact, so a missing RDKit
+# there must not block training.
+OPTIONAL_UNAVAILABLE: list[dict[str, str]] = []
 
 STUB_MANIFEST = {
     "pytorch_lightning": "LightningModule -> torch.nn.Module; no Trainer is used",
@@ -282,7 +286,15 @@ def install() -> dict[str, Any]:
     _install_stubs()
     import contextlib  # noqa: E402
 
-    import data_loading.transforms as transforms  # noqa: E402
+    try:
+        import data_loading.transforms as transforms  # noqa: E402
+    except ModuleNotFoundError as exc:
+        # rdkit / posenc are only required by the featurisation path, which is
+        # not executed when the pre-built structure artifact is used.
+        if (exc.name or "").split(".")[0] not in ("rdkit", "data_loading", "utils"):
+            raise
+        transforms = None
+        OPTIONAL_UNAVAILABLE.append({"module": "data_loading.transforms", "missing": str(exc.name), "reason": "structure artifact is pre-built and hash-verified"})
     import esa.masked_layers as masked_layers  # noqa: E402
     import esa.mha as esa_mha  # noqa: E402
     import esa.models as esa_models  # noqa: E402
