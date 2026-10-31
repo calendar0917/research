@@ -20,7 +20,7 @@ The Monitor is an external check on frozen predictions, **not** an independent b
 
 - Protocol ID: `lcrc-lipo-mechanism-generalization-ssl-v2`.
 - Final protocol freeze: `analysis/protocol_freeze_v2.json`, SHA-256 `76524f0e9dfc…` (full hash in `summary_v2.json`).
-- GPU authorization: `analysis/gpu_authorization_v2.json`, SHA-256 `965080b2fe15…`; it is pinned to the earlier two-seed freeze `d78d71cfac2d…` and was consumed before the post-run analysis fixes. No GPU job was launched after the authorization expired; the ledger still enforces the 3.5 h cap.
+- GPU authorization: `analysis/gpu_authorization_v2.json`, SHA-256 `965080b2fe15…`; it is pinned to the earlier two-seed freeze `d78d71cfac2d…` and was consumed before the post-run analysis fixes. No GPU job was launched after the authorization was superseded by the final analysis freeze; the ledger still enforces the 3.5 h cap.
 - Prediction manifest: `analysis/predictions/MANIFEST.json`, SHA-256 `1bc705295b4e…`, 9 predictions, `label_blind=true`.
 - Hard cap: 3.5 A100 GPU-hours. Charged: **2.4647 h** (61 jobs); remaining **1.0353 h**. v1's 0.5539 h remains separate historical context.
 - v1 immutability: `assert_v1_unchanged` = **51/51 checks ok** (v1 freeze `7fffba42…`, manifest `ba8ad0be…`, formal checkpoints included).
