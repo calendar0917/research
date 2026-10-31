@@ -1,0 +1,105 @@
+protocol_id: lcrc-lipo-chem-feature-pilot-v3
+round_id: lcrc-lipo-chem-feature-pilot-v3
+
+fold: 1
+seed: 0
+recipe: R3
+
+training:
+  batch_size: 128
+  epochs: 360
+  soup_last: 5
+  grad_clip: 5.0
+  min_lr: 1.0e-5
+  shuffle_offset: 917000
+  optimizer: AdamW
+  scheduler: per_step_cosine
+  loss: mse_on_fold_standardised_target
+  checkpoint: mean_of_last_5_epoch_end_state_dicts
+  early_stopping: false
+  monitor_during_training: false
+  R0:
+    peak_lr: 1.0e-3
+    weight_decay: 1.0e-5
+    dropout: 0.0
+  R1:
+    peak_lr: 1.0e-3
+    weight_decay: 1.0e-3
+    dropout: 0.10
+  R2:
+    peak_lr: 1.0e-3
+    weight_decay: 1.0e-3
+    dropout: 0.20
+  R3:
+    peak_lr: 3.0e-4
+    weight_decay: 1.0e-3
+    dropout: 0.10
+
+features:
+  source: rdkit.Chem.Descriptors.CalcMolDescriptors
+  rdkit_version: "2026.09.1"
+  canonical_smiles: "RDKit MolToSmiles(canonical=True); sha256 per row"
+  global_dim_base: 42
+  standardisation: fold1_train_only
+  nonfinite_policy: train_fold_median_then_zero_variance_scale_1
+  chem12:
+    - TPSA
+    - MolWt
+    - NumHAcceptors
+    - NumHDonors
+    - NumRotatableBonds
+    - NumAromaticRings
+    - NumAliphaticRings
+    - NumSaturatedRings
+    - RingCount
+    - FractionCSP3
+    - HeavyAtomCount
+    - MolMR
+  chem13:
+    - TPSA
+    - MolWt
+    - NumHAcceptors
+    - NumHDonors
+    - NumRotatableBonds
+    - NumAromaticRings
+    - NumAliphaticRings
+    - NumSaturatedRings
+    - RingCount
+    - FractionCSP3
+    - HeavyAtomCount
+    - MolMR
+    - MolLogP
+
+arms:
+  unconditional: [A_Chem12, A_Chem13]
+  conditional: C_Chem12
+
+comparators:
+  A: F1_A_sel_s0
+  C: F1_C_sel_s0
+
+decision:
+  materiality_rmse: 0.03
+  tail_fraction: 0.02
+  tail_min_retained_fraction: 0.50
+  tail_exclusion_source:
+    A: F1_A_sel_s0
+    C: F1_C_sel_s0
+  bootstrap_resamples: 2000
+  bootstrap_seed: 20261101
+
+budget:
+  gpu_hard_cap_hours: 0.30
+  includes: [A_Chem12, A_Chem13, C_Chem12 conditional]
+  historical_v1_v2_hours_reference_only: 3.0186
+
+evaluation:
+  primary_metric: raw_rmse_on_fold1_dev
+  secondary_metrics: [raw_mae]
+  monitor_used: false
+  reserved_labels_read: false
+  official_valid_test_read: false
+  extra_seeds: false
+  extra_folds: false
+  ssl: false
+  full_fit_retrain: false
