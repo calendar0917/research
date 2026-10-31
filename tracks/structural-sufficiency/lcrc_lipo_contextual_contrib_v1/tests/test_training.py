@@ -60,6 +60,8 @@ def test_context_run_records_path_usage(tmp_path, cfg, frozen_data):
     assert payload["model_audit"]["parameters_new"] == C.CONTEXT_NEW_PARAMS_REFERENCE
     assert usage["valid420"]["n_hetero_atoms"] > 0
     assert usage["valid420"]["change_l2_mean_over_hetero_atoms"] >= 0.0
+    assert usage["valid420"]["f_delta_abs_mean_over_hetero_atoms"] >= 0.0
+    assert usage["valid420"]["f_delta_abs_max_over_hetero_atoms"] >= 0.0
     assert usage["gradient_probe"]["all_new_tensors_received_nonzero_gradient"]
     assert payload["diagnostics"]["rho_after_soup"]["passed"]
     assert payload["diagnostics"]["dropout"]["passed"]

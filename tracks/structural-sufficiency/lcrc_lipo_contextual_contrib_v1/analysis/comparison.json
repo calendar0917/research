@@ -1,0 +1,301 @@
+{
+  "created_utc": "2026-10-31T14:04:42Z",
+  "decision": {
+    "exploratory_decision": "NO_CLEAR_GAIN",
+    "gain": 0.011828794529036513,
+    "gain_definition": "RMSE(BASE) - RMSE(CONTEXT); positive = CONTEXT better",
+    "gain_threshold": 0.02,
+    "known_tail_concentrated": false,
+    "mae_base": 0.4278543268939333,
+    "mae_change": -0.016281751040184977,
+    "mae_context": 0.41157257585374835,
+    "mae_tolerance_pass": true,
+    "mae_worsening_tolerance": 0.01,
+    "no_checkpoint_selection_by_validation": true,
+    "outcome": "NO_CLEAR_GAIN | NOT_TAIL_CONCENTRATED",
+    "primary_metric": "validation_rmse_raw_logD",
+    "protocol_id": "lcrc-lipo-contextual-contrib-v1",
+    "scope": "single seed (0), random42 Train3360/Validation420, descriptive only",
+    "status": "POST_TRAINING_FIXED_RULE",
+    "tail_status": "NOT_TAIL_CONCENTRATED"
+  },
+  "estimated_metric": {
+    "note": "hand-free recomputation of both arms from the frozen valid_predictions.npz",
+    "reported_vs_recomputed_max_abs_diff": 0.0
+  },
+  "historical_reference": {
+    "metrics_validation_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/metrics_validation.json",
+    "metrics_validation_sha256": "c540f9ac89a391ea13c8235b7b14cb7faf10ae2a9d60616d2e4716659c576fdd",
+    "model": "LCRC-A-R3-scratch (random42 v1)",
+    "note": "Descriptive only. The historical random42 v1 LCRC training loop never applied the configured dropout, so its Validation RMSE 0.589007 is not a matched comparison for either arm of this round.",
+    "valid_rmse": 0.5890072081930064
+  },
+  "models": {
+    "base": {
+      "arm": "base",
+      "checkpoint_sha256": "1a2820e376e6a426cc470b80bdf3f28a9f6bb9044d0028792463aeddabadc60d",
+      "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+      "device": "cuda",
+      "epochs_run": 360,
+      "git_commit": "b7f520e5027d3e2b360bb0af23d79d2bc0e70af7",
+      "grad_clip_events": 4985,
+      "hostname": "a100-2",
+      "optimizer_steps": 9720,
+      "parameters": 247106,
+      "parameters_new": 0,
+      "pool": "res-gpu0",
+      "reported_train": {
+        "checkpoint": "soup_last_5",
+        "mae": 0.19063400118660626,
+        "r2": 0.9546249193225947,
+        "rmse": 0.25362078415085476,
+        "units": "raw_logD"
+      },
+      "reported_valid": {
+        "checkpoint": "soup_last_5",
+        "mae": 0.4278543268939333,
+        "r2": 0.7770971170970459,
+        "rmse": 0.5804162585770505,
+        "units": "raw_logD"
+      },
+      "run_key": "base_s0",
+      "torch": "2.5.1+cu124",
+      "torch_cuda": "12.4",
+      "train": {
+        "mae": 0.19063400118660626,
+        "r2": 0.9546249193225947,
+        "rmse": 0.25362078415085476
+      },
+      "valid": {
+        "mae": 0.4278543268939333,
+        "r2": 0.7770971170970459,
+        "rmse": 0.5804162585770505
+      },
+      "valid_predictions_sha256": "ef8f751061b85e409705ccfb3ff1297ae00f710b935240f4d703311695ad0d4f",
+      "wall_seconds": 311.9999756938778
+    },
+    "context": {
+      "arm": "context",
+      "checkpoint_sha256": "38bf6926c32db02f4c10f72da5c84abf2194c8b954681e0334aca88c91eccaee",
+      "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+      "device": "cuda",
+      "epochs_run": 360,
+      "git_commit": "b7f520e5027d3e2b360bb0af23d79d2bc0e70af7",
+      "grad_clip_events": 4478,
+      "hostname": "a100-2",
+      "optimizer_steps": 9720,
+      "parameters": 255458,
+      "parameters_new": 8352,
+      "pool": "res-gpu1",
+      "reported_train": {
+        "checkpoint": "soup_last_5",
+        "mae": 0.1585655078219649,
+        "r2": 0.9676918085550412,
+        "rmse": 0.21400920795609085,
+        "units": "raw_logD"
+      },
+      "reported_valid": {
+        "checkpoint": "soup_last_5",
+        "mae": 0.41157257585374835,
+        "r2": 0.7860899903089615,
+        "rmse": 0.568587464048014,
+        "units": "raw_logD"
+      },
+      "run_key": "context_s0",
+      "torch": "2.5.1+cu124",
+      "torch_cuda": "12.4",
+      "train": {
+        "mae": 0.1585655078219649,
+        "r2": 0.9676918085550412,
+        "rmse": 0.21400920795609085
+      },
+      "valid": {
+        "mae": 0.41157257585374835,
+        "r2": 0.7860899903089615,
+        "rmse": 0.568587464048014
+      },
+      "valid_predictions_sha256": "1af23e1544c06a9a24da99ff01fbd2cb8747b9b67c7ca7e9e7cae632148a35de",
+      "wall_seconds": 423.7810770459473
+    }
+  },
+  "paired": {
+    "fraction_context_better_abs": 0.5071428571428571,
+    "gain_rmse_base_minus_context": 0.011828794529036513,
+    "mae_base": 0.4278543268939333,
+    "mae_change_context_minus_base": -0.016281751040184977,
+    "mae_context": 0.41157257585374835,
+    "max_abs_prediction_difference": 1.1909819625362617,
+    "mean_abs_prediction_difference": 0.20347358878107813,
+    "n_base_better_abs": 207,
+    "n_context_better_abs": 213,
+    "n_tie_abs": 0,
+    "n_valid": 420,
+    "r2_base": 0.7770971170970459,
+    "r2_context": 0.7860899903089615,
+    "rmse_base": 0.5804162585770505,
+    "rmse_context": 0.568587464048014,
+    "sse_base": 141.49087395264425,
+    "sse_context": 135.78251579447166,
+    "sse_difference_base_minus_context": 5.708358158172587
+  },
+  "protocol_id": "lcrc-lipo-contextual-contrib-v1",
+  "role_coverage": {
+    "train3360": {
+      "carbon_halogen_atom_fraction": 0.7621510051271917,
+      "hetero_atom_fraction": 0.23776116289538113,
+      "molecule_counts": {
+        "both": 3359,
+        "carbon_halogen_only": 1,
+        "hetero_only": 0,
+        "neither": 0
+      },
+      "molecule_fractions": {
+        "both": 0.999702380952381,
+        "carbon_halogen_only": 0.00029761904761904765,
+        "hetero_only": 0.0,
+        "neither": 0.0
+      },
+      "molecules_with_carbon_halogen_fraction": 1.0,
+      "molecules_with_hetero_fraction": 0.999702380952381,
+      "n_atoms": 91083,
+      "n_carbon_halogen_atoms": 69419,
+      "n_hetero_atoms": 21656,
+      "n_molecules": 3360,
+      "role_tables": {
+        "carbon_halogen_elements": [
+          "C",
+          "F",
+          "Cl",
+          "Br",
+          "I"
+        ],
+        "carbon_halogen_type_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "carbon_halogen_type_names": [
+          "Br",
+          "C",
+          "C_aromatic",
+          "Cl",
+          "F",
+          "I"
+        ],
+        "hetero_elements": [
+          "N",
+          "O",
+          "S",
+          "P"
+        ],
+        "hetero_type_ids": [
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "hetero_type_names": [
+          "N",
+          "N_aromatic",
+          "O",
+          "O_aromatic",
+          "P",
+          "S",
+          "S_aromatic"
+        ],
+        "unassigned_type_names": [
+          "B",
+          "Si",
+          "UNK"
+        ]
+      }
+    },
+    "valid420": {
+      "carbon_halogen_atom_fraction": 0.7646634831966844,
+      "hetero_atom_fraction": 0.2353365168033156,
+      "molecule_counts": {
+        "both": 420,
+        "carbon_halogen_only": 0,
+        "hetero_only": 0,
+        "neither": 0
+      },
+      "molecule_fractions": {
+        "both": 1.0,
+        "carbon_halogen_only": 0.0,
+        "hetero_only": 0.0,
+        "neither": 0.0
+      },
+      "molecules_with_carbon_halogen_fraction": 1.0,
+      "molecules_with_hetero_fraction": 1.0,
+      "n_atoms": 11099,
+      "n_carbon_halogen_atoms": 8487,
+      "n_hetero_atoms": 2612,
+      "n_molecules": 420,
+      "role_tables": {
+        "carbon_halogen_elements": [
+          "C",
+          "F",
+          "Cl",
+          "Br",
+          "I"
+        ],
+        "carbon_halogen_type_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "carbon_halogen_type_names": [
+          "Br",
+          "C",
+          "C_aromatic",
+          "Cl",
+          "F",
+          "I"
+        ],
+        "hetero_elements": [
+          "N",
+          "O",
+          "S",
+          "P"
+        ],
+        "hetero_type_ids": [
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "hetero_type_names": [
+          "N",
+          "N_aromatic",
+          "O",
+          "O_aromatic",
+          "P",
+          "S",
+          "S_aromatic"
+        ],
+        "unassigned_type_names": [
+          "B",
+          "Si",
+          "UNK"
+        ]
+      }
+    }
+  },
+  "scope": "single seed 0, random42 Train3360 / Validation420, raw logD units",
+  "status": "POST_TRAINING_DESCRIPTIVE",
+  "test_labels_read": false,
+  "test_metrics_read": false,
+  "test_predictions_read": false
+}

@@ -683,7 +683,7 @@ def context_diagnostics(model: LCRCContextual, cache: Mapping[str, Any], device:
                     change_per_molecule.append(float(cg[hg].mean()))
                     graph_change_mean.append(float(cg[hg].mean()))
                     graph_change_max.append(float(cg[hg].max()))
-                    f_delta_abs_hetero.append(fg[hg])
+                    f_delta_abs_hetero.append(np.abs(fg[hg]))
                 f_delta_abs_all.append(np.abs(fg))
                 f_delta_sum_per_molecule.append(float(fg.sum()))
                 f_delta_abs_sum_per_molecule.append(float(np.abs(fg).sum()))
