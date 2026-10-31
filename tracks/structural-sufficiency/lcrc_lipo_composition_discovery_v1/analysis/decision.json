@@ -1,0 +1,59 @@
+{
+  "protocol_id": "lcrc-lipo-composition-discovery-v1",
+  "created_utc": "2026-10-31T19:11:31.358053+00:00",
+  "decision": "NO_PROMISING_NEW_ARCHITECTURE",
+  "promoted_new_models": [],
+  "retain": "ROLEBLIND (frozen ROLEBLIND_s0 reference); interpret its advantage with seed caution",
+  "test420_status": "NOT_READ_FOR_METRICS; no Test prediction or Test metric was computed",
+  "stage1": {
+    "n_new_arms": 8,
+    "best_new_model": "g2l_loo_s0",
+    "best_new_valid_rmse": 0.5371892216521502,
+    "roleblind_s0_valid_rmse": 0.5342319612586572,
+    "best_new_gain_vs_roleblind_s0": -0.0029572603934929775,
+    "performance_gate": "gain >= 0.008 and MAE change <= 0.005",
+    "performance_gate_passed_by_any_new_model": false
+  },
+  "mechanism_pairs": [
+    {
+      "pair": "path_bind_vs_path_unbound",
+      "gain_true_vs_control": -0.0018982433355041461,
+      "ci_low": -0.01815772465356926,
+      "ci_high": 0.014225659192893654,
+      "gate": false
+    },
+    {
+      "pair": "dist_true_vs_dist_blind",
+      "gain_true_vs_control": -0.04489020963101609,
+      "ci_low": -0.07873686938764894,
+      "ci_high": -0.010216764886250085,
+      "gate": false
+    },
+    {
+      "pair": "roleblind_vs_g2l_local_cap",
+      "gain_true_vs_control": 0.04084771455161107,
+      "ci_low": 0.012590919809916789,
+      "ci_high": 0.06864564177868912,
+      "gate": true
+    }
+  ],
+  "stage2_seed_check": {
+    "roleblind_s0_valid_rmse": 0.5342319612586572,
+    "roleblind_s1_valid_rmse": 0.5867647473767172,
+    "base_s0_valid_rmse": 0.5804162534265884,
+    "base_s1_valid_rmse": 0.576780192542826,
+    "roleblind_s1_gain_vs_base_s1": -0.009984554833891268,
+    "roleblind_seed_spread": 0.052532786118060004,
+    "base_seed_spread": -0.0036360608837624486,
+    "interpretation": "The ROLEBLIND seed-1 run is worse than BASE seed 1 and 0.0525 worse than ROLEBLIND seed 0; single-seed model differences below this spread are not a reliable architecture ranking."
+  },
+  "stage3_scaffold": "NOT_RUN: no new model passed the Stage-I performance gate",
+  "stage4_path_select": "NOT_RUN: PATH-BIND did not show a performance or binding advantage over PATH-UNBOUND",
+  "reasons": [
+    "No new arm beats ROLEBLIND_s0 by the predeclared 0.008 Validation RMSE gate.",
+    "PATH-BIND is 0.0019 worse than PATH-UNBOUND; the paired 95% interval includes zero.",
+    "DIST-TRUE is 0.0449 worse than DIST-BLIND; actual D34/D5 content is harmful, not helpful.",
+    "ROLEBLIND beats its graph-level local-cap control by 0.0408, confirming that an all-atom (not atom-local) context is important, but this is the existing mechanism, not a new one.",
+    "ROLEBLIND seed 1 is 0.0525 worse than seed 0 and 0.0100 worse than BASE seed 1, so the seed-0 ranking is within large seed noise."
+  ]
+}
