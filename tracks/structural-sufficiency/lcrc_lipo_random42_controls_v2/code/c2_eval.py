@@ -533,6 +533,7 @@ def run_inference_benchmark(*, batch_size: int = 128, warmup: int = 3, repeats: 
     valid_cache = views["valid_cache"]
     spec = views["spec"]
     train_norm = views["train_norm"]
+    target_norm = views["target_norm"]
     train_data = D.load_structure_data(rows=rows_train)
     valid_data = D.load_structure_data(rows=rows_valid)
     if len(train_data) != C.SPLIT_SIZES["train"] or len(valid_data) != C.SPLIT_SIZES["valid"]:
@@ -559,7 +560,7 @@ def run_inference_benchmark(*, batch_size: int = 128, warmup: int = 3, repeats: 
     model_lcrc = V2M.prep_model.LCRC(spec, train_norm, V2M.prep_model.DEFAULT_CONFIG)
     ckpt = _load_checkpoint(model_lcrc, C.V1_LCRC_CKPT, device)
     torch.cuda.reset_peak_memory_stats(device)
-    pred = _predict_chunks(model_lcrc, chunks, prep_lcrc, lambda b: model_lcrc(b))
+    pred = NT.denormalise(_predict_chunks(model_lcrc, chunks, prep_lcrc, lambda b: model_lcrc(b)), target_norm)
     timing = _time_chunks(model_lcrc, chunks, prep_lcrc, lambda b: model_lcrc(b), device=device, warmup=warmup, repeats=repeats)
     peak = int(torch.cuda.max_memory_allocated(device))
     entries.append(
@@ -587,7 +588,7 @@ def run_inference_benchmark(*, batch_size: int = 128, warmup: int = 3, repeats: 
     model_s2off, _base, _audit = CM.build_s2off(spec, train_norm, C.TRAIN_SEED, device)
     s2off_ckpt = _load_checkpoint(model_s2off, C.REPO / s2off_payload["checkpoint_path"], device)
     torch.cuda.reset_peak_memory_stats(device)
-    pred = _predict_chunks(model_s2off, chunks, prep_lcrc, lambda b: model_s2off(b))
+    pred = NT.denormalise(_predict_chunks(model_s2off, chunks, prep_lcrc, lambda b: model_s2off(b)), target_norm)
     timing = _time_chunks(model_s2off, chunks, prep_lcrc, lambda b: model_s2off(b), device=device, warmup=warmup, repeats=repeats)
     peak = int(torch.cuda.max_memory_allocated(device))
     entries.append(
@@ -625,7 +626,7 @@ def run_inference_benchmark(*, batch_size: int = 128, warmup: int = 3, repeats: 
             raise PermissionError("historical PNA degree histogram drifted")
         pna_ckpt = _load_checkpoint(model_pna, C.V1_PNA_CKPT, device)
         torch.cuda.reset_peak_memory_stats(device)
-        pred = _predict_chunks(model_pna, chunks, prep_pna, lambda b: pna_forward(model_pna, b, device))
+        pred = NT.denormalise(_predict_chunks(model_pna, chunks, prep_pna, lambda b: pna_forward(model_pna, b, device)), target_norm)
         timing = _time_chunks(
             model_pna,
             chunks,
@@ -671,7 +672,7 @@ def run_inference_benchmark(*, batch_size: int = 128, warmup: int = 3, repeats: 
             raise PermissionError("PNA-small degree histogram drifted")
         small_ckpt = _load_checkpoint(model_small, C.REPO / pna_payload["checkpoint_path"], device)
         torch.cuda.reset_peak_memory_stats(device)
-        pred = _predict_chunks(model_small, chunks, prep_pna, lambda b: pna_forward(model_small, b, device))
+        pred = NT.denormalise(_predict_chunks(model_small, chunks, prep_pna, lambda b: pna_forward(model_small, b, device)), target_norm)
         timing = _time_chunks(
             model_small,
             chunks,
