@@ -1,5 +1,49 @@
 {
+  "A_Chem12": {
+    "bootstrap_rmse_ci95": [
+      -0.029178637848670017,
+      0.009653981849718352
+    ],
+    "delta_mae": -0.0012297570246962986,
+    "delta_rmse": -0.00962769797300389,
+    "tail_not_dependent": false,
+    "tail_retained_fraction": null
+  },
+  "A_Chem13": {
+    "bootstrap_rmse_ci95": [
+      -0.04357863594193488,
+      0.006949350946845838
+    ],
+    "delta_mae": -0.004378081145777535,
+    "delta_rmse": -0.017082486340917358,
+    "tail_not_dependent": false,
+    "tail_retained_fraction": null
+  },
+  "conditional_C": {
+    "cross_architecture_consistent": null,
+    "gate": {
+      "delta_mae": -0.0012297570246962986,
+      "delta_rmse": -0.00962769797300389,
+      "met": false,
+      "rule": "delta_rmse >= 0.03 and delta_mae > 0 and not tail-dependent",
+      "tail_not_dependent": false,
+      "tail_retained_fraction": null
+    },
+    "run_executed": false,
+    "run_key": "F1_C_Chem12_R3_s0"
+  },
   "materiality_rmse": 0.03,
-  "reason": "A_Chem12 and/or A_Chem13 GPU runs are missing",
-  "verdict": "PILOT_NOT_STARTED"
+  "mollogp_incremental_delta_rmse": -0.0074547883679134674,
+  "mollogp_incremental_reading": "negative: MolLogP does not add on top of Chem12",
+  "monitor_used": false,
+  "official_valid_test_used": false,
+  "reason": "Neither Chem12 nor Chem13 reaches the 0.03 RMSE materiality threshold",
+  "reserved_used": false,
+  "rules": {
+    "direct_logp_prior": "Chem12 < 0.03, Chem13 >= 0.03, tail-robust",
+    "general_chem_prior": "Chem12 delta >= 0.03, tail-robust; Chem13 also >= 0.03",
+    "inconclusive": "tail-dependent, MolLogP removes the gain, or RMSE/MAE conflict",
+    "no_gain": "both < 0.03"
+  },
+  "verdict": "NO_GLOBAL_DESCRIPTOR_GAIN"
 }
