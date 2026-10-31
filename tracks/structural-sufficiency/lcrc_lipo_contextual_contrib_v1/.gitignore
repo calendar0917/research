@@ -6,3 +6,8 @@ analysis/runs/*/logs/
 
 # Everything else under analysis/ is an evidence artifact and is versioned:
 # gates, protocol freeze, smoke runs, formal checkpoints, predictions, curves.
+
+# The repository root ignores *.npz; these small arrays are evidence and are
+# referenced by sha256 in train.json, so keep them inside this round.
+!analysis/**/train_predictions.npz
+!analysis/**/valid_predictions.npz
