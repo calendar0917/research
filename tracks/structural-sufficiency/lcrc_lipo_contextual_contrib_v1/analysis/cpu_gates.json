@@ -1,0 +1,832 @@
+{
+  "checks": [
+    {
+      "details": {
+        "label_audit": {
+          "n_train": 3360,
+          "n_valid": 420,
+          "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+          "scope": "train_and_valid_only",
+          "sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+          "test_labels_included": false,
+          "vector_sha256": {
+            "train": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+            "valid": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+          }
+        },
+        "lcrc_cache": {
+          "content_fingerprint": "23ec00be4fb7e3cf93967cd62911bd932159b1d7e0b43226b23cf7c6a3718e03",
+          "file_sha256": "450e749045216f32a7a388f0fc039adf6bc5729ef3e9319379ba78f0d9662bd8",
+          "labels_present": false,
+          "path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/cache/lcrc_all4200.pt",
+          "source": "existing_round_cache"
+        },
+        "n_train_cache": 3360,
+        "n_valid_cache": 420,
+        "split": {
+          "file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/split_esa_random42_v1.json",
+          "first_five": {
+            "train": [
+              3942,
+              3415,
+              1426,
+              2365,
+              3462
+            ],
+            "valid": [
+              501,
+              1649,
+              3579,
+              2873,
+              106
+            ]
+          },
+          "multi_component_row": 1646,
+          "multi_component_split": "train",
+          "n_test_declared": 420,
+          "n_train": 3360,
+          "n_valid": 420,
+          "sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+          "test_row_values_used": false,
+          "train_rows_sha256": "0df18c72753974d502f8bede1cd2aa5c0ebdc1df450b8871fffdb1f67d2648ee",
+          "valid_rows_sha256": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44"
+        },
+        "target_norm": {
+          "label_vector_sha256": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+          "mean": 2.2081011904761905,
+          "n": 3360,
+          "scale": 1.1906281212426577,
+          "scale_definition": "population_std_float64 (sklearn StandardScaler convention)",
+          "source": "train3360_labels_only",
+          "valid_or_test_used": false
+        },
+        "train_norm_fingerprint": "4d6e5bf456ff9d2217eb11a2c4a29d3f7cbbcb95665bf56e62b93c3ae93d0e26"
+      },
+      "id": "data_split_integrity",
+      "name": "random42 Train3360/Validation420 rows, sizes, order and hashes match the frozen file",
+      "passed": true
+    },
+    {
+      "details": {
+        "forbidden_opens": [],
+        "forbidden_tokens": [
+          "test420",
+          "metrics_test",
+          "labels_test",
+          "test_read",
+          "/predictions/"
+        ],
+        "n_files_opened_during_gates": 21,
+        "note": "the frozen split JSON is read as a whole; its Test row values are never used and no Test artifact is opened",
+        "static_scan_offending_files": {},
+        "test_label_accessor_raises": true,
+        "test_labels_read": false,
+        "test_metrics_read": false,
+        "test_predictions_read": false
+      },
+      "id": "test_isolation",
+      "name": "no Test label, Test prediction, Test metric or per-molecule Test artifact is opened",
+      "passed": true
+    },
+    {
+      "details": {
+        "max_abs_forward_diff": 0.0,
+        "n_state_entries_compared": 35,
+        "passed": true,
+        "state_dict_bitwise_identical": true,
+        "state_dict_keys_identical": true,
+        "tolerance": 0.0
+      },
+      "id": "base_matches_original_lcrc",
+      "name": "BASE equals the original lcrc_model.LCRC at the same seed and input",
+      "passed": true
+    },
+    {
+      "details": {
+        "all_shared_bitwise_identical": true,
+        "base_only_keys": [],
+        "context_is_base_plus_new_only": true,
+        "mismatched": [],
+        "model_only_keys": [
+          "context.W_atom.bias",
+          "context.W_atom.weight",
+          "context.W_ch.bias",
+          "context.W_ch.weight",
+          "context.W_het.bias",
+          "context.W_het.weight",
+          "context.W_out.bias",
+          "context.W_out.weight"
+        ],
+        "n_shared_entries": 35,
+        "n_shared_entries_base": 35,
+        "n_shared_entries_context": 43,
+        "parameters_base": 247106,
+        "parameters_context": 255458,
+        "parameters_new": 8352,
+        "shared_keys": [
+          "global_mean",
+          "global_scale",
+          "scalar_mean",
+          "scalar_scale",
+          "atom_encoder.lins.0.weight",
+          "atom_encoder.lins.0.bias",
+          "atom_encoder.lins.1.weight",
+          "atom_encoder.lins.1.bias",
+          "bond_encoder.lins.0.weight",
+          "bond_encoder.lins.0.bias",
+          "bond_encoder.lins.1.weight",
+          "bond_encoder.lins.1.bias",
+          "local.nbr_emb.weight",
+          "local.path_emb.weight",
+          "local.end_emb.weight",
+          "local.path_u.weight",
+          "local.path_v.weight",
+          "local.joint_proj.weight",
+          "local.joint_proj.bias",
+          "local.close_emb.weight",
+          "local.path_gate.weight",
+          "local.mlp.lins.0.weight",
+          "local.mlp.lins.0.bias",
+          "local.mlp.lins.1.weight",
+          "local.mlp.lins.1.bias",
+          "local.norm.weight",
+          "local.norm.bias",
+          "f.lins.0.weight",
+          "f.lins.0.bias",
+          "f.lins.1.weight",
+          "f.lins.1.bias",
+          "rho.lins.0.weight",
+          "rho.lins.0.bias",
+          "rho.lins.1.weight",
+          "rho.lins.1.bias"
+        ]
+      },
+      "id": "shared_initialisation",
+      "name": "CONTEXT shared parameters/buffers are bit-identical to BASE",
+      "passed": true
+    },
+    {
+      "details": {
+        "initial_w_out_is_not_degenerate": true,
+        "max_abs_diff_base_vs_untouched_context_at_init": 0.0011744499206542969,
+        "max_abs_diff_base_vs_zeroed_context": 0.0,
+        "mean_abs_diff_base_vs_untouched_context_at_init": 0.0007013082504272461,
+        "n_graphs": 8,
+        "passed": true,
+        "tolerance": 1e-05,
+        "zeroed_context_matches_base": true
+      },
+      "id": "zero_out_equivalence",
+      "name": "W_out forced to zero makes CONTEXT equal same-weight BASE (tol 1e-5)",
+      "passed": true
+    },
+    {
+      "details": {
+        "carbon_halogen_lut_matches_expected": true,
+        "carbon_halogen_matches_element_metadata": true,
+        "hetero_lut_matches_expected": true,
+        "hetero_matches_element_metadata": true,
+        "n_atoms_checked": 223,
+        "n_carbon_halogen_atoms_checked": 173,
+        "n_hetero_atoms_checked": 50,
+        "passed": true,
+        "role_tables": {
+          "carbon_halogen_elements": [
+            "C",
+            "F",
+            "Cl",
+            "Br",
+            "I"
+          ],
+          "carbon_halogen_type_ids": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "carbon_halogen_type_names": [
+            "Br",
+            "C",
+            "C_aromatic",
+            "Cl",
+            "F",
+            "I"
+          ],
+          "hetero_elements": [
+            "N",
+            "O",
+            "S",
+            "P"
+          ],
+          "hetero_type_ids": [
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13
+          ],
+          "hetero_type_names": [
+            "N",
+            "N_aromatic",
+            "O",
+            "O_aromatic",
+            "P",
+            "S",
+            "S_aromatic"
+          ],
+          "unassigned_type_names": [
+            "B",
+            "Si",
+            "UNK"
+          ]
+        },
+        "unknown_element_type_ids": [
+          15
+        ]
+      },
+      "id": "element_role_masks",
+      "name": "hetero / carbon_halogen masks match spec.atom_type_metadata",
+      "passed": true
+    },
+    {
+      "details": {
+        "molecule_reorder": {
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "n_graphs": 8,
+          "passed": true,
+          "tolerance": 1e-06
+        },
+        "renumber": {
+          "max_abs_diff": 9.5367431640625e-07,
+          "mean_abs_diff": 3.5762786865234375e-07,
+          "n_graphs": 8,
+          "passed": true,
+          "tolerance": 1e-05
+        }
+      },
+      "id": "renumber_and_reorder",
+      "name": "atom renumbering and batch molecule reordering do not change predictions",
+      "passed": true
+    },
+    {
+      "details": {
+        "max_context_diff_single_vs_batch": 0.0,
+        "max_prediction_diff_single_vs_batch": 0.0,
+        "other_molecule_context_diff_after_perturbation": {
+          "m_ch": 0.0,
+          "m_het": 0.0
+        },
+        "other_molecule_prediction_diff_after_perturbation": 0.0,
+        "passed": true,
+        "per_graph": [
+          {
+            "d_m_ch": 0.0,
+            "d_m_het": 0.0,
+            "d_pred": 0.0,
+            "row": 0
+          },
+          {
+            "d_m_ch": 0.0,
+            "d_m_het": 0.0,
+            "d_pred": 0.0,
+            "row": 1
+          },
+          {
+            "d_m_ch": 0.0,
+            "d_m_het": 0.0,
+            "d_pred": 0.0,
+            "row": 2
+          },
+          {
+            "d_m_ch": 0.0,
+            "d_m_het": 0.0,
+            "d_pred": 0.0,
+            "row": 3
+          },
+          {
+            "d_m_ch": 0.0,
+            "d_m_het": 0.0,
+            "d_pred": 0.0,
+            "row": 4
+          },
+          {
+            "d_m_ch": 0.0,
+            "d_m_het": 0.0,
+            "d_pred": 0.0,
+            "row": 5
+          },
+          {
+            "d_m_ch": 0.0,
+            "d_m_het": 0.0,
+            "d_pred": 0.0,
+            "row": 6
+          },
+          {
+            "d_m_ch": 0.0,
+            "d_m_het": 0.0,
+            "d_pred": 0.0,
+            "row": 7
+          }
+        ],
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "tolerance": 1e-06
+      },
+      "id": "no_context_mixing",
+      "name": "per-molecule context never mixes across molecules in a batch",
+      "passed": true
+    },
+    {
+      "details": {
+        "all_new_layers_finite_gradient": true,
+        "all_new_tensors_nonzero_gradient_at_last_probe_step": true,
+        "all_new_tensors_updated": true,
+        "history": [
+          {
+            "grads": {
+              "context.W_atom.bias": {
+                "finite": true,
+                "max_abs": 0.009062908589839935,
+                "norm": 0.01263618003576994
+              },
+              "context.W_atom.weight": {
+                "finite": true,
+                "max_abs": 0.013751126825809479,
+                "norm": 0.07034444063901901
+              },
+              "context.W_ch.bias": {
+                "finite": true,
+                "max_abs": 0.003253507660701871,
+                "norm": 0.006217312533408403
+              },
+              "context.W_ch.weight": {
+                "finite": true,
+                "max_abs": 0.005938332062214613,
+                "norm": 0.03800779581069946
+              },
+              "context.W_het.bias": {
+                "finite": true,
+                "max_abs": 0.0049674478359520435,
+                "norm": 0.009328755550086498
+              },
+              "context.W_het.weight": {
+                "finite": true,
+                "max_abs": 0.0072739627212285995,
+                "norm": 0.05101696401834488
+              },
+              "context.W_out.bias": {
+                "finite": true,
+                "max_abs": 4.760865211486816,
+                "norm": 14.198624610900879
+              },
+              "context.W_out.weight": {
+                "finite": true,
+                "max_abs": 0.9898971319198608,
+                "norm": 4.276544570922852
+              }
+            },
+            "loss": 30.678422927856445,
+            "step": 1
+          },
+          {
+            "grads": {
+              "context.W_atom.bias": {
+                "finite": true,
+                "max_abs": 0.005418945103883743,
+                "norm": 0.008916639722883701
+              },
+              "context.W_atom.weight": {
+                "finite": true,
+                "max_abs": 0.007677409797906876,
+                "norm": 0.05038604512810707
+              },
+              "context.W_ch.bias": {
+                "finite": true,
+                "max_abs": 0.0026852679438889027,
+                "norm": 0.00442282110452652
+              },
+              "context.W_ch.weight": {
+                "finite": true,
+                "max_abs": 0.006587900221347809,
+                "norm": 0.02800261415541172
+              },
+              "context.W_het.bias": {
+                "finite": true,
+                "max_abs": 0.0027441554702818394,
+                "norm": 0.005621758755296469
+              },
+              "context.W_het.weight": {
+                "finite": true,
+                "max_abs": 0.0042845746502280235,
+                "norm": 0.03188716247677803
+              },
+              "context.W_out.bias": {
+                "finite": true,
+                "max_abs": 1.42802095413208,
+                "norm": 4.263495445251465
+              },
+              "context.W_out.weight": {
+                "finite": true,
+                "max_abs": 0.40578389167785645,
+                "norm": 1.5073590278625488
+              }
+            },
+            "loss": 4.554089546203613,
+            "step": 2
+          }
+        ],
+        "new_parameter_names": [
+          "context.W_atom.weight",
+          "context.W_atom.bias",
+          "context.W_het.weight",
+          "context.W_het.bias",
+          "context.W_ch.weight",
+          "context.W_ch.bias",
+          "context.W_out.weight",
+          "context.W_out.bias"
+        ],
+        "nonzero_gradient_at_step_2": true,
+        "parameter_max_abs_update": {
+          "context.W_atom.bias": 0.000598028302192688,
+          "context.W_atom.weight": 0.0006003910675644875,
+          "context.W_ch.bias": 0.0005998900160193443,
+          "context.W_ch.weight": 0.0006003826856613159,
+          "context.W_het.bias": 0.0006003011949360371,
+          "context.W_het.weight": 0.0006003938615322113,
+          "context.W_out.bias": 0.0005599263240583241,
+          "context.W_out.weight": 0.0006004049791954458
+        },
+        "passed": true,
+        "steps": 2
+      },
+      "id": "new_layer_gradients",
+      "name": "all four new Linear layers get finite non-zero gradients after two steps",
+      "passed": true
+    },
+    {
+      "details": {
+        "discriminating": true,
+        "max_abs_diff_vs_h_new_reconstruction": 0.0007429122924804688,
+        "max_abs_diff_vs_h_original_reconstruction": 0.0,
+        "max_abs_h_new_minus_h_original": 0.00172385573387146,
+        "max_abs_mean_h_difference_if_h_new_used": 0.00027954578399658203,
+        "n_graphs": 8,
+        "passed": true,
+        "rho_input_matches_h_original": true
+      },
+      "id": "rho_uses_original_h",
+      "name": "rho reads only the original local h, never h_new",
+      "passed": true
+    },
+    {
+      "details": {
+        "base": {
+          "all_parameter_tensors_updated": true,
+          "all_parameters_finite": true,
+          "grad_norms": [
+            1881.30078125,
+            684.029541015625
+          ],
+          "losses_standardised": [
+            31.420169830322266,
+            4.708461761474609
+          ],
+          "max_abs_parameter_update": 0.0006014108657836914,
+          "parameters": 247106,
+          "prediction_finite": true,
+          "prediction_shape": [
+            32
+          ]
+        },
+        "context": {
+          "all_parameter_tensors_updated": true,
+          "all_parameters_finite": true,
+          "grad_norms": [
+            1886.394287109375,
+            677.4561157226562
+          ],
+          "losses_standardised": [
+            32.12294006347656,
+            4.851269721984863
+          ],
+          "max_abs_parameter_update": 0.0006008148193359375,
+          "parameters": 255458,
+          "prediction_finite": true,
+          "prediction_shape": [
+            32
+          ]
+        }
+      },
+      "id": "cpu_two_batch_smoke",
+      "name": "two-batch CPU forward/backward/optimizer step succeeds for both arms",
+      "passed": true
+    },
+    {
+      "details": {
+        "denormalisation_exact": true,
+        "manual": {
+          "mae": 1.1094832945588184,
+          "r2": -0.29329816610611625,
+          "rmse": 1.3980768918131856
+        },
+        "max_abs_module_vs_manual": 0.0,
+        "module": {
+          "mae": 1.1094832945588184,
+          "r2": -0.29329816610611625,
+          "rmse": 1.3980768918131856
+        },
+        "n": 420,
+        "rmse_scale_identity_error": 2.220446049250313e-16,
+        "target_norm": {
+          "label_vector_sha256": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+          "mean": 2.2081011904761905,
+          "n": 3360,
+          "scale": 1.1906281212426577,
+          "scale_definition": "population_std_float64 (sklearn StandardScaler convention)",
+          "source": "train3360_labels_only",
+          "valid_or_test_used": false
+        },
+        "tolerance": 1e-12
+      },
+      "id": "denormalisation_and_metrics",
+      "name": "per-molecule denormalisation and RMSE/MAE/R2 are correct",
+      "passed": true
+    }
+  ],
+  "code_hashes": {
+    "code/run_x1.py": "9d36f0c21eafe90cb73a1840017a7ed737a8bf8a64f9d78cc79f16a6997db2f2",
+    "code/x1_analysis.py": "512c8c4be9490ba22f68c6d5e65ecb2f64173e97199bebb8a8a3b0d8b5de00e2",
+    "code/x1_common.py": "fb9562b5f37ae19363976d0aa55ee9d6031e0a1df348488a80a7bdcac3bb67b9",
+    "code/x1_data.py": "19ab3245a7ba25513dde9a7a456c615218be8a6f18778d0d6dcc92b4db023c27",
+    "code/x1_gates.py": "b0b44032415adfa071990eef830019c5be73bda544ee9b1411167386f9e3f9ff",
+    "code/x1_ledger.py": "20c65a548cad27a4f86f32508225dfe60e611c34a6f3fb1f7f258ea306baa9fc",
+    "code/x1_models.py": "f37c962abef89b3251c650031249def1b72774c20ae9bca04158c78a5a4a4deb",
+    "code/x1_train.py": "595c02c140e41f4678fc81315b90c1f3ec0bf2a3c744e41422bba206a9b8a69f"
+  },
+  "config_hash": "d89800b854760f655854e33925f1f3d777f94ea3ae0491751ca2029b80ff52b1",
+  "created_utc": "2026-10-31T13:36:56Z",
+  "device": "cpu",
+  "environment": {
+    "cuda_available": false,
+    "cuda_device_count": 0,
+    "cuda_device_name": "cpu",
+    "git_commit": "b48c211533e4b673d5d1105d3b2bd2a0d623b1a5",
+    "git_dirty_tracked": false,
+    "hostname": "main",
+    "numpy": "2.1.3",
+    "pid": 1377209,
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "round_id": "lcrc-lipo-contextual-contrib-v1",
+    "timestamp": "2026-10-31T13:36:56Z",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "git_commit": "b48c211533e4b673d5d1105d3b2bd2a0d623b1a5",
+  "git_dirty_tracked": false,
+  "n_gates": 12,
+  "n_passed": 12,
+  "ok": true,
+  "protocol_id": "lcrc-lipo-contextual-contrib-v1",
+  "status": "PASS",
+  "supplementary": {
+    "context_initial_magnitude_valid420": {
+      "change_component_abs_mean_over_hetero_atoms": 0.00040289261960424483,
+      "change_l2_max_over_hetero_atoms": 0.006474725436419249,
+      "change_l2_mean_over_hetero_atoms": 0.003944524098187685,
+      "change_l2_per_molecule_max": 0.005439206957817078,
+      "change_l2_per_molecule_mean_of_means": 0.00402361574482971,
+      "change_l2_per_molecule_median": 0.0039732325822114944,
+      "change_l2_per_molecule_p95": 0.004782268311828375,
+      "change_l2_sum_over_all_atoms_divided_by_n_atoms": 0.000928290537558496,
+      "definition_change": "change_i = h_new_i - h_original_i is a 64-d vector; the reported magnitude is ||change_i||_2 per atom, averaged over atoms that receive the correction (hetero)",
+      "definition_change_component_abs": "per hetero atom mean_j |change_ij|, then averaged",
+      "definition_f_delta": "|f(h_new) - f(h_original)| per atom, then averaged",
+      "f_delta_abs_max_over_hetero_atoms": 0.00040477514266967773,
+      "f_delta_abs_mean_over_all_atoms": 2.8929829568369314e-05,
+      "f_delta_abs_mean_over_hetero_atoms": 0.00012110854731872678,
+      "f_delta_abs_sum_per_molecule_mean": 0.0007645051926374435,
+      "f_delta_sum_per_molecule_mean": 0.0007531798489037014,
+      "fraction_molecules_with_hetero": 1.0,
+      "graph_change_l2_max_max": 0.006474725436419249,
+      "n_atoms": 11099,
+      "n_atoms_with_nonzero_change": 2612,
+      "n_hetero_atoms": 2612,
+      "n_molecules": 420,
+      "n_molecules_with_hetero": 420
+    },
+    "dropout_execution_base": {
+      "dropout_p": 0.1,
+      "eval_mode_forwards_identical": true,
+      "hook_module_present": true,
+      "passed": true,
+      "train_mode_forwards_differ": true
+    },
+    "dropout_execution_context": {
+      "dropout_p": 0.1,
+      "eval_mode_forwards_identical": true,
+      "hook_module_present": true,
+      "passed": true,
+      "train_mode_forwards_differ": true
+    },
+    "dropout_p": 0.1,
+    "parameter_counts": {
+      "base": 247106,
+      "context": 255458,
+      "counts_match_reference": true,
+      "new": 8352,
+      "references": {
+        "base": 247106,
+        "context": 255458,
+        "new": 8352
+      }
+    },
+    "passed": true,
+    "role_coverage_train3360": {
+      "carbon_halogen_atom_fraction": 0.7621510051271917,
+      "hetero_atom_fraction": 0.23776116289538113,
+      "molecule_counts": {
+        "both": 3359,
+        "carbon_halogen_only": 1,
+        "hetero_only": 0,
+        "neither": 0
+      },
+      "molecule_fractions": {
+        "both": 0.999702380952381,
+        "carbon_halogen_only": 0.00029761904761904765,
+        "hetero_only": 0.0,
+        "neither": 0.0
+      },
+      "molecules_with_carbon_halogen_fraction": 1.0,
+      "molecules_with_hetero_fraction": 0.999702380952381,
+      "n_atoms": 91083,
+      "n_carbon_halogen_atoms": 69419,
+      "n_hetero_atoms": 21656,
+      "n_molecules": 3360,
+      "role_tables": {
+        "carbon_halogen_elements": [
+          "C",
+          "F",
+          "Cl",
+          "Br",
+          "I"
+        ],
+        "carbon_halogen_type_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "carbon_halogen_type_names": [
+          "Br",
+          "C",
+          "C_aromatic",
+          "Cl",
+          "F",
+          "I"
+        ],
+        "hetero_elements": [
+          "N",
+          "O",
+          "S",
+          "P"
+        ],
+        "hetero_type_ids": [
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "hetero_type_names": [
+          "N",
+          "N_aromatic",
+          "O",
+          "O_aromatic",
+          "P",
+          "S",
+          "S_aromatic"
+        ],
+        "unassigned_type_names": [
+          "B",
+          "Si",
+          "UNK"
+        ]
+      }
+    },
+    "role_coverage_valid420": {
+      "carbon_halogen_atom_fraction": 0.7646634831966844,
+      "hetero_atom_fraction": 0.2353365168033156,
+      "molecule_counts": {
+        "both": 420,
+        "carbon_halogen_only": 0,
+        "hetero_only": 0,
+        "neither": 0
+      },
+      "molecule_fractions": {
+        "both": 1.0,
+        "carbon_halogen_only": 0.0,
+        "hetero_only": 0.0,
+        "neither": 0.0
+      },
+      "molecules_with_carbon_halogen_fraction": 1.0,
+      "molecules_with_hetero_fraction": 1.0,
+      "n_atoms": 11099,
+      "n_carbon_halogen_atoms": 8487,
+      "n_hetero_atoms": 2612,
+      "n_molecules": 420,
+      "role_tables": {
+        "carbon_halogen_elements": [
+          "C",
+          "F",
+          "Cl",
+          "Br",
+          "I"
+        ],
+        "carbon_halogen_type_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "carbon_halogen_type_names": [
+          "Br",
+          "C",
+          "C_aromatic",
+          "Cl",
+          "F",
+          "I"
+        ],
+        "hetero_elements": [
+          "N",
+          "O",
+          "S",
+          "P"
+        ],
+        "hetero_type_ids": [
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "hetero_type_names": [
+          "N",
+          "N_aromatic",
+          "O",
+          "O_aromatic",
+          "P",
+          "S",
+          "S_aromatic"
+        ],
+        "unassigned_type_names": [
+          "B",
+          "Si",
+          "UNK"
+        ]
+      }
+    },
+    "validation_prediction_finite": true,
+    "validation_prediction_preview": {
+      "base_first5": [
+        -5.250753879547119,
+        -7.14400577545166,
+        -3.3953442573547363,
+        -7.407351970672607,
+        -6.906667232513428
+      ],
+      "context_first5": [
+        -5.250328540802002,
+        -7.142330169677734,
+        -3.394918918609619,
+        -7.406358242034912,
+        -6.905470848083496
+      ],
+      "max_abs_base_minus_context": 0.002079010009765625
+    }
+  },
+  "test_labels_read": false,
+  "test_metrics_read": false,
+  "test_predictions_read": false
+}

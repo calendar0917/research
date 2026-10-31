@@ -1,0 +1,448 @@
+{
+  "anomalies": {
+    "grad_clip_events": 4,
+    "grad_norm_max": 2126.32861328125,
+    "nonfinite_events": 0
+  },
+  "arm": "context",
+  "checkpoint_path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/smoke_cpu/context_smoke/checkpoint.pt",
+  "checkpoint_sha256": "ce4426a870155b0ca1dfcbf4c8d99f4c375fa08df20647a8556765e63b5a1580",
+  "config_hash": "d89800b854760f655854e33925f1f3d777f94ea3ae0491751ca2029b80ff52b1",
+  "cuda_device_count": 0,
+  "cuda_device_name": "cpu",
+  "curve": [
+    {
+      "epoch": 1,
+      "grad_clip_events": 2,
+      "grad_norm_max": 2126.32861328125,
+      "lr": 0.00015499999999999995,
+      "seconds": 0.0837203930132091,
+      "steps": 2,
+      "train_loss_standardized": 20.714659690856934,
+      "train_mae_standardized": 3.879414439201355,
+      "train_rmse_standardized": 4.551336033612211,
+      "valid_mae_raw": 2.081529990058193,
+      "valid_r2_raw": -2.290216051325019,
+      "valid_rmse_raw": 2.3983882938032237
+    },
+    {
+      "epoch": 2,
+      "grad_clip_events": 2,
+      "grad_norm_max": 611.1397094726562,
+      "lr": 1e-05,
+      "seconds": 0.0833935079863295,
+      "steps": 2,
+      "train_loss_standardized": 2.819475293159485,
+      "train_mae_standardized": 1.3315862715244293,
+      "train_rmse_standardized": 1.6791293259184907,
+      "valid_mae_raw": 1.1502556175436014,
+      "valid_r2_raw": -0.05860584256066925,
+      "valid_rmse_raw": 1.3604244565276824
+    }
+  ],
+  "data": {
+    "feature_spec_hash": "bee7cd5e9abfa81461145bc546875ee254b878da89a2e7fd8d855069a7281a5e",
+    "label_audit": {
+      "n_train": 3360,
+      "n_valid": 420,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+      "scope": "train_and_valid_only",
+      "sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+      "test_labels_included": false,
+      "vector_sha256": {
+        "train": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+        "valid": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+      }
+    },
+    "labels_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+    "labels_file_sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+    "lcrc_cache_content_fingerprint": "23ec00be4fb7e3cf93967cd62911bd932159b1d7e0b43226b23cf7c6a3718e03",
+    "lcrc_cache_labels_present": false,
+    "lcrc_cache_path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/cache/lcrc_all4200.pt",
+    "lcrc_cache_sha256": "450e749045216f32a7a388f0fc039adf6bc5729ef3e9319379ba78f0d9662bd8",
+    "lcrc_cache_source": "existing_round_cache",
+    "n_train": 256,
+    "n_valid": 64,
+    "split_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/split_esa_random42_v1.json",
+    "split_file_sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+    "target_norm": {
+      "label_vector_sha256": "1aefdb2cd7971fbb4788cc30af68b48f4f39dccd1e40de9002dce3ba7e2bb12c",
+      "mean": 2.3398828125,
+      "n": 256,
+      "scale": 1.152155412972612,
+      "scale_definition": "population_std_float64 (sklearn StandardScaler convention)",
+      "source": "train3360_labels_only",
+      "valid_or_test_used": false
+    },
+    "test_labels_read": false,
+    "test_metrics_read": false,
+    "test_predictions_read": false,
+    "test_row_values_used": false,
+    "train_norm_fingerprint": "8fad3b81d70994d01e348c33d98777cc16bbb66071de7ddaaf6c83b8cdbf9d70",
+    "train_norm_is_frozen_v1": false,
+    "train_rows_sha256": "23b808975fbbf9b36447a7b0706a9a372eec4506e108f5b650c30e4867198b2e",
+    "valid_rows_sha256": "62ef98cd7955ee9699ccb6f4fc017a12bb14a39f93e5dd117b1988128f759cfc"
+  },
+  "device": "cpu",
+  "device_note": "rr sets CUDA_VISIBLE_DEVICES per pool; the pool GPU is cuda:0 in-process",
+  "diagnostics": {
+    "context_usage": {
+      "gradient_probe": {
+        "aggregate": {
+          "context.W_atom.bias": {
+            "all_nonzero": true,
+            "max": 0.0002131217042915523,
+            "mean": 9.934733770933235e-05,
+            "min": 3.107665179413743e-05,
+            "n_steps": 4
+          },
+          "context.W_atom.weight": {
+            "all_nonzero": true,
+            "max": 0.001391038647852838,
+            "mean": 0.000601543844823027,
+            "min": 0.0001728539209580049,
+            "n_steps": 4
+          },
+          "context.W_ch.bias": {
+            "all_nonzero": true,
+            "max": 0.00010697586549213156,
+            "mean": 5.206632567933411e-05,
+            "min": 1.687036819930654e-05,
+            "n_steps": 4
+          },
+          "context.W_ch.weight": {
+            "all_nonzero": true,
+            "max": 0.0007870187982916832,
+            "mean": 0.00035119887979817577,
+            "min": 0.00010170471796300262,
+            "n_steps": 4
+          },
+          "context.W_het.bias": {
+            "all_nonzero": true,
+            "max": 0.0001449710107408464,
+            "mean": 7.236050896608504e-05,
+            "min": 2.4530494556529447e-05,
+            "n_steps": 4
+          },
+          "context.W_het.weight": {
+            "all_nonzero": true,
+            "max": 0.0010602236725389957,
+            "mean": 0.000463200227386551,
+            "min": 0.00013381509052123874,
+            "n_steps": 4
+          },
+          "context.W_out.bias": {
+            "all_nonzero": true,
+            "max": 0.071051225066185,
+            "mean": 0.048188723623752594,
+            "min": 0.037850603461265564,
+            "n_steps": 4
+          },
+          "context.W_out.weight": {
+            "all_nonzero": true,
+            "max": 0.04379969462752342,
+            "mean": 0.020818996243178844,
+            "min": 0.011385486461222172,
+            "n_steps": 4
+          }
+        },
+        "all_new_tensors_received_nonzero_gradient": true,
+        "first_five_steps": [
+          {
+            "global_step": 1,
+            "grad_norm": {
+              "context.W_atom.bias": 3.107665179413743e-05,
+              "context.W_atom.weight": 0.0001728539209580049,
+              "context.W_ch.bias": 1.687036819930654e-05,
+              "context.W_ch.weight": 0.00010170471796300262,
+              "context.W_het.bias": 2.4530494556529447e-05,
+              "context.W_het.weight": 0.00013381509052123874,
+              "context.W_out.bias": 0.037850603461265564,
+              "context.W_out.weight": 0.011385486461222172
+            }
+          },
+          {
+            "global_step": 2,
+            "grad_norm": {
+              "context.W_atom.bias": 8.093867654679343e-05,
+              "context.W_atom.weight": 0.0004456957976799458,
+              "context.W_ch.bias": 4.313663885113783e-05,
+              "context.W_ch.weight": 0.00026415110914967954,
+              "context.W_het.bias": 5.881943798158318e-05,
+              "context.W_het.weight": 0.000322822539601475,
+              "context.W_out.bias": 0.041755013167858124,
+              "context.W_out.weight": 0.01435043290257454
+            }
+          },
+          {
+            "global_step": 3,
+            "grad_norm": {
+              "context.W_atom.bias": 7.225231820484623e-05,
+              "context.W_atom.weight": 0.00039658701280131936,
+              "context.W_ch.bias": 4.128243017476052e-05,
+              "context.W_ch.weight": 0.0002519208937883377,
+              "context.W_het.bias": 6.112109258538112e-05,
+              "context.W_het.weight": 0.0003359396068844944,
+              "context.W_out.bias": 0.04209805279970169,
+              "context.W_out.weight": 0.013740370981395245
+            }
+          },
+          {
+            "global_step": 4,
+            "grad_norm": {
+              "context.W_atom.bias": 0.0002131217042915523,
+              "context.W_atom.weight": 0.001391038647852838,
+              "context.W_ch.bias": 0.00010697586549213156,
+              "context.W_ch.weight": 0.0007870187982916832,
+              "context.W_het.bias": 0.0001449710107408464,
+              "context.W_het.weight": 0.0010602236725389957,
+              "context.W_out.bias": 0.071051225066185,
+              "context.W_out.weight": 0.04379969462752342
+            }
+          }
+        ]
+      },
+      "train": {
+        "change_component_abs_mean_over_hetero_atoms": 0.000590832089073956,
+        "change_l2_max_over_hetero_atoms": 0.010349221527576447,
+        "change_l2_mean_over_hetero_atoms": 0.00566756771877408,
+        "change_l2_per_molecule_max": 0.007610771805047989,
+        "change_l2_per_molecule_mean_of_means": 0.005720184250351261,
+        "change_l2_per_molecule_median": 0.0056970128789544106,
+        "change_l2_per_molecule_p95": 0.006480506155639886,
+        "change_l2_sum_over_all_atoms_divided_by_n_atoms": 0.0013567617861554027,
+        "definition_change": "change_i = h_new_i - h_original_i is a 64-d vector; the reported magnitude is ||change_i||_2 per atom, averaged over atoms that receive the correction (hetero)",
+        "definition_change_component_abs": "per hetero atom mean_j |change_ij|, then averaged",
+        "definition_f_delta": "|f(h_new) - f(h_original)| per atom, then averaged",
+        "f_delta_abs_max_over_hetero_atoms": 0.0015549510717391968,
+        "f_delta_abs_mean_over_all_atoms": 0.0001637101813685149,
+        "f_delta_abs_mean_over_hetero_atoms": 0.0006838624249212444,
+        "f_delta_abs_sum_per_molecule_mean": 0.004490518549573608,
+        "f_delta_sum_per_molecule_mean": 0.004490518549573608,
+        "fraction_molecules_with_hetero": 0.99609375,
+        "graph_change_l2_max_max": 0.010349221527576447,
+        "n_atoms": 7022,
+        "n_atoms_with_nonzero_change": 1681,
+        "n_hetero_atoms": 1681,
+        "n_molecules": 256,
+        "n_molecules_with_hetero": 255
+      },
+      "trained_new_parameter_delta_from_init": {
+        "context.W_atom.bias": 0.0006567537784576416,
+        "context.W_atom.weight": 0.0006593465805053711,
+        "context.W_ch.bias": 0.000648777699097991,
+        "context.W_ch.weight": 0.000654958188533783,
+        "context.W_het.bias": 0.0006535984575748444,
+        "context.W_het.weight": 0.0006576478481292725,
+        "context.W_out.bias": 0.0006526537472382188,
+        "context.W_out.weight": 0.000658071250654757
+      },
+      "valid420": {
+        "change_component_abs_mean_over_hetero_atoms": 0.000597201578784734,
+        "change_l2_max_over_hetero_atoms": 0.009915144182741642,
+        "change_l2_mean_over_hetero_atoms": 0.005722431465983391,
+        "change_l2_per_molecule_max": 0.0071729980409145355,
+        "change_l2_per_molecule_mean_of_means": 0.005769206280092476,
+        "change_l2_per_molecule_median": 0.005689272889867425,
+        "change_l2_per_molecule_p95": 0.006803409848362207,
+        "change_l2_sum_over_all_atoms_divided_by_n_atoms": 0.0013337723212316632,
+        "definition_change": "change_i = h_new_i - h_original_i is a 64-d vector; the reported magnitude is ||change_i||_2 per atom, averaged over atoms that receive the correction (hetero)",
+        "definition_change_component_abs": "per hetero atom mean_j |change_ij|, then averaged",
+        "definition_f_delta": "|f(h_new) - f(h_original)| per atom, then averaged",
+        "f_delta_abs_max_over_hetero_atoms": 0.0015008598566055298,
+        "f_delta_abs_mean_over_all_atoms": 0.00015998657909221947,
+        "f_delta_abs_mean_over_hetero_atoms": 0.0006864081369712949,
+        "f_delta_abs_sum_per_molecule_mean": 0.0039146714261732996,
+        "f_delta_sum_per_molecule_mean": 0.0039146714261732996,
+        "fraction_molecules_with_hetero": 1.0,
+        "graph_change_l2_max_max": 0.009915144182741642,
+        "n_atoms": 1566,
+        "n_atoms_with_nonzero_change": 365,
+        "n_hetero_atoms": 365,
+        "n_molecules": 64,
+        "n_molecules_with_hetero": 64
+      },
+      "w_out_zero_ablation_valid": {
+        "mae": 1.4317718003757463,
+        "max_abs_prediction_change_vs_full_context": 0.00881538282284966,
+        "mean_abs_prediction_change_vs_full_context": 0.004510305648625673,
+        "note": "full CONTEXT vs the same trained CONTEXT with W_out zeroed in eval (its own base path)",
+        "r2": -0.6261048383618637,
+        "rmse": 1.6860931283140654,
+        "rmse_change_vs_full_context": -0.0026810589062207235
+      }
+    },
+    "dropout": {
+      "dropout_p": 0.1,
+      "eval_mode_forwards_identical": true,
+      "hook_module_present": true,
+      "passed": true,
+      "train_mode_forwards_differ": true
+    },
+    "rho_after_soup": {
+      "discriminating": true,
+      "max_abs_diff_vs_h_new_reconstruction": 0.0009527206420898438,
+      "max_abs_diff_vs_h_original_reconstruction": 0.0,
+      "max_abs_h_new_minus_h_original": 0.0019451379776000977,
+      "max_abs_mean_h_difference_if_h_new_used": 0.0003660917282104492,
+      "n_graphs": 8,
+      "passed": true,
+      "rho_input_matches_h_original": true
+    }
+  },
+  "git_commit": "b48c211533e4b673d5d1105d3b2bd2a0d623b1a5",
+  "git_dirty_tracked": false,
+  "gpu": {
+    "device_name": "cpu",
+    "peak_memory_allocated_bytes": 0
+  },
+  "hostname": "main",
+  "label_scope": "train3360_and_valid420_only",
+  "metrics": {
+    "train": {
+      "checkpoint": "soup_last_5",
+      "mae": 1.0860713038135026,
+      "r2": -0.507855934681342,
+      "rmse": 1.4147867680249404,
+      "units": "raw_logD"
+    },
+    "train_loss_standardized_last_epoch": 2.819475293159485,
+    "train_mae_standardized_last_epoch": 1.3315862715244293,
+    "valid": {
+      "checkpoint": "soup_last_5",
+      "mae": 1.4344579181348598,
+      "r2": -0.6312802927360033,
+      "rmse": 1.6887741872202862,
+      "units": "raw_logD"
+    }
+  },
+  "model": "LCRC-A-R3-contextual-contribution",
+  "model_audit": {
+    "context_definition": "hetero-only h_new = h + W_out(tanh(W_atom h) * tanh(W_het m_het) * tanh(W_ch m_ch)); y = sum f(h_new) + rho(original h statistics)",
+    "dropout_hook_calls": 22,
+    "init_state_hash": "0652fc9628d5cdd09f22dff894a9630331ce9bf27ed8d69c473f5ea4a2f870ca",
+    "parameter_breakdown": {
+      "atom_encoder": 19040,
+      "bond_encoder": 63776,
+      "context": 8352,
+      "f": 4225,
+      "local": 148992,
+      "rho": 11073,
+      "total": 255458
+    },
+    "parameters": 255458,
+    "parameters_base": 247106,
+    "parameters_new": 8352,
+    "shared_init": {
+      "all_shared_bitwise_identical": true,
+      "base_only_keys": [],
+      "mismatched": [],
+      "model_only_keys": [
+        "context.W_atom.bias",
+        "context.W_atom.weight",
+        "context.W_ch.bias",
+        "context.W_ch.weight",
+        "context.W_het.bias",
+        "context.W_het.weight",
+        "context.W_out.bias",
+        "context.W_out.weight"
+      ],
+      "n_shared_entries": 35,
+      "shared_keys": [
+        "global_mean",
+        "global_scale",
+        "scalar_mean",
+        "scalar_scale",
+        "atom_encoder.lins.0.weight",
+        "atom_encoder.lins.0.bias",
+        "atom_encoder.lins.1.weight",
+        "atom_encoder.lins.1.bias",
+        "bond_encoder.lins.0.weight",
+        "bond_encoder.lins.0.bias",
+        "bond_encoder.lins.1.weight",
+        "bond_encoder.lins.1.bias",
+        "local.nbr_emb.weight",
+        "local.path_emb.weight",
+        "local.end_emb.weight",
+        "local.path_u.weight",
+        "local.path_v.weight",
+        "local.joint_proj.weight",
+        "local.joint_proj.bias",
+        "local.close_emb.weight",
+        "local.path_gate.weight",
+        "local.mlp.lins.0.weight",
+        "local.mlp.lins.0.bias",
+        "local.mlp.lins.1.weight",
+        "local.mlp.lins.1.bias",
+        "local.norm.weight",
+        "local.norm.bias",
+        "f.lins.0.weight",
+        "f.lins.0.bias",
+        "f.lins.1.weight",
+        "f.lins.1.bias",
+        "rho.lins.0.weight",
+        "rho.lins.0.bias",
+        "rho.lins.1.weight",
+        "rho.lins.1.bias"
+      ]
+    },
+    "soup_state_hash": "fbe8d98fa44fe212a5c30d7547ee2a41faec7c9772b0819c4f4d396f276bea0d"
+  },
+  "pool": "local",
+  "precision": "fp32",
+  "predictions": {
+    "curve_path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/smoke_cpu/context_smoke/curve.csv",
+    "curve_sha256": "852dc88fa93bd46ed7fc58e7ee6506f8c20878d9575ff96d4cfb999a9fa1b06f",
+    "train_path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/smoke_cpu/context_smoke/train_predictions.npz",
+    "train_sha256": "da343256f2f5f049d98b75347bdbf6217cf4cff0616bd5ede5067bf93769d9ad",
+    "valid_path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/smoke_cpu/context_smoke/valid_predictions.npz",
+    "valid_sha256": "fb474f2ecc709d2ad640d33fdecac0520ce9613f4c31df328b2fd5e3e00ba65e"
+  },
+  "protocol_id": "lcrc-lipo-contextual-contrib-v1",
+  "python": "3.12.15",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_order_sha256": "ae228c1df68fea1dbf829d54c3bacc558da2286802293ebdddae02bdd6271c6b",
+    "batch_size": 128,
+    "checkpoint_rule": "average_last_5_epoch_end_state_dicts",
+    "dropout": 0.1,
+    "dropout_position": "final atom-level local h (v2 DropoutAtLocal on model.local)",
+    "dropout_rng_reseeded_after_init": true,
+    "early_stopping": false,
+    "epochs_planned": 2,
+    "epochs_run": 2,
+    "gradient_clip": 5.0,
+    "loss": "mse_on_train3360_standardised_target",
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "optimizer_steps": 4,
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "soup_last": 2,
+    "soup_members": [
+      1,
+      2
+    ],
+    "steps_per_epoch": 2,
+    "validation_used_for_checkpoint_selection": false,
+    "weight_decay": 0.001
+  },
+  "seed": 0,
+  "smoke": true,
+  "test_labels_read": false,
+  "test_metrics_read": false,
+  "test_predictions_read": false,
+  "timing": {
+    "inference_batch_size": 256,
+    "inference_device": "cpu",
+    "inference_seconds_per_valid420": 0.007585391994022454,
+    "process_wall_seconds": 1.2389212400012184,
+    "train_wall_seconds": 0.16730121400905773
+  },
+  "torch": "2.5.1+cu124",
+  "torch_cuda": "12.4"
+}
