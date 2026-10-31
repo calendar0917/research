@@ -468,8 +468,11 @@ def train_pna_small(
             batch = Batch.from_data_list([train_data[i] for i in rows]).to(device)
             y = y_train_std[rows].to(device)
             optimizer.zero_grad(set_to_none=True)
-            pred = _pna_forward(model, batch, precision, device)
-            loss = F.mse_loss(pred.reshape(-1), y.reshape(-1))
+            # Keep the loss inside autocast, matching the historical v1 loop:
+            # bf16 predictions and float32 targets are not mixed outside it.
+            with NT._autocast(device, precision):
+                _, _, pred = model(batch.x, batch.edge_index, batch.batch, batch.edge_attr)
+                loss = F.mse_loss(pred.reshape(-1), y.reshape(-1))
             loss.backward()
             gnorm = float(torch.nn.utils.clip_grad_norm_(model.parameters(), float(cfg["gradient_clip"])))
             if not math.isfinite(float(loss)) or not math.isfinite(gnorm):

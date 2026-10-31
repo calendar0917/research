@@ -32,7 +32,12 @@ import r42_data as D  # noqa: E402
 
 
 def build_s2off(spec, norm: Mapping[str, Any], seed: int, device: torch.device | str = "cpu"):
-    model, base, shared_state = V2M.build_e(spec, norm, int(seed), device)
+    # Build and audit on CPU: v2's ``build_e`` returns the comparison LCRC-A on
+    # CPU while moving only the capacity-matched model to ``device``.  Auditing
+    # before the move preserves the historical shared-init check bit-for-bit
+    # and avoids a CPU/GPU comparison.  The model is then moved to the requested
+    # device; no parameter value changes.
+    model, base, shared_state = V2M.build_e(spec, norm, int(seed), "cpu")
     audit = V2M.e_capacity_audit(model, spec)
     shared = V2M.shared_init_audit(base, model)
     if audit["nominal_parameters"] != C.S2OFF_NOMINAL_REFERENCE:
@@ -47,6 +52,7 @@ def build_s2off(spec, norm: Mapping[str, Any], seed: int, device: torch.device |
         raise PermissionError("S2-off implementation reports typed-S2 use")
     if shared["all_shared_bitwise_identical"] is not True:
         raise PermissionError(f"S2-off shared init differs from LCRC-A: {shared['mismatched']}")
+    model.to(device)
     return model, base, {
         "capacity": audit,
         "shared_init": shared,
