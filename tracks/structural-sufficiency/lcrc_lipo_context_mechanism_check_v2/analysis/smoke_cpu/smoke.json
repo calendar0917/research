@@ -1,0 +1,204 @@
+{
+  "created_utc": "2026-10-31T14:58:04Z",
+  "device": "cpu",
+  "device_audit_passed": true,
+  "environment": {
+    "cuda_available": false,
+    "cuda_device_count": 0,
+    "cuda_device_name": "cpu",
+    "git_commit": "5f5404b93a5e2e98fc10f831c94b362ec7c0b6ab",
+    "git_dirty_tracked": false,
+    "hostname": "main",
+    "numpy": "2.1.3",
+    "pid": 1437800,
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "round_id": "lcrc-lipo-context-mechanism-check-v2",
+    "timestamp": "2026-10-31T14:58:04Z",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "epochs": 1,
+  "limit_train": 64,
+  "limit_valid": 32,
+  "protocol_id": "lcrc-lipo-context-mechanism-check-v2",
+  "results": {
+    "base_s1": {
+      "cuda_device_name": "cpu",
+      "device": "cpu",
+      "dropout_hook_calls": 7,
+      "metrics": {
+        "train": {
+          "checkpoint": "soup_last_5",
+          "mae": 8.36305857758375,
+          "r2": -60.88774760223947,
+          "rmse": 8.808341170873103,
+          "units": "raw_logD"
+        },
+        "train_loss_standardized_last_epoch": 259.3909606933594,
+        "train_mae_standardized_last_epoch": 15.374520301818848,
+        "valid": {
+          "checkpoint": "soup_last_5",
+          "mae": 8.252294430029375,
+          "r2": -40.19171257807265,
+          "rmse": 8.692562654222508,
+          "units": "raw_logD"
+        }
+      },
+      "parameters": 247106,
+      "parameters_new": 0,
+      "run_dir": "tracks/structural-sufficiency/lcrc_lipo_context_mechanism_check_v2/analysis/smoke_cpu/base_s1_smoke",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_device": "cpu",
+        "inference_seconds_per_valid420": 0.005373528663767502,
+        "process_wall_seconds": 0.3258476619957946,
+        "train_wall_seconds": 0.024404317984590307
+      }
+    },
+    "context_s1": {
+      "cuda_device_name": "cpu",
+      "device": "cpu",
+      "dropout_hook_calls": 15,
+      "metrics": {
+        "train": {
+          "checkpoint": "soup_last_5",
+          "mae": 8.357099279858405,
+          "r2": -60.80132951274371,
+          "rmse": 8.80218917827602,
+          "units": "raw_logD"
+        },
+        "train_loss_standardized_last_epoch": 259.3882751464844,
+        "train_mae_standardized_last_epoch": 15.37444019317627,
+        "valid": {
+          "checkpoint": "soup_last_5",
+          "mae": 8.246797254036677,
+          "r2": -40.137874791782856,
+          "rmse": 8.686880184169583,
+          "units": "raw_logD"
+        }
+      },
+      "parameters": 255458,
+      "parameters_new": 8352,
+      "run_dir": "tracks/structural-sufficiency/lcrc_lipo_context_mechanism_check_v2/analysis/smoke_cpu/context_s1_smoke",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_device": "cpu",
+        "inference_seconds_per_valid420": 0.0036005139991175383,
+        "process_wall_seconds": 0.42859579899231903,
+        "train_wall_seconds": 0.021765498007880524
+      }
+    },
+    "roleblind_device_audits": {
+      "aggregation": {
+        "all_atom_mean_vs_hetero_only_mean_max_abs_diff": 1.7768718004226685,
+        "c_graph_equals_tanh_W_ch_m_all_max_abs_diff": 1.7881393432617188e-07,
+        "count_all_matches_manual": true,
+        "hetero_atom_delta_max_abs": 0.0022941529750823975,
+        "m_ch_equals_all_atom_mean_max_abs_diff": 3.5762786865234375e-07,
+        "m_het_equals_all_atom_mean_max_abs_diff": 3.5762786865234375e-07,
+        "m_het_equals_m_all_bitwise": true,
+        "m_het_equals_m_ch_bitwise": true,
+        "n_graphs": 16,
+        "n_graphs_where_all_atom_mean_differs_from_hetero_mean": 16,
+        "non_hetero_atom_delta_max_abs": 0.0,
+        "p_graph_equals_tanh_W_het_m_all_max_abs_diff": 2.086162567138672e-07,
+        "passed": true,
+        "per_graph_all_atom_mean_vs_hetero_only_mean_max_abs_diff": [
+          1.0165050029754639,
+          1.0478843450546265,
+          0.6986092925071716,
+          0.6876099705696106,
+          1.242964744567871,
+          0.3469446301460266,
+          0.7204216718673706,
+          0.6550202369689941,
+          1.067109227180481,
+          0.719707727432251,
+          1.2326695919036865,
+          0.8041296601295471,
+          1.1587203741073608,
+          1.7768718004226685,
+          1.0617313385009766,
+          0.5795026421546936
+        ],
+        "rows": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "tolerance": 1e-06
+      },
+      "batch_invariance": {
+        "batch_sizes": {
+          "even": 8,
+          "full": 16,
+          "mixed": 16,
+          "odd": 8,
+          "reversed": 16,
+          "single": 1
+        },
+        "max_abs_prediction_differences": {
+          "full_batch_vs_reversed": 1.1920928955078125e-07,
+          "single_vs_even_subset": 1.1920928955078125e-07,
+          "single_vs_full_batch": 1.1920928955078125e-07,
+          "single_vs_mixed_batch_with_unrelated_graphs": 1.1920928955078125e-07,
+          "single_vs_odd_subset": 1.1920928955078125e-07,
+          "single_vs_reversed_batch": 1.1920928955078125e-07
+        },
+        "n_rows_single": 16,
+        "passed": true,
+        "tolerance": 1e-05
+      }
+    },
+    "roleblind_s0": {
+      "cuda_device_name": "cpu",
+      "device": "cpu",
+      "dropout_hook_calls": 17,
+      "metrics": {
+        "train": {
+          "checkpoint": "soup_last_5",
+          "mae": 2.2412452061182058,
+          "r2": -4.467820343587888,
+          "rmse": 2.618176421979141,
+          "units": "raw_logD"
+        },
+        "train_loss_standardized_last_epoch": 31.157005310058594,
+        "train_mae_standardized_last_epoch": 5.197107791900635,
+        "valid": {
+          "checkpoint": "soup_last_5",
+          "mae": 2.436505711699138,
+          "r2": -3.2434228573146138,
+          "rmse": 2.7899798143015575,
+          "units": "raw_logD"
+        }
+      },
+      "parameters": 255458,
+      "parameters_new": 8352,
+      "run_dir": "tracks/structural-sufficiency/lcrc_lipo_context_mechanism_check_v2/analysis/smoke_cpu/roleblind_s0_smoke",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_device": "cpu",
+        "inference_seconds_per_valid420": 0.003962785005569458,
+        "process_wall_seconds": 0.5353412140102591,
+        "train_wall_seconds": 0.02199204300995916
+      }
+    }
+  },
+  "soup_last": 1,
+  "status": "COMPLETED",
+  "test_labels_read": false
+}

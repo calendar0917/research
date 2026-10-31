@@ -1,0 +1,127 @@
+# LCRC lipophilicity context mechanism check v2.
+#
+# Every value is fixed by the task statement and re-validated by
+# code/m2_common.py:validate_config().  Changing any value invalidates the
+# protocol freeze and the CPU gates; formal training refuses to run.
+protocol_id: lcrc-lipo-context-mechanism-check-v2
+round_id: lcrc-lipo-context-mechanism-check-v2
+
+# Split seed stays at the frozen random42 value.  Training seeds are per arm.
+split_seed: 42
+
+data:
+  source_round: lcrc_lipo_esa_random42_v1
+  source_dir: tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1
+  split_file: data/split_esa_random42_v1.json
+  split_file_sha256: 1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4
+  labels_file: data/labels_train_valid_v1.json
+  labels_file_sha256: 1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca
+  test_rows_sha256: 4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b
+  test_label_vector_sha256: a0724b4c1ca6f7bb6b69b720ac2d020825685d9666544c7312e0f24d7e3a4021
+  raw_csv: data/lipophilicity/Lipophilicity.csv
+  raw_csv_sha256: aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd
+  n_molecules: 4200
+  split_sizes:
+    train: 3360
+    valid: 420
+    test: 420
+  label_scope: train3360_plus_valid420_plus_exposed_test420
+  test_access: EXPOSED_TEST_EXPLORATORY
+  target_scaler: frozen_train3360_standard_scaler_population_std
+  feature_normalisation: frozen_train3360_structures_only
+
+arms:
+  base_s1:
+    family: base
+    seed: 1
+    pool: res-gpu0
+  context_s1:
+    family: context
+    seed: 1
+    pool: res-gpu1
+  roleblind_s0:
+    family: roleblind
+    seed: 0
+    pool: res-gpu1
+
+training:
+  optimizer: AdamW
+  adam_betas: [0.9, 0.999]
+  adam_eps: 1.0e-8
+  peak_lr: 3.0e-4
+  min_lr: 1.0e-5
+  scheduler: per_step_cosine
+  weight_decay: 1.0e-3
+  batch_size: 128
+  epochs: 360
+  gradient_clip: 5.0
+  dropout: 0.10
+  dropout_position: final_atom_level_local_h_before_readout
+  loss: mse_on_train3360_standardised_target
+  checkpoint: average_last_5_epoch_end_state_dicts
+  soup_last: 5
+  early_stopping: false
+  ssl: false
+  pretraining: false
+  external_descriptors: false
+  shuffle_offset: 917000
+  precision: fp32
+
+model:
+  base: lcrc_model.LCRC_lipo_v1_width64
+  base_class: tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/lcrc_model.py:LCRC
+  context_class: tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/code/x1_models.py:LCRCContextual
+  roleblind_class: tracks/structural-sufficiency/lcrc_lipo_context_mechanism_check_v2/code/m2_models.py:LCRCContextualRoleBlind
+  width: 64
+  context_dim: 32
+  hetero_elements: [N, O, S, P]
+  carbon_halogen_elements: [C, F, Cl, Br, I]
+  roles_are_fixed_element_classes: true
+  update_scope: hetero_atoms_only
+  interaction: "a_i * p_g * c_g"
+  w_out_init:
+    weight: normal
+    std: 1.0e-3
+    bias: 0.0
+  other_new_layer_init: pytorch_linear_default
+  roleblind_definition: "m_het = m_ch = mean over all atoms"
+  roleblind_parameters_equal_context: true
+  roleblind_initialisation_equals_context: true
+  additional_prototypes: false
+  additional_attention: false
+  additional_message_passing: false
+  additional_descriptors: false
+  auxiliary_losses: none
+  separate_molecule_residual: false
+  context_mixing_across_molecules: false
+
+evaluation:
+  primary_units: raw_logD
+  splits: [valid420, test420]
+  test_scope: EXPOSED_TEST_EXPLORATORY
+  bootstrap:
+    n_resamples: 10000
+    seed: 20261101
+    ci_level: 0.95
+    method: percentile_paired_molecule_resampling
+    unit: molecule
+  tail_rows: [1630, 2924, 822, 1153, 3634]
+  non_tail_count: 415
+  historical_pna_native_test_rmse: 0.5288742856070585
+  historical_pna_native_test_mae: 0.37377129447390695
+  historical_lcrc_a_r3_test_rmse: 0.5839847887469122
+
+decision:
+  performance_rule: "PERFORMANCE_SIGNAL=PRESENT iff all four BASE->CONTEXT RMSE gains (BASE - CONTEXT) are > 0 across seed 0/1 and Validation/Test; otherwise ABSENT"
+  role_specificity_rule: "ROLE_SPECIFICITY_SIGNAL=PRESENT iff CONTEXT_s0 beats ROLEBLIND_s0 on both Validation and Test by RMSE and both paired-bootstrap 95% intervals of that gain exclude 0; otherwise ABSENT"
+  independent_dimensions: [PERFORMANCE_SIGNAL, ROLE_SPECIFICITY_SIGNAL]
+  checkpoint_selection_by_validation: none
+
+budget:
+  gpu_hard_cap_hours: 0.45
+  pools:
+    base_s1: res-gpu0
+    context_s1: res-gpu1
+    roleblind_s0: res-gpu1
+  host: res
+  in_process_device: cuda:0

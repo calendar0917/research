@@ -1,0 +1,409 @@
+{
+  "anomalies": {
+    "grad_clip_events": 1,
+    "grad_norm_max": 5804.46875,
+    "nonfinite_events": 0
+  },
+  "arm": "context_s1",
+  "checkpoint_path": "tracks/structural-sufficiency/lcrc_lipo_context_mechanism_check_v2/analysis/smoke_cpu/context_s1_smoke/checkpoint.pt",
+  "checkpoint_sha256": "e5d1e89a1ce482cb0ca211d3045f2069bd05feae126c78ca2e0d94abad26e8c9",
+  "config_hash": "68b1213076512fdcd87ec84dc61c0e2a5d4b6e6f9e23075fb324d10fd26bef76",
+  "cuda_device_count": 0,
+  "cuda_device_name": "cpu",
+  "curve": [
+    {
+      "epoch": 1,
+      "grad_clip_events": 1,
+      "grad_norm_max": 5804.46875,
+      "lr": 1e-05,
+      "seconds": 0.021687817992642522,
+      "steps": 1,
+      "train_loss_standardized": 259.3882751464844,
+      "train_mae_standardized": 15.37444019317627,
+      "train_rmse_standardized": 16.105535543609978,
+      "valid_mae_raw": 8.246797254036677,
+      "valid_r2_raw": -40.137874791782856,
+      "valid_rmse_raw": 8.686880184169583
+    }
+  ],
+  "data": {
+    "feature_spec_hash": "bee7cd5e9abfa81461145bc546875ee254b878da89a2e7fd8d855069a7281a5e",
+    "label_audit": {
+      "n_train": 3360,
+      "n_valid": 420,
+      "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+      "sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+      "test_labels_included": false,
+      "train_vector_sha256": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+      "valid_vector_sha256": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+    },
+    "label_scope": "train3360_and_valid420_only",
+    "labels_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+    "labels_file_sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+    "lcrc_cache_content_fingerprint": "23ec00be4fb7e3cf93967cd62911bd932159b1d7e0b43226b23cf7c6a3718e03",
+    "lcrc_cache_labels_present": false,
+    "lcrc_cache_path": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/cache/lcrc_all4200.pt",
+    "lcrc_cache_sha256": "450e749045216f32a7a388f0fc039adf6bc5729ef3e9319379ba78f0d9662bd8",
+    "n_train": 64,
+    "n_valid": 32,
+    "split_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/split_esa_random42_v1.json",
+    "split_file_sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+    "target_norm": {
+      "label_vector_sha256": "cfe31496a6ef59abeb36b29d7546177aae683c1ba36ce4f61b8a4435e71f4524",
+      "mean": 2.4440625000000002,
+      "n": 64,
+      "scale": 1.1196745045296645,
+      "scale_definition": "population_std_float64 (sklearn StandardScaler convention)",
+      "source": "train3360_labels_only",
+      "valid_or_test_used": false
+    },
+    "test_labels_read": false,
+    "test_metrics_read": false,
+    "test_predictions_read": false,
+    "test_row_values_used": false,
+    "train_norm_fingerprint": "c36a7d7b4548d75cf3f2b4fb4406360fe484a40acbffa14f7b350dcdb5264dde",
+    "train_norm_is_frozen_v1": false,
+    "train_rows_sha256": "ca426b33eef2d9f273c48e9c47974489ecd67d3ba7105fde365eff0113322d91",
+    "valid_rows_sha256": "f6503979e0131741b172c481b4ca7e6ee7aac8858b59de3e9835963e91466383"
+  },
+  "device": "cpu",
+  "device_note": "rr sets CUDA_VISIBLE_DEVICES per pool; the pool GPU is cuda:0 in-process",
+  "diagnostics": {
+    "context_usage": {
+      "gradient_probe": {
+        "aggregate": {
+          "context.W_atom.bias": {
+            "all_nonzero": true,
+            "max": 1.9247308955527842e-05,
+            "mean": 1.9247308955527842e-05,
+            "min": 1.9247308955527842e-05,
+            "n_steps": 1
+          },
+          "context.W_atom.weight": {
+            "all_nonzero": true,
+            "max": 0.000101087884104345,
+            "mean": 0.000101087884104345,
+            "min": 0.000101087884104345,
+            "n_steps": 1
+          },
+          "context.W_ch.bias": {
+            "all_nonzero": true,
+            "max": 1.615679866517894e-05,
+            "mean": 1.615679866517894e-05,
+            "min": 1.615679866517894e-05,
+            "n_steps": 1
+          },
+          "context.W_ch.weight": {
+            "all_nonzero": true,
+            "max": 8.976036770036444e-05,
+            "mean": 8.976036770036444e-05,
+            "min": 8.976036770036444e-05,
+            "n_steps": 1
+          },
+          "context.W_het.bias": {
+            "all_nonzero": true,
+            "max": 1.1884298146469519e-05,
+            "mean": 1.1884298146469519e-05,
+            "min": 1.1884298146469519e-05,
+            "n_steps": 1
+          },
+          "context.W_het.weight": {
+            "all_nonzero": true,
+            "max": 5.924495053477585e-05,
+            "mean": 5.924495053477585e-05,
+            "min": 5.924495053477585e-05,
+            "n_steps": 1
+          },
+          "context.W_out.bias": {
+            "all_nonzero": true,
+            "max": 0.038112055510282516,
+            "mean": 0.038112055510282516,
+            "min": 0.038112055510282516,
+            "n_steps": 1
+          },
+          "context.W_out.weight": {
+            "all_nonzero": true,
+            "max": 0.01183510571718216,
+            "mean": 0.01183510571718216,
+            "min": 0.01183510571718216,
+            "n_steps": 1
+          }
+        },
+        "all_new_tensors_received_nonzero_gradient": true,
+        "first_five_steps": [
+          {
+            "global_step": 1,
+            "grad_norm": {
+              "context.W_atom.bias": 1.9247308955527842e-05,
+              "context.W_atom.weight": 0.000101087884104345,
+              "context.W_ch.bias": 1.615679866517894e-05,
+              "context.W_ch.weight": 8.976036770036444e-05,
+              "context.W_het.bias": 1.1884298146469519e-05,
+              "context.W_het.weight": 5.924495053477585e-05,
+              "context.W_out.bias": 0.038112055510282516,
+              "context.W_out.weight": 0.01183510571718216
+            }
+          }
+        ]
+      },
+      "train": {
+        "change_component_abs_mean_over_hetero_atoms": 0.0006342006963677704,
+        "change_l2_max_over_hetero_atoms": 0.008165104314684868,
+        "change_l2_mean_over_hetero_atoms": 0.0060448055155575275,
+        "change_l2_per_molecule_max": 0.007305986247956753,
+        "change_l2_per_molecule_mean_of_means": 0.006058555754226824,
+        "change_l2_per_molecule_median": 0.006084554363042116,
+        "change_l2_per_molecule_p95": 0.007136654946953058,
+        "change_l2_sum_over_all_atoms_divided_by_n_atoms": 0.001435460988432169,
+        "definition_change": "change_i = h_new_i - h_original_i is a 64-d vector; the reported magnitude is ||change_i||_2 per atom, averaged over atoms that receive the correction (hetero)",
+        "definition_change_component_abs": "per hetero atom mean_j |change_ij|, then averaged",
+        "definition_f_delta": "|f(h_new) - f(h_original)| per atom, then averaged",
+        "f_delta_abs_max_over_hetero_atoms": 0.0012610852718353271,
+        "f_delta_abs_mean_over_all_atoms": 0.00020358560141175985,
+        "f_delta_abs_mean_over_hetero_atoms": 0.0008573102531954646,
+        "f_delta_abs_sum_per_molecule_mean": 0.0053313979879021645,
+        "f_delta_sum_per_molecule_mean": -0.0053313979879021645,
+        "fraction_molecules_with_hetero": 0.984375,
+        "graph_change_l2_max_max": 0.008165104314684868,
+        "n_atoms": 1676,
+        "n_atoms_with_nonzero_change": 398,
+        "n_hetero_atoms": 398,
+        "n_molecules": 64,
+        "n_molecules_with_hetero": 63
+      },
+      "trained_new_parameter_delta_from_init": {
+        "context.W_atom.bias": 0.00029981136322021484,
+        "context.W_atom.weight": 0.0002998737618327141,
+        "context.W_ch.bias": 0.00029974430799484253,
+        "context.W_ch.weight": 0.00029984861612319946,
+        "context.W_het.bias": 0.00029958225786685944,
+        "context.W_het.weight": 0.00029971450567245483,
+        "context.W_out.bias": 0.0002999997232109308,
+        "context.W_out.weight": 0.0002999991411343217
+      },
+      "valid420": {
+        "change_component_abs_mean_over_hetero_atoms": 0.0006240744260139763,
+        "change_l2_max_over_hetero_atoms": 0.008248182013630867,
+        "change_l2_mean_over_hetero_atoms": 0.005955196917057037,
+        "change_l2_per_molecule_max": 0.00736541673541069,
+        "change_l2_per_molecule_mean_of_means": 0.005944671414908953,
+        "change_l2_per_molecule_median": 0.005843539489433169,
+        "change_l2_per_molecule_p95": 0.007013217988424003,
+        "change_l2_sum_over_all_atoms_divided_by_n_atoms": 0.0013907789252698421,
+        "definition_change": "change_i = h_new_i - h_original_i is a 64-d vector; the reported magnitude is ||change_i||_2 per atom, averaged over atoms that receive the correction (hetero)",
+        "definition_change_component_abs": "per hetero atom mean_j |change_ij|, then averaged",
+        "definition_f_delta": "|f(h_new) - f(h_original)| per atom, then averaged",
+        "f_delta_abs_max_over_hetero_atoms": 0.0012655258178710938,
+        "f_delta_abs_mean_over_all_atoms": 0.00019466507364995778,
+        "f_delta_abs_mean_over_hetero_atoms": 0.00083353923400864,
+        "f_delta_abs_sum_per_molecule_mean": 0.004897043341770768,
+        "f_delta_sum_per_molecule_mean": -0.004897043341770768,
+        "fraction_molecules_with_hetero": 1.0,
+        "graph_change_l2_max_max": 0.008248182013630867,
+        "n_atoms": 805,
+        "n_atoms_with_nonzero_change": 188,
+        "n_hetero_atoms": 188,
+        "n_molecules": 32,
+        "n_molecules_with_hetero": 32
+      },
+      "w_out_zero_ablation_valid": {
+        "mae": 8.252280373380017,
+        "max_abs_prediction_change_vs_full_context": 0.010290435028220912,
+        "mean_abs_prediction_change_vs_full_context": 0.005483119343338588,
+        "note": "full trained model vs the same trained model with W_out zeroed in eval (its own base path)",
+        "r2": -40.19162809927647,
+        "rmse": 8.692553740565376,
+        "rmse_change_vs_full_context": 0.0056735563957932555
+      }
+    },
+    "dropout": {
+      "dropout_p": 0.1,
+      "eval_forward_diff_note": "non-zero only from float32 reduction order, not dropout",
+      "eval_mode_forward_max_abs_diff": 0.0,
+      "eval_mode_is_identity": true,
+      "eval_mode_max_abs_dropout_delta": 0.0,
+      "head_calls_eval": 2,
+      "head_calls_train": 2,
+      "head_training_in_eval_mode": false,
+      "head_training_in_train_mode": true,
+      "hook_module_present": true,
+      "passed": true,
+      "train_mode_forward_max_abs_diff_different_masks": 0.9576835632324219,
+      "train_mode_masked_atoms": true,
+      "train_mode_max_abs_dropout_delta": 3.8314898014068604
+    },
+    "rho_after_soup": {
+      "atol": 1e-05,
+      "bitwise_equal_to_h_original_reconstruction": true,
+      "discriminating": true,
+      "max_abs_diff_vs_h_new_reconstruction": 0.0010833740234375,
+      "max_abs_diff_vs_h_original_reconstruction": 0.0,
+      "max_abs_h_new_minus_h_original": 0.0022298097610473633,
+      "max_abs_mean_h_difference_if_h_new_used": 0.00047078728675842285,
+      "n_graphs": 8,
+      "passed": true,
+      "rho_input_matches_h_original": true
+    }
+  },
+  "family": "context",
+  "git_commit": "5f5404b93a5e2e98fc10f831c94b362ec7c0b6ab",
+  "git_dirty_tracked": false,
+  "gpu": {
+    "device_name": "cpu",
+    "peak_memory_allocated_bytes": 0
+  },
+  "hostname": "main",
+  "label_scope": "train3360_and_valid420_only",
+  "metrics": {
+    "train": {
+      "checkpoint": "soup_last_5",
+      "mae": 8.357099279858405,
+      "r2": -60.80132951274371,
+      "rmse": 8.80218917827602,
+      "units": "raw_logD"
+    },
+    "train_loss_standardized_last_epoch": 259.3882751464844,
+    "train_mae_standardized_last_epoch": 15.37444019317627,
+    "valid": {
+      "checkpoint": "soup_last_5",
+      "mae": 8.246797254036677,
+      "r2": -40.137874791782856,
+      "rmse": 8.686880184169583,
+      "units": "raw_logD"
+    }
+  },
+  "model": "LCRC-A-R3-contextual-contribution",
+  "model_audit": {
+    "context_definition": null,
+    "dropout_hook_calls": 15,
+    "init_state_hash": "e14f0341862b8d40debcc2b4ceac6c482f1b66cd3dba9143909725ebc0eb7bcb",
+    "parameter_breakdown": {
+      "atom_encoder": 19040,
+      "bond_encoder": 63776,
+      "context": 8352,
+      "f": 4225,
+      "local": 148992,
+      "rho": 11073,
+      "total": 255458
+    },
+    "parameters": 255458,
+    "parameters_base": 247106,
+    "parameters_new": 8352,
+    "roleblind_init_parity_with_context": null,
+    "shared_init": {
+      "all_shared_bitwise_identical": true,
+      "base_only_keys": [],
+      "mismatched": [],
+      "model_only_keys": [
+        "context.W_atom.bias",
+        "context.W_atom.weight",
+        "context.W_ch.bias",
+        "context.W_ch.weight",
+        "context.W_het.bias",
+        "context.W_het.weight",
+        "context.W_out.bias",
+        "context.W_out.weight"
+      ],
+      "n_shared_entries": 35,
+      "shared_keys": [
+        "global_mean",
+        "global_scale",
+        "scalar_mean",
+        "scalar_scale",
+        "atom_encoder.lins.0.weight",
+        "atom_encoder.lins.0.bias",
+        "atom_encoder.lins.1.weight",
+        "atom_encoder.lins.1.bias",
+        "bond_encoder.lins.0.weight",
+        "bond_encoder.lins.0.bias",
+        "bond_encoder.lins.1.weight",
+        "bond_encoder.lins.1.bias",
+        "local.nbr_emb.weight",
+        "local.path_emb.weight",
+        "local.end_emb.weight",
+        "local.path_u.weight",
+        "local.path_v.weight",
+        "local.joint_proj.weight",
+        "local.joint_proj.bias",
+        "local.close_emb.weight",
+        "local.path_gate.weight",
+        "local.mlp.lins.0.weight",
+        "local.mlp.lins.0.bias",
+        "local.mlp.lins.1.weight",
+        "local.mlp.lins.1.bias",
+        "local.norm.weight",
+        "local.norm.bias",
+        "f.lins.0.weight",
+        "f.lins.0.bias",
+        "f.lins.1.weight",
+        "f.lins.1.bias",
+        "rho.lins.0.weight",
+        "rho.lins.0.bias",
+        "rho.lins.1.weight",
+        "rho.lins.1.bias"
+      ]
+    },
+    "soup_state_hash": "38ed973e143940cbc9b344b7e25ea999604487da034f51de3335452d9c3b275c"
+  },
+  "pool": "local",
+  "precision": "fp32",
+  "predictions": {
+    "curve_path": "tracks/structural-sufficiency/lcrc_lipo_context_mechanism_check_v2/analysis/smoke_cpu/context_s1_smoke/curve.csv",
+    "curve_sha256": "f0ea381ba4899b6039582544f11c63808c67469e40741373ee65d8817f0bcb1f",
+    "train_path": "tracks/structural-sufficiency/lcrc_lipo_context_mechanism_check_v2/analysis/smoke_cpu/context_s1_smoke/train_predictions.npz",
+    "train_sha256": "147929fcd86db1def744148a0825f4d4c7bad781542527d075ff63a2d51a4f43",
+    "valid_path": "tracks/structural-sufficiency/lcrc_lipo_context_mechanism_check_v2/analysis/smoke_cpu/context_s1_smoke/valid_predictions.npz",
+    "valid_sha256": "246f4b11578d5a1e54aa353ec07379d077cac0d9b23fa1289d1c6494beddfdf5"
+  },
+  "protocol_id": "lcrc-lipo-context-mechanism-check-v2",
+  "python": "3.12.15",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_order_sha256": "37901e21244cade758f7afb4aee2048f9de30a78ba4f9c132ff846fb72bde2a7",
+    "batch_size": 128,
+    "checkpoint_rule": "average_last_5_epoch_end_state_dicts",
+    "dropout": 0.1,
+    "dropout_position": "final atom-level local h (v2 DropoutAtLocal on model.local)",
+    "dropout_rng_reseeded_after_init": true,
+    "early_stopping": false,
+    "epochs_planned": 1,
+    "epochs_run": 1,
+    "gradient_clip": 5.0,
+    "loss": "mse_on_train3360_standardised_target",
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "optimizer_steps": 1,
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "seed": 1,
+    "shuffle_generator_seed": 917001,
+    "soup_last": 1,
+    "soup_members": [
+      1
+    ],
+    "split_seed": 42,
+    "steps_per_epoch": 1,
+    "validation_used_for_checkpoint_selection": false,
+    "weight_decay": 0.001
+  },
+  "run_key": "context_s1",
+  "seed": 1,
+  "smoke": true,
+  "split_seed": 42,
+  "test_labels_read": false,
+  "test_metrics_read": false,
+  "test_predictions_read": false,
+  "timing": {
+    "inference_batch_size": 256,
+    "inference_device": "cpu",
+    "inference_seconds_per_valid420": 0.0036005139991175383,
+    "process_wall_seconds": 0.42859579899231903,
+    "train_wall_seconds": 0.021765498007880524
+  },
+  "torch": "2.5.1+cu124",
+  "torch_cuda": "12.4"
+}

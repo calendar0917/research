@@ -1,0 +1,332 @@
+{
+  "bootstrap": {
+    "base_s0__vs__context_s0": {
+      "test420": {
+        "ci_level": 0.95,
+        "interval": {
+          "gain_rmse": [
+            0.0016657270902605003,
+            0.03171492171430024,
+            0.06504172008833217
+          ],
+          "mae_change": [
+            -0.039820513963553746,
+            -0.019153716419303413,
+            0.0016668221316296875
+          ],
+          "mean_abs_prediction_difference": [
+            0.1815634046090018,
+            0.19839581111490753,
+            0.21590950534718278
+          ],
+          "n_other_better_abs": [
+            205.0,
+            225.0,
+            245.0
+          ],
+          "sse_gain": [
+            0.7693452304322012,
+            14.73699992488919,
+            32.54866843357355
+          ]
+        },
+        "method": "percentile_paired_molecule_resampling",
+        "n": 420,
+        "n_resamples": 10000,
+        "observed": {
+          "gain_rmse": 0.03225588364184595,
+          "mae_change": -0.01911251867955832,
+          "mae_other": 0.3848509038873737,
+          "mae_ref": 0.403963422566932,
+          "max_abs_prediction_difference": 1.19965639675203,
+          "mean_abs_prediction_difference": 0.19833099766580922,
+          "n_other_better_abs": 225,
+          "n_ref_better_abs": 195,
+          "n_tie_abs": 0,
+          "rmse_other": 0.5447313959153379,
+          "rmse_ref": 0.5769872795571839,
+          "sse_gain": 15.196451371469436,
+          "sse_other": 124.62756335226652,
+          "sse_ref": 139.82401472373596
+        },
+        "quantiles": {
+          "lower": 0.025000000000000022,
+          "median": 0.5,
+          "upper": 0.975
+        },
+        "seed": 20261101,
+        "sign_rule": "gain_rmse > 0 and mae_change < 0 and sse_gain > 0 all mean 'other' is better; interval columns are [lower, median, upper] percentiles"
+      },
+      "valid420": {
+        "ci_level": 0.95,
+        "interval": {
+          "gain_rmse": [
+            -0.016637730896068896,
+            0.012054241743456873,
+            0.03980085034338316
+          ],
+          "mae_change": [
+            -0.03888101112329215,
+            -0.016112634123241043,
+            0.006734212896762764
+          ],
+          "mean_abs_prediction_difference": [
+            0.18627902894357132,
+            0.20332927096843278,
+            0.22174170548037722
+          ],
+          "n_other_better_abs": [
+            193.0,
+            213.0,
+            233.0
+          ],
+          "sse_gain": [
+            -8.10686277197958,
+            5.8159296832662974,
+            19.128698723809663
+          ]
+        },
+        "method": "percentile_paired_molecule_resampling",
+        "n": 420,
+        "n_resamples": 10000,
+        "observed": {
+          "gain_rmse": 0.01182881477393316,
+          "mae_change": -0.016281724269164466,
+          "mae_other": 0.41157258668888325,
+          "mae_ref": 0.4278543109580477,
+          "max_abs_prediction_difference": 1.1909822464041269,
+          "mean_abs_prediction_difference": 0.2034736098282751,
+          "n_other_better_abs": 213,
+          "n_ref_better_abs": 207,
+          "n_tie_abs": 0,
+          "rmse_other": 0.5685874386526553,
+          "rmse_ref": 0.5804162534265884,
+          "sse_gain": 5.708367776231711,
+          "sse_other": 135.78250366530654,
+          "sse_ref": 141.49087144153825
+        },
+        "quantiles": {
+          "lower": 0.025000000000000022,
+          "median": 0.5,
+          "upper": 0.975
+        },
+        "seed": 20261101,
+        "sign_rule": "gain_rmse > 0 and mae_change < 0 and sse_gain > 0 all mean 'other' is better; interval columns are [lower, median, upper] percentiles"
+      }
+    }
+  },
+  "created_utc": "2026-10-31T14:56:08Z",
+  "device": "cpu",
+  "environment": {
+    "cuda_available": false,
+    "cuda_device_count": 0,
+    "cuda_device_name": "cpu",
+    "git_commit": "5f5404b93a5e2e98fc10f831c94b362ec7c0b6ab",
+    "git_dirty_tracked": false,
+    "hostname": "main",
+    "numpy": "2.1.3",
+    "pid": 1436580,
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "round_id": "lcrc-lipo-context-mechanism-check-v2",
+    "timestamp": "2026-10-31T14:56:08Z",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "git_commit": "5f5404b93a5e2e98fc10f831c94b362ec7c0b6ab",
+  "git_dirty_tracked": false,
+  "historical_reference": {
+    "historical_lcrc_a_r3_test_rmse": 0.5839847887469122,
+    "note": "same frozen random42 split; PNA-native was not retrained in this round; descriptive reference only",
+    "pna_native_test_mae": 0.37377129447390695,
+    "pna_native_test_rmse": 0.5288742856070585
+  },
+  "models": {
+    "base_s0": {
+      "checkpoint": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/runs/base_s0/checkpoint.pt",
+      "checkpoint_sha256": "1a2820e376e6a426cc470b80bdf3f28a9f6bb9044d0028792463aeddabadc60d",
+      "family": "base",
+      "freeze_weights_audit": {
+        "test420": {
+          "changed_state_entries": [],
+          "model_training_after_inference": false,
+          "n_changed_state_entries": 0,
+          "n_predictions": 420,
+          "n_state_entries": 35,
+          "parameters_with_grad_after_inference": [],
+          "passed": true,
+          "predictions_finite": true,
+          "requires_grad_flags_unchanged": true
+        },
+        "valid420": {
+          "changed_state_entries": [],
+          "model_training_after_inference": false,
+          "n_changed_state_entries": 0,
+          "n_predictions": 420,
+          "n_state_entries": 35,
+          "parameters_with_grad_after_inference": [],
+          "passed": true,
+          "predictions_finite": true,
+          "requires_grad_flags_unchanged": true
+        }
+      },
+      "historical": true,
+      "key": "base_s0",
+      "predictions_saved": true,
+      "recomputed_state_hash": "501681459e5fc68bc610613bfc6183031bc059f6e80b200877e127378003a463",
+      "reference_check": {
+        "abs_diff": 5.15046205684655e-09,
+        "checkpoint_sha256": "1a2820e376e6a426cc470b80bdf3f28a9f6bb9044d0028792463aeddabadc60d",
+        "recomputed_valid_rmse": 0.5804162534265884,
+        "v1_checkpoint_sha256": "1a2820e376e6a426cc470b80bdf3f28a9f6bb9044d0028792463aeddabadc60d",
+        "v1_valid_predictions_max_abs_diff": 1.7032071895073386e-06,
+        "v1_valid_predictions_mean_abs_diff": 3.8126791394244546e-07,
+        "v1_valid_rmse": 0.5804162585770505
+      },
+      "seed": 0,
+      "soup_state_hash": "501681459e5fc68bc610613bfc6183031bc059f6e80b200877e127378003a463",
+      "test": {
+        "mae": 0.403963422566932,
+        "max_abs_error": 3.618243637725266,
+        "mean_abs_error": 0.403963422566932,
+        "n": 420,
+        "r2": 0.791449712842223,
+        "rmse": 0.5769872795571839,
+        "sse": 139.82401472373596
+      },
+      "valid": {
+        "mae": 0.4278543109580477,
+        "max_abs_error": 2.5639917028599024,
+        "mean_abs_error": 0.4278543109580477,
+        "n": 420,
+        "r2": 0.7770971210530095,
+        "rmse": 0.5804162534265884,
+        "sse": 141.49087144153825
+      }
+    },
+    "context_s0": {
+      "checkpoint": "tracks/structural-sufficiency/lcrc_lipo_contextual_contrib_v1/analysis/runs/context_s0/checkpoint.pt",
+      "checkpoint_sha256": "38bf6926c32db02f4c10f72da5c84abf2194c8b954681e0334aca88c91eccaee",
+      "family": "context",
+      "freeze_weights_audit": {
+        "test420": {
+          "changed_state_entries": [],
+          "model_training_after_inference": false,
+          "n_changed_state_entries": 0,
+          "n_predictions": 420,
+          "n_state_entries": 43,
+          "parameters_with_grad_after_inference": [],
+          "passed": true,
+          "predictions_finite": true,
+          "requires_grad_flags_unchanged": true
+        },
+        "valid420": {
+          "changed_state_entries": [],
+          "model_training_after_inference": false,
+          "n_changed_state_entries": 0,
+          "n_predictions": 420,
+          "n_state_entries": 43,
+          "parameters_with_grad_after_inference": [],
+          "passed": true,
+          "predictions_finite": true,
+          "requires_grad_flags_unchanged": true
+        }
+      },
+      "historical": true,
+      "key": "context_s0",
+      "predictions_saved": true,
+      "recomputed_state_hash": "6a2bdd1165d383792eaf012923470518b3354e7fb38cf073851e828ed14fd745",
+      "reference_check": {
+        "abs_diff": 2.539535870482723e-08,
+        "checkpoint_sha256": "38bf6926c32db02f4c10f72da5c84abf2194c8b954681e0334aca88c91eccaee",
+        "recomputed_valid_rmse": 0.5685874386526553,
+        "v1_checkpoint_sha256": "38bf6926c32db02f4c10f72da5c84abf2194c8b954681e0334aca88c91eccaee",
+        "v1_valid_predictions_max_abs_diff": 1.4903062908189213e-06,
+        "v1_valid_predictions_mean_abs_diff": 3.4801270906952604e-07,
+        "v1_valid_rmse": 0.568587464048014
+      },
+      "seed": 0,
+      "soup_state_hash": "6a2bdd1165d383792eaf012923470518b3354e7fb38cf073851e828ed14fd745",
+      "test": {
+        "mae": 0.3848509038873737,
+        "max_abs_error": 3.7292738692631007,
+        "mean_abs_error": 0.3848509038873737,
+        "n": 420,
+        "r2": 0.8141155210266102,
+        "rmse": 0.5447313959153379,
+        "sse": 124.62756335226652
+      },
+      "valid": {
+        "mae": 0.41157258668888325,
+        "max_abs_error": 2.5455556205057794,
+        "mean_abs_error": 0.41157258668888325,
+        "n": 420,
+        "r2": 0.7860900094170905,
+        "rmse": 0.5685874386526553,
+        "sse": 135.78250366530654
+      }
+    }
+  },
+  "pairs": {
+    "base_s0__vs__context_s0": {
+      "test420": {
+        "gain_rmse": 0.03225588364184595,
+        "mae_change": -0.01911251867955832,
+        "mae_other": 0.3848509038873737,
+        "mae_ref": 0.403963422566932,
+        "max_abs_prediction_difference": 1.19965639675203,
+        "mean_abs_prediction_difference": 0.19833099766580922,
+        "n_other_better_abs": 225,
+        "n_ref_better_abs": 195,
+        "n_tie_abs": 0,
+        "rmse_other": 0.5447313959153379,
+        "rmse_ref": 0.5769872795571839,
+        "sse_gain": 15.196451371469436,
+        "sse_other": 124.62756335226652,
+        "sse_ref": 139.82401472373596
+      },
+      "valid420": {
+        "gain_rmse": 0.01182881477393316,
+        "mae_change": -0.016281724269164466,
+        "mae_other": 0.41157258668888325,
+        "mae_ref": 0.4278543109580477,
+        "max_abs_prediction_difference": 1.1909822464041269,
+        "mean_abs_prediction_difference": 0.2034736098282751,
+        "n_other_better_abs": 213,
+        "n_ref_better_abs": 207,
+        "n_tie_abs": 0,
+        "rmse_other": 0.5685874386526553,
+        "rmse_ref": 0.5804162534265884,
+        "sse_gain": 5.708367776231711,
+        "sse_other": 135.78250366530654,
+        "sse_ref": 141.49087144153825
+      }
+    }
+  },
+  "protocol_id": "lcrc-lipo-context-mechanism-check-v2",
+  "scope": "EXPOSED_TEST_EXPLORATORY",
+  "test_access": "EXPOSED_TEST_EXPLORATORY",
+  "test_labels_source": {
+    "compound_ids_sha256": "83c0a2aa7c1732d0301a6e0509ee7c34b3f82328b16822d766fe28afb9282ac7",
+    "csv_path": "data/lipophilicity/Lipophilicity.csv",
+    "csv_sha256": "aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd",
+    "first_five_rows": [
+      967,
+      3557,
+      3492,
+      462,
+      2258
+    ],
+    "label_vector_sha256": "a0724b4c1ca6f7bb6b69b720ac2d020825685d9666544c7312e0f24d7e3a4021",
+    "n_test": 420,
+    "rows_sha256": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b",
+    "scope": "EXPOSED_TEST_EXPLORATORY",
+    "smiles_sha256": "891e482b227a80ccce95c7625091fe074575593ffdaff8ad429acd10fbae0214"
+  },
+  "test_row_identity": {
+    "all_models_aligned": true,
+    "expected": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b",
+    "n": 420,
+    "rows_sha256": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b"
+  }
+}

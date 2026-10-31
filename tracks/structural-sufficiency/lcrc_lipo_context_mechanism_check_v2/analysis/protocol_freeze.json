@@ -1,0 +1,115 @@
+{
+  "code_hashes": {
+    "code/m2_analysis.py": "92b64d032744aca9fe008d37175dd27e355c7b3044c44af978bebe8ddfb82ff2",
+    "code/m2_common.py": "539acf5de57bea36de06d192003cdaaadddade95e426276f4303aba4f9afea8d",
+    "code/m2_data.py": "227c22cc3a6014b7323d21bc9957dd3705b5771fbec9eb549299f8d4eed182e9",
+    "code/m2_evaluate.py": "1e925a52db63b0806c51736bf3b86134ae0158732094bc969f2622562c8e6098",
+    "code/m2_gates.py": "e10a2772ecc3d5396acff939fb66017350f9d70f434698f2e8fcab45889b4919",
+    "code/m2_ledger.py": "43205cf43a86982c7b55b39decea0f88323148f486c4a2ee8b66304fd978b914",
+    "code/m2_models.py": "b05de3f47793537024d10f2812b26e71e6ff75a37f02e118ba2c7c9ff797cd01",
+    "code/m2_train.py": "36de0a1d2ccdc25dd4047409a3dba570f083e6c29844a03dee87deb3654c59cb",
+    "code/run_m2.py": "0055cb9ae58a6513615862c3d3f99bbe301b01019b40767b3c08385278267676"
+  },
+  "config_file_sha256": "f9b0897ceb4ee7867b68c92c39b16b329a65e059d965f1be9cc36c476fb08e47",
+  "config_hash": "68b1213076512fdcd87ec84dc61c0e2a5d4b6e6f9e23075fb324d10fd26bef76",
+  "cpu_gates_n_passed": 11,
+  "cpu_gates_sha256": "14c51042b5d7b1394e12a299ee7a72975556ab8c7bd0603a0698ffbc67533b1e",
+  "created_utc": "2026-10-31T15:00:14Z",
+  "data_audit_sha256": "3fb41b7701b84a977b31ff013848c4e85d477cdc51c9bc1736f66f906c4d2396",
+  "evaluation": {
+    "bootstrap": {
+      "ci_level": 0.95,
+      "method": "percentile_paired_molecule_resampling",
+      "n_resamples": 10000,
+      "seed": 20261101,
+      "unit": "molecule"
+    },
+    "historical_reference": {
+      "historical_lcrc_test_rmse": 0.5839847887469122,
+      "pna_native_test_rmse": 0.5288742856070585
+    },
+    "non_tail_count": 415,
+    "performance_rule": "PERFORMANCE_SIGNAL=PRESENT iff all four BASE->CONTEXT RMSE gains (BASE RMSE - CONTEXT RMSE; positive = CONTEXT better) are > 0, i.e. seed 0 and seed 1 on both Validation420 and Test420.  Otherwise ABSENT. A sign disagreement between Validation and Test inside any seed is reported explicitly as a reversal.",
+    "role_specificity_rule": "ROLE_SPECIFICITY_SIGNAL=PRESENT iff CONTEXT_s0 beats ROLEBLIND_s0 on both Validation420 and Test420 by RMSE (ROLEBLIND RMSE - CONTEXT RMSE; positive = CONTEXT better) AND both paired-bootstrap 95% percentile intervals of that RMSE gain exclude 0.  Otherwise ABSENT.  Descriptive, not a confirmatory hypothesis test.",
+    "tail_rows": [
+      1630,
+      2924,
+      822,
+      1153,
+      3634
+    ]
+  },
+  "frozen_arms": {
+    "base_s1": {
+      "family": "base",
+      "pool": "res-gpu0",
+      "run_key": "base_s1",
+      "seed": 1
+    },
+    "context_s1": {
+      "family": "context",
+      "pool": "res-gpu1",
+      "run_key": "context_s1",
+      "seed": 1
+    },
+    "roleblind_s0": {
+      "family": "roleblind",
+      "pool": "res-gpu1",
+      "run_key": "roleblind_s0",
+      "seed": 0
+    }
+  },
+  "frozen_historical_checkpoints": {
+    "base_s0": {
+      "family": "base",
+      "seed": 0,
+      "sha256": "1a2820e376e6a426cc470b80bdf3f28a9f6bb9044d0028792463aeddabadc60d"
+    },
+    "context_s0": {
+      "family": "context",
+      "seed": 0,
+      "sha256": "38bf6926c32db02f4c10f72da5c84abf2194c8b954681e0334aca88c91eccaee"
+    }
+  },
+  "frozen_recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "checkpoint": "average_last_5_epoch_end_state_dicts",
+    "dropout": 0.1,
+    "dropout_position": "final_atom_level_local_h_before_readout",
+    "early_stopping": false,
+    "epochs": 360,
+    "gradient_clip": 5.0,
+    "loss": "mse_on_train3360_standardised_target",
+    "min_lr": 1e-05,
+    "model_family": "LCRC-A-R3 (lipo_v1, width 64)",
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "ssl": false,
+    "weight_decay": 0.001
+  },
+  "git_commit": "5f5404b93a5e2e98fc10f831c94b362ec7c0b6ab",
+  "git_dirty_tracked": false,
+  "gpu_hard_cap_hours": 0.45,
+  "labels_file_sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+  "protocol_id": "lcrc-lipo-context-mechanism-check-v2",
+  "protocol_sha256": "1fb9791422f1e2034d8077f086db80c6768fcd430e0106c0db5fa5f9f0bba1a6",
+  "scope": "part A exposed-Test evaluation of frozen seed-0 checkpoints; part B seed-1 BASE/CONTEXT; part C ROLEBLIND_s0; Validation420 and Test420 reporting",
+  "split_file_sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+  "status": "FROZEN_BEFORE_FORMAL_TRAINING",
+  "target_norm": {
+    "fit_on": "Train3360 only",
+    "mean": 2.2081011904761905,
+    "scale": 1.1906281212426577
+  },
+  "test_access": "EXPOSED_TEST_EXPLORATORY",
+  "test_label_vector_sha256": "a0724b4c1ca6f7bb6b69b720ac2d020825685d9666544c7312e0f24d7e3a4021",
+  "test_labels_read": true,
+  "test_predictions_read": false,
+  "test_rows_sha256": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b"
+}
