@@ -321,6 +321,11 @@ def to_device(batch: Mapping[str, Any], device: Any) -> dict[str, Any]:
     return {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()}
 
 
+def model_device(model: nn.Module) -> torch.device:
+    """Device of the first parameter (all audit helpers must follow the model)."""
+    return next(model.parameters()).device
+
+
 def permute_batch_atoms(batch: Mapping[str, Any], generator: torch.Generator) -> dict[str, Any]:
     """Renumber atoms inside every molecule of a collated batch.
 
@@ -491,7 +496,8 @@ def base_matches_original_lcrc(spec, norm: Mapping[str, Any], seed: int, cache: 
     key_sets_equal = set(base.state_dict()) == set(reference.state_dict())
     base.eval()
     reference.eval()
-    batch = lcrc_data.collate(cache, [int(r) for r in rows])
+    device = model_device(base)
+    batch = to_device(lcrc_data.collate(cache, [int(r) for r in rows]), device)
     with torch.no_grad():
         y_base = base(batch).detach().float().cpu().numpy().reshape(-1)
         y_ref = reference(batch).detach().float().cpu().numpy().reshape(-1)
@@ -509,7 +515,8 @@ def base_matches_original_lcrc(spec, norm: Mapping[str, Any], seed: int, cache: 
 def zero_out_equivalence_audit(base: nn.Module, context: LCRCContextual, cache: Mapping[str, Any], rows: Sequence[int]) -> dict[str, Any]:
     base.eval()
     context.eval()
-    batch = lcrc_data.collate(cache, [int(r) for r in rows])
+    device = model_device(context)
+    batch = to_device(lcrc_data.collate(cache, [int(r) for r in rows]), device)
     # Make the shared state exactly identical to BASE before comparing.
     own = context.state_dict()
     shared = {k: v for k, v in base.state_dict().items() if k in own and tuple(own[k].shape) == tuple(v.shape)}
@@ -542,7 +549,8 @@ def zero_out_equivalence_audit(base: nn.Module, context: LCRCContextual, cache: 
 def rho_input_audit(model: LCRCContextual, cache: Mapping[str, Any], rows: Sequence[int]) -> dict[str, Any]:
     """Capture the actual ``rho`` input and reconstruct it from ``h_original``."""
     model.eval()
-    batch = lcrc_data.collate(cache, [int(r) for r in rows])
+    device = model_device(model)
+    batch = to_device(lcrc_data.collate(cache, [int(r) for r in rows]), device)
     captured_h: list[torch.Tensor] = []
     captured_rho: list[torch.Tensor] = []
     h_local = model.local.register_forward_hook(
@@ -769,7 +777,8 @@ def gradient_probe(
 def dropout_activity_audit(model: nn.Module, cache: Mapping[str, Any], rows: Sequence[int], generator_seed: int = 0) -> dict[str, Any]:
     """The hook must be active in train mode and the identity in eval mode."""
     model.train()
-    batch = lcrc_data.collate(cache, [int(r) for r in rows])
+    device = model_device(model)
+    batch = to_device(lcrc_data.collate(cache, [int(r) for r in rows]), device)
     torch.manual_seed(int(generator_seed) + 12_345)
     with torch.no_grad():
         y_train_1 = model(batch).detach().float().cpu().numpy().reshape(-1)
