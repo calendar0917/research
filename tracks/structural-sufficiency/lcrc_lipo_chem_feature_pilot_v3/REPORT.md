@@ -55,7 +55,7 @@ All gates pass; `analysis/cpu_gates_v3.json` is `READY_FOR_GPU_AUTHORIZATION`.
 | Zero-extra equivalence | A arms max abs output diff **0.0**; C arm **1.19e-7** (float32 GEMM), all within 1e-6 |
 | New-column gradients | finite and non-zero for all three arms (768/832 gradient entries) |
 | Denormalisation / raw RMSE | independent checkpoint replay matches stored predictions within 1.7e-6; stored RMSE/MAE match `train.json` and historical constants exactly |
-| Historical artifacts | v1 guard ok; v2 guard **237 checks ok**; v2 code/config, 61 run records, checkpoints, predictions and 175-file manifest unchanged |
+| Historical artifacts | v1 guard ok; v2 guard **237 checks ok**; v2 code/config, 61 run records, checkpoints, predictions and 226-file manifest unchanged |
 | Temporary training | 1-epoch CPU smoke in a temp directory; v2 loop reused; +768 params; no v1/v2 write |
 
 The frozen GPU input is `analysis/frozen_extras_v3.npz` (147 KB, SHA-256 `fd73ccd7b4b4…`) plus `analysis/frozen_extras_v3.json`; it contains the exact train/dev matrices, positions, rows, spec hashes and 54-wide normalisation. The GPU host does not need RDKit.
