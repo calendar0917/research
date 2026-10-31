@@ -1,0 +1,96 @@
+# LCRC Lipophilicity random42 element-context contribution experiment, v1.
+#
+# Every value below is fixed by the task statement and re-validated by
+# code/x1_common.py:validate_config().  Changing any of them invalidates the
+# protocol freeze and the CPU gates; formal training refuses to run.
+protocol_id: lcrc-lipo-contextual-contrib-v1
+round_id: lcrc-lipo-contextual-contrib-v1
+
+# One training seed, one frozen split (random42 seed 42), no seed selection.
+seed: 0
+split_seed: 42
+
+data:
+  source_round: lcrc_lipo_esa_random42_v1
+  source_dir: tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1
+  split_file: data/split_esa_random42_v1.json
+  split_file_sha256: 1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4
+  labels_file: data/labels_train_valid_v1.json
+  labels_file_sha256: 1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca
+  n_molecules: 4200
+  split_sizes:
+    train: 3360
+    valid: 420
+  label_scope: train3360_and_valid420_only
+  test_access: forbidden
+  target_scaler: train3360_only_standard_scaler_population_std
+  feature_normalisation: train3360_structures_only
+
+training:
+  seed: 0
+  optimizer: AdamW
+  adam_betas: [0.9, 0.999]
+  adam_eps: 1.0e-8
+  peak_lr: 3.0e-4
+  min_lr: 1.0e-5
+  scheduler: per_step_cosine
+  weight_decay: 1.0e-3
+  batch_size: 128
+  epochs: 360
+  gradient_clip: 5.0
+  dropout: 0.10
+  dropout_position: final_atom_level_local_h_before_readout
+  loss: mse_on_train3360_standardised_target
+  checkpoint: average_last_5_epoch_end_state_dicts
+  soup_last: 5
+  early_stopping: false
+  ssl: false
+  pretraining: false
+  external_descriptors: false
+  shuffle_offset: 917000
+  precision: fp32
+
+model:
+  base: lcrc_model.LCRC_lipo_v1_width64
+  base_class: tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/lcrc_model.py:LCRC
+  base_sha256: d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37
+  width: 64
+  context_dim: 32
+  hetero_elements: [N, O, S, P]
+  carbon_halogen_elements: [C, F, Cl, Br, I]
+  roles_are_fixed_element_classes: true
+  roles_are_hba_hbd_or_hydrophobicity: false
+  interaction: "a_i * p_g * c_g"
+  w_out_init:
+    weight: normal
+    std: 1.0e-3
+    bias: 0.0
+  other_new_layer_init: pytorch_linear_default
+  update_scope: hetero_atoms_only
+  empty_role_mean: exact_zero
+  additional_prototypes: false
+  additional_attention: false
+  additional_message_passing: false
+  additional_descriptors: false
+  auxiliary_losses: none
+  separate_molecule_residual: false
+  context_mixing_across_molecules: false
+
+decision:
+  primary_metric: validation_rmse_raw_logD
+  gain_definition: "RMSE(BASE) - RMSE(CONTEXT); positive = CONTEXT better"
+  gain_threshold: 0.020
+  mae_worsening_tolerance: 0.010
+  tail_rows: [1630, 2924, 822, 1153, 3634]
+  tail_share_threshold: 0.50
+  tail_rule: "KNOWN_TAIL_CONCENTRATED iff net SSE improvement > 0 and (share of net SSE improvement from the five tail rows >= 0.50 or gain after removing them <= 0)"
+  checkpoint_selection_by_validation: none
+
+budget:
+  gpu_hard_cap_hours: 0.45
+  pools:
+    base: res-gpu0
+    context: res-gpu1
+  host: res
+  parallel_arms: true
+  in_process_device: cuda:0
