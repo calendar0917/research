@@ -40,6 +40,10 @@ def _average_states(states: Sequence[Mapping[str, torch.Tensor]]) -> dict[str, t
 
 
 def _correction_output(module: torch.nn.Module, family: str):
+    if family in ("context", "roleblind"):
+        return module.context.W_out
+    if family == "base":
+        return None
     if family == "g2l_scalar":
         return module.context.w_out
     if family in ("g2l_all", "g2l_loo", "g2l_local_cap"):
@@ -53,6 +57,8 @@ def _correction_output(module: torch.nn.Module, family: str):
 
 def predict_with_correction_disabled(model, cache, family: str, device="cpu", batch_size: int = 256) -> np.ndarray:
     out = _correction_output(model, family)
+    if out is None:
+        return M.predict(model, cache, device=device, batch_size=batch_size)
     w = out.weight.detach().clone()
     b = out.bias.detach().clone()
     try:
