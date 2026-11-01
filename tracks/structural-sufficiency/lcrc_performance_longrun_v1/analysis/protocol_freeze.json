@@ -1,0 +1,631 @@
+{
+  "anchors": {
+    "BACE": "scaffold122 (published repeat 0)",
+    "ESOL": "random122 (published repeat 0)",
+    "Lipophilicity": "random122 (published repeat 0)",
+    "seed": 0
+  },
+  "arms": {
+    "base": {
+      "parameters_default": 247106,
+      "single_change": "none; frozen LCRC-A"
+    },
+    "chem8": {
+      "parameters_default": 248130,
+      "single_change": "widen atom_encoder.lins.0 from 51 to 59; new columns zero"
+    },
+    "combo_chem_contrib": {
+      "parameters_default": 253163,
+      "single_change": "CHEMLOCAL8 + MULTICONTRIB8"
+    },
+    "combo_chem_rho": {
+      "parameters_default": 256322,
+      "single_change": "CHEMLOCAL8 + RHOSHAPE"
+    },
+    "combo_rho_contrib": {
+      "parameters_default": 260331,
+      "single_change": "RHOSHAPE + MULTICONTRIB8"
+    },
+    "multicontrib": {
+      "parameters_default": 252139,
+      "single_change": "Q: 64->64->8 graph sum, delta=MLP([Q_graph, log1p(n)]); delta last layer zero"
+    },
+    "rhoshape": {
+      "parameters_default": 255298,
+      "single_change": "rho input + [max_v h_v, mean_v |h_v - mean h|] (128 dims); new columns zero"
+    }
+  },
+  "base_reference": {
+    "anchors": {
+      "BACE": {
+        "best_epoch": 102,
+        "gpu_hours": 0.04473941329666155,
+        "metric": "roc_auc",
+        "note": "Sprint-02 BASE, seed 0, R3 recipe, 360 epochs",
+        "parameters": 247106,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/benchmark_table.csv",
+        "source_sha256": "efedbf1cef92266dfbcf33aeaddc12ffe8ff1297d8c8f4823d0a5f6c183094de",
+        "test": 0.8253623188405796,
+        "train": 0.96568415170776,
+        "valid": 0.7761194029850746
+      },
+      "ESOL": {
+        "best_epoch": 136,
+        "gpu_hours": 0.020018576976920787,
+        "metric": "rmse",
+        "note": "Sprint-02 BASE, seed 0, R3 recipe, 360 epochs",
+        "parameters": 247106,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/benchmark_table.csv",
+        "source_sha256": "efedbf1cef92266dfbcf33aeaddc12ffe8ff1297d8c8f4823d0a5f6c183094de",
+        "test": 0.5225626961940829,
+        "train": 0.4430008887882619,
+        "valid": 0.5584556483389852
+      },
+      "Lipophilicity": {
+        "best_epoch": 240,
+        "gpu_hours": 0.0993819212577849,
+        "metric": "rmse",
+        "note": "Sprint-02 BASE, seed 0, R3 recipe, 360 epochs",
+        "parameters": 247106,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/benchmark_table.csv",
+        "source_sha256": "efedbf1cef92266dfbcf33aeaddc12ffe8ff1297d8c8f4823d0a5f6c183094de",
+        "test": 0.5727470871023582,
+        "train": 0.2831010170540372,
+        "valid": 0.7108803968155553
+      }
+    },
+    "lipophilicity_repeats": {
+      "122": {
+        "best_epoch": 240,
+        "gpu_seconds": 357.77,
+        "metric": "rmse",
+        "note": "Sprint-01/03 BASE, seed 0, R3 recipe, 360 epochs",
+        "source": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/lipo_repeat_comparison.csv",
+        "source_sha256": "30e16f3df4d345402243c4c44fbbea3597cbee4f0c9c9cb0ff427541e5597999",
+        "test": 0.572747,
+        "train": 0.283101,
+        "valid": 0.71088
+      },
+      "123": {
+        "best_epoch": 248,
+        "gpu_seconds": 272.95,
+        "metric": "rmse",
+        "note": "Sprint-01/03 BASE, seed 0, R3 recipe, 360 epochs",
+        "source": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/lipo_repeat_comparison.csv",
+        "source_sha256": "30e16f3df4d345402243c4c44fbbea3597cbee4f0c9c9cb0ff427541e5597999",
+        "test": 0.569819,
+        "train": 0.276924,
+        "valid": 0.73773
+      },
+      "124": {
+        "best_epoch": 152,
+        "gpu_seconds": 370.04,
+        "metric": "rmse",
+        "note": "Sprint-01/03 BASE, seed 0, R3 recipe, 360 epochs",
+        "source": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/lipo_repeat_comparison.csv",
+        "source_sha256": "30e16f3df4d345402243c4c44fbbea3597cbee4f0c9c9cb0ff427541e5597999",
+        "test": 0.528153,
+        "train": 0.372381,
+        "valid": 0.633197
+      }
+    },
+    "matched_xgboost": {
+      "BACE": {
+        "hyperparameters": "frozen ECFP4 (2048) + 217 RDKit descriptors + XGBoost; no tuning",
+        "same_test_rows": true,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/matched_baseline.csv",
+        "source_sha256": "2d94bcb107877a2066ec33060c9fa802430bec0e9956e1d3fe59866a29259a8f",
+        "xgb_test": 0.7969202898550725,
+        "xgb_valid": 0.7064676616915424
+      },
+      "BBBP": {
+        "hyperparameters": "frozen ECFP4 (2048) + 217 RDKit descriptors + XGBoost; no tuning",
+        "same_test_rows": true,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/matched_baseline.csv",
+        "source_sha256": "2d94bcb107877a2066ec33060c9fa802430bec0e9956e1d3fe59866a29259a8f",
+        "xgb_test": 0.7207823489738895,
+        "xgb_valid": 0.9773874223602484
+      },
+      "ESOL": {
+        "hyperparameters": "frozen ECFP4 (2048) + 217 RDKit descriptors + XGBoost; no tuning",
+        "same_test_rows": true,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/matched_baseline.csv",
+        "source_sha256": "2d94bcb107877a2066ec33060c9fa802430bec0e9956e1d3fe59866a29259a8f",
+        "xgb_test": 0.5281165125690107,
+        "xgb_valid": 0.6424811062649439
+      },
+      "FreeSolv": {
+        "hyperparameters": "frozen ECFP4 (2048) + 217 RDKit descriptors + XGBoost; no tuning",
+        "same_test_rows": true,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/matched_baseline.csv",
+        "source_sha256": "2d94bcb107877a2066ec33060c9fa802430bec0e9956e1d3fe59866a29259a8f",
+        "xgb_test": 1.097670017469098,
+        "xgb_valid": 1.1330833868185541
+      },
+      "Lipophilicity": {
+        "hyperparameters": "frozen ECFP4 (2048) + 217 RDKit descriptors + XGBoost; no tuning",
+        "same_test_rows": true,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/matched_baseline.csv",
+        "source_sha256": "2d94bcb107877a2066ec33060c9fa802430bec0e9956e1d3fe59866a29259a8f",
+        "xgb_test": 0.6477098178766193,
+        "xgb_valid": 0.653178121743995
+      },
+      "Tox21": {
+        "hyperparameters": "frozen ECFP4 (2048) + 217 RDKit descriptors + XGBoost; no tuning",
+        "same_test_rows": true,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/matched_baseline.csv",
+        "source_sha256": "2d94bcb107877a2066ec33060c9fa802430bec0e9956e1d3fe59866a29259a8f",
+        "xgb_test": 0.8520816107409157,
+        "xgb_valid": 0.861036800227549
+      },
+      "ogbg-molhiv": {
+        "hyperparameters": "frozen ECFP4 (2048) + 217 RDKit descriptors + XGBoost; no tuning",
+        "same_test_rows": true,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/matched_baseline.csv",
+        "source_sha256": "2d94bcb107877a2066ec33060c9fa802430bec0e9956e1d3fe59866a29259a8f",
+        "xgb_test": 0.7624403715792116,
+        "xgb_valid": 0.8366922643543013
+      }
+    },
+    "transfer": {
+      "BBBP": {
+        "best_epoch": 24,
+        "gpu_hours": 0.03840546914977798,
+        "metric": "roc_auc",
+        "note": "Sprint-02 BASE, seed 0, R3 recipe, 360 epochs",
+        "parameters": 247106,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/benchmark_table.csv",
+        "source_sha256": "efedbf1cef92266dfbcf33aeaddc12ffe8ff1297d8c8f4823d0a5f6c183094de",
+        "test": 0.7109548126023701,
+        "train": 0.9506518552804134,
+        "valid": 0.9733113354037266
+      },
+      "FreeSolv": {
+        "best_epoch": 116,
+        "gpu_hours": 0.010510120730032213,
+        "metric": "rmse",
+        "note": "Sprint-02 BASE, seed 0, R3 recipe, 360 epochs",
+        "parameters": 247106,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/benchmark_table.csv",
+        "source_sha256": "efedbf1cef92266dfbcf33aeaddc12ffe8ff1297d8c8f4823d0a5f6c183094de",
+        "test": 1.0869879394267459,
+        "train": 0.6419905096737604,
+        "valid": 0.7593759914421874
+      },
+      "Tox21": {
+        "best_epoch": 55,
+        "gpu_hours": 0.178928912952801,
+        "metric": "macro_roc_auc",
+        "note": "Sprint-02 BASE, seed 0, R3 recipe, 360 epochs",
+        "parameters": 248536,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/benchmark_table.csv",
+        "source_sha256": "efedbf1cef92266dfbcf33aeaddc12ffe8ff1297d8c8f4823d0a5f6c183094de",
+        "test": 0.8353224410457143,
+        "train": 0.9238390541363959,
+        "valid": 0.8662517165749429
+      },
+      "ogbg-molhiv": {
+        "best_epoch": 77,
+        "gpu_hours": 0.8228101093649942,
+        "metric": "roc_auc",
+        "note": "Sprint-02 BASE, seed 0, R3 recipe, 360 epochs",
+        "parameters": 247106,
+        "source": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/benchmark_table.csv",
+        "source_sha256": "efedbf1cef92266dfbcf33aeaddc12ffe8ff1297d8c8f4823d0a5f6c183094de",
+        "test": 0.7523880337588598,
+        "train": 0.9950407020590007,
+        "valid": 0.8365452919851069
+      }
+    }
+  },
+  "budget": {
+    "hard_cap_a100_gpu_hours": 15.0,
+    "planned_upper_bound_gpu_hours": 15.0,
+    "reserve_for_sync_analysis_report_git": true,
+    "wall_time_hours": 8.0
+  },
+  "checkpoint_rule": {
+    "binary": "highest Validation ROC-AUC, tie -> lower Validation BCE, then earlier epoch",
+    "multitask": "highest Validation macro ROC-AUC, tie -> lower masked BCE, then earlier epoch",
+    "recheck_tolerance": "analytic metric resolution, at least 1e-5",
+    "regression": "lowest Validation RMSE, strict improvement, ties keep the earlier epoch",
+    "restore_before_report": true
+  },
+  "chem8": {
+    "artifacts": {
+      "BACE": {
+        "n_fallback": 0,
+        "n_molecules": 1513,
+        "path": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/source/chem8/BACE.npz",
+        "sha256": "9e3d63dfa2a60ace2418a81208383bc6170032bdec031da7f196aa859a6a3c9f"
+      },
+      "BBBP": {
+        "n_fallback": 0,
+        "n_molecules": 2039,
+        "path": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/source/chem8/BBBP.npz",
+        "sha256": "aa3446f9699b2fc46b95b01f1bf900f5c49dc08ac20aaa574893793699e621ac"
+      },
+      "ESOL": {
+        "n_fallback": 0,
+        "n_molecules": 1128,
+        "path": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/source/chem8/ESOL.npz",
+        "sha256": "dedf1f29cacec13a7178f5a0820ff5beab8ecc5e1d9c883325ba469a0c2dd8f4"
+      },
+      "FreeSolv": {
+        "n_fallback": 0,
+        "n_molecules": 642,
+        "path": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/source/chem8/FreeSolv.npz",
+        "sha256": "f0438ec513070b8824d6a2bf762e33ea1ab04391ae07c4f7ec2317da08fa100b"
+      },
+      "Lipophilicity": {
+        "n_fallback": 0,
+        "n_molecules": 4200,
+        "path": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/source/chem8/Lipophilicity.npz",
+        "sha256": "d3bdf700a668e77616bfd200d2a67b5ecdf2955d76ae98f9d7c93b6c70562aaf"
+      },
+      "Tox21": {
+        "n_fallback": 8,
+        "n_molecules": 7831,
+        "path": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/source/chem8/Tox21.npz",
+        "sha256": "71a66b27dbddb60ada50f3a010dec23e4a5b320ea523f99ca596df55601c4a93"
+      },
+      "ogbg-molhiv": {
+        "n_fallback": 7,
+        "n_molecules": 41127,
+        "path": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/source/chem8/ogbg-molhiv.npz",
+        "sha256": "b774aaab85af03dacce98ea287fa1826c83983725f33e21b33cea64eb159f5e7"
+      }
+    },
+    "channels": [
+      "CIP_R",
+      "CIP_S",
+      "CIP_UNASSIGNED_TETRA",
+      "HBD",
+      "HBA",
+      "HYB_SP",
+      "HYB_SP2",
+      "HYB_SP3"
+    ],
+    "definition": "label-free RDKit CIP R/S/unassigned-tetra, Lipinski HBD/HBA atom roles, and SP/SP2/SP3 hybridisation appended to the frozen lipo_v1 atom features",
+    "manifest": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/chem8_manifest.json",
+    "sha256": "72637c8ff3b6ee8d420ff866afcbb0fe058263dc12525b0aac9277288f2af212"
+  },
+  "code_hashes": {
+    "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+    "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+    "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+    "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+    "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+    "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+    "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+    "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+    "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+    "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+    "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+  },
+  "created_utc": "2026-11-01T17:19:55Z",
+  "decision_rules": {
+    "A_chem": "CHEMLOCAL8 wins -> recommend LCRC-Chem; next round local chemistry, not interaction",
+    "B_stats": "RHOSHAPE wins -> recommend LCRC-Stats; next round explicit set statistics",
+    "C_composition": "MULTICONTRIB8 wins -> recommend LCRC-Composition; next round multiple latent contribution axes",
+    "D_combo": "COMBO clearly best -> name LCRC-B and decompose the two contributions",
+    "E_null": "no stable gain -> NO_LCRC_B_SIGNAL_THIS_ROUND and stop these three directions"
+  },
+  "git_commit": "b577048c4fe6f53f81b8fafa616e282272151174",
+  "git_commit_note": "HEAD when this file was written (the code commit). The commit that contains this file is the one deployed; each run records it as git_commit.",
+  "git_dirty_tracked": false,
+  "hypotheses": {
+    "A_local_chemistry": "LCRC-A's local atom input omits deterministic chemistry; CHEMLOCAL8 adds it.",
+    "B_global_statistics": "rho compresses the h distribution to two moments; RHOSHAPE adds max and MAD.",
+    "C_readout": "a single additive scalar contribution is too simple; MULTICONTRIB8 adds 8 latent additive channels.",
+    "null": "none of these is the main bottleneck; report NO_LCRC_B_SIGNAL_THIS_ROUND."
+  },
+  "non_goals": [
+    "no Graph Transformer / self-attention / pair attention",
+    "no new message-passing layer",
+    "no SSL / prototype dictionary / DIST / PATH / G2L",
+    "no ZINC architecture search",
+    "no large hyper-parameter search"
+  ],
+  "p0": {
+    "gate": "all added modules pass before any GPU job",
+    "report": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p0_tests.txt",
+    "sha256": "d182bf19b41e25f765ba0d4e532586c3a9ced6cd0e49496579ddf85dac2d59fa",
+    "tail": "...................                                                      [100%]\n19 passed in 3.32s"
+  },
+  "plan": {
+    "P1": {
+      "n_gpu_runs": 9,
+      "question": "Do the three single changes move the three anchors?",
+      "runs": [
+        {
+          "arm": "chem8",
+          "dataset": "Lipophilicity",
+          "key": "p1_chem8_lipo",
+          "seed": 0,
+          "split": "published",
+          "stage": "P1"
+        },
+        {
+          "arm": "rhoshape",
+          "dataset": "Lipophilicity",
+          "key": "p1_rho_lipo",
+          "seed": 0,
+          "split": "published",
+          "stage": "P1"
+        },
+        {
+          "arm": "multicontrib",
+          "dataset": "Lipophilicity",
+          "key": "p1_contrib_lipo",
+          "seed": 0,
+          "split": "published",
+          "stage": "P1"
+        },
+        {
+          "arm": "chem8",
+          "dataset": "ESOL",
+          "key": "p1_chem8_esol",
+          "seed": 0,
+          "split": "published",
+          "stage": "P1"
+        },
+        {
+          "arm": "rhoshape",
+          "dataset": "ESOL",
+          "key": "p1_rho_esol",
+          "seed": 0,
+          "split": "published",
+          "stage": "P1"
+        },
+        {
+          "arm": "multicontrib",
+          "dataset": "ESOL",
+          "key": "p1_contrib_esol",
+          "seed": 0,
+          "split": "published",
+          "stage": "P1"
+        },
+        {
+          "arm": "chem8",
+          "dataset": "BACE",
+          "key": "p1_chem8_bace",
+          "seed": 0,
+          "split": "published",
+          "stage": "P1"
+        },
+        {
+          "arm": "rhoshape",
+          "dataset": "BACE",
+          "key": "p1_rho_bace",
+          "seed": 0,
+          "split": "published",
+          "stage": "P1"
+        },
+        {
+          "arm": "multicontrib",
+          "dataset": "BACE",
+          "key": "p1_contrib_bace",
+          "seed": 0,
+          "split": "published",
+          "stage": "P1"
+        }
+      ],
+      "selection_rule": "STRONG_SIGNAL: >=2 anchors improve both Validation and Test, or one large gain with no catastrophic regression elsewhere; WEAK_SIGNAL: one anchor or mixed Valid/Test; NO_SIGNAL: broad regression or Train-only gain. Promote at most two single arms."
+    },
+    "P2": {
+      "max_gpu_runs": 3,
+      "question": "If two directions are positive, does one combination add value?",
+      "rule": "Construct exactly one combo, preferring the strongest representation candidate + the strongest readout candidate. Do not build the triple unless all three singles are clearly positive. If only one arm is positive, skip P2 and promote that arm."
+    },
+    "P3": {
+      "constraint": "BASE-SCALE-M and WINNER-SCALE-M must both be 320k-450k parameters; only local_hidden may be nudged",
+      "n_gpu_runs": 4,
+      "question": "Is a winner gain still visible after matching parameter capacity?",
+      "runs": [
+        {
+          "arm": "base",
+          "dataset": "Lipophilicity",
+          "key": "p3_base_scalem_lipo",
+          "scale": "M",
+          "seed": 0,
+          "split": "published",
+          "stage": "P3"
+        },
+        {
+          "arm": "WINNER",
+          "dataset": "Lipophilicity",
+          "key": "p3_winner_scalem_lipo",
+          "scale": "M",
+          "seed": 0,
+          "split": "published",
+          "stage": "P3"
+        },
+        {
+          "arm": "base",
+          "dataset": "ESOL",
+          "key": "p3_base_scalem_esol",
+          "scale": "M",
+          "seed": 0,
+          "split": "published",
+          "stage": "P3"
+        },
+        {
+          "arm": "WINNER",
+          "dataset": "ESOL",
+          "key": "p3_winner_scalem_esol",
+          "scale": "M",
+          "seed": 0,
+          "split": "published",
+          "stage": "P3"
+        }
+      ],
+      "scale_m": {
+        "atom_hidden": 144,
+        "atom_out": 104,
+        "bond_hidden": 176,
+        "bond_out": 104,
+        "local_hidden": 230,
+        "rho_hidden": 80,
+        "stat_rank": 40,
+        "width": 80
+      }
+    },
+    "P4": {
+      "hiv_note": "HIV-BASE-SHORT and HIV-WINNER-SHORT must both run; no 360-epoch HIV comparison",
+      "n_gpu_runs": 7,
+      "question": "Does the frozen winner transfer across tasks?",
+      "runs": [
+        {
+          "arm": "WINNER",
+          "dataset": "Lipophilicity",
+          "key": "p4_winner_lipo123",
+          "seed": 0,
+          "split": "lipo-repeat:123",
+          "stage": "P4"
+        },
+        {
+          "arm": "WINNER",
+          "dataset": "Lipophilicity",
+          "key": "p4_winner_lipo124",
+          "seed": 0,
+          "split": "lipo-repeat:124",
+          "stage": "P4"
+        },
+        {
+          "arm": "WINNER",
+          "dataset": "FreeSolv",
+          "key": "p4_winner_freesolv",
+          "seed": 0,
+          "split": "published",
+          "stage": "P4"
+        },
+        {
+          "arm": "WINNER",
+          "dataset": "BBBP",
+          "key": "p4_winner_bbbp",
+          "seed": 0,
+          "split": "published",
+          "stage": "P4"
+        },
+        {
+          "arm": "WINNER",
+          "dataset": "Tox21",
+          "key": "p4_winner_tox21",
+          "seed": 0,
+          "split": "published",
+          "stage": "P4"
+        },
+        {
+          "arm": "WINNER",
+          "dataset": "ogbg-molhiv",
+          "key": "p4_winner_hiv",
+          "protocol": "hiv_short",
+          "seed": 0,
+          "split": "published",
+          "stage": "P4"
+        },
+        {
+          "arm": "base",
+          "dataset": "ogbg-molhiv",
+          "key": "p4_base_hiv",
+          "protocol": "hiv_short",
+          "seed": 0,
+          "split": "published",
+          "stage": "P4"
+        }
+      ]
+    },
+    "P5": {
+      "max_gpu_runs": 12,
+      "question": "Are the gains stable across seeds?",
+      "rule": "Up to three tasks; winner seeds 1,2 and matched BASE seeds 1,2 where absent; do not fill the budget for its own sake."
+    }
+  },
+  "protocol_id": "lcrc-performance-longrun-v1",
+  "recipes": {
+    "default": {
+      "batch_size": 128,
+      "dropout": 0.1,
+      "early_stopping": false,
+      "epochs": 360,
+      "gradient_clip": 5.0,
+      "min_lr": 1e-05,
+      "optimizer": "AdamW",
+      "peak_lr": 0.0003,
+      "scheduler": "per_step_cosine",
+      "weight_decay": 0.001
+    },
+    "hiv_short": {
+      "applies_to": [
+        "HIV-BASE-SHORT",
+        "HIV-WINNER-SHORT"
+      ],
+      "early_stop_patience": 30,
+      "epochs": 160,
+      "loss": "unweighted BCEWithLogitsLoss",
+      "minimum_epochs": 60,
+      "scheduler_horizon_epochs": 160
+    }
+  },
+  "round_id": "lcrc-performance-longrun-v1",
+  "splits": {
+    "Lipophilicity_repeats": {
+      "122": {
+        "file": "Lipop.random122.ind.pkl",
+        "rows_sha256": {
+          "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "train": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        },
+        "sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "sizes": {
+          "test": 420,
+          "train": 3360,
+          "valid": 420
+        }
+      },
+      "123": {
+        "file": "Lipop.random123.ind.pkl",
+        "rows_sha256": {
+          "test": "6c335c844cb1a53273fb784de389d7df25281df86a057bbe22882f130aa06df2",
+          "train": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+          "valid": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982"
+        },
+        "sha256": "afaed4c6d95b64ac64e8fb760b6de516802008965befe1601b3664303119a0e8",
+        "sizes": {
+          "test": 420,
+          "train": 3360,
+          "valid": 420
+        }
+      },
+      "124": {
+        "file": "Lipop.random124.ind.pkl",
+        "rows_sha256": {
+          "test": "c4a5b71d8245ab426cffe475cd8862e11b16106d303b3ddb5dc409611fd0427d",
+          "train": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+          "valid": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+        },
+        "sha256": "2b48a41ccc39b622bbb74f18331ca9d9513190eec2de29144ce2bc7d47ef7ef3",
+        "sizes": {
+          "test": 420,
+          "train": 3360,
+          "valid": 420
+        }
+      }
+    },
+    "transfer": {
+      "BBBP": "scaffold122",
+      "FreeSolv": "random122",
+      "Tox21": "random122",
+      "ogbg-molhiv": "official OGB scaffold split"
+    }
+  },
+  "test_policy": {
+    "checkpoint_selection_uses_test": false,
+    "ledger": "analysis/test_access_ledger.json (append-only, one entry per run)",
+    "mode": "DEVELOPMENT_TEST",
+    "read": "once per run, after the best-Validation checkpoint is frozen",
+    "selection": "Test may inform the next stage's go/no-go, never the checkpoint/epoch/HP/width"
+  }
+}
