@@ -31,7 +31,7 @@ HISTORY_CURVES = {
     "g2l_loo_s0": (C.HIST_COMPOSITION / "analysis/runs/g2l_loo_s0", "dc_train_loop"),
     "g2l_all_s0": (C.HIST_COMPOSITION / "analysis/runs/g2l_all_s0", "dc_train_loop"),
     "roleblind_s0": (C.HIST_MECH / "analysis/runs/roleblind_s0", "other_round_loop"),
-    "roleblind_s1": (C.HIST_MECH / "analysis/runs/roleblind_s1", "other_round_loop"),
+    "roleblind_s1": (C.HIST_COMPOSITION / "analysis/runs/roleblind_s1", "dc_train_loop"),
     "base_s0": (C.HIST_CONTEXT / "analysis/runs/base_s0", "other_round_loop"),
     "base_s1": (C.HIST_MECH / "analysis/runs/base_s1", "other_round_loop"),
 }

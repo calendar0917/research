@@ -1,0 +1,107 @@
+{
+  "arms": [
+    "scaffold_base_s0",
+    "scaffold_base_s1",
+    "scaffold_base_s2",
+    "scaffold_roleblind_s0",
+    "scaffold_roleblind_s1",
+    "scaffold_roleblind_s2",
+    "scaffold_g2l_all_s0",
+    "scaffold_g2l_all_s1",
+    "scaffold_g2l_all_s2"
+  ],
+  "code_hashes": {
+    "code/be_analysis.py": "f05a821e567883c3aada9d1eb7c9ab873700dc0e618f0f59718d1e827ef87e38",
+    "code/be_common.py": "8316f60ad35648d2b4c041c26f284f02af71644a0ff814f88f9ca382727349c6",
+    "code/be_data.py": "906e1fcc4bc9a93cf9cdc692c6006b5b6b7235fce49516f0b49a0924282ab2c3",
+    "code/be_evaluate.py": "6b56e9416e6cc0185ac9d25c283fd8f75d16b15970797edaf54f4708eb1643d8",
+    "code/be_gates.py": "4e7c26f046b34b18ddcddbbb48e92f7735e4c652e8ae663a08f34861d18ed8ce",
+    "code/be_ledger.py": "4d13d49d0b318237069d5493144afa678581872eab26c691d3b9f1edd1b8d894",
+    "code/be_models.py": "2baa7561232e19a7ee8f2f2bbac769d7de6e9f10567be75dca63e83d7623aad4",
+    "code/be_scaffold.py": "340de99f5dc46239d4d167174e69661781193220518377b2f5334a86508d56fc",
+    "code/be_train.py": "560dea7b79f6034cf29d0ca1177cb38f672dfb0b7b4be9b941449909dd692301",
+    "code/run_be.py": "8b50560e502794db79b2a39188934f289d98ec0487c9bc9c271ce57a8ac10b8b"
+  },
+  "config_hash": "7dfea45e73fd1c3929ff81fac02641a6fb185800555605ea8edc2eda322310d6",
+  "created_utc": "2026-11-01T01:21:14Z",
+  "git_commit": "25173edef527137c53b0c7221b6c09d267ec2ea4",
+  "git_dirty_tracked": true,
+  "model_selection_rule": "BASE, ROLEBLIND and the strongest other model by the random42 3-seed mean Validation420 RMSE (Test420 not used)",
+  "models": [
+    "BASE",
+    "ROLEBLIND",
+    "G2L-ALL"
+  ],
+  "norm_refit": "structure normalisation and target scaler refitted on scaffold Train3360 only",
+  "preflight_sha256": "fdad9e70274a8715222255ce08e1246bf1d42b1a3fb1db6a7039360b5de2d53c",
+  "protocol_id": "lcrc-lipo-best-epoch-distance-fix-v1",
+  "random42_validation_ranking": [
+    {
+      "model": "G2L-ALL",
+      "valid_rmse_mean": 0.5369164202680934
+    },
+    {
+      "model": "DIST-BLIND",
+      "valid_rmse_mean": 0.5394593927968451
+    },
+    {
+      "model": "ROLEBLIND",
+      "valid_rmse_mean": 0.54110875138364
+    },
+    {
+      "model": "G2L-LOO",
+      "valid_rmse_mean": 0.5452507714700677
+    },
+    {
+      "model": "DIST-TRUE-FIXED",
+      "valid_rmse_mean": 0.5468919312121997
+    },
+    {
+      "model": "BASE",
+      "valid_rmse_mean": 0.5619623761844272
+    }
+  ],
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "checkpoint": "single_best_validation420_rmse_epoch",
+    "dropout": 0.1,
+    "dropout_position": "final_atom_level_local_h_before_readout",
+    "early_stopping": false,
+    "epochs": 360,
+    "gradient_clip": 5.0,
+    "loss": "mse_on_train3360_standardised_target",
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "ssl": false,
+    "weight_decay": 0.001
+  },
+  "scope": "DEVELOPMENT_DISTRIBUTION_SHIFT_NOT_A_NEW_BLIND_DATASET",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "selected_models": [
+    "base",
+    "roleblind",
+    "g2l_all"
+  ],
+  "split": {
+    "file": "tracks/structure-contribution/results/bjoc_cross_task_lipophilicity_v1/split_lipo_v1.json",
+    "sha256": "7f0e0b991b0a0465bfe5fa30dc2ca77e40239aeecbdd0bc87322c9621c2393f8",
+    "sizes": {
+      "test": 420,
+      "train": 3360,
+      "valid": 420
+    },
+    "splitter": "deepchem==2.8.0 ScaffoldSplitter (verbatim algorithm)"
+  },
+  "status": "SCAFFOLD_PREFLIGHT"
+}

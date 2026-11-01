@@ -144,3 +144,32 @@ No `PATH-*`, `G2L-SCALAR`, `G2L-LOCAL-CAP`, no new architecture, no LR /
 clipping / dropout search, no EMA, no ensembles, no Test-driven retraining.
 Stage D (Lipophilicity scaffold shift) is optional and runs only after the 18
 random42 runs, the frozen-manifest Test pass and all verification are complete.
+
+## 8. Addendum — Stage D (scaffold shift) executed after the random42 round closed
+
+Stage D was executed because the 18 formal runs, the frozen-manifest Test pass
+and all verification finished inside the budget. It never altered a random42
+artifact.
+
+* **Split**: `tracks/structure-contribution/results/bjoc_cross_task_lipophilicity_v1/split_lipo_v1.json`
+  (`deepchem==2.8.0 ScaffoldSplitter`, 3360/420/420, 2408 scaffolds, 0 crossing).
+  Verified by re-derivation, not trusted: disjoint rows, union = rows 0…4199,
+  embedded `train_y` == CSV `exp` at those rows, all three declared row hashes
+  reproduce. Audit: `analysis/scaffold/split_audit.json`.
+* **Scope tag**: `DEVELOPMENT_DISTRIBUTION_SHIFT_NOT_A_NEW_BLIND_DATASET` — a
+  different partition of the same 4,200 already-used molecules.
+* **Arms** (pre-registered, 9): `BASE`, `ROLEBLIND` and the strongest other model
+  by the random42 3-seed mean **Validation** RMSE → `G2L-ALL`; seeds 0/1/2;
+  `analysis/scaffold/preflight.json`.
+* **Refit**: structure normalisation and target scaler fitted on scaffold Train
+  only (`valid_or_test_used=false`); training from scratch, same recipe, same
+  best-single-Validation-epoch rule (360 epochs, no early stopping, no soup).
+* **Order**: `scaffold-preflight` → 9 trainings → `scaffold-manifest` (frozen
+  before the scaffold Test read) → `scaffold-eval` (single pass).
+* **Amendment**: the preflight code-hash guard covers every `code/*.py`. Two
+  reporting-only modules (`be_analysis.py`, `be_ledger.py`) were edited after
+  the runs; `analysis/scaffold/preflight_amendment.json` records the old/new
+  hashes, proves the training-path modules are byte-identical in both
+  preflights, and shows all 9 runs trained under preflight v1.
+* Stage D results are reported separately in `REPORT.md` §11 and are not mixed
+  into the random42 main table.

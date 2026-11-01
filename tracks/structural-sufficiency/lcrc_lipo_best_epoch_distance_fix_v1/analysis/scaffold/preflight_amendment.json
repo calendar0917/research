@@ -1,0 +1,58 @@
+{
+  "amendment_sha256": "111b931e434b5023b060cc2e6fb62dc7243502258f8e57f2ccc31e44e63817cd",
+  "changed_files": {
+    "code/be_analysis.py": {
+      "v1": "f05a821e567883c3aada9d1eb7c9ab873700dc0e618f0f59718d1e827ef87e38",
+      "v2": "4bfb4db5cc6f63c8b0a5eefd8ef92f4a63b91ed3c8a0cef201b89f23cf666dfe"
+    },
+    "code/be_ledger.py": {
+      "v1": "4d13d49d0b318237069d5493144afa678581872eab26c691d3b9f1edd1b8d894",
+      "v2": "51056649ef91b245c707d41a29bc45eefdee932ab4c601f780d2d64df8169a5c"
+    }
+  },
+  "changed_files_are_not_imported_by_training_path": [
+    "code/be_analysis.py",
+    "code/be_ledger.py"
+  ],
+  "created_utc": "2026-11-01T02:31:10Z",
+  "n_runs_trained_under_v1": 9,
+  "preflight_v1_sha256": "fdad9e70274a8715222255ce08e1246bf1d42b1a3fb1db6a7039360b5de2d53c",
+  "preflight_v2_sha256": "109feacd5ff9c172d779c72fcf6bad5c8a21a2a6b8878b027599939e86ebf0da",
+  "proof": "be_train.py and be_scaffold.py import be_common, be_data, be_models, lcrc_*, r42_*, torch; neither imports be_analysis or be_ledger. The training-path hashes below are identical in v1 and v2.",
+  "protocol_id": "lcrc-lipo-best-epoch-distance-fix-v1",
+  "reason": "after the 9 scaffold trainings finished, two reporting-only modules were edited (be_analysis.py: point the historical ROLEBLIND s1 curve at its actual round; be_ledger.py: add the scaffold stage to the GPU ledger). The preflight hash check covers every code/*.py file, so the frozen preflight had to be re-generated.",
+  "run_preflight_sha256": {
+    "scaffold_base_s0": "fdad9e70274a8715222255ce08e1246bf1d42b1a3fb1db6a7039360b5de2d53c",
+    "scaffold_base_s1": "fdad9e70274a8715222255ce08e1246bf1d42b1a3fb1db6a7039360b5de2d53c",
+    "scaffold_base_s2": "fdad9e70274a8715222255ce08e1246bf1d42b1a3fb1db6a7039360b5de2d53c",
+    "scaffold_g2l_all_s0": "fdad9e70274a8715222255ce08e1246bf1d42b1a3fb1db6a7039360b5de2d53c",
+    "scaffold_g2l_all_s1": "fdad9e70274a8715222255ce08e1246bf1d42b1a3fb1db6a7039360b5de2d53c",
+    "scaffold_g2l_all_s2": "fdad9e70274a8715222255ce08e1246bf1d42b1a3fb1db6a7039360b5de2d53c",
+    "scaffold_roleblind_s0": "fdad9e70274a8715222255ce08e1246bf1d42b1a3fb1db6a7039360b5de2d53c",
+    "scaffold_roleblind_s1": "fdad9e70274a8715222255ce08e1246bf1d42b1a3fb1db6a7039360b5de2d53c",
+    "scaffold_roleblind_s2": "fdad9e70274a8715222255ce08e1246bf1d42b1a3fb1db6a7039360b5de2d53c"
+  },
+  "run_preflight_sha256_all_equal_v1": true,
+  "status": "SCAFFOLD_PREFLIGHT_AMENDMENT",
+  "training_path_hashes_v1": {
+    "code/be_common.py": "8316f60ad35648d2b4c041c26f284f02af71644a0ff814f88f9ca382727349c6",
+    "code/be_data.py": "906e1fcc4bc9a93cf9cdc692c6006b5b6b7235fce49516f0b49a0924282ab2c3",
+    "code/be_evaluate.py": "6b56e9416e6cc0185ac9d25c283fd8f75d16b15970797edaf54f4708eb1643d8",
+    "code/be_gates.py": "4e7c26f046b34b18ddcddbbb48e92f7735e4c652e8ae663a08f34861d18ed8ce",
+    "code/be_models.py": "2baa7561232e19a7ee8f2f2bbac769d7de6e9f10567be75dca63e83d7623aad4",
+    "code/be_scaffold.py": "340de99f5dc46239d4d167174e69661781193220518377b2f5334a86508d56fc",
+    "code/be_train.py": "560dea7b79f6034cf29d0ca1177cb38f672dfb0b7b4be9b941449909dd692301",
+    "code/run_be.py": "8b50560e502794db79b2a39188934f289d98ec0487c9bc9c271ce57a8ac10b8b"
+  },
+  "training_path_hashes_v2": {
+    "code/be_common.py": "8316f60ad35648d2b4c041c26f284f02af71644a0ff814f88f9ca382727349c6",
+    "code/be_data.py": "906e1fcc4bc9a93cf9cdc692c6006b5b6b7235fce49516f0b49a0924282ab2c3",
+    "code/be_evaluate.py": "6b56e9416e6cc0185ac9d25c283fd8f75d16b15970797edaf54f4708eb1643d8",
+    "code/be_gates.py": "4e7c26f046b34b18ddcddbbb48e92f7735e4c652e8ae663a08f34861d18ed8ce",
+    "code/be_models.py": "2baa7561232e19a7ee8f2f2bbac769d7de6e9f10567be75dca63e83d7623aad4",
+    "code/be_scaffold.py": "340de99f5dc46239d4d167174e69661781193220518377b2f5334a86508d56fc",
+    "code/be_train.py": "560dea7b79f6034cf29d0ca1177cb38f672dfb0b7b4be9b941449909dd692301",
+    "code/run_be.py": "8b50560e502794db79b2a39188934f289d98ec0487c9bc9c271ce57a8ac10b8b"
+  },
+  "training_path_unchanged": true
+}

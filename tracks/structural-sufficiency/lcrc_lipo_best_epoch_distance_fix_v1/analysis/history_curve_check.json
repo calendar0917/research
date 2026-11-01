@@ -127,13 +127,28 @@
       "max_abs_diff_valid_rmse": 0.3422974338589493
     },
     "roleblind_s1": {
-      "available": false,
-      "group": "other_round_loop",
-      "historical": false,
-      "new": true
+      "available": true,
+      "best_epoch_historical": 133,
+      "best_epoch_new": 115,
+      "best_valid_rmse_abs_diff": 0.015987013821715412,
+      "best_valid_rmse_historical": 0.5646547135837519,
+      "best_valid_rmse_new": 0.5486676997620364,
+      "epoch1_train_loss_historical": 24.667116794132053,
+      "epoch1_train_loss_new": 24.667117339088804,
+      "epoch1_train_loss_rel_diff": 2.2092438134247192e-08,
+      "epoch1_valid_rmse_abs_diff": 1.985856263875263e-07,
+      "epoch1_valid_rmse_historical": 1.751497886981951,
+      "epoch1_valid_rmse_new": 1.7514980855675775,
+      "epochs_historical": 360,
+      "epochs_new": 360,
+      "group": "dc_train_loop",
+      "historical_run": "tracks/structural-sufficiency/lcrc_lipo_composition_discovery_v1/analysis/runs/roleblind_s1",
+      "last_epoch_valid_rmse_historical": 0.5918830278075959,
+      "last_epoch_valid_rmse_new": 0.5801803857956706,
+      "max_abs_diff_valid_rmse": 0.426926702603886
     }
   },
-  "created_utc": "2026-11-01T01:21:06Z",
+  "created_utc": "2026-11-01T02:31:37Z",
   "explanation": "Same recipe, same seed, same batch order and the same shared initialisation. Bitwise reproduction is not expected on CUDA: the LCRC forward pass uses index_add_ reductions that are non-deterministic on GPU. The epoch-1 numbers show the recipe is numerically the same computation; the later divergence is optimisation chaos, and its size must be read against analysis/nondeterminism.json (two literal repeats of one seed with this round's own code). The historical soup value is the last-epoch column of the same curve.",
   "groups": {
     "dc_train_loop": "historical run used the same dc_train loop this round reuses",

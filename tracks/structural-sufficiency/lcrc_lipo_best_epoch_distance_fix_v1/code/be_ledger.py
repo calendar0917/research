@@ -81,6 +81,30 @@ def _in_process() -> list[dict[str, Any]]:
     return out
 
 
+def _scaffold_in_process() -> list[dict[str, Any]]:
+    out = []
+    root = C.ANALYSIS / "scaffold" / "runs"
+    if not root.exists():
+        return out
+    for train_json in sorted(root.glob("*/train.json")):
+        payload = C.read_json(train_json)
+        out.append(
+            {
+                "run_key": train_json.parent.name,
+                "arm": payload.get("arm"),
+                "family": payload.get("family"),
+                "seed": payload.get("seed"),
+                "stage": "scaffold_shift_development",
+                "best_epoch": payload.get("checkpoint", {}).get("best_epoch"),
+                "cuda_device_name": payload.get("cuda_device_name"),
+                "train_wall_seconds": payload.get("timing", {}).get("train_wall_seconds"),
+                "epochs_run": payload.get("recipe", {}).get("epochs_run"),
+                "train_json": C.track_rel(train_json),
+            }
+        )
+    return out
+
+
 def build_ledger() -> dict[str, Any]:
     records = _status_records()
     total_seconds = float(sum(r["gpu_seconds"] or 0.0 for r in records))
@@ -101,6 +125,7 @@ def build_ledger() -> dict[str, Any]:
         "within_cap": bool(total_hours <= C.GPU_HARD_CAP_HOURS),
         "remaining_gpu_hours": max(0.0, C.GPU_HARD_CAP_HOURS - total_hours),
         "in_process_timings": _in_process(),
+        "scaffold_in_process_timings": _scaffold_in_process(),
         "gpu_models": sorted({name for r in records for name in (r.get("gpu_names") or []) if name}),
         "failures": [r for r in records if r.get("state") != "completed"],
     }
