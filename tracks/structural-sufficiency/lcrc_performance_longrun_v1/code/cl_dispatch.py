@@ -154,6 +154,12 @@ def _worker(pool: str, queue: list[dict[str, Any]], *, dry_run: bool, stop: thre
 
 
 PLANS: dict[str, list[dict[str, Any]]] = {
+    "p4b": [
+        {"key": "p4b_combo_tox21", "dataset": "Tox21", "arm": "combo_chem_contrib", "pool": "res-gpu0"},
+        {"key": "p4b_combo_freesolv", "dataset": "FreeSolv", "arm": "combo_chem_contrib", "pool": "res-gpu0"},
+        {"key": "p4b_combo_hiv", "dataset": "ogbg-molhiv", "arm": "combo_chem_contrib", "pool": "res-gpu1", "protocol": "hiv_short"},
+        {"key": "p4b_combo_bbbp", "dataset": "BBBP", "arm": "combo_chem_contrib", "pool": "res-gpu1"},
+    ],
     "p5b": [
         {"key": "p5b_combo_lipo_s1", "dataset": "Lipophilicity", "arm": "combo_chem_contrib", "seed": 1, "pool": "res-gpu0"},
         {"key": "p4b_combo_lipo123", "dataset": "Lipophilicity", "split": "lipo-repeat:123", "arm": "combo_chem_contrib", "pool": "res-gpu0"},
