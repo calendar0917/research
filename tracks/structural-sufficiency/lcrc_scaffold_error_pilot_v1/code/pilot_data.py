@@ -275,8 +275,11 @@ def build_pilot_views(*, include_outer: bool) -> dict[str, Any]:
     split_manifest = load_split()
     smiles, y = load_csv_labels()
     rows = {name: [int(x) for x in split_manifest["rows"][name]] for name in ("train", "valid", "test")}
-    if [str(x) for x in split_manifest["scaffold_by_row"]] != bemis_murcko_scaffolds(smiles):
-        raise PermissionError("pilot split scaffold strings do not match the current RDKit")
+    # The fixed split manifest already contains the scaffold strings; training
+    # must not depend on RDKit (the GPU host does not install it).  The local
+    # split audit re-derived them with RDKit before the freeze.
+    if len(split_manifest["scaffold_by_row"]) != PC.N_MOLECULES:
+        raise PermissionError("pilot split scaffold vector has the wrong length")
 
     base_views = D.load_views(include_test=False)
     cache_all = base_views["cache_built"]["cache"]
