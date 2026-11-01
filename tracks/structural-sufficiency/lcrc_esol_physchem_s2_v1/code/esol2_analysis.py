@@ -207,6 +207,9 @@ def _group_contributions(
                 "share_of_base_sse": float(sse_base[mask].sum() / sse_base.sum()),
             }
         )
+    total_abs_delta = float(sum(abs(rec["delta_sse"]) for rec in recs))
+    for rec in recs:
+        rec["share_of_abs_delta_sse"] = float(abs(rec["delta_sse"]) / total_abs_delta if total_abs_delta else 0.0)
     recs.sort(key=lambda rec: abs(rec["delta_sse"]), reverse=True)
     return recs
 
@@ -357,9 +360,10 @@ def analyse() -> dict[str, Any]:
             group_contrib[f"s{seed}"] = {
                 "top_groups_by_abs_delta_sse": contrib[:5],
                 "n_groups": len(contrib),
-                "top1_group_abs_share_of_delta_sse": abs(contrib[0]["share_of_total_delta_sse"]) if contrib else 0.0,
-                "top3_groups_abs_share_of_delta_sse": float(
-                    sum(abs(rec["share_of_total_delta_sse"]) for rec in contrib[:3])
+                "total_delta_sse": float(err_cand @ err_cand - err_base @ err_base),
+                "top1_group_abs_share_of_abs_delta_sse": contrib[0]["share_of_abs_delta_sse"] if contrib else 0.0,
+                "top3_groups_abs_share_of_abs_delta_sse": float(
+                    sum(rec["share_of_abs_delta_sse"] for rec in contrib[:3])
                 ),
                 "n_groups_for_50pct_of_abs_delta_sse": _groups_for_half(contrib),
                 "base_error_concentration": _concentration(err_base),
@@ -435,7 +439,7 @@ def analyse() -> dict[str, Any]:
 
 
 def _groups_for_half(contrib: Sequence[Mapping[str, Any]]) -> int:
-    total = sum(abs(rec["delta_sse"]) for rec in contrib)
+    total = sum(abs(rec["delta_sse"]) for rec in contrib)  # = total_abs_delta_sse
     if total == 0.0:
         return 0
     cumulative = 0.0

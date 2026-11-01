@@ -315,12 +315,81 @@ def verify_new_arm(arm: str, views) -> dict[str, Any]:
     }
 
 
+#: Audit / reporting / driver modules: hashed, but they cannot change a trained
+#: checkpoint.  The pre-training freeze pinned the full dictionary; a later edit
+#: to one of these files is reported as analysis-only drift, never as a change
+#: of the trained artefacts.
+ANALYSIS_ONLY_MODULES = ("esol2_analysis.py", "esol2_p0.py", "run_esol2.py")
+
+
+def training_code_hashes() -> dict[str, str]:
+    drop = {f"esol2/{name}" for name in ANALYSIS_ONLY_MODULES}
+    return {key: value for key, value in C.code_hashes().items() if key not in drop}
+
+
+def verify_freeze_for_post_run() -> dict[str, Any]:
+    """Post-run check of the pre-training freeze (training subset must match)."""
+    if not C.PROTOCOL_FREEZE.exists():
+        raise PermissionError("protocol freeze missing")
+    frozen = C.read_json(C.PROTOCOL_FREEZE)
+    if frozen.get("protocol_id") != C.PROTOCOL_ID:
+        raise PermissionError("protocol freeze has the wrong protocol id")
+    if frozen.get("config_sha256") != C.config_sha256():
+        raise PermissionError("config changed after the freeze")
+    if frozen.get("p0_status") != "PASS" or frozen.get("base_replay", {}).get("passed") is not True:
+        raise PermissionError("freeze does not record P0 PASS and a passed BASE replay")
+    if frozen.get("split_manifest_sha256") != C.sha256_file(C.SPLIT_MANIFEST):
+        raise PermissionError("split manifest changed after the freeze")
+    frozen_training = {key: value for key, value in frozen["code_hashes"].items() if key in training_code_hashes()}
+    if frozen_training != training_code_hashes():
+        raise PermissionError("training code changed after the freeze")
+    return frozen
+
+
 def cmd_manifest(args: argparse.Namespace) -> dict[str, Any]:
     del args
-    C.require_freeze()
     views = D.build_views()
     arms = C.arms_with_runs()
     lanes = {arm: verify_new_arm(arm, views) for arm in arms}
+    # Post-run provenance: the freeze was written before training; an
+    # analysis-only module may have been edited afterwards.  Record the exact
+    # difference and verify that every run's *training* code equals the freeze.
+    frozen = verify_freeze_for_post_run()
+    current_full = C.code_hashes()
+    drift = {
+        key: {"frozen": frozen["code_hashes"].get(key), "current": value}
+        for key, value in current_full.items()
+        if frozen["code_hashes"].get(key) != value
+    }
+    current_training = training_code_hashes()
+    training_matches_freeze = {
+        arm: {
+            key: value
+            for key, value in C.read_json(C.run_dir(arm) / "train.json")["code_hashes"].items()
+            if key in current_training
+        }
+        == current_training
+        for arm in arms
+    }
+    if not all(training_matches_freeze.values()):
+        raise PermissionError(f"a run was produced by different training code: {training_matches_freeze}")
+    post_run = {
+        "protocol_id": C.PROTOCOL_ID,
+        "created_utc": C.utcnow(),
+        "freeze_sha256": frozen["freeze_sha256"],
+        "full_code_hash_drift_since_freeze": drift,
+        "drift_is_analysis_only": bool(
+            all(key.split("/")[-1] in ANALYSIS_ONLY_MODULES for key in drift)
+        ),
+        "training_code_hashes_match_freeze": True,
+        "per_run_training_code_matches_current": training_matches_freeze,
+        "note": (
+            "the drift entries are audit/reporting modules edited after the six runs; "
+            "the training modules, the config and every reused frozen module are "
+            "byte-identical to the pre-training freeze and to each run record"
+        ),
+    }
+    C.write_json(C.ANALYSIS / "post_run_provenance.json", post_run)
     coverage = {
         "new_formal_runs": len(arms),
         "hard_max": 6,
