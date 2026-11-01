@@ -30,6 +30,7 @@ import ta_common as C  # noqa: I001
 
 import mb2_data as D
 import mb2_metrics as MET
+import lcrc_data as PREP_DATA
 import mb2_model as M
 import ta_data as TD
 
@@ -74,6 +75,13 @@ def evaluate(key: str) -> dict[str, Any]:
         tag=f"lipo_r{suffix}",
         split_meta={"kind": "published_repeat", "suffix": suffix},
     )
+    if str(ckpt.get("feature_spec_hash")) != spec.hash():
+        raise SystemExit("checkpoint was trained on a different FeatureSpec")
+    if str(ckpt.get("train_norm_fingerprint")) != PREP_DATA.norm_fingerprint(view.train_norm):
+        raise SystemExit(
+            "the Train-only standardiser rebuilt from the frozen Train rows does not match the "
+            "fingerprint stored in the checkpoint (double standardisation or row drift)"
+        )
     model = M.load_checkpoint_model(
         spec,
         view.train_norm,

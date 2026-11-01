@@ -1,0 +1,39 @@
+{
+ "created_utc": "2026-11-01T16:09:29Z",
+ "files": {
+  "ta/ta_eval.py": {
+   "affects_training_math": "no",
+   "current_sha256": "f6ea7e4df9b03c80a06c1d1ee41b06ec9f6bd5a3760cf0b16101881b7bc8933a",
+   "frozen_sha256": "c80cb1c4ccfb3cc42dc81a1028db28d11f4171cd0ac7ed432859cf545783da0f",
+   "reason": "gates hardened before the one-shot Test read: the evaluator now also refuses a checkpoint whose FeatureSpec hash or Train-only normaliser fingerprint does not match the rebuilt view (the double-standardisation failure mode from the PHYSCHEM6 round)."
+  },
+  "ta/ta_floor.py": {
+   "affects_training_math": "no",
+   "current_sha256": "9c0cba84447f90410d61f095bb0aab5f32eab377477b0f5c6c19d61dd8e6c219",
+   "frozen_sha256": null,
+   "reason": "new file, P0 analysis: bounds the error a proven collision can explain. Consumes no GPU."
+  },
+  "ta/ta_registry.py": {
+   "affects_training_math": "no",
+   "current_sha256": "083d11fd51eb7bcc5cdfea85653ad24ee6830c439f38ed790905d16c4e773a84",
+   "frozen_sha256": null,
+   "reason": "new file, post-run ledger snapshot from `rr jobs --json`. Consumes no GPU."
+  },
+  "ta/ta_tables.py": {
+   "affects_training_math": "no",
+   "current_sha256": "d588b55008786db5d578d875549ec37ef654fde4fb8b2a03f5cd3e99754e8c2f",
+   "frozen_sha256": null,
+   "reason": "new file, post-run table generation. Consumes no GPU."
+  },
+  "ta/ta_train.py": {
+   "affects_training_math": "no",
+   "current_sha256": "63e27622f28564a87ff6e7838f7a0a30571aa85cee4137d7cf80588cc412e5d3",
+   "frozen_sha256": "0c5c2fd6ea1d689d0c5943aa1b55afacd75999ce4f4f5e8c0d24b5553e25c8b9",
+   "reason": "post-training audit only: the restored-state recheck tolerance is now derived from the metric's resolution, after BBBP fold 0 aborted with a one-AUC-pair difference (2.30e-5). Training loop, RNG stream, optimizer, checkpoint contents unchanged. Runs at f49b5025 (the two Lipophilicity repeats) predate it; runs at de483098 follow it."
+  }
+ },
+ "note": "Files that differ from analysis/protocol_freeze.json's code_hashes, with the reason. The protocol itself (splits, objectives, recipe, run list, budget, Test policy) is unchanged; only the audit/tooling layer moved after the freeze, and the run manifest records which commit produced each run.",
+ "protocol_freeze_sha256": "6b77aa8ad9902390fa48ebba55912a0fd02b19887c40394dbc6278e1745bcdf0",
+ "protocol_unchanged": true,
+ "round_id": "lcrc-taskaware-representation-pilot-v1"
+}

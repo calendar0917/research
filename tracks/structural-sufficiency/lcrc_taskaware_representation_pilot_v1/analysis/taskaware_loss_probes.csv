@@ -1,0 +1,9 @@
+kind,name,dataset,objective,metric_name,value,reference_value,delta,gate,note
+toy_batch,sparse_two_tasks,,masked_cell=0.816705 vs equal_task=0.632231,loss,0.632231,0.816705,-0.184474,passed,
+toy_batch,dense_three_tasks,,masked_cell=0.669727 vs equal_task=0.669727,loss,0.669727,0.669727,0.0,passed,
+toy_batch,empty_third_task,,masked_cell=0.871206 vs equal_task=0.838713,loss,0.838713,0.871206,-0.032493,passed,
+toy_batch,only_first_task,,masked_cell=1.001179 vs equal_task=1.001179,loss,1.001179,1.001179,0.0,passed,
+formal_run,tox21_equal_task,Tox21,equal_task,valid_macro_roc_auc,0.864387,0.866252,-0.001864,validation_only,best_epoch 55 vs reference 55
+formal_run,tox21_equal_task,Tox21,equal_task,valid_masked_bce,0.182105,0.180657,0.001447,validation_only,the two objectives are not calibrated against each other here; compare ranking only
+formal_run,hiv_sqrt_pos,ogbg-molhiv,sqrt_pos_weight,valid_roc_auc,0.830017,0.836545,-0.006528,validation_only,"pos_weight {'cap': 5.0, 'capped': True, 'formula': 'min(cap, sqrt(n_negative / n_positive))', 'n_negative': 31669, 'n_positive': 1232, 'pos_weight': 5.0, 'positive_rate': 0.03744567034436643, 'raw_sqrt_ratio': 5.070045082921565, 'source': 'official Train split labels only'} best_epoch 23 vs reference 77"
+formal_run,hiv_sqrt_pos,ogbg-molhiv,sqrt_pos_weight,valid_pr_auc,0.331736,0.315448,0.016288,validation_only,PR-AUC is the imbalance-sensitive companion of ROC-AUC
