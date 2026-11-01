@@ -296,7 +296,12 @@ the 3-seed Test mean is 0.5413 — *pessimistic* for that model). One seed is no
 
 ## 10. Gates
 
-`analysis/cpu_gates.json`: **20/20 passed**, CPU-only, at the frozen code hash. Groups: data
+**20/20 passed**, CPU-only. Three artifacts, deliberately kept distinct:
+`analysis/cpu_gates_frozen.json` is the artifact certified by `protocol_freeze.json` (its SHA256
+equals the freeze's `cpu_gates_sha256`, its `code_hashes` equal the freeze's, 20/20);
+`analysis/cpu_gates.json` is a re-run with the final code (20/20, same config hash, `code_hashes`
+differ only in the two reporting-only modules added after the runs); and
+`analysis/cpu_gates_final_code.json` records that comparison explicitly. Groups: data
 identity (split/labels/cache hashes), row & label alignment, target normalisation fitted on Train
 only, distance correctness (chain, reference loop, empty buckets, no cross-molecule mixing,
 renumbering/reorder invariance, gradient locality, perturbation locality, bucket coverage),
