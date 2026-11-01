@@ -161,10 +161,14 @@ BACE `f4c434b9…` (full table in `analysis/checkpoint_manifest.json`).
 
 ### Known limitations (deliberate, not fixed)
 1. **One seed.** Every number is a single draw; no CIs, no seed spread.
-2. **ESOL label leakage by duplication.** The published random repeat-0 split places 4
-   canonical-SMILES duplicate groups across Train/Test (rows
-   `[[147,779],[450,1019],[680,1069],[701,825]]`). The published split was used as-is;
-   repairing it would have made the round incomparable to any published ESOL number.
+2. **ESOL duplicate molecules across Train/Validation.** The published random repeat-0 split
+   places 4 canonical-SMILES duplicate groups across **Train/Validation** (rows
+   `[[147,779],[450,1019],[680,1069],[701,825]]`), not across Train/Test. The Test split is
+   duplicate-free, so the one-shot Test number is not inflated by this. (Erratum 2026-11-02:
+   an earlier version of this report said "Train/Test"; the machine record in
+   `analysis/p0_audit.json` always said `["train","valid"]`, and no data, split or checkpoint
+   was changed by this correction.) The published split was used as-is; repairing it would
+   have made the round incomparable to any published ESOL number.
 3. **FreeSolv test set is 65 molecules**; one molecule moves RMSE by ~0.1.
 4. **Within-protocol comparison only.** All literature rows are grade B or C; nothing in
    this round is an exact split match, and single-seed numbers should not be placed in a

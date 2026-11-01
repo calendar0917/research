@@ -1,0 +1,441 @@
+{
+  "baseline_P2": {
+    "datasets": [
+      "ESOL",
+      "Lipophilicity",
+      "FreeSolv",
+      "BACE",
+      "BBBP",
+      "Tox21",
+      "ogbg-molhiv"
+    ],
+    "frozen_configuration": {
+      "descriptor_list": "frozen tuple RDKIT_DESCRIPTORS in mb2_baseline.py",
+      "ecfp_n_bits": 2048,
+      "ecfp_radius": 2,
+      "features": "Morgan ECFP4 (radius 2, 2048 bits) + RDKit 2D descriptors (frozen list)",
+      "hyperparameter_search": false,
+      "imputation": "per-descriptor median fitted on the Train split only; constant columns dropped by Train-only variance",
+      "scaling": "none (tree model; descriptors are not standardised)",
+      "validation_used_for_any_baseline_choice": false,
+      "xgboost": {
+        "colsample_bytree": 0.8,
+        "device": "cpu",
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "n_estimators": 500,
+        "random_state": 0,
+        "reg_lambda": 5.0,
+        "subsample": 0.8,
+        "tree_method": "hist"
+      }
+    },
+    "hyperparameter_search": false,
+    "same_rows_as_lcrc": true,
+    "tox21": "one boosting model per endpoint, trained only on that endpoint's labelled Train rows",
+    "uses_gpu": false
+  },
+  "budget": {
+    "gpu": "NVIDIA A100 (res / a100-2)",
+    "gpu_hard_cap_hours": 2.0,
+    "planned_gpu_runs": {
+      "P1": 3,
+      "P2": "CPU only",
+      "P3": 4,
+      "total_formal": 7
+    },
+    "stop_conditions": [
+      "if the projected HIV run would exceed the remaining cap, report BUDGET_BLOCKED and skip HIV",
+      "P3 is dropped first if the budget gets tight; P1 and P2 keep priority",
+      "no epoch reduction, batch-size inflation or recipe change may be used to fit the budget",
+      "stop after the authorised runs; no extra dataset, seed, architecture or S2 ablation"
+    ]
+  },
+  "code_hashes": {
+    "prep/adapters.py": "67f33874ece9198bc7f8fd88aa8b9983d419b72acda1a86da0e6fb941ca48553",
+    "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+    "prep/lcrc_common.py": "799be6b52ed155572d067a2edb53ff92d06fd89304e49d96af8b0c8a8bf079cf",
+    "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+    "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+    "prep/molecular_graph.py": "59a49724c890efc5aa41f7eed8cb2d848fb782aab768ce990864d990cbbe46db",
+    "v1/mb_literature.py": "c279634606cabc1e68e1d550f31473ecda278438254f4f91c398f84d8fa25244",
+    "v1/mb_rdkit.py": "deca01383d3c0d363d216191a954faa120d55d59917b9fb011723a47b1eeb9e0",
+    "v1/mb_source.py": "ae19eeae345ec723f5d8221ae73c038dfb6f49ac6884c070c87cabb2e57a74a1",
+    "v2/mb2_common.py": "a8db1c0f2c28031792fc25673e39ce7404cbf884250592f7bdd33a1005e3e45c",
+    "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+    "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+    "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4",
+    "v2/mb2_p0.py": "296788fead3e85643ab1d4c6eda3bc55c136d8b13cb4e3694680ecb3b8ded69d",
+    "v2/mb2_protocol_freeze.py": "c845b72de079cc627d3966d6a1ee3d3e1160f7318efbb4737141cd72c1c1cd07",
+    "v2/mb2_raw_artifact.py": "b06f5498adb272fe961e48ec0f52c1b60bf2e20f04faf8f4459af0399fe538b9",
+    "v2/mb2_rdkit.py": "567d045914315d1bcd819c0d0de56f53c7210c76362d71992df925834958c355",
+    "v2/mb2_source.py": "5b0b9f6e77457f4e1e15c6771b8d851b5aaa3015714cf9b077bb6ba6eaf35dc7",
+    "v2/mb2_train.py": "1bfc430c21b5384f6b917354aacf91a0617989fb2d8c61ca3d1ee9a5059c1d5b"
+  },
+  "created_utc": "2026-11-01T11:27:17Z",
+  "dataset_order": [
+    "ESOL",
+    "Lipophilicity",
+    "FreeSolv",
+    "BACE",
+    "BBBP",
+    "Tox21",
+    "ogbg-molhiv"
+  ],
+  "datasets": {
+    "BACE": {
+      "csv_sha256": "5f0f81e1069babe3eb27362b3b49069b28f3f5cc0315cd10b732fd2b112ae726",
+      "label_columns": [
+        "Class"
+      ],
+      "n_rows": 1513,
+      "p0_status": "PASS",
+      "rows_sha256": {
+        "test": "ea331b0b94e8191547951dbe385e701e3155419d4e9c724912f7f73e1ef99256",
+        "train": "5f36ea5e5ae6a8ebf451a831c4e41b944daa85ad66a0b92498dad282c60db51e",
+        "valid": "b44a8e9e69c9bb9a1a657f6ee0ca94a49e526d59256e54bca1fbc794cd81b23b"
+      },
+      "source_kind": "chembench",
+      "split_file": "BACE.scaffold122.ind.pkl",
+      "split_method": "scaffold",
+      "split_sha256": "fe93d61fcf3a0a2615dfe07c8d5c0cbc5ee2c4da753bc7eda9aa8ccefd6415eb",
+      "task": "binary",
+      "test_status_at_freeze": "EXPOSED (Sprint 01)",
+      "units": "binary class (1 = active BACE-1 inhibitor)"
+    },
+    "BBBP": {
+      "csv_sha256": "698918057e09753782f4307c177b2af8f2eb31b63bc77198ec37d8c44c38cd7e",
+      "label_columns": [
+        "p_np"
+      ],
+      "n_rows": 2039,
+      "p0_status": "PASS",
+      "rows_sha256": {
+        "test": "7b9d07d3f181236ac9a5a39266378f41ee7a5617962ef60e86ccd649cbf7b349",
+        "train": "8828006bcbb76cac6dc6bbf4ab6b5eef0c2b31ad389c979b134d7fe5afc7003a",
+        "valid": "bebd77a6e278c180abf444b701d0b43ee67cf5aed0635768bffaa4f300a808d2"
+      },
+      "source_kind": "chembench",
+      "split_file": "BBBP.scaffold122.ind.pkl",
+      "split_method": "scaffold",
+      "split_sha256": "b132bccdc116cfeac541e3f6bf3949fbefccc12d58193495fe7331a199d1d325",
+      "task": "binary",
+      "test_status_at_freeze": "NOT_YET_READ",
+      "units": "binary class (1 = blood-brain barrier permeant)"
+    },
+    "ESOL": {
+      "csv_sha256": "3eb977a01fd9cf0404f95602aaf80172a167b3c61ab846382c87d655cf7b8e89",
+      "label_columns": [
+        "measured log solubility in mols per litre"
+      ],
+      "n_rows": 1128,
+      "p0_status": "PASS",
+      "rows_sha256": {
+        "test": "fafa668780c336a6767ecef2938dd1886649689fc101b7614f59965e1204fe14",
+        "train": "b7459354f258ba805eb7a5012dde7a947c887d4e917dfbd2e0802e80742ece77",
+        "valid": "8fbc7db023f608b6b3646edb04728c2dfc6182487ea011b2e33d14111705cbb0"
+      },
+      "source_kind": "chembench",
+      "split_file": "ESOL.random122.ind.pkl",
+      "split_method": "random",
+      "split_sha256": "ebac56b86a6cad416aec254c1c30c7733409998807033c080b01a49453a2b283",
+      "task": "regression",
+      "test_status_at_freeze": "EXPOSED (Sprint 01)",
+      "units": "logS (log10 mol/L, measured)"
+    },
+    "FreeSolv": {
+      "csv_sha256": "46f3df3dbfc65282bdbe01d9d653c625fb8db4ea9528e39c75e8837e04a9ca5a",
+      "label_columns": [
+        "expt"
+      ],
+      "n_rows": 642,
+      "p0_status": "PASS",
+      "rows_sha256": {
+        "test": "229542e89543781ab70caeb1fc2887272d69bc884d7a4f5e3e5420918211e4b7",
+        "train": "19074e5231c266bbe8b08022b9527229ac66a54c2c5d041d1b43d727764b0356",
+        "valid": "788218be78ee6fc58334a2e8433da578f25d2d7261c7332c3c7e6ab385cd3a16"
+      },
+      "source_kind": "chembench",
+      "split_file": "FreeSolv.random122.ind.pkl",
+      "split_method": "random",
+      "split_sha256": "8a93ced2f63e6c794348ee0de4e6bb64b2d9b96e8c7c1c7322c75f1d5d545942",
+      "task": "regression",
+      "test_status_at_freeze": "EXPOSED (Sprint 01)",
+      "units": "kcal/mol (experimental hydration free energy)"
+    },
+    "Lipophilicity": {
+      "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+      "label_columns": [
+        "exp"
+      ],
+      "n_rows": 4200,
+      "p0_status": "PASS",
+      "rows_sha256": {
+        "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+        "train": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+        "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+      },
+      "source_kind": "chembench",
+      "split_file": "Lipop.random122.ind.pkl",
+      "split_method": "random",
+      "split_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+      "task": "regression",
+      "test_status_at_freeze": "EXPOSED (Sprint 01)",
+      "units": "logD (log10 octanol/water distribution coefficient, experimental)"
+    },
+    "Tox21": {
+      "csv_sha256": "827b799dc6a18ddc73d9a196355e807e831ad5b630405d014c309ded2ea8686a",
+      "label_columns": [
+        "NR-AR",
+        "NR-AR-LBD",
+        "NR-AhR",
+        "NR-Aromatase",
+        "NR-ER",
+        "NR-ER-LBD",
+        "NR-PPAR-gamma",
+        "SR-ARE",
+        "SR-ATAD5",
+        "SR-HSE",
+        "SR-MMP",
+        "SR-p53"
+      ],
+      "n_rows": 7831,
+      "p0_status": "PASS",
+      "rows_sha256": {
+        "test": "f4fcd38d77a4563bcaf8da872cfe4bc68099620842d9c24ef5aa6f5d407304d4",
+        "train": "e3b54f6df86d799932f84a4126ab107d4f1dedbf616b1c677ef5648f308e79e1",
+        "valid": "79b3582fc40c9adefd461749ed199663bb2e354119ea8dade0be59681e8b5b40"
+      },
+      "source_kind": "chembench",
+      "split_file": "Tox21.random122.ind.pkl",
+      "split_method": "random",
+      "split_sha256": "d6694f6661d0ef2f9f0ab555be785f9441971caa84d46c5da2ac9c80a1b05404",
+      "task": "multitask",
+      "test_status_at_freeze": "NOT_YET_READ",
+      "units": "12 binary toxicity endpoints; NaN = not assayed (never 0)"
+    },
+    "ogbg-molhiv": {
+      "csv_sha256": "306c4ad8d54fc6cd40c71da4d0561fdcc73e1188662e6992bae0dda8f65bf6d0",
+      "label_columns": [
+        "HIV_active"
+      ],
+      "n_rows": 41127,
+      "p0_status": "PASS",
+      "rows_sha256": {
+        "test": "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804",
+        "train": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+        "valid": "ab298cdbd817e15ad190c7a2a73dbb59babbfb471f947b58e9a9761452ce983a"
+      },
+      "source_kind": "ogb",
+      "split_file": "split/scaffold",
+      "split_method": "scaffold (OGB official)",
+      "split_sha256": "9f1e46e77897b3de3d19452cbd47c312e2844a0ec664c1c9dc897c10d12e42f0",
+      "task": "binary",
+      "test_status_at_freeze": "NOT_YET_READ",
+      "units": "binary class (1 = HIV active)"
+    }
+  },
+  "environment_at_freeze": {
+    "cuda_available": false,
+    "hostname": "main",
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "scikit_learn": "1.5.2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "xgboost": "2.1.3"
+  },
+  "evaluation_discipline": {
+    "baseline_test": "one shot per dataset, after analysis/baseline_manifest.json is committed",
+    "exposed_test_datasets": [
+      "ESOL",
+      "Lipophilicity",
+      "FreeSolv",
+      "BACE"
+    ],
+    "exposed_test_label": "EXPOSED_TEST_EXPLORATORY",
+    "lcrc_test": "one shot per new dataset, after analysis/checkpoint_manifest.json is committed",
+    "literature_grades": [
+      "A EXACT_SPLIT_MATCH",
+      "B PROTOCOL_MATCH_ONLY",
+      "C NOT_COMPARABLE"
+    ],
+    "test_used_for_any_selection": false
+  },
+  "feature_spec": {
+    "atom_feat_dim": 51,
+    "bond_feat_dim": 13,
+    "global_dim": 42,
+    "hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+    "n_atom_types": 16,
+    "n_bond_types": 5,
+    "n_nbr_codes": 80,
+    "n_path_codes": 400,
+    "n_scalars": 9,
+    "name": "lipo_v1",
+    "source": "lcrc_cross_task_preparation_v1/code/feature_spec.py::lipo_v1_spec"
+  },
+  "frozen_statement": "Every quantity in this file was fixed before the first formal GPU run of the round. No split, seed, epoch count, learning rate, loss, checkpoint rule, metric or baseline configuration may change after a Validation or Test number has been seen.",
+  "git_commit_at_freeze": "50d495962e218fb687cdb2aa6745d04769da3435",
+  "git_dirty_tracked_at_freeze": true,
+  "inputs": {
+    "dataset_manifest": {
+      "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/dataset_manifest.json",
+      "sha256": "7c024514d5494a9d29263a671b33349bc8c7ec610d44d7215a92f9293802a869"
+    },
+    "p0_audit": {
+      "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/p0_audit.json",
+      "sha256": "d528ae7f69a3519d5b204775db7a3cc30d23e85a8fa623c048ee39d942015f84"
+    },
+    "raw_artifact_manifest": {
+      "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/source/raw_artifact_manifest.json",
+      "sha256": "c447bd835e6f815e2a1922582b62b9148e9890c42c7509390f521312ed827aea"
+    },
+    "source_manifest": {
+      "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/source_manifest.json",
+      "sha256": "1eca6f9aeed25536e4b5b94b039e9cc3241eb672f5abdd016d752800736d8b36"
+    }
+  },
+  "probe_candidates_P3": {
+    "bace_dropout20": {
+      "dataset": "BACE",
+      "hypothesis": "dropout 0.10 -> 0.20",
+      "overrides": {
+        "dropout": 0.2
+      },
+      "recipe_overrides": {
+        "dropout": 0.2
+      },
+      "test_inference": false,
+      "validation_only": true
+    },
+    "bace_wd1e2": {
+      "dataset": "BACE",
+      "hypothesis": "weight decay 1e-3 -> 1e-2",
+      "overrides": {
+        "weight_decay": 0.01
+      },
+      "recipe_overrides": {
+        "weight_decay": 0.01
+      },
+      "test_inference": false,
+      "validation_only": true
+    },
+    "fs_dropout00": {
+      "dataset": "FreeSolv",
+      "hypothesis": "dropout 0.10 -> 0.00",
+      "overrides": {
+        "dropout": 0.0
+      },
+      "recipe_overrides": {
+        "dropout": 0.0
+      },
+      "test_inference": false,
+      "validation_only": true
+    },
+    "fs_dropout20": {
+      "dataset": "FreeSolv",
+      "hypothesis": "dropout 0.10 -> 0.20",
+      "overrides": {
+        "dropout": 0.2
+      },
+      "recipe_overrides": {
+        "dropout": 0.2
+      },
+      "test_inference": false,
+      "validation_only": true
+    }
+  },
+  "probe_rules": {
+    "epochs_per_candidate": 360,
+    "max_extra_runs": 4,
+    "note": "FreeSolv and BACE Test sets were already read in Sprint 01, so the probes are Validation-only diagnostics and are never merged into the seven-dataset main table",
+    "read_test_labels": false,
+    "report_test_metric": false,
+    "run_test_inference": false,
+    "seed": 0,
+    "selection_uses_validation_only": true
+  },
+  "protocol_id": "lcrc-molnet-benchmark-pilot-v2",
+  "recipe_R3": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "dropout": 0.1,
+    "dropout_position": "final atom-level local representation h, before the per-atom contribution f and the global rho",
+    "early_stopping": false,
+    "ema": false,
+    "epochs": 360,
+    "gradient_clip": 5.0,
+    "hyperparameter_search": false,
+    "min_lr": 1e-05,
+    "note": "identical to Sprint 01 (lcrc-molnet-benchmark-pilot-v1) and to the earlier R3 rounds",
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "soup": false,
+    "ssl": false,
+    "swa": false,
+    "weight_decay": 0.001
+  },
+  "reused_module_hashes": {
+    "prep/adapters.py": "67f33874ece9198bc7f8fd88aa8b9983d419b72acda1a86da0e6fb941ca48553",
+    "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+    "prep/lcrc_common.py": "799be6b52ed155572d067a2edb53ff92d06fd89304e49d96af8b0c8a8bf079cf",
+    "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+    "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+    "prep/molecular_graph.py": "59a49724c890efc5aa41f7eed8cb2d848fb782aab768ce990864d990cbbe46db",
+    "v1/mb_literature.py": "c279634606cabc1e68e1d550f31473ecda278438254f4f91c398f84d8fa25244",
+    "v1/mb_rdkit.py": "deca01383d3c0d363d216191a954faa120d55d59917b9fb011723a47b1eeb9e0",
+    "v1/mb_source.py": "ae19eeae345ec723f5d8221ae73c038dfb6f49ac6884c070c87cabb2e57a74a1"
+  },
+  "round_id": "lcrc-molnet-benchmark-pilot-v2",
+  "schema": "lcrc-molnet-v2-protocol-freeze-v1",
+  "split_policy": {
+    "chembench_repeat_file_index": 122,
+    "chembench_repeat_index": 0,
+    "chembench_rule": "repeat 0 = the lexicographically first published split file (suffix 122); glob order is never used",
+    "drop_or_impute_samples": false,
+    "ogb_rule": "official split/scaffold/{train,valid,test}.csv.gz row ids, published order preserved",
+    "repair_or_resplit": false
+  },
+  "task_adaptation": {
+    "binary": "BCEWithLogitsLoss on a single logit; sigmoid probability; highest-Validation-ROC-AUC checkpoint (tie -> lower BCE -> earlier epoch)",
+    "class_weights": false,
+    "focal_loss": false,
+    "multitask_tox21": "BCEWithLogitsLoss(reduction='none') with the observed-label mask; loss = (per_label_loss*mask).sum()/mask.sum(); highest-Validation-macro-ROC-AUC checkpoint (tie -> lower masked BCE -> earlier epoch)",
+    "regression": "MSE on the Train-standardised target; RMSE on raw units; lowest-Validation-RMSE checkpoint",
+    "single_task_parameters": 247106,
+    "threshold_tuning": false,
+    "tox21_head_change": "only the last output layer of f and of rho widens from 1 to 12 outputs; the shared encoder, S1/S2 modules, local MLP, dropout position and readout form are unchanged",
+    "tox21_parameters": 248536
+  },
+  "test_labels_read": false,
+  "tox21_endpoints": [
+    "NR-AR",
+    "NR-AR-LBD",
+    "NR-AhR",
+    "NR-Aromatase",
+    "NR-ER",
+    "NR-ER-LBD",
+    "NR-PPAR-gamma",
+    "SR-ARE",
+    "SR-ATAD5",
+    "SR-HSE",
+    "SR-MMP",
+    "SR-p53"
+  ],
+  "tox21_missing_policy": {
+    "loss": "masked BCE, denominator = number of observed cells",
+    "metrics": "per-endpoint ROC-AUC/PR-AUC on observed cells; macro mean over definable endpoints",
+    "missing_value": "NaN (never 0, never imputed, never treated as a negative)",
+    "undefined_endpoint_rule": "reported as not definable; the macro-average coverage count is reported with it"
+  },
+  "written_before_any_gpu_training": true
+}
