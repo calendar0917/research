@@ -378,15 +378,15 @@ of ≥0.01 should be read as signal):
 ## 12. GPU ledger
 
 `analysis/gpu_ledger.json` (`run_be.py ledger`), built from one `rr status --json` record per run
-(`analysis/rr_status/`, 43 records including failures and cancellations) plus in-process timings.
+(`analysis/rr_status/`, 45 records including failures and cancellations) plus in-process timings.
 
 | group | runs | GPU-hours |
 | --- | ---: | ---: |
 | formal arms (6 models × 3 seeds) | 18 | 3.209 |
 | Stage D scaffold (incl. 2 retried duplicates and pre-CSV failures) | 19 | 2.402 |
 | non-determinism repeats (same arm twice + one aborted launch) | 3 | 0.359 |
-| CUDA smoke | 3 | 0.008 |
-| **total** | **43** | **5.978 / 14.000** |
+| smoke (CUDA, 6 families × 4 epochs on 64/32 rows; 3 records incl. 2 rejected launches) | 5 | 0.014 |
+| **total** | **45** | **5.983 / 14.000** |
 
 All runs on `NVIDIA A100-SXM4-40GB` (driver 550.163.01, torch 2.5.1+cu124), pools `res-gpu0` /
 `res-gpu1` (one GPU per run, `cuda:0` in-process). Formal per-run wall clock: mean 628 s, range
@@ -416,6 +416,9 @@ python .../run_be.py manifest
 python .../run_be.py eval-test --label EXPOSED_TEST_EXPLORATORY
 python .../run_be.py analysis
 ```
+
+The CUDA smoke artifact (6 families, 4 epochs, `smoke: true`, excluded from every table by the
+smoke guard) is in `analysis/smoke_cuda/`; `analysis/smoke_cpu/` holds the CPU audit run.
 
 Artifacts: `analysis/runs/<arm>/{checkpoint.pt,curve.csv,train.json,diagnostics.json,train_predictions.npz,valid_predictions.npz}`,
 `analysis/checkpoint_manifest.json`, `analysis/MANIFEST_FROZEN`, `analysis/eval_test/*` (per-molecule

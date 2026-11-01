@@ -159,8 +159,8 @@ the D34/D5 line (P3) and, so far, to the G2L gates (P4).
 
 ## Budget
 
-5.978 A100 GPU-hours of the 14-hour cap (18 formal runs 3.209, scaffold stage 2.402, repeats 0.359,
-smoke 0.008), ~4 h wall clock. The binding constraint was never GPU time; it was the noise floor and
+5.983 A100 GPU-hours of the 14-hour cap (18 formal runs 3.209, scaffold stage 2.402, repeats 0.359,
+smoke 0.014), ~4.5 h wall clock. The binding constraint was never GPU time; it was the noise floor and
 one silent aggregation bug.
 
 ## Scope
