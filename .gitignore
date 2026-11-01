@@ -53,6 +53,11 @@ tracks/*/code/**/__pycache__/
 htmlcov/
 *.npz
 *.npy
+# the Sprint-02 LCRC benchmark ships its label-free raw-attribute artifact and its
+# per-run prediction/checkpoint files as content-addressed evidence (small, and every
+# consumer re-verifies the sha256 recorded in the manifests)
+!tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/source/raw/lcrc_raw_v2/*.npz
+!tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/runs/*/*.npz
 tracks/*/results/molhiv/*.npz
 
 # generated experiment outputs; keep small Markdown summaries and explicit manifests
