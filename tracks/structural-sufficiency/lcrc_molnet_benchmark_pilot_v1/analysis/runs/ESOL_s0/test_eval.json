@@ -1,0 +1,97 @@
+{
+  "checkpoint": {
+    "best_epoch": 136,
+    "best_metric_name": "valid_rmse",
+    "best_metric_value": 0.5584556461262555,
+    "parameters": 247106,
+    "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/runs/ESOL_s0/checkpoint.pt",
+    "sha256": "894340da80da6a69309957abeb4f012940b1258691e9ff4feb6f11d97c39cb3a"
+  },
+  "checkpoint_manifest": {
+    "frozen_git_commit": "d91e496fd590f0eebd110221d87b65b2fdc67b46",
+    "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/checkpoint_manifest.json",
+    "sha256": "7daf473b1d049141d59b4f3d64e1363c48d9c40cce681c4eccb3e483ae6b0ba4"
+  },
+  "cuda_device_name": "cpu",
+  "dataset": "ESOL",
+  "device": "cpu",
+  "evaluated_utc": "2026-11-01T10:42:51Z",
+  "git_commit": "d5bcba11be0d8d17c7f1039054947e1e8822b27f",
+  "git_dirty_tracked": false,
+  "gpu": {
+    "device_name": "cpu",
+    "peak_memory_allocated_bytes": 0
+  },
+  "hostname": "main",
+  "label_column": "measured log solubility in mols per litre",
+  "metrics": {
+    "test": {
+      "bias": -0.0009079116519860671,
+      "mae": 0.39611388168468,
+      "n": 113,
+      "note": "single one-shot evaluation",
+      "r2": 0.9312271362393161,
+      "rmse": 0.5225626961940829
+    },
+    "train": {
+      "bias": 0.06922617409318078,
+      "mae": 0.3304328557235451,
+      "n": 902,
+      "note": "recomputed from the frozen best checkpoint",
+      "r2": 0.9565007070094298,
+      "rmse": 0.4430008622891272
+    },
+    "valid": {
+      "bias": 0.010000146981748738,
+      "mae": 0.4012452421845448,
+      "n": 113,
+      "note": "reproduced from the frozen best checkpoint",
+      "r2": 0.9161031578249882,
+      "rmse": 0.5584555279478907
+    }
+  },
+  "one_shot": true,
+  "preconditions": {
+    "best_epoch_matches_curve": true,
+    "checkpoint_sha256_matches_manifest": true,
+    "code_hashes_unchanged_since_freeze": true,
+    "curve_argbest_epoch": 136,
+    "train_cache_fingerprint_matches": true,
+    "valid_cache_fingerprint_matches": true,
+    "valid_metric_reproduced": true,
+    "valid_metric_reproduced_abs_diff": 1.1817836487182376e-07,
+    "valid_metric_reproduced_tolerance": 1e-05,
+    "valid_metric_reproduced_value": 0.5584555279478907
+  },
+  "predictions": {
+    "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/runs/ESOL_s0/test_predictions.npz",
+    "sha256": "74d3f5930c6805fd237471fb884dacd9e5871fd8cddd963582dbb3ba4f987f87"
+  },
+  "protocol_id": "lcrc-molnet-benchmark-pilot-v1",
+  "seed": 0,
+  "split_repeat_index": 0,
+  "task": "regression",
+  "test_labels_read": true,
+  "test_split": {
+    "atom_unknown_fraction": 0.0,
+    "cache_build_seconds": 0.10913839598651975,
+    "cache_content_fingerprint": "6c8e47a490a61f79326c1c33adbdb3b561ec2d847ed2f9d0983eb5403b5730b0",
+    "n": 113,
+    "n_atoms": 1491,
+    "n_s1_codes": 3062,
+    "n_s2_paths": 4164,
+    "rows_sha256": "fafa668780c336a6767ecef2938dd1886649689fc101b7614f59965e1204fe14"
+  },
+  "test_used_for_selection": false,
+  "timing": {
+    "note": "test_seconds excludes cache build; cache build is reported separately; both are inference-only and contain no training",
+    "test_cache_build_seconds": 0.10913839598651975,
+    "test_cache_seconds": 0.0051888140151277184,
+    "test_molecules_per_second": 17414.23028038399,
+    "test_seconds": 0.0064889460045378655,
+    "train_predict_seconds": null,
+    "valid_seconds": 0.007613680005306378
+  },
+  "torch": "2.5.1+cu124",
+  "units": "logS (log10 mol/L, measured)"
+}

@@ -104,7 +104,7 @@ def build() -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
             "task": task,
             "phase": "train",
             "run_dir": C.track_rel(run_dir),
-            "experiment_name": f"molnet-{dataset.lower()}-s0",
+            "experiment_name": f"molnet-train-{dataset}",
             "rr_wall_seconds": rr_wall,
             "measured_training_seconds": train_seconds,
             "charged_gpu_seconds": train_seconds,
@@ -119,16 +119,22 @@ def build() -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
         }
         if test_json is not None:
             eval_seconds = float(test_json["timing"]["test_seconds"]) + float(test_json["timing"]["valid_seconds"])
+            eval_device = str(test_json.get("device", "cpu"))
+            eval_on_gpu = eval_device.startswith("cuda")
             entry["test_eval"] = {
+                "device": eval_device,
+                "charged_on_gpu": eval_on_gpu,
                 "measured_inference_seconds": eval_seconds,
                 "test_seconds": float(test_json["timing"]["test_seconds"]),
                 "test_molecules_per_second": float(test_json["timing"]["test_molecules_per_second"]),
                 "test_cache_build_seconds": float(test_json["timing"]["test_cache_build_seconds"]),
                 "peak_memory_allocated_bytes": int(test_json["gpu"]["peak_memory_allocated_bytes"]),
-                "charged_gpu_seconds": eval_seconds,
-                "charged_gpu_hours": eval_seconds / 3600.0,
+                # Test evaluation was run once on CPU after the checkpoint was
+                # frozen; it is charged 0 GPU-seconds and reported separately.
+                "charged_gpu_seconds": eval_seconds if eval_on_gpu else 0.0,
+                "charged_gpu_hours": (eval_seconds / 3600.0) if eval_on_gpu else 0.0,
             }
-            entry["charged_gpu_seconds"] += eval_seconds
+            entry["charged_gpu_seconds"] += entry["test_eval"]["charged_gpu_seconds"]
             entry["charged_gpu_hours"] = entry["charged_gpu_seconds"] / 3600.0
         ledger_entries.append(entry)
 

@@ -27,11 +27,16 @@ lcrc_molnet_benchmark_pilot_v1/
 ├── BENCHMARK_PROTOCOL.md      # pre-registration: data, splits, gates, recipe, evaluation
 ├── REPORT.md                  # results + positioning + next step
 ├── README.md
-├── data/
-│   ├── chembench_source_manifest.json
-│   └── chembench/<task>/      # vendored CSV + all three published split files
+├── analysis/
+│   ├── source/chembench_source_manifest.json
+│   ├── source/chembench/<task>/   # vendored CSV + all three published split files
+│   ├── source/raw_attributes_v1.json.gz  # committed label-free attributes (RDKit is local-only)
+│   ├── p0_audit.json / protocol_freeze.json / checkpoint_manifest.json
+│   ├── benchmark_table.csv / literature_matrix.csv / gpu_ledger.json
+│   └── runs/<dataset>_s0/     # checkpoint, curve, train/eval JSON, predictions
 ├── code/
 │   ├── mb_common.py           # paths, frozen declarations, hashing
+│   ├── mb_raw_artifact.py     # builds/verifies the committed raw-attribute artifact
 │   ├── mb_source.py           # ChemBench loader + split-repeat policy
 │   ├── mb_rdkit.py            # SMILES -> frozen raw attributes -> lipo_v1 graph
 │   ├── mb_data.py             # structure caches, train-only normalisation, batching
@@ -41,7 +46,8 @@ lcrc_molnet_benchmark_pilot_v1/
 │   ├── mb_train.py            # P1: one formal run per dataset
 │   ├── mb_freeze.py           # checkpoint manifest (before any Test access)
 │   ├── mb_eval.py             # P2: one-shot Test evaluation
-│   └── mb_tables.py           # benchmark table, GPU ledger, summary
+│   ├── mb_tables.py           # benchmark table, GPU ledger, summary
+│   └── mb_literature.py       # literature matrix + A/B/C grading
 ├── tests/                     # 44 CPU tests (~2 s)
 ├── cache/                     # local structure caches (git-ignored, label-free)
 └── analysis/
@@ -69,8 +75,9 @@ uv run python -m pytest tracks/structural-sufficiency/lcrc_molnet_benchmark_pilo
 # P1 / P2
 uv run python .../code/mb_train.py --dataset ESOL --device cuda
 uv run python .../code/mb_freeze.py
-uv run python .../code/mb_eval.py --dataset ESOL --device cuda
+uv run python .../code/mb_eval.py --dataset ESOL --device cpu
 uv run python .../code/mb_tables.py
+uv run python .../code/mb_literature.py
 ```
 
 ## Non-negotiables enforced in code
