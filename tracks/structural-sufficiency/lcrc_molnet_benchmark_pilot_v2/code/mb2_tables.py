@@ -126,12 +126,18 @@ def _git_commit_for(path: Path) -> str:
 
 
 def _metric(task: str, metrics: dict[str, Any]) -> float:
-    return float(metrics["rmse"] if task == "regression" else metrics["roc_auc"])
+    if task == "regression":
+        return float(metrics["rmse"])
+    if task == "multitask":
+        return float(metrics["macro_roc_auc"])
+    return float(metrics["roc_auc"])
 
 
 def _secondary(task: str, metrics: dict[str, Any]) -> tuple[str, float | None]:
     if task == "regression":
         return "mae", float(metrics["mae"])
+    if task == "multitask":
+        return "macro_pr_auc", float(metrics["macro_pr_auc"])
     return "pr_auc", float(metrics["pr_auc"])
 
 
@@ -501,7 +507,9 @@ def build() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, 
             ),
             "cpu_baseline_seconds_total": sum(e["fit_seconds"] for e in (_baseline_record(d) or {"fit_seconds": 0} for d in C.DATASET_ORDER)),
             "sprint01_gpu_hours_read_only": sum(
-                e["gpu_hours"] for e in ledger_entries if e["source"].startswith("lcrc_molnet_benchmark_pilot_v1")
+                e["charged_gpu_hours"]
+                for e in ledger_entries
+                if e["source"].startswith("lcrc_molnet_benchmark_pilot_v1")
             ),
         },
     }

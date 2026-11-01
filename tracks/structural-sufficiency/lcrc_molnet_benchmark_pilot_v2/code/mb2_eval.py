@@ -37,8 +37,6 @@ import mb2_gate as GATE
 import mb2_metrics as MET
 import mb2_model as M
 
-import lcrc_data as PREP_DATA
-
 
 def _manifest_entry(manifest: dict[str, Any], dataset: str) -> dict[str, Any]:
     if dataset not in manifest.get("datasets", {}):
@@ -64,8 +62,7 @@ def _append_test_ledger(entry: dict[str, Any]) -> None:
     C.write_json(path, payload)
 
 
-def evaluate(dataset: str, *, device: torch.device, data_device: torch.device | None = None, force: bool = False) -> dict[str, Any]:
-    data_device = data_device or torch.device("cpu")
+def evaluate(dataset: str, *, device: torch.device, force: bool = False) -> dict[str, Any]:
     manifest_path = C.ANALYSIS / "checkpoint_manifest.json"
     if not manifest_path.exists():
         raise SystemExit(f"{C.track_rel(manifest_path)} missing: freeze the P1 checkpoints first")
@@ -262,8 +259,45 @@ def evaluate(dataset: str, *, device: torch.device, data_device: torch.device | 
         f"[{dataset} one-shot Test] {key}={test_metrics[key]:.5f} (valid {valid_metrics[key]:.5f}) "
         f"-> {C.track_rel(out_path)}"
     )
-    del data_device, PREP_DATA
     return payload
+
+
+def verify(dataset: str) -> dict[str, Any]:
+    """Re-derive the recorded Test metric from the *stored* predictions only.
+
+    This performs no Test access: it reads ``test_predictions.npz`` (which was
+    written by the single one-shot evaluation) and recomputes the primary metric
+    with the frozen metric code, so a later edit to the reporting layer cannot
+    silently move a published number.
+    """
+    run_dir = C.RUNS / f"{dataset}_s{C.TRAIN_SEED}"
+    payload = C.read_json(run_dir / "test_eval.json")
+    arrays = np.load(run_dir / "test_predictions.npz")
+    from sklearn.metrics import roc_auc_score
+
+    task = payload["task"]
+    raw, y_true = arrays["raw"], arrays["y_true"]
+    if task == "regression":
+        recomputed = float(np.sqrt(np.mean((raw[:, 0] - y_true[:, 0]) ** 2)))
+        key = "rmse"
+    elif task == "binary":
+        recomputed = float(roc_auc_score(y_true.reshape(-1), raw[:, 0]))
+        key = "roc_auc"
+    else:
+        per_task = []
+        for j in range(raw.shape[1]):
+            mask = np.isfinite(y_true[:, j])
+            if mask.sum() and len(np.unique(y_true[mask, j])) == 2:
+                per_task.append(float(roc_auc_score(y_true[mask, j], raw[mask, j])))
+        recomputed = float(np.mean(per_task))
+        key = "macro_roc_auc"
+    recorded = float(payload["metrics"]["test"][payload["primary_metric"]])
+    diff = abs(recomputed - recorded)
+    ok = diff <= C.REPRO_TOL
+    C.log(f"[{dataset} verify] {key} recorded={recorded:.6f} recomputed={recomputed:.6f} diff={diff:.2e} ok={ok}")
+    if not ok:
+        raise SystemExit(f"{dataset}: recorded Test metric does not reproduce from the stored predictions")
+    return {"dataset": dataset, "metric": key, "recorded": recorded, "recomputed": recomputed, "abs_diff": diff, "ok": ok}
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -271,10 +305,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--dataset", required=True, choices=list(C.DATASETS))
     parser.add_argument("--device", default="cpu", choices=["cuda", "cpu"])
     parser.add_argument("--force", action="store_true", help="not permitted for a formal one-shot result")
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="recompute the recorded Test metric from the stored predictions (no Test access, no new read)",
+    )
     args = parser.parse_args(argv)
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
         raise SystemExit("CUDA requested but unavailable")
+    if args.verify:
+        verify(args.dataset)
+        return 0
     if args.dataset in C.EXPOSED_TEST_DATASETS and not args.force:
         raise SystemExit(
             f"{args.dataset}: the Test set was already read in Sprint 01; this round does not re-read it "

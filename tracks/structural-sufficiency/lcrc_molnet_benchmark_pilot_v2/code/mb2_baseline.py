@@ -528,7 +528,9 @@ def test_dataset(dataset: str, *, force: bool = False) -> dict[str, Any]:
     t0 = time.perf_counter()
     pred, _tasks = _baseline_test_predictions(dataset, X[np.asarray(rows, dtype=np.int64)])
     seconds = time.perf_counter() - t0
-    metrics = MET.task_metrics(meta["task"], pred, y_test, None, list(C.TOX21_TASKS))
+    # the tree model predicts in the target's own units, so the identity normaliser applies
+    identity_norm = {"scale": 1.0, "mean": 0.0}
+    metrics = MET.task_metrics(meta["task"], pred, y_test, identity_norm, list(C.TOX21_TASKS))
     ogb_block = None
     if dataset == "ogbg-molhiv":
         ogb_block = MET.ogb_evaluator_roc_auc(y_test.reshape(-1), pred[:, 0])
