@@ -154,6 +154,15 @@ def _worker(pool: str, queue: list[dict[str, Any]], *, dry_run: bool, stop: thre
 
 
 PLANS: dict[str, list[dict[str, Any]]] = {
+    "p4": [
+        {"key": "p4_rho_lipo123", "dataset": "Lipophilicity", "split": "lipo-repeat:123", "arm": "rhoshape", "pool": "res-gpu0"},
+        {"key": "p4_rho_lipo124", "dataset": "Lipophilicity", "split": "lipo-repeat:124", "arm": "rhoshape", "pool": "res-gpu0"},
+        {"key": "p4_rho_hiv", "dataset": "ogbg-molhiv", "arm": "rhoshape", "pool": "res-gpu0", "protocol": "hiv_short"},
+        {"key": "p4_rho_freesolv", "dataset": "FreeSolv", "arm": "rhoshape", "pool": "res-gpu1"},
+        {"key": "p4_rho_bbbp", "dataset": "BBBP", "arm": "rhoshape", "pool": "res-gpu1"},
+        {"key": "p4_rho_tox21", "dataset": "Tox21", "arm": "rhoshape", "pool": "res-gpu1"},
+        {"key": "p4_base_hiv", "dataset": "ogbg-molhiv", "arm": "base", "pool": "res-gpu1", "protocol": "hiv_short"},
+    ],
     "p2": [
         {"key": "p2_combo_rho_contrib_lipo", "dataset": "Lipophilicity", "arm": "combo_rho_contrib", "pool": "res-gpu0"},
         {"key": "p2_combo_rho_contrib_esol", "dataset": "ESOL", "arm": "combo_rho_contrib", "pool": "res-gpu1"},
