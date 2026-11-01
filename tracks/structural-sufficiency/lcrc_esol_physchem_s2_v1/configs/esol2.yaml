@@ -1,0 +1,65 @@
+# lcrc-esol-physchem-s2-v1
+# Two independent experiments on the frozen lcrc_esol_quickstart_v1 split:
+#   H1  ESOL-BASE vs ESOL-PHYSCHEM6   (six recomputed descriptors -> global rho)
+#   H2  ESOL-BASE vs ESOL-S2BLIND-E   (typed two-hop S2 content, capacity-matched)
+# The ESOL-BASE checkpoints are reused read-only and never retrained.
+# No Test evaluation happens in this round.
+protocol_id: lcrc-esol-physchem-s2-v1
+round_id: lcrc-esol-physchem-s2-v1
+split_seed: 20261103
+split_fractions: [0.8, 0.1, 0.1]
+
+data:
+  source: the frozen lcrc_esol_quickstart_v1 ESOL artifacts (CSV, raw graphs, physchem, split)
+  source_round: tracks/structural-sufficiency/lcrc_esol_quickstart_v1
+  csv_sha256: 8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189
+  split_manifest_sha256: 47db06adfd4f5206fa6df3930a2522010c9fc6b51d29a550da3dd83ca8a71a43
+  physchem_sha256: b3be094811805287993d9ce8fd4a7924e460a4585e5ef72946f803c0824ae599
+  lcrc_cache_content_fingerprint: 30f2bf97be4c78bd261b67b277f46df5f3c5d2dddbaf35d09a82a79bf5d353e3
+  descriptor_source: recomputed from SMILES with RDKit (never the CSV predicted-logS column)
+  descriptor_alignment: per-split matrices in cache order (views['physchem_train'] / ['physchem_valid'])
+  standardisation: Train-only mean/scale, applied exactly once inside LCRCPhyschem6.forward
+  label_scope: train and validation only
+  test_policy: no Test evaluation in this round
+
+models: [physchem6, s2blind_e]
+base_model: base
+seeds: [0, 1, 2]
+descriptors: [MolWt, MolLogP, TPSA, HBD, HBA, RotatableBonds]
+
+base_reuse:
+  arms: [base_s0, base_s1, base_s2]
+  retrained: false
+  validation_replay_tolerance: 1.0e-6
+
+training:
+  optimizer: AdamW
+  adam_betas: [0.9, 0.999]
+  adam_eps: 1.0e-8
+  peak_lr: 3.0e-4
+  min_lr: 1.0e-5
+  scheduler: per_step_cosine
+  weight_decay: 1.0e-3
+  batch_size: 128
+  epochs: 360
+  gradient_clip: 5.0
+  dropout: 0.10
+  dropout_position: final_atom_level_local_h_before_readout
+  loss: mse_on_train_standardised_target
+  checkpoint: single_best_validation_rmse_epoch
+  early_stopping: false
+  ssl: false
+  shuffle_offset: 917000
+
+analysis:
+  primary_metric: valid_rmse
+  secondary_metrics: [valid_mae, train_rmse, best_epoch, train_valid_gap]
+  paired: within seed
+  uncertainty: paired frozen-scaffold-group bootstrap (descriptive)
+  test_evaluation: none
+
+budget:
+  host: res
+  pools: [res-gpu0, res-gpu1]
+  gpu_hard_cap_hours: 0.6
+  max_formal_runs: 6
