@@ -389,6 +389,57 @@ def cmd_analysis(args: argparse.Namespace) -> dict[str, Any]:
     return payload
 
 
+def cmd_scaffold_preflight(args: argparse.Namespace) -> dict[str, Any]:
+    import be_scaffold
+
+    del args
+    payload = be_scaffold.preflight()
+    C.log(
+        f"[scaffold-preflight] models={payload['models']} seeds={payload['seeds']} "
+        f"split_sha={payload['split']['sha256'][:12]}"
+    )
+    return payload
+
+
+def cmd_scaffold_train(args: argparse.Namespace) -> dict[str, Any]:
+    import be_scaffold
+
+    device = _device(args.device)
+    if device.type != "cuda":
+        raise PermissionError("scaffold training must run on CUDA")
+    log_dir = C.ANALYSIS / "scaffold/runs" / str(args.arm)
+    env = _start_envelope(str(args.arm), "scaffold", str(device), log_dir, sys.argv[1:])
+    try:
+        payload = be_scaffold.train(str(args.arm), device=device, pool=str(args.pool or "local"))
+    except Exception as exc:
+        _finish_envelope(env, log_dir, status="FAILED", error=f"{type(exc).__name__}: {exc}")
+        raise
+    _finish_envelope(env, log_dir, status="COMPLETED")
+    C.log(
+        f"[scaffold-train] {args.arm} best_epoch={payload['checkpoint']['best_epoch']} "
+        f"valid={payload['metrics']['valid']['rmse']:.6f}"
+    )
+    return payload
+
+
+def cmd_scaffold_manifest(args: argparse.Namespace) -> dict[str, Any]:
+    import be_scaffold
+
+    del args
+    payload = be_scaffold.freeze_manifest()
+    C.log(f"[scaffold-manifest] frozen {payload['n_arms']} checkpoints sha={payload['manifest_sha256'][:12]}")
+    return payload
+
+
+def cmd_scaffold_eval(args: argparse.Namespace) -> dict[str, Any]:
+    import be_scaffold
+
+    del args
+    payload = be_scaffold.evaluate()
+    C.log("[scaffold-eval] wrote scaffold metrics and tables")
+    return payload
+
+
 def cmd_ledger(args: argparse.Namespace) -> dict[str, Any]:
     del args
     import be_ledger
@@ -457,6 +508,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_analysis = sub.add_parser("analysis")
     p_analysis.add_argument("--allow-smoke", action="store_true")
 
+    sub.add_parser("scaffold-preflight")
+    sub.add_parser("scaffold-manifest")
+    sub.add_parser("scaffold-eval")
+
+    p_st = sub.add_parser("scaffold-train")
+    p_st.add_argument("--arm", required=True)
+    p_st.add_argument("--device", default="cuda", choices=["cuda", "cuda:0"])
+    p_st.add_argument("--pool", default=None)
+
     p_verify = sub.add_parser("verify")
     p_verify.add_argument("--device", default="cpu", choices=["cpu", "cuda", "cuda:0"])
     return parser
@@ -472,6 +532,10 @@ HANDLERS = {
     "manifest": cmd_manifest,
     "eval-test": cmd_eval_test,
     "analysis": cmd_analysis,
+    "scaffold-preflight": cmd_scaffold_preflight,
+    "scaffold-train": cmd_scaffold_train,
+    "scaffold-manifest": cmd_scaffold_manifest,
+    "scaffold-eval": cmd_scaffold_eval,
     "ledger": cmd_ledger,
     "status": cmd_status,
 }

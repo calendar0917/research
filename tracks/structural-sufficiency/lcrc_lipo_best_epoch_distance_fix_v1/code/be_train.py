@@ -216,12 +216,24 @@ def train_arm(
     max_epochs: int | None = None,
     pool: str = "local",
     smoke: bool = False,
+    family: str | None = None,
+    seed: int | None = None,
 ) -> dict[str, Any]:
-    if arm not in C.ARM_SPECS:
-        raise ValueError(f"unknown arm {arm!r}")
-    spec_meta = C.ARM_SPECS[arm]
-    family = str(spec_meta["family"])
-    seed = int(spec_meta["seed"])
+    """Train one arm with the unified best-single-Validation-epoch rule.
+
+    ``family``/``seed`` may be supplied explicitly for stages that are not the
+    frozen random42 arm list (the optional scaffold-shift stage); the frozen
+    random42 arms are looked up in :data:`be_common.ARM_SPECS`.
+    """
+    if arm in C.ARM_SPECS:
+        spec_meta = C.ARM_SPECS[arm]
+        family = str(spec_meta["family"]) if family is None else str(family)
+        seed = int(spec_meta["seed"]) if seed is None else int(seed)
+    elif family is None or seed is None:
+        raise ValueError(f"unknown arm {arm!r} (family and seed are required for non-frozen arms)")
+    else:
+        family = str(family)
+        seed = int(seed)
     recipe = dict(cfg["training"])
     run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -520,7 +532,8 @@ def train_arm(
         "family": family,
         "model": C.MODEL_DISPLAY[family],
         "seed": seed,
-        "split_seed": C.SPLIT_SEED,
+        "split_seed": int(views.get("split_seed") if views.get("split_seed") is not None else C.SPLIT_SEED),
+        "split_scope": str(views.get("split_scope", "random42_frozen")),
         "smoke": bool(smoke),
         "pool": str(pool),
         "device": str(device),
@@ -628,7 +641,7 @@ def train_arm(
             "shuffle_generator_seed": seed + C.SHUFFLE_OFFSET,
             "torch_rng_state_sha256_after_training": rng_after_training,
             "seed": seed,
-            "split_seed": C.SPLIT_SEED,
+            "split_seed": int(views.get("split_seed") if views.get("split_seed") is not None else C.SPLIT_SEED),
         },
         "metrics": {
             "train": {**train_metrics, "units": "raw_logD", "checkpoint": "best_epoch"},
@@ -666,6 +679,10 @@ def train_arm(
         "test_predictions_read": False,
         "test_metrics_read": False,
     }
+    if "data_override" in views:
+        payload["data"].update(dict(views["data_override"]))
+    if "protocol_override" in views:
+        payload.update(dict(views["protocol_override"]))
     C.write_json(run_dir / "train.json", payload)
     C.write_json(run_dir / "diagnostics.json", diagnostics)
     C.log(
