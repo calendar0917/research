@@ -154,6 +154,12 @@ def _worker(pool: str, queue: list[dict[str, Any]], *, dry_run: bool, stop: thre
 
 
 PLANS: dict[str, list[dict[str, Any]]] = {
+    "p3": [
+        {"key": "p3_base_scalem_lipo", "dataset": "Lipophilicity", "arm": "base", "pool": "res-gpu0", "scale": "M"},
+        {"key": "p3_rho_scalem_lipo", "dataset": "Lipophilicity", "arm": "rhoshape", "pool": "res-gpu1", "scale": "M"},
+        {"key": "p3_base_scalem_esol", "dataset": "ESOL", "arm": "base", "pool": "res-gpu0", "scale": "M"},
+        {"key": "p3_rho_scalem_esol", "dataset": "ESOL", "arm": "rhoshape", "pool": "res-gpu1", "scale": "M"},
+    ],
     "p4": [
         {"key": "p4_rho_lipo123", "dataset": "Lipophilicity", "split": "lipo-repeat:123", "arm": "rhoshape", "pool": "res-gpu0"},
         {"key": "p4_rho_lipo124", "dataset": "Lipophilicity", "split": "lipo-repeat:124", "arm": "rhoshape", "pool": "res-gpu0"},
