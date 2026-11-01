@@ -154,6 +154,20 @@ def _worker(pool: str, queue: list[dict[str, Any]], *, dry_run: bool, stop: thre
 
 
 PLANS: dict[str, list[dict[str, Any]]] = {
+    "p5": [
+        {"key": "p5_base_lipo_s1", "dataset": "Lipophilicity", "arm": "base", "seed": 1, "pool": "res-gpu0"},
+        {"key": "p5_rho_lipo_s1", "dataset": "Lipophilicity", "arm": "rhoshape", "seed": 1, "pool": "res-gpu0"},
+        {"key": "p5_base_esol_s1", "dataset": "ESOL", "arm": "base", "seed": 1, "pool": "res-gpu0"},
+        {"key": "p5_rho_esol_s1", "dataset": "ESOL", "arm": "rhoshape", "seed": 1, "pool": "res-gpu0"},
+        {"key": "p5_base_freesolv_s1", "dataset": "FreeSolv", "arm": "base", "seed": 1, "pool": "res-gpu0"},
+        {"key": "p5_rho_freesolv_s1", "dataset": "FreeSolv", "arm": "rhoshape", "seed": 1, "pool": "res-gpu0"},
+        {"key": "p5_base_lipo_s2", "dataset": "Lipophilicity", "arm": "base", "seed": 2, "pool": "res-gpu1"},
+        {"key": "p5_rho_lipo_s2", "dataset": "Lipophilicity", "arm": "rhoshape", "seed": 2, "pool": "res-gpu1"},
+        {"key": "p5_base_esol_s2", "dataset": "ESOL", "arm": "base", "seed": 2, "pool": "res-gpu1"},
+        {"key": "p5_rho_esol_s2", "dataset": "ESOL", "arm": "rhoshape", "seed": 2, "pool": "res-gpu1"},
+        {"key": "p5_base_freesolv_s2", "dataset": "FreeSolv", "arm": "base", "seed": 2, "pool": "res-gpu1"},
+        {"key": "p5_rho_freesolv_s2", "dataset": "FreeSolv", "arm": "rhoshape", "seed": 2, "pool": "res-gpu1"},
+    ],
     "p3": [
         {"key": "p3_base_scalem_lipo", "dataset": "Lipophilicity", "arm": "base", "pool": "res-gpu0", "scale": "M"},
         {"key": "p3_rho_scalem_lipo", "dataset": "Lipophilicity", "arm": "rhoshape", "pool": "res-gpu1", "scale": "M"},
