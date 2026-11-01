@@ -19,6 +19,9 @@ def _mol(smiles: str):
 
 
 def test_hand_chiral_channels():
+    import pytest
+
+    pytest.importorskip("rdkit", reason="RDKit is a local data-prep dependency; the committed artifact is used on GPU hosts")
     mol, method = _mol("C[C@@H](N)C(=O)O")
     assert method == "strict"
     out, _ = CH.chem8_for_mol(mol)
@@ -35,6 +38,9 @@ def test_hand_chiral_channels():
 
 
 def test_hand_donor_acceptor_and_hybridisation():
+    import pytest
+
+    pytest.importorskip("rdkit", reason="RDKit is a local data-prep dependency; the committed artifact is used on GPU hosts")
     mol, _ = _mol("CCO")
     out, _ = CH.chem8_for_mol(mol)
     # C, C, O: O is both donor and acceptor; carbons are SP3.
