@@ -29,6 +29,13 @@ The four Sprint-01 datasets were **not** re-trained and **not** re-scored: their
 committed artifacts are read read-only and their Test numbers are carried forward
 with the label `EXPOSED_TEST_EXPLORATORY`.
 
+Two launches were aborted before any training step: the first deployed revision
+(`137f5a3b`) did not yet commit the label-free raw-attribute artifact, so the runs
+exited with `FileNotFoundError` in the cache build. The artifact was committed
+(`62afa5a2`), and the same jobs were relaunched; all seven formal runs and the one
+timing smoke ran at `62afa5a2`. The aborted jobs are listed in
+`analysis/rr_run_registry.json` with `exit_code: 1` and charged nothing.
+
 The Test gate enforced, per dataset: frozen manifest membership, checkpoint
 sha256, zero drift in the 14 scoring-critical modules, cache-fingerprint
 reproduction, Validation-metric reproduction (≤1e-5; measured 0.0, 1.1e-16,
