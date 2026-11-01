@@ -201,3 +201,39 @@ def test_hiv_pos_weight_is_train_only_and_capped():
     assert info["pos_weight"] <= 5.0
     assert info["pos_weight"] == pytest.approx(min(5.0, float(np.sqrt(info["n_negative"] / info["n_positive"]))))
     assert info["source"] == "official Train split labels only"
+
+
+# ---------------------------------------------------------------------------
+# checkpoint recheck tolerance must follow the resolution of the statistic
+# ---------------------------------------------------------------------------
+
+
+def test_recheck_tolerance_scales_with_auc_resolution():
+    import ta_train
+
+    y = np.zeros((545, 1), dtype=np.float64)
+    y[:448, 0] = 1.0
+    tol, basis = ta_train._recheck_tolerance("binary", y, None)
+    step = 1.0 / (448 * 97)
+    assert tol >= 1.5 * step - 1e-15
+    assert "97" in basis and "448" in basis
+
+    # a dense fold goes back to the flat float tolerance
+    y_big = np.zeros((10000, 1), dtype=np.float64)
+    y_big[:5000, 0] = 1.0
+    tol_big, _ = ta_train._recheck_tolerance("binary", y_big, None)
+    assert tol_big == pytest.approx(max(1e-5, 1.5 / (5000 * 5000)))
+
+    # multitask: driven by the sparsest definable task
+    y_mt = np.full((200, 3), np.nan)
+    y_mt[:80, 0] = 1.0
+    y_mt[80:150, 0] = 0.0
+    y_mt[:20, 1] = 1.0
+    y_mt[20:30, 1] = 0.0
+    tol_mt, basis_mt = ta_train._recheck_tolerance("multitask", y_mt, None)
+    assert tol_mt == pytest.approx(max(1e-5, 1.5 / (20 * 10)))
+    assert "over 2 tasks" in basis_mt
+
+    # regression keeps the fixed float tolerance
+    tol_reg, _ = ta_train._recheck_tolerance("regression", np.zeros((10, 1)), None)
+    assert tol_reg == pytest.approx(1e-5)
