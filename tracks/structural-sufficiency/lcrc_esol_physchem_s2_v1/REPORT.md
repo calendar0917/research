@@ -369,7 +369,7 @@ value of the typed S2 content", not "S2 is necessary".
 | GPU | 6 × A100-SXM4-40GB on `res` (process backend, `res-gpu0` / `res-gpu1`), fp32 |
 | training wall clock | 69.6–78.4 s per run, 444.7 s total → **0.1235 / 0.6 GPU·h** (`analysis/gpu_ledger.json`) |
 | non-training jobs | 2 × CPU `preflight` on `res` (BASE replay, cache rebuild), no GPU |
-| failures / retries | **none**; no seed was re-run, no run was replaced |
+| failures / retries | no training failure, no seed re-run, no run replaced. One **preflight** job (`esol2-preflight`) failed because the v1 `*.npz` prediction files are git-ignored and therefore absent on the GPU host; fixed by deriving BASE predictions from the committed checkpoints (`1276fc6a`) and re-run as `esol2-preflight2`, which passed. No formal run was affected. |
 | torch / driver | 2.5.1+cu124 / 550.163.01 |
 | smoke | local CPU 2-epoch smoke of both arms before deploy (`analysis/smoke/smoke.json`), never counted as a formal run |
 | freeze | `analysis/protocol_freeze.json`, sha `22b79f167b5d…`, written before any new training, `p0_status = PASS`, BASE replay passed |
