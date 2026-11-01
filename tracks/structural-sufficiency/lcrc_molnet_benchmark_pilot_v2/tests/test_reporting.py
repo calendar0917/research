@@ -91,10 +91,14 @@ def test_probe_candidates_are_the_four_registered_ones():
         assert len(overrides) == 1
 
 
-def test_probe_table_refuses_a_test_reading_record(tmp_path, monkeypatch):
-    """A probe record that claims Test access must not enter the probe table."""
-    run = C.RUNS / "probe_fs_dropout00_s0"
-    run.mkdir(parents=True, exist_ok=True)
+def test_probe_table_refuses_a_test_reading_record(tmp_path):
+    """A probe record that claims Test access must not enter the probe table.
+
+    The fixture is written under ``tmp_path`` -- never under ``analysis/runs`` --
+    so a test can never touch a real run artifact.
+    """
+    run = tmp_path / "probe_fs_dropout00_s0"
+    run.mkdir()
     payload = {
         "dataset": "FreeSolv",
         "task": "regression",
@@ -102,17 +106,38 @@ def test_probe_table_refuses_a_test_reading_record(tmp_path, monkeypatch):
         "data": {"test_labels_read": True, "test_cache_built": True},
         "metrics": {"valid": {"rmse": 1.0, "mae": 0.8}, "train": {"rmse": 0.5, "mae": 0.3}},
         "recipe": {"dropout": 0.0, "weight_decay": 1e-3, "epochs_run": 360, "overrides_vs_R3": {"dropout": 0.0}},
+        "model": {"dropout": 0.0},
         "checkpoint": {"best_epoch": 3, "best_metric_name": "valid_rmse", "curve_path": "x.csv", "sha256": "0" * 64},
-        "timing": {"train_wall_seconds": 1.0},
+        "timing": {"train_wall_seconds": 1.0, "process_wall_seconds": 2.0},
         "gpu": {"peak_memory_allocated_bytes": 0},
         "probe": {"probe": True, "name": "fs_dropout00"},
     }
-    (run / "train.json").write_text(json.dumps(payload), encoding="utf-8")
-    try:
-        with pytest.raises(SystemExit):
-            PROBE._from_train_json(
-                run / "train.json", dataset="FreeSolv", config="fs_dropout00", kind="validation_only_probe"
-            )
-    finally:
-        (run / "train.json").unlink()
-        run.rmdir()
+    path = run / "train.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(SystemExit):
+        PROBE._from_train_json(path, dataset="FreeSolv", config="fs_dropout00", kind="validation_only_probe")
+
+
+def test_probe_verdicts_use_the_task_direction(tmp_path):
+    """A positive RMSE delta is worse, a positive ROC-AUC delta is better."""
+
+    def row(task, value, base):
+        return {
+            "dataset": "X",
+            "task": task,
+            "config": "p",
+            "kind": "validation_only_probe",
+            "valid_primary_value": value,
+            "valid_primary_metric": "valid_rmse_raw" if task == "regression" else "valid_roc_auc",
+            "delta_valid_vs_base": value - base,
+            "delta_relative_vs_base": (value - base) / base,
+        }
+
+    verdict, _ = PROBE._verdict(row("regression", 1.10, 1.00))
+    assert verdict.startswith("no_validation_improvement")
+    verdict, _ = PROBE._verdict(row("regression", 0.90, 1.00))
+    assert verdict.startswith("large_validation_gain")
+    verdict, _ = PROBE._verdict(row("binary", 0.90, 0.80))
+    assert verdict.startswith("large_validation_gain")
+    verdict, _ = PROBE._verdict(row("binary", 0.79, 0.80))
+    assert verdict.startswith("no_validation_improvement")

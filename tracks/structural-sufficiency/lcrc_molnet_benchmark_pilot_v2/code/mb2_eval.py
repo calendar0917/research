@@ -33,6 +33,7 @@ import torch
 
 import mb2_common as C
 import mb2_data as D
+import mb2_gate as GATE
 import mb2_metrics as MET
 import mb2_model as M
 
@@ -80,13 +81,12 @@ def evaluate(dataset: str, *, device: torch.device, data_device: torch.device | 
     actual = C.sha256_file(checkpoint_path)
     if actual != entry["checkpoint"]["sha256"]:
         raise SystemExit(f"{dataset}: checkpoint sha256 {actual} != frozen {entry['checkpoint']['sha256']}")
-    drift = {
-        k: (entry["code_hashes"].get(k), v)
-        for k, v in C.code_hashes().items()
-        if entry["code_hashes"].get(k) not in (None, v)
+    frozen_critical = entry.get("code_hashes_scoring_critical") or {
+        k: v for k, v in entry["code_hashes"].items() if k in GATE.SCORING_CRITICAL_MODULES
     }
+    drift = GATE.drift(frozen_critical, label=f"{dataset} Test gate")
     if drift:
-        raise SystemExit(f"{dataset}: code changed since the freeze: {drift}")
+        raise SystemExit(f"{dataset}: a scoring-critical module changed since the freeze: {drift}")
 
     spec = D.frozen_spec()
     view = D.build_view(dataset, spec=spec)

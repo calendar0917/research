@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import mb2_common as C
+import mb2_gate as GATE
 import mb2_metrics as MET
 
 
@@ -108,6 +109,14 @@ def freeze_dataset(dataset: str) -> dict[str, Any]:
         "gpu": payload["gpu"],
         "git_commit": payload["git_commit"],
         "code_hashes": payload["code_hashes"],
+        "code_hashes_at_training": payload["code_hashes"],
+        "code_hashes_scoring_critical": GATE.scoring_critical_hashes(),
+        "scoring_critical_drift_since_training": sorted(GATE.drift(payload["code_hashes"], label=dataset)),
+        "non_critical_drift_since_training": sorted(
+            k
+            for k, v in C.code_hashes().items()
+            if k not in GATE.SCORING_CRITICAL_MODULES and payload["code_hashes"].get(k) not in (None, v)
+        ),
         "artifacts": {
             "train_json": C.track_rel(train_json),
             "train_json_sha256": C.sha256_file(train_json),
@@ -138,6 +147,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             missing.append(f"{key}: {exc}")
     if not frozen:
         raise SystemExit("no completed runs to freeze")
+    drifted = {k: v["scoring_critical_drift_since_training"] for k, v in frozen.items() if v["scoring_critical_drift_since_training"]}
+    if drifted:
+        raise SystemExit(
+            "a scoring-critical module changed between training and the freeze, so the checkpoint no longer "
+            f"provably belongs to the code that produced it: {drifted}"
+        )
     total_gpu_seconds = sum(entry["timing"]["train_wall_seconds"] for entry in frozen.values())
     manifest = {
         "schema": "lcrc-molnet-v2-checkpoint-manifest-v1",
@@ -160,7 +175,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         "frozen": True,
         "test_evaluation_rule": (
             "one shot per dataset; mb2_eval.py refuses a dataset absent from this manifest, a checkpoint "
-            "whose sha256 differs, a changed code module, or a second evaluation"
+            "whose sha256 differs, a changed scoring-critical code module, or a second evaluation"
+        ),
+        "scoring_critical_modules": list(GATE.SCORING_CRITICAL_MODULES),
+        "drift_policy": (
+            "the Test gate compares only SCORING_CRITICAL_MODULES against the freeze-time bytes; drift in a "
+            "reporting module is recorded per dataset (non_critical_drift_since_training) and cannot change a "
+            "score, so it neither blocks nor unblocks the gate"
         ),
         "test_labels_read": False,
     }

@@ -158,6 +158,9 @@ def _lcrc_record(dataset: str) -> dict[str, Any] | None:
             "epochs_run": int(train["checkpoint"]["epochs_run"]),
             "parameters": int(train["model"]["parameters"]),
             "gpu_hours": float(train["timing"]["train_wall_seconds"]) / 3600.0,
+            "train_wall_seconds": float(train["timing"]["train_wall_seconds"]),
+            "process_wall_seconds": float(train["timing"]["process_wall_seconds"]),
+            "train_cache_build_seconds": float(train["data"].get("train_cache_build_seconds", 0.0)),
             "peak_memory_allocated_bytes": int(train["gpu"]["peak_memory_allocated_bytes"]),
             "checkpoint_sha256": test["checkpoint"]["sha256"],
             "n_train": int(train["data"]["n_train"]),
@@ -185,6 +188,9 @@ def _lcrc_record(dataset: str) -> dict[str, Any] | None:
             "epochs_run": int(train["checkpoint"]["epochs_run"]),
             "parameters": int(train["model"]["parameters"]),
             "gpu_hours": float(train["timing"]["train_wall_seconds"]) / 3600.0,
+            "train_wall_seconds": float(train["timing"]["train_wall_seconds"]),
+            "process_wall_seconds": float(train["timing"]["process_wall_seconds"]),
+            "train_cache_build_seconds": float(train["data"].get("train_cache_build_seconds", 0.0)),
             "peak_memory_allocated_bytes": int(train["gpu"]["peak_memory_allocated_bytes"]),
             "checkpoint_sha256": train["checkpoint"]["sha256"],
             "n_train": int(train["data"]["n_train"]),
@@ -206,6 +212,9 @@ def _lcrc_record(dataset: str) -> dict[str, Any] | None:
         "epochs_run": int(train["checkpoint"]["epochs_run"]),
         "parameters": int(train["model"]["parameters"]),
         "gpu_hours": float(train["timing"]["train_wall_seconds"]) / 3600.0,
+        "train_wall_seconds": float(train["timing"]["train_wall_seconds"]),
+        "process_wall_seconds": float(train["timing"]["process_wall_seconds"]),
+        "train_cache_build_seconds": float(train["data"].get("train_cache_build_seconds", 0.0)),
         "peak_memory_allocated_bytes": int(train["gpu"]["peak_memory_allocated_bytes"]),
         "checkpoint_sha256": test["checkpoint"]["sha256"],
         "n_train": int(train["data"]["n_train"]),
@@ -393,8 +402,11 @@ def build() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, 
                 "run_dir": lcrc.get("test_eval_path") or "",
                 "source": lcrc["source"],
                 "provenance_commit": lcrc["provenance_commit"],
-                "measured_training_seconds": lcrc["gpu_hours"] * 3600.0,
+                "measured_training_seconds": lcrc["train_wall_seconds"],
+                "measured_process_wall_seconds": lcrc["process_wall_seconds"],
+                "train_cache_build_seconds": lcrc["train_cache_build_seconds"],
                 "charged_gpu_hours": lcrc["gpu_hours"],
+                "process_wall_gpu_hours": lcrc["process_wall_seconds"] / 3600.0,
                 "peak_memory_allocated_bytes": lcrc["peak_memory_allocated_bytes"],
                 "n_train": lcrc["n_train"],
                 "epochs_run": lcrc["epochs_run"],
@@ -415,7 +427,9 @@ def build() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, 
                 "run_dir": row["artifact"],
                 "source": "lcrc_molnet_benchmark_pilot_v2 (P3)",
                 "measured_training_seconds": float(row["train_wall_seconds"]),
+                "measured_process_wall_seconds": float(row.get("process_wall_seconds") or row["train_wall_seconds"]),
                 "charged_gpu_hours": float(row["gpu_hours"]),
+                "process_wall_gpu_hours": float(row.get("process_wall_seconds") or row["train_wall_seconds"]) / 3600.0,
                 "peak_memory_allocated_bytes": int(row["peak_memory_allocated_bytes"]),
                 "epochs_run": int(row["epochs_run"]),
                 "test_evaluated": False,
@@ -425,6 +439,11 @@ def build() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, 
 
     v2_total = sum(
         e["charged_gpu_hours"] for e in ledger_entries if e["source"].startswith("lcrc_molnet_benchmark_pilot_v2")
+    )
+    process_total = sum(
+        e.get("process_wall_gpu_hours", e["charged_gpu_hours"])
+        for e in ledger_entries
+        if e["source"].startswith("lcrc_molnet_benchmark_pilot_v2")
     )
     smoke = 0.0
     for run_dir in sorted(C.RUNS.glob("smoke_*")):
@@ -467,6 +486,14 @@ def build() -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, 
             "gpu_hours_this_round": v2_total,
             "fraction_of_cap": v2_total / C.GPU_HARD_CAP_HOURS,
             "within_cap": v2_total <= C.GPU_HARD_CAP_HOURS,
+            "gpu_hours_this_round_process_wall": process_total,
+            "fraction_of_cap_process_wall": process_total / C.GPU_HARD_CAP_HOURS,
+            "within_cap_process_wall": process_total <= C.GPU_HARD_CAP_HOURS,
+            "cap_accounting_note": (
+                "the frozen charging rule charges the training loop wall clock; the process wall clock "
+                "(which also contains the label-free structure-cache build and the final predictions) is "
+                "reported alongside, and the cap holds under both accountings"
+            ),
             "engineering_smoke_gpu_hours": smoke,
             "smoke_note": (
                 "2-epoch engineering smokes are not results; they are reported separately and are not "

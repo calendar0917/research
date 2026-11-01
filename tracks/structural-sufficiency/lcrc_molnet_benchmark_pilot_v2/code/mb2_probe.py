@@ -32,6 +32,7 @@ import mb2_common as C
 
 PROBE_COLUMNS = [
     "dataset",
+    "task",
     "config",
     "kind",
     "dropout",
@@ -50,6 +51,7 @@ PROBE_COLUMNS = [
     "delta_valid_vs_base",
     "delta_relative_vs_base",
     "train_wall_seconds",
+    "process_wall_seconds",
     "gpu_hours",
     "peak_memory_allocated_bytes",
     "checkpoint_sha256",
@@ -94,9 +96,11 @@ def _from_train_json(path: Path, *, dataset: str, config: str, kind: str) -> dic
     train_primary = _primary(task, train)
     return {
         "dataset": dataset,
+        "task": task,
         "config": config,
         "kind": kind,
-        "dropout": float(payload["recipe"]["dropout"]),
+        # Sprint 01 records the dropout on the model block, this round records it on the recipe
+        "dropout": float(payload["recipe"].get("dropout", payload["model"].get("dropout", float("nan")))),
         "weight_decay": float(payload["recipe"]["weight_decay"]),
         "overrides_vs_R3": payload["recipe"].get("overrides_vs_R3") or {},
         "epochs_run": int(payload["recipe"]["epochs_run"]),
@@ -110,6 +114,7 @@ def _from_train_json(path: Path, *, dataset: str, config: str, kind: str) -> dic
         "final_epoch_valid_primary_value": final_value,
         "best_minus_final_valid": (final_value - valid_primary) if final_value is not None else None,
         "train_wall_seconds": float(payload["timing"]["train_wall_seconds"]),
+        "process_wall_seconds": float(payload["timing"]["process_wall_seconds"]),
         "gpu_hours": float(payload["timing"]["train_wall_seconds"]) / 3600.0,
         "peak_memory_allocated_bytes": int(payload["gpu"]["peak_memory_allocated_bytes"]),
         "checkpoint_sha256": payload["checkpoint"]["sha256"],
@@ -118,6 +123,34 @@ def _from_train_json(path: Path, *, dataset: str, config: str, kind: str) -> dic
         "test_metric_reported": False,
         "note": "",
     }
+
+
+def _verdict(row: dict[str, Any]) -> tuple[str, str]:
+    """Fixed, conservative verdict language (chosen before the numbers existed)."""
+    if row["kind"] == "frozen_benchmark_base":
+        return "base", ""
+    delta = row["delta_valid_vs_base"]
+    # direction comes from the task, never from a metric-name string
+    lower_is_better = row["task"] == "regression"
+    better = (delta < 0) if lower_is_better else (delta > 0)
+    magnitude = abs(row["delta_relative_vs_base"] or 0.0)
+    if not better:
+        return (
+            "no_validation_improvement__does_not_solve_the_gap",
+            "the single-parameter change did not improve Validation; this says this finite regularisation "
+            "probe did not help, not that the model is fundamentally mis-specified",
+        )
+    if magnitude >= 0.05:
+        return (
+            "large_validation_gain__candidate_for_next_round",
+            "Validation improved by >=5% relative on a single seed; treat as a candidate recipe for a "
+            "multi-seed / new-split confirmation, never as proven generalisation",
+        )
+    return (
+        "small_validation_gain__within_single_seed_noise",
+        "Validation moved less than 5% relative on one seed; the effect is not separable from seed and "
+        "split noise at this sample size",
+    )
 
 
 def build() -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -151,32 +184,8 @@ def build() -> tuple[list[dict[str, Any]], dict[str, Any]]:
         row["delta_valid_vs_base"] = delta
         row["delta_relative_vs_base"] = delta / base["valid_primary_value"] if base["valid_primary_value"] else None
 
-    # a deliberately conservative verdict language, fixed before the numbers exist
     for row in rows:
-        if row["kind"] == "frozen_benchmark_base":
-            row["verdict"] = "base"
-            continue
-        delta = row["delta_valid_vs_base"]
-        better = delta < 0 if row["valid_primary_metric"] == "valid_rmse" else delta > 0
-        magnitude = abs(row["delta_relative_vs_base"] or 0.0)
-        if not better:
-            row["verdict"] = "no_validation_improvement__does_not_solve_the_gap"
-            row["note"] = (
-                "the single-parameter change did not improve Validation; this says the finite regularisation "
-                "probe did not help, not that the model is fundamentally mis-specified"
-            )
-        elif magnitude >= 0.05:
-            row["verdict"] = "large_validation_gain__candidate_for_next_round"
-            row["note"] = (
-                "Validation improved by >=5% relative on a single seed; treat as a candidate recipe for a "
-                "multi-seed / new-split confirmation, never as proven generalisation"
-            )
-        else:
-            row["verdict"] = "small_validation_gain__within_single_seed_noise"
-            row["note"] = (
-                "Validation moved less than 5% relative on one seed; the effect is not separable from seed "
-                "and split noise at this sample size"
-            )
+        row["verdict"], row["note"] = _verdict(row)
 
     manifest = {
         "schema": "lcrc-molnet-v2-probe-manifest-v1",
