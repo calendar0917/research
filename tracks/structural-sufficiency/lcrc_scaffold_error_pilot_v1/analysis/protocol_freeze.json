@@ -1,0 +1,82 @@
+{
+  "arms": [
+    "pilot_base_s0",
+    "pilot_base_s1",
+    "pilot_base_s2",
+    "pilot_g2l_all_s0",
+    "pilot_g2l_all_s1",
+    "pilot_g2l_all_s2"
+  ],
+  "checkpoint_rule": "single_best_inner_validation_rmse_epoch",
+  "code_hashes": {
+    "pilot/pilot_common.py": "ec4e0cb800c1cf7d12e292cf6d518758718492176263ad2a2e22efca81e56925",
+    "pilot/pilot_data.py": "a5dc04a653d493f5e24ac23faa0c5fc0c912a98360ac4d3a8336ca6bdf77d286",
+    "pilot/pilot_p0.py": "2b6ba8b3cb922e5c7b360dd232dbecb55583a737d70bfe584cc76337307a30d4",
+    "pilot/pilot_train.py": "c7ed2ea50ddee8f9ab6cd6cc8819d29eca58f0110e57c2f3d6e3c8918a5d1e26",
+    "pilot/run_pilot.py": "dd8e47b4572b02533a6897e47f2d6b5de34099218a8cb7147c3eb2fff64e8e79",
+    "reused/lcrc_lipo_best_epoch_distance_fix_v1/be_analysis.py": "4bfb4db5cc6f63c8b0a5eefd8ef92f4a63b91ed3c8a0cef201b89f23cf666dfe",
+    "reused/lcrc_lipo_best_epoch_distance_fix_v1/be_common.py": "8316f60ad35648d2b4c041c26f284f02af71644a0ff814f88f9ca382727349c6",
+    "reused/lcrc_lipo_best_epoch_distance_fix_v1/be_data.py": "906e1fcc4bc9a93cf9cdc692c6006b5b6b7235fce49516f0b49a0924282ab2c3",
+    "reused/lcrc_lipo_best_epoch_distance_fix_v1/be_evaluate.py": "6b56e9416e6cc0185ac9d25c283fd8f75d16b15970797edaf54f4708eb1643d8",
+    "reused/lcrc_lipo_best_epoch_distance_fix_v1/be_gates.py": "4e7c26f046b34b18ddcddbbb48e92f7735e4c652e8ae663a08f34861d18ed8ce",
+    "reused/lcrc_lipo_best_epoch_distance_fix_v1/be_ledger.py": "51056649ef91b245c707d41a29bc45eefdee932ab4c601f780d2d64df8169a5c",
+    "reused/lcrc_lipo_best_epoch_distance_fix_v1/be_models.py": "2baa7561232e19a7ee8f2f2bbac769d7de6e9f10567be75dca63e83d7623aad4",
+    "reused/lcrc_lipo_best_epoch_distance_fix_v1/be_scaffold.py": "340de99f5dc46239d4d167174e69661781193220518377b2f5334a86508d56fc",
+    "reused/lcrc_lipo_best_epoch_distance_fix_v1/be_train.py": "560dea7b79f6034cf29d0ca1177cb38f672dfb0b7b4be9b941449909dd692301",
+    "reused/lcrc_lipo_best_epoch_distance_fix_v1/run_be.py": "8b50560e502794db79b2a39188934f289d98ec0487c9bc9c271ce57a8ac10b8b"
+  },
+  "config": "tracks/structural-sufficiency/lcrc_scaffold_error_pilot_v1/configs/pilot.yaml",
+  "config_sha256": "c086843d47b3be2ad208b141326037f49335560856c9273b4a5587bac2fa376b",
+  "created_utc": "2026-11-01T04:20:42Z",
+  "freeze_sha256": "cd235f78a0dd2af752d54322e1a3ee2dd11f80c83211c7c9f3c500167d46dbc0",
+  "git_commit": "868e1e1fc930ee4360d1b479018b3dea56b0d365",
+  "git_dirty_tracked": false,
+  "gpu_hard_cap_hours": 2.0,
+  "models": [
+    "base",
+    "g2l_all"
+  ],
+  "outer_evaluation_policy": "freeze all six checkpoint hashes before reading any outer-evaluation label; outer labels are used exactly once, after the manifest freeze",
+  "outer_labels_read_at_freeze_time": false,
+  "protocol_id": "lcrc-scaffold-error-pilot-v1",
+  "round_id": "lcrc-scaffold-error-pilot-v1",
+  "scope": "one new Bemis-Murcko scaffold partition of the 4,200 Lipophilicity molecules",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "split_audit": "tracks/structural-sufficiency/lcrc_scaffold_error_pilot_v1/analysis/split/split_audit.json",
+  "split_audit_sha256": "fdc344bde8cbc2fde0c46828121503cdab272ac847fbb3c635cfd3fc9a7f115d",
+  "split_fractions": [
+    0.8,
+    0.1,
+    0.1
+  ],
+  "split_manifest": "tracks/structural-sufficiency/lcrc_scaffold_error_pilot_v1/analysis/split/split_pilot_v1.json",
+  "split_manifest_sha256": "a57bb4ca55ed83c862ae79ea032f44e6a24d4423b8e6d717e06e668c6fea1440",
+  "split_seed": 20261102,
+  "status": "FROZEN_BEFORE_PILOT_TRAINING",
+  "training_recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "checkpoint": "single_best_validation420_rmse_epoch",
+    "dropout": 0.1,
+    "dropout_position": "final_atom_level_local_h_before_readout",
+    "early_stopping": false,
+    "epochs": 360,
+    "gradient_clip": 5.0,
+    "loss": "mse_on_train3360_standardised_target",
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "shuffle_offset": 917000,
+    "ssl": false,
+    "weight_decay": 0.001
+  }
+}
