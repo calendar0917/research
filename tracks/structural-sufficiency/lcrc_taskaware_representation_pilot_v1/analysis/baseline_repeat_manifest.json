@@ -1,0 +1,54 @@
+{
+  "created_utc": "2026-11-01T14:34:09Z",
+  "entries": {
+    "123": {
+      "model": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/baseline_repeat/models/Lipophilicity_random123.ubj",
+      "model_sha256": "84fa8397d26b31f40025e729b0f7eb21d24be903d196a70b1c7daeb792fa8faf",
+      "report": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/baseline_repeat/Lipophilicity_random123.json",
+      "report_sha256": "394d04b2bfd546c91e5ef53cef452a5e3d5ea273b9c8c11686cee5c95a5e10b2",
+      "split_rows_sha256": {
+        "test": "6c335c844cb1a53273fb784de389d7df25281df86a057bbe22882f130aa06df2",
+        "train": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+        "valid": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982"
+      },
+      "valid_rmse": 0.690943206800863
+    },
+    "124": {
+      "model": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/baseline_repeat/models/Lipophilicity_random124.ubj",
+      "model_sha256": "aef4cb075de2dc2a715fd92d45e398620546e412a4cb5200d232c3f1cbf041bd",
+      "report": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/baseline_repeat/Lipophilicity_random124.json",
+      "report_sha256": "76352036ed7a6c6853a04b87e9c9f437c135e47843aac59c121cf686620f8823",
+      "split_rows_sha256": {
+        "test": "c4a5b71d8245ab426cffe475cd8862e11b16106d303b3ddb5dc409611fd0427d",
+        "train": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+        "valid": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+      },
+      "valid_rmse": 0.6353443100802408
+    }
+  },
+  "recipe": {
+    "descriptor_list": "frozen tuple RDKIT_DESCRIPTORS in mb2_baseline.py",
+    "ecfp_n_bits": 2048,
+    "ecfp_radius": 2,
+    "features": "Morgan ECFP4 (radius 2, 2048 bits) + RDKit 2D descriptors (frozen list)",
+    "hyperparameter_search": false,
+    "imputation": "per-descriptor median fitted on the Train split only; constant columns dropped by Train-only variance",
+    "scaling": "none (tree model; descriptors are not standardised)",
+    "validation_used_for_any_baseline_choice": false,
+    "xgboost": {
+      "colsample_bytree": 0.8,
+      "device": "cpu",
+      "learning_rate": 0.03,
+      "max_depth": 5,
+      "min_child_weight": 1,
+      "n_estimators": 500,
+      "random_state": 0,
+      "reg_lambda": 5.0,
+      "subsample": 0.8,
+      "tree_method": "hist"
+    }
+  },
+  "round_id": "lcrc-taskaware-representation-pilot-v1",
+  "test_policy": "Test is scored once, after this freeze, per repeat; never used for any choice",
+  "workstream": "P1 Lipophilicity repeat robustness -- matched classical baseline"
+}

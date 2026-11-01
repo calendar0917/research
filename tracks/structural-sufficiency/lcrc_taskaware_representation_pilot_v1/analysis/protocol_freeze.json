@@ -1,0 +1,385 @@
+{
+  "budget": {
+    "expected_hours": {
+      "bbbp_cv_f0": 0.03,
+      "bbbp_cv_f1": 0.03,
+      "bbbp_cv_f2": 0.03,
+      "hiv_sqrt_pos": 0.83,
+      "lipo_r123": 0.1,
+      "lipo_r124": 0.1,
+      "tox21_equal_task": 0.19
+    },
+    "expected_total_hours": 1.31,
+    "hard_cap_a100_gpu_hours": 1.6,
+    "no_epoch_reduction_to_fit_budget": true,
+    "priority_order": [
+      "lipo_r123",
+      "lipo_r124",
+      "bbbp_cv_f0",
+      "bbbp_cv_f1",
+      "bbbp_cv_f2",
+      "tox21_equal_task",
+      "hiv_sqrt_pos"
+    ]
+  },
+  "checkpoint_rule": {
+    "binary": "highest Validation ROC-AUC, tie -> lower Validation BCE, then earlier epoch",
+    "multitask": "highest Validation macro ROC-AUC, tie -> lower masked BCE, then earlier epoch",
+    "regression": "lowest Validation RMSE, strict improvement, ties keep the earlier epoch"
+  },
+  "code_hashes": {
+    "chembench/BBBP.scaffold122.ind.pkl": "b132bccdc116cfeac541e3f6bf3949fbefccc12d58193495fe7331a199d1d325",
+    "chembench/Lipop.random122.ind.pkl": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+    "chembench/Lipop.random123.ind.pkl": "afaed4c6d95b64ac64e8fb760b6de516802008965befe1601b3664303119a0e8",
+    "chembench/Lipop.random124.ind.pkl": "2b48a41ccc39b622bbb74f18331ca9d9513190eec2de29144ce2bc7d47ef7ef3",
+    "prep/adapters.py": "67f33874ece9198bc7f8fd88aa8b9983d419b72acda1a86da0e6fb941ca48553",
+    "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+    "prep/feature_spec_lipo.json": "a65c67f9595d9190e7c913d2594ba984a07b51300d63916de865dccca434206c",
+    "prep/lcrc_common.py": "799be6b52ed155572d067a2edb53ff92d06fd89304e49d96af8b0c8a8bf079cf",
+    "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+    "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+    "prep/molecular_graph.py": "59a49724c890efc5aa41f7eed8cb2d848fb782aab768ce990864d990cbbe46db",
+    "ta/ta_audit.py": "327b08a8913f4b34acd43e3f36329d6c101401abbc9aa56993775b9661a2f89b",
+    "ta/ta_baseline.py": "52374a9613b0e5bbb0f31de6cce31917c12514f1b1deb4855532fb41c11c124f",
+    "ta/ta_collision.py": "8bf2a5d30edefd43eecb9150abc56e5c6c5b4c75735b5b756a08b238b67e490a",
+    "ta/ta_common.py": "d67bbbcff57d868da59c351ad2d9c341ee1a743db948ff857ad56bcdddf9d665",
+    "ta/ta_coverage.py": "61ef8603ae8e43c637ef437bbd6c2a421aeb602db7786148dc973543cc3b1bb7",
+    "ta/ta_cv.py": "c5d5b189fc1ee28727c7559d33f3435d4c4b8701225e16ad1146dc0abb25abf9",
+    "ta/ta_data.py": "bf10958f237eb089d527a1cb17e147a744a94f0388b34e8169194d8f5dda53f1",
+    "ta/ta_eval.py": "c80cb1c4ccfb3cc42dc81a1028db28d11f4171cd0ac7ed432859cf545783da0f",
+    "ta/ta_freeze.py": "58024128c158ad25d815a75219f3f464775dfa25f7b7cfef17c8eb563b147cb8",
+    "ta/ta_losses.py": "9a01d8343e090f193fb3d2445a280977ca16e098377c45cd36ac5182de0abcfe",
+    "ta/ta_protocol_freeze.py": "3298a434748d160483f508c384cfc3587b73bde39dd386fdd1e09478fdf74911",
+    "ta/ta_train.py": "0c5c2fd6ea1d689d0c5943aa1b55afacd75999ce4f4f5e8c0d24b5553e25c8b9",
+    "v1/mb_literature.py": "c279634606cabc1e68e1d550f31473ecda278438254f4f91c398f84d8fa25244",
+    "v1/mb_rdkit.py": "deca01383d3c0d363d216191a954faa120d55d59917b9fb011723a47b1eeb9e0",
+    "v1/mb_source.py": "ae19eeae345ec723f5d8221ae73c038dfb6f49ac6884c070c87cabb2e57a74a1",
+    "v2/mb2_baseline.py": "1d2043bb6234b2b65eab4dc7e93d7c8b9c64c0ea7b352505e8e1a1e627b61f31",
+    "v2/mb2_common.py": "a8db1c0f2c28031792fc25673e39ce7404cbf884250592f7bdd33a1005e3e45c",
+    "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+    "v2/mb2_eval.py": "4245112e3a63e79830d36834cd58ff46ad41d70763edacb4668d9486682a9399",
+    "v2/mb2_freeze.py": "843ce71d2d7cd5075e796a0b5ee464406162b8dd34ebbec4d28f1fbf65ac1a4e",
+    "v2/mb2_gate.py": "0d906f3ef01aecaa1fcccf26d83a016514480be74ba8bffc2ccd1fc8cdf2ba6a",
+    "v2/mb2_literature.py": "d4b4de38833ccf1e6d053e58a2fda3b97687a691500318c9627522bd21b338e8",
+    "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+    "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4",
+    "v2/mb2_p0.py": "296788fead3e85643ab1d4c6eda3bc55c136d8b13cb4e3694680ecb3b8ded69d",
+    "v2/mb2_probe.py": "c5fa358e9886540bd46cd896877a6879406418674cfa20ef87e9fb592e616323",
+    "v2/mb2_protocol_freeze.py": "c845b72de079cc627d3966d6a1ee3d3e1160f7318efbb4737141cd72c1c1cd07",
+    "v2/mb2_raw_artifact.py": "b06f5498adb272fe961e48ec0f52c1b60bf2e20f04faf8f4459af0399fe538b9",
+    "v2/mb2_rdkit.py": "567d045914315d1bcd819c0d0de56f53c7210c76362d71992df925834958c355",
+    "v2/mb2_source.py": "5b0b9f6e77457f4e1e15c6771b8d851b5aaa3015714cf9b077bb6ba6eaf35dc7",
+    "v2/mb2_split_audit.py": "3b4095033a5154b7f24a9b6a61642040f71289e7f0397ba88b12dd4d1c4568da",
+    "v2/mb2_split_representativeness.py": "765bfd7ce2961ab7ac1675a52ae60890098024459863493d41cdf9f4d8161bb3",
+    "v2/mb2_tables.py": "2224009bdb64d3f27b9c72039ef048310e3aa8346839a1f7204050cc9f9bd7fb",
+    "v2/mb2_train.py": "1bfc430c21b5384f6b917354aacf91a0617989fb2d8c61ca3d1ee9a5059c1d5b"
+  },
+  "created_utc": "2026-11-01T14:42:16Z",
+  "engineering_gates": [
+    "source split bytes re-verified against the Sprint-02 manifest before training",
+    "structure caches rebuilt for the new row lists, SMILES re-checked against the published source",
+    "Train-only standardiser fitted once on the frozen Train rows of each run",
+    "driver equivalence: a 2-epoch CPU smoke of the new driver matches Sprint 02's driver bit-for-bit on the published Tox21 split",
+    "no Test cache is constructed before the checkpoint freeze"
+  ],
+  "git_commit": "79783fff8934058934f1234338ce2099229ddae8",
+  "git_commit_note": "HEAD when this file was written; the commit that contains it is recorded per run as protocol_freeze_committed_at in each train.json",
+  "git_dirty_tracked": true,
+  "inputs": {
+    "baseline_repeat_manifest": {
+      "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/baseline_repeat_manifest.json",
+      "sha256": "42800355342403de4428cad72319558dce3dd143ab765370be9b71ddaa1bc869"
+    },
+    "feature_collision_tests": {
+      "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/feature_collision_tests.json",
+      "sha256": "9d6d8eda624320bacde2653b94443f1110514c2eaca6d1ac55db20931628512c"
+    },
+    "feature_coverage": {
+      "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/feature_coverage.json",
+      "sha256": "c941a5bc8c3bd99e26395b6bddb7663ad11a43d04a27ac4d8eb18a4da9049ee0"
+    },
+    "p0_information_flow": {
+      "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/p0_information_flow.json",
+      "sha256": "2f38689193eda3b60a8323b8bd89e8c6b1113cecca3f0e1758229d920449a102"
+    },
+    "split_freeze": {
+      "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/split_freeze.json",
+      "sha256": "bd39ee359e7b341116775bdde648b0e168bb74b884a1cdfa2ce92f673899496f"
+    },
+    "taskaware_loss_probes_p0": {
+      "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/taskaware_loss_probes_p0.json",
+      "sha256": "8625fc997f68f4d2031eb26713bfe41eee69206caa048d79f9407d1fb3e0d229"
+    }
+  },
+  "max_formal_runs": 7,
+  "not_done_this_round": [
+    "no new FeatureSpec",
+    "no augmented LCRC model",
+    "no representation change of any kind",
+    "no second training seed",
+    "no hyper-parameter search",
+    "no new dataset",
+    "no re-scoring of any Sprint-01/02 Test split"
+  ],
+  "p0_summary": {
+    "chiral_molecule_fraction": {
+      "BACE": 0.25313945803040316,
+      "BBBP": 0.312408043158411,
+      "ESOL": 0.0,
+      "FreeSolv": 0.0763239875389408,
+      "Lipophilicity": 0.2683333333333333,
+      "Tox21": 0.16881624313625335,
+      "ogbg-molhiv": 0.0
+    },
+    "ez_changes_only": [
+      "bond_feat"
+    ],
+    "fields_with_no_forward_response": [],
+    "frozen_model_same_output": true,
+    "identical_input_pairs": {
+      "BACE": 30,
+      "BBBP": 21,
+      "ESOL": 0,
+      "FreeSolv": 1,
+      "Lipophilicity": 114,
+      "Tox21": 102,
+      "ogbg-molhiv": 0
+    },
+    "information_item_status_counts": {
+      "EXPLICIT": 11,
+      "EXTRA_COMPUTE": 4,
+      "INDIRECT": 4,
+      "LOST_IN_PREPROCESSING": 2,
+      "NOT_DETERMINABLE": 3
+    },
+    "joint_code_gates": {
+      "s1": true,
+      "s2": true,
+      "s2_pairing": true
+    },
+    "tetrahedral_collision": "REPRESENTATION_COLLISION: two enantiomers with different CIP labels produce identical LCRC-A input tensors"
+  },
+  "p1_lipophilicity_repeats": {
+    "baseline": "frozen ECFP4+217 RDKit descriptors+XGBoost (Sprint 02 configuration, no tuning)",
+    "datasets": [
+      "Lipophilicity"
+    ],
+    "exposure_label": "PUBLIC_SPLIT_ROBUSTNESS -- not an independent blind test",
+    "gpu_runs": 2,
+    "model": "frozen lipo_v1 LCRC-A, R3 recipe, training seed 0",
+    "new_repeats": [
+      123,
+      124
+    ],
+    "reference_repeat": 122,
+    "reported_metric": "Test RMSE, one read per repeat after the checkpoint freeze",
+    "selection_metric": "Validation RMSE",
+    "splits": {
+      "122": {
+        "file": "Lipop.random122.ind.pkl",
+        "rows_sha256": {
+          "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "train": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        },
+        "sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "sizes": {
+          "test": 420,
+          "train": 3360,
+          "valid": 420
+        }
+      },
+      "123": {
+        "file": "Lipop.random123.ind.pkl",
+        "rows_sha256": {
+          "test": "6c335c844cb1a53273fb784de389d7df25281df86a057bbe22882f130aa06df2",
+          "train": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+          "valid": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982"
+        },
+        "sha256": "afaed4c6d95b64ac64e8fb760b6de516802008965befe1601b3664303119a0e8",
+        "sizes": {
+          "test": 420,
+          "train": 3360,
+          "valid": 420
+        }
+      },
+      "124": {
+        "file": "Lipop.random124.ind.pkl",
+        "rows_sha256": {
+          "test": "c4a5b71d8245ab426cffe475cd8862e11b16106d303b3ddb5dc409611fd0427d",
+          "train": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+          "valid": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+        },
+        "sha256": "2b48a41ccc39b622bbb74f18331ca9d9513190eec2de29144ce2bc7d47ef7ef3",
+        "sizes": {
+          "test": 420,
+          "train": 3360,
+          "valid": 420
+        }
+      }
+    }
+  },
+  "p2_bbbp_inner_cv": {
+    "acyclic_policy": "each acyclic (empty Murcko scaffold) row is its own group",
+    "algorithm": "greedy stratified group assignment (least-loaded bottleneck scheduling): groups ordered by (-size, sha256(salt|scaffold)); each group goes to the fold minimising max((pos_f+p)/target_pos, (neg_f+n)/target_neg), ties -> lowest fold index; no RNG",
+    "folds": {
+      "0": {
+        "n": 545,
+        "n_negative": 97,
+        "n_positive": 448,
+        "n_scaffold_groups": 257,
+        "rows_sha256": "881d92f44f712e4970729a2717fe34f815b31fc82269ac4bc9066a8038fbd116"
+      },
+      "1": {
+        "n": 542,
+        "n_negative": 97,
+        "n_positive": 445,
+        "n_scaffold_groups": 268,
+        "rows_sha256": "3151fccc27d40f424c99f0ee9e712fab8be0305f145bcb4d2e7e9147fc54a514"
+      },
+      "2": {
+        "n": 544,
+        "n_negative": 96,
+        "n_positive": 448,
+        "n_scaffold_groups": 190,
+        "rows_sha256": "986aa3f4f13a07b0ad466205241351c4d681dc0af156a7190274da95d6c60f03"
+      }
+    },
+    "gpu_runs": 3,
+    "model": "frozen lipo_v1 LCRC-A, R3 recipe, training seed 0, one run per fold",
+    "n_folds": 3,
+    "published_valid_test_labels": "not read",
+    "salt": "lcrc-taskaware-bbbp-inner-cv-v1",
+    "selection_metric": "ROC-AUC on the held-out fold",
+    "source": "BBBP.scaffold122 Train rows only (1631)"
+  },
+  "p3_objectives": {
+    "baseline_repeat_valid_rmse": {
+      "123": 0.690943206800863,
+      "124": 0.6353443100802408
+    },
+    "hiv_sqrt_pos_weight": {
+      "cap": 5.0,
+      "capped": true,
+      "dataset": "ogbg-molhiv",
+      "definition": "BCEWithLogitsLoss(pos_weight=min(5.0, sqrt(n_negative/n_positive)))",
+      "formula": "min(cap, sqrt(n_negative / n_positive))",
+      "gpu_runs": 1,
+      "n_negative": 31669,
+      "n_positive": 1232,
+      "name": "hiv_sqrt_pos_weight",
+      "pos_weight": 5.0,
+      "positive_rate": 0.03744567034436643,
+      "raw_sqrt_ratio": 5.070045082921565,
+      "reference": "lcrc_molnet_benchmark_pilot_v2/analysis/runs/ogbg-molhiv_s0",
+      "selection_metric": "Validation ROC-AUC (unchanged checkpoint rule)",
+      "source": "official Train split labels only",
+      "statistic_source": "official OGB Train split labels only",
+      "test_read": false,
+      "validation_or_test_used": false
+    },
+    "loss_probe_gates": {
+      "empty_task_excluded": true,
+      "gradients_match_analytic": true,
+      "hiv_pos_weight_within_cap": true,
+      "single_task_normalisation": true,
+      "two_losses_differ_on_some_toy_batch": true
+    },
+    "tox21_equal_task_loss": {
+      "class_weights": null,
+      "dataset": "Tox21",
+      "definition": "per-task mean BCE over that task's observed cells in the batch, then an unweighted mean over the tasks that have >=1 observed cell in this batch",
+      "empty_task_policy": "excluded from the denominator; never treated as zero loss",
+      "gpu_runs": 1,
+      "name": "tox21_equal_task_loss",
+      "nan_fill": null,
+      "reference": "lcrc_molnet_benchmark_pilot_v2/analysis/runs/Tox21_s0 (frozen masked-cell run)",
+      "selection_metric": "Validation macro ROC-AUC (unchanged checkpoint rule)",
+      "test_read": false
+    }
+  },
+  "protocol_id": "lcrc-taskaware-representation-pilot-v1",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "dropout": 0.1,
+    "dropout_position": "final atom-level local representation h, before the per-atom contribution f and the global rho",
+    "early_stopping": false,
+    "ema": false,
+    "epochs": 360,
+    "gradient_clip": 5.0,
+    "hyperparameter_search": false,
+    "min_lr": 1e-05,
+    "note": "byte-identical to Sprint 02 R3; only the objective (P3) or the row list (P1/P2) changes",
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "soup": false,
+    "ssl": false,
+    "swa": false,
+    "weight_decay": 0.001
+  },
+  "round_id": "lcrc-taskaware-representation-pilot-v1",
+  "run_plan": [
+    {
+      "dataset": "Lipophilicity",
+      "key": "lipo_r123",
+      "loss": "masked_cell",
+      "repeat": 1,
+      "workstream": "P1"
+    },
+    {
+      "dataset": "Lipophilicity",
+      "key": "lipo_r124",
+      "loss": "masked_cell",
+      "repeat": 2,
+      "workstream": "P1"
+    },
+    {
+      "dataset": "BBBP",
+      "fold": 0,
+      "key": "bbbp_cv_f0",
+      "loss": "masked_cell",
+      "workstream": "P2"
+    },
+    {
+      "dataset": "BBBP",
+      "fold": 1,
+      "key": "bbbp_cv_f1",
+      "loss": "masked_cell",
+      "workstream": "P2"
+    },
+    {
+      "dataset": "BBBP",
+      "fold": 2,
+      "key": "bbbp_cv_f2",
+      "loss": "masked_cell",
+      "workstream": "P2"
+    },
+    {
+      "dataset": "Tox21",
+      "key": "tox21_equal_task",
+      "loss": "equal_task",
+      "workstream": "P3"
+    },
+    {
+      "dataset": "ogbg-molhiv",
+      "key": "hiv_sqrt_pos",
+      "loss": "sqrt_pos_weight",
+      "workstream": "P3"
+    }
+  ],
+  "test_policy": {
+    "everything_else": "not read, not predicted, not evaluated",
+    "selection": "Validation only (P1/P3) or held-out inner-CV fold (P2)",
+    "sprint01_02_test_numbers": "EXPOSED_TEST_EXPLORATORY; carried forward read-only, never re-optimised",
+    "test_reads_this_round": [
+      "Lipophilicity random123",
+      "Lipophilicity random124"
+    ]
+  }
+}

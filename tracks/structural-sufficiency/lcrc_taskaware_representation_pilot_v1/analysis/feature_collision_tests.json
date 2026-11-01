@@ -1,0 +1,1639 @@
+{
+  "constructive": {
+    "ez": {
+      "dataset": "BBBP",
+      "direction": "Z->E",
+      "isomer_a_smiles": "CN(C)[C@@H]1C(=O)/C(=C(/O)NCN2CCCC2)C(=O)[C@@]2(O)C(=O)C3=C(O)c4c(O)cccc4[C@@](C)(O)[C@H]3C[C@@H]12",
+      "isomer_b_smiles": "CN(C)[C@@H]1C(=O)/C(=C(\\O)NCN2CCCC2)C(=O)[C@@]2(O)C(=O)C3=C(O)c4c(O)cccc4[C@@](C)(O)[C@H]3C[C@@H]12",
+      "model_input": {
+        "all_input_tensors_identical": false,
+        "tensors": {
+          "atom_feat": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              38,
+              51
+            ],
+            "shape_b": [
+              38,
+              51
+            ]
+          },
+          "atom_scalar": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              38,
+              9
+            ],
+            "shape_b": [
+              38,
+              9
+            ]
+          },
+          "atom_type": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              38
+            ],
+            "shape_b": [
+              38
+            ]
+          },
+          "bond_feat": {
+            "identical": false,
+            "n_differing_entries": 2,
+            "shape_a": [
+              42,
+              13
+            ],
+            "shape_b": [
+              42,
+              13
+            ]
+          },
+          "bond_index": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              42,
+              2
+            ],
+            "shape_b": [
+              42,
+              2
+            ]
+          },
+          "bond_type": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              42
+            ],
+            "shape_b": [
+              42
+            ]
+          },
+          "global": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              42
+            ],
+            "shape_b": [
+              42
+            ]
+          },
+          "nbr_code": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              84
+            ],
+            "shape_b": [
+              84
+            ]
+          },
+          "path_cat": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              134
+            ],
+            "shape_b": [
+              134
+            ]
+          },
+          "path_closure": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              134
+            ],
+            "shape_b": [
+              134
+            ]
+          },
+          "path_end": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              134
+            ],
+            "shape_b": [
+              134
+            ]
+          },
+          "path_end63": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              134
+            ],
+            "shape_b": [
+              134
+            ]
+          }
+        }
+      },
+      "raw_artifact_fields_that_differ": {
+        "atom_charge": false,
+        "atom_class": false,
+        "atom_h": false,
+        "edge_class": false,
+        "edge_index": false,
+        "edge_stereo": true
+      },
+      "row": 6,
+      "s1_s2_codes_identical": true,
+      "source_smiles": "CN(C)[C@H]1[C@@H]2C[C@H]3C(=C(O)c4c(O)cccc4[C@@]3(C)O)C(=O)[C@]2(O)C(=O)\\C(=C(/O)NCN5CCCC5)C1=O",
+      "stereo_stripped_smiles": "CN(C)C1C(=O)C(=C(O)NCN2CCCC2)C(=O)C2(O)C(=O)C3=C(O)c4c(O)cccc4C(C)(O)C3CC12",
+      "tensors_that_change": [
+        "bond_feat"
+      ],
+      "tensors_that_stay_identical": [
+        "atom_feat",
+        "atom_type",
+        "atom_scalar",
+        "bond_type",
+        "bond_index",
+        "nbr_code",
+        "path_cat",
+        "path_end63",
+        "path_end",
+        "path_closure",
+        "global"
+      ],
+      "verdict": "PARTIAL: the E/Z label is carried only by bond_feat[stereo]; the S1/S2 joint codes, the atom scalars and the global block are stereo-blind"
+    },
+    "frozen_model_effect": {
+      "checkpoint": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/runs/BACE_s0/checkpoint.pt",
+      "checkpoint_best_epoch": 102,
+      "outputs_identical": true,
+      "raw_model_output_by_smiles": {
+        "CC#Cc1cncc(-c2cccc([C@@]3(c4cc(C)c(=O)n(CC)c4)[NH+]=C(N)c4c(F)cccc43)c2)c1": [
+          8.033543586730957
+        ],
+        "CC#Cc1cncc(-c2cccc([C@]3(c4cc(C)c(=O)n(CC)c4)[NH+]=C(N)c4c(F)cccc43)c2)c1": [
+          8.033543586730957
+        ]
+      }
+    },
+    "tetrahedral": {
+      "cip_a": "R",
+      "cip_b": "S",
+      "dataset": "BACE",
+      "isomer_a_smiles": "CC#Cc1cncc(-c2cccc([C@@]3(c4cc(C)c(=O)n(CC)c4)[NH+]=C(N)c4c(F)cccc43)c2)c1",
+      "isomer_b_smiles": "CC#Cc1cncc(-c2cccc([C@]3(c4cc(C)c(=O)n(CC)c4)[NH+]=C(N)c4c(F)cccc43)c2)c1",
+      "model_input": {
+        "all_input_tensors_identical": true,
+        "tensors": {
+          "atom_feat": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              36,
+              51
+            ],
+            "shape_b": [
+              36,
+              51
+            ]
+          },
+          "atom_scalar": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              36,
+              9
+            ],
+            "shape_b": [
+              36,
+              9
+            ]
+          },
+          "atom_type": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              36
+            ],
+            "shape_b": [
+              36
+            ]
+          },
+          "bond_feat": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              40,
+              13
+            ],
+            "shape_b": [
+              40,
+              13
+            ]
+          },
+          "bond_index": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              40,
+              2
+            ],
+            "shape_b": [
+              40,
+              2
+            ]
+          },
+          "bond_type": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              40
+            ],
+            "shape_b": [
+              40
+            ]
+          },
+          "global": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              42
+            ],
+            "shape_b": [
+              42
+            ]
+          },
+          "nbr_code": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              80
+            ],
+            "shape_b": [
+              80
+            ]
+          },
+          "path_cat": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              118
+            ],
+            "shape_b": [
+              118
+            ]
+          },
+          "path_closure": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              118
+            ],
+            "shape_b": [
+              118
+            ]
+          },
+          "path_end": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              118
+            ],
+            "shape_b": [
+              118
+            ]
+          },
+          "path_end63": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              118
+            ],
+            "shape_b": [
+              118
+            ]
+          }
+        }
+      },
+      "raw_artifact_fields_that_differ": {
+        "atom_charge": false,
+        "atom_class": false,
+        "atom_h": false,
+        "edge_class": false,
+        "edge_index": false,
+        "edge_stereo": false
+      },
+      "raw_artifact_identical": true,
+      "row": 7,
+      "source_smiles": "Fc1c2c(ccc1)[C@@]([NH+]=C2N)(C=1C=C(C)C(=O)N(C=1)CC)c1cc(ccc1)-c1cc(cnc1)C#CC",
+      "stereo_stripped_smiles": "CC#Cc1cncc(-c2cccc(C3(c4cc(C)c(=O)n(CC)c4)[NH+]=C(N)c4c(F)cccc43)c2)c1",
+      "stereocentre_atom_index": 7,
+      "verdict": "REPRESENTATION_COLLISION: two enantiomers with different CIP labels produce identical LCRC-A input tensors"
+    },
+    "tetrahedral_bbbp": {
+      "cip_a": "S",
+      "cip_b": "R",
+      "dataset": "BBBP",
+      "isomer_a_smiles": "CN1C2CCC1CC(OC(=O)[C@H](CO)c1ccccc1)C2",
+      "isomer_b_smiles": "CN1C2CCC1CC(OC(=O)[C@@H](CO)c1ccccc1)C2",
+      "model_input": {
+        "all_input_tensors_identical": true,
+        "tensors": {
+          "atom_feat": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              21,
+              51
+            ],
+            "shape_b": [
+              21,
+              51
+            ]
+          },
+          "atom_scalar": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              21,
+              9
+            ],
+            "shape_b": [
+              21,
+              9
+            ]
+          },
+          "atom_type": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              21
+            ],
+            "shape_b": [
+              21
+            ]
+          },
+          "bond_feat": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              23,
+              13
+            ],
+            "shape_b": [
+              23,
+              13
+            ]
+          },
+          "bond_index": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              23,
+              2
+            ],
+            "shape_b": [
+              23,
+              2
+            ]
+          },
+          "bond_type": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              23
+            ],
+            "shape_b": [
+              23
+            ]
+          },
+          "global": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              42
+            ],
+            "shape_b": [
+              42
+            ]
+          },
+          "nbr_code": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              46
+            ],
+            "shape_b": [
+              46
+            ]
+          },
+          "path_cat": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              64
+            ],
+            "shape_b": [
+              64
+            ]
+          },
+          "path_closure": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              64
+            ],
+            "shape_b": [
+              64
+            ]
+          },
+          "path_end": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              64
+            ],
+            "shape_b": [
+              64
+            ]
+          },
+          "path_end63": {
+            "identical": true,
+            "n_differing_entries": 0,
+            "shape_a": [
+              64
+            ],
+            "shape_b": [
+              64
+            ]
+          }
+        }
+      },
+      "raw_artifact_fields_that_differ": {
+        "atom_charge": false,
+        "atom_class": false,
+        "atom_h": false,
+        "edge_class": false,
+        "edge_index": false,
+        "edge_stereo": false
+      },
+      "raw_artifact_identical": true,
+      "row": 17,
+      "source_smiles": "CN1C2CCC1CC(C2)OC(=O)[C@H](CO)c3ccccc3",
+      "stereo_stripped_smiles": "CN1C2CCC1CC(OC(=O)C(CO)c1ccccc1)C2",
+      "stereocentre_atom_index": 12,
+      "verdict": "REPRESENTATION_COLLISION: two enantiomers with different CIP labels produce identical LCRC-A input tensors"
+    }
+  },
+  "created_utc": "2026-11-01T14:19:40Z",
+  "environment": {
+    "cuda_available": false,
+    "git_commit": "b66622562bab5903cbebc9a3fdac8b54a7c3cdf1",
+    "git_dirty_tracked": false,
+    "hostname": "main",
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "round_id": "lcrc-taskaware-representation-pilot-v1",
+    "scikit_learn": "1.5.2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "xgboost": "2.1.3"
+  },
+  "interpretation": "A collision proves that the frozen input cannot distinguish two structures. It does NOT prove that any dataset's error is caused by that collision; no label is read in this file.",
+  "real_data": {
+    "BACE": {
+      "dataset": "BACE",
+      "examples": [
+        {
+          "identical_tensors": true,
+          "rows": [
+            3,
+            581
+          ],
+          "smiles": [
+            "CCOC[C@@H](Oc1cc(C[C@@H]2CS(=O)(=O)C[C@H]([NH2+]Cc3cccc(C(C)(C)C)c3)[C@H]2O)cc(F)c1N)C(F)(F)F",
+            "CCOC[C@H](Oc1cc(CC2CS(=O)(=O)CC([NH2+]Cc3cccc(C(C)(C)C)c3)C2O)cc(F)c1N)C(F)(F)F"
+          ],
+          "stereo_stripped": "CCOCC(Oc1cc(CC2CS(=O)(=O)CC([NH2+]Cc3cccc(C(C)(C)C)c3)C2O)cc(F)c1N)C(F)(F)F"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            458,
+            158
+          ],
+          "smiles": [
+            "CCCN(CCC)C(=O)c1cc(C)cc(C(=O)NC(Cc2cc(F)cc(F)c2)[C@@H](O)C[NH2+]Cc2cccc(OC)c2)c1",
+            "CCCN(CCC)C(=O)c1cc(C)cc(C(=O)N[C@@H](Cc2cc(F)cc(F)c2)[C@@H](O)C[NH2+]Cc2cccc(OC)c2)c1"
+          ],
+          "stereo_stripped": "CCCN(CCC)C(=O)c1cc(C)cc(C(=O)NC(Cc2cc(F)cc(F)c2)C(O)C[NH2+]Cc2cccc(OC)c2)c1"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            458,
+            15
+          ],
+          "smiles": [
+            "CCCN(CCC)C(=O)c1cc(C)cc(C(=O)NC(Cc2cc(F)cc(F)c2)[C@@H](O)C[NH2+]Cc2cccc(OC)c2)c1",
+            "CCCN(CCC)C(=O)c1cc(C)cc(C(=O)N[C@@H](Cc2cc(F)cc(F)c2)[C@H](O)C[NH2+]Cc2cccc(OC)c2)c1"
+          ],
+          "stereo_stripped": "CCCN(CCC)C(=O)c1cc(C)cc(C(=O)NC(Cc2cc(F)cc(F)c2)C(O)C[NH2+]Cc2cccc(OC)c2)c1"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            158,
+            15
+          ],
+          "smiles": [
+            "CCCN(CCC)C(=O)c1cc(C)cc(C(=O)N[C@@H](Cc2cc(F)cc(F)c2)[C@@H](O)C[NH2+]Cc2cccc(OC)c2)c1",
+            "CCCN(CCC)C(=O)c1cc(C)cc(C(=O)N[C@@H](Cc2cc(F)cc(F)c2)[C@H](O)C[NH2+]Cc2cccc(OC)c2)c1"
+          ],
+          "stereo_stripped": "CCCN(CCC)C(=O)c1cc(C)cc(C(=O)NC(Cc2cc(F)cc(F)c2)C(O)C[NH2+]Cc2cccc(OC)c2)c1"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            336,
+            22
+          ],
+          "smiles": [
+            "CO[C@@H](C)C(=O)NC(Cc1cccc(-c2nccs2)c1)C(O)C[NH2+]C1CC2(CCC2)Oc2ncc(CC(C)(C)C)cc21",
+            "CO[C@H](C)C(=O)N[C@@H](Cc1cccc(-c2nccs2)c1)[C@H](O)C[NH2+][C@H]1CC2(CCC2)Oc2ncc(CC(C)(C)C)cc21"
+          ],
+          "stereo_stripped": "COC(C)C(=O)NC(Cc1cccc(-c2nccs2)c1)C(O)C[NH2+]C1CC2(CCC2)Oc2ncc(CC(C)(C)C)cc21"
+        }
+      ],
+      "n_constitution_groups": 1483,
+      "n_groups_capped_at": 400,
+      "n_groups_with_stereo_distinct_members": 28,
+      "n_molecules": 1513,
+      "n_molecules_with_assigned_chiral_center": 383,
+      "n_pairs_compared": 32,
+      "n_pairs_with_distinguishable_model_input": 2,
+      "n_pairs_with_identical_model_input": 30,
+      "n_parse_failed": 0,
+      "n_stereo_distinct_isoforms_upper_bound": 28,
+      "n_stereo_isoform_pairs": 32
+    },
+    "BBBP": {
+      "dataset": "BBBP",
+      "examples": [
+        {
+          "identical_tensors": true,
+          "rows": [
+            2,
+            31
+          ],
+          "smiles": [
+            "CC1COc2c(N3CCN(C)CC3)c(F)cc3c(=O)c(C(=O)O)cn1c23",
+            "C[C@H]1COc2c(N3CCN(C)CC3)c(F)cc3c(=O)c(C(=O)O)cn1c23"
+          ],
+          "stereo_stripped": "CC1COc2c(N3CCN(C)CC3)c(F)cc3c(=O)c(C(=O)O)cn1c23"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            10,
+            264
+          ],
+          "smiles": [
+            "CN1Cc2c(-c3noc(C(C)(O)CO)n3)ncn2-c2cccc(Cl)c2C1=O",
+            "CN1Cc2c(-c3noc([C@](C)(O)CO)n3)ncn2-c2cccc(Cl)c2C1=O"
+          ],
+          "stereo_stripped": "CN1Cc2c(-c3noc(C(C)(O)CO)n3)ncn2-c2cccc(Cl)c2C1=O"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            13,
+            313
+          ],
+          "smiles": [
+            "CC(C)(C)NC(=O)C1CC2CCCCC2CN1CC(O)C(Cc1ccccc1)NC(=O)C(CC(N)=O)NC(=O)c1ccc2ccccc2n1",
+            "CC(C)(C)NC(=O)[C@@H]1C[C@@H]2CCCC[C@@H]2CN1C[C@@H](O)[C@H](Cc1ccccc1)NC(=O)[C@H](CC(N)=O)NC(=O)c1ccc2ccccc2n1"
+          ],
+          "stereo_stripped": "CC(C)(C)NC(=O)C1CC2CCCCC2CN1CC(O)C(Cc1ccccc1)NC(=O)C(CC(N)=O)NC(=O)c1ccc2ccccc2n1"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            124,
+            17
+          ],
+          "smiles": [
+            "CN1C2CCC1CC(OC(=O)C(CO)c1ccccc1)C2",
+            "CN1C2CCC1CC(OC(=O)[C@H](CO)c1ccccc1)C2"
+          ],
+          "stereo_stripped": "CN1C2CCC1CC(OC(=O)C(CO)c1ccccc1)C2"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            450,
+            21
+          ],
+          "smiles": [
+            "CC(N)Cc1ccccc1",
+            "C[C@H](N)Cc1ccccc1"
+          ],
+          "stereo_stripped": "CC(N)Cc1ccccc1"
+        }
+      ],
+      "n_constitution_groups": 1953,
+      "n_groups_capped_at": 400,
+      "n_groups_with_stereo_distinct_members": 21,
+      "n_molecules": 2039,
+      "n_molecules_with_assigned_chiral_center": 637,
+      "n_pairs_compared": 23,
+      "n_pairs_with_distinguishable_model_input": 2,
+      "n_pairs_with_identical_model_input": 21,
+      "n_parse_failed": 0,
+      "n_stereo_distinct_isoforms_upper_bound": 21,
+      "n_stereo_isoform_pairs": 23
+    },
+    "ESOL": {
+      "dataset": "ESOL",
+      "examples": [
+        {
+          "identical_tensors": false,
+          "rows": [
+            140,
+            1091
+          ],
+          "smiles": [
+            "C/C=C/CC",
+            "C/C=C\\CC"
+          ],
+          "stereo_stripped": "CC=CCC",
+          "tensors_that_differ": [
+            "bond_feat"
+          ]
+        },
+        {
+          "identical_tensors": false,
+          "rows": [
+            356,
+            1081
+          ],
+          "smiles": [
+            "C/C=C/C=O",
+            "CC=CC=O"
+          ],
+          "stereo_stripped": "CC=CC=O",
+          "tensors_that_differ": [
+            "bond_feat"
+          ]
+        }
+      ],
+      "n_constitution_groups": 1115,
+      "n_groups_capped_at": 400,
+      "n_groups_with_stereo_distinct_members": 2,
+      "n_molecules": 1128,
+      "n_molecules_with_assigned_chiral_center": 0,
+      "n_pairs_compared": 2,
+      "n_pairs_with_distinguishable_model_input": 2,
+      "n_pairs_with_identical_model_input": 0,
+      "n_parse_failed": 0,
+      "n_stereo_distinct_isoforms_upper_bound": 2,
+      "n_stereo_isoform_pairs": 2
+    },
+    "FreeSolv": {
+      "dataset": "FreeSolv",
+      "examples": [
+        {
+          "identical_tensors": false,
+          "rows": [
+            269,
+            15
+          ],
+          "smiles": [
+            "CC(C)=CCC/C(C)=C/CO",
+            "CC(C)=CCC/C(C)=C\\CO"
+          ],
+          "stereo_stripped": "CC(C)=CCCC(C)=CCO",
+          "tensors_that_differ": [
+            "bond_feat"
+          ]
+        },
+        {
+          "identical_tensors": false,
+          "rows": [
+            129,
+            610
+          ],
+          "smiles": [
+            "Cl/C=C/Cl",
+            "Cl/C=C\\Cl"
+          ],
+          "stereo_stripped": "ClC=CCl",
+          "tensors_that_differ": [
+            "bond_feat"
+          ]
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            629,
+            564
+          ],
+          "smiles": [
+            "C[C@@H](O)C(F)(F)F",
+            "C[C@H](O)C(F)(F)F"
+          ],
+          "stereo_stripped": "CC(O)C(F)(F)F"
+        }
+      ],
+      "n_constitution_groups": 639,
+      "n_groups_capped_at": 400,
+      "n_groups_with_stereo_distinct_members": 3,
+      "n_molecules": 642,
+      "n_molecules_with_assigned_chiral_center": 49,
+      "n_pairs_compared": 3,
+      "n_pairs_with_distinguishable_model_input": 2,
+      "n_pairs_with_identical_model_input": 1,
+      "n_parse_failed": 0,
+      "n_stereo_distinct_isoforms_upper_bound": 3,
+      "n_stereo_isoform_pairs": 3
+    },
+    "Lipophilicity": {
+      "dataset": "Lipophilicity",
+      "examples": [
+        {
+          "identical_tensors": true,
+          "rows": [
+            3,
+            2411
+          ],
+          "smiles": [
+            "O=C(NC1Cc2ccccc2N(C[C@@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1",
+            "O=C(N[C@@H]1Cc2ccccc2N(C[C@@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1"
+          ],
+          "stereo_stripped": "O=C(NC1Cc2ccccc2N(CC(O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            3,
+            3534
+          ],
+          "smiles": [
+            "O=C(NC1Cc2ccccc2N(C[C@@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1",
+            "O=C(N[C@H]1Cc2ccccc2N(C[C@@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1"
+          ],
+          "stereo_stripped": "O=C(NC1Cc2ccccc2N(CC(O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            3,
+            2566
+          ],
+          "smiles": [
+            "O=C(NC1Cc2ccccc2N(C[C@@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1",
+            "O=C(N[C@H]1Cc2ccccc2N(C[C@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1"
+          ],
+          "stereo_stripped": "O=C(NC1Cc2ccccc2N(CC(O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            2411,
+            3534
+          ],
+          "smiles": [
+            "O=C(N[C@@H]1Cc2ccccc2N(C[C@@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1",
+            "O=C(N[C@H]1Cc2ccccc2N(C[C@@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1"
+          ],
+          "stereo_stripped": "O=C(NC1Cc2ccccc2N(CC(O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            2411,
+            2566
+          ],
+          "smiles": [
+            "O=C(N[C@@H]1Cc2ccccc2N(C[C@@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1",
+            "O=C(N[C@H]1Cc2ccccc2N(C[C@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1"
+          ],
+          "stereo_stripped": "O=C(NC1Cc2ccccc2N(CC(O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1"
+        }
+      ],
+      "n_constitution_groups": 4102,
+      "n_groups_capped_at": 400,
+      "n_groups_with_stereo_distinct_members": 82,
+      "n_molecules": 4200,
+      "n_molecules_with_assigned_chiral_center": 1127,
+      "n_pairs_compared": 115,
+      "n_pairs_with_distinguishable_model_input": 1,
+      "n_pairs_with_identical_model_input": 114,
+      "n_parse_failed": 0,
+      "n_stereo_distinct_isoforms_upper_bound": 82,
+      "n_stereo_isoform_pairs": 115
+    },
+    "Tox21": {
+      "dataset": "Tox21",
+      "examples": [
+        {
+          "identical_tensors": true,
+          "rows": [
+            3562,
+            8
+          ],
+          "smiles": [
+            "OC[C@@H](O)C(O)[C@H](O)CO",
+            "OC[C@@H](O)[C@H](O)[C@@H](O)CO"
+          ],
+          "stereo_stripped": "OCC(O)C(O)C(O)CO"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            44,
+            3367
+          ],
+          "smiles": [
+            "CC(C)C(Nc1ccc(C(F)(F)F)cc1Cl)C(=O)OC(C#N)c1cccc(Oc2ccccc2)c1",
+            "CC(C)[C@@H](Nc1ccc(C(F)(F)F)cc1Cl)C(=O)OC(C#N)c1cccc(Oc2ccccc2)c1"
+          ],
+          "stereo_stripped": "CC(C)C(Nc1ccc(C(F)(F)F)cc1Cl)C(=O)OC(C#N)c1cccc(Oc2ccccc2)c1"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            358,
+            49
+          ],
+          "smiles": [
+            "C=C[C@H]1CN2CCC1C[C@@H]2[C@@H](O)c1ccnc2ccc(OC)cc12",
+            "C=C[C@H]1CN2CCC1C[C@H]2[C@H](O)c1ccnc2ccc(OC)cc12"
+          ],
+          "stereo_stripped": "C=CC1CN2CCC1CC2C(O)c1ccnc2ccc(OC)cc12"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            6687,
+            62
+          ],
+          "smiles": [
+            "C=C(C)C1CC=C(C)CC1",
+            "C=C(C)[C@@H]1CC=C(C)CC1"
+          ],
+          "stereo_stripped": "C=C(C)C1CC=C(C)CC1"
+        },
+        {
+          "identical_tensors": true,
+          "rows": [
+            6687,
+            4337
+          ],
+          "smiles": [
+            "C=C(C)C1CC=C(C)CC1",
+            "C=C(C)[C@H]1CC=C(C)CC1"
+          ],
+          "stereo_stripped": "C=C(C)C1CC=C(C)CC1"
+        }
+      ],
+      "n_constitution_groups": 7709,
+      "n_groups_capped_at": 400,
+      "n_groups_with_stereo_distinct_members": 107,
+      "n_molecules": 7831,
+      "n_molecules_with_assigned_chiral_center": 1321,
+      "n_pairs_compared": 139,
+      "n_pairs_with_distinguishable_model_input": 37,
+      "n_pairs_with_identical_model_input": 102,
+      "n_parse_failed": 0,
+      "n_stereo_distinct_isoforms_upper_bound": 107,
+      "n_stereo_isoform_pairs": 139
+    },
+    "ogbg-molhiv": {
+      "dataset": "ogbg-molhiv",
+      "examples": [],
+      "n_constitution_groups": 41127,
+      "n_groups_capped_at": 400,
+      "n_groups_with_stereo_distinct_members": 0,
+      "n_molecules": 41127,
+      "n_molecules_with_assigned_chiral_center": 0,
+      "n_pairs_compared": 0,
+      "n_pairs_with_distinguishable_model_input": 0,
+      "n_pairs_with_identical_model_input": 0,
+      "n_parse_failed": 0,
+      "n_stereo_distinct_isoforms_upper_bound": 0,
+      "n_stereo_isoform_pairs": 0
+    }
+  },
+  "round_id": "lcrc-taskaware-representation-pilot-v1",
+  "train_label_divergence": {
+    "BACE": {
+      "dataset": "BACE",
+      "examples_of_label_divergence": [
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            1.0
+          ],
+          "label_b": [
+            0.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            458,
+            158
+          ]
+        },
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            0.0
+          ],
+          "label_b": [
+            1.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            158,
+            15
+          ]
+        },
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            1.0
+          ],
+          "label_b": [
+            0.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            37,
+            140
+          ]
+        },
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            1.0
+          ],
+          "label_b": [
+            0.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            50,
+            1130
+          ]
+        },
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            1.0
+          ],
+          "label_b": [
+            0.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            51,
+            1241
+          ]
+        },
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            1.0
+          ],
+          "label_b": [
+            0.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            60,
+            126
+          ]
+        },
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            1.0
+          ],
+          "label_b": [
+            0.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            232,
+            123
+          ]
+        },
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            1.0
+          ],
+          "label_b": [
+            0.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            286,
+            124
+          ]
+        }
+      ],
+      "fraction_different": 0.5625,
+      "label_scope": "published Train split only; Test labels never decoded",
+      "n_capped_examples_ignored": 5,
+      "n_collision_pairs": 32,
+      "n_collision_pairs_with_both_rows_in_train": 32,
+      "n_pairs_different_train_label": 18,
+      "n_pairs_same_train_label": 14,
+      "task": "binary"
+    },
+    "BBBP": {
+      "dataset": "BBBP",
+      "examples_of_label_divergence": [
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            1.0
+          ],
+          "label_b": [
+            0.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            13,
+            313
+          ]
+        },
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            0.0
+          ],
+          "label_b": [
+            1.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            124,
+            17
+          ]
+        },
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            0.0
+          ],
+          "label_b": [
+            1.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            297,
+            50
+          ]
+        },
+        {
+          "abs_delta": 1.0,
+          "identical_model_input": true,
+          "label_a": [
+            1.0
+          ],
+          "label_b": [
+            0.0
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            88,
+            250
+          ]
+        }
+      ],
+      "fraction_different": 0.17391304347826086,
+      "label_scope": "published Train split only; Test labels never decoded",
+      "n_capped_examples_ignored": 5,
+      "n_collision_pairs": 23,
+      "n_collision_pairs_with_both_rows_in_train": 23,
+      "n_pairs_different_train_label": 4,
+      "n_pairs_same_train_label": 19,
+      "task": "binary"
+    },
+    "ESOL": {
+      "dataset": "ESOL",
+      "examples_of_label_divergence": [],
+      "fraction_different": 0.0,
+      "label_scope": "published Train split only; Test labels never decoded",
+      "n_capped_examples_ignored": 2,
+      "n_collision_pairs": 2,
+      "n_collision_pairs_with_both_rows_in_train": 1,
+      "n_pairs_different_train_label": 0,
+      "n_pairs_same_train_label": 1,
+      "task": "regression"
+    },
+    "FreeSolv": {
+      "dataset": "FreeSolv",
+      "examples_of_label_divergence": [
+        {
+          "abs_delta": 0.3899999999999999,
+          "identical_model_input": false,
+          "label_a": [
+            -0.78
+          ],
+          "label_b": [
+            -1.17
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            129,
+            610
+          ]
+        }
+      ],
+      "fraction_different": 1.0,
+      "label_scope": "published Train split only; Test labels never decoded",
+      "n_capped_examples_ignored": 3,
+      "n_collision_pairs": 3,
+      "n_collision_pairs_with_both_rows_in_train": 1,
+      "n_pairs_different_train_label": 1,
+      "n_pairs_same_train_label": 0,
+      "task": "regression"
+    },
+    "Lipophilicity": {
+      "dataset": "Lipophilicity",
+      "examples_of_label_divergence": [
+        {
+          "abs_delta": 0.10000000000000009,
+          "identical_model_input": true,
+          "label_a": [
+            3.37
+          ],
+          "label_b": [
+            3.27
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            3,
+            2411
+          ]
+        },
+        {
+          "abs_delta": 0.10000000000000009,
+          "identical_model_input": true,
+          "label_a": [
+            3.37
+          ],
+          "label_b": [
+            3.27
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            3,
+            2566
+          ]
+        },
+        {
+          "abs_delta": 0.16000000000000003,
+          "identical_model_input": true,
+          "label_a": [
+            -1.08
+          ],
+          "label_b": [
+            -0.92
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            3677,
+            1309
+          ]
+        },
+        {
+          "abs_delta": 0.22999999999999998,
+          "identical_model_input": true,
+          "label_a": [
+            3.14
+          ],
+          "label_b": [
+            2.91
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            1024,
+            73
+          ]
+        },
+        {
+          "abs_delta": 0.10000000000000003,
+          "identical_model_input": true,
+          "label_a": [
+            -0.45
+          ],
+          "label_b": [
+            -0.35
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            79,
+            644
+          ]
+        },
+        {
+          "abs_delta": 0.10000000000000009,
+          "identical_model_input": true,
+          "label_a": [
+            1.2
+          ],
+          "label_b": [
+            1.3
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            1954,
+            89
+          ]
+        },
+        {
+          "abs_delta": 0.040000000000000036,
+          "identical_model_input": true,
+          "label_a": [
+            1.92
+          ],
+          "label_b": [
+            1.96
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            1168,
+            337
+          ]
+        },
+        {
+          "abs_delta": 0.3999999999999999,
+          "identical_model_input": true,
+          "label_a": [
+            3.5
+          ],
+          "label_b": [
+            3.1
+          ],
+          "n_differing_label_cells": null,
+          "train_rows": [
+            205,
+            3628
+          ]
+        }
+      ],
+      "fraction_different": 0.9066666666666666,
+      "label_scope": "published Train split only; Test labels never decoded",
+      "n_capped_examples_ignored": 5,
+      "n_collision_pairs": 115,
+      "n_collision_pairs_with_both_rows_in_train": 75,
+      "n_pairs_different_train_label": 68,
+      "n_pairs_same_train_label": 7,
+      "task": "regression"
+    },
+    "Tox21": {
+      "dataset": "Tox21",
+      "examples_of_label_divergence": [
+        {
+          "abs_delta": null,
+          "identical_model_input": true,
+          "label_a": [
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            1.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            NaN,
+            0.0
+          ],
+          "label_b": [
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            NaN,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "n_differing_label_cells": 2,
+          "train_rows": [
+            358,
+            49
+          ]
+        },
+        {
+          "abs_delta": null,
+          "identical_model_input": true,
+          "label_a": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "label_b": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "n_differing_label_cells": 2,
+          "train_rows": [
+            7345,
+            567
+          ]
+        },
+        {
+          "abs_delta": null,
+          "identical_model_input": true,
+          "label_a": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            NaN,
+            NaN,
+            0.0,
+            NaN,
+            0.0,
+            0.0
+          ],
+          "label_b": [
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            NaN,
+            NaN,
+            0.0,
+            0.0,
+            NaN,
+            0.0
+          ],
+          "n_differing_label_cells": 1,
+          "train_rows": [
+            616,
+            2257
+          ]
+        },
+        {
+          "abs_delta": null,
+          "identical_model_input": true,
+          "label_a": [
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            NaN,
+            NaN,
+            0.0,
+            0.0,
+            NaN,
+            0.0
+          ],
+          "label_b": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            NaN,
+            NaN,
+            0.0,
+            NaN,
+            NaN,
+            0.0
+          ],
+          "n_differing_label_cells": 1,
+          "train_rows": [
+            2257,
+            2264
+          ]
+        },
+        {
+          "abs_delta": null,
+          "identical_model_input": true,
+          "label_a": [
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            NaN,
+            0.0,
+            0.0,
+            NaN,
+            1.0,
+            0.0,
+            1.0,
+            NaN
+          ],
+          "label_b": [
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            NaN,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            NaN
+          ],
+          "n_differing_label_cells": 2,
+          "train_rows": [
+            755,
+            752
+          ]
+        },
+        {
+          "abs_delta": null,
+          "identical_model_input": true,
+          "label_a": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "label_b": [
+            0.0,
+            0.0,
+            NaN,
+            NaN,
+            0.0,
+            0.0,
+            0.0,
+            NaN,
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          "n_differing_label_cells": 3,
+          "train_rows": [
+            7375,
+            7379
+          ]
+        },
+        {
+          "abs_delta": null,
+          "identical_model_input": true,
+          "label_a": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            NaN,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "label_b": [
+            0.0,
+            0.0,
+            NaN,
+            NaN,
+            0.0,
+            0.0,
+            0.0,
+            NaN,
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          "n_differing_label_cells": 2,
+          "train_rows": [
+            7378,
+            7379
+          ]
+        },
+        {
+          "abs_delta": null,
+          "identical_model_input": true,
+          "label_a": [
+            0.0,
+            0.0,
+            NaN,
+            NaN,
+            1.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "label_b": [
+            0.0,
+            NaN,
+            0.0,
+            NaN,
+            0.0,
+            0.0,
+            0.0,
+            NaN,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "n_differing_label_cells": 1,
+          "train_rows": [
+            7137,
+            1543
+          ]
+        }
+      ],
+      "fraction_different": 0.2235294117647059,
+      "label_scope": "published Train split only; Test labels never decoded",
+      "n_capped_examples_ignored": 5,
+      "n_collision_pairs": 139,
+      "n_collision_pairs_with_both_rows_in_train": 85,
+      "n_pairs_different_train_label": 19,
+      "n_pairs_same_train_label": 66,
+      "task": "multitask"
+    },
+    "ogbg-molhiv": {
+      "dataset": "ogbg-molhiv",
+      "examples_of_label_divergence": [],
+      "fraction_different": 0.0,
+      "label_scope": "published Train split only; Test labels never decoded",
+      "n_capped_examples_ignored": 0,
+      "n_collision_pairs": 0,
+      "n_collision_pairs_with_both_rows_in_train": 0,
+      "n_pairs_different_train_label": 0,
+      "n_pairs_same_train_label": 0,
+      "task": "binary"
+    }
+  }
+}

@@ -1,0 +1,253 @@
+{
+  "created_utc": "2026-11-01T14:26:19Z",
+  "environment": {
+    "cuda_available": false,
+    "git_commit": "b66622562bab5903cbebc9a3fdac8b54a7c3cdf1",
+    "git_dirty_tracked": false,
+    "hostname": "main",
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "round_id": "lcrc-taskaware-representation-pilot-v1",
+    "scikit_learn": "1.5.2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "xgboost": "2.1.3"
+  },
+  "gates": {
+    "empty_task_excluded": true,
+    "gradients_match_analytic": true,
+    "hiv_pos_weight_within_cap": true,
+    "single_task_normalisation": true,
+    "two_losses_differ_on_some_toy_batch": true
+  },
+  "hiv_sqrt_pos_weight": {
+    "cap": 5.0,
+    "capped": true,
+    "dataset": "ogbg-molhiv",
+    "definition": "BCEWithLogitsLoss(pos_weight=min(5.0, sqrt(n_negative/n_positive)))",
+    "formula": "min(cap, sqrt(n_negative / n_positive))",
+    "n_negative": 31669,
+    "n_positive": 1232,
+    "name": "hiv_sqrt_pos_weight",
+    "pos_weight": 5.0,
+    "positive_rate": 0.03744567034436643,
+    "raw_sqrt_ratio": 5.070045082921565,
+    "source": "official Train split labels only",
+    "statistic_source": "official OGB Train split labels only",
+    "validation_or_test_used": false
+  },
+  "round_id": "lcrc-taskaware-representation-pilot-v1",
+  "tox21_equal_task_loss": {
+    "class_weights": null,
+    "dataset": "Tox21",
+    "definition": "per-task mean BCE over that task's observed cells in the batch, then an unweighted mean over the tasks that have >=1 observed cell in this batch",
+    "empty_task_policy": "excluded from the denominator; never treated as zero loss",
+    "name": "tox21_equal_task_loss",
+    "nan_fill": null
+  },
+  "toy_probe": [
+    {
+      "case": "sparse_two_tasks",
+      "difference": -0.18447411060333252,
+      "equal_task_cell_weighting": [
+        [
+          0.166667,
+          0.5,
+          0.0
+        ],
+        [
+          0.166667,
+          0.0,
+          0.0
+        ],
+        [
+          0.166667,
+          0.0,
+          0.0
+        ]
+      ],
+      "equal_task_loss": 0.6322306394577026,
+      "grad_equal_task_matches_analytic": true,
+      "grad_masked_cell_matches_analytic": true,
+      "losses_differ": true,
+      "masked_cell_cell_weighting": [
+        [
+          0.25,
+          0.25,
+          0.0
+        ],
+        [
+          0.25,
+          0.0,
+          0.0
+        ],
+        [
+          0.25,
+          0.0,
+          0.0
+        ]
+      ],
+      "masked_cell_loss": 0.8167047500610352,
+      "n_observed_cells": 4,
+      "n_tasks_with_an_observed_cell": 2,
+      "tasks_missing_pattern": [
+        3,
+        1,
+        0
+      ]
+    },
+    {
+      "case": "dense_three_tasks",
+      "difference": 0.0,
+      "equal_task_cell_weighting": [
+        [
+          0.111111,
+          0.111111,
+          0.111111
+        ],
+        [
+          0.111111,
+          0.111111,
+          0.111111
+        ],
+        [
+          0.111111,
+          0.111111,
+          0.111111
+        ]
+      ],
+      "equal_task_loss": 0.6697273254394531,
+      "grad_equal_task_matches_analytic": true,
+      "grad_masked_cell_matches_analytic": true,
+      "losses_differ": false,
+      "masked_cell_cell_weighting": [
+        [
+          0.111111,
+          0.111111,
+          0.111111
+        ],
+        [
+          0.111111,
+          0.111111,
+          0.111111
+        ],
+        [
+          0.111111,
+          0.111111,
+          0.111111
+        ]
+      ],
+      "masked_cell_loss": 0.6697273254394531,
+      "n_observed_cells": 9,
+      "n_tasks_with_an_observed_cell": 3,
+      "tasks_missing_pattern": [
+        3,
+        3,
+        3
+      ]
+    },
+    {
+      "case": "empty_third_task",
+      "difference": -0.03249317407608032,
+      "equal_task_cell_weighting": [
+        [
+          0.166667,
+          0.0,
+          0.0
+        ],
+        [
+          0.166667,
+          0.25,
+          0.0
+        ],
+        [
+          0.166667,
+          0.25,
+          0.0
+        ]
+      ],
+      "equal_task_loss": 0.8387129306793213,
+      "grad_equal_task_matches_analytic": true,
+      "grad_masked_cell_matches_analytic": true,
+      "losses_differ": true,
+      "masked_cell_cell_weighting": [
+        [
+          0.2,
+          0.0,
+          0.0
+        ],
+        [
+          0.2,
+          0.2,
+          0.0
+        ],
+        [
+          0.2,
+          0.2,
+          0.0
+        ]
+      ],
+      "masked_cell_loss": 0.8712061047554016,
+      "n_observed_cells": 5,
+      "n_tasks_with_an_observed_cell": 2,
+      "tasks_missing_pattern": [
+        3,
+        2,
+        0
+      ]
+    },
+    {
+      "case": "only_first_task",
+      "difference": 0.0,
+      "equal_task_cell_weighting": [
+        [
+          0.333333,
+          0.0,
+          0.0
+        ],
+        [
+          0.333333,
+          0.0,
+          0.0
+        ],
+        [
+          0.333333,
+          0.0,
+          0.0
+        ]
+      ],
+      "equal_task_loss": 1.0011788606643677,
+      "grad_equal_task_matches_analytic": true,
+      "grad_masked_cell_matches_analytic": true,
+      "losses_differ": false,
+      "masked_cell_cell_weighting": [
+        [
+          0.333333,
+          0.0,
+          0.0
+        ],
+        [
+          0.333333,
+          0.0,
+          0.0
+        ],
+        [
+          0.333333,
+          0.0,
+          0.0
+        ]
+      ],
+      "masked_cell_loss": 1.0011788606643677,
+      "n_observed_cells": 3,
+      "n_tasks_with_an_observed_cell": 1,
+      "tasks_missing_pattern": [
+        3,
+        0,
+        0
+      ]
+    }
+  ]
+}

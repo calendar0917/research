@@ -1,0 +1,89 @@
+{
+  "dataset": "Lipophilicity",
+  "environment": {
+    "git_commit": "b66622562bab5903cbebc9a3fdac8b54a7c3cdf1",
+    "xgboost": "2.1.3"
+  },
+  "features": {
+    "config": {
+      "descriptor_list": "frozen tuple RDKIT_DESCRIPTORS in mb2_baseline.py",
+      "ecfp_n_bits": 2048,
+      "ecfp_radius": 2,
+      "features": "Morgan ECFP4 (radius 2, 2048 bits) + RDKit 2D descriptors (frozen list)",
+      "hyperparameter_search": false,
+      "imputation": "per-descriptor median fitted on the Train split only; constant columns dropped by Train-only variance",
+      "scaling": "none (tree model; descriptors are not standardised)",
+      "validation_used_for_any_baseline_choice": false,
+      "xgboost": {
+        "colsample_bytree": 0.8,
+        "device": "cpu",
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "n_estimators": 500,
+        "random_state": 0,
+        "reg_lambda": 5.0,
+        "subsample": 0.8,
+        "tree_method": "hist"
+      }
+    },
+    "feature_matrix": {
+      "cached": true,
+      "n_parse_failed": 0,
+      "n_unsanitized_fallback": 0,
+      "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/cache/baseline_features/Lipophilicity.npz",
+      "sha256": "ff3511f8f388ee4d60b0346b5f8800795772a89203e7ecd014d782ba0cf04da2",
+      "shape": [
+        4200,
+        2265
+      ]
+    },
+    "keep_sha256": "7493dfd11a8927750e3597ca592ff25c8eecaf225f34101a73889bcd308c28f8",
+    "median_sha256": "42af04a2e9aa966e0ff91d7516f0169cf14317795711f5a03852d8fc6dfadd4f",
+    "n_dropped_constant": 16,
+    "n_features_after_drop": 2249,
+    "preprocessing": {
+      "constant_column_rule": "drop columns whose Train-split std == 0 (bit columns included)",
+      "descriptor_error_policy": "descriptor raising or returning a non-finite value -> NaN for that cell",
+      "imputation": "per-column median fitted on the Train split only",
+      "label_used_for_any_feature_decision": false,
+      "scaling": "none",
+      "tox21_preprocessing_fit": "the dataset-level Tox21 Train split (not the per-endpoint subset)",
+      "validation_or_test_used_for_any_feature_decision": false
+    }
+  },
+  "fit_seconds": 1.9413296789862216,
+  "model_path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/baseline_repeat/models/Lipophilicity_random124.ubj",
+  "model_sha256": "aef4cb075de2dc2a715fd92d45e398620546e412a4cb5200d232c3f1cbf041bd",
+  "protocol_id": "lcrc-taskaware-representation-pilot-v1",
+  "repeat_suffix": 124,
+  "rows": {
+    "test": 420,
+    "train": 3360,
+    "valid": 420
+  },
+  "split_file": "Lipop.random124.ind.pkl",
+  "split_file_sha256": "2b48a41ccc39b622bbb74f18331ca9d9513190eec2de29144ce2bc7d47ef7ef3",
+  "split_rows_sha256": {
+    "test": "c4a5b71d8245ab426cffe475cd8862e11b16106d303b3ddb5dc409611fd0427d",
+    "train": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+    "valid": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+  },
+  "test_scored": false,
+  "test_used_for_any_choice": false,
+  "train": {
+    "bias": 0.0008045564278228489,
+    "mae": 0.28953257474891975,
+    "n": 3360,
+    "r2": 0.8994007726305462,
+    "rmse": 0.3815239579310229
+  },
+  "valid": {
+    "bias": -0.018005281324187914,
+    "mae": 0.4779966959137293,
+    "n": 420,
+    "r2": 0.7220874576421448,
+    "rmse": 0.6353443100802408
+  },
+  "valid_predictions": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/baseline_repeat/Lipophilicity_random124_valid_predictions.npz"
+}

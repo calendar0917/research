@@ -1,0 +1,3201 @@
+{
+  "created_utc": "2026-11-01T14:19:23Z",
+  "environment": {
+    "cuda_available": false,
+    "git_commit": "b66622562bab5903cbebc9a3fdac8b54a7c3cdf1",
+    "git_dirty_tracked": false,
+    "hostname": "main",
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "round_id": "lcrc-taskaware-representation-pilot-v1",
+    "scikit_learn": "1.5.2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "xgboost": "2.1.3"
+  },
+  "feature_spec": {
+    "description": "Explicit Lipophilicity structure schema built from the committed label-free raw graph. Atom/bond/global widths and vocabularies are independent of legacy_zinc.  Disconnected molecules and isolated atoms are supported with finite statistics.",
+    "hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+    "name": "lipo_v1",
+    "path": "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/analysis/feature_spec_lipo.json"
+  },
+  "field_table": {
+    "atom_feat": [
+      {
+        "dim": 16,
+        "name": "atom_type",
+        "slice": [
+          0,
+          16
+        ],
+        "source": "raw atom_class"
+      },
+      {
+        "dim": 6,
+        "name": "formal_charge",
+        "slice": [
+          16,
+          22
+        ],
+        "source": "raw atom_charge index"
+      },
+      {
+        "dim": 6,
+        "name": "n_hydrogens",
+        "slice": [
+          22,
+          28
+        ],
+        "source": "raw atom_h index"
+      },
+      {
+        "dim": 6,
+        "name": "degree",
+        "slice": [
+          28,
+          34
+        ],
+        "source": "physical-bond graph"
+      },
+      {
+        "dim": 1,
+        "name": "in_ring",
+        "slice": [
+          34,
+          35
+        ],
+        "source": "physical-bond graph"
+      },
+      {
+        "dim": 7,
+        "name": "min_ring_size",
+        "slice": [
+          35,
+          42
+        ],
+        "source": "physical-bond graph"
+      },
+      {
+        "dim": 1,
+        "name": "ring_bond_count_over_4",
+        "slice": [
+          42,
+          43
+        ],
+        "source": "physical-bond graph"
+      },
+      {
+        "dim": 1,
+        "name": "ring_bond_fraction",
+        "slice": [
+          43,
+          44
+        ],
+        "source": "physical-bond graph"
+      },
+      {
+        "dim": 5,
+        "name": "incident_bond_class_fraction",
+        "slice": [
+          44,
+          49
+        ],
+        "source": "raw edge_class"
+      },
+      {
+        "dim": 1,
+        "name": "is_terminal",
+        "slice": [
+          49,
+          50
+        ],
+        "source": "physical-bond graph"
+      },
+      {
+        "dim": 1,
+        "name": "is_fused_or_spiro",
+        "slice": [
+          50,
+          51
+        ],
+        "source": "physical-bond graph"
+      }
+    ],
+    "atom_scalar": [
+      {
+        "dim": 1,
+        "name": "log1p_n_d2",
+        "slice": [
+          0,
+          1
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "log1p_n_paths2",
+        "slice": [
+          1,
+          2
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "closure_ratio",
+        "slice": [
+          2,
+          3
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "log1p_degree",
+        "slice": [
+          3,
+          4
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "in_ring",
+        "slice": [
+          4,
+          5
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "min_ring_size_over_8",
+        "slice": [
+          5,
+          6
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "ring_bond_count_over_4",
+        "slice": [
+          6,
+          7
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "is_terminal",
+        "slice": [
+          7,
+          8
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "is_fused_or_spiro",
+        "slice": [
+          8,
+          9
+        ]
+      }
+    ],
+    "bond_feat": [
+      {
+        "dim": 5,
+        "name": "bond_class",
+        "slice": [
+          0,
+          5
+        ],
+        "source": "raw edge_class"
+      },
+      {
+        "dim": 1,
+        "name": "is_ring",
+        "slice": [
+          5,
+          6
+        ],
+        "source": "physical-bond graph"
+      },
+      {
+        "dim": 1,
+        "name": "exactly_one_endpoint_in_ring",
+        "slice": [
+          6,
+          7
+        ],
+        "source": "physical-bond graph"
+      },
+      {
+        "dim": 1,
+        "name": "both_endpoints_in_ring",
+        "slice": [
+          7,
+          8
+        ],
+        "source": "physical-bond graph"
+      },
+      {
+        "dim": 5,
+        "name": "stereo",
+        "slice": [
+          8,
+          13
+        ],
+        "source": "raw edge_stereo"
+      }
+    ],
+    "code_formulas": {
+      "nbr_code": "atom_type[neighbour] * 5 + (bond_type - 1)",
+      "path_cat": "atom_type[middle] * 25 + (bond_type_1 - 1) * 5 + (bond_type_2 - 1)",
+      "path_end63": "atom_type[end] * 5 + (bond_type_2 - 1)"
+    },
+    "global": [
+      {
+        "dim": 1,
+        "name": "log1p_n_atoms",
+        "slice": [
+          0,
+          1
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "log1p_n_bonds",
+        "slice": [
+          1,
+          2
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "log1p_n_junctions",
+        "slice": [
+          2,
+          3
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "cyclomatic_number",
+        "slice": [
+          3,
+          4
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "n_components",
+        "slice": [
+          4,
+          5
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "ring_atom_fraction",
+        "slice": [
+          5,
+          6
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "ring_bond_fraction",
+        "slice": [
+          6,
+          7
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "n_ring_systems",
+        "slice": [
+          7,
+          8
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "diameter_max_finite",
+        "slice": [
+          8,
+          9
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "mean_finite_pair_distance",
+        "slice": [
+          9,
+          10
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "frac_unreachable_pairs",
+        "slice": [
+          10,
+          11
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "frac_finite_pairs_ge3",
+        "slice": [
+          11,
+          12
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "bonds_per_atom",
+        "slice": [
+          12,
+          13
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "log1p_n_ring_atoms",
+        "slice": [
+          13,
+          14
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "max_degree",
+        "slice": [
+          14,
+          15
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "terminal_atom_fraction",
+        "slice": [
+          15,
+          16
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "junction_per_bond",
+        "slice": [
+          16,
+          17
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "frac_junction_centers_ring",
+        "slice": [
+          17,
+          18
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "frac_deg2_junctions",
+        "slice": [
+          18,
+          19
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "frac_deg3plus_junctions",
+        "slice": [
+          19,
+          20
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "bond_single_fraction",
+        "slice": [
+          20,
+          21
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "bond_double_fraction",
+        "slice": [
+          21,
+          22
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "bond_triple_fraction",
+        "slice": [
+          22,
+          23
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "bond_aromatic_fraction",
+        "slice": [
+          23,
+          24
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "bond_unknown_fraction",
+        "slice": [
+          24,
+          25
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "ring_size3_fraction",
+        "slice": [
+          25,
+          26
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "ring_size4_fraction",
+        "slice": [
+          26,
+          27
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "ring_size5_fraction",
+        "slice": [
+          27,
+          28
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "ring_size6_fraction",
+        "slice": [
+          28,
+          29
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "ring_size7_fraction",
+        "slice": [
+          29,
+          30
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "ring_size8plus_fraction",
+        "slice": [
+          30,
+          31
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "fused_ring_atom_fraction",
+        "slice": [
+          31,
+          32
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "aromatic_atom_fraction",
+        "slice": [
+          32,
+          33
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "unknown_atom_fraction",
+        "slice": [
+          33,
+          34
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "charged_atom_fraction",
+        "slice": [
+          34,
+          35
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "mean_formal_charge",
+        "slice": [
+          35,
+          36
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "mean_hydrogens",
+        "slice": [
+          36,
+          37
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "distinct_atom_types",
+        "slice": [
+          37,
+          38
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "distinct_bond_types",
+        "slice": [
+          38,
+          39
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "max_abs_formal_charge",
+        "slice": [
+          39,
+          40
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "unknown_charge_fraction",
+        "slice": [
+          40,
+          41
+        ]
+      },
+      {
+        "dim": 1,
+        "name": "unknown_hydrogen_fraction",
+        "slice": [
+          41,
+          42
+        ]
+      }
+    ],
+    "widths": {
+      "atom_feat": 51,
+      "atom_scalar": 9,
+      "bond_feat": 13,
+      "global": 42,
+      "n_nbr_codes": 80,
+      "n_path_codes": 400
+    }
+  },
+  "forward_keys": {
+    "BACE": {
+      "atom_type_note": "atom_type / bond_type are documentation tensors in the batch; the same information is carried into the forward by atom_feat[:, :16] and by the S1/S2 joint codes",
+      "atom_type_read": false,
+      "bond_type_read": false,
+      "dataset": "BACE",
+      "declared_structural_keys": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "keys_present_but_not_read": [
+        "atom_counts",
+        "atom_off",
+        "atom_type",
+        "bond_batch",
+        "bond_counts",
+        "bond_type",
+        "path_graph"
+      ],
+      "keys_read_by_forward": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "n_atoms": 40,
+      "parameters": 247106,
+      "row": 3,
+      "y": -8.516742706298828
+    },
+    "BBBP": {
+      "atom_type_note": "atom_type / bond_type are documentation tensors in the batch; the same information is carried into the forward by atom_feat[:, :16] and by the S1/S2 joint codes",
+      "atom_type_read": false,
+      "bond_type_read": false,
+      "dataset": "BBBP",
+      "declared_structural_keys": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "keys_present_but_not_read": [
+        "atom_counts",
+        "atom_off",
+        "atom_type",
+        "bond_batch",
+        "bond_counts",
+        "bond_type",
+        "path_graph"
+      ],
+      "keys_read_by_forward": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "n_atoms": 21,
+      "parameters": 247106,
+      "row": 3,
+      "y": -4.454097270965576
+    },
+    "ESOL": {
+      "atom_type_note": "atom_type / bond_type are documentation tensors in the batch; the same information is carried into the forward by atom_feat[:, :16] and by the S1/S2 joint codes",
+      "atom_type_read": false,
+      "bond_type_read": false,
+      "dataset": "ESOL",
+      "declared_structural_keys": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "keys_present_but_not_read": [
+        "atom_counts",
+        "atom_off",
+        "atom_type",
+        "bond_batch",
+        "bond_counts",
+        "bond_type",
+        "path_graph"
+      ],
+      "keys_read_by_forward": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "n_atoms": 22,
+      "parameters": 247106,
+      "row": 3,
+      "y": -2.7373757362365723
+    },
+    "FreeSolv": {
+      "atom_type_note": "atom_type / bond_type are documentation tensors in the batch; the same information is carried into the forward by atom_feat[:, :16] and by the S1/S2 joint codes",
+      "atom_type_read": false,
+      "bond_type_read": false,
+      "dataset": "FreeSolv",
+      "declared_structural_keys": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "keys_present_but_not_read": [
+        "atom_counts",
+        "atom_off",
+        "atom_type",
+        "bond_batch",
+        "bond_counts",
+        "bond_type",
+        "path_graph"
+      ],
+      "keys_read_by_forward": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "n_atoms": 8,
+      "parameters": 247106,
+      "row": 3,
+      "y": -1.2156813144683838
+    },
+    "Lipophilicity": {
+      "atom_type_note": "atom_type / bond_type are documentation tensors in the batch; the same information is carried into the forward by atom_feat[:, :16] and by the S1/S2 joint codes",
+      "atom_type_read": false,
+      "bond_type_read": false,
+      "dataset": "Lipophilicity",
+      "declared_structural_keys": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "keys_present_but_not_read": [
+        "atom_counts",
+        "atom_off",
+        "atom_type",
+        "bond_batch",
+        "bond_counts",
+        "bond_type",
+        "path_graph"
+      ],
+      "keys_read_by_forward": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "n_atoms": 28,
+      "parameters": 247106,
+      "row": 3,
+      "y": -5.409554958343506
+    },
+    "Tox21": {
+      "atom_type_note": "atom_type / bond_type are documentation tensors in the batch; the same information is carried into the forward by atom_feat[:, :16] and by the S1/S2 joint codes",
+      "atom_type_read": false,
+      "bond_type_read": false,
+      "dataset": "Tox21",
+      "declared_structural_keys": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "keys_present_but_not_read": [
+        "atom_counts",
+        "atom_off",
+        "atom_type",
+        "bond_batch",
+        "bond_counts",
+        "bond_type",
+        "path_graph"
+      ],
+      "keys_read_by_forward": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "n_atoms": 20,
+      "parameters": 247106,
+      "row": 3,
+      "y": -4.108317852020264
+    },
+    "ogbg-molhiv": {
+      "atom_type_note": "atom_type / bond_type are documentation tensors in the batch; the same information is carried into the forward by atom_feat[:, :16] and by the S1/S2 joint codes",
+      "atom_type_read": false,
+      "bond_type_read": false,
+      "dataset": "ogbg-molhiv",
+      "declared_structural_keys": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "keys_present_but_not_read": [
+        "atom_counts",
+        "atom_off",
+        "atom_type",
+        "bond_batch",
+        "bond_counts",
+        "bond_type",
+        "path_graph"
+      ],
+      "keys_read_by_forward": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "n_atoms": 24,
+      "parameters": 247106,
+      "row": 3,
+      "y": -4.675497531890869
+    }
+  },
+  "information_items": [
+    {
+      "carrier": "atom_feat[atom_type] 16-d one-hot; S1 nbr_code; S2 path_cat/path_end63; global distinct_atom_types",
+      "evidence": [
+        "atom_type_onehot",
+        "s1_joint_code",
+        "s2_joint_code",
+        "sensitivity:atom_feat.atom_type"
+      ],
+      "item": "element_identity",
+      "status": "EXPLICIT"
+    },
+    {
+      "carrier": "5 aromatic element classes in atom_type; AROMATIC bond_class; global aromatic_atom_fraction / bond_aromatic_fraction",
+      "evidence": [
+        "atom_type_onehot",
+        "bond_class_onehot",
+        "sensitivity:atom_feat.atom_type",
+        "sensitivity:bond_feat.bond_class"
+      ],
+      "item": "aromaticity",
+      "status": "EXPLICIT"
+    },
+    {
+      "carrier": "atom_feat[formal_charge] 6-d one-hot (-2,-1,0,+1,+2,UNK); global charged_atom_fraction / mean_formal_charge / max_abs_formal_charge / unknown_charge_fraction",
+      "caveat": "not part of the S1/S2 joint codes; reaches radius 2 only through the S2 content term a[path_end]*gate",
+      "evidence": [
+        "atom_feat.formal_charge",
+        "global.charged_atom_fraction",
+        "sensitivity:atom_feat.formal_charge"
+      ],
+      "item": "formal_charge",
+      "status": "EXPLICIT"
+    },
+    {
+      "carrier": "atom_feat[n_hydrogens] 6-d one-hot (0..4, 4+, UNK); global mean_hydrogens / unknown_hydrogen_fraction",
+      "caveat": "same as formal charge: atom-level only, not in the S1/S2 codes",
+      "evidence": [
+        "atom_feat.n_hydrogens",
+        "global.mean_hydrogens",
+        "sensitivity:atom_feat.n_hydrogens"
+      ],
+      "item": "hydrogen_count",
+      "status": "EXPLICIT"
+    },
+    {
+      "carrier": "atom_feat[degree] 6-d one-hot; atom_scalar log1p_degree; global max_degree / terminal_atom_fraction",
+      "evidence": [
+        "atom_feat.degree",
+        "atom_scalar.log1p_degree",
+        "sensitivity:atom_feat.degree"
+      ],
+      "item": "heavy_atom_degree",
+      "status": "EXPLICIT"
+    },
+    {
+      "carrier": "bond_feat[bond_class] 5-d one-hot (SINGLE/DOUBLE/TRIPLE/AROMATIC/UNK); S1 code (...,bond_type); S2 code (bt1,bt2); global bond_*_fraction",
+      "evidence": [
+        "bond_feat.bond_class",
+        "s1_joint_code",
+        "s2_joint_code",
+        "sensitivity:bond_feat.bond_class"
+      ],
+      "item": "bond_order",
+      "status": "EXPLICIT"
+    },
+    {
+      "carrier": "atom_feat in_ring/min_ring_size/ring_bond_count/ring_bond_fraction/is_fused_or_spiro; bond_feat is_ring/exactly_one_endpoint_in_ring/both_endpoints_in_ring; global ring_* / n_ring_systems / ring_sizeK_fraction / fused_ring_atom_fraction",
+      "evidence": [
+        "atom_feat.in_ring",
+        "bond_feat.is_ring",
+        "global.n_ring_systems",
+        "sensitivity:atom_feat.min_ring_size"
+      ],
+      "item": "ring_membership_size_fusion",
+      "status": "EXPLICIT"
+    },
+    {
+      "carrier": "the 44 lipo_v1 global fields (size, bonds, junctions, cyclomatic rank, distances, degree/junction profiles, bond-class and ring-size fractions)",
+      "evidence": [
+        "global.<44 fields>",
+        "sensitivity:global"
+      ],
+      "item": "global_topology",
+      "status": "EXPLICIT"
+    },
+    {
+      "carrier": "the SMILES ionic form is carried by atom_feat[formal_charge] + n_hydrogens",
+      "caveat": "the *protonation equilibrium* / pKa and any alternate protomer are not represented and are not derivable from the given graph",
+      "evidence": [
+        "atom_feat.formal_charge",
+        "global.charged_atom_fraction"
+      ],
+      "item": "formal_charge_state_protonation",
+      "status": "EXPLICIT"
+    },
+    {
+      "carrier": "bond_feat[stereo] 5-d one-hot (NONE,E,Z,OTHER,UNK) from raw edge_stereo",
+      "caveat": "enters h only through the radius-1 bond aggregate b_sum/b_mean; S1/S2 joint codes are stereo-blind and the global block has no stereo statistic",
+      "evidence": [
+        "bond_feat.stereo",
+        "sensitivity:bond_feat.stereo"
+      ],
+      "item": "double_bond_ez",
+      "status": "EXPLICIT"
+    },
+    {
+      "carrier": "none -- raw artifact has no field for it; atom_feat has no chirality block",
+      "caveat": "RDKit exposes it (Atom.GetChiralTag / FindMolChiralCenters); the frozen raw-adapter never reads it",
+      "evidence": [
+        "raw_artifact.fields",
+        "atom_feat.blocks",
+        "collision:tetrahedral"
+      ],
+      "item": "tetrahedral_chirality",
+      "status": "LOST_IN_PREPROCESSING"
+    },
+    {
+      "carrier": "none",
+      "caveat": "not read from RDKit; no dataset in this round is expected to rely on it",
+      "evidence": [
+        "raw_artifact.fields"
+      ],
+      "item": "isotope_label",
+      "status": "LOST_IN_PREPROCESSING"
+    },
+    {
+      "carrier": "not named; an alternating single/double pattern is expressible through the S2 (bt1,bt2) joint code and the aromatic bond class",
+      "caveat": "the model must learn the conjugation rule from bond-order pairs; no explicit conjugated flag exists",
+      "evidence": [
+        "s2_joint_code",
+        "bond_feat.bond_class"
+      ],
+      "item": "bond_conjugation",
+      "status": "INDIRECT"
+    },
+    {
+      "carrier": "not named; determined by (element, bond orders, hydrogen count, formal charge) which are all present",
+      "caveat": "sp/sp2/sp3 must be inferred by the model from those four channels",
+      "evidence": [
+        "atom_feat.atom_type,formal_charge,n_hydrogens,degree",
+        "bond_feat.bond_class"
+      ],
+      "item": "valence_hybridisation",
+      "status": "INDIRECT"
+    },
+    {
+      "carrier": "not present as a named feature; a deterministic RDKit/Lipinski rule (N,O,S with H / lone pairs) is needed",
+      "caveat": "atom-level N/O/S + H count + charge are available, so the information is *derivable* in principle",
+      "evidence": [
+        "atom_feat.atom_type",
+        "atom_feat.n_hydrogens",
+        "coverage:hbd_hba"
+      ],
+      "item": "hbd_hba_counts",
+      "status": "EXTRA_COMPUTE"
+    },
+    {
+      "carrier": "hetero-element one-hots + formal charge + hydrogen count + ring context; no electronegativity value or partial-charge descriptor",
+      "caveat": "a Gasteiger/MMFF partial charge would be an EXTRA_COMPUTE prior, not new structural information",
+      "evidence": [
+        "atom_feat.atom_type",
+        "atom_feat.formal_charge",
+        "sensitivity:atom_feat.formal_charge"
+      ],
+      "item": "local_polarity_electronegativity",
+      "status": "INDIRECT"
+    },
+    {
+      "carrier": "aromatic_atom_fraction + n_ring_systems + ring-size fractions; the *aromatic ring count* is not a named field",
+      "caveat": "derivable from the aromatic atom set and the biconnected-block decomposition",
+      "evidence": [
+        "global.aromatic_atom_fraction",
+        "global.n_ring_systems"
+      ],
+      "item": "ring_system_aromaticity",
+      "status": "INDIRECT"
+    },
+    {
+      "carrier": "global n_components / frac_unreachable_pairs; the raw adapter counts RDKit fragments",
+      "evidence": [
+        "global.n_components",
+        "coverage:multi_component"
+      ],
+      "item": "multi_component_salt",
+      "status": "EXPLICIT"
+    },
+    {
+      "carrier": "not present; element composition is present, so MW is a fixed linear functional of the atom_type histogram",
+      "caveat": "adding it would inject the periodic table as an external prior; it is not new graph information",
+      "evidence": [
+        "atom_feat.atom_type",
+        "coverage:mw"
+      ],
+      "item": "molecular_weight",
+      "status": "EXTRA_COMPUTE"
+    },
+    {
+      "carrier": "not present; requires the Ertl fragment table over N/O/S environments",
+      "caveat": "the fragments are functions of (element, H count, charge, ring/aromatic context), all of which are present",
+      "evidence": [
+        "atom_feat.atom_type,n_hydrogens,formal_charge",
+        "coverage:tpsa"
+      ],
+      "item": "tpsa",
+      "status": "EXTRA_COMPUTE"
+    },
+    {
+      "carrier": "not present; Crippen/Wildman atom-typing rules would be needed",
+      "caveat": "logD also depends on the experimental pH / ionisation state, which the graph does not carry",
+      "evidence": [
+        "coverage:logp_prior"
+      ],
+      "item": "logp_logd_prior",
+      "status": "EXTRA_COMPUTE"
+    },
+    {
+      "carrier": "none",
+      "caveat": "the input is a 2-D molecular graph; no conformer, no 3-D descriptor",
+      "evidence": [
+        "audit:scope"
+      ],
+      "item": "three_dimensional_conformation",
+      "status": "NOT_DETERMINABLE"
+    },
+    {
+      "carrier": "none -- the supplied SMILES fixes one tautomer",
+      "caveat": "tautomer enumeration would require external rules and would change the sample definition",
+      "evidence": [
+        "audit:scope"
+      ],
+      "item": "tautomer_protomer_choice",
+      "status": "NOT_DETERMINABLE"
+    },
+    {
+      "carrier": "none",
+      "caveat": "BACE / HIV / Tox21 activity is not a function of the 2-D graph alone",
+      "evidence": [
+        "audit:scope"
+      ],
+      "item": "target_specific_binding_pose",
+      "status": "NOT_DETERMINABLE"
+    }
+  ],
+  "joint_codes": {
+    "note": "S1 is one jointly typed statistic per incident bond; S2 is one jointly typed statistic per ordered non-backtracking 2-path, plus a separate joint (end type, bond2) code, the triangle-closure flag and a gated copy of the end atom's full atom representation. Neither is a sum of element and bond-order marginals. The middle<->end pairing inside S2 is NOT additive (see s2_pairing).",
+    "s1": {
+      "code_vocabulary": 80,
+      "codes_a": [
+        10,
+        46
+      ],
+      "codes_b": [
+        11,
+        45
+      ],
+      "embedding_rows": 80,
+      "joint_codes_differ": true,
+      "marginal_bond_multiset_identical": true,
+      "marginal_element_multiset_identical": true,
+      "passed": true
+    },
+    "s2": {
+      "code_vocabulary": 400,
+      "embedding_rows": 400,
+      "joint_codes_differ": true,
+      "marginal_bond_multiset_identical": true,
+      "passed": true,
+      "path_cats_a": [
+        51
+      ],
+      "path_cats_b": [
+        55
+      ]
+    },
+    "s2_pairing": {
+      "additive_terms_identical": true,
+      "conclusion": "with a fixed set of additive codes the middle<->end pairing is only representable through the rank-32 multiplicative term; it is not part of any additive S2 code",
+      "joint_term_differs": true,
+      "max_abs_joint_difference": 2.6430253982543945,
+      "passed": true,
+      "record_set_a": [
+        [
+          50,
+          11
+        ],
+        [
+          51,
+          45
+        ]
+      ],
+      "record_set_b": [
+        [
+          50,
+          45
+        ],
+        [
+          51,
+          11
+        ]
+      ],
+      "same_end63_marginal": true,
+      "same_path_cat_marginal": true,
+      "stat_rank": 32
+    }
+  },
+  "raw_artifact": {
+    "atom_field_provenance": {
+      "atom_charge": "formal charge bucket (-2,-1,0,1,2), 5=UNK",
+      "atom_class": "(element, is_aromatic) of 15 named classes, 15=UNK",
+      "atom_h": "GetTotalNumHs bucket (0..4, >4 -> 4), 5=UNK",
+      "edge_class": "SINGLE/DOUBLE/TRIPLE/AROMATIC -> 0..3, 4=UNK",
+      "edge_stereo": "GetStereo(): NONE/E/Z -> 0..2, anything else -> 3 (OTHER)"
+    },
+    "fields": {
+      "atom_charge": "int8",
+      "atom_class": "int8",
+      "atom_h": "int8",
+      "atom_ptr": "int64",
+      "bond_ptr": "int64",
+      "canonical_smiles": "<U97",
+      "edge_class": "int8",
+      "edge_dst": "int32",
+      "edge_src": "int32",
+      "edge_stereo": "int8",
+      "mol_index": "int32",
+      "n_components": "int16",
+      "smiles": "<U98"
+    },
+    "not_read_from_rdkit": [
+      "Atom.GetChiralTag() / FindMolChiralCenters (tetrahedral configuration)",
+      "Atom.GetIsotope()",
+      "Bond.GetStereoAtoms() (the substituent identity behind an E/Z label)",
+      "Bond.GetBondDir() (SMILES directionality)",
+      "conformer / 3-D coordinates"
+    ],
+    "schema": "lcrc-molnet-rawgraph-v2",
+    "vocab": {
+      "atom_classes": [
+        "B",
+        "Br",
+        "C",
+        "C_aromatic",
+        "Cl",
+        "F",
+        "I",
+        "N",
+        "N_aromatic",
+        "O",
+        "O_aromatic",
+        "P",
+        "S",
+        "S_aromatic",
+        "Si",
+        "UNK"
+      ],
+      "atom_unk": 15,
+      "bond_classes": [
+        "SINGLE",
+        "DOUBLE",
+        "TRIPLE",
+        "AROMATIC",
+        "UNK"
+      ],
+      "bond_unk": 4,
+      "charge_buckets": [
+        -2,
+        -1,
+        0,
+        1,
+        2,
+        "UNK"
+      ],
+      "charge_unk": 5,
+      "h_buckets": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        "UNK"
+      ],
+      "h_unk": 5,
+      "stereo_buckets": [
+        "NONE",
+        "E",
+        "Z",
+        "OTHER"
+      ]
+    }
+  },
+  "round_id": "lcrc-taskaware-representation-pilot-v1",
+  "scope": "2-D molecular graph only, lipo_v1 FeatureSpec, frozen LCRC-A forward. No learned-importance claim is made; see each section's interpretation field.",
+  "sensitivity": {
+    "dataset": "Lipophilicity",
+    "fields_with_no_response": [],
+    "interpretation": "A field is 'wired' iff perturbing one of its columns changes h or y. This proves the computational graph consumes the declared block; it does NOT measure learned importance. Local atom/bond/path fields must move h; global fields only reach y through rho.",
+    "model": "LCRC-A, seed 0, random init (wiring test only)",
+    "n_atoms": 28,
+    "n_bonds": 31,
+    "n_probes": 73,
+    "passed": true,
+    "per_field": {
+      "aromatic_atom_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0083465576171875,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "atom_type": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.05388772487640381,
+        "max_abs_delta_y": 0.008374691009521484,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "bond_aromatic_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.01396322250366211,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "bond_class": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.027564287185668945,
+        "max_abs_delta_y": 0.002594470977783203,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "bond_double_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.024413585662841797,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "bond_index": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.11398708820343018,
+        "max_abs_delta_y": 0.004711151123046875,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "bond_single_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.012141704559326172,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "bond_triple_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0032758712768554688,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "bond_unknown_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0036520957946777344,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "bonds_per_atom": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.008919715881347656,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "both_endpoints_in_ring": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.01609659194946289,
+        "max_abs_delta_y": 0.0022726058959960938,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "charged_atom_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.018367290496826172,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "closure_ratio": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.21028125286102295,
+        "max_abs_delta_y": 0.014744758605957031,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "cyclomatic_number": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.011760711669921875,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "degree": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.035411328077316284,
+        "max_abs_delta_y": 0.011543750762939453,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "diameter_max_finite": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.02059316635131836,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "distinct_atom_types": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.010615348815917969,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "distinct_bond_types": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.02666330337524414,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "exactly_one_endpoint_in_ring": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.022582300007343292,
+        "max_abs_delta_y": 0.0006465911865234375,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "formal_charge": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.035411328077316284,
+        "max_abs_delta_y": 0.011543750762939453,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "frac_deg2_junctions": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.012905120849609375,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "frac_deg3plus_junctions": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.02375316619873047,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "frac_finite_pairs_ge3": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.01340627670288086,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "frac_junction_centers_ring": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0036644935607910156,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "frac_unreachable_pairs": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.01562976837158203,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "fused_ring_atom_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.019947052001953125,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "in_ring": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.12959349155426025,
+        "max_abs_delta_y": 0.008441448211669922,
+        "n_probes": 2,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "incident_bond_class_fraction": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.04724830389022827,
+        "max_abs_delta_y": 0.001445770263671875,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "is_fused_or_spiro": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.1736803650856018,
+        "max_abs_delta_y": 0.007266521453857422,
+        "n_probes": 2,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "is_ring": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.022461771965026855,
+        "max_abs_delta_y": 0.0009927749633789062,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "is_terminal": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.1473584771156311,
+        "max_abs_delta_y": 0.005088329315185547,
+        "n_probes": 2,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "junction_per_bond": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.003231525421142578,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "log1p_degree": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.18332511186599731,
+        "max_abs_delta_y": 0.005475044250488281,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "log1p_n_atoms": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.018177032470703125,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "log1p_n_bonds": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.00913381576538086,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "log1p_n_d2": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.16903352737426758,
+        "max_abs_delta_y": 0.013604164123535156,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "log1p_n_junctions": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.009250164031982422,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "log1p_n_paths2": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.16550076007843018,
+        "max_abs_delta_y": 0.005967140197753906,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "log1p_n_ring_atoms": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.019729137420654297,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "max_abs_formal_charge": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.007451057434082031,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "max_degree": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0319976806640625,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "mean_finite_pair_distance": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0010929107666015625,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "mean_formal_charge": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.00830698013305664,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "mean_hydrogens": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.027747154235839844,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "min_ring_size": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.04939311742782593,
+        "max_abs_delta_y": 0.0012660026550292969,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "min_ring_size_over_8": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.1789279580116272,
+        "max_abs_delta_y": 0.01180410385131836,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "n_components": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.02913808822631836,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "n_hydrogens": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.035411328077316284,
+        "max_abs_delta_y": 0.011543750762939453,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "n_ring_systems": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.01467132568359375,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "nbr_code": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 2.146772861480713,
+        "max_abs_delta_y": 0.07494163513183594,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "path_cat": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 1.3879642486572266,
+        "max_abs_delta_y": 0.009079933166503906,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "path_closure": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.6416417956352234,
+        "max_abs_delta_y": 0.10783052444458008,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "path_end": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.11020953953266144,
+        "max_abs_delta_y": 0.0036487579345703125,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "path_end63": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 1.428545355796814,
+        "max_abs_delta_y": 0.06346845626831055,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "ring_atom_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.004540443420410156,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "ring_bond_count_over_4": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.1498182713985443,
+        "max_abs_delta_y": 0.007441043853759766,
+        "n_probes": 2,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "ring_bond_fraction": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.047564148902893066,
+        "max_abs_delta_y": 0.03049945831298828,
+        "n_probes": 2,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "ring_size3_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0033464431762695312,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "ring_size4_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.005000114440917969,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "ring_size5_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.005949974060058594,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "ring_size6_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.002162456512451172,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "ring_size7_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.005192756652832031,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "ring_size8plus_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.006994724273681641,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "stereo": {
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.018020033836364746,
+        "max_abs_delta_y": 0.0031557083129882812,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "terminal_atom_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.016542434692382812,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "unknown_atom_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.03079986572265625,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "unknown_charge_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.02002716064453125,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      "unknown_hydrogen_fraction": {
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.002556324005126953,
+        "n_probes": 1,
+        "tensor_changed": true,
+        "wired_to_output": true
+      }
+    },
+    "probes": [
+      {
+        "column": 35,
+        "delta": 1.0,
+        "field": "atom_type",
+        "group": "atom_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.05388772487640381,
+        "max_abs_delta_y": 0.008374691009521484,
+        "tensor": "atom_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 45,
+        "delta": 1.0,
+        "field": "formal_charge",
+        "group": "atom_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.035411328077316284,
+        "max_abs_delta_y": 0.011543750762939453,
+        "tensor": "atom_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 45,
+        "delta": 1.0,
+        "field": "n_hydrogens",
+        "group": "atom_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.035411328077316284,
+        "max_abs_delta_y": 0.011543750762939453,
+        "tensor": "atom_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 45,
+        "delta": 1.0,
+        "field": "degree",
+        "group": "atom_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.035411328077316284,
+        "max_abs_delta_y": 0.011543750762939453,
+        "tensor": "atom_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 50,
+        "delta": 1.0,
+        "field": "in_ring",
+        "group": "atom_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.047564148902893066,
+        "max_abs_delta_y": 0.002628326416015625,
+        "tensor": "atom_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 44,
+        "delta": 1.0,
+        "field": "min_ring_size",
+        "group": "atom_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.04939311742782593,
+        "max_abs_delta_y": 0.0012660026550292969,
+        "tensor": "atom_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 50,
+        "delta": 1.0,
+        "field": "ring_bond_count_over_4",
+        "group": "atom_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.047564148902893066,
+        "max_abs_delta_y": 0.002628326416015625,
+        "tensor": "atom_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 50,
+        "delta": 1.0,
+        "field": "ring_bond_fraction",
+        "group": "atom_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.047564148902893066,
+        "max_abs_delta_y": 0.002628326416015625,
+        "tensor": "atom_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 46,
+        "delta": 1.0,
+        "field": "incident_bond_class_fraction",
+        "group": "atom_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.04724830389022827,
+        "max_abs_delta_y": 0.001445770263671875,
+        "tensor": "atom_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 50,
+        "delta": 1.0,
+        "field": "is_terminal",
+        "group": "atom_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.047564148902893066,
+        "max_abs_delta_y": 0.002628326416015625,
+        "tensor": "atom_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 50,
+        "delta": 1.0,
+        "field": "is_fused_or_spiro",
+        "group": "atom_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.047564148902893066,
+        "max_abs_delta_y": 0.002628326416015625,
+        "tensor": "atom_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 0,
+        "delta": 1.0,
+        "field": "bond_class",
+        "group": "bond_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.027564287185668945,
+        "max_abs_delta_y": 0.002594470977783203,
+        "tensor": "bond_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 5,
+        "delta": 1.0,
+        "field": "is_ring",
+        "group": "bond_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.022461771965026855,
+        "max_abs_delta_y": 0.0009927749633789062,
+        "tensor": "bond_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 6,
+        "delta": 1.0,
+        "field": "exactly_one_endpoint_in_ring",
+        "group": "bond_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.022582300007343292,
+        "max_abs_delta_y": 0.0006465911865234375,
+        "tensor": "bond_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 7,
+        "delta": 1.0,
+        "field": "both_endpoints_in_ring",
+        "group": "bond_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.01609659194946289,
+        "max_abs_delta_y": 0.0022726058959960938,
+        "tensor": "bond_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 8,
+        "delta": 1.0,
+        "field": "stereo",
+        "group": "bond_feat",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.018020033836364746,
+        "max_abs_delta_y": 0.0031557083129882812,
+        "tensor": "bond_feat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 0,
+        "delta": 1.0,
+        "field": "log1p_n_d2",
+        "group": "atom_scalar",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.16903352737426758,
+        "max_abs_delta_y": 0.013604164123535156,
+        "tensor": "atom_scalar",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 1,
+        "delta": 1.0,
+        "field": "log1p_n_paths2",
+        "group": "atom_scalar",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.16550076007843018,
+        "max_abs_delta_y": 0.005967140197753906,
+        "tensor": "atom_scalar",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 2,
+        "delta": 1.0,
+        "field": "closure_ratio",
+        "group": "atom_scalar",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.21028125286102295,
+        "max_abs_delta_y": 0.014744758605957031,
+        "tensor": "atom_scalar",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 3,
+        "delta": 1.0,
+        "field": "log1p_degree",
+        "group": "atom_scalar",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.18332511186599731,
+        "max_abs_delta_y": 0.005475044250488281,
+        "tensor": "atom_scalar",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 4,
+        "delta": 1.0,
+        "field": "in_ring",
+        "group": "atom_scalar",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.12959349155426025,
+        "max_abs_delta_y": 0.008441448211669922,
+        "tensor": "atom_scalar",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 5,
+        "delta": 1.0,
+        "field": "min_ring_size_over_8",
+        "group": "atom_scalar",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.1789279580116272,
+        "max_abs_delta_y": 0.01180410385131836,
+        "tensor": "atom_scalar",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 6,
+        "delta": 1.0,
+        "field": "ring_bond_count_over_4",
+        "group": "atom_scalar",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.1498182713985443,
+        "max_abs_delta_y": 0.007441043853759766,
+        "tensor": "atom_scalar",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 7,
+        "delta": 1.0,
+        "field": "is_terminal",
+        "group": "atom_scalar",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.1473584771156311,
+        "max_abs_delta_y": 0.005088329315185547,
+        "tensor": "atom_scalar",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 8,
+        "delta": 1.0,
+        "field": "is_fused_or_spiro",
+        "group": "atom_scalar",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.1736803650856018,
+        "max_abs_delta_y": 0.007266521453857422,
+        "tensor": "atom_scalar",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 0,
+        "delta": 1.0,
+        "field": "log1p_n_atoms",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.018177032470703125,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 1,
+        "delta": 1.0,
+        "field": "log1p_n_bonds",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.00913381576538086,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 2,
+        "delta": 1.0,
+        "field": "log1p_n_junctions",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.009250164031982422,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 3,
+        "delta": 1.0,
+        "field": "cyclomatic_number",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.011760711669921875,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 4,
+        "delta": 1.0,
+        "field": "n_components",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.02913808822631836,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 5,
+        "delta": 1.0,
+        "field": "ring_atom_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.004540443420410156,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 6,
+        "delta": 1.0,
+        "field": "ring_bond_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.03049945831298828,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 7,
+        "delta": 1.0,
+        "field": "n_ring_systems",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.01467132568359375,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 8,
+        "delta": 1.0,
+        "field": "diameter_max_finite",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.02059316635131836,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 9,
+        "delta": 1.0,
+        "field": "mean_finite_pair_distance",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0010929107666015625,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 10,
+        "delta": 1.0,
+        "field": "frac_unreachable_pairs",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.01562976837158203,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 11,
+        "delta": 1.0,
+        "field": "frac_finite_pairs_ge3",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.01340627670288086,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 12,
+        "delta": 1.0,
+        "field": "bonds_per_atom",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.008919715881347656,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 13,
+        "delta": 1.0,
+        "field": "log1p_n_ring_atoms",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.019729137420654297,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 14,
+        "delta": 1.0,
+        "field": "max_degree",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0319976806640625,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 15,
+        "delta": 1.0,
+        "field": "terminal_atom_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.016542434692382812,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 16,
+        "delta": 1.0,
+        "field": "junction_per_bond",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.003231525421142578,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 17,
+        "delta": 1.0,
+        "field": "frac_junction_centers_ring",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0036644935607910156,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 18,
+        "delta": 1.0,
+        "field": "frac_deg2_junctions",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.012905120849609375,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 19,
+        "delta": 1.0,
+        "field": "frac_deg3plus_junctions",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.02375316619873047,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 20,
+        "delta": 1.0,
+        "field": "bond_single_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.012141704559326172,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 21,
+        "delta": 1.0,
+        "field": "bond_double_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.024413585662841797,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 22,
+        "delta": 1.0,
+        "field": "bond_triple_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0032758712768554688,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 23,
+        "delta": 1.0,
+        "field": "bond_aromatic_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.01396322250366211,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 24,
+        "delta": 1.0,
+        "field": "bond_unknown_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0036520957946777344,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 25,
+        "delta": 1.0,
+        "field": "ring_size3_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0033464431762695312,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 26,
+        "delta": 1.0,
+        "field": "ring_size4_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.005000114440917969,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 27,
+        "delta": 1.0,
+        "field": "ring_size5_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.005949974060058594,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 28,
+        "delta": 1.0,
+        "field": "ring_size6_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.002162456512451172,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 29,
+        "delta": 1.0,
+        "field": "ring_size7_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.005192756652832031,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 30,
+        "delta": 1.0,
+        "field": "ring_size8plus_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.006994724273681641,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 31,
+        "delta": 1.0,
+        "field": "fused_ring_atom_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.019947052001953125,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 32,
+        "delta": 1.0,
+        "field": "aromatic_atom_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.0083465576171875,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 33,
+        "delta": 1.0,
+        "field": "unknown_atom_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.03079986572265625,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 34,
+        "delta": 1.0,
+        "field": "charged_atom_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.018367290496826172,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 35,
+        "delta": 1.0,
+        "field": "mean_formal_charge",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.00830698013305664,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 36,
+        "delta": 1.0,
+        "field": "mean_hydrogens",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.027747154235839844,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 37,
+        "delta": 1.0,
+        "field": "distinct_atom_types",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.010615348815917969,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 38,
+        "delta": 1.0,
+        "field": "distinct_bond_types",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.02666330337524414,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 39,
+        "delta": 1.0,
+        "field": "max_abs_formal_charge",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.007451057434082031,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 40,
+        "delta": 1.0,
+        "field": "unknown_charge_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.02002716064453125,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 41,
+        "delta": 1.0,
+        "field": "unknown_hydrogen_fraction",
+        "group": "global",
+        "index": 0,
+        "influences_local_representation": false,
+        "max_abs_delta_h": 0.0,
+        "max_abs_delta_y": 0.002556324005126953,
+        "tensor": "global",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": null,
+        "delta": 1.0,
+        "field": "nbr_code",
+        "group": "structural_code",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 2.146772861480713,
+        "max_abs_delta_y": 0.07494163513183594,
+        "tensor": "nbr_code",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": null,
+        "delta": 1.0,
+        "field": "path_cat",
+        "group": "structural_code",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 1.3879642486572266,
+        "max_abs_delta_y": 0.009079933166503906,
+        "tensor": "path_cat",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": null,
+        "delta": 1.0,
+        "field": "path_end63",
+        "group": "structural_code",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 1.428545355796814,
+        "max_abs_delta_y": 0.06346845626831055,
+        "tensor": "path_end63",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": null,
+        "delta": 1.0,
+        "field": "path_closure",
+        "group": "structural_code",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.6416417956352234,
+        "max_abs_delta_y": 0.10783052444458008,
+        "tensor": "path_closure",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": null,
+        "delta": 1.0,
+        "field": "path_end",
+        "group": "structural_code",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.11020953953266144,
+        "max_abs_delta_y": 0.0036487579345703125,
+        "tensor": "path_end",
+        "tensor_changed": true,
+        "wired_to_output": true
+      },
+      {
+        "column": 0,
+        "delta": 1.0,
+        "field": "bond_index",
+        "group": "structural_code",
+        "index": 0,
+        "influences_local_representation": true,
+        "max_abs_delta_h": 0.11398708820343018,
+        "max_abs_delta_y": 0.004711151123046875,
+        "tensor": "bond_index",
+        "tensor_changed": true,
+        "wired_to_output": true
+      }
+    ],
+    "row": 3
+  },
+  "status_counts": {
+    "EXPLICIT": 11,
+    "EXTRA_COMPUTE": 4,
+    "INDIRECT": 4,
+    "LOST_IN_PREPROCESSING": 2,
+    "NOT_DETERMINABLE": 3
+  },
+  "vocabulary": {
+    "BACE": {
+      "atom_feat_column_nonconstant": 39,
+      "atom_feat_width": 51,
+      "atom_type_coverage": 0.75,
+      "atom_types_used": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        12,
+        13
+      ],
+      "bond_type_coverage": 0.8,
+      "bond_types_used": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "closure_fraction": 0.005693049735115047,
+      "dataset": "BACE",
+      "global_dim": 42,
+      "n_atoms": 40720,
+      "n_bonds": 43987,
+      "n_molecules": 1210,
+      "n_s1_codes": 87974,
+      "n_s2_paths": 126470,
+      "n_scalars": 9,
+      "nbr_code_coverage": 0.2625,
+      "nbr_code_vocab": 80,
+      "nbr_codes_used": 21,
+      "path_code_coverage": 0.0575,
+      "path_code_vocab": 400,
+      "path_codes_used": 23,
+      "path_end_codes_used": 19,
+      "split": "train",
+      "unknown_atom_rows": 0,
+      "unknown_bond_rows": 0
+    },
+    "BBBP": {
+      "atom_feat_column_nonconstant": 43,
+      "atom_feat_width": 51,
+      "atom_type_coverage": 0.9375,
+      "atom_types_used": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        15
+      ],
+      "bond_type_coverage": 0.8,
+      "bond_types_used": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "closure_fraction": 0.001971602013109424,
+      "dataset": "BBBP",
+      "global_dim": 42,
+      "n_atoms": 37187,
+      "n_bonds": 40018,
+      "n_molecules": 1631,
+      "n_s1_codes": 80036,
+      "n_s2_paths": 115642,
+      "n_scalars": 9,
+      "nbr_code_coverage": 0.3,
+      "nbr_code_vocab": 80,
+      "nbr_codes_used": 24,
+      "path_code_coverage": 0.07,
+      "path_code_vocab": 400,
+      "path_codes_used": 28,
+      "path_end_codes_used": 23,
+      "split": "train",
+      "unknown_atom_rows": 52,
+      "unknown_bond_rows": 0
+    },
+    "ESOL": {
+      "atom_feat_column_nonconstant": 42,
+      "atom_feat_width": 51,
+      "atom_type_coverage": 0.8125,
+      "atom_types_used": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "bond_type_coverage": 0.8,
+      "bond_types_used": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "closure_fraction": 0.002448408534452606,
+      "dataset": "ESOL",
+      "global_dim": 42,
+      "n_atoms": 12114,
+      "n_bonds": 12491,
+      "n_molecules": 902,
+      "n_s1_codes": 24982,
+      "n_s2_paths": 34308,
+      "n_scalars": 9,
+      "nbr_code_coverage": 0.2875,
+      "nbr_code_vocab": 80,
+      "nbr_codes_used": 23,
+      "path_code_coverage": 0.065,
+      "path_code_vocab": 400,
+      "path_codes_used": 26,
+      "path_end_codes_used": 21,
+      "split": "train",
+      "unknown_atom_rows": 0,
+      "unknown_bond_rows": 0
+    },
+    "FreeSolv": {
+      "atom_feat_column_nonconstant": 41,
+      "atom_feat_width": 51,
+      "atom_type_coverage": 0.75,
+      "atom_types_used": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13
+      ],
+      "bond_type_coverage": 0.8,
+      "bond_types_used": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "closure_fraction": 0.0017513134851138354,
+      "dataset": "FreeSolv",
+      "global_dim": 42,
+      "n_atoms": 4377,
+      "n_bonds": 4195,
+      "n_molecules": 513,
+      "n_s1_codes": 8390,
+      "n_s2_paths": 10278,
+      "n_scalars": 9,
+      "nbr_code_coverage": 0.275,
+      "nbr_code_vocab": 80,
+      "nbr_codes_used": 22,
+      "path_code_coverage": 0.0625,
+      "path_code_vocab": 400,
+      "path_codes_used": 25,
+      "path_end_codes_used": 20,
+      "split": "train",
+      "unknown_atom_rows": 0,
+      "unknown_bond_rows": 0
+    },
+    "Lipophilicity": {
+      "atom_feat_column_nonconstant": 44,
+      "atom_feat_width": 51,
+      "atom_type_coverage": 1.0,
+      "atom_types_used": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "bond_type_coverage": 0.8,
+      "bond_types_used": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "closure_fraction": 0.003525820183170658,
+      "dataset": "Lipophilicity",
+      "global_dim": 42,
+      "n_atoms": 90863,
+      "n_bonds": 99114,
+      "n_molecules": 3360,
+      "n_s1_codes": 198228,
+      "n_s2_paths": 279084,
+      "n_scalars": 9,
+      "nbr_code_coverage": 0.325,
+      "nbr_code_vocab": 80,
+      "nbr_codes_used": 26,
+      "path_code_coverage": 0.0725,
+      "path_code_vocab": 400,
+      "path_codes_used": 29,
+      "path_end_codes_used": 25,
+      "split": "train",
+      "unknown_atom_rows": 1,
+      "unknown_bond_rows": 0
+    },
+    "Tox21": {
+      "atom_feat_column_nonconstant": 49,
+      "atom_feat_width": 51,
+      "atom_type_coverage": 1.0,
+      "atom_types_used": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "bond_type_coverage": 0.8,
+      "bond_types_used": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "closure_fraction": 0.003028836675806943,
+      "dataset": "Tox21",
+      "global_dim": 42,
+      "n_atoms": 117139,
+      "n_bonds": 121748,
+      "n_molecules": 6264,
+      "n_s1_codes": 243496,
+      "n_s2_paths": 334782,
+      "n_scalars": 9,
+      "nbr_code_coverage": 0.4,
+      "nbr_code_vocab": 80,
+      "nbr_codes_used": 32,
+      "path_code_coverage": 0.0975,
+      "path_code_vocab": 400,
+      "path_codes_used": 39,
+      "path_end_codes_used": 28,
+      "split": "train",
+      "unknown_atom_rows": 139,
+      "unknown_bond_rows": 0
+    },
+    "ogbg-molhiv": {
+      "atom_feat_column_nonconstant": 49,
+      "atom_feat_width": 51,
+      "atom_type_coverage": 1.0,
+      "atom_types_used": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "bond_type_coverage": 1.0,
+      "bond_types_used": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "closure_fraction": 0.0013556537408683307,
+      "dataset": "ogbg-molhiv",
+      "global_dim": 42,
+      "n_atoms": 830936,
+      "n_bonds": 889803,
+      "n_molecules": 32901,
+      "n_s1_codes": 1779606,
+      "n_s2_paths": 2527194,
+      "n_scalars": 9,
+      "nbr_code_coverage": 0.45,
+      "nbr_code_vocab": 80,
+      "nbr_codes_used": 36,
+      "path_code_coverage": 0.1475,
+      "path_code_vocab": 400,
+      "path_codes_used": 59,
+      "path_end_codes_used": 35,
+      "split": "train",
+      "unknown_atom_rows": 1102,
+      "unknown_bond_rows": 4
+    }
+  }
+}
