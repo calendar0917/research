@@ -154,6 +154,11 @@ def _worker(pool: str, queue: list[dict[str, Any]], *, dry_run: bool, stop: thre
 
 
 PLANS: dict[str, list[dict[str, Any]]] = {
+    "p2": [
+        {"key": "p2_combo_rho_contrib_lipo", "dataset": "Lipophilicity", "arm": "combo_rho_contrib", "pool": "res-gpu0"},
+        {"key": "p2_combo_rho_contrib_esol", "dataset": "ESOL", "arm": "combo_rho_contrib", "pool": "res-gpu1"},
+        {"key": "p2_combo_rho_contrib_bace", "dataset": "BACE", "arm": "combo_rho_contrib", "pool": "res-gpu1"},
+    ],
     "p1": [
         {"key": "p1_chem8_lipo", "dataset": "Lipophilicity", "arm": "chem8", "pool": "res-gpu0"},
         {"key": "p1_rho_lipo", "dataset": "Lipophilicity", "arm": "rhoshape", "pool": "res-gpu0"},
