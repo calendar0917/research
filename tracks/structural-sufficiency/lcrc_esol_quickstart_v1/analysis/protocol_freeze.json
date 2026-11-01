@@ -1,0 +1,91 @@
+{
+  "checkpoint_rule": "single_best_validation_rmse_epoch",
+  "code_hashes": {
+    "esol/esol_common.py": "299379b227af5d1ab7c63c4136b42bc8ea1c06b988ea497f6b145163eeb42111",
+    "esol/esol_data.py": "832801dd420c423e9c20a8e863505bbfa3fb1c90991c42915fd3a26bf342c3cb",
+    "esol/esol_eval.py": "3d0ffdd6e89b82ade0a8a6523cf73b7ed83bbf32c624efe851aa22d389a20953",
+    "esol/esol_models.py": "32c0859edc27304a19fba8c2d876a331b59fdd57f7adcd12b5e00b81d6f8453f",
+    "esol/esol_p0.py": "161cebb7a06a419f2e8d721a0a630b9b31a1f6ff874b0275369722dbc3c982a3",
+    "esol/esol_raw.py": "7f45f865d794aa41f7573fa4a9cfc2f3ca3a86448cb31c4713d329f8c65547a1",
+    "esol/esol_split.py": "7008a613fe7b7362a2c76f009152faa9c891efc7d95a6a5d6fb9e894f2f47bd1",
+    "esol/esol_train.py": "62343e06c5c19153df21672cd56f8964a266da7d53f8dd03f718046fb20e4612",
+    "esol/run_esol.py": "b4448cdd923b0c955cfc855aa4b02c57c3a58df6ec3c03356b474cf160218ed9",
+    "reused/lipo_adapter/bjoc_lipophilicity_adapter_v1.py": "a0b10816a409973df446a624f55b28bec008edfff27aaa69c16a89631b2c4c9e",
+    "reused/prep/adapters.py": "67f33874ece9198bc7f8fd88aa8b9983d419b72acda1a86da0e6fb941ca48553",
+    "reused/prep/cpu_gates.py": "cd9bc4c749198e065312a3534f3994f68146c9938a4cb755c4cd6e31891843d6",
+    "reused/prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+    "reused/prep/lcrc_common.py": "799be6b52ed155572d067a2edb53ff92d06fd89304e49d96af8b0c8a8bf079cf",
+    "reused/prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+    "reused/prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+    "reused/prep/molecular_graph.py": "59a49724c890efc5aa41f7eed8cb2d848fb782aab768ce990864d990cbbe46db"
+  },
+  "config": "tracks/structural-sufficiency/lcrc_esol_quickstart_v1/configs/esol.yaml",
+  "config_sha256": "7e3dd936c8b91cd8cbed5c7cc1ac273e3a4a2a5cda2f8d1fd903f5c0e61b7185",
+  "created_utc": "2026-11-01T05:56:37Z",
+  "freeze_sha256": "099eee4e24c5dab73453bd344dde95fc57da216e9abadea6ce77c7097cddd16c",
+  "git_commit": "1ec46b84f3ded80a9cf0dd4b8b1092a963463b9b",
+  "git_dirty_tracked": false,
+  "gpu_hard_cap_hours": 1.5,
+  "model_dropout": {
+    "base": 0.1,
+    "drop20": 0.2,
+    "physchem6": 0.1
+  },
+  "models": [
+    "base",
+    "drop20",
+    "physchem6"
+  ],
+  "p1_arms": [
+    "base_s0",
+    "base_s1",
+    "base_s2"
+  ],
+  "planned_run_counts": {
+    "hard_max": 6,
+    "p1": 3,
+    "p2": "0 or 3"
+  },
+  "protocol_id": "lcrc-esol-quickstart-v1",
+  "round_id": "lcrc-esol-quickstart-v1",
+  "scope": "ESOL / Delaney (1,128 molecules), one fixed label-blind Bemis-Murcko scaffold partition (seed 20261103), P1 baseline + at most one P2 iteration",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "split_audit": "tracks/structural-sufficiency/lcrc_esol_quickstart_v1/analysis/split/split_audit.json",
+  "split_audit_sha256": "8e473293e47394821d6fbf81782902cf9368963b67a2dd4b2e970627d0fe7b7e",
+  "split_fractions": [
+    0.8,
+    0.1,
+    0.1
+  ],
+  "split_manifest": "tracks/structural-sufficiency/lcrc_esol_quickstart_v1/analysis/split/split_esol_scaffold_seed_20261103.json",
+  "split_manifest_sha256": "47db06adfd4f5206fa6df3930a2522010c9fc6b51d29a550da3dd83ca8a71a43",
+  "split_seed": 20261103,
+  "status": "FROZEN_BEFORE_ESOL_TRAINING",
+  "test_evaluation_policy": "freeze every checkpoint hash before reading any Test label; Test labels are read exactly once, after the manifest freeze, and never used for selection",
+  "test_labels_read_at_freeze_time": false,
+  "training_recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "checkpoint": "single_best_validation_rmse_epoch",
+    "dropout": 0.1,
+    "dropout_position": "final_atom_level_local_h_before_readout",
+    "early_stopping": false,
+    "epochs": 360,
+    "gradient_clip": 5.0,
+    "loss": "mse_on_train_standardised_target",
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "ssl": false,
+    "weight_decay": 0.001
+  }
+}

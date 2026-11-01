@@ -1,0 +1,46 @@
+# lcrc-esol-quickstart-v1
+# LCRC-A moved to ESOL / Delaney water solubility.  One fixed label-blind
+# Bemis-Murcko scaffold partition; the frozen R3 best-Validation-epoch recipe.
+protocol_id: lcrc-esol-quickstart-v1
+round_id: lcrc-esol-quickstart-v1
+split_seed: 20261103
+split_fractions: [0.8, 0.1, 0.1]
+
+data:
+  source: delaney-processed.csv (DeepChem, 1,128 molecules, logS in log(mol/L))
+  source_url: https://deepchemdata.s3-us-west-1.amazonaws.com/datasets/delaney-processed.csv
+  csv_sha256: 8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189
+  splitter: Bemis-Murcko scaffold groups, seeded group shuffle + greedy fill
+  empty_scaffold_policy: acyclic molecule = its own singleton group
+  feature_schema: lipo_v1 (imported unchanged)
+  label_scope: train and validation only during training
+  test_evaluation: read once after the checkpoint manifest is frozen
+
+models: [base, drop20, physchem6]
+p1_models: [base]
+seeds: [0, 1, 2]
+
+training:
+  optimizer: AdamW
+  adam_betas: [0.9, 0.999]
+  adam_eps: 1.0e-8
+  peak_lr: 3.0e-4
+  min_lr: 1.0e-5
+  scheduler: per_step_cosine
+  weight_decay: 1.0e-3
+  batch_size: 128
+  epochs: 360
+  gradient_clip: 5.0
+  dropout: 0.10
+  dropout_position: final_atom_level_local_h_before_readout
+  loss: mse_on_train_standardised_target
+  checkpoint: single_best_validation_rmse_epoch
+  early_stopping: false
+  ssl: false
+  shuffle_offset: 917000
+
+budget:
+  host: res
+  pools: [res-gpu0, res-gpu1]
+  gpu_hard_cap_hours: 1.5
+  max_formal_runs: 6
