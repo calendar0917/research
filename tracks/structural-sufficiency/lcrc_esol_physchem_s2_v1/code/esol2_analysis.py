@@ -16,7 +16,7 @@ Outputs
 from __future__ import annotations
 
 import csv
-import itertools
+
 from typing import Any, Mapping, Sequence
 
 import numpy as np
@@ -81,13 +81,51 @@ def new_records() -> dict[str, dict[str, Any]]:
 
 
 def _valid_predictions(arm: str, source: str, views: Mapping[str, Any]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Re-derive Validation predictions from the **committed checkpoint**.
+
+    The ``*.npz`` prediction files are git-ignored, so nothing here depends on
+    them; when a local copy exists it is used only as a cross-check.
+    """
     run_dir = C.v1_run_dir(arm) if source == "v1_readonly" else C.run_dir(arm)
-    payload = np.load(run_dir / "valid_predictions.npz")
-    rows = np.asarray(payload["rows"], dtype=np.int64)
-    expected = np.asarray(views["split"]["rows"]["valid"], dtype=np.int64)
-    if not np.array_equal(rows, expected):
-        raise PermissionError(f"{arm}: Validation rows are not the frozen split order")
-    return rows, np.asarray(payload["pred"], dtype=np.float64), np.asarray(payload["y_true"], dtype=np.float64)
+    train_json = C.read_json(run_dir / "train.json")
+    model_kind, seed = C.arm_parts(arm)
+    model, _meta = M.build(
+        model_kind,
+        views["spec"],
+        views["train_norm"],
+        seed,
+        "cpu",
+        dropout=float(C.MODEL_DROPOUT[model_kind]),
+        physchem_norm=views.get("physchem_norm"),
+    )
+    M.load_checkpoint(
+        model,
+        run_dir / "checkpoint.pt",
+        expected_sha256=train_json["checkpoint"]["sha256"],
+        expected_family=model_kind,
+        expected_seed=seed,
+    )
+    _train, physchem_valid = D.physchem_for(model_kind, views)
+    pred = T.denormalise(
+        M.predict(model, views["valid_cache"], "cpu", physchem=physchem_valid), views["target_norm"]
+    )
+    y = np.asarray(views["labels"]["y_valid"], dtype=np.float64)
+    recorded = float(train_json["metrics"]["valid"]["rmse"])
+    recomputed = float(C.all_metrics(pred, y)["rmse"])
+    if abs(recomputed - recorded) > 1.0e-6:
+        raise RuntimeError(f"{arm}: recomputed Validation RMSE {recomputed} != recorded {recorded}")
+    rows = np.asarray(views["split"]["rows"]["valid"], dtype=np.int64)
+    npz_path = run_dir / "valid_predictions.npz"
+    if npz_path.exists():
+        saved = np.load(npz_path)
+        if not np.array_equal(np.asarray(saved["rows"], dtype=np.int64), rows):
+            raise PermissionError(f"{arm}: saved Validation rows are not the frozen split order")
+        # v1 stored its Validation predictions from a CUDA forward; a CPU replay
+        # differs only by float32 accumulation order (~1e-6), so this is a loose
+        # cross-check, not the primary assertion (that is the RMSE above).
+        if float(np.max(np.abs(np.asarray(saved["pred"], dtype=np.float64) - pred))) > 1.0e-4:
+            raise RuntimeError(f"{arm}: saved predictions disagree with the checkpoint replay")
+    return rows, pred, y
 
 
 # ---------------------------------------------------------------------------
@@ -378,13 +416,17 @@ def analyse() -> dict[str, Any]:
         writer.writeheader()
         writer.writerows(paired_rows)
 
-    # per-molecule Validation table for all nine runs (for the report / plots)
-    writes: dict[str, np.ndarray] = {"csv_row": rows, "y_true": y_valid, "group": np.asarray(keys)}
+    # per-molecule Validation table for all nine runs (committed CSV artifact)
+    columns: dict[str, np.ndarray] = {"csv_row": rows, "y_true": y_valid, "group": np.asarray(keys)}
     for seed in C.SEEDS:
-        writes[f"base_s{seed}"] = _valid_predictions(f"base_s{seed}", "v1_readonly", views)[1]
+        columns[f"base_s{seed}"] = _valid_predictions(f"base_s{seed}", "v1_readonly", views)[1]
     for arm in C.NEW_ARMS:
-        writes[arm] = _valid_predictions(arm, "new_run", views)[1]
-    np.savez(C.ANALYSIS / "per_molecule_valid.npz", **writes)
+        columns[arm] = _valid_predictions(arm, "new_run", views)[1]
+    with open(C.ANALYSIS / "per_molecule_valid.csv", "w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(list(columns))
+        for i in range(int(rows.size)):
+            writer.writerow([columns[name][i] for name in columns])
 
     summary["physchem_usage"] = descriptor_usage(views)
     C.write_json(C.PAIRED_SUMMARY, summary)
