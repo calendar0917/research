@@ -1,0 +1,41 @@
+# lcrc-scaffold-error-pilot-v1
+# A new Bemis-Murcko scaffold partition with a fixed split seed.
+# The training recipe is the frozen best-epoch recipe of
+# lcrc_lipo_best_epoch_distance_fix_v1, unchanged.
+protocol_id: lcrc-scaffold-error-pilot-v1
+round_id: lcrc-scaffold-error-pilot-v1
+split_seed: 20261102
+split_fractions: [0.8, 0.1, 0.1]
+
+data:
+  source: Lipophilicity.csv (4,200 molecules, logD)
+  splitter: Bemis-Murcko scaffold groups, seeded group shuffle + greedy fill
+  label_scope: train and inner-validation only during training
+  outer_evaluation: read once after the checkpoint manifest is frozen
+
+models: [base, g2l_all]
+seeds: [0, 1, 2]
+
+training:
+  optimizer: AdamW
+  adam_betas: [0.9, 0.999]
+  adam_eps: 1.0e-8
+  peak_lr: 3.0e-4
+  min_lr: 1.0e-5
+  scheduler: per_step_cosine
+  weight_decay: 1.0e-3
+  batch_size: 128
+  epochs: 360
+  gradient_clip: 5.0
+  dropout: 0.10
+  dropout_position: final_atom_level_local_h_before_readout
+  loss: mse_on_train3360_standardised_target
+  checkpoint: single_best_validation420_rmse_epoch
+  early_stopping: false
+  ssl: false
+  shuffle_offset: 917000
+
+budget:
+  host: res
+  pools: [res-gpu0, res-gpu1]
+  gpu_hard_cap_hours: 2.0
