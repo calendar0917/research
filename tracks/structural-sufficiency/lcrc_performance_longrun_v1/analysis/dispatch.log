@@ -1,0 +1,276 @@
+[2026-11-02T01:38:20] plan=p1 runs=9 queues={'res-gpu0': ['p1_chem8_lipo', 'p1_rho_lipo', 'p1_contrib_bace'], 'res-gpu1': ['p1_contrib_lipo', 'p1_chem8_esol', 'p1_rho_esol', 'p1_contrib_esol', 'p1_chem8_bace', 'p1_rho_bace']}
+[2026-11-02T01:38:20] DRY-RUN res-gpu0: run res p1-chem8-lipo --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_chem8_lipo -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm chem8 --seed 0 --device cuda --key p1_chem8_lipo
+[2026-11-02T01:38:20] DRY-RUN res-gpu0: run res p1-rho-lipo --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_rho_lipo -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm rhoshape --seed 0 --device cuda --key p1_rho_lipo
+[2026-11-02T01:38:20] DRY-RUN res-gpu0: run res p1-contrib-bace --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_contrib_bace -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset BACE --split published --arm multicontrib --seed 0 --device cuda --key p1_contrib_bace
+[2026-11-02T01:38:20] DRY-RUN res-gpu1: run res p1-contrib-lipo --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_contrib_lipo -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm multicontrib --seed 0 --device cuda --key p1_contrib_lipo
+[2026-11-02T01:38:20] DRY-RUN res-gpu1: run res p1-chem8-esol --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_chem8_esol -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ESOL --split published --arm chem8 --seed 0 --device cuda --key p1_chem8_esol
+[2026-11-02T01:38:20] DRY-RUN res-gpu1: run res p1-rho-esol --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_rho_esol -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ESOL --split published --arm rhoshape --seed 0 --device cuda --key p1_rho_esol
+[2026-11-02T01:38:20] DRY-RUN res-gpu1: run res p1-contrib-esol --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_contrib_esol -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ESOL --split published --arm multicontrib --seed 0 --device cuda --key p1_contrib_esol
+[2026-11-02T01:38:20] DRY-RUN res-gpu1: run res p1-chem8-bace --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_chem8_bace -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset BACE --split published --arm chem8 --seed 0 --device cuda --key p1_chem8_bace
+[2026-11-02T01:38:20] DRY-RUN res-gpu1: run res p1-rho-bace --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_rho_bace -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset BACE --split published --arm rhoshape --seed 0 --device cuda --key p1_rho_bace
+[2026-11-02T01:38:20] SUMMARY [{"arm": "chem8", "dataset": "Lipophilicity", "key": "p1_chem8_lipo", "pool": "res-gpu0", "state": "dry_run"}, {"arm": "rhoshape", "dataset": "Lipophilicity", "key": "p1_rho_lipo", "pool": "res-gpu0", "state": "dry_run"}, {"arm": "multicontrib", "dataset": "BACE", "key": "p1_contrib_bace", "pool": "res-gpu0", "state": "dry_run"}, {"arm": "multicontrib", "dataset": "Lipophilicity", "key": "p1_contrib_lipo", "pool": "res-gpu1", "state": "dry_run"}, {"arm": "chem8", "dataset": "ESOL", "key": "p1_chem8_esol", "pool": "res-gpu1", "state": "dry_run"}, {"arm": "rhoshape", "dataset": "ESOL", "key": "p1_rho_esol", "pool": "res-gpu1", "state": "dry_run"}, {"arm": "multicontrib", "dataset": "ESOL", "key": "p1_contrib_esol", "pool": "res-gpu1", "state": "dry_run"}, {"arm": "chem8", "dataset": "BACE", "key": "p1_chem8_bace", "pool": "res-gpu1", "state": "dry_run"}, {"arm": "rhoshape", "dataset": "BACE", "key": "p1_rho_bace", "pool": "res-gpu1", "state": "dry_run"}]
+[2026-11-02T01:38:50] plan=p1 runs=9 queues={'res-gpu0': ['p1_chem8_lipo', 'p1_rho_lipo', 'p1_contrib_bace'], 'res-gpu1': ['p1_contrib_lipo', 'p1_chem8_esol', 'p1_rho_esol', 'p1_contrib_esol', 'p1_chem8_bace', 'p1_rho_bace']}
+[2026-11-02T01:38:51] LAUNCH-FAIL p1_chem8_lipo: rr run failed for p1_chem8_lipo: 
+rr: remote checkout is not at the local commit; run `rr deploy res` first
+  host: res
+  local_commit: 771fd56b3c04
+  remote_commit: 0b4513e47759
+
+[2026-11-02T01:38:51] LAUNCH-FAIL p1_contrib_lipo: rr run failed for p1_contrib_lipo: 
+rr: remote checkout is not at the local commit; run `rr deploy res` first
+  host: res
+  local_commit: 771fd56b3c04
+  remote_commit: 0b4513e47759
+
+[2026-11-02T01:38:51] SUMMARY [{"arm": "chem8", "dataset": "Lipophilicity", "error": "rr run failed for p1_chem8_lipo: \nrr: remote checkout is not at the local commit; run `rr deploy res` first\n  host: res\n  local_commit: 771fd56b3c04\n  remote_commit: 0b4513e47759\n", "key": "p1_chem8_lipo", "pool": "res-gpu0", "state": "launch_failed"}, {"arm": "multicontrib", "dataset": "Lipophilicity", "error": "rr run failed for p1_contrib_lipo: \nrr: remote checkout is not at the local commit; run `rr deploy res` first\n  host: res\n  local_commit: 771fd56b3c04\n  remote_commit: 0b4513e47759\n", "key": "p1_contrib_lipo", "pool": "res-gpu1", "state": "launch_failed"}]
+[2026-11-02T01:40:57] plan=p1 runs=9 queues={'res-gpu0': ['p1_chem8_lipo', 'p1_rho_lipo', 'p1_contrib_bace'], 'res-gpu1': ['p1_contrib_lipo', 'p1_chem8_esol', 'p1_rho_esol', 'p1_contrib_esol', 'p1_chem8_bace', 'p1_rho_bace']}
+[2026-11-02T01:41:06] launched p1_contrib_lipo on res-gpu1: follow: rr logs p1-contrib-lipo --follow   |   rr status p1-contrib-lipo
+[2026-11-02T01:41:06] launched p1_chem8_lipo on res-gpu0: follow: rr logs p1-chem8-lipo --follow   |   rr status p1-chem8-lipo
+[2026-11-02T01:41:19] p1_chem8_lipo state=running elapsed=13s
+[2026-11-02T01:41:19] p1_contrib_lipo state=running elapsed=13s
+[2026-11-02T01:46:07] p1_chem8_lipo state=completed elapsed=300s
+[2026-11-02T01:46:21] p1_chem8_lipo pull rc=0
+[2026-11-02T01:46:27] launched p1_rho_lipo on res-gpu0: follow: rr logs p1-rho-lipo --follow   |   rr status p1-rho-lipo
+[2026-11-02T01:46:41] p1_rho_lipo state=running elapsed=13s
+[2026-11-02T01:47:59] p1_contrib_lipo state=completed elapsed=413s
+[2026-11-02T01:48:14] p1_contrib_lipo pull rc=0
+[2026-11-02T01:48:20] launched p1_chem8_esol on res-gpu1: follow: rr logs p1-chem8-esol --follow   |   rr status p1-chem8-esol
+[2026-11-02T01:48:32] p1_chem8_esol state=running elapsed=12s
+[2026-11-02T01:50:26] p1_chem8_esol state=completed elapsed=126s
+[2026-11-02T01:50:41] p1_chem8_esol pull rc=0
+[2026-11-02T01:50:46] launched p1_rho_esol on res-gpu1: follow: rr logs p1-rho-esol --follow   |   rr status p1-rho-esol
+[2026-11-02T01:51:00] p1_rho_esol state=running elapsed=14s
+[2026-11-02T01:52:21] p1_rho_lipo state=completed elapsed=354s
+[2026-11-02T01:52:34] p1_rho_lipo pull rc=0
+[2026-11-02T01:52:46] launched p1_contrib_bace on res-gpu0: follow: rr logs p1-contrib-bace --follow   |   rr status p1-contrib-bace
+[2026-11-02T01:52:58] p1_rho_esol state=completed elapsed=132s
+[2026-11-02T01:53:01] p1_contrib_bace state=running elapsed=16s
+[2026-11-02T01:53:14] p1_rho_esol pull rc=0
+[2026-11-02T01:53:20] launched p1_contrib_esol on res-gpu1: follow: rr logs p1-contrib-esol --follow   |   rr status p1-contrib-esol
+[2026-11-02T01:53:33] p1_contrib_esol state=running elapsed=13s
+[2026-11-02T01:55:33] p1_contrib_esol state=completed elapsed=134s
+[2026-11-02T01:55:47] p1_contrib_bace state=completed elapsed=181s
+[2026-11-02T01:55:50] p1_contrib_esol pull rc=0
+[2026-11-02T01:55:56] launched p1_chem8_bace on res-gpu1: follow: rr logs p1-chem8-bace --follow   |   rr status p1-chem8-bace
+[2026-11-02T01:55:59] p1_contrib_bace pull rc=0
+[2026-11-02T01:56:10] p1_chem8_bace state=running elapsed=14s
+[2026-11-02T01:59:09] p1_chem8_bace state=completed elapsed=193s
+[2026-11-02T01:59:29] p1_chem8_bace pull rc=0
+[2026-11-02T01:59:39] launched p1_rho_bace on res-gpu1: follow: rr logs p1-rho-bace --follow   |   rr status p1-rho-bace
+[2026-11-02T01:59:54] p1_rho_bace state=running elapsed=15s
+[2026-11-02T02:03:05] p1_rho_bace state=completed elapsed=205s
+[2026-11-02T02:03:22] p1_rho_bace pull rc=0
+[2026-11-02T02:03:22] SUMMARY [{"arm": "chem8", "dataset": "Lipophilicity", "elapsed_seconds": 314.6, "exit_code": 0, "experiment": "p1-chem8-lipo", "key": "p1_chem8_lipo", "pool": "res-gpu0", "run_id": "p1-chem8-lipo-20261102-014101-6215adf2", "state": "completed"}, {"arm": "rhoshape", "dataset": "Lipophilicity", "elapsed_seconds": 367.2, "exit_code": 0, "experiment": "p1-rho-lipo", "key": "p1_rho_lipo", "pool": "res-gpu0", "run_id": "p1-rho-lipo-20261102-014624-519bcc81", "state": "completed"}, {"arm": "multicontrib", "dataset": "BACE", "elapsed_seconds": 193.8, "exit_code": 0, "experiment": "p1-contrib-bace", "key": "p1_contrib_bace", "pool": "res-gpu0", "run_id": "p1-contrib-bace-20261102-015238-3c635524", "state": "completed"}, {"arm": "multicontrib", "dataset": "Lipophilicity", "elapsed_seconds": 427.7, "exit_code": 0, "experiment": "p1-contrib-lipo", "key": "p1_contrib_lipo", "pool": "res-gpu1", "run_id": "p1-contrib-lipo-20261102-014101-ee88c684", "state": "completed"}, {"arm": "chem8", "dataset": "ESOL", "elapsed_seconds": 140.4, "exit_code": 0, "experiment": "p1-chem8-esol", "key": "p1_chem8_esol", "pool": "res-gpu1", "run_id": "p1-chem8-esol-20261102-014816-418da8dc", "state": "completed"}, {"arm": "rhoshape", "dataset": "ESOL", "elapsed_seconds": 147.4, "exit_code": 0, "experiment": "p1-rho-esol", "key": "p1_rho_esol", "pool": "res-gpu1", "run_id": "p1-rho-esol-20261102-015043-392839ed", "state": "completed"}, {"arm": "multicontrib", "dataset": "ESOL", "elapsed_seconds": 149.8, "exit_code": 0, "experiment": "p1-contrib-esol", "key": "p1_contrib_esol", "pool": "res-gpu1", "run_id": "p1-contrib-esol-20261102-015316-316c0068", "state": "completed"}, {"arm": "chem8", "dataset": "BACE", "elapsed_seconds": 213.1, "exit_code": 0, "experiment": "p1-chem8-bace", "key": "p1_chem8_bace", "pool": "res-gpu1", "run_id": "p1-chem8-bace-20261102-015552-7126fa23", "state": "completed"}, {"arm": "rhoshape", "dataset": "BACE", "elapsed_seconds": 222.2, "exit_code": 0, "experiment": "p1-rho-bace", "key": "p1_rho_bace", "pool": "res-gpu1", "run_id": "p1-rho-bace-20261102-015933-53542d2c", "state": "completed"}]
+[2026-11-02T02:06:35] plan=p2 runs=3 queues={'res-gpu0': ['p2_combo_rho_contrib_lipo'], 'res-gpu1': ['p2_combo_rho_contrib_esol', 'p2_combo_rho_contrib_bace']}
+[2026-11-02T02:06:35] DRY-RUN res-gpu0: run res p2-combo-rho-contrib-lipo --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p2_combo_rho_contrib_lipo -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm combo_rho_contrib --seed 0 --device cuda --key p2_combo_rho_contrib_lipo
+[2026-11-02T02:06:35] DRY-RUN res-gpu1: run res p2-combo-rho-contrib-esol --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p2_combo_rho_contrib_esol -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ESOL --split published --arm combo_rho_contrib --seed 0 --device cuda --key p2_combo_rho_contrib_esol
+[2026-11-02T02:06:35] DRY-RUN res-gpu1: run res p2-combo-rho-contrib-bace --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p2_combo_rho_contrib_bace -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset BACE --split published --arm combo_rho_contrib --seed 0 --device cuda --key p2_combo_rho_contrib_bace
+[2026-11-02T02:06:35] SUMMARY [{"arm": "combo_rho_contrib", "dataset": "Lipophilicity", "key": "p2_combo_rho_contrib_lipo", "pool": "res-gpu0", "state": "dry_run"}, {"arm": "combo_rho_contrib", "dataset": "ESOL", "key": "p2_combo_rho_contrib_esol", "pool": "res-gpu1", "state": "dry_run"}, {"arm": "combo_rho_contrib", "dataset": "BACE", "key": "p2_combo_rho_contrib_bace", "pool": "res-gpu1", "state": "dry_run"}]
+[2026-11-02T02:07:06] plan=p2 runs=3 queues={'res-gpu0': ['p2_combo_rho_contrib_lipo'], 'res-gpu1': ['p2_combo_rho_contrib_esol', 'p2_combo_rho_contrib_bace']}
+[2026-11-02T02:07:15] launched p2_combo_rho_contrib_esol on res-gpu1: follow: rr logs p2-combo-rho-contrib-esol --follow   |   rr status p2-combo-rho-contrib-esol
+[2026-11-02T02:07:15] launched p2_combo_rho_contrib_lipo on res-gpu0: follow: rr logs p2-combo-rho-contrib-lipo --follow   |   rr status p2-combo-rho-contrib-lipo
+[2026-11-02T02:07:31] p2_combo_rho_contrib_esol state=running elapsed=16s
+[2026-11-02T02:07:31] p2_combo_rho_contrib_lipo state=running elapsed=16s
+[2026-11-02T02:09:31] p2_combo_rho_contrib_esol state=completed elapsed=136s
+[2026-11-02T02:09:45] p2_combo_rho_contrib_esol pull rc=0
+[2026-11-02T02:09:52] launched p2_combo_rho_contrib_bace on res-gpu1: follow: rr logs p2-combo-rho-contrib-bace --follow   |   rr status p2-combo-rho-contrib-bace
+[2026-11-02T02:10:05] p2_combo_rho_contrib_bace state=running elapsed=14s
+[2026-11-02T02:13:16] p2_combo_rho_contrib_bace state=completed elapsed=204s
+[2026-11-02T02:13:27] p2_combo_rho_contrib_lipo state=completed elapsed=373s
+[2026-11-02T02:13:30] p2_combo_rho_contrib_bace pull rc=0
+[2026-11-02T02:13:47] p2_combo_rho_contrib_lipo pull rc=0
+[2026-11-02T02:13:47] SUMMARY [{"arm": "combo_rho_contrib", "dataset": "ESOL", "elapsed_seconds": 150.5, "exit_code": 0, "experiment": "p2-combo-rho-contrib-esol", "key": "p2_combo_rho_contrib_esol", "pool": "res-gpu1", "run_id": "p2-combo-rho-contrib-esol-20261102-020710-dbffc89d", "state": "completed"}, {"arm": "combo_rho_contrib", "dataset": "BACE", "elapsed_seconds": 218.4, "exit_code": 0, "experiment": "p2-combo-rho-contrib-bace", "key": "p2_combo_rho_contrib_bace", "pool": "res-gpu1", "run_id": "p2-combo-rho-contrib-bace-20261102-020948-407dbb10", "state": "completed"}, {"arm": "combo_rho_contrib", "dataset": "Lipophilicity", "elapsed_seconds": 392.6, "exit_code": 0, "experiment": "p2-combo-rho-contrib-lipo", "key": "p2_combo_rho_contrib_lipo", "pool": "res-gpu0", "run_id": "p2-combo-rho-contrib-lipo-20261102-020710-803a7894", "state": "completed"}]
+[2026-11-02T02:17:07] plan=p4 runs=7 queues={'res-gpu0': ['p4_rho_lipo123', 'p4_rho_lipo124', 'p4_rho_hiv'], 'res-gpu1': ['p4_rho_freesolv', 'p4_rho_bbbp', 'p4_rho_tox21', 'p4_base_hiv']}
+[2026-11-02T02:17:07] DRY-RUN res-gpu0: run res p4-rho-lipo123 --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4_rho_lipo123 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split lipo-repeat:123 --arm rhoshape --seed 0 --device cuda --key p4_rho_lipo123
+[2026-11-02T02:17:07] DRY-RUN res-gpu0: run res p4-rho-lipo124 --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4_rho_lipo124 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split lipo-repeat:124 --arm rhoshape --seed 0 --device cuda --key p4_rho_lipo124
+[2026-11-02T02:17:07] DRY-RUN res-gpu0: run res p4-rho-hiv --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4_rho_hiv -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ogbg-molhiv --split published --arm rhoshape --seed 0 --device cuda --key p4_rho_hiv --protocol hiv_short
+[2026-11-02T02:17:07] DRY-RUN res-gpu1: run res p4-rho-freesolv --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4_rho_freesolv -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset FreeSolv --split published --arm rhoshape --seed 0 --device cuda --key p4_rho_freesolv
+[2026-11-02T02:17:07] DRY-RUN res-gpu1: run res p4-rho-bbbp --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4_rho_bbbp -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset BBBP --split published --arm rhoshape --seed 0 --device cuda --key p4_rho_bbbp
+[2026-11-02T02:17:07] DRY-RUN res-gpu1: run res p4-rho-tox21 --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4_rho_tox21 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Tox21 --split published --arm rhoshape --seed 0 --device cuda --key p4_rho_tox21
+[2026-11-02T02:17:07] DRY-RUN res-gpu1: run res p4-base-hiv --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4_base_hiv -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ogbg-molhiv --split published --arm base --seed 0 --device cuda --key p4_base_hiv --protocol hiv_short
+[2026-11-02T02:17:07] SUMMARY [{"arm": "rhoshape", "dataset": "Lipophilicity", "key": "p4_rho_lipo123", "pool": "res-gpu0", "split": "lipo-repeat:123", "state": "dry_run"}, {"arm": "rhoshape", "dataset": "Lipophilicity", "key": "p4_rho_lipo124", "pool": "res-gpu0", "split": "lipo-repeat:124", "state": "dry_run"}, {"arm": "rhoshape", "dataset": "ogbg-molhiv", "key": "p4_rho_hiv", "pool": "res-gpu0", "protocol": "hiv_short", "state": "dry_run"}, {"arm": "rhoshape", "dataset": "FreeSolv", "key": "p4_rho_freesolv", "pool": "res-gpu1", "state": "dry_run"}, {"arm": "rhoshape", "dataset": "BBBP", "key": "p4_rho_bbbp", "pool": "res-gpu1", "state": "dry_run"}, {"arm": "rhoshape", "dataset": "Tox21", "key": "p4_rho_tox21", "pool": "res-gpu1", "state": "dry_run"}, {"arm": "base", "dataset": "ogbg-molhiv", "key": "p4_base_hiv", "pool": "res-gpu1", "protocol": "hiv_short", "state": "dry_run"}]
+[2026-11-02T02:17:40] plan=p4 runs=7 queues={'res-gpu0': ['p4_rho_lipo123', 'p4_rho_lipo124', 'p4_rho_hiv'], 'res-gpu1': ['p4_rho_freesolv', 'p4_rho_bbbp', 'p4_rho_tox21', 'p4_base_hiv']}
+[2026-11-02T02:17:51] launched p4_rho_freesolv on res-gpu1: follow: rr logs p4-rho-freesolv --follow   |   rr status p4-rho-freesolv
+[2026-11-02T02:17:51] launched p4_rho_lipo123 on res-gpu0: follow: rr logs p4-rho-lipo123 --follow   |   rr status p4-rho-lipo123
+[2026-11-02T02:18:06] p4_rho_freesolv state=running elapsed=15s
+[2026-11-02T02:18:06] p4_rho_lipo123 state=running elapsed=15s
+[2026-11-02T02:19:15] p4_rho_freesolv state=completed elapsed=85s
+[2026-11-02T02:19:30] p4_rho_freesolv pull rc=0
+[2026-11-02T02:19:37] launched p4_rho_bbbp on res-gpu1: follow: rr logs p4-rho-bbbp --follow   |   rr status p4-rho-bbbp
+[2026-11-02T02:19:50] p4_rho_bbbp state=running elapsed=13s
+[2026-11-02T02:23:23] p4_rho_bbbp state=completed elapsed=226s
+[2026-11-02T02:23:37] p4_rho_bbbp pull rc=0
+[2026-11-02T02:23:47] launched p4_rho_tox21 on res-gpu1: follow: rr logs p4-rho-tox21 --follow   |   rr status p4-rho-tox21
+[2026-11-02T02:23:55] p4_rho_lipo123 state=completed elapsed=364s
+[2026-11-02T02:23:57] p4_rho_tox21 state=running elapsed=10s
+[2026-11-02T02:24:10] p4_rho_lipo123 pull rc=0
+[2026-11-02T02:24:15] launched p4_rho_lipo124 on res-gpu0: follow: rr logs p4-rho-lipo124 --follow   |   rr status p4-rho-lipo124
+[2026-11-02T02:24:30] p4_rho_lipo124 state=running elapsed=14s
+[2026-11-02T02:30:26] p4_rho_lipo124 state=completed elapsed=370s
+[2026-11-02T02:30:39] p4_rho_lipo124 pull rc=0
+[2026-11-02T02:30:50] launched p4_rho_hiv on res-gpu0: follow: rr logs p4-rho-hiv --follow   |   rr status p4-rho-hiv
+[2026-11-02T02:31:02] p4_rho_hiv state=running elapsed=12s
+[2026-11-02T02:35:50] p4_rho_tox21 state=completed elapsed=723s
+[2026-11-02T02:36:03] p4_rho_tox21 pull rc=0
+[2026-11-02T02:36:13] launched p4_base_hiv on res-gpu1: follow: rr logs p4-base-hiv --follow   |   rr status p4-base-hiv
+[2026-11-02T02:36:26] p4_base_hiv state=running elapsed=12s
+[2026-11-02T02:41:27] p4_rho_hiv state=completed elapsed=637s
+[2026-11-02T02:41:40] p4_rho_hiv pull rc=0
+[2026-11-02T02:51:10] p4_base_hiv state=completed elapsed=896s
+[2026-11-02T02:51:27] p4_base_hiv pull rc=0
+[2026-11-02T02:51:27] SUMMARY [{"arm": "rhoshape", "dataset": "Lipophilicity", "elapsed_seconds": 379.2, "exit_code": 0, "experiment": "p4-rho-lipo123", "key": "p4_rho_lipo123", "pool": "res-gpu0", "run_id": "p4-rho-lipo123-20261102-021744-f87c5b41", "split": "lipo-repeat:123", "state": "completed"}, {"arm": "rhoshape", "dataset": "Lipophilicity", "elapsed_seconds": 383.6, "exit_code": 0, "experiment": "p4-rho-lipo124", "key": "p4_rho_lipo124", "pool": "res-gpu0", "run_id": "p4-rho-lipo124-20261102-022412-05b0f2fd", "split": "lipo-repeat:124", "state": "completed"}, {"arm": "rhoshape", "dataset": "ogbg-molhiv", "elapsed_seconds": 650.7, "exit_code": 0, "experiment": "p4-rho-hiv", "key": "p4_rho_hiv", "pool": "res-gpu0", "protocol": "hiv_short", "run_id": "p4-rho-hiv-20261102-023044-1209258a", "state": "completed"}, {"arm": "rhoshape", "dataset": "FreeSolv", "elapsed_seconds": 99.0, "exit_code": 0, "experiment": "p4-rho-freesolv", "key": "p4_rho_freesolv", "pool": "res-gpu1", "run_id": "p4-rho-freesolv-20261102-021744-ad934ce0", "state": "completed"}, {"arm": "rhoshape", "dataset": "BBBP", "elapsed_seconds": 239.3, "exit_code": 0, "experiment": "p4-rho-bbbp", "key": "p4_rho_bbbp", "pool": "res-gpu1", "run_id": "p4-rho-bbbp-20261102-021933-62d5f7db", "state": "completed"}, {"arm": "rhoshape", "dataset": "Tox21", "elapsed_seconds": 736.0, "exit_code": 0, "experiment": "p4-rho-tox21", "key": "p4_rho_tox21", "pool": "res-gpu1", "run_id": "p4-rho-tox21-20261102-022341-65385359", "state": "completed"}, {"arm": "base", "dataset": "ogbg-molhiv", "elapsed_seconds": 913.5, "exit_code": 0, "experiment": "p4-base-hiv", "key": "p4_base_hiv", "pool": "res-gpu1", "protocol": "hiv_short", "run_id": "p4-base-hiv-20261102-023607-102692b9", "state": "completed"}]
+[2026-11-02T02:52:21] plan=p3 runs=4 queues={'res-gpu0': ['p3_base_scalem_lipo', 'p3_base_scalem_esol'], 'res-gpu1': ['p3_rho_scalem_lipo', 'p3_rho_scalem_esol']}
+[2026-11-02T02:52:21] DRY-RUN res-gpu0: run res p3-base-scalem-lipo --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p3_base_scalem_lipo -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm base --seed 0 --device cuda --key p3_base_scalem_lipo --scale M
+[2026-11-02T02:52:21] DRY-RUN res-gpu0: run res p3-base-scalem-esol --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p3_base_scalem_esol -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ESOL --split published --arm base --seed 0 --device cuda --key p3_base_scalem_esol --scale M
+[2026-11-02T02:52:21] DRY-RUN res-gpu1: run res p3-rho-scalem-lipo --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p3_rho_scalem_lipo -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm rhoshape --seed 0 --device cuda --key p3_rho_scalem_lipo --scale M
+[2026-11-02T02:52:21] DRY-RUN res-gpu1: run res p3-rho-scalem-esol --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p3_rho_scalem_esol -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ESOL --split published --arm rhoshape --seed 0 --device cuda --key p3_rho_scalem_esol --scale M
+[2026-11-02T02:52:21] SUMMARY [{"arm": "base", "dataset": "Lipophilicity", "key": "p3_base_scalem_lipo", "pool": "res-gpu0", "scale": "M", "state": "dry_run"}, {"arm": "base", "dataset": "ESOL", "key": "p3_base_scalem_esol", "pool": "res-gpu0", "scale": "M", "state": "dry_run"}, {"arm": "rhoshape", "dataset": "Lipophilicity", "key": "p3_rho_scalem_lipo", "pool": "res-gpu1", "scale": "M", "state": "dry_run"}, {"arm": "rhoshape", "dataset": "ESOL", "key": "p3_rho_scalem_esol", "pool": "res-gpu1", "scale": "M", "state": "dry_run"}]
+[2026-11-02T02:52:48] plan=p3 runs=4 queues={'res-gpu0': ['p3_base_scalem_lipo', 'p3_base_scalem_esol'], 'res-gpu1': ['p3_rho_scalem_lipo', 'p3_rho_scalem_esol']}
+[2026-11-02T02:53:00] launched p3_rho_scalem_lipo on res-gpu1: follow: rr logs p3-rho-scalem-lipo --follow   |   rr status p3-rho-scalem-lipo
+[2026-11-02T02:53:00] launched p3_base_scalem_lipo on res-gpu0: follow: rr logs p3-base-scalem-lipo --follow   |   rr status p3-base-scalem-lipo
+[2026-11-02T02:53:13] p3_base_scalem_lipo state=running elapsed=14s
+[2026-11-02T02:53:13] p3_rho_scalem_lipo state=running elapsed=14s
+[2026-11-02T02:58:33] p3_base_scalem_lipo state=completed elapsed=333s
+[2026-11-02T02:58:47] p3_base_scalem_lipo pull rc=0
+[2026-11-02T02:58:53] launched p3_base_scalem_esol on res-gpu0: follow: rr logs p3-base-scalem-esol --follow   |   rr status p3-base-scalem-esol
+[2026-11-02T02:59:08] p3_base_scalem_esol state=running elapsed=15s
+[2026-11-02T03:00:07] p3_rho_scalem_lipo state=completed elapsed=428s
+[2026-11-02T03:00:21] p3_rho_scalem_lipo pull rc=0
+[2026-11-02T03:00:30] launched p3_rho_scalem_esol on res-gpu1: follow: rr logs p3-rho-scalem-esol --follow   |   rr status p3-rho-scalem-esol
+[2026-11-02T03:00:38] p3_base_scalem_esol state=completed elapsed=105s
+[2026-11-02T03:00:40] p3_rho_scalem_esol state=running elapsed=10s
+[2026-11-02T03:00:53] p3_base_scalem_esol pull rc=0
+[2026-11-02T03:02:24] p3_rho_scalem_esol state=completed elapsed=113s
+[2026-11-02T03:02:41] p3_rho_scalem_esol pull rc=0
+[2026-11-02T03:02:41] SUMMARY [{"arm": "base", "dataset": "Lipophilicity", "elapsed_seconds": 347.7, "exit_code": 0, "experiment": "p3-base-scalem-lipo", "key": "p3_base_scalem_lipo", "pool": "res-gpu0", "run_id": "p3-base-scalem-lipo-20261102-025253-e47da003", "scale": "M", "state": "completed"}, {"arm": "base", "dataset": "ESOL", "elapsed_seconds": 119.9, "exit_code": 0, "experiment": "p3-base-scalem-esol", "key": "p3_base_scalem_esol", "pool": "res-gpu0", "run_id": "p3-base-scalem-esol-20261102-025849-a7aa5274", "scale": "M", "state": "completed"}, {"arm": "rhoshape", "dataset": "Lipophilicity", "elapsed_seconds": 441.2, "exit_code": 0, "experiment": "p3-rho-scalem-lipo", "key": "p3_rho_scalem_lipo", "pool": "res-gpu1", "run_id": "p3-rho-scalem-lipo-20261102-025253-05675a9a", "scale": "M", "state": "completed"}, {"arm": "rhoshape", "dataset": "ESOL", "elapsed_seconds": 131.0, "exit_code": 0, "experiment": "p3-rho-scalem-esol", "key": "p3_rho_scalem_esol", "pool": "res-gpu1", "run_id": "p3-rho-scalem-esol-20261102-030025-fdb44514", "scale": "M", "state": "completed"}]
+[2026-11-02T03:03:45] plan=p5 runs=12 queues={'res-gpu0': ['p5_base_lipo_s1', 'p5_rho_lipo_s1', 'p5_base_esol_s1', 'p5_rho_esol_s1', 'p5_base_freesolv_s1', 'p5_rho_freesolv_s1'], 'res-gpu1': ['p5_base_lipo_s2', 'p5_rho_lipo_s2', 'p5_base_esol_s2', 'p5_rho_esol_s2', 'p5_base_freesolv_s2', 'p5_rho_freesolv_s2']}
+[2026-11-02T03:03:45] DRY-RUN res-gpu0: run res p5-base-lipo-s1 --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_lipo_s1 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm base --seed 1 --device cuda --key p5_base_lipo_s1
+[2026-11-02T03:03:45] DRY-RUN res-gpu0: run res p5-rho-lipo-s1 --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_rho_lipo_s1 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm rhoshape --seed 1 --device cuda --key p5_rho_lipo_s1
+[2026-11-02T03:03:45] DRY-RUN res-gpu0: run res p5-base-esol-s1 --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_esol_s1 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ESOL --split published --arm base --seed 1 --device cuda --key p5_base_esol_s1
+[2026-11-02T03:03:45] DRY-RUN res-gpu0: run res p5-rho-esol-s1 --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_rho_esol_s1 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ESOL --split published --arm rhoshape --seed 1 --device cuda --key p5_rho_esol_s1
+[2026-11-02T03:03:45] DRY-RUN res-gpu0: run res p5-base-freesolv-s1 --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_freesolv_s1 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset FreeSolv --split published --arm base --seed 1 --device cuda --key p5_base_freesolv_s1
+[2026-11-02T03:03:45] DRY-RUN res-gpu0: run res p5-rho-freesolv-s1 --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_rho_freesolv_s1 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset FreeSolv --split published --arm rhoshape --seed 1 --device cuda --key p5_rho_freesolv_s1
+[2026-11-02T03:03:45] DRY-RUN res-gpu1: run res p5-base-lipo-s2 --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_lipo_s2 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm base --seed 2 --device cuda --key p5_base_lipo_s2
+[2026-11-02T03:03:45] DRY-RUN res-gpu1: run res p5-rho-lipo-s2 --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_rho_lipo_s2 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm rhoshape --seed 2 --device cuda --key p5_rho_lipo_s2
+[2026-11-02T03:03:45] DRY-RUN res-gpu1: run res p5-base-esol-s2 --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_esol_s2 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ESOL --split published --arm base --seed 2 --device cuda --key p5_base_esol_s2
+[2026-11-02T03:03:45] DRY-RUN res-gpu1: run res p5-rho-esol-s2 --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_rho_esol_s2 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ESOL --split published --arm rhoshape --seed 2 --device cuda --key p5_rho_esol_s2
+[2026-11-02T03:03:45] DRY-RUN res-gpu1: run res p5-base-freesolv-s2 --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_freesolv_s2 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset FreeSolv --split published --arm base --seed 2 --device cuda --key p5_base_freesolv_s2
+[2026-11-02T03:03:45] DRY-RUN res-gpu1: run res p5-rho-freesolv-s2 --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_rho_freesolv_s2 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset FreeSolv --split published --arm rhoshape --seed 2 --device cuda --key p5_rho_freesolv_s2
+[2026-11-02T03:03:45] SUMMARY [{"arm": "base", "dataset": "Lipophilicity", "key": "p5_base_lipo_s1", "pool": "res-gpu0", "seed": 1, "state": "dry_run"}, {"arm": "rhoshape", "dataset": "Lipophilicity", "key": "p5_rho_lipo_s1", "pool": "res-gpu0", "seed": 1, "state": "dry_run"}, {"arm": "base", "dataset": "ESOL", "key": "p5_base_esol_s1", "pool": "res-gpu0", "seed": 1, "state": "dry_run"}, {"arm": "rhoshape", "dataset": "ESOL", "key": "p5_rho_esol_s1", "pool": "res-gpu0", "seed": 1, "state": "dry_run"}, {"arm": "base", "dataset": "FreeSolv", "key": "p5_base_freesolv_s1", "pool": "res-gpu0", "seed": 1, "state": "dry_run"}, {"arm": "rhoshape", "dataset": "FreeSolv", "key": "p5_rho_freesolv_s1", "pool": "res-gpu0", "seed": 1, "state": "dry_run"}, {"arm": "base", "dataset": "Lipophilicity", "key": "p5_base_lipo_s2", "pool": "res-gpu1", "seed": 2, "state": "dry_run"}, {"arm": "rhoshape", "dataset": "Lipophilicity", "key": "p5_rho_lipo_s2", "pool": "res-gpu1", "seed": 2, "state": "dry_run"}, {"arm": "base", "dataset": "ESOL", "key": "p5_base_esol_s2", "pool": "res-gpu1", "seed": 2, "state": "dry_run"}, {"arm": "rhoshape", "dataset": "ESOL", "key": "p5_rho_esol_s2", "pool": "res-gpu1", "seed": 2, "state": "dry_run"}, {"arm": "base", "dataset": "FreeSolv", "key": "p5_base_freesolv_s2", "pool": "res-gpu1", "seed": 2, "state": "dry_run"}, {"arm": "rhoshape", "dataset": "FreeSolv", "key": "p5_rho_freesolv_s2", "pool": "res-gpu1", "seed": 2, "state": "dry_run"}]
+[2026-11-02T03:04:14] plan=p5 runs=12 queues={'res-gpu0': ['p5_base_lipo_s1', 'p5_rho_lipo_s1', 'p5_base_esol_s1', 'p5_rho_esol_s1', 'p5_base_freesolv_s1', 'p5_rho_freesolv_s1'], 'res-gpu1': ['p5_base_lipo_s2', 'p5_rho_lipo_s2', 'p5_base_esol_s2', 'p5_rho_esol_s2', 'p5_base_freesolv_s2', 'p5_rho_freesolv_s2']}
+[2026-11-02T03:04:25] launched p5_base_lipo_s1 on res-gpu0: follow: rr logs p5-base-lipo-s1 --follow   |   rr status p5-base-lipo-s1
+[2026-11-02T03:04:25] launched p5_base_lipo_s2 on res-gpu1: follow: rr logs p5-base-lipo-s2 --follow   |   rr status p5-base-lipo-s2
+[2026-11-02T03:04:40] p5_base_lipo_s2 state=running elapsed=15s
+[2026-11-02T03:04:40] p5_base_lipo_s1 state=running elapsed=15s
+[2026-11-02T03:09:22] p5_base_lipo_s1 state=completed elapsed=297s
+[2026-11-02T03:09:37] p5_base_lipo_s1 pull rc=0
+[2026-11-02T03:09:43] launched p5_rho_lipo_s1 on res-gpu0: follow: rr logs p5-rho-lipo-s1 --follow   |   rr status p5-rho-lipo-s1
+[2026-11-02T03:09:57] p5_rho_lipo_s1 state=running elapsed=15s
+[2026-11-02T03:10:55] p5_base_lipo_s2 state=completed elapsed=391s
+[2026-11-02T03:11:09] p5_base_lipo_s2 pull rc=0
+[2026-11-02T03:11:19] launched p5_rho_lipo_s2 on res-gpu1: follow: rr logs p5-rho-lipo-s2 --follow   |   rr status p5-rho-lipo-s2
+[2026-11-02T03:11:31] p5_rho_lipo_s2 state=running elapsed=13s
+[2026-11-02T03:15:52] p5_rho_lipo_s1 state=completed elapsed=369s
+[2026-11-02T03:16:06] p5_rho_lipo_s1 pull rc=0
+[2026-11-02T03:16:15] launched p5_base_esol_s1 on res-gpu0: follow: rr logs p5-base-esol-s1 --follow   |   rr status p5-base-esol-s1
+[2026-11-02T03:16:27] p5_base_esol_s1 state=running elapsed=12s
+[2026-11-02T03:17:59] p5_base_esol_s1 state=completed elapsed=104s
+[2026-11-02T03:18:14] p5_base_esol_s1 pull rc=0
+[2026-11-02T03:18:17] p5_rho_lipo_s2 state=completed elapsed=418s
+[2026-11-02T03:18:20] launched p5_rho_esol_s1 on res-gpu0: follow: rr logs p5-rho-esol-s1 --follow   |   rr status p5-rho-esol-s1
+[2026-11-02T03:18:29] p5_rho_lipo_s2 pull rc=0
+[2026-11-02T03:18:32] p5_rho_esol_s1 state=running elapsed=12s
+[2026-11-02T03:18:44] launched p5_base_esol_s2 on res-gpu1: follow: rr logs p5-base-esol-s2 --follow   |   rr status p5-base-esol-s2
+[2026-11-02T03:18:57] p5_base_esol_s2 state=running elapsed=13s
+[2026-11-02T03:19:58] p5_rho_esol_s1 state=completed elapsed=98s
+[2026-11-02T03:20:16] p5_rho_esol_s1 pull rc=0
+[2026-11-02T03:20:23] launched p5_base_freesolv_s1 on res-gpu0: follow: rr logs p5-base-freesolv-s1 --follow   |   rr status p5-base-freesolv-s1
+[2026-11-02T03:20:26] p5_base_esol_s2 state=completed elapsed=102s
+[2026-11-02T03:20:33] p5_base_freesolv_s1 state=running elapsed=10s
+[2026-11-02T03:20:41] p5_base_esol_s2 pull rc=0
+[2026-11-02T03:20:48] launched p5_rho_esol_s2 on res-gpu1: follow: rr logs p5-rho-esol-s2 --follow   |   rr status p5-rho-esol-s2
+[2026-11-02T03:21:03] p5_rho_esol_s2 state=running elapsed=16s
+[2026-11-02T03:21:17] p5_base_freesolv_s1 state=completed elapsed=54s
+[2026-11-02T03:21:34] p5_base_freesolv_s1 pull rc=0
+[2026-11-02T03:21:41] launched p5_rho_freesolv_s1 on res-gpu0: follow: rr logs p5-rho-freesolv-s1 --follow   |   rr status p5-rho-freesolv-s1
+[2026-11-02T03:21:53] p5_rho_freesolv_s1 state=running elapsed=11s
+[2026-11-02T03:22:40] p5_rho_freesolv_s1 state=completed elapsed=59s
+[2026-11-02T03:22:51] p5_rho_esol_s2 state=completed elapsed=124s
+[2026-11-02T03:22:53] p5_rho_freesolv_s1 pull rc=0
+[2026-11-02T03:23:08] p5_rho_esol_s2 pull rc=0
+[2026-11-02T03:23:20] launched p5_base_freesolv_s2 on res-gpu1: follow: rr logs p5-base-freesolv-s2 --follow   |   rr status p5-base-freesolv-s2
+[2026-11-02T03:23:37] p5_base_freesolv_s2 state=running elapsed=17s
+[2026-11-02T03:24:27] p5_base_freesolv_s2 state=completed elapsed=66s
+[2026-11-02T03:24:44] p5_base_freesolv_s2 pull rc=0
+[2026-11-02T03:24:57] launched p5_rho_freesolv_s2 on res-gpu1: follow: rr logs p5-rho-freesolv-s2 --follow   |   rr status p5-rho-freesolv-s2
+[2026-11-02T03:25:13] p5_rho_freesolv_s2 state=running elapsed=17s
+[2026-11-02T03:26:01] p5_rho_freesolv_s2 state=completed elapsed=65s
+[2026-11-02T03:26:22] p5_rho_freesolv_s2 pull rc=0
+[2026-11-02T03:26:22] SUMMARY [{"arm": "base", "dataset": "Lipophilicity", "elapsed_seconds": 311.8, "exit_code": 0, "experiment": "p5-base-lipo-s1", "key": "p5_base_lipo_s1", "pool": "res-gpu0", "run_id": "p5-base-lipo-s1-20261102-030418-ef6b97b1", "seed": 1, "state": "completed"}, {"arm": "rhoshape", "dataset": "Lipophilicity", "elapsed_seconds": 383.0, "exit_code": 0, "experiment": "p5-rho-lipo-s1", "key": "p5_rho_lipo_s1", "pool": "res-gpu0", "run_id": "p5-rho-lipo-s1-20261102-030939-0963c458", "seed": 1, "state": "completed"}, {"arm": "base", "dataset": "ESOL", "elapsed_seconds": 118.9, "exit_code": 0, "experiment": "p5-base-esol-s1", "key": "p5_base_esol_s1", "pool": "res-gpu0", "run_id": "p5-base-esol-s1-20261102-031610-fff5ab8b", "seed": 1, "state": "completed"}, {"arm": "rhoshape", "dataset": "ESOL", "elapsed_seconds": 115.8, "exit_code": 0, "experiment": "p5-rho-esol-s1", "key": "p5_rho_esol_s1", "pool": "res-gpu0", "run_id": "p5-rho-esol-s1-20261102-031817-eb75a7ca", "seed": 1, "state": "completed"}, {"arm": "base", "dataset": "FreeSolv", "elapsed_seconds": 71.6, "exit_code": 0, "experiment": "p5-base-freesolv-s1", "key": "p5_base_freesolv_s1", "pool": "res-gpu0", "run_id": "p5-base-freesolv-s1-20261102-032019-60f2c601", "seed": 1, "state": "completed"}, {"arm": "rhoshape", "dataset": "FreeSolv", "elapsed_seconds": 72.1, "exit_code": 0, "experiment": "p5-rho-freesolv-s1", "key": "p5_rho_freesolv_s1", "pool": "res-gpu0", "run_id": "p5-rho-freesolv-s1-20261102-032137-743a2ade", "seed": 1, "state": "completed"}, {"arm": "base", "dataset": "Lipophilicity", "elapsed_seconds": 404.5, "exit_code": 0, "experiment": "p5-base-lipo-s2", "key": "p5_base_lipo_s2", "pool": "res-gpu1", "run_id": "p5-base-lipo-s2-20261102-030418-516ab03f", "seed": 2, "state": "completed"}, {"arm": "rhoshape", "dataset": "Lipophilicity", "elapsed_seconds": 430.6, "exit_code": 0, "experiment": "p5-rho-lipo-s2", "key": "p5_rho_lipo_s2", "pool": "res-gpu1", "run_id": "p5-rho-lipo-s2-20261102-031114-2eea8e21", "seed": 2, "state": "completed"}, {"arm": "base", "dataset": "ESOL", "elapsed_seconds": 117.2, "exit_code": 0, "experiment": "p5-base-esol-s2", "key": "p5_base_esol_s2", "pool": "res-gpu1", "run_id": "p5-base-esol-s2-20261102-031833-35cc9255", "seed": 2, "state": "completed"}, {"arm": "rhoshape", "dataset": "ESOL", "elapsed_seconds": 140.5, "exit_code": 0, "experiment": "p5-rho-esol-s2", "key": "p5_rho_esol_s2", "pool": "res-gpu1", "run_id": "p5-rho-esol-s2-20261102-032045-dc5e3834", "seed": 2, "state": "completed"}, {"arm": "base", "dataset": "FreeSolv", "elapsed_seconds": 83.4, "exit_code": 0, "experiment": "p5-base-freesolv-s2", "key": "p5_base_freesolv_s2", "pool": "res-gpu1", "run_id": "p5-base-freesolv-s2-20261102-032314-a6cb986c", "seed": 2, "state": "completed"}, {"arm": "rhoshape", "dataset": "FreeSolv", "elapsed_seconds": 85.2, "exit_code": 0, "experiment": "p5-rho-freesolv-s2", "key": "p5_rho_freesolv_s2", "pool": "res-gpu1", "run_id": "p5-rho-freesolv-s2-20261102-032449-cebd9d47", "seed": 2, "state": "completed"}]
+[2026-11-02T03:29:26] plan=p2b runs=3 queues={'res-gpu0': ['p2b_combo_chem_contrib_lipo'], 'res-gpu1': ['p2b_combo_chem_contrib_esol', 'p2b_combo_chem_contrib_bace']}
+[2026-11-02T03:29:26] DRY-RUN res-gpu0: run res p2b-combo-chem-contrib-lipo --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p2b_combo_chem_contrib_lipo -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm combo_chem_contrib --seed 0 --device cuda --key p2b_combo_chem_contrib_lipo
+[2026-11-02T03:29:26] DRY-RUN res-gpu1: run res p2b-combo-chem-contrib-esol --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p2b_combo_chem_contrib_esol -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ESOL --split published --arm combo_chem_contrib --seed 0 --device cuda --key p2b_combo_chem_contrib_esol
+[2026-11-02T03:29:26] DRY-RUN res-gpu1: run res p2b-combo-chem-contrib-bace --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p2b_combo_chem_contrib_bace -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset BACE --split published --arm combo_chem_contrib --seed 0 --device cuda --key p2b_combo_chem_contrib_bace
+[2026-11-02T03:29:26] SUMMARY [{"arm": "combo_chem_contrib", "dataset": "Lipophilicity", "key": "p2b_combo_chem_contrib_lipo", "pool": "res-gpu0", "state": "dry_run"}, {"arm": "combo_chem_contrib", "dataset": "ESOL", "key": "p2b_combo_chem_contrib_esol", "pool": "res-gpu1", "state": "dry_run"}, {"arm": "combo_chem_contrib", "dataset": "BACE", "key": "p2b_combo_chem_contrib_bace", "pool": "res-gpu1", "state": "dry_run"}]
+[2026-11-02T03:29:54] plan=p2b runs=3 queues={'res-gpu0': ['p2b_combo_chem_contrib_lipo'], 'res-gpu1': ['p2b_combo_chem_contrib_esol', 'p2b_combo_chem_contrib_bace']}
+[2026-11-02T03:30:06] launched p2b_combo_chem_contrib_esol on res-gpu1: follow: rr logs p2b-combo-chem-contrib-esol --follow   |   rr status p2b-combo-chem-contrib-esol
+[2026-11-02T03:30:06] launched p2b_combo_chem_contrib_lipo on res-gpu0: follow: rr logs p2b-combo-chem-contrib-lipo --follow   |   rr status p2b-combo-chem-contrib-lipo
+[2026-11-02T03:30:22] p2b_combo_chem_contrib_lipo state=running elapsed=16s
+[2026-11-02T03:30:22] p2b_combo_chem_contrib_esol state=running elapsed=16s
+[2026-11-02T03:31:52] p2b_combo_chem_contrib_esol state=completed elapsed=106s
+[2026-11-02T03:32:07] p2b_combo_chem_contrib_esol pull rc=0
+[2026-11-02T03:32:13] launched p2b_combo_chem_contrib_bace on res-gpu1: follow: rr logs p2b-combo-chem-contrib-bace --follow   |   rr status p2b-combo-chem-contrib-bace
+[2026-11-02T03:32:27] p2b_combo_chem_contrib_bace state=running elapsed=14s
+[2026-11-02T03:35:41] p2b_combo_chem_contrib_bace state=completed elapsed=208s
+[2026-11-02T03:35:58] p2b_combo_chem_contrib_bace pull rc=0
+[2026-11-02T03:36:19] p2b_combo_chem_contrib_lipo state=completed elapsed=373s
+[2026-11-02T03:36:38] p2b_combo_chem_contrib_lipo pull rc=0
+[2026-11-02T03:36:38] SUMMARY [{"arm": "combo_chem_contrib", "dataset": "ESOL", "elapsed_seconds": 120.6, "exit_code": 0, "experiment": "p2b-combo-chem-contrib-esol", "key": "p2b_combo_chem_contrib_esol", "pool": "res-gpu1", "run_id": "p2b-combo-chem-contrib-esol-20261102-032959-cf996188", "state": "completed"}, {"arm": "combo_chem_contrib", "dataset": "BACE", "elapsed_seconds": 225.3, "exit_code": 0, "experiment": "p2b-combo-chem-contrib-bace", "key": "p2b_combo_chem_contrib_bace", "pool": "res-gpu1", "run_id": "p2b-combo-chem-contrib-bace-20261102-033209-86cbd423", "state": "completed"}, {"arm": "combo_chem_contrib", "dataset": "Lipophilicity", "elapsed_seconds": 391.9, "exit_code": 0, "experiment": "p2b-combo-chem-contrib-lipo", "key": "p2b_combo_chem_contrib_lipo", "pool": "res-gpu0", "run_id": "p2b-combo-chem-contrib-lipo-20261102-032959-e1ead834", "state": "completed"}]
+[2026-11-02T03:38:44] plan=p5b runs=4 queues={'res-gpu0': ['p5b_combo_lipo_s1', 'p4b_combo_lipo123'], 'res-gpu1': ['p5b_combo_lipo_s2', 'p4b_combo_lipo124']}
+[2026-11-02T03:38:44] DRY-RUN res-gpu0: run res p5b-combo-lipo-s1 --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5b_combo_lipo_s1 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm combo_chem_contrib --seed 1 --device cuda --key p5b_combo_lipo_s1
+[2026-11-02T03:38:44] DRY-RUN res-gpu1: run res p5b-combo-lipo-s2 --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5b_combo_lipo_s2 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split published --arm combo_chem_contrib --seed 2 --device cuda --key p5b_combo_lipo_s2
+[2026-11-02T03:38:44] DRY-RUN res-gpu1: run res p4b-combo-lipo124 --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4b_combo_lipo124 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split lipo-repeat:124 --arm combo_chem_contrib --seed 0 --device cuda --key p4b_combo_lipo124
+[2026-11-02T03:38:44] DRY-RUN res-gpu0: run res p4b-combo-lipo123 --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4b_combo_lipo123 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Lipophilicity --split lipo-repeat:123 --arm combo_chem_contrib --seed 0 --device cuda --key p4b_combo_lipo123
+[2026-11-02T03:38:44] SUMMARY [{"arm": "combo_chem_contrib", "dataset": "Lipophilicity", "key": "p5b_combo_lipo_s2", "pool": "res-gpu1", "seed": 2, "state": "dry_run"}, {"arm": "combo_chem_contrib", "dataset": "Lipophilicity", "key": "p4b_combo_lipo124", "pool": "res-gpu1", "split": "lipo-repeat:124", "state": "dry_run"}, {"arm": "combo_chem_contrib", "dataset": "Lipophilicity", "key": "p5b_combo_lipo_s1", "pool": "res-gpu0", "seed": 1, "state": "dry_run"}, {"arm": "combo_chem_contrib", "dataset": "Lipophilicity", "key": "p4b_combo_lipo123", "pool": "res-gpu0", "split": "lipo-repeat:123", "state": "dry_run"}]
+[2026-11-02T03:39:13] plan=p5b runs=4 queues={'res-gpu0': ['p5b_combo_lipo_s1', 'p4b_combo_lipo123'], 'res-gpu1': ['p5b_combo_lipo_s2', 'p4b_combo_lipo124']}
+[2026-11-02T03:39:22] launched p5b_combo_lipo_s2 on res-gpu1: follow: rr logs p5b-combo-lipo-s2 --follow   |   rr status p5b-combo-lipo-s2
+[2026-11-02T03:39:22] launched p5b_combo_lipo_s1 on res-gpu0: follow: rr logs p5b-combo-lipo-s1 --follow   |   rr status p5b-combo-lipo-s1
+[2026-11-02T03:39:38] p5b_combo_lipo_s2 state=running elapsed=16s
+[2026-11-02T03:39:38] p5b_combo_lipo_s1 state=running elapsed=16s
+[2026-11-02T03:45:35] p5b_combo_lipo_s1 state=completed elapsed=373s
+[2026-11-02T03:45:50] p5b_combo_lipo_s1 pull rc=0
+[2026-11-02T03:45:57] launched p4b_combo_lipo123 on res-gpu0: follow: rr logs p4b-combo-lipo123 --follow   |   rr status p4b-combo-lipo123
+[2026-11-02T03:46:11] p4b_combo_lipo123 state=running elapsed=14s
+[2026-11-02T03:46:21] p5b_combo_lipo_s2 state=completed elapsed=419s
+[2026-11-02T03:46:38] p5b_combo_lipo_s2 pull rc=0
+[2026-11-02T03:46:48] launched p4b_combo_lipo124 on res-gpu1: follow: rr logs p4b-combo-lipo124 --follow   |   rr status p4b-combo-lipo124
+[2026-11-02T03:46:58] p4b_combo_lipo124 state=running elapsed=10s
+[2026-11-02T03:52:00] p4b_combo_lipo123 state=completed elapsed=363s
+[2026-11-02T03:52:14] p4b_combo_lipo123 pull rc=0
+[2026-11-02T03:54:06] p4b_combo_lipo124 state=completed elapsed=438s
+[2026-11-02T03:54:23] p4b_combo_lipo124 pull rc=0
+[2026-11-02T03:54:23] SUMMARY [{"arm": "combo_chem_contrib", "dataset": "Lipophilicity", "elapsed_seconds": 387.8, "exit_code": 0, "experiment": "p5b-combo-lipo-s1", "key": "p5b_combo_lipo_s1", "pool": "res-gpu0", "run_id": "p5b-combo-lipo-s1-20261102-033917-182815cf", "seed": 1, "state": "completed"}, {"arm": "combo_chem_contrib", "dataset": "Lipophilicity", "elapsed_seconds": 377.2, "exit_code": 0, "experiment": "p4b-combo-lipo123", "key": "p4b_combo_lipo123", "pool": "res-gpu0", "run_id": "p4b-combo-lipo123-20261102-034553-f13e0663", "split": "lipo-repeat:123", "state": "completed"}, {"arm": "combo_chem_contrib", "dataset": "Lipophilicity", "elapsed_seconds": 435.4, "exit_code": 0, "experiment": "p5b-combo-lipo-s2", "key": "p5b_combo_lipo_s2", "pool": "res-gpu1", "run_id": "p5b-combo-lipo-s2-20261102-033917-9c1ced0a", "seed": 2, "state": "completed"}, {"arm": "combo_chem_contrib", "dataset": "Lipophilicity", "elapsed_seconds": 455.7, "exit_code": 0, "experiment": "p4b-combo-lipo124", "key": "p4b_combo_lipo124", "pool": "res-gpu1", "run_id": "p4b-combo-lipo124-20261102-034642-a27c71cf", "split": "lipo-repeat:124", "state": "completed"}]
+[2026-11-02T03:57:23] plan=p4b runs=4 queues={'res-gpu0': ['p4b_combo_tox21', 'p4b_combo_freesolv'], 'res-gpu1': ['p4b_combo_hiv', 'p4b_combo_bbbp']}
+[2026-11-02T03:57:23] DRY-RUN res-gpu0: run res p4b-combo-tox21 --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4b_combo_tox21 -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset Tox21 --split published --arm combo_chem_contrib --seed 0 --device cuda --key p4b_combo_tox21
+[2026-11-02T03:57:23] DRY-RUN res-gpu1: run res p4b-combo-hiv --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4b_combo_hiv -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset ogbg-molhiv --split published --arm combo_chem_contrib --seed 0 --device cuda --key p4b_combo_hiv --protocol hiv_short
+[2026-11-02T03:57:23] DRY-RUN res-gpu0: run res p4b-combo-freesolv --pool res-gpu0 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4b_combo_freesolv -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset FreeSolv --split published --arm combo_chem_contrib --seed 0 --device cuda --key p4b_combo_freesolv
+[2026-11-02T03:57:23] DRY-RUN res-gpu1: run res p4b-combo-bbbp --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4b_combo_bbbp -- uv run python tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py --dataset BBBP --split published --arm combo_chem_contrib --seed 0 --device cuda --key p4b_combo_bbbp
+[2026-11-02T03:57:23] SUMMARY [{"arm": "combo_chem_contrib", "dataset": "Tox21", "key": "p4b_combo_tox21", "pool": "res-gpu0", "state": "dry_run"}, {"arm": "combo_chem_contrib", "dataset": "FreeSolv", "key": "p4b_combo_freesolv", "pool": "res-gpu0", "state": "dry_run"}, {"arm": "combo_chem_contrib", "dataset": "ogbg-molhiv", "key": "p4b_combo_hiv", "pool": "res-gpu1", "protocol": "hiv_short", "state": "dry_run"}, {"arm": "combo_chem_contrib", "dataset": "BBBP", "key": "p4b_combo_bbbp", "pool": "res-gpu1", "state": "dry_run"}]
+[2026-11-02T03:57:52] plan=p4b runs=4 queues={'res-gpu0': ['p4b_combo_tox21', 'p4b_combo_freesolv'], 'res-gpu1': ['p4b_combo_hiv', 'p4b_combo_bbbp']}
+[2026-11-02T03:58:03] launched p4b_combo_tox21 on res-gpu0: follow: rr logs p4b-combo-tox21 --follow   |   rr status p4b-combo-tox21
+[2026-11-02T03:58:03] launched p4b_combo_hiv on res-gpu1: follow: rr logs p4b-combo-hiv --follow   |   rr status p4b-combo-hiv
+[2026-11-02T03:58:17] p4b_combo_hiv state=running elapsed=15s
+[2026-11-02T03:58:17] p4b_combo_tox21 state=running elapsed=15s
+[2026-11-02T04:08:19] p4b_combo_tox21 state=completed elapsed=617s
+[2026-11-02T04:08:35] p4b_combo_tox21 pull rc=0
+[2026-11-02T04:08:42] launched p4b_combo_freesolv on res-gpu0: follow: rr logs p4b-combo-freesolv --follow   |   rr status p4b-combo-freesolv
+[2026-11-02T04:08:56] p4b_combo_freesolv state=running elapsed=14s
+[2026-11-02T04:09:43] p4b_combo_freesolv state=completed elapsed=61s
+[2026-11-02T04:09:58] p4b_combo_freesolv pull rc=0
+[2026-11-02T04:11:39] p4b_combo_hiv state=completed elapsed=817s
+[2026-11-02T04:11:56] p4b_combo_hiv pull rc=0
+[2026-11-02T04:12:06] launched p4b_combo_bbbp on res-gpu1: follow: rr logs p4b-combo-bbbp --follow   |   rr status p4b-combo-bbbp
+[2026-11-02T04:12:21] p4b_combo_bbbp state=running elapsed=15s
+[2026-11-02T04:15:50] p4b_combo_bbbp state=completed elapsed=224s
+[2026-11-02T04:16:08] p4b_combo_bbbp pull rc=0
+[2026-11-02T04:16:08] SUMMARY [{"arm": "combo_chem_contrib", "dataset": "Tox21", "elapsed_seconds": 632.2, "exit_code": 0, "experiment": "p4b-combo-tox21", "key": "p4b_combo_tox21", "pool": "res-gpu0", "run_id": "p4b-combo-tox21-20261102-035757-28c24344", "state": "completed"}, {"arm": "combo_chem_contrib", "dataset": "FreeSolv", "elapsed_seconds": 76.2, "exit_code": 0, "experiment": "p4b-combo-freesolv", "key": "p4b_combo_freesolv", "pool": "res-gpu0", "run_id": "p4b-combo-freesolv-20261102-040838-a0e7f86e", "state": "completed"}, {"arm": "combo_chem_contrib", "dataset": "ogbg-molhiv", "elapsed_seconds": 833.8, "exit_code": 0, "experiment": "p4b-combo-hiv", "key": "p4b_combo_hiv", "pool": "res-gpu1", "protocol": "hiv_short", "run_id": "p4b-combo-hiv-20261102-035757-9785fef5", "state": "completed"}, {"arm": "combo_chem_contrib", "dataset": "BBBP", "elapsed_seconds": 242.5, "exit_code": 0, "experiment": "p4b-combo-bbbp", "key": "p4b_combo_bbbp", "pool": "res-gpu1", "run_id": "p4b-combo-bbbp-20261102-041200-75f899d1", "state": "completed"}]

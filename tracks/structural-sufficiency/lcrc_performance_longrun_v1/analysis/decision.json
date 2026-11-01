@@ -1,0 +1,40 @@
+{
+  "schema": "lcrc-decision/v1",
+  "round_id": "lcrc-performance-longrun-v1",
+  "verdict": "NO_LCRC_B_SIGNAL_THIS_ROUND",
+  "case": "E",
+  "lcirc_b_named": null,
+  "summary": "No single arm or combination improves both Validation and Test on at least two anchors with a stable, non-trivial effect. The strongest result is a Lipophilicity-specific combo (chem8+multicontrib): five runs, mean Test RMSE 0.5429 vs 0.5620 BASE, all five Test deltas negative. It is not promoted to LCRC-B because it is a single-dataset gain and regresses BACE, ESOL and HIV.",
+  "strongest_specialist": {
+    "arm": "combo_chem_contrib",
+    "dataset": "Lipophilicity",
+    "n_runs": 5,
+    "runs": ["p2b_combo_chem_contrib_lipo", "p5b_combo_lipo_s1", "p5b_combo_lipo_s2", "p4b_combo_lipo123", "p4b_combo_lipo124"],
+    "mean_base_test_rmse": 0.56195,
+    "mean_arm_test_rmse": 0.54286,
+    "mean_test_delta": -0.01908,
+    "mean_valid_delta": -0.04846,
+    "all_test_deltas_negative": true,
+    "reason_not_lcirc_b": "single dataset; BACE, ESOL and HIV regress; no multi-task consistency"
+  },
+  "strongest_single": {
+    "arm": "rhoshape",
+    "dataset": "ESOL",
+    "mean_test_delta_seeds_0_1_2": -0.03115,
+    "all_three_seeds_test_better": true,
+    "reason_not_lcirc_b": "Lipophilicity Test worsens on all three seeds (mean +0.0308); ESOL gain reverses at SCALE-M (+0.0157); no multi-task consistency"
+  },
+  "capacity_check": {
+    "scale": "M",
+    "base_params": 320230,
+    "rhoshape_params": 333030,
+    "lipophilicity": {"base_test": 0.591683, "rho_test": 0.563165, "delta": -0.028518, "both_better": true},
+    "esol": {"base_test": 0.515875, "rho_test": 0.531548, "delta": 0.015673, "both_better": false},
+    "conclusion": "capacity-dependent; no consistent architecture effect"
+  },
+  "test_policy": "DEVELOPMENT_TEST; Test never selected checkpoint, epoch, hyperparameter, width or seed",
+  "gpu_hours": 3.5,
+  "gpu_budget_hours": 15.0,
+  "n_formal_runs": 49,
+  "next_step": "Carry combo_chem_contrib forward only as a Lipophilicity specialist; for a multi-task LCRC-B, seek a combination that preserves the Lipophilicity gain without regressing BACE/ESOL/HIV."
+}
