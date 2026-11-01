@@ -90,7 +90,8 @@ def evaluate(dataset: str, *, device: torch.device, force: bool = False) -> dict
     valid_metrics = T.task_metrics(view.task, valid_raw, view.y_valid, view.target_norm)
     valid_seconds = time.perf_counter() - t_valid
     key = "rmse" if view.task == "regression" else "roc_auc"
-    if abs(float(valid_metrics[key]) - float(entry["checkpoint"]["best_metric_value"])) > 1e-9:
+    valid_repro_diff = abs(float(valid_metrics[key]) - float(entry["checkpoint"]["best_metric_value"]))
+    if valid_repro_diff > C.REPRO_TOL:
         raise SystemExit(
             f"{dataset}: reloaded Validation {key} {valid_metrics[key]} != frozen "
             f"{entry['checkpoint']['best_metric_value']}"
@@ -174,6 +175,8 @@ def evaluate(dataset: str, *, device: torch.device, force: bool = False) -> dict
             "train_cache_fingerprint_matches": True,
             "valid_cache_fingerprint_matches": True,
             "valid_metric_reproduced": True,
+            "valid_metric_reproduced_abs_diff": float(valid_repro_diff),
+            "valid_metric_reproduced_tolerance": float(C.REPRO_TOL),
             "valid_metric_reproduced_value": float(valid_metrics[key]),
             "curve_argbest_epoch": argbest,
             "best_epoch_matches_curve": True,

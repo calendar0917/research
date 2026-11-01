@@ -217,6 +217,15 @@ property of this training run) are separate frozen quantities.
 4. Test results never change an epoch, model, split, learning rate, loss,
    threshold or metric definition.
 
+Re-verification tolerance: the reload/reproduction checks compare metric values
+with an absolute tolerance of `1e-5` (`mb_common.REPRO_TOL`), because a CUDA
+forward pass is not bit-reproducible across kernel-launch orders (a 2.1e-8
+Validation-RMSE difference was observed between the training-time and the
+reloaded-checkpoint forward pass on the ESOL GPU smoke run, 2026-11-01). The
+observed difference is recorded in every `train.json` / `test_eval.json`; the
+tolerance was fixed before any formal run and is five orders of magnitude
+tighter than the effects these checks guard against.
+
 Reported: Train/Valid/Test primary metric, Test MAE/R² (regression) or Test
 PR-AUC (BACE), best epoch, parameters, GPU time, peak memory, and — separately
 — data-preprocessing time and inference throughput. CPU and GPU time are never

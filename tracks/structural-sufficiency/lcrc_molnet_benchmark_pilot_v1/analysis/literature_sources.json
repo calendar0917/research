@@ -1,0 +1,68 @@
+{
+  "by_dataset": {
+    "BACE": {
+      "grades": [
+        "B"
+      ],
+      "n": 6
+    },
+    "ESOL": {
+      "grades": [
+        "B",
+        "C"
+      ],
+      "n": 6
+    },
+    "FreeSolv": {
+      "grades": [
+        "B",
+        "C"
+      ],
+      "n": 5
+    },
+    "Lipophilicity": {
+      "grades": [
+        "B",
+        "C"
+      ],
+      "n": 5
+    }
+  },
+  "exact_match_found": false,
+  "generated_utc": "2026-11-01T10:10:57Z",
+  "grade_counts": {
+    "A": 0,
+    "B": 12,
+    "C": 10
+  },
+  "rows": 22,
+  "sources": {
+    "chemprop2019": {
+      "bytes": 2359573,
+      "citation": "Yang et al., J. Chem. Inf. Model. 59, 3370-3389 (2019) - D-MPNN / chemprop, arXiv:1904.01561v5",
+      "fetched": "2026-11-01T18:08:20Z",
+      "note": "Table 4 gives the dataset sizes (ESOL 1128, FreeSolv 642, Lipophilicity 4200, BACE 1513 - identical to the CSVs used here). The per-dataset result panels are figures, not numeric tables, so no D-MPNN scalar can be transcribed from the text; this source is therefore only used to attest the molecule counts and the split protocol (10 randomly-seeded 80:10:10 splits, scaffold split for headline results, random-split results moved to the Supporting Information).",
+      "sha256": "f95ac4b49d196bc1b63e00e75fa7dff4709bce1d6ed0967f8d6a496d35a23447",
+      "url": "https://arxiv.org/pdf/1904.01561v5"
+    },
+    "grover2020": {
+      "bytes": 2657733,
+      "citation": "Rong et al., NeurIPS 33 (2020) - GROVER, arXiv:2007.02835v2",
+      "fetched": "2026-11-01T18:07:26Z",
+      "note": "Table 1 (p. 7): classification ROC-AUC and regression RMSE with standard deviations. Sec. 4.2 and Appendix B.1 state: 'we apply the scaffold splitting for all tasks on all datasets' and 'three independent runs on three random-seeded scaffold splitting'. Split seeds are not published, so the exact indices cannot be reproduced or matched.",
+      "sha256": "d672b7f40e5cef743b19b43b6d2cfec0273b9fc98617bfeb968923f275b9ed81",
+      "url": "https://arxiv.org/pdf/2007.02835v2"
+    },
+    "molnet2018": {
+      "bytes": 242320,
+      "citation": "Wu et al., Chem. Sci. 9, 513-530 (2018) - MoleculeNet",
+      "fetched": "2026-11-01T18:05:39Z",
+      "note": "Table 1 (dataset table: split method per dataset) and Table 3 (best performance per dataset, conventional vs graph-based). No per-example split indices are published; the paper reports one number per model, not a multi-seed mean.",
+      "sha256": "f5ba3f55520c70fee1f3bd3c23eae3f2dce74cdca8d1df7c7bf0ae6400323d07",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5868307/"
+    }
+  },
+  "transcription": "values copied by hand from the fetched documents; locators give the table and row. GROVER's regression panel is a scaffold-split panel, which is why its ESOL/FreeSolv/Lipophilicity numbers are graded C against a random-split round.",
+  "verdict": "NO_EXACT_MATCH_FOUND",
+  "why": "No published source releases the per-example split indices behind its numbers, and the published random/scaffold draws are seed-dependent, so A-grade (EXACT_SPLIT_MATCH) is unreachable for these four datasets. Within-grade B comparisons are still valid for the protocol-matched rows."
+}

@@ -347,7 +347,7 @@ def train_run(
     valid_metrics = task_metrics(view.task, valid_raw, y_valid, view.target_norm)
     recheck_key = "rmse" if view.task == "regression" else "roc_auc"
     recheck_diff = abs(float(valid_metrics[recheck_key]) - float(tracker.best_metrics[recheck_key]))
-    if recheck_diff > 1e-9:
+    if recheck_diff > C.REPRO_TOL:
         raise RuntimeError(
             f"reloaded best checkpoint Validation {recheck_key} {valid_metrics[recheck_key]} != recorded "
             f"{tracker.best_metrics[recheck_key]} (diff {recheck_diff})"
@@ -398,6 +398,13 @@ def train_run(
             "init_state_hash": init_hash,
             "parameters": params_total,
             "target_norm": None if view.target_norm is None else dict(view.target_norm),
+            "best_reload_check": {
+                "metric": recheck_key,
+                "reloaded": float(valid_metrics[recheck_key]),
+                "recorded": float(tracker.best_metrics[recheck_key]),
+                "abs_diff": float(recheck_diff),
+                "tolerance": float(C.REPRO_TOL),
+            },
             "epochs_run": len(curve),
             "curve_sha256": C.sha256_file(curve_path),
             "smoke": bool(smoke),

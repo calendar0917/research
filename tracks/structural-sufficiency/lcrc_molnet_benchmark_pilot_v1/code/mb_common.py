@@ -185,6 +185,13 @@ OLD_DIRS_READ_ONLY = (
 
 #: Hard budget for this round.
 GPU_HARD_CAP_HOURS = 1.5
+# Floating-point re-verification tolerance.  A CUDA forward pass is not
+# bit-reproducible across kernel-launch orders (observed 2.1e-8 on Validation
+# RMSE between the training-time forward and the reloaded-checkpoint forward),
+# so the audit compares metrics with a 1e-5 absolute tolerance.  That is five
+# orders of magnitude tighter than any effect this audit is meant to catch
+# (wrong checkpoint, wrong split, wrong normalisation).
+REPRO_TOL = 1e-5
 
 
 # ---------------------------------------------------------------------------
@@ -352,6 +359,7 @@ __all__ = [
     "DATASETS",
     "DATASET_ORDER",
     "GPU_HARD_CAP_HOURS",
+    "REPRO_TOL",
     "utcnow",
     "sha256_file",
     "sha256_bytes",
