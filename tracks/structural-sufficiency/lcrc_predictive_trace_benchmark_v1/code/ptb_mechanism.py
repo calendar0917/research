@@ -365,7 +365,10 @@ def intervention(datasets: Sequence[str], device: str) -> dict[str, Any]:
         view = D.molecule_view(t["dataset"])
         blob = torch.load(t["path"], map_location="cpu", weights_only=False)
         state = blob.get("state_dict", blob) if isinstance(blob, Mapping) else blob
-        model = M.load_checkpoint_model(view.spec, view.train_norm, t["model"], state, device)
+        n_tasks = int(blob.get("n_tasks", 1)) if isinstance(blob, Mapping) else 1
+        model = M.load_checkpoint_model(
+            view.spec, view.train_norm, t["model"], state, device, n_tasks=n_tasks
+        )
         base = _predict_with(model, view.valid_cache, device)
         row: dict[str, Any] = {
             "dataset": t["dataset"],
