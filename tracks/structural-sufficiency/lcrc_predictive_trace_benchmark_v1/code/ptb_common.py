@@ -22,6 +22,7 @@ Reused read-only
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import platform
@@ -29,7 +30,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
 
@@ -250,6 +251,22 @@ def write_json(path: Path | str, obj: Any) -> Path:
 
 def read_json(path: Path | str) -> Any:
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def write_csv(path: Path | str, rows: Sequence[Mapping[str, Any]]) -> Path:
+    """Deterministic CSV; the header order comes from the first row."""
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    if not rows:
+        p.write_text("", encoding="utf-8")
+        return p
+    fieldnames = list(rows[0].keys())
+    with open(p, "w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({k: ("" if row.get(k) is None else row.get(k)) for k in fieldnames})
+    return p
 
 
 def track_rel(path: Path | str) -> str:
