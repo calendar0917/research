@@ -185,6 +185,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--pool-label", default="unknown")
     ap.add_argument("--only-dataset", default=None, help="restrict to one dataset (unused in formal runs)")
     ap.add_argument("--max-units", type=int, default=None)
+    ap.add_argument("--shard", type=int, default=0, help="this queue handles shard K of --shards")
+    ap.add_argument("--shards", type=int, default=1, help="split the plan across N queues by unit hash")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
 
@@ -192,6 +194,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     plan = build_plan(args.plan, protocol)
     if args.only_dataset:
         plan = [e for e in plan if f"_{args.only_dataset}_" in e["unit"]]
+    if args.shards and int(args.shards) > 1:
+        # deterministic disjoint split so two pools never train the same unit
+        def _shard_of(unit: str) -> int:
+            return int(C.sha256_text(unit)[:8], 16) % int(args.shards)
+
+        before = len(plan)
+        plan = [e for e in plan if _shard_of(e["unit"]) == int(args.shard)]
+        C.log(f"shard {args.shard}/{args.shards}: {len(plan)} of {before} planned units")
     if args.max_units:
         plan = plan[: int(args.max_units)]
 
