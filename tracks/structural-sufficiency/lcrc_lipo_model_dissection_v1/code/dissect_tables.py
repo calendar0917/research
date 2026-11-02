@@ -467,7 +467,7 @@ def cross_repeat(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     variants = [v for v in ("A0", "B5") if any(r["variant"] == v for r in rows)]
     compact = C.ANALYSIS / "compact_selection.json"
     if compact.exists():
-        chosen = C.read_json(compact).get("compact")
+        chosen = C.read_json(compact).get("selected")
         if chosen and chosen not in variants and any(r["variant"] == chosen for r in rows):
             variants.append(chosen)
     out = []

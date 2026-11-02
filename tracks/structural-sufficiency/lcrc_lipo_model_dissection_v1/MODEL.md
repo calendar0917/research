@@ -7,7 +7,11 @@
 上游 `lcrc_model.LCRC` 在 CPU 上逐位一致（见 `analysis/audit_cpu.json`）。
 
 参照点：public122 / FULL / seed0，Valid RMSE 0.7108803968，Test RMSE 0.5727470871，
-best epoch 240（旧 checkpoint，仅用于等价复播；本轮 54 个 run 全部重训）。
+best epoch 240（旧 checkpoint，仅用于等价复播；本轮 72 个 run 全部重训）。
+
+**结果索引**：分支的实验判定在 `REPORT.md`（Q1 §3、Q2 §3.4、Q3 §4、Q4 §5、COMPACT §6、跨划分 §7、
+回溯 §8）；本文件只负责「模型在算什么」。本轮唯一被购买的简化是
+**C1 = 去掉 `b_mean` 这一 96 维块**（§2.1 的 `b_mean_v = b_sum_v/deg(v)` 行），参数 247,106 → 228,674。
 
 ## 1. 数据与输入
 

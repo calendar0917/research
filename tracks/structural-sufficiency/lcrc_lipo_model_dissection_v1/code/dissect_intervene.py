@@ -624,6 +624,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--skip-b", action="store_true")
     ap.add_argument("--variant", default="A0")
     ap.add_argument("--compact", default=None, help="optional COMPACT variant for the atom tables")
+    ap.add_argument(
+        "--out-tag",
+        default=None,
+        help="write path LOO to path_loo_<tag>.json only (no figures, no TABLES.md)",
+    )
     args = ap.parse_args(argv)
     ATTR.mkdir(parents=True, exist_ok=True)
     variants = ["A0"] + ([args.compact] if args.compact and args.compact != "A0" else [])
@@ -644,7 +649,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         C.write_json(ATTR / "interventions.json", ia)
         C.log("[attrib] interventions.json written")
     paths = None
-    if not args.skip_b:
+    if not args.skip_b and args.out_tag:
+        paths = part_b(variant=args.variant)
+        C.write_json(ATTR / f"path_loo_{args.out_tag}.json", paths)
+        C.log(f"[attrib] path_loo_{args.out_tag}.json written ({args.variant})")
+    elif not args.skip_b:
         paths = part_b(variant=args.variant)
         C.write_json(ATTR / "path_loo.json", paths)
         figs = figures(paths)
