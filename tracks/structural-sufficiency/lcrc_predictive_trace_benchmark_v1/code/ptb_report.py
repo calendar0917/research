@@ -161,11 +161,15 @@ def tu_summary(tu: Sequence[Mapping[str, str]]) -> str:
     tu_stats = C.read_json(stats).get("tu_paired", []) if stats.exists() else []
     for dataset in C.TU_DATASETS:
         for model in C.MODELS:
-            rows = [r for r in tu if r.get("dataset") == dataset and r.get("model") == model and r.get("test_primary")]
+            rows = [
+                r
+                for r in tu
+                if r.get("dataset") == dataset and r.get("model") == model and r.get("test_accuracy")
+            ]
             if not rows:
                 body.append([dataset, model, "—", "—", "—", "—", "NOT_RUN_BUDGET"])
                 continue
-            vals = [float(r["test_primary"]) for r in rows]
+            vals = [float(r["test_accuracy"]) for r in rows]
             body.append(
                 [
                     dataset,
