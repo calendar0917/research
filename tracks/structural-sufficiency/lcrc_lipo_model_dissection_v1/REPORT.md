@@ -67,7 +67,7 @@ Valid MAE +0.0009，是一次**在实用性容差内的简化**；它不宣称"�
 ### 1.3 训练与评估规则（未改动）
 
 - 每个 run：`fit` = Train 3360，`monitor` = Valid 420；best-epoch 按 **Valid RMSE 严格改进**，平局保留更早 epoch。
-- 每 run 9720 optimizer steps（54/54 run 一致，`optimizer_steps=9720`）。
+- 每 run 9720 optimizer steps（**72/72 run 一致**，`optimizer_steps=9720`）；72/72 均在 CUDA 上、`git_dirty_tracked=false`。
 - 目标在 Train 标准化空间做 MSE，报告一律反标准化回 logD。
 - 参考点：Train 均值常数预测器的 **Valid RMSE = 1.1559、Test RMSE = 1.1991**（用于判断"是否学到东西"）。
 
