@@ -141,6 +141,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     A(f"* CUDA smoke：`analysis/smoke_cuda.json`，`all_passed={smoke['all_passed']}`，"
       f"device `{smoke['device']}`，{smoke['seconds']:.1f}s；三模型前向/反向/保存/重载 logits 一致，")
     A("  未读 Test。")
+    A("### 2.1 汇总阶段完整性校验（每个 run 都过）")
+    A("")
+    integ = summary["integrity"]
+    n_ok = sum(1 for v in integ.values() if v["all_ok"])
+    A(f"`analysis/summary.json` 里 {n_ok}/{len(integ)} 个 run 的 `all_ok=true`，每格 {len(next(iter(integ.values()))['checks'])} 项：")
+    A("")
+    for k in sorted(next(iter(integ.values()))["checks"]):
+        A(f"* `{k}`")
+    A("")
+    A("其中 `test_metrics_match_predictions` 从保存的 Test logits 重算 accuracy / macro-F1 / CE，")
+    A("与 `run.json` 报告值逐位或 1e-5 内一致；`checkpoint_file_hash` 与 `checkpoint_hash_matches_selection`")
+    A("把 selection.json、checkpoint 文件、磁盘文件哈希三方对齐。")
+    A("")
     A("* 跨主机一致性：本地与 `res` 各自从官方 raw 文件重建，`feature_spec_hash`、`norm_fingerprint`、")
     A("  `partition_sha256`、清洗计数、节点类型数、S2 路径数全部逐项相同（见 §3 表）。")
     A("")

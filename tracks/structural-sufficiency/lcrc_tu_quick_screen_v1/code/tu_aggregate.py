@@ -93,6 +93,27 @@ def _check_run(payload: Mapping[str, Any], dataset: str, model: str) -> dict[str
         and payload["valid_recheck"]["ce_abs_diff"] <= 1e-6
     )
     checks["deterministic_seeded"] = bool(payload["determinism"]["torch_seed"] == C.TRAINING_SEED)
+    # Recompute the reported Test metrics from the stored logits: the headline
+    # numbers must be reproducible from the prediction artefacts alone.
+    logits = np.asarray(pred["logits"], dtype=np.float64)
+    probs = np.asarray(pred["probs"], dtype=np.float64)
+    y = np.asarray(y_test, dtype=np.int64)
+    y_hat = logits.argmax(axis=1)
+    acc = float((y_hat == y).mean())
+    ce = float(-np.log(np.maximum(probs[np.arange(y.size), y].astype(np.float64), 1e-45)).mean())
+    f1s = []
+    for c in range(int(logits.shape[1])):
+        tp = float(((y == c) & (y_hat == c)).sum())
+        fp = float(((y != c) & (y_hat == c)).sum())
+        fn = float(((y == c) & (y_hat != c)).sum())
+        f1s.append((2.0 * tp / (2.0 * tp + fp + fn)) if (2.0 * tp + fp + fn) > 0 else 0.0)
+    tm = payload["test_metrics"]
+    checks["test_metrics_match_predictions"] = bool(
+        abs(acc - float(tm["accuracy"])) <= 1e-12
+        and abs(ce - float(tm["cross_entropy"])) <= 1e-5
+        and abs(float(np.mean(f1s)) - float(tm["macro_f1"])) <= 1e-12
+        and int(np.asarray(tm["confusion_matrix"]).sum()) == int(y.size)
+    )
     return {"checks": checks, "all_ok": bool(all(checks.values()))}
 
 

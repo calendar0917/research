@@ -95,6 +95,29 @@ EMA/SWA/soup、增强、SSL 或额外 loss。
   FULL/C1/GIN 每个可训练张量梯度可达 + S2 content gate。
 * CUDA smoke：`analysis/smoke_cuda.json`，`all_passed=True`，device `cuda:0`，3.9s；三模型前向/反向/保存/重载 logits 一致，
   未读 Test。
+### 2.1 汇总阶段完整性校验（每个 run 都过）
+
+`analysis/summary.json` 里 12/12 个 run 的 `all_ok=true`，每格 14 项：
+
+* `best_epoch_matches_curve`
+* `checkpoint_file_hash`
+* `checkpoint_hash_matches_selection`
+* `curve_rows_equal_epochs`
+* `deterministic_seeded`
+* `reload_valid_recheck`
+* `seed_zero`
+* `split_seed_zero`
+* `status_completed`
+* `test_evaluated_after_selection`
+* `test_gids_unique_complete`
+* `test_labels_aligned`
+* `test_metrics_match_predictions`
+* `test_prediction_rows`
+
+其中 `test_metrics_match_predictions` 从保存的 Test logits 重算 accuracy / macro-F1 / CE，
+与 `run.json` 报告值逐位或 1e-5 内一致；`checkpoint_file_hash` 与 `checkpoint_hash_matches_selection`
+把 selection.json、checkpoint 文件、磁盘文件哈希三方对齐。
+
 * 跨主机一致性：本地与 `res` 各自从官方 raw 文件重建，`feature_spec_hash`、`norm_fingerprint`、
   `partition_sha256`、清洗计数、节点类型数、S2 路径数全部逐项相同（见 §3 表）。
 
