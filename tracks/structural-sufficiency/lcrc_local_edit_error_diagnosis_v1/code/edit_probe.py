@@ -130,7 +130,7 @@ def build_dataset(model: str, seed: int, partition: str, traces, pairs, y_by_row
             {
                 "pair_id": p["pair_id"],
                 "component": p["component"],
-                "class_id": int(p["class_id"]),
+                "class_id": str(p["class_id"]),
                 "core_class": int(p["core_class"]),
                 "same_var_heavy": int(p["same_var_heavy"]),
                 "row_a": int(p["row_a"]),
@@ -156,7 +156,7 @@ def build_dataset(model: str, seed: int, partition: str, traces, pairs, y_by_row
             "LOCAL_ONLY": np.asarray([[r["dL_var"], r["dL_core"]] for r in rows], dtype=np.float64),
         },
         "y": np.asarray([r["e_delta"] for r in rows], dtype=np.float64),
-        "classes": np.asarray([r["class_id"] for r in rows], dtype=np.int64),
+        "classes": np.asarray([r["class_id"] for r in rows], dtype=object),
     }
 
 
@@ -215,7 +215,7 @@ def _design(
         onehot = np.zeros((n, len(class_ids)), dtype=np.float64)
         index = {c: i for i, c in enumerate(class_ids)}
         for i, c in enumerate(classes.tolist()):
-            j = index.get(int(c))
+            j = index.get(str(c))
             if j is not None:
                 onehot[i, j] = 1.0
         cols.append(onehot)
@@ -283,7 +283,7 @@ def fit_method(
     return {
         "method": method,
         "block": block,
-        "class_ids": [int(c) for c in class_ids],
+        "class_ids": [str(c) for c in class_ids],
         "rms": None if rms is None else [float(v) for v in rms],
         "beta": [float(v) for v in beta],
         "n_fit_pairs": int(idx.size),
@@ -409,7 +409,7 @@ def stage_fit(models: Sequence[str], seeds: Sequence[int]) -> dict[str, Any]:
                 f"local_only={cv['LOCAL_ONLY']['component_equal_weight_mae']:.4f}"
             )
     payload["diagnose_class_coverage"] = {
-        "n_classes": len({int(p["class_id"]) for p in pairs if p["partition"] == "diagnose"}),
+        "n_classes": len({str(p["class_id"]) for p in pairs if p["partition"] == "diagnose"}),
     }
     C.write_json(PROBE_FREEZE, payload)
     C.log(f"probe frozen -> {C.track_rel(PROBE_FREEZE)}")
@@ -833,7 +833,7 @@ def _gauge_stability(frozen, audit, pairs, traces, n_boot: int) -> dict[str, Any
         rms = np.asarray(probe["rms"], dtype=np.float64)
         class_ids = probe["class_ids"]
         beta = np.asarray(probe["beta"], dtype=np.float64)
-        classes = np.asarray([p["class_id"] for p in meta_pairs], dtype=np.int64)
+        classes = np.asarray([p["class_id"] for p in meta_pairs], dtype=object)
         y = np.asarray([p["e_delta"] for p in meta_pairs], dtype=np.float64)
         shifted = np.stack([dL_var_s / (rms[0] if rms[0] > 0 else 1.0),
                             dL_core_s / (rms[1] if rms[1] > 0 else 1.0),
@@ -878,7 +878,7 @@ def _audit_ds(unit: Mapping[str, Any], traces) -> dict[str, Any]:
         "components": np.asarray([p["component"] for p in rows], dtype=object),
         "X_cont": {"TRACE": np.asarray(X, dtype=np.float64)},
         "y": np.asarray([p["e_delta"] for p in rows], dtype=np.float64),
-        "classes": np.asarray([p["class_id"] for p in rows], dtype=np.int64),
+        "classes": np.asarray([p["class_id"] for p in rows], dtype=object),
     }
 
 
