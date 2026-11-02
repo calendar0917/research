@@ -836,7 +836,15 @@ def _gauge_stability(frozen, audit, pairs, traces, n_boot: int) -> dict[str, Any
         shifted = np.stack([dL_var_s / (rms[0] if rms[0] > 0 else 1.0),
                             dL_core_s / (rms[1] if rms[1] > 0 else 1.0),
                             dR_s / (rms[2] if rms[2] > 0 else 1.0)], axis=1)
-        pred_shift = predict("TRACE", shifted, None, classes, class_ids, beta)
+        onehot = np.zeros((classes.size, len(class_ids)), dtype=np.float64)
+        index = {str(c): i for i, c in enumerate(class_ids)}
+        for i, c in enumerate(classes.tolist()):
+            j = index.get(str(c))
+            if j is not None:
+                onehot[i, j] = 1.0
+        if onehot.shape[1] + shifted.shape[1] != beta.size:
+            raise RuntimeError("gauge design width does not match the frozen coefficients")
+        pred_shift = np.concatenate([onehot, shifted], axis=1) @ beta
         err_shift = y - pred_shift
         orig = np.asarray(unit["residuals"]["TRACE"], dtype=np.float64)
         # the same/different-n_heavy subset split
