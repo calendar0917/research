@@ -99,6 +99,11 @@ def main(argv=None) -> int:
             "labels_scope": src["labels_scope"],
         }
 
+    # capture provenance before writing any output, so the record describes the
+    # tree the protocol was generated from (not the pending outputs of this run)
+    git_commit = C.git_commit()
+    git_dirty = C.git_dirty()
+
     variants = variant_payload()
     C.write_json(C.CONFIGS / "variants.json", variants)
     matrix = build_run_matrix(args.compact)
@@ -118,8 +123,8 @@ def main(argv=None) -> int:
         "created_utc": C.utcnow(),
         "protocol_id": C.PROTOCOL_ID,
         "round_id": C.ROUND_ID,
-        "git_commit": C.git_commit(),
-        "git_dirty_tracked": C.git_dirty(),
+        "git_commit": git_commit,
+        "git_dirty_tracked": git_dirty,
         "protocol_md": {
             "path": C.track_rel(protocol_md),
             "sha256": C.sha256_file(protocol_md) if protocol_md.exists() else None,
