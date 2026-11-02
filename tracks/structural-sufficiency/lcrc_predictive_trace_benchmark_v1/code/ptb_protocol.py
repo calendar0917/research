@@ -42,10 +42,14 @@ def project_molecule(rows, factor: float) -> dict[str, Any]:
     total = 0.0
     for dataset in C.MOLECULE_ORDER:
         epochs = int(C.MOLECULE_DATASETS[dataset]["epochs"])
+        # conservative: use the slower of the two variants for both, because a
+        # single 3-epoch measurement can be biased by CUDA warm-up
+        epoch_s = max(float(rows[("molecule", dataset, m)]["mean_epoch_seconds"]) for m in C.MODELS)
+        overhead = max(
+            max(float(rows[("molecule", dataset, m)]["process_wall_seconds"]) - float(rows[("molecule", dataset, m)]["train_wall_seconds"]), 0.0)
+            for m in C.MODELS
+        )
         for model in C.MODELS:
-            row = rows[("molecule", dataset, model)]
-            epoch_s = float(row["mean_epoch_seconds"])
-            overhead = max(float(row["process_wall_seconds"]) - float(row["train_wall_seconds"]), 0.0)
             unit_h = (epoch_s * epochs + overhead) / 3600.0
             per_unit[f"{dataset}:{model}"] = {
                 "mean_epoch_seconds": epoch_s,
@@ -68,10 +72,12 @@ def project_tu(rows, scheme: Mapping[str, Any], factor: float, cache_build_by_da
     n_splits = int(scheme["n_splits"])
     seeds = tuple(scheme["seeds"])
     for dataset in C.TU_DATASETS:
+        epoch_s = max(float(rows[("tu", dataset, m)]["mean_epoch_seconds"]) for m in C.MODELS)
+        overhead = max(
+            max(float(rows[("tu", dataset, m)]["process_wall_seconds"]) - float(rows[("tu", dataset, m)]["train_wall_seconds"]), 0.0)
+            for m in C.MODELS
+        )
         for model in C.MODELS:
-            row = rows[("tu", dataset, model)]
-            epoch_s = float(row["mean_epoch_seconds"])
-            overhead = max(float(row["process_wall_seconds"]) - float(row["train_wall_seconds"]), 0.0)
             unit_h = (epoch_s * int(C.TU_EPOCHS) + overhead) / 3600.0
             n_units = n_splits * len(seeds)
             per_unit[f"{dataset}:{model}"] = {

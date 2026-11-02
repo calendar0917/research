@@ -50,12 +50,18 @@ def _tu_per_unit(protocol: Mapping[str, Any]) -> dict[str, float]:
     scheme = protocol["tu_experiment"]["scheme"]
     total = 0.0
     per: dict[str, float] = {}
+    by_dataset: dict[str, float] = {}
     for row in payload["rows"]:
         if row["family"] != "tu":
             continue
         epoch_s = float(row["mean_epoch_seconds"])
         overhead = max(float(row["process_wall_seconds"]) - float(row["train_wall_seconds"]), 0.0)
         hours = (epoch_s * int(C.TU_EPOCHS) + overhead) / 3600.0 * float(C.COST_SAFETY_FACTOR)
+        by_dataset[row["dataset"]] = max(by_dataset.get(row["dataset"], 0.0), hours)
+    for row in payload["rows"]:
+        if row["family"] != "tu":
+            continue
+        hours = by_dataset[row["dataset"]]
         for fold in range(int(scheme["n_splits"])):
             for seed in scheme["seeds"]:
                 per[C.tu_run_name(row["dataset"], row["model"], fold, int(seed))] = hours
