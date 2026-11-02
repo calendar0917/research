@@ -1,0 +1,321 @@
+{
+  "all_passed": true,
+  "created_utc": "2026-11-02T16:27:52Z",
+  "dataset_for_cache_gates": "ESOL",
+  "env": {
+    "cuda_available": false,
+    "hostname": "main",
+    "numpy": "2.1.3",
+    "python": "3.12.15",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "gates": [
+    {
+      "checks": {
+        "A0_local_input_cols": 529,
+        "A0_parameters_single_task": 247106,
+        "A0_parameters_tox21": 248536,
+        "A0_shared_state_equal_to_full": true,
+        "C1_local_input_cols": 433,
+        "C1_parameters_single_task": 228674,
+        "C1_parameters_tox21": 230104,
+        "C1_shared_state_equal_to_full": true,
+        "c1_columns_equal_full_minus_b_mean": true,
+        "deleted_block_parameters": 18432,
+        "delta_single_task": 18432,
+        "delta_tox21": 18432,
+        "n_columns_removed": 96
+      },
+      "detail": "A0 247106 / C1 228674 / delta 18432 (single and Tox21)",
+      "gate": "params_and_columns",
+      "passed": true
+    },
+    {
+      "checks": {
+        "max_abs_delta_vs_frozen_predictions": 1.430511474609375e-06,
+        "n": 420,
+        "reference": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/runs/Lipophilicity_s0",
+        "reference_checkpoint_sha256": "b1dd1f5ad76665df0772ca252a582b424336a4fdd990725743073301227e2663",
+        "tolerance": 1e-05
+      },
+      "detail": "A0 re-implementation reproduces the frozen upstream Lipophilicity seed-0 Validation predictions",
+      "gate": "frozen_replay",
+      "passed": true
+    },
+    {
+      "checks": {
+        "A0_dropout_calls_per_forward": 1,
+        "A0_dropout_p": 0.1,
+        "A0_eval_deterministic_max_delta": 0.0,
+        "A0_nn_dropout_invocations_per_forward": 1,
+        "A0_train_stochastic_max_delta": 0.34250450134277344,
+        "C1_dropout_calls_per_forward": 1,
+        "C1_dropout_p": 0.1,
+        "C1_eval_deterministic_max_delta": 0.0,
+        "C1_nn_dropout_invocations_per_forward": 1,
+        "C1_train_stochastic_max_delta": 0.5782628059387207
+      },
+      "detail": "dropout runs once per forward on the shared h and is the identity in eval",
+      "gate": "dropout_semantics",
+      "passed": true
+    },
+    {
+      "checks": {
+        "A0_max_abs_prediction_delta": 9.5367431640625e-07,
+        "A0_per_molecule": [
+          9.5367431640625e-07,
+          2.384185791015625e-07,
+          2.384185791015625e-07,
+          4.76837158203125e-07,
+          2.384185791015625e-07
+        ],
+        "C1_max_abs_prediction_delta": 9.5367431640625e-07,
+        "C1_per_molecule": [
+          4.76837158203125e-07,
+          7.152557373046875e-07,
+          2.384185791015625e-07,
+          9.5367431640625e-07,
+          4.76837158203125e-07
+        ]
+      },
+      "detail": "atom renumbering leaves the prediction unchanged",
+      "gate": "renumbering_invariance",
+      "passed": true
+    },
+    {
+      "checks": {
+        "A0_batch_vs_single_max_delta": 2.384185791015625e-07,
+        "A0_batch_vs_split_max_delta": 2.384185791015625e-07,
+        "A0_order_permutation_max_delta": 0.0,
+        "C1_batch_vs_single_max_delta": 4.76837158203125e-07,
+        "C1_batch_vs_split_max_delta": 5.960464477539063e-08,
+        "C1_order_permutation_max_delta": 0.0
+      },
+      "detail": "batch merge/split and graph order do not change per-graph predictions",
+      "gate": "batching_and_isolation",
+      "passed": true
+    },
+    {
+      "checks": {
+        "n_atoms": 9,
+        "n_bonds": 10,
+        "n_s2_records": 28,
+        "s1_equal_bruteforce": true,
+        "s2_count_equal": true,
+        "s2_per_root_counts_equal_deg_minus_one_sum": true,
+        "s2_records_equal_with_closure_flag": true
+      },
+      "detail": "S1/S2 records match independent brute-force enumeration",
+      "gate": "s1_s2_path_construction",
+      "passed": true
+    },
+    {
+      "checks": {
+        "A0_ESOL_native_missing_grad": [],
+        "A0_ESOL_native_n_trainable": 31,
+        "A0_ESOL_native_zero_grad": [],
+        "A0_Tox21_12task_missing_grad": [],
+        "A0_Tox21_12task_n_trainable": 31,
+        "A0_Tox21_12task_zero_grad": [],
+        "C1_ESOL_native_missing_grad": [],
+        "C1_ESOL_native_n_trainable": 31,
+        "C1_ESOL_native_zero_grad": [],
+        "C1_Tox21_12task_missing_grad": [],
+        "C1_Tox21_12task_n_trainable": 31,
+        "C1_Tox21_12task_zero_grad": []
+      },
+      "detail": "every trainable parameter receives a non-zero gradient",
+      "gate": "gradient_reachability",
+      "passed": true
+    },
+    {
+      "checks": {
+        "global_mean_matches_train": true,
+        "scalar_mean_matches_train": true,
+        "target_mean_matches_train": true,
+        "target_norm_valid_or_test_used": false,
+        "target_scale_matches_train": true,
+        "train_norm_valid_or_test_used": false,
+        "trainer_never_calls_test_loader": true,
+        "trainer_never_imports_test_split": true
+      },
+      "detail": "standardisation constants come from the Train part only; the trainer cannot read Test",
+      "gate": "norm_train_only_and_test_isolation(ESOL)",
+      "passed": true
+    },
+    {
+      "checks": {
+        "abs_delta": 0.0,
+        "best_epoch": 1,
+        "max_train_test_grad_path": "checkpoint reloaded from disk, no Test data touched",
+        "recorded_rmse": 4.28592531593275,
+        "reloaded_rmse": 4.28592531593275
+      },
+      "detail": "saved best checkpoint reproduces the Validation metric",
+      "gate": "checkpoint_reload_reproduces_validation",
+      "passed": true
+    },
+    {
+      "checks": {
+        "feature_multiset_equal": true,
+        "global_equal": true,
+        "max_abs_logit_delta": 3.427267074584961e-07,
+        "permutation": [
+          3,
+          0,
+          5,
+          1,
+          4,
+          2
+        ],
+        "scalar_multiset_equal": true
+      },
+      "detail": "node renumbering leaves the feature multiset, global vector and logits unchanged",
+      "gate": "tu_permutation_invariance",
+      "passed": true
+    },
+    {
+      "checks": {
+        "full_batch_vs_single_graph_max_delta": 3.948807716369629e-07,
+        "full_batch_vs_two_sub_batches_max_delta": 3.8743019104003906e-07,
+        "gin_batch_vs_two_sub_batches_max_delta": 6.854534149169922e-07,
+        "shapes": {
+          "c1_3class": [
+            1,
+            3
+          ],
+          "full_2class": [
+            1,
+            2
+          ],
+          "full_3class": [
+            1,
+            3
+          ],
+          "gin_3class": [
+            1,
+            3
+          ]
+        }
+      },
+      "detail": "batch split/merge consistency for FULL and GIN; 2-class and 3-class logits have C columns",
+      "gate": "tu_batching_and_shapes",
+      "passed": true
+    },
+    {
+      "checks": {
+        "c1_has_b_mean": false,
+        "c1_local_layout": {
+          "a": [
+            0,
+            96
+          ],
+          "atom_scalar": [
+            424,
+            433
+          ],
+          "b_sum": [
+            96,
+            192
+          ],
+          "s1_joint": [
+            192,
+            224
+          ],
+          "s2_closure": [
+            320,
+            328
+          ],
+          "s2_content": [
+            328,
+            424
+          ],
+          "s2_end": [
+            256,
+            288
+          ],
+          "s2_joint": [
+            288,
+            320
+          ],
+          "s2_type": [
+            224,
+            256
+          ]
+        },
+        "deleted_block": [
+          192,
+          288
+        ],
+        "deleted_columns": 96,
+        "expected_param_diff": 18432,
+        "full_has_b_mean": true,
+        "full_local_layout": {
+          "a": [
+            0,
+            96
+          ],
+          "atom_scalar": [
+            520,
+            529
+          ],
+          "b_mean": [
+            192,
+            288
+          ],
+          "b_sum": [
+            96,
+            192
+          ],
+          "s1_joint": [
+            288,
+            320
+          ],
+          "s2_closure": [
+            416,
+            424
+          ],
+          "s2_content": [
+            424,
+            520
+          ],
+          "s2_end": [
+            352,
+            384
+          ],
+          "s2_joint": [
+            384,
+            416
+          ],
+          "s2_type": [
+            320,
+            352
+          ]
+        },
+        "full_vs_c1_max_abs_logit_delta": 0.04654534161090851,
+        "local_input_dim_c1": 433,
+        "local_input_dim_full": 529,
+        "n_shared_tensors_checked": 35,
+        "param_diff": 18432,
+        "shared_params_bitwise_equal": true,
+        "zeroed_bmean_full_vs_c1_max_abs_logit_delta": 2.980232238769531e-07
+      },
+      "detail": "FULL/C1 share every init tensor; C1 deletes exactly the b_mean block",
+      "gate": "tu_shared_init",
+      "passed": true
+    },
+    {
+      "checks": {},
+      "detail": "",
+      "gate": "tu_gradients",
+      "passed": true
+    }
+  ],
+  "git_commit": "9628ab4ca901aeecd2957b9e2c172a9fab485f7d",
+  "git_dirty_tracked": false,
+  "n_gates": 13,
+  "n_passed": 13,
+  "round_id": "lcrc-predictive-trace-benchmark-v1",
+  "schema": "lcrc-ptb-correctness-gates-v1"
+}
