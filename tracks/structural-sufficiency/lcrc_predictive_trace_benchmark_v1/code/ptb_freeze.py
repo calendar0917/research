@@ -166,6 +166,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         payload["updated_utc"] = C.utcnow()
         payload["frozen_datasets"] = [d for d, r in payload["datasets"].items() if r["frozen"]]
         C.write_json(path, payload)
+        back = C.read_json(path)
+        for dataset in datasets:
+            if back["datasets"][dataset]["n_units_present"] != payload["datasets"][dataset]["n_units_present"]:
+                raise RuntimeError(f"{dataset}: manifest write did not persist")
+        C.log(f"manifest written: {sorted(back['frozen_datasets'])}")
     if args.tu:
         protocol = C.read_json(args.protocol)
         payload = tu_manifest(protocol)
