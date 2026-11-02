@@ -15,8 +15,8 @@ Prompt 为准；实现不得自行替换。
 |---|---|---|
 | 变体定义（18 个） | `configs/variants.json`、`code/dissect_common.py::VARIANT_DEFS` | `analysis/protocol_freeze.json` |
 | run matrix（54 + ≤18） | `configs/run_matrix.json` | 同上 |
-| 数据源与 3 个 repeat 的字节哈希 | `code/dissect_source.py`、`code/dissect_common.py` | `analysis/protocol_freeze.json`、`analysis/cache_manifest.json` |
-| 结构 cache（label-free，可重建） | `code/dissect_data.py`、`code/dissect_prepare.py` | `analysis/cache_manifest.json` |
+| 数据源与 3 个 repeat 的字节哈希 | `code/dissect_source.py`、`code/dissect_common.py` | `analysis/protocol_freeze.json` |
+| 结构 cache（label-free，可重建） | `code/dissect_data.py`、`code/dissect_prepare.py` | `cache/manifest.json`（gitignored；指纹亦写入每个 run 的 `train.json`） |
 | FULL 行为等价重构 + 变体裁剪 | `code/dissect_model.py` | `analysis/audit_cpu.json` |
 | CPU 高风险核验 | `code/dissect_audit.py` | `analysis/audit_cpu.json` |
 | 单run训练（R3, 9720 updates） | `code/dissect_train.py` | `runs/<repeat>_<variant>_s<seed>/train.json` |

@@ -84,8 +84,8 @@ def main(argv=None) -> int:
         "pilot_repeat122_crosscheck": pilot_check,
         "pilot_crosscheck_all_identical": all(v.get("identical", False) for v in pilot_check.values()),
     }
-    C.write_json(C.ANALYSIS / "cache_manifest.json", payload)
-    C.log("wrote cache_manifest.json")
+    C.write_json(C.CACHE / "manifest.json", payload)
+    C.log("wrote cache/manifest.json")
     return 0
 
 
