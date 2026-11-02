@@ -1,0 +1,450 @@
+{
+  "cache_policy": "structure caches are rebuildable and gitignored; their content fingerprints are recorded above so a rebuild can be checked",
+  "code_hashes": {
+    "code/ptb_aggregate.py": "c5da27c6ad02365b709ebe9308658da01b193b2a438ced1114958298f85ed6a0",
+    "code/ptb_common.py": "6076ff50263f208e06d1a803719474fe788dbbe54e100f4aa155b4ec740728c5",
+    "code/ptb_cost.py": "7e1c018d3e04cc49a1a908ed8a411652d4d34841a40d8dda6408db3ae389d517",
+    "code/ptb_data.py": "358f29f5b8f3c29c93695854ca024515724233fd254e4cd9fe584ba494541a63",
+    "code/ptb_efficiency.py": "a6225beca30c79a237a340409e3c3c27d954fd0f48fe6aa85f88193b3280bbe7",
+    "code/ptb_freeze.py": "562bdaad19ed74fa57e75bb2b1c7052919265331dad22fae73e3c91a1e23b413",
+    "code/ptb_gates.py": "835f5093daaee80362217ebf5c015dd9bc3b6de139d4b71f104d3c67afc4e450",
+    "code/ptb_mechanism.py": "eec13e751d1e036036dc7060de79b9104476250c6d1ad033c06a8e6589321741",
+    "code/ptb_model.py": "57cd0405c3b53f73b51333c0b11ccb273b9769c09937f0fb504c4628401c04b5",
+    "code/ptb_protocol.py": "4a074c6e3b76b5e7d4fccebddce75c7166de412906f9dd7b0e4968493e5cff8a",
+    "code/ptb_queue.py": "4a67976d5ffaf91b180d1f9f011e6d8dd0ef2a79b0ef15513516a20d16912526",
+    "code/ptb_report.py": "791feec04867b188e58c0e84d42daf046e97de472f6bf161522783efba99a84d",
+    "code/ptb_score.py": "4bdbb8ed2114539a5aac5684bf891df4c6589e70e63eba3bb00ee68527a6d990",
+    "code/ptb_source_manifest.py": "3e00c09dc543cdd968b67dde362d0da9873c314474e5fe094fb77e2b8605b472",
+    "code/ptb_train_mol.py": "428000c4074922849014af79f3c624304b46459e45a5f6d9b2b7f0ada44a6d2a",
+    "code/ptb_train_tu.py": "2ebb7dee606a064d69f4717fd25a1e05260ddad63003e80fce65f5de00a0139d",
+    "reused/dissect/dissect_common.py": "31fb40f27d108b2e946663a690137a396e8174013aa3d952b49ee228333a8482",
+    "reused/dissect/dissect_data.py": "dc1ed6a32f64463a48d1f3c7bec74a9932da39000f2da6e16a909abec04e06c2",
+    "reused/dissect/dissect_model.py": "22fc95b3d908c02b240ab6b7638832acf4afc96dbfddd48f65db71c1d588be1a",
+    "reused/dissect/dissect_source.py": "1b3dd8a96532b29f4adb1069edb86bbbe1d2355ff32338ec82a3a026c7a742e5",
+    "reused/molnet_v2/mb2_common.py": "a8db1c0f2c28031792fc25673e39ce7404cbf884250592f7bdd33a1005e3e45c",
+    "reused/molnet_v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+    "reused/molnet_v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+    "reused/molnet_v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4",
+    "reused/molnet_v2/mb2_source.py": "5b0b9f6e77457f4e1e15c6771b8d851b5aaa3015714cf9b077bb6ba6eaf35dc7",
+    "reused/prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+    "reused/prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+    "reused/prep/molecular_graph.py": "59a49724c890efc5aa41f7eed8cb2d848fb782aab768ce990864d990cbbe46db",
+    "reused/tu/tu_adapter.py": "7cc68db216dc84fbcd6d6151e7b6f1e7231929470c0e4fcdf57bbe5fb3e5c837",
+    "reused/tu/tu_common.py": "f0c2490f50306dd4ca0bb6179aa0b46cbaf16edf1638dd45333971590d08a6ac",
+    "reused/tu/tu_data.py": "617db6a40366be7f8e386ece37f673c1bf6d007868f2dea268fad1734c485cb1",
+    "reused/tu/tu_model.py": "c8c216f5bf78a1744da23ffb16bfc421d69782fcac3d9976c21ec49b8b0ba325"
+  },
+  "created_utc": "2026-11-02T22:15:20Z",
+  "datasets": {
+    "BACE": {
+      "epochs": 360,
+      "label_columns": [
+        "Class"
+      ],
+      "labels_in_structure_cache": false,
+      "n_train": 1210,
+      "n_valid": 151,
+      "primary_metric": "roc_auc",
+      "rows": {
+        "test": {
+          "n": 152,
+          "sha256": "ea331b0b94e8191547951dbe385e701e3155419d4e9c724912f7f73e1ef99256"
+        },
+        "train": {
+          "n": 1210,
+          "sha256": "5f36ea5e5ae6a8ebf451a831c4e41b944daa85ad66a0b92498dad282c60db51e"
+        },
+        "valid": {
+          "n": 151,
+          "sha256": "b44a8e9e69c9bb9a1a657f6ee0ca94a49e526d59256e54bca1fbc794cd81b23b"
+        }
+      },
+      "source": {
+        "csv_sha256": "5f0f81e1069babe3eb27362b3b49069b28f3f5cc0315cd10b732fd2b112ae726",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "BACE.scaffold122.ind.pkl",
+        "split_file_sha256": "fe93d61fcf3a0a2615dfe07c8d5c0cbc5ee2c4da753bc7eda9aa8ccefd6415eb",
+        "split_method": "scaffold",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "5f36ea5e5ae6a8ebf451a831c4e41b944daa85ad66a0b92498dad282c60db51e",
+          "b44a8e9e69c9bb9a1a657f6ee0ca94a49e526d59256e54bca1fbc794cd81b23b",
+          "ea331b0b94e8191547951dbe385e701e3155419d4e9c724912f7f73e1ef99256"
+        ]
+      },
+      "task": "binary",
+      "train_cache_fingerprint": "3939fb6de3a6cd8190abca77c56ad384806f5853a006774d2aeffa3652e77f3a",
+      "train_norm_fingerprint": "2b31a7b96e4d60894230fa62aa6558b718a884f5c843a993a15c6a10fb385e41",
+      "units": "binary class (1 = active BACE-1 inhibitor)",
+      "valid_cache_fingerprint": "0ecd30b6a81fa6cc9bc5d3af6db63293a0a936fa46e1ad9f16daa0542d099867"
+    },
+    "BBBP": {
+      "epochs": 360,
+      "label_columns": [
+        "p_np"
+      ],
+      "labels_in_structure_cache": false,
+      "n_train": 1631,
+      "n_valid": 204,
+      "primary_metric": "roc_auc",
+      "rows": {
+        "test": {
+          "n": 204,
+          "sha256": "7b9d07d3f181236ac9a5a39266378f41ee7a5617962ef60e86ccd649cbf7b349"
+        },
+        "train": {
+          "n": 1631,
+          "sha256": "8828006bcbb76cac6dc6bbf4ab6b5eef0c2b31ad389c979b134d7fe5afc7003a"
+        },
+        "valid": {
+          "n": 204,
+          "sha256": "bebd77a6e278c180abf444b701d0b43ee67cf5aed0635768bffaa4f300a808d2"
+        }
+      },
+      "source": {
+        "csv_sha256": "698918057e09753782f4307c177b2af8f2eb31b63bc77198ec37d8c44c38cd7e",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "BBBP.scaffold122.ind.pkl",
+        "split_file_sha256": "b132bccdc116cfeac541e3f6bf3949fbefccc12d58193495fe7331a199d1d325",
+        "split_method": "scaffold",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "8828006bcbb76cac6dc6bbf4ab6b5eef0c2b31ad389c979b134d7fe5afc7003a",
+          "bebd77a6e278c180abf444b701d0b43ee67cf5aed0635768bffaa4f300a808d2",
+          "7b9d07d3f181236ac9a5a39266378f41ee7a5617962ef60e86ccd649cbf7b349"
+        ]
+      },
+      "task": "binary",
+      "train_cache_fingerprint": "72c9973824ba210a975b461c8675515bf1f6448aa03849b43c1a3b9fe30eec82",
+      "train_norm_fingerprint": "2e02df4d5a9773079b84a5aa336494a30a75486b575b4ad97e46742cfcd852ec",
+      "units": "binary class (1 = blood-brain barrier permeant)",
+      "valid_cache_fingerprint": "3b60e1ae33e48079c6525f6cc837cf26e0fa0c03c9ff0d530ebce18c1dc11bdf"
+    },
+    "ESOL": {
+      "epochs": 360,
+      "label_columns": [
+        "measured log solubility in mols per litre"
+      ],
+      "labels_in_structure_cache": false,
+      "n_train": 902,
+      "n_valid": 113,
+      "primary_metric": "rmse",
+      "rows": {
+        "test": {
+          "n": 113,
+          "sha256": "fafa668780c336a6767ecef2938dd1886649689fc101b7614f59965e1204fe14"
+        },
+        "train": {
+          "n": 902,
+          "sha256": "b7459354f258ba805eb7a5012dde7a947c887d4e917dfbd2e0802e80742ece77"
+        },
+        "valid": {
+          "n": 113,
+          "sha256": "8fbc7db023f608b6b3646edb04728c2dfc6182487ea011b2e33d14111705cbb0"
+        }
+      },
+      "source": {
+        "csv_sha256": "3eb977a01fd9cf0404f95602aaf80172a167b3c61ab846382c87d655cf7b8e89",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "ESOL.random122.ind.pkl",
+        "split_file_sha256": "ebac56b86a6cad416aec254c1c30c7733409998807033c080b01a49453a2b283",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "b7459354f258ba805eb7a5012dde7a947c887d4e917dfbd2e0802e80742ece77",
+          "8fbc7db023f608b6b3646edb04728c2dfc6182487ea011b2e33d14111705cbb0",
+          "fafa668780c336a6767ecef2938dd1886649689fc101b7614f59965e1204fe14"
+        ]
+      },
+      "task": "regression",
+      "train_cache_fingerprint": "ab0e956df473bdae43243312c323f1bb6eb20b5691d80a66188ad37cc874580b",
+      "train_norm_fingerprint": "9a9b0e3ce471b3b56b99e8692c08d0accba7df52da7bc208ad6e7ecafc70bf0a",
+      "units": "logS (log10 mol/L, measured)",
+      "valid_cache_fingerprint": "d13496e9bc8137a218bcc6d8f68110ada41e6cd487294857ff1f2ed2dc2d06e4"
+    },
+    "FreeSolv": {
+      "epochs": 360,
+      "label_columns": [
+        "expt"
+      ],
+      "labels_in_structure_cache": false,
+      "n_train": 513,
+      "n_valid": 64,
+      "primary_metric": "rmse",
+      "rows": {
+        "test": {
+          "n": 65,
+          "sha256": "229542e89543781ab70caeb1fc2887272d69bc884d7a4f5e3e5420918211e4b7"
+        },
+        "train": {
+          "n": 513,
+          "sha256": "19074e5231c266bbe8b08022b9527229ac66a54c2c5d041d1b43d727764b0356"
+        },
+        "valid": {
+          "n": 64,
+          "sha256": "788218be78ee6fc58334a2e8433da578f25d2d7261c7332c3c7e6ab385cd3a16"
+        }
+      },
+      "source": {
+        "csv_sha256": "46f3df3dbfc65282bdbe01d9d653c625fb8db4ea9528e39c75e8837e04a9ca5a",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "FreeSolv.random122.ind.pkl",
+        "split_file_sha256": "8a93ced2f63e6c794348ee0de4e6bb64b2d9b96e8c7c1c7322c75f1d5d545942",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "19074e5231c266bbe8b08022b9527229ac66a54c2c5d041d1b43d727764b0356",
+          "788218be78ee6fc58334a2e8433da578f25d2d7261c7332c3c7e6ab385cd3a16",
+          "229542e89543781ab70caeb1fc2887272d69bc884d7a4f5e3e5420918211e4b7"
+        ]
+      },
+      "task": "regression",
+      "train_cache_fingerprint": "bcf4f2d4018e4cd42439a62aec08babc96e68edb8894b7036ad2cd69d6b01a34",
+      "train_norm_fingerprint": "48f007818d886d99e9e6c459a428a02ebdee7b4fba2413e08cb89eaddcea750b",
+      "units": "kcal/mol (experimental hydration free energy)",
+      "valid_cache_fingerprint": "ba219a3ec37ef9e0403c81a7d522a888419e57e52d6a17f0674a5a659c910e58"
+    },
+    "Tox21": {
+      "epochs": 360,
+      "label_columns": [
+        "NR-AR",
+        "NR-AR-LBD",
+        "NR-AhR",
+        "NR-Aromatase",
+        "NR-ER",
+        "NR-ER-LBD",
+        "NR-PPAR-gamma",
+        "SR-ARE",
+        "SR-ATAD5",
+        "SR-HSE",
+        "SR-MMP",
+        "SR-p53"
+      ],
+      "labels_in_structure_cache": false,
+      "n_train": 6264,
+      "n_valid": 783,
+      "primary_metric": "macro_roc_auc",
+      "rows": {
+        "test": {
+          "n": 784,
+          "sha256": "f4fcd38d77a4563bcaf8da872cfe4bc68099620842d9c24ef5aa6f5d407304d4"
+        },
+        "train": {
+          "n": 6264,
+          "sha256": "e3b54f6df86d799932f84a4126ab107d4f1dedbf616b1c677ef5648f308e79e1"
+        },
+        "valid": {
+          "n": 783,
+          "sha256": "79b3582fc40c9adefd461749ed199663bb2e354119ea8dade0be59681e8b5b40"
+        }
+      },
+      "source": {
+        "csv_sha256": "827b799dc6a18ddc73d9a196355e807e831ad5b630405d014c309ded2ea8686a",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Tox21.random122.ind.pkl",
+        "split_file_sha256": "d6694f6661d0ef2f9f0ab555be785f9441971caa84d46c5da2ac9c80a1b05404",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "e3b54f6df86d799932f84a4126ab107d4f1dedbf616b1c677ef5648f308e79e1",
+          "79b3582fc40c9adefd461749ed199663bb2e354119ea8dade0be59681e8b5b40",
+          "f4fcd38d77a4563bcaf8da872cfe4bc68099620842d9c24ef5aa6f5d407304d4"
+        ]
+      },
+      "task": "multitask",
+      "train_cache_fingerprint": "1e4be94ce528e742dd803209509ab0468fca66e9efab8d6bff60a3fa44836b9c",
+      "train_norm_fingerprint": "ec6e67b08478da4837a2daef00c71caf52c130eff3f10ed9e53c34d070022b1b",
+      "units": "12 binary toxicity endpoints; NaN = not assayed (never 0)",
+      "valid_cache_fingerprint": "05c3a902a89b12f96e76e537f88f13ca4803d58367daa8d9f71fdbe7189ba67a"
+    },
+    "ogbg-molhiv": {
+      "epochs": 100,
+      "label_columns": [
+        "HIV_active"
+      ],
+      "labels_in_structure_cache": false,
+      "n_train": 32901,
+      "n_valid": 4113,
+      "primary_metric": "roc_auc",
+      "rows": {
+        "test": {
+          "n": 4113,
+          "sha256": "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804"
+        },
+        "train": {
+          "n": 32901,
+          "sha256": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a"
+        },
+        "valid": {
+          "n": 4113,
+          "sha256": "ab298cdbd817e15ad190c7a2a73dbb59babbfb471f947b58e9a9761452ce983a"
+        }
+      },
+      "source": {
+        "csv_sha256": "306c4ad8d54fc6cd40c71da4d0561fdcc73e1188662e6992bae0dda8f65bf6d0",
+        "label_agreement": {
+          "identical": true,
+          "mismatches": 0,
+          "rows_compared": 41127
+        },
+        "ogb_release": "v1 (2020-05-04)",
+        "source_kind": "ogb",
+        "split_file": "split/scaffold/{train,valid,test}.csv.gz",
+        "split_file_sha256": "9f1e46e77897b3de3d19452cbd47c312e2844a0ec664c1c9dc897c10d12e42f0",
+        "split_method": "scaffold (OGB official)",
+        "split_repeat_index": null,
+        "split_rows_sha256": [
+          "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+          "ab298cdbd817e15ad190c7a2a73dbb59babbfb471f947b58e9a9761452ce983a",
+          "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804"
+        ]
+      },
+      "task": "binary",
+      "train_cache_fingerprint": "111d91752a6d451c6f94a6700b4df889a9d9762c90e734ef4f16e4b1a4258596",
+      "train_norm_fingerprint": "c339e63b8f1101271d908834b6df5c218c1fd6b11e21dc2fdc00bfb5f8852ca1",
+      "units": "binary class (1 = HIV active)",
+      "valid_cache_fingerprint": "478c529ecf609bbd6f5c1bd6482924eb86a4158f11e085064b1ab0c7e8028619"
+    }
+  },
+  "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+  "git_commit": "02f230636fc4e3a287b64f6445bf1429ca773ba2",
+  "git_dirty_tracked": true,
+  "reused_module_hashes": {
+    "dissect/dissect_common.py": "31fb40f27d108b2e946663a690137a396e8174013aa3d952b49ee228333a8482",
+    "dissect/dissect_data.py": "dc1ed6a32f64463a48d1f3c7bec74a9932da39000f2da6e16a909abec04e06c2",
+    "dissect/dissect_model.py": "22fc95b3d908c02b240ab6b7638832acf4afc96dbfddd48f65db71c1d588be1a",
+    "dissect/dissect_source.py": "1b3dd8a96532b29f4adb1069edb86bbbe1d2355ff32338ec82a3a026c7a742e5",
+    "molnet_v2/mb2_common.py": "a8db1c0f2c28031792fc25673e39ce7404cbf884250592f7bdd33a1005e3e45c",
+    "molnet_v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+    "molnet_v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+    "molnet_v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4",
+    "molnet_v2/mb2_source.py": "5b0b9f6e77457f4e1e15c6771b8d851b5aaa3015714cf9b077bb6ba6eaf35dc7",
+    "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+    "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+    "prep/molecular_graph.py": "59a49724c890efc5aa41f7eed8cb2d848fb782aab768ce990864d990cbbe46db",
+    "tu/tu_adapter.py": "7cc68db216dc84fbcd6d6151e7b6f1e7231929470c0e4fcdf57bbe5fb3e5c837",
+    "tu/tu_common.py": "f0c2490f50306dd4ca0bb6179aa0b46cbaf16edf1638dd45333971590d08a6ac",
+    "tu/tu_data.py": "617db6a40366be7f8e386ece37f673c1bf6d007868f2dea268fad1734c485cb1",
+    "tu/tu_model.py": "c8c216f5bf78a1744da23ffb16bfc421d69782fcac3d9976c21ec49b8b0ba325"
+  },
+  "round_id": "lcrc-predictive-trace-benchmark-v1",
+  "schema": "lcrc-ptb-source-manifest-v1",
+  "test_split_policy": "Test structure caches and Test labels are opened only by code/ptb_score.py after analysis/checkpoint_manifest.json freezes the units; the TU outer folds are scored once per unit inside the training script after the checkpoint hash is written",
+  "tu_datasets": {
+    "IMDB-BINARY": {
+      "epochs": 200,
+      "meta": {
+        "n_classes": 2,
+        "n_graphs": 1000,
+        "n_test": 100,
+        "n_train": 800,
+        "n_valid": 100,
+        "node_type": "degree"
+      },
+      "model_names": {
+        "A0": "FULL",
+        "C1": "C1"
+      }
+    },
+    "IMDB-MULTI": {
+      "epochs": 200,
+      "meta": {
+        "n_classes": 3,
+        "n_graphs": 1500,
+        "n_test": 150,
+        "n_train": 1200,
+        "n_valid": 150,
+        "node_type": "degree"
+      },
+      "model_names": {
+        "A0": "FULL",
+        "C1": "C1"
+      }
+    },
+    "NCI1": {
+      "epochs": 200,
+      "meta": {
+        "n_classes": 2,
+        "n_graphs": 4110,
+        "n_test": 411,
+        "n_train": 3288,
+        "n_valid": 411,
+        "node_type": "label"
+      },
+      "model_names": {
+        "A0": "FULL",
+        "C1": "C1"
+      }
+    },
+    "PROTEINS": {
+      "epochs": 200,
+      "meta": {
+        "n_classes": 2,
+        "n_graphs": 1113,
+        "n_test": 112,
+        "n_train": 890,
+        "n_valid": 111,
+        "node_type": "label"
+      },
+      "model_names": {
+        "A0": "FULL",
+        "C1": "C1"
+      }
+    }
+  },
+  "upstream_files": {
+    "tracks/structural-sufficiency/lcrc_lipo_mechanism_generalization_ssl_v2/analysis/cv_results_v2.json": {
+      "bytes": 98094,
+      "sha256": "afb9259b5f5c18467d54d7b177f5fcff8053831b91a98c911a330de1f76c365e"
+    },
+    "tracks/structural-sufficiency/lcrc_lipo_model_dissection_followup_v1/analysis/corrected_tables/corrected_contrasts_valid.json": {
+      "bytes": 154881,
+      "sha256": "9047ac9ed7cdc5db03a8a9c02e6979c23cfa1381bf0a6cd460af1485da71a542"
+    },
+    "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/analysis/tables/variant_means.csv": {
+      "bytes": 15496,
+      "sha256": "f499c10c566e85d5064b2ecc51c47776e6b7f6c0da9a2f6d8a9e2c3eb202ffd6"
+    },
+    "tracks/structural-sufficiency/lcrc_lipo_random42_controls_v2/analysis/validation_table.json": {
+      "bytes": 18587,
+      "sha256": "e081d74100eb0b969c2e67132735b07cf1640badaea24d0c91c8cbdddadc8a59"
+    },
+    "tracks/structural-sufficiency/lcrc_local_edit_error_diagnosis_v1/PROTOCOL.md": {
+      "bytes": 17864,
+      "sha256": "f743c24bcda52d041c7c80e79d5be8ba865e8cc6417f227ca2525a7347ecedda"
+    },
+    "tracks/structural-sufficiency/lcrc_local_edit_error_diagnosis_v1/analysis/probe_freeze.json": {
+      "bytes": 305991,
+      "sha256": "d0270da96b9d9dc2667ecc0ee3d24ecb1fdf3c2dabf08df9dd969a2880bb3791"
+    },
+    "tracks/structural-sufficiency/lcrc_local_edit_error_diagnosis_v1/analysis/probe_report.json": {
+      "bytes": 8118,
+      "sha256": "78b2fbcb018d4e13d844321a5bca2870c7586f181fdd8b9db736607d19148ba6"
+    },
+    "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/runs/Lipophilicity_s0/checkpoint.pt": {
+      "bytes": 1000610,
+      "sha256": "b1dd1f5ad76665df0772ca252a582b424336a4fdd990725743073301227e2663"
+    },
+    "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/literature_matrix.csv": {
+      "bytes": 12612,
+      "sha256": "d9287ec48254c2e328b7b154271939e2b3e2a179a050740f286c2ee87927ee98"
+    },
+    "tracks/structural-sufficiency/lcrc_tu_quick_screen_v1/code/tu_model.py": {
+      "bytes": 20286,
+      "sha256": "c8c216f5bf78a1744da23ffb16bfc421d69782fcac3d9976c21ec49b8b0ba325"
+    },
+    "tracks/structural-sufficiency/zinc_dccl_bottleneck_v1/analysis/decision.json": {
+      "bytes": 5481,
+      "sha256": "0c597321685b63c14eb5e17ac7e5094fe7a50ebde2234058f14e4af2595090c9"
+    },
+    "tracks/structural-sufficiency/zinc_error_mechanism_audit_v1/analysis/audit.json": {
+      "bytes": 201885,
+      "sha256": "cc37fff7bd2e8641db9b94cea3a5b63a2c57d3f49fc137047f222bb963aea099"
+    }
+  }
+}
