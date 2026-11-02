@@ -148,7 +148,8 @@ def molecular_rows(manifest: Mapping[str, Any]) -> list[dict[str, Any]]:
                     if k in train:
                         row[f"train_{k}"] = float(train[k])
                 if test is not None and test.get("official_ogb_roc_auc"):
-                    row["test_official_ogb_roc_auc"] = float(test["official_ogb_roc_auc"]["roc_auc"])
+                    ogb = test["official_ogb_roc_auc"]
+                    row["test_official_ogb_roc_auc"] = float(ogb.get("ogb_rocauc", ogb.get("roc_auc")))
                 task = task_of[dataset]
                 if row["test_primary"] is not None:
                     row["valid_minus_test_primary"] = float(row["valid_primary"] - row["test_primary"])
