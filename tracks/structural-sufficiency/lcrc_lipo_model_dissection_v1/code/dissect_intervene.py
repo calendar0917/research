@@ -372,6 +372,14 @@ def part_b(variant: str = "A0", seed: int = 0) -> dict[str, Any]:
                             "closure",
                         )
                     },
+                    "pred_before": pred0,
+                    "pred_after": pred1,
+                    "rho_before": rho0,
+                    "rho_after": float(a1["rho"].item() * scale),
+                    "f_root_before": float(contrib_atom0[root]),
+                    "f_root_after": float(contrib_atom0[root] + d_contrib_atom[root]),
+                    "h_root_l2_before": float(a0["h"][root].norm().item()),
+                    "h_root_l2_after": float(a1["h"][root].norm().item()),
                     "delta_pred": pred1 - pred0,
                     "delta_contrib_root": float(d_contrib_atom[root]),
                     "delta_contrib_sum": d_contrib,
@@ -594,15 +602,17 @@ def markdown(paths: Mapping[str, Any], interventions: Mapping[str, Any], fig_pat
             "",
             f"![rank {ex['rank']}]({fig})",
             "",
-            "| path | root | end | bt1→bt2 | closure | Δpred | Δc_root | ΔL | Δrho | max Δ other f | identity gap |",
+            "| path | root→mid→end | bt1→bt2 | closure | pred before→after | f_root before→after | ΔL | Δrho | Δpred | max Δ other f | identity gap |",
             "|---|---|---|---|---|---|---|---|---|---|---|",
         ]
         for p in ex["paths"][:12]:
+            mid = ",".join(str(m) for m in p["middle_candidates"]) or "?"
             lines.append(
-                f"| {p['path_index']} | {p['root']}{p['root_symbol']} | {p['end']}{p['end_symbol']} | "
-                f"{p['bt1']}→{p['bt2']} | {p['closure']} | {p['delta_pred']:+.4f} | {p['delta_contrib_root']:+.4f} | "
-                f"{p['delta_contrib_sum']:+.4f} | {p['delta_rho']:+.4f} | {p['other_atoms_f_max_abs_delta']:.2e} | "
-                f"{p['identity_gap']:+.2e} |"
+                f"| {p['path_index']} | {p['root']}{p['root_symbol']}→{mid}→{p['end']}{p['end_symbol']} | "
+                f"{p['bt1']}→{p['bt2']} | {p['closure']} | {p['pred_before']:+.3f}→{p['pred_after']:+.3f} | "
+                f"{p['f_root_before']:+.3f}→{p['f_root_after']:+.3f} | "
+                f"{p['delta_contrib_sum']:+.4f} | {p['delta_rho']:+.4f} | {p['delta_pred']:+.4f} | "
+                f"{p['other_atoms_f_max_abs_delta']:.2e} | {p['identity_gap']:+.2e} |"
             )
         lines.append("")
     return "\n".join(lines) + "\n"
