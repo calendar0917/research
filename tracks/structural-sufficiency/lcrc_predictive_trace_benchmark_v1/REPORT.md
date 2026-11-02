@@ -210,7 +210,7 @@ uv run python code/ptb_protocol.py                  # 由实测成本冻结 TU �
 uv run python code/ptb_queue.py --plan molecule --pool-label res-gpu0
 uv run python code/ptb_queue.py --plan local_edit_then_tu --pool-label res-gpu1
 uv run python code/ptb_freeze.py --molecule --tu     # 只在全部单元完成后
-uv run python code/ptb_score.py --all                # 一次性 Test
+uv run python code/ptb_score.py --all-frozen         # 一次性 Test
 uv run python code/ptb_aggregate.py
 uv run python code/ptb_efficiency.py --device cuda
 uv run python code/ptb_mechanism.py --device cuda
