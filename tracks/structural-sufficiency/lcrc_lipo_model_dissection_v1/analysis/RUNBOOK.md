@@ -34,20 +34,25 @@ uv run python .../code/dissect_score.py --freeze tracks/.../analysis/freeze/A_r1
 # 5. Stage B / Stage C 同上（--stage B / C，21 / 15 runs）
 # 6. COMPACT 选择（只读 Valid，脚本拒绝任何 Test 产物）
 uv run python .../code/dissect_compact.py
-#    -> analysis/compact_selection.json；提交后再 deploy，才允许跨划分 run
+#    -> analysis/compact_selection.json
+# 6b. 把选出的 COMPACT 登记进冻结矩阵，再提交 + deploy（否则 sweep --stage cross 直接退出）
+uv run python .../code/dissect_protocol.py --compact C1   # 重写 configs/run_matrix.json 的 cross_split_rule
+git add -A && git commit -m "register COMPACT" && rr deploy res
 # 7. 跨划分 123/124（FULL、COMPACT、B5，去重，最多 18 runs）
 rr run res lipo-X0 --pool res-gpu0 --gpus 1 --cpus 8 --result $R -- \
   uv run python .../code/dissect_sweep.py --stage cross --shard 0 --shards 2
 rr run res lipo-X1 --pool res-gpu1 --gpus 1 --cpus 8 --result $R -- \
   uv run python .../code/dissect_sweep.py --stage cross --shard 1 --shards 2
-uv run python .../code/dissect_freeze.py --stage cross
+uv run python .../code/dissect_freeze.py --stage cross --repeat 123 --variants A0,B5,C1
+uv run python .../code/dissect_freeze.py --stage cross --repeat 124 --variants A0,B5,C1
 uv run python .../code/dissect_score.py --freeze tracks/.../analysis/freeze/cross_r123.json
 uv run python .../code/dissect_score.py --freeze tracks/.../analysis/freeze/cross_r124.json
 
 # 8. 表与回溯
 uv run python .../code/dissect_tables.py            # + scaffold bootstrap
 uv run python .../code/dissect_render.py            # markdown 片段
-uv run python .../code/dissect_intervene.py         # 固定权重干预 + LOO 路径干预 + 图
+uv run python .../code/dissect_intervene.py --compact C1   # 干预 + LOO（A0）+ 图 + atom_terms(A0+C1)
+uv run python .../code/dissect_intervene.py --variant C1 --out-tag compact --skip-a   # 只写 path_loo_compact.json
 ```
 
 恢复语义：
