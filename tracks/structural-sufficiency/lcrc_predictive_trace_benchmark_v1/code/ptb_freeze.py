@@ -147,8 +147,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         payload["round_id"] = C.ROUND_ID
         datasets = [args.dataset] if args.dataset else list(C.MOLECULE_ORDER)
         for dataset in datasets:
-            rec = molecule_manifest(dataset)
-            payload["datasets"][dataset] = rec
+            try:
+                rec = molecule_manifest(dataset)
+            except RuntimeError as exc:
+                existing = payload["datasets"].get(dataset)
+                # a dataset that was already frozen *and* scored keeps its frozen entry:
+                # re-freezing is impossible by design (the Test read is one-shot), so the
+                # only honest action is to carry the recorded entry forward unchanged.
+                if existing and existing.get("frozen") and "already evaluated" in str(exc):
+                    rec = existing
+                    C.log(f"{dataset}: already frozen and scored -> entry preserved ({rec['n_units_present']}/6)")
+                    continue
+                raise
             C.log(
                 f"{dataset}: {rec['n_units_present']}/{rec['n_units_expected']} units "
                 f"{'FROZEN' if rec['frozen'] else 'INCOMPLETE -> ' + str(rec['missing_units'])}"
