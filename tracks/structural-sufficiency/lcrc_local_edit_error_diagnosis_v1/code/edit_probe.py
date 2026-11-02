@@ -536,6 +536,14 @@ def stage_report(n_boot: int = C.BOOTSTRAP_REPLICATES) -> dict[str, Any]:
                 "best_base": unit["best_base"],
                 "audit_mae": {m: component_equal_mae(err_by_unit[key][m], comps) for m in C.PROBE_METHODS},
                 "gain_trace_minus_best_base": float(unit["gain_trace_minus_best_base"]),
+                "gain_trace_minus_native": float(
+                    component_equal_mae(err_by_unit[key]["NATIVE"], comps)
+                    - component_equal_mae(err_by_unit[key]["TRACE"], comps)
+                ),
+                "best_overall_method": min(
+                    C.PROBE_METHODS,
+                    key=lambda m: component_equal_mae(err_by_unit[key][m], comps),
+                ),
             }
         )
 
@@ -846,15 +854,15 @@ def _gauge_stability(frozen, audit, pairs, traces, n_boot: int) -> dict[str, Any
             raise RuntimeError("gauge design width does not match the frozen coefficients")
         pred_shift = np.concatenate([onehot, shifted], axis=1) @ beta
         err_shift = y - pred_shift
-        orig = np.asarray(unit["residuals"]["TRACE"], dtype=np.float64)
+        orig = np.asarray(unit["residuals"]["TRACE"], dtype=np.float64)  # already a residual
         # the same/different-n_heavy subset split
         same_mask = np.asarray(same)
         out["units"][key] = {
             "n_pairs": int(len(y)),
             "identical_gauge_invariant_d_pred": float(np.max(np.abs(d_pred_check - np.asarray([p["d_pred"] for p in meta_pairs])))),
-            "audit_mae_trace_unshifted": component_equal_mae(y - orig, comps),
+            "audit_mae_trace_unshifted": component_equal_mae(orig, comps),
             "audit_mae_trace_shifted": component_equal_mae(err_shift, comps),
-            "abs_change": float(abs(component_equal_mae(err_shift, comps) - component_equal_mae(y - orig, comps))),
+            "abs_change": float(abs(component_equal_mae(err_shift, comps) - component_equal_mae(orig, comps))),
             "n_same_var_heavy_pairs": int(same_mask.sum()),
             "n_diff_var_heavy_pairs": int((~same_mask).sum()),
             "audit_mae_trace_shifted_same_var_heavy": component_equal_mae(err_shift[same_mask], comps[same_mask])
@@ -863,10 +871,10 @@ def _gauge_stability(frozen, audit, pairs, traces, n_boot: int) -> dict[str, Any
             "audit_mae_trace_shifted_diff_var_heavy": component_equal_mae(err_shift[~same_mask], comps[~same_mask])
             if (~same_mask).any()
             else None,
-            "audit_mae_trace_unshifted_same_var_heavy": component_equal_mae((y - orig)[same_mask], comps[same_mask])
+            "audit_mae_trace_unshifted_same_var_heavy": component_equal_mae(orig[same_mask], comps[same_mask])
             if same_mask.any()
             else None,
-            "audit_mae_trace_unshifted_diff_var_heavy": component_equal_mae((y - orig)[~same_mask], comps[~same_mask])
+            "audit_mae_trace_unshifted_diff_var_heavy": component_equal_mae(orig[~same_mask], comps[~same_mask])
             if (~same_mask).any()
             else None,
         }
