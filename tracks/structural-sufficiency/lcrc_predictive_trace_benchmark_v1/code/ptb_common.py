@@ -95,6 +95,8 @@ MODEL_A0 = "A0"  # frozen LCRC-A (FULL)
 MODEL_C1 = "C1"  # NO_BOND_MEAN, the pre-registered main model
 MODELS = (MODEL_A0, MODEL_C1)
 MODEL_LABELS = {MODEL_A0: "A0 / FULL", MODEL_C1: "C1 / NO_BOND_MEAN"}
+#: the TU quick-screen model registry names the frozen graph "FULL"
+TU_MODEL_NAME = {MODEL_A0: "FULL", MODEL_C1: "C1"}
 #: single-task parameter counts (frozen); Tox21 widens both heads identically.
 EXPECTED_PARAMS_SINGLE = {MODEL_A0: 247_106, MODEL_C1: 228_674}
 EXPECTED_PARAM_DELTA = 18_432

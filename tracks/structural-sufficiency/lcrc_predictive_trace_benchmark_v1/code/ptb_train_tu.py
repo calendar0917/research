@@ -186,12 +186,13 @@ def train_unit(
     n_valid = int(valid_cache["n_molecules"])
 
     determinism = TC.seed_everything(int(seed))
+    tu_name = C.TU_MODEL_NAME[model_name]
     full = TM.build_full_state(spec, norm, n_classes, int(seed))
-    init_state = TM.remap_state(model_name, full, spec, n_classes)
-    model = TM.TULCRC(spec, norm, n_classes, model_name)
+    init_state = TM.remap_state(tu_name, full, spec, n_classes)
+    model = TM.TULCRC(spec, norm, n_classes, tu_name)
     model.load_state_dict(init_state, strict=True)
     model.to(device)
-    shared = _shared_equal(model_name, full, init_state, spec)
+    shared = _shared_equal(tu_name, full, init_state, spec)
     params = TM.parameter_count(model)
 
     recipe = dict(TC.RECIPE)
@@ -349,7 +350,7 @@ def train_unit(
     )
 
     # ---- reload the selected state and score Train/Valid/held-out fold -------
-    reloaded = TM.TULCRC(spec, norm, n_classes, model_name)
+    reloaded = TM.TULCRC(spec, norm, n_classes, tu_name)
     reloaded.load_state_dict({k: v.cpu() for k, v in tracker.state.items()}, strict=True)
     reloaded.to(device)
     reloaded.eval()

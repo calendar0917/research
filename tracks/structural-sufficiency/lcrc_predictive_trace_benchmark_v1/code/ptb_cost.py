@@ -89,15 +89,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--tu-splits", type=int, default=5)
     ap.add_argument("--out", default=str(C.ANALYSIS / "cost_measurement.json"))
+    ap.add_argument("--families", default="molecule,tu")
+    ap.add_argument("--keep-existing", action="store_true", help="merge with rows already in --out")
     args = ap.parse_args(argv)
     device = torch.device(args.device)
     rows: list[dict[str, Any]] = []
+    families = {f.strip() for f in args.families.split(",") if f.strip()}
+    if args.keep_existing and Path(args.out).exists():
+        rows.extend(C.read_json(args.out)["rows"])
     t_start = time.perf_counter()
-    for dataset in C.MOLECULE_ORDER:
+    for dataset in (C.MOLECULE_ORDER if "molecule" in families else ()):
         for model in C.MODELS:
             C.log(f"cost measure molecule {dataset}/{model}")
             rows.append(_mol_cost(dataset, model, int(args.epochs), device))
-    for dataset in C.TU_DATASETS:
+    for dataset in (C.TU_DATASETS if "tu" in families else ()):
         for model in C.MODELS:
             C.log(f"cost measure TU {dataset}/{model}")
             rows.append(_tu_cost(dataset, model, int(args.epochs), device, int(args.tu_splits), 0))
