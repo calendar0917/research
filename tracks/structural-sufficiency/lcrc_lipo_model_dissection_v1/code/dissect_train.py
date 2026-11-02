@@ -394,6 +394,7 @@ def train_run(
         "task": "regression",
         "label_column": view.source_meta["label_column"],
         "units": view.source_meta["units"],
+        "status": "completed",
         "smoke": bool(smoke),
         "repeat": int(repeat),
         "seed": int(seed),

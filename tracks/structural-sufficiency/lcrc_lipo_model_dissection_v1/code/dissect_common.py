@@ -560,6 +560,11 @@ VARIANT_DEFS: dict[str, dict[str, Any]] = {
 for _k in VARIANT_ORDER:
     assert VARIANT_DEFS[_k]["stage"] == _k[0], _k
 
+#: stage -> variants, in frozen order (used by the sweep driver)
+VARIANT_STAGE: dict[str, tuple[str, ...]] = {
+    _s: tuple(_v for _v in VARIANT_ORDER if VARIANT_DEFS[_v]["stage"] == _s) for _s in ("A", "B", "C")
+}
+
 
 def run_name(repeat: int, variant: str, seed: int) -> str:
     return f"r{int(repeat)}_{variant}_s{int(seed)}"
@@ -687,6 +692,7 @@ __all__ = [
     "code_hashes",
     "reused_module_hashes",
     "VARIANT_ORDER",
+    "VARIANT_STAGE",
     "STAGE_VARIANTS",
     "EXPECTED_PARAMS",
     "VARIANT_NAMES",
