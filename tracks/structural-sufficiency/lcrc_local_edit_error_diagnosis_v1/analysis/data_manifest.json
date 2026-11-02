@@ -1,0 +1,90 @@
+{
+  "artifacts": {
+    "pairs_csv": {
+      "path": "tracks/structural-sufficiency/lcrc_local_edit_error_diagnosis_v1/analysis/pairs.csv",
+      "sha256": "98db43ec1f6f2d712d4ae59ed6a832a0860c54fec230a85ad5fcb303561ae356"
+    }
+  },
+  "audit_scope": "WITHIN_DATASET_PROSPECTIVE_AUDIT",
+  "core_classes": {
+    "n_classes_with_multiple_canonical_strings": 0,
+    "n_core_classes": 8027,
+    "n_isomorphism_checks": 1455,
+    "n_wl_buckets": 8027
+  },
+  "created_utc": "2026-11-02T15:45:42Z",
+  "eligibility": {
+    "counts": {
+      "cut:core_below_75pct": 12,
+      "cut:core_too_small": 83,
+      "cut:kept": 9482,
+      "cut:nonring_single_bonds": 19409,
+      "cut:var_too_large": 9832,
+      "eligible_molecules": 2414,
+      "excluded:not_single_connected_component": 1,
+      "excluded:stereochemistry": 945
+    },
+    "excluded_reasons": {
+      "not_single_connected_component": 1,
+      "stereochemistry": 945
+    },
+    "n_eligible": 2414,
+    "n_excluded": 946,
+    "n_rows": 3360
+  },
+  "label_blind": true,
+  "labels_read": false,
+  "pair_rules": {
+    "atom_label": "element, is_aromatic, formal_charge, total_H (capped at the cut with a dummy)",
+    "bond_label": "SINGLE/DOUBLE/TRIPLE/AROMATIC/OTHER",
+    "candidate_generation": "Weisfeiler-Lehman refinement hash on the labelled core",
+    "core_min_fraction_of_parent": 0.75,
+    "core_min_heavy_atoms": 10,
+    "core_verification": "explicit labelled-graph isomorphism with attachment-point marker",
+    "cut": "non-ring single bonds only",
+    "definition_choice": "maximum common core, then canonical core string, then fragment strings",
+    "direction": "smaller canonical variable-fragment string is A, larger is B",
+    "exclude_stereo_canonical_smiles_tokens": [
+      "@",
+      "/",
+      "\\"
+    ],
+    "require_single_connected_component": true,
+    "variable_fragment_heavy_atoms": [
+      1,
+      4
+    ]
+  },
+  "pairs": {
+    "core_shared_candidates": 610,
+    "n_classes": 211,
+    "n_core_classes_used": 250,
+    "n_pairs": 509,
+    "n_participating_molecules": 502,
+    "superseded_definition": 49
+  },
+  "rdkit": "2026.09.1",
+  "round": "lcrc-local-edit-error-diagnosis-v1",
+  "schema": "lcrc-local-edit-data-manifest-v1",
+  "sources": {
+    "csv": {
+      "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+      "sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758"
+    },
+    "raw_artifact": {
+      "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/raw_attributes_v1.json.gz",
+      "sha256": "1127607de45e341c89ffc67db85714117831ec84b0845c75aaa11005489c51be"
+    },
+    "split_file": {
+      "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.random122.ind.pkl",
+      "sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d"
+    },
+    "split_freeze": {
+      "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/analysis/split_freeze.json"
+    },
+    "train_rows": {
+      "n": 3360,
+      "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+    }
+  }
+}

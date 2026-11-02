@@ -1,0 +1,155 @@
+{
+  "checks": [
+    {
+      "detail": {
+        "hashes": {
+          "csv": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+          "raw_artifact": "1127607de45e341c89ffc67db85714117831ec84b0845c75aaa11005489c51be",
+          "split_file": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d"
+        },
+        "n_train_rows": 3360,
+        "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+      },
+      "name": "sources",
+      "note": "frozen bytes of the public data",
+      "ok": true
+    },
+    {
+      "detail": {
+        "n_pairs": 509,
+        "n_rows": 3360,
+        "n_units": 3033,
+        "pairs_per_partition": {
+          "audit": 74,
+          "diagnose": 84,
+          "fit": 301,
+          "select": 50
+        },
+        "per_partition": {
+          "audit": 504,
+          "diagnose": 504,
+          "fit": 2016,
+          "select": 336
+        },
+        "status": "OK"
+      },
+      "name": "partitions",
+      "note": "disjoint, complete, pairs never straddle",
+      "ok": true
+    },
+    {
+      "detail": {
+        "atom_order_identical_to_rdkit": true,
+        "n_molecules_checked": 3360,
+        "worst_row": null
+      },
+      "name": "cache_alignment",
+      "note": "cache atom order == RDKit atom order",
+      "ok": true
+    },
+    {
+      "detail": {
+        "formula": "pred = mu + sigma*(sum_v f(h_v) + rho)",
+        "max_abs_L_plus_rho_minus_y": 0.0,
+        "max_abs_raw_gap": 0.0,
+        "max_abs_sum_f_minus_L": 0.0,
+        "mu": 2.1742261904761904,
+        "n_molecules": 32,
+        "sigma": 1.200602732405724
+      },
+      "name": "raw_unit_formula",
+      "note": "pred = mu + sigma*(L+rho)",
+      "ok": true
+    },
+    {
+      "detail": {
+        "kept_full_columns": 433,
+        "max_contrib_gap_zeroed_bmean": 1.430511474609375e-06,
+        "max_first_layer_weight_gap": 0.0,
+        "max_local_input_gap": 0.0,
+        "n_shared_checks": 35,
+        "note": "the column/weight subsets are bit-identical; the residual is fp32 GEMM accumulation order",
+        "parameters": {
+          "A0": 247106,
+          "C1": 228674
+        },
+        "shared_state_all_equal": true,
+        "zeroed_bmean_tolerance": 1e-05
+      },
+      "name": "c1_column_deletion",
+      "note": "C1 = FULL minus the b_mean block",
+      "ok": true
+    },
+    {
+      "detail": {
+        "available": true,
+        "checkpoint": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/runs/Lipophilicity_s0/checkpoint.pt",
+        "checkpoint_sha256": "b1dd1f5ad76665df0772ca252a582b424336a4fdd990725743073301227e2663",
+        "max_abs_forward_gap": 0.0,
+        "n_molecules": 24,
+        "note": "equivalence replay only; the pilot checkpoint trained on rows that include Fit molecules"
+      },
+      "name": "frozen_equivalence",
+      "note": "A0 wrapper == upstream LCRC (replay)",
+      "ok": true
+    },
+    {
+      "detail": {
+        "audit_labels_accessed": false,
+        "n_ledger_events": 10,
+        "refusals": {
+          "audit:probe_fit": "refused",
+          "audit:select": "refused",
+          "audit:train": "refused",
+          "diagnose:select": "refused",
+          "diagnose:train": "refused",
+          "select:train": "refused"
+        }
+      },
+      "name": "label_permissions",
+      "note": "purpose scope + Audit one-shot guard",
+      "ok": true
+    },
+    {
+      "detail": {
+        "n_pairs_checked": 509,
+        "n_pairs_with_non_unique_mapping": 442,
+        "note": "the summed core term does not depend on which isomorphism is used"
+      },
+      "name": "core_mapping",
+      "note": "stored mappings are labelled isomorphisms",
+      "ok": true
+    },
+    {
+      "detail": {
+        "attachment_position_invariant": true,
+        "core_class_invariant": true,
+        "n_pairs_checked": 60
+      },
+      "name": "renumbering_structure",
+      "note": "core class invariant",
+      "ok": true
+    },
+    {
+      "detail": {
+        "bootstrap_seed": 20261102,
+        "identical_across_calls": true,
+        "n_audit_pair_components": 26,
+        "n_audit_pairs": 74,
+        "note": "the bootstrap resamples *pair components* (indivisible units), not pairs, and every model, seed and probe method of one replicate uses the same index array",
+        "replicates_checked": 64
+      },
+      "name": "bootstrap_identity",
+      "note": "deterministic shared resampler",
+      "ok": true
+    }
+  ],
+  "created_utc": "2026-11-02T15:47:32Z",
+  "git_commit": "e080b94b60e5b5536e338faae34a144d0147eac2",
+  "n_checks": 10,
+  "n_failed": 0,
+  "ok": true,
+  "round": "lcrc-local-edit-error-diagnosis-v1",
+  "schema": "lcrc-local-edit-correctness-gates-v1",
+  "stage": "pre"
+}

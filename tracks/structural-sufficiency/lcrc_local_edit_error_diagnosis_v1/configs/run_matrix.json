@@ -1,0 +1,21 @@
+{
+  "schema": "lcrc-local-edit-run-matrix-v1",
+  "round": "lcrc-local-edit-error-diagnosis-v1",
+  "created": "2026-11-02",
+  "allowed_units": ["C1:s0", "A0:s0", "A0:s1", "C1:s1", "C1:s2", "A0:s2"],
+  "n_units": 6,
+  "main_model": "C1",
+  "reference_model": "A0",
+  "seeds": [0, 1, 2],
+  "waves": [
+    {"wave": 1, "res-gpu0": "C1:s0", "res-gpu1": "A0:s0"},
+    {"wave": 2, "res-gpu0": "A0:s1", "res-gpu1": "C1:s1"},
+    {"wave": 3, "res-gpu0": "C1:s2", "res-gpu1": "A0:s2"}
+  ],
+  "notes": [
+    "exactly six training units; no additional seeds after the six complete",
+    "no architecture search, no hyperparameter search, no additional models",
+    "C1 is not pinned to a single GPU: the wave plan alternates devices",
+    "checkpoint selection uses the Select partition only; Diagnose/Audit never touch encoder training"
+  ]
+}
