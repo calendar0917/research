@@ -49,6 +49,7 @@ TU_ROOT = Path(os.environ.get("LCX_TU_ROOT", str(REPO / "data" / "TUD")))
 ANALYSIS = TRACK / "analysis"
 CACHE = TRACK / "cache"
 RUNS = TRACK / "runs"
+REPORT = TRACK / "REPORT.md"
 CONFIGS = TRACK / "configs"
 TESTS = TRACK / "tests"
 DATA_MANIFEST = ANALYSIS / "data_manifest.json"

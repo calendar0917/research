@@ -63,7 +63,8 @@ lcrc_tu_quick_screen_v1/
 │   ├── tu_gates.py      # 最小正确性 gates（划分/手算/置换/batch/共享初始化/梯度）
 │   ├── tu_smoke.py      # 短 CUDA smoke（前向/反向/保存/重载，不读 Test）
 │   ├── tu_train.py      # 单个正式 run
-│   └── tu_aggregate.py  # results.csv + 汇总表 + 完整性校验
+│   ├── tu_aggregate.py  # results.csv + 汇总表 + 完整性校验
+│   └── tu_report.py     # 由 run.json/summary.json 生成 REPORT.md
 ├── configs/protocol.json
 ├── tests/               # CPU、无数据的 gate 测试
 ├── analysis/            # 提交的证据 JSON（划分、数据来源、gates、汇总）
@@ -96,8 +97,12 @@ rr run res lcx-NCI1-FULL --pool res-gpu0 --result tracks/structural-sufficiency/
        --dataset NCI1 --model FULL --seed 0 --device cuda:0
 # ... 其余 11 个 run 见 REPORT.md 的运行记录
 
-# 6) 汇总
+# 6) 汇总（本地读 12 个 run.json）
 uv run python tracks/structural-sufficiency/lcrc_tu_quick_screen_v1/code/tu_aggregate.py
+uv run python tracks/structural-sufficiency/lcrc_tu_quick_screen_v1/code/tu_report.py
 ```
+
+本轮实测结果与逐 run 记录见 `REPORT.md`、`results.csv`、`analysis/summary.json`、
+`analysis/comparison.md`、`analysis/run_registry.json`。
 
 缓存和权重按仓库既有规则不进入 Git；`analysis/` 的 JSON、`results.csv` 与 `REPORT.md` 提交。
