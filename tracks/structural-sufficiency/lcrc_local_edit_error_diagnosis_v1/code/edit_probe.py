@@ -92,16 +92,14 @@ def load_pairs() -> list[dict[str, Any]]:
         if cid is None:
             raise SystemExit(f"{p['pair_id']}: no component id for row_a/row_b")
         p["component"] = str(cid)
-        for name in ("n_atoms_a", "n_atoms_b", "var_heavy_a", "var_heavy_b"):
-            p.setdefault(name, p.get(name))
     return pairs
 
 
-def _hetero_counts(partitions: Sequence[str]) -> dict[int, int]:
-    """Non-carbon heavy-atom count per row id (label-free structure lookup)."""
+def _row_structure(partitions: Sequence[str]) -> dict[int, tuple[int, int]]:
+    """(n heavy atoms, n non-carbon heavy atoms) per row id; label-free lookup."""
     spec = ED.frozen_spec()
     carbon = {i for i, nm in enumerate(spec.atom_type_names) if nm.startswith("C")}
-    out: dict[int, int] = {}
+    out: dict[int, tuple[int, int]] = {}
     for part in partitions:
         cache = ED.load_cache(part)
         atom_ptr = np.asarray(cache["atom_ptr"])
@@ -109,12 +107,12 @@ def _hetero_counts(partitions: Sequence[str]) -> dict[int, int]:
         rows = np.asarray(cache["rows"]).tolist()
         for pos, row in enumerate(rows):
             a0, a1 = int(atom_ptr[pos]), int(atom_ptr[pos + 1])
-            types = atom_type[a0:a1]
-            out[int(row)] = int(sum(1 for t in types.tolist() if int(t) not in carbon))
+            types = atom_type[a0:a1].tolist()
+            out[int(row)] = (int(a1 - a0), int(sum(1 for t in types if int(t) not in carbon)))
     return out
 
 
-def build_dataset(model: str, seed: int, partition: str, traces, pairs, y_by_row, hetero) -> dict[str, Any]:
+def build_dataset(model: str, seed: int, partition: str, traces, pairs, y_by_row, structure) -> dict[str, Any]:
     rows = []
     for p in pairs:
         if p["partition"] != partition:
@@ -139,8 +137,8 @@ def build_dataset(model: str, seed: int, partition: str, traces, pairs, y_by_row
                 "dL_var": float(tr["dL_var_raw"]),
                 "dL_core": float(tr["dL_core_raw"]),
                 "dR": float(tr["dR_raw"]),
-                "d_nheavy": float(p["n_atoms_b"] - p["n_atoms_a"]),
-                "d_nhetero": float(hetero.get(int(p["row_b"]), 0) - hetero.get(int(p["row_a"]), 0)),
+                "d_nheavy": float(structure[int(p["row_b"])][0] - structure[int(p["row_a"])][0]),
+                "d_nhetero": float(structure[int(p["row_b"])][1] - structure[int(p["row_a"])][1]),
                 "d_y": float(d_y),
                 "e_delta": float(e_delta),
             }
@@ -342,7 +340,7 @@ def stage_fit(models: Sequence[str], seeds: Sequence[int]) -> dict[str, Any]:
         raise SystemExit("Audit labels were already read; the round is over, refusing to refit")
     pairs = load_pairs()
     traces = load_traces()
-    hetero = _hetero_counts(["diagnose", "audit"])
+    structure = _row_structure(["diagnose", "audit"])
     y_diag = ED.labels("diagnose", "probe_fit")
     y_by_row = {int(r): float(v) for r, v in zip(y_diag["rows"], y_diag["y"])}
 
@@ -368,7 +366,7 @@ def stage_fit(models: Sequence[str], seeds: Sequence[int]) -> dict[str, Any]:
     }
     for model in models:
         for seed in seeds:
-            ds = build_dataset(model, seed, "diagnose", traces, pairs, y_by_row, hetero)
+            ds = build_dataset(model, seed, "diagnose", traces, pairs, y_by_row, structure)
             cv: dict[str, Any] = {}
             for method in C.PROBE_METHODS:
                 preds, folds = leave_one_component_out(method, ds)
@@ -433,7 +431,7 @@ def stage_audit() -> dict[str, Any]:
         raise SystemExit("Audit was already scored once; refusing a second read")
     pairs = load_pairs()
     traces = load_traces()
-    hetero = _hetero_counts(["audit"])
+    structure = _row_structure(["audit", "diagnose"])
     y_audit = ED.labels("audit", "audit_score")
     y_by_row = {int(r): float(v) for r, v in zip(y_audit["rows"], y_audit["y"])}
 
@@ -448,7 +446,7 @@ def stage_audit() -> dict[str, Any]:
     }
     for key, unit in frozen["units"].items():
         model, seed = unit["model"], int(unit["seed"])
-        ds = build_dataset(model, seed, "audit", traces, pairs, y_by_row, hetero)
+        ds = build_dataset(model, seed, "audit", traces, pairs, y_by_row, structure)
         idx = np.arange(len(ds["rows"]))
         scores: dict[str, Any] = {}
         for method in C.PROBE_METHODS:
