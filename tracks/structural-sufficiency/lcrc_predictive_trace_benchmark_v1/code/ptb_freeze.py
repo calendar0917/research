@@ -163,6 +163,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 f"{dataset}: {rec['n_units_present']}/{rec['n_units_expected']} units "
                 f"{'FROZEN' if rec['frozen'] else 'INCOMPLETE -> ' + str(rec['missing_units'])}"
             )
+            payload["datasets"][dataset] = rec
         payload["updated_utc"] = C.utcnow()
         payload["frozen_datasets"] = [d for d, r in payload["datasets"].items() if r["frozen"]]
         C.write_json(path, payload)
