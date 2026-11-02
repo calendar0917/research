@@ -164,6 +164,127 @@ def molecular_rows(manifest: Mapping[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
+DISSECTION_MEANS = C.REPO / "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/analysis/tables/variant_means.csv"
+
+
+def frozen_reference_rows() -> list[dict[str, Any]]:
+    """Lipophilicity A0/C1 copied read-only from the frozen dissection round.
+
+    Nothing is retrained and nothing is re-scored: the values are the published
+    frozen table.  Test columns keep the ``EXPOSED_TEST_EXPLORATORY`` label of the
+    round that produced them.
+    """
+    if not DISSECTION_MEANS.exists():
+        return [
+            {
+                "dataset": "Lipophilicity",
+                "status": "FROZEN_REFERENCE_MISSING",
+                "result_label": "NOT_AVAILABLE",
+                "source": C.track_rel(DISSECTION_MEANS),
+            }
+        ]
+    out: list[dict[str, Any]] = []
+    with open(DISSECTION_MEANS, newline="", encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            if row["variant"] not in ("A0", "C1"):
+                continue
+            out.append(
+                {
+                    "dataset": "Lipophilicity",
+                    "task": "regression",
+                    "model": "A0" if row["variant"] == "A0" else "C1",
+                    "variant_name": row["variant_name"],
+                    "seed": "seed_mean(3)",
+                    "repeat": int(row["repeat"]),
+                    "parameters": int(float(row["params_trainable"])),
+                    "n_seeds": int(float(row["n_seeds"])),
+                    "valid_primary": float(row["valid_rmse_mean"]),
+                    "valid_rmse_sd": float(row["valid_rmse_sd"]),
+                    "valid_mae_mean": float(row["valid_mae_mean"]),
+                    "test_primary": float(row["test_rmse_mean"]),
+                    "test_rmse_sd": float(row["test_rmse_sd"]),
+                    "best_epoch_mean": float(row["best_epoch_mean"]),
+                    "gpu_hours": float(row["gpu_hours_total"]),
+                    "status": "FROZEN_HISTORY",
+                    "result_label": "EXPOSED_TEST_EXPLORATORY",
+                    "access_scope": "read_only_frozen_history",
+                    "source": C.track_rel(DISSECTION_MEANS),
+                    "source_sha256": C.sha256_file(DISSECTION_MEANS),
+                    "why_not_comparable": (
+                        "frozen upstream round; Test labels were already read there, and the "
+                        "training repeats are not the three seeds of this round"
+                    ),
+                }
+            )
+    out.append(
+        {
+            "dataset": "ZINC-12k",
+            "task": "regression",
+            "model": "not_applicable",
+            "variant_name": "DCC-L is a different model family, not C1",
+            "seed": None,
+            "status": "FROZEN_HISTORY_OTHER_FAMILY",
+            "result_label": "EXPOSED_TEST_EXPLORATORY",
+            "access_scope": "read_only_frozen_history",
+            "source": "tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/analysis/literature_reference.csv",
+            "why_not_comparable": (
+                "ZINC uses the frozen DCC-L family; it is never reported as an A0/C1 comparison"
+            ),
+        }
+    )
+    return out
+
+
+def frozen_reference_paired(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """A0 - C1 contrast from the frozen Lipophilicity table, per repeat."""
+    by_key: dict[tuple[int, str], Mapping[str, Any]] = {}
+    for row in rows:
+        if row.get("dataset") == "Lipophilicity" and row.get("status") == "FROZEN_HISTORY":
+            by_key[(int(row["repeat"]), str(row["model"]))] = row
+    out = []
+    for (repeat, model), row in sorted(by_key.items()):
+        if model != "A0":
+            continue
+        other = by_key.get((repeat, "C1"))
+        if other is None:
+            continue
+        out.append(
+            {
+                "kind": "molecule_frozen_history",
+                "dataset": "Lipophilicity",
+                "seed": "seed_mean(3)",
+                "repeat": repeat,
+                "metric": "valid_rmse",
+                "A0": float(row["valid_primary"]),
+                "C1": float(other["valid_primary"]),
+                "delta_C1_minus_A0": float(other["valid_primary"]) - float(row["valid_primary"]),
+                "boot_lo": None,
+                "boot_hi": None,
+                "eval_unit": "frozen repeat",
+                "result_label": "EXPOSED_TEST_EXPLORATORY",
+                "note": "read-only frozen history; no new training and no new test read",
+            }
+        )
+        out.append(
+            {
+                "kind": "molecule_frozen_history",
+                "dataset": "Lipophilicity",
+                "seed": "seed_mean(3)",
+                "repeat": repeat,
+                "metric": "test_rmse",
+                "A0": float(row["test_primary"]),
+                "C1": float(other["test_primary"]),
+                "delta_C1_minus_A0": float(other["test_primary"]) - float(row["test_primary"]),
+                "boot_lo": None,
+                "boot_hi": None,
+                "eval_unit": "frozen repeat",
+                "result_label": "EXPOSED_TEST_EXPLORATORY",
+                "note": "read-only frozen history; Test was already read by the upstream round",
+            }
+        )
+    return out
+
+
 def _load_preds(run_dir: Path, split: str) -> np.ndarray | None:
     path = run_dir / f"{split}_predictions.npz"
     if not path.exists():
@@ -722,7 +843,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     rng = np.random.default_rng(C.STATS_BOOTSTRAP_SEED)
 
     mol_rows = molecular_rows(manifest)
-    _write_csv(C.ANALYSIS / "molecular_results.csv", mol_rows)
+    frozen_rows = frozen_reference_rows()
+    _write_csv(C.ANALYSIS / "molecular_results.csv", mol_rows + frozen_rows)
 
     tu = tu_rows(protocol)
     _write_csv(C.ANALYSIS / "tu_results.csv", tu)
@@ -768,6 +890,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "result_label": C.TU_RESULT_LABEL,
             }
         )
+    paired.extend(frozen_reference_paired(frozen_rows))
     _write_csv(C.ANALYSIS / "paired_differences.csv", paired)
 
     diag = sample_diagnostics(manifest)
