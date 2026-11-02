@@ -51,11 +51,13 @@ def _load_entries() -> tuple[dict[str, dict[int, dict[str, Any]]], list[dict[str
 
 def select() -> dict[str, Any]:
     by_variant, inputs = _load_entries()
-    for key in by_variant:
+    for key, entries in by_variant.items():
         if key in ("A0", "FULL"):
             continue
-        if any(k.endswith(".json") and k.startswith("test") for k in by_variant[key]):
-            raise SystemExit("Test artifact leaked into the selection inputs")
+        for entry in entries.values():
+            leaked = [k for k in entry if str(k).startswith("test")]
+            if leaked:
+                raise SystemExit(f"Test artifact leaked into the selection inputs: {key} {leaked}")
 
     full = by_variant.get("A0")
     if not full or set(full) != set(C.SEEDS):
