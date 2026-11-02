@@ -142,6 +142,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             continue
         for model in C.MODELS:
             for seed in C.MOLECULE_SEEDS:
+                if (C.mol_run_dir(dataset, model, seed) / "test_eval.json").exists():
+                    # already scored exactly once (a dataset frozen in an earlier pass)
+                    C.log(f"{dataset}/{model}/s{seed}: already scored, not re-reading Test")
+                    continue
                 rec = score_unit(dataset, model, seed, manifest)
                 C.log(
                     f"{dataset}/{model}/s{seed}: {MET.primary_name(rec['task'])} "
