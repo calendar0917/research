@@ -1,0 +1,1020 @@
+{
+  "all_passed": true,
+  "batching_and_shapes": {
+    "details": {
+      "full_batch_vs_single_graph_max_delta": 3.948807716369629e-07,
+      "full_batch_vs_two_sub_batches_max_delta": 3.8743019104003906e-07,
+      "gin_batch_vs_two_sub_batches_max_delta": 6.854534149169922e-07,
+      "shapes": {
+        "c1_3class": [
+          1,
+          3
+        ],
+        "full_2class": [
+          1,
+          2
+        ],
+        "full_3class": [
+          1,
+          3
+        ],
+        "gin_3class": [
+          1,
+          3
+        ]
+      }
+    },
+    "message": "batch split/merge consistency for FULL and GIN; 2-class and 3-class logits have C columns",
+    "ok": true
+  },
+  "code_state": {
+    "dirty_files": [
+      "?? tracks/structural-sufficiency/lcrc_tu_quick_screen_v1/"
+    ],
+    "git_commit": "dabeef8b9c323697d03fe5f4f2361316d15ce8d6",
+    "git_dirty": true
+  },
+  "created_utc": "2026-11-02T11:55:49Z",
+  "environment": {
+    "cpu_count": 16,
+    "cuda_available": false,
+    "networkx": "3.4.2",
+    "numpy": "2.1.3",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "sklearn": "1.5.2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "torch_geometric": "2.6.1"
+  },
+  "gradients": {
+    "checks": {
+      "C1": {
+        "details": {
+          "dead_tensors": [],
+          "grad_norm": {
+            "atom_encoder.lins.0.bias": 0.059984151273965836,
+            "atom_encoder.lins.0.weight": 0.12384097278118134,
+            "atom_encoder.lins.1.bias": 0.22108520567417145,
+            "atom_encoder.lins.1.weight": 0.2823043167591095,
+            "bond_encoder.lins.0.bias": 0.04569818079471588,
+            "bond_encoder.lins.0.weight": 0.09083067625761032,
+            "bond_encoder.lins.1.bias": 0.17707881331443787,
+            "bond_encoder.lins.1.weight": 0.08461011946201324,
+            "f.lins.0.bias": 0.2722720503807068,
+            "f.lins.0.weight": 1.9038901329040527,
+            "f.lins.1.bias": 0.8499824404716492,
+            "f.lins.1.weight": 1.6185959577560425,
+            "local.close_emb.weight": 0.06823255866765976,
+            "local.end_emb.weight": 0.08419309556484222,
+            "local.joint_proj.bias": 0.1095871552824974,
+            "local.joint_proj.weight": 0.34660497307777405,
+            "local.mlp.lins.0.bias": 0.32274162769317627,
+            "local.mlp.lins.0.weight": 5.2778849601745605,
+            "local.mlp.lins.1.bias": 0.9424960613250732,
+            "local.mlp.lins.1.weight": 3.2021868228912354,
+            "local.nbr_emb.weight": 0.08252762258052826,
+            "local.norm.bias": 0.1518346220254898,
+            "local.norm.weight": 0.1444108635187149,
+            "local.path_emb.weight": 0.08677425235509872,
+            "local.path_gate.weight": 0.0011031971080228686,
+            "local.path_u.weight": 0.03541213274002075,
+            "local.path_v.weight": 0.03785822167992592,
+            "rho.lins.0.bias": 0.06860313564538956,
+            "rho.lins.0.weight": 1.0082582235336304,
+            "rho.lins.1.bias": 0.19358375668525696,
+            "rho.lins.1.weight": 0.6480841040611267
+          },
+          "n_tensors": 31
+        },
+        "message": "every trainable tensor of C1 receives a finite non-zero gradient",
+        "ok": true
+      },
+      "FULL": {
+        "details": {
+          "dead_tensors": [],
+          "grad_norm": {
+            "atom_encoder.lins.0.bias": 0.23124754428863525,
+            "atom_encoder.lins.0.weight": 0.4574049115180969,
+            "atom_encoder.lins.1.bias": 0.7534781098365784,
+            "atom_encoder.lins.1.weight": 0.9415799975395203,
+            "bond_encoder.lins.0.bias": 0.1686941236257553,
+            "bond_encoder.lins.0.weight": 0.326651930809021,
+            "bond_encoder.lins.1.bias": 0.5767890810966492,
+            "bond_encoder.lins.1.weight": 0.269453763961792,
+            "f.lins.0.bias": 1.2399570941925049,
+            "f.lins.0.weight": 8.453614234924316,
+            "f.lins.1.bias": 4.215609073638916,
+            "f.lins.1.weight": 8.449265480041504,
+            "local.close_emb.weight": 0.16835755109786987,
+            "local.end_emb.weight": 0.3032785952091217,
+            "local.joint_proj.bias": 0.4451286792755127,
+            "local.joint_proj.weight": 1.403133511543274,
+            "local.mlp.lins.0.bias": 1.3215962648391724,
+            "local.mlp.lins.0.weight": 21.61258888244629,
+            "local.mlp.lins.1.bias": 4.197897911071777,
+            "local.mlp.lins.1.weight": 13.124606132507324,
+            "local.nbr_emb.weight": 0.2780321538448334,
+            "local.norm.bias": 0.6352642774581909,
+            "local.norm.weight": 0.5434604287147522,
+            "local.path_emb.weight": 0.27583006024360657,
+            "local.path_gate.weight": 0.04502984881401062,
+            "local.path_u.weight": 0.15442167222499847,
+            "local.path_v.weight": 0.19599361717700958,
+            "rho.lins.0.bias": 0.36851924657821655,
+            "rho.lins.0.weight": 5.129312515258789,
+            "rho.lins.1.bias": 0.9343463778495789,
+            "rho.lins.1.weight": 3.303550958633423
+          },
+          "n_tensors": 31
+        },
+        "message": "every trainable tensor of FULL receives a finite non-zero gradient",
+        "ok": true
+      },
+      "GIN": {
+        "details": {
+          "dead_tensors": [],
+          "grad_norm": {
+            "layers.0.eps": 0.042187780141830444,
+            "layers.0.mlp.lins.0.bias": 2.32008695602417,
+            "layers.0.mlp.lins.0.weight": 11.552536010742188,
+            "layers.0.mlp.lins.1.bias": 7.543947219848633,
+            "layers.0.mlp.lins.1.weight": 18.50457000732422,
+            "layers.0.norm.bias": 1.0607211589813232,
+            "layers.0.norm.weight": 1.038171410560608,
+            "layers.1.eps": 0.09935347735881805,
+            "layers.1.mlp.lins.0.bias": 0.7120611667633057,
+            "layers.1.mlp.lins.0.weight": 8.918213844299316,
+            "layers.1.mlp.lins.1.bias": 2.0237672328948975,
+            "layers.1.mlp.lins.1.weight": 14.095754623413086,
+            "layers.1.norm.bias": 0.7310853004455566,
+            "layers.1.norm.weight": 0.6918785572052002,
+            "layers.2.eps": 0.0330469012260437,
+            "layers.2.mlp.lins.0.bias": 0.40096166729927063,
+            "layers.2.mlp.lins.0.weight": 8.92043399810791,
+            "layers.2.mlp.lins.1.bias": 1.1310367584228516,
+            "layers.2.mlp.lins.1.weight": 11.758336067199707,
+            "layers.2.norm.bias": 0.680656909942627,
+            "layers.2.norm.weight": 0.8952471017837524,
+            "layers.3.eps": 0.01682461053133011,
+            "layers.3.mlp.lins.0.bias": 0.25597164034843445,
+            "layers.3.mlp.lins.0.weight": 7.009851932525635,
+            "layers.3.mlp.lins.1.bias": 0.7398630380630493,
+            "layers.3.mlp.lins.1.weight": 10.53463363647461,
+            "layers.3.norm.bias": 0.6236363053321838,
+            "layers.3.norm.weight": 0.8333269357681274,
+            "layers.4.eps": 0.020276546478271484,
+            "layers.4.mlp.lins.0.bias": 0.23131991922855377,
+            "layers.4.mlp.lins.0.weight": 7.6874260902404785,
+            "layers.4.mlp.lins.1.bias": 0.593399703502655,
+            "layers.4.mlp.lins.1.weight": 11.748381614685059,
+            "layers.4.norm.bias": 0.5874725580215454,
+            "layers.4.norm.weight": 0.8186641931533813,
+            "node_proj.bias": 4.252638816833496,
+            "node_proj.weight": 8.098907470703125,
+            "readout.lins.0.bias": 0.46519893407821655,
+            "readout.lins.0.weight": 28.86745262145996,
+            "readout.lins.1.bias": 1.1585049629211426,
+            "readout.lins.1.weight": 19.31395721435547
+          },
+          "n_tensors": 41
+        },
+        "message": "every trainable tensor of GIN receives a finite non-zero gradient",
+        "ok": true
+      },
+      "content_gate_probe": {
+        "details": {
+          "max_abs_logit_delta": 0.13324779272079468
+        },
+        "message": "zeroing the S2 content gate changes the logits (content channel is in the computation)",
+        "ok": true
+      }
+    },
+    "ok": true
+  },
+  "hand_computed": {
+    "chain": {
+      "details": {
+        "global": [
+          1.6094379425048828,
+          1.3862943649291992,
+          1.0986123085021973,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          3.0,
+          1.6666666269302368,
+          0.0,
+          0.1666666716337204,
+          0.75,
+          0.0,
+          2.0,
+          0.5,
+          0.6666666865348816,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          2.0
+        ],
+        "nbr_code": [
+          2,
+          0,
+          0,
+          2,
+          2,
+          0
+        ],
+        "nbr_ptr": [
+          0,
+          1,
+          3,
+          5,
+          6
+        ],
+        "path_cat": [
+          4,
+          0,
+          4,
+          0
+        ],
+        "path_closure": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "path_end": [
+          2,
+          3,
+          0,
+          1
+        ],
+        "path_end63": [
+          0,
+          2,
+          0,
+          2
+        ],
+        "path_ptr": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "scalars": [
+          [
+            0.6931471824645996,
+            0.6931471824645996,
+            0.0,
+            0.6931471824645996,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.6931471824645996,
+            0.6931471824645996,
+            0.0,
+            1.0986123085021973,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.6931471824645996,
+            0.6931471824645996,
+            0.0,
+            1.0986123085021973,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.6931471824645996,
+            0.6931471824645996,
+            0.0,
+            0.6931471824645996,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ]
+        ]
+      },
+      "message": "chain S1/S2/scalars/global equal the hand-computed values",
+      "ok": true
+    },
+    "degree_buckets": {
+      "details": {
+        "bucket_hits": [
+          2,
+          2,
+          2
+        ],
+        "n_atom_types": 18
+      },
+      "message": "IMDB node types are degree buckets (triangle -> bucket 2, K=18)",
+      "ok": true
+    },
+    "disconnected": {
+      "details": {
+        "global": [
+          1.3862943649291992,
+          0.6931471824645996,
+          0.0,
+          0.0,
+          2.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          1.0,
+          0.6666666865348816,
+          0.0,
+          0.3333333432674408,
+          0.0,
+          1.0,
+          0.6666666865348816,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "message": "disconnected graph uses the -1 unreachable sentinel and finite distance statistics",
+      "ok": true
+    },
+    "isolated_node": {
+      "details": {
+        "global": [
+          0.6931471824645996,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scalars": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "message": "isolated node keeps finite zero statistics and empty S1/S2",
+      "ok": true
+    },
+    "triangle": {
+      "details": {
+        "global": [
+          1.3862943649291992,
+          1.3862943649291992,
+          1.3862943649291992,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          0.0,
+          1.0,
+          1.3862943649291992,
+          2.0,
+          0.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "path_closure": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "path_end": [
+          2,
+          1,
+          2,
+          0,
+          1,
+          0
+        ],
+        "path_ptr": [
+          0,
+          2,
+          4,
+          6
+        ],
+        "scalars": [
+          [
+            0.0,
+            1.0986123085021973,
+            1.0,
+            1.0986123085021973,
+            1.0,
+            1.3862943649291992,
+            1.0986123085021973,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0986123085021973,
+            1.0,
+            1.0986123085021973,
+            1.0,
+            1.3862943649291992,
+            1.0986123085021973,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0986123085021973,
+            1.0,
+            1.0986123085021973,
+            1.0,
+            1.3862943649291992,
+            1.0986123085021973,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "message": "triangle closure=1 for every rooted 2-path and the ring statistics match",
+      "ok": true
+    },
+    "unseen_label_maps_to_unk": {
+      "details": {
+        "atom_type": [
+          0,
+          1
+        ],
+        "n_atom_types": 2,
+        "names": [
+          "NODE_LABEL_0",
+          "UNK"
+        ]
+      },
+      "message": "a node label unseen in Train maps to UNK (vocabulary size 1 + UNK)",
+      "ok": true
+    }
+  },
+  "n_checks": 14,
+  "permutation_invariance": {
+    "details": {
+      "feature_multiset_equal": true,
+      "global_equal": true,
+      "max_abs_logit_delta": 3.427267074584961e-07,
+      "permutation": [
+        3,
+        0,
+        5,
+        1,
+        4,
+        2
+      ],
+      "scalar_multiset_equal": true
+    },
+    "message": "node renumbering leaves the feature multiset, global vector and logits unchanged",
+    "ok": true
+  },
+  "round_id": "lcrc-tu-quick-screen-v1",
+  "shared_init": {
+    "details": {
+      "c1_has_b_mean": false,
+      "c1_local_layout": {
+        "a": [
+          0,
+          96
+        ],
+        "atom_scalar": [
+          424,
+          433
+        ],
+        "b_sum": [
+          96,
+          192
+        ],
+        "s1_joint": [
+          192,
+          224
+        ],
+        "s2_closure": [
+          320,
+          328
+        ],
+        "s2_content": [
+          328,
+          424
+        ],
+        "s2_end": [
+          256,
+          288
+        ],
+        "s2_joint": [
+          288,
+          320
+        ],
+        "s2_type": [
+          224,
+          256
+        ]
+      },
+      "deleted_block": [
+        192,
+        288
+      ],
+      "deleted_columns": 96,
+      "expected_param_diff": 18432,
+      "full_has_b_mean": true,
+      "full_local_layout": {
+        "a": [
+          0,
+          96
+        ],
+        "atom_scalar": [
+          520,
+          529
+        ],
+        "b_mean": [
+          192,
+          288
+        ],
+        "b_sum": [
+          96,
+          192
+        ],
+        "s1_joint": [
+          288,
+          320
+        ],
+        "s2_closure": [
+          416,
+          424
+        ],
+        "s2_content": [
+          424,
+          520
+        ],
+        "s2_end": [
+          352,
+          384
+        ],
+        "s2_joint": [
+          384,
+          416
+        ],
+        "s2_type": [
+          320,
+          352
+        ]
+      },
+      "full_vs_c1_max_abs_logit_delta": 0.04654534161090851,
+      "local_input_dim_c1": 433,
+      "local_input_dim_full": 529,
+      "n_shared_tensors_checked": 35,
+      "param_diff": 18432,
+      "shared_params_bitwise_equal": true,
+      "zeroed_bmean_full_vs_c1_max_abs_logit_delta": 2.980232238769531e-07
+    },
+    "message": "FULL/C1 share every init tensor; C1 deletes exactly the b_mean block",
+    "ok": true
+  },
+  "split_and_norm": {
+    "IMDB-BINARY": {
+      "details": {
+        "class_counts": {
+          "test": [
+            50,
+            50
+          ],
+          "train": [
+            400,
+            400
+          ],
+          "valid": [
+            50,
+            50
+          ]
+        },
+        "complete": true,
+        "disjoint": true,
+        "n": 1000,
+        "norm_fit_split": "train",
+        "norm_global_mean_matches_train": true,
+        "norm_valid_or_test_used": false,
+        "partition_sha256": "b1cacabd5a2c4fefc51fa48981deeeb0bdc548e943d9bc155cb4fb508c903b97",
+        "sizes": {
+          "test": 100,
+          "train": 800,
+          "valid": 100
+        },
+        "split_rows_probe": {
+          "test": [
+            28,
+            39,
+            42,
+            53,
+            70,
+            72,
+            82,
+            87,
+            941,
+            954,
+            960,
+            972,
+            978,
+            979,
+            980,
+            994
+          ],
+          "train": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            990,
+            991,
+            993,
+            995,
+            996,
+            997,
+            998,
+            999
+          ],
+          "valid": [
+            9,
+            25,
+            31,
+            32,
+            38,
+            47,
+            57,
+            84,
+            919,
+            920,
+            929,
+            930,
+            939,
+            963,
+            975,
+            992
+          ]
+        },
+        "test_index_sha256": "13815b55a547d41958d2f0c2dd66cc43d9084d92e4a017cf248579fa9c766da1",
+        "train_index_sha256": "de7aff70604903aad3034d145acd7349d9ed43069098e353b9fa2bfd86b2fc09",
+        "valid_index_sha256": "e05c4320e7d03939999fa3863d57437e3ebbeb20b616230b639e04f6a0ba0544"
+      },
+      "message": "split is a disjoint complete partition and the norm is fit on Train only",
+      "ok": true
+    },
+    "IMDB-MULTI": {
+      "details": {
+        "class_counts": {
+          "test": [
+            50,
+            50,
+            50
+          ],
+          "train": [
+            400,
+            400,
+            400
+          ],
+          "valid": [
+            50,
+            50,
+            50
+          ]
+        },
+        "complete": true,
+        "disjoint": true,
+        "n": 1500,
+        "norm_fit_split": "train",
+        "norm_global_mean_matches_train": true,
+        "norm_valid_or_test_used": false,
+        "partition_sha256": "624b69aee1a7cf1934b5026901ff8a13db3d7c9cbacffb4c6a2b58a32f93bf5b",
+        "sizes": {
+          "test": 150,
+          "train": 1200,
+          "valid": 150
+        },
+        "split_rows_probe": {
+          "test": [
+            28,
+            31,
+            32,
+            47,
+            53,
+            57,
+            70,
+            72,
+            1451,
+            1455,
+            1459,
+            1465,
+            1472,
+            1491,
+            1494,
+            1498
+          ],
+          "train": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            1489,
+            1490,
+            1492,
+            1493,
+            1495,
+            1496,
+            1497,
+            1499
+          ],
+          "valid": [
+            9,
+            25,
+            38,
+            39,
+            42,
+            88,
+            99,
+            117,
+            1420,
+            1428,
+            1429,
+            1435,
+            1439,
+            1470,
+            1471,
+            1482
+          ]
+        },
+        "test_index_sha256": "9a335de535955382977fb3a1c5b208330c00be594241adf409165fe30addee6b",
+        "train_index_sha256": "bbb63d202eee838517b7930c44fcd53a82aa311a6c5db6b7d59812203b866b0b",
+        "valid_index_sha256": "85b067d66be7abd29855ac31aaaf71619c34184484c33b3afb83cf827624aca9"
+      },
+      "message": "split is a disjoint complete partition and the norm is fit on Train only",
+      "ok": true
+    },
+    "NCI1": {
+      "details": {
+        "class_counts": {
+          "test": [
+            206,
+            205
+          ],
+          "train": [
+            1642,
+            1646
+          ],
+          "valid": [
+            205,
+            206
+          ]
+        },
+        "complete": true,
+        "disjoint": true,
+        "n": 4110,
+        "norm_fit_split": "train",
+        "norm_global_mean_matches_train": true,
+        "norm_valid_or_test_used": false,
+        "partition_sha256": "b8ecf9feee86ad1f0c95f9a46291c97190d786c34d69151a6068aa43fd711302",
+        "sizes": {
+          "test": 411,
+          "train": 3288,
+          "valid": 411
+        },
+        "split_rows_probe": {
+          "test": [
+            11,
+            23,
+            28,
+            69,
+            72,
+            73,
+            93,
+            99,
+            4033,
+            4048,
+            4065,
+            4071,
+            4075,
+            4094,
+            4096,
+            4097
+          ],
+          "train": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            4101,
+            4102,
+            4103,
+            4104,
+            4106,
+            4107,
+            4108,
+            4109
+          ],
+          "valid": [
+            24,
+            25,
+            32,
+            33,
+            36,
+            41,
+            43,
+            57,
+            4050,
+            4051,
+            4064,
+            4067,
+            4084,
+            4087,
+            4091,
+            4105
+          ]
+        },
+        "test_index_sha256": "0e0649e52f6bd0c5963c3d7b484e959f9b43a546356fba43ac3e324fabebfb76",
+        "train_index_sha256": "a0da877aab4c9bbd05ed440987b5f0b8b6c373e67ac4d4fec42ceef86fbb6cef",
+        "valid_index_sha256": "5aac763c0daf66a2f3116a5f239f6a5c4adf518be0b1e54d3a3055349a64976f"
+      },
+      "message": "split is a disjoint complete partition and the norm is fit on Train only",
+      "ok": true
+    },
+    "PROTEINS": {
+      "details": {
+        "class_counts": {
+          "test": [
+            67,
+            45
+          ],
+          "train": [
+            530,
+            360
+          ],
+          "valid": [
+            66,
+            45
+          ]
+        },
+        "complete": true,
+        "disjoint": true,
+        "n": 1113,
+        "norm_fit_split": "train",
+        "norm_global_mean_matches_train": true,
+        "norm_valid_or_test_used": false,
+        "partition_sha256": "68d9490aa5e7a8bcd7a64dbd753a221c65346f2a156e942a8e72601cc2e30330",
+        "sizes": {
+          "test": 112,
+          "train": 890,
+          "valid": 111
+        },
+        "split_rows_probe": {
+          "test": [
+            11,
+            32,
+            41,
+            42,
+            47,
+            57,
+            58,
+            70,
+            1021,
+            1028,
+            1053,
+            1059,
+            1068,
+            1069,
+            1071,
+            1098
+          ],
+          "train": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            1103,
+            1104,
+            1105,
+            1106,
+            1108,
+            1109,
+            1111,
+            1112
+          ],
+          "valid": [
+            9,
+            19,
+            23,
+            28,
+            36,
+            43,
+            53,
+            72,
+            1052,
+            1064,
+            1066,
+            1072,
+            1077,
+            1080,
+            1107,
+            1110
+          ]
+        },
+        "test_index_sha256": "c0d9ac1de16cef614b7225c51e5f5e3d01160ff7897c0af12946296f6248c32d",
+        "train_index_sha256": "3f033b968f477734906e4145d445456ae0ade20bc201a21317aea51a70c0a22c",
+        "valid_index_sha256": "b1d57025b9f3539d79e61bfd95597ed2ab96ed4097d59544a2b9de81df5e4831"
+      },
+      "message": "split is a disjoint complete partition and the norm is fit on Train only",
+      "ok": true
+    }
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "round_id": "lcrc-tu-quick-screen-v1",
+  "result_label": "EXPLORATORY_SINGLE_SEED_RANDOM_811",
+  "purpose": "Fixed exploratory screen: LCRC-FULL vs LCRC-C1 (no b_mean) vs GIN+global on four TUDataset classification datasets, single seed, single 8:1:1 stratified split.",
+  "datasets": {
+    "NCI1": {"n_graphs": 4110, "n_classes": 2, "split": [3288, 411, 411], "node_type": "raw discrete node label (Train vocabulary + UNK)"},
+    "PROTEINS": {"n_graphs": 1113, "n_classes": 2, "split": [890, 111, 112], "node_type": "raw discrete node label (Train vocabulary + UNK)"},
+    "IMDB-BINARY": {"n_graphs": 1000, "n_classes": 2, "split": [800, 100, 100], "node_type": "degree bucket 0..15, >=16, reserved UNK"},
+    "IMDB-MULTI": {"n_graphs": 1500, "n_classes": 3, "split": [1200, 150, 150], "node_type": "degree bucket 0..15, >=16, reserved UNK"}
+  },
+  "loader": {
+    "interface": "torch_geometric.datasets.TUDataset",
+    "cleaned": false,
+    "use_node_attr": false,
+    "use_edge_attr": false,
+    "docs": [
+      "https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.datasets.TUDataset.html",
+      "https://chrsmrrs.github.io/datasets/docs/datasets/"
+    ],
+    "archive_root": "https://www.chrsmrrs.com/graphkerneldatasets"
+  },
+  "edge_cleaning": "drop self-loops; merge duplicated directed records into one physical undirected edge per pair; keep isolated nodes and disconnected graphs",
+  "split": {
+    "seed": 0,
+    "procedure": "train_test_split(train_size=n_train, stratify=y, random_state=0) then train_test_split(rest, train_size=n_valid, stratify=y_rest, random_state=0)",
+    "re_draw_forbidden": true,
+    "test_labels": "used only once per run, after the checkpoint hash is recorded"
+  },
+  "tu_features": {
+    "bond_types": ["EDGE", "UNK"],
+    "bond_type_used": "EDGE=1 for every physical edge",
+    "node_features": "node type one-hot (K) + degree bucket one-hot (17) + in_cycle + minimum cycle size one-hot acyclic,3,4,5,6,7,>=8 + log1p(cycle_degree) + cycle_degree/max(degree,1) + degree==1 + cycle_degree>=3; width K+29",
+    "edge_features": ["1", "is_cycle_edge"],
+    "node_scalars": [
+      "log1p_n_d2",
+      "log1p_n_paths2",
+      "closure_ratio",
+      "log1p_degree",
+      "in_cycle",
+      "log1p_min_cycle_size",
+      "log1p_cycle_degree",
+      "is_terminal",
+      "cycle_degree_ge3"
+    ],
+    "global_features_28": [
+      "log1p_n_atoms",
+      "log1p_n_bonds",
+      "log1p_n_junctions",
+      "cyclomatic_number",
+      "n_components",
+      "ring_atom_fraction",
+      "ring_bond_fraction",
+      "n_ring_systems",
+      "diameter_max_finite",
+      "mean_finite_pair_distance",
+      "frac_unreachable_pairs",
+      "frac_finite_pairs_ge3",
+      "bonds_per_atom",
+      "log1p_n_ring_atoms",
+      "max_degree",
+      "terminal_atom_fraction",
+      "junction_per_bond",
+      "frac_junction_centers_ring",
+      "frac_deg2_junctions",
+      "frac_deg3plus_junctions",
+      "ring_size3_fraction",
+      "ring_size4_fraction",
+      "ring_size5_fraction",
+      "ring_size6_fraction",
+      "ring_size7_fraction",
+      "ring_size8plus_fraction",
+      "fused_ring_atom_fraction",
+      "distinct_atom_types"
+    ],
+    "s1_s2": "directed non-backtracking 2-path enumeration root->middle->end with end != root; no sampling, no truncation",
+    "normalisation": "Train-only mean/scale for the 9 scalars and the 28 global fields; zero-variance scale set to 1"
+  },
+  "models": {
+    "FULL": "LCRC-A body: atom 128->96, bond 160->96, stat_rank 32, local_hidden 192, h=64, rho_hidden 64; logits = sum_v f(h_v) + rho(global, mean h, mean h^2, log1p n); dropout 0.10 once per forward",
+    "C1": "identical to FULL with only the 96-d b_mean = b_sum/degree block deleted; shared initialisation mapped from the seed-0 FULL state",
+    "GIN": "node linear -> 64, 5 GIN layers (train_eps, eps=0, MLP 64-128-64, LayerNorm-SiLU-dropout 0.10 residual), concat[sum_pool, mean_pool, global28, log1p n] -> 157-64-C"
+  },
+  "recipe": {
+    "seed": 0,
+    "precision": "fp32",
+    "optimizer": "AdamW",
+    "lr": 0.001,
+    "min_lr": 0.00001,
+    "weight_decay": 0.0001,
+    "betas": [0.9, 0.999],
+    "eps": 0.00000001,
+    "batch_size": 64,
+    "epochs": 200,
+    "scheduler": "per-step cosine",
+    "gradient_clip": 5.0,
+    "loss": "unweighted CrossEntropyLoss over C logits",
+    "selection": "max Valid accuracy, tie -> lower Valid CE, tie -> earlier epoch",
+    "test_policy": "one evaluation per run after the checkpoint hash is saved",
+    "forbidden": ["early stopping", "EMA", "SWA", "soup", "augmentation", "SSL", "extra losses", "hyperparameter search", "cross-validation", "multi-seed"]
+  },
+  "run_matrix": [
+    {"dataset": "NCI1", "model": "FULL"},
+    {"dataset": "NCI1", "model": "C1"},
+    {"dataset": "NCI1", "model": "GIN"},
+    {"dataset": "PROTEINS", "model": "FULL"},
+    {"dataset": "PROTEINS", "model": "C1"},
+    {"dataset": "PROTEINS", "model": "GIN"},
+    {"dataset": "IMDB-BINARY", "model": "FULL"},
+    {"dataset": "IMDB-BINARY", "model": "C1"},
+    {"dataset": "IMDB-BINARY", "model": "GIN"},
+    {"dataset": "IMDB-MULTI", "model": "FULL"},
+    {"dataset": "IMDB-MULTI", "model": "C1"},
+    {"dataset": "IMDB-MULTI", "model": "GIN"}
+  ],
+  "baseline": "Train-majority constant classifier (zero training cost, not one of the 12 runs)"
+}
