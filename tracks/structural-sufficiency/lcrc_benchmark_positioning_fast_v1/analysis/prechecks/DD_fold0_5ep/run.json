@@ -1,0 +1,257 @@
+{
+  "batch_size": 64,
+  "best_aux": 3.442445993423462,
+  "best_epoch": 2,
+  "best_metric": 0.6440677966101694,
+  "cache_identity": {
+    "cache": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/cache/DD.pt",
+    "cache_sha256": "1a4aab43c58f46a749175b387ba41c6468babebb8ded8ba609b7540981d5490a",
+    "cont_norm_fingerprint": "",
+    "feature_spec_hash": "1ebd7555f0e1c7c76ef9e9b3b9a22a24f6fe0e312b1ffbaf4346fb08461d4a3c",
+    "fold_partition_sha256": "3a555c3f1b6c4234391d812b655bfd7f951d79c40c59eebb4ca69601f95a9b55",
+    "norm_fingerprint": "5e3af43dd8692e0786ca242d9d4775fec4a516019f527ad4f44933a0f4e36bec"
+  },
+  "checkpoint_path": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/analysis/prechecks/DD_fold0_5ep/checkpoint.pt",
+  "checkpoint_sha256": "7e2ef6383f5eeb21d23532ae85a5ed3d6773984ef62166cab8a6137cfa65ccc3",
+  "curve_sha256": "46958dc4d86776177abca96a8f45a11041b3a9066cfcb193f3d357df554e9e66",
+  "dataset": "DD",
+  "dropout_calls": 80,
+  "environment": {
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "git_commit": "03b21b9536f216a79b018dda5e4797202eca6a34",
+    "git_dirty": false,
+    "hostname": "a100-2",
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "epochs_run": 5,
+  "feature_spec_hash": "1ebd7555f0e1c7c76ef9e9b3b9a22a24f6fe0e312b1ffbaf4346fb08461d4a3c",
+  "gpu_peak_allocated_bytes": 1868069888,
+  "gpu_peak_reserved_bytes": 5953814528,
+  "grad_clip_events": 75,
+  "grad_norm_max": 1784.1881103515625,
+  "kind": "tu",
+  "max_seconds": 1200.0,
+  "model_info": {
+    "cont_norm_in_state": false,
+    "cont_slice": [
+      112,
+      112
+    ],
+    "full_init_state_hash": "df99314e81a0b4772d4f1ee4fa5adc2ca99b61a1c1645127f5f60dec7cf95fdf",
+    "init_state_hash": "4ed7a6c2f926ebf9be519fd56b05b0e08155f29e305348769da78e4d0d402f77",
+    "input_widths": {
+      "atom_feat": 112,
+      "bond_feat": 2,
+      "global": 28,
+      "n_nbr_codes": 166,
+      "n_path_codes": 332,
+      "scalars": 9
+    },
+    "local_input_dim": 433,
+    "local_layout": {
+      "a": [
+        0,
+        96
+      ],
+      "atom_scalar": [
+        424,
+        433
+      ],
+      "b_sum": [
+        96,
+        192
+      ],
+      "s1_joint": [
+        192,
+        224
+      ],
+      "s2_closure": [
+        320,
+        328
+      ],
+      "s2_content": [
+        328,
+        424
+      ],
+      "s2_end": [
+        256,
+        288
+      ],
+      "s2_joint": [
+        288,
+        320
+      ],
+      "s2_type": [
+        224,
+        256
+      ]
+    },
+    "n_outputs": 2,
+    "parameters": 237792,
+    "parameters_breakdown": {
+      "atom_encoder": 26848,
+      "bond_encoder": 62016,
+      "drop": 0,
+      "f": 4290,
+      "local": 134396,
+      "rho": 10242,
+      "total": 237792
+    },
+    "rho_input_dim": 157,
+    "seed": 100,
+    "shared_with_full": {
+      "all_equal": true,
+      "checks": {
+        "atom_encoder.lins.0.bias": true,
+        "atom_encoder.lins.0.weight": true,
+        "atom_encoder.lins.1.bias": true,
+        "atom_encoder.lins.1.weight": true,
+        "bond_encoder.lins.0.bias": true,
+        "bond_encoder.lins.0.weight": true,
+        "bond_encoder.lins.1.bias": true,
+        "bond_encoder.lins.1.weight": true,
+        "f.lins.0.bias": true,
+        "f.lins.0.weight": true,
+        "f.lins.1.bias": true,
+        "f.lins.1.weight": true,
+        "global_mean": true,
+        "global_scale": true,
+        "local.close_emb.weight": true,
+        "local.end_emb.weight": true,
+        "local.joint_proj.bias": true,
+        "local.joint_proj.weight": true,
+        "local.mlp.lins.0.bias": true,
+        "local.mlp.lins.0.weight": true,
+        "local.mlp.lins.1.bias": true,
+        "local.mlp.lins.1.weight": true,
+        "local.nbr_emb.weight": true,
+        "local.norm.bias": true,
+        "local.norm.weight": true,
+        "local.path_emb.weight": true,
+        "local.path_gate.weight": true,
+        "local.path_u.weight": true,
+        "local.path_v.weight": true,
+        "rho.lins.0.bias": true,
+        "rho.lins.0.weight": true,
+        "rho.lins.1.bias": true,
+        "rho.lins.1.weight": true,
+        "scalar_mean": true,
+        "scalar_scale": true
+      },
+      "n_checked": 35
+    },
+    "variant": "C1",
+    "variant_definition": "LCRC-A minus the 96-d b_mean = b_sum/deg local-input block; no other change"
+  },
+  "n_outputs": 2,
+  "norm_fingerprint": "5e3af43dd8692e0786ca242d9d4775fec4a516019f527ad4f44933a0f4e36bec",
+  "parameters": 237792,
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 64,
+    "dropout": 0.1,
+    "early_stop": "after min_epochs, stop when 25 consecutive epochs do not strictly improve best Valid accuracy",
+    "gradient_clip": 5.0,
+    "loss": "CrossEntropyLoss (unweighted)",
+    "max_epochs": 120,
+    "min_epochs": 40,
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "patience": 25,
+    "peak_lr": 0.001,
+    "scheduler": "per_step_cosine",
+    "scheduler_horizon_epochs": 200,
+    "selection": "max Valid accuracy; ties -> lower Valid CE; ties -> earlier epoch",
+    "test_policy": "terminal: one evaluation after checkpoint hash is recorded",
+    "weight_decay": 0.0001
+  },
+  "seconds": 11.925663955975324,
+  "seed": 100,
+  "selection": {
+    "best_aux": 3.442445993423462,
+    "best_epoch": 2,
+    "best_metric": 0.6440677966101694,
+    "best_metrics": {
+      "accuracy": 0.6440677966101694,
+      "confusion_matrix": [
+        [
+          69,
+          0
+        ],
+        [
+          42,
+          7
+        ]
+      ],
+      "cross_entropy": 3.442445993423462,
+      "macro_f1": 0.5083333333333333,
+      "n": 118,
+      "per_class_f1": [
+        0.7666666666666667,
+        0.25
+      ]
+    },
+    "checkpoint_path": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/analysis/prechecks/DD_fold0_5ep/checkpoint.pt",
+    "checkpoint_sha256": "7e2ef6383f5eeb21d23532ae85a5ed3d6773984ef62166cab8a6137cfa65ccc3",
+    "scores": [
+      {
+        "aux": 6.877586364746094,
+        "epoch": 1,
+        "is_best": true,
+        "metric": 0.4152542372881356,
+        "strict_improve": true
+      },
+      {
+        "aux": 3.442445993423462,
+        "epoch": 2,
+        "is_best": true,
+        "metric": 0.6440677966101694,
+        "strict_improve": true
+      },
+      {
+        "aux": 1.9468119144439697,
+        "epoch": 3,
+        "is_best": false,
+        "metric": 0.4576271186440678,
+        "strict_improve": false
+      },
+      {
+        "aux": 2.2199697494506836,
+        "epoch": 4,
+        "is_best": false,
+        "metric": 0.6271186440677966,
+        "strict_improve": false
+      },
+      {
+        "aux": 2.961493492126465,
+        "epoch": 5,
+        "is_best": false,
+        "metric": 0.4152542372881356,
+        "strict_improve": false
+      }
+    ],
+    "selection_finished_utc": "2026-11-03T21:10:05Z",
+    "test_evaluated": false,
+    "tie_check": {
+      "argbest_epoch": 2,
+      "consistent": true,
+      "tracked_epoch": 2
+    }
+  },
+  "started_utc": "2026-11-03T21:10:07Z",
+  "status": "PRECHECK_ONLY",
+  "test_evaluated": false,
+  "train_seconds": 10.00165447872132,
+  "unit": 0,
+  "valid_seconds": 1.0291036306880414,
+  "variant": "C1"
+}

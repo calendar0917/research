@@ -281,3 +281,13 @@ Molecular：
 报告只描述观察事实，不推导新模型研究结论，不提出新架构，不自行决定下一轮实验。
 
 验收标准：已完成任务具有可核验的数据来源、独立的验证选择和最终 Test 评分；未完成任务有明确原因；没有预算越界、协议漂移或静默近似。
+
+## 11. 执行记录（非协议修改）
+
+以下为执行后追加的事实记录；不改变第 1–10 节冻结的模型、配方、预算或评价规则。
+
+- 精确 S2 eager cache 的执行上限为 `20,000,000` 条路径/数据集（`bp_common.EAGER_S2_LIMIT`）。COLLAB 的精确 S2 总量为 `3,934,836,808`，REDDIT-BINARY 为 `369,653,358`；两者均在预检查阶段标记 `RESOURCE_BLOCKED / EXACT_S2_CACHE_BUDGET`，未建立 cache、未启动 10-fold，未采样、未截断、未改图。证据：`analysis/COLLAB_precheck_counts.json`、`analysis/REDDIT-BINARY_precheck_counts.json`。
+- Peptides-func seed0 第一次尝试在 epoch 120 开始时达到 1500 s 单任务上限，写 `RESOURCE_BLOCKED / PER_TASK_TIME_LIMIT`，无 checkpoint、无 Test；归档于 `analysis/blocked_runs/peptide_peptides-func_seed0_attempt1_PER_TASK_TIME_LIMIT/`。同一 seed、冻结配方、同一 25 分钟上限重跑一次，1150.4 s 完成；两 records 见 `results/peptide_seed0_attempts.csv`。
+- 正式训练 commit：`4c24f5f50db0`；汇总代码 commit：`29e51c9ba2f5`。全部 82 个完成任务的 `run.json` 记录 `git_dirty=false`。
+- `tests/test_bp_core.py` 在正式队列启动前 11/11 通过；`analysis/correctness_gates.json` 的 26 项 artifact audit 全部通过（时间戳晚于队列启动，为只读检查）。
+- 最终完成 82/102：TU 70/90（7 数据集），OGB 9/9，Peptides 3/3；资源阻塞 20/102；其他失败 0。GPU 账本 2.973 A100-hours（含 seed0 第一次阻塞尝试 0.420 h 与重跑）。

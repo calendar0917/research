@@ -1,0 +1,262 @@
+{
+  "batch_size": 64,
+  "best_aux": null,
+  "best_epoch": 4,
+  "best_metric": 0.36715922258636213,
+  "cache_identity": {
+    "cache_train": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/cache/peptides_func_train.pt",
+    "cache_train_sha256": "7b57289e8a7cc6174c6c356124c333d03d1cbeff11cf0fca0ef66826608b0ad1",
+    "cache_valid_sha256": "6c1d66677effdac1fa8ca8f25d457e962b89a837c5416985c6c10b717418be6c",
+    "feature_spec_hash": "0eaba915b633642f618bcd7a273436df2305a10838e70be749721c2ea394cdc9",
+    "norm_fingerprint": "919acc427ab2066ecade1e83d922845011aabafc00b6c2de6b091ba3ce531f6a"
+  },
+  "checkpoint_path": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/analysis/prechecks/peptides_seed0_5ep/checkpoint.pt",
+  "checkpoint_sha256": "1291864edf107ddb6e33523fc1acea8da3d27dfe04ac1ae731a95611f61d4a43",
+  "curve_sha256": "0f81a6a5a794e041e861e87930de7919c00a3df83f5652ddd8c9afb14a456f16",
+  "dataset": "peptides-func",
+  "dropout_calls": 900,
+  "environment": {
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "git_commit": "4c24f5f50db08ddb5661147d6e166019bc8bd464",
+    "git_dirty": false,
+    "hostname": "a100-2",
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "epochs_run": 5,
+  "feature_spec_hash": "0eaba915b633642f618bcd7a273436df2305a10838e70be749721c2ea394cdc9",
+  "gpu_peak_allocated_bytes": 356266496,
+  "gpu_peak_reserved_bytes": 771751936,
+  "grad_clip_events": 838,
+  "grad_norm_max": 229.6761016845703,
+  "kind": "peptide",
+  "max_seconds": 1200.0,
+  "model_info": {
+    "cont_norm_in_state": false,
+    "cont_slice": [
+      0,
+      0
+    ],
+    "full_init_state_hash": "4a823f6f3b5d3e9d17ddc7d7e035c9bc15744d2d2f57ec1f11453b764c325621",
+    "init_state_hash": "4b7ca35f3f791fc54921cf20b7e470a22ec9f90aff99f353ec60f8e997fec1a8",
+    "input_widths": {
+      "atom_feat": 198,
+      "bond_feat": 14,
+      "global": 28,
+      "n_nbr_codes": 595,
+      "n_path_codes": 2975,
+      "scalars": 9
+    },
+    "local_input_dim": 433,
+    "local_layout": {
+      "a": [
+        0,
+        96
+      ],
+      "atom_scalar": [
+        424,
+        433
+      ],
+      "b_sum": [
+        96,
+        192
+      ],
+      "s1_joint": [
+        192,
+        224
+      ],
+      "s2_closure": [
+        320,
+        328
+      ],
+      "s2_content": [
+        328,
+        424
+      ],
+      "s2_end": [
+        256,
+        288
+      ],
+      "s2_joint": [
+        288,
+        320
+      ],
+      "s2_type": [
+        224,
+        256
+      ]
+    },
+    "n_outputs": 10,
+    "parameters": 464739,
+    "parameters_breakdown": {
+      "atom_encoder": 37856,
+      "bond_encoder": 63936,
+      "drop": 0,
+      "f": 4810,
+      "local": 347375,
+      "rho": 10762,
+      "total": 464739
+    },
+    "rho_input_dim": 157,
+    "seed": 0,
+    "shared_with_full": {
+      "all_equal": true,
+      "checks": {
+        "atom_encoder.lins.0.bias": true,
+        "atom_encoder.lins.0.weight": true,
+        "atom_encoder.lins.1.bias": true,
+        "atom_encoder.lins.1.weight": true,
+        "bond_encoder.lins.0.bias": true,
+        "bond_encoder.lins.0.weight": true,
+        "bond_encoder.lins.1.bias": true,
+        "bond_encoder.lins.1.weight": true,
+        "f.lins.0.bias": true,
+        "f.lins.0.weight": true,
+        "f.lins.1.bias": true,
+        "f.lins.1.weight": true,
+        "global_mean": true,
+        "global_scale": true,
+        "local.close_emb.weight": true,
+        "local.end_emb.weight": true,
+        "local.joint_proj.bias": true,
+        "local.joint_proj.weight": true,
+        "local.mlp.lins.0.bias": true,
+        "local.mlp.lins.0.weight": true,
+        "local.mlp.lins.1.bias": true,
+        "local.mlp.lins.1.weight": true,
+        "local.nbr_emb.weight": true,
+        "local.norm.bias": true,
+        "local.norm.weight": true,
+        "local.path_emb.weight": true,
+        "local.path_gate.weight": true,
+        "local.path_u.weight": true,
+        "local.path_v.weight": true,
+        "rho.lins.0.bias": true,
+        "rho.lins.0.weight": true,
+        "rho.lins.1.bias": true,
+        "rho.lins.1.weight": true,
+        "scalar_mean": true,
+        "scalar_scale": true
+      },
+      "n_checked": 35
+    },
+    "variant": "C1",
+    "variant_definition": "LCRC-A minus the 96-d b_mean = b_sum/deg local-input block; no other change"
+  },
+  "n_outputs": 10,
+  "norm_fingerprint": "919acc427ab2066ecade1e83d922845011aabafc00b6c2de6b091ba3ce531f6a",
+  "parameters": 464739,
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 64,
+    "batch_size_fallbacks": [
+      32,
+      16
+    ],
+    "dropout": 0.1,
+    "early_stop": "after min_epochs, stop when 25 consecutive epochs do not strictly improve best Validation mean AP",
+    "gradient_clip": 5.0,
+    "loss": "BCEWithLogitsLoss over 10 independent labels",
+    "max_epochs": 120,
+    "min_epochs": 40,
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "patience": 25,
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "scheduler_horizon_epochs": 120,
+    "selection": "max Validation mean average precision (macro AP over 10 labels)",
+    "test_policy": "terminal: one evaluation after checkpoint hash is recorded",
+    "weight_decay": 0.001
+  },
+  "reload_tolerance": 0.0001,
+  "reload_valid_delta": 6.737028975023485e-06,
+  "reload_valid_metric": 0.36716595961533716,
+  "seconds": 50.73856531502679,
+  "seed": 0,
+  "selection": {
+    "best_aux": null,
+    "best_epoch": 4,
+    "best_metric": 0.36715922258636213,
+    "best_metrics": {
+      "macro_ap": 0.36715922258636213,
+      "missing_policy": "labels with no observed row or a single class are excluded from the macro mean and recorded as null",
+      "n": 2331,
+      "n_labels": 10,
+      "per_label": [
+        0.16860954931613353,
+        0.0805952971222855,
+        0.1641039189143364,
+        0.21141171106884118,
+        0.8360659854164372,
+        0.41164563955552896,
+        0.8233678068889426,
+        0.3365154136807986,
+        0.06598924640505859,
+        0.5732876574952595
+      ],
+      "value": 0.36715922258636213
+    },
+    "checkpoint_path": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/analysis/prechecks/peptides_seed0_5ep/checkpoint.pt",
+    "checkpoint_sha256": "1291864edf107ddb6e33523fc1acea8da3d27dfe04ac1ae731a95611f61d4a43",
+    "scores": [
+      {
+        "aux": NaN,
+        "epoch": 1,
+        "is_best": true,
+        "metric": 0.3011003400048915,
+        "strict_improve": true
+      },
+      {
+        "aux": NaN,
+        "epoch": 2,
+        "is_best": true,
+        "metric": 0.34403136848065263,
+        "strict_improve": true
+      },
+      {
+        "aux": NaN,
+        "epoch": 3,
+        "is_best": true,
+        "metric": 0.3493275402697481,
+        "strict_improve": true
+      },
+      {
+        "aux": NaN,
+        "epoch": 4,
+        "is_best": true,
+        "metric": 0.36715922258636213,
+        "strict_improve": true
+      },
+      {
+        "aux": NaN,
+        "epoch": 5,
+        "is_best": false,
+        "metric": 0.3656349781996996,
+        "strict_improve": false
+      }
+    ],
+    "selection_finished_utc": "2026-11-03T21:16:59Z",
+    "test_evaluated": false,
+    "tie_check": {
+      "argbest_epoch": 4,
+      "consistent": true,
+      "tracked_epoch": 4
+    }
+  },
+  "started_utc": "2026-11-03T21:17:00Z",
+  "status": "PRECHECK_ONLY",
+  "test_evaluated": false,
+  "train_seconds": 42.97898924257606,
+  "unit": 0,
+  "valid_seconds": 6.896051614079624,
+  "variant": "C1"
+}
