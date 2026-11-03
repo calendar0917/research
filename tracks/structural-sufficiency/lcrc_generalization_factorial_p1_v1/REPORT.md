@@ -16,7 +16,7 @@
 4. **Q4（增益是否集中于少数分子）：不集中。** Test 上 COMBO 改善的分子比例 0.488–0.569（几乎就是 50/50），在净收益为正的 6 个 Test 组合里，前 5 个分子对净 SSE 下降的贡献份额为 0.38–0.77；但单个分子仍可造成 −1.2 ~ −4.0 SSE 的反向损失。**这是"面上小幅、尾部仍有重尾损伤"的形态，不是"少数英雄式翻盘"。**
 5. **Q5（是否只对 scaffold-unseen 有效）：不是，方向甚至相反。** random123 seed 1 的 Test 上，seen 组 ΔRMSE = −0.0543 [−0.0799, −0.0260]，unseen 组 = +0.0084 [−0.0385, +0.0594]；random122 三个 seed 的 seen/unseen 差值几乎相同。最接近 Train 的 `max_train_tanimoto` Q4 在 122 Test 上最稳定地改善。**COMBO 的增益更像"熟悉化学空间内的小幅稳定改进"，不是 unseen 泛化能力。**
 
-一句话：**本轮没有复现出可重复的 CHEM8×MULTICONTRIB 交互，也没有建立 COMBO 的统计显著优势；能站住的只有"COMBO 在三个划分的 Test 上都不比 BASE 差、平均约 1.6%–5.2% 的 RMSE 小幅改善、且该改善不是靠少数分子或 unseen 子群"这一弱陈述。**
+一句话：**本轮没有复现出可重复的 CHEM8×MULTICONTRIB 交互，也没有建立 COMBO 的统计显著优势；能站住的只有"COMBO 在三个划分的 Test 上平均都比 BASE 好（1.6%–5.2%，单点 random124 seed 0 除外）、且该改善不是靠少数分子或 unseen 子群"这一弱陈述。**
 
 ---
 
@@ -228,8 +228,9 @@ Test 只在 checkpoint 冻结后被读取一次（`test_labels_read: true` 仅�
 ## 9. 与既有结论的关系
 
 - `lcrc_performance_longrun_v1` 的判决是 `NO_LCRC_B_SIGNAL_THIS_ROUND`；本轮不推翻它：CHEM8/MULTICONTRIB 的收益在 Validation 上存在、在 Test 上塌缩（MULTICONTRIB8 主效应 −0.108 → −0.012 MSE）。
+- 一致性交叉验证：把本轮 5 个复用 COMBO run（122 s0/s1/s2、123 s0、124 s0）的 Test RMSE 平均得到 **0.5429**，与 `lcrc_performance_longrun_v1/REPORT.md` 记录的 COMBO lipo 专家 0.5429 逐位一致——说明复用的冻结单元在本轮的重建指标没有漂移。
 - P0 的结论"rooted-radius-2 支撑度对 LCRC−PNA 差距无可测增量"与本轮一致：本轮不引入任何支撑度加权模型。
-- 本轮**新增**的可复用事实：(a) 该训练配方在同单元重训下 Test RMSE 可动 ~0.003；(b) MULTICONTRIB8 的 Validation 优势不能迁移到 Test（约 9 倍衰减）；(c) COMBO 在三个划分的 Test 上一致优于 BASE 的方向性，但强度落在重训噪声的 5–10 倍、且逐 seed 不显著。
+- 本轮**新增**的可复用事实：(a) 该训练配方在同单元重训下 Validation RMSE 可动 ~0.010、Test RMSE 可动 ~0.003；(b) MULTICONTRIB8 的 Validation 优势不能迁移到 Test（约 9 倍衰减）；(c) COMBO 在多数 (split, seed) 的 Test 上优于 BASE，但其强度只约为重训噪声的 2–10 倍、且逐 seed 不显著。
 
 ## 10. 不可声称的内容
 
