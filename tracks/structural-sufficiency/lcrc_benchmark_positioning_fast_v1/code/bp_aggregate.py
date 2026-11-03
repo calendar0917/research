@@ -76,21 +76,38 @@ def main() -> int:
                 planned.append(C.plan_entry("mol", ds, s))
         for s in C.PEPTIDE_SEEDS:
             planned.append(C.plan_entry("peptide", C.PEPTIDE_DATASET, s))
+    blocked: dict[str, dict[str, Any]] = {}
+    for ds in C.TU_DATASETS:
+        payload = _read_json(C.ANALYSIS / f"{ds}_blocked.json")
+        if payload:
+            blocked[ds] = payload
     for entry in planned:
         kind, dataset, unit = entry["kind"], entry["dataset"], int(entry["unit"])
         run_dir = C.result_paths(kind, dataset, unit)
         run = _read_json(run_dir / "run.json")
+        blocked_payload = blocked.get(dataset)
+        status = (run or {}).get("status", "NOT_RUN")
+        if run is None and blocked_payload:
+            status = str(blocked_payload.get("status", "RESOURCE_BLOCKED"))
         task = {
             "kind": kind,
             "dataset": dataset,
             "unit": unit,
             "task_id": entry["task_id"],
-            "status": (run or {}).get("status", "NOT_RUN"),
+            "status": status,
             "run_json": C.track_rel(run_dir / "run.json") if (run_dir / "run.json").is_file() else "",
+            "reason": (run or {}).get("reason", ""),
+            "detail": (run or {}).get("detail", ""),
         }
         all_tasks.append(task)
         if run is None:
-            failures.append({**task, "reason": "NOT_RUN_NO_RUN_JSON"})
+            if blocked_payload:
+                task["reason"] = str(blocked_payload.get("reason", "PREPROCESSING_BLOCKED"))
+                task["detail"] = str(blocked_payload.get("detail", ""))
+                task["source"] = str(blocked_payload.get("counts_file", ""))
+                failures.append({**task, "status": status})
+            else:
+                failures.append({**task, "reason": "NOT_RUN_NO_RUN_JSON"})
             continue
         ledger.append(
             {
