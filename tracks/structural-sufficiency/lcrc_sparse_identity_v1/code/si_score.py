@@ -223,6 +223,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "test_rows_sha256": C.index_sha256(rows_now),
         "test_structure_sha256": test_feats["stats"]["binary_sha256"],
         "test_vector_sha256": test_feats["stats"]["vector_sha256"],
+        "test_feature_stats": test_feats["stats"],
         "test_rows_in_vocabulary_coverage": test_feats["stats"]["molecule_coverage"],
         "test_oov_path_ratio": test_feats["stats"]["oov_path_ratio"],
         "test_null_stats": {
