@@ -580,8 +580,16 @@ def _train_attempt(
         data.kind, data.dataset, reloaded, data.valid_cache, data.valid_rows, data.y_valid, device,
         n_classes=data.n_out,
     )
-    if abs(float(valid_re["value"] if data.kind != "tu" else valid_re["accuracy"]) - float(tracker.best_metric)) > 1e-10:
-        raise RuntimeError("reloaded checkpoint does not reproduce the selected validation metric")
+    reloaded_metric = float(valid_re["value"] if data.kind != "tu" else valid_re["accuracy"])
+    reload_delta = abs(reloaded_metric - float(tracker.best_metric))
+    # CUDA index_add_ reductions are not bitwise deterministic; AP/ROC-AUC can
+    # move a few 1e-6 when scores tie.  TU accuracy is integer and stays exact.
+    reload_tol = 1e-10 if data.kind == "tu" else 1e-4
+    if reload_delta > reload_tol:
+        raise RuntimeError(
+            f"reloaded checkpoint does not reproduce the selected validation metric: "
+            f"stored={tracker.best_metric:.12f} reloaded={reloaded_metric:.12f} delta={reload_delta:.3e}"
+        )
     if data.kind == "tu":
         np.savez(
             out_dir / "train_predictions.npz",
@@ -611,6 +619,9 @@ def _train_attempt(
         "best_epoch": int(tracker.best_epoch),
         "best_metric": float(tracker.best_metric),
         "best_aux": None if not math.isfinite(tracker.best_aux) else float(tracker.best_aux),
+        "reload_valid_metric": float(reloaded_metric),
+        "reload_valid_delta": float(reload_delta),
+        "reload_tolerance": float(reload_tol),
         "selection": selection,
         "curve_sha256": curve_sha,
         "checkpoint_sha256": checkpoint_sha,
