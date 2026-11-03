@@ -5,6 +5,7 @@
     "initialization_checks": "analysis/initialization_checks.json",
     "null_checks": "analysis/null_checks.json"
   },
+  "finalized_utc": "2026-11-03T05:38:24Z",
   "gate_14_static": {
     "details": {
       "checkpoint_manifest_exists": false,
@@ -98,16 +99,66 @@
       "pass": true
     },
     {
+      "details": {
+        "max_abs_validation_logit_diff": 5.7220458984375e-06,
+        "per_unit": {
+          "mol_ogbg-molhiv_s0_A0": 3.814697265625e-06,
+          "mol_ogbg-molhiv_s0_FOLD64": 3.814697265625e-06,
+          "mol_ogbg-molhiv_s0_WIDE_NULL": 5.7220458984375e-06,
+          "mol_ogbg-molhiv_s0_WIDE_TRUE": 2.86102294921875e-06,
+          "mol_ogbg-molhiv_s1_A0": 3.814697265625e-06,
+          "mol_ogbg-molhiv_s1_FOLD64": 2.86102294921875e-06,
+          "mol_ogbg-molhiv_s1_WIDE_NULL": 2.384185791015625e-06,
+          "mol_ogbg-molhiv_s1_WIDE_TRUE": 3.814697265625e-06,
+          "mol_ogbg-molhiv_s2_A0": 3.337860107421875e-06,
+          "mol_ogbg-molhiv_s2_FOLD64": 5.7220458984375e-06,
+          "mol_ogbg-molhiv_s2_WIDE_NULL": 1.9073486328125e-06,
+          "mol_ogbg-molhiv_s2_WIDE_TRUE": 2.86102294921875e-06
+        },
+        "tolerance": 1e-05,
+        "units_checked": 12
+      },
       "id": 13,
       "name": "checkpoint_reload_reproduces_validation",
-      "pass": null,
-      "status": "enforced per training run; completed at freeze"
+      "pass": true,
+      "status": "completed at freeze"
     },
     {
+      "details": {
+        "run_records_claim_test_access": false,
+        "static_ast_scan": {
+          "checkpoint_manifest_exists": false,
+          "forbidden_symbols": [
+            "load_test_cache",
+            "molecule_test",
+            "build_test_structure_cache"
+          ],
+          "scan_mode": "python AST (names / attributes / imports); docstrings and comments are not code",
+          "static_hits_by_ast": {
+            "si_features.py": [],
+            "si_model.py": [],
+            "si_sparse.py": [],
+            "si_train.py": []
+          },
+          "test_access_ledger_events_before_freeze": 0,
+          "train_view_scope": "ptb_data.molecule_view -> Train + Validation only",
+          "training_module_imports": [
+            "si_common",
+            "si_features",
+            "si_model",
+            "lcrc_data",
+            "mb2_metrics",
+            "ptb_data",
+            "ptb_train_mol"
+          ]
+        },
+        "test_access_ledger_events_before_freeze": 0,
+        "test_artifacts_present_before_freeze": []
+      },
       "id": 14,
       "name": "no_test_access_during_training",
       "pass": true,
-      "status": "static precondition verified here; completed at freeze"
+      "status": "completed at freeze"
     }
   ],
   "ring18_witness": {
