@@ -212,7 +212,7 @@ seed 平均（122 为 3 个 seed，123/124 各 2 个）：Test RMSE 122 0.5706 �
 - 122/123/124 三个划分来自同一个 4,200 分子池（`Lipop.csv.gz`，SHA-256 `34280f0a…`），**三者的 Test 不是独立队列**；跨划分只能作"稳定性检查"，不能当作三次独立重复。
 - seed 不是独立分子；bootstrap 以 Bemis–Murcko scaffold 为簇（Test 上 350–361 簇 / 420 分子，最大簇占 1.2%–2.9%，三个划分均 `low_cluster_support: false`）。
 - 部分 (split, seed) 混合了复用与新训单元（§2），差值里含 §7 的重训噪声。
-- `source_audit.json` 中 `git_dirty: true` 指的是**本次构建自身重写了分析输出文件**；每个训练单元记录的 `git_dirty_tracked` 均为 `false`，且 20 个单元训练代码哈希完全一致。
+- `source_audit.json` 记录 `git_dirty: false` 与 `git_commit: c561a66a`：最终构建是在一个干净的已提交工作树上跑的（构建过程本身只重写了带时间戳的四个审计 JSON，见下一次提交）。
 - 未删除任何离群分子，未按 Test 挑选 epoch 或 checkpoint。
 
 ### 8.4 完整性
