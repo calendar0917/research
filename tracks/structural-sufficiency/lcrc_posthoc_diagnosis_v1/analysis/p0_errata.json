@@ -1,0 +1,352 @@
+{
+  "P0_1_full_c1_count": {
+    "arithmetic_note": "The task instruction's own per-task list (5 molecule tasks better + IMDB-MULTI better) sums to 6 better, not 5.  Recomputing all 10 dataset-level means gives 6/10 better and 4/10 worse; the old 4/10-better text is wrong, and the instruction's 5/5 total is also arithmetically inconsistent with its list.",
+    "corrected_text": "C1 在 6/10 更好、4/10 更差",
+    "instruction_claimed_text": "C1 在 5/10 更好、5/10 更差",
+    "n_C1_better": 6,
+    "n_C1_better_molecule": 5,
+    "n_C1_better_tu": 1,
+    "n_C1_worse": 4,
+    "n_datasets": 10,
+    "original_text": "C1 在 4/10 更好、6/10 更差",
+    "per_dataset": [
+      {
+        "A0_mean": 0.5644566437853232,
+        "C1_better": true,
+        "C1_mean": 0.5533872414018113,
+        "dataset": "ESOL",
+        "delta_C1_minus_A0": -0.01106940238351195,
+        "direction": "lower",
+        "kind": "molecule",
+        "metric": "rmse"
+      },
+      {
+        "A0_mean": 1.09217873583089,
+        "C1_better": true,
+        "C1_mean": 1.071093249761269,
+        "dataset": "FreeSolv",
+        "delta_C1_minus_A0": -0.021085486069621018,
+        "direction": "lower",
+        "kind": "molecule",
+        "metric": "rmse"
+      },
+      {
+        "A0_mean": 0.8168478260869564,
+        "C1_better": true,
+        "C1_mean": 0.8263285024154589,
+        "dataset": "BACE",
+        "delta_C1_minus_A0": 0.009480676328502469,
+        "direction": "higher",
+        "kind": "molecule",
+        "metric": "roc_auc"
+      },
+      {
+        "A0_mean": 0.7041140765006263,
+        "C1_better": true,
+        "C1_mean": 0.7059768121527442,
+        "dataset": "BBBP",
+        "delta_C1_minus_A0": 0.0018627356521179195,
+        "direction": "higher",
+        "kind": "molecule",
+        "metric": "roc_auc"
+      },
+      {
+        "A0_mean": 0.8352587723510291,
+        "C1_better": true,
+        "C1_mean": 0.8374471006895244,
+        "dataset": "Tox21",
+        "delta_C1_minus_A0": 0.00218832833849536,
+        "direction": "higher",
+        "kind": "molecule",
+        "metric": "macro_roc_auc"
+      },
+      {
+        "A0_mean": 0.771606249637884,
+        "C1_better": false,
+        "C1_mean": 0.7611213040035536,
+        "dataset": "ogbg-molhiv",
+        "delta_C1_minus_A0": -0.010484945634330445,
+        "direction": "higher",
+        "kind": "molecule",
+        "metric": "roc_auc"
+      },
+      {
+        "A0_mean": 0.8295620437956204,
+        "C1_better": false,
+        "C1_mean": 0.8240875912408759,
+        "dataset": "NCI1",
+        "delta_C1_minus_A0": -0.005474452554744436,
+        "direction": "higher",
+        "kind": "tu",
+        "metric": "accuracy"
+      },
+      {
+        "A0_mean": 0.7591988849836384,
+        "C1_better": false,
+        "C1_mean": 0.7533410091706055,
+        "dataset": "PROTEINS",
+        "delta_C1_minus_A0": -0.005857875813032876,
+        "direction": "higher",
+        "kind": "tu",
+        "metric": "accuracy"
+      },
+      {
+        "A0_mean": 0.7369999999999999,
+        "C1_better": false,
+        "C1_mean": 0.726,
+        "dataset": "IMDB-BINARY",
+        "delta_C1_minus_A0": -0.010999999999999899,
+        "direction": "higher",
+        "kind": "tu",
+        "metric": "accuracy"
+      },
+      {
+        "A0_mean": 0.481,
+        "C1_better": true,
+        "C1_mean": 0.4843333333333334,
+        "dataset": "IMDB-MULTI",
+        "delta_C1_minus_A0": 0.0033333333333334103,
+        "direction": "higher",
+        "kind": "tu",
+        "metric": "accuracy"
+      }
+    ]
+  },
+  "P0_2_typed_s2_scope": {
+    "interpretation": "The summary 10/12 and body 11/13 refer to the same convention: 12 new checkpoints plus the 1 historical Lipophilicity checkpoint = 13, with the two MolHIV rows treated as 'comparable' exceptions.  The count is a scope difference, not a contradiction.  Under a strict numeric maximum the count is 11/12 new and 12/13 all; MolHIV:C1 typed-S2 is numerically highest but only 3.0% above mean_h2, hence 'comparable' under the 5% margin rule.  This is a fixed-weight zeroing sensitivity comparison of input blocks of different widths, not a trained S2-necessity result.",
+    "n_new_checkpoints": 12,
+    "n_rows": 13,
+    "n_with_lipophilicity": 13,
+    "reported": {
+      "body": "11/13",
+      "summary": "10/12"
+    },
+    "rows": [
+      {
+        "5%_margin_best": "typed_s2",
+        "5%_margin_typed_s2_best": true,
+        "dataset": "Lipophilicity",
+        "margin_over_second": 1.4646021637348088,
+        "means": {
+          "global_g": 0.38514318495900146,
+          "rho_mean_h2": 0.2284700733565149,
+          "typed_s2": 0.9492247269976707
+        },
+        "model": "A0",
+        "scope": "FROZEN_UPSTREAM_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      },
+      {
+        "5%_margin_best": "typed_s2",
+        "5%_margin_typed_s2_best": true,
+        "dataset": "ESOL",
+        "margin_over_second": 0.14196754973965592,
+        "means": {
+          "global_g": 0.3616719212943474,
+          "rho_mean_h2": 0.4662514128516206,
+          "typed_s2": 0.5324439834968179
+        },
+        "model": "A0",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      },
+      {
+        "5%_margin_best": "typed_s2",
+        "5%_margin_typed_s2_best": true,
+        "dataset": "ESOL",
+        "margin_over_second": 0.1642750349896028,
+        "means": {
+          "global_g": 0.3348151987369082,
+          "rho_mean_h2": 0.4669540405800912,
+          "typed_s2": 0.5436629319349221
+        },
+        "model": "C1",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      },
+      {
+        "5%_margin_best": "typed_s2",
+        "5%_margin_typed_s2_best": true,
+        "dataset": "FreeSolv",
+        "margin_over_second": 1.024331138313901,
+        "means": {
+          "global_g": 0.21476804872509092,
+          "rho_mean_h2": 0.30133392894640565,
+          "typed_s2": 0.6099996553966776
+        },
+        "model": "A0",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      },
+      {
+        "5%_margin_best": "typed_s2",
+        "5%_margin_typed_s2_best": true,
+        "dataset": "FreeSolv",
+        "margin_over_second": 1.2353981563227838,
+        "means": {
+          "global_g": 0.183134536142461,
+          "rho_mean_h2": 0.27191075423615985,
+          "typed_s2": 0.6078287987038493
+        },
+        "model": "C1",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      },
+      {
+        "5%_margin_best": "typed_s2",
+        "5%_margin_typed_s2_best": true,
+        "dataset": "BACE",
+        "margin_over_second": 3.1918468309387262,
+        "means": {
+          "global_g": 1.2072777343506844,
+          "rho_mean_h2": 1.509977036655344,
+          "typed_s2": 6.329592455893953
+        },
+        "model": "A0",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      },
+      {
+        "5%_margin_best": "typed_s2",
+        "5%_margin_typed_s2_best": true,
+        "dataset": "BACE",
+        "margin_over_second": 3.941098042586711,
+        "means": {
+          "global_g": 1.4491360091006025,
+          "rho_mean_h2": 1.5371042716791792,
+          "typed_s2": 7.5949829080456635
+        },
+        "model": "C1",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      },
+      {
+        "5%_margin_best": "typed_s2",
+        "5%_margin_typed_s2_best": true,
+        "dataset": "BBBP",
+        "margin_over_second": 3.939774929631081,
+        "means": {
+          "global_g": 0.5881268384994245,
+          "rho_mean_h2": 1.3849815729567234,
+          "typed_s2": 6.841497252092642
+        },
+        "model": "A0",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      },
+      {
+        "5%_margin_best": "typed_s2",
+        "5%_margin_typed_s2_best": true,
+        "dataset": "BBBP",
+        "margin_over_second": 3.1960210649894556,
+        "means": {
+          "global_g": 0.7757716929795695,
+          "rho_mean_h2": 1.498400567647289,
+          "typed_s2": 6.2873203456401825
+        },
+        "model": "C1",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      },
+      {
+        "5%_margin_best": "typed_s2",
+        "5%_margin_typed_s2_best": true,
+        "dataset": "Tox21",
+        "margin_over_second": 0.35134267222753324,
+        "means": {
+          "global_g": 1.3259992800068574,
+          "rho_mean_h2": 2.388067693819073,
+          "typed_s2": 3.2270977788257085
+        },
+        "model": "A0",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      },
+      {
+        "5%_margin_best": "typed_s2",
+        "5%_margin_typed_s2_best": true,
+        "dataset": "Tox21",
+        "margin_over_second": 0.16741387092916593,
+        "means": {
+          "global_g": 1.1586393690122891,
+          "rho_mean_h2": 2.309453520259557,
+          "typed_s2": 2.6960880738171986
+        },
+        "model": "C1",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      },
+      {
+        "5%_margin_best": "comparable",
+        "5%_margin_typed_s2_best": false,
+        "dataset": "ogbg-molhiv",
+        "margin_over_second": 0.030131064346794405,
+        "means": {
+          "global_g": 1.2312261842529963,
+          "rho_mean_h2": 4.3079741207496465,
+          "typed_s2": 4.181967003860165
+        },
+        "model": "A0",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "rho_mean_h2",
+        "strict_typed_s2_best": false
+      },
+      {
+        "5%_margin_best": "comparable",
+        "5%_margin_typed_s2_best": false,
+        "dataset": "ogbg-molhiv",
+        "margin_over_second": 0.030490861187793847,
+        "means": {
+          "global_g": 1.2585990239263538,
+          "rho_mean_h2": 4.233133076710743,
+          "typed_s2": 4.362204949742189
+        },
+        "model": "C1",
+        "scope": "THIS_ROUND_FROZEN_CHECKPOINT",
+        "seed": 0,
+        "strict_best": "typed_s2",
+        "strict_typed_s2_best": true
+      }
+    ],
+    "scope_counts": {
+      "all_13_5pct_margin": "11/13",
+      "all_13_strict_max": "12/13",
+      "new_12_5pct_margin": "10/12",
+      "new_12_strict_max": "11/12"
+    }
+  },
+  "P0_3_ci_definition": {
+    "historical_statistics_json_modified": false,
+    "new_label": "SEED_CONDITIONAL_MEAN_DIFFERENCE_BOOTSTRAP_CI",
+    "old_code": "code/ptb_report.py::molecule_summary: min(boot_lo), max(boot_hi)",
+    "old_is_not": "95% CI for the mean C1-A0 effect across seeds",
+    "old_label": "SEED_WISE_CI_ENVELOPE"
+  },
+  "baseline_commit": "6cf9ca4eb3ddd45701c73baea66e80642034b756",
+  "result_label": "POST_HOC_EXPOSED_EVALUATION",
+  "round_id": "lcrc-posthoc-diagnosis-v1",
+  "schema": "lcrc-posthoc-p0-errata-v1"
+}

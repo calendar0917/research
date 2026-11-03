@@ -7,14 +7,25 @@ Track: `tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/`
 （三份设计文件在任何正式 GPU 训练之前冻结，SHA-256 记在 `analysis/protocol_freeze.json`，
 之后未再修改）。
 
+> **后续勘误（2026-11，`lcrc_posthoc_diagnosis_v1`）**：本报告的三处表述已被更正：
+> (1) FULL/C1 胜负计数为 **6/10 更好、4/10 更差**，不是 4/10、6/10；
+> (2) 分子任务的旧 “Δ 95% CI” 实际是 **各 seed bootstrap 区间的外包络**
+> (`SEED_WISE_CI_ENVELOPE`)，不是跨 seed 平均效应的 CI；修正后的跨 seed 条件
+> bootstrap 在 BACE 与 MolHIV 上排除 0；
+> (3) typed-S2 的 10/12 与 11/13 是 12 个本轮 checkpoint 与 13 个含历史
+> checkpoint 的范围差异（按 5% 边际判据）。
+> 详细数字、判据和复现代码见
+> `tracks/structural-sufficiency/lcrc_posthoc_diagnosis_v1/ERRATA.md`。
+> 原始分数、checkpoint、冻结协议与 `analysis/statistics.json` 均未修改。
+
 ---
 
 ## 0. 一页结论
 
 | 假设 | 结果 | 判定 |
 |---|---|---|
-| **H1** 预测强度：C1（228 674）能否替代 A0（247 106） | 10 个数据集全部 CI 跨 0；C1 在 4/10 更好、6/10 更差，方向不一致 | `NO_DETECTABLE_DIFFERENCE`（不是等价） |
-| **H2** 结构机制：typed-S2 通道被训练权重依赖 | 10/12 个本轮 checkpoint 中 typed-S2 是最强输入通道；C1 与 A0 同等依赖 | `TYPED_S2_DOMINANT` |
+| **H1** 预测强度：C1（228 674）能否替代 A0（247 106） | 旧 seed-wise envelope 10/10 跨 0；修正后分子任务 4/6 跨 0（BACE、MolHIV 排除 0）；C1 在 6/10 更好、4/10 更差，方向不一致 | `NO_DETECTABLE_DIFFERENCE`（不是等价；勘误 P0-1/P0-3） |
+| **H2** 结构机制：typed-S2 通道被训练权重依赖 | 10/12 个本轮 checkpoint（5% 边际判据；含历史为 11/13）中 typed-S2 是最强输入通道；C1 与 A0 同等依赖 | `TYPED_S2_DOMINANT`（固定权重敏感性，非训练后必要性） |
 | **H3** 局部编辑误差能否被迹特征预测 | `Gain = +0.0015`，CI [−0.0108, +0.0114] | `NO_INCREMENT_THIS_PROBE` |
 | **H4** TRACE vs NATIVE/FAMILY/GLOBAL | 与零预测器打平 | `NO_INCREMENT_THIS_PROBE` |
 
@@ -76,7 +87,7 @@ Track: `tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/`
 
 主指标（每格 3 seeds；`Δ` = C1 − A0；回归 RMSE 越小越好，分类 ROC-AUC 越大越好）：
 
-| dataset | metric | A0 mean ± sd | C1 mean ± sd | Δ C1−A0 | Δ 95% CI（行 bootstrap） |
+| dataset | metric | A0 mean ± sd | C1 mean ± sd | Δ C1−A0 | Δ seed-wise CI envelope（非平均效应 CI） |
 |---|---|---|---|---|---|
 | ESOL | RMSE | 0.5645 ± 0.0299 | **0.5534 ± 0.0299** | −0.0111 | [−0.0507, +0.0248] |
 | FreeSolv | RMSE | 1.0922 ± 0.0606 | **1.0711 ± 0.0732** | −0.0211 | [−0.0921, +0.1017] |
@@ -85,9 +96,14 @@ Track: `tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/`
 | Tox21 | macro ROC-AUC | 0.8353 ± 0.0104 | **0.8374 ± 0.0087** | +0.0022 | [−0.0023, +0.0153] |
 | ogbg-molhiv | ROC-AUC（官方 evaluator） | **0.7716 ± 0.0055** | 0.7611 ± 0.0135 | −0.0105 | [−0.0511, +0.0093] |
 
-* **6/6 的 CI 跨 0**：在这个样本量下没有可检测的 A0/C1 差异。
+* **旧口径 6/6 envelope 跨 0**：上表区间是三个 seed 各自行 bootstrap 区间的
+  最小值/最大值外包络，**不能**当作跨 seed 平均 C1−A0 效应的 95% CI。
+  修正后的 seed-conditional mean-difference bootstrap 见
+  `lcrc_posthoc_diagnosis_v1/analysis/mean_seed_bootstrap_ci.csv`：
+  4/6 分子任务跨 0，BACE 与 MolHIV 排除 0；仅条件于当前 6 个 checkpoint。
 * 方向：C1 在 ESOL、FreeSolv、BACE、BBBP、Tox21 略好，在 MolHIV 明显更差
   （−0.0105，主要来自 seed 2 的 0.7491）；方向不一致 → 不支持"C1 更强"或"C1 更弱"。
+* **胜负计数勘误**：逐数据集均值为 **C1 6/10 更好、4/10 更差**（不是 4/10、6/10）。
 * MolHIV 上限 100 epoch，**未扩展**；6 个单元的 best epoch 为 29–53，
   **没有**触发 `BUDGET_LIMITED_POSSIBLE`（阈值 ≥90）。即便如此，
   仍不与历史 360-epoch A0 做配对比较。
@@ -159,9 +175,11 @@ Test 差值在 −0.0160…+0.0030 之间摆动（repeat 123 是离群），
 
 单位：回归为 raw logD，分类为 logit。\* Lipophilicity 用上游冻结 checkpoint（A0）。
 
-* 13 个 checkpoint 中有 11 个（MolHIV 两例外，`mean_h2` 与 typed-S2 相当）
-  typed-S2 是**影响最大的可干预输入通道**，且排序稳定性被严重破坏
-  （分类任务 Spearman 降到 0.15–0.42）。
+* 按 **5% 边际判据**，13 个 checkpoint 中有 11 个（12 个本轮中有 10 个；
+  MolHIV 两行视为 `mean_h2` 与 typed-S2 “comparable”）typed-S2 是**影响最大的
+  可干预输入通道**，且排序稳定性被严重破坏（分类任务 Spearman 降到 0.15–0.42）。
+  严格数值最大为 12/13（本轮 11/12）；MolHIV:C1 的 typed-S2 仅比 `mean_h2` 高 3.0%。
+  这是**固定权重下输入块置零的敏感度比较**，不是训练后 S2 必要性的证明。
 * **C1 与 A0 的依赖程度基本相同**（同一数据集内差异 ≤ 0.5 个 logit / 0.02 logD）：
   删掉 `b_mean` 没有把依赖转移到别处，也没有降低对 typed-S2 的依赖。
 

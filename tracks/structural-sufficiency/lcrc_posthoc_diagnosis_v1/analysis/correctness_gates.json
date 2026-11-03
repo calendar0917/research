@@ -1,0 +1,179 @@
+{
+  "all_pass": true,
+  "created_utc": "2026-11-03T01:13:00.658039+00:00",
+  "environment": {
+    "cuda_visible_devices": "",
+    "numpy": "2.1.3",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1"
+  },
+  "gates": [
+    {
+      "details": {
+        "baseline": "6cf9ca4eb3ddd45701c73baea66e80642034b756",
+        "head": "6cf9ca4eb3ddd45701c73baea66e80642034b756",
+        "worktree_entries": 2
+      },
+      "name": "repo/baseline_commit",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "CUDA_VISIBLE_DEVICES": ""
+      },
+      "name": "policy/no_cuda",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "note": "this module only reads saved npz/json; no torch import, no ptb_score/edit_probe"
+      },
+      "name": "policy/no_training_or_scoring_entrypoint",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "audit_labels": "not read; only saved probe_audit_scores.json fields",
+        "molecule_test_labels": "only saved test_predictions.npz y_true",
+        "ogb": "mapping SMILES only; graph-label.csv.gz not opened"
+      },
+      "name": "policy/no_new_test_label_source",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "all_pass": true,
+        "datasets": {
+          "BACE": {
+            "checks": [],
+            "n_test": 152,
+            "rows_sha256": "ea331b0b94e8191547951dbe385e701e3155419d4e9c724912f7f73e1ef99256",
+            "y_true_sha256": "7a6d56759787ff5e880145813a4ada83280008f19ecab816ed51bfc29d6a0ca5"
+          },
+          "BBBP": {
+            "checks": [],
+            "n_test": 204,
+            "rows_sha256": "7b9d07d3f181236ac9a5a39266378f41ee7a5617962ef60e86ccd649cbf7b349",
+            "y_true_sha256": "39b548c1b786e8f526d3d25b314978f7af0045c9920b5222329395d87c560907"
+          },
+          "ESOL": {
+            "checks": [],
+            "n_test": 113,
+            "rows_sha256": "fafa668780c336a6767ecef2938dd1886649689fc101b7614f59965e1204fe14",
+            "y_true_sha256": "a34c2b8d8782c5008316d6823f906083908935c39b38116723573b8e8ab2a5ed"
+          },
+          "FreeSolv": {
+            "checks": [],
+            "n_test": 65,
+            "rows_sha256": "229542e89543781ab70caeb1fc2887272d69bc884d7a4f5e3e5420918211e4b7",
+            "y_true_sha256": "863a03bc3fd0c4f4d943a0fd611e2ffd985e8d02eff5bb8b09347b9ae110d55a"
+          },
+          "Tox21": {
+            "checks": [],
+            "definable_tasks": 12,
+            "n_tasks": 12,
+            "n_test": 784,
+            "rows_sha256": "f4fcd38d77a4563bcaf8da872cfe4bc68099620842d9c24ef5aa6f5d407304d4",
+            "y_true_sha256": "813dec0823c3d25ca158e751876ddf774389a7048fc926a7f8fa28030157f1b2"
+          },
+          "ogbg-molhiv": {
+            "checks": [],
+            "n_test": 4113,
+            "rows_sha256": "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804",
+            "y_true_sha256": "bd8828162b5be1c55fa4298c945c04a4a152869ccb8914c8931c703f25955953"
+          }
+        },
+        "max_abs_metric_recompute_diff": 0.0,
+        "max_abs_yt_delta": 0.0
+      },
+      "name": "molecule/artifacts",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "all_pass": true,
+        "datasets": {
+          "NCI1": {
+            "checks": [],
+            "folds": {
+              "0": {
+                "gids_sha256": "767a73a0eefa08ce3b99e4c634a5cc17113abd4e0f6bd0d9afd0860adb78562b",
+                "n_test": 822,
+                "positive_rate": 0.5
+              },
+              "1": {
+                "gids_sha256": "5c04286ab97634031fa06acea8562788b1572b7d258a28d5ebb0b7a04e98cb07",
+                "n_test": 822,
+                "positive_rate": 0.5
+              },
+              "2": {
+                "gids_sha256": "123396183e7353dab05a53b5209db2b9a9d4edf6f10b99ad30e945751bc048fb",
+                "n_test": 822,
+                "positive_rate": 0.5
+              },
+              "3": {
+                "gids_sha256": "6f12966c4e6083a27aab86796ce0cae3a25774be11292562fcd097fc0bdc1f2f",
+                "n_test": 822,
+                "positive_rate": 0.5012165450121655
+              },
+              "4": {
+                "gids_sha256": "25c002cad5e992a69cf59f47b1399159886372e330ba72c88c1700c47e8923d7",
+                "n_test": 822,
+                "positive_rate": 0.5012165450121655
+              }
+            }
+          }
+        }
+      },
+      "name": "tu/artifacts",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "checks": {
+          "mol_ogbg-molhiv_s0_A0": {
+            "manifest": "603a0c6d773e55534aa95e825ac80f11fb571bbefb9c45cf05026e9ab371d1e3",
+            "match": true,
+            "remote": "603a0c6d773e55534aa95e825ac80f11fb571bbefb9c45cf05026e9ab371d1e3"
+          },
+          "mol_ogbg-molhiv_s0_C1": {
+            "manifest": "b8ada81535d53a84ef9db2a744adebcb835059e05d64f8136fd76169559cd008",
+            "match": true,
+            "remote": "b8ada81535d53a84ef9db2a744adebcb835059e05d64f8136fd76169559cd008"
+          },
+          "mol_ogbg-molhiv_s1_A0": {
+            "manifest": "aca07a1d8c7a9fd1b8e7b6bd6ceee4045f7828c45a6c5952607fc1252a6a808d",
+            "match": true,
+            "remote": "aca07a1d8c7a9fd1b8e7b6bd6ceee4045f7828c45a6c5952607fc1252a6a808d"
+          },
+          "mol_ogbg-molhiv_s1_C1": {
+            "manifest": "be067f06dabe484f7ee43cf017969f1414c2402829b0e5d2890852600bd771d7",
+            "match": true,
+            "remote": "be067f06dabe484f7ee43cf017969f1414c2402829b0e5d2890852600bd771d7"
+          },
+          "mol_ogbg-molhiv_s2_A0": {
+            "manifest": "6ff130a4498d803767d24af402d59c4dd73726738bb2f343053bba68824fea94",
+            "match": true,
+            "remote": "6ff130a4498d803767d24af402d59c4dd73726738bb2f343053bba68824fea94"
+          },
+          "mol_ogbg-molhiv_s2_C1": {
+            "manifest": "3635de0a7ec2732feef97aea6a25d8f28231ba41f5a0cc3c84a7c6fd77fdf1ab",
+            "match": true,
+            "remote": "3635de0a7ec2732feef97aea6a25d8f28231ba41f5a0cc3c84a7c6fd77fdf1ab"
+          }
+        },
+        "command": "cd /home/hxy/cy/research && sha256sum tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s0_A0/checkpoint.pt tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s0_C1/checkpoint.pt tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s1_A0/checkpoint.pt tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s1_C1/checkpoint.pt tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s2_A0/checkpoint.pt tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s2_C1/checkpoint.pt",
+        "returncode": 0,
+        "status": "PASS",
+        "stderr": "",
+        "stdout": "603a0c6d773e55534aa95e825ac80f11fb571bbefb9c45cf05026e9ab371d1e3  tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s0_A0/checkpoint.pt\nb8ada81535d53a84ef9db2a744adebcb835059e05d64f8136fd76169559cd008  tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s0_C1/checkpoint.pt\naca07a1d8c7a9fd1b8e7b6bd6ceee4045f7828c45a6c5952607fc1252a6a808d  tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s1_A0/checkpoint.pt\nbe067f06dabe484f7ee43cf017969f1414c2402829b0e5d2890852600bd771d7  tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s1_C1/checkpoint.pt\n6ff130a4498d803767d24af402d59c4dd73726738bb2f343053bba68824fea94  tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s2_A0/checkpoint.pt\n3635de0a7ec2732feef97aea6a25d8f28231ba41f5a0cc3c84a7c6fd77fdf1ab  tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/runs/mol_ogbg-molhiv_s2_C1/checkpoint.pt\n"
+      },
+      "name": "checkpoint/remote_sha256",
+      "status": "PASS"
+    }
+  ],
+  "result_label": "POST_HOC_EXPOSED_EVALUATION",
+  "round_id": "lcrc-posthoc-diagnosis-v1",
+  "schema": "lcrc-posthoc-correctness-gates-v1"
+}
