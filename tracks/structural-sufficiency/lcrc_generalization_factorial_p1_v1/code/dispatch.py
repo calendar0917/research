@@ -312,11 +312,20 @@ def cmd_ledger(args: argparse.Namespace) -> int:
     payload = _read_launches()
     entries = []
     total_hours = 0.0
+    seen: set[tuple[str, bool]] = set()
     for launch in payload["launches"]:
         exp = launch["experiment"]
+        if launch.get("state") == "launch_failed":
+            continue
+        ident = (exp, bool(launch.get("superseded")))
+        if ident in seen:
+            # the launch log keeps one record per attempt; only the first record of
+            # a (experiment, superseded) pair is charged so retries cannot double count
+            continue
+        seen.add(ident)
         status = _status(exp)
-        started = status.get("started_at")
-        completed = status.get("completed_at")
+        started = launch.get("started_at") or status.get("started_at")
+        completed = launch.get("completed_at") or status.get("completed_at")
         seconds = None
         if started and completed:
             seconds = _iso_seconds(started, completed)
@@ -324,8 +333,10 @@ def cmd_ledger(args: argparse.Namespace) -> int:
         if hours:
             total_hours += hours
         train_json = RUNS / launch["unit_key"] / "train.json"
-        measured = None
-        if train_json.exists():
+        # a superseded attempt has its own recorded wall time; its artefacts are not
+        # in the runs tree (it was written elsewhere), so never fall through to it
+        measured = launch.get("trainer_wall_seconds")
+        if measured is None and train_json.exists():
             measured = json.loads(train_json.read_text(encoding="utf-8"))["timing"]["process_wall_seconds"]
         entries.append(
             {
@@ -334,7 +345,9 @@ def cmd_ledger(args: argparse.Namespace) -> int:
                 "unit_key": launch["unit_key"],
                 "experiment": exp,
                 "pool": launch.get("pool"),
-                "run_id": status.get("run_id") or launch.get("run_id"),
+                "run_id": (launch.get("run_id") if launch.get("superseded") else status.get("run_id"))
+                or status.get("run_id")
+                or launch.get("run_id"),
                 "state": status.get("state"),
                 "exit_code": status.get("exit_code"),
                 "commit": status.get("commit"),

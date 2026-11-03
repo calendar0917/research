@@ -1,0 +1,38 @@
+{
+  "round_id": "lcrc-generalization-factorial-p1-v1",
+  "generated_at": "2026-11-03T15:51:37Z",
+  "git_commit": "c669b02ee55ad012deea27161cf023e912e64511",
+  "git_dirty": true,
+  "protocol_freeze": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/protocol_freeze.json",
+  "bootstrap": {
+    "n_boot": 2000,
+    "unit": "Bemis-Murcko scaffold cluster",
+    "seed": 20261104
+  },
+  "tail": {
+    "fraction": 0.1,
+    "cvar": "ceil(0.10*n) worst molecules of the model itself"
+  },
+  "units": {
+    "n_total": 20,
+    "n_reused": 10,
+    "n_fresh": 10
+  },
+  "outputs": [
+    "analysis/source_audit.json",
+    "analysis/run_reuse_manifest.json",
+    "analysis/integrity_checks.json",
+    "analysis/metrics_by_split_seed_arm.csv",
+    "analysis/per_molecule_predictions.csv",
+    "analysis/paired_uncertainty.json",
+    "analysis/factorial_interaction.json",
+    "analysis/tail_risk.json",
+    "analysis/scaffold_subgroups.json",
+    "analysis/concentration_diagnostics.json",
+    "analysis/gpu_ledger.json"
+  ],
+  "reproduce": [
+    "uv run python tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/code/run_analysis.py",
+    "uv run pytest -q tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/tests"
+  ]
+}

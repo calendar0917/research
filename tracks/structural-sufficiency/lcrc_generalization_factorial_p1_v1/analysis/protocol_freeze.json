@@ -1,7 +1,7 @@
 {
   "round_id": "lcrc-generalization-factorial-p1-v1",
   "created_at": "2026-11-03T14:13:07Z",
-  "git_commit": "e28ac10c120f42f81188326c58e2bad32e531347",
+  "git_commit": "c669b02ee55ad012deea27161cf023e912e64511",
   "protocol": {
     "path": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/PROTOCOL.md",
     "sha256": "ad9870525818960a1fe1f602009f722f10b2e9a823a1a111e8b904a2d7fbf5c2"
@@ -53,7 +53,7 @@
     "code/p1_analysis.py": "3dff93661c43d91073b38b5342b7c606a12aeca8c1ab8c047733da90ab09a12e",
     "code/run_analysis.py": "fa667f9b76af5317062d8e81d4e8ebbf6284e7fa0c75a23355625bfb0c112218",
     "code/run_unit.py": "52e2369ff85b63c06fbe3cf173b39ec8995e419b58424d391d46c53a70a4190f",
-    "code/dispatch.py": "3a2b4fa8ffe2b3b226c137848ddc684f56b151a43a0bb380ad3f2bcdc7a5bad9",
+    "code/dispatch.py": "95f3431897c4df13cffd27a2546e14a37c7a3e141736f128563eb1aeeb11ba0a",
     "code/write_freeze.py": "1aa6aff445b92b4ddc7ba804f40f5f096c1f97223da499fb0aaa558abe20c84c"
   },
   "pre_run_audit": {
@@ -183,6 +183,33 @@
       },
       "new_protocol_sha256": "ad9870525818960a1fe1f602009f722f10b2e9a823a1a111e8b904a2d7fbf5c2",
       "git_commit": "e28ac10c120f42f81188326c58e2bad32e531347"
+    },
+    {
+      "at": "2026-11-03T15:50:35Z",
+      "reason": "dispatch.py ledger accounting: retry records could be counted more than once and a superseded attempt inherited the retrained unit's wall time. The ledger now charges each (experiment, superseded) pair exactly once and uses the superseded attempt's own recorded run id and wall time. Budget accounting only; no metric, training or analysis definition changed. Charged total after the fix: 1.1381 of 2.0 A100 GPU-hours.",
+      "previous_analysis_code_hashes": {
+        "code/p1_common.py": "8837efa306c120da408f3bb99679172970cd50c49ac89ab9a10272ed24a9823c",
+        "code/p1_stats.py": "3c274d233b2833646ecaa5a5df2c5b1354570b7904c762dfeab66dd6b502c3b9",
+        "code/p1_sources.py": "913dcd36db77ab5b39635c79f5d220118e872b4e8cf76b4fcb8fa8550cc4b907",
+        "code/p1_analysis.py": "3dff93661c43d91073b38b5342b7c606a12aeca8c1ab8c047733da90ab09a12e",
+        "code/run_analysis.py": "fa667f9b76af5317062d8e81d4e8ebbf6284e7fa0c75a23355625bfb0c112218",
+        "code/run_unit.py": "52e2369ff85b63c06fbe3cf173b39ec8995e419b58424d391d46c53a70a4190f",
+        "code/dispatch.py": "3a2b4fa8ffe2b3b226c137848ddc684f56b151a43a0bb380ad3f2bcdc7a5bad9",
+        "code/write_freeze.py": "1aa6aff445b92b4ddc7ba804f40f5f096c1f97223da499fb0aaa558abe20c84c"
+      },
+      "previous_protocol_sha256": "ad9870525818960a1fe1f602009f722f10b2e9a823a1a111e8b904a2d7fbf5c2",
+      "new_analysis_code_hashes": {
+        "code/p1_common.py": "8837efa306c120da408f3bb99679172970cd50c49ac89ab9a10272ed24a9823c",
+        "code/p1_stats.py": "3c274d233b2833646ecaa5a5df2c5b1354570b7904c762dfeab66dd6b502c3b9",
+        "code/p1_sources.py": "913dcd36db77ab5b39635c79f5d220118e872b4e8cf76b4fcb8fa8550cc4b907",
+        "code/p1_analysis.py": "3dff93661c43d91073b38b5342b7c606a12aeca8c1ab8c047733da90ab09a12e",
+        "code/run_analysis.py": "fa667f9b76af5317062d8e81d4e8ebbf6284e7fa0c75a23355625bfb0c112218",
+        "code/run_unit.py": "52e2369ff85b63c06fbe3cf173b39ec8995e419b58424d391d46c53a70a4190f",
+        "code/dispatch.py": "95f3431897c4df13cffd27a2546e14a37c7a3e141736f128563eb1aeeb11ba0a",
+        "code/write_freeze.py": "1aa6aff445b92b4ddc7ba804f40f5f096c1f97223da499fb0aaa558abe20c84c"
+      },
+      "new_protocol_sha256": "ad9870525818960a1fe1f602009f722f10b2e9a823a1a111e8b904a2d7fbf5c2",
+      "git_commit": "c669b02ee55ad012deea27161cf023e912e64511"
     }
   ]
 }

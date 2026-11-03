@@ -1,14 +1,14 @@
 {
   "round_id": "lcrc-generalization-factorial-p1-v1",
-  "generated_at": "2026-11-03T14:13:59Z",
-  "git_commit": "b0fed141bf7feb8519d8217d79fef629605a5e4a",
+  "generated_at": "2026-11-03T15:51:17Z",
+  "git_commit": "c669b02ee55ad012deea27161cf023e912e64511",
   "git_dirty": true,
   "python": "3.12.15",
   "numpy": "2.1.3",
   "pandas": "2.2.3",
   "analysis_code_freeze": {
     "protocol_freeze": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/protocol_freeze.json",
-    "protocol_freeze_sha256": "43dff7ad83aa6c76f4c886747cb8f7467cba22ea0f70e921af73d6fdb5763864",
+    "protocol_freeze_sha256": "5f4216f451af6a20b4f4ff60f9837304a01752449d72d6f51ac575bc74f81090",
     "analysis_code_hashes_match": true
   },
   "analysis_code_hashes": {
@@ -17,8 +17,8 @@
     "code/p1_sources.py": "913dcd36db77ab5b39635c79f5d220118e872b4e8cf76b4fcb8fa8550cc4b907",
     "code/p1_analysis.py": "3dff93661c43d91073b38b5342b7c606a12aeca8c1ab8c047733da90ab09a12e",
     "code/run_analysis.py": "fa667f9b76af5317062d8e81d4e8ebbf6284e7fa0c75a23355625bfb0c112218",
-    "code/run_unit.py": "f80d7be6d4a7ed9829a4d848ebdd5ad61104c18791be6da981b1739376c86f5e",
-    "code/dispatch.py": "ac2e44247c6a4c9e5c5eff65b22f73b3451d0faeb7ca2bbdd381b7affe97ae4c",
+    "code/run_unit.py": "52e2369ff85b63c06fbe3cf173b39ec8995e419b58424d391d46c53a70a4190f",
+    "code/dispatch.py": "95f3431897c4df13cffd27a2546e14a37c7a3e141736f128563eb1aeeb11ba0a",
     "code/write_freeze.py": "1aa6aff445b92b4ddc7ba804f40f5f096c1f97223da499fb0aaa558abe20c84c"
   },
   "inputs": {
@@ -2020,13 +2020,1961 @@
         "process_wall_seconds": 419.81988438311964,
         "train_wall_seconds": 416.66847013682127
       }
+    },
+    {
+      "unit_key": "f1_chem8_random122_s1",
+      "split": "random122",
+      "arm": "chem8",
+      "seed": 1,
+      "origin": "fresh",
+      "run_dir": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/runs/f1_chem8_random122_s1",
+      "files": {
+        "train.json": "2b85896ca0370bee861f1178025bfad176d8ad824c100b1c08cdcb3d4e3b91c9",
+        "checkpoint.pt": "a5854704a00933d32da06f96f26bf9da096babc5edb0c018fd46f984721bb39b",
+        "valid_predictions.npz": "45eaec62d72d0c42ddbb51c24de159550fa41aa1995fbfc288f1baa7ded91618",
+        "test_predictions.npz": "31d7159e7ca7cb181cbde10f4b3f0d817622e257760fc92012795827792c1bdd",
+        "test_eval.json": "f779c78aeb45a804e8fdcd8cbffeeed067dacf1c81060aee49b5f1e19f2f7d25",
+        "curve.csv": "aac09416df36f221f81b64da17519f7c7294cd1c09e010f811444350e57d7679"
+      },
+      "historical_git_commit": "e28ac10c120f42f81188326c58e2bad32e531347",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917001
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+        "train_base": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "valid": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3",
+        "valid_base": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "chem8": {
+          "artifact_manifest": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/chem8_manifest.json",
+          "base_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "channel_names": [
+            "CIP_R",
+            "CIP_S",
+            "CIP_UNASSIGNED_TETRA",
+            "HBD",
+            "HBA",
+            "HYB_SP",
+            "HYB_SP2",
+            "HYB_SP3"
+          ],
+          "extended_spec_hash": "497933552f0a1c212980e4c483d791b8b39f97d3cdaee1aac974c78744f763df",
+          "train_cache_base_fingerprint": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+          "train_cache_extended_fingerprint": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+          "train_norm_fingerprint_unchanged": true,
+          "valid_cache_base_fingerprint": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+          "valid_cache_extended_fingerprint": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3"
+        },
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 275,
+      "epochs_run": 360,
+      "parameters": 248130,
+      "arm_label": "LCRC-CHEMLOCAL8",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.04657890761483943,
+          "checkpoint": "best_epoch",
+          "mae": 0.41446445893973827,
+          "n": 420,
+          "r2": 0.6591206570825625,
+          "rmse": 0.6744354272583596
+        },
+        "test": {
+          "bias": -0.06330159243856652,
+          "checkpoint": "best_epoch",
+          "mae": 0.4225463619354588,
+          "n": 420,
+          "r2": 0.7761815662588197,
+          "rmse": 0.5667494415778453
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.6744354272583596,
+          "mae": 0.41446445893973827,
+          "p90_ae": 0.8539287895058024,
+          "cvar90_ae": 1.3522360402394658,
+          "sse": 191.04252112728975,
+          "bias": -0.04657890761483943
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5667494415778453,
+          "mae": 0.4225463619354588,
+          "p90_ae": 0.8890158001266446,
+          "cvar90_ae": 1.2644591074619291,
+          "sse": 134.9060704020958,
+          "bias": -0.06330159243856652
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "chem8",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 34,
+        "new_extension_tensors": 0,
+        "spec_atom_width": 59,
+        "widened_zero_padded": 1
+      },
+      "base_init_state_hash": "d8b3f5b858696f9b7cafa26db2014074e3d1943258f8af68524a03fc306666ac",
+      "init_state_hash": "758d3fe5bab45f93a9be1a094c771ed2007bd63c2ef21c72fb7f8612c9fbcad6",
+      "shared_encoder_state_hash": "e465e9a02ea8111d009550e5fc67fd145738e754f01af2e43a2ebab5ab449125",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.03616941502938668,
+        "mean_epoch_seconds": 0.7619825298820312,
+        "process_wall_seconds": 277.6431306190789,
+        "train_wall_seconds": 274.5343361259438
+      }
+    },
+    {
+      "unit_key": "f1_chem8_random122_s2",
+      "split": "random122",
+      "arm": "chem8",
+      "seed": 2,
+      "origin": "fresh",
+      "run_dir": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/runs/f1_chem8_random122_s2",
+      "files": {
+        "train.json": "10db988cd5bbdca66d844b2f59cffd11d81731b80cf505b1e0357364629914cb",
+        "checkpoint.pt": "7fe405a96771f1a71430a3cbe256632e3cd9d76bd0ed0156a656cab95d0e16db",
+        "valid_predictions.npz": "89572ec15cdeca9129dcd1f51c35f84779068768a3839d1b351565279867d95f",
+        "test_predictions.npz": "b9a5c67859a655c59c90f8ff9a896be551c387d1239b4a5dca39c15822e5d5df",
+        "test_eval.json": "444c35ac86c442ae10f96b6007960b8d26a2cd22f4f6063ed80959073b05c7f6",
+        "curve.csv": "4d11efd3aa9293e5f8e43697296561e2c17e916a11538c6c2cbf0990406fbcfa"
+      },
+      "historical_git_commit": "e28ac10c120f42f81188326c58e2bad32e531347",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917002
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+        "train_base": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "valid": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3",
+        "valid_base": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "chem8": {
+          "artifact_manifest": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/chem8_manifest.json",
+          "base_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "channel_names": [
+            "CIP_R",
+            "CIP_S",
+            "CIP_UNASSIGNED_TETRA",
+            "HBD",
+            "HBA",
+            "HYB_SP",
+            "HYB_SP2",
+            "HYB_SP3"
+          ],
+          "extended_spec_hash": "497933552f0a1c212980e4c483d791b8b39f97d3cdaee1aac974c78744f763df",
+          "train_cache_base_fingerprint": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+          "train_cache_extended_fingerprint": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+          "train_norm_fingerprint_unchanged": true,
+          "valid_cache_base_fingerprint": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+          "valid_cache_extended_fingerprint": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3"
+        },
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 246,
+      "epochs_run": 360,
+      "parameters": 248130,
+      "arm_label": "LCRC-CHEMLOCAL8",
+      "recorded_metrics": {
+        "valid": {
+          "bias": 0.0008844322656895276,
+          "checkpoint": "best_epoch",
+          "mae": 0.39213737556075484,
+          "n": 420,
+          "r2": 0.6065465313023397,
+          "rmse": 0.7245806339487131
+        },
+        "test": {
+          "bias": -0.027643867872157463,
+          "checkpoint": "best_epoch",
+          "mae": 0.41725302297939365,
+          "n": 420,
+          "r2": 0.7724220061927958,
+          "rmse": 0.5714895678591859
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.7245806339487131,
+          "mae": 0.39213737556075484,
+          "p90_ae": 0.7634363376027626,
+          "cvar90_ae": 1.3626884000323725,
+          "sse": 220.50717993927793,
+          "bias": 0.0008844322656895276
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5714895678591859,
+          "mae": 0.41725302297939365,
+          "p90_ae": 0.9627347220612545,
+          "cvar90_ae": 1.3134964196645038,
+          "sse": 137.17213699218922,
+          "bias": -0.027643867872157463
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "chem8",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 34,
+        "new_extension_tensors": 0,
+        "spec_atom_width": 59,
+        "widened_zero_padded": 1
+      },
+      "base_init_state_hash": "1398f98b84191959d16ab04d0faa932846d32aac704f47ef4ef99ff92fe1e051",
+      "init_state_hash": "c3c26ab0b0ebb61e13f72b702e1b63e6c2a6a5c9ac41aad8afdf2ef65954b1ce",
+      "shared_encoder_state_hash": "aff7719af1f7603441786aaf5b67d24e2d8ce175adab58649e3b8c3424958392",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.060984264283130564,
+        "mean_epoch_seconds": 0.9846496568449462,
+        "process_wall_seconds": 357.6623633480631,
+        "train_wall_seconds": 354.699132761918
+      }
+    },
+    {
+      "unit_key": "f1_contrib_random122_s1",
+      "split": "random122",
+      "arm": "multicontrib",
+      "seed": 1,
+      "origin": "fresh",
+      "run_dir": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/runs/f1_contrib_random122_s1",
+      "files": {
+        "train.json": "06846492f6d9ba8620224e36aa9818dc592322e984985e30632421450341f9be",
+        "checkpoint.pt": "a64431298ec50708e4fc8a5f0ec152b320be185bb9f30372a720b869be809867",
+        "valid_predictions.npz": "0c04c51ac7f94591149783b882208e6ee38c3f746d7ff8ca76d7da07552ac294",
+        "test_predictions.npz": "9b90cfe9111268bcb6cbadef10f7f6cf949276c989fcc4feb01e10e0d290a8f7",
+        "test_eval.json": "3c7e393a340f46e9771834ee3628497edd5a84a8c6291b674994a8dddbcfbca9",
+        "curve.csv": "07968b7fe2b5e86d086312d883f537063f41fba0fcf0752bf5889d3a007f777f"
+      },
+      "historical_git_commit": "c669b02ee55ad012deea27161cf023e912e64511",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917001
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "train_base": null,
+        "valid": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "valid_base": null,
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 286,
+      "epochs_run": 360,
+      "parameters": 252139,
+      "arm_label": "LCRC-MULTICONTRIB8",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.03545630557203062,
+          "checkpoint": "best_epoch",
+          "mae": 0.3917727873658341,
+          "n": 420,
+          "r2": 0.7503319233550414,
+          "rmse": 0.5771936452226633
+        },
+        "test": {
+          "bias": -0.046166455760576035,
+          "checkpoint": "best_epoch",
+          "mae": 0.4142167494182991,
+          "n": 420,
+          "r2": 0.7877605083770812,
+          "rmse": 0.5518947631256023
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.5771936452226633,
+          "mae": 0.3917727873658341,
+          "p90_ae": 0.8016678148059454,
+          "cvar90_ae": 1.2866789516110906,
+          "sse": 139.9240517158788,
+          "bias": -0.03545630557203062
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5518947631256023,
+          "mae": 0.4142167494182991,
+          "p90_ae": 0.8510752895902973,
+          "cvar90_ae": 1.2447997321905517,
+          "sse": 127.92688841749512,
+          "bias": -0.046166455760576035
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "multicontrib",
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 35,
+        "new_extension_tensors": 8,
+        "spec_atom_width": 51,
+        "widened_zero_padded": 0
+      },
+      "base_init_state_hash": "d8b3f5b858696f9b7cafa26db2014074e3d1943258f8af68524a03fc306666ac",
+      "init_state_hash": "360255baac959bf82da814310121166595d8e6fc2bbde7ee2b6796233ba6f9f7",
+      "shared_encoder_state_hash": "917ce55888eccccbb4cca10ebf4f3064e1a0d5c27e125ca32135dee9cadc63f4",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.05641736043617129,
+        "mean_epoch_seconds": 0.9665998755734311,
+        "process_wall_seconds": 350.8991109780036,
+        "train_wall_seconds": 348.2801895169541
+      }
+    },
+    {
+      "unit_key": "f1_contrib_random122_s2",
+      "split": "random122",
+      "arm": "multicontrib",
+      "seed": 2,
+      "origin": "fresh",
+      "run_dir": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/runs/f1_contrib_random122_s2",
+      "files": {
+        "train.json": "123465b58566f4cfd9aba6c7a6e705185af8ee286777f1e740aa76867f9c6852",
+        "checkpoint.pt": "4159c8288c15d531460714675bf2facead81be63905989b0789c937f60b9ac60",
+        "valid_predictions.npz": "13cfb343ec4f8f17be43abcaecd143d885ef1c6523072969dab93a3f3d60567a",
+        "test_predictions.npz": "5f44f9858deef3395c956542c90f92f37e9bde560920bc67c8d498b25be5ef4c",
+        "test_eval.json": "0a1fe09b786b31143143c8af6ef99d7889c68bebc00e7560d32c29d73c9c48a0",
+        "curve.csv": "65fe2921e635d1ceac40719304635a0b8a96665694960d1b0a85320b2b945dc3"
+      },
+      "historical_git_commit": "c669b02ee55ad012deea27161cf023e912e64511",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917002
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "train_base": null,
+        "valid": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "valid_base": null,
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 246,
+      "epochs_run": 360,
+      "parameters": 252139,
+      "arm_label": "LCRC-MULTICONTRIB8",
+      "recorded_metrics": {
+        "valid": {
+          "bias": 0.008381672502171185,
+          "checkpoint": "best_epoch",
+          "mae": 0.3857031768457674,
+          "n": 420,
+          "r2": 0.6328405481216941,
+          "rmse": 0.6999505990580002
+        },
+        "test": {
+          "bias": -0.00693642598253614,
+          "checkpoint": "best_epoch",
+          "mae": 0.4154433940498215,
+          "n": 420,
+          "r2": 0.7864172349243127,
+          "rmse": 0.553638492045262
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.6999505990580002,
+          "mae": 0.3857031768457674,
+          "p90_ae": 0.7430048151893136,
+          "cvar90_ae": 1.359981770161451,
+          "sse": 205.77095327109436,
+          "bias": 0.008381672502171185
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.553638492045262,
+          "mae": 0.4154433940498215,
+          "p90_ae": 0.8827238407089139,
+          "cvar90_ae": 1.2467816646308474,
+          "sse": 128.7365435471437,
+          "bias": -0.00693642598253614
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "multicontrib",
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 35,
+        "new_extension_tensors": 8,
+        "spec_atom_width": 51,
+        "widened_zero_padded": 0
+      },
+      "base_init_state_hash": "1398f98b84191959d16ab04d0faa932846d32aac704f47ef4ef99ff92fe1e051",
+      "init_state_hash": "949393aa94938e509b0c3629628a40ba0542d2c091b522d8a69824c03702f895",
+      "shared_encoder_state_hash": "f28890bb4e9454d4eed7ea3d7077d7a46e4eba3e4a4677af73db20c2c8c4b0f4",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.06167118391022086,
+        "mean_epoch_seconds": 1.1030472550178982,
+        "process_wall_seconds": 400.1880298512988,
+        "train_wall_seconds": 397.3803623379208
+      }
+    },
+    {
+      "unit_key": "f1_base_random123_s0",
+      "split": "random123",
+      "arm": "base",
+      "seed": 0,
+      "origin": "fresh",
+      "run_dir": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/runs/f1_base_random123_s0",
+      "files": {
+        "train.json": "4f51669234d61150bc91829e324242aa26088d10ac9106348eeb259dbff5c8c9",
+        "checkpoint.pt": "418ce99f6764e6e64b7e3327ec93cc01b89eeec806273dee267703b7d827b939",
+        "valid_predictions.npz": "fef913c166f42284f84af151925447e21266129079e5882747b7e4a4d8824597",
+        "test_predictions.npz": "284f6d269e55a2aac6fdab899efdf7791836e6d95bbaf94864f8aa21bd6c7f6c",
+        "test_eval.json": "f05ded906a9237edf8232269bd76b8e6da0970ae0d7a568030d09dc815cdfd8a",
+        "curve.csv": "a32acaed293f50c3a710705f32392aec38bc78ed9638c36fe96005fb769ebb4c"
+      },
+      "historical_git_commit": "c669b02ee55ad012deea27161cf023e912e64511",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917000
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.1903154761904764,
+        "n": 3360,
+        "scale": 1.2061284808757047,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
+        "train_base": null,
+        "valid": "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203",
+        "valid_base": null,
+        "train_norm": "03c9b60d5faa79d48016ec9dcbf1f52ce57c4044a478c00893f62326ee136c25"
+      },
+      "split_record_rows": {
+        "train": {
+          "n": 3360,
+          "sha256": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982"
+        }
+      },
+      "source": {
+        "cache_meta": {
+          "train": {
+            "cache_hit": true,
+            "content_fingerprint": "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
+            "dataset": "Lipophilicity",
+            "n_rows": 3360,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r123_train.a3af8ce779db.pt",
+            "rows_sha256": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+            "sha256": "89e793076837243e6b9c720cccfb75edd53ac1795cd50c4420f552fb697e8435",
+            "split_label": "lipo_r123_train",
+            "tag": "lipo_r123_train"
+          },
+          "valid": {
+            "cache_hit": true,
+            "content_fingerprint": "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203",
+            "dataset": "Lipophilicity",
+            "n_rows": 420,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r123_valid.a79e192e922d.pt",
+            "rows_sha256": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982",
+            "sha256": "f1b21887ae0c47b0de70b23e8d1116eb81aaaa811a1a79ee54121f93948e3f30",
+            "split_label": "lipo_r123_valid",
+            "tag": "lipo_r123_valid"
+          }
+        },
+        "file": "Lipop.random123.ind.pkl",
+        "kind": "published_repeat",
+        "rows_sha256": {
+          "test": "6c335c844cb1a53273fb784de389d7df25281df86a057bbe22882f130aa06df2",
+          "train": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+          "valid": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982"
+        },
+        "sha256": "afaed4c6d95b64ac64e8fb760b6de516802008965befe1601b3664303119a0e8",
+        "source": {
+          "csv": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+          "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+          "source_kind": "chembench"
+        },
+        "suffix": 123
+      },
+      "best_epoch": 248,
+      "epochs_run": 360,
+      "parameters": 247106,
+      "arm_label": "LCRC-A (BASE)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": 0.0024794695088431705,
+          "checkpoint": "best_epoch",
+          "mae": 0.47776743843705405,
+          "n": 420,
+          "r2": 0.6288393885706861,
+          "rmse": 0.7296429958800768
+        },
+        "test": {
+          "bias": -0.057214318168722196,
+          "checkpoint": "best_epoch",
+          "mae": 0.41550767242394876,
+          "n": 420,
+          "r2": 0.7633619860681348,
+          "rmse": 0.5747023945133596
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.7296429958800768,
+          "mae": 0.47776743843705405,
+          "p90_ae": 1.03026310903415,
+          "cvar90_ae": 1.64899474686441,
+          "sse": 223.5991386034785,
+          "bias": 0.0024794695088431705
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5747023945133596,
+          "mae": 0.41550767242394876,
+          "p90_ae": 0.9337172145502046,
+          "cvar90_ae": 1.3010543735878015,
+          "sse": 138.71879374894348,
+          "bias": -0.057214318168722196
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": null,
+      "base_copy": null,
+      "base_init_state_hash": null,
+      "init_state_hash": "2eafef5f209bcc9956f23ab6c9cd78a4a747a78429f8dcc1c54a711aaa9ac57f",
+      "shared_encoder_state_hash": "02e8c9f316f873e2def81b96a5cb3ed968524cbe66b54bf9ab3d0c0364109719",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.0335403544207414,
+        "mean_epoch_seconds": 0.7449658905957929,
+        "process_wall_seconds": 270.4677573530935,
+        "train_wall_seconds": 268.3377286186442
+      }
+    },
+    {
+      "unit_key": "f1_base_random123_s1",
+      "split": "random123",
+      "arm": "base",
+      "seed": 1,
+      "origin": "fresh",
+      "run_dir": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/runs/f1_base_random123_s1",
+      "files": {
+        "train.json": "4eedc5bcc3e353481f67d610493141b5aeeebb2589bdd294df28741af6451c37",
+        "checkpoint.pt": "805c927bfe372fedba02bcd6844c302b428fdf6123f8bde73665ec99d930058d",
+        "valid_predictions.npz": "a0a2abcdb9a051895cb978893586a99755545f53ac62a3ca2b301e20f94dcabb",
+        "test_predictions.npz": "2605f0c0b454dbb7c74d5d15b2caa516f44231fe88599633d118b40a0bf623e1",
+        "test_eval.json": "a021fdba033ac560bf30830c57c6d30253b983e22dbcb01ac0dd9bfdd20f3ce3",
+        "curve.csv": "c2a76c8c21a85e67ed2fb672512788d6429e007c524b190a3e49be58082bf793"
+      },
+      "historical_git_commit": "c669b02ee55ad012deea27161cf023e912e64511",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917001
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.1903154761904764,
+        "n": 3360,
+        "scale": 1.2061284808757047,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
+        "train_base": null,
+        "valid": "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203",
+        "valid_base": null,
+        "train_norm": "03c9b60d5faa79d48016ec9dcbf1f52ce57c4044a478c00893f62326ee136c25"
+      },
+      "split_record_rows": {
+        "train": {
+          "n": 3360,
+          "sha256": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982"
+        }
+      },
+      "source": {
+        "cache_meta": {
+          "train": {
+            "cache_hit": true,
+            "content_fingerprint": "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
+            "dataset": "Lipophilicity",
+            "n_rows": 3360,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r123_train.a3af8ce779db.pt",
+            "rows_sha256": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+            "sha256": "89e793076837243e6b9c720cccfb75edd53ac1795cd50c4420f552fb697e8435",
+            "split_label": "lipo_r123_train",
+            "tag": "lipo_r123_train"
+          },
+          "valid": {
+            "cache_hit": true,
+            "content_fingerprint": "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203",
+            "dataset": "Lipophilicity",
+            "n_rows": 420,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r123_valid.a79e192e922d.pt",
+            "rows_sha256": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982",
+            "sha256": "f1b21887ae0c47b0de70b23e8d1116eb81aaaa811a1a79ee54121f93948e3f30",
+            "split_label": "lipo_r123_valid",
+            "tag": "lipo_r123_valid"
+          }
+        },
+        "file": "Lipop.random123.ind.pkl",
+        "kind": "published_repeat",
+        "rows_sha256": {
+          "test": "6c335c844cb1a53273fb784de389d7df25281df86a057bbe22882f130aa06df2",
+          "train": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+          "valid": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982"
+        },
+        "sha256": "afaed4c6d95b64ac64e8fb760b6de516802008965befe1601b3664303119a0e8",
+        "source": {
+          "csv": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+          "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+          "source_kind": "chembench"
+        },
+        "suffix": 123
+      },
+      "best_epoch": 166,
+      "epochs_run": 360,
+      "parameters": 247106,
+      "arm_label": "LCRC-A (BASE)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.04044509444238858,
+          "checkpoint": "best_epoch",
+          "mae": 0.49307129084778,
+          "n": 420,
+          "r2": 0.5842462979720218,
+          "rmse": 0.7722315475473617
+        },
+        "test": {
+          "bias": -0.09516524524387542,
+          "checkpoint": "best_epoch",
+          "mae": 0.4369719319988752,
+          "n": 420,
+          "r2": 0.7434059643404827,
+          "rmse": 0.5984447059852681
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.7722315475473617,
+          "mae": 0.49307129084778,
+          "p90_ae": 0.9953067341284868,
+          "cvar90_ae": 1.669806031691627,
+          "sse": 250.46345647150514,
+          "bias": -0.04044509444238858
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5984447059852681,
+          "mae": 0.4369719319988752,
+          "p90_ae": 0.9900850885603997,
+          "cvar90_ae": 1.3290291447257654,
+          "sse": 150.41714777115345,
+          "bias": -0.09516524524387542
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": null,
+      "base_copy": null,
+      "base_init_state_hash": null,
+      "init_state_hash": "eb3a163a7fe67df8b4b84d199aa61d87399ff6b2d2fd37086b0854f8b46a88b7",
+      "shared_encoder_state_hash": "6d8c901773bd903eaebb0dcdd6de19165911f3bd08fa06852490f8e76cd72b72",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.06885331838081281,
+        "mean_epoch_seconds": 1.0038001083807708,
+        "process_wall_seconds": 364.431917920243,
+        "train_wall_seconds": 361.5764527111314
+      }
+    },
+    {
+      "unit_key": "f1_combo_random123_s1",
+      "split": "random123",
+      "arm": "combo_chem_contrib",
+      "seed": 1,
+      "origin": "fresh",
+      "run_dir": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/runs/f1_combo_random123_s1",
+      "files": {
+        "train.json": "98b629a110bd13a5d3b19ae4ac60102431af72e104c9caa4455eab61ed80e73d",
+        "checkpoint.pt": "2135af5a38ea629545ec5835c92254420cbcaed7717efff62a17d46f68728798",
+        "valid_predictions.npz": "be719999313599b1a9a32d764b1083fac70c94216ca2a3a2c478fff719d700ae",
+        "test_predictions.npz": "d5a775b5f4a38f31a19a9d6568182dce05b39504e4519a5dd929ad7e92c32a27",
+        "test_eval.json": "2f6bf93e95919c907baae57a02363dca1dc960a33c104d1352eafe3e5a8070b5",
+        "curve.csv": "2afb14e1a89b4d9fd8f305ba8d086949288f971aad44a449c2d16265a52be795"
+      },
+      "historical_git_commit": "c669b02ee55ad012deea27161cf023e912e64511",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917001
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.1903154761904764,
+        "n": 3360,
+        "scale": 1.2061284808757047,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "19be3b7c4a2347d70c762986de72f3c30068b69c31bd4c7e914e00bc263a2d32",
+        "train_base": "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
+        "valid": "5100d1f4fbe1670ff9e62ebf75fab03d7b463d93ab74f59106eb56e6948a9997",
+        "valid_base": "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203",
+        "train_norm": "03c9b60d5faa79d48016ec9dcbf1f52ce57c4044a478c00893f62326ee136c25"
+      },
+      "split_record_rows": {
+        "train": {
+          "n": 3360,
+          "sha256": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982"
+        }
+      },
+      "source": {
+        "cache_meta": {
+          "train": {
+            "cache_hit": true,
+            "content_fingerprint": "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
+            "dataset": "Lipophilicity",
+            "n_rows": 3360,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r123_train.a3af8ce779db.pt",
+            "rows_sha256": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+            "sha256": "89e793076837243e6b9c720cccfb75edd53ac1795cd50c4420f552fb697e8435",
+            "split_label": "lipo_r123_train",
+            "tag": "lipo_r123_train"
+          },
+          "valid": {
+            "cache_hit": true,
+            "content_fingerprint": "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203",
+            "dataset": "Lipophilicity",
+            "n_rows": 420,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r123_valid.a79e192e922d.pt",
+            "rows_sha256": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982",
+            "sha256": "f1b21887ae0c47b0de70b23e8d1116eb81aaaa811a1a79ee54121f93948e3f30",
+            "split_label": "lipo_r123_valid",
+            "tag": "lipo_r123_valid"
+          }
+        },
+        "chem8": {
+          "artifact_manifest": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/chem8_manifest.json",
+          "base_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "channel_names": [
+            "CIP_R",
+            "CIP_S",
+            "CIP_UNASSIGNED_TETRA",
+            "HBD",
+            "HBA",
+            "HYB_SP",
+            "HYB_SP2",
+            "HYB_SP3"
+          ],
+          "extended_spec_hash": "497933552f0a1c212980e4c483d791b8b39f97d3cdaee1aac974c78744f763df",
+          "train_cache_base_fingerprint": "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
+          "train_cache_extended_fingerprint": "19be3b7c4a2347d70c762986de72f3c30068b69c31bd4c7e914e00bc263a2d32",
+          "train_norm_fingerprint_unchanged": true,
+          "valid_cache_base_fingerprint": "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203",
+          "valid_cache_extended_fingerprint": "5100d1f4fbe1670ff9e62ebf75fab03d7b463d93ab74f59106eb56e6948a9997"
+        },
+        "file": "Lipop.random123.ind.pkl",
+        "kind": "published_repeat",
+        "rows_sha256": {
+          "test": "6c335c844cb1a53273fb784de389d7df25281df86a057bbe22882f130aa06df2",
+          "train": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+          "valid": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982"
+        },
+        "sha256": "afaed4c6d95b64ac64e8fb760b6de516802008965befe1601b3664303119a0e8",
+        "source": {
+          "csv": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+          "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+          "source_kind": "chembench"
+        },
+        "suffix": 123
+      },
+      "best_epoch": 332,
+      "epochs_run": 360,
+      "parameters": 253163,
+      "arm_label": "LCRC-COMBO (CHEMLOCAL8 + MULTICONTRIB8)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.08939988868150625,
+          "checkpoint": "best_epoch",
+          "mae": 0.48205536402896465,
+          "n": 420,
+          "r2": 0.6154093448684849,
+          "rmse": 0.7427263654301844
+        },
+        "test": {
+          "bias": -0.15048530947855332,
+          "checkpoint": "best_epoch",
+          "mae": 0.4235182537534211,
+          "n": 420,
+          "r2": 0.7632456957785216,
+          "rmse": 0.5748435892817046
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.7427263654301844,
+          "mae": 0.48205536402896465,
+          "p90_ae": 0.9655552162306801,
+          "cvar90_ae": 1.6103771202183292,
+          "sse": 231.68983064015538,
+          "bias": -0.08939988868150625
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5748435892817046,
+          "mae": 0.4235182537534211,
+          "p90_ae": 0.9853388521831837,
+          "cvar90_ae": 1.280252448656599,
+          "sse": 138.78696389807473,
+          "bias": -0.15048530947855332
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "combo_chem_contrib",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 34,
+        "new_extension_tensors": 8,
+        "spec_atom_width": 59,
+        "widened_zero_padded": 1
+      },
+      "base_init_state_hash": "eb3a163a7fe67df8b4b84d199aa61d87399ff6b2d2fd37086b0854f8b46a88b7",
+      "init_state_hash": "27ade99de189813e0a2ebfe12728627543fbf74f79d4ce716b6a6cce2af46240",
+      "shared_encoder_state_hash": "867a5fcbd5439b5ba782bd5fefac4e004d20756d8010c90012ebb45c6dc4cd6e",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.05589381977915764,
+        "mean_epoch_seconds": 0.9560826869177012,
+        "process_wall_seconds": 347.2894566869363,
+        "train_wall_seconds": 344.41108874604106
+      }
+    },
+    {
+      "unit_key": "f1_base_random124_s0",
+      "split": "random124",
+      "arm": "base",
+      "seed": 0,
+      "origin": "fresh",
+      "run_dir": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/runs/f1_base_random124_s0",
+      "files": {
+        "train.json": "06465fb63c5d30e3bb1148812c453d4ac809f42074fdd5e5c7d299f820247570",
+        "checkpoint.pt": "cd52ae6351b87945f25687e8717faf984b426f2a5ab37a19385430dfbda65fa0",
+        "valid_predictions.npz": "fdb376bbd2db9077138711a6366c7501386c9c81d87ee63f42371e4dff03e315",
+        "test_predictions.npz": "79ab12fe5451894662b626ecd586add6af4629f3d2ad339e8498403229a17604",
+        "test_eval.json": "3653a89a758d2df84f6f0b16c1200e6d025d7cd63e5c4b5d1f331c061a839741",
+        "curve.csv": "60d3d0df55214ac966fceef0915aecfe7000bc37b457c3ca81fbc3e02d2156c2"
+      },
+      "historical_git_commit": "c669b02ee55ad012deea27161cf023e912e64511",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917000
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.186172619047619,
+        "n": 3360,
+        "scale": 1.202886060674314,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
+        "train_base": null,
+        "valid": "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a",
+        "valid_base": null,
+        "train_norm": "3f7db6917537bde3c71c2637e2b63f5de031af40d5cbb31e49bf59efb90029e0"
+      },
+      "split_record_rows": {
+        "train": {
+          "n": 3360,
+          "sha256": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+        }
+      },
+      "source": {
+        "cache_meta": {
+          "train": {
+            "cache_hit": true,
+            "content_fingerprint": "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
+            "dataset": "Lipophilicity",
+            "n_rows": 3360,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r124_train.dacdee79f1e3.pt",
+            "rows_sha256": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+            "sha256": "82de62c4c49477ea3635f2e0a54c8b777d318f39891cb4f2aa450d5a1d34b14b",
+            "split_label": "lipo_r124_train",
+            "tag": "lipo_r124_train"
+          },
+          "valid": {
+            "cache_hit": true,
+            "content_fingerprint": "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a",
+            "dataset": "Lipophilicity",
+            "n_rows": 420,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r124_valid.e2100b1b236d.pt",
+            "rows_sha256": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94",
+            "sha256": "dd8c9f686aa4301d0e5ce2e9f07f2507fcfa6bae150f3b0e40c2573103afea06",
+            "split_label": "lipo_r124_valid",
+            "tag": "lipo_r124_valid"
+          }
+        },
+        "file": "Lipop.random124.ind.pkl",
+        "kind": "published_repeat",
+        "rows_sha256": {
+          "test": "c4a5b71d8245ab426cffe475cd8862e11b16106d303b3ddb5dc409611fd0427d",
+          "train": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+          "valid": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+        },
+        "sha256": "2b48a41ccc39b622bbb74f18331ca9d9513190eec2de29144ce2bc7d47ef7ef3",
+        "source": {
+          "csv": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+          "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+          "source_kind": "chembench"
+        },
+        "suffix": 124
+      },
+      "best_epoch": 190,
+      "epochs_run": 360,
+      "parameters": 247106,
+      "arm_label": "LCRC-A (BASE)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": 0.0076666263513442395,
+          "checkpoint": "best_epoch",
+          "mae": 0.4136264269292539,
+          "n": 420,
+          "r2": 0.7202519649257826,
+          "rmse": 0.637438945075198
+        },
+        "test": {
+          "bias": -0.01972168060701807,
+          "checkpoint": "best_epoch",
+          "mae": 0.39117381781599614,
+          "n": 420,
+          "r2": 0.8157334770967767,
+          "rmse": 0.5152253819371113
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.637438945075198,
+          "mae": 0.4136264269292539,
+          "p90_ae": 0.9120862085184949,
+          "cvar90_ae": 1.4032228633451536,
+          "sse": 170.65793165340418,
+          "bias": 0.0076666263513442395
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5152253819371113,
+          "mae": 0.39117381781599614,
+          "p90_ae": 0.8574819705058812,
+          "cvar90_ae": 1.1270795484969607,
+          "sse": 111.49202156074176,
+          "bias": -0.01972168060701807
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": null,
+      "base_copy": null,
+      "base_init_state_hash": null,
+      "init_state_hash": "c25be21820b2a7cf46e1d171e638b2b5f61671b7bbacf1b2745d17036e276620",
+      "shared_encoder_state_hash": "a49f40291de0c76c95f897000dd80da6875503661d17d4712a807d2c31a08e37",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.05910263039792577,
+        "mean_epoch_seconds": 1.0338769727903936,
+        "process_wall_seconds": 375.31764284009114,
+        "train_wall_seconds": 372.44462024094537
+      }
+    },
+    {
+      "unit_key": "f1_base_random124_s1",
+      "split": "random124",
+      "arm": "base",
+      "seed": 1,
+      "origin": "fresh",
+      "run_dir": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/runs/f1_base_random124_s1",
+      "files": {
+        "train.json": "fd4a8717aea80a2c0976402fda4d2541f0d09672de13c30b67439bc3ad1f84dd",
+        "checkpoint.pt": "6d0c930cff70ebb3357348beffa356e61cf5777fe9a006876da543cd1f8d35bd",
+        "valid_predictions.npz": "70ad75686af3a2a5e185c8cbc97abb4331bf5775cd6f8caf95fea091df7dd161",
+        "test_predictions.npz": "76a230d8002890f2667572705a6bbf9a4309ac966cf871962add97d8367efd7c",
+        "test_eval.json": "84ffc79c5d62fcbd50d8754f0bd75ab46e641e833ed9374f2ee70ea70feffb4b",
+        "curve.csv": "5c269c287bbf8031f823a52be2ef9cec38e6020180c0045ca18c85f1c1151f62"
+      },
+      "historical_git_commit": "c669b02ee55ad012deea27161cf023e912e64511",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917001
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.186172619047619,
+        "n": 3360,
+        "scale": 1.202886060674314,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
+        "train_base": null,
+        "valid": "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a",
+        "valid_base": null,
+        "train_norm": "3f7db6917537bde3c71c2637e2b63f5de031af40d5cbb31e49bf59efb90029e0"
+      },
+      "split_record_rows": {
+        "train": {
+          "n": 3360,
+          "sha256": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+        }
+      },
+      "source": {
+        "cache_meta": {
+          "train": {
+            "cache_hit": true,
+            "content_fingerprint": "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
+            "dataset": "Lipophilicity",
+            "n_rows": 3360,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r124_train.dacdee79f1e3.pt",
+            "rows_sha256": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+            "sha256": "82de62c4c49477ea3635f2e0a54c8b777d318f39891cb4f2aa450d5a1d34b14b",
+            "split_label": "lipo_r124_train",
+            "tag": "lipo_r124_train"
+          },
+          "valid": {
+            "cache_hit": true,
+            "content_fingerprint": "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a",
+            "dataset": "Lipophilicity",
+            "n_rows": 420,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r124_valid.e2100b1b236d.pt",
+            "rows_sha256": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94",
+            "sha256": "dd8c9f686aa4301d0e5ce2e9f07f2507fcfa6bae150f3b0e40c2573103afea06",
+            "split_label": "lipo_r124_valid",
+            "tag": "lipo_r124_valid"
+          }
+        },
+        "file": "Lipop.random124.ind.pkl",
+        "kind": "published_repeat",
+        "rows_sha256": {
+          "test": "c4a5b71d8245ab426cffe475cd8862e11b16106d303b3ddb5dc409611fd0427d",
+          "train": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+          "valid": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+        },
+        "sha256": "2b48a41ccc39b622bbb74f18331ca9d9513190eec2de29144ce2bc7d47ef7ef3",
+        "source": {
+          "csv": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+          "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+          "source_kind": "chembench"
+        },
+        "suffix": 124
+      },
+      "best_epoch": 168,
+      "epochs_run": 360,
+      "parameters": 247106,
+      "arm_label": "LCRC-A (BASE)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.06661972641951511,
+          "checkpoint": "best_epoch",
+          "mae": 0.4271585484569409,
+          "n": 420,
+          "r2": 0.715844379269847,
+          "rmse": 0.6424409221397432
+        },
+        "test": {
+          "bias": -0.08215955951127245,
+          "checkpoint": "best_epoch",
+          "mae": 0.43026873832829376,
+          "n": 420,
+          "r2": 0.7794876175376328,
+          "rmse": 0.5636253528419543
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.6424409221397432,
+          "mae": 0.4271585484569409,
+          "p90_ae": 0.8881495211958095,
+          "cvar90_ae": 1.3406597904111446,
+          "sse": 173.34674214470076,
+          "bias": -0.06661972641951511
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5636253528419543,
+          "mae": 0.43026873832829376,
+          "p90_ae": 0.9068221252328167,
+          "cvar90_ae": 1.2297686146654054,
+          "sse": 133.42288611381133,
+          "bias": -0.08215955951127245
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": null,
+      "base_copy": null,
+      "base_init_state_hash": null,
+      "init_state_hash": "0ac6d8da3b16838c59f6a12cb802d064af38026f7e697df620eb50b0e7e1733a",
+      "shared_encoder_state_hash": "1ca94e057ce5b964152005560f24ff87b4654db088d833dcdc9f786245d05672",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.033661720963815846,
+        "mean_epoch_seconds": 0.7992623734637163,
+        "process_wall_seconds": 290.05806908616796,
+        "train_wall_seconds": 287.9353207331151
+      }
+    },
+    {
+      "unit_key": "f1_combo_random124_s1",
+      "split": "random124",
+      "arm": "combo_chem_contrib",
+      "seed": 1,
+      "origin": "fresh",
+      "run_dir": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/runs/f1_combo_random124_s1",
+      "files": {
+        "train.json": "dcba10eccf4e1164cebcacbe9c8ebe4f656fd43ea631191dcf5de18819cfa3db",
+        "checkpoint.pt": "74ef3fa6390ef2c44d65e7918c9ed6445ed693e4399b2e82681f547cea79fdb5",
+        "valid_predictions.npz": "ebed45810d8794a1f841a744801e051c5a99daf29732d108f7247a2ecff5608e",
+        "test_predictions.npz": "8d5138ce94b6409629a108cbdf857a54d71ed41e68812a9c2aa8e85a05ac9f29",
+        "test_eval.json": "f5bf548109d427800f764c41cf54bc920e6625c92205613e5e10d6dc7a35a699",
+        "curve.csv": "63bb22e73574b3680de07a28c7b548ec9411feb658df9f680f6290be03c4c9ce"
+      },
+      "historical_git_commit": "c669b02ee55ad012deea27161cf023e912e64511",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917001
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.186172619047619,
+        "n": 3360,
+        "scale": 1.202886060674314,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "1e3596744b6785effda815d486d4617fc1646024d99e75a692743d3af080820f",
+        "train_base": "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
+        "valid": "93a322d269212eb78c638318cf1a25c7018c06c1946bb20631d96c2f6d30efa0",
+        "valid_base": "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a",
+        "train_norm": "3f7db6917537bde3c71c2637e2b63f5de031af40d5cbb31e49bf59efb90029e0"
+      },
+      "split_record_rows": {
+        "train": {
+          "n": 3360,
+          "sha256": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+        }
+      },
+      "source": {
+        "cache_meta": {
+          "train": {
+            "cache_hit": true,
+            "content_fingerprint": "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
+            "dataset": "Lipophilicity",
+            "n_rows": 3360,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r124_train.dacdee79f1e3.pt",
+            "rows_sha256": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+            "sha256": "82de62c4c49477ea3635f2e0a54c8b777d318f39891cb4f2aa450d5a1d34b14b",
+            "split_label": "lipo_r124_train",
+            "tag": "lipo_r124_train"
+          },
+          "valid": {
+            "cache_hit": true,
+            "content_fingerprint": "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a",
+            "dataset": "Lipophilicity",
+            "n_rows": 420,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r124_valid.e2100b1b236d.pt",
+            "rows_sha256": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94",
+            "sha256": "dd8c9f686aa4301d0e5ce2e9f07f2507fcfa6bae150f3b0e40c2573103afea06",
+            "split_label": "lipo_r124_valid",
+            "tag": "lipo_r124_valid"
+          }
+        },
+        "chem8": {
+          "artifact_manifest": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/chem8_manifest.json",
+          "base_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "channel_names": [
+            "CIP_R",
+            "CIP_S",
+            "CIP_UNASSIGNED_TETRA",
+            "HBD",
+            "HBA",
+            "HYB_SP",
+            "HYB_SP2",
+            "HYB_SP3"
+          ],
+          "extended_spec_hash": "497933552f0a1c212980e4c483d791b8b39f97d3cdaee1aac974c78744f763df",
+          "train_cache_base_fingerprint": "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
+          "train_cache_extended_fingerprint": "1e3596744b6785effda815d486d4617fc1646024d99e75a692743d3af080820f",
+          "train_norm_fingerprint_unchanged": true,
+          "valid_cache_base_fingerprint": "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a",
+          "valid_cache_extended_fingerprint": "93a322d269212eb78c638318cf1a25c7018c06c1946bb20631d96c2f6d30efa0"
+        },
+        "file": "Lipop.random124.ind.pkl",
+        "kind": "published_repeat",
+        "rows_sha256": {
+          "test": "c4a5b71d8245ab426cffe475cd8862e11b16106d303b3ddb5dc409611fd0427d",
+          "train": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+          "valid": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+        },
+        "sha256": "2b48a41ccc39b622bbb74f18331ca9d9513190eec2de29144ce2bc7d47ef7ef3",
+        "source": {
+          "csv": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+          "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+          "source_kind": "chembench"
+        },
+        "suffix": 124
+      },
+      "best_epoch": 223,
+      "epochs_run": 360,
+      "parameters": 253163,
+      "arm_label": "LCRC-COMBO (CHEMLOCAL8 + MULTICONTRIB8)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.030151341333783402,
+          "checkpoint": "best_epoch",
+          "mae": 0.41247703163900806,
+          "n": 420,
+          "r2": 0.7356455068243064,
+          "rmse": 0.6196528043291675
+        },
+        "test": {
+          "bias": -0.0678601318403837,
+          "checkpoint": "best_epoch",
+          "mae": 0.4066708585967449,
+          "n": 420,
+          "r2": 0.7981021764156149,
+          "rmse": 0.5393117074748006
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.6196528043291675,
+          "mae": 0.41247703163900806,
+          "p90_ae": 0.8611112831385688,
+          "cvar90_ae": 1.376920771729901,
+          "sse": 161.26723112346065,
+          "bias": -0.030151341333783402
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5393117074748006,
+          "mae": 0.4066708585967449,
+          "p90_ae": 0.9172101903496803,
+          "cvar90_ae": 1.1997193020907864,
+          "sse": 122.15998948414168,
+          "bias": -0.0678601318403837
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "combo_chem_contrib",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 34,
+        "new_extension_tensors": 8,
+        "spec_atom_width": 59,
+        "widened_zero_padded": 1
+      },
+      "base_init_state_hash": "0ac6d8da3b16838c59f6a12cb802d064af38026f7e697df620eb50b0e7e1733a",
+      "init_state_hash": "ab743e3fd3e740878d5cd01279711d97d2fc5480996c7d39e7f6fde605953d57",
+      "shared_encoder_state_hash": "01f56810833ffbd9990f2417ac09885ac71bd49050c88084f900190392d1b74b",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.05983266637971004,
+        "mean_epoch_seconds": 1.0288790228660218,
+        "process_wall_seconds": 373.8430770440027,
+        "train_wall_seconds": 370.6403592620045
+      }
     }
   ],
   "completeness": {
     "n_units_expected": 20,
-    "n_units_available": 10,
+    "n_units_available": 20,
     "n_reused": 10,
-    "n_fresh": 0,
+    "n_fresh": 10,
     "expected_units": [
       {
         "split": "random122",

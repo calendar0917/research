@@ -1,0 +1,1968 @@
+{
+  "cvar90_definition": "mean absolute error of this model's own worst ceil(0.10*n) molecules",
+  "posthoc_tail_definition": "top ceil(0.10*n) molecules by same-seed BASE absolute error; label LABEL_SELECTED_POSTHOC_TAIL",
+  "warning": "The BASE-defined tail is selected using BASE error, so an improvement inside it is a post-hoc quantity. It must not be read as a pre-identifiable tail-repair capability and it is never a substitute for CVaR90-AE or P90 absolute error.",
+  "bootstrap": {
+    "n_boot": 2000,
+    "seed": 20261104,
+    "unit": "Bemis-Murcko scaffold cluster"
+  },
+  "splits": {
+    "random122": {
+      "valid": {
+        "cvar90_by_seed_arm": {
+          "s0_base": {
+            "cvar90_ae": 1.427581062897397,
+            "p90_ae": 0.8554420079020039,
+            "tail_size": 42
+          },
+          "s0_chem8": {
+            "cvar90_ae": 1.4069041495027106,
+            "p90_ae": 0.8200020417894256,
+            "tail_size": 42
+          },
+          "s0_multicontrib": {
+            "cvar90_ae": 1.3618379372746034,
+            "p90_ae": 0.8576940622237476,
+            "tail_size": 42
+          },
+          "s0_combo_chem_contrib": {
+            "cvar90_ae": 1.4495818507715257,
+            "p90_ae": 0.8655549644309747,
+            "tail_size": 42
+          },
+          "s1_base": {
+            "cvar90_ae": 1.3320312999319437,
+            "p90_ae": 0.81129196999946,
+            "tail_size": 42
+          },
+          "s1_chem8": {
+            "cvar90_ae": 1.3522360402394658,
+            "p90_ae": 0.8539287895058024,
+            "tail_size": 42
+          },
+          "s1_multicontrib": {
+            "cvar90_ae": 1.2866789516110906,
+            "p90_ae": 0.8016678148059454,
+            "tail_size": 42
+          },
+          "s1_combo_chem_contrib": {
+            "cvar90_ae": 1.3049660197204793,
+            "p90_ae": 0.8120483003828884,
+            "tail_size": 42
+          },
+          "s2_base": {
+            "cvar90_ae": 1.3737861270445615,
+            "p90_ae": 0.8171458710266664,
+            "tail_size": 42
+          },
+          "s2_chem8": {
+            "cvar90_ae": 1.3626884000323725,
+            "p90_ae": 0.7634363376027626,
+            "tail_size": 42
+          },
+          "s2_multicontrib": {
+            "cvar90_ae": 1.359981770161451,
+            "p90_ae": 0.7430048151893136,
+            "tail_size": 42
+          },
+          "s2_combo_chem_contrib": {
+            "cvar90_ae": 1.2877293355299675,
+            "p90_ae": 0.806057605996622,
+            "tail_size": 42
+          }
+        },
+        "posthoc_base_tail": {
+          "s0": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.9724492345750395,
+              "rmse_combo": 1.8755650166449602,
+              "mae_base": 1.4275810628973973,
+              "mae_combo": 1.2952526416808963,
+              "sse_base": 163.4033512849777,
+              "sse_combo": 147.74525352982124,
+              "delta_rmse": -0.09688421793007929,
+              "delta_mae": -0.132328421216501,
+              "delta_sse": -15.658097755156462,
+              "frac_improved": 0.7142857142857143,
+              "mean_abs_improvement": 0.13232842121650096
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.09688421793007929,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.09839241786535606,
+                "sd": 0.0390887801877398,
+                "ci_low": -0.16858955349495428,
+                "ci_high": -0.013868389387115498,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0155,
+                "frac_lt_zero": 0.9845
+              },
+              "delta_mae": {
+                "point": -0.132328421216501,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.13211578017257938,
+                "sd": 0.04782234498969056,
+                "ci_low": -0.2275615341363634,
+                "ci_high": -0.03720769086351694,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0015,
+                "frac_lt_zero": 0.9985
+              },
+              "frac_improved": {
+                "point": 0.7142857142857143,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.71625,
+                "sd": 0.0704966739457612,
+                "ci_low": 0.5714285714285714,
+                "ci_high": 0.8571428571428571,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 42,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 1,
+              "max_cluster_molecule_share": 0.023809523809523808,
+              "singleton_clusters": 42,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              2087,
+              1852,
+              2099,
+              456,
+              3626,
+              3029,
+              3473,
+              1155,
+              3631,
+              940,
+              623,
+              2658,
+              1729,
+              622,
+              3318,
+              1701,
+              210,
+              2296,
+              2803,
+              2502,
+              3800,
+              2234,
+              3457,
+              382,
+              3369,
+              1225,
+              3133,
+              281,
+              3913,
+              1321,
+              3402,
+              3036,
+              1689,
+              1820,
+              1042,
+              1811,
+              2496,
+              2181,
+              2832,
+              1642,
+              1243,
+              2532
+            ],
+            "tail_scaffolds_distinct": 42
+          },
+          "s1": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.8355692391554546,
+              "rmse_combo": 1.5219079328962757,
+              "mae_base": 1.3320312999319441,
+              "mae_combo": 1.210498936408761,
+              "sse_base": 141.51120613281685,
+              "sse_combo": 97.28055776092981,
+              "delta_rmse": -0.3136613062591789,
+              "delta_mae": -0.12153236352318308,
+              "delta_sse": -44.23064837188704,
+              "frac_improved": 0.5952380952380952,
+              "mean_abs_improvement": 0.12153236352318302
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.3136613062591789,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.2690881644771006,
+                "sd": 0.20430527828177636,
+                "ci_low": -0.6550256064725365,
+                "ci_high": 0.02426869363979495,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.074,
+                "frac_lt_zero": 0.926
+              },
+              "delta_mae": {
+                "point": -0.12153236352318308,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.12084652113550123,
+                "sd": 0.07413808295822756,
+                "ci_low": -0.2784994118116396,
+                "ci_high": 0.0039060951048627028,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0325,
+                "frac_lt_zero": 0.9675
+              },
+              "frac_improved": {
+                "point": 0.5952380952380952,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.5954425423854449,
+                "sd": 0.07420282055023307,
+                "ci_low": 0.4523809523809524,
+                "ci_high": 0.7380952380952381,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 41,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 2,
+              "max_cluster_molecule_share": 0.047619047619047616,
+              "singleton_clusters": 40,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              2087,
+              2099,
+              1852,
+              3029,
+              456,
+              3473,
+              3318,
+              2935,
+              2803,
+              3626,
+              102,
+              1155,
+              623,
+              2493,
+              622,
+              1225,
+              1296,
+              3256,
+              3631,
+              940,
+              2658,
+              2160,
+              3369,
+              3865,
+              3821,
+              1243,
+              1642,
+              2599,
+              2234,
+              122,
+              382,
+              2303,
+              4076,
+              1991,
+              1820,
+              3449,
+              281,
+              1042,
+              1071,
+              3800,
+              1408,
+              298
+            ],
+            "tail_scaffolds_distinct": 41
+          },
+          "s2": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 2.0473827155915107,
+              "rmse_combo": 1.4539738600616403,
+              "mae_base": 1.3737861270445615,
+              "mae_combo": 1.170204681734593,
+              "sse_base": 176.0545913323205,
+              "sse_combo": 88.78967940118696,
+              "delta_rmse": -0.5934088555298704,
+              "delta_mae": -0.20358144530996847,
+              "delta_sse": -87.26491193113355,
+              "frac_improved": 0.5238095238095238,
+              "mean_abs_improvement": 0.20358144530996858
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.5934088555298704,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.4957487019815525,
+                "sd": 0.4173915523432938,
+                "ci_low": -1.272721659059368,
+                "ci_high": 0.056642496999247456,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.1395,
+                "frac_lt_zero": 0.8605
+              },
+              "delta_mae": {
+                "point": -0.20358144530996847,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.20176519815879845,
+                "sd": 0.12867397285369137,
+                "ci_low": -0.5012426812612112,
+                "ci_high": -0.007786741740230864,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0205,
+                "frac_lt_zero": 0.9795
+              },
+              "frac_improved": {
+                "point": 0.5238095238095238,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.5245669265578743,
+                "sd": 0.07872731774252689,
+                "ci_low": 0.36585365853658536,
+                "ci_high": 0.6818181818181818,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 41,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 2,
+              "max_cluster_molecule_share": 0.047619047619047616,
+              "singleton_clusters": 40,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              2087,
+              2099,
+              1852,
+              3029,
+              3631,
+              102,
+              2234,
+              3473,
+              3626,
+              2847,
+              1225,
+              1689,
+              2803,
+              2496,
+              281,
+              1729,
+              2888,
+              2493,
+              622,
+              2296,
+              3133,
+              3256,
+              456,
+              293,
+              3411,
+              3379,
+              3036,
+              2502,
+              1128,
+              3318,
+              2658,
+              3913,
+              1243,
+              1820,
+              1631,
+              3920,
+              2303,
+              210,
+              4017,
+              3865,
+              746,
+              1701
+            ],
+            "tail_scaffolds_distinct": 41
+          }
+        },
+        "per_seed": {}
+      },
+      "test": {
+        "cvar90_by_seed_arm": {
+          "s0_base": {
+            "cvar90_ae": 1.3101196309266978,
+            "p90_ae": 0.8787229894417379,
+            "tail_size": 42
+          },
+          "s0_chem8": {
+            "cvar90_ae": 1.3041713484131467,
+            "p90_ae": 0.8574799954969852,
+            "tail_size": 42
+          },
+          "s0_multicontrib": {
+            "cvar90_ae": 1.3007028207959903,
+            "p90_ae": 0.9122125042256507,
+            "tail_size": 42
+          },
+          "s0_combo_chem_contrib": {
+            "cvar90_ae": 1.2442585163792792,
+            "p90_ae": 0.8905256587568872,
+            "tail_size": 42
+          },
+          "s1_base": {
+            "cvar90_ae": 1.2620934400492871,
+            "p90_ae": 0.899559509149983,
+            "tail_size": 42
+          },
+          "s1_chem8": {
+            "cvar90_ae": 1.2644591074619291,
+            "p90_ae": 0.8890158001266446,
+            "tail_size": 42
+          },
+          "s1_multicontrib": {
+            "cvar90_ae": 1.2447997321905517,
+            "p90_ae": 0.8510752895902973,
+            "tail_size": 42
+          },
+          "s1_combo_chem_contrib": {
+            "cvar90_ae": 1.2247053223701605,
+            "p90_ae": 0.8576245920751883,
+            "tail_size": 42
+          },
+          "s2_base": {
+            "cvar90_ae": 1.3014545201067378,
+            "p90_ae": 0.9555739726994997,
+            "tail_size": 42
+          },
+          "s2_chem8": {
+            "cvar90_ae": 1.3134964196645038,
+            "p90_ae": 0.9627347220612545,
+            "tail_size": 42
+          },
+          "s2_multicontrib": {
+            "cvar90_ae": 1.2467816646308474,
+            "p90_ae": 0.8827238407089139,
+            "tail_size": 42
+          },
+          "s2_combo_chem_contrib": {
+            "cvar90_ae": 1.2712728552236237,
+            "p90_ae": 0.8782079517573066,
+            "tail_size": 42
+          }
+        },
+        "posthoc_base_tail": {
+          "s0": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.3469342602696086,
+              "rmse_combo": 1.2363255104560849,
+              "mae_base": 1.3101196309266978,
+              "mae_combo": 1.1771271572297841,
+              "sse_base": 76.19773986249757,
+              "sse_combo": 64.19703224778895,
+              "delta_rmse": -0.11060874981352375,
+              "delta_mae": -0.1329924736969137,
+              "delta_sse": -12.000707614708617,
+              "frac_improved": 0.6904761904761905,
+              "mean_abs_improvement": 0.1329924736969137
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.11060874981352375,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.11122543947997929,
+                "sd": 0.0468114689150886,
+                "ci_low": -0.20709528718691503,
+                "ci_high": -0.023746660272714906,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.006,
+                "frac_lt_zero": 0.994
+              },
+              "delta_mae": {
+                "point": -0.1329924736969137,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.13262851550956556,
+                "sd": 0.04428461823483509,
+                "ci_low": -0.224260301887413,
+                "ci_high": -0.05311939432106052,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.001,
+                "frac_lt_zero": 0.999
+              },
+              "frac_improved": {
+                "point": 0.6904761904761905,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.6912491440943301,
+                "sd": 0.06882415619518753,
+                "ci_low": 0.5526315789473685,
+                "ci_high": 0.8181818181818182,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 38,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 3,
+              "max_cluster_molecule_share": 0.07142857142857142,
+              "singleton_clusters": 35,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              1667,
+              3458,
+              98,
+              291,
+              1653,
+              3986,
+              1601,
+              3772,
+              508,
+              2823,
+              2748,
+              3371,
+              3057,
+              231,
+              3857,
+              2804,
+              2526,
+              3352,
+              3349,
+              175,
+              3456,
+              1442,
+              3740,
+              1821,
+              683,
+              3203,
+              2145,
+              515,
+              2471,
+              3012,
+              3167,
+              3762,
+              3049,
+              1936,
+              810,
+              2008,
+              2235,
+              794,
+              2300,
+              1400,
+              1391,
+              4150
+            ],
+            "tail_scaffolds_distinct": 38
+          },
+          "s1": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.3049866783340058,
+              "rmse_combo": 1.1905182965046694,
+              "mae_base": 1.2620934400492874,
+              "mae_combo": 1.115728644487378,
+              "sse_base": 71.52558968642731,
+              "sse_combo": 59.528020201119965,
+              "delta_rmse": -0.11446838182933639,
+              "delta_mae": -0.1463647955619094,
+              "delta_sse": -11.997569485307345,
+              "frac_improved": 0.6666666666666666,
+              "mean_abs_improvement": 0.14636479556190918
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.11446838182933639,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.11366237943114965,
+                "sd": 0.04483954838440476,
+                "ci_low": -0.19802667171306046,
+                "ci_high": -0.022574043104384142,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.008,
+                "frac_lt_zero": 0.992
+              },
+              "delta_mae": {
+                "point": -0.1463647955619094,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.14494210553892337,
+                "sd": 0.043938152115819716,
+                "ci_low": -0.22984739353982972,
+                "ci_high": -0.05490693060036406,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0005,
+                "frac_lt_zero": 0.9995
+              },
+              "frac_improved": {
+                "point": 0.6666666666666666,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.6634945174016196,
+                "sd": 0.07343259057329349,
+                "ci_low": 0.5116279069767442,
+                "ci_high": 0.8001219512195116,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 39,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 3,
+              "max_cluster_molecule_share": 0.07142857142857142,
+              "singleton_clusters": 37,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              2804,
+              1667,
+              3986,
+              1601,
+              2748,
+              3772,
+              291,
+              3057,
+              3203,
+              98,
+              3349,
+              231,
+              508,
+              2623,
+              3762,
+              3458,
+              1653,
+              2145,
+              3740,
+              3371,
+              2526,
+              1498,
+              2433,
+              2223,
+              3337,
+              1936,
+              3012,
+              2432,
+              3352,
+              2823,
+              3167,
+              2399,
+              3049,
+              2235,
+              1391,
+              1542,
+              2546,
+              480,
+              2175,
+              794,
+              494,
+              192
+            ],
+            "tail_scaffolds_distinct": 39
+          },
+          "s2": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.344795988310278,
+              "rmse_combo": 1.217113390887158,
+              "mae_base": 1.3014545201067378,
+              "mae_combo": 1.1183903833233033,
+              "sse_base": 75.95600250736753,
+              "sse_combo": 62.21733026362712,
+              "delta_rmse": -0.12768259742311994,
+              "delta_mae": -0.18306413678343447,
+              "delta_sse": -13.73867224374041,
+              "frac_improved": 0.7380952380952381,
+              "mean_abs_improvement": 0.18306413678343464
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.12768259742311994,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.12758245637240678,
+                "sd": 0.040615256941491484,
+                "ci_low": -0.20639231054247018,
+                "ci_high": -0.05120681262251938,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.001,
+                "frac_lt_zero": 0.999
+              },
+              "delta_mae": {
+                "point": -0.18306413678343447,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.18233161099988718,
+                "sd": 0.04133725673462771,
+                "ci_low": -0.2630353817112358,
+                "ci_high": -0.10198467834682891,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0,
+                "frac_lt_zero": 1.0
+              },
+              "frac_improved": {
+                "point": 0.7380952380952381,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.7362683211970578,
+                "sd": 0.06382593587969924,
+                "ci_low": 0.6190476190476191,
+                "ci_high": 0.857225913621262,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 40,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 2,
+              "max_cluster_molecule_share": 0.047619047619047616,
+              "singleton_clusters": 38,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              1667,
+              2804,
+              1653,
+              98,
+              3986,
+              3458,
+              3772,
+              231,
+              3203,
+              291,
+              508,
+              2526,
+              2145,
+              3371,
+              3857,
+              3049,
+              4194,
+              4150,
+              3349,
+              3352,
+              3762,
+              366,
+              3337,
+              3167,
+              3877,
+              1542,
+              1391,
+              683,
+              3060,
+              2008,
+              2223,
+              2432,
+              3057,
+              2748,
+              250,
+              1601,
+              538,
+              1936,
+              1275,
+              2175,
+              2253,
+              3242
+            ],
+            "tail_scaffolds_distinct": 40
+          }
+        },
+        "per_seed": {}
+      }
+    },
+    "random123": {
+      "valid": {
+        "cvar90_by_seed_arm": {
+          "s0_base": {
+            "cvar90_ae": 1.64899474686441,
+            "p90_ae": 1.03026310903415,
+            "tail_size": 42
+          },
+          "s0_combo_chem_contrib": {
+            "cvar90_ae": 1.6732843168014058,
+            "p90_ae": 1.0143548787246313,
+            "tail_size": 42
+          },
+          "s1_base": {
+            "cvar90_ae": 1.669806031691627,
+            "p90_ae": 0.9953067341284868,
+            "tail_size": 42
+          },
+          "s1_combo_chem_contrib": {
+            "cvar90_ae": 1.6103771202183292,
+            "p90_ae": 0.9655552162306801,
+            "tail_size": 42
+          }
+        },
+        "posthoc_base_tail": {
+          "s0": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.906119710151967,
+              "rmse_combo": 1.9665944946140568,
+              "mae_base": 1.64899474686441,
+              "mae_combo": 1.6168070810483344,
+              "sse_base": 152.59827867605236,
+              "sse_combo": 162.43474406234532,
+              "delta_rmse": 0.06047478446208987,
+              "delta_mae": -0.03218766581607557,
+              "delta_sse": 9.836465386292957,
+              "frac_improved": 0.5476190476190477,
+              "mean_abs_improvement": 0.032187665816075794
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": 0.06047478446208987,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.05929107221093153,
+                "sd": 0.07534199537488802,
+                "ci_low": -0.09351575308624342,
+                "ci_high": 0.19997166175909048,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.7865,
+                "frac_lt_zero": 0.2135
+              },
+              "delta_mae": {
+                "point": -0.03218766581607557,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.028782983106814854,
+                "sd": 0.05714873199917939,
+                "ci_low": -0.14073659552462328,
+                "ci_high": 0.08197355456057313,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.296,
+                "frac_lt_zero": 0.704
+              },
+              "frac_improved": {
+                "point": 0.5476190476190477,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.5425687193057492,
+                "sd": 0.07740053984875443,
+                "ci_low": 0.3902439024390244,
+                "ci_high": 0.6904761904761905,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 41,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 2,
+              "max_cluster_molecule_share": 0.047619047619047616,
+              "singleton_clusters": 40,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              1425,
+              1494,
+              1647,
+              4180,
+              703,
+              3592,
+              508,
+              3458,
+              3473,
+              2795,
+              3779,
+              2446,
+              1944,
+              3251,
+              1508,
+              3936,
+              1784,
+              1539,
+              4010,
+              3800,
+              4163,
+              1475,
+              1282,
+              2296,
+              2086,
+              1367,
+              894,
+              3950,
+              545,
+              3824,
+              22,
+              113,
+              2599,
+              1140,
+              1819,
+              1760,
+              768,
+              2174,
+              2713,
+              3288,
+              3772,
+              2046
+            ],
+            "tail_scaffolds_distinct": 41
+          },
+          "s1": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 2.0603054427653458,
+              "rmse_combo": 1.9048678442930072,
+              "mae_base": 1.6698060316916272,
+              "mae_combo": 1.5101993214924927,
+              "sse_base": 178.2840577345173,
+              "sse_combo": 152.39790317730248,
+              "delta_rmse": -0.15543759847233862,
+              "delta_mae": -0.15960671019913453,
+              "delta_sse": -25.88615455721481,
+              "frac_improved": 0.7380952380952381,
+              "mean_abs_improvement": 0.15960671019913422
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.15543759847233862,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.15763380668084656,
+                "sd": 0.057194194101174003,
+                "ci_low": -0.28413587755247377,
+                "ci_high": -0.06451747064135664,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0,
+                "frac_lt_zero": 1.0
+              },
+              "delta_mae": {
+                "point": -0.15960671019913453,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.1594475766915587,
+                "sd": 0.0451673444043942,
+                "ci_low": -0.25640042587527884,
+                "ci_high": -0.07976687100492902,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0,
+                "frac_lt_zero": 1.0
+              },
+              "frac_improved": {
+                "point": 0.7380952380952381,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.7382402542955083,
+                "sd": 0.06851243556614176,
+                "ci_low": 0.6096284741917186,
+                "ci_high": 0.8604651162790697,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 41,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 2,
+              "max_cluster_molecule_share": 0.047619047619047616,
+              "singleton_clusters": 40,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              1425,
+              1494,
+              3592,
+              1647,
+              703,
+              4180,
+              3119,
+              3251,
+              508,
+              3473,
+              2296,
+              1944,
+              3772,
+              3458,
+              1475,
+              1784,
+              3779,
+              1508,
+              2446,
+              3936,
+              1140,
+              1539,
+              4010,
+              2795,
+              1760,
+              1367,
+              3897,
+              22,
+              2040,
+              1819,
+              768,
+              2174,
+              2169,
+              2599,
+              1282,
+              862,
+              1871,
+              2086,
+              3355,
+              894,
+              2713,
+              3288
+            ],
+            "tail_scaffolds_distinct": 41
+          }
+        },
+        "per_seed": {}
+      },
+      "test": {
+        "cvar90_by_seed_arm": {
+          "s0_base": {
+            "cvar90_ae": 1.3010543735878015,
+            "p90_ae": 0.9337172145502046,
+            "tail_size": 42
+          },
+          "s0_combo_chem_contrib": {
+            "cvar90_ae": 1.2193698632041314,
+            "p90_ae": 0.8619085465282739,
+            "tail_size": 42
+          },
+          "s1_base": {
+            "cvar90_ae": 1.3290291447257654,
+            "p90_ae": 0.9900850885603997,
+            "tail_size": 42
+          },
+          "s1_combo_chem_contrib": {
+            "cvar90_ae": 1.280252448656599,
+            "p90_ae": 0.9853388521831837,
+            "tail_size": 42
+          }
+        },
+        "posthoc_base_tail": {
+          "s0": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.3789545700933805,
+              "rmse_combo": 1.2082325097625164,
+              "mae_base": 1.3010543735878017,
+              "mae_combo": 1.120279876895724,
+              "sse_base": 79.86365966801962,
+              "sse_combo": 61.31268350117522,
+              "delta_rmse": -0.17072206033086412,
+              "delta_mae": -0.18077449669207768,
+              "delta_sse": -18.5509761668444,
+              "frac_improved": 0.7142857142857143,
+              "mean_abs_improvement": 0.1807744966920775
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.17072206033086412,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.1722452484338619,
+                "sd": 0.04169348705030818,
+                "ci_low": -0.2547243310964509,
+                "ci_high": -0.09516771844242736,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0,
+                "frac_lt_zero": 1.0
+              },
+              "delta_mae": {
+                "point": -0.18077449669207768,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.18232120295999765,
+                "sd": 0.036848113732965364,
+                "ci_low": -0.25515359855953007,
+                "ci_high": -0.11154022051312185,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0,
+                "frac_lt_zero": 1.0
+              },
+              "frac_improved": {
+                "point": 0.7142857142857143,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.7164166666666666,
+                "sd": 0.0698414537109773,
+                "ci_low": 0.5714285714285714,
+                "ci_high": 0.8571428571428571,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 42,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 1,
+              "max_cluster_molecule_share": 0.023809523809523808,
+              "singleton_clusters": 42,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              2289,
+              3148,
+              1666,
+              17,
+              1514,
+              2620,
+              3198,
+              2512,
+              622,
+              1381,
+              672,
+              3025,
+              96,
+              1543,
+              1242,
+              2521,
+              3579,
+              3082,
+              1249,
+              1013,
+              2216,
+              1153,
+              3133,
+              3252,
+              1442,
+              1704,
+              3457,
+              1896,
+              867,
+              3245,
+              3316,
+              2838,
+              3702,
+              1105,
+              1662,
+              2574,
+              979,
+              3296,
+              323,
+              1150,
+              1128,
+              2004
+            ],
+            "tail_scaffolds_distinct": 42
+          },
+          "s1": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.397186147898715,
+              "rmse_combo": 1.241070848074173,
+              "mae_base": 1.3290291447257654,
+              "mae_combo": 1.1755926694822054,
+              "sse_base": 81.9894235389621,
+              "sse_combo": 64.69078769746096,
+              "delta_rmse": -0.1561152998245421,
+              "delta_mae": -0.15343647524355997,
+              "delta_sse": -17.298635841501138,
+              "frac_improved": 0.7857142857142857,
+              "mean_abs_improvement": 0.1534364752435596
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.1561152998245421,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.15321008108554815,
+                "sd": 0.037820088096534414,
+                "ci_low": -0.22599626525851885,
+                "ci_high": -0.07743270793530825,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0005,
+                "frac_lt_zero": 0.9995
+              },
+              "delta_mae": {
+                "point": -0.15343647524355997,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.1508504597805716,
+                "sd": 0.037842143159198975,
+                "ci_low": -0.22426407264777323,
+                "ci_high": -0.07418982364986138,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0,
+                "frac_lt_zero": 1.0
+              },
+              "frac_improved": {
+                "point": 0.7857142857142857,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.784,
+                "sd": 0.06198171041770189,
+                "ci_low": 0.6666666666666666,
+                "ci_high": 0.9047619047619048,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 42,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 1,
+              "max_cluster_molecule_share": 0.023809523809523808,
+              "singleton_clusters": 42,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              2289,
+              3148,
+              1666,
+              1242,
+              17,
+              2512,
+              194,
+              2620,
+              3316,
+              1381,
+              1514,
+              1153,
+              3465,
+              3198,
+              1013,
+              2004,
+              3296,
+              867,
+              622,
+              4177,
+              1249,
+              979,
+              672,
+              3573,
+              851,
+              3252,
+              1879,
+              514,
+              3025,
+              1111,
+              2721,
+              2521,
+              1662,
+              323,
+              3508,
+              1246,
+              3133,
+              96,
+              1490,
+              1150,
+              480,
+              2574
+            ],
+            "tail_scaffolds_distinct": 42
+          }
+        },
+        "per_seed": {}
+      }
+    },
+    "random124": {
+      "valid": {
+        "cvar90_by_seed_arm": {
+          "s0_base": {
+            "cvar90_ae": 1.4032228633451536,
+            "p90_ae": 0.9120862085184949,
+            "tail_size": 42
+          },
+          "s0_combo_chem_contrib": {
+            "cvar90_ae": 1.3723122902365634,
+            "p90_ae": 0.8292880964750471,
+            "tail_size": 42
+          },
+          "s1_base": {
+            "cvar90_ae": 1.3406597904111446,
+            "p90_ae": 0.8881495211958095,
+            "tail_size": 42
+          },
+          "s1_combo_chem_contrib": {
+            "cvar90_ae": 1.376920771729901,
+            "p90_ae": 0.8611112831385688,
+            "tail_size": 42
+          }
+        },
+        "posthoc_base_tail": {
+          "s0": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.6566235005550956,
+              "rmse_combo": 1.6081848932997,
+              "mae_base": 1.4032228633451536,
+              "mae_combo": 1.3066495352109468,
+              "sse_base": 115.26485974883958,
+              "sse_combo": 108.62286334356943,
+              "delta_rmse": -0.048438607255395505,
+              "delta_mae": -0.09657332813420672,
+              "delta_sse": -6.641996405270149,
+              "frac_improved": 0.7142857142857143,
+              "mean_abs_improvement": 0.09657332813420663
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.048438607255395505,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.05100016447791433,
+                "sd": 0.04057612258419867,
+                "ci_low": -0.13505707925397317,
+                "ci_high": 0.023921364438021193,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0975,
+                "frac_lt_zero": 0.9025
+              },
+              "delta_mae": {
+                "point": -0.09657332813420672,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.09606171604392258,
+                "sd": 0.036442909058409204,
+                "ci_low": -0.16558308728334475,
+                "ci_high": -0.02555751542890305,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0025,
+                "frac_lt_zero": 0.9975
+              },
+              "frac_improved": {
+                "point": 0.7142857142857143,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.7151785714285713,
+                "sd": 0.07007889039279094,
+                "ci_low": 0.5714285714285714,
+                "ci_high": 0.8571428571428571,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 42,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 1,
+              "max_cluster_molecule_share": 0.023809523809523808,
+              "singleton_clusters": 42,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              1425,
+              2024,
+              508,
+              4117,
+              3057,
+              3257,
+              1667,
+              840,
+              3950,
+              1307,
+              4130,
+              1508,
+              768,
+              1051,
+              1381,
+              2491,
+              2838,
+              2203,
+              4171,
+              3836,
+              3549,
+              1964,
+              1686,
+              3702,
+              2344,
+              2420,
+              3318,
+              2493,
+              2069,
+              3818,
+              1213,
+              244,
+              2523,
+              236,
+              3771,
+              825,
+              1418,
+              259,
+              1798,
+              2172,
+              1486,
+              224
+            ],
+            "tail_scaffolds_distinct": 42
+          },
+          "s1": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.6386707746592297,
+              "rmse_combo": 1.548358298523384,
+              "mae_base": 1.3406597904111446,
+              "mae_combo": 1.2636511149100662,
+              "sse_base": 112.78016012433577,
+              "sse_combo": 100.69136366546161,
+              "delta_rmse": -0.09031247613584581,
+              "delta_mae": -0.07700867550107837,
+              "delta_sse": -12.088796458874157,
+              "frac_improved": 0.6190476190476191,
+              "mean_abs_improvement": 0.07700867550107841
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.09031247613584581,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.0840510436185305,
+                "sd": 0.07341823277077553,
+                "ci_low": -0.21808676789650855,
+                "ci_high": 0.052968185838519574,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.153,
+                "frac_lt_zero": 0.847
+              },
+              "delta_mae": {
+                "point": -0.07700867550107837,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.0791914922296157,
+                "sd": 0.048693635502164566,
+                "ci_low": -0.1778567738942715,
+                "ci_high": 0.01649076443610497,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.05,
+                "frac_lt_zero": 0.95
+              },
+              "frac_improved": {
+                "point": 0.6190476190476191,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.6227142857142857,
+                "sd": 0.07352589128560362,
+                "ci_low": 0.47619047619047616,
+                "ci_high": 0.7619047619047619,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 42,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 1,
+              "max_cluster_molecule_share": 0.023809523809523808,
+              "singleton_clusters": 42,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              1425,
+              2024,
+              840,
+              4117,
+              1667,
+              3057,
+              3257,
+              2203,
+              508,
+              2491,
+              4171,
+              1381,
+              3836,
+              1213,
+              768,
+              3549,
+              2494,
+              3818,
+              1936,
+              2493,
+              2069,
+              1964,
+              259,
+              3771,
+              3702,
+              1798,
+              1307,
+              236,
+              1053,
+              1153,
+              145,
+              3111,
+              49,
+              2838,
+              4078,
+              2847,
+              1989,
+              1686,
+              3756,
+              2344,
+              902,
+              2662
+            ],
+            "tail_scaffolds_distinct": 42
+          }
+        },
+        "per_seed": {}
+      },
+      "test": {
+        "cvar90_by_seed_arm": {
+          "s0_base": {
+            "cvar90_ae": 1.1270795484969607,
+            "p90_ae": 0.8574819705058812,
+            "tail_size": 42
+          },
+          "s0_combo_chem_contrib": {
+            "cvar90_ae": 1.1493747315254068,
+            "p90_ae": 0.8366255163794446,
+            "tail_size": 42
+          },
+          "s1_base": {
+            "cvar90_ae": 1.2297686146654054,
+            "p90_ae": 0.9068221252328167,
+            "tail_size": 42
+          },
+          "s1_combo_chem_contrib": {
+            "cvar90_ae": 1.1997193020907864,
+            "p90_ae": 0.9172101903496803,
+            "tail_size": 42
+          }
+        },
+        "posthoc_base_tail": {
+          "s0": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.150946252551524,
+              "rmse_combo": 1.1030838641624727,
+              "mae_base": 1.1270795484969607,
+              "mae_combo": 1.0542353671717417,
+              "sse_base": 55.63644560302065,
+              "sse_combo": 51.10534847777572,
+              "delta_rmse": -0.047862388389051214,
+              "delta_mae": -0.07284418132521897,
+              "delta_sse": -4.531097125244926,
+              "frac_improved": 0.5476190476190477,
+              "mean_abs_improvement": 0.07284418132521898
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.047862388389051214,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.04693967590267647,
+                "sd": 0.03935224861924448,
+                "ci_low": -0.12216426730277563,
+                "ci_high": 0.034285471631688644,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.117,
+                "frac_lt_zero": 0.883
+              },
+              "delta_mae": {
+                "point": -0.07284418132521897,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.07201560664214603,
+                "sd": 0.044085337614368496,
+                "ci_low": -0.16011025139494994,
+                "ci_high": 0.01733122923943655,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.052,
+                "frac_lt_zero": 0.948
+              },
+              "frac_improved": {
+                "point": 0.5476190476190477,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.546635540062058,
+                "sd": 0.07500631606641339,
+                "ci_low": 0.3902439024390244,
+                "ci_high": 0.6904761904761905,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 41,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 2,
+              "max_cluster_molecule_share": 0.047619047619047616,
+              "singleton_clusters": 40,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              3296,
+              2182,
+              1679,
+              823,
+              918,
+              2325,
+              1471,
+              40,
+              3686,
+              1539,
+              1233,
+              3838,
+              2548,
+              822,
+              3399,
+              17,
+              3998,
+              2349,
+              3025,
+              2695,
+              4154,
+              183,
+              2026,
+              3133,
+              2560,
+              2441,
+              3355,
+              91,
+              1905,
+              4046,
+              1561,
+              2633,
+              3043,
+              210,
+              953,
+              2888,
+              2505,
+              3369,
+              4059,
+              894,
+              1660,
+              624
+            ],
+            "tail_scaffolds_distinct": 41
+          },
+          "s1": {
+            "available": true,
+            "label": "LABEL_SELECTED_POSTHOC_TAIL",
+            "selection_rule": "same-seed BASE absolute error, top 10%",
+            "point": {
+              "tail_n": 42,
+              "tail_fraction": 0.1,
+              "rmse_base": 1.2483677852262447,
+              "rmse_combo": 1.157954574850009,
+              "mae_base": 1.2297686146654054,
+              "mae_combo": 1.1095248494495829,
+              "sse_base": 65.45372934200854,
+              "sse_combo": 56.31606949147473,
+              "delta_rmse": -0.09041321037623562,
+              "delta_mae": -0.12024376521582258,
+              "delta_sse": -9.137659850533815,
+              "frac_improved": 0.7380952380952381,
+              "mean_abs_improvement": 0.12024376521582238
+            },
+            "bootstrap": {
+              "delta_rmse": {
+                "point": -0.09041321037623562,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.09004081829268894,
+                "sd": 0.0414924517730006,
+                "ci_low": -0.17420277526578107,
+                "ci_high": -0.010446499358495332,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0125,
+                "frac_lt_zero": 0.9875
+              },
+              "delta_mae": {
+                "point": -0.12024376521582258,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": -0.11915342473348656,
+                "sd": 0.042452761378102985,
+                "ci_low": -0.20385529444324513,
+                "ci_high": -0.03824765829316554,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 0.0025,
+                "frac_lt_zero": 0.9975
+              },
+              "frac_improved": {
+                "point": 0.7380952380952381,
+                "n_boot": 2000,
+                "n_finite": 2000,
+                "mean": 0.7365714285714284,
+                "sd": 0.06670451306689873,
+                "ci_low": 0.5952380952380952,
+                "ci_high": 0.8571428571428571,
+                "ci_percentiles": [
+                  2.5,
+                  97.5
+                ],
+                "frac_gt_zero": 1.0,
+                "frac_lt_zero": 0.0
+              }
+            },
+            "tail_cluster_profile": {
+              "n_molecules": 42,
+              "n_clusters": 42,
+              "median_cluster_size": 1.0,
+              "max_cluster_size": 1,
+              "max_cluster_molecule_share": 0.023809523809523808,
+              "singleton_clusters": 42,
+              "low_cluster_support": false,
+              "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+            },
+            "tail_row_ids": [
+              2918,
+              918,
+              17,
+              2182,
+              1397,
+              3296,
+              1785,
+              1471,
+              4154,
+              2505,
+              3897,
+              3133,
+              2548,
+              1679,
+              2441,
+              2325,
+              198,
+              2349,
+              1539,
+              823,
+              2883,
+              962,
+              3025,
+              3686,
+              3369,
+              3998,
+              1008,
+              4046,
+              2464,
+              1561,
+              1036,
+              219,
+              3043,
+              690,
+              3399,
+              3355,
+              1498,
+              2433,
+              2659,
+              3615,
+              1233,
+              624
+            ],
+            "tail_scaffolds_distinct": 42
+          }
+        },
+        "per_seed": {}
+      }
+    }
+  }
+}

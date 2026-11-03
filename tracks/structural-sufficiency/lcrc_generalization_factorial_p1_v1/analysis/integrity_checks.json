@@ -1,64 +1,13 @@
 {
   "round_id": "lcrc-generalization-factorial-p1-v1",
-  "phase": "partial",
-  "generated_at": "2026-11-03T14:13:59Z",
-  "n_checks": 255,
-  "n_passed": 245,
-  "n_failed": 10,
-  "all_passed": false,
+  "phase": "final",
+  "generated_at": "2026-11-03T15:51:17Z",
+  "n_checks": 449,
+  "n_passed": 449,
+  "n_failed": 0,
+  "all_passed": true,
   "blocking_policy": "a failed check blocks the paired comparison that depends on it; the build aborts instead of silently mixing incomparable units",
-  "failed": [
-    {
-      "check": "unit_available_random122_chem8_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
-    },
-    {
-      "check": "unit_available_random122_chem8_s2",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
-    },
-    {
-      "check": "unit_available_random122_multicontrib_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
-    },
-    {
-      "check": "unit_available_random122_multicontrib_s2",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
-    },
-    {
-      "check": "unit_available_random123_base_s0",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
-    },
-    {
-      "check": "unit_available_random123_base_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
-    },
-    {
-      "check": "unit_available_random123_combo_chem_contrib_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
-    },
-    {
-      "check": "unit_available_random124_base_s0",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
-    },
-    {
-      "check": "unit_available_random124_base_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
-    },
-    {
-      "check": "unit_available_random124_combo_chem_contrib_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
-    }
-  ],
+  "failed": [],
   "checks": [
     {
       "check": "csv_smiles_unique",
@@ -1898,6 +1847,1590 @@
       "detail": "DEVELOPMENT_TEST (exploratory round; Test never selected the checkpoint)"
     },
     {
+      "check": "f1_chem8_random122_s1_identity",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "chem8",
+        "seed": 1,
+        "expected": {
+          "split": "published",
+          "arm": "chem8",
+          "seed": 1
+        }
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_target_norm_train_only",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "n": 3360,
+        "mean": 2.176985119047619,
+        "scale": 1.2091154725538142
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_checkpoint_rule_uses_validation_only",
+      "passed": true,
+      "detail": {
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "selection_uses_test": false,
+        "test_used_for_development": true
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_extension_zero_init",
+      "passed": true,
+      "detail": {
+        "arm": "chem8",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "passed": true
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_shared_tensors_copied_from_base",
+      "passed": true,
+      "detail": {
+        "base_init_state_hash": "d8b3f5b858696f9b7cafa26db2014074e3d1943258f8af68524a03fc306666ac",
+        "base_copy": {
+          "base_atom_width": 51,
+          "copied_identical": 34,
+          "new_extension_tensors": 0,
+          "spec_atom_width": 59,
+          "widened_zero_padded": 1
+        }
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_test_pred_is_destandardised_raw",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_chem8_random122_s1_y_true_matches_frozen_split_labels_valid",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_chem8_random122_s1_y_true_matches_frozen_split_labels_test",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_chem8_random122_s1_predictions_finite",
+      "passed": true,
+      "detail": {
+        "valid_nonfinite": 0,
+        "test_nonfinite": 0
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_metric_reproduction_valid_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.6744354272583596,
+        "recomputed": 0.6744354272583596,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_metric_reproduction_valid_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.41446445893973827,
+        "recomputed": 0.41446445893973827,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_metric_reproduction_valid_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 191.04252112728972,
+        "recomputed": 191.04252112728975
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_n_valid",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_metric_reproduction_test_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.5667494415778453,
+        "recomputed": 0.5667494415778453,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_metric_reproduction_test_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.4225463619354588,
+        "recomputed": 0.4225463619354588,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_metric_reproduction_test_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 134.9060704020958,
+        "recomputed": 134.9060704020958
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_n_test",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_test_eval_rows_match_split",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "check": "f1_chem8_random122_s1_test_eval_metric_reproduction",
+      "passed": true,
+      "detail": {
+        "recorded_rmse": 0.5667494415778453,
+        "recomputed_rmse": 0.5667494415778453
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s1_test_eval_exposure_label",
+      "passed": true,
+      "detail": "DEVELOPMENT_TEST (exploratory round; Test never selected the checkpoint)"
+    },
+    {
+      "check": "f1_chem8_random122_s2_identity",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "chem8",
+        "seed": 2,
+        "expected": {
+          "split": "published",
+          "arm": "chem8",
+          "seed": 2
+        }
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_target_norm_train_only",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "n": 3360,
+        "mean": 2.176985119047619,
+        "scale": 1.2091154725538142
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_checkpoint_rule_uses_validation_only",
+      "passed": true,
+      "detail": {
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "selection_uses_test": false,
+        "test_used_for_development": true
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_extension_zero_init",
+      "passed": true,
+      "detail": {
+        "arm": "chem8",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "passed": true
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_shared_tensors_copied_from_base",
+      "passed": true,
+      "detail": {
+        "base_init_state_hash": "1398f98b84191959d16ab04d0faa932846d32aac704f47ef4ef99ff92fe1e051",
+        "base_copy": {
+          "base_atom_width": 51,
+          "copied_identical": 34,
+          "new_extension_tensors": 0,
+          "spec_atom_width": 59,
+          "widened_zero_padded": 1
+        }
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_test_pred_is_destandardised_raw",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_chem8_random122_s2_y_true_matches_frozen_split_labels_valid",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_chem8_random122_s2_y_true_matches_frozen_split_labels_test",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_chem8_random122_s2_predictions_finite",
+      "passed": true,
+      "detail": {
+        "valid_nonfinite": 0,
+        "test_nonfinite": 0
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_metric_reproduction_valid_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.7245806339487131,
+        "recomputed": 0.7245806339487131,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_metric_reproduction_valid_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.39213737556075484,
+        "recomputed": 0.39213737556075484,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_metric_reproduction_valid_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 220.50717993927793,
+        "recomputed": 220.50717993927793
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_n_valid",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_metric_reproduction_test_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.5714895678591859,
+        "recomputed": 0.5714895678591859,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_metric_reproduction_test_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.41725302297939365,
+        "recomputed": 0.41725302297939365,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_metric_reproduction_test_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 137.1721369921892,
+        "recomputed": 137.17213699218922
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_n_test",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_test_eval_rows_match_split",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "check": "f1_chem8_random122_s2_test_eval_metric_reproduction",
+      "passed": true,
+      "detail": {
+        "recorded_rmse": 0.5714895678591859,
+        "recomputed_rmse": 0.5714895678591859
+      }
+    },
+    {
+      "check": "f1_chem8_random122_s2_test_eval_exposure_label",
+      "passed": true,
+      "detail": "DEVELOPMENT_TEST (exploratory round; Test never selected the checkpoint)"
+    },
+    {
+      "check": "f1_contrib_random122_s1_identity",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "multicontrib",
+        "seed": 1,
+        "expected": {
+          "split": "published",
+          "arm": "multicontrib",
+          "seed": 1
+        }
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_target_norm_train_only",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "n": 3360,
+        "mean": 2.176985119047619,
+        "scale": 1.2091154725538142
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_checkpoint_rule_uses_validation_only",
+      "passed": true,
+      "detail": {
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "selection_uses_test": false,
+        "test_used_for_development": true
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_extension_zero_init",
+      "passed": true,
+      "detail": {
+        "arm": "multicontrib",
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_shared_tensors_copied_from_base",
+      "passed": true,
+      "detail": {
+        "base_init_state_hash": "d8b3f5b858696f9b7cafa26db2014074e3d1943258f8af68524a03fc306666ac",
+        "base_copy": {
+          "base_atom_width": 51,
+          "copied_identical": 35,
+          "new_extension_tensors": 8,
+          "spec_atom_width": 51,
+          "widened_zero_padded": 0
+        }
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_test_pred_is_destandardised_raw",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_contrib_random122_s1_y_true_matches_frozen_split_labels_valid",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_contrib_random122_s1_y_true_matches_frozen_split_labels_test",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_contrib_random122_s1_predictions_finite",
+      "passed": true,
+      "detail": {
+        "valid_nonfinite": 0,
+        "test_nonfinite": 0
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_metric_reproduction_valid_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.5771936452226633,
+        "recomputed": 0.5771936452226633,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_metric_reproduction_valid_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.3917727873658341,
+        "recomputed": 0.3917727873658341,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_metric_reproduction_valid_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 139.9240517158788,
+        "recomputed": 139.9240517158788
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_n_valid",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_metric_reproduction_test_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.5518947631256023,
+        "recomputed": 0.5518947631256023,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_metric_reproduction_test_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.4142167494182991,
+        "recomputed": 0.4142167494182991,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_metric_reproduction_test_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 127.92688841749515,
+        "recomputed": 127.92688841749512
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_n_test",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_test_eval_rows_match_split",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "check": "f1_contrib_random122_s1_test_eval_metric_reproduction",
+      "passed": true,
+      "detail": {
+        "recorded_rmse": 0.5518947631256023,
+        "recomputed_rmse": 0.5518947631256023
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s1_test_eval_exposure_label",
+      "passed": true,
+      "detail": "DEVELOPMENT_TEST (exploratory round; Test never selected the checkpoint)"
+    },
+    {
+      "check": "f1_contrib_random122_s2_identity",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "multicontrib",
+        "seed": 2,
+        "expected": {
+          "split": "published",
+          "arm": "multicontrib",
+          "seed": 2
+        }
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_target_norm_train_only",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "n": 3360,
+        "mean": 2.176985119047619,
+        "scale": 1.2091154725538142
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_checkpoint_rule_uses_validation_only",
+      "passed": true,
+      "detail": {
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "selection_uses_test": false,
+        "test_used_for_development": true
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_extension_zero_init",
+      "passed": true,
+      "detail": {
+        "arm": "multicontrib",
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_shared_tensors_copied_from_base",
+      "passed": true,
+      "detail": {
+        "base_init_state_hash": "1398f98b84191959d16ab04d0faa932846d32aac704f47ef4ef99ff92fe1e051",
+        "base_copy": {
+          "base_atom_width": 51,
+          "copied_identical": 35,
+          "new_extension_tensors": 8,
+          "spec_atom_width": 51,
+          "widened_zero_padded": 0
+        }
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_test_pred_is_destandardised_raw",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_contrib_random122_s2_y_true_matches_frozen_split_labels_valid",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_contrib_random122_s2_y_true_matches_frozen_split_labels_test",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_contrib_random122_s2_predictions_finite",
+      "passed": true,
+      "detail": {
+        "valid_nonfinite": 0,
+        "test_nonfinite": 0
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_metric_reproduction_valid_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.6999505990580002,
+        "recomputed": 0.6999505990580002,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_metric_reproduction_valid_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.3857031768457674,
+        "recomputed": 0.3857031768457674,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_metric_reproduction_valid_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 205.77095327109438,
+        "recomputed": 205.77095327109436
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_n_valid",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_metric_reproduction_test_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.553638492045262,
+        "recomputed": 0.553638492045262,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_metric_reproduction_test_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.4154433940498215,
+        "recomputed": 0.4154433940498215,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_metric_reproduction_test_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 128.7365435471437,
+        "recomputed": 128.7365435471437
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_n_test",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_test_eval_rows_match_split",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "check": "f1_contrib_random122_s2_test_eval_metric_reproduction",
+      "passed": true,
+      "detail": {
+        "recorded_rmse": 0.553638492045262,
+        "recomputed_rmse": 0.553638492045262
+      }
+    },
+    {
+      "check": "f1_contrib_random122_s2_test_eval_exposure_label",
+      "passed": true,
+      "detail": "DEVELOPMENT_TEST (exploratory round; Test never selected the checkpoint)"
+    },
+    {
+      "check": "f1_base_random123_s0_identity",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "lipo-repeat:123",
+        "arm": "base",
+        "seed": 0,
+        "expected": {
+          "split": "lipo-repeat:123",
+          "arm": "base",
+          "seed": 0
+        }
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_target_norm_train_only",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "n": 3360,
+        "mean": 2.1903154761904764,
+        "scale": 1.2061284808757047
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_checkpoint_rule_uses_validation_only",
+      "passed": true,
+      "detail": {
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "selection_uses_test": false,
+        "test_used_for_development": true
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_test_pred_is_destandardised_raw",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random123_s0_y_true_matches_frozen_split_labels_valid",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random123_s0_y_true_matches_frozen_split_labels_test",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random123_s0_predictions_finite",
+      "passed": true,
+      "detail": {
+        "valid_nonfinite": 0,
+        "test_nonfinite": 0
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_metric_reproduction_valid_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.7296429958800768,
+        "recomputed": 0.7296429958800768,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_metric_reproduction_valid_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.47776743843705405,
+        "recomputed": 0.47776743843705405,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_metric_reproduction_valid_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 223.59913860347856,
+        "recomputed": 223.5991386034785
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_n_valid",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_metric_reproduction_test_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.5747023945133596,
+        "recomputed": 0.5747023945133596,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_metric_reproduction_test_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.41550767242394876,
+        "recomputed": 0.41550767242394876,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_metric_reproduction_test_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 138.71879374894345,
+        "recomputed": 138.71879374894348
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_n_test",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_test_eval_rows_match_split",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "check": "f1_base_random123_s0_test_eval_metric_reproduction",
+      "passed": true,
+      "detail": {
+        "recorded_rmse": 0.5747023945133596,
+        "recomputed_rmse": 0.5747023945133596
+      }
+    },
+    {
+      "check": "f1_base_random123_s0_test_eval_exposure_label",
+      "passed": true,
+      "detail": "DEVELOPMENT_TEST (exploratory round; Test never selected the checkpoint)"
+    },
+    {
+      "check": "f1_base_random123_s1_identity",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "lipo-repeat:123",
+        "arm": "base",
+        "seed": 1,
+        "expected": {
+          "split": "lipo-repeat:123",
+          "arm": "base",
+          "seed": 1
+        }
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_target_norm_train_only",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "n": 3360,
+        "mean": 2.1903154761904764,
+        "scale": 1.2061284808757047
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_checkpoint_rule_uses_validation_only",
+      "passed": true,
+      "detail": {
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "selection_uses_test": false,
+        "test_used_for_development": true
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_test_pred_is_destandardised_raw",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random123_s1_y_true_matches_frozen_split_labels_valid",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random123_s1_y_true_matches_frozen_split_labels_test",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random123_s1_predictions_finite",
+      "passed": true,
+      "detail": {
+        "valid_nonfinite": 0,
+        "test_nonfinite": 0
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_metric_reproduction_valid_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.7722315475473617,
+        "recomputed": 0.7722315475473617,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_metric_reproduction_valid_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.49307129084778,
+        "recomputed": 0.49307129084778,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_metric_reproduction_valid_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 250.46345647150514,
+        "recomputed": 250.46345647150514
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_n_valid",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_metric_reproduction_test_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.5984447059852681,
+        "recomputed": 0.5984447059852681,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_metric_reproduction_test_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.4369719319988752,
+        "recomputed": 0.4369719319988752,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_metric_reproduction_test_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 150.41714777115348,
+        "recomputed": 150.41714777115345
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_n_test",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_test_eval_rows_match_split",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "check": "f1_base_random123_s1_test_eval_metric_reproduction",
+      "passed": true,
+      "detail": {
+        "recorded_rmse": 0.5984447059852681,
+        "recomputed_rmse": 0.5984447059852681
+      }
+    },
+    {
+      "check": "f1_base_random123_s1_test_eval_exposure_label",
+      "passed": true,
+      "detail": "DEVELOPMENT_TEST (exploratory round; Test never selected the checkpoint)"
+    },
+    {
+      "check": "f1_combo_random123_s1_identity",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "lipo-repeat:123",
+        "arm": "combo_chem_contrib",
+        "seed": 1,
+        "expected": {
+          "split": "lipo-repeat:123",
+          "arm": "combo_chem_contrib",
+          "seed": 1
+        }
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_target_norm_train_only",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "n": 3360,
+        "mean": 2.1903154761904764,
+        "scale": 1.2061284808757047
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_checkpoint_rule_uses_validation_only",
+      "passed": true,
+      "detail": {
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "selection_uses_test": false,
+        "test_used_for_development": true
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_extension_zero_init",
+      "passed": true,
+      "detail": {
+        "arm": "combo_chem_contrib",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_shared_tensors_copied_from_base",
+      "passed": true,
+      "detail": {
+        "base_init_state_hash": "eb3a163a7fe67df8b4b84d199aa61d87399ff6b2d2fd37086b0854f8b46a88b7",
+        "base_copy": {
+          "base_atom_width": 51,
+          "copied_identical": 34,
+          "new_extension_tensors": 8,
+          "spec_atom_width": 59,
+          "widened_zero_padded": 1
+        }
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_test_pred_is_destandardised_raw",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_combo_random123_s1_y_true_matches_frozen_split_labels_valid",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_combo_random123_s1_y_true_matches_frozen_split_labels_test",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_combo_random123_s1_predictions_finite",
+      "passed": true,
+      "detail": {
+        "valid_nonfinite": 0,
+        "test_nonfinite": 0
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_metric_reproduction_valid_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.7427263654301844,
+        "recomputed": 0.7427263654301844,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_metric_reproduction_valid_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.48205536402896465,
+        "recomputed": 0.48205536402896465,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_metric_reproduction_valid_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 231.6898306401554,
+        "recomputed": 231.68983064015538
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_n_valid",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_metric_reproduction_test_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.5748435892817046,
+        "recomputed": 0.5748435892817046,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_metric_reproduction_test_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.4235182537534211,
+        "recomputed": 0.4235182537534211,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_metric_reproduction_test_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 138.7869638980747,
+        "recomputed": 138.78696389807473
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_n_test",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_test_eval_rows_match_split",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "check": "f1_combo_random123_s1_test_eval_metric_reproduction",
+      "passed": true,
+      "detail": {
+        "recorded_rmse": 0.5748435892817046,
+        "recomputed_rmse": 0.5748435892817046
+      }
+    },
+    {
+      "check": "f1_combo_random123_s1_test_eval_exposure_label",
+      "passed": true,
+      "detail": "DEVELOPMENT_TEST (exploratory round; Test never selected the checkpoint)"
+    },
+    {
+      "check": "f1_base_random124_s0_identity",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "lipo-repeat:124",
+        "arm": "base",
+        "seed": 0,
+        "expected": {
+          "split": "lipo-repeat:124",
+          "arm": "base",
+          "seed": 0
+        }
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_target_norm_train_only",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "n": 3360,
+        "mean": 2.186172619047619,
+        "scale": 1.202886060674314
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_checkpoint_rule_uses_validation_only",
+      "passed": true,
+      "detail": {
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "selection_uses_test": false,
+        "test_used_for_development": true
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_test_pred_is_destandardised_raw",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random124_s0_y_true_matches_frozen_split_labels_valid",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random124_s0_y_true_matches_frozen_split_labels_test",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random124_s0_predictions_finite",
+      "passed": true,
+      "detail": {
+        "valid_nonfinite": 0,
+        "test_nonfinite": 0
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_metric_reproduction_valid_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.637438945075198,
+        "recomputed": 0.637438945075198,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_metric_reproduction_valid_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.4136264269292539,
+        "recomputed": 0.4136264269292539,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_metric_reproduction_valid_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 170.65793165340415,
+        "recomputed": 170.65793165340418
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_n_valid",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_metric_reproduction_test_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.5152253819371113,
+        "recomputed": 0.5152253819371113,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_metric_reproduction_test_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.39117381781599614,
+        "recomputed": 0.39117381781599614,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_metric_reproduction_test_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 111.49202156074173,
+        "recomputed": 111.49202156074176
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_n_test",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_test_eval_rows_match_split",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "check": "f1_base_random124_s0_test_eval_metric_reproduction",
+      "passed": true,
+      "detail": {
+        "recorded_rmse": 0.5152253819371113,
+        "recomputed_rmse": 0.5152253819371113
+      }
+    },
+    {
+      "check": "f1_base_random124_s0_test_eval_exposure_label",
+      "passed": true,
+      "detail": "DEVELOPMENT_TEST (exploratory round; Test never selected the checkpoint)"
+    },
+    {
+      "check": "f1_base_random124_s1_identity",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "lipo-repeat:124",
+        "arm": "base",
+        "seed": 1,
+        "expected": {
+          "split": "lipo-repeat:124",
+          "arm": "base",
+          "seed": 1
+        }
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_target_norm_train_only",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "n": 3360,
+        "mean": 2.186172619047619,
+        "scale": 1.202886060674314
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_checkpoint_rule_uses_validation_only",
+      "passed": true,
+      "detail": {
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "selection_uses_test": false,
+        "test_used_for_development": true
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_test_pred_is_destandardised_raw",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random124_s1_y_true_matches_frozen_split_labels_valid",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random124_s1_y_true_matches_frozen_split_labels_test",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_base_random124_s1_predictions_finite",
+      "passed": true,
+      "detail": {
+        "valid_nonfinite": 0,
+        "test_nonfinite": 0
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_metric_reproduction_valid_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.6424409221397432,
+        "recomputed": 0.6424409221397432,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_metric_reproduction_valid_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.4271585484569409,
+        "recomputed": 0.4271585484569409,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_metric_reproduction_valid_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 173.34674214470073,
+        "recomputed": 173.34674214470076
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_n_valid",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_metric_reproduction_test_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.5636253528419543,
+        "recomputed": 0.5636253528419543,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_metric_reproduction_test_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.43026873832829376,
+        "recomputed": 0.43026873832829376,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_metric_reproduction_test_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 133.42288611381133,
+        "recomputed": 133.42288611381133
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_n_test",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_test_eval_rows_match_split",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "check": "f1_base_random124_s1_test_eval_metric_reproduction",
+      "passed": true,
+      "detail": {
+        "recorded_rmse": 0.5636253528419543,
+        "recomputed_rmse": 0.5636253528419543
+      }
+    },
+    {
+      "check": "f1_base_random124_s1_test_eval_exposure_label",
+      "passed": true,
+      "detail": "DEVELOPMENT_TEST (exploratory round; Test never selected the checkpoint)"
+    },
+    {
+      "check": "f1_combo_random124_s1_identity",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "lipo-repeat:124",
+        "arm": "combo_chem_contrib",
+        "seed": 1,
+        "expected": {
+          "split": "lipo-repeat:124",
+          "arm": "combo_chem_contrib",
+          "seed": 1
+        }
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_target_norm_train_only",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "n": 3360,
+        "mean": 2.186172619047619,
+        "scale": 1.202886060674314
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_checkpoint_rule_uses_validation_only",
+      "passed": true,
+      "detail": {
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "selection_uses_test": false,
+        "test_used_for_development": true
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_extension_zero_init",
+      "passed": true,
+      "detail": {
+        "arm": "combo_chem_contrib",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_shared_tensors_copied_from_base",
+      "passed": true,
+      "detail": {
+        "base_init_state_hash": "0ac6d8da3b16838c59f6a12cb802d064af38026f7e697df620eb50b0e7e1733a",
+        "base_copy": {
+          "base_atom_width": 51,
+          "copied_identical": 34,
+          "new_extension_tensors": 8,
+          "spec_atom_width": 59,
+          "widened_zero_padded": 1
+        }
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_test_pred_is_destandardised_raw",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_combo_random124_s1_y_true_matches_frozen_split_labels_valid",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_combo_random124_s1_y_true_matches_frozen_split_labels_test",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "check": "f1_combo_random124_s1_predictions_finite",
+      "passed": true,
+      "detail": {
+        "valid_nonfinite": 0,
+        "test_nonfinite": 0
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_metric_reproduction_valid_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.6196528043291675,
+        "recomputed": 0.6196528043291675,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_metric_reproduction_valid_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.41247703163900806,
+        "recomputed": 0.41247703163900806,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_metric_reproduction_valid_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 161.26723112346062,
+        "recomputed": 161.26723112346065
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_n_valid",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_metric_reproduction_test_rmse",
+      "passed": true,
+      "detail": {
+        "recorded": 0.5393117074748006,
+        "recomputed": 0.5393117074748006,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_metric_reproduction_test_mae",
+      "passed": true,
+      "detail": {
+        "recorded": 0.4066708585967449,
+        "recomputed": 0.4066708585967449,
+        "abs_diff": 0.0
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_metric_reproduction_test_sse",
+      "passed": true,
+      "detail": {
+        "recorded": 122.15998948414166,
+        "recomputed": 122.15998948414168
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_n_test",
+      "passed": true,
+      "detail": {
+        "recorded": 420,
+        "recomputed": 420
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_test_eval_rows_match_split",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "check": "f1_combo_random124_s1_test_eval_metric_reproduction",
+      "passed": true,
+      "detail": {
+        "recorded_rmse": 0.5393117074748006,
+        "recomputed_rmse": 0.5393117074748006
+      }
+    },
+    {
+      "check": "f1_combo_random124_s1_test_eval_exposure_label",
+      "passed": true,
+      "detail": "DEVELOPMENT_TEST (exploratory round; Test never selected the checkpoint)"
+    },
+    {
       "check": "training_code_hashes_identical_across_all_units",
       "passed": true,
       "detail": {
@@ -1995,14 +3528,19 @@
       "check": "base_input_cache_identical_within_split_random123",
       "passed": true,
       "detail": {
-        "base_and_multicontrib_fingerprints": [],
+        "base_and_multicontrib_fingerprints": [
+          [
+            "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
+            "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203"
+          ]
+        ],
         "chem8_arms_base_fingerprints": [
           [
             "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
             "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203"
           ]
         ],
-        "deferred_until_base_units_exist": true
+        "deferred_until_base_units_exist": false
       }
     },
     {
@@ -2028,14 +3566,19 @@
       "check": "base_input_cache_identical_within_split_random124",
       "passed": true,
       "detail": {
-        "base_and_multicontrib_fingerprints": [],
+        "base_and_multicontrib_fingerprints": [
+          [
+            "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
+            "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a"
+          ]
+        ],
         "chem8_arms_base_fingerprints": [
           [
             "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
             "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a"
           ]
         ],
-        "deferred_until_base_units_exist": true
+        "deferred_until_base_units_exist": false
       }
     },
     {
@@ -2074,10 +3617,24 @@
       ]
     },
     {
+      "check": "shared_init_hash_matches_base_seed_random123_s1",
+      "passed": true,
+      "detail": [
+        "eb3a163a7fe67df8b4b84d199aa61d87399ff6b2d2fd37086b0854f8b46a88b7"
+      ]
+    },
+    {
       "check": "shared_init_hash_matches_base_seed_random124_s0",
       "passed": true,
       "detail": [
         "c25be21820b2a7cf46e1d171e638b2b5f61671b7bbacf1b2745d17036e276620"
+      ]
+    },
+    {
+      "check": "shared_init_hash_matches_base_seed_random124_s1",
+      "passed": true,
+      "detail": [
+        "0ac6d8da3b16838c59f6a12cb802d064af38026f7e697df620eb50b0e7e1733a"
       ]
     },
     {
@@ -2102,13 +3659,13 @@
     },
     {
       "check": "unit_available_random122_chem8_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
+      "passed": true,
+      "detail": null
     },
     {
       "check": "unit_available_random122_chem8_s2",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
+      "passed": true,
+      "detail": null
     },
     {
       "check": "unit_available_random122_multicontrib_s0",
@@ -2117,13 +3674,13 @@
     },
     {
       "check": "unit_available_random122_multicontrib_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
+      "passed": true,
+      "detail": null
     },
     {
       "check": "unit_available_random122_multicontrib_s2",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
+      "passed": true,
+      "detail": null
     },
     {
       "check": "unit_available_random122_combo_chem_contrib_s0",
@@ -2142,13 +3699,13 @@
     },
     {
       "check": "unit_available_random123_base_s0",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
+      "passed": true,
+      "detail": null
     },
     {
       "check": "unit_available_random123_base_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
+      "passed": true,
+      "detail": null
     },
     {
       "check": "unit_available_random123_combo_chem_contrib_s0",
@@ -2157,18 +3714,18 @@
     },
     {
       "check": "unit_available_random123_combo_chem_contrib_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
+      "passed": true,
+      "detail": null
     },
     {
       "check": "unit_available_random124_base_s0",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
+      "passed": true,
+      "detail": null
     },
     {
       "check": "unit_available_random124_base_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
+      "passed": true,
+      "detail": null
     },
     {
       "check": "unit_available_random124_combo_chem_contrib_s0",
@@ -2177,8 +3734,8 @@
     },
     {
       "check": "unit_available_random124_combo_chem_contrib_s1",
-      "passed": false,
-      "detail": "MISSING: this comparison cell is not built"
+      "passed": true,
+      "detail": null
     }
   ]
 }
